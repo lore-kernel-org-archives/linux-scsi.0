@@ -2,373 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 47BADC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 20:01:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D38C433B4
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 21:21:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D8856135B
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 20:01:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7811B60FE3
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 21:21:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240109AbhERUCs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 May 2021 16:02:48 -0400
-Received: from mail-1.ca.inter.net ([208.85.220.69]:43251 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239208AbhERUCs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2021 16:02:48 -0400
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 606F92EA15E;
-        Tue, 18 May 2021 16:01:29 -0400 (EDT)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id 6C+InrNMlnau; Tue, 18 May 2021 15:39:54 -0400 (EDT)
-Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id DDB2D2EA14B;
-        Tue, 18 May 2021 16:01:27 -0400 (EDT)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH v2 02/50] core: Use scsi_cmd_to_rq() instead of
- scsi_cmnd.request
-To:     Bart Van Assche <bvanassche@acm.org>,
+        id S236624AbhERVWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 May 2021 17:22:51 -0400
+Received: from mail-pf1-f181.google.com ([209.85.210.181]:39500 "EHLO
+        mail-pf1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236428AbhERVWu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2021 17:22:50 -0400
+Received: by mail-pf1-f181.google.com with SMTP id c17so8384207pfn.6
+        for <linux-scsi@vger.kernel.org>; Tue, 18 May 2021 14:21:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=+E8mpT7TA8viJWXCX32oQUfVHCiH8RtDoaMQ0vrY2u0=;
+        b=r+AYCT+7bfB6J8J+pNnAmlLiLSvki/pnnQbTefmrDTNktaCbzK+Dja0nMtozIdYjUQ
+         2F+UpPKxMtpeB7PutSafjtUtrtTkH2cKJ0i3tVdF3VeNM+D7q/ed5buX+rs8mOwHmlEt
+         V13uQmfZPpWjQgKyrJi/fiNdkjmt05PTu4eH5ASHaW4R5iKeRF+eTP8OWYgNUAonr6gJ
+         gwryxizjb/5djfBsNxJnon/Agge7tyMk5/tO+ryKwtQ29S+s97S5i0TF4B89XsIcLuDl
+         Q4xQ0xlABAcztf4oqs8QiVfe7y4Kv9a+NfWY28oAUO0UFVJ9RFpXNVGXl7LZAAmugqe5
+         /uEg==
+X-Gm-Message-State: AOAM5320hsUGLe9BiRvkCnuZuNI/Nv0SuW8FwiKpc7q3yk/IXuDetsY2
+        6BCOWSh+sOZZEOhk6Z0X9WJze96MnWZTkQ==
+X-Google-Smtp-Source: ABdhPJy2RL8wtoIu5zIs5zn0rZO5RXXGibpvXYE88SOXoHSDaKToFrKLUSGfGX47s1O/Ecyy6S5h4g==
+X-Received: by 2002:a63:1443:: with SMTP id 3mr7115643pgu.69.1621372891343;
+        Tue, 18 May 2021 14:21:31 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:4ae4:fc49:eafe:4150? ([2601:647:4000:d7:4ae4:fc49:eafe:4150])
+        by smtp.gmail.com with ESMTPSA id j16sm4370784pfi.92.2021.05.18.14.21.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 18 May 2021 14:21:30 -0700 (PDT)
+Subject: Re: [PATCH v2 00/50] Remove the request pointer from struct scsi_cmnd
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc:     linux-scsi@vger.kernel.org
 References: <20210518174450.20664-1-bvanassche@acm.org>
- <20210518174450.20664-3-bvanassche@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <088b4699-6e96-adcc-34e5-7926279df923@interlog.com>
-Date:   Tue, 18 May 2021 16:01:27 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+ <af39cb904e0f0450549f9fdcee3c256e61bfab93.camel@HansenPartnership.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <f3dae885-5826-11da-0eec-04f0a3e04cd9@acm.org>
+Date:   Tue, 18 May 2021 14:21:28 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <20210518174450.20664-3-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
+In-Reply-To: <af39cb904e0f0450549f9fdcee3c256e61bfab93.camel@HansenPartnership.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-05-18 1:44 p.m., Bart Van Assche wrote:
-> Prepare for removal of the request pointer by using scsi_cmd_to_rq()
-> instead. This patch does not change any functionality.
+On 5/18/21 10:55 AM, James Bottomley wrote:
+> On Tue, 2021-05-18 at 10:44 -0700, Bart Van Assche wrote:
+>> Hi Martin,
+>>
+>> This patch series implements the following two changes for all SCSI
+>> drivers:
+>> - Use blk_mq_rq_from_pdu() instead of the request member of struct
+>> scsi_cmnd
+>>   since adding an offset to a pointer is faster than pointer
+>> indirection.
 > 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/scsi.c         |  2 +-
->   drivers/scsi/scsi_error.c   | 14 +++++++-------
->   drivers/scsi/scsi_lib.c     | 28 +++++++++++++++-------------
->   drivers/scsi/scsi_logging.c | 18 ++++++++++--------
->   include/scsi/scsi_cmnd.h    |  6 ++++--
->   include/scsi/scsi_device.h  | 16 +++++++++-------
->   6 files changed, 46 insertions(+), 38 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index e9e2f0e15ac8..7d545223dd59 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -197,7 +197,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
->   				"(result %x)\n", cmd->result));
->   
->   	good_bytes = scsi_bufflen(cmd);
-> -	if (!blk_rq_is_passthrough(cmd->request)) {
-> +	if (!blk_rq_is_passthrough(scsi_cmd_to_rq(cmd))) {
->   		int old_good_bytes = good_bytes;
->   		drv = scsi_cmd_to_driver(cmd);
->   		if (drv->done)
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index d8fafe77dbbe..5af6d87e83aa 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -242,7 +242,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
->    */
->   static void scsi_eh_reset(struct scsi_cmnd *scmd)
->   {
-> -	if (!blk_rq_is_passthrough(scmd->request)) {
-> +	if (!blk_rq_is_passthrough(scsi_cmd_to_rq(scmd))) {
->   		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->   		if (sdrv->eh_reset)
->   			sdrv->eh_reset(scmd);
-> @@ -1188,7 +1188,7 @@ static enum scsi_disposition scsi_request_sense(struct scsi_cmnd *scmd)
->   static enum scsi_disposition
->   scsi_eh_action(struct scsi_cmnd *scmd, enum scsi_disposition rtn)
->   {
-> -	if (!blk_rq_is_passthrough(scmd->request)) {
-> +	if (!blk_rq_is_passthrough(scsi_cmd_to_rq(scmd))) {
->   		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
->   		if (sdrv->eh_action)
->   			rtn = sdrv->eh_action(scmd, rtn);
-> @@ -1762,16 +1762,16 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
->   	case DID_TIME_OUT:
->   		goto check_type;
->   	case DID_BUS_BUSY:
-> -		return (scmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT);
-> +		return scsi_cmd_to_rq(scmd)->cmd_flags & REQ_FAILFAST_TRANSPORT;
->   	case DID_PARITY:
-> -		return (scmd->request->cmd_flags & REQ_FAILFAST_DEV);
-> +		return scsi_cmd_to_rq(scmd)->cmd_flags & REQ_FAILFAST_DEV;
->   	case DID_ERROR:
->   		if (msg_byte(scmd->result) == COMMAND_COMPLETE &&
->   		    status_byte(scmd->result) == RESERVATION_CONFLICT)
->   			return 0;
->   		fallthrough;
->   	case DID_SOFT_ERROR:
-> -		return (scmd->request->cmd_flags & REQ_FAILFAST_DRIVER);
-> +		return scsi_cmd_to_rq(scmd)->cmd_flags & REQ_FAILFAST_DRIVER;
->   	}
->   
->   	if (status_byte(scmd->result) != CHECK_CONDITION)
-> @@ -1782,8 +1782,8 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
->   	 * assume caller has checked sense and determined
->   	 * the check condition was retryable.
->   	 */
-> -	if (scmd->request->cmd_flags & REQ_FAILFAST_DEV ||
-> -	    blk_rq_is_passthrough(scmd->request))
-> +	if (scsi_cmd_to_rq(scmd)->cmd_flags & REQ_FAILFAST_DEV ||
-> +	    blk_rq_is_passthrough(scsi_cmd_to_rq(scmd)))
->   		return 1;
->   
->   	return 0;
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 532304d42f00..2e9598c91cee 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -119,13 +119,15 @@ scsi_set_blocked(struct scsi_cmnd *cmd, int reason)
->   
->   static void scsi_mq_requeue_cmd(struct scsi_cmnd *cmd)
->   {
-> -	if (cmd->request->rq_flags & RQF_DONTPREP) {
-> -		cmd->request->rq_flags &= ~RQF_DONTPREP;
-> +	struct request *rq = scsi_cmd_to_rq(cmd);
-> +
-> +	if (rq->rq_flags & RQF_DONTPREP) {
-> +		rq->rq_flags &= ~RQF_DONTPREP;
->   		scsi_mq_uninit_cmd(cmd);
->   	} else {
->   		WARN_ON_ONCE(true);
->   	}
-> -	blk_mq_requeue_request(cmd->request, true);
-> +	blk_mq_requeue_request(rq, true);
->   }
->   
->   /**
-> @@ -164,7 +166,7 @@ static void __scsi_queue_insert(struct scsi_cmnd *cmd, int reason, bool unbusy)
->   	 */
->   	cmd->result = 0;
->   
-> -	blk_mq_requeue_request(cmd->request, true);
-> +	blk_mq_requeue_request(scsi_cmd_to_rq(cmd), true);
->   }
->   
->   /**
-> @@ -475,7 +477,7 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
->   
->   static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
->   {
-> -	if (!blk_rq_is_passthrough(cmd->request)) {
-> +	if (!blk_rq_is_passthrough(scsi_cmd_to_rq(cmd))) {
->   		struct scsi_driver *drv = scsi_cmd_to_driver(cmd);
->   
->   		if (drv->uninit_command)
-> @@ -626,7 +628,7 @@ static void scsi_io_completion_reprep(struct scsi_cmnd *cmd,
->   
->   static bool scsi_cmd_runtime_exceeced(struct scsi_cmnd *cmd)
->   {
-> -	struct request *req = cmd->request;
-> +	struct request *req = scsi_cmd_to_rq(cmd);
->   	unsigned long wait_for;
->   
->   	if (cmd->allowed == SCSI_CMD_RETRIES_NO_LIMIT)
-> @@ -645,7 +647,7 @@ static bool scsi_cmd_runtime_exceeced(struct scsi_cmnd *cmd)
->   static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
->   {
->   	struct request_queue *q = cmd->device->request_queue;
-> -	struct request *req = cmd->request;
-> +	struct request *req = scsi_cmd_to_rq(cmd);
->   	int level = 0;
->   	enum {ACTION_FAIL, ACTION_REPREP, ACTION_RETRY,
->   	      ACTION_DELAYED_RETRY} action;
-> @@ -819,7 +821,7 @@ static int scsi_io_completion_nz_result(struct scsi_cmnd *cmd, int result,
->   {
->   	bool sense_valid;
->   	bool sense_current = true;	/* false implies "deferred sense" */
-> -	struct request *req = cmd->request;
-> +	struct request *req = scsi_cmd_to_rq(cmd);
->   	struct scsi_sense_hdr sshdr;
->   
->   	sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
-> @@ -908,7 +910,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->   {
->   	int result = cmd->result;
->   	struct request_queue *q = cmd->device->request_queue;
-> -	struct request *req = cmd->request;
-> +	struct request *req = scsi_cmd_to_rq(cmd);
->   	blk_status_t blk_stat = BLK_STS_OK;
->   
->   	if (unlikely(result))	/* a nz result may or may not be an error */
-> @@ -979,7 +981,7 @@ static inline bool scsi_cmd_needs_dma_drain(struct scsi_device *sdev,
->   blk_status_t scsi_alloc_sgtables(struct scsi_cmnd *cmd)
->   {
->   	struct scsi_device *sdev = cmd->device;
-> -	struct request *rq = cmd->request;
-> +	struct request *rq = scsi_cmd_to_rq(cmd);
->   	unsigned short nr_segs = blk_rq_nr_phys_segments(rq);
->   	struct scatterlist *last_sg = NULL;
->   	blk_status_t ret;
-> @@ -1108,7 +1110,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
->   {
->   	void *buf = cmd->sense_buffer;
->   	void *prot = cmd->prot_sdb;
-> -	struct request *rq = blk_mq_rq_from_pdu(cmd);
-> +	struct request *rq = scsi_cmd_to_rq(cmd);
->   	unsigned int flags = cmd->flags & SCMD_PRESERVED_FLAGS;
->   	unsigned long jiffies_at_alloc;
->   	int retries, to_clear;
-> @@ -1573,12 +1575,12 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
->   
->   static void scsi_mq_done(struct scsi_cmnd *cmd)
->   {
-> -	if (unlikely(blk_should_fake_timeout(cmd->request->q)))
-> +	if (unlikely(blk_should_fake_timeout(scsi_cmd_to_rq(cmd)->q)))
->   		return;
->   	if (unlikely(test_and_set_bit(SCMD_STATE_COMPLETE, &cmd->state)))
->   		return;
->   	trace_scsi_dispatch_cmd_done(cmd);
-> -	blk_mq_complete_request(cmd->request);
-> +	blk_mq_complete_request(scsi_cmd_to_rq(cmd));
->   }
->   
->   static void scsi_mq_put_budget(struct request_queue *q, int budget_token)
-> diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-> index 8ea44c6595ef..f0ae55ad0973 100644
-> --- a/drivers/scsi/scsi_logging.c
-> +++ b/drivers/scsi/scsi_logging.c
-> @@ -28,8 +28,9 @@ static void scsi_log_release_buffer(char *bufptr)
->   
->   static inline const char *scmd_name(const struct scsi_cmnd *scmd)
->   {
-> -	return scmd->request->rq_disk ?
-> -		scmd->request->rq_disk->disk_name : NULL;
-> +	struct request *rq = scsi_cmd_to_rq((struct scsi_cmnd *)scmd);
-> +
-> +	return rq->rq_disk ? rq->rq_disk->disk_name : NULL;
->   }
->   
->   static size_t sdev_format_header(char *logbuf, size_t logbuf_len,
-> @@ -91,7 +92,7 @@ void scmd_printk(const char *level, const struct scsi_cmnd *scmd,
->   	if (!logbuf)
->   		return;
->   	off = sdev_format_header(logbuf, logbuf_len, scmd_name(scmd),
-> -				 scmd->request->tag);
-> +				 scsi_cmd_to_rq((struct scsi_cmnd *)scmd)->tag);
->   	if (off < logbuf_len) {
->   		va_start(args, fmt);
->   		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
-> @@ -188,7 +189,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
->   		return;
->   
->   	off = sdev_format_header(logbuf, logbuf_len,
-> -				 scmd_name(cmd), cmd->request->tag);
-> +				 scmd_name(cmd), scsi_cmd_to_rq(cmd)->tag);
->   	if (off >= logbuf_len)
->   		goto out_printk;
->   	off += scnprintf(logbuf + off, logbuf_len - off, "CDB: ");
-> @@ -210,7 +211,7 @@ void scsi_print_command(struct scsi_cmnd *cmd)
->   
->   			off = sdev_format_header(logbuf, logbuf_len,
->   						 scmd_name(cmd),
-> -						 cmd->request->tag);
-> +						 scsi_cmd_to_rq(cmd)->tag);
->   			if (!WARN_ON(off > logbuf_len - 58)) {
->   				off += scnprintf(logbuf + off, logbuf_len - off,
->   						 "CDB[%02x]: ", k);
-> @@ -373,7 +374,8 @@ EXPORT_SYMBOL(__scsi_print_sense);
->   /* Normalize and print sense buffer in SCSI command */
->   void scsi_print_sense(const struct scsi_cmnd *cmd)
->   {
-> -	scsi_log_print_sense(cmd->device, scmd_name(cmd), cmd->request->tag,
-> +	scsi_log_print_sense(cmd->device, scmd_name(cmd),
-> +			     scsi_cmd_to_rq((struct scsi_cmnd *)cmd)->tag,
->   			     cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE);
->   }
->   EXPORT_SYMBOL(scsi_print_sense);
-> @@ -392,8 +394,8 @@ void scsi_print_result(const struct scsi_cmnd *cmd, const char *msg,
->   	if (!logbuf)
->   		return;
->   
-> -	off = sdev_format_header(logbuf, logbuf_len,
-> -				 scmd_name(cmd), cmd->request->tag);
-> +	off = sdev_format_header(logbuf, logbuf_len, scmd_name(cmd),
-> +				 scsi_cmd_to_rq((struct scsi_cmnd *)cmd)->tag);
->   
->   	if (off >= logbuf_len)
->   		goto out_printk;
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index 6787670d0d16..bd7f73f035be 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -164,7 +164,9 @@ static inline void *scsi_cmd_priv(struct scsi_cmnd *cmd)
->   /* make sure not to use it with passthrough commands */
->   static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
->   {
-> -	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
-> +	struct request *rq = scsi_cmd_to_rq(cmd);
-> +
-> +	return *(struct scsi_driver **)rq->rq_disk->private_data;
->   }
->   
->   extern void scsi_finish_command(struct scsi_cmnd *cmd);
-> @@ -290,7 +292,7 @@ static inline unsigned char scsi_get_prot_type(struct scsi_cmnd *scmd)
->   
->   static inline sector_t scsi_get_lba(struct scsi_cmnd *scmd)
->   {
-> -	return blk_rq_pos(scmd->request);
-> +	return blk_rq_pos(scsi_cmd_to_rq(scmd));
->   }
->   
->   static inline unsigned int scsi_prot_interval(struct scsi_cmnd *scmd)
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index ac6ab16abee7..09797a2b779d 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -265,13 +265,15 @@ sdev_prefix_printk(const char *, const struct scsi_device *, const char *,
->   __printf(3, 4) void
->   scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
->   
-> -#define scmd_dbg(scmd, fmt, a...)					   \
-> -	do {								   \
-> -		if ((scmd)->request->rq_disk)				   \
-> -			sdev_dbg((scmd)->device, "[%s] " fmt,		   \
-> -				 (scmd)->request->rq_disk->disk_name, ##a);\
-> -		else							   \
-> -			sdev_dbg((scmd)->device, fmt, ##a);		   \
-> +#define scmd_dbg(scmd, fmt, a...)				\
-> +	do {							\
-> +		struct request *rq = scsi_cmd_to_rq((scmd));	\
+> Are there any performance results to back up this assertion?  It's
+> quite a lot of churn so it would be nice to know it's worth it.
 
-When introducing a new name (e.g. rq) in a macro, shouldn't it be prefixed
-with either a single or double underscore? There is a good chance rq maybe
-in use in the enclosing scope causing a compiler warning.
+I have not yet run any performance measurements because I expect that it
+will be challenging to measure the performance impact of a change like
+this one accurately. The performance measurement tool itself (e.g. fio)
+might introduce more variation between runs than the performance
+improvement of this patch series. Another reason I have not yet run any
+performance measurements is because I was assuming that everyone would
+be happy with a patch series that makes code faster and that reduces the
+size of a key SCSI data structure.
 
-> +								\
-> +		if (rq->rq_disk)				\
-> +			sdev_dbg((scmd)->device, "[%s] " fmt,	\
-> +				 rq->rq_disk->disk_name, ##a);	\
-> +		else						\
-> +			sdev_dbg((scmd)->device, fmt, ##a);	\
->   	} while (0)
->   
->   enum scsi_target_state {
-> 
+Anyway, I have run 'make drivers/scsi/scsi_lib.lst' with and without
+this patch series applied. What I see is that without this patch series
+the assembly code for converting a SCSI command pointer into a request
+pointer looks like this:
 
-To James's point, using fio (or dd, sg_dd, etc) and scsi_debug as the LLD
-in before and after runs might show a performance improvement.
+48 8b bb 10 01 00 00    mov    0x110(%rbx),%rdi
+
+With this patch series applied that conversion code changes into the
+following:
+
+48 8d bb f0 fe ff ff    lea    -0x110(%rbx),%rdi
+
+The above shows that struct request has a size of 0x110 = 272 bytes with
+my kernel configuration.
+
+This illustrates that this patch series realizes an improvement since
+"mov" instructions used for converting SCSI command pointers into struct
+request pointers are converted into "lea" instructions. "mov" fetches
+data from memory while "lea" does not.
+
+Bart.
