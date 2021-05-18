@@ -2,106 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2D38C433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 21:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26CFBC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 21:59:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7811B60FE3
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 21:21:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F052161353
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 21:59:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236624AbhERVWv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 May 2021 17:22:51 -0400
-Received: from mail-pf1-f181.google.com ([209.85.210.181]:39500 "EHLO
-        mail-pf1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236428AbhERVWu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2021 17:22:50 -0400
-Received: by mail-pf1-f181.google.com with SMTP id c17so8384207pfn.6
-        for <linux-scsi@vger.kernel.org>; Tue, 18 May 2021 14:21:32 -0700 (PDT)
+        id S236677AbhERWA7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 May 2021 18:00:59 -0400
+Received: from mail-pf1-f176.google.com ([209.85.210.176]:42712 "EHLO
+        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233561AbhERWA7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2021 18:00:59 -0400
+Received: by mail-pf1-f176.google.com with SMTP id x18so4150185pfi.9
+        for <linux-scsi@vger.kernel.org>; Tue, 18 May 2021 14:59:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=+E8mpT7TA8viJWXCX32oQUfVHCiH8RtDoaMQ0vrY2u0=;
-        b=r+AYCT+7bfB6J8J+pNnAmlLiLSvki/pnnQbTefmrDTNktaCbzK+Dja0nMtozIdYjUQ
-         2F+UpPKxMtpeB7PutSafjtUtrtTkH2cKJ0i3tVdF3VeNM+D7q/ed5buX+rs8mOwHmlEt
-         V13uQmfZPpWjQgKyrJi/fiNdkjmt05PTu4eH5ASHaW4R5iKeRF+eTP8OWYgNUAonr6gJ
-         gwryxizjb/5djfBsNxJnon/Agge7tyMk5/tO+ryKwtQ29S+s97S5i0TF4B89XsIcLuDl
-         Q4xQ0xlABAcztf4oqs8QiVfe7y4Kv9a+NfWY28oAUO0UFVJ9RFpXNVGXl7LZAAmugqe5
-         /uEg==
-X-Gm-Message-State: AOAM5320hsUGLe9BiRvkCnuZuNI/Nv0SuW8FwiKpc7q3yk/IXuDetsY2
-        6BCOWSh+sOZZEOhk6Z0X9WJze96MnWZTkQ==
-X-Google-Smtp-Source: ABdhPJy2RL8wtoIu5zIs5zn0rZO5RXXGibpvXYE88SOXoHSDaKToFrKLUSGfGX47s1O/Ecyy6S5h4g==
-X-Received: by 2002:a63:1443:: with SMTP id 3mr7115643pgu.69.1621372891343;
-        Tue, 18 May 2021 14:21:31 -0700 (PDT)
+        bh=TTLponXUteGuQL/U0smckJUhrm+m4vvmJIBQAfILAoA=;
+        b=V3l2h5Cq4VO7V6XkSbuR4bZ3uXIKDvfDPvo6NjuxVyiJ26fvAOQp71WSYATfmBECqW
+         G45vI79CmWaU8yK+qUULB3vSckyG94G76kCI7jjMiWcXOjVs1CBf7FTelY25o6KCyITy
+         FsSmpnsUhpCIILbwmw82ev9PvMisrQGS8zE/NcQsloFXtuKFSpU0mZPs9DXghAskrFPZ
+         y+6LxwDzRR2xR+JUMYccpPYm2vmAZHvYuAEO+VigEtCzbjh9xmYwAx4S2nKKmiTFPANL
+         SbxqHsXRpsVMOFEq3pngcXAP8utZT59qXd/xIdzpX6nmn7GA7WnRXE6el5KwI302XP2U
+         4z+w==
+X-Gm-Message-State: AOAM532XWcrJ9SrIIpL2wyKD3kSg3hgnNf/Wghp2sjtGy9TnQdbrXogQ
+        CvFeEPbL+ztjF5AlMtlkvwY=
+X-Google-Smtp-Source: ABdhPJz/dzekeVsjFFmnmOp8IkMTV3WY28WqDi+OdGJINdgYgsfPuXJGWt6gx5gGoSuODvbHNXrtiQ==
+X-Received: by 2002:a62:1d0e:0:b029:2d8:30a3:687f with SMTP id d14-20020a621d0e0000b02902d830a3687fmr7227595pfd.17.1621375180746;
+        Tue, 18 May 2021 14:59:40 -0700 (PDT)
 Received: from ?IPv6:2601:647:4000:d7:4ae4:fc49:eafe:4150? ([2601:647:4000:d7:4ae4:fc49:eafe:4150])
-        by smtp.gmail.com with ESMTPSA id j16sm4370784pfi.92.2021.05.18.14.21.29
+        by smtp.gmail.com with ESMTPSA id y24sm1969337pfn.81.2021.05.18.14.59.39
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 18 May 2021 14:21:30 -0700 (PDT)
-Subject: Re: [PATCH v2 00/50] Remove the request pointer from struct scsi_cmnd
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Tue, 18 May 2021 14:59:40 -0700 (PDT)
+Subject: Re: [PATCH v2 02/50] core: Use scsi_cmd_to_rq() instead of
+ scsi_cmnd.request
+To:     dgilbert@interlog.com,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
+Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
 References: <20210518174450.20664-1-bvanassche@acm.org>
- <af39cb904e0f0450549f9fdcee3c256e61bfab93.camel@HansenPartnership.com>
+ <20210518174450.20664-3-bvanassche@acm.org>
+ <088b4699-6e96-adcc-34e5-7926279df923@interlog.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <f3dae885-5826-11da-0eec-04f0a3e04cd9@acm.org>
-Date:   Tue, 18 May 2021 14:21:28 -0700
+Message-ID: <3dd52887-edb9-d9b8-00b2-8fc4e6ca4830@acm.org>
+Date:   Tue, 18 May 2021 14:59:38 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.1
 MIME-Version: 1.0
-In-Reply-To: <af39cb904e0f0450549f9fdcee3c256e61bfab93.camel@HansenPartnership.com>
+In-Reply-To: <088b4699-6e96-adcc-34e5-7926279df923@interlog.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/18/21 10:55 AM, James Bottomley wrote:
-> On Tue, 2021-05-18 at 10:44 -0700, Bart Van Assche wrote:
->> Hi Martin,
->>
->> This patch series implements the following two changes for all SCSI
->> drivers:
->> - Use blk_mq_rq_from_pdu() instead of the request member of struct
->> scsi_cmnd
->>   since adding an offset to a pointer is faster than pointer
->> indirection.
+On 5/18/21 1:01 PM, Douglas Gilbert wrote:
+> On 2021-05-18 1:44 p.m., Bart Van Assche wrote:
+>> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+>> index ac6ab16abee7..09797a2b779d 100644
+>> --- a/include/scsi/scsi_device.h
+>> +++ b/include/scsi/scsi_device.h
+>> @@ -265,13 +265,15 @@ sdev_prefix_printk(const char *, const struct
+>> scsi_device *, const char *,
+>>   __printf(3, 4) void
+>>   scmd_printk(const char *, const struct scsi_cmnd *, const char *, ...);
+>>   -#define scmd_dbg(scmd, fmt, a...)                       \
+>> -    do {                                   \
+>> -        if ((scmd)->request->rq_disk)                   \
+>> -            sdev_dbg((scmd)->device, "[%s] " fmt,           \
+>> -                 (scmd)->request->rq_disk->disk_name, ##a);\
+>> -        else                               \
+>> -            sdev_dbg((scmd)->device, fmt, ##a);           \
+>> +#define scmd_dbg(scmd, fmt, a...)                \
+>> +    do {                            \
+>> +        struct request *rq = scsi_cmd_to_rq((scmd));    \
 > 
-> Are there any performance results to back up this assertion?  It's
-> quite a lot of churn so it would be nice to know it's worth it.
+> When introducing a new name (e.g. rq) in a macro, shouldn't it be prefixed
+> with either a single or double underscore? There is a good chance rq maybe
+> in use in the enclosing scope causing a compiler warning.
 
-I have not yet run any performance measurements because I expect that it
-will be challenging to measure the performance impact of a change like
-this one accurately. The performance measurement tool itself (e.g. fio)
-might introduce more variation between runs than the performance
-improvement of this patch series. Another reason I have not yet run any
-performance measurements is because I was assuming that everyone would
-be happy with a patch series that makes code faster and that reduces the
-size of a key SCSI data structure.
+Hi Doug,
 
-Anyway, I have run 'make drivers/scsi/scsi_lib.lst' with and without
-this patch series applied. What I see is that without this patch series
-the assembly code for converting a SCSI command pointer into a request
-pointer looks like this:
+Thanks for having taken a look. I will insert one or more underscores in
+front of the 'rq' variable name or remove that variable again. It is not
+clear to me whether there is a general rule. In include/linux/kernel.h I
+found a variable that has a prefix of seven underscores:
 
-48 8b bb 10 01 00 00    mov    0x110(%rbx),%rdi
-
-With this patch series applied that conversion code changes into the
-following:
-
-48 8d bb f0 fe ff ff    lea    -0x110(%rbx),%rdi
-
-The above shows that struct request has a size of 0x110 = 272 bytes with
-my kernel configuration.
-
-This illustrates that this patch series realizes an improvement since
-"mov" instructions used for converting SCSI command pointers into struct
-request pointers are converted into "lea" instructions. "mov" fetches
-data from memory while "lea" does not.
+#define trace_printk(fmt, ...)                          \
+do {                                                    \
+        char _______STR[] = __stringify((__VA_ARGS__)); \
+        if (sizeof(_______STR) > 3)                     \
+                do_trace_printk(fmt, ##__VA_ARGS__);    \
+        else                                            \
+                trace_puts(fmt);                        \
+} while (0)
 
 Bart.
