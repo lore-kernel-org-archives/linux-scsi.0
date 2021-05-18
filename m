@@ -2,292 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDEBDC433B4
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 00:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD23AC433ED
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 05:17:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CABFD61360
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 00:15:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 91223611BD
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 05:17:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344871AbhERAQj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 17 May 2021 20:16:39 -0400
-Received: from mail-pg1-f178.google.com ([209.85.215.178]:39708 "EHLO
-        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344949AbhERAQd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 May 2021 20:16:33 -0400
-Received: by mail-pg1-f178.google.com with SMTP id v14so3021888pgi.6;
-        Mon, 17 May 2021 17:15:16 -0700 (PDT)
+        id S241456AbhERFSd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 May 2021 01:18:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42160 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240631AbhERFS1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2021 01:18:27 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0C6B4C061756
+        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 22:16:39 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id g6-20020a17090adac6b029015d1a9a6f1aso1102948pjx.1
+        for <linux-scsi@vger.kernel.org>; Mon, 17 May 2021 22:16:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version;
+        bh=ESfLlSpw3dD1OkY5qIquniVN61DIZKW/knPHUYIzoMw=;
+        b=hzNNKmtN+/4zIDs5y07SCQ4tlqjgvw+DVU1l/2F3P80k88zxYSWVr4OYyT7g9LmwB0
+         ZPakfUAEe2J5ySpv8m6Ek7fPwzC4FE8EZgxQ2EGnOdctSTKaxJnc3Pd5oa2AXBwllIrf
+         89LOwL0lw0qhRst45A/J1chbuLNiswfKkvVXI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ma0y+AVUF5FMxdqp11h4WFBWrewppi+BP0ptgmZXHNY=;
-        b=rcf5780RorwrxoweWjAm501Qj583TK4nRZdNSJVKBvEZ3QQGFBks/nNpEyrI9URLIx
-         S+aZ+42V6IfSvdCgQzF670BMAx0kPP0RGcld98ROcvyOsi70h82SK/1HutoWIb2Zw61L
-         NY4x2LJ3OJfSIxMLrOg4iVVcDGI67IghEervJvzbqzFvzwcp4PV3hHzsUlrsM+zgw2xx
-         ne2f+Dv48NlwBcH2fXDV3+QrKLwAp0mBxODdo0nqc/XsVoolXE+/yFCjfWnDpq1RAY4A
-         Zq/8yuEJfBxCmlq16SnCFejH8Dr2K3B7NJGV4pbY7FZbku8Dq74IpsQ0r6Mzx9Ex36kK
-         Qh4Q==
-X-Gm-Message-State: AOAM53243qSUMMJN+/Volr7L3l9Ls/WxTCt54Ge4pQnz749YencvpuxM
-        5rQtGz6GD1MB7AQD/B33eUc=
-X-Google-Smtp-Source: ABdhPJwRgqjZwa+aml3zeF/6QupA23QGawzuRvsXsHqBnEjcM+kPVN9ffwKUcYegX+/ZwO/OZBf4Vg==
-X-Received: by 2002:a65:48c5:: with SMTP id o5mr2168498pgs.101.1621296915872;
-        Mon, 17 May 2021 17:15:15 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:9781:8633:8854:8704? ([2601:647:4000:d7:9781:8633:8854:8704])
-        by smtp.gmail.com with ESMTPSA id 10sm5158247pgl.39.2021.05.17.17.15.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 17 May 2021 17:15:14 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>
-Cc:     "axboe@kernel.dk" <axboe@kernel.dk>,
-        "msnitzer@redhat.com" <msnitzer@redhat.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        "mpatocka@redhat.com" <mpatocka@redhat.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "kbusch@kernel.org" <kbusch@kernel.org>,
-        "rwheeler@redhat.com" <rwheeler@redhat.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
-        "zach.brown@ni.com" <zach.brown@ni.com>,
-        "osandov@fb.com" <osandov@fb.com>
-References: <BYAPR04MB49652C4B75E38F3716F3C06386539@BYAPR04MB4965.namprd04.prod.outlook.com>
-Message-ID: <0cfa9399-701a-9fa2-3225-3b54007462e7@acm.org>
-Date:   Mon, 17 May 2021 17:15:11 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
+        bh=ESfLlSpw3dD1OkY5qIquniVN61DIZKW/knPHUYIzoMw=;
+        b=Rbopqw6480m1rdzIaPU4Jq+jM6cIsNTf9DFRrzReb+uVDMcQ35QR7ZcgAkoxazCdjU
+         yjkKiAc+DbTK4k4SNeRnoP6RMsqj/NzOXIce7N3NpqfLj8NsgJc85SvpvLU4hhBix4Ny
+         tS3/WiHCWb+r2aOUKh5Z73tSRjhrjhlpkIArmxbBNqvjvWnsS64RaGRU/TsNQYx9hL3Z
+         pvE/koBkDBOPZigt6zJ/aKrc+fJSTw/tWC95Yhsdzc0QHWREeXt17SQJFiF7TENC3lt/
+         d2qIkMlUCVasjpE93e218Ee/W5DxxqnQyNSgU/9Wr4mqpIu1FEjUbtVmzMWIkZqBzhOR
+         /a8g==
+X-Gm-Message-State: AOAM533X5D0P8GkfnPM1YvkRJ93HElnZdQm+Zkqq3QSPmVoI6PWEL0jz
+        TsKu3JKx+kTdLiRraLGMLchNO4BxZpTw/ruNvE0FJML2t0Xuz+N9AnOKlBrcQ4E28f16zF1eDA/
+        qcFBHj14iSgeH1C2NRWyapqZnv/WAeeJETwoaCVNMU3US7qcvhdP4WgW+TMHW15HnB/PBUgZ+Yp
+        o30pNt0VF6/c9vcXd1rEcR
+X-Google-Smtp-Source: ABdhPJx0NXJb5wEU4G7PP/w6rpUDbvlAVHGy4moEr2i0qdxwN/seln2LbKMXdkev7Blo5vHsnvqELA==
+X-Received: by 2002:a17:90b:f0e:: with SMTP id br14mr3136799pjb.121.1621314997754;
+        Mon, 17 May 2021 22:16:37 -0700 (PDT)
+Received: from dhcp-10-123-20-76.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id hk15sm437556pjb.53.2021.05.17.22.16.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 May 2021 22:16:36 -0700 (PDT)
+From:   Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Cc:     Sathya.Prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [Patch 0/3] Gracefully handle FW faults during HBA initialization
+Date:   Tue, 18 May 2021 10:46:22 +0530
+Message-Id: <20210518051625.1596742-1-suganath-prabu.subramani@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB49652C4B75E38F3716F3C06386539@BYAPR04MB4965.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000008d59af05c293d0ca"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/10/21 5:15 PM, Chaitanya Kulkarni wrote:
-> I'd like to propose a session to go over this topic to understand :-
-> 
-> 1. What are the blockers for Copy Offload implementation ?
-> 2. Discussion about having a file system interface.
-> 3. Discussion about having right system call for user-space.
-> 4. What is the right way to move this work forward ?
-> 5. How can we help to contribute and move this work forward ?
+--0000000000008d59af05c293d0ca
+Content-Transfer-Encoding: 8bit
 
-We need to achieve agreement about an approach. The text below is my
-attempt at guiding the discussion. A HTML version is available at
-https://github.com/bvanassche/linux-kernel-copy-offload. As usual,
-feedback is welcome.
+During IOC initialization driver may observe some firmware faults.
+Currently the driver is not handling the firmware faults gracefully,
+most of the time the driver is terminating the IOC initialization
+without trying to recover the IOC from the fault. Instead of terminating
+the IOC initialization, driver has to try to recover the IOC at least
+for one time before terminating the IOC initialization.
 
-Bart.
+Suganath Prabu S (3):
+  mpt3sas: Fix deadlock while cancelling the running FW  event
+  mpt3sas: Handle FW faults during first half of IOC  init
+  mpt3sas: Handle FWfault while second half of IOC Init
+
+ drivers/scsi/mpt3sas/mpt3sas_base.c   | 261 ++++++++++++++++++--------
+ drivers/scsi/mpt3sas/mpt3sas_base.h   |   8 +
+ drivers/scsi/mpt3sas/mpt3sas_config.c |  18 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c  | 174 +++++++++++++++--
+ 4 files changed, 368 insertions(+), 93 deletions(-)
+
+-- 
+2.27.0
 
 
-# Implementing Copy Offloading in the Linux Kernel
+--0000000000008d59af05c293d0ca
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-## Introduction
-
-Efforts to add copy offloading support in the Linux kernel started considerable
-time ago. Despite this copy offloading support is not yet upstream and there is
-no detailed plan yet of how to implement copy offloading.
-
-This document outlines a possible implementation. The purpose of this document
-is to help guiding the conversations around copy offloading.
-
-## Block Layer
-
-We need an interface to pass copy offload requests from user space or file
-systems to block drivers. Although the first implementation of copy offloading
-added a single operation to the block layer for copy offloading, there seems
-to be agreement today to implement copy offloading as two operations,
-namely `REQ_COPY_IN` and `REQ_COPY_OUT`.
-
-A possible approach is as follows:
-
-* Fall back to a non-offloaded copy operation if necessary, e.g. if copy
-  offloading is not supported or if data is encrypted and the ciphertext
-  depends on the LBA. The following code may be a good starting point:
-  `drivers/md/dm-kcopyd.c`.
-* If the block driver supports copy offloading, submit the `REQ_COPY_IN`
-  operation first. The block driver stores the data ranges associated with the
-  `REQ_COPY_IN` operation.
-* Wait for completion of the `REQ_COPY_IN` operation.
-* After the `REQ_COPY_IN` operation has completed, submit the `REQ_COPY_OUT`
-  operation and include a reference to the `REQ_COPY_IN` operation. If the
-  block driver that receives the `REQ_COPY_OUT` operation receives a matching
-  `REQ_COPY_IN` operation, offload the copy operation. Otherwise report that no
-  data has been copied and let the block layer perform a non-offloaded copy
-  operation.
-
-The operation type is stored in the top bits of the `bi_opf` member of struct
-bio.  With each bio a single data buffer and a single contiguous byte range on
-the storage medium are associated. Pointers to the data buffer occur in
-`bi_io_vec[]`. The affected byte range is represented by `bi_iter.bi_sector` and
-`bi_iter.bi_size`.
-
-While the NVMe and SCSI copy offload commands both support multiple source
-ranges, XCOPY supports multiple destination ranges while the NVMe simple copy
-command supports a single destination range.
-
-Possible approaches for passing the data ranges involved in a copy operation
-from the block layer to block drivers are as follows:
-
-* Attach a bio to each copy offload request and encode all relevant copy
-  offload parameters in that data buffer. These parameters include source
-  device and source ranges for `REQ_COPY_IN` and destination device and
-  destination ranges for `REQ_COPY_OUT`. Let the block drivers translate these
-  parameters into something the storage device understands (NVMe simple copy
-  parameters or SCSI XCOPY parameters). Fill in the parameter structure size
-  in `bi_iter.bi_size`. Set `bi_vcnt` to 1 and fill in `bio->bi_io_vec[0]`.
-* Map each source range and each destination range onto a different bio. Link
-  all the bios with the `bi_next` pointer and attach these bios to the copy
-  offload requests. Leave `bi_vcnt` zero. This is related but not identical to
-  the approach followed by `__blkdev_issue_discard()`.
-
-I think that the first approach would require more changes in the device mapper
-than the second approach since the device mapper code knows how to split bios
-but not how to split a buffer with LBA range descriptors.
-
-The following code needs to be modified no matter how copy offloading is
-implemented:
-
-* Request cloning. The code for checking the limits before request are cloned
-  compares `blk_rq_sectors()` with `max_sectors`. This is inappropriate for
-  `REQ_COPY_*` requests.
-* Request splitting. `bio_split()` assumes that `bi_iter.bi_size` represents
-  the number of bytes affected on the medium.
-* Code related to retrying the original requests of a merged request with
-  mixed failfast attributes, e.g. `blk_rq_err_bytes()`.
-* Code related to partially completing a request, e.g. `blk_update_request()`.
-* The code for merging block layer requests.
-* `blk_mq_end_request()` since it calls `blk_update_request()` and
-  `blk_rq_bytes()`.
-* The plugging code because of the following test in the plugging code:
-  `blk_rq_bytes(last) >= BLK_PLUG_FLUSH_SIZE`.
-* The I/O accounting code (task_io_account_read()) since that code uses
-  bio_has_data() and hence skips discard, secure erase and write zeroes
-  requests:
-```
-static inline bool bio_has_data(struct bio *bio)
-{
-	return bio && bio->bi_iter.bi_size &&
-	    bio_op(bio) != REQ_OP_DISCARD &&
-	    bio_op(bio) != REQ_OP_SECURE_ERASE &&
-	    bio_op(bio) != REQ_OP_WRITE_ZEROESy;
-}
-```
-
-Block drivers will need to use the `special_vec` member of struct request to
-pass the copy offload parameters to the storage device. That member is used
-e.g. when a REQ_OP_DISCARD operation is submitted to an NVMe driver. The SCSI
-sd driver uses `special_vec` while processing an UNMAP or WRITE SAME command.
-
-## Device Mapper
-
-The device mapper may have to split a request. As an example, LVM is
-based on the dm-linear driver. A request that is submitted to an LVM volume
-has to be split if it affects multiple block devices. Copy offload requests
-that affect multiple block devices should be split or should be onloaded.
-
-The call chain for bio-based dm drivers is as follows:
-```
-dm_submit_bio(bio)
--> __split_and_process_bio(md, map, bio)
-  -> __split_and_process_non_flush(clone_info)
-    -> __clone_and_map_data_bio(clone_info, target_info, sector, len)
-      -> clone_bio(dm_target_io, bio, sector, len)
-      -> __map_bio(dm_target_io)
-        -> ti->type->map(dm_target_io, clone)
-```
-
-## NVMe
-
-Process copy offload commands by translating REQ_COPY_OUT requests into simple
-copy commands.
-
-## SCSI
-
-From inside `sd_revalidate_disk()`, query the third-party copy VPD page. Extract
-the following parameters (see also SPC-6):
-
-* MAXIMUM CSCD DESCRIPTOR COUNT
-* MAXIMUM SEGMENT DESCRIPTOR COUNT
-* MAXIMUM DESCRIPTOR LIST LENGTH
-* Supported third-party copy commands.
-* SUPPORTED CSCD DESCRIPTOR ID (0 or more)
-* ROD type descriptor (0 or more)
-* TOTAL CONCURRENT COPIES
-* MAXIMUM IDENTIFIED CONCURRENT COPIES
-* MAXIMUM SEGMENT LENGTH
-
-From inside `sd_init_command()`, translate REQ_COPY_OUT into either EXTENDED
-COPY or POPULATE TOKEN + WRITE USING TOKEN.
-
-Set the parameters in the copy offload commands as follows:
-
-* We may have to set the STR bit. From SPC-6: "A sequential striped (STR) bit
-  set to one specifies to the copy manager that the majority of the block
-  device references in the parameter list represent sequential access of
-  several block devices that are striped. This may be used by the copy manager
-  to perform reads from a copy source block device at any time and in any
-  order during processing of an EXTENDED COPY command as described in
-  6.6.5.3. A STR bit set to zero specifies to the copy manager that disk
-  references, if any, may not be sequential."
-* Set the LIST ID USAGE field to 3 and the LIST ID to 0. This means that
-  neither "held data" nor the RECEIVE COPY STATUS command are supported. This
-  improves security because the data that is being copied cannot be accessed
-  via the LIST ID.
-* We may have to set the G_SENSE (good with sense data) bit. From SPC-6: " If
-  the G _SENSE bit is set to one and the copy manager completes the EXTENDED
-  COPY command with GOOD status, then the copy manager shall include sense
-  data with the GOOD status in which the sense key is set to COMPLETED, the
-  additional sense code is set to EXTENDED COPY INFORMATION AVAILABLE, and the
-  COMMAND-SPECIFIC INFORMATION field is set to the number of segment
-  descriptors the copy manager has processed."
-* Clear the IMMED bit.
-
-## System Call Interface
-
-To submit copy offload requests from user space, we need:
-
-* A system call for passing these requests, e.g. copy_file_range() or io_uring.
-* Add a copy offload parameter format description to the user space ABI. The
-  parameters include source device, source ranges, destination device and
-  destination ranges.
-* A flag that indicates whether or not it is acceptable to fall back to
-  onloading the copy operation.
-
-## Sysfs Interface
-
-To do: define which aspects of copy offloading should be configurable through
-new sysfs parameters under /sys/block/*/queue/.
-
-## See Also
-
-* Martin Petersen, [Copy
-  Offload](https://www.mail-archive.com/linux-scsi@vger.kernel.org/msg28998.html),
-  linux-scsi, 28 May 2014.
-* Mikulas Patocka, [ANNOUNCE: SCSI XCOPY support for the kernel and device
-  mapper](https://www.mail-archive.com/linux-kernel@vger.kernel.org/msg686111.html),
-  15 July 2014.
-* [kcopyd documentation](https://www.kernel.org/doc/html/latest/admin-guide/device-mapper/kcopyd.html), kernel.org.
-* Martin K. Petersen, [Copy Offload - Here Be Dragons](http://mkp.net/pubs/xcopy.pdf), 2019-08-21.
-* Martin K. Petersen, [Re: [dm-devel] [RFC PATCH v2 1/2] block: add simple copy
-support](https://lore.kernel.org/linux-nvme/yq1blf3smcl.fsf@ca-mkp.ca.oracle.com/), linux-nvme mailing list, 2020-12-08.
-* NVM Express Organization, [NVMe - TP 4065b Simple Copy Command 2021.01.25 -
-  Ratified.pdf](https://workspace.nvmexpress.org/apps/org/workgroup/allmembers/download.php/4773/NVMe%20-%20TP%204065b%20Simple%20Copy%20Command%202021.01.25%20-%20Ratified.pdf), 2021-01-25.
-* Selvakumar S, [[RFC PATCH v5 0/4] add simple copy
-  support](https://lore.kernel.org/linux-nvme/20210219124517.79359-1-selvakuma.s1@samsung.com/),
-  linux-nvme, 2021-02-19.
-
+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
+riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
+QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
+UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
+M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
+Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
+14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
+a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
+XzCCBXAwggRYoAMCAQICDCAc2j96+IoHW5040jANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
+RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
+UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMTAyMjIxMjQzNTVaFw0yMjA5MTUxMTMwMjdaMIGm
+MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
+BgNVBAoTDUJyb2FkY29tIEluYy4xITAfBgNVBAMTGFN1Z2FuYXRoIFByYWJ1IFN1YnJhbWFuaTE0
+MDIGCSqGSIb3DQEJARYlc3VnYW5hdGgtcHJhYnUuc3VicmFtYW5pQGJyb2FkY29tLmNvbTCCASIw
+DQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJp3W6i+yVqwmKTbucNHNrAD35AKBa4GklrnUcWS
+As4Yz62jxfJOu+dcysfahgpi3JcAhTe/eRMLc5on8ReYZAYCMNJ+jpNKRuf1Abgh6nfhcNf+cuGb
+S83CJlqxdJjbnimwwbueitA/edWTFjcULNUDZZEmAPJkbHXmlTlJD8TMdR0ezem/d4niexc4RCyt
+YMUhnlcyFg+2OR0MKuT2Q714Ka0IamXFyyXhX5wD9B+ITo5hu+ZtXV2RuOXy0U2bIEQzFPVJ7QA9
+hUD4z7+jEN/0xIbuF8EJZMsb6XAT+CFOjnizM5yvGFfmupDlyQ4JuVb86R8v2AEDpXmbdnS1tDkC
+AwEAAaOCAeYwggHiMA4GA1UdDwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUH
+MAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNp
+Z24yY2EyMDIwLmNydDBBBggrBgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3Nn
+Y2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYB
+BQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAw
+SQYDVR0fBEIwQDA+oDygOoY4aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29u
+YWxzaWduMmNhMjAyMC5jcmwwMAYDVR0RBCkwJ4Elc3VnYW5hdGgtcHJhYnUuc3VicmFtYW5pQGJy
+b2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk
+1b5I3qGPzzAdBgNVHQ4EFgQURmgYmHXuw9VrKqnEjPBuviQS0CEwDQYJKoZIhvcNAQELBQADggEB
+AAp1Yt9kkxViI/9B/AQxLFmuC9wWruix0ajjegaJ/HZ6C1ky/V9QvI1MwweIhBiuk2jttOzO4h87
+rADIQnEI3bf5ccaw61CJNqc6Cb4LiEIjPF7py8f6+rHL928xCUnKqeCO2sC0A+k39bCiyHaGo432
+eXxWNXxGrLg6/2TuwgOtvbil0hWwK/Wf5ql2YiZXy8wRo9IhHoY/4cJLS/Fay8yKX8IdhEc3pNbu
+dDLaJg39U0ikF3NHtNMaXXHgh6TMs3OsWhH4+zlvkC0eSC6dvasGxmpPQPQe/0huBB8gDbzGrRg/
+cRn2ctMmNHxZO4EBJ5SzsV/lHimTk+5K39lzkzYxggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJF
+MRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQ
+ZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwgHNo/eviKB1udONIwDQYJYIZIAWUDBAIBBQCggdQwLwYJ
+KoZIhvcNAQkEMSIEIPHwGW0f0laX/1SgApzU2jcmsEhAkmPinZTdpH6cRS/VMBgGCSqGSIb3DQEJ
+AzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDUxODA1MTYzOFowaQYJKoZIhvcNAQkP
+MVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzAL
+BgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCU
+bYNGrdN0COjIizw3UzJkQ3elfWV6iCIRifLcchA3Cu6lZjaDgHLBnwaIkH6L0knbk3aUfFd17j8z
+g2Bc/GYLDT8nkXJA4am25zza98JKV0ln5qMGSElWi89bvcRLReuY0XiDDh2TTa9FA0dwqBwzmOZT
+cBOkaxfj9+4qAXMzeCGvEO90oGNSosps4WUs8+ZnWjgt3i7J08v1xEplOgy9PIJRjfGx0lM5u67m
+jT0uV8RidWVpUD9/XyEHrKuw0oNuDuyP1zunZTwIIu+U2JEi8R4WKGDi55bwahVmQBkFzdut+j4w
+3H2wsBKIOdcKpFp0Hv2WPgB0rV8iRfT9QZgk
+--0000000000008d59af05c293d0ca--
