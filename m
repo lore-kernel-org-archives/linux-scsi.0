@@ -7,48 +7,53 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86F26C433ED
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 17:45:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 939DCC43460
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 17:45:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D1A5611CE
-	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 17:45:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74C7861074
+	for <linux-scsi@archiver.kernel.org>; Tue, 18 May 2021 17:45:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351312AbhERRrN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 18 May 2021 13:47:13 -0400
-Received: from mail-pg1-f172.google.com ([209.85.215.172]:43928 "EHLO
-        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1351320AbhERRrH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2021 13:47:07 -0400
-Received: by mail-pg1-f172.google.com with SMTP id k15so7519967pgb.10
-        for <linux-scsi@vger.kernel.org>; Tue, 18 May 2021 10:45:49 -0700 (PDT)
+        id S1351341AbhERRrO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 18 May 2021 13:47:14 -0400
+Received: from mail-pj1-f43.google.com ([209.85.216.43]:35486 "EHLO
+        mail-pj1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1351329AbhERRrK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 May 2021 13:47:10 -0400
+Received: by mail-pj1-f43.google.com with SMTP id lx17-20020a17090b4b11b029015f3b32b8dbso204807pjb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 18 May 2021 10:45:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=UMCYnVrhY8njikYx66obtRsVTDVDJ+hpIeqxgmK/N90=;
-        b=pVg9BWJuSNKjRodgaAtBG6LUUDPjCTvq9l8IVDiZE9DI6mUmJ3G1QreaJh5clDREDb
-         DNzyt02N5Z5xgW2M2Ak3Lz3mQxWAR+2kvEshZsZhpU3da2Y4ujmg9vbR+4tXJbp7MetT
-         P90jxv18bfKZa9hrxek4yVhfSwq3sgSmf0eXTzrRwFxFLV6OwBXlkZdWitZjlFeJSd1p
-         4F1a8flM6VHBBlg3bmUJuJ2EW4MD1CLTj5SdnlarRPVkfoZnmIlnWpbC2odaUrrgftmT
-         u+mg3VhWCVbLhpZ3uGToBrrEvSnOLNkcQperisgNIMQHeWO2veaxb68RrjVqKpP6gVkl
-         1FLQ==
-X-Gm-Message-State: AOAM531qwKGWFml85uBg9gJluliE2kR1qO3Vo0Ykho6UMmtYZOPpRyPY
-        zrsEDE/MsmYIy3vmHHlsJMI=
-X-Google-Smtp-Source: ABdhPJzsZiaCBSdlPwT9O86drrTtkKKxRf641z6ST4t6bodvU+3sSnL8rTCfKRQ6jDNnWubdXx5A+Q==
-X-Received: by 2002:a65:4548:: with SMTP id x8mr6218790pgr.413.1621359948987;
-        Tue, 18 May 2021 10:45:48 -0700 (PDT)
+        bh=Ch7z7VSw6yzfLj0A9EnDxgqXt0vFaVpmyV0R7QVYQkc=;
+        b=BLnhn4vG2pdQV6zdRuFIRM9tX2Gyw9/OJ/R7B6yPgXt9oXvvQhasPp7TggXdbZLS+5
+         z7TuxDhhvjy7AVLZNUq6AxkgMZshqbEyQXlfNkuh1wsLEIICPvcHm1eey2kFJ5VoxUXR
+         cfYcF1UKuSHtyKKhun8+9NEamcrqHrtK+Q4unAbN8PTjXlmzXh3IGoRcnXQmseZ1Hv9K
+         YXPDg+SBpDjPdUemK+/MYZRS/eyGGzjMbmevhRm44NQZApZNUQjCtgWkASYdZzhIENve
+         gct9/0wrYUEmiyDN4YTfNNj0ghU89hoZmjgSrTm4aPgKLCyAbFMvFqMlIe712j699jPA
+         eWfg==
+X-Gm-Message-State: AOAM530G0YVks59aTekOq8Tg/+xbFV085rryvuGt84V2yfx/+u0QuxZf
+        mpAXaaUCd0562uBu3W149uOHyEnX32zQMQ==
+X-Google-Smtp-Source: ABdhPJyB8v1L4HwUTDn6bv1dbQ0HZ2O1DqSvZoDYtNuXS92DsrWg7XtK9lhnk3U41EYgJjw9rgvuPw==
+X-Received: by 2002:a17:90a:5406:: with SMTP id z6mr6455301pjh.130.1621359952418;
+        Tue, 18 May 2021 10:45:52 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:4ae4:fc49:eafe:4150])
-        by smtp.gmail.com with ESMTPSA id z27sm12656920pfr.46.2021.05.18.10.45.48
+        by smtp.gmail.com with ESMTPSA id z27sm12656920pfr.46.2021.05.18.10.45.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 18 May 2021 10:45:48 -0700 (PDT)
+        Tue, 18 May 2021 10:45:52 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Matthew Wilcox <willy@infradead.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 44/50] sym53c8xx: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Tue, 18 May 2021 10:44:44 -0700
-Message-Id: <20210518174450.20664-45-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH v2 45/50] ufs: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Tue, 18 May 2021 10:44:45 -0700
+Message-Id: <20210518174450.20664-46-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210518174450.20664-1-bvanassche@acm.org>
 References: <20210518174450.20664-1-bvanassche@acm.org>
@@ -63,21 +68,90 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/sym53c8xx_2/sym_glue.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index d9a045f9858c..04cd28c268f2 100644
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -502,8 +502,8 @@ static int sym53c8xx_queue_command_lck(struct scsi_cmnd *cmd,
- 	 *  Shorten our settle_time if needed for 
- 	 *  this command not to time out.
- 	 */
--	if (np->s.settle_time_valid && cmd->request->timeout) {
--		unsigned long tlimit = jiffies + cmd->request->timeout;
-+	if (np->s.settle_time_valid && scsi_cmd_to_rq(cmd)->timeout) {
-+		unsigned long tlimit = jiffies + scsi_cmd_to_rq(cmd)->timeout;
- 		tlimit -= SYM_CONF_TIMER_INTERVAL*2;
- 		if (time_after(np->s.settle_time, tlimit)) {
- 			np->s.settle_time = tlimit;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index d543864df7c2..7d30b5f04204 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -379,6 +379,8 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 	}
+ 
+ 	if (cmd) { /* data phase exists */
++		struct request *rq = scsi_cmd_to_rq(cmd);
++
+ 		/* trace UPIU also */
+ 		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
+ 		opcode = cmd->cmnd[0];
+@@ -387,17 +389,15 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 			 * Currently we only fully trace read(10) and write(10)
+ 			 * commands
+ 			 */
+-			if (cmd->request && cmd->request->bio)
+-				lba = cmd->request->bio->bi_iter.bi_sector;
++			if (rq->bio)
++				lba = rq->bio->bi_iter.bi_sector;
+ 			transfer_len = be32_to_cpu(
+ 				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
+ 			if (opcode == WRITE_10)
+ 				group_id = lrbp->cmd->cmnd[6];
+ 		} else if (opcode == UNMAP) {
+-			if (cmd->request) {
+-				lba = scsi_get_lba(cmd);
+-				transfer_len = blk_rq_bytes(cmd->request);
+-			}
++			lba = scsi_get_lba(cmd);
++			transfer_len = blk_rq_bytes(rq);
+ 		}
+ 	}
+ 
+@@ -2058,7 +2058,7 @@ static void ufshcd_update_monitor(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	int dir = ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
+ 
+ 	if (dir >= 0 && hba->monitor.nr_queued[dir] > 0) {
+-		struct request *req = lrbp->cmd->request;
++		struct request *req = scsi_cmd_to_rq(lrbp->cmd);
+ 		struct ufs_hba_monitor *m = &hba->monitor;
+ 		ktime_t now, inc, lat;
+ 
+@@ -2677,11 +2677,11 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	hba = shost_priv(host);
+ 
+-	tag = cmd->request->tag;
++	tag = scsi_cmd_to_rq(cmd)->tag;
+ 	if (!ufshcd_valid_tag(hba, tag)) {
+ 		dev_err(hba->dev,
+-			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
+-			__func__, tag, cmd, cmd->request);
++			"%s: invalid command tag %d: cmd=0x%p, scsi_cmd_to_rq=0x%p",
++			__func__, tag, cmd, scsi_cmd_to_rq(cmd));
+ 		BUG();
+ 	}
+ 
+@@ -2716,7 +2716,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+ 	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba) ? true : false;
+ 
+-	ufshcd_prepare_lrbp_crypto(cmd->request, lrbp);
++	ufshcd_prepare_lrbp_crypto(scsi_cmd_to_rq(cmd), lrbp);
+ 
+ 	lrbp->req_abort_skip = false;
+ 
+@@ -6965,12 +6965,12 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 
+ 	host = cmd->device->host;
+ 	hba = shost_priv(host);
+-	tag = cmd->request->tag;
++	tag = scsi_cmd_to_rq(cmd)->tag;
+ 	lrbp = &hba->lrb[tag];
+ 	if (!ufshcd_valid_tag(hba, tag)) {
+ 		dev_err(hba->dev,
+-			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
+-			__func__, tag, cmd, cmd->request);
++			"%s: invalid command tag %d: cmd=0x%p, scsi_cmd_to_rq=0x%p",
++			__func__, tag, cmd, scsi_cmd_to_rq(cmd));
+ 		BUG();
+ 	}
+ 
