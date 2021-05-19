@@ -2,146 +2,70 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7BE1C433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 10:11:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27CE6C433ED
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 10:14:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 899286112F
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 10:11:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 019066135C
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 10:14:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345559AbhESKMv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 May 2021 06:12:51 -0400
-Received: from stargate.chelsio.com ([12.32.117.8]:26381 "EHLO
-        stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345366AbhESKMt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2021 06:12:49 -0400
-Received: from fcoe-test11.asicdesigners.com (fcoe-test11.blr.asicdesigners.com [10.193.185.180])
-        by stargate.chelsio.com (8.13.8/8.13.8) with ESMTP id 14JABOhL031647;
-        Wed, 19 May 2021 03:11:25 -0700
-From:   Varun Prakash <varun@chelsio.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        varun@chelsio.com, <stable@vger.kernel.org>
-Subject: [PATCH] scsi: target: cxgbit: unmap DMA buffer before calling target_execute_cmd()
-Date:   Wed, 19 May 2021 15:41:22 +0530
-Message-Id: <1621419082-3330-1-git-send-email-varun@chelsio.com>
-X-Mailer: git-send-email 2.0.2
+        id S1347506AbhESKPt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 May 2021 06:15:49 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:3598 "EHLO
+        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347574AbhESKPd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2021 06:15:33 -0400
+Received: from dggems705-chm.china.huawei.com (unknown [172.30.72.59])
+        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4FlTDp0Z6TzmWJl;
+        Wed, 19 May 2021 18:11:54 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ dggems705-chm.china.huawei.com (10.3.19.182) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Wed, 19 May 2021 18:14:03 +0800
+Received: from [10.47.87.246] (10.47.87.246) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 19 May
+ 2021 11:14:00 +0100
+Subject: Re: [PATCH v2 25/50] libsas: Use scsi_cmd_to_rq() instead of
+ scsi_cmnd.request
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Luo Jiaxing <luojiaxing@huawei.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Jolly Shah <jollys@google.com>,
+        Liu Shixin <liushixin2@huawei.com>
+References: <20210518174450.20664-1-bvanassche@acm.org>
+ <20210518174450.20664-26-bvanassche@acm.org>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <dc764d20-75d4-2968-f26f-63850730a919@huawei.com>
+Date:   Wed, 19 May 2021 11:12:57 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
+MIME-Version: 1.0
+In-Reply-To: <20210518174450.20664-26-bvanassche@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.87.246]
+X-ClientProxiedBy: lhreml745-chm.china.huawei.com (10.201.108.195) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Instead of calling dma_unmap_sg() after completing WRITE I/O,
-call dma_unmap_sg() before calling target_execute_cmd() to sync
-the DMA buffer.
+On 18/05/2021 18:44, Bart Van Assche wrote:
+> Prepare for removal of the request pointer by using scsi_cmd_to_rq()
+> instead. This patch does not change any functionality.
+> 
+> Signed-off-by: Bart Van Assche<bvanassche@acm.org>
 
-Cc: <stable@vger.kernel.org> # 5.4+
-Signed-off-by: Varun Prakash <varun@chelsio.com>
----
- drivers/target/iscsi/cxgbit/cxgbit_ddp.c    | 19 ++++++++++---------
- drivers/target/iscsi/cxgbit/cxgbit_target.c | 21 ++++++++++++++++++---
- 2 files changed, 28 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-index af35251..b044999 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-@@ -265,12 +265,13 @@ void cxgbit_unmap_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
- 	struct cxgbit_cmd *ccmd = iscsit_priv_cmd(cmd);
- 
- 	if (ccmd->release) {
--		struct cxgbi_task_tag_info *ttinfo = &ccmd->ttinfo;
--
--		if (ttinfo->sgl) {
-+		if (cmd->se_cmd.se_cmd_flags & SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC) {
-+			put_page(sg_page(&ccmd->sg));
-+		} else {
- 			struct cxgbit_sock *csk = conn->context;
- 			struct cxgbit_device *cdev = csk->com.cdev;
- 			struct cxgbi_ppm *ppm = cdev2ppm(cdev);
-+			struct cxgbi_task_tag_info *ttinfo = &ccmd->ttinfo;
- 
- 			/* Abort the TCP conn if DDP is not complete to
- 			 * avoid any possibility of DDP after freeing
-@@ -280,14 +281,14 @@ void cxgbit_unmap_cmd(struct iscsi_conn *conn, struct iscsi_cmd *cmd)
- 				     cmd->se_cmd.data_length))
- 				cxgbit_abort_conn(csk);
- 
-+			if (unlikely(ttinfo->sgl)) {
-+				dma_unmap_sg(&ppm->pdev->dev, ttinfo->sgl,
-+					     ttinfo->nents, DMA_FROM_DEVICE);
-+				ttinfo->nents = 0;
-+				ttinfo->sgl = NULL;
-+			}
- 			cxgbi_ppm_ppod_release(ppm, ttinfo->idx);
--
--			dma_unmap_sg(&ppm->pdev->dev, ttinfo->sgl,
--				     ttinfo->nents, DMA_FROM_DEVICE);
--		} else {
--			put_page(sg_page(&ccmd->sg));
- 		}
--
- 		ccmd->release = false;
- 	}
- }
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_target.c b/drivers/target/iscsi/cxgbit/cxgbit_target.c
-index b926e1d..282297f 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_target.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_target.c
-@@ -997,17 +997,18 @@ static int cxgbit_handle_iscsi_dataout(struct cxgbit_sock *csk)
- 	struct scatterlist *sg_start;
- 	struct iscsi_conn *conn = csk->conn;
- 	struct iscsi_cmd *cmd = NULL;
-+	struct cxgbit_cmd *ccmd;
-+	struct cxgbi_task_tag_info *ttinfo;
- 	struct cxgbit_lro_pdu_cb *pdu_cb = cxgbit_rx_pdu_cb(csk->skb);
- 	struct iscsi_data *hdr = (struct iscsi_data *)pdu_cb->hdr;
- 	u32 data_offset = be32_to_cpu(hdr->offset);
--	u32 data_len = pdu_cb->dlen;
-+	u32 data_len = ntoh24(hdr->dlength);
- 	int rc, sg_nents, sg_off;
- 	bool dcrc_err = false;
- 
- 	if (pdu_cb->flags & PDUCBF_RX_DDP_CMP) {
- 		u32 offset = be32_to_cpu(hdr->offset);
- 		u32 ddp_data_len;
--		u32 payload_length = ntoh24(hdr->dlength);
- 		bool success = false;
- 
- 		cmd = iscsit_find_cmd_from_itt_or_dump(conn, hdr->itt, 0);
-@@ -1022,7 +1023,7 @@ static int cxgbit_handle_iscsi_dataout(struct cxgbit_sock *csk)
- 		cmd->data_sn = be32_to_cpu(hdr->datasn);
- 
- 		rc = __iscsit_check_dataout_hdr(conn, (unsigned char *)hdr,
--						cmd, payload_length, &success);
-+						cmd, data_len, &success);
- 		if (rc < 0)
- 			return rc;
- 		else if (!success)
-@@ -1060,6 +1061,20 @@ static int cxgbit_handle_iscsi_dataout(struct cxgbit_sock *csk)
- 		cxgbit_skb_copy_to_sg(csk->skb, sg_start, sg_nents, skip);
- 	}
- 
-+	ccmd = iscsit_priv_cmd(cmd);
-+	ttinfo = &ccmd->ttinfo;
-+
-+	if (ccmd->release && ttinfo->sgl &&
-+	    (cmd->se_cmd.data_length ==	(cmd->write_data_done + data_len))) {
-+		struct cxgbit_device *cdev = csk->com.cdev;
-+		struct cxgbi_ppm *ppm = cdev2ppm(cdev);
-+
-+		dma_unmap_sg(&ppm->pdev->dev, ttinfo->sgl, ttinfo->nents,
-+			     DMA_FROM_DEVICE);
-+		ttinfo->nents = 0;
-+		ttinfo->sgl = NULL;
-+	}
-+
- check_payload:
- 
- 	rc = iscsit_check_dataout_payload(cmd, hdr, dcrc_err);
--- 
-2.0.2
-
+Tested-by: John Garry <john.garry@huawei.com>
+Reviewed-by: John Garry <john.garry@huawei.com>
