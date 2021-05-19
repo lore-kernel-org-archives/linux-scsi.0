@@ -2,74 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29340C433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 20:21:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D65A5C43460
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 20:21:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02519611C2
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 20:21:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE978611C2
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 20:21:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229674AbhESUWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 May 2021 16:22:25 -0400
-Received: from mail-pg1-f171.google.com ([209.85.215.171]:35518 "EHLO
-        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229638AbhESUWY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2021 16:22:24 -0400
-Received: by mail-pg1-f171.google.com with SMTP id m190so10268584pga.2
-        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 13:21:04 -0700 (PDT)
+        id S229932AbhESUW0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 May 2021 16:22:26 -0400
+Received: from mail-pg1-f179.google.com ([209.85.215.179]:41761 "EHLO
+        mail-pg1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229638AbhESUWZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2021 16:22:25 -0400
+Received: by mail-pg1-f179.google.com with SMTP id t30so10248892pgl.8
+        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 13:21:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=1lKuVpmpAgB4kht69eY1AHzmU1UZrTex5nuPNtqWcys=;
-        b=XxWlymDxy/9X47bbfNNo79cABftC/GNPBeohlrxjCfzYVkQ9AJHsP7fqct8xtZTKU+
-         KSGmBQSIjfm+IelBfm7BTvgYDR+SR8+5x6TqHNuDLVDPEQY9v/IYh2CJmizD6Sp86qQ7
-         QMkEIKK8cL7b8wuOPKieDs+vmn054zX86LYd4NvCqDxx86zAsTV6whiHGAB0Z6LAQ+Km
-         eHf3C9jatZWY8MGpfTW5MyH31AaDJ45B7KpO6jYeuYivFh5GooeCW7kAssBumhcMM6/M
-         jg2kviZUORG+1BHX2ZjJbu8maE4rM2lXma+obpar9zYhkjFTW9ggRUKTzUxMEx048uHC
-         uilQ==
-X-Gm-Message-State: AOAM5325qC/xA2sEHz2do4DmRBWo4jbJ6KPU6xL8Ha//XNwHJpEemx23
-        gV7rarbtj0KBXgeSHiLM6mda4E8Viv4=
-X-Google-Smtp-Source: ABdhPJzfqxxTRCa4pLmlsQ865gdeBi9qDC7AZWEvhpOBC9qYimfp74ajcuW2sjN1qxf6+ydYtOJvug==
-X-Received: by 2002:a63:5a5d:: with SMTP id k29mr864317pgm.215.1621455664199;
-        Wed, 19 May 2021 13:21:04 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=ztPPd3INkbmgPeFhAZR1nkL0dIMDdjV8ZJYXkaKrN7w=;
+        b=SKLsx0/6qWjOLsfF+bc4uCDyu+ZIDaZZQcxV8cnsB1RsqVLq8gCAw9R/yUeV/zU2hR
+         PpCZkTXN6zNdFB5zXxDXLim3FNu8JFw2T9wuAaW1Hi17ZHyXcs9wbcPfykbDgcbm5NqN
+         5Wl1Kqpt6kgwwr0JrnX0Y+v4y0UfxD+wRxrGTyLfucWG9t/3MkzGxYp+rfm2hFGGtG6A
+         SNU+rrPyYaB6jCRHZ6JoiSzXzWWIQqzhAEREtYMSJaQv6malMKy2tcRQLdyHvfZmDf3U
+         N6rCSA/5unEcEcCR8e2dUJaZZMQ+ZmRZTRQNT46tLkDTs84RVUNhTPT1AOKm9A52mqcV
+         Dkeg==
+X-Gm-Message-State: AOAM530yjSko0ypPlSl9Qq+n4gLP33oOKbf9KANhzjfL6iSySYz83f+O
+        ZQf8DXoom96ZhqZsL7HE2nI=
+X-Google-Smtp-Source: ABdhPJyF8h3K5KLPB4HNTotSbO2SdQeKTN/k09o3QFFd3sCJL/KAlDKGEKc8/5G46eqEQKJJmCgdKQ==
+X-Received: by 2002:a63:1626:: with SMTP id w38mr905033pgl.420.1621455665497;
+        Wed, 19 May 2021 13:21:05 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:db5a:2bf3:3617:be1c])
-        by smtp.gmail.com with ESMTPSA id o4sm220338pfk.15.2021.05.19.13.21.03
+        by smtp.gmail.com with ESMTPSA id o4sm220338pfk.15.2021.05.19.13.21.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 May 2021 13:21:03 -0700 (PDT)
+        Wed, 19 May 2021 13:21:04 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 0/2] Two additional UFS patches
-Date:   Wed, 19 May 2021 13:20:56 -0700
-Message-Id: <20210519202058.12634-1-bvanassche@acm.org>
+        Bart Van Assche <bvanassche@acm.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH 1/2] ufs: Suppress false positive unhandled interrupt messages
+Date:   Wed, 19 May 2021 13:20:57 -0700
+Message-Id: <20210519202058.12634-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210519202058.12634-1-bvanassche@acm.org>
+References: <20210519202058.12634-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+From ufshcd_transfer_req_compl():
+<quote>Resetting interrupt aggregation counters first and reading the
+DOOR_BELL afterward allows us to handle all the completed requests.
+In order to prevent other interrupts starvation the DB is read once
+after reset. The down side of this solution is the possibility of
+false interrupt if device completes another request after resetting
+aggregation and before reading the DB.</quote>
 
-There are two UFS patches in this series. One bug fix and one cleanup patch.
-Please consider the bug fix for kernel v5.13 and the cleanup patch for kernel
-v5.14.
+This patch prevents that ufshcd_intr() reports a false positive
+"Unhandled interrupt" message if the above scenario is triggered.
 
-Thanks,
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Bean Huo <beanhuo@micron.com>
+Cc: Jaegeuk Kim <jaegeuk@kernel.org>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Suggested-by: Jaegeuk Kim <jaegeuk@kernel.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Bart.
-
-Bart Van Assche (2):
-  ufs: Suppress false positive unhandled interrupt messages
-  ufs: Use designated initializers in ufs_pm_lvl_states[]
-
- drivers/scsi/ufs/ufshcd.c | 17 +++++++++--------
- drivers/scsi/ufs/ufshcd.h | 14 +++++++-------
- 2 files changed, 16 insertions(+), 15 deletions(-)
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index c541b6953863..d330eae02890 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6454,7 +6454,8 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
+ 	}
+ 
+ 	if (enabled_intr_status && retval == IRQ_NONE &&
+-				!ufshcd_eh_in_progress(hba)) {
++	    (!(enabled_intr_status & UTP_TRANSFER_REQ_COMPL) ||
++	     hba->outstanding_reqs) && !ufshcd_eh_in_progress(hba)) {
+ 		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x (0x%08x, 0x%08x)\n",
+ 					__func__,
+ 					intr_status,
