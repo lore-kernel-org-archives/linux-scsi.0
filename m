@@ -2,121 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 909EFC433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 19:25:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29340C433B4
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 20:21:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 717EC6112F
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 19:25:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02519611C2
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 20:21:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231747AbhEST1Q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 May 2021 15:27:16 -0400
-Received: from mxout02.lancloud.ru ([45.84.86.82]:56794 "EHLO
-        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229668AbhEST1P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2021 15:27:15 -0400
-X-Greylist: delayed 336 seconds by postgrey-1.27 at vger.kernel.org; Wed, 19 May 2021 15:27:14 EDT
-Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru 4FA5920B3836
-Received: from LanCloud
-Received: from LanCloud
-Received: from LanCloud
-From:   Sergey Shtylyov <s.shtylyov@omp.ru>
-Subject: [PATCH] scsi: hisi_sas: propagate errors in interrupt_init_v1_hw()
-To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, John Garry <john.garry@huawei.com>
-Organization: Open Mobile Platform
-Message-ID: <49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru>
-Date:   Wed, 19 May 2021 22:20:15 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.8.1
+        id S229674AbhESUWZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 May 2021 16:22:25 -0400
+Received: from mail-pg1-f171.google.com ([209.85.215.171]:35518 "EHLO
+        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229638AbhESUWY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2021 16:22:24 -0400
+Received: by mail-pg1-f171.google.com with SMTP id m190so10268584pga.2
+        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 13:21:04 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=1lKuVpmpAgB4kht69eY1AHzmU1UZrTex5nuPNtqWcys=;
+        b=XxWlymDxy/9X47bbfNNo79cABftC/GNPBeohlrxjCfzYVkQ9AJHsP7fqct8xtZTKU+
+         KSGmBQSIjfm+IelBfm7BTvgYDR+SR8+5x6TqHNuDLVDPEQY9v/IYh2CJmizD6Sp86qQ7
+         QMkEIKK8cL7b8wuOPKieDs+vmn054zX86LYd4NvCqDxx86zAsTV6whiHGAB0Z6LAQ+Km
+         eHf3C9jatZWY8MGpfTW5MyH31AaDJ45B7KpO6jYeuYivFh5GooeCW7kAssBumhcMM6/M
+         jg2kviZUORG+1BHX2ZjJbu8maE4rM2lXma+obpar9zYhkjFTW9ggRUKTzUxMEx048uHC
+         uilQ==
+X-Gm-Message-State: AOAM5325qC/xA2sEHz2do4DmRBWo4jbJ6KPU6xL8Ha//XNwHJpEemx23
+        gV7rarbtj0KBXgeSHiLM6mda4E8Viv4=
+X-Google-Smtp-Source: ABdhPJzfqxxTRCa4pLmlsQ865gdeBi9qDC7AZWEvhpOBC9qYimfp74ajcuW2sjN1qxf6+ydYtOJvug==
+X-Received: by 2002:a63:5a5d:: with SMTP id k29mr864317pgm.215.1621455664199;
+        Wed, 19 May 2021 13:21:04 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:db5a:2bf3:3617:be1c])
+        by smtp.gmail.com with ESMTPSA id o4sm220338pfk.15.2021.05.19.13.21.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 19 May 2021 13:21:03 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/2] Two additional UFS patches
+Date:   Wed, 19 May 2021 13:20:56 -0700
+Message-Id: <20210519202058.12634-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
- LFEX1908.lancloud.ru (fd00:f066::208)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-After the commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have
-the error codes returned by platform_get_irq() ready for the propagation
-upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
-probing. Let's propagate the error codes from devm_request_irq() as well
-since I don't see the reason to override them with -ENOENT...
+Hi Martin,
 
-Fixes: df2d8213d9e3 ("hisi_sas: use platform_get_irq()")
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+There are two UFS patches in this series. One bug fix and one cleanup patch.
+Please consider the bug fix for kernel v5.13 and the cleanup patch for kernel
+v5.14.
 
----
-The patch is against the 'for-next' branch of Martin Petgersen's 'scsi.git'
-repo.
+Thanks,
 
-drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+Bart.
 
-Index: scsi/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-===================================================================
---- scsi.orig/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ scsi/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1649,7 +1649,7 @@ static int interrupt_init_v1_hw(struct h
- 			if (irq < 0) {
- 				dev_err(dev, "irq init: fail map phy interrupt %d\n",
- 					idx);
--				return -ENOENT;
-+				return irq;
- 			}
- 
- 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
-@@ -1657,7 +1657,7 @@ static int interrupt_init_v1_hw(struct h
- 			if (rc) {
- 				dev_err(dev, "irq init: could not request phy interrupt %d, rc=%d\n",
- 					irq, rc);
--				return -ENOENT;
-+				return rc;
- 			}
- 		}
- 	}
-@@ -1668,7 +1668,7 @@ static int interrupt_init_v1_hw(struct h
- 		if (irq < 0) {
- 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
- 				idx);
--			return -ENOENT;
-+			return irq;
- 		}
- 
- 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
-@@ -1676,7 +1676,7 @@ static int interrupt_init_v1_hw(struct h
- 		if (rc) {
- 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
- 				irq, rc);
--			return -ENOENT;
-+			return rc;
- 		}
- 	}
- 
-@@ -1686,7 +1686,7 @@ static int interrupt_init_v1_hw(struct h
- 		if (irq < 0) {
- 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
- 				idx);
--			return -ENOENT;
-+			return irq;
- 		}
- 
- 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
-@@ -1694,7 +1694,7 @@ static int interrupt_init_v1_hw(struct h
- 		if (rc) {
- 			dev_err(dev, "irq init: could not request fatal interrupt %d, rc=%d\n",
- 				irq, rc);
--			return -ENOENT;
-+			return rc;
- 		}
- 	}
- 
+Bart Van Assche (2):
+  ufs: Suppress false positive unhandled interrupt messages
+  ufs: Use designated initializers in ufs_pm_lvl_states[]
+
+ drivers/scsi/ufs/ufshcd.c | 17 +++++++++--------
+ drivers/scsi/ufs/ufshcd.h | 14 +++++++-------
+ 2 files changed, 16 insertions(+), 15 deletions(-)
+
