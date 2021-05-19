@@ -2,180 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C13CC433B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 13:55:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58412C43460
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 14:20:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 47C026108D
-	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 13:55:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 359FB6139A
+	for <linux-scsi@archiver.kernel.org>; Wed, 19 May 2021 14:20:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241528AbhESN4U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 19 May 2021 09:56:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33100 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241071AbhESN4T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2021 09:56:19 -0400
-Received: from mail-ej1-x633.google.com (mail-ej1-x633.google.com [IPv6:2a00:1450:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7A6CC06175F;
-        Wed, 19 May 2021 06:54:59 -0700 (PDT)
-Received: by mail-ej1-x633.google.com with SMTP id s22so19886460ejv.12;
-        Wed, 19 May 2021 06:54:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=Ca29eW0paaI5oHeLYHIRQELkdNdJWMdtnbA9Gd8Xw00=;
-        b=XQ5520VfYPS4uhfAsKV4HmyAQSQ2tCZn/sk6OYgHqfM4Nlhqhl1FZ6CJqAPU4kaWV/
-         xDI3pyXdpSn+S+4ORx6MC+O0ahuQmTMbjs9QteQI8kd3bzcP2s9PfPPKYU8q3sK+Rk/J
-         7Lyra6HMchKMZwGh472YMsOP1fvhKRsgPXXDZGt0lQxjKQPPxg3oaneO/DIsjYbmT752
-         hwga9bO5A8iAPhKslG5GKNARqPKBL8VD2NihcSl/Dw30ynH62/bCIVbGmvtG5lfy5dNH
-         VouOr9/6sG2Gp2JbZopLHC9Y+YEWFWGMAYe5f3DYu9agudiHC7jIsCPXCqKgbVRyi5aP
-         5Okg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=Ca29eW0paaI5oHeLYHIRQELkdNdJWMdtnbA9Gd8Xw00=;
-        b=sg39cgJnWfEDCJvks9Gnl/c6a3Oyk1+XmZ/b7aczxRw3fSB9l2U9NmSvo7Ic64mjSt
-         wfV/W0SHnS0RCmFMuMyWJKwlEUZxUZrIywumdDinZNJ+p/n5ORLUUl1P8zau94VfGnG4
-         oeYvbX81q4fLKDSGyay+fbbSbEvxuFkPnXjfk79O3IFJcAQy3VcGCn5Y5D17Z86owISg
-         bE50nSdU5i0DiCiheenOXP+BjMfFQZMdpyXUiElspVV5mv2k/KBfMx775xlJJbiVc2rj
-         x5BAhNIegMus8w8wKsnjqBKCFM6qk6nDgDQTjgXQZ4ud1klQWrqQmbRgN0PgZ24dut1M
-         15Fg==
-X-Gm-Message-State: AOAM53302xeec3A3rfwa1H/tEHxeXABns04ATKwLGItCpu79/gqOL0Sn
-        PtRztF5Qix3oy4S0y8FCU/+G5pGiutg=
-X-Google-Smtp-Source: ABdhPJw90icdxURIyfOXsBdOpCjY8EyoMrPjfecTcJy9RD9i2aWK7vHAvw2zezBBpWpHNDW0AnwNdg==
-X-Received: by 2002:a17:906:5495:: with SMTP id r21mr13066604ejo.471.1621432498567;
-        Wed, 19 May 2021 06:54:58 -0700 (PDT)
-Received: from localhost (ipbcc11466.dynamic.kabel-deutschland.de. [188.193.20.102])
-        by smtp.gmail.com with ESMTPSA id g21sm3081341edb.92.2021.05.19.06.54.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 19 May 2021 06:54:57 -0700 (PDT)
-From:   Bodo Stroesser <bostroesser@gmail.com>
-To:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Bodo Stroesser <bostroesser@gmail.com>,
-        Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: [PATCH v3] scsi: target: tcmu: Fix xarray RCU warning
-Date:   Wed, 19 May 2021 15:54:40 +0200
-Message-Id: <20210519135440.26773-1-bostroesser@gmail.com>
-X-Mailer: git-send-email 2.12.3
+        id S1347203AbhESOWH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 19 May 2021 10:22:07 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38642 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241909AbhESOWG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 May 2021 10:22:06 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14JEFO1d101869;
+        Wed, 19 May 2021 14:20:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type : in-reply-to;
+ s=corp-2020-01-29; bh=NWXJTdpag0NA3Z5nBPPluFxqdVryRh9BEHtOH6qDsdw=;
+ b=MZHROyt0Bb1+DBlsr2p1DXCUw8+PO3qHUFz5V9FIy2hSTU8BealhEaWVSdXQydQivnC7
+ vtHvV8mqwP6M3mcvuIPoLEZ8Q/L1pfBQmOGkU8DyFhtWXhqzANRXLybIrHBSdfMmv101
+ HERBOJdB7NgY8YOCwfSpHndzxMEyF1Tdf7f70WpAat5/xW097tQtZthD7OeHj+JoNxRp
+ /+OiczBQShqrMUWi70if2HwnzFnLTJtFeahif20bUIAxrb54yLy+IYaVAQBLh71YmR6x
+ Kdpp5xV/tS9OiwCRtgmuzaKZohKHiEcV1RxDaGUbqYCx9NuEdaDAzUSp0G0ZSpNRczN8 Kw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 38j6xnhp6g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 May 2021 14:20:38 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14JEEYMm026477;
+        Wed, 19 May 2021 14:20:38 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by userp3020.oracle.com with ESMTP id 38n490r567-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 May 2021 14:20:38 +0000
+Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 14JEKbKF038131;
+        Wed, 19 May 2021 14:20:37 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 38n490r55y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 19 May 2021 14:20:37 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id 14JEKaX2006668;
+        Wed, 19 May 2021 14:20:36 GMT
+Received: from mwanda (/41.212.42.34)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 19 May 2021 14:20:35 +0000
+Date:   Wed, 19 May 2021 17:20:27 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Dan Williams <dan.j.williams@intel.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Jacek Danecki <jacek.danecki@intel.com>,
+        James Bottomley <JBottomley@parallels.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: libsas: use _safe() loop in sas_resume_port()
+Message-ID: <YKUeq6gwfGcvvhty@mwanda>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210518082855.GB32682@kadam>
+X-Mailer: git-send-email haha only kidding
+X-Proofpoint-GUID: eiWzx_JHoZsIUKMcKgdqTGrepn9ltPPr
+X-Proofpoint-ORIG-GUID: eiWzx_JHoZsIUKMcKgdqTGrepn9ltPPr
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9988 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 mlxscore=0
+ mlxlogscore=999 adultscore=0 malwarescore=0 priorityscore=1501
+ phishscore=0 suspectscore=0 lowpriorityscore=0 bulkscore=0 clxscore=1011
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104190000 definitions=main-2105190089
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit f5ce815f34bc ("scsi: target: tcmu: Support DATA_BLOCK_SIZE = N *
-PAGE_SIZE") introduced xas_next() calls to iterate xarray elements.
-These calls triggered the WARNING "suspicious RCU usage" at tcmu device
-set up [1]. In the call stack of xas_next(), xas_load() was called.
-According to its comment, this function requires "the xa_lock or the RCU
-lock".
+If sas_notify_lldd_dev_found() fails then this code calls:
 
-To avoid the warning
- - guard the small loop calling xas_next() in tcmu_get_empty_block with
-   RCU lock
- - In the large loop in tcmu_copy_data using RCU lock would possibly
-   disable preemtion for a long time (copy multi MBs). Therefore replace
-   XA_STATE, xas_set and xas_next with a single xa_load.
+	sas_unregister_dev(port, dev);
 
-[1]
+which removes "dev", our list iterator, from the list.  This could
+lead to an endless loop.  We need to use list_for_each_entry_safe().
 
-[ 1899.867091] =============================
-[ 1899.871199] WARNING: suspicious RCU usage
-[ 1899.875310] 5.13.0-rc1+ #41 Not tainted
-[ 1899.879222] -----------------------------
-[ 1899.883299] include/linux/xarray.h:1182 suspicious rcu_dereference_check() usage!
-[ 1899.890940] other info that might help us debug this:
-[ 1899.899082] rcu_scheduler_active = 2, debug_locks = 1
-[ 1899.905719] 3 locks held by kworker/0:1/1368:
-[ 1899.910161]  #0: ffffa1f8c8b98738 ((wq_completion)target_submission){+.+.}-{0:0}, at: process_one_work+0x1ee/0x580
-[ 1899.920732]  #1: ffffbd7040cd7e78 ((work_completion)(&q->sq.work)){+.+.}-{0:0}, at: process_one_work+0x1ee/0x580
-[ 1899.931146]  #2: ffffa1f8d1c99768 (&udev->cmdr_lock){+.+.}-{3:3}, at: tcmu_queue_cmd+0xea/0x160 [target_core_user]
-[ 1899.941678] stack backtrace:
-[ 1899.946093] CPU: 0 PID: 1368 Comm: kworker/0:1 Not tainted 5.13.0-rc1+ #41
-[ 1899.953070] Hardware name: System manufacturer System Product Name/PRIME Z270-A, BIOS 1302 03/15/2018
-[ 1899.962459] Workqueue: target_submission target_queued_submit_work [target_core_mod]
-[ 1899.970337] Call Trace:
-[ 1899.972839]  dump_stack+0x6d/0x89
-[ 1899.976222]  xas_descend+0x10e/0x120
-[ 1899.979875]  xas_load+0x39/0x50
-[ 1899.983077]  tcmu_get_empty_blocks+0x115/0x1c0 [target_core_user]
-[ 1899.989318]  queue_cmd_ring+0x1da/0x630 [target_core_user]
-[ 1899.994897]  ? rcu_read_lock_sched_held+0x3f/0x70
-[ 1899.999695]  ? trace_kmalloc+0xa6/0xd0
-[ 1900.003501]  ? __kmalloc+0x205/0x380
-[ 1900.007167]  tcmu_queue_cmd+0x12f/0x160 [target_core_user]
-[ 1900.012746]  __target_execute_cmd+0x23/0xa0 [target_core_mod]
-[ 1900.018589]  transport_generic_new_cmd+0x1f3/0x370 [target_core_mod]
-[ 1900.025046]  transport_handle_cdb_direct+0x34/0x50 [target_core_mod]
-[ 1900.031517]  target_queued_submit_work+0x43/0xe0 [target_core_mod]
-[ 1900.037837]  process_one_work+0x268/0x580
-[ 1900.041952]  ? process_one_work+0x580/0x580
-[ 1900.046195]  worker_thread+0x55/0x3b0
-[ 1900.049921]  ? process_one_work+0x580/0x580
-[ 1900.054192]  kthread+0x143/0x160
-[ 1900.057499]  ? kthread_create_worker_on_cpu+0x40/0x40
-[ 1900.062661]  ret_from_fork+0x1f/0x30
-
-Fixes: f5ce815f34bc ("scsi: target: tcmu: Support DATA_BLOCK_SIZE = N * PAGE_SIZE")
-Reported-by: Shin'ichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
+Fixes: 303694eeee5e ("[SCSI] libsas: suspend / resume support")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 ---
-Changes from v2:
-* In the large loop of tcmu_copy_data use xa_load instead of xas_*.
+ drivers/scsi/libsas/sas_port.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Changes from v1:
-* Used xas_(un)lock() instead of rcu_read_(un)lock() for the large loop
----
- drivers/target/target_core_user.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 9866d7b49ab8..806f64a6a779 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -516,8 +516,10 @@ static inline int tcmu_get_empty_block(struct tcmu_dev *udev,
- 	dpi = dbi * udev->data_pages_per_blk;
- 	/* Count the number of already allocated pages */
- 	xas_set(&xas, dpi);
-+	rcu_read_lock();
- 	for (cnt = 0; xas_next(&xas) && cnt < page_cnt;)
- 		cnt++;
-+	rcu_read_unlock();
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index 19cf418928fa..e3d03d744713 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -25,7 +25,7 @@ static bool phy_is_wideport_member(struct asd_sas_port *port, struct asd_sas_phy
  
- 	for (i = cnt; i < page_cnt; i++) {
- 		/* try to get new page from the mm */
-@@ -699,11 +701,10 @@ static inline void tcmu_copy_data(struct tcmu_dev *udev,
- 				  struct scatterlist *sg, unsigned int sg_nents,
- 				  struct iovec **iov, size_t data_len)
+ static void sas_resume_port(struct asd_sas_phy *phy)
  {
--	XA_STATE(xas, &udev->data_pages, 0);
- 	/* start value of dbi + 1 must not be a valid dbi */
- 	int dbi = -2;
- 	size_t page_remaining, cp_len;
--	int page_cnt, page_inx;
-+	int page_cnt, page_inx, dpi;
- 	struct sg_mapping_iter sg_iter;
- 	unsigned int sg_flags;
- 	struct page *page;
-@@ -726,9 +727,10 @@ static inline void tcmu_copy_data(struct tcmu_dev *udev,
- 		if (page_cnt > udev->data_pages_per_blk)
- 			page_cnt = udev->data_pages_per_blk;
+-	struct domain_device *dev;
++	struct domain_device *dev, *n;
+ 	struct asd_sas_port *port = phy->port;
+ 	struct sas_ha_struct *sas_ha = phy->ha;
+ 	struct sas_internal *si = to_sas_internal(sas_ha->core.shost->transportt);
+@@ -44,7 +44,7 @@ static void sas_resume_port(struct asd_sas_phy *phy)
+ 	 * 1/ presume every device came back
+ 	 * 2/ force the next revalidation to check all expander phys
+ 	 */
+-	list_for_each_entry(dev, &port->dev_list, dev_list_node) {
++	list_for_each_entry_safe(dev, n, &port->dev_list, dev_list_node) {
+ 		int i, rc;
  
--		xas_set(&xas, dbi * udev->data_pages_per_blk);
--		for (page_inx = 0; page_inx < page_cnt && data_len; page_inx++) {
--			page = xas_next(&xas);
-+		dpi = dbi * udev->data_pages_per_blk;
-+		for (page_inx = 0; page_inx < page_cnt && data_len;
-+		     page_inx++, dpi++) {
-+			page = xa_load(&udev->data_pages, dpi);
- 
- 			if (direction == TCMU_DATA_AREA_TO_SG)
- 				flush_dcache_page(page);
+ 		rc = sas_notify_lldd_dev_found(dev);
 -- 
-2.12.3
+2.30.2
 
