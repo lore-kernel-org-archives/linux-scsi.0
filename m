@@ -2,101 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_NONE,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A183C43461
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:23:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E0E5C433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:49:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E360660FDC
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:23:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F097861184
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:48:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230492AbhETGZS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 May 2021 02:25:18 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:61904 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230424AbhETGZS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 02:25:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1621491838; x=1653027838;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Wp6HwlIcg67ctqyVvHN7QMtvugFozUtOOg6ywvP2lgA=;
-  b=LKQGu6PlM4phPeMcSNc03sSZ3t20u7/r5ymix/PfMnwyoeg9zY/rU7zA
-   e19UQM4qTcyQS3JQ1p/w6mNYASWmKN7Qe+U3S/5bZx8ZsPEEGVKfqYPW9
-   A6zckwPMaL05LLIQej9N13Ru88aTo3GdAojWhNJ1VQn2UTb9A7yn6n//u
-   Pb/R6HF49SUR3a0JAUisoskX9O+CqD8zzasnvaZBcYNXYsPn5LV9JumDU
-   QzBTTWfaABdQsi3bQ1DJVHix5Se5DRoZk9O5LUzTGpygWF5pjO+ZtEaQH
-   GY/NvLxgklY9t+4tJm1LAZJDCvF5CxFemA0HfudUxLgjVpoDE/bmM8zcR
-   A==;
-IronPort-SDR: 6U1IpFbD++LZRsvm0qUmRWpdg0soqgFdDvo8A75wsUYFQRTlDHJ77Sa/qJrVrxj4dR1RhcQVYK
- cjNIg+k2PoAvXxnodtptoP8xGflgEpE6P7+G0aBXG4vBssi28e7aAwHH4zkJQKnJrdMArcsHIo
- V8xqDL2FXRU3JZmrNbgWyuNvjpBL/iNVOhRUZpW5+lVzqde0mfb5zQMcK39NSN6tqKqki/8X9S
- 6BzeNp0/XNBjjgIdjOUj+1uVMVz+YSpIA5Fu2v7oHWnYMbXej2EduT/dczpNNJBf/2rn9SmWyB
- i4k=
-X-IronPort-AV: E=Sophos;i="5.82,313,1613404800"; 
-   d="scan'208";a="169351439"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 May 2021 14:23:58 +0800
-IronPort-SDR: J82/g+aE3N3k32qb/6ktjHN3i8uo47juXMP12tVcKnAsAeLXm8qAmfUgRr7J/S2YOB7QZkxcDu
- iIsLeiyD0gR5YWWCBGc/qAORPG4jnCN3AVoNffkLUyC7IAAIkAv0q6Y8wEfAONr9e2SyrfMbjW
- dXThIcpmJOjIF8WgBVBOPTrqY821QHoDrZg/HJuwzDfKWp6HXoXnMaDOqXkJaTtNJE+/96gj0l
- gVxCNJ6FH6yPVeNmn//SvWslQPSLlvXN4Xz6I5uuxjsKpDICPw9YHsRHU22Bx53oz/038NaoBB
- C0n/U4NfLYoGzHDhN9hXgLIq
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2021 23:02:20 -0700
-IronPort-SDR: WpzxWyMAbGCiCjCDX1m2OE/AlVYYI1Yp3LjmHmYPU9Z0UBKpknSQyelu3Yd7YCKQXx9MvmqtVW
- 0KPUMbVojiCh8NAfembYOfqATi1ga3LdqAIyniinkmzV7MVbZ9muVS3LBDkmeSlBZQiATT0zAD
- U4rIhpY4tolb8m7ttIlqBfvbJaI40lLnQwV1voqBm5YmrmMAoPgs+iFe9zsmqkjIz7QRU6uWec
- fqVUNSqtcsKLiPtM8zCe+CJ4zOCD2Nxb9VbxvM1reXK5M6UiQRCk1q3H/PR7Pl9mcUmmQxID5c
- uOY=
-WDCIronportException: Internal
-Received: from wdsc_char_051.sc.wdc.com (HELO xfs.sc.wdc.com) ([10.4.170.150])
-  by uls-op-cesaip01.wdc.com with ESMTP; 19 May 2021 23:23:57 -0700
-From:   Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org
-Cc:     axboe@kernel.dk, mb@lightnvm.io, martin.petersen@oracle.com,
-        clm@fb.com, josef@toxicpanda.com, dsterba@suse.com,
-        johannes.thumshirn@wdc.com, ming.lei@redhat.com, osandov@fb.com,
-        willy@infradead.org, jefflexu@linux.alibaba.com, hch@lst.de,
-        Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
-Subject: [RFC PATCH 8/8] block: fix variable type for zero pages
-Date:   Wed, 19 May 2021 23:22:55 -0700
-Message-Id: <20210520062255.4908-9-chaitanya.kulkarni@wdc.com>
-X-Mailer: git-send-email 2.24.0
-In-Reply-To: <20210520062255.4908-1-chaitanya.kulkarni@wdc.com>
-References: <20210520062255.4908-1-chaitanya.kulkarni@wdc.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S230393AbhETGuU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 May 2021 02:50:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36700 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230377AbhETGuT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 02:50:19 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F65BC06175F
+        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 23:48:57 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id kr9so547256pjb.5
+        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 23:48:57 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=areca-com-tw.20150623.gappssmtp.com; s=20150623;
+        h=message-id:subject:from:to:date:mime-version
+         :content-transfer-encoding;
+        bh=ah9WuIwTVXGma0griLbvLlZl0iobmLFJcW76a34Yh88=;
+        b=lBApfxFR50L7SAkrcK7AbLaJRoh9UBHJA+sNi5rrpWwPa618zWTCeInefEEgx/OOL+
+         cvTOwaK5LtZqkAaY+l6HTpH/cV8bvOGIvKnppo/ui611+4gOoXTcYFT9zpQNsphdNMt3
+         WlUjfD1OHKa/xngtztNx2R3CvTkSpJ6vkAw1Nbt2KQz/Zk38hCVbCbyj/HdwywqF7Qkr
+         GMow97u+nEkNmAL31hvaBzW+r3vx56kYMpvQ0WE2hkmiGl36lbRXBkKW/dLEYF5Shzit
+         puseaBdpOvmAcCWCdvJ3WVnvZvVz1DGMs09vUruoYyiO5TQnxYbJO5oX9EDvBCRLQKWg
+         gkHA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:date:mime-version
+         :content-transfer-encoding;
+        bh=ah9WuIwTVXGma0griLbvLlZl0iobmLFJcW76a34Yh88=;
+        b=invn03lDhtIWBIROtaiNYesDnJCGlafvc4i3vKaipnOKdaXnP28p9To/R6Aaw/l/U1
+         p3qHaNBu3rInFV0S/o1ijLj/kukP+N7ByspyO1jmfzrBZYLfrsva3N2YIsGnvqbKR8N8
+         mPXaFfRijhQIUo1ehvzergha2qztEX/d+c/TF/Uf8ZhP8yV4/KyJR3hYxfX5HwN/2mpB
+         sAPdIYwqT86t7CC8spOuuTfiYAmk3qh9xpSpq1I2BCiAMVHHm5ApFr5nOvjG/tw9pSY7
+         WUaPqWmKCw3JgicnvChIw++MzWP4j3DI3GF0lW5cB73gMMLw1IOTbMpIstif/os+ZWFL
+         wQTA==
+X-Gm-Message-State: AOAM53208qISlaSMSHX/7GTb1WSW/udb3Oc0/zihlTDmyqFTmzJpgpRI
+        D2rTImYDNobo4s1/Jz+qxt2+/g==
+X-Google-Smtp-Source: ABdhPJx86oszuYO3f5wkZd+NreLIoQY6r7ZAmf4Q5WL7WKAVmQDXITZUJyS300XIHajmOxJomhTZzQ==
+X-Received: by 2002:a17:902:7787:b029:f0:a7c0:f9e5 with SMTP id o7-20020a1709027787b02900f0a7c0f9e5mr4021671pll.5.1621493336697;
+        Wed, 19 May 2021 23:48:56 -0700 (PDT)
+Received: from centos78 (60-248-88-209.HINET-IP.hinet.net. [60.248.88.209])
+        by smtp.gmail.com with ESMTPSA id s2sm3426348pjz.41.2021.05.19.23.48.55
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 19 May 2021 23:48:56 -0700 (PDT)
+Message-ID: <61f706e52872255ba4a59613fd6a8b59678ff1e0.camel@areca.com.tw>
+Subject: [PATCH 0/2] scsi: arcmsr: fix doorbell status may arrived late on
+ ARC-1886
+From:   ching Huang <ching2048@areca.com.tw>
+To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
+        linux-scsi@vger.kernel.org,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Date:   Thu, 20 May 2021 14:48:55 +0800
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
+Mime-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make variable bi_size unsigned int since bio_add_page() now returns
-unsigned int.
+This patch is against to mkp's 5.14/scsi-queue.
 
-Signed-off-by: Chaitanya Kulkarni <chaitanya.kulkarni@wdc.com>
+This patch fix the doorbell status coming from IOP may late.
+The doorbell status value should not be 0.
 ---
- block/blk-lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 7b256131b20b..67062066c293 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -305,7 +305,7 @@ static int __blkdev_issue_zero_pages(struct block_device *bdev,
- {
- 	struct request_queue *q = bdev_get_queue(bdev);
- 	struct bio *bio = *biop;
--	int bi_size = 0;
-+	unsigned int bi_size = 0;
- 	unsigned int sz;
- 
- 	if (!q)
--- 
-2.24.0
 
