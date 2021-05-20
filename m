@@ -2,66 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_2 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E0E5C433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:49:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A65BC433B4
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:55:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F097861184
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:48:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CB7E60E0B
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:55:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230393AbhETGuU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 May 2021 02:50:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36700 "EHLO
+        id S230471AbhETG4p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 May 2021 02:56:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230377AbhETGuT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 02:50:19 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F65BC06175F
-        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 23:48:57 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id kr9so547256pjb.5
-        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 23:48:57 -0700 (PDT)
+        with ESMTP id S231211AbhETG4i (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 02:56:38 -0400
+Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA4B5C06138B
+        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 23:55:16 -0700 (PDT)
+Received: by mail-pg1-x536.google.com with SMTP id m190so11180640pga.2
+        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 23:55:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=areca-com-tw.20150623.gappssmtp.com; s=20150623;
         h=message-id:subject:from:to:date:mime-version
          :content-transfer-encoding;
-        bh=ah9WuIwTVXGma0griLbvLlZl0iobmLFJcW76a34Yh88=;
-        b=lBApfxFR50L7SAkrcK7AbLaJRoh9UBHJA+sNi5rrpWwPa618zWTCeInefEEgx/OOL+
-         cvTOwaK5LtZqkAaY+l6HTpH/cV8bvOGIvKnppo/ui611+4gOoXTcYFT9zpQNsphdNMt3
-         WlUjfD1OHKa/xngtztNx2R3CvTkSpJ6vkAw1Nbt2KQz/Zk38hCVbCbyj/HdwywqF7Qkr
-         GMow97u+nEkNmAL31hvaBzW+r3vx56kYMpvQ0WE2hkmiGl36lbRXBkKW/dLEYF5Shzit
-         puseaBdpOvmAcCWCdvJ3WVnvZvVz1DGMs09vUruoYyiO5TQnxYbJO5oX9EDvBCRLQKWg
-         gkHA==
+        bh=ZjS8xGFFsqpY9xijPZhdC83gL+fsRNLiJRhnKCIKzUQ=;
+        b=1iZbCenGWJR+Gq+PkkIqnRRZ+TQLPknki+a/FzBCbMOIYlG1lE5Qjy53Fbl2ArcV8v
+         eYLoTN6qmfiOKcWk81FSAO7E4N3l69XwQb/Yj2OPrtNtedrmKCjFA3dVnRyt/UgUVJ/Q
+         rFvB42vp33aMC3vCO5mD7EuC9agSBgGHoGwF2RlXyZI7DCCv89HN4wSxyX6D0DX1qqop
+         OqSuekeZsLN9drD+WumT7XJhuYGBUAv3xwrz3vFtXDi4z8b28UtpjzOAFZepPGuuUAC9
+         QxkkO7wBB0yKH22+udP4ozFjzvrNY80VMSHoJbxzrvjZ+Yfc2S6E15S4WfTH+UMJEn7U
+         gZ1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:date:mime-version
          :content-transfer-encoding;
-        bh=ah9WuIwTVXGma0griLbvLlZl0iobmLFJcW76a34Yh88=;
-        b=invn03lDhtIWBIROtaiNYesDnJCGlafvc4i3vKaipnOKdaXnP28p9To/R6Aaw/l/U1
-         p3qHaNBu3rInFV0S/o1ijLj/kukP+N7ByspyO1jmfzrBZYLfrsva3N2YIsGnvqbKR8N8
-         mPXaFfRijhQIUo1ehvzergha2qztEX/d+c/TF/Uf8ZhP8yV4/KyJR3hYxfX5HwN/2mpB
-         sAPdIYwqT86t7CC8spOuuTfiYAmk3qh9xpSpq1I2BCiAMVHHm5ApFr5nOvjG/tw9pSY7
-         WUaPqWmKCw3JgicnvChIw++MzWP4j3DI3GF0lW5cB73gMMLw1IOTbMpIstif/os+ZWFL
-         wQTA==
-X-Gm-Message-State: AOAM53208qISlaSMSHX/7GTb1WSW/udb3Oc0/zihlTDmyqFTmzJpgpRI
-        D2rTImYDNobo4s1/Jz+qxt2+/g==
-X-Google-Smtp-Source: ABdhPJx86oszuYO3f5wkZd+NreLIoQY6r7ZAmf4Q5WL7WKAVmQDXITZUJyS300XIHajmOxJomhTZzQ==
-X-Received: by 2002:a17:902:7787:b029:f0:a7c0:f9e5 with SMTP id o7-20020a1709027787b02900f0a7c0f9e5mr4021671pll.5.1621493336697;
-        Wed, 19 May 2021 23:48:56 -0700 (PDT)
+        bh=ZjS8xGFFsqpY9xijPZhdC83gL+fsRNLiJRhnKCIKzUQ=;
+        b=OwcohV181tqoWvd4RdEcUGuXdGv7VlnfvdDbcdyPu4K/OpSGaerewbGteI1oLE/0o0
+         4ER/cBAN4kogh80km2ultWareIlmTrNz5ryvXhLm0Y5UUJYyhVA+f4YZJOiOYidOQyY0
+         1hRQLwUSwUIlJ77wyt0Qt8hl63/kTzspYCV7izy9AcqpuMqFQrB33snM6zeqnQVLFmp0
+         WUViEA5rls3PSYUbsS8kRPSt2oJoz0sl38oc0i4BGjNloWDIOIvOyEY7hfR83OdvCZxq
+         9RqrgRq5BotYYgLR+UD7JuhvgnzoiJlJW5PvZoCu4cqY6GrJ1Hhp9TpV0qewhJNvi+XA
+         wFDg==
+X-Gm-Message-State: AOAM533PL0xoN7eqMrUzNB8V1GwmTXVMeBDxqetCMHeOZc9z6fU/8Pcs
+        kfR9v8lKqLBW/B05Mp5XkIim9MFXF/dpGA==
+X-Google-Smtp-Source: ABdhPJy+fHfKlDcRouTuFnvCP1d8yx1p1XIwLbfbS+jF/ATbMclvspleZhwvFtNwItf/I2fQSmy0Hg==
+X-Received: by 2002:a63:3dc5:: with SMTP id k188mr3071051pga.140.1621493716420;
+        Wed, 19 May 2021 23:55:16 -0700 (PDT)
 Received: from centos78 (60-248-88-209.HINET-IP.hinet.net. [60.248.88.209])
-        by smtp.gmail.com with ESMTPSA id s2sm3426348pjz.41.2021.05.19.23.48.55
+        by smtp.gmail.com with ESMTPSA id g202sm1160918pfb.54.2021.05.19.23.55.14
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 19 May 2021 23:48:56 -0700 (PDT)
-Message-ID: <61f706e52872255ba4a59613fd6a8b59678ff1e0.camel@areca.com.tw>
-Subject: [PATCH 0/2] scsi: arcmsr: fix doorbell status may arrived late on
+        Wed, 19 May 2021 23:55:16 -0700 (PDT)
+Message-ID: <afdfdf7eabecf14632492c4987a6b9ac6312a7ad.camel@areca.com.tw>
+Subject: [PATCH 1/2] scsi: arcmsr: fix doorbell status may arrived late on
  ARC-1886
 From:   ching Huang <ching2048@areca.com.tw>
 To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
         linux-scsi@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date:   Thu, 20 May 2021 14:48:55 +0800
+Date:   Thu, 20 May 2021 14:55:15 +0800
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
 Mime-Version: 1.0
@@ -70,10 +71,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch is against to mkp's 5.14/scsi-queue.
+From: ching Huang <ching2048@areca.com.tw>
 
 This patch fix the doorbell status coming from IOP may late.
 The doorbell status value should not be 0.
+
+Signed-off-by: ching Huang <ching2048@areca.com.tw>
 ---
 
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 930972c..98e3d57 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2419,10 +2419,18 @@ static void arcmsr_hbaD_doorbell_isr(struct AdapterControlBlock *pACB)
+ 
+ static void arcmsr_hbaE_doorbell_isr(struct AdapterControlBlock *pACB)
+ {
+-	uint32_t outbound_doorbell, in_doorbell, tmp;
++	uint32_t outbound_doorbell, in_doorbell, tmp, i;
+ 	struct MessageUnit_E __iomem *reg = pACB->pmuE;
+ 
+-	in_doorbell = readl(&reg->iobound_doorbell);
++	if (pACB->adapter_type == ACB_ADAPTER_TYPE_F) {
++		for (i = 0; i < 5; i++) {
++			in_doorbell = readl(&reg->iobound_doorbell);
++			if (in_doorbell != 0)
++				break;
++		}
++	}
++	else
++		in_doorbell = readl(&reg->iobound_doorbell);
+ 	outbound_doorbell = in_doorbell ^ pACB->in_doorbell;
+ 	do {
+ 		writel(0, &reg->host_int_status); /* clear interrupt */
 
