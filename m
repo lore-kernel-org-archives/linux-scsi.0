@@ -2,94 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9DBEC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 17:25:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CACC433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 17:50:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC077611AD
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 17:25:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A4CA613E4
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 17:50:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233620AbhETR0h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 May 2021 13:26:37 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:4705 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233209AbhETR0f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 13:26:35 -0400
-Received: from dggems704-chm.china.huawei.com (unknown [172.30.72.58])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FmGl5110Gz16QXk;
-        Fri, 21 May 2021 01:22:25 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- dggems704-chm.china.huawei.com (10.3.19.181) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Fri, 21 May 2021 01:25:11 +0800
-Received: from [10.47.87.246] (10.47.87.246) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Thu, 20 May
- 2021 18:25:09 +0100
-Subject: Re: [PATCH] scsi: core: Cap shost cmd_per_lun at can_queue
-To:     Bart Van Assche <bvanassche@acm.org>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <ming.lei@redhat.com>
-References: <1621434662-173079-1-git-send-email-john.garry@huawei.com>
- <988856ad-8e89-97e4-f8fe-54c1ca1b4a93@acm.org>
- <a838c8e2-6513-a266-f145-5bcaed0a4f96@huawei.com>
- <439c6fb8-3799-bfae-7f44-9f8c26a7bf79@acm.org>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <457d23a9-deb0-4ee1-fe7f-5a63605d9686@huawei.com>
-Date:   Thu, 20 May 2021 18:24:02 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S235381AbhETRva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 May 2021 13:51:30 -0400
+Received: from smtp05.smtpout.orange.fr ([80.12.242.127]:55744 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234489AbhETRva (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 13:51:30 -0400
+Received: from [192.168.1.18] ([86.243.172.93])
+        by mwinf5d10 with ME
+        id 75q52500B21Fzsu035q6DT; Thu, 20 May 2021 19:50:07 +0200
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Thu, 20 May 2021 19:50:07 +0200
+X-ME-IP: 86.243.172.93
+Subject: Re: [PATCH] scsi: sni_53c710: Fix a resource leak in an error
+ handling path
+To:     Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <5a97774020847f6b63e161197254d15ef1d786ea.1621485792.git.christophe.jaillet@wanadoo.fr>
+ <20210520150641.GA22843@alpha.franken.de>
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Message-ID: <37ec6fe9-170f-c282-465e-6ae7d69e623e@wanadoo.fr>
+Date:   Thu, 20 May 2021 19:50:05 +0200
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.2
 MIME-Version: 1.0
-In-Reply-To: <439c6fb8-3799-bfae-7f44-9f8c26a7bf79@acm.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <20210520150641.GA22843@alpha.franken.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.87.246]
-X-ClientProxiedBy: lhreml745-chm.china.huawei.com (10.201.108.195) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20/05/2021 17:57, Bart Van Assche wrote:
->> not be limited to 16b?
-> Maybe I'm missing something but it is not clear to me why different
-> structures in the SCSI headers use different data types for can_queue
-> and cmd_per_lun?
+Le 20/05/2021 à 17:06, Thomas Bogendoerfer a écrit :
+> On Thu, May 20, 2021 at 06:44:25AM +0200, Christophe JAILLET wrote:
+>> After a successful 'NCR_700_detect()' call, 'NCR_700_release()' must be
+>> called to release some DMA related resources, as already done in the
+>> remove function.
+>>
+>> Fixes: c27d85f3f3c5 ("[SCSI] SNI RM 53c710 driver")
+>> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+>> ---
+>>   drivers/scsi/sni_53c710.c | 1 +
+>>   1 file changed, 1 insertion(+)
+>>
+>> diff --git a/drivers/scsi/sni_53c710.c b/drivers/scsi/sni_53c710.c
+>> index 678651b9b4dd..f6d60d542207 100644
+>> --- a/drivers/scsi/sni_53c710.c
+>> +++ b/drivers/scsi/sni_53c710.c
+>> @@ -98,6 +98,7 @@ static int snirm710_probe(struct platform_device *dev)
+>>   
+>>    out_put_host:
+>>   	scsi_host_put(host);
+>> +	NCR_700_release(host);
+> 
+> shouldn't this done before the scsi_host_put() to avoid a use after free ?
 
-For cmd_per_lun, is it related to SCSI task tag limit? SAM-3 says upto 
-64b for task tag, but then SAS uses 16b for TMF tag, so not sure.
+I did it this way because remove function are:
+    scsi_remove_host
+    NCR_700_release
 
-Someone with more SCSI spec knowledge than we can clarify this.
+The other reason was to free resources in the reverse order than allocation.
+But this logic does'nt work in all cases.
+
+> lasi700.c has the same problem.
+
+and a400t.c and bvme6000_scsi.c and mvme16x_scsi.c and sim710.c and 
+zorro7xx.c.
+That is to say all drivers that use NCR_700_detect().
+
+That is why I'm unsure with my patch. It is unusual to have ALL users 
+wrong. It is more likely that I missed something and that the code is 
+correct.
+
+I also don't fully understand why we use 'scsi_host_put' in some place 
+and 'scsi_remove_host' in remove functions.
+Referenced managed resources sometimes have the needed mechanism to 
+automagically release some resource.
+
+> And it looks like NCR_700_detect() will leak
+> dma memory, if scsi_host_alloc() failed.
+
+Agreed. And same if scsi_add_host fails at the end of the function.
 
 > 
-> $ git grep -nHEw '(cmd_per_lun|can_queue);' include/scsi
-> include/scsi/scsi_device.h:318:	unsigned int		can_queue;
-> include/scsi/scsi_host.h:372:	int can_queue;
-> include/scsi/scsi_host.h:425:	short cmd_per_lun;
-> include/scsi/scsi_host.h:612:	int can_queue;
-> include/scsi/scsi_host.h:613:	short cmd_per_lun;
+> Thomas.
 > 
->> It seems intentional that can_queue is int and cmd_per_lun is short.
-> Intentional? It is not clear to me why? Even high-performance drivers
-> like iSER and SRP set can_queue by default to a value that fits well in
-> a 16-bit variable (512 and 64 respectively). The highest value that I
-> found after a quick search is the following:
-> 
->   #define ISCSI_TOTAL_CMDS_MAX		4096
-
-I guess int was used for can_queue as an arbitrarily big number.
-
-And if we try to use 16b for can_queue, reducing size of 
-variables/structure members sometimes breaks things, from my experience.
-
-Thanks,
-John
-
-
 
