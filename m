@@ -7,62 +7,62 @@ X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_2 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A65BC433B4
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:55:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D94EC433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 07:13:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CB7E60E0B
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 06:55:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6CE061163
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 07:13:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230471AbhETG4p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 May 2021 02:56:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38208 "EHLO
+        id S229953AbhETHPM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 May 2021 03:15:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42504 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231211AbhETG4i (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 02:56:38 -0400
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA4B5C06138B
-        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 23:55:16 -0700 (PDT)
-Received: by mail-pg1-x536.google.com with SMTP id m190so11180640pga.2
-        for <linux-scsi@vger.kernel.org>; Wed, 19 May 2021 23:55:16 -0700 (PDT)
+        with ESMTP id S229534AbhETHPL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 03:15:11 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F40CC06175F
+        for <linux-scsi@vger.kernel.org>; Thu, 20 May 2021 00:13:50 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id d78so10821344pfd.10
+        for <linux-scsi@vger.kernel.org>; Thu, 20 May 2021 00:13:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=areca-com-tw.20150623.gappssmtp.com; s=20150623;
         h=message-id:subject:from:to:date:mime-version
          :content-transfer-encoding;
-        bh=ZjS8xGFFsqpY9xijPZhdC83gL+fsRNLiJRhnKCIKzUQ=;
-        b=1iZbCenGWJR+Gq+PkkIqnRRZ+TQLPknki+a/FzBCbMOIYlG1lE5Qjy53Fbl2ArcV8v
-         eYLoTN6qmfiOKcWk81FSAO7E4N3l69XwQb/Yj2OPrtNtedrmKCjFA3dVnRyt/UgUVJ/Q
-         rFvB42vp33aMC3vCO5mD7EuC9agSBgGHoGwF2RlXyZI7DCCv89HN4wSxyX6D0DX1qqop
-         OqSuekeZsLN9drD+WumT7XJhuYGBUAv3xwrz3vFtXDi4z8b28UtpjzOAFZepPGuuUAC9
-         QxkkO7wBB0yKH22+udP4ozFjzvrNY80VMSHoJbxzrvjZ+Yfc2S6E15S4WfTH+UMJEn7U
-         gZ1A==
+        bh=/FZogyMJylWtzS0eidX0k1eno6muyKoInIXOv6M+ByM=;
+        b=DrJ/o5Y6r98D7LiHaOQqQdgv67bnQTekP2Lz8uwmnHCnoXeikFHS1UWXdH3YZIFjE5
+         0sJ10LbC0IgJG1d89ZZsnHMB4AjQdArcFPPOdbUaHPQJjKpu8xmYZZTtaIqtFaiBWCA8
+         SquxN/7ElfbtCN2b227sxwT6BgXj/xL4x3RKFBJ8dnKJEJg09HZB6vG8mKGNYHwT2RB6
+         /vfn5l2EXFK3D0dTZL/8P/stsfwURB/VpkkcVSXg/w7l9t2A/V/x4OCjEZn2TRnOsE4d
+         CzMVqpxDQEbAQItql7tImECh7dFLYCnWlLgurSBmTPcaqQa6LbJxHByqyGKtybbERX9A
+         FiNA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:date:mime-version
          :content-transfer-encoding;
-        bh=ZjS8xGFFsqpY9xijPZhdC83gL+fsRNLiJRhnKCIKzUQ=;
-        b=OwcohV181tqoWvd4RdEcUGuXdGv7VlnfvdDbcdyPu4K/OpSGaerewbGteI1oLE/0o0
-         4ER/cBAN4kogh80km2ultWareIlmTrNz5ryvXhLm0Y5UUJYyhVA+f4YZJOiOYidOQyY0
-         1hRQLwUSwUIlJ77wyt0Qt8hl63/kTzspYCV7izy9AcqpuMqFQrB33snM6zeqnQVLFmp0
-         WUViEA5rls3PSYUbsS8kRPSt2oJoz0sl38oc0i4BGjNloWDIOIvOyEY7hfR83OdvCZxq
-         9RqrgRq5BotYYgLR+UD7JuhvgnzoiJlJW5PvZoCu4cqY6GrJ1Hhp9TpV0qewhJNvi+XA
-         wFDg==
-X-Gm-Message-State: AOAM533PL0xoN7eqMrUzNB8V1GwmTXVMeBDxqetCMHeOZc9z6fU/8Pcs
-        kfR9v8lKqLBW/B05Mp5XkIim9MFXF/dpGA==
-X-Google-Smtp-Source: ABdhPJy+fHfKlDcRouTuFnvCP1d8yx1p1XIwLbfbS+jF/ATbMclvspleZhwvFtNwItf/I2fQSmy0Hg==
-X-Received: by 2002:a63:3dc5:: with SMTP id k188mr3071051pga.140.1621493716420;
-        Wed, 19 May 2021 23:55:16 -0700 (PDT)
+        bh=/FZogyMJylWtzS0eidX0k1eno6muyKoInIXOv6M+ByM=;
+        b=GHivJ71NhiOTJNujYCMDFJsrjRUwvdDOBUC9VTqAnRG7SFPTi9JamIGDkAhene76bN
+         BSmwDyuHfKeEOS5uiPqY5Ab4T4S0XPKmVyojth8+srvpWaD/YddyX6SqfK5+JR9HaCQZ
+         AlBZMN2cOgtNpuHd5ppsT8hd8nBFvDfjS3OeGg5IW/z+PNrXfAsBRYbdLdZYJ8tQCp4u
+         BbtnTMwZFY2QV42AhGzIuZCNYpE/94zBxcDVM0JOHKThKplLToJUQHMylNkPfUwoEHo7
+         yUAFWqXb/rrE4IRKPtyIo8oTXaViLbRi2WhHx3KsTsV9eW0r2vtxmaIO+IxfYyhizcWJ
+         4/8w==
+X-Gm-Message-State: AOAM5333VA9WR2VGJ03Zgr4sf/Cy3fEj+70KBBiqN0IBumMRGtOpQNbx
+        UHxfpmVrO9nZtQfnIPgtINg4n445wYscZg==
+X-Google-Smtp-Source: ABdhPJxk1iqei3q6Z+wifKmSwxkuDpy5mFlZdNY6CV5wI8PgPuHlhNIUiWve/ymmfsA557xD7C5Iog==
+X-Received: by 2002:a65:5a81:: with SMTP id c1mr3081613pgt.111.1621494829559;
+        Thu, 20 May 2021 00:13:49 -0700 (PDT)
 Received: from centos78 (60-248-88-209.HINET-IP.hinet.net. [60.248.88.209])
-        by smtp.gmail.com with ESMTPSA id g202sm1160918pfb.54.2021.05.19.23.55.14
+        by smtp.gmail.com with ESMTPSA id o3sm1220688pgh.22.2021.05.20.00.13.48
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 19 May 2021 23:55:16 -0700 (PDT)
-Message-ID: <afdfdf7eabecf14632492c4987a6b9ac6312a7ad.camel@areca.com.tw>
-Subject: [PATCH 1/2] scsi: arcmsr: fix doorbell status may arrived late on
- ARC-1886
+        Thu, 20 May 2021 00:13:49 -0700 (PDT)
+Message-ID: <d0c6dc6431f0e46db6583dc0d04d7983b420d4da.camel@areca.com.tw>
+Subject: [PATCH 2/2] scsi: arcmsr: update driver version to
+ v1.50.00.05-20210429
 From:   ching Huang <ching2048@areca.com.tw>
 To:     martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com,
         linux-scsi@vger.kernel.org,
         Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Date:   Thu, 20 May 2021 14:55:15 +0800
+Date:   Thu, 20 May 2021 15:13:49 +0800
 Content-Type: text/plain; charset="UTF-8"
 X-Mailer: Evolution 3.28.5 (3.28.5-10.el7) 
 Mime-Version: 1.0
@@ -73,35 +73,22 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: ching Huang <ching2048@areca.com.tw>
 
-This patch fix the doorbell status coming from IOP may late.
-The doorbell status value should not be 0.
+Update driver version to v1.50.00.05-20210429.
 
 Signed-off-by: ching Huang <ching2048@areca.com.tw>
 ---
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 930972c..98e3d57 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -2419,10 +2419,18 @@ static void arcmsr_hbaD_doorbell_isr(struct AdapterControlBlock *pACB)
- 
- static void arcmsr_hbaE_doorbell_isr(struct AdapterControlBlock *pACB)
- {
--	uint32_t outbound_doorbell, in_doorbell, tmp;
-+	uint32_t outbound_doorbell, in_doorbell, tmp, i;
- 	struct MessageUnit_E __iomem *reg = pACB->pmuE;
- 
--	in_doorbell = readl(&reg->iobound_doorbell);
-+	if (pACB->adapter_type == ACB_ADAPTER_TYPE_F) {
-+		for (i = 0; i < 5; i++) {
-+			in_doorbell = readl(&reg->iobound_doorbell);
-+			if (in_doorbell != 0)
-+				break;
-+		}
-+	}
-+	else
-+		in_doorbell = readl(&reg->iobound_doorbell);
- 	outbound_doorbell = in_doorbell ^ pACB->in_doorbell;
- 	do {
- 		writel(0, &reg->host_int_status); /* clear interrupt */
+diff --git a/drivers/scsi/arcmsr/arcmsr.h b/drivers/scsi/arcmsr/arcmsr.h
+index eb0ef73..6ce57f0 100644
+--- a/drivers/scsi/arcmsr/arcmsr.h
++++ b/drivers/scsi/arcmsr/arcmsr.h
+@@ -49,7 +49,7 @@ struct device_attribute;
+ #define ARCMSR_MAX_OUTSTANDING_CMD	1024
+ #define ARCMSR_DEFAULT_OUTSTANDING_CMD	128
+ #define ARCMSR_MIN_OUTSTANDING_CMD	32
+-#define ARCMSR_DRIVER_VERSION		"v1.50.00.04-20210414"
++#define ARCMSR_DRIVER_VERSION		"v1.50.00.05-20210429"
+ #define ARCMSR_SCSI_INITIATOR_ID	255
+ #define ARCMSR_MAX_XFER_SECTORS		512
+ #define ARCMSR_MAX_XFER_SECTORS_B	4096
 
