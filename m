@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D63E5C433ED
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 15:23:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7143DC433ED
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 15:23:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC5606121E
-	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 15:23:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 521136124C
+	for <linux-scsi@archiver.kernel.org>; Thu, 20 May 2021 15:23:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235367AbhETPYY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 20 May 2021 11:24:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39658 "EHLO
+        id S232274AbhETPY2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 20 May 2021 11:24:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39474 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242310AbhETPXq (ORCPT
+        with ESMTP id S242821AbhETPXq (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 May 2021 11:23:46 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6361AC061763
-        for <linux-scsi@vger.kernel.org>; Thu, 20 May 2021 08:22:22 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id b13-20020a17090a8c8db029015cd97baea9so5480086pjo.0
-        for <linux-scsi@vger.kernel.org>; Thu, 20 May 2021 08:22:22 -0700 (PDT)
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 428B2C0613CE
+        for <linux-scsi@vger.kernel.org>; Thu, 20 May 2021 08:22:25 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id f22so4238321pfn.0
+        for <linux-scsi@vger.kernel.org>; Thu, 20 May 2021 08:22:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=I/JTiGJafhhNaWchQObUW4tJS39kMJSsSn4kCA0ENsU=;
-        b=UlmFS/NcZ34TsNW2qzR7XvJzm3luRw4MZpaT8X01LbytX9vxSbS5tzMaCBB0+wOxgq
-         zPP8pxt9xBAK9VSsTTaSnAW2jfQkl4wB5EToFyia98bkl3HO5jHRATrXoWGhNWjpA5Cz
-         fB68cRtCQcGO9DRqZE7WC6CzVkI+2jsuHq/g4=
+        bh=5zukZjtUZN3+i8mAacZhnGlEWlLqm8MpQiVIecoQHJg=;
+        b=CLtsCgaWeESUv9KLE19NMHJcatLcjsDG19GGMnHrHyHjGHZHZIULyo1bgJ6Z2vMwPn
+         8FFrmoh3ivUI3QEifuaRnIsUjwUiKoRm76XrLgA+JzSo9JJBU5xIGft9diQZ9zf/3eJA
+         P2UaorjKIY5hvGeSBFGrxXsElrM/Qb79NerDo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=I/JTiGJafhhNaWchQObUW4tJS39kMJSsSn4kCA0ENsU=;
-        b=UHupPQdFYN+ZlxFhFRsovInrb3ZHefrMAuTdjldt6LMtcPbcdQfD4YDXfOp9PLSBHw
-         PeTX5zMDw4nvr6jjI08xzl7fiNXbE7nU0hp9zKSIf1FLLt/2byhUDxXAieOEG9utpHZG
-         R6pcFAsAU8zucZrv34JnaYCnXPoPM9JU0QsLpO27qwrJCYFFrkGHVq/X9OaGApYpDjoD
-         LAhWtq6VsX1RtO0dQEhiwd5hrgLrb7V7FVcQ8PrewZXTYAz/d+S3QxuAHaPRWjuUy7wK
-         UrdU9gtswOvIrjF182Nz5HqKvC/zeY87AcmSn6t6nAlsNryuh4DKeDYUPeg9I+W71NX7
-         RquQ==
-X-Gm-Message-State: AOAM533tWg5rBkazmK4uY4F5MDbeTQBMjKvYSLV9rnLYdP1kzbF3NqPR
-        52pQlU3MUrYFx0XzFrjK3aBImeLym9bCsut7wjq6kIIxE09aB2puXq/zRdmIWVPWV0Tga2vhk/l
-        EoegBJMmfoSvYhrQtXK7lfLgkynJXTv0Q8g+atJvLw4jzT8/qnQ0U7tG1onsrl8nXoTLl/GPE8X
-        EgLw9TNw==
-X-Google-Smtp-Source: ABdhPJyeoOGVYoT7HWtnT1c2GTbZg2JmuiceAKpLMn22rcynyn4FpFAzriycib9AicNocYEDhJe0Ew==
-X-Received: by 2002:a17:90a:3fca:: with SMTP id u10mr5733297pjm.76.1621524141453;
-        Thu, 20 May 2021 08:22:21 -0700 (PDT)
+        bh=5zukZjtUZN3+i8mAacZhnGlEWlLqm8MpQiVIecoQHJg=;
+        b=dJQ9UUWFSyHUX1icesTcG961ZID17HSywwc9xXCXJUufe20HhcLgJZIn3wjATa/yLQ
+         6IvJ3BDGrs+b2qEKrqz8FgpfeByPO4arYarXGw5BcIURoSaYUvqAbNSeHX8Puu1Srbcf
+         9Rpr28akSowEubk9ncnv6jfaDUF70Iuob/pjIW0X1jU4zeUEnfbLJJNEpEeysDyglszx
+         ISY1+VPrAMtV3LhNSWee8EqeH5qF1Ij3YdcjUs/BY5ebz5IizDKyggk8+8SYx7rV0Th6
+         VvkVKnu3k0jc939aC5fak4B2z0UU3nfK/COIzl7W2hZGTbvqxtqfXRE5NgrO8Oz9cAo5
+         Mg0g==
+X-Gm-Message-State: AOAM532JaP0RZ2D3WKP6Ff8JjiIQopqzPjnbFmS9ccZXhKy2lP/af5j3
+        p4wP+b+o4sX4X2tmIvuSR0yJgBteoWD6Y+PdPC5VAX7aNtV/A6UnX04gEfNfSCegGt4Jm9fVBs+
+        A8QFrBDy/mMurFLWDBj3Jm7HVfWFh21jA6FP/EB6eg0gNJDb86kA1uuSr21Wr2AsRuTlXDQnX9H
+        bIIfjvIA==
+X-Google-Smtp-Source: ABdhPJz9JLdItej841XOHcD50FwgufxJscuulhyrcoVKdOGCVMOMC66/5FJXj5dXyFflt7ilZdqJqg==
+X-Received: by 2002:a62:ea1a:0:b029:27a:bcea:5d3d with SMTP id t26-20020a62ea1a0000b029027abcea5d3dmr4960877pfh.69.1621524144314;
+        Thu, 20 May 2021 08:22:24 -0700 (PDT)
 Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id s8sm2250557pfe.112.2021.05.20.08.22.18
+        by smtp.gmail.com with ESMTPSA id s8sm2250557pfe.112.2021.05.20.08.22.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 May 2021 08:22:20 -0700 (PDT)
+        Thu, 20 May 2021 08:22:23 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
@@ -61,22 +61,19 @@ Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
         mpi3mr-linuxdrv.pdl@broadcom.com,
         Kashyap Desai <kashyap.desai@broadcom.com>,
         sathya.prakash@broadcom.com
-Subject: [PATCH v6 20/24] mpi3mr: wait for pending IO completions upon detection of VD IO timeout
-Date:   Thu, 20 May 2021 20:55:41 +0530
-Message-Id: <20210520152545.2710479-21-kashyap.desai@broadcom.com>
+Subject: [PATCH v6 21/24] mpi3mr: add support of PM suspend and resume
+Date:   Thu, 20 May 2021 20:55:42 +0530
+Message-Id: <20210520152545.2710479-22-kashyap.desai@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210520152545.2710479-1-kashyap.desai@broadcom.com>
 References: <20210520152545.2710479-1-kashyap.desai@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000079132505c2c4821f"
+        boundary="000000000000a56d3305c2c482f6"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000079132505c2c4821f
-
-Wait for (default 180 seconds) host IO completion if IO timeout is detected
-on VDs
+--000000000000a56d3305c2c482f6
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
@@ -85,116 +82,116 @@ Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
 Cc: sathya.prakash@broadcom.com
 ---
- drivers/scsi/mpi3mr/mpi3mr.h    |  1 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c |  2 ++
- drivers/scsi/mpi3mr/mpi3mr_os.c | 55 +++++++++++++++++++++++++++++++++
- 3 files changed, 58 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 84 +++++++++++++++++++++++++++++++++
+ 1 file changed, 84 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 5a3a137..372ce0e 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -107,6 +107,7 @@ extern struct list_head mrioc_list;
- #define MPI3MR_RESET_HOST_IOWAIT_TIMEOUT	5
- #define MPI3MR_TSUPDATE_INTERVAL		900
- #define MPI3MR_DEFAULT_SHUTDOWN_TIME		120
-+#define	MPI3MR_RAID_ERRREC_RESET_TIMEOUT	180
- 
- #define MPI3MR_WATCHDOG_INTERVAL		1000 /* in milli seconds */
- 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 605015e..813b0bc 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -3765,6 +3765,8 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 		}
- 	}
- 
-+	mpi3mr_wait_for_host_io(mrioc, MPI3MR_RESET_HOST_IOWAIT_TIMEOUT);
-+
- 	mpi3mr_ioc_disable_intr(mrioc);
- 
- 	if (snapdump) {
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index e36a502..e63db7c 100644
+index e63db7c..dd71cdc 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2409,6 +2409,43 @@ static void mpi3mr_print_pending_host_io(struct mpi3mr_ioc *mrioc)
- 	    mpi3mr_print_scmd, (void *)mrioc);
+@@ -3389,6 +3389,86 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
+ 	mpi3mr_cleanup_ioc(mrioc, 0);
  }
  
++#ifdef CONFIG_PM
 +/**
-+ * mpi3mr_wait_for_host_io - block for I/Os to complete
-+ * @mrioc: Adapter instance reference
-+ * @timeout: time out in seconds
-+ * Waits for pending I/Os for the given adapter to complete or
-+ * to hit the timeout.
++ * mpi3mr_suspend - PCI power management suspend callback
++ * @pdev: PCI device instance
++ * @state: New power state
 + *
-+ * Return: Nothing
++ * Change the power state to the given value and cleanup the IOC
++ * by issuing MUR and shutdown notification
++ *
++ * Return: 0 always.
 + */
-+void mpi3mr_wait_for_host_io(struct mpi3mr_ioc *mrioc, u32 timeout)
++static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
 +{
-+	enum mpi3mr_iocstate iocstate;
-+	int i = 0;
++	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct mpi3mr_ioc *mrioc;
++	pci_power_t device_state;
 +
-+	iocstate = mpi3mr_get_iocstate(mrioc);
-+	if (iocstate != MRIOC_STATE_READY)
-+		return;
++	if (!shost)
++		return 0;
 +
-+	if (!mpi3mr_get_fw_pending_ios(mrioc))
-+		return;
-+	ioc_info(mrioc,
-+	    "%s :Waiting for %d seconds prior to reset for %d I/O\n",
-+	    __func__, timeout, mpi3mr_get_fw_pending_ios(mrioc));
++	mrioc = shost_priv(shost);
++	while (mrioc->reset_in_progress || mrioc->is_driver_loading)
++		ssleep(1);
++	mrioc->stop_drv_processing = 1;
++	mpi3mr_cleanup_fwevt_list(mrioc);
++	scsi_block_requests(shost);
++	mpi3mr_stop_watchdog(mrioc);
++	mpi3mr_cleanup_ioc(mrioc, 1);
 +
-+	for (i = 0; i < timeout; i++) {
-+		if (!mpi3mr_get_fw_pending_ios(mrioc))
-+			break;
-+		iocstate = mpi3mr_get_iocstate(mrioc);
-+		if (iocstate != MRIOC_STATE_READY)
-+			break;
-+		msleep(1000);
-+	}
++	device_state = pci_choose_state(pdev, state);
++	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
++	    pdev, pci_name(pdev), device_state);
++	pci_save_state(pdev);
++	pci_set_power_state(pdev, device_state);
++	mpi3mr_cleanup_resources(mrioc);
 +
-+	ioc_info(mrioc, "%s :Pending I/Os after wait is: %d\n", __func__,
-+	    mpi3mr_get_fw_pending_ios(mrioc));
++	return 0;
 +}
 +
- /**
-  * mpi3mr_eh_host_reset - Host reset error handling callback
-  * @scmd: SCSI command reference
-@@ -2423,8 +2460,26 @@ static void mpi3mr_print_pending_host_io(struct mpi3mr_ioc *mrioc)
- static int mpi3mr_eh_host_reset(struct scsi_cmnd *scmd)
- {
- 	struct mpi3mr_ioc *mrioc = shost_priv(scmd->device->host);
-+	struct mpi3mr_stgt_priv_data *stgt_priv_data;
-+	struct mpi3mr_sdev_priv_data *sdev_priv_data;
-+	u8 dev_type = MPI3_DEVICE_DEVFORM_VD;
- 	int retval = FAILED, ret;
++/**
++ * mpi3mr_resume - PCI power management resume callback
++ * @pdev: PCI device instance
++ *
++ * Restore the power state to D0 and reinitialize the controller
++ * and resume I/O operations to the target devices
++ *
++ * Return: 0 on success, non-zero on failure
++ */
++static int mpi3mr_resume(struct pci_dev *pdev)
++{
++	struct Scsi_Host *shost = pci_get_drvdata(pdev);
++	struct mpi3mr_ioc *mrioc;
++	pci_power_t device_state = pdev->current_state;
++	int r;
++
++	mrioc = shost_priv(shost);
++
++	ioc_info(mrioc, "pdev=0x%p, slot=%s, previous operating state [D%d]\n",
++	    pdev, pci_name(pdev), device_state);
++	pci_set_power_state(pdev, PCI_D0);
++	pci_enable_wake(pdev, PCI_D0, 0);
++	pci_restore_state(pdev);
++	mrioc->pdev = pdev;
++	mrioc->cpu_count = num_online_cpus();
++	r = mpi3mr_setup_resources(mrioc);
++	if (r) {
++		ioc_info(mrioc, "%s: Setup resources failed[%d]\n",
++		    __func__, r);
++		return r;
++	}
++
++	mrioc->stop_drv_processing = 0;
++	mpi3mr_init_ioc(mrioc, 1);
++	scsi_unblock_requests(shost);
++	mpi3mr_start_watchdog(mrioc);
++
++	return 0;
++}
++#endif
++
+ static const struct pci_device_id mpi3mr_pci_id_table[] = {
+ 	{
+ 		PCI_DEVICE_SUB(PCI_VENDOR_ID_LSI_LOGIC, 0x00A5,
+@@ -3404,6 +3484,10 @@ static struct pci_driver mpi3mr_pci_driver = {
+ 	.probe = mpi3mr_probe,
+ 	.remove = mpi3mr_remove,
+ 	.shutdown = mpi3mr_shutdown,
++#ifdef CONFIG_PM
++	.suspend = mpi3mr_suspend,
++	.resume = mpi3mr_resume,
++#endif
+ };
  
-+	sdev_priv_data = scmd->device->hostdata;
-+	if (sdev_priv_data && sdev_priv_data->tgt_priv_data) {
-+		stgt_priv_data = sdev_priv_data->tgt_priv_data;
-+		dev_type = stgt_priv_data->dev_type;
-+	}
-+
-+	if (dev_type == MPI3_DEVICE_DEVFORM_VD) {
-+		mpi3mr_wait_for_host_io(mrioc,
-+		    MPI3MR_RAID_ERRREC_RESET_TIMEOUT);
-+		if (!mpi3mr_get_fw_pending_ios(mrioc)) {
-+			retval = SUCCESS;
-+			goto out;
-+		}
-+	}
-+
- 	mpi3mr_print_pending_host_io(mrioc);
- 	ret = mpi3mr_soft_reset_handler(mrioc,
- 	    MPI3MR_RESET_FROM_EH_HOS, 1);
+ static int __init mpi3mr_init(void)
 -- 
 2.18.1
 
 
---00000000000079132505c2c4821f
+--000000000000a56d3305c2c482f6
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -265,13 +262,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIoAdCvvv82JAGnVNyDziJKj34hK
-RaGLYlG3UdTqVXd2MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDUyMDE1MjIyMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPNDGtNEJSAkqhDKKQJHkcb9JXuj
+QLBlAK39viWaGl8gMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDUyMDE1MjIyNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQCtKyedjyYDOdboqZJPVkNSzIM5wg9lY7eKNdPf5HcJbL4e
-eRBmuW0IB/1YXtaxkpCBR4n2N7bV/NK4DuWEU+Lxy9ey5Kt35z+yblvaVDFOF0xoqfzboqYJ4RWu
-uZQe2zdlaSx9ohehj47qgTXIB6cihGv4Cy5wcBhs+R8hNGoXrFW8BeV1KfrbFwAthVwZG/jKlWPL
-fllac11Kmc9nMjKbMTdB5pVT1dwv/1EUfGTuPJJeSCdpKTdmLzpKKl8UByww7n8//6bya8AsD61D
-CJeWhlAnXMAzIvXttfyUTQRLNtqd++1JvX+XB3/xUJXx5ZbDs5fgabJMuN9OfPcSTY6Y
---00000000000079132505c2c4821f--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQCxqgY1haLdwEIQ0l3rEQyR29E1u46x9NOUSYOt4uGqff3R
+inJwwJ5sVpdhGABEncKSShYGh00JLzRoWuzbdNu9bovhvMuYlqHYkgek1zEeF+kaRnIHtGe/02aS
+Yz8ujUw8/L4lwjcq9tgcmcDTixsD4R+VjWeDWV9I5pz0VMbnb6CgRi1y5clpaAwHV0Bh8Hg/uGfj
+es0v/eV6tgRzKvHhYL6rLXWDzt8b1E0Xo8LvSLx2ZseKe1q3dWqZ6Xv8SQ5Jv7Vu4psPVqJwY6/u
+i8scgNBciVcFLsPKZFjBi4fbV1WL8dJQG76J4JY2K74qVi9E+tBjI0unE0mgc4cF+xK7
+--000000000000a56d3305c2c482f6--
