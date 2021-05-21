@@ -2,91 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 185A5C04FF3
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 May 2021 21:56:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1061EC4707A
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 May 2021 22:37:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE7E0613F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 May 2021 21:56:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6644613D8
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 May 2021 22:37:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229668AbhEUV5t (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 May 2021 17:57:49 -0400
-Received: from mail-1.ca.inter.net ([208.85.220.69]:35224 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229519AbhEUV5p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 May 2021 17:57:45 -0400
-Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id B5CB22EA2F1;
-        Fri, 21 May 2021 17:56:20 -0400 (EDT)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
-        with ESMTP id 65WCzJyE3B32; Fri, 21 May 2021 17:34:34 -0400 (EDT)
-Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 1049F2EA0B0;
-        Fri, 21 May 2021 17:56:20 -0400 (EDT)
-Reply-To: dgilbert@interlog.com
-To:     linux-scsi <linux-scsi@vger.kernel.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Subject: REQ_HIPRI and SCSI mid-level
-Cc:     Hannes Reinecke <hare@suse.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Ming Lei <ming.lei@redhat.com>
-Message-ID: <8c490b4a-aac0-7451-8755-e05bb3ee3d32@interlog.com>
-Date:   Fri, 21 May 2021 17:56:19 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S230188AbhEUWjE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 May 2021 18:39:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39628 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230184AbhEUWjD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 May 2021 18:39:03 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8588BC06138E
+        for <linux-scsi@vger.kernel.org>; Fri, 21 May 2021 15:37:31 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id c12so4357726pfl.3
+        for <linux-scsi@vger.kernel.org>; Fri, 21 May 2021 15:37:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=osandov-com.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ccivkmqRxvbEoQM0V9sS14GS9yzetYD2ZYyUao6LYL8=;
+        b=HOGxRJT+S3zcq6hG9tZPy7cA+K51TbarsJRrSVikqTSau6Cy77dyYdOclcQ4KvkpHL
+         5ki+DoCGpNRtNv4oENFijvD3ZkT/t1aN2qNTMepSrH0L94PGE0RLEjmqtf8E00t3c/86
+         CDqc01/JsB/YG4kBmyYNC+6VoiJyGqMitHpngLrllV4yPODbvzUlEsqIsK6f0hlR8Tcb
+         C8K/mEhs8pnXSwp444dQA5fcf7dakjkkfbgdlRkymTXroZ2d6+yqAh452WDayssVLPJm
+         nhKApahBosgELZ6FlET1/n1KNxZ2IiCLlx/30dQUtLw8acr4TeNRu03XZcXHHQwKaJ3h
+         1zFg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ccivkmqRxvbEoQM0V9sS14GS9yzetYD2ZYyUao6LYL8=;
+        b=NFlcbr/NdcnWtq5cmhrA6InCgwGFUEYWNFGUYqnjfCL+7kDAePw4CV2ck/qQmToXma
+         1SGjJwldNf4cOgVfyeViW8/t9c9VlDWUPJAzItR+pbVRJcnKg9NNUSriRv/z6D8evGk+
+         bpG+rF6QaiMA2cd3b5+AXQP1U9xLScTgWUM4cMlyyqtgaePQJG5e7YxKLdqe9ZKDCXKq
+         WkfKcaCoojjZ5efz668nFXDzSJSVFihx2ZhwruzjSFxtKgyvD4zxQMfn9saR6p+cA2mx
+         qK+TzCjdsDGs92GIAU7FtJ9/yUAzkpJpw0HjiSxSzBZwiGGqFX7Q19RmthHYDzRRQDgj
+         KBEQ==
+X-Gm-Message-State: AOAM531zm7hyr60wnoY0uUzy3GOGKSxbwuWB2F5s7pwleEydpynV7ynD
+        3vBfPOscFE7m95G+O16Sx2yByg==
+X-Google-Smtp-Source: ABdhPJwzK3VZ3KUvllj7T7UMXQIPumDuGJJFVNI/o3u4lcUKHfVMLwumBcQE4Nn84BsmiwpYUjd3Pw==
+X-Received: by 2002:a62:3682:0:b029:2dd:ed69:6e85 with SMTP id d124-20020a6236820000b02902dded696e85mr12537608pfa.20.1621636650955;
+        Fri, 21 May 2021 15:37:30 -0700 (PDT)
+Received: from relinquished.localdomain ([2620:10d:c090:400::5:1e18])
+        by smtp.gmail.com with ESMTPSA id pg5sm2712122pjb.28.2021.05.21.15.37.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 21 May 2021 15:37:29 -0700 (PDT)
+Date:   Fri, 21 May 2021 15:37:27 -0700
+From:   Omar Sandoval <osandov@osandov.com>
+To:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
+Cc:     Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "mb@lightnvm.io" <mb@lightnvm.io>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "clm@fb.com" <clm@fb.com>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "dsterba@suse.com" <dsterba@suse.com>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
+        "hch@lst.de" <hch@lst.de>
+Subject: Re: [RFC PATCH 0/8] block: fix bio_add_XXX_page() return type
+Message-ID: <YKg2J5n3oY9RpgVb@relinquished.localdomain>
+References: <20210520062255.4908-1-chaitanya.kulkarni@wdc.com>
+ <PH0PR04MB74169D71E3DCB347DFCBFCB59B299@PH0PR04MB7416.namprd04.prod.outlook.com>
+ <BYAPR04MB496577D8AC414B1FFD44722486299@BYAPR04MB4965.namprd04.prod.outlook.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <BYAPR04MB496577D8AC414B1FFD44722486299@BYAPR04MB4965.namprd04.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The REQ_HIPRI flag on requests is associated with blk_poll() (aka iopoll)
-and assumes the user space (or some higher level) will be calling
-blk_poll() on requests marked with REQ_HIPRI and that will lead to their
-completion.
+On Fri, May 21, 2021 at 09:37:43PM +0000, Chaitanya Kulkarni wrote:
+> On 5/21/21 03:25, Johannes Thumshirn wrote:
+> > I couldn't spot any errors, but I'm not sure it's worth the effort.
+> >
+> > If Jens decides to take it:
+> > Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> >
+> 
+> It does create confusion on the code level which can result in
+> invalid error checks.
 
-In lk 5.13-rc1 the megaraid and scsi_debug LLDs support blk_poll() [seen
-by searching for 'mq_poll'] with more to follow, I assume. I have tested
-blk_poll() on the scsi_debug driver using both fio and the new sg driver.
-It works well with one caveat: as long as there isn't an error.
-After fighting with that error processing from the ULD side (i.e. the
-new sg driver) and the LLD side I am concluding that the glue that
-holds them together, that is, the mid-level is not as REQ_HIPRI aware
-as it should be.
-
-Yes REQ_HIPRI is there in scsi_lib.c but it is missing from scsi_error.c
-How can scsi_error.c re-issue requests _without_ taking into account
-that the original was issued with REQ_HIPRI ? Well I don't know but I'm
-pretty sure that is close to the area that I see causing problems
-(mainly lockups).
-
-As an example the scsi_debug driver has an in-use bitmap that when a new
-request arrives the code looks for an empty slot. Due to (incorrect)
-parameter setup that may fail. If the driver returns:
-     device_qfull_result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
-then I see lock-ups if the request in question has REQ_HIPRI set.
-
-If that is changed to:
-     device_qfull_result = (DID_ABORT << 16) | SAM_STAT_TASK_SET_FULL;
-then my user space test program sees that error and aborts showing the
-TASK SET FULL SCSI status. That is much better than a lockup ...
-
-Having played around with variants of the above for a few weeks, I'd
-like to throw this problem into the open :-)
-
-
-Suggestion: perhaps the eh could give up immediately on any request
-with REQ_HIPRI set (i.e. make it a higher level layer's problem).
-
-Doug Gilbert
+Do you have any examples of bugs caused by this confusion (whether they
+were fixed in the past, currently exist, or were caught in code review)?
+That would be good justification for doing this.
