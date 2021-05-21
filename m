@@ -8,120 +8,137 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93FF6C433B4
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 May 2021 10:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 644B9C433ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 May 2021 10:27:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74732613AE
-	for <linux-scsi@archiver.kernel.org>; Fri, 21 May 2021 10:26:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 483BD613BD
+	for <linux-scsi@archiver.kernel.org>; Fri, 21 May 2021 10:27:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232225AbhEUK15 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 21 May 2021 06:27:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43264 "EHLO
+        id S229724AbhEUK2U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 21 May 2021 06:28:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43232 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231706AbhEUK1s (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 May 2021 06:27:48 -0400
-Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2E54CC061763
-        for <linux-scsi@vger.kernel.org>; Fri, 21 May 2021 03:26:25 -0700 (PDT)
-Received: by mail-pf1-x42e.google.com with SMTP id c12so2999776pfl.3
-        for <linux-scsi@vger.kernel.org>; Fri, 21 May 2021 03:26:25 -0700 (PDT)
+        with ESMTP id S232170AbhEUK15 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 May 2021 06:27:57 -0400
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DBD4FC061574
+        for <linux-scsi@vger.kernel.org>; Fri, 21 May 2021 03:26:32 -0700 (PDT)
+Received: by mail-pf1-x436.google.com with SMTP id d78so13714097pfd.10
+        for <linux-scsi@vger.kernel.org>; Fri, 21 May 2021 03:26:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=ZlMtgJUy6Q+f0OdhwAmXGj3gAMU3iOQ3xdRy/NooUek=;
-        b=S8lnpvewtCk1xLCJDWwDFGHNJg4bXH1gP06Pk/axLAZtZcqu4vQxj7CNUpQD0ycUkg
-         uayr+ItrIH2k+Q2iiGyEkT+QjnQrBHxlFgPg6gpJjyavX9DpQxCzIe4I5kfuKySq8E2h
-         uJb0v/rhkH7Wcsuc9C2zTBZE2JUHiHDvXvMak=
+        bh=AGsp065a2GVEmhI2AMfgVrrsFc3IjmZCaM+JG3LRsRQ=;
+        b=Fmlv33lSYs/LIeIAMy8j08ipVhkHEWGMbpIX6ry1q1Du/hDy+a5skChgIO7NHsu1dS
+         /I4Lo7albvQMoD3okQCmGLiF1Bd8dduHtyeo38vyUmPge74DYZGYHKA8QdMpR3SYju5G
+         TxClAVzkQWph6q81nIaOqv421MOKO/HNMOyoQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=ZlMtgJUy6Q+f0OdhwAmXGj3gAMU3iOQ3xdRy/NooUek=;
-        b=fq4wYjcCAJ+0sDggcKDFzO4j5lRrcF0s//AfhrgFMEDwZcP0vbm7KLJuCW+q2HKVxM
-         mABJGu7cazHGS0DGvT47GrSSjukEC9H5pIyGsQByFp8AH1x5vjguPpBN5id7H2TSwwuA
-         lFWVynBhuIFWwVKSVXFX7tV2ck7SXAzR/WB9Uty6cguwIhyUKE740KKZXv+mE7DIz2qB
-         jkPvAJMgkVyTQPHLiv2VQg+KU05LhenRFhBhuSmK/9TVe8zERGjKTuSfkC2cB+++bM0a
-         Ipqto0j10q3SZZw6YCWj2AvnrzrVITdGJQU2G4UyQ+eNoTeLlhrbFt85uj0zLwWyUVrI
-         cU3Q==
-X-Gm-Message-State: AOAM5317B8+S/SNT0RHC/jqR64djZ7GsurZqlzTfdRT4fLuLki4KZAQB
-        6NE10asMPR6ObFyuMgVsMUIAiZ0jQrpLNaYH1Qgf3qbid1MkHTImDeWkuuazpFlLam7QP/QlYsz
-        J3eeuex0uNsysgWJTgW3gW3+T8rxknm5jtT42WbesvBF5xgbEspreZ4Tcv+UyA6lnpCqmbJXSea
-        kWoav0eOPj8ZSqaBs=
-X-Google-Smtp-Source: ABdhPJzFspZHWyut2RCjQhjaCIdLMnhnX3+RLylZldAPB90MhiHXno55mlhd/9CaNYtfajQSVlhu9g==
-X-Received: by 2002:a05:6a00:787:b029:2dd:15b6:515a with SMTP id g7-20020a056a000787b02902dd15b6515amr9666178pfu.26.1621592784108;
-        Fri, 21 May 2021 03:26:24 -0700 (PDT)
+        bh=AGsp065a2GVEmhI2AMfgVrrsFc3IjmZCaM+JG3LRsRQ=;
+        b=plTXowiOccum7xUYhKDz//1bsvjmp9M8WRPYfMmz6jmmDiyt1Uxyoras3R9hcPVRa5
+         njNBAePkYabJsmKZFjPGdQn7fEJe+4TRfOvNOa+ehZbpINtVk85NahUTVMnEUjgnTsXC
+         yXXNSXfIeMkYCO7JBv90rooVoO7kUwhBmZ0aftm8ERmLTEHlTHXLZKwodfn2EZV/vvYX
+         NM+0VxLaoZfdzvFwArwqlPQWwAA9Fp4hM//jfczbFYuJ4faCga9gKTiK44m3fYPBKpj+
+         8EzhfLhhowpLjspcWsAwXwStTooUbFeqhVmEO3secvKgiL4YuwEienknVYCPEzABh3Xo
+         TEWg==
+X-Gm-Message-State: AOAM530G77X+n26kltRHtF9u8Q6NYq4DbN0E6l8Onn3X9gqnXDGHZZf9
+        rN7Y4E37Fd/wxP/kTi8yQYbzzEKaGgmK+tRA+XJjR1BXGGBwjyKUZlUezJB9MZo/gvD4mBDUzOQ
+        f7ilddVHGMYYeYpRiXNOZQCfuaK3XjWiiT52isKe+/vdfjvYGEQ+tlPVxI9ULzUessbebyBHeQf
+        BmS5YqAuAyGuPa2RM=
+X-Google-Smtp-Source: ABdhPJxc2aXTbJjTyev661SSTG72GzoIE3FVTzrNlfAYEi5XEac05qOOKaJVEZg05zSwZYA4N26mCA==
+X-Received: by 2002:aa7:8d5a:0:b029:227:7b07:7d8b with SMTP id s26-20020aa78d5a0000b02902277b077d8bmr9385036pfe.26.1621592791882;
+        Fri, 21 May 2021 03:26:31 -0700 (PDT)
 Received: from dhcp-10-123-20-83.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id j3sm4197858pfe.98.2021.05.21.03.26.21
+        by smtp.gmail.com with ESMTPSA id j3sm4197858pfe.98.2021.05.21.03.26.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 May 2021 03:26:23 -0700 (PDT)
+        Fri, 21 May 2021 03:26:31 -0700 (PDT)
 From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        stable@vger.kernel.org
-Subject: [PATCH v2 1/5] megaraid_sas: Send all non-RW IOs for TYPE_ENCLOSURE device through firmware
-Date:   Fri, 21 May 2021 15:55:44 +0530
-Message-Id: <20210521102548.11156-2-chandrakanth.patil@broadcom.com>
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Subject: [PATCH v2 2/5] megaraid_sas: Fix the resource leak in case of probe failure
+Date:   Fri, 21 May 2021 15:55:45 +0530
+Message-Id: <20210521102548.11156-3-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210521102548.11156-1-chandrakanth.patil@broadcom.com>
 References: <20210521102548.11156-1-chandrakanth.patil@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000e484d605c2d47d50"
+        boundary="0000000000005b068505c2d47e90"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000e484d605c2d47d50
+--0000000000005b068505c2d47e90
 
-Driver issues all non-ReadWrite IOs for TYPE_ENCLOSURE devices through
-the fast path with invalid dev handle and fast path inturn directs all
-the IOs to the firmware. As firmware stopped handling those IOs from
-SAS3.5 generation of controllers (Ventura and its onward generations)
-lead to IOs failure.
+Driver doesn't cleanup all the allocated resources properly when
+scsi_add_host(),megasas_start_aen() function fails during the PCI
+device probe.
+This patch will cleanup all those resources.
 
-The driver will issue all the non-ReadWrite IOs for TYPE_ENCLOSURE devices
-directly to firmware from SAS3.5 generation of controllers.
-
-Cc: <stable@vger.kernel.org> # v5.11+
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 13 +++++++++++++
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 +
+ 2 files changed, 14 insertions(+)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 8ed347eebf07..35b2137e0d1a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -7545,11 +7545,16 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	return 0;
+ 
+ fail_start_aen:
++	instance->unload = 1;
++	scsi_remove_host(instance->host);
+ fail_io_attach:
+ 	megasas_mgmt_info.count--;
+ 	megasas_mgmt_info.max_index--;
+ 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
+ 
++	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
++		del_timer_sync(&instance->sriov_heartbeat_timer);
++
+ 	instance->instancet->disable_intr(instance);
+ 	megasas_destroy_irqs(instance);
+ 
+@@ -7557,8 +7562,16 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 		megasas_release_fusion(instance);
+ 	else
+ 		megasas_release_mfi(instance);
++
+ 	if (instance->msix_vectors)
+ 		pci_free_irq_vectors(instance->pdev);
++	instance->msix_vectors = 0;
++
++	if (instance->fw_crash_state != UNAVAILABLE)
++		megasas_free_host_crash_buffer(instance);
++
++	if (instance->adapter_type != MFI_SERIES)
++		megasas_fusion_stop_watchdog(instance);
+ fail_init_mfi:
+ 	scsi_host_put(host);
+ fail_alloc_instance:
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 2221175ae051..cd94a0c81f83 100644
+index cd94a0c81f83..f79c19010c92 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3203,6 +3203,8 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- {
- 	int sge_count;
- 	u8  cmd_type;
-+	u16 pd_index = 0;
-+	u8 drive_type = 0;
- 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request = cmd->io_request;
- 	struct MR_PRIV_DEVICE *mr_device_priv_data;
- 	mr_device_priv_data = scp->device->hostdata;
-@@ -3237,8 +3239,12 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 		megasas_build_syspd_fusion(instance, scp, cmd, true);
- 		break;
- 	case NON_READ_WRITE_SYSPDIO:
--		if (instance->secure_jbod_support ||
--		    mr_device_priv_data->is_tm_capable)
-+		pd_index = MEGASAS_PD_INDEX(scp);
-+		drive_type = instance->pd_list[pd_index].driveType;
-+		if ((instance->secure_jbod_support ||
-+		     mr_device_priv_data->is_tm_capable) ||
-+		     (instance->adapter_type >= VENTURA_SERIES &&
-+		     drive_type == TYPE_ENCLOSURE))
- 			megasas_build_syspd_fusion(instance, scp, cmd, false);
- 		else
- 			megasas_build_syspd_fusion(instance, scp, cmd, true);
+@@ -5272,6 +5272,7 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
+ 		if (!fusion->log_to_span) {
+ 			dev_err(&instance->pdev->dev, "Failed from %s %d\n",
+ 				__func__, __LINE__);
++			kfree(instance->ctrl_context);
+ 			return -ENOMEM;
+ 		}
+ 	}
 -- 
 2.18.1
 
 
---000000000000e484d605c2d47d50
+--0000000000005b068505c2d47e90
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -192,14 +209,14 @@ Zpnb0pToIvDm+Ur3N2MiX3nSNdXYjeMdwB0OAs05pMciX6VfrXagLKEdSRHtOo/W/JA7fToB0eJS
 Ky1ZxnSRQGTL4yIIMw43kd0GQyTIM6KyMy8uprn32g7HcYJf07P/tjC196OWjB5Qr7dSv3vtjU8N
 2J0Xc13/AGfXSZ8xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxLE6Al5lQBqzmVPS8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIK5MDBDk
-N1Wm3XdLwqM8ZIxoiYJ5f1nv8P5cVmtb5sOSMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIxMDUyMTEwMjYyNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxLE6Al5lQBqzmVPS8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINM1bEYe
+FmSlKmxqgbHWmUNRtknsIFA7NVT0TwEgdDZiMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIxMDUyMTEwMjYzMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBVmLysM9w0O7OMuYE3aOdSf6q0
-FPa6nzP0y5bWLtTJZBKcBxwKbxEvZyZt/8aif1FkT64T1BvtS/b4K4ad3PYrU7MtWNY+bK7Wu6Mg
-OJZqloKHogQovfbbBTnap4oM4476kYgU6j5JFkjrgK6b6iTmUqyRY0pF8F6q/KTfLrhaIaWYwpd1
-9niAC9DHuwxyBuA4O5RghyEJ1E11+PXct8KlS/O9mw7hOS5cedm1f8N2co3PJvN0IkDGC94HatQE
-Rs20tbLfSLqZuHCjZspFVnk7XQWvHoJ3pfQkjNN/mJ9CozsdhlMXNEUHQRhKyV2GyYOkXuSetBWF
-aJS+eWnrLZIY
---000000000000e484d605c2d47d50--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCBziZdsaScGTDyzBBzF0ZFTtlu
+uAvK858Kdx5BmJqsmUnzJYvTTzxCUMsubiiNnSom5Kf1LKt7adVcm2EvlHejRTt6AxQVMrwpCr+M
+PT13ljiAKlMs52LwvO3LSACG3HM9Sj+UI7qnT60mvWKWa4bfqsSfg98sCpcsu/9sjaYjVPMFU6QT
+/nYIWHH7d/UIJxI7HoBEdQpT0hPVF32rXlIDMR8ybEwxjYvXxMOajWW8rHZ8TGM8d7/XFzZEBf6E
+TNLxFeZczNkU+ZRa5odO2b8JTJ+bzqw1dVmNx9S29iz12HiPEsrLqz4n/51+FlMEGPqASw2YDF08
+Nse6hNahFL2O
+--0000000000005b068505c2d47e90--
