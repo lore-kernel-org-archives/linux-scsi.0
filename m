@@ -7,36 +7,36 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF997C47087
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 May 2021 08:40:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BDCCBC2B9F2
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 May 2021 08:41:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9CB956121E
-	for <linux-scsi@archiver.kernel.org>; Sat, 22 May 2021 08:40:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0CDF613E4
+	for <linux-scsi@archiver.kernel.org>; Sat, 22 May 2021 08:41:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230164AbhEVImX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S231137AbhEVImX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sat, 22 May 2021 04:42:23 -0400
-Received: from szxga07-in.huawei.com ([45.249.212.35]:3909 "EHLO
-        szxga07-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230248AbhEVImH (ORCPT
+Received: from szxga05-in.huawei.com ([45.249.212.191]:4580 "EHLO
+        szxga05-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230229AbhEVImH (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 May 2021 04:42:07 -0400
-Received: from dggems703-chm.china.huawei.com (unknown [172.30.72.60])
-        by szxga07-in.huawei.com (SkyGuard) with ESMTP id 4FnH0w1bmjzBv0l;
-        Sat, 22 May 2021 16:37:52 +0800 (CST)
+Received: from dggems705-chm.china.huawei.com (unknown [172.30.72.60])
+        by szxga05-in.huawei.com (SkyGuard) with ESMTP id 4FnH0v6zY7zsT63;
+        Sat, 22 May 2021 16:37:51 +0800 (CST)
 Received: from dggemi760-chm.china.huawei.com (10.1.198.146) by
- dggems703-chm.china.huawei.com (10.3.19.180) with Microsoft SMTP Server
+ dggems705-chm.china.huawei.com (10.3.19.182) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Sat, 22 May 2021 16:40:41 +0800
+ 15.1.2176.2; Sat, 22 May 2021 16:40:40 +0800
 Received: from localhost.localdomain (10.67.165.24) by
  dggemi760-chm.china.huawei.com (10.1.198.146) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Sat, 22 May 2021 16:40:40 +0800
+ 15.1.2176.2; Sat, 22 May 2021 16:40:39 +0800
 From:   Hui Tang <tanghui20@huawei.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <tanghui20@huawei.com>
-Subject: [PATCH 20/24] scsi: mac53c94: remove leading spaces before tabs
-Date:   Sat, 22 May 2021 16:37:24 +0800
-Message-ID: <1621672648-39955-21-git-send-email-tanghui20@huawei.com>
+Subject: [PATCH 14/24] scsi: proc: remove leading spaces before tabs
+Date:   Sat, 22 May 2021 16:37:18 +0800
+Message-ID: <1621672648-39955-15-git-send-email-tanghui20@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1621672648-39955-1-git-send-email-tanghui20@huawei.com>
 References: <1621672648-39955-1-git-send-email-tanghui20@huawei.com>
@@ -57,56 +57,22 @@ the following commard:
 
 Signed-off-by: Hui Tang <tanghui20@huawei.com>
 ---
- drivers/scsi/mac53c94.c | 24 ++++++++++++------------
- 1 file changed, 12 insertions(+), 12 deletions(-)
+ drivers/scsi/scsi_proc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
-index ec9840d..f13c1cd 100644
---- a/drivers/scsi/mac53c94.c
-+++ b/drivers/scsi/mac53c94.c
-@@ -424,11 +424,11 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
+diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
+index d6982d3..7cab3d7 100644
+--- a/drivers/scsi/scsi_proc.c
++++ b/drivers/scsi/scsi_proc.c
+@@ -106,7 +106,7 @@ void scsi_proc_hostdir_add(struct scsi_host_template *sht)
+ 	mutex_lock(&global_host_template_mutex);
+ 	if (!sht->present++) {
+ 		sht->proc_dir = proc_mkdir(sht->proc_name, proc_scsi);
+-        	if (!sht->proc_dir)
++		if (!sht->proc_dir)
+ 			printk(KERN_ERR "%s: proc_mkdir failed for %s\n",
+ 			       __func__, sht->proc_name);
  	}
- 
- 	if (macio_request_resources(mdev, "mac53c94") != 0) {
--       		printk(KERN_ERR "mac53c94: unable to request memory resources");
-+		printk(KERN_ERR "mac53c94: unable to request memory resources");
- 		return -EBUSY;
- 	}
- 
--       	host = scsi_host_alloc(&mac53c94_template, sizeof(struct fsc_state));
-+	host = scsi_host_alloc(&mac53c94_template, sizeof(struct fsc_state));
- 	if (host == NULL) {
- 		printk(KERN_ERR "mac53c94: couldn't register host");
- 		rc = -ENOMEM;
-@@ -453,18 +453,18 @@ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *mat
- 	}
- 
- 	clkprop = of_get_property(node, "clock-frequency", &proplen);
--       	if (clkprop == NULL || proplen != sizeof(int)) {
--       		printk(KERN_ERR "%pOF: can't get clock frequency, "
--       		       "assuming 25MHz\n", node);
--       		state->clk_freq = 25000000;
--       	} else
--       		state->clk_freq = *(int *)clkprop;
--
--       	/* Space for dma command list: +1 for stop command,
--       	 * +1 to allow for aligning.
-+	if (clkprop == NULL || proplen != sizeof(int)) {
-+		printk(KERN_ERR "%pOF: can't get clock frequency, "
-+		       "assuming 25MHz\n", node);
-+		state->clk_freq = 25000000;
-+	} else
-+		state->clk_freq = *(int *)clkprop;
-+
-+	/* Space for dma command list: +1 for stop command,
-+	 * +1 to allow for aligning.
- 	 * XXX FIXME: Use DMA consistent routines
- 	 */
--       	dma_cmd_space = kmalloc_array(host->sg_tablesize + 2,
-+	dma_cmd_space = kmalloc_array(host->sg_tablesize + 2,
- 					     sizeof(struct dbdma_cmd),
- 					     GFP_KERNEL);
- 	if (!dma_cmd_space) {
 -- 
 2.8.1
 
