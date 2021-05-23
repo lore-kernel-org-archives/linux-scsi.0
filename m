@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 698EEC47083
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 May 2021 21:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65E80C47080
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 May 2021 21:14:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 49A47611ED
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 May 2021 21:14:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 470E161166
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 May 2021 21:14:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232037AbhEWVP6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 17:15:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56256 "EHLO
+        id S232045AbhEWVQA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 17:16:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56258 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232002AbhEWVP4 (ORCPT
+        with ESMTP id S232011AbhEWVP4 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 17:15:56 -0400
-Received: from mail-ej1-x629.google.com (mail-ej1-x629.google.com [IPv6:2a00:1450:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC35DC061756;
-        Sun, 23 May 2021 14:14:25 -0700 (PDT)
-Received: by mail-ej1-x629.google.com with SMTP id k14so35139483eji.2;
-        Sun, 23 May 2021 14:14:25 -0700 (PDT)
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77A42C06138A;
+        Sun, 23 May 2021 14:14:26 -0700 (PDT)
+Received: by mail-ed1-x530.google.com with SMTP id y7so12052940eda.2;
+        Sun, 23 May 2021 14:14:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=C/2CGtVUgkNHUKn8feRs8brY9+vXSWlUJgFt66SIrUY=;
-        b=ShUfGkRA0BFzdEJyKzmFycpfCT2c/23QIVrNhbiTD0sNxCLy/W4yFI15ypJXOhsnhA
-         S5l3y02L5IxSlqCChahKKkhcNHKszcmUzHvAr6xpqi68z+lT/BT1M//ZR9R5jHLu4lUy
-         J7HrPOeYbi7U1YQsbHPK3C9ZrH9gVeOn/qm60kEHI1T5KPrlDs5laNNgV6TMqZVdF5Pp
-         OMYCXkMT+tRfaX+AYX5sdnoUQiYB8W3QPOh/mQ7GB8Vr53YuVDC9P98oDgbB5HsM91wl
-         49/Wy9/MVJzCSx1LkSr7Cfb4gmYgaEE0Pyjq4tBmlj5h7A7ix8I1ncp2Uc2Y51nzz4qM
-         YTEw==
+        bh=k3/TbwNFI9HmhMLl8iv6vlhOjkQhUhwgc45VnlZgXpQ=;
+        b=W60V5nAxC/JJPeu1DW7gBrxEGdxhUWLNPrg2O2rkZl67RCJ+HvU0phYa7k5Sf8WOwW
+         ilnq+zzKGrhTudnFETqltfNgqpXUcyrlbbjsqwhxbalkAr/EADGhzIo6Xe1os4/YoFzq
+         xheCGLK5CWii2vcbJhX8nqOfpKQ6X+KjblXGJ6JoNAI9z5pK3cYo6qH8tA2Z3SfT8J19
+         7L95w0AU63Auzu5u2vS8XV1r/Sw7dYukc7LNgJLzrL5aQJ6XZ1NBaZa7Y8kO8ITpuIaQ
+         IOwC6A4yopMIenaE0bbqM4LUdS5p7FqJoRvMqaHc53KC8tg+8B5oLjYEKElqQUHufUnQ
+         LkEA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=C/2CGtVUgkNHUKn8feRs8brY9+vXSWlUJgFt66SIrUY=;
-        b=MuvlUfOQdYvFbK6czgPdkNmy6t6bvy8O26qqp4uvm/gyx/D6WxDUJft+zz3TBhSdJR
-         WrKaSvBZysVK8POVMuj7XNqLZOnZa4hUK6VKFecy0bOh7WxhUkWAe32vDj6HuMJCyzRI
-         rvXWTWprF1Kupu7DZ4KPFV8K/HvVdzT1rtXD4+aCq3qORnXW0Ln5G3qhIufTiLMFOuk2
-         atOarUL18/R++Y1k3bxVGhHdcMHXtJwT/xV+DyDC67jcgWbp3C/5ne9+Lx8Vu3wMwhIy
-         6dhamxb/F1TTz2iSG6d/xUljjkKG+Wgs46PNo6nSnTlZn0yqeg13EHsiPEzqLLBYiBgv
-         Fv9w==
-X-Gm-Message-State: AOAM531Xj8sR6lQ7Vf0uBv2Y9UW8xLC6Uxt7YRchZIA7yaRB3qgL8ydi
-        D5Gg9T2BW0ctfIFsyZeJkuE=
-X-Google-Smtp-Source: ABdhPJwqv+o5JITd/AXk5aV9BiIW7ZPlabUlGzg1CDlYCqsWa7KKuZF43UobN4Fp4IJFY6G7S1uwlg==
-X-Received: by 2002:a17:907:768c:: with SMTP id jv12mr19368022ejc.215.1621804464327;
-        Sun, 23 May 2021 14:14:24 -0700 (PDT)
+        bh=k3/TbwNFI9HmhMLl8iv6vlhOjkQhUhwgc45VnlZgXpQ=;
+        b=gUHN6LsOU5Lb16yJQl7gLNw6IRnJZ7j8Pbqbt6HPp361PWFfZGZN6OCqhLuIiEZmWl
+         2yybUbGV6zbhTKIRQ5vJi2P+x7cJD9VBX0Gq7XbYQtdtRGxPbcgkMlhDNvCe45svk31W
+         fEg5HiEFF6IJUIlKLJyjdN2hFRaeLGSg3KDxiINhHaDygfHhB1b1qYBiS9jCJx/Fhy41
+         9T41474YejYxHBpz01PCVH9E3ZdATVH58a6kiOfdXEccGqfxjQSvWkjMZCsnBEzgMLWW
+         ZWLzX2rKflSTIXFYqjfAqqw0HOSFUJTo/5TkVlu/oCaz68Sblba3Nvcc7FWhl7e/gAai
+         VQHw==
+X-Gm-Message-State: AOAM533Vslh+mLUPlPGEB2sZafkoHnQRAwPDNU87OW3IMJsmhJCdocVt
+        HshuoE4KvFL/NQ/Jatjoxys=
+X-Google-Smtp-Source: ABdhPJzA4DXJYm8b5VzpVVtlpASJZhCgZcVxGeOxmgM1eUCgnntKC/ExCbE6z0LbIqxWqSS+6eKpvg==
+X-Received: by 2002:a50:fd17:: with SMTP id i23mr22962801eds.54.1621804465083;
+        Sun, 23 May 2021 14:14:25 -0700 (PDT)
 Received: from localhost.localdomain (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
-        by smtp.gmail.com with ESMTPSA id t6sm2444ejd.123.2021.05.23.14.14.23
+        by smtp.gmail.com with ESMTPSA id t6sm2444ejd.123.2021.05.23.14.14.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Sun, 23 May 2021 14:14:24 -0700 (PDT)
 From:   Bean Huo <huobean@gmail.com>
@@ -63,14 +63,13 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 2/3] scsi: ufs: Let command trace only for the cmd != null case
-Date:   Sun, 23 May 2021 23:14:08 +0200
-Message-Id: <20210523211409.210304-3-huobean@gmail.com>
+Subject: [PATCH v1 3/3] scsi: ufs: Use UPIU query trace in devman_upiu_cmd
+Date:   Sun, 23 May 2021 23:14:09 +0200
+Message-Id: <20210523211409.210304-4-huobean@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210523211409.210304-1-huobean@gmail.com>
 References: <20210523211409.210304-1-huobean@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -78,92 +77,37 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-For the query request, we already have query_trace, but in
-ufshcd_send_command (), there will add two more redundant
-traces. Since lrbp->cmd is null in the query request, the
-below these two trace events provide nothing except the tag
-and DB. Instead of letting them take up the limited trace
-ring buffer, it’s better not to print these traces in case
-of cmd == null.
-
-ufshcd_command: send_req: ff3b0000.ufs: tag: 28, DB: 0x0, size: -1, IS: 0, LBA: 18446744073709551615, opcode: 0x0 (0x0), group_id: 0x0
-ufshcd_command: dev_complete: ff3b0000.ufs: tag: 28, DB: 0x0, size: -1, IS: 0, LBA: 18446744073709551615, opcode: 0x0 (0x0), group_id: 0x0
+Since devman_upiu_cmd is not COMMAND UPIU, and doesn't have
+CDB, it is better to use UPIU query trace, which provides more
+helpful information for issue shooting.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 49 ++++++++++++++++++---------------------
- 1 file changed, 23 insertions(+), 26 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index dc5f13ccf176..ed9059b3e63d 100644
+index ed9059b3e63d..e8756a4fb972 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -376,33 +376,31 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	int transfer_len = -1;
+@@ -6697,6 +6697,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
  
--	if (!trace_ufshcd_command_enabled()) {
--		/* trace UPIU W/O tracing command */
--		if (cmd)
--			ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
-+	if (!cmd)
- 		return;
--	}
+ 	hba->dev_cmd.complete = &wait;
  
--	if (cmd) { /* data phase exists */
--		/* trace UPIU also */
--		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
--		opcode = cmd->cmnd[0];
--		if ((opcode == READ_10) || (opcode == WRITE_10)) {
--			/*
--			 * Currently we only fully trace read(10) and write(10)
--			 * commands
--			 */
--			if (cmd->request && cmd->request->bio)
--				lba = cmd->request->bio->bi_iter.bi_sector;
--			transfer_len = be32_to_cpu(
-+	/* trace UPIU W/O tracing command */
-+	ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
-+
-+	if (!trace_ufshcd_command_enabled())
-+		return;
-+
-+	opcode = cmd->cmnd[0];
-+	if ((opcode == READ_10) || (opcode == WRITE_10)) {
-+		/*
-+		 * Currently we only fully trace read(10) and write(10)
-+		 * commands
-+		 */
-+		if (cmd->request && cmd->request->bio)
-+			lba = cmd->request->bio->bi_iter.bi_sector;
-+		transfer_len = be32_to_cpu(
- 				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
--			if (opcode == WRITE_10)
--				group_id = lrbp->cmd->cmnd[6];
--		} else if (opcode == UNMAP) {
--			if (cmd->request) {
--				lba = scsi_get_lba(cmd);
--				transfer_len = blk_rq_bytes(cmd->request);
--			}
-+		if (opcode == WRITE_10)
-+			group_id = lrbp->cmd->cmnd[6];
-+	} else if (opcode == UNMAP) {
-+		if (cmd->request) {
-+			lba = scsi_get_lba(cmd);
-+			transfer_len = blk_rq_bytes(cmd->request);
++	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+ 	/* Make sure descriptors are ready before ringing the doorbell */
+ 	wmb();
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+@@ -6729,6 +6730,9 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
  		}
  	}
  
-@@ -9774,8 +9772,7 @@ static const struct dev_pm_ops ufs_rpmb_pm_ops = {
- };
- 
- /**
-- * Describes the ufs rpmb wlun.
-- * Used only to send uac.
-+ * Describes the ufs rpmb wlun. Used only to send uac.
-  */
- static struct scsi_driver ufs_rpmb_wlun_template = {
- 	.gendrv = {
++	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
++				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
++
+ out:
+ 	blk_put_request(req);
+ out_unlock:
 -- 
 2.25.1
 
