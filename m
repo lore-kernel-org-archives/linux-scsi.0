@@ -5,79 +5,78 @@ X-Spam-Level:
 X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86FD0C47081
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 May 2021 17:58:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4EF1C47082
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 May 2021 17:58:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A5E2610A6
-	for <linux-scsi@archiver.kernel.org>; Sun, 23 May 2021 17:58:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8224C610A6
+	for <linux-scsi@archiver.kernel.org>; Sun, 23 May 2021 17:58:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231945AbhEWR7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 13:59:37 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:38864 "EHLO
+        id S231947AbhEWR7i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 13:59:38 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38868 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231927AbhEWR7e (ORCPT
+        with ESMTP id S231939AbhEWR7e (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 13:59:34 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14NHurQL155892;
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14NHuvHu156106;
         Sun, 23 May 2021 17:57:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2020-01-29; bh=ilX5dcSbBylgPZkS5WHSZzC6Y2p79IQNH+ZVqjPKU18=;
- b=IBlFzo8tJZ+qu+85m+bkrfTk8ObiFKo395BSOolyZOwnEcGGS7SN2BebZoaBE1GC8PsS
- BAeyQ3eRN9EfdJaG7EzgLEjmoTTak86L8a/tQLWZK5n2r12eeSkAmBFa7gblENI6dbvt
- DcjXxnehOT1UZckRHxADhHlUmviwczPJmz8PtXnwQnSXkhyROWzBcCMA4oFjYKxsU4GP
- 55CZMFkPDKRAPRx7cqgEQtwTvrJu+2aqVDK60AAO43fbBmN3TVThp7q7CpRcYQpxV0yX
- Nrutex8GH6ivGqQcGhp6lm7XCcnM2wTKQQXVuYsTdWTzSAmb/QCZQQLSmH96TmOR0RrR oA== 
+ s=corp-2020-01-29; bh=OLraTDovEJeVcgs/luxN0asnw5ggmSB+fgbC0HM/l1M=;
+ b=jz6tH4cXbSCB3fw6B4R/6JiapJH0WfRu3tGZGjoZ4ufjLz/tq18uSGESN4klhcVMuc3b
+ Z/kAg60ucqIOL6LwFclGwEu0vlaM2CSY1Io3i7Fy6zxi0Jv+eTUOfO6RiuG8xT3DhYyy
+ G0tNMNMKoLGElFrieB5kHf6B1xAwenJJrPjY5aBqRzyWyQRcIYFyXpK6CL1R943R4kXF
+ FWqnZNJihx5of6CIAT6BBbPqUPI7fSajFnOVS7BdJ8d9cQJ8Cmp1iFG6jFuJyeM8XXel
+ 2w0K/glAcXgcMM9P2HbLIXajLCQjydG/UeHTxfEWpfgcnlyTVwIEho0RcLuZEDc95B5z fA== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 38pswn9fq9-1
+        by aserp2120.oracle.com with ESMTP id 38pswn9fq7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 May 2021 17:57:59 +0000
+        Sun, 23 May 2021 17:57:58 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14NHucLS161902;
-        Sun, 23 May 2021 17:57:59 GMT
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14NHucLR161902;
+        Sun, 23 May 2021 17:57:58 GMT
 Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2170.outbound.protection.outlook.com [104.47.58.170])
-        by aserp3020.oracle.com with ESMTP id 38pss3qbd3-3
+        by aserp3020.oracle.com with ESMTP id 38pss3qbd3-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 23 May 2021 17:57:59 +0000
+        Sun, 23 May 2021 17:57:58 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=di7PeG+ZxXwBYgjSPO0Ikm+y1EFHnHAxML5Ta1r0MjyXsq00DNQdNupaqFwVUZDtWMHhcXIn8g94s/6U2g7rxHxy/2HdR19sk4AmByOsghXVvKEm22xjn8jYTwGBTgvWolGCA7drOQYL+Wru5ca51HOBwIm0XfSQ/QJ03/grmp+oCC8NPcz5lxC4FhZu04KCdRIddXojUKQ6MOObyJd9lc+SXM0cWcJvsGAftYqB+k0n5nn4cVlSX+kd116IdQkHOOzReCgl+H3ZTPjljM6ffMF10CNJmyR7qBUW4azlGoeDG9OoK+lEtJsBQ4iBspc4KSPH15s1qs+WRdkx3/iWjA==
+ b=HiC32UMeadHpw24sABu6rGHLmPNOKVR5Aswb1WBBmCCSzukQBVYRmyHpmMTomTLG71ZT+3L+s9pLXGbQe/MbKgL4NIfILqn7FbqITf1uh8xwy8qGu5sfL4mHeWHztud8NRL/LVz8e9EELoW+Xq5AYj1BnOxHGOhz6q8d91T+DJ3CXMCY24UIOzLYelLDyJEHzKqypvDeo6Pz0BDwNlzk2plSeFwf58upo8ht0ThbIjYOL1+Q3cbiP9vwQv9eTH8J4HuL+SNPafMHWIM942CjC22045AU/UQ3uKk4VR/vvy8GvjqsVDZ6rNw9lFtv2N0d4m8jGgBzOh8NcnuXTZYqEg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ilX5dcSbBylgPZkS5WHSZzC6Y2p79IQNH+ZVqjPKU18=;
- b=Z09k9ggOS6924LEckix800TF1q+HVCmmLaJFP5JNf9QvtWYJljFj9s2ZPY5KbWrPJncT0rpHhxKIVAWLuBp1g1lovoGlJ4FFaWUsvEifljCgy032JWZKNqLeD0+dlEIch93FaPza4VcWizWt8X+maLlZg4PLFtvKw0gXsVrT6LWETIw5CUJkj1N6o5TgsrE7t6dxkez54IM+Jt5OwIZw35E2v+Hz14kcaZSppcywQirLa8Jl1YOOkR5PWYP5BlkvKieUI3GbV1/TDGS4XBR9iItZXbJoC/jsCQHRig3/Xds+9dedtOtiPZ8BB2bBEgBt5WsoIHQFBspwJsdHlcB/cw==
+ bh=OLraTDovEJeVcgs/luxN0asnw5ggmSB+fgbC0HM/l1M=;
+ b=coJ4SCOhKdomhedSlRBLUVq3NbtakEwQxOxNhCWf2aDiwqn7sy8pQpPhfkeEHTca/Z692E5h3uHKVkcXmgeBCc9cuGXE/aT/sufpj6/N2As+7NLrCfNkhRet0jaT9uL4qz/fCboxkFiBjUMPejEcGLn887kqXcrXAXNWfXo7Za3F0KGk+wPaoupmHoKOnz8aToBiFZQoSlYyZRGxROmLnv7tzVNB5imEGp1pfL7E9V0kKTywkfYMMpJuSIQZshQ/NWk1YcES1CwFVF1QhWYSMCFnnpflJmlhrME6Jl9LLNyO43uW/2hBg6ypDtyVwhZNbGDYNax1KXhmLatqZG3dmw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ilX5dcSbBylgPZkS5WHSZzC6Y2p79IQNH+ZVqjPKU18=;
- b=P7cJrNWInUqnWm33XFTxZtjUvxeVCnY6bCiDPxi7gbGXrgHxcQ3A73l3cOI5ySiJFX1jiIFNlPV2Dq29alJ2q+16Wpi8TQGu4RC4I6dGRHDT+l2PGYuyevJxNqEG7aelS2oFezczvNFdWCSnQ++I7r7asH0gt6mdUuI7/aodSUA=
+ bh=OLraTDovEJeVcgs/luxN0asnw5ggmSB+fgbC0HM/l1M=;
+ b=lcQKn6cfuq+YLSWrl8aRcA+huocN/SwPqIPoMbFopLP9KgNNe+jI8lVfRkpm0kiaX+ZzYqt0ddclQOMtojdmsJ8v+iEqAfH2/FLP9wga88FISPSQsMbtpl1JzoVJ5r8z/wlUJsCJtP30Q76YJhgyd1Ce0Wb2D0B+Jpgcmt+Ze0g=
 Authentication-Results: suse.com; dkim=none (message not signed)
  header.d=none;suse.com; dmarc=none action=none header.from=oracle.com;
 Received: from BYAPR10MB3573.namprd10.prod.outlook.com (2603:10b6:a03:11e::32)
  by BY5PR10MB4004.namprd10.prod.outlook.com (2603:10b6:a03:1b2::27) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4150.23; Sun, 23 May
- 2021 17:57:57 +0000
+ 2021 17:57:56 +0000
 Received: from BYAPR10MB3573.namprd10.prod.outlook.com
  ([fe80::b09d:e36a:4258:d3d0]) by BYAPR10MB3573.namprd10.prod.outlook.com
  ([fe80::b09d:e36a:4258:d3d0%7]) with mapi id 15.20.4150.027; Sun, 23 May 2021
- 17:57:57 +0000
+ 17:57:56 +0000
 From:   Mike Christie <michael.christie@oracle.com>
 To:     lduncan@suse.com, cleech@redhat.com, njavali@marvell.com,
         mrangankar@marvell.com, GR-QLogic-Storage-Upstream@marvell.com,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
         jejb@linux.ibm.com
 Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 08/28] scsi: iscsi_tcp: Set no linger
-Date:   Sun, 23 May 2021 12:57:19 -0500
-Message-Id: <20210523175739.360324-9-michael.christie@oracle.com>
+Subject: [PATCH 07/28] scsi: iscsi: Fix in-kernel conn failure handling
+Date:   Sun, 23 May 2021 12:57:18 -0500
+Message-Id: <20210523175739.360324-8-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210523175739.360324-1-michael.christie@oracle.com>
 References: <20210523175739.360324-1-michael.christie@oracle.com>
@@ -89,58 +88,58 @@ X-ClientProxiedBy: DM6PR03CA0033.namprd03.prod.outlook.com
  (2603:10b6:a03:11e::32)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from localhost.localdomain (73.88.28.6) by DM6PR03CA0033.namprd03.prod.outlook.com (2603:10b6:5:40::46) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4150.24 via Frontend Transport; Sun, 23 May 2021 17:57:56 +0000
+Received: from localhost.localdomain (73.88.28.6) by DM6PR03CA0033.namprd03.prod.outlook.com (2603:10b6:5:40::46) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4150.24 via Frontend Transport; Sun, 23 May 2021 17:57:55 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a5a3cef2-8e6b-44fb-96ab-08d91e144c1f
+X-MS-Office365-Filtering-Correlation-Id: ec164e97-3422-4ab0-daac-08d91e144b75
 X-MS-TrafficTypeDiagnostic: BY5PR10MB4004:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BY5PR10MB40046BA3F695BB6520E4E6AEF1279@BY5PR10MB4004.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-Microsoft-Antispam-PRVS: <BY5PR10MB400494B53E8223EEF7D51E53F1279@BY5PR10MB4004.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:10000;
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: SZut/tO7ch7Z5tDzQ0E3R39xsqyvhu59QNh+zQX+8xn74cWdycp7vdVDKVgGmYPRrK98oMwFnlwHHpULbXenTWnd7AytJw9yWkQM5NQ/SW4tmmW2Slc8VSWa3/0Vpc0EOaFhZJy9mOJFnCQ4CUavSHMd3A97+G3jHXcbW8iV5KqHsAPPAGrsHkFGq2/aeYzG0JJ+13gFaLn0yGGHTp9sbI73A1ZIzqFCiiSpgcrF/aIdIbrpsNEvRtD5NMiIGCvQLEnVUFZhYPcnS0jnwO64DOJiwlB4sP2Qsks8CTiHw9uYQOQwuc6v0JUDVeUCB1ecmH4ojKPmka0pcEPRr4QoBTDYtRvG5iguZRGy0+xqfkmhzarmRDoshgSHEpZziG3dKIExd3K8/T/vDiLyS4lBzPb/XTpvjYS0XDa62uKMlQDcaoCQrJ71xc3uM5l8A4Tv2kDYCGjBOaaXBlvwkM4RQDrO+Sor4OWSt2I10GdIG9QVU4cNwbwixvqa/7HcjxTxUICBG+KSoVrzYvLYiykQd8dQwyYO0E85YmyqR4hwgiJO6vYx5ADnKMPs+ppCEdkf0ypmNZ99oVq2US/rxj5g3w2SdZM0DxWOcRTGmH5RBw14aojgc5/lrF7h1JqdFqzLdpcJeSR6vzenA/LuafhxBSfFjUn3uxQbgiMJMZq2k2UNVUOcJUozrogR7X1W95wl
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(396003)(366004)(376002)(39860400002)(346002)(66476007)(66556008)(956004)(2616005)(66946007)(16526019)(478600001)(36756003)(2906002)(83380400001)(86362001)(5660300002)(186003)(6486002)(26005)(4326008)(1076003)(8676002)(6512007)(6666004)(8936002)(38100700002)(38350700002)(6506007)(107886003)(316002)(52116002)(69590400013);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?k2eH5IJjwaAGedcjyqsVPYITXrmXevXdKWkdHPn7hldzfskEaDB8RXUTeuw7?=
- =?us-ascii?Q?tm2eIw8QXtp03gjwm5op2duKg5ypzlwicHRvfEl7d14F3x3/B8zK4ae3Qofx?=
- =?us-ascii?Q?IIrROHmNH8BVIUNnxUbxBZSgW21nAE6o/YPJxHmOkQ9sSRFhqMLlovx/P3b2?=
- =?us-ascii?Q?F80wZzrsIEYl5LIIcXmcFehEtyWEyK/Lww/Nnw3cjn/3nDZNQQWNkBLqLKCx?=
- =?us-ascii?Q?ZnAn+pV7ZVhs8g9hxkDoLN6LNX0sV5isjgLVCCVR/7LlRzB1c2BQOREhhTmo?=
- =?us-ascii?Q?n94qL5m4h7I+2B5jMmzJBa+dmlE/YhBGBSC6QwR9vfYkJsUcNQMwKMnIXKYe?=
- =?us-ascii?Q?LJmXFitlhjnCMbCB+c7mkvJ/q5I4xDHcjbDDFWg92x7NWcdE/6VjALLKLsxg?=
- =?us-ascii?Q?jUR04e20ZbbJDr+r3C0IiqE0LEEa/QMVr7g5NfjI1J3VbkawY/TNtPEssf7T?=
- =?us-ascii?Q?qLlY+JaJ95JGuSJ2gsgHz4NEuOjWXZ2GBS7mDTJOjrEIY5SnVazmO3zwG5ed?=
- =?us-ascii?Q?x4Dq9zRf1tggYSWnIIwfUJILCyhsfa6R3VB10cqXVMg7upJh9W6UlVGNic2x?=
- =?us-ascii?Q?UkX0HTQXFJY/a3+1A7sYjNrawlboXPTqQ38P2Wz7WjF9wazkZrwnh0pmq8qG?=
- =?us-ascii?Q?W45DRjyvZ9XqYK2wkO63uVavZfyFI3Bm8ou+x/BQyKUTNNHj8RWg23sfcM9b?=
- =?us-ascii?Q?ebjCbhZ8D1hm3xCKCvH9fpuqgZiXzXXJvqng46hpMin55eUeIXhzIk4/FWIG?=
- =?us-ascii?Q?0fL47VaGLMtlFNKw+K1mawLEIZqIFvigUlqP437ktLrOC9BRieGCoiCRx+47?=
- =?us-ascii?Q?wgAsNuwk1wvAegvduBQYTlky6soAe8Ht6p0Zj3OBhEqPm2pnAhEQuUWLjy2R?=
- =?us-ascii?Q?INipj+NDXTMeVnyE9XhbXlm1anGCHQjhwZZF/rLKBMIDcEjCydsxiwm7PavL?=
- =?us-ascii?Q?Sv27UWndnTnwJxffLURD6rd/S2KPvwzVqWioH1HsbW2gdCNMiHFxY/8dD4pM?=
- =?us-ascii?Q?GTIW3euYV+R2iRDqS8+8b0CxbZ57ts5XrcwWx3T2uIllmqrqgIyhw/0XjwQ7?=
- =?us-ascii?Q?GAtAcUYA0trWJl2o1Tko7yc65A7MXGXIG2TYe/DdFpTsySm6OSLlJs370CA7?=
- =?us-ascii?Q?6eWTvO2iZrE8ENZ9MDUDAeR7+2Wi3pjGIs+YCtPtb2Bvk0aLdDQ6qofATpBz?=
- =?us-ascii?Q?/Q73u88rNIXDfP7HJqjWu9hFsHZr6TZ9K6XGJpJgksaM93bBIrD1VRtX9HIG?=
- =?us-ascii?Q?vCAn/4lnIpZmZpJxyKLbFHnYbMl1EPQRchLr1hjV8mUNngveoy/GVeo2S7xV?=
- =?us-ascii?Q?NR1KHvXLzjJIMhP8wcffIFFu?=
+X-Microsoft-Antispam-Message-Info: DvY+C0JfF7Psrzng0Wv0KYw2Y9M8sPYWdiDS0k2eD2CpDDsTvok7LfHWPxF6SoG7jkJOKrcuorFDkpLjYuVDgunn3Uo5aWehk7MMmtbQm/E6WDjEF6YBWIhDm9D0cg8saPMfvU3KZn+em1/GMd3zRfwdiszWqDFbCYnwI7pqcnMVpdYXbxU42gDDTCd7r2rH7BEusPY4ZRdQu6Sh7y9NVkVr2WtloDOEJQWx5/8k1rm4poGJTwe26Z/5pPO8DbKJOXmLm1Lrk+ryl3c4EuWZGeCH3CCvkFw4q6lWYt2B5uaqrBug4pdoCWNg5Gez/GCMj2apHqh2i0fQ4H2QzZQp1HGWgIf4VwzF/ftH/imMoj9FOMFuuSt93eBd/FhD/Tawx+cuVZClcXCcIx1cHq1dTY85nyCaXt8vSPBaF0TaXFAfvHLMuOvJ3jJ4/Z7K9SmoFRNZAtstxoLBCB++JnqeN8HuRLykJPu4MImDkpURGNDnJCitjitbKavTLeNdXoW4cYhiJNqB+jrlOkUyTYpBbyNvik+ytHnHmj2WLQ7bWRCugrWNP1q9JRyqOGLO+BKW90xaJXQ1BxpjGP+43+Lj51MbDaTbCyf8tvEso69BLiTN0HDseNmBFlGB/MSqB4BzrRBEEkCkmv7CLXf7P835cFgtRu8ClbQBxft3xhqX1hWcuuceftoJpUlErrOA19L8
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(396003)(366004)(376002)(39860400002)(346002)(66476007)(66556008)(956004)(2616005)(66946007)(16526019)(478600001)(36756003)(2906002)(83380400001)(30864003)(86362001)(5660300002)(186003)(6486002)(26005)(4326008)(1076003)(8676002)(6512007)(6666004)(8936002)(38100700002)(38350700002)(6506007)(107886003)(316002)(52116002)(69590400013);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?q1rmKNLf50l4tcWelmcxJZsa38DS4MbXxqd3ifrLsZq6B6B/MFxhfBzRmFnt?=
+ =?us-ascii?Q?iIY7C1uv6gSy0Flx/40rsqwR0OLV0X7hCV05zm8wwuRjvX2YdhrQhhEzhc+M?=
+ =?us-ascii?Q?xx+uOEdVxPRJNWQO+/zxPdQtdschNutX+ILjWctd5dzXToKMJ47bpHaMnNe1?=
+ =?us-ascii?Q?l1nGICFVFoOnejxz7K1WM5XKpAuluCUm6/4dP7XJoSdcpENW1/9CB75sHjdR?=
+ =?us-ascii?Q?liQK8Ic9Pk9+O9mBjOgZt97DiLKnD3cg4J4j04wLBg6erg8tdm0uWGUba5Kr?=
+ =?us-ascii?Q?+f1ZIS6hMgHU8xvNKfOEvvwIQCRktCRHT7El8Iy2KaaYE/+bFxg2bf0mMzrD?=
+ =?us-ascii?Q?kki9VGI0cF81zNXaM5cVe4RYY1Qq0903lQxmL2N4XZyz68gnQfM+wU9pwuBY?=
+ =?us-ascii?Q?dEWnUC2BXWXAozZcevduN6I4Y9m4a4rCfGfN2msRS4zbxbXoIuGNWOkCwxzu?=
+ =?us-ascii?Q?OEtkHJgfMgKgmpprrRCYJ7i7a/BxL1GxqRXFlhMFRprSsl46A8aZHX/RrR7U?=
+ =?us-ascii?Q?4912W507t/nBfMDVd62VwgbqgpATSFv/nVDdhoDc1p3fQ1dOScQqopsGW54s?=
+ =?us-ascii?Q?4xwTjxzrGeZhg8Q3SLQGRsYlu9pW79sYUku37eHyVQWxxKZVySwhs/kDWqdk?=
+ =?us-ascii?Q?xI42fbau1C+EFDdjH7KGBLd9q21Laq3gM6azmYwZC1GjuOd1kgAObXlu9j6q?=
+ =?us-ascii?Q?bKH82BeGnalngsAkB30EZAygP24z+wtgp7zzFdW0t3Q5MJrwQahRWfAp/jvA?=
+ =?us-ascii?Q?EkgxLjqMWCfCdGLO6ANWs0KNurZLATXRGl8FWbq0veJkssD73pt9wnXM1Cod?=
+ =?us-ascii?Q?06HrKv97OS6+usVyHPzT2/Jz2YYIxCpXDHPdRxYX/uPZ0amk5BvWJqvCsLQn?=
+ =?us-ascii?Q?dpVIwI1hTlGa8xS0RSkFRmJUNk2P26qZFL5zJnAdHHMC77dKfCziSBribEaw?=
+ =?us-ascii?Q?eVQz770Imlvw6TnFod8kzqfBwUrlGE3POztZekb2zmq3nZ64/PgpyhDcZLp9?=
+ =?us-ascii?Q?uwp83q0bj1IpbHlvLBM139CvuOetEaYt8HsENB4muO9VNj+90R6CrGLvRoTS?=
+ =?us-ascii?Q?FPuCHa8gtKopBxFLMlNwfArOFe300mAFeh4nS+ttXlKd+oUJj6xYveIRAp1M?=
+ =?us-ascii?Q?4nzgsYr0+IHS4jAMn2m2RR/CWMjtqOtcQgIXD0cNE17Y5CSFDOXqSI80Iaf0?=
+ =?us-ascii?Q?EJN2kjtNb/8rCruFtu0y3s/HOmU4GWR9q3AqBSSpWsacVf/Cb7jS31Z2pjUC?=
+ =?us-ascii?Q?AmAC6PlKBUIue2uRmjTA9u023cxBWGFA9KCZfCG0dx0IRlZteHIMCt73v+ie?=
+ =?us-ascii?Q?14h3u+TT5A7w08L+uYgJ50jL?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a5a3cef2-8e6b-44fb-96ab-08d91e144c1f
+X-MS-Exchange-CrossTenant-Network-Message-Id: ec164e97-3422-4ab0-daac-08d91e144b75
 X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3573.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 May 2021 17:57:57.6952
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 May 2021 17:57:56.5568
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: K7mqT6RGhocYiM3uiEwZBcZfmo3dkfogSjvh10EVJvnH8AnvJPGGQaFxH5xfO4G9xSINMqTIcA5JDQ9YVzU0awDwXYOYJHbkXgx6Kv+bDRQ=
+X-MS-Exchange-CrossTenant-UserPrincipalName: y6C+af+NBXmj8qA2EdgGBLWCkrT6FNm0UiqLimNrVKBlGWp75KHo/eR7GHzD9Yxz25lwWkXUsiq4PpklPZcMXXkFQZ2z4Q6yoOVNcJCXViQ=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: BY5PR10MB4004
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9993 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0
  malwarescore=0 mlxlogscore=999 spamscore=0 mlxscore=0 bulkscore=0
  phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2104190000 definitions=main-2105230136
-X-Proofpoint-GUID: -dzpgUy2E3Dxtoq0kqoXfiwQtmDlPd0p
-X-Proofpoint-ORIG-GUID: -dzpgUy2E3Dxtoq0kqoXfiwQtmDlPd0p
+X-Proofpoint-GUID: CAkF6QGOazYQ8d55PHVLeWEE6QIT96PB
+X-Proofpoint-ORIG-GUID: CAkF6QGOazYQ8d55PHVLeWEE6QIT96PB
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9993 signatures=668682
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 clxscore=1015 suspectscore=0
  spamscore=0 adultscore=0 mlxlogscore=999 lowpriorityscore=0 bulkscore=0
@@ -151,32 +150,691 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Userspace (open-iscsi based tools at least) sets no linger on the socket
-to prevent stale data from being sent. However, with the in kernel cleanup
-if userspace is not up the sockfd_put will release the socket without
-having set that sockopt.
+The commit 0ab710458da1 ("scsi: iscsi: Perform connection failure entirely
+in kernel space") has the following regressions/bugs that this patch fixes:
 
-iscsid sets that opt at socket close time, but it seems ok to set this at
-setup time in the kernel for all tools.
+1. It can return cmds to upper layers like dm-multipath where that can
+retry them. After they are successful the fs/app can send new IO to the
+same sectors, but we've left the cmds running in FW or in the net layer.
+We need to be calling ep_disconnect if userspace is not up.
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+This patch only fixes the issue for offload drivers. iscsi_tcp will be
+fixed in separate patch because it doesn't have a ep_disconnect call.
+
+2. The drivers that implement ep_disconnect expect that it's called before
+conn_stop. Besides crashes, if the cleanup_task callout is called before
+ep_disconnect it might free up driver/card resources for session1 then
+they could be allocated for session2. But because the driver's
+ep_disconnect is not called it has not cleaned up the firmware so the card
+is still using the resources for the original cmd.
+
+3. The stop_conn_work_fn can run after userspace has done it's recovery
+and we are happily using the session. We will then end up with various
+bugs depending on what is going on at the time.
+
+We may also run stop_conn_work_fn late after userspace has called
+stop_conn and ep_disconnect and is now going to call start/bind conn. If
+stop_conn_work_fn runs after bind but before start, we would leave the
+conn in a unbound but sort of started state where IO might be allowed
+even though the drivers have been set in a state where they no longer
+expect IO.
+
+4. returning -EAGAIN in iscsi_if_destroy_conn if we haven't yet run the in
+kernel stop_conn function is breaking userspace. We should have been doing
+this for the caller.
+
+Fixes: 0ab710458da1 ("scsi: iscsi: Perform connection failure entirely in
+kernel space")
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/scsi/iscsi_tcp.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/scsi_transport_iscsi.c | 471 ++++++++++++++++------------
+ include/scsi/scsi_transport_iscsi.h |  10 +-
+ 2 files changed, 283 insertions(+), 198 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index dd33ce0e3737..553e95ad6197 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -689,6 +689,7 @@ iscsi_sw_tcp_conn_bind(struct iscsi_cls_session *cls_session,
- 	sk->sk_sndtimeo = 15 * HZ; /* FIXME: make it configurable */
- 	sk->sk_allocation = GFP_ATOMIC;
- 	sk_set_memalloc(sk);
-+	sock_no_linger(sk);
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index bab6654d8ee9..b8a93e607891 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -86,15 +86,11 @@ struct iscsi_internal {
+ 	struct transport_container session_cont;
+ };
  
- 	iscsi_sw_tcp_conn_set_callbacks(conn);
- 	tcp_sw_conn->sendpage = tcp_sw_conn->sock->ops->sendpage;
+-/* Worker to perform connection failure on unresponsive connections
+- * completely in kernel space.
+- */
+-static void stop_conn_work_fn(struct work_struct *work);
+-static DECLARE_WORK(stop_conn_work, stop_conn_work_fn);
+-
+ static atomic_t iscsi_session_nr; /* sysfs session id for next new session */
+ static struct workqueue_struct *iscsi_eh_timer_workq;
+ 
++static struct workqueue_struct *iscsi_conn_cleanup_workq;
++
+ static DEFINE_IDA(iscsi_sess_ida);
+ /*
+  * list of registered transports and lock that must
+@@ -1623,12 +1619,6 @@ static DECLARE_TRANSPORT_CLASS(iscsi_connection_class,
+ static struct sock *nls;
+ static DEFINE_MUTEX(rx_queue_mutex);
+ 
+-/*
+- * conn_mutex protects the {start,bind,stop,destroy}_conn from racing
+- * against the kernel stop_connection recovery mechanism
+- */
+-static DEFINE_MUTEX(conn_mutex);
+-
+ static LIST_HEAD(sesslist);
+ static DEFINE_SPINLOCK(sesslock);
+ static LIST_HEAD(connlist);
+@@ -2245,6 +2235,123 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_remove_session);
+ 
++static void iscsi_stop_conn(struct iscsi_cls_conn *conn, int flag)
++{
++	ISCSI_DBG_TRANS_CONN(conn, "Stopping conn.\n");
++
++	switch (flag) {
++	case STOP_CONN_RECOVER:
++		conn->state = ISCSI_CONN_FAILED;
++		break;
++	case STOP_CONN_TERM:
++		conn->state = ISCSI_CONN_DOWN;
++		break;
++	default:
++		iscsi_cls_conn_printk(KERN_ERR, conn, "invalid stop flag %d\n",
++				      flag);
++		return;
++	}
++
++	conn->transport->stop_conn(conn, flag);
++	ISCSI_DBG_TRANS_CONN(conn, "Stopping conn done.\n");
++}
++
++static int iscsi_if_stop_conn(struct iscsi_transport *transport,
++			      struct iscsi_uevent *ev)
++{
++	int flag = ev->u.stop_conn.flag;
++	struct iscsi_cls_conn *conn;
++
++	conn = iscsi_conn_lookup(ev->u.stop_conn.sid, ev->u.stop_conn.cid);
++	if (!conn)
++		return -EINVAL;
++
++	ISCSI_DBG_TRANS_CONN(conn, "iscsi if conn stop.\n");
++	/*
++	 * If this is a termination we have to call stop_conn with that flag
++	 * so the correct states get set. If we haven't run the work yet try to
++	 * avoid the extra run.
++	 */
++	if (flag == STOP_CONN_TERM) {
++		cancel_work_sync(&conn->cleanup_work);
++		iscsi_stop_conn(conn, flag);
++	} else {
++		/*
++		 * Figure out if it was the kernel or userspace initiating this.
++		 */
++		if (!test_and_set_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
++			iscsi_stop_conn(conn, flag);
++		} else {
++			ISCSI_DBG_TRANS_CONN(conn,
++					     "flush kernel conn cleanup.\n");
++			flush_work(&conn->cleanup_work);
++		}
++		/*
++		 * Only clear for recovery to avoid extra cleanup runs during
++		 * termination.
++		 */
++		clear_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags);
++	}
++	ISCSI_DBG_TRANS_CONN(conn, "iscsi if conn stop done.\n");
++	return 0;
++}
++
++static void iscsi_ep_disconnect(struct iscsi_cls_conn *conn, bool is_active)
++{
++	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
++	struct iscsi_endpoint *ep;
++
++	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep.\n");
++	conn->state = ISCSI_CONN_FAILED;
++
++	if (!conn->ep || !session->transport->ep_disconnect)
++		return;
++
++	ep = conn->ep;
++	conn->ep = NULL;
++
++	session->transport->unbind_conn(conn, is_active);
++	session->transport->ep_disconnect(ep);
++	ISCSI_DBG_TRANS_CONN(conn, "disconnect ep done.\n");
++}
++
++static void iscsi_cleanup_conn_work_fn(struct work_struct *work)
++{
++	struct iscsi_cls_conn *conn = container_of(work, struct iscsi_cls_conn,
++						   cleanup_work);
++	struct iscsi_cls_session *session = iscsi_conn_to_session(conn);
++
++	mutex_lock(&conn->ep_mutex);
++	/*
++	 * If we are not at least bound there is nothing for us to do. Userspace
++	 * will do a ep_disconnect call if offload is used, but will not be
++	 * doing a stop since there is nothing to clean up, so we have to clear
++	 * the cleanup bit here.
++	 */
++	if (conn->state != ISCSI_CONN_BOUND && conn->state != ISCSI_CONN_UP) {
++		ISCSI_DBG_TRANS_CONN(conn, "Got error while conn is already failed. Ignoring.\n");
++		clear_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags);
++		mutex_unlock(&conn->ep_mutex);
++		return;
++	}
++
++	iscsi_ep_disconnect(conn, false);
++
++	if (system_state != SYSTEM_RUNNING) {
++		/*
++		 * If the user has set up for the session to never timeout
++		 * then hang like they wanted. For all other cases fail right
++		 * away since userspace is not going to relogin.
++		 */
++		if (session->recovery_tmo > 0)
++			session->recovery_tmo = 0;
++	}
++
++	iscsi_stop_conn(conn, STOP_CONN_RECOVER);
++	mutex_unlock(&conn->ep_mutex);
++	ISCSI_DBG_TRANS_CONN(conn, "cleanup done.\n");
++}
++
+ void iscsi_free_session(struct iscsi_cls_session *session)
+ {
+ 	ISCSI_DBG_TRANS_SESSION(session, "Freeing session\n");
+@@ -2284,7 +2391,7 @@ iscsi_create_conn(struct iscsi_cls_session *session, int dd_size, uint32_t cid)
+ 
+ 	mutex_init(&conn->ep_mutex);
+ 	INIT_LIST_HEAD(&conn->conn_list);
+-	INIT_LIST_HEAD(&conn->conn_list_err);
++	INIT_WORK(&conn->cleanup_work, iscsi_cleanup_conn_work_fn);
+ 	conn->transport = transport;
+ 	conn->cid = cid;
+ 	conn->state = ISCSI_CONN_DOWN;
+@@ -2341,7 +2448,6 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
+ 
+ 	spin_lock_irqsave(&connlock, flags);
+ 	list_del(&conn->conn_list);
+-	list_del(&conn->conn_list_err);
+ 	spin_unlock_irqrestore(&connlock, flags);
+ 
+ 	transport_unregister_device(&conn->dev);
+@@ -2456,83 +2562,6 @@ int iscsi_offload_mesg(struct Scsi_Host *shost,
+ }
+ EXPORT_SYMBOL_GPL(iscsi_offload_mesg);
+ 
+-/*
+- * This can be called without the rx_queue_mutex, if invoked by the kernel
+- * stop work. But, in that case, it is guaranteed not to race with
+- * iscsi_destroy by conn_mutex.
+- */
+-static void iscsi_if_stop_conn(struct iscsi_cls_conn *conn, int flag)
+-{
+-	/*
+-	 * It is important that this path doesn't rely on
+-	 * rx_queue_mutex, otherwise, a thread doing allocation on a
+-	 * start_session/start_connection could sleep waiting on a
+-	 * writeback to a failed iscsi device, that cannot be recovered
+-	 * because the lock is held.  If we don't hold it here, the
+-	 * kernel stop_conn_work_fn has a chance to stop the broken
+-	 * session and resolve the allocation.
+-	 *
+-	 * Still, the user invoked .stop_conn() needs to be serialized
+-	 * with stop_conn_work_fn by a private mutex.  Not pretty, but
+-	 * it works.
+-	 */
+-	mutex_lock(&conn_mutex);
+-	switch (flag) {
+-	case STOP_CONN_RECOVER:
+-		conn->state = ISCSI_CONN_FAILED;
+-		break;
+-	case STOP_CONN_TERM:
+-		conn->state = ISCSI_CONN_DOWN;
+-		break;
+-	default:
+-		iscsi_cls_conn_printk(KERN_ERR, conn,
+-				      "invalid stop flag %d\n", flag);
+-		goto unlock;
+-	}
+-
+-	conn->transport->stop_conn(conn, flag);
+-unlock:
+-	mutex_unlock(&conn_mutex);
+-}
+-
+-static void stop_conn_work_fn(struct work_struct *work)
+-{
+-	struct iscsi_cls_conn *conn, *tmp;
+-	unsigned long flags;
+-	LIST_HEAD(recovery_list);
+-
+-	spin_lock_irqsave(&connlock, flags);
+-	if (list_empty(&connlist_err)) {
+-		spin_unlock_irqrestore(&connlock, flags);
+-		return;
+-	}
+-	list_splice_init(&connlist_err, &recovery_list);
+-	spin_unlock_irqrestore(&connlock, flags);
+-
+-	list_for_each_entry_safe(conn, tmp, &recovery_list, conn_list_err) {
+-		uint32_t sid = iscsi_conn_get_sid(conn);
+-		struct iscsi_cls_session *session;
+-
+-		session = iscsi_session_lookup(sid);
+-		if (session) {
+-			if (system_state != SYSTEM_RUNNING) {
+-				/*
+-				 * If the user has set up for the session to
+-				 * never timeout then hang like they wanted.
+-				 * For all other cases fail right away since
+-				 * userspace is not going to relogin.
+-				 */
+-				if (session->recovery_tmo > 0)
+-					session->recovery_tmo = 0;
+-			}
+-
+-			iscsi_if_stop_conn(conn, STOP_CONN_RECOVER);
+-		}
+-
+-		list_del_init(&conn->conn_list_err);
+-	}
+-}
+-
+ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ {
+ 	struct nlmsghdr	*nlh;
+@@ -2540,12 +2569,9 @@ void iscsi_conn_error_event(struct iscsi_cls_conn *conn, enum iscsi_err error)
+ 	struct iscsi_uevent *ev;
+ 	struct iscsi_internal *priv;
+ 	int len = nlmsg_total_size(sizeof(*ev));
+-	unsigned long flags;
+ 
+-	spin_lock_irqsave(&connlock, flags);
+-	list_add(&conn->conn_list_err, &connlist_err);
+-	spin_unlock_irqrestore(&connlock, flags);
+-	queue_work(system_unbound_wq, &stop_conn_work);
++	if (!test_and_set_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags))
++		queue_work(iscsi_conn_cleanup_workq, &conn->cleanup_work);
+ 
+ 	priv = iscsi_if_transport_lookup(conn->transport);
+ 	if (!priv)
+@@ -2875,26 +2901,17 @@ static int
+ iscsi_if_destroy_conn(struct iscsi_transport *transport, struct iscsi_uevent *ev)
+ {
+ 	struct iscsi_cls_conn *conn;
+-	unsigned long flags;
+ 
+ 	conn = iscsi_conn_lookup(ev->u.d_conn.sid, ev->u.d_conn.cid);
+ 	if (!conn)
+ 		return -EINVAL;
+ 
+-	spin_lock_irqsave(&connlock, flags);
+-	if (!list_empty(&conn->conn_list_err)) {
+-		spin_unlock_irqrestore(&connlock, flags);
+-		return -EAGAIN;
+-	}
+-	spin_unlock_irqrestore(&connlock, flags);
+-
++	ISCSI_DBG_TRANS_CONN(conn, "Flushing cleanup during destruction\n");
++	flush_work(&conn->cleanup_work);
+ 	ISCSI_DBG_TRANS_CONN(conn, "Destroying transport conn\n");
+ 
+-	mutex_lock(&conn_mutex);
+ 	if (transport->destroy_conn)
+ 		transport->destroy_conn(conn);
+-	mutex_unlock(&conn_mutex);
+-
+ 	return 0;
+ }
+ 
+@@ -2973,7 +2990,7 @@ static int iscsi_if_ep_connect(struct iscsi_transport *transport,
+ }
+ 
+ static int iscsi_if_ep_disconnect(struct iscsi_transport *transport,
+-				  u64 ep_handle, bool is_active)
++				  u64 ep_handle)
+ {
+ 	struct iscsi_cls_conn *conn;
+ 	struct iscsi_endpoint *ep;
+@@ -2984,17 +3001,30 @@ static int iscsi_if_ep_disconnect(struct iscsi_transport *transport,
+ 	ep = iscsi_lookup_endpoint(ep_handle);
+ 	if (!ep)
+ 		return -EINVAL;
++
+ 	conn = ep->conn;
+-	if (conn) {
+-		mutex_lock(&conn->ep_mutex);
+-		conn->ep = NULL;
++	if (!conn) {
++		/*
++		 * conn was not even bound yet, so we can't get iscsi conn
++		 * failures yet.
++		 */
++		transport->ep_disconnect(ep);
++		goto put_ep;
++	}
++
++	mutex_lock(&conn->ep_mutex);
++	/* Check if this was a conn error and the kernel took ownership */
++	if (test_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
++		ISCSI_DBG_TRANS_CONN(conn, "flush kernel conn cleanup.\n");
+ 		mutex_unlock(&conn->ep_mutex);
+-		conn->state = ISCSI_CONN_FAILED;
+ 
+-		transport->unbind_conn(conn, is_active);
++		flush_work(&conn->cleanup_work);
++		goto put_ep;
+ 	}
+ 
+-	transport->ep_disconnect(ep);
++	iscsi_ep_disconnect(conn, false);
++	mutex_unlock(&conn->ep_mutex);
++put_ep:
+ 	iscsi_put_endpoint(ep);
+ 	return 0;
+ }
+@@ -3025,8 +3055,7 @@ iscsi_if_transport_ep(struct iscsi_transport *transport,
+ 		break;
+ 	case ISCSI_UEVENT_TRANSPORT_EP_DISCONNECT:
+ 		rc = iscsi_if_ep_disconnect(transport,
+-					    ev->u.ep_disconnect.ep_handle,
+-					    false);
++					    ev->u.ep_disconnect.ep_handle);
+ 		break;
+ 	}
+ 	return rc;
+@@ -3653,18 +3682,129 @@ iscsi_get_host_stats(struct iscsi_transport *transport, struct nlmsghdr *nlh)
+ 	return err;
+ }
+ 
++static int iscsi_if_transport_conn(struct iscsi_transport *transport,
++				   struct nlmsghdr *nlh)
++{
++	struct iscsi_uevent *ev = nlmsg_data(nlh);
++	struct iscsi_cls_session *session;
++	struct iscsi_cls_conn *conn = NULL;
++	struct iscsi_endpoint *ep;
++	uint32_t pdu_len;
++	int err = 0;
++
++	switch (nlh->nlmsg_type) {
++	case ISCSI_UEVENT_CREATE_CONN:
++		return iscsi_if_create_conn(transport, ev);
++	case ISCSI_UEVENT_DESTROY_CONN:
++		return iscsi_if_destroy_conn(transport, ev);
++	case ISCSI_UEVENT_STOP_CONN:
++		return iscsi_if_stop_conn(transport, ev);
++	}
++
++	/*
++	 * The following cmds need to be run under the ep_mutex so in kernel
++	 * conn cleanup (ep_disconnect + unbind and conn) is not done while
++	 * these are running. They also must not run if we have just run a conn
++	 * cleanup because they would set the state in a way that might allow
++	 * IO or send IO themselves.
++	 */
++	switch (nlh->nlmsg_type) {
++	case ISCSI_UEVENT_START_CONN:
++		conn = iscsi_conn_lookup(ev->u.start_conn.sid,
++					 ev->u.start_conn.cid);
++		break;
++	case ISCSI_UEVENT_BIND_CONN:
++		conn = iscsi_conn_lookup(ev->u.b_conn.sid, ev->u.b_conn.cid);
++		break;
++	case ISCSI_UEVENT_SEND_PDU:
++		conn = iscsi_conn_lookup(ev->u.send_pdu.sid, ev->u.send_pdu.cid);
++		break;
++	}
++
++	if (!conn)
++		return -EINVAL;
++
++	mutex_lock(&conn->ep_mutex);
++	if (test_bit(ISCSI_CLS_CONN_BIT_CLEANUP, &conn->flags)) {
++		mutex_unlock(&conn->ep_mutex);
++		ev->r.retcode = -ENOTCONN;
++		return 0;
++	}
++
++	switch (nlh->nlmsg_type) {
++	case ISCSI_UEVENT_BIND_CONN:
++		if (conn->ep) {
++			/*
++			 * For offload boot support where iscsid is restarted
++			 * during the pivot root stage, the ep will be intact
++			 * here when the new iscsid instance starts up and
++			 * reconnects.
++			 */
++			iscsi_ep_disconnect(conn, true);
++		}
++
++		session = iscsi_session_lookup(ev->u.b_conn.sid);
++		if (!session) {
++			err = -EINVAL;
++			break;
++		}
++
++		ev->r.retcode =	transport->bind_conn(session, conn,
++						ev->u.b_conn.transport_eph,
++						ev->u.b_conn.is_leading);
++		if (!ev->r.retcode)
++			conn->state = ISCSI_CONN_BOUND;
++
++		if (ev->r.retcode || !transport->ep_connect)
++			break;
++
++		ep = iscsi_lookup_endpoint(ev->u.b_conn.transport_eph);
++		if (ep) {
++			ep->conn = conn;
++			conn->ep = ep;
++			iscsi_put_endpoint(ep);
++		} else {
++			err = -ENOTCONN;
++			iscsi_cls_conn_printk(KERN_ERR, conn,
++					      "Could not set ep conn binding\n");
++		}
++		break;
++	case ISCSI_UEVENT_START_CONN:
++		ev->r.retcode = transport->start_conn(conn);
++		if (!ev->r.retcode)
++			conn->state = ISCSI_CONN_UP;
++		break;
++	case ISCSI_UEVENT_SEND_PDU:
++		pdu_len = nlh->nlmsg_len - sizeof(*nlh) - sizeof(*ev);
++
++		if ((ev->u.send_pdu.hdr_size > pdu_len) ||
++		    (ev->u.send_pdu.data_size > (pdu_len - ev->u.send_pdu.hdr_size))) {
++			err = -EINVAL;
++			break;
++		}
++
++		ev->r.retcode =	transport->send_pdu(conn,
++				(struct iscsi_hdr *)((char *)ev + sizeof(*ev)),
++				(char *)ev + sizeof(*ev) + ev->u.send_pdu.hdr_size,
++				ev->u.send_pdu.data_size);
++		break;
++	default:
++		err = -ENOSYS;
++	}
++
++	mutex_unlock(&conn->ep_mutex);
++	return err;
++}
+ 
+ static int
+ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ {
+ 	int err = 0;
+ 	u32 portid;
+-	u32 pdu_len;
+ 	struct iscsi_uevent *ev = nlmsg_data(nlh);
+ 	struct iscsi_transport *transport = NULL;
+ 	struct iscsi_internal *priv;
+ 	struct iscsi_cls_session *session;
+-	struct iscsi_cls_conn *conn;
+ 	struct iscsi_endpoint *ep = NULL;
+ 
+ 	if (!netlink_capable(skb, CAP_SYS_ADMIN))
+@@ -3741,90 +3881,16 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
+ 		else
+ 			err = -EINVAL;
+ 		break;
+-	case ISCSI_UEVENT_CREATE_CONN:
+-		err = iscsi_if_create_conn(transport, ev);
+-		break;
+-	case ISCSI_UEVENT_DESTROY_CONN:
+-		err = iscsi_if_destroy_conn(transport, ev);
+-		break;
+-	case ISCSI_UEVENT_BIND_CONN:
+-		session = iscsi_session_lookup(ev->u.b_conn.sid);
+-		conn = iscsi_conn_lookup(ev->u.b_conn.sid, ev->u.b_conn.cid);
+-
+-		if (conn && conn->ep)
+-			iscsi_if_ep_disconnect(transport, conn->ep->id, true);
+-
+-		if (!session || !conn) {
+-			err = -EINVAL;
+-			break;
+-		}
+-
+-		mutex_lock(&conn_mutex);
+-		ev->r.retcode =	transport->bind_conn(session, conn,
+-						ev->u.b_conn.transport_eph,
+-						ev->u.b_conn.is_leading);
+-		if (!ev->r.retcode)
+-			conn->state = ISCSI_CONN_BOUND;
+-		mutex_unlock(&conn_mutex);
+-
+-		if (ev->r.retcode || !transport->ep_connect)
+-			break;
+-
+-		ep = iscsi_lookup_endpoint(ev->u.b_conn.transport_eph);
+-		if (ep) {
+-			ep->conn = conn;
+-
+-			mutex_lock(&conn->ep_mutex);
+-			conn->ep = ep;
+-			mutex_unlock(&conn->ep_mutex);
+-			iscsi_put_endpoint(ep);
+-		} else
+-			iscsi_cls_conn_printk(KERN_ERR, conn,
+-					      "Could not set ep conn "
+-					      "binding\n");
+-		break;
+ 	case ISCSI_UEVENT_SET_PARAM:
+ 		err = iscsi_set_param(transport, ev);
+ 		break;
+-	case ISCSI_UEVENT_START_CONN:
+-		conn = iscsi_conn_lookup(ev->u.start_conn.sid, ev->u.start_conn.cid);
+-		if (conn) {
+-			mutex_lock(&conn_mutex);
+-			ev->r.retcode = transport->start_conn(conn);
+-			if (!ev->r.retcode)
+-				conn->state = ISCSI_CONN_UP;
+-			mutex_unlock(&conn_mutex);
+-		}
+-		else
+-			err = -EINVAL;
+-		break;
++	case ISCSI_UEVENT_CREATE_CONN:
++	case ISCSI_UEVENT_DESTROY_CONN:
+ 	case ISCSI_UEVENT_STOP_CONN:
+-		conn = iscsi_conn_lookup(ev->u.stop_conn.sid, ev->u.stop_conn.cid);
+-		if (conn)
+-			iscsi_if_stop_conn(conn, ev->u.stop_conn.flag);
+-		else
+-			err = -EINVAL;
+-		break;
++	case ISCSI_UEVENT_START_CONN:
++	case ISCSI_UEVENT_BIND_CONN:
+ 	case ISCSI_UEVENT_SEND_PDU:
+-		pdu_len = nlh->nlmsg_len - sizeof(*nlh) - sizeof(*ev);
+-
+-		if ((ev->u.send_pdu.hdr_size > pdu_len) ||
+-		    (ev->u.send_pdu.data_size > (pdu_len - ev->u.send_pdu.hdr_size))) {
+-			err = -EINVAL;
+-			break;
+-		}
+-
+-		conn = iscsi_conn_lookup(ev->u.send_pdu.sid, ev->u.send_pdu.cid);
+-		if (conn) {
+-			mutex_lock(&conn_mutex);
+-			ev->r.retcode =	transport->send_pdu(conn,
+-				(struct iscsi_hdr*)((char*)ev + sizeof(*ev)),
+-				(char*)ev + sizeof(*ev) + ev->u.send_pdu.hdr_size,
+-				ev->u.send_pdu.data_size);
+-			mutex_unlock(&conn_mutex);
+-		}
+-		else
+-			err = -EINVAL;
++		err = iscsi_if_transport_conn(transport, nlh);
+ 		break;
+ 	case ISCSI_UEVENT_GET_STATS:
+ 		err = iscsi_if_get_stats(transport, nlh);
+@@ -4827,8 +4893,18 @@ static __init int iscsi_transport_init(void)
+ 		goto release_nls;
+ 	}
+ 
++	iscsi_conn_cleanup_workq = alloc_workqueue("%s",
++			WQ_SYSFS | WQ_MEM_RECLAIM | WQ_UNBOUND, 0,
++			"iscsi_conn_cleanup");
++	if (!iscsi_conn_cleanup_workq) {
++		err = -ENOMEM;
++		goto destroy_wq;
++	}
++
+ 	return 0;
+ 
++destroy_wq:
++	destroy_workqueue(iscsi_eh_timer_workq);
+ release_nls:
+ 	netlink_kernel_release(nls);
+ unregister_flashnode_bus:
+@@ -4850,6 +4926,7 @@ static __init int iscsi_transport_init(void)
+ 
+ static void __exit iscsi_transport_exit(void)
+ {
++	destroy_workqueue(iscsi_conn_cleanup_workq);
+ 	destroy_workqueue(iscsi_eh_timer_workq);
+ 	netlink_kernel_release(nls);
+ 	bus_unregister(&iscsi_flashnode_bus);
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index d36a72cf049f..3974329d4d02 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -197,15 +197,23 @@ enum iscsi_connection_state {
+ 	ISCSI_CONN_BOUND,
+ };
+ 
++#define ISCSI_CLS_CONN_BIT_CLEANUP	1
++
+ struct iscsi_cls_conn {
+ 	struct list_head conn_list;	/* item in connlist */
+-	struct list_head conn_list_err;	/* item in connlist_err */
+ 	void *dd_data;			/* LLD private data */
+ 	struct iscsi_transport *transport;
+ 	uint32_t cid;			/* connection id */
++	/*
++	 * This protects the conn startup and binding/unbinding of the ep to
++	 * the conn. Unbinding includes ep_disconnect and stop_conn.
++	 */
+ 	struct mutex ep_mutex;
+ 	struct iscsi_endpoint *ep;
+ 
++	unsigned long flags;
++	struct work_struct cleanup_work;
++
+ 	struct device dev;		/* sysfs transport/container device */
+ 	enum iscsi_connection_state state;
+ };
 -- 
 2.25.1
 
