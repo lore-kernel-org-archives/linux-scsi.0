@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 780BBC04FF3
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 15:01:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06C79C2B9F7
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 15:07:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 581EA61090
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 15:01:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEB2B6138C
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 15:07:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233353AbhEXPCn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 May 2021 11:02:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37288 "EHLO mail.kernel.org"
+        id S233903AbhEXPIe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 May 2021 11:08:34 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38148 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234595AbhEXPAI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 May 2021 11:00:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CB82061435;
-        Mon, 24 May 2021 14:49:54 +0000 (UTC)
+        id S233613AbhEXPDA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 May 2021 11:03:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0436F61613;
+        Mon, 24 May 2021 14:50:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621867795;
-        bh=qpeWGXYbfBBTCp7GnN16Kw1/b0uQPW98VaTjozobj54=;
+        s=k20201202; t=1621867829;
+        bh=r2zlUh1pZXvCNhM+q9Rg6U2Q68hTUG+6yv5YzOkjEZ0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=vOZl16S1nilglDbkVnunloy/YLp10OyXNyk1tRSEz1Kx/Y+bxPlGt4xZSY/LfV4IG
-         jiT+xHp8SfwQXK+Nq37Kmcdi/RdOSIIXfd1Mj3F3Gny4jPhVM5m5Vj3t8jKBHwcn5J
-         G/IKEC4JuQaPCb4Y4kgSpl8UDPjQG5zhHMLKibmw+KfW8Y7vTWsJ1UMhMcm6EqH86z
-         1qan0lqtOZKdObnTtPkUdybnJInlRogJmExKIfSM6GQBEoY8vampm9lXIEwKeamATZ
-         au4fDgRN3YljJOFHGG1GiDGccpTstfF8ez33MkuaaR53VwLLvfmFnhjqKAsGagNcuJ
-         RFtPM4B2nh8RA==
+        b=Sq2i/agHk3rqwTAXPJsEI6sy6ZS+p4qjFpOwD8l/1Er9lRk09/PLYjRYfM73NfCMg
+         HB9HMUjWvD1UeFSRrlzLOMnq+EFoVHzdscgsHtc1qov4h3h9khJAP2XYxpmYoOUfrQ
+         fbeT94H1F5IO3+TLfp1ZoQsUaotNtcbZE/jWcd3NhvYtKXwL2m4reWcdnXoZ//VDPP
+         //4kzgsdAyz3z3U9B4GwGaX4Y1ALKpozKRs45ABKogCJR5tXsp0oOOcs9ASosET4AS
+         h5QLKPSaruKdBQJG0ud7KATdPW9qtHO5d8KNxVX9OuMHTKJnv/B7MTJCBUlcPQbbCp
+         GdWc/IYC885pA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Matt Wang <wwentao@vmware.com>,
         Khalid Aziz <khalid@gonehiking.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 42/52] scsi: BusLogic: Fix 64-bit system enumeration error for Buslogic
-Date:   Mon, 24 May 2021 10:48:52 -0400
-Message-Id: <20210524144903.2498518-42-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 17/25] scsi: BusLogic: Fix 64-bit system enumeration error for Buslogic
+Date:   Mon, 24 May 2021 10:50:00 -0400
+Message-Id: <20210524145008.2499049-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210524144903.2498518-1-sashal@kernel.org>
-References: <20210524144903.2498518-1-sashal@kernel.org>
+In-Reply-To: <20210524145008.2499049-1-sashal@kernel.org>
+References: <20210524145008.2499049-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,10 +77,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index c25e8a54e869..6e988233fb81 100644
+index 0d4ffe0ae306..79b5c5457cc2 100644
 --- a/drivers/scsi/BusLogic.c
 +++ b/drivers/scsi/BusLogic.c
-@@ -3077,11 +3077,11 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+@@ -3081,11 +3081,11 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
  		ccb->opcode = BLOGIC_INITIATOR_CCB_SG;
  		ccb->datalen = count * sizeof(struct blogic_sg_seg);
  		if (blogic_multimaster_type(adapter))
@@ -96,10 +96,10 @@ index c25e8a54e869..6e988233fb81 100644
  		scsi_for_each_sg(command, sg, count, i) {
  			ccb->sglist[i].segbytes = sg_dma_len(sg);
 diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
-index 6182cc8a0344..e081ad47d1cf 100644
+index 8d47e2c88d24..1a33a4b28d45 100644
 --- a/drivers/scsi/BusLogic.h
 +++ b/drivers/scsi/BusLogic.h
-@@ -814,7 +814,7 @@ struct blogic_ccb {
+@@ -821,7 +821,7 @@ struct blogic_ccb {
  	unsigned char cdblen;				/* Byte 2 */
  	unsigned char sense_datalen;			/* Byte 3 */
  	u32 datalen;					/* Bytes 4-7 */
