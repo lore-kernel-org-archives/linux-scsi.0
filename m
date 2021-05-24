@@ -2,466 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0BF2C04FF3
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 08:45:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE0A0C04FF3
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 08:46:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA88561151
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 08:45:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9564F611CE
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 08:46:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232440AbhEXIrU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 May 2021 04:47:20 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:50824 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232401AbhEXIrT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 May 2021 04:47:19 -0400
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210524084550epoutp04d6b9f2132cc4a5832193c7be27b6b386~B9EytVNy33140931409epoutp04Y
-        for <linux-scsi@vger.kernel.org>; Mon, 24 May 2021 08:45:50 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210524084550epoutp04d6b9f2132cc4a5832193c7be27b6b386~B9EytVNy33140931409epoutp04Y
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1621845951;
-        bh=h/fJ4bSvE4W5qNrjQuAiZOjTrd+6guiZyeSyOepSxsg=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=FtnGkDl2IMVRL4NE06aSuSr+om+8qXscljfsvWKW1sTRJl1K7R8cuhEUb7a7jUR6k
-         wEZWAFoewqTIDELFzW2uEb0KlTNzeQK9dVQuQZyue8jWzSpqNlo+c4f7x0xbWSVDn7
-         dYkVb4HxCaqY0p4ISSyz/VTlgBzsTWpOZFJGI1ck=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20210524084550epcas2p1f38ee640c1a5d6b376d229b55542eacb~B9Ex-JXOw0977009770epcas2p1U;
-        Mon, 24 May 2021 08:45:50 +0000 (GMT)
-Received: from epsmges2p2.samsung.com (unknown [182.195.40.191]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4FpW564mvbz4x9QQ; Mon, 24 May
-        2021 08:45:46 +0000 (GMT)
-X-AuditID: b6c32a46-e17ff700000025de-68-60ab67ba0024
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        1F.D1.09694.AB76BA06; Mon, 24 May 2021 17:45:46 +0900 (KST)
-Mime-Version: 1.0
-Subject: [PATCH v35 3/4] scsi: ufs: Prepare HPB read for cached sub-region
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Daejun Park <daejun7.park@samsung.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Jaemyung Lee <jaemyung.lee@samsung.com>,
-        Jieon Seol <jieon.seol@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20210524084345epcms2p63dde85f3fdc127c29d25ada7d7f539cb@epcms2p6>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20210524084546epcms2p2c91dc1df482fd593307892825532c6dd@epcms2p2>
-Date:   Mon, 24 May 2021 17:45:46 +0900
-X-CMS-MailID: 20210524084546epcms2p2c91dc1df482fd593307892825532c6dd
+        id S232445AbhEXIri (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 May 2021 04:47:38 -0400
+Received: from mail-dm6nam11on2069.outbound.protection.outlook.com ([40.107.223.69]:65249
+        "EHLO NAM11-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232471AbhEXIri (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 May 2021 04:47:38 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Czf4XKfW5jRn+x8cg/4LQ6rraEeavj5UHxzEirwzM/mK49Uowl7aHfpx2UG3SjCTEgQFqAiznVBIpdPvBhbsJJU9GMuqLWlKOo2KeLhpCsBsAjU5EpIN8ZPHpKKkXgDDOaXt4E60rCW04a88wI9NYBqBH3hkk9IiGTjfi9M3JjH2UNLMHMiPO9TKVMEAm4ZiJi/TkJASyjJGTqmHgI629mumCyIx85scG4h2hFoTy2UD77QBlNrMp9naj2hnIkcibkdrixUk0mD2bmXj8J6tzKAX//6nyj/gVsnIRqn+YdK2HwdCl9+JJVbsZXsQg5IcIQ+yqbU+GhYi2465yT/2zg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CeVM+0nugZkkR9PiwP69ivGT8swxfrI40WenT4ez8fk=;
+ b=kqX1Tm90O1nHSFQ7oCF67RocE32fvx6CqtUpKTwK4CnskZEN3TDzUp+KVkiPTx7dcyQ+sCVSP18ZtZDGLLaGQ2jUrCwMIlMrZs6P0UYjK3HdP1hg7trt/6snm0MaqAkM/bX74ySvICf9aifRKru635D+k6sih6t39BZzBuH3pGa8Yg4QbcjzdlXx6/96Gp5kulCgLT5BZij1KzGS6ozB3ac8yAGhZqsWfgXiBIocWeSgZ1qmwhVqslJiCndXYEzC7/5tUCuV4tP/a99X2q9yxSDq2XhK4U3wqRLN/9k9+5Yu/TaDwcdCIfRvMtyEwk1r4hBBuMPp+dqhV1RguVP7+w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.112.34) smtp.rcpttodomain=lst.de smtp.mailfrom=nvidia.com; dmarc=pass
+ (p=none sp=none pct=100) action=none header.from=nvidia.com; dkim=none
+ (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CeVM+0nugZkkR9PiwP69ivGT8swxfrI40WenT4ez8fk=;
+ b=t5LKVMjYeOtcd0uzP+7fOyh/r5ASDACc3IR59fPUpBFJc3ncBULB3aaDkAT0CB5DLr8jFS4XfjLXxLHj8ulnNWY9DSRajRvMkosqS8pDKfNsil1qaE804ZQNrSBLWLhX5XLif9dy3nsKgSruuMACgP5l0ZCWKYhcTCitMtQrhZpQ/Q81JPuy9HBhhvXJYAVBETtlvMCm5TWu399eMySHIQyKebYW3UoeKXP4FZn9Vedb4cS/vXUd4mtFpvYgFhCrALWHV4636SkRW4O3m5yyaP773kiHjQnh7RRB+unCtsWeoIrkx+WZ24uRZ6sDiU98s51mhssOFoLgdjVYwL0byQ==
+Received: from DM5PR15CA0052.namprd15.prod.outlook.com (2603:10b6:3:ae::14) by
+ DM6PR12MB2939.namprd12.prod.outlook.com (2603:10b6:5:18b::24) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4150.25; Mon, 24 May 2021 08:46:08 +0000
+Received: from DM6NAM11FT024.eop-nam11.prod.protection.outlook.com
+ (2603:10b6:3:ae:cafe::66) by DM5PR15CA0052.outlook.office365.com
+ (2603:10b6:3:ae::14) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4150.23 via Frontend
+ Transport; Mon, 24 May 2021 08:46:08 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.112.34)
+ smtp.mailfrom=nvidia.com; lst.de; dkim=none (message not signed)
+ header.d=none;lst.de; dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.112.34 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.112.34; helo=mail.nvidia.com;
+Received: from mail.nvidia.com (216.228.112.34) by
+ DM6NAM11FT024.mail.protection.outlook.com (10.13.172.159) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ 15.20.4129.25 via Frontend Transport; Mon, 24 May 2021 08:46:08 +0000
+Received: from [172.27.15.6] (172.20.145.6) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 24 May
+ 2021 08:46:04 +0000
+Subject: Re: [PATCH v3 08/51] RDMA/iser: Use scsi_cmd_to_rq() instead of
+ scsi_cmnd.request
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>, <linux-scsi@vger.kernel.org>,
+        Sagi Grimberg <sagi@grimberg.me>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+References: <20210524030856.2824-1-bvanassche@acm.org>
+ <20210524030856.2824-9-bvanassche@acm.org>
+From:   Max Gurtovoy <mgurtovoy@nvidia.com>
+Message-ID: <e5afcba3-747b-236d-487b-fb221c21d75f@nvidia.com>
+Date:   Mon, 24 May 2021 11:46:02 +0300
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
+MIME-Version: 1.0
+In-Reply-To: <20210524030856.2824-9-bvanassche@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA12Te0xbVRzHc+69vS0s3S7lsSMuG7ngMuYKbbV4hqBmstmAAzZUki0BbuiV
-        kvWV3oLTKEPHSxiMGSakYWBwW8NrHVW6woY85WEkhiCMVdggFCYxKI+YjRmYLQW3+N/nfM/3
-        nN/vex4CXPQ7GSjI1BpZg5ZR06Q3YesNlYvbMxrTJHeb96HpGhuJOgoG+WhhbYxEXy+t4WjF
-        cp2HFnpCUXt3N4kappPR+W8tJKoezsVQ6cVWEn3XfRNHs5OrfFQ3YcPQxY1CAtlWfdDA0J8A
-        jbZXk6jkrp1E5oENDF1rvQfQl5VNxFsBitFf4xSjZaWYos00xVeU13UBReeVJr4ib6iTUCzP
-        OQhF2fcNQLFq3aso7CrBEr1PqaNULKNkDUGsNl2nzNRmRNNxSalvp8ojJFKx9DB6jQ7SMho2
-        mo55N1F8LFPtikkHZTPqLJeUyHAcHf5GlEGXZWSDVDrOGE2zeqVaL5XqwzhGw2VpM8LSdZpI
-        qUQik7ucaWrVePEIqZ8/cXb1BwuZC8aOFAMvAaRehZUrtUQx8BaIKDuA1Y/WXQOBQEj5wHW7
-        r9vjS8XC+qEnuJtFFA0tIya+Rw+Djpkm4GaSOgQrBx/w3fv4UfkErBs2Y+4BTv2CwzsThcBT
-        TQirCucID78Ib5lbN3UvKh5u9N/f8hyAj6+X4h72h/caF/nb/Fd/7ZbHD+bfH97y+MDptdtb
-        +guw//YS5uFzsHXyCXA3AakLAPa2OXieiXA4XtSy2YSQOg6/apvhuRMT1Evwcc0ejyUGDpfN
-        kW7GqX3w1mI17rbgVCi0tIe7EVLBsM9BbKfKbfmH/3/GqZ2wqHf9P91e49zqbD+8sWbBykGw
-        6dlJm56rZXpW6xuAN4AAVs9pMlhOppc9f7lWsPnkDx6zg4rFpbAegAlAD4ACnPYTrpfVp4mE
-        SubjT1iDLtWQpWa5HiB3hbyEB/qn61x/RmtMlcplERGSw3Ikj5Aherdwjc1JE1EZjJE9w7J6
-        1rC9DhN4BeZiVV2yaVFs55U9Yy0q0y7rTWdDH3fiU1v8Ud8Cdror53LjcMig+uTP43srsPyr
-        CX9Ezk3FdyR/eNJozjn0ztRPUllUTLQ8Sh93fkXWQw9cXf4it/7BSEnF7guzj5zi8B1O8XFn
-        gmZlyJp3mfJjQo78uKi58/pnjgNmqJw/NSVxzvy2hNL+Fi2nnLUkXcpMqHvKX2iezEsOje21
-        9q18ZO4IK5jQ1VaNMLsepjiuddpTkqV1JnH8yzeCa1PfHIt/+oF/9qjUcvq94KId8+VDvBCi
-        isfs5EV+vr/kzMJscMTkw5HR00qr6qgN8V7p9zWcm02ax4WB2TWLqxqrFTTXzL4fQBOcipEe
-        xA0c8y+UbbxwewQAAA==
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210524084345epcms2p63dde85f3fdc127c29d25ada7d7f539cb
-References: <20210524084345epcms2p63dde85f3fdc127c29d25ada7d7f539cb@epcms2p6>
-        <CGME20210524084345epcms2p63dde85f3fdc127c29d25ada7d7f539cb@epcms2p2>
+Content-Language: en-US
+X-Originating-IP: [172.20.145.6]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: d1ddc0b9-546a-43ec-ff18-08d91e905feb
+X-MS-TrafficTypeDiagnostic: DM6PR12MB2939:
+X-Microsoft-Antispam-PRVS: <DM6PR12MB2939FF60733CC9291EB8521EDE269@DM6PR12MB2939.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: QA/ZmadIaRjMHYni6hz/Xr+W0M4u6e5NDYbXYfLctW94JxgC1M4JziFxq1ouVTaSarEsHr9/+S4FE/p5/PnGx683ytcYnp+YSWdQ8qWnA3fnwSp2khERXDWCsvDN7Q7Hn1c5rW6TRbTnbAN2YpRRuWQGQp4xkYlzasbwhE5QydJ3ezJvTZYAtOksRR8Rq/P8sOElZEC2nruCsO5KXjl+LmdwwRC79U3wkVQ95ii2042/sdu5Zb8IN5lYzf26NHAwEtkThvy1XvX0wtGXeYjcMZQK/SX+sKGrF/4ZWm0yuyTanFlqo0RCFn7axOYBtwL7tydNhq5iyb2W3NK2b+Vw7v6RYmYEjfR2F24ofb1kWvOUAvsUuu++G2sVp+B+HGX9vdzX9gyBuKmemt/5sHnLxe3N2hJyqLY+MojfuZdxJUriCY77Y9lDkfUIIB00QKT4RocFShy9pDIlopDfu/Od/khPBKM2+H0gqhsKGFgDVvoUtN36PxAWEO+k0Ll5I58cTjZfc0I7U9JZS3qNOSib1H5DpCe6iRXXw3dvbA+OCrFaY01wL1pgyEkEUjdb9ROPz+auH2FAmlWtAJC4Zz+jEAGrPd307xipicsPIH51bsw3J2FFfG75tQ3PcKrySzz6mgvgVx/rP0+7zeU2C+/eVQLfTpQBwuva9f15dm+Iz+yA9VofpZ4ebNpne7IApELP
+X-Forefront-Antispam-Report: CIP:216.228.112.34;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:schybrid03.nvidia.com;CAT:NONE;SFS:(4636009)(136003)(346002)(396003)(39860400002)(376002)(36840700001)(46966006)(47076005)(54906003)(8936002)(16526019)(36906005)(82310400003)(8676002)(16576012)(82740400003)(4326008)(110136005)(478600001)(186003)(316002)(83380400001)(70206006)(36756003)(31696002)(356005)(26005)(53546011)(2906002)(36860700001)(7636003)(5660300002)(70586007)(426003)(336012)(86362001)(2616005)(31686004)(43740500002);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 May 2021 08:46:08.1872
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: d1ddc0b9-546a-43ec-ff18-08d91e905feb
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.112.34];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource: DM6NAM11FT024.eop-nam11.prod.protection.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB2939
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch changes the read I/O to the HPB read I/O.
 
-If the logical address of the read I/O belongs to active sub-region, the
-HPB driver modifies the read I/O command to HPB read. It modifies the UPIU
-command of UFS instead of modifying the existing SCSI command.
+On 5/24/2021 6:08 AM, Bart Van Assche wrote:
+> Prepare for removal of the request pointer by using scsi_cmd_to_rq()
+> instead. This patch does not change any functionality.
+>
+> Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/infiniband/ulp/iser/iser_memory.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/infiniband/ulp/iser/iser_memory.c b/drivers/infiniband/ulp/iser/iser_memory.c
+> index afec40da9b58..9776b755d848 100644
+> --- a/drivers/infiniband/ulp/iser/iser_memory.c
+> +++ b/drivers/infiniband/ulp/iser/iser_memory.c
+> @@ -159,7 +159,7 @@ iser_set_dif_domain(struct scsi_cmnd *sc, struct ib_sig_domain *domain)
+>   {
+>   	domain->sig_type = IB_SIG_TYPE_T10_DIF;
+>   	domain->sig.dif.pi_interval = scsi_prot_interval(sc);
+> -	domain->sig.dif.ref_tag = t10_pi_ref_tag(sc->request);
+> +	domain->sig.dif.ref_tag = t10_pi_ref_tag(scsi_cmd_to_rq(sc));
+>   	/*
+>   	 * At the moment we hard code those, but in the future
+>   	 * we will take them from sc.
 
-In the HPB version 1.0, the maximum read I/O size that can be converted to
-HPB read is 4KB.
+Looks good,
 
-The dirty map of the active sub-region prevents an incorrect HPB read that
-has stale physical page number which is updated by previous write I/O.
-
-Reviewed-by: Can Guo <cang@codeaurora.org>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-Acked-by: Avri Altman <Avri.Altman@wdc.com>
-Tested-by: Bean Huo <beanhuo@micron.com>
-Tested-by: Can Guo <cang@codeaurora.org>
-Tested-by: Stanley Chu <stanley.chu@mediatek.com>
-Signed-off-by: Daejun Park <daejun7.park@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c |   2 +
- drivers/scsi/ufs/ufshpb.c | 257 +++++++++++++++++++++++++++++++++++++-
- drivers/scsi/ufs/ufshpb.h |   2 +
- 3 files changed, 258 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 20cdaf0441a6..1de1340339ad 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2661,6 +2661,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	lrbp->req_abort_skip = false;
- 
-+	ufshpb_prep(hba, lrbp);
-+
- 	ufshcd_comp_scsi_upiu(hba, lrbp);
- 
- 	err = ufshcd_map_sg(hba, lrbp);
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 5f01b0e56477..a9339a90bce3 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -46,6 +46,29 @@ static void ufshpb_set_state(struct ufshpb_lu *hpb, int state)
- 	atomic_set(&hpb->hpb_state, state);
- }
- 
-+static int ufshpb_is_valid_srgn(struct ufshpb_region *rgn,
-+				struct ufshpb_subregion *srgn)
-+{
-+	return rgn->rgn_state != HPB_RGN_INACTIVE &&
-+		srgn->srgn_state == HPB_SRGN_VALID;
-+}
-+
-+static bool ufshpb_is_read_cmd(struct scsi_cmnd *cmd)
-+{
-+	return req_op(cmd->request) == REQ_OP_READ;
-+}
-+
-+static bool ufshpb_is_write_or_discard(struct scsi_cmnd *cmd)
-+{
-+	return op_is_write(req_op(cmd->request)) ||
-+	       op_is_discard(req_op(cmd->request));
-+}
-+
-+static bool ufshpb_is_supported_chunk(int transfer_len)
-+{
-+	return transfer_len <= HPB_MULTI_CHUNK_HIGH;
-+}
-+
- static bool ufshpb_is_general_lun(int lun)
- {
- 	return lun < UFS_UPIU_MAX_UNIT_NUM_ID;
-@@ -80,8 +103,8 @@ static void ufshpb_kick_map_work(struct ufshpb_lu *hpb)
- }
- 
- static bool ufshpb_is_hpb_rsp_valid(struct ufs_hba *hba,
--					 struct ufshcd_lrb *lrbp,
--					 struct utp_hpb_rsp *rsp_field)
-+				    struct ufshcd_lrb *lrbp,
-+				    struct utp_hpb_rsp *rsp_field)
- {
- 	/* Check HPB_UPDATE_ALERT */
- 	if (!(lrbp->ucd_rsp_ptr->header.dword_2 &
-@@ -107,6 +130,234 @@ static bool ufshpb_is_hpb_rsp_valid(struct ufs_hba *hba,
- 	return true;
- }
- 
-+static void ufshpb_set_ppn_dirty(struct ufshpb_lu *hpb, int rgn_idx,
-+				 int srgn_idx, int srgn_offset, int cnt)
-+{
-+	struct ufshpb_region *rgn;
-+	struct ufshpb_subregion *srgn;
-+	int set_bit_len;
-+	int bitmap_len;
-+
-+next_srgn:
-+	rgn = hpb->rgn_tbl + rgn_idx;
-+	srgn = rgn->srgn_tbl + srgn_idx;
-+
-+	if (likely(!srgn->is_last))
-+		bitmap_len = hpb->entries_per_srgn;
-+	else
-+		bitmap_len = hpb->last_srgn_entries;
-+
-+	if ((srgn_offset + cnt) > bitmap_len)
-+		set_bit_len = bitmap_len - srgn_offset;
-+	else
-+		set_bit_len = cnt;
-+
-+	if (rgn->rgn_state != HPB_RGN_INACTIVE &&
-+	    srgn->srgn_state == HPB_SRGN_VALID)
-+		bitmap_set(srgn->mctx->ppn_dirty, srgn_offset, set_bit_len);
-+
-+	srgn_offset = 0;
-+	if (++srgn_idx == hpb->srgns_per_rgn) {
-+		srgn_idx = 0;
-+		rgn_idx++;
-+	}
-+
-+	cnt -= set_bit_len;
-+	if (cnt > 0)
-+		goto next_srgn;
-+}
-+
-+static bool ufshpb_test_ppn_dirty(struct ufshpb_lu *hpb, int rgn_idx,
-+				  int srgn_idx, int srgn_offset, int cnt)
-+{
-+	struct ufshpb_region *rgn;
-+	struct ufshpb_subregion *srgn;
-+	int bitmap_len;
-+	int bit_len;
-+
-+next_srgn:
-+	rgn = hpb->rgn_tbl + rgn_idx;
-+	srgn = rgn->srgn_tbl + srgn_idx;
-+
-+	if (likely(!srgn->is_last))
-+		bitmap_len = hpb->entries_per_srgn;
-+	else
-+		bitmap_len = hpb->last_srgn_entries;
-+
-+	if (!ufshpb_is_valid_srgn(rgn, srgn))
-+		return true;
-+
-+	/*
-+	 * If the region state is active, mctx must be allocated.
-+	 * In this case, check whether the region is evicted or
-+	 * mctx allcation fail.
-+	 */
-+	if (unlikely(!srgn->mctx)) {
-+		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
-+			"no mctx in region %d subregion %d.\n",
-+			srgn->rgn_idx, srgn->srgn_idx);
-+		return true;
-+	}
-+
-+	if ((srgn_offset + cnt) > bitmap_len)
-+		bit_len = bitmap_len - srgn_offset;
-+	else
-+		bit_len = cnt;
-+
-+	if (find_next_bit(srgn->mctx->ppn_dirty,
-+			  bit_len, srgn_offset) >= srgn_offset)
-+		return true;
-+
-+	srgn_offset = 0;
-+	if (++srgn_idx == hpb->srgns_per_rgn) {
-+		srgn_idx = 0;
-+		rgn_idx++;
-+	}
-+
-+	cnt -= bit_len;
-+	if (cnt > 0)
-+		goto next_srgn;
-+
-+	return false;
-+}
-+
-+static int ufshpb_fill_ppn_from_page(struct ufshpb_lu *hpb,
-+				     struct ufshpb_map_ctx *mctx, int pos,
-+				     int len, u64 *ppn_buf)
-+{
-+	struct page *page;
-+	int index, offset;
-+	int copied;
-+
-+	index = pos / (PAGE_SIZE / HPB_ENTRY_SIZE);
-+	offset = pos % (PAGE_SIZE / HPB_ENTRY_SIZE);
-+
-+	if ((offset + len) <= (PAGE_SIZE / HPB_ENTRY_SIZE))
-+		copied = len;
-+	else
-+		copied = (PAGE_SIZE / HPB_ENTRY_SIZE) - offset;
-+
-+	page = mctx->m_page[index];
-+	if (unlikely(!page)) {
-+		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
-+			"error. cannot find page in mctx\n");
-+		return -ENOMEM;
-+	}
-+
-+	memcpy(ppn_buf, page_address(page) + (offset * HPB_ENTRY_SIZE),
-+	       copied * HPB_ENTRY_SIZE);
-+
-+	return copied;
-+}
-+
-+static void
-+ufshpb_get_pos_from_lpn(struct ufshpb_lu *hpb, unsigned long lpn, int *rgn_idx,
-+			int *srgn_idx, int *offset)
-+{
-+	int rgn_offset;
-+
-+	*rgn_idx = lpn >> hpb->entries_per_rgn_shift;
-+	rgn_offset = lpn & hpb->entries_per_rgn_mask;
-+	*srgn_idx = rgn_offset >> hpb->entries_per_srgn_shift;
-+	*offset = rgn_offset & hpb->entries_per_srgn_mask;
-+}
-+
-+static void
-+ufshpb_set_hpb_read_to_upiu(struct ufshpb_lu *hpb, struct ufshcd_lrb *lrbp,
-+			    u32 lpn, u64 ppn, u8 transfer_len)
-+{
-+	unsigned char *cdb = lrbp->cmd->cmnd;
-+
-+	cdb[0] = UFSHPB_READ;
-+
-+	/* ppn value is stored as big-endian in the host memory */
-+	memcpy(&cdb[6], &ppn, sizeof(__be64));
-+	cdb[14] = transfer_len;
-+
-+	lrbp->cmd->cmd_len = UFS_CDB_SIZE;
-+}
-+
-+/*
-+ * This function will set up HPB read command using host-side L2P map data.
-+ * In HPB v1.0, maximum size of HPB read command is 4KB.
-+ */
-+void ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
-+{
-+	struct ufshpb_lu *hpb;
-+	struct ufshpb_region *rgn;
-+	struct ufshpb_subregion *srgn;
-+	struct scsi_cmnd *cmd = lrbp->cmd;
-+	u32 lpn;
-+	u64 ppn;
-+	unsigned long flags;
-+	int transfer_len, rgn_idx, srgn_idx, srgn_offset;
-+	int err = 0;
-+
-+	hpb = ufshpb_get_hpb_data(cmd->device);
-+	if (!hpb)
-+		return;
-+
-+	if (ufshpb_get_state(hpb) == HPB_INIT)
-+		return;
-+
-+	if (ufshpb_get_state(hpb) != HPB_PRESENT) {
-+		dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
-+			   "%s: ufshpb state is not PRESENT", __func__);
-+		return;
-+	}
-+
-+	if (blk_rq_is_scsi(cmd->request) ||
-+	    (!ufshpb_is_write_or_discard(cmd) &&
-+	    !ufshpb_is_read_cmd(cmd)))
-+		return;
-+
-+	transfer_len = sectors_to_logical(cmd->device,
-+					  blk_rq_sectors(cmd->request));
-+	if (unlikely(!transfer_len))
-+		return;
-+
-+	lpn = sectors_to_logical(cmd->device, blk_rq_pos(cmd->request));
-+	ufshpb_get_pos_from_lpn(hpb, lpn, &rgn_idx, &srgn_idx, &srgn_offset);
-+	rgn = hpb->rgn_tbl + rgn_idx;
-+	srgn = rgn->srgn_tbl + srgn_idx;
-+
-+	/* If command type is WRITE or DISCARD, set bitmap as drity */
-+	if (ufshpb_is_write_or_discard(cmd)) {
-+		spin_lock_irqsave(&hpb->rgn_state_lock, flags);
-+		ufshpb_set_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
-+				 transfer_len);
-+		spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
-+		return;
-+	}
-+
-+	if (!ufshpb_is_supported_chunk(transfer_len))
-+		return;
-+
-+	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
-+	if (ufshpb_test_ppn_dirty(hpb, rgn_idx, srgn_idx, srgn_offset,
-+				   transfer_len)) {
-+		hpb->stats.miss_cnt++;
-+		spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
-+		return;
-+	}
-+
-+	err = ufshpb_fill_ppn_from_page(hpb, srgn->mctx, srgn_offset, 1, &ppn);
-+	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
-+	if (unlikely(err < 0)) {
-+		/*
-+		 * In this case, the region state is active,
-+		 * but the ppn table is not allocated.
-+		 * Make sure that ppn table must be allocated on
-+		 * active state.
-+		 */
-+		dev_err(hba->dev, "get ppn failed. err %d\n", err);
-+		return;
-+	}
-+
-+	ufshpb_set_hpb_read_to_upiu(hpb, lrbp, lpn, ppn, transfer_len);
-+
-+	hpb->stats.hit_cnt++;
-+}
- static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- 					     struct ufshpb_subregion *srgn)
- {
-@@ -153,7 +404,7 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- }
- 
- static void ufshpb_put_map_req(struct ufshpb_lu *hpb,
--				      struct ufshpb_req *map_req)
-+			       struct ufshpb_req *map_req)
- {
- 	bio_put(map_req->bio);
- 	blk_put_request(map_req->req);
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index dcc0ca3b8158..6e6a0252dc15 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -201,6 +201,7 @@ struct ufs_hba;
- struct ufshcd_lrb;
- 
- #ifndef CONFIG_SCSI_UFS_HPB
-+static void ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp) {}
- static void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp) {}
- static void ufshpb_resume(struct ufs_hba *hba) {}
- static void ufshpb_suspend(struct ufs_hba *hba) {}
-@@ -214,6 +215,7 @@ static bool ufshpb_is_allowed(struct ufs_hba *hba) { return false; }
- static void ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf) {}
- static void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf) {}
- #else
-+void ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
- void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
- void ufshpb_resume(struct ufs_hba *hba);
- void ufshpb_suspend(struct ufs_hba *hba);
--- 
-2.25.1
+Reviewed-by: Max Gurtovoy <mgurtovoy@nvidia.com>
 
