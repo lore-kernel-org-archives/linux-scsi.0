@@ -2,81 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 886AEC04FF3
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 13:52:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 584D0C47088
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 14:48:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60C84613B0
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 13:52:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CE3B61439
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 14:48:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232548AbhEXNxh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 May 2021 09:53:37 -0400
-Received: from szxga06-in.huawei.com ([45.249.212.32]:3985 "EHLO
-        szxga06-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232456AbhEXNxg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 May 2021 09:53:36 -0400
-Received: from dggems705-chm.china.huawei.com (unknown [172.30.72.58])
-        by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4Fpdqr4867zmZ1T;
-        Mon, 24 May 2021 21:49:44 +0800 (CST)
-Received: from dggpeml500008.china.huawei.com (7.185.36.147) by
- dggems705-chm.china.huawei.com (10.3.19.182) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Mon, 24 May 2021 21:52:04 +0800
-Received: from [127.0.0.1] (10.40.188.252) by dggpeml500008.china.huawei.com
- (7.185.36.147) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 24 May
- 2021 21:52:03 +0800
-Subject: Re: [PATCH] scsi: hisi_sas: Use the correct HiSilicon copyright
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.garry@huawei.com>
-References: <1621679075-15404-1-git-send-email-fanghao11@huawei.com>
- <02ff5bb3aa4894cd8ef2b0ca9d66f4c6ba34278b.camel@linux.ibm.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <prime.zeng@hisilicon.com>
-From:   "fanghao (A)" <fanghao11@huawei.com>
-Message-ID: <524a6457-260f-e11c-1090-7c1ed839bf0a@huawei.com>
-Date:   Mon, 24 May 2021 21:52:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+        id S233823AbhEXOuT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 May 2021 10:50:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55762 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233490AbhEXOsr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 May 2021 10:48:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C3A45613DB;
+        Mon, 24 May 2021 14:47:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1621867639;
+        bh=6J+VSZR2RVrPRUpwU04x1RUQWW0xg8KZLbMcUqkVw6I=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=rTbfseDHwN739QvRXcf7ie4gSuLFgJCMJow/8rUj6MbzQ9eIwuoEkgMH8QWliM9VN
+         BqO9CRV1hiBN/lXtc2HUBgg00OUiLM6zm/s6sC1EG2T0LYfIKG1hTXJDgNafztpWMu
+         UeQmBmaGEB3uQ4TfvHUQy+c+0ca1rnaV5yk30SVANNlGlIYMxWs0P/OydUJQw6NVFv
+         I7dTT0lCNU45sLM63+1O/MmJUcgEpR0mTN7aSNPxLmCoZJgWr9p3bNFSKC8NlXXF6U
+         c9XEH7kBDq+z25OwimDLhx18FXtS4bpHLIJEf8S+AenlY1Oj/FJSkRuE/6aRpnIrgt
+         4cRQuS4t0y6HQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Peter Wang <peter.wang@mediatek.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-mediatek@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.12 45/63] scsi: ufs: ufs-mediatek: Fix power down spec violation
+Date:   Mon, 24 May 2021 10:46:02 -0400
+Message-Id: <20210524144620.2497249-45-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210524144620.2497249-1-sashal@kernel.org>
+References: <20210524144620.2497249-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <02ff5bb3aa4894cd8ef2b0ca9d66f4c6ba34278b.camel@linux.ibm.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.40.188.252]
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- dggpeml500008.china.huawei.com (7.185.36.147)
-X-CFilter-Loop: Reflected
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Peter Wang <peter.wang@mediatek.com>
 
+[ Upstream commit c625b80b9d00f3546722cd77527f9697c8c4c911 ]
 
-On 2021/5/22 22:56, James Bottomley wrote:
-> On Sat, 2021-05-22 at 18:24 +0800, Hao Fang wrote:
->> s/Hisilicon/HiSilicon/.
->> It should use capital S, according to the official website
->> https://www.hisilicon.com/en.
->
-> You can't do this.  The strict terms of the GPL require us to preserve
-> intact all notices referring to copyright and licences.  If hisilicon
-> truly did make a mistake when they added their original copyright
-> notices, *they* may submit a patch to correct it, but you can't correct
-> it for them without their permission just because you think they got it
-> wrong.
->
+As per spec, e.g. JESD220E chapter 7.2, while powering off the UFS device,
+RST_N signal should be between VSS(Ground) and VCCQ/VCCQ2. The power down
+sequence after fixing:
 
-John, can you help to review this patch and add an Acked-by? Or you can resubmit it.
+Power down:
 
-Thanks.
+ 1. Assert RST_N low
 
-Hao
->
->
->
-> .
->
+ 2. Turn-off VCC
+
+ 3. Turn-off VCCQ/VCCQ2
+
+Link: https://lore.kernel.org/r/1620813706-25331-1-git-send-email-peter.wang@mediatek.com
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/ufs/ufs-mediatek.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index a981f261b304..aee3cfc7142a 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -922,6 +922,7 @@ static void ufs_mtk_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
+ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ {
+ 	int err;
++	struct arm_smccc_res res;
+ 
+ 	if (ufshcd_is_link_hibern8(hba)) {
+ 		err = ufs_mtk_link_set_lpm(hba);
+@@ -941,6 +942,9 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 			goto fail;
+ 	}
+ 
++	if (ufshcd_is_link_off(hba))
++		ufs_mtk_device_reset_ctrl(0, res);
++
+ 	return 0;
+ fail:
+ 	/*
+-- 
+2.30.2
 
