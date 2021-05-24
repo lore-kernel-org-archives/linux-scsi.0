@@ -7,36 +7,35 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0C60C47082
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:02:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EECA4C47080
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:02:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A86996117A
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:02:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3AF06102A
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:02:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232143AbhEXBDa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 21:03:30 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:33093 "EHLO smtp.infotech.no"
+        id S232176AbhEXBDc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 21:03:32 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:33102 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232072AbhEXBD2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 23 May 2021 21:03:28 -0400
+        id S232130AbhEXBDa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 23 May 2021 21:03:30 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 290D8204278;
+        by smtp.infotech.no (Postfix) with ESMTP id A6809204269;
         Mon, 24 May 2021 03:02:00 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id YGmK8xwfRL8i; Mon, 24 May 2021 03:01:56 +0200 (CEST)
+        with ESMTP id IeqQ04GgsMm3; Mon, 24 May 2021 03:01:58 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        by smtp.infotech.no (Postfix) with ESMTPA id 24857204269;
-        Mon, 24 May 2021 03:01:52 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id C159820426F;
+        Mon, 24 May 2021 03:01:53 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v19 02/45] sg: remove typedefs, type+formatting cleanup
-Date:   Sun, 23 May 2021 21:01:04 -0400
-Message-Id: <20210524010147.94845-3-dgilbert@interlog.com>
+        Hannes Reinecke <hare@suse.com>
+Subject: [PATCH v19 03/45] sg: sg_log and is_enabled
+Date:   Sun, 23 May 2021 21:01:05 -0400
+Message-Id: <20210524010147.94845-4-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210524010147.94845-1-dgilbert@interlog.com>
 References: <20210524010147.94845-1-dgilbert@interlog.com>
@@ -46,1016 +45,647 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Typedefs for structure types are discouraged so those structures
-that are private to the driver have had their typedefs removed.
+Replace SCSI_LOG_TIMEOUT macros with SG_LOG macros across the driver.
+The definition of SG_LOG calls SCSI_LOG_TIMEOUT if given and derived
+pointers are non-zero, calls pr_info otherwise. SG_LOGS additionally
+prints the sg device name and the thread id. The thread id is very
+useful, even in single threaded invocations because the driver not
+only uses the invocer's thread but also uses work queues and the
+main callback (i.e. sg_rq_end_io()) may hit any thread. Some
+interesting cases arise when the callback hits its invocer's
+thread.
 
-This also means that most "camel" type variable names (i.e. mixed
-case) have been removed.
+SG_LOGS takes 48 bytes on the stack to build this printf format
+string: "sg%u: tid=%d" whose size is clearly bounded above by
+the maximum size of those two integers.
+Protecting against the 'current' pointer being zero is for safety
+and the case where the boot device is SCSI and the sg driver is
+built into the kernel. Also when debugging, getting a message
+from a compromised kernel can be very useful in pinpointing the
+location of the failure.
 
-Reviewed-by: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+The simple fact that the SG_LOG macro is shorter than
+SCSI_LOG_TIMEOUT macro allow more error message "payload" per line.
+
+Also replace #if and #ifdef conditional compilations with
+the IS_ENABLED macro.
+
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 400 +++++++++++++++++++++++++---------------------
- 1 file changed, 222 insertions(+), 178 deletions(-)
+ drivers/scsi/sg.c | 260 +++++++++++++++++++++++-----------------------
+ 1 file changed, 130 insertions(+), 130 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index c7bc15c876df..e26284512544 100644
+index e26284512544..33fd280dc5da 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -3,7 +3,7 @@
-  *  History:
-  *  Started: Aug 9 by Lawrence Foard (entropy@world.std.com),
-  *           to allow user process control of SCSI devices.
-- *  Development Sponsored by Killy Corp. NY NY
-+ *  Development Sponsored by Killy Corp. NY NY   [guess: 1992]
-  *
-  * Original driver (sg.c):
-  *        Copyright (C) 1992 Lawrence Foard
-@@ -15,13 +15,6 @@ static int sg_version_num = 30901;  /* [x]xyyzz where [x] empty when x=0 */
- #define SG_VERSION_STR "3.9.01"		/* [x]x.[y]y.zz */
- static char *sg_version_date = "20190606";
+@@ -57,6 +57,15 @@ static char *sg_version_date = "20190606";
  
--/*
-- *  D. P. Gilbert (dgilbert@interlog.com), notes:
-- *      - scsi logging is available via SCSI_LOG_TIMEOUT macros. First
-- *        the kernel/module needs to be built with CONFIG_SCSI_LOGGING
-- *        (otherwise the macros compile to empty statements).
-- *
-- */
- #include <linux/module.h>
+ #define SG_MAX_DEVS 32768
  
- #include <linux/fs.h>
-@@ -91,33 +84,32 @@ static int sg_add_device(struct device *, struct class_interface *);
- static void sg_remove_device(struct device *, struct class_interface *);
- 
- static DEFINE_IDR(sg_index_idr);
--static DEFINE_RWLOCK(sg_index_lock);	/* Also used to lock
--							   file descriptor list for device */
-+static DEFINE_RWLOCK(sg_index_lock); /* Also used to lock fd list for device */
- 
- static struct class_interface sg_interface = {
- 	.add_dev        = sg_add_device,
- 	.remove_dev     = sg_remove_device,
- };
- 
--typedef struct sg_scatter_hold { /* holding area for scsi scatter gather info */
--	unsigned short k_use_sg; /* Count of kernel scatter-gather pieces */
--	unsigned sglist_len; /* size of malloc'd scatter-gather list ++ */
--	unsigned bufflen;	/* Size of (aggregate) data buffer */
-+struct sg_scatter_hold { /* holding area for scsi scatter gather info */
-+	u16 k_use_sg; /* Count of kernel scatter-gather pieces */
-+	unsigned int sglist_len; /* size of malloc'd scatter-gather list ++ */
-+	unsigned int bufflen;	/* Size of (aggregate) data buffer */
- 	struct page **pages;
- 	int page_order;
- 	char dio_in_use;	/* 0->indirect IO (or mmap), 1->dio */
--	unsigned char cmd_opcode; /* first byte of command */
--} Sg_scatter_hold;
-+	u8 cmd_opcode;		/* first byte of command */
-+};
- 
- struct sg_device;		/* forward declarations */
- struct sg_fd;
- 
--typedef struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
-+struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
- 	struct list_head entry;	/* list entry */
- 	struct sg_fd *parentfp;	/* NULL -> not in use */
--	Sg_scatter_hold data;	/* hold buffer, perhaps scatter list */
-+	struct sg_scatter_hold data;	/* hold buffer, perhaps scatter list */
- 	sg_io_hdr_t header;	/* scsi command+info, see <scsi/sg.h> */
--	unsigned char sense_b[SCSI_SENSE_BUFFERSIZE];
-+	u8 sense_b[SCSI_SENSE_BUFFERSIZE];
- 	char res_used;		/* 1 -> using reserve buffer, 0 -> not ... */
- 	char orphan;		/* 1 -> drop on sight, 0 -> normal */
- 	char sg_io_owned;	/* 1 -> packet belongs to SG_IO */
-@@ -126,9 +118,9 @@ typedef struct sg_request {	/* SG_MAX_QUEUE requests outstanding per file */
- 	struct request *rq;
- 	struct bio *bio;
- 	struct execute_work ew;
--} Sg_request;
-+};
- 
--typedef struct sg_fd {		/* holds the state of a file descriptor */
-+struct sg_fd {		/* holds the state of a file descriptor */
- 	struct list_head sfd_siblings;  /* protected by device's sfd_lock */
- 	struct sg_device *parentdp;	/* owning device */
- 	wait_queue_head_t read_wait;	/* queue read until command done */
-@@ -136,21 +128,21 @@ typedef struct sg_fd {		/* holds the state of a file descriptor */
- 	struct mutex f_mutex;	/* protect against changes in this fd */
- 	int timeout;		/* defaults to SG_DEFAULT_TIMEOUT      */
- 	int timeout_user;	/* defaults to SG_DEFAULT_TIMEOUT_USER */
--	Sg_scatter_hold reserve;	/* buffer held for this file descriptor */
-+	struct sg_scatter_hold reserve;	/* buffer for this file descriptor */
- 	struct list_head rq_list; /* head of request list */
- 	struct fasync_struct *async_qp;	/* used by asynchronous notification */
--	Sg_request req_arr[SG_MAX_QUEUE];	/* used as singly-linked list */
-+	struct sg_request req_arr[SG_MAX_QUEUE];/* use as singly-linked list */
- 	char force_packid;	/* 1 -> pack_id input to read(), 0 -> ignored */
- 	char cmd_q;		/* 1 -> allow command queuing, 0 -> don't */
--	unsigned char next_cmd_len; /* 0: automatic, >0: use on next write() */
-+	u8 next_cmd_len;	/* 0: automatic, >0: use on next write() */
- 	char keep_orphan;	/* 0 -> drop orphan (def), 1 -> keep for read() */
- 	char mmap_called;	/* 0 -> mmap() never called on this fd */
- 	char res_in_use;	/* 1 -> 'reserve' array in use */
- 	struct kref f_ref;
- 	struct execute_work ew;
--} Sg_fd;
-+};
- 
--typedef struct sg_device { /* holds the state of each scsi generic device */
-+struct sg_device { /* holds the state of each scsi generic device */
- 	struct scsi_device *device;
- 	wait_queue_head_t open_wait;    /* queue open() when O_EXCL present */
- 	struct mutex open_rel_lock;     /* held when in open() or release() */
-@@ -163,32 +155,36 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
- 	int open_cnt;		/* count of opens (perhaps < num(sfds) ) */
- 	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10-> all devs */
- 	struct gendisk *disk;
--	struct cdev * cdev;	/* char_dev [sysfs: /sys/cdev/major/sg<n>] */
-+	struct cdev *cdev;
- 	struct kref d_ref;
--} Sg_device;
-+};
- 
- /* tasklet or soft irq callback */
- static void sg_rq_end_io(struct request *rq, blk_status_t status);
- /* Declarations of other static functions used before they are defined */
- static int sg_proc_init(void);
--static int sg_start_req(Sg_request *srp, unsigned char *cmd);
--static int sg_finish_rem_req(Sg_request * srp);
--static int sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size);
--static ssize_t sg_new_write(Sg_fd *sfp, struct file *file,
--			const char __user *buf, size_t count, int blocking,
--			int read_only, int sg_io_owned, Sg_request **o_srp);
--static int sg_common_write(Sg_fd * sfp, Sg_request * srp,
--			   unsigned char *cmnd, int timeout, int blocking);
--static int sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer);
--static void sg_remove_scat(Sg_fd * sfp, Sg_scatter_hold * schp);
--static void sg_build_reserve(Sg_fd * sfp, int req_size);
--static void sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size);
--static void sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp);
--static Sg_fd *sg_add_sfp(Sg_device * sdp);
-+static int sg_start_req(struct sg_request *srp, u8 *cmd);
-+static int sg_finish_rem_req(struct sg_request *srp);
-+static int sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
-+			     int buff_size);
-+static ssize_t sg_new_write(struct sg_fd *sfp, struct file *file,
-+			    const char __user *buf, size_t count, int blocking,
-+			    int read_only, int sg_io_owned,
-+			    struct sg_request **o_srp);
-+static int sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
-+			   u8 *cmnd, int timeout, int blocking);
-+static int sg_read_oxfer(struct sg_request *srp, char __user *outp,
-+			 int num_read_xfer);
-+static void sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp);
-+static void sg_build_reserve(struct sg_fd *sfp, int req_size);
-+static void sg_link_reserve(struct sg_fd *sfp, struct sg_request *srp,
-+			    int size);
-+static void sg_unlink_reserve(struct sg_fd *sfp, struct sg_request *srp);
-+static struct sg_fd *sg_add_sfp(struct sg_device *sdp);
- static void sg_remove_sfp(struct kref *);
--static Sg_request *sg_add_request(Sg_fd * sfp);
--static int sg_remove_request(Sg_fd * sfp, Sg_request * srp);
--static Sg_device *sg_get_dev(int dev);
-+static struct sg_request *sg_add_request(struct sg_fd *sfp);
-+static int sg_remove_request(struct sg_fd *sfp, struct sg_request *srp);
-+static struct sg_device *sg_get_dev(int dev);
++/* Comment out the following line to compile out SCSI_LOGGING stuff */
++#define SG_DEBUG 1
++
++#if !IS_ENABLED(SG_DEBUG)
++#if IS_ENABLED(DEBUG)	/* If SG_DEBUG not defined, check for DEBUG */
++#define SG_DEBUG DEBUG
++#endif
++#endif
++
+ /* SG_MAX_CDB_SIZE should be 260 (spc4r37 section 3.1.30) however the type
+  * of sg_io_hdr::cmd_len can only represent 255. All SCSI commands greater
+  * than 16 bytes are "variable length" whose length is a multiple of 4
+@@ -174,7 +183,7 @@ static ssize_t sg_new_write(struct sg_fd *sfp, struct file *file,
+ static int sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+ 			   u8 *cmnd, int timeout, int blocking);
+ static int sg_read_oxfer(struct sg_request *srp, char __user *outp,
+-			 int num_read_xfer);
++			 int num_xfer);
+ static void sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp);
+ static void sg_build_reserve(struct sg_fd *sfp, int req_size);
+ static void sg_link_reserve(struct sg_fd *sfp, struct sg_request *srp,
+@@ -187,14 +196,45 @@ static int sg_remove_request(struct sg_fd *sfp, struct sg_request *srp);
+ static struct sg_device *sg_get_dev(int dev);
  static void sg_device_destroy(struct kref *kref);
  
- #define SZ_SG_HEADER sizeof(struct sg_header)
-@@ -212,7 +208,8 @@ static void sg_device_destroy(struct kref *kref);
-  * This function provides protection for the legacy API by restricting the
-  * calling context.
-  */
--static int sg_check_file_access(struct file *filp, const char *caller)
-+static int
-+sg_check_file_access(struct file *filp, const char *caller)
- {
- 	if (filp->f_cred != current_real_cred()) {
- 		pr_err_once("%s: process %d (%s) changed security contexts after opening file descriptor, this is not allowed.\n",
-@@ -228,11 +225,11 @@ static int sg_check_file_access(struct file *filp, const char *caller)
- }
- 
- static int
--open_wait(Sg_device *sdp, int flags)
-+sg_wait_open_event(struct sg_device *sdp, bool o_excl)
- {
- 	int retval = 0;
- 
--	if (flags & O_EXCL) {
-+	if (o_excl) {
- 		while (sdp->open_cnt > 0) {
- 			mutex_unlock(&sdp->open_rel_lock);
- 			retval = wait_event_interruptible(sdp->open_wait,
-@@ -263,26 +260,34 @@ open_wait(Sg_device *sdp, int flags)
- 	return retval;
- }
- 
--/* Returns 0 on success, else a negated errno value */
+-#define SZ_SG_HEADER sizeof(struct sg_header)
+-#define SZ_SG_IO_HDR sizeof(sg_io_hdr_t)
+-#define SZ_SG_IOVEC sizeof(sg_iovec_t)
+-#define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
++#define SZ_SG_HEADER ((int)sizeof(struct sg_header))	/* v1 and v2 header */
++#define SZ_SG_IO_HDR ((int)sizeof(struct sg_io_hdr))	/* v3 header */
++#define SZ_SG_REQ_INFO ((int)sizeof(struct sg_req_info))
++
 +/*
-+ * Corresponds to the open() system call on sg devices. Implements O_EXCL on
-+ * a per device basis using 'open_cnt'. If O_EXCL and O_NONBLOCK and there is
-+ * already a sg handle open on this device then it fails with an errno of
-+ * EBUSY. Without the O_NONBLOCK flag then this thread enters an interruptible
-+ * wait until the other handle(s) are closed.
++ * Kernel needs to be built with CONFIG_SCSI_LOGGING to see log messages.
++ * 'depth' is a number between 1 (most severe) and 7 (most noisy, most
++ * information). All messages are logged as informational (KERN_INFO). In
++ * the unexpected situation where sfp or sdp is NULL the macro reverts to
++ * a pr_info and ignores SCSI_LOG_TIMEOUT and always prints to the log.
++ * Example: this invocation: 'scsi_logging_level -s -T 3' will print
++ * depth (aka level) 1 and 2 SG_LOG() messages.
 + */
- static int
- sg_open(struct inode *inode, struct file *filp)
- {
--	int dev = iminor(inode);
--	int flags = filp->f_flags;
-+	bool o_excl;
-+	int min_dev = iminor(inode);
-+	int op_flags = filp->f_flags;
- 	struct request_queue *q;
--	Sg_device *sdp;
--	Sg_fd *sfp;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
- 	int retval;
++
++#define SG_PROC_DEBUG_SZ 8192
++
++#if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
++#define SG_LOG_BUFF_SZ 48
++
++#define SG_LOG(depth, sfp, fmt, a...)					\
++	do {								\
++		char _b[SG_LOG_BUFF_SZ];				\
++		int _tid = (current ? current->pid : -1);		\
++		struct sg_fd *_fp = sfp;				\
++		struct sg_device *_sdp = _fp ? _fp->parentdp : NULL;	\
++									\
++		if (likely(_sdp && _sdp->disk)) {			\
++			snprintf(_b, sizeof(_b), "sg%u: tid=%d",	\
++				 _sdp->index, _tid);			\
++			SCSI_LOG_TIMEOUT(depth,				\
++					 sdev_prefix_printk(KERN_INFO,	\
++					 _sdp->device, _b, fmt, ##a));	\
++		} else							\
++			pr_info("sg: sdp or sfp NULL, " fmt, ##a);	\
++	} while (0)
++#else
++#define SG_LOG(depth, sfp, fmt, a...) do { } while (0)
++#endif	/* end of CONFIG_SCSI_LOGGING && SG_DEBUG conditional */
  
- 	nonseekable_open(inode, filp);
--	if ((flags & O_EXCL) && (O_RDONLY == (flags & O_ACCMODE)))
-+	o_excl = !!(op_flags & O_EXCL);
-+	if (o_excl && ((op_flags & O_ACCMODE) == O_RDONLY))
- 		return -EPERM; /* Can't lock it with read only access */
--	sdp = sg_get_dev(dev);
-+	sdp = sg_get_dev(min_dev);
+-#define sg_printk(prefix, sdp, fmt, a...) \
+-	sdev_prefix_printk(prefix, (sdp)->device,		\
+-			   (sdp)->disk->disk_name, fmt, ##a)
+ 
+ /*
+  * The SCSI interfaces that use read() and write() as an asynchronous variant of
+@@ -286,9 +326,6 @@ sg_open(struct inode *inode, struct file *filp)
  	if (IS_ERR(sdp))
  		return PTR_ERR(sdp);
  
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
--				      "sg_open: flags=0x%x\n", flags));
-+				      "sg_open: flags=0x%x\n", op_flags));
- 
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "sg_open: flags=0x%x\n", op_flags));
+-
  	/* This driver's module count bumped by fops_get in <linux/fs.h> */
  	/* Prevent the device driver from vanishing while we sleep */
-@@ -297,7 +302,7 @@ sg_open(struct inode *inode, struct file *filp)
- 	/* scsi_block_when_processing_errors() may block so bypass
- 	 * check if O_NONBLOCK. Permits SCSI commands to be issued
- 	 * during error recovery. Tread carefully. */
--	if (!((flags & O_NONBLOCK) ||
-+	if (!((op_flags & O_NONBLOCK) ||
- 	      scsi_block_when_processing_errors(sdp->device))) {
- 		retval = -ENXIO;
- 		/* we are in error recovery for this device */
-@@ -305,8 +310,8 @@ sg_open(struct inode *inode, struct file *filp)
- 	}
+ 	retval = scsi_device_get(sdp->device);
+@@ -346,6 +383,9 @@ sg_open(struct inode *inode, struct file *filp)
+ 	filp->private_data = sfp;
+ 	sdp->open_cnt++;
+ 	mutex_unlock(&sdp->open_rel_lock);
++	SG_LOG(3, sfp, "%s: minor=%d, op_flags=0x%x; %s count prior=%d%s\n",
++	       __func__, min_dev, op_flags, "device open", sdp->open_cnt,
++	       ((op_flags & O_NONBLOCK) ? " O_NONBLOCK" : ""));
+ 
+ 	retval = 0;
+ sg_put:
+@@ -376,9 +416,10 @@ sg_release(struct inode *inode, struct file *filp)
+ 
+ 	sfp = filp->private_data;
+ 	sdp = sfp->parentdp;
++	SG_LOG(3, sfp, "%s: device open count prior=%d\n", __func__,
++	       sdp->open_cnt);
+ 	if (!sdp)
+ 		return -ENXIO;
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
  
  	mutex_lock(&sdp->open_rel_lock);
--	if (flags & O_NONBLOCK) {
--		if (flags & O_EXCL) {
-+	if (op_flags & O_NONBLOCK) {
-+		if (o_excl) {
- 			if (sdp->open_cnt > 0) {
- 				retval = -EBUSY;
- 				goto error_mutex_locked;
-@@ -318,13 +323,13 @@ sg_open(struct inode *inode, struct file *filp)
- 			}
- 		}
- 	} else {
--		retval = open_wait(sdp, flags);
-+		retval = sg_wait_open_event(sdp, o_excl);
- 		if (retval) /* -ERESTARTSYS or -ENODEV */
- 			goto error_mutex_locked;
- 	}
+ 	scsi_autopm_put_device(sdp->device);
+@@ -417,10 +458,9 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
  
- 	/* N.B. at this point we are holding the open_rel_lock */
--	if (flags & O_EXCL)
-+	if (o_excl)
- 		sdp->exclude = true;
- 
- 	if (sdp->open_cnt < 1) {  /* no existing opens */
-@@ -348,7 +353,7 @@ sg_open(struct inode *inode, struct file *filp)
- 	return retval;
- 
- out_undo:
--	if (flags & O_EXCL) {
-+	if (o_excl) {
- 		sdp->exclude = false;   /* undo if error */
- 		wake_up_interruptible(&sdp->open_wait);
- 	}
-@@ -366,10 +371,12 @@ sg_open(struct inode *inode, struct file *filp)
- static int
- sg_release(struct inode *inode, struct file *filp)
- {
--	Sg_device *sdp;
--	Sg_fd *sfp;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
- 
--	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
-+	sfp = filp->private_data;
-+	sdp = sfp->parentdp;
-+	if (!sdp)
+ 	sfp = filp->private_data;
+ 	sdp = sfp->parentdp;
++	SG_LOG(3, sfp, "%s: write(3rd arg) count=%d\n", __func__, (int)count);
+ 	if (!sdp)
  		return -ENXIO;
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp, "sg_release\n"));
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "sg_write: count=%d\n", (int) count));
+ 	if (atomic_read(&sdp->detaching))
+ 		return -ENODEV;
+ 	if (!((filp->f_flags & O_NONBLOCK) ||
+@@ -443,8 +483,7 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 		return -EFAULT;
  
-@@ -378,7 +385,7 @@ sg_release(struct inode *inode, struct file *filp)
- 	kref_put(&sfp->f_ref, sg_remove_sfp);
- 	sdp->open_cnt--;
- 
--	/* possibly many open()s waiting on exlude clearing, start many;
-+	/* possibly many open()s waiting on exclude clearing, start many;
- 	 * only open(O_EXCL)s wait on 0==open_cnt so only start one */
- 	if (sdp->exclude) {
- 		sdp->exclude = false;
-@@ -395,20 +402,22 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- {
- 	int mxsize, cmd_size, k;
- 	int input_size, blocking;
--	unsigned char opcode;
--	Sg_device *sdp;
--	Sg_fd *sfp;
--	Sg_request *srp;
-+	u8 opcode;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
-+	struct sg_request *srp;
- 	struct sg_header old_hdr;
- 	sg_io_hdr_t *hp;
--	unsigned char cmnd[SG_MAX_CDB_SIZE];
-+	u8 cmnd[SG_MAX_CDB_SIZE];
- 	int retval;
- 
- 	retval = sg_check_file_access(filp, __func__);
- 	if (retval)
- 		return retval;
- 
--	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
-+	sfp = filp->private_data;
-+	sdp = sfp->parentdp;
-+	if (!sdp)
- 		return -ENXIO;
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
- 				      "sg_write: count=%d\n", (int) count));
-@@ -461,7 +470,7 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	if (!(srp = sg_add_request(sfp))) {
+-		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sdp,
+-					      "sg_write: queue full\n"));
++		SG_LOG(1, sfp, "%s: queue full\n", __func__);
+ 		return -EDOM;
  	}
- 	hp = &srp->header;
- 	hp->interface_id = '\0';	/* indicator of old interface tunnelled */
--	hp->cmd_len = (unsigned char) cmd_size;
-+	hp->cmd_len = (u8)cmd_size;
- 	hp->iovec_count = 0;
- 	hp->mx_sb_len = 0;
- 	if (input_size > 0)
-@@ -503,7 +512,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
- 	return (k < 0) ? k : count;
- }
+ 	mutex_lock(&sfp->f_mutex);
+@@ -457,9 +496,8 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 			cmd_size = 12;
+ 	}
+ 	mutex_unlock(&sfp->f_mutex);
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
+-		"sg_write:   scsi opcode=0x%02x, cmd_size=%d\n", (int) opcode, cmd_size));
+-/* Determine buffer size.  */
++	SG_LOG(4, sfp, "%s:   scsi opcode=0x%02x, cmd_size=%d\n", __func__,
++	       (unsigned int)opcode, cmd_size);
+ 	input_size = count - cmd_size;
+ 	mxsize = (input_size > old_hdr.reply_len) ? input_size : old_hdr.reply_len;
+ 	mxsize -= SZ_SG_HEADER;
+@@ -540,8 +578,7 @@ sg_new_write(struct sg_fd *sfp, struct file *file, const char __user *buf,
  
--static int sg_allow_access(struct file *filp, unsigned char *cmd)
-+static int
-+sg_allow_access(struct file *filp, u8 *cmd)
- {
- 	struct sg_fd *sfp = filp->private_data;
+ 	sfp->cmd_q = 1;	/* when sg_io_hdr seen, set command queuing on */
+ 	if (!(srp = sg_add_request(sfp))) {
+-		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
+-					      "sg_new_write: queue full\n"));
++		SG_LOG(1, sfp, "%s: queue full\n", __func__);
+ 		return -EDOM;
+ 	}
+ 	srp->sg_io_owned = sg_io_owned;
+@@ -606,9 +643,8 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+ 	hp->host_status = 0;
+ 	hp->driver_status = 0;
+ 	hp->resid = 0;
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
+-			"sg_common_write:  scsi opcode=0x%02x, cmd_size=%d\n",
+-			(int) cmnd[0], (int) hp->cmd_len));
++	SG_LOG(4, sfp, "%s:  opcode=0x%02x, cmd_sz=%d\n", __func__,
++	       (int)cmnd[0], hp->cmd_len);
  
-@@ -514,14 +524,14 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
- }
+ 	if (hp->dxfer_len >= SZ_256M) {
+ 		sg_remove_request(sfp, srp);
+@@ -617,8 +653,7 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
  
- static ssize_t
--sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
--		 size_t count, int blocking, int read_only, int sg_io_owned,
--		 Sg_request **o_srp)
-+sg_new_write(struct sg_fd *sfp, struct file *file, const char __user *buf,
-+	     size_t count, int blocking, int read_only, int sg_io_owned,
-+	     struct sg_request **o_srp)
- {
- 	int k;
--	Sg_request *srp;
-+	struct sg_request *srp;
- 	sg_io_hdr_t *hp;
--	unsigned char cmnd[SG_MAX_CDB_SIZE];
-+	u8 cmnd[SG_MAX_CDB_SIZE];
- 	int timeout;
- 	unsigned long ul_timeout;
+ 	k = sg_start_req(srp, cmnd);
+ 	if (k) {
+-		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
+-			"sg_common_write: start_req err=%d\n", k));
++		SG_LOG(1, sfp, "%s: start_req err=%d\n", __func__, k);
+ 		sg_finish_rem_req(srp);
+ 		sg_remove_request(sfp, srp);
+ 		return k;	/* probably out of space --> ENOMEM */
+@@ -751,9 +786,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
  
-@@ -581,11 +591,11 @@ sg_new_write(Sg_fd *sfp, struct file *file, const char __user *buf,
- }
+ 	sfp = filp->private_data;
+ 	sdp = sfp->parentdp;
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "%s: count=%d\n", __func__,
+-				      (int)count));
++	SG_LOG(3, sfp, "%s: read() count=%d\n", __func__, (int)count);
+ 	if (!sdp)
+ 		return -ENXIO;
  
- static int
--sg_common_write(Sg_fd * sfp, Sg_request * srp,
--		unsigned char *cmnd, int timeout, int blocking)
-+sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
-+		u8 *cmnd, int timeout, int blocking)
- {
- 	int k, at_head;
--	Sg_device *sdp = sfp->parentdp;
-+	struct sg_device *sdp = sfp->parentdp;
- 	sg_io_hdr_t *hp = &srp->header;
- 
- 	srp->data.cmd_opcode = cmnd[0];	/* hold opcode of command */
-@@ -644,10 +654,10 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
-  * half of the ioctl(SG_IO) share code with read(2).
-  */
- 
--static Sg_request *
--sg_get_rq_mark(Sg_fd *sfp, int pack_id)
-+static struct sg_request *
-+sg_get_rq_mark(struct sg_fd *sfp, int pack_id)
- {
--	Sg_request *resp;
-+	struct sg_request *resp;
+@@ -974,8 +1007,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 	struct sg_request *srp;
  	unsigned long iflags;
  
- 	write_lock_irqsave(&sfp->rq_list_lock, iflags);
-@@ -665,7 +675,8 @@ sg_get_rq_mark(Sg_fd *sfp, int pack_id)
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				   "sg_ioctl: cmd=0x%x\n", (int) cmd_in));
++	SG_LOG(6, sfp, "%s: cmd=0x%x, O_NONBLOCK=%d\n", __func__, cmd_in,
++	       !!(filp->f_flags & O_NONBLOCK));
+ 	read_only = (O_RDWR != (filp->f_flags & O_ACCMODE));
+ 
+ 	switch (cmd_in) {
+@@ -1220,8 +1253,9 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 	return scsi_ioctl(sdp->device, cmd_in, p);
  }
  
- static ssize_t
--sg_new_read(Sg_fd *sfp, char __user *buf, size_t count, Sg_request *srp)
-+sg_new_read(struct sg_fd *sfp, char __user *buf, size_t count,
-+	    struct sg_request *srp)
- {
- 	sg_io_hdr_t *hp = &srp->header;
- 	int err = 0, err2;
-@@ -707,7 +718,8 @@ sg_new_read(Sg_fd *sfp, char __user *buf, size_t count, Sg_request *srp)
- 	return err ? : err2 ? : count;
- }
- 
--static int srp_done(Sg_fd *sfp, Sg_request *srp)
-+static int
-+srp_done(struct sg_fd *sfp, struct sg_request *srp)
- {
- 	unsigned long flags;
- 	int ret;
-@@ -721,9 +733,9 @@ static int srp_done(Sg_fd *sfp, Sg_request *srp)
- static ssize_t
- sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
- {
--	Sg_device *sdp;
--	Sg_fd *sfp;
--	Sg_request *srp;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
-+	struct sg_request *srp;
- 	int req_pack_id = -1;
- 	sg_io_hdr_t *hp;
- 	struct sg_header *old_hdr = NULL;
-@@ -883,7 +895,8 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
- 	return retval;
- }
- 
--static int max_sectors_bytes(struct request_queue *q)
-+static int
-+max_sectors_bytes(struct request_queue *q)
- {
- 	unsigned int max_sectors = queue_max_sectors(q);
- 
-@@ -893,9 +906,9 @@ static int max_sectors_bytes(struct request_queue *q)
- }
- 
- static void
--sg_fill_request_table(Sg_fd *sfp, sg_req_info_t *rinfo)
-+sg_fill_request_table(struct sg_fd *sfp, struct sg_req_info *rinfo)
- {
--	Sg_request *srp;
-+	struct sg_request *srp;
- 	int val;
- 	unsigned int ms;
- 
-@@ -953,12 +966,12 @@ static int put_compat_request_table(struct compat_sg_req_info __user *o,
- #endif
- 
- static long
--sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
-+sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 		unsigned int cmd_in, void __user *p)
- {
- 	int __user *ip = p;
- 	int result, val, read_only;
--	Sg_request *srp;
-+	struct sg_request *srp;
- 	unsigned long iflags;
- 
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
-@@ -1191,11 +1204,13 @@ static long
- sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- {
- 	void __user *p = (void __user *)arg;
--	Sg_device *sdp;
--	Sg_fd *sfp;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
- 	int ret;
- 
--	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
-+	sfp = filp->private_data;
-+	sdp = sfp->parentdp;
-+	if (!sdp)
- 		return -ENXIO;
- 
- 	ret = sg_ioctl_common(filp, sdp, sfp, cmd_in, p);
-@@ -1209,11 +1224,13 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+-#ifdef CONFIG_COMPAT
+-static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
++#if IS_ENABLED(CONFIG_COMPAT)
++static long
++sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
  {
  	void __user *p = compat_ptr(arg);
--	Sg_device *sdp;
--	Sg_fd *sfp;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
- 	int ret;
- 
--	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
-+	sfp = filp->private_data;
-+	sdp = sfp->parentdp;
-+	if (!sdp)
- 		return -ENXIO;
- 
- 	ret = sg_ioctl_common(filp, sdp, sfp, cmd_in, p);
-@@ -1228,9 +1245,9 @@ static __poll_t
- sg_poll(struct file *filp, poll_table * wait)
- {
- 	__poll_t res = 0;
--	Sg_device *sdp;
--	Sg_fd *sfp;
--	Sg_request *srp;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
-+	struct sg_request *srp;
- 	int count = 0;
- 	unsigned long iflags;
- 
-@@ -1265,10 +1282,12 @@ sg_poll(struct file *filp, poll_table * wait)
- static int
- sg_fasync(int fd, struct file *filp, int mode)
- {
--	Sg_device *sdp;
--	Sg_fd *sfp;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
- 
--	if ((!(sfp = (Sg_fd *) filp->private_data)) || (!(sdp = sfp->parentdp)))
-+	sfp = filp->private_data;
-+	sdp = sfp->parentdp;
-+	if (!sdp)
- 		return -ENXIO;
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
- 				      "sg_fasync: mode=%d\n", mode));
-@@ -1280,13 +1299,21 @@ static vm_fault_t
- sg_vma_fault(struct vm_fault *vmf)
- {
- 	struct vm_area_struct *vma = vmf->vma;
--	Sg_fd *sfp;
-+	struct sg_fd *sfp;
- 	unsigned long offset, len, sa;
--	Sg_scatter_hold *rsv_schp;
-+	struct sg_scatter_hold *rsv_schp;
- 	int k, length;
-+	const char *nbp = "==NULL, bad";
- 
--	if ((NULL == vma) || (!(sfp = (Sg_fd *) vma->vm_private_data)))
--		return VM_FAULT_SIGBUS;
-+	if (!vma) {
-+		pr_warn("%s: vma%s\n", __func__, nbp);
-+		goto out_err;
-+	}
-+	sfp = vma->vm_private_data;
-+	if (!sfp) {
-+		pr_warn("%s: sfp%s\n", __func__, nbp);
-+		goto out_err;
-+	}
- 	rsv_schp = &sfp->reserve;
- 	offset = vmf->pgoff << PAGE_SHIFT;
- 	if (offset >= rsv_schp->bufflen)
-@@ -1309,7 +1336,7 @@ sg_vma_fault(struct vm_fault *vmf)
- 		sa += len;
- 		offset -= len;
- 	}
--
-+out_err:
- 	return VM_FAULT_SIGBUS;
- }
- 
-@@ -1320,14 +1347,19 @@ static const struct vm_operations_struct sg_mmap_vm_ops = {
- static int
- sg_mmap(struct file *filp, struct vm_area_struct *vma)
- {
--	Sg_fd *sfp;
-+	struct sg_fd *sfp;
- 	unsigned long req_sz, len, sa;
--	Sg_scatter_hold *rsv_schp;
-+	struct sg_scatter_hold *rsv_schp;
- 	int k, length;
- 	int ret = 0;
- 
--	if ((!filp) || (!vma) || (!(sfp = (Sg_fd *) filp->private_data)))
-+	if (!filp || !vma)
-+		return -ENXIO;
-+	sfp = filp->private_data;
-+	if (!sfp) {
-+		pr_warn("sg: %s: sfp is NULL\n", __func__);
- 		return -ENXIO;
-+	}
- 	req_sz = vma->vm_end - vma->vm_start;
- 	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
- 				      "sg_mmap starting, vm_start=%p, len=%d\n",
-@@ -1378,8 +1410,8 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
- {
- 	struct sg_request *srp = rq->end_io_data;
- 	struct scsi_request *req = scsi_req(rq);
--	Sg_device *sdp;
--	Sg_fd *sfp;
-+	struct sg_device *sdp;
-+	struct sg_fd *sfp;
- 	unsigned long iflags;
- 	unsigned int ms;
- 	char *sense;
-@@ -1491,21 +1523,18 @@ static struct class *sg_sysfs_class;
- 
- static int sg_sysfs_valid = 0;
- 
--static Sg_device *
-+static struct sg_device *
- sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
- {
- 	struct request_queue *q = scsidp->request_queue;
--	Sg_device *sdp;
-+	struct sg_device *sdp;
- 	unsigned long iflags;
- 	int error;
- 	u32 k;
- 
--	sdp = kzalloc(sizeof(Sg_device), GFP_KERNEL);
--	if (!sdp) {
--		sdev_printk(KERN_WARNING, scsidp, "%s: kmalloc Sg_device "
--			    "failure\n", __func__);
-+	sdp = kzalloc(sizeof(*sdp), GFP_KERNEL);
-+	if (!sdp)
- 		return ERR_PTR(-ENOMEM);
--	}
- 
- 	idr_preload(GFP_KERNEL);
- 	write_lock_irqsave(&sg_index_lock, iflags);
-@@ -1518,8 +1547,8 @@ sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
- 				    scsidp->type, SG_MAX_DEVS - 1);
- 			error = -ENODEV;
- 		} else {
--			sdev_printk(KERN_WARNING, scsidp, "%s: idr "
--				    "allocation Sg_device failure: %d\n",
-+			sdev_printk(KERN_WARNING, scsidp,
-+				    "%s: idr alloc sg_device failure: %d\n",
- 				    __func__, error);
- 		}
- 		goto out_unlock;
-@@ -1558,7 +1587,7 @@ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
- {
- 	struct scsi_device *scsidp = to_scsi_device(cl_dev->parent);
- 	struct gendisk *disk;
--	Sg_device *sdp = NULL;
-+	struct sg_device *sdp = NULL;
- 	struct cdev * cdev = NULL;
- 	int error;
- 	unsigned long iflags;
-@@ -1657,9 +1686,9 @@ static void
- sg_remove_device(struct device *cl_dev, struct class_interface *cl_intf)
- {
- 	struct scsi_device *scsidp = to_scsi_device(cl_dev->parent);
--	Sg_device *sdp = dev_get_drvdata(cl_dev);
-+	struct sg_device *sdp = dev_get_drvdata(cl_dev);
- 	unsigned long iflags;
--	Sg_fd *sfp;
-+	struct sg_fd *sfp;
- 	int val;
- 
- 	if (!sdp)
-@@ -1762,22 +1791,22 @@ exit_sg(void)
- }
- 
- static int
--sg_start_req(Sg_request *srp, unsigned char *cmd)
-+sg_start_req(struct sg_request *srp, u8 *cmd)
- {
- 	int res;
- 	struct request *rq;
- 	struct scsi_request *req;
--	Sg_fd *sfp = srp->parentfp;
-+	struct sg_fd *sfp = srp->parentfp;
- 	sg_io_hdr_t *hp = &srp->header;
- 	int dxfer_len = (int) hp->dxfer_len;
- 	int dxfer_dir = hp->dxfer_direction;
- 	unsigned int iov_count = hp->iovec_count;
--	Sg_scatter_hold *req_schp = &srp->data;
--	Sg_scatter_hold *rsv_schp = &sfp->reserve;
-+	struct sg_scatter_hold *req_schp = &srp->data;
-+	struct sg_scatter_hold *rsv_schp = &sfp->reserve;
- 	struct request_queue *q = sfp->parentdp->device->request_queue;
- 	struct rq_map_data *md, map_data;
- 	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
--	unsigned char *long_cmdp = NULL;
-+	u8 *long_cmdp = NULL;
- 
- 	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
- 				      "sg_start_req: dxfer_len=%d\n",
-@@ -1891,12 +1920,12 @@ sg_start_req(Sg_request *srp, unsigned char *cmd)
- }
- 
- static int
--sg_finish_rem_req(Sg_request *srp)
-+sg_finish_rem_req(struct sg_request *srp)
- {
- 	int ret = 0;
- 
--	Sg_fd *sfp = srp->parentfp;
--	Sg_scatter_hold *req_schp = &srp->data;
-+	struct sg_fd *sfp = srp->parentfp;
-+	struct sg_scatter_hold *req_schp = &srp->data;
- 
- 	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
- 				      "sg_finish_rem_req: res_used=%d\n",
-@@ -1918,7 +1947,8 @@ sg_finish_rem_req(Sg_request *srp)
- }
- 
- static int
--sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp, int tablesize)
-+sg_build_sgat(struct sg_scatter_hold *schp, const struct sg_fd *sfp,
-+	      int tablesize)
- {
- 	int sg_bufflen = tablesize * sizeof(struct page *);
- 	gfp_t gfp_flags = GFP_ATOMIC | __GFP_NOWARN;
-@@ -1931,7 +1961,8 @@ sg_build_sgat(Sg_scatter_hold * schp, const Sg_fd * sfp, int tablesize)
- }
- 
- static int
--sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
-+sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
-+		  int buff_size)
- {
- 	int ret_sz = 0, i, k, rem_sz, num, mx_sc_elems;
- 	int sg_tablesize = sfp->parentdp->sg_tablesize;
-@@ -2009,7 +2040,7 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- }
- 
- static void
--sg_remove_scat(Sg_fd * sfp, Sg_scatter_hold * schp)
-+sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp)
- {
- 	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
- 			 "sg_remove_scat: k_use_sg=%d\n", schp->k_use_sg));
-@@ -2032,9 +2063,9 @@ sg_remove_scat(Sg_fd * sfp, Sg_scatter_hold * schp)
- }
- 
- static int
--sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer)
-+sg_read_oxfer(struct sg_request *srp, char __user *outp, int num_read_xfer)
- {
--	Sg_scatter_hold *schp = &srp->data;
-+	struct sg_scatter_hold *schp = &srp->data;
- 	int k, num;
- 
- 	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, srp->parentfp->parentdp,
-@@ -2065,9 +2096,9 @@ sg_read_oxfer(Sg_request * srp, char __user *outp, int num_read_xfer)
- }
- 
- static void
--sg_build_reserve(Sg_fd * sfp, int req_size)
-+sg_build_reserve(struct sg_fd *sfp, int req_size)
- {
--	Sg_scatter_hold *schp = &sfp->reserve;
-+	struct sg_scatter_hold *schp = &sfp->reserve;
- 
- 	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
- 			 "sg_build_reserve: req_size=%d\n", req_size));
-@@ -2083,10 +2114,10 @@ sg_build_reserve(Sg_fd * sfp, int req_size)
- }
- 
- static void
--sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
-+sg_link_reserve(struct sg_fd *sfp, struct sg_request *srp, int size)
- {
--	Sg_scatter_hold *req_schp = &srp->data;
--	Sg_scatter_hold *rsv_schp = &sfp->reserve;
-+	struct sg_scatter_hold *req_schp = &srp->data;
-+	struct sg_scatter_hold *rsv_schp = &sfp->reserve;
- 	int k, num, rem;
- 
- 	srp->res_used = 1;
-@@ -2115,9 +2146,9 @@ sg_link_reserve(Sg_fd * sfp, Sg_request * srp, int size)
- }
- 
- static void
--sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp)
-+sg_unlink_reserve(struct sg_fd *sfp, struct sg_request *srp)
- {
--	Sg_scatter_hold *req_schp = &srp->data;
-+	struct sg_scatter_hold *req_schp = &srp->data;
- 
- 	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, srp->parentfp->parentdp,
- 				      "sg_unlink_reserve: req->k_use_sg=%d\n",
-@@ -2133,12 +2164,12 @@ sg_unlink_reserve(Sg_fd * sfp, Sg_request * srp)
- }
- 
- /* always adds to end of list */
--static Sg_request *
--sg_add_request(Sg_fd * sfp)
-+static struct sg_request *
-+sg_add_request(struct sg_fd *sfp)
- {
- 	int k;
- 	unsigned long iflags;
--	Sg_request *rp = sfp->req_arr;
-+	struct sg_request *rp = sfp->req_arr;
- 
- 	write_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	if (!list_empty(&sfp->rq_list)) {
-@@ -2152,7 +2183,7 @@ sg_add_request(Sg_fd * sfp)
- 		if (k >= SG_MAX_QUEUE)
- 			goto out_unlock;
- 	}
--	memset(rp, 0, sizeof (Sg_request));
-+	memset(rp, 0, sizeof(struct sg_request));
- 	rp->parentfp = sfp;
- 	rp->header.duration = jiffies_to_msecs(jiffies);
- 	list_add_tail(&rp->entry, &sfp->rq_list);
-@@ -2165,7 +2196,7 @@ sg_add_request(Sg_fd * sfp)
- 
- /* Return of 1 for found; 0 for not found */
- static int
--sg_remove_request(Sg_fd * sfp, Sg_request * srp)
-+sg_remove_request(struct sg_fd *sfp, struct sg_request *srp)
- {
- 	unsigned long iflags;
- 	int res = 0;
-@@ -2182,10 +2213,10 @@ sg_remove_request(Sg_fd * sfp, Sg_request * srp)
+ 	struct sg_device *sdp;
+@@ -1274,24 +1308,16 @@ sg_poll(struct file *filp, poll_table * wait)
+ 			res |= EPOLLOUT | EPOLLWRNORM;
+ 	} else if (count < SG_MAX_QUEUE)
+ 		res |= EPOLLOUT | EPOLLWRNORM;
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "sg_poll: res=0x%x\n", (__force u32) res));
++	SG_LOG(3, sfp, "%s: res=0x%x\n", __func__, (__force u32)res);
  	return res;
  }
  
--static Sg_fd *
--sg_add_sfp(Sg_device * sdp)
-+static struct sg_fd *
-+sg_add_sfp(struct sg_device *sdp)
+ static int
+ sg_fasync(int fd, struct file *filp, int mode)
  {
--	Sg_fd *sfp;
-+	struct sg_fd *sfp;
- 	unsigned long iflags;
- 	int bufflen;
+-	struct sg_device *sdp;
+-	struct sg_fd *sfp;
+-
+-	sfp = filp->private_data;
+-	sdp = sfp->parentdp;
+-	if (!sdp)
+-		return -ENXIO;
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "sg_fasync: mode=%d\n", mode));
++	struct sg_fd *sfp = filp->private_data;
  
-@@ -2235,13 +2266,13 @@ sg_remove_sfp_usercontext(struct work_struct *work)
- {
- 	struct sg_fd *sfp = container_of(work, struct sg_fd, ew.work);
- 	struct sg_device *sdp = sfp->parentdp;
--	Sg_request *srp;
-+	struct sg_request *srp;
- 	unsigned long iflags;
++	SG_LOG(3, sfp, "%s: mode(%s)\n", __func__, (mode ? "add" : "remove"));
+ 	return fasync_helper(fd, filp, mode, &sfp->async_qp);
+ }
  
- 	/* Cleanup any responses which were never read(). */
- 	write_lock_irqsave(&sfp->rq_list_lock, iflags);
- 	while (!list_empty(&sfp->rq_list)) {
--		srp = list_first_entry(&sfp->rq_list, Sg_request, entry);
-+		srp = list_first_entry(&sfp->rq_list, struct sg_request, entry);
- 		sg_finish_rem_req(srp);
- 		list_del(&srp->entry);
- 		srp->parentfp = NULL;
-@@ -2306,12 +2337,13 @@ sg_last_dev(void)
+@@ -1318,10 +1344,8 @@ sg_vma_fault(struct vm_fault *vmf)
+ 	offset = vmf->pgoff << PAGE_SHIFT;
+ 	if (offset >= rsv_schp->bufflen)
+ 		return VM_FAULT_SIGBUS;
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
+-				      "sg_vma_fault: offset=%lu, scatg=%d\n",
+-				      offset, rsv_schp->k_use_sg));
+ 	sa = vma->vm_start;
++	SG_LOG(3, sfp, "%s: vm_start=0x%lx, off=%lu\n", __func__, sa, offset);
+ 	length = 1 << (PAGE_SHIFT + rsv_schp->page_order);
+ 	for (k = 0; k < rsv_schp->k_use_sg && sa < vma->vm_end; k++) {
+ 		len = vma->vm_end - sa;
+@@ -1361,9 +1385,8 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 		return -ENXIO;
+ 	}
+ 	req_sz = vma->vm_end - vma->vm_start;
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sfp->parentdp,
+-				      "sg_mmap starting, vm_start=%p, len=%d\n",
+-				      (void *) vma->vm_start, (int) req_sz));
++	SG_LOG(3, sfp, "%s: vm_start=%p, len=%d\n", __func__,
++	       (void *)vma->vm_start, (int)req_sz);
+ 	if (vma->vm_pgoff)
+ 		return -EINVAL;	/* want no offset */
+ 	rsv_schp = &sfp->reserve;
+@@ -1432,10 +1455,9 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 	result = req->result;
+ 	resid = req->resid_len;
+ 
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sdp,
+-				      "sg_cmd_done: pack_id=%d, res=0x%x\n",
+-				      srp->header.pack_id, result));
+ 	srp->header.resid = resid;
++	SG_LOG(6, sfp, "%s: pack_id=%d, res=0x%x\n", __func__,
++	       srp->header.pack_id, result);
+ 	ms = jiffies_to_msecs(jiffies);
+ 	srp->header.duration = (ms > srp->header.duration) ?
+ 				(ms - srp->header.duration) : 0;
+@@ -1509,7 +1531,7 @@ static const struct file_operations sg_fops = {
+ 	.write = sg_write,
+ 	.poll = sg_poll,
+ 	.unlocked_ioctl = sg_ioctl,
+-#ifdef CONFIG_COMPAT
++#if IS_ENABLED(CONFIG_COMPAT)
+ 	.compat_ioctl = sg_compat_ioctl,
  #endif
+ 	.open = sg_open,
+@@ -1556,7 +1578,7 @@ sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+ 	k = error;
  
- /* must be called with sg_index_lock held */
--static Sg_device *sg_lookup_dev(int dev)
-+static struct sg_device *
-+sg_lookup_dev(int dev)
- {
- 	return idr_find(&sg_index_idr, dev);
+ 	SCSI_LOG_TIMEOUT(3, sdev_printk(KERN_INFO, scsidp,
+-					"sg_alloc: dev=%d \n", k));
++			 "%s: dev=%d, sdp=0x%p ++\n", __func__, k, sdp));
+ 	sprintf(disk->disk_name, "sg%d", k);
+ 	disk->first_minor = k;
+ 	sdp->disk = disk;
+@@ -1666,7 +1688,11 @@ sg_device_destroy(struct kref *kref)
+ 	struct sg_device *sdp = container_of(kref, struct sg_device, d_ref);
+ 	unsigned long flags;
+ 
+-	/* CAUTION!  Note that the device can still be found via idr_find()
++	SCSI_LOG_TIMEOUT(1, pr_info("[tid=%d] %s: sdp idx=%d, sdp=0x%p --\n",
++				    (current ? current->pid : -1), __func__,
++				    sdp->index, sdp));
++	/*
++	 * CAUTION!  Note that the device can still be found via idr_find()
+ 	 * even though the refcount is 0.  Therefore, do idr_remove() BEFORE
+ 	 * any other cleanup.
+ 	 */
+@@ -1675,9 +1701,6 @@ sg_device_destroy(struct kref *kref)
+ 	idr_remove(&sg_index_idr, sdp->index);
+ 	write_unlock_irqrestore(&sg_index_lock, flags);
+ 
+-	SCSI_LOG_TIMEOUT(3,
+-		sg_printk(KERN_INFO, sdp, "sg_device_destroy\n"));
+-
+ 	put_disk(sdp->disk);
+ 	kfree(sdp);
+ }
+@@ -1698,8 +1721,8 @@ sg_remove_device(struct device *cl_dev, struct class_interface *cl_intf)
+ 	if (val > 1)
+ 		return; /* only want to do following once per device */
+ 
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "%s\n", __func__));
++	SCSI_LOG_TIMEOUT(3, sdev_printk(KERN_INFO, sdp->device,
++					"%s: 0x%p\n", __func__, sdp));
+ 
+ 	read_lock_irqsave(&sdp->sfd_lock, iflags);
+ 	list_for_each_entry(sfp, &sdp->sfds, sfd_siblings) {
+@@ -1768,7 +1791,7 @@ init_sg(void)
+ 	return rc;
  }
  
--static Sg_device *
-+static struct sg_device *
- sg_get_dev(int dev)
+-#ifndef CONFIG_SCSI_PROC_FS
++#if !IS_ENABLED(CONFIG_SCSI_PROC_FS)
+ static int
+ sg_proc_init(void)
  {
- 	struct sg_device *sdp;
-@@ -2407,13 +2439,15 @@ sg_proc_init(void)
+@@ -1779,9 +1802,8 @@ sg_proc_init(void)
+ static void __exit
+ exit_sg(void)
+ {
+-#ifdef CONFIG_SCSI_PROC_FS
+-	remove_proc_subtree("scsi/sg", NULL);
+-#endif				/* CONFIG_SCSI_PROC_FS */
++	if (IS_ENABLED(CONFIG_SCSI_PROC_FS))
++		remove_proc_subtree("scsi/sg", NULL);
+ 	scsi_unregister_interface(&sg_interface);
+ 	class_destroy(sg_sysfs_class);
+ 	sg_sysfs_valid = 0;
+@@ -1808,15 +1830,14 @@ sg_start_req(struct sg_request *srp, u8 *cmd)
+ 	int rw = hp->dxfer_direction == SG_DXFER_TO_DEV ? WRITE : READ;
+ 	u8 *long_cmdp = NULL;
+ 
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
+-				      "sg_start_req: dxfer_len=%d\n",
+-				      dxfer_len));
+-
+ 	if (hp->cmd_len > BLK_MAX_CDB) {
+ 		long_cmdp = kzalloc(hp->cmd_len, GFP_KERNEL);
+ 		if (!long_cmdp)
+ 			return -ENOMEM;
++		SG_LOG(5, sfp, "%s: long_cmdp=0x%p ++\n", __func__, long_cmdp);
+ 	}
++	SG_LOG(4, sfp, "%s: dxfer_len=%d, data-%s\n", __func__, dxfer_len,
++	       (rw ? "OUT" : "IN"));
+ 
+ 	/*
+ 	 * NOTE
+@@ -1927,9 +1948,8 @@ sg_finish_rem_req(struct sg_request *srp)
+ 	struct sg_fd *sfp = srp->parentfp;
+ 	struct sg_scatter_hold *req_schp = &srp->data;
+ 
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
+-				      "sg_finish_rem_req: res_used=%d\n",
+-				      (int) srp->res_used));
++	SG_LOG(4, sfp, "%s: srp=0x%p%s\n", __func__, srp,
++	       (srp->res_used) ? " rsv" : "");
+ 	if (srp->bio)
+ 		ret = blk_rq_unmap_user(srp->bio);
+ 
+@@ -1975,9 +1995,8 @@ sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
+ 		++blk_size;	/* don't know why */
+ 	/* round request up to next highest SG_SECTOR_SZ byte boundary */
+ 	blk_size = ALIGN(blk_size, SG_SECTOR_SZ);
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
+-		"sg_build_indirect: buff_size=%d, blk_size=%d\n",
+-		buff_size, blk_size));
++	SG_LOG(4, sfp, "%s: buff_size=%d, blk_size=%d\n", __func__, buff_size,
++	       blk_size);
+ 
+ 	/* N.B. ret_sz carried into this block ... */
+ 	mx_sc_elems = sg_build_sgat(schp, sfp, sg_tablesize);
+@@ -2013,18 +2032,13 @@ sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
+ 				scatter_elem_sz_prev = ret_sz;
+ 			}
+ 		}
+-
+-		SCSI_LOG_TIMEOUT(5, sg_printk(KERN_INFO, sfp->parentdp,
+-				 "sg_build_indirect: k=%d, num=%d, ret_sz=%d\n",
+-				 k, num, ret_sz));
++		SG_LOG(5, sfp, "%s: k=%d, num=%d, ret_sz=%d\n", __func__, k,
++		       num, ret_sz);
+ 	}		/* end of for loop */
+ 
+ 	schp->page_order = order;
+ 	schp->k_use_sg = k;
+-	SCSI_LOG_TIMEOUT(5, sg_printk(KERN_INFO, sfp->parentdp,
+-			 "sg_build_indirect: k_use_sg=%d, rem_sz=%d\n",
+-			 k, rem_sz));
+-
++	SG_LOG(5, sfp, "%s: k_use_sg=%d, order=%d\n", __func__, k, order);
+ 	schp->bufflen = blk_size;
+ 	if (rem_sz > 0)	/* must have failed */
+ 		return -ENOMEM;
+@@ -2042,35 +2056,34 @@ sg_build_indirect(struct sg_scatter_hold *schp, struct sg_fd *sfp,
+ static void
+ sg_remove_scat(struct sg_fd *sfp, struct sg_scatter_hold *schp)
+ {
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
+-			 "sg_remove_scat: k_use_sg=%d\n", schp->k_use_sg));
++	SG_LOG(4, sfp, "%s: num_sgat=%d\n", __func__, schp->k_use_sg);
+ 	if (schp->pages && schp->sglist_len > 0) {
+ 		if (!schp->dio_in_use) {
+ 			int k;
+ 
+ 			for (k = 0; k < schp->k_use_sg && schp->pages[k]; k++) {
+-				SCSI_LOG_TIMEOUT(5,
+-					sg_printk(KERN_INFO, sfp->parentdp,
+-					"sg_remove_scat: k=%d, pg=0x%p\n",
+-					k, schp->pages[k]));
++				SG_LOG(5, sfp, "%s: pg[%d]=0x%p --\n",
++				       __func__, k, schp->pages[k]);
+ 				__free_pages(schp->pages[k], schp->page_order);
+ 			}
+-
+ 			kfree(schp->pages);
+ 		}
+ 	}
+ 	memset(schp, 0, sizeof (*schp));
  }
  
- 
--static int sg_proc_seq_show_int(struct seq_file *s, void *v)
-+static int
-+sg_proc_seq_show_int(struct seq_file *s, void *v)
++/*
++ * For sg v1 and v2 interface: with a command yielding a data-in buffer, after
++ * it has arrived in kernel memory, this function copies it to the user space,
++ * appended to given struct sg_header object.
++ */
+ static int
+ sg_read_oxfer(struct sg_request *srp, char __user *outp, int num_read_xfer)
  {
- 	seq_printf(s, "%d\n", *((int *)s->private));
- 	return 0;
- }
+ 	struct sg_scatter_hold *schp = &srp->data;
+ 	int k, num;
  
--static int sg_proc_single_open_adio(struct inode *inode, struct file *file)
-+static int
-+sg_proc_single_open_adio(struct inode *inode, struct file *file)
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, srp->parentfp->parentdp,
+-			 "sg_read_oxfer: num_read_xfer=%d\n",
+-			 num_read_xfer));
++	SG_LOG(4, srp->parentfp, "%s: num_xfer=%d\n", __func__, num_read_xfer);
+ 	if ((!outp) || (num_read_xfer <= 0))
+ 		return 0;
+ 
+@@ -2100,8 +2113,7 @@ sg_build_reserve(struct sg_fd *sfp, int req_size)
  {
- 	return single_open(file, sg_proc_seq_show_int, &sg_allow_dio);
- }
-@@ -2434,7 +2468,8 @@ sg_proc_write_adio(struct file *filp, const char __user *buffer,
- 	return count;
- }
+ 	struct sg_scatter_hold *schp = &sfp->reserve;
  
--static int sg_proc_single_open_dressz(struct inode *inode, struct file *file)
-+static int
-+sg_proc_single_open_dressz(struct inode *inode, struct file *file)
- {
- 	return single_open(file, sg_proc_seq_show_int, &sg_big_buff);
- }
-@@ -2459,14 +2494,16 @@ sg_proc_write_dressz(struct file *filp, const char __user *buffer,
- 	return -ERANGE;
- }
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
+-			 "sg_build_reserve: req_size=%d\n", req_size));
++	SG_LOG(3, sfp, "%s: buflen=%d\n", __func__, req_size);
+ 	do {
+ 		if (req_size < PAGE_SIZE)
+ 			req_size = PAGE_SIZE;
+@@ -2121,8 +2133,7 @@ sg_link_reserve(struct sg_fd *sfp, struct sg_request *srp, int size)
+ 	int k, num, rem;
  
--static int sg_proc_seq_show_version(struct seq_file *s, void *v)
-+static int
-+sg_proc_seq_show_version(struct seq_file *s, void *v)
- {
- 	seq_printf(s, "%d\t%s [%s]\n", sg_version_num, SG_VERSION_STR,
- 		   sg_version_date);
- 	return 0;
- }
+ 	srp->res_used = 1;
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, sfp->parentdp,
+-			 "sg_link_reserve: size=%d\n", size));
++	SG_LOG(4, sfp, "%s: size=%d\n", __func__, size);
+ 	rem = size;
  
--static int sg_proc_seq_show_devhdr(struct seq_file *s, void *v)
-+static int
-+sg_proc_seq_show_devhdr(struct seq_file *s, void *v)
- {
- 	seq_puts(s, "host\tchan\tid\tlun\ttype\topens\tqdepth\tbusy\tonline\n");
- 	return 0;
-@@ -2477,7 +2514,8 @@ struct sg_proc_deviter {
- 	size_t	max;
- };
+ 	num = 1 << (PAGE_SHIFT + rsv_schp->page_order);
+@@ -2140,8 +2151,7 @@ sg_link_reserve(struct sg_fd *sfp, struct sg_request *srp, int size)
+ 	}
  
--static void * dev_seq_start(struct seq_file *s, loff_t *pos)
-+static void *
-+dev_seq_start(struct seq_file *s, loff_t *pos)
- {
- 	struct sg_proc_deviter * it = kmalloc(sizeof(*it), GFP_KERNEL);
- 
-@@ -2492,7 +2530,8 @@ static void * dev_seq_start(struct seq_file *s, loff_t *pos)
- 	return it;
- }
- 
--static void * dev_seq_next(struct seq_file *s, void *v, loff_t *pos)
-+static void *
-+dev_seq_next(struct seq_file *s, void *v, loff_t *pos)
- {
- 	struct sg_proc_deviter * it = s->private;
- 
-@@ -2500,15 +2539,17 @@ static void * dev_seq_next(struct seq_file *s, void *v, loff_t *pos)
- 	return (it->index < it->max) ? it : NULL;
- }
- 
--static void dev_seq_stop(struct seq_file *s, void *v)
-+static void
-+dev_seq_stop(struct seq_file *s, void *v)
- {
- 	kfree(s->private);
- }
- 
--static int sg_proc_seq_show_dev(struct seq_file *s, void *v)
-+static int
-+sg_proc_seq_show_dev(struct seq_file *s, void *v)
- {
- 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
--	Sg_device *sdp;
-+	struct sg_device *sdp;
- 	struct scsi_device *scsidp;
- 	unsigned long iflags;
- 
-@@ -2531,10 +2572,11 @@ static int sg_proc_seq_show_dev(struct seq_file *s, void *v)
- 	return 0;
- }
- 
--static int sg_proc_seq_show_devstrs(struct seq_file *s, void *v)
-+static int
-+sg_proc_seq_show_devstrs(struct seq_file *s, void *v)
- {
- 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
--	Sg_device *sdp;
-+	struct sg_device *sdp;
- 	struct scsi_device *scsidp;
- 	unsigned long iflags;
- 
-@@ -2551,11 +2593,12 @@ static int sg_proc_seq_show_devstrs(struct seq_file *s, void *v)
- }
- 
- /* must be called while holding sg_index_lock */
--static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
-+static void
-+sg_proc_debug_helper(struct seq_file *s, struct sg_device *sdp)
- {
- 	int k, new_interface, blen, usg;
--	Sg_request *srp;
--	Sg_fd *fp;
-+	struct sg_request *srp;
-+	struct sg_fd *fp;
- 	const sg_io_hdr_t *hp;
- 	const char * cp;
- 	unsigned int ms;
-@@ -2613,10 +2656,11 @@ static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
+ 	if (k >= rsv_schp->k_use_sg) {
+-		SCSI_LOG_TIMEOUT(1, sg_printk(KERN_INFO, sfp->parentdp,
+-				 "sg_link_reserve: BAD size\n"));
++		SG_LOG(1, sfp, "%s: BAD size\n", __func__);
  	}
  }
  
--static int sg_proc_seq_show_debug(struct seq_file *s, void *v)
-+static int
-+sg_proc_seq_show_debug(struct seq_file *s, void *v)
+@@ -2150,9 +2160,8 @@ sg_unlink_reserve(struct sg_fd *sfp, struct sg_request *srp)
  {
- 	struct sg_proc_deviter * it = (struct sg_proc_deviter *) v;
--	Sg_device *sdp;
-+	struct sg_device *sdp;
- 	unsigned long iflags;
+ 	struct sg_scatter_hold *req_schp = &srp->data;
  
- 	if (it && (0 == it->index))
+-	SCSI_LOG_TIMEOUT(4, sg_printk(KERN_INFO, srp->parentfp->parentdp,
+-				      "sg_unlink_reserve: req->k_use_sg=%d\n",
+-				      (int) req_schp->k_use_sg));
++	SG_LOG(4, srp->parentfp, "%s: req->k_use_sg=%d\n", __func__,
++	       (int)req_schp->k_use_sg);
+ 	req_schp->k_use_sg = 0;
+ 	req_schp->bufflen = 0;
+ 	req_schp->pages = NULL;
+@@ -2243,18 +2252,15 @@ sg_add_sfp(struct sg_device *sdp)
+ 	}
+ 	list_add_tail(&sfp->sfd_siblings, &sdp->sfds);
+ 	write_unlock_irqrestore(&sdp->sfd_lock, iflags);
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "sg_add_sfp: sfp=0x%p\n", sfp));
++	SG_LOG(3, sfp, "%s: sfp=0x%p\n", __func__, sfp);
+ 	if (unlikely(sg_big_buff != def_reserved_size))
+ 		sg_big_buff = def_reserved_size;
+ 
+ 	bufflen = min_t(int, sg_big_buff,
+ 			max_sectors_bytes(sdp->device->request_queue));
+ 	sg_build_reserve(sfp, bufflen);
+-	SCSI_LOG_TIMEOUT(3, sg_printk(KERN_INFO, sdp,
+-				      "sg_add_sfp: bufflen=%d, k_use_sg=%d\n",
+-				      sfp->reserve.bufflen,
+-				      sfp->reserve.k_use_sg));
++	SG_LOG(3, sfp, "%s: bufflen=%d, k_use_sg=%d\n", __func__,
++	       sfp->reserve.bufflen, sfp->reserve.k_use_sg);
+ 
+ 	kref_get(&sdp->d_ref);
+ 	__module_get(THIS_MODULE);
+@@ -2280,15 +2286,12 @@ sg_remove_sfp_usercontext(struct work_struct *work)
+ 	write_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 
+ 	if (sfp->reserve.bufflen > 0) {
+-		SCSI_LOG_TIMEOUT(6, sg_printk(KERN_INFO, sdp,
+-				"sg_remove_sfp:    bufflen=%d, k_use_sg=%d\n",
+-				(int) sfp->reserve.bufflen,
+-				(int) sfp->reserve.k_use_sg));
++		SG_LOG(6, sfp, "%s:    bufflen=%d, k_use_sg=%d\n", __func__,
++		       (int)sfp->reserve.bufflen, (int)sfp->reserve.k_use_sg);
+ 		sg_remove_scat(sfp, &sfp->reserve);
+ 	}
+ 
+-	SCSI_LOG_TIMEOUT(6, sg_printk(KERN_INFO, sdp,
+-			"sg_remove_sfp: sfp=0x%p\n", sfp));
++	SG_LOG(6, sfp, "%s: sfp=0x%p\n", __func__, sfp);
+ 	kfree(sfp);
+ 
+ 	scsi_device_put(sdp->device);
+@@ -2311,7 +2314,6 @@ sg_remove_sfp(struct kref *kref)
+ 	schedule_work(&sfp->ew.work);
+ }
+ 
+-#ifdef CONFIG_SCSI_PROC_FS
+ static int
+ sg_idr_max_id(int id, void *p, void *data)
+ {
+@@ -2323,19 +2325,6 @@ sg_idr_max_id(int id, void *p, void *data)
+ 	return 0;
+ }
+ 
+-static int
+-sg_last_dev(void)
+-{
+-	int k = -1;
+-	unsigned long iflags;
+-
+-	read_lock_irqsave(&sg_index_lock, iflags);
+-	idr_for_each(&sg_index_idr, sg_idr_max_id, &k);
+-	read_unlock_irqrestore(&sg_index_lock, iflags);
+-	return k + 1;		/* origin 1 */
+-}
+-#endif
+-
+ /* must be called with sg_index_lock held */
+ static struct sg_device *
+ sg_lookup_dev(int dev)
+@@ -2365,7 +2354,7 @@ sg_get_dev(int dev)
+ 	return sdp;
+ }
+ 
+-#ifdef CONFIG_SCSI_PROC_FS
++#if IS_ENABLED(CONFIG_SCSI_PROC_FS)     /* long, almost to end of file */
+ static int sg_proc_seq_show_int(struct seq_file *s, void *v);
+ 
+ static int sg_proc_single_open_adio(struct inode *inode, struct file *file);
+@@ -2438,6 +2427,17 @@ sg_proc_init(void)
+ 	return 0;
+ }
+ 
++static int
++sg_last_dev(void)
++{
++	int k = -1;
++	unsigned long iflags;
++
++	read_lock_irqsave(&sg_index_lock, iflags);
++	idr_for_each(&sg_index_idr, sg_idr_max_id, &k);
++	read_unlock_irqrestore(&sg_index_lock, iflags);
++	return k + 1;		/* origin 1 */
++}
+ 
+ static int
+ sg_proc_seq_show_int(struct seq_file *s, void *v)
+@@ -2695,7 +2695,7 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
+ 	return 0;
+ }
+ 
+-#endif				/* CONFIG_SCSI_PROC_FS */
++#endif				/* CONFIG_SCSI_PROC_FS (~300 lines back) */
+ 
+ module_init(init_sg);
+ module_exit(exit_sg);
 -- 
 2.25.1
 
