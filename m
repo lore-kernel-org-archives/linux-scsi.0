@@ -7,48 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5707BC47082
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D93DC47080
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 386046115C
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2298661151
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232313AbhEXDLu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 23:11:50 -0400
-Received: from mail-pf1-f176.google.com ([209.85.210.176]:42940 "EHLO
-        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232305AbhEXDLo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:44 -0400
-Received: by mail-pf1-f176.google.com with SMTP id x18so15375190pfi.9
-        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:10:16 -0700 (PDT)
+        id S232305AbhEXDLv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 23:11:51 -0400
+Received: from mail-pg1-f176.google.com ([209.85.215.176]:35487 "EHLO
+        mail-pg1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232326AbhEXDLp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:45 -0400
+Received: by mail-pg1-f176.google.com with SMTP id m190so19062448pga.2
+        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:10:18 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Sp4ChfNEiSRF8tBgNXrRZhDtMX1chUozxV3cgDD8AUY=;
-        b=bCsvlQU55iWZ8hyrWbz4GV91ZkaUVUA3qbXPggQO+1C1/+IOnaGc/py9h6u5jjmna2
-         1WoBvMdVSjie1vkgPFZv8MJYuR9C82urISwhS8RgIX19g5/V0Luo6ejuat0YKj1Jxtvs
-         Hz0UYA1BIiVFZOPQTlmL4+9sAbI1xn7DluW5BdSQDJEMdgvL4bHcbG+Ko9U3O5weuTxy
-         5wNwFtttuRq4ZtxcRrr1raRm3JRpW1M5qnZ90eTkX4pu8+XWtnUEINoPU1qd+OBpZIhA
-         mOGfXHij088mt/Em8e3xHTnA52QXivlnGUNOU3d2ks5rbH//2avOsoGPnpWGaHthyCJD
-         eJNg==
-X-Gm-Message-State: AOAM532geWws3JTGQUqcL5vC2xK5n/HNiBflLHYnlrR0qou3xBIH7EJS
-        wVcBULBeO5SnDpCCksewpSQ=
-X-Google-Smtp-Source: ABdhPJzByoTPDOLg5uJ2T5uCIiUR4PAFJqUKw9Kh1oRGVNz5LoZPTzycXW3bze7MqS0Qv7uEcMLOkg==
-X-Received: by 2002:a63:6f01:: with SMTP id k1mr11378250pgc.59.1621825816419;
-        Sun, 23 May 2021 20:10:16 -0700 (PDT)
+        bh=qjkKBA4uNCWH2mTP+yZ3vIfvVwLp3WuZYDfjgLtrzT4=;
+        b=aFz6fHPUuikU+7rIug4MeHVG/2ywxZca0Xbqn73bFGck5cjmwf+0AdsmKc1paznHhh
+         KgTvIyS+E3dmzs+WyHRfEnJN7KNTQ79J/2o+GQonzWjLb3Efp/8oMyuFn7mhSqbtR39U
+         DtCCgWwGjBMVIlFVQw3WV93f8ILfeT0it3iDCuVBn3V7/MJY7i1aYqheqjpxl4yRaWYh
+         z1AurPkSBZ4ehaGn8M/OmuHvUjlW4LBhEfFlvMbR0LbEAIGOg5Qi9iFTcp4PZpvErkh1
+         EKwTs+nI1RA1h9Fxu6d9ORkfzLaih84R1YNwnqrNMD+g+LaQXClZ1LDVloj3Wgyp0bQl
+         9E9g==
+X-Gm-Message-State: AOAM530gvWBuRxPbghIppCoxIW7l8IpfoBiNkHW5GeelEXdeqMYib8ZM
+        Mdtbzg0epu1Ugpjox5Qs2ok=
+X-Google-Smtp-Source: ABdhPJx/w+S+f+HLRMSlD5vDia3K95Ke3tXnk/mmL2btw1FgbsTOxM87VXei5JwwXuMg2DtU+gNLpQ==
+X-Received: by 2002:a63:5b08:: with SMTP id p8mr11418744pgb.193.1621825817966;
+        Sun, 23 May 2021 20:10:17 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.10.15
+        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.10.16
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 May 2021 20:10:15 -0700 (PDT)
+        Sun, 23 May 2021 20:10:17 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
+        Finn Thain <fthain@telegraphics.com.au>,
+        Michael Schmitz <schmitzmic@gmail.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 43/51] stex: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Sun, 23 May 2021 20:08:48 -0700
-Message-Id: <20210524030856.2824-44-bvanassche@acm.org>
+Subject: [PATCH v3 44/51] sun3_scsi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Sun, 23 May 2021 20:08:49 -0700
+Message-Id: <20210524030856.2824-45-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210524030856.2824-1-bvanassche@acm.org>
 References: <20210524030856.2824-1-bvanassche@acm.org>
@@ -63,37 +65,19 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/stex.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/sun3_scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index 12471208c7a8..b6eec2e51048 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -543,7 +543,7 @@ stex_ss_send_cmd(struct st_hba *hba, struct req_msg *req, u16 tag)
- 	msg_h = (struct st_msg_header *)req - 1;
- 	if (likely(cmd)) {
- 		msg_h->channel = (u8)cmd->device->channel;
--		msg_h->timeout = cpu_to_le16(cmd->request->timeout/HZ);
-+		msg_h->timeout = cpu_to_le16(scsi_cmd_to_rq(cmd)->timeout / HZ);
- 	}
- 	addr = hba->dma_handle + hba->req_head * hba->rq_size;
- 	addr += (hba->ccb[tag].sg_count+4)/11;
-@@ -693,7 +693,7 @@ stex_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
- 
- 	cmd->scsi_done = done;
- 
--	tag = cmd->request->tag;
-+	tag = scsi_cmd_to_rq(cmd)->tag;
- 
- 	if (unlikely(tag >= host->can_queue))
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -1249,7 +1249,7 @@ static int stex_abort(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 2e3fbc2fae97..d6000a397f73 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -336,7 +336,7 @@ static int sun3scsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
  {
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct st_hba *hba = (struct st_hba *)host->hostdata;
--	u16 tag = cmd->request->tag;
-+	u16 tag = scsi_cmd_to_rq(cmd)->tag;
- 	void __iomem *base;
- 	u32 data;
- 	int result = SUCCESS;
+ 	int wanted_len = cmd->SCp.this_residual;
+ 
+-	if (wanted_len < DMA_MIN_SIZE || blk_rq_is_passthrough(cmd->request))
++	if (wanted_len < DMA_MIN_SIZE || blk_rq_is_passthrough(scsi_cmd_to_rq(cmd)))
+ 		return 0;
+ 
+ 	return wanted_len;
