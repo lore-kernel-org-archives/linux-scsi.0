@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EABE6C47083
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D1D8C47080
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C866061151
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C2FF6115C
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232308AbhEXDLo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 23:11:44 -0400
-Received: from mail-pl1-f177.google.com ([209.85.214.177]:37830 "EHLO
-        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232305AbhEXDLm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:42 -0400
-Received: by mail-pl1-f177.google.com with SMTP id u7so5342251plq.4
-        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:10:13 -0700 (PDT)
+        id S232327AbhEXDLp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 23:11:45 -0400
+Received: from mail-pg1-f177.google.com ([209.85.215.177]:46946 "EHLO
+        mail-pg1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232124AbhEXDLn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:43 -0400
+Received: by mail-pg1-f177.google.com with SMTP id m124so19030971pgm.13
+        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:10:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=OaYYFKNbGHJfyrEgp1V5dPIkQNPdZPWPXMt1X8L2btk=;
-        b=KW4fpUHLGksx1FibgP6FtC8525yp0ulZRwlFggQt9XYRnpaNlAwZOx771D2igxuck4
-         CTN/gNg75jQEwOqPSRrCyjL9t5yvHO4cWuocdiaq7KzlxeqAnuVDT+pU0UDpRdPovj+v
-         BDRMfiJWhc2KMwGdjOmtK2wNFfB34bKcE5QruXplbd1GIG44Jau+qzuARmsNcglJCOtl
-         Hn/iH5LpW71aoN2em3jRFYphW5gMa0UNs0XvbEufmWnj2EO0mYt8Wc9iYPRSjAmtKpmH
-         /i5cF8+5EpoYKg8if1yTEsuUd1l9ak9yAi8sO7+MZHPUPhzqT2Rt7eB11abhsy2Bq4YI
-         ZJZg==
-X-Gm-Message-State: AOAM532fN2cbDr8iYHUfbAPyq4bQg+Yn6MS3x/sOLGZcx6tItWtLd7go
-        R0z/jyCkdLi106QPRcO3UTY=
-X-Google-Smtp-Source: ABdhPJy9UF8YkXPqYShYedsKa/s1f18JnYJeqI/09L61Ffnq8WQ6myecjC7CHPsqS4ayEhAOSu0kgQ==
-X-Received: by 2002:a17:90b:17c9:: with SMTP id me9mr23298814pjb.13.1621825813359;
-        Sun, 23 May 2021 20:10:13 -0700 (PDT)
+        bh=T8SlbbTX7ZS3tdWtl1+UcAtfQLkoGrPBUdkthnafFic=;
+        b=aA/VAPHMNE+O67cSmT+Y01Oapp9jaxpZLTUoHt7DpsvQq+M4qy0OWShmIpwy745az9
+         MuiUi2snvxnHKJkI3oTq0dVa9zFUG9eXsI1e07MgYnNytOSEOiqxLHzrwC5Zj713qPqV
+         E7Rfep4Y6qproLbbDIZNQ3xuWzlfnri+J766OfAfuim4z85BO7OVNMpaxWFhZkEX0f7O
+         +vyUeRHs+1v6rZxCiBB4d0Bga+CEOMySsbaLnZtg9XxaYIc1+mLCWdyyH906ABv0auCj
+         CYdooO7+CXgE2vwIxzG4QsL347l07uCjm1ZWEL4vyITz+2LaLmcKLhLeOd70GlVPGvOa
+         5bKA==
+X-Gm-Message-State: AOAM531z8U9ytyYwy0wLRUr2ipBs09EKavwiEqLaTazvevHIt65zSmhX
+        BJeSuG2oOUTCUhSi/pf3vPU=
+X-Google-Smtp-Source: ABdhPJzVGZxi3u7IXnALoxOqam7jT7c42EPMMW1ZbXgIhOFuwKOgZDylqojUkd0ijJY9qIqo/kyPfA==
+X-Received: by 2002:a62:4ed1:0:b029:2e4:df13:fbd8 with SMTP id c200-20020a624ed10000b02902e4df13fbd8mr14105019pfb.68.1621825814921;
+        Sun, 23 May 2021 20:10:14 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.10.12
+        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.10.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 May 2021 20:10:12 -0700 (PDT)
+        Sun, 23 May 2021 20:10:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 41/51] smartpqi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Sun, 23 May 2021 20:08:46 -0700
-Message-Id: <20210524030856.2824-42-bvanassche@acm.org>
+Subject: [PATCH v3 42/51] snic: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Sun, 23 May 2021 20:08:47 -0700
+Message-Id: <20210524030856.2824-43-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210524030856.2824-1-bvanassche@acm.org>
 References: <20210524030856.2824-1-bvanassche@acm.org>
@@ -64,28 +65,55 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/snic/snic_scsi.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 5db16509b6e1..6c841a1fa4a2 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -5569,7 +5569,7 @@ static inline u16 pqi_get_hw_queue(struct pqi_ctrl_info *ctrl_info,
- {
- 	u16 hw_queue;
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index 6dd0ff188bb4..d5a807c9c0d3 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -33,7 +33,7 @@
+ #include "snic_io.h"
+ #include "snic.h"
  
--	hw_queue = blk_mq_unique_tag_to_hwq(blk_mq_unique_tag(scmd->request));
-+	hw_queue = blk_mq_unique_tag_to_hwq(blk_mq_unique_tag(scsi_cmd_to_rq(scmd)));
- 	if (hw_queue > ctrl_info->max_hw_queue_index)
- 		hw_queue = 0;
+-#define snic_cmd_tag(sc)	(((struct scsi_cmnd *) sc)->request->tag)
++#define snic_cmd_tag(sc)	(scsi_cmd_to_rq(sc)->tag)
  
-@@ -5578,7 +5578,7 @@ static inline u16 pqi_get_hw_queue(struct pqi_ctrl_info *ctrl_info,
+ const char *snic_state_str[] = {
+ 	[SNIC_INIT]	= "SNIC_INIT",
+@@ -1636,7 +1636,7 @@ snic_abort_cmd(struct scsi_cmnd *sc)
+ 	u32 start_time = jiffies;
  
- static inline bool pqi_is_bypass_eligible_request(struct scsi_cmnd *scmd)
- {
--	if (blk_rq_is_passthrough(scmd->request))
-+	if (blk_rq_is_passthrough(scsi_cmd_to_rq(scmd)))
- 		return false;
+ 	SNIC_SCSI_DBG(snic->shost, "abt_cmd:sc %p :0x%x :req = %p :tag = %d\n",
+-		       sc, sc->cmnd[0], sc->request, tag);
++		       sc, sc->cmnd[0], scsi_cmd_to_rq(sc), tag);
  
- 	return scmd->SCp.this_residual == 0;
+ 	if (unlikely(snic_get_state(snic) != SNIC_ONLINE)) {
+ 		SNIC_HOST_ERR(snic->shost,
+@@ -2152,7 +2152,7 @@ snic_device_reset(struct scsi_cmnd *sc)
+ 	int dr_supp = 0;
+ 
+ 	SNIC_SCSI_DBG(shost, "dev_reset:sc %p :0x%x :req = %p :tag = %d\n",
+-		      sc, sc->cmnd[0], sc->request,
++		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
+ 		      snic_cmd_tag(sc));
+ 	dr_supp = snic_dev_reset_supported(sc->device);
+ 	if (!dr_supp) {
+@@ -2387,7 +2387,7 @@ snic_host_reset(struct scsi_cmnd *sc)
+ 
+ 	SNIC_SCSI_DBG(shost,
+ 		      "host reset:sc %p sc_cmd 0x%x req %p tag %d flags 0x%llx\n",
+-		      sc, sc->cmnd[0], sc->request,
++		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
+ 		      snic_cmd_tag(sc), CMD_FLAGS(sc));
+ 
+ 	ret = snic_reset(shost, sc);
+@@ -2494,7 +2494,7 @@ snic_scsi_cleanup(struct snic *snic, int ex_tag)
+ 		sc->result = DID_TRANSPORT_DISRUPTED << 16;
+ 		SNIC_HOST_INFO(snic->shost,
+ 			       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
+-			       sc, sc->request->tag, CMD_FLAGS(sc), rqi,
++			       sc, scsi_cmd_to_rq(sc)->tag, CMD_FLAGS(sc), rqi,
+ 			       jiffies_to_msecs(jiffies - st_time));
+ 
+ 		/* Update IO stats */
