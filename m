@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CA82C47082
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:03:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35C2AC47080
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:03:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0031961057
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:03:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DE1B6102A
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:03:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232269AbhEXBEa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 21:04:30 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:33321 "EHLO smtp.infotech.no"
+        id S232278AbhEXBEb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 21:04:31 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:33267 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232225AbhEXBEM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 23 May 2021 21:04:12 -0400
+        id S232230AbhEXBEN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 23 May 2021 21:04:13 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 1BBDA20425C;
-        Mon, 24 May 2021 03:02:44 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id AB10D204272;
+        Mon, 24 May 2021 03:02:45 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id EVBCO7hYQYmK; Mon, 24 May 2021 03:02:42 +0200 (CEST)
+        with ESMTP id akCrQDlwejWg; Mon, 24 May 2021 03:02:44 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-58-219-4.dyn.295.ca [45.58.219.4])
-        by smtp.infotech.no (Postfix) with ESMTPA id 4E51C2042A1;
-        Mon, 24 May 2021 03:02:38 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 64CE120426F;
+        Mon, 24 May 2021 03:02:39 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de
-Subject: [PATCH v19 42/45] sg: remove unit attention check for device changed
-Date:   Sun, 23 May 2021 21:01:44 -0400
-Message-Id: <20210524010147.94845-43-dgilbert@interlog.com>
+Subject: [PATCH v19 43/45] sg: no_dxfer: move to/from kernel buffers
+Date:   Sun, 23 May 2021 21:01:45 -0400
+Message-Id: <20210524010147.94845-44-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210524010147.94845-1-dgilbert@interlog.com>
 References: <20210524010147.94845-1-dgilbert@interlog.com>
@@ -44,98 +44,92 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The SCSI mid-layer now checks for SCSI UNIT ATTENTIONs and takes
-the appropriate actions. This means that the sg driver no longer
-needs to do this check.
+When the NO_DXFER flag is use on a command/request, the data-in
+and data-out buffers (if present) should not be ignored. Add
+sg_rq_map_kern() function to handle this. Uses a single bio with
+multiple bvec_s usually each holding multiple pages, if necessary.
+The driver default element size is 32 KiB so if PAGE_SIZE is 4096
+then get_order()==3 .
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 49 ++++++++++++-----------------------------------
- 1 file changed, 12 insertions(+), 37 deletions(-)
+ drivers/scsi/sg.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index d63294a55a88..20ebaebe4a9b 100644
+index 20ebaebe4a9b..444116b10ea2 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -2396,39 +2396,6 @@ sg_rq_end_io_usercontext(struct work_struct *work)
- 	kref_put(&sfp->f_ref, sg_remove_sfp);
+@@ -2802,6 +2802,59 @@ exit_sg(void)
+ 	idr_destroy(&sg_index_idr);
  }
  
--static void
--sg_check_sense(struct sg_device *sdp, struct sg_request *srp, int sense_len)
--{
--	int driver_stat;
--	u32 rq_res = srp->rq_result;
--	struct scsi_request *scsi_rp = scsi_req(READ_ONCE(srp->rqq));
--	u8 *sbp = scsi_rp ? scsi_rp->sense : NULL;
--
--	if (!sbp)
--		return;
--	driver_stat = driver_byte(rq_res);
--	if (driver_stat & DRIVER_SENSE) {
--		struct scsi_sense_hdr ssh;
--
--		if (scsi_normalize_sense(sbp, sense_len, &ssh)) {
--			if (!scsi_sense_is_deferred(&ssh)) {
--				if (ssh.sense_key == UNIT_ATTENTION) {
--					if (sdp->device->removable)
--						sdp->device->changed = 1;
--				}
--			}
--		}
--	}
--	if (test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm) > 0) {
--		int scsi_stat = rq_res & 0xff;
--
--		if (scsi_stat == SAM_STAT_CHECK_CONDITION ||
--		    scsi_stat == SAM_STAT_COMMAND_TERMINATED)
--			__scsi_print_sense(sdp->device, __func__, sbp,
--					   sense_len);
--	}
--}
--
- /*
-  * This "bottom half" (soft interrupt) handler is called by the mid-level
-  * when a request has completed or failed. This callback is registered in a
-@@ -2440,6 +2407,7 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
- {
- 	enum sg_rq_state rqq_state = SG_RS_AWAIT_RCV;
- 	int a_resid, slen;
-+	u32 rq_result;
- 	unsigned long iflags;
- 	struct sg_request *srp = rqq->end_io_data;
- 	struct scsi_request *scsi_rp = scsi_req(rqq);
-@@ -2449,7 +2417,8 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
- 	sfp = srp->parentfp;
- 	sdp = sfp->parentdp;
- 
--	srp->rq_result = scsi_rp->result;
-+	rq_result = scsi_rp->result;
-+	srp->rq_result = rq_result;
- 	slen = min_t(int, scsi_rp->sense_len, SCSI_SENSE_BUFFERSIZE);
- 	a_resid = scsi_rp->resid_len;
- 
-@@ -2465,10 +2434,16 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
- 	}
- 
- 	SG_LOG(6, sfp, "%s: pack_id=%d, res=0x%x\n", __func__, srp->pack_id,
--	       srp->rq_result);
-+	       rq_result);
- 	srp->duration = sg_calc_rq_dur(srp);
--	if (unlikely((srp->rq_result & SG_ML_RESULT_MSK) && slen > 0))
--		sg_check_sense(sdp, srp, slen);
-+	if (unlikely((rq_result & SG_ML_RESULT_MSK) && slen > 0 &&
-+		     test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm))) {
-+		u32 scsi_stat = rq_result & 0xff;
++static struct bio *
++sg_mk_kern_bio(int bvec_cnt)
++{
++	struct bio *biop;
 +
-+		if (scsi_stat == SAM_STAT_CHECK_CONDITION ||
-+		    scsi_stat == SAM_STAT_COMMAND_TERMINATED)
-+			__scsi_print_sense(sdp->device, __func__, scsi_rp->sense, slen);
++	if (bvec_cnt > BIO_MAX_VECS)
++		return NULL;
++	biop = bio_alloc(GFP_ATOMIC, bvec_cnt);
++	if (!biop)
++		return NULL;
++	biop->bi_end_io = bio_put;
++	return biop;
++}
++
++/*
++ * Setup to move data between kernel buffers managed by this driver and a SCSI device. Note that
++ * there is no corresponding 'unmap' call as is required by blk_rq_map_user() . Uses a single
++ * bio with an expanded appended bvec if necessary.
++ */
++static int
++sg_rq_map_kern(struct sg_request *srp, struct request_queue *q, struct request *rqq, int rw_ind)
++{
++	struct sg_scatter_hold *schp = &srp->sgat_h;
++	struct bio *bio;
++	int k, ln;
++	int op_flags = 0;
++	int num_sgat = schp->num_sgat;
++	int dlen = schp->dlen;
++	int pg_sz = 1 << (PAGE_SHIFT + schp->page_order);
++
++	SG_LOG(4, srp->parentfp, "%s: dlen=%d, pg_sz=%d\n", __func__, dlen, pg_sz);
++	if (num_sgat <= 0)
++		return 0;
++	if (rw_ind == WRITE)
++		op_flags = REQ_SYNC | REQ_IDLE;
++	bio = sg_mk_kern_bio(num_sgat);
++	if (!bio)
++		return -ENOMEM;
++	bio->bi_opf = req_op(rqq) | op_flags;
++
++	for (k = 0; k < num_sgat && dlen > 0; ++k, dlen -= ln) {
++		ln = min_t(int, dlen, pg_sz);
++		if (bio_add_pc_page(q, bio, schp->pages[k], ln, 0) < ln) {
++			bio_put(bio);
++			return -EINVAL;
++		}
 +	}
- 	if (slen > 0) {
- 		if (scsi_rp->sense && !srp->sense_bp) {
- 			srp->sense_bp = mempool_alloc(sg_sense_pool,
++	/* used blk_rq_append_bio() before but this is simpler */
++	blk_rq_bio_prep(rqq, bio, num_sgat);
++	rqq->nr_phys_segments = (1 << schp->page_order) * num_sgat;
++	return 0;
++}
++
+ static inline void
+ sg_set_map_data(const struct sg_scatter_hold *schp, bool up_valid,
+ 		struct rq_map_data *mdp)
+@@ -2962,6 +3015,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
+ 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS) && res)
+ 			SG_LOG(1, sfp, "%s: blk_rq_map_user() res=%d\n",
+ 			       __func__, res);
++	} else {	/* transfer data to/from kernel buffers */
++		res = sg_rq_map_kern(srp, q, rqq, r0w);
+ 	}
+ fini:
+ 	if (unlikely(res)) {		/* failure, free up resources */
 -- 
 2.25.1
 
