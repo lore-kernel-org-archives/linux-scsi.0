@@ -7,51 +7,52 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEEB9C47082
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3952C47082
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9E1E161159
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 820786115C
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232287AbhEXDLW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 23:11:22 -0400
-Received: from mail-pj1-f52.google.com ([209.85.216.52]:42577 "EHLO
-        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232289AbhEXDLV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:21 -0400
-Received: by mail-pj1-f52.google.com with SMTP id j6-20020a17090adc86b02900cbfe6f2c96so10316994pjv.1
-        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:09:53 -0700 (PDT)
+        id S232295AbhEXDLY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 23:11:24 -0400
+Received: from mail-pl1-f176.google.com ([209.85.214.176]:36553 "EHLO
+        mail-pl1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232289AbhEXDLX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:23 -0400
+Received: by mail-pl1-f176.google.com with SMTP id a7so5214436plh.3
+        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:09:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=nLOXmbkXRNeeP/UFiIiEMptFEfRvTpiTtB/FcoDb2+s=;
-        b=MfDqQRUTWPeh1WhgaisVcyEWVHy1c1P7tdElYrBKa0vIsLNsmo4C5XWP7vJk2bEJaj
-         i2e+UnZXXJPiqQPZHCO8jBam/9QyUiWsfXCObtRUV2EAOqNrSZXIwAJmIf23aeLwf0q5
-         Rvz0pkwRoSBlgg8pzA2Mvks29qflChTzx4ZVpv7PvqVl78qfIk78uUki1NWiRieRS4dt
-         qxAELXmo4NYwXZ4ml82h0pQ6L0qNMzrqrJPx1JtvpTZv4nYGRv9W7Jm829d1YIediW4K
-         /xtdGR+tFGXjG5h8+4FECpCz8ZrJQbAqaB5okSFfo5B6Q5sYouuDbto1owZfFFxyLMMP
-         oZRg==
-X-Gm-Message-State: AOAM5320RwVn99NEGxZ6DQPTcQrzoxvgS72ZvK1AVGJOioCgjlZoujOn
-        FxyeV/hIVvRH4vkptApYshU=
-X-Google-Smtp-Source: ABdhPJwbyDbcU5t1J8ngOB2ems1R6A/wht5QqFz9+sPDo/kLoYrxOTSlYLknnC5e9xrh4V328rJuLQ==
-X-Received: by 2002:a17:903:30c4:b029:f0:ad43:4ca with SMTP id s4-20020a17090330c4b02900f0ad4304camr22913896plc.70.1621825793161;
-        Sun, 23 May 2021 20:09:53 -0700 (PDT)
+        bh=viCiB4o6GXr0kJHTMIfRdGFoQM/n4ommt0j81s06QY4=;
+        b=rVRHKgeMcCnZRG9W9VIIQ/pE2eYf5hHLoeGFxZ3BkH8YpgjP9gxNr+ciAEAjnrA2nh
+         Yhv8Et+5fLHGNRi3PDb8ADHFHPgrZT/N47PKn6jCebkUCWVuOCX+hXb7lo2Bnm8g0yVz
+         GFSmcGxqTi3/73g4ZXQtRdCvtZM5D8PBnPdaHVVeHUsmqvz7sZi4JT8KEj1uiqOWBEju
+         +GgwnQFWc94KI//hj1yYsU11w52foRz6DfMAnWAx7nFCYznUt75mfrVi7rhE7lJqyqm6
+         KRtt0jGMcM7MExgLpU9VchwFJa/BLoX/1kBpilLPHDGtyrXyo8L5/H8799GGmgBXi/of
+         oOXg==
+X-Gm-Message-State: AOAM532juDVlFG2tz/0ozZX2HjAy3U42whr+SSPpkqa5oR0rUFRA/akL
+        MGCsKtP3Q7t1iEsmds+8BeE=
+X-Google-Smtp-Source: ABdhPJyRQoHLRrmTHoDAfDd/nX23MQCUWLBssnvM9hEL4Rb34CqJa8Ad+PlKFxB1FDpMZkISgvtCuA==
+X-Received: by 2002:a17:90a:4415:: with SMTP id s21mr21616217pjg.25.1621825794892;
+        Sun, 23 May 2021 20:09:54 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.09.51
+        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.09.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 May 2021 20:09:52 -0700 (PDT)
+        Sun, 23 May 2021 20:09:54 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 28/51] megaraid: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Sun, 23 May 2021 20:08:33 -0700
-Message-Id: <20210524030856.2824-29-bvanassche@acm.org>
+Subject: [PATCH v3 29/51] mpt3sas: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Sun, 23 May 2021 20:08:34 -0700
+Message-Id: <20210524030856.2824-30-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210524030856.2824-1-bvanassche@acm.org>
 References: <20210524030856.2824-1-bvanassche@acm.org>
@@ -64,76 +65,62 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 Prepare for removal of the request pointer by using scsi_cmd_to_rq()
 instead. This patch does not change any functionality.
 
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   |  4 ++--
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 10 +++++-----
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 4 ++--
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 6 +++---
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 8ed347eebf07..8fc7a3074a21 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1443,10 +1443,10 @@ megasas_build_dcdb(struct megasas_instance *instance, struct scsi_cmnd *scp,
- 	 * pthru timeout to the os layer timeout value.
- 	 */
- 	if (scp->device->type == TYPE_TAPE) {
--		if ((scp->request->timeout / HZ) > 0xFFFF)
-+		if (scsi_cmd_to_rq(scp)->timeout / HZ > 0xFFFF)
- 			pthru->timeout = cpu_to_le16(0xFFFF);
- 		else
--			pthru->timeout = cpu_to_le16(scp->request->timeout / HZ);
-+			pthru->timeout = cpu_to_le16(scsi_cmd_to_rq(scp)->timeout / HZ);
- 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 68fde055b02f..352526cdcb2d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -3649,7 +3649,7 @@ _base_get_msix_index(struct MPT3SAS_ADAPTER *ioc,
+ 		    &ioc->total_io_cnt), ioc->reply_queue_count) : 0;
  
- 	/*
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 2221175ae051..b894451a3e09 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -402,7 +402,7 @@ megasas_get_msix_index(struct megasas_instance *instance,
- 			(mega_mod64(atomic64_add_return(1, &instance->total_io_count),
- 				instance->msix_vectors));
- 	} else if (instance->host->nr_hw_queues > 1) {
+ 	if (scmd && ioc->shost->nr_hw_queues > 1) {
 -		u32 tag = blk_mq_unique_tag(scmd->request);
 +		u32 tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
  
- 		cmd->request_desc->SCSIIO.MSIxIndex = blk_mq_unique_tag_to_hwq(tag) +
- 			instance->low_latency_index_start;
-@@ -3024,7 +3024,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		io_request->DevHandle = cpu_to_le16(device_id);
- 		io_request->LUN[1] = scmd->device->lun;
- 		pRAID_Context->timeout_value =
--			cpu_to_le16 (scmd->request->timeout / HZ);
-+			cpu_to_le16(scsi_cmd_to_rq(scmd)->timeout / HZ);
- 		cmd->request_desc->SCSIIO.RequestFlags =
- 			(MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
- 			MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-@@ -3087,7 +3087,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
+ 		return blk_mq_unique_tag_to_hwq(tag) +
+ 			ioc->high_iops_queues;
+@@ -3733,7 +3733,7 @@ mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+ 	u16 smid;
+ 	u32 tag, unique_tag;
  
- 	device_id = MEGASAS_DEV_INDEX(scmd);
- 	pd_index = MEGASAS_PD_INDEX(scmd);
--	os_timeout_value = scmd->request->timeout / HZ;
-+	os_timeout_value = scsi_cmd_to_rq(scmd)->timeout / HZ;
- 	mr_device_priv_data = scmd->device->hostdata;
- 	cmd->pd_interface = mr_device_priv_data->interface_type;
+-	unique_tag = blk_mq_unique_tag(scmd->request);
++	unique_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
+ 	tag = blk_mq_unique_tag_to_tag(unique_tag);
  
-@@ -3376,7 +3376,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
+ 	/*
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index d00aca3c77ce..c05abb458f57 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3303,7 +3303,7 @@ scsih_abort(struct scsi_cmnd *scmd)
+ 	sdev_printk(KERN_INFO, scmd->device, "attempting task abort!"
+ 	    "scmd(0x%p), outstanding for %u ms & timeout %u ms\n",
+ 	    scmd, jiffies_to_msecs(jiffies - scmd->jiffies_at_alloc),
+-	    (scmd->request->timeout / HZ) * 1000);
++	    (scsi_cmd_to_rq(scmd)->timeout / HZ) * 1000);
+ 	_scsih_tm_display_info(ioc, scmd);
  
--	cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
-+	cmd = megasas_get_cmd_fusion(instance, scsi_cmd_to_rq(scmd)->tag);
+ 	sas_device_priv_data = scmd->device->hostdata;
+@@ -5032,7 +5032,7 @@ _scsih_setup_eedp(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ 		    MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG |
+ 		    MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
+ 		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
+-		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
++		    cpu_to_be32(t10_pi_ref_tag(scsi_cmd_to_rq(scmd)));
+ 		break;
  
- 	if (!cmd) {
- 		atomic_dec(&instance->fw_outstanding);
-@@ -3417,7 +3417,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 	 */
- 	if (cmd->r1_alt_dev_handle != MR_DEVHANDLE_INVALID) {
- 		r1_cmd = megasas_get_cmd_fusion(instance,
--				(scmd->request->tag + instance->max_fw_cmds));
-+				scsi_cmd_to_rq(scmd)->tag + instance->max_fw_cmds);
- 		megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
- 	}
- 
+ 	case SCSI_PROT_DIF_TYPE3:
+@@ -5101,7 +5101,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data;
+ 	struct MPT3SAS_TARGET *sas_target_priv_data;
+ 	struct _raid_device *raid_device;
+-	struct request *rq = scmd->request;
++	struct request *rq = scsi_cmd_to_rq(scmd);
+ 	int class;
+ 	Mpi25SCSIIORequest_t *mpi_request;
+ 	struct _pcie_device *pcie_device = NULL;
