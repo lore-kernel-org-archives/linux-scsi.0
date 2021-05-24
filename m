@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 149E7C04FF3
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 15:14:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76963C2B9F7
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 15:14:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EECD96100C
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 15:14:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 614AE6100C
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 15:14:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233561AbhEXPPk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 May 2021 11:15:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40914 "EHLO mail.kernel.org"
+        id S234302AbhEXPPo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 May 2021 11:15:44 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39986 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234287AbhEXPHL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 May 2021 11:07:11 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9985661401;
-        Mon, 24 May 2021 14:51:24 +0000 (UTC)
+        id S234801AbhEXPJK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 May 2021 11:09:10 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 18C9A61132;
+        Mon, 24 May 2021 14:51:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1621867885;
+        s=k20201202; t=1621867906;
         bh=9liq446dUtNHzkDe9cd9s7fywZ722+6e6Sek6Sb8DE4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=X5vlJ37RqWKBEeTyMKSH/EiykcNGlCkntYqCPpNZL1hP1vJYmaTW9l0c4RyNCCuS7
-         l3vy8hgudi0ZLGmHS5IZG1V8AgG29hUPRG6DLb0nnDixwFS0Pvi82gzgkGaLF2TQpP
-         1RvpwN9NUMCSISFH4gXRFM4SWWQRCAtDxBjvJrGRu6gPdGSO/ib174cNY5WXQn9EkX
-         4QHwZPQ4/BcpHnDmI8G9rnIFUFQMfoys3EQBOPDnQrsLoZA2A/4AIT+n6nusJzON/m
-         OxN9Qhpm/oRvC3PFEbeXaG7L++lHuFemcbo60vUNLQaFTKlfH6jVfozyIYaMWRKvj6
-         4ytR1inyB9d8g==
+        b=KFJ6cmYhdDcSJvXxcInxeNUkdKkQ7OD12sy5+XLibzBpa72pzB3JfjyVxrORLqwYn
+         Dubm7rtHxPbvUdjrh3ImQty4TWPtYFlXVY9NYgA0RqIpjyuQs2DlbGV7BAnGJtW69H
+         NLjr/EbV0DMxQueOAPmJC29rXu6RlXBEnTJMYSzC/DgshQUQL/XdOUi6ollpdGugg+
+         Fk8qu/jKvNiFvbVwW1/YH+ZwiMudx+dI5e2BVhz24vxP6DWDFcJguyeWPADtkY/aCw
+         GppUtlyWvdrxQSDgiYGHCaPf7ka2SHuUiXWb6msfOa7TU5iu1eDwh1WS91abfzPx76
+         VnfWjC5lTEWAQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Matt Wang <wwentao@vmware.com>,
         Khalid Aziz <khalid@gonehiking.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 15/19] scsi: BusLogic: Fix 64-bit system enumeration error for Buslogic
-Date:   Mon, 24 May 2021 10:51:02 -0400
-Message-Id: <20210524145106.2499571-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 13/16] scsi: BusLogic: Fix 64-bit system enumeration error for Buslogic
+Date:   Mon, 24 May 2021 10:51:27 -0400
+Message-Id: <20210524145130.2499829-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210524145106.2499571-1-sashal@kernel.org>
-References: <20210524145106.2499571-1-sashal@kernel.org>
+In-Reply-To: <20210524145130.2499829-1-sashal@kernel.org>
+References: <20210524145130.2499829-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
