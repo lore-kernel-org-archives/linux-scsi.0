@@ -7,49 +7,52 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13D01C47080
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81307C47085
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED1CB61151
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 662A561166
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232253AbhEXDKt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 23:10:49 -0400
-Received: from mail-pg1-f173.google.com ([209.85.215.173]:39734 "EHLO
-        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232200AbhEXDKq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:10:46 -0400
-Received: by mail-pg1-f173.google.com with SMTP id v14so16330688pgi.6
-        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:09:17 -0700 (PDT)
+        id S232200AbhEXDKu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 23:10:50 -0400
+Received: from mail-pj1-f42.google.com ([209.85.216.42]:36694 "EHLO
+        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232245AbhEXDKr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:10:47 -0400
+Received: by mail-pj1-f42.google.com with SMTP id n6-20020a17090ac686b029015d2f7aeea8so10436674pjt.1
+        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:09:19 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KYyvj8sPypakZuMmZlRPWY8QgoYwTR2Pr8+T7m6OEgU=;
-        b=mCQnlit0Ft4DO3d1MJeGXqPhPHr/gSupF7hqG/q9LXIhtcrAnLFBx+P6bOneClnsHB
-         dUWOUcOpNzU649sWgd5p1tlMYJPgnuhhYijDUJg+jpLgCvSoPoSkyNPj/fIpezku3J8t
-         Mn7RM0vLWesmVWHk7CtvcfXMEsSAPpAAim4zjp1XMByASxDbZ5pgpbCSEO2iUwfGU68L
-         eJxcFXapZ82BDK3etCrMGQHPcdw51TJMqPAU3SblPwpB8H3D+RX6MD+eJ4imFk09YpTf
-         d3qZ+Rn4JbDO9EUrpBFu9IJbMbQKlXJzA5NYRPMwiOJ+YIvxj1jyY7S5XYw0MntgiJzx
-         i5TA==
-X-Gm-Message-State: AOAM5336LUb5Kz55rL7EnmxPcs60iUjCoPHX/gjb4ywwQr874zBDe0Hm
-        1tgHEGw/WjRXIYs/BQ6Phws=
-X-Google-Smtp-Source: ABdhPJyTWDnGKSmb/TQifXANyVjsKw0gFakYyFQ4ydQwaYdgbK5Z6ATCGyG2C7eExo4qH9YJ06jD1Q==
-X-Received: by 2002:a63:1e64:: with SMTP id p36mr11138126pgm.105.1621825757513;
-        Sun, 23 May 2021 20:09:17 -0700 (PDT)
+        bh=TXPzkzuJQGE01JowfjgEICCjDt9e86KsHwCasja+Oho=;
+        b=YXxWVEBT3OGNFsjqWw/4/3BgsfNLvTCLxtd+cZB8sunepvJHbmmaQHzSIn71pOUyKE
+         m4JI3DQYDBNrd2xAy1tTGlDQ1aSE+wtENawyXp6PhGjQxJc7Zco17wNLKQy/EFpUVV+J
+         3e2kNlJmTjuy/oSMIu7BcS+AB4xsh7DakYkhHCo3KRM4G7ty+YqJzTu9BfcTqkKZWr8c
+         Mpe9nB1269oDar3r53z5DHNV4lUczofYqGQyLocbpTRVL0ocM9nJ7wZBXNBg/n2gWQbz
+         J62cGBPBgx5aZRV/n/Ltu1WZaWa6UcM6r7GveTTO6R4mVLzzEhwp7SKW+g2CeJZM06aX
+         A+QQ==
+X-Gm-Message-State: AOAM533Aez2LizEO6Kb/lMHM9EUsQE7cRxqRe9XlkxIZfxwI062H1fGV
+        0kJWb5OKJQCcGLjbzQkUq3M=
+X-Google-Smtp-Source: ABdhPJz5ncnMjO9qqN/oiUY4AfBEExJZXzLi3LUqTSM3rJVDpTUvmTVQgQyOm9spwc+Ec5cQD5wPXw==
+X-Received: by 2002:a17:90a:6402:: with SMTP id g2mr22411025pjj.82.1621825759152;
+        Sun, 23 May 2021 20:09:19 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.09.16
+        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.09.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 May 2021 20:09:17 -0700 (PDT)
+        Sun, 23 May 2021 20:09:18 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-Subject: [PATCH v3 09/51] RDMA/srp: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Sun, 23 May 2021 20:08:14 -0700
-Message-Id: <20210524030856.2824-10-bvanassche@acm.org>
+        Benjamin Block <bblock@linux.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: [PATCH v3 10/51] zfcp: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Sun, 23 May 2021 20:08:15 -0700
+Message-Id: <20210524030856.2824-11-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210524030856.2824-1-bvanassche@acm.org>
 References: <20210524030856.2824-1-bvanassche@acm.org>
@@ -62,32 +65,22 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 Prepare for removal of the request pointer by using scsi_cmd_to_rq()
 instead. This patch does not change any functionality.
 
+Acked-by: Benjamin Block <bblock@linux.ibm.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/infiniband/ulp/srp/ib_srp.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/s390/scsi/zfcp_fsf.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
-index 31f8aa2c40ed..e3a7ee8d451d 100644
---- a/drivers/infiniband/ulp/srp/ib_srp.c
-+++ b/drivers/infiniband/ulp/srp/ib_srp.c
-@@ -2182,8 +2182,8 @@ static int srp_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scmnd)
- 	if (unlikely(scmnd->result))
- 		goto err;
+diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+index 2e4804ef2fb9..9e3f37b4423d 100644
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -2377,7 +2377,7 @@ static void zfcp_fsf_req_trace(struct zfcp_fsf_req *req, struct scsi_cmnd *scsi)
+ 		}
+ 	}
  
--	WARN_ON_ONCE(scmnd->request->tag < 0);
--	tag = blk_mq_unique_tag(scmnd->request);
-+	WARN_ON_ONCE(scsi_cmd_to_rq(scmnd)->tag < 0);
-+	tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmnd));
- 	ch = &target->ch[blk_mq_unique_tag_to_hwq(tag)];
- 	idx = blk_mq_unique_tag_to_tag(tag);
- 	WARN_ONCE(idx >= target->req_ring_size, "%s: tag %#x: idx %d >= %d\n",
-@@ -2814,7 +2814,7 @@ static int srp_abort(struct scsi_cmnd *scmnd)
+-	blk_add_driver_data(scsi->request, &blktrc, sizeof(blktrc));
++	blk_add_driver_data(scsi_cmd_to_rq(scsi), &blktrc, sizeof(blktrc));
+ }
  
- 	if (!req)
- 		return SUCCESS;
--	tag = blk_mq_unique_tag(scmnd->request);
-+	tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmnd));
- 	ch_idx = blk_mq_unique_tag_to_hwq(tag);
- 	if (WARN_ON_ONCE(ch_idx >= target->ch_count))
- 		return SUCCESS;
+ /**
