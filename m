@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81D11C47083
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD8E2C47082
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 626926115C
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A758061168
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232296AbhEXDLZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 23:11:25 -0400
-Received: from mail-pf1-f176.google.com ([209.85.210.176]:34631 "EHLO
-        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232289AbhEXDLY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:24 -0400
-Received: by mail-pf1-f176.google.com with SMTP id q25so1628600pfn.1
-        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:09:56 -0700 (PDT)
+        id S232289AbhEXDL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 23:11:26 -0400
+Received: from mail-pl1-f176.google.com ([209.85.214.176]:34532 "EHLO
+        mail-pl1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232288AbhEXDL0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:26 -0400
+Received: by mail-pl1-f176.google.com with SMTP id e15so7281935plh.1
+        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:09:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=nG69elz3fRIik+x0xPzidwBogqJG1UGznFLcOfDZOZo=;
-        b=ODNb6QRVwKOZF+1dTXTn+Wo4b28wRpnQBhtB1kBqlTz3pf+Y2T8BX/kbc4fjJ7OjIG
-         g0SE8L8VQF82Nt7881ERZ0JZ08v0yUeGlovKtZCh2JngOuTVnTNJtHYzYhMOckvXd5gK
-         GEvBB+6curout/KqNBp9nd6K/eoUcgqIOJNDxtUCVjUbaQWN2BUwQtSyUhCeJdvDM/a5
-         aBhQYp0l+WiFaQjRgKeZXi5wWyT13lUcvx+rhnZIVGKhopEUo/7reAeZm2n6bAuSzR1k
-         MNWPAw0U9Rv1AIZWTuC2idZOcn+zRvWme1DW9/i6oqgwZjuVwBusOXMAQh1ex5e8w606
-         NqoA==
-X-Gm-Message-State: AOAM532YzEQ+y0I4afBXHaFGi00ZTdEQ0BP7tRZqbCblqncM1GVaGFIZ
-        B1SAOlc8r6LisCwo9QNFNM4=
-X-Google-Smtp-Source: ABdhPJzIQxaFSTFQ9W9teGjNgKA9ZvDldcbPeVc+togYcyfUhYtDtxUoBt8PGm2EKXfNUbqZtSIi3Q==
-X-Received: by 2002:a62:e21a:0:b029:2de:4440:3a with SMTP id a26-20020a62e21a0000b02902de4440003amr21966772pfi.23.1621825796297;
-        Sun, 23 May 2021 20:09:56 -0700 (PDT)
+        bh=lWCkbl9gtDCSQSGnzA3xMbegNxrAgeyKupcSi9N6TCY=;
+        b=o1jq17EMTquNJVrHTMdhNuIFXiftA9879WMLAxoeThXGX9t+UpiKg9zYE0cq6B86b/
+         9pzIZ8PgJWngK0i62CqvoFVAWGOJ8Iv94uIAvZf7iB6QPaLtCEfZxmEVAGruIi8C+0t4
+         seoYfAOXQPENSIdhaYE2M3T/zXGSTp5IAyYsUeUzdTnRfsplqnYBZsfglfbOKMU70df3
+         XxHh99E1zc7i/oRdZW8Bl5KNc7h3p2xTfKipVoDP2cnjF+WRMeMruSoKbQorf8a37lvX
+         JBVzCXQ3c6L5L2m1bsha4mqiDy2kleV9yjtbtKDa8cdBpipgz83I+/TsJ4cxirYdfCWG
+         VUrQ==
+X-Gm-Message-State: AOAM533HItHNHP1XlJTiaaMjQirwx/nqSiDsCxGh84C1SRw83FgMxb76
+        ZAcIHOmgFphHTr41kWta6Nw=
+X-Google-Smtp-Source: ABdhPJzdIG9cW+V8ANnPEuw/c6YLPnojncCuebsYnl70q+r7jAzdxoU6ycSiZJtZL0Us/LIX0bqUtw==
+X-Received: by 2002:a17:90a:2aca:: with SMTP id i10mr22660121pjg.110.1621825797816;
+        Sun, 23 May 2021 20:09:57 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.09.55
+        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.09.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 May 2021 20:09:55 -0700 (PDT)
+        Sun, 23 May 2021 20:09:57 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 30/51] mvumi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Sun, 23 May 2021 20:08:35 -0700
-Message-Id: <20210524030856.2824-31-bvanassche@acm.org>
+Subject: [PATCH v3 31/51] myrb: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Sun, 23 May 2021 20:08:36 -0700
+Message-Id: <20210524030856.2824-32-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210524030856.2824-1-bvanassche@acm.org>
 References: <20210524030856.2824-1-bvanassche@acm.org>
@@ -63,19 +64,51 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/mvumi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/myrb.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
-index 9d5743627604..94b2b207d391 100644
---- a/drivers/scsi/mvumi.c
-+++ b/drivers/scsi/mvumi.c
-@@ -702,7 +702,7 @@ static int mvumi_host_reset(struct scsi_cmnd *scmd)
- 	mhba = (struct mvumi_hba *) scmd->device->host->hostdata;
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index d9c82e211ae7..27aabe1e635a 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -1263,6 +1263,7 @@ static int myrb_host_reset(struct scsi_cmnd *scmd)
+ static int myrb_pthru_queuecommand(struct Scsi_Host *shost,
+ 		struct scsi_cmnd *scmd)
+ {
++	struct request *rq = scsi_cmd_to_rq(scmd);
+ 	struct myrb_hba *cb = shost_priv(shost);
+ 	struct myrb_cmdblk *cmd_blk = scsi_cmd_priv(scmd);
+ 	union myrb_cmd_mbox *mbox = &cmd_blk->mbox;
+@@ -1286,7 +1287,7 @@ static int myrb_pthru_queuecommand(struct Scsi_Host *shost,
+ 	}
  
- 	scmd_printk(KERN_NOTICE, scmd, "RESET -%u cmd=%x retries=%x\n",
--			scmd->request->tag, scmd->cmnd[0], scmd->retries);
-+			scsi_cmd_to_rq(scmd)->tag, scmd->cmnd[0], scmd->retries);
+ 	mbox->type3.opcode = MYRB_CMD_DCDB;
+-	mbox->type3.id = scmd->request->tag + 3;
++	mbox->type3.id = rq->tag + 3;
+ 	mbox->type3.addr = dcdb_addr;
+ 	dcdb->channel = sdev->channel;
+ 	dcdb->target = sdev->id;
+@@ -1305,11 +1306,11 @@ static int myrb_pthru_queuecommand(struct Scsi_Host *shost,
+ 		break;
+ 	}
+ 	dcdb->early_status = false;
+-	if (scmd->request->timeout <= 10)
++	if (rq->timeout <= 10)
+ 		dcdb->timeout = MYRB_DCDB_TMO_10_SECS;
+-	else if (scmd->request->timeout <= 60)
++	else if (rq->timeout <= 60)
+ 		dcdb->timeout = MYRB_DCDB_TMO_60_SECS;
+-	else if (scmd->request->timeout <= 600)
++	else if (rq->timeout <= 600)
+ 		dcdb->timeout = MYRB_DCDB_TMO_10_MINS;
+ 	else
+ 		dcdb->timeout = MYRB_DCDB_TMO_24_HRS;
+@@ -1577,7 +1578,7 @@ static int myrb_ldev_queuecommand(struct Scsi_Host *shost,
+ 	}
  
- 	return mhba->instancet->reset_host(mhba);
- }
+ 	myrb_reset_cmd(cmd_blk);
+-	mbox->type5.id = scmd->request->tag + 3;
++	mbox->type5.id = scsi_cmd_to_rq(scmd)->tag + 3;
+ 	if (scmd->sc_data_direction == DMA_NONE)
+ 		goto submit;
+ 	nsge = scsi_dma_map(scmd);
