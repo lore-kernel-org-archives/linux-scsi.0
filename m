@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 92B95C47080
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1F9DC47082
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67EFA6117A
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDFA561168
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:09:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232212AbhEXDKl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S232185AbhEXDKl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Sun, 23 May 2021 23:10:41 -0400
-Received: from mail-pl1-f172.google.com ([209.85.214.172]:35812 "EHLO
-        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232196AbhEXDKj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:10:39 -0400
-Received: by mail-pl1-f172.google.com with SMTP id t21so13920091plo.2
-        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:09:11 -0700 (PDT)
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:50861 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232132AbhEXDKi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:10:38 -0400
+Received: by mail-pj1-f44.google.com with SMTP id t11so14030559pjm.0
+        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:09:10 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=l6VDWq6IVEh87e1uNmLaYE9v1k4d4/jK9l4qdKk6+CY=;
-        b=OwHdphPAQF/WUKlbg4l1VyxPXTlmGqlXtVaADrhYMuHZ04rVQuO9gaGwimZf/rsppq
-         xaYgDu/s/TulHCw6UlGEOizi96sZ8SMqSPFqPbzp1RCeT4ZwLaYZUNy4DbawNcbjyEgL
-         1x5NqnqaAJ0C+HPhD9dpjLazRleK6+poba2MmCx4ylU8ddoMQVY+1B2y53Ooa8IXI0Mo
-         WpLFmYpwYQD+3GDHLgfWjDTUTYElvICpF+TDOmECc/hQYAg/1i/1u1xsYLjlAzt8Hyf7
-         nT9anwI2CLgLeuYNVNkZ4L2mpn26NmpnzlSNSTy71RYSJTCZ7SYOR/ARwk9QMQUlSn3A
-         I0Rg==
-X-Gm-Message-State: AOAM533JeUv5RfTj8mDbfvGq8qZiRmvho9OlOuelAmSB/+v8r3gmtGg6
-        Xw8JDQOYoPUgKpEXgeZp4Q68GZ6N+8I=
-X-Google-Smtp-Source: ABdhPJzrTg5Nuz4/wQDtdj81tGy20JmNI03w0fb5TSBShWIBEB+ABElzfCqvPli6kE/Ml5NXSQzvTw==
-X-Received: by 2002:a17:90b:4b0f:: with SMTP id lx15mr21780311pjb.184.1621825751369;
-        Sun, 23 May 2021 20:09:11 -0700 (PDT)
+        bh=C9REewPRXrYQ26/Yrz6DO7KURHZ0CA9NseOl7nKEHG4=;
+        b=RFCKV+ccqdJW7lT+KsXRfaV8iTXMTQt4Tn1dEk6YOfYduD9GzIhfjtHd3ieSM6vdLc
+         7XARYKe7jhNb1euqrcjhwOBV+66a8AWJ3U/16AQzjhSICL8FAJgPu9e7mw8U1dix3a1v
+         XWGQk7QVjGvBLVAVCSSs3adeNWmY6QyuNiTrgdtBm60SfCej9ct3rYDF+3BdOMwHA0FH
+         5EyjnV7roVgWLkunzpMmSuPuoFQCOnsRI/o5wtHvJIAytztg/rEzSXKVEdz7Zmj8tF1F
+         iWpt4oAsEf+7+P0h5HgPtyILiuI5SqErl/VTzSMKApvhyADCeQkJOgFR0bVvFDPKRlhL
+         KAkA==
+X-Gm-Message-State: AOAM531CY1M7MOw52CeiltLclgIagfAxOVwCl4ToFeWU4JdLRYN8d6YJ
+        YoZgD2QbY8HZRU1zc2u+M3g=
+X-Google-Smtp-Source: ABdhPJxh2w2rpu6q11EKovEi75wAC2wW704ROJu+9UaOWKezGIz86TnZh6Hh/+iW82l8euMOEnODWg==
+X-Received: by 2002:a17:90a:b38d:: with SMTP id e13mr22155597pjr.222.1621825749843;
+        Sun, 23 May 2021 20:09:09 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.09.10
+        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.09.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 May 2021 20:09:10 -0700 (PDT)
+        Sun, 23 May 2021 20:09:09 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
         Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 05/51] scsi_transport_fc: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Sun, 23 May 2021 20:08:10 -0700
-Message-Id: <20210524030856.2824-6-bvanassche@acm.org>
+Subject: [PATCH v3 04/51] sr: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Sun, 23 May 2021 20:08:09 -0700
+Message-Id: <20210524030856.2824-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210524030856.2824-1-bvanassche@acm.org>
 References: <20210524030856.2824-1-bvanassche@acm.org>
@@ -67,19 +68,49 @@ Cc: Hannes Reinecke <hare@suse.de>
 Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_transport_fc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/sr.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 49748cd817a5..60e406bcf42a 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3804,7 +3804,7 @@ bool fc_eh_should_retry_cmd(struct scsi_cmnd *scmd)
- 	struct fc_rport *rport = starget_to_rport(scsi_target(scmd->device));
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index e4633b84c556..439e8198a528 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -326,7 +326,8 @@ static int sr_done(struct scsi_cmnd *SCpnt)
+ 	int good_bytes = (result == 0 ? this_count : 0);
+ 	int block_sectors = 0;
+ 	long error_sector;
+-	struct scsi_cd *cd = scsi_cd(SCpnt->request->rq_disk);
++	struct request *rq = scsi_cmd_to_rq(SCpnt);
++	struct scsi_cd *cd = scsi_cd(rq->rq_disk);
  
- 	if ((rport->port_state != FC_PORTSTATE_ONLINE) &&
--		(scmd->request->cmd_flags & REQ_FAILFAST_TRANSPORT)) {
-+		(scsi_cmd_to_rq(scmd)->cmd_flags & REQ_FAILFAST_TRANSPORT)) {
- 		set_host_byte(scmd, DID_TRANSPORT_MARGINAL);
- 		return false;
- 	}
+ #ifdef DEBUG
+ 	scmd_printk(KERN_INFO, SCpnt, "done: %x\n", result);
+@@ -348,16 +349,14 @@ static int sr_done(struct scsi_cmnd *SCpnt)
+ 				break;
+ 			error_sector =
+ 				get_unaligned_be32(&SCpnt->sense_buffer[3]);
+-			if (SCpnt->request->bio != NULL)
+-				block_sectors =
+-					bio_sectors(SCpnt->request->bio);
++			if (rq->bio != NULL)
++				block_sectors = bio_sectors(rq->bio);
+ 			if (block_sectors < 4)
+ 				block_sectors = 4;
+ 			if (cd->device->sector_size == 2048)
+ 				error_sector <<= 2;
+ 			error_sector &= ~(block_sectors - 1);
+-			good_bytes = (error_sector -
+-				      blk_rq_pos(SCpnt->request)) << 9;
++			good_bytes = (error_sector - blk_rq_pos(rq)) << 9;
+ 			if (good_bytes < 0 || good_bytes >= this_count)
+ 				good_bytes = 0;
+ 			/*
+@@ -389,7 +388,7 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
+ {
+ 	int block = 0, this_count, s_size;
+ 	struct scsi_cd *cd;
+-	struct request *rq = SCpnt->request;
++	struct request *rq = scsi_cmd_to_rq(SCpnt);
+ 	blk_status_t ret;
+ 
+ 	ret = scsi_alloc_sgtables(SCpnt);
