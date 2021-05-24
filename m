@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E63BC47080
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDCB9C47083
 	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62A3161159
+	by mail.kernel.org (Postfix) with ESMTP id B17CA6115C
 	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 03:10:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232211AbhEXDMD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 23:12:03 -0400
-Received: from mail-pg1-f170.google.com ([209.85.215.170]:37841 "EHLO
-        mail-pg1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232235AbhEXDL6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:11:58 -0400
-Received: by mail-pg1-f170.google.com with SMTP id t193so19064715pgb.4
-        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:10:30 -0700 (PDT)
+        id S232330AbhEXDME (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 23:12:04 -0400
+Received: from mail-pg1-f173.google.com ([209.85.215.173]:34763 "EHLO
+        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232328AbhEXDMB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 23:12:01 -0400
+Received: by mail-pg1-f173.google.com with SMTP id l70so19064694pga.1
+        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 20:10:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=laV2E24Fm3RHSV+xjoxc9ZAJGQpQIIm4wmdw1Gavwm0=;
-        b=gDOBPKMW/sxpyB9HyVjIKIAYzkDqJ78E07bMk2XOscLvQq6Mi1vmK97fg4+Q6SouK0
-         fokMwQHA2GjkZo9WmDUIigaNe7u/SF5MFtijZ83DbwpZMzym/P4JfNIu9ZlriSe5QKsq
-         ixw/Ua+V4UmAV1O1QL5b5NP+7fZGRWUT08IWZQmhPIEVUy/czGY6JbhG5g5dUYNHSrUk
-         F+a7ff1HHtAw1EqoH3A7dd4R6pYRMaA8XsQLX6Vlb/3WDuqwCangi36dPFhkdLcKKqFn
-         ihtPco/YP30eXUMs7c5jgY51ueASBkF5slZDuiKISjOGwKrY4b2BAMSAKzr7/XKFJfCa
-         DXbw==
-X-Gm-Message-State: AOAM532mo57YSNetYqVZWiY5G5VzGexdbW/4Of089fcbXwUOMtUmsdGa
-        aY3afbc40wM4LOOcvoE/7InavT69SYCS2w==
-X-Google-Smtp-Source: ABdhPJyeXkBrOspPzf0EUkDSBdl1VOx6SEvbyiiiT+EEh61KrxXdQTUoVD3VWxfePdQDSRmq4lbHeQ==
-X-Received: by 2002:a05:6a00:c84:b029:2e4:e4da:788b with SMTP id a4-20020a056a000c84b02902e4e4da788bmr14211398pfv.72.1621825829990;
-        Sun, 23 May 2021 20:10:29 -0700 (PDT)
+        bh=G7u7yOIHrMaairO+Op3MCSa1DYBCAhMTLm0X2oUr+iM=;
+        b=dGv9Gcy/+JeBlSN0aDntrwH1oI3bMuYCHNCZBRmHWrCJrWXUi13Ycgy54XVnvA98a9
+         npfXrLHrQ4sZiBBVclFFa4WbZqTIkFo4XFJ1SKpwGX26UCHpNWXRnkwAdK3eKsoWM9Cj
+         lMgERR1XbpdjybxsujtLFJ0gj3w4RztwchaKXHCA/AgHaFy1TEtq+EfPgA8cJ9Hm+tsN
+         4Zrwo1PJDTgbIJQ17qGnZWq4cB8t8aQ5hv0TH4omhujXVhtcbW0t6XkMQCdmnl1GfgVD
+         YWVY9PH1t/Z5ZVb8GdQ7LFUvS0Mey0OznUXz5VSSwY94457z0VlzYS4O8eA2ANUx/lvJ
+         aCAQ==
+X-Gm-Message-State: AOAM530CZpGVfXNVmlivIS1pHofqp5tOjq4yBQMCi6rdMpm6Q7ESRVIf
+        obiB9VAKWVNJq+h0PSCdiwQ=
+X-Google-Smtp-Source: ABdhPJxYx9e9GblOinJg/kJKA3K47hWviHky34XJfr8XYXf+U4TnGacQC4eEvXiJauwEqpSjqs7qrQ==
+X-Received: by 2002:aa7:8a1a:0:b029:2d4:a24:8967 with SMTP id m26-20020aa78a1a0000b02902d40a248967mr22422310pfa.11.1621825833166;
+        Sun, 23 May 2021 20:10:33 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.10.28
+        by smtp.gmail.com with ESMTPSA id v9sm11131863pjd.26.2021.05.23.20.10.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 23 May 2021 20:10:29 -0700 (PDT)
+        Sun, 23 May 2021 20:10:32 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
-        Bodo Stroesser <bostroesser@gmail.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>
-Subject: [PATCH v3 49/51] tcm_loop: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Sun, 23 May 2021 20:08:54 -0700
-Message-Id: <20210524030856.2824-50-bvanassche@acm.org>
+        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH v3 51/51] core: Remove the request member from struct scsi_cmnd
+Date:   Sun, 23 May 2021 20:08:56 -0700
+Message-Id: <20210524030856.2824-52-bvanassche@acm.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210524030856.2824-1-bvanassche@acm.org>
 References: <20210524030856.2824-1-bvanassche@acm.org>
@@ -60,34 +59,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prepare for removal of the request pointer by using scsi_cmd_to_rq()
-instead. This patch does not change any functionality.
+Since all scsi_cmnd.request users are gone, remove the request pointer
+from struct scsi_cmnd.
 
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/target/loopback/tcm_loop.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_error.c | 1 -
+ drivers/scsi/scsi_lib.c   | 1 -
+ include/scsi/scsi_cmnd.h  | 3 ---
+ 3 files changed, 5 deletions(-)
 
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 2687fd7d45db..834eceaac9cd 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -183,7 +183,7 @@ static int tcm_loop_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *sc)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 5af6d87e83aa..3c83e892284b 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2390,7 +2390,6 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
  
- 	memset(tl_cmd, 0, sizeof(*tl_cmd));
- 	tl_cmd->sc = sc;
--	tl_cmd->sc_cmd_tag = sc->request->tag;
-+	tl_cmd->sc_cmd_tag = scsi_cmd_to_rq(sc)->tag;
+ 	scmd = (struct scsi_cmnd *)(rq + 1);
+ 	scsi_init_command(dev, scmd);
+-	scmd->request = rq;
+ 	scmd->cmnd = scsi_req(rq)->cmd;
  
- 	tcm_loop_target_queue_cmd(tl_cmd);
- 	return 0;
-@@ -249,7 +249,7 @@ static int tcm_loop_abort_task(struct scsi_cmnd *sc)
- 	tl_hba = *(struct tcm_loop_hba **)shost_priv(sc->device->host);
- 	tl_tpg = &tl_hba->tl_hba_tpgs[sc->device->id];
- 	ret = tcm_loop_issue_tmr(tl_tpg, sc->device->lun,
--				 sc->request->tag, TMR_ABORT_TASK);
-+				 scsi_cmd_to_rq(sc)->tag, TMR_ABORT_TASK);
- 	return (ret == TMR_FUNCTION_COMPLETE) ? SUCCESS : FAILED;
- }
+ 	scmd->scsi_done		= scsi_reset_provider_done_command;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 2e9598c91cee..b5df3f94156e 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1536,7 +1536,6 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
  
+ 	scsi_init_command(sdev, cmd);
+ 
+-	cmd->request = req;
+ 	cmd->tag = req->tag;
+ 	cmd->prot_op = SCSI_PROT_NORMAL;
+ 	if (blk_rq_bytes(req))
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index bd7f73f035be..984bfa5deab8 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -111,9 +111,6 @@ struct scsi_cmnd {
+ 				   reconnects.   Probably == sector
+ 				   size */
+ 
+-	struct request *request;	/* The command we are
+-				   	   working on */
+-
+ 	unsigned char *sense_buffer;
+ 				/* obtained by REQUEST SENSE when
+ 				 * CHECK CONDITION is received on original
