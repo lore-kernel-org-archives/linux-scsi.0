@@ -2,168 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF917C47080
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 08:48:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26B10C04FF3
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 09:23:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6B2061153
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 08:48:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0329B6108E
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 09:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232543AbhEXIte (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 24 May 2021 04:49:34 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:6211 "EHLO
-        labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232513AbhEXIt1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 May 2021 04:49:27 -0400
-IronPort-SDR: FUOsR8lCnOZeWBw9JWra+xI6PrOJeDIRIZrauHuLV7pMuON3fNYa9k1TpbBxVrv8Ux7IvA7eOY
- 6+qeIFgtapaveu1pYt4W4n7ojasfA1BKxeRT/OZSeOY121Sp1mMzfWXkIKZFtHyw/8fRd43AFT
- yTWFVw9bdlvz0LsADXUr7hBm2xHQV8a4sEHuQfi9suoAkBdoTsGdQwGTo3oIAh0RxW1wUJnQki
- wMCGSwbtF3/Q0TVbSha/tEIqip0idrvIJ4NOSWHxnMl9+Vs+PgTojwZsJBK6LxpXxhnuYL2cyM
- vPg=
-X-IronPort-AV: E=Sophos;i="5.82,319,1613462400"; 
-   d="scan'208";a="47877522"
-Received: from unknown (HELO ironmsg04-sd.qualcomm.com) ([10.53.140.144])
-  by labrats.qualcomm.com with ESMTP; 24 May 2021 01:47:56 -0700
-X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg04-sd.qualcomm.com with ESMTP; 24 May 2021 01:47:55 -0700
-Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id 3CBE221AD7; Mon, 24 May 2021 01:47:55 -0700 (PDT)
-From:   Can Guo <cang@codeaurora.org>
-To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, cang@codeaurora.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v2 6/6] scsi: ufs: Update the fast abort path in ufshcd_abort() for PM requests
-Date:   Mon, 24 May 2021 01:47:25 -0700
-Message-Id: <1621846046-22204-7-git-send-email-cang@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1621846046-22204-1-git-send-email-cang@codeaurora.org>
-References: <1621846046-22204-1-git-send-email-cang@codeaurora.org>
+        id S232397AbhEXJYv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 24 May 2021 05:24:51 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:59074 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232313AbhEXJYr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 May 2021 05:24:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1621848199;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ne4HeOCGj7q8c4BgvagMZxPePSQO88cIXvFas9Gk97w=;
+        b=PIL4UnPm/viX3l74DwLu77oqriPr6yxBdknbIx4Emp5QJmDQRQly/1fFhzhdRSiCLZ1Qx7
+        1BWTeQ0mWla4QLz0fGitkApz52yJf68pV8FMds+oXWzvAssvK49rewMTxj1NIpD3PYZvmb
+        sQLMAvA8RTAuX+KftWZ7wxp9yFJjYFU=
+Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
+ [209.85.221.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-580-E3hz_bw7PEqGIhPUFiEPJA-1; Mon, 24 May 2021 05:23:18 -0400
+X-MC-Unique: E3hz_bw7PEqGIhPUFiEPJA-1
+Received: by mail-wr1-f70.google.com with SMTP id c13-20020a5d6ccd0000b029010ec741b84bso12784693wrc.23
+        for <linux-scsi@vger.kernel.org>; Mon, 24 May 2021 02:23:18 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=ne4HeOCGj7q8c4BgvagMZxPePSQO88cIXvFas9Gk97w=;
+        b=UMt2yL9M0OyHuz21t0gnH8waHIUwQx+t/Mqae96YrLoFuIRCBEomSEFdCNX+YP2naV
+         jGP3KGlp2QXnA1gJ1wzvzHHpp1vpVv+er9GKvWzeQxhqnI7B9l8UZbsdw+zctVBsHiIv
+         1ab98/49lEwxEV/rncymLrLsw4MBQHsQKy2h5nYVwx51rYsZT7ZRcy4vfIF+M7iymJKG
+         Z7BLs0/el5B5psUYQmb9SX7vJbTv4KrfiSIRzadRFwqk5VB+3WhzdrW5u1UaaIvjsSsR
+         Ho72pPoxx90lV3++vC0wznSbKZIACiTIKOD6TP7VR1dBIhwgRkRJDnlbuLN0C+ZPMM8v
+         KNAw==
+X-Gm-Message-State: AOAM532xh1V/wI9iycp/1acSyrhq2kGoiP9d5/naADazuJWn7bFcTYOb
+        gA5e+ceMmCG8T9MfTVcofLcN6bgnHNQwH1pncRsPBBiKFrMlPvdfbTuUcOnmupbqxTDB4qsdWhY
+        XV5he9Im7zZAIBgqufvLJhA==
+X-Received: by 2002:a05:6000:186a:: with SMTP id d10mr21744501wri.41.1621848197160;
+        Mon, 24 May 2021 02:23:17 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzXkzC5UeXauCxR+Lq2KM020A5wyfMd5vwbgFN3j9I9zuro0RWyF0jWCQ5UFODd9juP+fN5pg==
+X-Received: by 2002:a05:6000:186a:: with SMTP id d10mr21744492wri.41.1621848197042;
+        Mon, 24 May 2021 02:23:17 -0700 (PDT)
+Received: from redhat.com ([2a10:8006:fcda:0:90d:c7e7:9e26:b297])
+        by smtp.gmail.com with ESMTPSA id q3sm11331101wrr.43.2021.05.24.02.23.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 24 May 2021 02:23:16 -0700 (PDT)
+Date:   Mon, 24 May 2021 05:23:13 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Jason Wang <jasowang@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH v3 47/51] virtio_scsi: Use scsi_cmd_to_rq() instead of
+ scsi_cmnd.request
+Message-ID: <20210524052301-mutt-send-email-mst@kernel.org>
+References: <20210524030856.2824-1-bvanassche@acm.org>
+ <20210524030856.2824-48-bvanassche@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210524030856.2824-48-bvanassche@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If PM requests fail during runtime suspend/resume, RPM framework saves the
-error to dev->power.runtime_error. Before the runtime_error gets cleared,
-runtime PM on this specific device won't work again, leaving the device
-in either suspended or active state permanently.
+On Sun, May 23, 2021 at 08:08:52PM -0700, Bart Van Assche wrote:
+> Prepare for removal of the request pointer by using scsi_cmd_to_rq()
+> instead. This patch does not change any functionality.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-When task abort happens to a PM request sent during runtime suspend/resume,
-even if it can be successfully aborted, RPM framework anyways saves the
-(TIMEOUT) error. But we want more and we can do better - let error handling
-recover and clear the runtime_error. So, let PM requests take the fast
-abort path in ufshcd_abort().
+If everyone else does it, I don't mind
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
 
-Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 38 ++++++++++++++++++++++----------------
- 1 file changed, 22 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9a3bc04..8312b31 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2731,7 +2731,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		 * err handler blocked for too long. So, just fail the scsi cmd
- 		 * sent from PM ops, err handler can recover PM error anyways.
- 		 */
--		if (hba->wl_pm_op_in_progress) {
-+		if (cmd->request->rq_flags & RQF_PM) {
- 			hba->force_reset = true;
- 			set_host_byte(cmd, DID_BAD_TARGET);
- 			cmd->scsi_done(cmd);
-@@ -2764,7 +2764,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		(hba->clk_gating.state != CLKS_ON));
- 
- 	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
--		if (hba->wl_pm_op_in_progress)
-+		if (cmd->request->rq_flags & RQF_PM)
- 			set_host_byte(cmd, DID_BAD_TARGET);
- 		else
- 			err = SCSI_MLQUEUE_HOST_BUSY;
-@@ -6982,11 +6982,14 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	int err = 0;
- 	struct ufshcd_lrb *lrbp;
- 	u32 reg;
-+	bool need_eh = false;
- 
- 	host = cmd->device->host;
- 	hba = shost_priv(host);
- 	tag = cmd->request->tag;
- 	lrbp = &hba->lrb[tag];
-+
-+	dev_info(hba->dev, "%s: Device abort task at tag %d\n", __func__, tag);
- 	if (!ufshcd_valid_tag(hba, tag)) {
- 		dev_err(hba->dev,
- 			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
-@@ -7004,9 +7007,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto out;
- 	}
- 
--	/* Print Transfer Request of aborted task */
--	dev_info(hba->dev, "%s: Device abort task at tag %d\n", __func__, tag);
--
- 	/*
- 	 * Print detailed info about aborted request.
- 	 * As more than one request might get aborted at the same time,
-@@ -7034,21 +7034,21 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	}
- 
- 	/*
--	 * Task abort to the device W-LUN is illegal. When this command
--	 * will fail, due to spec violation, scsi err handling next step
--	 * will be to send LU reset which, again, is a spec violation.
--	 * To avoid these unnecessary/illegal steps, first we clean up
--	 * the lrb taken by this cmd and re-set it in outstanding_reqs,
--	 * then queue the eh_work and bail.
-+	 * This fast path guarantees the cmd always gets aborted successfully,
-+	 * meanwhile it invokes the error handler. It allows contexts, which
-+	 * are blocked by this cmd, to fail fast. It serves multiple purposes:
-+	 * #1 To avoid unnecessary/illagal abort attempts to the W-LU.
-+	 * #2 To avoid live lock between eh_work and specific contexts, i.e.,
-+	 *    suspend/resume and eh_work itself.
-+	 * #3 To let eh_work recover runtime PM error in case abort happens
-+	 *    to cmds sent from runtime suspend/resume ops.
- 	 */
--	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
-+	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN ||
-+	    (cmd->request->rq_flags & RQF_PM)) {
- 		ufshcd_update_evt_hist(hba, UFS_EVT_ABORT, lrbp->lun);
- 		__ufshcd_transfer_req_compl(hba, (1UL << tag));
- 		set_bit(tag, &hba->outstanding_reqs);
--		spin_lock_irqsave(host->host_lock, flags);
--		hba->force_reset = true;
--		ufshcd_schedule_eh_work(hba);
--		spin_unlock_irqrestore(host->host_lock, flags);
-+		need_eh = true;
- 		goto out;
- 	}
- 
-@@ -7062,6 +7062,12 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- cleanup:
- 		__ufshcd_transfer_req_compl(hba, (1UL << tag));
- out:
-+		if (cmd->request->rq_flags & RQF_PM || need_eh) {
-+			spin_lock_irqsave(host->host_lock, flags);
-+			hba->force_reset = true;
-+			ufshcd_schedule_eh_work(hba);
-+			spin_unlock_irqrestore(host->host_lock, flags);
-+		}
- 		err = SUCCESS;
- 	} else {
- 		dev_err(hba->dev, "%s: failed with err %d\n", __func__, err);
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+> ---
+>  drivers/scsi/virtio_scsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index b9c86a7e3b97..8ae4b8441519 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -521,7 +521,7 @@ static void virtio_scsi_init_hdr_pi(struct virtio_device *vdev,
+>  				    struct virtio_scsi_cmd_req_pi *cmd_pi,
+>  				    struct scsi_cmnd *sc)
+>  {
+> -	struct request *rq = sc->request;
+> +	struct request *rq = scsi_cmd_to_rq(sc);
+>  	struct blk_integrity *bi;
+>  
+>  	virtio_scsi_init_hdr(vdev, (struct virtio_scsi_cmd_req *)cmd_pi, sc);
+> @@ -545,7 +545,7 @@ static void virtio_scsi_init_hdr_pi(struct virtio_device *vdev,
+>  static struct virtio_scsi_vq *virtscsi_pick_vq_mq(struct virtio_scsi *vscsi,
+>  						  struct scsi_cmnd *sc)
+>  {
+> -	u32 tag = blk_mq_unique_tag(sc->request);
+> +	u32 tag = blk_mq_unique_tag(scsi_cmd_to_rq(sc));
+>  	u16 hwq = blk_mq_unique_tag_to_hwq(tag);
+>  
+>  	return &vscsi->req_vqs[hwq];
 
