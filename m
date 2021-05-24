@@ -2,74 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B791C47080
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:33:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DE3DC47080
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 02:55:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 410E261028
-	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 01:33:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D95AB61159
+	for <linux-scsi@archiver.kernel.org>; Mon, 24 May 2021 02:55:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232166AbhEXBea (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 23 May 2021 21:34:30 -0400
-Received: from mail-pg1-f175.google.com ([209.85.215.175]:43690 "EHLO
-        mail-pg1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232067AbhEXBe3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 21:34:29 -0400
-Received: by mail-pg1-f175.google.com with SMTP id e22so3174465pgv.10;
-        Sun, 23 May 2021 18:33:01 -0700 (PDT)
+        id S232114AbhEXC4e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 23 May 2021 22:56:34 -0400
+Received: from mail-pg1-f179.google.com ([209.85.215.179]:47072 "EHLO
+        mail-pg1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231833AbhEXC4d (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 May 2021 22:56:33 -0400
+Received: by mail-pg1-f179.google.com with SMTP id m124so19008107pgm.13
+        for <linux-scsi@vger.kernel.org>; Sun, 23 May 2021 19:55:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=GLzR8V6SvDeIsyAstNkq2gTzI23jfFfIEag6VtEV2NE=;
-        b=tPjWM3wJM12ctM2TRAO2AJIzGopgWSHkfhblZR/aXs/uJ6jaKsUaTlGoa7au47mi5Q
-         qA8ys504mFOf1oafWuaXE504ms6YOi6uPghZFSaxtRmCdAbLZmmpX1c7KggiDG+3HPpn
-         ya2VLbLLUGXFa9XsrCw/UUoJYJxjNFjgf6XhErmuhVM0dAadE2rRRAPXAtHHYUJ9iRSu
-         rnn+1snKRXsLj0iiV1Dzcvh2WwaRgZdr+cf7Xh1YqVVEstK5Mv44fuwUa2f2XiTRQIzL
-         96ofhEi0I9Umnignat88YdPku1GZ2YEeo6pF+svggJ5PK8oQVvBqoc0BBuVG0kdb6OSh
-         tX/Q==
-X-Gm-Message-State: AOAM5310DsIoIlmQDeyb7PNvf05nUowH0TvOl91kMLKDMVQiEOgsEnZ1
-        wylXoS0DZIw5dYC9NXW3P6Cs6HHdR5U=
-X-Google-Smtp-Source: ABdhPJwY1rfRhWwwW7EJJpJ4CD3uMjSP1bGZxUrs+ZultUgkkfZg20r8kSEzyejfXEVvGn44tq5V8g==
-X-Received: by 2002:a63:3704:: with SMTP id e4mr10721891pga.125.1621819980580;
-        Sun, 23 May 2021 18:33:00 -0700 (PDT)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id y190sm10168536pgd.24.2021.05.23.18.32.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 23 May 2021 18:33:00 -0700 (PDT)
-Subject: Re: [PATCH v1 3/3] scsi: ufs: Use UPIU query trace in devman_upiu_cmd
-To:     Bean Huo <huobean@gmail.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, tomas.winkler@intel.com, cang@codeaurora.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210523211409.210304-1-huobean@gmail.com>
- <20210523211409.210304-4-huobean@gmail.com>
+        bh=5TPQF4MBdfwBaMFONAQiYSAdxV+sDDTPW1OIRm2DlP4=;
+        b=g9xLWHAg/7pOKnGjasFH4zyVOcBceSr8w4pMRqxY1SAsvSJcqz1AwKYWlMhRY8EeWW
+         Ob79FhG8fu0VLG3t5aOYbAS9iXl3v+KAhFK+Go59xTSu3wWeanws0r1GQf43vkU1mPZM
+         piodkyzMfUuFPHge/caqCOLtjRdWPPgNNjPpC6rCd5PundzjZb/+ne8PVdJsBPlzbS1J
+         58N2mhtP/l78/VeEdTkyomMQFzBlSD+BpX4R2aJ3/bBZZx8OxmYQZDUHsQb/F0XCGCuj
+         /PqIvHbG8hAjLVUqOVvC+VXraymJSmJmpVpfwNYpV2b2swrRMmUEg8ACOImV9Q//F26l
+         DoTg==
+X-Gm-Message-State: AOAM531IQnIjJWubLWG5U99WvRAtWygmb+0zW6xxHMbRiU05FYpKW3yE
+        bFgF5CVOYfBSuFWDF8qhuNcDBltlk08=
+X-Google-Smtp-Source: ABdhPJwftdvglvFatCN9JDZy/0Vs3UOsTdwMTiuatMBh4SJRP7CCOri4i2vx08ghmMSdrnvMEEdisQ==
+X-Received: by 2002:a65:50c5:: with SMTP id s5mr11080341pgp.138.1621824905051;
+        Sun, 23 May 2021 19:55:05 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id g8sm13272926pju.6.2021.05.23.19.55.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 23 May 2021 19:55:04 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <74d9b6e5-489d-9267-1c6f-c59f9164136d@acm.org>
-Date:   Sun, 23 May 2021 18:32:58 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.2
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v3 0/3] Introduce enums for SCSI status codes
+Date:   Sun, 23 May 2021 19:54:54 -0700
+Message-Id: <20210524025457.11299-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <20210523211409.210304-4-huobean@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/23/21 2:14 PM, Bean Huo wrote:
-> +	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
-> +				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+Hi Martin,
 
-Why is there a cast in the above code from a response pointer to a
-request pointer type?
+This patch series introduces enums for the SAM, message, host and driver
+status codes and hence improves static type checking by the compiler.
+Please consider this patch series for kernel v5.14.
 
 Thanks,
 
 Bart.
+
+Changes compared to v2:
+- Changed SAS_STAT_ prefix into SAS_SAM_STAT_.
+
+Changes compared to v1:
+- Modified the comment block at the start of the enum exec_status definition
+  in libsas.h.
+- Changed the __SAM_STAT_ prefix into SAS_STAT_ for the SAM status codes that
+  are also used in the SAS code.
+- Restored the reverse-Christmas tree style in two functions.
+- Renamed enum host_status and driver_status into enum scsi_host_status and
+  scsi_driver_status respectively.
+
+Bart Van Assche (3):
+  libsas: Introduce more SAM status code aliases in enum exec_status
+  Introduce enums for the SAM, message, host and driver status codes
+  Change the type of the second argument of
+    scsi_host_complete_all_commands()
+
+ drivers/scsi/aic94xx/aic94xx_task.c    |  2 +-
+ drivers/scsi/constants.c               |  4 +-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c |  8 +--
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c |  8 +--
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c |  8 +--
+ drivers/scsi/hosts.c                   |  8 ++-
+ drivers/scsi/isci/request.c            | 10 +--
+ drivers/scsi/isci/task.c               |  2 +-
+ drivers/scsi/libsas/sas_ata.c          |  7 +-
+ drivers/scsi/libsas/sas_expander.c     |  2 +-
+ drivers/scsi/libsas/sas_task.c         |  4 +-
+ drivers/scsi/mvsas/mv_sas.c            | 10 +--
+ drivers/scsi/pm8001/pm8001_hwi.c       | 16 ++---
+ drivers/scsi/pm8001/pm8001_sas.c       |  4 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c       | 14 ++--
+ drivers/target/target_core_pscsi.c     |  2 +-
+ include/scsi/libsas.h                  | 12 +++-
+ include/scsi/scsi.h                    | 81 +----------------------
+ include/scsi/scsi_host.h               |  2 +-
+ include/scsi/scsi_proto.h              | 24 +++----
+ include/scsi/scsi_status.h             | 89 ++++++++++++++++++++++++++
+ 21 files changed, 170 insertions(+), 147 deletions(-)
+ create mode 100644 include/scsi/scsi_status.h
+
