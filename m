@@ -2,145 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3DE3C4707F
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:44:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1577BC2B9F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:47:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C234661420
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:44:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E52AB6141C
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:47:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233383AbhEYQqG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 May 2021 12:46:06 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:52520 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233149AbhEYQqF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 May 2021 12:46:05 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1621961075; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
- Subject: Sender; bh=MSK+0MFz2qCFARcKpE7NkQqP5Tr+sTVIlGaMvOiEARk=; b=BELofAnIX/DB0NKEHKVkHk73uXbqcZgNgB/ZcWhES/yfr/n1Rqsbp2rbHPvbApHF2I8jmnXR
- Uu46qEFMWeh9461p5rkWOOfh7Esb+d3BLCiXj0a6rc7J4eQiMaEVmy2Kvhj6OVQ8t/Wnat45
- 3ToJcv7k7VIro3Ux7eGKY2duz40=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-west-2.postgun.com with SMTP id
- 60ad2970c229adfeff48d70c (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 25 May 2021 16:44:32
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7FD60C43143; Tue, 25 May 2021 16:44:32 +0000 (UTC)
-Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S232681AbhEYQtP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 May 2021 12:49:15 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:40094 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232479AbhEYQtP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 May 2021 12:49:15 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1621961264;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=fL6Y/duGHBMJKkmMDJ4jflONRQgZgnAzPjAPflMfB2s=;
+        b=NirqhuDVVDLTpqdbUNHL4TtQ8UcYuD8wcTaOtX0CZxeLb4ir/ucGSE278+bmp/Cbj37WBA
+        bkUiIRMMaM1fl2MAbroxbE8lrDWYo9//TnwbUVpSGlja58E4IZHrd+MAFDhZy+fgWbyOmm
+        1x6uygak2EVcRUXmM/9sEraDQqUrYmQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-248-M1ILaIflOF2vHlFCyOjrRg-1; Tue, 25 May 2021 12:47:42 -0400
+X-MC-Unique: M1ILaIflOF2vHlFCyOjrRg-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 9FD4DC433F1;
-        Tue, 25 May 2021 16:44:30 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 9FD4DC433F1
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
-Subject: Re: [PATCH v4 2/2] scsi: ufs-qcom: enter and exit hibern8 during
- clock scaling
-To:     Lee Jones <lee.jones@linaro.org>
-Cc:     Avri Altman <Avri.Altman@wdc.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "PedroM.Sousa@synopsys.com" <PedroM.Sousa@synopsys.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <186237103353b5a79c3496e619fca894dbc78600.1589997078.git.asutoshd@codeaurora.org>
- <9b67c25eb7c0bf80075b36660aebdb3788207353.1589997078.git.asutoshd@codeaurora.org>
- <SN6PR04MB464071B647084B0EB111992DFCB60@SN6PR04MB4640.namprd04.prod.outlook.com>
- <f9425765-42fb-717b-e20c-fd57e310b882@codeaurora.org>
- <CAF2Aj3gpMhPf8dF7cxcW0AhwGmGtf=LbO6HPB0u3FxudWTBcoQ@mail.gmail.com>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-Message-ID: <daf42576-3b58-1645-c068-115355c0c494@codeaurora.org>
-Date:   Tue, 25 May 2021 09:44:29 -0700
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2B8AA180FD66;
+        Tue, 25 May 2021 16:47:41 +0000 (UTC)
+Received: from localhost (ovpn-115-80.ams2.redhat.com [10.36.115.80])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 449B9421F;
+        Tue, 25 May 2021 16:47:37 +0000 (UTC)
+Date:   Tue, 25 May 2021 17:47:36 +0100
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     Dongli Zhang <dongli.zhang@oracle.com>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        virtualization@lists.linux-foundation.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-block@vger.kernel.org, mst@redhat.com, jasowang@redhat.com,
+        pbonzini@redhat.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, joe.jin@oracle.com,
+        junxiao.bi@oracle.com, srinivas.eeda@oracle.com
+Subject: Re: [RFC] virtio_scsi: to poll and kick the virtqueue in timeout
+ handler
+Message-ID: <YK0qKMF0I8Wm1euN@stefanha-x1.localdomain>
+References: <20210523063843.1177-1-dongli.zhang@oracle.com>
+ <ac161748-15d2-2962-402e-23abca469623@suse.de>
+ <YKupFeOtc6Pr5KS2@stefanha-x1.localdomain>
+ <a0404035-2ab7-6b9c-f393-0bb0417c4b3d@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <CAF2Aj3gpMhPf8dF7cxcW0AhwGmGtf=LbO6HPB0u3FxudWTBcoQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="VNMvGmWXBqxStO+j"
+Content-Disposition: inline
+In-Reply-To: <a0404035-2ab7-6b9c-f393-0bb0417c4b3d@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/25/2021 12:57 AM, Lee Jones wrote:
-> On Wed, 20 May 2020 at 22:59, Asutosh Das (asd) <asutoshd@codeaurora.org 
-> <mailto:asutoshd@codeaurora.org>> wrote:
-> 
->     Hi Avri,
-> 
->     On 5/20/2020 2:33 PM, Avri Altman wrote:
->      > Hi,
->      >
->      >>
->      >>
->      >> Qualcomm controller needs to be in hibern8 before scaling clocks.
->      >> This change puts the controller in hibern8 state before scaling
->      >> and brings it out after scaling of clocks.
->      >>
->      >> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org
->     <mailto:asutoshd@codeaurora.org>>
->      >
->      > I guess that your previous versions are pretty far back - ,
->      > I noticed a comment by Pedro, so you might want to resend this
->     series.
->      >
->     Ok.
-> 
->      > What happens if the pre-change is successful,
->      > but you are not getting to the post change because, e.g.
->     ufshcd_set_clk_freq failed?
->      >
->     I agree. Let me check this.
-> 
->      > Also, this piece of code is ~5 years old, so you might want to
->     elaborate on how come hibernation is now needed.
->      >
->      > Thanks,
->      > Avri
->      >
-> 
->     Thanks for the review. Hibernation was needed since long actually.
->     I guess it was never pushed upstream.
-> 
-> 
-> Good morning Asd,
-> 
-> Any luck with getting this upstream?
-> 
-> Looks like this was the last submission.
-> 
-> Did something change?  Is this no longer required?
-> 
-Hi Lee
-This slipped away. I may not get to this soon.
-I'd prefer to drop it for now and come back to it when I've some time.
 
-Thanks,
--asd
+--VNMvGmWXBqxStO+j
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-> -- 
-> Lee Jones [李琼斯]
-> Linaro Services Senior Technical Lead
-> Linaro.org │ Open source software for ARM SoCs
-> Follow Linaro: Facebook | Twitter | Blog
+On Mon, May 24, 2021 at 11:33:33PM -0700, Dongli Zhang wrote:
+> On 5/24/21 6:24 AM, Stefan Hajnoczi wrote:
+> > On Sun, May 23, 2021 at 09:39:51AM +0200, Hannes Reinecke wrote:
+> >> On 5/23/21 8:38 AM, Dongli Zhang wrote:
+> >>> This RFC is to trigger the discussion about to poll and kick the
+> >>> virtqueue on purpose in virtio-scsi timeout handler.
+> >>>
+> >>> The virtio-scsi relies on the virtio vring shared between VM and host.
+> >>> The VM side produces requests to vring and kicks the virtqueue, while=
+ the
+> >>> host side produces responses to vring and interrupts the VM side.
+> >>>
+> >>> By default the virtio-scsi handler depends on the host timeout handler
+> >>> by BLK_EH_RESET_TIMER to give host a chance to perform EH.
+> >>>
+> >>> However, this is not helpful for the case that the responses are avai=
+lable
+> >>> on vring but the notification from host to VM is lost.
+> >>>
+> >> How can this happen?
+> >> If responses are lost the communication between VM and host is broken,=
+ and
+> >> we should rather reset the virtio rings themselves.
+> >=20
+> > I agree. In principle it's fine to poll the virtqueue at any time, but I
+> > don't understand the failure scenario here. It's not clear to me why the
+> > device-to-driver vq notification could be lost.
+> >=20
+>=20
+> One example is the CPU hotplug issue before the commit bf0beec0607d ("blk=
+-mq:
+> drain I/O when all CPUs in a hctx are offline") was available. The issue =
+is
+> equivalent to loss of interrupt. Without the CPU hotplug fix, while NVMe =
+driver
+> relies on the timeout handler to complete inflight IO requests, the PV
+> virtio-scsi may hang permanently.
+>=20
+> In addition, as the virtio/vhost/QEMU are complex software, we are not ab=
+le to
+> guarantee there is no further lost of interrupt/kick issue in the future.=
+ It is
+> really painful if we encounter such issue in production environment.
 
+Any number of hardware or software bugs might exist that we don't know
+about, yet we don't pre-emptively add workarounds for them because where
+do you draw the line?
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+I checked other SCSI/block drivers and found it's rare to poll in the
+timeout function so there does not seem to be a consensus that it's
+useful to do this.
+
+That said, it's technically fine to do it, the virtqueue APIs are there
+and can be used like this. So if you and others think this is necessary,
+then it's a pretty small change and I'm not against merging a patch like
+this.
+
+Stefan
+
+--VNMvGmWXBqxStO+j
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmCtKigACgkQnKSrs4Gr
+c8jE6gf/SzpIij5k5NFqXRfDYjrAoN/hHDK0f8rALj06t2cmrKq1LugoGygtb4nd
+MmJypVvxZZW037iS8fChHC5kcqvBA9Y/N+0tABVJNT8GHLnvDZI8diTONgXVUCzj
+X/u0+3EjQNz2TX6W9pZbEJmeVv0z7JiWCQKcLf9DYq77Xei8U4U5Xv4k0Nks1b1A
+PFH+j4R42eYdziIwwxCPgAQtlCWlTgWbGO9B14kqeybM7I9pq2Ar+WQXIItptuuA
+9R3RBQ6n1cOqtiOHwOXjz2Y4zSa3o4jrLeV8/u3MEmZAwpc2+1A7QL+fW2uxpWJf
+7geSWXbXMdwb7odJ+yKHBNAMOjZqmA==
+=d024
+-----END PGP SIGNATURE-----
+
+--VNMvGmWXBqxStO+j--
+
