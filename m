@@ -2,66 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11154C47085
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 13:27:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D62B7C2B9F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 14:43:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2A2B6143C
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 13:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B27656142B
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 14:43:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233468AbhEYN3B (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 May 2021 09:29:01 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37540 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233367AbhEYN1g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 May 2021 09:27:36 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1621949165; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        id S234089AbhEYOop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 May 2021 10:44:45 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:26098 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234079AbhEYOon (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 May 2021 10:44:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1621953793;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=+4aBrhqhsJ0cIj4ikBhKVV6Rdd3i26Twb4VIOVQvtmg=;
-        b=swEL0iA0gRihqBQQzsTxXR5fSWR5je8UYHoRPf7rgO424/YqD2yAHE2taIPKJbofZ0l8r2
-        JT4M6BlO2gVqj+1XifNiYArVaPwkZ9oWbGC/SNQ03sRqQFFYsMiH6pIRRYnn215elMlW91
-        OgR3AIbaUpzbf/hJuQA368qJ68KW8Pk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1621949165;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+4aBrhqhsJ0cIj4ikBhKVV6Rdd3i26Twb4VIOVQvtmg=;
-        b=O7vs5QbLcZMSeFLaRR8geVrnEvVwHp7CS3BOVHHU8ZfQ+tr/jOrvit+VW9cmOCpU0gvdoU
-        3TYakJp6JLazIHCg==
-Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 4CC11AB71;
-        Tue, 25 May 2021 13:26:05 +0000 (UTC)
-Date:   Tue, 25 May 2021 15:26:04 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     GR-QLogic-Storage-Upstream@marvell.com,
-        linux-kernel@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
-        Arun Easi <aeasi@marvell.com>
-Subject: Re: [RFC 0/2] Serialize timeout handling and done callback.
-Message-ID: <20210525132604.dpn56mga2otyaxwl@beryllium.lan>
-References: <20210507123103.10265-1-dwagner@suse.de>
+        bh=2eREcQH05HdMm07P16cGEvnLmqZIHH3Z/hvbRfIzcmM=;
+        b=EQAG/Ry/WbhGNsry8FgV6Wk+QSFQnigRinHK3fu+zI7JAUqKarERJbBngsS7dAYKXrWcWz
+        xI3qpOYS5OGfCNUPXMxN2g3tHR+U+WealWB9u2DeKT5KEpAhiOfEcJqYcjbd67YF9Q5Dfa
+        EbZWvakw8OvEvhJbCdh1qidcFL4Upc0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-585-NtxLsyiQOXKCkKQ3yL5EEg-1; Tue, 25 May 2021 10:43:09 -0400
+X-MC-Unique: NtxLsyiQOXKCkKQ3yL5EEg-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C23718049C5;
+        Tue, 25 May 2021 14:43:07 +0000 (UTC)
+Received: from localhost.localdomain (unknown [10.40.192.71])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 0C3105D6AC;
+        Tue, 25 May 2021 14:43:05 +0000 (UTC)
+Subject: Re: [PATCH v6 13/24] mpi3mr: implement scsi error handler hooks
+To:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        linux-scsi@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
+        mpi3mr-linuxdrv.pdl@broadcom.com, sathya.prakash@broadcom.com,
+        hare@suse.de
+References: <20210520152545.2710479-1-kashyap.desai@broadcom.com>
+ <20210520152545.2710479-14-kashyap.desai@broadcom.com>
+From:   Tomas Henzl <thenzl@redhat.com>
+Message-ID: <415d8bcd-71eb-4265-ca51-146a55cfd92d@redhat.com>
+Date:   Tue, 25 May 2021 16:43:05 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210507123103.10265-1-dwagner@suse.de>
+In-Reply-To: <20210520152545.2710479-14-kashyap.desai@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi,
+On 5/20/21 5:25 PM, Kashyap Desai wrote:
+> SCSI EH hook is added.
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+> 
+> Cc: sathya.prakash@broadcom.com
+> Cc: hare@suse.de
+> Cc: thenzl@redhat.com
 
-On Fri, May 07, 2021 at 02:31:00PM +0200, Daniel Wagner wrote:
-> Maybe they make sense to add the driver even if I don't have prove it
-> really address the mentioned bug hence this is marked as RFC.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Any feedback?
+Regards,
+Tomas
 
-Thanks,
-Daniel
