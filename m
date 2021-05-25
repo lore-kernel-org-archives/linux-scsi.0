@@ -5,63 +5,54 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30F22C47084
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 08:26:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 911FCC2B9F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 08:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1280D61400
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 08:26:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 715C9613D5
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 08:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232382AbhEYI1i (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 May 2021 04:27:38 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40296 "EHLO mx2.suse.de"
+        id S231847AbhEYIiL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 May 2021 04:38:11 -0400
+Received: from mx2.suse.de ([195.135.220.15]:51324 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232408AbhEYI1c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 May 2021 04:27:32 -0400
+        id S232213AbhEYIiK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 May 2021 04:38:10 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1621931162; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1621931800; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=bNbAlHo1EQ2ZaT1LVZUFuygvqAEUgqU7/d3OqPfby8s=;
-        b=kNInzt7o92mXwj5mm/tTB3mvp67b2SyAQFwHzwsyiBAknMavEnoBNjJP18tMcVLl0Gt7RG
-        D5ZyM3Da2GmNIuB1EYzTmm6vvqoxRUZJndN2RI9lH7q3tsaVou9Z2xgQNsxc/L3Qgfwxrj
-        qrhtZvNkAdplphtLAO+kullzgQwP1jo=
+        bh=uNeaL6bordaQR6K/RtEmdG9iMJHGmVJ7ceVMANwC5qs=;
+        b=strQxeJNC87oktrtrjM1qa69sbx6n4CyEE6IsBXAYgOPn0Yew5hpa+0qq4wQoWhhfLm0D3
+        IJ4wJY4DrCdRr/mW9PYGLxF1qBREzKZAlhWTUNZgdW/NT/Fq50qpeG5Ji+Yf4XqdcHt8mF
+        R5BhiZ/X73gyxLdt9fqs21oDgSyKzwE=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1621931162;
+        s=susede2_ed25519; t=1621931800;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=bNbAlHo1EQ2ZaT1LVZUFuygvqAEUgqU7/d3OqPfby8s=;
-        b=IbsF7be7IP90OP075dLi1k2Qff7v3ZnjUc8Bk5cR9UH2gwM5flg6iWijH5Hr+QIZDBXb12
-        hrn5ZP2I3ROHxqBw==
+        bh=uNeaL6bordaQR6K/RtEmdG9iMJHGmVJ7ceVMANwC5qs=;
+        b=37is/Gn7NcNAtdFIbjhrUrpQLmIrVuokUnG7kLptFn7IPIkjjdc83mS4Uzq4XIKlbqdCFD
+        yH2P0h3DwX5ZejAg==
 Received: from relay2.suse.de (unknown [195.135.221.27])
-        by mx2.suse.de (Postfix) with ESMTP id 4AE88AE1F;
-        Tue, 25 May 2021 08:26:02 +0000 (UTC)
-Subject: Re: [PATCH 8/8] block: remove bdget_disk
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Song Liu <song@kernel.org>
-Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
-        Minchan Kim <minchan@kernel.org>,
-        Nitin Gupta <ngupta@vflare.org>,
-        Stefan Haberland <sth@linux.ibm.com>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20210525061301.2242282-1-hch@lst.de>
- <20210525061301.2242282-9-hch@lst.de>
+        by mx2.suse.de (Postfix) with ESMTP id 244D0AE92;
+        Tue, 25 May 2021 08:36:40 +0000 (UTC)
+Subject: Re: [PATCH v19 44/45] sg: add blk_poll support
+To:     Douglas Gilbert <dgilbert@interlog.com>, linux-scsi@vger.kernel.org
+Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+References: <20210524010147.94845-1-dgilbert@interlog.com>
+ <20210524010147.94845-45-dgilbert@interlog.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <46da28bf-a531-7640-0b0b-d0645d850827@suse.de>
-Date:   Tue, 25 May 2021 10:26:00 +0200
+Message-ID: <b8cf3717-489e-7f55-8e5d-9b4493e2da40@suse.de>
+Date:   Tue, 25 May 2021 10:36:39 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210525061301.2242282-9-hch@lst.de>
+In-Reply-To: <20210524010147.94845-45-dgilbert@interlog.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -69,16 +60,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/25/21 8:13 AM, Christoph Hellwig wrote:
-> Just opencode the xa_load in the callers, as none of them actually
-> needs a reference to the bdev.
+On 5/24/21 3:01 AM, Douglas Gilbert wrote:
+> The support is added via the new SGV4_FLAG_HIPRI command flag which
+> causes REQ_HIPRI to be set on the request. Before waiting on an
+> inflight request, it is checked to see if it has SGV4_FLAG_HIPRI,
+> and if so blk_poll() is called instead of the wait. In situations
+> where only the file descriptor is known (e.g. sg_poll() and
+> ioctl(SG_GET_NUM_WAITING)) all inflight requests associated with
+> the file descriptor that have SGV4_FLAG_HIPRI set, have blk_poll()
+> called on them.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> It is important to know blk_execute_rq_nowait() has finished before
+> sending blk_poll() on that request. The SG_RS_INFLIGHT state is set
+> just before blk_execute_rq_nowait() is called so a new bit setting
+> SG_FRQ_ISSUED has been added that is set just after that calls
+> returns.
+> 
+> Note that the implementation of blk_poll() calls mq_poll() in the
+> LLD associated with the request. Then for any request found to be
+> ready, blk_poll() invokes the scsi_done() callback. When blk_poll()
+> returns > 0 , sg_rq_end_io() may have been called on the given
+> request. If so the given request will be in await_rcv state.
+> 
+> Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 > ---
->   block/genhd.c           | 35 +++++------------------------------
->   block/partitions/core.c | 25 ++++++++++++-------------
->   include/linux/genhd.h   |  1 -
->   3 files changed, 17 insertions(+), 44 deletions(-)
+>   drivers/scsi/sg.c      | 111 ++++++++++++++++++++++++++++++++++++++---
+>   include/uapi/scsi/sg.h |   1 +
+>   2 files changed, 106 insertions(+), 6 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
