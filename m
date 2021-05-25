@@ -2,82 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D62B7C2B9F8
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 14:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F0B3C2B9F8
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:03:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B27656142B
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 14:43:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F27A66140A
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:03:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234089AbhEYOop (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 May 2021 10:44:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:26098 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234079AbhEYOon (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 May 2021 10:44:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1621953793;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2eREcQH05HdMm07P16cGEvnLmqZIHH3Z/hvbRfIzcmM=;
-        b=EQAG/Ry/WbhGNsry8FgV6Wk+QSFQnigRinHK3fu+zI7JAUqKarERJbBngsS7dAYKXrWcWz
-        xI3qpOYS5OGfCNUPXMxN2g3tHR+U+WealWB9u2DeKT5KEpAhiOfEcJqYcjbd67YF9Q5Dfa
-        EbZWvakw8OvEvhJbCdh1qidcFL4Upc0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-585-NtxLsyiQOXKCkKQ3yL5EEg-1; Tue, 25 May 2021 10:43:09 -0400
-X-MC-Unique: NtxLsyiQOXKCkKQ3yL5EEg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S233872AbhEYQEu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 May 2021 12:04:50 -0400
+Received: from mail-1.ca.inter.net ([208.85.220.69]:41346 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233423AbhEYQEt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2021 12:04:49 -0400
+Received: from localhost (offload-3.ca.inter.net [208.85.220.70])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 281812EA1D1;
+        Tue, 25 May 2021 12:03:18 -0400 (EDT)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by localhost (offload-3.ca.inter.net [208.85.220.70]) (amavisd-new, port 10024)
+        with ESMTP id SgckRW0CEjvH; Tue, 25 May 2021 11:41:16 -0400 (EDT)
+Received: from [192.168.48.23] (host-45-58-219-4.dyn.295.ca [45.58.219.4])
+        (using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C23718049C5;
-        Tue, 25 May 2021 14:43:07 +0000 (UTC)
-Received: from localhost.localdomain (unknown [10.40.192.71])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0C3105D6AC;
-        Tue, 25 May 2021 14:43:05 +0000 (UTC)
-Subject: Re: [PATCH v6 13/24] mpi3mr: implement scsi error handler hooks
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com, sathya.prakash@broadcom.com,
-        hare@suse.de
-References: <20210520152545.2710479-1-kashyap.desai@broadcom.com>
- <20210520152545.2710479-14-kashyap.desai@broadcom.com>
-From:   Tomas Henzl <thenzl@redhat.com>
-Message-ID: <415d8bcd-71eb-4265-ca51-146a55cfd92d@redhat.com>
-Date:   Tue, 25 May 2021 16:43:05 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.1
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 3D11F2EA188;
+        Tue, 25 May 2021 12:03:16 -0400 (EDT)
+Reply-To: dgilbert@interlog.com
+Subject: Re: REQ_HIPRI and SCSI mid-level
+From:   Douglas Gilbert <dgilbert@interlog.com>
+To:     linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Ming Lei <ming.lei@redhat.com>
+References: <8c490b4a-aac0-7451-8755-e05bb3ee3d32@interlog.com>
+Message-ID: <7cd246bd-646c-6833-b3a6-a25222bed647@interlog.com>
+Date:   Tue, 25 May 2021 12:03:16 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210520152545.2710479-14-kashyap.desai@broadcom.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <8c490b4a-aac0-7451-8755-e05bb3ee3d32@interlog.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/20/21 5:25 PM, Kashyap Desai wrote:
-> SCSI EH hook is added.
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+On 2021-05-21 5:56 p.m., Douglas Gilbert wrote:
+> The REQ_HIPRI flag on requests is associated with blk_poll() (aka iopoll)
+> and assumes the user space (or some higher level) will be calling
+> blk_poll() on requests marked with REQ_HIPRI and that will lead to their
+> completion.
 > 
-> Cc: sathya.prakash@broadcom.com
-> Cc: hare@suse.de
-> Cc: thenzl@redhat.com
+> In lk 5.13-rc1 the megaraid and scsi_debug LLDs support blk_poll() [seen
+> by searching for 'mq_poll'] with more to follow, I assume. I have tested
+> blk_poll() on the scsi_debug driver using both fio and the new sg driver.
+> It works well with one caveat: as long as there isn't an error.
+> After fighting with that error processing from the ULD side (i.e. the
+> new sg driver) and the LLD side I am concluding that the glue that
+> holds them together, that is, the mid-level is not as REQ_HIPRI aware
+> as it should be.
+> 
+> Yes REQ_HIPRI is there in scsi_lib.c but it is missing from scsi_error.c
+> How can scsi_error.c re-issue requests _without_ taking into account
+> that the original was issued with REQ_HIPRI ? Well I don't know but I'm
+> pretty sure that is close to the area that I see causing problems
+> (mainly lockups).
+> 
+> As an example the scsi_debug driver has an in-use bitmap that when a new
+> request arrives the code looks for an empty slot. Due to (incorrect)
+> parameter setup that may fail. If the driver returns:
+>      device_qfull_result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
+> then I see lock-ups if the request in question has REQ_HIPRI set.
+> 
+> If that is changed to:
+>      device_qfull_result = (DID_ABORT << 16) | SAM_STAT_TASK_SET_FULL;
+> then my user space test program sees that error and aborts showing the
+> TASK SET FULL SCSI status. That is much better than a lockup ...
+> 
+> Having played around with variants of the above for a few weeks, I'd
+> like to throw this problem into the open :-)
+> 
+> 
+> Suggestion: perhaps the eh could give up immediately on any request
+> with REQ_HIPRI set (i.e. make it a higher level layer's problem).
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Hmmm, no response. Any LLD that decides to support blk_poll() and
+relies on the mid-level eh handling will get burnt by this. And those
+LLDs that do their own eh handling needs to take care not to replicate
+the mid-level's eh handling in this case.
 
-Regards,
-Tomas
+An even simpler approach for the mid-level eh handling to address
+(at least partially) this problem, is to do:
+    rqq->cmd_flags &= ~REQ_HIPRI;
+
+on retried requests. Clearing the REQ_HIPRI flag, if present, should
+make the LLD behave the way the mid-level eh processing expects.
+
+Doug Gilbert
+
 
