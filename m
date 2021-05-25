@@ -2,94 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A374BC2B9F8
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:40:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C719C47084
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:44:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 703AE6140F
-	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:40:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BE9261429
+	for <linux-scsi@archiver.kernel.org>; Tue, 25 May 2021 16:44:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233020AbhEYQmJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 May 2021 12:42:09 -0400
-Received: from mail-pf1-f178.google.com ([209.85.210.178]:37882 "EHLO
-        mail-pf1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230377AbhEYQmI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2021 12:42:08 -0400
-Received: by mail-pf1-f178.google.com with SMTP id q67so6991408pfb.4;
-        Tue, 25 May 2021 09:40:37 -0700 (PDT)
+        id S232935AbhEYQqC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 May 2021 12:46:02 -0400
+Received: from mail-pl1-f169.google.com ([209.85.214.169]:40764 "EHLO
+        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230377AbhEYQp7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2021 12:45:59 -0400
+Received: by mail-pl1-f169.google.com with SMTP id n8so11422963plf.7;
+        Tue, 25 May 2021 09:44:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=6kZjbGQduH1O16Py6H5dph2xaDYJhSr3BHluI3PjlOA=;
-        b=QHcUQCDgZ+6bYQJlLahxOJHBGDJCoNAtj612tuFwLx4CWota6Srq2SLb1UZ24vpIM1
-         hEI2vEuh6LUG/Dg8ge4TtUwaVRtsvpvwDueKC5tXmbGVnPHr2JP7D3OXTTZaBxHVxjl4
-         jKmI1InCtK0oTb8gI4jJujzXawej6qSOT3s1TFaF/rMApG+YGYO6zWx7PKmWUuTyFVeL
-         QnpxKLbsROJWcd8Qc+PxUmEovnkTCQ1hMVYuY6raXGoPuqK5dXnKZhj7wm97oFCiSS4s
-         iFX3me0gRAiHMd19tVGBZm6ByL24/1Ggq84BtST85uJyN1WXOLDThOJFytCzDd7W7cY2
-         7oLQ==
-X-Gm-Message-State: AOAM532yoW0XVUxrmEIK+RD6EWBDrItF5kdXLldTpbmGnmmT5BgCMndJ
-        6DOO8HWNCHWmxWaJHVDwUUs=
-X-Google-Smtp-Source: ABdhPJwUxMVTVripchYVIdxI3dqkr1pmOUf575UZmWTQuIyVLkEdUNT5IcevXy/8DJy9E0iX+RFPzw==
-X-Received: by 2002:a65:6156:: with SMTP id o22mr19679020pgv.71.1621960837224;
-        Tue, 25 May 2021 09:40:37 -0700 (PDT)
+        bh=CaqjTqqmQT7xqCIFzdCE6BMUTxhsquiSo9yLIXmZo+s=;
+        b=Brj0yWnZoRRO3oNCRnbdKC41F3+Bomb4Jf8xohEveftzYfdvqUOyIkIluD86V1Has0
+         d8OoeO1P1eqBrMoWrOmKAjGPX70Ca0kMyA2VTtZy3LeEUlATKnSCce43FltmVe69o1qK
+         NBNW6UiyHBOm1v+GwTQ8MluMiNas+m9wohTUkiXle1o93l0i0TLiP2l0db6yzrFBfyQM
+         fF3vK54t38TWwwgca6iRinK0CyHExsqWz+mIrjSk0lonPmisp6uQ5ueFF6HfQu3ciC9z
+         SoswlDbQcbytqpyh+fjfsXQYQfvPBofrnIH2GbqjW4GL9d3NwDdOxCS11FYOP5au+jwk
+         cs7w==
+X-Gm-Message-State: AOAM533ly/5NnjPPaKt5W0QT/GUejS0yhyS7s8Ju63cpJ/UJ2K5uCK4L
+        Gxesij4/hmvQmyE7JOYR6bUsJS/laDo=
+X-Google-Smtp-Source: ABdhPJxfSsWtNseKWam3FCFToUIuDzEzfbBQikWPI6eHDzWdhKPORb1DFGR0SMWyDQFFLOYVg+ONEg==
+X-Received: by 2002:a17:90a:7601:: with SMTP id s1mr5747947pjk.66.1621961069389;
+        Tue, 25 May 2021 09:44:29 -0700 (PDT)
 Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id i16sm12897203pji.30.2021.05.25.09.40.35
+        by smtp.gmail.com with ESMTPSA id lp13sm2504005pjb.0.2021.05.25.09.44.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 25 May 2021 09:40:36 -0700 (PDT)
-Subject: Re: [PATCH v1 2/3] scsi: ufs: Optimize host lock on transfer requests
- send/compl paths
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, Stanley Chu <stanley.chu@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-References: <1621845419-14194-1-git-send-email-cang@codeaurora.org>
- <1621845419-14194-3-git-send-email-cang@codeaurora.org>
- <41a08b3e-122d-4f1a-abbd-4b5730f880b2@acm.org>
- <0cfbf580e340073ff972be493a59dbe7@codeaurora.org>
+        Tue, 25 May 2021 09:44:28 -0700 (PDT)
+Subject: Re: 2463a604a8: netperf.Throughput_tps 12.8% improvement
+To:     kernel test robot <oliver.sang@intel.com>
+Cc:     0day robot <lkp@intel.com>, John Garry <john.garry@huawei.com>,
+        Hannes Reinecke <hare@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>, lkp@lists.01.org,
+        ying.huang@intel.com, feng.tang@intel.com, zhengjun.xing@intel.com,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20210525064427.GC7744@xsang-OptiPlex-9020>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <c254b5bf-62ea-4edf-f600-db6789c747b1@acm.org>
-Date:   Tue, 25 May 2021 09:40:34 -0700
+Message-ID: <f572997b-8979-26bb-cb3b-9926086c4cc7@acm.org>
+Date:   Tue, 25 May 2021 09:44:26 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.2
 MIME-Version: 1.0
-In-Reply-To: <0cfbf580e340073ff972be493a59dbe7@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20210525064427.GC7744@xsang-OptiPlex-9020>
+Content-Type: text/plain; charset=windows-1252
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/24/21 6:40 PM, Can Guo wrote:
-> Agree with all above, and what you ask is right what we are doing in
-> the 3rd change - get rid of host lock on dispatch and completion
-> paths.
+On 5/24/21 11:44 PM, kernel test robot wrote:
+> FYI, we noticed a 12.8% improvement of netperf.Throughput_tps due to commit:
 > 
-> I agree with using dedicated spin locks for dedicated purposes in
-> UFS driver, e.g., clk gating has its own gating_lock and clk scaling
-> has its own scaling_lock. But this specific series is only for
-> improving performance. We will take your comments into consideration
-> and address it in future.
-Thanks!
+> commit: 2463a604a86728777ce4284214a52de46a808c9e ("[PATCH v3 2/3] Introduce enums for the SAM, message, host and driver status codes")
+> url: https://github.com/0day-ci/linux/commits/Bart-Van-Assche/Introduce-enums-for-SCSI-status-codes/20210524-105751
+> base: https://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git for-next
+> 
+> in testcase: netperf
+> on test machine: 192 threads 4 sockets Intel(R) Xeon(R) Platinum 9242 CPU @ 2.30GHz with 192G memory
+> with following parameters:
+> 
+> 	ip: ipv4
+> 	runtime: 300s
+> 	nr_threads: 16
+> 	cluster: cs-localhost
+> 	test: TCP_CRR
+> 	cpufreq_governor: performance
+> 	ucode: 0x5003006
+> 
+> test-description: Netperf is a benchmark that can be use to measure various aspect of networking performance.
+> test-url: http://www.netperf.org/netperf/
+
+The above email reports a performance improvement for the networking
+subsystem while my patch only affects the SCSI subsystem and should not
+have any performance impact. I'm confused by the above feedback ...
 
 Bart.
