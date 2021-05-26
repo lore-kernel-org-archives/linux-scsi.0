@@ -2,98 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCCA6C4707F
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 May 2021 01:50:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4326C47088
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 May 2021 01:59:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88FA96128B
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 May 2021 01:50:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 802876113B
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 May 2021 01:59:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230350AbhEZBvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 May 2021 21:51:42 -0400
-Received: from mga18.intel.com ([134.134.136.126]:25828 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229978AbhEZBvm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 25 May 2021 21:51:42 -0400
-IronPort-SDR: z8aWKyBeMhBimhOTDgzMzG/TK+95W4ZbMAv3tfrHgG260iCQqrTt++li/OsUmuQXwYIAPqsPgi
- i+D1bK3MvpUQ==
-X-IronPort-AV: E=McAfee;i="6200,9189,9995"; a="189729476"
-X-IronPort-AV: E=Sophos;i="5.82,330,1613462400"; 
-   d="scan'208";a="189729476"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 May 2021 18:50:11 -0700
-IronPort-SDR: nyA9quQLu82kgtjugpD+ctBZqdQgKaIoN/n0LYx7gIQb7mmIxboZ3bzAs7oxGTQJrb/HrjYc/p
- rDAigRoE4M9w==
-X-IronPort-AV: E=Sophos;i="5.82,330,1613462400"; 
-   d="scan'208";a="476697412"
-Received: from xingzhen-mobl.ccr.corp.intel.com (HELO [10.238.5.220]) ([10.238.5.220])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 May 2021 18:50:08 -0700
-Subject: Re: [LKP] Re: 2463a604a8: netperf.Throughput_tps 12.8% improvement
-To:     Bart Van Assche <bvanassche@acm.org>,
-        kernel test robot <oliver.sang@intel.com>
-Cc:     0day robot <lkp@intel.com>, John Garry <john.garry@huawei.com>,
-        Hannes Reinecke <hare@suse.com>,
-        LKML <linux-kernel@vger.kernel.org>, lkp@lists.01.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20210525064427.GC7744@xsang-OptiPlex-9020>
- <f572997b-8979-26bb-cb3b-9926086c4cc7@acm.org>
-From:   Xing Zhengjun <zhengjun.xing@linux.intel.com>
-Message-ID: <0c2d909a-d307-548b-473c-0c85d479573e@linux.intel.com>
-Date:   Wed, 26 May 2021 09:50:05 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.2
+        id S231707AbhEZCBZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 May 2021 22:01:25 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25141 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231911AbhEZCBY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 May 2021 22:01:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1621994393;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=d8inRor7KiBDt1dkNXD0/ZVF1N3dnEi/uAhgNnvWWBU=;
+        b=GcSh8Q8X+KlZdRBtolM18+q8KsxzIfVJsysHZ/QdK7erdPkPhlLJapZAauRtXxeU15ta12
+        ybpY42DxYZr2FMXmcskC5ywif7ahb1PFZn4CBTWWZSIx/YGWDsCZUFyvpQmLK079yrqnPC
+        rbRVA0K1nB1d6793C7wJ4uSjziiHdcA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-413-sTHQWim9MSW21Mg9oM89ww-1; Tue, 25 May 2021 21:59:50 -0400
+X-MC-Unique: sTHQWim9MSW21Mg9oM89ww-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1B751107ACCA;
+        Wed, 26 May 2021 01:59:48 +0000 (UTC)
+Received: from T590 (ovpn-12-85.pek2.redhat.com [10.72.12.85])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 51A9C60CC6;
+        Wed, 26 May 2021 01:59:34 +0000 (UTC)
+Date:   Wed, 26 May 2021 09:59:29 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, Song Liu <song@kernel.org>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Roger Pau =?iso-8859-1?Q?Monn=E9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Nitin Gupta <ngupta@vflare.org>,
+        Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 4/8] block: move adjusting bd_part_count out of
+ __blkdev_get
+Message-ID: <YK2rgY1NXIHVi/Ec@T590>
+References: <20210525061301.2242282-1-hch@lst.de>
+ <20210525061301.2242282-5-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <f572997b-8979-26bb-cb3b-9926086c4cc7@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210525061301.2242282-5-hch@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Tue, May 25, 2021 at 08:12:57AM +0200, Christoph Hellwig wrote:
+> Keep in the callers and thus remove the for_part argument.  This mirrors
+> what is done on the blkdev_get side and slightly simplifies
+> blkdev_get_part as well.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-On 5/26/2021 12:44 AM, Bart Van Assche wrote:
-> On 5/24/21 11:44 PM, kernel test robot wrote:
->> FYI, we noticed a 12.8% improvement of netperf.Throughput_tps due to commit:
->>
->> commit: 2463a604a86728777ce4284214a52de46a808c9e ("[PATCH v3 2/3] Introduce enums for the SAM, message, host and driver status codes")
->> url: https://github.com/0day-ci/linux/commits/Bart-Van-Assche/Introduce-enums-for-SCSI-status-codes/20210524-105751
->> base: https://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git for-next
->>
->> in testcase: netperf
->> on test machine: 192 threads 4 sockets Intel(R) Xeon(R) Platinum 9242 CPU @ 2.30GHz with 192G memory
->> with following parameters:
->>
->> 	ip: ipv4
->> 	runtime: 300s
->> 	nr_threads: 16
->> 	cluster: cs-localhost
->> 	test: TCP_CRR
->> 	cpufreq_governor: performance
->> 	ucode: 0x5003006
->>
->> test-description: Netperf is a benchmark that can be use to measure various aspect of networking performance.
->> test-url: http://www.netperf.org/netperf/
-> The above email reports a performance improvement for the networking
-> subsystem while my patch only affects the SCSI subsystem and should not
-> have any performance impact. I'm confused by the above feedback ...
-
-I suspect it related with cache alignment, 2463a604a8 changes "u8" 
-(size:1) to "enum xxx_status" (size: 4),  the cache alignment is better 
-than before , so cause the improvement.
->
-> Bart.
-> _______________________________________________
-> LKP mailing list -- lkp@lists.01.org
-> To unsubscribe send an email to lkp-leave@lists.01.org
+Reviewed-by: Ming Lei <ming.lei@rehat.com>
 
 -- 
-Zhengjun Xing
+Ming
 
