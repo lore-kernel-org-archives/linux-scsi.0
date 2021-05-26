@@ -2,106 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A098EC47087
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 May 2021 01:39:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCCA6C4707F
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 May 2021 01:50:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7390D6142C
-	for <linux-scsi@archiver.kernel.org>; Wed, 26 May 2021 01:39:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 88FA96128B
+	for <linux-scsi@archiver.kernel.org>; Wed, 26 May 2021 01:50:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231993AbhEZBkb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 25 May 2021 21:40:31 -0400
-Received: from szxga04-in.huawei.com ([45.249.212.190]:6710 "EHLO
-        szxga04-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230306AbhEZBka (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 May 2021 21:40:30 -0400
-Received: from dggems703-chm.china.huawei.com (unknown [172.30.72.60])
-        by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4FqYRS3dgzzpfSC;
-        Wed, 26 May 2021 09:35:16 +0800 (CST)
-Received: from dggeme756-chm.china.huawei.com (10.3.19.102) by
- dggems703-chm.china.huawei.com (10.3.19.180) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Wed, 26 May 2021 09:38:53 +0800
-Received: from localhost.localdomain (10.69.192.58) by
- dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Wed, 26 May 2021 09:38:52 +0800
-From:   chenxiang <chenxiang66@hisilicon.com>
-To:     <axboe@kernel.dk>, <tj@kernel.org>, <martin.petersen@oracle.com>
-CC:     <linux-ide@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linuxarm@openeuler.org>, <linuxarm@huawei.com>,
-        Xiang Chen <chenxiang66@hisilicon.com>
-Subject: [PATCH] libata: configure max sectors properly
-Date:   Wed, 26 May 2021 09:34:22 +0800
-Message-ID: <1621992862-114264-1-git-send-email-chenxiang66@hisilicon.com>
-X-Mailer: git-send-email 2.8.1
+        id S230350AbhEZBvm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 25 May 2021 21:51:42 -0400
+Received: from mga18.intel.com ([134.134.136.126]:25828 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229978AbhEZBvm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 May 2021 21:51:42 -0400
+IronPort-SDR: z8aWKyBeMhBimhOTDgzMzG/TK+95W4ZbMAv3tfrHgG260iCQqrTt++li/OsUmuQXwYIAPqsPgi
+ i+D1bK3MvpUQ==
+X-IronPort-AV: E=McAfee;i="6200,9189,9995"; a="189729476"
+X-IronPort-AV: E=Sophos;i="5.82,330,1613462400"; 
+   d="scan'208";a="189729476"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 May 2021 18:50:11 -0700
+IronPort-SDR: nyA9quQLu82kgtjugpD+ctBZqdQgKaIoN/n0LYx7gIQb7mmIxboZ3bzAs7oxGTQJrb/HrjYc/p
+ rDAigRoE4M9w==
+X-IronPort-AV: E=Sophos;i="5.82,330,1613462400"; 
+   d="scan'208";a="476697412"
+Received: from xingzhen-mobl.ccr.corp.intel.com (HELO [10.238.5.220]) ([10.238.5.220])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 May 2021 18:50:08 -0700
+Subject: Re: [LKP] Re: 2463a604a8: netperf.Throughput_tps 12.8% improvement
+To:     Bart Van Assche <bvanassche@acm.org>,
+        kernel test robot <oliver.sang@intel.com>
+Cc:     0day robot <lkp@intel.com>, John Garry <john.garry@huawei.com>,
+        Hannes Reinecke <hare@suse.com>,
+        LKML <linux-kernel@vger.kernel.org>, lkp@lists.01.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20210525064427.GC7744@xsang-OptiPlex-9020>
+ <f572997b-8979-26bb-cb3b-9926086c4cc7@acm.org>
+From:   Xing Zhengjun <zhengjun.xing@linux.intel.com>
+Message-ID: <0c2d909a-d307-548b-473c-0c85d479573e@linux.intel.com>
+Date:   Wed, 26 May 2021 09:50:05 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.2
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggeme756-chm.china.huawei.com (10.3.19.102)
-X-CFilter-Loop: Reflected
+In-Reply-To: <f572997b-8979-26bb-cb3b-9926086c4cc7@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Max sectors of limitations for scsi host can be set through
-scsi_host_template->max_sectors in scsi driver. But we find that max
-sectors may exceed scsi_host_template->max_sectors for SATA disk even
-if we set it. We find that it may be overwrote in some scsi drivers
-(which calls the callback slave_configure and also calls function
-ata_scsi_dev_config in it). The invoking relationship is as follows:
 
-scsi_probe_and_add_lun
-    ...
-    scsi_alloc_sdev
-	scsi_mq_alloc_queue
-	    ...
-	    __scsi_init_queue
-		blk_queue_max_hw_sectors(q, shost->max_sectors) //max_sectors coming from sht->max_sectors
-	    scsi_change_queue_depth
-	    scsi_sysfs_device_initialize
-	    shost->hostt->slave_alloc()
-		xxx_salve_configure
-		    ...
-		    ata_scsi_dev_config
-			blk_queue_max_hw_sectors(q, dev->max_sectors) //max_sectors is overwrote by dev->max_sectors
+On 5/26/2021 12:44 AM, Bart Van Assche wrote:
+> On 5/24/21 11:44 PM, kernel test robot wrote:
+>> FYI, we noticed a 12.8% improvement of netperf.Throughput_tps due to commit:
+>>
+>> commit: 2463a604a86728777ce4284214a52de46a808c9e ("[PATCH v3 2/3] Introduce enums for the SAM, message, host and driver status codes")
+>> url: https://github.com/0day-ci/linux/commits/Bart-Van-Assche/Introduce-enums-for-SCSI-status-codes/20210524-105751
+>> base: https://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git for-next
+>>
+>> in testcase: netperf
+>> on test machine: 192 threads 4 sockets Intel(R) Xeon(R) Platinum 9242 CPU @ 2.30GHz with 192G memory
+>> with following parameters:
+>>
+>> 	ip: ipv4
+>> 	runtime: 300s
+>> 	nr_threads: 16
+>> 	cluster: cs-localhost
+>> 	test: TCP_CRR
+>> 	cpufreq_governor: performance
+>> 	ucode: 0x5003006
+>>
+>> test-description: Netperf is a benchmark that can be use to measure various aspect of networking performance.
+>> test-url: http://www.netperf.org/netperf/
+> The above email reports a performance improvement for the networking
+> subsystem while my patch only affects the SCSI subsystem and should not
+> have any performance impact. I'm confused by the above feedback ...
 
-To avoid the issue, set q->limits.max_sectors with the minimum value between
-dev->max_sectors and q->limits.max_sectors.
+I suspect it related with cache alignment, 2463a604a8 changes "u8" 
+(size:1) to "enum xxx_status" (size: 4),  the cache alignment is better 
+than before , so cause the improvement.
+>
+> Bart.
+> _______________________________________________
+> LKP mailing list -- lkp@lists.01.org
+> To unsubscribe send an email to lkp-leave@lists.01.org
 
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
----
- drivers/ata/libata-scsi.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 48b8934..fb7b243 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1026,12 +1026,15 @@ EXPORT_SYMBOL_GPL(ata_scsi_dma_need_drain);
- int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
- {
- 	struct request_queue *q = sdev->request_queue;
-+	unsigned int max_sectors;
- 
- 	if (!ata_id_has_unload(dev->id))
- 		dev->flags |= ATA_DFLAG_NO_UNLOAD;
- 
- 	/* configure max sectors */
--	blk_queue_max_hw_sectors(q, dev->max_sectors);
-+	max_sectors = min_t(unsigned int, dev->max_sectors,
-+			q->limits.max_sectors);
-+	blk_queue_max_hw_sectors(q, max_sectors);
- 
- 	if (dev->class == ATA_DEV_ATAPI) {
- 		sdev->sector_size = ATA_SECT_SIZE;
 -- 
-2.8.1
+Zhengjun Xing
 
