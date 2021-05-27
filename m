@@ -2,167 +2,148 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CAABEC47089
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 17:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD465C4707F
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 17:51:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA277610A0
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 17:43:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98B92613BE
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 17:51:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233218AbhE0Ros (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 May 2021 13:44:48 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:36542 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229609AbhE0Roq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2021 13:44:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1622137393; x=1653673393;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=nIkdRTIa/GFQeW8v3pTCfFaAU5hitmN2LLo6VykFkJk=;
-  b=Hq00N7K+qtXQR3X+EyLnYm1Tb0M4L1HH7sYi+fAsLp+aFH5rqXMNvcjM
-   0AoptSUhd94GTIVO8rZVN9Cb7JciLFUDisyCd23+zIkkUp1DX48Es9sMF
-   RoR2c92XYsrWwbpKKi4/cYSG1nesFMRThBzdpijqpTKPozymwVtjMcZq0
-   qyY2kusdGuUS17ckBdiv5A/ImZxOFidtEqecIGmLd84kvkD4YWJwvNjlO
-   dXExu4KNB14g5fTONbh+d2oO6OBZU0VGidq2vPX9V0CHgsabKQnGTnbB/
-   DBJqDdZuJjnCsEm84k+hPTZw6XX8LsTJlFSd1PPfw5npYpmqrGIkWnTBh
-   g==;
-IronPort-SDR: 7yzndZtGIprOtyX1/jw6z6clVrDFeqiKgr390c8NtRvNuRllgQxlxbmDHWvJD7oFyAYkKrDYMO
- QG0lJrwi6mL7/bssP0wMhAsKSID+kJUvltyymd6U/uUIvjIwE6vccE+qRXNGdSsJLIGY1gu9fU
- jcZpAhgBoYBdrcjaffunrBBLQpZVqVc2+eLgSJBsNrQqooIqipEfvn4j6YEDcX+LHMBro8zXf+
- FGjTwhyxGzEmAFdNoODoISWZxEEM30ggs4ptyE91hPO9mlkGSxbMPFH9ID6T59yz2Nsxgsw+FB
- xdM=
-X-IronPort-AV: E=Sophos;i="5.83,228,1616428800"; 
-   d="scan'208";a="168985607"
-Received: from mail-dm6nam12lp2168.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.168])
-  by ob1.hgst.iphmx.com with ESMTP; 28 May 2021 01:43:11 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YVsD8luSZa2OJCNwfTsv+vbkLC2vIVXZ5plIDT6jfGfZZxWOZeNtwHSbBehYj0n94IdjANsOYJex4SFExKTbY79aiF9gjxk6uNqpyduYuai0D5mr5DqNbuvNhFHdTZLJymHIch6q7p0zumzc4dP+HFyJem/H3Gc5fG5O8s6fLqJoA9Z2zLS3C0Bo2nnJtIxFSqA9fP42Uf4bRWViR4oWqtK0Do77JeOLDJQIP3DdAbvrV0m+BgufOyx1tzOtSD4inVlk7IjhbJcr2LOAAva0AmPmfTrXh/8p5Mmap48o4ccsRnlmSTc3JTXDiNo8Xb7qUEHQdhnLxfSMaohSqif+DA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nIkdRTIa/GFQeW8v3pTCfFaAU5hitmN2LLo6VykFkJk=;
- b=KxIUlYhZQ7wNSldTgB7UOYO0gnB+wZNUQDMO1WZzkwEMOgzCbOGg0yJCqmgcXG1fe6IWepNwSHOOYPIQ9jGS0cjJVTEMYo3gP2+CD6+sfZPJal/HAJUCq9enHtemM4J2tPfJy9N0SGAUThBgT16pv3CoyhzNhHekL9+8ogCO+7cybbKMdEAzoGO0KCbonJ4GHtBssIwwxWrpFgHG0PrF6DZSvN8pv7C7tpr/ABJjejIHp28zu/kUo57uZAOq7TMtjq2uLU5lO+0dfq+Md/SG9Hjh9pgQbTbWJtlqQ1szDoqJWJa0UEmkdNJcs1Al1jKSVLG6MgyIa0xGbIaBTqY/sw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nIkdRTIa/GFQeW8v3pTCfFaAU5hitmN2LLo6VykFkJk=;
- b=JF831C9DJpItQ6HNsnDAE0b0nULMQXTlYvZpAXPsr98ySLF3lg4WQXpRRVEPZOQloK9ElPPneIlPfZOCZgN9gRkL9DR6Pa8vqT/zMT6YAdIUJULk24587NsmEqSydAgIcAL96zeFZyP2bU5S3fD/YA8dXkl91MgH56CnRlfeTY0=
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com (2603:10b6:a03:4d::25)
- by BYAPR04MB4134.namprd04.prod.outlook.com (2603:10b6:a02:fa::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4150.23; Thu, 27 May
- 2021 17:43:10 +0000
-Received: from BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::6873:3d64:8f9f:faf0]) by BYAPR04MB4965.namprd04.prod.outlook.com
- ([fe80::6873:3d64:8f9f:faf0%7]) with mapi id 15.20.4150.027; Thu, 27 May 2021
- 17:43:10 +0000
-From:   Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>
-To:     Christoph Hellwig <hch@lst.de>
-CC:     Matthew Wilcox <willy@infradead.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "mb@lightnvm.io" <mb@lightnvm.io>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "clm@fb.com" <clm@fb.com>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "dsterba@suse.com" <dsterba@suse.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>
-Subject: Re: [RFC PATCH 0/8] block: fix bio_add_XXX_page() return type
-Thread-Topic: [RFC PATCH 0/8] block: fix bio_add_XXX_page() return type
-Thread-Index: AQHXTUCZbkdV5W8mbU+6O2TFfy2HFA==
-Date:   Thu, 27 May 2021 17:43:10 +0000
-Message-ID: <BYAPR04MB4965B509EDB1A69B29E9BB6686239@BYAPR04MB4965.namprd04.prod.outlook.com>
-References: <20210520062255.4908-1-chaitanya.kulkarni@wdc.com>
- <YKeZ5dtxt3gsImsd@casper.infradead.org> <20210524073527.GA24302@lst.de>
- <BYAPR04MB49650508F2C5A4EA3B576D5286249@BYAPR04MB4965.namprd04.prod.outlook.com>
- <20210527114347.GA18214@lst.de>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: lst.de; dkim=none (message not signed)
- header.d=none;lst.de; dmarc=none action=none header.from=wdc.com;
-x-originating-ip: [199.255.45.62]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: e2ce1c22-0467-4130-12f7-08d92136e4f9
-x-ms-traffictypediagnostic: BYAPR04MB4134:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB4134934471CAED3E2136862D86239@BYAPR04MB4134.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: kT62lp+D1rZ1GkXPgAfgetygM5c+EJK4kkxwqjK4MiaPfCXrZlT7HsFgflU48iqcp8+8/w0WW+g6q4EzPGQlRXgxay2drePQJe0h5FkY23YHWJOmuPWwoF9pw8tW7wllZcB75Ysj1cz0tABVOk+kDB29QVOE3shQLXyGMm6lXymZDFJxtQYZdmE2O7Ycmxz73G85JJCusVpt1vGTj8+wvoVpS3ZqkpnIuSH7QwDA/I5FNqnP8HTI4kaWU0gMYDzTh39VhLrVjD+xrBH27BKPkhU4fYfvw9C8qa7vVrX+YYAAAgP1TlStBWyD5lYbMtzE68cGTg9P4sQF8xCpG4fRk4iOtAa4LblDBmxWDfCdUQBaQqyYhM+GpS73JEbNmkbbeRuRoRUtHGpG8z+yxRLYsm/Rjz574a4R/dwuf87quDTxc0MPlTQS97wMpkwMQFcbfa49oYRMqDdenJZHrgukneV4ZvW+dl/MrWFy0iemMcLicDqKur/heZFO0QMOxRU6P/Z0EMENsmaFIhmFyr3VuVVUp5Svt9OVfw+Jj2Tkr5qqO46745RVCsfZNgpSEuBGkJg1hPcPX7A9+zloOOlHyhu661aRoZahH38itmPYxJs=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR04MB4965.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(39860400002)(396003)(376002)(136003)(346002)(316002)(6916009)(86362001)(8936002)(478600001)(76116006)(7416002)(9686003)(66946007)(66476007)(33656002)(71200400001)(64756008)(66556008)(8676002)(66446008)(26005)(7696005)(4744005)(4326008)(52536014)(186003)(5660300002)(55016002)(54906003)(6506007)(122000001)(38100700002)(2906002)(53546011);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata: =?us-ascii?Q?A9j9JbnYnw7et0g0ww3feg1j4Fdfimm6PGSqYs5o2tXoX79cl5Oe836bIUw+?=
- =?us-ascii?Q?iPQGWo85Q7LD6z0VXMP3KH5dcWCauBuwZ1EQRt+DrbnsCMiMe7tr4mUoXE8n?=
- =?us-ascii?Q?fT4dIbMKEWt4kHYe6dNYQvq1AKF7U6bxABW/u3grltGFSlmSgF432iPeP27G?=
- =?us-ascii?Q?qmJNirbM1a/Bsi/P8aq77A+EF3w26aFZVw3ep8Zk7SWgUsDIsbgNjQV9mtl5?=
- =?us-ascii?Q?UgSAfThyM7WwnWpqTu9lietM9gb7al4iOvqx617hDlEMCPQJ2fPi4ueDoSTV?=
- =?us-ascii?Q?irVB6A534RZPcvfqYYlVjTmD25C4dtJFTSfLeHHGN6BrHwEsshBbNbF4sYJo?=
- =?us-ascii?Q?LgVIuFZbpGrv3iIr+Lw6gTjMfrsd94Zvuv3Pbe3ruSHUxMPv9HNK3eLboHRm?=
- =?us-ascii?Q?Sa551BcUDCDlsUP/jOSRlY1LlXqCAVp17r3wzwSrU+dlFYFDLFQwemWdwOVR?=
- =?us-ascii?Q?ikJO9/ZEnewJIaUhfBOL2B4r/ll/7y+IrTtSMue8rViz2ZDtZYOSNYOJT+5O?=
- =?us-ascii?Q?R0VQesnlF7TOLpKI69XyMw8DdawZACm62Wj/BN0TOMKdgx9bxIXsjkBc9EUB?=
- =?us-ascii?Q?jDyzfq5Oq9CMDrb5+Wlv3pkkso5ByJ80pU0eCfXb9tkOp7OkI4VVVwhv8VGz?=
- =?us-ascii?Q?jAptEd7at1UJSH17QGItQvREnLmESUnZT1S3+uZNLk9uuFd6XBj+H7vZSDWG?=
- =?us-ascii?Q?ALfObhAoYvOuIVa4mEKpO84NPUW+UjolZy9L4+pwNlVl67e4T185T1NDRnd9?=
- =?us-ascii?Q?W5nMOwM7m+7N0p1Rj3VCRQcoMHtojVye/Wwe7K+M/47MlvwiFmVSpFuywoUe?=
- =?us-ascii?Q?CaAjXP3wg4gBqKTP76iyFJIO7aRKPw/dKs40sJUrfAJnDLa5zWl7niiNV95P?=
- =?us-ascii?Q?GynoHdPFvuCApUSczTSFy53cmgQKTi++Qh1sEq/0ssbfWorksi1QW2BfDX7a?=
- =?us-ascii?Q?YgFIY1k7P2zrA9Iw93so133eUM5OhsHY9w9HoigIlJLx9Ezx7ItJpVAlZuKL?=
- =?us-ascii?Q?FH6ezfAGOML5ZVLxQaa3gBAEYbsP4JxWbykIZuO608VclWZqTDygX6X+GivA?=
- =?us-ascii?Q?jZGiO7eD2AAICyjo43phYtaC2x/FjOQUZsXeRaJxhYwYYKWVv3GjOHGjB/jR?=
- =?us-ascii?Q?PscmsqVOFDzcwqJ9Ap32FWzuqazb4ZKfPGo7cExSAg9OKVYooeZb0doYZAxU?=
- =?us-ascii?Q?SI3N9sd2LN3EA9c5a9fqjWZtZG2mWVcMxBhWIHzWqs9IHIY+v8hhsvU/MP5B?=
- =?us-ascii?Q?9pwQaT5TXfwMpvDLox0f5G+kNimtaJ1MB5DVjqL+IBWqaaU1R+n+Bme45yY9?=
- =?us-ascii?Q?sZNDVPybwBLZgW6zw5PQkAZrQfs2OWL1Mzkpcxxyh+ohZg=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S229791AbhE0RxO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 May 2021 13:53:14 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3096 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234314AbhE0RxL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2021 13:53:11 -0400
+Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FrZnX0wwXz6Q2XZ;
+        Fri, 28 May 2021 01:39:28 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Thu, 27 May 2021 19:51:34 +0200
+Received: from [10.47.88.230] (10.47.88.230) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Thu, 27 May
+ 2021 18:51:33 +0100
+Subject: Re: [PATCH] scsi: core: fix failure handling of
+ scsi_add_host_with_dma
+To:     Ming Lei <ming.lei@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+CC:     Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>
+References: <20210526081055.1932084-1-ming.lei@redhat.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <6e5416aa-be0b-1cb5-918f-5eab93e155cb@huawei.com>
+Date:   Thu, 27 May 2021 18:50:57 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR04MB4965.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e2ce1c22-0467-4130-12f7-08d92136e4f9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 May 2021 17:43:10.1965
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: MTG9tugbl+p51Y21oPYbRGsuSxPIgeARkIgHevTScf9J+mC4jDVQj65Td36cn6DCPdaBLYpCmpUD56SFLaWN8GbIVK2pdMOtik1IxXi3xOA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4134
+In-Reply-To: <20210526081055.1932084-1-ming.lei@redhat.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.88.230]
+X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/27/21 04:43, Christoph Hellwig wrote:=0A=
-> On Wed, May 26, 2021 at 02:55:57AM +0000, Chaitanya Kulkarni wrote:=0A=
->> Is above comment is on this series or on the API present in the folio=0A=
->> patches [1] ?=0A=
-> All of the above.=0A=
->=0A=
->> Since if we change the return type to bool for the functions in=0A=
->> question [2] in this series we also need to modify the callers, I'm not =
-sure=0A=
->> that is worth it though.=0A=
-> Yes, all the caller would need to change as well.=0A=
->=0A=
-=0A=
-I see, thanks, I'll work on V1 with this approach.=0A=
-=0A=
-=0A=
+On 26/05/2021 09:10, Ming Lei wrote:
+> When scsi_add_host_with_dma() return failure, the caller will call
+> scsi_host_put(shost) to release everything allocated for this host
+> instance. So we can't free allocated stuff in scsi_add_host_with_dma(),
+> otherwise double free will be caused.
+> 
+> Strictly speaking, these host resources allocation should have been
+> moved to scsi_host_alloc(), but the allocation may need driver's
+> info which can be built between calling scsi_host_alloc() and
+> scsi_add_host(), so just keep the allocations in
+> scsi_add_host_with_dma().
+> 
+
+Hi Ming,
+
+I did an experiment by making scsi_add_host_with_dma() fail by hacking 
+the code, like:
+
+                 snprintf(shost->work_q_name, sizeof(shost->work_q_name),
+                          "scsi_wq_%d", shost->host_no);
+#if 0
+              shost->work_q = alloc_workqueue("%s",
+                         WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | 
+WQ_UNBOUND,
+                         1, shost->work_q_name);
+#endif
+
+I was finding that the shost gendev kobj kref count was 2 at the "fail" 
+label - I would expect 1.
+
+Did you actually ever see the release function - scsi_host_dev_release() 
+- being called and causing the double free?
+
+Thanks,
+John
+
+> Fixes the problem by relying on host device's release handler to
+> release everything.
+> 
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>   drivers/scsi/hosts.c | 14 ++++++--------
+>   1 file changed, 6 insertions(+), 8 deletions(-)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 624e2582c3df..ef8d2f512fe3 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -281,23 +281,22 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   
+>   		if (!shost->work_q) {
+>   			error = -EINVAL;
+> -			goto out_free_shost_data;
+> +			goto out_del_dev;
+>   		}
+>   	}
+>   
+>   	error = scsi_sysfs_add_host(shost);
+>   	if (error)
+> -		goto out_destroy_host;
+> +		goto out_del_dev;
+>   
+>   	scsi_proc_host_add(shost);
+>   	scsi_autopm_put_host(shost);
+>   	return error;
+>   
+> - out_destroy_host:
+> -	if (shost->work_q)
+> -		destroy_workqueue(shost->work_q);
+> - out_free_shost_data:
+> -	kfree(shost->shost_data);
+> +	/*
+> +	 * any host allocation in this function will be freed in
+> +	 * scsi_host_dev_release, so not free them in the failure path
+> +	 */
+>    out_del_dev:
+>   	device_del(&shost->shost_dev);
+>    out_del_gendev:
+> @@ -307,7 +306,6 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   	pm_runtime_disable(&shost->shost_gendev);
+>   	pm_runtime_set_suspended(&shost->shost_gendev);
+>   	pm_runtime_put_noidle(&shost->shost_gendev);
+> -	scsi_mq_destroy_tags(shost);
+>    fail:
+>   	return error;
+>   }
+> 
+
