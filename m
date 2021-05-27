@@ -2,154 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B4F4C47089
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 07:47:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0F89C47089
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 08:02:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E43376113B
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 07:47:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B07961090
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 08:02:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234647AbhE0HtA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 May 2021 03:49:00 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:54058 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234626AbhE0Hs4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2021 03:48:56 -0400
-X-Greylist: delayed 330 seconds by postgrey-1.27 at vger.kernel.org; Thu, 27 May 2021 03:48:55 EDT
-Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id B39AF218DD;
-        Thu, 27 May 2021 07:41:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1622101311; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3ttE23UWAFNVZ79voJwxcR9BZTIr+cGS5rkk0rMZAv4=;
-        b=G37Rd2Tl9nmQmo/aSnHsfaxoVuJG1gpZDW/+7zIsNaJD73F6mKMwY8BAWS3atZSFjRq9U1
-        q0cqkNLwbfrheSF3otx/7lWDVPtkHs+puLD3YmTciEnKDhgay24iVTl7wdjjIec7JAS0dt
-        ThHonE2EnIdnEWo5Qpy4Va4BiYj4uyY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1622101311;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=3ttE23UWAFNVZ79voJwxcR9BZTIr+cGS5rkk0rMZAv4=;
-        b=0aHPCyCS6WhEkAtclxXHAn4zgLcfsCll1qrl0BdnA057x2WxMF3dvQY6Nfq4MbQnpuLevZ
-        L/2M2m9lLskm1GCQ==
-Received: from director2.suse.de (director2.suse-dmz.suse.de [192.168.254.72])
-        by imap.suse.de (Postfix) with ESMTPSA id 965C711A98;
-        Thu, 27 May 2021 07:41:51 +0000 (UTC)
-To:     Keith Busch <kbusch@kernel.org>,
-        Matthew Wilcox <willy@infradead.org>
-Cc:     lsf-pc@lists.linux-foundation.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-References: <YJlzwcADaxO/JHRE@casper.infradead.org>
- <YJ636tQhuc9X7ZzR@casper.infradead.org>
- <20210526210742.GA3706388@dhcp-10-100-145-180.wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Organization: SUSE Linux GmbH
-Subject: Re: [LSF/MM/BPF TOPIC] Memory folios
-Message-ID: <97698689-0a18-81e0-a0ff-b4f92e56be5b@suse.de>
-Date:   Thu, 27 May 2021 09:41:51 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        id S235100AbhE0IDV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 May 2021 04:03:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44002 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235010AbhE0IDE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2021 04:03:04 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E208C061574;
+        Thu, 27 May 2021 01:01:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=XD30i9lyjqWzjdlV8G2qQlwX5r7P+LScMiZQASEL5jI=; b=hc9X6fCnEnnUozgZoaL8BYMaop
+        0CUh6XoT+5AyeBYoMtYjqhLOpxyfnjPjTuvKmu9ke8k3dbStBkUbGKs1TAQiNXqkPt/0YbYtG372d
+        iQgLQrAlTYFzcsxKbOvgYNoL87l1tuCi5fiArb2bREe9+vh6I+Tg0Z7m8sLE1s2ligQ6P5NJgE0s+
+        1zb4KlKSyvhGPgAEW0WagUPexz+4QuY+KRI7dDnVaH2SmYZ32kCPoOLS7pLiFX4ph8bmB5vefM3D0
+        I7KcOU9iEPkUUZ4w4z/tcaGls5tu4GEFgUpDKHNWH5cJTINdBE/s+7yWsx92SMFHnIblGSl4vpaX5
+        SJnAQ27w==;
+Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
+        id 1lmAwD-005JIL-MT; Thu, 27 May 2021 08:00:23 +0000
+Date:   Thu, 27 May 2021 09:00:17 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     jongmin jeong <jjmin.jeong@samsung.com>
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, cang@codeaurora.org,
+        beanhuo@micron.com, adrian.hunter@intel.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/3] scsi: ufs: add quirk to handle broken UIC command
+Message-ID: <YK9RkXoLsUT38cTP@infradead.org>
+References: <20210527030901.88403-1-jjmin.jeong@samsung.com>
+ <CGME20210527031219epcas2p313fcf248833cf14ec9a164dd91a1ca13@epcas2p3.samsung.com>
+ <20210527030901.88403-2-jjmin.jeong@samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <20210526210742.GA3706388@dhcp-10-100-145-180.wdc.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210527030901.88403-2-jjmin.jeong@samsung.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/26/21 11:07 PM, Keith Busch wrote:
-> On Fri, May 14, 2021 at 06:48:26PM +0100, Matthew Wilcox wrote:
->> On Mon, May 10, 2021 at 06:56:17PM +0100, Matthew Wilcox wrote:
->>> I don't know exactly how much will be left to discuss about supporting
->>> larger memory allocation units in the page cache by December.  In my
->>> ideal world, all the patches I've submitted so far are accepted, I
->>> persuade every filesystem maintainer to convert their own filesystem
->>> and struct page is nothing but a bad memory by December.  In reality,
->>> I'm just not that persuasive.
->>>
->>> So, probably some kind of discussion will be worthwhile about
->>> converting the remaining filesystems to use folios, when it's worth
->>> having filesystems opt-in to multi-page folios, what we can do about
->>> buffer-head based filesystems, and so on.
->>>
->>> Hopefully we aren't still discussing whether folios are a good idea
->>> or not by then.
->>
->> I got an email from Hannes today asking about memory folios as they
->> pertain to the block layer, and I thought this would be a good chance
->> to talk about them.  If you're not familiar with the term "folio",
->> https://lore.kernel.org/lkml/20210505150628.111735-10-willy@infradead.org/
->> is not a bad introduction.
->>
->> Thanks to the work done by Ming Lei in 2017, the block layer already
->> supports multipage bvecs, so to a first order of approximation, I don't
->> need anything from the block layer on down through the various storage
->> layers.  Which is why I haven't been talking to anyone in storage!
->>
->> It might change (slightly) the contents of bios.  For example,
->> bvec[n]->bv_offset might now be larger than PAGE_SIZE.  Drivers should
->> handle this OK, but probably haven't been audited to make sure they do.
->> Mostly, it's simply that drivers will now see fewer, larger, segments
->> in their bios.  Once a filesystem supports multipage folios, we will
->> allocate order-N pages as part of readahead (and sufficiently large
->> writes).  Dirtiness is tracked on a per-folio basis (not per page),
->> so folios take trips around the LRU as a single unit and finally make
->> it to being written back as a single unit.
->>
->> Drivers still need to cope with sub-folio-sized reads and writes.
->> O_DIRECT still exists and (eg) doing a sub-page, block-aligned write
->> will not necessarily cause readaround to happen.  Filesystems may read
->> and write their own metadata at whatever granularity and alignment they
->> see fit.  But the vast majority of pagecache I/O will be folio-sized
->> and folio-aligned.
->>
->> I do have two small patches which make it easier for the one
->> filesystem that I've converted so far (iomap/xfs) to add folios to bios
->> and get folios back out of bios:
->>
->> https://lore.kernel.org/lkml/20210505150628.111735-72-willy@infradead.org/
->> https://lore.kernel.org/lkml/20210505150628.111735-73-willy@infradead.org/
->>
->> as well as a third patch that estimates how large a bio to allocate,
->> given the current folio that it's working on:
->> https://git.infradead.org/users/willy/pagecache.git/commitdiff/89541b126a59dc7319ad618767e2d880fcadd6c2
->>
->> It would be possible to make other changes in future.  For example, if
->> we decide it'd be better, we could change bvecs from being (page, offset,
->> length) to (folio, offset, length).  I don't know that it's worth doing;
->> it would need to be evaluated on its merits.  Personally, I'd rather
->> see us move to a (phys_addr, length) pair, but I'm a little busy at the
->> moment.
->>
->> Hannes has some fun ideas about using the folio work to support larger
->> sector sizes, and I think they're doable.
-> 
-> I'm also interested in this, and was looking into the exact same thing
-> recently. Some of the very high capacity SSDs that can really benefit
-> from better large sector support. If this is a topic for the conference,
-> I would like to attend this session.
-> 
-And, of course, so would I :-)
+On Thu, May 27, 2021 at 12:08:59PM +0900, jongmin jeong wrote:
+> samsung ExynosAuto SoC has two types of host controller interface to
+> support the virtualization of UFS Device.
+> One is the physical host(PH) that the same as conventaional UFSHCI,
+> and the other is the virtual host(VH) that support data transfer function only.
 
-Cheers,
+You forgot to include the hunk that actually sets the quirk.
 
-Hannes
--- 
-Dr. Hannes Reinecke		        Kernel Storage Architect
-hare@suse.de			               +49 911 74053 688
-SUSE Software Solutions Germany GmbH, 90409 Nürnberg
-GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
+Also please work on the commit log formatting.
+
+> Change-Id: Ie528726b29bcb643149440bf1c90eaa5995c5ac1
+
+This kind of crap has no business in a commit log.
