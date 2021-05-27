@@ -2,68 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0F89C47089
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 08:02:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78285C4707F
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 08:02:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B07961090
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 08:02:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59A7C61090
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 08:02:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235100AbhE0IDV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 27 May 2021 04:03:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44002 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235010AbhE0IDE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2021 04:03:04 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E208C061574;
-        Thu, 27 May 2021 01:01:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=XD30i9lyjqWzjdlV8G2qQlwX5r7P+LScMiZQASEL5jI=; b=hc9X6fCnEnnUozgZoaL8BYMaop
-        0CUh6XoT+5AyeBYoMtYjqhLOpxyfnjPjTuvKmu9ke8k3dbStBkUbGKs1TAQiNXqkPt/0YbYtG372d
-        iQgLQrAlTYFzcsxKbOvgYNoL87l1tuCi5fiArb2bREe9+vh6I+Tg0Z7m8sLE1s2ligQ6P5NJgE0s+
-        1zb4KlKSyvhGPgAEW0WagUPexz+4QuY+KRI7dDnVaH2SmYZ32kCPoOLS7pLiFX4ph8bmB5vefM3D0
-        I7KcOU9iEPkUUZ4w4z/tcaGls5tu4GEFgUpDKHNWH5cJTINdBE/s+7yWsx92SMFHnIblGSl4vpaX5
-        SJnAQ27w==;
-Received: from hch by casper.infradead.org with local (Exim 4.94 #2 (Red Hat Linux))
-        id 1lmAwD-005JIL-MT; Thu, 27 May 2021 08:00:23 +0000
-Date:   Thu, 27 May 2021 09:00:17 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     jongmin jeong <jjmin.jeong@samsung.com>
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, cang@codeaurora.org,
-        beanhuo@micron.com, adrian.hunter@intel.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] scsi: ufs: add quirk to handle broken UIC command
-Message-ID: <YK9RkXoLsUT38cTP@infradead.org>
-References: <20210527030901.88403-1-jjmin.jeong@samsung.com>
- <CGME20210527031219epcas2p313fcf248833cf14ec9a164dd91a1ca13@epcas2p3.samsung.com>
- <20210527030901.88403-2-jjmin.jeong@samsung.com>
+        id S235186AbhE0IDe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 27 May 2021 04:03:34 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:54142 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232240AbhE0IDD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 May 2021 04:03:03 -0400
+Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 71FAA218DD;
+        Thu, 27 May 2021 08:01:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1622102471; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=XiaoSC6yYiEgHrMWEHB8sKET+jJd2RbBFq8b0Rhw20A=;
+        b=fZP/BjUp3zio0QQ5e/hsVy1rIPFCbD5tneyyzVMWd5dsLDyQOCQ7hFDJl3kdS2HS3KfuoL
+        +4eenJEi/A4OkIcUOHO+sqbI5EDgcwZ3x8M2NLalSCgEMMfsNZoQXlzacVDgwMwcASVhKo
+        2HFA11aeee8Lmnj/5i6pD1tfopqkbLg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1622102471;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=XiaoSC6yYiEgHrMWEHB8sKET+jJd2RbBFq8b0Rhw20A=;
+        b=AVN0AoaaVsTMciS7K2HV1IX6rYmzxRy0vT8f61PLQ10IVXzAS9OtzUhkfX6LFG9l0/S9sj
+        9Km1W6lx4RXTedAg==
+Received: from director2.suse.de (director2.suse-dmz.suse.de [192.168.254.72])
+        by imap.suse.de (Postfix) with ESMTPSA id 62FA511CD8;
+        Thu, 27 May 2021 08:01:11 +0000 (UTC)
+To:     "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Linux NVMe Mailinglist <linux-nvme@lists.infradead.org>
+From:   Hannes Reinecke <hare@suse.de>
+Organization: SUSE Linux GmbH
+Subject: [LSF/MM/BPF TOPIC] block namespaces
+Message-ID: <a189ec50-4c11-9ee9-0b9e-b492507adc1e@suse.de>
+Date:   Thu, 27 May 2021 10:01:11 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210527030901.88403-2-jjmin.jeong@samsung.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, May 27, 2021 at 12:08:59PM +0900, jongmin jeong wrote:
-> samsung ExynosAuto SoC has two types of host controller interface to
-> support the virtualization of UFS Device.
-> One is the physical host(PH) that the same as conventaional UFSHCI,
-> and the other is the virtual host(VH) that support data transfer function only.
+Hi all,
 
-You forgot to include the hunk that actually sets the quirk.
+I guess it's time to tick off yet another item on my long-term to-do list:
 
-Also please work on the commit log formatting.
+Block namespaces
+----------------
 
-> Change-Id: Ie528726b29bcb643149440bf1c90eaa5995c5ac1
+Idea is similar to what network already does: allowing each user
+namespace to have a different 'view' on the existing block devices.
+EG if the admin creates a ramdisk in one namespace this device should
+not be visible to other namespaces.
+But for me the most important use-case would be qemu; currently the
+devices need to be set up in the host, even though the host has no
+business touching it as they really belong to the qemu instance. This is
+causing quite some irritation eg when this device has LVM or MD metadata
+and udev is trying to activate it on the host.
 
-This kind of crap has no business in a commit log.
+Overall plan is to restrict views of '/dev', '/sys/dev/block' and
+'/sys/block' to only present the devices 'visible' for this namespace.
+Initially the drivers would keep their global enumeration, but plan is
+to make the drivers namespace-aware, too, such that each namespace could
+have its own driver-specific device enumeration.
+
+Goal of this topic is to get a consensus on whether block namespaces are
+a feature which would find interest, and also to discuss some design
+details here:
+- Only in certain cases can a namespace be assigned (eg by calling
+'modprobe', starting iscsiadm, or calling nvme-cli); how do we handle
+devices for which no namespace can be identified?
+- Shall we allow for different device enumeration per namespace?
+- Into which level should we go with hiding sysfs structures?
+  Is blanking out the higher-level interfaces in /dev and /sys/block
+  enough?
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		        Kernel Storage Architect
+hare@suse.de			               +49 911 74053 688
+SUSE Software Solutions Germany GmbH, 90409 Nürnberg
+GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
