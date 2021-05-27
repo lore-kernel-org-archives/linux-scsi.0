@@ -2,171 +2,183 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E46DDC47089
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 02:40:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D2C0C4707F
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 03:12:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C68B4613BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 02:40:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60631613D4
+	for <linux-scsi@archiver.kernel.org>; Thu, 27 May 2021 03:12:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233226AbhE0Cm1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 26 May 2021 22:42:27 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:39070 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232673AbhE0Cm0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 May 2021 22:42:26 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14R2YB94024283;
-        Thu, 27 May 2021 02:40:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2020-01-29;
- bh=MUFz+CMpOKzQGkKnSiJgv5LKeuEzVhM5q2sgVeCHfmA=;
- b=aR3HabEOIykiqXsLFXis700EEvyFAAv1sP3znMDSkHBxyvkehq1x0bBABBA+OMAFWXNP
- ub/yOWdl/fUywmiQUmmexzAOAarz8c59FC5NAbGjicu4DV32PdLsSC/PXx1Vk+ceHF8V
- 7+xaFpjhjJfETy51RID2Y3t/9/uYrJhiJ9/b9qIetJHBGJHa7SIv/Kj50sG61dXIQstp
- dZZRklM5H4Oiy+n40mCe7kE6LunS13BT0jBtQUsge6q+tbwX+PcKA8hHb6bj1fxC+kTg
- Xp50YkvkPEYFgzlos5Z1P89qTP1+RnsQa7KUw1vQFsgnYxwnwCfGNtppoJyCTSxYNtx7 XQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 38q3q928ds-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 May 2021 02:40:32 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 14R2Z1NY095436;
-        Thu, 27 May 2021 02:40:31 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2174.outbound.protection.outlook.com [104.47.55.174])
-        by aserp3020.oracle.com with ESMTP id 38rehesbd5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 27 May 2021 02:40:31 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=Oso8qMIUjjI4TMz6xaYPcJb9vYzoLdZB6QiQ+Nx07Qu0Ro81Us3B9n5CTpaqt38ZTYyMrFsdoKmNknTIepjJLDzWDaf12CqWUPw2zmchlPh7Ld4m195ZpRRoa81ud5IeN13oJcVXEb4UCFopU23F6Kpz0QSwBQI07GFy7ca7LLrOOsYrGbxxTf2q7w0GuKy1mEyOFcNUuIpFO8A/mwcCeFBle2Wb16+AtxVHf/2d+vjJoxkIQkxZxoMPhXxGbJc+HClRB1AqcmrPsMXK3KXBtejd+yAtEnUMwVXZiHzW5adFV/bDkusCZGjjfHJM3W4CFB+lKFauUGN5kRYLhc6Edg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MUFz+CMpOKzQGkKnSiJgv5LKeuEzVhM5q2sgVeCHfmA=;
- b=eZYwphKbMZmBIMC/AXabM/JUekTW/85ghZHRQK5m/huyRrwfZosMqYpEEDvymidyu34NHGp5DWnPv2CWcLB8uKZlOrzcEW/Q7JujMKAmCRqlMQY+OsWs3khFfHiKC8TvLwMRYIjxTw9vTHPgx2JFBfkksUZ6iRT3sC6UIA6AN9mMIMtkWK8bnKlInDEQAJ02OvINq3J3zNjHFNmMCk4Fr8BnQlIdiVU5mDclwvN7VbbNO/Vw40IaCes6da46ieUPQCnWAUZb88kfz+g6JEg/yZU4DUvft/uFMIWIq8Go08pee3v8eRdLswR7/+3vGi3MRHboph8v7ZkK2+muxv30Vg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MUFz+CMpOKzQGkKnSiJgv5LKeuEzVhM5q2sgVeCHfmA=;
- b=PmoWrjilke8oUxeTc8HRiLHx6Ai77mmDhR0W1pOLA1VvP9QKGekIalrBbeqiCg769OOgtsucu2X18xZtaimxIuFDRCXSS8w32ESrP7e5ZdEZoYaHgCTXBUbqatIY6Y01hmNgG4brGcqs26clmhJ1xF2kXcbUTUi22mJ/bRP7HzQ=
-Authentication-Results: huawei.com; dkim=none (message not signed)
- header.d=none;huawei.com; dmarc=none action=none header.from=oracle.com;
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4438.namprd10.prod.outlook.com (2603:10b6:510:36::20) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4173.20; Thu, 27 May
- 2021 02:40:30 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::4c61:9532:4af0:8796]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::4c61:9532:4af0:8796%7]) with mapi id 15.20.4150.027; Thu, 27 May 2021
- 02:40:30 +0000
-To:     "Leizhen (ThunderTown)" <thunder.leizhen@huawei.com>
-Cc:     Ulrich Windl <Ulrich.Windl@rz.uni-regensburg.de>,
-        <open-iscsi@googlegroups.com>, <dgilbert@interlog.com>,
-        <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>
-Subject: Re: Aw: [EXT] Re: [PATCH 1/1] scsi: Fix spelling mistakes in header
- files
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1y2c0vs0t.fsf@ca-mkp.ca.oracle.com>
-References: <20210517095945.7363-1-thunder.leizhen@huawei.com>
-        <162200196243.11962.5629932935575912565.b4-ty@oracle.com>
-        <60AE2272020000A100041478@gwsmtp.uni-regensburg.de>
-        <215847b9-f64d-8cb2-e53b-13123770ca1a@huawei.com>
-Date:   Wed, 26 May 2021 22:40:26 -0400
-In-Reply-To: <215847b9-f64d-8cb2-e53b-13123770ca1a@huawei.com> (Leizhen's
-        message of "Thu, 27 May 2021 10:11:41 +0800")
-Content-Type: text/plain
-X-Originating-IP: [138.3.200.58]
-X-ClientProxiedBy: SN4PR0501CA0076.namprd05.prod.outlook.com
- (2603:10b6:803:22::14) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        id S234500AbhE0DN5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 26 May 2021 23:13:57 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:29256 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234382AbhE0DN4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 May 2021 23:13:56 -0400
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210527031222epoutp04e5c2831b9fbfb5a71190c4d05676441b~Czde36AL90906709067epoutp045
+        for <linux-scsi@vger.kernel.org>; Thu, 27 May 2021 03:12:22 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210527031222epoutp04e5c2831b9fbfb5a71190c4d05676441b~Czde36AL90906709067epoutp045
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1622085142;
+        bh=f37EYTIi3mXSrhIWvEOJvyWGH29au5/mg/qphK5+clw=;
+        h=From:To:Cc:Subject:Date:References:From;
+        b=kIdwI50VoWQfBYrIzH3o6hochu7wHO+c+V32GMBRPm0pVNSvOaOi26y176CaGkHVe
+         QPmhNzEAOTbnk0OGeIYPNK8X1JaSzB8cL4YeadtDt+aqCUKIWnOakhxeSt2ZJQAe2Z
+         vpE3dMHsqikv8Ui9NT8iccmJd7rNtFHLCr7xTS9w=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTP id
+        20210527031221epcas2p29a6a54129cb58a2244f099bf6066cea6~CzdeM8AYv2760027600epcas2p2O;
+        Thu, 27 May 2021 03:12:21 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.187]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4FrCXz47B4z4x9Q3; Thu, 27 May
+        2021 03:12:19 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        AE.CC.09604.11E0FA06; Thu, 27 May 2021 12:12:17 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20210527031217epcas2p44b9d999edcc55b345dfd0749acefeaec~CzdajC8Xk0835408354epcas2p40;
+        Thu, 27 May 2021 03:12:17 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20210527031217epsmtrp1152503d270cc1830080b6c7179960e3a~CzdaiBbl70371003710epsmtrp1Q;
+        Thu, 27 May 2021 03:12:17 +0000 (GMT)
+X-AuditID: b6c32a45-dc9ff70000002584-cd-60af0e11cee9
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        50.B2.08163.11E0FA06; Thu, 27 May 2021 12:12:17 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.229.9.60]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20210527031217epsmtip22a13cd0e5dd19317ca6ce8846d49991d~CzdaWk3PN2849528495epsmtip2t;
+        Thu, 27 May 2021 03:12:17 +0000 (GMT)
+From:   jongmin jeong <jjmin.jeong@samsung.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, cang@codeaurora.org,
+        beanhuo@micron.com, adrian.hunter@intel.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        jjmin.jeong@samsung.com
+Subject: [PATCH 0/3] Add quirk to support exynos ufshci
+Date:   Thu, 27 May 2021 12:08:58 +0900
+Message-Id: <20210527030901.88403-1-jjmin.jeong@samsung.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SN4PR0501CA0076.namprd05.prod.outlook.com (2603:10b6:803:22::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4173.12 via Frontend Transport; Thu, 27 May 2021 02:40:29 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: a92226e6-f336-4af4-9c5f-08d920b8cae2
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4438:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <PH0PR10MB4438CA77041EA62D067C06888E239@PH0PR10MB4438.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: jYQeTUGhQPfqS7npIirN1Ah7CtV6of3SoxG9inZdOjKr/7mLLaKb2NTXaZH5/TtckI5Hanfcl3OiIM4j+ez7F/s3eSA6UiQKaMUmQ2xUeGCBsCpyPmfCiVAQvYN9q1yClfAJZANKUK/SzIwjyuVSxODBx9tnStl+DZHgkiprVE5H9ldRm2dV7kc8qnD4Gv2JBis6DnE0HGnZdxHuIYwTm9EO13P3Zllx/TWdS8p7fIpMdibQEv8+GtERyoWIzX7jTGBqxBnRlvyBS2BqH+fYzLYVmlbRDKpADBYSSfU1xYoDenIFpXyKL81spwNnoaJBLhD48bGVDiuPNdtwaGnMhfenlsEImP+m+MCG9KtKcABWL2IE9m72Pm/+wQJgBQ0HouPpwhXypU/zgev2Qb/KxF6axHxhG+OfCfHjLQ+Br6Pa40H2AbctjtZnuB7sG0O2fmjYVW/nfs0fyp3g4NNhFtItETbxalm4esr/jBvCyN1ORE+DeyhIDQ9iC0hetn7kyn8HhtMvArBg2Df5LfLiDqIXUPrswgSorH8OIcZ43WWFzwuMwSUckdPfU0onGRq4fbgzGwHHrN+78plnh8mVXNYqZQ7nIpLt47a9IBwJ9lP3cfTwaLPDmTCREpGejkM4tdHqXXNcCCLRndCED5zG92Cmtf9Uu8+czxa5r0zTofs=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(396003)(39860400002)(376002)(136003)(366004)(956004)(52116002)(86362001)(6666004)(66946007)(66556008)(4744005)(16526019)(36916002)(186003)(7696005)(54906003)(5660300002)(38350700002)(478600001)(6916009)(2906002)(55016002)(8936002)(8676002)(4326008)(316002)(26005)(38100700002)(83380400001)(66476007);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?us-ascii?Q?IVOQQXvwT3djKjV/aXQNyw2dplDzGavMdoZ+/xMu6CADqwg81Pvp6jsquO+v?=
- =?us-ascii?Q?N+pjn4xlnVHFDE1t2sDc/2YJ0CbtIZJKBYS2EGTBwtOCbAicwMYB7aOYJ/fQ?=
- =?us-ascii?Q?g/4T7n/eG79U/Omom6rIwbfQpjXvOCUqYnr+ZQmE00Q72FUYwi6tShxDHbBF?=
- =?us-ascii?Q?S5qGGXHQLJKSKRD+6wfw1fB5Cdxvka01cD0IzXuJ08dEKnegXM5Q3fRL8gia?=
- =?us-ascii?Q?YaFQI6CmIFEqBo4kyaAUBssTzuBrWOMN+MONZNnUXZkCJvxSWQaCq5FthYNH?=
- =?us-ascii?Q?HGypfqgCBpTirsRO4nY1ncgzZp8h+Z63w21QQnYygX/CVMdqzgqh2oskSOC7?=
- =?us-ascii?Q?UqfUWQEWoVDl9tIJ8j2YIsbQEk8D3EKArGNFyD3wdM5kC/m5vi7N+vFdICTj?=
- =?us-ascii?Q?oWOH+8G1Dx1eJ61bbG1D8xdAB1FgQDZLTqV/wXPfmgbetyex+COIl7kO21jA?=
- =?us-ascii?Q?ByOMdEvcoNO48mepLe3WqpTzY5WAQvrOc9SbyNi6BHjblpHBWCGnF5sCL36J?=
- =?us-ascii?Q?KJOvgNeI65SRZZaVFmD19ytWB6WgnyUzWQma7Nc1MQO2uDhNuVm7rqRtUwzV?=
- =?us-ascii?Q?caXnqwhXV21Qk0gl3rTZW371C6XTZzRtU2vthHDPEUbRlHbbwovDK9rS9NgI?=
- =?us-ascii?Q?QLNx9CkNyWgpCvbN8ePZA+t1r/dBH1SFSHol/ulBZmduEbWsBEoRBj07zFq0?=
- =?us-ascii?Q?wo+c+p8nX46EVqVnR2vxc6slc6Q5T3NaM7Hxs6oJs9AMdpn5+cM8azHvEfB9?=
- =?us-ascii?Q?sH8FK7XQf5X6TgyDMmPx5P/oSQpmwlQs0P5WqcXUyxC3a0WniyuvwDUfih5Z?=
- =?us-ascii?Q?0ijSKM+P3N3Bh6dYvCzkqHrorA/G6dhbmMe4nbQ7sTe39cxPtoZxgM/OiOoS?=
- =?us-ascii?Q?867xFPv6RbsNPE7DFP7Tx4PnWU8RTDDccklcw8OTxdVkQSg8SD/+jGLN+HfZ?=
- =?us-ascii?Q?0AnHUGfn4pDwcRy4aPabRiU5U4EVqRuGY/d010FV4TQf1pt5v8iKmdc739RN?=
- =?us-ascii?Q?omh2ccUq/r609B73r96lkQfY+mVIvUL4PMOcsUcFNCEIUW9YrmksAG8AT6tf?=
- =?us-ascii?Q?OCaFKnJmDkxIAqu/iX88TGXqRcMpLVFxLyVEP69zr047PKjlG8C2hjRiaMib?=
- =?us-ascii?Q?ZRlYuGT9dDZVoBfpXRwOj7nGwCKgvdjSfMo2/xooxYMqd8DLTttH+0bcnFoG?=
- =?us-ascii?Q?Os8KAJyg+iAqJGGt/6M/jQqii4Brq7JABMkm2KtbGxnsqzC9+KOQSdDMSX/S?=
- =?us-ascii?Q?2fxQcn5xHgp2By3SdH1s6P3Z6eihyFckJytlJAUldKEpF4gWYKxDmggrUFnL?=
- =?us-ascii?Q?cvJIsojPZJ/N96Bq0LQWfT9d?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: a92226e6-f336-4af4-9c5f-08d920b8cae2
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 May 2021 02:40:30.0451
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qhaMvoOzwDxAybpfeeI6nZVOlXj86jkB+UrgB69Iy/CO8i+aDI/4BxcqLlAv0+qM03NFRiRjXx1/MJdbi9bulIwXkmLzYvVu6AEZQCt6PVo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4438
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9996 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 spamscore=0 adultscore=0
- mlxscore=0 mlxlogscore=999 malwarescore=0 phishscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2105270015
-X-Proofpoint-GUID: r_XpG9CZD3Jehwz22xpW16ilfmIeSUww
-X-Proofpoint-ORIG-GUID: r_XpG9CZD3Jehwz22xpW16ilfmIeSUww
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=9996 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxscore=0 clxscore=1011
- malwarescore=0 bulkscore=0 impostorscore=0 phishscore=0 spamscore=0
- adultscore=0 priorityscore=1501 mlxlogscore=999 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2105270015
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprHJsWRmVeSWpSXmKPExsWy7bCmha4g3/oEg3NNlhYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4tH4Zq8WiG9uYLFZes7C4vGsOm0X39R1sFsuP/2Ny4PK43NfL5LF4z0sm
+        jwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMARlWOTkZqYklqkkJqXnJ+SmZduq+Qd
+        HO8cb2pmYKhraGlhrqSQl5ibaqvk4hOg65aZA3SjkkJZYk4pUCggsbhYSd/Opii/tCRVISO/
+        uMRWKbUgJafA0LBArzgxt7g0L10vOT/XytDAwMgUqDIhJ2PajWdsBUfEKl6v+MLSwDhJsIuR
+        k0NCwERi1ZHLrF2MXBxCAjsYJV5e/wjlfGKU+DnjPZTzmVFi0sqTjDAtB67NY4RI7GKU2Nl0
+        hg3C+cgo0XVpNTNIFZuArsSZzS+BbA4OEQEjiWurPEFqmAVOMkr0nn0BViMsYC6x/80uVhCb
+        RUBV4tfTPjCbV8BG4szFK+wQ2+QlTp+4xggRF5Q4OfMJC4jNDBRv3jqbGWSohMBfdok7+x+x
+        QDS4SDR+2csEYQtLvDq+BWqQlMTL/jYou15id8MeqOYJjBLdnVehmu0lfk3fwgpyNbOApsT6
+        XfogpoSAssSRW1B7+SQ6Dv9lhwjzSnS0CUE0qkpsWbwRGkDSEkvXHoca6CFxeMdesHeFBGIl
+        /j16wTaBUX4Wkm9mIflmFsLeBYzMqxjFUguKc9NTi40KDJFjdRMjOKFque5gnPz2g94hRiYO
+        xkOMEhzMSiK8B5vXJgjxpiRWVqUW5ccXleakFh9iNAWG70RmKdHkfGBKzyuJNzQ1MjMzsDS1
+        MDUzslAS5/2ZWpcgJJCeWJKanZpakFoE08fEwSnVwFS0/1TcfsPqBN1dMjxrlMMSQu96Sxxi
+        FDqkvdwv7oErl1ew2UWNTbEMk5flup4w1dfavM5h+U4Gr/roy2wMH1h7+1VsZ3/U5jnsXOov
+        93zC9S8vsr6ffsMj9OvN+6Z54duaQwqPr5tQGP/+4Eyzcp4Zl1lC7exblP/nfT9dq/1+Wvir
+        kBlH45ufxRnZRXdf6P9n3x4n2LKCV3tTteaNlTp1/NNXH+l/8badZaHux8B9yffMVDeI7pxp
+        r/3jjnPdHj+2+RMO1HcWWU7a5/PovOqaR+bzmi/M2+P1LpD91ertkpEXjk1wftvYbdN+eq6k
+        NPv3nkmVV9fXic4QFjjSdFR5+w9ji2dMbTKqhd90OJRYijMSDbWYi4oTAQFhUnMxBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrNLMWRmVeSWpSXmKPExsWy7bCSvK4g3/oEg1ut0hYnn6xhs3gwbxub
+        xcufV9ksDj7sZLH4tH4Zq8WiG9uYLFZes7C4vGsOm0X39R1sFsuP/2Ny4PK43NfL5LF4z0sm
+        jwmLDjB6fF/fwebx8ektFo++LasYPT5vkvNoP9DNFMARxWWTkpqTWZZapG+XwJUx7cYztoIj
+        YhWvV3xhaWCcJNjFyMkhIWAiceDaPMYuRi4OIYEdjBK9rb3MXYwcQAlpiTV7pCFqhCXutxxh
+        hah5zyjR3LOXCSTBJqArcWbzS2YQWwRo0Ixb71hBbGaBy4wS089Fg9jCAuYS+9/sAouzCKhK
+        /HraB2bzCthInLl4hR1igbzE6RPXGCHighInZz5hgZgjL9G8dTbzBEa+WUhSs5CkFjAyrWKU
+        TC0ozk3PLTYsMMpLLdcrTswtLs1L10vOz93ECA5vLa0djHtWfdA7xMjEwXiIUYKDWUmE92Dz
+        2gQh3pTEyqrUovz4otKc1OJDjNIcLErivBe6TsYLCaQnlqRmp6YWpBbBZJk4OKUamPg5V5+6
+        bCFwJMTA7jwDd3OnxvYmnTn+p0zu7K8rZX9lyVUaVGc8rVLK3njTLf4nG9RLH924OenYpZ8L
+        zheWrStc8ePzd/Zmwe8NVo9ulT+K/CPxWeN2lPfZoLRD++PaIiyWau48uN55Oke3hZe0gF7q
+        LNvC5JqjT69a/ld9Fj3NYOqsxkWnQnWCn1UHL/A/dunFc4nJh88oikq1q4fxND7YU7P/rdjH
+        Y7vOMS3b4+U0KXBzxzUxe+bwwjt8k5gsbvX2n6iOlir69mHxnqJ226jf5mK2s/5LC5w7dejO
+        0/0Xnkh+5P++ibmx+/oN61k7F53WEb2yYPVLu4XtzR+KJp9fkXhBd90H1l8RMXPSfycrsRRn
+        JBpqMRcVJwIAwxcaq94CAAA=
+X-CMS-MailID: 20210527031217epcas2p44b9d999edcc55b345dfd0749acefeaec
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210527031217epcas2p44b9d999edcc55b345dfd0749acefeaec
+References: <CGME20210527031217epcas2p44b9d999edcc55b345dfd0749acefeaec@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+In ExynosAuto(variant of the Exynos for automotive), the UFS Storage needs
+to be accessed from multi-OS.
+To increase IO performance and reduce SW complexity, we implemented UFS-IOV
+to support storage IO virtualization feature on UFS.
 
-It's an unfortunate quirk of b4 that it quotes the description from the
-original patch submission and not the message that ends up being
-committed. As a result my commentary didn't make it to the list.
+IO virtualization increases IO performance and reduce SW complexity
+with small area cost. And IO virtualization supports virtual machine isolation
+for Security and Safety which are requested by Multi-OS system such as
+automotive application.
 
-> Busses isn't a misspelling, it's just that few people use it these
-> days.
+Below figure is the conception of UFS-IOV architeture.
 
-In the context of electronics and computing "busses" still appears to be
-widely in use. In any case, whether to use one or the other is up to the
-author of the code in question. I only merged fixed for what was obvious
-typos.
+    +------+          +------+
+    | OS#1 |          | OS#2 |
+    +------+          +------+
+       |                 |
+ +------------+     +------------+
+ |  Physical  |     |   Virtual  |
+ |    Host    |     |    Host    |
+ +------------+     +------------+
+   |      |              | <-- UTP_CMD_SAP, UTP_TM_SAP
+   |   +-------------------------+
+   |   |    Function Arbitor     |
+   |   +-------------------------+
+ +-------------------------------+
+ |           UTP Layer           |
+ +-------------------------------+
+ +-------------------------------+
+ |           UIC Layer           |
+ +-------------------------------+
 
-Thanks!
+There are two types of host controllers on the UFS host controller
+that we designed.
+The UFS device has a Function Arbitor that arranges commands of each host.
+When each host transmits a command to the Arbitor, the Arbitor transmits it
+to the UTP layer.
+Physical Host(PH) support all UFSHCI functions(all SAPs) same as conventional
+UFSHCI.
+Virtual Host(VH) support only data transfer function(UTP_CMD_SAP and UTP_TM_SAP).
+
+In an environment where multiple OSs are used, the OS that has the leadership of
+the system is called System OS. This system OS uses PH and controls error handling.
+
+Since VH can only use less functions than PH, it is necessary to send a request
+to PH for Detected Error Handling in VH. To interface among PH and VHs,
+UFSHCI HW supports mailbox. PH can broadcast mail to other VH at the same time
+with arguments and VH can mail to PH with arguments.
+PH and VH generate interrupts when mails from PH or VH.
+
+In this structure, the virtual host can't support some feature and need to skip
+the some part of ufshcd code by using quirk.
+This patchs add quirks so that the UIC command is ignored and the ufshcd init
+process can be skipped for VH. Also, according to our UFS-IOV policy,
+we added a quirk to the abort handler or device reset handler to call
+the host reset handler.
+
+jongmin jeong (3):
+  scsi: ufs: add quirk to handle broken UIC command
+  scsi: ufs: add quirk to enable host controller without interface
+    configuration
+  scsi: ufs: add quirk to support host reset only
+
+ drivers/scsi/ufs/ufshcd.c | 13 +++++++++++++
+ drivers/scsi/ufs/ufshcd.h | 18 ++++++++++++++++++
+ 2 files changed, 31 insertions(+)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.31.1
+
