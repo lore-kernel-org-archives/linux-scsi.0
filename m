@@ -2,186 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,MIME_NO_TEXT,
+	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1687C47087
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 08:35:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B93A9C2B9F7
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 13:13:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACCFB613E3
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 08:35:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D41F613E6
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 13:13:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232481AbhE1IhC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 May 2021 04:37:02 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3105 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231564AbhE1Ig7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2021 04:36:59 -0400
-Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FryWv6RSvz6N3rw;
-        Fri, 28 May 2021 16:28:59 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Fri, 28 May 2021 10:35:22 +0200
-Received: from [10.47.88.230] (10.47.88.230) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Fri, 28 May
- 2021 09:35:22 +0100
-Subject: Re: [PATCH V2 1/2] scsi: core: fix failure handling of
- scsi_add_host_with_dma
-To:     Ming Lei <ming.lei@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>
-References: <20210528011838.2122559-1-ming.lei@redhat.com>
- <20210528011838.2122559-2-ming.lei@redhat.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <0e3a05ab-2dba-cafd-2840-70a0559a9140@huawei.com>
-Date:   Fri, 28 May 2021 09:34:44 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
-MIME-Version: 1.0
-In-Reply-To: <20210528011838.2122559-2-ming.lei@redhat.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.88.230]
-X-ClientProxiedBy: lhreml730-chm.china.huawei.com (10.201.108.81) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+        id S235956AbhE1NPJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 May 2021 09:15:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44514 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235853AbhE1NPJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2021 09:15:09 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 459F7C061574
+        for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 06:13:34 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id c12so3224266pfl.3
+        for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 06:13:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=Y8gKWk8htMRl1moiymQwDO1tq62EjeQptSjLhm2KZgE=;
+        b=KAePbOWvx1EhI47j9QHuEDlmzYVgp3IgdWaHSodmHenT8FoO1oZ4ByR9jvh6zJ2YG7
+         vEeePJ84WgARaLHxM6WW2M8G80x4csMIjafPKtrcrEaPbcX3sV4FrBY9mkCZmyaXagX/
+         9VcwbaUU3iJZQh70MOdWVZx2rCWcrx95vfN7o=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=Y8gKWk8htMRl1moiymQwDO1tq62EjeQptSjLhm2KZgE=;
+        b=tRaBBXS8eMsviB16v+Y7lWckXWj1jhMgOkNU35r7kaHYSxmYUv8Kf9R4N9pHqnXKcy
+         +kDYAH66raPURR+myRXH3q1k1aNIKPL6alHAgGO+3AI3gkE7RYCmH45LaPcyOLCDNOCz
+         lh6EwTr/tlAC0VNm8o2pxtZrtHuuMyp4mEI0Jerh66mICm7aTwNG8QSwrrW1nO1JgKEH
+         OMRPNVUcuf01GXSBbLwcyHUr8cBKJtq6EwPheHaMBRzi5Mq/PyQmqkSFqk5LRi8AA17r
+         s4vD7Qef+bzM6tR7g3s+hCEyb3rfQU+9kAFdEGEEV6F6Pc7pUGdBrtNLn88ZGEYD6hC1
+         KgNg==
+X-Gm-Message-State: AOAM5332eVjiWPZvft0j+k9CyznzGbub1VplbD7mCnp+FlhbfVZbl7Ya
+        yAdkQEKIy4YNYj8txVe9rnIORAtx/kevSCNA6LXIkvwtaz+Sf0swwzLw4x5BIfCdjyN5xBx67Iq
+        x+CcmvJUWRlWt0+jrBpOW8Qot8ZBynxFYAREpwj5uR3HDUpXWGGhyZlT/ZBORMF3A/GAmWZOi5p
+        kxMi6Wb16g5vT4N+w=
+X-Google-Smtp-Source: ABdhPJzGiKE0pQIemaDAuGVVZk7gWJcJkvVN8bgaRI1aI7MV9ZEsGdElv+dg7g/ChGYDVluUFRqD9g==
+X-Received: by 2002:a63:d14b:: with SMTP id c11mr8794615pgj.162.1622207613262;
+        Fri, 28 May 2021 06:13:33 -0700 (PDT)
+Received: from dhcp-10-123-20-83.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id o2sm4238434pfu.80.2021.05.28.06.13.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 28 May 2021 06:13:32 -0700 (PDT)
+From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Subject: [PATCH v3 0/5] megaraid_sas: Update driver version to 07.717.02.00-rc1
+Date:   Fri, 28 May 2021 18:43:02 +0530
+Message-Id: <20210528131307.25683-1-chandrakanth.patil@broadcom.com>
+X-Mailer: git-send-email 2.18.1
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000009129ad05c363a415"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/05/2021 02:18, Ming Lei wrote:
-> When scsi_add_host_with_dma() return failure, the caller will call
-> scsi_host_put(shost) to release everything allocated for this host
-> instance. So we can't free allocated stuff in scsi_add_host_with_dma(),
-> otherwise double free will be caused.
-> 
-> Strictly speaking, these host resources allocation should have been
-> moved to scsi_host_alloc(), but the allocation may need driver's
-> info which can be built between calling scsi_host_alloc() and
-> scsi_add_host(), so just keep the allocations in
-> scsi_add_host_with_dma().
-> 
-> Fixes the problem by relying on host device's release handler to
-> release everything.
-> 
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: John Garry <john.garry@huawei.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+--0000000000009129ad05c363a415
 
-It now looks like we have a memory leak:
+This patchset contains few critical fixes and enhancements.
 
-unreferenced object 0xffff0410070a4e00 (size 128):
-   comm "swapper/0", pid 1, jiffies 4294894100 (age 90.744s)
-   hex dump (first 32 bytes):
-68 6f 73 74 30 00 00 00 00 00 00 00 00 00 00 00  host0...........
-00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-   backtrace:
-[<(____ptrval____)>] __kmalloc_track_caller+0x25c/0x380
-[<(____ptrval____)>] kvasprintf+0xe8/0x1a4
-[<(____ptrval____)>] kvasprintf_const+0xc8/0x17c
-[<(____ptrval____)>] kobject_set_name_vargs+0x58/0xf4
-[<(____ptrval____)>] dev_set_name+0xa4/0xe0
-[<(____ptrval____)>] scsi_host_alloc+0x45c/0x5d0
-[<(____ptrval____)>] hisi_sas_probe+0x40/0x570
-[<(____ptrval____)>] hisi_sas_v2_probe+0x1c/0x2c
-[<(____ptrval____)>] platform_probe+0x90/0x110
-[<(____ptrval____)>] really_probe+0x148/0x744
-[<(____ptrval____)>] driver_probe_device+0x8c/0xfc
-[<(____ptrval____)>] device_driver_attach+0x11c/0x12c
-[<(____ptrval____)>] __driver_attach+0xc8/0x1a0
-[<(____ptrval____)>] bus_for_each_dev+0xe4/0x154
-[<(____ptrval____)>] driver_attach+0x38/0x50
-[<(____ptrval____)>] bus_add_driver+0x1bc/0x2c4
-unreferenced object 0xffff001056581800 (size 256):
-   comm "swapper/0", pid 1, jiffies 4294894398 (age 89.560s)
-   hex dump (first 32 bytes):
-00 00 00 00 00 00 00 00 08 18 58 56 10 00 ff ff  ..........XV....
-08 18 58 56 10 00 ff ff c0 f4 b4 10 00 80 ff ff  ..XV............
-   backtrace:
-[<(____ptrval____)>] kmem_cache_alloc+0x298/0x350
-[<(____ptrval____)>] device_add+0x6d8/0xc4c
-[<(____ptrval____)>] scsi_add_host_with_dma+0x370/0x5dc
-[<(____ptrval____)>] hisi_sas_probe+0x418/0x570
-[<(____ptrval____)>] hisi_sas_v2_probe+0x1c/0x2c
-[<(____ptrval____)>] platform_probe+0x90/0x110
-[<(____ptrval____)>] really_probe+0x148/0x744
-[<(____ptrval____)>] driver_probe_device+0x8c/0xfc
-[<(____ptrval____)>] device_driver_attach+0x11c/0x12c
-[<(____ptrval[  101.941505] random: fast init done
-____)>] __driver_attach+0xc8/0x1a0
-[<(____ptrval____)>] bus_for_each_dev+0xe4/0x154
-[<(____ptrval____)>] driver_attach+0x38/0x50
-[<(____ptrval____)>] bus_add_driver+0x1bc/0x2c4
-[<(____ptrval____)>] driver_register+0xe4/0x210
-[<(____ptrval____)>] __platform_driver_register+0x48/0x60
-[<(____ptrval____)>] hisi_sas_v2_driver_init+0x20/0x2c
+v2:
+     - Fixed sparse warnings reported by kbuild test robot in patch3.
+v3:
+     - Fixed sparse warnings reported by kbuild test robot in patch4.
 
-I think that the release for the shost_dev dev name memory needs fixing.
+Chandrakanth Patil (5):
+  megaraid_sas: Send all non-RW IOs for TYPE_ENCLOSURE device through
+    firmware
+  megaraid_sas: Fix the resource leak in case of probe failure
+  megaraid_sas: Early detection of VD deletion through RaidMap update
+  megaraid_sas: Handle missing interrupts while re-enabling IRQs
+  megaraid_sas: Update driver version to 07.717.02.00-rc1
 
-In scsi_host_dev_release(), for my experiment, shost state is running, 
-so we miss the kfree(dev_name(&shost->shost_dev)), I guess. Not sure on 
-the proper fix.
+ drivers/scsi/megaraid/megaraid_sas.h        | 16 +++-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 96 +++++++++++++++++++--
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |  6 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 20 ++++-
+ 4 files changed, 123 insertions(+), 15 deletions(-)
 
-> ---
->   drivers/scsi/hosts.c | 14 ++++++--------
->   1 file changed, 6 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 697c09ef259b..ea50856cb203 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -278,23 +278,22 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->   
->   		if (!shost->work_q) {
->   			error = -EINVAL;
-> -			goto out_free_shost_data;
-> +			goto out_del_dev;
->   		}
->   	}
->   
->   	error = scsi_sysfs_add_host(shost);
->   	if (error)
-> -		goto out_destroy_host;
-> +		goto out_del_dev;
->   
->   	scsi_proc_host_add(shost);
->   	scsi_autopm_put_host(shost);
->   	return error;
->   
-> - out_destroy_host:
-> -	if (shost->work_q)
-> -		destroy_workqueue(shost->work_q);
-> - out_free_shost_data:
-> -	kfree(shost->shost_data);
-> +	/*
-> +	 * any host allocation in this function will be freed in
-> +	 * scsi_host_dev_release, so not free them in the failure path
 
-nit: "so do not free them"
+base-commit: ea2f0f77538c50739b9fb4de4700cee5535e1f77
+-- 
+2.18.1
 
-> +	 */
->    out_del_dev:
->   	device_del(&shost->shost_dev);
->    out_del_gendev:
-> @@ -304,7 +303,6 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->   	pm_runtime_disable(&shost->shost_gendev);
->   	pm_runtime_set_suspended(&shost->shost_gendev);
->   	pm_runtime_put_noidle(&shost->shost_gendev);
-> -	scsi_mq_destroy_tags(shost);
->    fail:
->   	return error;
->   }
-> 
 
-Thanks,
-John
+--0000000000009129ad05c363a415
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
+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
+riBJ/K1AFUjRAjFhGV64l++td7dkmnq/X8ET75ti+w1s4FRpFqkD2m7pg5NxdsZphYIXAgMBAAGj
+QjBAMA4GA1UdDwEB/wQEAwIBBjAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBSP8Et/qC5FJK5N
+UPpjmove4t0bvDANBgkqhkiG9w0BAQsFAAOCAQEAS0DbwFCq/sgM7/eWVEVJu5YACUGssxOGhigH
+M8pr5nS5ugAtrqQK0/Xx8Q+Kv3NnSoPHRHt44K9ubG8DKY4zOUXDjuS5V2yq/BKW7FPGLeQkbLmU
+Y/vcU2hnVj6DuM81IcPJaP7O2sJTqsyQiunwXUaMld16WCgaLx3ezQA3QY/tRG3XUyiXfvNnBB4V
+14qWtNPeTCekTBtzc3b0F5nCH3oO4y0IrQocLP88q1UOD5F+NuvDV0m+4S4tfGCLw0FREyOdzvcy
+a5QBqJnnLDMfOjsl0oZAzjsshnjJYS8Uuu7bVW/fhO4FCU29KNhyztNiUGUe65KXgzHZs7XKR1g/
+XzCCBV4wggRGoAMCAQICDEsToCXmVAGrOZU9LzANBgkqhkiG9w0BAQsFADBbMQswCQYDVQQGEwJC
+RTEZMBcGA1UEChMQR2xvYmFsU2lnbiBudi1zYTExMC8GA1UEAxMoR2xvYmFsU2lnbiBHQ0MgUjMg
+UGVyc29uYWxTaWduIDIgQ0EgMjAyMDAeFw0yMTAyMjIxMjM4MDJaFw0yMjA5MTUxMTIzMzVaMIGa
+MQswCQYDVQQGEwJJTjESMBAGA1UECBMJS2FybmF0YWthMRIwEAYDVQQHEwlCYW5nYWxvcmUxFjAU
+BgNVBAoTDUJyb2FkY29tIEluYy4xGzAZBgNVBAMTEkNoYW5kcmFrYW50aCBQYXRpbDEuMCwGCSqG
+SIb3DQEJARYfY2hhbmRyYWthbnRoLnBhdGlsQGJyb2FkY29tLmNvbTCCASIwDQYJKoZIhvcNAQEB
+BQADggEPADCCAQoCggEBAN17vAiN630Miz8/OedJKuauChEmiA4b0QYvWMA5eDpaTmonlWoaIrq6
+FEwzCFLCgTpToIzUShYM1O6fu/b6Zdy1Jvdccbj7u7mSXWF+rKJu5yg2g38x2XxWsy+/4rwqi9ix
+BSrtpRGbpSxMsfxuEvtMbzZCeC4SitvLhFIMMHgUJ9E8pxXV7c0/ub5jxd/3nIOeIDoTOqJgSn40
+aBqT0QvScYPWy42jL2D449cgE9PMNQy1mrSwerDqgTTgZJM4gAW7ta1nFP8cNbLJNYn3ZFEhJnOw
+pXRVGaqlwpA1hmodBANNyhMlODsRuxNuqmNzINouAr/YlO2bdzlu+VTWz0MCAwEAAaOCAeAwggHc
+MA4GA1UdDwEB/wQEAwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9z
+ZWN1cmUuZ2xvYmFsc2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNy
+dDBBBggrBgEFBQcwAYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFs
+c2lnbjJjYTIwMjAwTQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBz
+Oi8vd3d3Lmdsb2JhbHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+
+oDygOoY4aHR0cDovL2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MC5jcmwwKgYDVR0RBCMwIYEfY2hhbmRyYWthbnRoLnBhdGlsQGJyb2FkY29tLmNvbTATBgNVHSUE
+DDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU
+KHtkFTCJhYaNrtTlVnhO7+Z49xswDQYJKoZIhvcNAQELBQADggEBAB695p3nxrHwDBiZuUyc4kSq
+1o3jGWXYdAgZoVOXcGSn0FFSuBT4bkoZNRXvN4AZGh7n5XjtEzGQjn++xALKCRF6K3yFfhAqsrHx
+66xXjz8VYmD4J4p+TzVo8GP7si+9xJO/AW4f0FMCQ3vJdruH1PMHZYYuHFHcgyDY5CagijMkFJtD
+Zpnb0pToIvDm+Ur3N2MiX3nSNdXYjeMdwB0OAs05pMciX6VfrXagLKEdSRHtOo/W/JA7fToB0eJS
+Ky1ZxnSRQGTL4yIIMw43kd0GQyTIM6KyMy8uprn32g7HcYJf07P/tjC196OWjB5Qr7dSv3vtjU8N
+2J0Xc13/AGfXSZ8xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
+aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
+MDIwAgxLE6Al5lQBqzmVPS8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIKnQkeyj
+qm4a6+KHsIntWkAbQsollyeV1XzsTwxhXndVMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIxMDUyODEzMTMzM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDPwqkBbp46dlChZxDJXG7Jxxid
++3C82h++9v2rQFR9uXf2fCG9TzYFTpYvKkcqbMNupU8+3AAUYwPPTch11cZ9kPtoja9KRK+9MvAU
+Zgit+iOsrWGWlFXMeEvZRRcsy5Dm3JL78iV6I7Iqkf819c2oSlbkd7YtvQj0smS9t/KHhcaNw0b0
+95R+JO12iNwkatVgi7tYj5Ny8uMK/VJhUi+5PDWcGw1RhuZYWN2Audob3LrdyADFy2UOBWad1IYR
+n4NF9z8bxK+LDgf7nb90Yu7XnVNWAtjezlMngc71FOO4PD7mmQqsGMsl3nwswMTyXw2zsES5a3MJ
+ZHRzcar6NtJX
+--0000000000009129ad05c363a415--
