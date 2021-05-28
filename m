@@ -2,87 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-21.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEFF7C4708C
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 18:36:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 97F00C47087
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 20:07:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ABD4D613C9
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 18:36:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76B16613B5
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 20:07:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229492AbhE1SiG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 May 2021 14:38:06 -0400
-Received: from smtprelay0056.hostedemail.com ([216.40.44.56]:53302 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S229463AbhE1SiF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 May 2021 14:38:05 -0400
-X-Greylist: delayed 448 seconds by postgrey-1.27 at vger.kernel.org; Fri, 28 May 2021 14:38:05 EDT
-Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave06.hostedemail.com (Postfix) with ESMTP id 400C58023692;
-        Fri, 28 May 2021 18:29:03 +0000 (UTC)
-Received: from omf04.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay03.hostedemail.com (Postfix) with ESMTP id 08960837F27E;
-        Fri, 28 May 2021 18:29:02 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf04.hostedemail.com (Postfix) with ESMTPA id 6721AD1515;
-        Fri, 28 May 2021 18:29:00 +0000 (UTC)
-Message-ID: <8a64b62949477b85576ab47e4705ca13fb555a9c.camel@perches.com>
-Subject: Re: [PATCH 1/3] scsi: fcoe: Statically initialize flogi_maddr
-From:   Joe Perches <joe@perches.com>
-To:     Kees Cook <keescook@chromium.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Hannes Reinecke <hare@suse.de>,
+        id S229631AbhE1UJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 May 2021 16:09:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38664 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229492AbhE1UJF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 May 2021 16:09:05 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 44A1E613B5;
+        Fri, 28 May 2021 20:07:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1622232449;
+        bh=lqdDlotOcp/TOALDyK7jkrg3rREQUCM6i45sWq1gsdQ=;
+        h=Date:From:To:Cc:Subject:From;
+        b=XWAnPblHFKmH+dBiYVHNg+xxpAisItgi2GSJfyNCPJPp+ecDc4dy/9lwWV6qL4NRh
+         Xse25J0owud0SMXjXsumF+30V80s2WOaqtOzBtllY7+ByZLKmmWguTL9YCHZFprtlq
+         mZ2rGEbZZQU30cF1G7jKJReOJThzxfzIFZ8mvObBz9bLy7RIoCILB4nVesiUsoDorq
+         7KwxKVm7ixUTwZC79FONUUFCJdztmkfrjvRA4QsGTM0QLzfkJSRpqAt9OfV9UEQDD+
+         EG7Q+DMJQP60PMeCsvhhQpdXgqptDx6BJ/VhjG887Lo8MmeCGHGBG3EjBULIngIyU2
+         weq+ccAJbdzIg==
+Date:   Fri, 28 May 2021 15:08:28 -0500
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Bradley Grove <linuxdrivers@attotech.com>,
-        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-hardening@vger.kernel.org
-Date:   Fri, 28 May 2021 11:28:59 -0700
-In-Reply-To: <20210528181337.792268-2-keescook@chromium.org>
-References: <20210528181337.792268-1-keescook@chromium.org>
-         <20210528181337.792268-2-keescook@chromium.org>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.38.1-1 
+Subject: [PATCH][next] scsi: mpt3sas: Fix fall-through warnings for Clang
+Message-ID: <20210528200828.GA39349@embeddedor>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Rspamd-Server: rspamout05
-X-Rspamd-Queue-Id: 6721AD1515
-X-Stat-Signature: uwk3xpe6uybxkt53prb6c4u4z74zby8t
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX18UiZQA79XyUyFUgPVxG5YCbfS14BoxNgY=
-X-HE-Tag: 1622226540-104772
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2021-05-28 at 11:13 -0700, Kees Cook wrote:
-> In preparation for FORTIFY_SOURCE performing compile-time and run-time
-> field bounds checking for memcpy() using memcpy() with an inline const
-> buffer and instead just statically initialize the destination array
-> directly.
-[]
-> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-[]
-> @@ -293,7 +293,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
->  	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
->  	struct netdev_hw_addr *ha;
->  	struct net_device *real_dev;
-> -	u8 flogi_maddr[ETH_ALEN];
-> +	u8 flogi_maddr[ETH_ALEN] = FC_FCOE_FLOGI_MAC;
+In preparation to enable -Wimplicit-fallthrough for Clang, fix a couple
+of warnings by explicitly adding break statements instead of just letting
+the code fall through to the next case.
 
-static const
+Link: https://github.com/KSPP/linux/issues/115
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+JFYI: We had thousands of these sorts of warnings and now we are down
+      to just 25 in linux-next. These are some of those last remaining
+      warnings.
 
-> @@ -442,7 +441,7 @@ static void fcoe_interface_remove(struct fcoe_interface *fcoe)
->  {
->  	struct net_device *netdev = fcoe->netdev;
->  	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
-> -	u8 flogi_maddr[ETH_ALEN];
-> +	u8 flogi_maddr[ETH_ALEN] = FC_FCOE_FLOGI_MAC;
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 1 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1 +
+ 2 files changed, 2 insertions(+)
 
-etc...
-
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 68fde055b02f..969c0d676ae2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -4435,6 +4435,7 @@ _base_display_OEMs_branding(struct MPT3SAS_ADAPTER *ioc)
+ 				 ioc->pdev->subsystem_device);
+ 			break;
+ 		}
++		break;
+ 	default:
+ 		break;
+ 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index d00aca3c77ce..d9d5e9c0e110 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -11932,6 +11932,7 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 				ioc->multipath_on_hba = 1;
+ 			else
+ 				ioc->multipath_on_hba = 0;
++			break;
+ 		default:
+ 			break;
+ 		}
+-- 
+2.27.0
 
