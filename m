@@ -2,106 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC1BFC47087
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 21:22:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73AFCC47087
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 21:24:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92933613F0
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 21:22:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 459BC613E3
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 21:24:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229543AbhE1VYX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 May 2021 17:24:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40726 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229560AbhE1VYV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2021 17:24:21 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D8A6C061574;
-        Fri, 28 May 2021 14:22:45 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id f3-20020a17090a4a83b02901619627235bso1130075pjh.1;
-        Fri, 28 May 2021 14:22:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=AAm/Rd7QC3VUgd2WvOibfK1HCay8pvSqKwkU5G4j4T0=;
-        b=HJZ24VQ9l40CQjL8gFSf3KKuxMp3kX2Nb64DSrWe8CcSWAtibw7i43zvDkPaC5mBiw
-         YOwuRAkEmQ3tWmTTM4eZSpDNgQeEHIcokpqRyWAG7ptRWSxHWNrrZLedWVOhDZmJyOZS
-         D1YTAMuAQmK2xKD2cnAslogcNXIhn8KO92aA3NiDbH+cQMM/ACc1mu7ao8PsXmPhe+fk
-         lCj7utUr6U/7uTBkfDKT2Y41Khai0NHueXnZVi6AbQAOBDfC3Y71S6zKVasgqxYCW45v
-         RthhCMTQ2Tg3cdBu7d3IqSBFyGWDSUQDdLfQQtxb6Zwz7oNE+PzXMA+lmfBD5lHEusDI
-         +YNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=AAm/Rd7QC3VUgd2WvOibfK1HCay8pvSqKwkU5G4j4T0=;
-        b=ZrGNUMOBnwat+/6Nhb45MX5VkBaVgRxWnw61H3d/iiAnZMANh9ifirp688sI5yllzl
-         hzggUgnhFIwjsCB33MIyq0/ehTT+BwLSASI5TIPTNe2K0NvQHpD2iU3npy1nxNYZu9bf
-         1AiI/HpIbvwJiyZN+oLJvjF8gw6sRpVGFe13deIbJ7/MdVfvw98HtT/r+0UxdyevLrY8
-         3L+N3/VzXS1qcSBafkgsrmkvvGJuHTqI4UFgKFB4jOvKEMizknIFzoQK0xL566FVVSdS
-         XZ09WhXrZp01IK83vZ6G5FnENC3wzoJaufZxaYbsPBi7J4JL07vrC55Kz3FH3WWwnrZP
-         PVdA==
-X-Gm-Message-State: AOAM530p1A05GJzKO6RbaHlhg/9C2S0ASOb9tyC6BX8vGIyUYhHqVdj/
-        lbS7L/6jI9ErgkyzawICZmeGQvO2IHE=
-X-Google-Smtp-Source: ABdhPJyK+fhRlRrLD4VvoADZ7f6+VUatYYoMCobg7Dt+DxwN+YE70QTdJpt2w3WeLs3nzL4RXac4mw==
-X-Received: by 2002:a17:90a:b88d:: with SMTP id o13mr6581897pjr.207.1622236965076;
-        Fri, 28 May 2021 14:22:45 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id o6sm5169734pfb.126.2021.05.28.14.22.44
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 May 2021 14:22:44 -0700 (PDT)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>, stable@vger.kernel.org
-Subject: [PATCH] lpfc: Fix failure to transmit ABTS on FC link
-Date:   Fri, 28 May 2021 14:22:40 -0700
-Message-Id: <20210528212240.11387-1-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        id S229528AbhE1VZi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 May 2021 17:25:38 -0400
+Received: from gateway20.websitewelcome.com ([192.185.50.28]:49109 "EHLO
+        gateway20.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229481AbhE1VZh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 May 2021 17:25:37 -0400
+X-Greylist: delayed 1802 seconds by postgrey-1.27 at vger.kernel.org; Fri, 28 May 2021 17:25:37 EDT
+Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
+        by gateway20.websitewelcome.com (Postfix) with ESMTP id 12772400DC332
+        for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 15:15:57 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id mj6EltxHwx8Dpmj6ElftYc; Fri, 28 May 2021 15:28:54 -0500
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=L3zwx02/a4qpuCrv9Ng4KVesaQf7X0hbM+48SL7llOw=; b=BXiFY5HalugiWU9BTfssC7wnet
+        kLkPs6B0zXCSMe5NRtPgkGtGzAk1YnInlYGzLbgWUZIQdRv161BcZJxn85KtCVRuK4J0l5z26e7VB
+        6jfy7MlnGhyhPzFH0R6qUkGqWcllxR7/Je5vqmVw/sQ0EKVdRk/WBgwuxedo8ngYHZaNfM2pc4n7u
+        O6B4cNG/QgZ9UpQLnzu5MPAYEhKsXwkSY6d4LKVf90acuNJPu3TUk9inxU0lmN3lQgrq/f1GsuzNx
+        8wYoRRsFGbcM4aJEy9AzE5ldF09UryO6pcWHo15B85Z27agBNorK5+w233Wbwo/5Ns1jgbXeELtSG
+        SzEXm2yA==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:38342 helo=[192.168.15.8])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1lmj6A-003lbU-Ig; Fri, 28 May 2021 15:28:50 -0500
+Subject: Re: [PATCH 3/3] scsi: isci: Use correctly sized target buffer for
+ memcpy()
+To:     Kees Cook <keescook@chromium.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Bradley Grove <linuxdrivers@attotech.com>,
+        Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+References: <20210528181337.792268-1-keescook@chromium.org>
+ <20210528181337.792268-4-keescook@chromium.org>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <5741ac53-81ef-5106-0b58-51ddf5f65851@embeddedor.com>
+Date:   Fri, 28 May 2021 15:29:46 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210528181337.792268-4-keescook@chromium.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1lmj6A-003lbU-Ig
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.8]) [187.162.31.110]:38342
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 24
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The abort_cmd_ia flag in an abort wqe describes whether an ABTS basic
-link service should be transmitted on the FC link or not.
-Code added in lpfc_sli4_issue_abort_iotag() set the abort_cmd_ia flag
-incorrectly, surpressing ABTS transmission.
 
-A previous LPFC change to build an abort wqe inverted prior logic that
-determined whether an ABTS was to be issued on the FC link.
 
-Revert this logic to its proper state.
+On 5/28/21 13:13, Kees Cook wrote:
+> In preparation for FORTIFY_SOURCE performing compile-time and run-time
+> field bounds checking for memcpy(), avoid intentionally writing across
+> neighboring array fields.
+> 
+> Switch from rsp_ui to resp_buf, since resp_ui isn't SSP_RESP_IU_MAX_SIZE
+> bytes in length. This avoids future compile-time warnings.
+> 
+> Signed-off-by: Kees Cook <keescook@chromium.org>
 
-Fixes: db7531d2b377 ("scsi: lpfc: Convert abort handling to SLI-3 and SLI-4 handlers")
-Cc: <stable@vger.kernel.org> # v5.11+
-Signed-off-by: James Smart <jsmart2021@gmail.com>
----
- drivers/scsi/lpfc/lpfc_sli.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Reviewed-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 1ad1beb2a8a8..e2cfb86f7e61 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -20615,10 +20615,8 @@ lpfc_sli4_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	abtswqe = &abtsiocb->wqe;
- 	memset(abtswqe, 0, sizeof(*abtswqe));
- 
--	if (lpfc_is_link_up(phba))
-+	if (!lpfc_is_link_up(phba))
- 		bf_set(abort_cmd_ia, &abtswqe->abort_cmd, 1);
--	else
--		bf_set(abort_cmd_ia, &abtswqe->abort_cmd, 0);
- 	bf_set(abort_cmd_criteria, &abtswqe->abort_cmd, T_XRI_TAG);
- 	abtswqe->abort_cmd.rsrvd5 = 0;
- 	abtswqe->abort_cmd.wqe_com.abort_tag = xritag;
--- 
-2.26.2
+Thanks
+--
+Gustavo
 
+> ---
+>  drivers/scsi/isci/task.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
+> index 62062ed6cd9a..eeaec26ac324 100644
+> --- a/drivers/scsi/isci/task.c
+> +++ b/drivers/scsi/isci/task.c
+> @@ -709,8 +709,8 @@ isci_task_request_complete(struct isci_host *ihost,
+>  		tmf->status = completion_status;
+>  
+>  		if (tmf->proto == SAS_PROTOCOL_SSP) {
+> -			memcpy(&tmf->resp.resp_iu,
+> -			       &ireq->ssp.rsp,
+> +			memcpy(tmf->resp.rsp_buf,
+> +			       ireq->ssp.rsp_buf,
+>  			       SSP_RESP_IU_MAX_SIZE);
+>  		} else if (tmf->proto == SAS_PROTOCOL_SATA) {
+>  			memcpy(&tmf->resp.d2h_fis,
+> 
