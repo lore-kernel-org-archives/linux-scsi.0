@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0F7C2B9F7
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 18:13:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B159C47087
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 18:13:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38604613D1
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 18:13:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F0EA613D1
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 18:13:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229549AbhE1SPR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 May 2021 14:15:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55388 "EHLO
+        id S229571AbhE1SPS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 May 2021 14:15:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55390 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbhE1SPQ (ORCPT
+        with ESMTP id S229481AbhE1SPQ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2021 14:15:16 -0400
-Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87627C061760
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A3A66C061761
         for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 11:13:41 -0700 (PDT)
-Received: by mail-pl1-x631.google.com with SMTP id b7so2036094plg.0
+Received: by mail-pf1-x433.google.com with SMTP id g18so3854851pfr.2
         for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 11:13:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=CDvnpqBXqv8XLON1AxPWRjfcHJXzeJBqZ9NYKHrBM5o=;
-        b=KyHPf8zdegewQA7dP0UIsSm3gZOTOHeu6NEg2WQWCjAVqhINgAz1dXE2thdsB1f/8W
-         OD2MNTa+SQK6s3vI3syyCaNqsVHiQT34AGX/O8FOwDCvFFQabaFlvk1XS5FRSH16W1jZ
-         0w0OESRA5zzkEUTW24p1/3pbJHMFkXXhzfjGM=
+        bh=2qeALokNh1iV94XoUXRrDmoZR32MixsQjhUt5pfNJoI=;
+        b=lQNTcma3W0ACxWMruXV7/81HRYphyAY8g2cuty+wJCt3nGYR4BkCqF93KWCxfVSgWd
+         CYIQAdbJ9q5xGrttJRZcBKZ1qBxC7OiO8W6Lg+No4WLDszS7V76vc/Ijr4ZwZLWxdvo0
+         hzKK655EJn+SH0dQglsX3i9ZruvGAqgX4/RCs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=CDvnpqBXqv8XLON1AxPWRjfcHJXzeJBqZ9NYKHrBM5o=;
-        b=ZU8axt9XDThwKwqwXyhz87AF90K+F5SzY50q3dO06UGKKlmAOHFiV+M2qF/9CCsAOe
-         IubIBkEn3+7oIdu7Yx/xYYbTnaKMeU38ao0hW/r2Lmr+7lA+67Se9rGQzfFB/U6DxveE
-         TLSCLum9fUX0wQkkDWEDa7rcjM1oyM6E8waOu9Py8Zk9HkwYir85s+tOm7QwUIKnksyT
-         5nNvc/i9RHtrAoFdqPcKsGfzVJNERqFre4MHQsNmqKENJLYLX/xR98PTTu+vtp2dHI5Y
-         akRR1akV2HNHIFrz6V21+kjPAf817Gdxm9TZV1yIFQlNXjuojdu2ZF9vaMn1qod3iGe0
-         GN9Q==
-X-Gm-Message-State: AOAM531SUvC7jew42o7xGlv6j4BscI8z5m98gxSEZVSSqi2lssDQ/gL0
-        wiRHduHGcEsCqOUK6GzfQG0OQw==
-X-Google-Smtp-Source: ABdhPJy0pEj5kXexZ3kbLMRUqpx5WAYMi/90yCyx0lldYTW/IAk5CHNJdRyH2RLdK+kAJq1S5xwhPg==
-X-Received: by 2002:a17:90b:4386:: with SMTP id in6mr5775448pjb.160.1622225620900;
-        Fri, 28 May 2021 11:13:40 -0700 (PDT)
+        bh=2qeALokNh1iV94XoUXRrDmoZR32MixsQjhUt5pfNJoI=;
+        b=cd5sg0PfHMMFMCy3zWrz+ivUgwNthmKXDapSBGjzYPSQStXpnp/GtmioXWJHo0WFq0
+         asWzMJeC0z3uZLvmI551fmnM1+jeLqi0cBzDIYKVzlmmLJ96lS7kDm09fa6IzaKOF9sT
+         FQ3EuCHpTGkenbHlCz5ccMQ3A6hbEemsNfWsEbqkLtqvJpYTuJuqaPHnbvsDNLL1Xzvd
+         nF2cG6Towdm9ftdu5YJCoziO79wG3O/PUUT9wVbu4kub+7rqnTopADJ6a+L0eNirO76X
+         BMFORvlo/Y7ItfXEg20IealsbGiS1x+YvbLCWm74dQCl8hibBzALL9QjckGOcdoAv27H
+         p1og==
+X-Gm-Message-State: AOAM531tN0HftAldcFG5JIXj/+mgmhdPNxAqKjA01GmNp9l+rgieK8Jw
+        EKdGB84XFWATO50x9UoyxrxJIw==
+X-Google-Smtp-Source: ABdhPJxFmCkd0ibmjXyUuAdn8d/4VfScR2HWYJAXlSdavzr2ixQTNEmpBI6ECAbqgrgR+QBJ/JKcrQ==
+X-Received: by 2002:aa7:9632:0:b029:2dc:6ef5:b1d3 with SMTP id r18-20020aa796320000b02902dc6ef5b1d3mr5112059pfg.53.1622225621169;
+        Fri, 28 May 2021 11:13:41 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id 21sm4764913pfh.103.2021.05.28.11.13.40
+        by smtp.gmail.com with ESMTPSA id a4sm2586464pjw.46.2021.05.28.11.13.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Fri, 28 May 2021 11:13:40 -0700 (PDT)
 From:   Kees Cook <keescook@chromium.org>
@@ -61,66 +61,68 @@ Cc:     Kees Cook <keescook@chromium.org>, Hannes Reinecke <hare@suse.de>,
         Artur Paszkiewicz <artur.paszkiewicz@intel.com>,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-hardening@vger.kernel.org
-Subject: [PATCH 2/3] scsi: esas2r: Switch to flexible array member
-Date:   Fri, 28 May 2021 11:13:36 -0700
-Message-Id: <20210528181337.792268-3-keescook@chromium.org>
+Subject: [PATCH 1/3] scsi: fcoe: Statically initialize flogi_maddr
+Date:   Fri, 28 May 2021 11:13:35 -0700
+Message-Id: <20210528181337.792268-2-keescook@chromium.org>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210528181337.792268-1-keescook@chromium.org>
 References: <20210528181337.792268-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-Patch-Hashes: v=1; h=sha256; g=ed33a7a5f3363106fee565de7dbeee0ed0e40367; i=BYSzddwUIutLMyBe4gwWgWRPW0Hyydpyw0TO1883Jzg=; m=YbO8CRPgssEoXh7CdGXaGg4HSn/4MdRiTXs7ilaylIE=; p=lWDkVNs9OQuwMDzmOamHffGHEwqku1AwhzpCn4AKrps=
-X-Patch-Sig: m=pgp; i=keescook@chromium.org; s=0x0x8972F4DFDC6DC026; b=iQIzBAABCgAdFiEEpcP2jyKd1g9yPm4TiXL039xtwCYFAmCxMtAACgkQiXL039xtwCYbjxAApoR gVcRcTyxYGtZIQKqX/2G6HqNiiSzqxvfk7xFPlCDVWGGJ2pACdpFHWfIDslPj5dmTaVr+fJ+SemQb Sw+bs48JHiL2nlUIez21DyHDlhO/V7AtPQzFmDgOEBPvgHQcIhhIa3uLiVzjo+3THPMcudJjtrBuM t8Ml1IcYym3eY4cwTCleCwwCujdIe+e+cutoTJZCp6neD0BeAPdfLvyddMC6cr4CtQmzMa6PcWPKL 1V2N7Td3Qi1m6AD2TLlDIffwLiQMjIV6s4zZxp9b1ZyGNIrrwOpBg0vppST0YSCH56/KeEAFZN6bb /JG6hZm8iR56E+X65xV4rOG0+Vjyr+kn9KS5iE7RJo276zzt9PcmnXetpV9XdP4UwS6Xp6fQJuqm3 VYHOSmoPADBUUhoYBHRSU3L3lZNzFFAV1TNYraoafgEaWziHEqnUnpnhie6eW+4fYSMI7nqoGqc5y keC5ukPpw3skUYfe1X7oSUe3Y4og+v0qAInEbcqlcw1QDmtXBcOeOp3z7ZgF/4R8MPmS8RHfNRM5Q daQ8HXLrV6zguj3cCmERbio5z3R7sW4pz9rmvitzVk3ej2aYwDNmioUhExtBwFAVOcR2q7ZahfINn MmzR5Ginfa9TjTS/YTWSkxWsG01LU8dN5oox8qjrzcksZpaVGcyYuaqFlZSOfwRo=
+X-Patch-Hashes: v=1; h=sha256; g=e47d32aead2f09bc45fd65562793c517f4bec062; i=95Is7JkaFTuD8yBK8ZqRtqMfruaTolJ5BECzzYphzjk=; m=vQ0LG77sh0mlAVazI/73j+Gz+gKUZUqL7rNbsd9G8Fs=; p=TzjuF1GRL8hWYpJl6NqKvAbiso01z27hEDzS+3XCjHI=
+X-Patch-Sig: m=pgp; i=keescook@chromium.org; s=0x0x8972F4DFDC6DC026; b=iQIzBAABCgAdFiEEpcP2jyKd1g9yPm4TiXL039xtwCYFAmCxMtAACgkQiXL039xtwCbwyQ/9Hy2 OTO06JGqppO0iq5Dx1GWxVn4JgLYqE3VJ0gnpter+B+v1LiMh56sZRTI7x4QH5gwb3JVm88AuFGcU DNVW/xus2hxgZ+ACYLgHgrvlvXsd48n+7ikO4yoDbI0AAYUy2ytnqCz1G+JZ6c1G+ACQrvOvo2FPM vAm7ZrzieMlnI/wLMsliurZ1nej0X2dmU+PNki/rkNdsqUPGJfYyPxpFcL88ThJi+yLS43VDVzIrf mtOUkomtBQ5tBUzMi668R/IUoN0SwXl1MKoTQhVO82sgRRJgwSdUxEtEY/hEGq0afVLpBDmDeQ7hd Qrx8DrEYijHnxNT/F7hQL/9/vX/OP3x/KJc98DSGO8IzyplJ1nl9kaf17UB8Sd1TsKXFnHsoHMTya PXHJWDbBW/KmhyoH9Nsa+pgAleQE+zMbXN3LtOgqWwJd2v50GiJOT0/pnU6RreWn0bNMkOGXCdgif 02Vq17oK5PKnd0PjJfkyZOu9XXmneKeGVrK/IOh+HgaBJSjOB2H5P0P0nRJbA6Q+ucDeT4Ak3K2FI Xg25afXg4/wLMvNMqjUcI5d3E14vs1hxPsglDzH8oWKB7tnDckuAoBCb09ZLmXSWBRYdHQWFxM/AU D13XZeosaTixq0Zp14CuJvAIVrJdGmf5Bq5ma4b/WP5wVe3PDD+GMzQK7swLg/+E=
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 In preparation for FORTIFY_SOURCE performing compile-time and run-time
-field bounds checking for memcpy(), avoid intentionally writing across
-neighboring array fields.
-
-Remove old-style 1-byte array in favor of a flexible array[1] to avoid
-future false-positive cross-field memcpy() warning in:
-
-esas2r_vda.c:
-	memcpy(vi->cmd.gsv.version_info, esas2r_vdaioctl_versions, ...)
-
-The change in struct size doesn't change other structure sizes (it is
-already maxed out to 256 bytes, for example here:
-
-        union {
-                struct atto_ioctl_vda_scsi_cmd scsi;
-                struct atto_ioctl_vda_flash_cmd flash;
-                struct atto_ioctl_vda_diag_cmd diag;
-                struct atto_ioctl_vda_cli_cmd cli;
-                struct atto_ioctl_vda_smp_cmd smp;
-                struct atto_ioctl_vda_cfg_cmd cfg;
-                struct atto_ioctl_vda_mgt_cmd mgt;
-                struct atto_ioctl_vda_gsv_cmd gsv;
-                u8 cmd_info[256];
-        } cmd;
-
-No sizes are calculated using the enclosing structure, so no other
-updates are needed.
+field bounds checking for memcpy() using memcpy() with an inline const
+buffer and instead just statically initialize the destination array
+directly.
 
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/esas2r/atioctl.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/fcoe/fcoe.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/atioctl.h b/drivers/scsi/esas2r/atioctl.h
-index 4aca3d52c851..ff2ad9b38575 100644
---- a/drivers/scsi/esas2r/atioctl.h
-+++ b/drivers/scsi/esas2r/atioctl.h
-@@ -1141,7 +1141,7 @@ struct __packed atto_ioctl_vda_gsv_cmd {
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 89ec735929c3..8991990e6639 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -293,7 +293,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+ 	struct netdev_hw_addr *ha;
+ 	struct net_device *real_dev;
+-	u8 flogi_maddr[ETH_ALEN];
++	u8 flogi_maddr[ETH_ALEN] = FC_FCOE_FLOGI_MAC;
+ 	const struct net_device_ops *ops;
  
- 	u8 rsp_len;
- 	u8 reserved[7];
--	u8 version_info[1];
-+	u8 version_info[];
- 	#define ATTO_VDA_VER_UNSUPPORTED 0xFF
+ 	fcoe->netdev = netdev;
+@@ -336,7 +336,6 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 	 * or enter promiscuous mode if not capable of listening
+ 	 * for multiple unicast MACs.
+ 	 */
+-	memcpy(flogi_maddr, (u8[6]) FC_FCOE_FLOGI_MAC, ETH_ALEN);
+ 	dev_uc_add(netdev, flogi_maddr);
+ 	if (fip->spma)
+ 		dev_uc_add(netdev, fip->ctl_src_addr);
+@@ -442,7 +441,7 @@ static void fcoe_interface_remove(struct fcoe_interface *fcoe)
+ {
+ 	struct net_device *netdev = fcoe->netdev;
+ 	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+-	u8 flogi_maddr[ETH_ALEN];
++	u8 flogi_maddr[ETH_ALEN] = FC_FCOE_FLOGI_MAC;
+ 	const struct net_device_ops *ops;
  
- };
+ 	/*
+@@ -458,7 +457,6 @@ static void fcoe_interface_remove(struct fcoe_interface *fcoe)
+ 	synchronize_net();
+ 
+ 	/* Delete secondary MAC addresses */
+-	memcpy(flogi_maddr, (u8[6]) FC_FCOE_FLOGI_MAC, ETH_ALEN);
+ 	dev_uc_del(netdev, flogi_maddr);
+ 	if (fip->spma)
+ 		dev_uc_del(netdev, fip->ctl_src_addr);
 -- 
 2.25.1
 
