@@ -8,137 +8,330 @@ X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF2F2C2B9F7
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 13:13:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E682BC2B9F7
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 13:14:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2FF2613E9
-	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 13:13:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AEF84613E9
+	for <linux-scsi@archiver.kernel.org>; Fri, 28 May 2021 13:14:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235853AbhE1NPc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 28 May 2021 09:15:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44600 "EHLO
+        id S234233AbhE1NPi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 28 May 2021 09:15:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234233AbhE1NPb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2021 09:15:31 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 046E4C061574
-        for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 06:13:57 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id v13so1600563ple.9
-        for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 06:13:56 -0700 (PDT)
+        with ESMTP id S235477AbhE1NPg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 May 2021 09:15:36 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89F04C061574
+        for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 06:14:01 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id 29so2493906pgu.11
+        for <linux-scsi@vger.kernel.org>; Fri, 28 May 2021 06:14:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=DiDIMiqc9B3JV75I5Hplx59o53D4BXmArTicNREC1zA=;
-        b=DXNUvw0AdOQEOi5Nwy6EXDQMSsBljA8Tkgc1xWBFQXY+KdwncGS+Ij3arzZjGl6DSm
-         lDLwNUlqde8j+p18VW8nRugOyB5BBHvshXuB4tSkH8ljahoit2I4CnH7K8DUiHFbzLsg
-         KBOkB1mLR5Uzx854mCrdJsqbeB9SdQUG7zHpA=
+        bh=fMdc/7TqPyzr2SXvrgbWYiTUqUbgb+3NPfYkfUuAjsM=;
+        b=VlonM459aR8c9UJdH1s0pjhz6FYcsJMnnRyIWEAZ5VSpQCBPhPcoqmOyhn2XT6m3Nj
+         5bp0Xdxapav5Es5U/lSRqe6cz25itMOdwnB0b5/CaBpFOAjmPQgF4guaomx3ai2VqdUd
+         FweDlWcrqugxVFsERa+SpK56i88m3YDSTl3ms=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=DiDIMiqc9B3JV75I5Hplx59o53D4BXmArTicNREC1zA=;
-        b=dD0bsbmWYkgBBKVimVfeeopWk8qo2BHrtzwK0yPjolN/YRwelk2WdkAX2PNHSAhGMO
-         GfNjjhUm3E+8nvXUnWr8JZpV/qrGiW4mW93f9DNiy1gC9LF2GGgTMZFInFPc3AK8m7S4
-         Jwj01+qKbdeIdS41WAXPh1tq5tKxQLuvT5UxOYhEj5s3abTrNjrtS0gJs5HXVxj6oDGK
-         WHxaSjFt3HlPhZe+4jkgXBvNZwF55adr/v/1ndcdvnn/fL9sbUwWjXZg8CrpvJH/N7bH
-         eUKM7ab1rrGIr87RxUBKXNXQuCx40nD29ufPfzO71JL+gMQDODaFQQyBksgIsjwZSGUS
-         ZUIw==
-X-Gm-Message-State: AOAM532fIcRou1wyw3QWojvYoOTXQYwpdnRUa7DVwM5s/N1nITBwCd/2
-        eVSrmVtx9WQ+BUPfqYZdXje556EQbExj2qxh87YJhXXebQRKX9VRGN2ZFUdmhkD01bTMdq22fSA
-        hXqDdb3mQ04DH7oRzF6QGSpbIRFQB4gcVQkE+O6CHdCTmCneIeIzMuBh6EB7isGasfHePfGu0GF
-        HMYCGrq6rG7FHQ5zo=
-X-Google-Smtp-Source: ABdhPJza7RqIj5H6rqDWWJ4iM9YhOVSQdm1iv6s2IZyJBp+LCNwB45innoD2LseObA7aumJwrMA9FQ==
-X-Received: by 2002:a17:902:aa02:b029:f0:cc19:faae with SMTP id be2-20020a170902aa02b02900f0cc19faaemr7918000plb.57.1622207635953;
-        Fri, 28 May 2021 06:13:55 -0700 (PDT)
+        bh=fMdc/7TqPyzr2SXvrgbWYiTUqUbgb+3NPfYkfUuAjsM=;
+        b=Ffym3fovkoGRW95LTbh+gj6NTbxE1HRbiJvHVsLstumSYPqmVBKCNgEFAc5wqLwyfz
+         4U+S1LBRPLKkn++ZQSqGrNg28pDNTaO7IJOyrtmAMloWeeama9rnlEtpQkojo8uez5QJ
+         Um8arLSI5iqb+7JTSl8cdgbJyH/2NNl1CTXnFgxtsMpWFPIyDEVw8dEq8Uh8/oXE39mf
+         7YT9bAxvpR2RHhJPTfOmkvs8IuXwjQYgRWhh9uqR9xaj0mmTtV2pGZZzymjS6cMMU5CB
+         88lQj7BluhuM6cZgFnq+9SByqcd36iDwwXWZ/RjzNmcEseHX+iYKxwkn9ZHONici0/mp
+         gcag==
+X-Gm-Message-State: AOAM5320EomDLhrGbnmvO0i3dfxePluGp3KS9oqVZvveTuGNdmN5K1Du
+        dcx36sVtXHxuso/URtfQs2IjFna/TUAoDrkWyQSB38lXkRzKmEfpzCO8iYvTG9QJdI9FOLxhGzh
+        3Xa7z1N8tdd2l0wu+Cf7r6giONNrAPRm+0BMk58Ro2HyDzN9e4N2cVb80LEgHHE0NBOCV/XJh0u
+        oZC75gemMqM9AhrZo=
+X-Google-Smtp-Source: ABdhPJxqPHExUtXdtvvIMDxN5oSS+j1bndRObW/m2q5JF8BPg5H64j2XTJgG9O3dAxKPerIBSqW5rw==
+X-Received: by 2002:a05:6a00:1a0f:b029:2dd:823b:3dce with SMTP id g15-20020a056a001a0fb02902dd823b3dcemr3820636pfv.35.1622207640307;
+        Fri, 28 May 2021 06:14:00 -0700 (PDT)
 Received: from dhcp-10-123-20-83.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id o2sm4238434pfu.80.2021.05.28.06.13.53
+        by smtp.gmail.com with ESMTPSA id o2sm4238434pfu.80.2021.05.28.06.13.58
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 May 2021 06:13:55 -0700 (PDT)
+        Fri, 28 May 2021 06:13:59 -0700 (PDT)
 From:   Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
         Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH v3 2/5] megaraid_sas: Fix the resource leak in case of probe failure
-Date:   Fri, 28 May 2021 18:43:04 +0530
-Message-Id: <20210528131307.25683-3-chandrakanth.patil@broadcom.com>
+Subject: [PATCH v3 3/5] megaraid_sas: Early detection of VD deletion through RaidMap update
+Date:   Fri, 28 May 2021 18:43:05 +0530
+Message-Id: <20210528131307.25683-4-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210528131307.25683-1-chandrakanth.patil@broadcom.com>
 References: <20210528131307.25683-1-chandrakanth.patil@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000eb668205c363a547"
+        boundary="0000000000002ff08405c363a617"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000eb668205c363a547
+--0000000000002ff08405c363a617
 
-Driver doesn't cleanup all the allocated resources properly when
-scsi_add_host(),megasas_start_aen() function fails during the PCI
-device probe.
-This patch will cleanup all those resources.
+Consider in a case, when a VD is deleted and the targetID of
+that VD is assigned to a newly created VD. If the sequence of
+deletion/addition of VD happens very quickly, there is a possibility
+that second event(VD add) occurs even before the driver processes the
+first event(VD delete).
+As event processing is done in deferred context the device list
+remains same(but targetID is re-used) so driver will not learn the
+VD deletion/additon and IOs meant for older VD will be directed to
+new VD which may lead to data corruption.
 
+In new design, driver will detect the deleted VD as soon as possible
+based on the RaidMap update and blocks further IOs to that device.
+
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   | 13 +++++++++++++
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 +
- 2 files changed, 14 insertions(+)
+ drivers/scsi/megaraid/megaraid_sas.h      | 12 ++++
+ drivers/scsi/megaraid/megaraid_sas_base.c | 83 ++++++++++++++++++++---
+ drivers/scsi/megaraid/megaraid_sas_fp.c   |  6 +-
+ 3 files changed, 92 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index b5a765b73c76..a43b67299b08 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2262,6 +2262,15 @@ enum MR_PERF_MODE {
+ 		 (mode) == MR_LATENCY_PERF_MODE ? "Latency" : \
+ 		 "Unknown")
+ 
++enum MEGASAS_LD_TARGET_ID_STATUS {
++	LD_TARGET_ID_INITIAL,
++	LD_TARGET_ID_ACTIVE,
++	LD_TARGET_ID_DELETED,
++};
++
++#define MEGASAS_TARGET_ID(sdev)						\
++	(((sdev->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL) + sdev->id)
++
+ struct megasas_instance {
+ 
+ 	unsigned int *reply_map;
+@@ -2326,6 +2335,9 @@ struct megasas_instance {
+ 	struct megasas_pd_list          pd_list[MEGASAS_MAX_PD];
+ 	struct megasas_pd_list          local_pd_list[MEGASAS_MAX_PD];
+ 	u8 ld_ids[MEGASAS_MAX_LD_IDS];
++	u8 ld_tgtid_status[MEGASAS_MAX_LD_IDS];
++	u8 ld_ids_prev[MEGASAS_MAX_LD_IDS];
++	u8 ld_ids_from_raidmap[MEGASAS_MAX_LD_IDS];
+ 	s8 init_id;
+ 
+ 	u16 max_num_sge;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 8ed347eebf07..35b2137e0d1a 100644
+index 35b2137e0d1a..9cb167069ec8 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -7545,11 +7545,16 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	return 0;
+@@ -141,6 +141,8 @@ static int megasas_register_aen(struct megasas_instance *instance,
+ 				u32 seq_num, u32 class_locale_word);
+ static void megasas_get_pd_info(struct megasas_instance *instance,
+ 				struct scsi_device *sdev);
++static void
++megasas_set_ld_removed_by_fw(struct megasas_instance *instance);
  
- fail_start_aen:
-+	instance->unload = 1;
-+	scsi_remove_host(instance->host);
- fail_io_attach:
- 	megasas_mgmt_info.count--;
- 	megasas_mgmt_info.max_index--;
- 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
+ /*
+  * PCI ID table for all supported controllers
+@@ -436,6 +438,12 @@ megasas_decode_evt(struct megasas_instance *instance)
+ 			(class_locale.members.locale),
+ 			format_class(class_locale.members.class),
+ 			evt_detail->description);
++
++	if (megasas_dbg_lvl & LD_PD_DEBUG)
++		dev_info(&instance->pdev->dev,
++			 "evt_detail.args.ld.target_id/index %d/%d\n",
++			 evt_detail->args.ld.target_id, evt_detail->args.ld.ld_index);
++
+ }
  
-+	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
-+		del_timer_sync(&instance->sriov_heartbeat_timer);
-+
- 	instance->instancet->disable_intr(instance);
- 	megasas_destroy_irqs(instance);
+ /*
+@@ -1779,6 +1787,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ {
+ 	struct megasas_instance *instance;
+ 	struct MR_PRIV_DEVICE *mr_device_priv_data;
++	u32 ld_tgt_id;
  
-@@ -7557,8 +7562,16 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 		megasas_release_fusion(instance);
- 	else
- 		megasas_release_mfi(instance);
-+
- 	if (instance->msix_vectors)
- 		pci_free_irq_vectors(instance->pdev);
-+	instance->msix_vectors = 0;
-+
-+	if (instance->fw_crash_state != UNAVAILABLE)
-+		megasas_free_host_crash_buffer(instance);
-+
-+	if (instance->adapter_type != MFI_SERIES)
-+		megasas_fusion_stop_watchdog(instance);
- fail_init_mfi:
- 	scsi_host_put(host);
- fail_alloc_instance:
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index cd94a0c81f83..f79c19010c92 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -5272,6 +5272,7 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
- 		if (!fusion->log_to_span) {
- 			dev_err(&instance->pdev->dev, "Failed from %s %d\n",
- 				__func__, __LINE__);
-+			kfree(instance->ctrl_context);
- 			return -ENOMEM;
+ 	instance = (struct megasas_instance *)
+ 	    scmd->device->host->hostdata;
+@@ -1805,17 +1814,21 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
  		}
  	}
+ 
+-	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR) {
++	mr_device_priv_data = scmd->device->hostdata;
++	if (!mr_device_priv_data ||
++	    (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+ 		scmd->scsi_done(scmd);
+ 		return 0;
+ 	}
+ 
+-	mr_device_priv_data = scmd->device->hostdata;
+-	if (!mr_device_priv_data) {
+-		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
+-		return 0;
++	if (MEGASAS_IS_LOGICAL(scmd->device)) {
++		ld_tgt_id = MEGASAS_TARGET_ID(scmd->device);
++		if (instance->ld_tgtid_status[ld_tgt_id] == LD_TARGET_ID_DELETED) {
++			scmd->result = DID_NO_CONNECT << 16;
++			scmd->scsi_done(scmd);
++			return 0;
++		}
+ 	}
+ 
+ 	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL)
+@@ -2095,7 +2108,7 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+ 
+ static int megasas_slave_alloc(struct scsi_device *sdev)
+ {
+-	u16 pd_index = 0;
++	u16 pd_index = 0, ld_tgt_id;
+ 	struct megasas_instance *instance ;
+ 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+ 
+@@ -2120,6 +2133,14 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ 					GFP_KERNEL);
+ 	if (!mr_device_priv_data)
+ 		return -ENOMEM;
++
++	if (MEGASAS_IS_LOGICAL(sdev)) {
++		ld_tgt_id = MEGASAS_TARGET_ID(sdev);
++		instance->ld_tgtid_status[ld_tgt_id] = LD_TARGET_ID_ACTIVE;
++		if (megasas_dbg_lvl & LD_PD_DEBUG)
++			sdev_printk(KERN_INFO, sdev, "LD target ID %d created.\n", ld_tgt_id);
++	}
++
+ 	sdev->hostdata = mr_device_priv_data;
+ 
+ 	atomic_set(&mr_device_priv_data->r1_ldio_hint,
+@@ -2129,6 +2150,19 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ 
+ static void megasas_slave_destroy(struct scsi_device *sdev)
+ {
++	u16 ld_tgt_id;
++	struct megasas_instance *instance;
++
++	instance = megasas_lookup_instance(sdev->host->host_no);
++
++	if (MEGASAS_IS_LOGICAL(sdev)) {
++		ld_tgt_id = MEGASAS_TARGET_ID(sdev);
++		instance->ld_tgtid_status[ld_tgt_id] = LD_TARGET_ID_DELETED;
++		if (megasas_dbg_lvl & LD_PD_DEBUG)
++			sdev_printk(KERN_INFO, sdev,
++				    "LD target ID %d removed from OS stack\n", ld_tgt_id);
++	}
++
+ 	kfree(sdev->hostdata);
+ 	sdev->hostdata = NULL;
+ }
+@@ -3525,6 +3559,22 @@ megasas_complete_abort(struct megasas_instance *instance,
+ 	}
+ }
+ 
++static void
++megasas_set_ld_removed_by_fw(struct megasas_instance *instance)
++{
++	uint i;
++
++	for (i = 0; (i < MEGASAS_MAX_LD_IDS); i++) {
++		if (instance->ld_ids_prev[i] != 0xff &&
++		    instance->ld_ids_from_raidmap[i] == 0xff) {
++			if (megasas_dbg_lvl & LD_PD_DEBUG)
++				dev_info(&instance->pdev->dev,
++					 "LD target ID %d removed from RAID map\n", i);
++			instance->ld_tgtid_status[i] = LD_TARGET_ID_DELETED;
++		}
++	}
++}
++
+ /**
+  * megasas_complete_cmd -	Completes a command
+  * @instance:			Adapter soft state
+@@ -3687,9 +3737,13 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 				fusion->fast_path_io = 0;
+ 			}
+ 
++			if (instance->adapter_type >= INVADER_SERIES)
++				megasas_set_ld_removed_by_fw(instance);
++
+ 			megasas_sync_map_info(instance);
+ 			spin_unlock_irqrestore(instance->host->host_lock,
+ 					       flags);
++
+ 			break;
+ 		}
+ 		if (opcode == MR_DCMD_CTRL_EVENT_GET_INFO ||
+@@ -8831,8 +8885,10 @@ megasas_aen_polling(struct work_struct *work)
+ 	union megasas_evt_class_locale class_locale;
+ 	int event_type = 0;
+ 	u32 seq_num;
++	u16 ld_target_id;
+ 	int error;
+ 	u8  dcmd_ret = DCMD_SUCCESS;
++	struct scsi_device *sdev1;
+ 
+ 	if (!instance) {
+ 		printk(KERN_ERR "invalid instance!\n");
+@@ -8855,12 +8911,23 @@ megasas_aen_polling(struct work_struct *work)
+ 			break;
+ 
+ 		case MR_EVT_LD_OFFLINE:
+-		case MR_EVT_CFG_CLEARED:
+ 		case MR_EVT_LD_DELETED:
++			ld_target_id = instance->evt_detail->args.ld.target_id;
++			sdev1 = scsi_device_lookup(instance->host,
++						   MEGASAS_MAX_PD_CHANNELS +
++						   (ld_target_id / MEGASAS_MAX_DEV_PER_CHANNEL),
++						   (ld_target_id - MEGASAS_MAX_DEV_PER_CHANNEL),
++						   0);
++			if (sdev1)
++				megasas_remove_scsi_device(sdev1);
++
++			event_type = SCAN_VD_CHANNEL;
++			break;
+ 		case MR_EVT_LD_CREATED:
+ 			event_type = SCAN_VD_CHANNEL;
+ 			break;
+ 
++		case MR_EVT_CFG_CLEARED:
+ 		case MR_EVT_CTRL_HOST_BUS_SCAN_REQUESTED:
+ 		case MR_EVT_FOREIGN_CFG_IMPORTED:
+ 		case MR_EVT_LD_STATE_CHANGE:
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index b6c08d620033..83f69c33b01a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -349,6 +349,10 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
+ 
+ 	num_lds = le16_to_cpu(drv_map->raidMap.ldCount);
+ 
++	memcpy(instance->ld_ids_prev,
++	       instance->ld_ids_from_raidmap,
++	       sizeof(instance->ld_ids_from_raidmap));
++	memset(instance->ld_ids_from_raidmap, 0xff, MEGASAS_MAX_LD_IDS);
+ 	/*Convert Raid capability values to CPU arch */
+ 	for (i = 0; (num_lds > 0) && (i < MAX_LOGICAL_DRIVES_EXT); i++) {
+ 		ld = MR_TargetIdToLdGet(i, drv_map);
+@@ -359,7 +363,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance, u64 map_id)
+ 
+ 		raid = MR_LdRaidGet(ld, drv_map);
+ 		le32_to_cpus((u32 *)&raid->capability);
+-
++		instance->ld_ids_from_raidmap[i] = i;
+ 		num_lds--;
+ 	}
+ 
 -- 
 2.18.1
 
 
---000000000000eb668205c363a547
+--0000000000002ff08405c363a617
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -209,14 +402,14 @@ Zpnb0pToIvDm+Ur3N2MiX3nSNdXYjeMdwB0OAs05pMciX6VfrXagLKEdSRHtOo/W/JA7fToB0eJS
 Ky1ZxnSRQGTL4yIIMw43kd0GQyTIM6KyMy8uprn32g7HcYJf07P/tjC196OWjB5Qr7dSv3vtjU8N
 2J0Xc13/AGfXSZ8xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
 aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgxLE6Al5lQBqzmVPS8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINM1bEYe
-FmSlKmxqgbHWmUNRtknsIFA7NVT0TwEgdDZiMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTIxMDUyODEzMTM1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
+MDIwAgxLE6Al5lQBqzmVPS8wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIO3JZGON
+Yqx9cBdD0nGKp4xt1NOV1BYLRbxkN9cCiQbTMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTIxMDUyODEzMTQwMFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASow
 CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZI
-hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQDCkdAf7thM5kCP3UXJ7LHY+DBR
-bvCA/t+gOenQrlleFdu74TnCklgFjH02nZ6+DELBT7/DMJZouKlwboRpiD34NSQeSDyBCCfc2Xyh
-rtt+zUxRH7Q0QOT9qebZru5cOPCOkbNJ5lLXS80WnN14022smCXt9W1bHHvcjaQaz5Ek00qrvoWf
-aF63nbYGQ3Y3E3JG/AHXkz5ebmFGwK0iIfWNqQTbllPT6aulvb9rbAKy9AZLHnvTDhgXd51vAAli
-8AbkdD8VXoTryPJcuhjvNXf29lKBjhz+n+SA3F85GVa+nCd9EdQthwntBGVAwipgHSsNCDbNtb7w
-zJ5LcaOu2Cg9
---000000000000eb668205c363a547--
+hvcNAQEHMAsGCWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBjuG8sPtBCKzW9CzEz0t8H/a8y
+UlLGeD4raPpMBXUMd89eZL7tqFTn5g7HVg3CoIgnBrhUXcKpVqMoPVhgxCV6UOa75mAlLMcxEBSE
+WU3x8aI/af0FEtjyJYIFIwKLctAa7CxSmS1vwdGgYNOfa9hz3dqu3O+uAmEIxurMbqA5m6X6Jycj
+WQoOUVKLHs7y65kH8KuyS8lur/n5IGG8SVY5DuKfa9js9XmVZNUr3elQOgDapDNsj93JQS4f59MQ
+wAdOCZSdjoVIja0P8nqeDcNBvN9YYeH+70vSBs0oFt4Z8zUeicxVI07jNfBkORXjn0+3C3bW4Ka1
+6JvXxyfyxB1P
+--0000000000002ff08405c363a617--
