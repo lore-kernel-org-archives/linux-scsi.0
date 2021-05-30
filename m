@@ -2,202 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-17.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 48A0AC47082
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 May 2021 23:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C04EFC47095
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 May 2021 08:10:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10A366108D
-	for <linux-scsi@archiver.kernel.org>; Sat, 29 May 2021 23:49:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 849B0611AB
+	for <linux-scsi@archiver.kernel.org>; Sun, 30 May 2021 08:10:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229551AbhE2Xuj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 29 May 2021 19:50:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44754 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229514AbhE2Xuj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 May 2021 19:50:39 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8B030C061574
-        for <linux-scsi@vger.kernel.org>; Sat, 29 May 2021 16:49:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=b6jRAqcck9zu7xXrrOW4rNulzJBM7xMgxV9cSmz/aSQ=; b=WgUPLXr6kcz+COK+GzZm5R4n/6
-        CkY7MvsqDLQUPxEo53MDaGWdD/TTXytlfkqzW6P/ZsKieY51aIbo5OSvvtL5vCwLiqnYSbwv9RN31
-        qxRunbxBEot6975at7Dg3CMTmFzs+uNf90ffX1/uP3FR52RHxcxJAI5Bg/b8WU/nmCMZFcz8SYieF
-        XmWZIBbD8zLlUm4ZdrfcAtW9icpj0v8a1WsjaXmPD66U+ako8d0YUW+wPuY23pQKRWRlpIsut9faU
-        TJsRMDIdtaTljMm4bE+1maPdVQogv36Zl6Rpoomm7D80fLRJBUMLuhGtDiND3pNYZPLnQEPqa0Bh4
-        nlisndJA==;
-Received: from [2601:1c0:6280:3f0::ce7d] (helo=bombadil.infradead.org)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1ln8hO-008c7j-LJ; Sat, 29 May 2021 23:48:58 +0000
-From:   Randy Dunlap <rdunlap@infradead.org>
-To:     linux-scsi@vger.kernel.org
-Cc:     Randy Dunlap <rdunlap@infradead.org>,
-        kernel test robot <lkp@intel.com>,
+        id S229579AbhE3IL7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 30 May 2021 04:11:59 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:37770 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229500AbhE3IL6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 May 2021 04:11:58 -0400
+Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 56B2921918;
+        Sun, 30 May 2021 08:10:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1622362220; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=+Xb2DkGsSALc5EaPomznF8PNBm5nIHOVIb5pHgAgX3E=;
+        b=GqoIkCoynUNAchwmxwJjNBq/EAIHmHxM3sTCZ4JLL7x/ZzFobgAXBGUzBpAoPwEjGU+hut
+        BBWHRjj8faecidTOLkaq+1iByayAd3tOxAfbXi/WgOS7waalSYQs/OaLUq/PgTjRVcK+Qh
+        R49riZ5DGxDqoq8EX1RuQdnFSj1rXKs=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1622362220;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=+Xb2DkGsSALc5EaPomznF8PNBm5nIHOVIb5pHgAgX3E=;
+        b=l3JZiyleX6r5f+m0hy9iGUQ0srmLuJkQMnF6Fp9ZyB/503N9C1N11USLHZhOPmvFmYCFc6
+        YhBeb8IP0OiEzMDQ==
+Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        by imap.suse.de (Postfix) with ESMTP id BF31E118DD;
+        Sun, 30 May 2021 08:10:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1622362218; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=+Xb2DkGsSALc5EaPomznF8PNBm5nIHOVIb5pHgAgX3E=;
+        b=lM9ODM1iviPy7sLpXd8bVbPyqwbjsSvJplaIfrLINjEkKDQDvfNEjwx6A7bmcfSGkhoUJw
+        v+AfEyu2pLSb7x+deYW8DT2TeXalglz6FfQjf/8HujxFX6IM4yPiiASFoRo1l9/PAPBlvs
+        ZCr5NOReWGsaUH3lEjY6sIwF7PEtr10=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1622362218;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=+Xb2DkGsSALc5EaPomznF8PNBm5nIHOVIb5pHgAgX3E=;
+        b=HzcCmDtrZDqVRe+DTEBd/TAP8ItCS6vbCCFOK+m8zxFthnY9aJ6LJMEUcJZqV0/5Q31Kpx
+        d46hyB+dG/PVzFDg==
+Received: from director2.suse.de ([192.168.254.72])
+        by imap3-int with ESMTPSA
+        id foI4LWpIs2AoTwAALh3uQQ
+        (envelope-from <hare@suse.de>); Sun, 30 May 2021 08:10:18 +0000
+Subject: Re: [PATCH] SCSI: FlashPoint: rename si_flags field
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-scsi@vger.kernel.org
+Cc:     kernel test robot <lkp@intel.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Hannes Reinecke <hare@suse.de>,
         Khalid Aziz <khalid.aziz@oracle.com>,
         Khalid Aziz <khalid@gonehiking.org>
-Subject: [PATCH] SCSI: FlashPoint: rename si_flags field
-Date:   Sat, 29 May 2021 16:48:57 -0700
-Message-Id: <20210529234857.6870-1-rdunlap@infradead.org>
-X-Mailer: git-send-email 2.26.2
+References: <20210529234857.6870-1-rdunlap@infradead.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <b631c661-44fa-57f5-6540-1721f3df61e8@suse.de>
+Date:   Sun, 30 May 2021 10:10:17 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
+In-Reply-To: <20210529234857.6870-1-rdunlap@infradead.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+Authentication-Results: imap.suse.de;
+        none
+X-Spamd-Result: default: False [0.00 / 100.00];
+         ARC_NA(0.00)[];
+         RCVD_VIA_SMTP_AUTH(0.00)[];
+         FROM_HAS_DN(0.00)[];
+         TO_DN_SOME(0.00)[];
+         TO_MATCH_ENVRCPT_ALL(0.00)[];
+         MIME_GOOD(-0.10)[text/plain];
+         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+         RCPT_COUNT_SEVEN(0.00)[9];
+         RCVD_NO_TLS_LAST(0.10)[];
+         FROM_EQ_ENVFROM(0.00)[];
+         MIME_TRACE(0.00)[0:+];
+         RCVD_COUNT_TWO(0.00)[2];
+         MID_RHS_MATCH_FROM(0.00)[]
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The BusLogic driver has build errors on ia64 due to a name collision
-(in the #included FlashPoint.c file).
-Rename the struct field in struct sccb_mgr_info from si_flags to
-si_mflags (manager flags) to mend the build.
+On 5/30/21 1:48 AM, Randy Dunlap wrote:
+> The BusLogic driver has build errors on ia64 due to a name collision
+> (in the #included FlashPoint.c file).
+> Rename the struct field in struct sccb_mgr_info from si_flags to
+> si_mflags (manager flags) to mend the build.
+> 
+> This is the first problem. There are 50+ others after this one:
+> 
+> In file included from ../include/uapi/linux/signal.h:6,
+>                   from ../include/linux/signal_types.h:10,
+>                   from ../include/linux/sched.h:29,
+>                   from ../include/linux/hardirq.h:9,
+>                   from ../include/linux/interrupt.h:11,
+>                   from ../drivers/scsi/BusLogic.c:27:
+> ../arch/ia64/include/uapi/asm/siginfo.h:15:27: error: expected ':', ',', ';', '}' or '__attribute__' before '.' token
+>     15 | #define si_flags _sifields._sigfault._flags
+>        |                           ^
+> ../drivers/scsi/FlashPoint.c:43:6: note: in expansion of macro 'si_flags'
+>     43 |  u16 si_flags;
+>        |      ^~~~~~~~
+> In file included from ../drivers/scsi/BusLogic.c:51:
+> ../drivers/scsi/FlashPoint.c: In function 'FlashPoint_ProbeHostAdapter':
+> ../drivers/scsi/FlashPoint.c:1076:11: error: 'struct sccb_mgr_info' has no member named '_sifields'
+>   1076 |  pCardInfo->si_flags = 0x0000;
+>        |           ^~
+> ../drivers/scsi/FlashPoint.c:1079:12: error: 'struct sccb_mgr_info' has no member named '_sifields'
+> 
+> Fixes: 391e2f25601e ("[SCSI] BusLogic: Port driver to 64-bit.")
+> Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+> Reported-by: kernel test robot <lkp@intel.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Khalid Aziz <khalid.aziz@oracle.com>
+> Cc: Khalid Aziz <khalid@gonehiking.org>
+> ---
+>   drivers/scsi/FlashPoint.c |   32 ++++++++++++++++----------------
+>   1 file changed, 16 insertions(+), 16 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-This is the first problem. There are 50+ others after this one:
+Cheers,
 
-In file included from ../include/uapi/linux/signal.h:6,
-                 from ../include/linux/signal_types.h:10,
-                 from ../include/linux/sched.h:29,
-                 from ../include/linux/hardirq.h:9,
-                 from ../include/linux/interrupt.h:11,
-                 from ../drivers/scsi/BusLogic.c:27:
-../arch/ia64/include/uapi/asm/siginfo.h:15:27: error: expected ':', ',', ';', '}' or '__attribute__' before '.' token
-   15 | #define si_flags _sifields._sigfault._flags
-      |                           ^
-../drivers/scsi/FlashPoint.c:43:6: note: in expansion of macro 'si_flags'
-   43 |  u16 si_flags;
-      |      ^~~~~~~~
-In file included from ../drivers/scsi/BusLogic.c:51:
-../drivers/scsi/FlashPoint.c: In function 'FlashPoint_ProbeHostAdapter':
-../drivers/scsi/FlashPoint.c:1076:11: error: 'struct sccb_mgr_info' has no member named '_sifields'
- 1076 |  pCardInfo->si_flags = 0x0000;
-      |           ^~
-../drivers/scsi/FlashPoint.c:1079:12: error: 'struct sccb_mgr_info' has no member named '_sifields'
-
-Fixes: 391e2f25601e ("[SCSI] BusLogic: Port driver to 64-bit.")
-Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
-Reported-by: kernel test robot <lkp@intel.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Khalid Aziz <khalid.aziz@oracle.com>
-Cc: Khalid Aziz <khalid@gonehiking.org>
----
- drivers/scsi/FlashPoint.c |   32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
-
---- linux-next-20210528.orig/drivers/scsi/FlashPoint.c
-+++ linux-next-20210528/drivers/scsi/FlashPoint.c
-@@ -40,7 +40,7 @@ struct sccb_mgr_info {
- 	u16 si_per_targ_ultra_nego;
- 	u16 si_per_targ_no_disc;
- 	u16 si_per_targ_wide_nego;
--	u16 si_flags;
-+	u16 si_mflags;
- 	unsigned char si_card_family;
- 	unsigned char si_bustype;
- 	unsigned char si_card_model[3];
-@@ -1073,22 +1073,22 @@ static int FlashPoint_ProbeHostAdapter(s
- 		ScamFlg =
- 		    (unsigned char)FPT_utilEERead(ioport, SCAM_CONFIG / 2);
- 
--	pCardInfo->si_flags = 0x0000;
-+	pCardInfo->si_mflags = 0x0000;
- 
- 	if (i & 0x01)
--		pCardInfo->si_flags |= SCSI_PARITY_ENA;
-+		pCardInfo->si_mflags |= SCSI_PARITY_ENA;
- 
- 	if (!(i & 0x02))
--		pCardInfo->si_flags |= SOFT_RESET;
-+		pCardInfo->si_mflags |= SOFT_RESET;
- 
- 	if (i & 0x10)
--		pCardInfo->si_flags |= EXTENDED_TRANSLATION;
-+		pCardInfo->si_mflags |= EXTENDED_TRANSLATION;
- 
- 	if (ScamFlg & SCAM_ENABLED)
--		pCardInfo->si_flags |= FLAG_SCAM_ENABLED;
-+		pCardInfo->si_mflags |= FLAG_SCAM_ENABLED;
- 
- 	if (ScamFlg & SCAM_LEVEL2)
--		pCardInfo->si_flags |= FLAG_SCAM_LEVEL2;
-+		pCardInfo->si_mflags |= FLAG_SCAM_LEVEL2;
- 
- 	j = (RD_HARPOON(ioport + hp_bm_ctrl) & ~SCSI_TERM_ENA_L);
- 	if (i & 0x04) {
-@@ -1104,7 +1104,7 @@ static int FlashPoint_ProbeHostAdapter(s
- 
- 	if (!(RD_HARPOON(ioport + hp_page_ctrl) & NARROW_SCSI_CARD))
- 
--		pCardInfo->si_flags |= SUPPORT_16TAR_32LUN;
-+		pCardInfo->si_mflags |= SUPPORT_16TAR_32LUN;
- 
- 	pCardInfo->si_card_family = HARPOON_FAMILY;
- 	pCardInfo->si_bustype = BUSTYPE_PCI;
-@@ -1140,15 +1140,15 @@ static int FlashPoint_ProbeHostAdapter(s
- 
- 	if (pCardInfo->si_card_model[1] == '3') {
- 		if (RD_HARPOON(ioport + hp_ee_ctrl) & BIT(7))
--			pCardInfo->si_flags |= LOW_BYTE_TERM;
-+			pCardInfo->si_mflags |= LOW_BYTE_TERM;
- 	} else if (pCardInfo->si_card_model[2] == '0') {
- 		temp = RD_HARPOON(ioport + hp_xfer_pad);
- 		WR_HARPOON(ioport + hp_xfer_pad, (temp & ~BIT(4)));
- 		if (RD_HARPOON(ioport + hp_ee_ctrl) & BIT(7))
--			pCardInfo->si_flags |= LOW_BYTE_TERM;
-+			pCardInfo->si_mflags |= LOW_BYTE_TERM;
- 		WR_HARPOON(ioport + hp_xfer_pad, (temp | BIT(4)));
- 		if (RD_HARPOON(ioport + hp_ee_ctrl) & BIT(7))
--			pCardInfo->si_flags |= HIGH_BYTE_TERM;
-+			pCardInfo->si_mflags |= HIGH_BYTE_TERM;
- 		WR_HARPOON(ioport + hp_xfer_pad, temp);
- 	} else {
- 		temp = RD_HARPOON(ioport + hp_ee_ctrl);
-@@ -1166,9 +1166,9 @@ static int FlashPoint_ProbeHostAdapter(s
- 		WR_HARPOON(ioport + hp_ee_ctrl, temp);
- 		WR_HARPOON(ioport + hp_xfer_pad, temp2);
- 		if (!(temp3 & BIT(7)))
--			pCardInfo->si_flags |= LOW_BYTE_TERM;
-+			pCardInfo->si_mflags |= LOW_BYTE_TERM;
- 		if (!(temp3 & BIT(6)))
--			pCardInfo->si_flags |= HIGH_BYTE_TERM;
-+			pCardInfo->si_mflags |= HIGH_BYTE_TERM;
- 	}
- 
- 	ARAM_ACCESS(ioport);
-@@ -1275,7 +1275,7 @@ static void *FlashPoint_HardwareResetHos
- 	WR_HARPOON(ioport + hp_arb_id, pCardInfo->si_id);
- 	CurrCard->ourId = pCardInfo->si_id;
- 
--	i = (unsigned char)pCardInfo->si_flags;
-+	i = (unsigned char)pCardInfo->si_mflags;
- 	if (i & SCSI_PARITY_ENA)
- 		WR_HARPOON(ioport + hp_portctrl_1, (HOST_MODE8 | CHK_SCSI_P));
- 
-@@ -1289,14 +1289,14 @@ static void *FlashPoint_HardwareResetHos
- 		j |= SCSI_TERM_ENA_H;
- 	WR_HARPOON(ioport + hp_ee_ctrl, j);
- 
--	if (!(pCardInfo->si_flags & SOFT_RESET)) {
-+	if (!(pCardInfo->si_mflags & SOFT_RESET)) {
- 
- 		FPT_sresb(ioport, thisCard);
- 
- 		FPT_scini(thisCard, pCardInfo->si_id, 0);
- 	}
- 
--	if (pCardInfo->si_flags & POST_ALL_UNDERRRUNS)
-+	if (pCardInfo->si_mflags & POST_ALL_UNDERRRUNS)
- 		CurrCard->globalFlags |= F_NO_FILTER;
- 
- 	if (pCurrNvRam) {
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
