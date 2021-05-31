@@ -8,52 +8,52 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A77F2C47082
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 10:43:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F238C47080
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 10:43:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80BEA60FF3
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 10:43:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41D7A60FF3
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 10:43:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231474AbhEaKpO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 May 2021 06:45:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49884 "EHLO
+        id S231384AbhEaKpR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 May 2021 06:45:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49882 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231357AbhEaKpF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 06:45:05 -0400
-Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86E94C061574;
-        Mon, 31 May 2021 03:43:24 -0700 (PDT)
-Received: by mail-ej1-x62d.google.com with SMTP id jt22so16027853ejb.7;
-        Mon, 31 May 2021 03:43:24 -0700 (PDT)
+        with ESMTP id S231382AbhEaKpG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 06:45:06 -0400
+Received: from mail-ej1-x62c.google.com (mail-ej1-x62c.google.com [IPv6:2a00:1450:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 56CA9C061760;
+        Mon, 31 May 2021 03:43:25 -0700 (PDT)
+Received: by mail-ej1-x62c.google.com with SMTP id lz27so15964043ejb.11;
+        Mon, 31 May 2021 03:43:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=J6H9WGXYQrem7icV2sz1sWQwyHLvRgt4yHtiTHtzZlc=;
-        b=douWCSMM3wPLfJv+MkKPa/w46b9NcIaI+PtpQ3LwIQuwXxYa3Nw0m2QPXGzlU+Xzng
-         zaMHfTSNVCpeT6gycmJUK2BJ82X8BkxxCzqvPyKp/IykX4qIq6bn/H2FCcM6pCB1JAd+
-         XhbHGokcnzzdAtaPCBOjApbw598DdFzRRETW6tp6hKG74axhd4zCI06KJAh7uVJoY6y/
-         v536iNw3MpkxpILuf+wdrQJeO/CNS8B6X45MHf4AJscqaXaJMYETSG+4147PjuV1LSHO
-         9D72KVDobpLYlu/zB2JFB3KyGbumiqiEiTJsxy8M6XHh17OxXQj6Rvw6OlPlKIB8pFNy
-         mCiA==
+        bh=QJR89/55KXiudMnlzBPyQOfHeATecr68iMPdF7Lg45k=;
+        b=K1CXkY67aICkk8XQVHakyjkkVxcPKI0OgTVvMhRn0798culLJyaL453W0qgY4Uhk6N
+         vTR7zkfwIqMcFLegI0Yf3/meTKtrU/yDDQFU5qTytk9RaRgqM1Mfa2fQX3glxfM2EOID
+         Y5Gs3ZIcqC/NO72M0Olou7LZ0FQJwekMhY+90afE9JRtLgAPPCpfQZAEVcqZ8tDBtIsN
+         jTXMX9H524WiujyAW4oOXDo0g/c5JOYcsSAZEuPRVIeDGcPqXN2sclbF60Ya4KmDF9m1
+         Q5bgMdFWTGDSlBFZWNybZB3Iy96ksD9XKpa+auj4FXGP186ORO8gtrqaqXIM5e9pYqZd
+         +Z1w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=J6H9WGXYQrem7icV2sz1sWQwyHLvRgt4yHtiTHtzZlc=;
-        b=pOTT3fFNP7JlTdf4KpTm/5HjyW781GIxVTqS1a+Gc/Zy4MeRHvO9KQpQ0n+bKL/2kv
-         HIrg97pufiGxQ2ORKysn6oaFV7InjbxfYfMQQmSggFY1G8Y7znODfrAdQAc1wtPqrBuR
-         Lj/3/cnAlq8ABQ1+8qAn4+nmyvojNGiAhaVWeCg+sWYl/SzBWvT1fKEasSuNzN5XV0b3
-         TaaI2mW7uh5JwpZiM+XfIMHq4/1lHC3eTXsrn+G/wu1XOuD19tTDvQnBhJ9ibnKPUDCA
-         +wMJTglQkW2f3jc/bbXgLmiLhhij19iHYKTj+LCZhCd/9iznKPqGwthg8UE0TrQBw13V
-         2K0g==
-X-Gm-Message-State: AOAM531bAywraktat6nQOec4l95INKZ8xo7rL8YUNjpI2Gly2T1q2O0k
-        6C31HOlkR3t53ebGH3zMjzw=
-X-Google-Smtp-Source: ABdhPJzhUwzGZu153knctX6DiLSQRXDa4A+syM6Q2UYXJlYvj+cH6FasUGt+4SL/QBhG7QtsX2vvMw==
-X-Received: by 2002:a17:906:1806:: with SMTP id v6mr21972016eje.454.1622457803215;
+        bh=QJR89/55KXiudMnlzBPyQOfHeATecr68iMPdF7Lg45k=;
+        b=SVY/3lNHV6UGLn3DPi0dKIs6RV4OPwINjl19efFUESDSNKLn1L/q4DuR5FuOfJRrIV
+         VvUjqi/CBtRV+HUcfb228Lt7U1jcC38ObDn126Z1Mzqjpb61/I9An/lnut4MvcHz49zE
+         RM/WwvgGLgjA+UUWvsgmWRHtk4tmhhe+XRoJ3BwIRJMQTWTSQ1hcxL2RN7vnRVTaTZw7
+         TMl5BJPZQDxpnZvSwSUsqBdRsblriI0cYtjZfyH6JZTwqIQamPmx5vGqBrWbLSVeYd6i
+         oAw3TkZdzDyhcA/JQuEQEkgNgblPU38o+svGgI4WV/EoX3/CGMIo/QyTcKlbXpXu5oKp
+         7zZA==
+X-Gm-Message-State: AOAM5317d1Irl0CO+Cd1ZZpuc3XyysJBt9gZZlMQH9/yAMmlJ5MD05IX
+        lAAYNuk/CEeuISWpSCM9l20=
+X-Google-Smtp-Source: ABdhPJxDJvrgYdIK8f0tjjYwr6p6Uz/eVz7Ds1pKwC2HivAzFIfzlLx594swmbjxCRutv/Gr/5IFmw==
+X-Received: by 2002:a17:906:c0c6:: with SMTP id bn6mr21272637ejb.436.1622457803973;
         Mon, 31 May 2021 03:43:23 -0700 (PDT)
 Received: from localhost.localdomain (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
-        by smtp.gmail.com with ESMTPSA id dk9sm5741035ejb.91.2021.05.31.03.43.22
+        by smtp.gmail.com with ESMTPSA id dk9sm5741035ejb.91.2021.05.31.03.43.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Mon, 31 May 2021 03:43:23 -0700 (PDT)
 From:   Bean Huo <huobean@gmail.com>
@@ -63,14 +63,13 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/4] scsi: ufs: Let command trace only for the cmd != null case
-Date:   Mon, 31 May 2021 12:43:07 +0200
-Message-Id: <20210531104308.391842-4-huobean@gmail.com>
+Subject: [PATCH v2 4/4] scsi: ufs: Use UPIU query trace in devman_upiu_cmd
+Date:   Mon, 31 May 2021 12:43:08 +0200
+Message-Id: <20210531104308.391842-5-huobean@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210531104308.391842-1-huobean@gmail.com>
 References: <20210531104308.391842-1-huobean@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -78,83 +77,36 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-For the query request, we already have query_trace, but in
-ufshcd_send_command (), there will add two more redundant
-traces. Since lrbp->cmd is null in the query request, the
-below these two trace events provide nothing except the tag
-and DB. Instead of letting them take up the limited trace
-ring buffer, it’s better not to print these traces in case
-of cmd == null.
-
-ufshcd_command: send_req: ff3b0000.ufs: tag: 28, DB: 0x0, size: -1, IS: 0, LBA: 18446744073709551615, opcode: 0x0 (0x0), group_id: 0x0
-ufshcd_command: dev_complete: ff3b0000.ufs: tag: 28, DB: 0x0, size: -1, IS: 0, LBA: 18446744073709551615, opcode: 0x0 (0x0), group_id: 0x0
+Since devman_upiu_cmd is not COMMAND UPIU, and doesn't have
+CDB, it is better to use UPIU query trace, which provides more
+helpful information for issue shooting.
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 44 +++++++++++++++++++--------------------
- 1 file changed, 21 insertions(+), 23 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c5754d5486c9..c84bd8e045f6 100644
+index c84bd8e045f6..deb9e232b349 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -378,35 +378,33 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	int transfer_len = -1;
+@@ -6701,6 +6701,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
  
-+	if (!cmd)
-+		return;
-+
- 	if (!trace_ufshcd_command_enabled()) {
- 		/* trace UPIU W/O tracing command */
--		if (cmd)
--			ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
-+		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
- 		return;
+ 	hba->dev_cmd.complete = &wait;
+ 
++	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+ 	/* Make sure descriptors are ready before ringing the doorbell */
+ 	wmb();
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+@@ -6732,6 +6733,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 			err = -EINVAL;
+ 		}
  	}
++	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
++				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
  
--	if (cmd) { /* data phase exists */
--		/* trace UPIU also */
--		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
--		opcode = cmd->cmnd[0];
--		lba = sectors_to_logical(cmd->device, blk_rq_pos(cmd->request));
-+	/* trace UPIU also */
-+	ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
-+	opcode = cmd->cmnd[0];
-+	lba = sectors_to_logical(cmd->device, blk_rq_pos(cmd->request));
- 
--		if ((opcode == READ_10) || (opcode == WRITE_10)) {
--			/*
--			 * Currently we only fully trace read(10) and write(10)
--			 * commands
--			 */
--			transfer_len = be32_to_cpu(
--				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
--			if (opcode == WRITE_10)
--				group_id = lrbp->cmd->cmnd[6];
--		} else if (opcode == UNMAP) {
--			/*
--			 * The number of Bytes to be unmapped beginning with the
--			 * lba.
--			 */
--			transfer_len = blk_rq_bytes(cmd->request);
--		}
-+	if (opcode == READ_10 || opcode == WRITE_10) {
-+		/*
-+		 * Currently we only fully trace read(10) and write(10) commands
-+		 */
-+		transfer_len =
-+		       be32_to_cpu(lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
-+		if (opcode == WRITE_10)
-+			group_id = lrbp->cmd->cmnd[6];
-+	} else if (opcode == UNMAP) {
-+		/*
-+		 * The number of Bytes to be unmapped beginning with the lba.
-+		 */
-+		transfer_len = blk_rq_bytes(cmd->request);
- 	}
- 
- 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+ out:
+ 	blk_put_request(req);
 -- 
 2.25.1
 
