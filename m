@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41E61C47080
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 10:43:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A77F2C47082
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 10:43:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23C386124C
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 10:43:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80BEA60FF3
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 10:43:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231397AbhEaKpH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 May 2021 06:45:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49882 "EHLO
+        id S231474AbhEaKpO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 May 2021 06:45:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231363AbhEaKpE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 06:45:04 -0400
-Received: from mail-ej1-x636.google.com (mail-ej1-x636.google.com [IPv6:2a00:1450:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6718C06174A;
-        Mon, 31 May 2021 03:43:23 -0700 (PDT)
-Received: by mail-ej1-x636.google.com with SMTP id k7so6458216ejv.12;
-        Mon, 31 May 2021 03:43:23 -0700 (PDT)
+        with ESMTP id S231357AbhEaKpF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 06:45:05 -0400
+Received: from mail-ej1-x62d.google.com (mail-ej1-x62d.google.com [IPv6:2a00:1450:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 86E94C061574;
+        Mon, 31 May 2021 03:43:24 -0700 (PDT)
+Received: by mail-ej1-x62d.google.com with SMTP id jt22so16027853ejb.7;
+        Mon, 31 May 2021 03:43:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=tA6A2ohh4L8vBzT6/8t9tpUkgl45rDZLB/Lv05qFeiw=;
-        b=kAfcQ/GGr5m+hwwczKIC6ejflav1uQUMGfO5AOqqv9OpJM9l5w44bw5NWNgDMp9zXL
-         fDx7ar2wpcjlHbvEHxScCT6FJf6pFTGpMsx/RpIW3RDkRw91OMj2ItNl5Sp+FlBo2Z1f
-         /KyndLMF+FFEfYgMwzpVKXvy94HsLbTCrLs297J7bsm7Cd9IWLh0hx5VV2NwqmuabVkK
-         /qqzLCfr2vao3YvT30mWPRoWJvSTjq5h+rIyu2Af6uStJMoXOVgUy0jX6avYY4rhx+D+
-         93vWMjM7sZCHu7ktRLUdx55RaxeSL0PIy5FiLi9sjOGHjhb87zII4QLRDB8eVu+ldKmr
-         FIbQ==
+        bh=J6H9WGXYQrem7icV2sz1sWQwyHLvRgt4yHtiTHtzZlc=;
+        b=douWCSMM3wPLfJv+MkKPa/w46b9NcIaI+PtpQ3LwIQuwXxYa3Nw0m2QPXGzlU+Xzng
+         zaMHfTSNVCpeT6gycmJUK2BJ82X8BkxxCzqvPyKp/IykX4qIq6bn/H2FCcM6pCB1JAd+
+         XhbHGokcnzzdAtaPCBOjApbw598DdFzRRETW6tp6hKG74axhd4zCI06KJAh7uVJoY6y/
+         v536iNw3MpkxpILuf+wdrQJeO/CNS8B6X45MHf4AJscqaXaJMYETSG+4147PjuV1LSHO
+         9D72KVDobpLYlu/zB2JFB3KyGbumiqiEiTJsxy8M6XHh17OxXQj6Rvw6OlPlKIB8pFNy
+         mCiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=tA6A2ohh4L8vBzT6/8t9tpUkgl45rDZLB/Lv05qFeiw=;
-        b=drjt6IkTyMZNJqYdH4bm66ysMdckOrSwTxkeY5jzwBRuzgxfQZl4c8LgVT3dE2gD10
-         UiNnFHuW+7XLctHCFRsqvL9OW72d8n0JHUt2II78koBA32S+8Et2jO3znIr12kWod62t
-         WmxLLb6f47gbQpl2QRrqrGEUnbtYQa25+1pM3i04+H2Ph0jankTzVYPIH7bCE/ROBVUm
-         lQ//CT3+MZrcytjbaaaPOAUSDo2OH22Hfumdt2YXhlq/4FQ0Nh6iKfTcwO53X8L+5AhM
-         JGZ3hazU0I9VFDMP9lgkhzgUPbORMSMgF0dHMS5/1xHscW+hDktO6NNWbwuusIu9GUa6
-         0Z0A==
-X-Gm-Message-State: AOAM530WMYw88fBPtQFUxR5jVuXKtGHc4hgSUB8RMvscsisZzsTr/exy
-        GtABr0rjJj3PUvUwHdZqgiM=
-X-Google-Smtp-Source: ABdhPJwa7MnHJHeEjbiD02yy+8LFvhMpLVGXYyeU9KmVCI5OPQLFmaPwGaZqBBP8Rn3Sn2/XM/cNYQ==
-X-Received: by 2002:a17:906:f6d7:: with SMTP id jo23mr3164770ejb.302.1622457802464;
-        Mon, 31 May 2021 03:43:22 -0700 (PDT)
+        bh=J6H9WGXYQrem7icV2sz1sWQwyHLvRgt4yHtiTHtzZlc=;
+        b=pOTT3fFNP7JlTdf4KpTm/5HjyW781GIxVTqS1a+Gc/Zy4MeRHvO9KQpQ0n+bKL/2kv
+         HIrg97pufiGxQ2ORKysn6oaFV7InjbxfYfMQQmSggFY1G8Y7znODfrAdQAc1wtPqrBuR
+         Lj/3/cnAlq8ABQ1+8qAn4+nmyvojNGiAhaVWeCg+sWYl/SzBWvT1fKEasSuNzN5XV0b3
+         TaaI2mW7uh5JwpZiM+XfIMHq4/1lHC3eTXsrn+G/wu1XOuD19tTDvQnBhJ9ibnKPUDCA
+         +wMJTglQkW2f3jc/bbXgLmiLhhij19iHYKTj+LCZhCd/9iznKPqGwthg8UE0TrQBw13V
+         2K0g==
+X-Gm-Message-State: AOAM531bAywraktat6nQOec4l95INKZ8xo7rL8YUNjpI2Gly2T1q2O0k
+        6C31HOlkR3t53ebGH3zMjzw=
+X-Google-Smtp-Source: ABdhPJzhUwzGZu153knctX6DiLSQRXDa4A+syM6Q2UYXJlYvj+cH6FasUGt+4SL/QBhG7QtsX2vvMw==
+X-Received: by 2002:a17:906:1806:: with SMTP id v6mr21972016eje.454.1622457803215;
+        Mon, 31 May 2021 03:43:23 -0700 (PDT)
 Received: from localhost.localdomain (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
-        by smtp.gmail.com with ESMTPSA id dk9sm5741035ejb.91.2021.05.31.03.43.21
+        by smtp.gmail.com with ESMTPSA id dk9sm5741035ejb.91.2021.05.31.03.43.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 May 2021 03:43:22 -0700 (PDT)
+        Mon, 31 May 2021 03:43:23 -0700 (PDT)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -63,9 +63,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/4] scsi: ufs: Let UPIU completion trace print RSP UPIU header
-Date:   Mon, 31 May 2021 12:43:06 +0200
-Message-Id: <20210531104308.391842-3-huobean@gmail.com>
+Subject: [PATCH v2 3/4] scsi: ufs: Let command trace only for the cmd != null case
+Date:   Mon, 31 May 2021 12:43:07 +0200
+Message-Id: <20210531104308.391842-4-huobean@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210531104308.391842-1-huobean@gmail.com>
 References: <20210531104308.391842-1-huobean@gmail.com>
@@ -78,56 +78,83 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-The current UPIU completion event trace still prints the COMMAND UPIU
-header, rather than the RSP UPIU header. This makes UPIU command trace
-useless in problem shooting in case we receive a trace log from the
-customer/field.
+For the query request, we already have query_trace, but in
+ufshcd_send_command (), there will add two more redundant
+traces. Since lrbp->cmd is null in the query request, the
+below these two trace events provide nothing except the tag
+and DB. Instead of letting them take up the limited trace
+ring buffer, it’s better not to print these traces in case
+of cmd == null.
 
-There are two important fields in RSP UPIU:
- 1. The response field, which indicates the UFS defined overall success
-    or failure of the series of Command, Data and RESPONSE UPIU’s that
-    make up the execution of a task.
- 2. The Status field, which contains the command set specific status for
-    a specific command issued by the initiator device.
-
-Before this patch, the UPIU paired trace events:
-
-ufshcd_upiu: send_req: fe3b0000.ufs: HDR:01 20 00 1c 00 00 00 00 00 00 00 00, CDB:3b e1 00 00 00 00 00 00 30 00 00 00 00 00 00 00
-ufshcd_upiu: complete_rsp: fe3b0000.ufs: HDR:01 20 00 1c 00 00 00 00 00 00 00 00, CDB:3b e1 00 00 00 00 00 00 30 00 00 00 00 00 00 00
-
-After the patch:
-
-ufshcd_upiu: send_req: fe3b0000.ufs: HDR:01 20 00 1c 00 00 00 00 00 00 00 00, CDB:3b e1 00 00 00 00 00 00 30 00 00 00 00 00 00 00
-ufshcd_upiu: complete_rsp: fe3b0000.ufs: HDR:21 00 00 1c 00 00 00 00 00 00 00 00, CDB:3b e1 00 00 00 00 00 00 30 00 00 00 00 00 00 00
+ufshcd_command: send_req: ff3b0000.ufs: tag: 28, DB: 0x0, size: -1, IS: 0, LBA: 18446744073709551615, opcode: 0x0 (0x0), group_id: 0x0
+ufshcd_command: dev_complete: ff3b0000.ufs: tag: 28, DB: 0x0, size: -1, IS: 0, LBA: 18446744073709551615, opcode: 0x0 (0x0), group_id: 0x0
 
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 44 +++++++++++++++++++--------------------
+ 1 file changed, 21 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 85590d3a719e..c5754d5486c9 100644
+index c5754d5486c9..c84bd8e045f6 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -302,11 +302,17 @@ static void ufshcd_add_cmd_upiu_trace(struct ufs_hba *hba, unsigned int tag,
- 				      enum ufs_trace_str_t str_t)
- {
- 	struct utp_upiu_req *rq = hba->lrb[tag].ucd_req_ptr;
-+	struct utp_upiu_header *header;
+@@ -378,35 +378,33 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
+ 	struct scsi_cmnd *cmd = lrbp->cmd;
+ 	int transfer_len = -1;
  
- 	if (!trace_ufshcd_upiu_enabled())
- 		return;
- 
--	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq->header, &rq->sc.cdb,
-+	if (str_t == UFS_CMD_SEND)
-+		header = &rq->header;
-+	else
-+		header = &hba->lrb[tag].ucd_rsp_ptr->header;
++	if (!cmd)
++		return;
 +
-+	trace_ufshcd_upiu(dev_name(hba->dev), str_t, header, &rq->sc.cdb,
- 			  UFS_TSF_CDB);
- }
+ 	if (!trace_ufshcd_command_enabled()) {
+ 		/* trace UPIU W/O tracing command */
+-		if (cmd)
+-			ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
++		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
+ 		return;
+ 	}
  
+-	if (cmd) { /* data phase exists */
+-		/* trace UPIU also */
+-		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
+-		opcode = cmd->cmnd[0];
+-		lba = sectors_to_logical(cmd->device, blk_rq_pos(cmd->request));
++	/* trace UPIU also */
++	ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
++	opcode = cmd->cmnd[0];
++	lba = sectors_to_logical(cmd->device, blk_rq_pos(cmd->request));
+ 
+-		if ((opcode == READ_10) || (opcode == WRITE_10)) {
+-			/*
+-			 * Currently we only fully trace read(10) and write(10)
+-			 * commands
+-			 */
+-			transfer_len = be32_to_cpu(
+-				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
+-			if (opcode == WRITE_10)
+-				group_id = lrbp->cmd->cmnd[6];
+-		} else if (opcode == UNMAP) {
+-			/*
+-			 * The number of Bytes to be unmapped beginning with the
+-			 * lba.
+-			 */
+-			transfer_len = blk_rq_bytes(cmd->request);
+-		}
++	if (opcode == READ_10 || opcode == WRITE_10) {
++		/*
++		 * Currently we only fully trace read(10) and write(10) commands
++		 */
++		transfer_len =
++		       be32_to_cpu(lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
++		if (opcode == WRITE_10)
++			group_id = lrbp->cmd->cmnd[6];
++	} else if (opcode == UNMAP) {
++		/*
++		 * The number of Bytes to be unmapped beginning with the lba.
++		 */
++		transfer_len = blk_rq_bytes(cmd->request);
+ 	}
+ 
+ 	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
 -- 
 2.25.1
 
