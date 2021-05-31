@@ -2,133 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E2A49C4708F
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 09:06:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1514C4708F
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 09:18:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0A7060FDA
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 09:06:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C918A606A5
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 09:18:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230399AbhEaJIb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 May 2021 05:08:31 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25578 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230337AbhEaJIP (ORCPT
+        id S229768AbhEaJTk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 May 2021 05:19:40 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:27710 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229646AbhEaJTe (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 May 2021 05:08:15 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 14V96NSM014845;
-        Mon, 31 May 2021 02:06:28 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=vJD3FC7L7Iq4KIkXJn86baeDLcjGa8hZW/EM6OIxen4=;
- b=freR52Z/V6uNlyR3JwDFIkQsYL1R5LW9QH0toDBPu1bfvPQcju1gHQdhyxU+5m9VJhTZ
- Jhsmfc/sg65zO1XG+tVpakQByYEyDbsXKNAGBzqPNQ/OcVYfDvsMEWvAHeUan+HLx0Ca
- fnaZFAtMQOhkN6e6oYgxQuPxLpVhIIZGHFE66WoNr6Yy4HvmVqJtlq42l2kyV/eUvoZ4
- kiU5jKYenb2RkmkEqQgDPKAt8SZ0RpcZFS/cIqkniQk1kSdQPCb/aj9kyyErtrcVs0wX
- akXZdj6gvDVSNgXaemIU5sGIFG9Py6puapNVojPPajZIfH8y92pOZs2AnKkJMtoUJfvT gA== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 38vtnj8cyu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Mon, 31 May 2021 02:06:27 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 31 May
- 2021 02:06:25 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Mon, 31 May 2021 02:06:26 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id B577D3F703F;
-        Mon, 31 May 2021 02:06:25 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 14V96O82001639;
-        Mon, 31 May 2021 02:06:25 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Mon, 31 May 2021 02:06:24 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     Daniel Wagner <dwagner@suse.de>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        <linux-kernel@vger.kernel.org>, Nilesh Javali <njavali@marvell.com>
-Subject: Re: [EXT] [RFC 0/2] Serialize timeout handling and done callback.
-In-Reply-To: <20210507123103.10265-1-dwagner@suse.de>
-Message-ID: <alpine.LRH.2.21.9999.2105310148300.17918@irv1user01.caveonetworks.com>
-References: <20210507123103.10265-1-dwagner@suse.de>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
+        Mon, 31 May 2021 05:19:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1622452675;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=oMCrl/sxWrR3LIJsiYUpsQEWSyTBjyGH6b5b1UjBVDI=;
+        b=a9wzA+KDASj4ocnGz1u/Seam8/q/ye9+uz3P0Lg/wHpgvch1s7Wb6iEykhtJyC/+WlqRAe
+        eocsqc9PJBkcElwgDfp4DL9zz2Vi0sFQil4wQ3FCkZP0FuPsymap+VQSxDYFYUcEYXWIxb
+        Vuxe/CPiKMgxLSV1YX+9qFHNg2p62no=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-599-HwSP2wC_MD2HqdU7uyzeVQ-1; Mon, 31 May 2021 05:17:51 -0400
+X-MC-Unique: HwSP2wC_MD2HqdU7uyzeVQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id C5F99107ACC7;
+        Mon, 31 May 2021 09:17:49 +0000 (UTC)
+Received: from T590 (ovpn-12-235.pek2.redhat.com [10.72.12.235])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id ACF275D745;
+        Mon, 31 May 2021 09:17:43 +0000 (UTC)
+Date:   Mon, 31 May 2021 17:17:38 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH V3 3/3] scsi: core: put ->shost_gendev.parent in failure
+ handling path
+Message-ID: <YLSpst+BdewyYJXh@T590>
+References: <20210531050727.2353973-1-ming.lei@redhat.com>
+ <20210531050727.2353973-4-ming.lei@redhat.com>
+ <2cbcfc4a-78ae-ddc9-1386-6008fcaecb0b@suse.de>
+ <YLSWscVt74+2OO19@T590>
+ <e010e535-7b8e-7e3c-141c-64da37370729@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-GUID: UXdAua8R7xiGaB5RyXsu5-vHqQymrCUx
-X-Proofpoint-ORIG-GUID: UXdAua8R7xiGaB5RyXsu5-vHqQymrCUx
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-05-31_07:2021-05-31,2021-05-31 signatures=0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e010e535-7b8e-7e3c-141c-64da37370729@suse.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 7 May 2021, 5:31am, Daniel Wagner wrote:
+On Mon, May 31, 2021 at 10:23:43AM +0200, Hannes Reinecke wrote:
+> On 5/31/21 9:56 AM, Ming Lei wrote:
+> > On Mon, May 31, 2021 at 08:28:49AM +0200, Hannes Reinecke wrote:
+> > > On 5/31/21 7:07 AM, Ming Lei wrote:
+> > > > get_device(shost->shost_gendev.parent) is called in
+> > > > scsi_add_host_with_dma(), but its counter pair isn't called in the failure
+> > > > path, so fix it by calling put_device(shost->shost_gendev.parent) in its
+> > > > failure path.
+> > > > 
+> > > > Reported-by: John Garry <john.garry@huawei.com>
+> > > > Cc: Bart Van Assche <bvanassche@acm.org>
+> > > > Cc: Hannes Reinecke <hare@suse.de>
+> > > > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > > > ---
+> > > >    drivers/scsi/hosts.c | 1 +
+> > > >    1 file changed, 1 insertion(+)
+> > > > 
+> > > > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> > > > index 6cbc3eb16525..6cc43c51b7b3 100644
+> > > > --- a/drivers/scsi/hosts.c
+> > > > +++ b/drivers/scsi/hosts.c
+> > > > @@ -298,6 +298,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+> > > >     out_del_dev:
+> > > >    	device_del(&shost->shost_dev);
+> > > >     out_del_gendev:
+> > > > +	put_device(shost->shost_gendev.parent);
+> > > >    	device_del(&shost->shost_gendev);
+> > > >     out_disable_runtime_pm:
+> > > >    	device_disable_async_suspend(&shost->shost_gendev);
+> > > > 
+> > > This really needs to be folded into the first patch as it's really a bugfix
+> > > for that.
+> > 
+> > All three are bug fixes, and this one may leak .shost_gendev's parent,
+> > but the 1st one leaks .shost_gendev->kobj.name, so we needn't to fold
+> > the 3rd into the 1st one.
+> > 
+> I beg to disagree.
+> The first patch removes the 'get_device()' from
+> scsi_add_host_with_dma(), but does not remove the corresponding
+> 'put_device()' in the error path.
 
-> External Email
-> 
-> ----------------------------------------------------------------------
-> Hi,
-> 
-> We got a customer report where qla2xxx was crashing only if the kernel
-> was booting and ql2xextended_error_logging was set. Loading the module
-> with the log option didn't trigger the crash.
-> 
-> After starring for a long time at the crash report I figured the
-> problem might be a race between the timeout handler and done callback.
-> I've come up with these patches here but unfortunatly, our customer is
-> not able to reproduce the problem in the lab anymore (it was caused by
-> a hardware issue which got fixed). So for these patches I don't have
-> any feedback.
+There isn't such 'put_device' in the error path of scsi_add_host_with_dma(),
+is there?
 
-Thanks Daniel for the report and your effort here. Agree, this needs to be 
-fixed.
+> So the first patch introduces a reference imbalance which is fixed by the
+> third patch. Hence my suggestion to merge those two patches.
 
-> 
-> Maybe they make sense to add the driver even if I don't have prove it
-> really address the mentioned bug hence this is marked as RFC.
+No, that isn't true, please look at current code of
+scsi_add_host_with_dma().
 
-If you do not mind, can I take this from here? This touches quite a 
-number of paths, and I would like to have this go through a full 
-regression cycle before this is merged.
 
-That said, I had some general comments:
+Thanks, 
+Ming
 
-1. I see sp->lock was introduced, but could not locate where it was used.
-2. I did not see a release of lock after a successful kref_put_lock, maybe 
-   that piece was missed out.
-3. The sp->done should be invoked only once, and I do not see if this is
-   taken care of.
-4. sp->cmd_sp could be a SCSI IO too, where sp is not allocated 
-   separately, so qla2x00_sp_release shall not be called for it.
-
-Regards,
--Arun
-
-> 
-> Thanks,
-> Daniel
-> 
-> Daniel Wagner (2):
->   qla2xxx: Refactor asynchronous command initialization
->   qla2xxx: Do not free resource to early in qla24xx_async_gpsc_sp_done()
-> 
->  drivers/scsi/qla2xxx/qla_def.h    |  5 ++
->  drivers/scsi/qla2xxx/qla_gbl.h    |  4 +-
->  drivers/scsi/qla2xxx/qla_gs.c     | 86 ++++++++++-------------------
->  drivers/scsi/qla2xxx/qla_init.c   | 91 +++++++++++++------------------
->  drivers/scsi/qla2xxx/qla_iocb.c   | 54 +++++++++++++-----
->  drivers/scsi/qla2xxx/qla_mbx.c    | 11 ++--
->  drivers/scsi/qla2xxx/qla_mid.c    |  5 +-
->  drivers/scsi/qla2xxx/qla_mr.c     |  7 +--
->  drivers/scsi/qla2xxx/qla_target.c |  6 +-
->  9 files changed, 127 insertions(+), 142 deletions(-)
-> 
-> 
