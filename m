@@ -2,163 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7CD9C47092
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 01:22:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A7BDC47094
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 04:08:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AF6636100B
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 01:22:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9ECE611CA
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 04:08:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229912AbhEaBYF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 30 May 2021 21:24:05 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:53235 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229891AbhEaBYE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 30 May 2021 21:24:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622424144;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=oexqDgsEO/C/755NVBQ6lb8PYWosWSIrZucWIeBcye8=;
-        b=TU4MTS2zWO6pwoWqovYrYwmPjTp0/E1jAujE04P/fEn7sTJZTsEWXgy5wFOkXwu7/Ojd9e
-        mLEEyR1sW5qJ4XqzpD+xYU3cdQPfxobCIAH0Rqay5/vosoItdrpfOt9rS+HWMUD/Uk+xou
-        ts/qZ0N0XH2RHbGnOqHBNyv8kkpXPbA=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-200-iwQEQkzZMrObkzcyzIS14A-1; Sun, 30 May 2021 21:22:23 -0400
-X-MC-Unique: iwQEQkzZMrObkzcyzIS14A-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 010B06D246;
-        Mon, 31 May 2021 01:22:22 +0000 (UTC)
-Received: from T590 (ovpn-12-79.pek2.redhat.com [10.72.12.79])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E61A110023AF;
-        Mon, 31 May 2021 01:22:15 +0000 (UTC)
-Date:   Mon, 31 May 2021 09:22:10 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH V2 1/2] scsi: core: fix failure handling of
- scsi_add_host_with_dma
-Message-ID: <YLQ6QsF1Pq5c6S/9@T590>
-References: <20210528011838.2122559-1-ming.lei@redhat.com>
- <20210528011838.2122559-2-ming.lei@redhat.com>
- <0e3a05ab-2dba-cafd-2840-70a0559a9140@huawei.com>
+        id S229913AbhEaEKW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 May 2021 00:10:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46318 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229471AbhEaEKP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 00:10:15 -0400
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 467B6C061574;
+        Sun, 30 May 2021 21:08:36 -0700 (PDT)
+Received: by mail-pg1-x533.google.com with SMTP id r1so7367975pgk.8;
+        Sun, 30 May 2021 21:08:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=B5E+Z+YC3ztWK1Gz5JJ/ZjFYfV7x7WXsq6pvj4QOEV8=;
+        b=qpIh0hZZdMUbO/xaXOluESyDyKh1wuXDzVMU8DbvilQdbzUAKKvtHMi2tZHdZZl6FD
+         pzHWR1qJ9SA0OUooLhgYA/FHAGzMTwF85gH2zMJXOjHY8akNBlPm2ZAFPL/BsX6AECn0
+         g+snaripSV02Ww2TMRpmrTPml1udHoN6L4hr2lbSznbW+9RR1UtQlYNf3WxE5hsOWUtQ
+         ktECgJ1y4SLarJMnSz0M8Q7rpMoLOq1xtTjLcSnDW6jj68DsuSfsO/MEvpsp4a3+Pm5b
+         T6ij0KxeYE/ElhOhht4tRwlDS7A1Bc2B1m97gM084MLnflqwYjE/MK2P0UCAVk17tm4z
+         0i8w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=B5E+Z+YC3ztWK1Gz5JJ/ZjFYfV7x7WXsq6pvj4QOEV8=;
+        b=mbI6AAUZRHYlCRmGziwGa1xARwPaosVg8IJFq2FPK3vwVGCyYYU0YoVbnozfJE/Ljx
+         5quYyeilqUBLsUwM4NLGlBbZ+gEapIiOGMBd3mYn7dk284hGxWZDX346VvZakZUU/fuL
+         sep16M/UWddyD9DO09h7ksMNYcsCW+fAS80315JOYVG/n4qAJfEA+mYM67Vlcy9jyGhB
+         simojDdDV5fnmra0R7t3IPDZn7j9CDiiXSgZl/ORcleI9dsSAxP6RxPlqF6dZqPR58Pi
+         3+vacqjMyw9nX6g7++QR7e5eApW3eXdxQpeNFIYrXklBR2cO/C4Hu9m/7bGzMgmRpJKj
+         WlWQ==
+X-Gm-Message-State: AOAM531q+ZZLHb6DMBM0WwKjuDh9qvWLooSnxHrYUmRgGsx0A82xuDCK
+        lQ3RCgO038sHhUx8/yfKEPg=
+X-Google-Smtp-Source: ABdhPJx+HANXtJX9yvLkBX/HVsORb2hbS4daFpETnK5c9NyvtRnVmWON27YgYVQ2Kp8imni+2oGhjA==
+X-Received: by 2002:a63:5a43:: with SMTP id k3mr21331103pgm.308.1622434115432;
+        Sun, 30 May 2021 21:08:35 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
+        by smtp.gmail.com with ESMTPSA id v4sm4275222pfn.41.2021.05.30.21.08.23
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 30 May 2021 21:08:35 -0700 (PDT)
+Subject: Re: [RFC PATCH V3 03/11] x86/Hyper-V: Add new hvcall guest address
+ host visibility support
+To:     Borislav Petkov <bp@alien8.de>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, x86@kernel.org, hpa@zytor.com, arnd@arndb.de,
+        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        akpm@linux-foundation.org, kirill.shutemov@linux.intel.com,
+        rppt@kernel.org, hannes@cmpxchg.org, cai@lca.pw,
+        krish.sadhukhan@oracle.com, saravanand@fb.com,
+        Tianyu.Lan@microsoft.com, konrad.wilk@oracle.com, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com,
+        boris.ostrovsky@oracle.com, jgross@suse.com,
+        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
+        xen-devel@lists.xenproject.org, davem@davemloft.net,
+        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, thomas.lendacky@amd.com,
+        brijesh.singh@amd.com, sunilmut@microsoft.com
+References: <20210530150628.2063957-1-ltykernel@gmail.com>
+ <20210530150628.2063957-4-ltykernel@gmail.com> <YLPYqxF7urDIAd9z@zn.tnic>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <3716c9e0-2508-3553-5a70-e4b3f5f4c82e@gmail.com>
+Date:   Mon, 31 May 2021 12:08:21 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <0e3a05ab-2dba-cafd-2840-70a0559a9140@huawei.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+In-Reply-To: <YLPYqxF7urDIAd9z@zn.tnic>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, May 28, 2021 at 09:34:44AM +0100, John Garry wrote:
-> On 28/05/2021 02:18, Ming Lei wrote:
-> > When scsi_add_host_with_dma() return failure, the caller will call
-> > scsi_host_put(shost) to release everything allocated for this host
-> > instance. So we can't free allocated stuff in scsi_add_host_with_dma(),
-> > otherwise double free will be caused.
-> > 
-> > Strictly speaking, these host resources allocation should have been
-> > moved to scsi_host_alloc(), but the allocation may need driver's
-> > info which can be built between calling scsi_host_alloc() and
-> > scsi_add_host(), so just keep the allocations in
-> > scsi_add_host_with_dma().
-> > 
-> > Fixes the problem by relying on host device's release handler to
-> > release everything.
-> > 
-> > Cc: Bart Van Assche <bvanassche@acm.org>
-> > Cc: John Garry <john.garry@huawei.com>
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Hi Borislav:
+	Thanks for your review.
+
+On 5/31/2021 2:25 AM, Borislav Petkov wrote:
+> On Sun, May 30, 2021 at 11:06:20AM -0400, Tianyu Lan wrote:
+>> diff --git a/arch/x86/mm/pat/set_memory.c b/arch/x86/mm/pat/set_memory.c
+>> index 156cd235659f..a82975600107 100644
+>> --- a/arch/x86/mm/pat/set_memory.c
+>> +++ b/arch/x86/mm/pat/set_memory.c
+>> @@ -29,6 +29,8 @@
+>>   #include <asm/proto.h>
+>>   #include <asm/memtype.h>
+>>   #include <asm/set_memory.h>
+>> +#include <asm/hyperv-tlfs.h>
+>> +#include <asm/mshyperv.h>
+>>   
+>>   #include "../mm_internal.h"
+>>   
+>> @@ -1986,8 +1988,14 @@ static int __set_memory_enc_dec(unsigned long addr, int numpages, bool enc)
+>>   	int ret;
+>>   
+>>   	/* Nothing to do if memory encryption is not active */
+>> -	if (!mem_encrypt_active())
+>> +	if (hv_is_isolation_supported()) {
+>> +		return hv_set_mem_host_visibility((void *)addr,
+>> +				numpages * HV_HYP_PAGE_SIZE,
+>> +				enc ? VMBUS_PAGE_NOT_VISIBLE
+>> +				: VMBUS_PAGE_VISIBLE_READ_WRITE);
 > 
-> It now looks like we have a memory leak:
+> Put all this gunk in a hv-specific function somewhere in hv-land which
+> you only call from here. This way you probably won't even need to export
+> hv_set_mem_host_visibility() and so on...
 > 
-> unreferenced object 0xffff0410070a4e00 (size 128):
->   comm "swapper/0", pid 1, jiffies 4294894100 (age 90.744s)
->   hex dump (first 32 bytes):
-> 68 6f 73 74 30 00 00 00 00 00 00 00 00 00 00 00  host0...........
-> 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->   backtrace:
-> [<(____ptrval____)>] __kmalloc_track_caller+0x25c/0x380
-> [<(____ptrval____)>] kvasprintf+0xe8/0x1a4
-> [<(____ptrval____)>] kvasprintf_const+0xc8/0x17c
-> [<(____ptrval____)>] kobject_set_name_vargs+0x58/0xf4
-> [<(____ptrval____)>] dev_set_name+0xa4/0xe0
-> [<(____ptrval____)>] scsi_host_alloc+0x45c/0x5d0
-> [<(____ptrval____)>] hisi_sas_probe+0x40/0x570
-> [<(____ptrval____)>] hisi_sas_v2_probe+0x1c/0x2c
-> [<(____ptrval____)>] platform_probe+0x90/0x110
-> [<(____ptrval____)>] really_probe+0x148/0x744
-> [<(____ptrval____)>] driver_probe_device+0x8c/0xfc
-> [<(____ptrval____)>] device_driver_attach+0x11c/0x12c
-> [<(____ptrval____)>] __driver_attach+0xc8/0x1a0
-> [<(____ptrval____)>] bus_for_each_dev+0xe4/0x154
-> [<(____ptrval____)>] driver_attach+0x38/0x50
-> [<(____ptrval____)>] bus_add_driver+0x1bc/0x2c4
-> unreferenced object 0xffff001056581800 (size 256):
->   comm "swapper/0", pid 1, jiffies 4294894398 (age 89.560s)
->   hex dump (first 32 bytes):
-> 00 00 00 00 00 00 00 00 08 18 58 56 10 00 ff ff  ..........XV....
-> 08 18 58 56 10 00 ff ff c0 f4 b4 10 00 80 ff ff  ..XV............
->   backtrace:
-> [<(____ptrval____)>] kmem_cache_alloc+0x298/0x350
-> [<(____ptrval____)>] device_add+0x6d8/0xc4c
-> [<(____ptrval____)>] scsi_add_host_with_dma+0x370/0x5dc
-> [<(____ptrval____)>] hisi_sas_probe+0x418/0x570
-> [<(____ptrval____)>] hisi_sas_v2_probe+0x1c/0x2c
-> [<(____ptrval____)>] platform_probe+0x90/0x110
-> [<(____ptrval____)>] really_probe+0x148/0x744
-> [<(____ptrval____)>] driver_probe_device+0x8c/0xfc
-> [<(____ptrval____)>] device_driver_attach+0x11c/0x12c
-> [<(____ptrval[  101.941505] random: fast init done
-> ____)>] __driver_attach+0xc8/0x1a0
-> [<(____ptrval____)>] bus_for_each_dev+0xe4/0x154
-> [<(____ptrval____)>] driver_attach+0x38/0x50
-> [<(____ptrval____)>] bus_add_driver+0x1bc/0x2c4
-> [<(____ptrval____)>] driver_register+0xe4/0x210
-> [<(____ptrval____)>] __platform_driver_register+0x48/0x60
-> [<(____ptrval____)>] hisi_sas_v2_driver_init+0x20/0x2c
-> 
-> I think that the release for the shost_dev dev name memory needs fixing.
-> 
-> In scsi_host_dev_release(), for my experiment, shost state is running, so we
-> miss the kfree(dev_name(&shost->shost_dev)), I guess. Not sure on the proper
-> fix.
 
-kobject_cleanup() is responsible for freeing dev->kobj.name, so nothing
-to do with freeing the device name.
+Good idea. Will update. Thanks.
 
-The following delta patch may fix the issue, and we should have
-wrap it into the 2nd patch, can you test it and see if the kmemleak
-warning is fixed?
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 492b64f349e1..7f7e0b3f6a3c 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -298,6 +298,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
-        put_device(&shost->shost_gendev);
-        device_del(&shost->shost_dev);
-  out_del_gendev:
-+       put_device(shost->shost_gendev.parent);
-        device_del(&shost->shost_gendev);
-  out_disable_runtime_pm:
-        device_disable_async_suspend(&shost->shost_gendev);
-
-
-
-Thanks,
-Ming
 
