@@ -8,57 +8,57 @@ X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16BD1C47082
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 17:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18B02C47083
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 17:25:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DE3D0610A8
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 17:25:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F11EE61108
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 17:25:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232174AbhEaR1I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 May 2021 13:27:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53956 "EHLO
+        id S233422AbhEaR13 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 May 2021 13:27:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232938AbhEaR0y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 13:26:54 -0400
-Received: from mail-wr1-x42a.google.com (mail-wr1-x42a.google.com [IPv6:2a00:1450:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 10C60C07210D;
-        Mon, 31 May 2021 09:04:20 -0700 (PDT)
-Received: by mail-wr1-x42a.google.com with SMTP id q5so762705wrm.1;
-        Mon, 31 May 2021 09:04:19 -0700 (PDT)
+        with ESMTP id S232096AbhEaR1I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 13:27:08 -0400
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 051ABC072122;
+        Mon, 31 May 2021 09:05:27 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id n2so11472157wrm.0;
+        Mon, 31 May 2021 09:05:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :user-agent:mime-version:content-transfer-encoding;
-        bh=hjP2GgSblleAgp88n/FXlq2IIJg58iX4N95E14USZQU=;
-        b=SbQoM9XZG1WvqI841iaaDi7bVckm7JjLL2FIKg6QoDCycc+qaIN1WeMQJrBk8Ahoa6
-         nKyxzpzOnmzLGrgfTtdd3UeRMBwWISktetIF5GkwXMoX1UtljdDP9NW6LLZc3cp18SfH
-         LC9lJrsBl+sxTedFNcp+1PFCMcoCj2DcJi2PnpWsYQklBGlBSVsmgJEvxMF8jGP+VOuq
-         zEAvF2XV5VbaUyRIiaYLfBNQC9VuupDPsPBQfxbSal5/nWx9p2j+ktIrbe5+IIPeFik5
-         i3vg5nVbTDXe1Qab1z6ax1u+oQvzKbaZH2zfAoXDgDmSYlGuZ6ORnaSW913pv3VeUNtw
-         cVsg==
+        bh=Qc6CI/WXrqiqEChpYGorO6MkwQYDxw3uL16JCZvhWUM=;
+        b=qCqJmtounWoHmySgIWFJx3GKQV1ZiTAr7/JgogeudF/5uBOPGllZYzdTYWU/SNLtgT
+         RFRUeX6e7Wn0Y5gWuSrLxBOssFS9XD+TbSx03mhlnX7E/ZNtb4FwMRxjeqTQIZVB/KcU
+         jo2+TuM3l/MXi3LaRGsCYqa4Te5vQ0tN1Nhcpf2M17WerAVT+fYlBMtmIZsrdam+1jze
+         kIUs7FEgxl5vbh9JpnVM6JxYogFNGFm3PS4IvV03T57NtWUY1rWYacKXYMqcKdToyK9F
+         cAMU2F38vcSAtuzA2D/OcQhbAYOoy3Sv09I1SKsfUZmxgLccZ3Q6bFrunv2EPkT/2Kb8
+         J6Ag==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:user-agent:mime-version:content-transfer-encoding;
-        bh=hjP2GgSblleAgp88n/FXlq2IIJg58iX4N95E14USZQU=;
-        b=a2YOT8jhRCj5Y5h0Xmd0oOqVOICCWZviXGMxFWLkc7C3e/AHOIv1r10Rd5t8y1uD1/
-         Q68cRDlbFs8S41xZJEWxVTt4EuKSkA+PrdHKHc2ACm8IZdPNgr2mt2I5axsdwG/0YHG9
-         E6saoXnw0965vSbjoBGKypBNZVupLyl7ndsC55WC8Lggi5gcX7Pwdy0NUxuXQsrLw9K9
-         sYAiVbOOhMU2WWIN4sniIbVMxM5MPBGPtNChg62IfWPWPzhHuLBaTvCXNtid2l4S8nXd
-         HpI6P9NM09Dbf+p4Kg/w+hRQ7WbXRAxUfql23UPrwpGmWk7boAAr+1EqyQFGT3zqco1Z
-         Z1UA==
-X-Gm-Message-State: AOAM532+Z8uxF8B6yKA2FbXs6LYWROFChGIpIgk1Y7oQVojv/uZ5Fayt
-        KcRgHYccYo1mkF+djTdaa5g=
-X-Google-Smtp-Source: ABdhPJwIKNm2vDybB1eaApkJIC8exiL2TQu44XUOYBgaEmyuzIdO8B0DmWXiuMTmywNXoBV5g2ecTg==
-X-Received: by 2002:adf:f7d2:: with SMTP id a18mr7685854wrq.111.1622477058688;
-        Mon, 31 May 2021 09:04:18 -0700 (PDT)
+        bh=Qc6CI/WXrqiqEChpYGorO6MkwQYDxw3uL16JCZvhWUM=;
+        b=E1Jb7lbHAV1NWrP51TgsvY906sX2KkSaHS3UowbKpKtAPeqgHdVWJnRd+BmT9IsgVg
+         PXJQtdMP74hVysZtZ3V0cYbIvB3F1/f3hCJ16trtQzqzsMHg6Jos9dKh6tIaSdcpwPLT
+         FbtcJMa849LS8iHlALgFS3kX3+r7Uv76C7v5pCpsK6k2lPoDZxuR0O/C0o7kowkrMcDq
+         miWN78dSHMKqV6gRZYWhUy8rk4H4YmbgYeVP1Nf4jo8qNN21rvggVaM0cY2yO3AOJDhg
+         bRCChIClsfFHUCkm90z01Dfn4S3ruwsuPkZsa3uKD+6x+LOEEC7ZdQoss4CVh/HO5eKF
+         x+Dg==
+X-Gm-Message-State: AOAM532yhlbNikqh/u0IHGpy15r1/qKTNuywrTvuLiCtMtoaTYTRNafT
+        C32slV6RnihhzrFzqf11qck=
+X-Google-Smtp-Source: ABdhPJzyI+GMUKWGdnluF3L0hbXzLcnYFP6YTTjFJAKEmHNmyYxDt4HnS2Vpf8+CZDWtmk++b7GLbA==
+X-Received: by 2002:adf:d1c2:: with SMTP id b2mr23013384wrd.407.1622477125656;
+        Mon, 31 May 2021 09:05:25 -0700 (PDT)
 Received: from ubuntu-laptop (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
-        by smtp.googlemail.com with ESMTPSA id 6sm6766413wmg.17.2021.05.31.09.04.17
+        by smtp.googlemail.com with ESMTPSA id b10sm128238wrt.24.2021.05.31.09.05.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 31 May 2021 09:04:18 -0700 (PDT)
-Message-ID: <6d6d296a84f1e62f65fda4d172a85bb35d9a3684.camel@gmail.com>
-Subject: Re: [PATCH v1 2/3] scsi: ufs: Optimize host lock on transfer
- requests send/compl paths
+        Mon, 31 May 2021 09:05:25 -0700 (PDT)
+Message-ID: <88dc0251ee98aee5af2217f5d864f0a893dbdef8.camel@gmail.com>
+Subject: Re: [PATCH v1 3/3] scsi: ufs: Utilize Transfer Request List
+ Completion Notification Register
 From:   Bean Huo <huobean@gmail.com>
 To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
         nguyenb@codeaurora.org, hongwus@codeaurora.org,
@@ -74,15 +74,17 @@ Cc:     Stanley Chu <stanley.chu@mediatek.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Kiwoong Kim <kwmad.kim@samsung.com>,
         Satya Tangirala <satyat@google.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Caleb Connolly <caleb@connolly.tech>,
         open list <linux-kernel@vger.kernel.org>,
         "moderated list:ARM/Mediatek SoC support" 
         <linux-arm-kernel@lists.infradead.org>,
         "moderated list:ARM/Mediatek SoC support" 
         <linux-mediatek@lists.infradead.org>
-Date:   Mon, 31 May 2021 18:04:17 +0200
-In-Reply-To: <1621845419-14194-3-git-send-email-cang@codeaurora.org>
+Date:   Mon, 31 May 2021 18:05:24 +0200
+In-Reply-To: <1621845419-14194-4-git-send-email-cang@codeaurora.org>
 References: <1621845419-14194-1-git-send-email-cang@codeaurora.org>
-         <1621845419-14194-3-git-send-email-cang@codeaurora.org>
+         <1621845419-14194-4-git-send-email-cang@codeaurora.org>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.4-0ubuntu1 
 MIME-Version: 1.0
@@ -92,31 +94,19 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Mon, 2021-05-24 at 01:36 -0700, Can Guo wrote:
-> Current UFS IRQ handler is completely wrapped by host lock, and
-> because
+> By reading the UTP Transfer Request List Completion Notification
+> Register,
 > 
-> ufshcd_send_command() is also protected by host lock, when IRQ
-> handler
+> which is added in UFSHCI Ver 3.0, SW can easily get the compeleted
+> transfer
 > 
-> fires, not only the CPU running the IRQ handler cannot send new
-> requests,
+> requests. Thus, SW can get rid of host lock, which is used to
+> synchronize
 > 
-> the rest CPUs can neither. Move the host lock wrapping the IRQ
-> handler into
+> the tr_doorbell and outstanding_reqs, on transfer requests dispatch
+> and
 > 
-> specific branches, i.e., ufshcd_uic_cmd_compl(),
-> ufshcd_check_errors(),
-> 
-> ufshcd_tmc_handler() and ufshcd_transfer_req_compl(). Meanwhile, to
-> further
-> 
-> reduce occpuation of host lock in ufshcd_transfer_req_compl(), host
-> lock is
-> 
-> no longer required to call __ufshcd_transfer_req_compl(). As per
-> test, the
-> 
-> optimization can bring considerable gain to random read/write
+> completion paths. This can further benefit random read/write
 > performance.
 > 
 > 
@@ -129,21 +119,5 @@ On Mon, 2021-05-24 at 01:36 -0700, Can Guo wrote:
 > 
 > Signed-off-by: Can Guo <cang@codeaurora.org>
 
-Can,
-The patch looks good to me.
-I did a UFS queue limitation test before, observed that once the queue
-is full, then the active task number in the queue will get down. For
-the Nvme, the scenario is the same. You can refer to the slide 23, and
-slide 24 in the pdf:
-https://elinux.org/images/6/6c/Linux_Storage_System_Bottleneck_Exploration_V0.3.pdf I don't know if your patch can fix this
-issue.
-
-Unfortunately, I cannot verify UTRLCNR usage flow since my platform is
-v2.1. But at least my test can prove that the patch doesn't impact the
-legacy(UFSHCI is less than v3.0) doorbell usage flow.
-
 Reviewed-by: Bean Huo <beanhuo@micron.com>
-
-
-Bean
 
