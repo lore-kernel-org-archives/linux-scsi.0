@@ -7,82 +7,82 @@ X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DBC7C47082
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 06:28:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D1BD6C4708F
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 06:32:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 357DC61364
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 06:28:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A65AB60241
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 06:32:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230121AbhEaGac (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 May 2021 02:30:32 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:47704 "EHLO
+        id S230107AbhEaGdm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 May 2021 02:33:42 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:47720 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230111AbhEaGab (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 02:30:31 -0400
+        with ESMTP id S230070AbhEaGdl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 02:33:41 -0400
 Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
         (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 34D0C1FD2F;
-        Mon, 31 May 2021 06:28:51 +0000 (UTC)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 53EF31FD2E;
+        Mon, 31 May 2021 06:32:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1622442531; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1622442721; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=q4WnUtCClUhVv4IlUD+BnstQaSkPByuHIVpvyNUuyJc=;
-        b=pHnO2aKomCE910sZyDpeMSYC+3IIjSQmvu3a/NHf7tiIKD+sy0eKcCBF3e7W/TmVG6zmLw
-        qUsBahVDmqfzFdEcBCnwryDgO5jVx0zDGOj0zm/tdshgGtd1+QpuI7u9C2DbTxWruKfb4R
-        z8TPfyaZr4Mziu+6RMTuOnV2ewg4R/Q=
+        bh=ckSIUtCAW5WdVQvQRy9M3j5jWlh0K4Uzkr1LlkRSLl0=;
+        b=H+BXZHf7NirGnh3Qjx2JS1Zum0NWDkYXBbjb0goUgf7wjRTCCGflyV5569WyERSWFmanBb
+        VcnOLTIsMubX7G+ZeTdo2MIuh0DqaGjqfb9rvzy7osBJ1O0VZMqiNZ/jJDaoEfH5SuCPB8
+        PyJGLCxMwPzQS54VvXKH27nDqKmiZfw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1622442531;
+        s=susede2_ed25519; t=1622442721;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=q4WnUtCClUhVv4IlUD+BnstQaSkPByuHIVpvyNUuyJc=;
-        b=wCWFTT+yGbXmLAPfdQO5MUkmzP5B1cEm/2z5bfTLERsV7VhWJvD4hBceYyXYA/Zf8j5yOo
-        NCFe4Eypei72tkDw==
+        bh=ckSIUtCAW5WdVQvQRy9M3j5jWlh0K4Uzkr1LlkRSLl0=;
+        b=OEKN3ld6pfrlGb5ESigRedTc8zYS9GYIiHrZboWvchzm+X57LFrCuOBGDbPwxk4NyMFvI/
+        +9Xy+oeTQNrnJYBA==
 Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id 880DF118DD;
-        Mon, 31 May 2021 06:28:50 +0000 (UTC)
+        by imap.suse.de (Postfix) with ESMTP id 11EB6118DD;
+        Mon, 31 May 2021 06:32:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1622442530; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1622442721; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=q4WnUtCClUhVv4IlUD+BnstQaSkPByuHIVpvyNUuyJc=;
-        b=hf+NzDOJ4xt/sf2tUgAJbBaFSyQgKGBu8BLx2VpXNQdD30RRx6I4XJLXOgiQFBtuPGvacl
-        TpwFYXIcHZGYQXNO5GHmSmzS9AFiQbwOeerccFYEKsO4X5MD1TU7riKo2rgqIx2EfC4up6
-        2Xg4gXN6ptakbeJqSESSZ4+u48+sq6s=
+        bh=ckSIUtCAW5WdVQvQRy9M3j5jWlh0K4Uzkr1LlkRSLl0=;
+        b=H+BXZHf7NirGnh3Qjx2JS1Zum0NWDkYXBbjb0goUgf7wjRTCCGflyV5569WyERSWFmanBb
+        VcnOLTIsMubX7G+ZeTdo2MIuh0DqaGjqfb9rvzy7osBJ1O0VZMqiNZ/jJDaoEfH5SuCPB8
+        PyJGLCxMwPzQS54VvXKH27nDqKmiZfw=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1622442530;
+        s=susede2_ed25519; t=1622442721;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=q4WnUtCClUhVv4IlUD+BnstQaSkPByuHIVpvyNUuyJc=;
-        b=XUHFLd7EqUy3BeLKXE08YLpgonIm1dP9ILt3jvsFi2X97n/UUeqB9L3f1O3bCddBRUL5Jc
-        7pCX20Rx5c5NPsDg==
+        bh=ckSIUtCAW5WdVQvQRy9M3j5jWlh0K4Uzkr1LlkRSLl0=;
+        b=OEKN3ld6pfrlGb5ESigRedTc8zYS9GYIiHrZboWvchzm+X57LFrCuOBGDbPwxk4NyMFvI/
+        +9Xy+oeTQNrnJYBA==
 Received: from director2.suse.de ([192.168.254.72])
         by imap3-int with ESMTPSA
-        id tOkiICKCtGDxewAALh3uQQ
-        (envelope-from <hare@suse.de>); Mon, 31 May 2021 06:28:50 +0000
-Subject: Re: [PATCH V3 3/3] scsi: core: put ->shost_gendev.parent in failure
- handling path
+        id StoJA+GCtGAcfQAALh3uQQ
+        (envelope-from <hare@suse.de>); Mon, 31 May 2021 06:32:01 +0000
+Subject: Re: [PATCH V3 2/3] scsi: core: fix failure handling of
+ scsi_add_host_with_dma
 To:     Ming Lei <ming.lei@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Cc:     John Garry <john.garry@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>
 References: <20210531050727.2353973-1-ming.lei@redhat.com>
- <20210531050727.2353973-4-ming.lei@redhat.com>
+ <20210531050727.2353973-3-ming.lei@redhat.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <2cbcfc4a-78ae-ddc9-1386-6008fcaecb0b@suse.de>
-Date:   Mon, 31 May 2021 08:28:49 +0200
+Message-ID: <bb3479ee-b7ca-bfdf-92a7-b2cef90bbf59@suse.de>
+Date:   Mon, 31 May 2021 08:31:59 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210531050727.2353973-4-ming.lei@redhat.com>
+In-Reply-To: <20210531050727.2353973-3-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -107,34 +107,72 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 5/31/21 7:07 AM, Ming Lei wrote:
-> get_device(shost->shost_gendev.parent) is called in
-> scsi_add_host_with_dma(), but its counter pair isn't called in the failure
-> path, so fix it by calling put_device(shost->shost_gendev.parent) in its
-> failure path.
+> When scsi_add_host_with_dma() return failure, the caller will call
+> scsi_host_put(shost) to release everything allocated for this host
+> instance. So we can't free allocated stuff in scsi_add_host_with_dma(),
+> otherwise double free will be caused.
 > 
-> Reported-by: John Garry <john.garry@huawei.com>
+> Strictly speaking, these host resources allocation should have been
+> moved to scsi_host_alloc(), but the allocation may need driver's
+> info which can be built between calling scsi_host_alloc() and
+> scsi_add_host(), so just keep the allocations in
+> scsi_add_host_with_dma().
+> 
+> Fixes the problem by relying on host device's release handler to
+> release everything.
+> 
 > Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: John Garry <john.garry@huawei.com>
 > Cc: Hannes Reinecke <hare@suse.de>
 > Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > ---
->   drivers/scsi/hosts.c | 1 +
->   1 file changed, 1 insertion(+)
+>   drivers/scsi/hosts.c | 14 ++++++--------
+>   1 file changed, 6 insertions(+), 8 deletions(-)
 > 
 > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 6cbc3eb16525..6cc43c51b7b3 100644
+> index ada11e3ae577..6cbc3eb16525 100644
 > --- a/drivers/scsi/hosts.c
 > +++ b/drivers/scsi/hosts.c
-> @@ -298,6 +298,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+> @@ -279,23 +279,22 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   
+>   		if (!shost->work_q) {
+>   			error = -EINVAL;
+> -			goto out_free_shost_data;
+> +			goto out_del_dev;
+>   		}
+>   	}
+>   
+>   	error = scsi_sysfs_add_host(shost);
+>   	if (error)
+> -		goto out_destroy_host;
+> +		goto out_del_dev;
+>   
+>   	scsi_proc_host_add(shost);
+>   	scsi_autopm_put_host(shost);
+>   	return error;
+>   
+> - out_destroy_host:
+> -	if (shost->work_q)
+> -		destroy_workqueue(shost->work_q);
+> - out_free_shost_data:
+> -	kfree(shost->shost_data);
+> +	/*
+> +	 * any host allocation in this function will be freed in
+> +	 * scsi_host_dev_release, so don't free them in the failure path
+> +	 */
 >    out_del_dev:
 >   	device_del(&shost->shost_dev);
 >    out_del_gendev:
-> +	put_device(shost->shost_gendev.parent);
->   	device_del(&shost->shost_gendev);
->    out_disable_runtime_pm:
->   	device_disable_async_suspend(&shost->shost_gendev);
+> @@ -305,7 +304,6 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   	pm_runtime_disable(&shost->shost_gendev);
+>   	pm_runtime_set_suspended(&shost->shost_gendev);
+>   	pm_runtime_put_noidle(&shost->shost_gendev);
+> -	scsi_mq_destroy_tags(shost);
+>    fail:
+>   	return error;
+>   }
 > 
-This really needs to be folded into the first patch as it's really a 
-bugfix for that.
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
