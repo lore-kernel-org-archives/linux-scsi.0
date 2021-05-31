@@ -2,158 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FCFDC47082
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 08:23:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2A49C4708F
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 09:06:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 77A9C610C9
-	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 08:23:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0A7060FDA
+	for <linux-scsi@archiver.kernel.org>; Mon, 31 May 2021 09:06:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230165AbhEaIZY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 31 May 2021 04:25:24 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:39930 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230070AbhEaIZY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 May 2021 04:25:24 -0400
-Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 6569E2191B;
-        Mon, 31 May 2021 08:23:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1622449424; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eJtl7Q1H95E/ZDC0H7SbUI1DE03FpKXl/aCSV7WzQ+0=;
-        b=VXTOBscaQzWiAn4xHDrmToT+qixakrqYkjG34BJOLU6f9nT1mDz9D2qHzkxrIK+/1jQBpx
-        QFbSxw7gV0LMc4Uyg43Es/8EuJNSpZ2YLQZ1Rmw/c5ooZwkmbTQFBVaKOYWsLAG9O/jfqa
-        0usQEaDtBuWbr8Sas56a9pwIFFi/3Q4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1622449424;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eJtl7Q1H95E/ZDC0H7SbUI1DE03FpKXl/aCSV7WzQ+0=;
-        b=hWFw+Hwj+Il+D/xdy/1b4Xhk+a64htzBtjHMsxUbB7smigzT9VAjqLqXa0KdDKDOH4WMoX
-        JPK3Epj5jzRmMUAg==
-Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id B0D7E118DD;
-        Mon, 31 May 2021 08:23:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1622449423; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eJtl7Q1H95E/ZDC0H7SbUI1DE03FpKXl/aCSV7WzQ+0=;
-        b=HoWWwRZXg+nCe/GG3RFpGBXnbeiTpmDbrob17d7WFFug0l/mL9i9RcEg8hwMRONNu8MBmw
-        5IhqrUXw9ENBjUoIrp0vQpnsJywj9OCNw4WQeDC4cZ5U40M4vy7TJFUTCBDODfx5RjsV69
-        R1aJol82GbPuw+mB/zByFTalDdpQryY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1622449423;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=eJtl7Q1H95E/ZDC0H7SbUI1DE03FpKXl/aCSV7WzQ+0=;
-        b=it5zBMwVJhF1EPZ2zNLK/eiwqgknoNdWPyEFvdzJlPU1IhtXqbpNQKRatL6yevbQGEIWCt
-        6rAgrLyAVmNBH1BQ==
-Received: from director2.suse.de ([192.168.254.72])
-        by imap3-int with ESMTPSA
-        id pCDPKQ+dtGCfMwAALh3uQQ
-        (envelope-from <hare@suse.de>); Mon, 31 May 2021 08:23:43 +0000
-Subject: Re: [PATCH V3 3/3] scsi: core: put ->shost_gendev.parent in failure
- handling path
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>
-References: <20210531050727.2353973-1-ming.lei@redhat.com>
- <20210531050727.2353973-4-ming.lei@redhat.com>
- <2cbcfc4a-78ae-ddc9-1386-6008fcaecb0b@suse.de> <YLSWscVt74+2OO19@T590>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <e010e535-7b8e-7e3c-141c-64da37370729@suse.de>
-Date:   Mon, 31 May 2021 10:23:43 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        id S230399AbhEaJIb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 31 May 2021 05:08:31 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:25578 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230337AbhEaJIP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 May 2021 05:08:15 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 14V96NSM014845;
+        Mon, 31 May 2021 02:06:28 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=vJD3FC7L7Iq4KIkXJn86baeDLcjGa8hZW/EM6OIxen4=;
+ b=freR52Z/V6uNlyR3JwDFIkQsYL1R5LW9QH0toDBPu1bfvPQcju1gHQdhyxU+5m9VJhTZ
+ Jhsmfc/sg65zO1XG+tVpakQByYEyDbsXKNAGBzqPNQ/OcVYfDvsMEWvAHeUan+HLx0Ca
+ fnaZFAtMQOhkN6e6oYgxQuPxLpVhIIZGHFE66WoNr6Yy4HvmVqJtlq42l2kyV/eUvoZ4
+ kiU5jKYenb2RkmkEqQgDPKAt8SZ0RpcZFS/cIqkniQk1kSdQPCb/aj9kyyErtrcVs0wX
+ akXZdj6gvDVSNgXaemIU5sGIFG9Py6puapNVojPPajZIfH8y92pOZs2AnKkJMtoUJfvT gA== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 38vtnj8cyu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 31 May 2021 02:06:27 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Mon, 31 May
+ 2021 02:06:25 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Mon, 31 May 2021 02:06:26 -0700
+Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
+        by maili.marvell.com (Postfix) with ESMTP id B577D3F703F;
+        Mon, 31 May 2021 02:06:25 -0700 (PDT)
+Received: from localhost (aeasi@localhost)
+        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 14V96O82001639;
+        Mon, 31 May 2021 02:06:25 -0700
+X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
+Date:   Mon, 31 May 2021 02:06:24 -0700
+From:   Arun Easi <aeasi@marvell.com>
+X-X-Sender: aeasi@irv1user01.caveonetworks.com
+To:     Daniel Wagner <dwagner@suse.de>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        <linux-kernel@vger.kernel.org>, Nilesh Javali <njavali@marvell.com>
+Subject: Re: [EXT] [RFC 0/2] Serialize timeout handling and done callback.
+In-Reply-To: <20210507123103.10265-1-dwagner@suse.de>
+Message-ID: <alpine.LRH.2.21.9999.2105310148300.17918@irv1user01.caveonetworks.com>
+References: <20210507123103.10265-1-dwagner@suse.de>
+User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
 MIME-Version: 1.0
-In-Reply-To: <YLSWscVt74+2OO19@T590>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-Authentication-Results: imap.suse.de;
-        none
-X-Spamd-Result: default: False [0.00 / 100.00];
-         ARC_NA(0.00)[];
-         RCVD_VIA_SMTP_AUTH(0.00)[];
-         FROM_HAS_DN(0.00)[];
-         TO_DN_SOME(0.00)[];
-         TO_MATCH_ENVRCPT_ALL(0.00)[];
-         MIME_GOOD(-0.10)[text/plain];
-         RCPT_COUNT_FIVE(0.00)[5];
-         DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-         RCVD_NO_TLS_LAST(0.10)[];
-         FROM_EQ_ENVFROM(0.00)[];
-         MIME_TRACE(0.00)[0:+];
-         RCVD_COUNT_TWO(0.00)[2];
-         MID_RHS_MATCH_FROM(0.00)[]
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-GUID: UXdAua8R7xiGaB5RyXsu5-vHqQymrCUx
+X-Proofpoint-ORIG-GUID: UXdAua8R7xiGaB5RyXsu5-vHqQymrCUx
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-05-31_07:2021-05-31,2021-05-31 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/31/21 9:56 AM, Ming Lei wrote:
-> On Mon, May 31, 2021 at 08:28:49AM +0200, Hannes Reinecke wrote:
->> On 5/31/21 7:07 AM, Ming Lei wrote:
->>> get_device(shost->shost_gendev.parent) is called in
->>> scsi_add_host_with_dma(), but its counter pair isn't called in the failure
->>> path, so fix it by calling put_device(shost->shost_gendev.parent) in its
->>> failure path.
->>>
->>> Reported-by: John Garry <john.garry@huawei.com>
->>> Cc: Bart Van Assche <bvanassche@acm.org>
->>> Cc: Hannes Reinecke <hare@suse.de>
->>> Signed-off-by: Ming Lei <ming.lei@redhat.com>
->>> ---
->>>    drivers/scsi/hosts.c | 1 +
->>>    1 file changed, 1 insertion(+)
->>>
->>> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
->>> index 6cbc3eb16525..6cc43c51b7b3 100644
->>> --- a/drivers/scsi/hosts.c
->>> +++ b/drivers/scsi/hosts.c
->>> @@ -298,6 +298,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->>>     out_del_dev:
->>>    	device_del(&shost->shost_dev);
->>>     out_del_gendev:
->>> +	put_device(shost->shost_gendev.parent);
->>>    	device_del(&shost->shost_gendev);
->>>     out_disable_runtime_pm:
->>>    	device_disable_async_suspend(&shost->shost_gendev);
->>>
->> This really needs to be folded into the first patch as it's really a bugfix
->> for that.
-> 
-> All three are bug fixes, and this one may leak .shost_gendev's parent,
-> but the 1st one leaks .shost_gendev->kobj.name, so we needn't to fold
-> the 3rd into the 1st one.
-> 
-I beg to disagree.
-The first patch removes the 'get_device()' from
-scsi_add_host_with_dma(), but does not remove the corresponding 
-'put_device()' in the error path.
-So the first patch introduces a reference imbalance which is fixed by 
-the third patch. Hence my suggestion to merge those two patches.
+On Fri, 7 May 2021, 5:31am, Daniel Wagner wrote:
 
-Cheers,
+> External Email
+> 
+> ----------------------------------------------------------------------
+> Hi,
+> 
+> We got a customer report where qla2xxx was crashing only if the kernel
+> was booting and ql2xextended_error_logging was set. Loading the module
+> with the log option didn't trigger the crash.
+> 
+> After starring for a long time at the crash report I figured the
+> problem might be a race between the timeout handler and done callback.
+> I've come up with these patches here but unfortunatly, our customer is
+> not able to reproduce the problem in the lab anymore (it was caused by
+> a hardware issue which got fixed). So for these patches I don't have
+> any feedback.
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Thanks Daniel for the report and your effort here. Agree, this needs to be 
+fixed.
+
+> 
+> Maybe they make sense to add the driver even if I don't have prove it
+> really address the mentioned bug hence this is marked as RFC.
+
+If you do not mind, can I take this from here? This touches quite a 
+number of paths, and I would like to have this go through a full 
+regression cycle before this is merged.
+
+That said, I had some general comments:
+
+1. I see sp->lock was introduced, but could not locate where it was used.
+2. I did not see a release of lock after a successful kref_put_lock, maybe 
+   that piece was missed out.
+3. The sp->done should be invoked only once, and I do not see if this is
+   taken care of.
+4. sp->cmd_sp could be a SCSI IO too, where sp is not allocated 
+   separately, so qla2x00_sp_release shall not be called for it.
+
+Regards,
+-Arun
+
+> 
+> Thanks,
+> Daniel
+> 
+> Daniel Wagner (2):
+>   qla2xxx: Refactor asynchronous command initialization
+>   qla2xxx: Do not free resource to early in qla24xx_async_gpsc_sp_done()
+> 
+>  drivers/scsi/qla2xxx/qla_def.h    |  5 ++
+>  drivers/scsi/qla2xxx/qla_gbl.h    |  4 +-
+>  drivers/scsi/qla2xxx/qla_gs.c     | 86 ++++++++++-------------------
+>  drivers/scsi/qla2xxx/qla_init.c   | 91 +++++++++++++------------------
+>  drivers/scsi/qla2xxx/qla_iocb.c   | 54 +++++++++++++-----
+>  drivers/scsi/qla2xxx/qla_mbx.c    | 11 ++--
+>  drivers/scsi/qla2xxx/qla_mid.c    |  5 +-
+>  drivers/scsi/qla2xxx/qla_mr.c     |  7 +--
+>  drivers/scsi/qla2xxx/qla_target.c |  6 +-
+>  9 files changed, 127 insertions(+), 142 deletions(-)
+> 
+> 
