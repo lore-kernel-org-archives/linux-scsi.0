@@ -2,101 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8D9EC47080
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 17:23:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 09F5EC4708F
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 17:52:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A49E6613AE
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 17:23:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD900613D2
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 17:52:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234506AbhFARYx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Jun 2021 13:24:53 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:52330 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234009AbhFARYx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 13:24:53 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 151HGjqd008965
-        for <linux-scsi@vger.kernel.org>; Tue, 1 Jun 2021 10:23:11 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=1szamPOfKg26/29aRvSx1PXoZkNsUiB45TV9dziTc8I=;
- b=f9u6MU1XQQTGBJOFYvvz7nfvVRHhVO3G55PpJvzSatHSP/2PJUEYQC0wOaEusmGX4es+
- uZNCVlJcxhdC8Yr0rExW6bq8TfWdT8gez23tJrRfdf7JK2EEdz7yNFwTcgstkdgW0YG4
- 90RXZtAShjWRKlvpUkecc1Et8PbCNRg3cW2IdcwfNh2SQ+RdrZDNwLrgAob0ETJfWOpC
- GGHyqoDnEusQ2p6a8ZVLwDOILJwANUMIiJas8SPOgKNQkeylHTmRTjBABKxm381mIjPQ
- WT2yO3M3w2XbiHkNjmlTuC32iuRZztaqAIez7LX+xnVJhdJvm6nzB1sYDx7Q4A/DatSr rQ== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 38vtnjd8kc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Jun 2021 10:23:11 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 1 Jun
- 2021 10:23:09 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 1 Jun 2021 10:23:09 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 218B73F703F;
-        Tue,  1 Jun 2021 10:23:09 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 151HN8W2032001;
-        Tue, 1 Jun 2021 10:23:08 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 151HN88d031992;
-        Tue, 1 Jun 2021 10:23:08 -0700
-From:   Javed Hasan <jhasan@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
-Subject: [PATCH 2/2] libfc: Corrected the condition check and invalid argument passed
-Date:   Tue, 1 Jun 2021 10:21:56 -0700
-Message-ID: <20210601172156.31942-3-jhasan@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20210601172156.31942-1-jhasan@marvell.com>
-References: <20210601172156.31942-1-jhasan@marvell.com>
+        id S234539AbhFARyC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Jun 2021 13:54:02 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:40681 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231918AbhFARyB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 13:54:01 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1622569937;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=GIMQHLkO8Ur9LeMID+AlYIfJfA7jvotE5Xy3QEgSTX0=;
+        b=fvSVR/BjBPNsjttI0pTHogfJYy8q6uPEkthmSZ24zcPD3DjGydpCqZJe+HHoj7D7NkBMu0
+        SAbywedfilf0hmnJLS/mZ/urhXtsjSoWM+fBxyqYD6Oj/AQZg3ztQuMf6DkESHRuWlIB5t
+        ErNY5bw3nerkrgRR9YcFr5Pa5WBufQM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-161-UKTPeL87PU-yxyXp4d8g-g-1; Tue, 01 Jun 2021 13:52:16 -0400
+X-MC-Unique: UKTPeL87PU-yxyXp4d8g-g-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5E7E1107ACCD
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Jun 2021 17:52:15 +0000 (UTC)
+Received: from emilne.bos.redhat.com (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 2B8AF5D6D3
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Jun 2021 17:52:15 +0000 (UTC)
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: scsi_devinfo: Add blacklist entry for HPE OPEN-V
+Date:   Tue,  1 Jun 2021 13:52:14 -0400
+Message-Id: <20210601175214.25719-1-emilne@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: kbgL8zHyAGj3bMcT-mDNONwcVpxaib-M
-X-Proofpoint-ORIG-GUID: kbgL8zHyAGj3bMcT-mDNONwcVpxaib-M
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-06-01_08:2021-06-01,2021-06-01 signatures=0
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
- -In correct condition check was leading to data corruption
-  and so the invalid argument.
+Apparently some arrays are now returning "HPE" as the vendor.
 
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
-
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/libfc/fc_encode.h | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/libfc/fc_encode.h b/drivers/scsi/libfc/fc_encode.h
-index 602c97a651bc..9ea4ceadb559 100644
---- a/drivers/scsi/libfc/fc_encode.h
-+++ b/drivers/scsi/libfc/fc_encode.h
-@@ -166,9 +166,11 @@ static inline int fc_ct_ns_fill(struct fc_lport *lport,
- static inline void fc_ct_ms_fill_attr(struct fc_fdmi_attr_entry *entry,
- 				    const char *in, size_t len)
- {
--	int copied = strscpy(entry->value, in, len);
--	if (copied > 0)
--		memset(entry->value, copied, len - copied);
-+	int copied;
-+
-+	copied = strscpy((char *)&entry->value, in, len);
-+	if (copied > 0 && (copied + 1) < len)
-+		memset((entry->value + copied + 1), 0, len - copied - 1);
- }
- 
- /**
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index d92cec1..d33355a 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -184,6 +184,7 @@ static struct {
+ 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
+ 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
+ 	{"HP", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
++	{"HPE", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
 -- 
-2.26.2
+2.1.0
 
