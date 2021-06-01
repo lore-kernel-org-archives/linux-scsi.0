@@ -8,62 +8,62 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05301C47080
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87FE2C47092
 	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 23:55:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DFBBD61351
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 23:55:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DF1761351
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 23:55:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235234AbhFAX5Z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Jun 2021 19:57:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40442 "EHLO
+        id S235272AbhFAX50 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Jun 2021 19:57:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40452 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235264AbhFAX5P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 19:57:15 -0400
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 30B7DC06175F
-        for <linux-scsi@vger.kernel.org>; Tue,  1 Jun 2021 16:55:32 -0700 (PDT)
-Received: by mail-pl1-x62d.google.com with SMTP id x10so164714plg.3
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Jun 2021 16:55:32 -0700 (PDT)
+        with ESMTP id S235274AbhFAX5T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 19:57:19 -0400
+Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D2855C061760
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Jun 2021 16:55:33 -0700 (PDT)
+Received: by mail-pg1-x52a.google.com with SMTP id r1so722775pgk.8
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Jun 2021 16:55:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=trHBr9DAQRjcMfM8iKsQNWKyn8gSaIfUBbisw7lQ8qA=;
-        b=LniUDYVS8JSrBG3yW2oRUuc3khT2A+6cq+pxqpa8z85nDtqcdfi4he5Bdn8Wrw9eEH
-         k9ievOEPMvCQv9Fbsuc66SMjnUJNC3isiniJYexYh9J2CKTxCE3rq8l/rYNocOdPAvsM
-         yle2Db/GP02vTXSDrTchJrK9+9P6777WVf82ZxlO+6Q6lkRWwiGL99ud160sJeRQdBCY
-         FShAV8oTCNZBMSYPDTDFakEKvqrsvy5munAnwf/1WI1KCHo1AGa8U7eCkFOo6/vrpDNH
-         i5x4Fyh3hmA8tmnhngqu+2OOCz8L8VG/dz5csr2cBYAcOB1tCAnvrDGHe5TKASG42Pz9
-         NYNA==
+        bh=+/1ZLuW67AXLyI36R83Udmcrvyu72NoFPnqjbItSl4Y=;
+        b=PqDJOX0/c/xfC48aue+izmMo/IMyLzqQSSVHhNSEydk59C5I96jm6dsczfLVfinPrs
+         sT+TxmyeAkAr92QMwjJm4u+xZQAf016w+dhMPygr4UK7I6/VaEoNhn76qF1A/YHxdbcQ
+         8QTcIgJz9zjMH6XLM6h/wBMz7e6H6Z+32TEkNYiPFKCxEJPVrlm4eT2JfhGp76mPbvPu
+         S4SCTREY5Q/6BDQSaN69F+R+FtuLVR6rpZp6UUD2MxfmV+XcZaSdFm8scu4PvlJ3O0ER
+         X+bw+yQcjv8BtROJwskakE6GDmr9C72VuAyNlwBA0HCqFBbLtEH5sKCUrfc1TC8tpWYf
+         K/uw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=trHBr9DAQRjcMfM8iKsQNWKyn8gSaIfUBbisw7lQ8qA=;
-        b=LmM+WqPVKk1iucJhS9QcM0WBI9gxubypkNlvBs7UWex0zRx79ytdmXEgXfnHiSqar4
-         gpjiTcVVZSC0jWcWotbUgjYcGo/8DAEQwpw9MDt8S4BEiDO4+dRZXOxOda334IREbOQu
-         P4JvxrY6MWbN46Qu7uG9N4HO58GM1C6k7sDjpOOw3WROzDc37tFRo0y6EGnsqeDnIJCN
-         l6gNrYP2g/ioMXAXL6O4VUchOdspshvfYjdHYtbMxr6vyZjCSpFZb8Obp+8LToCLc3t2
-         xQz6LxZUEcnAufPgGEGVU80zwqm5B+Cy+/zNQqSCMEF8zoTlB0E4k/KewRsh9tU6Xhcw
-         /+uQ==
-X-Gm-Message-State: AOAM532Bv9VbtGybKJ7lmlLitWUKalYcRlAiOlxbjwSKilGQrx4WVzDL
-        YpQZHUlV16fNUozBgBi8jaAfLmuelYM=
-X-Google-Smtp-Source: ABdhPJw5dp9Dsjl9cBvWCUbA2gmcuG55gZR9XBUatqsM6gYOUpksiHrhhIFoPboFdJGfUPxV2GpNdg==
-X-Received: by 2002:a17:902:e748:b029:f7:af18:2bd8 with SMTP id p8-20020a170902e748b02900f7af182bd8mr28425156plf.66.1622591731319;
-        Tue, 01 Jun 2021 16:55:31 -0700 (PDT)
+        bh=+/1ZLuW67AXLyI36R83Udmcrvyu72NoFPnqjbItSl4Y=;
+        b=YKIduSv/ap/A3+K6s9il3srvs+POX0AWNnLqMCVCYZbo7ai3W55iBgSxeCJqbQKNKP
+         YiVogN78EohZTElrudbL3EzLuh+05121iaMIs9B31gvaVkCA3MMnnUebUIQAMhb62+oO
+         JqJZA0KPlteYr90dgdhiuf+tiapCQbfBeFY9DbSUCT1TgWPv3iBwMosSMJQq/E6HTpXC
+         SD2Ov5qMmt8koYHKFVHEYQMa/Cx4qnUng63wdebisz/Dwl/xui2xFwRduFlGfnW7wMBf
+         OTjNKfTZgu4chDeWddXgRfE5Ibnl7qZys6zsQ9cHq8EgkURaKOqLVsZKoHMZePQHIuHu
+         7l3g==
+X-Gm-Message-State: AOAM5331+uqoPoJ9M2fUxVdeKedKW0Ax+7kmVE22D3E0CIDIP+K779B0
+        kxAcgOWI/Lo/dOKsRAhqy/4JPL4WZEg=
+X-Google-Smtp-Source: ABdhPJx+oS6kcQlFDGTtHQF+NBmSEwmVpCHqo4XIFYr3O7Y3AZRugNz9oKjrRjmUU4ymp1KaLvW4Hg==
+X-Received: by 2002:a63:b507:: with SMTP id y7mr30739526pge.74.1622591732959;
+        Tue, 01 Jun 2021 16:55:32 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id v15sm13915357pfm.187.2021.06.01.16.55.30
+        by smtp.gmail.com with ESMTPSA id v15sm13915357pfm.187.2021.06.01.16.55.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Jun 2021 16:55:31 -0700 (PDT)
+        Tue, 01 Jun 2021 16:55:32 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Ram Vegesna <ram.vegesna@broadcom.com>,
         Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH v9 17/31] elx: efct: Data structures and defines for hw operations
-Date:   Tue,  1 Jun 2021 16:54:58 -0700
-Message-Id: <20210601235512.20104-18-jsmart2021@gmail.com>
+Subject: [PATCH v9 19/31] elx: efct: Hardware queues creation and deletion
+Date:   Tue,  1 Jun 2021 16:55:00 -0700
+Message-Id: <20210601235512.20104-20-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210601235512.20104-1-jsmart2021@gmail.com>
 References: <20210601235512.20104-1-jsmart2021@gmail.com>
@@ -74,14 +74,10 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch starts the population of the efct target mode
-driver.  The driver is contained in the drivers/scsi/elx/efct
-subdirectory.
+This patch continues the efct driver population.
 
-This patch creates the efct directory and starts population of
-the driver by adding SLI-4 configuration parameters, data structures
-for configuring SLI-4 queues, converting from os to SLI-4 IO requests,
-and handling async events.
+This patch adds driver definitions for:
+Routines for queue creation, deletion, and configuration.
 
 Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
 Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
@@ -97,602 +93,709 @@ Non-functional changes:
        values.
   Correct indentation on line continuations.
 ---
- drivers/scsi/elx/efct/efct_hw.h | 586 ++++++++++++++++++++++++++++++++
- 1 file changed, 586 insertions(+)
- create mode 100644 drivers/scsi/elx/efct/efct_hw.h
+ drivers/scsi/elx/efct/efct_hw.h        |   4 +
+ drivers/scsi/elx/efct/efct_hw_queues.c | 677 +++++++++++++++++++++++++
+ 2 files changed, 681 insertions(+)
+ create mode 100644 drivers/scsi/elx/efct/efct_hw_queues.c
 
 diff --git a/drivers/scsi/elx/efct/efct_hw.h b/drivers/scsi/elx/efct/efct_hw.h
-new file mode 100644
-index 000000000000..d5f1d8c05209
---- /dev/null
+index 6c8ed6a59f5e..7440461a58c8 100644
+--- a/drivers/scsi/elx/efct/efct_hw.h
 +++ b/drivers/scsi/elx/efct/efct_hw.h
-@@ -0,0 +1,586 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
+@@ -593,6 +593,10 @@ efct_hw_setup(struct efct_hw *hw, void *os, struct pci_dev *pdev);
+ int efct_hw_init(struct efct_hw *hw);
+ int
+ efct_hw_parse_filter(struct efct_hw *hw, void *value);
++int
++efct_hw_init_queues(struct efct_hw *hw);
++int
++efct_hw_map_wq_cpu(struct efct_hw *hw);
+ uint64_t
+ efct_get_wwnn(struct efct_hw *hw);
+ uint64_t
+diff --git a/drivers/scsi/elx/efct/efct_hw_queues.c b/drivers/scsi/elx/efct/efct_hw_queues.c
+new file mode 100644
+index 000000000000..3a1d1a5864a3
+--- /dev/null
++++ b/drivers/scsi/elx/efct/efct_hw_queues.c
+@@ -0,0 +1,677 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2021 Broadcom. All Rights Reserved. The term
 + * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.
 + */
 +
-+#ifndef _EFCT_HW_H
-+#define _EFCT_HW_H
-+
-+#include "../libefc_sli/sli4.h"
-+
-+/*
-+ * EFCT PCI IDs
-+ */
-+#define EFCT_VENDOR_ID			0x10df
-+/* LightPulse 16Gb x 4 FC (lancer-g6) */
-+#define EFCT_DEVICE_LANCER_G6		0xe307
-+/* LightPulse 32Gb x 4 FC (lancer-g7) */
-+#define EFCT_DEVICE_LANCER_G7		0xf407
-+
-+/*Default RQ entries len used by driver*/
-+#define EFCT_HW_RQ_ENTRIES_MIN		512
-+#define EFCT_HW_RQ_ENTRIES_DEF		1024
-+#define EFCT_HW_RQ_ENTRIES_MAX		4096
-+
-+/*Defines the size of the RQ buffers used for each RQ*/
-+#define EFCT_HW_RQ_SIZE_HDR             128
-+#define EFCT_HW_RQ_SIZE_PAYLOAD         1024
-+
-+/*Define the maximum number of multi-receive queues*/
-+#define EFCT_HW_MAX_MRQS		8
-+
-+/*
-+ * Define count of when to set the WQEC bit in a submitted
-+ * WQE, causing a consummed/released completion to be posted.
-+ */
-+#define EFCT_HW_WQEC_SET_COUNT		32
-+
-+/*Send frame timeout in seconds*/
-+#define EFCT_HW_SEND_FRAME_TIMEOUT	10
-+
-+/*
-+ * FDT Transfer Hint value, reads greater than this value
-+ * will be segmented to implement fairness. A value of zero disables
-+ * the feature.
-+ */
-+#define EFCT_HW_FDT_XFER_HINT		8192
-+
-+#define EFCT_HW_TIMECHECK_ITERATIONS	100
-+#define EFCT_HW_MAX_NUM_MQ		1
-+#define EFCT_HW_MAX_NUM_RQ		32
-+#define EFCT_HW_MAX_NUM_EQ		16
-+#define EFCT_HW_MAX_NUM_WQ		32
-+#define EFCT_HW_DEF_NUM_EQ		1
-+
-+#define OCE_HW_MAX_NUM_MRQ_PAIRS	16
-+
-+#define EFCT_HW_MQ_DEPTH		128
-+#define EFCT_HW_EQ_DEPTH		1024
-+
-+/*
-+ * A CQ will be assinged to each WQ
-+ * (CQ must have 2X entries of the WQ for abort
-+ * processing), plus a separate one for each RQ PAIR and one for MQ
-+ */
-+#define EFCT_HW_MAX_NUM_CQ \
-+	((EFCT_HW_MAX_NUM_WQ * 2) + 1 + (OCE_HW_MAX_NUM_MRQ_PAIRS * 2))
-+
-+#define EFCT_HW_Q_HASH_SIZE		128
-+#define EFCT_HW_RQ_HEADER_SIZE		128
-+#define EFCT_HW_RQ_HEADER_INDEX		0
-+
-+#define EFCT_HW_REQUE_XRI_REGTAG	65534
-+
-+/* Options for efct_hw_command() */
-+enum efct_cmd_opts {
-+	/* command executes synchronously and busy-waits for completion */
-+	EFCT_CMD_POLL,
-+	/* command executes asynchronously. Uses callback */
-+	EFCT_CMD_NOWAIT,
-+};
-+
-+enum efct_hw_reset {
-+	EFCT_HW_RESET_FUNCTION,
-+	EFCT_HW_RESET_FIRMWARE,
-+	EFCT_HW_RESET_MAX
-+};
-+
-+enum efct_hw_topo {
-+	EFCT_HW_TOPOLOGY_AUTO,
-+	EFCT_HW_TOPOLOGY_NPORT,
-+	EFCT_HW_TOPOLOGY_LOOP,
-+	EFCT_HW_TOPOLOGY_NONE,
-+	EFCT_HW_TOPOLOGY_MAX
-+};
-+
-+/* pack fw revision values into a single uint64_t */
-+#define HW_FWREV(a, b, c, d) (((uint64_t)(a) << 48) | ((uint64_t)(b) << 32) \
-+			| ((uint64_t)(c) << 16) | ((uint64_t)(d)))
-+
-+#define EFCT_FW_VER_STR(a, b, c, d) (#a "." #b "." #c "." #d)
-+
-+enum efct_hw_io_type {
-+	EFCT_HW_ELS_REQ,
-+	EFCT_HW_ELS_RSP,
-+	EFCT_HW_FC_CT,
-+	EFCT_HW_FC_CT_RSP,
-+	EFCT_HW_BLS_ACC,
-+	EFCT_HW_BLS_RJT,
-+	EFCT_HW_IO_TARGET_READ,
-+	EFCT_HW_IO_TARGET_WRITE,
-+	EFCT_HW_IO_TARGET_RSP,
-+	EFCT_HW_IO_DNRX_REQUEUE,
-+	EFCT_HW_IO_MAX,
-+};
-+
-+enum efct_hw_io_state {
-+	EFCT_HW_IO_STATE_FREE,
-+	EFCT_HW_IO_STATE_INUSE,
-+	EFCT_HW_IO_STATE_WAIT_FREE,
-+	EFCT_HW_IO_STATE_WAIT_SEC_HIO,
-+};
-+
-+#define EFCT_TARGET_WRITE_SKIPS	1
-+#define EFCT_TARGET_READ_SKIPS	2
-+
-+struct efct_hw;
-+struct efct_io;
-+
-+#define EFCT_CMD_CTX_POOL_SZ	32
-+/**
-+ * HW command context.
-+ * Stores the state for the asynchronous commands sent to the hardware.
-+ */
-+struct efct_command_ctx {
-+	struct list_head	list_entry;
-+	int (*cb)(struct efct_hw *hw, int status, u8 *mqe, void *arg);
-+	void			*arg;	/* Argument for callback */
-+	/* buffer holding command / results */
-+	u8			buf[SLI4_BMBX_SIZE];
-+	void			*ctx;	/* upper layer context */
-+};
-+
-+struct efct_hw_sgl {
-+	uintptr_t		addr;
-+	size_t			len;
-+};
-+
-+union efct_hw_io_param_u {
-+	struct sli_bls_params bls;
-+	struct sli_els_params els;
-+	struct sli_ct_params fc_ct;
-+	struct sli_fcp_tgt_params fcp_tgt;
-+};
-+
-+/* WQ steering mode */
-+enum efct_hw_wq_steering {
-+	EFCT_HW_WQ_STEERING_CLASS,
-+	EFCT_HW_WQ_STEERING_REQUEST,
-+	EFCT_HW_WQ_STEERING_CPU,
-+};
-+
-+/* HW wqe object */
-+struct efct_hw_wqe {
-+	struct list_head	list_entry;
-+	bool			abort_wqe_submit_needed;
-+	bool			send_abts;
-+	u32			id;
-+	u32			abort_reqtag;
-+	u8			*wqebuf;
-+};
-+
-+struct efct_hw_io;
-+/* Typedef for HW "done" callback */
-+typedef int (*efct_hw_done_t)(struct efct_hw_io *, u32 len, int status,
-+			      u32 ext, void *ul_arg);
-+
-+/**
-+ * HW IO object.
-+ *
-+ * Stores the per-IO information necessary
-+ * for both SLI and efct.
-+ * @ref:		reference counter for hw io object
-+ * @state:		state of IO: free, busy, wait_free
-+ * @list_entry		used for busy, wait_free, free lists
-+ * @wqe			Work queue object, with link for pending
-+ * @hw			pointer back to hardware context
-+ * @xfer_rdy		transfer ready data
-+ * @type		IO type
-+ * @xbusy		Exchange is active in FW
-+ * @abort_in_progress	if TRUE, abort is in progress
-+ * @status_saved	if TRUE, latched status should be returned
-+ * @wq_class		WQ class if steering mode is Class
-+ * @reqtag		request tag for this HW IO
-+ * @wq			WQ assigned to the exchange
-+ * @done		Function called on IO completion
-+ * @arg			argument passed to IO done callback
-+ * @abort_done		Function called on abort completion
-+ * @abort_arg		argument passed to abort done callback
-+ * @wq_steering		WQ steering mode request
-+ * @saved_status	Saved status
-+ * @saved_len		Status length
-+ * @saved_ext		Saved extended status
-+ * @eq			EQ on which this HIO came up
-+ * @sge_offset		SGE data offset
-+ * @def_sgl_count	Count of SGEs in default SGL
-+ * @abort_reqtag	request tag for an abort of this HW IO
-+ * @indicator		Exchange indicator
-+ * @def_sgl		default SGL
-+ * @sgl			pointer to current active SGL
-+ * @sgl_count		count of SGEs in io->sgl
-+ * @first_data_sge	index of first data SGE
-+ * @n_sge		number of active SGEs
-+ */
-+struct efct_hw_io {
-+	struct kref		ref;
-+	enum efct_hw_io_state	state;
-+	void			(*release)(struct kref *arg);
-+	struct list_head	list_entry;
-+	struct efct_hw_wqe	wqe;
-+
-+	struct efct_hw		*hw;
-+	struct efc_dma		xfer_rdy;
-+	u16			type;
-+	bool			xbusy;
-+	bool			abort_in_progress;
-+	bool			status_saved;
-+	u8			wq_class;
-+	u16			reqtag;
-+
-+	struct hw_wq		*wq;
-+	efct_hw_done_t		done;
-+	void			*arg;
-+	efct_hw_done_t		abort_done;
-+	void			*abort_arg;
-+
-+	enum efct_hw_wq_steering wq_steering;
-+
-+	u32			saved_status;
-+	u32			saved_len;
-+	u32			saved_ext;
-+
-+	struct hw_eq		*eq;
-+	u32			sge_offset;
-+	u32			def_sgl_count;
-+	u32			abort_reqtag;
-+	u32			indicator;
-+	struct efc_dma		def_sgl;
-+	struct efc_dma		*sgl;
-+	u32			sgl_count;
-+	u32			first_data_sge;
-+	u32			n_sge;
-+};
-+
-+enum efct_hw_port {
-+	EFCT_HW_PORT_INIT,
-+	EFCT_HW_PORT_SHUTDOWN,
-+};
-+
-+/* Node group rpi reference */
-+struct efct_hw_rpi_ref {
-+	atomic_t rpi_count;
-+	atomic_t rpi_attached;
-+};
-+
-+enum efct_hw_link_stat {
-+	EFCT_HW_LINK_STAT_LINK_FAILURE_COUNT,
-+	EFCT_HW_LINK_STAT_LOSS_OF_SYNC_COUNT,
-+	EFCT_HW_LINK_STAT_LOSS_OF_SIGNAL_COUNT,
-+	EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_COUNT,
-+	EFCT_HW_LINK_STAT_INVALID_XMIT_WORD_COUNT,
-+	EFCT_HW_LINK_STAT_CRC_COUNT,
-+	EFCT_HW_LINK_STAT_PRIMITIVE_SEQ_TIMEOUT_COUNT,
-+	EFCT_HW_LINK_STAT_ELASTIC_BUFFER_OVERRUN_COUNT,
-+	EFCT_HW_LINK_STAT_ARB_TIMEOUT_COUNT,
-+	EFCT_HW_LINK_STAT_ADVERTISED_RCV_B2B_CREDIT,
-+	EFCT_HW_LINK_STAT_CURR_RCV_B2B_CREDIT,
-+	EFCT_HW_LINK_STAT_ADVERTISED_XMIT_B2B_CREDIT,
-+	EFCT_HW_LINK_STAT_CURR_XMIT_B2B_CREDIT,
-+	EFCT_HW_LINK_STAT_RCV_EOFA_COUNT,
-+	EFCT_HW_LINK_STAT_RCV_EOFDTI_COUNT,
-+	EFCT_HW_LINK_STAT_RCV_EOFNI_COUNT,
-+	EFCT_HW_LINK_STAT_RCV_SOFF_COUNT,
-+	EFCT_HW_LINK_STAT_RCV_DROPPED_NO_AER_COUNT,
-+	EFCT_HW_LINK_STAT_RCV_DROPPED_NO_RPI_COUNT,
-+	EFCT_HW_LINK_STAT_RCV_DROPPED_NO_XRI_COUNT,
-+	EFCT_HW_LINK_STAT_MAX,
-+};
-+
-+enum efct_hw_host_stat {
-+	EFCT_HW_HOST_STAT_TX_KBYTE_COUNT,
-+	EFCT_HW_HOST_STAT_RX_KBYTE_COUNT,
-+	EFCT_HW_HOST_STAT_TX_FRAME_COUNT,
-+	EFCT_HW_HOST_STAT_RX_FRAME_COUNT,
-+	EFCT_HW_HOST_STAT_TX_SEQ_COUNT,
-+	EFCT_HW_HOST_STAT_RX_SEQ_COUNT,
-+	EFCT_HW_HOST_STAT_TOTAL_EXCH_ORIG,
-+	EFCT_HW_HOST_STAT_TOTAL_EXCH_RESP,
-+	EFCT_HW_HOSY_STAT_RX_P_BSY_COUNT,
-+	EFCT_HW_HOST_STAT_RX_F_BSY_COUNT,
-+	EFCT_HW_HOST_STAT_DROP_FRM_DUE_TO_NO_RQ_BUF_COUNT,
-+	EFCT_HW_HOST_STAT_EMPTY_RQ_TIMEOUT_COUNT,
-+	EFCT_HW_HOST_STAT_DROP_FRM_DUE_TO_NO_XRI_COUNT,
-+	EFCT_HW_HOST_STAT_EMPTY_XRI_POOL_COUNT,
-+	EFCT_HW_HOST_STAT_MAX,
-+};
-+
-+enum efct_hw_state {
-+	EFCT_HW_STATE_UNINITIALIZED,
-+	EFCT_HW_STATE_QUEUES_ALLOCATED,
-+	EFCT_HW_STATE_ACTIVE,
-+	EFCT_HW_STATE_RESET_IN_PROGRESS,
-+	EFCT_HW_STATE_TEARDOWN_IN_PROGRESS,
-+};
-+
-+struct efct_hw_link_stat_counts {
-+	u8		overflow;
-+	u32		counter;
-+};
-+
-+struct efct_hw_host_stat_counts {
-+	u32		counter;
-+};
-+
-+/* Structure used for the hash lookup of queue IDs */
-+struct efct_queue_hash {
-+	bool		in_use;
-+	u16		id;
-+	u16		index;
-+};
-+
-+/* WQ callback object */
-+struct hw_wq_callback {
-+	u16		instance_index;	/* use for request tag */
-+	void (*callback)(void *arg, u8 *cqe, int status);
-+	void		*arg;
-+	struct list_head list_entry;
-+};
-+
-+struct reqtag_pool {
-+	spinlock_t lock;	/* pool lock */
-+	struct hw_wq_callback *tags[U16_MAX];
-+	struct list_head freelist;
-+};
-+
-+struct efct_hw_config {
-+	u32		n_eq;
-+	u32		n_cq;
-+	u32		n_mq;
-+	u32		n_rq;
-+	u32		n_wq;
-+	u32		n_io;
-+	u32		n_sgl;
-+	u32		speed;
-+	u32		topology;
-+	/* size of the buffers for first burst */
-+	u32		rq_default_buffer_size;
-+	u8		esoc;
-+	/* MRQ RQ selection policy */
-+	u8		rq_selection_policy;
-+	/* RQ quanta if rq_selection_policy == 2 */
-+	u8		rr_quanta;
-+	u32		filter_def[SLI4_CMD_REG_FCFI_NUM_RQ_CFG];
-+};
-+
-+struct efct_hw {
-+	struct efct		*os;
-+	struct sli4		sli;
-+	u16			ulp_start;
-+	u16			ulp_max;
-+	u32			dump_size;
-+	enum efct_hw_state	state;
-+	bool			hw_setup_called;
-+	u8			sliport_healthcheck;
-+	u16			fcf_indicator;
-+
-+	/* HW configuration */
-+	struct efct_hw_config	config;
-+
-+	/* calculated queue sizes for each type */
-+	u32			num_qentries[SLI4_QTYPE_MAX];
-+
-+	/* Storage for SLI queue objects */
-+	struct sli4_queue	wq[EFCT_HW_MAX_NUM_WQ];
-+	struct sli4_queue	rq[EFCT_HW_MAX_NUM_RQ];
-+	u16			hw_rq_lookup[EFCT_HW_MAX_NUM_RQ];
-+	struct sli4_queue	mq[EFCT_HW_MAX_NUM_MQ];
-+	struct sli4_queue	cq[EFCT_HW_MAX_NUM_CQ];
-+	struct sli4_queue	eq[EFCT_HW_MAX_NUM_EQ];
-+
-+	/* HW queue */
-+	u32			eq_count;
-+	u32			cq_count;
-+	u32			mq_count;
-+	u32			wq_count;
-+	u32			rq_count;
-+	u32			cmd_head_count;
-+	struct list_head	eq_list;
-+
-+	struct efct_queue_hash	cq_hash[EFCT_HW_Q_HASH_SIZE];
-+	struct efct_queue_hash	rq_hash[EFCT_HW_Q_HASH_SIZE];
-+	struct efct_queue_hash	wq_hash[EFCT_HW_Q_HASH_SIZE];
-+
-+	/* Storage for HW queue objects */
-+	struct hw_wq		*hw_wq[EFCT_HW_MAX_NUM_WQ];
-+	struct hw_rq		*hw_rq[EFCT_HW_MAX_NUM_RQ];
-+	struct hw_mq		*hw_mq[EFCT_HW_MAX_NUM_MQ];
-+	struct hw_cq		*hw_cq[EFCT_HW_MAX_NUM_CQ];
-+	struct hw_eq		*hw_eq[EFCT_HW_MAX_NUM_EQ];
-+	/* count of hw_rq[] entries */
-+	u32			hw_rq_count;
-+	/* count of multirq RQs */
-+	u32			hw_mrq_count;
-+
-+	struct hw_wq		**wq_cpu_array;
-+
-+	/* Sequence objects used in incoming frame processing */
-+	struct efc_hw_sequence	*seq_pool;
-+
-+	/* Maintain an ordered, linked list of outstanding HW commands. */
-+	struct mutex            bmbx_lock;
-+	spinlock_t		cmd_lock;
-+	struct list_head	cmd_head;
-+	struct list_head	cmd_pending;
-+	mempool_t		*cmd_ctx_pool;
-+	mempool_t		*mbox_rqst_pool;
-+
-+	struct sli4_link_event	link;
-+
-+	/* pointer array of IO objects */
-+	struct efct_hw_io	**io;
-+	/* array of WQE buffs mapped to IO objects */
-+	u8			*wqe_buffs;
-+
-+	/* IO lock to synchronize list access */
-+	spinlock_t		io_lock;
-+	/* List of IO objects in use */
-+	struct list_head	io_inuse;
-+	/* List of IO objects waiting to be freed */
-+	struct list_head	io_wait_free;
-+	/* List of IO objects available for allocation */
-+	struct list_head	io_free;
-+
-+	struct efc_dma		loop_map;
-+
-+	struct efc_dma		xfer_rdy;
-+
-+	struct efc_dma		rnode_mem;
-+
-+	atomic_t		io_alloc_failed_count;
-+
-+	/* stat: wq sumbit count */
-+	u32			tcmd_wq_submit[EFCT_HW_MAX_NUM_WQ];
-+	/* stat: wq complete count */
-+	u32			tcmd_wq_complete[EFCT_HW_MAX_NUM_WQ];
-+
-+	atomic_t		send_frame_seq_id;
-+	struct reqtag_pool	*wq_reqtag_pool;
-+};
-+
-+enum efct_hw_io_count_type {
-+	EFCT_HW_IO_INUSE_COUNT,
-+	EFCT_HW_IO_FREE_COUNT,
-+	EFCT_HW_IO_WAIT_FREE_COUNT,
-+	EFCT_HW_IO_N_TOTAL_IO_COUNT,
-+};
-+
-+/* HW queue data structures */
-+struct hw_eq {
-+	struct list_head	list_entry;
-+	enum sli4_qtype		type;
-+	u32			instance;
-+	u32			entry_count;
-+	u32			entry_size;
-+	struct efct_hw		*hw;
-+	struct sli4_queue	*queue;
-+	struct list_head	cq_list;
-+	u32			use_count;
-+};
-+
-+struct hw_cq {
-+	struct list_head	list_entry;
-+	enum sli4_qtype		type;
-+	u32			instance;
-+	u32			entry_count;
-+	u32			entry_size;
-+	struct hw_eq		*eq;
-+	struct sli4_queue	*queue;
-+	struct list_head	q_list;
-+	u32			use_count;
-+};
-+
-+struct hw_q {
-+	struct list_head	list_entry;
-+	enum sli4_qtype		type;
-+};
-+
-+struct hw_mq {
-+	struct list_head	list_entry;
-+	enum sli4_qtype		type;
-+	u32			instance;
-+
-+	u32			entry_count;
-+	u32			entry_size;
-+	struct hw_cq		*cq;
-+	struct sli4_queue	*queue;
-+
-+	u32			use_count;
-+};
-+
-+struct hw_wq {
-+	struct list_head	list_entry;
-+	enum sli4_qtype		type;
-+	u32			instance;
-+	struct efct_hw		*hw;
-+
-+	u32			entry_count;
-+	u32			entry_size;
-+	struct hw_cq		*cq;
-+	struct sli4_queue	*queue;
-+	u32			class;
-+
-+	/* WQ consumed */
-+	u32			wqec_set_count;
-+	u32			wqec_count;
-+	u32			free_count;
-+	u32			total_submit_count;
-+	struct list_head	pending_list;
-+
-+	/* HW IO allocated for use with Send Frame */
-+	struct efct_hw_io	*send_frame_io;
-+
-+	/* Stats */
-+	u32			use_count;
-+	u32			wq_pending_count;
-+};
-+
-+struct hw_rq {
-+	struct list_head	list_entry;
-+	enum sli4_qtype		type;
-+	u32			instance;
-+
-+	u32			entry_count;
-+	u32			use_count;
-+	u32			hdr_entry_size;
-+	u32			first_burst_entry_size;
-+	u32			data_entry_size;
-+	bool			is_mrq;
-+	u32			base_mrq_id;
-+
-+	struct hw_cq		*cq;
-+
-+	u8			filter_mask;
-+	struct sli4_queue	*hdr;
-+	struct sli4_queue	*first_burst;
-+	struct sli4_queue	*data;
-+
-+	struct efc_hw_rq_buffer	*hdr_buf;
-+	struct efc_hw_rq_buffer	*fb_buf;
-+	struct efc_hw_rq_buffer	*payload_buf;
-+	/* RQ tracker for this RQ */
-+	struct efc_hw_sequence	**rq_tracker;
-+};
-+
-+struct efct_hw_send_frame_context {
-+	struct efct_hw		*hw;
-+	struct hw_wq_callback	*wqcb;
-+	struct efct_hw_wqe	wqe;
-+	void (*callback)(int status, void *arg);
-+	void			*arg;
-+
-+	/* General purpose elements */
-+	struct efc_hw_sequence	*seq;
-+	struct efc_dma		payload;
-+};
-+
-+struct efct_hw_grp_hdr {
-+	u32			size;
-+	__be32			magic_number;
-+	u32			word2;
-+	u8			rev_name[128];
-+	u8			date[12];
-+	u8			revision[32];
-+};
-+
-+#endif /* __EFCT_H__ */
++#include "efct_driver.h"
++#include "efct_hw.h"
++#include "efct_unsol.h"
++
++int
++efct_hw_init_queues(struct efct_hw *hw)
++{
++	struct hw_eq *eq = NULL;
++	struct hw_cq *cq = NULL;
++	struct hw_wq *wq = NULL;
++	struct hw_mq *mq = NULL;
++
++	struct hw_eq *eqs[EFCT_HW_MAX_NUM_EQ];
++	struct hw_cq *cqs[EFCT_HW_MAX_NUM_EQ];
++	struct hw_rq *rqs[EFCT_HW_MAX_NUM_EQ];
++	u32 i = 0, j;
++
++	hw->eq_count = 0;
++	hw->cq_count = 0;
++	hw->mq_count = 0;
++	hw->wq_count = 0;
++	hw->rq_count = 0;
++	hw->hw_rq_count = 0;
++	INIT_LIST_HEAD(&hw->eq_list);
++
++	for (i = 0; i < hw->config.n_eq; i++) {
++		/* Create EQ */
++		eq = efct_hw_new_eq(hw, EFCT_HW_EQ_DEPTH);
++		if (!eq) {
++			efct_hw_queue_teardown(hw);
++			return -ENOMEM;
++		}
++
++		eqs[i] = eq;
++
++		/* Create one MQ */
++		if (!i) {
++			cq = efct_hw_new_cq(eq,
++					    hw->num_qentries[SLI4_QTYPE_CQ]);
++			if (!cq) {
++				efct_hw_queue_teardown(hw);
++				return -ENOMEM;
++			}
++
++			mq = efct_hw_new_mq(cq, EFCT_HW_MQ_DEPTH);
++			if (!mq) {
++				efct_hw_queue_teardown(hw);
++				return -ENOMEM;
++			}
++		}
++
++		/* Create WQ */
++		cq = efct_hw_new_cq(eq, hw->num_qentries[SLI4_QTYPE_CQ]);
++		if (!cq) {
++			efct_hw_queue_teardown(hw);
++			return -ENOMEM;
++		}
++
++		wq = efct_hw_new_wq(cq, hw->num_qentries[SLI4_QTYPE_WQ]);
++		if (!wq) {
++			efct_hw_queue_teardown(hw);
++			return -ENOMEM;
++		}
++	}
++
++	/* Create CQ set */
++	if (efct_hw_new_cq_set(eqs, cqs, i, hw->num_qentries[SLI4_QTYPE_CQ])) {
++		efct_hw_queue_teardown(hw);
++		return -EIO;
++	}
++
++	/* Create RQ set */
++	if (efct_hw_new_rq_set(cqs, rqs, i, EFCT_HW_RQ_ENTRIES_DEF)) {
++		efct_hw_queue_teardown(hw);
++		return -EIO;
++	}
++
++	for (j = 0; j < i ; j++) {
++		rqs[j]->filter_mask = 0;
++		rqs[j]->is_mrq = true;
++		rqs[j]->base_mrq_id = rqs[0]->hdr->id;
++	}
++
++	hw->hw_mrq_count = i;
++
++	return 0;
++}
++
++int
++efct_hw_map_wq_cpu(struct efct_hw *hw)
++{
++	struct efct *efct = hw->os;
++	u32 cpu = 0, i;
++
++	/* Init cpu_map array */
++	hw->wq_cpu_array = kcalloc(num_possible_cpus(), sizeof(void *),
++				   GFP_KERNEL);
++	if (!hw->wq_cpu_array)
++		return -ENOMEM;
++
++	for (i = 0; i < hw->config.n_eq; i++) {
++		const struct cpumask *maskp;
++
++		/* Get a CPU mask for all CPUs affinitized to this vector */
++		maskp = pci_irq_get_affinity(efct->pci, i);
++		if (!maskp) {
++			efc_log_debug(efct, "maskp null for vector:%d\n", i);
++			continue;
++		}
++
++		/* Loop through all CPUs associated with vector idx */
++		for_each_cpu_and(cpu, maskp, cpu_present_mask) {
++			efc_log_debug(efct, "CPU:%d irq vector:%d\n", cpu, i);
++			hw->wq_cpu_array[cpu] = hw->hw_wq[i];
++		}
++	}
++
++	return 0;
++}
++
++struct hw_eq *
++efct_hw_new_eq(struct efct_hw *hw, u32 entry_count)
++{
++	struct hw_eq *eq = kzalloc(sizeof(*eq), GFP_KERNEL);
++
++	if (!eq)
++		return NULL;
++
++	eq->type = SLI4_QTYPE_EQ;
++	eq->hw = hw;
++	eq->entry_count = entry_count;
++	eq->instance = hw->eq_count++;
++	eq->queue = &hw->eq[eq->instance];
++	INIT_LIST_HEAD(&eq->cq_list);
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_EQ, eq->queue,	entry_count,
++			    NULL)) {
++		efc_log_err(hw->os, "EQ[%d] alloc failure\n", eq->instance);
++		kfree(eq);
++		return NULL;
++	}
++
++	sli_eq_modify_delay(&hw->sli, eq->queue, 1, 0, 8);
++	hw->hw_eq[eq->instance] = eq;
++	INIT_LIST_HEAD(&eq->list_entry);
++	list_add_tail(&eq->list_entry, &hw->eq_list);
++	efc_log_debug(hw->os, "create eq[%2d] id %3d len %4d\n", eq->instance,
++		      eq->queue->id, eq->entry_count);
++	return eq;
++}
++
++struct hw_cq *
++efct_hw_new_cq(struct hw_eq *eq, u32 entry_count)
++{
++	struct efct_hw *hw = eq->hw;
++	struct hw_cq *cq = kzalloc(sizeof(*cq), GFP_KERNEL);
++
++	if (!cq)
++		return NULL;
++
++	cq->eq = eq;
++	cq->type = SLI4_QTYPE_CQ;
++	cq->instance = eq->hw->cq_count++;
++	cq->entry_count = entry_count;
++	cq->queue = &hw->cq[cq->instance];
++
++	INIT_LIST_HEAD(&cq->q_list);
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_CQ, cq->queue,
++			    cq->entry_count, eq->queue)) {
++		efc_log_err(hw->os, "CQ[%d] allocation failure len=%d\n",
++			    eq->instance, eq->entry_count);
++		kfree(cq);
++		return NULL;
++	}
++
++	hw->hw_cq[cq->instance] = cq;
++	INIT_LIST_HEAD(&cq->list_entry);
++	list_add_tail(&cq->list_entry, &eq->cq_list);
++	efc_log_debug(hw->os, "create cq[%2d] id %3d len %4d\n", cq->instance,
++		      cq->queue->id, cq->entry_count);
++	return cq;
++}
++
++u32
++efct_hw_new_cq_set(struct hw_eq *eqs[], struct hw_cq *cqs[],
++		   u32 num_cqs, u32 entry_count)
++{
++	u32 i;
++	struct efct_hw *hw = eqs[0]->hw;
++	struct sli4 *sli4 = &hw->sli;
++	struct hw_cq *cq = NULL;
++	struct sli4_queue *qs[SLI4_MAX_CQ_SET_COUNT];
++	struct sli4_queue *assefct[SLI4_MAX_CQ_SET_COUNT];
++
++	/* Initialise CQS pointers to NULL */
++	for (i = 0; i < num_cqs; i++)
++		cqs[i] = NULL;
++
++	for (i = 0; i < num_cqs; i++) {
++		cq = kzalloc(sizeof(*cq), GFP_KERNEL);
++		if (!cq)
++			goto error;
++
++		cqs[i]          = cq;
++		cq->eq          = eqs[i];
++		cq->type        = SLI4_QTYPE_CQ;
++		cq->instance    = hw->cq_count++;
++		cq->entry_count = entry_count;
++		cq->queue       = &hw->cq[cq->instance];
++		qs[i]           = cq->queue;
++		assefct[i]       = eqs[i]->queue;
++		INIT_LIST_HEAD(&cq->q_list);
++	}
++
++	if (sli_cq_alloc_set(sli4, qs, num_cqs, entry_count, assefct)) {
++		efc_log_err(hw->os, "Failed to create CQ Set.\n");
++		goto error;
++	}
++
++	for (i = 0; i < num_cqs; i++) {
++		hw->hw_cq[cqs[i]->instance] = cqs[i];
++		INIT_LIST_HEAD(&cqs[i]->list_entry);
++		list_add_tail(&cqs[i]->list_entry, &cqs[i]->eq->cq_list);
++	}
++
++	return 0;
++
++error:
++	for (i = 0; i < num_cqs; i++) {
++		kfree(cqs[i]);
++		cqs[i] = NULL;
++	}
++	return -EIO;
++}
++
++struct hw_mq *
++efct_hw_new_mq(struct hw_cq *cq, u32 entry_count)
++{
++	struct efct_hw *hw = cq->eq->hw;
++	struct hw_mq *mq = kzalloc(sizeof(*mq), GFP_KERNEL);
++
++	if (!mq)
++		return NULL;
++
++	mq->cq = cq;
++	mq->type = SLI4_QTYPE_MQ;
++	mq->instance = cq->eq->hw->mq_count++;
++	mq->entry_count = entry_count;
++	mq->entry_size = EFCT_HW_MQ_DEPTH;
++	mq->queue = &hw->mq[mq->instance];
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_MQ, mq->queue, mq->entry_size,
++			    cq->queue)) {
++		efc_log_err(hw->os, "MQ allocation failure\n");
++		kfree(mq);
++		return NULL;
++	}
++
++	hw->hw_mq[mq->instance] = mq;
++	INIT_LIST_HEAD(&mq->list_entry);
++	list_add_tail(&mq->list_entry, &cq->q_list);
++	efc_log_debug(hw->os, "create mq[%2d] id %3d len %4d\n", mq->instance,
++		      mq->queue->id, mq->entry_count);
++	return mq;
++}
++
++struct hw_wq *
++efct_hw_new_wq(struct hw_cq *cq, u32 entry_count)
++{
++	struct efct_hw *hw = cq->eq->hw;
++	struct hw_wq *wq = kzalloc(sizeof(*wq), GFP_KERNEL);
++
++	if (!wq)
++		return NULL;
++
++	wq->hw = cq->eq->hw;
++	wq->cq = cq;
++	wq->type = SLI4_QTYPE_WQ;
++	wq->instance = cq->eq->hw->wq_count++;
++	wq->entry_count = entry_count;
++	wq->queue = &hw->wq[wq->instance];
++	wq->wqec_set_count = EFCT_HW_WQEC_SET_COUNT;
++	wq->wqec_count = wq->wqec_set_count;
++	wq->free_count = wq->entry_count - 1;
++	INIT_LIST_HEAD(&wq->pending_list);
++
++	if (sli_queue_alloc(&hw->sli, SLI4_QTYPE_WQ, wq->queue,
++			    wq->entry_count, cq->queue)) {
++		efc_log_err(hw->os, "WQ allocation failure\n");
++		kfree(wq);
++		return NULL;
++	}
++
++	hw->hw_wq[wq->instance] = wq;
++	INIT_LIST_HEAD(&wq->list_entry);
++	list_add_tail(&wq->list_entry, &cq->q_list);
++	efc_log_debug(hw->os, "create wq[%2d] id %3d len %4d cls %d\n",
++		      wq->instance, wq->queue->id, wq->entry_count, wq->class);
++	return wq;
++}
++
++u32
++efct_hw_new_rq_set(struct hw_cq *cqs[], struct hw_rq *rqs[],
++		   u32 num_rq_pairs, u32 entry_count)
++{
++	struct efct_hw *hw = cqs[0]->eq->hw;
++	struct hw_rq *rq = NULL;
++	struct sli4_queue *qs[SLI4_MAX_RQ_SET_COUNT * 2] = { NULL };
++	u32 i, q_count, size;
++
++	/* Initialise RQS pointers */
++	for (i = 0; i < num_rq_pairs; i++)
++		rqs[i] = NULL;
++
++	/*
++	 * Allocate an RQ object SET, where each element in set
++	 * encapsulates 2 SLI queues (for rq pair)
++	 */
++	for (i = 0, q_count = 0; i < num_rq_pairs; i++, q_count += 2) {
++		rq = kzalloc(sizeof(*rq), GFP_KERNEL);
++		if (!rq)
++			goto error;
++
++		rqs[i] = rq;
++		rq->instance = hw->hw_rq_count++;
++		rq->cq = cqs[i];
++		rq->type = SLI4_QTYPE_RQ;
++		rq->entry_count = entry_count;
++
++		/* Header RQ */
++		rq->hdr = &hw->rq[hw->rq_count];
++		rq->hdr_entry_size = EFCT_HW_RQ_HEADER_SIZE;
++		hw->hw_rq_lookup[hw->rq_count] = rq->instance;
++		hw->rq_count++;
++		qs[q_count] = rq->hdr;
++
++		/* Data RQ */
++		rq->data = &hw->rq[hw->rq_count];
++		rq->data_entry_size = hw->config.rq_default_buffer_size;
++		hw->hw_rq_lookup[hw->rq_count] = rq->instance;
++		hw->rq_count++;
++		qs[q_count + 1] = rq->data;
++
++		rq->rq_tracker = NULL;
++	}
++
++	if (sli_fc_rq_set_alloc(&hw->sli, num_rq_pairs, qs,
++				cqs[0]->queue->id,
++			    rqs[0]->entry_count,
++			    rqs[0]->hdr_entry_size,
++			    rqs[0]->data_entry_size)) {
++		efc_log_err(hw->os, "RQ Set alloc failure for base CQ=%d\n",
++			    cqs[0]->queue->id);
++		goto error;
++	}
++
++	for (i = 0; i < num_rq_pairs; i++) {
++		hw->hw_rq[rqs[i]->instance] = rqs[i];
++		INIT_LIST_HEAD(&rqs[i]->list_entry);
++		list_add_tail(&rqs[i]->list_entry, &cqs[i]->q_list);
++		size = sizeof(struct efc_hw_sequence *) * rqs[i]->entry_count;
++		rqs[i]->rq_tracker = kzalloc(size, GFP_KERNEL);
++		if (!rqs[i]->rq_tracker)
++			goto error;
++	}
++
++	return 0;
++
++error:
++	for (i = 0; i < num_rq_pairs; i++) {
++		if (rqs[i]) {
++			kfree(rqs[i]->rq_tracker);
++			kfree(rqs[i]);
++		}
++	}
++
++	return -EIO;
++}
++
++void
++efct_hw_del_eq(struct hw_eq *eq)
++{
++	struct hw_cq *cq;
++	struct hw_cq *cq_next;
++
++	if (!eq)
++		return;
++
++	list_for_each_entry_safe(cq, cq_next, &eq->cq_list, list_entry)
++		efct_hw_del_cq(cq);
++	list_del(&eq->list_entry);
++	eq->hw->hw_eq[eq->instance] = NULL;
++	kfree(eq);
++}
++
++void
++efct_hw_del_cq(struct hw_cq *cq)
++{
++	struct hw_q *q;
++	struct hw_q *q_next;
++
++	if (!cq)
++		return;
++
++	list_for_each_entry_safe(q, q_next, &cq->q_list, list_entry) {
++		switch (q->type) {
++		case SLI4_QTYPE_MQ:
++			efct_hw_del_mq((struct hw_mq *)q);
++			break;
++		case SLI4_QTYPE_WQ:
++			efct_hw_del_wq((struct hw_wq *)q);
++			break;
++		case SLI4_QTYPE_RQ:
++			efct_hw_del_rq((struct hw_rq *)q);
++			break;
++		default:
++			break;
++		}
++	}
++	list_del(&cq->list_entry);
++	cq->eq->hw->hw_cq[cq->instance] = NULL;
++	kfree(cq);
++}
++
++void
++efct_hw_del_mq(struct hw_mq *mq)
++{
++	if (!mq)
++		return;
++
++	list_del(&mq->list_entry);
++	mq->cq->eq->hw->hw_mq[mq->instance] = NULL;
++	kfree(mq);
++}
++
++void
++efct_hw_del_wq(struct hw_wq *wq)
++{
++	if (!wq)
++		return;
++
++	list_del(&wq->list_entry);
++	wq->cq->eq->hw->hw_wq[wq->instance] = NULL;
++	kfree(wq);
++}
++
++void
++efct_hw_del_rq(struct hw_rq *rq)
++{
++	struct efct_hw *hw = NULL;
++
++	if (!rq)
++		return;
++	/* Free RQ tracker */
++	kfree(rq->rq_tracker);
++	rq->rq_tracker = NULL;
++	list_del(&rq->list_entry);
++	hw = rq->cq->eq->hw;
++	hw->hw_rq[rq->instance] = NULL;
++	kfree(rq);
++}
++
++void
++efct_hw_queue_teardown(struct efct_hw *hw)
++{
++	struct hw_eq *eq;
++	struct hw_eq *eq_next;
++
++	if (!hw->eq_list.next)
++		return;
++
++	list_for_each_entry_safe(eq, eq_next, &hw->eq_list, list_entry)
++		efct_hw_del_eq(eq);
++}
++
++static inline int
++efct_hw_rqpair_find(struct efct_hw *hw, u16 rq_id)
++{
++	return efct_hw_queue_hash_find(hw->rq_hash, rq_id);
++}
++
++static struct efc_hw_sequence *
++efct_hw_rqpair_get(struct efct_hw *hw, u16 rqindex, u16 bufindex)
++{
++	struct sli4_queue *rq_hdr = &hw->rq[rqindex];
++	struct efc_hw_sequence *seq = NULL;
++	struct hw_rq *rq = hw->hw_rq[hw->hw_rq_lookup[rqindex]];
++	unsigned long flags = 0;
++
++	if (bufindex >= rq_hdr->length) {
++		efc_log_err(hw->os,
++			    "RQidx %d bufidx %d exceed ring len %d for id %d\n",
++			    rqindex, bufindex, rq_hdr->length, rq_hdr->id);
++		return NULL;
++	}
++
++	/* rq_hdr lock also covers rqindex+1 queue */
++	spin_lock_irqsave(&rq_hdr->lock, flags);
++
++	seq = rq->rq_tracker[bufindex];
++	rq->rq_tracker[bufindex] = NULL;
++
++	if (!seq) {
++		efc_log_err(hw->os,
++			    "RQbuf NULL, rqidx %d, bufidx %d, cur q idx = %d\n",
++			    rqindex, bufindex, rq_hdr->index);
++	}
++
++	spin_unlock_irqrestore(&rq_hdr->lock, flags);
++	return seq;
++}
++
++int
++efct_hw_rqpair_process_rq(struct efct_hw *hw, struct hw_cq *cq,
++			  u8 *cqe)
++{
++	u16 rq_id;
++	u32 index;
++	int rqindex;
++	int rq_status;
++	u32 h_len;
++	u32 p_len;
++	struct efc_hw_sequence *seq;
++	struct hw_rq *rq;
++
++	rq_status = sli_fc_rqe_rqid_and_index(&hw->sli, cqe,
++					      &rq_id, &index);
++	if (rq_status != 0) {
++		switch (rq_status) {
++		case SLI4_FC_ASYNC_RQ_BUF_LEN_EXCEEDED:
++		case SLI4_FC_ASYNC_RQ_DMA_FAILURE:
++			/* just get RQ buffer then return to chip */
++			rqindex = efct_hw_rqpair_find(hw, rq_id);
++			if (rqindex < 0) {
++				efc_log_debug(hw->os,
++					      "status=%#x: lookup fail id=%#x\n",
++					     rq_status, rq_id);
++				break;
++			}
++
++			/* get RQ buffer */
++			seq = efct_hw_rqpair_get(hw, rqindex, index);
++
++			/* return to chip */
++			if (efct_hw_rqpair_sequence_free(hw, seq)) {
++				efc_log_debug(hw->os,
++					      "status=%#x,fail rtrn buf to RQ\n",
++					     rq_status);
++				break;
++			}
++			break;
++		case SLI4_FC_ASYNC_RQ_INSUFF_BUF_NEEDED:
++		case SLI4_FC_ASYNC_RQ_INSUFF_BUF_FRM_DISC:
++			/*
++			 * since RQ buffers were not consumed, cannot return
++			 * them to chip
++			 */
++			efc_log_debug(hw->os, "Warning: RCQE status=%#x,\n",
++				      rq_status);
++			fallthrough;
++		default:
++			break;
++		}
++		return -EIO;
++	}
++
++	rqindex = efct_hw_rqpair_find(hw, rq_id);
++	if (rqindex < 0) {
++		efc_log_debug(hw->os, "Error: rq_id lookup failed for id=%#x\n",
++			      rq_id);
++		return -EIO;
++	}
++
++	rq = hw->hw_rq[hw->hw_rq_lookup[rqindex]];
++	rq->use_count++;
++
++	seq = efct_hw_rqpair_get(hw, rqindex, index);
++	if (WARN_ON(!seq))
++		return -EIO;
++
++	seq->hw = hw;
++
++	sli_fc_rqe_length(&hw->sli, cqe, &h_len, &p_len);
++	seq->header->dma.len = h_len;
++	seq->payload->dma.len = p_len;
++	seq->fcfi = sli_fc_rqe_fcfi(&hw->sli, cqe);
++	seq->hw_priv = cq->eq;
++
++	efct_unsolicited_cb(hw->os, seq);
++
++	return 0;
++}
++
++static int
++efct_hw_rqpair_put(struct efct_hw *hw, struct efc_hw_sequence *seq)
++{
++	struct sli4_queue *rq_hdr = &hw->rq[seq->header->rqindex];
++	struct sli4_queue *rq_payload = &hw->rq[seq->payload->rqindex];
++	u32 hw_rq_index = hw->hw_rq_lookup[seq->header->rqindex];
++	struct hw_rq *rq = hw->hw_rq[hw_rq_index];
++	u32 phys_hdr[2];
++	u32 phys_payload[2];
++	int qindex_hdr;
++	int qindex_payload;
++	unsigned long flags = 0;
++
++	/* Update the RQ verification lookup tables */
++	phys_hdr[0] = upper_32_bits(seq->header->dma.phys);
++	phys_hdr[1] = lower_32_bits(seq->header->dma.phys);
++	phys_payload[0] = upper_32_bits(seq->payload->dma.phys);
++	phys_payload[1] = lower_32_bits(seq->payload->dma.phys);
++
++	/* rq_hdr lock also covers payload / header->rqindex+1 queue */
++	spin_lock_irqsave(&rq_hdr->lock, flags);
++
++	/*
++	 * Note: The header must be posted last for buffer pair mode because
++	 *       posting on the header queue posts the payload queue as well.
++	 *       We do not ring the payload queue independently in RQ pair mode.
++	 */
++	qindex_payload = sli_rq_write(&hw->sli, rq_payload,
++				      (void *)phys_payload);
++	qindex_hdr = sli_rq_write(&hw->sli, rq_hdr, (void *)phys_hdr);
++	if (qindex_hdr < 0 ||
++	    qindex_payload < 0) {
++		efc_log_err(hw->os, "RQ_ID=%#x write failed\n", rq_hdr->id);
++		spin_unlock_irqrestore(&rq_hdr->lock, flags);
++		return -EIO;
++	}
++
++	/* ensure the indexes are the same */
++	WARN_ON(qindex_hdr != qindex_payload);
++
++	/* Update the lookup table */
++	if (!rq->rq_tracker[qindex_hdr]) {
++		rq->rq_tracker[qindex_hdr] = seq;
++	} else {
++		efc_log_debug(hw->os,
++			      "expected rq_tracker[%d][%d] buffer to be NULL\n",
++			      hw_rq_index, qindex_hdr);
++	}
++
++	spin_unlock_irqrestore(&rq_hdr->lock, flags);
++	return 0;
++}
++
++int
++efct_hw_rqpair_sequence_free(struct efct_hw *hw, struct efc_hw_sequence *seq)
++{
++	int rc = 0;
++
++	/*
++	 * Post the data buffer first. Because in RQ pair mode, ringing the
++	 * doorbell of the header ring will post the data buffer as well.
++	 */
++	if (efct_hw_rqpair_put(hw, seq)) {
++		efc_log_err(hw->os, "error writing buffers\n");
++		return -EIO;
++	}
++
++	return rc;
++}
++
++int
++efct_efc_hw_sequence_free(struct efc *efc, struct efc_hw_sequence *seq)
++{
++	struct efct *efct = efc->base;
++
++	return efct_hw_rqpair_sequence_free(&efct->hw, seq);
++}
 -- 
 2.26.2
 
