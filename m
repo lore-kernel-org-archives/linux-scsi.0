@@ -2,114 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D12D3C4708F
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 16:22:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C4AFC4708F
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 17:22:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0123610E7
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 16:22:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E5FB06008E
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 17:22:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233904AbhFAQYc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Jun 2021 12:24:32 -0400
-Received: from mail-pf1-f176.google.com ([209.85.210.176]:44957 "EHLO
-        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233088AbhFAQYb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 12:24:31 -0400
-Received: by mail-pf1-f176.google.com with SMTP id u18so1601776pfk.11;
-        Tue, 01 Jun 2021 09:22:50 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=a+Tv9Ay4ki6fzCru5B5uDZBCMDiZwHl1GhoT7S+ieyE=;
-        b=EhUWLwDXRiHrE71kYsUYkZZaLjy2HiyDKQ/qmLWHG1cPNaJ8Aopd034T3eHTaByToY
-         fqy+OsZLyosKieJ6E1VadWCD+y5w94Nk2r5ZoYevZ6j/wGUomqOp7dkaMZkuKQTOyvPQ
-         ynuRAp0TXoXuDC16+wRpJ9pUlPVyXXSzR1AKRWvv969dEY4dfZ2LBP9k6ghyT02jamrY
-         Mw3Awa9ucvXQdKOmqZbz5gMBwheoCUc5+hdzYoKe50Q3Z7lr7Q4NNqd6doZp+4gtzjRq
-         daBKCCH2h3qLk6YvE5dUrD4BLoHhv7Hbd6MP7awpSbPJ6pKC8BJ0MFFQ7kcYyBaSUbZs
-         BVuQ==
-X-Gm-Message-State: AOAM532bkfJ1a6hLOOjkZI1LWn2WXPWo3mUhSQDJp/rvZYp10F8uP2Bz
-        kbgX0NA4sS5MAGyhm1aHULA=
-X-Google-Smtp-Source: ABdhPJylD5SLoWgCzDx1Q/SKarLPo0/7oxEowLo+WZPWfEBUfr2J0eF0NK9LCngk4DzfNitquRZayw==
-X-Received: by 2002:a63:1224:: with SMTP id h36mr28862318pgl.296.1622564570126;
-        Tue, 01 Jun 2021 09:22:50 -0700 (PDT)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id i14sm8589037pgc.57.2021.06.01.09.22.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 01 Jun 2021 09:22:49 -0700 (PDT)
-Subject: Re: [PATCH v5 07/10] scsi: ufshpb: Add "Cold" regions timer
-To:     Can Guo <cang@codeaurora.org>, Avri Altman <Avri.Altman@wdc.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <Avi.Shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>
-References: <20210302132503.224670-1-avri.altman@wdc.com>
- <20210302132503.224670-8-avri.altman@wdc.com>
- <be5c0c390d7c0cf13e67f51cdc7dd8c2@codeaurora.org>
- <DM6PR04MB65755EE82C8D19B27E8B576BFC6B9@DM6PR04MB6575.namprd04.prod.outlook.com>
- <5dc7f93e6a1b1328fe8b5bb28a9ea34f@codeaurora.org>
- <DM6PR04MB657542A19075691EC60BCEB7FC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <7953c9c3-d30c-496f-9fb3-15aa1a7e3e4a@acm.org>
-Date:   Tue, 1 Jun 2021 09:22:46 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.2
+        id S234539AbhFARYE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Jun 2021 13:24:04 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20248 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S231918AbhFARYD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 13:24:03 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 151HFxiA013591
+        for <linux-scsi@vger.kernel.org>; Tue, 1 Jun 2021 10:22:22 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=yLL+Xxqcqnev5qwWZwQffjXIrrGZo6EP3JJ8wzOvzOM=;
+ b=RZmiV9kUDNb8wgr1Pfj+uc1mtyUsUMj62dzjnsEgMgYjEZH4Lz6OTITW7oCv8rAtevCN
+ IzDfEH8evevErEpMRYXMlSENgs+MLP8JbdAhlw7lC3vT4fyiVyiwq4NIcIX9iIUjTSmr
+ XZ5sKZxGb3EzL812bxIKXCBll9rauqMvHJWSVaiNQTfHMuwv+d1y0CF3FWhb+/kXUchw
+ UZDIJ5nQRtw2llEx2bHSUxtQQk1IOxMB94Ouu1yTMjqQidfp+BGBB/PHGSy5GaIBfP25
+ UD3/UsSNZJkEFn4O6nQy7tFixr3gI/fDPtIdmJcDJ3dIGRLkCKga0RNOLJBVY5LRRr2K /A== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 38w96734w1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Jun 2021 10:22:22 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Tue, 1 Jun
+ 2021 10:22:21 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 1 Jun 2021 10:22:21 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id CE73F3F703F;
+        Tue,  1 Jun 2021 10:22:20 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 151HMK6l031985;
+        Tue, 1 Jun 2021 10:22:20 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 151HMKLj031976;
+        Tue, 1 Jun 2021 10:22:20 -0700
+From:   Javed Hasan <jhasan@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
+Subject: [PATCH 0/2] scsi: FDMI Fixes
+Date:   Tue, 1 Jun 2021 10:21:54 -0700
+Message-ID: <20210601172156.31942-1-jhasan@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-In-Reply-To: <DM6PR04MB657542A19075691EC60BCEB7FC6A9@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-GUID: yGRoGRpctEuA-0LwQ87sfL7hdef4bNC7
+X-Proofpoint-ORIG-GUID: yGRoGRpctEuA-0LwQ87sfL7hdef4bNC7
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-06-01_08:2021-06-01,2021-06-01 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 3/17/21 12:55 AM, Avri Altman wrote:
->> On 2021-03-16 17:21, Avri Altman wrote:
-[ ... ]
->>>> And, which lock is protecting rgn->list_expired_rgn? If two
->>>> read_to_handler works
->>>> are running in parallel, one can be inserting it to its expired_list
->>>> while another
->>>> can be deleting it.
->>> The timeout handler, being a delayed work, is meant to run every
->>> polling period.
->>> Originally, I had it protected from 2 handlers running concurrently,
->>> But I removed it following Daejun's comment, which I accepted,
->>> Since it is always scheduled using the same polling period.
->>
->> But one can set the delay to 0 through sysfs, right?
->
-> Will restore the protection.  Thanks.
+This series has two fixes for FDMI.
+Attributes length corrected for RHBA.
+Fixed the wrong condition check in fc_ct_ms_fill_attr().
 
-(replying to an email from 2.5 months ago)
+Kindly apply this series to scsi-queue at your earliest convenience.
 
-Hi Can,
+Javed Hasan (2):
+  scsi: fc: Corrected RHBA attributes length
+  libfc: Corrected the condition check and invalid argument passed
 
-How can two read_to_handler works run in parallel? How can it make a
-difference whether or not the delay can be set to zero? Are you aware
-that since kernel v3.7 (released in 2012) all workqueues are
-non-reentrant? See also commit dbf2576e37da ("workqueue: make all
-workqueues non-reentrant"). From the description of that commit:
+ drivers/scsi/libfc/fc_encode.h | 8 +++++---
+ include/scsi/fc/fc_ms.h        | 4 ++--
+ 2 files changed, 7 insertions(+), 5 deletions(-)
 
-    This patch makes all workqueues non-reentrant.  If a work item is
-    executing on a different CPU when queueing is requested, it is
-    always queued to that CPU.  This guarantees that any given work item
-    can be executing on one CPU at maximum and if a work item is queued
-    and executing, both are on the same CPU.
+-- 
+2.26.2
 
-Thanks,
-
-Bart.
