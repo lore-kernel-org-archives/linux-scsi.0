@@ -2,112 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C147FC47080
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 13:33:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4B4FC47096
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 13:48:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A67E7613AE
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 13:33:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 876C0613AE
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 13:48:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234082AbhFANfb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Jun 2021 09:35:31 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:54548 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234295AbhFANex (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 09:34:53 -0400
-Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 442E91FD40;
-        Tue,  1 Jun 2021 13:33:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1622554390; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bAlwsesqw1LXjLjiTi841dpdgmr9KJoO7kF5C5YQHuY=;
-        b=IPPe9DZsF30uyzd/wrb5X/q1CcSP4GECB44UYJM+WlO0DnFZhbUg5OGnWstPBg4GGvkIj+
-        Lpzmldnw28SDXzofv4rIKpQgG7DMeu5Pce2ckXHDjm0o4xAS9MUw+XGag655hxeEPcQW8R
-        GQOGroYeGI27py8trkRO4cS0s0+1QmI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1622554390;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bAlwsesqw1LXjLjiTi841dpdgmr9KJoO7kF5C5YQHuY=;
-        b=GFniMHrE5UPFaT7jJUvLFpzjq+MYKj8bb9M1g43NVYj40k/yIn1mdLmOQScf3mcZ+qYAtU
-        64npeyxmSkqrJrDg==
-Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id 2A08B118DD;
-        Tue,  1 Jun 2021 13:33:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1622554390; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bAlwsesqw1LXjLjiTi841dpdgmr9KJoO7kF5C5YQHuY=;
-        b=IPPe9DZsF30uyzd/wrb5X/q1CcSP4GECB44UYJM+WlO0DnFZhbUg5OGnWstPBg4GGvkIj+
-        Lpzmldnw28SDXzofv4rIKpQgG7DMeu5Pce2ckXHDjm0o4xAS9MUw+XGag655hxeEPcQW8R
-        GQOGroYeGI27py8trkRO4cS0s0+1QmI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1622554390;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=bAlwsesqw1LXjLjiTi841dpdgmr9KJoO7kF5C5YQHuY=;
-        b=GFniMHrE5UPFaT7jJUvLFpzjq+MYKj8bb9M1g43NVYj40k/yIn1mdLmOQScf3mcZ+qYAtU
-        64npeyxmSkqrJrDg==
-Received: from director2.suse.de ([192.168.254.72])
-        by imap3-int with ESMTPSA
-        id LsjSCRY3tmBfCgAALh3uQQ
-        (envelope-from <hare@suse.de>); Tue, 01 Jun 2021 13:33:10 +0000
-Subject: Re: [PATCH v6 11/24] mpi3mr: print ioc info for debugging
-To:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        steve.hagan@broadcom.com, peter.rivera@broadcom.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com, sathya.prakash@broadcom.com
-References: <20210520152545.2710479-1-kashyap.desai@broadcom.com>
- <20210520152545.2710479-12-kashyap.desai@broadcom.com>
-From:   Hannes Reinecke <hare@suse.de>
-Organization: SUSE Linux GmbH
-Message-ID: <445187f2-57aa-fd8c-04c2-056f3736165b@suse.de>
-Date:   Tue, 1 Jun 2021 15:33:09 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        id S234085AbhFANuB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Jun 2021 09:50:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44832 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234098AbhFANtz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 09:49:55 -0400
+Received: from mail-oi1-x233.google.com (mail-oi1-x233.google.com [IPv6:2607:f8b0:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0921FC06175F
+        for <linux-scsi@vger.kernel.org>; Tue,  1 Jun 2021 06:48:14 -0700 (PDT)
+Received: by mail-oi1-x233.google.com with SMTP id j1so7759758oie.6
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Jun 2021 06:48:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=ipnxCnh19CBJuunWP2rsr0Ni235aZXMcvM30fyFeMuQ=;
+        b=V0S6R6UmafrosfqM3fzGD59jB381L/p/7bytRzwtBjYk44ZPHrKU2HWzuhEzDtJydz
+         DcC2KuQLoE18J1FBUZSGYoGhMnGy/8g1rqYoJGA9u7Sl03aalZoIoPk0TGD4xNqxAY7d
+         tPYK7Xscb78FUgSfSKjdk7sFCijlvrJAqgrGtfjbn1GsnWDmw5xPhSff3fyvddODDseP
+         oU1SoctgdMc/jCDOobqf03LN44VFePEEwGOVAzSLH97WR+9DCP886TcERarzw36yWuIP
+         viV7w20/QrLhpYL4LJyJm4heuLOJXlX7FOiquGi/N1RKufWGQjPnG/EsoE1rSNG1bS9/
+         WRTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=ipnxCnh19CBJuunWP2rsr0Ni235aZXMcvM30fyFeMuQ=;
+        b=Lng4gwQ6Zj7ya0CpQ34U3njaimiTR0p0Uq8mL9V/NQyEkx0mW1xLM4rSAUAMge31Dr
+         X+8yHC31Zba6eNN6a/myKjNHYVqNkdX8QVTqNvqdiswluNcZndJaT9ZsgCWC9Y/sUDhr
+         okjbmuzgoqL7FGOFdYgNqMBJYh2h/b68oKGwWCJKAm4DkxljeK+v6HFDoohs287Oz5ZJ
+         SEmVuJr6Rz625Fq4pmoYjbkNuRcFR8YzMHji/E7ELHiLGWHGTJlOFaR/TDovFTOfO2Wr
+         raOFh0X7bWonja5LAcZROXcI6GUq6ZrhFaTUZKhRPcyVVUwliqgb/OGFEU4kQG9l0CN6
+         26fg==
+X-Gm-Message-State: AOAM531tmiYZr4MGfgkCCegv3X3LvCu15wfJ8YtBxI3oDerwVR8JUdX2
+        9wNICIsia64fA3Wr91nL2ugnMX2UaT1DNQ==
+X-Google-Smtp-Source: ABdhPJwxhtnzC3SisgYG8G/QsGTGKUqev34GCI1fM06rYYNl9kpAe5mHjI/TkhPqkXu3hvSl0+OSHA==
+X-Received: by 2002:a05:6808:13ca:: with SMTP id d10mr18287063oiw.24.1622555293127;
+        Tue, 01 Jun 2021 06:48:13 -0700 (PDT)
+Received: from [192.168.1.134] ([198.8.77.61])
+        by smtp.gmail.com with ESMTPSA id q14sm3731189ota.31.2021.06.01.06.48.11
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 01 Jun 2021 06:48:12 -0700 (PDT)
+Subject: Re: move bd_mutex to the gendisk v2
+To:     Christoph Hellwig <hch@lst.de>, Song Liu <song@kernel.org>
+Cc:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>,
+        Minchan Kim <minchan@kernel.org>,
+        Nitin Gupta <ngupta@vflare.org>,
+        Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20210525061301.2242282-1-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <d5ce8361-f42d-c478-6e1a-5d652dc269d8@kernel.dk>
+Date:   Tue, 1 Jun 2021 07:48:14 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210520152545.2710479-12-kashyap.desai@broadcom.com>
+In-Reply-To: <20210525061301.2242282-1-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/20/21 5:25 PM, Kashyap Desai wrote:
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+On 5/25/21 12:12 AM, Christoph Hellwig wrote:
+> Hi all,
 > 
-> Cc: sathya.prakash@broadcom.com
-> ---
->  drivers/scsi/mpi3mr/mpi3mr_fw.c | 95 +++++++++++++++++++++++++++++++++
->  drivers/scsi/mpi3mr/mpi3mr_os.c |  1 +
->  2 files changed, 96 insertions(+)
+> this series first cleans up gendisk allocation in the md driver to remove
+> the ERESTARTSYS hack in blkdev_get, then further refactors blkdev_get
+> and then finally moves bd_mutex into the gendisk as having separate locks
+> for the whole device vs partitions just complicates locking in places that
+> add an remove partitions a lot.
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Changes since v1:
+>  - rebased to the latest for-5.14/block branch
+> 
+> Diffstat:
+>  Documentation/filesystems/locking.rst |    2 
+>  block/genhd.c                         |   59 +++------
+>  block/ioctl.c                         |    2 
+>  block/partitions/core.c               |   45 +++----
+>  drivers/block/loop.c                  |   14 +-
+>  drivers/block/xen-blkfront.c          |    8 -
+>  drivers/block/zram/zram_drv.c         |   18 +-
+>  drivers/block/zram/zram_drv.h         |    2 
+>  drivers/md/md.h                       |    6 
+>  drivers/s390/block/dasd_genhd.c       |    8 -
+>  drivers/scsi/sd.c                     |    4 
+>  fs/block_dev.c                        |  207 ++++++++++++++++------------------
+>  fs/btrfs/volumes.c                    |    2 
+>  fs/super.c                            |    8 -
+>  include/linux/blk_types.h             |    4 
+>  include/linux/genhd.h                 |    6 
+>  init/do_mounts.c                      |   10 -
+>  17 files changed, 186 insertions(+), 219 deletions(-)
 
-Cheers,
+Applied, thanks. Took a bit of hand-applying, but we got there. Please
+check the final result.
 
-Hannes
 -- 
-Dr. Hannes Reinecke		        Kernel Storage Architect
-hare@suse.de			               +49 911 74053 688
-SUSE Software Solutions Germany GmbH, 90409 Nürnberg
-GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
+Jens Axboe
+
