@@ -2,69 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10FD7C4708F
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 14:07:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4AF9C47092
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 15:08:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6DEA613C1
-	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 14:07:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 82AA561375
+	for <linux-scsi@archiver.kernel.org>; Tue,  1 Jun 2021 15:08:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234074AbhFAOJ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Jun 2021 10:09:27 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:6122 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234016AbhFAOJ1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 10:09:27 -0400
-Received: from dggeme760-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4FvYnm1m2BzYpfx;
-        Tue,  1 Jun 2021 22:05:00 +0800 (CST)
-Received: from localhost.localdomain (10.175.104.82) by
- dggeme760-chm.china.huawei.com (10.3.19.106) with Microsoft SMTP Server
+        id S234362AbhFAPJk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Jun 2021 11:09:40 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3119 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234340AbhFAPJj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 11:09:39 -0400
+Received: from fraeml705-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4FvZzx5fxJz6T1ZW;
+        Tue,  1 Jun 2021 22:58:53 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml705-chm.china.huawei.com (10.206.15.54) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Tue, 1 Jun 2021 22:07:42 +0800
-From:   Zheng Yongjun <zhengyongjun3@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     Zheng Yongjun <zhengyongjun3@huawei.com>
-Subject: [PATCH -next] scsi: qlogicpti: Remove unneeded semicolon
-Date:   Tue, 1 Jun 2021 22:21:22 +0800
-Message-ID: <20210601142122.4132250-1-zhengyongjun3@huawei.com>
-X-Mailer: git-send-email 2.25.1
+ 15.1.2176.2; Tue, 1 Jun 2021 17:07:56 +0200
+Received: from [10.47.91.52] (10.47.91.52) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 1 Jun 2021
+ 16:07:55 +0100
+Subject: Re: [PATCH V3 0/3] scsi: two fixes in scsi_add_host_with_dma
+To:     Ming Lei <ming.lei@redhat.com>
+CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>,
+        "Hannes Reinecke" <hare@suse.de>
+References: <20210531050727.2353973-1-ming.lei@redhat.com>
+ <d37d30cf-8293-e34e-0b4f-eebfcfa56bc9@huawei.com> <YLYx//I7J2kcnrtN@T590>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <17786916-5e1f-8387-344c-55bb1020b09e@huawei.com>
+Date:   Tue, 1 Jun 2021 16:07:05 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.104.82]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggeme760-chm.china.huawei.com (10.3.19.106)
+In-Reply-To: <YLYx//I7J2kcnrtN@T590>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.91.52]
+X-ClientProxiedBy: lhreml729-chm.china.huawei.com (10.201.108.80) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove unneeded semicolon.
+On 01/06/2021 14:11, Ming Lei wrote:
+>> We don't call scsi_host_cls_release() either, so I guess a ref count is
+>> leaked for shost_dev - I see its refcount is 1 at exit in
+>> scsi_add_host_with_dma(). We have the device_initialize(), device_add(),
+>> device_del() in the alloc and add host functions, but I don't know who is
+>> responsible for the final "device put".
+> Hammm, we still need to put ->shost_dev before returning the error, and the
+> following delta patch can fix the issue, and it should have been wrapped
+> into the 1st one.
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 22a58e453a0c..532165462a42 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -306,6 +306,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   	pm_runtime_set_suspended(&shost->shost_gendev);
+>   	pm_runtime_put_noidle(&shost->shost_gendev);
+>    fail:
+> +	/* drop ref of ->shost_dev so that caller can release this host */
+> +	put_device(&shost->shost_dev);
+>   	return error;
+>   }
+>   EXPORT_SYMBOL(scsi_add_host_with_dma);
 
-Signed-off-by: Zheng Yongjun <zhengyongjun3@huawei.com>
----
- drivers/scsi/qlogicpti.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That looks better now.
 
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index d84e218d32cb..3da58263cab3 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -1150,7 +1150,7 @@ static struct scsi_cmnd *qlogicpti_intr_handler(struct qlogicpti *qpti)
- 		case COMMAND_ERROR:
- 		case COMMAND_PARAM_ERROR:
- 			break;
--		};
-+		}
- 		sbus_writew(0, qpti->qregs + SBUS_SEMAPHORE);
- 	}
- 
--- 
-2.25.1
+And we can see the equivalent on the normal removal path in 
+scsi_remove_host() -> device_unregister(&shost->shost_dev), which does a 
+device_del()+put_device().
 
+So could we actually just have:
+out_del_dev:
+	unregister_dev(&shost->shost_dev)
+
+I am not sure if we are required to keep that shost_dev reference all 
+the way until the exit, as you do.
+
+Thanks,
+John
