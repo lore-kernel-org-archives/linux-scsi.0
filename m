@@ -2,202 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CD47C4708F
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 16:03:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D44C7C4708F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 18:00:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 438D061603
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 16:03:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B47A261DAD
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 18:00:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232619AbhFBQFe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Jun 2021 12:05:34 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:19666 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232602AbhFBQFd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 12:05:33 -0400
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 152G2fGe024614;
-        Wed, 2 Jun 2021 16:02:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=FhZo5TqOLCbYFE8dfIq/wsTGIaXUBJx1ifBYy0FfxBs=;
- b=C+sZK792DEg+Pm4h9rvBrh/2zdQHOQuoQRm/do27x7/HA48MmNPxtwD8W8ObfoLMplRs
- /yZ6eNFS2mql4jkDtI9LML+8ktzng7QRgsUU0skT2Cpilxjq3tB5JSchNSY0AKjS8Fy6
- x4De18C4zCD0FAKBKSC5sM2eWIpCkTD/qT3+qcNR26gjxRg3ubY436S2elTPL0VxAt4Y
- KWaaaocDSggOSG6ltI50ME1AyilI0OY+lvTxuII95TCSYtHpirJISkVx6N3q3ow+wwNG
- SEKEigOvPMw29jxVGBOMBgAFSbj56PecqHZUARI1RWzYpMKpes7u4MubXYtMeq6vx/6e HA== 
-Received: from oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 38wx9fra8e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Jun 2021 16:02:40 +0000
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
-        by pps.podrdrct (8.16.0.36/8.16.0.36) with SMTP id 152G2duL074339;
-        Wed, 2 Jun 2021 16:02:39 GMT
-Received: from nam04-mw2-obe.outbound.protection.outlook.com (mail-mw2nam08lp2171.outbound.protection.outlook.com [104.47.73.171])
-        by aserp3020.oracle.com with ESMTP id 38udecap7t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 02 Jun 2021 16:02:39 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=VJMvBgWS66jGwJGc2xlCo1rGKiYxBBzM2VzGY+HsNEhweBknL+pGn0yBqLdE0ciE3uupEG0vYQ3aPLW19xUYG2XCOfEDxWxGqsk/mo6BuTQWDCw8fmXfNBDJS2tsFq4t5/PaWaBp1LhxHuiYL4KVYUt1gmZI4lC6X9oRNdCfDM4cMyiemRrraoS2SUw6JTuLGttt1FXByTgXxS1Cj+JYIPE2OUd7xm4Mq+IhiGgE9Bk5fJM5SJuv68hAUwThIDKKmkEbZBVfMHBQBiSylIlQ3cOszjQi1mbxkuv1c48tZ5K4RviM8HSvjk2fQDB2QIyqoiGQS8TTcGKCjs+pzor2cw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FhZo5TqOLCbYFE8dfIq/wsTGIaXUBJx1ifBYy0FfxBs=;
- b=oQAV4EZMJY/pnqtfE0mtTPspIJVNFCQMydHqGvL++XEkzxbi7uFwKMpBuk44f1ipTwBQGXj+bLQXhj8iJfRXjNw9corb+MhK//9uAd9rZVnLBz/fkoMmn7iuF5lUiTeLxWFIWsJbknqMcVxM2zLVMsO81Zji8TUBhmEccsJKuOePqICBGUQQ5fs2bn2I0m/5lcIxiXYxOvmoIN/xWGXaBwgPReu0QtIm58t2ClE7+EvYFfYhEtJhkjiPJfJ+lATlxlFK93aZWmUp2GPEqnDu9L6yLPy5TpNj3+qaG4AWyNUBujNeEcbouQMbw4DH02kQJ3w5RPWPptVTbjos0WjLTw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
+        id S230390AbhFBSCB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Jun 2021 14:02:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58232 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229467AbhFBSB7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 14:01:59 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A945FC061574
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Jun 2021 11:00:05 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id lx17-20020a17090b4b11b029015f3b32b8dbso3928178pjb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Jun 2021 11:00:05 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FhZo5TqOLCbYFE8dfIq/wsTGIaXUBJx1ifBYy0FfxBs=;
- b=ZY9rTj1M6I4whNd1GbkVOBxUHuFh1wdxbd6A8LmJBy5jwsEXhW+HAaLAo0I0ma/5t2PhXABnTt71WqBdwuKj4p3MYQflGAMFdQdpepmAl41X6PhgdjrnXj2yEiKd9XD4Q7NEaRtmIfXxeNirsm7YT8LJXkefefcn42u7/b4+mGQ=
-Authentication-Results: microsoft.com; dkim=none (message not signed)
- header.d=none;microsoft.com; dmarc=none action=none header.from=oracle.com;
-Received: from BLAPR10MB5009.namprd10.prod.outlook.com (2603:10b6:208:321::10)
- by BL0PR10MB2948.namprd10.prod.outlook.com (2603:10b6:208:7b::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4173.20; Wed, 2 Jun
- 2021 16:02:17 +0000
-Received: from BLAPR10MB5009.namprd10.prod.outlook.com
- ([fe80::78a3:67d:a8ca:93cf]) by BLAPR10MB5009.namprd10.prod.outlook.com
- ([fe80::78a3:67d:a8ca:93cf%7]) with mapi id 15.20.4195.020; Wed, 2 Jun 2021
- 16:02:17 +0000
-Subject: Re: [RFC PATCH V3 09/11] HV/IOMMU: Enable swiotlb bounce buffer for
- Isolation VM
-To:     Tianyu Lan <ltykernel@gmail.com>, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, x86@kernel.org, hpa@zytor.com, arnd@arndb.de,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        akpm@linux-foundation.org, kirill.shutemov@linux.intel.com,
-        rppt@kernel.org, hannes@cmpxchg.org, cai@lca.pw,
-        krish.sadhukhan@oracle.com, saravanand@fb.com,
-        Tianyu.Lan@microsoft.com, konrad.wilk@oracle.com, hch@lst.de,
-        m.szyprowski@samsung.com, robin.murphy@arm.com, jgross@suse.com,
-        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
-        xen-devel@lists.xenproject.org, davem@davemloft.net,
-        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, thomas.lendacky@amd.com,
-        brijesh.singh@amd.com, sunilmut@microsoft.com
-References: <20210530150628.2063957-1-ltykernel@gmail.com>
- <20210530150628.2063957-10-ltykernel@gmail.com>
- <9488c114-81ad-eb67-79c0-5ed319703d3e@oracle.com>
- <a023ee3f-ce85-b54f-79c3-146926bf3279@gmail.com>
-From:   Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Message-ID: <d6714e8b-dcb6-798b-59a4-5bb68f789564@oracle.com>
-Date:   Wed, 2 Jun 2021 12:02:03 -0400
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.10.2
-In-Reply-To: <a023ee3f-ce85-b54f-79c3-146926bf3279@gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Originating-IP: [160.34.89.155]
-X-ClientProxiedBy: SJ0PR03CA0275.namprd03.prod.outlook.com
- (2603:10b6:a03:39e::10) To BLAPR10MB5009.namprd10.prod.outlook.com
- (2603:10b6:208:321::10)
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=YzKTs0J8fXoCjJBzufm+adOqqY1UoziMMTbtfSyXGi4=;
+        b=jGzYlGefJkjcaCnSFLDBlpOkaOpFVNv3fS5GUP8YE4ktBqcIHbf6HAakJy9aI7o+M2
+         KigHSo+QsXCBPdWvp7p3XG5fLttkRQdieVUAWd94mHKpnTT/gISACF3S1zSzHmko6IwR
+         ASy2T/ycXegM706E1mv4ROXrKqyxv5vYoCYEc=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=YzKTs0J8fXoCjJBzufm+adOqqY1UoziMMTbtfSyXGi4=;
+        b=ADHuLObQd6yDuglDvKwjZd1GKJFHFgv2bal7P1wn/eP6cRbE9qSrfmLVq+1MRZ7iEZ
+         +ljVEaVh07ZlHtEVeWTURbmtuEANlYiljfG6o2/3Gxd545EQ038Qi3uSwO7dmToAtmFO
+         3daWtolEbNcnwgwcKksD/CKEKX1/zZ9iuslWrO9WW97JOyvoquWDMORs3NORAEQCiRfL
+         Gft0Oaa3WcbAGB/sJkjp40o/eUjFPzOFK+gdlwWjB4zIcNaq2m3NHhfI2wNIFzbVq2SQ
+         lp+VeA5yG01/mnlga2DHAJtQCeijkMtKuG0GLheW1MLG6qlaAfpEkPuPbFU23D95Th33
+         InVg==
+X-Gm-Message-State: AOAM533j370IMvsZMVT9/syoGa1nAJ89XfZJx6w4SvZfEDUh0k0wZoiq
+        6r5xRDNvkWUk+9haLdPKnZp0mw==
+X-Google-Smtp-Source: ABdhPJyuFM58x7Sv+O692q7ERK7l6HOo3hypRgAmtQSCzw0TYbpNKpnjoOZS1yIAntgzqL4AJ8Eyzg==
+X-Received: by 2002:a17:90b:38cd:: with SMTP id nn13mr6696749pjb.48.1622656805115;
+        Wed, 02 Jun 2021 11:00:05 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id m1sm397994pgd.78.2021.06.02.11.00.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Jun 2021 11:00:04 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Kees Cook <keescook@chromium.org>, Joe Perches <joe@perches.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-scsi@vger.kernel.org, linux-hardening@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v2] scsi: fcoe: Statically initialize flogi_maddr
+Date:   Wed,  2 Jun 2021 11:00:00 -0700
+Message-Id: <20210602180000.3326448-1-keescook@chromium.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [10.74.103.155] (160.34.89.155) by SJ0PR03CA0275.namprd03.prod.outlook.com (2603:10b6:a03:39e::10) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.20 via Frontend Transport; Wed, 2 Jun 2021 16:02:06 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: e880f785-c80a-4594-9961-08d925dfcb81
-X-MS-TrafficTypeDiagnostic: BL0PR10MB2948:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <BL0PR10MB2948E5F3684F7BB4EF7F01718A3D9@BL0PR10MB2948.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: HJL3AnD7x/9PGpxjrgiyQBj/KirmlfRaYrGHtjr3cgyzQIc/Fc0RmeioXFo2lfpVibPJcQ9r58P7xtGkhF4eaFDZreeA0GQ90s3Wo+pmh9ansrYimIOspvJ1zUmXFLKsVaMTfvIw7nhDE90bqdKuAO1MbKrtttn9+W+hQJ2wYgBvGV67tN2wT5g2Rlwp7UK7LjGoeoH4t2WsY4gPxvUJLsiUZP2Af6C6k1pEL2fz8kwEH8UDixN/eFDFI6epDF5tWQoFf1UWvBrmlH1kTXTdJmFAxEXcnvu97K8ODRBbd8cUI82pVSqETJUxbA/Zh0hYTzJ6Q89Y+c52vHkfO77EoH7Rv3pq80qHqlxSLK+ox/f3Lzeu73mgTSy4EqCUB5hMcr3CfcvS5PFrsKLG657V+DeXzCBhfxqtfKPcUzcs99tU+Sb9KVSJm1o+QSBAOtuXoEvctK1iEpYlc9GQ2gIh7hnBFYFYoM0DuzSks2msc9lGrhm1AgVDMhjSrYsEzzvOwY8/qyhoWp86YUnMP637N2sCy5vgZlko6itldn8fwpDjWf72FzXPM7hiRw6bOSYj5bSsbsP7Mdh/6L2zRsrfue3z/e0xUaZXCUo+8mbMKqD1CqHQnRNTIzolx2hIcHcubX9CFOOtoPpzqXhJrLApmk7UvBDbh4wjiTYi86havgHX4l3IH0BQ1WCrrPbqV4/Fo1pXDpm1gduHQQrE+XhLdw==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5009.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39860400002)(366004)(396003)(376002)(346002)(26005)(6636002)(16526019)(186003)(86362001)(2616005)(956004)(83380400001)(44832011)(31696002)(66476007)(8676002)(7406005)(478600001)(53546011)(16576012)(66946007)(31686004)(38100700002)(8936002)(66556008)(6666004)(316002)(4326008)(2906002)(921005)(5660300002)(36756003)(6486002)(7416002)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?utf-8?B?MDZyeStwMFFoR2J0SEc2bW9rbVR3cm51Nm96UzJ1NU9KNDczNmhNZHZIbnF4?=
- =?utf-8?B?ZFA3TlNzR1dLd1FTTVdqWlZuMXVmWTFjMWZVSTlIdDhFM0FhTU9HallxVFNa?=
- =?utf-8?B?dlcxWGRQaEg0S3RQY2ozTGhSRlpnZTNpUzR2TW83amc0ZVV5cTJkbzQzUERS?=
- =?utf-8?B?Y0VqZXFWc01Rd2xKc0NnTmJxUk5vcVZDemdBaThxVDZwUm1abWxldVE5U2ZX?=
- =?utf-8?B?ZjQzVzk2QVZGVEdQYjdxZ0R3RFF4b2tENEJtQ3hhU2tITUdDTENsaUt3OS9Q?=
- =?utf-8?B?T2pTTDFodXVBNktZRGIxV3AxUElTVDExSnRQa1FHTUt6TGhIcGFNNjVaTjFs?=
- =?utf-8?B?K3g4UmRZa2ROYjlGOWRBYkRWZk5YR1VPRmhlcW5YZTJJWTN3MU5NRjU5b2hy?=
- =?utf-8?B?cDlIeGhyejFxNFRMbDlhODljNlUyVFBDa3ptL2dMd3ZwMmd4azZjZDZjc3J5?=
- =?utf-8?B?dG5HZzd1LzhWOVVpdSsyZjJ1VU43QVdOaFBqdTFLQ2MxZHd4NWpmSjlLcDhk?=
- =?utf-8?B?UmN3blRXWloyT2pDVkRsamlJU0pNWDNIc3dwZ0IrLzd4WTNMWFAxdHdMd1Bp?=
- =?utf-8?B?TXRYclRBWG1xeUlEcHlhVnpDMUdHK0lBL21PZk9KaWZYNmtabmpheDVIMFly?=
- =?utf-8?B?L21XcVJ4M2psdkNEeEcvSmQ3ZW1IbEVwWHo1RmNwUmFUS2RwMHRsWVI3UjBR?=
- =?utf-8?B?aWJUanYyOEFhbGZKMXpCU0FGT3ZSbDNzWFdpcnIxL3hsSkYwSTNvUVc2bnZv?=
- =?utf-8?B?cnk5eGpQbnpTV3R3L011NjMxaTFjTWZZTmtVbWlrNFNnMzN5K0RieFRPcWE0?=
- =?utf-8?B?cXExRmJlWVBNbXhad010Nmd6d0h0QkZWZ1NWeXRqa2dVUG0xRHZaU3NJNTEz?=
- =?utf-8?B?RVRHWU9rVGFDRHVtWFJyYTFMVnNWYzM5Mm1FTnVSTldRY2tEZUphZys1ZFhz?=
- =?utf-8?B?b2tENmMrNWErZmk0V2dQcHlUZi8weFdWbE4zaTEwSnArVFc3eGVVTUJYUjFt?=
- =?utf-8?B?cVA2WlpQYlJ2L2RERzFybVY2dEdBWFlVWTNEWVBKSFh1UytXMlN3TXlSSkV3?=
- =?utf-8?B?MEVBVkkvZFBwWGwrVUVieVVxc2Z3bDBic203bjJKU1REQVN4K0w3T2FIMEY5?=
- =?utf-8?B?a1M5VEhYSE12MHp6SXEzRThWWTRPVkNNdS8rSEFUY3dSVWlrMXV4RXJFNVZs?=
- =?utf-8?B?WWJVTHZTZHh0SVZJNGlYQkZXbEd4OUVQMlE0bGdRS3RCT1pxdVhNNmEyZk5B?=
- =?utf-8?B?WG42VlNqK2MvU3MzYUwvSVo3ZndYZmptMmFqVFI4S3RVNlNlNFZ2RXA3VElI?=
- =?utf-8?B?MW1PTEJMYzQvOG9SM2YrNkR2bWllUXVpVWN0dkdWTVgwNVUwc0dkU0JVNFhB?=
- =?utf-8?B?TGFpVkEzOTZJbW5lSVNhY1JHSlE1a2tVQlJxRFRFMHpqanl0aGk1eFdrNmRX?=
- =?utf-8?B?ZjJXRUpudHNXQkU1R0M5NWl1eFpiWTIrWnRXOU9jL1phcyt6d1JWMzdMUGVa?=
- =?utf-8?B?dEE0eWx2RlBISWo3WWQrRHo4M3hTMGZ2Z1ZoZnRjUjJpOThRQVJ5SjB5TWlP?=
- =?utf-8?B?WjRacEw4L3E5SGJWblVDRHhoNEJpcCtXWVAxMXIyTTJOODh2dmJaNzNnLzdk?=
- =?utf-8?B?bm0zM0gzR0x6MGViS0VPalZNUFBOS2NVajBPQ1dMT2FvS2F3UjdnRzhHS2Ju?=
- =?utf-8?B?cnBkd3daaHR6Vjc0dDhWV0JGRDY2alJJK1ZkNEU2LzgzaDJlWWFSTWErOE94?=
- =?utf-8?Q?gXM4EeYi+eZIPZA3pmX/wNZ1x05ij1DuSnROjtp?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e880f785-c80a-4594-9961-08d925dfcb81
-X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5009.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 02 Jun 2021 16:02:17.5711
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: y2gXOzzbZ7MMkWZnLPMBjTsCziTkYJjn8DI5EWzgfUUM3mB9fJXC1BCiBLmVmLPBRFNvBCvRFwdczV3oJioOpqVJxQ1juVJOh1BkAxeEGsU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR10MB2948
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10003 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0 phishscore=0
- suspectscore=0 spamscore=0 mlxlogscore=999 adultscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2106020101
-X-Proofpoint-GUID: D2nKtgwgUzB4I8NO5gn7GykhtJc5Pd7z
-X-Proofpoint-ORIG-GUID: D2nKtgwgUzB4I8NO5gn7GykhtJc5Pd7z
+X-Patch-Hashes: v=1; h=sha256; g=26150766ac749c1c294828a8255824f1c1f8fe16; i=95Is7JkaFTuD8yBK8ZqRtqMfruaTolJ5BECzzYphzjk=; m=Lx6JJw18vLqP7fW8njYDmnOt/EnJ++MkyC26ujChlaQ=; p=O0CUdXEefbXm/vJ3Z09Q1E3tpRXOhkgbS1ffGDQy7YY=
+X-Patch-Sig: m=pgp; i=keescook@chromium.org; s=0x0x8972F4DFDC6DC026; b=iQIzBAABCgAdFiEEpcP2jyKd1g9yPm4TiXL039xtwCYFAmC3xx8ACgkQiXL039xtwCafVBAAr2P 83Qty+fa78mrhypxErK9jHI/xfX1opwsSP+TyL2DUI57tARg7VoJVIAuCEuGjQs4v8dpzAh1NSEx7 ECMVil0Yy242LMHgZP3p7sBj1YToUCt3e7qxsfios1i7H3WoHBc5YlCSQHXZ2ELKzjviCbDFrGBEc bV5cKqsacIfFCFIqt6ou/UuVZrlP6EmF8NAICoxvkbTQcnz3+ns2718oRq7mEKraXsuztY0c6rf5N 94YbzGezhWi7pFje2XtfUrRktEz4T1o0/qeM4NRlWdzaEmLFCjE1p7n+SJ5qvuZvWueoC8qSDFdOJ 11H7CDkqVXbNOUPLCg3de6hxqsuQzaa36YKYVoPxpWVhEvp/HkC38bDogoyZJ86rDunApvIHVscBl 9QO6DtCgOTaKKvP4fvh9uBXgtsYaZIVDU76Ybzc0bw9OPcVt+SFveiq/5Q+Hl1qXdMe+NlSC3MPxX gJ+qsnAkgE84W+erbZjPrpV8Fj/qRhs4ZV2j47FQokuALTV5xX0E+Os66n4wP51AlLr0+KqeJU1Kt 9YKefP/rp2nZeQj6RIJ5zU3zUW49wYpvtcD1wWhi5qPGMrdDmjWkWF2Hj5H3Xzf/BB/xXcBGYek0o akHfC6iXrAQxPOdrrL7fjC5ICGqcbiVpn62DZ80VtSWCRYnu9xY19NI9EToBd5UY=
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+In preparation for FORTIFY_SOURCE performing compile-time and run-time
+field bounds checking for memcpy() avoid using an inline const buffer
+argument and instead just statically initialize the destination array
+directly.
 
-On 6/2/21 11:01 AM, Tianyu Lan wrote:
-> Hi Boris:
->     Thanks for your review.
->
-> On 6/2/2021 9:16 AM, Boris Ostrovsky wrote:
->>
->> On 5/30/21 11:06 AM, Tianyu Lan wrote:
->>> @@ -91,6 +92,6 @@ int pci_xen_swiotlb_init_late(void)
->>>   EXPORT_SYMBOL_GPL(pci_xen_swiotlb_init_late);
->>>     IOMMU_INIT_FINISH(2,
->>> -          NULL,
->>> +          hyperv_swiotlb_detect,
->>>             pci_xen_swiotlb_init,
->>>             NULL);
->>
->>
->> Could you explain this change?
->
-> Hyper-V allocates its own swiotlb bounce buffer and the default
-> swiotlb buffer should not be allocated. swiotlb_init() in pci_swiotlb_init() is to allocate default swiotlb buffer.
-> To achieve this, put hyperv_swiotlb_detect() as the first entry in the iommu_table_entry list. The detect loop in the pci_iommu_alloc() will exit once hyperv_swiotlb_detect() is called in Hyper-V VM and other iommu_table_entry callback will not be called.
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+v2:
+ - use "static const" (Joe)
+v1: https://lore.kernel.org/lkml/20210528181337.792268-2-keescook@chromium.org/
+---
+ drivers/scsi/fcoe/fcoe.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-
-
-Right. But pci_xen_swiotlb_detect() will only do something for Xen PV guests, and those guests don't run on hyperV. It's either xen_pv_domain() (i.e. hypervisor_is_type(X86_HYPER_XEN_PV)) or hypervisor_is_type(X86_HYPER_MS_HYPERV) but never both. So I don't think there needs to be a dependency between the two callbacks.
-
-
-
--boris
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 89ec735929c3..5ae6c207d3ac 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -293,7 +293,7 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+ 	struct netdev_hw_addr *ha;
+ 	struct net_device *real_dev;
+-	u8 flogi_maddr[ETH_ALEN];
++	static const u8 flogi_maddr[ETH_ALEN] = FC_FCOE_FLOGI_MAC;
+ 	const struct net_device_ops *ops;
+ 
+ 	fcoe->netdev = netdev;
+@@ -336,7 +336,6 @@ static int fcoe_interface_setup(struct fcoe_interface *fcoe,
+ 	 * or enter promiscuous mode if not capable of listening
+ 	 * for multiple unicast MACs.
+ 	 */
+-	memcpy(flogi_maddr, (u8[6]) FC_FCOE_FLOGI_MAC, ETH_ALEN);
+ 	dev_uc_add(netdev, flogi_maddr);
+ 	if (fip->spma)
+ 		dev_uc_add(netdev, fip->ctl_src_addr);
+@@ -442,7 +441,7 @@ static void fcoe_interface_remove(struct fcoe_interface *fcoe)
+ {
+ 	struct net_device *netdev = fcoe->netdev;
+ 	struct fcoe_ctlr *fip = fcoe_to_ctlr(fcoe);
+-	u8 flogi_maddr[ETH_ALEN];
++	static const u8 flogi_maddr[ETH_ALEN] = FC_FCOE_FLOGI_MAC;
+ 	const struct net_device_ops *ops;
+ 
+ 	/*
+@@ -458,7 +457,6 @@ static void fcoe_interface_remove(struct fcoe_interface *fcoe)
+ 	synchronize_net();
+ 
+ 	/* Delete secondary MAC addresses */
+-	memcpy(flogi_maddr, (u8[6]) FC_FCOE_FLOGI_MAC, ETH_ALEN);
+ 	dev_uc_del(netdev, flogi_maddr);
+ 	if (fip->spma)
+ 		dev_uc_del(netdev, fip->ctl_src_addr);
+-- 
+2.25.1
 
