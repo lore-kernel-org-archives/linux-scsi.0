@@ -2,120 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F9FFC47093
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 15:01:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC31AC4708F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 15:26:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 076D1613B1
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 15:01:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C5C8161242
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 15:26:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231996AbhFBPDg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Jun 2021 11:03:36 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46308 "EHLO
+        id S231751AbhFBP2a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Jun 2021 11:28:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51950 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230072AbhFBPDf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 11:03:35 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ABA77C061574;
-        Wed,  2 Jun 2021 08:01:52 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id y15so2405396pfl.4;
-        Wed, 02 Jun 2021 08:01:52 -0700 (PDT)
+        with ESMTP id S230479AbhFBP23 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 11:28:29 -0400
+Received: from mail-qv1-xf35.google.com (mail-qv1-xf35.google.com [IPv6:2607:f8b0:4864:20::f35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05DFDC061574
+        for <linux-scsi@vger.kernel.org>; Wed,  2 Jun 2021 08:26:30 -0700 (PDT)
+Received: by mail-qv1-xf35.google.com with SMTP id u13so1486401qvt.7
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Jun 2021 08:26:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=+az3hl/4w22b3I/rRlTcQ1/sSF9KD2GATy/NbYn2SjU=;
-        b=LFh9HsM5N4yAOGzJ85RpIVWyAjUPznHirCf8/j7G4yx59JLH20/Uh4u7wbdu1FOv1R
-         BMS/VcyQyPaNyIBLyV79xaZ6CaUNzIjmBxRj8Fe+1khO8KcH3zpgVSaCPqyrS/mPSxUA
-         SxH1O0RaYnJym4R1ouc54zGTJI9ko785LbI0cE/6JrbOl++1vJMUiWvQ+YxS/x02SX1A
-         GtQ9eZiWdQ81n3fEqhZUgWSVZqHZymyGyts8taigNA7xByYUg2QhaEC1Sqw034dlDQ+n
-         EaQjVI9wbITemQxMjxw+B5xkVM7JxSTIPhVvW43gJtVIEw3fB0lKjLuGjHRyUK5Iy7k4
-         pXzg==
+        h=date:from:to:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=Aa29NoohpvQBP2zYadv1ijqbMXjPa46Bq9pr2d7Rx1Y=;
+        b=nHPgEflQvGJLhWuvp2WAi33olXKIeQtPEh3gx9I6fNzsexGkXDsdwK3PeuQQ3AAxTZ
+         tSqN+yc83ScwB4SrI0knFNhAQmWV7PzHSC20ziTGn8T8sml6YDpcJDWH1g/HzAD/CBnF
+         2/0+KQEvbqpvmRCZTRmOz15fj+Y5AlhYYMSMWFfpEr1PJlyt7MgIm/oRLlz0wCgaaeTG
+         xgr9criN0JzApI6601NKRhCZm+ca9GPz8HzoEDDQPbMnYk90XHAA93Jz5cSHyHsWs1gv
+         Pbh+uwFkWGnrnvZFZHUNytVaFOzLcrMJq0/AonzyHkKdKI14hMbJLJRwV8/NwoUr2OTe
+         txgw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=+az3hl/4w22b3I/rRlTcQ1/sSF9KD2GATy/NbYn2SjU=;
-        b=sI4Vy4nBU5dmDoIiGcLaXTloMRiWF4DKdtAQg7+ctEWccFnHxPdQbnEDEUXl1/riRL
-         QRW69aWC2NaBnC8kzGtJC1478CWNkidr3flpUP+JOHkt5/OaR7n1sEJyBZYh2mu+ReBZ
-         hfI1YLOxlMGN/k1W6pqMXBchH/Pq6zchuIWztQwEWIHhTSYunAjQ4dEnTq89K20Gpr/y
-         qc5I3smFTAVL7U/j3d2V5ldbc1838nBrknSsEj364zr47K5hYbTIspwUSt3T0nQtuJhY
-         7CfRfOKniqRSZosM8eWdbhLIUeKdhbSmUD849Cu8Mn6/6Ei0z3KoNjSMRhwWteQKEcm7
-         xmVw==
-X-Gm-Message-State: AOAM532io0b+Ywbz+UNz2fJuj15tdtXTZEzT/s50ib0LwpWZ5LGA9kLr
-        H38eIB4ZGDZzmldiXuhZs7w=
-X-Google-Smtp-Source: ABdhPJztpeXS5x/Q7Ocwttmq+13ab9HvNAwDx8hEcPtnl/lWI6mAldnzn4lX5IPnQcCsuOUMA5JO9w==
-X-Received: by 2002:a62:4e96:0:b029:2ea:2244:5e31 with SMTP id c144-20020a624e960000b02902ea22445e31mr3354423pfb.43.1622646112263;
-        Wed, 02 Jun 2021 08:01:52 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
-        by smtp.gmail.com with ESMTPSA id y13sm97917pgp.16.2021.06.02.08.01.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 02 Jun 2021 08:01:51 -0700 (PDT)
-Subject: Re: [RFC PATCH V3 09/11] HV/IOMMU: Enable swiotlb bounce buffer for
- Isolation VM
-To:     Boris Ostrovsky <boris.ostrovsky@oracle.com>, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, x86@kernel.org, hpa@zytor.com, arnd@arndb.de,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        akpm@linux-foundation.org, kirill.shutemov@linux.intel.com,
-        rppt@kernel.org, hannes@cmpxchg.org, cai@lca.pw,
-        krish.sadhukhan@oracle.com, saravanand@fb.com,
-        Tianyu.Lan@microsoft.com, konrad.wilk@oracle.com, hch@lst.de,
-        m.szyprowski@samsung.com, robin.murphy@arm.com, jgross@suse.com,
-        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
-        xen-devel@lists.xenproject.org, davem@davemloft.net,
-        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, thomas.lendacky@amd.com,
-        brijesh.singh@amd.com, sunilmut@microsoft.com
-References: <20210530150628.2063957-1-ltykernel@gmail.com>
- <20210530150628.2063957-10-ltykernel@gmail.com>
- <9488c114-81ad-eb67-79c0-5ed319703d3e@oracle.com>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <a023ee3f-ce85-b54f-79c3-146926bf3279@gmail.com>
-Date:   Wed, 2 Jun 2021 23:01:36 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.2
+        h=x-gm-message-state:date:from:to:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=Aa29NoohpvQBP2zYadv1ijqbMXjPa46Bq9pr2d7Rx1Y=;
+        b=VVY8HbU06mZ2Xbbcpr+Gi84J/6dMWerUSoHz62drmVV2C5MzKwhYdg8EOjaJEjJ3XG
+         i1qbB7m5FR7T/L72agKNKfpfjiLqKfKUBOanPCZrQNEXETMU5jyDIc4mXbeD93xpncHi
+         iy9x2DltgLkp4Yvi6YJ5pRRnnwiwNYGGvasXDsjc/0rcOT8pFo3S9yw/eymb5+t5qwEB
+         t1qBcHR8McjDz88X+YTwbHhn7E5pX7wkzngBAXsgPXpKz2qC2ZF3RjDq1WVLmi8VvMHd
+         uWMRkVUbyvHDFQeglD8Ma0C9ZxYw01tJGr2Z/rxxuCCiBJYIuJS6d0sHS8wdpz74dRzR
+         wCsQ==
+X-Gm-Message-State: AOAM531FSrbAWr+z/WT6zmwQczT2JJJz56m+2bNcZ0UkIHC8fOFLU3z8
+        1/mum2+8RYK1fJr7G1eayPo=
+X-Google-Smtp-Source: ABdhPJyUl1OcE4v+CF3AiWFXTV13U74zLmKjgwPC/4toQb2Nn9n7WmOI3SuiRJL5MJQ+1cbToINLDg==
+X-Received: by 2002:ad4:56e2:: with SMTP id cr2mr22727045qvb.19.1622647589223;
+        Wed, 02 Jun 2021 08:26:29 -0700 (PDT)
+Received: from david-pc (c-73-82-11-57.hsd1.ga.comcast.net. [73.82.11.57])
+        by smtp.gmail.com with ESMTPSA id a128sm14838qkd.76.2021.06.02.08.26.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 02 Jun 2021 08:26:28 -0700 (PDT)
+Date:   Wed, 2 Jun 2021 11:26:26 -0400
+From:   David Sebek <dasebek@gmail.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: Set BLIST_TRY_VPD_PAGES for WD Black P10 external
+ HDD
+Message-ID: <YLejIoBJ8YJuonVZ@david-pc>
+References: <YLVThaYJ0cXzy57D@david-pc>
+ <yq1czt5q8wu.fsf@ca-mkp.ca.oracle.com>
+ <yq17djdq8ly.fsf@ca-mkp.ca.oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <9488c114-81ad-eb67-79c0-5ed319703d3e@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq17djdq8ly.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Boris:
-	Thanks for your review.
+Martin,
 
-On 6/2/2021 9:16 AM, Boris Ostrovsky wrote:
-> 
-> On 5/30/21 11:06 AM, Tianyu Lan wrote:
->> @@ -91,6 +92,6 @@ int pci_xen_swiotlb_init_late(void)
->>   EXPORT_SYMBOL_GPL(pci_xen_swiotlb_init_late);
->>   
->>   IOMMU_INIT_FINISH(2,
->> -		  NULL,
->> +		  hyperv_swiotlb_detect,
->>   		  pci_xen_swiotlb_init,
->>   		  NULL);
-> 
-> 
-> Could you explain this change?
+Thank you for the clarification.
 
-Hyper-V allocates its own swiotlb bounce buffer and the default
-swiotlb buffer should not be allocated. swiotlb_init() in 
-pci_swiotlb_init() is to allocate default swiotlb buffer.
-To achieve this, put hyperv_swiotlb_detect() as the first entry in the 
-iommu_table_entry list. The detect loop in the pci_iommu_alloc() will 
-exit once hyperv_swiotlb_detect() is called in Hyper-V VM and other 
-iommu_table_entry callback will not be called.
+>> Is BLIST_INQUIRY_36 really needed?
+
+No, BLIST_INQUIRY_36 is not needed. I included it only because the nearby
+comment "Note that all USB devices should have the BLIST_INQUIRY_36 flag."
+said so.
+
+David Sebek
