@@ -2,134 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9A43C4708F
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 10:36:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E75CC47092
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 10:48:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C23C5613D3
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 10:36:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 855FB613BF
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 10:48:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232614AbhFBKh5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Jun 2021 06:37:57 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3131 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231287AbhFBKh4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 06:37:56 -0400
-Received: from fraeml741-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Fw4yr50Z2z6S1W3;
-        Wed,  2 Jun 2021 18:29:40 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml741-chm.china.huawei.com (10.206.15.222) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 2 Jun 2021 12:36:11 +0200
-Received: from [10.47.91.52] (10.47.91.52) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 2 Jun 2021
- 11:36:10 +0100
-Subject: Re: [PATCH] scsi: libsas: check lun number valid for ata device in
- sas_queuecommand()
-To:     Yufen Yu <yuyufen@huawei.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <yanaijie@huawei.com>,
-        <wubo40@huawei.com>, Linuxarm <linuxarm@huawei.com>
-References: <20210601070439.1236679-1-yuyufen@huawei.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <ff6ec6a7-fcff-99a8-8e9e-ffdc43b4af35@huawei.com>
-Date:   Wed, 2 Jun 2021 11:36:09 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S230519AbhFBKuP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Jun 2021 06:50:15 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59656 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S231329AbhFBKtF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 06:49:05 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 152Ak9he030092
+        for <linux-scsi@vger.kernel.org>; Wed, 2 Jun 2021 03:47:21 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=lbxnEHC94H891BTQdQyXbuCjeVZAWEC7oANUFb60QLw=;
+ b=SwJBAuZU7SY//Tc3draDYHCU18tvzJzjb2gI/BviC0U6a0cOgkpakYXFqwPxX5CIUiSk
+ IUR0G02Gs46jVsY5hK4vCohaTjxr3VW4I00B/qgrTiwQDmjzR+lsV8EhL5cX48vqYlJV
+ LhEyJGJY7CStp/TY5BAUGa+ZTml2odo39or6FPg+3vZzoMH2bFunKaxNpYj6yJBFner2
+ KgO7c3IhYJN1ARBPSs5T3Dc2o7/+UDyV/zbSkg4htz3bDPtlERwU+FXXnSCLnOidbF2p
+ R7Pa4nbrWKniY/7e84eFLENBaXXX912vixJA1z+SgngcAR52HkX956JOwqUnlV3hUirG XA== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 38wug72j60-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Jun 2021 03:47:21 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Wed, 2 Jun
+ 2021 03:47:20 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 2 Jun 2021 03:47:20 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 2A9BE3F7051;
+        Wed,  2 Jun 2021 03:47:18 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 152AlHtT017313;
+        Wed, 2 Jun 2021 03:47:17 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 152AlHGW017312;
+        Wed, 2 Jun 2021 03:47:17 -0700
+From:   Javed Hasan <jhasan@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
+Subject: [PATCH V2] qedf: Update the max_id value in host structure.
+Date:   Wed, 2 Jun 2021 03:46:53 -0700
+Message-ID: <20210602104653.17278-1-jhasan@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210601070439.1236679-1-yuyufen@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.91.52]
-X-ClientProxiedBy: lhreml729-chm.china.huawei.com (10.201.108.80) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: 98BqvhZZPy9T9QLcYXJJqNH9KYCBZzIq
+X-Proofpoint-GUID: 98BqvhZZPy9T9QLcYXJJqNH9KYCBZzIq
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-06-02_06:2021-06-02,2021-06-02 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 01/06/2021 08:04, Yufen Yu wrote:
-> We found that offline a ata device on hisi sas control and then
-> scanning the host can probe 255 not exist devices into system.
-> It can be reproduced easily as following:
-> 
-> Some ata devices on hisi sas v3 control:
->    [root@localhost ~]# lsscsi
->    [2:0:0:0]    disk    ATA      Samsung SSD 860  2B6Q  /dev/sda
->    [2:0:1:0]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdb
->    [2:0:2:0]    disk    SEAGATE  ST600MM0006      B001  /dev/sdc
-> 
->   1) echo "offline" > /sys/block/sdb/device/state
->   2) echo "- - -" > /sys/class/scsi_host/host2/scan
-> 
-> Then, we can see another 255 not exist device in system:
->    [root@localhost ~]# lsscsi
->    [2:0:0:0]    disk    ATA      Samsung SSD 860  2B6Q  /dev/sda
->    [2:0:1:0]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdb
->    [2:0:1:1]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdh
->    ...
->    [2:0:1:254]  disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdja
->    [2:0:1:255]  disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdjb
-> 
-> When we try to scan the host, REPORT LUN command issued to the
-> offline device (sdb) will return fail. Then it tries to do a
-> sequential scan. Since only one ata device, any INQUIRY command
-> will be issued to the only device (i.e. lun 0) and return success,
-> no matter the lun number. So, the device whose lun number is not
-> zero will also be probed into system.
-> 
-> We fix the probe by checking lun number valid in sas_queuecommand.
-> Any lun number is not equal '0' will return fail.
-> 
-> Signed-off-by: Wu Bo <wubo40@huawei.com>
-> Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+From: Saurav Kashyap <skashyap@marvell.com>
 
-As mentioned privately, we could alternatively add a check in a slave 
-alloc callback, like:
+  The max_id value defines the max id of the target that stack
+  can scan during manual scanning through scsi_host sysfs interface.
+  If default value is 8, update the value to the max sessions driver support.
 
-int sas_slave_alloc(struct scsi_device *sdev)
-{
-	if (dev_is_sata(sdev_to_domain_dev(sdev)) && sdev->lun)
-		return -ENXIO;
+Signed-off-by: Saurav Kashyap <skashyap@marvell.com>
+Signed-off-by: Javed Hasan <jhasan@marvell.com>
+---
+Changes in v2:
+ - Added description and signed-off.
+---
+ drivers/scsi/qedf/qedf_main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-	return 0;
-}
-
-This avoids touching the queuecommand fastpath. But not sure it is worth it.
-
-BTW, please mention that we are doing similar to commit 2fc62e2ac, to 
-cut down the commit log a bit.
-
-> ---
->   drivers/scsi/libsas/sas_scsi_host.c | 6 ++++++
->   1 file changed, 6 insertions(+)
-> 
-> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-> index 1bf939818c98..62a01d11df96 100644
-> --- a/drivers/scsi/libsas/sas_scsi_host.c
-> +++ b/drivers/scsi/libsas/sas_scsi_host.c
-> @@ -174,6 +174,12 @@ int sas_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->   	}
->   
->   	if (dev_is_sata(dev)) {
-> +		/* sas ata just have one lun */
-> +		if (cmd->device->lun != 0) {
-> +			cmd->result = (DID_BAD_TARGET << 16);
-> +			cmd->scsi_done(cmd);
-> +			return res;
-
-goto out_done is better
-
-> +		}
->   		spin_lock_irq(dev->sata_dev.ap->lock);
->   		res = ata_sas_queuecmd(cmd, dev->sata_dev.ap);
->   		spin_unlock_irq(dev->sata_dev.ap->lock);
-> 
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index c5f37277..322046f4 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -2089,6 +2089,7 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
+ 	vn_port->host->max_lun = qedf_max_lun;
+ 	vn_port->host->sg_tablesize = QEDF_MAX_BDS_PER_CMD;
+ 	vn_port->host->max_cmd_len = QEDF_MAX_CDB_LEN;
++	vn_port->host->max_id = QEDF_MAX_SESSIONS;
+ 
+ 	rc = scsi_add_host(vn_port->host, &vport->dev);
+ 	if (rc) {
+@@ -3855,6 +3856,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 		host->transportt = qedf_fc_transport_template;
+ 		host->max_lun = qedf_max_lun;
+ 		host->max_cmd_len = QEDF_MAX_CDB_LEN;
++		host->max_id = QEDF_MAX_SESSIONS;
+ #ifdef USE_BLK_MQ
+ 		host->use_blk_mq = qedf_use_blk_mq;
+ 		if (shost_use_blk_mq(host)) {
+-- 
+2.18.2
 
