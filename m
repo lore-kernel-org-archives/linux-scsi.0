@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF652C47080
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 02:32:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5028C47092
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 02:34:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2EDD613BE
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 02:32:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8545613BE
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 02:34:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230400AbhFBCeX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Jun 2021 22:34:23 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:13345 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230021AbhFBCeW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Jun 2021 22:34:22 -0400
+        id S230379AbhFBCfy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Jun 2021 22:35:54 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:22751 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229975AbhFBCfx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 22:35:53 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1622601160; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1622601251; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=N2aWNaK6HbPpRc2PN5lxaYs+zFYsZrJUqGdXKGBg3Nw=;
- b=IHo3m9FP6jdI53s/7HokI9Cibpcd35yFcE3IcgBki5jJzXlZXXEACHo5DkLPWi1SUoVZjSwC
- /OXqhCEgQJ/fMsM5tQmnzzs9fd65Gf6W3oY+lznq/Zq1PYCf6fLPV3Zlv1Kq5GJlOLiVxl00
- MnK33fSHDsKqvzc+U8xYhyKhcwA=
-X-Mailgun-Sending-Ip: 69.72.43.7
+ MIME-Version: Sender; bh=7Xn3A6fVS46RBZmcAtbEyiPLKhOi7x8dz+VLSnh3H3w=;
+ b=Bn0FHRj4uhegFwYfmKZ6B8D3s69d9oD+fS+NF22/R7uqVRgTUlHf8EBWkBPaw7IHz0OUjkyt
+ J5HEHN/ydsf5+8GHxSP++q30jHVX0VH5MK5qrVcG534PDLEv+6OdJVeGluUdoQufC3XZkJvR
+ ZOH8twwaQHSDSUSTQcvdgwiPkcI=
+X-Mailgun-Sending-Ip: 198.61.254.9
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 60b6edbcabfd22a3dcf05629 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Jun 2021 02:32:28
+ smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
+ 60b6ee1e2eaeb98b5e609d1f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Jun 2021 02:34:06
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 60100C43144; Wed,  2 Jun 2021 02:32:27 +0000 (UTC)
+        id D9597C4360C; Wed,  2 Jun 2021 02:34:06 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4F10AC43460;
-        Wed,  2 Jun 2021 02:32:26 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2808BC433F1;
+        Wed,  2 Jun 2021 02:34:05 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8;
  format=flowed
 Content-Transfer-Encoding: 8bit
-Date:   Wed, 02 Jun 2021 10:32:26 +0800
+Date:   Wed, 02 Jun 2021 10:34:05 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Bean Huo <huobean@gmail.com>
 Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
@@ -55,12 +55,12 @@ Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         martin.petersen@oracle.com, stanley.chu@mediatek.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 3/4] scsi: ufs: Let command trace only for the cmd !=
- null case
-In-Reply-To: <20210531104308.391842-4-huobean@gmail.com>
+Subject: Re: [PATCH v2 2/4] scsi: ufs: Let UPIU completion trace print RSP
+ UPIU header
+In-Reply-To: <20210531104308.391842-3-huobean@gmail.com>
 References: <20210531104308.391842-1-huobean@gmail.com>
- <20210531104308.391842-4-huobean@gmail.com>
-Message-ID: <309e9bacdc0a6ab78913036f4c95f142@codeaurora.org>
+ <20210531104308.391842-3-huobean@gmail.com>
+Message-ID: <361f7611bc5193694487831bfd912ad1@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
@@ -70,85 +70,61 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 On 2021-05-31 18:43, Bean Huo wrote:
 > From: Bean Huo <beanhuo@micron.com>
 > 
-> For the query request, we already have query_trace, but in
-> ufshcd_send_command (), there will add two more redundant
-> traces. Since lrbp->cmd is null in the query request, the
-> below these two trace events provide nothing except the tag
-> and DB. Instead of letting them take up the limited trace
-> ring buffer, it’s better not to print these traces in case
-> of cmd == null.
+> The current UPIU completion event trace still prints the COMMAND UPIU
+> header, rather than the RSP UPIU header. This makes UPIU command trace
+> useless in problem shooting in case we receive a trace log from the
+> customer/field.
 > 
-> ufshcd_command: send_req: ff3b0000.ufs: tag: 28, DB: 0x0, size: -1,
-> IS: 0, LBA: 18446744073709551615, opcode: 0x0 (0x0), group_id: 0x0
-> ufshcd_command: dev_complete: ff3b0000.ufs: tag: 28, DB: 0x0, size:
-> -1, IS: 0, LBA: 18446744073709551615, opcode: 0x0 (0x0), group_id: 0x0
+> There are two important fields in RSP UPIU:
+>  1. The response field, which indicates the UFS defined overall success
+>     or failure of the series of Command, Data and RESPONSE UPIU’s that
+>     make up the execution of a task.
+>  2. The Status field, which contains the command set specific status 
+> for
+>     a specific command issued by the initiator device.
+> 
+> Before this patch, the UPIU paired trace events:
+> 
+> ufshcd_upiu: send_req: fe3b0000.ufs: HDR:01 20 00 1c 00 00 00 00 00 00
+> 00 00, CDB:3b e1 00 00 00 00 00 00 30 00 00 00 00 00 00 00
+> ufshcd_upiu: complete_rsp: fe3b0000.ufs: HDR:01 20 00 1c 00 00 00 00
+> 00 00 00 00, CDB:3b e1 00 00 00 00 00 00 30 00 00 00 00 00 00 00
+> 
+> After the patch:
+> 
+> ufshcd_upiu: send_req: fe3b0000.ufs: HDR:01 20 00 1c 00 00 00 00 00 00
+> 00 00, CDB:3b e1 00 00 00 00 00 00 30 00 00 00 00 00 00 00
+> ufshcd_upiu: complete_rsp: fe3b0000.ufs: HDR:21 00 00 1c 00 00 00 00
+> 00 00 00 00, CDB:3b e1 00 00 00 00 00 00 30 00 00 00 00 00 00 00
 > 
 > Signed-off-by: Bean Huo <beanhuo@micron.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 44 +++++++++++++++++++--------------------
->  1 file changed, 21 insertions(+), 23 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 8 +++++++-
+>  1 file changed, 7 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c5754d5486c9..c84bd8e045f6 100644
+> index 85590d3a719e..c5754d5486c9 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -378,35 +378,33 @@ static void ufshcd_add_command_trace(struct
+> @@ -302,11 +302,17 @@ static void ufshcd_add_cmd_upiu_trace(struct
 > ufs_hba *hba, unsigned int tag,
->  	struct scsi_cmnd *cmd = lrbp->cmd;
->  	int transfer_len = -1;
+>  				      enum ufs_trace_str_t str_t)
+>  {
+>  	struct utp_upiu_req *rq = hba->lrb[tag].ucd_req_ptr;
+> +	struct utp_upiu_header *header;
 > 
-> +	if (!cmd)
-> +		return;
-> +
->  	if (!trace_ufshcd_command_enabled()) {
->  		/* trace UPIU W/O tracing command */
-> -		if (cmd)
-> -			ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
-> +		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
+>  	if (!trace_ufshcd_upiu_enabled())
 >  		return;
->  	}
 > 
-> -	if (cmd) { /* data phase exists */
-> -		/* trace UPIU also */
-> -		ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
-> -		opcode = cmd->cmnd[0];
-> -		lba = sectors_to_logical(cmd->device, blk_rq_pos(cmd->request));
-> +	/* trace UPIU also */
-> +	ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
-> +	opcode = cmd->cmnd[0];
-> +	lba = sectors_to_logical(cmd->device, blk_rq_pos(cmd->request));
-> 
-> -		if ((opcode == READ_10) || (opcode == WRITE_10)) {
-> -			/*
-> -			 * Currently we only fully trace read(10) and write(10)
-> -			 * commands
-> -			 */
-> -			transfer_len = be32_to_cpu(
-> -				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
-> -			if (opcode == WRITE_10)
-> -				group_id = lrbp->cmd->cmnd[6];
-> -		} else if (opcode == UNMAP) {
-> -			/*
-> -			 * The number of Bytes to be unmapped beginning with the
-> -			 * lba.
-> -			 */
-> -			transfer_len = blk_rq_bytes(cmd->request);
-> -		}
-> +	if (opcode == READ_10 || opcode == WRITE_10) {
-> +		/*
-> +		 * Currently we only fully trace read(10) and write(10) commands
-> +		 */
-> +		transfer_len =
-> +		       be32_to_cpu(lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
-> +		if (opcode == WRITE_10)
-> +			group_id = lrbp->cmd->cmnd[6];
-> +	} else if (opcode == UNMAP) {
-> +		/*
-> +		 * The number of Bytes to be unmapped beginning with the lba.
-> +		 */
-> +		transfer_len = blk_rq_bytes(cmd->request);
->  	}
-> 
->  	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> -	trace_ufshcd_upiu(dev_name(hba->dev), str_t, &rq->header, 
+> &rq->sc.cdb,
+> +	if (str_t == UFS_CMD_SEND)
+> +		header = &rq->header;
+> +	else
+> +		header = &hba->lrb[tag].ucd_rsp_ptr->header;
+> +
+> +	trace_ufshcd_upiu(dev_name(hba->dev), str_t, header, &rq->sc.cdb,
+>  			  UFS_TSF_CDB);
+>  }
 
 Reviewed-by: Can Guo <cang@codeaurora.org>
