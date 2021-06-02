@@ -2,79 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CAE1C47080
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 02:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E74E8C4708F
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 02:29:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36AD86139A
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 02:14:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9ABB613BF
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 02:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229969AbhFBCQh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 1 Jun 2021 22:16:37 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:12077 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbhFBCQg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jun 2021 22:16:36 -0400
+        id S230359AbhFBCbg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 1 Jun 2021 22:31:36 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:13505 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229975AbhFBCbf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Jun 2021 22:31:35 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1622600094; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1622600993; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=iOQwgqabrc1MbfT07CPHtQODLtRaNjncaWi9mJJSGlQ=;
- b=G7TqxZz7NYfTW6FC5UCMgRIzR5h498GWyxDz8HNcBPxpOjOzJ/Lg8Cs78OvciSqsbKj5iNzC
- mvIgshlhUVCF3OTDFgWp0f1rsXcITXgx78VJe6+Rg9P9j0uNK/O95hbvvvKXfHtP57mdiXl3
- aybqmVvwBshKjWf6d1umLVajhzA=
-X-Mailgun-Sending-Ip: 198.61.254.9
+ MIME-Version: Sender; bh=mrS8FjuiuckPwfzV6XWwylgTgo9N2E/xkBAnOaFFiqY=;
+ b=N6PvkDMAX/FqMHRbpj+wKku9CN+ueilX/euKbiP2eDLx+WayYHKv1KOjWESQA58YmqDv6K5c
+ qRviZ3u80MCch80VbWdt9OZszuCZhn4Q9WBHvB7x2N1wUl+u9YwshQOvoH4e0Sxl86QAn//g
+ bhzqJDNERXqWFNWnBxS4K/Dqwpk=
+X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 60b6e993f726fa4188928ac6 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Jun 2021 02:14:43
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 60b6ed1de27c0cc77f058798 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Jun 2021 02:29:49
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 1EC6BC4338A; Wed,  2 Jun 2021 02:14:43 +0000 (UTC)
+        id 36F05C43217; Wed,  2 Jun 2021 02:29:49 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 61B2DC433F1;
-        Wed,  2 Jun 2021 02:14:39 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1E64AC43460;
+        Wed,  2 Jun 2021 02:29:47 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Wed, 02 Jun 2021 10:14:39 +0800
+Date:   Wed, 02 Jun 2021 10:29:47 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Bean Huo <huobean@gmail.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, Stanley Chu <stanley.chu@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Subject: Re: [PATCH v1 2/3] scsi: ufs: Optimize host lock on transfer requests
- send/compl paths
-In-Reply-To: <6d6d296a84f1e62f65fda4d172a85bb35d9a3684.camel@gmail.com>
-References: <1621845419-14194-1-git-send-email-cang@codeaurora.org>
- <1621845419-14194-3-git-send-email-cang@codeaurora.org>
- <6d6d296a84f1e62f65fda4d172a85bb35d9a3684.camel@gmail.com>
-Message-ID: <adc85803e27226bc8d24c53061e39214@codeaurora.org>
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 4/4] scsi: ufs: Use UPIU query trace in devman_upiu_cmd
+In-Reply-To: <20210531104308.391842-5-huobean@gmail.com>
+References: <20210531104308.391842-1-huobean@gmail.com>
+ <20210531104308.391842-5-huobean@gmail.com>
+Message-ID: <7689e5022787716596534e9123fdc295@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
@@ -83,70 +68,44 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Bean,
 
-On 2021-06-01 00:04, Bean Huo wrote:
-> On Mon, 2021-05-24 at 01:36 -0700, Can Guo wrote:
->> Current UFS IRQ handler is completely wrapped by host lock, and
->> because
->> 
->> ufshcd_send_command() is also protected by host lock, when IRQ
->> handler
->> 
->> fires, not only the CPU running the IRQ handler cannot send new
->> requests,
->> 
->> the rest CPUs can neither. Move the host lock wrapping the IRQ
->> handler into
->> 
->> specific branches, i.e., ufshcd_uic_cmd_compl(),
->> ufshcd_check_errors(),
->> 
->> ufshcd_tmc_handler() and ufshcd_transfer_req_compl(). Meanwhile, to
->> further
->> 
->> reduce occpuation of host lock in ufshcd_transfer_req_compl(), host
->> lock is
->> 
->> no longer required to call __ufshcd_transfer_req_compl(). As per
->> test, the
->> 
->> optimization can bring considerable gain to random read/write
->> performance.
->> 
->> 
->> 
->> Cc: Stanley Chu <stanley.chu@mediatek.com>
->> 
->> Co-developed-by: Asutosh Das <asutoshd@codeaurora.org>
->> 
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
+On 2021-05-31 18:43, Bean Huo wrote:
+> From: Bean Huo <beanhuo@micron.com>
 > 
-> Can,
-> The patch looks good to me.
-> I did a UFS queue limitation test before, observed that once the queue
-> is full, then the active task number in the queue will get down. For
-> the Nvme, the scenario is the same. You can refer to the slide 23, and
-> slide 24 in the pdf:
-> https://elinux.org/images/6/6c/Linux_Storage_System_Bottleneck_Exploration_V0.3.pdf
-> I don't know if your patch can fix this
-> issue.
-
-I've studied these slides made by you many times, it is really good.
-I will do some study later on this. Thanks for the slides.
-
+> Since devman_upiu_cmd is not COMMAND UPIU, and doesn't have
+> CDB, it is better to use UPIU query trace, which provides more
+> helpful information for issue shooting.
 > 
-> Unfortunately, I cannot verify UTRLCNR usage flow since my platform is
-> v2.1. But at least my test can prove that the patch doesn't impact the
-> legacy(UFSHCI is less than v3.0) doorbell usage flow.
+> Signed-off-by: Bean Huo <beanhuo@micron.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index c84bd8e045f6..deb9e232b349 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6701,6 +6701,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct
+> ufs_hba *hba,
+> 
+>  	hba->dev_cmd.complete = &wait;
+> 
+> +	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+>  	/* Make sure descriptors are ready before ringing the doorbell */
+>  	wmb();
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> @@ -6732,6 +6733,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct
+> ufs_hba *hba,
+>  			err = -EINVAL;
+>  		}
+>  	}
+> +	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : 
+> UFS_QUERY_COMP,
+> +				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+> 
+>  out:
+>  	blk_put_request(req);
 
-Thanks for your time :).
+What about ufshcd_exec_dev_cmd()?
 
-Regards,
+Thanks,
 Can Guo.
-
-> Reviewed-by: Bean Huo <beanhuo@micron.com>
-> 
-> 
-> Bean
