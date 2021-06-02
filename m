@@ -2,109 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37579C47083
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 21:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 791A7C47083
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 21:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 146CE613EA
-	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 21:07:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 575B4613E9
+	for <linux-scsi@archiver.kernel.org>; Wed,  2 Jun 2021 21:18:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229620AbhFBVIm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Jun 2021 17:08:42 -0400
-Received: from mail-ed1-f47.google.com ([209.85.208.47]:44872 "EHLO
-        mail-ed1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229541AbhFBVIl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 17:08:41 -0400
-Received: by mail-ed1-f47.google.com with SMTP id u24so4525019edy.11;
-        Wed, 02 Jun 2021 14:06:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=1s237lY/zDGiCSLNMNYFLWwPxsCMomPG/HHc5c6xiWk=;
-        b=qshs3QjH6ea6wFSnZCa0aBOM7j1av/OEZbx3CwX9cK5dUzys71Z9vT/cW37ZJgaC2q
-         U940eOXuAKqkdlOUjwXyCfDg5Jr9DUw7uYKQqP/xbxvf9D4Q8557QgBASz+PFeilHSSm
-         oWklJmZJlPde9QhAhjY+L8BOYifCiAGMLgpIrbD6Tq92nQy4aqic8eRKjN/bZktr+QeT
-         o5Iyz7Klj7wYG6QXM+Ilv3HEjhh+f77Kr1JemoLt3hDK4/pTsIWaERmzmZaSYXx3sJu3
-         BK6xgxtS85Fiav1Up0IHpG+jvZI04K0t0v9Yp7Z352zJJT2stk8t46XdsC/o2BakYudA
-         oRSg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=1s237lY/zDGiCSLNMNYFLWwPxsCMomPG/HHc5c6xiWk=;
-        b=o1vtVmj/xT3xYtv4Hm/ss2+fQRMZENYJYDOOZIOniKldnwXYzkSR598bh54b1dcpVo
-         WRCY7H9yI6fzXRsfT8+84Vw02RuhgEqYOpJ86yNhSmTlWvEpfcXhblQ16MVpp/eyu33x
-         L9rVm627gQ2K21+B1dS2SErUgaAKkIDQJjHyKy6FLiY5e0OKX3Yi3tR54nELzWKhSkIV
-         Cbo9MIJJzodrGGqsSJ+vqnzjsA7JMEUgN43NdoyqXYMrEiZlkh3USHqjITiXaATxQEji
-         dTyNAUPVIyDPforITndAkvU/xgjEvBdhQ8q9WAZz6Hl6tjcLBjaFBZulUFWeuPmvQ7Ml
-         ikDQ==
-X-Gm-Message-State: AOAM533//ql0DIEcZZlXQq+bVXXp6n3Z5K7chmR1yKO/QdO5USUfghz4
-        q1q+PBSygCJRXCIiB+5n0k0=
-X-Google-Smtp-Source: ABdhPJy8oSVfq5Kq1zd562cl3lP3jTqC7YeW2cxgwiupMkHOiAVy26b79xcSYACXuX+Ib3ZocGtO+Q==
-X-Received: by 2002:aa7:da94:: with SMTP id q20mr3410853eds.310.1622667948153;
-        Wed, 02 Jun 2021 14:05:48 -0700 (PDT)
-Received: from ubuntu-laptop (ip5f5bec5d.dynamic.kabel-deutschland.de. [95.91.236.93])
-        by smtp.googlemail.com with ESMTPSA id o64sm600883eda.83.2021.06.02.14.05.47
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 02 Jun 2021 14:05:47 -0700 (PDT)
-Message-ID: <aaa62a02184b590c8845183c4bbad9a0e9ab36aa.camel@gmail.com>
-Subject: Re: [PATCH v2 4/4] scsi: ufs: Use UPIU query trace in
- devman_upiu_cmd
-From:   Bean Huo <huobean@gmail.com>
-To:     Can Guo <cang@codeaurora.org>
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        asutoshd@codeaurora.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, stanley.chu@mediatek.com,
-        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date:   Wed, 02 Jun 2021 23:05:44 +0200
-In-Reply-To: <7689e5022787716596534e9123fdc295@codeaurora.org>
-References: <20210531104308.391842-1-huobean@gmail.com>
-         <20210531104308.391842-5-huobean@gmail.com>
-         <7689e5022787716596534e9123fdc295@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.4-0ubuntu1 
+        id S229568AbhFBVU0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Jun 2021 17:20:26 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:39519 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229576AbhFBVU0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 2 Jun 2021 17:20:26 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1622668722; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: MIME-Version: Date: Message-ID: From: References: Cc: To:
+ Subject: Sender; bh=+CMCzWdXYW36gvLhqspzCb5O76RlF7D5cgvfnUD5vAs=; b=WytgUox4Om6I0SVPzRFJ8vmm9cIuN+wchqYBR1LucO8boc+Sq1phmVrpv2bop26OhKHYfABS
+ kvXRPu7AzwDta3zFhnCyt19bmTd29+c5VutGqtSIb/0k3V7XZ95ydIcfI5vrYTFxJ67GSh8G
+ AK45+GHLgj8fTukJkwj08ZVuF7A=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n01.prod.us-east-1.postgun.com with SMTP id
+ 60b7f5b1e27c0cc77f7e5b71 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 02 Jun 2021 21:18:41
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 1434AC43146; Wed,  2 Jun 2021 21:18:39 +0000 (UTC)
+Received: from [192.168.8.168] (cpe-70-95-149-85.san.res.rr.com [70.95.149.85])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 1BD5CC433D3;
+        Wed,  2 Jun 2021 21:18:38 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.3.2 smtp.codeaurora.org 1BD5CC433D3
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=asutoshd@codeaurora.org
+Subject: Re: [PATCH v1 2/3] scsi: ufs: Optimize host lock on transfer requests
+ send/compl paths
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Can Guo <cang@codeaurora.org>,
+        "nguyenb@codeaurora.org" <nguyenb@codeaurora.org>,
+        "hongwus@codeaurora.org" <hongwus@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "kernel-team@android.com" <kernel-team@android.com>
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Satya Tangirala <satyat@google.com>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+References: <1621845419-14194-1-git-send-email-cang@codeaurora.org>
+ <1621845419-14194-3-git-send-email-cang@codeaurora.org>
+ <41a08b3e-122d-4f1a-abbd-4b5730f880b2@acm.org>
+ <d4ff8e1a-f368-6720-798a-a2a31a4d41fb@codeaurora.org>
+ <DM6PR04MB65752DD2F442C178B2D0233AFC259@DM6PR04MB6575.namprd04.prod.outlook.com>
+ <DM6PR04MB657525D67B70FF3418511694FC229@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+Message-ID: <e7605343-5785-e708-751b-72a66e4e0b67@codeaurora.org>
+Date:   Wed, 2 Jun 2021 14:18:37 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
+In-Reply-To: <DM6PR04MB657525D67B70FF3418511694FC229@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-06-02 at 10:29 +0800, Can Guo wrote:
-> >        spin_lock_irqsave(hba->host->host_lock, flags);
-> > @@ -6732,6 +6733,8 @@ static int
-> > ufshcd_issue_devman_upiu_cmd(struct
-> > ufs_hba *hba,
-> >                        err = -EINVAL;
-> >                }
-> >        }
-> > +     ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : 
-> > UFS_QUERY_COMP,
-> > +                                 (struct utp_upiu_req *)lrbp-
-> > >ucd_rsp_ptr);
-> >   out:
-> >        blk_put_request(req);
+On 5/28/2021 12:30 AM, Avri Altman wrote:
+>>> Hi Bart,
+>>> No it's not necessary to serialize both the paths. I think this series
+>>> attempts to remove this serialization to a certain degree, which is
+>>> what's giving the performance improvement.
+> Btw, Is this performance improvement is on top of rq_affinity 2 or 1?
 > 
-> 
-> What about ufshcd_exec_dev_cmd()?
-> 
-
-
-Can,
-thanks for your veiew.
-yes, ufshcd_exec_dev_cmd() is only to send
-UPIU command frame, and doesn't include CDB. It already uses
-ufshcd_add_query_upiu_trace() to trace UPIU frame. 
-
-Kind regards,
-Bean
+It's on 1.
 
 > Thanks,
+> Avri
 > 
-> Can Guo.
+>>>
+>>> Even if multiqueue support would be available in the future, I think
+>>> this change is apt now for the current available specification.
+>> I agree - this looks like the harbinger of a major change,
+>> And going further with respect of hw queues,
+>> will need the spec support - e.g. doorbell per lane, etc.
+>>
+>> Thanks,
+>> Avri
+>>
+>>>> Thanks,
+>>>>
+>>>> Bart.
+>>>>
+>>>
+>>>
+>>> Thanks,
+>>> -asd
+>>>
+>>> --
+>>> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora
+>>> Forum,
+>>> Linux Foundation Collaborative Project
 
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
