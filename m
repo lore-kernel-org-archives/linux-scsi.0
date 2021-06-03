@@ -2,93 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5213C47083
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 02:55:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3B40C47083
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 03:06:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE9CA613F0
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 02:55:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 754C8613B8
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 03:06:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229828AbhFCC4q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Jun 2021 22:56:46 -0400
-Received: from mailgw01.mediatek.com ([210.61.82.183]:54469 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229812AbhFCC4q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 22:56:46 -0400
-X-UUID: 144e700ae6a044128ab6d0af69907f6c-20210603
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=pihTp1DwQK+HeV7mk+RNkiNU9/T3ejwlYv/tON4uSVU=;
-        b=K8dISz8A3sCqVuZ7Dv3NqYr+YwmqdYVXSrdlzyJPC8LGmlZH7DX2UQZ7lvnBnFIMu95rYcjVPBJDyOIYrmi1DRO3y4xCR5HY+WujmZcYbExluZLTc5CDFr0I+uvGrYi4X/NQNgvm662hGVzuCB4AfSCGMF1g/BMAs1YQVeVxSco=;
-X-UUID: 144e700ae6a044128ab6d0af69907f6c-20210603
-Received: from mtkcas06.mediatek.inc [(172.21.101.30)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1431275690; Thu, 03 Jun 2021 10:55:00 +0800
-Received: from mtkcas07.mediatek.inc (172.21.101.84) by mtkexhb02.mediatek.inc
- (172.21.101.103) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 3 Jun
- 2021 10:54:59 +0800
-Received: from [172.21.77.33] (172.21.77.33) by mtkcas07.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 3 Jun 2021 10:54:59 +0800
-Message-ID: <1622688899.7096.7.camel@mtkswgap22>
-Subject: Re: [PATCH v1 3/3] scsi: ufs: Utilize Transfer Request List
- Completion Notification Register
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Can Guo <cang@codeaurora.org>
-CC:     <asutoshd@codeaurora.org>, <nguyenb@codeaurora.org>,
-        <hongwus@codeaurora.org>, <linux-scsi@vger.kernel.org>,
-        <kernel-team@android.com>, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        "Adrian Hunter" <adrian.hunter@intel.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Caleb Connolly <caleb@connolly.tech>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-Date:   Thu, 3 Jun 2021 10:54:59 +0800
-In-Reply-To: <1621845419-14194-4-git-send-email-cang@codeaurora.org>
-References: <1621845419-14194-1-git-send-email-cang@codeaurora.org>
-         <1621845419-14194-4-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.2.3-0ubuntu6 
+        id S229617AbhFCDId (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 2 Jun 2021 23:08:33 -0400
+Received: from mail-pj1-f46.google.com ([209.85.216.46]:34461 "EHLO
+        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229541AbhFCDId (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 23:08:33 -0400
+Received: by mail-pj1-f46.google.com with SMTP id g6-20020a17090adac6b029015d1a9a6f1aso2621704pjx.1
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Jun 2021 20:06:33 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=5J98ypAdG7TGFDW/Qe5X05lht29wl4JZD+Fti7OtFtQ=;
+        b=fayWDgH9R25xTQs4ivQx/jrnSq5uxiN9S5b01eJ/j5I+L7bLXheKsIGsWJJBiByXEe
+         508Lgje5dST9PnOzWnpCzhWSWnGbi/IO3FTdfCI2CKheikb5ZuHbvHz1xPFFr9087K5S
+         1J8ovAFjw7FwhhzNBzXbr1dl2q1Co4NBHBo6qVfE4Nv2ey5F7cMCXHKS6yeJ2qmAn70L
+         +y0Wlw6Y7NTG8sp+Ag5fRgMieITTbdNcKxQOdHjXb9IqhXbjdVdW4DoGtAnGQxUzu/+a
+         nMD6zVbWJ1Rzl111uyQN4QuG0nWkTaxsgO7IQXjV8nHeIY4m4F77p32tGShLHpMplWuv
+         Hk9Q==
+X-Gm-Message-State: AOAM530JsI9z7h8EFmOSzKF/f5wqhwzpMCBIA253ZLdoL4BaX1S+bW7l
+        /wET8ha8u8/Hq9xtDYbgnro=
+X-Google-Smtp-Source: ABdhPJzDMFE66H45nedLhyOIznCI1vN4Q9p7t4Gm9jz8lmR6pXVV95s5Y3McKUgJx5TmHyicDL9HtA==
+X-Received: by 2002:a17:902:7087:b029:104:6133:6d2d with SMTP id z7-20020a1709027087b029010461336d2dmr19874367plk.39.1622689593043;
+        Wed, 02 Jun 2021 20:06:33 -0700 (PDT)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id n72sm799432pfd.8.2021.06.02.20.06.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 02 Jun 2021 20:06:32 -0700 (PDT)
+Subject: Re: [PATCH 3/4] scsi: core: put .shost_dev in failure path if host
+ state becomes running
+To:     Ming Lei <ming.lei@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     John Garry <john.garry@huawei.com>, Hannes Reinecke <hare@suse.de>
+References: <20210602133029.2864069-1-ming.lei@redhat.com>
+ <20210602133029.2864069-4-ming.lei@redhat.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <d2ddd0a4-db61-a966-0e27-313e59cfd7e7@acm.org>
+Date:   Wed, 2 Jun 2021 20:06:31 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.2
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+In-Reply-To: <20210602133029.2864069-4-ming.lei@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgQ2FuLA0KDQpPbiBNb24sIDIwMjEtMDUtMjQgYXQgMDE6MzYgLTA3MDAsIENhbiBHdW8gd3Jv
-dGU6DQo+IEJ5IHJlYWRpbmcgdGhlIFVUUCBUcmFuc2ZlciBSZXF1ZXN0IExpc3QgQ29tcGxldGlv
-biBOb3RpZmljYXRpb24gUmVnaXN0ZXIsDQo+IHdoaWNoIGlzIGFkZGVkIGluIFVGU0hDSSBWZXIg
-My4wLCBTVyBjYW4gZWFzaWx5IGdldCB0aGUgY29tcGVsZXRlZCB0cmFuc2Zlcg0KPiByZXF1ZXN0
-cy4gVGh1cywgU1cgY2FuIGdldCByaWQgb2YgaG9zdCBsb2NrLCB3aGljaCBpcyB1c2VkIHRvIHN5
-bmNocm9uaXplDQo+IHRoZSB0cl9kb29yYmVsbCBhbmQgb3V0c3RhbmRpbmdfcmVxcywgb24gdHJh
-bnNmZXIgcmVxdWVzdHMgZGlzcGF0Y2ggYW5kDQo+IGNvbXBsZXRpb24gcGF0aHMuIFRoaXMgY2Fu
-IGZ1cnRoZXIgYmVuZWZpdCByYW5kb20gcmVhZC93cml0ZSBwZXJmb3JtYW5jZS4NCj4gDQo+IENj
-OiBTdGFubGV5IENodSA8c3RhbmxleS5jaHVAbWVkaWF0ZWsuY29tPg0KPiBDby1kZXZlbG9wZWQt
-Ynk6IEFzdXRvc2ggRGFzIDxhc3V0b3NoZEBjb2RlYXVyb3JhLm9yZz4NCj4gU2lnbmVkLW9mZi1i
-eTogQXN1dG9zaCBEYXMgPGFzdXRvc2hkQGNvZGVhdXJvcmEub3JnPg0KPiBTaWduZWQtb2ZmLWJ5
-OiBDYW4gR3VvIDxjYW5nQGNvZGVhdXJvcmEub3JnPg0KDQpSZXZpZXdlZC1ieTogU3RhbmxleSBD
-aHUgPHN0YW5sZXkuY2h1QG1lZGlhdGVrLmNvbT4NCg0KDQo+ICsrKyBiL2RyaXZlcnMvc2NzaS91
-ZnMvdWZzaGNpLmgNCj4gQEAgLTM5LDYgKzM5LDcgQEAgZW51bSB7DQo+ICAJUkVHX1VUUF9UUkFO
-U0ZFUl9SRVFfRE9PUl9CRUxMCQk9IDB4NTgsDQo+ICAJUkVHX1VUUF9UUkFOU0ZFUl9SRVFfTElT
-VF9DTEVBUgkJPSAweDVDLA0KPiAgCVJFR19VVFBfVFJBTlNGRVJfUkVRX0xJU1RfUlVOX1NUT1AJ
-PSAweDYwLA0KPiArCVJFR19VVFBfVFJBTlNGRVJfUkVRX0xJU1RfQ09NUEwJCT0gMHg2NCwNCj4g
-IAlSRUdfVVRQX1RBU0tfUkVRX0xJU1RfQkFTRV9MCQk9IDB4NzAsDQo+ICAJUkVHX1VUUF9UQVNL
-X1JFUV9MSVNUX0JBU0VfSAkJPSAweDc0LA0KPiAgCVJFR19VVFBfVEFTS19SRVFfRE9PUl9CRUxM
-CQk9IDB4NzgsDQoNCg==
+On 6/2/21 6:30 AM, Ming Lei wrote:
+> scsi_host_dev_release() only works around for us by freeing
+> dev_name(&shost->shost_dev) when host state is SHOST_CREATED. After host
+> state is changed to SHOST_RUNNING, scsi_host_dev_release() doesn't do
+> that any more.
+> 
+> So fix the issue by put .shost_dev in failure path if host state becomes
+> running, meantime move get_device(&shost->shost_gendev) before
+> device_add(&shost->shost_dev), so that scsi_host_cls_release() can put
+> this reference.
+> 
+> Reported-by: John Garry <john.garry@huawei.com>
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/hosts.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 796736e47764..7049844adb6b 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -257,12 +257,11 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>  
+>  	device_enable_async_suspend(&shost->shost_dev);
+>  
+> +	get_device(&shost->shost_gendev);
+>  	error = device_add(&shost->shost_dev);
+>  	if (error)
+>  		goto out_del_gendev;
+>  
+> -	get_device(&shost->shost_gendev);
+> -
+>  	if (shost->transportt->host_size) {
+>  		shost->shost_data = kzalloc(shost->transportt->host_size,
+>  					 GFP_KERNEL);
+> @@ -300,6 +299,11 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   out_del_dev:
+>  	device_del(&shost->shost_dev);
+>   out_del_gendev:
+> +	/*
+> +	 * host state has become SHOST_RUNNING, so we have to release
+> +	 * ->shost_dev explicitly
+> +	 */
+> +	put_device(&shost->shost_dev);
+>  	device_del(&shost->shost_gendev);
+>   out_disable_runtime_pm:
+>  	device_disable_async_suspend(&shost->shost_gendev);
+
+Shouldn't this change be merged into patch 2/4 since both patches touch
+the same function? Anyway, this patch also looks good to me.
+
+Bart.
+
 
