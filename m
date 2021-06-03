@@ -7,41 +7,42 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 770DAC47098
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:09:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A54FDC47099
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:10:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5FC1061421
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:09:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EE22613F1
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:10:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232530AbhFCRLb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Jun 2021 13:11:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42176 "EHLO mail.kernel.org"
+        id S232740AbhFCRMP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Jun 2021 13:12:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43644 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231937AbhFCRKq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Jun 2021 13:10:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2E6666140F;
-        Thu,  3 Jun 2021 17:09:01 +0000 (UTC)
+        id S232231AbhFCRL0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Jun 2021 13:11:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4F603613F1;
+        Thu,  3 Jun 2021 17:09:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622740141;
-        bh=o4gimoPiJ3bHPHqjEjBBHmZXwQuE/CmhBTkx++jA4UI=;
+        s=k20201202; t=1622740182;
+        bh=UFy/fNZZcXDiSUPifrg7RaZsPbIx8W3OHjSscJM5XlY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uXONNjLanBra464mQegDga8WhXbW2lYHu4dC/E7wR/ovrHub2na4lXiBV2FKtjIPq
-         prFnGjByAjnR3k+5yN+2MmH8g5j99q4KIgY1pRoNILOSLN/NFOlYEu/eRxOkatsqA+
-         IqeDxuRZhEvW0nWnRfFoI3u4rdegk5gHuat/GiVmTWSLu4UTjgMfm2I8uD4G28g7+a
-         X3/UhmJwmSwpALbGOETRDdUNZlY4QYEuO3NWslmb+Hofcijh8JnCkFLRPaOgGLQW9b
-         9190VBOHGV3cEd+9voaPOj7GrYKYHNUyZx8sI8GsAsUo84yeCklUnyFBTRxcJSivHT
-         PibyzPX+pZeGg==
+        b=il4SVFmUVwrHXf5tnv+NyoIgOplmPLOIwc2ZYWAuqrAVKwPYJFN7/0cI0wj5CLLtV
+         9qwie0FruoBT55iGAmCe8InVPORu/jaUxb7nmfF2OeME7m9HIgVXFZcFSctExGtWUH
+         J+0LM7plD2OaBtd7qT0q7w6YER3RfCcmnWRruMZImzF9KkJZiurpImvaEmUbZblcr9
+         hRa6q93+z3LN6e+/DaAEo8PAMSWUFttLgEOk/RVJVXSma5T93PntN6zDrNLCyw05M3
+         ReQ4OTVOPHuMx46GWv9nUenQqu6abR9886g6UIugdF37avRxLsVRQ+9Gfnb83LK3t9
+         c3GQwWk8VPCTQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Matt Wang <wwentao@vmware.com>,
+Cc:     Javed Hasan <jhasan@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 26/39] scsi: vmw_pvscsi: Set correct residual data length
-Date:   Thu,  3 Jun 2021 13:08:16 -0400
-Message-Id: <20210603170829.3168708-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 18/31] scsi: bnx2fc: Return failure if io_req is already in ABTS processing
+Date:   Thu,  3 Jun 2021 13:09:06 -0400
+Message-Id: <20210603170919.3169112-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210603170829.3168708-1-sashal@kernel.org>
-References: <20210603170829.3168708-1-sashal@kernel.org>
+In-Reply-To: <20210603170919.3169112-1-sashal@kernel.org>
+References: <20210603170919.3169112-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,68 +51,33 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Matt Wang <wwentao@vmware.com>
+From: Javed Hasan <jhasan@marvell.com>
 
-[ Upstream commit e662502b3a782d479e67736a5a1c169a703d853a ]
+[ Upstream commit 122c81c563b0c1c6b15ff76a9159af5ee1f21563 ]
 
-Some commands (such as INQUIRY) may return less data than the initiator
-requested. To avoid conducting useless information, set the right residual
-count to make upper layer aware of this.
+Return failure from bnx2fc_eh_abort() if io_req is already in ABTS
+processing.
 
-Before (INQUIRY PAGE 0xB0 with 128B buffer):
-
-$ sg_raw -r 128 /dev/sda 12 01 B0 00 80 00
-SCSI Status: Good
-
-Received 128 bytes of data:
- 00 00 b0 00 3c 01 00 00 00 00 00 00 00 00 00 00 00 ...<............
- 10 00 00 00 00 00 01 00 00 00 00 00 40 00 00 08 00 ...........@....
- 20 80 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 .......... .....
- 30 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
- 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
- 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
- 60 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
- 70 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-
-After:
-
-$ sg_raw -r 128 /dev/sda 12 01 B0 00 80 00
-SCSI Status: Good
-
-Received 64 bytes of data:
-00 00 b0 00 3c 01 00 00 00 00 00 00 00 00 00 00 00 ...<............
-10 00 00 00 00 00 01 00 00 00 00 00 40 00 00 08 00 ...........@....
-20 80 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 .......... .....
-30 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
-
-[mkp: clarified description]
-
-Link: https://lore.kernel.org/r/03C41093-B62E-43A2-913E-CFC92F1C70C3@vmware.com
-Signed-off-by: Matt Wang <wwentao@vmware.com>
+Link: https://lore.kernel.org/r/20210519061416.19321-1-jhasan@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Javed Hasan <jhasan@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/vmw_pvscsi.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/bnx2fc/bnx2fc_io.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 081f54ab7d86..1421b1394d81 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -587,7 +587,13 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
- 		case BTSTAT_SUCCESS:
- 		case BTSTAT_LINKED_COMMAND_COMPLETED:
- 		case BTSTAT_LINKED_COMMAND_COMPLETED_WITH_FLAG:
--			/* If everything went fine, let's move on..  */
-+			/*
-+			 * Commands like INQUIRY may transfer less data than
-+			 * requested by the initiator via bufflen. Set residual
-+			 * count to make upper layer aware of the actual amount
-+			 * of data returned.
-+			 */
-+			scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
- 			cmd->result = (DID_OK << 16);
- 			break;
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
+index 401743e2b429..a0e776414889 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_io.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
+@@ -1219,6 +1219,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
+ 		   was a result from the ABTS request rather than the CLEANUP
+ 		   request */
+ 		set_bit(BNX2FC_FLAG_IO_CLEANUP,	&io_req->req_flags);
++		rc = FAILED;
+ 		goto done;
+ 	}
  
 -- 
 2.30.2
