@@ -2,83 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 937ABC47096
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 15:43:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE4B9C47096
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 16:52:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 667F1613BF
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 15:43:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FB6E613F1
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 16:52:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229726AbhFCPpA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Jun 2021 11:45:00 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3150 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229617AbhFCPo7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2021 11:44:59 -0400
-Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Fwqbn6J8pz6J8kh;
-        Thu,  3 Jun 2021 23:30:45 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Thu, 3 Jun 2021 17:43:13 +0200
-Received: from [10.47.80.115] (10.47.80.115) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Thu, 3 Jun 2021
- 16:43:13 +0100
-Subject: Re: [PATCH 0/4] scsi: fix failure handling of alloc/add host
-To:     Ming Lei <ming.lei@redhat.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>
-CC:     Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>
-References: <20210602133029.2864069-1-ming.lei@redhat.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <6fb17d5f-d266-58b8-40be-eae970f84e47@huawei.com>
-Date:   Thu, 3 Jun 2021 16:43:12 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S230147AbhFCQyi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Jun 2021 12:54:38 -0400
+Received: from mail-pj1-f49.google.com ([209.85.216.49]:33507 "EHLO
+        mail-pj1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229826AbhFCQyi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2021 12:54:38 -0400
+Received: by mail-pj1-f49.google.com with SMTP id k22-20020a17090aef16b0290163512accedso3695927pjz.0;
+        Thu, 03 Jun 2021 09:52:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=A4PUrNAyORJrJtmrQDwf06S8baOEzVduzKP2wT3KDSU=;
+        b=RtdCKAf7FrR+LdK5t99yhknuZvT2vKvoE2j6U5dVZymA9QyrLTkQ6nLhvWJDop7Ql/
+         P9P1IUG5BmzjMX2DEOfQWRsM5hkbOyJUKOpwJTsqOCIKbrcBLcZrSNgaVPAXB2ppPoX6
+         y8PdE4Danw46njO4VeUrwKMa+HYPzxF4dxQGJSVj3/HSd8NIIIFJ3g4/aIbO84vHR9Eo
+         opHLspi4qErKr+QsilIV6h+vUXESEx55+17AZ+GpjmbcyE3A25LyxkfkJxYcxHqjkRgW
+         nmMjZYnghtu3MvnnorNbsXOs+fJrYH50o1eZFqNtx+KQP4SkKq2ONCU5u8t5m4b2Xn3T
+         s9dQ==
+X-Gm-Message-State: AOAM531w3Ju9PlUq4vpiDEXgEMO9UuMvActo9ArDWUlI3eSVmN0EJrDk
+        5dA4YaHBHgMsXepkA2OJzYvVyWuxtbM=
+X-Google-Smtp-Source: ABdhPJzWPJhxQy7iqzH9sbtkolZXhfMH4Ry88gBWFj3lcinDhqrOzw9Ol/DA6KAVd276NDUF52RmMA==
+X-Received: by 2002:a17:90a:af8b:: with SMTP id w11mr149454pjq.228.1622739172619;
+        Thu, 03 Jun 2021 09:52:52 -0700 (PDT)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id e6sm2925710pjl.3.2021.06.03.09.52.51
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 03 Jun 2021 09:52:52 -0700 (PDT)
+Subject: Re: UFS failures with v5.13-rc4
+To:     Felipe Balbi <balbi@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+References: <87lf7rc9es.fsf@kernel.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <f3488feb-9a22-cfc3-a2f2-3c324c9646bd@acm.org>
+Date:   Thu, 3 Jun 2021 09:52:50 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210602133029.2864069-1-ming.lei@redhat.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <87lf7rc9es.fsf@kernel.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.80.115]
-X-ClientProxiedBy: lhreml751-chm.china.huawei.com (10.201.108.201) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 02/06/2021 14:30, Ming Lei wrote:
-> Hello Martin,
+On 6/3/21 7:25 AM, Felipe Balbi wrote:
+> Today I managed to trigger some pretty bad faults with with v5.13-rc4
+> running on SM8150 (Snapdragon) and iozone.
 > 
-> Fix failure handling of alloc/add host code, and related device release
-> handling.
-> 
-> 
-> Ming Lei (4):
->    scsi: core: fix error handling of scsi_host_alloc
->    scsi: core: fix failure handling of scsi_add_host_with_dma
->    scsi: core: put .shost_dev in failure path if host state becomes
->      running
->    scsi: core: only put parent device if host state isn't in
->      SHOST_CREATED
-> 
->   drivers/scsi/hosts.c | 47 ++++++++++++++++++++++++--------------------
->   1 file changed, 26 insertions(+), 21 deletions(-)
-> 
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: John Garry <john.garry@huawei.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> 
+> It seems the problem only happens when using bfq iosched, as I couldn't
+> trigger it with mq-deadline.
 
-I tested a single error path in each of scsi_host_alloc() and 
-scsi_add_host_with_dma(), and it looked ok, so:
+Both the UFS driver and the BFQ scheduler have been changed 
+significantly recently. It would help if this issue could be bisected. 
+That will reveal whether the root cause is in the UFS driver or in the 
+BFQ scheduler.
 
-Tested-by: John Garry <john.garry@huawei.com>
+Thanks,
+
+Bart.
