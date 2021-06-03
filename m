@@ -2,124 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AC7CC47083
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 03:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41907C47082
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 09:57:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3B539613C9
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 03:28:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2849F613E9
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 09:57:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbhFCDai (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 2 Jun 2021 23:30:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:55990 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229758AbhFCD0Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jun 2021 23:26:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622690587;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=hJddlx7honz6mKn/y/fYftuPNX5yH4s+TxbtFJjjdCY=;
-        b=AdBuEQves0wrywRuJsfjpTyN3q8q7ajKYuSo4ewjXsaWRajlvFgmS7dlD6Wy1hurZJZos4
-        OEV5fN2RyLsNtNnBdoP8JL/FEdo8HZ1qNOkmCr2qAvcGro78o3X/NYxNZMeKNSFJaZ2izU
-        ZfUa1QhnVEmz9Xuf6rWjeVmyB0pLono=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-58-prKhzu4MMF6tkaGgHeaKmA-1; Wed, 02 Jun 2021 23:23:04 -0400
-X-MC-Unique: prKhzu4MMF6tkaGgHeaKmA-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EB1FE101371B;
-        Thu,  3 Jun 2021 03:23:02 +0000 (UTC)
-Received: from T590 (ovpn-12-17.pek2.redhat.com [10.72.12.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 763501037E8B;
-        Thu,  3 Jun 2021 03:22:53 +0000 (UTC)
-Date:   Thu, 3 Jun 2021 11:22:48 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/4] scsi: core: put .shost_dev in failure path if host
- state becomes running
-Message-ID: <YLhLCDqv7KWNELXl@T590>
-References: <20210602133029.2864069-1-ming.lei@redhat.com>
- <20210602133029.2864069-4-ming.lei@redhat.com>
- <d2ddd0a4-db61-a966-0e27-313e59cfd7e7@acm.org>
+        id S229625AbhFCJ6s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Jun 2021 05:58:48 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:48896 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229576AbhFCJ6s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2021 05:58:48 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 1539p88T005747
+        for <linux-scsi@vger.kernel.org>; Thu, 3 Jun 2021 02:57:04 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=yLL+Xxqcqnev5qwWZwQffjXIrrGZo6EP3JJ8wzOvzOM=;
+ b=isbAN/ui6PfDK9vRRrs+me0B23FkowsA4EALpi25u3PO9jUDXiy3kO0ZgHflkHpfVz1P
+ Pimhx0rGaiAUcRBCA0bokiPkj4WkgaAnhKm11egvUV01RAKh2FMXoqHHLafoYYKXdl4h
+ sGpdlnXv2JQFbrIBNVrb7kE/paL6yX43HQjaj+Q+oj/G/s44dnBxQr+F8LW/FaZrtwGJ
+ OG+i7fDOQH7u3FvBtiVXD/wrpIBxOJPYO6k86gGGqSy5aiSawg1Vk17L/r+bPlw+DxON
+ /wYm/JFvwzS6IyguVOW+o18hDHyhhDLZ75rPhdBwamAgeXstNsXIAbOGgZpbYakFO1Q/ UQ== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 38xhym24c4-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Jun 2021 02:57:03 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 3 Jun
+ 2021 02:57:01 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 3 Jun 2021 02:57:01 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id A40C83F7041;
+        Thu,  3 Jun 2021 02:57:01 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 1539v1VL007362;
+        Thu, 3 Jun 2021 02:57:01 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 1539v18g007353;
+        Thu, 3 Jun 2021 02:57:01 -0700
+From:   Javed Hasan <jhasan@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
+Subject: [PATCH 0/2] scsi: FDMI Fixes
+Date:   Thu, 3 Jun 2021 02:56:35 -0700
+Message-ID: <20210603095637.7319-1-jhasan@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d2ddd0a4-db61-a966-0e27-313e59cfd7e7@acm.org>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: dy6RC6R0vuBHbgZ9iG8_J3o4kYisFVe3
+X-Proofpoint-GUID: dy6RC6R0vuBHbgZ9iG8_J3o4kYisFVe3
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-06-03_06:2021-06-02,2021-06-03 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 02, 2021 at 08:06:31PM -0700, Bart Van Assche wrote:
-> On 6/2/21 6:30 AM, Ming Lei wrote:
-> > scsi_host_dev_release() only works around for us by freeing
-> > dev_name(&shost->shost_dev) when host state is SHOST_CREATED. After host
-> > state is changed to SHOST_RUNNING, scsi_host_dev_release() doesn't do
-> > that any more.
-> > 
-> > So fix the issue by put .shost_dev in failure path if host state becomes
-> > running, meantime move get_device(&shost->shost_gendev) before
-> > device_add(&shost->shost_dev), so that scsi_host_cls_release() can put
-> > this reference.
-> > 
-> > Reported-by: John Garry <john.garry@huawei.com>
-> > Cc: Bart Van Assche <bvanassche@acm.org>
-> > Cc: Hannes Reinecke <hare@suse.de>
-> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> > ---
-> >  drivers/scsi/hosts.c | 8 ++++++--
-> >  1 file changed, 6 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> > index 796736e47764..7049844adb6b 100644
-> > --- a/drivers/scsi/hosts.c
-> > +++ b/drivers/scsi/hosts.c
-> > @@ -257,12 +257,11 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
-> >  
-> >  	device_enable_async_suspend(&shost->shost_dev);
-> >  
-> > +	get_device(&shost->shost_gendev);
-> >  	error = device_add(&shost->shost_dev);
-> >  	if (error)
-> >  		goto out_del_gendev;
-> >  
-> > -	get_device(&shost->shost_gendev);
-> > -
-> >  	if (shost->transportt->host_size) {
-> >  		shost->shost_data = kzalloc(shost->transportt->host_size,
-> >  					 GFP_KERNEL);
-> > @@ -300,6 +299,11 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
-> >   out_del_dev:
-> >  	device_del(&shost->shost_dev);
-> >   out_del_gendev:
-> > +	/*
-> > +	 * host state has become SHOST_RUNNING, so we have to release
-> > +	 * ->shost_dev explicitly
-> > +	 */
-> > +	put_device(&shost->shost_dev);
-> >  	device_del(&shost->shost_gendev);
-> >   out_disable_runtime_pm:
-> >  	device_disable_async_suspend(&shost->shost_gendev);
-> 
-> Shouldn't this change be merged into patch 2/4 since both patches touch
-> the same function? Anyway, this patch also looks good to me.
+This series has two fixes for FDMI.
+Attributes length corrected for RHBA.
+Fixed the wrong condition check in fc_ct_ms_fill_attr().
 
-2/4 address double-free, this one fixes memory leak. Not mention this
-one isn't trivial to find & figuring out, so it will be easier to review by
-splitting them out.
- 
+Kindly apply this series to scsi-queue at your earliest convenience.
 
-Thanks,
-Ming
+Javed Hasan (2):
+  scsi: fc: Corrected RHBA attributes length
+  libfc: Corrected the condition check and invalid argument passed
+
+ drivers/scsi/libfc/fc_encode.h | 8 +++++---
+ include/scsi/fc/fc_ms.h        | 4 ++--
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+-- 
+2.26.2
 
