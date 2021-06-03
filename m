@@ -2,150 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CED2C47096
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 10:45:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CDAEC47096
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 12:16:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD920613D6
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 10:45:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7E986613C9
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 12:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229926AbhFCKqz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Jun 2021 06:46:55 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:56410 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229610AbhFCKqy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2021 06:46:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1622717109;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=DKnh0uyhdKqoboJLkz1MQbf+CPgU8STex9vsGZAVttw=;
-        b=Jfl3AASW9HZkeNsOj9zT9B5m3jydShVKQBQEtOa9+xk0A5apFQ8M30V+W2kzMW9gRVFZtg
-        qkgwb7zWsgzQkrY5ikC4pHo0JGTjkklU2mgpXUilMOdxKcXZjA6xtM3w0CHRU4ZielF7f2
-        lPv3LxN0alLvZW27H/wZ6qy4Mgno9L8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-302-rgmo3ZBUPgyy8riSHYsp3g-1; Thu, 03 Jun 2021 06:45:08 -0400
-X-MC-Unique: rgmo3ZBUPgyy8riSHYsp3g-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0A950801817;
-        Thu,  3 Jun 2021 10:45:07 +0000 (UTC)
-Received: from localhost (ovpn-114-228.ams2.redhat.com [10.36.114.228])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 01FB350F89;
-        Thu,  3 Jun 2021 10:45:02 +0000 (UTC)
-Date:   Thu, 3 Jun 2021 11:45:01 +0100
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
-        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH 3/9] vhost: modify internal functions to take a
- vhost_worker
-Message-ID: <YLiyrRdeD6vQ2VXc@stefanha-x1.localdomain>
-References: <20210525180600.6349-1-michael.christie@oracle.com>
- <20210525180600.6349-4-michael.christie@oracle.com>
+        id S229747AbhFCMSe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Jun 2021 08:18:34 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59960 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S229927AbhFCMSe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2021 08:18:34 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 153CANON011022
+        for <linux-scsi@vger.kernel.org>; Thu, 3 Jun 2021 05:16:49 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=XkB4PX5lIEoGqCLtr9Fq+1SziSIVe35o9eEkpc7U8Mg=;
+ b=boETqiRrn2JgNvKIhhTDhNjV6j7pu2zpwzs7s7Cpq0mMDalyPmqAxNhfhe+PXzRDX4LA
+ 70rwzehU0HWcwgi0C2UCNFuCoaSGA8AIRWf4gOkpVxtW5lTi0YCq2KuKuFv3T9MGLBG4
+ WonUAGfw2nfYXIfvFfvPqJvVpeFSYA+55XvbWBFuePPuvBrRZyyntnJaIM7Q3DQpRQTw
+ x2Uuf+AxmjZWsDXUpBKxp2uKTBZAsSa9gvJ+g72G0I+dsj5HmxurVfYxftrqOHeTpPDm
+ 26Bo3Bm33HEnBrSvH6rwYs8iyb+x7Hg4nnXLUyOLf+hLbkrICRIIFch+sW0HAuH1PL5H Rg== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 38xe7xuhas-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Jun 2021 05:16:49 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 3 Jun
+ 2021 05:16:48 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 3 Jun 2021 05:16:47 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id E389C3F7044;
+        Thu,  3 Jun 2021 05:16:47 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 153CGlPB010119;
+        Thu, 3 Jun 2021 05:16:47 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 153CGlIe010118;
+        Thu, 3 Jun 2021 05:16:47 -0700
+From:   Javed Hasan <jhasan@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
+Subject: [PATCH 0/5] scsi: FDMI enhancement
+Date:   Thu, 3 Jun 2021 05:16:18 -0700
+Message-ID: <20210603121623.10084-1-jhasan@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="F7RAaeNOJ2iI4bk5"
-Content-Disposition: inline
-In-Reply-To: <20210525180600.6349-4-michael.christie@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: k61kx1N9rWLixy2BLcGboFCyNPMX2KkC
+X-Proofpoint-GUID: k61kx1N9rWLixy2BLcGboFCyNPMX2KkC
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
+ definitions=2021-06-03_08:2021-06-02,2021-06-03 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+This series has FDMI enhancement code.
+FDMI V2 attributes added for RHBA and RPA.
+If registration get failed with FDMI V1 attributes,
+than fall back to the registration with FDMI V2 attributes.
 
---F7RAaeNOJ2iI4bk5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Kindly apply this series to scsi-queue at your earliest convenience.
 
-On Tue, May 25, 2021 at 01:05:54PM -0500, Mike Christie wrote:
-> -void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work)
-> +static void vhost_work_queue_on(struct vhost_work *work,
-> +				struct vhost_worker *worker)
->  {
-> -	if (!dev->worker)
-> -		return;
-> -
->  	if (!test_and_set_bit(VHOST_WORK_QUEUED, &work->flags)) {
->  		/* We can only add the work to the list after we're
->  		 * sure it was not in the list.
->  		 * test_and_set_bit() implies a memory barrier.
->  		 */
-> -		llist_add(&work->node, &dev->worker->work_list);
-> -		wake_up_process(dev->worker->task);
-> +		llist_add(&work->node, &worker->work_list);
-> +		wake_up_process(worker->task);
->  	}
->  }
-> +
-> +void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work)
+Javed Hasan (5):
+  libfc: initialisation of RHBA and RPA attributes
+  qedf: Added vendor identifier attribute
+  libfc: Added FDMI-2 attributes
+  libfc: FDMI enhancement.
+  fc: FDMI enhancement
 
-When should this function still be used? A doc comment contrasting it to
-vhost_work_queue_on() would be helpful. I would expect callers to switch
-to that instead of queuing work on dev->workers[0].
+ drivers/scsi/libfc/fc_encode.h   | 248 ++++++++++++++++++++++++++++++-
+ drivers/scsi/libfc/fc_lport.c    |  88 ++++++++++-
+ drivers/scsi/qedf/qedf_main.c    |   3 +
+ include/scsi/fc/fc_ms.h          |  55 ++++++-
+ include/scsi/scsi_transport_fc.h |  25 +++-
+ 5 files changed, 401 insertions(+), 18 deletions(-)
 
->  /* A lockless hint for busy polling code to exit the loop */
->  bool vhost_has_work(struct vhost_dev *dev)
->  {
-> -	return dev->worker && !llist_empty(&dev->worker->work_list);
-> +	int i;
-> +
-> +	for (i =3D 0; i < dev->num_workers; i++) {
-> +		if (!llist_empty(&dev->workers[i]->work_list))
-> +			return true;
-> +	}
-> +
-> +	return false;
->  }
->  EXPORT_SYMBOL_GPL(vhost_has_work);
-
-It's probably not necessary to poll all workers:
-
-drivers/vhost/net.c calls vhost_has_work() to busy poll a specific
-virtqueue. If the vq:worker mapping is 1:1 or N:1 then vhost_has_work()
-should be extended to include the struct vhost_virtqueue so we can poll
-just that vq worker's work_list.
->  /* Caller must have device mutex */
->  static int vhost_worker_try_create_def(struct vhost_dev *dev)
->  {
-> -	if (!dev->use_worker || dev->worker)
-> +	struct vhost_worker *worker;
-> +
-> +	if (!dev->use_worker || dev->workers)
->  		return 0;
-> =20
-> -	return vhost_worker_create(dev);
-> +	dev->workers =3D kcalloc(1, sizeof(struct vhost_worker *), GFP_KERNEL);
-
-GFP_KERNEL_ACCOUNT so that vhost memory associated with a process (the
-one that invoked the ioctl) is accounted? This may get trickier if the
-workers are shared between processes.
-
-The same applies for struct vhost_worker in vhost_worker_create().
-
---F7RAaeNOJ2iI4bk5
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmC4sq0ACgkQnKSrs4Gr
-c8gXxgf6AuE6XADmG7si7aHqwcDMJZ+rEPI+I8QDNKz/fJNr65aBbaPl5xrosoaF
-gs7CLIEdNshApxvMrB/2AffUwvv8CJYeWjCGtjKZAi5rjM0V0bVomsUEdDMoFlhy
-QijVpTOfdY77vZIsjcDWuDA8wfIni6yfFQ4g4Rpnj86qVROK777vzdKkrywqrdtK
-ntxM5SK1kWAiD1ulurJ6CgW3tYy7mVFM4pFwEXWmjm8kUmMe9OyQlll7HjUVsxgT
-cLQVsVWa64qyZx2etIJLGiQY7cT/6eI+v+9EmxdqEhnUngdLjpawe+Eld3wTffld
-rRDnZF8n/R2P0SZbiEPHzqGxMF0sOw==
-=xLx3
------END PGP SIGNATURE-----
-
---F7RAaeNOJ2iI4bk5--
+-- 
+2.26.2
 
