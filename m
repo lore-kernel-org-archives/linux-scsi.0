@@ -7,39 +7,38 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5DCBC4709F
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:08:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B99AC4709C
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:08:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D83E9613F9
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:08:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E6F7F613FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:08:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231535AbhFCRJ7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Jun 2021 13:09:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41188 "EHLO mail.kernel.org"
+        id S231472AbhFCRJz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Jun 2021 13:09:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41098 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231488AbhFCRJ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Jun 2021 13:09:57 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1EB3A6141E;
-        Thu,  3 Jun 2021 17:08:11 +0000 (UTC)
+        id S231421AbhFCRJy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Jun 2021 13:09:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9C05E613F8;
+        Thu,  3 Jun 2021 17:08:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622740091;
-        bh=87XpyyJ9i7M+apfwWnDHr4EMnI24tv0eOjqFr6ZvkYo=;
+        s=k20201202; t=1622740089;
+        bh=HdVEokA1sEOmD78e+4tbqLKvOvzgnR7TWLsmm52b/iQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=P+0+UNvKEG18wyhKHrCYoW18tpl9uAOOQ66lvlGsHzR7ONdTni4xB1PsaENUK3mKF
-         VeygVG6/zC8ze/+c7vQBALFbjoJH/Fj1X62oMSsBfbHJRJjxSkfnMYOvotJ/jzWjjZ
-         5Z6lqY6R7Oa8HfEnJ2BILCwuv3ey9nxawayG7lg4FW8qEslGI8DDUxzzpwHqEf9O+X
-         0OhRLSMwZI+88SK60KK2ciMLgEx10o436tN+O0Yr+Vv7c5TcphNiUgluZZDIdJJItd
-         O+H8BpoVw+h/oxRyspa84lXmLHS0m9dLvj72HNlAh2o7AD5AYYkKwcNALoI+/eIoJN
-         6OrG+xFrm0fEA==
+        b=hqzDWsi2RYWtZdB2lCvJkB8+eGEmh/fkE25ttLrEn4VraXWeuLIVSd0sQrs5Qv/eo
+         JdAYMD0s/iTrsWwFTeH5bKc1+mCeEo78hSaGQUi7jToRKJaDx7+EAV1JDW6e5uJjlz
+         PK/Lz4XrKRAv4YW+Or3odLnLMbHdNIxjq3BZCXf6iyK/mAvmudQyggq/KeKTrnjQH5
+         zXngv9eDt0QJcb8/AnIYcXTKldQh6EetVEzWIQlrrdAHDFv69ja0Enwyn8zfCLScVR
+         aYxT64YgfIZaMNDOmIRhF6BI7KzHP6deYeWIkgVFqs0BF1WhXb/tLUzmoFz4KypkMq
+         orZRk7/n1SMcQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
+Cc:     Matt Wang <wwentao@vmware.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 30/43] scsi: target: qla2xxx: Wait for stop_phase1 at WWN removal
-Date:   Thu,  3 Jun 2021 13:07:20 -0400
-Message-Id: <20210603170734.3168284-30-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 28/43] scsi: vmw_pvscsi: Set correct residual data length
+Date:   Thu,  3 Jun 2021 13:07:18 -0400
+Message-Id: <20210603170734.3168284-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210603170734.3168284-1-sashal@kernel.org>
 References: <20210603170734.3168284-1-sashal@kernel.org>
@@ -51,80 +50,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Dmitry Bogdanov <d.bogdanov@yadro.com>
+From: Matt Wang <wwentao@vmware.com>
 
-[ Upstream commit 2ef7665dfd88830f15415ba007c7c9a46be7acd8 ]
+[ Upstream commit e662502b3a782d479e67736a5a1c169a703d853a ]
 
-Target de-configuration panics at high CPU load because TPGT and WWPN can
-be removed on separate threads.
+Some commands (such as INQUIRY) may return less data than the initiator
+requested. To avoid conducting useless information, set the right residual
+count to make upper layer aware of this.
 
-TPGT removal requests a reset HBA on a separate thread and waits for reset
-complete (phase1). Due to high CPU load that HBA reset can be delayed for
-some time.
+Before (INQUIRY PAGE 0xB0 with 128B buffer):
 
-WWPN removal does qlt_stop_phase2(). There it is believed that phase1 has
-already completed and thus tgt.tgt_ops is subsequently cleared. However,
-tgt.tgt_ops is needed to process incoming traffic and therefore this will
-cause one of the following panics:
+$ sg_raw -r 128 /dev/sda 12 01 B0 00 80 00
+SCSI Status: Good
 
-NIP qlt_reset+0x7c/0x220 [qla2xxx]
-LR  qlt_reset+0x68/0x220 [qla2xxx]
-Call Trace:
-0xc000003ffff63a78 (unreliable)
-qlt_handle_imm_notify+0x800/0x10c0 [qla2xxx]
-qlt_24xx_atio_pkt+0x208/0x590 [qla2xxx]
-qlt_24xx_process_atio_queue+0x33c/0x7a0 [qla2xxx]
-qla83xx_msix_atio_q+0x54/0x90 [qla2xxx]
+Received 128 bytes of data:
+ 00 00 b0 00 3c 01 00 00 00 00 00 00 00 00 00 00 00 ...<............
+ 10 00 00 00 00 00 01 00 00 00 00 00 40 00 00 08 00 ...........@....
+ 20 80 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 .......... .....
+ 30 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+ 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+ 50 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+ 60 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+ 70 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
 
-or
+After:
 
-NIP qlt_24xx_handle_abts+0xd0/0x2a0 [qla2xxx]
-LR  qlt_24xx_handle_abts+0xb4/0x2a0 [qla2xxx]
-Call Trace:
-qlt_24xx_handle_abts+0x90/0x2a0 [qla2xxx] (unreliable)
-qlt_24xx_process_atio_queue+0x500/0x7a0 [qla2xxx]
-qla83xx_msix_atio_q+0x54/0x90 [qla2xxx]
+$ sg_raw -r 128 /dev/sda 12 01 B0 00 80 00
+SCSI Status: Good
 
-or
+Received 64 bytes of data:
+00 00 b0 00 3c 01 00 00 00 00 00 00 00 00 00 00 00 ...<............
+10 00 00 00 00 00 01 00 00 00 00 00 40 00 00 08 00 ...........@....
+20 80 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 .......... .....
+30 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
 
-NIP qlt_create_sess+0x90/0x4e0 [qla2xxx]
-LR  qla24xx_do_nack_work+0xa8/0x180 [qla2xxx]
-Call Trace:
-0xc0000000348fba30 (unreliable)
-qla24xx_do_nack_work+0xa8/0x180 [qla2xxx]
-qla2x00_do_work+0x674/0xbf0 [qla2xxx]
-qla2x00_iocb_work_fn
+[mkp: clarified description]
 
-The patch fixes the issue by serializing qlt_stop_phase1() and
-qlt_stop_phase2() functions to make WWPN removal wait for phase1
-completion.
-
-Link: https://lore.kernel.org/r/20210415203554.27890-1-d.bogdanov@yadro.com
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Link: https://lore.kernel.org/r/03C41093-B62E-43A2-913E-CFC92F1C70C3@vmware.com
+Signed-off-by: Matt Wang <wwentao@vmware.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/vmw_pvscsi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 480e7d2dcf3e..745d6d98c02e 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1558,10 +1558,12 @@ void qlt_stop_phase2(struct qla_tgt *tgt)
- 		return;
- 	}
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 8a79605d9652..b9969fce6b4d 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -585,7 +585,13 @@ static void pvscsi_complete_request(struct pvscsi_adapter *adapter,
+ 		case BTSTAT_SUCCESS:
+ 		case BTSTAT_LINKED_COMMAND_COMPLETED:
+ 		case BTSTAT_LINKED_COMMAND_COMPLETED_WITH_FLAG:
+-			/* If everything went fine, let's move on..  */
++			/*
++			 * Commands like INQUIRY may transfer less data than
++			 * requested by the initiator via bufflen. Set residual
++			 * count to make upper layer aware of the actual amount
++			 * of data returned.
++			 */
++			scsi_set_resid(cmd, scsi_bufflen(cmd) - e->dataLen);
+ 			cmd->result = (DID_OK << 16);
+ 			break;
  
-+	mutex_lock(&tgt->ha->optrom_mutex);
- 	mutex_lock(&vha->vha_tgt.tgt_mutex);
- 	tgt->tgt_stop = 0;
- 	tgt->tgt_stopped = 1;
- 	mutex_unlock(&vha->vha_tgt.tgt_mutex);
-+	mutex_unlock(&tgt->ha->optrom_mutex);
- 
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf00c, "Stop of tgt %p finished\n",
- 	    tgt);
 -- 
 2.30.2
 
