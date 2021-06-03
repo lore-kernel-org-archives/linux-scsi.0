@@ -4,149 +4,218 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A105AC4708F
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Jun 2021 04:06:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 974F3C47083
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Jun 2021 04:30:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CE8E61078
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Jun 2021 04:06:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F010611ED
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Jun 2021 04:30:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229628AbhFDEI2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Jun 2021 00:08:28 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:64563 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229452AbhFDEI1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jun 2021 00:08:27 -0400
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210604040640epoutp01a6d32183c9781eecebe22a9b116acddc~FRXLf6uy61943319433epoutp014
-        for <linux-scsi@vger.kernel.org>; Fri,  4 Jun 2021 04:06:40 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210604040640epoutp01a6d32183c9781eecebe22a9b116acddc~FRXLf6uy61943319433epoutp014
+        id S229801AbhFDEbq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Jun 2021 00:31:46 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:42838 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229573AbhFDEbq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jun 2021 00:31:46 -0400
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210604042958epoutp026de645fea13754e2d06b56795028f762~FRrhpcon80271202712epoutp02d
+        for <linux-scsi@vger.kernel.org>; Fri,  4 Jun 2021 04:29:58 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210604042958epoutp026de645fea13754e2d06b56795028f762~FRrhpcon80271202712epoutp02d
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1622779600;
-        bh=uGYoBs1H20g7voD4bG564WPjR6hSkS1XhBtI4UMg76w=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=cUNovKDk+1+JLHTYuzMCBseWTeNlwStcf2qudIHeRnjfv1urEysGzx2kwTGIR1IBC
-         3FUZVly/fTvBRGNC++j+ORxcH951bM4N8ADE3hSt8zg3haiPXRg6AvTg9KVhc/7+Zc
-         e1RFUDv4iMdGuAZe6C0w7uZQIvVJuVY3EXfkRveg=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20210604040639epcas2p42b15f2f9de2bb703478c991d9aefcfab~FRXKxrX0w0482404824epcas2p49;
-        Fri,  4 Jun 2021 04:06:39 +0000 (GMT)
-Received: from epsmges2p4.samsung.com (unknown [182.195.40.191]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4Fx8Mw6JPXz4x9Q7; Fri,  4 Jun
-        2021 04:06:36 +0000 (GMT)
-X-AuditID: b6c32a48-4fbff700000025f5-44-60b9a6ccc11e
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p4.samsung.com (Symantec Messaging Gateway) with SMTP id
-        43.ED.09717.CC6A9B06; Fri,  4 Jun 2021 13:06:36 +0900 (KST)
-Mime-Version: 1.0
-Subject: RE: Re: [PATCH v35 3/4] scsi: ufs: Prepare HPB read for cached
- sub-region
-Reply-To: daejun7.park@samsung.com
-Sender: Daejun Park <daejun7.park@samsung.com>
-From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Greg KH <gregkh@linuxfoundation.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Jaemyung Lee <jaemyung.lee@samsung.com>,
-        Jieon Seol <jieon.seol@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <4bf317c8-4c74-2207-95e2-34c59b14c454@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <20210604040636epcms2p7bcf940a2cd060336f79250de0060e08c@epcms2p7>
-Date:   Fri, 04 Jun 2021 13:06:36 +0900
-X-CMS-MailID: 20210604040636epcms2p7bcf940a2cd060336f79250de0060e08c
+        s=mail20170921; t=1622780998;
+        bh=5t04RlzQl0RyBI4gJM0ad0zEyozsoAuFKyhCdf1pY3k=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=k4PlVXAL+rSeoMOvbkgM0jiVDea+WpdlRfHGc0zn8AX+Ao/w73GPNkbQX20wl25DV
+         fP7uIUtOVHkhpeLwAtWpiVj+8OVinITQ3GFoLZlnkmxPuA1ToGyTLGYoOuanGMSgzK
+         J13TVPuXg1BO8/vfjInTrbHvk2FT/70CRxFszvMA=
+Received: from epsmges5p2new.samsung.com (unknown [182.195.42.74]) by
+        epcas5p2.samsung.com (KnoxPortal) with ESMTP id
+        20210604042957epcas5p2914e089ea9e9d9cbb403fa5b501bae18~FRrgr85Nf0828608286epcas5p2w;
+        Fri,  4 Jun 2021 04:29:57 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+        epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        25.F5.09697.54CA9B06; Fri,  4 Jun 2021 13:29:57 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+        20210603145716epcas5p151b1e268e09301c4c4c646d5f087b038~FGl8bk_qL1034210342epcas5p1g;
+        Thu,  3 Jun 2021 14:57:16 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20210603145716epsmtrp11174ce14d14f3c4e6bdfdfe8fe889bf2~FGl8ad9D32297722977epsmtrp1G;
+        Thu,  3 Jun 2021 14:57:16 +0000 (GMT)
+X-AuditID: b6c32a4a-64fff700000025e1-81-60b9ac459be3
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        C6.3B.08163.CCDE8B06; Thu,  3 Jun 2021 23:57:16 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.122.12.5]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20210603145715epsmtip1ee74c17d7887cc26200750a672b2233d~FGl7KUm1B1456414564epsmtip1C;
+        Thu,  3 Jun 2021 14:57:15 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Felipe Balbi'" <balbi@kernel.org>,
+        "'Avri Altman'" <avri.altman@wdc.com>,
+        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
+        "'Martin K. Petersen'" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+        <asutoshd@codeaurora.org>, <cang@codeaurora.org>
+In-Reply-To: <87lf7rc9es.fsf@kernel.org>
+Subject: RE: UFS failures with v5.13-rc4
+Date:   Thu, 3 Jun 2021 20:27:13 +0530
+Message-ID: <0acb01d75888$be51fe00$3af5fa00$@samsung.com>
+MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQFo4vPJKnQDl+7tnsLsmUF4WWdqJwIJTNTJq88AIjA=
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrNKsWRmVeSWpSXmKPExsWy7bCmuq7rmp0JBosb5Sz2tp1gt3j58yqb
+        xbG2J+wWn9YvY7VYdGMbk8XE/WfZLbqv72CzWH78H5MDh8flvl4mj02rOtk8Jiw6wOjx8ekt
+        Fo/Pm+Q82g90MwWwRXHZpKTmZJalFunbJXBl/Fq6lLHgpnrFhN0vmRsYu+S7GDk5JARMJA71
+        TGbpYuTiEBLYzSjRdP8oE4TziVFiSfMBRgjnM6PEhrb7zDAtGy9uhErsYpRouLaaHcJ5ySjx
+        fMkqVpAqNgFdiR2L29hAEiICq5kkVn07xASS4BTQkDjcu5EFxBYGso9suwoWZxFQkWiY0Q3W
+        zCtgKXHi/lQoW1Di5MwnYPXMAvIS29/OgTpDQeLn02VgNSICVhK9P9azQdSISxz92cMMslhC
+        YCaHxMsPh6EaXCTan66CsoUlXh3fwg5hS0m87G8DsjmA7GyJnl3GEOEaiaXzjrFA2PYSB67M
+        YQEpYRbQlFi/Sx8iLCsx9dQ6Joi1fBK9v58wQcR5JXbMg7FVJZrfXYUaIy0xsRviRQkBD4kf
+        vw+yTmBUnIXky1lIvpyF5JtZCJsXMLKsYpRMLSjOTU8tNi0wykst1ytOzC0uzUvXS87P3cQI
+        Tk9aXjsYHz74oHeIkYmD8RCjBAezkgjvHrUdCUK8KYmVValF+fFFpTmpxYcYpTlYlMR5Vzyc
+        nCAkkJ5YkpqdmlqQWgSTZeLglGpgavi5/He26xmLkk0L8xZKz9Ysf7j28arASc3Bfh2B69Y8
+        7b7t0KUaYMB0bN3yLzmhwrvL5TSUP3pdYb1ytfUP0135/anlZvPsE3gz7k/5r6UR8TQ/N3pe
+        gIr8X+0jFrMKGHWllwvtlfaK/pS8kO3g9Js3Hqd8PPx2ackCn6wvnNvb3havn+xRMPWL5cuv
+        vu+n+nj1JzHH/nU9uc+i+q7uzx2vX2ztC5N0bN3rZ3TQfN6WFSVa6x9euvVeIWqKhYjYG4+O
+        tucJEdf5rU19/CtyRIrjqraFcrxvlsgXZWmQc/3ZbHLyoHhq3tOFCte/WBTd/RIQOekR662a
+        V1vaVFkXReYXif1klBI/6ba5bou1EktxRqKhFnNRcSIAUwNyNb4DAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrHLMWRmVeSWpSXmKPExsWy7bCSnO6ZtzsSDDZfkbDY23aC3eLlz6ts
+        FsfanrBbfFq/jNVi0Y1tTBYT959lt+i+voPNYvnxf0wOHB6X+3qZPDat6mTzmLDoAKPHx6e3
+        WDw+b5LzaD/QzRTAFsVlk5Kak1mWWqRvl8CV8WvpUsaCm+oVE3a/ZG5g7JLvYuTkkBAwkdh4
+        cSMjiC0ksINRYtPLIoi4tMT1jRPYIWxhiZX/ngPZXEA1zxkl9h9oAmtgE9CV2LG4jQ0kISKw
+        kUni+KRjTF2MHEBVlRKTn6uD1HAKaEgc7t3IAmILA9lHtl1lArFZBFQkGmZ0s4LYvAKWEifu
+        T4WyBSVOznzCAjKGWUBPog3iNmYBeYntb+cwQ9yjIPHz6TKwchEBK4neH+vZIGrEJY7+7GGe
+        wCg0C8mkWQiTZiGZNAtJxwJGllWMkqkFxbnpucWGBUZ5qeV6xYm5xaV56XrJ+bmbGMFRpKW1
+        g3HPqg96hxiZOBgPMUpwMCuJ8O5R25EgxJuSWFmVWpQfX1Sak1p8iFGag0VJnPdC18l4IYH0
+        xJLU7NTUgtQimCwTB6dUA9OR+Q6//vZovPx4LVXrhYDpmxffjkZ7iU78sa70mO3JiYsYX7oZ
+        vFoY13fV81XXtYeG8+wW5OhuVzOXWKRgtsypNGTlxrPvtq8/lPaitrloF9Pxsus/5fq+u0Q4
+        vb0kqKgonPd+2/LvF79Yhaq8/9ZcP2Uh77Fc7ps5pX39Ejw3fv/b9e8Iz5XSk0WPbn0Sk6r9
+        GjW/WfD+1Q17fn1I7Q+u28nVXZnGl9vhUrbL1Sqx9r2HjnvAlvgK18cFgjOv5J9L5+lbrX1J
+        Wnx/v/8qv8Xqcyt0ZllNyZnqacz9PvrgbsGPJ85tDmqyP9lt/lSxqTG3TbfMNGVz9OQyh939
+        QcI/a/JvLApcnpTQIPI1iEGJpTgj0VCLuag4EQA9r7VMEQMAAA==
+X-CMS-MailID: 20210603145716epcas5p151b1e268e09301c4c4c646d5f087b038
+X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA12Te0xbVRzHc3ovtxdMzaU8PGLcWNEFxqMPuewMYW4OzMWpIRnRZMbRG3ql
-        zNLWPnzhlMjGUx6SbLCOx0RkWyUytrW0PBy0kzEz2Hgpq7wmEsWECfLP6mSTPnCL/33yPd9z
-        ft/f75xDYsIlIoLMUxs4nZpViYgg3OqMoeOvt9nlkqVlCZpvshKor3iIj5bckwQ6seLG0F8d
-        bQFoyRGDugcGCGSefwMVfdVBoIbhQh6qrLYQ6OLAeQwtTK/xUcuUlYeq75fgyLoWjK5euwPQ
-        eHcDgSp+shHozNX7PPS15RZAZXXt+J5wZnxiPzNeVclj7KYZPlPT0g+Yy43tfObotcs4s7ro
-        wpmqS2bArF3YwpT0V/Aygw6qUpQcq+B0kZw6R6PIU+emivYfyN6XTSdJpPHSXWinKFLN5nOp
-        orRXMuNfylNttCmKfI9VGTekTFavF4l3p+g0RgMXqdToDakiTqtQaaVSbYKezdcb1bkJOZr8
-        ZKlEIqM3nHKV8qSzFtdO8D+4WbuKF4ITRDkIJCGVCL+/PomXgyBSSNkAPFtYBMoBSQqoYLhu
-        C/F4QqgseG9u2usXUiLYMWri+/QE6LrdDjxMUHGwbmiO7zknlPoMh3bnsvdQjLqBwd6pEuCr
-        JoD1JYu4j5+CXWcsXj2Qeh6Wmef8nmh4t60S83EYvPXNMn+T/xxs9ntC4bHZYb8nGM67e/z6
-        k3CwZ4Xn40+hZfpv4AkBqc8BdNpdAb4FMfyxtNMbQkC9Cq21Di/j1LNworXRHy4NNlvKvIxR
-        W2HXcgPmmQpGxcCObrEHIRUFr7jwzbYKO+/x/88Y9Tgsda7/p9uafvVH2w6/dXfwakCU6eGo
-        TY/UMj2sdRpgZhDOafX5uZxepk189HYvAO+b38HYwKnllQQH4JHAASCJiUIFvdttcqFAwX74
-        EafTZOuMKk7vAPRGl19gEWE5mo1PozZkS2lZUpJkF43oJBkSPSFwc5/IhVQua+De4Tgtp9vc
-        xyMDIwp5Awtszz/RucdmhKbxB6d+SAmradHJwgUPwo9s6x3PWh1uVPa/uwgmE8RBamWP/Jm+
-        WeOe+JGst75rXriSPhyWc2D9NDsnLhi50zrGkfWlU8at9X/07G5X9P1c+vri/C+ZT5u37b3E
-        hIgLzPRvFfNjOw9l1GUfkVaZpuDZ5LLzc/myqb0lC50ZBPXm8cCiyC8dbzP9KfbXXKNxeZMW
-        zaorlgiI7TLQg31jz8XSs4fDjzuPmlsOxrwoOBn9cvQL+L6l3wceKyv+eIFx3062KqoE5+QX
-        tTlRW26k3y06fE76flWgcrCh+JCzWmuJ61cOybXRZPpIaOtoBlVAp9lvNs0kEiJcr2SlOzCd
-        nv0XHi4c/3wEAAA=
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210524084345epcms2p63dde85f3fdc127c29d25ada7d7f539cb
-References: <4bf317c8-4c74-2207-95e2-34c59b14c454@acm.org>
-        <12392bef-e018-8260-5279-16b7b43f5a8f@acm.org>
-        <20210524084345epcms2p63dde85f3fdc127c29d25ada7d7f539cb@epcms2p6>
-        <20210524084546epcms2p2c91dc1df482fd593307892825532c6dd@epcms2p2>
-        <20210604011124epcms2p39a466db169ebbfd2c889e25fba9aa0b4@epcms2p3>
-        <CGME20210524084345epcms2p63dde85f3fdc127c29d25ada7d7f539cb@epcms2p7>
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20210603142546epcas5p2bea63eb4359ddec8ccd257ee3aa9af61
+References: <CGME20210603142546epcas5p2bea63eb4359ddec8ccd257ee3aa9af61@epcas5p2.samsung.com>
+        <87lf7rc9es.fsf@kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->>> +/*
->>>> + * This function will set up HPB read command using host-side L2P map data.
->>>> + * In HPB v1.0, maximum size of HPB read command is 4KB.
->>>> + */
->>>> +void ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->>>> +{
->>> [ ... ]
->>>> +
->>>> +        ufshpb_set_hpb_read_to_upiu(hpb, lrbp, lpn, ppn, transfer_len);
->>>
->>> 'transfer_len' has type int and is truncated to type 'u8' when passed as
->>> an argument to ufshpb_set_hpb_read_to_upiu(). Please handle transfer_len
->>> values >= 256 properly.
->> 
->> Before entering the function, ufshpb_is_supported_chunk() checks whether
->> transfer_len <= hpb->pre_req_max_tr_len which is set to
->> HPB_MULTI_CHUNK_HIGH (128) on initalization.
-> 
->How about adding a WARN_ON_ONCE() in ufshpb_prep() that verifies that
->transfer_len is <= HPB_MULTI_CHUNK_HIGH?
++ codeaurora guys ( Can and Asutosh)
 
-Sure, I will add WARN_ON_ONCE() just after calling ufshpb_is_supported_chunk().
 
-Thanks
 
+> -----Original Message-----
+> From: Felipe Balbi <balbi@kernel.org>
+> Sent: 03 June 2021 19:56
+> To: Alim Akhtar <alim.akhtar@samsung.com>; Avri Altman
+> <avri.altman@wdc.com>; James E.J. Bottomley <jejb@linux.ibm.com>;
+> Martin K. Petersen <martin.petersen@oracle.com>; linux-
+> scsi@vger.kernel.org; linux-arm-msm@vger.kernel.org
+> Subject: UFS failures with v5.13-rc4
 > 
->Thanks,
 > 
->Bart.
+> Hi guys,
 > 
+> Today I managed to trigger some pretty bad faults with with v5.13-rc4
+> running on SM8150 (Snapdragon) and iozone.
 > 
->  
+> It seems the problem only happens when using bfq iosched, as I couldn't
+> trigger it with mq-deadline.
+> 
+> Here's the relevant snippet of console logs, full dmesg.txt attached.
+> 
+> # echo bfq > /sys/block/sdg/queue/scheduler # iozone -i 0 -R -t 8 -s 1G -r
+> 16M -b /tmp/iozone-bfq.xls -F /mnt/file0 /mnt/file1 /mnt/file2 /mnt/file3
+> /mnt/file4 /mnt/file5 /mnt/file6 /mnt/file7
+>         Iozone: Performance Test of File I/O
+>                 Version $Revision: 3.489 $
+>                 Compiled for 64 bit mode.
+>                 Build: linux
+> 
+>         Contributors:William Norcott, Don Capps, Isom Crawford, Kirby
+Collins
+>                      Al Slater, Scott Rhine, Mike Wisner, Ken Goss
+>                      Steve Landherr, Brad Smith, Mark Kelly, Dr. Alain
+CYR,
+>                      Randy Dunlap, Mark Montague, Dan Million, Gavin
+Brebner,
+>                      Jean-Marc Zucconi, Jeff Blomberg, Benny Halevy, Dave
+Boone,
+>                      Erik Habbinga, Kris Strecker, Walter Wong, Joshua
+Root,
+>                      Fabrice Bacchella, Zhenghua Xue, Qin Li, Darren
+Sawyer,
+>                      Vangel Bojaxhi, Ben England, Vikentsi Lapa,
+>                      Alexey Skidanov, Sudhir Kumar.
+> 
+>         Run began: Thu Jan  1 02:29:50 1970
+> 
+>         Excel chart generation enabled
+>         File size set to 1048576 kB
+>         Record Size 16384 kB
+>         Command line used: iozone -i 0 -R -t 8 -s 1G -r 16M -b
+/tmp/iozone-
+> bfq.xls -F /mnt/file0 /mnt/file1 /mnt/file2 /mnt/file3 /mnt/file4
+/mnt/file5
+> /mnt/file6 /mnt/fil
+> e7
+>         Output is in kBytes/sec
+>         Time Resolution = 0.000001 seconds.
+>         Processor cache size set to 1024 kBytes.
+>         Processor cache line size set to 32 bytes.
+>         File stride size set to 17 * record size.
+>         Throughput test with 8 processes
+>         Each process writes a 1048576 kByte file in 16384 kByte records [
+> 2475.173128] ufshcd-qcom 1d84000.ufshc: __ufshcd_issue_tm_cmd: task
+> management cmd 0x80 timed-out [ 2475.182205] ufshcd-qcom
+> 1d84000.ufshc: ufshcd_try_to_abort_task: no response from device. tag = 0,
+> err -110 [ 2475.252049] ufshcd-qcom 1d84000.ufshc: Controller enable
+failed [
+> 2475.317224] ufshcd-qcom 1d84000.ufshc: Controller enable failed [
+> 2475.382038] ufshcd-qcom 1d84000.ufshc: Controller enable failed [
+> 2475.447318] ufshcd-qcom 1d84000.ufshc: Controller enable failed [
+> 2475.453450] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore:
+> Host init failed -5 [ 2475.522779] ufshcd-qcom 1d84000.ufshc: Controller
+> enable failed [ 2475.587983] ufshcd-qcom 1d84000.ufshc: Controller enable
+> failed [ 2475.653027] ufshcd-qcom 1d84000.ufshc: Controller enable failed
+[
+> 2475.719555] ufshcd-qcom 1d84000.ufshc: Controller enable failed [
+> 2475.725690] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore:
+> Host init failed -5 [ 2475.795173] ufshcd-qcom 1d84000.ufshc: Controller
+> enable failed [ 2475.861232] ufshcd-qcom 1d84000.ufshc: Controller enable
+> failed [ 2475.926035] ufshcd-qcom 1d84000.ufshc: Controller enable failed
+[
+> 2475.991184] ufshcd-qcom 1d84000.ufshc: Controller enable failed [
+> 2475.997382] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore:
+> Host init failed -5 [ 2476.064948] ufshcd-qcom 1d84000.ufshc: Controller
+> enable failed [ 2476.129955] ufshcd-qcom 1d84000.ufshc: Controller enable
+> failed [ 2476.194502] ufshcd-qcom 1d84000.ufshc: Controller enable failed
+[
+> 2476.259851] ufshcd-qcom 1d84000.ufshc: Controller enable failed [
+> 2476.265962] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore:
+> Host init failed -5 [ 2476.334428] ufshcd-qcom 1d84000.ufshc: Controller
+> enable failed [ 2476.399788] ufshcd-qcom 1d84000.ufshc: Controller enable
+> failed [ 2476.465468] ufshcd-qcom 1d84000.ufshc: Controller enable failed
+[
+> 2476.529965] ufshcd-qcom 1d84000.ufshc: Controller enable failed [
+> 2476.536086] ufshcd-qcom 1d84000.ufshc: ufshcd_host_reset_and_restore:
+> Host init failed -5 [ 2476.544523] ufshcd-qcom 1d84000.ufshc:
+> ufshcd_err_handler: reset and restore failed with err -5 [ 2476.606521] sd
+> 0:0:0:6: [sdg] tag#0 UNKNOWN(0x2003) Result: hostbyte=0x07
+> driverbyte=0x00 cmd_age=0s [ 2476.615917] sd 0:0:0:6: [sdg] tag#0 CDB:
+> opcode=0x2a 2a 00 00 35 b5 7c 00 00 10 00 [ 2476.623715]
+> blk_update_request: I/O error, dev sdg, sector 28158944 op 0x1:(WRITE)
+> flags 0x4000 phys_seg 16 prio class 0
+
+
