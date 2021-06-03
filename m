@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A54FDC47099
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:10:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C2B1C47096
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:10:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EE22613F1
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:10:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A90A61406
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 17:10:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232740AbhFCRMP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Jun 2021 13:12:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43644 "EHLO mail.kernel.org"
+        id S232829AbhFCRMY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Jun 2021 13:12:24 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43672 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232231AbhFCRL0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Jun 2021 13:11:26 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4F603613F1;
-        Thu,  3 Jun 2021 17:09:41 +0000 (UTC)
+        id S230159AbhFCRL3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 3 Jun 2021 13:11:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 94B1961417;
+        Thu,  3 Jun 2021 17:09:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1622740182;
-        bh=UFy/fNZZcXDiSUPifrg7RaZsPbIx8W3OHjSscJM5XlY=;
+        s=k20201202; t=1622740184;
+        bh=ybWbKRT6SyVWjItDV8O6L3KrhsfiBNd/ktFe2SWzlMc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=il4SVFmUVwrHXf5tnv+NyoIgOplmPLOIwc2ZYWAuqrAVKwPYJFN7/0cI0wj5CLLtV
-         9qwie0FruoBT55iGAmCe8InVPORu/jaUxb7nmfF2OeME7m9HIgVXFZcFSctExGtWUH
-         J+0LM7plD2OaBtd7qT0q7w6YER3RfCcmnWRruMZImzF9KkJZiurpImvaEmUbZblcr9
-         hRa6q93+z3LN6e+/DaAEo8PAMSWUFttLgEOk/RVJVXSma5T93PntN6zDrNLCyw05M3
-         ReQ4OTVOPHuMx46GWv9nUenQqu6abR9886g6UIugdF37avRxLsVRQ+9Gfnb83LK3t9
-         c3GQwWk8VPCTQ==
+        b=jEBRz5vyYKBzwlZdRVshK5IG1093IHjvB2d2YaXO4ct1aN1jUJ8kxnpPHH2ylIGvn
+         vGYM9gbPUyuYvmmgjXZ0N1tEU62DKZfre8QLmX0+ANnEBRXkwwsuSeaJjxupNWF2Bb
+         S7utmgzLDy932rjyNpTEQ4wY4stAwCGSDE6Z0u+w+vXSehgLtarsGSKbAQJJcns0LL
+         BVOOF36IxodcNln8v6QXA4seMRRb0+6MkLLoRea3bF5NR9rHsBLJprfM+O3xlEV7Ey
+         qEd+B+qNlTgit7ss80WW8IQqQ1SJM7imkq4lClbNSFVJZqhO1DW4ZMBH7mBymNsBrQ
+         /7zXBI2fQMHcQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Javed Hasan <jhasan@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
+Cc:     Yang Yingliang <yangyingliang@huawei.com>,
+        Hulk Robot <hulkci@huawei.com>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 18/31] scsi: bnx2fc: Return failure if io_req is already in ABTS processing
-Date:   Thu,  3 Jun 2021 13:09:06 -0400
-Message-Id: <20210603170919.3169112-18-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 20/31] scsi: hisi_sas: Drop free_irq() of devm_request_irq() allocated irq
+Date:   Thu,  3 Jun 2021 13:09:08 -0400
+Message-Id: <20210603170919.3169112-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210603170919.3169112-1-sashal@kernel.org>
 References: <20210603170919.3169112-1-sashal@kernel.org>
@@ -51,34 +52,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Javed Hasan <jhasan@marvell.com>
+From: Yang Yingliang <yangyingliang@huawei.com>
 
-[ Upstream commit 122c81c563b0c1c6b15ff76a9159af5ee1f21563 ]
+[ Upstream commit 7907a021e4bbfa29cccacd2ba2dade894d9a7d4c ]
 
-Return failure from bnx2fc_eh_abort() if io_req is already in ABTS
-processing.
+irqs allocated with devm_request_irq() should not be freed using
+free_irq(). Doing so causes a dangling pointer and a subsequent double
+free.
 
-Link: https://lore.kernel.org/r/20210519061416.19321-1-jhasan@marvell.com
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
+Link: https://lore.kernel.org/r/20210519130519.2661938-1-yangyingliang@huawei.com
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Acked-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/bnx2fc/bnx2fc_io.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index 401743e2b429..a0e776414889 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -1219,6 +1219,7 @@ int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd)
- 		   was a result from the ABTS request rather than the CLEANUP
- 		   request */
- 		set_bit(BNX2FC_FLAG_IO_CLEANUP,	&io_req->req_flags);
-+		rc = FAILED;
- 		goto done;
- 	}
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index 723f51c822af..916447f3c607 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3274,14 +3274,14 @@ hisi_sas_v3_destroy_irqs(struct pci_dev *pdev, struct hisi_hba *hisi_hba)
+ {
+ 	int i;
  
+-	free_irq(pci_irq_vector(pdev, 1), hisi_hba);
+-	free_irq(pci_irq_vector(pdev, 2), hisi_hba);
+-	free_irq(pci_irq_vector(pdev, 11), hisi_hba);
++	devm_free_irq(&pdev->dev, pci_irq_vector(pdev, 1), hisi_hba);
++	devm_free_irq(&pdev->dev, pci_irq_vector(pdev, 2), hisi_hba);
++	devm_free_irq(&pdev->dev, pci_irq_vector(pdev, 11), hisi_hba);
+ 	for (i = 0; i < hisi_hba->cq_nvecs; i++) {
+ 		struct hisi_sas_cq *cq = &hisi_hba->cq[i];
+ 		int nr = hisi_sas_intr_conv ? 16 : 16 + i;
+ 
+-		free_irq(pci_irq_vector(pdev, nr), cq);
++		devm_free_irq(&pdev->dev, pci_irq_vector(pdev, nr), cq);
+ 	}
+ 	pci_free_irq_vectors(pdev);
+ }
 -- 
 2.30.2
 
