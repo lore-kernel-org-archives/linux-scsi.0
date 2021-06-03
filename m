@@ -2,190 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UPPERCASE_50_75,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1E4FC47096
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 12:18:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ED3FBC47082
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 12:22:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCC78610A1
-	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 12:18:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C3954610C9
+	for <linux-scsi@archiver.kernel.org>; Thu,  3 Jun 2021 12:22:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229927AbhFCMUe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 3 Jun 2021 08:20:34 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:13426 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S229765AbhFCMUe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2021 08:20:34 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 153CAO7M011040
-        for <linux-scsi@vger.kernel.org>; Thu, 3 Jun 2021 05:18:50 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=pfpt0220;
- bh=Q9U88xC49m5YWxGPIUgLDyr6ZS/eDaNiREhQ9H1KR/g=;
- b=co7RFv9PBdeBdRPhdNuA8gjghHEe/YKw8RXYk8d+QX4t8pzcdysRysZiHcq0hl8C4PA6
- st8gL/D2wKPjgu+NFrjOvVkBrMzzer4shEslqqdPJC9PqxbYpx2zwjOTNl/qjtO7fvaW
- TtU4Ap7MdkI2G/jLPQqb4Xiz0WAfgbZ4DAORIAnVQpikDKsCsjxQiLvSwngtbLfct1c7
- s8SgBXBxAUDkBvprNnHgP2yft1/Uf+iHeZeClduz5ZVHto8LrENCfPw6biGsnuGAkwPu
- ZUmgEZLdjl4PqoEtGS4z92WfS0kBIxs502ZRXew3nd078FuuPZc8kdFpwHXYJwiSpmOl uA== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 38xe7xuhfe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Jun 2021 05:18:50 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.2; Thu, 3 Jun
- 2021 05:18:48 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Thu, 3 Jun 2021 05:18:48 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 96B133F703F;
-        Thu,  3 Jun 2021 05:18:48 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 153CImFk010156;
-        Thu, 3 Jun 2021 05:18:48 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 153CImDo010155;
-        Thu, 3 Jun 2021 05:18:48 -0700
-From:   Javed Hasan <jhasan@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>, <jhasan@marvell.com>
-Subject: [PATCH 5/5] fc: FDMI enhancement
-Date:   Thu, 3 Jun 2021 05:16:23 -0700
-Message-ID: <20210603121623.10084-6-jhasan@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20210603121623.10084-1-jhasan@marvell.com>
-References: <20210603121623.10084-1-jhasan@marvell.com>
+        id S229864AbhFCMYk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 3 Jun 2021 08:24:40 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:54840 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229747AbhFCMYk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jun 2021 08:24:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1622722975; x=1654258975;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=y/CwrbWKrG++2Uj3wQRm676Y0+UyeOBUYgYmisKh0P4=;
+  b=WIsQg3DFEkcA4a0GI4+tvvcIfKNd1HCmmvOuh3M18FSUbsgeJbnYrkMY
+   wUjAplG+pA/5eU7+W8+HhtM1XuzjEIGpqi3vgmvbe8bMNKFU/p9Vbljwq
+   BUlwoi73UCiKbSSitjkQglNFA+TW86SvgwZT5/1lse+AAZJ8xX54VBjmJ
+   MB9dUQi3+PzexO30KxrFVErw8ZPg1uwR2RkOtFfCfs1DaamV4mg2A+iGq
+   tDrsfrWt9L3iIApl31Jnu1sCCemsk62klpYVfGqKFQxlZ9zzQWJdc1BXp
+   Q627g/8OQpB4TroKQ+YmznrhiRPbuhLZ2u8SuLz/kpPk/63Cm/UEJ2pmL
+   Q==;
+IronPort-SDR: B4t/aUrYeWeP+jMr+oaakVCxdv9b0opzAZaW0DEx8pBvJeMrcEfE+/R5hHzCgRIQcJrXI12Qk7
+ 6J/5fQsSbzy49a5tenl9peDinx43h02Q6GVvTcz/42X5xBy2Ub4J41e0Tp0jpGKC+agLkhUmUk
+ fArf14vGHSXVa/0T5iCY6jlaPjsab7FE8Py9Su+m+3f2nI6u3hVRrkubm/4dmcEsC7ST+SsKp/
+ MOdr3u90lQTWvXLiNHT/wJi6xVPr7wjioUsg7zUvhvKwWf9d7regdCoIMGm+dyFQtgtcl763oB
+ XJ4=
+X-IronPort-AV: E=Sophos;i="5.83,244,1616428800"; 
+   d="scan'208";a="170590448"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 03 Jun 2021 20:22:55 +0800
+IronPort-SDR: Vqjulv37YY5kQgmTmF1zaZ2WZ7DOj8mmuFNPyRoLkrARBxKkpuOjF9qsNzsUlGrr/ZMjODo9hR
+ dNT8R5oMQRaj2TCqJ+HYOqBBH/6mta9mUF9LU4JcMX7jFsJ16rg46U9FvIfLpIS3p0HPqNWi3Z
+ oLbI9KXpMmYfxmX1E/C2TG5qbjC9SigKPzc4m+Vgi8cjmsl1j7twFyswoqphRKszLoWuVZcxaH
+ nrDOx9WAkvUBYUqDxmfEuiFj5z3tn6F3Vcs2SqxUAuaSNQwaMfN9yYMSRv361PUzmfR8a7gkEt
+ ReH+Yk6qtZsWUXCrI37fleNO
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2021 05:00:42 -0700
+IronPort-SDR: /EaBnEqZ7iDFmsujOI9OXxzp9ChL+KbPIs8lwYtqKP5qz4clM1vBJUixEipr5jQN0ZxfpONao0
+ o1PQXz2aUngEiSXNOhfjNlpeCo3wUl6sUPuKupsG1lFAYwtl4VhsrmsKSDa7wLzmMuShSZICXL
+ bhRcmUIhG2pxHkwGXYmq3c7zhLwIqDTUJI2M0u0kNRp0CJHUyHtmFAQ7DapIJ8wz9eDbtpfQel
+ mTATjylGrLZW0ZvpBmHsle+Z4bfP4bqU0WcTz+icH03TWkr3YhABTV15Mmsg4BsLcHsn4h1ByC
+ aSA=
+WDCIronportException: Internal
+Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
+  by uls-op-cesaip02.wdc.com with ESMTP; 03 Jun 2021 05:22:53 -0700
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Asutosh Das <asutoshd@codeaurora.org>
+Cc:     linux-kernel@vger.kernel.org, Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH] scsi: ufs: Remove irrelevant reference to non-existing doc
+Date:   Thu,  3 Jun 2021 15:22:09 +0300
+Message-Id: <20210603122209.635799-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-ORIG-GUID: x3xiDx5xf2t3eY0r1fR7fAz7QztsTcaO
-X-Proofpoint-GUID: x3xiDx5xf2t3eY0r1fR7fAz7QztsTcaO
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-06-03_08:2021-06-02,2021-06-03 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Added RHBA and RPA attributes type and length.
-As par FC_GC_7 document section "Table 400 – Attribute Entry Types and associated Values"
-ascii type attributes length can be vary from "4 to 256 byte".
-If we keep all RHBA ascii attributes length 256 then total length is 
-going upto 2750, which is far more than 2048 (max frame size).
+Remove all references to the description of __ufshcd_wl_{suspend,resume}
+as no such description exist.
 
-In libfc we do have logic to split FCP commands but not for CT commands.
-Practically all version/names get covered with in 64 bytes except OS 
-name, for that we need 128 bytes.
-Hence length of all RBHA ascii attributes length reduced to 64 bytes
-and 128 bytes in case OS name.
+fixes: b294ff3e3449 (scsi: ufs: core: Enable power management for wlun)
 
-RPA attributes total length is with in frame size.
-
-Signed-off-by: Javed Hasan <jhasan@marvell.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- include/scsi/fc/fc_ms.h | 55 +++++++++++++++++++++++++++++++++++------
- 1 file changed, 48 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/include/scsi/fc/fc_ms.h b/include/scsi/fc/fc_ms.h
-index 800d53dc9470..00191695233a 100644
---- a/include/scsi/fc/fc_ms.h
-+++ b/include/scsi/fc/fc_ms.h
-@@ -24,6 +24,12 @@
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index af527e77fe66..362a1b0e0afd 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -9122,7 +9122,6 @@ static void ufshcd_wl_shutdown(struct device *dev)
+  *
+  * This function will put disable irqs, turn off clocks
+  * and set vreg and hba-vreg in lpm mode.
+- * Also check the description of __ufshcd_wl_suspend().
   */
- #define	FC_FDMI_SUBTYPE	    0x10 /* fs_ct_hdr.ct_fs_subtype */
- 
-+/*
-+ * Management server FDMI specifications.
-+ */
-+#define	FDMI_V1	    1 /* FDMI version 1 specifications */
-+#define	FDMI_V2	    2 /* FDMI version 2 specifications */
-+
- /*
-  * Management server FDMI Requests.
+ static int ufshcd_suspend(struct ufs_hba *hba)
+ {
+@@ -9158,7 +9157,6 @@ static int ufshcd_suspend(struct ufs_hba *hba)
+  *
+  * This function basically turns on the regulators, clocks and
+  * irqs of the hba.
+- * Also check the description of __ufshcd_wl_resume().
+  *
+  * Returns 0 for success and non-zero for failure
   */
-@@ -57,6 +63,13 @@ enum fc_fdmi_hba_attr_type {
- 	FC_FDMI_HBA_ATTR_FIRMWAREVERSION = 0x0009,
- 	FC_FDMI_HBA_ATTR_OSNAMEVERSION = 0x000A,
- 	FC_FDMI_HBA_ATTR_MAXCTPAYLOAD = 0x000B,
-+	FC_FDMI_HBA_ATTR_NODESYMBLNAME = 0x000C,
-+	FC_FDMI_HBA_ATTR_VENDORSPECIFICINFO = 0x000D,
-+	FC_FDMI_HBA_ATTR_NUMBEROFPORTS = 0x000E,
-+	FC_FDMI_HBA_ATTR_FABRICNAME = 0x000F,
-+	FC_FDMI_HBA_ATTR_BIOSVERSION = 0x0010,
-+	FC_FDMI_HBA_ATTR_BIOSSTATE = 0x0011,
-+	FC_FDMI_HBA_ATTR_VENDORIDENTIFIER = 0x00E0,
- };
- 
- /*
-@@ -65,14 +78,21 @@ enum fc_fdmi_hba_attr_type {
- #define FC_FDMI_HBA_ATTR_NODENAME_LEN		8
- #define FC_FDMI_HBA_ATTR_MANUFACTURER_LEN	64
- #define FC_FDMI_HBA_ATTR_SERIALNUMBER_LEN	64
--#define FC_FDMI_HBA_ATTR_MODEL_LEN		256
--#define FC_FDMI_HBA_ATTR_MODELDESCR_LEN		256
--#define FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN	256
--#define FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN	256
--#define FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN	256
--#define FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN	256
--#define FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN	256
-+#define FC_FDMI_HBA_ATTR_MODEL_LEN		64
-+#define FC_FDMI_HBA_ATTR_MODELDESCR_LEN		64
-+#define FC_FDMI_HBA_ATTR_HARDWAREVERSION_LEN	64
-+#define FC_FDMI_HBA_ATTR_DRIVERVERSION_LEN	64
-+#define FC_FDMI_HBA_ATTR_OPTIONROMVERSION_LEN	64
-+#define FC_FDMI_HBA_ATTR_FIRMWAREVERSION_LEN	64
-+#define FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN	128
- #define FC_FDMI_HBA_ATTR_MAXCTPAYLOAD_LEN	4
-+#define FC_FDMI_HBA_ATTR_NODESYMBLNAME_LEN	64
-+#define FC_FDMI_HBA_ATTR_VENDORSPECIFICINFO_LEN	4
-+#define FC_FDMI_HBA_ATTR_NUMBEROFPORTS_LEN	4
-+#define FC_FDMI_HBA_ATTR_FABRICNAME_LEN	8
-+#define FC_FDMI_HBA_ATTR_BIOSVERSION_LEN	64
-+#define FC_FDMI_HBA_ATTR_BIOSSTATE_LEN    4
-+#define FC_FDMI_HBA_ATTR_VENDORIDENTIFIER_LEN 8
- 
- /*
-  * Port Attribute Type
-@@ -84,6 +104,16 @@ enum fc_fdmi_port_attr_type {
- 	FC_FDMI_PORT_ATTR_MAXFRAMESIZE = 0x0004,
- 	FC_FDMI_PORT_ATTR_OSDEVICENAME = 0x0005,
- 	FC_FDMI_PORT_ATTR_HOSTNAME = 0x0006,
-+	FC_FDMI_PORT_ATTR_NODENAME = 0x0007,
-+	FC_FDMI_PORT_ATTR_PORTNAME = 0x0008,
-+	FC_FDMI_PORT_ATTR_SYMBOLICNAME = 0x0009,
-+	FC_FDMI_PORT_ATTR_PORTTYPE = 0x000A,
-+	FC_FDMI_PORT_ATTR_SUPPORTEDCLASSSRVC = 0x000B,
-+	FC_FDMI_PORT_ATTR_FABRICNAME = 0x000C,
-+	FC_FDMI_PORT_ATTR_CURRENTFC4TYPE = 0x000D,
-+	FC_FDMI_PORT_ATTR_PORTSTATE = 0x101,
-+	FC_FDMI_PORT_ATTR_DISCOVEREDPORTS = 0x102,
-+	FC_FDMI_PORT_ATTR_PORTID = 0x103,
- };
- 
- /*
-@@ -95,6 +125,17 @@ enum fc_fdmi_port_attr_type {
- #define FC_FDMI_PORT_ATTR_MAXFRAMESIZE_LEN	4
- #define FC_FDMI_PORT_ATTR_OSDEVICENAME_LEN	256
- #define FC_FDMI_PORT_ATTR_HOSTNAME_LEN		256
-+#define FC_FDMI_PORT_ATTR_NODENAME_LEN		8
-+#define FC_FDMI_PORT_ATTR_PORTNAME_LEN		8
-+#define FC_FDMI_PORT_ATTR_SYMBOLICNAME_LEN	256
-+#define FC_FDMI_PORT_ATTR_PORTTYPE_LEN		4
-+#define FC_FDMI_PORT_ATTR_SUPPORTEDCLASSSRVC_LEN	4
-+#define FC_FDMI_PORT_ATTR_FABRICNAME_LEN	8
-+#define FC_FDMI_PORT_ATTR_CURRENTFC4TYPE_LEN	32
-+#define FC_FDMI_PORT_ATTR_PORTSTATE_LEN		4
-+#define FC_FDMI_PORT_ATTR_DISCOVEREDPORTS_LEN	4
-+#define FC_FDMI_PORT_ATTR_PORTID_LEN		4
-+
- 
- /*
-  * HBA Attribute ID
+@@ -9196,7 +9194,6 @@ static int ufshcd_resume(struct ufs_hba *hba)
+  * @hba: per adapter instance
+  *
+  * Check the description of ufshcd_suspend() function for more details.
+- * Also check the description of __ufshcd_wl_suspend().
+  *
+  * Returns 0 for success and non-zero for failure
+  */
+@@ -9248,7 +9245,6 @@ EXPORT_SYMBOL(ufshcd_system_resume);
+  * @hba: per adapter instance
+  *
+  * Check the description of ufshcd_suspend() function for more details.
+- * Also check the description of __ufshcd_wl_suspend().
+  *
+  * Returns 0 for success and non-zero for failure
+  */
 -- 
-2.26.2
+2.25.1
 
