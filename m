@@ -2,82 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC4A8C4743D
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Jun 2021 18:23:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23310C4743C
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Jun 2021 18:26:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B37A3613F4
-	for <linux-scsi@archiver.kernel.org>; Fri,  4 Jun 2021 18:23:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0297861406
+	for <linux-scsi@archiver.kernel.org>; Fri,  4 Jun 2021 18:26:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229854AbhFDSZE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 4 Jun 2021 14:25:04 -0400
-Received: from mail-pg1-f178.google.com ([209.85.215.178]:44975 "EHLO
-        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229726AbhFDSZE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jun 2021 14:25:04 -0400
-Received: by mail-pg1-f178.google.com with SMTP id y11so384117pgp.11
-        for <linux-scsi@vger.kernel.org>; Fri, 04 Jun 2021 11:23:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=UX1G2MyuSMoI9qtV/IxvY2Ox2XX3g0K693XM4XnGuQs=;
-        b=brEmXwIeWk511PUJq83cxnT/omO9wa73pzK4DBRRfyw6IWWvIhLLWGnHkQu0cTXiId
-         osUMl3zdzBrUmpwlIil/zSWrkJ02MAiC0TmLGGOkxs0YiRQNoKaQ23SXe129ISop5J0w
-         psq9IuXjXRSwfDxo+lWbs78DFv2LT0K2q7H8s=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=UX1G2MyuSMoI9qtV/IxvY2Ox2XX3g0K693XM4XnGuQs=;
-        b=s/stebg1Mu2iOvYiwRhk/p/dWZCWg8eYKLQ2/54I21zrDDp5rdfqYMYFrmK3HmI+cB
-         qO7AoLwteL5I/7QaV1BReKvGTBqzt24gximqUsXtkXRU6MBelYkBiQr92/SUqqIfPpbg
-         W0bNmWZ2fMY/eXaEFzTPHezeSYtRzvtFKG3OV69tJDZpO9CF7Q9H+2NP2dW5gyHf6pYL
-         3W1uJ5b/sNMe3L3kMGJ5R5iEWTOmg/8XgD1uK5JeR0lXVvQnYXE0Avwtt1NovvSJQF4f
-         4zMwPyN/cwg6wnpkkwi8BI+NBHVJOmrUfpVBxCFAQ7qeJIgBYFcyNf/z2s5vjJ+e3Kjk
-         LAnw==
-X-Gm-Message-State: AOAM5306zVPweR9RJ/eflzWmYpRGvtjOee4YTYtqwyi3Wx7rl2X2roe8
-        hP8Odq1hYB3QKw3rCqGTqilQGg==
-X-Google-Smtp-Source: ABdhPJx/yQn8DS3AzA7xRJxe/WtzLqKi+h8G2XgHEWQGo8dMvTira3vRnBtv6+zBFbCRjJOcdsXa1w==
-X-Received: by 2002:a62:148e:0:b029:2e4:e5a5:7e33 with SMTP id 136-20020a62148e0000b02902e4e5a57e33mr5846985pfu.9.1622830937626;
-        Fri, 04 Jun 2021 11:22:17 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id t13sm2352888pfh.97.2021.06.04.11.22.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 04 Jun 2021 11:22:17 -0700 (PDT)
-Date:   Fri, 4 Jun 2021 11:22:15 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] scsi: mpi3mr: Fix fall-through warning for Clang
-Message-ID: <202106041121.41CF254@keescook>
-References: <20210604023530.GA180997@embeddedor>
+        id S229982AbhFDS2I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 4 Jun 2021 14:28:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38264 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229769AbhFDS2H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jun 2021 14:28:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1622831180;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=Mv7uXkgY5PVRquRJS6H5Ba6nGlgoWs763Ui8NnpQ+gw=;
+        b=NbT0IM2wkSfY2xX/hqmP8VZqbPqu1FKU2j6OBbpYicMcY9qwIeSnMk4YpQD7HxGuSAeoct
+        L6nyjTcDtb+JAxWfx28Ucq4Hj58Yu5TbQCUrkdGKy5V5GdZZCPsdEM+mxY9BfoJ4O2oVJL
+        ViB6NVaQ7ILpd0mY9DzQ+26zjkesxkE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-508-oiwmGK49MZWbKSbGQSYOfQ-1; Fri, 04 Jun 2021 14:26:18 -0400
+X-MC-Unique: oiwmGK49MZWbKSbGQSYOfQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 89C6D10CE783;
+        Fri,  4 Jun 2021 18:26:17 +0000 (UTC)
+Received: from localhost.localdomain.com (unknown [10.40.192.170])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AB9375D74B;
+        Fri,  4 Jun 2021 18:26:16 +0000 (UTC)
+From:   Tomas Henzl <thenzl@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     kashyap.desai@broadcom.com, sathya.prakash@broadcom.com
+Subject: [PATCH] mpi3mr: fix a double free
+Date:   Fri,  4 Jun 2021 20:26:15 +0200
+Message-Id: <20210604182615.9593-1-thenzl@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210604023530.GA180997@embeddedor>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jun 03, 2021 at 09:35:30PM -0500, Gustavo A. R. Silva wrote:
-> In preparation to enable -Wimplicit-fallthrough for Clang, fix a
-> fall-through warning by explicitly adding a break statement instead
-> of just letting the code fall through to the next case.
-> 
-> Link: https://github.com/KSPP/linux/issues/115
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Fix a double free, scsi_tgt_priv_data will be freed
+in mpi3mr_target_destroy.
+I've also removed a second init of starget->hostdata
+with the same value.
 
-Looks right.
+Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
-
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index a54aa009ec5a..0681d9133fe4 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -3300,7 +3300,6 @@ static int mpi3mr_target_alloc(struct scsi_target *starget)
+ 	spin_lock_irqsave(&mrioc->tgtdev_lock, flags);
+ 	tgt_dev = __mpi3mr_get_tgtdev_by_perst_id(mrioc, starget->id);
+ 	if (tgt_dev && !tgt_dev->is_hidden) {
+-		starget->hostdata = scsi_tgt_priv_data;
+ 		scsi_tgt_priv_data->starget = starget;
+ 		scsi_tgt_priv_data->dev_handle = tgt_dev->dev_handle;
+ 		scsi_tgt_priv_data->perst_id = tgt_dev->perst_id;
+@@ -3309,10 +3308,8 @@ static int mpi3mr_target_alloc(struct scsi_target *starget)
+ 		tgt_dev->starget = starget;
+ 		atomic_set(&scsi_tgt_priv_data->block_io, 0);
+ 		retval = 0;
+-	} else {
+-		kfree(scsi_tgt_priv_data);
++	} else
+ 		retval = -ENXIO;
+-	}
+ 	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
+ 
+ 	return retval;
 -- 
-Kees Cook
+2.31.1
+
