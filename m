@@ -2,230 +2,254 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABBA8C4743D
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Jun 2021 23:54:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D21B7C47096
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Jun 2021 15:49:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88179613B4
-	for <linux-scsi@archiver.kernel.org>; Sat,  5 Jun 2021 23:54:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABD7B61429
+	for <linux-scsi@archiver.kernel.org>; Sun,  6 Jun 2021 15:49:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230084AbhFEXz6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 5 Jun 2021 19:55:58 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:47304 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230022AbhFEXz6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Jun 2021 19:55:58 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 155Ns5PH097134;
-        Sat, 5 Jun 2021 23:54:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=tF3493mO0IfVOZj48r4o9zB7f//KSObg2jiKuIGijjQ=;
- b=ahCEUR9R/rCiqMOaaplTMJP8SWa7NJBfroB2qx0HXsb8YP1FO5gcblA3aPrmH77FH433
- I8TmOprT/YCaioF0z8MFpghIB98jlDvkkcRKtaQUV2cmrC2sP2Skk4JnSVfd3JoypxJR
- hQI9pdaG/gdEZ+v8fnl0KRveD87X1iBJ3dKl2p7ENQYVr1BSE9OhIagPnqa7PcU7WWjs
- 8Rr7W14fB19n4I5GpdFvBfkKpPGM0Dh2J/5Jxove6uFBaxVt3GY2JeIdNJFOLgF9nJF3
- ySYVMDCN6i9MrsdSORCew5lietEq6s2C3ZVNIryE0MREhgsM9P/8PgpUx0L2fVY9tPX1 OA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 39017n8q9p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 05 Jun 2021 23:54:05 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 155NoBEE130172;
-        Sat, 5 Jun 2021 23:54:04 GMT
-Received: from nam12-mw2-obe.outbound.protection.outlook.com (mail-mw2nam12lp2045.outbound.protection.outlook.com [104.47.66.45])
-        by userp3030.oracle.com with ESMTP id 38yxcsv77y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 05 Jun 2021 23:54:04 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=n34nHvzLKeGokXDP78whzBn7xf5FScCuqo3W0mGx/gOmJoN2szKqLoAOpYgeQmdoSLQnCXlwsIgK3FNdirdcwaZCzsUYvPAuXZEp6M8aGg7WFvbIDeJDzenOTOno4tcB5WszLKp1zS05ftKjPOSO741ltdxMqwyr0DVeM7eUNgmS3/vvaCZxmBHQsKfblDrNDs/YSri01n1Md6ArmTTqr9GqibbcyvLDE1vnvxtKw66cAMLtfLwec4S4OqGwioe/Sg3wzdKWn/FL3oTwZyFJJxBg9PXFmR32fQLJ+a0qCdNkeCyWCyLd2RarjFDSvT/bNgkggni5GblZ66VYQSzpVw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tF3493mO0IfVOZj48r4o9zB7f//KSObg2jiKuIGijjQ=;
- b=RY2P6U6MZXXuuZjZ7z9ejVXGSST9+P1A6jMwPFjH62Ur7U+elFKd4AZJ2RxyWsOFOFZjjs7ggQ7CXvH53uRIMWgt+6JaXkQMCjjOCm5jHiI0OyWd6xMzTL32wZZ4QRuPwdQgG/dyY9Nb0mb5VzYa3M4BynFJxzVYFjLdYsJPKdI4I+boR8C1+wCmXt1z4+cRe3K9UohXOQN5LLD3EfJrtEaZaXOHGmbfOtPOf+r4OXN7B/vOCpY8hnS+qtz7HF1TLxhk3HAbTiQgDvvfGd6oZtXu7ThXw9VR6hT/f1/LszWXNUxjVQ8cUinDwv/dyN0Zlth9I2UG+DmQtYD0uwD+3g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tF3493mO0IfVOZj48r4o9zB7f//KSObg2jiKuIGijjQ=;
- b=vu5+nKjH9ZJHOvrXEmZTxCrdtymtFJ23GJOY0Bt/Xp7HxzNoBmkeQd8a4SpttwrR/opXPB4sS7rADPWMcUC+tNjYTIiNPHdQAcXooH6d2XX/8+M76RLCANjjmmnK/sQ3JAVO7ijrOGopp+VQo8ZvhSz6jpf0BhWw3QwYv6MHt54=
-Authentication-Results: lists.linux-foundation.org; dkim=none (message not
- signed) header.d=none;lists.linux-foundation.org; dmarc=none action=none
- header.from=oracle.com;
-Received: from BYAPR10MB3573.namprd10.prod.outlook.com (2603:10b6:a03:11e::32)
- by BYAPR10MB3285.namprd10.prod.outlook.com (2603:10b6:a03:159::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.23; Sat, 5 Jun
- 2021 23:54:01 +0000
-Received: from BYAPR10MB3573.namprd10.prod.outlook.com
- ([fe80::b09d:e36a:4258:d3d0]) by BYAPR10MB3573.namprd10.prod.outlook.com
- ([fe80::b09d:e36a:4258:d3d0%7]) with mapi id 15.20.4173.030; Sat, 5 Jun 2021
- 23:54:01 +0000
-Subject: Re: [PATCH 7/9] vhost: allow userspace to create workers
-To:     Stefan Hajnoczi <stefanha@redhat.com>
-Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
-        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
-References: <20210525180600.6349-1-michael.christie@oracle.com>
- <20210525180600.6349-8-michael.christie@oracle.com>
- <YLjnk5GpFaCCOqCU@stefanha-x1.localdomain>
-From:   michael.christie@oracle.com
-Message-ID: <0c1aef53-4850-8c46-0706-9b7276716e68@oracle.com>
-Date:   Sat, 5 Jun 2021 18:53:58 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.11.0
-In-Reply-To: <YLjnk5GpFaCCOqCU@stefanha-x1.localdomain>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [73.88.28.6]
-X-ClientProxiedBy: DM5PR19CA0013.namprd19.prod.outlook.com
- (2603:10b6:3:151::23) To BYAPR10MB3573.namprd10.prod.outlook.com
- (2603:10b6:a03:11e::32)
+        id S230149AbhFFPvF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 6 Jun 2021 11:51:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39116 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230090AbhFFPvE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 6 Jun 2021 11:51:04 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 04BCCC061766;
+        Sun,  6 Jun 2021 08:49:14 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id E4EA21280946;
+        Sun,  6 Jun 2021 08:49:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1622994552;
+        bh=FYl7mwu6LLvSpk3rnuHAfiCIgSiclVR/MbkXA3/WIEQ=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=W0bKIKp5rhOQNfnbJy8PsMAVgCrijhuZ2Yn3MPEarIeoDyjlkyq1/xjVs0vJ0BOYp
+         G0keR26GLTFCWaM3Y4pbZyS9tJ8K6DsoiF0gts1C4TZ8xZCgGg2oc5kbzS2O9tBNIY
+         We3o0RUjO3B8ZOpKk4XCzKEncJ7imvCuY8NOdFoA=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id TTzNMhhgMJha; Sun,  6 Jun 2021 08:49:12 -0700 (PDT)
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::c447])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 23526128093E;
+        Sun,  6 Jun 2021 08:49:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1622994552;
+        bh=FYl7mwu6LLvSpk3rnuHAfiCIgSiclVR/MbkXA3/WIEQ=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=W0bKIKp5rhOQNfnbJy8PsMAVgCrijhuZ2Yn3MPEarIeoDyjlkyq1/xjVs0vJ0BOYp
+         G0keR26GLTFCWaM3Y4pbZyS9tJ8K6DsoiF0gts1C4TZ8xZCgGg2oc5kbzS2O9tBNIY
+         We3o0RUjO3B8ZOpKk4XCzKEncJ7imvCuY8NOdFoA=
+Message-ID: <22894c5d4fd4bcfa29bd945ce81112606d2fe5fc.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.13-rc4
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sun, 06 Jun 2021 08:49:10 -0700
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [20.15.0.5] (73.88.28.6) by DM5PR19CA0013.namprd19.prod.outlook.com (2603:10b6:3:151::23) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4195.21 via Frontend Transport; Sat, 5 Jun 2021 23:54:00 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 60ceb576-d062-423f-0e71-08d9287d3107
-X-MS-TrafficTypeDiagnostic: BYAPR10MB3285:
-X-Microsoft-Antispam-PRVS: <BYAPR10MB3285D7242B6487FFF82524DBF13A9@BYAPR10MB3285.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:9508;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 86qtMKSrnGRnoVuCfgOPs1DE/RaFp4sQw5YoafpHx1hHjNuegvLKvDrildirsaWpi7/ww1VCXrYStMP5Yxv3hmNLE01lpthgNfi4EflmpGlzznP2ZTg1j6UANVZzTuzhHZRHnb4yRM44RZYadDdnLolLfshy4ICzAZc0K7Ob3KVWP76ug5EKTMK5L1VLw/9KGG8/kuUWBemkqQ4Y/pPzFqaadmWoh1i14HqnQ+REyvPKPt0EztPb5VWOpiV2V3uAIatm+AmC03bxpPzh2IPerj3Upb0lPrRomaHRB5U/tcieXdTx67uG4N/JeJTvjZEHNcbK1lyQ+iMwmXP6CVsRZUxaZbOjfl6H3l5L9QEBkGvQBHsl3kT5wb7CurDuHzOnaoJa/dHwHqN0orGmUrG2CsXgWGedFBn8OD9sMI9vIHAkFSA7mR5rxaRLdKQPhWSvnOfevnqlnZCXZbMPidzEdg7JenBGZ7xWsbZ368nEoX/f9xS72/29Hgw5ifitF/jxzTAPekZV+9zLXGO5Q4/P4LLonmjhc0AA1LQchGS5dA6C66+VeZc4px3ISpefHc60iA/IkaKnkvpQKPa0dcI8NoQsfzNjLEk0EBqE3XJ/PKaseXsCZpO3vOWEko4VUIa27R3MY0rhH+Ttj8xouPi6EcsRabe1PAMxUoK6V6Z4/BamEZWtSIWnfpzYDGZ/BStI
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BYAPR10MB3573.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(366004)(346002)(376002)(39860400002)(396003)(6916009)(6706004)(8676002)(6486002)(36756003)(38100700002)(9686003)(16576012)(31696002)(86362001)(478600001)(31686004)(2906002)(8936002)(316002)(4326008)(66556008)(66946007)(83380400001)(956004)(2616005)(26005)(186003)(53546011)(5660300002)(16526019)(66476007)(78286007)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData: =?Windows-1252?Q?pkwqSDfaSwpgrUFV6lHnXX62ZmE24XseAl0W+eLkiJ13BeSRDf2h48BJ?=
- =?Windows-1252?Q?CnirbL9sP0IiNwlD1ddZL2BEdRHh8t6oJdv/Xohy08elp9APOXHjSNyy?=
- =?Windows-1252?Q?SRN/Qb034tIKo5942lBNGW21qtw+haMqVb8OiIdssy3PrffdRghk0Hyi?=
- =?Windows-1252?Q?RPzCW10maVROy1+zvB1uiYfhJNHIfumlhNmeAJEm6oQ51vlK2PfwhA05?=
- =?Windows-1252?Q?BBlCSo47Q+87JPlpPs6dUb0jDClg9gWrRaxwJlyaDImzux6gVb2VW9Sp?=
- =?Windows-1252?Q?lK0UpuLpWnB6UWHZikBln5NKPrMQedjmYz00WyFEL9fBdlgqkm8JzR7S?=
- =?Windows-1252?Q?AHaNcQQGZskmZjpozV0R1HfsG4ZUlULyB2MtKGBBa1V+vTXsbTGtVicG?=
- =?Windows-1252?Q?vCUqIXJeN1doG9Nw+vOMM6iKiUc9PSxNHpmCqCMIlmdIy/qwF399vJth?=
- =?Windows-1252?Q?2Mo4/4Awx+3ch5/2b+irU9proMM3CEqARZWXnvlw4oCraSiyUURXXxdt?=
- =?Windows-1252?Q?pCfLOz+UCARJp3zuYX4LjEIg2LmZs+7LrgljEc2/GLqcPt3+gVapSGMD?=
- =?Windows-1252?Q?xBCh0oBI7gUBhoWb2g2y32dqUZW8G6qVeXXekayG+7z4jwN94TdvYiaB?=
- =?Windows-1252?Q?FktJHUrGFEDArs4aEiG4AQVp7pEy8EZwoW+EW+KDVTab0cXWZvM4zA2M?=
- =?Windows-1252?Q?mcyrXRecBs1R+9wYstJYkvE1lZBnenn2VVNquNsEqBCXU2NRweaFn4H0?=
- =?Windows-1252?Q?4whvgYboOEgU+KlUrpwxnZnJ/YZEWqlkgvNnItqb4chGGoSzmijauxlf?=
- =?Windows-1252?Q?6ypGyd4goMWP6D8blHc3IKQDbSdSIDgLT0YS9dDZf9g84h6bxW+wmVBI?=
- =?Windows-1252?Q?vAGAeLMIQfC4GAh6lbiXiJ/vtZwMNTTRcmDi7df2uozfgc0Aa3yfqqHR?=
- =?Windows-1252?Q?FDI9rjvidf9hv/VBt14WRYngKjJS7xoes+XrwVC8ULkziGGcl4NAO0s5?=
- =?Windows-1252?Q?mtpVHchcqxIuP1c9pjTCSbl1mjeU3KphITQ3vhByAN+W5uabtmq8zDsE?=
- =?Windows-1252?Q?07/YYH9w/jG/XgLz/K7UYo80d9nJ5HYG6SmfyqfMNbxaqH/B4vLxbKdf?=
- =?Windows-1252?Q?ub99dMU4xzOBXSN3d0tnecI46xY2Ka+/FUOBrWGpMEAPZr9Vy2oUlcfh?=
- =?Windows-1252?Q?PuUEore6wI5HcVhaWwnQ8lg3HDAOzMmE3TDEa3NLph/MWUkdJKD2qTT7?=
- =?Windows-1252?Q?qRSOMH+D+VnP1YYKxuTXjkMwbDSiwuPQy4QcnicJz4eAfFft3lzmWSo/?=
- =?Windows-1252?Q?nEQEjA6gBCoT4PYtJ+Y/Oy7fipnEdEmG8ZBuODOuLklfc/e2YiIPZcfl?=
- =?Windows-1252?Q?OSTpfxlowuHmT9XnfUG3e3QcvSi/M7xkQxbrq8h9jbVkrSlgTIUAa52B?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 60ceb576-d062-423f-0e71-08d9287d3107
-X-MS-Exchange-CrossTenant-AuthSource: BYAPR10MB3573.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jun 2021 23:54:01.0553
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: L5utPixWzw2Ugi7c6MTLhWeVLIx0+dJg0z+LHw5nj/9+mMRakuquuSHF+OsPisulkCMtX59B6SYJ3ypqz1uWKwEJwK+LaAbJRdlyMnzGgPw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR10MB3285
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10006 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 mlxscore=0
- spamscore=0 adultscore=0 mlxlogscore=999 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2106050173
-X-Proofpoint-GUID: c0TfCGAObkKKS_40HgzeQqHxbPfHMm-X
-X-Proofpoint-ORIG-GUID: c0TfCGAObkKKS_40HgzeQqHxbPfHMm-X
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10006 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 spamscore=0
- mlxlogscore=999 phishscore=0 impostorscore=0 suspectscore=0 clxscore=1015
- mlxscore=0 malwarescore=0 priorityscore=1501 lowpriorityscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2106050174
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/3/21 9:30 AM, Stefan Hajnoczi wrote:
->> +	if (info->pid == VHOST_VRING_NEW_WORKER) {
->> +		worker = vhost_worker_create(dev);
-> 
-> The maximum number of kthreads created is limited by
-> vhost_dev_init(nvqs)? For example VHOST_SCSI_MAX_VQ 128.
-> 
-> IIUC kthread_create is not limited by or accounted against the current
-> task, so I'm a little worried that a process can create a lot of
-> kthreads.
-> 
-> I haven't investigated other kthread_create() users reachable from
-> userspace applications to see how they bound the number of threads
-> effectively.
+Five small and fairly minor fixes, all in drivers.
 
-Do we want something like io_uring's copy_process use? It's what fork uses,
-so we get checks like RLIMIT_NPROC and max_threads.
+The patch is available here:
 
-I know I didn't look at everything, but it looks like for some software
-drivers we just allow the user to run wild. For example for nbd, when we
-create the device to do alloc_workqueue and use the default max_active
-value (256). We then don't have a limit on connections, so we could end
-up with 256 workqueue threads per device. And then there is no limit on
-devices a user can make.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
+The short changelog is:
 
-> 
-> Any thoughts?
->
+Daniel Wagner (1):
+      scsi: qedf: Do not put host in qedf_vport_create() unconditionally
 
-Is the concern a bad VM could create N devs each with 128 vqs/threads
-and it would slow down other VMs? How do we handle the case where
-some VM makes M * N devs and that is equal to N * 128 so we would end
-up with the same number of threads either way? Is there a limit to the
-number of vhost devices a VM can make and can I just stick in a similar
-check for workers?
+Ewan D. Milne (1):
+      scsi: scsi_devinfo: Add blacklist entry for HPE OPEN-V
 
-For vhost-scsi specifically, the 128 limit does not make a lot of sense.
-I think we want the max to be the number of vCPUs the VM has so we can
-add checks for that. Then we would assume someone making a VM with lots of
-CPUs is going to have the resources to support them.
+James Smart (1):
+      scsi: lpfc: Fix failure to transmit ABTS on FC link
 
-Note: It does make sense from the point of view that we don't know the
-number of vCPUs when vhost-scsi calls vhost_dev_init, so I get we had to
-select an initial limit.
+Maurizio Lombardi (1):
+      scsi: target: core: Fix warning on realtime kernels
 
+Stanley Chu (1):
+      scsi: ufs: ufs-mediatek: Fix HCI version in some platforms
 
+And the diffstat:
 
->> +		if (!dev->workers) {
->> +			vhost_worker_put(worker);
->> +			return -ENOMEM;
->> +		}
->> +	}
->> +
->> +	vq->worker = worker;
->> +
->> +	dev->workers[dev->num_workers] = worker;
->> +	dev->num_workers++;
-> 
-> Hmm...should we really append to workers[] in the vhost_worker_find()
-> case?
+ drivers/scsi/lpfc/lpfc_sli.c           |  4 +---
+ drivers/scsi/qedf/qedf_main.c          | 20 +++++++++-----------
+ drivers/scsi/scsi_devinfo.c            |  1 +
+ drivers/scsi/ufs/ufs-mediatek.c        | 15 ++++++++++++++-
+ drivers/target/target_core_transport.c |  4 +---
+ 5 files changed, 26 insertions(+), 18 deletions(-)
 
+With full diff below.
 
-As it's coded now, yes. Every successful vhost_worker_find call does a
-get on the worker's refcount. Later when we delete the device, we loop
-over the workers array and for every entry we do a put.
+James
 
-I can add in some code to first check if the worker is already in the
-dev's worker list. If so then skip the refcount and skip adding to the
-workers array. If not in the dev's worker list then do a vhost_worker_find.
+---
 
-I thought it might be nicer how it is now with the single path. It's less
-code at least. Later if we add support to change a vq's worker then we also
-don't have to worry about refcounts as much. We just always drop the count
-taken from when it was added.
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 573c8599d71c..fc3682f15f50 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -20589,10 +20589,8 @@ lpfc_sli4_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	abtswqe = &abtsiocb->wqe;
+ 	memset(abtswqe, 0, sizeof(*abtswqe));
+ 
+-	if (lpfc_is_link_up(phba))
++	if (!lpfc_is_link_up(phba))
+ 		bf_set(abort_cmd_ia, &abtswqe->abort_cmd, 1);
+-	else
+-		bf_set(abort_cmd_ia, &abtswqe->abort_cmd, 0);
+ 	bf_set(abort_cmd_criteria, &abtswqe->abort_cmd, T_XRI_TAG);
+ 	abtswqe->abort_cmd.rsrvd5 = 0;
+ 	abtswqe->abort_cmd.wqe_com.abort_tag = xritag;
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 756231151882..b92570a7c309 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -1827,22 +1827,20 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
+ 		fcoe_wwn_to_str(vport->port_name, buf, sizeof(buf));
+ 		QEDF_WARN(&(base_qedf->dbg_ctx), "Failed to create vport, "
+ 			   "WWPN (0x%s) already exists.\n", buf);
+-		goto err1;
++		return rc;
+ 	}
+ 
+ 	if (atomic_read(&base_qedf->link_state) != QEDF_LINK_UP) {
+ 		QEDF_WARN(&(base_qedf->dbg_ctx), "Cannot create vport "
+ 			   "because link is not up.\n");
+-		rc = -EIO;
+-		goto err1;
++		return -EIO;
+ 	}
+ 
+ 	vn_port = libfc_vport_create(vport, sizeof(struct qedf_ctx));
+ 	if (!vn_port) {
+ 		QEDF_WARN(&(base_qedf->dbg_ctx), "Could not create lport "
+ 			   "for vport.\n");
+-		rc = -ENOMEM;
+-		goto err1;
++		return -ENOMEM;
+ 	}
+ 
+ 	fcoe_wwn_to_str(vport->port_name, buf, sizeof(buf));
+@@ -1866,7 +1864,7 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
+ 	if (rc) {
+ 		QEDF_ERR(&(base_qedf->dbg_ctx), "Could not allocate memory "
+ 		    "for lport stats.\n");
+-		goto err2;
++		goto err;
+ 	}
+ 
+ 	fc_set_wwnn(vn_port, vport->node_name);
+@@ -1884,7 +1882,7 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
+ 	if (rc) {
+ 		QEDF_WARN(&base_qedf->dbg_ctx,
+ 			  "Error adding Scsi_Host rc=0x%x.\n", rc);
+-		goto err2;
++		goto err;
+ 	}
+ 
+ 	/* Set default dev_loss_tmo based on module parameter */
+@@ -1925,9 +1923,10 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
+ 	vport_qedf->dbg_ctx.host_no = vn_port->host->host_no;
+ 	vport_qedf->dbg_ctx.pdev = base_qedf->pdev;
+ 
+-err2:
++	return 0;
++
++err:
+ 	scsi_host_put(vn_port->host);
+-err1:
+ 	return rc;
+ }
+ 
+@@ -1968,8 +1967,7 @@ static int qedf_vport_destroy(struct fc_vport *vport)
+ 	fc_lport_free_stats(vn_port);
+ 
+ 	/* Release Scsi_Host */
+-	if (vn_port->host)
+-		scsi_host_put(vn_port->host);
++	scsi_host_put(vn_port->host);
+ 
+ out:
+ 	return 0;
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index d92cec12454c..d33355ab6e14 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -184,6 +184,7 @@ static struct {
+ 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
+ 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
+ 	{"HP", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
++	{"HPE", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index aee3cfc7142a..0a84ec9e7cea 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -603,11 +603,23 @@ static void ufs_mtk_get_controller_version(struct ufs_hba *hba)
+ 
+ 	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_LOCALVERINFO), &ver);
+ 	if (!ret) {
+-		if (ver >= UFS_UNIPRO_VER_1_8)
++		if (ver >= UFS_UNIPRO_VER_1_8) {
+ 			host->hw_ver.major = 3;
++			/*
++			 * Fix HCI version for some platforms with
++			 * incorrect version
++			 */
++			if (hba->ufs_version < ufshci_version(3, 0))
++				hba->ufs_version = ufshci_version(3, 0);
++		}
+ 	}
+ }
+ 
++static u32 ufs_mtk_get_ufs_hci_version(struct ufs_hba *hba)
++{
++	return hba->ufs_version;
++}
++
+ /**
+  * ufs_mtk_init - find other essential mmio bases
+  * @hba: host controller instance
+@@ -1048,6 +1060,7 @@ static void ufs_mtk_event_notify(struct ufs_hba *hba,
+ static const struct ufs_hba_variant_ops ufs_hba_mtk_vops = {
+ 	.name                = "mediatek.ufshci",
+ 	.init                = ufs_mtk_init,
++	.get_ufs_hci_version = ufs_mtk_get_ufs_hci_version,
+ 	.setup_clocks        = ufs_mtk_setup_clocks,
+ 	.hce_enable_notify   = ufs_mtk_hce_enable_notify,
+ 	.link_startup_notify = ufs_mtk_link_startup_notify,
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 05d7ffd59df6..7e35eddd9eb7 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -3121,9 +3121,7 @@ __transport_wait_for_tasks(struct se_cmd *cmd, bool fabric_stop,
+ 	__releases(&cmd->t_state_lock)
+ 	__acquires(&cmd->t_state_lock)
+ {
+-
+-	assert_spin_locked(&cmd->t_state_lock);
+-	WARN_ON_ONCE(!irqs_disabled());
++	lockdep_assert_held(&cmd->t_state_lock);
+ 
+ 	if (fabric_stop)
+ 		cmd->transport_state |= CMD_T_FABRIC_STOP;
+
