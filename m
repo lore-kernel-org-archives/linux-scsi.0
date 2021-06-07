@@ -7,83 +7,70 @@ X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F838C47095
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 15:01:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDBE6C47095
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 15:12:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4350061108
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 15:01:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4E8B61107
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 15:12:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230226AbhFGPCw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 11:02:52 -0400
-Received: from mail-pg1-f171.google.com ([209.85.215.171]:36789 "EHLO
-        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230198AbhFGPCw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 11:02:52 -0400
-Received: by mail-pg1-f171.google.com with SMTP id 27so14017364pgy.3;
-        Mon, 07 Jun 2021 08:01:01 -0700 (PDT)
+        id S230398AbhFGPOc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 11:14:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34686 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230333AbhFGPOb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 11:14:31 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D57D2C061766
+        for <linux-scsi@vger.kernel.org>; Mon,  7 Jun 2021 08:12:25 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id z3-20020a17090a3983b029016bc232e40bso198932pjb.4
+        for <linux-scsi@vger.kernel.org>; Mon, 07 Jun 2021 08:12:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=LBQFfB81E+P58yjRe+k2+cx97sDCbuPy/V/8bIJeXkc=;
-        b=d1nEfDWwq7FWKqIFyB7wcvXzmP+qszgIuZNrjkwP3x1/yDu+sQSJ4TgOka8JMFwdpz
-         FbG95ETwwZelyW9y9nYy/fBdQQ5EpoXh41Gbn4eQmQTaoxF5map34fNshbDgQ+GKj1eQ
-         M2HNtozQY8mDF7hXNffuvHHSZK/H+HS3mDWozeDZ1wrNV7N6DSSxBit7yoz2Djn0vKsu
-         PTtFJD9Ofb3TtKRa65oNYY7gKKMzGB1TuT8lxEnUuKWvE9MiqzfZDCghwXldP+Yap8sq
-         BhmGax5uZd/Z3aYrXJPVjrW6XKPjEpwSZcuA8L3oguKgjEhjLQ9bi63V9oWBmfiZKAst
-         VQoQ==
+        bh=Cm3qgzi23mBbzxMJsLrt1zLbD3zvIpRVy2R0h23ZSjQ=;
+        b=qaYOnxFry+kMfTwY/EVosRlumn8TNOy8t7GjsXlgJk9ZspsdfY3jvPwPRo+jE+3i1M
+         Dk0elceUF1xG8G8FApSP3SnaUnAJbSt2Y1Gw3rHkUmA5Z2GSJWzx5V08XJHbwRwIcilI
+         gcCwj2beB4sJtxb9zTwE0Ris0/q99aVMixMnItRG6zccBE0MopqNXNKEnBYqCnsbqvfY
+         CClwwXG7YUFVWwhLap0KVkxtvZ7gMQpxqAiY/2WcO+DT6iXlLTpYWr+1hIwrmvvA67YM
+         5asze7WqJZJndtLaWFLDRFCGqMwp0D2PX71R9ZwOeMXdAMeNgP1ppug9JkLMvgGC89w3
+         CLHA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=LBQFfB81E+P58yjRe+k2+cx97sDCbuPy/V/8bIJeXkc=;
-        b=l09nOkgcvg+YBP4lNEGOB9tR+Vf9c0s7nHnIRgSTBria6bL8V8q73onXABynKzglnE
-         MZSI08FXq+mbBnzGl7COD5OCr28+CtA/T4tqsPX4NL+SVrf27VvBSJbrVXryUD9na4aO
-         ElyCJjb+ZutONyP4NoUCo4zhJ2oRqzDH1V6c4lqiw7jNB2/s91pMHgIbq1AHHT+NWB+h
-         f6r6w1ugCYjCKhaWW0PmkJZSDcjWBEyYaa7Ue4kGWrNM71sy/2RDi6iwBD+dlrhz6oRx
-         AH6WeBowRVrimqB8tmczGkY5zLyGeQ5te80afsi6fSoaxlmuLB7/1FyZsO0nYrMG4itd
-         6QWg==
-X-Gm-Message-State: AOAM530c9LmcYFtZqp5izHbpfW1ZL6gUjeBn59s3Zb5TO3886USPtcz+
-        BmVkVHEqKJAu3ev+EwRE8O0=
-X-Google-Smtp-Source: ABdhPJxA6AxF//BtD4CX3ss9LWnlUG4jgLj+0PRFw+NP8biHDKV1XDA0j2C9BbRScevume4H06cdTA==
-X-Received: by 2002:a63:7d2:: with SMTP id 201mr18504206pgh.14.1623078000846;
-        Mon, 07 Jun 2021 08:00:00 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
-        by smtp.gmail.com with ESMTPSA id x6sm8711203pfd.173.2021.06.07.07.59.47
+        bh=Cm3qgzi23mBbzxMJsLrt1zLbD3zvIpRVy2R0h23ZSjQ=;
+        b=g27SRfy3w2AFbM902i95OIK37eSnO1GpphlUNMXpqNsOaJ1AYIs6G7tWu+JcBgqCyQ
+         G4jCtpLTvGSwJXXd/lCEi6BDjIo31flho2PyKuZpTgB0JuyYpz67Z8nICvmoZvN7ITMI
+         sHBSBvPtyW7MuZ29lzw5eSa9T+mnTUZDVVAl2k3XUWVyrMQztFaTPCQfyO/X609g8ez4
+         gr29adRtgXX1atMhR2LrqmTZqz1NABZ9NTRwjHrYMsWnup5WgHoVY9uzgtQkEsHlNEc2
+         3jezGGYrKHXeNiNbHMRwzyWbZByBXz7EzmN0nifHbLMn5AD2QyESi60rXoh3er8VF5Kd
+         MjUA==
+X-Gm-Message-State: AOAM5312Ds/i/k3PEmNJqoIMQBUG70vW559LwI6oh4koNx3uNW9w9XT2
+        +5siYqH//4K0wg0VdnzGpLVI3D8Ohgg=
+X-Google-Smtp-Source: ABdhPJxg+6YZYMltoTRHI4uCE8KRPeEFnd9FxbXKEU/Y52U4Is4h3SMiTID5bm93NFM3eHpuFL4w5g==
+X-Received: by 2002:a17:902:8e86:b029:10f:44bb:2c42 with SMTP id bg6-20020a1709028e86b029010f44bb2c42mr17130706plb.67.1623078743567;
+        Mon, 07 Jun 2021 08:12:23 -0700 (PDT)
+Received: from [10.230.185.151] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 21sm8192413pfh.103.2021.06.07.08.12.23
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Jun 2021 08:00:00 -0700 (PDT)
-Subject: Re: [RFC PATCH V3 11/11] HV/Storvsc: Add Isolation VM support for
- storvsc driver
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        arnd@arndb.de, dave.hansen@linux.intel.com, luto@kernel.org,
-        peterz@infradead.org, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        hannes@cmpxchg.org, cai@lca.pw, krish.sadhukhan@oracle.com,
-        saravanand@fb.com, Tianyu.Lan@microsoft.com,
-        konrad.wilk@oracle.com, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, boris.ostrovsky@oracle.com, jgross@suse.com,
-        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
-        xen-devel@lists.xenproject.org, davem@davemloft.net,
-        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, thomas.lendacky@amd.com,
-        brijesh.singh@amd.com, sunilmut@microsoft.com
-References: <20210530150628.2063957-1-ltykernel@gmail.com>
- <20210530150628.2063957-12-ltykernel@gmail.com>
- <20210607064603.GD24478@lst.de>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <26c771e5-a64e-f2cc-e245-fa5f130f4b18@gmail.com>
-Date:   Mon, 7 Jun 2021 22:59:46 +0800
+        Mon, 07 Jun 2021 08:12:23 -0700 (PDT)
+Subject: Re: [PATCH v2 02/15] lpfc: Fix auto sli_mode and its effect on
+ CONFIG_PORT for SLI3
+To:     Daniel Wagner <dwagner@suse.de>
+Cc:     linux-scsi@vger.kernel.org,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+References: <20210104180240.46824-1-jsmart2021@gmail.com>
+ <20210104180240.46824-3-jsmart2021@gmail.com>
+ <20210607110630.kwn74yfrbsrrrhsm@beryllium.lan>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <06b1d757-9046-8b94-265b-c6c760cd8749@gmail.com>
+Date:   Mon, 7 Jun 2021 08:12:22 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+ Thunderbird/78.10.2
 MIME-Version: 1.0
-In-Reply-To: <20210607064603.GD24478@lst.de>
+In-Reply-To: <20210607110630.kwn74yfrbsrrrhsm@beryllium.lan>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -91,22 +78,91 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 6/7/2021 2:46 PM, Christoph Hellwig wrote:
-> On Sun, May 30, 2021 at 11:06:28AM -0400, Tianyu Lan wrote:
->> +				for (i = 0; i < request->hvpg_count; i++)
->> +					dma_unmap_page(&device->device,
->> +							request->dma_range[i].dma,
->> +							request->dma_range[i].mapping_size,
->> +							request->vstor_packet.vm_srb.data_in
->> +							     == READ_TYPE ?
->> +							DMA_FROM_DEVICE : DMA_TO_DEVICE);
->> +				kfree(request->dma_range);
+On 6/7/2021 4:06 AM, Daniel Wagner wrote:
+> Hi James,
 > 
-> Unreadably long lines.  You probably want to factor the quoted code into
-> a little readable helper and do the same for the map side.
+> On Mon, Jan 04, 2021 at 10:02:27AM -0800, James Smart wrote:
+>> A very long time ago, there was a feature: auto sli mode. It gave the
+>> user the ability to auto select the SLI mode (SLI2 or SLI3) to run the
+>> port in, or even force SLI2 mode if configured.  Because of the
+>> convoluted logic, the CONFIG_PORT mbox command ends up being called 2 or
+>> 3 times. It should have been called only once.  Additionally, the driver
+>> no longer supports SLI-2, so only SLI-3 mode should be allowed.
+>>
+>> The following changes were made:
+>> - Force module parameter to SLI3 only.
+>> - Rip out redundant CONFIG_PORT mbox commands.
+>> - Force CONFIG_PORT mbox command to be in beginning of enable ISR routine.
+>> - Added changes for offline to online behavior
+> 
+> We got a regression report for this patch. The problem seems to be
+> related with older Emulex HBAs. The symptom is in this case one port is
+> not enabled. A revert of this patch fixed the problem. This was
+> observed with:
+> 
+>    Emulex LPe11000 FV2.72X2 DV12.8.0.7 HN:FR2AS6AP2-0001 OS:Linux
+> 
+> Here some ramblings from my debugging:
+> 
+> In the logs I found:
+> 
+>> 0000:0b:00.0: 0:0431 Failed to enable interrupt.
+>> 0000:0b:00.0: 0:0431 Failed to enable interrupt.
+>> 0000:0b:00.0: 0:0431 Failed to enable interrupt.
+> 
+> cfg_sli_mode used to be 0 (auto) and the config port setup
+> used to try first mode = 3 and then fall back to mode = 2
+> 
+>> -       rc = lpfc_sli_config_port(phba, mode);
+>> -
+>> -       if (rc && phba->cfg_sli_mode == 3)
+>> -               lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+>> -                               "1820 Unable to select SLI-3.  "
+>> -                               "Not supported by adapter.\n");
+>> -       if (rc && mode != 2)
+>> -               rc = lpfc_sli_config_port(phba, 2);
+> 
+> the port config is now in lpfc_sli_enable_intr which is hardcoded
+> to LPFC_SLI_REV3 and I think this fails and the HBA_NEEDS_CFG_PORT
+> flag is not resetted, hence in lpfc_sli_hba_setup() the new
+> code tries to enable the port again with:
+> 
+>> +       /* Enable ISR already does config_port because of config_msi mbx */
+>> +       if (phba->hba_flag & HBA_NEEDS_CFG_PORT) {
+>> +               rc = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
+>> +               if (rc)
+>> +                       return -EIO;
+>> +               phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
+> 
+> Though I think this should something like
+> 
+>     lpfc_sli_config_port(phba, LPFC_SLI_REV2);
+> 
+> for the specific case.
+> 
+> HTH!
+> 
+> Thanks,
+> Daniel
+> 
 
-Good suggestion. Will update.
+ouch - What you are describing is likely true, but sli-2 firmware is 
+*extremely* old - 2 decades or more. If a change wont work first shot, 
+it likely won't be worth the effort to try to fix it. Other 
+functionality may be hanging on by a thread.  That adapter certainly 
+runs SLI-3 (even that is 10-15 yrs old), so the best solution is a fw 
+upgrade that picks up the sli3 interface. Is that possible?
 
-Thanks.
+Given that the error message you quoted was a failure of interrupt, that 
+may be a clue. It may well be the adapter has sli3 firmware and it's 
+failing on setting the interrupt vector type.  The older adapters 
+supported MSI and INTx. SLI-2 may have been limited to INTx only. There 
+used to be hiccups in some platforms with MSI support (platform said it 
+did, but was broken) which is why the driver had "set it, test it, 
+revert it" logic. I believe the driver has a lpfc_use_msi module 
+parameter that when set to 0 should use only INTx, which may be what the 
+sli2 downgrade is effectively doing. Try setting that and seeing if the 
+card loads the sli3 image and runs.
+
+
+-- james
