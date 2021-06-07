@@ -2,91 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61551C4743F
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1257EC47094
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:47:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 423F36054E
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:26:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA2C460C40
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:47:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234633AbhFGQ2g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 12:28:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:60180 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234135AbhFGQZY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Jun 2021 12:25:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D16186144E;
-        Mon,  7 Jun 2021 16:16:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623082576;
-        bh=7Ws0jZ1/9jfL3AFF6798BOs1ZRGa0ZAja/D4PdjEYrc=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=QBPBqaZqsLZzdYDINAoAwnGNT+yVCENZMVQer/PKaPv2BmWJruisiiL6k60XDjc+O
-         PNAK6M28p8+I5O6/Cj91qXKrDc3TPMhvBnmrjDeuTOwBq0NZZVzKPTuaIwf/DLMIFt
-         frOZZiYBakms5PAkJkJzldgWglbB+J3RKJOPyQngOcndOaFr0zEwKnm++r0d44VEP0
-         0+CjsqgbgGuMelPsdCF3HY3uqlfGub8IxHtl3Bh4q9VcAVNqVLOrqyflx+0eRegqd+
-         duV1EZGFN7mWm1Ef/7eIXfvIzMslTOOeerVj9vhlbHKPxAB1xiWURJo4SQisZOdvvZ
-         Ug5ohrOzhqVOQ==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maurizio Lombardi <mlombard@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 08/14] scsi: target: core: Fix warning on realtime kernels
-Date:   Mon,  7 Jun 2021 12:15:59 -0400
-Message-Id: <20210607161605.3584954-8-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210607161605.3584954-1-sashal@kernel.org>
-References: <20210607161605.3584954-1-sashal@kernel.org>
+        id S230440AbhFGQsx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 12:48:53 -0400
+Received: from mail-pl1-f176.google.com ([209.85.214.176]:39452 "EHLO
+        mail-pl1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230395AbhFGQsw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 12:48:52 -0400
+Received: by mail-pl1-f176.google.com with SMTP id v11so546011ply.6;
+        Mon, 07 Jun 2021 09:47:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RqM/V5eLWFeMro1faYW6Y0l876M4QVLq21ePu11ZzHo=;
+        b=niFZyRnjSZJUNGMlrmksvrbJSipG+ozte98gtTST863mnM4S0pJ/hW/0pn1dS4LBb+
+         NthETeqqL6TxjPNijfj/pKrOl0X4Ki7Uwzgbm0VXnql1IUvsWtMtuBqM81cmVJ+klaL0
+         Z7QlJHOJleJlYG/nvil5WBkb2rXAsA7ME9A3quqKa6YzgMFuQdyfG54AZ/3HXRpyNV/K
+         sjUsVZzeNMvfbnLgmTaez+OaHe/oDjNGc2yldeJfOWT96IYyykYnZlXLYCcYFCOXY9jD
+         tNeXbONBQ+7TRTqlVtb4mnicUEoqACg9IEwRxPRPbTDJPTNzqUcUqD92spcwM71E7MfM
+         uTeg==
+X-Gm-Message-State: AOAM53219joUKd4texRR/6tx74XRqpxBBsqzzWsxnmTNxkbwVU3b+B/R
+        MbQzDqwZRvpZkMNWNTFy8LY=
+X-Google-Smtp-Source: ABdhPJygdkxD8CUNwO3gYZnjRveMacyt4NUWgX026stBqMkMsRkcnezkILEftsvJah1e8t9mswV/2Q==
+X-Received: by 2002:a17:902:145:b029:10d:c0d5:d6ac with SMTP id 63-20020a1709020145b029010dc0d5d6acmr18880586plb.9.1623084420905;
+        Mon, 07 Jun 2021 09:47:00 -0700 (PDT)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id k13sm8408819pfh.68.2021.06.07.09.46.57
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Jun 2021 09:47:00 -0700 (PDT)
+Subject: Re: [PATCH v12 1/3] bio: control bio max size
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Changheun Lee <nanich.lee@samsung.com>, damien.lemoal@wdc.com,
+        Avri.Altman@wdc.com, Johannes.Thumshirn@wdc.com,
+        alex_y_xu@yahoo.ca, alim.akhtar@samsung.com,
+        asml.silence@gmail.com, axboe@kernel.dk, bgoncalv@redhat.com,
+        cang@codeaurora.org, gregkh@linuxfoundation.org,
+        jaegeuk@kernel.org, jejb@linux.ibm.com, jisoo2146.oh@samsung.com,
+        junho89.kim@samsung.com, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, ming.lei@redhat.com,
+        mj0123.lee@samsung.com, osandov@fb.com, patchwork-bot@kernel.org,
+        seunghwan.hyun@samsung.com, sookwan7.kim@samsung.com,
+        tj@kernel.org, tom.leiming@gmail.com, woosung2.lee@samsung.com,
+        yi.zhang@redhat.com, yt0928.kim@samsung.com
+References: <DM6PR04MB70812AF342F46F453696A447E73B9@DM6PR04MB7081.namprd04.prod.outlook.com>
+ <CGME20210604075331epcas1p13bb57f9ddfc7b112dec1ba8cf40fdc74@epcas1p1.samsung.com>
+ <20210604073459.29235-1-nanich.lee@samsung.com>
+ <63afd2d3-9fa3-9f90-a2b3-37235739f5e2@acm.org>
+ <YL2+HeyKVMHsLNe2@infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <221377e3-05d1-f250-1ad8-6e5c9485d756@acm.org>
+Date:   Mon, 7 Jun 2021 09:46:56 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.2
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <YL2+HeyKVMHsLNe2@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Maurizio Lombardi <mlombard@redhat.com>
+On 6/6/21 11:35 PM, Christoph Hellwig wrote:
+> On Fri, Jun 04, 2021 at 07:52:35AM -0700, Bart Van Assche wrote:
+>>  Damien is right. bd_disk can be NULL. From
+> 
+> bd_disk is initialized in bdev_alloc, so it should never be NULL.
+> bi_bdev OTOH is only set afer bio_add_page in various places or not at
+> all in case of passthrough bios.  Which is a bit of a mess and I have
+> plans to fix it.
 
-[ Upstream commit 515da6f4295c2c42b8c54572cce3d2dd1167c41e ]
+Hi Christoph,
 
-On realtime kernels, spin_lock_irq*(spinlock_t) do not disable the
-interrupts, a call to irqs_disabled() will return false thus firing a
-warning in __transport_wait_for_tasks().
+Thank you for having shared your plans for how to improve how bi_bdev is
+set.
 
-Remove the warning and also replace assert_spin_locked() with
-lockdep_assert_held()
+In case you would not yet have had the time to do this, please take a
+look at the call trace available on
+https://lore.kernel.org/linux-block/20210425043020.30065-1-bvanassche@acm.org/.
+That call trace shows how bio_add_pc_page() is called by the SCSI core
+before alloc_disk() is called. I think that sending a SCSI command
+before alloc_disk() is called is fundamental in the SCSI core because
+the SCSI INQUIRY command has to be sent before it is known whether or
+not a SCSI LUN represents a disk.
 
-Link: https://lore.kernel.org/r/20210531121326.3649-1-mlombard@redhat.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/target/target_core_transport.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Thanks,
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 96cf2448a1f4..6c6aa23ced45 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2757,9 +2757,7 @@ __transport_wait_for_tasks(struct se_cmd *cmd, bool fabric_stop,
- 	__releases(&cmd->t_state_lock)
- 	__acquires(&cmd->t_state_lock)
- {
--
--	assert_spin_locked(&cmd->t_state_lock);
--	WARN_ON_ONCE(!irqs_disabled());
-+	lockdep_assert_held(&cmd->t_state_lock);
- 
- 	if (fabric_stop)
- 		cmd->transport_state |= CMD_T_FABRIC_STOP;
--- 
-2.30.2
-
+Bart.
