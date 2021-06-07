@@ -7,83 +7,83 @@ X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7C37C4743F
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 11:40:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E1BDC47094
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 11:41:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C51676121D
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 11:40:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B4B7610C7
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 11:41:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231586AbhFGLmc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 07:42:32 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:36606 "EHLO
+        id S231202AbhFGLn3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 07:43:29 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:36784 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230374AbhFGLmb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 07:42:31 -0400
+        with ESMTP id S230463AbhFGLn3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 07:43:29 -0400
 Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
         (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id F0B0221A93;
-        Mon,  7 Jun 2021 11:40:39 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7F11E21A98;
+        Mon,  7 Jun 2021 11:41:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623066039; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1623066097; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ATVAiI6RtRQRyNfJmKxKg2saJK4YPMiaDHH9Y0WQYd8=;
-        b=F6uX6qqanFjvv3+7i+6dXeGLguU9JFIX3pcdFmi1qyF/9NwRUNrl5eh9RmK1qccqyNspMk
-        qhjO/oAenFOOoFgcpVeW2Mo0NSAHXrL5i7JX2xRqDfNOO++xKyf21hDjRl67iGg+Imhl1m
-        VNO00U+LsZfAWq9PoRLk7yI5xKu35vI=
+        bh=igDnF5ZmEG2zZLWJYgXP9VS65qJ0yD+V5kexmfG/3jc=;
+        b=hmhBIOt3SUwiBBE3ToeG3QOoLPgeLKkPv16LW84R/G1X/YfOCExYUAf7pJ9+WYzoFqYjlL
+        9LHScUKp8ZMPw67ZYV/EUAHIwx0Fxg26XLUR4ULpCpMxBXnAzijMtJXd2gSpfF+/NYr9Xk
+        58GNXOnDHYgPXJnJWDPh8b5lodzIPIU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623066039;
+        s=susede2_ed25519; t=1623066097;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ATVAiI6RtRQRyNfJmKxKg2saJK4YPMiaDHH9Y0WQYd8=;
-        b=eWDOgCNO1gqZjlw2KJ2jaYrS3o+tUNTbRMcYV7WvNUbRHu2M2ML81GytJ0Zay+9wMTew1N
-        Sx3dBiiJMJjZHmBA==
+        bh=igDnF5ZmEG2zZLWJYgXP9VS65qJ0yD+V5kexmfG/3jc=;
+        b=tC6pvjSZ+TqvbVw5HjKbQ+Pd31UfesphslC0/4InCr7EZER3OeWohDaJV4G1mw944wO4Ps
+        DQcY4fLt86Gb8pDw==
 Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id B46ED118DD;
-        Mon,  7 Jun 2021 11:40:39 +0000 (UTC)
+        by imap.suse.de (Postfix) with ESMTP id 63BB6118DD;
+        Mon,  7 Jun 2021 11:41:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623066039; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1623066097; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ATVAiI6RtRQRyNfJmKxKg2saJK4YPMiaDHH9Y0WQYd8=;
-        b=F6uX6qqanFjvv3+7i+6dXeGLguU9JFIX3pcdFmi1qyF/9NwRUNrl5eh9RmK1qccqyNspMk
-        qhjO/oAenFOOoFgcpVeW2Mo0NSAHXrL5i7JX2xRqDfNOO++xKyf21hDjRl67iGg+Imhl1m
-        VNO00U+LsZfAWq9PoRLk7yI5xKu35vI=
+        bh=igDnF5ZmEG2zZLWJYgXP9VS65qJ0yD+V5kexmfG/3jc=;
+        b=hmhBIOt3SUwiBBE3ToeG3QOoLPgeLKkPv16LW84R/G1X/YfOCExYUAf7pJ9+WYzoFqYjlL
+        9LHScUKp8ZMPw67ZYV/EUAHIwx0Fxg26XLUR4ULpCpMxBXnAzijMtJXd2gSpfF+/NYr9Xk
+        58GNXOnDHYgPXJnJWDPh8b5lodzIPIU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623066039;
+        s=susede2_ed25519; t=1623066097;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=ATVAiI6RtRQRyNfJmKxKg2saJK4YPMiaDHH9Y0WQYd8=;
-        b=eWDOgCNO1gqZjlw2KJ2jaYrS3o+tUNTbRMcYV7WvNUbRHu2M2ML81GytJ0Zay+9wMTew1N
-        Sx3dBiiJMJjZHmBA==
+        bh=igDnF5ZmEG2zZLWJYgXP9VS65qJ0yD+V5kexmfG/3jc=;
+        b=tC6pvjSZ+TqvbVw5HjKbQ+Pd31UfesphslC0/4InCr7EZER3OeWohDaJV4G1mw944wO4Ps
+        DQcY4fLt86Gb8pDw==
 Received: from director2.suse.de ([192.168.254.72])
         by imap3-int with ESMTPSA
-        id DCYpK7cFvmBCXwAALh3uQQ
-        (envelope-from <hare@suse.de>); Mon, 07 Jun 2021 11:40:39 +0000
-Subject: Re: [PATCH 3/4] scsi: core: put .shost_dev in failure path if host
- state becomes running
+        id BrLZF/EFvmC2XwAALh3uQQ
+        (envelope-from <hare@suse.de>); Mon, 07 Jun 2021 11:41:37 +0000
+Subject: Re: [PATCH 4/4] scsi: core: only put parent device if host state
+ isn't in SHOST_CREATED
 To:     Ming Lei <ming.lei@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Cc:     John Garry <john.garry@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>
 References: <20210602133029.2864069-1-ming.lei@redhat.com>
- <20210602133029.2864069-4-ming.lei@redhat.com>
+ <20210602133029.2864069-5-ming.lei@redhat.com>
 From:   Hannes Reinecke <hare@suse.de>
 Organization: SUSE Linux GmbH
-Message-ID: <50a04420-0104-04b2-7c37-8f9e25949085@suse.de>
-Date:   Mon, 7 Jun 2021 13:40:39 +0200
+Message-ID: <40e024d4-87d6-ca11-8b68-d15f2e772ecc@suse.de>
+Date:   Mon, 7 Jun 2021 13:41:36 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210602133029.2864069-4-ming.lei@redhat.com>
+In-Reply-To: <20210602133029.2864069-5-ming.lei@redhat.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -92,25 +92,33 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 6/2/21 3:30 PM, Ming Lei wrote:
-> scsi_host_dev_release() only works around for us by freeing
-> dev_name(&shost->shost_dev) when host state is SHOST_CREATED. After host
-> state is changed to SHOST_RUNNING, scsi_host_dev_release() doesn't do
-> that any more.
+> get_device(shost->shost_gendev.parent) is called after host state is
+> changed to SHOST_RUNNING. So scsi_host_dev_release() shouldn't release
+> the parent device if host state is still SHOST_CREATED.
 > 
-> So fix the issue by put .shost_dev in failure path if host state becomes
-> running, meantime move get_device(&shost->shost_gendev) before
-> device_add(&shost->shost_dev), so that scsi_host_cls_release() can put
-> this reference.
-> 
-> Reported-by: John Garry <john.garry@huawei.com>
 > Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: John Garry <john.garry@huawei.com>
 > Cc: Hannes Reinecke <hare@suse.de>
 > Signed-off-by: Ming Lei <ming.lei@redhat.com>
 > ---
->  drivers/scsi/hosts.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
+>  drivers/scsi/hosts.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 7049844adb6b..34db5be7a562 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -350,7 +350,7 @@ static void scsi_host_dev_release(struct device *dev)
+>  
+>  	ida_simple_remove(&host_index_ida, shost->host_no);
+>  
+> -	if (parent)
+> +	if (shost->shost_state != SHOST_CREATED)
+>  		put_device(parent);
+>  	kfree(shost);
+>  }
+> 
+What happened to the check 'if (parent)'?
 
 Cheers,
 
