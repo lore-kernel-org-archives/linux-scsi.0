@@ -2,155 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA7BDC47082
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 13:02:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02256C48BCD
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 14:57:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A6206108D
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 13:02:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB4C761159
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 14:57:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230343AbhFGNEK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 09:04:10 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:45480 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230254AbhFGNEK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 09:04:10 -0400
-Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 980F821A90;
-        Mon,  7 Jun 2021 13:02:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623070938; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7WP7yfB0MIMV5YAUtxqOsOXkEpqWLnan4Liepj3r5Co=;
-        b=ndGWEc/PMrrG2XzW9V1JSGzy96TTIGUVkMMHhvqD3eDV87NJdZYlQqYKfjvTZIb1q5xl1J
-        idfxVfFH7AE3htm/qdA+nCKi7WqEVRUrPb2aenJmUE/aZMyAQN4JT14sFeF+vI/GNGPRKK
-        4yPqenM0QkWy6kU1T3Xy0hUScCCZ11s=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623070938;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7WP7yfB0MIMV5YAUtxqOsOXkEpqWLnan4Liepj3r5Co=;
-        b=U2Pv6ftmdBY1o9jgLZtHsx4Q1B9PMzxe642Fnm2loNk5wRQv7/V8ypRnW8zvuK/aA2wtNa
-        MePy3LaQPkCov9Cg==
-Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id 60665118DD;
-        Mon,  7 Jun 2021 13:02:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623070938; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7WP7yfB0MIMV5YAUtxqOsOXkEpqWLnan4Liepj3r5Co=;
-        b=ndGWEc/PMrrG2XzW9V1JSGzy96TTIGUVkMMHhvqD3eDV87NJdZYlQqYKfjvTZIb1q5xl1J
-        idfxVfFH7AE3htm/qdA+nCKi7WqEVRUrPb2aenJmUE/aZMyAQN4JT14sFeF+vI/GNGPRKK
-        4yPqenM0QkWy6kU1T3Xy0hUScCCZ11s=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623070938;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=7WP7yfB0MIMV5YAUtxqOsOXkEpqWLnan4Liepj3r5Co=;
-        b=U2Pv6ftmdBY1o9jgLZtHsx4Q1B9PMzxe642Fnm2loNk5wRQv7/V8ypRnW8zvuK/aA2wtNa
-        MePy3LaQPkCov9Cg==
-Received: from director2.suse.de ([192.168.254.72])
-        by imap3-int with ESMTPSA
-        id qPKEFtoYvmADEgAALh3uQQ
-        (envelope-from <hare@suse.de>); Mon, 07 Jun 2021 13:02:18 +0000
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Jiri Slaby <jirislaby@kernel.org>, Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        linux-scsi@vger.kernel.org
-References: <20191021095322.137969-1-hare@suse.de>
- <20191021095322.137969-14-hare@suse.de>
- <a5551d37-8303-2cbb-f82a-17fea785adad@kernel.org>
- <c48e74e9-4bbb-d892-4976-06bb448f5f6c@suse.de>
- <yq1bl8hn9py.fsf@ca-mkp.ca.oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-Organization: SUSE Linux GmbH
-Subject: Re: [PATCH 13/24] scsi: Kill DRIVER_SENSE
-Message-ID: <e2c75feb-cd87-1681-a5ee-6aed7ee82e11@suse.de>
-Date:   Mon, 7 Jun 2021 15:02:18 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        id S230341AbhFGO7H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 10:59:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59486 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230193AbhFGO7E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 10:59:04 -0400
+Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A85F9C061766;
+        Mon,  7 Jun 2021 07:57:01 -0700 (PDT)
+Received: by mail-pg1-x52b.google.com with SMTP id 27so14010942pgy.3;
+        Mon, 07 Jun 2021 07:57:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=mkL4psSj+prMNO7AohBJyTx+Q189qdo7fgANRpB5e+4=;
+        b=lhaKoBcNOuAsXD3pTAmPwsFop0hqZ7JU5MLd+d9L1no2Uoec0Qyp3qHl7oh02shWeI
+         Jes/SZ8q3U+KfCNoq9c1Xrlmq8EXws4qXzfcpkEnMBLnTwTeOLVn57/5lNMv0IIQu936
+         eZ7O1rSFr9fTp5zpfxPADKjK5NrHWx5QoMUdi6NsRSJlWsZAOZ1xE13fUHg60coHCGz9
+         L8KTelBvvQsClf1NodL6YCelq4Ol69U2fD2Jwlp+Qg82jWdc6cKvPRG+8Dfwd10h1GXK
+         eJIB1Vu38FzkxJlUAMfqjcOa76EjkPTv6FXCcrF7OHioGvvqCsPHt0hXWXzpcsKlznTI
+         Ov6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=mkL4psSj+prMNO7AohBJyTx+Q189qdo7fgANRpB5e+4=;
+        b=FwS6i0uKIdwoGvDNri0MVo4csFd3/e/afhHykIx33QdV5oVVTlDVmnRfLXkAbR/ZOZ
+         dqlubCpcoT8p6jf3rDaFvUtM411rFOqNt3zJzHB0g44L0EOd2gn57E4JNqdEe8dCrbp3
+         Thk1HCW8OHcok4kCyCuRrfX58zZOOq+MA1pcpJ8oaraabaoDOno32/6ccb6UKTDUZCpq
+         KGJoajV9T0+0mC2QAwhLWb23ScCKklTc19wezbdyHF450EEnGoCUrWuVG2LkMbbmXG9h
+         oZwxyl7rng+Ub/CKN5EBf/QqZ/ZstlN2/JczEdBY4BohM+z8ynWmDjflRPI2DVNhS9VM
+         mFtw==
+X-Gm-Message-State: AOAM53203/RcrdZZty4YE+UJ6Aa2bSbHN3mjILh8WB9DPJ4NfRlNoYyJ
+        3yY0gvVQd4zS6Ub4hhV1Cgk=
+X-Google-Smtp-Source: ABdhPJyAa6AVd7SFvf1Ep4fkh59q91v76tY7vbke901CKM7Z5XY+dbd7TJGFiS7g5cKGjx+7iiHgJA==
+X-Received: by 2002:a65:6a51:: with SMTP id o17mr18093661pgu.170.1623077821197;
+        Mon, 07 Jun 2021 07:57:01 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
+        by smtp.gmail.com with ESMTPSA id p14sm9148073pgk.6.2021.06.07.07.56.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 07 Jun 2021 07:57:00 -0700 (PDT)
+Subject: Re: [RFC PATCH V3 08/11] swiotlb: Add bounce buffer remap address
+ setting function
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        arnd@arndb.de, dave.hansen@linux.intel.com, luto@kernel.org,
+        peterz@infradead.org, akpm@linux-foundation.org,
+        kirill.shutemov@linux.intel.com, rppt@kernel.org,
+        hannes@cmpxchg.org, cai@lca.pw, krish.sadhukhan@oracle.com,
+        saravanand@fb.com, Tianyu.Lan@microsoft.com,
+        konrad.wilk@oracle.com, m.szyprowski@samsung.com,
+        robin.murphy@arm.com, boris.ostrovsky@oracle.com, jgross@suse.com,
+        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
+        xen-devel@lists.xenproject.org, davem@davemloft.net,
+        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, thomas.lendacky@amd.com,
+        brijesh.singh@amd.com, sunilmut@microsoft.com
+References: <20210530150628.2063957-1-ltykernel@gmail.com>
+ <20210530150628.2063957-9-ltykernel@gmail.com>
+ <20210607064312.GB24478@lst.de>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <48516ce3-564c-419e-b355-0ce53794dcb1@gmail.com>
+Date:   Mon, 7 Jun 2021 22:56:47 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <yq1bl8hn9py.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20210607064312.GB24478@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/7/21 2:30 PM, Martin K. Petersen wrote:
-> 
-> Hannes,
-> 
->>> Any ideas?
-> 
->>> Can you enable SCSI logging via
+
+On 6/7/2021 2:43 PM, Christoph Hellwig wrote:
+> On Sun, May 30, 2021 at 11:06:25AM -0400, Tianyu Lan wrote:
+>> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 >>
->> scsi.scsi_logging_level=216
->>
->> on the kernel commandline and send me the output?
+>> For Hyper-V isolation VM with AMD SEV SNP, the bounce buffer(shared memory)
+>> needs to be accessed via extra address space(e.g address above bit39).
+>> Hyper-V code may remap extra address space outside of swiotlb. swiotlb_
+>> bounce() needs to use remap virtual address to copy data from/to bounce
+>> buffer. Add new interface swiotlb_set_bounce_remap() to do that.
 > 
-> You now effectively set SAM_STAT_CHECK_CONDITION if the scsi_cmnd has a
-> sense buffer.
+> Why can't you use the bus_dma_region ranges to remap to your preferred
+> address?
 > 
-> The original code only set DRIVER_SENSE if the adapter response actually
-> contained sense information:
-> 
-> @@ -161,8 +161,7 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
->                        min_t(u32,
->                              virtio32_to_cpu(vscsi->vdev, resp->sense_len),
->                              VIRTIO_SCSI_SENSE_SIZE));
-> -               if (resp->sense_len)
-> -                       set_driver_byte(sc, DRIVER_SENSE);
-> +               set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
->         }
-> 
-Oh, I know. But we're checking for a valid sense code during scanning:
 
-			if (scsi_status_is_check_condition(result) &&
-			    scsi_sense_valid(&sshdr)) {
+Thanks for your suggestion.
 
-so if that makes a difference it would mean that the virtio driver has
-some stale sense data which then gets copied over.
-Anyway.
-Can you test with this patch?
+These addresses in extra address space works as system memory mirror. 
+The shared memory with host in Isolation VM needs to be accessed via 
+extra address space which is above shared gpa boundary. During 
+initializing swiotlb bounce buffer pool, only address bellow shared gpa 
+boundary can be accepted by swiotlb API because it is treated as system 
+memory and managed by memory management. This is why Hyper-V swiotlb 
+bounce buffer pool needs to be allocated in Hyper-V code and map
+associated physical address in extra address space. The patch target is
+to add the new interface to set start virtual address of bounce buffer
+pool and let swiotlb boucne buffer copy function to use right virtual 
+address for extra address space.
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index fd69a03d6137..0cb1182fd734 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -161,7 +161,8 @@ static void virtscsi_complete_cmd(struct virtio_scsi
-*vscsi, void *buf)
-                       min_t(u32,
-                             virtio32_to_cpu(vscsi->vdev, resp->sense_len),
-                             VIRTIO_SCSI_SENSE_SIZE));
--               set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
-+               if (resp->sense_len)
-+                       set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
-        }
+bus_dma_region is to translate cpu physical address to dma address.
+It can't modify the virtual address of bounce buffer pool and let
+swiotlb code to copy data with right address. If some thing missed,
+please correct me.
 
-        sc->scsi_done(sc);
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		        Kernel Storage Architect
-hare@suse.de			               +49 911 74053 688
-SUSE Software Solutions Germany GmbH, 90409 Nürnberg
-GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
+Thanks.
