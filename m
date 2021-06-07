@@ -7,41 +7,43 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 875A9C47095
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:19:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D4C7C4743F
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:21:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F9E96140D
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:19:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43DD161469
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:21:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233199AbhFGQUv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 12:20:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48704 "EHLO mail.kernel.org"
+        id S233352AbhFGQXH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 12:23:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32772 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231984AbhFGQSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Jun 2021 12:18:50 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3910A61585;
-        Mon,  7 Jun 2021 16:14:34 +0000 (UTC)
+        id S232345AbhFGQVG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Jun 2021 12:21:06 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4AB2761864;
+        Mon,  7 Jun 2021 16:15:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623082474;
-        bh=nQEK1x9e3y2124hqECKJ2gGbWsIfNf0Y6BDmEwsR0N8=;
+        s=k20201202; t=1623082503;
+        bh=1zf+BQx7t+SeimfFA/onkUY3pcops3a+BVK9iv4zMWw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=HGjXE40GwmxlG23yZvqNmQXSsO3Mm8v91dNkwRjV/IlKmfaK8OKXKycGiRUFuHq3i
-         Vw8HDbKX5rKCYkwf2uCQ9DWyTXViXCpOOHMx0Cu3HKjJP1vBHYG7dtxy4NPCs3Q61R
-         ORTLHJpj8Nz5znecqqSm04D+j42q3F5MaMWXGBjPnNPv63vCVfcyyNLGpncnW9CMHc
-         88415TmWXnl9YyxM0dt2IC/RMpD5K7hOsWAUw/qAhEsGKKAdr3wVeDOacJork7nF3u
-         1qNS/spnb2wgqR1LZ2noc9EEiMBXXX4Xv9pHbivsLBcKKMnwxLpr3ps79qqWfZAFOp
-         zmUcdI0EWXYOw==
+        b=Le+cFJurCBPC2vOpCf8hX/KaafsL7P2Dyv4PemWq+Z0x7TSL13xDZnYFxvg6ZkTHM
+         W21u5hQ9niCqXDlXfMmo3F2aG3TrdiwBnsMTxpX98EQAGxkevOK+lCNdzJzIA0qi76
+         AMM7FAvqS5xGc6filuhFFK6VH3eRMWvGyOOK01rqL6G/Cn1CJ8LFaL1I66SgRwWqPX
+         hBVNFMJyYgPD+pNUinue4A/Ue6TPtUlGGGPAbNWRze4dSKh28B5UlorZP/8i6oAzEU
+         XwotH992OfEQ+qBBysIiRoTFEa9hzqR9/aGWZYgxb/aDO9jTjQAFmTy/UvLB0PSMOM
+         EzJYIEOxQeQIQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     "Ewan D. Milne" <emilne@redhat.com>,
+Cc:     Maurizio Lombardi <mlombard@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 19/29] scsi: scsi_devinfo: Add blacklist entry for HPE OPEN-V
-Date:   Mon,  7 Jun 2021 12:14:00 -0400
-Message-Id: <20210607161410.3584036-19-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 11/21] scsi: target: core: Fix warning on realtime kernels
+Date:   Mon,  7 Jun 2021 12:14:38 -0400
+Message-Id: <20210607161448.3584332-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210607161410.3584036-1-sashal@kernel.org>
-References: <20210607161410.3584036-1-sashal@kernel.org>
+In-Reply-To: <20210607161448.3584332-1-sashal@kernel.org>
+References: <20210607161448.3584332-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,32 +52,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: "Ewan D. Milne" <emilne@redhat.com>
+From: Maurizio Lombardi <mlombard@redhat.com>
 
-[ Upstream commit e57f5cd99ca60cddf40201b0f4ced9f1938e299c ]
+[ Upstream commit 515da6f4295c2c42b8c54572cce3d2dd1167c41e ]
 
-Apparently some arrays are now returning "HPE" as the vendor.
+On realtime kernels, spin_lock_irq*(spinlock_t) do not disable the
+interrupts, a call to irqs_disabled() will return false thus firing a
+warning in __transport_wait_for_tasks().
 
-Link: https://lore.kernel.org/r/20210601175214.25719-1-emilne@redhat.com
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+Remove the warning and also replace assert_spin_locked() with
+lockdep_assert_held()
+
+Link: https://lore.kernel.org/r/20210531121326.3649-1-mlombard@redhat.com
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_devinfo.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/target/target_core_transport.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index fb5a7832353c..7f76bf5cc8a8 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -184,6 +184,7 @@ static struct {
- 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
- 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
- 	{"HP", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
-+	{"HPE", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES},
- 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
- 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index bdada97cd4fe..9c60a090cfd1 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2982,9 +2982,7 @@ __transport_wait_for_tasks(struct se_cmd *cmd, bool fabric_stop,
+ 	__releases(&cmd->t_state_lock)
+ 	__acquires(&cmd->t_state_lock)
+ {
+-
+-	assert_spin_locked(&cmd->t_state_lock);
+-	WARN_ON_ONCE(!irqs_disabled());
++	lockdep_assert_held(&cmd->t_state_lock);
+ 
+ 	if (fabric_stop)
+ 		cmd->transport_state |= CMD_T_FABRIC_STOP;
 -- 
 2.30.2
 
