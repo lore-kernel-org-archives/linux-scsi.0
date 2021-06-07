@@ -2,164 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_RED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D28EC47094
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 15:21:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 762FCC47082
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 15:23:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F2B860FF0
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 15:21:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DE08611AC
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 15:23:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230404AbhFGPX0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 11:23:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36662 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230217AbhFGPXZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 11:23:25 -0400
-Received: from mail-pj1-x1030.google.com (mail-pj1-x1030.google.com [IPv6:2607:f8b0:4864:20::1030])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B514C061766;
-        Mon,  7 Jun 2021 08:21:34 -0700 (PDT)
-Received: by mail-pj1-x1030.google.com with SMTP id 22-20020a17090a0c16b0290164a5354ad0so12181445pjs.2;
-        Mon, 07 Jun 2021 08:21:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=AqJMsqQ4KNSlTkis4vnlFWwGNt3Bx7s+42JKf63F/jc=;
-        b=WsBdcRsefCiECb9IqTSuqCUv8coeVKPfrhSnmSii/c3l1gmGod3/U/htpg5pceudXy
-         aYMrb18s8dW7vOcfl+l3/JLyfgriswqTmUyfzOzd+MpR4PFDQBqNxGysTptsKMLLdnqS
-         jvqIZCDUxhyEXhn3kFG8PvvaL25gkKk9fhLU2Y6GVkr75vdb0Ve9OxPhhCsLOSZbZ46o
-         oReEyqo0bUD1A3JvfVwFOyoUdnbneVTJbIjly5SDJg+VKDoLMXo7YsQjaqCn4F5oQkI9
-         W8T56TKPKa5QxGA65hUQQsSol/AsF5UgHxkBXTE4sP50uacN6R0GzZbY+xLSbeosBWte
-         pywQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=AqJMsqQ4KNSlTkis4vnlFWwGNt3Bx7s+42JKf63F/jc=;
-        b=MeQeU2Ir03tCyqYM3rLAHeZ1yS4sXLoA8ylkw+16k39ilc1HdG5cyR4dP1AfYW+qEz
-         HO/ry9XUmE3SrAXs4DM59W5FAM8ids/qYGilbCcnBYRO5svd3nN2hRfjZIp+7y92qUIs
-         NLHJT2bgZ/unAZXnLA8SN1NvLverYScZ5SbzehioOt/Q+n6JLFj+kNKQW0eNvllH9iJS
-         JZDEp1V+avfwXlepJZrKDbDpnTNQyM5bELprAupcP1UpYgzyVnzHa0QoraTbHm2pVrp8
-         Bbb7tSKrT5umWfYPyyno+1oXqMt16Y8a1qg9nQPYXrK506ZhcyclTcSUFXGN5i8CJMM6
-         qArg==
-X-Gm-Message-State: AOAM530fLaBlDfCNWDPHYFAAnWlcGl95qFjcwbAjPc/c92hikvRMFdZl
-        7xSA7BZKUZM5Zj6YoMENaI0=
-X-Google-Smtp-Source: ABdhPJwKT7FVRh43L9EMp25B1edDg0633yW6Rnccv/gD+CMCio9gORsvm6jnf+jqiJgT4Bx7SQrrGw==
-X-Received: by 2002:a17:90a:c68a:: with SMTP id n10mr33294547pjt.32.1623079293798;
-        Mon, 07 Jun 2021 08:21:33 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
-        by smtp.gmail.com with ESMTPSA id g63sm8507428pfb.55.2021.06.07.08.21.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 07 Jun 2021 08:21:33 -0700 (PDT)
-Subject: Re: [RFC PATCH V3 10/11] HV/Netvsc: Add Isolation VM support for
- netvsc driver
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        arnd@arndb.de, dave.hansen@linux.intel.com, luto@kernel.org,
-        peterz@infradead.org, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        hannes@cmpxchg.org, cai@lca.pw, krish.sadhukhan@oracle.com,
-        saravanand@fb.com, Tianyu.Lan@microsoft.com,
-        konrad.wilk@oracle.com, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, boris.ostrovsky@oracle.com, jgross@suse.com,
-        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
-        xen-devel@lists.xenproject.org, davem@davemloft.net,
-        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, thomas.lendacky@amd.com,
-        brijesh.singh@amd.com, sunilmut@microsoft.com
-References: <20210530150628.2063957-1-ltykernel@gmail.com>
- <20210530150628.2063957-11-ltykernel@gmail.com>
- <20210607065007.GE24478@lst.de>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <279cb4bf-c5b6-6db9-0f1e-9238e902c8f2@gmail.com>
-Date:   Mon, 7 Jun 2021 23:21:20 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S230422AbhFGPZS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 11:25:18 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50730 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230311AbhFGPZQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 11:25:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1623079404;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=gQwwwRdrZ6LaChUnuXU63XguCJG6w88HoCF5tiXY9yU=;
+        b=OB2ywks+i9BALr5U+0r/60kUnAElqYouBZeaZPqTTRVaF4r377lQMQh2HlHEHNPslSelry
+        NXoplXo4pbcSVMZc2zaPycYVuZNLtfqC9m6yS1r0AMYdUhTjhXgZbXWY0LYj5TDbrA4S7O
+        MIR+JsYWT0EGN/AirhjCtqZYmqweFm8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-425-mqxYEZBLMKSvFwsPsHlx4g-1; Mon, 07 Jun 2021 11:23:22 -0400
+X-MC-Unique: mqxYEZBLMKSvFwsPsHlx4g-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2ADFD180FD6D;
+        Mon,  7 Jun 2021 15:23:21 +0000 (UTC)
+Received: from localhost (ovpn-114-44.ams2.redhat.com [10.36.114.44])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 65C7B60CC6;
+        Mon,  7 Jun 2021 15:23:17 +0000 (UTC)
+Date:   Mon, 7 Jun 2021 16:23:16 +0100
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     michael.christie@oracle.com
+Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
+        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: vhost: multiple worker support
+Message-ID: <YL455LckMXfs0uuL@stefanha-x1.localdomain>
+References: <20210525180600.6349-1-michael.christie@oracle.com>
+ <YLjpMXbfJsaLrgF5@stefanha-x1.localdomain>
+ <523e6207-c380-9a9d-7a5d-7b7ee554d7f2@oracle.com>
+ <faa6085b-dfd8-9ddf-8b52-20053ac182ef@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20210607065007.GE24478@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="Kyb5/9sATge0h0pI"
+Content-Disposition: inline
+In-Reply-To: <faa6085b-dfd8-9ddf-8b52-20053ac182ef@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
+--Kyb5/9sATge0h0pI
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-On 6/7/2021 2:50 PM, Christoph Hellwig wrote:
-> On Sun, May 30, 2021 at 11:06:27AM -0400, Tianyu Lan wrote:
->> +	if (hv_isolation_type_snp()) {
->> +		pfns = kcalloc(buf_size / HV_HYP_PAGE_SIZE, sizeof(unsigned long),
->> +			       GFP_KERNEL);
->> +		for (i = 0; i < buf_size / HV_HYP_PAGE_SIZE; i++)
->> +			pfns[i] = virt_to_hvpfn(net_device->recv_buf + i * HV_HYP_PAGE_SIZE) +
->> +				(ms_hyperv.shared_gpa_boundary >> HV_HYP_PAGE_SHIFT);
->> +
->> +		vaddr = vmap_pfn(pfns, buf_size / HV_HYP_PAGE_SIZE, PAGE_KERNEL_IO);
->> +		kfree(pfns);
->> +		if (!vaddr)
->> +			goto cleanup;
->> +		net_device->recv_original_buf = net_device->recv_buf;
->> +		net_device->recv_buf = vaddr;
->> +	}
-> 
-> This probably wnats a helper to make the thing more readable.  But who
-> came up with this fucked up communication protocol where the host needs
-> to map random pfns into a contigous range?  Sometime I really have to
-> wonder what crack the hyper-v people take when comparing this to the
-> relatively sane approach others take.
+On Sat, Jun 05, 2021 at 05:40:17PM -0500, michael.christie@oracle.com wrote:
+> On 6/3/21 5:16 PM, Mike Christie wrote:
+> > On 6/3/21 9:37 AM, Stefan Hajnoczi wrote:
+> >> On Tue, May 25, 2021 at 01:05:51PM -0500, Mike Christie wrote:
+> >>> The following patches apply over linus's tree or mst's vhost branch
+> >>> and my cleanup patchset:
+> >>>
+> >>> https://urldefense.com/v3/__https://lists.linuxfoundation.org/piperma=
+il/virtualization/2021-May/054354.html__;!!GqivPVa7Brio!P55eslnMW_iZkoTUZck=
+whnSw_9Z35JBScgtSYRh4CMFTRkSsWwKOYqY0huUfBfIPM8BV$=20
+> >>>
+> >>> These patches allow us to support multiple vhost workers per device. I
+> >>> ended up just doing Stefan's original idea where userspace has the
+> >>> kernel create a worker and we pass back the pid. This has the benefit
+> >>> over the workqueue and userspace thread approach where we only have
+> >>> one'ish code path in the kernel during setup to detect old tools. The
+> >>> main IO paths and device/vq setup/teardown paths all use common code.
+> >>>
+> >>> The kernel patches here allow us to then do N workers device and also
+> >>> share workers across devices.
+> >>>
+> >>> I've also included a patch for qemu so you can get an idea of how it
+> >>> works. If we are ok with the kernel code then I'll break that up into
+> >>> a patchset and send to qemu-devel.
+> >>
+> >> It seems risky to allow userspace process A to "share" a vhost worker
+> >> thread with userspace process B based on a matching pid alone. Should
+> >> they have ptrace_may_access() or similar?
+> >>
+> >=20
+> > I'm not sure. I already made it a little restrictive in this posting, b=
+ut
+>=20
+> Made a mistake here. In this posting I did not make it restrictive and
+> I was allowing any old 2 processes to share. So we would need something
+> like ptrace_may_access if go this route.
+>=20
+> If we restrict sharing workers with the same owner, then I'm not sure if
+> need anything.
 
-Agree. Will add a helper function.
-> 
->> +	for (i = 0; i < page_count; i++)
->> +		dma_unmap_single(&hv_dev->device, packet->dma_range[i].dma,
->> +				 packet->dma_range[i].mapping_size,
->> +				 DMA_TO_DEVICE);
->> +
->> +	kfree(packet->dma_range);
-> 
-> Any reason this isn't simply using a struct scatterlist?
+Agreed.
 
-I will have a look. Thanks to reminder scatterlist.
+Sharing between processes becomes most interesting when there is busy
+polling (because it consumes CPU and we should consolidate polling onto
+as few CPUs as possible). Without polling we can just share the threads
+within a process.
 
-> 
->> +	for (i = 0; i < page_count; i++) {
->> +		char *src = phys_to_virt((pb[i].pfn << HV_HYP_PAGE_SHIFT)
->> +					 + pb[i].offset);
->> +		u32 len = pb[i].len;
->> +
->> +		dma = dma_map_single(&hv_dev->device, src, len,
->> +				     DMA_TO_DEVICE);
-> 
-> dma_map_single can only be used on page baked memory, and if this is
-> using page backed memory you wouldn't need to do thee phys_to_virt
-> tricks.  Can someone explain the mess here in more detail?
+Stefan
 
-Sorry. Could you elaborate the issue? These pages in the pb array are 
-not allocated by DMA API and using dma_map_single() here is to map these 
-pages' address to bounce buffer physical address.
+--Kyb5/9sATge0h0pI
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> 
->>   	struct rndis_device *dev = nvdev->extension;
->>   	struct rndis_request *request = NULL;
->> +	struct hv_device *hv_dev = ((struct net_device_context *)
->> +			netdev_priv(ndev))->device_ctx;
-> 
-> Why not use a net_device_context local variable instead of this cast
-> galore?
-> 
+-----BEGIN PGP SIGNATURE-----
 
-OK. I will update.
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmC+OeQACgkQnKSrs4Gr
+c8itnwgAyaZ9Om2772W/pMrI+RZS8bt0A2DvHS8+fjZPz57Q08tawZ91kvAykxQq
+YI4wduuObGWltmlTh6Unmm3eVdRBHVG8rn5szrYcC4C4IxjQZyPRpemgU5qVJtQn
+ECAqx1JveFR9evQk/MXIFy1Y33oNuM2VS3yst2kqaS7KsmRbhfb+AnPbgfqM61z1
+ULxQtdL2NbW1Cs4xObsBfk48EhL5MXaL9AGL4sm/YA+wVePRrCYzGt9U2oGZCvqu
+EZCfAoxz9C6tJ5ZiZVbBfFN05Dhej7677/daxSUs79SWwV/uw1SHR8AR5roxuuZc
+6yokRBdnHyd2DL10zMk5/8FzXhE3Wg==
+=qN6w
+-----END PGP SIGNATURE-----
 
+--Kyb5/9sATge0h0pI--
 
-Thanks.
