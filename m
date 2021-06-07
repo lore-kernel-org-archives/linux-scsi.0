@@ -4,43 +4,41 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 246C8C48BCD
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:15:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DED04C47095
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:15:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FC2261463
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:15:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C890F6194F
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:15:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232654AbhFGQRc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 12:17:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48738 "EHLO mail.kernel.org"
+        id S232686AbhFGQRj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 12:17:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50068 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231971AbhFGQQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S232291AbhFGQQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 7 Jun 2021 12:16:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 16F5361466;
-        Mon,  7 Jun 2021 16:13:45 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 21A5461463;
+        Mon,  7 Jun 2021 16:13:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623082425;
-        bh=/48tEIiycQisQE3B2621vevj4juoOruldivOFAm/uX4=;
+        s=k20201202; t=1623082430;
+        bh=0pX1k/xoHWn6byGeiRZWcn55c8+q9SC9H4ofULQgfKk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UZ1sodpNapUmpBWpF+kQerdBB2YLbzMpGXja1xzgtPrmPYZyzi2Kv8xLJreEQcdYz
-         PCSWWYX3YQTBHC5nesU7LEzQ2gja6BuOT3k2A0Kid9J0k5lHGk07BgDv6tdbdpEfnN
-         QGuwcvojm+dpza6WxWidMcF9ntqfVH+yCbw5OQknoA6CxLSCcoEX5Y3QeEMb7Ue9xC
-         4mGYhiyxABboI0VLw+rfZDs9qEkBnaQklTG4UgWNbcuezbSsY47y5D4PT/sp9Gdcf6
-         C4M2nrmhH9anmxO6vhDnhbV0/pqQl2UB3VdXtUzQ8fbM7TskKcvsPe8Nx5nLOnRFN+
-         dDH6ZXZqxqVCg==
+        b=q3Kp2GOtvgIlV38IECf6tPvnXnWmX44HQP4PlFcgikni24PxTxetGQ8EhIRB25dwH
+         1xwePLJfWKwetow4KB4jd9dxLCB19S1ZVS3s1ftxdZe3XTch+3SMT3BWr9mBboz85n
+         zdwO35jw+Z4e+G5UF1aqeVYO9XXW01AwhxQ9JOjm+DnBYIuCHtrGSj7xPo37QMkUVb
+         TPGWRISe9/1Nux83QowzlsOOQGM8GuFd4WErXUngMCaxr0WMeTZd7wbUAeC72gQQ83
+         EV/+kLfKwMwciUvnct4jabHX1e8U9gms/ZdCUquEyM9WFRv5Iz10pFGMQ/gHFB6Kxp
+         yUq98fnxgFBog==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Maurizio Lombardi <mlombard@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     "Ewan D. Milne" <emilne@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 21/39] scsi: target: core: Fix warning on realtime kernels
-Date:   Mon,  7 Jun 2021 12:13:00 -0400
-Message-Id: <20210607161318.3583636-21-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 25/39] scsi: scsi_devinfo: Add blacklist entry for HPE OPEN-V
+Date:   Mon,  7 Jun 2021 12:13:04 -0400
+Message-Id: <20210607161318.3583636-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210607161318.3583636-1-sashal@kernel.org>
 References: <20210607161318.3583636-1-sashal@kernel.org>
@@ -52,41 +50,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Maurizio Lombardi <mlombard@redhat.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-[ Upstream commit 515da6f4295c2c42b8c54572cce3d2dd1167c41e ]
+[ Upstream commit e57f5cd99ca60cddf40201b0f4ced9f1938e299c ]
 
-On realtime kernels, spin_lock_irq*(spinlock_t) do not disable the
-interrupts, a call to irqs_disabled() will return false thus firing a
-warning in __transport_wait_for_tasks().
+Apparently some arrays are now returning "HPE" as the vendor.
 
-Remove the warning and also replace assert_spin_locked() with
-lockdep_assert_held()
-
-Link: https://lore.kernel.org/r/20210531121326.3649-1-mlombard@redhat.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+Link: https://lore.kernel.org/r/20210601175214.25719-1-emilne@redhat.com
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_transport.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 484f0ba0a65b..61b79804d462 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -3038,9 +3038,7 @@ __transport_wait_for_tasks(struct se_cmd *cmd, bool fabric_stop,
- 	__releases(&cmd->t_state_lock)
- 	__acquires(&cmd->t_state_lock)
- {
--
--	assert_spin_locked(&cmd->t_state_lock);
--	WARN_ON_ONCE(!irqs_disabled());
-+	lockdep_assert_held(&cmd->t_state_lock);
- 
- 	if (fabric_stop)
- 		cmd->transport_state |= CMD_T_FABRIC_STOP;
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index ba84244c1b4f..9a8f9f902f3b 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -184,6 +184,7 @@ static struct {
+ 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
+ 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
+ 	{"HP", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
++	{"HPE", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
 -- 
 2.30.2
 
