@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4360AC47095
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 408B0C48BCD
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:13:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3110961246
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BCB961442
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:13:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232025AbhFGQPT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 12:15:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48406 "EHLO mail.kernel.org"
+        id S232076AbhFGQPZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 12:15:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48884 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231633AbhFGQOs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Jun 2021 12:14:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 46A63613C1;
-        Mon,  7 Jun 2021 16:12:56 +0000 (UTC)
+        id S231721AbhFGQOu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Jun 2021 12:14:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AD32A613D5;
+        Mon,  7 Jun 2021 16:12:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623082377;
-        bh=a4TIiWANEKxTnYf+JVI7YM6TQKyxchagbhSFNk43bco=;
+        s=k20201202; t=1623082379;
+        bh=KKW5qRr7fS7+NBA0jnAn5p0F2zM9qjXWyvTV70NiWrY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hLOj15/QpYGro4DGmFAWafvkSKls60ZtEmsXHX276HPjJ73pR+hpFIcQ5kzRpf7iR
-         OnBHr/9MCk1aMidl/e2VEv4CC1u39K1rEW67vkR3JUD58C3daKE284lQZniMI0nDIo
-         9el4/wJX50+bFANaMXs6BDGybMBTbr8+OB4eOfZxkyA9mzjdKMswc0TGrTXMrCO9v7
-         o35Rg3OXEPFtEjMn6QgwO/7+agV5XRKiUJqnBonmrnJDkHubPdTaGTX1u2vto9cyNM
-         GkMuEUAp1Bc6l2ArHu+yn+T/+35GkHGc3ImTRuD+mCuSFRH4RJc+RRFjemRtLkQ0H3
-         GFcak0hhSBmMQ==
+        b=TMkeZrbmmZfiqx/o3Qn/HNtw/mFHNXLZaeweXip2pfqqAkRW/YU8UDrBL1N3IVk2R
+         jAbMHMUZ9oVTRSS4OMzU6WWcVUhZ8KuKGJCGKWSN02xavNDbc2jjNh1QH6eya2bdIc
+         jqGDTpn1hAiuH+Hz3FyoJJGOdfxQ4lrldy1EfKJwgqhKGoQKEKA8cLuIlrXzO0U/Pz
+         XrrYBPlWituTphMH9gcOLtPqbJe8SqmoItCeixIvnchBodmqkaONs+lzYML/6wsclL
+         FLd/BKENR/qYVPY8Pnq60htZChvGz4vHYRCXHYojBd4EDiiuhdz3KE7WAOzV5ONUEN
+         ii7qYzKkNdxtA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Daniel Wagner <dwagner@suse.de>, Javed Hasan <jhasan@marvell.com>,
+Cc:     "Ewan D. Milne" <emilne@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 33/49] scsi: qedf: Do not put host in qedf_vport_create() unconditionally
-Date:   Mon,  7 Jun 2021 12:11:59 -0400
-Message-Id: <20210607161215.3583176-33-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 35/49] scsi: scsi_devinfo: Add blacklist entry for HPE OPEN-V
+Date:   Mon,  7 Jun 2021 12:12:01 -0400
+Message-Id: <20210607161215.3583176-35-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210607161215.3583176-1-sashal@kernel.org>
 References: <20210607161215.3583176-1-sashal@kernel.org>
@@ -50,93 +50,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Daniel Wagner <dwagner@suse.de>
+From: "Ewan D. Milne" <emilne@redhat.com>
 
-[ Upstream commit 79c932cd6af9829432888c4a0001d01793a09f12 ]
+[ Upstream commit e57f5cd99ca60cddf40201b0f4ced9f1938e299c ]
 
-Do not drop reference count on vn_port->host in qedf_vport_create()
-unconditionally. Instead drop the reference count in qedf_vport_destroy().
+Apparently some arrays are now returning "HPE" as the vendor.
 
-Link: https://lore.kernel.org/r/20210521143440.84816-1-dwagner@suse.de
-Reported-by: Javed Hasan <jhasan@marvell.com>
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
+Link: https://lore.kernel.org/r/20210601175214.25719-1-emilne@redhat.com
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedf/qedf_main.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_devinfo.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index e5076f09d5ed..16a0470aedfc 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -1827,22 +1827,20 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 		fcoe_wwn_to_str(vport->port_name, buf, sizeof(buf));
- 		QEDF_WARN(&(base_qedf->dbg_ctx), "Failed to create vport, "
- 			   "WWPN (0x%s) already exists.\n", buf);
--		goto err1;
-+		return rc;
- 	}
- 
- 	if (atomic_read(&base_qedf->link_state) != QEDF_LINK_UP) {
- 		QEDF_WARN(&(base_qedf->dbg_ctx), "Cannot create vport "
- 			   "because link is not up.\n");
--		rc = -EIO;
--		goto err1;
-+		return -EIO;
- 	}
- 
- 	vn_port = libfc_vport_create(vport, sizeof(struct qedf_ctx));
- 	if (!vn_port) {
- 		QEDF_WARN(&(base_qedf->dbg_ctx), "Could not create lport "
- 			   "for vport.\n");
--		rc = -ENOMEM;
--		goto err1;
-+		return -ENOMEM;
- 	}
- 
- 	fcoe_wwn_to_str(vport->port_name, buf, sizeof(buf));
-@@ -1866,7 +1864,7 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 	if (rc) {
- 		QEDF_ERR(&(base_qedf->dbg_ctx), "Could not allocate memory "
- 		    "for lport stats.\n");
--		goto err2;
-+		goto err;
- 	}
- 
- 	fc_set_wwnn(vn_port, vport->node_name);
-@@ -1884,7 +1882,7 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 	if (rc) {
- 		QEDF_WARN(&base_qedf->dbg_ctx,
- 			  "Error adding Scsi_Host rc=0x%x.\n", rc);
--		goto err2;
-+		goto err;
- 	}
- 
- 	/* Set default dev_loss_tmo based on module parameter */
-@@ -1925,9 +1923,10 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 	vport_qedf->dbg_ctx.host_no = vn_port->host->host_no;
- 	vport_qedf->dbg_ctx.pdev = base_qedf->pdev;
- 
--err2:
-+	return 0;
-+
-+err:
- 	scsi_host_put(vn_port->host);
--err1:
- 	return rc;
- }
- 
-@@ -1968,8 +1967,7 @@ static int qedf_vport_destroy(struct fc_vport *vport)
- 	fc_lport_free_stats(vn_port);
- 
- 	/* Release Scsi_Host */
--	if (vn_port->host)
--		scsi_host_put(vn_port->host);
-+	scsi_host_put(vn_port->host);
- 
- out:
- 	return 0;
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index d92cec12454c..d33355ab6e14 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -184,6 +184,7 @@ static struct {
+ 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
+ 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
+ 	{"HP", "DISK-SUBSYSTEM", "*", BLIST_REPORTLUN2},
++	{"HPE", "OPEN-", "*", BLIST_REPORTLUN2 | BLIST_TRY_VPD_PAGES},
+ 	{"IBM", "AuSaV1S2", NULL, BLIST_FORCELUN},
+ 	{"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"IBM", "2105", NULL, BLIST_RETRY_HWERROR},
 -- 
 2.30.2
 
