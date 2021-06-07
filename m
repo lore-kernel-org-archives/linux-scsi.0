@@ -4,44 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87A02C47082
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:15:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 707B0C47094
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:18:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 686CA6194F
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:15:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5ADDE6140D
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 16:18:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232698AbhFGQRl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 12:17:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49988 "EHLO mail.kernel.org"
+        id S233179AbhFGQUs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 12:20:48 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49406 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231981AbhFGQQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Jun 2021 12:16:12 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AFCD76145C;
-        Mon,  7 Jun 2021 16:13:47 +0000 (UTC)
+        id S232433AbhFGQSp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Jun 2021 12:18:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8043161601;
+        Mon,  7 Jun 2021 16:14:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623082428;
-        bh=vemhfjrrhQBx+PYah633o7e9zpKijYA3wYwiRjNm7WM=;
+        s=k20201202; t=1623082471;
+        bh=MfSr33OQR/3F0MHvDf2x2DbxuNCQgTef2ELFZ8C5Lg0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=qL95ftH+rBQG2Ddv39ytMuMdPI2u33doHj17O5vB/9w0erjrLzFSapqx9LDZovSnZ
-         RgujZaW8kCAuHQnUTwMGH22HrklUtnZ7RZKTAxTmA8V0KbPXB5qw/COzrAZlmhPp3Y
-         +IBxfUhsWbWv649dpS403NhZw/iN3/XYTvrYVLufJqE3SQ5MIosQ33lg6zpqHzUyE6
-         I2zhCTgIbKKxJCrGhm9c6ulCuR+AxWuedSiB/zqS7FIfcJvbWNhST2ni+oyk9WA866
-         akMwhFKBp3DfXFqhBK13ibf5mLLN99N5tMmpcGydpBIVZ9FY6XVnPNcpuUkDNJ6l2C
-         YT52x42wOunZA==
+        b=iDSF1w4F7OXl+AoulCMtQKuBzWc3YdRGCPd58dLb2RMYwSoh7/hihxC8I38zOuSRj
+         U9woEoukcSwkJ+JLxbF3UEGpj8VjF4QgMINE+strz+ZJOHU4eU96EpQx3RGrbyQ8ja
+         nMpkw+h6eoYOea4aNuVWYsROPJYFEDfrHYrZ9cqBXD8EjkMw9lAF891tacBTyHtwCS
+         ij3t5ghYWmdQHC2I2hqaDeI911M6S9za34sd5QeURzACyt37eKSs6Ltpq78V5HU6eF
+         EIOIMMaDr0MrUdwAW/D5+qlT7WvjNbkO+TSeE7yGdLZDAxKvPKhJA+u46rci6hZZjg
+         PWouFdmvIATJw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Daniel Wagner <dwagner@suse.de>, Javed Hasan <jhasan@marvell.com>,
+Cc:     Maurizio Lombardi <mlombard@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 23/39] scsi: qedf: Do not put host in qedf_vport_create() unconditionally
-Date:   Mon,  7 Jun 2021 12:13:02 -0400
-Message-Id: <20210607161318.3583636-23-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 16/29] scsi: target: core: Fix warning on realtime kernels
+Date:   Mon,  7 Jun 2021 12:13:57 -0400
+Message-Id: <20210607161410.3584036-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210607161318.3583636-1-sashal@kernel.org>
-References: <20210607161318.3583636-1-sashal@kernel.org>
+In-Reply-To: <20210607161410.3584036-1-sashal@kernel.org>
+References: <20210607161410.3584036-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,93 +52,41 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Daniel Wagner <dwagner@suse.de>
+From: Maurizio Lombardi <mlombard@redhat.com>
 
-[ Upstream commit 79c932cd6af9829432888c4a0001d01793a09f12 ]
+[ Upstream commit 515da6f4295c2c42b8c54572cce3d2dd1167c41e ]
 
-Do not drop reference count on vn_port->host in qedf_vport_create()
-unconditionally. Instead drop the reference count in qedf_vport_destroy().
+On realtime kernels, spin_lock_irq*(spinlock_t) do not disable the
+interrupts, a call to irqs_disabled() will return false thus firing a
+warning in __transport_wait_for_tasks().
 
-Link: https://lore.kernel.org/r/20210521143440.84816-1-dwagner@suse.de
-Reported-by: Javed Hasan <jhasan@marvell.com>
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
+Remove the warning and also replace assert_spin_locked() with
+lockdep_assert_held()
+
+Link: https://lore.kernel.org/r/20210531121326.3649-1-mlombard@redhat.com
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedf/qedf_main.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+ drivers/target/target_core_transport.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index a464d0a4f465..846a02de4d51 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -1827,22 +1827,20 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 		fcoe_wwn_to_str(vport->port_name, buf, sizeof(buf));
- 		QEDF_WARN(&(base_qedf->dbg_ctx), "Failed to create vport, "
- 			   "WWPN (0x%s) already exists.\n", buf);
--		goto err1;
-+		return rc;
- 	}
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index a16835c0bb1d..5cf9e7677926 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2993,9 +2993,7 @@ __transport_wait_for_tasks(struct se_cmd *cmd, bool fabric_stop,
+ 	__releases(&cmd->t_state_lock)
+ 	__acquires(&cmd->t_state_lock)
+ {
+-
+-	assert_spin_locked(&cmd->t_state_lock);
+-	WARN_ON_ONCE(!irqs_disabled());
++	lockdep_assert_held(&cmd->t_state_lock);
  
- 	if (atomic_read(&base_qedf->link_state) != QEDF_LINK_UP) {
- 		QEDF_WARN(&(base_qedf->dbg_ctx), "Cannot create vport "
- 			   "because link is not up.\n");
--		rc = -EIO;
--		goto err1;
-+		return -EIO;
- 	}
- 
- 	vn_port = libfc_vport_create(vport, sizeof(struct qedf_ctx));
- 	if (!vn_port) {
- 		QEDF_WARN(&(base_qedf->dbg_ctx), "Could not create lport "
- 			   "for vport.\n");
--		rc = -ENOMEM;
--		goto err1;
-+		return -ENOMEM;
- 	}
- 
- 	fcoe_wwn_to_str(vport->port_name, buf, sizeof(buf));
-@@ -1866,7 +1864,7 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 	if (rc) {
- 		QEDF_ERR(&(base_qedf->dbg_ctx), "Could not allocate memory "
- 		    "for lport stats.\n");
--		goto err2;
-+		goto err;
- 	}
- 
- 	fc_set_wwnn(vn_port, vport->node_name);
-@@ -1884,7 +1882,7 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 	if (rc) {
- 		QEDF_WARN(&base_qedf->dbg_ctx,
- 			  "Error adding Scsi_Host rc=0x%x.\n", rc);
--		goto err2;
-+		goto err;
- 	}
- 
- 	/* Set default dev_loss_tmo based on module parameter */
-@@ -1925,9 +1923,10 @@ static int qedf_vport_create(struct fc_vport *vport, bool disabled)
- 	vport_qedf->dbg_ctx.host_no = vn_port->host->host_no;
- 	vport_qedf->dbg_ctx.pdev = base_qedf->pdev;
- 
--err2:
-+	return 0;
-+
-+err:
- 	scsi_host_put(vn_port->host);
--err1:
- 	return rc;
- }
- 
-@@ -1968,8 +1967,7 @@ static int qedf_vport_destroy(struct fc_vport *vport)
- 	fc_lport_free_stats(vn_port);
- 
- 	/* Release Scsi_Host */
--	if (vn_port->host)
--		scsi_host_put(vn_port->host);
-+	scsi_host_put(vn_port->host);
- 
- out:
- 	return 0;
+ 	if (fabric_stop)
+ 		cmd->transport_state |= CMD_T_FABRIC_STOP;
 -- 
 2.30.2
 
