@@ -2,146 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08C76C47082
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 11:06:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65250C47082
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 11:37:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D8C5760FDA
-	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 11:06:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43CD761159
+	for <linux-scsi@archiver.kernel.org>; Mon,  7 Jun 2021 11:37:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230213AbhFGLIX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 7 Jun 2021 07:08:23 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:33264 "EHLO
+        id S231565AbhFGLjO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 7 Jun 2021 07:39:14 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:36350 "EHLO
         smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230131AbhFGLIX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 07:08:23 -0400
+        with ESMTP id S231499AbhFGLjM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jun 2021 07:39:12 -0400
 Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
         (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 2AC6121A59;
-        Mon,  7 Jun 2021 11:06:31 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id AEC6021A97;
+        Mon,  7 Jun 2021 11:37:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623063991; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1623065840; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GHYTT534j1CyXuVjlW+dmJdW1mhRIl30E7ZHgn5NbCI=;
-        b=SuPyxBWtCPEH6kWLNRw5XWJeIhW6o7+OoN8rrfvwND2IgNdi9ytchWkjCAgyeVoRrbtd6Y
-        oVdFmfRRo2jZ89NzUu8VFFpfFXVVUz3VDX9g0Wlo4atdgEIY6TQXuJtXC8mUOwQbk1ddET
-        R6ON6wDiZaSTSLtAFFoNBgZWBo9O9m4=
+        bh=yZOHVH2XtB2FE9PhDbBJcskiQDcVcxS8zf+lEFsGqY0=;
+        b=mXb7JQJUGFm96HgGhW+dndEGTPAV/F4fJKWot+BhQZClPPd5RChHC9pZkuDfjUFFFknj+F
+        D0uPtdSHtde0XLXez1W75314Ome3TUwBFOijaHSnD3J5hb4a5nQkgq74bgig2hPRE6P4vZ
+        CMFpsE4FbvQwBiB2P42IEqqWcdEDYjU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623063991;
+        s=susede2_ed25519; t=1623065840;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GHYTT534j1CyXuVjlW+dmJdW1mhRIl30E7ZHgn5NbCI=;
-        b=toirQodYRyYLg7v9MGC8BZKI9Hj9p+XMZROnH48zTvvlvAeW2+kT6kYPICoAd0wxsBHV1z
-        YbbMTE1mJc4Xs5Dw==
+        bh=yZOHVH2XtB2FE9PhDbBJcskiQDcVcxS8zf+lEFsGqY0=;
+        b=rYDieUQoI9UXhhucsY+uMIwgGA1K10ptiXZRcRjbVG/AbQLT7025FpIzSjshZR08GxGdah
+        Vqu0q+muk7El0ABA==
 Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id 0C4E8118DD;
-        Mon,  7 Jun 2021 11:06:31 +0000 (UTC)
+        by imap.suse.de (Postfix) with ESMTP id 80E47118DD;
+        Mon,  7 Jun 2021 11:37:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623063991; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1623065840; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GHYTT534j1CyXuVjlW+dmJdW1mhRIl30E7ZHgn5NbCI=;
-        b=SuPyxBWtCPEH6kWLNRw5XWJeIhW6o7+OoN8rrfvwND2IgNdi9ytchWkjCAgyeVoRrbtd6Y
-        oVdFmfRRo2jZ89NzUu8VFFpfFXVVUz3VDX9g0Wlo4atdgEIY6TQXuJtXC8mUOwQbk1ddET
-        R6ON6wDiZaSTSLtAFFoNBgZWBo9O9m4=
+        bh=yZOHVH2XtB2FE9PhDbBJcskiQDcVcxS8zf+lEFsGqY0=;
+        b=mXb7JQJUGFm96HgGhW+dndEGTPAV/F4fJKWot+BhQZClPPd5RChHC9pZkuDfjUFFFknj+F
+        D0uPtdSHtde0XLXez1W75314Ome3TUwBFOijaHSnD3J5hb4a5nQkgq74bgig2hPRE6P4vZ
+        CMFpsE4FbvQwBiB2P42IEqqWcdEDYjU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623063991;
+        s=susede2_ed25519; t=1623065840;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=GHYTT534j1CyXuVjlW+dmJdW1mhRIl30E7ZHgn5NbCI=;
-        b=toirQodYRyYLg7v9MGC8BZKI9Hj9p+XMZROnH48zTvvlvAeW2+kT6kYPICoAd0wxsBHV1z
-        YbbMTE1mJc4Xs5Dw==
+        bh=yZOHVH2XtB2FE9PhDbBJcskiQDcVcxS8zf+lEFsGqY0=;
+        b=rYDieUQoI9UXhhucsY+uMIwgGA1K10ptiXZRcRjbVG/AbQLT7025FpIzSjshZR08GxGdah
+        Vqu0q+muk7El0ABA==
 Received: from director2.suse.de ([192.168.254.72])
         by imap3-int with ESMTPSA
-        id RSyEArf9vWA6TAAALh3uQQ
-        (envelope-from <dwagner@suse.de>); Mon, 07 Jun 2021 11:06:31 +0000
-Date:   Mon, 7 Jun 2021 13:06:30 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: Re: [PATCH v2 02/15] lpfc: Fix auto sli_mode and its effect on
- CONFIG_PORT for SLI3
-Message-ID: <20210607110630.kwn74yfrbsrrrhsm@beryllium.lan>
-References: <20210104180240.46824-1-jsmart2021@gmail.com>
- <20210104180240.46824-3-jsmart2021@gmail.com>
+        id YLWyHvAEvmCTXQAALh3uQQ
+        (envelope-from <hare@suse.de>); Mon, 07 Jun 2021 11:37:20 +0000
+Subject: Re: [PATCH 2/4] scsi: core: fix failure handling of
+ scsi_add_host_with_dma
+To:     Ming Lei <ming.lei@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>
+References: <20210602133029.2864069-1-ming.lei@redhat.com>
+ <20210602133029.2864069-3-ming.lei@redhat.com>
+From:   Hannes Reinecke <hare@suse.de>
+Organization: SUSE Linux GmbH
+Message-ID: <d414ccf1-bd6b-8de5-6792-15fbc166b885@suse.de>
+Date:   Mon, 7 Jun 2021 13:37:20 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210104180240.46824-3-jsmart2021@gmail.com>
+In-Reply-To: <20210602133029.2864069-3-ming.lei@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi James,
-
-On Mon, Jan 04, 2021 at 10:02:27AM -0800, James Smart wrote:
-> A very long time ago, there was a feature: auto sli mode. It gave the
-> user the ability to auto select the SLI mode (SLI2 or SLI3) to run the
-> port in, or even force SLI2 mode if configured.  Because of the
-> convoluted logic, the CONFIG_PORT mbox command ends up being called 2 or
-> 3 times. It should have been called only once.  Additionally, the driver
-> no longer supports SLI-2, so only SLI-3 mode should be allowed.
+On 6/2/21 3:30 PM, Ming Lei wrote:
+> When scsi_add_host_with_dma() return failure, the caller will call
+> scsi_host_put(shost) to release everything allocated for this host
+> instance. So we can't free allocated stuff in scsi_add_host_with_dma(),
+> otherwise double free will be caused.
 > 
-> The following changes were made:
-> - Force module parameter to SLI3 only.
-> - Rip out redundant CONFIG_PORT mbox commands.
-> - Force CONFIG_PORT mbox command to be in beginning of enable ISR routine.
-> - Added changes for offline to online behavior
+> Strictly speaking, these host resources allocation should have been
+> moved to scsi_host_alloc(), but the allocation may need driver's
+> info which can be built between calling scsi_host_alloc() and
+> scsi_add_host(), so just keep the allocations in
+> scsi_add_host_with_dma().
+> 
+> Fixes the problem by relying on host device's release handler to
+> release everything.
+> 
+> Cc: Bart Van Assche <bvanassche@acm.org>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/hosts.c | 14 ++++++--------
+>  1 file changed, 6 insertions(+), 8 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-We got a regression report for this patch. The problem seems to be
-related with older Emulex HBAs. The symptom is in this case one port is
-not enabled. A revert of this patch fixed the problem. This was
-observed with:
+Cheers,
 
-  Emulex LPe11000 FV2.72X2 DV12.8.0.7 HN:FR2AS6AP2-0001 OS:Linux
-
-Here some ramblings from my debugging:
-
-In the logs I found:
-
-> 0000:0b:00.0: 0:0431 Failed to enable interrupt.
-> 0000:0b:00.0: 0:0431 Failed to enable interrupt.
-> 0000:0b:00.0: 0:0431 Failed to enable interrupt.
-
-cfg_sli_mode used to be 0 (auto) and the config port setup
-used to try first mode = 3 and then fall back to mode = 2
-
-> -       rc = lpfc_sli_config_port(phba, mode);
-> -
-> -       if (rc && phba->cfg_sli_mode == 3)
-> -               lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-> -                               "1820 Unable to select SLI-3.  "
-> -                               "Not supported by adapter.\n");
-> -       if (rc && mode != 2)
-> -               rc = lpfc_sli_config_port(phba, 2);
-
-the port config is now in lpfc_sli_enable_intr which is hardcoded
-to LPFC_SLI_REV3 and I think this fails and the HBA_NEEDS_CFG_PORT
-flag is not resetted, hence in lpfc_sli_hba_setup() the new
-code tries to enable the port again with:
-
-> +       /* Enable ISR already does config_port because of config_msi mbx */
-> +       if (phba->hba_flag & HBA_NEEDS_CFG_PORT) {
-> +               rc = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
-> +               if (rc)
-> +                       return -EIO;
-> +               phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
-
-Though I think this should something like
-
-   lpfc_sli_config_port(phba, LPFC_SLI_REV2);
-
-for the specific case.
-
-HTH!
-
-Thanks,
-Daniel
+Hannes
+-- 
+Dr. Hannes Reinecke		        Kernel Storage Architect
+hare@suse.de			               +49 911 74053 688
+SUSE Software Solutions Germany GmbH, 90409 Nürnberg
+GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
