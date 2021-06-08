@@ -2,87 +2,185 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
+	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFD69C47082
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Jun 2021 07:23:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE261C47082
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Jun 2021 11:36:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA3926127A
-	for <linux-scsi@archiver.kernel.org>; Tue,  8 Jun 2021 07:23:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ACACB6134F
+	for <linux-scsi@archiver.kernel.org>; Tue,  8 Jun 2021 11:36:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230145AbhFHHZE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 8 Jun 2021 03:25:04 -0400
-Received: from m12-17.163.com ([220.181.12.17]:46417 "EHLO m12-17.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229512AbhFHHZE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Jun 2021 03:25:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=lXAG6
-        vCftIk6Ip/UkivpNpsxciXf87u+LUWOlsCSk0o=; b=CoaKPJGZm9VDPyPxwu3sy
-        brDVKLD7Cj2Q7lJhQEaGd2E75KDdIizN7sM7mAZprmXHhImKAJppgVTVfU5GA1Av
-        TM24JckQwcAQy3Xmm3zmLNYrE6XVZuluUQv723bM2tx77VNcTn2kZS+FDycONBhe
-        z+Q/dXqeiIIWyWeXkegTAA=
-Received: from localhost.localdomain (unknown [218.17.89.92])
-        by smtp13 (Coremail) with SMTP id EcCowADH5ZW5Gr9gr0h06A--.64881S2;
-        Tue, 08 Jun 2021 15:22:34 +0800 (CST)
-From:   lijian_8010a29@163.com
-To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lijian <lijian@yulong.com>
-Subject: [PATCH] scsi: lpfc: lpfc_nvmet: deleted the repeated word
-Date:   Tue,  8 Jun 2021 15:21:33 +0800
-Message-Id: <20210608072133.272091-1-lijian_8010a29@163.com>
-X-Mailer: git-send-email 2.25.1
+        id S232049AbhFHLiW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 8 Jun 2021 07:38:22 -0400
+Received: from relay.smtp-ext.broadcom.com ([192.19.11.229]:43166 "EHLO
+        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231986AbhFHLiV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jun 2021 07:38:21 -0400
+Received: from localhost.localdomain (unknown [10.157.2.20])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by relay.smtp-ext.broadcom.com (Postfix) with ESMTPS id D17C0E9;
+        Tue,  8 Jun 2021 04:27:59 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com D17C0E9
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
+        s=dkimrelay; t=1623151682;
+        bh=ME7vECLt+bmTJvpV1j3UHITX2YBx0cjhpp2EX7qJYBg=;
+        h=From:To:Cc:Subject:Date:From;
+        b=U+5uuwqSCho/UZ0kMgVf1G3IFTmlGnWHGmn6Cz4dseMXnSfdPAy3HPxcbC3N1Pvcr
+         jl042vIqrskU6qk8kbblEyybibsKIbXrbB0efD45lNegWNgRugpHBCbRv26nUqPbkk
+         kBO34A1xx/QmT0cKtF7Xsy2p/xqel9Giz/pZmviQ=
+From:   Muneendra Kumar <muneendra.kumar@broadcom.com>
+To:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        tj@kernel.org, linux-nvme@lists.infradead.org, hare@suse.de
+Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
+        Muneendra <muneendra.kumar@broadcom.com>
+Subject: [PATCH v11 00/13] blkcg:Support to track FC storage blk io traffic
+Date:   Tue,  8 Jun 2021 10:05:43 +0530
+Message-Id: <20210608043556.274139-1-muneendra.kumar@broadcom.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: EcCowADH5ZW5Gr9gr0h06A--.64881S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Ww1fWF4kWrWDZw4kCFyDZFb_yoW8JFW3pa
-        1rCF1IvrsYkF1IkFW3Zr48ur98t3WFqFWj9a1DK345uFWrtrW7JFyxGrWDXrWrXF48Jryj
-        vrsrKryjg3WDZrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07b8wIgUUUUU=
-X-Originating-IP: [218.17.89.92]
-X-CM-SenderInfo: 5olmxttqbyiikqdsmqqrwthudrp/1tbi3xqrUGB0Gd-8rgAAs+
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: lijian <lijian@yulong.com>
+From: Muneendra <muneendra.kumar@broadcom.com>
 
-deleted the repeated word 'the' and 'received' in the comments.
+This Patch added a unique application identifier i.e
+app_id  knob to  blkcg which allows identification of traffic
+sources at an individual cgroup based Applications
+(ex:virtual machine (VM))level in both host and
+fabric infrastructure.
 
-Signed-off-by: lijian <lijian@yulong.com>
----
- drivers/scsi/lpfc/lpfc_nvmet.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Added a new sysfs attribute appid_store to set the application identfier
+in  the blkcg associted with cgroup id under
+/sys/class/fc/fc_udev_device/*
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index f2d9a3580887..bf35984e58e9 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1469,7 +1469,7 @@ lpfc_nvmet_cleanup_io_context(struct lpfc_hba *phba)
- 	if (!infop)
- 		return;
- 
--	/* Cycle the the entire CPU context list for every MRQ */
-+	/* Cycle the entire CPU context list for every MRQ */
- 	for (i = 0; i < phba->cfg_nvmet_mrq; i++) {
- 		for_each_present_cpu(j) {
- 			infop = lpfc_get_ctx_list(phba, j, i);
-@@ -3562,7 +3562,7 @@ lpfc_nvmet_unsol_fcp_issue_abort(struct lpfc_hba *phba,
-  * lpfc_nvme_unsol_ls_issue_abort - issue ABTS on an exchange received
-  *        via async frame receive where the frame is not handled.
-  * @phba: pointer to adapter structure
-- * @ctxp: pointer to the asynchronously received received sequence
-+ * @ctxp: pointer to the asynchronously received sequence
-  * @sid: address of the remote port to send the ABTS to
-  * @xri: oxid value to for the ABTS (other side's exchange id).
-  **/
+With this new interface the user can set the application identfier
+in  the blkcg associted with cgroup id.
+
+This capability can be utilized by multiple block transport infrastructure
+like fc,iscsi,roce.
+
+Existing FC fabric will use this feature and the description of
+the use case is below.
+
+Various virtualization technologies used in Fibre Channel
+SAN deployments have created the opportunity to identify
+and associate traffic with specific virtualized applications.
+The concepts behind the T11 Application Services standard is
+to provide the general mechanisms needed to identify
+virtualized services.
+It enables the Fabric and the storage targets to
+identify, monitor, and handle FC traffic
+based on vm tags by inserting application specific identification
+into the FC frame.
+
+The patches were cut against  5.14/scsi-queue tree
+
+v11:
+add Tejun Heo Acks.
+Add comment on race condition
+
+v10:
+Fixed the spelling mistakes and function name corrections
+Removed the redundant code
+
+v9:
+Addressed the issues reported by kernel test robot
+Replaced lpfc_get_vmid_from_hashtable with the
+generic kernel based hashtable (include/linux/hashtable.h)
+and made the changes in the code accordingly.
+Addressed the locking issue and also merged few patches
+
+v8:
+Modified the structure member,log messages and function declarations
+Added proper error codes and return values
+
+v7:
+Modified the Kconfig comments
+
+v6:
+Addressed the issues reported by kernel test robot
+Modified the Kconfig files as per standard
+
+v5:
+Renamed the function cgroup_get_from_kernfs_id to
+cgroup_get_from_id.
+
+Moved the input validation at the beginning of the function in 
+Renamed the arguments appropriatley.
+
+Changed Return code to non-numeric/SymbolChanged Return code
+to non-numeric/Symbol
+
+Modified the comments.
+
+v4:
+Addressed the error reported by  kernel test robot
+
+v3:
+removed RFC.
+
+Renamed the functions and app_id to more specific
+Addressed the reference leaks in blkcg_set_app_identifier
+Added a new config BLK_CGROUP_FC_APPID and made changes to 
+select the same under SCSI_FC_ATTRS
+
+V2:
+renamed app_identifier to app_id.
+removed the  sysfs interface blkio.app_identifie under
+/sys/fs/cgroup/blkio
+Ported the patch on top of 5.10/scsi-queue.
+Removed redundant code due to changes since last submit.
+Added a fix for issuing QFPA command.
+
+
+
+Gaurav Srivastava (10):
+  lpfc: vmid: Add the datastructure for supporting VMID in lpfc
+  lpfc: vmid: VMID params initialization
+  lpfc: vmid: Add support for vmid in mailbox command, does vmid
+    resource allocation and vmid cleanup
+  lpfc: vmid: Implements ELS commands for appid patch
+  lpfc: vmid: Functions to manage vmids
+  lpfc: vmid: Implements CT commands for appid.
+  lpfc: vmid: Appends the vmid in the wqe before sending
+  lpfc: vmid: Timeout implementation for vmid
+  lpfc: vmid: Adding qfpa and vmid timeout check in worker thread
+  lpfc: vmid: Introducing vmid in io path.
+
+Muneendra (3):
+  cgroup: Added cgroup_get_from_id
+  blkcg: Added a app identifier support for blkcg
+  nvme: Added a newsysfs attribute appid_store
+
+ block/Kconfig                    |   9 +
+ drivers/nvme/host/fc.c           |  73 +++++-
+ drivers/scsi/Kconfig             |  13 ++
+ drivers/scsi/lpfc/lpfc.h         | 122 +++++++++++
+ drivers/scsi/lpfc/lpfc_attr.c    |  48 ++++
+ drivers/scsi/lpfc/lpfc_crtn.h    |  11 +
+ drivers/scsi/lpfc/lpfc_ct.c      | 255 +++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_disc.h    |   1 +
+ drivers/scsi/lpfc/lpfc_els.c     | 366 ++++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 148 +++++++++++++
+ drivers/scsi/lpfc/lpfc_hw.h      | 124 ++++++++++-
+ drivers/scsi/lpfc/lpfc_hw4.h     |  12 +
+ drivers/scsi/lpfc/lpfc_init.c    | 104 +++++++++
+ drivers/scsi/lpfc/lpfc_mbox.c    |   6 +
+ drivers/scsi/lpfc/lpfc_scsi.c    | 321 +++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.c     |  23 ++
+ drivers/scsi/lpfc/lpfc_sli.h     |   8 +
+ include/linux/blk-cgroup.h       |  64 ++++++
+ include/linux/cgroup.h           |   6 +
+ kernel/cgroup/cgroup.c           |  26 +++
+ 20 files changed, 1731 insertions(+), 9 deletions(-)
+
 -- 
-2.25.1
-
+2.26.2
 
