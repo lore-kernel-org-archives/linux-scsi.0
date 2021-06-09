@@ -2,302 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 693EAC47095
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:56:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63704C48BD1
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 10:26:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 543F661375
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:56:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F983611C9
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 10:26:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235105AbhFIJ5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Jun 2021 05:57:54 -0400
-Received: from m12-14.163.com ([220.181.12.14]:60437 "EHLO m12-14.163.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238367AbhFIJ5x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Jun 2021 05:57:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=RQ9DQ
-        KpHgkyziF9WoACmrsjpsx+HFCbf6WDfWPqQp8E=; b=MSKuJN9gKq8gNugdOl3Qt
-        Q6zQEzH2nur93N5s5QXZAm2jGF7KJyYT0AmklLUxFqDvAER9gw8v++x7PKaQOvB3
-        TNm7Ypbym9fIA9SPsPT/ncCPVr2giHLAvjYMxITt23dnsojBEh/O5Hro0IkyByWX
-        wYNq/wqj2zO6ilXquieugg=
-Received: from localhost.localdomain (unknown [218.17.89.92])
-        by smtp10 (Coremail) with SMTP id DsCowADH0YQPkMBg7UAyNw--.22912S2;
-        Wed, 09 Jun 2021 17:55:27 +0800 (CST)
-From:   lijian_8010a29@163.com
-To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        lijian <lijian@yulong.com>
-Subject: [PATCH] scsi: lpfc: lpfc_hbadisc: Removed unnecessary 'return'
-Date:   Wed,  9 Jun 2021 17:54:30 +0800
-Message-Id: <20210609095430.611383-1-lijian_8010a29@163.com>
-X-Mailer: git-send-email 2.25.1
+        id S236717AbhFIK2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Jun 2021 06:28:42 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:38552 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234515AbhFIK2l (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2021 06:28:41 -0400
+Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id D7E45219AF;
+        Wed,  9 Jun 2021 09:50:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1623232234; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=SvW0mHPDOY2f5vF2VERxSgZ7iWKgInFYzb+o7n87p3Y=;
+        b=IwHRgY2gpyS8zg3lLb7hhAOoCeF335f24+a6gmGqKFAUrl93rdww0hcU4QNJwrPax8S3MW
+        6zXB5NNBi5h2kv+uhMTMBHGPIYdPXV59SewYrtGxKbnmiL79N9JLTCxNRgiVlfRfsvoCzR
+        5GAiIdWEB/1EchUuS3Td3mzTC79NQFY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1623232234;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=SvW0mHPDOY2f5vF2VERxSgZ7iWKgInFYzb+o7n87p3Y=;
+        b=VmxFXjatL1IpMgt1H1mGLL6m4tJ53rwtrocntVoh7KVdBcf2xnuOHjH3xkpUO617hV8GUw
+        l3fzSjN1H7fYARBQ==
+Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        by imap.suse.de (Postfix) with ESMTP id BD5FE118DD;
+        Wed,  9 Jun 2021 09:50:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1623232234; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=SvW0mHPDOY2f5vF2VERxSgZ7iWKgInFYzb+o7n87p3Y=;
+        b=IwHRgY2gpyS8zg3lLb7hhAOoCeF335f24+a6gmGqKFAUrl93rdww0hcU4QNJwrPax8S3MW
+        6zXB5NNBi5h2kv+uhMTMBHGPIYdPXV59SewYrtGxKbnmiL79N9JLTCxNRgiVlfRfsvoCzR
+        5GAiIdWEB/1EchUuS3Td3mzTC79NQFY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1623232234;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=SvW0mHPDOY2f5vF2VERxSgZ7iWKgInFYzb+o7n87p3Y=;
+        b=VmxFXjatL1IpMgt1H1mGLL6m4tJ53rwtrocntVoh7KVdBcf2xnuOHjH3xkpUO617hV8GUw
+        l3fzSjN1H7fYARBQ==
+Received: from director2.suse.de ([192.168.254.72])
+        by imap3-int with ESMTPSA
+        id PjKULuqOwGDUGAAALh3uQQ
+        (envelope-from <dwagner@suse.de>); Wed, 09 Jun 2021 09:50:34 +0000
+From:   Daniel Wagner <dwagner@suse.de>
+To:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>
+Cc:     linux-kernel@vger.kernel.org,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Arun Easi <aeasi@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>,
+        James Smart <jsmart2021@gmail.com>,
+        Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
+Subject: [PATCH] qla2xxx: synchronize rport dev_loss_tmo setting
+Date:   Wed,  9 Jun 2021 11:49:56 +0200
+Message-Id: <20210609094956.11286-1-dwagner@suse.de>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: DsCowADH0YQPkMBg7UAyNw--.22912S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxKw18JF45Ar1fJFWUJr1rXrb_yoW7uw4kpa
-        nrCas7Wr4kGF13KrZxJF15A3Wayw40yryqya1DK34fursY9rZ3GFy7JFW0grs8tFW0kryY
-        yrnFgw45G3W8XFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jpsj8UUUUU=
-X-Originating-IP: [218.17.89.92]
-X-CM-SenderInfo: 5olmxttqbyiikqdsmqqrwthudrp/1tbiEQ+sUF7+3pa30AAAst
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: lijian <lijian@yulong.com>
+From: Hannes Reinecke <hare@suse.de>
 
-Removed unnecessary 'return'.
+Currently, the dev_loss_tmo setting is only ever used for SCSI
+devices. This patch reshuffles initialisation such that the SCSI
+remote ports are registered before the NVMe ones, allowing the
+dev_loss_tmo setting to be synchronized between SCSI and NVMe.
 
-Signed-off-by: lijian <lijian@yulong.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Daniel Wagner <dwagner@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 38 --------------------------------
- 1 file changed, 38 deletions(-)
+Hi,
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 40a5a7f02fa2..8ade5a520897 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -232,8 +232,6 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
- 		lpfc_worker_wake_up(phba);
- 	}
- 	spin_unlock_irqrestore(&phba->hbalock, iflags);
--
--	return;
- }
- 
- /**
-@@ -510,7 +508,6 @@ lpfc_send_fastpath_evt(struct lpfc_hba *phba,
- 			LPFC_NL_VENDOR_ID);
- 
- 	lpfc_free_fast_evt(phba, fast_evt_data);
--	return;
- }
- 
- static void
-@@ -1141,8 +1138,6 @@ lpfc_mbx_cmpl_clear_la(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	writel(control, phba->HCregaddr);
- 	readl(phba->HCregaddr); /* flush */
- 	spin_unlock_irq(&phba->hbalock);
--
--	return;
- }
- 
- void
-@@ -1232,7 +1227,6 @@ lpfc_mbx_cmpl_local_config_link(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 			 vport->port_state);
- 
- 	lpfc_issue_clear_la(phba, vport);
--	return;
- }
- 
- /**
-@@ -1567,8 +1561,6 @@ lpfc_register_fcf(struct lpfc_hba *phba)
- 		spin_unlock_irq(&phba->hbalock);
- 		mempool_free(fcf_mbxq, phba->mbox_mem_pool);
- 	}
--
--	return;
- }
- 
- /**
-@@ -2624,8 +2616,6 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- out:
- 	lpfc_sli4_mbox_cmd_free(phba, mboxq);
- 	lpfc_register_fcf(phba);
--
--	return;
- }
- 
- /**
-@@ -2826,7 +2816,6 @@ lpfc_init_vfi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 
- 	lpfc_initial_flogi(vport);
- 	mempool_free(mboxq, phba->mbox_mem_pool);
--	return;
- }
- 
- /**
-@@ -2908,7 +2897,6 @@ lpfc_init_vpi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 				 "2606 No NPIV Fabric support\n");
- 	}
- 	mempool_free(mboxq, phba->mbox_mem_pool);
--	return;
- }
- 
- /**
-@@ -3090,7 +3078,6 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 		lpfc_mbuf_free(phba, dmabuf->virt, dmabuf->phys);
- 		kfree(dmabuf);
- 	}
--	return;
+This is a followup on
+
+  https://lore.kernel.org/linux-scsi/20210419100014.47144-1-dwagner@suse.de/
+
+Hannes and I started to play with this patch. After a few iterations
+on getting the right dev_loss_tmo variables set, it works as
+hoped. With this change, it's possible to use the same udev rule for
+qla2xxx as we currently use for lpfc driver. And it survived serious
+testing sessions.
+
+Thanks,
+Daniel
+
+ drivers/scsi/qla2xxx/qla_attr.c |  6 ++++++
+ drivers/scsi/qla2xxx/qla_init.c | 10 +++-------
+ drivers/scsi/qla2xxx/qla_nvme.c |  5 ++++-
+ 3 files changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 3aa9869f6fae..c762c940970f 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2648,7 +2648,13 @@ qla2x00_get_starget_port_id(struct scsi_target *starget)
+ static inline void
+ qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
+ {
++	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
++
+ 	rport->dev_loss_tmo = timeout ? timeout : 1;
++
++	if (fcport->nvme_remote_port)
++		nvme_fc_set_remoteport_devloss(fcport->nvme_remote_port,
++					       rport->dev_loss_tmo);
  }
  
  static void
-@@ -3154,7 +3141,6 @@ lpfc_mbx_cmpl_read_sparam(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	kfree(mp);
- 	lpfc_issue_clear_la(phba, vport);
- 	mempool_free(pmb, phba->mbox_mem_pool);
--	return;
- }
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index eb825318e3f5..7f5b64a5ec90 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -5629,13 +5629,6 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
  
- static void
-@@ -3381,7 +3367,6 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
- 			 "0263 Discovery Mailbox error: state: 0x%x : x%px x%px\n",
- 			 vport->port_state, sparam_mbox, cfglink_mbox);
- 	lpfc_issue_clear_la(phba, vport);
--	return;
- }
+ 	qla2x00_dfs_create_rport(vha, fcport);
  
- static void
-@@ -3569,7 +3554,6 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
- 	kfree(mp);
- 	mempool_free(pmb, phba->mbox_mem_pool);
--	return;
- }
- 
- /*
-@@ -3629,8 +3613,6 @@ lpfc_mbx_cmpl_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	 * function.
- 	 */
- 	lpfc_nlp_put(ndlp);
+-	if (NVME_TARGET(vha->hw, fcport)) {
+-		qla_nvme_register_remote(vha, fcport);
+-		qla2x00_set_fcport_disc_state(fcport, DSC_LOGIN_COMPLETE);
+-		qla2x00_set_fcport_state(fcport, FCS_ONLINE);
+-		return;
+-	}
 -
--	return;
- }
+ 	qla24xx_update_fcport_fcp_prio(vha, fcport);
  
- static void
-@@ -3745,7 +3727,6 @@ lpfc_mbx_cmpl_reg_vpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 
- out:
- 	mempool_free(pmb, phba->mbox_mem_pool);
--	return;
- }
- 
- /**
-@@ -3890,8 +3871,6 @@ lpfc_create_static_vport(struct lpfc_hba *phba)
- 		}
- 		mempool_free(pmb, phba->mbox_mem_pool);
- 	}
--
--	return;
- }
- 
- /*
-@@ -3970,7 +3949,6 @@ lpfc_mbx_cmpl_fabric_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	 * all the current reference to the ndlp have been done.
- 	 */
- 	lpfc_nlp_put(ndlp);
--	return;
- }
- 
-  /*
-@@ -4156,8 +4134,6 @@ lpfc_mbx_cmpl_ns_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
- 	kfree(mp);
- 	mempool_free(pmb, phba->mbox_mem_pool);
--
--	return;
- }
- 
- static void
-@@ -4242,8 +4218,6 @@ lpfc_register_remote_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- 	    (rport->scsi_target_id < LPFC_MAX_TARGET)) {
- 		ndlp->nlp_sid = rport->scsi_target_id;
- 	}
--
--	return;
- }
- 
- static void
-@@ -4557,7 +4531,6 @@ lpfc_drop_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	switch (vha->host->active_mode) {
+@@ -5657,6 +5650,9 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
+ 		break;
  	}
  
- 	lpfc_nlp_put(ndlp);
--	return;
- }
++	if (NVME_TARGET(vha->hw, fcport))
++		qla_nvme_register_remote(vha, fcport);
++
+ 	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
  
- /*
-@@ -4599,8 +4572,6 @@ lpfc_set_disctmo(struct lpfc_vport *vport)
- 			 vport->port_state, tmo,
- 			 (unsigned long)&vport->fc_disctmo, vport->fc_plogi_cnt,
- 			 vport->fc_adisc_cnt);
--
--	return;
- }
+ 	if (IS_IIDMA_CAPABLE(vha->hw) && vha->hw->flags.gpsc_supported) {
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index e119f8b24e33..5cc58957dbec 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -41,7 +41,7 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+ 	req.port_name = wwn_to_u64(fcport->port_name);
+ 	req.node_name = wwn_to_u64(fcport->node_name);
+ 	req.port_role = 0;
+-	req.dev_loss_tmo = 0;
++	req.dev_loss_tmo = fcport->dev_loss_tmo;
  
- /*
-@@ -5414,7 +5385,6 @@ lpfc_disc_list_loopmap(struct lpfc_vport *vport)
- 			lpfc_setup_disc_node(vport, alpa);
- 		}
+ 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_INITIATOR)
+ 		req.port_role = FC_PORT_ROLE_NVME_INITIATOR;
+@@ -68,6 +68,9 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
+ 		return ret;
  	}
--	return;
- }
  
- /* SLI3 only */
-@@ -5566,7 +5536,6 @@ lpfc_disc_start(struct lpfc_vport *vport)
- 				lpfc_els_handle_rscn(vport);
- 		}
- 	}
--	return;
- }
- 
- /*
-@@ -5681,7 +5650,6 @@ lpfc_disc_timeout(struct timer_list *t)
- 
- 	if (!tmo_posted)
- 		lpfc_worker_wake_up(phba);
--	return;
- }
- 
- static void
-@@ -5916,7 +5884,6 @@ lpfc_disc_timeout_handler(struct lpfc_vport *vport)
- 		}
- 		vport->port_state = LPFC_VPORT_READY;
- 	}
--	return;
- }
- 
- /*
-@@ -5967,8 +5934,6 @@ lpfc_mbx_cmpl_fdmi_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
- 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
- 	kfree(mp);
- 	mempool_free(pmb, phba->mbox_mem_pool);
--
--	return;
- }
- 
- static int
-@@ -6347,7 +6312,6 @@ lpfc_unregister_vfi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	phba->pport->fc_flag &= ~FC_VFI_REGISTERED;
- 	spin_unlock_irq(shost->host_lock);
- 	mempool_free(mboxq, phba->mbox_mem_pool);
--	return;
- }
- 
- /**
-@@ -6369,7 +6333,6 @@ lpfc_unregister_fcfi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 				mboxq->u.mb.mbxStatus, vport->port_state);
- 	}
- 	mempool_free(mboxq, phba->mbox_mem_pool);
--	return;
- }
- 
- /**
-@@ -6713,7 +6676,6 @@ lpfc_read_fcoe_param(struct lpfc_hba *phba,
- 	phba->fc_map[0] = fcoe_param->fc_map[0];
- 	phba->fc_map[1] = fcoe_param->fc_map[1];
- 	phba->fc_map[2] = fcoe_param->fc_map[2];
--	return;
- }
- 
- /**
++	nvme_fc_set_remoteport_devloss(fcport->nvme_remote_port,
++				       fcport->dev_loss_tmo);
++
+ 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_SLER)
+ 		ql_log(ql_log_info, vha, 0x212a,
+ 		       "PortID:%06x Supports SLER\n", req.port_id);
 -- 
-2.25.1
+2.29.2
 
