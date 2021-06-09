@@ -2,96 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A88CEC48BCD
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 14:20:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69714C48BCD
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 17:26:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 936CA613BE
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 14:20:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5021161182
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 17:26:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237645AbhFIOWh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Jun 2021 10:22:37 -0400
-Received: from szxga03-in.huawei.com ([45.249.212.189]:5361 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236453AbhFIOWe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2021 10:22:34 -0400
-Received: from dggeml756-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4G0TgY51psz6tw1;
-        Wed,  9 Jun 2021 22:16:41 +0800 (CST)
-Received: from [10.174.179.14] (10.174.179.14) by
- dggeml756-chm.china.huawei.com (10.1.199.158) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Wed, 9 Jun 2021 22:20:33 +0800
-Subject: Re: [PATCH v2] scsi: libsas: add lun number check in .slave_alloc
- callback
-To:     John Garry <john.garry@huawei.com>, Yufen Yu <yuyufen@huawei.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        id S231371AbhFIR2c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Jun 2021 13:28:32 -0400
+Received: from mail.kernel.org ([198.145.29.99]:59446 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231208AbhFIR2b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Jun 2021 13:28:31 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1E00A60FF0;
+        Wed,  9 Jun 2021 17:26:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1623259597;
+        bh=FpoCLV9AugRc/VDev7vPQc6huezBsa4q91oamgMCi5c=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=NLOK9mUD+/TKJsoyTz8L0eBkVX43pGvWLc5FpY6jTYXm9zQH9xDeb8eVBxYr7141D
+         oOihLl1UDsYd8WcVKymY7cYRTAlm3IBdGHGVhpv44a485uzGP1mU2iQkVxmZiW6Yrr
+         CYpWet4OJByewcGJb/e+Cvsm73g/rtgPybRmUxF8PG+VXeTf6OD/vvfSdsYhqew/B4
+         C0t3li6a730oPWMd8/cLa8kLP3IXqdVjxFEe9oxvSmIAfWpXEc7rcRa8D36ghB0lqZ
+         Z36gt8FMHm2fGxJbUpKIFxdjCg1lUZChHzTVUM7Jf/XD/gFw/osviQV2csVEl4jxOF
+         21rQWy31RN3pg==
+Date:   Wed, 9 Jun 2021 10:26:30 -0700
+From:   Nathan Chancellor <nathan@kernel.org>
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        <wubo40@huawei.com>
-References: <20210609093631.2557822-1-yuyufen@huawei.com>
- <9c67a92d-b9df-0e0c-5dda-e9dbeffec48f@huawei.com>
- <747c1ca6-4585-d6f1-4653-b3e2f907e362@huawei.com>
- <8f100f32-28fd-455d-0b25-163c48065f06@huawei.com>
-From:   Jason Yan <yanaijie@huawei.com>
-Message-ID: <bc942009-7bec-8343-6206-e8dfb3100698@huawei.com>
-Date:   Wed, 9 Jun 2021 22:20:32 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.4.2
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "moderated list:ARM/Mediatek SoC support" 
+        <linux-mediatek@lists.infradead.org>
+Subject: Re: [PATCH v3] scsi: ufs: Fix a possible use before initialization
+ case
+Message-ID: <YMD5xoeiE7+wrCEK@archlinux-ax161>
+References: <1623227044-22635-1-git-send-email-cang@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <8f100f32-28fd-455d-0b25-163c48065f06@huawei.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.174.179.14]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggeml756-chm.china.huawei.com (10.1.199.158)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1623227044-22635-1-git-send-email-cang@codeaurora.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-在 2021/6/9 21:13, John Garry 写道:
+On Wed, Jun 09, 2021 at 01:24:00AM -0700, Can Guo wrote:
+> In ufshcd_exec_dev_cmd(), if error happens before lrpb is initialized,
+> then we should bail out instead of letting trace record the error.
 > 
->>> I just noticed that libsas.h already has a prototype for 
->>> sas_slave_alloc() - any idea why?
->>
->> sas_slave_alloc() was implemented in the history and it was removed in 
->> this commit: 9508a66f898d. And it seems the prototype was left over 
->> since then.
->> .
+> Fixes: a45f937110fa6 ("scsi: ufs: Optimize host lock on transfer requests send/compl paths")
+> Reported-by: kernel test robot <lkp@intel.com>
+> Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+
+Reviewed-by: Nathan Chancellor <nathan@kernel.org>
+
+> ---
 > 
-> ok, understood.
+> Change since V2:
+> - Removed unused goto out_put_tag
 > 
-> So how about backporting this also? I have no idea when the regression 
-> was introduced and prob cannot test as it predates hisi_sas support.
+> Change since V1:
+> - Use codeaurora mail in Signed-off-by tag
 > 
-
-This function before did nothing but initialized the ata port. The
-commit removed the function just moved the initialization somewhere
-else.
-
--int sas_slave_alloc(struct scsi_device *scsi_dev)
--{
--       struct domain_device *dev = sdev_to_domain_dev(scsi_dev);
--
--       if (dev_is_sata(dev))
--               return ata_sas_port_init(dev->sata_dev.ap);
--
--       return 0;
--}
-
-
-It looks like it's not related to this issue. And I guess it is
-not a regression. This issue only exists when user do a manual scan and
-at the same time the device is offlined. Few people will do that actually.
-
-> BTW, we also have a dangling prototype for sas_init_ex_attr(), if 
-> someone wants to delete that...
+>  drivers/scsi/ufs/ufshcd.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
 > 
-> Thanks,
-> John
-> .
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index fe1b5f4..25fe18a 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2980,7 +2980,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>  	WARN_ON(lrbp->cmd);
+>  	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
+>  	if (unlikely(err))
+> -		goto out_put_tag;
+> +		goto out;
+>  
+>  	hba->dev_cmd.complete = &wait;
+>  
+> @@ -2990,11 +2990,10 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>  
+>  	ufshcd_send_command(hba, tag);
+>  	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+> -out:
+>  	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
+>  				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+>  
+> -out_put_tag:
+> +out:
+>  	blk_put_request(req);
+>  out_unlock:
+>  	up_read(&hba->clk_scaling_lock);
+> -- 
+> Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
+> 
