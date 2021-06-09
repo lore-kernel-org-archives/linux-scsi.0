@@ -8,45 +8,45 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15BF7C47095
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 08:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7E36C47095
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 08:14:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB7AF6128A
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 08:04:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C200661364
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 08:14:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236578AbhFIIGS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Jun 2021 04:06:18 -0400
-Received: from m12-13.163.com ([220.181.12.13]:48790 "EHLO m12-13.163.com"
+        id S237229AbhFIIP4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Jun 2021 04:15:56 -0400
+Received: from m12-14.163.com ([220.181.12.14]:37198 "EHLO m12-14.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237557AbhFIIFi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Jun 2021 04:05:38 -0400
+        id S236067AbhFIIP4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Jun 2021 04:15:56 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=2QFsg
-        HWbDLHSyne75bV8q+tTk9wN+wBNwY/fBdd4/6Y=; b=P8zxRm5V9I/YwaIsg1BsR
-        sHVn3IJbzR/V+fPuMhAiIEAsJPT4PgXiHLwAL1xEU6n0OkiemC8tvmzz8zirKJtO
-        YgiBqUTayo0pdn1jUZ0jrAtI+Ws164BVpT1zi9kSy10nGuWQMoWDq1or3TVw32z6
-        z08XAnAJxn4NvPE1DJzYW4=
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=6O6gx
+        oSiOfpBiZK7OrcRi7iWNwmlbtgWWUXFVrmBj0o=; b=hRZpIUAyURnrhMNE27Y6O
+        +g8IAaL7gjgUtIGT+1V0ocAnBypocOS/00v5ech8Mj9DslsssLgcR0D8uey7Bl35
+        oOpYiNhuyTfAZnSA5YV7Djf24ckApumMy16gZ/O1PSofeZX8RI48GkTIESunM17i
+        ZJh1Yjkk5aXYJiODXQaKv0=
 Received: from localhost.localdomain (unknown [218.17.89.92])
-        by smtp9 (Coremail) with SMTP id DcCowABXjwOodcBgsgaOFQ--.3052S2;
-        Wed, 09 Jun 2021 16:02:49 +0800 (CST)
+        by smtp10 (Coremail) with SMTP id DsCowACXn0v+d8Bgu0sgNw--.20422S2;
+        Wed, 09 Jun 2021 16:12:47 +0800 (CST)
 From:   lijian_8010a29@163.com
 To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
         jejb@linux.ibm.com, martin.petersen@oracle.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         lijian <lijian@yulong.com>
-Subject: [PATCH] scsi: lpfc: lpfc_sli: Removed unnecessary 'return'
-Date:   Wed,  9 Jun 2021 16:01:51 +0800
-Message-Id: <20210609080151.489666-1-lijian_8010a29@163.com>
+Subject: [PATCH] scsi: lpfc: lpfc_ct: Removed unnecessary 'return'
+Date:   Wed,  9 Jun 2021 16:11:49 +0800
+Message-Id: <20210609081149.504882-1-lijian_8010a29@163.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: DcCowABXjwOodcBgsgaOFQ--.3052S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxAFW5CF1kJF4UtFW5Aw48Crg_yoW5WFWfpa
-        nrGay7ur4ktF17trW5AFs8uFsIy3y0v34jyan2g34Y9F4vyrWfKFW3JFy0qr45tFWq9rnY
-        yw42gFW5Ca1xJrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+X-CM-TRANSID: DsCowACXn0v+d8Bgu0sgNw--.20422S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxAFW5AFyDtw43XF45tFW7XFb_yoW5AF15p3
+        Z7WFW8CrZ2kFsrKFyrJF4UCFnIyw48JrWqkayvg3yYkFsayFW7tFy5JF18ZrW5WFy0vr1S
+        yrs7KrWUCw4kXrUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
         9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jZMa5UUUUU=
 X-Originating-IP: [218.17.89.92]
-X-CM-SenderInfo: 5olmxttqbyiikqdsmqqrwthudrp/1tbiLwmsUFUMY3+iFgAAsr
+X-CM-SenderInfo: 5olmxttqbyiikqdsmqqrwthudrp/1tbiSh+sUFPAOoZGtwAAs3
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -57,73 +57,102 @@ Removed unnecessary 'return'.
 
 Signed-off-by: lijian <lijian@yulong.com>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 17 -----------------
- 1 file changed, 17 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c | 13 -------------
+ 1 file changed, 13 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 368cbc10e0cf..14e1ddc5ac17 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1544,7 +1544,6 @@ lpfc_sli_cancel_iocbs(struct lpfc_hba *phba, struct list_head *iocblist,
- 			lpfc_sli_release_iocbq(phba, piocb);
- 		}
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 450f3a3fa911..d6332f6dcc98 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -483,7 +483,6 @@ lpfc_free_ct_rsp(struct lpfc_hba *phba, struct lpfc_dmabuf *mlist)
  	}
+ 	lpfc_mbuf_free(phba, mlist->virt, mlist->phys);
+ 	kfree(mlist);
 -	return;
  }
  
- /**
-@@ -2054,8 +2053,6 @@ lpfc_sli_resume_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
- 		else
- 			lpfc_sli_update_full_ring(phba, pring);
- 	}
--
--	return;
- }
- 
- /**
-@@ -2566,7 +2563,6 @@ lpfc_sli_wake_mbox_wait(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmboxq)
- 	if (pmbox_done)
- 		complete(pmbox_done);
- 	spin_unlock_irqrestore(&phba->hbalock, drvr_flag);
+ static struct lpfc_dmabuf *
+@@ -1136,7 +1135,6 @@ lpfc_cmpl_ct_cmd_gid_ft(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ out:
+ 	lpfc_ct_free_iocb(phba, cmdiocb);
+ 	lpfc_nlp_put(ndlp);
 -	return;
  }
  
  static void
-@@ -3560,8 +3556,6 @@ lpfc_sli_rsp_pointers_error(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
- 	phba->work_hs = HS_FFER3;
- 
- 	lpfc_worker_wake_up(phba);
--
+@@ -1482,7 +1480,6 @@ lpfc_cmpl_ct_cmd_gff_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	free_ndlp = cmdiocb->context_un.ndlp;
+ 	lpfc_ct_free_iocb(phba, cmdiocb);
+ 	lpfc_nlp_put(free_ndlp);
 -	return;
  }
  
- /**
-@@ -3608,7 +3602,6 @@ void lpfc_poll_eratt(struct timer_list *t)
- 		mod_timer(&phba->eratt_poll,
- 			  jiffies +
- 			  msecs_to_jiffies(1000 * phba->eratt_poll_interval));
+ static void
+@@ -1645,7 +1642,6 @@ lpfc_cmpl_ct(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ out:
+ 	lpfc_ct_free_iocb(phba, cmdiocb);
+ 	lpfc_nlp_put(ndlp);
 -	return;
  }
  
- 
-@@ -4135,7 +4128,6 @@ lpfc_sli_handle_slow_ring_event_s3(struct lpfc_hba *phba,
+ static void
+@@ -1666,7 +1662,6 @@ lpfc_cmpl_ct_cmd_rft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			vport->ct_flags |= FC_CT_RFT_ID;
  	}
- 
- 	spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
 -	return;
  }
  
- /**
-@@ -6439,8 +6431,6 @@ lpfc_set_features(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox,
- 		mbox->u.mqe.un.set_feature.param_len = 4;
+ static void
+@@ -1687,7 +1682,6 @@ lpfc_cmpl_ct_cmd_rnn_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			vport->ct_flags |= FC_CT_RNN_ID;
+ 	}
+ 	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+-	return;
+ }
+ 
+ static void
+@@ -1708,7 +1702,6 @@ lpfc_cmpl_ct_cmd_rspn_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			vport->ct_flags |= FC_CT_RSPN_ID;
+ 	}
+ 	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+-	return;
+ }
+ 
+ static void
+@@ -1729,7 +1722,6 @@ lpfc_cmpl_ct_cmd_rsnn_nn(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			vport->ct_flags |= FC_CT_RSNN_NN;
+ 	}
+ 	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+-	return;
+ }
+ 
+ static void
+@@ -1741,7 +1733,6 @@ lpfc_cmpl_ct_cmd_da_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	/* even if it fails we will act as though it succeeded. */
+ 	vport->ct_flags = 0;
+ 	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+-	return;
+ }
+ 
+ static void
+@@ -1762,7 +1753,6 @@ lpfc_cmpl_ct_cmd_rff_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			vport->ct_flags |= FC_CT_RFF_ID;
+ 	}
+ 	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+-	return;
+ }
+ 
+ /*
+@@ -2327,7 +2317,6 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		}
  		break;
  	}
--
 -	return;
  }
  
- /**
-@@ -8162,7 +8152,6 @@ lpfc_mbox_timeout(struct timer_list *t)
+ 
+@@ -3637,7 +3626,6 @@ lpfc_delayed_disc_tmo(struct timer_list *t)
  
  	if (!tmo_posted)
  		lpfc_worker_wake_up(phba);
@@ -131,55 +160,12 @@ index 368cbc10e0cf..14e1ddc5ac17 100644
  }
  
  /**
-@@ -11572,7 +11561,6 @@ lpfc_sli_abort_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+@@ -3746,5 +3734,4 @@ lpfc_decode_firmware_rev(struct lpfc_hba *phba, char *fwrevision, int flag)
+ 
+ 		sprintf(fwrevision, "%d.%d%d%c%d", b1, b2, b3, c, b4);
  	}
- release_iocb:
- 	lpfc_sli_release_iocbq(phba, cmdiocb);
 -	return;
  }
- 
- /**
-@@ -11939,7 +11927,6 @@ lpfc_sli_abort_fcp_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			cmdiocb->iotag, rspiocb->iocb.ulpStatus,
- 			rspiocb->iocb.un.ulpWord[4]);
- 	lpfc_sli_release_iocbq(phba, cmdiocb);
--	return;
- }
- 
- /**
-@@ -12219,7 +12206,6 @@ lpfc_sli_wake_iocb_wait(struct lpfc_hba *phba,
- 	if (pdone_q)
- 		wake_up(pdone_q);
- 	spin_unlock_irqrestore(&phba->hbalock, iflags);
--	return;
- }
- 
- /**
-@@ -15078,7 +15064,6 @@ lpfc_sli4_queue_free(struct lpfc_queue *queue)
- 		list_del(&queue->cpu_list);
- 
- 	kfree(queue);
--	return;
- }
- 
- /**
-@@ -15306,7 +15291,6 @@ lpfc_modify_hba_eq_delay(struct lpfc_hba *phba, uint32_t startq,
- 				shdr_status, shdr_add_status, rc);
- 	}
- 	mempool_free(mbox, phba->mbox_mem_pool);
--	return;
- }
- 
- /**
-@@ -19967,7 +19951,6 @@ lpfc_sli_read_link_ste(struct lpfc_hba *phba)
- 
- out:
- 	kfree(rgn23_data);
--	return;
- }
- 
- /**
 -- 
 2.25.1
-
 
