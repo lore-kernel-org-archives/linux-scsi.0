@@ -2,266 +2,302 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 69721C47095
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:53:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 693EAC47095
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:56:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 460A4613AD
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:53:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 543F661375
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:56:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238454AbhFIJzq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Jun 2021 05:55:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42276 "EHLO mail.kernel.org"
+        id S235105AbhFIJ5y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Jun 2021 05:57:54 -0400
+Received: from m12-14.163.com ([220.181.12.14]:60437 "EHLO m12-14.163.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238448AbhFIJzp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Jun 2021 05:55:45 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9764361375;
-        Wed,  9 Jun 2021 09:53:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1623232431;
-        bh=CVI19HxzerQeBdqOZMyU8l7Pa/R+AWrO+Xskvkm82ow=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=0q0hDIW6DgWFP3COy3bpinX0qTjr+6iKVpsHISrNUxE7IIrUk4rXaqZah55x1pN08
-         9ZdCII9XR0QthdPaOc7TRDyDCZ8hnVr/VDTC5MvFQjtlpEh9p0fa6gzqs5EN7MM3+2
-         Fqc72US1TwbjDy/Mw5lj1r7q+dsSAIJH7nuj63jM=
-Date:   Wed, 9 Jun 2021 11:53:48 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Daejun Park <daejun7.park@samsung.com>
-Cc:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        JinHwan Park <jh.i.park@samsung.com>,
-        Javier Gonzalez <javier.gonz@samsung.com>,
-        Sung-Jun Park <sungjun07.park@samsung.com>,
-        Jinyoung CHOI <j-young.choi@samsung.com>,
-        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Jaemyung Lee <jaemyung.lee@samsung.com>,
-        Jieon Seol <jieon.seol@samsung.com>
-Subject: Re: [PATCH v36 0/4] scsi: ufs: Add Host Performance Booster Support
-Message-ID: <YMCPrE+Fq+ee+vBS@kroah.com>
-References: <CGME20210607041650epcms2p29002c9d072738bbf21fb4acf31847e8e@epcms2p2>
- <20210607041650epcms2p29002c9d072738bbf21fb4acf31847e8e@epcms2p2>
+        id S238367AbhFIJ5x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Jun 2021 05:57:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=RQ9DQ
+        KpHgkyziF9WoACmrsjpsx+HFCbf6WDfWPqQp8E=; b=MSKuJN9gKq8gNugdOl3Qt
+        Q6zQEzH2nur93N5s5QXZAm2jGF7KJyYT0AmklLUxFqDvAER9gw8v++x7PKaQOvB3
+        TNm7Ypbym9fIA9SPsPT/ncCPVr2giHLAvjYMxITt23dnsojBEh/O5Hro0IkyByWX
+        wYNq/wqj2zO6ilXquieugg=
+Received: from localhost.localdomain (unknown [218.17.89.92])
+        by smtp10 (Coremail) with SMTP id DsCowADH0YQPkMBg7UAyNw--.22912S2;
+        Wed, 09 Jun 2021 17:55:27 +0800 (CST)
+From:   lijian_8010a29@163.com
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lijian <lijian@yulong.com>
+Subject: [PATCH] scsi: lpfc: lpfc_hbadisc: Removed unnecessary 'return'
+Date:   Wed,  9 Jun 2021 17:54:30 +0800
+Message-Id: <20210609095430.611383-1-lijian_8010a29@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210607041650epcms2p29002c9d072738bbf21fb4acf31847e8e@epcms2p2>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: DsCowADH0YQPkMBg7UAyNw--.22912S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxKw18JF45Ar1fJFWUJr1rXrb_yoW7uw4kpa
+        nrCas7Wr4kGF13KrZxJF15A3Wayw40yryqya1DK34fursY9rZ3GFy7JFW0grs8tFW0kryY
+        yrnFgw45G3W8XFUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jpsj8UUUUU=
+X-Originating-IP: [218.17.89.92]
+X-CM-SenderInfo: 5olmxttqbyiikqdsmqqrwthudrp/1tbiEQ+sUF7+3pa30AAAst
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jun 07, 2021 at 01:16:50PM +0900, Daejun Park wrote:
-> Changelog:
-> 
-> v35 -> v36
-> 1. Changed ppn variable type from u64 to __be64.
-> 2. Added WARN_ON_ONCE() to check for HPB read IO size exceeded.
-> 
-> v34 -> v35
-> 1. Addressed Bart's comments (type casting)
-> 2. Rebase 5.14 scsi-queue
-> 
-> v33 -> v34
-> Fix warning about NULL check before some freeing functions is not needed.
-> 
-> v32 -> v33
-> 1. Fix wrong usage of scsi_command_normalize_sense.
-> 2. Addressed Bart's comments (func. name, type casting, parentheses)
-> 
-> v31 -> v32
-> Delete unused parameter of unmap API.
-> 
-> v30 -> v31
-> Delete unnecessary debug message.
-> 
-> v29 -> v30
-> 1. Add support to reuse bio of pre-request.
-> 2. Delete unreached code in the ufshpb_issue_map_req.
-> 
-> v28 -> v29
-> 1. Remove unused variable that reported by kernel test robot.
-> 
-> v27 -> v28
-> 1. Fix wrong return value of ufshpb_prep.
-> 
-> v26 -> v27
-> 1. Fix wrong refernce of sense buffer in pre_req complete function.
-> 2. Fix read_id error.
-> 3. Fix chunk size checking for HPB 1.0.
-> 4. Mute unnecessary messages before HPB initialization.
-> 
-> v25 -> v26
-> 1. Fix wrong chunk size checking for HPB 1.0.
-> 2. Fix wrong max data size for HPB single command.
-> 3. Fix typo error.
-> 
-> v24 -> v25
-> 1. Change write buffer API for unmap region.
-> 2. Add checking hpb_enable for avoiding unnecessary memory allocation.
-> 3. Change pr_info to dev_info.
-> 4. Change default requeue timeout value for HPB read.
-> 5. Fix wrong offset manipulation on ufshpb_prep_entry.
-> 
-> v23 -> v24
-> 1. Fix build error reported by kernel test robot.
-> 
-> v22 -> v23
-> 1. Add support compatibility of HPB 1.0.
-> 2. Fix read id for single HPB read command.
-> 3. Fix number of pre-allocated requests for write buffer.
-> 4. Add fast path for response UPIU that has same LUN in sense data.
-> 5. Remove WARN_ON for preventing kernel crash.
-> 7. Fix wrong argument for read buffer command.
-> 
-> v21 -> v22
-> 1. Add support processing response UPIU in suspend state.
-> 2. Add support HPB hint from other LU.
-> 3. Add sending write buffer with 0x03 after HPB init.
-> 
-> v20 -> v21
-> 1. Add bMAX_DATA_SIZE_FOR_HPB_SINGLE_CMD attr. and fHPBen flag support.
-> 
-> v19 -> v20
-> 1. Add documentation for sysfs entries of hpb->stat.
-> 2. Fix read buffer command for under-sized sub-region.
-> 3. Fix wrong condition checking for kick map work.
-> 4. Delete redundant response UPIU checking.
-> 5. Add LUN checking in response UPIU.
-> 6. Fix possible deadlock problem due to runtime PM.
-> 7. Add instant changing of sub-region state from response UPIU.
-> 8. Fix endian problem in prefetched PPN.
-> 9. Add JESD220-3A (HPB v2.0) support.
-> 
-> v18 -> 19
-> 1. Fix null pointer error when printing sysfs from non-HPB LU.
-> 2. Apply HPB read opcode in lrbp->cmd->cmnd (from Can Guo's review).
-> 3. Rebase the patch on 5.12/scsi-queue.
-> 
-> v17 -> v18
-> Fix build error which reported by kernel test robot.
-> 
-> v16 -> v17
-> 1. Rename hpb_state_lock to rgn_state_lock and move it to corresponding
-> patch.
-> 2. Remove redundant information messages.
-> 
-> v15 -> v16
-> 1. Add missed sysfs ABI documentation.
-> 
-> v14 -> v15
-> 1. Remove duplicated sysfs ABI entries in documentation.
-> 2. Add experiment result of HPB performance testing with iozone.
-> 
-> v13 -> v14
-> 1. Cleanup codes by commentted in Greg's review.
-> 2. Add documentation for sysfs entries (from Greg's review).
-> 3. Add experiment result of HPB performance testing.
-> 
-> v12 -> v13
-> 1. Cleanup codes by comments from Can Guo.
-> 2. Add HPB related descriptor/flag/attributes in sysfs.
-> 3. Change base commit from 5.10/scsi-queue to 5.11/scsi-queue.
-> 
-> v11 -> v12
-> 1. Fixed to return error value when HPB fails to initialize pinned active 
-> region.
-> 2. Fixed to disable HPB feature if HPB fails to allocate essential memory
-> and workqueue.
-> 3. Fixed to change proper sub-region state when region is already evicted.
-> 
-> v10 -> v11
-> Add a newline at end the last line on Kconfig file.
-> 
-> v9 -> v10
-> 1. Fixed 64-bit division error
-> 2. Fixed problems commentted in Bart's review.
-> 
-> v8 -> v9
-> 1. Change sysfs initialization.
-> 2. Change reading descriptor during HPB initialization
-> 3. Fixed problems commentted in Bart's review.
-> 4. Change base commit from 5.9/scsi-queue to 5.10/scsi-queue.
-> 
-> v7 -> v8
-> Remove wrongly added tags.
-> 
-> v6 -> v7
-> 1. Remove UFS feature layer.
-> 2. Cleanup for sparse error.
-> 
-> v5 -> v6
-> Change base commit to b53293fa662e28ae0cdd40828dc641c09f133405
-> 
-> v4 -> v5
-> Delete unused macro define.
-> 
-> v3 -> v4
-> 1. Cleanup.
-> 
-> v2 -> v3
-> 1. Add checking input module parameter value.
-> 2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
-> 3. Cleanup for unused variables and label.
-> 
-> v1 -> v2
-> 1. Change the full boilerplate text to SPDX style.
-> 2. Adopt dynamic allocation for sub-region data structure.
-> 3. Cleanup.
-> 
-> NAND flash memory-based storage devices use Flash Translation Layer (FTL)
-> to translate logical addresses of I/O requests to corresponding flash
-> memory addresses. Mobile storage devices typically have RAM with
-> constrained size, thus lack in memory to keep the whole mapping table.
-> Therefore, mapping tables are partially retrieved from NAND flash on
-> demand, causing random-read performance degradation.
-> 
-> To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
-> (Host Performance Booster) which uses host system memory as a cache for the
-> FTL mapping table. By using HPB, FTL data can be read from host memory
-> faster than from NAND flash memory. 
-> 
-> The current version only supports the DCM (device control mode).
-> This patch consists of 3 parts to support HPB feature.
-> 
-> 1) HPB probe and initialization process
-> 2) READ -> HPB READ using cached map information
-> 3) L2P (logical to physical) map management
-> 
-> In the HPB probe and init process, the device information of the UFS is
-> queried. After checking supported features, the data structure for the HPB
-> is initialized according to the device information.
-> 
-> A read I/O in the active sub-region where the map is cached is changed to
-> HPB READ by the HPB.
-> 
-> The HPB manages the L2P map using information received from the
-> device. For active sub-region, the HPB caches through ufshpb_map
-> request. For the in-active region, the HPB discards the L2P map.
-> When a write I/O occurs in an active sub-region area, associated dirty
-> bitmap checked as dirty for preventing stale read.
-> 
-> HPB is shown to have a performance improvement of 58 - 67% for random read
-> workload. [1]
-> 
-> [1]:
-> https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
-> 
-> Daejun Park (4):
->   scsi: ufs: Introduce HPB feature
->   scsi: ufs: L2P map management for HPB read
->   scsi: ufs: Prepare HPB read for cached sub-region
->   scsi: ufs: Add HPB 2.0 support
+From: lijian <lijian@yulong.com>
 
-Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Removed unnecessary 'return'.
+
+Signed-off-by: lijian <lijian@yulong.com>
+---
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 38 --------------------------------
+ 1 file changed, 38 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 40a5a7f02fa2..8ade5a520897 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -232,8 +232,6 @@ lpfc_dev_loss_tmo_callbk(struct fc_rport *rport)
+ 		lpfc_worker_wake_up(phba);
+ 	}
+ 	spin_unlock_irqrestore(&phba->hbalock, iflags);
+-
+-	return;
+ }
+ 
+ /**
+@@ -510,7 +508,6 @@ lpfc_send_fastpath_evt(struct lpfc_hba *phba,
+ 			LPFC_NL_VENDOR_ID);
+ 
+ 	lpfc_free_fast_evt(phba, fast_evt_data);
+-	return;
+ }
+ 
+ static void
+@@ -1141,8 +1138,6 @@ lpfc_mbx_cmpl_clear_la(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	writel(control, phba->HCregaddr);
+ 	readl(phba->HCregaddr); /* flush */
+ 	spin_unlock_irq(&phba->hbalock);
+-
+-	return;
+ }
+ 
+ void
+@@ -1232,7 +1227,6 @@ lpfc_mbx_cmpl_local_config_link(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 			 vport->port_state);
+ 
+ 	lpfc_issue_clear_la(phba, vport);
+-	return;
+ }
+ 
+ /**
+@@ -1567,8 +1561,6 @@ lpfc_register_fcf(struct lpfc_hba *phba)
+ 		spin_unlock_irq(&phba->hbalock);
+ 		mempool_free(fcf_mbxq, phba->mbox_mem_pool);
+ 	}
+-
+-	return;
+ }
+ 
+ /**
+@@ -2624,8 +2616,6 @@ lpfc_mbx_cmpl_fcf_scan_read_fcf_rec(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ out:
+ 	lpfc_sli4_mbox_cmd_free(phba, mboxq);
+ 	lpfc_register_fcf(phba);
+-
+-	return;
+ }
+ 
+ /**
+@@ -2826,7 +2816,6 @@ lpfc_init_vfi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 
+ 	lpfc_initial_flogi(vport);
+ 	mempool_free(mboxq, phba->mbox_mem_pool);
+-	return;
+ }
+ 
+ /**
+@@ -2908,7 +2897,6 @@ lpfc_init_vpi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 				 "2606 No NPIV Fabric support\n");
+ 	}
+ 	mempool_free(mboxq, phba->mbox_mem_pool);
+-	return;
+ }
+ 
+ /**
+@@ -3090,7 +3078,6 @@ lpfc_mbx_cmpl_reg_vfi(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 		lpfc_mbuf_free(phba, dmabuf->virt, dmabuf->phys);
+ 		kfree(dmabuf);
+ 	}
+-	return;
+ }
+ 
+ static void
+@@ -3154,7 +3141,6 @@ lpfc_mbx_cmpl_read_sparam(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	kfree(mp);
+ 	lpfc_issue_clear_la(phba, vport);
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+-	return;
+ }
+ 
+ static void
+@@ -3381,7 +3367,6 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
+ 			 "0263 Discovery Mailbox error: state: 0x%x : x%px x%px\n",
+ 			 vport->port_state, sparam_mbox, cfglink_mbox);
+ 	lpfc_issue_clear_la(phba, vport);
+-	return;
+ }
+ 
+ static void
+@@ -3569,7 +3554,6 @@ lpfc_mbx_cmpl_read_topology(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
+ 	kfree(mp);
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+-	return;
+ }
+ 
+ /*
+@@ -3629,8 +3613,6 @@ lpfc_mbx_cmpl_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	 * function.
+ 	 */
+ 	lpfc_nlp_put(ndlp);
+-
+-	return;
+ }
+ 
+ static void
+@@ -3745,7 +3727,6 @@ lpfc_mbx_cmpl_reg_vpi(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 
+ out:
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+-	return;
+ }
+ 
+ /**
+@@ -3890,8 +3871,6 @@ lpfc_create_static_vport(struct lpfc_hba *phba)
+ 		}
+ 		mempool_free(pmb, phba->mbox_mem_pool);
+ 	}
+-
+-	return;
+ }
+ 
+ /*
+@@ -3970,7 +3949,6 @@ lpfc_mbx_cmpl_fabric_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	 * all the current reference to the ndlp have been done.
+ 	 */
+ 	lpfc_nlp_put(ndlp);
+-	return;
+ }
+ 
+  /*
+@@ -4156,8 +4134,6 @@ lpfc_mbx_cmpl_ns_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
+ 	kfree(mp);
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+-
+-	return;
+ }
+ 
+ static void
+@@ -4242,8 +4218,6 @@ lpfc_register_remote_port(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	    (rport->scsi_target_id < LPFC_MAX_TARGET)) {
+ 		ndlp->nlp_sid = rport->scsi_target_id;
+ 	}
+-
+-	return;
+ }
+ 
+ static void
+@@ -4557,7 +4531,6 @@ lpfc_drop_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 	}
+ 
+ 	lpfc_nlp_put(ndlp);
+-	return;
+ }
+ 
+ /*
+@@ -4599,8 +4572,6 @@ lpfc_set_disctmo(struct lpfc_vport *vport)
+ 			 vport->port_state, tmo,
+ 			 (unsigned long)&vport->fc_disctmo, vport->fc_plogi_cnt,
+ 			 vport->fc_adisc_cnt);
+-
+-	return;
+ }
+ 
+ /*
+@@ -5414,7 +5385,6 @@ lpfc_disc_list_loopmap(struct lpfc_vport *vport)
+ 			lpfc_setup_disc_node(vport, alpa);
+ 		}
+ 	}
+-	return;
+ }
+ 
+ /* SLI3 only */
+@@ -5566,7 +5536,6 @@ lpfc_disc_start(struct lpfc_vport *vport)
+ 				lpfc_els_handle_rscn(vport);
+ 		}
+ 	}
+-	return;
+ }
+ 
+ /*
+@@ -5681,7 +5650,6 @@ lpfc_disc_timeout(struct timer_list *t)
+ 
+ 	if (!tmo_posted)
+ 		lpfc_worker_wake_up(phba);
+-	return;
+ }
+ 
+ static void
+@@ -5916,7 +5884,6 @@ lpfc_disc_timeout_handler(struct lpfc_vport *vport)
+ 		}
+ 		vport->port_state = LPFC_VPORT_READY;
+ 	}
+-	return;
+ }
+ 
+ /*
+@@ -5967,8 +5934,6 @@ lpfc_mbx_cmpl_fdmi_reg_login(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 	lpfc_mbuf_free(phba, mp->virt, mp->phys);
+ 	kfree(mp);
+ 	mempool_free(pmb, phba->mbox_mem_pool);
+-
+-	return;
+ }
+ 
+ static int
+@@ -6347,7 +6312,6 @@ lpfc_unregister_vfi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 	phba->pport->fc_flag &= ~FC_VFI_REGISTERED;
+ 	spin_unlock_irq(shost->host_lock);
+ 	mempool_free(mboxq, phba->mbox_mem_pool);
+-	return;
+ }
+ 
+ /**
+@@ -6369,7 +6333,6 @@ lpfc_unregister_fcfi_cmpl(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 				mboxq->u.mb.mbxStatus, vport->port_state);
+ 	}
+ 	mempool_free(mboxq, phba->mbox_mem_pool);
+-	return;
+ }
+ 
+ /**
+@@ -6713,7 +6676,6 @@ lpfc_read_fcoe_param(struct lpfc_hba *phba,
+ 	phba->fc_map[0] = fcoe_param->fc_map[0];
+ 	phba->fc_map[1] = fcoe_param->fc_map[1];
+ 	phba->fc_map[2] = fcoe_param->fc_map[2];
+-	return;
+ }
+ 
+ /**
+-- 
+2.25.1
+
