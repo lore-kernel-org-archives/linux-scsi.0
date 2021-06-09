@@ -2,182 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63704C48BD1
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 10:26:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9C94C48BCF
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 11:01:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F983611C9
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 10:26:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B799A613B1
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 11:01:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236717AbhFIK2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Jun 2021 06:28:42 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:38552 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234515AbhFIK2l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2021 06:28:41 -0400
-Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id D7E45219AF;
-        Wed,  9 Jun 2021 09:50:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623232234; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=SvW0mHPDOY2f5vF2VERxSgZ7iWKgInFYzb+o7n87p3Y=;
-        b=IwHRgY2gpyS8zg3lLb7hhAOoCeF335f24+a6gmGqKFAUrl93rdww0hcU4QNJwrPax8S3MW
-        6zXB5NNBi5h2kv+uhMTMBHGPIYdPXV59SewYrtGxKbnmiL79N9JLTCxNRgiVlfRfsvoCzR
-        5GAiIdWEB/1EchUuS3Td3mzTC79NQFY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623232234;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=SvW0mHPDOY2f5vF2VERxSgZ7iWKgInFYzb+o7n87p3Y=;
-        b=VmxFXjatL1IpMgt1H1mGLL6m4tJ53rwtrocntVoh7KVdBcf2xnuOHjH3xkpUO617hV8GUw
-        l3fzSjN1H7fYARBQ==
-Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id BD5FE118DD;
-        Wed,  9 Jun 2021 09:50:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623232234; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=SvW0mHPDOY2f5vF2VERxSgZ7iWKgInFYzb+o7n87p3Y=;
-        b=IwHRgY2gpyS8zg3lLb7hhAOoCeF335f24+a6gmGqKFAUrl93rdww0hcU4QNJwrPax8S3MW
-        6zXB5NNBi5h2kv+uhMTMBHGPIYdPXV59SewYrtGxKbnmiL79N9JLTCxNRgiVlfRfsvoCzR
-        5GAiIdWEB/1EchUuS3Td3mzTC79NQFY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623232234;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=SvW0mHPDOY2f5vF2VERxSgZ7iWKgInFYzb+o7n87p3Y=;
-        b=VmxFXjatL1IpMgt1H1mGLL6m4tJ53rwtrocntVoh7KVdBcf2xnuOHjH3xkpUO617hV8GUw
-        l3fzSjN1H7fYARBQ==
-Received: from director2.suse.de ([192.168.254.72])
-        by imap3-int with ESMTPSA
-        id PjKULuqOwGDUGAAALh3uQQ
-        (envelope-from <dwagner@suse.de>); Wed, 09 Jun 2021 09:50:34 +0000
-From:   Daniel Wagner <dwagner@suse.de>
-To:     linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>
-Cc:     linux-kernel@vger.kernel.org,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        Arun Easi <aeasi@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        James Smart <jsmart2021@gmail.com>,
-        Hannes Reinecke <hare@suse.de>, Daniel Wagner <dwagner@suse.de>
-Subject: [PATCH] qla2xxx: synchronize rport dev_loss_tmo setting
-Date:   Wed,  9 Jun 2021 11:49:56 +0200
-Message-Id: <20210609094956.11286-1-dwagner@suse.de>
-X-Mailer: git-send-email 2.31.1
+        id S238659AbhFILDF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Jun 2021 07:03:05 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:53340 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238668AbhFILDF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2021 07:03:05 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 159AxrRw096653;
+        Wed, 9 Jun 2021 11:01:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
+ bh=uju7O+5XraNZQjssqJeHqm4DA5OyOACA7tF1aMmj5RA=;
+ b=G2ZYjrrV1Pp+Co+Z8IJDnRnfm/j/xuoD/upEInAkA/wi2g6v/o+56paRkh+8k4Sv3gMV
+ RiZZVyDOHgu9J9Xh197rrlQZ+hbaVIVbS3sNz712tnbDYCNZ9V39E0btUdWg68f4rh3K
+ r9Rv/MBUnTo8v4R/rijbD53G7+yS3/hvpFXi5FC7Q3iWu2qjYyh12DrgRCH8g6GKcNMw
+ 810u9ZziAgBRKj+Hht48aSDvXYYGfFHUW0L4QoykfgqWdAzQfwk3mcaj2F3bS5dRLrlE
+ 8udDLzpE7ZFM5XgLnBAzIMT9YkAof6cTiGcZeQCu2xkNjWjMDc3/AFP5J5dw2Sy8am1o /w== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 39017ngry8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 09 Jun 2021 11:01:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 159B0c7O024080;
+        Wed, 9 Jun 2021 11:01:08 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by aserp3020.oracle.com with ESMTP id 3922wumx3d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 09 Jun 2021 11:01:08 +0000
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 159B17GG029310;
+        Wed, 9 Jun 2021 11:01:07 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 3922wumx2f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 09 Jun 2021 11:01:07 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 159B171e027631;
+        Wed, 9 Jun 2021 11:01:07 GMT
+Received: from mwanda (/41.212.42.34)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 09 Jun 2021 11:01:06 +0000
+Date:   Wed, 9 Jun 2021 14:01:01 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     cang@codeaurora.org
+Cc:     linux-scsi@vger.kernel.org
+Subject: [bug report] scsi: ufs: Optimize host lock on transfer requests
+ send/compl paths
+Message-ID: <YMCfbSj7Ui+fzi2N@mwanda>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Proofpoint-GUID: JTwfFMV4zB22lpxk6qx7rj02j8PgoRsG
+X-Proofpoint-ORIG-GUID: JTwfFMV4zB22lpxk6qx7rj02j8PgoRsG
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10009 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 bulkscore=0 spamscore=0
+ mlxlogscore=999 phishscore=0 impostorscore=0 suspectscore=0 clxscore=1011
+ mlxscore=0 malwarescore=0 priorityscore=1501 lowpriorityscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2106090054
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+Hello Can Guo,
 
-Currently, the dev_loss_tmo setting is only ever used for SCSI
-devices. This patch reshuffles initialisation such that the SCSI
-remote ports are registered before the NVMe ones, allowing the
-dev_loss_tmo setting to be synchronized between SCSI and NVMe.
+The patch a45f937110fa: "scsi: ufs: Optimize host lock on transfer
+requests send/compl paths" from May 24, 2021, leads to the following
+static checker warning:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Daniel Wagner <dwagner@suse.de>
----
-Hi,
+	drivers/scsi/ufs/ufshcd.c:2998 ufshcd_exec_dev_cmd()
+	error: potentially dereferencing uninitialized 'lrbp'.
 
-This is a followup on
+drivers/scsi/ufs/ufshcd.c
+  2948  static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+  2949                  enum dev_cmd_type cmd_type, int timeout)
+  2950  {
+  2951          struct request_queue *q = hba->cmd_queue;
+  2952          struct request *req;
+  2953          struct ufshcd_lrb *lrbp;
+                                   ^^^^
 
-  https://lore.kernel.org/linux-scsi/20210419100014.47144-1-dwagner@suse.de/
+  2954          int err;
+  2955          int tag;
+  2956          struct completion wait;
+  2957  
+  2958          down_read(&hba->clk_scaling_lock);
+  2959  
+  2960          /*
+  2961           * Get free slot, sleep if slots are unavailable.
+  2962           * Even though we use wait_event() which sleeps indefinitely,
+  2963           * the maximum wait time is bounded by SCSI request timeout.
+  2964           */
+  2965          req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
+  2966          if (IS_ERR(req)) {
+  2967                  err = PTR_ERR(req);
+  2968                  goto out_unlock;
+  2969          }
+  2970          tag = req->tag;
+  2971          WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
+  2972          /* Set the timeout such that the SCSI error handler is not activated. */
+  2973          req->timeout = msecs_to_jiffies(2 * timeout);
+  2974          blk_mq_start_request(req);
+  2975  
+  2976          if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
+  2977                  err = -EBUSY;
+  2978                  goto out;
+                        ^^^^^^^^
 
-Hannes and I started to play with this patch. After a few iterations
-on getting the right dev_loss_tmo variables set, it works as
-hoped. With this change, it's possible to use the same udev rule for
-qla2xxx as we currently use for lpfc driver. And it survived serious
-testing sessions.
+  2979          }
+  2980  
+  2981          init_completion(&wait);
+  2982          lrbp = &hba->lrb[tag];
 
-Thanks,
-Daniel
+This used to be initialized before the goto
 
- drivers/scsi/qla2xxx/qla_attr.c |  6 ++++++
- drivers/scsi/qla2xxx/qla_init.c | 10 +++-------
- drivers/scsi/qla2xxx/qla_nvme.c |  5 ++++-
- 3 files changed, 13 insertions(+), 8 deletions(-)
+  2983          WARN_ON(lrbp->cmd);
+  2984          err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
+  2985          if (unlikely(err))
+  2986                  goto out_put_tag;
+  2987  
+  2988          hba->dev_cmd.complete = &wait;
+  2989  
+  2990          ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+  2991          /* Make sure descriptors are ready before ringing the doorbell */
+  2992          wmb();
+  2993  
+  2994          ufshcd_send_command(hba, tag);
+  2995          err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+  2996  out:
+  2997          ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
+  2998                                      (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
+                                                                   ^^^^^^^^^^^^^^^^^
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 3aa9869f6fae..c762c940970f 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2648,7 +2648,13 @@ qla2x00_get_starget_port_id(struct scsi_target *starget)
- static inline void
- qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
- {
-+	fc_port_t *fcport = *(fc_port_t **)rport->dd_data;
-+
- 	rport->dev_loss_tmo = timeout ? timeout : 1;
-+
-+	if (fcport->nvme_remote_port)
-+		nvme_fc_set_remoteport_devloss(fcport->nvme_remote_port,
-+					       rport->dev_loss_tmo);
- }
- 
- static void
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index eb825318e3f5..7f5b64a5ec90 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -5629,13 +5629,6 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- 
- 	qla2x00_dfs_create_rport(vha, fcport);
- 
--	if (NVME_TARGET(vha->hw, fcport)) {
--		qla_nvme_register_remote(vha, fcport);
--		qla2x00_set_fcport_disc_state(fcport, DSC_LOGIN_COMPLETE);
--		qla2x00_set_fcport_state(fcport, FCS_ONLINE);
--		return;
--	}
--
- 	qla24xx_update_fcport_fcp_prio(vha, fcport);
- 
- 	switch (vha->host->active_mode) {
-@@ -5657,6 +5650,9 @@ qla2x00_update_fcport(scsi_qla_host_t *vha, fc_port_t *fcport)
- 		break;
- 	}
- 
-+	if (NVME_TARGET(vha->hw, fcport))
-+		qla_nvme_register_remote(vha, fcport);
-+
- 	qla2x00_set_fcport_state(fcport, FCS_ONLINE);
- 
- 	if (IS_IIDMA_CAPABLE(vha->hw) && vha->hw->flags.gpsc_supported) {
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index e119f8b24e33..5cc58957dbec 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -41,7 +41,7 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
- 	req.port_name = wwn_to_u64(fcport->port_name);
- 	req.node_name = wwn_to_u64(fcport->node_name);
- 	req.port_role = 0;
--	req.dev_loss_tmo = 0;
-+	req.dev_loss_tmo = fcport->dev_loss_tmo;
- 
- 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_INITIATOR)
- 		req.port_role = FC_PORT_ROLE_NVME_INITIATOR;
-@@ -68,6 +68,9 @@ int qla_nvme_register_remote(struct scsi_qla_host *vha, struct fc_port *fcport)
- 		return ret;
- 	}
- 
-+	nvme_fc_set_remoteport_devloss(fcport->nvme_remote_port,
-+				       fcport->dev_loss_tmo);
-+
- 	if (fcport->nvme_prli_service_param & NVME_PRLI_SP_SLER)
- 		ql_log(ql_log_info, vha, 0x212a,
- 		       "PortID:%06x Supports SLER\n", req.port_id);
--- 
-2.29.2
+  2999  
+  3000  out_put_tag:
+  3001          blk_put_request(req);
+  3002  out_unlock:
+  3003          up_read(&hba->clk_scaling_lock);
+  3004          return err;
+  3005  }
 
+regards,
+dan carpenter
