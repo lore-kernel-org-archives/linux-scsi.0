@@ -2,80 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D6E7C48BCD
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 07:02:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2A6CC47095
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 07:02:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4EBB660E0C
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 07:02:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B62C461352
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 07:02:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236958AbhFIHEf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Jun 2021 03:04:35 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:8107 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236942AbhFIHEd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2021 03:04:33 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4G0HzR5BG2zYsXF;
-        Wed,  9 Jun 2021 14:59:47 +0800 (CST)
-Received: from dggpeml500020.china.huawei.com (7.185.36.88) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 9 Jun 2021 15:02:37 +0800
-Received: from huawei.com (10.175.127.227) by dggpeml500020.china.huawei.com
- (7.185.36.88) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 9 Jun 2021
- 15:02:36 +0800
-From:   Baokun Li <libaokun1@huawei.com>
-To:     <linux-kernel@vger.kernel.org>, Hannes Reinecke <hare@suse.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <weiyongjun1@huawei.com>, <yuehaibing@huawei.com>,
-        <yangjihong1@huawei.com>, <yukuai3@huawei.com>,
-        <libaokun1@huawei.com>, <linux-scsi@vger.kernel.org>,
-        <kernel-janitors@vger.kernel.org>, Hulk Robot <hulkci@huawei.com>
-Subject: [PATCH -next v2] scsi: fcoe: use list_move instead of list_del/list_add in fcoe_ctlr.c
-Date:   Wed, 9 Jun 2021 15:11:46 +0800
-Message-ID: <20210609071146.1332262-1-libaokun1@huawei.com>
-X-Mailer: git-send-email 2.31.1
+        id S237004AbhFIHEt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Jun 2021 03:04:49 -0400
+Received: from m12-17.163.com ([220.181.12.17]:44703 "EHLO m12-17.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236977AbhFIHEn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Jun 2021 03:04:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=1DIJp
+        HP+Eol0S9hpb7lABrWGpCIi+rnoAxnOQ9OdNvQ=; b=Ni9HIpxYDueZW94cD2MYO
+        o6m91F52K88gBCuWSdU8/1G89qFWyyM0qrCPRk7pZOHBsHTExaDc5qPVhLZpK8HC
+        oQz+7sQeklqMYl8dWOANunwzuanrzmBMOmkzWLlX6UxRALIGUTjoJkp7m7mI/MZK
+        hOUOOWvdY69/uPOUY4ENdk=
+Received: from localhost.localdomain (unknown [218.17.89.92])
+        by smtp13 (Coremail) with SMTP id EcCowABnTXVyZ8Bgitlc6Q--.23071S2;
+        Wed, 09 Jun 2021 15:02:10 +0800 (CST)
+From:   lijian_8010a29@163.com
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lijian <lijian@yulong.com>
+Subject: [PATCH] scsi: lpfc: lpfc_hbadisc: deleted these repeated words
+Date:   Wed,  9 Jun 2021 15:01:13 +0800
+Message-Id: <20210609070113.443914-1-lijian_8010a29@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type:   text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
-X-Originating-IP: [10.175.127.227]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggpeml500020.china.huawei.com (7.185.36.88)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: EcCowABnTXVyZ8Bgitlc6Q--.23071S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ZF4UXr47tr1DuFy3Zw47Arb_yoW8WFWDpr
+        Z7KF1UAr1vkF42k3W3AryUZF90k3s3WFZFyF4qy345WrWrJrW0qr10q34fJay5WF4Fvw1q
+        vFsFkF9xua1kZrJanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07b8b1bUUUUU=
+X-Originating-IP: [218.17.89.92]
+X-CM-SenderInfo: 5olmxttqbyiikqdsmqqrwthudrp/1tbiLxKsUFUMY37LWgAAsU
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Using list_move() instead of list_del() + list_add() in fcoe_ctlr.c.
+From: lijian <lijian@yulong.com>
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Baokun Li <libaokun1@huawei.com>
+deleted these repeated words 'the' and 'random' in the comments.
+
+Signed-off-by: lijian <lijian@yulong.com>
 ---
-V1->V2:
-	CC mailist
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- drivers/scsi/fcoe/fcoe_ctlr.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index f5a898c2c904..40a5a7f02fa2 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -1837,7 +1837,7 @@ lpfc_check_pending_fcoe_event(struct lpfc_hba *phba, uint8_t unreg_fcf)
+  * use through a sequence of @fcf_cnt eligible FCF records with equal
+  * probability. To perform integer manunipulation of random numbers with
+  * size unit32_t, the lower 16 bits of the 32-bit random number returned
+- * from prandom_u32() are taken as the random random number generated.
++ * from prandom_u32() are taken as the random number generated.
+  *
+  * Returns true when outcome is for the newly read FCF record should be
+  * chosen; otherwise, return false when outcome is for keeping the previously
+@@ -2138,7 +2138,7 @@ static void lpfc_sli4_fcf_pri_list_del(struct lpfc_hba *phba,
+  * @phba: pointer to lpfc hba data structure.
+  * @fcf_index: the index of the fcf record to update
+  * This routine acquires the hbalock and then set the LPFC_FCF_FLOGI_FAILED
+- * flag so the the round robin slection for the particular priority level
++ * flag so the round robin slection for the particular priority level
+  * will try a different fcf record that does not have this bit set.
+  * If the fcf record is re-read for any reason this flag is cleared brfore
+  * adding it to the priority list.
+-- 
+2.25.1
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 1756a0ac6f08..69dde091eaa2 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -853,8 +853,7 @@ static unsigned long fcoe_ctlr_age_fcfs(struct fcoe_ctlr *fip)
- 			 * fcoe_sysfs_fcf_del (which can sleep)
- 			 * after the put_cpu().
- 			 */
--			list_del(&fcf->list);
--			list_add(&fcf->list, &del_list);
-+			list_move(&fcf->list, &del_list);
- 			stats->VLinkFailureCount++;
- 		} else {
- 			if (time_after(next_timer, deadline))
 
