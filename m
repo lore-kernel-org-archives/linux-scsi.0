@@ -2,207 +2,266 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-11.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7197BC47095
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:48:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69721C47095
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:53:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 53A7961375
-	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:48:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 460A4613AD
+	for <linux-scsi@archiver.kernel.org>; Wed,  9 Jun 2021 09:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235909AbhFIJue (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 9 Jun 2021 05:50:34 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:3919 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232867AbhFIJue (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jun 2021 05:50:34 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4G0MFR38skz6vp7;
-        Wed,  9 Jun 2021 17:27:07 +0800 (CST)
-Received: from dggpeml500009.china.huawei.com (7.185.36.209) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 9 Jun 2021 17:30:11 +0800
-Received: from huawei.com (10.175.101.6) by dggpeml500009.china.huawei.com
- (7.185.36.209) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 9 Jun 2021
- 17:30:10 +0800
-From:   Yufen Yu <yuyufen@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.garry@huawei.com>
-CC:     <linux-scsi@vger.kernel.org>, <yanaijie@huawei.com>,
-        <wubo40@huawei.com>, <yuyufen@huawei.com>
-Subject: [PATCH v2] scsi: libsas: add lun number check in .slave_alloc callback
-Date:   Wed, 9 Jun 2021 17:36:31 +0800
-Message-ID: <20210609093631.2557822-1-yuyufen@huawei.com>
-X-Mailer: git-send-email 2.25.4
+        id S238454AbhFIJzq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 9 Jun 2021 05:55:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42276 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238448AbhFIJzp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 9 Jun 2021 05:55:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9764361375;
+        Wed,  9 Jun 2021 09:53:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1623232431;
+        bh=CVI19HxzerQeBdqOZMyU8l7Pa/R+AWrO+Xskvkm82ow=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=0q0hDIW6DgWFP3COy3bpinX0qTjr+6iKVpsHISrNUxE7IIrUk4rXaqZah55x1pN08
+         9ZdCII9XR0QthdPaOc7TRDyDCZ8hnVr/VDTC5MvFQjtlpEh9p0fa6gzqs5EN7MM3+2
+         Fqc72US1TwbjDy/Mw5lj1r7q+dsSAIJH7nuj63jM=
+Date:   Wed, 9 Jun 2021 11:53:48 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Daejun Park <daejun7.park@samsung.com>
+Cc:     "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Jaemyung Lee <jaemyung.lee@samsung.com>,
+        Jieon Seol <jieon.seol@samsung.com>
+Subject: Re: [PATCH v36 0/4] scsi: ufs: Add Host Performance Booster Support
+Message-ID: <YMCPrE+Fq+ee+vBS@kroah.com>
+References: <CGME20210607041650epcms2p29002c9d072738bbf21fb4acf31847e8e@epcms2p2>
+ <20210607041650epcms2p29002c9d072738bbf21fb4acf31847e8e@epcms2p2>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.175.101.6]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpeml500009.china.huawei.com (7.185.36.209)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210607041650epcms2p29002c9d072738bbf21fb4acf31847e8e@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We found that offline a ata device on hisi sas control and then
-scanning the host can probe 255 not exist devices into system.
-It can be reproduced easily as following:
+On Mon, Jun 07, 2021 at 01:16:50PM +0900, Daejun Park wrote:
+> Changelog:
+> 
+> v35 -> v36
+> 1. Changed ppn variable type from u64 to __be64.
+> 2. Added WARN_ON_ONCE() to check for HPB read IO size exceeded.
+> 
+> v34 -> v35
+> 1. Addressed Bart's comments (type casting)
+> 2. Rebase 5.14 scsi-queue
+> 
+> v33 -> v34
+> Fix warning about NULL check before some freeing functions is not needed.
+> 
+> v32 -> v33
+> 1. Fix wrong usage of scsi_command_normalize_sense.
+> 2. Addressed Bart's comments (func. name, type casting, parentheses)
+> 
+> v31 -> v32
+> Delete unused parameter of unmap API.
+> 
+> v30 -> v31
+> Delete unnecessary debug message.
+> 
+> v29 -> v30
+> 1. Add support to reuse bio of pre-request.
+> 2. Delete unreached code in the ufshpb_issue_map_req.
+> 
+> v28 -> v29
+> 1. Remove unused variable that reported by kernel test robot.
+> 
+> v27 -> v28
+> 1. Fix wrong return value of ufshpb_prep.
+> 
+> v26 -> v27
+> 1. Fix wrong refernce of sense buffer in pre_req complete function.
+> 2. Fix read_id error.
+> 3. Fix chunk size checking for HPB 1.0.
+> 4. Mute unnecessary messages before HPB initialization.
+> 
+> v25 -> v26
+> 1. Fix wrong chunk size checking for HPB 1.0.
+> 2. Fix wrong max data size for HPB single command.
+> 3. Fix typo error.
+> 
+> v24 -> v25
+> 1. Change write buffer API for unmap region.
+> 2. Add checking hpb_enable for avoiding unnecessary memory allocation.
+> 3. Change pr_info to dev_info.
+> 4. Change default requeue timeout value for HPB read.
+> 5. Fix wrong offset manipulation on ufshpb_prep_entry.
+> 
+> v23 -> v24
+> 1. Fix build error reported by kernel test robot.
+> 
+> v22 -> v23
+> 1. Add support compatibility of HPB 1.0.
+> 2. Fix read id for single HPB read command.
+> 3. Fix number of pre-allocated requests for write buffer.
+> 4. Add fast path for response UPIU that has same LUN in sense data.
+> 5. Remove WARN_ON for preventing kernel crash.
+> 7. Fix wrong argument for read buffer command.
+> 
+> v21 -> v22
+> 1. Add support processing response UPIU in suspend state.
+> 2. Add support HPB hint from other LU.
+> 3. Add sending write buffer with 0x03 after HPB init.
+> 
+> v20 -> v21
+> 1. Add bMAX_DATA_SIZE_FOR_HPB_SINGLE_CMD attr. and fHPBen flag support.
+> 
+> v19 -> v20
+> 1. Add documentation for sysfs entries of hpb->stat.
+> 2. Fix read buffer command for under-sized sub-region.
+> 3. Fix wrong condition checking for kick map work.
+> 4. Delete redundant response UPIU checking.
+> 5. Add LUN checking in response UPIU.
+> 6. Fix possible deadlock problem due to runtime PM.
+> 7. Add instant changing of sub-region state from response UPIU.
+> 8. Fix endian problem in prefetched PPN.
+> 9. Add JESD220-3A (HPB v2.0) support.
+> 
+> v18 -> 19
+> 1. Fix null pointer error when printing sysfs from non-HPB LU.
+> 2. Apply HPB read opcode in lrbp->cmd->cmnd (from Can Guo's review).
+> 3. Rebase the patch on 5.12/scsi-queue.
+> 
+> v17 -> v18
+> Fix build error which reported by kernel test robot.
+> 
+> v16 -> v17
+> 1. Rename hpb_state_lock to rgn_state_lock and move it to corresponding
+> patch.
+> 2. Remove redundant information messages.
+> 
+> v15 -> v16
+> 1. Add missed sysfs ABI documentation.
+> 
+> v14 -> v15
+> 1. Remove duplicated sysfs ABI entries in documentation.
+> 2. Add experiment result of HPB performance testing with iozone.
+> 
+> v13 -> v14
+> 1. Cleanup codes by commentted in Greg's review.
+> 2. Add documentation for sysfs entries (from Greg's review).
+> 3. Add experiment result of HPB performance testing.
+> 
+> v12 -> v13
+> 1. Cleanup codes by comments from Can Guo.
+> 2. Add HPB related descriptor/flag/attributes in sysfs.
+> 3. Change base commit from 5.10/scsi-queue to 5.11/scsi-queue.
+> 
+> v11 -> v12
+> 1. Fixed to return error value when HPB fails to initialize pinned active 
+> region.
+> 2. Fixed to disable HPB feature if HPB fails to allocate essential memory
+> and workqueue.
+> 3. Fixed to change proper sub-region state when region is already evicted.
+> 
+> v10 -> v11
+> Add a newline at end the last line on Kconfig file.
+> 
+> v9 -> v10
+> 1. Fixed 64-bit division error
+> 2. Fixed problems commentted in Bart's review.
+> 
+> v8 -> v9
+> 1. Change sysfs initialization.
+> 2. Change reading descriptor during HPB initialization
+> 3. Fixed problems commentted in Bart's review.
+> 4. Change base commit from 5.9/scsi-queue to 5.10/scsi-queue.
+> 
+> v7 -> v8
+> Remove wrongly added tags.
+> 
+> v6 -> v7
+> 1. Remove UFS feature layer.
+> 2. Cleanup for sparse error.
+> 
+> v5 -> v6
+> Change base commit to b53293fa662e28ae0cdd40828dc641c09f133405
+> 
+> v4 -> v5
+> Delete unused macro define.
+> 
+> v3 -> v4
+> 1. Cleanup.
+> 
+> v2 -> v3
+> 1. Add checking input module parameter value.
+> 2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
+> 3. Cleanup for unused variables and label.
+> 
+> v1 -> v2
+> 1. Change the full boilerplate text to SPDX style.
+> 2. Adopt dynamic allocation for sub-region data structure.
+> 3. Cleanup.
+> 
+> NAND flash memory-based storage devices use Flash Translation Layer (FTL)
+> to translate logical addresses of I/O requests to corresponding flash
+> memory addresses. Mobile storage devices typically have RAM with
+> constrained size, thus lack in memory to keep the whole mapping table.
+> Therefore, mapping tables are partially retrieved from NAND flash on
+> demand, causing random-read performance degradation.
+> 
+> To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
+> (Host Performance Booster) which uses host system memory as a cache for the
+> FTL mapping table. By using HPB, FTL data can be read from host memory
+> faster than from NAND flash memory. 
+> 
+> The current version only supports the DCM (device control mode).
+> This patch consists of 3 parts to support HPB feature.
+> 
+> 1) HPB probe and initialization process
+> 2) READ -> HPB READ using cached map information
+> 3) L2P (logical to physical) map management
+> 
+> In the HPB probe and init process, the device information of the UFS is
+> queried. After checking supported features, the data structure for the HPB
+> is initialized according to the device information.
+> 
+> A read I/O in the active sub-region where the map is cached is changed to
+> HPB READ by the HPB.
+> 
+> The HPB manages the L2P map using information received from the
+> device. For active sub-region, the HPB caches through ufshpb_map
+> request. For the in-active region, the HPB discards the L2P map.
+> When a write I/O occurs in an active sub-region area, associated dirty
+> bitmap checked as dirty for preventing stale read.
+> 
+> HPB is shown to have a performance improvement of 58 - 67% for random read
+> workload. [1]
+> 
+> [1]:
+> https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
+> 
+> Daejun Park (4):
+>   scsi: ufs: Introduce HPB feature
+>   scsi: ufs: L2P map management for HPB read
+>   scsi: ufs: Prepare HPB read for cached sub-region
+>   scsi: ufs: Add HPB 2.0 support
 
-Some ata devices on hisi sas v3 control:
-  [root@localhost ~]# lsscsi
-  [2:0:0:0]    disk    ATA      Samsung SSD 860  2B6Q  /dev/sda
-  [2:0:1:0]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdb
-  [2:0:2:0]    disk    SEAGATE  ST600MM0006      B001  /dev/sdc
-
- 1) echo "offline" > /sys/block/sdb/device/state
- 2) echo "- - -" > /sys/class/scsi_host/host2/scan
-
-Then, we can see another 255 not exist devices in system:
-  [root@localhost ~]# lsscsi
-  [2:0:0:0]    disk    ATA      Samsung SSD 860  2B6Q  /dev/sda
-  [2:0:1:0]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdb
-  [2:0:1:1]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdh
-  ...
-  [2:0:1:255]  disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdjb
-
-After REPORT LUN command issued to the offline device fail, it tries
-to do a sequential scan and probe all devices whose lun is not 0
-successfully.
-
-To fix the problem, we try to do same things as commit 2fc62e2ac350
-("[SCSI] libsas: disable scanning lun > 0 on ata devices"), which
-will prevent the device whose lun number is not zero probe into system.
-
-Reported-by: Wu Bo <wubo40@huawei.com>
-Suggested-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Yufen Yu <yuyufen@huawei.com>
----
- drivers/scsi/aic94xx/aic94xx_init.c    | 1 +
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 1 +
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 +
- drivers/scsi/isci/init.c               | 1 +
- drivers/scsi/libsas/sas_scsi_host.c    | 9 +++++++++
- drivers/scsi/mvsas/mv_init.c           | 1 +
- drivers/scsi/pm8001/pm8001_init.c      | 1 +
- 8 files changed, 16 insertions(+)
-
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index a195bfe9eccc..7a78606598c4 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -53,6 +53,7 @@ static struct scsi_host_template aic94xx_sht = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler	= sas_eh_device_reset_handler,
- 	.eh_target_reset_handler	= sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 3e359ac752fd..15eaac3a4eb6 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1771,6 +1771,7 @@ static struct scsi_host_template sht_v1_hw = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 46f60fc2a069..9df1639ffa65 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -3584,6 +3584,7 @@ static struct scsi_host_template sht_v2_hw = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index e95408314078..36ec3901cfd4 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3155,6 +3155,7 @@ static struct scsi_host_template sht_v3_hw = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index c452849e7bb4..ffd33e5decae 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -167,6 +167,7 @@ static struct scsi_host_template isci_sht = {
- 	.eh_abort_handler		= sas_eh_abort_handler,
- 	.eh_device_reset_handler        = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler        = sas_eh_target_reset_handler,
-+	.slave_alloc			= sas_slave_alloc,
- 	.target_destroy			= sas_target_destroy,
- 	.ioctl				= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 1bf939818c98..ee44a0d7730b 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -911,6 +911,14 @@ void sas_task_abort(struct sas_task *task)
- 		blk_abort_request(sc->request);
- }
- 
-+int sas_slave_alloc(struct scsi_device *sdev)
-+{
-+	if (dev_is_sata(sdev_to_domain_dev(sdev)) && sdev->lun)
-+		return -ENXIO;
-+
-+	return 0;
-+}
-+
- void sas_target_destroy(struct scsi_target *starget)
- {
- 	struct domain_device *found_dev = starget->hostdata;
-@@ -957,5 +965,6 @@ EXPORT_SYMBOL_GPL(sas_task_abort);
- EXPORT_SYMBOL_GPL(sas_phy_reset);
- EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
- EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
-+EXPORT_SYMBOL_GPL(sas_slave_alloc);
- EXPORT_SYMBOL_GPL(sas_target_destroy);
- EXPORT_SYMBOL_GPL(sas_ioctl);
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 6aa2697c4a15..b03c0f35d7b0 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -46,6 +46,7 @@ static struct scsi_host_template mvs_sht = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index af09bd282cb9..313248c7bab9 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -101,6 +101,7 @@ static struct scsi_host_template pm8001_sht = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
--- 
-2.25.4
-
+Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
