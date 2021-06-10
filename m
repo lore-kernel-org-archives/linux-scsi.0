@@ -2,239 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77142C47094
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 14:01:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56212C48BE5
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 14:14:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4FFFB61027
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 14:01:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A155613C1
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 14:14:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230317AbhFJODo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 10:03:44 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:60418 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230287AbhFJODo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 10:03:44 -0400
-Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 635361FD37;
-        Thu, 10 Jun 2021 14:01:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623333707; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fKONkR/kFyAL5fyxcxUGu4sbBeMiAxaKOlzYBnvpfBM=;
-        b=n/bYyKgVi9XgajsJ6GgNZnBDqvUcdVPQiZBq4BVs5wW0b+eoE4cKujLVUPXBSvydEfCDF0
-        FXC/APg6SDbiTdfTYLvrCH1saRv1xhqEOreAJhn1tsWWTYALutMc0xQAjawPUhBVLz2MqZ
-        DU0JDis6JAQkhI4MGgcPsp39xFsBrHI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623333707;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fKONkR/kFyAL5fyxcxUGu4sbBeMiAxaKOlzYBnvpfBM=;
-        b=0Cb3kXsO18kmwL++A6uoHcgpg8RMBEYAYFP9wMxeKImp7Ej6FF4Pxs2oBqR9D+MfHxPHFK
-        ybbroY+ATS8uYcCQ==
-Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id 4565A118DD;
-        Thu, 10 Jun 2021 14:01:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623333707; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fKONkR/kFyAL5fyxcxUGu4sbBeMiAxaKOlzYBnvpfBM=;
-        b=n/bYyKgVi9XgajsJ6GgNZnBDqvUcdVPQiZBq4BVs5wW0b+eoE4cKujLVUPXBSvydEfCDF0
-        FXC/APg6SDbiTdfTYLvrCH1saRv1xhqEOreAJhn1tsWWTYALutMc0xQAjawPUhBVLz2MqZ
-        DU0JDis6JAQkhI4MGgcPsp39xFsBrHI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623333707;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=fKONkR/kFyAL5fyxcxUGu4sbBeMiAxaKOlzYBnvpfBM=;
-        b=0Cb3kXsO18kmwL++A6uoHcgpg8RMBEYAYFP9wMxeKImp7Ej6FF4Pxs2oBqR9D+MfHxPHFK
-        ybbroY+ATS8uYcCQ==
-Received: from director2.suse.de ([192.168.254.72])
-        by imap3-int with ESMTPSA
-        id +essEEsbwmBxVgAALh3uQQ
-        (envelope-from <hare@suse.de>); Thu, 10 Jun 2021 14:01:47 +0000
-Subject: Re: [PATCH 13/24] scsi: Kill DRIVER_SENSE
-To:     Jiri Slaby <jirislaby@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        linux-scsi@vger.kernel.org
-References: <20191021095322.137969-1-hare@suse.de>
- <20191021095322.137969-14-hare@suse.de>
- <a5551d37-8303-2cbb-f82a-17fea785adad@kernel.org>
- <c48e74e9-4bbb-d892-4976-06bb448f5f6c@suse.de>
- <yq1bl8hn9py.fsf@ca-mkp.ca.oracle.com>
- <e2c75feb-cd87-1681-a5ee-6aed7ee82e11@suse.de>
- <6d5c893d-61c1-fad9-78f5-17b41f19706d@kernel.org>
-From:   Hannes Reinecke <hare@suse.de>
-Organization: SUSE Linux GmbH
-Message-ID: <723d9d8b-5dde-839f-efe6-164177f5c1ce@suse.de>
-Date:   Thu, 10 Jun 2021 16:01:46 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        id S231214AbhFJOP5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 10:15:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42368 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230153AbhFJOP4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 10:15:56 -0400
+Received: from mail-pf1-x435.google.com (mail-pf1-x435.google.com [IPv6:2607:f8b0:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8AE7C061574;
+        Thu, 10 Jun 2021 07:13:47 -0700 (PDT)
+Received: by mail-pf1-x435.google.com with SMTP id u18so1715544pfk.11;
+        Thu, 10 Jun 2021 07:13:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=uVvPHfIwriaeCqaGS4SWF2JfjGEeCNMTseqgcHKL0PY=;
+        b=ot0iffXK2/znAlvDWUx0DvEHPs9Hu42jQhvk3aHGx+T2NhWFpnwKA1vIkYGIy+cgYb
+         LxEbfgCrbULtFd7nVuJsfQAH+IMqZIL2R35dwiAl9sJZz1GKTswJr7viHRHzd8ec6z9L
+         cpBdHTN6hAjfnZCW/MdapYStRdZ2pSAmS2zSYAlKj+wqby1v1sKfa0Z3IJGU1Q2S8YcP
+         HqfC/opPsY22Z36tiTPSUNG8yLuAg9Bq77HzKuJDM2mT1cANyfp9SOlXy6wpSwett2B6
+         yucBibCk75zJ2NzA/8lMhfuq11vR41IllnpzmIyKLTH/P3wGLWQCIUfWmxQ4zGD/3HTx
+         tacA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=uVvPHfIwriaeCqaGS4SWF2JfjGEeCNMTseqgcHKL0PY=;
+        b=Ob5AjVJlmewWgR91C2iGfH32rqVp9W5EnF11+BLWmpEgtRimFpEQMaBysOyo7RcTVj
+         kvxM2SaGFg8t5sfZ0L6oqoxpQjkqb7ySAyb9AFHodVAL9+Q8Z5jiZKjH9JAeNUFNeeKq
+         oYwL/EVQzB5PZX307pQc+Z1dcVZr09VYTuAbSCmARcFaDgDyZwFTv/oUze7mKDo27IId
+         zdrUSWdvZ6rQZ+a0M5xP8L82dq/cSAqGONkxuMCVmtwV/exS+dccGbDtkwIXsz+8T8Om
+         lyrwZspUfEnEq4X191QY4ap5ptVgz2zhFRZnhbEP0NbU0nTigIrw9MXypsXQAf8jnKP1
+         MC/w==
+X-Gm-Message-State: AOAM530It9T+D/oLpTv3sg30GnJpQoKABxSxMfca/I5TP5FZrDaRkoBG
+        bk4gPaWYunVAN/RQi3+Ix3s=
+X-Google-Smtp-Source: ABdhPJz4FYgWX1XRVYnd1fLznm93BCcmg2/a4wkuQ7x2l90mgEwjIr25Q5mcrDlHBGTMoQXHYCH6CA==
+X-Received: by 2002:a05:6a00:2353:b029:2f2:987a:5da2 with SMTP id j19-20020a056a002353b02902f2987a5da2mr3220673pfj.58.1623334427380;
+        Thu, 10 Jun 2021 07:13:47 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
+        by smtp.gmail.com with ESMTPSA id h12sm3035510pgn.54.2021.06.10.07.13.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Jun 2021 07:13:46 -0700 (PDT)
+Subject: Re: [RFC PATCH V3 01/11] x86/HV: Initialize GHCB page in Isolation VM
+To:     Joerg Roedel <joro@8bytes.org>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        arnd@arndb.de, dave.hansen@linux.intel.com, luto@kernel.org,
+        peterz@infradead.org, akpm@linux-foundation.org,
+        kirill.shutemov@linux.intel.com, rppt@kernel.org,
+        hannes@cmpxchg.org, cai@lca.pw, krish.sadhukhan@oracle.com,
+        saravanand@fb.com, Tianyu.Lan@microsoft.com,
+        konrad.wilk@oracle.com, hch@lst.de, m.szyprowski@samsung.com,
+        robin.murphy@arm.com, boris.ostrovsky@oracle.com, jgross@suse.com,
+        sstabellini@kernel.org, will@kernel.org,
+        xen-devel@lists.xenproject.org, davem@davemloft.net,
+        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, thomas.lendacky@amd.com,
+        brijesh.singh@amd.com, sunilmut@microsoft.com
+References: <20210530150628.2063957-1-ltykernel@gmail.com>
+ <20210530150628.2063957-2-ltykernel@gmail.com> <YMC2RSr/J1WYCvtz@8bytes.org>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <c9a7eaa8-a8b3-3ed3-c52c-7a2cea3c95bc@gmail.com>
+Date:   Thu, 10 Jun 2021 22:13:32 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <6d5c893d-61c1-fad9-78f5-17b41f19706d@kernel.org>
-Content-Type: multipart/mixed;
- boundary="------------E163DC3D490E3B45511F0041"
+In-Reply-To: <YMC2RSr/J1WYCvtz@8bytes.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------E163DC3D490E3B45511F0041
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Hi Joerg：
+	Thanks for your review.
 
-On 6/10/21 12:52 PM, Jiri Slaby wrote:
-> On 07. 06. 21, 15:02, Hannes Reinecke wrote:
->> On 6/7/21 2:30 PM, Martin K. Petersen wrote:
->>>
->>> Hannes,
->>>
->>>>> Any ideas?
->>>
->>>>> Can you enable SCSI logging via
->>>>
->>>> scsi.scsi_logging_level=216
->>>>
->>>> on the kernel commandline and send me the output?
->>>
->>> You now effectively set SAM_STAT_CHECK_CONDITION if the scsi_cmnd has a
->>> sense buffer.
->>>
->>> The original code only set DRIVER_SENSE if the adapter response actually
->>> contained sense information:
->>>
->>> @@ -161,8 +161,7 @@ static void virtscsi_complete_cmd(struct
->>> virtio_scsi *vscsi, void *buf)
->>>                         min_t(u32,
->>>                               virtio32_to_cpu(vscsi->vdev,
->>> resp->sense_len),
->>>                               VIRTIO_SCSI_SENSE_SIZE));
->>> -               if (resp->sense_len)
->>> -                       set_driver_byte(sc, DRIVER_SENSE);
->>> +               set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
->>>          }
->>>
->> Oh, I know. But we're checking for a valid sense code during scanning:
+
+On 6/9/2021 8:38 PM, Joerg Roedel wrote:
+> On Sun, May 30, 2021 at 11:06:18AM -0400, Tianyu Lan wrote:
+>> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 >>
->>             if (scsi_status_is_check_condition(result) &&
->>                 scsi_sense_valid(&sshdr)) {
+>> Hyper-V exposes GHCB page via SEV ES GHCB MSR for SNP guest
+>> to communicate with hypervisor. Map GHCB page for all
+>> cpus to read/write MSR register and submit hvcall request
+>> via GHCB.
 >>
->> so if that makes a difference it would mean that the virtio driver has
->> some stale sense data which then gets copied over.
->> Anyway.
->> Can you test with this patch?
+>> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
+>> ---
+>>   arch/x86/hyperv/hv_init.c       | 60 ++++++++++++++++++++++++++++++---
+>>   arch/x86/include/asm/mshyperv.h |  2 ++
+>>   include/asm-generic/mshyperv.h  |  2 ++
+>>   3 files changed, 60 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
+>> index bb0ae4b5c00f..dc74d01cb859 100644
+>> --- a/arch/x86/hyperv/hv_init.c
+>> +++ b/arch/x86/hyperv/hv_init.c
+>> @@ -60,6 +60,9 @@ static int hv_cpu_init(unsigned int cpu)
+>>   	struct hv_vp_assist_page **hvp = &hv_vp_assist_page[smp_processor_id()];
+>>   	void **input_arg;
+>>   	struct page *pg;
+>> +	u64 ghcb_gpa;
+>> +	void *ghcb_va;
+>> +	void **ghcb_base;
 > 
-> Yes, that boots, but is somehow sloooow (hard to tell what is causing
-> this).
+> Any reason you can't reuse the SEV-ES support code in the Linux kernel?
+> It already has code to setup GHCBs for all vCPUs.
 > 
-> Anyway, the new print is still there with the patch:
-> [   11.549986] sd 0:0:0:0: Power-on or device reset occurred
+> I see that you don't need #VC handling in your SNP VMs because of the
+> paravisor running underneath it, but just re-using the GHCB setup code
+> shouldn't be too hard.
 > 
-> Cool; one step further.
-Can you check if the attached patch helps, too?
 
-Cheers,
+Thanks for your suggestion. I will have a try to use SEV-ES code.
 
-Hannes
--- 
-Dr. Hannes Reinecke		        Kernel Storage Architect
-hare@suse.de			               +49 911 74053 688
-SUSE Software Solutions Germany GmbH, 90409 Nürnberg
-GF: F. Imendörffer, HRB 36809 (AG Nürnberg)
-
---------------E163DC3D490E3B45511F0041
-Content-Type: text/x-patch; charset=UTF-8;
- name="0002-scsi-do-not-assume-CHECK_CONDITION-is-set-for-valid-.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename*0="0002-scsi-do-not-assume-CHECK_CONDITION-is-set-for-valid-.pa";
- filename*1="tch"
-
-From f60b3ab985a555cd623b77f6da95cb094da08d2a Mon Sep 17 00:00:00 2001
-From: Hannes Reinecke <hare@suse.de>
-Date: Thu, 10 Jun 2021 15:46:56 +0200
-Subject: [PATCH 2/2] scsi: do not assume CHECK_CONDITION is set for valid
- sense code
-
-While the standard implies that a sense code should be returned in
-response to CHECK CONDITION status, it _might_ be returned on other
-status codes, too.
-At least, that's what the original code assumed. So it's arguably
-wrong to assume we only will have a valid sense code when CHECK
-CONDITION is set.
-
-Fixes: 464a00c9e0ad ("scsi: core: Kill DRIVER_SENSE")
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/sd.c | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 20739072f21a..821bbcfe68c9 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1722,8 +1722,7 @@ static int sd_sync_cache(struct scsi_disk *sdkp, struct scsi_sense_hdr *sshdr)
- 		if (res < 0)
- 			return res;
- 
--		if (scsi_status_is_check_condition(res) &&
--		    scsi_sense_valid(sshdr)) {
-+		if (scsi_sense_valid(sshdr)) {
- 			sd_print_sense_hdr(sdkp, sshdr);
- 
- 			/* we need to evaluate the error return  */
-@@ -1829,10 +1828,10 @@ static int sd_pr_command(struct block_device *bdev, u8 sa,
- 	result = scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, &data, sizeof(data),
- 			&sshdr, SD_TIMEOUT, sdkp->max_retries, NULL);
- 
--	if (scsi_status_is_check_condition(result) &&
--	    scsi_sense_valid(&sshdr)) {
-+	if (result) {
- 		sdev_printk(KERN_INFO, sdev, "PR command failed: %d\n", result);
--		scsi_print_sense_hdr(sdev, NULL, &sshdr);
-+		if (scsi_sense_valid(&sshdr))
-+			scsi_print_sense_hdr(sdev, NULL, &sshdr);
- 	}
- 
- 	return result;
-@@ -2073,7 +2072,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 	}
- 	sdkp->medium_access_timed_out = 0;
- 
--	if (!scsi_status_is_check_condition(result) &&
-+	if (result &&
- 	    (!sense_valid || sense_deferred))
- 		goto out;
- 
-@@ -2178,10 +2177,9 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 			retries++;
- 		} while (retries < 3 &&
- 			 (!scsi_status_is_good(the_result) ||
--			  (scsi_status_is_check_condition(the_result) &&
--			  sense_valid && sshdr.sense_key == UNIT_ATTENTION)));
-+			  (sense_valid && sshdr.sense_key == UNIT_ATTENTION)));
- 
--		if (!scsi_status_is_check_condition(the_result)) {
-+		if (the_result < 0 || !sense_valid) {
- 			/* no sense, TUR either succeeded or failed
- 			 * with a status error */
- 			if(!spintime && !scsi_status_is_good(the_result)) {
--- 
-2.26.2
-
-
---------------E163DC3D490E3B45511F0041--
