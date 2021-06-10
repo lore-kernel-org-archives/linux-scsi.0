@@ -7,43 +7,44 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7BAC47094
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 07:50:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C31CC47094
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 07:51:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41233613D0
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 07:50:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F9E6613C8
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 07:51:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230040AbhFJHwF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 03:52:05 -0400
-Received: from szxga03-in.huawei.com ([45.249.212.189]:5366 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229802AbhFJHwE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 03:52:04 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.54])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4G0wyT270gz6w7B;
-        Thu, 10 Jun 2021 15:46:09 +0800 (CST)
+        id S230136AbhFJHxa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 03:53:30 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:9062 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229770AbhFJHxa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 03:53:30 -0400
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4G0x1P5RbgzZcVb;
+        Thu, 10 Jun 2021 15:48:41 +0800 (CST)
 Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 10 Jun 2021 15:50:01 +0800
+ 15.1.2176.2; Thu, 10 Jun 2021 15:51:32 +0800
 Received: from thunder-town.china.huawei.com (10.174.177.72) by
  dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 10 Jun 2021 15:50:01 +0800
+ 15.1.2176.2; Thu, 10 Jun 2021 15:51:31 +0800
 From:   Zhen Lei <thunder.leizhen@huawei.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+To:     Hannes Reinecke <hare@suse.de>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi <linux-scsi@vger.kernel.org>
 CC:     Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH 1/1] scsi: libcxgbi: remove unnecessary oom message
-Date:   Thu, 10 Jun 2021 15:49:52 +0800
-Message-ID: <20210610074952.15765-1-thunder.leizhen@huawei.com>
+Subject: [PATCH 1/1] scsi: fcoe: remove unnecessary oom message
+Date:   Thu, 10 Jun 2021 15:51:24 +0800
+Message-ID: <20210610075124.15818-1-thunder.leizhen@huawei.com>
 X-Mailer: git-send-email 2.26.0.windows.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [10.174.177.72]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
  dggpemm500006.china.huawei.com (7.185.36.236)
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -57,29 +58,25 @@ Remove it can help us save a bit of memory.
 
 Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- drivers/scsi/cxgbi/libcxgbi.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/fcoe/fcoe_transport.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index 8c7d4dda4cf2994..df370fb5dd86f96 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -556,12 +556,11 @@ EXPORT_SYMBOL_GPL(cxgbi_sock_free_cpl_skbs);
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index 4d0e19e7c84b91a..815915734d88d43 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -639,10 +639,8 @@ static int fcoe_add_netdev_mapping(struct net_device *netdev,
+ 	struct fcoe_netdev_mapping *nm;
  
- static struct cxgbi_sock *cxgbi_sock_create(struct cxgbi_device *cdev)
- {
--	struct cxgbi_sock *csk = kzalloc(sizeof(*csk), GFP_NOIO);
-+	struct cxgbi_sock *csk;
- 
--	if (!csk) {
--		pr_info("alloc csk %zu failed.\n", sizeof(*csk));
-+	csk = kzalloc(sizeof(*csk), GFP_NOIO);
-+	if (!csk)
- 		return NULL;
+ 	nm = kmalloc(sizeof(*nm), GFP_KERNEL);
+-	if (!nm) {
+-		printk(KERN_ERR "Unable to allocate netdev_mapping");
++	if (!nm)
+ 		return -ENOMEM;
 -	}
  
- 	if (cdev->csk_alloc_cpls(csk) < 0) {
- 		pr_info("csk 0x%p, alloc cpls failed.\n", csk);
+ 	nm->netdev = netdev;
+ 	nm->ft = ft;
 -- 
 2.26.0.106.g9fadedd
 
