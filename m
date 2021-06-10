@@ -2,383 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38BC3C47094
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 09:52:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3436C47094
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 10:52:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21AD661403
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 09:52:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1A4C613FF
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 10:52:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230295AbhFJJyK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 05:54:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:51428 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230254AbhFJJyD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Jun 2021 05:54:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1623318727;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=YoVNk4j9gtFSnQb0D1+J8+G6ag1xYY93rHbDDkf83Y8=;
-        b=ISC1pEaxtPoGZJyp+6B4QUSMDWdiMu4+Djk2EHBRyOr7C+JSe1VzaujRAEjdANel6JmL+r
-        SJRFYS3yY3GtnjjInhnuLEIASxDwXx6Qtn9Iv3s93i8iZmHkU/pnz7tm2b7NONDZyOCNKq
-        drVYb9XWSxv8FaXVn3JkuotG1y12wKU=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-433-EQcRoCIENpu13yHddkBCkA-1; Thu, 10 Jun 2021 05:52:05 -0400
-X-MC-Unique: EQcRoCIENpu13yHddkBCkA-1
-Received: by mail-wr1-f71.google.com with SMTP id x9-20020adfffc90000b02901178add5f60so643408wrs.5
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2021 02:52:05 -0700 (PDT)
+        id S230153AbhFJKys (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 06:54:48 -0400
+Received: from mail-wm1-f54.google.com ([209.85.128.54]:40707 "EHLO
+        mail-wm1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229961AbhFJKyr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 06:54:47 -0400
+Received: by mail-wm1-f54.google.com with SMTP id b145-20020a1c80970000b029019c8c824054so6241589wmd.5
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2021 03:52:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:in-reply-to:references:date
-         :message-id:mime-version;
-        bh=YoVNk4j9gtFSnQb0D1+J8+G6ag1xYY93rHbDDkf83Y8=;
-        b=LvYhYWf5SX9lU0xe4f3754yLqtvuAi6Y3QjoeLYWgIGa1gLX7jG83s4MqfQYjJx4MH
-         rZ3s8ipPqDq8ve72HP6AB5nNryxKTR1tuwXqsBwC5ZhHbzwcUm4Nyp+iUUVwzoGumrua
-         5rOlIRnntohwS0bnFUYDxl9+oil/qoKXxiK6Af048ls7kBvQCNRJ6gxsjXqkxP4xP6fK
-         B3U4yzg2BLQUN62/zybUUoImFOvFJcQLKaPGIa1iIq064k9d9WYA6hLR6ka5mu84Qcod
-         P/tIvM0/olI6gGsyBXAI+DxSIOCDaePPE5hYh2tAmUuySmJgGMMcjZHSPwmY74XvDLuR
-         xPQA==
-X-Gm-Message-State: AOAM5303WQkU7bGTRfKCg2tI8dTSaQniYyGDvPQLOvdvFW1GzmFduTh1
-        0PMsd9YdFYFkol57B2OhgAotVDnHfgqqgF4zi/m9J+CjfJLPDgGlGSmjhChlzd9SPSMiJIkhGjx
-        0MZt+Av243bqK6dxf5tK0OA==
-X-Received: by 2002:a5d:6111:: with SMTP id v17mr4390230wrt.20.1623318724403;
-        Thu, 10 Jun 2021 02:52:04 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJws7/mCqvX4+aPUx81hg5pKpa/fS4mRAQA+Xfvs2mECl/9+zJ/36DfVftBI3zRBfZ+Q7l7Vlw==
-X-Received: by 2002:a5d:6111:: with SMTP id v17mr4390203wrt.20.1623318724162;
-        Thu, 10 Jun 2021 02:52:04 -0700 (PDT)
-Received: from vitty.brq.redhat.com (g-server-2.ign.cz. [91.219.240.2])
-        by smtp.gmail.com with ESMTPSA id i2sm2324384wmo.40.2021.06.10.02.52.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 10 Jun 2021 02:52:03 -0700 (PDT)
-From:   Vitaly Kuznetsov <vkuznets@redhat.com>
-To:     Tianyu Lan <ltykernel@gmail.com>
-Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com,
-        sunilmut@microsoft.com, kys@microsoft.com, haiyangz@microsoft.com,
-        sthemmin@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
-        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, x86@kernel.org,
-        hpa@zytor.com, arnd@arndb.de, dave.hansen@linux.intel.com,
-        luto@kernel.org, peterz@infradead.org, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        hannes@cmpxchg.org, cai@lca.pw, krish.sadhukhan@oracle.com,
-        saravanand@fb.com, Tianyu.Lan@microsoft.com,
-        konrad.wilk@oracle.com, hch@lst.de, m.szyprowski@samsung.com,
-        robin.murphy@arm.com, boris.ostrovsky@oracle.com, jgross@suse.com,
-        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
-        xen-devel@lists.xenproject.org, davem@davemloft.net,
-        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com
-Subject: Re: [RFC PATCH V3 10/11] HV/Netvsc: Add Isolation VM support for
- netvsc driver
-In-Reply-To: <20210530150628.2063957-11-ltykernel@gmail.com>
-References: <20210530150628.2063957-1-ltykernel@gmail.com>
- <20210530150628.2063957-11-ltykernel@gmail.com>
-Date:   Thu, 10 Jun 2021 11:52:01 +0200
-Message-ID: <874ke6yrlq.fsf@vitty.brq.redhat.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Se/+f840vWN1hnB8FqABpPi/FVV1wd7BwIPK7BO5yE4=;
+        b=eJ3Bi6hekOrxwPjcZ37PCpR4QpY1En3SGPqIeWX+JhWm1UmDdc3z+RBFc6jArVLAqM
+         /LN/okEHgIh/rtp4it18icsa7Umbti5261SRGIcr2atoIinkttsKjvXFfyier42Qx2ZB
+         spIFPNbgRGfOQouWn0u5xXmvzxxinL+578xZmdN5qgy1si9OQ19cBoD6wQ6WwlBa2e+M
+         n7NCV4/1n9Iq90jbDgk3UYRZgDAtBPI4An3QBzQSaSS0fxh8q5IpiEXoURai1Xt9kZnu
+         v7tjARHIZHCCnU8d4DznTUKi3tbMQI1CqYMMutpi4AJVbZyBq0t43lN9W9iaeod85DZU
+         joHg==
+X-Gm-Message-State: AOAM530Xa62lYf1/EmlPmqq4advUZ1e68BlLPne57CgLkSxYZyY89IKE
+        hpH+qdSge0j759G0gLjtjMo7cTTsysk=
+X-Google-Smtp-Source: ABdhPJyPSx/I01eX8mkePD7V7FNxJbfLM+plulbUJG4ss688altciZucHkcmkmpaXusovL52I7G2Sw==
+X-Received: by 2002:a05:600c:1c22:: with SMTP id j34mr14925739wms.166.1623322370517;
+        Thu, 10 Jun 2021 03:52:50 -0700 (PDT)
+Received: from ?IPv6:2a0b:e7c0:0:107::70f? ([2a0b:e7c0:0:107::70f])
+        by smtp.gmail.com with ESMTPSA id n42sm8786039wms.29.2021.06.10.03.52.49
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 10 Jun 2021 03:52:49 -0700 (PDT)
+Subject: Re: [PATCH 13/24] scsi: Kill DRIVER_SENSE
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        linux-scsi@vger.kernel.org
+References: <20191021095322.137969-1-hare@suse.de>
+ <20191021095322.137969-14-hare@suse.de>
+ <a5551d37-8303-2cbb-f82a-17fea785adad@kernel.org>
+ <c48e74e9-4bbb-d892-4976-06bb448f5f6c@suse.de>
+ <yq1bl8hn9py.fsf@ca-mkp.ca.oracle.com>
+ <e2c75feb-cd87-1681-a5ee-6aed7ee82e11@suse.de>
+From:   Jiri Slaby <jirislaby@kernel.org>
+Message-ID: <6d5c893d-61c1-fad9-78f5-17b41f19706d@kernel.org>
+Date:   Thu, 10 Jun 2021 12:52:48 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.10.2
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <e2c75feb-cd87-1681-a5ee-6aed7ee82e11@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Tianyu Lan <ltykernel@gmail.com> writes:
+On 07. 06. 21, 15:02, Hannes Reinecke wrote:
+> On 6/7/21 2:30 PM, Martin K. Petersen wrote:
+>>
+>> Hannes,
+>>
+>>>> Any ideas?
+>>
+>>>> Can you enable SCSI logging via
+>>>
+>>> scsi.scsi_logging_level=216
+>>>
+>>> on the kernel commandline and send me the output?
+>>
+>> You now effectively set SAM_STAT_CHECK_CONDITION if the scsi_cmnd has a
+>> sense buffer.
+>>
+>> The original code only set DRIVER_SENSE if the adapter response actually
+>> contained sense information:
+>>
+>> @@ -161,8 +161,7 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
+>>                         min_t(u32,
+>>                               virtio32_to_cpu(vscsi->vdev, resp->sense_len),
+>>                               VIRTIO_SCSI_SENSE_SIZE));
+>> -               if (resp->sense_len)
+>> -                       set_driver_byte(sc, DRIVER_SENSE);
+>> +               set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
+>>          }
+>>
+> Oh, I know. But we're checking for a valid sense code during scanning:
+> 
+> 			if (scsi_status_is_check_condition(result) &&
+> 			    scsi_sense_valid(&sshdr)) {
+> 
+> so if that makes a difference it would mean that the virtio driver has
+> some stale sense data which then gets copied over.
+> Anyway.
+> Can you test with this patch?
 
-> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
->
-> In Isolation VM, all shared memory with host needs to mark visible
-> to host via hvcall. vmbus_establish_gpadl() has already done it for
-> netvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
-> pagebuffer() still need to handle. Use DMA API to map/umap these
-> memory during sending/receiving packet and Hyper-V DMA ops callback
-> will use swiotlb function to allocate bounce buffer and copy data
-> from/to bounce buffer.
->
-> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> ---
->  drivers/net/hyperv/hyperv_net.h   |   6 ++
->  drivers/net/hyperv/netvsc.c       | 125 ++++++++++++++++++++++++++++--
->  drivers/net/hyperv/rndis_filter.c |   3 +
->  include/linux/hyperv.h            |   5 ++
->  4 files changed, 133 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/hyperv/hyperv_net.h b/drivers/net/hyperv/hyperv_net.h
-> index b11aa68b44ec..c2fbb9d4df2c 100644
-> --- a/drivers/net/hyperv/hyperv_net.h
-> +++ b/drivers/net/hyperv/hyperv_net.h
-> @@ -164,6 +164,7 @@ struct hv_netvsc_packet {
->  	u32 total_bytes;
->  	u32 send_buf_index;
->  	u32 total_data_buflen;
-> +	struct hv_dma_range *dma_range;
->  };
->  
->  #define NETVSC_HASH_KEYLEN 40
-> @@ -1074,6 +1075,7 @@ struct netvsc_device {
->  
->  	/* Receive buffer allocated by us but manages by NetVSP */
->  	void *recv_buf;
-> +	void *recv_original_buf;
->  	u32 recv_buf_size; /* allocated bytes */
->  	u32 recv_buf_gpadl_handle;
->  	u32 recv_section_cnt;
-> @@ -1082,6 +1084,8 @@ struct netvsc_device {
->  
->  	/* Send buffer allocated by us */
->  	void *send_buf;
-> +	void *send_original_buf;
-> +	u32 send_buf_size;
->  	u32 send_buf_gpadl_handle;
->  	u32 send_section_cnt;
->  	u32 send_section_size;
-> @@ -1729,4 +1733,6 @@ struct rndis_message {
->  #define RETRY_US_HI	10000
->  #define RETRY_MAX	2000	/* >10 sec */
->  
-> +void netvsc_dma_unmap(struct hv_device *hv_dev,
-> +		      struct hv_netvsc_packet *packet);
->  #endif /* _HYPERV_NET_H */
-> diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
-> index 7bd935412853..a01740c6c6b8 100644
-> --- a/drivers/net/hyperv/netvsc.c
-> +++ b/drivers/net/hyperv/netvsc.c
-> @@ -153,8 +153,21 @@ static void free_netvsc_device(struct rcu_head *head)
->  	int i;
->  
->  	kfree(nvdev->extension);
-> -	vfree(nvdev->recv_buf);
-> -	vfree(nvdev->send_buf);
-> +
-> +	if (nvdev->recv_original_buf) {
-> +		vunmap(nvdev->recv_buf);
-> +		vfree(nvdev->recv_original_buf);
-> +	} else {
-> +		vfree(nvdev->recv_buf);
-> +	}
-> +
-> +	if (nvdev->send_original_buf) {
-> +		vunmap(nvdev->send_buf);
-> +		vfree(nvdev->send_original_buf);
-> +	} else {
-> +		vfree(nvdev->send_buf);
-> +	}
-> +
->  	kfree(nvdev->send_section_map);
->  
->  	for (i = 0; i < VRSS_CHANNEL_MAX; i++) {
-> @@ -338,8 +351,10 @@ static int netvsc_init_buf(struct hv_device *device,
->  	struct net_device *ndev = hv_get_drvdata(device);
->  	struct nvsp_message *init_packet;
->  	unsigned int buf_size;
-> +	unsigned long *pfns;
->  	size_t map_words;
->  	int i, ret = 0;
-> +	void *vaddr;
->  
->  	/* Get receive buffer area. */
->  	buf_size = device_info->recv_sections * device_info->recv_section_size;
-> @@ -375,6 +390,21 @@ static int netvsc_init_buf(struct hv_device *device,
->  		goto cleanup;
->  	}
->  
-> +	if (hv_isolation_type_snp()) {
-> +		pfns = kcalloc(buf_size / HV_HYP_PAGE_SIZE, sizeof(unsigned long),
-> +			       GFP_KERNEL);
-> +		for (i = 0; i < buf_size / HV_HYP_PAGE_SIZE; i++)
-> +			pfns[i] = virt_to_hvpfn(net_device->recv_buf + i * HV_HYP_PAGE_SIZE) +
-> +				(ms_hyperv.shared_gpa_boundary >> HV_HYP_PAGE_SHIFT);
-> +
-> +		vaddr = vmap_pfn(pfns, buf_size / HV_HYP_PAGE_SIZE, PAGE_KERNEL_IO);
-> +		kfree(pfns);
-> +		if (!vaddr)
-> +			goto cleanup;
-> +		net_device->recv_original_buf = net_device->recv_buf;
-> +		net_device->recv_buf = vaddr;
-> +	}
-> +
->  	/* Notify the NetVsp of the gpadl handle */
->  	init_packet = &net_device->channel_init_pkt;
->  	memset(init_packet, 0, sizeof(struct nvsp_message));
-> @@ -477,6 +507,23 @@ static int netvsc_init_buf(struct hv_device *device,
->  		goto cleanup;
->  	}
->  
-> +	if (hv_isolation_type_snp()) {
-> +		pfns = kcalloc(buf_size / HV_HYP_PAGE_SIZE, sizeof(unsigned long),
-> +			       GFP_KERNEL);
-> +
-> +		for (i = 0; i < buf_size / HV_HYP_PAGE_SIZE; i++)
-> +			pfns[i] = virt_to_hvpfn(net_device->send_buf + i * HV_HYP_PAGE_SIZE)
-> +				+ (ms_hyperv.shared_gpa_boundary >> HV_HYP_PAGE_SHIFT);
-> +
-> +		vaddr = vmap_pfn(pfns, buf_size / HV_HYP_PAGE_SIZE, PAGE_KERNEL_IO);
-> +		kfree(pfns);
-> +		if (!vaddr)
-> +			goto cleanup;
-> +
-> +		net_device->send_original_buf = net_device->send_buf;
-> +		net_device->send_buf = vaddr;
-> +	}
-> +
->  	/* Notify the NetVsp of the gpadl handle */
->  	init_packet = &net_device->channel_init_pkt;
->  	memset(init_packet, 0, sizeof(struct nvsp_message));
-> @@ -767,7 +814,7 @@ static void netvsc_send_tx_complete(struct net_device *ndev,
->  
->  	/* Notify the layer above us */
->  	if (likely(skb)) {
-> -		const struct hv_netvsc_packet *packet
-> +		struct hv_netvsc_packet *packet
->  			= (struct hv_netvsc_packet *)skb->cb;
->  		u32 send_index = packet->send_buf_index;
->  		struct netvsc_stats *tx_stats;
-> @@ -783,6 +830,7 @@ static void netvsc_send_tx_complete(struct net_device *ndev,
->  		tx_stats->bytes += packet->total_bytes;
->  		u64_stats_update_end(&tx_stats->syncp);
->  
-> +		netvsc_dma_unmap(ndev_ctx->device_ctx, packet);
->  		napi_consume_skb(skb, budget);
->  	}
->  
-> @@ -947,6 +995,63 @@ static void netvsc_copy_to_send_buf(struct netvsc_device *net_device,
->  		memset(dest, 0, padding);
->  }
->  
-> +void netvsc_dma_unmap(struct hv_device *hv_dev,
-> +		      struct hv_netvsc_packet *packet)
-> +{
-> +	u32 page_count = packet->cp_partial ?
-> +		packet->page_buf_cnt - packet->rmsg_pgcnt :
-> +		packet->page_buf_cnt;
-> +	int i;
-> +
-> +	if (!packet->dma_range)
-> +		return;
-> +
-> +	for (i = 0; i < page_count; i++)
-> +		dma_unmap_single(&hv_dev->device, packet->dma_range[i].dma,
-> +				 packet->dma_range[i].mapping_size,
-> +				 DMA_TO_DEVICE);
-> +
-> +	kfree(packet->dma_range);
-> +}
-> +
-> +int netvsc_dma_map(struct hv_device *hv_dev,
-> +		   struct hv_netvsc_packet *packet,
-> +		   struct hv_page_buffer *pb)
-> +{
-> +	u32 page_count =  packet->cp_partial ?
-> +		packet->page_buf_cnt - packet->rmsg_pgcnt :
-> +		packet->page_buf_cnt;
-> +	dma_addr_t dma;
-> +	int i;
-> +
-> +	packet->dma_range = kcalloc(page_count,
-> +				    sizeof(*packet->dma_range),
-> +				    GFP_KERNEL);
-> +	if (!packet->dma_range)
-> +		return -ENOMEM;
-> +
-> +	for (i = 0; i < page_count; i++) {
-> +		char *src = phys_to_virt((pb[i].pfn << HV_HYP_PAGE_SHIFT)
-> +					 + pb[i].offset);
-> +		u32 len = pb[i].len;
-> +
-> +		dma = dma_map_single(&hv_dev->device, src, len,
-> +				     DMA_TO_DEVICE);
-> +		if (dma_mapping_error(&hv_dev->device, dma)) {
-> +			kfree(packet->dma_range);
-> +			return -ENOMEM;
-> +		}
-> +
-> +		packet->dma_range[i].dma = dma;
-> +		packet->dma_range[i].mapping_size = len;
-> +		pb[i].pfn = dma >> HV_HYP_PAGE_SHIFT;
-> +		pb[i].offset = offset_in_hvpage(dma);
-> +		pb[i].len = len;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  static inline int netvsc_send_pkt(
->  	struct hv_device *device,
->  	struct hv_netvsc_packet *packet,
-> @@ -987,14 +1092,22 @@ static inline int netvsc_send_pkt(
->  
->  	trace_nvsp_send_pkt(ndev, out_channel, rpkt);
->  
-> +	packet->dma_range = NULL;
->  	if (packet->page_buf_cnt) {
->  		if (packet->cp_partial)
->  			pb += packet->rmsg_pgcnt;
->  
-> +		ret = netvsc_dma_map(ndev_ctx->device_ctx, packet, pb);
-> +		if (ret)
-> +			return ret;
-> +
->  		ret = vmbus_sendpacket_pagebuffer(out_channel,
-> -						  pb, packet->page_buf_cnt,
-> -						  &nvmsg, sizeof(nvmsg),
-> -						  req_id);
-> +					  pb, packet->page_buf_cnt,
-> +					  &nvmsg, sizeof(nvmsg),
-> +					  req_id);
+Yes, that boots, but is somehow sloooow (hard to tell what is causing this).
 
-Nitpick: stray change? 
+Anyway, the new print is still there with the patch:
+[   11.549986] sd 0:0:0:0: Power-on or device reset occurred
 
-> +
-> +		if (ret)
-> +			netvsc_dma_unmap(ndev_ctx->device_ctx, packet);
->  	} else {
->  		ret = vmbus_sendpacket(out_channel,
->  				       &nvmsg, sizeof(nvmsg),
-> diff --git a/drivers/net/hyperv/rndis_filter.c b/drivers/net/hyperv/rndis_filter.c
-> index 983bf362466a..448c1ee39246 100644
-> --- a/drivers/net/hyperv/rndis_filter.c
-> +++ b/drivers/net/hyperv/rndis_filter.c
-> @@ -293,6 +293,8 @@ static void rndis_filter_receive_response(struct net_device *ndev,
->  	u32 *req_id = &resp->msg.init_complete.req_id;
->  	struct rndis_device *dev = nvdev->extension;
->  	struct rndis_request *request = NULL;
-> +	struct hv_device *hv_dev = ((struct net_device_context *)
-> +			netdev_priv(ndev))->device_ctx;
->  	bool found = false;
->  	unsigned long flags;
->  
-> @@ -361,6 +363,7 @@ static void rndis_filter_receive_response(struct net_device *ndev,
->  			}
->  		}
->  
-> +		netvsc_dma_unmap(hv_dev, &request->pkt);
->  		complete(&request->wait_event);
->  	} else {
->  		netdev_err(ndev,
-> diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-> index babbe19f57e2..90abff664495 100644
-> --- a/include/linux/hyperv.h
-> +++ b/include/linux/hyperv.h
-> @@ -1616,6 +1616,11 @@ struct hyperv_service_callback {
->  	void (*callback)(void *context);
->  };
->  
-> +struct hv_dma_range {
-> +	dma_addr_t dma;
-> +	u32 mapping_size;
-> +};
-> +
->  #define MAX_SRV_VER	0x7ffffff
->  extern bool vmbus_prep_negotiate_resp(struct icmsg_hdr *icmsghdrp, u8 *buf, u32 buflen,
->  				const int *fw_version, int fw_vercnt,
 
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index fd69a03d6137..0cb1182fd734 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -161,7 +161,8 @@ static void virtscsi_complete_cmd(struct virtio_scsi
+> *vscsi, void *buf)
+>                         min_t(u32,
+>                               virtio32_to_cpu(vscsi->vdev, resp->sense_len),
+>                               VIRTIO_SCSI_SENSE_SIZE));
+> -               set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
+> +               if (resp->sense_len)
+> +                       set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
+>          }
+> 
+>          sc->scsi_done(sc);
+> 
+
+
+thanks,
 -- 
-Vitaly
-
+js
+suse labs
