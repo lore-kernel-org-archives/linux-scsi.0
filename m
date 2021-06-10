@@ -7,44 +7,43 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 402BBC47094
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 07:40:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E03CC47094
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 07:42:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E722613BD
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 07:40:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5319E613C8
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 07:42:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229941AbhFJHmQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 03:42:16 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:3934 "EHLO
+        id S229911AbhFJHoT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 03:44:19 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:3935 "EHLO
         szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229634AbhFJHmP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 03:42:15 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.54])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4G0wm92Rncz6x9v;
-        Thu, 10 Jun 2021 15:37:13 +0800 (CST)
+        with ESMTP id S229634AbhFJHoS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 03:44:18 -0400
+Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.56])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4G0wpY13BGz6w5S;
+        Thu, 10 Jun 2021 15:39:17 +0800 (CST)
 Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 10 Jun 2021 15:40:11 +0800
+ 15.1.2176.2; Thu, 10 Jun 2021 15:42:21 +0800
 Received: from thunder-town.china.huawei.com (10.174.177.72) by
  dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Thu, 10 Jun 2021 15:40:11 +0800
+ 15.1.2176.2; Thu, 10 Jun 2021 15:42:21 +0800
 From:   Zhen Lei <thunder.leizhen@huawei.com>
-To:     Adam Radford <aradford@gmail.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi <linux-scsi@vger.kernel.org>
 CC:     Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH 1/1] scsi: 3w-xxx: remove unnecessary oom message
-Date:   Thu, 10 Jun 2021 15:40:07 +0800
-Message-ID: <20210610074007.15453-1-thunder.leizhen@huawei.com>
+Subject: [PATCH 1/1] scsi: a100u2w: remove unnecessary oom message
+Date:   Thu, 10 Jun 2021 15:42:14 +0800
+Message-ID: <20210610074214.15506-1-thunder.leizhen@huawei.com>
 X-Mailer: git-send-email 2.26.0.windows.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7BIT
 Content-Type:   text/plain; charset=US-ASCII
 X-Originating-IP: [10.174.177.72]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
  dggpemm500006.china.huawei.com (7.185.36.236)
 X-CFilter-Loop: Reflected
 Precedence: bulk
@@ -58,25 +57,35 @@ Remove it can help us save a bit of memory.
 
 Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- drivers/scsi/3w-xxxx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/a100u2w.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index 4ee485ab2714845..a7eb50d2592ea1a 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -836,10 +836,8 @@ static int tw_allocate_memory(TW_Device_Extension *tw_dev, int size, int which)
- 
- 	cpu_addr = dma_alloc_coherent(&tw_dev->tw_pci_dev->dev,
- 			size * TW_Q_LENGTH, &dma_handle, GFP_KERNEL);
--	if (cpu_addr == NULL) {
--		printk(KERN_WARNING "3w-xxxx: dma_alloc_coherent() failed.\n");
-+	if (!cpu_addr)
- 		return 1;
+diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
+index 028af6b1057c606..7bcb8889c085e0a 100644
+--- a/drivers/scsi/a100u2w.c
++++ b/drivers/scsi/a100u2w.c
+@@ -1123,19 +1123,15 @@ static int inia100_probe_one(struct pci_dev *pdev,
+ 	sz = ORC_MAXQUEUE * sizeof(struct orc_scb);
+ 	host->scb_virt = dma_alloc_coherent(&pdev->dev, sz, &host->scb_phys,
+ 					    GFP_KERNEL);
+-	if (!host->scb_virt) {
+-		printk("inia100: SCB memory allocation error\n");
++	if (!host->scb_virt)
+ 		goto out_host_put;
 -	}
  
- 	if ((unsigned long)cpu_addr % (tw_dev->tw_pci_dev->device == TW_DEVICE_ID ? TW_ALIGNMENT_6000 : TW_ALIGNMENT_7000)) {
- 		printk(KERN_WARNING "3w-xxxx: Couldn't allocate correctly aligned memory.\n");
+ 	/* Get total memory needed for ESCB */
+ 	sz = ORC_MAXQUEUE * sizeof(struct orc_extended_scb);
+ 	host->escb_virt = dma_alloc_coherent(&pdev->dev, sz, &host->escb_phys,
+ 					     GFP_KERNEL);
+-	if (!host->escb_virt) {
+-		printk("inia100: ESCB memory allocation error\n");
++	if (!host->escb_virt)
+ 		goto out_free_scb_array;
+-	}
+ 
+ 	if (init_orchid(host)) {	/* Initialize orchid chip */
+ 		printk("inia100: initial orchid fail!!\n");
 -- 
 2.26.0.106.g9fadedd
 
