@@ -2,135 +2,301 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3436C47094
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 10:52:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0488FC47094
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 11:15:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1A4C613FF
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 10:52:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE82C613F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 11:15:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230153AbhFJKys (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 06:54:48 -0400
-Received: from mail-wm1-f54.google.com ([209.85.128.54]:40707 "EHLO
-        mail-wm1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229961AbhFJKyr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 06:54:47 -0400
-Received: by mail-wm1-f54.google.com with SMTP id b145-20020a1c80970000b029019c8c824054so6241589wmd.5
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Jun 2021 03:52:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Se/+f840vWN1hnB8FqABpPi/FVV1wd7BwIPK7BO5yE4=;
-        b=eJ3Bi6hekOrxwPjcZ37PCpR4QpY1En3SGPqIeWX+JhWm1UmDdc3z+RBFc6jArVLAqM
-         /LN/okEHgIh/rtp4it18icsa7Umbti5261SRGIcr2atoIinkttsKjvXFfyier42Qx2ZB
-         spIFPNbgRGfOQouWn0u5xXmvzxxinL+578xZmdN5qgy1si9OQ19cBoD6wQ6WwlBa2e+M
-         n7NCV4/1n9Iq90jbDgk3UYRZgDAtBPI4An3QBzQSaSS0fxh8q5IpiEXoURai1Xt9kZnu
-         v7tjARHIZHCCnU8d4DznTUKi3tbMQI1CqYMMutpi4AJVbZyBq0t43lN9W9iaeod85DZU
-         joHg==
-X-Gm-Message-State: AOAM530Xa62lYf1/EmlPmqq4advUZ1e68BlLPne57CgLkSxYZyY89IKE
-        hpH+qdSge0j759G0gLjtjMo7cTTsysk=
-X-Google-Smtp-Source: ABdhPJyPSx/I01eX8mkePD7V7FNxJbfLM+plulbUJG4ss688altciZucHkcmkmpaXusovL52I7G2Sw==
-X-Received: by 2002:a05:600c:1c22:: with SMTP id j34mr14925739wms.166.1623322370517;
-        Thu, 10 Jun 2021 03:52:50 -0700 (PDT)
-Received: from ?IPv6:2a0b:e7c0:0:107::70f? ([2a0b:e7c0:0:107::70f])
-        by smtp.gmail.com with ESMTPSA id n42sm8786039wms.29.2021.06.10.03.52.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 10 Jun 2021 03:52:49 -0700 (PDT)
-Subject: Re: [PATCH 13/24] scsi: Kill DRIVER_SENSE
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        linux-scsi@vger.kernel.org
-References: <20191021095322.137969-1-hare@suse.de>
- <20191021095322.137969-14-hare@suse.de>
- <a5551d37-8303-2cbb-f82a-17fea785adad@kernel.org>
- <c48e74e9-4bbb-d892-4976-06bb448f5f6c@suse.de>
- <yq1bl8hn9py.fsf@ca-mkp.ca.oracle.com>
- <e2c75feb-cd87-1681-a5ee-6aed7ee82e11@suse.de>
-From:   Jiri Slaby <jirislaby@kernel.org>
-Message-ID: <6d5c893d-61c1-fad9-78f5-17b41f19706d@kernel.org>
-Date:   Thu, 10 Jun 2021 12:52:48 +0200
+        id S230084AbhFJLRJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 07:17:09 -0400
+Received: from mga04.intel.com ([192.55.52.120]:61539 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229961AbhFJLRI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Jun 2021 07:17:08 -0400
+IronPort-SDR: sk8C9x06PQbAvDUKuypin6IIJNBXncYDcTDeTgmUcAHEEe1g6ECPT3ngLX1zrLyq2qwQI0w1bu
+ 5V2TJhX+kXhQ==
+X-IronPort-AV: E=McAfee;i="6200,9189,10010"; a="203430678"
+X-IronPort-AV: E=Sophos;i="5.83,263,1616482800"; 
+   d="scan'208";a="203430678"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jun 2021 04:15:06 -0700
+IronPort-SDR: XnqcV3Q9BMBVPvWBtSITBeTxQQ8i5OPYsrWDZt8lD7F/zaC8CqOb9T5Y/c25xWYydostiuL9DQ
+ xxbhTJ4iDtKA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.83,263,1616482800"; 
+   d="scan'208";a="402825980"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
+  by orsmga003.jf.intel.com with ESMTP; 10 Jun 2021 04:15:00 -0700
+Subject: Re: [PATCH v3 1/9] scsi: ufs: Differentiate status between hba pm ops
+ and wl pm ops
+To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, hongwus@codeaurora.org,
+        ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Satya Tangirala <satyat@google.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1623300218-9454-1-git-send-email-cang@codeaurora.org>
+ <1623300218-9454-2-git-send-email-cang@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <7d7a771f-6595-0106-8ee5-4e6407caee56@intel.com>
+Date:   Thu, 10 Jun 2021 14:15:29 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.2
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <e2c75feb-cd87-1681-a5ee-6aed7ee82e11@suse.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1623300218-9454-2-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 07. 06. 21, 15:02, Hannes Reinecke wrote:
-> On 6/7/21 2:30 PM, Martin K. Petersen wrote:
->>
->> Hannes,
->>
->>>> Any ideas?
->>
->>>> Can you enable SCSI logging via
->>>
->>> scsi.scsi_logging_level=216
->>>
->>> on the kernel commandline and send me the output?
->>
->> You now effectively set SAM_STAT_CHECK_CONDITION if the scsi_cmnd has a
->> sense buffer.
->>
->> The original code only set DRIVER_SENSE if the adapter response actually
->> contained sense information:
->>
->> @@ -161,8 +161,7 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
->>                         min_t(u32,
->>                               virtio32_to_cpu(vscsi->vdev, resp->sense_len),
->>                               VIRTIO_SCSI_SENSE_SIZE));
->> -               if (resp->sense_len)
->> -                       set_driver_byte(sc, DRIVER_SENSE);
->> +               set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
->>          }
->>
-> Oh, I know. But we're checking for a valid sense code during scanning:
+On 10/06/21 7:43 am, Can Guo wrote:
+> Put pm_op_in_progress and is_sys_suspend flags back to ufshcd hba pm ops,
+> add two new flags, namely wl_pm_op_in_progress and is_wl_sys_suspended, to
+> track the UFS device W-LU pm ops. This helps us differentiate the status of
+> hba and wl pm ops when we need to do troubleshooting.
+
+Really you have 2 changes here:
+1. Renaming to pm_op_in_progress / is_sys_suspend to wl_pm_op_in_progress / is_wl_sys_suspended
+2. Introducing flags for the status of hba
+
+So it should really be 2 patches.
+
+That would show up things like:
+- did you intend not to change hba->is_sys_suspended in ufs_qcom_resume() ?
+
 > 
-> 			if (scsi_status_is_check_condition(result) &&
-> 			    scsi_sense_valid(&sshdr)) {
+> Signed-off-by: Can Guo <cang@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 42 ++++++++++++++++++++++++++++--------------
+>  drivers/scsi/ufs/ufshcd.h |  4 +++-
+>  2 files changed, 31 insertions(+), 15 deletions(-)
 > 
-> so if that makes a difference it would mean that the virtio driver has
-> some stale sense data which then gets copied over.
-> Anyway.
-> Can you test with this patch?
-
-Yes, that boots, but is somehow sloooow (hard to tell what is causing this).
-
-Anyway, the new print is still there with the patch:
-[   11.549986] sd 0:0:0:0: Power-on or device reset occurred
-
-
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index fd69a03d6137..0cb1182fd734 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -161,7 +161,8 @@ static void virtscsi_complete_cmd(struct virtio_scsi
-> *vscsi, void *buf)
->                         min_t(u32,
->                               virtio32_to_cpu(vscsi->vdev, resp->sense_len),
->                               VIRTIO_SCSI_SENSE_SIZE));
-> -               set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
-> +               if (resp->sense_len)
-> +                       set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
->          }
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 25fe18a..47b2a9a 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -549,7 +549,9 @@ static void ufshcd_print_host_state(struct ufs_hba *hba)
+>  		hba->saved_err, hba->saved_uic_err);
+>  	dev_err(hba->dev, "Device power mode=%d, UIC link state=%d\n",
+>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
+> -	dev_err(hba->dev, "PM in progress=%d, sys. suspended=%d\n",
+> +	dev_err(hba->dev, "wl_pm_op_in_progress=%d, is_wl_sys_suspended=%d\n",
+> +		hba->wl_pm_op_in_progress, hba->is_wl_sys_suspended);
+> +	dev_err(hba->dev, "pm_op_in_progress=%d, is_sys_suspended=%d\n",
+>  		hba->pm_op_in_progress, hba->is_sys_suspended);
+>  	dev_err(hba->dev, "Auto BKOPS=%d, Host self-block=%d\n",
+>  		hba->auto_bkops_enabled, hba->host->host_self_blocked);
+> @@ -1999,7 +2001,7 @@ static void ufshcd_clk_scaling_start_busy(struct ufs_hba *hba)
+>  	if (!hba->clk_scaling.active_reqs++)
+>  		queue_resume_work = true;
+>  
+> -	if (!hba->clk_scaling.is_enabled || hba->pm_op_in_progress) {
+> +	if (!hba->clk_scaling.is_enabled || hba->wl_pm_op_in_progress) {
+>  		spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  		return;
+>  	}
+> @@ -2734,7 +2736,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>  		 * err handler blocked for too long. So, just fail the scsi cmd
+>  		 * sent from PM ops, err handler can recover PM error anyways.
+>  		 */
+> -		if (hba->pm_op_in_progress) {
+> +		if (hba->wl_pm_op_in_progress) {
+>  			hba->force_reset = true;
+>  			set_host_byte(cmd, DID_BAD_TARGET);
+>  			cmd->scsi_done(cmd);
+> @@ -2767,7 +2769,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>  		(hba->clk_gating.state != CLKS_ON));
+>  
+>  	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
+> -		if (hba->pm_op_in_progress)
+> +		if (hba->wl_pm_op_in_progress)
+>  			set_host_byte(cmd, DID_BAD_TARGET);
+>  		else
+>  			err = SCSI_MLQUEUE_HOST_BUSY;
+> @@ -5116,7 +5118,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>  			 * solution could be to abort the system suspend if
+>  			 * UFS device needs urgent BKOPs.
+>  			 */
+> -			if (!hba->pm_op_in_progress &&
+> +			if (!hba->wl_pm_op_in_progress &&
+>  			    !ufshcd_eh_in_progress(hba) &&
+>  			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+>  				/* Flushed in suspend */
+> @@ -5916,7 +5918,7 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+>  {
+>  	ufshcd_rpm_get_sync(hba);
+>  	if (pm_runtime_status_suspended(&hba->sdev_ufs_device->sdev_gendev) ||
+> -	    hba->is_sys_suspended) {
+> +	    hba->is_wl_sys_suspended) {
+>  		enum ufs_pm_op pm_op;
+>  
+>  		/*
+> @@ -5933,7 +5935,7 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+>  		if (!ufshcd_is_clkgating_allowed(hba))
+>  			ufshcd_setup_clocks(hba, true);
+>  		ufshcd_release(hba);
+> -		pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
+> +		pm_op = hba->is_wl_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
+>  		ufshcd_vops_resume(hba, pm_op);
+>  	} else {
+>  		ufshcd_hold(hba, false);
+> @@ -5976,7 +5978,7 @@ static void ufshcd_recover_pm_error(struct ufs_hba *hba)
+>  	struct request_queue *q;
+>  	int ret;
+>  
+> -	hba->is_sys_suspended = false;
+> +	hba->is_wl_sys_suspended = false;
+>  	/*
+>  	 * Set RPM status of wlun device to RPM_ACTIVE,
+>  	 * this also clears its runtime error.
+> @@ -8784,7 +8786,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  	enum ufs_dev_pwr_mode req_dev_pwr_mode;
+>  	enum uic_link_state req_link_state;
+>  
+> -	hba->pm_op_in_progress = true;
+> +	hba->wl_pm_op_in_progress = true;
+>  	if (pm_op != UFS_SHUTDOWN_PM) {
+>  		pm_lvl = pm_op == UFS_RUNTIME_PM ?
+>  			 hba->rpm_lvl : hba->spm_lvl;
+> @@ -8919,7 +8921,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  		hba->clk_gating.is_suspended = false;
+>  		ufshcd_release(hba);
+>  	}
+> -	hba->pm_op_in_progress = false;
+> +	hba->wl_pm_op_in_progress = false;
+>  	return ret;
+>  }
+>  
+> @@ -8928,7 +8930,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  	int ret;
+>  	enum uic_link_state old_link_state = hba->uic_link_state;
+>  
+> -	hba->pm_op_in_progress = true;
+> +	hba->wl_pm_op_in_progress = true;
+>  
+>  	/*
+>  	 * Call vendor specific resume callback. As these callbacks may access
+> @@ -9006,7 +9008,7 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>  		ufshcd_update_evt_hist(hba, UFS_EVT_WL_RES_ERR, (u32)ret);
+>  	hba->clk_gating.is_suspended = false;
+>  	ufshcd_release(hba);
+> -	hba->pm_op_in_progress = false;
+> +	hba->wl_pm_op_in_progress = false;
+>  	return ret;
+>  }
+>  
+> @@ -9072,7 +9074,7 @@ static int ufshcd_wl_suspend(struct device *dev)
+>  
+>  out:
+>  	if (!ret)
+> -		hba->is_sys_suspended = true;
+> +		hba->is_wl_sys_suspended = true;
+>  	trace_ufshcd_wl_suspend(dev_name(dev), ret,
+>  		ktime_to_us(ktime_sub(ktime_get(), start)),
+>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
+> @@ -9100,7 +9102,7 @@ static int ufshcd_wl_resume(struct device *dev)
+>  		ktime_to_us(ktime_sub(ktime_get(), start)),
+>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
+>  	if (!ret)
+> -		hba->is_sys_suspended = false;
+> +		hba->is_wl_sys_suspended = false;
+>  	up(&hba->host_sem);
+>  	return ret;
+>  }
+> @@ -9141,6 +9143,8 @@ static int ufshcd_suspend(struct ufs_hba *hba)
+>  
+>  	if (!hba->is_powered)
+>  		return 0;
+> +
+> +	hba->pm_op_in_progress = true;
+>  	/*
+>  	 * Disable the host irq as host controller as there won't be any
+>  	 * host controller transaction expected till resume.
+> @@ -9160,6 +9164,7 @@ static int ufshcd_suspend(struct ufs_hba *hba)
+>  	ufshcd_vreg_set_lpm(hba);
+>  	/* Put the host controller in low power mode if possible */
+>  	ufshcd_hba_vreg_set_lpm(hba);
+> +	hba->pm_op_in_progress = false;
+>  	return ret;
+>  }
+>  
+> @@ -9179,6 +9184,7 @@ static int ufshcd_resume(struct ufs_hba *hba)
+>  	if (!hba->is_powered)
+>  		return 0;
+>  
+> +	hba->pm_op_in_progress = true;
+>  	ufshcd_hba_vreg_set_hpm(hba);
+>  	ret = ufshcd_vreg_set_hpm(hba);
+>  	if (ret)
+> @@ -9198,6 +9204,7 @@ static int ufshcd_resume(struct ufs_hba *hba)
+>  out:
+>  	if (ret)
+>  		ufshcd_update_evt_hist(hba, UFS_EVT_RESUME_ERR, (u32)ret);
+> +	hba->pm_op_in_progress = false;
+>  	return ret;
+>  }
+>  
+> @@ -9222,6 +9229,10 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+>  	trace_ufshcd_system_suspend(dev_name(hba->dev), ret,
+>  		ktime_to_us(ktime_sub(ktime_get(), start)),
+>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
+> +
+> +	if (!ret)
+> +		hba->is_sys_suspended = true;
+> +
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(ufshcd_system_suspend);
+> @@ -9248,6 +9259,9 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+>  		ktime_to_us(ktime_sub(ktime_get(), start)),
+>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
+>  
+> +	if (!ret)
+> +		hba->is_sys_suspended = false;
+> +
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(ufshcd_system_resume);
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index c98d540..eaebb4e 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -752,7 +752,8 @@ struct ufs_hba {
+>  	enum ufs_pm_level spm_lvl;
+>  	struct device_attribute rpm_lvl_attr;
+>  	struct device_attribute spm_lvl_attr;
+> -	int pm_op_in_progress;
+> +	bool pm_op_in_progress;
+> +	bool wl_pm_op_in_progress;
+>  
+>  	/* Auto-Hibernate Idle Timer register value */
+>  	u32 ahit;
+> @@ -839,6 +840,7 @@ struct ufs_hba {
+>  	struct devfreq *devfreq;
+>  	struct ufs_clk_scaling clk_scaling;
+>  	bool is_sys_suspended;
+> +	bool is_wl_sys_suspended;
+>  
+>  	enum bkops_status urgent_bkops_lvl;
+>  	bool is_urgent_bkops_lvl_checked;
 > 
->          sc->scsi_done(sc);
-> 
 
-
-thanks,
--- 
-js
-suse labs
