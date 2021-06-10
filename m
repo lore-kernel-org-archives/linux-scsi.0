@@ -2,104 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,UNPARSEABLE_RELAY autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0ADC8C47094
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 04:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0F1AC47094
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 05:48:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9490613B3
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 04:54:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF390613F1
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 05:48:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229705AbhFJE4r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 00:56:47 -0400
-Received: from smtprelay0087.hostedemail.com ([216.40.44.87]:47808 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S229529AbhFJE4q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Jun 2021 00:56:46 -0400
-Received: from omf12.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay07.hostedemail.com (Postfix) with ESMTP id 572B7181D337B;
-        Thu, 10 Jun 2021 04:54:50 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf12.hostedemail.com (Postfix) with ESMTPA id 8007A24023F;
-        Thu, 10 Jun 2021 04:54:47 +0000 (UTC)
-Message-ID: <e0950e65c5e7f8f0db132cfd22bdd24ee27c63e7.camel@perches.com>
-Subject: Re: [PATCH] scsi: ufs: Add indent for code alignment
-From:   Joe Perches <joe@perches.com>
-To:     keosung.park@samsung.com, ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        "satyat@google.com" <satyat@google.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Wed, 09 Jun 2021 21:54:46 -0700
-In-Reply-To: <1891546521.01623299401994.JavaMail.epsvc@epcpadp3>
-References: <CGME20210610040731epcms2p7533bc62d13b82a0e86590f30ac4b6c30@epcms2p7>
-         <1891546521.01623299401994.JavaMail.epsvc@epcpadp3>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.38.1-1 
+        id S229725AbhFJFuK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 01:50:10 -0400
+Received: from m12-17.163.com ([220.181.12.17]:36977 "EHLO m12-17.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229634AbhFJFuJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Jun 2021 01:50:09 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=31k3i
+        V9GoasuZDit4YgL+Ut81SpGX7iPAJg3QTv7z00=; b=Mo7K0kJv/4BfYVLN3HDww
+        /FYAxQtQzsmXwyJPE/FQ72z5+qYiLmF7YjtbD1zvFU8ZnF26zqDiDGmV0mDOyF4t
+        l1LMqedA1jD+YPbkiKwjWnxkqY39QGYDesfiR2aMUTebzR0q9Kw39WEc3G4DohoC
+        7gMPSn3J3nzdHPkxS2J4DY=
+Received: from localhost.localdomain (unknown [218.17.89.92])
+        by smtp13 (Coremail) with SMTP id EcCowAB3UGhtp8FgwkcZ6g--.41572S2;
+        Thu, 10 Jun 2021 13:47:26 +0800 (CST)
+From:   lijian_8010a29@163.com
+To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lijian <lijian@yulong.com>
+Subject: [PATCH v2] scsi: lpfc: lpfc_hbadisc: deleted these repeated words
+Date:   Thu, 10 Jun 2021 13:46:24 +0800
+Message-Id: <20210610054624.51800-1-lijian_8010a29@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Rspamd-Server: rspamout05
-X-Rspamd-Queue-Id: 8007A24023F
-X-Stat-Signature: 1rrt63hpehtiueafoipnuh41kncp1i97
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX18yOD5I0kpqbzHqufp09I0M3g46l2YLBuQ=
-X-HE-Tag: 1623300887-154885
+X-CM-TRANSID: EcCowAB3UGhtp8FgwkcZ6g--.41572S2
+X-Coremail-Antispam: 1Uf129KBjvdXoW7XF43Ww48Kw45Jr4fGr48JFb_yoWkGrX_WF
+        48ZF1xJw4kAFZ7AFy7Xr13Zr92q3y5ZFn7C34qqryrXr4DXF4DArs09rWUZryrurZFqa43
+        C3Z3WFyFkw43WjkaLaAFLSUrUUUUUb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+        9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU57CztUUUUU==
+X-Originating-IP: [218.17.89.92]
+X-CM-SenderInfo: 5olmxttqbyiikqdsmqqrwthudrp/1tbiHQ6tUFSIrHiv9gAAs-
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2021-06-10 at 13:07 +0900, Keoseong Park wrote:
-> Add indentation to return statement.
-[]
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-[]
-> @@ -903,7 +903,7 @@ static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
->  	else
->  		return false;
->  #else
-> -return true;
-> +	return true;
->  #endif
->  }
->  
+From: lijian <lijian@yulong.com>
 
-Perhaps a little refactoring instead:
+deleted these repeated words 'the' and 'random' in the comments.
+
+Signed-off-by: lijian <lijian@yulong.com>
 ---
- drivers/scsi/ufs/ufshcd.h | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+v2: fix a typo
+change 'slection' to 'selection'.
 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c98d540ac044d..ed89839476b3b 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -894,15 +894,11 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
- static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
- {
- /* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
--#ifndef CONFIG_SCSI_UFS_DWC
--	if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
--	    !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
-+	if (IS_ENABLED(CONFIG_SCSI_UFS_DWC))
- 		return true;
--	else
--		return false;
--#else
--return true;
--#endif
-+
-+	return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
-+		!(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
- }
- 
- static inline bool ufshcd_can_aggressive_pc(struct ufs_hba *hba)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 8ade5a520897..d38d721b2b59 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -2130,7 +2130,7 @@ static void lpfc_sli4_fcf_pri_list_del(struct lpfc_hba *phba,
+  * @phba: pointer to lpfc hba data structure.
+  * @fcf_index: the index of the fcf record to update
+  * This routine acquires the hbalock and then set the LPFC_FCF_FLOGI_FAILED
+- * flag so the round robin slection for the particular priority level
++ * flag so the round robin selection for the particular priority level
+  * will try a different fcf record that does not have this bit set.
+  * If the fcf record is re-read for any reason this flag is cleared brfore
+  * adding it to the priority list.
+-- 
+2.25.1
+
 
