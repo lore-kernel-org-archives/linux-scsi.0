@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17FE8C47094
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 04:44:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADDB7C47094
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 04:44:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01AF160FEF
-	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 04:44:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E163613C0
+	for <linux-scsi@archiver.kernel.org>; Thu, 10 Jun 2021 04:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230136AbhFJEqX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 00:46:23 -0400
+        id S230153AbhFJEqe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 00:46:34 -0400
 Received: from labrats.qualcomm.com ([199.106.110.90]:10071 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230120AbhFJEqW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 00:46:22 -0400
-IronPort-SDR: jotiyUclQrVrtpwZwn2WtillfYGqVfOIO78rVhdw/eCjOS4N6HbAky4c/KrgKGFSTs9bTSX+aW
- EdCfJxiFQQuyNuJxR4t0sNRw8k6RlW0cslRBb+6+rAT+m7YOk7tlicH2hGPQPZ/NdAZb7qlCy/
- fu1+7Y7V+fXXXu59R8erIui4jKxEYjcY9GduOfE/UFEKyKMoJzNzH8gXv1ElZocMPt3nOD7go1
- npt/7KIKcuNL7ObbRHu7YTFAKAWgjviTMxE0uBl2/Rb1gEAp0RwqOfGtTQGsCRSKtqJf9TBUTG
- aW8=
+        with ESMTP id S230120AbhFJEq0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 00:46:26 -0400
+IronPort-SDR: 2gIJujVIYJSQw4eYn9kR8Wq5wR1nw6W01+zg/OC+002gLNKEVyuyQq7oQKxHWtA2xg37YbvDm0
+ Pm10nRbCjxt+SrQEuHlsprFd4FPQUnnXB66FQVPlNrfNbh7kTOBVeNxd0gzLzMm1DKOyQfzG/S
+ AwM3+eSb/rV5ujqeJIUVH1WG5aJVGZwTF42qJXIAlHPrnvkk86rMDimuHsb07zGJmXj82XW+11
+ TPiPjcgzdC7THRddi5aFQ+EBG7eyrE8pJQ/Eis3A2zVAQvYT32G3UtMMpSe3MBrRkxNZfcdwsu
+ HaA=
 X-IronPort-AV: E=Sophos;i="5.83,262,1616482800"; 
-   d="scan'208";a="29778431"
-Received: from unknown (HELO ironmsg01-sd.qualcomm.com) ([10.53.140.141])
-  by labrats.qualcomm.com with ESMTP; 09 Jun 2021 21:44:26 -0700
+   d="scan'208";a="29778432"
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by labrats.qualcomm.com with ESMTP; 09 Jun 2021 21:44:30 -0700
 X-QCInternal: smtphost
 Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
-  by ironmsg01-sd.qualcomm.com with ESMTP; 09 Jun 2021 21:44:25 -0700
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 09 Jun 2021 21:44:29 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id AFCF921AF7; Wed,  9 Jun 2021 21:44:25 -0700 (PDT)
+        id D86D021AF7; Wed,  9 Jun 2021 21:44:29 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, ziqichen@codeaurora.org,
@@ -45,14 +45,10 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        Bart Van Assche <bvanassche@acm.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3 7/9] scsi: ufs: Let host_sem cover the entire system suspend/resume
-Date:   Wed,  9 Jun 2021 21:43:35 -0700
-Message-Id: <1623300218-9454-8-git-send-email-cang@codeaurora.org>
+Subject: [PATCH v3 8/9] scsi: ufs: Update the fast abort path in ufshcd_abort() for PM requests
+Date:   Wed,  9 Jun 2021 21:43:36 -0700
+Message-Id: <1623300218-9454-9-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1623300218-9454-1-git-send-email-cang@codeaurora.org>
 References: <1623300218-9454-1-git-send-email-cang@codeaurora.org>
@@ -60,77 +56,115 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS error handling now is doing more than just re-probing, but also sending
-scsi cmds, e.g., for clearing UACs, and recovering runtime PM error, which
-may change runtime status of scsi devices. To protect system suspend/resume
-from being disturbed by error handling, move the host_sem from wl pm ops
-to ufshcd_suspend_prepare() and ufshcd_resume_complete().
+If PM requests fail during runtime suspend/resume, RPM framework saves the
+error to dev->power.runtime_error. Before the runtime_error gets cleared,
+runtime PM on this specific device won't work again, leaving the device
+either runtime active or runtime suspended permanently.
+
+When task abort happens to a PM request sent during runtime suspend/resume,
+even if it can be successfully aborted, RPM framework anyways saves the
+(TIMEOUT) error. In this situation, we can leverage error handling to
+recover and clear the runtime_error. So, let PM requests take the fast
+abort path in ufshcd_abort().
 
 Signed-off-by: Can Guo <cang@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 8 +++-----
- drivers/scsi/ufs/ufshcd.h | 2 +-
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 38 ++++++++++++++++++++++----------------
+ 1 file changed, 22 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c418a19..861942b 100644
+index 861942b..cf24ec2 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -9060,16 +9060,13 @@ static int ufshcd_wl_suspend(struct device *dev)
- 	ktime_t start = ktime_get();
+@@ -2737,7 +2737,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		 * err handler blocked for too long. So, just fail the scsi cmd
+ 		 * sent from PM ops, err handler can recover PM error anyways.
+ 		 */
+-		if (hba->wl_pm_op_in_progress) {
++		if (cmd->request->rq_flags & RQF_PM) {
+ 			hba->force_reset = true;
+ 			set_host_byte(cmd, DID_BAD_TARGET);
+ 			cmd->scsi_done(cmd);
+@@ -2760,7 +2760,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	}
  
- 	hba = shost_priv(sdev->host);
--	down(&hba->host_sem);
+ 	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
+-		if (hba->wl_pm_op_in_progress) {
++		if (cmd->request->rq_flags & RQF_PM) {
+ 			set_host_byte(cmd, DID_BAD_TARGET);
+ 			cmd->scsi_done(cmd);
+ 		} else {
+@@ -6985,11 +6985,14 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	int err = 0;
+ 	struct ufshcd_lrb *lrbp;
+ 	u32 reg;
++	bool need_eh = false;
  
- 	if (pm_runtime_suspended(dev))
+ 	host = cmd->device->host;
+ 	hba = shost_priv(host);
+ 	tag = cmd->request->tag;
+ 	lrbp = &hba->lrb[tag];
++
++	dev_info(hba->dev, "%s: Device abort task at tag %d\n", __func__, tag);
+ 	if (!ufshcd_valid_tag(hba, tag)) {
+ 		dev_err(hba->dev,
+ 			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
+@@ -7007,9 +7010,6 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
  		goto out;
+ 	}
  
- 	ret = __ufshcd_wl_suspend(hba, UFS_SYSTEM_PM);
--	if (ret) {
-+	if (ret)
- 		dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__,  ret);
--		up(&hba->host_sem);
--	}
+-	/* Print Transfer Request of aborted task */
+-	dev_info(hba->dev, "%s: Device abort task at tag %d\n", __func__, tag);
+-
+ 	/*
+ 	 * Print detailed info about aborted request.
+ 	 * As more than one request might get aborted at the same time,
+@@ -7037,21 +7037,21 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	}
  
+ 	/*
+-	 * Task abort to the device W-LUN is illegal. When this command
+-	 * will fail, due to spec violation, scsi err handling next step
+-	 * will be to send LU reset which, again, is a spec violation.
+-	 * To avoid these unnecessary/illegal steps, first we clean up
+-	 * the lrb taken by this cmd and re-set it in outstanding_reqs,
+-	 * then queue the eh_work and bail.
++	 * This fast path guarantees the cmd always gets aborted successfully,
++	 * meanwhile it invokes the error handler. It allows contexts, which
++	 * are blocked by this cmd, to fail fast. It serves multiple purposes:
++	 * #1 To avoid unnecessary/illagal abort attempts to the W-LU.
++	 * #2 To avoid live lock between eh_work and specific contexts, i.e.,
++	 *    suspend/resume and eh_work itself.
++	 * #3 To let eh_work recover runtime PM error in case abort happens
++	 *    to cmds sent from runtime suspend/resume ops.
+ 	 */
+-	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
++	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN ||
++	    (cmd->request->rq_flags & RQF_PM)) {
+ 		ufshcd_update_evt_hist(hba, UFS_EVT_ABORT, lrbp->lun);
+ 		__ufshcd_transfer_req_compl(hba, (1UL << tag));
+ 		set_bit(tag, &hba->outstanding_reqs);
+-		spin_lock_irqsave(host->host_lock, flags);
+-		hba->force_reset = true;
+-		ufshcd_schedule_eh_work(hba);
+-		spin_unlock_irqrestore(host->host_lock, flags);
++		need_eh = true;
+ 		goto out;
+ 	}
+ 
+@@ -7065,6 +7065,12 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ cleanup:
+ 		__ufshcd_transfer_req_compl(hba, (1UL << tag));
  out:
- 	if (!ret)
-@@ -9102,7 +9099,6 @@ static int ufshcd_wl_resume(struct device *dev)
- 		hba->curr_dev_pwr_mode, hba->uic_link_state);
- 	if (!ret)
- 		hba->is_wl_sys_suspended = false;
--	up(&hba->host_sem);
- 	return ret;
- }
- #endif
-@@ -9665,6 +9661,7 @@ void ufshcd_resume_complete(struct device *dev)
- 		ufshcd_rpmb_rpm_put(hba);
- 		hba->rpmb_complete_put = false;
- 	}
-+	up(&hba->host_sem);
- }
- EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
- 
-@@ -9691,6 +9688,7 @@ int ufshcd_suspend_prepare(struct device *dev)
- 		ufshcd_rpmb_rpm_get_sync(hba);
- 		hba->rpmb_complete_put = true;
- 	}
-+	down(&hba->host_sem);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(ufshcd_suspend_prepare);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index eaebb4e..47da47c 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -693,7 +693,7 @@ struct ufs_hba_monitor {
-  * @ee_ctrl_mask: Exception event control mask
-  * @is_powered: flag to check if HBA is powered
-  * @shutting_down: flag to check if shutdown has been invoked
-- * @host_sem: semaphore used to serialize concurrent contexts
-+ * @host_sem: semaphore used to avoid concurrency of contexts
-  * @eh_wq: Workqueue that eh_work works on
-  * @eh_work: Worker to handle UFS errors that require s/w attention
-  * @eeh_work: Worker to handle exception events
++		if (cmd->request->rq_flags & RQF_PM || need_eh) {
++			spin_lock_irqsave(host->host_lock, flags);
++			hba->force_reset = true;
++			ufshcd_schedule_eh_work(hba);
++			spin_unlock_irqrestore(host->host_lock, flags);
++		}
+ 		err = SUCCESS;
+ 	} else {
+ 		dev_err(hba->dev, "%s: failed with err %d\n", __func__, err);
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
