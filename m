@@ -2,342 +2,173 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 572DEC48BDF
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Jun 2021 00:54:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48759C48BD1
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Jun 2021 00:54:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B6A261376
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Jun 2021 00:54:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 291C261357
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Jun 2021 00:54:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231171AbhFKA4K (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 20:56:10 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:32015 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230230AbhFKA4J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 20:56:09 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1623372853; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=3O9++L/rQbH8e38VoJDy4lfBxXxL4VmTGgM/3gDTRuo=;
- b=LqLzRc/CMmAm5a/OEskAtvVl4VzjXbv9NUctdxIpv/mVDJGHxGWKHNepNFgXuerRq2HIWAQC
- BvvsWmFSs/iaulfNF0t8Ysxu9QqSdqOBfrRu08yDJOdWYmsyJkvRt8xYI0i+XxZWvgrlP3KZ
- awX28lfsprbCLIRLSm19qapXGe4=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n07.prod.us-east-1.postgun.com with SMTP id
- 60c2b41de27c0cc77f178e95 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 11 Jun 2021 00:53:49
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 533F0C43146; Fri, 11 Jun 2021 00:53:48 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 2F751C433D3;
-        Fri, 11 Jun 2021 00:53:46 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Fri, 11 Jun 2021 08:53:46 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S231228AbhFKA4V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 20:56:21 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38878 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231192AbhFKA4U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 20:56:20 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15B0rpl1186177;
+        Fri, 11 Jun 2021 00:53:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=OfrLvI2h/NvRPoooY5q47nfxS7WrdmUMrn0+l4DHIzo=;
+ b=cWLOzLjRgAv92n4Ukj7cfnCnBjEUU7ObEvLNjE9huqDdHaBS7/imzsrs6PQHJXA+nXxa
+ SXmaqhCFsN0qYF4Jibn4b80OrUZH9Bx0NOgvFqvwh5L6hXe5Ep3ihvDNNepExJJUyJS6
+ 7kDPhpWuKboHMm2q/RBSQsQg1kMpf1Y19tq2kqLQ7/uhKBCVKtkvnQY0GC6eCJqD3C3d
+ jfKHiMG2sZMx1KTFO7dZ3e7GRO6MRl7tC2C2RAhQsjULcoEjW+53wnhCYbx3t67R07a/
+ ZuxxQMkAQzMIWOLK4NrrEFYs4SWKbYhHAOEA1f4r1ZDkJHfznYoKoUnqmwM/XTvmPFsH mw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 3914quuuke-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 11 Jun 2021 00:53:56 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15B0oWqW174515;
+        Fri, 11 Jun 2021 00:53:55 GMT
+Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2174.outbound.protection.outlook.com [104.47.55.174])
+        by userp3030.oracle.com with ESMTP id 38yxcx37p4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 11 Jun 2021 00:53:55 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ktFKql5qPsdaTT0IQG5PcrDSp7ehSVkstis8ZONjlDrHTowcjP5Z4kgEEPcpRjO34F1wvsaBsBY7iIzO8CCJIiwl+AB+zKjC5dcFVTILJJ8k9D9NelkB/rfPOBWxYTmP1RHba3aHVyQdWO/CwGiY0z8xb8RyOwLk45SUzJOlxKoKZklsq37HXmxBupj4A4hgHn5reJ6HhhRGFF9jjafde7B2HyNHWb8XUpjSUTRiQnvCz0HO6cTzTNJQoZgSbmasK+yTS6L6GIvjm4bxWDO+Um07ndG36HjhNo/S2zdykZwdPAqkvWVmok75mkAzItDdSjZZzo3S8o14WZvMSeHffQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OfrLvI2h/NvRPoooY5q47nfxS7WrdmUMrn0+l4DHIzo=;
+ b=LK5P0+R1c+EhhJEs2c1tU2KbmOatkGnmT7iSINU4atl0LC0pEOwbL0Uj4Q5jidYStRkHhjmVSP+x0sJm238NKD17R+Y5pvRPQqvP8lQ3VL0z5SDrc1vH7+1u19tNzlN7r6kLquSwlM60HcaI911fwQhKwlJcEUx+kZMH7GBiJVGrlcPxbd/RCFXoJxK6dYnEaNdUsF+sHEPpgWwlCLHxKGIjVCCSkoYfxt667a2hBh52L4Am7DtR7Iyvl7NOybsuTZmHR06i5ICsIjgrpU8eTQ2W+As2pX4K2anSQN+A60TGJNERZ4XoV5d7UVt58HM2VUghTXvlP72WMkFRMhXIzA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=OfrLvI2h/NvRPoooY5q47nfxS7WrdmUMrn0+l4DHIzo=;
+ b=W8BVzLYDu+oX7FmS9ofr8B0wAGDvNpC0wrgmDSoXkq/YUmoBS/HxqF1TDdqBTYN+Aw2qV5ZmXMY/UyDlYhShG1tZbkMwjOMGlegTvrxNZBR9/dZK2XzBKvZN1001EBsVHRljrIBbIq2DVEQJ6qAs5qAmMXzav9E50/atmp59YRY=
+Authentication-Results: orcam.me.uk; dkim=none (message not signed)
+ header.d=none;orcam.me.uk; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB5419.namprd10.prod.outlook.com (2603:10b6:510:d6::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.21; Fri, 11 Jun
+ 2021 00:53:53 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::4c61:9532:4af0:8796]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::4c61:9532:4af0:8796%7]) with mapi id 15.20.4219.022; Fri, 11 Jun 2021
+ 00:53:53 +0000
+To:     "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc:     Nix <nix@esperi.org.uk>, Khalid Aziz <khalid@gonehiking.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 1/9] scsi: ufs: Differentiate status between hba pm ops
- and wl pm ops
-In-Reply-To: <7d7a771f-6595-0106-8ee5-4e6407caee56@intel.com>
-References: <1623300218-9454-1-git-send-email-cang@codeaurora.org>
- <1623300218-9454-2-git-send-email-cang@codeaurora.org>
- <7d7a771f-6595-0106-8ee5-4e6407caee56@intel.com>
-Message-ID: <d53df7c79e6511a1257affefc69f4cf3@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PING][PATCH v2 0/5] Bring the BusLogic host bus adapter driver
+ up to Y2021
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1eed9cjkl.fsf@ca-mkp.ca.oracle.com>
+References: <alpine.DEB.2.21.2104201934280.44318@angie.orcam.me.uk>
+        <alpine.DEB.2.21.2106110102340.1657@angie.orcam.me.uk>
+Date:   Thu, 10 Jun 2021 20:53:50 -0400
+In-Reply-To: <alpine.DEB.2.21.2106110102340.1657@angie.orcam.me.uk> (Maciej
+        W. Rozycki's message of "Fri, 11 Jun 2021 01:25:36 +0200 (CEST)")
+Content-Type: text/plain
+X-Originating-IP: [138.3.200.58]
+X-ClientProxiedBy: SN7PR04CA0031.namprd04.prod.outlook.com
+ (2603:10b6:806:120::6) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
+MIME-Version: 1.0
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SN7PR04CA0031.namprd04.prod.outlook.com (2603:10b6:806:120::6) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.20 via Frontend Transport; Fri, 11 Jun 2021 00:53:53 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 8321163e-22ee-47d3-9606-08d92c736280
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5419:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB54194AFBCA6E586C21179C9B8E349@PH0PR10MB5419.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8273;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: EHvMYZKVQCwF8qhpSeultS8uT4u7GygPHll+omhmknoSQ/Trt2+YZ764BEqwgsYHQvlbuT0NSH+PMBi7+Zu//yets0UZX2PSmfO2PeSZg90isfardCRi/uMbu7zGcdbZhSHPz/PxhldDcdGawfFrbQLoFHHJxnnWttH1tRe+9MZOvRuAvA9SwIE5gLuhqQwBALO6wfCo9Nbq2tEXvCs5bmo35gzLKyvCeLh+K8n/PR1e4ts1+gbVSqU4M1U3laITcG4v0v2SF92hKvebNldwdLTcetOVVBx0Mc2BH7yFoQBKtvTnSbHSaihHr3HwISCeL8ebQUYhIB3FpY6xT03kBPpf8Jztgk0RIgUk2reX5A4J3B8LerhMmYGov0Y6YH9CJZmZmn+Sdw8aFpTGq2DOiDFiFuJDnsQH3A4ZkOpR8UA9vZV/iOd5c8GXcRRxCTGeE0G+J5Jr9/dTuBdHHAYGQbcoisaCgEDw3HNkb7OdjDVsiU9J/m+Uq/hOi1VooRi1zjU0c8DHwrLNc3qSp6A2AxJkXPydADBVcfM35mXSx9R+UYxVSMNkIpRbMy+B7amBgPEo7dEwEYAgW8uHwJ0MxywUso4Nhv42XkPlcVb/lzJRLAaeZLd0pjZUNF5lMnqhiB+gIDcZzv7Qvd/Crqr7ZJvCPTiQRQBLxTNJNmmMZKo=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(39860400002)(396003)(346002)(136003)(376002)(26005)(6916009)(8676002)(4744005)(83380400001)(55016002)(2906002)(66946007)(54906003)(7696005)(316002)(16526019)(186003)(66476007)(86362001)(66556008)(38100700002)(52116002)(5660300002)(478600001)(8936002)(36916002)(4326008)(38350700002)(956004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?MRcBCqht+baB+AR8bVepXoP4f9hXfvSnIUHsP1+0/EcFO4fxdUOH8u2w4cW/?=
+ =?us-ascii?Q?B8lEWDds1ewAD/V2CuAMziQ7nAiBd78uGs1YguQxtG4JDAW1TAA84h5uUPc3?=
+ =?us-ascii?Q?MEcbj98NR7SGQZEbi0U+WBRtI6f3H1LM4J/uivVP9nr3RtVeayvmzDkHwpYF?=
+ =?us-ascii?Q?onj4ElSnJNz1ABl/rY7KFEr0hXYtEFGFCMjHnEZINHkBSwWQSccWeA6ecHwb?=
+ =?us-ascii?Q?jKlWZyX3xTUH3aqfJvIKp9GOtGm15IEzZ/g+/Shpq24sWS4gb1Cw67L07sPy?=
+ =?us-ascii?Q?P97tLMTtfg5yrROHfJzlSbxWECTqnWzDJtJRL9trD7KqAFaJmqEcCCgT4Ebq?=
+ =?us-ascii?Q?kg5ioQU8+UZEkd+4pYm6Pkxp+P4vDTrJwWWfaILq2/3jpgf5ipX6vmYCcJF3?=
+ =?us-ascii?Q?oijFBhudbprZkNuEN/VyD/gEFpnMvi4HwXjQLeaMjH7LqnZGEdm1Y/Aq5rl7?=
+ =?us-ascii?Q?1xnHxhN0jzqPB7wawrpiZuEFZrPMJViaxeQ8jeKRcHKqlFzkahYtEpGLyY7S?=
+ =?us-ascii?Q?h1Ashd/zBY5wxFwgsc2uZ+bLyPTcyLLmyh9MGGN1Cv7d1oXlTJeU5K9QYLxY?=
+ =?us-ascii?Q?+G9LL/nVJeeSYQivFReNLgNHx5mzuoAlUnKN8yTmPh1ENeAiPEm5HX9XGzwJ?=
+ =?us-ascii?Q?lOvpvgfEFzI9C3daUjPWOR5mbL+X1tioxn/6SvonZE0OOizJvtGOElV8Mcog?=
+ =?us-ascii?Q?OPvtNO6XXEBXvUIkIID8VmhJJG4e5Q3qhGXhQgxE+3WSzVxiDOesCrjgkXZu?=
+ =?us-ascii?Q?nHIbsR9UPpIPiqPLoANDuxyrgk+QTYKrIH1yvhOnP5PVWA9f4EpwnG9TXR6i?=
+ =?us-ascii?Q?RbwtCQNBfX7swREiQi4DZOa9Xt2O33mZ72zGWQHI1LxIdQrSukyfvWfA7BAh?=
+ =?us-ascii?Q?JYTeEy7iOpSL0FzPLt6DfeUHjjE/f0oMAadd+bP1mIDYGFywyN/Vk3i7PlaQ?=
+ =?us-ascii?Q?TzmufLVsabKEwtC9zw40PIKkGYpNGGEsThiE+HmBJJBks3nlofEiWJWKiB88?=
+ =?us-ascii?Q?eQmz6imUysXG6xi0ypmQbFPJR3cdQ/PfUYd8Tp9za/nV4u2xSjAbTE+bYd2W?=
+ =?us-ascii?Q?bHz3Y1YtVPt2MFS6ZpcwWSM7xB5ooXqSjPLOaGZky1Q8cGDgkUXNDVJ74fI5?=
+ =?us-ascii?Q?R48tCNBxwaMrkPinisf2CG3rD+R9nDTgOKQrnzPmn1uh03CthlAzmtX1Lvwe?=
+ =?us-ascii?Q?aWKfeqxmcS1xt8qButAuTbnU/grcU47EAjMYQ5CtMG4aYG418LS0W8pdaOMu?=
+ =?us-ascii?Q?YovB9KePB4PyAdJy5aKvFpxyOQkGmVzUpYKyTrgokw8KNvj0rVeyElsmZO8Z?=
+ =?us-ascii?Q?riPnUcftkc0/BJDtrXTmXTte?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8321163e-22ee-47d3-9606-08d92c736280
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jun 2021 00:53:53.6226
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: QR467b5ep2iDFfk9p3usgKIvcMB0OROONw7Z6Gvwb9sLcWK5AvbNBFrQhNnolKk/BkDTyR9Cm1pQrM0GWi6tuYH4CTbdzAbXv/9E/Ke9MQo=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5419
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10011 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 mlxscore=0
+ spamscore=0 adultscore=0 mlxlogscore=999 suspectscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2106110003
+X-Proofpoint-ORIG-GUID: FXL2kZajWEn59b1yMD970aGB5NjzVVXd
+X-Proofpoint-GUID: FXL2kZajWEn59b1yMD970aGB5NjzVVXd
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10011 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 impostorscore=0 phishscore=0
+ spamscore=0 malwarescore=0 clxscore=1011 lowpriorityscore=0
+ priorityscore=1501 adultscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104190000 definitions=main-2106110003
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Adrian,
 
-On 2021-06-10 19:15, Adrian Hunter wrote:
-> On 10/06/21 7:43 am, Can Guo wrote:
->> Put pm_op_in_progress and is_sys_suspend flags back to ufshcd hba pm 
->> ops,
->> add two new flags, namely wl_pm_op_in_progress and 
->> is_wl_sys_suspended, to
->> track the UFS device W-LU pm ops. This helps us differentiate the 
->> status of
->> hba and wl pm ops when we need to do troubleshooting.
-> 
-> Really you have 2 changes here:
-> 1. Renaming to pm_op_in_progress / is_sys_suspend to
-> wl_pm_op_in_progress / is_wl_sys_suspended
-> 2. Introducing flags for the status of hba
-> 
-> So it should really be 2 patches.
+Maciej,
 
-Sure I will make it 2 in next version.
+> Where are we with this patch series?  I can see it's been archived in
+> patchwork in the new state.  With the unexpected serial device fixes
+> which preempted me and which I've just posted, moving them off the
+> table I now have some spare cycles to get back here, but I'm not sure
+> what to do.
 
-> 
-> That would show up things like:
-> - did you intend not to change hba->is_sys_suspended in 
-> ufs_qcom_resume() ?
+Some of the patches were clashing with my device discovery changes.
+Your series is still in my inbox, have just been swamped with testing
+and integrating several fundamental core modifications the last few
+weeks.
 
-I missed it - shall change it in next version.
+I'll get to it before the merge window...
 
-Thanks,
-Can Guo.
-
-> 
->> 
->> Signed-off-by: Can Guo <cang@codeaurora.org>
->> ---
->>  drivers/scsi/ufs/ufshcd.c | 42 
->> ++++++++++++++++++++++++++++--------------
->>  drivers/scsi/ufs/ufshcd.h |  4 +++-
->>  2 files changed, 31 insertions(+), 15 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 25fe18a..47b2a9a 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -549,7 +549,9 @@ static void ufshcd_print_host_state(struct ufs_hba 
->> *hba)
->>  		hba->saved_err, hba->saved_uic_err);
->>  	dev_err(hba->dev, "Device power mode=%d, UIC link state=%d\n",
->>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
->> -	dev_err(hba->dev, "PM in progress=%d, sys. suspended=%d\n",
->> +	dev_err(hba->dev, "wl_pm_op_in_progress=%d, 
->> is_wl_sys_suspended=%d\n",
->> +		hba->wl_pm_op_in_progress, hba->is_wl_sys_suspended);
->> +	dev_err(hba->dev, "pm_op_in_progress=%d, is_sys_suspended=%d\n",
->>  		hba->pm_op_in_progress, hba->is_sys_suspended);
->>  	dev_err(hba->dev, "Auto BKOPS=%d, Host self-block=%d\n",
->>  		hba->auto_bkops_enabled, hba->host->host_self_blocked);
->> @@ -1999,7 +2001,7 @@ static void ufshcd_clk_scaling_start_busy(struct 
->> ufs_hba *hba)
->>  	if (!hba->clk_scaling.active_reqs++)
->>  		queue_resume_work = true;
->> 
->> -	if (!hba->clk_scaling.is_enabled || hba->pm_op_in_progress) {
->> +	if (!hba->clk_scaling.is_enabled || hba->wl_pm_op_in_progress) {
->>  		spin_unlock_irqrestore(hba->host->host_lock, flags);
->>  		return;
->>  	}
->> @@ -2734,7 +2736,7 @@ static int ufshcd_queuecommand(struct Scsi_Host 
->> *host, struct scsi_cmnd *cmd)
->>  		 * err handler blocked for too long. So, just fail the scsi cmd
->>  		 * sent from PM ops, err handler can recover PM error anyways.
->>  		 */
->> -		if (hba->pm_op_in_progress) {
->> +		if (hba->wl_pm_op_in_progress) {
->>  			hba->force_reset = true;
->>  			set_host_byte(cmd, DID_BAD_TARGET);
->>  			cmd->scsi_done(cmd);
->> @@ -2767,7 +2769,7 @@ static int ufshcd_queuecommand(struct Scsi_Host 
->> *host, struct scsi_cmnd *cmd)
->>  		(hba->clk_gating.state != CLKS_ON));
->> 
->>  	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
->> -		if (hba->pm_op_in_progress)
->> +		if (hba->wl_pm_op_in_progress)
->>  			set_host_byte(cmd, DID_BAD_TARGET);
->>  		else
->>  			err = SCSI_MLQUEUE_HOST_BUSY;
->> @@ -5116,7 +5118,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, 
->> struct ufshcd_lrb *lrbp)
->>  			 * solution could be to abort the system suspend if
->>  			 * UFS device needs urgent BKOPs.
->>  			 */
->> -			if (!hba->pm_op_in_progress &&
->> +			if (!hba->wl_pm_op_in_progress &&
->>  			    !ufshcd_eh_in_progress(hba) &&
->>  			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
->>  				/* Flushed in suspend */
->> @@ -5916,7 +5918,7 @@ static void ufshcd_err_handling_prepare(struct 
->> ufs_hba *hba)
->>  {
->>  	ufshcd_rpm_get_sync(hba);
->>  	if (pm_runtime_status_suspended(&hba->sdev_ufs_device->sdev_gendev) 
->> ||
->> -	    hba->is_sys_suspended) {
->> +	    hba->is_wl_sys_suspended) {
->>  		enum ufs_pm_op pm_op;
->> 
->>  		/*
->> @@ -5933,7 +5935,7 @@ static void ufshcd_err_handling_prepare(struct 
->> ufs_hba *hba)
->>  		if (!ufshcd_is_clkgating_allowed(hba))
->>  			ufshcd_setup_clocks(hba, true);
->>  		ufshcd_release(hba);
->> -		pm_op = hba->is_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
->> +		pm_op = hba->is_wl_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
->>  		ufshcd_vops_resume(hba, pm_op);
->>  	} else {
->>  		ufshcd_hold(hba, false);
->> @@ -5976,7 +5978,7 @@ static void ufshcd_recover_pm_error(struct 
->> ufs_hba *hba)
->>  	struct request_queue *q;
->>  	int ret;
->> 
->> -	hba->is_sys_suspended = false;
->> +	hba->is_wl_sys_suspended = false;
->>  	/*
->>  	 * Set RPM status of wlun device to RPM_ACTIVE,
->>  	 * this also clears its runtime error.
->> @@ -8784,7 +8786,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba 
->> *hba, enum ufs_pm_op pm_op)
->>  	enum ufs_dev_pwr_mode req_dev_pwr_mode;
->>  	enum uic_link_state req_link_state;
->> 
->> -	hba->pm_op_in_progress = true;
->> +	hba->wl_pm_op_in_progress = true;
->>  	if (pm_op != UFS_SHUTDOWN_PM) {
->>  		pm_lvl = pm_op == UFS_RUNTIME_PM ?
->>  			 hba->rpm_lvl : hba->spm_lvl;
->> @@ -8919,7 +8921,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba 
->> *hba, enum ufs_pm_op pm_op)
->>  		hba->clk_gating.is_suspended = false;
->>  		ufshcd_release(hba);
->>  	}
->> -	hba->pm_op_in_progress = false;
->> +	hba->wl_pm_op_in_progress = false;
->>  	return ret;
->>  }
->> 
->> @@ -8928,7 +8930,7 @@ static int __ufshcd_wl_resume(struct ufs_hba 
->> *hba, enum ufs_pm_op pm_op)
->>  	int ret;
->>  	enum uic_link_state old_link_state = hba->uic_link_state;
->> 
->> -	hba->pm_op_in_progress = true;
->> +	hba->wl_pm_op_in_progress = true;
->> 
->>  	/*
->>  	 * Call vendor specific resume callback. As these callbacks may 
->> access
->> @@ -9006,7 +9008,7 @@ static int __ufshcd_wl_resume(struct ufs_hba 
->> *hba, enum ufs_pm_op pm_op)
->>  		ufshcd_update_evt_hist(hba, UFS_EVT_WL_RES_ERR, (u32)ret);
->>  	hba->clk_gating.is_suspended = false;
->>  	ufshcd_release(hba);
->> -	hba->pm_op_in_progress = false;
->> +	hba->wl_pm_op_in_progress = false;
->>  	return ret;
->>  }
->> 
->> @@ -9072,7 +9074,7 @@ static int ufshcd_wl_suspend(struct device *dev)
->> 
->>  out:
->>  	if (!ret)
->> -		hba->is_sys_suspended = true;
->> +		hba->is_wl_sys_suspended = true;
->>  	trace_ufshcd_wl_suspend(dev_name(dev), ret,
->>  		ktime_to_us(ktime_sub(ktime_get(), start)),
->>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
->> @@ -9100,7 +9102,7 @@ static int ufshcd_wl_resume(struct device *dev)
->>  		ktime_to_us(ktime_sub(ktime_get(), start)),
->>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
->>  	if (!ret)
->> -		hba->is_sys_suspended = false;
->> +		hba->is_wl_sys_suspended = false;
->>  	up(&hba->host_sem);
->>  	return ret;
->>  }
->> @@ -9141,6 +9143,8 @@ static int ufshcd_suspend(struct ufs_hba *hba)
->> 
->>  	if (!hba->is_powered)
->>  		return 0;
->> +
->> +	hba->pm_op_in_progress = true;
->>  	/*
->>  	 * Disable the host irq as host controller as there won't be any
->>  	 * host controller transaction expected till resume.
->> @@ -9160,6 +9164,7 @@ static int ufshcd_suspend(struct ufs_hba *hba)
->>  	ufshcd_vreg_set_lpm(hba);
->>  	/* Put the host controller in low power mode if possible */
->>  	ufshcd_hba_vreg_set_lpm(hba);
->> +	hba->pm_op_in_progress = false;
->>  	return ret;
->>  }
->> 
->> @@ -9179,6 +9184,7 @@ static int ufshcd_resume(struct ufs_hba *hba)
->>  	if (!hba->is_powered)
->>  		return 0;
->> 
->> +	hba->pm_op_in_progress = true;
->>  	ufshcd_hba_vreg_set_hpm(hba);
->>  	ret = ufshcd_vreg_set_hpm(hba);
->>  	if (ret)
->> @@ -9198,6 +9204,7 @@ static int ufshcd_resume(struct ufs_hba *hba)
->>  out:
->>  	if (ret)
->>  		ufshcd_update_evt_hist(hba, UFS_EVT_RESUME_ERR, (u32)ret);
->> +	hba->pm_op_in_progress = false;
->>  	return ret;
->>  }
->> 
->> @@ -9222,6 +9229,10 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
->>  	trace_ufshcd_system_suspend(dev_name(hba->dev), ret,
->>  		ktime_to_us(ktime_sub(ktime_get(), start)),
->>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
->> +
->> +	if (!ret)
->> +		hba->is_sys_suspended = true;
->> +
->>  	return ret;
->>  }
->>  EXPORT_SYMBOL(ufshcd_system_suspend);
->> @@ -9248,6 +9259,9 @@ int ufshcd_system_resume(struct ufs_hba *hba)
->>  		ktime_to_us(ktime_sub(ktime_get(), start)),
->>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
->> 
->> +	if (!ret)
->> +		hba->is_sys_suspended = false;
->> +
->>  	return ret;
->>  }
->>  EXPORT_SYMBOL(ufshcd_system_resume);
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index c98d540..eaebb4e 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -752,7 +752,8 @@ struct ufs_hba {
->>  	enum ufs_pm_level spm_lvl;
->>  	struct device_attribute rpm_lvl_attr;
->>  	struct device_attribute spm_lvl_attr;
->> -	int pm_op_in_progress;
->> +	bool pm_op_in_progress;
->> +	bool wl_pm_op_in_progress;
->> 
->>  	/* Auto-Hibernate Idle Timer register value */
->>  	u32 ahit;
->> @@ -839,6 +840,7 @@ struct ufs_hba {
->>  	struct devfreq *devfreq;
->>  	struct ufs_clk_scaling clk_scaling;
->>  	bool is_sys_suspended;
->> +	bool is_wl_sys_suspended;
->> 
->>  	enum bkops_status urgent_bkops_lvl;
->>  	bool is_urgent_bkops_lvl_checked;
->> 
+-- 
+Martin K. Petersen	Oracle Linux Engineering
