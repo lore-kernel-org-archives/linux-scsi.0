@@ -2,165 +2,334 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5889C48BDF
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Jun 2021 02:10:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 619A1C48BDF
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Jun 2021 02:21:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F21F6124C
-	for <linux-scsi@archiver.kernel.org>; Fri, 11 Jun 2021 02:10:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 340B860C3E
+	for <linux-scsi@archiver.kernel.org>; Fri, 11 Jun 2021 02:21:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230368AbhFKCMw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 10 Jun 2021 22:12:52 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:28490 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230168AbhFKCMw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Jun 2021 22:12:52 -0400
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15B29QlT001021;
-        Fri, 11 Jun 2021 02:10:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2020-01-29;
- bh=bgsZJkrS7dJ/vDKcDujBYemIyxA8MjQQa8DzPUGrmT4=;
- b=wLM3FkzdnBVR8IgrAI8w2Pt7IUK+QGeWLR6Qe/ocFOcAGdBYNwow/Eo0PUr4XO+eoiDk
- kfKMv62NtvvWcpNiMrZYLEMhh8RTKrB9cF+fhXB6K4n3E1cEZTslZ6CT9qLm4SjoPDTk
- kTF9jCI+Hl5A4wPkb3fBljwD22zdJnWW+j/OzF+bplbKFWOTA6Y4Es4iYil3ruoBqqK5
- w9f0TkVriCy2x0uBn9Rk1LH7WI29jPGNWhvw0CJooSEX460y+qsv6B7Uq6huBJRMCHfw
- o77Y/7sMQGACjrzKFQVwUH8WnfXUC5EQB+7mMIARqYgksPbN0pZyFnI2kx54iQfvqrXy iQ== 
-Received: from oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 392yvb8m45-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Jun 2021 02:10:53 +0000
-Received: from userp3030.oracle.com (userp3030.oracle.com [127.0.0.1])
-        by pps.podrdrct (8.16.0.36/8.16.0.36) with SMTP id 15B2AqDG110449;
-        Fri, 11 Jun 2021 02:10:52 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2109.outbound.protection.outlook.com [104.47.58.109])
-        by userp3030.oracle.com with ESMTP id 38yxcx4edu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Jun 2021 02:10:51 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YF1ZAt2oUpol5j3qexL/ZQ+iWhK6AtR/cEU/MT1kYc53N/bIPUFaNt9vV+uT+ijmIjO7jUFgaipQXmAJH2tgarZdJ0lA14S6R1ELFMml1FleTjgFbcFHLJimv0g1cBQj0t84SY3pWIGxcKJyV6FFS9QjwJTzlNOJuD/Ed5duohoJsdY7h+6di/gsVCCDJjpZPtM2kk8bOY+gzadVIuxBcsiLA+rqybNfcKO2tLY0GrCtrJyB++XUXdRHWK6QMlfZ+3i9GG42QKcm5djm+uidjK6/te1gu65h0Xs2upraSrnhIehHHpsVkyKI3t0nGMVX1dSPHsxOGfXkTj0gdrd/PA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bgsZJkrS7dJ/vDKcDujBYemIyxA8MjQQa8DzPUGrmT4=;
- b=IY/AiTOzU2y7KFMu58CLsWv5kg8cJO4236Ng5YerWg+qaE/y7PniL4iBlBrBsM4dgAMkh3SJfCVVaXZLfOLm3GvcSM71CNdz/PoQ9cpZf/VG2L4iATlSQ2TuYVmxTliUjnkU8z4s4r+/U0UrRYGpbiOzEejCJOCNxSFNnTRFndEswW0fyq6nzlv7X14B3ByTK+4ur9Mip7DUEMgKjlKfMAmGV+G76q1zDt4mc9Oisuuu4BpQBdLTHmDC3+gdCHtN4D0etQ30sIxZK1Z9kkW3yeLuB07Z7WWznCdQgj2SxS3JsQ/HC888ylGM2lkpbDjEhpydoBqsS4q45u6nVYnB0w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bgsZJkrS7dJ/vDKcDujBYemIyxA8MjQQa8DzPUGrmT4=;
- b=KBoDYmmHt75peZ7M86inXXibo14DmraGosxW1SlBiZosUL4WK7GwvGOxejULEPgcERcZyWqsic/t9CbsQzhudNBC3l3R1ZMAc1Pm4tqErtJAglDC+roaQMryuhtxmbHMstEnzEhc9ZmfBqY77O5xfaqQfmChD5VlH+fsodl8HBc=
-Authentication-Results: gmail.com; dkim=none (message not signed)
- header.d=none;gmail.com; dmarc=none action=none header.from=oracle.com;
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4535.namprd10.prod.outlook.com (2603:10b6:510:31::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.22; Fri, 11 Jun
- 2021 02:10:49 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::4c61:9532:4af0:8796]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::4c61:9532:4af0:8796%7]) with mapi id 15.20.4219.022; Fri, 11 Jun 2021
- 02:10:49 +0000
-To:     David Sebek <dasebek@gmail.com>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: Set BLIST_TRY_VPD_PAGES for WD Black P10 external
- HDD
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq135tpcfv1.fsf@ca-mkp.ca.oracle.com>
-References: <YLVThaYJ0cXzy57D@david-pc> <yq1czt5q8wu.fsf@ca-mkp.ca.oracle.com>
-        <yq17djdq8ly.fsf@ca-mkp.ca.oracle.com> <YLejIoBJ8YJuonVZ@david-pc>
-Date:   Thu, 10 Jun 2021 22:10:45 -0400
-In-Reply-To: <YLejIoBJ8YJuonVZ@david-pc> (David Sebek's message of "Wed, 2 Jun
-        2021 11:26:26 -0400")
-Content-Type: text/plain
-X-Originating-IP: [138.3.200.58]
-X-ClientProxiedBy: SN6PR04CA0083.namprd04.prod.outlook.com
- (2603:10b6:805:f2::24) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
-MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SN6PR04CA0083.namprd04.prod.outlook.com (2603:10b6:805:f2::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.21 via Frontend Transport; Fri, 11 Jun 2021 02:10:48 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 6709cf56-0a4b-43ec-b802-08d92c7e217e
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4535:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <PH0PR10MB45359B11BC719F5D32A8EBA68E349@PH0PR10MB4535.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:7691;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 41JZ+S6twN1p7eYAaV5zkkGovXGhIYTMf8EKImoNn0JDEqfL6dqMuPJOu7hTJLkLNZcfHRk6z5GpTTnwV6OhEeVRG5UDg8klE5/Nqzk/4O7KNuoobjen02RsRjMur2W0/eZL27yJSD05CZWGR+Ia2bgyo68sA9YDwwFk6P3sNl2smYuJ6QHDn71Kc9238tMggwdgI8eI2XWJYmiJs57drEondVXkC3CJBlLKujPosKctR8BFFcH2yow8dPf6y0FAArC+fnzV4gZFSRZ4VPTJJKvq0nxuw52S/H3oBdBgiAZIBNhXFr9XLjAT8BDIzfcAMgKMKcv+tNtrkX9+rfRlB/rxvjBxdvJvy4H+NAmNJ/ty5gpO5sk0sWkR8e5o8/3oLXyp7XCopuw4k5St3MPRr0p5LtRi1O6zeG5J5P4xVSj/JgiSfm/MIxRdhquhyXcUh5nvYZlxAigrBfN9pKWHZipRutNEp4QPu6dVzpGGwHFKgK+yBs/e02wGqfPx90pqdlLnjrCe/bZB/hGhRgSL3Wv7x8vKgmD0SvO9dUW6WJAIQQ8O8pqEE05p0knmsfUeM66xSdkrKdM5Gmfg7t++PPnMDsoJN+ZVsPwPrYZwrMkOoiZ6uMa0/7gs7YAj1deKgK3eLZglkGDvPqrbXNV601+KiJLfd0lZctgFo38SzLU=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(346002)(376002)(396003)(39860400002)(136003)(66476007)(66946007)(316002)(55016002)(5660300002)(956004)(66556008)(8936002)(52116002)(8676002)(16526019)(478600001)(86362001)(186003)(38100700002)(38350700002)(7696005)(6666004)(36916002)(4326008)(6916009)(4744005)(2906002)(26005);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?JlCrM27zMePphwRHb978kO3JUw1lbbdiiXJIru+Xqt/dI9f97TRjgFwtxygO?=
- =?us-ascii?Q?lcGFaZ7LXZxjo+ZcMgtPVfuwA37Grc58aeQmBWVMWvnqe6x3faJhePejfQk2?=
- =?us-ascii?Q?n8xtaMwqQG+OAtXhnX+FNaw8hhW80IGrE6dPibx/Znq72DZ56mvYnSy3nPVH?=
- =?us-ascii?Q?7YqokK+2ONQAopQe19jcm5MOp4U0FjrXW9S58NAZlDjvs10EwgmpRVj6yGtB?=
- =?us-ascii?Q?H2AqOzofAEtx+bPVAMaAz0atl9Ixl/Kq1/C5XySOjV23YpMnEcv1e3i0rJyr?=
- =?us-ascii?Q?v94koat7A/EAB1H+7lCKbHL5heYceOZToqgzt6DQy/2ZQ3nR3BlqbfatKRFU?=
- =?us-ascii?Q?mKhmKLpeIKdxa+aYkPOWhqBJ9/U6YBLZMZz4AW5yOOCz+VKS1y6Dt4QetAx8?=
- =?us-ascii?Q?jstk+hQgHKH5ztCAUzrgsLGEWKYYY/KNMcKX6X+oMrd4qOyrWa1B6K0qieuE?=
- =?us-ascii?Q?0ogaOp2xT+bulBm1dQgoTdH0JwHt+dEWLXgnTMR9UiwMtNrEbWd0RleI0L/8?=
- =?us-ascii?Q?ERZjVOA4AzxNwRYGP4lB4Y6MXJy1hx2fdgStMRyr+aWgg03wz5c62BzR76Qg?=
- =?us-ascii?Q?L9i1ZOkAQJ0ajJC8lgiTDLsr0H4x+/Io5W5Idth7ztOTvCEzIkVUunnuwySt?=
- =?us-ascii?Q?G6R58cMLUb6xoY8WrGIv6rGTySiEWtz3UrVBtHkjt0nCduhvUPOgIcFj7VDR?=
- =?us-ascii?Q?XBAzC2GYYGfu4k5ZwXj494aX4nmHPxcWN1mk72XxkAbee8cy3SB1H+Vqlji5?=
- =?us-ascii?Q?UQwlfJjuBa6b3ahixNSY5D+5Iy7iuPRuvXUYWzb/F5l1nGd5lgIt2ri6wGXs?=
- =?us-ascii?Q?2mBmJMtfrvgZfXx/BBvJVbFY45UaNRz6/BMdpK+XaDsI++X3QBGoFAX/f1X/?=
- =?us-ascii?Q?JGlJC3eBlMAYB0cqByhOfD/pzml8Cm5qUCXRrSfT5GkyfEY2mBOAF8uL2vF0?=
- =?us-ascii?Q?J16xH1yeByO2iBQoDBXNUP5NXAbYJL94TZ7ExgZzK7m/rZZ2iM1IN59O9pje?=
- =?us-ascii?Q?nkgg66CTT83pkL6jsL3IUVQO1HQ9kZF5ERZ6an2HEe9fTzrUqm9PzCGgTmVn?=
- =?us-ascii?Q?4IJ57BbXO/MsG8vKbnPUF61OFKaaFMTdzJkK/DPStV2CXPvdc9+CwWvv3Kw0?=
- =?us-ascii?Q?CcGl//MqeUJl0HNRolgfbUDDQfv8yuuEeYZEexnsyFlcUOQZAG/uheiV8Hfb?=
- =?us-ascii?Q?tQdHyadCSDSQiS70em1aF+DBtUYbQQfO2sRVpFdQUKd6fNkH/gXqMt/zhN3G?=
- =?us-ascii?Q?2T6KqAyDZZi5QvlxqJt8ghX69pOy8RRRTZHnxyiUtjZD6g4Eh1nKtxaP6QVp?=
- =?us-ascii?Q?FblYclPlL1iyjPpPrs/FOXht?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6709cf56-0a4b-43ec-b802-08d92c7e217e
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jun 2021 02:10:49.1798
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: mC7erhiThyQUlRTVe8Xz+f+dk2jfni0faHy9LJH6+oBgGw+NND8VCeu2FzBMjF03EtbRm1PUwTGNWdb9nl7/OoWdXMY8uaHrv2DjO2747+I=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4535
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10011 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 mlxscore=0
- spamscore=0 adultscore=0 mlxlogscore=999 suspectscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2106110012
-X-Proofpoint-ORIG-GUID: 9WSi0MG0YSKj0szqUzMsto3Qm4Vle9QP
-X-Proofpoint-GUID: 9WSi0MG0YSKj0szqUzMsto3Qm4Vle9QP
+        id S231414AbhFKCXq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 10 Jun 2021 22:23:46 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:21166 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230374AbhFKCXp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jun 2021 22:23:45 -0400
+Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210611022146epoutp01a9e686295c84f85b3fabf2be8e517266~HZcmHJ-Pm0557005570epoutp01p
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Jun 2021 02:21:46 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210611022146epoutp01a9e686295c84f85b3fabf2be8e517266~HZcmHJ-Pm0557005570epoutp01p
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1623378106;
+        bh=jB0nFr+KlekJcUPpvC4qd0BteXQHVS8y8fMpR9Q9I9Y=;
+        h=Subject:Reply-To:From:To:CC:Date:References:From;
+        b=IbzMeB0WDd5xnX141buGsn6wzPN/25amTZ6SH+iRtbKnzn2MDKN95Pk3qUYd8Me39
+         XCRiC/ozRUBIy8uh2e3/ACBrMIxzWOef/OIWTJqwwpbMNI0W6KkekBT0GLxoolYEY6
+         ChRSmRqHygZ5wkCqXSpfkm/z1RLrrtM5JEMvvqHo=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
+        20210611022146epcas2p116ef2ed24a71488421daaaaed27df6db~HZclX9iC12280922809epcas2p13;
+        Fri, 11 Jun 2021 02:21:46 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.40.183]) by
+        epsnrtp2.localdomain (Postfix) with ESMTP id 4G1Pjg14yHz4x9Q6; Fri, 11 Jun
+        2021 02:21:43 +0000 (GMT)
+X-AuditID: b6c32a47-f61ff700000024d9-a8-60c2c8b67b03
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        0A.DC.09433.6B8C2C06; Fri, 11 Jun 2021 11:21:43 +0900 (KST)
+Mime-Version: 1.0
+Subject: [PATCH v37 0/4] scsi: ufs: Add Host Performance Booster Support
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Greg KH <gregkh@linuxfoundation.org>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Daejun Park <daejun7.park@samsung.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        JinHwan Park <jh.i.park@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        Sung-Jun Park <sungjun07.park@samsung.com>,
+        Jinyoung CHOI <j-young.choi@samsung.com>,
+        Dukhyun Kwon <d_hyun.kwon@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Jaemyung Lee <jaemyung.lee@samsung.com>,
+        Jieon Seol <jieon.seol@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <20210611022142epcms2p374ea5b82cfe122de69a7fefe27edf856@epcms2p3>
+Date:   Fri, 11 Jun 2021 11:21:42 +0900
+X-CMS-MailID: 20210611022142epcms2p374ea5b82cfe122de69a7fefe27edf856
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+CMS-TYPE: 102P
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrGJsWRmVeSWpSXmKPExsWy7bCmme72E4cSDHbMZ7J4MG8bm8XethPs
+        Fi9/XmWzmPbhJ7PFp/XLWC1eHtK02HXwIJvFqgfhFs2L17NZzDnbwGTR27+VzWLzwQ3MFo/v
+        fGa3WHRjG5NF/792FottnwUtjp98x2hxedccNovu6zvYLJYf/8dksXTrTUaLzulrWBzEPC5f
+        8fa43NfL5LFz1l12jwmLDjB67J+7ht2j5eR+Fo+PT2+xePRtWcXo8XmTnEf7gW6mAK6oHJuM
+        1MSU1CKF1Lzk/JTMvHRbJe/geOd4UzMDQ11DSwtzJYW8xNxUWyUXnwBdt8wcoDeVFMoSc0qB
+        QgGJxcVK+nY2RfmlJakKGfnFJbZKqQUpOQWGhgV6xYm5xaV56XrJ+blWhgYGRqZAlQk5GZcX
+        tzEXdFlVXFhX3MD4QbeLkZNDQsBE4u3zByxdjFwcQgI7GCVWz7rE2MXIwcErICjxd4cwiCks
+        4CHxZjc7SLmQgJLE+ouzwGxhAT2JWw/XMILYbAI6EtNP3GcHGSMi0Moise3bRTCHWeA8s8Se
+        G+2MEMt4JWa0P2WBsKUlti/fChXXkPixrJcZwhaVuLn6LTuM/f7YfKgaEYnWe2ehagQlHvzc
+        DRWXlDi2+wMThF0vsfXOL0aQxRICPYwSh3feYoVI6Etc69gItphXwFeiZ80CNhCbRUBVou/o
+        SahBLhLLmpvAapgF5CW2v53DDPI9s4CmxPpd+iCmhICyxJFbLDCvNGz8zY7OZhbgk+g4/Bcu
+        vmPeE6jT1CTW/VzPBDFGRuLWPMYJjEqzEAE9C8naWQhrFzAyr2IUSy0ozk1PLTYqMEaO2k2M
+        4ASv5b6DccbbD3qHGJk4GA8xSnAwK4nw7lx5KEGINyWxsiq1KD++qDQntfgQoynQwxOZpUST
+        84E5Jq8k3tDUyMzMwNLUwtTMyEJJnJeDHahJID2xJDU7NbUgtQimj4mDU6qBSX3WzLPPhRKO
+        nvm69tHZ2i+aOc+W7mdkbPEq/KYk+cXvasqG/WvPSFgXppffk/Mumd94evX0fs1FW96HKWjK
+        R3aZra55U6n4LC9c6GvPjaNubP92Hp7vvlJm6oSfjQsEcuP937SfnfKx+UOJZf+9Ey8Mq7M+
+        HbvxVMT1zY1FpvO6Zm2IDA6bFuto6Ky1O3RhzqJ3GlMlGBo1XM9xtf1V2DNn21UnEd7kc29a
+        5quXq7y6WsPnqBqzuCQzf+fa73uXLJw2K1u4Qqx8psMPWbP04Bm2Tz7vr5mvXnjIbt6Gj/fl
+        HnQlh57KrFTw8Dc6tN7Ef6d1/OuUqp1/v1gwO/LHK2tV+XvsWJb3KPie0b3ue0osxRmJhlrM
+        RcWJAEKKD3N5BAAA
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210611022142epcms2p374ea5b82cfe122de69a7fefe27edf856
+References: <CGME20210611022142epcms2p374ea5b82cfe122de69a7fefe27edf856@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Changelog:
 
-David,
+v36 -> v37
+1. Fix wrong usage of find_next_bit API.
+2. Address Barts' comments. (sysfs, documentation, return type)
+3. Change HPB_MULTI_CHUNK_HIGH for 1MB-sized request.
 
-> No, BLIST_INQUIRY_36 is not needed. I included it only because the
-> nearby comment "Note that all USB devices should have the
-> BLIST_INQUIRY_36 flag."  said so.
+v35 -> v36
+1. Changed ppn variable type from u64 to __be64.
+2. Added WARN_ON_ONCE() to check for HPB read IO size exceeded.
 
-I would appreciate it if you could send me the output of:
+v34 -> v35
+1. Addressed Bart's comments (type casting)
+2. Rebase 5.14 scsi-queue
 
-# sg_inq /dev/sdN
-# sg_readcap -l /dev/sdN
-# sg_vpd -p bl /dev/sdN
-# sg_vpd -p lbpv /dev/sdN
+v33 -> v34
+Fix warning about NULL check before some freeing functions is not needed.
 
-Thanks!
+v32 -> v33
+1. Fix wrong usage of scsi_command_normalize_sense.
+2. Addressed Bart's comments (func. name, type casting, parentheses)
+
+v31 -> v32
+Delete unused parameter of unmap API.
+
+v30 -> v31
+Delete unnecessary debug message.
+
+v29 -> v30
+1. Add support to reuse bio of pre-request.
+2. Delete unreached code in the ufshpb_issue_map_req.
+
+v28 -> v29
+1. Remove unused variable that reported by kernel test robot.
+
+v27 -> v28
+1. Fix wrong return value of ufshpb_prep.
+
+v26 -> v27
+1. Fix wrong refernce of sense buffer in pre_req complete function.
+2. Fix read_id error.
+3. Fix chunk size checking for HPB 1.0.
+4. Mute unnecessary messages before HPB initialization.
+
+v25 -> v26
+1. Fix wrong chunk size checking for HPB 1.0.
+2. Fix wrong max data size for HPB single command.
+3. Fix typo error.
+
+v24 -> v25
+1. Change write buffer API for unmap region.
+2. Add checking hpb_enable for avoiding unnecessary memory allocation.
+3. Change pr_info to dev_info.
+4. Change default requeue timeout value for HPB read.
+5. Fix wrong offset manipulation on ufshpb_prep_entry.
+
+v23 -> v24
+1. Fix build error reported by kernel test robot.
+
+v22 -> v23
+1. Add support compatibility of HPB 1.0.
+2. Fix read id for single HPB read command.
+3. Fix number of pre-allocated requests for write buffer.
+4. Add fast path for response UPIU that has same LUN in sense data.
+5. Remove WARN_ON for preventing kernel crash.
+7. Fix wrong argument for read buffer command.
+
+v21 -> v22
+1. Add support processing response UPIU in suspend state.
+2. Add support HPB hint from other LU.
+3. Add sending write buffer with 0x03 after HPB init.
+
+v20 -> v21
+1. Add bMAX_DATA_SIZE_FOR_HPB_SINGLE_CMD attr. and fHPBen flag support.
+
+v19 -> v20
+1. Add documentation for sysfs entries of hpb->stat.
+2. Fix read buffer command for under-sized sub-region.
+3. Fix wrong condition checking for kick map work.
+4. Delete redundant response UPIU checking.
+5. Add LUN checking in response UPIU.
+6. Fix possible deadlock problem due to runtime PM.
+7. Add instant changing of sub-region state from response UPIU.
+8. Fix endian problem in prefetched PPN.
+9. Add JESD220-3A (HPB v2.0) support.
+
+v18 -> 19
+1. Fix null pointer error when printing sysfs from non-HPB LU.
+2. Apply HPB read opcode in lrbp->cmd->cmnd (from Can Guo's review).
+3. Rebase the patch on 5.12/scsi-queue.
+
+v17 -> v18
+Fix build error which reported by kernel test robot.
+
+v16 -> v17
+1. Rename hpb_state_lock to rgn_state_lock and move it to corresponding
+patch.
+2. Remove redundant information messages.
+
+v15 -> v16
+1. Add missed sysfs ABI documentation.
+
+v14 -> v15
+1. Remove duplicated sysfs ABI entries in documentation.
+2. Add experiment result of HPB performance testing with iozone.
+
+v13 -> v14
+1. Cleanup codes by commentted in Greg's review.
+2. Add documentation for sysfs entries (from Greg's review).
+3. Add experiment result of HPB performance testing.
+
+v12 -> v13
+1. Cleanup codes by comments from Can Guo.
+2. Add HPB related descriptor/flag/attributes in sysfs.
+3. Change base commit from 5.10/scsi-queue to 5.11/scsi-queue.
+
+v11 -> v12
+1. Fixed to return error value when HPB fails to initialize pinned active 
+region.
+2. Fixed to disable HPB feature if HPB fails to allocate essential memory
+and workqueue.
+3. Fixed to change proper sub-region state when region is already evicted.
+
+v10 -> v11
+Add a newline at end the last line on Kconfig file.
+
+v9 -> v10
+1. Fixed 64-bit division error
+2. Fixed problems commentted in Bart's review.
+
+v8 -> v9
+1. Change sysfs initialization.
+2. Change reading descriptor during HPB initialization
+3. Fixed problems commentted in Bart's review.
+4. Change base commit from 5.9/scsi-queue to 5.10/scsi-queue.
+
+v7 -> v8
+Remove wrongly added tags.
+
+v6 -> v7
+1. Remove UFS feature layer.
+2. Cleanup for sparse error.
+
+v5 -> v6
+Change base commit to b53293fa662e28ae0cdd40828dc641c09f133405
+
+v4 -> v5
+Delete unused macro define.
+
+v3 -> v4
+1. Cleanup.
+
+v2 -> v3
+1. Add checking input module parameter value.
+2. Change base commit from 5.8/scsi-queue to 5.9/scsi-queue.
+3. Cleanup for unused variables and label.
+
+v1 -> v2
+1. Change the full boilerplate text to SPDX style.
+2. Adopt dynamic allocation for sub-region data structure.
+3. Cleanup.
+
+NAND flash memory-based storage devices use Flash Translation Layer (FTL)
+to translate logical addresses of I/O requests to corresponding flash
+memory addresses. Mobile storage devices typically have RAM with
+constrained size, thus lack in memory to keep the whole mapping table.
+Therefore, mapping tables are partially retrieved from NAND flash on
+demand, causing random-read performance degradation.
+
+To improve random read performance, JESD220-3 (HPB v1.0) proposes HPB
+(Host Performance Booster) which uses host system memory as a cache for the
+FTL mapping table. By using HPB, FTL data can be read from host memory
+faster than from NAND flash memory. 
+
+The current version only supports the DCM (device control mode).
+This patch consists of 3 parts to support HPB feature.
+
+1) HPB probe and initialization process
+2) READ -> HPB READ using cached map information
+3) L2P (logical to physical) map management
+
+In the HPB probe and init process, the device information of the UFS is
+queried. After checking supported features, the data structure for the HPB
+is initialized according to the device information.
+
+A read I/O in the active sub-region where the map is cached is changed to
+HPB READ by the HPB.
+
+The HPB manages the L2P map using information received from the
+device. For active sub-region, the HPB caches through ufshpb_map
+request. For the in-active region, the HPB discards the L2P map.
+When a write I/O occurs in an active sub-region area, associated dirty
+bitmap checked as dirty for preventing stale read.
+
+HPB is shown to have a performance improvement of 58 - 67% for random read
+workload. [1]
+
+[1]:
+https://www.usenix.org/conference/hotstorage17/program/presentation/jeong
+
+Daejun Park (4):
+  scsi: ufs: Introduce HPB feature
+  scsi: ufs: L2P map management for HPB read
+  scsi: ufs: Prepare HPB read for cached sub-region
+  scsi: ufs: Add HPB 2.0 support
+
+ Documentation/ABI/testing/sysfs-driver-ufs |  162 ++
+ drivers/scsi/ufs/Kconfig                   |    9 +
+ drivers/scsi/ufs/Makefile                  |    1 +
+ drivers/scsi/ufs/ufs-sysfs.c               |   22 +
+ drivers/scsi/ufs/ufs.h                     |   54 +-
+ drivers/scsi/ufs/ufshcd.c                  |   74 +-
+ drivers/scsi/ufs/ufshcd.h                  |   30 +
+ drivers/scsi/ufs/ufshpb.c                  | 2380 ++++++++++++++++++++
+ drivers/scsi/ufs/ufshpb.h                  |  277 +++
+ 9 files changed, 3007 insertions(+), 2 deletions(-)
+ create mode 100644 drivers/scsi/ufs/ufshpb.c
+ create mode 100644 drivers/scsi/ufs/ufshpb.h
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.25.1
+
