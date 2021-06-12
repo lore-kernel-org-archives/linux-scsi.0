@@ -2,103 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 373E9C48BCF
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Jun 2021 07:13:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B44DCC48BE8
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Jun 2021 07:18:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 146CC610C7
-	for <linux-scsi@archiver.kernel.org>; Sat, 12 Jun 2021 07:13:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8344161248
+	for <linux-scsi@archiver.kernel.org>; Sat, 12 Jun 2021 07:18:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230395AbhFLHPa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 12 Jun 2021 03:15:30 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:45950 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230229AbhFLHP3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Jun 2021 03:15:29 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1623482010; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=dSTq7/FJmXNvVcUhDXUN+9uGuplltG1LiEo4dgdMqR8=;
- b=RsPz1YvV/G6JfthiA5KpvBqN6Uw6EH4GZ1R9tW1vh6B1spWZWaYR1TnOSimy4SKnw/yjmp8u
- KSI5eocHFCSizwrs4+u/R0GHjImg7wGyn/K7CKkUljhIKW8aH+juq/amjp7NZiNemdwzs3Ui
- FCaq3sB6awrrwhPAh3e6vmVMT1g=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-west-2.postgun.com with SMTP id
- 60c45e99e570c05619a7a79a (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Sat, 12 Jun 2021 07:13:29
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 744ECC43145; Sat, 12 Jun 2021 07:13:29 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A143DC4338A;
-        Sat, 12 Jun 2021 07:13:28 +0000 (UTC)
+        id S230460AbhFLHUm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 12 Jun 2021 03:20:42 -0400
+Received: from smtp13.smtpout.orange.fr ([80.12.242.135]:57980 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230028AbhFLHUj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Jun 2021 03:20:39 -0400
+Received: from localhost.localdomain ([86.243.172.93])
+        by mwinf5d74 with ME
+        id G7Jc2500P21Fzsu037Jd1X; Sat, 12 Jun 2021 09:18:38 +0200
+X-ME-Helo: localhost.localdomain
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sat, 12 Jun 2021 09:18:38 +0200
+X-ME-IP: 86.243.172.93
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com,
+        jitendra.bhivare@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, minhduc.tran@emulex.com,
+        sony.john-n@emulex.com, JBottomley@Parallels.com,
+        jayamohank@gmail.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH 1/2] scsi: be2iscsi: Fix an error handling path in 'beiscsi_dev_probe()'
+Date:   Sat, 12 Jun 2021 09:18:34 +0200
+Message-Id: <77adb02cfea7f1364e5603ecf3930d8597ae356e.1623482155.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Sat, 12 Jun 2021 15:13:28 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Dinghao Liu <dinghao.liu@zju.edu.cn>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 9/9] scsi: ufs: Apply more limitations to user access
-In-Reply-To: <b1e555c2-a59a-2a63-79e0-7c22d5b7b698@acm.org>
-References: <1623300218-9454-1-git-send-email-cang@codeaurora.org>
- <1623300218-9454-10-git-send-email-cang@codeaurora.org>
- <b1e555c2-a59a-2a63-79e0-7c22d5b7b698@acm.org>
-Message-ID: <f41c45d5b151ca98da1e41848c067f89@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-06-12 05:03, Bart Van Assche wrote:
-> On 6/9/21 9:43 PM, Can Guo wrote:
->> Do not let user access HW if hba resume fails or hba is not in good 
->> state,
->> otherwise it may lead to various stability issues.
-> 
-> Just like for the previous patch, I'm wondering whether or not such a
-> failure perhaps indicates a hardware bug?
-> 
+If an error occurs after a 'pci_enable_pcie_error_reporting()' call, it
+must be undone by a corresponding 'pci_disable_pcie_error_reporting()'
+call, as already done in the remove function.
 
-Indeed yes, but user access happens when power/clock is not ready will
-lead to system stability issues, e.g., OCP or unclocked register access.
+Fixes: 3567f36a09d1 ("[SCSI] be2iscsi: Fix AER handling in driver")
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/be2iscsi/be_main.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Nowadays, customers are heavily using UFS sysfs nodes during runtime,
-so our test teams added quite a lot test scripts to simulate user access
-to UFS sysfs nodes during their test.
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 310b801c6c87..b89a7db477c7 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -5743,6 +5743,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	pci_disable_msix(phba->pcidev);
+ 	pci_dev_put(phba->pcidev);
+ 	iscsi_host_free(phba->shost);
++	pci_disable_pcie_error_reporting(pcidev);
+ 	pci_set_drvdata(pcidev, NULL);
+ disable_pci:
+ 	pci_release_regions(pcidev);
+-- 
+2.30.2
 
-Thanks,
-
-Can Guo.
-
-> Thanks,
-> 
-> Bart.
