@@ -2,65 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 033A5C48BE8
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Jun 2021 20:17:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 051E1C48BDF
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Jun 2021 21:04:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C3EA361040
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Jun 2021 20:17:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEF6D610C8
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Jun 2021 21:04:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232020AbhFMUTw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Jun 2021 16:19:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50146 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231788AbhFMUTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 13 Jun 2021 16:19:50 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id DE36761040;
-        Sun, 13 Jun 2021 20:17:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623615468;
-        bh=qvKzYaPtv6Eces/OL4DglaCR6tqM+10HGfogEHH7FYE=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=cMdmS/yxMJSG2+qPiJdfbuAg/opdRYh2FKdYQU0K9pSbjYzAa2XtD+fzgw8QvYmSb
-         T/YioEv/nxJUUylgCFy76iwjIhvYScvgQTudGRaba94Wbc0taUnIATjGxcxWdlAuxQ
-         DpScBZUQMVg4X+CyguqalIjsbXCsENItknMIiEqbR+7uiA9E9rfS1BFRBDjYcvedo4
-         EA6NWvh+b+xWZCi4VtV9qLnKB67CnRg4Oi83PHQDTqAnnBnepDlwRBqNAylEgs7qxF
-         3nFgJEyiTq7K+eLTPrKlP8ltMKntsjobAttd8u5NWp332PZX9K7v3MSDOgperxryOL
-         BMt8vekQ4Xdvw==
-Subject: Re: [GIT PULL] SCSI fixes for 5.13-rc5
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <3eba0f658b27558cd0e023d58912443886bc723e.camel@HansenPartnership.com>
-References: <3eba0f658b27558cd0e023d58912443886bc723e.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <3eba0f658b27558cd0e023d58912443886bc723e.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 1e0d4e6225996f05271de1ebcb1a7c9381af0b27
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 331a6edb30af2b06fcc7f2bf734c6f4984b48a31
-Message-Id: <162361546777.15542.8510931793075326886.pr-tracker-bot@kernel.org>
-Date:   Sun, 13 Jun 2021 20:17:47 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S232114AbhFMVGL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 13 Jun 2021 17:06:11 -0400
+Received: from smtp11.smtpout.orange.fr ([80.12.242.133]:45537 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232107AbhFMVGK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jun 2021 17:06:10 -0400
+Received: from localhost.localdomain ([86.243.172.93])
+        by mwinf5d46 with ME
+        id Gl462500721Fzsu03l467y; Sun, 13 Jun 2021 23:04:07 +0200
+X-ME-Helo: localhost.localdomain
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Sun, 13 Jun 2021 23:04:07 +0200
+X-ME-IP: 86.243.172.93
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH 0/1] scsi: mptctl: switch from 'pci_' to 'dma_' API
+Date:   Sun, 13 Jun 2021 23:04:04 +0200
+Message-Id: <cover.1623617903.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.30.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sun, 13 Jun 2021 09:15:13 -0400:
+This cover letter is only there to draw attention on the fact that I'm a bit
+unsure about the use of GFP_KERNEL in 'kbuf_alloc_2_sgl()'.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+In all conversion that I've done, GFP_USER was never used. I don't fully
+understand the difference between GFP_USER and GFP_KERNEL.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/331a6edb30af2b06fcc7f2bf734c6f4984b48a31
+So please review with care :).
 
-Thank you!
+
+For the 3 other functions, I'm much more confident. I've put the explanation
+of why I think that GFP_KERNEL is safe in patch 1/1.
+Basically, these functions already call fome functions that can sleep.
+
+
+Christophe JAILLET (1):
+  scsi: mptctl: switch from 'pci_' to 'dma_' API
+
+ drivers/message/fusion/mptctl.c | 82 ++++++++++++++++++++-------------
+ 1 file changed, 49 insertions(+), 33 deletions(-)
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.30.2
+
