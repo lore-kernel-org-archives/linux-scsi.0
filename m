@@ -2,368 +2,215 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3305DC48BCF
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Jun 2021 10:33:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B54DC48BDF
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Jun 2021 13:15:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC8B661029
-	for <linux-scsi@archiver.kernel.org>; Sun, 13 Jun 2021 10:33:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B9F4601FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 13 Jun 2021 13:15:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231709AbhFMKfO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 13 Jun 2021 06:35:14 -0400
-Received: from smtp05.smtpout.orange.fr ([80.12.242.127]:28338 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231658AbhFMKfO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jun 2021 06:35:14 -0400
-Received: from localhost.localdomain ([86.243.172.93])
-        by mwinf5d10 with ME
-        id GaZB2500a21Fzsu03aZBVb; Sun, 13 Jun 2021 12:33:12 +0200
-X-ME-Helo: localhost.localdomain
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Sun, 13 Jun 2021 12:33:12 +0200
-X-ME-IP: 86.243.172.93
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com
-Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: mptlan: switch from 'pci_' to 'dma_' API
-Date:   Sun, 13 Jun 2021 12:33:10 +0200
-Message-Id: <db56a78d7d04b809abd32a6fb4839d698587bf7c.1623580326.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.30.2
+        id S231733AbhFMNRT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 13 Jun 2021 09:17:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39464 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231286AbhFMNRT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jun 2021 09:17:19 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 18F32C061574;
+        Sun, 13 Jun 2021 06:15:18 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 15A91128055B;
+        Sun, 13 Jun 2021 06:15:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1623590116;
+        bh=pzxdLNEzqGnMnPZNOdg/sBCq6TrbljgRZQnji/Mau6Q=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=av96WejD7f0Pm6wVnOKP4mgskrdazILpjKwIi5oVLu25LR96wdWtHcarOJNgEH2iN
+         3kDFfzxvlvW1Pj4peMkQp6N0rpSpoBy6UKntodKVAFrY5W+kbIi4Yvt5wG5WhIYN9D
+         M97iXEkDZ/7FR10M1zXfi/JMqEg1H9CA4ZNxmklc=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id im6BXv7YPCau; Sun, 13 Jun 2021 06:15:16 -0700 (PDT)
+Received: from [10.71.4.154] (unknown [134.204.103.43])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 6ABE11280558;
+        Sun, 13 Jun 2021 06:15:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1623590115;
+        bh=pzxdLNEzqGnMnPZNOdg/sBCq6TrbljgRZQnji/Mau6Q=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=oEdMjy6RiuXfgYkpx1WBhMESyBRAbrubGaordZIcRsE/Frrj2jTVCeiyUr341kE9+
+         E4UGVk1vmk8zlvJOJei7q0gIh/ZY9wLg+kkrXbUqWnTrwJ9VFKwAS6FYvY/M5ijAjH
+         oWc9vnfL4JxmM4F/DbdICdmV70qixUP7aM5O/rNQ=
+Message-ID: <3eba0f658b27558cd0e023d58912443886bc723e.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.13-rc5
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sun, 13 Jun 2021 09:15:13 -0400
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The wrappers in include/linux/pci-dma-compat.h should go away.
+Four reasonably small fixes to the core for scsi host allocation
+failure paths.  The root problem is that we're not freeing the memory
+allocated by dev_set_name(), which involves a rejig of may of the free
+on error paths to do put_device() instead of kfree which, in turn, has
+several other knock on ramifications and inspection turned up a few
+other lurking bugs.
 
-The patch has been generated with the coccinelle script below.
-It has been compile tested.
+The patch is available here:
 
-No memory allocation in involved in this patch, so no GFP_ tweak is needed.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-@@ @@
--    PCI_DMA_BIDIRECTIONAL
-+    DMA_BIDIRECTIONAL
+The short changelog is:
 
-@@ @@
--    PCI_DMA_TODEVICE
-+    DMA_TO_DEVICE
+Ming Lei (4):
+      scsi: core: Only put parent device if host state differs from SHOST_CREATED
+      scsi: core: Put .shost_dev in failure path if host state changes to RUNNING
+      scsi: core: Fix failure handling of scsi_add_host_with_dma()
+      scsi: core: Fix error handling of scsi_host_alloc()
 
-@@ @@
--    PCI_DMA_FROMDEVICE
-+    DMA_FROM_DEVICE
+And the diffstat:
 
-@@ @@
--    PCI_DMA_NONE
-+    DMA_NONE
+ drivers/scsi/hosts.c | 47 ++++++++++++++++++++++++++---------------------
+ 1 file changed, 26 insertions(+), 21 deletions(-)
 
-@@
-expression e1, e2, e3;
-@@
--    pci_alloc_consistent(e1, e2, e3)
-+    dma_alloc_coherent(&e1->dev, e2, e3, GFP_)
+With full diff below.
 
-@@
-expression e1, e2, e3;
-@@
--    pci_zalloc_consistent(e1, e2, e3)
-+    dma_alloc_coherent(&e1->dev, e2, e3, GFP_)
+James
 
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_free_consistent(e1, e2, e3, e4)
-+    dma_free_coherent(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_map_single(e1, e2, e3, e4)
-+    dma_map_single(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_unmap_single(e1, e2, e3, e4)
-+    dma_unmap_single(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4, e5;
-@@
--    pci_map_page(e1, e2, e3, e4, e5)
-+    dma_map_page(&e1->dev, e2, e3, e4, e5)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_unmap_page(e1, e2, e3, e4)
-+    dma_unmap_page(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_map_sg(e1, e2, e3, e4)
-+    dma_map_sg(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_unmap_sg(e1, e2, e3, e4)
-+    dma_unmap_sg(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_dma_sync_single_for_cpu(e1, e2, e3, e4)
-+    dma_sync_single_for_cpu(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_dma_sync_single_for_device(e1, e2, e3, e4)
-+    dma_sync_single_for_device(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_dma_sync_sg_for_cpu(e1, e2, e3, e4)
-+    dma_sync_sg_for_cpu(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2, e3, e4;
-@@
--    pci_dma_sync_sg_for_device(e1, e2, e3, e4)
-+    dma_sync_sg_for_device(&e1->dev, e2, e3, e4)
-
-@@
-expression e1, e2;
-@@
--    pci_dma_mapping_error(e1, e2)
-+    dma_mapping_error(&e1->dev, e2)
-
-@@
-expression e1, e2;
-@@
--    pci_set_dma_mask(e1, e2)
-+    dma_set_mask(&e1->dev, e2)
-
-@@
-expression e1, e2;
-@@
--    pci_set_consistent_dma_mask(e1, e2)
-+    dma_set_coherent_mask(&e1->dev, e2)
-
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
-If needed, see post from Christoph Hellwig on the kernel-janitors ML:
-   https://marc.info/?l=kernel-janitors&m=158745678307186&w=4
----
- drivers/message/fusion/mptlan.c | 90 ++++++++++++++++++---------------
- 1 file changed, 48 insertions(+), 42 deletions(-)
 
-diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
-index 3261cac762de..e62c90127cc2 100644
---- a/drivers/message/fusion/mptlan.c
-+++ b/drivers/message/fusion/mptlan.c
-@@ -516,9 +516,9 @@ mpt_lan_close(struct net_device *dev)
- 		if (priv->RcvCtl[i].skb != NULL) {
- /**/			dlprintk((KERN_INFO MYNAM "/lan_close: bucket %05x "
- /**/				  "is still out\n", i));
--			pci_unmap_single(mpt_dev->pcidev, priv->RcvCtl[i].dma,
--					 priv->RcvCtl[i].len,
--					 PCI_DMA_FROMDEVICE);
-+			dma_unmap_single(&mpt_dev->pcidev->dev,
-+					 priv->RcvCtl[i].dma,
-+					 priv->RcvCtl[i].len, DMA_FROM_DEVICE);
- 			dev_kfree_skb(priv->RcvCtl[i].skb);
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 697c09ef259b..cd52664920e1 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -254,12 +254,11 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 
+ 	device_enable_async_suspend(&shost->shost_dev);
+ 
++	get_device(&shost->shost_gendev);
+ 	error = device_add(&shost->shost_dev);
+ 	if (error)
+ 		goto out_del_gendev;
+ 
+-	get_device(&shost->shost_gendev);
+-
+ 	if (shost->transportt->host_size) {
+ 		shost->shost_data = kzalloc(shost->transportt->host_size,
+ 					 GFP_KERNEL);
+@@ -278,33 +277,36 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 
+ 		if (!shost->work_q) {
+ 			error = -EINVAL;
+-			goto out_free_shost_data;
++			goto out_del_dev;
  		}
  	}
-@@ -528,9 +528,9 @@ mpt_lan_close(struct net_device *dev)
  
- 	for (i = 0; i < priv->tx_max_out; i++) {
- 		if (priv->SendCtl[i].skb != NULL) {
--			pci_unmap_single(mpt_dev->pcidev, priv->SendCtl[i].dma,
--					 priv->SendCtl[i].len,
--					 PCI_DMA_TODEVICE);
-+			dma_unmap_single(&mpt_dev->pcidev->dev,
-+					 priv->SendCtl[i].dma,
-+					 priv->SendCtl[i].len, DMA_TO_DEVICE);
- 			dev_kfree_skb(priv->SendCtl[i].skb);
- 		}
- 	}
-@@ -582,8 +582,8 @@ mpt_lan_send_turbo(struct net_device *dev, u32 tmsg)
- 			__func__, sent));
+ 	error = scsi_sysfs_add_host(shost);
+ 	if (error)
+-		goto out_destroy_host;
++		goto out_del_dev;
  
- 	priv->SendCtl[ctx].skb = NULL;
--	pci_unmap_single(mpt_dev->pcidev, priv->SendCtl[ctx].dma,
--			 priv->SendCtl[ctx].len, PCI_DMA_TODEVICE);
-+	dma_unmap_single(&mpt_dev->pcidev->dev, priv->SendCtl[ctx].dma,
-+			 priv->SendCtl[ctx].len, DMA_TO_DEVICE);
- 	dev_kfree_skb_irq(sent);
+ 	scsi_proc_host_add(shost);
+ 	scsi_autopm_put_host(shost);
+ 	return error;
  
- 	spin_lock_irqsave(&priv->txfidx_lock, flags);
-@@ -648,8 +648,9 @@ mpt_lan_send_reply(struct net_device *dev, LANSendReply_t *pSendRep)
- 				__func__, sent));
+- out_destroy_host:
+-	if (shost->work_q)
+-		destroy_workqueue(shost->work_q);
+- out_free_shost_data:
+-	kfree(shost->shost_data);
++	/*
++	 * Any host allocation in this function will be freed in
++	 * scsi_host_dev_release().
++	 */
+  out_del_dev:
+ 	device_del(&shost->shost_dev);
+  out_del_gendev:
++	/*
++	 * Host state is SHOST_RUNNING so we have to explicitly release
++	 * ->shost_dev.
++	 */
++	put_device(&shost->shost_dev);
+ 	device_del(&shost->shost_gendev);
+  out_disable_runtime_pm:
+ 	device_disable_async_suspend(&shost->shost_gendev);
+ 	pm_runtime_disable(&shost->shost_gendev);
+ 	pm_runtime_set_suspended(&shost->shost_gendev);
+ 	pm_runtime_put_noidle(&shost->shost_gendev);
+-	scsi_mq_destroy_tags(shost);
+  fail:
+ 	return error;
+ }
+@@ -345,7 +347,7 @@ static void scsi_host_dev_release(struct device *dev)
  
- 		priv->SendCtl[ctx].skb = NULL;
--		pci_unmap_single(mpt_dev->pcidev, priv->SendCtl[ctx].dma,
--				 priv->SendCtl[ctx].len, PCI_DMA_TODEVICE);
-+		dma_unmap_single(&mpt_dev->pcidev->dev,
-+				 priv->SendCtl[ctx].dma,
-+				 priv->SendCtl[ctx].len, DMA_TO_DEVICE);
- 		dev_kfree_skb_irq(sent);
+ 	ida_simple_remove(&host_index_ida, shost->host_no);
  
- 		priv->mpt_txfidx[++priv->mpt_txfidx_tail] = ctx;
-@@ -720,8 +721,8 @@ mpt_lan_sdu_send (struct sk_buff *skb, struct net_device *dev)
- 	skb_reset_mac_header(skb);
- 	skb_pull(skb, 12);
+-	if (parent)
++	if (shost->shost_state != SHOST_CREATED)
+ 		put_device(parent);
+ 	kfree(shost);
+ }
+@@ -388,8 +390,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	mutex_init(&shost->scan_mutex);
  
--        dma = pci_map_single(mpt_dev->pcidev, skb->data, skb->len,
--			     PCI_DMA_TODEVICE);
-+	dma = dma_map_single(&mpt_dev->pcidev->dev, skb->data, skb->len,
-+			     DMA_TO_DEVICE);
+ 	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
+-	if (index < 0)
+-		goto fail_kfree;
++	if (index < 0) {
++		kfree(shost);
++		return NULL;
++	}
+ 	shost->host_no = index;
  
- 	priv->SendCtl[ctx].skb = skb;
- 	priv->SendCtl[ctx].dma = dma;
-@@ -868,13 +869,17 @@ mpt_lan_receive_post_turbo(struct net_device *dev, u32 tmsg)
- 			return -ENOMEM;
- 		}
- 
--		pci_dma_sync_single_for_cpu(mpt_dev->pcidev, priv->RcvCtl[ctx].dma,
--					    priv->RcvCtl[ctx].len, PCI_DMA_FROMDEVICE);
-+		dma_sync_single_for_cpu(&mpt_dev->pcidev->dev,
-+					priv->RcvCtl[ctx].dma,
-+					priv->RcvCtl[ctx].len,
-+					DMA_FROM_DEVICE);
- 
- 		skb_copy_from_linear_data(old_skb, skb_put(skb, len), len);
- 
--		pci_dma_sync_single_for_device(mpt_dev->pcidev, priv->RcvCtl[ctx].dma,
--					       priv->RcvCtl[ctx].len, PCI_DMA_FROMDEVICE);
-+		dma_sync_single_for_device(&mpt_dev->pcidev->dev,
-+					   priv->RcvCtl[ctx].dma,
-+					   priv->RcvCtl[ctx].len,
-+					   DMA_FROM_DEVICE);
- 		goto out;
+ 	shost->dma_channel = 0xff;
+@@ -481,7 +485,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 		shost_printk(KERN_WARNING, shost,
+ 			"error handler thread failed to spawn, error = %ld\n",
+ 			PTR_ERR(shost->ehandler));
+-		goto fail_index_remove;
++		goto fail;
  	}
  
-@@ -882,8 +887,8 @@ mpt_lan_receive_post_turbo(struct net_device *dev, u32 tmsg)
+ 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+@@ -490,17 +494,18 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	if (!shost->tmf_work_q) {
+ 		shost_printk(KERN_WARNING, shost,
+ 			     "failed to create tmf workq\n");
+-		goto fail_kthread;
++		goto fail;
+ 	}
+ 	scsi_proc_hostdir_add(shost->hostt);
+ 	return shost;
++ fail:
++	/*
++	 * Host state is still SHOST_CREATED and that is enough to release
++	 * ->shost_gendev. scsi_host_dev_release() will free
++	 * dev_name(&shost->shost_dev).
++	 */
++	put_device(&shost->shost_gendev);
  
- 	priv->RcvCtl[ctx].skb = NULL;
- 
--	pci_unmap_single(mpt_dev->pcidev, priv->RcvCtl[ctx].dma,
--			 priv->RcvCtl[ctx].len, PCI_DMA_FROMDEVICE);
-+	dma_unmap_single(&mpt_dev->pcidev->dev, priv->RcvCtl[ctx].dma,
-+			 priv->RcvCtl[ctx].len, DMA_FROM_DEVICE);
- 
- out:
- 	spin_lock_irqsave(&priv->rxfidx_lock, flags);
-@@ -927,8 +932,8 @@ mpt_lan_receive_post_free(struct net_device *dev,
- //		dlprintk((KERN_INFO MYNAM "@rpr[2] TC + 3\n"));
- 
- 		priv->RcvCtl[ctx].skb = NULL;
--		pci_unmap_single(mpt_dev->pcidev, priv->RcvCtl[ctx].dma,
--				 priv->RcvCtl[ctx].len, PCI_DMA_FROMDEVICE);
-+		dma_unmap_single(&mpt_dev->pcidev->dev, priv->RcvCtl[ctx].dma,
-+				 priv->RcvCtl[ctx].len, DMA_FROM_DEVICE);
- 		dev_kfree_skb_any(skb);
- 
- 		priv->mpt_rxfidx[++priv->mpt_rxfidx_tail] = ctx;
-@@ -1028,16 +1033,16 @@ mpt_lan_receive_post_reply(struct net_device *dev,
- //					IOC_AND_NETDEV_NAMES_s_s(dev),
- //					i, l));
- 
--			pci_dma_sync_single_for_cpu(mpt_dev->pcidev,
--						    priv->RcvCtl[ctx].dma,
--						    priv->RcvCtl[ctx].len,
--						    PCI_DMA_FROMDEVICE);
-+			dma_sync_single_for_cpu(&mpt_dev->pcidev->dev,
-+						priv->RcvCtl[ctx].dma,
-+						priv->RcvCtl[ctx].len,
-+						DMA_FROM_DEVICE);
- 			skb_copy_from_linear_data(old_skb, skb_put(skb, l), l);
- 
--			pci_dma_sync_single_for_device(mpt_dev->pcidev,
--						       priv->RcvCtl[ctx].dma,
--						       priv->RcvCtl[ctx].len,
--						       PCI_DMA_FROMDEVICE);
-+			dma_sync_single_for_device(&mpt_dev->pcidev->dev,
-+						   priv->RcvCtl[ctx].dma,
-+						   priv->RcvCtl[ctx].len,
-+						   DMA_FROM_DEVICE);
- 
- 			priv->mpt_rxfidx[++priv->mpt_rxfidx_tail] = ctx;
- 			szrem -= l;
-@@ -1056,17 +1061,17 @@ mpt_lan_receive_post_reply(struct net_device *dev,
- 			return -ENOMEM;
- 		}
- 
--		pci_dma_sync_single_for_cpu(mpt_dev->pcidev,
--					    priv->RcvCtl[ctx].dma,
--					    priv->RcvCtl[ctx].len,
--					    PCI_DMA_FROMDEVICE);
-+		dma_sync_single_for_cpu(&mpt_dev->pcidev->dev,
-+					priv->RcvCtl[ctx].dma,
-+					priv->RcvCtl[ctx].len,
-+					DMA_FROM_DEVICE);
- 
- 		skb_copy_from_linear_data(old_skb, skb_put(skb, len), len);
- 
--		pci_dma_sync_single_for_device(mpt_dev->pcidev,
--					       priv->RcvCtl[ctx].dma,
--					       priv->RcvCtl[ctx].len,
--					       PCI_DMA_FROMDEVICE);
-+		dma_sync_single_for_device(&mpt_dev->pcidev->dev,
-+					   priv->RcvCtl[ctx].dma,
-+					   priv->RcvCtl[ctx].len,
-+					   DMA_FROM_DEVICE);
- 
- 		spin_lock_irqsave(&priv->rxfidx_lock, flags);
- 		priv->mpt_rxfidx[++priv->mpt_rxfidx_tail] = ctx;
-@@ -1077,8 +1082,8 @@ mpt_lan_receive_post_reply(struct net_device *dev,
- 
- 		priv->RcvCtl[ctx].skb = NULL;
- 
--		pci_unmap_single(mpt_dev->pcidev, priv->RcvCtl[ctx].dma,
--				 priv->RcvCtl[ctx].len, PCI_DMA_FROMDEVICE);
-+		dma_unmap_single(&mpt_dev->pcidev->dev, priv->RcvCtl[ctx].dma,
-+				 priv->RcvCtl[ctx].len, DMA_FROM_DEVICE);
- 		priv->RcvCtl[ctx].dma = 0;
- 
- 		priv->mpt_rxfidx[++priv->mpt_rxfidx_tail] = ctx;
-@@ -1199,10 +1204,10 @@ mpt_lan_post_receive_buckets(struct mpt_lan_priv *priv)
- 
- 			skb = priv->RcvCtl[ctx].skb;
- 			if (skb && (priv->RcvCtl[ctx].len != len)) {
--				pci_unmap_single(mpt_dev->pcidev,
-+				dma_unmap_single(&mpt_dev->pcidev->dev,
- 						 priv->RcvCtl[ctx].dma,
- 						 priv->RcvCtl[ctx].len,
--						 PCI_DMA_FROMDEVICE);
-+						 DMA_FROM_DEVICE);
- 				dev_kfree_skb(priv->RcvCtl[ctx].skb);
- 				skb = priv->RcvCtl[ctx].skb = NULL;
- 			}
-@@ -1218,8 +1223,9 @@ mpt_lan_post_receive_buckets(struct mpt_lan_priv *priv)
- 					break;
- 				}
- 
--				dma = pci_map_single(mpt_dev->pcidev, skb->data,
--						     len, PCI_DMA_FROMDEVICE);
-+				dma = dma_map_single(&mpt_dev->pcidev->dev,
-+						     skb->data, len,
-+						     DMA_FROM_DEVICE);
- 
- 				priv->RcvCtl[ctx].skb = skb;
- 				priv->RcvCtl[ctx].dma = dma;
--- 
-2.30.2
+- fail_kthread:
+-	kthread_stop(shost->ehandler);
+- fail_index_remove:
+-	ida_simple_remove(&host_index_ida, shost->host_no);
+- fail_kfree:
+-	kfree(shost);
+ 	return NULL;
+ }
+ EXPORT_SYMBOL(scsi_host_alloc);
 
