@@ -2,195 +2,163 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BDF1C48BE6
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 09:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0300C48BE6
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 13:29:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DED0661357
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 09:52:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FFFC6134F
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 13:29:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232726AbhFNJy4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Jun 2021 05:54:56 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:14009 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232709AbhFNJyy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jun 2021 05:54:54 -0400
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210614095250epoutp04a18fc66bb810c04208edaec0dcd40354~IaiSEu7kT0451804518epoutp04G
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Jun 2021 09:52:50 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210614095250epoutp04a18fc66bb810c04208edaec0dcd40354~IaiSEu7kT0451804518epoutp04G
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1623664370;
-        bh=Jnba7HNp4tDfvtshitsQ9HvzTfYRmhGBL9/Zu5pNwWY=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=fCcREFz2rh6xF9QgxfJ2uWfup/qloZkaJ1vTcigInZn/irv0DAwNUlJB/edSR1VN0
-         xRqDcc8Qmum7lW1CNcrVSybQK140LjKIQDOBpPqiRh5wow0yyQXvYFRuhb5jO3JZRU
-         KdT0hq0CIJV8+24rY3ki3G+FWVlha1WnFvgsxQg4=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
-        20210614095249epcas2p39fa7028516ea8f25302566f651e163ff~IaiRIBqXz1377813778epcas2p3d;
-        Mon, 14 Jun 2021 09:52:49 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.40.189]) by
-        epsnrtp4.localdomain (Postfix) with ESMTP id 4G3RZl4cDDz4x9Pw; Mon, 14 Jun
-        2021 09:52:47 +0000 (GMT)
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        19.CC.09433.EE627C06; Mon, 14 Jun 2021 18:52:46 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20210614095245epcas2p2e8512382423332786f584d5ef1e225d3~IaiNfeguC0182701827epcas2p2v;
-        Mon, 14 Jun 2021 09:52:45 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20210614095245epsmtrp16167d22ccfda9a9eff68b3718939d872~IaiNev4T23143531435epsmtrp1p;
-        Mon, 14 Jun 2021 09:52:45 +0000 (GMT)
-X-AuditID: b6c32a47-f61ff700000024d9-d1-60c726ee02d2
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        C2.D2.08163.DE627C06; Mon, 14 Jun 2021 18:52:45 +0900 (KST)
-Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20210614095245epsmtip2d9de53db206581bdc2cee9e66c190d8f~IaiNUQaUv0355303553epsmtip2d;
-        Mon, 14 Jun 2021 09:52:45 +0000 (GMT)
-From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
-To:     <linux-scsi@vger.kernel.org>
-Cc:     "'Can Guo'" <cang@codeaurora.org>,
-        "'Bart Van Assche'" <bvanassche@acm.org>,
-        "'Avri Altman'" <avri.altman@wdc.com>,
-        "'Bean Huo'" <beanhuo@micron.com>,
-        "'Jaegeuk Kim'" <jaegeuk@kernel.org>
-Subject: Question about coherency of comand context between ufs and scsi
-Date:   Mon, 14 Jun 2021 18:52:45 +0900
-Message-ID: <000001d76103$06c3cb50$144b61f0$@samsung.com>
+        id S233893AbhFNNbk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Jun 2021 09:31:40 -0400
+Received: from mail-dm6nam10on2047.outbound.protection.outlook.com ([40.107.93.47]:30368
+        "EHLO NAM10-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S233180AbhFNNbi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 14 Jun 2021 09:31:38 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=TssKbYwq4JWlNirEuKAXIYFbhBum6dE3vzgfeTkaYzrFB2ioxzfCDymBenqjoIxsqQPYP0ra6zqPSmmYq7WYxyvB+OzR/MAuRcbIg3oEgSuBJ/RapBVR1QTpsbkSlOzDbY8GiQcK715dwRURWXGuF77ieoSaQWpl5z8aUlDoVOIpLBtGWv1NPO/p9dO4Pu3ag2UtYfvlKh8M2ku0gqXCevHduCdlU5RtJj/Ku5pnp0nvGTc+DJabdFMUh1y28+6XTetqezJtddMY9QEJmqQnFxz8xxyAx9sOK0x6+9gdDNeyGSqSwuHw6mNhOdB/F04oRTiXvDH/axh0KXsylHquzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4tEwxi4hVyxOZ0eN1UAOCZfBuAaTWIOrLO/RC/MnHdI=;
+ b=R4DLhS/2GP2HTh8B08DBVpbcfhE849XDYc3nE2CaVJs0p3ux8lNYleOiKQxzNm9HWzev8MyrrNoOpeHll69FSbZxjuqzWb8XxMIty5PCj42rTbhi/+AVTPQPMmvk5Tgy0hyh3cbIqcHI1E35kQg36ek+XERq5x2WsxdURc52lgwVWy35mXDp5Jx4+en5upDtAFvZ8wuraOJerrkoxtuDzuGuUNW4rbSC2lrF2/GMwP4V3GNTkpDMx/bTAq9bg2r7Z201maQfivlEjZyQB8621MlkDsj/03zP4ClfxrkubKNg47IX208lklIbOXqzjr6lKMicoe5c4ijWdIE34TyjGg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
+ header.d=amd.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4tEwxi4hVyxOZ0eN1UAOCZfBuAaTWIOrLO/RC/MnHdI=;
+ b=ZzpgrFF/sG/4Nosw4z7DxYtRE3dX36+KREkrQTnaqtOGDEEDGAnJlUIbQeIwixqknnSmvJryf5PqfFrsjID1VgKioG1ac5FQcg9mASJqfmBLr8Raj7FQ1A9PH8WqnX6GWNuNIY6B//1YzYneknadUbCKQUzBPwZoqomkTbhc8aU=
+Authentication-Results: microsoft.com; dkim=none (message not signed)
+ header.d=none;microsoft.com; dmarc=none action=none header.from=amd.com;
+Received: from DM5PR12MB1355.namprd12.prod.outlook.com (2603:10b6:3:6e::7) by
+ DM6PR12MB3369.namprd12.prod.outlook.com (2603:10b6:5:117::16) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4219.23; Mon, 14 Jun 2021 13:29:31 +0000
+Received: from DM5PR12MB1355.namprd12.prod.outlook.com
+ ([fe80::6437:2e87:f7dc:a686]) by DM5PR12MB1355.namprd12.prod.outlook.com
+ ([fe80::6437:2e87:f7dc:a686%12]) with mapi id 15.20.4219.025; Mon, 14 Jun
+ 2021 13:29:31 +0000
+Subject: Re: [RFC PATCH V3 08/11] swiotlb: Add bounce buffer remap address
+ setting function
+To:     Christoph Hellwig <hch@lst.de>, Tianyu Lan <ltykernel@gmail.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        arnd@arndb.de, dave.hansen@linux.intel.com, luto@kernel.org,
+        peterz@infradead.org, akpm@linux-foundation.org,
+        kirill.shutemov@linux.intel.com, rppt@kernel.org,
+        hannes@cmpxchg.org, cai@lca.pw, krish.sadhukhan@oracle.com,
+        saravanand@fb.com, Tianyu.Lan@microsoft.com,
+        konrad.wilk@oracle.com, m.szyprowski@samsung.com,
+        robin.murphy@arm.com, boris.ostrovsky@oracle.com, jgross@suse.com,
+        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
+        xen-devel@lists.xenproject.org, davem@davemloft.net,
+        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, brijesh.singh@amd.com, sunilmut@microsoft.com
+References: <20210530150628.2063957-1-ltykernel@gmail.com>
+ <20210530150628.2063957-9-ltykernel@gmail.com>
+ <20210607064312.GB24478@lst.de>
+ <48516ce3-564c-419e-b355-0ce53794dcb1@gmail.com>
+ <20210614071223.GA30171@lst.de>
+From:   Tom Lendacky <thomas.lendacky@amd.com>
+Message-ID: <e76644b9-8eda-8e9c-8837-42299b0754d5@amd.com>
+Date:   Mon, 14 Jun 2021 08:29:27 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.8.1
+In-Reply-To: <20210614071223.GA30171@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [67.79.209.213]
+X-ClientProxiedBy: SA9PR13CA0156.namprd13.prod.outlook.com
+ (2603:10b6:806:28::11) To DM5PR12MB1355.namprd12.prod.outlook.com
+ (2603:10b6:3:6e::7)
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AddhAwaH2PiR9/n6ThSsaVJwmtP3+A==
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprOJsWRmVeSWpSXmKPExsWy7bCmhe47teMJBpu+clu8/HmVzeLgw04W
-        i2kffjJbfFq/jNXiyfpZzBbd13ewObB5XL7i7XG5r5fJY9OqTjaP7+s72Dw+b5LzaD/QzRTA
-        FpVjk5GamJJapJCal5yfkpmXbqvkHRzvHG9qZmCoa2hpYa6kkJeYm2qr5OIToOuWmQN0hZJC
-        WWJOKVAoILG4WEnfzqYov7QkVSEjv7jEVim1ICWnwNCwQK84Mbe4NC9dLzk/18rQwMDIFKgy
-        ISfj/801bAUfpSteXJnA1sDYJtHFyMEhIWAi8WlOeRcjJ4eQwA5GiR8vGbsYuYDsT4wSXy9P
-        Z4FwPjNKTNm/lhGkCqThw6G1UIldjBLX3i9kg3BeMErc6NkAVsUmoC0x7eFuVhBbREBB4m/b
-        IWaQImaBw4wS9181MIMkhAU8JLpOz2YBsVkEVCWWvu8Ai/MKWEo0P57JAmELSpyc+QTMZgYa
-        umzha2aIMxQkfj5dBrVAT2La4bNsEDUiErM728CWSQh8ZJdYf7edDaLBReLv8h0sELawxKvj
-        W9ghbCmJl/1tUHa9xL6pDawQzT2MEk/3/YN62lhi1rN2RlCIMQtoSqzfpQ8JPGWJI7egbuOT
-        6Dj8lx0izCvR0SYE0ags8WvSZKghkhIzb96B2gT0+oNXrBMYFWch+XIWki9nIflmFsLeBYws
-        qxjFUguKc9NTi40KjJEjexMjOIVque9gnPH2g94hRiYOxkOMEhzMSiK8z7oOJwjxpiRWVqUW
-        5ccXleakFh9iNAWG+0RmKdHkfGASzyuJNzQ1MjMzsDS1MDUzslAS5+VgP5QgJJCeWJKanZpa
-        kFoE08fEwSnVwFT5x3WH9LxdXaYxN4RKv/SvPZyl5JA1bb/EHC+vshaX7e9C9PxtdHUOcS15
-        LNEmfDhf5Pllgbeb4vwVFD1kL3g/MV/Pc+Xwvif3mhV+3VJuf6e0zOvxRr/e+q8v7Qs/c8ZN
-        0b/z6I2Q0qq/ORf3P59gFB0ddN04UnsPf3htw8qN/oe7tJ+t3ch6uymgRHfTT1mvlWfyv57+
-        uObxobWuSkeKviyI6Is613br9cwj2p7HnRfpfNE/+sSFtduFffmB978c6jasNUzMKS/Ysu3u
-        +i2z/S/Krz4p1yejvMgt+4bqm+CEI0V7tv5TUV8lUWm4ScNgc+xnh7kra6Y2Wy05aZSUsWHJ
-        pUflL47XP+fKcj6mxFKckWioxVxUnAgAmipKiSoEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrFLMWRmVeSWpSXmKPExsWy7bCSvO5bteMJBu/u6lq8/HmVzeLgw04W
-        i2kffjJbfFq/jNXiyfpZzBbd13ewObB5XL7i7XG5r5fJY9OqTjaP7+s72Dw+b5LzaD/QzRTA
-        FsVlk5Kak1mWWqRvl8CV8XfjffaCZqmKXV0L2RsY54h1MXJySAiYSHw4tJYFxBYS2MEosXiN
-        AERcUuLEzueMELawxP2WI6xdjFxANc8YJU5NWsMKkmAT0JaY9nA3mC0ioCDxt+0QM0gRs8Bx
-        RomWec3MIAlhAQ+JrtOzwTawCKhKLH3fARbnFbCUaH48kwXCFpQ4OfMJmM0MNPTpzadw9rKF
-        r5khrlCQ+Pl0GdQyPYlph8+yQdSISMzubGOewCg4C8moWUhGzUIyahaSlgWMLKsYJVMLinPT
-        c4sNC4zyUsv1ihNzi0vz0vWS83M3MYKjQ0trB+OeVR/0DjEycTAeYpTgYFYS4X3WdThBiDcl
-        sbIqtSg/vqg0J7X4EKM0B4uSOO+FrpPxQgLpiSWp2ampBalFMFkmDk6pBqaefTs33vL4tpnt
-        ftNF8bUSHmyR+i+2xt+reKZRsVvjoxXX3ZxlS1g6bBfdDDHqU06N4j5/+Xn7rmObb37a5zVn
-        Fvs5fol1U42st3Q3lS9zYXn6d7WuKH/1rJJU2w+dGRaGGhNFn3lcj3ql4PLrZNuDOcX3VBZ8
-        mVnY4SghorInbfsmQa/CEx+UDxrfKL1f0Nig/eXevU4J7cVzje3qZom63v5fqeX0XvxhiHud
-        bG909+EzNzpeZFxaEc2taVnY8cr9gVlihOrt/T9FD2g0pAp4ST3jfSzMJ7VEqNZx7pe83o2z
-        CnIXK2nfUTmy72oZQ8taxqLi1BSt133P2O08IkPXfHB2u7q1XuJ/nd0JKyWW4oxEQy3mouJE
-        ABL2lZ39AgAA
-X-CMS-MailID: 20210614095245epcas2p2e8512382423332786f584d5ef1e225d3
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210614095245epcas2p2e8512382423332786f584d5ef1e225d3
-References: <CGME20210614095245epcas2p2e8512382423332786f584d5ef1e225d3@epcas2p2.samsung.com>
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from office-ryzen.texastahm.com (67.79.209.213) by SA9PR13CA0156.namprd13.prod.outlook.com (2603:10b6:806:28::11) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4242.9 via Frontend Transport; Mon, 14 Jun 2021 13:29:28 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 6e989d99-af08-4a06-4c51-08d92f38711e
+X-MS-TrafficTypeDiagnostic: DM6PR12MB3369:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <DM6PR12MB3369A3BCC0CC33B7CD0B7E7FEC319@DM6PR12MB3369.namprd12.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 1QmDGjWWEbGHHVdPamyugQhhazHt47b+mkPusoQGt9Ms/n426x5PB2UvkugkitKBIBvfXLnNi2ZR9RnQuO7cvIN8/Ly0sf02CRgcGMcO+jaRMDZZSHVa/uA2jgenuLLMsuxN1hwvTRjJDDqrBUyVYSUVlgWd55AUbLzUHNNfmG23XzYvY4ciyBTTsx0ffYIqDd3QseUNFZe8uKhh7vdTxLHZkHJZehOdMlY1eRqRSFQlYXKpppWVBBuZbEgMIbyHsUgDVajruTR3ygUazc3U4AcvEb4SiDUnt1UdMGBCCHSvUBkLWKdVtVI2N7w+0pBfL/dtQhDrVozV5/+i/Gb1dQ1Zk9gFHxrb10QTaRIOLpwDj2sTFJAZeUG/fxCxkk6s7YHXZBxrDIJS8M4XVLeDxAzDrtLjMvQF9i7K3471NZbYwEz/YNXh9yJS/zTO4o5gAoRTXYE41QZxbxJWHfPe3xxvCf3T69KL2V2s+5O6G8AzLJVTkc6mV2BTcsMKK6nR703FY/Ilf8iHpUYn3yqXMCWGTpe/0hd3Cfpi0gW0JiLgdl/u/F0mhjsHsi1SqVnY+qABvw+Ks6ZtLvwM4eETAPkOPNQohevxatH4sqYaA7tIpAkbNapUhRCKbbxrRnVPg7pBnjSK6EyLv6zjR7N/+Xg/EVl4pbBKgq8+1dQPqFJbArKwS179+AMIaX5k5WhUPXTKyAEe+MvOHa+0mbIN8ppm8xlm3WL5wpSlOpGOiRxuVwESXB8nDimPgpsST2H9J+hcALOIjl2ipXIoS9cOTVYBZIwjtehtjPIpYO4C9fxlxqHZWiWjyhcKhuTeLnoD
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR12MB1355.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(136003)(39860400002)(366004)(346002)(396003)(376002)(2906002)(16526019)(26005)(83380400001)(186003)(6506007)(7406005)(53546011)(7416002)(5660300002)(66946007)(4326008)(4744005)(86362001)(66476007)(8676002)(956004)(8936002)(2616005)(66556008)(38100700002)(31696002)(6512007)(36756003)(31686004)(966005)(316002)(110136005)(478600001)(6486002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?U09KclZSaDBTaTI3bnJlL0oyUzg2OHVoU1lETnluRVByV3JlT25FZk5ZcjMx?=
+ =?utf-8?B?aS83R1BiUkdNVjRuZ09yYjJBYTE3bSs3Z3JWWHJweXlPK3FTTzM3NjFQYWNE?=
+ =?utf-8?B?aTA0czVZNU1ZOVA2SEFVT3lkZ2dDdDQ1ZkU0dWN2WHdNNHByWVA2VDFYeGtV?=
+ =?utf-8?B?QmpNdWtzYXo5VWJnVXB6c1YxRHJUQWdqb3FmWkJqaWdOMldNNkxvNFRUM1Zn?=
+ =?utf-8?B?c1FCWTZKRWFnNGthVDdiWHVTU0MvVUNOcW5TeDZ4dkVLUnpMS0x0cFk1R1lS?=
+ =?utf-8?B?L2FCNGVzSTl6ajUvT0ZnbHZWd1VoMVJvTFdnUjNnVFRxNmFDNzdnMmtOd2NY?=
+ =?utf-8?B?UzArc2liWU41UzNldFF4ZmVDTW9FR0tIMzhLYXlvNWNsakZiS1FpckQ4aC8z?=
+ =?utf-8?B?d2s3QjlBbnBXSFhTNTNBVmlEZytuZzBlVGdFcUE4R1d2Mmh5ZlJSZjlPY0JS?=
+ =?utf-8?B?bmV0SmpNNk45ZFRFMXlsQm5GWGhGT1M2M1UrWVY1ZmorNTZWSEE5VkEvWG9S?=
+ =?utf-8?B?UzJjd25HZGxveCsvRkkxTFlNQ1ZYei85Mjlya3NISkxadDRkRFhuWC9lV0Rh?=
+ =?utf-8?B?bERCTmQ4UTcyOGxnR20zM1ZMNzFHMDR1QTRndG4ydlhOZUNnRlk3a2xKMDlz?=
+ =?utf-8?B?aldJSDdvTll6QkZSaGpjRUhjNzZwb1hOTFpCc0lMdXpGZ05LM1JOWUFsM1dt?=
+ =?utf-8?B?YmNlWDJZV0pRUGxwOGhuQnRxTzlZdnJsM0h5cnJWSjU5bkJEbEtFUzM3YjVl?=
+ =?utf-8?B?YVpseGRkYW92QXRpWjd5V3NOYmE0Z1VlZ2FSYTQyNzUyVU9yaWJxS1ZZZWo3?=
+ =?utf-8?B?a2NBMmpjVVIwVU1RaXRvQStqQmxlYTQzTUhmYU1IWXFaczVOSXZaM3dCVXZW?=
+ =?utf-8?B?WDgwNXh1UnJsdUhRTE1ocm5WTWFzMHI2Q3pzcVIxNW9HZ2doc1NCMHdRSWFT?=
+ =?utf-8?B?aW5zaGlUV09sd0VsTGVJOXorZ2RxNzJxTDFZMmlUeG1HYlpidkZWUmJLWGM4?=
+ =?utf-8?B?VEh5SlJYMzhWMVVJTmxERHpGbjBoTjNOdkNzMHUvamVyeWVzOHhjRmtNeHV4?=
+ =?utf-8?B?NUlTTGgyVHVOd0t3bndIU3NLejViNlJlS2h1TmFScHlWc1Z4bm1pR1NLQkR1?=
+ =?utf-8?B?WHBUeTNyWm1UODJ1QnpRZndXN0dORWVzOHJCdVRVVnhTUmU1NzJUOFZvNFNv?=
+ =?utf-8?B?TWZHSHNpWUhoRklic1l4TjNNU21nTlRyR2RlMFAycmtKN1dFQUtnSmw1cEdJ?=
+ =?utf-8?B?WWdEMnc3bzdkK3laMFhoVDRPeW0vRlZ6bEhlN092eVI3RTYrSVIwTHpiRCti?=
+ =?utf-8?B?TVJkY1lhenNZZCtPL1RCMkVpSGkrV1lVYWZiT3BvcU1KVlc0cjlTR2xlaXll?=
+ =?utf-8?B?NFdUN3Z5VVRiY1BQb3BZOTBKODJoVHZ2dStMRWlUMG0zamdLN1BFL05lbjMr?=
+ =?utf-8?B?RTZYaDFtQ0dXSE1Hdkxhd090cXFpb1BWa0lqQmJ5QnhMNXZ0c0lpNDdoZ1VB?=
+ =?utf-8?B?RTBjTDBGUDZORkc5TGorOGtKQTRMaUs0UlVVRGhpSDlJVkd6RTI4VHg0Wlc3?=
+ =?utf-8?B?Sk1RQlNoakdJNVFzOEx2eUJBNmVsM1Aydmtod0FFYjBIRmxPOC9DbEM1aU0x?=
+ =?utf-8?B?U1N4aHRFZjNNOFF4WlUvL2hSYmt2RDJTaWlQVHFHVk05czFQS2s0S01RZUFZ?=
+ =?utf-8?B?ZmRMT3Z3SkpGR1JiWHBjWkZyeVJBeEJYclQ1YzBpVG9acjFsT3k5UUpoL2xL?=
+ =?utf-8?Q?ZHYZOzjn4BogJ5Uq0Zqb/GJaQ7hliEsKT3RlIOF?=
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6e989d99-af08-4a06-4c51-08d92f38711e
+X-MS-Exchange-CrossTenant-AuthSource: DM5PR12MB1355.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jun 2021 13:29:31.5169
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: WI31GdrXDga81nCxIOcSfQ8NG9RmlJ/RvBfGoXtWFVMP2J3ukSn6BXcu+zCQcToiNLLEwGct1WP42ocHUZLDKQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB3369
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dear All
+On 6/14/21 2:12 AM, Christoph Hellwig wrote:
+> On Mon, Jun 07, 2021 at 10:56:47PM +0800, Tianyu Lan wrote:
+>> These addresses in extra address space works as system memory mirror. The 
+>> shared memory with host in Isolation VM needs to be accessed via extra 
+>> address space which is above shared gpa boundary.
+> 
+> Why?
+> 
 
-I saw one symptom and started wondering on how a command context is synchro=
-nized between ufs and scsi.
-In the situation where the following log happened, the lrb structure for ta=
-g 10 didn't have a command context.
-That is, lrbp->cmd was null, so it led to this kernel panic.
+IIUC, this is using the vTOM feature of SEV-SNP. When this feature is
+enabled for a VMPL level, any physical memory addresses below vTOM are
+considered private/encrypted and any physical memory addresses above vTOM
+are considered shared/unencrypted. With this option, you don't need a
+fully enlightened guest that sets and clears page table encryption bits.
+You just need the DMA buffers to be allocated in the proper range above vTOM.
 
-lrbp->cmd is set when a command is issued, and cleared when the command is =
-completed.
-But what if the command is timed-out and it's completed because its respons=
-e comes in at the same time?
+See the section on "Virtual Machine Privilege Levels" in
+https://www.amd.com/system/files/TechDocs/SEV-SNP-strengthening-vm-isolation-with-integrity-protection-and-more.pdf.
 
-If scsi added it into its error command list and wakes-up scsi_eh though th=
-e command is actually completed, scsi_eh will invoke eh_abort_handler and t=
-he symptom will be duplicated, I think
-
-Otherwise, is there anyone who know how to guarantee the coherency?
-
-
-=5B78843.058729=5D =5B3:  kworker/u16:1:27018=5D exynos-ufs 13100000.ufs: u=
-fshcd_abort: cmd was completed, but without a notifying intr, tag =3D 10
-=5B78843.058775=5D =5B3:  kworker/u16:1:27018=5D exynos-ufs 13100000.ufs: u=
-fshcd_abort: Device abort task at tag 10
-=5B78843.058793=5D =5B3:  kworker/u16:1:27018=5D Unable to handle kernel NU=
-LL pointer dereference at virtual address 0000000000000160
-..
-=5B78843.075421=5D =5B3:  kworker/u16:1:27018=5D pc : scsi_print_command+0x=
-24/0x340
-=5B78843.075436=5D =5B3:  kworker/u16:1:27018=5D lr : ufshcd_abort+0x180/0x=
-674
-=5B78843.075444=5D =5B3:  kworker/u16:1:27018=5D sp : ffffffc038ea3c00
-=5B78843.075453=5D =5B3:  kworker/u16:1:27018=5D x29: ffffffc038ea3c10 x28:=
- 0000000000000400=20
-=5B78843.075464=5D =5B3:  kworker/u16:1:27018=5D x27: ffffff8934c0a680 x26:=
- ffffff8931560000=20
-=5B78843.075474=5D =5B3:  kworker/u16:1:27018=5D x25: 000000000002000a x24:=
- ffffff88a0dd4910=20
-=5B78843.075485=5D =5B3:  kworker/u16:1:27018=5D x23: 0000000000000000 x22:=
- ffffff8930f258f0=20
-=5B78843.075495=5D =5B3:  kworker/u16:1:27018=5D x21: ffffff8934c0a080 x20:=
- 000000000000000a=20
-=5B78843.075505=5D =5B3:  kworker/u16:1:27018=5D x19: ffffff8931560cf8 x18:=
- ffffffc037557030=20
-=5B78843.075516=5D =5B3:  kworker/u16:1:27018=5D x17: 0000000000000000 x16:=
- ffffffc010eeba70=20
-=5B78843.075526=5D =5B3:  kworker/u16:1:27018=5D x15: ffffffc01187d88f x14:=
- 2067617420746120=20
-=5B78843.075536=5D =5B3:  kworker/u16:1:27018=5D x13: 6b7361742074726f x12:=
- 6261206563697665=20
-=5B78843.075546=5D =5B3:  kworker/u16:1:27018=5D x11: 44203a74726f6261 x10:=
- 00000000ffffffff=20
-=5B78843.075556=5D =5B3:  kworker/u16:1:27018=5D x9 : 0000000000000090 x8 :=
- ffffff8934c0a620=20
-=5B78843.075566=5D =5B3:  kworker/u16:1:27018=5D x7 : 0000000000000000 x6 :=
- ffffffc0102a7d6c=20
-=5B78843.075576=5D =5B3:  kworker/u16:1:27018=5D x5 : 0000000000000000 x4 :=
- 0000000000000080=20
-=5B78843.075585=5D =5B3:  kworker/u16:1:27018=5D x3 : 0000000000000000 x2 :=
- ffffffc0102a7d80=20
-=5B78843.075595=5D =5B3:  kworker/u16:1:27018=5D x1 : ffffffc0102a7d80 x0 :=
- 0000000000000000=20
-=5B78843.075606=5D =5B3:  kworker/u16:1:27018=5D Call trace:
-=5B78843.075617=5D =5B3:  kworker/u16:1:27018=5D  scsi_print_command+0x24/0=
-x340
-=5B78843.075627=5D =5B3:  kworker/u16:1:27018=5D  ufshcd_abort+0x180/0x674
-=5B78843.075643=5D =5B3:  kworker/u16:1:27018=5D  scmd_eh_abort_handler+0x8=
-0/0x15c
-=5B78843.075660=5D =5B3:  kworker/u16:1:27018=5D  process_one_work+0x290/0x=
-4e4
-=5B78843.075669=5D =5B3:  kworker/u16:1:27018=5D  worker_thread+0x258/0x534
-=5B78843.075681=5D =5B3:  kworker/u16:1:27018=5D  kthread+0x178/0x188
-=5B78843.075696=5D =5B3:  kworker/u16:1:27018=5D  ret_from_fork+0x10/0x18
-
-Thanks.
-Kiwoong Kim
-
-
+Thanks,
+Tom
