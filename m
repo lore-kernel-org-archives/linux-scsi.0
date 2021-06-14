@@ -2,120 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DC566C2B9F4
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 14:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79924C4743C
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 15:16:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB4A961283
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 14:50:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D55F6124B
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 15:16:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232919AbhFNOwX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Jun 2021 10:52:23 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37672 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232858AbhFNOwW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Jun 2021 10:52:22 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15EEZZvs176498;
-        Mon, 14 Jun 2021 10:50:17 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=QLMrU22zMD2US22b2rVVCf/GB9PrsCpJ3yw0B0C2cZQ=;
- b=Qrg9v62+4fcvxi+pAzjaPD9wZ/yVquG8ejqiC5fwcyRkoyX4PxcUZYs9QJevNugSNg41
- xvI2iA3M0UgS/+Opr2026mS4DXQJ0WkwcwAwnqFxl7/33E1KJTqUuGDjBiz99SAkfJV9
- vb/KGpXksxlitd7GSYABH5bcCYYC/JOrpgON5BnRKGoSM5Xgy7zzbURW7OMxfAO/cnH/
- fPL0A6thkddbP9h1ZLU1h/oiSEchjNtb3xfO4mbkGTnVzbfN9Qo9Ksta0gtlDDyBXUe0
- skxXK64QM9CD3V9i3F9eS9zQW19KmLp8p4+sXYOLxC5CzVubw4Z11rhxu6jwRdMbfT2Z FQ== 
-Received: from ppma06fra.de.ibm.com (48.49.7a9f.ip4.static.sl-reverse.com [159.122.73.72])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3966xs50uw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 14 Jun 2021 10:50:17 -0400
-Received: from pps.filterd (ppma06fra.de.ibm.com [127.0.0.1])
-        by ppma06fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 15EEnFcm021303;
-        Mon, 14 Jun 2021 14:50:16 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma06fra.de.ibm.com with ESMTP id 394m6h8j4s-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 14 Jun 2021 14:50:15 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 15EEoCFc33030500
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Jun 2021 14:50:12 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B796FA405F;
-        Mon, 14 Jun 2021 14:50:12 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id A57D8A4040;
-        Mon, 14 Jun 2021 14:50:12 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.145.174.2])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Mon, 14 Jun 2021 14:50:12 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94.2)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1lsnum-001IEe-5H; Mon, 14 Jun 2021 16:50:12 +0200
-Date:   Mon, 14 Jun 2021 16:50:12 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 12/15] scsi: core: Make scsi_get_lba() return the LBA
-Message-ID: <YMdspAy63qF1h8aI@t480-pf1aa2c2.linux.ibm.com>
-References: <20210609033929.3815-1-martin.petersen@oracle.com>
- <20210609033929.3815-13-martin.petersen@oracle.com>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20210609033929.3815-13-martin.petersen@oracle.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: -r7Tr7JCi0sBzpp4BKKXkUVcMf-FNIBK
-X-Proofpoint-ORIG-GUID: -r7Tr7JCi0sBzpp4BKKXkUVcMf-FNIBK
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        id S233178AbhFNPSY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Jun 2021 11:18:24 -0400
+Received: from mail-qv1-f43.google.com ([209.85.219.43]:44778 "EHLO
+        mail-qv1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232818AbhFNPSY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jun 2021 11:18:24 -0400
+Received: by mail-qv1-f43.google.com with SMTP id w4so13155527qvr.11;
+        Mon, 14 Jun 2021 08:16:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ZGk/FA6XxJotBQ1URjiWbasLNGa5cJUSnfXjO2+742k=;
+        b=BvG3N2hWKfrbgmuKiiDk7L2rr3e8aWfowRKTO1haLAduE0GZMA2D87fOWLcnf0ipqE
+         NgC8s+fLo0CFjLmvHBHSrVoasepVt30b2hW54PXIIiCYk7uAVxp1C1PLwIUebSnRi0WY
+         F2ysUqAgq/TnDy0fKk8Xsj7FcOxDAdZBzOVJKsQqbzjk9VuewA86Kcxh3zIVJDxMr5Hc
+         SgqgzZ4ryo7wETctpy35AS8j5YR5KHioAGxncsgxCRdgsVsrMR1GTCd6pvtG3o825AC2
+         CwyS5OEhYUOB78j4Jga/6CY91YsMQCUerVqCu/O0qjr7PCqYISjoHCg51Q/fyZwse8Ge
+         sI/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=ZGk/FA6XxJotBQ1URjiWbasLNGa5cJUSnfXjO2+742k=;
+        b=HLyp/+eppAyKQaz/LtiqCw0ozEqkTbhXdpURy34Q+OBz+8X/F/epRRlf5l5hyKt28r
+         4r9AtuA7Ua8x/iPe0JMr2ITiWoHC/FjGRjoxk+U1MjrDFVsLeIF1ui2gU5CCiPhRnD35
+         ydSiuul+sll0em91Pr9msoyGOqlzT0uhfp7CRcoC3fm9kKn7YkV1Aq4xgrBrvVo5p7zV
+         PCyUx8eKlcgxuQHAS33sm8Hnmy3btyESHfFQbLRVmsltnP0V/4iFRjmWhzwaUgu74zHP
+         r3EBhhmKu2azMPu9aUkuhuFRgta3f7Pg6X5UIVQ+dtgLaCCBjDW6pgmI0F6WgcOQpMMI
+         W5JQ==
+X-Gm-Message-State: AOAM531vNzefqS6UbhUA5VNimH7udwYS6js6uwdAhqNUTSqAQg3HHTSE
+        uwPcV4WgST3dMXNRE+qUp6U=
+X-Google-Smtp-Source: ABdhPJyAqNDr60raHRfjT+q3Sts7H3aWjsFFkX73RBcG/iIK+h5Cc6F9UIoka2tDB7DvrS5FNqdIhg==
+X-Received: by 2002:ad4:4146:: with SMTP id z6mr16633948qvp.36.1623683721047;
+        Mon, 14 Jun 2021 08:15:21 -0700 (PDT)
+Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
+        by smtp.gmail.com with ESMTPSA id h5sm10542086qkg.122.2021.06.14.08.15.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Jun 2021 08:15:20 -0700 (PDT)
+Sender: Mike Snitzer <snitzer@gmail.com>
+Date:   Mon, 14 Jun 2021 11:15:19 -0400
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     mwilck@suse.com
+Cc:     Alasdair G Kergon <agk@redhat.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        dm-devel@redhat.com, Hannes Reinecke <hare@suse.de>,
+        Daniel Wagner <dwagner@suse.de>, linux-block@vger.kernel.org,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Benjamin Marzinski <bmarzins@redhat.com>,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH v3 0/2]  dm: dm_blk_ioctl(): implement failover for SG_IO
+ on dm-multipath
+Message-ID: <YMdyh62mR/lEifMR@redhat.com>
+References: <20210611202509.5426-1-mwilck@suse.com>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.761
- definitions=2021-06-14_09:2021-06-14,2021-06-14 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 mlxscore=0
- adultscore=0 clxscore=1015 priorityscore=1501 phishscore=0 mlxlogscore=999
- malwarescore=0 lowpriorityscore=0 spamscore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2106140095
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210611202509.5426-1-mwilck@suse.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jun 08, 2021 at 11:39:26PM -0400, Martin K. Petersen wrote:
-> scsi_get_lba() confusingly returned the block layer sector number
-> expressed in units of 512 bytes. Now that we have a more aptly named
-> scsi_get_sector() function, make scsi_get_lba() return the actual LBA.
-> 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  include/scsi/scsi_cmnd.h | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index cba63377d46a..90da9617d28a 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -225,6 +225,13 @@ static inline sector_t scsi_get_sector(struct scsi_cmnd *scmd)
->  	return blk_rq_pos(scmd->request);
->  }
->  
-> +static inline sector_t scsi_get_lba(struct scsi_cmnd *scmd)
-> +{
-> +	unsigned int shift = ilog2(scmd->device->sector_size) - SECTOR_SHIFT;
-> +
-> +	return blk_rq_pos(scmd->request) >> shift;
+On Fri, Jun 11 2021 at  4:25P -0400,
+mwilck@suse.com <mwilck@suse.com> wrote:
 
-Hmm again, should it use `blk_mq_rq_from_pdu()`?
+> From: Martin Wilck <mwilck@suse.com>
+> 
+> Hello Mike,
+> 
+> here is v3 of my attempt to add retry logic to SG_IO on dm-multipath devices.
+> Sorry that it took such a long time.
+> 
+> Regards
+> Martin
+> 
+> Changes v2->v3:
+> 
+>  - un-inlined scsi_result_to_blk_status again, and move the helper
+>    __scsi_result_to_blk_status to block/scsi_ioctl.c instead
+>    (Bart v. Assche)
+>  - open-coded the status/msg/host/driver-byte -> result conversion
+>    where the standard SCSI helpers aren't usable (Bart v. Assche)
 
--- 
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
-Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+This work offers a proof-of-concept but it needs further refinement
+for sure.
+
+The proposed open-coded SCSI code (in patch 2's drivers/md/dm-scsi_ioctl.c) 
+is well beyond what I'm willing to take in DM.  If this type of
+functionality is still needed (for kvm's SCSI passthru snafu) then
+more work is needed to negotiate proper interfaces with the SCSI
+subsystem (added linux-scsi to cc, odd they weren't engaged on this).
+
+Does it make sense to extend the SCSI device handler interface to add
+the required enablement? (I think it'd have to if this line of work is
+to ultimately get upstream).
+
+Mike
+
+  
+> Changes v1->v2:
+> 
+>  - applied modifications from Mike Snitzer
+>  - moved SG_IO dependent code to a separate file, no scsi includes in
+>    dm.c any more
+>  - made the new code depend on a configuration option 
+>  - separated out scsi changes, made scsi_result_to_blk_status()
+>    inline to avoid dependency of dm_mod from scsi_mod (Paolo Bonzini)
+> 
+> Martin Wilck (2):
+>   scsi: export __scsi_result_to_blk_status() in scsi_ioctl.c
+>   dm: add CONFIG_DM_MULTIPATH_SG_IO - failover for SG_IO on dm-multipath
+> 
+>  block/scsi_ioctl.c         |  52 ++++++++++++++-
+>  drivers/md/Kconfig         |  11 ++++
+>  drivers/md/Makefile        |   4 ++
+>  drivers/md/dm-core.h       |   5 ++
+>  drivers/md/dm-rq.h         |  11 ++++
+>  drivers/md/dm-scsi_ioctl.c | 127 +++++++++++++++++++++++++++++++++++++
+>  drivers/md/dm.c            |  20 +++++-
+>  drivers/scsi/scsi_lib.c    |  29 +--------
+>  include/linux/blkdev.h     |   3 +
+>  9 files changed, 229 insertions(+), 33 deletions(-)
+>  create mode 100644 drivers/md/dm-scsi_ioctl.c
+> 
+> -- 
+> 2.31.1
+> 
