@@ -2,94 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=BAYES_00,
+	CHARSET_FARAWAY_HEADER,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DED7DC48BE6
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 07:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32E8BC48BE6
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 07:44:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B980461075
-	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 07:21:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07EAE61352
+	for <linux-scsi@archiver.kernel.org>; Mon, 14 Jun 2021 07:44:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232494AbhFNHXf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Jun 2021 03:23:35 -0400
-Received: from mail-ed1-f46.google.com ([209.85.208.46]:36475 "EHLO
-        mail-ed1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232454AbhFNHXf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jun 2021 03:23:35 -0400
-Received: by mail-ed1-f46.google.com with SMTP id w21so45031864edv.3
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Jun 2021 00:21:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ZUfFKoeo6FRQMco/dPmn7H+ldhTvrhPeV2iUfINpVsI=;
-        b=cnTql8VMTA0JXqAE6gA4jBlrUAsWibx2opDxJGFCPSwMluMZi1Zim8WfwiI566Vgbq
-         ZQXZ/gt4x3ETPfnpOV6NKLRZREVw2etDmsbZzM1ASMOqFJ8wXiLFNYY84gmSoRBaTFCJ
-         uBOlouXUuugVOQCGzr3VmXAK9TwL88qYztqxJgOqRKIfD5FBX3uS8pYMZOqKO9KPHbNL
-         ElbdajXN5urbWM1y77THZyRl2060bOhIkDRBisB81d9aGkGv8/P3T3Z7ca9F+NS6bTwF
-         Ig4r2ycBrOQqKEHSg/rJtZPOehHpq6VxKY+v/4mZ08ya7ma6J2HaQY3jjUGOifKvh9Qt
-         kgrw==
-X-Gm-Message-State: AOAM530OSIAunXU+5NHBrgaXYgUMepXriYjvNmWYYD6vb1JQAJY6Ioe5
-        vs4jxcN2izPWPiJKk4E8p5kHZ5I1M8U=
-X-Google-Smtp-Source: ABdhPJyu1Wq+HXtWVfMkVRLj0/L6Gnx/mav7yAYqYcroYI4+GRksgF3KRQK31K5I1kmoOvPO/tuCfA==
-X-Received: by 2002:a05:6402:1a4b:: with SMTP id bf11mr15383018edb.286.1623655291803;
-        Mon, 14 Jun 2021 00:21:31 -0700 (PDT)
-Received: from ?IPv6:2a0b:e7c0:0:107::70f? ([2a0b:e7c0:0:107::70f])
-        by smtp.gmail.com with ESMTPSA id ot30sm6526127ejb.61.2021.06.14.00.21.31
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 14 Jun 2021 00:21:31 -0700 (PDT)
-Subject: Re: [PATCH 1/2] virtio_scsi: do not overwrite SCSI status
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20210610135833.46663-1-hare@suse.de>
-From:   Jiri Slaby <jirislaby@kernel.org>
-Message-ID: <1a1dcd2f-7be1-8206-c1da-76f9c4e98dc4@kernel.org>
-Date:   Mon, 14 Jun 2021 09:21:30 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.2
+        id S232565AbhFNHqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Jun 2021 03:46:17 -0400
+Received: from exvmail.skhynix.com ([166.125.252.79]:52078 "EHLO
+        invmail.skhynix.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232493AbhFNHqQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jun 2021 03:46:16 -0400
+X-AuditID: a67dfc4e-24fff700000066e1-8f-60c708c9ad52
+Received: from hymail21.hynixad.com (10.156.135.51) by hymail21.hynixad.com
+ (10.156.135.51) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.792.3; Mon, 14 Jun 2021
+ 16:44:09 +0900
+Received: from hymail21.hynixad.com ([10.156.135.51]) by hymail21.hynixad.com
+ ([10.156.135.51]) with mapi id 15.02.0792.010; Mon, 14 Jun 2021 16:44:09
+ +0900
+From:   =?ks_c_5601-1987?B?waS/5MfRKEpPVU5HIFlPSEFOKSBNb2JpbGUgU0U=?= 
+        <yohan.joung@sk.com>
+To:     "avri.altman@wdc.com" <avri.altman@wdc.com>
+CC:     "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "d_hyun.kwon@samsung.com" <d_hyun.kwon@samsung.com>,
+        "daejun7.park@samsung.com" <daejun7.park@samsung.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "huobean@gmail.com" <huobean@gmail.com>,
+        "j-young.choi@samsung.com" <j-young.choi@samsung.com>,
+        "jaemyung.lee@samsung.com" <jaemyung.lee@samsung.com>,
+        =?ks_c_5601-1987?B?w9bA57+1KENIT0kgSkFFIFlPVU5HKSBNb2JpbGUgU0U=?= 
+        <jaeyoung21.choi@sk.com>,
+        "javier.gonz@samsung.com" <javier.gonz@samsung.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "jh.i.park@samsung.com" <jh.i.park@samsung.com>,
+        "jieon.seol@samsung.com" <jieon.seol@samsung.com>,
+        "keosung.park@samsung.com" <keosung.park@samsung.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "sungjun07.park@samsung.com" <sungjun07.park@samsung.com>,
+        =?ks_c_5601-1987?B?waS/5MfRKEpPVU5HIFlPSEFOKSBNb2JpbGUgU0U=?= 
+        <yohan.joung@sk.com>
+Subject: RE: [PATCH v37 3/4] scsi: ufs: Prepare HPB read for cached sub-region
+Thread-Topic: RE: [PATCH v37 3/4] scsi: ufs: Prepare HPB read for cached
+ sub-region
+Thread-Index: Addg8HnQRn32BXvqQgWqfIgV0ArbzA==
+Date:   Mon, 14 Jun 2021 07:44:08 +0000
+Message-ID: <1d1a5e83dfcf4b4b929d3482c19d7662@sk.com>
+Accept-Language: ko-KR, en-US
+Content-Language: ko-KR
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.152.36.34]
+Content-Type: text/plain; charset="ks_c_5601-1987"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-In-Reply-To: <20210610135833.46663-1-hare@suse.de>
-Content-Type: text/plain; charset=iso-8859-2; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-CFilter-Loop: Reflected
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrOLMWRmVeSWpSXmKPExsXCNUdUSfckx/EEg5czNCwu75rDZtF9fQeb
+        A5PH501yAYxRXDYpqTmZZalF+nYJXBnXmyoLfolUPJ71gbWBcYtIFyMnh4SAicSpO29Zuhi5
+        OIQEXjFKvO95yArhLGCUmHFyFjtIFZtAlMTj1hVgtoiAvkT70stMIDazwD9OiSm7xUFsYQE/
+        iRMPtjFC1IRK9E1YwAJh60lsn/qSFcRmEVCVaP6zGCzOK2Aq8erjbaCZHByMArISV6/JQIwU
+        l1j89RozxHECEkv2nIeyRSVePv7HCmErSKz8fgHqBCOJJavnQ9mKElO6H7JDjBeUODnzCQtE
+        vaTEwRU3WCYwisxCsmIWkvZZSNpnIWlfwMiyilE4M68sNzEzR684O6MyL7NCLzk/dxMjMPiX
+        1f7x28H45ULwIUYBDkYlHt4AxmMJQqyJZcWVuYcYJTiYlUR4n3UdThDiTUmsrEotyo8vKs1J
+        LT7EKM3BoiTO+y0sNUFIID2xJDU7NbUgtQgmy8TBKdXAyF2kXXR/tmJearP1EcW0+qfLVt3r
+        UT/ZfvGXoXnXM4VqbaeF/4uNv3lP2zgjfKfs11opH4XJZy6+nrQ764p6Z+axUwcWffsqtv5r
+        5fmD3uKN8TKZNe8mGx1fzeK/SSer3fnKuqyAUs8XKk9fNgqs9DVzMXS+2lsaeu68yQamgwf2
+        qMvrL/34VomlOCPRUIu5qDgRAG8YE2V6AgAA
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10. 06. 21, 15:58, Hannes Reinecke wrote:
-> When a sense code is present we should not override the scsi status;
-> the driver already sets it based on the response from the hypervisor.
-> 
-> Fixes:  464a00c9e0ad ("scsi: core: Kill DRIVER_SENSE")
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-Tested-by: Jiri Slaby <jirislaby@kernel.org>
-
-> ---
->   drivers/scsi/virtio_scsi.c | 1 -
->   1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index fd69a03d6137..43177a62916a 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -161,7 +161,6 @@ static void virtscsi_complete_cmd(struct virtio_scsi *vscsi, void *buf)
->   		       min_t(u32,
->   			     virtio32_to_cpu(vscsi->vdev, resp->sense_len),
->   			     VIRTIO_SCSI_SENSE_SIZE));
-> -		set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
->   	}
->   
->   	sc->scsi_done(sc);
-> 
-
-
--- 
-js
-suse labs
+PiA+ID4gPiA+KyAgICAgIC8qDQo+ID4gPiA+ID4rICAgICAgICogSWYgdGhlIHJlZ2lvbiBzdGF0
+ZSBpcyBhY3RpdmUsIG1jdHggbXVzdCBiZSBhbGxvY2F0ZWQuDQo+ID4gPiA+ID4rICAgICAgICog
+SW4gdGhpcyBjYXNlLCBjaGVjayB3aGV0aGVyIHRoZSByZWdpb24gaXMgZXZpY3RlZCBvcg0KPiA+
+ID4gPiA+KyAgICAgICAqIG1jdHggYWxsY2F0aW9uIGZhaWwuDQo+ID4gPiA+ID4rICAgICAgICov
+DQo+ID4gPiA+ID4rICAgICAgaWYgKHVubGlrZWx5KCFzcmduLT5tY3R4KSkgew0KPiA+ID4gPiA+
+KyAgICAgICAgICAgICAgZGV2X2VycigmaHBiLT5zZGV2X3Vmc19sdS0+c2Rldl9kZXYsDQo+ID4g
+PiA+ID4rICAgICAgICAgICAgICAgICAgICAgICJubyBtY3R4IGluIHJlZ2lvbiAlZCBzdWJyZWdp
+b24gJWQuXG4iLA0KPiA+ID4gPiA+KyAgICAgICAgICAgICAgICAgICAgICBzcmduLT5yZ25faWR4
+LCBzcmduLT5zcmduX2lkeCk7DQo+ID4gPiA+ID4rICAgICAgICAgICAgICByZXR1cm4gdHJ1ZTsN
+Cj4gPiA+ID4gPisgICAgICB9DQo+ID4gPiA+ID4rDQo+ID4gPiA+ID4rICAgICAgaWYgKChzcmdu
+X29mZnNldCArIGNudCkgPiBiaXRtYXBfbGVuKQ0KPiA+ID4gPiA+KyAgICAgICAgICAgICAgYml0
+X2xlbiA9IGJpdG1hcF9sZW4gLSBzcmduX29mZnNldDsNCj4gPiA+ID4gPisgICAgICBlbHNlDQo+
+ID4gPiA+ID4rICAgICAgICAgICAgICBiaXRfbGVuID0gY250Ow0KPiA+ID4gPiA+Kw0KPiA+ID4g
+PiA+KyAgICAgIGlmIChmaW5kX25leHRfYml0KHNyZ24tPm1jdHgtPnBwbl9kaXJ0eSwgYml0bWFw
+X2xlbiwNCj4gPiA+ID4gPisgICAgICAgICAgICAgICAgICAgICAgICBzcmduX29mZnNldCkgPCBi
+aXRfbGVuICsgc3Jnbl9vZmZzZXQpDQo+ID4gPiA+ID4rICAgICAgICAgICAgICByZXR1cm4gdHJ1
+ZTsNCj4gPiA+ID4gPisNCj4gPiA+ID4NCj4gPiA+ID4gSXQgc2VlbXMgdW5uZWNlc3NhcnkgdG8g
+c2VhcmNoIHRocm91Z2ggYml0bWFwX2xlbg0KPiA+ID4gPiBIb3cgYWJvdXQgc2VhcmNoaW5nIGJ5
+IHRyYW5zZmVyIHNpemU/DQo+ID4gPiA+DQo+ID4gPiA+IGlmIChmaW5kX25leHRfYml0KHNyZ24t
+Pm1jdHgtPnBwbl9kaXJ0eSwNCj4gPiA+ID4gICAgICAgICAgICAgICBiaXRfbGVuICsgc3Jnbl9v
+ZmZzZXQsIHNyZ25fb2Zmc2V0KSA8IGJpdF9sZW4gKyBzcmduX29mZnNldCkNCj4gPiA+IElzbid0
+IGJpdF9sZW4gc2hvdWxkIGJlIHVzZWQgZm9yIHNpemUsIGFuZCBub3QgYml0X2xlbiArIHNyZ25f
+b2Zmc2V0ID8NCj4gPiANCj4gPiB0aGVuIGZpbmRfbmV4dF9iaXQgY2hlY2tzIGZyb20gc3RhcnQg
+dG8gYml0X2xlbi4NCj4gPiBmaW5kX25leHRfYml0IHN0b3BzIGNoZWNraW5nIGlmIHN0YXJ0IGlz
+IGdyZWF0ZXIgdGhhbiBiaXRfbGVuLg0KPiA+IGl0IGRvZXMgbm90IGNoZWNrIGZvciBkaXJ0eSBh
+cyB0cmFuc2Zlcl9zaXplLg0KPiBSaWdodC4gU2l6ZSAobmJpdHMgaW4gX2ZpbmRfbmV4dF9iaXQp
+IHByYWN0aWNhbGx5IG1lYW5zIEBlbmQgLSBDb25mdXNpbmcuLi4NCj4gRWl0aGVyIHdheSwgSXMg
+dGhpcyB0YWQgb3B0aW1pemF0aW9uIHdvcnRoIGFub3RoZXIgc3BpbiBpbiB5b3VyIG9waW5pb24/
+DQoNCldvcnN0IGNhc2UsIHdlIGhhdmUgdG8gc2VhcmNoIGV2ZXJ5IHRpbWUgdXAgdG8gdGhlIGJp
+dG1hcF9sZW4gc2l6ZS4gDQpFdmVuIHRob3VnaCwgd2hlbiBiaXRfbGVuIGlzIDEsIG9ubHkgMSBi
+aXQgbmVlZHMgdG8gYmUgY2hlY2tlZA0KaXQgY2FuIGluY3JlYXNlIHRoZSBlZmZlY3QsIGRlcGVu
+ZGluZyBvbiB0aGUgc3VicmVnaW9uIHNpemUuIA0KDQpUaGFua3MNCllvaGFuDQo+IA0KPiBUaGFu
+a3MsDQo+IEF2cmkNCj4gDQo+ID4gDQo+ID4gVGhhbmtzDQo+ID4gWW9oYW4NCj4gPiANCj4gPiA+
+DQo+ID4gPiBUaGFua3MsDQo+ID4gPiBBdnJpDQo+ID4gPg0KPiA+ID4gPg0KPiA+ID4gPiBUaGFu
+a3MNCj4gPiA+ID4gWW9oYW4NCg==
