@@ -2,95 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81A5AC48BE8
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 05:04:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DE78C48BDF
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 06:39:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5364A613DA
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 05:04:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56C68613FA
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 06:39:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230265AbhFOFGX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Jun 2021 01:06:23 -0400
-Received: from helcar.hmeau.com ([216.24.177.18]:50656 "EHLO deadmen.hmeau.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229463AbhFOFGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Jun 2021 01:06:22 -0400
-Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
-        by deadmen.hmeau.com with esmtp (Exim 4.92 #5 (Debian))
-        id 1lt1Ec-0006cw-4n; Tue, 15 Jun 2021 13:03:34 +0800
-Received: from herbert by gondobar with local (Exim 4.92)
-        (envelope-from <herbert@gondor.apana.org.au>)
-        id 1lt1E3-0001MR-0g; Tue, 15 Jun 2021 13:02:59 +0800
-Date:   Tue, 15 Jun 2021 13:02:59 +0800
-From:   Herbert Xu <herbert@gondor.apana.org.au>
-To:     Ira Weiny <ira.weiny@intel.com>,
-        "David S. Miller" <davem@davemloft.net>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Geoff Levand <geoff@infradead.org>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Dongsheng Yang <dongsheng.yang@easystack.cn>,
-        Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com,
-        linux-mips@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        ceph-devel@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        linux-arch@vger.kernel.org, Tero Kristo <t-kristo@ti.com>,
-        linux-arm-kernel@lists.infradead.org, linux-csky@vger.kernel.org,
-        linux-sh@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 09/16] ps3disk: use memcpy_{from,to}_bvec
-Message-ID: <20210615050258.GA5208@gondor.apana.org.au>
-References: <20210608160603.1535935-1-hch@lst.de>
- <20210608160603.1535935-10-hch@lst.de>
- <20210609014822.GT3697498@iweiny-DESK2.sc.intel.com>
- <20210611065338.GA31210@lst.de>
- <20210612040743.GG1600546@iweiny-DESK2.sc.intel.com>
+        id S229914AbhFOGlY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Jun 2021 02:41:24 -0400
+Received: from szxga08-in.huawei.com ([45.249.212.255]:7268 "EHLO
+        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229494AbhFOGlX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2021 02:41:23 -0400
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4G3z7G3Ss1z1BMXb;
+        Tue, 15 Jun 2021 14:34:18 +0800 (CST)
+Received: from dggemi762-chm.china.huawei.com (10.1.198.148) by
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2176.2; Tue, 15 Jun 2021 14:39:17 +0800
+Received: from linux-lmwb.huawei.com (10.175.103.112) by
+ dggemi762-chm.china.huawei.com (10.1.198.148) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Tue, 15 Jun 2021 14:39:16 +0800
+From:   Zou Wei <zou_wei@huawei.com>
+To:     <linuxdrivers@attotech.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Zou Wei <zou_wei@huawei.com>
+Subject: [PATCH -next] scsi: esas2r: esas2r_int: Convert list_for_each to entry variant
+Date:   Tue, 15 Jun 2021 14:57:48 +0800
+Message-ID: <1623740268-15916-1-git-send-email-zou_wei@huawei.com>
+X-Mailer: git-send-email 2.6.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210612040743.GG1600546@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Type: text/plain
+X-Originating-IP: [10.175.103.112]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggemi762-chm.china.huawei.com (10.1.198.148)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jun 11, 2021 at 09:07:43PM -0700, Ira Weiny wrote:
->
-> More recently this was added:
-> 
-> 7e34e0bbc644 crypto: omap-crypto - fix userspace copied buffer access
-> 
-> I'm CC'ing Tero and Herbert to see why they added the SLAB check.
+convert list_for_each() to list_for_each_entry() where
+applicable.
 
-Probably because the generic Crypto API has the same check.  This
-all goes back to
+Reported-by: Hulk Robot <hulkci@huawei.com>
+Signed-off-by: Zou Wei <zou_wei@huawei.com>
+---
+ drivers/scsi/esas2r/esas2r_int.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
-commit 4f3e797ad07d52d34983354a77b365dfcd48c1b4
-Author: Herbert Xu <herbert@gondor.apana.org.au>
-Date:   Mon Feb 9 14:22:14 2009 +1100
-
-    crypto: scatterwalk - Avoid flush_dcache_page on slab pages
-
-    It's illegal to call flush_dcache_page on slab pages on a number
-    of architectures.  So this patch avoids doing so if PageSlab is
-    true.
-
-    In future we can move the flush_dcache_page call to those page
-    cache users that actually need it.
-
-    Reported-by: David S. Miller <davem@davemloft.net>
-    Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
-
-But I can't find any emails discussing this so let me ask Dave
-directly and see if he can tell us what the issue was or might
-have been.
-
-Thanks,
+diff --git a/drivers/scsi/esas2r/esas2r_int.c b/drivers/scsi/esas2r/esas2r_int.c
+index 5281d93..584c7c3 100644
+--- a/drivers/scsi/esas2r/esas2r_int.c
++++ b/drivers/scsi/esas2r/esas2r_int.c
+@@ -392,7 +392,6 @@ void esas2r_process_adapter_reset(struct esas2r_adapter *a)
+ 	struct esas2r_disc_context *dc;
+ 
+ 	LIST_HEAD(comp_list);
+-	struct list_head *element;
+ 
+ 	esas2r_trace_enter();
+ 
+@@ -429,9 +428,7 @@ void esas2r_process_adapter_reset(struct esas2r_adapter *a)
+ 	set_bit(AF_COMM_LIST_TOGGLE, &a->flags);
+ 
+ 	/* Kill all the requests on the active list */
+-	list_for_each(element, &a->defer_list) {
+-		rq = list_entry(element, struct esas2r_request, req_list);
+-
++	list_for_each_entry(rq, &a->defer_list, req_list) {
+ 		if (rq->req_stat == RS_STARTED)
+ 			if (esas2r_ioreq_aborted(a, rq, RS_ABORTED))
+ 				list_add_tail(&rq->comp_list, &comp_list);
+@@ -446,7 +443,6 @@ void esas2r_process_adapter_reset(struct esas2r_adapter *a)
+ static void esas2r_process_bus_reset(struct esas2r_adapter *a)
+ {
+ 	struct esas2r_request *rq;
+-	struct list_head *element;
+ 	unsigned long flags;
+ 
+ 	LIST_HEAD(comp_list);
+@@ -458,8 +454,7 @@ static void esas2r_process_bus_reset(struct esas2r_adapter *a)
+ 	spin_lock_irqsave(&a->queue_lock, flags);
+ 
+ 	/* kill all the requests on the deferred queue */
+-	list_for_each(element, &a->defer_list) {
+-		rq = list_entry(element, struct esas2r_request, req_list);
++	list_for_each_entry(rq, &a->defer_list, req_list) {
+ 		if (esas2r_ioreq_aborted(a, rq, RS_ABORTED))
+ 			list_add_tail(&rq->comp_list, &comp_list);
+ 	}
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+2.6.2
+
