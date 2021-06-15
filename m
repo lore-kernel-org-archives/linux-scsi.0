@@ -2,115 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13402C48BE5
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 15:25:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D42E1C49EA6
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 15:49:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC1D16161C
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 15:25:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF8AB6162F
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 15:49:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231483AbhFOP1P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Jun 2021 11:27:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52946 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231307AbhFOP1P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2021 11:27:15 -0400
-Received: from mail-pg1-x52c.google.com (mail-pg1-x52c.google.com [IPv6:2607:f8b0:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3C46C061574;
-        Tue, 15 Jun 2021 08:25:09 -0700 (PDT)
-Received: by mail-pg1-x52c.google.com with SMTP id v7so3002476pgl.2;
-        Tue, 15 Jun 2021 08:25:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=phyWWBHzkBpxWNeuQJLinu+go2K8vm0IQjBk4bPOC5o=;
-        b=lLzyvAx1eLMBBQ9Nv6UWlyfS7bq09JfNMuTSA72Pidzs3ADzEJh5UZNx1+KXAA3QS7
-         9qLwmHEZw5Xk+RHIQHD4WFV677p8Yi8BHKdEaKAbO078PZhHBwsAaiGPsQh7STbxJ28j
-         3L9M/FShV9IoCoZ9A/Eh9ROBNoQr5F07JQAgtoeaUjtdIexg1Nk9GrQcrUXxHc9NNgOV
-         D2nJiITYw2LCAuwzkpdFMOLcTULHsDylV5FWGHXPlqFv03pjAoTRz+TNqy9uLL90+fK0
-         edPtBl2ZDPRtYC3zVnWadcZFdsLes9V2OCmaC/x9ZwogRVqJGjkXmr9UDyWpPbPkMxE8
-         xgYA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=phyWWBHzkBpxWNeuQJLinu+go2K8vm0IQjBk4bPOC5o=;
-        b=r/+D0eo5vByu6Z5a5LdMbGRd1WPYAHS+JolUben3rfWchrPihzES/s2APVCiLTXZgY
-         xEWRlLhc2MaMrHSkbU5nPyIyKrHfbgZ2OAdCGP23qV74boRXi8Lr7WE0ht4PNaDXYktT
-         Fr2GutsYE2nChwuvTMCbp1HM4cxTfS0sMSQQhEctxDgj6sRrJ/3OCkFsbGu/AMecZoQa
-         W9rvqtMPILmZtrICGHcaO4J1QM2mEgAwmaG+9MUB3C6Oc8Pm0bKulf7ZYhfxJqidBHrW
-         UtKjAnwEsK+WJxqsFRPAcoDkRjvzRO9zlQ+3D/qf2hfTjFVp839p2VHn+yqA/iN01rUz
-         +guA==
-X-Gm-Message-State: AOAM533/8P0U7U6zvTbi75I1f3Bxx1m4Dn0I6HneBCii/K9iZhBS40R+
-        ghBTh0MhWDSnKsLGIu1DtBk=
-X-Google-Smtp-Source: ABdhPJwV2uWurEEhhhqeCwFEjPg+6PpMse5GS6lAolB+VF7P2QpHJP+RpOWgZ5BBFF0RzwB+7lXyqg==
-X-Received: by 2002:a65:6481:: with SMTP id e1mr85503pgv.140.1623770709416;
-        Tue, 15 Jun 2021 08:25:09 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
-        by smtp.gmail.com with ESMTPSA id u2sm15258266pfg.67.2021.06.15.08.24.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 15 Jun 2021 08:25:09 -0700 (PDT)
-Subject: Re: [RFC PATCH V3 08/11] swiotlb: Add bounce buffer remap address
- setting function
-To:     Christoph Hellwig <hch@lst.de>, Robin Murphy <robin.murphy@arm.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        arnd@arndb.de, dave.hansen@linux.intel.com, luto@kernel.org,
-        peterz@infradead.org, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        hannes@cmpxchg.org, cai@lca.pw, krish.sadhukhan@oracle.com,
-        saravanand@fb.com, Tianyu.Lan@microsoft.com,
-        konrad.wilk@oracle.com, m.szyprowski@samsung.com,
-        boris.ostrovsky@oracle.com, jgross@suse.com,
-        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
-        xen-devel@lists.xenproject.org, davem@davemloft.net,
-        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, thomas.lendacky@amd.com,
-        brijesh.singh@amd.com, sunilmut@microsoft.com
-References: <20210530150628.2063957-1-ltykernel@gmail.com>
- <20210530150628.2063957-9-ltykernel@gmail.com>
- <20210607064312.GB24478@lst.de>
- <94038087-a33c-93c5-27bf-7ec1f6f5f0e3@arm.com> <20210614153252.GA1741@lst.de>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <9e347c4c-d4b9-129c-10d2-0d7ff1b917cc@gmail.com>
-Date:   Tue, 15 Jun 2021 23:24:57 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S231995AbhFOPvM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Jun 2021 11:51:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44806 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231937AbhFOPvC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Jun 2021 11:51:02 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E2C8E6186A;
+        Tue, 15 Jun 2021 15:48:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1623772134;
+        bh=HaWhwJWeLZMtAfntkZWcru8b3XEU26yZdhuKMF4c1jI=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Adlyzk34BiaJSYzPGZDjQaAoMiIcly93qAkRlC1QIWx6JwUl+6BL/U/Ii16FHgEMp
+         6VeHxDww5LexegX8T2At8OpJZAU1bj+GRPbOiiJ4dpx+j1rOr2IsoYFaIBj4fHfhIK
+         LQyfSlUoRkhTxsMOguqUY/L6Uh6yEPvY93LDFIYnj0OArjUu3aNLiMAE15SQ5m5H2G
+         9vQ3Jm5KIs2qxdg1KE+sjavCE7Dk9Z+3qGe+6TIhGbPF0XvptNPXhCuK7VMBFn+lCv
+         RepPTQAGYhV9BRnaV7AC2lXkvLtqZf+sGQUa+yULJth3EiHCR+PzjVze4S9eOsHej7
+         mEJ0t5WT9W+fg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        Hannes Reinecke <hare@suse.de>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.12 24/33] scsi: core: Fix error handling of scsi_host_alloc()
+Date:   Tue, 15 Jun 2021 11:48:15 -0400
+Message-Id: <20210615154824.62044-24-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210615154824.62044-1-sashal@kernel.org>
+References: <20210615154824.62044-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20210614153252.GA1741@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/14/2021 11:32 PM, Christoph Hellwig wrote:
-> On Mon, Jun 14, 2021 at 02:49:51PM +0100, Robin Murphy wrote:
->> FWIW, I think a better generalisation for this would be allowing
->> set_memory_decrypted() to return an address rather than implicitly
->> operating in-place, and hide all the various hypervisor hooks behind that.
-> 
-> Yes, something like that would be a good idea.  As-is
-> set_memory_decrypted is a pretty horribly API anyway due to passing
-> the address as void, and taking a size parameter while it works in units
-> of pages.  So I'd very much welcome a major overhaul of this API.
-> 
+From: Ming Lei <ming.lei@redhat.com>
 
-Hi Christoph and Robin:
-	Thanks for your suggestion. I will try this idea in the next version. 
-Besides make the address translation into set_memory_
-decrypted() and return address, do you want to make other changes to the 
-API in order to make it more reasonable(e.g size parameter)?
+[ Upstream commit 66a834d092930cf41d809c0e989b13cd6f9ca006 ]
 
-Thanks
+After device is initialized via device_initialize(), or its name is set via
+dev_set_name(), the device has to be freed via put_device().  Otherwise
+device name will be leaked because it is allocated dynamically in
+dev_set_name().
+
+Fix the leak by replacing kfree() with put_device(). Since
+scsi_host_dev_release() properly handles IDA and kthread removal, remove
+special-casing these from the error handling as well.
+
+Link: https://lore.kernel.org/r/20210602133029.2864069-2-ming.lei@redhat.com
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: John Garry <john.garry@huawei.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Tested-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/hosts.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 2f162603876f..d835a7b23614 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -392,8 +392,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	mutex_init(&shost->scan_mutex);
+ 
+ 	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
+-	if (index < 0)
+-		goto fail_kfree;
++	if (index < 0) {
++		kfree(shost);
++		return NULL;
++	}
+ 	shost->host_no = index;
+ 
+ 	shost->dma_channel = 0xff;
+@@ -486,7 +488,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 		shost_printk(KERN_WARNING, shost,
+ 			"error handler thread failed to spawn, error = %ld\n",
+ 			PTR_ERR(shost->ehandler));
+-		goto fail_index_remove;
++		goto fail;
+ 	}
+ 
+ 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+@@ -495,17 +497,18 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	if (!shost->tmf_work_q) {
+ 		shost_printk(KERN_WARNING, shost,
+ 			     "failed to create tmf workq\n");
+-		goto fail_kthread;
++		goto fail;
+ 	}
+ 	scsi_proc_hostdir_add(shost->hostt);
+ 	return shost;
++ fail:
++	/*
++	 * Host state is still SHOST_CREATED and that is enough to release
++	 * ->shost_gendev. scsi_host_dev_release() will free
++	 * dev_name(&shost->shost_dev).
++	 */
++	put_device(&shost->shost_gendev);
+ 
+- fail_kthread:
+-	kthread_stop(shost->ehandler);
+- fail_index_remove:
+-	ida_simple_remove(&host_index_ida, shost->host_no);
+- fail_kfree:
+-	kfree(shost);
+ 	return NULL;
+ }
+ EXPORT_SYMBOL(scsi_host_alloc);
+-- 
+2.30.2
+
