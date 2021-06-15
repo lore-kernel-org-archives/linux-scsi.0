@@ -4,33 +4,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34C4DC48BDF
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 15:51:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 885C6C49EA3
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 15:52:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1C52661627
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 15:51:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A4B96191B
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 15:52:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232621AbhFOPxQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Jun 2021 11:53:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46518 "EHLO mail.kernel.org"
+        id S232408AbhFOPyO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Jun 2021 11:54:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47006 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231975AbhFOPwI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Jun 2021 11:52:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D3E986191E;
-        Tue, 15 Jun 2021 15:50:02 +0000 (UTC)
+        id S232444AbhFOPwl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Jun 2021 11:52:41 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D48F0616E9;
+        Tue, 15 Jun 2021 15:50:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623772203;
-        bh=QoilR5SZGcDiLfYtyO/1+0MNkQiN1hFEBm7sp/fX188=;
+        s=k20201202; t=1623772218;
+        bh=1Gp+Z8/x+ytLRxw9rI8pz2pH+N92miTJEyFNwLr8xXM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VGps5kVZrR0Z3aPzCcWQ0wumf2+LNa9pqL+DJcTiS1C8Xct10P7lmbs3t78S1yT2F
-         tgwql2A8Q+JLOkkSad8gG2JZbn82B8BIf5GIEFvyM+iYabzy70cTDMNCqrt9ZBr7yk
-         jto+/6qTvdR8RtUywjrfUHTnwSOo4xYwNSRXm5nQ4hEOtujQTLpfTiF+DlkZMQJBxk
-         gm1eptCWrpHnxoP93fPfiCa5n4iHbq25rVbnBhY4BacL13a0zuS9f4FH5XBLBQONjJ
-         PG2B8QwBDGw/6bqW7zKsai6DhCBz6vAA5tQumFKwms3UD0U0FfcxlgrbNMSpq3NoWu
-         zFdNg6PC+YVRw==
+        b=MJN7pgiIykdPTJaJxQoqg0W9gHDy9DrQmVcGz5Sd7FGC6kM+N5yWjSx9nysLHLJFN
+         RkvgbqE4I/OKk8eKdL5jYyLCpjcRuFh0k2Y85tLP/MF7fUlSNSkbWnNQ8u6nyXBSy2
+         XlyTVWnaRZmoFwRB2uziLvEBBy0VsTdz/bZ7UOcbyC/PKu+M2pldVY9y+3bIPzcc/b
+         o6Mug4expsYACGVZ8vrbnlJ85NMZvWNv5RYmAUtz+Un/b/Bf5RzlfCaDpGfPnvRAR4
+         zPGI6uuKFwetcugfmdvLgbv8xjnf7EC/aiqw+nazGuGEsRdwlsx8J4XR1iRflLTPnf
+         JR7CCGYR/SkWA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ming Lei <ming.lei@redhat.com>,
@@ -39,12 +39,12 @@ Cc:     Ming Lei <ming.lei@redhat.com>,
         Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 11/15] scsi: core: Only put parent device if host state differs from SHOST_CREATED
-Date:   Tue, 15 Jun 2021 11:49:43 -0400
-Message-Id: <20210615154948.62711-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 06/12] scsi: core: Fix error handling of scsi_host_alloc()
+Date:   Tue, 15 Jun 2021 11:50:03 -0400
+Message-Id: <20210615155009.62894-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210615154948.62711-1-sashal@kernel.org>
-References: <20210615154948.62711-1-sashal@kernel.org>
+In-Reply-To: <20210615155009.62894-1-sashal@kernel.org>
+References: <20210615155009.62894-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -55,38 +55,84 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Ming Lei <ming.lei@redhat.com>
 
-[ Upstream commit 1e0d4e6225996f05271de1ebcb1a7c9381af0b27 ]
+[ Upstream commit 66a834d092930cf41d809c0e989b13cd6f9ca006 ]
 
-get_device(shost->shost_gendev.parent) is called after host state has
-switched to SHOST_RUNNING. scsi_host_dev_release() shouldn't release the
-parent device if host state is still SHOST_CREATED.
+After device is initialized via device_initialize(), or its name is set via
+dev_set_name(), the device has to be freed via put_device().  Otherwise
+device name will be leaked because it is allocated dynamically in
+dev_set_name().
 
-Link: https://lore.kernel.org/r/20210602133029.2864069-5-ming.lei@redhat.com
+Fix the leak by replacing kfree() with put_device(). Since
+scsi_host_dev_release() properly handles IDA and kthread removal, remove
+special-casing these from the error handling as well.
+
+Link: https://lore.kernel.org/r/20210602133029.2864069-2-ming.lei@redhat.com
 Cc: Bart Van Assche <bvanassche@acm.org>
 Cc: John Garry <john.garry@huawei.com>
 Cc: Hannes Reinecke <hare@suse.de>
 Tested-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hosts.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hosts.c | 23 +++++++++++++----------
+ 1 file changed, 13 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 3689b5e6afd5..ff36432c8fbc 100644
+index ea4b0bb0c1cd..5f7899e64f15 100644
 --- a/drivers/scsi/hosts.c
 +++ b/drivers/scsi/hosts.c
-@@ -344,7 +344,7 @@ static void scsi_host_dev_release(struct device *dev)
+@@ -403,8 +403,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	mutex_init(&shost->scan_mutex);
  
- 	ida_simple_remove(&host_index_ida, shost->host_no);
+ 	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
+-	if (index < 0)
+-		goto fail_kfree;
++	if (index < 0) {
++		kfree(shost);
++		return NULL;
++	}
+ 	shost->host_no = index;
  
--	if (parent)
-+	if (shost->shost_state != SHOST_CREATED)
- 		put_device(parent);
- 	kfree(shost);
+ 	shost->dma_channel = 0xff;
+@@ -491,7 +493,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 		shost_printk(KERN_WARNING, shost,
+ 			"error handler thread failed to spawn, error = %ld\n",
+ 			PTR_ERR(shost->ehandler));
+-		goto fail_index_remove;
++		goto fail;
+ 	}
+ 
+ 	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+@@ -500,17 +502,18 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	if (!shost->tmf_work_q) {
+ 		shost_printk(KERN_WARNING, shost,
+ 			     "failed to create tmf workq\n");
+-		goto fail_kthread;
++		goto fail;
+ 	}
+ 	scsi_proc_hostdir_add(shost->hostt);
+ 	return shost;
++ fail:
++	/*
++	 * Host state is still SHOST_CREATED and that is enough to release
++	 * ->shost_gendev. scsi_host_dev_release() will free
++	 * dev_name(&shost->shost_dev).
++	 */
++	put_device(&shost->shost_gendev);
+ 
+- fail_kthread:
+-	kthread_stop(shost->ehandler);
+- fail_index_remove:
+-	ida_simple_remove(&host_index_ida, shost->host_no);
+- fail_kfree:
+-	kfree(shost);
+ 	return NULL;
  }
+ EXPORT_SYMBOL(scsi_host_alloc);
 -- 
 2.30.2
 
