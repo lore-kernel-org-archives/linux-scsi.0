@@ -2,110 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B4CFC48BDF
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 12:45:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40AFDC49EA2
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 14:31:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 55F2861437
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 12:45:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DE646145C
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 14:31:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230055AbhFOMrH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Jun 2021 08:47:07 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:41198 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229977AbhFOMrH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2021 08:47:07 -0400
-Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 7FC2C1FD56;
-        Tue, 15 Jun 2021 12:45:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623761102; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XMLy3P3r+VlLUUHhwskgoX942PdqXEESFfG3fvULCD8=;
-        b=2Mozp5bJq3MA/X67SirbGyP5IA00MxUvkXZ+3EvsByc275bZNVvf2Gm7yKzOb+nvUfvbGG
-        bFj4jjWcUa1TQSXkNxhz0itFy6XX0UT1dwttHBrRB1p93pUlhX99RI3eF+3r+K8/Y+sokw
-        PJqB7TQ8ZZqyO8kteUaMU17T3WpMp3A=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623761102;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XMLy3P3r+VlLUUHhwskgoX942PdqXEESFfG3fvULCD8=;
-        b=W4AkorRdCumgHH3mktzxM9pHXvBoxTVgjriufaZ/OaI5mMrWLhaYTTqH+a0j4TJ7L6Op+9
-        z3ncwouyVjmTmxBw==
-Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
-        by imap.suse.de (Postfix) with ESMTP id 650B4118DD;
-        Tue, 15 Jun 2021 12:45:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1623761102; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XMLy3P3r+VlLUUHhwskgoX942PdqXEESFfG3fvULCD8=;
-        b=2Mozp5bJq3MA/X67SirbGyP5IA00MxUvkXZ+3EvsByc275bZNVvf2Gm7yKzOb+nvUfvbGG
-        bFj4jjWcUa1TQSXkNxhz0itFy6XX0UT1dwttHBrRB1p93pUlhX99RI3eF+3r+K8/Y+sokw
-        PJqB7TQ8ZZqyO8kteUaMU17T3WpMp3A=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1623761102;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=XMLy3P3r+VlLUUHhwskgoX942PdqXEESFfG3fvULCD8=;
-        b=W4AkorRdCumgHH3mktzxM9pHXvBoxTVgjriufaZ/OaI5mMrWLhaYTTqH+a0j4TJ7L6Op+9
-        z3ncwouyVjmTmxBw==
-Received: from director2.suse.de ([192.168.254.72])
-        by imap3-int with ESMTPSA
-        id 902zF86gyGDddgAALh3uQQ
-        (envelope-from <dwagner@suse.de>); Tue, 15 Jun 2021 12:45:02 +0000
-Date:   Tue, 15 Jun 2021 14:45:02 +0200
-From:   Daniel Wagner <dwagner@suse.de>
-To:     James Smart <jsmart2021@gmail.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Dick Kennedy <dick.kennedy@broadcom.com>
-Subject: Re: [PATCH v2 02/15] lpfc: Fix auto sli_mode and its effect on
- CONFIG_PORT for SLI3
-Message-ID: <20210615124502.yzmudtm22pjzwqxj@beryllium.lan>
-References: <20210104180240.46824-1-jsmart2021@gmail.com>
- <20210104180240.46824-3-jsmart2021@gmail.com>
- <20210607110630.kwn74yfrbsrrrhsm@beryllium.lan>
- <06b1d757-9046-8b94-265b-c6c760cd8749@gmail.com>
+        id S230322AbhFOOdv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Jun 2021 10:33:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40858 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230076AbhFOOdu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2021 10:33:50 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5E0C5C061574;
+        Tue, 15 Jun 2021 07:31:45 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id a127so7581321pfa.10;
+        Tue, 15 Jun 2021 07:31:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=09f7flVgvhf5eQwpZCIbvOGTARFj7yeM2HilMpzlWLk=;
+        b=jk2oxSkqx62fHfzZ2Td3CQMKVDfVLX5soiM/JukpALSNJHJr6bPDtlz3KWKAxXo94O
+         s/hllSh2es9DhRUKAKUitklZDcf/EnVOKXhkOj9PYfOCpVShjA/ALCwL9qmhEU6/Uawa
+         XK557NRD7ifNeZzvRQOvgq1OjZVLzX0tIkT8t770jqHE0cKYFvqhPHbZNRgnhaDUZKFF
+         qX9q9wmOAxzVgsgD1wpLoriKUlqy7RCPkNZ1jG4aLxQucHRt8DEitzL0SOUV96Pc1UDE
+         2mXJY2Jw/0wFzqk5I0o9iVdLMmeZJJ8WeATZpVLS5cPgmlZCB/DeT8DlSYdBw+t/FiNV
+         Ts4Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=09f7flVgvhf5eQwpZCIbvOGTARFj7yeM2HilMpzlWLk=;
+        b=LwuxIzy9pg+zHfZXKOoMDDHdPL4iwbga1lkeOmj8z4a79H6tthZ6VmA1omj3bvfPYk
+         5ibSpIwbNCIwENqu+YVo/qllWVn4NhlHHJgYxq4ryoM2eSdwSBjlg1Sx+OrMNq7NdojQ
+         4afvgvbx27WSSvpTJ+o8A4gtoyMR+rBpedb4qNAa62n6I2QLnhisGLW3W3/VB79tpzUM
+         iv8lV/ReZRwuGM31Tkxw04qTCMJM8YgcZIkb0jBA7hc/DKPJXfYEYWTJgkoIMtKbXOr9
+         uHCHHFuYVIXNkskgWrp4D5ACeEyXLXkR1V16t7/ndKa038mxFM4lkuthDRk6g02mid8L
+         gKoQ==
+X-Gm-Message-State: AOAM530h9mUzaqcVFQgJjN/YMhjBL3L9+NqQb84sdq35JVWwm1ozNr4X
+        2qmv7sTBnjoEo9c3hTmoqyY=
+X-Google-Smtp-Source: ABdhPJyHvlYi58GrVtZOOV1UUSDfdDdKTtRA2DlWTeNf7j5KzC+iOROVnZire7W4JyUnDsrG1dvTzA==
+X-Received: by 2002:a65:550e:: with SMTP id f14mr22678348pgr.160.1623767504841;
+        Tue, 15 Jun 2021 07:31:44 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
+        by smtp.gmail.com with ESMTPSA id fy16sm2711030pjb.49.2021.06.15.07.31.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 15 Jun 2021 07:31:44 -0700 (PDT)
+Subject: Re: [RFC PATCH V3 10/11] HV/Netvsc: Add Isolation VM support for
+ netvsc driver
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        arnd@arndb.de, dave.hansen@linux.intel.com, luto@kernel.org,
+        peterz@infradead.org, akpm@linux-foundation.org,
+        kirill.shutemov@linux.intel.com, rppt@kernel.org,
+        hannes@cmpxchg.org, cai@lca.pw, krish.sadhukhan@oracle.com,
+        saravanand@fb.com, Tianyu.Lan@microsoft.com,
+        konrad.wilk@oracle.com, m.szyprowski@samsung.com,
+        robin.murphy@arm.com, boris.ostrovsky@oracle.com, jgross@suse.com,
+        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
+        xen-devel@lists.xenproject.org, davem@davemloft.net,
+        kuba@kernel.org, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, thomas.lendacky@amd.com,
+        brijesh.singh@amd.com, sunilmut@microsoft.com
+References: <20210530150628.2063957-1-ltykernel@gmail.com>
+ <20210530150628.2063957-11-ltykernel@gmail.com>
+ <20210607065007.GE24478@lst.de>
+ <279cb4bf-c5b6-6db9-0f1e-9238e902c8f2@gmail.com>
+ <20210614070903.GA29976@lst.de>
+ <e10c2696-23c3-befe-4f4d-25e18918132f@gmail.com>
+ <20210614153339.GB1741@lst.de>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <7d86307f-83ff-03ad-c6e9-87b455c559b8@gmail.com>
+Date:   Tue, 15 Jun 2021 22:31:31 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <06b1d757-9046-8b94-265b-c6c760cd8749@gmail.com>
+In-Reply-To: <20210614153339.GB1741@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi James,
+On 6/14/2021 11:33 PM, Christoph Hellwig wrote:
+> On Mon, Jun 14, 2021 at 10:04:06PM +0800, Tianyu Lan wrote:
+>> The pages in the hv_page_buffer array here are in the kernel linear
+>> mapping. The packet sent to host will contain an array which contains
+>> transaction data. In the isolation VM, data in the these pages needs to be
+>> copied to bounce buffer and so call dma_map_single() here to map these data
+>> pages with bounce buffer. The vmbus has ring buffer where the send/receive
+>> packets are copied to/from. The ring buffer has been remapped to the extra
+>> space above shared gpa boundary/vTom during probing Netvsc driver and so
+>> not call dma map function for vmbus ring
+>> buffer.
+> 
+> So why do we have all that PFN magic instead of using struct page or
+> the usual kernel I/O buffers that contain a page pointer?
+> 
 
-On Mon, Jun 07, 2021 at 08:12:22AM -0700, James Smart wrote:
-> ouch - What you are describing is likely true, but sli-2 firmware is
-> *extremely* old - 2 decades or more. If a change wont work first shot, it
-> likely won't be worth the effort to try to fix it. Other functionality may
-> be hanging on by a thread.  That adapter certainly runs SLI-3 (even that is
-> 10-15 yrs old), so the best solution is a fw upgrade that picks up the sli3
-> interface. Is that possible?
-
-I forwarded the info.
-
-> Given that the error message you quoted was a failure of interrupt, that may
-> be a clue. It may well be the adapter has sli3 firmware and it's failing on
-> setting the interrupt vector type.  The older adapters supported MSI and
-> INTx. SLI-2 may have been limited to INTx only. There used to be hiccups in
-> some platforms with MSI support (platform said it did, but was broken) which
-> is why the driver had "set it, test it, revert it" logic. I believe the
-> driver has a lpfc_use_msi module parameter that when set to 0 should use
-> only INTx, which may be what the sli2 downgrade is effectively doing. Try
-> setting that and seeing if the card loads the sli3 image and runs.
-
-I haven't heard back yet if the lpfc_use_msi=0 setting fixes the problem
-(waiting for the next maintenance window for the experiment).
-
-Thanks,
-Daniel
+These PFNs originally is part of Hyper-V protocol data and will be sent
+to host. Host accepts these GFN and copy data from/to guest memory. The 
+translation from va to pa is done by caller that populates the 
+hv_page_buffer array. I will try calling dma map function before 
+populating struct hv_page_buffer and this can avoid redundant 
+translation between PA and VA.
