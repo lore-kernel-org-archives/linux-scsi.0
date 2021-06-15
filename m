@@ -2,181 +2,184 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2783BC2B9F4
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 02:37:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 948AFC2B9F4
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 02:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 007F1613C2
-	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 02:37:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59B2E613F9
+	for <linux-scsi@archiver.kernel.org>; Tue, 15 Jun 2021 02:59:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231283AbhFOCjE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 14 Jun 2021 22:39:04 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:55017 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230313AbhFOCjE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Jun 2021 22:39:04 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1623724620; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=htAFHwDS8GLyJOv51qcTukaO+cQ/uyLwy7eNovu50Zw=;
- b=TRi2C6dsHs1S13ZYJ08+/P91xXTo2afjFapo/5EMAbqf3t3EYl4yPaIZ6aCv1qpTf77ZJk+g
- xxCGBbP/+5BFef3OlwlgKs/CmCWPYvcVsMeA/OIgtm7Fww5TkJ710+GPLeiPThXopqJAtPI1
- o8dZGMlCcpA4WC3ZPGM+jm2CrNY=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 60c8124b2eaeb98b5e1e5e74 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 15 Jun 2021 02:36:58
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 7AFFDC43148; Tue, 15 Jun 2021 02:36:58 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id D4455C4338A;
-        Tue, 15 Jun 2021 02:36:56 +0000 (UTC)
+        id S229649AbhFODB4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 14 Jun 2021 23:01:56 -0400
+Received: from aserp2130.oracle.com ([141.146.126.79]:48998 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229609AbhFODBz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jun 2021 23:01:55 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15F2tQmB051412;
+        Tue, 15 Jun 2021 02:59:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=+mUqP4AY9fKYvA1UkgLIAgtkf4RPriE9VtQ8e+PHl0U=;
+ b=P+99QxLNOZBRaYGXE3Rpj0csMbSgdfUesIVKp6SKEo1+6UOM5CDKurhTC+aRF8q+qnmI
+ a4J37rb7YBUO4NBXCXStt/OZbd4WW0s2xbOhFNx2gxy++ILqDWFihR6SdWfOzD9Kpefl
+ PJcdKnKnonEzLmwAS6AfWngCgK/oi3lQUygDFu6JGtmkJ0g1g/lc6cd9oX/bXg7VJlp1
+ beVqWEQplicnJTEa2dNmUCTWz47dNNal6jcgy4a2gH8nEOtEcXxxLDSxZGVvsh0CepjV
+ li7VX3fJf1blejRqCgFtgkNSeQm2ZHnZ52kECf6FMrWyfCC3FJkuW4N5PJf7p4pUOUN1 UQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2130.oracle.com with ESMTP id 394jecd1ey-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 15 Jun 2021 02:59:38 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15F2swYu087627;
+        Tue, 15 Jun 2021 02:59:37 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2105.outbound.protection.outlook.com [104.47.58.105])
+        by aserp3020.oracle.com with ESMTP id 394mr7um4q-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 15 Jun 2021 02:59:37 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SITdw9XN9rLHK430triNaKW2snSKushV81mQFNkYiSxVZiXU3pdN6K5GRsGN7ws19jfq4z4WL5uZvOdd2XL5WanVHBmRl709L8CgpWEvshjWwW6mLBEeQ1FZOBW4BfH1eECJSUMG4RrAQKGpy94CqkfBEjAaKfrFGn6iA8lHINiC7Peu75TLe5Me2Z/WT6d2C78QI2Zm3MUc5RX1PgZyVWL2vd8NUAiXa7kTjodoAfkGMiyJ2jSb6eI2AqYHpCej9kEAy5YW8tLMuwi3rQFkGLrEZ1W9b04xJH6v7uPHnNrtJArwWZuHdeYeNdiTuf73gbP/oi8nr0ziMBwSAhIKlQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+mUqP4AY9fKYvA1UkgLIAgtkf4RPriE9VtQ8e+PHl0U=;
+ b=I5Ef5F6rMOPcZiosQgLpADcfSQD+LSstpCQ9hQHGG+AUKVz9LsaeWCqouNNRB8SRkZrPK+41NdXG3I87QXY4oRo8GcQHZqpYC4H5u5LSgQG4rWfDMQfg6y7l8/uQ7wWUxcfVMWM+sURCI41kOkioojGmV3IkqZ1/e72ARhRW8zF52BduQAtwy8AGQkEEv4tASrLztE+0nX49QjhoCb8m/EbxSyct49Y+5iAnhqfmN6SIgsSn/3TFBQ+4lv6jN3JV8NomekL52kzr+fZYcMGOuVinPE0K/3qlvjGu+mIZTBAay07D1EsCpqPSZZhf/7LX3ZE1uotRMJs5vceQgXNeEQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=+mUqP4AY9fKYvA1UkgLIAgtkf4RPriE9VtQ8e+PHl0U=;
+ b=c2RdhxFFejrSDutd52PK1xgF+h8qdEYvXL9DqDm9vajUKR668/6nifO57JFhirDb2AdbQkTFWp3OWudVvJWgf9E+goCiabUH1Wl17I8qq0ohuz+4PhsuTWe3nr4fcBmTZWCepR0lvHSLO64v6Ngf+oCL0vDrmCAg33JTuirtFAI=
+Authentication-Results: suse.de; dkim=none (message not signed)
+ header.d=none;suse.de; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4790.namprd10.prod.outlook.com (2603:10b6:510:3f::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.22; Tue, 15 Jun
+ 2021 02:59:36 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::4c61:9532:4af0:8796]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::4c61:9532:4af0:8796%7]) with mapi id 15.20.4219.025; Tue, 15 Jun 2021
+ 02:59:36 +0000
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Jiri Slaby <jslaby@suse.com>
+Subject: Re: [PATCH 1/2] virtio_scsi: do not overwrite SCSI status
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1wnqv972s.fsf@ca-mkp.ca.oracle.com>
+References: <20210610135833.46663-1-hare@suse.de>
+Date:   Mon, 14 Jun 2021 22:59:32 -0400
+In-Reply-To: <20210610135833.46663-1-hare@suse.de> (Hannes Reinecke's message
+        of "Thu, 10 Jun 2021 15:58:33 +0200")
+Content-Type: text/plain
+X-Originating-IP: [138.3.200.58]
+X-ClientProxiedBy: SN2PR01CA0038.prod.exchangelabs.com (2603:10b6:804:2::48)
+ To PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 15 Jun 2021 10:36:56 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v3 8/9] scsi: ufs: Update the fast abort path in
- ufshcd_abort() for PM requests
-In-Reply-To: <8b27b0cc-ae16-173a-bd6f-0321a6aba01c@acm.org>
-References: <1623300218-9454-1-git-send-email-cang@codeaurora.org>
- <1623300218-9454-9-git-send-email-cang@codeaurora.org>
- <fa37645b-3c1e-2272-d492-0c2b563131b1@acm.org>
- <16f5bd448c7ae1a45fcb23133391aa3f@codeaurora.org>
- <926d8c4a-0fbf-a973-188a-b10c9acaa444@acm.org>
- <75527f0ba5d315d6edbf800a2ddcf8c7@codeaurora.org>
- <8b27b0cc-ae16-173a-bd6f-0321a6aba01c@acm.org>
-Message-ID: <3fce15502c2742a4388817538eb4db97@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SN2PR01CA0038.prod.exchangelabs.com (2603:10b6:804:2::48) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4219.21 via Frontend Transport; Tue, 15 Jun 2021 02:59:35 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 47fb1ac0-54d8-42e3-b0c9-08d92fa99bd0
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4790:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB47901D27EEB528F8DD97AFB88E309@PH0PR10MB4790.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: vSM7Mkbxo6WoR5ikH7mpD08ZheWTE76Ey1/dIDncnNheUnTuWx1hD9soWvRgPmib11Cq4XVew0tqO9hgd2VWQYimX/cIgq01ul8e0b9bIavluZbh0VssAm5971tJGmEvpfq3iwA6WJmT91+CYpOvJtkbBhQUu9FrtMyclbKcCfUN2+J7CqnyJDDHlZlGFquEMBAgfBidPrM6eWGFH5YzRxrMWmedeWBhGsdZZ7juSWYOJgVUSQo0ZWlZcu1ylQaWS+5DMLfqpQ7FDkiwfTKfTZOEduSe3u9hHpmrigOEr9jr0LmYRkwG/JZ1Nxvqmm7Sv+MfT1V496e6gviGBzPyIJ0aI15sLvwQWjUshE98c/cYFLAtGfqtwXB5B3omC2jnESBy3TWv5GAXLIh0RFvSD52n33Jd5AicL3n7VOeRsnnyJOABZHYVNrH1HdrMt0TafRkVHl5agNRDi1lexU84b2t3nj9urrdNmxOny4JaYiC7j3JPvpnbglJIUcsEUYfLXtjfTgqd/8e+MYRqHjJN+EYV7y+zpafgDZnHoVyJaj8ZReehyy9pAF+ZZIh5d1jezR3WzAqfq4XK8I+AecTQ4+H8rhXIMKD261TTXhwScxjVAcUalW7AGtdpou9GL+dADrcDC8rvtuvLf3qUROEBqUbDwgubl+/hyorIy9f+k6s=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(376002)(39860400002)(396003)(366004)(136003)(55016002)(66476007)(38100700002)(66556008)(38350700002)(478600001)(16526019)(6666004)(52116002)(66946007)(186003)(86362001)(8936002)(316002)(4326008)(8676002)(36916002)(2906002)(7696005)(26005)(956004)(54906003)(6916009)(4744005)(5660300002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?ogQ6EL1mZGkv20kixdmW+hLJivrCQdiMgkDafaA7ITSK6sllcX5/YqSXS9Nl?=
+ =?us-ascii?Q?TCnGJVrM7koVkeuclNdHP8DvWloMaBdx8xylOv7o6xo1sIIHu01eKU3YitoV?=
+ =?us-ascii?Q?2CaepOihfvHCK+hsS3CE1fNYlnPIIo9+xj9WOtlsp0qdY6Aj/G0uVG6Ext5u?=
+ =?us-ascii?Q?iltiw1zjgHUPYFRvh2LZvU16IIMUpPlTT4At0p1yeeFrXAt5gDk4FrpkGyCm?=
+ =?us-ascii?Q?oyyf9E3BxBFOETNE953UIcUHPv6uJ9/8GB+ZSAI9a2QwEwyJ0j79d85exhCk?=
+ =?us-ascii?Q?o5PKrM+p5GckSP6/Uy65lMjtYOAC5WJ5l5D9vKPImQdifQgTuHNBSk3v5C1h?=
+ =?us-ascii?Q?9kwcqxB8EGb19TMkGjpIbjcSCCxQWWAifh07ycjivwm4OBVoWfAhLrTNtUNB?=
+ =?us-ascii?Q?laizJjVqESnJbTGpmdiTpT/CAwgCYUONNI0NR/1xf63qlR3dmt0TYx7IHpL7?=
+ =?us-ascii?Q?XjCSipipyj7EYsvoVfjNDciQp4liLt1jstQB3iyzEMhb1wV30CsLNQK0g8PA?=
+ =?us-ascii?Q?1gLQvH2OCJ1eMM+JQTZ0LtmuNnMhdazDxcN2I2kDNhAxcmBFcdmb7NanIh3t?=
+ =?us-ascii?Q?6rleol9RtsV9j4gWxoFxsPw/W51wSPBTCw0I++r5fzq2bNhNFu4l/RL4TSP1?=
+ =?us-ascii?Q?W0pd+F53vlEtiTKeMh25Ob4lSlR6D0b7TBUfLOlsSj+xp1PRplL17xH6fl0k?=
+ =?us-ascii?Q?BduhDmN4belDTGiwfY/OA9Yn69k6+dg20rYpD5cySwFsXfPc+FwR5STC0YDy?=
+ =?us-ascii?Q?g0j2dPI03i3qQFlPIPytTZkfv7MPY1GF7yHWGb59gt2+ScZYvIewfyF83Z2o?=
+ =?us-ascii?Q?9G9AzY5utL6JtzGot1Cf6MFaRCfBqJoToYlXpOoEbg9MK1iLuYp6O3b3rCU3?=
+ =?us-ascii?Q?xRZzzimLeYOt2LHXJKyFr+MGqUj5O4djJ9+qv63IMne7fkYA+M3ENJHToVIz?=
+ =?us-ascii?Q?s0dBU/4StqtPOZ3vxFknLOsODZhgw09dZnlek1SNGfa7h1ymJ6Yn0Ay9RZ4l?=
+ =?us-ascii?Q?W3O55XU/iPkXO3qYCmCcJwCFP0xbRRzV0DnODQOF0tLa84sgJpGvpx68GJOV?=
+ =?us-ascii?Q?4t1rWbTcuY1jAgAvrvZOaSEqvAkc4EQFSYWmJEJmf3DFZhgzGdEZaMK2uhFn?=
+ =?us-ascii?Q?y15HQ9j29uCClGovcTfdkDsZ7xk0nlbu7oiQoU60XuZXuuxsE/urw5aM+sj1?=
+ =?us-ascii?Q?lMdsC9hoxDK+rcweSoD/9gkwGZZOxCmjfea6lZ5oi8mH7s0yMO6aj7j8Cp1r?=
+ =?us-ascii?Q?4Bvm6s+4EWfk6jw25GOKZA2bRov3YOPo9aYyV6g+Clpxw9Ui4mXFDGRJ35Jh?=
+ =?us-ascii?Q?PJWYp+OcQr9UPBAWyNvbRzg4?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 47fb1ac0-54d8-42e3-b0c9-08d92fa99bd0
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Jun 2021 02:59:36.0575
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: aIGUzCF/hk1W1OzbMYgTWE9vKbFTdQE9B7zCKKzI+2e1y8QmCWvHLBt13aWrdNDAaayOhMBsba/TgUV2WRZbnUlHUhkX70nVYFUl/8lL4pw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4790
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10015 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=999 mlxscore=0
+ malwarescore=0 spamscore=0 phishscore=0 suspectscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2106150017
+X-Proofpoint-ORIG-GUID: 5PjSyyG2nAi4q7UxA7Jh8Hd51naRLzth
+X-Proofpoint-GUID: 5PjSyyG2nAi4q7UxA7Jh8Hd51naRLzth
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10015 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 phishscore=0
+ bulkscore=0 clxscore=1011 mlxlogscore=999 adultscore=0 malwarescore=0
+ spamscore=0 lowpriorityscore=0 impostorscore=0 mlxscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2106150017
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
 
-On 2021-06-15 02:49, Bart Van Assche wrote:
-> On 6/13/21 7:42 AM, Can Guo wrote:
->> 2. ufshcd_abort() invokes ufshcd_err_handler() synchronously can have 
->> a
->> live lock issue, which is why I chose the asynchronous way (from the 
->> first
->> day I started to fix error handling). The live lock happens when abort
->> happens
->> to a PM request, e.g., a SSU cmd sent from suspend/resume. Because UFS
->> error
->> handler is synchronized with suspend/resume (by calling
->> pm_runtime_get_sync()
->> and lock_system_sleep()), the sequence is like:
->> [1] ufshcd_wl_resume() sends SSU cmd
->> [2] ufshcd_abort() calls UFS error handler
->> [3] UFS error handler calls lock_system_sleep() and 
->> pm_runtime_get_sync()
->> 
->> In above sequence, either lock_system_sleep() or pm_runtime_get_sync()
->> shall
->> be blocked - [3] is blocked by [1], [2] is blocked by [3], while [1] 
->> is
->> blocked by [2].
->> 
->> For PM requests, I chose to abort them fast to unblock suspend/resume,
->> suspend/resume shall fail of course, but UFS error handler recovers
->> PM errors anyways.
-> 
-> In the above sequence, does [2] perhaps refer to aborting the SSU
-> command submitted in step [1] (this is not clear to me)?
+Hannes,
 
-Yes, your understanding is right.
+> When a sense code is present we should not override the scsi status;
+> the driver already sets it based on the response from the hypervisor.
 
-> If so, how about breaking the circular waiting cycle as follows:
-> - If it can happen that SSU succeeds after more than scsi_timeout
->   seconds, define a custom timeout handler. From inside the timeout
->   handler, schedule a link check and return BLK_EH_RESET_TIMER. If the
->   link is no longer operational, run the error handler. If the link
->   cannot be recovered by the error handler, fail all pending commands.
->   This will prevent that ufshcd_abort() is called if a SSU command 
-> takes
->   longer than expected. See also commit 0dd0dec1677e.
-> - Modify the UFS error handler such that it accepts a context argument.
->   The context argument specifies whether or not the UFS error handler 
-> is
->   called from inside a system suspend or system resume handler. If the
->   UFS error handler is called from inside a system suspend or resume
->   callback, skip the lock_system_sleep() and unlock_system_sleep()
->   calls.
-> 
+Color me confused. The code looks like this:
 
-I am aware of commit 0dd0dec1677e, I gave my reviewed-by tag. Thank you
-for your suggestion and I believe it can resolve the cycle, because 
-actually
-I've considered the similar way (leverage hba->host->eh_noresume) last 
-year,
-but I didn't take this way due to below reasons:
+        if (sc->sense_buffer) {
+                memcpy(sc->sense_buffer, resp->sense,
+                       min_t(u32,
+                             virtio32_to_cpu(vscsi->vdev, resp->sense_len),
+                             VIRTIO_SCSI_SENSE_SIZE));
+                set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
+        }
 
-1. UFS error handler basically does one thing - reset and restore, which
-stops hba [1], resets device [2] and re-probes the device [3]. Stopping 
-hba [1]
-shall complete any pending requests in the doorbell (with error or no 
-error).
-After [1], suspend/resume contexts, blocked by SSU cmd, shall be 
-unblocked
-right away to do whatever it needs to handle the SSU cmd failure 
-(completed
-in [1], so scsi_execute() returns an error), e.g., put link back to the 
-old
-state. call ufshcd_vops_suspend(), turn off irq/clocks/powers and etc...
-However, reset and restore ([2] and [3]) is still running, and it can 
-(most likely)
-be disturbed by suspend/resume. So passing a parameter or using 
-hba->host->eh_noresume
-to skip lock_system_sleep() and unlock_system_sleep() can break the 
-cycle,
-but error handling may run concurrently with suspend/resume. Of course 
-we can
-modify suspend/resume to avoid it, but I was pursuing a minimal change 
-to get this fixed.
+But sc->sense_buffer is always true, the scsi_cmnd obviously has a sense
+buffer.
 
-2. Whatever way we take to break the cycle, suspend/resume shall fail 
-and
-RPM framework shall save the error to dev.power.runtime_error, leaving
-the device in runtime suspended or active mode permanently. If it is 
-left
-runtime suspended, UFS driver won't accept cmd anymore, while if it is 
-left
-runtime active, powers of UFS device and host will be left ON, leading 
-to power
-penalty. So my main idea is to let suspend/resume contexts, blocked by 
-PM cmds,
-fail fast first and then error handler recover everything back to work.
+Shouldn't that be looking at the returned response instead?
 
-Thanks,
+	if (resp->sense_len) {
+                memcpy(sc->sense_buffer, resp->sense,
+                       min_t(u32,
+                             virtio32_to_cpu(vscsi->vdev, resp->sense_len),
+                             VIRTIO_SCSI_SENSE_SIZE));
+                set_status_byte(sc, SAM_STAT_CHECK_CONDITION);
+        }
 
-Can Guo.
+What am I missing?
 
-> Thanks,
-> 
-> Bart.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
