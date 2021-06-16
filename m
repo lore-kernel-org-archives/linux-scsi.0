@@ -2,121 +2,146 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16219C48BE6
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 17:55:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84421C48BE8
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 19:54:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E30BD613B4
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 17:55:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EA9761351
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 19:54:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231374AbhFPR5N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 13:57:13 -0400
-Received: from mail-pf1-f177.google.com ([209.85.210.177]:36697 "EHLO
-        mail-pf1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230291AbhFPR5N (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 13:57:13 -0400
-Received: by mail-pf1-f177.google.com with SMTP id d62so839144pfd.3;
-        Wed, 16 Jun 2021 10:55:06 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=jnKj0HBwxlH/ulf+iZejWPSvpBbaHdsnZF9n9H/9ifA=;
-        b=CyBYdsYWL8J/isWXcd9fE+aPlg73GodoC1NPkumtPcQef0CZGjUCn3ZRuEniK8mVWw
-         l0brqNytiM0PQcR9sK1hho1OoRmv3i7tl0FpBTg5kmhpD1Bi9sGyIxzzP9ADf/f1S8NG
-         LnEoArGk8YMC2/xfUfifZlI4Bh4YKENsYTpNNoFRn/g6x6loOFACOeDZWxliIxpomefT
-         uGbIbASXQ13UlR/xQvtWD5cVDYR0TprSb8jTbOsoDm5+d7/WTHJP7yc+ZUJ14GbX+GH2
-         i8liiZslP04giigHEWhqe+oGSeumoQAFd6LK5tTM8dP9BNklycvliJiBWRRAvPwBKZVq
-         Qp0w==
-X-Gm-Message-State: AOAM532N8iGxhbkLc4850rdEvSTSQ+IQwX5Sm5ONu3KvZ4m6If5OtUNy
-        6smEiThCaIgHyArVNOjNrit9CDfXI0c=
-X-Google-Smtp-Source: ABdhPJznn/vGaY7gAHJU0FR2g3wY0tI/TjhNgwHGP5q9o+wMhjlrDPfhsmswD1zUPqIRoCtGvtcS9A==
-X-Received: by 2002:a63:1a5b:: with SMTP id a27mr746650pgm.427.1623866105692;
-        Wed, 16 Jun 2021 10:55:05 -0700 (PDT)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id 1sm6210506pjm.8.2021.06.16.10.55.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Jun 2021 10:55:05 -0700 (PDT)
-Subject: Re: [PATCH v3 8/9] scsi: ufs: Update the fast abort path in
- ufshcd_abort() for PM requests
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1623300218-9454-1-git-send-email-cang@codeaurora.org>
- <1623300218-9454-9-git-send-email-cang@codeaurora.org>
- <fa37645b-3c1e-2272-d492-0c2b563131b1@acm.org>
- <16f5bd448c7ae1a45fcb23133391aa3f@codeaurora.org>
- <926d8c4a-0fbf-a973-188a-b10c9acaa444@acm.org>
- <75527f0ba5d315d6edbf800a2ddcf8c7@codeaurora.org>
- <8b27b0cc-ae16-173a-bd6f-0321a6aba01c@acm.org>
- <3fce15502c2742a4388817538eb4db97@codeaurora.org>
- <fabc70f8-6bb8-4b62-3311-f6e0ce9eb2c3@acm.org>
- <8aae95071b9ab3c0a3cab91d1ae138e1@codeaurora.org>
- <0081ad7c-8a15-62bb-0e6a-82552aab5309@acm.org>
- <8eadb2f2e30804faf23c9c71e5724d08@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <2fa53602-8968-09e4-60f4-28462d85ae08@acm.org>
-Date:   Wed, 16 Jun 2021 10:55:03 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-MIME-Version: 1.0
-In-Reply-To: <8eadb2f2e30804faf23c9c71e5724d08@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+        id S233205AbhFPT4r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Jun 2021 15:56:47 -0400
+Received: from mail-bn7nam10on2134.outbound.protection.outlook.com ([40.107.92.134]:22368
+        "EHLO NAM10-BN7-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231602AbhFPT4j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 16 Jun 2021 15:56:39 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Kt/SPorguaJMTlHLyDdbt634Fmu2vgPSKNTjVlIZyoqDbvT0K3J7C88aCpbG1imw5p7+4fpyCkzT7KpV0howU+ZnVE4hMmgtHmqAX30OmjZ6WvbYAISP2FeYAsRVa/pwHCV7Ee9zd0KDUb6nyro4SjQUdxx2kOj/zTqJy7k8BCSbyigXEbceN43AwVaCPOATAtKciJ5d0SuimvA03wBRp1DG39neIVj3R+ZlJdZhjwRXZO+EIcjgWzcxqia/K0J3JhjrZ8CVzptkpgiD4T3d/b+BpPSmn9i56FRk+GHzxDJOxF1KtP2J7YkF5dpiq76nJ/7wIvmY99XK9RwDYWxeiw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3cxKsE33i2edd4h1R0Yzdcl2nj70Es/Uz/8mfx2GkB8=;
+ b=T/8DUdB2n7uZjCPEBRbDIyVzmeUdW18ixjUVNGo5Z+tNfFRmwB4IX3NnnGk2wMQZNCHHZEMtdsBsPMt7vf9y59qlGHUfgk8Qb7jYt/phITsWUDh93YEwlKBRwi670MO+r0F2We/roQLhVrj0uiH0VaLmoPVQSKt7KiPLgqxfX9VJsYZHIrR+Z5zNMLyHj/TY6G0wEOKMTalw9/xsFscvg/NR2XDGv/6UONgofq9edS+YZhbRbGk23jhl3D2YDSrYR81zYKegMbT+rG7ALRvzoyuf+r8xSB/blFGCW5xQJi1CgIvA+TO6+YUFZG0lm4hA3JkXivDjuC4eGADkV2Kb5g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=3cxKsE33i2edd4h1R0Yzdcl2nj70Es/Uz/8mfx2GkB8=;
+ b=ecBpW2/N6gR4INx8AZ+yt9QbaOtEbLlW2MopZtw6icvSxoWHVhh1mDeduxDE4whc6rkY14MWZWemAioy5EyKX9fLmw40BmctgM8vbHqfDiBtsDLQpi+JMCBia5QhXkKcQV9deIZBqVcSRvEktNKRz/8hvBw2RLp6lbM/aKu5zz8=
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com (2603:10b6:301:7c::11)
+ by MW4PR21MB1876.namprd21.prod.outlook.com (2603:10b6:303:64::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4264.3; Wed, 16 Jun
+ 2021 19:54:29 +0000
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::55bf:85c:1abe:d168]) by MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::55bf:85c:1abe:d168%8]) with mapi id 15.20.4264.004; Wed, 16 Jun 2021
+ 19:54:29 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     KY Srinivasan <kys@microsoft.com>, Long Li <longli@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Subject: RE: [PATCH 1/3] scsi: storvsc: Miscellaneous code cleanups
+Thread-Topic: [PATCH 1/3] scsi: storvsc: Miscellaneous code cleanups
+Thread-Index: AQHXWWYIAsJ2zwF+KkecbXYDITXaOKsV+udwgAEjtUA=
+Date:   Wed, 16 Jun 2021 19:54:29 +0000
+Message-ID: <MWHPR21MB1593ABC5154A199022896D3ED70F9@MWHPR21MB1593.namprd21.prod.outlook.com>
+References: <1622827263-12516-1-git-send-email-mikelley@microsoft.com>
+ <yq135ti7em1.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq135ti7em1.fsf@ca-mkp.ca.oracle.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=afabda0b-51be-4e6b-993f-bb340e6f98cf;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-06-16T19:49:22Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+authentication-results: oracle.com; dkim=none (message not signed)
+ header.d=none;oracle.com; dmarc=none action=none header.from=microsoft.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 46ae5b96-c6de-4b22-4fd4-08d931008da7
+x-ms-traffictypediagnostic: MW4PR21MB1876:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <MW4PR21MB18768232D51EE846B54F62F7D70F9@MW4PR21MB1876.namprd21.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: S2++C9A4xl4pSE63BbOX93MpigpaWXiG4IndX7WYEQABRSOin4cy+c87loBMkQn+5rB+w2Wt1i6ZuLIh0rjWK4W1mva2l99h4DnDZGGJFtPOJwPbj8B8ZlxaBV/VXl2+18uC0fUKzRUXUr0itkUTARbs09ghevrE1F2Wg/4OQ9q+1qEdmpNaSk0viSfC3kDlwndqedkRjKU27VNG+zTGIkoUNcYulqWrY4d0J0eHcLcUC7REKnSd7Cp/F77l/YlSYTNJSWBfrEdeJvwe2FYT3ES9r1a996FFqcyy7DEuQoZ1hfm48s1O6FbgqG+27KbNYS6D/XWUa08GSnrI93Uyf1DGcUV+dnRbe4IbxmSdEg3ypEpK87KwccsGE/5qf+YB458Ya48zHV74Xf34wkIt6iVsJNdrCp72E4yedHQFVLdKw41SPY81v3DoE6Ix9rqqKRR9wLkk8/7IpdJ++YFOXw7Z9FjFrxlJBGhmtH/A23Bq7Tq0pU52cT0P8GcPtKZ3lxzfI3YHAA92usZ8cHv+wFsykakCuNnWLCgz1uYSb0jnIGXb+gUzKyS/WE10WF/6YvfCb2ipu44z+zK0gL4X6IwGiqusmnpP+MvgVxRjYd360BmAvfaZGzp+4yAPZmwLAw43XZtICPLkURm3wHubWA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(54906003)(478600001)(4744005)(8936002)(8676002)(66556008)(66476007)(82960400001)(66446008)(6916009)(33656002)(64756008)(82950400001)(76116006)(83380400001)(52536014)(71200400001)(6506007)(9686003)(5660300002)(66946007)(7696005)(55016002)(186003)(4326008)(26005)(316002)(2906002)(8990500004)(38100700002)(122000001)(86362001)(10290500003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?n9GQnAsA1X6isPWMS8dZ7OpjshuKJb/CBaz4yk4OUqDi+LK7K9qsU0cd+nPT?=
+ =?us-ascii?Q?T1f+fTmjuwQa9kCX7XbSZuw3eNTworosDqASA5JkZU6AyEZ/Z2rWvKtaAjkO?=
+ =?us-ascii?Q?fEEdb8G2n+3FdUlTUc0iCu51iRwa/PT7YynDiFoBIX5hlvwl6ehdAdVpSIB/?=
+ =?us-ascii?Q?E149Y1bmvYi+ZFGzNTkQjcAwPCyhZmnNK8SgrUA9+cnGMDHlSuMJs9emTfrc?=
+ =?us-ascii?Q?ksHbaxAnn/JvXhyxDxSotGdxVTE18TKBTk2wI06mEIJnJ9iqDKuocnly+Uu/?=
+ =?us-ascii?Q?bwF0/m8lcKEeG0p4Pjt8bwhM/36paPfJZmfAQ7+zbMPhOoKw6eapgr8fKEJV?=
+ =?us-ascii?Q?jhlqwBoGRsu4Ux+wwZqloMtAqxc06w1U/Zafk3NBrJh/juoBEMhWNuOHwMbi?=
+ =?us-ascii?Q?tsq+qJSHSey3vgbboVQkKcpt4N/R0Lr4CNsjOSbVcJLX2DbZqkgoRduz6kNb?=
+ =?us-ascii?Q?R1CPqG3XO23A5AMy7vb9FzAmbLhUBSps3oD0qIa3avRgGdKKE8AztO4qODHL?=
+ =?us-ascii?Q?biNeFDZtVk1dNIxjkYWBWCuA/+BOlYeeyFdiL4BuVV4XXV4t8p2DPOmuG/4C?=
+ =?us-ascii?Q?7HBxYXZjjl/ZljHHFn3ehc/9PWqztIasYQmpbuUO16H5t43NRXlLxtwoMaNM?=
+ =?us-ascii?Q?MP/UPnd2PGOkyWeKZQFXgnnaSyMwBqmPYmNv8fiZbi/D55+8q6e3qLJMn6zE?=
+ =?us-ascii?Q?sA3TNGsa4iVf6Y6WybSMWvaNCrAyfZDCRB/pY51iADCDYILhSkalpYRWYYJw?=
+ =?us-ascii?Q?81zcLL6LIF7z+9pZJegiNDtYMVARUEmFrw4olqqGxFnBvdUWumShqaRoF9Eo?=
+ =?us-ascii?Q?V1OI35pVvnHXaHJDaFeQdqKeiYeji1XDJvcDJSermpTXP45D5WLmxTteAVtg?=
+ =?us-ascii?Q?6aQUnBTOfvaNkgW0XfBlC6qHk7UZE1phVEigcKS2QHVPqLbjLZc8UK8jxEpV?=
+ =?us-ascii?Q?thycZqVvuFTWY7vn0oDMdIGCNOBCLjIDXbZdOUkD3uJTu+ssRvmMUioEXEGB?=
+ =?us-ascii?Q?GVIQrVtpZ/OPY9Yf2Iv80E+CrL6IRVPvUfhCHxP4n8QtwomI3TQt3BVyWNCI?=
+ =?us-ascii?Q?PXxe6PTZkjTEG+a0i1gXea7y2ZdWivdaeG03aSZP3RycOdFQPlnQ5I9mumWk?=
+ =?us-ascii?Q?GdWE0YLCoqJWzrtXkrn86kil45rshbJyJm9wsyCG7slm2EMvw81rBEVflJkN?=
+ =?us-ascii?Q?9fpzsCeIAKwtXWp2SKo8O7MCndPXbbIKOHq0EYvp+vtUsuwk4AxxyDr03GqU?=
+ =?us-ascii?Q?+jWCBNU9s0PxF+/cu7fVZxxKVjpHKgNFeTILyfbxSoXlMCD6ZcpcXA5nYvZ6?=
+ =?us-ascii?Q?5g5zRViC/MvAKVgAIuWqU2p/?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 46ae5b96-c6de-4b22-4fd4-08d931008da7
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Jun 2021 19:54:29.4779
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: Zv4QtddOoiI4gW3ZMQgAK8OI8HmhQZIUWXmUx+IAuofsRLSBQROiFLsZ43TJUAT9krNgX77AW4XkzjT1Y6azaTFqIeiYOGdwlcNihuAlsjA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR21MB1876
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/16/21 1:47 AM, Can Guo wrote:
-> On 2021-06-16 12:40, Bart Van Assche wrote:
->> On 6/15/21 9:00 PM, Can Guo wrote:
->>> 2. And say we want SCSI layer to resubmit PM requests to prevent 
->>> suspend/resume fail, we should keep retrying the PM requests (so 
->>> long as error handler can recover everything successfully),
->>> meaning we should give them unlimited retries (which I think is a
->>> bad idea), otherwise (if they have zero retries or limited
->>> retries), in extreme conditions, what may happen is that error
->>> handler can recover everything successfully every time, but all
->>> these retries (say 3) still time out, which block the power
->>> management for too long (retries * 60 seconds) and, most
->>> important, when the last retry times out, scsi layer will
->>> anyways complete the PM request (even we return DID_IMM_RETRY),
->>> then we end up same - suspend/resume shall run concurrently with
->>> error handler and we couldn't recover saved PM errors.
->> 
->> Hmm ... it is not clear to me why this behavior is considered a
->> problem?
-> 
-> To me, task abort to PM requests does not worth being treated so 
-> differently, after all suspend/resume may fail due to any kinds of
-> UFS errors (as I've explained so many times). My idea is to let PM
-> requests fast fail (60 seconds has passed, a broken device maybe, we
-> have reason to fail it since it is just a passthrough req) and
-> schedule UFS error handler, UFS error handler shall proceed after
-> suspend/resume fails out then start to recover everything in a safe
-> environment. Is this way not working?
-Hi Can,
+From: Martin K. Petersen <martin.petersen@oracle.com> Sent: Tuesday, June 1=
+5, 2021 7:25 PM
+>=20
+> Michael,
+>=20
+> > As general cleanup and in preparation for subsequent patches:
+>=20
+> Applied 1-3 to 5.14/scsi-staging.
+>=20
+> Since Hannes' series has deprecated status_byte() and CHECK_CONDITION I
+> had to tweak that portion. Please verify my conflict resolution.
+>=20
 
-Thank you for the clarification. As you probably know the power
-management subsystem serializes runtime power management (RPM) and
-system suspend callbacks. I was concerned about the consequences of a
-failed RPM transition on system suspend and resume. Having taken a
-closer look at the UFS driver, I see that failed RPM transitions do not
-require special handling in the system suspend or resume callbacks. In
-other words, I'm fine with the approach of failing PM requests fast.
+Unfortunately, it's not quite right.  The line of code in question needs to=
+ be
 
-Bart.
+if ((vstor_packet->vm_srb.scsi_status & 0xFF) =3D=3D SAM_STAT_CHECK_CONDITI=
+ON &&
+
+The status_byte() helper was doing the masking as well as the right shift, =
+so the
+masking will need to be open coded.  The replacement get_status_byte() help=
+er=20
+won't work here because it's based on a scsi_cmnd structure.
+
+Michael
