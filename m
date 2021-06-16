@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 553EAC49EA2
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 820F8C49EA3
 	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:37:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 301D761107
+	by mail.kernel.org (Postfix) with ESMTP id 662D361107
 	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:37:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231441AbhFPGkD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S231446AbhFPGkD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 16 Jun 2021 02:40:03 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:10087 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231409AbhFPGkC (ORCPT
+Received: from szxga03-in.huawei.com ([45.249.212.189]:7323 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230508AbhFPGkC (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 02:40:02 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4G4b5c04drzZf6V;
-        Wed, 16 Jun 2021 14:35:00 +0800 (CST)
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.57])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4G4b4P0sjFz6y9v;
+        Wed, 16 Jun 2021 14:33:57 +0800 (CST)
 Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 16 Jun 2021 14:37:55 +0800
+ 15.1.2176.2; Wed, 16 Jun 2021 14:37:56 +0800
 Received: from thunder-town.china.huawei.com (10.174.179.0) by
  dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 16 Jun 2021 14:37:54 +0800
+ 15.1.2176.2; Wed, 16 Jun 2021 14:37:55 +0800
 From:   Zhen Lei <thunder.leizhen@huawei.com>
 To:     Vishal Bhakta <vbhakta@vmware.com>,
         VMware PV-Drivers <pv-drivers@vmware.com>,
@@ -47,9 +47,9 @@ To:     Vishal Bhakta <vbhakta@vmware.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi <linux-scsi@vger.kernel.org>
 CC:     Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH v2 06/20] scsi: devinfo: remove unnecessary oom message
-Date:   Wed, 16 Jun 2021 14:37:00 +0800
-Message-ID: <20210616063714.778-7-thunder.leizhen@huawei.com>
+Subject: [PATCH v2 07/20] scsi: tcm_qla2xxx: remove unnecessary oom message
+Date:   Wed, 16 Jun 2021 14:37:01 +0800
+Message-ID: <20210616063714.778-8-thunder.leizhen@huawei.com>
 X-Mailer: git-send-email 2.26.0.windows.1
 In-Reply-To: <20210616063714.778-1-thunder.leizhen@huawei.com>
 References: <20210616063714.778-1-thunder.leizhen@huawei.com>
@@ -71,25 +71,61 @@ Remove it can help us save a bit of memory.
 
 Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- drivers/scsi/scsi_devinfo.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index d33355ab6e14505..a8adbbbfddba44b 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -357,10 +357,8 @@ int scsi_dev_info_list_add_keyed(int compatible, char *vendor, char *model,
- 		return PTR_ERR(devinfo_table);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 03de1bcf1461d77..d537a7bc27f08b0 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1035,10 +1035,8 @@ static struct se_portal_group *tcm_qla2xxx_make_tpg(struct se_wwn *wwn,
+ 	}
  
- 	devinfo = kmalloc(sizeof(*devinfo), GFP_KERNEL);
--	if (!devinfo) {
--		printk(KERN_ERR "%s: no memory\n", __func__);
-+	if (!devinfo)
- 		return -ENOMEM;
+ 	tpg = kzalloc(sizeof(struct tcm_qla2xxx_tpg), GFP_KERNEL);
+-	if (!tpg) {
+-		pr_err("Unable to allocate struct tcm_qla2xxx_tpg\n");
++	if (!tpg)
+ 		return ERR_PTR(-ENOMEM);
 -	}
+ 	tpg->lport = lport;
+ 	tpg->lport_tpgt = tpgt;
+ 	/*
+@@ -1151,10 +1149,8 @@ static struct se_portal_group *tcm_qla2xxx_npiv_make_tpg(struct se_wwn *wwn,
+ 		return ERR_PTR(-EINVAL);
  
- 	scsi_strcpy_devinfo("vendor", devinfo->vendor, sizeof(devinfo->vendor),
- 			    vendor, compatible);
+ 	tpg = kzalloc(sizeof(struct tcm_qla2xxx_tpg), GFP_KERNEL);
+-	if (!tpg) {
+-		pr_err("Unable to allocate struct tcm_qla2xxx_tpg\n");
++	if (!tpg)
+ 		return ERR_PTR(-ENOMEM);
+-	}
+ 	tpg->lport = lport;
+ 	tpg->lport_tpgt = tpgt;
+ 
+@@ -1653,10 +1649,8 @@ static struct se_wwn *tcm_qla2xxx_make_lport(
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	lport = kzalloc(sizeof(struct tcm_qla2xxx_lport), GFP_KERNEL);
+-	if (!lport) {
+-		pr_err("Unable to allocate struct tcm_qla2xxx_lport\n");
++	if (!lport)
+ 		return ERR_PTR(-ENOMEM);
+-	}
+ 	lport->lport_wwpn = wwpn;
+ 	tcm_qla2xxx_format_wwn(&lport->lport_name[0], TCM_QLA2XXX_NAMELEN,
+ 				wwpn);
+@@ -1779,10 +1773,8 @@ static struct se_wwn *tcm_qla2xxx_npiv_make_lport(
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	lport = kzalloc(sizeof(struct tcm_qla2xxx_lport), GFP_KERNEL);
+-	if (!lport) {
+-		pr_err("Unable to allocate struct tcm_qla2xxx_lport for NPIV\n");
++	if (!lport)
+ 		return ERR_PTR(-ENOMEM);
+-	}
+ 	lport->lport_npiv_wwpn = npiv_wwpn;
+ 	lport->lport_npiv_wwnn = npiv_wwnn;
+ 	sprintf(lport->lport_naa_name, "naa.%016llx", (unsigned long long) npiv_wwpn);
 -- 
 2.26.0.106.g9fadedd
 
