@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8850C48BE8
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:38:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B08C7C48BE5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:38:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 93CB161375
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:38:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 982BA613BF
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:38:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231484AbhFPGkK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 02:40:10 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:4796 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231453AbhFPGkF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 02:40:05 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4G4b3G1kfvzWt4m;
-        Wed, 16 Jun 2021 14:32:58 +0800 (CST)
+        id S231593AbhFPGkL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Jun 2021 02:40:11 -0400
+Received: from szxga03-in.huawei.com ([45.249.212.189]:7324 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231489AbhFPGkG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 02:40:06 -0400
+Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.53])
+        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4G4b4T1crCz6y7X;
+        Wed, 16 Jun 2021 14:34:01 +0800 (CST)
 Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 16 Jun 2021 14:37:59 +0800
+ 15.1.2176.2; Wed, 16 Jun 2021 14:38:00 +0800
 Received: from thunder-town.china.huawei.com (10.174.179.0) by
  dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 16 Jun 2021 14:37:58 +0800
+ 15.1.2176.2; Wed, 16 Jun 2021 14:37:59 +0800
 From:   Zhen Lei <thunder.leizhen@huawei.com>
 To:     Vishal Bhakta <vbhakta@vmware.com>,
         VMware PV-Drivers <pv-drivers@vmware.com>,
@@ -47,9 +47,9 @@ To:     Vishal Bhakta <vbhakta@vmware.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi <linux-scsi@vger.kernel.org>
 CC:     Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH v2 11/20] scsi: ips: remove unnecessary oom message
-Date:   Wed, 16 Jun 2021 14:37:05 +0800
-Message-ID: <20210616063714.778-12-thunder.leizhen@huawei.com>
+Subject: [PATCH v2 12/20] scsi: ipr: remove unnecessary oom message
+Date:   Wed, 16 Jun 2021 14:37:06 +0800
+Message-ID: <20210616063714.778-13-thunder.leizhen@huawei.com>
 X-Mailer: git-send-email 2.26.0.windows.1
 In-Reply-To: <20210616063714.778-1-thunder.leizhen@huawei.com>
 References: <20210616063714.778-1-thunder.leizhen@huawei.com>
@@ -71,25 +71,26 @@ Remove it can help us save a bit of memory.
 
 Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- drivers/scsi/ips.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/ipr.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index bc33d54a40112a1..5a242247b8b52d7 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -1685,10 +1685,8 @@ ips_flash_copperhead(ips_ha_t * ha, ips_passthru_t * pt, ips_scb_t * scb)
- 			    pt->CoppCP.cmd.flashfw.count;
- 			ha->flash_data = dma_alloc_coherent(&ha->pcidev->dev,
- 					datasize, &ha->flash_busaddr, GFP_KERNEL);
--			if (!ha->flash_data){
--				printk(KERN_WARNING "Unable to allocate a flash buffer\n");
-+			if (!ha->flash_data)
- 				return IPS_FAILURE;
--			}
- 			ha->flash_datasize = 0;
- 			ha->flash_len = datasize;
- 		} else
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 30c30a1db5b1aa0..b99f55e9897af1b 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4364,11 +4364,8 @@ static int ipr_alloc_dump(struct ipr_ioa_cfg *ioa_cfg)
+ 	unsigned long lock_flags = 0;
+ 
+ 	dump = kzalloc(sizeof(struct ipr_dump), GFP_KERNEL);
+-
+-	if (!dump) {
+-		ipr_err("Dump memory allocation failed\n");
++	if (!dump)
+ 		return -ENOMEM;
+-	}
+ 
+ 	if (ioa_cfg->sis64)
+ 		ioa_data = vmalloc(array_size(IPR_FMT3_MAX_NUM_DUMP_PAGES,
 -- 
 2.26.0.106.g9fadedd
 
