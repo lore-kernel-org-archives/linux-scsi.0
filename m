@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62E17C49361
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 03:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2C5EC49EA2
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 03:45:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40F21610A2
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 03:45:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AAF6661369
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 03:45:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230211AbhFPDrw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 15 Jun 2021 23:47:52 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:7447 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230083AbhFPDrv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2021 23:47:51 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4G4WGx3cc9zZhk2;
-        Wed, 16 Jun 2021 11:42:49 +0800 (CST)
+        id S230482AbhFPDry (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 15 Jun 2021 23:47:54 -0400
+Received: from szxga08-in.huawei.com ([45.249.212.255]:7286 "EHLO
+        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230083AbhFPDry (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jun 2021 23:47:54 -0400
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.56])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4G4WDZ5q2tz1BMVP;
+        Wed, 16 Jun 2021 11:40:46 +0800 (CST)
 Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 16 Jun 2021 11:45:44 +0800
+ 15.1.2176.2; Wed, 16 Jun 2021 11:45:46 +0800
 Received: from thunder-town.china.huawei.com (10.174.179.0) by
  dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -44,9 +44,9 @@ To:     Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi <linux-scsi@vger.kernel.org>
 CC:     Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH v2 1/4] scsi: qedi: use DEVICE_ATTR_RO macro
-Date:   Wed, 16 Jun 2021 11:44:16 +0800
-Message-ID: <20210616034419.725-2-thunder.leizhen@huawei.com>
+Subject: [PATCH v2 2/4] scsi: qedf: use DEVICE_ATTR_RO macro
+Date:   Wed, 16 Jun 2021 11:44:17 +0800
+Message-ID: <20210616034419.725-3-thunder.leizhen@huawei.com>
 X-Mailer: git-send-email 2.26.0.windows.1
 In-Reply-To: <20210616034419.725-1-thunder.leizhen@huawei.com>
 References: <20210616034419.725-1-thunder.leizhen@huawei.com>
@@ -66,48 +66,48 @@ the code a bit shorter and easier to read.
 
 Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- drivers/scsi/qedi/qedi_sysfs.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/qedf/qedf_attr.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_sysfs.c b/drivers/scsi/qedi/qedi_sysfs.c
-index 04ee68e6499c912..be174d30eb7c275 100644
---- a/drivers/scsi/qedi/qedi_sysfs.c
-+++ b/drivers/scsi/qedi/qedi_sysfs.c
-@@ -16,9 +16,9 @@ static inline struct qedi_ctx *qedi_dev_to_hba(struct device *dev)
- 	return iscsi_host_priv(shost);
+diff --git a/drivers/scsi/qedf/qedf_attr.c b/drivers/scsi/qedf/qedf_attr.c
+index d995f72a67595bd..461c0c9180c444e 100644
+--- a/drivers/scsi/qedf/qedf_attr.c
++++ b/drivers/scsi/qedf/qedf_attr.c
+@@ -24,9 +24,8 @@ static struct qedf_ctx *qedf_get_base_qedf(struct qedf_ctx *qedf)
+ 	return lport_priv(base_lport);
  }
  
--static ssize_t qedi_show_port_state(struct device *dev,
--				    struct device_attribute *attr,
--				    char *buf)
-+static ssize_t port_state_show(struct device *dev,
-+			       struct device_attribute *attr,
-+			       char *buf)
+-static ssize_t
+-qedf_fcoe_mac_show(struct device *dev,
+-	struct device_attribute *attr, char *buf)
++static ssize_t fcoe_mac_show(struct device *dev,
++			     struct device_attribute *attr, char *buf)
  {
- 	struct qedi_ctx *qedi = qedi_dev_to_hba(dev);
- 
-@@ -28,8 +28,8 @@ static ssize_t qedi_show_port_state(struct device *dev,
- 		return sprintf(buf, "Linkdown\n");
+ 	struct fc_lport *lport = shost_priv(class_to_shost(dev));
+ 	u32 port_id;
+@@ -42,9 +41,8 @@ qedf_fcoe_mac_show(struct device *dev,
+ 	return scnprintf(buf, PAGE_SIZE, "%pM\n", fcoe_mac);
  }
  
--static ssize_t qedi_show_speed(struct device *dev,
--			       struct device_attribute *attr, char *buf)
-+static ssize_t speed_show(struct device *dev,
-+			  struct device_attribute *attr, char *buf)
+-static ssize_t
+-qedf_fka_period_show(struct device *dev,
+-	struct device_attribute *attr, char *buf)
++static ssize_t fka_period_show(struct device *dev,
++			       struct device_attribute *attr, char *buf)
  {
- 	struct qedi_ctx *qedi = qedi_dev_to_hba(dev);
- 	struct qed_link_output if_link;
-@@ -39,8 +39,8 @@ static ssize_t qedi_show_speed(struct device *dev,
- 	return sprintf(buf, "%d Gbit\n", if_link.speed / 1000);
+ 	struct fc_lport *lport = shost_priv(class_to_shost(dev));
+ 	struct qedf_ctx *qedf = lport_priv(lport);
+@@ -59,8 +57,8 @@ qedf_fka_period_show(struct device *dev,
+ 	return scnprintf(buf, PAGE_SIZE, "%d\n", fka_period);
  }
  
--static DEVICE_ATTR(port_state, 0444, qedi_show_port_state, NULL);
--static DEVICE_ATTR(speed, 0444, qedi_show_speed, NULL);
-+static DEVICE_ATTR_RO(port_state);
-+static DEVICE_ATTR_RO(speed);
+-static DEVICE_ATTR(fcoe_mac, S_IRUGO, qedf_fcoe_mac_show, NULL);
+-static DEVICE_ATTR(fka_period, S_IRUGO, qedf_fka_period_show, NULL);
++static DEVICE_ATTR_RO(fcoe_mac);
++static DEVICE_ATTR_RO(fka_period);
  
- struct device_attribute *qedi_shost_attrs[] = {
- 	&dev_attr_port_state,
+ struct device_attribute *qedf_host_attrs[] = {
+ 	&dev_attr_fcoe_mac,
 -- 
 2.26.0.106.g9fadedd
 
