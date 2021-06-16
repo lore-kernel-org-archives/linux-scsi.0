@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9EB0C48BE5
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 07:08:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D98CC48BE5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 07:08:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B285461359
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 07:08:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E740661356
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 07:08:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231303AbhFPHKZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 03:10:25 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:26954 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231256AbhFPHKY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 03:10:24 -0400
+        id S231303AbhFPHLA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Jun 2021 03:11:00 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:53960 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231245AbhFPHLA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 03:11:00 -0400
 Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210616070817epoutp0417359ac25057d9a36d552a5d13f529aa~I-lLK3hX22072920729epoutp04Y
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 07:08:17 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210616070817epoutp0417359ac25057d9a36d552a5d13f529aa~I-lLK3hX22072920729epoutp04Y
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210616070852epoutp01029cbca78087f6cc0560a12324890c18~I-lsSd6R-0486004860epoutp01G
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 07:08:52 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210616070852epoutp01029cbca78087f6cc0560a12324890c18~I-lsSd6R-0486004860epoutp01G
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1623827297;
-        bh=kLJhEEFY0h00zyR+/E/V2gSBD5Xm1zXS9WKzXBYrGi4=;
+        s=mail20170921; t=1623827332;
+        bh=vg8PmkUDW70yzHsu12i/jlTbycFxJxiZBBcNbQx9/1I=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=UnPKLJ8qfJo5oTq4V/oUjJci7lo2KYlrawUT8HSbFbR0zpjYinL8XkWRy8ex9QziK
-         rXzs0aKk7fXFBL5AK0PvGz4vC+9s2MZxJ8QelcF0A4V9GuzuQhYV3ztItyzYhC+hHK
-         pJAL8x5fsBauJGbDIHfJGfo/7L2JCS1g7md4TAtU=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        b=qyyFoY3HR6zwAxCFPfoH39t7QLV/CVrkAPZu8MG+WYQb0Dw+YetmhN22KwKGXueT/
+         LCYieOkMWNmjmbeS8AHkemCifCVBt5GSuP3Wt0ixd+vL49OYi6z6JF/8pRvhfZ6FqE
+         h2LK+B+QiA5ZZ6EERFxpkRslGGzg6j9PV+Hx+fQQ=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
         epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20210616070815epcas2p42da999b37922799a205bd162a4ce1eda~I-lJzvUIl2444924449epcas2p4w;
-        Wed, 16 Jun 2021 07:08:15 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.40.188]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4G4bqw5SRHz4x9Ps; Wed, 16 Jun
-        2021 07:08:12 +0000 (GMT)
-X-AuditID: b6c32a45-38939a8000002584-3f-60c9a35cac56
-Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        B0.37.09604.C53A9C06; Wed, 16 Jun 2021 16:08:12 +0900 (KST)
+        20210616070851epcas2p4c011324d8dc17fa65dea2bdae48e317d~I-lrJbZ9g2411924119epcas2p4Y;
+        Wed, 16 Jun 2021 07:08:51 +0000 (GMT)
+Received: from epsmges2p2.samsung.com (unknown [182.195.40.185]) by
+        epsnrtp3.localdomain (Postfix) with ESMTP id 4G4brc4YLjz4x9Q7; Wed, 16 Jun
+        2021 07:08:48 +0000 (GMT)
+X-AuditID: b6c32a46-e01ff700000025de-7a-60c9a38008ba
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        07.ED.09694.083A9C06; Wed, 16 Jun 2021 16:08:48 +0900 (KST)
 Mime-Version: 1.0
-Subject: [PATCH v38 1/4] scsi: ufs: Introduce HPB feature
+Subject: [PATCH v38 2/4] scsi: ufs: L2P map management for HPB read
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
@@ -75,111 +75,74 @@ X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <20210616070812epcms2p4650ce5cd78056dce9162482e59bb74dd@epcms2p4>
-Date:   Wed, 16 Jun 2021 16:08:12 +0900
-X-CMS-MailID: 20210616070812epcms2p4650ce5cd78056dce9162482e59bb74dd
+Message-ID: <20210616070848epcms2p2819a1f0bf96cdcc357842fe8500af633@epcms2p2>
+Date:   Wed, 16 Jun 2021 16:08:48 +0900
+X-CMS-MailID: 20210616070848epcms2p2819a1f0bf96cdcc357842fe8500af633
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 CMS-TYPE: 102P
-X-Brightmail-Tracker: H4sIAAAAAAAAA12Te1BUVRzHO/cuuxearcuCdKJU5uIjjMcuuHhwhMmkuKPgMDVTDdbAFW4L
-        47K73rubRkpgEuCKIBU4uGAtxhJRy8NlARHkMQKOTDVkuKQGiQ1QIIQjYEHtsks6/fc9n/N7
-        fc+DwCXjQl8iTaVlORWjpIQegqbuABT0dmV/ktRo2oRGKpqE6NLHfSI0sXhdiEpmFnH0p7nK
-        DU10BaDWzk4hqhl5E31UaRYiw0AWhgoKLULU2FmHozs350TIeKMJQ4XLuQLUNOeJevunARps
-        NQiRfqhZiEy9yxj60mIDKL+0VvCSDz344x568FQBRreU3RLRRcbLgO4orxXRx/s7BPTs3WEB
-        fepCDaDnGtbRuZf1WLxHgnJHKsuksJwfq0pWp6SpFJHUntcTdyXKw6WyIFkE2kb5qZh0NpKK
-        jo0PejVNabdJ+b3HKHV2FM/wPBUStYNT67SsX6qa10ZSrCZFqZHJNME8k87rVIrgZHX6dplU
-        Giq3RyYpU/ONBUJNdQ92uKTaNwvY9NgJ4E5AcivsMemBQ0vIZgCtRYdOAIIQk55wqdnLgb3I
-        CGi1PXBzhlDQ/EOZyMmD4fBo7UqqkAyEpX2/2LkH4U3mCKBxwIQ5Fjj5HQ7bbuQCZzMxPJN7
-        V+DUz0GrybLC3cm9MO+h1TXQC3ChqgB36jXQ9vWUaFXfu3LOVccb5twecMV4wpHFiy7+LLxy
-        ccZV50NoufkQOIaA5EkAu1uG3ZwbIfCnvPqVIcRkHLxmnVwpJCA3wvarxcDhHpLR8NySvwPj
-        5HponTLgDoyTAdDcGuKM8Ic9w4JVV1n1f4n+r3HyKZjXvfQfb64Yc022CX67aMaKgH/Zo5Mu
-        e6xX2aNenwO8BviwGj5dwfKhGtnjl9sAVp78lleawSdTM8FdACNAF4AETnmLg/i+JIk4hXk/
-        g+XUiZxOyfJdQG43eRr3XZOstv8ZlTZRJg8ND5dGyJE8PBRRz4gJUVeShFQwWvYAy2pYbjUP
-        I9x9s7AEn3fXg6iw7Lq88qyIBk721mTh8oYYr6P3FujTb2w2/Hxbch52Sw2cu/LlSR/FBrN2
-        /tAfOZK4fFqw+5/9LU8eS21lNGM5s5/qYpNiZoMMcGNHOdV4OKpkbWFgKROdER1ZaT1viC/O
-        hOK2jCMKQ0/dpd7S4/e/ebri15ji3U9MjBszFdyCb9vO0a26bP18ThjXsG4gbfPv5Qe/jzBW
-        vZhJdLRP2yRulpLxNFPc0NhJS/Xzanht8J3sL/S31tZvz8PO1jwQzx87kFC1v6Wy/qrt7Fce
-        F/Zl7BwtUcv+Dtt7H0wnb4sNOQgLw7KlZ44OTdR+oHZ/7fqdwMF91vbGI8Ehv31GCfhURrYF
-        53jmX/n1cLZ7BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrNJsWRmVeSWpSXmKPExsWy7bCmmW7D4pMJBk//KVg8mLeNzWJv2wl2
+        i5c/r7JZTPvwk9ni0/plrBYvD2la7Dp4kM1i1YNwi+bF69ks5pxtYLLo7d/KZrH54AZmi8d3
+        PrNbLLqxjcmi/187i8W2z4IWx0++Y7S4vGsOm0X39R1sFsuP/2OyWLr1JqNF5/Q1LA5iHpev
+        eHtc7utl8tg56y67x4RFBxg99s9dw+7RcnI/i8fHp7dYPPq2rGL0+LxJzqP9QDdTAFdUjk1G
+        amJKapFCal5yfkpmXrqtkndwvHO8qZmBoa6hpYW5kkJeYm6qrZKLT4CuW2YO0JtKCmWJOaVA
+        oYDE4mIlfTubovzSklSFjPziElul1IKUnAJDwwK94sTc4tK8dL3k/FwrQwMDI1OgyoScjPnT
+        l7IWXLvDVPFiXQN7A+OLOUxdjJwcEgImEndvnWbrYuTiEBLYwSix8cw99i5GDg5eAUGJvzuE
+        QWqEBZwltpw4wgpiCwkoSay/OIsdIq4ncevhGkYQm01AR2L6ifvsIHNEBFpZJBadXc4E4jAL
+        nGeW2HOjnRFiG6/EjPanLBC2tMT25VvB4pwCfhIdv7ZDXaQh8WNZLzOELSpxc/Vbdhj7/bH5
+        UHNEJFrvnYWqEZR48HM3VFxS4tjuD1Bz6iW23vnFCHKEhEAPo8ThnbdYIRL6Etc6NoIdwSvg
+        K/H2zCI2EJtFQFXi1MHDUINcJD4ffg8WZxaQl9j+dg4zKFSYBTQl1u/SBzElBJQljtxigXmr
+        YeNvdnQ2swCfRMfhv3DxHfOeQJ2mJrHu53qmCYzKsxBBPQvJrlkIuxYwMq9iFEstKM5NTy02
+        KjBCjt9NjOBUr+W2g3HK2w96hxiZOBgPMUpwMCuJ8OoWn0gQ4k1JrKxKLcqPLyrNSS0+xGgK
+        9OVEZinR5HxgtskriTc0NTIzM7A0tTA1M7JQEuflYD+UICSQnliSmp2aWpBaBNPHxMEp1cC0
+        /uzzP00b4+7MlmY4pRSsPGN26Lxwh3DvbT1X3FXuJTxcf+Sn2gc216RlmzR+r0mJW154tGsl
+        Z94lG/4rngI+82QmPeNrrNuk/u5mw48bnu8DBIRX3OurN9wpW/nw6k6tuNaXpyTVj8gcTJiz
+        cnHuM+VzJvvlIr94m5zjEHp67M37Z+nzTj31SDjgYP02u/So2wKTHL2QFabT99evrTos06p6
+        eLPp2cVHoyTZO2tsZV6tW5rWtP3y6g1G7m+35R3Su7FF+kzyLaXFMpdfzNzZ57B63vfXDSdd
+        W8SvJO+SXDv504Vz361O/ptp0nc344f+vNJKzrhpGccN0tQfGWSXbBe6GilanrjxofYPPkcV
+        TSWW4oxEQy3mouJEAJjD1bJ+BAAA
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
 X-CMS-RootMailID: 20210616070700epcms2p734db9b60e13229696fb3cda5f69e210f
 References: <20210616070700epcms2p734db9b60e13229696fb3cda5f69e210f@epcms2p7>
-        <CGME20210616070700epcms2p734db9b60e13229696fb3cda5f69e210f@epcms2p4>
+        <CGME20210616070700epcms2p734db9b60e13229696fb3cda5f69e210f@epcms2p2>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This is a patch for the HPB initialization and adds HPB function calls to
-UFS core driver.
+This is a patch for managing L2P map in HPB module.
 
-NAND flash-based storage devices, including UFS, have mechanisms to
-translate logical addresses of IO requests to the corresponding physical
-addresses of the flash storage.
-In UFS, Logical-address-to-Physical-address (L2P) map data, which is
-required to identify the physical address for the requested IOs, can only
-be partially stored in SRAM from NAND flash. Due to this partial loading,
-accessing the flash address area where the L2P information for that address
-is not loaded in the SRAM can result in serious performance degradation.
+The HPB divides logical addresses into several regions. A region consists
+of several sub-regions. The sub-region is a basic unit where L2P mapping is
+managed. The driver loads L2P mapping data of each sub-region. The loaded
+sub-region is called active-state. The HPB driver unloads L2P mapping data
+as region unit. The unloaded region is called inactive-state.
 
-The basic concept of HPB is to cache L2P mapping entries in host system
-memory so that both physical block address (PBA) and logical block address
-(LBA) can be delivered in HPB read command.
-The HPB READ command allows to read data faster than a read command in UFS
-since it provides the physical address (HPB Entry) of the desired logical
-block in addition to its logical address. The UFS device can access the
-physical block in NAND directly without searching and uploading L2P mapping
-table. This improves read performance because the NAND read operation for
-uploading L2P mapping table is removed.
+Sub-region/region candidates to be loaded and unloaded are delivered from
+the UFS device. The UFS device delivers the recommended active sub-region
+and inactivate region to the driver using sensedata.
+The HPB module performs L2P mapping management on the host through the
+delivered information.
 
-In HPB initialization, the host checks if the UFS device supports HPB
-feature and retrieves related device capabilities. Then, some HPB
-parameters are configured in the device.
+A pinned region is a pre-set regions on the UFS device that is always
+activate-state.
 
-We measured the total start-up time of popular applications and observed
-the difference by enabling the HPB.
-Popular applications are 12 game apps and 24 non-game apps. Each target
-applications were launched in order. The cycle consists of running 36
-applications in sequence. We repeated the cycle for observing performance
-improvement by L2P mapping cache hit in HPB.
+The data structure for map data request and L2P map uses mempool API,
+minimizing allocation overhead while avoiding static allocation.
 
-The Following is experiment environment:
- - kernel version: 4.4.0
- - RAM: 8GB
- - UFS 2.1 (64GB)
+The mininum size of the memory pool used in the HPB is implemented
+as a module parameter, so that it can be configurable by the user.
 
-Result:
-+-------+----------+----------+-------+
-| cycle | baseline | with HPB | diff  |
-+-------+----------+----------+-------+
-| 1     | 272.4    | 264.9    | -7.5  |
-| 2     | 250.4    | 248.2    | -2.2  |
-| 3     | 226.2    | 215.6    | -10.6 |
-| 4     | 230.6    | 214.8    | -15.8 |
-| 5     | 232.0    | 218.1    | -13.9 |
-| 6     | 231.9    | 212.6    | -19.3 |
-+-------+----------+----------+-------+
+To gurantee a minimum memory pool size of 4MB: ufshpb_host_map_kbytes=4096
 
-We also measured HPB performance using iozone.
-Here is my iozone script:
-iozone -r 4k -+n -i2 -ecI -t 16 -l 16 -u 16
--s $IO_RANGE/16 -F mnt/tmp_1 mnt/tmp_2 mnt/tmp_3 mnt/tmp_4 mnt/tmp_5
-mnt/tmp_6 mnt/tmp_7 mnt/tmp_8 mnt/tmp_9 mnt/tmp_10 mnt/tmp_11 mnt/tmp_12
-mnt/tmp_13 mnt/tmp_14 mnt/tmp_15 mnt/tmp_16
-
-Result:
-+----------+--------+---------+
-| IO range | HPB on | HPB off |
-+----------+--------+---------+
-|   1 GB   | 294.8  | 300.87  |
-|   4 GB   | 293.51 | 179.35  |
-|   8 GB   | 294.85 | 162.52  |
-|  16 GB   | 293.45 | 156.26  |
-|  32 GB   | 277.4  | 153.25  |
-+----------+--------+---------+
+The map_work manages active/inactive by 2 "to-do" lists.
+Each hpb lun maintains 2 "to-do" lists:
+  hpb->lh_inact_rgn - regions to be inactivated, and
+  hpb->lh_act_srgn - subregions to be activated
+Those lists are maintained on IO completion.
 
 Reviewed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
@@ -190,1254 +153,1501 @@ Acked-by: Avri Altman <Avri.Altman@wdc.com>
 Tested-by: Bean Huo <beanhuo@micron.com>
 Tested-by: Can Guo <cang@codeaurora.org>
 Tested-by: Stanley Chu <stanley.chu@mediatek.com>
-Reported-by: kernel test robot <lkp@intel.com>
 Signed-off-by: Daejun Park <daejun7.park@samsung.com>
 ---
- Documentation/ABI/testing/sysfs-driver-ufs | 127 +++++
- drivers/scsi/ufs/Kconfig                   |   9 +
- drivers/scsi/ufs/Makefile                  |   1 +
- drivers/scsi/ufs/ufs-sysfs.c               |  18 +
- drivers/scsi/ufs/ufs.h                     |  15 +
- drivers/scsi/ufs/ufshcd.c                  |  48 ++
- drivers/scsi/ufs/ufshcd.h                  |  23 +
- drivers/scsi/ufs/ufshpb.c                  | 568 +++++++++++++++++++++
- drivers/scsi/ufs/ufshpb.h                  | 167 ++++++
- 9 files changed, 976 insertions(+)
- create mode 100644 drivers/scsi/ufs/ufshpb.c
- create mode 100644 drivers/scsi/ufs/ufshpb.h
+ drivers/scsi/ufs/ufs.h    |   36 ++
+ drivers/scsi/ufs/ufshcd.c |    4 +
+ drivers/scsi/ufs/ufshpb.c | 1088 ++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshpb.h |   65 +++
+ 4 files changed, 1178 insertions(+), 15 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 8380866d8ed0..c3d80bd15f74 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1298,3 +1298,130 @@ Description:	This node is used to set or display whether UFS WriteBooster is
- 		(if the platform supports UFSHCD_CAP_CLK_SCALING). For a
- 		platform that doesn't support UFSHCD_CAP_CLK_SCALING, we can
- 		disable/enable WriteBooster through this sysfs node.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/hpb_version
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the HPB specification version.
-+		The full information about the descriptor could be found at UFS
-+		HPB (Host Performance Booster) Extension specifications.
-+		Example: version 1.2.3 = 0123h
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/device_descriptor/hpb_control
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows an indication of the HPB control mode.
-+		00h: Host control mode
-+		01h: Device control mode
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/hpb_region_size
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the bHPBRegionSize which can be calculated
-+		as in the following (in bytes):
-+		HPB Region size = 512B * 2^bHPBRegionSize
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/hpb_number_lu
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the maximum number of HPB LU supported	by
-+		the device.
-+		00h: HPB is not supported by the device.
-+		01h ~ 20h: Maximum number of HPB LU supported by the device
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/hpb_subregion_size
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the bHPBSubRegionSize, which can be
-+		calculated as in the following (in bytes) and shall be a multiple of
-+		logical block size:
-+		HPB Sub-Region size = 512B x 2^bHPBSubRegionSize
-+		bHPBSubRegionSize shall not exceed bHPBRegionSize.
-+
-+		The file is read only.
-+
-+What:		/sys/bus/platform/drivers/ufshcd/*/geometry_descriptor/hpb_max_active_regions
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the maximum number of active HPB regions that
-+		is supported by the device.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/unit_descriptor/hpb_lu_max_active_regions
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the maximum number of HPB regions assigned to
-+		the HPB logical unit.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/unit_descriptor/hpb_pinned_region_start_offset
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the start offset of HPB pinned region.
-+
-+		The file is read only.
-+
-+What:		/June/class/scsi_device/*/device/unit_descriptor/hpb_number_pinned_regions
-+Date:		March 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the number of HPB pinned regions assigned to
-+		the HPB logical unit.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_stats/hit_cnt
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the number of reads that changed to HPB read.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_stats/miss_cnt
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the number of reads that cannot be changed to
-+		HPB read.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_stats/rb_noti_cnt
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the number of response UPIUs that has
-+		recommendations for activating sub-regions and/or inactivating region.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_stats/rb_active_cnt
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the number of active sub-regions recommended by
-+		response UPIUs.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_stats/rb_inactive_cnt
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the number of inactive regions recommended by
-+		response UPIUs.
-+
-+		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_stats/map_req_cnt
-+Date:		June 2021
-+Contact:	Daejun Park <daejun7.park@samsung.com>
-+Description:	This entry shows the number of read buffer commands for
-+		activating sub-regions recommended by response UPIUs.
-+
-+		The file is read only.
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index 07cf415367b4..29ec6e4a87bd 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -182,3 +182,12 @@ config SCSI_UFS_CRYPTO
- 	  Enabling this makes it possible for the kernel to use the crypto
- 	  capabilities of the UFS device (if present) to perform crypto
- 	  operations on data being transferred to/from the device.
-+
-+config SCSI_UFS_HPB
-+	bool "Support UFS Host Performance Booster"
-+	depends on SCSI_UFSHCD
-+	help
-+	  The UFS HPB feature improves random read performance. It caches
-+	  L2P (logical to physical) map of UFS to host DRAM. The driver uses HPB
-+	  read command by piggybacking physical page number for bypassing FTL (flash
-+	  translation layer)'s L2P address translation.
-diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
-index 06f3a3fe4a44..cce9b3916f5b 100644
---- a/drivers/scsi/ufs/Makefile
-+++ b/drivers/scsi/ufs/Makefile
-@@ -8,6 +8,7 @@ ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
- ufshcd-core-$(CONFIG_DEBUG_FS)		+= ufs-debugfs.o
- ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
- ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
-+ufshcd-core-$(CONFIG_SCSI_UFS_HPB)	+= ufshpb.o
- 
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.o
- obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 52bd807f7940..639644817f36 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -604,6 +604,8 @@ UFS_DEVICE_DESC_PARAM(device_version, _DEV_VER, 2);
- UFS_DEVICE_DESC_PARAM(number_of_secure_wpa, _NUM_SEC_WPA, 1);
- UFS_DEVICE_DESC_PARAM(psa_max_data_size, _PSA_MAX_DATA, 4);
- UFS_DEVICE_DESC_PARAM(psa_state_timeout, _PSA_TMT, 1);
-+UFS_DEVICE_DESC_PARAM(hpb_version, _HPB_VER, 2);
-+UFS_DEVICE_DESC_PARAM(hpb_control, _HPB_CONTROL, 1);
- UFS_DEVICE_DESC_PARAM(ext_feature_sup, _EXT_UFS_FEATURE_SUP, 4);
- UFS_DEVICE_DESC_PARAM(wb_presv_us_en, _WB_PRESRV_USRSPC_EN, 1);
- UFS_DEVICE_DESC_PARAM(wb_type, _WB_TYPE, 1);
-@@ -636,6 +638,8 @@ static struct attribute *ufs_sysfs_device_descriptor[] = {
- 	&dev_attr_number_of_secure_wpa.attr,
- 	&dev_attr_psa_max_data_size.attr,
- 	&dev_attr_psa_state_timeout.attr,
-+	&dev_attr_hpb_version.attr,
-+	&dev_attr_hpb_control.attr,
- 	&dev_attr_ext_feature_sup.attr,
- 	&dev_attr_wb_presv_us_en.attr,
- 	&dev_attr_wb_type.attr,
-@@ -709,6 +713,10 @@ UFS_GEOMETRY_DESC_PARAM(enh4_memory_max_alloc_units,
- 	_ENM4_MAX_NUM_UNITS, 4);
- UFS_GEOMETRY_DESC_PARAM(enh4_memory_capacity_adjustment_factor,
- 	_ENM4_CAP_ADJ_FCTR, 2);
-+UFS_GEOMETRY_DESC_PARAM(hpb_region_size, _HPB_REGION_SIZE, 1);
-+UFS_GEOMETRY_DESC_PARAM(hpb_number_lu, _HPB_NUMBER_LU, 1);
-+UFS_GEOMETRY_DESC_PARAM(hpb_subregion_size, _HPB_SUBREGION_SIZE, 1);
-+UFS_GEOMETRY_DESC_PARAM(hpb_max_active_regions, _HPB_MAX_ACTIVE_REGS, 2);
- UFS_GEOMETRY_DESC_PARAM(wb_max_alloc_units, _WB_MAX_ALLOC_UNITS, 4);
- UFS_GEOMETRY_DESC_PARAM(wb_max_wb_luns, _WB_MAX_WB_LUNS, 1);
- UFS_GEOMETRY_DESC_PARAM(wb_buff_cap_adj, _WB_BUFF_CAP_ADJ, 1);
-@@ -746,6 +754,10 @@ static struct attribute *ufs_sysfs_geometry_descriptor[] = {
- 	&dev_attr_enh3_memory_capacity_adjustment_factor.attr,
- 	&dev_attr_enh4_memory_max_alloc_units.attr,
- 	&dev_attr_enh4_memory_capacity_adjustment_factor.attr,
-+	&dev_attr_hpb_region_size.attr,
-+	&dev_attr_hpb_number_lu.attr,
-+	&dev_attr_hpb_subregion_size.attr,
-+	&dev_attr_hpb_max_active_regions.attr,
- 	&dev_attr_wb_max_alloc_units.attr,
- 	&dev_attr_wb_max_wb_luns.attr,
- 	&dev_attr_wb_buff_cap_adj.attr,
-@@ -1160,6 +1172,9 @@ UFS_UNIT_DESC_PARAM(provisioning_type, _PROVISIONING_TYPE, 1);
- UFS_UNIT_DESC_PARAM(physical_memory_resourse_count, _PHY_MEM_RSRC_CNT, 8);
- UFS_UNIT_DESC_PARAM(context_capabilities, _CTX_CAPABILITIES, 2);
- UFS_UNIT_DESC_PARAM(large_unit_granularity, _LARGE_UNIT_SIZE_M1, 1);
-+UFS_UNIT_DESC_PARAM(hpb_lu_max_active_regions, _HPB_LU_MAX_ACTIVE_RGNS, 2);
-+UFS_UNIT_DESC_PARAM(hpb_pinned_region_start_offset, _HPB_PIN_RGN_START_OFF, 2);
-+UFS_UNIT_DESC_PARAM(hpb_number_pinned_regions, _HPB_NUM_PIN_RGNS, 2);
- UFS_UNIT_DESC_PARAM(wb_buf_alloc_units, _WB_BUF_ALLOC_UNITS, 4);
- 
- 
-@@ -1177,6 +1192,9 @@ static struct attribute *ufs_sysfs_unit_descriptor[] = {
- 	&dev_attr_physical_memory_resourse_count.attr,
- 	&dev_attr_context_capabilities.attr,
- 	&dev_attr_large_unit_granularity.attr,
-+	&dev_attr_hpb_lu_max_active_regions.attr,
-+	&dev_attr_hpb_pinned_region_start_offset.attr,
-+	&dev_attr_hpb_number_pinned_regions.attr,
- 	&dev_attr_wb_buf_alloc_units.attr,
- 	NULL,
- };
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index cb80b9670bfe..4eee7e31d08d 100644
+index 4eee7e31d08d..bfb84d2ba990 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -122,6 +122,7 @@ enum flag_idn {
- 	QUERY_FLAG_IDN_WB_EN                            = 0x0E,
- 	QUERY_FLAG_IDN_WB_BUFF_FLUSH_EN                 = 0x0F,
- 	QUERY_FLAG_IDN_WB_BUFF_FLUSH_DURING_HIBERN8     = 0x10,
-+	QUERY_FLAG_IDN_HPB_RESET                        = 0x11,
+@@ -478,6 +478,41 @@ struct utp_cmd_rsp {
+ 	u8 sense_data[UFS_SENSE_SIZE];
  };
  
- /* Attribute idn for Query requests */
-@@ -195,6 +196,9 @@ enum unit_desc_param {
- 	UNIT_DESC_PARAM_PHY_MEM_RSRC_CNT	= 0x18,
- 	UNIT_DESC_PARAM_CTX_CAPABILITIES	= 0x20,
- 	UNIT_DESC_PARAM_LARGE_UNIT_SIZE_M1	= 0x22,
-+	UNIT_DESC_PARAM_HPB_LU_MAX_ACTIVE_RGNS	= 0x23,
-+	UNIT_DESC_PARAM_HPB_PIN_RGN_START_OFF	= 0x25,
-+	UNIT_DESC_PARAM_HPB_NUM_PIN_RGNS	= 0x27,
- 	UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS	= 0x29,
- };
- 
-@@ -235,6 +239,8 @@ enum device_desc_param {
- 	DEVICE_DESC_PARAM_PSA_MAX_DATA		= 0x25,
- 	DEVICE_DESC_PARAM_PSA_TMT		= 0x29,
- 	DEVICE_DESC_PARAM_PRDCT_REV		= 0x2A,
-+	DEVICE_DESC_PARAM_HPB_VER		= 0x40,
-+	DEVICE_DESC_PARAM_HPB_CONTROL		= 0x42,
- 	DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP	= 0x4F,
- 	DEVICE_DESC_PARAM_WB_PRESRV_USRSPC_EN	= 0x53,
- 	DEVICE_DESC_PARAM_WB_TYPE		= 0x54,
-@@ -283,6 +289,10 @@ enum geometry_desc_param {
- 	GEOMETRY_DESC_PARAM_ENM4_MAX_NUM_UNITS	= 0x3E,
- 	GEOMETRY_DESC_PARAM_ENM4_CAP_ADJ_FCTR	= 0x42,
- 	GEOMETRY_DESC_PARAM_OPT_LOG_BLK_SIZE	= 0x44,
-+	GEOMETRY_DESC_PARAM_HPB_REGION_SIZE	= 0x48,
-+	GEOMETRY_DESC_PARAM_HPB_NUMBER_LU	= 0x49,
-+	GEOMETRY_DESC_PARAM_HPB_SUBREGION_SIZE	= 0x4A,
-+	GEOMETRY_DESC_PARAM_HPB_MAX_ACTIVE_REGS	= 0x4B,
- 	GEOMETRY_DESC_PARAM_WB_MAX_ALLOC_UNITS	= 0x4F,
- 	GEOMETRY_DESC_PARAM_WB_MAX_WB_LUNS	= 0x53,
- 	GEOMETRY_DESC_PARAM_WB_BUFF_CAP_ADJ	= 0x54,
-@@ -327,8 +337,10 @@ enum {
- 
- /* Possible values for dExtendedUFSFeaturesSupport */
- enum {
-+	UFS_DEV_HPB_SUPPORT		= BIT(7),
- 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
- };
-+#define UFS_DEV_HPB_SUPPORT_VERSION		0x310
- 
- #define POWER_DESC_MAX_ACTV_ICC_LVLS		16
- 
-@@ -544,6 +556,9 @@ struct ufs_dev_info {
- 	u16	wspecversion;
- 	u32	clk_gating_wait_us;
- 
-+	/* UFS HPB related flag */
-+	bool	hpb_enabled;
++struct ufshpb_active_field {
++	__be16 active_rgn;
++	__be16 active_srgn;
++};
++#define HPB_ACT_FIELD_SIZE 4
 +
- 	/* UFS WB related flags */
- 	bool    wb_enabled;
- 	bool    wb_buf_flush_enabled;
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 25fe18a36cd2..1911e030a441 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -24,6 +24,7 @@
- #include "ufs-debugfs.h"
- #include "ufs_bsg.h"
- #include "ufshcd-crypto.h"
-+#include "ufshpb.h"
- #include <asm/unaligned.h>
- #include "../sd.h"
- 
-@@ -4984,6 +4985,25 @@ static int ufshcd_change_queue_depth(struct scsi_device *sdev, int depth)
- 	return scsi_change_queue_depth(sdev, depth);
- }
- 
-+static void ufshcd_hpb_destroy(struct ufs_hba *hba, struct scsi_device *sdev)
-+{
-+	/* skip well-known LU */
-+	if ((sdev->lun >= UFS_UPIU_MAX_UNIT_NUM_ID) || !ufshpb_is_allowed(hba))
-+		return;
-+
-+	ufshpb_destroy_lu(hba, sdev);
-+}
-+
-+static void ufshcd_hpb_configure(struct ufs_hba *hba, struct scsi_device *sdev)
-+{
-+	/* skip well-known LU */
-+	if ((sdev->lun >= UFS_UPIU_MAX_UNIT_NUM_ID) ||
-+	    !(hba->dev_info.hpb_enabled) || !ufshpb_is_allowed(hba))
-+		return;
-+
-+	ufshpb_init_hpb_lu(hba, sdev);
-+}
++/**
++ * struct utp_hpb_rsp - Response UPIU structure
++ * @residual_transfer_count: Residual transfer count DW-3
++ * @reserved1: Reserved double words DW-4 to DW-7
++ * @sense_data_len: Sense data length DW-8 U16
++ * @desc_type: Descriptor type of sense data
++ * @additional_len: Additional length of sense data
++ * @hpb_op: HPB operation type
++ * @lun: LUN of response UPIU
++ * @active_rgn_cnt: Active region count
++ * @inactive_rgn_cnt: Inactive region count
++ * @hpb_active_field: Recommended to read HPB region and subregion
++ * @hpb_inactive_field: To be inactivated HPB region and subregion
++ */
++struct utp_hpb_rsp {
++	__be32 residual_transfer_count;
++	__be32 reserved1[4];
++	__be16 sense_data_len;
++	u8 desc_type;
++	u8 additional_len;
++	u8 hpb_op;
++	u8 lun;
++	u8 active_rgn_cnt;
++	u8 inactive_rgn_cnt;
++	struct ufshpb_active_field hpb_active_field[2];
++	__be16 hpb_inactive_field[2];
++};
++#define UTP_HPB_RSP_SIZE 40
 +
  /**
-  * ufshcd_slave_configure - adjust SCSI device configurations
-  * @sdev: pointer to SCSI device
-@@ -4993,6 +5013,8 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
- 	struct ufs_hba *hba = shost_priv(sdev->host);
- 	struct request_queue *q = sdev->request_queue;
- 
-+	ufshcd_hpb_configure(hba, sdev);
-+
- 	blk_queue_update_dma_pad(q, PRDT_DATA_BYTE_COUNT_PAD - 1);
- 	if (hba->quirks & UFSHCD_QUIRK_ALIGN_SG_WITH_PAGE_SIZE)
- 		blk_queue_update_dma_alignment(q, PAGE_SIZE - 1);
-@@ -5019,6 +5041,9 @@ static void ufshcd_slave_destroy(struct scsi_device *sdev)
- 	struct ufs_hba *hba;
- 
- 	hba = shost_priv(sdev->host);
-+
-+	ufshcd_hpb_destroy(hba, sdev);
-+
- 	/* Drop the reference as it won't be needed anymore */
- 	if (ufshcd_scsi_to_upiu_lun(sdev->lun) == UFS_UPIU_UFS_DEVICE_WLUN) {
- 		unsigned long flags;
-@@ -7094,6 +7119,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- {
- 	int err;
- 
-+	ufshpb_reset_host(hba);
- 	/*
- 	 * Stop the host controller and complete the requests
- 	 * cleared by h/w
-@@ -7496,6 +7522,7 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- {
- 	int err;
- 	u8 model_index;
-+	u8 b_ufs_feature_sup;
- 	u8 *desc_buf;
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 
-@@ -7523,9 +7550,16 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 	/* getting Specification Version in big endian format */
- 	dev_info->wspecversion = desc_buf[DEVICE_DESC_PARAM_SPEC_VER] << 8 |
- 				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
-+	b_ufs_feature_sup = desc_buf[DEVICE_DESC_PARAM_UFS_FEAT];
- 
- 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
- 
-+	if (dev_info->wspecversion >= UFS_DEV_HPB_SUPPORT_VERSION &&
-+	    (b_ufs_feature_sup & UFS_DEV_HPB_SUPPORT)) {
-+		dev_info->hpb_enabled = true;
-+		ufshpb_get_dev_info(hba, desc_buf);
-+	}
-+
- 	err = ufshcd_read_string_desc(hba, model_index,
- 				      &dev_info->model, SD_ASCII_STD);
- 	if (err < 0) {
-@@ -7757,6 +7791,10 @@ static int ufshcd_device_geo_params_init(struct ufs_hba *hba)
- 	else if (desc_buf[GEOMETRY_DESC_PARAM_MAX_NUM_LUN] == 0)
- 		hba->dev_info.max_lu_supported = 8;
- 
-+	if (hba->desc_size[QUERY_DESC_IDN_GEOMETRY] >=
-+		GEOMETRY_DESC_PARAM_HPB_MAX_ACTIVE_REGS)
-+		ufshpb_get_geo_info(hba, desc_buf);
-+
- out:
- 	kfree(desc_buf);
- 	return err;
-@@ -7899,6 +7937,7 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- 	}
- 
- 	ufs_bsg_probe(hba);
-+	ufshpb_init(hba);
- 	scsi_scan_host(hba->host);
- 	pm_runtime_put_sync(hba->dev);
- 
-@@ -8047,6 +8086,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
- 	/* Enable Auto-Hibernate if configured */
- 	ufshcd_auto_hibern8_enable(hba);
- 
-+	ufshpb_reset(hba);
- out:
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	if (ret)
-@@ -8094,6 +8134,9 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- static const struct attribute_group *ufshcd_driver_groups[] = {
- 	&ufs_sysfs_unit_descriptor_group,
- 	&ufs_sysfs_lun_attributes_group,
-+#ifdef CONFIG_SCSI_UFS_HPB
-+	&ufs_sysfs_hpb_stat_group,
-+#endif
- 	NULL,
+  * struct utp_upiu_rsp - general upiu response structure
+  * @header: UPIU header structure DW-0 to DW-2
+@@ -488,6 +523,7 @@ struct utp_upiu_rsp {
+ 	struct utp_upiu_header header;
+ 	union {
+ 		struct utp_cmd_rsp sr;
++		struct utp_hpb_rsp hr;
+ 		struct utp_upiu_query qr;
+ 	};
  };
- 
-@@ -8795,6 +8838,8 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		req_link_state = UIC_LINK_OFF_STATE;
- 	}
- 
-+	ufshpb_suspend(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1911e030a441..39f8896bb278 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5146,6 +5146,9 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 			    ufshcd_is_exception_event(lrbp->ucd_rsp_ptr))
+ 				/* Flushed in suspend */
+ 				schedule_work(&hba->eeh_work);
 +
- 	/*
- 	 * If we can't transition into any of the low power modes
- 	 * just gate the clocks.
-@@ -8918,6 +8963,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 		ufshcd_update_evt_hist(hba, UFS_EVT_WL_SUSP_ERR, (u32)ret);
- 		hba->clk_gating.is_suspended = false;
- 		ufshcd_release(hba);
-+		ufshpb_resume(hba);
- 	}
- 	hba->pm_op_in_progress = false;
- 	return ret;
-@@ -8995,6 +9041,8 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 
- 	/* Enable Auto-Hibernate if configured */
- 	ufshcd_auto_hibern8_enable(hba);
-+
-+	ufshpb_resume(hba);
- 	goto out;
- 
- set_old_link_state:
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c98d540ac044..12e39972c7be 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -641,6 +641,25 @@ struct ufs_hba_variant_params {
- 	u32 wb_flush_threshold;
- };
- 
-+#ifdef CONFIG_SCSI_UFS_HPB
-+/**
-+ * struct ufshpb_dev_info - UFSHPB device related info
-+ * @num_lu: the number of user logical unit to check whether all lu finished
-+ *          initialization
-+ * @rgn_size: device reported HPB region size
-+ * @srgn_size: device reported HPB sub-region size
-+ * @slave_conf_cnt: counter to check all lu finished initialization
-+ * @hpb_disabled: flag to check if HPB is disabled
-+ */
-+struct ufshpb_dev_info {
-+	int num_lu;
-+	int rgn_size;
-+	int srgn_size;
-+	atomic_t slave_conf_cnt;
-+	bool hpb_disabled;
-+};
-+#endif
-+
- struct ufs_hba_monitor {
- 	unsigned long chunk_size;
- 
-@@ -851,6 +870,10 @@ struct ufs_hba {
- 	struct request_queue	*bsg_queue;
- 	struct delayed_work rpm_dev_flush_recheck_work;
- 
-+#ifdef CONFIG_SCSI_UFS_HPB
-+	struct ufshpb_dev_info ufshpb_dev;
-+#endif
-+
- 	struct ufs_hba_monitor	monitor;
- 
- #ifdef CONFIG_SCSI_UFS_CRYPTO
++			if (scsi_status == SAM_STAT_GOOD)
++				ufshpb_rsp_upiu(hba, lrbp);
+ 			break;
+ 		case UPIU_TRANSACTION_REJECT_UPIU:
+ 			/* TODO: handle Reject UPIU Response */
+@@ -9386,6 +9389,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+ 	if (hba->sdev_ufs_device)
+ 		ufshcd_rpm_get_sync(hba);
+ 	ufs_bsg_remove(hba);
++	ufshpb_remove(hba);
+ 	ufs_sysfs_remove_nodes(hba->dev);
+ 	blk_cleanup_queue(hba->tmf_queue);
+ 	blk_mq_free_tag_set(&hba->tmf_tag_set);
 diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-new file mode 100644
-index 000000000000..91313c95e9b1
---- /dev/null
+index 91313c95e9b1..47ccd63063fc 100644
+--- a/drivers/scsi/ufs/ufshpb.c
 +++ b/drivers/scsi/ufs/ufshpb.c
-@@ -0,0 +1,568 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Universal Flash Storage Host Performance Booster
-+ *
-+ * Copyright (C) 2017-2021 Samsung Electronics Co., Ltd.
-+ *
-+ * Authors:
-+ *	Yongmyung Lee <ymhungry.lee@samsung.com>
-+ *	Jinyoung Choi <j-young.choi@samsung.com>
-+ */
+@@ -16,6 +16,16 @@
+ #include "ufshpb.h"
+ #include "../sd.h"
+ 
++/* memory management */
++static struct kmem_cache *ufshpb_mctx_cache;
++static mempool_t *ufshpb_mctx_pool;
++static mempool_t *ufshpb_page_pool;
++/* A cache size of 2MB can cache ppn in the 1GB range. */
++static unsigned int ufshpb_host_map_kbytes = 2048;
++static int tot_active_srgn_pages;
 +
-+#include <asm/unaligned.h>
-+#include <linux/async.h>
++static struct workqueue_struct *ufshpb_wq;
 +
-+#include "ufshcd.h"
-+#include "ufshpb.h"
-+#include "../sd.h"
-+
-+bool ufshpb_is_allowed(struct ufs_hba *hba)
+ bool ufshpb_is_allowed(struct ufs_hba *hba)
+ {
+ 	return !(hba->ufshpb_dev.hpb_disabled);
+@@ -36,14 +46,889 @@ static void ufshpb_set_state(struct ufshpb_lu *hpb, int state)
+ 	atomic_set(&hpb->hpb_state, state);
+ }
+ 
++static bool ufshpb_is_general_lun(int lun)
 +{
-+	return !(hba->ufshpb_dev.hpb_disabled);
++	return lun < UFS_UPIU_MAX_UNIT_NUM_ID;
 +}
 +
-+static struct ufshpb_lu *ufshpb_get_hpb_data(struct scsi_device *sdev)
++static bool
++ufshpb_is_pinned_region(struct ufshpb_lu *hpb, int rgn_idx)
 +{
-+	return sdev->hostdata;
++	if (hpb->lu_pinned_end != PINNED_NOT_SET &&
++	    rgn_idx >= hpb->lu_pinned_start &&
++	    rgn_idx <= hpb->lu_pinned_end)
++		return true;
++
++	return false;
 +}
 +
-+static int ufshpb_get_state(struct ufshpb_lu *hpb)
++static void ufshpb_kick_map_work(struct ufshpb_lu *hpb)
 +{
-+	return atomic_read(&hpb->hpb_state);
++	bool ret = false;
++	unsigned long flags;
++
++	if (ufshpb_get_state(hpb) != HPB_PRESENT)
++		return;
++
++	spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++	if (!list_empty(&hpb->lh_inact_rgn) || !list_empty(&hpb->lh_act_srgn))
++		ret = true;
++	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
++
++	if (ret)
++		queue_work(ufshpb_wq, &hpb->map_work);
 +}
 +
-+static void ufshpb_set_state(struct ufshpb_lu *hpb, int state)
++static bool ufshpb_is_hpb_rsp_valid(struct ufs_hba *hba,
++					 struct ufshcd_lrb *lrbp,
++					 struct utp_hpb_rsp *rsp_field)
 +{
-+	atomic_set(&hpb->hpb_state, state);
-+}
++	/* Check HPB_UPDATE_ALERT */
++	if (!(lrbp->ucd_rsp_ptr->header.dword_2 &
++	      UPIU_HEADER_DWORD(0, 2, 0, 0)))
++		return false;
 +
-+static void ufshpb_init_subregion_tbl(struct ufshpb_lu *hpb,
-+				      struct ufshpb_region *rgn, bool last)
-+{
-+	int srgn_idx;
-+	struct ufshpb_subregion *srgn;
++	if (be16_to_cpu(rsp_field->sense_data_len) != DEV_SENSE_SEG_LEN ||
++	    rsp_field->desc_type != DEV_DES_TYPE ||
++	    rsp_field->additional_len != DEV_ADDITIONAL_LEN ||
++	    rsp_field->active_rgn_cnt > MAX_ACTIVE_NUM ||
++	    rsp_field->inactive_rgn_cnt > MAX_INACTIVE_NUM ||
++	    rsp_field->hpb_op == HPB_RSP_NONE ||
++	    (rsp_field->hpb_op == HPB_RSP_REQ_REGION_UPDATE &&
++	     !rsp_field->active_rgn_cnt && !rsp_field->inactive_rgn_cnt))
++		return false;
 +
-+	for (srgn_idx = 0; srgn_idx < rgn->srgn_cnt; srgn_idx++) {
-+		srgn = rgn->srgn_tbl + srgn_idx;
-+
-+		srgn->rgn_idx = rgn->rgn_idx;
-+		srgn->srgn_idx = srgn_idx;
-+		srgn->srgn_state = HPB_SRGN_UNUSED;
++	if (!ufshpb_is_general_lun(rsp_field->lun)) {
++		dev_warn(hba->dev, "ufshpb: lun(%d) not supported\n",
++			 lrbp->lun);
++		return false;
 +	}
 +
-+	if (unlikely(last && hpb->last_srgn_entries))
-+		srgn->is_last = true;
++	return true;
 +}
 +
-+static int ufshpb_alloc_subregion_tbl(struct ufshpb_lu *hpb,
-+				      struct ufshpb_region *rgn, int srgn_cnt)
++static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
++					     struct ufshpb_subregion *srgn)
 +{
-+	rgn->srgn_tbl = kvcalloc(srgn_cnt, sizeof(struct ufshpb_subregion),
-+				 GFP_KERNEL);
-+	if (!rgn->srgn_tbl)
-+		return -ENOMEM;
++	struct ufshpb_req *map_req;
++	struct request *req;
++	struct bio *bio;
++	int retries = HPB_MAP_REQ_RETRIES;
 +
-+	rgn->srgn_cnt = srgn_cnt;
-+	return 0;
-+}
-+
-+static void ufshpb_lu_parameter_init(struct ufs_hba *hba,
-+				     struct ufshpb_lu *hpb,
-+				     struct ufshpb_dev_info *hpb_dev_info,
-+				     struct ufshpb_lu_info *hpb_lu_info)
-+{
-+	u32 entries_per_rgn;
-+	u64 rgn_mem_size, tmp;
-+
-+	hpb->lu_pinned_start = hpb_lu_info->pinned_start;
-+	hpb->lu_pinned_end = hpb_lu_info->num_pinned ?
-+		(hpb_lu_info->pinned_start + hpb_lu_info->num_pinned - 1)
-+		: PINNED_NOT_SET;
-+
-+	rgn_mem_size = (1ULL << hpb_dev_info->rgn_size) * HPB_RGN_SIZE_UNIT
-+			* HPB_ENTRY_SIZE;
-+	do_div(rgn_mem_size, HPB_ENTRY_BLOCK_SIZE);
-+	hpb->srgn_mem_size = (1ULL << hpb_dev_info->srgn_size)
-+		* HPB_RGN_SIZE_UNIT / HPB_ENTRY_BLOCK_SIZE * HPB_ENTRY_SIZE;
-+
-+	tmp = rgn_mem_size;
-+	do_div(tmp, HPB_ENTRY_SIZE);
-+	entries_per_rgn = (u32)tmp;
-+	hpb->entries_per_rgn_shift = ilog2(entries_per_rgn);
-+	hpb->entries_per_rgn_mask = entries_per_rgn - 1;
-+
-+	hpb->entries_per_srgn = hpb->srgn_mem_size / HPB_ENTRY_SIZE;
-+	hpb->entries_per_srgn_shift = ilog2(hpb->entries_per_srgn);
-+	hpb->entries_per_srgn_mask = hpb->entries_per_srgn - 1;
-+
-+	tmp = rgn_mem_size;
-+	do_div(tmp, hpb->srgn_mem_size);
-+	hpb->srgns_per_rgn = (int)tmp;
-+
-+	hpb->rgns_per_lu = DIV_ROUND_UP(hpb_lu_info->num_blocks,
-+				entries_per_rgn);
-+	hpb->srgns_per_lu = DIV_ROUND_UP(hpb_lu_info->num_blocks,
-+				(hpb->srgn_mem_size / HPB_ENTRY_SIZE));
-+	hpb->last_srgn_entries = hpb_lu_info->num_blocks
-+				 % (hpb->srgn_mem_size / HPB_ENTRY_SIZE);
-+
-+	hpb->pages_per_srgn = DIV_ROUND_UP(hpb->srgn_mem_size, PAGE_SIZE);
-+}
-+
-+static int ufshpb_alloc_region_tbl(struct ufs_hba *hba, struct ufshpb_lu *hpb)
-+{
-+	struct ufshpb_region *rgn_table, *rgn;
-+	int rgn_idx, i;
-+	int ret = 0;
-+
-+	rgn_table = kvcalloc(hpb->rgns_per_lu, sizeof(struct ufshpb_region),
-+			    GFP_KERNEL);
-+	if (!rgn_table)
-+		return -ENOMEM;
-+
-+	hpb->rgn_tbl = rgn_table;
-+
-+	for (rgn_idx = 0; rgn_idx < hpb->rgns_per_lu; rgn_idx++) {
-+		int srgn_cnt = hpb->srgns_per_rgn;
-+		bool last_srgn = false;
-+
-+		rgn = rgn_table + rgn_idx;
-+		rgn->rgn_idx = rgn_idx;
-+
-+		if (rgn_idx == hpb->rgns_per_lu - 1) {
-+			srgn_cnt = ((hpb->srgns_per_lu - 1) %
-+				    hpb->srgns_per_rgn) + 1;
-+			last_srgn = true;
-+		}
-+
-+		ret = ufshpb_alloc_subregion_tbl(hpb, rgn, srgn_cnt);
-+		if (ret)
-+			goto release_srgn_table;
-+		ufshpb_init_subregion_tbl(hpb, rgn, last_srgn);
-+
-+		rgn->rgn_state = HPB_RGN_INACTIVE;
-+	}
-+
-+	return 0;
-+
-+release_srgn_table:
-+	for (i = 0; i < rgn_idx; i++)
-+		kvfree(rgn_table[i].srgn_tbl);
-+
-+	kvfree(rgn_table);
-+	return ret;
-+}
-+
-+static void ufshpb_destroy_subregion_tbl(struct ufshpb_lu *hpb,
-+					 struct ufshpb_region *rgn)
-+{
-+	int srgn_idx;
-+
-+	for (srgn_idx = 0; srgn_idx < rgn->srgn_cnt; srgn_idx++) {
-+		struct ufshpb_subregion *srgn;
-+
-+		srgn = rgn->srgn_tbl + srgn_idx;
-+		srgn->srgn_state = HPB_SRGN_UNUSED;
-+	}
-+}
-+
-+static void ufshpb_destroy_region_tbl(struct ufshpb_lu *hpb)
-+{
-+	int rgn_idx;
-+
-+	for (rgn_idx = 0; rgn_idx < hpb->rgns_per_lu; rgn_idx++) {
-+		struct ufshpb_region *rgn;
-+
-+		rgn = hpb->rgn_tbl + rgn_idx;
-+		if (rgn->rgn_state != HPB_RGN_INACTIVE) {
-+			rgn->rgn_state = HPB_RGN_INACTIVE;
-+
-+			ufshpb_destroy_subregion_tbl(hpb, rgn);
-+		}
-+
-+		kvfree(rgn->srgn_tbl);
-+	}
-+
-+	kvfree(hpb->rgn_tbl);
-+}
-+
-+/* SYSFS functions */
-+#define ufshpb_sysfs_attr_show_func(__name)				\
-+static ssize_t __name##_show(struct device *dev,			\
-+	struct device_attribute *attr, char *buf)			\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);		\
-+									\
-+	if (!hpb)							\
-+		return -ENODEV;						\
-+									\
-+	return sysfs_emit(buf, "%llu\n", hpb->stats.__name);		\
-+}									\
-+\
-+static DEVICE_ATTR_RO(__name)
-+
-+ufshpb_sysfs_attr_show_func(hit_cnt);
-+ufshpb_sysfs_attr_show_func(miss_cnt);
-+ufshpb_sysfs_attr_show_func(rb_noti_cnt);
-+ufshpb_sysfs_attr_show_func(rb_active_cnt);
-+ufshpb_sysfs_attr_show_func(rb_inactive_cnt);
-+ufshpb_sysfs_attr_show_func(map_req_cnt);
-+
-+static struct attribute *hpb_dev_attrs[] = {
-+	&dev_attr_hit_cnt.attr,
-+	&dev_attr_miss_cnt.attr,
-+	&dev_attr_rb_noti_cnt.attr,
-+	&dev_attr_rb_active_cnt.attr,
-+	&dev_attr_rb_inactive_cnt.attr,
-+	&dev_attr_map_req_cnt.attr,
-+	NULL,
-+};
-+
-+struct attribute_group ufs_sysfs_hpb_stat_group = {
-+	.name = "hpb_stats",
-+	.attrs = hpb_dev_attrs,
-+};
-+
-+static void ufshpb_stat_init(struct ufshpb_lu *hpb)
-+{
-+	hpb->stats.hit_cnt = 0;
-+	hpb->stats.miss_cnt = 0;
-+	hpb->stats.rb_noti_cnt = 0;
-+	hpb->stats.rb_active_cnt = 0;
-+	hpb->stats.rb_inactive_cnt = 0;
-+	hpb->stats.map_req_cnt = 0;
-+}
-+
-+static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
-+{
-+	int ret;
-+
-+	ret = ufshpb_alloc_region_tbl(hba, hpb);
-+
-+	ufshpb_stat_init(hpb);
-+
-+	return 0;
-+}
-+
-+static struct ufshpb_lu *
-+ufshpb_alloc_hpb_lu(struct ufs_hba *hba, int lun,
-+		    struct ufshpb_dev_info *hpb_dev_info,
-+		    struct ufshpb_lu_info *hpb_lu_info)
-+{
-+	struct ufshpb_lu *hpb;
-+	int ret;
-+
-+	hpb = kzalloc(sizeof(struct ufshpb_lu), GFP_KERNEL);
-+	if (!hpb)
++	map_req = kmem_cache_alloc(hpb->map_req_cache, GFP_KERNEL);
++	if (!map_req)
 +		return NULL;
 +
-+	hpb->lun = lun;
++retry:
++	req = blk_get_request(hpb->sdev_ufs_lu->request_queue,
++			      REQ_OP_SCSI_IN, BLK_MQ_REQ_NOWAIT);
 +
-+	ufshpb_lu_parameter_init(hba, hpb, hpb_dev_info, hpb_lu_info);
-+
-+	ret = ufshpb_lu_hpb_init(hba, hpb);
-+	if (ret) {
-+		dev_err(hba->dev, "hpb lu init failed. ret %d", ret);
-+		goto release_hpb;
++	if ((PTR_ERR(req) == -EWOULDBLOCK) && (--retries > 0)) {
++		usleep_range(3000, 3100);
++		goto retry;
 +	}
 +
-+	return hpb;
++	if (IS_ERR(req))
++		goto free_map_req;
 +
-+release_hpb:
-+	kfree(hpb);
++	bio = bio_alloc(GFP_KERNEL, hpb->pages_per_srgn);
++	if (!bio) {
++		blk_put_request(req);
++		goto free_map_req;
++	}
++
++	map_req->hpb = hpb;
++	map_req->req = req;
++	map_req->bio = bio;
++
++	map_req->rgn_idx = srgn->rgn_idx;
++	map_req->srgn_idx = srgn->srgn_idx;
++	map_req->mctx = srgn->mctx;
++
++	return map_req;
++
++free_map_req:
++	kmem_cache_free(hpb->map_req_cache, map_req);
 +	return NULL;
 +}
 +
-+static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
++static void ufshpb_put_map_req(struct ufshpb_lu *hpb,
++				      struct ufshpb_req *map_req)
 +{
-+	int err = 0;
-+	bool flag_res = true;
-+	int try;
++	bio_put(map_req->bio);
++	blk_put_request(map_req->req);
++	kmem_cache_free(hpb->map_req_cache, map_req);
++}
 +
-+	/* wait for the device to complete HPB reset query */
-+	for (try = 0; try < HPB_RESET_REQ_RETRIES; try++) {
-+		dev_dbg(hba->dev,
-+			"%s start flag reset polling %d times\n",
-+			__func__, try);
++static int ufshpb_clear_dirty_bitmap(struct ufshpb_lu *hpb,
++				     struct ufshpb_subregion *srgn)
++{
++	u32 num_entries = hpb->entries_per_srgn;
 +
-+		/* Poll fHpbReset flag to be cleared */
-+		err = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_READ_FLAG,
-+				QUERY_FLAG_IDN_HPB_RESET, 0, &flag_res);
++	if (!srgn->mctx) {
++		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
++			"no mctx in region %d subregion %d.\n",
++			srgn->rgn_idx, srgn->srgn_idx);
++		return -1;
++	}
 +
-+		if (err) {
-+			dev_err(hba->dev,
-+				"%s reading fHpbReset flag failed with error %d\n",
-+				__func__, err);
-+			return flag_res;
++	if (unlikely(srgn->is_last))
++		num_entries = hpb->last_srgn_entries;
++
++	bitmap_zero(srgn->mctx->ppn_dirty, num_entries);
++	return 0;
++}
++
++static void ufshpb_update_active_info(struct ufshpb_lu *hpb, int rgn_idx,
++				      int srgn_idx)
++{
++	struct ufshpb_region *rgn;
++	struct ufshpb_subregion *srgn;
++
++	rgn = hpb->rgn_tbl + rgn_idx;
++	srgn = rgn->srgn_tbl + srgn_idx;
++
++	list_del_init(&rgn->list_inact_rgn);
++
++	if (list_empty(&srgn->list_act_srgn))
++		list_add_tail(&srgn->list_act_srgn, &hpb->lh_act_srgn);
++}
++
++static void ufshpb_update_inactive_info(struct ufshpb_lu *hpb, int rgn_idx)
++{
++	struct ufshpb_region *rgn;
++	struct ufshpb_subregion *srgn;
++	int srgn_idx;
++
++	rgn = hpb->rgn_tbl + rgn_idx;
++
++	for_each_sub_region(rgn, srgn_idx, srgn)
++		list_del_init(&srgn->list_act_srgn);
++
++	if (list_empty(&rgn->list_inact_rgn))
++		list_add_tail(&rgn->list_inact_rgn, &hpb->lh_inact_rgn);
++}
++
++static void ufshpb_activate_subregion(struct ufshpb_lu *hpb,
++				      struct ufshpb_subregion *srgn)
++{
++	struct ufshpb_region *rgn;
++
++	/*
++	 * If there is no mctx in subregion
++	 * after I/O progress for HPB_READ_BUFFER, the region to which the
++	 * subregion belongs was evicted.
++	 * Make sure the region must not evict in I/O progress
++	 */
++	if (!srgn->mctx) {
++		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
++			"no mctx in region %d subregion %d.\n",
++			srgn->rgn_idx, srgn->srgn_idx);
++		srgn->srgn_state = HPB_SRGN_INVALID;
++		return;
++	}
++
++	rgn = hpb->rgn_tbl + srgn->rgn_idx;
++
++	if (unlikely(rgn->rgn_state == HPB_RGN_INACTIVE)) {
++		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
++			"region %d subregion %d evicted\n",
++			srgn->rgn_idx, srgn->srgn_idx);
++		srgn->srgn_state = HPB_SRGN_INVALID;
++		return;
++	}
++	srgn->srgn_state = HPB_SRGN_VALID;
++}
++
++static void ufshpb_map_req_compl_fn(struct request *req, blk_status_t error)
++{
++	struct ufshpb_req *map_req = (struct ufshpb_req *) req->end_io_data;
++	struct ufshpb_lu *hpb = map_req->hpb;
++	struct ufshpb_subregion *srgn;
++	unsigned long flags;
++
++	srgn = hpb->rgn_tbl[map_req->rgn_idx].srgn_tbl +
++		map_req->srgn_idx;
++
++	ufshpb_clear_dirty_bitmap(hpb, srgn);
++	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
++	ufshpb_activate_subregion(hpb, srgn);
++	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
++
++	ufshpb_put_map_req(map_req->hpb, map_req);
++}
++
++static void ufshpb_set_read_buf_cmd(unsigned char *cdb, int rgn_idx,
++				    int srgn_idx, int srgn_mem_size)
++{
++	cdb[0] = UFSHPB_READ_BUFFER;
++	cdb[1] = UFSHPB_READ_BUFFER_ID;
++
++	put_unaligned_be16(rgn_idx, &cdb[2]);
++	put_unaligned_be16(srgn_idx, &cdb[4]);
++	put_unaligned_be24(srgn_mem_size, &cdb[6]);
++
++	cdb[9] = 0x00;
++}
++
++static int ufshpb_execute_map_req(struct ufshpb_lu *hpb,
++				  struct ufshpb_req *map_req, bool last)
++{
++	struct request_queue *q;
++	struct request *req;
++	struct scsi_request *rq;
++	int mem_size = hpb->srgn_mem_size;
++	int ret = 0;
++	int i;
++
++	q = hpb->sdev_ufs_lu->request_queue;
++	for (i = 0; i < hpb->pages_per_srgn; i++) {
++		ret = bio_add_pc_page(q, map_req->bio, map_req->mctx->m_page[i],
++				      PAGE_SIZE, 0);
++		if (ret != PAGE_SIZE) {
++			dev_err(&hpb->sdev_ufs_lu->sdev_dev,
++				   "bio_add_pc_page fail %d - %d\n",
++				   map_req->rgn_idx, map_req->srgn_idx);
++			return ret;
 +		}
-+
-+		if (!flag_res)
-+			goto out;
-+
-+		usleep_range(1000, 1100);
 +	}
-+	if (flag_res) {
-+		dev_err(hba->dev,
-+			"%s fHpbReset was not cleared by the device\n",
-+			__func__);
-+	}
-+out:
-+	return flag_res;
++
++	req = map_req->req;
++
++	blk_rq_append_bio(req, map_req->bio);
++
++	req->end_io_data = map_req;
++
++	rq = scsi_req(req);
++
++	if (unlikely(last))
++		mem_size = hpb->last_srgn_entries * HPB_ENTRY_SIZE;
++
++	ufshpb_set_read_buf_cmd(rq->cmd, map_req->rgn_idx,
++				map_req->srgn_idx, mem_size);
++	rq->cmd_len = HPB_READ_BUFFER_CMD_LENGTH;
++
++	blk_execute_rq_nowait(NULL, req, 1, ufshpb_map_req_compl_fn);
++
++	hpb->stats.map_req_cnt++;
++	return 0;
 +}
 +
-+void ufshpb_reset(struct ufs_hba *hba)
++static struct ufshpb_map_ctx *ufshpb_get_map_ctx(struct ufshpb_lu *hpb,
++						 bool last)
 +{
-+	struct ufshpb_lu *hpb;
-+	struct scsi_device *sdev;
++	struct ufshpb_map_ctx *mctx;
++	u32 num_entries = hpb->entries_per_srgn;
++	int i, j;
 +
-+	shost_for_each_device(sdev, hba->host) {
-+		hpb = sdev->hostdata;
-+		if (!hpb)
-+			continue;
++	mctx = mempool_alloc(ufshpb_mctx_pool, GFP_KERNEL);
++	if (!mctx)
++		return NULL;
 +
-+		if (ufshpb_get_state(hpb) != HPB_RESET)
-+			continue;
++	mctx->m_page = kmem_cache_alloc(hpb->m_page_cache, GFP_KERNEL);
++	if (!mctx->m_page)
++		goto release_mctx;
 +
-+		ufshpb_set_state(hpb, HPB_PRESENT);
++	if (unlikely(last))
++		num_entries = hpb->last_srgn_entries;
++
++	mctx->ppn_dirty = bitmap_zalloc(num_entries, GFP_KERNEL);
++	if (!mctx->ppn_dirty)
++		goto release_m_page;
++
++	for (i = 0; i < hpb->pages_per_srgn; i++) {
++		mctx->m_page[i] = mempool_alloc(ufshpb_page_pool, GFP_KERNEL);
++		if (!mctx->m_page[i]) {
++			for (j = 0; j < i; j++)
++				mempool_free(mctx->m_page[j], ufshpb_page_pool);
++			goto release_ppn_dirty;
++		}
++		clear_page(page_address(mctx->m_page[i]));
 +	}
++
++	return mctx;
++
++release_ppn_dirty:
++	bitmap_free(mctx->ppn_dirty);
++release_m_page:
++	kmem_cache_free(hpb->m_page_cache, mctx->m_page);
++release_mctx:
++	mempool_free(mctx, ufshpb_mctx_pool);
++	return NULL;
 +}
 +
-+void ufshpb_reset_host(struct ufs_hba *hba)
++static void ufshpb_put_map_ctx(struct ufshpb_lu *hpb,
++			       struct ufshpb_map_ctx *mctx)
 +{
-+	struct ufshpb_lu *hpb;
-+	struct scsi_device *sdev;
++	int i;
 +
-+	shost_for_each_device(sdev, hba->host) {
-+		hpb = sdev->hostdata;
-+		if (!hpb)
-+			continue;
++	for (i = 0; i < hpb->pages_per_srgn; i++)
++		mempool_free(mctx->m_page[i], ufshpb_page_pool);
 +
-+		if (ufshpb_get_state(hpb) != HPB_PRESENT)
-+			continue;
-+		ufshpb_set_state(hpb, HPB_RESET);
-+	}
++	bitmap_free(mctx->ppn_dirty);
++	kmem_cache_free(hpb->m_page_cache, mctx->m_page);
++	mempool_free(mctx, ufshpb_mctx_pool);
 +}
 +
-+void ufshpb_suspend(struct ufs_hba *hba)
++static int ufshpb_check_srgns_issue_state(struct ufshpb_lu *hpb,
++					  struct ufshpb_region *rgn)
 +{
-+	struct ufshpb_lu *hpb;
-+	struct scsi_device *sdev;
++	struct ufshpb_subregion *srgn;
++	int srgn_idx;
 +
-+	shost_for_each_device(sdev, hba->host) {
-+		hpb = sdev->hostdata;
-+		if (!hpb)
-+			continue;
-+
-+		if (ufshpb_get_state(hpb) != HPB_PRESENT)
-+			continue;
-+		ufshpb_set_state(hpb, HPB_SUSPEND);
-+	}
-+}
-+
-+void ufshpb_resume(struct ufs_hba *hba)
-+{
-+	struct ufshpb_lu *hpb;
-+	struct scsi_device *sdev;
-+
-+	shost_for_each_device(sdev, hba->host) {
-+		hpb = sdev->hostdata;
-+		if (!hpb)
-+			continue;
-+
-+		if ((ufshpb_get_state(hpb) != HPB_PRESENT) &&
-+		    (ufshpb_get_state(hpb) != HPB_SUSPEND))
-+			continue;
-+		ufshpb_set_state(hpb, HPB_PRESENT);
-+	}
-+}
-+
-+static int ufshpb_get_lu_info(struct ufs_hba *hba, int lun,
-+			      struct ufshpb_lu_info *hpb_lu_info)
-+{
-+	u16 max_active_rgns;
-+	u8 lu_enable;
-+	int size;
-+	int ret;
-+	char desc_buf[QUERY_DESC_MAX_SIZE];
-+
-+	ufshcd_map_desc_id_to_length(hba, QUERY_DESC_IDN_UNIT, &size);
-+
-+	pm_runtime_get_sync(hba->dev);
-+	ret = ufshcd_query_descriptor_retry(hba, UPIU_QUERY_OPCODE_READ_DESC,
-+					    QUERY_DESC_IDN_UNIT, lun, 0,
-+					    desc_buf, &size);
-+	pm_runtime_put_sync(hba->dev);
-+
-+	if (ret) {
-+		dev_err(hba->dev,
-+			"%s: idn: %d lun: %d  query request failed",
-+			__func__, QUERY_DESC_IDN_UNIT, lun);
-+		return ret;
-+	}
-+
-+	lu_enable = desc_buf[UNIT_DESC_PARAM_LU_ENABLE];
-+	if (lu_enable != LU_ENABLED_HPB_FUNC)
-+		return -ENODEV;
-+
-+	max_active_rgns = get_unaligned_be16(
-+			desc_buf + UNIT_DESC_PARAM_HPB_LU_MAX_ACTIVE_RGNS);
-+	if (!max_active_rgns) {
-+		dev_err(hba->dev,
-+			"lun %d wrong number of max active regions\n", lun);
-+		return -ENODEV;
-+	}
-+
-+	hpb_lu_info->num_blocks = get_unaligned_be64(
-+			desc_buf + UNIT_DESC_PARAM_LOGICAL_BLK_COUNT);
-+	hpb_lu_info->pinned_start = get_unaligned_be16(
-+			desc_buf + UNIT_DESC_PARAM_HPB_PIN_RGN_START_OFF);
-+	hpb_lu_info->num_pinned = get_unaligned_be16(
-+			desc_buf + UNIT_DESC_PARAM_HPB_NUM_PIN_RGNS);
-+	hpb_lu_info->max_active_rgns = max_active_rgns;
++	for_each_sub_region(rgn, srgn_idx, srgn)
++		if (srgn->srgn_state == HPB_SRGN_ISSUED)
++			return -EPERM;
 +
 +	return 0;
 +}
 +
-+void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev)
++static void ufshpb_add_lru_info(struct victim_select_info *lru_info,
++				struct ufshpb_region *rgn)
 +{
-+	struct ufshpb_lu *hpb = sdev->hostdata;
-+
-+	if (!hpb)
-+		return;
-+
-+	ufshpb_set_state(hpb, HPB_FAILED);
-+
-+	sdev = hpb->sdev_ufs_lu;
-+	sdev->hostdata = NULL;
-+
-+	ufshpb_destroy_region_tbl(hpb);
-+
-+	list_del_init(&hpb->list_hpb_lu);
-+
-+	kfree(hpb);
++	rgn->rgn_state = HPB_RGN_ACTIVE;
++	list_add_tail(&rgn->list_lru_rgn, &lru_info->lh_lru_rgn);
++	atomic_inc(&lru_info->active_cnt);
 +}
 +
-+static void ufshpb_hpb_lu_prepared(struct ufs_hba *hba)
++static void ufshpb_hit_lru_info(struct victim_select_info *lru_info,
++				struct ufshpb_region *rgn)
 +{
-+	struct ufshpb_lu *hpb;
-+	struct scsi_device *sdev;
-+	bool init_success;
++	list_move_tail(&rgn->list_lru_rgn, &lru_info->lh_lru_rgn);
++}
 +
-+	init_success = !ufshpb_check_hpb_reset_query(hba);
++static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
++{
++	struct victim_select_info *lru_info = &hpb->lru_info;
++	struct ufshpb_region *rgn, *victim_rgn = NULL;
 +
-+	shost_for_each_device(sdev, hba->host) {
-+		hpb = sdev->hostdata;
-+		if (!hpb)
++	list_for_each_entry(rgn, &lru_info->lh_lru_rgn, list_lru_rgn) {
++		if (!rgn) {
++			dev_err(&hpb->sdev_ufs_lu->sdev_dev,
++				"%s: no region allocated\n",
++				__func__);
++			return NULL;
++		}
++		if (ufshpb_check_srgns_issue_state(hpb, rgn))
 +			continue;
 +
-+		if (init_success) {
-+			ufshpb_set_state(hpb, HPB_PRESENT);
-+		} else {
-+			dev_err(hba->dev, "destroy HPB lu %d\n", hpb->lun);
-+			ufshpb_destroy_lu(hba, sdev);
++		victim_rgn = rgn;
++		break;
++	}
++
++	return victim_rgn;
++}
++
++static void ufshpb_cleanup_lru_info(struct victim_select_info *lru_info,
++				    struct ufshpb_region *rgn)
++{
++	list_del_init(&rgn->list_lru_rgn);
++	rgn->rgn_state = HPB_RGN_INACTIVE;
++	atomic_dec(&lru_info->active_cnt);
++}
++
++static void ufshpb_purge_active_subregion(struct ufshpb_lu *hpb,
++					  struct ufshpb_subregion *srgn)
++{
++	if (srgn->srgn_state != HPB_SRGN_UNUSED) {
++		ufshpb_put_map_ctx(hpb, srgn->mctx);
++		srgn->srgn_state = HPB_SRGN_UNUSED;
++		srgn->mctx = NULL;
++	}
++}
++
++static void __ufshpb_evict_region(struct ufshpb_lu *hpb,
++				  struct ufshpb_region *rgn)
++{
++	struct victim_select_info *lru_info;
++	struct ufshpb_subregion *srgn;
++	int srgn_idx;
++
++	lru_info = &hpb->lru_info;
++
++	dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "evict region %d\n", rgn->rgn_idx);
++
++	ufshpb_cleanup_lru_info(lru_info, rgn);
++
++	for_each_sub_region(rgn, srgn_idx, srgn)
++		ufshpb_purge_active_subregion(hpb, srgn);
++}
++
++static int ufshpb_evict_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
++{
++	unsigned long flags;
++	int ret = 0;
++
++	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
++	if (rgn->rgn_state == HPB_RGN_PINNED) {
++		dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
++			 "pinned region cannot drop-out. region %d\n",
++			 rgn->rgn_idx);
++		goto out;
++	}
++	if (!list_empty(&rgn->list_lru_rgn)) {
++		if (ufshpb_check_srgns_issue_state(hpb, rgn)) {
++			ret = -EBUSY;
++			goto out;
 +		}
++
++		__ufshpb_evict_region(hpb, rgn);
 +	}
-+}
-+
-+void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev)
-+{
-+	struct ufshpb_lu *hpb;
-+	int ret;
-+	struct ufshpb_lu_info hpb_lu_info = { 0 };
-+	int lun = sdev->lun;
-+
-+	if (lun >= hba->dev_info.max_lu_supported)
-+		goto out;
-+
-+	ret = ufshpb_get_lu_info(hba, lun, &hpb_lu_info);
-+	if (ret)
-+		goto out;
-+
-+	hpb = ufshpb_alloc_hpb_lu(hba, lun, &hba->ufshpb_dev,
-+				  &hpb_lu_info);
-+	if (!hpb)
-+		goto out;
-+
-+	hpb->sdev_ufs_lu = sdev;
-+	sdev->hostdata = hpb;
-+
 +out:
-+	/* All LUs are initialized */
-+	if (atomic_dec_and_test(&hba->ufshpb_dev.slave_conf_cnt))
-+		ufshpb_hpb_lu_prepared(hba);
++	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
++	return ret;
 +}
 +
-+void ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf)
++static int ufshpb_issue_map_req(struct ufshpb_lu *hpb,
++				struct ufshpb_region *rgn,
++				struct ufshpb_subregion *srgn)
 +{
-+	struct ufshpb_dev_info *hpb_info = &hba->ufshpb_dev;
-+	int max_active_rgns = 0;
-+	int hpb_num_lu;
++	struct ufshpb_req *map_req;
++	unsigned long flags;
++	int ret;
++	int err = -EAGAIN;
++	bool alloc_required = false;
++	enum HPB_SRGN_STATE state = HPB_SRGN_INVALID;
 +
-+	hpb_num_lu = geo_buf[GEOMETRY_DESC_PARAM_HPB_NUMBER_LU];
-+	if (hpb_num_lu == 0) {
-+		dev_err(hba->dev, "No HPB LU supported\n");
-+		hpb_info->hpb_disabled = true;
-+		return;
++	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
++
++	if (ufshpb_get_state(hpb) != HPB_PRESENT) {
++		dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
++			   "%s: ufshpb state is not PRESENT\n", __func__);
++		goto unlock_out;
 +	}
 +
-+	hpb_info->rgn_size = geo_buf[GEOMETRY_DESC_PARAM_HPB_REGION_SIZE];
-+	hpb_info->srgn_size = geo_buf[GEOMETRY_DESC_PARAM_HPB_SUBREGION_SIZE];
-+	max_active_rgns = get_unaligned_be16(geo_buf +
-+			  GEOMETRY_DESC_PARAM_HPB_MAX_ACTIVE_REGS);
-+
-+	if (hpb_info->rgn_size == 0 || hpb_info->srgn_size == 0 ||
-+	    max_active_rgns == 0) {
-+		dev_err(hba->dev, "No HPB supported device\n");
-+		hpb_info->hpb_disabled = true;
-+		return;
-+	}
-+}
-+
-+void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf)
-+{
-+	struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
-+	int version;
-+	u8 hpb_mode;
-+
-+	hpb_mode = desc_buf[DEVICE_DESC_PARAM_HPB_CONTROL];
-+	if (hpb_mode == HPB_HOST_CONTROL) {
-+		dev_err(hba->dev, "%s: host control mode is not supported.\n",
-+			__func__);
-+		hpb_dev_info->hpb_disabled = true;
-+		return;
++	if ((rgn->rgn_state == HPB_RGN_INACTIVE) &&
++	    (srgn->srgn_state == HPB_SRGN_INVALID)) {
++		err = 0;
++		goto unlock_out;
 +	}
 +
-+	version = get_unaligned_be16(desc_buf + DEVICE_DESC_PARAM_HPB_VER);
-+	if (version != HPB_SUPPORT_VERSION) {
-+		dev_err(hba->dev, "%s: HPB %x version is not supported.\n",
-+			__func__, version);
-+		hpb_dev_info->hpb_disabled = true;
-+		return;
-+	}
++	if (srgn->srgn_state == HPB_SRGN_UNUSED)
++		alloc_required = true;
 +
 +	/*
-+	 * Get the number of user logical unit to check whether all
-+	 * scsi_device finish initialization
++	 * If the subregion is already ISSUED state,
++	 * a specific event (e.g., GC or wear-leveling, etc.) occurs in
++	 * the device and HPB response for map loading is received.
++	 * In this case, after finishing the HPB_READ_BUFFER,
++	 * the next HPB_READ_BUFFER is performed again to obtain the latest
++	 * map data.
 +	 */
-+	hpb_dev_info->num_lu = desc_buf[DEVICE_DESC_PARAM_NUM_LU];
++	if (srgn->srgn_state == HPB_SRGN_ISSUED)
++		goto unlock_out;
++
++	srgn->srgn_state = HPB_SRGN_ISSUED;
++	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
++
++	if (alloc_required) {
++		srgn->mctx = ufshpb_get_map_ctx(hpb, srgn->is_last);
++		if (!srgn->mctx) {
++			dev_err(&hpb->sdev_ufs_lu->sdev_dev,
++			    "get map_ctx failed. region %d - %d\n",
++			    rgn->rgn_idx, srgn->srgn_idx);
++			state = HPB_SRGN_UNUSED;
++			goto change_srgn_state;
++		}
++	}
++
++	map_req = ufshpb_get_map_req(hpb, srgn);
++	if (!map_req)
++		goto change_srgn_state;
++
++
++	ret = ufshpb_execute_map_req(hpb, map_req, srgn->is_last);
++	if (ret) {
++		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
++			   "%s: issue map_req failed: %d, region %d - %d\n",
++			   __func__, ret, srgn->rgn_idx, srgn->srgn_idx);
++		goto free_map_req;
++	}
++	return 0;
++
++free_map_req:
++	ufshpb_put_map_req(hpb, map_req);
++change_srgn_state:
++	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
++	srgn->srgn_state = state;
++unlock_out:
++	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
++	return err;
 +}
 +
-+void ufshpb_init(struct ufs_hba *hba)
++static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
 +{
-+	struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
-+	int try;
-+	int ret;
++	struct ufshpb_region *victim_rgn;
++	struct victim_select_info *lru_info = &hpb->lru_info;
++	unsigned long flags;
++	int ret = 0;
 +
-+	if (!ufshpb_is_allowed(hba) || !hba->dev_info.hpb_enabled)
++	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
++	/*
++	 * If region belongs to lru_list, just move the region
++	 * to the front of lru list. because the state of the region
++	 * is already active-state
++	 */
++	if (!list_empty(&rgn->list_lru_rgn)) {
++		ufshpb_hit_lru_info(lru_info, rgn);
++		goto out;
++	}
++
++	if (rgn->rgn_state == HPB_RGN_INACTIVE) {
++		if (atomic_read(&lru_info->active_cnt) ==
++		    lru_info->max_lru_active_cnt) {
++			/*
++			 * If the maximum number of active regions
++			 * is exceeded, evict the least recently used region.
++			 * This case may occur when the device responds
++			 * to the eviction information late.
++			 * It is okay to evict the least recently used region,
++			 * because the device could detect this region
++			 * by not issuing HPB_READ
++			 */
++			victim_rgn = ufshpb_victim_lru_info(hpb);
++			if (!victim_rgn) {
++				dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
++				    "cannot get victim region error\n");
++				ret = -ENOMEM;
++				goto out;
++			}
++
++			dev_dbg(&hpb->sdev_ufs_lu->sdev_dev,
++				"LRU full (%d), choose victim %d\n",
++				atomic_read(&lru_info->active_cnt),
++				victim_rgn->rgn_idx);
++			__ufshpb_evict_region(hpb, victim_rgn);
++		}
++
++		/*
++		 * When a region is added to lru_info list_head,
++		 * it is guaranteed that the subregion has been
++		 * assigned all mctx. If failed, try to receive mctx again
++		 * without being added to lru_info list_head
++		 */
++		ufshpb_add_lru_info(lru_info, rgn);
++	}
++out:
++	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
++	return ret;
++}
++
++static void ufshpb_rsp_req_region_update(struct ufshpb_lu *hpb,
++					 struct utp_hpb_rsp *rsp_field)
++{
++	struct ufshpb_region *rgn;
++	struct ufshpb_subregion *srgn;
++	int i, rgn_i, srgn_i;
++
++	BUILD_BUG_ON(sizeof(struct ufshpb_active_field) != HPB_ACT_FIELD_SIZE);
++	/*
++	 * If the active region and the inactive region are the same,
++	 * we will inactivate this region.
++	 * The device could check this (region inactivated) and
++	 * will response the proper active region information
++	 */
++	for (i = 0; i < rsp_field->active_rgn_cnt; i++) {
++		rgn_i =
++			be16_to_cpu(rsp_field->hpb_active_field[i].active_rgn);
++		srgn_i =
++			be16_to_cpu(rsp_field->hpb_active_field[i].active_srgn);
++
++		dev_dbg(&hpb->sdev_ufs_lu->sdev_dev,
++			"activate(%d) region %d - %d\n", i, rgn_i, srgn_i);
++
++		spin_lock(&hpb->rsp_list_lock);
++		ufshpb_update_active_info(hpb, rgn_i, srgn_i);
++		spin_unlock(&hpb->rsp_list_lock);
++
++		rgn = hpb->rgn_tbl + rgn_i;
++		srgn = rgn->srgn_tbl + srgn_i;
++
++		/* blocking HPB_READ */
++		spin_lock(&hpb->rgn_state_lock);
++		if (srgn->srgn_state == HPB_SRGN_VALID)
++			srgn->srgn_state = HPB_SRGN_INVALID;
++		spin_unlock(&hpb->rgn_state_lock);
++		hpb->stats.rb_active_cnt++;
++	}
++
++	for (i = 0; i < rsp_field->inactive_rgn_cnt; i++) {
++		rgn_i = be16_to_cpu(rsp_field->hpb_inactive_field[i]);
++		dev_dbg(&hpb->sdev_ufs_lu->sdev_dev,
++			"inactivate(%d) region %d\n", i, rgn_i);
++
++		spin_lock(&hpb->rsp_list_lock);
++		ufshpb_update_inactive_info(hpb, rgn_i);
++		spin_unlock(&hpb->rsp_list_lock);
++
++		rgn = hpb->rgn_tbl + rgn_i;
++
++		spin_lock(&hpb->rgn_state_lock);
++		if (rgn->rgn_state != HPB_RGN_INACTIVE) {
++			for (srgn_i = 0; srgn_i < rgn->srgn_cnt; srgn_i++) {
++				srgn = rgn->srgn_tbl + srgn_i;
++				if (srgn->srgn_state == HPB_SRGN_VALID)
++					srgn->srgn_state = HPB_SRGN_INVALID;
++			}
++		}
++		spin_unlock(&hpb->rgn_state_lock);
++
++		hpb->stats.rb_inactive_cnt++;
++	}
++
++	dev_dbg(&hpb->sdev_ufs_lu->sdev_dev, "Noti: #ACT %u #INACT %u\n",
++		rsp_field->active_rgn_cnt, rsp_field->inactive_rgn_cnt);
++
++	if (ufshpb_get_state(hpb) == HPB_PRESENT)
++		queue_work(ufshpb_wq, &hpb->map_work);
++}
++
++/*
++ * This function will parse recommended active subregion information in sense
++ * data field of response UPIU with SAM_STAT_GOOD state.
++ */
++void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
++{
++	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(lrbp->cmd->device);
++	struct utp_hpb_rsp *rsp_field = &lrbp->ucd_rsp_ptr->hr;
++	int data_seg_len;
++
++	if (unlikely(lrbp->lun != rsp_field->lun)) {
++		struct scsi_device *sdev;
++		bool found = false;
++
++		__shost_for_each_device(sdev, hba->host) {
++			hpb = ufshpb_get_hpb_data(sdev);
++
++			if (!hpb)
++				continue;
++
++			if (rsp_field->lun == hpb->lun) {
++				found = true;
++				break;
++			}
++		}
++
++		if (!found)
++			return;
++	}
++
++	if (!hpb)
 +		return;
 +
-+	atomic_set(&hpb_dev_info->slave_conf_cnt, hpb_dev_info->num_lu);
-+	/* issue HPB reset query */
-+	for (try = 0; try < HPB_RESET_REQ_RETRIES; try++) {
-+		ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
-+					QUERY_FLAG_IDN_HPB_RESET, 0, NULL);
-+		if (!ret)
-+			break;
++	if (ufshpb_get_state(hpb) == HPB_INIT)
++		return;
++
++	if ((ufshpb_get_state(hpb) != HPB_PRESENT) &&
++	    (ufshpb_get_state(hpb) != HPB_SUSPEND)) {
++		dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
++			   "%s: ufshpb state is not PRESENT/SUSPEND\n",
++			   __func__);
++		return;
++	}
++
++	data_seg_len = be32_to_cpu(lrbp->ucd_rsp_ptr->header.dword_2)
++		& MASK_RSP_UPIU_DATA_SEG_LEN;
++
++	/* To flush remained rsp_list, we queue the map_work task */
++	if (!data_seg_len) {
++		if (!ufshpb_is_general_lun(hpb->lun))
++			return;
++
++		ufshpb_kick_map_work(hpb);
++		return;
++	}
++
++	BUILD_BUG_ON(sizeof(struct utp_hpb_rsp) != UTP_HPB_RSP_SIZE);
++
++	if (!ufshpb_is_hpb_rsp_valid(hba, lrbp, rsp_field))
++		return;
++
++	hpb->stats.rb_noti_cnt++;
++
++	switch (rsp_field->hpb_op) {
++	case HPB_RSP_REQ_REGION_UPDATE:
++		if (data_seg_len != DEV_DATA_SEG_LEN)
++			dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
++				 "%s: data seg length is not same.\n",
++				 __func__);
++		ufshpb_rsp_req_region_update(hpb, rsp_field);
++		break;
++	case HPB_RSP_DEV_RESET:
++		dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
++			 "UFS device lost HPB information during PM.\n");
++		break;
++	default:
++		dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
++			   "hpb_op is not available: %d\n",
++			   rsp_field->hpb_op);
++		break;
 +	}
 +}
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-new file mode 100644
-index 000000000000..fa311ed3fa94
---- /dev/null
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -0,0 +1,167 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
++
++static void ufshpb_add_active_list(struct ufshpb_lu *hpb,
++				   struct ufshpb_region *rgn,
++				   struct ufshpb_subregion *srgn)
++{
++	if (!list_empty(&rgn->list_inact_rgn))
++		return;
++
++	if (!list_empty(&srgn->list_act_srgn)) {
++		list_move(&srgn->list_act_srgn, &hpb->lh_act_srgn);
++		return;
++	}
++
++	list_add(&srgn->list_act_srgn, &hpb->lh_act_srgn);
++}
++
++static void ufshpb_add_pending_evict_list(struct ufshpb_lu *hpb,
++					  struct ufshpb_region *rgn,
++					  struct list_head *pending_list)
++{
++	struct ufshpb_subregion *srgn;
++	int srgn_idx;
++
++	if (!list_empty(&rgn->list_inact_rgn))
++		return;
++
++	for_each_sub_region(rgn, srgn_idx, srgn)
++		if (!list_empty(&srgn->list_act_srgn))
++			return;
++
++	list_add_tail(&rgn->list_inact_rgn, pending_list);
++}
++
++static void ufshpb_run_active_subregion_list(struct ufshpb_lu *hpb)
++{
++	struct ufshpb_region *rgn;
++	struct ufshpb_subregion *srgn;
++	unsigned long flags;
++	int ret = 0;
++
++	spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++	while ((srgn = list_first_entry_or_null(&hpb->lh_act_srgn,
++						struct ufshpb_subregion,
++						list_act_srgn))) {
++		if (ufshpb_get_state(hpb) == HPB_SUSPEND)
++			break;
++
++		list_del_init(&srgn->list_act_srgn);
++		spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
++
++		rgn = hpb->rgn_tbl + srgn->rgn_idx;
++		ret = ufshpb_add_region(hpb, rgn);
++		if (ret)
++			goto active_failed;
++
++		ret = ufshpb_issue_map_req(hpb, rgn, srgn);
++		if (ret) {
++			dev_err(&hpb->sdev_ufs_lu->sdev_dev,
++			    "issue map_req failed. ret %d, region %d - %d\n",
++			    ret, rgn->rgn_idx, srgn->srgn_idx);
++			goto active_failed;
++		}
++		spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++	}
++	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
++	return;
++
++active_failed:
++	dev_err(&hpb->sdev_ufs_lu->sdev_dev, "failed to activate region %d - %d, will retry\n",
++		   rgn->rgn_idx, srgn->srgn_idx);
++	spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++	ufshpb_add_active_list(hpb, rgn, srgn);
++	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
++}
++
++static void ufshpb_run_inactive_region_list(struct ufshpb_lu *hpb)
++{
++	struct ufshpb_region *rgn;
++	unsigned long flags;
++	int ret;
++	LIST_HEAD(pending_list);
++
++	spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++	while ((rgn = list_first_entry_or_null(&hpb->lh_inact_rgn,
++					       struct ufshpb_region,
++					       list_inact_rgn))) {
++		if (ufshpb_get_state(hpb) == HPB_SUSPEND)
++			break;
++
++		list_del_init(&rgn->list_inact_rgn);
++		spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
++
++		ret = ufshpb_evict_region(hpb, rgn);
++		if (ret) {
++			spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++			ufshpb_add_pending_evict_list(hpb, rgn, &pending_list);
++			spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
++		}
++
++		spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++	}
++
++	list_splice(&pending_list, &hpb->lh_inact_rgn);
++	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
++}
++
++static void ufshpb_map_work_handler(struct work_struct *work)
++{
++	struct ufshpb_lu *hpb = container_of(work, struct ufshpb_lu, map_work);
++
++	if (ufshpb_get_state(hpb) != HPB_PRESENT) {
++		dev_notice(&hpb->sdev_ufs_lu->sdev_dev,
++			   "%s: ufshpb state is not PRESENT\n", __func__);
++		return;
++	}
++
++	ufshpb_run_inactive_region_list(hpb);
++	ufshpb_run_active_subregion_list(hpb);
++}
++
 +/*
-+ * Universal Flash Storage Host Performance Booster
-+ *
-+ * Copyright (C) 2017-2021 Samsung Electronics Co., Ltd.
-+ *
-+ * Authors:
-+ *	Yongmyung Lee <ymhungry.lee@samsung.com>
-+ *	Jinyoung Choi <j-young.choi@samsung.com>
++ * this function doesn't need to hold lock due to be called in init.
++ * (rgn_state_lock, rsp_list_lock, etc..)
 + */
++static int ufshpb_init_pinned_active_region(struct ufs_hba *hba,
++					    struct ufshpb_lu *hpb,
++					    struct ufshpb_region *rgn)
++{
++	struct ufshpb_subregion *srgn;
++	int srgn_idx, i;
++	int err = 0;
 +
-+#ifndef _UFSHPB_H_
-+#define _UFSHPB_H_
++	for_each_sub_region(rgn, srgn_idx, srgn) {
++		srgn->mctx = ufshpb_get_map_ctx(hpb, srgn->is_last);
++		srgn->srgn_state = HPB_SRGN_INVALID;
++		if (!srgn->mctx) {
++			err = -ENOMEM;
++			dev_err(hba->dev,
++				"alloc mctx for pinned region failed\n");
++			goto release;
++		}
 +
-+/* hpb response UPIU macro */
-+#define HPB_RSP_NONE				0x0
-+#define HPB_RSP_REQ_REGION_UPDATE		0x1
-+#define HPB_RSP_DEV_RESET			0x2
-+#define MAX_ACTIVE_NUM				2
-+#define MAX_INACTIVE_NUM			2
-+#define DEV_DATA_SEG_LEN			0x14
-+#define DEV_SENSE_SEG_LEN			0x12
-+#define DEV_DES_TYPE				0x80
-+#define DEV_ADDITIONAL_LEN			0x10
++		list_add_tail(&srgn->list_act_srgn, &hpb->lh_act_srgn);
++	}
 +
-+/* hpb map & entries macro */
-+#define HPB_RGN_SIZE_UNIT			512
-+#define HPB_ENTRY_BLOCK_SIZE			4096
-+#define HPB_ENTRY_SIZE				0x8
-+#define PINNED_NOT_SET				U32_MAX
++	rgn->rgn_state = HPB_RGN_PINNED;
++	return 0;
 +
-+/* hpb support chunk size */
-+#define HPB_MULTI_CHUNK_HIGH			1
++release:
++	for (i = 0; i < srgn_idx; i++) {
++		srgn = rgn->srgn_tbl + i;
++		ufshpb_put_map_ctx(hpb, srgn->mctx);
++	}
++	return err;
++}
 +
-+/* hpb vender defined opcode */
-+#define UFSHPB_READ				0xF8
-+#define UFSHPB_READ_BUFFER			0xF9
-+#define UFSHPB_READ_BUFFER_ID			0x01
-+#define HPB_READ_BUFFER_CMD_LENGTH		10
-+#define LU_ENABLED_HPB_FUNC			0x02
+ static void ufshpb_init_subregion_tbl(struct ufshpb_lu *hpb,
+ 				      struct ufshpb_region *rgn, bool last)
+ {
+ 	int srgn_idx;
+ 	struct ufshpb_subregion *srgn;
+ 
+-	for (srgn_idx = 0; srgn_idx < rgn->srgn_cnt; srgn_idx++) {
+-		srgn = rgn->srgn_tbl + srgn_idx;
++	for_each_sub_region(rgn, srgn_idx, srgn) {
++		INIT_LIST_HEAD(&srgn->list_act_srgn);
+ 
+ 		srgn->rgn_idx = rgn->rgn_idx;
+ 		srgn->srgn_idx = srgn_idx;
+@@ -78,6 +963,8 @@ static void ufshpb_lu_parameter_init(struct ufs_hba *hba,
+ 	hpb->lu_pinned_end = hpb_lu_info->num_pinned ?
+ 		(hpb_lu_info->pinned_start + hpb_lu_info->num_pinned - 1)
+ 		: PINNED_NOT_SET;
++	hpb->lru_info.max_lru_active_cnt =
++		hpb_lu_info->max_active_rgns - hpb_lu_info->num_pinned;
+ 
+ 	rgn_mem_size = (1ULL << hpb_dev_info->rgn_size) * HPB_RGN_SIZE_UNIT
+ 			* HPB_ENTRY_SIZE;
+@@ -129,6 +1016,9 @@ static int ufshpb_alloc_region_tbl(struct ufs_hba *hba, struct ufshpb_lu *hpb)
+ 		rgn = rgn_table + rgn_idx;
+ 		rgn->rgn_idx = rgn_idx;
+ 
++		INIT_LIST_HEAD(&rgn->list_inact_rgn);
++		INIT_LIST_HEAD(&rgn->list_lru_rgn);
 +
-+#define HPB_RESET_REQ_RETRIES			10
+ 		if (rgn_idx == hpb->rgns_per_lu - 1) {
+ 			srgn_cnt = ((hpb->srgns_per_lu - 1) %
+ 				    hpb->srgns_per_rgn) + 1;
+@@ -140,7 +1030,13 @@ static int ufshpb_alloc_region_tbl(struct ufs_hba *hba, struct ufshpb_lu *hpb)
+ 			goto release_srgn_table;
+ 		ufshpb_init_subregion_tbl(hpb, rgn, last_srgn);
+ 
+-		rgn->rgn_state = HPB_RGN_INACTIVE;
++		if (ufshpb_is_pinned_region(hpb, rgn_idx)) {
++			ret = ufshpb_init_pinned_active_region(hba, hpb, rgn);
++			if (ret)
++				goto release_srgn_table;
++		} else {
++			rgn->rgn_state = HPB_RGN_INACTIVE;
++		}
+ 	}
+ 
+ 	return 0;
+@@ -157,13 +1053,13 @@ static void ufshpb_destroy_subregion_tbl(struct ufshpb_lu *hpb,
+ 					 struct ufshpb_region *rgn)
+ {
+ 	int srgn_idx;
++	struct ufshpb_subregion *srgn;
+ 
+-	for (srgn_idx = 0; srgn_idx < rgn->srgn_cnt; srgn_idx++) {
+-		struct ufshpb_subregion *srgn;
+-
+-		srgn = rgn->srgn_tbl + srgn_idx;
+-		srgn->srgn_state = HPB_SRGN_UNUSED;
+-	}
++	for_each_sub_region(rgn, srgn_idx, srgn)
++		if (srgn->srgn_state != HPB_SRGN_UNUSED) {
++			srgn->srgn_state = HPB_SRGN_UNUSED;
++			ufshpb_put_map_ctx(hpb, srgn->mctx);
++		}
+ }
+ 
+ static void ufshpb_destroy_region_tbl(struct ufshpb_lu *hpb)
+@@ -238,11 +1134,47 @@ static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
+ {
+ 	int ret;
+ 
++	spin_lock_init(&hpb->rgn_state_lock);
++	spin_lock_init(&hpb->rsp_list_lock);
 +
-+#define HPB_SUPPORT_VERSION			0x100
++	INIT_LIST_HEAD(&hpb->lru_info.lh_lru_rgn);
++	INIT_LIST_HEAD(&hpb->lh_act_srgn);
++	INIT_LIST_HEAD(&hpb->lh_inact_rgn);
++	INIT_LIST_HEAD(&hpb->list_hpb_lu);
 +
-+enum UFSHPB_MODE {
-+	HPB_HOST_CONTROL,
-+	HPB_DEVICE_CONTROL,
++	INIT_WORK(&hpb->map_work, ufshpb_map_work_handler);
++
++	hpb->map_req_cache = kmem_cache_create("ufshpb_req_cache",
++			  sizeof(struct ufshpb_req), 0, 0, NULL);
++	if (!hpb->map_req_cache) {
++		dev_err(hba->dev, "ufshpb(%d) ufshpb_req_cache create fail",
++			hpb->lun);
++		return -ENOMEM;
++	}
++
++	hpb->m_page_cache = kmem_cache_create("ufshpb_m_page_cache",
++			  sizeof(struct page *) * hpb->pages_per_srgn,
++			  0, 0, NULL);
++	if (!hpb->m_page_cache) {
++		dev_err(hba->dev, "ufshpb(%d) ufshpb_m_page_cache create fail",
++			hpb->lun);
++		ret = -ENOMEM;
++		goto release_req_cache;
++	}
++
+ 	ret = ufshpb_alloc_region_tbl(hba, hpb);
++	if (ret)
++		goto release_m_page_cache;
+ 
+ 	ufshpb_stat_init(hpb);
+ 
+ 	return 0;
++
++release_m_page_cache:
++	kmem_cache_destroy(hpb->m_page_cache);
++release_req_cache:
++	kmem_cache_destroy(hpb->map_req_cache);
++	return ret;
+ }
+ 
+ static struct ufshpb_lu *
+@@ -274,6 +1206,33 @@ ufshpb_alloc_hpb_lu(struct ufs_hba *hba, int lun,
+ 	return NULL;
+ }
+ 
++static void ufshpb_discard_rsp_lists(struct ufshpb_lu *hpb)
++{
++	struct ufshpb_region *rgn, *next_rgn;
++	struct ufshpb_subregion *srgn, *next_srgn;
++	unsigned long flags;
++
++	/*
++	 * If the device reset occurred, the remained HPB region information
++	 * may be stale. Therefore, by dicarding the lists of HPB response
++	 * that remained after reset, it prevents unnecessary work.
++	 */
++	spin_lock_irqsave(&hpb->rsp_list_lock, flags);
++	list_for_each_entry_safe(rgn, next_rgn, &hpb->lh_inact_rgn,
++				 list_inact_rgn)
++		list_del_init(&rgn->list_inact_rgn);
++
++	list_for_each_entry_safe(srgn, next_srgn, &hpb->lh_act_srgn,
++				 list_act_srgn)
++		list_del_init(&srgn->list_act_srgn);
++	spin_unlock_irqrestore(&hpb->rsp_list_lock, flags);
++}
++
++static void ufshpb_cancel_jobs(struct ufshpb_lu *hpb)
++{
++	cancel_work_sync(&hpb->map_work);
++}
++
+ static bool ufshpb_check_hpb_reset_query(struct ufs_hba *hba)
+ {
+ 	int err = 0;
+@@ -317,7 +1276,7 @@ void ufshpb_reset(struct ufs_hba *hba)
+ 	struct scsi_device *sdev;
+ 
+ 	shost_for_each_device(sdev, hba->host) {
+-		hpb = sdev->hostdata;
++		hpb = ufshpb_get_hpb_data(sdev);
+ 		if (!hpb)
+ 			continue;
+ 
+@@ -334,13 +1293,15 @@ void ufshpb_reset_host(struct ufs_hba *hba)
+ 	struct scsi_device *sdev;
+ 
+ 	shost_for_each_device(sdev, hba->host) {
+-		hpb = sdev->hostdata;
++		hpb = ufshpb_get_hpb_data(sdev);
+ 		if (!hpb)
+ 			continue;
+ 
+ 		if (ufshpb_get_state(hpb) != HPB_PRESENT)
+ 			continue;
+ 		ufshpb_set_state(hpb, HPB_RESET);
++		ufshpb_cancel_jobs(hpb);
++		ufshpb_discard_rsp_lists(hpb);
+ 	}
+ }
+ 
+@@ -350,13 +1311,14 @@ void ufshpb_suspend(struct ufs_hba *hba)
+ 	struct scsi_device *sdev;
+ 
+ 	shost_for_each_device(sdev, hba->host) {
+-		hpb = sdev->hostdata;
++		hpb = ufshpb_get_hpb_data(sdev);
+ 		if (!hpb)
+ 			continue;
+ 
+ 		if (ufshpb_get_state(hpb) != HPB_PRESENT)
+ 			continue;
+ 		ufshpb_set_state(hpb, HPB_SUSPEND);
++		ufshpb_cancel_jobs(hpb);
+ 	}
+ }
+ 
+@@ -366,7 +1328,7 @@ void ufshpb_resume(struct ufs_hba *hba)
+ 	struct scsi_device *sdev;
+ 
+ 	shost_for_each_device(sdev, hba->host) {
+-		hpb = sdev->hostdata;
++		hpb = ufshpb_get_hpb_data(sdev);
+ 		if (!hpb)
+ 			continue;
+ 
+@@ -374,6 +1336,7 @@ void ufshpb_resume(struct ufs_hba *hba)
+ 		    (ufshpb_get_state(hpb) != HPB_SUSPEND))
+ 			continue;
+ 		ufshpb_set_state(hpb, HPB_PRESENT);
++		ufshpb_kick_map_work(hpb);
+ 	}
+ }
+ 
+@@ -426,7 +1389,7 @@ static int ufshpb_get_lu_info(struct ufs_hba *hba, int lun,
+ 
+ void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev)
+ {
+-	struct ufshpb_lu *hpb = sdev->hostdata;
++	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
+ 
+ 	if (!hpb)
+ 		return;
+@@ -436,8 +1399,13 @@ void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev)
+ 	sdev = hpb->sdev_ufs_lu;
+ 	sdev->hostdata = NULL;
+ 
++	ufshpb_cancel_jobs(hpb);
++
+ 	ufshpb_destroy_region_tbl(hpb);
+ 
++	kmem_cache_destroy(hpb->map_req_cache);
++	kmem_cache_destroy(hpb->m_page_cache);
++
+ 	list_del_init(&hpb->list_hpb_lu);
+ 
+ 	kfree(hpb);
+@@ -445,24 +1413,41 @@ void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev)
+ 
+ static void ufshpb_hpb_lu_prepared(struct ufs_hba *hba)
+ {
++	int pool_size;
+ 	struct ufshpb_lu *hpb;
+ 	struct scsi_device *sdev;
+ 	bool init_success;
+ 
++	if (tot_active_srgn_pages == 0) {
++		ufshpb_remove(hba);
++		return;
++	}
++
+ 	init_success = !ufshpb_check_hpb_reset_query(hba);
+ 
++	pool_size = PAGE_ALIGN(ufshpb_host_map_kbytes * 1024) / PAGE_SIZE;
++	if (pool_size > tot_active_srgn_pages) {
++		mempool_resize(ufshpb_mctx_pool, tot_active_srgn_pages);
++		mempool_resize(ufshpb_page_pool, tot_active_srgn_pages);
++	}
++
+ 	shost_for_each_device(sdev, hba->host) {
+-		hpb = sdev->hostdata;
++		hpb = ufshpb_get_hpb_data(sdev);
+ 		if (!hpb)
+ 			continue;
+ 
+ 		if (init_success) {
+ 			ufshpb_set_state(hpb, HPB_PRESENT);
++			if ((hpb->lu_pinned_end - hpb->lu_pinned_start) > 0)
++				queue_work(ufshpb_wq, &hpb->map_work);
+ 		} else {
+ 			dev_err(hba->dev, "destroy HPB lu %d\n", hpb->lun);
+ 			ufshpb_destroy_lu(hba, sdev);
+ 		}
+ 	}
++
++	if (!init_success)
++		ufshpb_remove(hba);
+ }
+ 
+ void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev)
+@@ -484,6 +1469,9 @@ void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev)
+ 	if (!hpb)
+ 		goto out;
+ 
++	tot_active_srgn_pages += hpb_lu_info.max_active_rgns *
++			hpb->srgns_per_rgn * hpb->pages_per_srgn;
++
+ 	hpb->sdev_ufs_lu = sdev;
+ 	sdev->hostdata = hpb;
+ 
+@@ -493,6 +1481,57 @@ void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev)
+ 		ufshpb_hpb_lu_prepared(hba);
+ }
+ 
++static int ufshpb_init_mem_wq(struct ufs_hba *hba)
++{
++	int ret;
++	unsigned int pool_size;
++
++	ufshpb_mctx_cache = kmem_cache_create("ufshpb_mctx_cache",
++					sizeof(struct ufshpb_map_ctx),
++					0, 0, NULL);
++	if (!ufshpb_mctx_cache) {
++		dev_err(hba->dev, "ufshpb: cannot init mctx cache\n");
++		return -ENOMEM;
++	}
++
++	pool_size = PAGE_ALIGN(ufshpb_host_map_kbytes * 1024) / PAGE_SIZE;
++	dev_info(hba->dev, "%s:%d ufshpb_host_map_kbytes %u pool_size %u\n",
++	       __func__, __LINE__, ufshpb_host_map_kbytes, pool_size);
++
++	ufshpb_mctx_pool = mempool_create_slab_pool(pool_size,
++						    ufshpb_mctx_cache);
++	if (!ufshpb_mctx_pool) {
++		dev_err(hba->dev, "ufshpb: cannot init mctx pool\n");
++		ret = -ENOMEM;
++		goto release_mctx_cache;
++	}
++
++	ufshpb_page_pool = mempool_create_page_pool(pool_size, 0);
++	if (!ufshpb_page_pool) {
++		dev_err(hba->dev, "ufshpb: cannot init page pool\n");
++		ret = -ENOMEM;
++		goto release_mctx_pool;
++	}
++
++	ufshpb_wq = alloc_workqueue("ufshpb-wq",
++					WQ_UNBOUND | WQ_MEM_RECLAIM, 0);
++	if (!ufshpb_wq) {
++		dev_err(hba->dev, "ufshpb: alloc workqueue failed\n");
++		ret = -ENOMEM;
++		goto release_page_pool;
++	}
++
++	return 0;
++
++release_page_pool:
++	mempool_destroy(ufshpb_page_pool);
++release_mctx_pool:
++	mempool_destroy(ufshpb_mctx_pool);
++release_mctx_cache:
++	kmem_cache_destroy(ufshpb_mctx_cache);
++	return ret;
++}
++
+ void ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf)
+ {
+ 	struct ufshpb_dev_info *hpb_info = &hba->ufshpb_dev;
+@@ -557,7 +1596,13 @@ void ufshpb_init(struct ufs_hba *hba)
+ 	if (!ufshpb_is_allowed(hba) || !hba->dev_info.hpb_enabled)
+ 		return;
+ 
++	if (ufshpb_init_mem_wq(hba)) {
++		hpb_dev_info->hpb_disabled = true;
++		return;
++	}
++
+ 	atomic_set(&hpb_dev_info->slave_conf_cnt, hpb_dev_info->num_lu);
++	tot_active_srgn_pages = 0;
+ 	/* issue HPB reset query */
+ 	for (try = 0; try < HPB_RESET_REQ_RETRIES; try++) {
+ 		ret = ufshcd_query_flag(hba, UPIU_QUERY_OPCODE_SET_FLAG,
+@@ -566,3 +1611,16 @@ void ufshpb_init(struct ufs_hba *hba)
+ 			break;
+ 	}
+ }
++
++void ufshpb_remove(struct ufs_hba *hba)
++{
++	mempool_destroy(ufshpb_page_pool);
++	mempool_destroy(ufshpb_mctx_pool);
++	kmem_cache_destroy(ufshpb_mctx_cache);
++
++	destroy_workqueue(ufshpb_wq);
++}
++
++module_param(ufshpb_host_map_kbytes, uint, 0644);
++MODULE_PARM_DESC(ufshpb_host_map_kbytes,
++	"ufshpb host mapping memory kilo-bytes for ufshpb memory-pool");
+diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+index fa311ed3fa94..dcc0ca3b8158 100644
+--- a/drivers/scsi/ufs/ufshpb.h
++++ b/drivers/scsi/ufs/ufshpb.h
+@@ -40,6 +40,7 @@
+ #define LU_ENABLED_HPB_FUNC			0x02
+ 
+ #define HPB_RESET_REQ_RETRIES			10
++#define HPB_MAP_REQ_RETRIES			5
+ 
+ #define HPB_SUPPORT_VERSION			0x100
+ 
+@@ -84,11 +85,19 @@ struct ufshpb_lu_info {
+ 	int max_active_rgns;
+ };
+ 
++struct ufshpb_map_ctx {
++	struct page **m_page;
++	unsigned long *ppn_dirty;
 +};
 +
-+enum UFSHPB_STATE {
-+	HPB_INIT = 0,
-+	HPB_PRESENT = 1,
-+	HPB_SUSPEND,
-+	HPB_FAILED,
-+	HPB_RESET,
+ struct ufshpb_subregion {
++	struct ufshpb_map_ctx *mctx;
+ 	enum HPB_SRGN_STATE srgn_state;
+ 	int rgn_idx;
+ 	int srgn_idx;
+ 	bool is_last;
++	/* below information is used by rsp_list */
++	struct list_head list_act_srgn;
+ };
+ 
+ struct ufshpb_region {
+@@ -96,6 +105,43 @@ struct ufshpb_region {
+ 	enum HPB_RGN_STATE rgn_state;
+ 	int rgn_idx;
+ 	int srgn_cnt;
++
++	/* below information is used by rsp_list */
++	struct list_head list_inact_rgn;
++
++	/* below information is used by lru */
++	struct list_head list_lru_rgn;
 +};
 +
-+enum HPB_RGN_STATE {
-+	HPB_RGN_INACTIVE,
-+	HPB_RGN_ACTIVE,
-+	/* pinned regions are always active */
-+	HPB_RGN_PINNED,
-+};
-+
-+enum HPB_SRGN_STATE {
-+	HPB_SRGN_UNUSED,
-+	HPB_SRGN_INVALID,
-+	HPB_SRGN_VALID,
-+	HPB_SRGN_ISSUED,
-+};
++#define for_each_sub_region(rgn, i, srgn)				\
++	for ((i) = 0;							\
++	     ((i) < (rgn)->srgn_cnt) && ((srgn) = &(rgn)->srgn_tbl[i]); \
++	     (i)++)
 +
 +/**
-+ * struct ufshpb_lu_info - UFSHPB logical unit related info
-+ * @num_blocks: the number of logical block
-+ * @pinned_start: the start region number of pinned region
-+ * @num_pinned: the number of pinned regions
-+ * @max_active_rgns: maximum number of active regions
++ * struct ufshpb_req - UFSHPB READ BUFFER (for caching map) request structure
++ * @req: block layer request for READ BUFFER
++ * @bio: bio for holding map page
++ * @hpb: ufshpb_lu structure that related to the L2P map
++ * @mctx: L2P map information
++ * @rgn_idx: target region index
++ * @srgn_idx: target sub-region index
++ * @lun: target logical unit number
 + */
-+struct ufshpb_lu_info {
-+	int num_blocks;
-+	int pinned_start;
-+	int num_pinned;
-+	int max_active_rgns;
++struct ufshpb_req {
++	struct request *req;
++	struct bio *bio;
++	struct ufshpb_lu *hpb;
++	struct ufshpb_map_ctx *mctx;
++
++	unsigned int rgn_idx;
++	unsigned int srgn_idx;
 +};
 +
-+struct ufshpb_subregion {
-+	enum HPB_SRGN_STATE srgn_state;
-+	int rgn_idx;
-+	int srgn_idx;
-+	bool is_last;
-+};
++struct victim_select_info {
++	struct list_head lh_lru_rgn; /* LRU list of regions */
++	int max_lru_active_cnt; /* supported hpb #region - pinned #region */
++	atomic_t active_cnt;
+ };
+ 
+ struct ufshpb_stats {
+@@ -110,10 +156,22 @@ struct ufshpb_stats {
+ struct ufshpb_lu {
+ 	int lun;
+ 	struct scsi_device *sdev_ufs_lu;
 +
-+struct ufshpb_region {
-+	struct ufshpb_subregion *srgn_tbl;
-+	enum HPB_RGN_STATE rgn_state;
-+	int rgn_idx;
-+	int srgn_cnt;
-+};
++	spinlock_t rgn_state_lock; /* for protect rgn/srgn state */
+ 	struct ufshpb_region *rgn_tbl;
+ 
+ 	atomic_t hpb_state;
+ 
++	spinlock_t rsp_list_lock;
++	struct list_head lh_act_srgn; /* hold rsp_list_lock */
++	struct list_head lh_inact_rgn; /* hold rsp_list_lock */
 +
-+struct ufshpb_stats {
-+	u64 hit_cnt;
-+	u64 miss_cnt;
-+	u64 rb_noti_cnt;
-+	u64 rb_active_cnt;
-+	u64 rb_inactive_cnt;
-+	u64 map_req_cnt;
-+};
++	/* cached L2P map management worker */
++	struct work_struct map_work;
 +
-+struct ufshpb_lu {
-+	int lun;
-+	struct scsi_device *sdev_ufs_lu;
-+	struct ufshpb_region *rgn_tbl;
++	/* for selecting victim */
++	struct victim_select_info lru_info;
 +
-+	atomic_t hpb_state;
+ 	/* pinned region information */
+ 	u32 lu_pinned_start;
+ 	u32 lu_pinned_end;
+@@ -133,6 +191,9 @@ struct ufshpb_lu {
+ 
+ 	struct ufshpb_stats stats;
+ 
++	struct kmem_cache *map_req_cache;
++	struct kmem_cache *m_page_cache;
 +
-+	/* pinned region information */
-+	u32 lu_pinned_start;
-+	u32 lu_pinned_end;
-+
-+	/* HPB related configuration */
-+	u32 rgns_per_lu;
-+	u32 srgns_per_lu;
-+	u32 last_srgn_entries;
-+	int srgns_per_rgn;
-+	u32 srgn_mem_size;
-+	u32 entries_per_rgn_mask;
-+	u32 entries_per_rgn_shift;
-+	u32 entries_per_srgn;
-+	u32 entries_per_srgn_mask;
-+	u32 entries_per_srgn_shift;
-+	u32 pages_per_srgn;
-+
-+	struct ufshpb_stats stats;
-+
-+	struct list_head list_hpb_lu;
-+};
-+
-+struct ufs_hba;
-+struct ufshcd_lrb;
-+
-+#ifndef CONFIG_SCSI_UFS_HPB
-+static void ufshpb_resume(struct ufs_hba *hba) {}
-+static void ufshpb_suspend(struct ufs_hba *hba) {}
-+static void ufshpb_reset(struct ufs_hba *hba) {}
-+static void ufshpb_reset_host(struct ufs_hba *hba) {}
-+static void ufshpb_init(struct ufs_hba *hba) {}
-+static void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev) {}
-+static void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev) {}
-+static bool ufshpb_is_allowed(struct ufs_hba *hba) { return false; }
-+static void ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf) {}
-+static void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf) {}
-+#else
-+void ufshpb_resume(struct ufs_hba *hba);
-+void ufshpb_suspend(struct ufs_hba *hba);
-+void ufshpb_reset(struct ufs_hba *hba);
-+void ufshpb_reset_host(struct ufs_hba *hba);
-+void ufshpb_init(struct ufs_hba *hba);
-+void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev);
-+void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev);
-+bool ufshpb_is_allowed(struct ufs_hba *hba);
-+void ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf);
-+void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf);
-+extern struct attribute_group ufs_sysfs_hpb_stat_group;
-+#endif
-+
-+#endif /* End of Header */
+ 	struct list_head list_hpb_lu;
+ };
+ 
+@@ -140,6 +201,7 @@ struct ufs_hba;
+ struct ufshcd_lrb;
+ 
+ #ifndef CONFIG_SCSI_UFS_HPB
++static void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp) {}
+ static void ufshpb_resume(struct ufs_hba *hba) {}
+ static void ufshpb_suspend(struct ufs_hba *hba) {}
+ static void ufshpb_reset(struct ufs_hba *hba) {}
+@@ -147,10 +209,12 @@ static void ufshpb_reset_host(struct ufs_hba *hba) {}
+ static void ufshpb_init(struct ufs_hba *hba) {}
+ static void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev) {}
+ static void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev) {}
++static void ufshpb_remove(struct ufs_hba *hba) {}
+ static bool ufshpb_is_allowed(struct ufs_hba *hba) { return false; }
+ static void ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf) {}
+ static void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf) {}
+ #else
++void ufshpb_rsp_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp);
+ void ufshpb_resume(struct ufs_hba *hba);
+ void ufshpb_suspend(struct ufs_hba *hba);
+ void ufshpb_reset(struct ufs_hba *hba);
+@@ -158,6 +222,7 @@ void ufshpb_reset_host(struct ufs_hba *hba);
+ void ufshpb_init(struct ufs_hba *hba);
+ void ufshpb_init_hpb_lu(struct ufs_hba *hba, struct scsi_device *sdev);
+ void ufshpb_destroy_lu(struct ufs_hba *hba, struct scsi_device *sdev);
++void ufshpb_remove(struct ufs_hba *hba);
+ bool ufshpb_is_allowed(struct ufs_hba *hba);
+ void ufshpb_get_geo_info(struct ufs_hba *hba, u8 *geo_buf);
+ void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf);
 -- 
 2.25.1
 
