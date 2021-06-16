@@ -7,109 +7,107 @@ X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 086FDC48BE5
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 13:44:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CBBBDC48BE6
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 13:46:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CCEEF61241
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 13:44:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD87A60FF1
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 13:46:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233219AbhFPNqv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 09:46:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43312 "EHLO
+        id S233338AbhFPNsn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Jun 2021 09:48:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231179AbhFPNqu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 09:46:50 -0400
-Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 573BDC061574
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 06:44:44 -0700 (PDT)
-Received: by mail-qt1-x82f.google.com with SMTP id e3so1934687qte.0
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 06:44:44 -0700 (PDT)
+        with ESMTP id S233330AbhFPNsn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 09:48:43 -0400
+Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C484CC06175F
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 06:46:36 -0700 (PDT)
+Received: by mail-qk1-x72a.google.com with SMTP id i68so2630905qke.3
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 06:46:36 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=tM3AuQI5cHJ3IzHbSxLUVvfQaNgshqiBWwm3uPEgrio=;
-        b=CV3Hi73XJI6gKVf5IFQsnUlkKcBzqkLQ3wd7ewv2aXh41YHpvspkTSAF+Sfha41m8p
-         JrmjPX3bLk3rAlMsby4WNmPo5PG90QC5t5ig7Q6KU917wggIu/vhK4JI7X4sgX/IMrAT
-         3k/v0KIQkEeSlzA7FQtX+ywRAVLuNUWNiWPUk=
+        bh=4j5cJcp48x0HoZglaW0sGfmgzoVkURuj10VOmg5NfI8=;
+        b=cxTSCpIc0oC+tR6At/Pa3gdYuZ5bl7u3HHA+RE3rCkZnbyyt8sB1eYXVQhApA5VAhU
+         P5WgHCAlNnTnNOtnjBTnpefiJTbLeH5kOQjoeYi0xzN+KxtfKL+mGJRzrX4mEZvoBCWA
+         Tlq0vWQqSuX1ghwqOAABiahwj24oL9VLnQODs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=tM3AuQI5cHJ3IzHbSxLUVvfQaNgshqiBWwm3uPEgrio=;
-        b=PQumt2lWoN5RcJ87xuS9H9XBbTarjWjFoyS2KwhDzGE/pRU6+Cb8qZ/qiCTHH445tS
-         QlqU0bSkiaWVMNq1BMM0HUmtYxjpUJq6uUZ+W5RmbWIU4ygnehvym4wzZWu8ck6Rw1ZK
-         VamuOewEfxKypchG95E1tq6/6STJgh/cRSpmEH8NMp4372ZZoDokhREaTnVYJRTyfhGo
-         lTJwXChoSJd9Y5fFlYaH72wcxK7WSmtye6ag9v350F9ehr6t55iDEM2C8BrCDxUcbbvC
-         Z9Lm7aipRVkoe3LOiAaIHTn4mi4AYAK/e4f0CJ/IOulcmrnK7q8obMKBN30qzaZmwtWM
-         LSgg==
-X-Gm-Message-State: AOAM531dKhi//bwF4auLwmBdWbUqXMLVAwYskNkp/RcXtYDfQ0K2Hgpe
-        FlhexJIGkUDSDW+YSFmlR+owcNShmVATS0/tLt2qAw==
-X-Google-Smtp-Source: ABdhPJyBKBW9a+kdoMpAVe1j5aTcnnBj6hBpikQZ/DEDkr8AVwiZRnluylF6lshe3sMtj4tLPfrRbk15OJDVfRx8IjU=
-X-Received: by 2002:ac8:6e8e:: with SMTP id c14mr5177107qtv.216.1623851083400;
- Wed, 16 Jun 2021 06:44:43 -0700 (PDT)
+        bh=4j5cJcp48x0HoZglaW0sGfmgzoVkURuj10VOmg5NfI8=;
+        b=BTG5+/5pcnubWRQU7sAisKW0Ag2TADaI57fJExAoIQGNgvJ3wQQcMRNSrjWseaabMw
+         HRSN5hiQe1QEyd1c9wXO3Bj/Qev5BNmn8twBzLP2/xGmIgJiBqQ2Wy+1g0YcwXT5ZFsD
+         wQ30JlR1scAN2cEzHwK7jKSZ+UqJGPKk0tg2ZO7J7YwTUpz9hrXAafpt+7WQWr5esKNq
+         XncJK0ahi6fy9pmA722RCnqAAqeJFrQL8tvuzR1KJk/jqHtUTspWsKhDeWs1vmhDMR0G
+         tCXWbIGLrZh2wI2Q754X+LXoWfqd+6foSHBfXe5beQ6TS3QwJXSTcDls+GwU5eBqGnxR
+         5mEQ==
+X-Gm-Message-State: AOAM531seug62IHukpU0ESV2KLWkM2iiiuaMLfYZ/Wl4nqDnH40gHsDC
+        YIGfZGbvgUtEQqpI8o1uOXh4StH1n16CRLyJzBYg3A==
+X-Google-Smtp-Source: ABdhPJxJgJrO+6A7hB1wsB3GvWnJTy+Y4QH0yiN/U5fQAwrmzwmaXrSOxD9lloROVI3pdU80nsc83fRtqyMKa0x/jj0=
+X-Received: by 2002:a37:394:: with SMTP id 142mr126851qkd.72.1623851195865;
+ Wed, 16 Jun 2021 06:46:35 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210603151653.711020-1-yangyingliang@huawei.com>
-In-Reply-To: <20210603151653.711020-1-yangyingliang@huawei.com>
+References: <20210603152803.717505-1-yangyingliang@huawei.com>
+In-Reply-To: <20210603152803.717505-1-yangyingliang@huawei.com>
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
-Date:   Wed, 16 Jun 2021 19:14:32 +0530
-Message-ID: <CAHsXFKEU2kd-yS2NEC+y3+D6ff6639z2NnZSxFzShV9SJJbX7A@mail.gmail.com>
-Subject: Re: [PATCH -next resend] scsi: mpi3mr: Fix error return code in mpi3mr_init_ioc()
+Date:   Wed, 16 Jun 2021 19:16:24 +0530
+Message-ID: <CAHsXFKGkRDdqc5kNozCrw=7CgORAp0_jyt+-7FW=n62r2xmvFA@mail.gmail.com>
+Subject: Re: [PATCH -next] scsi: mpi3mr: Fix missing unlock on error
 To:     Yang Yingliang <yangyingliang@huawei.com>
 Cc:     linux-kernel <linux-kernel@vger.kernel.org>,
         linux-scsi <linux-scsi@vger.kernel.org>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000003957b05c4e24b3b"
+        boundary="000000000000b76d1f05c4e25147"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000003957b05c4e24b3b
+--000000000000b76d1f05c4e25147
 Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Jun 3, 2021 at 8:42 PM Yang Yingliang <yangyingliang@huawei.com> wrote:
+> Goto unlock path before return from function
+> in the error handling case.
 >
-> Fix to return a negative error code from the error handling
-> case instead of 0, as done elsewhere in this function.
->
-> Fixes: fb9b04574f14 ("scsi: mpi3mr: Add support for recovering controller")
-> Fixes: 824a156633df ("scsi: mpi3mr: Base driver code")
+> Fixes: c9566231cfaf ("scsi: mpi3mr: Create operational request and reply queue pair")
 > Reported-by: Hulk Robot <hulkci@huawei.com>
 > Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 > ---
->  drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 ++
->  1 file changed, 2 insertions(+)
+>  drivers/scsi/mpi3mr/mpi3mr_fw.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> index acb2be62080a..dbf116414855 100644
+> index dbf116414855..8aea1c2ae712 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> @@ -3295,6 +3295,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+> @@ -1583,7 +1583,7 @@ static int mpi3mr_create_op_reply_q(struct mpi3mr_ioc *mrioc, u16 qidx)
+>         if (mrioc->init_cmds.state & MPI3MR_CMD_PENDING) {
+>                 retval = -1;
+>                 ioc_err(mrioc, "CreateRepQ: Init command is in use\n");
+> -               goto out;
+> +               goto out_unlock;
 >         }
->         ioc_state = mpi3mr_get_iocstate(mrioc);
->         if (ioc_state != MRIOC_STATE_RESET) {
-> +               retval = -1;
->                 ioc_err(mrioc, "Cannot bring IOC to reset state\n");
->                 goto out_failed;
+>         mrioc->init_cmds.state = MPI3MR_CMD_PENDING;
+>         mrioc->init_cmds.is_waiting = 1;
+> @@ -1692,7 +1692,7 @@ static int mpi3mr_create_op_req_q(struct mpi3mr_ioc *mrioc, u16 idx,
+>         if (mrioc->init_cmds.state & MPI3MR_CMD_PENDING) {
+>                 retval = -1;
+>                 ioc_err(mrioc, "CreateReqQ: Init command is in use\n");
+> -               goto out;
+> +               goto out_unlock;
 >         }
-> @@ -3391,6 +3392,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
->
->         if (re_init &&
->             (mrioc->shost->nr_hw_queues > mrioc->num_op_reply_q)) {
-> +               retval = -1;
->                 ioc_err(mrioc,
->                     "Cannot create minimum number of OpQueues expected:%d created:%d\n",
->                     mrioc->shost->nr_hw_queues, mrioc->num_op_reply_q);
-> --
+>         mrioc->init_cmds.state = MPI3MR_CMD_PENDING;
+>         mrioc->init_cmds.is_waiting = 1;
 
 Acked-by: Kashyap Desai <kashyap.desai@broadcom.com>
-
+> --
 > 2.25.1
 >
 
---00000000000003957b05c4e24b3b
+--000000000000b76d1f05c4e25147
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -180,13 +178,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIPX2GSf5ylh4yqQSSjC/a7LS3W5
-T2ttBsQTLXtHgTvJMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDYxNjEzNDQ0M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICKfbNQRzqy5i+OkxPXtF8RT5Nwz
+G2kR5RhxDJvcywZ7MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDYxNjEzNDYzNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQCzCf4LTtXQFoF819Y5JC5AwZ8e/k5ptXM+p0wYUCzRllY6
-OUcbwG5QxEOcNKyKwVJdR0/9zk3vrU3YBa2HR0cXsO+A+ULOZsBE1W/MCzUE/0toLIVmp95dDjf7
-gX68WVk2L+pYuFXyk2zty+vY6imK3DRpN3hnL3GCJXIRrJoc/ajSicYZuitr4Z7dZpT6yTlGl6Qz
-y4z9UzjZGsyjGH6400oPipMl7qS+aM35+d+UxxGduSoZZHzWxAqpGn9MjU7ywkSatBmcJIyOsiUa
-o0OZ/smHwL8mwwEmZaEBv95APmLwuOVz3SfVwXGAmUwhGvy9szoyCKe2tc6RYPZNnwsB
---00000000000003957b05c4e24b3b--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQAYSYYj/J8jZLlHXJlaTgVFsjo9wly2vRvml/Q53MpbNNDG
+tQxKd5pT3fhG82gZY2sPyNx3poXgKU4IBsM/mrDp29e/Mjs/ZK2n+tiAxZZKSes8pLMz3682YKP5
+2gbV+yN7qxZ/J61PZwXbQjiAO/FyUEe2ncSxDXJ0YRkgg9qAbKfbBqC1u8IyRj5BXABZy5cYNqE9
+jWdl53Pm2wbYxXNt8YO3ti7dn0MRP71cFokSA/zCgqgC2bUgfs9gpFvwfhqeBiYr3JMJ09l5mjCf
+TVzvWEQ2HQz/c1UWxxXrSQqbV5W+OmdMAgISpvPVrl7iyFs0th/xyEtSulYn11HcLrV8
+--000000000000b76d1f05c4e25147--
