@@ -2,55 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88FF9C49EA2
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 13:50:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FAC2C48BE6
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 14:24:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 69D4261241
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 13:50:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 509F661164
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 14:24:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233670AbhFPNwd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 09:52:33 -0400
-Received: from verein.lst.de ([213.95.11.211]:54470 "EHLO verein.lst.de"
+        id S233679AbhFPO0U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Jun 2021 10:26:20 -0400
+Received: from mga07.intel.com ([134.134.136.100]:46980 "EHLO mga07.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233642AbhFPNw1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Jun 2021 09:52:27 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 48AFE68BEB; Wed, 16 Jun 2021 15:50:16 +0200 (CEST)
-Date:   Wed, 16 Jun 2021 15:50:15 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "chenxiang (M)" <chenxiang66@hisilicon.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Tim Waugh <tim@cyberelk.net>, martin.petersen@oracle.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: remove ->revalidate_disk (resend)
-Message-ID: <20210616135015.GA30671@lst.de>
-References: <20210308074550.422714-1-hch@lst.de> <96011dbd-084f-8a07-3506-fc7717122866@hisilicon.com>
+        id S232408AbhFPO0U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 16 Jun 2021 10:26:20 -0400
+IronPort-SDR: +FKlEgZRjkjoqb9VjcW13lhQfkIvdX8/+y/J7SLozvtkFzHq6NoibriNDdvOtnJlbE/lEgcfvU
+ 7W9PbjqakorA==
+X-IronPort-AV: E=McAfee;i="6200,9189,10016"; a="270033736"
+X-IronPort-AV: E=Sophos;i="5.83,278,1616482800"; 
+   d="scan'208";a="270033736"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jun 2021 07:24:12 -0700
+IronPort-SDR: fXH+GD69Um10AQilDOktZtEBAffOWaqUlnxrfgy0RupAjUYs253/wy0M3XNMR/DizrOzdlCGMb
+ vNmIEg3MHMVg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.83,278,1616482800"; 
+   d="scan'208";a="637469424"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga006.fm.intel.com with ESMTP; 16 Jun 2021 07:24:10 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id 6F0872AA; Wed, 16 Jun 2021 17:24:35 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/1] scsi: imm: Switch to use module_parport_driver()
+Date:   Wed, 16 Jun 2021 17:24:29 +0300
+Message-Id: <20210616142429.45373-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <96011dbd-084f-8a07-3506-fc7717122866@hisilicon.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jun 16, 2021 at 05:41:54PM +0800, chenxiang (M) wrote:
-> Hi,
->
-> Before i reported a issue related to revalidate disk 
-> (https://www.spinics.net/lists/linux-scsi/msg151610.html), and no one 
-> replies, but the issue is still.
->
-> And i plan to resend it, but i find that revalidate_disk interface is 
-> completely removed in this patchset.
->
-> Do you have any idea about the above issue?
+Switch to use module_parport_driver() to reduce boilerplate code.
 
-bdev_disk_changed still calls into sd_revalidate_disk through sd_open.
-How did bdev_disk_changed get called for you previously?  If it was
-through the BLKRRPART ioctl please try latest mainline, which ensures
-that ->open is called for that case.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/scsi/imm.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
+
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 862d35a098cf..943c9102a7eb 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -1283,19 +1283,6 @@ static struct parport_driver imm_driver = {
+ 	.detach		= imm_detach,
+ 	.devmodel	= true,
+ };
+-
+-static int __init imm_driver_init(void)
+-{
+-	printk("imm: Version %s\n", IMM_VERSION);
+-	return parport_register_driver(&imm_driver);
+-}
+-
+-static void __exit imm_driver_exit(void)
+-{
+-	parport_unregister_driver(&imm_driver);
+-}
+-
+-module_init(imm_driver_init);
+-module_exit(imm_driver_exit);
++module_parport_driver(imm_driver);
+ 
+ MODULE_LICENSE("GPL");
+-- 
+2.30.2
+
