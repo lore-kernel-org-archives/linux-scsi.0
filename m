@@ -2,626 +2,191 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17788C48BE6
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 11:30:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 086FDC48BE5
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 13:44:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F043861246
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 11:29:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCEEF61241
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 13:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232607AbhFPLcE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 07:32:04 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:30278 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232602AbhFPLcB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 07:32:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1623842994; x=1655378994;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=bA4z4tBNnxVUE8VEs6eI9PaGePrvlQ1yeXwqVRHvPoQ=;
-  b=gApRdcD9hxwE7DDzj5P84obIhpGva4+6VmMstW/zocQ30MB6uBlPABAZ
-   2J3rEqTDPE5uKtMybpMkKLl9kw8KCmSf39u4wNiDh0gHRMTZCKCX5bxu/
-   VePPc6PubhC9NjdwTrbiAglVcZq/3oPBiy7YViB0ZD1BevDc/w5JFJG+c
-   INdFvxjftDNa7TyzrBbu9l8g8wxskgi3Kd2N8Ev4Y9+zEN+r1EgcxqStf
-   fpSHyj/rcD4hViYKeeQ98wBx8wxw33x6z11jqkoAWtu/yppoPdlBwluMm
-   oZ7XDNVnj752YYsyyGwPA5cO3UOxTJPEz6ahMaNJGDO31X2U18L0i5okT
-   g==;
-IronPort-SDR: olcv8VD8swCRTmFvqDvI6pV3QUALceEAr7KKSYpJphw5wE4bvl3qxaWmHmEAgjb4usW7fm8YPo
- zNmmMQFWHpNYU7MJba6gZ5YXteuie9kOkd4Q5KtvWGYFrtyP+/L5YkIUEPim4IiHAoxz5QJ0VN
- ngQL6iqIxnKo8nbiFa9yrr/4Kz8wLFRmGWezfphbYlU94VLFAxgOYfUfYJmAiDl1lhHp/p686S
- aX453E5yOsjmtOKzXi3dTLTXtjOOQAtnsmt/kbHhNGqAWv/nX9f+RcBBtYAXY1+FTEtQxjrk1T
- KX8=
-X-IronPort-AV: E=Sophos;i="5.83,277,1616428800"; 
-   d="scan'208";a="172091909"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Jun 2021 19:29:54 +0800
-IronPort-SDR: obkJulFVU1FTa7Rui9xwgsoUX9PvxNTCzUpdZN8Dysw7TMl/XmCSBC1a2TwFYdsqoF53gddKVZ
- TC9a6eSTJP4VIbicISn8dU2vxzLCgVWSf80DyTdxwMXrSV3DUYOPpPx6XXtXNF+D0eXRYrmy38
- rNzNJS4h++QQXvtdgkw5dj5JQHrIIHTggBIVwolgIwVV0kuRJfj+aJl/HsDRIeZykw3Sa54/Ls
- pzwy8xdfH/NionBbal8d/vFRY5NLbFphcdqxY+H/9WWnzaX8TEwMLrUeLU0cM//ga55Ru+JKJQ
- 6x+uGPeGZRF6Eu3OsNFAtelJ
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jun 2021 04:08:45 -0700
-IronPort-SDR: /rEKIf2b4/AW17IvCinhCPYwjWoga1XNFxvEnye2Tyww9wmkeEh4yGCc/0O/baqqcyrLt7WwRZ
- EPoySZRHnlNSMnG1yeR9yqXXNEW2xbZa7S8jafGT69r66rueS6uGWFsbGwDWE1+vxKUtnIQFlY
- vq6gE5wzplyDlSQPgqJoDin90otier0NaP8z3zCWCOkIBiY0SG7LdsbnLfrimmAHmzebw8DtC4
- 3UqzYJPAX4eB9/92UW5D2UoLxbpEzlVQPYEwZd69kIA6eEAG6xzPK32ISlBn8WfP/5u29uFwpT
- /0A=
-WDCIronportException: Internal
-Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 16 Jun 2021 04:29:52 -0700
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <avi.shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
-        stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v11 12/12] scsi: ufshpb: Make host mode parameters configurable
-Date:   Wed, 16 Jun 2021 14:28:00 +0300
-Message-Id: <20210616112800.52963-13-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210616112800.52963-1-avri.altman@wdc.com>
-References: <20210616112800.52963-1-avri.altman@wdc.com>
+        id S233219AbhFPNqv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Jun 2021 09:46:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43312 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231179AbhFPNqu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 09:46:50 -0400
+Received: from mail-qt1-x82f.google.com (mail-qt1-x82f.google.com [IPv6:2607:f8b0:4864:20::82f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 573BDC061574
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 06:44:44 -0700 (PDT)
+Received: by mail-qt1-x82f.google.com with SMTP id e3so1934687qte.0
+        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 06:44:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=tM3AuQI5cHJ3IzHbSxLUVvfQaNgshqiBWwm3uPEgrio=;
+        b=CV3Hi73XJI6gKVf5IFQsnUlkKcBzqkLQ3wd7ewv2aXh41YHpvspkTSAF+Sfha41m8p
+         JrmjPX3bLk3rAlMsby4WNmPo5PG90QC5t5ig7Q6KU917wggIu/vhK4JI7X4sgX/IMrAT
+         3k/v0KIQkEeSlzA7FQtX+ywRAVLuNUWNiWPUk=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=tM3AuQI5cHJ3IzHbSxLUVvfQaNgshqiBWwm3uPEgrio=;
+        b=PQumt2lWoN5RcJ87xuS9H9XBbTarjWjFoyS2KwhDzGE/pRU6+Cb8qZ/qiCTHH445tS
+         QlqU0bSkiaWVMNq1BMM0HUmtYxjpUJq6uUZ+W5RmbWIU4ygnehvym4wzZWu8ck6Rw1ZK
+         VamuOewEfxKypchG95E1tq6/6STJgh/cRSpmEH8NMp4372ZZoDokhREaTnVYJRTyfhGo
+         lTJwXChoSJd9Y5fFlYaH72wcxK7WSmtye6ag9v350F9ehr6t55iDEM2C8BrCDxUcbbvC
+         Z9Lm7aipRVkoe3LOiAaIHTn4mi4AYAK/e4f0CJ/IOulcmrnK7q8obMKBN30qzaZmwtWM
+         LSgg==
+X-Gm-Message-State: AOAM531dKhi//bwF4auLwmBdWbUqXMLVAwYskNkp/RcXtYDfQ0K2Hgpe
+        FlhexJIGkUDSDW+YSFmlR+owcNShmVATS0/tLt2qAw==
+X-Google-Smtp-Source: ABdhPJyBKBW9a+kdoMpAVe1j5aTcnnBj6hBpikQZ/DEDkr8AVwiZRnluylF6lshe3sMtj4tLPfrRbk15OJDVfRx8IjU=
+X-Received: by 2002:ac8:6e8e:: with SMTP id c14mr5177107qtv.216.1623851083400;
+ Wed, 16 Jun 2021 06:44:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20210603151653.711020-1-yangyingliang@huawei.com>
+In-Reply-To: <20210603151653.711020-1-yangyingliang@huawei.com>
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+Date:   Wed, 16 Jun 2021 19:14:32 +0530
+Message-ID: <CAHsXFKEU2kd-yS2NEC+y3+D6ff6639z2NnZSxFzShV9SJJbX7A@mail.gmail.com>
+Subject: Re: [PATCH -next resend] scsi: mpi3mr: Fix error return code in mpi3mr_init_ioc()
+To:     Yang Yingliang <yangyingliang@huawei.com>
+Cc:     linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000003957b05c4e24b3b"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We can make use of this commit, to elaborate some more of the host
-control mode logic, explaining what role play each and every variable.
+--00000000000003957b05c4e24b3b
+Content-Type: text/plain; charset="UTF-8"
 
-While at it, allow those parameters to be configurable.
+On Thu, Jun 3, 2021 at 8:42 PM Yang Yingliang <yangyingliang@huawei.com> wrote:
+>
+> Fix to return a negative error code from the error handling
+> case instead of 0, as done elsewhere in this function.
+>
+> Fixes: fb9b04574f14 ("scsi: mpi3mr: Add support for recovering controller")
+> Fixes: 824a156633df ("scsi: mpi3mr: Base driver code")
+> Reported-by: Hulk Robot <hulkci@huawei.com>
+> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
+> ---
+>  drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> index acb2be62080a..dbf116414855 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> @@ -3295,6 +3295,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+>         }
+>         ioc_state = mpi3mr_get_iocstate(mrioc);
+>         if (ioc_state != MRIOC_STATE_RESET) {
+> +               retval = -1;
+>                 ioc_err(mrioc, "Cannot bring IOC to reset state\n");
+>                 goto out_failed;
+>         }
+> @@ -3391,6 +3392,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+>
+>         if (re_init &&
+>             (mrioc->shost->nr_hw_queues > mrioc->num_op_reply_q)) {
+> +               retval = -1;
+>                 ioc_err(mrioc,
+>                     "Cannot create minimum number of OpQueues expected:%d created:%d\n",
+>                     mrioc->shost->nr_hw_queues, mrioc->num_op_reply_q);
+> --
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Daejun Park <daejun7.park@samsung.com>
----
- Documentation/ABI/testing/sysfs-driver-ufs |  76 +++++-
- drivers/scsi/ufs/ufshpb.c                  | 288 +++++++++++++++++++--
- drivers/scsi/ufs/ufshpb.h                  |  20 ++
- 3 files changed, 367 insertions(+), 17 deletions(-)
+Acked-by: Kashyap Desai <kashyap.desai@broadcom.com>
 
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index d001f008312b..b10cecb286df 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1449,7 +1449,7 @@ Description:	This entry shows the maximum HPB data size for using single HPB
- 
- 		The file is read only.
- 
--What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_enable
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/hpb_enable
- Date:		June 2021
- Contact:	Daejun Park <daejun7.park@samsung.com>
- Description:	This entry shows the status of HPB.
-@@ -1460,3 +1460,77 @@ Description:	This entry shows the status of HPB.
- 		== ============================
- 
- 		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/activation_thld
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	In host control mode, reads are the major source of activation
-+		trials.  once this threshold hs met, the region is added to the
-+		"to-be-activated" list.  Since we reset the read counter upon
-+		write, this include sending a rb command updating the region
-+		ppn as well.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/normalization_factor
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	In host control mode, We think of the regions as "buckets".
-+		Those buckets are being filled with reads, and emptied on write.
-+		We use entries_per_srgn - the amount of blocks in a subregion as
-+		our bucket size.  This applies because HPB1.0 only concern a
-+		single-block reads.  Once the bucket size is crossed, we trigger
-+		a normalization work - not only to avoid overflow, but mainly
-+		because we want to keep those counters normalized, as we are
-+		using those reads as a comparative score, to make various decisions.
-+		The normalization is dividing (shift right) the read counter by
-+		the normalization_factor. If during consecutive normalizations
-+		an active region has exhaust its reads - inactivate it.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/eviction_thld_enter
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	Region deactivation is often due to the fact that eviction took
-+		place: a region become active on the expense of another. This is
-+		happening when the max-active-regions limit has crossed.
-+		In host mode, eviction is considered an extreme measure. We
-+		want to verify that the entering region has enough reads, and
-+		the exiting region has much less reads.  eviction_thld_enter is
-+		the min reads that a region must have in order to be considered
-+		as a candidate to evict other region.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/eviction_thld_exit
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	same as above for the exiting region. A region is consider to
-+		be a candidate to be evicted, only if it has less reads than
-+		eviction_thld_exit.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/read_timeout_ms
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	In order not to hang on to “cold” regions, we shall inactivate
-+		a region that has no READ access for a predefined amount of
-+		time - read_timeout_ms. If read_timeout_ms has expired, and the
-+		region is dirty - it is less likely that we can make any use of
-+		HPB-READing it.  So we inactivate it.  Still, deactivation has
-+		its overhead, and we may still benefit from HPB-READing this
-+		region if it is clean - see read_timeout_expiries.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/read_timeout_expiries
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	if the region read timeout has expired, but the region is clean,
-+		just re-wind its timer for another spin.  Do that as long as it
-+		is clean and did not exhaust its read_timeout_expiries threshold.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/timeout_polling_interval_ms
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	the frequency in which the delayed worker that checks the
-+		read_timeouts is awaken.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/inflight_map_req
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	in host control mode the host is the originator of map requests.
-+		To not flood the device with map requests, use a simple throttling
-+		mechanism that limits the number of inflight map requests.
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index ab66919f4065..6f2ded8c63b0 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -17,7 +17,6 @@
- #include "../sd.h"
- 
- #define ACTIVATION_THRESHOLD 8 /* 8 IOs */
--#define EVICTION_THRESHOLD (ACTIVATION_THRESHOLD << 5) /* 256 IOs */
- #define READ_TO_MS 1000
- #define READ_TO_EXPIRIES 100
- #define POLLING_INTERVAL_MS 200
-@@ -195,7 +194,7 @@ static void ufshpb_iterate_rgn(struct ufshpb_lu *hpb, int rgn_idx, int srgn_idx,
- 		} else {
- 			srgn->reads++;
- 			rgn->reads++;
--			if (srgn->reads == ACTIVATION_THRESHOLD)
-+			if (srgn->reads == hpb->params.activation_thld)
- 				activate = true;
- 		}
- 		spin_unlock(&rgn->rgn_lock);
-@@ -744,10 +743,11 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- 	struct bio *bio;
- 
- 	if (hpb->is_hcm &&
--	    hpb->num_inflight_map_req >= THROTTLE_MAP_REQ_DEFAULT) {
-+	    hpb->num_inflight_map_req >= hpb->params.inflight_map_req) {
- 		dev_info(&hpb->sdev_ufs_lu->sdev_dev,
- 			 "map_req throttle. inflight %d throttle %d",
--			 hpb->num_inflight_map_req, THROTTLE_MAP_REQ_DEFAULT);
-+			 hpb->num_inflight_map_req,
-+			 hpb->params.inflight_map_req);
- 		return NULL;
- 	}
- 
-@@ -1053,6 +1053,7 @@ static void ufshpb_read_to_handler(struct work_struct *work)
- 	struct victim_select_info *lru_info = &hpb->lru_info;
- 	struct ufshpb_region *rgn, *next_rgn;
- 	unsigned long flags;
-+	unsigned int poll;
- 	LIST_HEAD(expired_list);
- 
- 	if (test_and_set_bit(TIMEOUT_WORK_RUNNING, &hpb->work_data_bits))
-@@ -1071,7 +1072,7 @@ static void ufshpb_read_to_handler(struct work_struct *work)
- 				list_add(&rgn->list_expired_rgn, &expired_list);
- 			else
- 				rgn->read_timeout = ktime_add_ms(ktime_get(),
--							 READ_TO_MS);
-+						hpb->params.read_timeout_ms);
- 		}
- 	}
- 
-@@ -1089,8 +1090,9 @@ static void ufshpb_read_to_handler(struct work_struct *work)
- 
- 	clear_bit(TIMEOUT_WORK_RUNNING, &hpb->work_data_bits);
- 
-+	poll = hpb->params.timeout_polling_interval_ms;
- 	schedule_delayed_work(&hpb->ufshpb_read_to_work,
--			      msecs_to_jiffies(POLLING_INTERVAL_MS));
-+			      msecs_to_jiffies(poll));
- }
- 
- static void ufshpb_add_lru_info(struct victim_select_info *lru_info,
-@@ -1100,8 +1102,11 @@ static void ufshpb_add_lru_info(struct victim_select_info *lru_info,
- 	list_add_tail(&rgn->list_lru_rgn, &lru_info->lh_lru_rgn);
- 	atomic_inc(&lru_info->active_cnt);
- 	if (rgn->hpb->is_hcm) {
--		rgn->read_timeout = ktime_add_ms(ktime_get(), READ_TO_MS);
--		rgn->read_timeout_expiries = READ_TO_EXPIRIES;
-+		rgn->read_timeout =
-+			ktime_add_ms(ktime_get(),
-+				     rgn->hpb->params.read_timeout_ms);
-+		rgn->read_timeout_expiries =
-+			rgn->hpb->params.read_timeout_expiries;
- 	}
- }
- 
-@@ -1130,7 +1135,8 @@ static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
- 		 * in host control mode, verify that the exiting region
- 		 * has less reads
- 		 */
--		if (hpb->is_hcm && rgn->reads > (EVICTION_THRESHOLD >> 1))
-+		if (hpb->is_hcm &&
-+		    rgn->reads > hpb->params.eviction_thld_exit)
- 			continue;
- 
- 		victim_rgn = rgn;
-@@ -1346,7 +1352,8 @@ static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
- 			 * in host control mode, verify that the entering
- 			 * region has enough reads
- 			 */
--			if (hpb->is_hcm && rgn->reads < EVICTION_THRESHOLD) {
-+			if (hpb->is_hcm &&
-+			    rgn->reads < hpb->params.eviction_thld_enter) {
- 				ret = -EACCES;
- 				goto out;
- 			}
-@@ -1697,6 +1704,7 @@ static void ufshpb_normalization_work_handler(struct work_struct *work)
- 	struct ufshpb_lu *hpb = container_of(work, struct ufshpb_lu,
- 					     ufshpb_normalization_work);
- 	int rgn_idx;
-+	u8 factor = hpb->params.normalization_factor;
- 
- 	for (rgn_idx = 0; rgn_idx < hpb->rgns_per_lu; rgn_idx++) {
- 		struct ufshpb_region *rgn = hpb->rgn_tbl + rgn_idx;
-@@ -1707,7 +1715,7 @@ static void ufshpb_normalization_work_handler(struct work_struct *work)
- 		for (srgn_idx = 0; srgn_idx < hpb->srgns_per_rgn; srgn_idx++) {
- 			struct ufshpb_subregion *srgn = rgn->srgn_tbl + srgn_idx;
- 
--			srgn->reads >>= 1;
-+			srgn->reads >>= factor;
- 			rgn->reads += srgn->reads;
- 		}
- 		spin_unlock(&rgn->rgn_lock);
-@@ -2030,8 +2038,247 @@ requeue_timeout_ms_store(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RW(requeue_timeout_ms);
- 
-+ufshpb_sysfs_param_show_func(activation_thld);
-+static ssize_t
-+activation_thld_store(struct device *dev, struct device_attribute *attr,
-+		      const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= 0)
-+		return -EINVAL;
-+
-+	hpb->params.activation_thld = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(activation_thld);
-+
-+ufshpb_sysfs_param_show_func(normalization_factor);
-+static ssize_t
-+normalization_factor_store(struct device *dev, struct device_attribute *attr,
-+			   const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= 0 || val > ilog2(hpb->entries_per_srgn))
-+		return -EINVAL;
-+
-+	hpb->params.normalization_factor = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(normalization_factor);
-+
-+ufshpb_sysfs_param_show_func(eviction_thld_enter);
-+static ssize_t
-+eviction_thld_enter_store(struct device *dev, struct device_attribute *attr,
-+			  const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= hpb->params.eviction_thld_exit)
-+		return -EINVAL;
-+
-+	hpb->params.eviction_thld_enter = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(eviction_thld_enter);
-+
-+ufshpb_sysfs_param_show_func(eviction_thld_exit);
-+static ssize_t
-+eviction_thld_exit_store(struct device *dev, struct device_attribute *attr,
-+			 const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= hpb->params.activation_thld)
-+		return -EINVAL;
-+
-+	hpb->params.eviction_thld_exit = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(eviction_thld_exit);
-+
-+ufshpb_sysfs_param_show_func(read_timeout_ms);
-+static ssize_t
-+read_timeout_ms_store(struct device *dev, struct device_attribute *attr,
-+		      const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	/* read_timeout >> timeout_polling_interval */
-+	if (val < hpb->params.timeout_polling_interval_ms * 2)
-+		return -EINVAL;
-+
-+	hpb->params.read_timeout_ms = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(read_timeout_ms);
-+
-+ufshpb_sysfs_param_show_func(read_timeout_expiries);
-+static ssize_t
-+read_timeout_expiries_store(struct device *dev, struct device_attribute *attr,
-+			    const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= 0)
-+		return -EINVAL;
-+
-+	hpb->params.read_timeout_expiries = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(read_timeout_expiries);
-+
-+ufshpb_sysfs_param_show_func(timeout_polling_interval_ms);
-+static ssize_t
-+timeout_polling_interval_ms_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	/* timeout_polling_interval << read_timeout */
-+	if (val <= 0 || val > hpb->params.read_timeout_ms / 2)
-+		return -EINVAL;
-+
-+	hpb->params.timeout_polling_interval_ms = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(timeout_polling_interval_ms);
-+
-+ufshpb_sysfs_param_show_func(inflight_map_req);
-+static ssize_t inflight_map_req_store(struct device *dev,
-+				      struct device_attribute *attr,
-+				      const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= 0 || val > hpb->sdev_ufs_lu->queue_depth - 1)
-+		return -EINVAL;
-+
-+	hpb->params.inflight_map_req = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(inflight_map_req);
-+
-+static void ufshpb_hcm_param_init(struct ufshpb_lu *hpb)
-+{
-+	hpb->params.activation_thld = ACTIVATION_THRESHOLD;
-+	hpb->params.normalization_factor = 1;
-+	hpb->params.eviction_thld_enter = (ACTIVATION_THRESHOLD << 5);
-+	hpb->params.eviction_thld_exit = (ACTIVATION_THRESHOLD << 4);
-+	hpb->params.read_timeout_ms = READ_TO_MS;
-+	hpb->params.read_timeout_expiries = READ_TO_EXPIRIES;
-+	hpb->params.timeout_polling_interval_ms = POLLING_INTERVAL_MS;
-+	hpb->params.inflight_map_req = THROTTLE_MAP_REQ_DEFAULT;
-+}
-+
- static struct attribute *hpb_dev_param_attrs[] = {
- 	&dev_attr_requeue_timeout_ms.attr,
-+	&dev_attr_activation_thld.attr,
-+	&dev_attr_normalization_factor.attr,
-+	&dev_attr_eviction_thld_enter.attr,
-+	&dev_attr_eviction_thld_exit.attr,
-+	&dev_attr_read_timeout_ms.attr,
-+	&dev_attr_read_timeout_expiries.attr,
-+	&dev_attr_timeout_polling_interval_ms.attr,
-+	&dev_attr_inflight_map_req.attr,
- 	NULL,
- };
- 
-@@ -2115,6 +2362,8 @@ static void ufshpb_stat_init(struct ufshpb_lu *hpb)
- static void ufshpb_param_init(struct ufshpb_lu *hpb)
- {
- 	hpb->params.requeue_timeout_ms = HPB_REQUEUE_TIME_MS;
-+	if (hpb->is_hcm)
-+		ufshpb_hcm_param_init(hpb);
- }
- 
- static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
-@@ -2169,9 +2418,13 @@ static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
- 	ufshpb_stat_init(hpb);
- 	ufshpb_param_init(hpb);
- 
--	if (hpb->is_hcm)
-+	if (hpb->is_hcm) {
-+		unsigned int poll;
-+
-+		poll = hpb->params.timeout_polling_interval_ms;
- 		schedule_delayed_work(&hpb->ufshpb_read_to_work,
--				      msecs_to_jiffies(POLLING_INTERVAL_MS));
-+				      msecs_to_jiffies(poll));
-+	}
- 
- 	return 0;
- 
-@@ -2350,10 +2603,13 @@ void ufshpb_resume(struct ufs_hba *hba)
- 			continue;
- 		ufshpb_set_state(hpb, HPB_PRESENT);
- 		ufshpb_kick_map_work(hpb);
--		if (hpb->is_hcm)
--			schedule_delayed_work(&hpb->ufshpb_read_to_work,
--				msecs_to_jiffies(POLLING_INTERVAL_MS));
-+		if (hpb->is_hcm) {
-+			unsigned int poll =
-+				hpb->params.timeout_polling_interval_ms;
- 
-+			schedule_delayed_work(&hpb->ufshpb_read_to_work,
-+				msecs_to_jiffies(poll));
-+		}
- 	}
- }
- 
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index edf565e9036f..c74a6c35a446 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -185,8 +185,28 @@ struct victim_select_info {
- 	atomic_t active_cnt;
- };
- 
-+/**
-+ * ufshpb_params - ufs hpb parameters
-+ * @requeue_timeout_ms - requeue threshold of wb command (0x2)
-+ * @activation_thld - min reads [IOs] to activate/update a region
-+ * @normalization_factor - shift right the region's reads
-+ * @eviction_thld_enter - min reads [IOs] for the entering region in eviction
-+ * @eviction_thld_exit - max reads [IOs] for the exiting region in eviction
-+ * @read_timeout_ms - timeout [ms] from the last read IO to the region
-+ * @read_timeout_expiries - amount of allowable timeout expireis
-+ * @timeout_polling_interval_ms - frequency in which timeouts are checked
-+ * @inflight_map_req - number of inflight map requests
-+ */
- struct ufshpb_params {
- 	unsigned int requeue_timeout_ms;
-+	unsigned int activation_thld;
-+	unsigned int normalization_factor;
-+	unsigned int eviction_thld_enter;
-+	unsigned int eviction_thld_exit;
-+	unsigned int read_timeout_ms;
-+	unsigned int read_timeout_expiries;
-+	unsigned int timeout_polling_interval_ms;
-+	unsigned int inflight_map_req;
- };
- 
- struct ufshpb_stats {
--- 
-2.25.1
+> 2.25.1
+>
 
+--00000000000003957b05c4e24b3b
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
+4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
+BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
+YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
+BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
+YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
+Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
+HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
+BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
+OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
+gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
+GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
+vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
+MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
+MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
+VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIPX2GSf5ylh4yqQSSjC/a7LS3W5
+T2ttBsQTLXtHgTvJMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDYxNjEzNDQ0M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
+AwQCATANBgkqhkiG9w0BAQEFAASCAQCzCf4LTtXQFoF819Y5JC5AwZ8e/k5ptXM+p0wYUCzRllY6
+OUcbwG5QxEOcNKyKwVJdR0/9zk3vrU3YBa2HR0cXsO+A+ULOZsBE1W/MCzUE/0toLIVmp95dDjf7
+gX68WVk2L+pYuFXyk2zty+vY6imK3DRpN3hnL3GCJXIRrJoc/ajSicYZuitr4Z7dZpT6yTlGl6Qz
+y4z9UzjZGsyjGH6400oPipMl7qS+aM35+d+UxxGduSoZZHzWxAqpGn9MjU7ywkSatBmcJIyOsiUa
+o0OZ/smHwL8mwwEmZaEBv95APmLwuOVz3SfVwXGAmUwhGvy9szoyCKe2tc6RYPZNnwsB
+--00000000000003957b05c4e24b3b--
