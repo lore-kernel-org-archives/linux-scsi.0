@@ -7,25 +7,25 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0205EC48BE5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BA2FC48BE8
 	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:37:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2EF761107
-	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:37:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39E1E61107
+	for <linux-scsi@archiver.kernel.org>; Wed, 16 Jun 2021 06:37:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231391AbhFPGkA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 02:40:00 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:4795 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230508AbhFPGj6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 02:39:58 -0400
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.55])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4G4b365ZTqzWssm;
-        Wed, 16 Jun 2021 14:32:50 +0800 (CST)
+        id S231400AbhFPGkC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Jun 2021 02:40:02 -0400
+Received: from szxga08-in.huawei.com ([45.249.212.255]:7288 "EHLO
+        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230370AbhFPGkA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 02:40:00 -0400
+Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.53])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4G4b375lqBz1BMSW;
+        Wed, 16 Jun 2021 14:32:51 +0800 (CST)
 Received: from dggpemm500006.china.huawei.com (7.185.36.236) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 16 Jun 2021 14:37:51 +0800
+ 15.1.2176.2; Wed, 16 Jun 2021 14:37:52 +0800
 Received: from thunder-town.china.huawei.com (10.174.179.0) by
  dggpemm500006.china.huawei.com (7.185.36.236) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
@@ -47,9 +47,9 @@ To:     Vishal Bhakta <vbhakta@vmware.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi <linux-scsi@vger.kernel.org>
 CC:     Zhen Lei <thunder.leizhen@huawei.com>
-Subject: [PATCH v2 02/20] scsi: zorro7xx: remove unnecessary oom message
-Date:   Wed, 16 Jun 2021 14:36:56 +0800
-Message-ID: <20210616063714.778-3-thunder.leizhen@huawei.com>
+Subject: [PATCH v2 03/20] scsi: bvme6000: remove unnecessary oom message
+Date:   Wed, 16 Jun 2021 14:36:57 +0800
+Message-ID: <20210616063714.778-4-thunder.leizhen@huawei.com>
 X-Mailer: git-send-email 2.26.0.windows.1
 In-Reply-To: <20210616063714.778-1-thunder.leizhen@huawei.com>
 References: <20210616063714.778-1-thunder.leizhen@huawei.com>
@@ -71,25 +71,26 @@ Remove it can help us save a bit of memory.
 
 Signed-off-by: Zhen Lei <thunder.leizhen@huawei.com>
 ---
- drivers/scsi/zorro7xx.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/bvme6000_scsi.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/zorro7xx.c b/drivers/scsi/zorro7xx.c
-index 27b9e2baab1a61c..1ecbb603897a27f 100644
---- a/drivers/scsi/zorro7xx.c
-+++ b/drivers/scsi/zorro7xx.c
-@@ -96,10 +96,8 @@ static int zorro7xx_init_one(struct zorro_dev *z,
- 	}
+diff --git a/drivers/scsi/bvme6000_scsi.c b/drivers/scsi/bvme6000_scsi.c
+index 8d72b25535c5e72..fec971bc9a7d7c7 100644
+--- a/drivers/scsi/bvme6000_scsi.c
++++ b/drivers/scsi/bvme6000_scsi.c
+@@ -45,11 +45,8 @@ bvme6000_probe(struct platform_device *dev)
+ 		goto out;
  
  	hostdata = kzalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
 -	if (!hostdata) {
--		printk(KERN_ERR "zorro7xx: Failed to allocate host data\n");
+-		printk(KERN_ERR "bvme6000-scsi: "
+-				"Failed to allocate host data\n");
 +	if (!hostdata)
- 		goto out_release;
+ 		goto out;
 -	}
  
  	/* Fill in the required pieces of hostdata */
- 	if (ioaddr > 0x01000000)
+ 	hostdata->base = (void __iomem *)BVME_NCR53C710_BASE;
 -- 
 2.26.0.106.g9fadedd
 
