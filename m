@@ -2,104 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-24.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7ECEC2B9F4
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 03:44:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3CF2C49361
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 06:17:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 97103613DE
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 03:44:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4B8260FEA
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 06:17:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229693AbhFQDrD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 23:47:03 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:4817 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229503AbhFQDqE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 23:46:04 -0400
-Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4G577x1pXYzWkZ1;
-        Thu, 17 Jun 2021 11:38:53 +0800 (CST)
-Received: from [127.0.0.1] (10.40.193.166) by dggeme756-chm.china.huawei.com
- (10.3.19.102) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Thu, 17
- Jun 2021 11:43:55 +0800
-Subject: Re: remove ->revalidate_disk (resend)
-To:     Christoph Hellwig <hch@lst.de>
-References: <20210308074550.422714-1-hch@lst.de>
- <96011dbd-084f-8a07-3506-fc7717122866@hisilicon.com>
- <20210616135015.GA30671@lst.de>
-CC:     Jens Axboe <axboe@kernel.dk>, Tim Waugh <tim@cyberelk.net>,
-        <martin.petersen@oracle.com>, <linux-block@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>,
-        "linuxarm@huawei.com" <linuxarm@huawei.com>
-From:   "chenxiang (M)" <chenxiang66@hisilicon.com>
-Message-ID: <709468de-c8fd-0eeb-a3f9-5eb40650034b@hisilicon.com>
-Date:   Thu, 17 Jun 2021 11:43:54 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.2.0
+        id S229683AbhFQGTw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Jun 2021 02:19:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47324 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229515AbhFQGTu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Jun 2021 02:19:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 22CE561245;
+        Thu, 17 Jun 2021 06:17:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1623910663;
+        bh=Iej6rNHKIHWDbxNC0dw+JtSIrT0pe3am0Zc+QTlD5+Q=;
+        h=From:To:Cc:Subject:Date:From;
+        b=TxPXXdmGtKAuOPEwHE9jTELtT4aA1F8zUarhx9Pj3gpNcTCo64+tl2E1c5s3KiOGP
+         +DwGVg4JqKyEP4udJPKGQMNcI4Wgl0PddA3CYpF2fskJE59I8XqZ1KleocqIQICyj4
+         StANrJCP5SfqPpbkJkdiQOZiuenYMMiSzPRS7EJFIg5srnOzWtgCNBpvfHlnsBlITs
+         gvm9bjduCSbuLk0yEu2+wuZEMZc659a5KVdeDy+H7IBP/9Xz3lMQEDpfTaBKvmo+az
+         ERuSFOohARgk80ZEgWXvr6O51MoYMzBQuaR/b5youIi/N8VSEXe/NsftxIpDA56GzI
+         lqQKmPp8C/vZA==
+From:   Nathan Chancellor <nathan@kernel.org>
+To:     James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Nick Desaulniers <ndesaulniers@google.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com,
+        Nathan Chancellor <nathan@kernel.org>
+Subject: [PATCH] scsi: elx: efct: Do not use id uninitialized in efct_lio_setup_session()
+Date:   Wed, 16 Jun 2021 23:17:21 -0700
+Message-Id: <20210617061721.2405511-1-nathan@kernel.org>
+X-Mailer: git-send-email 2.32.0.93.g670b81a890
 MIME-Version: 1.0
-In-Reply-To: <20210616135015.GA30671@lst.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+X-Patchwork-Bot: notify
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.40.193.166]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggeme756-chm.china.huawei.com (10.3.19.102)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Christoph,
+clang warns:
 
+drivers/scsi/elx/efct/efct_lio.c:1216:24: warning: variable 'id' is
+uninitialized when used here [-Wuninitialized]
+                      se_sess, node, id);
+                                     ^~
 
-在 2021/6/16 21:50, Christoph Hellwig 写道:
-> On Wed, Jun 16, 2021 at 05:41:54PM +0800, chenxiang (M) wrote:
->> Hi,
->>
->> Before i reported a issue related to revalidate disk
->> (https://www.spinics.net/lists/linux-scsi/msg151610.html), and no one
->> replies, but the issue is still.
->>
->> And i plan to resend it, but i find that revalidate_disk interface is
->> completely removed in this patchset.
->>
->> Do you have any idea about the above issue?
-> bdev_disk_changed still calls into sd_revalidate_disk through sd_open.
-> How did bdev_disk_changed get called for you previously?  If it was
-> through the BLKRRPART ioctl please try latest mainline, which ensures
-> that ->open is called for that case.
+Shuffle the debug print after id's initialization so that the actual
+value is printed.
 
-I use the latest mainline (Linux Euler 5.13.0-rc6-next-20210616), and 
-the issue is still.
-It is through BLKRRPART ioctl, and the call stack is as follows:
+Fixes: 692e5d73a811 ("scsi: elx: efct: LIO backend interface routines")
+Link: https://github.com/ClangBuiltLinux/linux/issues/1397
+Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+---
+ drivers/scsi/elx/efct/efct_lio.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-BLKRRPART ->
-         block_ioctl ->
-                 blkdev_ioctl ->
-                         blkdev_common_ioctl ->
-                                 blkdev_get_by_dev ->
-                                         __blkdev_get ->
-                                                 ...
-disk->fops->open() ->
-                                                         sd_open()
-                                                 ...
-                                                 dev_disk_changed()
-                                                 ...
+diff --git a/drivers/scsi/elx/efct/efct_lio.c b/drivers/scsi/elx/efct/efct_lio.c
+index e1bab2b17e4d..b7d69ff29c09 100644
+--- a/drivers/scsi/elx/efct/efct_lio.c
++++ b/drivers/scsi/elx/efct/efct_lio.c
+@@ -1212,12 +1212,12 @@ static void efct_lio_setup_session(struct work_struct *work)
+ 		return;
+ 	}
+ 
+-	efc_log_debug(efct, "new initiator sess=%p node=%p id: %llx\n",
+-		      se_sess, node, id);
+-
+ 	tgt_node = node->tgt_node;
+ 	id = (u64) tgt_node->port_fc_id << 32 | tgt_node->node_fc_id;
+ 
++	efc_log_debug(efct, "new initiator sess=%p node=%p id: %llx\n",
++		      se_sess, node, id);
++
+ 	if (xa_err(xa_store(&efct->lookup, id, tgt_node, GFP_KERNEL)))
+ 		efc_log_err(efct, "Node lookup store failed\n");
+ 
 
-
-
-In function sd_open(), it calls sd_revalidate_disk() when 
-sdev->removable or sdkp-> write_prot is true, but for our disk, 
-sdev->removable = 0 and
-sdkp->write_prot = 0, so sd_revalidate_disk() is not called actually.
-For previous code, it will call sd_revalidate_disk() in 
-bdev_disk_changed() from here 
-(https://elixir.bootlin.com/linux/v5.10-rc1/source/fs/block_dev.c#L1411).
-
->
-> .
->
-
+base-commit: ebc076b3eddc807729bd81f7bc48e798a3ddc477
+-- 
+2.32.0.93.g670b81a890
 
