@@ -7,72 +7,62 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5660C2B9F4
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 11:13:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8709C49EA2
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 11:43:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD75D61369
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 11:13:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C9A5861403
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 11:43:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232406AbhFQLPm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Jun 2021 07:15:42 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:7470 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231593AbhFQLPl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2021 07:15:41 -0400
-Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4G5K9842QwzZjG0;
-        Thu, 17 Jun 2021 19:10:36 +0800 (CST)
-Received: from dggemi762-chm.china.huawei.com (10.1.198.148) by
- dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Thu, 17 Jun 2021 19:13:32 +0800
-Received: from linux-lmwb.huawei.com (10.175.103.112) by
- dggemi762-chm.china.huawei.com (10.1.198.148) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Thu, 17 Jun 2021 19:13:32 +0800
-From:   Zou Wei <zou_wei@huawei.com>
-To:     <stanley.chu@mediatek.com>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <matthias.bgg@gmail.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        "Zou Wei" <zou_wei@huawei.com>
-Subject: [PATCH -next] scsi: ufs-mediatek: Add missing of_node_put() in ufs_mtk_probe()
-Date:   Thu, 17 Jun 2021 19:32:02 +0800
-Message-ID: <1623929522-4389-1-git-send-email-zou_wei@huawei.com>
-X-Mailer: git-send-email 2.6.2
+        id S232432AbhFQLp5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Jun 2021 07:45:57 -0400
+Received: from youngberry.canonical.com ([91.189.89.112]:44213 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231386AbhFQLp4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jun 2021 07:45:56 -0400
+Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
+        by youngberry.canonical.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.93)
+        (envelope-from <colin.king@canonical.com>)
+        id 1ltqR2-0002gS-4l; Thu, 17 Jun 2021 11:43:48 +0000
+From:   Colin King <colin.king@canonical.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: target/iscsi: remove redundant continue statement
+Date:   Thu, 17 Jun 2021 12:43:47 +0100
+Message-Id: <20210617114347.10247-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.103.112]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggemi762-chm.china.huawei.com (10.1.198.148)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The function is missing a of_node_put on node, fix this by adding the call
-before returning.
+From: Colin Ian King <colin.king@canonical.com>
 
-Reported-by: Hulk Robot <hulkci@huawei.com>
-Signed-off-by: Zou Wei <zou_wei@huawei.com>
+The continue statement at the end of a loop has no effect,
+remove it.
+
+Addresses-Coverity: ("Continue has no effect")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/ufs/ufs-mediatek.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/target/iscsi/iscsi_target_erl1.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
-index 1a517c9..d2c2516 100644
---- a/drivers/scsi/ufs/ufs-mediatek.c
-+++ b/drivers/scsi/ufs/ufs-mediatek.c
-@@ -1120,6 +1120,7 @@ static int ufs_mtk_probe(struct platform_device *pdev)
- 	if (err)
- 		dev_info(dev, "probe failed %d\n", err);
+diff --git a/drivers/target/iscsi/iscsi_target_erl1.c b/drivers/target/iscsi/iscsi_target_erl1.c
+index cd670cb9b8fb..0dd52f484fec 100644
+--- a/drivers/target/iscsi/iscsi_target_erl1.c
++++ b/drivers/target/iscsi/iscsi_target_erl1.c
+@@ -871,8 +871,6 @@ int iscsit_execute_ooo_cmdsns(struct iscsi_session *sess)
  
-+	of_node_put(reset_node);
- 	return err;
- }
+ 		if (iscsit_execute_cmd(cmd, 1) < 0)
+ 			return -1;
+-
+-		continue;
+ 	}
  
+ 	return ooo_count;
 -- 
-2.6.2
+2.31.1
 
