@@ -2,219 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 119FEC48BE5
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 00:15:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2645AC48BE5
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 01:33:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF88B613CB
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 00:15:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09B776112D
+	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 01:33:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234929AbhFQARt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 16 Jun 2021 20:17:49 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14770 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229575AbhFQARs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Jun 2021 20:17:48 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15H0AbwU026585
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 17:15:41 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
- cc : subject : in-reply-to : message-id : references : mime-version :
- content-type; s=pfpt0220; bh=oTi9YVxzUuiFk++1AKmxsu7MUrxw15T4ynLA9tgoulw=;
- b=k0aSz36HZkArOk7xDf+qoZN6VNG7t2KcX7QbbzhFMFnkyJi1oEsY/SqNTYJVETVJeLZl
- 0m+T1/UuJaAlcj555TeM2YKV8wB4odkEthHFoLHfpg+KrRuCr0wULwbkwWGYf1omcguv
- 0Ti/XxFPFmGAAvWwur2vFttFpFXuO1M6yzqdyu4XlkCB1e6ahPeWF3Ptu535jFLRySWC
- SKlKlN8P71W+uGdzV98UK8MFeWmXW0JEC/+ZzPnbOvfyzU3ChHQK27eRhWIM1otsDPQU
- YgExo1q1Hjer6/ONXn2yfJOthClZ8wWvn4TLL8wBf9SwEz89nAhg/FfBydFFNOVcFq+l nQ== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 397udrr24f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 16 Jun 2021 17:15:41 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 16 Jun
- 2021 17:15:39 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Wed, 16 Jun 2021 17:15:39 -0700
-Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
-        by maili.marvell.com (Postfix) with ESMTP id 546905B692F;
-        Wed, 16 Jun 2021 17:15:39 -0700 (PDT)
-Received: from localhost (aeasi@localhost)
-        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 15H0FdME002532;
-        Wed, 16 Jun 2021 17:15:39 -0700
-X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
-Date:   Wed, 16 Jun 2021 17:15:39 -0700
-From:   Arun Easi <aeasi@marvell.com>
-X-X-Sender: aeasi@irv1user01.caveonetworks.com
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>
-Subject: Re: [PATCH 03/15] scsi: qla2xxx: Use the proper SCSI midlayer
- interfaces for PI
-In-Reply-To: <20210609033929.3815-4-martin.petersen@oracle.com>
-Message-ID: <alpine.LRH.2.21.9999.2106161711000.17918@irv1user01.caveonetworks.com>
-References: <20210609033929.3815-1-martin.petersen@oracle.com>
- <20210609033929.3815-4-martin.petersen@oracle.com>
-User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-X-Proofpoint-ORIG-GUID: 1WIPShpyLvMJeZGD14JidVdPWp0wnyKh
-X-Proofpoint-GUID: 1WIPShpyLvMJeZGD14JidVdPWp0wnyKh
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
- definitions=2021-06-16_16:2021-06-15,2021-06-16 signatures=0
+        id S232053AbhFQBfN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 16 Jun 2021 21:35:13 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:54060 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231942AbhFQBfN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jun 2021 21:35:13 -0400
+Received: from epcas3p4.samsung.com (unknown [182.195.41.22])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210617013305epoutp04180e439c6f0bd5c1f9b95669cdee5ace~JOpytpwn31891318913epoutp04C
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Jun 2021 01:33:05 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210617013305epoutp04180e439c6f0bd5c1f9b95669cdee5ace~JOpytpwn31891318913epoutp04C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1623893585;
+        bh=D1qpqMB+OkXfuoIE8lfCNhPZsTDS/KWRKBsTuRhnzk4=;
+        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
+        b=i28FkUl/aDW/UCLtvJrqynJLATyhM98s3OtUUf/QuTyASSRMHgoo+eQbIpzVTFD3W
+         jan8vR2+WrfmuDB/0SXtdFUAjaoJzzAnv7aHYnpwJ3xNuK1DLoVTf9mIepYYgac9QP
+         ofaq+c48DOE5jC1x7ze0YRg8fvGlMlg4Erbi5m58=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
+        20210617013304epcas3p17a347b736bc80bc03e0350435c8944c2~JOpx7PZ6P1174411744epcas3p1O;
+        Thu, 17 Jun 2021 01:33:04 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
+        (Postfix) with ESMTP id 4G54Lm2bBjz4x9QM; Thu, 17 Jun 2021 01:33:04 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: RE: Re: [PATCH] scsi: ufs: Add indent for code alignment
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     Joe Perches <joe@perches.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        "satyat@google.com" <satyat@google.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <e0950e65c5e7f8f0db132cfd22bdd24ee27c63e7.camel@perches.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <2038148563.21623893584364.JavaMail.epsvc@epcpadp4>
+Date:   Thu, 17 Jun 2021 10:28:39 +0900
+X-CMS-MailID: 20210617012839epcms2p16d271ab83109fd286939bbb48ebba30f
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20210610040731epcms2p7533bc62d13b82a0e86590f30ac4b6c30
+References: <e0950e65c5e7f8f0db132cfd22bdd24ee27c63e7.camel@perches.com>
+        <1891546521.01623299401994.JavaMail.epsvc@epcpadp3>
+        <CGME20210610040731epcms2p7533bc62d13b82a0e86590f30ac4b6c30@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 8 Jun 2021, 8:39pm, Martin K. Petersen wrote:
-
-> Use the SCSI midlayer interfaces to query protection interval,
-> reference tag, and per-command DIX flags.
+>On Thu, 2021-06-10 at 13:07 +0900, Keoseong Park wrote:
+>> Add indentation to return statement.
+>[]
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>[]
+>> @@ -903,7 +903,7 @@ static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
+>>  	else
+>>  		return false;
+>>  #else
+>> -return true;
+>> +	return true;
+>>  #endif
+>>  }
+>>  
+>
+>Perhaps a little refactoring instead:
+>---
+> drivers/scsi/ufs/ufshcd.h | 12 ++++--------
+> 1 file changed, 4 insertions(+), 8 deletions(-)
+>
+>diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>index c98d540ac044d..ed89839476b3b 100644
+>--- a/drivers/scsi/ufs/ufshcd.h
+>+++ b/drivers/scsi/ufs/ufshcd.h
+>@@ -894,15 +894,11 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
+> static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
+> {
+> /* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
+>-#ifndef CONFIG_SCSI_UFS_DWC
+>-	if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
+>-	    !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
+>+	if (IS_ENABLED(CONFIG_SCSI_UFS_DWC))
+> 		return true;
+>-	else
+>-		return false;
+>-#else
+>-return true;
+>-#endif
+>+
+>+	return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
+>+		!(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
+> }
 > 
-> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-> ---
->  drivers/scsi/qla2xxx/qla_iocb.c | 84 ++++++---------------------------
->  1 file changed, 15 insertions(+), 69 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-> index 38b5bdde2405..42a6fbba7529 100644
-> --- a/drivers/scsi/qla2xxx/qla_iocb.c
-> +++ b/drivers/scsi/qla2xxx/qla_iocb.c
-> @@ -145,7 +145,6 @@ inline int
->  qla24xx_configure_prot_mode(srb_t *sp, uint16_t *fw_prot_opts)
->  {
->  	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
-> -	uint8_t	guard = scsi_host_get_guard(cmd->device->host);
->  
->  	/* We always use DIFF Bundling for best performance */
->  	*fw_prot_opts = 0;
-> @@ -166,7 +165,7 @@ qla24xx_configure_prot_mode(srb_t *sp, uint16_t *fw_prot_opts)
->  		break;
->  	case SCSI_PROT_READ_PASS:
->  	case SCSI_PROT_WRITE_PASS:
-> -		if (guard & SHOST_DIX_GUARD_IP)
-> +		if (cmd->prot_flags & SCSI_PROT_IP_CHECKSUM)
->  			*fw_prot_opts |= PO_MODE_DIF_TCP_CKSUM;
->  		else
->  			*fw_prot_opts |= PO_MODE_DIF_PASS;
-> @@ -176,6 +175,9 @@ qla24xx_configure_prot_mode(srb_t *sp, uint16_t *fw_prot_opts)
->  		break;
->  	}
->  
-> +	if (!(cmd->prot_flags & SCSI_PROT_GUARD_CHECK))
-> +		*fw_prot_opts |= PO_DISABLE_GUARD_CHECK;
-> +
->  	return scsi_prot_sg_count(cmd);
->  }
->  
-> @@ -772,74 +774,18 @@ qla24xx_set_t10dif_tags(srb_t *sp, struct fw_dif_context *pkt,
->  {
->  	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
->  
-> -	switch (scsi_get_prot_type(cmd)) {
-> -	case SCSI_PROT_DIF_TYPE0:
-> -		/*
-> -		 * No check for ql2xenablehba_err_chk, as it would be an
-> -		 * I/O error if hba tag generation is not done.
-> -		 */
-> -		pkt->ref_tag = cpu_to_le32((uint32_t)
-> -		    (0xffffffff & scsi_get_lba(cmd)));
-> -
-> -		if (!qla2x00_hba_err_chk_enabled(sp))
-> -			break;
-> -
-> -		pkt->ref_tag_mask[0] = 0xff;
-> -		pkt->ref_tag_mask[1] = 0xff;
-> -		pkt->ref_tag_mask[2] = 0xff;
-> -		pkt->ref_tag_mask[3] = 0xff;
-> -		break;
-> -
-> -	/*
-> -	 * For TYPE 2 protection: 16 bit GUARD + 32 bit REF tag has to
-> -	 * match LBA in CDB + N
-> -	 */
-> -	case SCSI_PROT_DIF_TYPE2:
-> -		pkt->app_tag = cpu_to_le16(0);
-> -		pkt->app_tag_mask[0] = 0x0;
-> -		pkt->app_tag_mask[1] = 0x0;
-> -
-> -		pkt->ref_tag = cpu_to_le32((uint32_t)
-> -		    (0xffffffff & scsi_get_lba(cmd)));
-> +	pkt->ref_tag = cpu_to_le32(scsi_prot_ref_tag(cmd));
->  
-> -		if (!qla2x00_hba_err_chk_enabled(sp))
-> -			break;
-> -
-> -		/* enable ALL bytes of the ref tag */
-> -		pkt->ref_tag_mask[0] = 0xff;
-> -		pkt->ref_tag_mask[1] = 0xff;
-> -		pkt->ref_tag_mask[2] = 0xff;
-> -		pkt->ref_tag_mask[3] = 0xff;
-> -		break;
-> -
-> -	/* For Type 3 protection: 16 bit GUARD only */
-> -	case SCSI_PROT_DIF_TYPE3:
-> -		pkt->ref_tag_mask[0] = pkt->ref_tag_mask[1] =
-> -			pkt->ref_tag_mask[2] = pkt->ref_tag_mask[3] =
-> -								0x00;
-> -		break;
-> -
-> -	/*
-> -	 * For TYpe 1 protection: 16 bit GUARD tag, 32 bit REF tag, and
-> -	 * 16 bit app tag.
-> -	 */
-> -	case SCSI_PROT_DIF_TYPE1:
-> -		pkt->ref_tag = cpu_to_le32((uint32_t)
-> -		    (0xffffffff & scsi_get_lba(cmd)));
-> -		pkt->app_tag = cpu_to_le16(0);
-> -		pkt->app_tag_mask[0] = 0x0;
-> -		pkt->app_tag_mask[1] = 0x0;
-> -
-> -		if (!qla2x00_hba_err_chk_enabled(sp))
-> -			break;
-> -
-> -		/* enable ALL bytes of the ref tag */
-> -		pkt->ref_tag_mask[0] = 0xff;
-> -		pkt->ref_tag_mask[1] = 0xff;
-> -		pkt->ref_tag_mask[2] = 0xff;
-> -		pkt->ref_tag_mask[3] = 0xff;
-> -		break;
-> +	if (cmd->prot_flags & SCSI_PROT_REF_CHECK) {
+> static inline bool ufshcd_can_aggressive_pc(struct ufs_hba *hba)
+>
 
-I would also add a "&& qla2x00_hba_err_chk_enabled(sp)" to the above check 
-to preserve the old semantics (which was helpful during testing).
+Hello Joe,
+Thanks for your advice.
+As you mentioned, refactoring looks good.
+However, since the content does not match the title, can I submit a patch with a new title?
 
-With that:
-
-Reviewed-by: Arun Easi <aeasi@marvell.com>
-
-Regards,
--Arun
-
-
-> +                pkt->ref_tag_mask[0] = 0xff;
-> +                pkt->ref_tag_mask[1] = 0xff;
-> +                pkt->ref_tag_mask[2] = 0xff;
-> +                pkt->ref_tag_mask[3] = 0xff;
->  	}
-> +
-> +	pkt->app_tag = __constant_cpu_to_le16(0);
-> +	pkt->app_tag_mask[0] = 0x0;
-> +	pkt->app_tag_mask[1] = 0x0;
->  }
->  
->  int
-> @@ -905,7 +851,7 @@ qla24xx_walk_and_build_sglist_no_difb(struct qla_hw_data *ha, srb_t *sp,
->  	memset(&sgx, 0, sizeof(struct qla2_sgx));
->  	if (sp) {
->  		cmd = GET_CMD_SP(sp);
-> -		prot_int = cmd->device->sector_size;
-> +		prot_int = scsi_prot_interval(cmd);
->  
->  		sgx.tot_bytes = scsi_bufflen(cmd);
->  		sgx.cur_sg = scsi_sglist(cmd);
-> 
+Best Regards,
+Keoseong
