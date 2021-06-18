@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21D60C48BE8
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 23:15:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99CD2C48BE8
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 23:30:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4A9960FE7
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 23:15:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7030761358
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 23:30:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233169AbhFRXRq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Jun 2021 19:17:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51518 "EHLO
+        id S234357AbhFRXcZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Jun 2021 19:32:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230024AbhFRXRp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2021 19:17:45 -0400
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 87B5AC061574
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Jun 2021 16:15:34 -0700 (PDT)
-Received: by mail-pg1-x52a.google.com with SMTP id n12so352838pgs.13
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Jun 2021 16:15:34 -0700 (PDT)
+        with ESMTP id S230024AbhFRXcZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2021 19:32:25 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 48186C061574
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Jun 2021 16:30:14 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id f10so3361732plg.0
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Jun 2021 16:30:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=qBhWFSDC/pGq6lffGacYxIQ2MA2iKJixy0K9unDji68=;
-        b=a2hc7nccDIhHlM1QVgAzhHIQUyflxy4OHHmG0Iej4GxegyHZdBtrzEZCQot5Ejf+R8
-         MAL9n/al5iwS7afQfZ6B2qNOBhrchddgSl1Y3+55YH36ECgotOkEKYrOKR49wstkcGZH
-         /RlXr807Ufo/FRW3dbbLr+M6yo1lphgL4CgdjU0V32flUuKoLctiusJ5dNKODhGE/bZU
-         aKtsVSZuwUqV9y4tEj+9K9mt+iuWhXvkJ8Jr6MJ3sYQCDSoF0/+KOcJTEbJ9/lmKwLAZ
-         LS/uAf0JNzimJwGYhycYDvaDM4mLdEAliUaf7eKHUqb2HntS/MJ2HCxqL7063Elkfs/C
-         ehvQ==
+        bh=j6MTIe2qwUVBjmzmH2LBNdGnSBRZGfX2pPBBTeWlkSQ=;
+        b=UfMpSQKTxLRK2gSsukxoha/rQy94JNbR7NnZokTC3bI26gLM4Ko1k+Urncq4UeKtMc
+         byxaK8zDL+xVZ7YVLpOXDM0JfeRkBRYneCSYtHCga5ObmMbx9eavLETjSpK1u+sS9STI
+         ls7Tz8+kW4hm7THnPi3m8dDta+9ImxO74jAnkl7+YY0eLo56KC+TuLJokWurqmm/cqMn
+         Z7Xuv3m+fo44GL9qehjr7M6yp9lTpFl+tU0ZHtQz3worhsLfH4jH3AxVmWhf2OVqGHzs
+         +cq8Ik70TyGNKXXnJ2tDbt2UkJ2IeT7AKUtjK665fAFEaHVM59cRPNCj09DxjZ25BcS2
+         dd+g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=qBhWFSDC/pGq6lffGacYxIQ2MA2iKJixy0K9unDji68=;
-        b=Q/Ai7obRoPEaFMMt6Yl7OnHP9Mw25r9+iIAfLbZbGAULFPZi2Q3tMN8IsA9lBo5nEr
-         Rsh8v6V47mxSxU3HDVMFWzkcOFpQozIdtne207/26QL9ctSehCqQAgGSb3JHnVk1YI17
-         S+By8aBr38kUrlK8FgksS7y+Rq40Of4iD98pi1U6XXjZ2L68iNWQMr+o/a7Uadv7sZYG
-         8pG9xd1tL0nal4CYA7+sN7H0o1GS9gN9JBuZlSQ8u+P1hyPhizscq6hDr3NTU9kYWBBw
-         k8UFslRNcwUHSQ05cTQm3s96P5MSG8vfI4cKzH/Foc4ogBit3pHI7koRKOLSMpgFjwsb
-         lVbg==
-X-Gm-Message-State: AOAM532meiTUAgEgI7diyR+KDczcguD4uMdiT+UCFFURY0YDuxIXmSQL
-        0R46+mY8ozPKJ0uvZitJ/JDI5cQLMPE=
-X-Google-Smtp-Source: ABdhPJzL6r0vtqwDebNocck/4/yDOC2sl9en+sExEQv97wtfZwuBLL/mlQwzp9GYDsRzWW399tUvSg==
-X-Received: by 2002:a63:f047:: with SMTP id s7mr12092635pgj.272.1624058133848;
-        Fri, 18 Jun 2021 16:15:33 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id u1sm10050072pgh.80.2021.06.18.16.15.31
+        bh=j6MTIe2qwUVBjmzmH2LBNdGnSBRZGfX2pPBBTeWlkSQ=;
+        b=szi2Lmpukql1EEqjyJto+09uTEXHystNOmfULiwOz3I6WStp33zeqrcH2xSDLYNCOl
+         XAsNiW/x23uNDyU1jaI6o+Rh7ekCZfFvijV3SLo8v2rH5kSYaxfjMG6HmufJVwB+uwPx
+         fHO8s5cB3fPP7pKKngEWJX61LmTcNdpVhzQPNRP+VGcPg1gm8PmkT2l+OPNNVs/KpiaB
+         ifUE7lI/d2x8h9nT705c5fwZinOSAxyaEP8EHuO+WnbrFZ7d/ir5uGRGwAzzrXU651mL
+         EKtczEBW9Lalt/7uR5aniJrTQkU+ODwl63S3bug0P4PPmUPalPk5g843Lal90xCxhnkX
+         J2CA==
+X-Gm-Message-State: AOAM530Piqa/ZrAFn5l51OzLsLxzp9Aiiqyfqot+tTyIiZm7xjR2rpV1
+        Y4s6WEz3CV1hDyGGPePm5uH8Ril703c=
+X-Google-Smtp-Source: ABdhPJwcrtaWtVzpANw12m6sRteTmIgky9uN34B2/4ZDeoJMe5pkrk72p5LGapDkwnqzWBORS3luAQ==
+X-Received: by 2002:a17:902:b487:b029:115:9655:b6c with SMTP id y7-20020a170902b487b029011596550b6cmr6833775plr.40.1624059013402;
+        Fri, 18 Jun 2021 16:30:13 -0700 (PDT)
+Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id p20sm10067858pgi.94.2021.06.18.16.30.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Jun 2021 16:15:33 -0700 (PDT)
+        Fri, 18 Jun 2021 16:30:13 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     ram.vegesna@broadcom.com, dan.carpenter@oracle.com,
         James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] elx: efct: fix is_originator return code type
-Date:   Fri, 18 Jun 2021 16:15:24 -0700
-Message-Id: <20210618231524.83179-1-jsmart2021@gmail.com>
+Subject: [PATCH] elx: efct: fix pointer error checking in debugfs init
+Date:   Fri, 18 Jun 2021 16:30:04 -0700
+Message-Id: <20210618233004.83769-1-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -70,53 +70,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-efct_hw_iotype_is_originator is returning a negative (-EIO) status which
-doesn't make sense for a u8 function type.
+debugfs_create_xxx routines, which return pointers, are being checked
+for error by looking for NULL values. The routines may return
+pointer-munged -Exxx codes, so they should be using IS_ERR() to adapt.
 
-Reviewing the code, the function only needs to return true/false, thus a
-bool status is most appropriate.
-
-Change the function return type and patch up the one callee as the bool
-inverses the if check.
+There are two cases:
+- the first case is on initial directory creation, which actually
+  doesn't need to be checked. So remove the check.
+- creation of the sessions subdirectory. Modify this creation to
+  create under the initial directory created, and fix failure check.
 
 Fixes: 4df84e846624 ("scsi: elx: efct: Driver initialization routines")
 Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/elx/efct/efct_hw.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/elx/efct/efct_xport.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_hw.c
-index ce4736c41564..0d86c2b81f46 100644
---- a/drivers/scsi/elx/efct/efct_hw.c
-+++ b/drivers/scsi/elx/efct/efct_hw.c
-@@ -338,14 +338,14 @@ efct_hw_init_free_io(struct efct_hw_io *io)
- 	io->wq = NULL;
- }
- 
--static u8 efct_hw_iotype_is_originator(u16 io_type)
-+static bool efct_hw_iotype_is_originator(u16 io_type)
- {
- 	switch (io_type) {
- 	case EFCT_HW_FC_CT:
- 	case EFCT_HW_ELS_REQ:
--		return 0;
-+		return true;
- 	default:
--		return -EIO;
-+		return false;
+diff --git a/drivers/scsi/elx/efct/efct_xport.c b/drivers/scsi/elx/efct/efct_xport.c
+index 78b6a47599c3..9495cedcc0b9 100644
+--- a/drivers/scsi/elx/efct/efct_xport.c
++++ b/drivers/scsi/elx/efct/efct_xport.c
+@@ -43,16 +43,13 @@ efct_xport_init_debugfs(struct efct *efct)
+ 	if (!efct_debugfs_root) {
+ 		efct_debugfs_root = debugfs_create_dir("efct", NULL);
+ 		atomic_set(&efct_debugfs_count, 0);
+-		if (!efct_debugfs_root) {
+-			efc_log_err(efct, "failed to create debugfs entry\n");
+-			goto debugfs_fail;
+-		}
  	}
- }
  
-@@ -408,7 +408,7 @@ efct_hw_wq_process_io(void *arg, u8 *cqe, int status)
- 		 * If we're not an originator IO, and XB is set, then issue
- 		 * abort for the IO from within the HW
- 		 */
--		if ((!efct_hw_iotype_is_originator(io->type)) &&
-+		if (efct_hw_iotype_is_originator(io->type) &&
- 		    wcqe->flags & SLI4_WCQE_XB) {
- 			int rc;
- 
+ 	/* Create a directory for sessions in root */
+ 	if (!efct->sess_debugfs_dir) {
+-		efct->sess_debugfs_dir = debugfs_create_dir("sessions", NULL);
+-		if (!efct->sess_debugfs_dir) {
++		efct->sess_debugfs_dir = debugfs_create_dir("sessions",
++							efct_debugfs_root);
++		if (IS_ERR(efct->sess_debugfs_dir)) {
+ 			efc_log_err(efct,
+ 				    "failed to create debugfs entry for sessions\n");
+ 			goto debugfs_fail;
 -- 
 2.26.2
 
