@@ -2,122 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97A7FC48BDF
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 05:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D357FC48BDF
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 08:52:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D6C961351
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 05:28:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC099613B9
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 08:52:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232516AbhFRFbE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Jun 2021 01:31:04 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:26468 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232467AbhFRFbE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 18 Jun 2021 01:31:04 -0400
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15I5B23e021392;
-        Fri, 18 Jun 2021 05:28:54 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2020-01-29;
- bh=MKhEPkB2SaYH/nABVa56qqWJyIm4bOLPdi5GcXPHISc=;
- b=KR+F7UeU/2Ufff+Fnr6cfZhdoFEhtBMvJp6LyCPHR38Xb4j2WW5cO1XnniYB7pKbasKp
- clObbK1AfYEqwg3dxln5qnCzjoyfrUOpyARVN0ZeS+uUNhcCA+kM1Le+z01XCh0d4UsS
- ua9gQG7lmqitKa5fNsD2NFOAte3plY4N7sG7n9/WAIcod8cbXMfp0kazxnr05CoIXRQ0
- lUlP5VtVv96TKL8RfoodJYSheZWS1jg83tXXvVNieD2pkhW0QPGJZu8giWV5g0zvZT6Z
- 4/IwaGLCTVB+lBGOFrFj1LzGIP7KrYDhIlnONEeuUPWqfw7Yse+i7oTsVZKSQSmaOAu0 bQ== 
-Received: from oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 39770hcn26-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Jun 2021 05:28:54 +0000
-Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
-        by pps.podrdrct (8.16.0.36/8.16.0.36) with SMTP id 15I5PjXr031582;
-        Fri, 18 Jun 2021 05:28:53 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3020.oracle.com with ESMTP id 396wayg8w9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Jun 2021 05:28:53 +0000
-Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 15I5SrjZ041468;
-        Fri, 18 Jun 2021 05:28:53 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 396wayg8w3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 18 Jun 2021 05:28:53 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 15I5SqC7017938;
-        Fri, 18 Jun 2021 05:28:52 GMT
-Received: from mwanda (/102.222.70.252)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 17 Jun 2021 22:28:51 -0700
-Date:   Fri, 18 Jun 2021 08:28:46 +0300
-From:   Dan Carpenter <dan.carpenter@oracle.com>
-To:     jsmart2021@gmail.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [bug report] scsi: elx: efct: LIO backend interface routines
-Message-ID: <YMwvDl71G6IWHUWN@mwanda>
+        id S231319AbhFRIzH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Jun 2021 04:55:07 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:39266 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230006AbhFRIzH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2021 04:55:07 -0400
+Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 88F881FDE7;
+        Fri, 18 Jun 2021 08:52:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1624006377; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=olGiIaMCgGhdIxOpJ72VqWOqc2xN2kYdZ90fvIDLVy0=;
+        b=eWK0mHC1HJLZlvtCKWTjOWxMljnnpb9j47EXi4/tV4SDfLtMOIG2oNZRvaDVUPPNFI/3qU
+        jU6H0Ryx9iulKnwU/mbpeDPbI2sZInTy5lXrnaqRj9FQRQk/FpM3QSc2XS37EZGdP/wdqW
+        S3GDK/1zhC5vaKF2Y9XphGN0L1Q5YpQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1624006377;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=olGiIaMCgGhdIxOpJ72VqWOqc2xN2kYdZ90fvIDLVy0=;
+        b=mI2E1pn1eoZkrPFM7Q6DEid8JTo54ZK2GHuuC/iJRgBwdTbE4ujljU9CPJyUwIaBsr7/3j
+        ebFmqQYVrTd43uBg==
+Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        by imap.suse.de (Postfix) with ESMTP id 6F7AB118DD;
+        Fri, 18 Jun 2021 08:52:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1624006377; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=olGiIaMCgGhdIxOpJ72VqWOqc2xN2kYdZ90fvIDLVy0=;
+        b=eWK0mHC1HJLZlvtCKWTjOWxMljnnpb9j47EXi4/tV4SDfLtMOIG2oNZRvaDVUPPNFI/3qU
+        jU6H0Ryx9iulKnwU/mbpeDPbI2sZInTy5lXrnaqRj9FQRQk/FpM3QSc2XS37EZGdP/wdqW
+        S3GDK/1zhC5vaKF2Y9XphGN0L1Q5YpQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1624006377;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=olGiIaMCgGhdIxOpJ72VqWOqc2xN2kYdZ90fvIDLVy0=;
+        b=mI2E1pn1eoZkrPFM7Q6DEid8JTo54ZK2GHuuC/iJRgBwdTbE4ujljU9CPJyUwIaBsr7/3j
+        ebFmqQYVrTd43uBg==
+Received: from director2.suse.de ([192.168.254.72])
+        by imap3-int with ESMTPSA
+        id fd43GulezGCHIQAALh3uQQ
+        (envelope-from <dwagner@suse.de>); Fri, 18 Jun 2021 08:52:57 +0000
+Date:   Fri, 18 Jun 2021 10:52:57 +0200
+From:   Daniel Wagner <dwagner@suse.de>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: Re: [PATCH v2 02/15] lpfc: Fix auto sli_mode and its effect on
+ CONFIG_PORT for SLI3
+Message-ID: <20210618085257.ouah6xsjv3akkjhz@beryllium.lan>
+References: <20210104180240.46824-1-jsmart2021@gmail.com>
+ <20210104180240.46824-3-jsmart2021@gmail.com>
+ <20210607110630.kwn74yfrbsrrrhsm@beryllium.lan>
+ <06b1d757-9046-8b94-265b-c6c760cd8749@gmail.com>
+ <20210615124502.yzmudtm22pjzwqxj@beryllium.lan>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-X-Proofpoint-GUID: cxmvViunF94HdFksWMyN9oCard7oBMnv
-X-Proofpoint-ORIG-GUID: cxmvViunF94HdFksWMyN9oCard7oBMnv
+In-Reply-To: <20210615124502.yzmudtm22pjzwqxj@beryllium.lan>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello James Smart,
+Hi James,
 
-The patch 692e5d73a811: "scsi: elx: efct: LIO backend interface
-routines" from Jun 1, 2021, leads to the following static checker
-warning:
+On Tue, Jun 15, 2021 at 02:45:02PM +0200, Daniel Wagner wrote:
+> I haven't heard back yet if the lpfc_use_msi=0 setting fixes the problem
+> (waiting for the next maintenance window for the experiment).
 
-	drivers/scsi/elx/efct/efct_lio.c:851 efct_lio_npiv_make_nport()
-	warn: '&vport_list->list_entry' not removed from list
+lpfc_use_msi=0 did not help in this case. Only a complete revert of the
+patch fixes the issue.
 
-drivers/scsi/elx/efct/efct_lio.c
-   828          vport_list = kzalloc(sizeof(*vport_list), GFP_KERNEL);
-   829          if (!vport_list) {
-   830                  kfree(lio_vport);
-   831                  return ERR_PTR(-ENOMEM);
-   832          }
-   833  
-   834          vport_list->lio_vport = lio_vport;
-   835          spin_lock_irqsave(&efct->tgt_efct.efct_lio_lock, flags);
-   836          INIT_LIST_HEAD(&vport_list->list_entry);
-   837          list_add_tail(&vport_list->list_entry, &efct->tgt_efct.vport_list);
-                               ^^^^^^^^^^^^^^^^^^^^^^
-Is it possible to add this to the list after fc_vport_create() succeeds?
+Anyway, I was thinking about adding something a workaround to our
+downstream version. I figured that sli_mode is unused and we could abuse
+it to select SLI version for lpfc_sli_config_port(). Something like:
 
-   838          spin_unlock_irqrestore(&efct->tgt_efct.efct_lio_lock, flags);
-   839  
-   840          memset(&vport_id, 0, sizeof(vport_id));
-   841          vport_id.port_name = npiv_wwpn;
-   842          vport_id.node_name = npiv_wwnn;
-   843          vport_id.roles = FC_PORT_ROLE_FCP_INITIATOR;
-   844          vport_id.vport_type = FC_PORTTYPE_NPIV;
-   845          vport_id.disable = false;
-   846  
-   847          new_fc_vport = fc_vport_create(efct->shost, 0, &vport_id);
-   848          if (!new_fc_vport) {
-   849                  efc_log_err(efct, "fc_vport_create failed\n");
-   850                  kfree(lio_vport);
-   851                  kfree(vport_list);
 
-In the corrent code we free it without removing it from the list which
-leads to a use after free.
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 1ad1beb2a8a8..cf8538ca8402 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -5355,7 +5355,10 @@ lpfc_sli_hba_setup(struct lpfc_hba *phba)
+ 
+        /* Enable ISR already does config_port because of config_msi mbx */
+        if (phba->hba_flag & HBA_NEEDS_CFG_PORT) {
+-               rc = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
++               if (phba->cfg_sli_mode == 2)
++                       rc = lpfc_sli_config_port(phba, LPFC_SLI_REV2);
++               else
++                       rc = lpfc_sli_config_port(phba, LPFC_SLI_REV3);
+                if (rc)
+                        return -EIO;
+                phba->hba_flag &= ~HBA_NEEDS_CFG_PORT;
 
-   852                  return ERR_PTR(-ENOMEM);
-   853          }
-   854  
-   855          lio_vport->fc_vport = new_fc_vport;
-   856  
-   857          return &lio_vport->vport_wwn;
-   858  }
 
-regards,
-dan carpenter
+Thanks,
+Daniel
