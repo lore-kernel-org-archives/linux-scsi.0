@@ -2,79 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7389FC48BDF
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 22:54:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AD92C49EA2
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 22:58:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54C1261284
-	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 22:54:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C4EA613DA
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 22:58:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235061AbhFRW4p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 18 Jun 2021 18:56:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46838 "EHLO
+        id S235093AbhFRXAY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 18 Jun 2021 19:00:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231270AbhFRW4p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2021 18:56:45 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2CE9CC061574;
-        Fri, 18 Jun 2021 15:54:34 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id o88-20020a17090a0a61b029016eeb2adf66so8853756pjo.4;
-        Fri, 18 Jun 2021 15:54:34 -0700 (PDT)
+        with ESMTP id S233058AbhFRXAX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jun 2021 19:00:23 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B1943C061574;
+        Fri, 18 Jun 2021 15:58:12 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id y15so3043167pfl.4;
+        Fri, 18 Jun 2021 15:58:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=rzOxWgOfLVUoE/zhN+Hv/nujRU8lGHYED4ijbZLx+m4=;
-        b=jgQ1L91cfMQM/qQBtomKGL3/CMrlamfrL+mybW0Oq5EoVtn1/rf2owYr0EW6eusISX
-         Keeti/dkr07avw8/GK0HD2BAY14QF9/HdKR5r14+RYFzS5TEH/cKxQdpE2frMxNILm6h
-         7+E782vXfI0pR0TjTZ3nSx5Hif2vlYqeRqfMubKLpICBzJB9kqQ3WGn6It0l8c7fRKSe
-         lvtHemBK0xjasQh/nlBD+7+5l6UK0woqoX1kSvU7atcnFsNumIBQOihghj+gVNoG6/nb
-         4WyNvVup2Hi6TxRk9E3XzfqRcMCoz6JLXpni15kT5amtWLCmpHTZVNXF4BuFhgIQh/cA
-         Xrsg==
+        bh=AiOSd2tE//HdXtO7NNcBY5AKe4g51NwiW8yfeGw8NeE=;
+        b=JCAAZVVt3fiPXNjRK4B/rykqCnHoXo+oFLOD1njNkEGYR4A2F7xMOuspV9IyOJVPds
+         qbm9OdWEn1WXiV4DGxdwezKeEO+PUu14nzlmIW2suBHUEiPGlq7w9RdD3Jh7MK2nPRD8
+         5X2scL2NTu8gkiyV1OhioDUMIwquKoj4Wqb4+ci30luf8GGMvEivKuFY6Igoq+Lrv9um
+         I1euJhqWLTr39CXj2kC8w3zDuZy8vT+hfzXWYpTEFnFcI0XSofz6g39rwlJ2vJAoOq+y
+         CENNZRDEfedp/usYMGtYcyOj6A+KyJNFqZ+Hjfv0i/JbfnTDcotJDLvLZZ0LANIREkpv
+         WDPg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=rzOxWgOfLVUoE/zhN+Hv/nujRU8lGHYED4ijbZLx+m4=;
-        b=fwFMar0ISr+6do9P/1DxUcbz5trNNATc++k7xU3UQpLKllKupDa9Z94XV0DoyHXxJ7
-         SdBzfxpapsg7FBF9k7ptlwnfoisGb9T4n1fYAGPYYOf6ZV5EPGTWFdzMawB8Tl0wgF0x
-         MtozZn9P0QzEjn+quaCGKoFL3l/RXxFHwfQWIyRt/u+8lJiMBTUYvhYKWLojnx4TFtLi
-         ow04/2DBCqzaQ/Av3htHiemmpKIkV8oHmaMBaBL7/edhoeJgiIwmGWBGsDxYfLMCdskA
-         0f3J4uoEHm8sJot7An/jwM4boLRqctabwCVSb2Zecl0UJhp1bG8gEpeWbX/isYC0nbBe
-         COCg==
-X-Gm-Message-State: AOAM533JxK8amev5CxyEvBrWK3xMvjkTowbXkdIxJU+883roYp2BZbxd
-        mYuu5lwfhl5UFCrzjAXkkQM=
-X-Google-Smtp-Source: ABdhPJxgGabDW4kArlQJfK1SpOkSAWjiRe51TdEqINac9PPVSlB7NeY5Vf1fWnU0L/+pD/QFyPdNIw==
-X-Received: by 2002:a17:90a:d3d2:: with SMTP id d18mr24467610pjw.102.1624056873737;
-        Fri, 18 Jun 2021 15:54:33 -0700 (PDT)
+        bh=AiOSd2tE//HdXtO7NNcBY5AKe4g51NwiW8yfeGw8NeE=;
+        b=qqAFqMlfJsKO9lHlm+g4dn5W11ZCGBf90xHUBV2FVpN9kgQwLPSEKoMx/NxoeFR78p
+         2NPeezb9pNe9dlq1lJ6d77Rmji5TDc6Xp2h3RqNtPM40CE+LMTPCEnLYTHzioehYfZ/r
+         15e96E0D4ygxXI1d1W6rtDMqwEki3iSe3Rpjmq81ByE1tbnuBD6m8gEGxmtGbCZeKdQ+
+         KLvzOTLJ93G3qx/fywIvFeLiQRqsiWpFKvZjtlCXSU29YBSEh4HcEGoofJrOfReMU6Qp
+         KAViiOAWi3aNg5OGuzN4MqV7tQzBNuYOtlZIr3VUE7As1MNbtvae3/+KHI8hAmJTy0Zy
+         LfAg==
+X-Gm-Message-State: AOAM533Xkbz7eJ2kbxyECISpN9ZQ2iDLlT9jL8zTEM92Jv6W/DFwF6F5
+        jRc0XWjqolFm32rtAJBQtVBvo7AnJRg=
+X-Google-Smtp-Source: ABdhPJzmIqluYN9IX6fyLzoDby8QdVZWzkU2qzeaMsbpZXWxXs3BS+iU2rKz7qkFJkqRn4AR5yJMeg==
+X-Received: by 2002:a62:e908:0:b029:2db:8791:c217 with SMTP id j8-20020a62e9080000b02902db8791c217mr7596611pfh.28.1624057091995;
+        Fri, 18 Jun 2021 15:58:11 -0700 (PDT)
 Received: from [10.230.185.151] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 1sm2893856pfo.92.2021.06.18.15.54.29
+        by smtp.gmail.com with ESMTPSA id m2sm8151862pgv.40.2021.06.18.15.58.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 18 Jun 2021 15:54:33 -0700 (PDT)
-Subject: Re: [PATCH] scsi: elx: efct: Eliminate unnecessary boolean check in
- efct_hw_command_cancel()
-To:     Nathan Chancellor <nathan@kernel.org>,
-        James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
+        Fri, 18 Jun 2021 15:58:11 -0700 (PDT)
+Subject: Re: [PATCH] scsi: elx: efct: fix uninitialized variable in debug
+ output
+To:     Dan Carpenter <dan.carpenter@oracle.com>,
+        James Smart <james.smart@broadcom.com>
+Cc:     Ram Vegesna <ram.vegesna@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Nick Desaulniers <ndesaulniers@google.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, clang-built-linux@googlegroups.com
-References: <20210617063123.21239-1-nathan@kernel.org>
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
+References: <YMyixn98qQXjsiqe@mwanda>
 From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <7afb1139-79d8-57b6-b629-bc0a0d142687@gmail.com>
-Date:   Fri, 18 Jun 2021 15:54:26 -0700
+Message-ID: <4cb2ba03-f65b-6b09-c595-3358bae0e639@gmail.com>
+Date:   Fri, 18 Jun 2021 15:58:04 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.2
 MIME-Version: 1.0
-In-Reply-To: <20210617063123.21239-1-nathan@kernel.org>
+In-Reply-To: <YMyixn98qQXjsiqe@mwanda>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -82,28 +82,21 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/16/2021 11:31 PM, Nathan Chancellor wrote:
-> clang warns:
+On 6/18/2021 6:42 AM, Dan Carpenter wrote:
+> Move the debug output down a couple lines so that "id" is initialized.
 > 
-> drivers/scsi/elx/efct/efct_hw.c:1523:17: warning: address of array
-> 'ctx->buf' will always evaluate to 'true' [-Wpointer-bool-conversion]
->                                (!ctx->buf ? U32_MAX : *((u32 *)ctx->buf)));
->                                 ~~~~~~^~~
-> 
-> buf is an array in the middle of a struct so deferencing it is not a
-> problem as long as ctx is not NULL. Eliminate the check, which fixes the
-> warning.
-> 
-> Fixes: 580c0255e4ef ("scsi: elx: efct: RQ buffer, memory pool allocation and deallocation APIs")
-> Link: https://github.com/ClangBuiltLinux/linux/issues/1398
-> Signed-off-by: Nathan Chancellor <nathan@kernel.org>
+> Fixes: 692e5d73a811 ("scsi: elx: efct: LIO backend interface routines")
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 > ---
->   drivers/scsi/elx/efct/efct_hw.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+>   drivers/scsi/elx/efct/efct_lio.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+> 
 
-Thanks!
+Yep!
 
-Reviewed-by: James Smart <jsmart2021@gmail.com>
+Same patch sent by Nathan Chancellor:
+https://lore.kernel.org/linux-scsi/20210617061721.2405511-1-nathan@kernel.org/
+
 
 -- james
 
