@@ -2,94 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB5A8C2B9F4
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 23:38:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FEC7C2B9F4
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 00:31:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C0E8261369
-	for <linux-scsi@archiver.kernel.org>; Thu, 17 Jun 2021 23:38:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20CD1610CD
+	for <linux-scsi@archiver.kernel.org>; Fri, 18 Jun 2021 00:31:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232005AbhFQXkS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 17 Jun 2021 19:40:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52328 "EHLO mail.kernel.org"
+        id S233226AbhFRAd7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 17 Jun 2021 20:33:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:40106 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230447AbhFQXkS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Jun 2021 19:40:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2566C61184;
-        Thu, 17 Jun 2021 23:38:07 +0000 (UTC)
+        id S232683AbhFRAd7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Jun 2021 20:33:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 66BC5610A3;
+        Fri, 18 Jun 2021 00:31:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1623973089;
-        bh=KiD+BfJ+qYLwA/lIAGT2/IP2dL1kIspW0vUrVZZ4zyE=;
-        h=From:To:Cc:Subject:Date:From;
-        b=B8l5pCGD0pgflCpjM0LQSOHGF2jPusPjl3MDXtyy3XTjEG3IAOKddf95MPxHkEO0t
-         CFJCTIixeMzjx40hNYKt2oLZZx+sOFN65yO2ELfby6qpZlra056DM/dzsIKBgraz1z
-         322TYvS9iUUTeNKLphmx2Qhr/Eg2O4fjDdG0uMsrL6jlxxTmJok+p8hwnvyGO46gKM
-         Vh23tBoPHfAr4/pBtO1ZdAgcJf/iBUqQAin3xHAeesZEO57mhR/9SIH/rp+SJEbQsk
-         zTkaZEXwq/KLnrEaFJuTGO4E4SlQLJqddPovESsHxod8V5CJGLpXwazQCrsklOsDG8
-         BDBiOfyfBx6GA==
+        s=k20201202; t=1623976311;
+        bh=FxLkwb9cFBDgjQOVtCI9Rcf8qb+qBMrt2l6X95U3vv8=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jPJkcvq6o/HD2OvJa6tmwxMq+v7LspnXkbJrlt0abBQO/3GXbHlC806OPJs8Q75Ro
+         Tj3WQpt64NalorUP2LZ/xiVtNaVcRbsQBK2QO3ztjzlJtfMYboe2ssjrb4P0FMEkq9
+         AeZlMsFSOjJ8Le0g1dAYUV1mXakGRwUxX1b9B32Pz4sjH9IhAdaivBb9tzTnyj+qqo
+         NYUOBZq2xEQadZlvCH3EBRzbtnAYGgx/h5zec8yDvW5mDnWZVr6+UvnVejZc1clAz4
+         ETHmIEPz+AOB2pq/Rtwe+/VAGf1bKNIg37/RO9UgOaxh/DN7vm2BmXQTzC2VH2evhn
+         /s2koPoOB7jYg==
+Date:   Thu, 17 Jun 2021 17:31:47 -0700
 From:   Nathan Chancellor <nathan@kernel.org>
-To:     James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nathan Chancellor <nathan@kernel.org>
-Subject: [PATCH] scsi: lpfc: Reduce scope of uuid in lpfc_queuecommand()
-Date:   Thu, 17 Jun 2021 16:37:59 -0700
-Message-Id: <20210617233759.2355447-1-nathan@kernel.org>
-X-Mailer: git-send-email 2.32.0.93.g670b81a890
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, Ram Vegesna <ram.vegesna@broadcom.com>,
+        Daniel Wagner <dwagner@suse.de>
+Subject: Re: [PATCH v9 21/31] elx: efct: Hardware IO and SGL initialization
+Message-ID: <YMvpc5KsGYFSAjok@archlinux-ax161>
+References: <20210601235512.20104-1-jsmart2021@gmail.com>
+ <20210601235512.20104-22-jsmart2021@gmail.com>
 MIME-Version: 1.0
-X-Patchwork-Bot: notify
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210601235512.20104-22-jsmart2021@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When CONFIG_SCSI_LPFC_DEBUG_FS is unset, uuid's declaration is not
-present, resulting in a compiler error:
+Hi James,
 
-drivers/scsi/lpfc/lpfc_scsi.c:5595:3: error: use of undeclared
-identifier 'uuid'
-                uuid = lpfc_is_command_vm_io(cmnd);
-                ^
+On Tue, Jun 01, 2021 at 04:55:02PM -0700, James Smart wrote:
+> This patch continues the efct driver population.
+> 
+> This patch adds driver definitions for:
+> Routines to create IO interfaces (wqs, etc), SGL initialization,
+> and configure hardware features.
+> 
+> Co-developed-by: Ram Vegesna <ram.vegesna@broadcom.com>
+> Signed-off-by: Ram Vegesna <ram.vegesna@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
+> Reviewed-by: Daniel Wagner <dwagner@suse.de>
 
-uuid is only used in the if statement so reduce its scope to solve the
-build error. Additionally, uuid is a char *, instead of u8 *.
+The
 
-Fixes: 33c79741deaf ("scsi: lpfc: vmid: Introduce VMID in I/O path")
-Signed-off-by: Nathan Chancellor <nathan@kernel.org>
----
- drivers/scsi/lpfc/lpfc_scsi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+if (cmpxchg(&io_to_abort->abort_in_progress, false, true)) {
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 46bfe251c2fe..e8af51e38614 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5457,7 +5457,6 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 	int err, idx;
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	uint64_t start = 0L;
--	u8 *uuid = NULL;
- 
- 	if (phba->ktime_on)
- 		start = ktime_get_ns();
-@@ -5592,7 +5591,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 	     LPFC_VMID_PRIO_TAG_ALL_TARGETS)) {
- 		/* is the I/O generated by a VM, get the associated virtual */
- 		/* entity id */
--		uuid = lpfc_is_command_vm_io(cmnd);
-+		char *uuid = lpfc_is_command_vm_io(cmnd);
- 
- 		if (uuid) {
- 			err = lpfc_vmid_get_appid(vport, uuid, cmnd,
+in this patch causes ARCH=arm allmodconfig to fail because
+CONFIG_CPU_V6=y and older do not support running cmpxchg() on bool
+(anything less than int from what I can tell) when instrumentation is
+enabled:
 
-base-commit: ebc076b3eddc807729bd81f7bc48e798a3ddc477
--- 
-2.32.0.93.g670b81a890
+ERROR: modpost: "__bad_cmpxchg" [drivers/scsi/elx/efct.ko] undefined!
 
+https://elixir.bootlin.com/linux/v5.13-rc6/source/arch/arm/include/asm/cmpxchg.h#L164
+
+I guess this could be turned into an int, although the structure grows
+slightly in size of the cmpxchg could be unrolled, similar to
+commit f5f4c615982d ("drm: Convert cmpxchg(bool) back to a two step
+operation").
+
+Cheers,
+Nathan
