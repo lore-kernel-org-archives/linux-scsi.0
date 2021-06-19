@@ -8,73 +8,73 @@ X-Spam-Status: No, score=-14.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86378C49361
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Jun 2021 15:45:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D3DBC48BE5
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Jun 2021 15:46:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6587861040
-	for <linux-scsi@archiver.kernel.org>; Sat, 19 Jun 2021 15:45:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F7C361040
+	for <linux-scsi@archiver.kernel.org>; Sat, 19 Jun 2021 15:46:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234658AbhFSPrM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 19 Jun 2021 11:47:12 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40722 "EHLO
+        id S233940AbhFSPsk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 19 Jun 2021 11:48:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41036 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233796AbhFSPrL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Jun 2021 11:47:11 -0400
+        with ESMTP id S231680AbhFSPsk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Jun 2021 11:48:40 -0400
 Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A7FCC061574;
-        Sat, 19 Jun 2021 08:45:01 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id x10so6225254plg.3;
-        Sat, 19 Jun 2021 08:45:01 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 377C7C061574;
+        Sat, 19 Jun 2021 08:46:29 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id 69so6224360plc.5;
+        Sat, 19 Jun 2021 08:46:29 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=YrKUdhs9GVQYxmJPM/9UcnT6/8KVsjpYC1ye5V/AvUI=;
-        b=MSOq84oNJOvVkiUUx/pG32BxE8cC/P9etMZabrNcpeYyYmmT196L/lNPlKM9a0tZvj
-         fH5o3cg+GxnBJ9ztiifpSvXFWzNWrAMYksof7vz2Y67/AGxhudgYJ3MP7cMElbYlpdpn
-         1cGrSDTE4xzPYMiqUS0hO5kANF5PnICjS7qDDLixy/AnJE+ZBnkZpPZ6cnFuSUgiY9RJ
-         YRPpermSKQHbtjLZXj3dTjz6w/peuLnlo4VVBqs8SR5Lrl53RYlnOSSn9tVE3cL2l1gh
-         guDam35xUz/WTjaoxFtAU0JWw1Sj/gSGnBE6BzRdn8bz7DLNIgWmbqWy1mKFpnb/A+0P
-         WRHw==
+        bh=b0K8HSAqOAgzoJk09xtqO95f4D/akP/DcQsZH563JKY=;
+        b=TuPm5T2vE34LrYNmzepdpUqwjK8MpRQNmhFeOP1xqMp3pWWca74FHaAqMtguYvHEQg
+         JrIgH23kfRh+u0D/IH6qg/iro6Jtco4SxOLVYNj6rwp/lQSsRbY9N72/I8vKod0gMvTI
+         nXvYEpqvrTxa1gojdnZggVOsp+lmxUmGHoQjhqMjmSxXkkWGxK31UTluRS9KNKyaRZoV
+         x6y5QOWbyzzCxqleVYDHD064+ShUXjvqs1b+AaqWMwvcTyHS7/4WhX/Jl8PkBEklViSY
+         YRrcf58Oeq5oz5YHbsq16DIdCaFpJ+SbLZbq62DrXDcsXxomgA+zYTzBpeWXaYEPCbUk
+         zgOA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=YrKUdhs9GVQYxmJPM/9UcnT6/8KVsjpYC1ye5V/AvUI=;
-        b=ipaTsotkWSNRza5Xt8xu78YhGoEzfaBCzpk+lMsalGo8A9NuRzbXkaRWE65PYSim9q
-         JMKPWXwPzJdetSYGLdbxLvUarB1erWoIBj9qd3VF9HCvlfW303CGSe7N4765q/eOEJ+j
-         Du/s074xQqcAOXVOPpneOYhVumYKSbmhzDbBLf3/w8q2QngR6gBlaBQXCGhBl4D4jrEn
-         iAdQw5ET51GyRHDjNCzwjNeczPaGkwcyEcb+Yn/OHI/Oo5KzQlkDo4QmLtFsHEEFAkmw
-         5E/lxXtz0X342+CSYjQs9YsVWCfH5Sh2t4ZijbWzRc+4pI1iLQy6NB3mdpGzXjW7ikjo
-         0VBw==
-X-Gm-Message-State: AOAM531+nglnQi6DHzIqIPV0FP1IoaHSQSxw1wb1DdxO/+Ls1GTfWXjZ
-        8Sy6BLc+/zVkbFBIrj35F3QablN1+fs=
-X-Google-Smtp-Source: ABdhPJzP6jP+A//wvqCL5vYEQd89Alei78k2cmUYKskv703OjGqaqD9BDQIHuPyAJ1w9weBRPd5ZTw==
-X-Received: by 2002:a17:903:1043:b029:11e:7489:9bad with SMTP id f3-20020a1709031043b029011e74899badmr9796847plc.34.1624117500508;
-        Sat, 19 Jun 2021 08:45:00 -0700 (PDT)
+        bh=b0K8HSAqOAgzoJk09xtqO95f4D/akP/DcQsZH563JKY=;
+        b=cXKctdnBZqfkb0opkURmNXx4XCQGmP0f/CqdyYCuAG840sXwl6Gj2xPo6kmAI4VAwO
+         e6P3QXODFx0iQMctsz3nM1kq1EC2WOJJyu49HaBpcmP7wc/qIsJBB0XcYui63OH48Rmj
+         DymAv3ZlT6dHd8JSNXQyG8w1LWXLxdmAqxI9GJmaevEyfz0Vw2r2lSaELwyk6RdCM6fS
+         cEVkgr5gqx95Kwf4Jc2DzRG9UHnXWMYS0TYXX1xLUBUu94zEl2vRHv221z7tUuani4hE
+         h2JlgK/qIa+DAKPu/QEbdc7PlArD0Vh3Oyu4AD9ldcjV9Im2bb6xFrYK+WY9sBQ00Ah7
+         SgnQ==
+X-Gm-Message-State: AOAM532NuDzqc0WSCR/HBT2kJ7SwJnaKIhsKEPK563gTo6ilwlkNK8O2
+        w7RVaNSgz4KYBYi1f3rI3z2B/BfxBpU=
+X-Google-Smtp-Source: ABdhPJxeLCgKu43N6SH9B2StFApUiyVm5/CK27TIBXxf4z5tJHFNJLJxXY1cXXtSzV2v7pJJ2uOBEg==
+X-Received: by 2002:a17:902:ab88:b029:11d:20fa:8ca6 with SMTP id f8-20020a170902ab88b029011d20fa8ca6mr9737530plr.67.1624117588705;
+        Sat, 19 Jun 2021 08:46:28 -0700 (PDT)
 Received: from [10.230.185.151] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id p1sm10735453pfn.212.2021.06.19.08.44.56
+        by smtp.gmail.com with ESMTPSA id e24sm11926205pgi.17.2021.06.19.08.46.24
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 19 Jun 2021 08:45:00 -0700 (PDT)
-Subject: Re: [PATCH] scsi: elx: libefc: fix IRQ restore in
- efc_domain_dispatch_frame()
-To:     Dan Carpenter <dan.carpenter@oracle.com>,
-        James Smart <james.smart@broadcom.com>
-Cc:     Ram Vegesna <ram.vegesna@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Daniel Wagner <dwagner@suse.de>,
+        Sat, 19 Jun 2021 08:46:28 -0700 (PDT)
+Subject: Re: [PATCH][next] scsi: elx: libefc: Fix less than zero comparison of
+ a unsigned int
+To:     Colin King <colin.king@canonical.com>,
+        James Smart <james.smart@broadcom.com>,
+        Ram Vegesna <ram.vegesna@broadcom.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
         Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, kernel-janitors@vger.kernel.org
-References: <YMyjH16k4M1yEmmU@mwanda>
+        target-devel@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20210616170401.15831-1-colin.king@canonical.com>
 From:   James Smart <jsmart2021@gmail.com>
-Message-ID: <63e4d110-90a7-48ab-31df-e8f4c00115a6@gmail.com>
-Date:   Sat, 19 Jun 2021 08:44:54 -0700
+Message-ID: <b1fbaad3-972b-53f5-817c-9b6ee14a02ce@gmail.com>
+Date:   Sat, 19 Jun 2021 08:46:22 -0700
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.10.2
 MIME-Version: 1.0
-In-Reply-To: <YMyjH16k4M1yEmmU@mwanda>
+In-Reply-To: <20210616170401.15831-1-colin.king@canonical.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -82,15 +82,18 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/18/2021 6:43 AM, Dan Carpenter wrote:
-> Calling a nested spin_lock_irqsave() will overwrite the original "flags"
-> so that they can not be enabled again at the end.
+On 6/16/2021 10:04 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Fixes: 3146240f19bf ("scsi: elx: libefc: FC Domain state machine interfaces")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> The comparison of the u32 variable rc to less than zero always
+> false because it is unsigned. Fix this by making it an int.
+> 
+> Addresses-Coverity: ("Unsigned compared against 0")
+> Fixes: 202bfdffae27 ("scsi: elx: libefc: FC node ELS and state handling")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 > ---
->   drivers/scsi/elx/libefc/efc_domain.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
+>   drivers/scsi/elx/libefc/efc_device.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 
 Thanks!
 
