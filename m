@@ -2,112 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1C51C48BE5
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 09:29:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F9EC48BE5
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 13:00:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA3036023C
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 09:29:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87D9A61164
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 13:00:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229837AbhFUJby (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Jun 2021 05:31:54 -0400
-Received: from mga03.intel.com ([134.134.136.65]:61365 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229641AbhFUJbx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Jun 2021 05:31:53 -0400
-IronPort-SDR: LXQOWgJ/mlYlUEDVJwRL7C16qmAHJgiCdKZ23+/cqtGklLGjzmP5dicC8VPQqCiYWBRzNLcVzd
- hEvYi+9PVaGw==
-X-IronPort-AV: E=McAfee;i="6200,9189,10021"; a="206850143"
-X-IronPort-AV: E=Sophos;i="5.83,289,1616482800"; 
-   d="scan'208";a="206850143"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jun 2021 02:29:38 -0700
-IronPort-SDR: KC3R/4G2ArhR9KURjfmKrolji4DpjaOi0FVZinQwAdqqOeEH+z7NxaJIuYxHaQBqQqs4xzsVgB
- JYTIJAQla1zw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.83,289,1616482800"; 
-   d="scan'208";a="405565750"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
-  by orsmga006.jf.intel.com with ESMTP; 21 Jun 2021 02:29:34 -0700
-Subject: Re: [PATCH] scsi: ufs: Refactor ufshcd_is_intr_aggr_allowed()
-To:     keosung.park@samsung.com, "joe@perches.com" <joe@perches.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        "satyat@google.com" <satyat@google.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <CGME20210621085158epcms2p46170ba48174547df00b9720dbc843110@epcms2p4>
- <1891546521.01624267081897.JavaMail.epsvc@epcpadp4>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <ed6d8c44-295e-aaa7-4b5f-7929c1c797d1@intel.com>
-Date:   Mon, 21 Jun 2021 12:29:58 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S229790AbhFUNCP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Jun 2021 09:02:15 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37974 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229708AbhFUNCO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Jun 2021 09:02:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1624280399;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=+YgUj6PMWgTlE2/zJGxRd3Re9nIIH1KzyMdqnBdCris=;
+        b=TDsd6DOqYEmNtglxYYf5Zevq8TZimrqE/Bp4N3nwomCTvBY87wEI2NdU67psyTC333oUVS
+        geXjkjhOo4jcv+KYVwtBCaqMIo0Lj7o9mabdNuQH8/CmuQtAUjmokARmRW8ohcwElRajsT
+        t0AbiSZphGnXF6ISQ/cbiFLql63HVv8=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-217-04wCizg9MfWKSuNYk_XV9Q-1; Mon, 21 Jun 2021 08:59:58 -0400
+X-MC-Unique: 04wCizg9MfWKSuNYk_XV9Q-1
+Received: by mail-lj1-f200.google.com with SMTP id o15-20020a2e9b4f0000b029015ae56d3aa0so9236670ljj.0
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2021 05:59:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=+YgUj6PMWgTlE2/zJGxRd3Re9nIIH1KzyMdqnBdCris=;
+        b=b2UI1oJPuJpEL93Zt4BjvOem/sLbh6f4yPkEACzifHvfADhE64/zxJA4JGjyfU4hcJ
+         rmLmX8+8HCS/oQp6ToSOdLsSaVCnHnNRD13xt4FeiZf28t+ltcgZSvYn4jo53KVDopcb
+         91uFkMFpyfYrgQAzYNthOpfTlxeGnwXrrbhV33huWVaByLMRo+zCJb77EzrvH8qTAaHk
+         qPMhauxjN3ich151NKPUl+CJ+dWrvtMNevj6i9lY32x6Hq4IyndgrSCQanMKDAJNiNaM
+         N83kNnMcexsAqXJWHmHUU+0GEl7UzzO3ecmB1kE3kHQXmmANBMrP2nPi+VykAmReVKoy
+         gwTQ==
+X-Gm-Message-State: AOAM532UHpN4BhbRpdWRWiYG2HKRK6N7zZy8hBSoI3oQc55mOoD4vR0r
+        r92VqI9ZRkYNQkM8HfjN+LA62IDJQBYhAyvu2x+FzR/ASdMJ63NGMpXWODYpFz/EKOXX8wJnIe0
+        /Acu9NbLSxTjkCSBuLIKVAy4rjsP6IOmWJ/KtbA==
+X-Received: by 2002:a05:651c:211e:: with SMTP id a30mr12543841ljq.14.1624280396490;
+        Mon, 21 Jun 2021 05:59:56 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJzgIQ11ykk0gwSlBTwdhqnda7mKHULal69m5BhjOHqEt21B5fLii3Df/yGCCr/pjsOr3FghqA8GvR4oD/ugEpM=
+X-Received: by 2002:a05:651c:211e:: with SMTP id a30mr12543807ljq.14.1624280396133;
+ Mon, 21 Jun 2021 05:59:56 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1891546521.01624267081897.JavaMail.epsvc@epcpadp4>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20210617182242.8637-1-nitesh@redhat.com> <20210617182242.8637-15-nitesh@redhat.com>
+ <YNBHQvo1uDfBbr5c@unreal>
+In-Reply-To: <YNBHQvo1uDfBbr5c@unreal>
+From:   Nitesh Lal <nilal@redhat.com>
+Date:   Mon, 21 Jun 2021 08:59:44 -0400
+Message-ID: <CAFki+LkVBjL_D24-DCFyctHFwFZuy4KhV0dGz=8jC0U16vZpFQ@mail.gmail.com>
+Subject: Re: [PATCH v1 14/14] net/mlx4: Use irq_update_affinity_hint
+To:     Leon Romanovsky <leon@kernel.org>
+Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
+        tglx@linutronix.de, jesse.brandeburg@intel.com,
+        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
+        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
+        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
+        peterz@infradead.org, davem@davemloft.net,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
+        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
+        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
+        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
+        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
+        luobin9@huawei.com, ajit.khaparde@broadcom.com,
+        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 21/06/21 11:51 am, Keoseong Park wrote:
-> Change conditional compilation to IS_ENABLED macro,
-> and simplify if else statement to return statement.
-> No functional change.
-> 
-> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
-> ---
->  drivers/scsi/ufs/ufshcd.h | 17 ++++++++---------
->  1 file changed, 8 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index c98d540ac044..6d239a855753 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -893,16 +893,15 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
->  
->  static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
->  {
-> -/* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
-> -#ifndef CONFIG_SCSI_UFS_DWC
-> -	if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
-> -	    !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
-> +	/*
-> +	 * DWC UFS Core has the Interrupt aggregation feature
-> +	 * but is not detectable.
-> +	 */
-> +	if (IS_ENABLED(CONFIG_SCSI_UFS_DWC))
+On Mon, Jun 21, 2021 at 4:02 AM Leon Romanovsky <leon@kernel.org> wrote:
+>
+> On Thu, Jun 17, 2021 at 02:22:42PM -0400, Nitesh Narayan Lal wrote:
+> > The driver uses irq_set_affinity_hint() to update the affinity_hint mask
+> > that is consumed by the userspace to distribute the interrupts. However,
+> > under the hood irq_set_affinity_hint() also applies the provided cpumask
+> > (if not NULL) as the affinity for the given interrupt which is an
+> > undocumented side effect.
+> >
+> > To remove this side effect irq_set_affinity_hint() has been marked
+> > as deprecated and new interfaces have been introduced. Hence, replace the
+> > irq_set_affinity_hint() with the new interface irq_update_affinity_hint()
+> > that only updates the affinity_hint pointer.
+> >
+> > Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+> > ---
+> >  drivers/net/ethernet/mellanox/mlx4/eq.c | 6 +++---
+> >  1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/net/ethernet/mellanox/mlx4/eq.c b/drivers/net/ethernet/mellanox/mlx4/eq.c
+> > index 9e48509ed3b2..f549d697ca95 100644
+> > --- a/drivers/net/ethernet/mellanox/mlx4/eq.c
+> > +++ b/drivers/net/ethernet/mellanox/mlx4/eq.c
+> > @@ -244,9 +244,9 @@ static void mlx4_set_eq_affinity_hint(struct mlx4_priv *priv, int vec)
+> >           cpumask_empty(eq->affinity_mask))
+> >               return;
+> >
+> > -     hint_err = irq_set_affinity_hint(eq->irq, eq->affinity_mask);
+> > +     hint_err = irq_update_affinity_hint(eq->irq, eq->affinity_mask);
+> >       if (hint_err)
+> > -             mlx4_warn(dev, "irq_set_affinity_hint failed, err %d\n", hint_err);
+> > +             mlx4_warn(dev, "irq_update_affinity_hint failed, err %d\n", hint_err);
+> >  }
+> >  #endif
+> >
+> > @@ -1124,7 +1124,7 @@ static void mlx4_free_irqs(struct mlx4_dev *dev)
+> >               if (eq_table->eq[i].have_irq) {
+> >                       free_cpumask_var(eq_table->eq[i].affinity_mask);
+> >  #if defined(CONFIG_SMP)
+> > -                     irq_set_affinity_hint(eq_table->eq[i].irq, NULL);
+> > +                     irq_update_affinity_hint(eq_table->eq[i].irq, NULL);
+> >  #endif
+>
+> This #if/endif can be deleted.
+>
 
-Why is this needed?  It seems like you could just set UFSHCD_CAP_INTR_AGGR
-and clear UFSHCD_QUIRK_BROKEN_INTR_AGGR instead?
+Ack will get rid of them in v2.
 
->  		return true;
-> -	else
-> -		return false;
-> -#else
-> -return true;
-> -#endif
-> +
-> +	return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
-> +		!(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
->  }
->  
->  static inline bool ufshcd_can_aggressive_pc(struct ufs_hba *hba)
-> 
+> Thanks,
+> Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
+>
+
+
+-- 
+Thanks
+Nitesh
 
