@@ -2,149 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3F9EC48BE5
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 13:00:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A4F7C4743C
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 13:41:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87D9A61164
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 13:00:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3238B61164
+	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 13:41:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229790AbhFUNCP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Jun 2021 09:02:15 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:37974 "EHLO
+        id S230076AbhFUNnb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Jun 2021 09:43:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:58361 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229708AbhFUNCO (ORCPT
+        by vger.kernel.org with ESMTP id S229747AbhFUNn3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Jun 2021 09:02:14 -0400
+        Mon, 21 Jun 2021 09:43:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1624280399;
+        s=mimecast20190719; t=1624282875;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=+YgUj6PMWgTlE2/zJGxRd3Re9nIIH1KzyMdqnBdCris=;
-        b=TDsd6DOqYEmNtglxYYf5Zevq8TZimrqE/Bp4N3nwomCTvBY87wEI2NdU67psyTC333oUVS
-        geXjkjhOo4jcv+KYVwtBCaqMIo0Lj7o9mabdNuQH8/CmuQtAUjmokARmRW8ohcwElRajsT
-        t0AbiSZphGnXF6ISQ/cbiFLql63HVv8=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-217-04wCizg9MfWKSuNYk_XV9Q-1; Mon, 21 Jun 2021 08:59:58 -0400
-X-MC-Unique: 04wCizg9MfWKSuNYk_XV9Q-1
-Received: by mail-lj1-f200.google.com with SMTP id o15-20020a2e9b4f0000b029015ae56d3aa0so9236670ljj.0
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2021 05:59:57 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=+YgUj6PMWgTlE2/zJGxRd3Re9nIIH1KzyMdqnBdCris=;
-        b=b2UI1oJPuJpEL93Zt4BjvOem/sLbh6f4yPkEACzifHvfADhE64/zxJA4JGjyfU4hcJ
-         rmLmX8+8HCS/oQp6ToSOdLsSaVCnHnNRD13xt4FeiZf28t+ltcgZSvYn4jo53KVDopcb
-         91uFkMFpyfYrgQAzYNthOpfTlxeGnwXrrbhV33huWVaByLMRo+zCJb77EzrvH8qTAaHk
-         qPMhauxjN3ich151NKPUl+CJ+dWrvtMNevj6i9lY32x6Hq4IyndgrSCQanMKDAJNiNaM
-         N83kNnMcexsAqXJWHmHUU+0GEl7UzzO3ecmB1kE3kHQXmmANBMrP2nPi+VykAmReVKoy
-         gwTQ==
-X-Gm-Message-State: AOAM532UHpN4BhbRpdWRWiYG2HKRK6N7zZy8hBSoI3oQc55mOoD4vR0r
-        r92VqI9ZRkYNQkM8HfjN+LA62IDJQBYhAyvu2x+FzR/ASdMJ63NGMpXWODYpFz/EKOXX8wJnIe0
-        /Acu9NbLSxTjkCSBuLIKVAy4rjsP6IOmWJ/KtbA==
-X-Received: by 2002:a05:651c:211e:: with SMTP id a30mr12543841ljq.14.1624280396490;
-        Mon, 21 Jun 2021 05:59:56 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzgIQ11ykk0gwSlBTwdhqnda7mKHULal69m5BhjOHqEt21B5fLii3Df/yGCCr/pjsOr3FghqA8GvR4oD/ugEpM=
-X-Received: by 2002:a05:651c:211e:: with SMTP id a30mr12543807ljq.14.1624280396133;
- Mon, 21 Jun 2021 05:59:56 -0700 (PDT)
+        bh=9QPtVyM3DHK6LzpFdTxuxCdYlW2bJr3j+UgwCyDNveA=;
+        b=NDd8F59dALOZyxotnEE5v7R3yIcdc3XWTLAZd1HjnkwEkhZtPTlkEZqXySAsTfMsfDFZN4
+        s/9fEopIfz4LyHXt8Nnd05c/dQhAjkjDS8uOLVTcvdJuV5in340RnaOyovdtGAp3zVlgrp
+        +OAQsYX9n49dZUQx5oJseeX7U2igcFg=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-480-41FiQ0ZPM726h4u7NBFUJQ-1; Mon, 21 Jun 2021 09:41:12 -0400
+X-MC-Unique: 41FiQ0ZPM726h4u7NBFUJQ-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9F72B100C662;
+        Mon, 21 Jun 2021 13:41:11 +0000 (UTC)
+Received: from localhost (ovpn-114-233.ams2.redhat.com [10.36.114.233])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BCE1717B4C;
+        Mon, 21 Jun 2021 13:41:07 +0000 (UTC)
+Date:   Mon, 21 Jun 2021 14:41:06 +0100
+From:   Stefan Hajnoczi <stefanha@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        pbonzini@redhat.com, jasowang@redhat.com, mst@redhat.com,
+        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH 7/9] vhost: allow userspace to create workers
+Message-ID: <YNCW8ipev/vjfZHW@stefanha-x1.localdomain>
+References: <20210525180600.6349-1-michael.christie@oracle.com>
+ <20210525180600.6349-8-michael.christie@oracle.com>
+ <YLjnk5GpFaCCOqCU@stefanha-x1.localdomain>
+ <0c1aef53-4850-8c46-0706-9b7276716e68@oracle.com>
+ <YL45CfpHyzSEcAJv@stefanha-x1.localdomain>
+ <6882ef4d-8382-5b0d-272e-779e6fa9e7da@oracle.com>
+ <YMHH+das0nmMBbt5@stefanha-x1.localdomain>
+ <c98dd627-f330-b49c-6716-1caf737c73da@oracle.com>
 MIME-Version: 1.0
-References: <20210617182242.8637-1-nitesh@redhat.com> <20210617182242.8637-15-nitesh@redhat.com>
- <YNBHQvo1uDfBbr5c@unreal>
-In-Reply-To: <YNBHQvo1uDfBbr5c@unreal>
-From:   Nitesh Lal <nilal@redhat.com>
-Date:   Mon, 21 Jun 2021 08:59:44 -0400
-Message-ID: <CAFki+LkVBjL_D24-DCFyctHFwFZuy4KhV0dGz=8jC0U16vZpFQ@mail.gmail.com>
-Subject: Re: [PATCH v1 14/14] net/mlx4: Use irq_update_affinity_hint
-To:     Leon Romanovsky <leon@kernel.org>
-Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
-        tglx@linutronix.de, jesse.brandeburg@intel.com,
-        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
-        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
-        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
-        luobin9@huawei.com, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="I0LHcjb+o7BPR6nT"
+Content-Disposition: inline
+In-Reply-To: <c98dd627-f330-b49c-6716-1caf737c73da@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jun 21, 2021 at 4:02 AM Leon Romanovsky <leon@kernel.org> wrote:
->
-> On Thu, Jun 17, 2021 at 02:22:42PM -0400, Nitesh Narayan Lal wrote:
-> > The driver uses irq_set_affinity_hint() to update the affinity_hint mask
-> > that is consumed by the userspace to distribute the interrupts. However,
-> > under the hood irq_set_affinity_hint() also applies the provided cpumask
-> > (if not NULL) as the affinity for the given interrupt which is an
-> > undocumented side effect.
-> >
-> > To remove this side effect irq_set_affinity_hint() has been marked
-> > as deprecated and new interfaces have been introduced. Hence, replace the
-> > irq_set_affinity_hint() with the new interface irq_update_affinity_hint()
-> > that only updates the affinity_hint pointer.
-> >
-> > Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-> > ---
-> >  drivers/net/ethernet/mellanox/mlx4/eq.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/net/ethernet/mellanox/mlx4/eq.c b/drivers/net/ethernet/mellanox/mlx4/eq.c
-> > index 9e48509ed3b2..f549d697ca95 100644
-> > --- a/drivers/net/ethernet/mellanox/mlx4/eq.c
-> > +++ b/drivers/net/ethernet/mellanox/mlx4/eq.c
-> > @@ -244,9 +244,9 @@ static void mlx4_set_eq_affinity_hint(struct mlx4_priv *priv, int vec)
-> >           cpumask_empty(eq->affinity_mask))
-> >               return;
-> >
-> > -     hint_err = irq_set_affinity_hint(eq->irq, eq->affinity_mask);
-> > +     hint_err = irq_update_affinity_hint(eq->irq, eq->affinity_mask);
-> >       if (hint_err)
-> > -             mlx4_warn(dev, "irq_set_affinity_hint failed, err %d\n", hint_err);
-> > +             mlx4_warn(dev, "irq_update_affinity_hint failed, err %d\n", hint_err);
-> >  }
-> >  #endif
-> >
-> > @@ -1124,7 +1124,7 @@ static void mlx4_free_irqs(struct mlx4_dev *dev)
-> >               if (eq_table->eq[i].have_irq) {
-> >                       free_cpumask_var(eq_table->eq[i].affinity_mask);
-> >  #if defined(CONFIG_SMP)
-> > -                     irq_set_affinity_hint(eq_table->eq[i].irq, NULL);
-> > +                     irq_update_affinity_hint(eq_table->eq[i].irq, NULL);
-> >  #endif
->
-> This #if/endif can be deleted.
->
 
-Ack will get rid of them in v2.
+--I0LHcjb+o7BPR6nT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> Thanks,
-> Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
->
+On Thu, Jun 17, 2021 at 09:49:07PM -0500, Mike Christie wrote:
+> Again it's io_uring. Check out fs/io_uring.c:__io_account_mem(). For RLIMIT_MEMLOCK
+> it just does the check and increments the user's counter itself. It's simple like
+> option 2, and it handles the issue where the process doing the ioctl wasn't having
+> its RLIMIT_NPROC checked/updated.
 
+This can work too. It doesn't cover cases where code called indirectly
+acquires resources, but that's probably fine for the vhost worker thread
+case.
 
--- 
-Thanks
-Nitesh
+Stefan
+
+--I0LHcjb+o7BPR6nT
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmDQlvIACgkQnKSrs4Gr
+c8hrMQgApIZoel70cxrnsWve344wJ86e71dzAJ7IgIyQPXMxS1dQKBLDwe3PDUzX
+S/F+YpRfuVRpzpjN0ZrLWDR/ybvbpfx5sC71AyQtPbpBeeKEG+6VfeARWOdCL7PW
+S+unE6FGodF7zc2hL4RBslnMJtJvo0hUcD8GVr71geGvkldImDzviMFuielMK5RA
+5oZuvRh2Sh/NGqioFShB/8+2WHMPKYiiz+W0oa9up+sWZMRV70x59iUw/KMV7ArS
+vQAQU7yRHkG8M8zqQSnfT4aTmCCO0+jzYhD3VShjeqz4vlOk5OI0Cubc3gdNcKN8
+LRCc6Al6ZM2aCvam/XHVzWQJgLvaZg==
+=ZFlv
+-----END PGP SIGNATURE-----
+
+--I0LHcjb+o7BPR6nT--
 
