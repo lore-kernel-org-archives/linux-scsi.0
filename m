@@ -2,75 +2,208 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02512C4743C
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 02:47:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EFEEC2B9F4
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 03:34:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D93D160FEB
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 02:47:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54A8660C3F
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 03:34:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231304AbhFVCuJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Jun 2021 22:50:09 -0400
-Received: from mail-pg1-f177.google.com ([209.85.215.177]:36667 "EHLO
-        mail-pg1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230045AbhFVCuI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2021 22:50:08 -0400
-Received: by mail-pg1-f177.google.com with SMTP id e33so15876400pgm.3;
-        Mon, 21 Jun 2021 19:47:52 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=9mlO06SX0LdTT0ocPEd5q7QIXv28FNBq2MCnTk+7XSA=;
-        b=aUoyXf5tRwH1g2IgWfAzgrqm13lMbJu69YHZ2KxNBaKBY5jDQrDx2HO2ZZLpzlnnOG
-         5AcwR/Xso6fcVwmFVITHyg5lwoqaDfWGAjeUBRO+W7oDWkqbQ9J2i8qRfJXnYJqI1nEF
-         Kn3hYT+LOH/wOUjvUCI6b3ZKxdzj3DzNJI3A8bVlBWkMoF+TkYML8JxmDBYhEWjT8IB6
-         9gON57pO3Kztc+luM8sIs/fPnGpoyC+9poEy7fv6H961a93igYWD2zPUkq6d6HLFF6d7
-         bZg3lR/4BWu0TrUftCIyU+8D8Oxzn+PuyR5tHhx1L/GhYQ18StPo4X+EpQvAyJ8a+Gjm
-         x0NQ==
-X-Gm-Message-State: AOAM53056JTlcTqx93GYuDkKlvzKVzhKIwZs+RH/TkBWwv7djzTETD0u
-        kmJbx1q2gZyE7OWDx4Ca4BGD+jPLJSE=
-X-Google-Smtp-Source: ABdhPJz7tQPMrQZzkjN2n8UhQFhnsD8RFLnss6532vV8dL6da/ZwaKUUgp7EjpfM0qtIv8wNB4+YGQ==
-X-Received: by 2002:a05:6a00:1515:b029:2f1:d29:2a44 with SMTP id q21-20020a056a001515b02902f10d292a44mr1329834pfu.51.1624330072083;
-        Mon, 21 Jun 2021 19:47:52 -0700 (PDT)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id u21sm16655525pfh.163.2021.06.21.19.47.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Jun 2021 19:47:51 -0700 (PDT)
-Subject: Re: [PATCH] scsi: remove reduntant assignment when alloc sdev
-To:     Ed Tsai <ed.tsai@mediatek.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20210621034555.4039-1-ed.tsai@mediatek.com>
- <9e1d5f1f-b51e-8f1a-d052-d6debed116e6@acm.org>
- <9bbe52d3f21b91eadf7ba30be5054cf64ba47739.camel@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <6a9e7b80-ace3-2af3-785e-5fc306fc2521@acm.org>
-Date:   Mon, 21 Jun 2021 19:47:49 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S230032AbhFVDgy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Jun 2021 23:36:54 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:7498 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229904AbhFVDgx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2021 23:36:53 -0400
+Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.53])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4G8BlC6pyGzZkSl;
+        Tue, 22 Jun 2021 11:31:35 +0800 (CST)
+Received: from dggpeml500009.china.huawei.com (7.185.36.209) by
+ dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Tue, 22 Jun 2021 11:34:35 +0800
+Received: from huawei.com (10.175.101.6) by dggpeml500009.china.huawei.com
+ (7.185.36.209) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 22 Jun
+ 2021 11:34:35 +0800
+From:   Yufen Yu <yuyufen@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <john.garry@huawei.com>
+CC:     <linux-scsi@vger.kernel.org>, <yanaijie@huawei.com>,
+        Yufen Yu <yuyufen@huawei.com>, Wu Bo <wubo40@huawei.com>
+Subject: [PATCH v3] scsi: libsas: add lun number check in .slave_alloc callback
+Date:   Tue, 22 Jun 2021 11:40:37 +0800
+Message-ID: <20210622034037.1467088-1-yuyufen@huawei.com>
+X-Mailer: git-send-email 2.25.4
 MIME-Version: 1.0
-In-Reply-To: <9bbe52d3f21b91eadf7ba30be5054cf64ba47739.camel@mediatek.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.101.6]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ dggpeml500009.china.huawei.com (7.185.36.209)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/21/21 6:27 PM, Ed Tsai wrote:
-> have planned to re-submit it?
+We found that offline a sata device on hisi sas control and then
+scanning the host can probe 255 not-existant devices into system.
 
-That patch has just been resubmitted. I have Cc-ed you.
+[root@localhost ~]# lsscsi
+  [2:0:0:0]    disk    ATA      Samsung SSD 860  2B6Q  /dev/sda
+  [2:0:1:0]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdb
+  [2:0:2:0]    disk    SEAGATE  ST600MM0006      B001  /dev/sdc
 
-Thanks,
+ 1) echo "offline" > /sys/block/sdb/device/state
+ 2) echo "- - -" > /sys/class/scsi_host/host2/scan
 
-Bart.
+Then, we can see another 255 non-existant devices in system:
+  [root@localhost ~]# lsscsi
+  [2:0:0:0]    disk    ATA      Samsung SSD 860  2B6Q  /dev/sda
+  [2:0:1:0]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdb
+  [2:0:1:1]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdh
+  ...
+  [2:0:1:255]  disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdjb
 
+After REPORT LUN command issued to the offline device fail, it tries
+to do a sequential scan and probe all devices whose lun is not 0
+successfully.
+
+To fix the problem, we try to do same things as commit 2fc62e2ac350
+("[SCSI] libsas: disable scanning lun > 0 on ata devices"), which
+will prevent the device whose lun number is not zero probe into system.
+
+Reported-by: Wu Bo <wubo40@huawei.com>
+Suggested-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+---
+ drivers/scsi/aic94xx/aic94xx_init.c    | 1 +
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 1 +
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 +
+ drivers/scsi/isci/init.c               | 1 +
+ drivers/scsi/libsas/sas_scsi_host.c    | 9 +++++++++
+ drivers/scsi/mvsas/mv_init.c           | 1 +
+ drivers/scsi/pm8001/pm8001_init.c      | 1 +
+ 8 files changed, 16 insertions(+)
+
+v2->v3:
+    simplify commit log and fix some spelling error
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index a195bfe9eccc..7a78606598c4 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -53,6 +53,7 @@ static struct scsi_host_template aic94xx_sht = {
+ 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
+ 	.eh_device_reset_handler	= sas_eh_device_reset_handler,
+ 	.eh_target_reset_handler	= sas_eh_target_reset_handler,
++	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 3e359ac752fd..15eaac3a4eb6 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1771,6 +1771,7 @@ static struct scsi_host_template sht_v1_hw = {
+ 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
+ 	.eh_device_reset_handler = sas_eh_device_reset_handler,
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
++	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 46f60fc2a069..9df1639ffa65 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -3584,6 +3584,7 @@ static struct scsi_host_template sht_v2_hw = {
+ 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
+ 	.eh_device_reset_handler = sas_eh_device_reset_handler,
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
++	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+index e95408314078..36ec3901cfd4 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
+@@ -3155,6 +3155,7 @@ static struct scsi_host_template sht_v3_hw = {
+ 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
+ 	.eh_device_reset_handler = sas_eh_device_reset_handler,
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
++	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
+index c452849e7bb4..ffd33e5decae 100644
+--- a/drivers/scsi/isci/init.c
++++ b/drivers/scsi/isci/init.c
+@@ -167,6 +167,7 @@ static struct scsi_host_template isci_sht = {
+ 	.eh_abort_handler		= sas_eh_abort_handler,
+ 	.eh_device_reset_handler        = sas_eh_device_reset_handler,
+ 	.eh_target_reset_handler        = sas_eh_target_reset_handler,
++	.slave_alloc			= sas_slave_alloc,
+ 	.target_destroy			= sas_target_destroy,
+ 	.ioctl				= sas_ioctl,
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 1bf939818c98..ee44a0d7730b 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -911,6 +911,14 @@ void sas_task_abort(struct sas_task *task)
+ 		blk_abort_request(sc->request);
+ }
+ 
++int sas_slave_alloc(struct scsi_device *sdev)
++{
++	if (dev_is_sata(sdev_to_domain_dev(sdev)) && sdev->lun)
++		return -ENXIO;
++
++	return 0;
++}
++
+ void sas_target_destroy(struct scsi_target *starget)
+ {
+ 	struct domain_device *found_dev = starget->hostdata;
+@@ -957,5 +965,6 @@ EXPORT_SYMBOL_GPL(sas_task_abort);
+ EXPORT_SYMBOL_GPL(sas_phy_reset);
+ EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
+ EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
++EXPORT_SYMBOL_GPL(sas_slave_alloc);
+ EXPORT_SYMBOL_GPL(sas_target_destroy);
+ EXPORT_SYMBOL_GPL(sas_ioctl);
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 6aa2697c4a15..b03c0f35d7b0 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -46,6 +46,7 @@ static struct scsi_host_template mvs_sht = {
+ 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
+ 	.eh_device_reset_handler = sas_eh_device_reset_handler,
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
++	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ #ifdef CONFIG_COMPAT
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index af09bd282cb9..313248c7bab9 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -101,6 +101,7 @@ static struct scsi_host_template pm8001_sht = {
+ 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
+ 	.eh_device_reset_handler = sas_eh_device_reset_handler,
+ 	.eh_target_reset_handler = sas_eh_target_reset_handler,
++	.slave_alloc		= sas_slave_alloc,
+ 	.target_destroy		= sas_target_destroy,
+ 	.ioctl			= sas_ioctl,
+ #ifdef CONFIG_COMPAT
+-- 
+2.25.4
 
