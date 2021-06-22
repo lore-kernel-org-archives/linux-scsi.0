@@ -2,91 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A66C4743C
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 01:32:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DC30EC4743C
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 02:47:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0211E60C3D
-	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 01:32:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8FCB61026
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 02:47:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230495AbhFVBeb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Jun 2021 21:34:31 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:39711 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230059AbhFVBe3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2021 21:34:29 -0400
-X-Greylist: delayed 303 seconds by postgrey-1.27 at vger.kernel.org; Mon, 21 Jun 2021 21:34:28 EDT
-X-UUID: c27ddc43ccc34fe0a8d1eaad25cd91df-20210622
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=ZLVdaGmik40Ze2v/CYmLtbOEykgp/qCj3I8UybRZ4Vs=;
-        b=YZOeNfpEG6upWTdbl3Rac5oYxNHiTVt88w2Y7MPl+hJyG6Sp48ZOJjyKI6ziTu3HbNj8B+lRbmmG8M81N6CZzSSucTmFqKxgQrroz+xdqIqrj5bynpYd4Mmc8mg6whZID7gfqXU3mfKAM7oIAcULJGW7nYlpfBvmRlt6A6IPMWM=;
-X-UUID: c27ddc43ccc34fe0a8d1eaad25cd91df-20210622
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <ed.tsai@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1410397488; Tue, 22 Jun 2021 09:27:07 +0800
-Received: from mtkmbs10n2.mediatek.inc (172.21.101.183) by
- mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Tue, 22 Jun 2021 09:27:05 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Tue, 22 Jun 2021 09:27:05 +0800
-Received: from mtksdccf07 (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 22 Jun 2021 09:27:05 +0800
-Message-ID: <9bbe52d3f21b91eadf7ba30be5054cf64ba47739.camel@mediatek.com>
-Subject: Re: [PATCH] scsi: remove reduntant assignment when alloc sdev
-From:   Ed Tsai <ed.tsai@mediatek.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date:   Tue, 22 Jun 2021 09:27:05 +0800
-In-Reply-To: <9e1d5f1f-b51e-8f1a-d052-d6debed116e6@acm.org>
-References: <20210621034555.4039-1-ed.tsai@mediatek.com>
-         <9e1d5f1f-b51e-8f1a-d052-d6debed116e6@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+        id S231196AbhFVCtS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Jun 2021 22:49:18 -0400
+Received: from mail-pj1-f48.google.com ([209.85.216.48]:36453 "EHLO
+        mail-pj1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230045AbhFVCtR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2021 22:49:17 -0400
+Received: by mail-pj1-f48.google.com with SMTP id s17-20020a17090a8811b029016e89654f93so861958pjn.1
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2021 19:47:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=w3jY+Bm3pRUXISnP0Fs23eGIOPYAxdJGl49SCNpREqE=;
+        b=nXf+8nCqbisPto5pB1yjiFxxA6fycsveiY7SltZxaYwrfjvMQXr22O26K9qPz2rFJ0
+         v5GLyvC1LvWl0c/cCBDFSKiLSxYh/J4KWMHJH/c9Zdcf8Abq/NRbdj4M121o+n7ou7vN
+         1kMSdtYJ/58tSwaNG6bIVT/7p4IaVJBUwrf2uxMXtweHxgkoR9525bdsphb1fP4idlS8
+         TkFFy6cBqWjVklGg2UvXUU9NcDcqI5gOhMu4wPjdiHXVswMyK+t4VT2JPEqGRrzqbRYr
+         LZaR7BaqiB4+BFeLBg2ZUF+l1c2LRzs4k0E7o7pLBRuyshU9SHc9qASmuxk5MuuIkqb1
+         byrQ==
+X-Gm-Message-State: AOAM531+YqtkKeMYKZBMMviEVN7GhcvzULwCN8UK9WucqUPIp5BRwHBY
+        50ewMKMhaLW7IWHyqOCdB12UQcszqh8=
+X-Google-Smtp-Source: ABdhPJx+yK7lx+0TlEuiNaLh1WjfLYFnocvqWc+DDUf5eiT2IbBUPWS4W8P6HB/lMPKOPTNlpA3ZcA==
+X-Received: by 2002:a17:90a:c791:: with SMTP id gn17mr1239330pjb.221.1624330021192;
+        Mon, 21 Jun 2021 19:47:01 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id s24sm512039pju.9.2021.06.21.19.46.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Jun 2021 19:47:00 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>,
+        Ed Tsai <ed.tsai@mediatek.com>
+Subject: [PATCH] scsi: Inline scsi_mq_alloc_queue()
+Date:   Mon, 21 Jun 2021 19:46:54 -0700
+Message-Id: <20210622024654.12543-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-X-MTK:  N
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-T24gVHVlLCAyMDIxLTA2LTIyIGF0IDAxOjIxICswODAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IE9uIDYvMjAvMjEgODo0NSBQTSwgRWQgVHNhaSB3cm90ZToNCj4gPiBzZGV2LT5yZXFldXN0
-X3F1ZXVlIGFuZCBpdHMgcXVldWVkYXRhIGhhdmUgYmVlbiBzZXQgdXAgaW4NCj4gPiBzY3NpX21x
-X2FsbG9jX3F1ZXVlKCkuIE5vIG5lZWQgdG8gZG8gdGhhdCBhZ2Fpbi4NCj4gPiANCj4gPiBTaWdu
-ZWQtb2ZmLWJ5OiBFZCBUc2FpIDxlZC50c2FpQG1lZGlhdGVrLmNvbT4NCj4gPiAtLS0NCj4gPiAg
-ZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jIHwgNCArLS0tDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAx
-IGluc2VydGlvbigrKSwgMyBkZWxldGlvbnMoLSkNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJp
-dmVycy9zY3NpL3Njc2lfc2Nhbi5jIGIvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jDQo+ID4gaW5k
-ZXggMTJmNTQ1NzFiODNlLi44MmMxNzkyZjFkZTIgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9z
-Y3NpL3Njc2lfc2Nhbi5jDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jDQo+ID4g
-QEAgLTI2Niw4ICsyNjYsNyBAQCBzdGF0aWMgc3RydWN0IHNjc2lfZGV2aWNlDQo+ID4gKnNjc2lf
-YWxsb2Nfc2RldihzdHJ1Y3Qgc2NzaV90YXJnZXQgKnN0YXJnZXQsDQo+ID4gIAkgKi8NCj4gPiAg
-CXNkZXYtPmJvcmtlbiA9IDE7DQo+ID4gIA0KPiA+IC0Jc2Rldi0+cmVxdWVzdF9xdWV1ZSA9IHNj
-c2lfbXFfYWxsb2NfcXVldWUoc2Rldik7DQo+ID4gLQlpZiAoIXNkZXYtPnJlcXVlc3RfcXVldWUp
-IHsNCj4gPiArCWlmICghc2NzaV9tcV9hbGxvY19xdWV1ZShzZGV2KSkgew0KPiA+ICAJCS8qIHJl
-bGVhc2UgZm4gaXMgc2V0IHVwIGluDQo+ID4gc2NzaV9zeXNmc19kZXZpY2VfaW5pdGlhbGlzZSwg
-c28NCj4gPiAgCQkgKiBoYXZlIHRvIGZyZWUgYW5kIHB1dCBtYW51YWxseSBoZXJlICovDQo+ID4g
-IAkJcHV0X2RldmljZSgmc3RhcmdldC0+ZGV2KTsNCj4gPiBAQCAtMjc1LDcgKzI3NCw2IEBAIHN0
-YXRpYyBzdHJ1Y3Qgc2NzaV9kZXZpY2UNCj4gPiAqc2NzaV9hbGxvY19zZGV2KHN0cnVjdCBzY3Np
-X3RhcmdldCAqc3RhcmdldCwNCj4gPiAgCQlnb3RvIG91dDsNCj4gPiAgCX0NCj4gPiAgCVdBUk5f
-T05fT05DRSghYmxrX2dldF9xdWV1ZShzZGV2LT5yZXF1ZXN0X3F1ZXVlKSk7DQo+ID4gLQlzZGV2
-LT5yZXF1ZXN0X3F1ZXVlLT5xdWV1ZWRhdGEgPSBzZGV2Ow0KPiA+ICANCj4gPiAgCWRlcHRoID0g
-c2Rldi0+aG9zdC0+Y21kX3Blcl9sdW4gPzogMTsNCj4gDQo+IFNpbmNlIHNjc2lfbXFfYWxsb2Nf
-cXVldWUoKSBvbmx5IGhhcyBvbmUgY2FsbGVyLCBwbGVhc2UgaW5saW5lDQo+IHNjc2lfbXFfYWxs
-b2NfcXVldWUoKSBpbnN0ZWFkIG9mIG1ha2luZyB0aGlzIGNoYW5nZS4gU2VlIGFsc28NCj4gDQpo
-dHRwczovL2xvcmUua2VybmVsLm9yZy9saW51eC1zY3NpLzIwMjAxMTIzMDMxNzQ5LjE0OTEyLTUt
-YnZhbmFzc2NoZUBhY20ub3JnLw0KPiANCj4gVGhhbmtzLA0KPiANCj4gQmFydC4NCg0KaGF2ZSBw
-bGFubmVkIHRvIHJlLXN1Ym1pdCBpdD8NCg==
+Since scsi_mq_alloc_queue() only has one caller, inline it. This change
+was suggested by Christoph Hellwig.
 
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Ed Tsai <ed.tsai@mediatek.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_lib.c  | 12 ------------
+ drivers/scsi/scsi_priv.h |  1 -
+ drivers/scsi/scsi_scan.c | 12 ++++++++----
+ 3 files changed, 8 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 6b994baf87c2..d1f0ad7c4c36 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1897,18 +1897,6 @@ static const struct blk_mq_ops scsi_mq_ops = {
+ 	.get_rq_budget_token = scsi_mq_get_rq_budget_token,
+ };
+ 
+-struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev)
+-{
+-	sdev->request_queue = blk_mq_init_queue(&sdev->host->tag_set);
+-	if (IS_ERR(sdev->request_queue))
+-		return NULL;
+-
+-	sdev->request_queue->queuedata = sdev;
+-	__scsi_init_queue(sdev->host, sdev->request_queue);
+-	blk_queue_flag_set(QUEUE_FLAG_SCSI_PASSTHROUGH, sdev->request_queue);
+-	return sdev->request_queue;
+-}
+-
+ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ {
+ 	unsigned int cmd_size, sgl_size;
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 75d6f23e4fff..eae2235f79b5 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -91,7 +91,6 @@ extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
+ extern void scsi_run_host_queues(struct Scsi_Host *shost);
+ extern void scsi_requeue_run_queue(struct work_struct *work);
+-extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
+ extern void scsi_start_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 5ce45ef9808f..b059bf2b61d4 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -217,6 +217,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ {
+ 	unsigned int depth;
+ 	struct scsi_device *sdev;
++	struct request_queue *q;
+ 	int display_failure_msg = 1, ret;
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 
+@@ -266,16 +267,19 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	 */
+ 	sdev->borken = 1;
+ 
+-	sdev->request_queue = scsi_mq_alloc_queue(sdev);
+-	if (!sdev->request_queue) {
++	q = blk_mq_init_queue(&sdev->host->tag_set);
++	if (IS_ERR(q)) {
+ 		/* release fn is set up in scsi_sysfs_device_initialise, so
+ 		 * have to free and put manually here */
+ 		put_device(&starget->dev);
+ 		kfree(sdev);
+ 		goto out;
+ 	}
+-	WARN_ON_ONCE(!blk_get_queue(sdev->request_queue));
+-	sdev->request_queue->queuedata = sdev;
++	sdev->request_queue = q;
++	q->queuedata = sdev;
++	__scsi_init_queue(sdev->host, q);
++	blk_queue_flag_set(QUEUE_FLAG_SCSI_PASSTHROUGH, q);
++	WARN_ON_ONCE(!blk_get_queue(q));
+ 
+ 	depth = sdev->host->cmd_per_lun ?: 1;
+ 
