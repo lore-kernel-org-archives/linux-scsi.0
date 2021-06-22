@@ -2,94 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC9F2C4743C
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 17:38:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23A66C4743C
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 01:32:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F51D61164
-	for <linux-scsi@archiver.kernel.org>; Mon, 21 Jun 2021 17:38:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0211E60C3D
+	for <linux-scsi@archiver.kernel.org>; Tue, 22 Jun 2021 01:32:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231279AbhFURko (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 21 Jun 2021 13:40:44 -0400
-Received: from mail-pf1-f180.google.com ([209.85.210.180]:39616 "EHLO
-        mail-pf1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230082AbhFURkn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2021 13:40:43 -0400
-Received: by mail-pf1-f180.google.com with SMTP id g192so6538938pfb.6
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Jun 2021 10:38:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=MpjA8FtIdT2XLGo++5VCqj6J3VwxYGuyTO95u8yP58U=;
-        b=MRIJVze+QvJkiuAky01VSD5s3OhM4IbPSFOfSdnhTpTn5h+2VueeHYnh9Mv2GVtxnt
-         tzO5zO6MPi/fqaccwknT/b4unFkocNFgKFkOlU5mrSnXcaTmdur5YKzDwPgBHwKbBGVg
-         azw7RmO9JtDFi9E/1iaRb94skRxoOsNaYo8cpCqsz7qn3NDwuW9TruwSGwIt9/ExtkIc
-         z0+Q0GCozqjSRJFKNOADafu1zSQp3iOsMGQ70xTp1Cj/sw9pdqG5dwvcfWB6fWOZ05U3
-         BsbvQWrWmeEBQHF3GlixoN4YsG+nNapCgW1r3zyCekJrWQfkX/PTm7mRFSFhUMRunUMk
-         Kj2w==
-X-Gm-Message-State: AOAM533JkXDFU8RAGTE40a808ysBEnIH7VG0dL/b74CbUse3RBumrmIB
-        IA7sdL0E5VL/3js61X2gREc=
-X-Google-Smtp-Source: ABdhPJz6+xvd79ieIv+meCDvgqmmQtnq1Y9z6r4MUwecHauezg8HL2I3g1SbsKpkdksOQH+thADNVg==
-X-Received: by 2002:a63:1141:: with SMTP id 1mr17895527pgr.217.1624297109187;
-        Mon, 21 Jun 2021 10:38:29 -0700 (PDT)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id p26sm6762123pgc.53.2021.06.21.10.38.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 21 Jun 2021 10:38:28 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH RFC 4/4] ufs: Make host controller state change handling
- more systematic
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Can Guo <cang@codeaurora.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Asutosh Das <asutoshd@codeaurora.org>
-References: <20210619005228.28569-1-bvanassche@acm.org>
- <20210619005228.28569-5-bvanassche@acm.org>
- <DM6PR04MB65756FC4B5BA216BB72FF22BFC0A9@DM6PR04MB6575.namprd04.prod.outlook.com>
-Message-ID: <d2585c1a-8af9-409b-597e-54e94de581dc@acm.org>
-Date:   Mon, 21 Jun 2021 10:38:26 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S230495AbhFVBeb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 21 Jun 2021 21:34:31 -0400
+Received: from mailgw01.mediatek.com ([60.244.123.138]:39711 "EHLO
+        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S230059AbhFVBe3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jun 2021 21:34:29 -0400
+X-Greylist: delayed 303 seconds by postgrey-1.27 at vger.kernel.org; Mon, 21 Jun 2021 21:34:28 EDT
+X-UUID: c27ddc43ccc34fe0a8d1eaad25cd91df-20210622
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=ZLVdaGmik40Ze2v/CYmLtbOEykgp/qCj3I8UybRZ4Vs=;
+        b=YZOeNfpEG6upWTdbl3Rac5oYxNHiTVt88w2Y7MPl+hJyG6Sp48ZOJjyKI6ziTu3HbNj8B+lRbmmG8M81N6CZzSSucTmFqKxgQrroz+xdqIqrj5bynpYd4Mmc8mg6whZID7gfqXU3mfKAM7oIAcULJGW7nYlpfBvmRlt6A6IPMWM=;
+X-UUID: c27ddc43ccc34fe0a8d1eaad25cd91df-20210622
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
+        (envelope-from <ed.tsai@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 1410397488; Tue, 22 Jun 2021 09:27:07 +0800
+Received: from mtkmbs10n2.mediatek.inc (172.21.101.183) by
+ mtkmbs08n2.mediatek.inc (172.21.101.56) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Tue, 22 Jun 2021 09:27:05 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
+ Tue, 22 Jun 2021 09:27:05 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Tue, 22 Jun 2021 09:27:05 +0800
+Message-ID: <9bbe52d3f21b91eadf7ba30be5054cf64ba47739.camel@mediatek.com>
+Subject: Re: [PATCH] scsi: remove reduntant assignment when alloc sdev
+From:   Ed Tsai <ed.tsai@mediatek.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date:   Tue, 22 Jun 2021 09:27:05 +0800
+In-Reply-To: <9e1d5f1f-b51e-8f1a-d052-d6debed116e6@acm.org>
+References: <20210621034555.4039-1-ed.tsai@mediatek.com>
+         <9e1d5f1f-b51e-8f1a-d052-d6debed116e6@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
-In-Reply-To: <DM6PR04MB65756FC4B5BA216BB72FF22BFC0A9@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/21/21 1:55 AM, Avri Altman wrote:
->> +static bool ufshcd_set_state(struct ufs_hba *hba, enum ufshcd_state
->> new_state)
->> +{
->> +       lockdep_assert_held(hba->host->host_lock);
->> +
->> +       if (old_state != UFSHCD_STATE_ERROR || new_state ==
->> UFSHCD_STATE_ERROR)
->
-> old_state ?
+T24gVHVlLCAyMDIxLTA2LTIyIGF0IDAxOjIxICswODAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+IE9uIDYvMjAvMjEgODo0NSBQTSwgRWQgVHNhaSB3cm90ZToNCj4gPiBzZGV2LT5yZXFldXN0
+X3F1ZXVlIGFuZCBpdHMgcXVldWVkYXRhIGhhdmUgYmVlbiBzZXQgdXAgaW4NCj4gPiBzY3NpX21x
+X2FsbG9jX3F1ZXVlKCkuIE5vIG5lZWQgdG8gZG8gdGhhdCBhZ2Fpbi4NCj4gPiANCj4gPiBTaWdu
+ZWQtb2ZmLWJ5OiBFZCBUc2FpIDxlZC50c2FpQG1lZGlhdGVrLmNvbT4NCj4gPiAtLS0NCj4gPiAg
+ZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jIHwgNCArLS0tDQo+ID4gIDEgZmlsZSBjaGFuZ2VkLCAx
+IGluc2VydGlvbigrKSwgMyBkZWxldGlvbnMoLSkNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJp
+dmVycy9zY3NpL3Njc2lfc2Nhbi5jIGIvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jDQo+ID4gaW5k
+ZXggMTJmNTQ1NzFiODNlLi44MmMxNzkyZjFkZTIgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9z
+Y3NpL3Njc2lfc2Nhbi5jDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL3Njc2lfc2Nhbi5jDQo+ID4g
+QEAgLTI2Niw4ICsyNjYsNyBAQCBzdGF0aWMgc3RydWN0IHNjc2lfZGV2aWNlDQo+ID4gKnNjc2lf
+YWxsb2Nfc2RldihzdHJ1Y3Qgc2NzaV90YXJnZXQgKnN0YXJnZXQsDQo+ID4gIAkgKi8NCj4gPiAg
+CXNkZXYtPmJvcmtlbiA9IDE7DQo+ID4gIA0KPiA+IC0Jc2Rldi0+cmVxdWVzdF9xdWV1ZSA9IHNj
+c2lfbXFfYWxsb2NfcXVldWUoc2Rldik7DQo+ID4gLQlpZiAoIXNkZXYtPnJlcXVlc3RfcXVldWUp
+IHsNCj4gPiArCWlmICghc2NzaV9tcV9hbGxvY19xdWV1ZShzZGV2KSkgew0KPiA+ICAJCS8qIHJl
+bGVhc2UgZm4gaXMgc2V0IHVwIGluDQo+ID4gc2NzaV9zeXNmc19kZXZpY2VfaW5pdGlhbGlzZSwg
+c28NCj4gPiAgCQkgKiBoYXZlIHRvIGZyZWUgYW5kIHB1dCBtYW51YWxseSBoZXJlICovDQo+ID4g
+IAkJcHV0X2RldmljZSgmc3RhcmdldC0+ZGV2KTsNCj4gPiBAQCAtMjc1LDcgKzI3NCw2IEBAIHN0
+YXRpYyBzdHJ1Y3Qgc2NzaV9kZXZpY2UNCj4gPiAqc2NzaV9hbGxvY19zZGV2KHN0cnVjdCBzY3Np
+X3RhcmdldCAqc3RhcmdldCwNCj4gPiAgCQlnb3RvIG91dDsNCj4gPiAgCX0NCj4gPiAgCVdBUk5f
+T05fT05DRSghYmxrX2dldF9xdWV1ZShzZGV2LT5yZXF1ZXN0X3F1ZXVlKSk7DQo+ID4gLQlzZGV2
+LT5yZXF1ZXN0X3F1ZXVlLT5xdWV1ZWRhdGEgPSBzZGV2Ow0KPiA+ICANCj4gPiAgCWRlcHRoID0g
+c2Rldi0+aG9zdC0+Y21kX3Blcl9sdW4gPzogMTsNCj4gDQo+IFNpbmNlIHNjc2lfbXFfYWxsb2Nf
+cXVldWUoKSBvbmx5IGhhcyBvbmUgY2FsbGVyLCBwbGVhc2UgaW5saW5lDQo+IHNjc2lfbXFfYWxs
+b2NfcXVldWUoKSBpbnN0ZWFkIG9mIG1ha2luZyB0aGlzIGNoYW5nZS4gU2VlIGFsc28NCj4gDQpo
+dHRwczovL2xvcmUua2VybmVsLm9yZy9saW51eC1zY3NpLzIwMjAxMTIzMDMxNzQ5LjE0OTEyLTUt
+YnZhbmFzc2NoZUBhY20ub3JnLw0KPiANCj4gVGhhbmtzLA0KPiANCj4gQmFydC4NCg0KaGF2ZSBw
+bGFubmVkIHRvIHJlLXN1Ym1pdCBpdD8NCg==
 
-Thanks for having taken a look. This function should look as follows:
-
-static bool ufshcd_set_state(struct ufs_hba *hba, enum ufshcd_state new_state)
-{
-	lockdep_assert_held(hba->host->host_lock);
-
-	if (hba->ufshcd_state != UFSHCD_STATE_ERROR ||
-	    new_state == UFSHCD_STATE_ERROR) {
-		hba->ufshcd_state = new_state;
-		return true;
-	}
-	return false;
-}
