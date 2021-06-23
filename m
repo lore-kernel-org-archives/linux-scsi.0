@@ -2,110 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F345DC4743C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 07:17:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EB66C4743C
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 07:17:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DBAA66102A
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 07:17:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 026BD61185
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 07:17:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229833AbhFWHTU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Jun 2021 03:19:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45870 "EHLO
+        id S229954AbhFWHTX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Jun 2021 03:19:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229660AbhFWHTT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2021 03:19:19 -0400
-Received: from mail-pg1-x544.google.com (mail-pg1-x544.google.com [IPv6:2607:f8b0:4864:20::544])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4311C061574
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 00:17:02 -0700 (PDT)
-Received: by mail-pg1-x544.google.com with SMTP id v7so1017774pgl.2
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 00:17:02 -0700 (PDT)
+        with ESMTP id S229660AbhFWHTX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2021 03:19:23 -0400
+Received: from mail-pg1-x52f.google.com (mail-pg1-x52f.google.com [IPv6:2607:f8b0:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32AD6C061574
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 00:17:06 -0700 (PDT)
+Received: by mail-pg1-x52f.google.com with SMTP id y14so984520pgs.12
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 00:17:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=qM5jJBfugG/nWLOPwyxt/GBU2LXMS+fzb6fwpCZ87cQ=;
-        b=IL6Wjo7WUP9DoMeyq8MnP49cXmN6N+snJx8IqQ1H8xg0wG/Vm0JGvD5tK5v2aBO/Ug
-         LR7uDoiXMfFuOP2504TjMKMVmu2A6v61tvWoq54Yhw5f4cmxqwvJw7klNDpXEzlp/kAb
-         56PEvd4VMLG5QIpcQqu/ZPykb0lblqZoAN9bI=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=f1m45n8mvtPg8TMAC62Xmy6EQGO5majY8CF0IatgFVs=;
+        b=NczizZ67YUslY6j8ACrZmwBCHW+FAxkqvbWHEi98XR4E738sbQhoS4RUvR+drpmka+
+         T09DWTrI0R7nTdQ71VoVl+z4wg2u0YBryQZaTsZiMzBOKSStBG7AwkQa50w/D6f4LNvp
+         XUTsFkHEMrpMm7pqw3zeYBUjK6p71/nf3ZA1k=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=qM5jJBfugG/nWLOPwyxt/GBU2LXMS+fzb6fwpCZ87cQ=;
-        b=LQUXdC+0DgurJGqedwLDkIPyelCY+XlSnXiH3HsOl3DVrebTojYxyQNn35PYZU/oHB
-         GmytaCjYW/l79NJofHWKLUwtYQc/DfsqyR51c6BLnOSrOJz1CJ54aGOMlV6/d0dnbFpy
-         dITLiIYmjuB2sDrRXrIG+8qYQd8IBGcIrjNCrUkTEHafcjyf4gWXRpe6PsbvJsd96Fqf
-         iJ69QeCBQjbvzqYdSIY6SlHlRodSKXJiei/4uRr0dLQ9lsHU8fkrmw96lerfPAXdYpbe
-         1YPJ1JyUq1dT4J+13W8O3Y801PX5CLpba+O571V3vOJV/g0ETyZe7SP1w0kw0XJmCfks
-         yDbg==
-X-Gm-Message-State: AOAM5337H5XxelvLOKjQa+fQwkFzk5pGW1aMocPnXSzbCrTZwSODkfWy
-        xrBX+NqPB7+6Ic8CcRTCfpG3JdV0Jhdt05VKJG8NVO2JvK56+1wgWItNZSaMXW+yNbTsT9WJtIC
-        mHBThExKW0CWXpRij14wd1+vh86RmzWJcOCaXxzS9NlRHXPA8KggQbmGEwjRo9LIkqPDsId9q9A
-        mocoITDpNxkE8=
-X-Google-Smtp-Source: ABdhPJw0fqaeaWR+40dsnC42a/P6htZC+fYt+5Ajw1yBPQ8pABXKOzqmKyJ5za4hpPljWi0Pm6PRqQ==
-X-Received: by 2002:a05:6a00:c81:b029:305:fd1e:e3f4 with SMTP id a1-20020a056a000c81b0290305fd1ee3f4mr4757268pfv.17.1624432621850;
-        Wed, 23 Jun 2021 00:17:01 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=f1m45n8mvtPg8TMAC62Xmy6EQGO5majY8CF0IatgFVs=;
+        b=B2jwMbda/hEGfV+ChihossByTx/ABs3Oj1M+AaZnE6WELf5nBMcpGhNFI6XRqU/Ik5
+         IEFrxcA/JX061lM/awcvapZv980MjZVKunQNzI9HatZ8bJAO6/qF0qLUf38UPhiFlE11
+         uBrdBYNfSjKfxrgerHQmVYwWjcA+UxNZiRmtDMoX8hqgKbK5KnvO1ilEI7PSDOWDQUQk
+         kaY7L4t3SxpWiDssffUgq7ovzpuidN2DTChcBJNQYl/mJ1bRrCuL4dMQrg8YaW79dmii
+         4YAC1EwGbUut+iNLLzNKTGzbuVTUkZbPOYtSaH0aeJY3HHEBj2ahubxSXB/Rk5/o7V4h
+         i3dw==
+X-Gm-Message-State: AOAM532ikx3A5sF/g4iSK+NzP/zpjJiCvlquejnqmL7PX42gqoqKxsRo
+        U8m1egEcSy/JDjFOG1IyoHbytwNG3Slq5kV7O7qDqLhlPggHvbesCnmFMuYuBIF0eBquK6t8CBs
+        lSBvOB6J2Zx9X669SF+PyaTKdUJOYvx+Js/JhMejvaTbYzRC33I6jncEvDGnjG0sx4CwDQuIrZF
+        mubadIEeuGnhA=
+X-Google-Smtp-Source: ABdhPJwbIb95avrJsKkJplnR7Nx2aZCYj/adHBKaB1RmpcSs0NIM2dSIA5/BMwEUxNOmoXLWfr37bg==
+X-Received: by 2002:a63:e50a:: with SMTP id r10mr2604258pgh.30.1624432625103;
+        Wed, 23 Jun 2021 00:17:05 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id y6sm10894252pgk.79.2021.06.23.00.16.58
+        by smtp.gmail.com with ESMTPSA id y6sm10894252pgk.79.2021.06.23.00.17.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 23 Jun 2021 00:17:00 -0700 (PDT)
+        Wed, 23 Jun 2021 00:17:04 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
         kashyap.desai@broadcom.com, sathya.prakash@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] MAINTAINERS: Add mpi3mr driver maintainers
-Date:   Wed, 23 Jun 2021 12:51:52 +0530
-Message-Id: <20210623072153.25758-1-sreekanth.reddy@broadcom.com>
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        kernel test robot <lkp@intel.com>
+Subject: [PATCH] mpi3mr: Fix W=1 compilation warnings
+Date:   Wed, 23 Jun 2021 12:51:53 +0530
+Message-Id: <20210623072153.25758-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210623072153.25758-1-sreekanth.reddy@broadcom.com>
+References: <20210623072153.25758-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000006beb2b05c569b16f"
+        boundary="0000000000009da63d05c569b148"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000006beb2b05c569b16f
+--0000000000009da63d05c569b148
 Content-Transfer-Encoding: 8bit
 
-Adding mpi3mr driver entry.
+Fix for below W=1 compilation warning,
+'strncpy' output may be truncated copying 16 bytes
+ from a string of length 64
 
+Reported-by: kernel test robot <lkp@intel.com>
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- MAINTAINERS | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 529bdc6c44ad..323fee8a3df4 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3733,6 +3733,17 @@ S:	Supported
- F:	Documentation/devicetree/bindings/gpio/brcm,kona-gpio.txt
- F:	drivers/gpio/gpio-bcm-kona.c
- 
-+BROADCOM MPI3 STORAGE CONTROLLER DRIVER
-+M:	Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-+M:	Kashyap Desai <kashyap.desai@broadcom.com>
-+M:	Sumit Saxena <sumit.saxena@broadcom.com>
-+M:	Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-+L:	mpi3mr-linuxdrv.pdl@broadcom.com
-+L:	linux-scsi@vger.kernel.org
-+S:	Supported
-+W:	https://www.broadcom.com/support/storage
-+F:	drivers/scsi/mpi3mr/
-+
- BROADCOM NETXTREME-E ROCE DRIVER
- M:	Selvin Xavier <selvin.xavier@broadcom.com>
- M:	Devesh Sharma <devesh.sharma@broadcom.com>
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 9eceafca59bc..fd437a19b948 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2608,10 +2608,8 @@ static int mpi3mr_issue_iocinit(struct mpi3mr_ioc *mrioc)
+ 	}
+ 	drv_info->information_length = cpu_to_le32(data_len);
+ 	strncpy(drv_info->driver_signature, "Broadcom", sizeof(drv_info->driver_signature));
+-	strncpy(drv_info->os_name, utsname()->sysname, sizeof(drv_info->os_name));
+-	drv_info->os_name[sizeof(drv_info->os_name) - 1] = 0;
+-	strncpy(drv_info->os_version, utsname()->release, sizeof(drv_info->os_version));
+-	drv_info->os_version[sizeof(drv_info->os_version) - 1] = 0;
++	memcpy(drv_info->os_name, utsname()->sysname, sizeof(drv_info->os_name) - 1);
++	memcpy(drv_info->os_version, utsname()->release, sizeof(drv_info->os_version) - 1);
+ 	strncpy(drv_info->driver_name, MPI3MR_DRIVER_NAME, sizeof(drv_info->driver_name));
+ 	strncpy(drv_info->driver_version, MPI3MR_DRIVER_VERSION, sizeof(drv_info->driver_version));
+ 	strncpy(drv_info->driver_release_date, MPI3MR_DRIVER_RELDATE, sizeof(drv_info->driver_release_date));
 -- 
 2.27.0
 
 
---0000000000006beb2b05c569b16f
+--0000000000009da63d05c569b148
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -176,13 +178,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIPDkWW0gUNSpdKb/1u5u
-BAYOAvPljD8jWcueruxhym+PMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMDYyMzA3MTcwMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDS3KYIcNi+uWslf8kPL
+YFek/jXSuLHM/srRX5qNrZ9iMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMDYyMzA3MTcwNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQClThI2SMaoXowg1LsGtHJzqAWJ/F7pqvZckUqg
-GGZJ1jE2dpc+EoXnD1DLQIlbti6Yw+fii/kQFROvobG6X5B2jsu8m3xFFXQVqOe87NvOfwKBP5H3
-av/5hB9a3/d5EBFdfZGBIhYhaLFjvYtiXDqaG6YAsusTvTUVz0C73zuhhJ8Mn38ScWuRQ21wSXiN
-dphbSxjLbBrCzwiLyMpG/MJ6qxZ/uP88OJD8f9hGJ/sjHyqIvUY5HRrZnf9vEo+r7GO0a8uE3H5j
-8ojVUvOF7mBNWssFAhbNywwUdj9YeQ/WcFE8yvIxm6Rxx2SZykRLYRc+g72howdoT/n9rzQtVpUx
---0000000000006beb2b05c569b16f--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB9Yns6FZHyBErFzvVaDI9McZUq8kiFjJYs4Z/1
+hXWTtddA1W0JDsjAGkM9bp3DVfi1zk5MAtWQM1QC8gkdL10/eXYvsHcr6xAtj0wk6EUgmCRFmH+A
+N6LLF3NEvCwgscRQyRB5T5Wb1qy/6aWlcEEkTtdhtFr3ulWT88Z/Tk+tcvIHSB26D5zH5skJKuFs
+gZdC5hoibUqHHEQu0QF9DvEdr/Nzqx9dEHQJzI4uIi0Uptd8cXSAwbd7EtaHidhpLsWBtPsMF8uT
+oqGqEdBlJmpED8mrrbCxUly4AIINZiCEMIAWE2h5F6AhOOBNBaX+aROZ1LFhzSHT2Iox3xE0fJbo
+--0000000000009da63d05c569b148--
