@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1848BC4743C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 10:29:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE519C4743C
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 10:29:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 014F160BD3
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 10:29:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE8E160698
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 10:29:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230036AbhFWKbq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Jun 2021 06:31:46 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3318 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230030AbhFWKbp (ORCPT
+        id S230083AbhFWKcI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Jun 2021 06:32:08 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:2654 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S230048AbhFWKcH (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Jun 2021 06:31:45 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15NAMY97027657
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 03:29:28 -0700
+        Wed, 23 Jun 2021 06:32:07 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15NABr90008281
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 03:29:50 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=7F3CINWZJIPO2bOOAztqNImFCaLlQusf2ph8WtjdM1A=;
- b=Kwu9UCylvk6tSpmeMvwA43IdARwBOTI10r/fFFMfGyDLWyI27k1GLFQCIvfXGPEXxc6K
- 00LX9GBuywPpV1vkDAM0nIIqGKNeQ+UYsuk4CGcl+tyy1kPIAISQTAO+z56VkJ+ijuBU
- FaNcoIsJZUXtW8wS/6ZaJs1heoQRGlt0lZcH9Nw+OPfieyI6hmcRiGupz/z8fUNk7vES
- C+q+RQ1Hlv+ukKPJaKIbL9IEr1QCwrCn7ClAH4lSfxbf/qwm/642THWmFppGXJcnP8Nh
- MsldgwT2rAdIGIDutR9u4MnffMiyIUuHvgN3Vk6shMhhpCpDvvEIS+EVf0t/FttLJgZf jA== 
+ content-type; s=pfpt0220; bh=Wf5AdOiCcObKiaXFdle0GNZL23vCWh6IA41Wx1zUOTw=;
+ b=BG1dxK9vhJ2gwfsgHSyBPMPh29L+FRaMsXnvXq6dcYiE7fVlZUJWPTvbzmZhRs8LvuhK
+ vidmTmAZKkLcdNF9JKu0TPT0NkOYzLRccPbdp8C0V1b+uCuS6oa304dYo/pcN/388+vr
+ AWJE03wrNTNg3XlWL2ikQ6kAM0KxEm6rCN+rp/qS7VDRx6L+tsE8xnPbolKsBbcXY66r
+ XBYIQibkj36C46x6ML/QVsPJmbeOnKPEoRHFPPAIDfZRRvPikNUmOTpx6MNdC3fQ6upT
+ +3SOrD3I3Bvs64VUSRwnJFat+jgYi2BbywXxNvygwX293v+jQnOhIcrbxMfwzPYnn/6J JQ== 
 Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 39bptj2j8y-1
+        by mx0a-0016f401.pphosted.com with ESMTP id 39bx5j949a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 03:29:27 -0700
-Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 03:29:50 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 23 Jun
- 2021 03:29:24 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Wed, 23 Jun 2021 03:29:24 -0700
+ 2021 03:29:48 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Wed, 23 Jun 2021 03:29:49 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 2196F5B6938;
-        Wed, 23 Jun 2021 03:29:25 -0700 (PDT)
+        by maili.marvell.com (Postfix) with ESMTP id 4543D5B6937;
+        Wed, 23 Jun 2021 03:29:49 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 15NATO1U003724;
-        Wed, 23 Jun 2021 03:29:24 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 15NATnv7003736;
+        Wed, 23 Jun 2021 03:29:49 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 15NATOvb003723;
-        Wed, 23 Jun 2021 03:29:24 -0700
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 15NATnjl003727;
+        Wed, 23 Jun 2021 03:29:49 -0700
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v3 07/11] qla2xxx: Add detection of secure device
-Date:   Wed, 23 Jun 2021 03:26:07 -0700
-Message-ID: <20210623102611.3637-8-njavali@marvell.com>
+Subject: [PATCH v3 08/11] qla2xxx: Add doorbell notification for app
+Date:   Wed, 23 Jun 2021 03:26:08 -0700
+Message-ID: <20210623102611.3637-9-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20210623102611.3637-1-njavali@marvell.com>
 References: <20210623102611.3637-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: DMm_DQ3i8zS1LI5knasWZOeyQ1cgsqvi
-X-Proofpoint-GUID: DMm_DQ3i8zS1LI5knasWZOeyQ1cgsqvi
+X-Proofpoint-ORIG-GUID: Mri_iK6H3VwvQM1ROQ742tvBFFZ5xl-5
+X-Proofpoint-GUID: Mri_iK6H3VwvQM1ROQ742tvBFFZ5xl-5
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
  definitions=2021-06-23_03:2021-06-23,2021-06-23 signatures=0
 Precedence: bulk
@@ -76,16 +76,18 @@ Latest FC adapter from Marvell has the ability to encrypt
 data in flight (EDIF) feature. This feature require an
 application (ex: ipsec, etc) to act as an authenticator.
 
-At this time, there is no FC switch scan service that
-indicate a device is secure or non-secure.
+During runtime, driver and authentication application needs
+to stay in sync in terms of: session being down|up, arrival of
+new authentication message(AUTH ELS) and SADB update completion.
 
-In order to detect whether the remote port support secured
-or not, driver must first do a PLOGI with the remote device.
-On completion of the PLOGI, driver will query FW to see if
-the device supports secure login. To do that, driver + FW
-must advertise the security bit via PLOGI's service
-parameter. The remote device shall respond with the same
-service parameter bit on whether it supports it or not.
+These events are queued up as doorbell to the authentication
+application. Application would read this doorbell on regular
+basis to stay up to date. Each SCSI host would have a separate
+doorbell queue.
+
+The doorbell interface can daisy chain a list of events for
+each read. Each event contains an event code + hint to help
+application steer the next course of action.
 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
@@ -95,697 +97,599 @@ Signed-off-by: Rick Hicksted Jr <rhicksted@marvell.com>
 Signed-off-by: Quinn Tran <qutran@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |   5 +-
- drivers/scsi/qla2xxx/qla_edif.c   |  31 +++++++
- drivers/scsi/qla2xxx/qla_fw.h     |   8 +-
- drivers/scsi/qla2xxx/qla_gbl.h    |   3 +
- drivers/scsi/qla2xxx/qla_gs.c     |   4 +
- drivers/scsi/qla2xxx/qla_init.c   | 141 +++++++++++++++++++++++++-----
- drivers/scsi/qla2xxx/qla_iocb.c   |  17 +++-
- drivers/scsi/qla2xxx/qla_isr.c    |   4 +
- drivers/scsi/qla2xxx/qla_mbx.c    |   6 ++
- drivers/scsi/qla2xxx/qla_mid.c    |   7 +-
- drivers/scsi/qla2xxx/qla_os.c     |  19 ++++
- drivers/scsi/qla2xxx/qla_target.c |  61 ++++++++++++-
- drivers/scsi/qla2xxx/qla_target.h |   1 +
- 13 files changed, 279 insertions(+), 28 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c   |   4 +
+ drivers/scsi/qla2xxx/qla_bsg.c    |  24 ++-
+ drivers/scsi/qla2xxx/qla_edif.c   | 329 ++++++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_gbl.h    |   4 +
+ drivers/scsi/qla2xxx/qla_init.c   |   3 +
+ drivers/scsi/qla2xxx/qla_os.c     |   4 +
+ drivers/scsi/qla2xxx/qla_target.c |   2 +
+ 7 files changed, 366 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 3e4c4cfbf7d4..af0e8be0eb9b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -492,6 +492,7 @@ struct srb_iocb {
- #define SRB_LOGIN_SKIP_PRLI	BIT_2
- #define SRB_LOGIN_NVME_PRLI	BIT_3
- #define SRB_LOGIN_PRLI_ONLY	BIT_4
-+#define SRB_LOGIN_FCSP		BIT_5
- 			uint16_t data[2];
- 			u32 iop[2];
- 		} logio;
-@@ -2343,6 +2344,7 @@ struct imm_ntfy_from_isp {
- 			__le16	nport_handle;
- 			uint16_t reserved_2;
- 			__le16	flags;
-+#define NOTIFY24XX_FLAGS_FCSP		BIT_5
- #define NOTIFY24XX_FLAGS_GLOBAL_TPRLO   BIT_1
- #define NOTIFY24XX_FLAGS_PUREX_IOCB     BIT_0
- 			__le16	srr_rx_id;
-@@ -2682,7 +2684,8 @@ static const char * const port_dstate_str[] = {
- 	"UPD_FCPORT",
- 	"LOGIN_COMPLETE",
- 	"ADISC",
--	"DELETE_PEND"
-+	"DELETE_PEND",
-+	"LOGIN_AUTH_PEND",
- };
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index d78db2949ef6..22191e9a04a0 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2435,6 +2435,7 @@ static DEVICE_ATTR(port_speed, 0644, qla2x00_port_speed_show,
+     qla2x00_port_speed_store);
+ static DEVICE_ATTR(port_no, 0444, qla2x00_port_no_show, NULL);
+ static DEVICE_ATTR(fw_attr, 0444, qla2x00_fw_attr_show, NULL);
++static DEVICE_ATTR_RO(edif_doorbell);
  
- /*
+ 
+ struct device_attribute *qla2x00_host_attrs[] = {
+@@ -2480,6 +2481,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 	&dev_attr_port_no,
+ 	&dev_attr_fw_attr,
+ 	&dev_attr_dport_diagnostics,
++	&dev_attr_edif_doorbell,
+ 	NULL, /* reserve for qlini_mode */
+ 	NULL, /* reserve for ql2xiniexchg */
+ 	NULL, /* reserve for ql2xexchoffld */
+@@ -3108,6 +3110,8 @@ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ 
+ 	qla_nvme_delete(vha);
+ 	qla_enode_stop(vha);
++	qla_edb_stop(vha);
++
+ 	vha->flags.delete_progress = 1;
+ 
+ 	qlt_remove_target(ha, vha);
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 2d43603e31ec..0739f8ad525a 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -2784,10 +2784,13 @@ qla2x00_manage_host_port(struct bsg_job *bsg_job)
+ }
+ 
+ static int
+-qla2x00_process_vendor_specific(struct bsg_job *bsg_job)
++qla2x00_process_vendor_specific(struct scsi_qla_host *vha, struct bsg_job *bsg_job)
+ {
+ 	struct fc_bsg_request *bsg_request = bsg_job->request;
+ 
++	ql_dbg(ql_dbg_edif, vha, 0x911b, "%s FC_BSG_HST_VENDOR cmd[0]=0x%x\n",
++	    __func__, bsg_request->rqst_data.h_vendor.vendor_cmd[0]);
++
+ 	switch (bsg_request->rqst_data.h_vendor.vendor_cmd[0]) {
+ 	case QL_VND_LOOPBACK:
+ 		return qla2x00_process_loopback(bsg_job);
+@@ -2916,12 +2919,19 @@ qla24xx_bsg_request(struct bsg_job *bsg_job)
+ 		ql_dbg(ql_dbg_user, vha, 0x709f,
+ 		    "BSG: ISP abort active/needed -- cmd=%d.\n",
+ 		    bsg_request->msgcode);
++		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
+ 		return -EBUSY;
+ 	}
+ 
++	if (test_bit(PFLG_DRIVER_REMOVING, &vha->pci_flags)) {
++		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
++		return -EIO;
++	}
++
+ skip_chip_chk:
+-	ql_dbg(ql_dbg_user, vha, 0x7000,
+-	    "Entered %s msgcode=0x%x.\n", __func__, bsg_request->msgcode);
++	ql_dbg(ql_dbg_user + ql_dbg_verbose, vha, 0x7000,
++	    "Entered %s msgcode=0x%x. bsg ptr %px\n",
++	    __func__, bsg_request->msgcode, bsg_job);
+ 
+ 	switch (bsg_request->msgcode) {
+ 	case FC_BSG_RPT_ELS:
+@@ -2932,7 +2942,7 @@ qla24xx_bsg_request(struct bsg_job *bsg_job)
+ 		ret = qla2x00_process_ct(bsg_job);
+ 		break;
+ 	case FC_BSG_HST_VENDOR:
+-		ret = qla2x00_process_vendor_specific(bsg_job);
++		ret = qla2x00_process_vendor_specific(vha, bsg_job);
+ 		break;
+ 	case FC_BSG_HST_ADD_RPORT:
+ 	case FC_BSG_HST_DEL_RPORT:
+@@ -2941,6 +2951,10 @@ qla24xx_bsg_request(struct bsg_job *bsg_job)
+ 		ql_log(ql_log_warn, vha, 0x705a, "Unsupported BSG request.\n");
+ 		break;
+ 	}
++
++	ql_dbg(ql_dbg_user + ql_dbg_verbose, vha, 0x7000,
++	    "%s done with return %x\n", __func__, ret);
++
+ 	return ret;
+ }
+ 
+@@ -2955,6 +2969,8 @@ qla24xx_bsg_timeout(struct bsg_job *bsg_job)
+ 	unsigned long flags;
+ 	struct req_que *req;
+ 
++	ql_log(ql_log_info, vha, 0x708b, "%s CMD timeout. bsg ptr %p.\n",
++	    __func__, bsg_job);
+ 	/* find the bsg job from the active list of commands */
+ 	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	for (que = 0; que < ha->max_req_queues; que++) {
 diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-index 8f486bd1201f..51f96f5882af 100644
+index 51f96f5882af..818d740fdfd1 100644
 --- a/drivers/scsi/qla2xxx/qla_edif.c
 +++ b/drivers/scsi/qla2xxx/qla_edif.c
-@@ -2366,6 +2366,26 @@ qla28xx_sa_update_iocb_entry(scsi_qla_host_t *v, struct req_que *req,
- 	sp->done(sp, 0);
- }
+@@ -19,6 +19,17 @@ static int qla_edif_sadb_delete_sa_index(fc_port_t *fcport, uint16_t nport_handl
+ 		uint16_t sa_index);
+ static int qla_pur_get_pending(scsi_qla_host_t *, fc_port_t *, struct bsg_job *);
  
-+/**********************************************
-+ * edif update/delete sa_index list functions *
-+ **********************************************/
++struct edb_node {
++	struct  list_head	list;
++	uint32_t		ntype;
++	union {
++		port_id_t	plogi_did;
++		uint32_t	async;
++		port_id_t	els_sid;
++		struct edif_sa_update_aen	sa_aen;
++	} u;
++};
 +
-+/* clear the edif_indx_list for this port */
-+void qla_edif_list_del(fc_port_t *fcport)
-+{
-+	struct edif_list_entry *indx_lst;
-+	struct edif_list_entry *tindx_lst;
-+	struct list_head *indx_list = &fcport->edif.edif_indx_list;
-+	unsigned long flags = 0;
+ static struct els_sub_cmd {
+ 	uint16_t cmd;
+ 	const char *str;
+@@ -443,6 +454,10 @@ static void __qla2x00_release_all_sadb(struct scsi_qla_host *vha,
+ 					/* build and send the aen */
+ 					fcport->edif.rx_sa_set = 1;
+ 					fcport->edif.rx_sa_pending = 0;
++					qla_edb_eventcreate(vha,
++							VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
++							QL_VND_SA_STAT_SUCCESS,
++							QL_VND_RX_SA_KEY, fcport);
+ 				}
+ 				ql_dbg(ql_dbg_edif, vha, 0x5033,
+ 				    "%s: release edif_entry %p, update_sa_index: 0x%x, delete_sa_index: 0x%x\n",
+@@ -539,6 +554,12 @@ qla_edif_app_start(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
+ 			    fcport->loop_id, fcport->d_id.b24,
+ 			    fcport->logout_on_delete);
+ 
++			ql_dbg(ql_dbg_edif, vha, 0xf084,
++			    "keep %d els_logo %d disc state %d auth state %d stop state %d\n",
++			    fcport->keep_nport_handle,
++			    fcport->send_els_logo, fcport->disc_state,
++			    fcport->edif.auth_state, fcport->edif.app_stop);
 +
-+	spin_lock_irqsave(&fcport->edif.indx_list_lock, flags);
-+	list_for_each_entry_safe(indx_lst, tindx_lst, indx_list, next) {
-+		list_del(&indx_lst->next);
-+		kfree(indx_lst);
-+	}
-+	spin_unlock_irqrestore(&fcport->edif.indx_list_lock, flags);
-+}
-+
- /******************
-  * SADB functions *
-  ******************/
-@@ -2791,3 +2811,14 @@ int qla_edif_process_els(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- done:
- 	return rval;
- }
-+
-+void qla_edif_sess_down(struct scsi_qla_host *vha, struct fc_port *sess)
-+{
-+	if (sess->edif.app_sess_online && vha->e_dbell.db_flags & EDB_ACTIVE) {
-+		ql_dbg(ql_dbg_disc, vha, 0xf09c,
-+			"%s: sess %8phN send port_offline event\n",
-+			__func__, sess->port_name);
-+		sess->edif.app_sess_online = 0;
-+		qla2x00_post_aen_work(vha, FCH_EVT_PORT_OFFLINE, sess->d_id.b24);
-+	}
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
-index c067cd202dc4..4934b08a8990 100644
---- a/drivers/scsi/qla2xxx/qla_fw.h
-+++ b/drivers/scsi/qla2xxx/qla_fw.h
-@@ -82,10 +82,11 @@ struct port_database_24xx {
- 	uint8_t port_name[WWN_SIZE];
- 	uint8_t node_name[WWN_SIZE];
- 
--	uint8_t reserved_3[4];
-+	uint8_t reserved_3[2];
-+	uint16_t nvme_first_burst_size;
- 	uint16_t prli_nvme_svc_param_word_0;	/* Bits 15-0 of word 0 */
- 	uint16_t prli_nvme_svc_param_word_3;	/* Bits 15-0 of word 3 */
--	uint16_t nvme_first_burst_size;
-+	uint8_t secure_login;
- 	uint8_t reserved_4[14];
- };
- 
-@@ -897,6 +898,7 @@ struct logio_entry_24xx {
- #define LCF_FCP2_OVERRIDE	BIT_9	/* Set/Reset word 3 of PRLI. */
- #define LCF_CLASS_2		BIT_8	/* Enable class 2 during PLOGI. */
- #define LCF_FREE_NPORT		BIT_7	/* Release NPORT handle after LOGO. */
-+#define LCF_COMMON_FEAT		BIT_7	/* PLOGI - Set Common Features Field */
- #define LCF_EXPL_LOGO		BIT_6	/* Perform an explicit LOGO. */
- #define LCF_NVME_PRLI		BIT_6   /* Perform NVME FC4 PRLI */
- #define LCF_SKIP_PRLI		BIT_5	/* Skip PRLI after PLOGI. */
-@@ -921,6 +923,8 @@ struct logio_entry_24xx {
- 	uint8_t rsp_size;		/* Response size in 32bit words. */
- 
- 	__le32	io_parameter[11];	/* General I/O parameters. */
-+#define LIO_COMM_FEAT_FCSP	BIT_21
-+#define LIO_COMM_FEAT_CIO	BIT_31
- #define LSC_SCODE_NOLINK	0x01
- #define LSC_SCODE_NOIOCB	0x02
- #define LSC_SCODE_NOXCB		0x03
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index d9d554101788..61b0164ac283 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -131,6 +131,7 @@ void qla24xx_free_purex_item(struct purex_item *item);
- extern bool qla24xx_risc_firmware_invalid(uint32_t *);
- void qla_init_iocb_limit(scsi_qla_host_t *);
- 
-+void qla_edif_list_del(fc_port_t *fcport);
- void qla_edif_sadb_release(struct qla_hw_data *ha);
- int qla_edif_sadb_build_free_pool(struct qla_hw_data *ha);
- void qla_edif_sadb_release_free_pool(struct qla_hw_data *ha);
-@@ -138,7 +139,9 @@ void qla_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha,
- 		srb_t *sp, struct sts_entry_24xx *sts24);
- void qlt_chk_edif_rx_sa_delete_pending(scsi_qla_host_t *vha, fc_port_t *fcport,
- 		struct ctio7_from_24xx *ctio);
-+void qla2x00_release_all_sadb(struct scsi_qla_host *vha, struct fc_port *fcport);
- int qla_edif_process_els(scsi_qla_host_t *vha, struct bsg_job *bsgjob);
-+void qla_edif_sess_down(struct scsi_qla_host *vha, struct fc_port *sess);
- const char *sc_to_str(uint16_t cmd);
- 
- /*
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 5b6e04a91a18..99fb330053ae 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -2826,6 +2826,10 @@ void qla24xx_handle_gpsc_event(scsi_qla_host_t *vha, struct event_arg *ea)
- 	if (fcport->disc_state == DSC_DELETE_PEND)
- 		return;
- 
-+	/* We will figure-out what happen after AUTH completes */
-+	if (fcport->disc_state == DSC_LOGIN_AUTH_PEND)
-+		return;
-+
- 	if (ea->sp->gen2 != fcport->login_gen) {
- 		/* target side must have changed it. */
- 		ql_dbg(ql_dbg_disc, vha, 0x20d3,
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 71f6c76be401..22474baf57aa 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -342,10 +342,22 @@ qla2x00_async_login(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	qla2x00_init_timer(sp, qla2x00_get_async_timeout(vha) + 2);
- 
- 	sp->done = qla2x00_async_login_sp_done;
--	if (N2N_TOPO(fcport->vha->hw) && fcport_is_bigger(fcport))
-+	if (N2N_TOPO(fcport->vha->hw) && fcport_is_bigger(fcport)) {
- 		lio->u.logio.flags |= SRB_LOGIN_PRLI_ONLY;
--	else
--		lio->u.logio.flags |= SRB_LOGIN_COND_PLOGI;
-+	} else {
-+		if (vha->hw->flags.edif_enabled) {
-+			if (fcport->edif.non_secured_login == 0) {
-+				lio->u.logio.flags |=
-+					(SRB_LOGIN_FCSP | SRB_LOGIN_SKIP_PRLI);
-+				ql_dbg(ql_dbg_disc, vha, 0x2072,
-+				    "Async-login: w/ FCSP %8phC hdl=%x, loopid=%x portid=%06x\n",
-+				    fcport->port_name, sp->handle, fcport->loop_id,
-+				    fcport->d_id.b24);
-+			}
-+		} else {
-+			lio->u.logio.flags |= SRB_LOGIN_COND_PLOGI;
-+		}
-+	}
- 
- 	if (NVME_TARGET(vha->hw, fcport))
- 		lio->u.logio.flags |= SRB_LOGIN_SKIP_PRLI;
-@@ -377,7 +389,7 @@ static void qla2x00_async_logout_sp_done(srb_t *sp, int res)
- {
- 	sp->fcport->flags &= ~(FCF_ASYNC_SENT | FCF_ASYNC_ACTIVE);
- 	sp->fcport->login_gen++;
--	qlt_logo_completion_handler(sp->fcport, res);
-+	qlt_logo_completion_handler(sp->fcport, sp->u.iocb_cmd.u.logio.data[0]);
- 	sp->free(sp);
- }
- 
-@@ -403,10 +415,10 @@ qla2x00_async_logout(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	sp->done = qla2x00_async_logout_sp_done;
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x2070,
--	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC.\n",
-+	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC explicit %d.\n",
- 	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
- 		fcport->d_id.b.area, fcport->d_id.b.al_pa,
--		fcport->port_name);
-+		fcport->port_name, fcport->explicit_logout);
- 
- 	rval = qla2x00_start_sp(sp);
- 	if (rval != QLA_SUCCESS)
-@@ -691,11 +703,11 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
- 
- 	fcport = ea->fcport;
- 	ql_dbg(ql_dbg_disc, vha, 0xffff,
--	    "%s %8phC DS %d LS rc %d %d login %d|%d rscn %d|%d lid %d\n",
-+	    "%s %8phC DS %d LS rc %d %d login %d|%d rscn %d|%d lid %d edif %d\n",
- 	    __func__, fcport->port_name, fcport->disc_state,
- 	    fcport->fw_login_state, ea->rc,
- 	    fcport->login_gen, fcport->last_login_gen,
--	    fcport->rscn_gen, fcport->last_rscn_gen, vha->loop_id);
-+	    fcport->rscn_gen, fcport->last_rscn_gen, vha->loop_id, fcport->edif.enable);
- 
- 	if (fcport->disc_state == DSC_DELETE_PEND)
- 		return;
-@@ -821,6 +833,13 @@ static void qla24xx_handle_gnl_done_event(scsi_qla_host_t *vha,
- 				qla2x00_post_async_adisc_work(vha, fcport,
- 				    data);
+ 			if (atomic_read(&vha->loop_state) == LOOP_DOWN)
  				break;
-+			case DSC_LS_PLOGI_COMP:
-+				if (vha->hw->flags.edif_enabled) {
-+					/* check to see if App support Secure */
-+					qla24xx_post_gpdb_work(vha, fcport, 0);
-+					break;
-+				}
-+				fallthrough;
- 			case DSC_LS_PORT_UNAVAIL:
- 			default:
- 				if (fcport->loop_id == FC_NO_LOOP_ID) {
-@@ -1417,6 +1436,57 @@ void __qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
- 	spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
- }
  
-+static int	qla_chk_secure_login(scsi_qla_host_t	*vha, fc_port_t *fcport,
-+	struct port_database_24xx *pd)
+@@ -1222,6 +1243,10 @@ qla24xx_check_sadb_avail_slot(struct bsg_job *bsg_job, fc_port_t *fcport,
+ 		/* build and send the aen */
+ 		fcport->edif.rx_sa_set = 1;
+ 		fcport->edif.rx_sa_pending = 0;
++		qla_edb_eventcreate(fcport->vha,
++		    VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
++		    QL_VND_SA_STAT_SUCCESS,
++		    QL_VND_RX_SA_KEY, fcport);
+ 
+ 		/* force a return of good bsg status; */
+ 		return RX_DELETE_NO_EDIF_SA_INDEX;
+@@ -1776,17 +1801,302 @@ qla_els_reject_iocb(scsi_qla_host_t *vha, struct qla_qpair *qp,
+ 	qla2x00_start_iocbs(vha, qp->req);
+ 	return 0;
+ }
++
++void
++qla_edb_init(scsi_qla_host_t *vha)
 +{
-+	int rc = 0;
-+
-+	if (pd->secure_login) {
-+		ql_dbg(ql_dbg_disc, vha, 0x104d,
-+		    "Secure Login established on %8phC\n",
-+		    fcport->port_name);
-+		fcport->edif.secured_login = 1;
-+		fcport->edif.non_secured_login = 0;
-+		fcport->flags |= FCF_FCSP_DEVICE;
-+	} else {
-+		ql_dbg(ql_dbg_disc, vha, 0x104d,
-+		    "non-Secure Login %8phC",
-+		    fcport->port_name);
-+		fcport->edif.secured_login = 0;
-+		fcport->edif.non_secured_login = 1;
++	if (vha->e_dbell.db_flags == EDB_ACTIVE) {
++		/* list already init'd - error */
++		ql_dbg(ql_dbg_edif, vha, 0x09102,
++		    "edif db already initialized, cannot reinit\n");
++		return;
 +	}
-+	if (vha->hw->flags.edif_enabled) {
-+		if (fcport->flags & FCF_FCSP_DEVICE) {
-+			qla2x00_set_fcport_disc_state(fcport, DSC_LOGIN_AUTH_PEND);
-+			/* Start edif prli timer & ring doorbell for app */
-+			fcport->edif.rx_sa_set = 0;
-+			fcport->edif.tx_sa_set = 0;
-+			fcport->edif.rx_sa_pending = 0;
-+			fcport->edif.tx_sa_pending = 0;
 +
-+			qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE,
-+			    fcport->d_id.b24);
++	/* initialize lock which protects doorbell & init list */
++	spin_lock_init(&vha->e_dbell.db_lock);
++	INIT_LIST_HEAD(&vha->e_dbell.head);
 +
-+			if (vha->e_dbell.db_flags ==  EDB_ACTIVE) {
-+				ql_dbg(ql_dbg_disc, vha, 0x20ef,
-+				    "%s %d %8phC EDIF: post DB_AUTH: AUTH needed\n",
-+				    __func__, __LINE__, fcport->port_name);
-+				fcport->edif.app_started = 1;
-+				fcport->edif.app_sess_online = 1;
-+			}
-+
-+			rc = 1;
-+		} else {
-+			ql_dbg(ql_dbg_disc, vha, 0x2117,
-+			    "%s %d %8phC post prli\n",
-+			    __func__, __LINE__, fcport->port_name);
-+			qla24xx_post_prli_work(vha, fcport);
-+			rc = 1;
-+		}
-+	}
-+	return rc;
++	/* create and initialize doorbell */
++	init_completion(&vha->e_dbell.dbell);
 +}
 +
- static
- void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
- {
-@@ -1459,8 +1529,11 @@ void qla24xx_handle_gpdb_event(scsi_qla_host_t *vha, struct event_arg *ea)
- 	case PDS_PRLI_COMPLETE:
- 		__qla24xx_parse_gpdb(vha, fcport, pd);
- 		break;
--	case PDS_PLOGI_PENDING:
- 	case PDS_PLOGI_COMPLETE:
-+		if (qla_chk_secure_login(vha, fcport, pd))
-+			return;
-+		fallthrough;
-+	case PDS_PLOGI_PENDING:
- 	case PDS_PRLI_PENDING:
- 	case PDS_PRLI2_PENDING:
- 		/* Set discovery state back to GNL to Relogin attempt */
-@@ -2052,26 +2125,38 @@ qla24xx_handle_plogi_done_event(struct scsi_qla_host *vha, struct event_arg *ea)
- 		 * force a relogin attempt via implicit LOGO, PLOGI, and PRLI
- 		 * requests.
- 		 */
--		if (NVME_TARGET(vha->hw, ea->fcport)) {
--			ql_dbg(ql_dbg_disc, vha, 0x2117,
--				"%s %d %8phC post prli\n",
--				__func__, __LINE__, ea->fcport->port_name);
--			qla24xx_post_prli_work(vha, ea->fcport);
--		} else {
--			ql_dbg(ql_dbg_disc, vha, 0x20ea,
--			    "%s %d %8phC LoopID 0x%x in use with %06x. post gpdb\n",
--			    __func__, __LINE__, ea->fcport->port_name,
--			    ea->fcport->loop_id, ea->fcport->d_id.b24);
--
-+		if (vha->hw->flags.edif_enabled) {
- 			set_bit(ea->fcport->loop_id, vha->hw->loop_id_map);
- 			spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
- 			ea->fcport->chip_reset = vha->hw->base_qpair->chip_reset;
- 			ea->fcport->logout_on_delete = 1;
- 			ea->fcport->send_els_logo = 0;
--			ea->fcport->fw_login_state = DSC_LS_PRLI_COMP;
-+			ea->fcport->fw_login_state = DSC_LS_PLOGI_COMP;
- 			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
- 
- 			qla24xx_post_gpdb_work(vha, ea->fcport, 0);
-+		} else {
-+			if (NVME_TARGET(vha->hw, fcport)) {
-+				ql_dbg(ql_dbg_disc, vha, 0x2117,
-+				    "%s %d %8phC post prli\n",
-+				    __func__, __LINE__, fcport->port_name);
-+				qla24xx_post_prli_work(vha, fcport);
-+			} else {
-+				ql_dbg(ql_dbg_disc, vha, 0x20ea,
-+				    "%s %d %8phC LoopID 0x%x in use with %06x. post gpdb\n",
-+				    __func__, __LINE__, fcport->port_name,
-+				    fcport->loop_id, fcport->d_id.b24);
++static void
++qla_edb_node_free(scsi_qla_host_t *vha, struct edb_node *node)
++{
++	/*
++	 * releases the space held by this edb node entry
++	 * this function does _not_ free the edb node itself
++	 * NB: the edb node entry passed should not be on any list
++	 *
++	 * currently for doorbell there's no additional cleanup
++	 * needed, but here as a placeholder for furture use.
++	 */
 +
-+				set_bit(fcport->loop_id, vha->hw->loop_id_map);
-+				spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
-+				fcport->chip_reset = vha->hw->base_qpair->chip_reset;
-+				fcport->logout_on_delete = 1;
-+				fcport->send_els_logo = 0;
-+				fcport->fw_login_state = DSC_LS_PRLI_COMP;
-+				spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
-+
-+				qla24xx_post_gpdb_work(vha, fcport, 0);
-+			}
- 		}
- 		break;
- 	case MBS_COMMAND_ERROR:
-@@ -5093,8 +5178,13 @@ qla2x00_free_fcport(fc_port_t *fcport)
- 
- 		fcport->ct_desc.ct_sns = NULL;
- 	}
-+
-+	qla_edif_flush_sa_ctl_lists(fcport);
- 	list_del(&fcport->list);
- 	qla2x00_clear_loop_id(fcport);
-+
-+	qla_edif_list_del(fcport);
-+
- 	kfree(fcport);
- }
- 
-@@ -5213,6 +5303,12 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 			    "LOOP READY.\n");
- 			ha->flags.fw_init_done = 1;
- 
-+			if (vha->hw->flags.edif_enabled &&
-+			    vha->e_dbell.db_flags != EDB_ACTIVE) {
-+				/* wake up authentication app to get ready */
-+				qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE, 0);
-+			}
-+
- 			/*
- 			 * Process any ATIO queue entries that came in
- 			 * while we weren't online.
-@@ -5232,7 +5328,8 @@ qla2x00_configure_loop(scsi_qla_host_t *vha)
- 		    "%s *** FAILED ***.\n", __func__);
- 	} else {
- 		ql_dbg(ql_dbg_disc, vha, 0x206b,
--		    "%s: exiting normally.\n", __func__);
-+		    "%s: exiting normally. local port wwpn %8phN id %06x)\n",
-+		    __func__, vha->port_name, vha->d_id.b24);
- 	}
- 
- 	/* Restore state if a resync event occurred during processing */
-diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
-index 64ec66307bda..25e772435ada 100644
---- a/drivers/scsi/qla2xxx/qla_iocb.c
-+++ b/drivers/scsi/qla2xxx/qla_iocb.c
-@@ -2466,6 +2466,12 @@ qla24xx_login_iocb(srb_t *sp, struct logio_entry_24xx *logio)
- 			logio->control_flags |= cpu_to_le16(LCF_COND_PLOGI);
- 		if (lio->u.logio.flags & SRB_LOGIN_SKIP_PRLI)
- 			logio->control_flags |= cpu_to_le16(LCF_SKIP_PRLI);
-+		if (lio->u.logio.flags & SRB_LOGIN_FCSP) {
-+			logio->control_flags |=
-+			    cpu_to_le16(LCF_COMMON_FEAT | LCF_SKIP_PRLI);
-+			logio->io_parameter[0] =
-+			    cpu_to_le32(LIO_COMM_FEAT_FCSP | LIO_COMM_FEAT_CIO);
-+		}
- 	}
- 	logio->nport_handle = cpu_to_le16(sp->fcport->loop_id);
- 	logio->port_id[0] = sp->fcport->d_id.b.al_pa;
-@@ -2806,7 +2812,6 @@ qla24xx_els_logo_iocb(srb_t *sp, struct els_entry_24xx *els_iocb)
- 		    (uint8_t *)els_iocb,
- 		    sizeof(*els_iocb));
- 	} else {
--		els_iocb->control_flags = cpu_to_le16(1 << 13);
- 		els_iocb->tx_byte_count =
- 			cpu_to_le32(sizeof(struct els_logo_payload));
- 		put_unaligned_le64(elsio->u.els_logo.els_logo_pyld_dma,
-@@ -3737,6 +3742,16 @@ static void qla2x00_send_notify_ack_iocb(srb_t *sp,
- 	nack->u.isp24.srr_reject_code = 0;
- 	nack->u.isp24.srr_reject_code_expl = 0;
- 	nack->u.isp24.vp_index = ntfy->u.isp24.vp_index;
-+
-+	if (ntfy->u.isp24.status_subcode == ELS_PLOGI &&
-+	    (le16_to_cpu(ntfy->u.isp24.flags) & NOTIFY24XX_FLAGS_FCSP) &&
-+	    sp->vha->hw->flags.edif_enabled) {
-+		ql_dbg(ql_dbg_disc, sp->vha, 0x3074,
-+		    "%s PLOGI NACK sent with FC SECURITY bit, hdl=%x, loopid=%x, to pid %06x\n",
-+		    sp->name, sp->handle, sp->fcport->loop_id,
-+		    sp->fcport->d_id.b24);
-+		nack->u.isp24.flags |= cpu_to_le16(NOTIFY_ACK_FLAGS_FCSP);
++	if (!node) {
++		ql_dbg(ql_dbg_edif, vha, 0x09122,
++		    "%s error - no valid node passed\n", __func__);
++		return;
 +	}
- }
- 
- /*
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 657fe0d9ee21..ce4f93fb4d25 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2372,6 +2372,10 @@ qla24xx_logio_entry(scsi_qla_host_t *vha, struct req_que *req,
- 		if (sp->type != SRB_LOGIN_CMD)
- 			goto logio_done;
- 
-+		lio->u.logio.iop[1] = le32_to_cpu(logio->io_parameter[5]);
-+		if (le32_to_cpu(logio->io_parameter[5]) & LIO_COMM_FEAT_FCSP)
-+			fcport->flags |= FCF_FCSP_DEVICE;
 +
- 		iop[0] = le32_to_cpu(logio->io_parameter[0]);
- 		if (iop[0] & BIT_4) {
- 			fcport->port_type = FCT_TARGET;
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 9f3ad8aa649c..19fa50884293 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -6588,6 +6588,12 @@ int __qla24xx_parse_gpdb(struct scsi_qla_host *vha, fc_port_t *fcport,
- 	fcport->d_id.b.al_pa = pd->port_id[2];
- 	fcport->d_id.b.rsvd_1 = 0;
- 
-+	ql_dbg(ql_dbg_disc, vha, 0x2062,
-+	     "%8phC SVC Param w3 %02x%02x",
-+	     fcport->port_name,
-+	     pd->prli_svc_param_word_3[1],
-+	     pd->prli_svc_param_word_3[0]);
++	node->ntype = N_UNDEF;
++}
 +
- 	if (NVME_TARGET(vha->hw, fcport)) {
- 		fcport->port_type = FCT_NVME;
- 		if ((pd->prli_svc_param_word_3[0] & BIT_5) == 0)
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index c7caf322f445..078d596dbd49 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -158,6 +158,10 @@ qla24xx_disable_vp(scsi_qla_host_t *vha)
- 	int ret = QLA_SUCCESS;
- 	fc_port_t *fcport;
+ /* function called when app is stopping */
  
-+	if (vha->hw->flags.edif_enabled)
-+		/* delete sessions and flush sa_indexes */
-+		qla2x00_wait_for_sess_deletion(vha);
+ void
+ qla_edb_stop(scsi_qla_host_t *vha)
+ {
++	unsigned long flags;
++	struct edb_node *node, *q;
 +
- 	if (vha->hw->flags.fw_started)
- 		ret = qla24xx_control_vp(vha, VCE_COMMAND_DISABLE_VPS_LOGO_ALL);
- 
-@@ -166,7 +170,8 @@ qla24xx_disable_vp(scsi_qla_host_t *vha)
- 	list_for_each_entry(fcport, &vha->vp_fcports, list)
- 		fcport->logout_on_delete = 0;
- 
--	qla2x00_mark_all_devices_lost(vha);
-+	if (!vha->hw->flags.edif_enabled)
-+		qla2x00_wait_for_sess_deletion(vha);
- 
- 	/* Remove port id from vp target map */
- 	spin_lock_irqsave(&vha->hw->hardware_lock, flags);
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 0ae4d0fd622f..216f132dc5b2 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1120,12 +1120,28 @@ static inline int test_fcport_count(scsi_qla_host_t *vha)
- 	struct qla_hw_data *ha = vha->hw;
- 	unsigned long flags;
- 	int res;
-+	/* Return 0 = sleep, x=wake */
- 
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 	ql_dbg(ql_dbg_init, vha, 0x00ec,
- 	    "tgt %p, fcport_count=%d\n",
- 	    vha, vha->fcport_count);
- 	res = (vha->fcport_count == 0);
-+	if  (res) {
-+		struct fc_port *fcport;
++	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
++		/* doorbell list not enabled */
++		ql_dbg(ql_dbg_edif, vha, 0x09102,
++		    "%s doorbell not enabled\n", __func__);
++		return;
++	}
 +
-+		list_for_each_entry(fcport, &vha->vp_fcports, list) {
-+			if (fcport->deleted != QLA_SESS_DELETED) {
-+				/* session(s) may not be fully logged in
-+				 * (ie fcport_count=0), but session
-+				 * deletion thread(s) may be inflight.
-+				 */
++	/* grab lock so list doesn't move */
++	spin_lock_irqsave(&vha->e_dbell.db_lock, flags);
 +
-+				res = 0;
++	vha->e_dbell.db_flags &= ~EDB_ACTIVE; /* mark it not active */
++	/* hopefully this is a null list at this point */
++	list_for_each_entry_safe(node, q, &vha->e_dbell.head, list) {
++		ql_dbg(ql_dbg_edif, vha, 0x910f,
++		    "%s freeing edb_node type=%x\n",
++		    __func__, node->ntype);
++		qla_edb_node_free(vha, node);
++		list_del(&node->list);
++
++		kfree(node);
++	}
++	spin_unlock_irqrestore(&vha->e_dbell.db_lock, flags);
++
++	/* wake up doorbell waiters - they'll be dismissed with error code */
++	complete_all(&vha->e_dbell.dbell);
++}
++
++static struct edb_node *
++qla_edb_node_alloc(scsi_qla_host_t *vha, uint32_t ntype)
++{
++	struct edb_node	*node;
++
++	node = kzalloc(sizeof(*node), GFP_ATOMIC);
++	if (!node) {
++		/* couldn't get space */
++		ql_dbg(ql_dbg_edif, vha, 0x9100,
++		    "edb node unable to be allocated\n");
++		return NULL;
++	}
++
++	node->ntype = ntype;
++	INIT_LIST_HEAD(&node->list);
++	return node;
++}
++
++/* adds a already alllocated enode to the linked list */
++static bool
++qla_edb_node_add(scsi_qla_host_t *vha, struct edb_node *ptr)
++{
++	unsigned long		flags;
++
+ 	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
+ 		/* doorbell list not enabled */
+ 		ql_dbg(ql_dbg_edif, vha, 0x09102,
+ 		    "%s doorbell not enabled\n", __func__);
++		return false;
++	}
++
++	spin_lock_irqsave(&vha->e_dbell.db_lock, flags);
++	list_add_tail(&ptr->list, &vha->e_dbell.head);
++	spin_unlock_irqrestore(&vha->e_dbell.db_lock, flags);
++
++	/* ring doorbell for waiters */
++	complete(&vha->e_dbell.dbell);
++
++	return true;
++}
++
++/* adds event to doorbell list */
++void
++qla_edb_eventcreate(scsi_qla_host_t *vha, uint32_t dbtype,
++	uint32_t data, uint32_t data2, fc_port_t	*sfcport)
++{
++	struct edb_node	*edbnode;
++	fc_port_t *fcport = sfcport;
++	port_id_t id;
++
++	if (!vha->hw->flags.edif_enabled) {
++		/* edif not enabled */
+ 		return;
+ 	}
++
++	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
++		if (fcport)
++			fcport->edif.auth_state = dbtype;
++		/* doorbell list not enabled */
++		ql_dbg(ql_dbg_edif, vha, 0x09102,
++		    "%s doorbell not enabled (type=%d\n", __func__, dbtype);
++		return;
++	}
++
++	edbnode = qla_edb_node_alloc(vha, dbtype);
++	if (!edbnode) {
++		ql_dbg(ql_dbg_edif, vha, 0x09102,
++		    "%s unable to alloc db node\n", __func__);
++		return;
++	}
++
++	if (!fcport) {
++		id.b.domain = (data >> 16) & 0xff;
++		id.b.area = (data >> 8) & 0xff;
++		id.b.al_pa = data & 0xff;
++		ql_dbg(ql_dbg_edif, vha, 0x09222,
++		    "%s: Arrived s_id: %06x\n", __func__,
++		    id.b24);
++		fcport = qla2x00_find_fcport_by_pid(vha, &id);
++		if (!fcport) {
++			ql_dbg(ql_dbg_edif, vha, 0x09102,
++			    "%s can't find fcport for sid= 0x%x - ignoring\n",
++			__func__, id.b24);
++			kfree(edbnode);
++			return;
++		}
++	}
++
++	/* populate the edb node */
++	switch (dbtype) {
++	case VND_CMD_AUTH_STATE_NEEDED:
++	case VND_CMD_AUTH_STATE_SESSION_SHUTDOWN:
++		edbnode->u.plogi_did.b24 = fcport->d_id.b24;
++		break;
++	case VND_CMD_AUTH_STATE_ELS_RCVD:
++		edbnode->u.els_sid.b24 = fcport->d_id.b24;
++		break;
++	case VND_CMD_AUTH_STATE_SAUPDATE_COMPL:
++		edbnode->u.sa_aen.port_id = fcport->d_id;
++		edbnode->u.sa_aen.status =  data;
++		edbnode->u.sa_aen.key_type =  data2;
++		break;
++	default:
++		ql_dbg(ql_dbg_edif, vha, 0x09102,
++			"%s unknown type: %x\n", __func__, dbtype);
++		qla_edb_node_free(vha, edbnode);
++		kfree(edbnode);
++		edbnode = NULL;
++		break;
++	}
++
++	if (edbnode && (!qla_edb_node_add(vha, edbnode))) {
++		ql_dbg(ql_dbg_edif, vha, 0x09102,
++		    "%s unable to add dbnode\n", __func__);
++		qla_edb_node_free(vha, edbnode);
++		kfree(edbnode);
++		return;
++	}
++	if (edbnode && fcport)
++		fcport->edif.auth_state = dbtype;
++	ql_dbg(ql_dbg_edif, vha, 0x09102,
++	    "%s Doorbell produced : type=%d %p\n", __func__, dbtype, edbnode);
++}
++
++static struct edb_node *
++qla_edb_getnext(scsi_qla_host_t *vha)
++{
++	unsigned long	flags;
++	struct edb_node	*edbnode = NULL;
++
++	spin_lock_irqsave(&vha->e_dbell.db_lock, flags);
++
++	/* db nodes are fifo - no qualifications done */
++	if (!list_empty(&vha->e_dbell.head)) {
++		edbnode = list_first_entry(&vha->e_dbell.head,
++		    struct edb_node, list);
++		list_del(&edbnode->list);
++	}
++
++	spin_unlock_irqrestore(&vha->e_dbell.db_lock, flags);
++
++	return edbnode;
++}
++
++/*
++ * app uses separate thread to read this. It'll wait until the doorbell
++ * is rung by the driver or the max wait time has expired
++ */
++ssize_t
++edif_doorbell_show(struct device *dev, struct device_attribute *attr,
++		char *buf)
++{
++	scsi_qla_host_t *vha = shost_priv(class_to_shost(dev));
++	struct edb_node	*dbnode = NULL;
++	struct edif_app_dbell *ap = (struct edif_app_dbell *)buf;
++	uint32_t dat_siz, buf_size, sz;
++
++	/* TODO: app currently hardcoded to 256. Will transition to bsg */
++	sz = 256;
++
++	/* stop new threads from waiting if we're not init'd */
++	if (vha->e_dbell.db_flags != EDB_ACTIVE) {
++		ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x09122,
++		    "%s error - edif db not enabled\n", __func__);
++		return 0;
++	}
++
++	if (!vha->hw->flags.edif_enabled) {
++		/* edif not enabled */
++		ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x09122,
++		    "%s error - edif not enabled\n", __func__);
++		return -1;
++	}
++
++	buf_size = 0;
++	while ((sz - buf_size) >= sizeof(struct edb_node)) {
++		/* remove the next item from the doorbell list */
++		dat_siz = 0;
++		dbnode = qla_edb_getnext(vha);
++		if (dbnode) {
++			ap->event_code = dbnode->ntype;
++			switch (dbnode->ntype) {
++			case VND_CMD_AUTH_STATE_SESSION_SHUTDOWN:
++			case VND_CMD_AUTH_STATE_NEEDED:
++				ap->port_id = dbnode->u.plogi_did;
++				dat_siz += sizeof(ap->port_id);
++				break;
++			case VND_CMD_AUTH_STATE_ELS_RCVD:
++				ap->port_id = dbnode->u.els_sid;
++				dat_siz += sizeof(ap->port_id);
++				break;
++			case VND_CMD_AUTH_STATE_SAUPDATE_COMPL:
++				ap->port_id = dbnode->u.sa_aen.port_id;
++				memcpy(ap->event_data, &dbnode->u,
++						sizeof(struct edif_sa_update_aen));
++				dat_siz += sizeof(struct edif_sa_update_aen);
++				break;
++			default:
++				/* unknown node type, rtn unknown ntype */
++				ap->event_code = VND_CMD_AUTH_STATE_UNDEF;
++				memcpy(ap->event_data, &dbnode->ntype, 4);
++				dat_siz += 4;
 +				break;
 +			}
-+		}
-+	}
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- 
- 	return res;
-@@ -3934,6 +3950,8 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
- 		qla2x00_set_fcport_state(fcport, FCS_DEVICE_LOST);
- 		qla2x00_schedule_rport_del(vha, fcport);
- 	}
 +
-+	qla_edif_sess_down(vha, fcport);
- 	/*
- 	 * We may need to retry the login, so don't change the state of the
- 	 * port but do the retries.
-@@ -5441,6 +5459,7 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 		if (atomic_read(&fcport->state) != FCS_ONLINE &&
- 		    fcport->login_retry) {
- 			if (fcport->scan_state != QLA_FCPORT_FOUND ||
-+			    fcport->disc_state == DSC_LOGIN_AUTH_PEND ||
- 			    fcport->disc_state == DSC_LOGIN_COMPLETE)
- 				continue;
++			ql_dbg(ql_dbg_edif, vha, 0x09102,
++				"%s Doorbell consumed : type=%d %p\n",
++				__func__, dbnode->ntype, dbnode);
++			/* we're done with the db node, so free it up */
++			qla_edb_node_free(vha, dbnode);
++			kfree(dbnode);
++		} else {
++			break;
++		}
++
++		ap->event_data_size = dat_siz;
++		/* 8bytes = ap->event_code + ap->event_data_size */
++		buf_size += dat_siz + 8;
++		ap = (struct edif_app_dbell *)(buf + buf_size);
++	}
++	return buf_size;
+ }
  
+ static void qla_noop_sp_done(srb_t *sp, int res)
+@@ -2097,6 +2407,8 @@ void qla24xx_auth_els(scsi_qla_host_t *vha, void **pkt, struct rsp_que **rsp)
+ 	    "%s COMPLETE purex->pur_info.pur_bytes_rcvd =%xh s:%06x -> d:%06x xchg=%xh\n",
+ 	    __func__, purex->pur_info.pur_bytes_rcvd, purex->pur_info.pur_sid.b24,
+ 	    purex->pur_info.pur_did.b24, p->rx_xchg_addr);
++
++	qla_edb_eventcreate(host, VND_CMD_AUTH_STATE_ELS_RCVD, sid, 0, NULL);
+ }
+ 
+ static uint16_t  qla_edif_get_sa_index_from_freepool(fc_port_t *fcport, int dir)
+@@ -2318,15 +2630,30 @@ qla28xx_sa_update_iocb_entry(scsi_qla_host_t *v, struct req_que *req,
+ 		if (pkt->flags & SA_FLAG_TX) {
+ 			sp->fcport->edif.tx_sa_set = 1;
+ 			sp->fcport->edif.tx_sa_pending = 0;
++			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
++				QL_VND_SA_STAT_SUCCESS,
++				QL_VND_TX_SA_KEY, sp->fcport);
+ 		} else {
+ 			sp->fcport->edif.rx_sa_set = 1;
+ 			sp->fcport->edif.rx_sa_pending = 0;
++			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
++				QL_VND_SA_STAT_SUCCESS,
++				QL_VND_RX_SA_KEY, sp->fcport);
+ 		}
+ 	} else {
+ 		ql_dbg(ql_dbg_edif, vha, 0x3063,
+ 		    "%s: %8phN SA update FAILED: sa_index: %d, new_sa_info %d, %02x%02x%02x\n",
+ 		    __func__, sp->fcport->port_name, pkt->sa_index, pkt->new_sa_info,
+ 		    pkt->port_id[2], pkt->port_id[1], pkt->port_id[0]);
++
++		if (pkt->flags & SA_FLAG_TX)
++			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
++				(le16_to_cpu(pkt->u.comp_sts) << 16) | QL_VND_SA_STAT_FAILED,
++				QL_VND_TX_SA_KEY, sp->fcport);
++		else
++			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SAUPDATE_COMPL,
++				(le16_to_cpu(pkt->u.comp_sts) << 16) | QL_VND_SA_STAT_FAILED,
++				QL_VND_RX_SA_KEY, sp->fcport);
+ 	}
+ 
+ 	/* for delete, release sa_ctl, sa_index */
+@@ -2819,6 +3146,8 @@ void qla_edif_sess_down(struct scsi_qla_host *vha, struct fc_port *sess)
+ 			"%s: sess %8phN send port_offline event\n",
+ 			__func__, sess->port_name);
+ 		sess->edif.app_sess_online = 0;
++		qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_SESSION_SHUTDOWN,
++		    sess->d_id.b24, 0, sess);
+ 		qla2x00_post_aen_work(vha, FCH_EVT_PORT_OFFLINE, sess->d_id.b24);
+ 	}
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 61b0164ac283..4fc20491898d 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -978,11 +978,15 @@ void qla_nvme_unregister_remote_port(struct fc_port *fcport);
+ 
+ /* qla_edif.c */
+ fc_port_t *qla2x00_find_fcport_by_pid(scsi_qla_host_t *vha, port_id_t *id);
++void qla_edb_eventcreate(scsi_qla_host_t *vha, uint32_t dbtype, uint32_t data, uint32_t data2,
++		fc_port_t *fcport);
+ void qla_edb_stop(scsi_qla_host_t *vha);
++ssize_t edif_doorbell_show(struct device *dev, struct device_attribute *attr, char *buf);
+ int32_t qla_edif_app_mgmt(struct bsg_job *bsg_job);
+ void qla_enode_init(scsi_qla_host_t *vha);
+ void qla_enode_stop(scsi_qla_host_t *vha);
+ void qla_edif_flush_sa_ctl_lists(fc_port_t *fcport);
++void qla_edb_init(scsi_qla_host_t *vha);
+ void qla24xx_sa_update_iocb(srb_t *sp, struct sa_update_28xx *sa_update_iocb);
+ void qla24xx_sa_replace_iocb(srb_t *sp, struct sa_update_28xx *sa_update_iocb);
+ void qla24xx_auth_els(scsi_qla_host_t *vha, void **pkt, struct rsp_que **rsp);
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 22474baf57aa..46dddc1dba9b 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1473,6 +1473,9 @@ static int	qla_chk_secure_login(scsi_qla_host_t	*vha, fc_port_t *fcport,
+ 				    __func__, __LINE__, fcport->port_name);
+ 				fcport->edif.app_started = 1;
+ 				fcport->edif.app_sess_online = 1;
++
++				qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_NEEDED,
++				    fcport->d_id.b24, 0, fcport);
+ 			}
+ 
+ 			rc = 1;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 216f132dc5b2..0234cd90bb01 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3488,6 +3488,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ probe_failed:
+ 	qla_enode_stop(base_vha);
++	qla_edb_stop(base_vha);
+ 	if (base_vha->gnl.l) {
+ 		dma_free_coherent(&ha->pdev->dev, base_vha->gnl.size,
+ 				base_vha->gnl.l, base_vha->gnl.ldma);
+@@ -3791,6 +3792,7 @@ qla2x00_remove_one(struct pci_dev *pdev)
+ 
+ 	base_vha->gnl.l = NULL;
+ 	qla_enode_stop(base_vha);
++	qla_edb_stop(base_vha);
+ 
+ 	vfree(base_vha->scan.l);
+ 
+@@ -4917,6 +4919,8 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 	init_waitqueue_head(&vha->fcport_waitQ);
+ 	init_waitqueue_head(&vha->vref_waitq);
+ 	qla_enode_init(vha);
++	qla_edb_init(vha);
++
+ 
+ 	vha->gnl.size = sizeof(struct get_name_list_extended) *
+ 			(ha->max_loop_id + 1);
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index eb5a9a385569..c1ff9f484f92 100644
+index c1ff9f484f92..11c892e9d3e2 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -576,6 +576,16 @@ static void qla2x00_async_nack_sp_done(srb_t *sp, int res)
- 		sp->fcport->logout_on_delete = 1;
- 		sp->fcport->plogi_nack_done_deadline = jiffies + HZ;
- 		sp->fcport->send_els_logo = 0;
-+
-+		if (sp->fcport->flags & FCF_FCSP_DEVICE) {
-+			ql_dbg(ql_dbg_edif, vha, 0x20ef,
-+			    "%s %8phC edif: PLOGI- AUTH WAIT\n", __func__,
-+			    sp->fcport->port_name);
-+			qla2x00_set_fcport_disc_state(sp->fcport,
-+			    DSC_LOGIN_AUTH_PEND);
-+			qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE,
-+			    sp->fcport->d_id.b24);
-+		}
+@@ -585,6 +585,8 @@ static void qla2x00_async_nack_sp_done(srb_t *sp, int res)
+ 			    DSC_LOGIN_AUTH_PEND);
+ 			qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE,
+ 			    sp->fcport->d_id.b24);
++			qla_edb_eventcreate(vha, VND_CMD_AUTH_STATE_NEEDED, sp->fcport->d_id.b24,
++			    0, sp->fcport);
+ 		}
  		break;
  
- 	case SRB_NACK_PRLI:
-@@ -623,6 +633,10 @@ int qla24xx_async_notify_ack(scsi_qla_host_t *vha, fc_port_t *fcport,
- 	case SRB_NACK_PLOGI:
- 		fcport->fw_login_state = DSC_LS_PLOGI_PEND;
- 		c = "PLOGI";
-+		if (vha->hw->flags.edif_enabled &&
-+		    (le16_to_cpu(ntfy->u.isp24.flags) & NOTIFY24XX_FLAGS_FCSP)) {
-+			fcport->flags |= FCF_FCSP_DEVICE;
-+		}
- 		break;
- 	case SRB_NACK_PRLI:
- 		fcport->fw_login_state = DSC_LS_PRLI_PEND;
-@@ -692,7 +706,12 @@ void qla24xx_do_nack_work(struct scsi_qla_host *vha, struct qla_work_evt *e)
- void qla24xx_delete_sess_fn(struct work_struct *work)
- {
- 	fc_port_t *fcport = container_of(work, struct fc_port, del_work);
--	struct qla_hw_data *ha = fcport->vha->hw;
-+	struct qla_hw_data *ha = NULL;
-+
-+	if (!fcport || !fcport->vha || !fcport->vha->hw)
-+		return;
-+
-+	ha = fcport->vha->hw;
- 
- 	if (fcport->se_sess) {
- 		ha->tgt.tgt_ops->shutdown_sess(fcport);
-@@ -964,6 +983,19 @@ void qlt_free_session_done(struct work_struct *work)
- 		sess->send_els_logo);
- 
- 	if (!IS_SW_RESV_ADDR(sess->d_id)) {
-+		if (ha->flags.edif_enabled &&
-+		    (!own || own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
-+			if (!ha->flags.host_shutting_down) {
-+				ql_dbg(ql_dbg_edif, vha, 0x911e,
-+					"%s wwpn %8phC calling qla2x00_release_all_sadb\n",
-+					__func__, sess->port_name);
-+				qla2x00_release_all_sadb(vha, sess);
-+			} else {
-+				ql_dbg(ql_dbg_edif, vha, 0x911e,
-+					"%s bypassing release_all_sadb\n",
-+					__func__);
-+			}
-+		}
- 		qla2x00_mark_device_lost(vha, sess, 0);
- 
- 		if (sess->send_els_logo) {
-@@ -971,6 +1003,7 @@ void qlt_free_session_done(struct work_struct *work)
- 
- 			logo.id = sess->d_id;
- 			logo.cmd_count = 0;
-+			INIT_LIST_HEAD(&logo.list);
- 			if (!own)
- 				qlt_send_first_logo(vha, &logo);
- 			sess->send_els_logo = 0;
-@@ -981,6 +1014,7 @@ void qlt_free_session_done(struct work_struct *work)
- 
- 			if (!own ||
- 			     (own->iocb.u.isp24.status_subcode == ELS_PLOGI)) {
-+				sess->logout_completed = 0;
- 				rc = qla2x00_post_async_logout_work(vha, sess,
- 				    NULL);
- 				if (rc != QLA_SUCCESS)
-@@ -1717,6 +1751,12 @@ static void qlt_send_notify_ack(struct qla_qpair *qpair,
- 	nack->u.isp24.srr_reject_code_expl = srr_explan;
- 	nack->u.isp24.vp_index = ntfy->u.isp24.vp_index;
- 
-+	/* TODO qualify this with EDIF enable */
-+	if (ntfy->u.isp24.status_subcode == ELS_PLOGI &&
-+	    (le16_to_cpu(ntfy->u.isp24.flags) & NOTIFY24XX_FLAGS_FCSP)) {
-+		nack->u.isp24.flags |= cpu_to_le16(NOTIFY_ACK_FLAGS_FCSP);
-+	}
-+
- 	ql_dbg(ql_dbg_tgt, vha, 0xe005,
- 	    "qla_target(%d): Sending 24xx Notify Ack %d\n",
- 	    vha->vp_idx, nack->u.isp24.status);
-@@ -4724,6 +4764,15 @@ static int qlt_handle_login(struct scsi_qla_host *vha,
- 		goto out;
- 	}
- 
-+	if (vha->hw->flags.edif_enabled &&
-+	    vha->e_dbell.db_flags != EDB_ACTIVE) {
-+		ql_dbg(ql_dbg_disc, vha, 0xffff,
-+			"%s %d Term INOT due to app not available lid=%d, NportID %06X ",
-+			__func__, __LINE__, loop_id, port_id.b24);
-+		qlt_send_term_imm_notif(vha, iocb, 1);
-+		goto out;
-+	}
-+
- 	pla = qlt_plogi_ack_find_add(vha, &port_id, iocb);
- 	if (!pla) {
- 		ql_dbg(ql_dbg_disc + ql_dbg_verbose, vha, 0xffff,
-@@ -4789,6 +4838,16 @@ static int qlt_handle_login(struct scsi_qla_host *vha,
- 	qlt_plogi_ack_link(vha, pla, sess, QLT_PLOGI_LINK_SAME_WWN);
- 	sess->d_id = port_id;
- 	sess->login_gen++;
-+	sess->loop_id = loop_id;
-+
-+	if (iocb->u.isp24.status_subcode == ELS_PLOGI) {
-+		ql_dbg(ql_dbg_disc, vha, 0xffff,
-+		    "%s %8phC - send port online\n",
-+		    __func__, sess->port_name);
-+
-+		qla2x00_post_aen_work(vha, FCH_EVT_PORT_ONLINE,
-+		    sess->d_id.b24);
-+	}
- 
- 	if (iocb->u.isp24.status_subcode == ELS_PRLI) {
- 		sess->fw_login_state = DSC_LS_PRLI_PEND;
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 8a319b78cdf6..b910f8f09353 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -176,6 +176,7 @@ struct nack_to_isp {
- 	uint8_t  reserved[2];
- 	__le16	ox_id;
- } __packed;
-+#define NOTIFY_ACK_FLAGS_FCSP		BIT_5
- #define NOTIFY_ACK_FLAGS_TERMINATE	BIT_3
- #define NOTIFY_ACK_SRR_FLAGS_ACCEPT	0
- #define NOTIFY_ACK_SRR_FLAGS_REJECT	1
 -- 
 2.19.0.rc0
 
