@@ -2,108 +2,249 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0FCEC4743C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 11:04:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23329C49EA4
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 12:03:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B55EE61075
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 11:04:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 074B761076
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 12:03:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230152AbhFWLGm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Jun 2021 07:06:42 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3303 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230028AbhFWLGi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2021 07:06:38 -0400
-Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4G90Rc3ljXz6H840;
-        Wed, 23 Jun 2021 18:50:52 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 23 Jun 2021 13:04:19 +0200
-Received: from [10.47.89.126] (10.47.89.126) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 23 Jun
- 2021 12:04:19 +0100
-Subject: Re: [PATCH 03/18] scsi: add scsi_{get,put}_internal_cmd() helper
-To:     Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        <linux-scsi@vger.kernel.org>
-References: <20210503150333.130310-1-hare@suse.de>
- <20210503150333.130310-4-hare@suse.de>
- <d9c7f79f-f0ec-a420-517c-d6ca83d99ef9@acm.org>
- <e2b24fd6-fe1b-ac5e-e370-93900d98ac90@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <4ba63914-e308-ca62-8562-c0779a7ed05c@huawei.com>
-Date:   Wed, 23 Jun 2021 11:57:48 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S230241AbhFWMFT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Jun 2021 08:05:19 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:17141 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230163AbhFWMFS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Jun 2021 08:05:18 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1624449781; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=TZy3QLobESFBPo4zqXB+Lm4NnttlJStnDUEdgvJ5AMs=;
+ b=rjZdD61tea1se5uj+aTQTZ3itgDSBB2sRDtHbdXT9c+XvaLlzzt3G4Ykqko4fPML0hrb5byk
+ /bvblS14cbyHrh1IzNs23+K/nBEJQRFW2ElLAK9+9mCNQmgdt+oHvHeyO1x7LAH2Z9T0xA7y
+ +PAiv/V2DGccBxPQ1JXnx4RzOjs=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 60d322f4dc4628fe7eb9e66f (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Jun 2021 12:03:00
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 8221FC4360C; Wed, 23 Jun 2021 12:02:59 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 364F4C433D3;
+        Wed, 23 Jun 2021 12:02:58 +0000 (UTC)
 MIME-Version: 1.0
-In-Reply-To: <e2b24fd6-fe1b-ac5e-e370-93900d98ac90@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.89.126]
-X-ClientProxiedBy: lhreml721-chm.china.huawei.com (10.201.108.72) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 23 Jun 2021 20:02:58 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: Re: [PATCH RFC 4/4] ufs: Make host controller state change handling
+ more systematic
+In-Reply-To: <20210619005228.28569-5-bvanassche@acm.org>
+References: <20210619005228.28569-1-bvanassche@acm.org>
+ <20210619005228.28569-5-bvanassche@acm.org>
+Message-ID: <58b71eb33b331033d04e4830f5e02d5c@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/05/2021 07:12, Hannes Reinecke wrote:
-> On 5/4/21 4:21 AM, Bart Van Assche wrote:
->> On 5/3/21 8:03 AM, Hannes Reinecke wrote:
->>> +/**
->>> + * scsi_get_internal_cmd - allocate an internal SCSI command
->>> + * @sdev: SCSI device from which to allocate the command
->>> + * @op: operation (REQ_OP_SCSI_IN or REQ_OP_SCSI_OUT)
->>> + * @flags: BLK_MQ_REQ_* flags, e.g. BLK_MQ_REQ_NOWAIT.
->>> + *
->>> + * Allocates a SCSI command for internal LLDD use.
->>> + */
->>> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
->>> +    unsigned int op, blk_mq_req_flags_t flags)
->>> +{
->>> +    struct request *rq;
->>> +    struct scsi_cmnd *scmd;
->>> +
->>> +    WARN_ON_ONCE(((op & REQ_OP_MASK) != REQ_OP_SCSI_IN) &&
->>> +             ((op & REQ_OP_MASK) != REQ_OP_SCSI_OUT));
->>> +    rq = blk_mq_alloc_request(sdev->request_queue, op, flags);
->>> +    if (IS_ERR(rq))
->>> +        return NULL;
->>> +    scmd = blk_mq_rq_to_pdu(rq);
->>> +    scmd->request = rq;
->>> +    scmd->device = sdev;
->>> +    return scmd;
->>> +}
->>> +EXPORT_SYMBOL_GPL(scsi_get_internal_cmd);
->>
->> Multiple fields that are initialized by the regular command submission
->> path are not initialized by the above function, e.g. scmd->tag. Has it
->> been considered to call scsi_init_command() instead of adding yet
->> another code path that initializes scmd->request?
->>
-> Hmm. No, I don't think it's a good idea.
-> Basic idea is that the SCSI request serves as a container for (non-SCSI) 
-> management commands, _and_ that they are submitted directly from within 
-> the driver, ie never ever enter ->queue_rq().
-> As such we don't need an initialisation vie scsi_init_request(), and it 
-> would actually be counter-productive as we would be setting up fields 
-> which we'll never need anyway, and might need to tear down afterwards.
+Hi Bart,
 
-I will note that we also bypass the queue budgeting in 
-blk_mq_ops.{get,put}_budget. I figure that is not an issue...
+On 2021-06-19 08:52, Bart Van Assche wrote:
+> Introduce a function that reports whether or not a controller state 
+> change
+> is allowed instead of duplicating these checks in every context that
+> changes the host controller state. This patch includes a behavior 
+> change:
+> ufshcd_link_recovery() no longer can change the host controller state 
+> from
+> UFSHCD_STATE_ERROR into UFSHCD_STATE_RESET.
+> 
+> Cc: Can Guo <cang@codeaurora.org>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 59 ++++++++++++++++++++++++---------------
+>  1 file changed, 36 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index c213daec20f7..a10c8ec28468 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -4070,16 +4070,32 @@ static int ufshcd_uic_change_pwr_mode(struct
+> ufs_hba *hba, u8 mode)
+>  	return ret;
+>  }
+> 
+> +static bool ufshcd_set_state(struct ufs_hba *hba, enum ufshcd_state 
+> new_state)
+> +{
+> +	lockdep_assert_held(hba->host->host_lock);
+> +
+> +	if (old_state != UFSHCD_STATE_ERROR || new_state == 
+> UFSHCD_STATE_ERROR)
+> +		hba->ufshcd_state = new_state;
+> +		return true;
+> +	}
+> +	return false;
+> +}
+> +
+>  int ufshcd_link_recovery(struct ufs_hba *hba)
+>  {
+>  	int ret;
+>  	unsigned long flags;
+> +	bool proceed;
+> 
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	hba->ufshcd_state = UFSHCD_STATE_RESET;
+> -	ufshcd_set_eh_in_progress(hba);
+> +	proceed = ufshcd_set_state(hba, UFSHCD_STATE_RESET);
+> +	if (proceed)
+> +		ufshcd_set_eh_in_progress(hba);
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> 
+> +	if (!proceed)
+> +		return -EPERM;
+> +
+>  	/* Reset the attached device */
+>  	ufshcd_device_reset(hba);
+> 
+> @@ -4087,7 +4103,7 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
+> 
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+>  	if (ret)
+> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
+> +		ufshcd_set_state(hba, UFSHCD_STATE_ERROR);
+>  	ufshcd_clear_eh_in_progress(hba);
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> 
+> @@ -5856,15 +5872,17 @@ static inline bool
+> ufshcd_is_saved_err_fatal(struct ufs_hba *hba)
+>  /* host lock must be held before calling this func */
+>  static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
+>  {
+> -	/* handle fatal errors only when link is not in error state */
+> -	if (hba->ufshcd_state != UFSHCD_STATE_ERROR) {
+> -		if (hba->force_reset || ufshcd_is_link_broken(hba) ||
+> -		    ufshcd_is_saved_err_fatal(hba))
+> -			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_FATAL;
+> -		else
+> -			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_NON_FATAL;
+> +	bool proceed;
+> +
+> +	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
+> +	    ufshcd_is_saved_err_fatal(hba))
+> +		proceed = ufshcd_set_state(hba,
+> +					   UFSHCD_STATE_EH_SCHEDULED_FATAL);
+> +	else
+> +		proceed = ufshcd_set_state(hba,
+> +					   UFSHCD_STATE_EH_SCHEDULED_NON_FATAL);
+> +	if (proceed)
+>  		queue_work(hba->eh_wq, &hba->eh_work);
+> -	}
+>  }
+> 
+>  static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
+> @@ -6017,8 +6035,7 @@ static void ufshcd_err_handler(struct work_struct 
+> *work)
+>  	down(&hba->host_sem);
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+>  	if (ufshcd_err_handling_should_stop(hba)) {
+> -		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+> -			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+> +		ufshcd_set_state(hba, UFSHCD_STATE_OPERATIONAL);
+>  		spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  		up(&hba->host_sem);
+>  		return;
+> @@ -6029,8 +6046,7 @@ static void ufshcd_err_handler(struct work_struct 
+> *work)
+>  	/* Complete requests that have door-bell cleared by h/w */
+>  	ufshcd_complete_requests(hba);
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+> -		hba->ufshcd_state = UFSHCD_STATE_RESET;
+> +	ufshcd_set_state(hba, UFSHCD_STATE_RESET);
+>  	/*
+>  	 * A full reset and restore might have happened after preparation
+>  	 * is finished, double check whether we should stop.
+> @@ -6163,8 +6179,7 @@ static void ufshcd_err_handler(struct work_struct 
+> *work)
+> 
+>  skip_err_handling:
+>  	if (!needs_reset) {
+> -		if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+> -			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
 
-BTW, any chance of a new version?
+State transition to OPERATIONAL should only be from RESET, this
+is to make sure that we don't miss any new error (fatal or non-fatal)
+occurs while error handling is running.
+
+> +		ufshcd_set_state(hba, UFSHCD_STATE_OPERATIONAL);
+>  		if (hba->saved_err || hba->saved_uic_err)
+>  			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x 
+> saved_uic_err 0x%x",
+>  			    __func__, hba->saved_err, hba->saved_uic_err);
+> @@ -7135,7 +7150,7 @@ static int ufshcd_reset_and_restore(struct 
+> ufs_hba *hba)
+>  	 */
+>  	scsi_report_bus_reset(hba->host, 0);
+>  	if (err) {
+> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
+> +		ufshcd_set_state(hba, UFSHCD_STATE_ERROR);
+>  		hba->saved_err |= saved_err;
+>  		hba->saved_uic_err |= saved_uic_err;
+>  	}
+> @@ -7951,7 +7966,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba,
+> bool init_dev_params)
+>  	unsigned long flags;
+>  	ktime_t start = ktime_get();
+> 
+> -	hba->ufshcd_state = UFSHCD_STATE_RESET;
+> +	ufshcd_set_state(hba, UFSHCD_STATE_RESET);
+> 
+>  	ret = ufshcd_link_startup(hba);
+>  	if (ret)
+> @@ -8024,10 +8039,8 @@ static int ufshcd_probe_hba(struct ufs_hba
+> *hba, bool init_dev_params)
+> 
+>  out:
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	if (ret)
+> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
+> -	else if (hba->ufshcd_state == UFSHCD_STATE_RESET)
+> -		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+
+State transition to OPERATIONAL should only be from RESET, this
+is to make sure that we don't miss any new error (fatal or non-fatal)
+occurs during re-probe.
 
 Thanks,
-John
+
+Can Guo.
+
+> +	ufshcd_set_state(hba, ret ? UFSHCD_STATE_ERROR :
+> +			 UFSHCD_STATE_OPERATIONAL);
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> 
+>  	trace_ufshcd_init(dev_name(hba->dev), ret,
