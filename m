@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97E22C4743C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 07:37:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F351FC48BE5
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 07:37:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 83892611AC
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 07:37:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC5B46128A
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 07:37:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231235AbhFWHjj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Jun 2021 03:39:39 -0400
-Received: from labrats.qualcomm.com ([199.106.110.90]:1666 "EHLO
+        id S230392AbhFWHjk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Jun 2021 03:39:40 -0400
+Received: from labrats.qualcomm.com ([199.106.110.90]:9757 "EHLO
         labrats.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230363AbhFWHjT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2021 03:39:19 -0400
-IronPort-SDR: M6TRVFwkS6FOV6qff0MiXiwDGxCYMI6QeciZCr6r/nzZ2LyTUwFjjCx3z1aAc6lUN5EWFiOAkr
- UvDV+CraFZoTQtSQGA0V/Y1lNfw5xGqKJmZZlvoyaRBRvyP0GEJbG7qJBxN8mcc5k/cbaKrlWW
- UKmvewxRIrOe5VBdFzKwaPH9XcI+SYro7bzENHa5m7H5c4f6445KoggB6WUTLU5vdnnJlbqslb
- NpKk/0r3FEwCPcCePzBHHj5if3THNiYv26deN8EN6OVzF6d7Sr4Z1JHCYQA2Ggyf/qjHDCV+Ru
- p3g=
+        with ESMTP id S230513AbhFWHjV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2021 03:39:21 -0400
+IronPort-SDR: lt5cE9eBpnslfYbr9VZrYOHwKXrlwitl/+pnUlcMX4dqbvrn9AwzaPptbQX17blGahA1tXlgpb
+ zS102jxZ0DmJ/7C2NjO3idjeoxbwWotrMRltdgAaQmxq6vFrwtqmJspYpZefEaBf9C1VWLugHL
+ xAmCBOdq2+WtbVsj6L+pNz+iikdBLq50D7mvKy1rXK66FuQrsOiNxS8akmlhxkAiwOlr1UF9Bd
+ 39SW/tD8RZpjZstHEj1Pze9KhGUmMC+BtaF1FusNEJntmFZzL6hEVgLrxDBS8kQVdz9So6m561
+ jo0=
 X-IronPort-AV: E=Sophos;i="5.83,293,1616482800"; 
-   d="scan'208";a="29780820"
-Received: from unknown (HELO ironmsg03-sd.qualcomm.com) ([10.53.140.143])
-  by labrats.qualcomm.com with ESMTP; 23 Jun 2021 00:37:00 -0700
+   d="scan'208";a="47902945"
+Received: from unknown (HELO ironmsg-SD-alpha.qualcomm.com) ([10.53.140.30])
+  by labrats.qualcomm.com with ESMTP; 23 Jun 2021 00:37:04 -0700
 X-QCInternal: smtphost
-Received: from stor-presley.qualcomm.com ([192.168.140.85])
-  by ironmsg03-sd.qualcomm.com with ESMTP; 23 Jun 2021 00:36:59 -0700
+Received: from wsp769891wss.qualcomm.com (HELO stor-presley.qualcomm.com) ([192.168.140.85])
+  by ironmsg-SD-alpha.qualcomm.com with ESMTP; 23 Jun 2021 00:37:03 -0700
 Received: by stor-presley.qualcomm.com (Postfix, from userid 359480)
-        id BC2E921BC1; Wed, 23 Jun 2021 00:36:59 -0700 (PDT)
+        id B4AF621BC1; Wed, 23 Jun 2021 00:37:03 -0700 (PDT)
 From:   Can Guo <cang@codeaurora.org>
 To:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, ziqichen@codeaurora.org,
@@ -46,9 +46,9 @@ Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Bean Huo <beanhuo@micron.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v4 04/10] scsi: ufs: Enable IRQ after enabling clocks in error handling preparation
-Date:   Wed, 23 Jun 2021 00:35:03 -0700
-Message-Id: <1624433711-9339-5-git-send-email-cang@codeaurora.org>
+Subject: [PATCH 05/10] scsi: ufs: Complete the cmd before returning in queuecommand
+Date:   Wed, 23 Jun 2021 00:35:04 -0700
+Message-Id: <1624433711-9339-6-git-send-email-cang@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
 References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
@@ -56,36 +56,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In error handling preparation, enable IRQ after enabling clocks in case
-unclocked register access happens.
+Commit 7a7e66c65d4148fc3f23b058405bc9f102414fcb ("scsi: ufs: Fix a race
+condition between ufshcd_abort() and eh_work()") forgot to complete the
+cmd, which takes an occupied lrb, before returning in queuecommand. This
+change adds the missing codes.
 
-Fixes: c72e79c0ad2bd ("scsi: ufs: Recover HBA runtime PM error in error handler")
+Fixes: 7a7e66c65d414 ("scsi: ufs: Fix a race condition between ufshcd_abort() and eh_work()")
 Signed-off-by: Can Guo <cang@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ee70522..5f837c4 100644
+index 5f837c4..7fbc63e 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5927,13 +5927,14 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
- 		 * can be OFF or in LPM.
- 		 */
- 		ufshcd_setup_hba_vreg(hba, true);
--		ufshcd_enable_irq(hba);
- 		ufshcd_setup_vreg(hba, true);
- 		ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
- 		ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq2);
- 		ufshcd_hold(hba, false);
--		if (!ufshcd_is_clkgating_allowed(hba))
-+		if (!ufshcd_is_clkgating_allowed(hba)) {
- 			ufshcd_setup_clocks(hba, true);
-+			ufshcd_enable_irq(hba);
+@@ -2758,6 +2758,16 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		goto out;
+ 	}
+ 
++	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
++		if (hba->wlu_pm_op_in_progress) {
++			set_host_byte(cmd, DID_BAD_TARGET);
++			cmd->scsi_done(cmd);
++		} else {
++			err = SCSI_MLQUEUE_HOST_BUSY;
 +		}
- 		ufshcd_release(hba);
- 		pm_op = hba->is_wlu_sys_suspended ? UFS_SYSTEM_PM : UFS_RUNTIME_PM;
- 		ufshcd_vops_resume(hba, pm_op);
++		goto out;
++	}
++
+ 	hba->req_abort_count = 0;
+ 
+ 	err = ufshcd_hold(hba, true);
+@@ -2768,15 +2778,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	WARN_ON(ufshcd_is_clkgating_allowed(hba) &&
+ 		(hba->clk_gating.state != CLKS_ON));
+ 
+-	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
+-		if (hba->wlu_pm_op_in_progress)
+-			set_host_byte(cmd, DID_BAD_TARGET);
+-		else
+-			err = SCSI_MLQUEUE_HOST_BUSY;
+-		ufshcd_release(hba);
+-		goto out;
+-	}
+-
+ 	lrbp = &hba->lrb[tag];
+ 	WARN_ON(lrbp->cmd);
+ 	lrbp->cmd = cmd;
 -- 
 Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a Linux Foundation Collaborative Project.
 
