@@ -2,249 +2,181 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23329C49EA4
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 12:03:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C4DC4743C
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 12:33:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 074B761076
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 12:03:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44A7761076
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 12:33:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230241AbhFWMFT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Jun 2021 08:05:19 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:17141 "EHLO m43-7.mailgun.net"
+        id S230479AbhFWMf4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Jun 2021 08:35:56 -0400
+Received: from mga04.intel.com ([192.55.52.120]:42821 "EHLO mga04.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230163AbhFWMFS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Jun 2021 08:05:18 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1624449781; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=TZy3QLobESFBPo4zqXB+Lm4NnttlJStnDUEdgvJ5AMs=;
- b=rjZdD61tea1se5uj+aTQTZ3itgDSBB2sRDtHbdXT9c+XvaLlzzt3G4Ykqko4fPML0hrb5byk
- /bvblS14cbyHrh1IzNs23+K/nBEJQRFW2ElLAK9+9mCNQmgdt+oHvHeyO1x7LAH2Z9T0xA7y
- +PAiv/V2DGccBxPQ1JXnx4RzOjs=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 60d322f4dc4628fe7eb9e66f (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Jun 2021 12:03:00
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 8221FC4360C; Wed, 23 Jun 2021 12:02:59 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 364F4C433D3;
-        Wed, 23 Jun 2021 12:02:58 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 23 Jun 2021 20:02:58 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
+        id S230384AbhFWMf4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Jun 2021 08:35:56 -0400
+IronPort-SDR: MH1aMG9iCdIpzQ7jE4qQk612ReISVLm2mB91R8NZ9jzvYFzZl4h6mU4t8ghHZECpooY47wJ/Og
+ X1zFY5A5lMwA==
+X-IronPort-AV: E=McAfee;i="6200,9189,10023"; a="205423464"
+X-IronPort-AV: E=Sophos;i="5.83,293,1616482800"; 
+   d="scan'208";a="205423464"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jun 2021 05:33:26 -0700
+IronPort-SDR: CoIbM9hMlkZZaXOB9WWWFvy8MOhN/dl5YS/M1dsRoU7BCSD9hj/45CC1rbHAPSxcKqbdC+ueyL
+ gtQ71drzSBLw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.83,293,1616482800"; 
+   d="scan'208";a="406293937"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
+  by orsmga006.jf.intel.com with ESMTP; 23 Jun 2021 05:33:21 -0700
+Subject: Re: [PATCH v4 02/10] scsi: ufs: Add flags pm_op_in_progress and
+ is_sys_suspended
+To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, hongwus@codeaurora.org,
+        ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
-        Asutosh Das <asutoshd@codeaurora.org>
-Subject: Re: [PATCH RFC 4/4] ufs: Make host controller state change handling
- more systematic
-In-Reply-To: <20210619005228.28569-5-bvanassche@acm.org>
-References: <20210619005228.28569-1-bvanassche@acm.org>
- <20210619005228.28569-5-bvanassche@acm.org>
-Message-ID: <58b71eb33b331033d04e4830f5e02d5c@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        Satya Tangirala <satyat@google.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
+ <1624433711-9339-3-git-send-email-cang@codeaurora.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <d9da89ac-cb40-d11b-5af3-5c948eb9b927@intel.com>
+Date:   Wed, 23 Jun 2021 15:33:43 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
+MIME-Version: 1.0
+In-Reply-To: <1624433711-9339-3-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
-
-On 2021-06-19 08:52, Bart Van Assche wrote:
-> Introduce a function that reports whether or not a controller state 
-> change
-> is allowed instead of duplicating these checks in every context that
-> changes the host controller state. This patch includes a behavior 
-> change:
-> ufshcd_link_recovery() no longer can change the host controller state 
-> from
-> UFSHCD_STATE_ERROR into UFSHCD_STATE_RESET.
+On 23/06/21 10:35 am, Can Guo wrote:
+> Add flags pm_op_in_progress and is_sys_suspended to track the status of hba
+> runtime and system suspend/resume operations.
 > 
-> Cc: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> Signed-off-by: Can Guo <cang@codeaurora.org>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 59 ++++++++++++++++++++++++---------------
->  1 file changed, 36 insertions(+), 23 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
+>  drivers/scsi/ufs/ufshcd.h |  4 ++++
+>  2 files changed, 15 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c213daec20f7..a10c8ec28468 100644
+> index c40ba1d..abe5f2d 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4070,16 +4070,32 @@ static int ufshcd_uic_change_pwr_mode(struct
-> ufs_hba *hba, u8 mode)
+> @@ -551,6 +551,8 @@ static void ufshcd_print_host_state(struct ufs_hba *hba)
+>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
+>  	dev_err(hba->dev, "wlu_pm_op_in_progress=%d, is_wlu_sys_suspended=%d\n",
+>  		hba->wlu_pm_op_in_progress, hba->is_wlu_sys_suspended);
+> +	dev_err(hba->dev, "pm_op_in_progress=%d, is_sys_suspended=%d\n",
+> +		hba->pm_op_in_progress, hba->is_sys_suspended);
+>  	dev_err(hba->dev, "Auto BKOPS=%d, Host self-block=%d\n",
+>  		hba->auto_bkops_enabled, hba->host->host_self_blocked);
+>  	dev_err(hba->dev, "Clk gate=%d\n", hba->clk_gating.state);
+> @@ -9141,6 +9143,8 @@ static int ufshcd_suspend(struct ufs_hba *hba)
+>  
+>  	if (!hba->is_powered)
+>  		return 0;
+> +
+> +	hba->pm_op_in_progress = true;
+>  	/*
+>  	 * Disable the host irq as host controller as there won't be any
+>  	 * host controller transaction expected till resume.
+	 */
+	ufshcd_disable_irq(hba);
+	ret = ufshcd_setup_clocks(hba, false);
+	if (ret) {
+		ufshcd_enable_irq(hba);
+
+Is "hba->pm_op_in_progress = false" needed here?
+
+		return ret;
+	}
+
+
+
+> @@ -9160,6 +9164,7 @@ static int ufshcd_suspend(struct ufs_hba *hba)
+>  	ufshcd_vreg_set_lpm(hba);
+>  	/* Put the host controller in low power mode if possible */
+>  	ufshcd_hba_vreg_set_lpm(hba);
+> +	hba->pm_op_in_progress = false;
 >  	return ret;
 >  }
-> 
-> +static bool ufshcd_set_state(struct ufs_hba *hba, enum ufshcd_state 
-> new_state)
-> +{
-> +	lockdep_assert_held(hba->host->host_lock);
-> +
-> +	if (old_state != UFSHCD_STATE_ERROR || new_state == 
-> UFSHCD_STATE_ERROR)
-> +		hba->ufshcd_state = new_state;
-> +		return true;
-> +	}
-> +	return false;
-> +}
-> +
->  int ufshcd_link_recovery(struct ufs_hba *hba)
->  {
->  	int ret;
->  	unsigned long flags;
-> +	bool proceed;
-> 
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	hba->ufshcd_state = UFSHCD_STATE_RESET;
-> -	ufshcd_set_eh_in_progress(hba);
-> +	proceed = ufshcd_set_state(hba, UFSHCD_STATE_RESET);
-> +	if (proceed)
-> +		ufshcd_set_eh_in_progress(hba);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> 
-> +	if (!proceed)
-> +		return -EPERM;
-> +
->  	/* Reset the attached device */
->  	ufshcd_device_reset(hba);
-> 
-> @@ -4087,7 +4103,7 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
-> 
->  	spin_lock_irqsave(hba->host->host_lock, flags);
+>  
+> @@ -9179,6 +9184,7 @@ static int ufshcd_resume(struct ufs_hba *hba)
+>  	if (!hba->is_powered)
+>  		return 0;
+>  
+> +	hba->pm_op_in_progress = true;
+>  	ufshcd_hba_vreg_set_hpm(hba);
+>  	ret = ufshcd_vreg_set_hpm(hba);
 >  	if (ret)
-> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> +		ufshcd_set_state(hba, UFSHCD_STATE_ERROR);
->  	ufshcd_clear_eh_in_progress(hba);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> 
-> @@ -5856,15 +5872,17 @@ static inline bool
-> ufshcd_is_saved_err_fatal(struct ufs_hba *hba)
->  /* host lock must be held before calling this func */
->  static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
->  {
-> -	/* handle fatal errors only when link is not in error state */
-> -	if (hba->ufshcd_state != UFSHCD_STATE_ERROR) {
-> -		if (hba->force_reset || ufshcd_is_link_broken(hba) ||
-> -		    ufshcd_is_saved_err_fatal(hba))
-> -			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_FATAL;
-> -		else
-> -			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_NON_FATAL;
-> +	bool proceed;
-> +
-> +	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
-> +	    ufshcd_is_saved_err_fatal(hba))
-> +		proceed = ufshcd_set_state(hba,
-> +					   UFSHCD_STATE_EH_SCHEDULED_FATAL);
-> +	else
-> +		proceed = ufshcd_set_state(hba,
-> +					   UFSHCD_STATE_EH_SCHEDULED_NON_FATAL);
-> +	if (proceed)
->  		queue_work(hba->eh_wq, &hba->eh_work);
-> -	}
->  }
-> 
->  static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
-> @@ -6017,8 +6035,7 @@ static void ufshcd_err_handler(struct work_struct 
-> *work)
->  	down(&hba->host_sem);
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	if (ufshcd_err_handling_should_stop(hba)) {
-> -		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
-> -			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-> +		ufshcd_set_state(hba, UFSHCD_STATE_OPERATIONAL);
->  		spin_unlock_irqrestore(hba->host->host_lock, flags);
->  		up(&hba->host_sem);
->  		return;
-> @@ -6029,8 +6046,7 @@ static void ufshcd_err_handler(struct work_struct 
-> *work)
->  	/* Complete requests that have door-bell cleared by h/w */
->  	ufshcd_complete_requests(hba);
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
-> -		hba->ufshcd_state = UFSHCD_STATE_RESET;
-> +	ufshcd_set_state(hba, UFSHCD_STATE_RESET);
->  	/*
->  	 * A full reset and restore might have happened after preparation
->  	 * is finished, double check whether we should stop.
-> @@ -6163,8 +6179,7 @@ static void ufshcd_err_handler(struct work_struct 
-> *work)
-> 
->  skip_err_handling:
->  	if (!needs_reset) {
-> -		if (hba->ufshcd_state == UFSHCD_STATE_RESET)
-> -			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-
-State transition to OPERATIONAL should only be from RESET, this
-is to make sure that we don't miss any new error (fatal or non-fatal)
-occurs while error handling is running.
-
-> +		ufshcd_set_state(hba, UFSHCD_STATE_OPERATIONAL);
->  		if (hba->saved_err || hba->saved_uic_err)
->  			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x 
-> saved_uic_err 0x%x",
->  			    __func__, hba->saved_err, hba->saved_uic_err);
-> @@ -7135,7 +7150,7 @@ static int ufshcd_reset_and_restore(struct 
-> ufs_hba *hba)
->  	 */
->  	scsi_report_bus_reset(hba->host, 0);
->  	if (err) {
-> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> +		ufshcd_set_state(hba, UFSHCD_STATE_ERROR);
->  		hba->saved_err |= saved_err;
->  		hba->saved_uic_err |= saved_uic_err;
->  	}
-> @@ -7951,7 +7966,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba,
-> bool init_dev_params)
->  	unsigned long flags;
->  	ktime_t start = ktime_get();
-> 
-> -	hba->ufshcd_state = UFSHCD_STATE_RESET;
-> +	ufshcd_set_state(hba, UFSHCD_STATE_RESET);
-> 
->  	ret = ufshcd_link_startup(hba);
->  	if (ret)
-> @@ -8024,10 +8039,8 @@ static int ufshcd_probe_hba(struct ufs_hba
-> *hba, bool init_dev_params)
-> 
+> @@ -9198,6 +9204,7 @@ static int ufshcd_resume(struct ufs_hba *hba)
 >  out:
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	if (ret)
-> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> -	else if (hba->ufshcd_state == UFSHCD_STATE_RESET)
-> -		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-
-State transition to OPERATIONAL should only be from RESET, this
-is to make sure that we don't miss any new error (fatal or non-fatal)
-occurs during re-probe.
-
-Thanks,
-
-Can Guo.
-
-> +	ufshcd_set_state(hba, ret ? UFSHCD_STATE_ERROR :
-> +			 UFSHCD_STATE_OPERATIONAL);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>  	if (ret)
+>  		ufshcd_update_evt_hist(hba, UFS_EVT_RESUME_ERR, (u32)ret);
+> +	hba->pm_op_in_progress = false;
+>  	return ret;
+>  }
+>  
+> @@ -9222,6 +9229,8 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+>  	trace_ufshcd_system_suspend(dev_name(hba->dev), ret,
+>  		ktime_to_us(ktime_sub(ktime_get(), start)),
+>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
+> +	if (!ret)
+> +		hba->is_sys_suspended = true;
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(ufshcd_system_suspend);
+> @@ -9247,7 +9256,8 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+>  	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
+>  		ktime_to_us(ktime_sub(ktime_get(), start)),
+>  		hba->curr_dev_pwr_mode, hba->uic_link_state);
+> -
+> +	if (!ret)
+> +		hba->is_sys_suspended = false;
+>  	return ret;
+>  }
+>  EXPORT_SYMBOL(ufshcd_system_resume);
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 93aeeb3..1e7fe73 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -754,6 +754,8 @@ struct ufs_hba {
+>  	struct device_attribute spm_lvl_attr;
+>  	/* A flag to tell whether __ufshcd_wl_suspend/resume() is in progress */
+>  	bool wlu_pm_op_in_progress;
+> +	/* A flag to tell whether ufshcd_suspend/resume() is in progress */
+> +	bool pm_op_in_progress;
+>  
+>  	/* Auto-Hibernate Idle Timer register value */
+>  	u32 ahit;
+> @@ -841,6 +843,8 @@ struct ufs_hba {
+>  	struct ufs_clk_scaling clk_scaling;
+>  	/* A flag to tell whether the UFS device W-LU is system suspended */
+>  	bool is_wlu_sys_suspended;
+> +	/* A flag to tell whether hba is system suspended */
+> +	bool is_sys_suspended;
+>  
+>  	enum bkops_status urgent_bkops_lvl;
+>  	bool is_urgent_bkops_lvl_checked;
 > 
->  	trace_ufshcd_init(dev_name(hba->dev), ret,
+
