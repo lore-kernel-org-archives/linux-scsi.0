@@ -3,264 +3,130 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCE5AC4743C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 08:09:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55547C48BE5
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 10:27:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1D176100B
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 08:09:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37EB660E08
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 10:27:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230102AbhFWIL0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Jun 2021 04:11:26 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:46477 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230098AbhFWILY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2021 04:11:24 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1624435747; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=UlLykNknjknU1+G+VUC8eKaHj1amKYamz25Sx4ytiGE=;
- b=ixMf09jFxlRAxijaThqzDAVMLKVgjs0BIpY91065xv0RtKakuHtwdJdssMtjhZ2KrNLDSF0r
- VnUHNAXU7xT/l+raRcbnTIiztJUpfuKLhIxmvW54ljph/UDTA5jZsNXTRfrUvpkqw5KwT2ii
- 0VCHEt23UQXnjI85zBJ8wUxA6pY=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-east-1.postgun.com with SMTP id
- 60d2ec075e3e57240bb5907d (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Jun 2021 08:08:39
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 5CD30C4360C; Wed, 23 Jun 2021 08:08:38 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 04DF9C433D3;
-        Wed, 23 Jun 2021 08:08:36 +0000 (UTC)
+        id S230031AbhFWK3v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Jun 2021 06:29:51 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:59220 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230036AbhFWK3u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Jun 2021 06:29:50 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15NACQ2A013614
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 03:27:28 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=8jMjxC4gvgiWnDKTAOmKUI0D5dews+6NDfMfxXFDirI=;
+ b=ZZ+oTp7kD6ee6tUA9PXOlTimodxtHCPr+5ZbeMJ0pPZL9tnO6hxPNelmuWil7K2Dhsfy
+ hhcgAxYNsv4EWk1Mzaj0f5AFpfIF05V/2tP9nC+aNHpDHRlUdrI8yYQFYSqOlpVN8ndC
+ ZFQpHAAxUbESgBRgP2w7O8DHjDCSYcBWGT/dqRTXtP2FmMbrNkG2NnuspbBi7namktcl
+ 0UJBXKSGtznoVLVUavW6W9Mmfpus/xctgLiiWeBIvWW5dPv+1+VDy32qpQ5ywqDIOOfv
+ yEgHJXWnrTxIPQjCWVIWaIqjPweB0qePIqmnrEzgvrG8Mc1NfYfQnjozxtW8hbUa5OW9 1A== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 39bptj2hy1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 03:27:26 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 23 Jun
+ 2021 03:26:35 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Wed, 23 Jun 2021 03:26:35 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id E0D275B6938;
+        Wed, 23 Jun 2021 03:26:35 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 15NAQZxs003672;
+        Wed, 23 Jun 2021 03:26:35 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 15NAQZ5Z003671;
+        Wed, 23 Jun 2021 03:26:35 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH v3 00/11] qla2xxx: Add EDIF support
+Date:   Wed, 23 Jun 2021 03:26:00 -0700
+Message-ID: <20210623102611.3637-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Wed, 23 Jun 2021 16:08:36 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Asutosh Das <asutoshd@codeaurora.org>
-Subject: Re: [PATCH RFC 4/4] ufs: Make host controller state change handling
- more systematic
-In-Reply-To: <20210619005228.28569-5-bvanassche@acm.org>
-References: <20210619005228.28569-1-bvanassche@acm.org>
- <20210619005228.28569-5-bvanassche@acm.org>
-Message-ID: <f237403527eab4f180a3aabed2510d41@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: 8Y7hQ11NWSFvZJpGuYXx2uLTyHzmMvRM
+X-Proofpoint-GUID: 8Y7hQ11NWSFvZJpGuYXx2uLTyHzmMvRM
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
+ definitions=2021-06-23_03:2021-06-23,2021-06-23 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+Martin,
+Please apply the EDIF support feature to the scsi tree at your earliest
+convenience.
 
-On 2021-06-19 08:52, Bart Van Assche wrote:
-> Introduce a function that reports whether or not a controller state 
-> change
-> is allowed instead of duplicating these checks in every context that
-> changes the host controller state. This patch includes a behavior 
-> change:
-> ufshcd_link_recovery() no longer can change the host controller state 
-> from
-> UFSHCD_STATE_ERROR into UFSHCD_STATE_RESET.
-> 
-> Cc: Can Guo <cang@codeaurora.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 59 ++++++++++++++++++++++++---------------
->  1 file changed, 36 insertions(+), 23 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c213daec20f7..a10c8ec28468 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4070,16 +4070,32 @@ static int ufshcd_uic_change_pwr_mode(struct
-> ufs_hba *hba, u8 mode)
->  	return ret;
->  }
-> 
-> +static bool ufshcd_set_state(struct ufs_hba *hba, enum ufshcd_state 
-> new_state)
-> +{
-> +	lockdep_assert_held(hba->host->host_lock);
-> +
-> +	if (old_state != UFSHCD_STATE_ERROR || new_state == 
-> UFSHCD_STATE_ERROR)
-> +		hba->ufshcd_state = new_state;
-> +		return true;
-> +	}
-> +	return false;
-> +}
-> +
->  int ufshcd_link_recovery(struct ufs_hba *hba)
->  {
->  	int ret;
->  	unsigned long flags;
-> +	bool proceed;
-> 
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	hba->ufshcd_state = UFSHCD_STATE_RESET;
-> -	ufshcd_set_eh_in_progress(hba);
-> +	proceed = ufshcd_set_state(hba, UFSHCD_STATE_RESET);
-> +	if (proceed)
-> +		ufshcd_set_eh_in_progress(hba);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> 
-> +	if (!proceed)
-> +		return -EPERM;
-> +
->  	/* Reset the attached device */
->  	ufshcd_device_reset(hba);
-> 
-> @@ -4087,7 +4103,7 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
+v3:
+- Incorporate the review comments.
+- Enable recently added heartbeat validation for EDIF.
 
-I want to remove this function since it is only used by ufs-mediatek.c
-through ufshcd_vops_resume(). Althrough it does not race with error
-handling as of now, by removing it we can reduce one more caller of
-full reset. I will ask Stanley help comment on this.
-
-> 
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	if (ret)
-> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> +		ufshcd_set_state(hba, UFSHCD_STATE_ERROR);
->  	ufshcd_clear_eh_in_progress(hba);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> 
-> @@ -5856,15 +5872,17 @@ static inline bool
-> ufshcd_is_saved_err_fatal(struct ufs_hba *hba)
->  /* host lock must be held before calling this func */
->  static inline void ufshcd_schedule_eh_work(struct ufs_hba *hba)
->  {
-> -	/* handle fatal errors only when link is not in error state */
-> -	if (hba->ufshcd_state != UFSHCD_STATE_ERROR) {
-> -		if (hba->force_reset || ufshcd_is_link_broken(hba) ||
-> -		    ufshcd_is_saved_err_fatal(hba))
-> -			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_FATAL;
-> -		else
-> -			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_NON_FATAL;
-> +	bool proceed;
-> +
-> +	if (hba->force_reset || ufshcd_is_link_broken(hba) ||
-> +	    ufshcd_is_saved_err_fatal(hba))
-> +		proceed = ufshcd_set_state(hba,
-> +					   UFSHCD_STATE_EH_SCHEDULED_FATAL);
-> +	else
-> +		proceed = ufshcd_set_state(hba,
-> +					   UFSHCD_STATE_EH_SCHEDULED_NON_FATAL);
-> +	if (proceed)
->  		queue_work(hba->eh_wq, &hba->eh_work);
-> -	}
->  }
-> 
->  static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
-> @@ -6017,8 +6035,7 @@ static void ufshcd_err_handler(struct work_struct 
-> *work)
->  	down(&hba->host_sem);
->  	spin_lock_irqsave(hba->host->host_lock, flags);
->  	if (ufshcd_err_handling_should_stop(hba)) {
-> -		if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
-> -			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-> +		ufshcd_set_state(hba, UFSHCD_STATE_OPERATIONAL);
->  		spin_unlock_irqrestore(hba->host->host_lock, flags);
->  		up(&hba->host_sem);
->  		return;
-> @@ -6029,8 +6046,7 @@ static void ufshcd_err_handler(struct work_struct 
-> *work)
->  	/* Complete requests that have door-bell cleared by h/w */
->  	ufshcd_complete_requests(hba);
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
-> -		hba->ufshcd_state = UFSHCD_STATE_RESET;
-> +	ufshcd_set_state(hba, UFSHCD_STATE_RESET);
->  	/*
->  	 * A full reset and restore might have happened after preparation
->  	 * is finished, double check whether we should stop.
-> @@ -6163,8 +6179,7 @@ static void ufshcd_err_handler(struct work_struct 
-> *work)
-> 
->  skip_err_handling:
->  	if (!needs_reset) {
-> -		if (hba->ufshcd_state == UFSHCD_STATE_RESET)
-> -			hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-> +		ufshcd_set_state(hba, UFSHCD_STATE_OPERATIONAL);
->  		if (hba->saved_err || hba->saved_uic_err)
->  			dev_err_ratelimited(hba->dev, "%s: exit: saved_err 0x%x 
-> saved_uic_err 0x%x",
->  			    __func__, hba->saved_err, hba->saved_uic_err);
-> @@ -7135,7 +7150,7 @@ static int ufshcd_reset_and_restore(struct 
-> ufs_hba *hba)
->  	 */
->  	scsi_report_bus_reset(hba->host, 0);
->  	if (err) {
-> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> +		ufshcd_set_state(hba, UFSHCD_STATE_ERROR);
->  		hba->saved_err |= saved_err;
->  		hba->saved_uic_err |= saved_uic_err;
->  	}
-> @@ -7951,7 +7966,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba,
-> bool init_dev_params)
->  	unsigned long flags;
->  	ktime_t start = ktime_get();
-> 
-> -	hba->ufshcd_state = UFSHCD_STATE_RESET;
-> +	ufshcd_set_state(hba, UFSHCD_STATE_RESET);
-
-1. We don't hold host lock here, but ufshcd_set_state() is expecting it.
-
-2. Here we need to override the state to RESET anyways even state is 
-ERROR,
-because in ufshcd_reset_and_restore(), ufshcd_probe_hba() can be called 
-5
-times (retries == 5, see below code snippet). Otherwise, say on the 2nd
-retry of ufshcd_probe_hba(), even if ufshcd_probe_hba() pass through 
-without
-an error (ret == 0), the ufshcd_set_state() (down below) cannot set the
-state back to OPERATIONAL.
-
-7042 	do {
-7043 		/* Reset the attached device */
-7044 		ufshcd_vops_device_reset(hba);
-7045
-7046 		err = ufshcd_host_reset_and_restore(hba);
-7047 	} while (err && --retries);
+v2:
+Split the EDIF support feature into logical commits for better readability.
 
 Thanks,
+Nilesh
 
-Can Guo.
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.00.107-k
 
-> 
->  	ret = ufshcd_link_startup(hba);
->  	if (ret)
-> @@ -8024,10 +8039,8 @@ static int ufshcd_probe_hba(struct ufs_hba
-> *hba, bool init_dev_params)
-> 
->  out:
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> -	if (ret)
-> -		hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> -	else if (hba->ufshcd_state == UFSHCD_STATE_RESET)
-> -		hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
-> +	ufshcd_set_state(hba, ret ? UFSHCD_STATE_ERROR :
-> +			 UFSHCD_STATE_OPERATIONAL);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> 
->  	trace_ufshcd_init(dev_name(hba->dev), ret,
+Quinn Tran (10):
+  qla2xxx: Add start + stop bsg's
+  qla2xxx: Add getfcinfo and statistic bsg's
+  qla2xxx: Add send, receive and accept for auth_els
+  qla2xxx: Add extraction of auth_els from the wire
+  qla2xxx: Add key update
+  qla2xxx: Add authentication pass + fail bsg's
+  qla2xxx: Add detection of secure device
+  qla2xxx: Add doorbell notification for app
+  qla2xxx: Add encryption to IO path
+  qla2xxx: enable heartbeat validation for edif command
+
+ drivers/scsi/qla2xxx/Makefile       |    3 +-
+ drivers/scsi/qla2xxx/qla_attr.c     |    5 +
+ drivers/scsi/qla2xxx/qla_bsg.c      |   90 +-
+ drivers/scsi/qla2xxx/qla_bsg.h      |    3 +
+ drivers/scsi/qla2xxx/qla_dbg.h      |    1 +
+ drivers/scsi/qla2xxx/qla_def.h      |  195 +-
+ drivers/scsi/qla2xxx/qla_edif.c     | 3409 +++++++++++++++++++++++++++
+ drivers/scsi/qla2xxx/qla_edif.h     |  128 +
+ drivers/scsi/qla2xxx/qla_edif_bsg.h |  220 ++
+ drivers/scsi/qla2xxx/qla_fw.h       |   12 +-
+ drivers/scsi/qla2xxx/qla_gbl.h      |   50 +-
+ drivers/scsi/qla2xxx/qla_gs.c       |    6 +-
+ drivers/scsi/qla2xxx/qla_init.c     |  168 +-
+ drivers/scsi/qla2xxx/qla_iocb.c     |   69 +-
+ drivers/scsi/qla2xxx/qla_isr.c      |  320 ++-
+ drivers/scsi/qla2xxx/qla_mbx.c      |   33 +-
+ drivers/scsi/qla2xxx/qla_mid.c      |    7 +-
+ drivers/scsi/qla2xxx/qla_nvme.c     |    4 +
+ drivers/scsi/qla2xxx/qla_os.c       |  101 +-
+ drivers/scsi/qla2xxx/qla_target.c   |  145 +-
+ drivers/scsi/qla2xxx/qla_target.h   |   19 +-
+ drivers/scsi/qla2xxx/qla_version.h  |    4 +-
+ 22 files changed, 4845 insertions(+), 147 deletions(-)
+ create mode 100644 drivers/scsi/qla2xxx/qla_edif.c
+ create mode 100644 drivers/scsi/qla2xxx/qla_edif.h
+ create mode 100644 drivers/scsi/qla2xxx/qla_edif_bsg.h
+
+
+base-commit: 041761f4a4db662e38b4ae9d510b8beb24c7d4b6
+prerequisite-patch-id: 62258e2861a8064d0d7fc3ea4efbf71758054bde
+-- 
+2.19.0.rc0
+
