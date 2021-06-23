@@ -2,135 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21B84C4743C
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 14:30:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C40DC49EA6
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 16:09:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 005C96101D
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 14:30:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2889B611C9
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 16:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231182AbhFWOcj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Jun 2021 10:32:39 -0400
-Received: from mga17.intel.com ([192.55.52.151]:61095 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229523AbhFWOcj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Jun 2021 10:32:39 -0400
-IronPort-SDR: Df7HhXnOXxn5v6uQ80xCtCAsmN0GVOm7zT1JnbKd/lVQcbVypvE+cQg/WvXVe615mU4aCd/dKd
- KtM54rgkhTTQ==
-X-IronPort-AV: E=McAfee;i="6200,9189,10024"; a="187655225"
-X-IronPort-AV: E=Sophos;i="5.83,294,1616482800"; 
-   d="scan'208";a="187655225"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jun 2021 07:30:21 -0700
-IronPort-SDR: C6+aZbqdDk246XhXNvDOJ+/rxc9bElyLIcisJuxRPwuLzQtBtReRRYHDlf+cLC5p+HwR38Y5Vm
- iyMEAR/GTK2A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.83,294,1616482800"; 
-   d="scan'208";a="406325931"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
-  by orsmga006.jf.intel.com with ESMTP; 23 Jun 2021 07:30:17 -0700
-Subject: Re: [PATCH v4 06/10] scsi: ufs: Remove host_sem used in
- suspend/resume
-To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
- <1624433711-9339-8-git-send-email-cang@codeaurora.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <ed59d61a-6951-2acd-4f89-40f8dc5015e1@intel.com>
-Date:   Wed, 23 Jun 2021 17:30:38 +0300
+        id S230046AbhFWQL6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Jun 2021 12:11:58 -0400
+Received: from mail-pg1-f178.google.com ([209.85.215.178]:44898 "EHLO
+        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230122AbhFWQL4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jun 2021 12:11:56 -0400
+Received: by mail-pg1-f178.google.com with SMTP id t13so2143898pgu.11
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jun 2021 09:09:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Gj6dYb/dDvQS7990nnwYIw5LCj0RlqsWgicXodrjM8I=;
+        b=osrru+BhZYxQV0KiQ7+3gKuoDi//TDU49nFoKlRnkanZS9tlJ6H3u0L4Ob0DZqxxKS
+         fTpYX40xx5OW83BtFxb17AG0Q4rN/Hm+uS4YfW2Qf2Hf9namiWDc/HHWltuTv8RwpzZW
+         M/HuiF58jLREQyRCtVqPgIYm1/YvprnhPy88DxkxKiOSJjCwzR0TNzxWKomy3D4t9zah
+         TbMWnVIk1BzXc3D4yIsOeNDqoSnJEeU525YB2b9jrRhwBZhjjxJOA8FUwfFZfiZPzJM/
+         vfIcvpEOIzzolfkzoEv2udV6uHy1DaNqjNEiHopCtFMSr0nFkc637+RxSyZC7CY3ruX7
+         faOg==
+X-Gm-Message-State: AOAM530ag5SaFJEid5P2rmC2udzV2+Avu2mHYpoqLXFGbL9Z1Ud/PDmK
+        wegbE4vzXZHbd27VA/mJUxFffimc8+k=
+X-Google-Smtp-Source: ABdhPJw/QhEJekMwkZcriLfurK8DAfsNMKWaSj374cMXFHnJCH5Fy8sS7auWvp00k0hzASDNRG2Fxw==
+X-Received: by 2002:aa7:8d01:0:b029:2f0:88da:1821 with SMTP id j1-20020aa78d010000b02902f088da1821mr447542pfe.67.1624464576652;
+        Wed, 23 Jun 2021 09:09:36 -0700 (PDT)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id p14sm346677pgb.2.2021.06.23.09.09.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Jun 2021 09:09:36 -0700 (PDT)
+Subject: Re: [PATCH 03/18] scsi: add scsi_{get,put}_internal_cmd() helper
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org
+References: <20210503150333.130310-1-hare@suse.de>
+ <20210503150333.130310-4-hare@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <cf177d09-fb2d-fc9f-b0ee-cdd75360413f@acm.org>
+Date:   Wed, 23 Jun 2021 09:09:33 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <1624433711-9339-8-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20210503150333.130310-4-hare@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 23/06/21 10:35 am, Can Guo wrote:
-> To protect system suspend/resume from being disturbed by error handling,
-> instead of using host_sem, let error handler call lock_system_sleep() and
-> unlock_system_sleep() which achieve the same purpose. Remove the host_sem
-> used in suspend/resume paths to make the code more readable.
-> 
-> Suggested-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Can Guo <cang@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 3695dd2..a09e4a2 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5907,6 +5907,11 @@ static void ufshcd_clk_scaling_suspend(struct ufs_hba *hba, bool suspend)
->  
->  static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->  {
-> +	/*
-> +	 * It is not safe to perform error handling while suspend or resume is
-> +	 * in progress. Hence the lock_system_sleep() call.
-> +	 */
-> +	lock_system_sleep();
+On 5/3/21 8:03 AM, Hannes Reinecke wrote:
+> +struct scsi_cmnd *scsi_get_internal_cmd(struct scsi_device *sdev,
+> +	unsigned int op, blk_mq_req_flags_t flags)
+> +{
+> +	struct request *rq;
+> +	struct scsi_cmnd *scmd;
+> +
+> +	WARN_ON_ONCE(((op & REQ_OP_MASK) != REQ_OP_SCSI_IN) &&
+> +		     ((op & REQ_OP_MASK) != REQ_OP_SCSI_OUT));
 
-It looks to me like the system takes this lock quite early, even before
-freezing tasks, so if anything needs the error handler to run it will
-deadlock.
+Consider using blk_op_is_scsi() instead of open-coding it.
 
->  	ufshcd_rpm_get_sync(hba);
->  	if (pm_runtime_status_suspended(&hba->sdev_ufs_device->sdev_gendev) ||
->  	    hba->is_wlu_sys_suspended) {
-> @@ -5951,6 +5956,7 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
->  		ufshcd_clk_scaling_suspend(hba, false);
->  	ufshcd_clear_ua_wluns(hba);
->  	ufshcd_rpm_put(hba);
-> +	unlock_system_sleep();
->  }
->  
->  static inline bool ufshcd_err_handling_should_stop(struct ufs_hba *hba)
-> @@ -9053,16 +9059,13 @@ static int ufshcd_wl_suspend(struct device *dev)
->  	ktime_t start = ktime_get();
->  
->  	hba = shost_priv(sdev->host);
-> -	down(&hba->host_sem);
->  
->  	if (pm_runtime_suspended(dev))
->  		goto out;
->  
->  	ret = __ufshcd_wl_suspend(hba, UFS_SYSTEM_PM);
-> -	if (ret) {
-> +	if (ret)
->  		dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__,  ret);
-> -		up(&hba->host_sem);
-> -	}
->  
->  out:
->  	if (!ret)
-> @@ -9095,7 +9098,6 @@ static int ufshcd_wl_resume(struct device *dev)
->  		hba->curr_dev_pwr_mode, hba->uic_link_state);
->  	if (!ret)
->  		hba->is_wlu_sys_suspended = false;
-> -	up(&hba->host_sem);
->  	return ret;
->  }
->  #endif
-> 
+Thanks,
 
+Bart.
