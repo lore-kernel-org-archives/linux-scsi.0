@@ -2,157 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61E10C2B9F4
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 01:34:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 175E3C2B9F4
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 01:35:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4762461361
-	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 01:34:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E635061375
+	for <linux-scsi@archiver.kernel.org>; Wed, 23 Jun 2021 01:35:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230160AbhFWBgS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 22 Jun 2021 21:36:18 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:42456 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229751AbhFWBgR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Jun 2021 21:36:17 -0400
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15N1VTbw002726;
-        Wed, 23 Jun 2021 01:33:49 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2020-01-29;
- bh=FySvbdNMmyTRQXrXc14aFXVQaugJW0ULK5j5EGaHxDI=;
- b=TqVAtUnjadfmPy0+d4gnjoa6OH7mjOu8xhZvYjPxW/aRSBiTmC8+qaE6zZA1hWgV0FAb
- LK+53bKW/CZoqogUd+wFQd5pXDnf5+2yScDNzKVV4Sj/Jjua/kiNn38umEp00uBN2M1M
- RW+UlwPGay+uuR37g0X4CaCwK7J4Go3tzON1741xKgTWny/L49g//zkIKITm6r0+lET/
- MFdBq+/MeAGdDRQHqXpKc3ofUCSK3L3BRss3lqPjJJ45OMkvG97uAtizLbLT0dYlpe26
- oMUT+iABdl7GE78u1Kuglz8XILLRW6YG+YSpGHKxajOC83gtnEBoGJZanvH1AlDxPwvB 7g== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 39aqqvvjwe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 23 Jun 2021 01:33:49 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15N1FR31076371;
-        Wed, 23 Jun 2021 01:33:48 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2176.outbound.protection.outlook.com [104.47.58.176])
-        by aserp3020.oracle.com with ESMTP id 3998d8cgg3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 23 Jun 2021 01:33:47 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=CMSOiFToZylNrgC+WlARw8sKqZJnYYhahf5/5g0GgbCIF8DhKX/ooTh3qkGax5X1AwnUdcRctZKFFbtxudJ/x2nf1UViekVib23Ac1WuhLFWUG6y8XNepKyhcK1gv39Cmys0ONuWgyH5Q5UwhRuZsYZyprnvXWrXkOrJ4bMW7YqlhlHa+FI2hMw776MZp0djB2ME051aOcuj9+F48Yb7AoNeTFsW9U74Na2S5sV3fQJeb0WIQKfjzAAJpcgYVLv+ca9ugRTuYmafw77HK5a2pfrM86zZY/EHVVPEIyGRZrQDKEWvg1G142OKfxsvw64kQ9LiJAxlBdrv+HcsUqohyg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FySvbdNMmyTRQXrXc14aFXVQaugJW0ULK5j5EGaHxDI=;
- b=LWBI2f/VwvNlH9U0s6fBNF2OKqmfStr4LDJlzHfyiT/GXRAUiL6Rbs/lrfLOJ6HcACZ7KooZnPRUtz2IcSUt8sCchQhiEUjkn3aVgyEWyDzNm+PpxHpY229XzF3QcMj1jxHLZhpSmaeNfs7V/doPGed5kK8jqGnoEXsF8slVHM+jjuul1lmx/jPDHYaSz1gaX6eRRSL2k4KYDr8+R1wZBTYQQ+cssA/1Kfab6AAdBgnF4YrE0KSPbwoh6rKnovShvayyAds+E/4D9GbLWvTCa3UWrnyHckjpkTwfqR4O0HgW/qVCVRZT/VeYTNhE08NQjxZlYiHmWO1yoDYL8MInvw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FySvbdNMmyTRQXrXc14aFXVQaugJW0ULK5j5EGaHxDI=;
- b=W8o4rA9HTxNJYITkvbwRSAtRJpuzd3CwHO52EqtQERXGnSrPYe9XtzL+X8yCYMEFNzE4drSaFdzAdrj5IsEyc54u+fD5AJ9auVtFJEOntnHc+0cLFxknOTbXE6gI7mkC1xAilMNBdUKWIv693s1AJSbnGEdxqbKLnb5x6AnnOII=
-Authentication-Results: huawei.com; dkim=none (message not signed)
- header.d=none;huawei.com; dmarc=none action=none header.from=oracle.com;
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB4501.namprd10.prod.outlook.com (2603:10b6:510:43::7) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4264.18; Wed, 23 Jun
- 2021 01:33:46 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::4c61:9532:4af0:8796]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::4c61:9532:4af0:8796%7]) with mapi id 15.20.4242.024; Wed, 23 Jun 2021
- 01:33:46 +0000
-To:     Yufen Yu <yuyufen@huawei.com>
-Cc:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <john.garry@huawei.com>, <linux-scsi@vger.kernel.org>,
-        <yanaijie@huawei.com>, Wu Bo <wubo40@huawei.com>
-Subject: Re: [PATCH v3] scsi: libsas: add lun number check in .slave_alloc
- callback
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq1k0mls6tq.fsf@ca-mkp.ca.oracle.com>
-References: <20210622034037.1467088-1-yuyufen@huawei.com>
-Date:   Tue, 22 Jun 2021 21:33:43 -0400
-In-Reply-To: <20210622034037.1467088-1-yuyufen@huawei.com> (Yufen Yu's message
-        of "Tue, 22 Jun 2021 11:40:37 +0800")
-Content-Type: text/plain
-X-Originating-IP: [138.3.200.58]
-X-ClientProxiedBy: SJ0PR03CA0149.namprd03.prod.outlook.com
- (2603:10b6:a03:33c::34) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        id S230015AbhFWBhS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 22 Jun 2021 21:37:18 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:61849 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229751AbhFWBhS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jun 2021 21:37:18 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1624412102; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=+4WX1+XKSVWz3RW6iMyqFbDGyD0cNV+UYK/Z+DXHS7M=;
+ b=jPIstFSX6fOrKsnTl4m4vU17EojsUmN3Gp+JYQbJBiqXR6F8b828WHvB19Q+J24DH/XIzfRK
+ p9ig4476XoZVGL7fDZWpOhKPIO8VqO1o+Vmz/lCMQGXdK4PQQhJdB5jFsf7iLp22cr+miS4P
+ n66aLL3aTf+rf46+XPwQRiV6zE0=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 60d28fb3638039e9977d6dec (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Wed, 23 Jun 2021 01:34:43
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 349A9C4360C; Wed, 23 Jun 2021 01:34:43 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 5974CC433F1;
+        Wed, 23 Jun 2021 01:34:42 +0000 (UTC)
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SJ0PR03CA0149.namprd03.prod.outlook.com (2603:10b6:a03:33c::34) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4264.18 via Frontend Transport; Wed, 23 Jun 2021 01:33:45 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 856ac420-9ff1-449a-210b-08d935e6f199
-X-MS-TrafficTypeDiagnostic: PH0PR10MB4501:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <PH0PR10MB45011C20A9B4A2DAC55651C78E089@PH0PR10MB4501.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:5236;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 5cPpU0XHRjnPGGYOpLKjghuDnlLlfv3XQwfwKw+aV4S7zD7qHemezL2AdQPju35E/8lumACE66Zsm6CPE6P/BJmlr3MP3Bf7/sIoyATXZ+xGc/aU/Fa0+WctrqUtktbhaPL6L/t91cbFCxN41znQ5xykhBRIVfvAwT6O743tO923MUDE00O4ER5EnFdlG7khnSYyXpWMEjw3eqTWlttQckAAEeCKiKNUD9GFptplZOE7aZPEWwmFAvtG3k+3yhK/wOUwsyXuU+ozZQR77ks42ExpWkJYay64L5mi4jQtg9HrGnzUXdEGNcBFu/XL+Bf67dnCWjUN7ZQ7LLAl6BcmhVWCpswGQhrVmh5MyW20++TgR+40FE+2dKL7ReV8KUxMgpL4qE7bKIqAlbPuCxdQqtRfdpJsi5LfOK2WDBBIO/gNYh9ZRFS5DRXvTPTNpVjhxIM3SSUDbuqnsATi27Lkh5ApPmj/40KSkD/hUznwIkrnDh5DQ9AHlq+P1uVf2wSTgnLy0yeoNTJki6lmFpIJwNi3bYjOQjUFNH1zWP/xiC3rFx/249FiyK5s94vJBATuL+YLpVH/tj+ddmCu8dxNAJeMCe2i5lS8xoXyaxy2DX6li9V01JNpWDex7ADOrL+mQhXz7ZugrVC/nWpa8y1dmWlD6fkzHz9iSTjHr3YgadPbo2CQ2a2CZ+3ZsZ8yZJ5+
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(346002)(376002)(366004)(39860400002)(396003)(6916009)(8676002)(16526019)(26005)(956004)(38100700002)(38350700002)(2906002)(4326008)(316002)(86362001)(36916002)(66556008)(558084003)(8936002)(66476007)(7696005)(66946007)(52116002)(54906003)(55016002)(186003)(5660300002)(478600001)(142923001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?r+uKn029JkqREQIGrfCDpnOb2ixZBOakKZOxr0de++WpdbgOC1463Y0TTl48?=
- =?us-ascii?Q?CbS6GrpttAB4jUB95IybWYIqX0rJik5A/T1eu7yXh8JSgtaB/7PggZY0WT5K?=
- =?us-ascii?Q?jzxVZXSN8+/2j/vAsu6Bv0ffVOyQzYLm61Kz6v0BYRDgATdDN04iDJH7DdON?=
- =?us-ascii?Q?+a8FiaPYyFRwXPNr/TJd0dsKUSsTMvp87xbICgdCSU3nFEOyiemVbiAMhnGP?=
- =?us-ascii?Q?+uIPw1hwPKwoW8pgwSfM/eP00PjLaIfE5dX7if8Mt2VrDlq+L385cS2O+S1L?=
- =?us-ascii?Q?SfPVanDY3BD/syEiJBz00Yv+jF6ObqpmAPmMAOg885dhfcPrqGY82CrY2gTF?=
- =?us-ascii?Q?AdISkbgHcBVwlh+GSD7mxfcpcdtdUlx3jxUAtQI4cV5lO6wrui9X5ZA8zMai?=
- =?us-ascii?Q?mgObr0dFyq3eUDmSHvFDYx7qqv1yUA6tr3iress1ZCtIO2O/3t1jMFhnqoSw?=
- =?us-ascii?Q?9ZGaOExjUk/dttB9QbgjLgwN6AjkwPOte02ZX5kUh25l+IKTfqME/LbFZ8sR?=
- =?us-ascii?Q?GmYc5AJ2++/34SesYyAWJkqKtepnPgaN5qpgLflvujMPTy6GVtN85pOwCsFC?=
- =?us-ascii?Q?BgNfuRbrCd0+yfSpV+V/2XcsutaU5a+SomowuJLxqych98nUeEOekETXdXQi?=
- =?us-ascii?Q?7Gg3oxqgJT4uvTLAV6ZYIg0d6M+/4j4meaufbiSkf8NpewDXKKdp920arzlJ?=
- =?us-ascii?Q?7q9OF8OxBHo8bxLyZjs579Z4WNQLwSMoLCWwdoTECJp0z7P9Q+hbqdMDsYSl?=
- =?us-ascii?Q?/N+RSxI0Sy1ql82ygwHUDhFhemGv0RQ1r5T0Xjo6DrCTr+vgi9zkRsYZSUYu?=
- =?us-ascii?Q?lPovC161JGkaNIf08SXZi+fZPpd0pm04JrVL5WXxrnFvKE3F9adaEw6LVXAz?=
- =?us-ascii?Q?z8U8LIn6IW2GafJ89z2J+PAYV9vLvJchJkDRqRPFZA8x2am1dCfuQvZafmmD?=
- =?us-ascii?Q?Gm9XbZ7ply0eiNGZxqDXAnj059MmAE4P9X41zgUb6D5ibpxNXxNtrk+M9fzs?=
- =?us-ascii?Q?YZki30RXseN4YVpQBMfnuwEU9j7N8ylpBXDw5KWh/1vJVeyqN37a9ZpTPCsG?=
- =?us-ascii?Q?xU3NP9HcaPl8dzcE2ZRynRYO+rbczlMXGuedryV9/AdRACpsHaYSjFJ5kIZy?=
- =?us-ascii?Q?jKrhnQKUtuIwTu7o1TlTnD21oPPftGZQ45uMEnVLBfamTbhoIWVo/QeSK/wH?=
- =?us-ascii?Q?6Lo9aWKrq1kWOaubNpKlZXUfbDEutJTas/fye3txQqGqc/IkCu4jHr4U7O0P?=
- =?us-ascii?Q?L/atf49JP4CSh0nOirwhLAeLL2iMwBUn7nfxlOEbpaP1Si5KHZodle1LIT1J?=
- =?us-ascii?Q?7aIHnAUoFOJKytlxPJYgLDEj?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 856ac420-9ff1-449a-210b-08d935e6f199
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jun 2021 01:33:46.3164
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pFLxxyldna16O/hicU7241MaW0x6Zi1IPsb9WoGK9/7L0LCz4WELTZnHgDsIdeaKkUPyiwqN18XPEddypial17qDCnZSf/jLaHXB1QokIlE=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4501
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10023 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 adultscore=0
- mlxlogscore=999 phishscore=0 suspectscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
- definitions=main-2106230004
-X-Proofpoint-ORIG-GUID: v58GmeEjUqSW9Ev7Gjie3YEkAoQ9TQO7
-X-Proofpoint-GUID: v58GmeEjUqSW9Ev7Gjie3YEkAoQ9TQO7
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Wed, 23 Jun 2021 09:34:42 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v3 8/9] scsi: ufs: Update the fast abort path in
+ ufshcd_abort() for PM requests
+In-Reply-To: <2fa53602-8968-09e4-60f4-28462d85ae08@acm.org>
+References: <1623300218-9454-1-git-send-email-cang@codeaurora.org>
+ <1623300218-9454-9-git-send-email-cang@codeaurora.org>
+ <fa37645b-3c1e-2272-d492-0c2b563131b1@acm.org>
+ <16f5bd448c7ae1a45fcb23133391aa3f@codeaurora.org>
+ <926d8c4a-0fbf-a973-188a-b10c9acaa444@acm.org>
+ <75527f0ba5d315d6edbf800a2ddcf8c7@codeaurora.org>
+ <8b27b0cc-ae16-173a-bd6f-0321a6aba01c@acm.org>
+ <3fce15502c2742a4388817538eb4db97@codeaurora.org>
+ <fabc70f8-6bb8-4b62-3311-f6e0ce9eb2c3@acm.org>
+ <8aae95071b9ab3c0a3cab91d1ae138e1@codeaurora.org>
+ <0081ad7c-8a15-62bb-0e6a-82552aab5309@acm.org>
+ <8eadb2f2e30804faf23c9c71e5724d08@codeaurora.org>
+ <2fa53602-8968-09e4-60f4-28462d85ae08@acm.org>
+Message-ID: <386c2e650232d7a900f5c1bbf98bd5a5@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Bart,
 
-Yufen,
+On 2021-06-17 01:55, Bart Van Assche wrote:
+> On 6/16/21 1:47 AM, Can Guo wrote:
+>> On 2021-06-16 12:40, Bart Van Assche wrote:
+>>> On 6/15/21 9:00 PM, Can Guo wrote:
+>>>> 2. And say we want SCSI layer to resubmit PM requests to prevent
+>>>> suspend/resume fail, we should keep retrying the PM requests (so
+>>>> long as error handler can recover everything successfully),
+>>>> meaning we should give them unlimited retries (which I think is a
+>>>> bad idea), otherwise (if they have zero retries or limited
+>>>> retries), in extreme conditions, what may happen is that error
+>>>> handler can recover everything successfully every time, but all
+>>>> these retries (say 3) still time out, which block the power
+>>>> management for too long (retries * 60 seconds) and, most
+>>>> important, when the last retry times out, scsi layer will
+>>>> anyways complete the PM request (even we return DID_IMM_RETRY),
+>>>> then we end up same - suspend/resume shall run concurrently with
+>>>> error handler and we couldn't recover saved PM errors.
+>>> 
+>>> Hmm ... it is not clear to me why this behavior is considered a
+>>> problem?
+>> 
+>> To me, task abort to PM requests does not worth being treated so
+>> differently, after all suspend/resume may fail due to any kinds of
+>> UFS errors (as I've explained so many times). My idea is to let PM
+>> requests fast fail (60 seconds has passed, a broken device maybe, we
+>> have reason to fail it since it is just a passthrough req) and
+>> schedule UFS error handler, UFS error handler shall proceed after
+>> suspend/resume fails out then start to recover everything in a safe
+>> environment. Is this way not working?
+> Hi Can,
+> 
+> Thank you for the clarification. As you probably know the power
+> management subsystem serializes runtime power management (RPM) and
+> system suspend callbacks. I was concerned about the consequences of a
+> failed RPM transition on system suspend and resume. Having taken a
+> closer look at the UFS driver, I see that failed RPM transitions do not
+> require special handling in the system suspend or resume callbacks. In
+> other words, I'm fine with the approach of failing PM requests fast.
+> 
 
-> We found that offline a sata device on hisi sas control and then
-> scanning the host can probe 255 not-existant devices into system.
+Thank you for your time and efforts spent on this series, I will upload
+next version to address your previous comments (hope I can convince 
+Trilok
+to pick these up).
 
-Applied to 5.14/scsi-staging, thanks!
+Thanks,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Can Guo.
+
+> Bart.
