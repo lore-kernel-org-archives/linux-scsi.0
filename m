@@ -2,98 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE666C49EA5
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 17:27:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C021C49EA6
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 17:32:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8B956613F2
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 17:27:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F300561075
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 17:32:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232077AbhFXR3m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Jun 2021 13:29:42 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:40564 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229573AbhFXR3m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Jun 2021 13:29:42 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 242974244B;
-        Thu, 24 Jun 2021 17:27:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        mime-version:content-transfer-encoding:content-type:content-type
-        :content-language:accept-language:in-reply-to:references
-        :message-id:date:date:subject:subject:from:from:received
-        :received:received:received; s=mta-01; t=1624555641; x=
-        1626370042; bh=0azvXi0tVbaBc9x9cnLK2kI5DckMx0jtgixtgYnLhcs=; b=B
-        +5eMxEZ3vTl+S2N7+B9PVX0RIrjTl/2ytVIEbLjtOQ4aOYpRs96Cas2WLlfajD4C
-        pshbG3RONF0k8W4Aqr5CXstJcldfja9CpT7sWjZ+M0Pr1siWTjhJytLk8yJb/4Am
-        szU3/Z9JaWAWey0eQFX6VPS7Bwd+Do+Bc0fUZTPhNw=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id kCuJ7nBGOoVl; Thu, 24 Jun 2021 20:27:21 +0300 (MSK)
-Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id EF52A42C03;
-        Thu, 24 Jun 2021 20:27:20 +0300 (MSK)
-Received: from T-EXCH-03.corp.yadro.com (172.17.100.103) by
- T-EXCH-03.corp.yadro.com (172.17.100.103) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Thu, 24 Jun 2021 20:27:20 +0300
-Received: from T-EXCH-03.corp.yadro.com ([fe80::39f4:7b05:b1d3:5272]) by
- T-EXCH-03.corp.yadro.com ([fe80::39f4:7b05:b1d3:5272%14]) with mapi id
- 15.01.0669.032; Thu, 24 Jun 2021 20:27:20 +0300
-From:   Sergey Samoylenko <s.samoylenko@yadro.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "michael.christie@oracle.com" <michael.christie@oracle.com>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux@yadro.com" <linux@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Konstantin Shelekhin <k.shelekhin@yadro.com>
-Subject: RE: [PATCH 1/1] scsi: target: core: Fix sense key for invalid XCOPY
- request
-Thread-Topic: [PATCH 1/1] scsi: target: core: Fix sense key for invalid XCOPY
- request
-Thread-Index: AQHXaOr0HC/8j5iIqkSi3dBQXUYXPKsjHzmAgABFBmA=
-Date:   Thu, 24 Jun 2021 17:27:20 +0000
-Message-ID: <ddf079075d234fc09e524e5485b84ec7@yadro.com>
-References: <20210624111926.63176-1-s.samoylenko@yadro.com>
- <20210624111926.63176-2-s.samoylenko@yadro.com>
- <5981680f-96ad-3c4e-6640-c3cca709a57c@acm.org>
-In-Reply-To: <5981680f-96ad-3c4e-6640-c3cca709a57c@acm.org>
-Accept-Language: ru-RU, en-US
-Content-Language: ru-RU
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.199.0.253]
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S232300AbhFXRe7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Jun 2021 13:34:59 -0400
+Received: from mail-pl1-f170.google.com ([209.85.214.170]:37549 "EHLO
+        mail-pl1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229464AbhFXRe6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jun 2021 13:34:58 -0400
+Received: by mail-pl1-f170.google.com with SMTP id y21so3324426plb.4;
+        Thu, 24 Jun 2021 10:32:38 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=7mkCkEwXQBHYc4yoTuGzapJQixnK7les2iDpwlzJsuo=;
+        b=NdDxU8/6SN3l+4qljsFjZ4gHMKksDEQPmLgiiBqm9NcXx8vTGNvhxC+nKf3LpiYlNW
+         gL151sqWWu6PfHDIgAzpxJK8iOD5gLdpBRqWEvhsmMo3+17o7z6GpQ/rYH+2uDBBDg9g
+         sk0+koYvwL9MW9w2i4NOWeFtlNcpvqNkwxm+4nwGS6WmAbLxIxtDsbK4u3/O0UoKIIB8
+         ihis5nauAkFIOfCcmLpLEg3XlgWwi7Ryuglo/S9U5IdVxuJxrAbpbHstO3E5SScRaOiZ
+         UYdZE9m6CgrR0qUt5YF25xdly708MDa3gpN3wvCxmW6FaYE25GD4nJEWVlDpqRqKl4o6
+         7CJA==
+X-Gm-Message-State: AOAM532m21JgHrX/dDx4Et0cv6p0K78VUdeKKD9fO7eMPrN4qtz1KDJO
+        EDleOfHTDyGESxQAP0IdgyJ+c1lHHL5IeQ==
+X-Google-Smtp-Source: ABdhPJyH4XqAg6hLJhMqZ3dMwRiI23X1p+PVWJycWy/irAG5i5R8Hsp0UPJpiZE9nWKXuPtateldQA==
+X-Received: by 2002:a17:902:e545:b029:111:6990:4103 with SMTP id n5-20020a170902e545b029011169904103mr5192664plf.63.1624555957778;
+        Thu, 24 Jun 2021 10:32:37 -0700 (PDT)
+Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id 18sm8741183pje.22.2021.06.24.10.32.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Jun 2021 10:32:37 -0700 (PDT)
+Subject: Re: [PATCH v4 01/10] scsi: ufs: Rename flags pm_op_in_progress and
+ is_sys_suspended
+To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        nguyenb@codeaurora.org, hongwus@codeaurora.org,
+        ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
+        kernel-team@android.com
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Satya Tangirala <satyat@google.com>,
+        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
+ <1624433711-9339-2-git-send-email-cang@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <71e7d714-8cb9-1f57-9035-e43c147b5c61@acm.org>
+Date:   Thu, 24 Jun 2021 10:32:34 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
+In-Reply-To: <1624433711-9339-2-git-send-email-cang@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thank you Bart,
+On 6/23/21 12:35 AM, Can Guo wrote:
+> Rename pm_op_in_progress and is_sys_suspended to wlu_pm_op_in_progress and
+> is_wlu_sys_suspended accordingly.
 
-I used API (target_complete_cmd_with_sense) which is not in
-mainline kernel. I need to change the patch.
-Sorry, this is my mistake.
+Can the pm_op_in_progress variable be removed if the UFS driver checks whether
+q->rpm_status == RPM_SUSPENDING || q->rpm_status == RPM_RESUMING instead of
+using pm_op_in_progress? The fewer state variables we maintain the lower the
+chance that these are inconsistent or incorrect. See also block/blk-pm.c for
+the code that sets q->rpm_status.
 
-Sergey.
+Thanks,
 
->On 6/24/21 4:19 AM, Sergey Samoylenko wrote:
->> +	pr_warn_ratelimited("target_xcopy_do_work: rc: %d, sense: %u,"
->> +		" XCOPY operation failed\n", rc, sense_rc);
->
->Please do not split format strings across multiple lines. Checkpatch
->should have complained about this.
->
->Thanks,
->
->Bart.
+Bart.
