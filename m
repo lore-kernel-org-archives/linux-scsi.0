@@ -2,54 +2,53 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C021C49EA6
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 17:32:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA03FC49EA5
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 17:35:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F300561075
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 17:32:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CBC7D613EA
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 17:35:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232300AbhFXRe7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Jun 2021 13:34:59 -0400
-Received: from mail-pl1-f170.google.com ([209.85.214.170]:37549 "EHLO
-        mail-pl1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229464AbhFXRe6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jun 2021 13:34:58 -0400
-Received: by mail-pl1-f170.google.com with SMTP id y21so3324426plb.4;
-        Thu, 24 Jun 2021 10:32:38 -0700 (PDT)
+        id S232174AbhFXRh6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Jun 2021 13:37:58 -0400
+Received: from mail-pl1-f171.google.com ([209.85.214.171]:33768 "EHLO
+        mail-pl1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229721AbhFXRh5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jun 2021 13:37:57 -0400
+Received: by mail-pl1-f171.google.com with SMTP id f10so3346714plg.0;
+        Thu, 24 Jun 2021 10:35:37 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=7mkCkEwXQBHYc4yoTuGzapJQixnK7les2iDpwlzJsuo=;
-        b=NdDxU8/6SN3l+4qljsFjZ4gHMKksDEQPmLgiiBqm9NcXx8vTGNvhxC+nKf3LpiYlNW
-         gL151sqWWu6PfHDIgAzpxJK8iOD5gLdpBRqWEvhsmMo3+17o7z6GpQ/rYH+2uDBBDg9g
-         sk0+koYvwL9MW9w2i4NOWeFtlNcpvqNkwxm+4nwGS6WmAbLxIxtDsbK4u3/O0UoKIIB8
-         ihis5nauAkFIOfCcmLpLEg3XlgWwi7Ryuglo/S9U5IdVxuJxrAbpbHstO3E5SScRaOiZ
-         UYdZE9m6CgrR0qUt5YF25xdly708MDa3gpN3wvCxmW6FaYE25GD4nJEWVlDpqRqKl4o6
-         7CJA==
-X-Gm-Message-State: AOAM532m21JgHrX/dDx4Et0cv6p0K78VUdeKKD9fO7eMPrN4qtz1KDJO
-        EDleOfHTDyGESxQAP0IdgyJ+c1lHHL5IeQ==
-X-Google-Smtp-Source: ABdhPJyH4XqAg6hLJhMqZ3dMwRiI23X1p+PVWJycWy/irAG5i5R8Hsp0UPJpiZE9nWKXuPtateldQA==
-X-Received: by 2002:a17:902:e545:b029:111:6990:4103 with SMTP id n5-20020a170902e545b029011169904103mr5192664plf.63.1624555957778;
-        Thu, 24 Jun 2021 10:32:37 -0700 (PDT)
+        bh=x8YDqjlY3Yhk+5aYy3Mt9hst4lMIKy4S0P/FHR83jL8=;
+        b=Q0y4ptmW0uzOAH9w5y/glR/NMa2sx0qfeAAsx0/jAiZ9QqFJjmnYDJIr8EMBb0SDYK
+         svmhVJT5kEWQWWejOo4k8dJUIKgqU0jjnDbRLnbVswJ6+pfjdiUeqfhAS7xse3JkUE8N
+         WGlZP1d7eCzquVbQUEUlkbjyDguFIlDfs1aij/TPeQ9k9ZHsExZD4gzU2TncUi1yOWda
+         3tsI2NPrsw47f7yYbeTEqb0+mawMJ2jUPRHAuXqBnOc02qt4w44pmnwyGyfVu36H/lQ1
+         FJEKJav9Wn5pxB+ai/LvNGPuUZwCasdqomoWkba+FAXQPgWV1PxkoEhbJMnDqwz+M5fX
+         z4JA==
+X-Gm-Message-State: AOAM532J7GgFvHFVyvl3/0mF5ZOPRKa7iOwd2jJO1Qocu80brp9oLbs4
+        eBZ37cp5eTukxJvu57XjIsF1agTKW54UHQ==
+X-Google-Smtp-Source: ABdhPJyJTxjm8a4rguy/WDm+Y82IhEjZYDyQ3Yz9Rdv88ukNXnO07lu6xNFBZbpmscPS7ZDFXoXtKA==
+X-Received: by 2002:a17:90a:6404:: with SMTP id g4mr16349851pjj.155.1624556136704;
+        Thu, 24 Jun 2021 10:35:36 -0700 (PDT)
 Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id 18sm8741183pje.22.2021.06.24.10.32.35
+        by smtp.gmail.com with ESMTPSA id c62sm3444447pfa.12.2021.06.24.10.35.34
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 24 Jun 2021 10:32:37 -0700 (PDT)
-Subject: Re: [PATCH v4 01/10] scsi: ufs: Rename flags pm_op_in_progress and
+        Thu, 24 Jun 2021 10:35:35 -0700 (PDT)
+Subject: Re: [PATCH v4 02/10] scsi: ufs: Add flags pm_op_in_progress and
  is_sys_suspended
 To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
         nguyenb@codeaurora.org, hongwus@codeaurora.org,
         ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
         kernel-team@android.com
-Cc:     Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -57,19 +56,18 @@ Cc:     Andy Gross <agross@kernel.org>,
         Bean Huo <beanhuo@micron.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
         Satya Tangirala <satyat@google.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
 References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
- <1624433711-9339-2-git-send-email-cang@codeaurora.org>
+ <1624433711-9339-3-git-send-email-cang@codeaurora.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <71e7d714-8cb9-1f57-9035-e43c147b5c61@acm.org>
-Date:   Thu, 24 Jun 2021 10:32:34 -0700
+Message-ID: <77b92c6e-2e1c-c799-f6ac-04467175f96a@acm.org>
+Date:   Thu, 24 Jun 2021 10:35:33 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <1624433711-9339-2-git-send-email-cang@codeaurora.org>
+In-Reply-To: <1624433711-9339-3-git-send-email-cang@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -78,14 +76,41 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 6/23/21 12:35 AM, Can Guo wrote:
-> Rename pm_op_in_progress and is_sys_suspended to wlu_pm_op_in_progress and
-> is_wlu_sys_suspended accordingly.
+> @@ -9141,6 +9143,8 @@ static int ufshcd_suspend(struct ufs_hba *hba)
+>  
+>  	if (!hba->is_powered)
+>  		return 0;
+> +
+> +	hba->pm_op_in_progress = true;
+>  	/*
+>  	 * Disable the host irq as host controller as there won't be any
+>  	 * host controller transaction expected till resume.
+> @@ -9160,6 +9164,7 @@ static int ufshcd_suspend(struct ufs_hba *hba)
+>  	ufshcd_vreg_set_lpm(hba);
+>  	/* Put the host controller in low power mode if possible */
+>  	ufshcd_hba_vreg_set_lpm(hba);
+> +	hba->pm_op_in_progress = false;
+>  	return ret;
+>  }
+>  
+> @@ -9179,6 +9184,7 @@ static int ufshcd_resume(struct ufs_hba *hba)
+>  	if (!hba->is_powered)
+>  		return 0;
+>  
+> +	hba->pm_op_in_progress = true;
+>  	ufshcd_hba_vreg_set_hpm(hba);
+>  	ret = ufshcd_vreg_set_hpm(hba);
+>  	if (ret)
+> @@ -9198,6 +9204,7 @@ static int ufshcd_resume(struct ufs_hba *hba)
+>  out:
+>  	if (ret)
+>  		ufshcd_update_evt_hist(hba, UFS_EVT_RESUME_ERR, (u32)ret);
+> +	hba->pm_op_in_progress = false;
+>  	return ret;
+>  }
 
-Can the pm_op_in_progress variable be removed if the UFS driver checks whether
-q->rpm_status == RPM_SUSPENDING || q->rpm_status == RPM_RESUMING instead of
-using pm_op_in_progress? The fewer state variables we maintain the lower the
-chance that these are inconsistent or incorrect. See also block/blk-pm.c for
-the code that sets q->rpm_status.
+Has it been considered to check dev->power.runtime_status instead of
+introducing the pm_op_in_progress variable?
 
 Thanks,
 
