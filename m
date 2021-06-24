@@ -2,143 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43750C49EA5
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 11:20:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EAC2C48BDF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 11:45:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2CE446124C
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 11:20:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10BC0613C7
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 11:45:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232466AbhFXLW7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Jun 2021 07:22:59 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:42300 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S232005AbhFXLW4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Jun 2021 07:22:56 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id A348F42C08;
-        Thu, 24 Jun 2021 11:20:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received; s=mta-01; t=
-        1624533635; x=1626348036; bh=ltpEwS9aHPtc1zOKIjrtGJ53x5c98aniDIW
-        BQ4ObvRM=; b=oOIJGfxB+xjw/vcQtttZ+xczQ6cTFoYsUg4dFRIK3XpjhPHi6Ae
-        02ie99uRLeSsQVQKN3Q7Pmgv8FkgQb9Z3i9DATjR6AcK+Y6/4wLI1mgBT+SM8d7r
-        /wcNfsVpFJfguY82G0tyxEtmvd/+Yru3l4DwIOVbwdJVySk9XWdy7G7s=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id hB-Sgf12yFlh; Thu, 24 Jun 2021 14:20:35 +0300 (MSK)
-Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id D254F42B95;
-        Thu, 24 Jun 2021 14:20:35 +0300 (MSK)
-Received: from yadro.com (10.199.0.253) by T-EXCH-03.corp.yadro.com
- (172.17.100.103) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Thu, 24
- Jun 2021 14:20:35 +0300
-From:   Sergey Samoylenko <s.samoylenko@yadro.com>
-To:     <martin.petersen@oracle.com>, <michael.christie@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        Sergey Samoylenko <s.samoylenko@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Konstantin Shelekhin <k.shelekhin@yadro.com>
-Subject: [PATCH 1/1] scsi: target: core: Fix sense key for invalid XCOPY request
-Date:   Thu, 24 Jun 2021 14:19:26 +0300
-Message-ID: <20210624111926.63176-2-s.samoylenko@yadro.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210624111926.63176-1-s.samoylenko@yadro.com>
-References: <20210624111926.63176-1-s.samoylenko@yadro.com>
+        id S229864AbhFXLsF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Jun 2021 07:48:05 -0400
+Received: from mga07.intel.com ([134.134.136.100]:59479 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229464AbhFXLsE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Jun 2021 07:48:04 -0400
+IronPort-SDR: DtRH+tJHV728X3wNWWua2nCcDwUAEh4oWKa9mTUhcxPo1WpxcpfyHRHzrXBvt8KWsyccacUd0D
+ +GxT8dohxckA==
+X-IronPort-AV: E=McAfee;i="6200,9189,10024"; a="271299477"
+X-IronPort-AV: E=Sophos;i="5.83,296,1616482800"; 
+   d="scan'208";a="271299477"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2021 04:45:45 -0700
+IronPort-SDR: G/x/Aj4ZfK6zrckJse1ZzlSVn5Arrtq/Y3Huf2aZZ5c3UOL8GRzgC/ju8hgpINp0HQ4cADtBjo
+ bc6+VzipzOMQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.83,296,1616482800"; 
+   d="scan'208";a="406617865"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
+  by orsmga006.jf.intel.com with ESMTP; 24 Jun 2021 04:45:40 -0700
+Subject: Re: [PATCH] scsi: ufs: Refactor ufshcd_is_intr_aggr_allowed()
+To:     keosung.park@samsung.com, "joe@perches.com" <joe@perches.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        "satyat@google.com" <satyat@google.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Joao Pinto <jpinto@synopsys.com>,
+        Pedro Sousa <sousa@synopsys.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>
+References: <42c2978f-f0ca-3efb-7762-cac813a0a5fe@intel.com>
+ <ed6d8c44-295e-aaa7-4b5f-7929c1c797d1@intel.com>
+ <1891546521.01624267081897.JavaMail.epsvc@epcpadp4>
+ <37380050.31624517282371.JavaMail.epsvc@epcpadp4>
+ <CGME20210621085158epcms2p46170ba48174547df00b9720dbc843110@epcms2p1>
+ <1891546521.01624533302400.JavaMail.epsvc@epcpadp3>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <abd587ed-6666-34b8-b545-8ea97bcf0515@intel.com>
+Date:   Thu, 24 Jun 2021 14:46:02 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.199.0.253]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-03.corp.yadro.com (172.17.100.103)
+In-Reply-To: <1891546521.01624533302400.JavaMail.epsvc@epcpadp3>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-TCM fails to pass the following tests in libiscsi:
+On 24/06/21 1:44 pm, Keoseong Park wrote:
+>> On 24/06/21 9:41 am, Keoseong Park wrote:
+>>>> On 21/06/21 11:51 am, Keoseong Park wrote:
+>>>>> Change conditional compilation to IS_ENABLED macro,
+>>>>> and simplify if else statement to return statement.
+>>>>> No functional change.
+>>>>>
+>>>>> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+>>>>> ---
+>>>>>  drivers/scsi/ufs/ufshcd.h | 17 ++++++++---------
+>>>>>  1 file changed, 8 insertions(+), 9 deletions(-)
+>>>>>
+>>>>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>>>>> index c98d540ac044..6d239a855753 100644
+>>>>> --- a/drivers/scsi/ufs/ufshcd.h
+>>>>> +++ b/drivers/scsi/ufs/ufshcd.h
+>>>>> @@ -893,16 +893,15 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
+>>>>>  
+>>>>>  static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
+>>>>>  {
+>>>>> -/* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
+>>>>> -#ifndef CONFIG_SCSI_UFS_DWC
+>>>>> -	if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
+>>>>> -	    !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
+>>>>> +	/*
+>>>>> +	 * DWC UFS Core has the Interrupt aggregation feature
+>>>>> +	 * but is not detectable.
+>>>>> +	 */
+>>>>> +	if (IS_ENABLED(CONFIG_SCSI_UFS_DWC))
+>>>>
+>>>> Why is this needed?  It seems like you could just set UFSHCD_CAP_INTR_AGGR
+>>>> and clear UFSHCD_QUIRK_BROKEN_INTR_AGGR instead?
+>>>
+>>> Hello Adrian,
+>>> Sorry for late reply.
+>>>
+>>> The code that returns true when CONFIG_SCSI_UFS_DWC is set in the original code 
+>>> is only changed using the IS_ENABLED macro.
+>>> (Linux kernel coding style, 21) Conditional Compilation)
+>>>
+>>> When CONFIG_SCSI_UFS_DWC is not defined, the code for checking quirk 
+>>> and caps has been moved to the newly added return statement below.
+>>
+>> Looking closer I cannot find CONFIG_SCSI_UFS_DWC at all.  It seems like it
+>> never existed.
+>>
+>> Why should we not remove the code related to CONFIG_SCSI_UFS_DWC entirely?
+> 
+> You're right. What do you think of deleting the code related to CONFIG_SCSI_UFS_DWC 
+> and changing it to the patch below?
 
-  SCSI.ExtendedCopy.DescrType
-  SCSI.ExtendedCopy.DescrLimits
-  SCSI.ExtendedCopy.ParamHdr
-  SCSI.ExtendedCopy.ValidSegDescr
-  SCSI.ExtendedCopy.ValidTgtDescr
+Yes, but cc Joao Pinto <jpinto@synopsys.com> who introduced the code
 
-XCOPY always returns the same NOT READY sense key for all
-detected errors. It changes a sense key for invalid requests
-to ILLEGAL REQUEST sense key, for aborted transferring data
-(IO error and etc.) to COPY ABORTED.
-
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Reviewed-by: Konstantin Shelekhin <k.shelekhin@yadro.com>
-Signed-off-by: Sergey Samoylenko <s.samoylenko@yadro.com>
----
- drivers/target/target_core_xcopy.c | 26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 0f1319336f3e..64baf3e8c079 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -674,12 +674,16 @@ static void target_xcopy_do_work(struct work_struct *work)
- 	unsigned int max_sectors;
- 	int rc = 0;
- 	unsigned short nolb, max_nolb, copied_nolb = 0;
-+	sense_reason_t sense_rc;
- 
--	if (target_parse_xcopy_cmd(xop) != TCM_NO_SENSE)
-+	sense_rc = target_parse_xcopy_cmd(xop);
-+	if (sense_rc != TCM_NO_SENSE)
- 		goto err_free;
- 
--	if (WARN_ON_ONCE(!xop->src_dev) || WARN_ON_ONCE(!xop->dst_dev))
-+	if (WARN_ON_ONCE(!xop->src_dev) || WARN_ON_ONCE(!xop->dst_dev)) {
-+		sense_rc = TCM_INVALID_PARAMETER_LIST;
- 		goto err_free;
-+	}
- 
- 	src_dev = xop->src_dev;
- 	dst_dev = xop->dst_dev;
-@@ -762,20 +766,20 @@ static void target_xcopy_do_work(struct work_struct *work)
- 	return;
- 
- out:
-+	/*
-+	 * The XCOPY command was aborted after some data was transferred.
-+	 * Terminate command with CHECK CONDITION status, with the sense key
-+	 * set to COPY ABORTED.
-+	 */
-+	sense_rc = TCM_COPY_TARGET_DEVICE_NOT_REACHABLE;
- 	xcopy_pt_undepend_remotedev(xop);
- 	target_free_sgl(xop->xop_data_sg, xop->xop_data_nents);
- 
- err_free:
- 	kfree(xop);
--	/*
--	 * Don't override an error scsi status if it has already been set
--	 */
--	if (ec_cmd->scsi_status == SAM_STAT_GOOD) {
--		pr_warn_ratelimited("target_xcopy_do_work: rc: %d, Setting X-COPY"
--			" CHECK_CONDITION -> sending response\n", rc);
--		ec_cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
--	}
--	target_complete_cmd(ec_cmd, ec_cmd->scsi_status);
-+	pr_warn_ratelimited("target_xcopy_do_work: rc: %d, sense: %u,"
-+		" XCOPY operation failed\n", rc, sense_rc);
-+	target_complete_cmd_with_sense(ec_cmd, sense_rc);
- }
- 
- /*
--- 
-2.25.1
+> 
+> ---
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index c98d540ac044..c9faca237290 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -893,16 +893,8 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
+> 
+>  static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
+>  {
+> -/* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
+> -#ifndef CONFIG_SCSI_UFS_DWC
+> -       if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
+> -           !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
+> -               return true;
+> -       else
+> -               return false;
+> -#else
+> -return true;
+> -#endif
+> +       return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
+> +               !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
+>  }
+> 
+>>
+>>
+>>>
+>>> Thanks,
+>>> Keoseong
+>>>
+>>>>
+>>>>>  		return true;
+>>>>> -	else
+>>>>> -		return false;
+>>>>> -#else
+>>>>> -return true;
+>>>>> -#endif
+>>>>> +
+>>>>> +	return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
+>>>>> +		!(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
+>>>>>  }
+>>>>>  
+>>>>>  static inline bool ufshcd_can_aggressive_pc(struct ufs_hba *hba)
+>>>>>
+>>>>
+>>
 
