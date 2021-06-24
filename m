@@ -2,51 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 092E6C48BC2
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 02:07:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD43C48BC2
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 02:12:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CA70D6137D
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 02:07:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A4D2613A9
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 02:12:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229818AbhFXCKN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 23 Jun 2021 22:10:13 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:12477 "EHLO m43-7.mailgun.net"
+        id S229844AbhFXCOV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 23 Jun 2021 22:14:21 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:55643 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229759AbhFXCKM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Jun 2021 22:10:12 -0400
+        id S229826AbhFXCOU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Jun 2021 22:14:20 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1624500474; h=Message-ID: References: In-Reply-To: Subject:
+ s=smtp; t=1624500722; h=Message-ID: References: In-Reply-To: Subject:
  Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=6atE1ASy+KdwLOEiHKmOOplUQomy6HEtQ2ed88jbMqY=;
- b=q3F3tz5eLEGvRDoFLMNgRCE/8NvS8NdzcZ9Y3oi9bvN9fLBHYCpBPvluftFWYiWtTNty/E7/
- 5pfHa1jOtrvxvG/G90J6rYVWpWmiiybjNJoulfkCTM0G/Op34W4l2bl4zvlqUMNv7L0GfV5c
- 0LV/Yu4x7lwcSfMaJeNYUwcLhik=
+ MIME-Version: Sender; bh=Ibr7ATXXDdGRj26ITAaHjj7gFL18k0W8orTknu55oeI=;
+ b=GbHa/3//Cn5/ACV4Il7lFw5M9DaLR1Abf98A3sitdqDUiOFKVk954zLYIPm2kGyWeGyp0SZt
+ l+Ek8lboKhA2Bbn2Lyna1u6ypBbaUlJrsRPzkQAINt3bi4/zh+OSoGbIY9fw3M2uEjN2ZbvS
+ Wcv4tLck1FRXS3RglYoc9eeiXgw=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 60d3e8f3638039e997e45ace (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Jun 2021 02:07:47
+ smtp-out-n04.prod.us-west-2.postgun.com with SMTP id
+ 60d3e9e32a2a9a9761ffb9b8 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Jun 2021 02:11:47
  GMT
 Sender: cang=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id D7335C43144; Thu, 24 Jun 2021 02:07:46 +0000 (UTC)
+        id EB1AAC43143; Thu, 24 Jun 2021 02:11:46 +0000 (UTC)
 Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
         (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
         (No client certificate requested)
         (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 0BE80C433F1;
-        Thu, 24 Jun 2021 02:07:45 +0000 (UTC)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id DA17DC433F1;
+        Thu, 24 Jun 2021 02:11:45 +0000 (UTC)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Date:   Thu, 24 Jun 2021 10:07:45 +0800
+Date:   Thu, 24 Jun 2021 10:11:45 +0800
 From:   Can Guo <cang@codeaurora.org>
 To:     Bart Van Assche <bvanassche@acm.org>
 Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
@@ -59,58 +60,70 @@ Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Satya Tangirala <satyat@google.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
         open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 02/10] scsi: ufs: Add flags pm_op_in_progress and
- is_sys_suspended
-In-Reply-To: <e728719d-8e43-0e5a-af7a-14196dafa2a9@acm.org>
+Subject: Re: [PATCH v4 03/10] scsi: ufs: Update the return value of supplier
+ pm ops
+In-Reply-To: <59b0c04a-298a-4eae-7938-8170835c00b7@acm.org>
 References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
- <1624433711-9339-3-git-send-email-cang@codeaurora.org>
- <e728719d-8e43-0e5a-af7a-14196dafa2a9@acm.org>
-Message-ID: <fba43980b0a50bd09e70eaa8a4fea49d@codeaurora.org>
+ <1624433711-9339-4-git-send-email-cang@codeaurora.org>
+ <59b0c04a-298a-4eae-7938-8170835c00b7@acm.org>
+Message-ID: <1b9c53737fbd4a93ced02abe1441f12b@codeaurora.org>
 X-Sender: cang@codeaurora.org
 User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-06-24 04:59, Bart Van Assche wrote:
+On 2021-06-24 05:08, Bart Van Assche wrote:
 > On 6/23/21 12:35 AM, Can Guo wrote:
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 93aeeb3..1e7fe73 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -754,6 +754,8 @@ struct ufs_hba {
->>  	struct device_attribute spm_lvl_attr;
->>  	/* A flag to tell whether __ufshcd_wl_suspend/resume() is in 
->> progress */
->>  	bool wlu_pm_op_in_progress;
->> +	/* A flag to tell whether ufshcd_suspend/resume() is in progress */
->> +	bool pm_op_in_progress;
+>> rpm_get_suppliers() is returning an error only if the error is 
+>> negative.
+>> However, ufshcd_wl_resume() may return a positive error code, e.g., 
+>> when
+>> hibern8 or SSU cmd fails. Make the positive return value a negative 
+>> error
+>> code so that consumers are aware of any resume failure from their 
+>> supplier.
+>> Make the same change to ufshcd_wl_suspend() just to keep symmetry.
 >> 
->>  	/* Auto-Hibernate Idle Timer register value */
->>  	u32 ahit;
->> @@ -841,6 +843,8 @@ struct ufs_hba {
->>  	struct ufs_clk_scaling clk_scaling;
->>  	/* A flag to tell whether the UFS device W-LU is system suspended */
->>  	bool is_wlu_sys_suspended;
->> +	/* A flag to tell whether hba is system suspended */
->> +	bool is_sys_suspended;
+>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>> ---
+>>  drivers/scsi/ufs/ufshcd.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
 >> 
->>  	enum bkops_status urgent_bkops_lvl;
->>  	bool is_urgent_bkops_lvl_checked;
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index abe5f2d..ee70522 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -8922,7 +8922,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba 
+>> *hba, enum ufs_pm_op pm_op)
+>>  		ufshcd_release(hba);
+>>  	}
+>>  	hba->wlu_pm_op_in_progress = false;
+>> -	return ret;
+>> +	return ret <= 0 ? ret : -EINVAL;
+>>  }
+>> 
+>>  static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op 
+>> pm_op)
+>> @@ -9009,7 +9009,7 @@ static int __ufshcd_wl_resume(struct ufs_hba 
+>> *hba, enum ufs_pm_op pm_op)
+>>  	hba->clk_gating.is_suspended = false;
+>>  	ufshcd_release(hba);
+>>  	hba->wlu_pm_op_in_progress = false;
+>> -	return ret;
+>> +	return ret <= 0 ? ret : -EINVAL;
+>>  }
 > 
-> It is not yet clear to me whether we really need these new member
-> variables. If these are retained, please rename pm_op_in_progress into
-> platform_pm_op_in_progress and is_sys_suspended into
-> platform_is_sys_suspended.
+> I think the above patch shows that indicating failure by either
+> returning a positive or a negative value is a booby trap. Please modify
+> ufshcd_send_request_sense() and ufshcd_set_dev_pwr_mode() such that
+> these return a value that is either zero or negative. Are there any
+> other functions than that need to be modified?
 
-Hi Bart,
-
-These flags are informative when we debug some UFS issues and they
-are used by later changes. Sure, I will modify the namings.
+Yes, there are more of them - both enter/exit_hibern8() and 
+reset_and_restore()
+can return positive values. I will modify all of them in next ver.
 
 Thanks,
 
