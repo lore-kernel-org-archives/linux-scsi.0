@@ -2,174 +2,340 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EAC2C48BDF
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 11:45:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DC62C49EA6
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 12:40:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10BC0613C7
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 11:45:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73CA9613FA
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 12:40:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229864AbhFXLsF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Jun 2021 07:48:05 -0400
-Received: from mga07.intel.com ([134.134.136.100]:59479 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229464AbhFXLsE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Jun 2021 07:48:04 -0400
-IronPort-SDR: DtRH+tJHV728X3wNWWua2nCcDwUAEh4oWKa9mTUhcxPo1WpxcpfyHRHzrXBvt8KWsyccacUd0D
- +GxT8dohxckA==
-X-IronPort-AV: E=McAfee;i="6200,9189,10024"; a="271299477"
-X-IronPort-AV: E=Sophos;i="5.83,296,1616482800"; 
-   d="scan'208";a="271299477"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Jun 2021 04:45:45 -0700
-IronPort-SDR: G/x/Aj4ZfK6zrckJse1ZzlSVn5Arrtq/Y3Huf2aZZ5c3UOL8GRzgC/ju8hgpINp0HQ4cADtBjo
- bc6+VzipzOMQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.83,296,1616482800"; 
-   d="scan'208";a="406617865"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
-  by orsmga006.jf.intel.com with ESMTP; 24 Jun 2021 04:45:40 -0700
-Subject: Re: [PATCH] scsi: ufs: Refactor ufshcd_is_intr_aggr_allowed()
-To:     keosung.park@samsung.com, "joe@perches.com" <joe@perches.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        "satyat@google.com" <satyat@google.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Pedro Sousa <sousa@synopsys.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>
-References: <42c2978f-f0ca-3efb-7762-cac813a0a5fe@intel.com>
- <ed6d8c44-295e-aaa7-4b5f-7929c1c797d1@intel.com>
- <1891546521.01624267081897.JavaMail.epsvc@epcpadp4>
- <37380050.31624517282371.JavaMail.epsvc@epcpadp4>
- <CGME20210621085158epcms2p46170ba48174547df00b9720dbc843110@epcms2p1>
- <1891546521.01624533302400.JavaMail.epsvc@epcpadp3>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <abd587ed-6666-34b8-b545-8ea97bcf0515@intel.com>
-Date:   Thu, 24 Jun 2021 14:46:02 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S231661AbhFXMmZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Jun 2021 08:42:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47718 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231610AbhFXMmU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jun 2021 08:42:20 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C1316C061574;
+        Thu, 24 Jun 2021 05:40:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=FhT7jjrlHLjpQaVJvWJtq0damwMxwXuO2NevODqm/2M=; b=FaA0XMI3GgGp9a44zv5QhXzYii
+        vk2YbYepeR1CWi9qH4IcD+K9KbZUVTHrlVPiOxF1KyxMumUg3xUNgJAeWJdoO8WiSRj4a7XECLi9o
+        FMrtTGjc5OL7jhlVkAZa6sI5QUMzxM7Y6/aLQ2cjOPFwTi8QGG1SmwSHjPTb3C7NYONBFivtLzFyI
+        YTH1hDxOW2fEBgYDbaiaGzMc7sdG0/kOTW/lsRJOpFGACwQbX4urUzMFF7rad/6ld5323szqz8jDV
+        KBZSUj6PGjBUwLQ4OdG7xTkr/6lWCcGg12ATq6gl6b+yoO2qE8hmpJQ7yL8mGJLNIapBE45E5V7QC
+        0VzbTmfw==;
+Received: from 213-225-9-92.nat.highway.a1.net ([213.225.9.92] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1lwOdu-00GZkD-Th; Thu, 24 Jun 2021 12:39:45 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     axboe@kernel.dk
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH 1/2] block: remove REQ_OP_SCSI_{IN,OUT}
+Date:   Thu, 24 Jun 2021 14:39:34 +0200
+Message-Id: <20210624123935.479229-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-In-Reply-To: <1891546521.01624533302400.JavaMail.epsvc@epcpadp3>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/06/21 1:44 pm, Keoseong Park wrote:
->> On 24/06/21 9:41 am, Keoseong Park wrote:
->>>> On 21/06/21 11:51 am, Keoseong Park wrote:
->>>>> Change conditional compilation to IS_ENABLED macro,
->>>>> and simplify if else statement to return statement.
->>>>> No functional change.
->>>>>
->>>>> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
->>>>> ---
->>>>>  drivers/scsi/ufs/ufshcd.h | 17 ++++++++---------
->>>>>  1 file changed, 8 insertions(+), 9 deletions(-)
->>>>>
->>>>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->>>>> index c98d540ac044..6d239a855753 100644
->>>>> --- a/drivers/scsi/ufs/ufshcd.h
->>>>> +++ b/drivers/scsi/ufs/ufshcd.h
->>>>> @@ -893,16 +893,15 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
->>>>>  
->>>>>  static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
->>>>>  {
->>>>> -/* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
->>>>> -#ifndef CONFIG_SCSI_UFS_DWC
->>>>> -	if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
->>>>> -	    !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
->>>>> +	/*
->>>>> +	 * DWC UFS Core has the Interrupt aggregation feature
->>>>> +	 * but is not detectable.
->>>>> +	 */
->>>>> +	if (IS_ENABLED(CONFIG_SCSI_UFS_DWC))
->>>>
->>>> Why is this needed?  It seems like you could just set UFSHCD_CAP_INTR_AGGR
->>>> and clear UFSHCD_QUIRK_BROKEN_INTR_AGGR instead?
->>>
->>> Hello Adrian,
->>> Sorry for late reply.
->>>
->>> The code that returns true when CONFIG_SCSI_UFS_DWC is set in the original code 
->>> is only changed using the IS_ENABLED macro.
->>> (Linux kernel coding style, 21) Conditional Compilation)
->>>
->>> When CONFIG_SCSI_UFS_DWC is not defined, the code for checking quirk 
->>> and caps has been moved to the newly added return statement below.
->>
->> Looking closer I cannot find CONFIG_SCSI_UFS_DWC at all.  It seems like it
->> never existed.
->>
->> Why should we not remove the code related to CONFIG_SCSI_UFS_DWC entirely?
-> 
-> You're right. What do you think of deleting the code related to CONFIG_SCSI_UFS_DWC 
-> and changing it to the patch below?
+With the legacy IDE driver gone drivers now use either REQ_OP_DRV_*
+or REQ_OP_SCSI_*, so unify the two concepts of passthrough requests
+into a single one.
 
-Yes, but cc Joao Pinto <jpinto@synopsys.com> who introduced the code
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/blk-core.c                   |  2 --
+ block/bsg-lib.c                    |  2 +-
+ block/bsg.c                        |  2 +-
+ block/scsi_ioctl.c                 |  6 +++---
+ drivers/block/pktcdvd.c            |  2 +-
+ drivers/cdrom/cdrom.c              |  2 +-
+ drivers/scsi/scsi_error.c          |  2 +-
+ drivers/scsi/scsi_lib.c            |  8 ++++----
+ drivers/scsi/sg.c                  |  2 +-
+ drivers/scsi/st.c                  |  2 +-
+ drivers/target/target_core_pscsi.c |  2 +-
+ fs/nfsd/blocklayout.c              |  2 +-
+ include/linux/blk_types.h          |  3 ---
+ include/linux/blkdev.h             | 33 +++---------------------------
+ 14 files changed, 19 insertions(+), 51 deletions(-)
 
-> 
-> ---
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index c98d540ac044..c9faca237290 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -893,16 +893,8 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
-> 
->  static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
->  {
-> -/* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
-> -#ifndef CONFIG_SCSI_UFS_DWC
-> -       if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
-> -           !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
-> -               return true;
-> -       else
-> -               return false;
-> -#else
-> -return true;
-> -#endif
-> +       return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
-> +               !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
->  }
-> 
->>
->>
->>>
->>> Thanks,
->>> Keoseong
->>>
->>>>
->>>>>  		return true;
->>>>> -	else
->>>>> -		return false;
->>>>> -#else
->>>>> -return true;
->>>>> -#endif
->>>>> +
->>>>> +	return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
->>>>> +		!(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
->>>>>  }
->>>>>  
->>>>>  static inline bool ufshcd_can_aggressive_pc(struct ufs_hba *hba)
->>>>>
->>>>
->>
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 514838ccab2d..3eea8d795565 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -142,8 +142,6 @@ static const char *const blk_op_name[] = {
+ 	REQ_OP_NAME(ZONE_APPEND),
+ 	REQ_OP_NAME(WRITE_SAME),
+ 	REQ_OP_NAME(WRITE_ZEROES),
+-	REQ_OP_NAME(SCSI_IN),
+-	REQ_OP_NAME(SCSI_OUT),
+ 	REQ_OP_NAME(DRV_IN),
+ 	REQ_OP_NAME(DRV_OUT),
+ };
+diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+index 330fede77271..57b082bc9017 100644
+--- a/block/bsg-lib.c
++++ b/block/bsg-lib.c
+@@ -45,7 +45,7 @@ static int bsg_transport_fill_hdr(struct request *rq, struct sg_io_v4 *hdr,
+ 		return PTR_ERR(job->request);
+ 
+ 	if (hdr->dout_xfer_len && hdr->din_xfer_len) {
+-		job->bidi_rq = blk_get_request(rq->q, REQ_OP_SCSI_IN, 0);
++		job->bidi_rq = blk_get_request(rq->q, REQ_OP_DRV_IN, 0);
+ 		if (IS_ERR(job->bidi_rq)) {
+ 			ret = PTR_ERR(job->bidi_rq);
+ 			goto out;
+diff --git a/block/bsg.c b/block/bsg.c
+index bd10922d5cbb..323e45878362 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -152,7 +152,7 @@ static int bsg_sg_io(struct request_queue *q, fmode_t mode, void __user *uarg)
+ 		return ret;
+ 
+ 	rq = blk_get_request(q, hdr.dout_xfer_len ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
++			REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(rq))
+ 		return PTR_ERR(rq);
+ 
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 1b3fe99b83a6..41ca95bfe607 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -311,7 +311,7 @@ static int sg_io(struct request_queue *q, struct gendisk *bd_disk,
+ 		at_head = 1;
+ 
+ 	ret = -ENOMEM;
+-	rq = blk_get_request(q, writing ? REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
++	rq = blk_get_request(q, writing ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(rq))
+ 		return PTR_ERR(rq);
+ 	req = scsi_req(rq);
+@@ -433,7 +433,7 @@ int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk, fmode_t mode,
+ 
+ 	}
+ 
+-	rq = blk_get_request(q, in_len ? REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
++	rq = blk_get_request(q, in_len ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(rq)) {
+ 		err = PTR_ERR(rq);
+ 		goto error_free_buffer;
+@@ -521,7 +521,7 @@ static int __blk_send_generic(struct request_queue *q, struct gendisk *bd_disk,
+ 	struct request *rq;
+ 	int err;
+ 
+-	rq = blk_get_request(q, REQ_OP_SCSI_OUT, 0);
++	rq = blk_get_request(q, REQ_OP_DRV_OUT, 0);
+ 	if (IS_ERR(rq))
+ 		return PTR_ERR(rq);
+ 	rq->timeout = BLK_DEFAULT_SG_TIMEOUT;
+diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
+index f69b5c69c2a6..538446b652de 100644
+--- a/drivers/block/pktcdvd.c
++++ b/drivers/block/pktcdvd.c
+@@ -704,7 +704,7 @@ static int pkt_generic_packet(struct pktcdvd_device *pd, struct packet_command *
+ 	int ret = 0;
+ 
+ 	rq = blk_get_request(q, (cgc->data_direction == CGC_DATA_WRITE) ?
+-			     REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
++			     REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(rq))
+ 		return PTR_ERR(rq);
+ 
+diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
+index 90ad34c6ef8e..feb827eefd1a 100644
+--- a/drivers/cdrom/cdrom.c
++++ b/drivers/cdrom/cdrom.c
+@@ -2186,7 +2186,7 @@ static int cdrom_read_cdda_bpc(struct cdrom_device_info *cdi, __u8 __user *ubuf,
+ 
+ 		len = nr * CD_FRAMESIZE_RAW;
+ 
+-		rq = blk_get_request(q, REQ_OP_SCSI_IN, 0);
++		rq = blk_get_request(q, REQ_OP_DRV_IN, 0);
+ 		if (IS_ERR(rq)) {
+ 			ret = PTR_ERR(rq);
+ 			break;
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d8fafe77dbbe..03a2ff547b22 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2011,7 +2011,7 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
+ 	struct request *req;
+ 	struct scsi_request *rq;
+ 
+-	req = blk_get_request(sdev->request_queue, REQ_OP_SCSI_IN, 0);
++	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(req))
+ 		return;
+ 	rq = scsi_req(req);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 532304d42f00..6cc7dad923cb 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -215,7 +215,7 @@ int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 
+ 	req = blk_get_request(sdev->request_queue,
+ 			data_direction == DMA_TO_DEVICE ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN,
++			REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
+ 			rq_flags & RQF_PM ? BLK_MQ_REQ_PM : 0);
+ 	if (IS_ERR(req))
+ 		return ret;
+@@ -540,7 +540,7 @@ static bool scsi_end_request(struct request *req, blk_status_t error,
+ 	if (blk_queue_add_random(q))
+ 		add_disk_randomness(req->rq_disk);
+ 
+-	if (!blk_rq_is_scsi(req)) {
++	if (!blk_rq_is_passthrough(req)) {
+ 		WARN_ON_ONCE(!(cmd->flags & SCMD_INITIALIZED));
+ 		cmd->flags &= ~SCMD_INITIALIZED;
+ 	}
+@@ -1115,7 +1115,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
+ 	bool in_flight;
+ 	int budget_token = cmd->budget_token;
+ 
+-	if (!blk_rq_is_scsi(rq) && !(flags & SCMD_INITIALIZED)) {
++	if (!blk_rq_is_passthrough(rq) && !(flags & SCMD_INITIALIZED)) {
+ 		flags |= SCMD_INITIALIZED;
+ 		scsi_initialize_rq(rq);
+ 	}
+@@ -1556,7 +1556,7 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
+ 	 * Special handling for passthrough commands, which don't go to the ULP
+ 	 * at all:
+ 	 */
+-	if (blk_rq_is_scsi(req))
++	if (blk_rq_is_passthrough(req))
+ 		return scsi_setup_scsi_cmnd(sdev, req);
+ 
+ 	if (sdev->handler && sdev->handler->prep_fn) {
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index def7ec3bbaf9..f84fa550dd15 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1756,7 +1756,7 @@ sg_start_req(Sg_request *srp, unsigned char *cmd)
+ 	 * not expect an EWOULDBLOCK from this condition.
+ 	 */
+ 	rq = blk_get_request(q, hp->dxfer_direction == SG_DXFER_TO_DEV ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
++			REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(rq)) {
+ 		kfree(long_cmdp);
+ 		return PTR_ERR(rq);
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 3b1afe1d5b27..86c951c654a8 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -549,7 +549,7 @@ static int st_scsi_execute(struct st_request *SRpnt, const unsigned char *cmd,
+ 
+ 	req = blk_get_request(SRpnt->stp->device->request_queue,
+ 			data_direction == DMA_TO_DEVICE ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
++			REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(req))
+ 		return DRIVER_ERROR << 24;
+ 	rq = scsi_req(req);
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index f2a11414366d..4531cf47d24e 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -982,7 +982,7 @@ pscsi_execute_cmd(struct se_cmd *cmd)
+ 
+ 	req = blk_get_request(pdv->pdv_sd->request_queue,
+ 			cmd->data_direction == DMA_TO_DEVICE ?
+-			REQ_OP_SCSI_OUT : REQ_OP_SCSI_IN, 0);
++			REQ_OP_DRV_OUT : REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(req)) {
+ 		pr_err("PSCSI: blk_get_request() failed\n");
+ 		ret = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
+diff --git a/fs/nfsd/blocklayout.c b/fs/nfsd/blocklayout.c
+index 1058659a8d31..c99dee99a3c1 100644
+--- a/fs/nfsd/blocklayout.c
++++ b/fs/nfsd/blocklayout.c
+@@ -236,7 +236,7 @@ static int nfsd4_scsi_identify_device(struct block_device *bdev,
+ 	if (!buf)
+ 		return -ENOMEM;
+ 
+-	rq = blk_get_request(q, REQ_OP_SCSI_IN, 0);
++	rq = blk_get_request(q, REQ_OP_DRV_IN, 0);
+ 	if (IS_ERR(rq)) {
+ 		error = -ENOMEM;
+ 		goto out_free_buf;
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index fd3860d18d7e..db61f7df1823 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -350,9 +350,6 @@ enum req_opf {
+ 	/* reset all the zone present on the device */
+ 	REQ_OP_ZONE_RESET_ALL	= 17,
+ 
+-	/* SCSI passthrough using struct scsi_request */
+-	REQ_OP_SCSI_IN		= 32,
+-	REQ_OP_SCSI_OUT		= 33,
+ 	/* Driver private requests */
+ 	REQ_OP_DRV_IN		= 34,
+ 	REQ_OP_DRV_OUT		= 35,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d66d0da72529..d199e51524eb 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -240,42 +240,15 @@ struct request {
+ 	void *end_io_data;
+ };
+ 
+-static inline bool blk_op_is_scsi(unsigned int op)
+-{
+-	return op == REQ_OP_SCSI_IN || op == REQ_OP_SCSI_OUT;
+-}
+-
+-static inline bool blk_op_is_private(unsigned int op)
++static inline bool blk_op_is_passthrough(unsigned int op)
+ {
++	op &= REQ_OP_MASK;
+ 	return op == REQ_OP_DRV_IN || op == REQ_OP_DRV_OUT;
+ }
+ 
+-static inline bool blk_rq_is_scsi(struct request *rq)
+-{
+-	return blk_op_is_scsi(req_op(rq));
+-}
+-
+-static inline bool blk_rq_is_private(struct request *rq)
+-{
+-	return blk_op_is_private(req_op(rq));
+-}
+-
+ static inline bool blk_rq_is_passthrough(struct request *rq)
+ {
+-	return blk_rq_is_scsi(rq) || blk_rq_is_private(rq);
+-}
+-
+-static inline bool bio_is_passthrough(struct bio *bio)
+-{
+-	unsigned op = bio_op(bio);
+-
+-	return blk_op_is_scsi(op) || blk_op_is_private(op);
+-}
+-
+-static inline bool blk_op_is_passthrough(unsigned int op)
+-{
+-	return (blk_op_is_scsi(op & REQ_OP_MASK) ||
+-			blk_op_is_private(op & REQ_OP_MASK));
++	return blk_op_is_passthrough(req_op(rq));
+ }
+ 
+ static inline unsigned short req_get_ioprio(struct request *req)
+-- 
+2.30.2
 
