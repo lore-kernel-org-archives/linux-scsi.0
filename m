@@ -2,44 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15049C49EA6
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 06:04:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20BBDC48BDF
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 06:12:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E806E613EE
-	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 06:04:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 08402613E7
+	for <linux-scsi@archiver.kernel.org>; Thu, 24 Jun 2021 06:12:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230490AbhFXGGh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Jun 2021 02:06:37 -0400
-Received: from mga18.intel.com ([134.134.136.126]:34627 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230257AbhFXGGg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Jun 2021 02:06:36 -0400
-IronPort-SDR: VYtkb64WtBbdBilJQwiPRc1fNknPegPcxDVVPs9dWgzrGMH1vuUsZSV/3KWatFfMcf+b9v0Ltt
- qO8MFbgmofew==
-X-IronPort-AV: E=McAfee;i="6200,9189,10024"; a="194703645"
-X-IronPort-AV: E=Sophos;i="5.83,295,1616482800"; 
-   d="scan'208";a="194703645"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jun 2021 23:04:17 -0700
-IronPort-SDR: /Akx3pg1VdnBcCCI9Vi8zXtNyOeGL4iI6cWzlDqgivkbb2uO6Fd17QG4TqxfQOdQyMa9IhubzW
- NFpZEm/OpDBw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.83,295,1616482800"; 
-   d="scan'208";a="406533408"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
-  by orsmga006.jf.intel.com with ESMTP; 23 Jun 2021 23:04:12 -0700
-Subject: Re: [PATCH v4 01/10] scsi: ufs: Rename flags pm_op_in_progress and
- is_sys_suspended
-To:     Can Guo <cang@codeaurora.org>, Bart Van Assche <bvanassche@acm.org>
+        id S231153AbhFXGPL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Jun 2021 02:15:11 -0400
+Received: from so254-9.mailgun.net ([198.61.254.9]:58379 "EHLO
+        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231139AbhFXGPK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jun 2021 02:15:10 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1624515172; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=ZrMHDWlFZx5T/DA/qDlkCvHV/LEE6wAJDGPH7Xn/SU4=;
+ b=d9+fkVvzP5b6yCzDJ82ypf1el+IHjw2Vm/z+05zW9/A0VTbFElsl6TCbADqkEs452f7OCI4Q
+ oK0O0F1+CR/4ejdNH/NFa5MwikprSdu8bIH362DTIPaQljdpGKGZaLisBJ7kIXqJrdhkTkPH
+ 5gjO3f+cJ0MHb+9Y74/pjYrIu2Q=
+X-Mailgun-Sending-Ip: 198.61.254.9
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
+ 60d42251dc4628fe7e8d8073 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 24 Jun 2021 06:12:33
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id A806BC43217; Thu, 24 Jun 2021 06:12:32 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 4DBDAC433D3;
+        Thu, 24 Jun 2021 06:12:31 +0000 (UTC)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Date:   Thu, 24 Jun 2021 14:12:31 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Adrian Hunter <adrian.hunter@intel.com>
 Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         hongwus@codeaurora.org, ziqichen@codeaurora.org,
         linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
@@ -47,101 +60,170 @@ Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v4 06/10] scsi: ufs: Remove host_sem used in
+ suspend/resume
+In-Reply-To: <a87e5ca5-390f-8ca0-41bf-27cdc70e3316@intel.com>
 References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
- <1624433711-9339-2-git-send-email-cang@codeaurora.org>
- <1c5db457-ee87-2308-15f5-5dad49508f10@acm.org>
- <c7c5d95e-8a69-dfef-44ea-bfcadd6ea5d5@acm.org>
- <932ce816be805e4cca2c5beee8627918@codeaurora.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <241b60e8-5d96-ddfd-58e4-e15f0a9dea91@intel.com>
-Date:   Thu, 24 Jun 2021 09:04:33 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-MIME-Version: 1.0
-In-Reply-To: <932ce816be805e4cca2c5beee8627918@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+ <1624433711-9339-8-git-send-email-cang@codeaurora.org>
+ <ed59d61a-6951-2acd-4f89-40f8dc5015e1@intel.com>
+ <9105f328ee6ce916a7f01027b0d28332@codeaurora.org>
+ <a87e5ca5-390f-8ca0-41bf-27cdc70e3316@intel.com>
+Message-ID: <1b351766a6e40d0df90b3adec964eb33@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24/06/21 5:02 am, Can Guo wrote:
-> Hi Bart,
+On 2021-06-24 13:52, Adrian Hunter wrote:
+> On 24/06/21 5:16 am, Can Guo wrote:
+>> On 2021-06-23 22:30, Adrian Hunter wrote:
+>>> On 23/06/21 10:35 am, Can Guo wrote:
+>>>> To protect system suspend/resume from being disturbed by error 
+>>>> handling,
+>>>> instead of using host_sem, let error handler call 
+>>>> lock_system_sleep() and
+>>>> unlock_system_sleep() which achieve the same purpose. Remove the 
+>>>> host_sem
+>>>> used in suspend/resume paths to make the code more readable.
+>>>> 
+>>>> Suggested-by: Bart Van Assche <bvanassche@acm.org>
+>>>> Signed-off-by: Can Guo <cang@codeaurora.org>
+>>>> ---
+>>>>  drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
+>>>>  1 file changed, 7 insertions(+), 5 deletions(-)
+>>>> 
+>>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>>> index 3695dd2..a09e4a2 100644
+>>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>>> @@ -5907,6 +5907,11 @@ static void ufshcd_clk_scaling_suspend(struct 
+>>>> ufs_hba *hba, bool suspend)
+>>>> 
+>>>>  static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+>>>>  {
+>>>> +    /*
+>>>> +     * It is not safe to perform error handling while suspend or 
+>>>> resume is
+>>>> +     * in progress. Hence the lock_system_sleep() call.
+>>>> +     */
+>>>> +    lock_system_sleep();
+>>> 
+>>> It looks to me like the system takes this lock quite early, even 
+>>> before
+>>> freezing tasks, so if anything needs the error handler to run it will
+>>> deadlock.
+>> 
+>> Hi Adrian,
+>> 
+>> UFS/hba system suspend/resume does not invoke or call error handling 
+>> in a
+>> synchronous way. So, whatever UFS errors (which schedules the error 
+>> handler)
+>> happens during suspend/resume, error handler will just wait here till 
+>> system
+>> suspend/resume release the lock. Hence no worries of deadlock here.
 > 
-> On 2021-06-24 04:57, Bart Van Assche wrote:
->> On 6/23/21 1:05 PM, Bart Van Assche wrote:
->>> On 6/23/21 12:35 AM, Can Guo wrote:
->>>> Rename pm_op_in_progress and is_sys_suspended to wlu_pm_op_in_progress and
->>>> is_wlu_sys_suspended accordingly.
->>>
->>> My understanding is that power management operations must be submitted
->>> to one particular UFS WLUN (hba->sdev_ufs_device). That makes the "wlu_"
->>> part of the new names redundant. In other words, I like the current
->>> names better than the new names. Unless if I missed something, consider
->>> dropping this patch.
->>
->> Hi Can,
->>
->> Reviewing later patches in this series made me realize that there are
->> two families of suspend/resume functions. One family of functions
->> operates at the platform level while the other family operates at the
->> SCSI LUN level. My comments about the suspend/resume functions are as
->> follows:
->> - It seems redundant to me to have system suspend support at the SCSI
->>   LUN level (__ufshcd_wl_suspend(hba, UFS_SYSTEM_PM)) and also at the
->>   platform level. Since the platform device is a parent of the SCSI
->>   WLUN, can system suspend/resume support be left out from
->>   ufshcd_wl_pm_ops (or in other words, remove the .freeze and .thaw
->>   callbacks)? Do we really need two calls from the power management
->>   subsystem into the UFS driver for every system suspend and every
->>   system resume?
+> It looks to me like the state can change to 
+> UFSHCD_STATE_EH_SCHEDULED_FATAL
+> and since user processes are not frozen, nor file systems sync'ed, 
+> everything
+> is going to deadlock.
+> i.e.
+> I/O is blocked waiting on error handling
+> error handling is blocked waiting on lock_system_sleep()
+> suspend is blocked waiting on I/O
 > 
-> Asutosh and Adrian should be the right persons to answer this, since
-> they've been working together on that huge change for 4 months -
-> 
-> https://lore.kernel.org/patchwork/patch/1417696/
-> 
-> In short, we need a dedicated suspend/resume ops for the UFS device
-> W-LU because one cannot send requests (not even PM requests) after the
-> device is runtime suspended - sending SSU cmds in hba suspend/resume
-> cannot pass through blk_queue_enter() as SSU cmd is sent to the UFS
-> device W-LU scsi device (by now it is runtime suspended) but not the
-> hba device.
 
-Yes it is quite normal to have different PM callbacks for different
-devices (e.g. host controller and device controlled by host controller),
-and SCSI effectively expects it that way now.
+Hi Adrian,
 
-.freeze and .thaw are necessary for suspend-to-disk
+First of all, enter_state(suspend_state_t state) uses 
+mutex_trylock(&system_transition_mutex).
+Second, even that happens, in ufshcd_queuecommand(), below logic will 
+break the cycle, by
+fast failing the PM request (below codes are from the code tip with this 
+whole series applied).
 
-> 
-> Of course we can keep the old way and send the SSU cmd through a
-> request queue without block layer PM initialized (hba->cmd_queue for
-> example, by pointing cmd_queue->dev to the UFS device W-LU scsi device),
-> but that would look like a hack.
-> 
->> - Because of the device links (device_link_add()), the ufschd_wl_*()
->>   RPM callbacks are invoked after all LUNs have been suspended. I would
->>   appreciate it if the "ufshcd_wl_" prefix would be changed into
->>   "ufshcd_lun_" since that would make it more clear that these callbacks
->>   are associated with all LUNs and not only with the WLUN through which
->>   power management commands are submitted.
->>
-> 
-> Sure, we will do that later.
-> 
-> Thanks,
-> 
-> Can Guo.
-> 
+         case UFSHCD_STATE_EH_SCHEDULED_FATAL:
+                 /*
+                  * ufshcd_rpm_get_sync() is used at error handling 
+preparation
+                  * stage. If a scsi cmd, e.g., the SSU cmd, is sent from 
+the
+                  * PM ops, it can never be finished if we let SCSI layer 
+keep
+                  * retrying it, which gets err handler stuck forever. 
+Neither
+                  * can we let the scsi cmd pass through, because UFS is 
+in bad
+                  * state, the scsi cmd may eventually time out, which 
+will get
+                  * err handler blocked for too long. So, just fail the 
+scsi cmd
+                  * sent from PM ops, err handler can recover PM error 
+anyways.
+                  */
+                 if (cmd->request->rq_flags & RQF_PM) {
+                         hba->force_reset = true;
+                         set_host_byte(cmd, DID_BAD_TARGET);
+                         cmd->scsi_done(cmd);
+                         goto out;
+                 }
+                 fallthrough;
+         case UFSHCD_STATE_RESET:
+
+Thanks,
+
+Can Guo.
+
+>> 
 >> Thanks,
->>
->> Bart.
-
+>> 
+>> Can Guo.
+>> 
+>>> 
+>>>>      ufshcd_rpm_get_sync(hba);
+>>>>      if 
+>>>> (pm_runtime_status_suspended(&hba->sdev_ufs_device->sdev_gendev) ||
+>>>>          hba->is_wlu_sys_suspended) {
+>>>> @@ -5951,6 +5956,7 @@ static void 
+>>>> ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+>>>>          ufshcd_clk_scaling_suspend(hba, false);
+>>>>      ufshcd_clear_ua_wluns(hba);
+>>>>      ufshcd_rpm_put(hba);
+>>>> +    unlock_system_sleep();
+>>>>  }
+>>>> 
+>>>>  static inline bool ufshcd_err_handling_should_stop(struct ufs_hba 
+>>>> *hba)
+>>>> @@ -9053,16 +9059,13 @@ static int ufshcd_wl_suspend(struct device 
+>>>> *dev)
+>>>>      ktime_t start = ktime_get();
+>>>> 
+>>>>      hba = shost_priv(sdev->host);
+>>>> -    down(&hba->host_sem);
+>>>> 
+>>>>      if (pm_runtime_suspended(dev))
+>>>>          goto out;
+>>>> 
+>>>>      ret = __ufshcd_wl_suspend(hba, UFS_SYSTEM_PM);
+>>>> -    if (ret) {
+>>>> +    if (ret)
+>>>>          dev_err(&sdev->sdev_gendev, "%s failed: %d\n", __func__,  
+>>>> ret);
+>>>> -        up(&hba->host_sem);
+>>>> -    }
+>>>> 
+>>>>  out:
+>>>>      if (!ret)
+>>>> @@ -9095,7 +9098,6 @@ static int ufshcd_wl_resume(struct device 
+>>>> *dev)
+>>>>          hba->curr_dev_pwr_mode, hba->uic_link_state);
+>>>>      if (!ret)
+>>>>          hba->is_wlu_sys_suspended = false;
+>>>> -    up(&hba->host_sem);
+>>>>      return ret;
+>>>>  }
+>>>>  #endif
+>>>> 
