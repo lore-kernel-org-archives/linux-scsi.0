@@ -2,151 +2,230 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9302C2B9F4
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 17:03:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F06A9C49EA7
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 17:52:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92FB76194F
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 17:03:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1B2361921
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 17:52:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229958AbhFYRGB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Jun 2021 13:06:01 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3320 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229630AbhFYRGB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jun 2021 13:06:01 -0400
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GBNS74xbPz6G8LK;
-        Sat, 26 Jun 2021 00:56:07 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Fri, 25 Jun 2021 19:03:38 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Fri, 25 Jun 2021 18:03:35 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <martin.petersen@oracle.com>, <jejb@linux.ibm.com>
-CC:     <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <hch@lst.de>, <hare@suse.de>,
-        <ming.lei@redhat.com>, John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: Delete scsi_{get,free}_host_dev()
-Date:   Sat, 26 Jun 2021 00:58:34 +0800
-Message-ID: <1624640314-93055-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        id S230020AbhFYRyn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Jun 2021 13:54:43 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:44442 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229573AbhFYRym (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Jun 2021 13:54:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1624643541;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=Np0xO1RJa8Fe+o0fE+8kFFb6yFJ3EzhbKHebm61tvY8=;
+        b=EMsy/twQiSuiWXxDvsqMXKElfFERbu+jKS+iBmRoj8bxzjJHtTjmc6r1n79zCy2lTZr6Xd
+        Aol6V7D/3tLjzIACkY4zhFov46ZSfVA/FfUKahyBLPiaYZEb36i/OsSfQxE86xjLzYVEMG
+        LW4+gHO1Ej/9EKoAmqeQDXMP5pi/NLA=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-434-yP1ayuPtOHippYuBOSxL-Q-1; Fri, 25 Jun 2021 13:52:20 -0400
+X-MC-Unique: yP1ayuPtOHippYuBOSxL-Q-1
+Received: by mail-lj1-f200.google.com with SMTP id q13-20020a2e914d0000b02901752c889bcdso2126450ljg.20
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2021 10:52:19 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Np0xO1RJa8Fe+o0fE+8kFFb6yFJ3EzhbKHebm61tvY8=;
+        b=uCvFhXNla8Q40MAV8kJitGhJTj6WAIk/Viu6xlsYPsC2UmRIDLGSvsGWgEx8WcY8og
+         5rFylgpEGhB6IVBGEqh3oZCV1q68K0hV3FFSGelEkrU1ONr0C05By6D5wzZmqASjiut3
+         LuROTB7Um8KwKUZpYuJBVFRSbb2ccIsf96K8v/YkzTu1JMkDj1v8CFlozZ4npDWCtEbZ
+         GsCedZ//UfnxzYsykWodP+pcahVxDhRX5fWOELVSFozj4l0MXcv6Rj8URdOtPWs2huZI
+         eSqmSArkYtKhEVY5pWx2Kh5vW8EdNs/pUbBoqFcjew+vADyNz9W4gel4RgEQSjKBpqLX
+         KGmA==
+X-Gm-Message-State: AOAM531xeN4f2fwM6lpN9+oBLGuopan70fHHgOgVE/tG/ye1yFn/EoS4
+        8PmrBmuJD/sAIGjBvw61Qh1GMOEteibTEZsvt8SE2YStFCzAYBODK8W82wOXvmjwXCUQakGjoPV
+        DsoVcgB/NrIn96+3O/zVs4GOVBSOSXs+Fn4zduw==
+X-Received: by 2002:a05:6512:1188:: with SMTP id g8mr9091319lfr.114.1624643538651;
+        Fri, 25 Jun 2021 10:52:18 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwv3ONlbYdOAJeKoocH2JT7i37U2k3Ba34lvXyyU9Xl8b/vh+ACiLOhDBLiq7MSlh/s914KOVChB9p0l3+RVAk=
+X-Received: by 2002:a05:6512:1188:: with SMTP id g8mr9091276lfr.114.1624643538381;
+ Fri, 25 Jun 2021 10:52:18 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <20210617182242.8637-1-nitesh@redhat.com> <20210617182242.8637-2-nitesh@redhat.com>
+In-Reply-To: <20210617182242.8637-2-nitesh@redhat.com>
+From:   Nitesh Lal <nilal@redhat.com>
+Date:   Fri, 25 Jun 2021 13:52:04 -0400
+Message-ID: <CAFki+Ln=OS1unuybbD0MKmeJwZci66j6m5OjpNvKDN74E0qw2Q@mail.gmail.com>
+Subject: Re: [PATCH v1 01/14] genirq: Provide new interfaces for affinity hints
+To:     linux-kernel@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     intel-wired-lan@lists.osuosl.org,
+        Thomas Gleixner <tglx@linutronix.de>, netdev@vger.kernel.org,
+        linux-pci@vger.kernel.org,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marcelo Tosatti <mtosatti@redhat.com>,
+        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
+        frederic@kernel.org, Juri Lelli <juri.lelli@redhat.com>,
+        Alex Belits <abelits@marvell.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
+        peterz@infradead.org, davem@davemloft.net,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
+        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
+        Stefan Assmann <sassmann@redhat.com>,
+        Tomas Henzl <thenzl@redhat.com>, kashyap.desai@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        shivasharan.srikanteshwara@broadcom.com,
+        sathya.prakash@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, Ken Cox <jkc@redhat.com>,
+        faisal.latif@intel.com, shiraz.saleem@intel.com, tariqt@nvidia.com,
+        Alaa Hleihel <ahleihel@redhat.com>,
+        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
+        saeedm@nvidia.com, benve@cisco.com, govind@gmx.com,
+        jassisinghbrar@gmail.com, ajit.khaparde@broadcom.com,
+        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Functions scsi_{get,free}_host_dev() no longer have any in-tree users, so
-delete them.
+On Thu, Jun 17, 2021 at 2:23 PM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
+>
+> From: Thomas Gleixner <tglx@linutronix.de>
+>
+> The discussion about removing the side effect of irq_set_affinity_hint() of
+> actually applying the cpumask (if not NULL) as affinity to the interrupt,
+> unearthed a few unpleasantries:
+>
+>   1) The modular perf drivers rely on the current behaviour for the very
+>      wrong reasons.
+>
+>   2) While none of the other drivers prevents user space from changing
+>      the affinity, a cursorily inspection shows that there are at least
+>      expectations in some drivers.
+>
+> #1 needs to be cleaned up anyway, so that's not a problem
+>
+> #2 might result in subtle regressions especially when irqbalanced (which
+>    nowadays ignores the affinity hint) is disabled.
+>
+> Provide new interfaces:
+>
+>   irq_update_affinity_hint()  - Only sets the affinity hint pointer
+>   irq_set_affinity_and_hint() - Set the pointer and apply the affinity to
+>                                 the interrupt
+>
+> Make irq_set_affinity_hint() a wrapper around irq_apply_affinity_hint() and
+> document it to be phased out.
+>
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+> Link: https://lore.kernel.org/r/20210501021832.743094-1-jesse.brandeburg@intel.com
+> ---
+>  include/linux/interrupt.h | 41 ++++++++++++++++++++++++++++++++++++++-
+>  kernel/irq/manage.c       |  8 ++++----
+>  2 files changed, 44 insertions(+), 5 deletions(-)
+>
+> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+> index 2ed65b01c961..4ca491a76033 100644
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -328,7 +328,46 @@ extern int irq_force_affinity(unsigned int irq, const struct cpumask *cpumask);
+>  extern int irq_can_set_affinity(unsigned int irq);
+>  extern int irq_select_affinity(unsigned int irq);
+>
+> -extern int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m);
+> +extern int __irq_apply_affinity_hint(unsigned int irq, const struct cpumask *m,
+> +                                    bool setaffinity);
+> +
+> +/**
+> + * irq_update_affinity_hint - Update the affinity hint
+> + * @irq:       Interrupt to update
+> + * @cpumask:   cpumask pointer (NULL to clear the hint)
+> + *
+> + * Updates the affinity hint, but does not change the affinity of the interrupt.
+> + */
+> +static inline int
+> +irq_update_affinity_hint(unsigned int irq, const struct cpumask *m)
+> +{
+> +       return __irq_apply_affinity_hint(irq, m, false);
+> +}
+> +
+> +/**
+> + * irq_set_affinity_and_hint - Update the affinity hint and apply the provided
+> + *                          cpumask to the interrupt
+> + * @irq:       Interrupt to update
+> + * @cpumask:   cpumask pointer (NULL to clear the hint)
+> + *
+> + * Updates the affinity hint and if @cpumask is not NULL it applies it as
+> + * the affinity of that interrupt.
+> + */
+> +static inline int
+> +irq_set_affinity_and_hint(unsigned int irq, const struct cpumask *m)
+> +{
+> +       return __irq_apply_affinity_hint(irq, m, true);
+> +}
+> +
+> +/*
+> + * Deprecated. Use irq_update_affinity_hint() or irq_set_affinity_and_hint()
+> + * instead.
+> + */
+> +static inline int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m)
+> +{
+> +       return irq_set_affinity_and_hint(irq, m);
+> +}
+> +
+>  extern int irq_update_affinity_desc(unsigned int irq,
+>                                     struct irq_affinity_desc *affinity);
+>
+> diff --git a/kernel/irq/manage.c b/kernel/irq/manage.c
+> index ef30b4762947..837b63e63111 100644
+> --- a/kernel/irq/manage.c
+> +++ b/kernel/irq/manage.c
+> @@ -487,7 +487,8 @@ int irq_force_affinity(unsigned int irq, const struct cpumask *cpumask)
+>  }
+>  EXPORT_SYMBOL_GPL(irq_force_affinity);
+>
+> -int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m)
+> +int __irq_apply_affinity_hint(unsigned int irq, const struct cpumask *m,
+> +                             bool setaffinity)
+>  {
+>         unsigned long flags;
+>         struct irq_desc *desc = irq_get_desc_lock(irq, &flags, IRQ_GET_DESC_CHECK_GLOBAL);
+> @@ -496,12 +497,11 @@ int irq_set_affinity_hint(unsigned int irq, const struct cpumask *m)
+>                 return -EINVAL;
+>         desc->affinity_hint = m;
+>         irq_put_desc_unlock(desc, flags);
+> -       /* set the initial affinity to prevent every interrupt being on CPU0 */
+> -       if (m)
+> +       if (m && setaffinity)
+>                 __irq_set_affinity(irq, m, false);
+>         return 0;
+>  }
+> -EXPORT_SYMBOL_GPL(irq_set_affinity_hint);
+> +EXPORT_SYMBOL_GPL(__irq_apply_affinity_hint);
+>
+>  static void irq_affinity_notify(struct work_struct *work)
+>  {
+> --
+> 2.27.0
+>
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
-An alt agenda of this patch is to get clarification on whether this API
-should be used for Hannes' reserved commands series.
+It turns out that this patch has an issue. The new interfaces are not
+added under the #ifdef (CONFIG_SMP)'s else section.
+I will fix it and send a v2 with other changes.
 
-Originally the recommendation was to use it, but now it seems to be to
-not use it:
-https://lore.kernel.org/linux-scsi/55918d68-7385-0153-0bd9-d822d3ce4c21@suse.de/
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index b059bf2b61d4..8e52ce545af3 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1896,60 +1896,3 @@ void scsi_forget_host(struct Scsi_Host *shost)
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- }
- 
--/**
-- * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
-- * @shost: Host that needs a scsi_device
-- *
-- * Lock status: None assumed.
-- *
-- * Returns:     The scsi_device or NULL
-- *
-- * Notes:
-- *	Attach a single scsi_device to the Scsi_Host - this should
-- *	be made to look like a "pseudo-device" that points to the
-- *	HA itself.
-- *
-- *	Note - this device is not accessible from any high-level
-- *	drivers (including generics), which is probably not
-- *	optimal.  We can add hooks later to attach.
-- */
--struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
--{
--	struct scsi_device *sdev = NULL;
--	struct scsi_target *starget;
--
--	mutex_lock(&shost->scan_mutex);
--	if (!scsi_host_scan_allowed(shost))
--		goto out;
--	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
--	if (!starget)
--		goto out;
--
--	sdev = scsi_alloc_sdev(starget, 0, NULL);
--	if (sdev)
--		sdev->borken = 0;
--	else
--		scsi_target_reap(starget);
--	put_device(&starget->dev);
-- out:
--	mutex_unlock(&shost->scan_mutex);
--	return sdev;
--}
--EXPORT_SYMBOL(scsi_get_host_dev);
--
--/**
-- * scsi_free_host_dev - Free a scsi_device that points to the host adapter itself
-- * @sdev: Host device to be freed
-- *
-- * Lock status: None assumed.
-- *
-- * Returns:     Nothing
-- */
--void scsi_free_host_dev(struct scsi_device *sdev)
--{
--	BUG_ON(sdev->id != sdev->host->this_id);
--
--	__scsi_remove_device(sdev);
--}
--EXPORT_SYMBOL(scsi_free_host_dev);
--
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 75363707b73f..bc9c45ced145 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -797,16 +797,6 @@ void scsi_host_busy_iter(struct Scsi_Host *,
- 
- struct class_container;
- 
--/*
-- * These two functions are used to allocate and free a pseudo device
-- * which will connect to the host adapter itself rather than any
-- * physical device.  You must deallocate when you are done with the
-- * thing.  This physical pseudo-device isn't real and won't be available
-- * from any high-level drivers.
-- */
--extern void scsi_free_host_dev(struct scsi_device *);
--extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
--
- /*
-  * DIF defines the exchange of protection information between
-  * initiator and SBC block device.
--- 
-2.26.2
+--
+Thanks
+
+Nitesh
 
