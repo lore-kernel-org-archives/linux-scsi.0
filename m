@@ -2,197 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA6D3C49EA6
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 02:55:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9EF9C49EA5
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 03:36:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F655613FF
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 02:55:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B2E161408
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 03:36:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233004AbhFYC5Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 24 Jun 2021 22:57:24 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:62281 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232917AbhFYC5Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jun 2021 22:57:24 -0400
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210625025502epoutp047ad81a9d8cbf9f3ae61e958a07e984c9~Ls7oRuUJ-1731417314epoutp04P
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2021 02:55:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210625025502epoutp047ad81a9d8cbf9f3ae61e958a07e984c9~Ls7oRuUJ-1731417314epoutp04P
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1624589702;
-        bh=DPiBchNmpbOw5Sq1Tqs2itJVDCXaLTb9mJUrRA353v0=;
-        h=Subject:Reply-To:From:To:In-Reply-To:Date:References:From;
-        b=WvAksahSh3mRkwxIc3w9OmMiRPx7TTbB8YCreVSveYgmWxS432RBT3K4bq2NhmHdx
-         eiN3JtPzxJ7XAVrQFjPqYvXPwBuEmuYX3pGORFi1no7+qgoKSFDSPCmKW4JVT+A7XL
-         kVNpO1G0MfWRXfgwisyJiSbcZJzIbse6b3l6claw=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
-        epcas3p4.samsung.com (KnoxPortal) with ESMTP id
-        20210625025501epcas3p414beb364bcb4cea839d3834e3c301cd5~Ls7nrJ_Mo1935119351epcas3p46;
-        Fri, 25 Jun 2021 02:55:01 +0000 (GMT)
-Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp4.localdomain
-        (Postfix) with ESMTP id 4GB1nd4c2Zz4x9Q6; Fri, 25 Jun 2021 02:55:01 +0000
-        (GMT)
-Mime-Version: 1.0
-Subject: RE: Re: [PATCH] scsi: ufs: Refactor ufshcd_is_intr_aggr_allowed()
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        "joe@perches.com" <joe@perches.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
-        "cang@codeaurora.org" <cang@codeaurora.org>,
-        "beanhuo@micron.com" <beanhuo@micron.com>,
-        "asutoshd@codeaurora.org" <asutoshd@codeaurora.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        "satyat@google.com" <satyat@google.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Joao Pinto <jpinto@synopsys.com>,
-        Pedro Sousa <sousa@synopsys.com>,
-        Pedro Sousa <pedrom.sousa@synopsys.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <abd587ed-6666-34b8-b545-8ea97bcf0515@intel.com>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1891546521.01624589701638.JavaMail.epsvc@epcpadp3>
-Date:   Fri, 25 Jun 2021 11:38:47 +0900
-X-CMS-MailID: 20210625023847epcms2p1bd03c89ef4a22865053e673a895b62b7
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20210621085158epcms2p46170ba48174547df00b9720dbc843110
-References: <abd587ed-6666-34b8-b545-8ea97bcf0515@intel.com>
-        <42c2978f-f0ca-3efb-7762-cac813a0a5fe@intel.com>
-        <ed6d8c44-295e-aaa7-4b5f-7929c1c797d1@intel.com>
-        <1891546521.01624267081897.JavaMail.epsvc@epcpadp4>
-        <37380050.31624517282371.JavaMail.epsvc@epcpadp4>
-        <1891546521.01624533302400.JavaMail.epsvc@epcpadp3>
-        <CGME20210621085158epcms2p46170ba48174547df00b9720dbc843110@epcms2p1>
+        id S233023AbhFYDii (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 24 Jun 2021 23:38:38 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:24808 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S232917AbhFYDii (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 24 Jun 2021 23:38:38 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15P3XUJ1093825
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Jun 2021 23:36:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id; s=pp1;
+ bh=PAiQ9DOwEvzOctZzFK/vKd2mPf1P98CwzdiESolvSZ0=;
+ b=YfC+Z8Qv/nPOOJ2DEb1XyWHrYZT/7aoIm+iuR4HH4zVdY+60BcPkiOFODS/DMQ81DVDs
+ vVfkzuqauxJwa69b0C9UIoAFzfMpyGeJvadtIiN7G01r4Lh6Fsv+iXfXVWWHF7FersGg
+ C83cuKJbSiUJqey/Duap/6eAhqFh98f1Ywq8P03If6nfD/u6jpIsfKmZ4Tg6HGUpJ2U2
+ 7yMO8z7aVUUskTbHxq2f39yr6SHvdRk0T2k8odVfWGsg13pp5asIG3MNSVcVB/EDkslv
+ FREEUc6AvCl3pgBEIRQGQHc09kewh2umZ7MV2vMMO5u2IVd4lf2MbMkowhcy13RFLJwv fA== 
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 39d5hujech-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Jun 2021 23:36:17 -0400
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 15P3Qvjn023448
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2021 03:36:16 GMT
+Received: from b03cxnp07028.gho.boulder.ibm.com (b03cxnp07028.gho.boulder.ibm.com [9.17.130.15])
+        by ppma04dal.us.ibm.com with ESMTP id 39cn61hhcy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2021 03:36:16 +0000
+Received: from b03ledav005.gho.boulder.ibm.com (b03ledav005.gho.boulder.ibm.com [9.17.130.236])
+        by b03cxnp07028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 15P3aEJ929688146
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 25 Jun 2021 03:36:14 GMT
+Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 932ABBE053;
+        Fri, 25 Jun 2021 03:36:14 +0000 (GMT)
+Received: from b03ledav005.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 26659BE051;
+        Fri, 25 Jun 2021 03:36:14 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.40.195.89])
+        by b03ledav005.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Fri, 25 Jun 2021 03:36:13 +0000 (GMT)
+From:   wenxiong@linux.vnet.ibm.com
+To:     jejb@linux.ibm.com
+Cc:     linux-scsi@vger.kernel.org, brking1@linux.vnet.ibm.com,
+        wenxiong@us.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: system crashes when seeing type 20 error
+Date:   Thu, 24 Jun 2021 21:11:25 -0500
+Message-Id: <1624587085-10073-1-git-send-email-wenxiong@linux.vnet.ibm.com>
+X-Mailer: git-send-email 1.6.0.2
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: _qptY-adMB1kiu-ZcNTgrZhgDjBEV2yA
+X-Proofpoint-GUID: _qptY-adMB1kiu-ZcNTgrZhgDjBEV2yA
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
+ definitions=2021-06-25_01:2021-06-24,2021-06-25 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ phishscore=0 suspectscore=0 mlxscore=0 malwarescore=0 impostorscore=0
+ priorityscore=1501 adultscore=0 clxscore=1011 mlxlogscore=999 bulkscore=0
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104190000 definitions=main-2106250018
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->On 24/06/21 1:44 pm, Keoseong Park wrote:
->>> On 24/06/21 9:41 am, Keoseong Park wrote:
->>>>> On 21/06/21 11:51 am, Keoseong Park wrote:
->>>>>> Change conditional compilation to IS_ENABLED macro,
->>>>>> and simplify if else statement to return statement.
->>>>>> No functional change.
->>>>>>
->>>>>> Signed-off-by: Keoseong Park <keosung.park@samsung.com>
->>>>>> ---
->>>>>>  drivers/scsi/ufs/ufshcd.h | 17 ++++++++---------
->>>>>>  1 file changed, 8 insertions(+), 9 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->>>>>> index c98d540ac044..6d239a855753 100644
->>>>>> --- a/drivers/scsi/ufs/ufshcd.h
->>>>>> +++ b/drivers/scsi/ufs/ufshcd.h
->>>>>> @@ -893,16 +893,15 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
->>>>>>  
->>>>>>  static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
->>>>>>  {
->>>>>> -/* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
->>>>>> -#ifndef CONFIG_SCSI_UFS_DWC
->>>>>> -	if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
->>>>>> -	    !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
->>>>>> +	/*
->>>>>> +	 * DWC UFS Core has the Interrupt aggregation feature
->>>>>> +	 * but is not detectable.
->>>>>> +	 */
->>>>>> +	if (IS_ENABLED(CONFIG_SCSI_UFS_DWC))
->>>>>
->>>>> Why is this needed?  It seems like you could just set UFSHCD_CAP_INTR_AGGR
->>>>> and clear UFSHCD_QUIRK_BROKEN_INTR_AGGR instead?
->>>>
->>>> Hello Adrian,
->>>> Sorry for late reply.
->>>>
->>>> The code that returns true when CONFIG_SCSI_UFS_DWC is set in the original code 
->>>> is only changed using the IS_ENABLED macro.
->>>> (Linux kernel coding style, 21) Conditional Compilation)
->>>>
->>>> When CONFIG_SCSI_UFS_DWC is not defined, the code for checking quirk 
->>>> and caps has been moved to the newly added return statement below.
->>>
->>> Looking closer I cannot find CONFIG_SCSI_UFS_DWC at all.  It seems like it
->>> never existed.
->>>
->>> Why should we not remove the code related to CONFIG_SCSI_UFS_DWC entirely?
->> 
->> You're right. What do you think of deleting the code related to CONFIG_SCSI_UFS_DWC 
->> and changing it to the patch below?
->
->Yes, but cc Joao Pinto <jpinto@synopsys.com> who introduced the code
+From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
-Thanks for your advice. I will upload next version patch by adding cc.
+Test team saw "4041: Incomplete multipath connection between enclosure
+and device" when IO drawers/drives have bad connections. System crashes
+when handling this type 20 errors.
 
-Thanks,
-Keoseong
+[    5.332452] ipr: 3/00-06-09: 4041: Incomplete multipath connection between enclosure and device
+[    5.332460] ipr: 3/00-06-09: The IOA failed to detect an expected path to a device
+[    5.332465] ipr: 3/00-06-09: Inactive path is failed: Resource Path=3/00-04-09
+[    5.332471] ipr: 3/00-06-09: Functional IOA port: Resource Path=3/00-04, Link rate=unknown, WWN=5005076059C38E05
+[    5.332478] ipr: 3/00-06-09: Incorrectly connected Device LUN: Resource Path=3/00-00-00-00-00-00-00-00-00-20-00-00-24-00-00-00-0, Link rate=unknown, WWN=0020000024000000
+[    5.332487] ipr: 3/00-06-09: Path element=FF: Resource Path=3/50-05-07-60-45-56-5A-9C-00-00-00-00-00-00-00-00-0, Link rate=unknown WWN=0000000000000000
+[    5.332492] ipr: 00000000: 54520EC8 00000000 00000000 4E532050
+[    5.332495] ipr: 00000010: 45522054 49434B3D 00000050 278130E6
+[    5.332498] ipr: 00000020: 033B5300 03282584 4C4D00E0 278039F3
+[    5.332501] ipr: 00000030: 033B5180 03282404 4C4D00E0 276A0282
+[    5.332504] ipr: 00000040: 033B5000 03281E04 447000E0 27697D19
+[    5.332507] ipr: 00000050: 033B4E80 03281D84 447000E0 27690524
+[    5.332509] ipr: 00000060: 033B4D00 03281C84 447000E0 27687FDA
+[    5.332512] ipr: 00000070: 033B4B80 03281C04 447000E0 2767E787
+[    5.332515] ipr: 00000080: 033B4A00 03281B04 447000E0 27674F0A
 
->
->> 
->> ---
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index c98d540ac044..c9faca237290 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -893,16 +893,8 @@ static inline bool ufshcd_is_rpm_autosuspend_allowed(struct ufs_hba *hba)
->> 
->>  static inline bool ufshcd_is_intr_aggr_allowed(struct ufs_hba *hba)
->>  {
->> -/* DWC UFS Core has the Interrupt aggregation feature but is not detectable*/
->> -#ifndef CONFIG_SCSI_UFS_DWC
->> -       if ((hba->caps & UFSHCD_CAP_INTR_AGGR) &&
->> -           !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR))
->> -               return true;
->> -       else
->> -               return false;
->> -#else
->> -return true;
->> -#endif
->> +       return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
->> +               !(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
->>  }
->> 
->>>
->>>
->>>>
->>>> Thanks,
->>>> Keoseong
->>>>
->>>>>
->>>>>>  		return true;
->>>>>> -	else
->>>>>> -		return false;
->>>>>> -#else
->>>>>> -return true;
->>>>>> -#endif
->>>>>> +
->>>>>> +	return (hba->caps & UFSHCD_CAP_INTR_AGGR) &&
->>>>>> +		!(hba->quirks & UFSHCD_QUIRK_BROKEN_INTR_AGGR);
->>>>>>  }
->>>>>>  
->>>>>>  static inline bool ufshcd_can_aggressive_pc(struct ufs_hba *hba)
->>>>>>
->>>>>
->>>
->
+Signed-off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+
+---
+ drivers/scsi/ipr.c | 4 ++--
+ drivers/scsi/ipr.h | 1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 30c30a1db5b1..5d78f7e939a3 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -1300,7 +1300,7 @@ static char *__ipr_format_res_path(u8 *res_path, char *buffer, int len)
+ 
+ 	*p = '\0';
+ 	p += scnprintf(p, buffer + len - p, "%02X", res_path[0]);
+-	for (i = 1; res_path[i] != 0xff && ((i * 3) < len); i++)
++	for (i = 1; res_path[i] != 0xff && i < IPR_RES_PATH_BYTES; i++)
+ 		p += scnprintf(p, buffer + len - p, "-%02X", res_path[i]);
+ 
+ 	return buffer;
+@@ -1323,7 +1323,7 @@ static char *ipr_format_res_path(struct ipr_ioa_cfg *ioa_cfg,
+ 
+ 	*p = '\0';
+ 	p += scnprintf(p, buffer + len - p, "%d/", ioa_cfg->host->host_no);
+-	__ipr_format_res_path(res_path, p, len - (buffer - p));
++	__ipr_format_res_path(res_path, p, len - (p - buffer));
+ 	return buffer;
+ }
+ 
+diff --git a/drivers/scsi/ipr.h b/drivers/scsi/ipr.h
+index 783ee03ad9ea..69444d21fca1 100644
+--- a/drivers/scsi/ipr.h
++++ b/drivers/scsi/ipr.h
+@@ -428,6 +428,7 @@ struct ipr_config_table_entry64 {
+ 	__be64 lun;
+ 	__be64 lun_wwn[2];
+ #define IPR_MAX_RES_PATH_LENGTH		48
++#define IPR_RES_PATH_BYTES		8
+ 	__be64 res_path;
+ 	struct ipr_std_inq_data std_inq_data;
+ 	u8 reserved2[4];
+-- 
+2.27.0
+
