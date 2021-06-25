@@ -2,153 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9E60C2B9F4
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 21:08:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E3F1C2B9F4
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 22:06:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB3FC6197D
-	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 21:08:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C9456194C
+	for <linux-scsi@archiver.kernel.org>; Fri, 25 Jun 2021 22:06:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229924AbhFYVKn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 25 Jun 2021 17:10:43 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:42929 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229900AbhFYVKk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Jun 2021 17:10:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1624655298;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=8ZDICObM3KXek2Hb3yoYurGVvyXCqbMuKZU9WccmR1E=;
-        b=DWfL8hLf6RsN8v6vR+QK3l/KkUsTnb4xTrOPKeCaQuvJ22XJd9/PpXIYkyi8dCO3t/ynyk
-        9oq0zDAWEfaXZRuvg6QYmirBVzi248iY+DHLUr//hUGFS1I9n4Y+wG4PjAsFDbePGJllHJ
-        0r5WWvPaXf9biEAhxSqXUCBlz1V3YcE=
-Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
- [209.85.208.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-179-axOWV8ddO9yKz-bz6R4nPA-1; Fri, 25 Jun 2021 17:08:16 -0400
-X-MC-Unique: axOWV8ddO9yKz-bz6R4nPA-1
-Received: by mail-lj1-f200.google.com with SMTP id s22-20020a2eb8d60000b029016f35266595so3782114ljp.3
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Jun 2021 14:08:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8ZDICObM3KXek2Hb3yoYurGVvyXCqbMuKZU9WccmR1E=;
-        b=MyZ2s6NMIjeC9g4IAk8NxpkBs00VeukKNrMERHh+JqXVzib3+cFgRrv8fkRYjdCtSQ
-         sAuWLU/xODod0weyBsWsHVcbUhqEt5sdE/WfvR5aG1RBSdLpx2O8mc8wmGLqpz0z9Uaz
-         ANE4U64IS1IFbE2crE1Nls/voSZuTlyzT2I67ARtoWjWL4WOHixlzIQuXO88MYvZrgyY
-         KII2/S8mfHsfTLTJWBLQS0PiWTftcNk7XyphcrJJms+fdWwnkcuJXM1Cjj5OCjE0Vrv+
-         vUL9KOk8k2ScTb1uKZp9K51JtWCZOJoO4Fx7NPLuUC4chxcZvRO9JWbPLH+IZv2/wyv+
-         dgUA==
-X-Gm-Message-State: AOAM5323TtvL4TJm/GSplfMvEZuop/DaedLWA4Ci3G+E4L5Wz7OlQTYN
-        FOcUvygX7PwNjmm5+uOPWE/Sklss9wZRMiiMOqScMe8pVzKowgLFRJkjAAPI2CsHc2lSYfhxwfR
-        ghOv6S1JoaekcsGTaaKSymiodZAotWRwbXiFnyw==
-X-Received: by 2002:a19:520b:: with SMTP id m11mr9732678lfb.548.1624655295024;
-        Fri, 25 Jun 2021 14:08:15 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxUexlIFHXeeKXO03SmwGePdENz2CjY0tC2d9T70zel0UdMzzrYS7rF2Shg08+5Cqm1V6fr5JNcCCdgzQuLKqk=
-X-Received: by 2002:a19:520b:: with SMTP id m11mr9732628lfb.548.1624655294717;
- Fri, 25 Jun 2021 14:08:14 -0700 (PDT)
-MIME-Version: 1.0
-References: <20210617182242.8637-1-nitesh@redhat.com> <20210617182242.8637-15-nitesh@redhat.com>
- <YNBHQvo1uDfBbr5c@unreal>
-In-Reply-To: <YNBHQvo1uDfBbr5c@unreal>
-From:   Nitesh Lal <nilal@redhat.com>
-Date:   Fri, 25 Jun 2021 17:08:03 -0400
-Message-ID: <CAFki+L=2nVA3FB03BjuXbj+di28LhVUzo9P9WoJyxoQFggt0VQ@mail.gmail.com>
-Subject: Re: [PATCH v1 14/14] net/mlx4: Use irq_update_affinity_hint
-To:     Leon Romanovsky <leon@kernel.org>
-Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
-        tglx@linutronix.de, jesse.brandeburg@intel.com,
-        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
-        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
-        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
-        luobin9@huawei.com, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com
+        id S229831AbhFYWJO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 25 Jun 2021 18:09:14 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46306 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229531AbhFYWJN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Jun 2021 18:09:13 -0400
+Received: from bedivere.hansenpartnership.com (bedivere.hansenpartnership.com [IPv6:2607:fcd0:100:8a00::2])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97589C061574;
+        Fri, 25 Jun 2021 15:06:52 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 55CC21280D3A;
+        Fri, 25 Jun 2021 15:06:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1624658812;
+        bh=BnPQkEERp43ZgwOYOogE0QsNBC0J/ou2Eh0RJEdP93k=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=ZHXQHurICrVapp/kdW6trPdO4AjMJ80m7t0Q2KANtPR195ISaIn3ekCUa+Jp7QlYO
+         5cduABdLdcB6+X7TrFBLxX1z5UTpiyIhZGtBXRI0l6lmUS6hM298ItMgzUpKn02ndL
+         XD7D4hlBBwq9qWLYIj1STaF8zW2VbUlVt0mg8K1o=
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 9MyRSz2Ys3pj; Fri, 25 Jun 2021 15:06:52 -0700 (PDT)
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:600:8280:66d1::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id E56D91280D37;
+        Fri, 25 Jun 2021 15:06:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1624658812;
+        bh=BnPQkEERp43ZgwOYOogE0QsNBC0J/ou2Eh0RJEdP93k=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=ZHXQHurICrVapp/kdW6trPdO4AjMJ80m7t0Q2KANtPR195ISaIn3ekCUa+Jp7QlYO
+         5cduABdLdcB6+X7TrFBLxX1z5UTpiyIhZGtBXRI0l6lmUS6hM298ItMgzUpKn02ndL
+         XD7D4hlBBwq9qWLYIj1STaF8zW2VbUlVt0mg8K1o=
+Message-ID: <85a6f026d0ed9dddcdddcc03a59968c46b09b94f.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.13-rc7
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 25 Jun 2021 15:06:51 -0700
 Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jun 21, 2021 at 4:02 AM Leon Romanovsky <leon@kernel.org> wrote:
->
-> On Thu, Jun 17, 2021 at 02:22:42PM -0400, Nitesh Narayan Lal wrote:
-> > The driver uses irq_set_affinity_hint() to update the affinity_hint mask
-> > that is consumed by the userspace to distribute the interrupts. However,
-> > under the hood irq_set_affinity_hint() also applies the provided cpumask
-> > (if not NULL) as the affinity for the given interrupt which is an
-> > undocumented side effect.
-> >
-> > To remove this side effect irq_set_affinity_hint() has been marked
-> > as deprecated and new interfaces have been introduced. Hence, replace the
-> > irq_set_affinity_hint() with the new interface irq_update_affinity_hint()
-> > that only updates the affinity_hint pointer.
-> >
-> > Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-> > ---
-> >  drivers/net/ethernet/mellanox/mlx4/eq.c | 6 +++---
-> >  1 file changed, 3 insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/net/ethernet/mellanox/mlx4/eq.c b/drivers/net/ethernet/mellanox/mlx4/eq.c
-> > index 9e48509ed3b2..f549d697ca95 100644
-> > --- a/drivers/net/ethernet/mellanox/mlx4/eq.c
-> > +++ b/drivers/net/ethernet/mellanox/mlx4/eq.c
-> > @@ -244,9 +244,9 @@ static void mlx4_set_eq_affinity_hint(struct mlx4_priv *priv, int vec)
-> >           cpumask_empty(eq->affinity_mask))
-> >               return;
-> >
-> > -     hint_err = irq_set_affinity_hint(eq->irq, eq->affinity_mask);
-> > +     hint_err = irq_update_affinity_hint(eq->irq, eq->affinity_mask);
-> >       if (hint_err)
-> > -             mlx4_warn(dev, "irq_set_affinity_hint failed, err %d\n", hint_err);
-> > +             mlx4_warn(dev, "irq_update_affinity_hint failed, err %d\n", hint_err);
-> >  }
-> >  #endif
-> >
-> > @@ -1124,7 +1124,7 @@ static void mlx4_free_irqs(struct mlx4_dev *dev)
-> >               if (eq_table->eq[i].have_irq) {
-> >                       free_cpumask_var(eq_table->eq[i].affinity_mask);
-> >  #if defined(CONFIG_SMP)
-> > -                     irq_set_affinity_hint(eq_table->eq[i].irq, NULL);
-> > +                     irq_update_affinity_hint(eq_table->eq[i].irq, NULL);
-> >  #endif
->
-> This #if/endif can be deleted.
+Two small fixes, both in upper layer drivers (scsi disk and cdrom). 
+The sd one is fixing a commit changing revalidation that came from the
+block tree a while ago (5.10) and the sr one adds handling of a
+condition we didn't previously handle for manually removed media.
 
-I think we also can get rid of the other #if/endif CONFIG_SMP
-occurrences that are present around mlx4_set_eq_affinity_hint()
-definition and call, isn't it?
-There is already a check-in interrupt.h so doing it again in the
-driver looks like an unwanted repetition IMHO.
+The patch is available here:
 
->
-> Thanks,
-> Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
->
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
+The short changelog is:
 
--- 
-Thanks
-Nitesh
+Christoph Hellwig (1):
+      scsi: sd: Call sd_revalidate_disk() for ioctl(BLKRRPART)
+
+ManYi Li (1):
+      scsi: sr: Return appropriate error code when disk is ejected
+
+And the diffstat:
+
+ drivers/scsi/sd.c | 22 ++++++++++++++++++----
+ drivers/scsi/sr.c |  2 ++
+ 2 files changed, 20 insertions(+), 4 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index cb3c37d1e009..a2c3d9ad9ee4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1387,6 +1387,22 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
+ 	}
+ }
+ 
++static bool sd_need_revalidate(struct block_device *bdev,
++		struct scsi_disk *sdkp)
++{
++	if (sdkp->device->removable || sdkp->write_prot) {
++		if (bdev_check_media_change(bdev))
++			return true;
++	}
++
++	/*
++	 * Force a full rescan after ioctl(BLKRRPART).  While the disk state has
++	 * nothing to do with partitions, BLKRRPART is used to force a full
++	 * revalidate after things like a format for historical reasons.
++	 */
++	return test_bit(GD_NEED_PART_SCAN, &bdev->bd_disk->state);
++}
++
+ /**
+  *	sd_open - open a scsi disk device
+  *	@bdev: Block device of the scsi disk to open
+@@ -1423,10 +1439,8 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 	if (!scsi_block_when_processing_errors(sdev))
+ 		goto error_out;
+ 
+-	if (sdev->removable || sdkp->write_prot) {
+-		if (bdev_check_media_change(bdev))
+-			sd_revalidate_disk(bdev->bd_disk);
+-	}
++	if (sd_need_revalidate(bdev, sdkp))
++		sd_revalidate_disk(bdev->bd_disk);
+ 
+ 	/*
+ 	 * If the drive is empty, just let the open fail.
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index e4633b84c556..7815ed642d43 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -220,6 +220,8 @@ static unsigned int sr_get_events(struct scsi_device *sdev)
+ 		return DISK_EVENT_EJECT_REQUEST;
+ 	else if (med->media_event_code == 2)
+ 		return DISK_EVENT_MEDIA_CHANGE;
++	else if (med->media_event_code == 3)
++		return DISK_EVENT_EJECT_REQUEST;
+ 	return 0;
+ }
+ 
 
