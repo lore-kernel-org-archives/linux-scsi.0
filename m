@@ -6,72 +6,72 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF0FC49EA3
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 17:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F47EC11F64
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 17:31:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F5EB6121E
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 17:07:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3583661C4D
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 17:31:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232999AbhF1RKQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Jun 2021 13:10:16 -0400
-Received: from mail-pl1-f173.google.com ([209.85.214.173]:45986 "EHLO
-        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233015AbhF1RKK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jun 2021 13:10:10 -0400
-Received: by mail-pl1-f173.google.com with SMTP id i4so9283758plt.12;
-        Mon, 28 Jun 2021 10:07:45 -0700 (PDT)
+        id S233615AbhF1ReR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Jun 2021 13:34:17 -0400
+Received: from mail-pg1-f172.google.com ([209.85.215.172]:46073 "EHLO
+        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232713AbhF1ReQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jun 2021 13:34:16 -0400
+Received: by mail-pg1-f172.google.com with SMTP id y17so3761946pgf.12;
+        Mon, 28 Jun 2021 10:31:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=5cLxTwDsCSrtdWkFMbm5QuhzGbb4I7nKkvY0D1dGHlY=;
-        b=AJBJ3mfSjL64Qqz2CblyDXlAvB6NAh/WN9jGvW8MLpb5HMe/HZV26LaRMaR3FJ0co4
-         SsaoyEASviUEjdU2lVF9h32EIjiLvknQ8A8GcDJIJkuYPeg3QwzvXyENPN0uFwTKs/2X
-         NX3PC/7rexJBT73ho+EeUejp7pHyboNv9IQNhz2Gx4dNqsso46UPjebnmzvuqGg0EoDV
-         lzG4cVXMuJDmJXtsn24iEGH8/oEY1sOKmo+s6/NkOiI5cgMKb5UEx8+MEu0zJJaiFSyg
-         MOt+B2sfLr/vKb2WtkA9FA2m5bFjOVSvRtAorQvMJaeadXjYuvIuhMqZcEG1p9kuhirM
-         CKJA==
-X-Gm-Message-State: AOAM532ESK0HPWGiYLa3J8x+GMBRYT7SBeKRryfIvw6Sn/4iYxh5eMEd
-        3Af9HNozU0zpN84v0Ogn5HcS+KrjzqQ=
-X-Google-Smtp-Source: ABdhPJzftsh0Nqv/HqgGTQbkic+FQnrxH2nrmHfzLcH8UeToPUbzrrLGPV9EGzpZWjBv9BAGAhkAJw==
-X-Received: by 2002:a17:90a:ea88:: with SMTP id h8mr7952693pjz.147.1624900064200;
-        Mon, 28 Jun 2021 10:07:44 -0700 (PDT)
+        bh=h/Ygcb6PuZTWJldevbJojqcbTHjtYoWaJ0JOU4ireDo=;
+        b=TB/cF9P5C1FtV3nMxw8cMUaksrEYgorCAKqjW9AWz0n/Sw7u0LUwSAIg5BtqzUWkc/
+         8QckR6bvM/+IZTPKLVhdq6l4r541661iR/mqCS260nqSrm6+sZwhLPQDksWz8UpzyWkd
+         XXfowF3G58uLarKXbT94CAgMfrj/5gNdmzzkt9Vc5AQxOmuqBIx8tm8YfPkYYdqXoHhD
+         4HlmkyFJtp8ebV7L+dp86AsiJmByqxz8IelvpRZPYTHZ/OMfhcKbTgk/mvUfWa+kI7AF
+         xhjH1gbZQEHRMLPWwOF03sWJJRF6ywOKkREW1RG9Pj/JXTqBeZevKXgERBui/nmGf6kK
+         lacg==
+X-Gm-Message-State: AOAM530zvZm9+wXoXkePIRYZ/K2+IYHYvfLf4oj+lo2yD0VCFlHKtkhs
+        4adeRSeJRXZhjW+YvGKOlSPGhIjllHY=
+X-Google-Smtp-Source: ABdhPJwLDhSmFqLmLzZ8srDQFHJADiLRuIYJeRuvToQMhz3NoYZP7cQIWcZxbxPbPBdgMbaKnoqWkg==
+X-Received: by 2002:a63:2cc4:: with SMTP id s187mr24098304pgs.233.1624901509737;
+        Mon, 28 Jun 2021 10:31:49 -0700 (PDT)
 Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id v9sm14732437pfn.22.2021.06.28.10.07.41
+        by smtp.gmail.com with ESMTPSA id o1sm15214298pfk.152.2021.06.28.10.31.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Jun 2021 10:07:43 -0700 (PDT)
-Subject: Re: [PATCH v4 01/10] scsi: ufs: Rename flags pm_op_in_progress and
- is_sys_suspended
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
+        Mon, 28 Jun 2021 10:31:48 -0700 (PDT)
+Subject: Re: [PATCH v4 06/10] scsi: ufs: Remove host_sem used in
+ suspend/resume
+To:     Can Guo <cang@codeaurora.org>
+Cc:     Adrian Hunter <adrian.hunter@intel.com>, asutoshd@codeaurora.org,
         nguyenb@codeaurora.org, hongwus@codeaurora.org,
         ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        kernel-team@android.com, Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Bean Huo <beanhuo@micron.com>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        "open list:ARM/QUALCOMM SUPPORT" <linux-arm-msm@vger.kernel.org>,
         open list <linux-kernel@vger.kernel.org>
 References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
- <1624433711-9339-2-git-send-email-cang@codeaurora.org>
- <cb39c5d7-c21d-66b1-0a86-f9154f73a94e@acm.org>
- <b7562bc820fc712196104a5eae30e2e4@codeaurora.org>
+ <1624433711-9339-8-git-send-email-cang@codeaurora.org>
+ <ed59d61a-6951-2acd-4f89-40f8dc5015e1@intel.com>
+ <9105f328ee6ce916a7f01027b0d28332@codeaurora.org>
+ <a87e5ca5-390f-8ca0-41bf-27cdc70e3316@intel.com>
+ <1b351766a6e40d0df90b3adec964eb33@codeaurora.org>
+ <a654d2ef-b333-1c56-42c6-3d69e9f44bd0@intel.com>
+ <3970b015e444c1f1714c7e7bd4c44651@codeaurora.org>
+ <7ba226fe-789c-bf20-076b-cc635530db42@acm.org>
+ <ea968eb95ef03ef16a420e7483680b75@codeaurora.org>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <50023fb6-7b61-e5dd-9fac-e0be3adbbadc@acm.org>
-Date:   Mon, 28 Jun 2021 10:07:40 -0700
+Message-ID: <c7d9e12d-f966-44c6-27dc-4004143398aa@acm.org>
+Date:   Mon, 28 Jun 2021 10:31:46 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <b7562bc820fc712196104a5eae30e2e4@codeaurora.org>
+In-Reply-To: <ea968eb95ef03ef16a420e7483680b75@codeaurora.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -79,37 +79,69 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/28/21 12:01 AM, Can Guo wrote:
-> On 2021-06-25 07:42, Bart Van Assche wrote:
->> On 6/23/21 12:35 AM, Can Guo wrote:
->>> Rename pm_op_in_progress and is_sys_suspended to
->>> wlu_pm_op_in_progress and
->>> is_wlu_sys_suspended accordingly.
+On 6/28/21 1:17 AM, Can Guo wrote:
+> On 2021-06-25 01:11, Bart Van Assche wrote:
+>> On 6/23/21 11:31 PM, Can Guo wrote:
+>>> Using back host_sem in suspend_prepare()/resume_complete() won't have
+>>> this problem of deadlock, right?
 >>
->> Can the is_wlu_sys_suspended member variable be removed by checking
->> dev->power.is_suspended where dev represents the WLUN?
->>
+>> Although that would solve the deadlock discussed in this email thread, it
+>> wouldn't solve the issue of potential adverse interactions of the UFS
+>> error handler and the SCSI error handler running concurrently.
 > 
-> No, PM set dev->power.is_suspended to "false" even the device failed
-> resuming,
-> while is_wlu_sys_suspended can be used to tell that.
+> I think I've explained it before, paste it here -
+> 
+> ufshcd_eh_host_reset_handler() invokes ufshcd_err_handler() and flushes it,
+> so SCSI error handler and UFS error handler can safely run together.
 
-(+Rafael)
+That code path is the exception. Do you agree that the following three
+functions all invoke the ufshcd_err_handler() function asynchronously?
+* ufshcd_uic_pwr_ctrl()
+* ufshcd_check_errors()
+* ufshcd_abort()
 
-Hi Rafael,
+>> How about using the
+>> standard approach for invoking the UFS error handler instead of using
+>> a custom
+>> mechanism, e.g. by using something like the (untested) patch below? This
+>> approach guarantees that the UFS error handler is only activated after
+>> all
+>> pending SCSI commands have failed or timed out and also guarantees
+>> that no new
+>> SCSI commands will be queued while the UFS error handler is in
+>> progress (see
+>> also scsi_host_queue_ready()).
+> 
+> Per my understanding, SCSI error handling is scsi cmd based, meaning it
+> only works when certain SCSI cmds failed [ ... ]
+That is not completely correct. The SCSI error handler is activated if
+either all pending commands have failed or if it is scheduled
+explicitly. Please take a look at the host_eh_scheduled member variable,
+how it is used and also at scsi_schedule_eh(). The scsi_schedule_eh()
+function was introduced in 2006 and that the ATA code uses it since then
+to activate the SCSI error handler even if no commands are pending. See
+also the patch "SCSI: make scsi_implement_eh() generic API for SCSI
+transports".
 
-In drivers/base/power/main.c we found the following code:
+> However, most UFS (UIC) errors happens during gear scaling, clk gating
+> and suspend/resume (due to power mode changes and/or hibern8
+> enter/exit), during which there is NO scsi cmds in UFS driver at all
+> (because these contexts start only when there is no ongoing data
+> transactions).
 
- End:
-	error = dpm_run_callback(callback, dev, state, info);
-	dev->power.is_suspended = false;
+Activating the SCSI error handler if no SCSI commands are in progress is
+supported by scsi_schedule_eh().
 
-Is it a bug or a feature that dev->power.is_suspended is set to false if
-dpm_run_callback() fails? I'm asking this because only clearing
-dev->power.is_suspended if dpm_run_callback() returns 0 would allow to
-simplify the UFS driver. It can happen for UFS devices that runtime
-resume fails and if this fails we need to track this.
+> Thus, scsi_unjam_host() won't even call scsi_eh_ready_devs() because
+> scsi_eh_get_sense() always returns TRUE in these cases (eh_work_q is
+> empty).
 
-Thanks,
+Please take another look at the patch in my previous message. There is a
+scsi_transport_template instance in that patch. The eh_strategy_handler
+defined in a SCSI transport template is called *instead* of
+scsi_unjam_host(). In other words, scsi_unjam_host() won't be called if
+my patch would be applied to the UFS driver.
+
+Please let me know if you need more information.
 
 Bart.
