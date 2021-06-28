@@ -2,133 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 087CCC2B9F4
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 13:35:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2D11C49EA3
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 13:35:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E91826145F
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 13:35:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 948626145F
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 13:35:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232240AbhF1Nh0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Jun 2021 09:37:26 -0400
-Received: from comms.puri.sm ([159.203.221.185]:47374 "EHLO comms.puri.sm"
+        id S232491AbhF1NiL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Jun 2021 09:38:11 -0400
+Received: from comms.puri.sm ([159.203.221.185]:47418 "EHLO comms.puri.sm"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232141AbhF1NhB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Jun 2021 09:37:01 -0400
+        id S232248AbhF1Nh0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Jun 2021 09:37:26 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id 977AAE01BC;
-        Mon, 28 Jun 2021 06:34:35 -0700 (PDT)
+        by comms.puri.sm (Postfix) with ESMTP id 71537E01B9;
+        Mon, 28 Jun 2021 06:34:31 -0700 (PDT)
 Received: from comms.puri.sm ([127.0.0.1])
         by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id qDthHyxKZd8L; Mon, 28 Jun 2021 06:34:34 -0700 (PDT)
+        with ESMTP id tRBK4TkhrQzn; Mon, 28 Jun 2021 06:34:29 -0700 (PDT)
 From:   Martin Kepplinger <martin.kepplinger@puri.sm>
 To:     martin.kepplinger@puri.sm
 Cc:     bvanassche@acm.org, jejb@linux.ibm.com,
         linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
         linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         stern@rowland.harvard.edu
-Subject: [PATCH v4 2/3] scsi: sd: send REQUEST SENSE for BLIST_MEDIA_CHANGE devices in runtime_resume()
-Date:   Mon, 28 Jun 2021 15:34:11 +0200
-Message-Id: <20210628133412.1172068-3-martin.kepplinger@puri.sm>
-In-Reply-To: <20210628133412.1172068-1-martin.kepplinger@puri.sm>
-References: <20210628133412.1172068-1-martin.kepplinger@puri.sm>
+Subject: [PATCH v4 0/3] fix runtime PM for SD card readers
+Date:   Mon, 28 Jun 2021 15:34:09 +0200
+Message-Id: <20210628133412.1172068-1-martin.kepplinger@puri.sm>
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For SD cardreader devices that have the BLIST_MEDIA_CHANGE flag set,
-a MEDIA CHANGE unit attention is received after resuming from runtime
-suspend. Send REQUEST SENSE to avoid that.
+hi,
 
-The "downside" is that for these devices we now rely on users not to
-really change the medium (SD card) *during* a runtime suspend/resume
-cycle, i.e. when not unmounting.
+(According to Alan Stern, "as far as I know, all") SD card readers send
+MEDIA_CHANGED unit attention notification on (runtime) resume. We cannot
+use runtime PM with these devices as I/O always fails in that case.
 
-To enable runtime PM for an SD cardreader (device number 0:0:0:0), do:
+This fixes runtime PM for SD cardreaders. I'd appreciate any feedback.
 
+To enable runtime PM for an SD cardreader number 0:0:0:0, do:
+    
 echo 0 > /sys/module/block/parameters/events_dfl_poll_msecs
 echo 1000 > /sys/bus/scsi/devices/0:0:0:0/power/autosuspend_delay_ms
 echo auto > /sys/bus/scsi/devices/0:0:0:0/power/control
 
-Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
----
- drivers/scsi/sd.c | 37 ++++++++++++++++++++++++++++++++++++-
- 1 file changed, 36 insertions(+), 1 deletion(-)
+thank you,
+                           martin
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 6d2d63629a90..0acc732f1933 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -63,6 +63,7 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
-@@ -114,6 +115,7 @@ static void sd_shutdown(struct device *);
- static int sd_suspend_system(struct device *);
- static int sd_suspend_runtime(struct device *);
- static int sd_resume(struct device *);
-+static int sd_resume_runtime(struct device *);
- static void sd_rescan(struct device *);
- static blk_status_t sd_init_command(struct scsi_cmnd *SCpnt);
- static void sd_uninit_command(struct scsi_cmnd *SCpnt);
-@@ -608,7 +610,7 @@ static const struct dev_pm_ops sd_pm_ops = {
- 	.poweroff		= sd_suspend_system,
- 	.restore		= sd_resume,
- 	.runtime_suspend	= sd_suspend_runtime,
--	.runtime_resume		= sd_resume,
-+	.runtime_resume		= sd_resume_runtime,
- };
- 
- static struct scsi_driver sd_template = {
-@@ -3720,6 +3722,39 @@ static int sd_resume(struct device *dev)
- 	return ret;
- }
- 
-+static int sd_resume_runtime(struct device *dev)
-+{
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	struct scsi_device *sdp;
-+	int timeout, retries, res;
-+	struct scsi_sense_hdr my_sshdr;
-+
-+	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
-+		return 0;
-+
-+	sdp = sdkp->device;
-+	timeout = sdp->request_queue->rq_timeout * SD_FLUSH_TIMEOUT_MULTIPLIER;
-+
-+	if (sdp->sdev_bflags & BLIST_MEDIA_CHANGE) {
-+		for (retries = 3; retries > 0; --retries) {
-+			unsigned char cmd[10] = { 0 };
-+
-+			cmd[0] = REQUEST_SENSE;
-+			/*
-+			 * Leave the rest of the command zero to indicate
-+			 * flush everything.
-+			 */
-+			res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL,
-+					   &my_sshdr, timeout,
-+					   sdkp->max_retries, 0, RQF_PM, NULL);
-+			if (res == 0)
-+				break;
-+		}
-+	}
-+
-+	return sd_resume(dev);
-+}
-+
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-  *	a module).
+revision history
+----------------
+v4: (thank you Bart and Alan)
+* send SENSE REQUEST in sd instead of adding a global scsi error flag.
+
+v3: (thank you Bart)
+ * create a new BLIST entry to mark affected devices instead of the
+   sysfs module parameter for sd only. still, only sd implements handling
+   the flag for now.
+ * cc linux-pm list
+https://lore.kernel.org/linux-scsi/20210328102531.1114535-1-martin.kepplinger@puri.sm/
+
+v2:
+https://lore.kernel.org/linux-scsi/20210112093329.3639-1-martin.kepplinger@puri.sm/
+ * move module parameter to sd
+ * add Documentation
+v1:
+https://lore.kernel.org/linux-scsi/20210111152029.28426-1-martin.kepplinger@puri.sm/T/
+For the full background, the discussion started in June 2020 here:
+https://lore.kernel.org/linux-scsi/20200623111018.31954-1-martin.kepplinger@puri.sm/
+
+
+Martin Kepplinger (3):
+  scsi: devinfo: add new flag BLIST_MEDIA_CHANGE
+  scsi: sd: send REQUEST SENSE for BLIST_MEDIA_CHANGE devices in
+    runtime_resume()
+  scsi: devinfo: add BLIST_MEDIA_CHANGE for Ultra HS-SD/MMC usb
+    cardreaders
+
+ drivers/scsi/scsi_devinfo.c |  1 +
+ drivers/scsi/sd.c           | 37 ++++++++++++++++++++++++++++++++++++-
+ include/scsi/scsi_devinfo.h |  6 +++---
+ 3 files changed, 40 insertions(+), 4 deletions(-)
+
 -- 
 2.30.2
 
