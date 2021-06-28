@@ -2,60 +2,78 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C89FEC2B9F4
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 09:57:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56CECC49EB7
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 13:35:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC08E61584
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 09:57:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4579361C6C
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 13:35:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232558AbhF1KAB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Jun 2021 06:00:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59868 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230256AbhF1KAA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jun 2021 06:00:00 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35784C061574;
-        Mon, 28 Jun 2021 02:57:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=qIbUFExBlJI5QA1nU2WzaI4H72pC0gc6gNk0xgR+rKc=; b=P67bAxKgnCNb4it+mmUn9RXFur
-        8YhmJ0KuWIUz8sQi0gHjJGwVa9pFqfA+MrWJqN52N2IHhHOWPsBb3AKXG1toUqLubnxKCJGQpaohm
-        wE4bdavEkuw68XocSlav0FoQ4eXqz+O9efzE/WBB0lB2LKWsBA3p1IfQgCJXy7ulG9nFwTK8EINRC
-        Qa1HlsRv0V1LxdbLyRkLFeamdOfxBD8w0Xb+wO5oFxxcaEgI0Qj3sdMADAJALRZioq6BFr7R1ZKVL
-        rOtpCQw20ssWCvqk2ZoD3qa3ugxA75tY9epUZuPCZjRg2tF03LdvGXuwBubvStyTJ87fYdkyLDoLD
-        O+yN5pvA==;
-Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1lxnxm-002ntY-LZ; Mon, 28 Jun 2021 09:54:15 +0000
-Date:   Mon, 28 Jun 2021 10:53:58 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Igor Kononenko <i.kononenko@yadro.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Felipe Balbi <balbi@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        openbmc@lists.ozlabs.org, linux-ide@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 5/6] FMS: Add the SCSI Get Configuration command.
-Message-ID: <YNmcNvqvTFNCrMl9@infradead.org>
-References: <20210626211820.107310-1-i.kononenko@yadro.com>
- <20210626211820.107310-6-i.kononenko@yadro.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210626211820.107310-6-i.kononenko@yadro.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+        id S232230AbhF1NhY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Jun 2021 09:37:24 -0400
+Received: from comms.puri.sm ([159.203.221.185]:47356 "EHLO comms.puri.sm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232087AbhF1NhA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Jun 2021 09:37:00 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id 8A547E01BB;
+        Mon, 28 Jun 2021 06:34:33 -0700 (PDT)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id XCCfshehQNc1; Mon, 28 Jun 2021 06:34:32 -0700 (PDT)
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+To:     martin.kepplinger@puri.sm
+Cc:     bvanassche@acm.org, jejb@linux.ibm.com,
+        linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        stern@rowland.harvard.edu
+Subject: [PATCH v4 1/3] scsi: devinfo: add new flag BLIST_MEDIA_CHANGE
+Date:   Mon, 28 Jun 2021 15:34:10 +0200
+Message-Id: <20210628133412.1172068-2-martin.kepplinger@puri.sm>
+In-Reply-To: <20210628133412.1172068-1-martin.kepplinger@puri.sm>
+References: <20210628133412.1172068-1-martin.kepplinger@puri.sm>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-What is FMS?  And why do only patches 5 and 6 show up on the list?
-And why does this mix changes to the SCSI layer, libata, usb-gadget and
-the CDROM UAPI in a single patch?
+add a new flag for devices that issue MEDIA CHANGE unit attentions
+when actually no medium changed. Drivers can then act accordingly in
+case they need to work around it, i.e. in resume().
+
+Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+---
+ include/scsi/scsi_devinfo.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/scsi/scsi_devinfo.h b/include/scsi/scsi_devinfo.h
+index 3fdb322d4c4b..766fa876598e 100644
+--- a/include/scsi/scsi_devinfo.h
++++ b/include/scsi/scsi_devinfo.h
+@@ -28,7 +28,8 @@
+ #define BLIST_LARGELUN		((__force blist_flags_t)(1ULL << 9))
+ /* override additional length field */
+ #define BLIST_INQUIRY_36	((__force blist_flags_t)(1ULL << 10))
+-#define __BLIST_UNUSED_11	((__force blist_flags_t)(1ULL << 11))
++/* ignore one MEDIA CHANGE unit attention after resuming from runtime suspend */
++#define BLIST_MEDIA_CHANGE	((__force blist_flags_t)(1ULL << 11))
+ /* do not do automatic start on add */
+ #define BLIST_NOSTARTONADD	((__force blist_flags_t)(1ULL << 12))
+ #define __BLIST_UNUSED_13	((__force blist_flags_t)(1ULL << 13))
+@@ -73,8 +74,7 @@
+ #define __BLIST_HIGH_UNUSED (~(__BLIST_LAST_USED | \
+ 			       (__force blist_flags_t) \
+ 			       ((__force __u64)__BLIST_LAST_USED - 1ULL)))
+-#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_11 | \
+-			     __BLIST_UNUSED_13 | \
++#define __BLIST_UNUSED_MASK (__BLIST_UNUSED_13 | \
+ 			     __BLIST_UNUSED_14 | \
+ 			     __BLIST_UNUSED_15 | \
+ 			     __BLIST_UNUSED_16 | \
+-- 
+2.30.2
+
