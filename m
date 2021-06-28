@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF5BC11F64
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 21:24:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CDB0C11F64
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 21:24:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC73361CF1
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 21:24:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75A7161D04
+	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 21:24:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237591AbhF1V0d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Jun 2021 17:26:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36346 "EHLO mail.kernel.org"
+        id S238040AbhF1V0g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Jun 2021 17:26:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:36386 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238017AbhF1VXz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Jun 2021 17:23:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 454D561D04;
-        Mon, 28 Jun 2021 21:21:15 +0000 (UTC)
+        id S238037AbhF1VX4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Jun 2021 17:23:56 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 01E4B61D09;
+        Mon, 28 Jun 2021 21:21:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1624915275;
-        bh=7/TVcdjiav0uskYQkjwjWZxSkidQ5JDWJntlocS4t8o=;
+        s=k20201202; t=1624915279;
+        bh=2/6PFKcqQpIK27RimnGf9jRd+T7ijjCZEd7Fgyj2bVo=;
         h=From:To:Cc:Subject:Date:From;
-        b=V7R1s5fcljSLo1P+4Lj9BhzDZDxsLwGeMuqyPSkooZALjNlNOCMeKuSvdWamEekG+
-         odIqDNuFcHCKEbE3R86fNzgXXLJ6xK0W2hs14/0idRo/nO6amVrgQbWZj74Jwavw5b
-         TxqEXZFwH186ggInPLO7pMuH9x0qubNwQfH3zXcgLXUeVt1nP8l335PxdJojH9LP/7
-         jFY28/KKHKq317QKVzXdmppDe074wmZ9J8FL59OjcpeZZbCToxJq2BMnhx1mj4vRoE
-         hwj06zFBrynaLYxwyuq1sJOevpqfoDzYuMHW689GJwG+JYuMcwzDva6hjbsvXIJJuu
-         ECB9Tg/bHxu6A==
+        b=nIAt6OEOCY+emTKQo3q/H612YaKM0HN+IxynZFq7wRHB0VxCa7wxFMPcNMOLrr/GZ
+         PVo9azW6ovK2vPaZrFs8NXPeNtYFkDTUj+7Lc+gQBh6MAa+X0nk8PFNrfBzYTn49t8
+         3Kst5kuAsuPH7bR56fE9LpEgoo2WNZlGACphkCexLKHKdNyuR7DBa2m3yjvv8kJ5PM
+         8RA0kjmOJPd+fYF6Gg4OlMZopvBjdFQXXHkY/z+94y/qMHxytqU291cDosnaOYKscD
+         80rOR/tootg8S03Fpei2Xcq5C7dixphcfDMKqlvu8dg0aNkKTlkWFN2Lad+SzkE/Ni
+         vISMaG14de7Zw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     ManYi Li <limanyi@uniontech.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 1/2] scsi: sr: Return appropriate error code when disk is ejected
-Date:   Mon, 28 Jun 2021 17:21:12 -0400
-Message-Id: <20210628212114.43604-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 1/2] scsi: sr: Return appropriate error code when disk is ejected
+Date:   Mon, 28 Jun 2021 17:21:16 -0400
+Message-Id: <20210628212117.43676-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
 X-stable: review
@@ -65,7 +65,7 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 5be3d6b7991b..a46fbe2d2ee6 100644
+index 67a73ea0a615..5e51a39a0c27 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
 @@ -216,6 +216,8 @@ static unsigned int sr_get_events(struct scsi_device *sdev)
