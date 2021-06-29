@@ -2,113 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D53F1C11F66
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 14:07:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9644CC11F68
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 14:08:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB6CA61DC4
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 14:07:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CCC861DB4
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 14:08:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232607AbhF2OJ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Jun 2021 10:09:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40760 "EHLO
+        id S234204AbhF2OLG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Jun 2021 10:11:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41184 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230100AbhF2OJ1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jun 2021 10:09:27 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CE986C061760
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 07:06:59 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id cs1-20020a17090af501b0290170856e1a8aso2002963pjb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 07:06:59 -0700 (PDT)
+        with ESMTP id S233600AbhF2OLG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jun 2021 10:11:06 -0400
+Received: from mail-ot1-x32d.google.com (mail-ot1-x32d.google.com [IPv6:2607:f8b0:4864:20::32d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C0C9C061766
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 07:08:39 -0700 (PDT)
+Received: by mail-ot1-x32d.google.com with SMTP id i12-20020a05683033ecb02903346fa0f74dso22764454otu.10
+        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 07:08:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=I3RV+HCCvCJQGx+A+5XaTlwpVAyTU6lqpa5nVvBNC5I=;
-        b=Bbads9/drsy/6BWcTebG162aH0bJpFsx711zbtoFZ6Y6X3lplmNogqhhgsf+u9g1dM
-         285wineIXefVdjkMezYn0tWzQrhiEE073HtGWhKCrEzdVMTRlRCbazqqaOgdeOgbDAfi
-         MafvPTR1PGwsUheV81tdJtDfoZ8kzDxk33Tns=
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Tx7GXv+l1iL7DNP0Qz+J+xkntgj2XgCeZbBwDG2Ctus=;
+        b=cBPt6Rm9sWG5qm7Cyq8TIWXU3/2bP4U70/+tmoRt9B6kqLwZ71K91L9ZVEcOnOS/Am
+         i68V6rJZtrMtN2d14uH5xI4pVLtK6hnC83fIBGsTyVYopodC5J+y534NIYsNf4DWCmip
+         7HU11ZRBejPJU+Thbw7qviSo1rNwL4vAIZvjE=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=I3RV+HCCvCJQGx+A+5XaTlwpVAyTU6lqpa5nVvBNC5I=;
-        b=asMrMWNAyiwrSl5ojd9Cn7tY/Knw6rxymXtLHv5amJ0Oi9shO5Q5lzi6YISpME8tPd
-         4h2PhQKn3ixyv3Y+SgQRDiw05q/365e1qlP4yTLJ/fj4iPRsCGoV6o63DZwtm4zlOKfg
-         AGQH3lFWIfxSjiR+EASX9Oj5osYuRjPMfB1CzjUiJO4CzVgWUB6dMVEt8JCtMjh+8PwO
-         6qAPDGyqMBonVjvVWe3/bRdmGTZufm3jsroI8LySD/95Uj7XYD1OSnTFoagvrJGUknxh
-         76ybnXC741vZRme2KTpIGhf5VNJcwpxBV+jRpX8iBAJsMp1VeClKe6Y4+2Rn3mfw/sBN
-         Qg6w==
-X-Gm-Message-State: AOAM532QEHt++BXeSsp4jatHCzaBkncpBCkSl8ReK/Bqe5pkJ8ZF/eRZ
-        vfbXdOg1KCdnzLFgF2EPAAPUjd3RqZYScDASNt7AEQEd+aXKE6AAMJtpwcKXeAdX88f69j5OxSt
-        xCqg/qaQn5Q8xXaZRFAufEHgGo0wZmd0YBj0UlNjToe6ze0g6Vc5QqypdfgRItZ3g9LLE2JQHwD
-        kQJPOt36HfJew=
-X-Google-Smtp-Source: ABdhPJx31QqrGP9AHdMtyL0X5WzL5Vhb1J7IXcfDwIgcFQE/VpxOegJFFmgY/BWSEHv1mebD5BpR0Q==
-X-Received: by 2002:a17:902:968a:b029:11d:6448:1352 with SMTP id n10-20020a170902968ab029011d64481352mr27746332plp.59.1624975618788;
-        Tue, 29 Jun 2021 07:06:58 -0700 (PDT)
-Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id a187sm18629535pfb.66.2021.06.29.07.06.55
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 29 Jun 2021 07:06:58 -0700 (PDT)
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Cc:     jejb@linux.ibm.com, mpi3mr-linuxdrv.pdl@broadcom.com,
-        kashyap.desai@broadcom.com, sathya.prakash@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        kernel test robot <lkp@intel.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH] mpi3mr: Fix warnings reported by smatch
-Date:   Tue, 29 Jun 2021 19:41:53 +0530
-Message-Id: <20210629141153.3158-1-sreekanth.reddy@broadcom.com>
-X-Mailer: git-send-email 2.27.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Tx7GXv+l1iL7DNP0Qz+J+xkntgj2XgCeZbBwDG2Ctus=;
+        b=eLf/DNhdnOUBN21EEFdxwWZ5S3EK0pY+CeaiaIdrrvEtfTGZJu8IKWFgUwuIm5Z4hw
+         e7nJBcJnVCWZYh/y9rSs2VdTBgjDHVfiFjGjGYWSL+t08976j54cGRYppbweDQcwJxFB
+         Lh6Ka/H6S9+NxQdm+WCEIJSfgMKot9qyo/mvV6ZNuefblkUJVIW43dSptSdjfAMOD/01
+         gwEPhfvF6+TIUAmpYXhcWVRfEdfFXlS1j07CpmdpgaA3xI2fp1EOLWs2aoWzGhBhegiK
+         8CF/Gf5DLTzqOO9/a0osLGTqMdRYzXSTeHS8EhTk2cv9x6kB/IiHSxJlzRw62SSk/b79
+         VY+A==
+X-Gm-Message-State: AOAM531stI9+L3RRzqk6ryfh1wBwdk5NCSAkjwFmKMdEVd4ZqYhoo49X
+        3Ey5xH+V45x6epLptBVDfQAm+DzEoFTWmm4tXJW08A==
+X-Google-Smtp-Source: ABdhPJw9w28wsM2zheMk+2qT1FBgkzqX78THMylREaDRBxkHwHOq04oE0lE+HEpj3GXaFuth2SID/MFqIYfd/Z5Z6+Y=
+X-Received: by 2002:a9d:1a8:: with SMTP id e37mr4558088ote.316.1624975718455;
+ Tue, 29 Jun 2021 07:08:38 -0700 (PDT)
 MIME-Version: 1.0
+References: <20210623072153.25758-1-sreekanth.reddy@broadcom.com>
+ <20210623072153.25758-2-sreekanth.reddy@broadcom.com> <yq1czs5l4uw.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1czs5l4uw.fsf@ca-mkp.ca.oracle.com>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Tue, 29 Jun 2021 19:38:25 +0530
+Message-ID: <CAK=zhgqJuwk2=pbZQnCPyys8Rh+Bi0NT=W8Fa5+oYgweigJ1VQ@mail.gmail.com>
+Subject: Re: [PATCH] mpi3mr: Fix W=1 compilation warnings
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        kernel test robot <lkp@intel.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000008f099a05c5e81ee1"
+        boundary="0000000000007d17da05c5e8240a"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000008f099a05c5e81ee1
-Content-Transfer-Encoding: 8bit
+--0000000000007d17da05c5e8240a
+Content-Type: text/plain; charset="UTF-8"
 
-Fix below warning reported by static analysis tool
-named smatch,
+On Tue, Jun 29, 2021 at 9:14 AM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Sreekanth,
+>
+> > -     strncpy(drv_info->os_name, utsname()->sysname, sizeof(drv_info->os_name));
+> > -     drv_info->os_name[sizeof(drv_info->os_name) - 1] = 0;
+> > -     strncpy(drv_info->os_version, utsname()->release, sizeof(drv_info->os_version));
+> > -     drv_info->os_version[sizeof(drv_info->os_version) - 1] = 0;
+> > +     memcpy(drv_info->os_name, utsname()->sysname, sizeof(drv_info->os_name) - 1);
+> > +     memcpy(drv_info->os_version, utsname()->release, sizeof(drv_info->os_version) - 1);
+>
+> strscpy()?
 
-smatch warnings:
-drivers/scsi/mpi3mr/mpi3mr_os.c:873 mpi3mr_update_tgtdev() error: we
-previously assumed 'mrioc->shost' could be null (see line 870
+Agreed. Posted a new patch using strscpy().
 
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr_os.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Thanks,
+Sreekanth
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 40676155e62d..24ac7ddec749 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -867,8 +867,9 @@ static void mpi3mr_update_tgtdev(struct mpi3mr_ioc *mrioc,
- 		if ((dev_info & MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_MASK) !=
- 		    MPI3_DEVICE0_PCIE_DEVICE_INFO_TYPE_NVME_DEVICE)
- 			tgtdev->is_hidden = 1;
--		if (mrioc->shost)
--			prot_mask = scsi_host_get_prot(mrioc->shost);
-+		if (!mrioc->shost)
-+			break;
-+		prot_mask = scsi_host_get_prot(mrioc->shost);
- 		if (prot_mask & SHOST_DIX_TYPE0_PROTECTION) {
- 			scsi_host_set_prot(mrioc->shost, prot_mask & 0x77);
- 			ioc_info(mrioc,
--- 
-2.27.0
-
-
---0000000000008f099a05c5e81ee1
+--0000000000007d17da05c5e8240a
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -179,13 +166,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIBsfcWD89yGU1PLyQcGO
-WaEBiIXR2kMGqlSWYkxdKTLOMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMDYyOTE0MDY1OVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHlOVEslIalxd6DEZG0O
+jwdpVIG+yJYJvt2+zRlhaN9uMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMDYyOTE0MDgzOFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAFgQeeXLAuGgVgssDFJQiGA6oFR+rfkQa+UIgX
-BIpFNde+gtnRo/YlswBxFDM0/FxljzYmDSnL09y+uhvhkf9oLL6ftpoTOqC+tnkBCE0NIiN+X+rr
-7FzaTL+Pk6YZrQ0qcLi9brEnwRy/PfEstIdL0vzl3T8iplBS4UskBVOH5K+7bAKSoKKiCXsdKoEJ
-YafhoVhJWSTZFHQU9Y5d60SlUTiOyBQijeaKe3FuTf6qiyRoU1EZxvizSYe0diFZj28g329RA8xR
-93cm6TgXadRkOT/4f2wRJ9pZP7KGW4o58YF8a1xzd6UJGwQdjEy7yCZbSB4/Ee9lVvPvqsWATzA/
---0000000000008f099a05c5e81ee1--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQB1jMBLrdgvBry2F3JjHxsLWQSH65Y341dJ5Lvj
+axIkyVDGVa9ZdFrGiXKfOxNAKFN2/XAiY0dSpmxVgIGfixeFMD/n8GzmCEbnvLFkQRGZUhQ+2nkv
+WnzoyZMEVgKULU7w9fqq4wR/qS2iUM6Nhm6Ern0GBON2p47+omRo9H/gSeseWEZxB2zNJM44Wa21
++RX7xj+wvOy+zrDN6PQWf7M6rq8xqRe4JLrC++rCn6XhhYZ5CNismYUE3tZoNLTlgzSfbf4U6Xqw
+8gpjHEu3aI8oe4akgZXdLM0rwyhZm+a6PzjUS8PJFXZ04yEf9IhNj0WjvoZxABYb8GfQb4ppT7lU
+--0000000000007d17da05c5e8240a--
