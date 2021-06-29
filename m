@@ -2,101 +2,158 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	FROM_LOCAL_DIGITS,FROM_LOCAL_HEX,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07ADAC11F68
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 08:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91B02C11F67
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 12:55:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E2E1661DD6
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 08:22:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B93D61DE3
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 12:55:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232706AbhF2IZJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Jun 2021 04:25:09 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3328 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232644AbhF2IYz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jun 2021 04:24:55 -0400
-Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GDcdd4jBLz6GBS1;
-        Tue, 29 Jun 2021 16:12:05 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Tue, 29 Jun 2021 10:22:26 +0200
-Received: from [10.47.83.88] (10.47.83.88) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 29 Jun
- 2021 09:22:26 +0100
-Subject: Re: [PATCH] scsi: Delete scsi_{get,free}_host_dev()
-To:     Hannes Reinecke <hare@suse.de>, <martin.petersen@oracle.com>,
-        <jejb@linux.ibm.com>
-CC:     <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <hch@lst.de>, <ming.lei@redhat.com>
-References: <1624640314-93055-1-git-send-email-john.garry@huawei.com>
- <044a31ed-f6e9-3017-4973-3a02765933e0@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <77afd764-4195-188d-ef0e-c4adcfa38f8b@huawei.com>
-Date:   Tue, 29 Jun 2021 09:15:37 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S233523AbhF2M5w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Jun 2021 08:57:52 -0400
+Received: from m12-17.163.com ([220.181.12.17]:33832 "EHLO m12-17.163.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233006AbhF2M5v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Jun 2021 08:57:51 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+        s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=EXz6v
+        pDzMzYn5VZ9oPlYoMts/4MVeH8md+BmGncxj50=; b=AfuDWrt2ib7K4YLeFCBcO
+        zyu1788spbyi7H012DjZTzl2nOvfvaDNdvWGDDdk3yubglzw6idcN3xvMZxUtzUQ
+        +rYl3b8sd++fFHgiNzJNahcZz0/myIJBQyJ1EbUypNrvEHhxoCcZ64qqhqbrh4hb
+        UllmImMJAypol/YebESuoo=
+Received: from ubuntu.localdomain (unknown [218.17.89.92])
+        by smtp13 (Coremail) with SMTP id EcCowAB3n4MxGNtg_N+_+A--.31644S2;
+        Tue, 29 Jun 2021 20:55:14 +0800 (CST)
+From:   gushengxian <13145886936@163.com>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        gushengxian <gushengxian@yulong.com>
+Subject: [PATCH] scsi: aha1542: Remove unneeded semicolons
+Date:   Tue, 29 Jun 2021 05:55:08 -0700
+Message-Id: <20210629125508.728580-1-13145886936@163.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <044a31ed-f6e9-3017-4973-3a02765933e0@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.83.88]
-X-ClientProxiedBy: lhreml751-chm.china.huawei.com (10.201.108.201) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID: EcCowAB3n4MxGNtg_N+_+A--.31644S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxWF4fJr1rXw1ktF4UArWfGrg_yoW5ZFykpF
+        W3G3yjyw4UtF47GrZ8AF1F9r45AFykJ34xGw1vg34fWFZ3GF1qgrZF9ryYvr9xGFZ7Wa43
+        XrWFy3W7u3WUAwUanT9S1TB71UUUUUUqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+        9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jiDGOUUUUU=
+X-Originating-IP: [218.17.89.92]
+X-CM-SenderInfo: 5zrdx5xxdq6xppld0qqrwthudrp/1tbiyhLAg1QHMjyUSQAAsb
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 26/06/2021 12:55, Hannes Reinecke wrote:
-> On 6/25/21 6:58 PM, John Garry wrote:
->> Functions scsi_{get,free}_host_dev() no longer have any in-tree users, so
->> delete them.
->>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> ---
->> An alt agenda of this patch is to get clarification on whether this API
->> should be used for Hannes' reserved commands series.
->>
->> Originally the recommendation was to use it, but now it seems to be to
->> not use it:
->> https://lore.kernel.org/linux-scsi/55918d68-7385-0153-0bd9-d822d3ce4c21@suse.de/ 
->>
->>
-> Please don't.
+From: gushengxian <gushengxian@yulong.com>
 
-ok, we can take that as a nacked-by for now.
+Remove some unneeded semicolons.
 
-> 
-> Before we're doing something like this I would like to have 
-> clarification from Christoph which way he prefers for reserved commands. 
-> Personally I _do_ like the host dev approach for reserved commands as it 
-> allows us to re-use existing infrastructure.
+Signed-off-by: gushengxian <gushengxian@yulong.com>
+---
+ drivers/scsi/aha1542.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-So when you deleted the gdth driver, the request there was to delete 
-this API. And in the v8 series, again, the request was not to use it, 
-and use the dedicated request queue instead - I do know that this 
-conflicts with the much earlier suggestion not to do that, but that was 
-when gdth existed.
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 1210e61afb18..7229748a57b9 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -304,7 +304,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+ 		if (flag & SCRD)
+ 			printk("SCRD ");
+ 		printk("status %02x\n", inb(STATUS(sh->io_port)));
+-	};
++	}
+ #endif
+ 	number_serviced = 0;
+ 
+@@ -346,7 +346,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+ 			if (!number_serviced)
+ 				shost_printk(KERN_WARNING, sh, "interrupt received, but no mail.\n");
+ 			return IRQ_HANDLED;
+-		};
++		}
+ 
+ 		mbo = (scsi2int(mb[mbi].ccbptr) - (unsigned long)aha1542->ccb_handle) / sizeof(struct ccb);
+ 		mbistatus = mb[mbi].status;
+@@ -411,7 +411,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+ 						 */
+ 		my_done(tmp_cmd);
+ 		number_serviced++;
+-	};
++	}
+ }
+ 
+ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+@@ -537,7 +537,7 @@ static void setup_mailboxes(struct Scsi_Host *sh)
+ 		any2scsi(aha1542->mb[i].ccbptr,
+ 			 aha1542->ccb_handle + i * sizeof(struct ccb));
+ 		aha1542->mb[AHA1542_MAILBOXES + i].status = 0;
+-	};
++	}
+ 	aha1542_intr_reset(sh->io_port);	/* reset interrupts, so they don't block */
+ 	any2scsi(mb_cmd + 2, aha1542->mb_handle);
+ 	if (aha1542_out(sh->io_port, mb_cmd, 5))
+@@ -552,7 +552,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
+ 	i = inb(STATUS(sh->io_port));
+ 	if (i & DF) {
+ 		i = inb(DATA(sh->io_port));
+-	};
++	}
+ 	aha1542_outb(sh->io_port, CMD_RETCONF);
+ 	aha1542_in(sh->io_port, inquiry_result, 3, 0);
+ 	if (!wait_mask(INTRFLAGS(sh->io_port), INTRMASK, HACC, 0, 0))
+@@ -581,7 +581,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
+ 	default:
+ 		shost_printk(KERN_ERR, sh, "Unable to determine DMA channel.\n");
+ 		return -1;
+-	};
++	}
+ 	switch (inquiry_result[1]) {
+ 	case 0x40:
+ 		sh->irq = 15;
+@@ -604,7 +604,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
+ 	default:
+ 		shost_printk(KERN_ERR, sh, "Unable to determine IRQ level.\n");
+ 		return -1;
+-	};
++	}
+ 	sh->this_id = inquiry_result[2] & 7;
+ 	return 0;
+ }
+@@ -639,7 +639,7 @@ static int aha1542_mbenable(struct Scsi_Host *sh)
+ 
+ 		if (aha1542_out(sh->io_port, mbenable_cmd, 3))
+ 			goto fail;
+-	};
++	}
+ 	while (0) {
+ fail:
+ 		shost_printk(KERN_ERR, sh, "Mailbox init failed\n");
+@@ -657,7 +657,7 @@ static int aha1542_query(struct Scsi_Host *sh)
+ 	i = inb(STATUS(sh->io_port));
+ 	if (i & DF) {
+ 		i = inb(DATA(sh->io_port));
+-	};
++	}
+ 	aha1542_outb(sh->io_port, CMD_INQUIRY);
+ 	aha1542_in(sh->io_port, inquiry_result, 4, 0);
+ 	if (!wait_mask(INTRFLAGS(sh->io_port), INTRMASK, HACC, 0, 0))
+@@ -676,7 +676,7 @@ static int aha1542_query(struct Scsi_Host *sh)
+ 	if (inquiry_result[0] == 0x43) {
+ 		shost_printk(KERN_INFO, sh, "Emulation mode not supported for AHA-1740 hardware, use aha1740 driver instead.\n");
+ 		return 1;
+-	};
++	}
+ 
+ 	/*
+ 	 * Always call this - boards that do not support extended bios translation
+-- 
+2.25.1
 
-As for reuse of existing infrastructure, using this API seems to add 
-more code than it reuses.
 
-So don't we just need to add a dedicated request_queue for host? I don't 
-know the use in having the scsi_device. Having said all that, we don't 
-seem to have a host request_queue sysfs entry with either solution, 
-which would be good.
-
-> 
-> Christoph?
-> 
-
-Thanks,
-John
