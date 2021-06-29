@@ -2,184 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.4 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 248AFC11F66
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 06:23:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81016C11F68
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 07:00:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ED2D261DC4
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 06:23:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EC3761DCA
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 07:00:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232041AbhF2G0C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Jun 2021 02:26:02 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:37875 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231881AbhF2G0B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Jun 2021 02:26:01 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1624947815; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=DdkTwy/6c3OcCt3JVBX/JqCoATNZP8AJdxUEwDuVA+g=;
- b=iAUjFz2Cueg+n4d4Zdec7p7LQfJJL1VoJnvEzT8Cm+NbiDCMB9jZydrr4R0bzAJWdrkIJJTS
- 80RtqudGUcW7+QUVigms4YLVqiOzRbYS/6Mm87TGrINj31jTRjsYzXES8ut+B3B0GTI+Ra5i
- dsZhe2khid0MVuz2oA2qVaZKQCk=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
- 60dabc61ad0600eedeeb2904 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 29 Jun 2021 06:23:29
- GMT
-Sender: cang=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 641A7C4360C; Tue, 29 Jun 2021 06:23:29 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: cang)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 21EE4C43460;
-        Tue, 29 Jun 2021 06:23:28 +0000 (UTC)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 29 Jun 2021 14:23:28 +0800
-From:   Can Guo <cang@codeaurora.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Adrian Hunter <adrian.hunter@intel.com>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com, Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S232161AbhF2HDC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Jun 2021 03:03:02 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:9902 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232041AbhF2HDB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Jun 2021 03:03:01 -0400
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15T6qCkD017030;
+        Tue, 29 Jun 2021 07:00:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type : in-reply-to;
+ s=corp-2020-01-29; bh=5LtOntajykpJ+8gNuE/dotnboFmSrVQFHVl9YsopYDk=;
+ b=sdOS+HQmbSM0zQp8oH5GkbvWywod3laBm1W/ocHQA8yXh112s3irkcjuK1Wk2DARk7kV
+ IS4MiK1YuaIJXGROPpk9l+sFxKrRZW3y1Yuoo5pmnFIg2+hFXqNWoyjJGMjlaOoUCyLl
+ DNHp0VwhZJT4EnGnflyE0U7tlTTB7zje19Da1H9z5tsAurHhnz/5ttBUDoDkyOi6fMfg
+ CcVah+/Kq/Hx5e/KziaN0GaBVAeAzi8tlyGg2hmepfveLQaM8VzgndwW87mzqLctU+M+
+ ZdzP+D/dl4tAUWE++kIzYzYn04cb//urfGfNi+CkMsVr9jeFkI4VnUJs3K9HhlnYbucJ QA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 39f7uu2nkk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Jun 2021 07:00:24 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15T6xoeU055836;
+        Tue, 29 Jun 2021 07:00:23 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by aserp3020.oracle.com with ESMTP id 39dv251ms8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Jun 2021 07:00:23 +0000
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [127.0.0.1])
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 15T70Mw2058603;
+        Tue, 29 Jun 2021 07:00:22 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 39dv251mrh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Jun 2021 07:00:22 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id 15T70J6g020274;
+        Tue, 29 Jun 2021 07:00:19 GMT
+Received: from kadam (/102.222.70.252)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 29 Jun 2021 00:00:19 -0700
+Date:   Tue, 29 Jun 2021 10:00:10 +0300
+From:   Dan Carpenter <dan.carpenter@oracle.com>
+To:     kbuild@lists.01.org, mwilck@suse.com,
+        Mike Snitzer <snitzer@redhat.com>,
+        Alasdair G Kergon <agk@redhat.com>,
+        Bart Van Assche <Bart.VanAssche@sandisk.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v4 06/10] scsi: ufs: Remove host_sem used in
- suspend/resume
-In-Reply-To: <c7d9e12d-f966-44c6-27dc-4004143398aa@acm.org>
-References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
- <1624433711-9339-8-git-send-email-cang@codeaurora.org>
- <ed59d61a-6951-2acd-4f89-40f8dc5015e1@intel.com>
- <9105f328ee6ce916a7f01027b0d28332@codeaurora.org>
- <a87e5ca5-390f-8ca0-41bf-27cdc70e3316@intel.com>
- <1b351766a6e40d0df90b3adec964eb33@codeaurora.org>
- <a654d2ef-b333-1c56-42c6-3d69e9f44bd0@intel.com>
- <3970b015e444c1f1714c7e7bd4c44651@codeaurora.org>
- <7ba226fe-789c-bf20-076b-cc635530db42@acm.org>
- <ea968eb95ef03ef16a420e7483680b75@codeaurora.org>
- <c7d9e12d-f966-44c6-27dc-4004143398aa@acm.org>
-Message-ID: <60a5496863100976b74d8c376c9e9cb0@codeaurora.org>
-X-Sender: cang@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
+        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
+        Hannes Reinecke <hare@suse.de>
+Cc:     lkp@intel.com, kbuild-all@lists.01.org,
+        Daniel Wagner <dwagner@suse.de>, linux-block@vger.kernel.org,
+        Paolo Bonzini <pbonzini@redhat.com>
+Subject: [kbuild] Re: [PATCH v4 2/3] scsi: scsi_ioctl: add
+ sg_io_to_blk_status()
+Message-ID: <202106282356.dKNkiTUO-lkp@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210628095210.26249-3-mwilck@suse.com>
+Message-ID-Hash: IRD7CG4UZAG2EYZJ7F52EJJBUWZF7ZWB
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-ORIG-GUID: DqxcFkkAexUvoS_yb1Y_fZ6GTTM60I3y
+X-Proofpoint-GUID: DqxcFkkAexUvoS_yb1Y_fZ6GTTM60I3y
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-06-29 01:31, Bart Van Assche wrote:
-> On 6/28/21 1:17 AM, Can Guo wrote:
->> On 2021-06-25 01:11, Bart Van Assche wrote:
->>> On 6/23/21 11:31 PM, Can Guo wrote:
->>>> Using back host_sem in suspend_prepare()/resume_complete() won't 
->>>> have
->>>> this problem of deadlock, right?
->>> 
->>> Although that would solve the deadlock discussed in this email 
->>> thread, it
->>> wouldn't solve the issue of potential adverse interactions of the UFS
->>> error handler and the SCSI error handler running concurrently.
->> 
->> I think I've explained it before, paste it here -
->> 
->> ufshcd_eh_host_reset_handler() invokes ufshcd_err_handler() and 
->> flushes it,
->> so SCSI error handler and UFS error handler can safely run together.
-> 
-> That code path is the exception. Do you agree that the following three
-> functions all invoke the ufshcd_err_handler() function asynchronously?
-> * ufshcd_uic_pwr_ctrl()
-> * ufshcd_check_errors()
-> * ufshcd_abort()
-> 
+Hi,
 
-I agree, but I don't see what's wrong with that. Any context can invoke
-ufs error handler asynchronously and ufs error handler prepare makes
-sure error handler can work safely, i.e., stopping PM ops/gating/scaling
-in error handler prepare makes sure no one shall call 
-ufshcd_uic_pwr_ctrl()
-ever again. And ufshcd_check_errors() and ufshcd_abort() are OK to run
-concurrently with UFS error handler.
+url:    https://github.com/0day-ci/linux/commits/mwilck-suse-com/scsi-dm-dm_blk_ioctl-implement-failover-for-SG_IO-on-dm-multipath/20210628-175410 
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git  for-next
+config: xtensa-randconfig-s032-20210628 (attached as .config)
+compiler: xtensa-linux-gcc (GCC) 9.3.0
+reproduce:
+        wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross  -O ~/bin/make.cross
+        chmod +x ~/bin/make.cross
+        # apt-get install sparse
+        # sparse version: v0.6.3-341-g8af24329-dirty
+        # https://github.com/0day-ci/linux/commit/259453ca972ae531cfdca07cbf4d6bb09b8f8c9f 
+        git remote add linux-review https://github.com/0day-ci/linux 
+        git fetch --no-tags linux-review mwilck-suse-com/scsi-dm-dm_blk_ioctl-implement-failover-for-SG_IO-on-dm-multipath/20210628-175410
+        git checkout 259453ca972ae531cfdca07cbf4d6bb09b8f8c9f
+        # save the attached .config to linux build tree
+        COMPILER_INSTALL_PATH=$HOME/0day COMPILER=gcc-9.3.0 make.cross C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__' O=build_dir ARCH=xtensa SHELL=/bin/bash
 
->>> How about using the
->>> standard approach for invoking the UFS error handler instead of using
->>> a custom
->>> mechanism, e.g. by using something like the (untested) patch below? 
->>> This
->>> approach guarantees that the UFS error handler is only activated 
->>> after
->>> all
->>> pending SCSI commands have failed or timed out and also guarantees
->>> that no new
->>> SCSI commands will be queued while the UFS error handler is in
->>> progress (see
->>> also scsi_host_queue_ready()).
->> 
->> Per my understanding, SCSI error handling is scsi cmd based, meaning 
->> it
->> only works when certain SCSI cmds failed [ ... ]
-> That is not completely correct. The SCSI error handler is activated if
-> either all pending commands have failed or if it is scheduled
-> explicitly. Please take a look at the host_eh_scheduled member 
-> variable,
-> how it is used and also at scsi_schedule_eh(). The scsi_schedule_eh()
-> function was introduced in 2006 and that the ATA code uses it since 
-> then
-> to activate the SCSI error handler even if no commands are pending. See
-> also the patch "SCSI: make scsi_implement_eh() generic API for SCSI
-> transports".
-> 
->> However, most UFS (UIC) errors happens during gear scaling, clk gating
->> and suspend/resume (due to power mode changes and/or hibern8
->> enter/exit), during which there is NO scsi cmds in UFS driver at all
->> (because these contexts start only when there is no ongoing data
->> transactions).
-> 
-> Activating the SCSI error handler if no SCSI commands are in progress 
-> is
-> supported by scsi_schedule_eh().
-> 
->> Thus, scsi_unjam_host() won't even call scsi_eh_ready_devs() because
->> scsi_eh_get_sense() always returns TRUE in these cases (eh_work_q is
->> empty).
-> 
-> Please take another look at the patch in my previous message. There is 
-> a
-> scsi_transport_template instance in that patch. The eh_strategy_handler
-> defined in a SCSI transport template is called *instead* of
-> scsi_unjam_host(). In other words, scsi_unjam_host() won't be called if
-> my patch would be applied to the UFS driver.
-> 
-> Please let me know if you need more information.
+If you fix the issue, kindly add following tag as appropriate
+Reported-by: kernel test robot <lkp@intel.com>
 
-Sorry that I missed the change of scsi_transport_template() in your 
-previous
-message. I can understand that you want to invoke UFS error hander by 
-invoking
-SCSI error handler, but I didn't go that far because I saw you changed
-pm_runtime_get_sync() to pm_runtime_get_noresume() in ufs error handler 
-prepare.
-How can that change make sure that the device is not suspending or 
-resuming
-while error handler is running?
+sparse warnings: (new ones prefixed by >>)
+>> block/scsi_ioctl.c:937:24: sparse: sparse: dubious: !x & y
 
-Thanks,
+vim +937 block/scsi_ioctl.c
 
-Can Guo.
+259453ca972ae5 Martin Wilck 2021-06-28  932  blk_status_t sg_io_to_blk_status(struct sg_io_hdr *hdr)
+259453ca972ae5 Martin Wilck 2021-06-28  933  {
+259453ca972ae5 Martin Wilck 2021-06-28  934  	int result;
+259453ca972ae5 Martin Wilck 2021-06-28  935  	blk_status_t sts;
+259453ca972ae5 Martin Wilck 2021-06-28  936  
+259453ca972ae5 Martin Wilck 2021-06-28 @937  	if (!hdr->info & SG_INFO_CHECK)
+                                                    ^
+Should be if (!(hdr->info & SG_INFO_CHECK))
 
-> 
-> Bart.
+259453ca972ae5 Martin Wilck 2021-06-28  938  		return BLK_STS_OK;
+259453ca972ae5 Martin Wilck 2021-06-28  939  
+259453ca972ae5 Martin Wilck 2021-06-28  940  	result = hdr->status |
+259453ca972ae5 Martin Wilck 2021-06-28  941  		(hdr->msg_status << 8) |
+259453ca972ae5 Martin Wilck 2021-06-28  942  		(hdr->host_status << 16) |
+259453ca972ae5 Martin Wilck 2021-06-28  943  		(hdr->driver_status << 24);
+259453ca972ae5 Martin Wilck 2021-06-28  944  
+259453ca972ae5 Martin Wilck 2021-06-28  945  	sts = __scsi_result_to_blk_status(&result, result);
+259453ca972ae5 Martin Wilck 2021-06-28  946  	hdr->host_status = host_byte(result);
+259453ca972ae5 Martin Wilck 2021-06-28  947  
+259453ca972ae5 Martin Wilck 2021-06-28  948  	return sts;
+259453ca972ae5 Martin Wilck 2021-06-28  949  }
+
+---
+0-DAY CI Kernel Test Service, Intel Corporation
+https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org 
+
+_______________________________________________
+kbuild mailing list -- kbuild@lists.01.org
+To unsubscribe send an email to kbuild-leave@lists.01.org
+
