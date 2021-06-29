@@ -2,119 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C989C11F64
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 23:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 182C7C11F66
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 03:01:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C44761C23
-	for <linux-scsi@archiver.kernel.org>; Mon, 28 Jun 2021 23:00:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F065861CA5
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 03:01:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235662AbhF1XBN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 28 Jun 2021 19:01:13 -0400
-Received: from mail-pl1-f177.google.com ([209.85.214.177]:42660 "EHLO
-        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234779AbhF1XBN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 28 Jun 2021 19:01:13 -0400
-Received: by mail-pl1-f177.google.com with SMTP id v13so9807212ple.9;
-        Mon, 28 Jun 2021 15:58:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=rQuHayracZCE5AuUCtlx0qvA9ABrKm6B8angLYVYEb8=;
-        b=KWU+v1IaGOGkY4Kr/HqG8Y2F+Xc+XQOSL7iU5CddfOUO7b/IIpXTxGbnL1NZ4HY7Ae
-         rI02XbCJQ1ht2bp8i+SOGcNSzirU6SzTOMGKrdcxAtdFINouhjEAUPcJjQtZNnu44q4r
-         wKa0YN52Day9L8TVRXK9UDBCOtXKBYQmLYaSLjl0BASL7p0fGm9vtJfbROYpZB6wHmfK
-         oVeRLmTZLsXmVZPB64/W25l8QTQHYB3T66ckKBjqU8qAW4WXz+kP1oYQFXAKByeUKzpC
-         YlNyoyN3LJLcpSqSOWR27Kgghxds6ccjbOmsl5MOMODHKgSbdXZm7XJe0BwDORl6rqqr
-         zStQ==
-X-Gm-Message-State: AOAM530CMYEbwwB9nsCiQLRglW3WeN+yKdAUbpKwnDcHhxfcZl9AS/pk
-        Ap5+m13fu3XII2VFnMKl2AY=
-X-Google-Smtp-Source: ABdhPJz773sQaKjTR5hTU6DS1WBDs3TNuXe56ia4TXreDfc9a6mue8ULUPDkwYnIqfXr3zNFkEc4Vg==
-X-Received: by 2002:a17:90b:11d1:: with SMTP id gv17mr9094474pjb.230.1624921098509;
-        Mon, 28 Jun 2021 15:58:18 -0700 (PDT)
-Received: from [192.168.3.217] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id s79sm8460998pfc.87.2021.06.28.15.58.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 28 Jun 2021 15:58:17 -0700 (PDT)
-Subject: Re: [PATCH v1 2/3] scsi: ufs: Optimize host lock on transfer requests
- send/compl paths
-To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com
-Cc:     Stanley Chu <stanley.chu@mediatek.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Satya Tangirala <satyat@google.com>,
-        open list <linux-kernel@vger.kernel.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "moderated list:ARM/Mediatek SoC support" 
-        <linux-mediatek@lists.infradead.org>
-References: <1621845419-14194-1-git-send-email-cang@codeaurora.org>
- <1621845419-14194-3-git-send-email-cang@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <c31185f5-e816-937d-25ac-1657b6111ff8@acm.org>
-Date:   Mon, 28 Jun 2021 15:58:15 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S231875AbhF2DDn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 28 Jun 2021 23:03:43 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:30922 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231849AbhF2DDn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Jun 2021 23:03:43 -0400
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15T2qBGj011434;
+        Tue, 29 Jun 2021 03:01:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=PoXLLDn/jgp7yPn6kSoIWwofoWFJBPKocVTTLDIjeg0=;
+ b=KiSAoUYWJyZycgyXBZOiTqxJJ7LugGMukAjedlUPPmLsHdYJ+qfNAo1F9g/g1sQwY/dW
+ orE/BucGxaS2XP+BUwFWkkmN5W7xhtKe3RhDwjQVloZuk3tmrbUyFNYzPhkw4nJ53y2A
+ Ax5o2DOtNd60vkLq7x1liG6775bNof9aNo2QnA2kSASTpLSKyRScZpugu6TZPuccfblo
+ IQ4AHC0KI/kCTWFKQZ5IKLlzC7v9TETGB8G42nb9BLuKMX7wClxqArx8iKuaYeCkSfJv
+ x3GWYRjrt9H/Qy3m1psYy4YTc5CCU+appRoWoxn/lKB3T8dl3wRpaW0oBDez23oRoFEf 8g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 39f7uu2aku-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Jun 2021 03:01:15 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15T2xpgx083766;
+        Tue, 29 Jun 2021 03:01:14 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2109.outbound.protection.outlook.com [104.47.55.109])
+        by userp3020.oracle.com with ESMTP id 39ee0tr2qa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Jun 2021 03:01:14 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=lfNqwxs+PEyiaMY+PAIu2E1LD/J7+Zc2hUZXNvefs5yAfYUfQqjH7OaRKkEyNmrlXeGEi/cEULPHFu3SGCsvakS+Jsh1FV20nVMDahkW9u3N/sS1Kdb4aWrDevSmpFyDymbRT4gCIRdqvSwD+AgIlJ4pPXpUcJi5Js96cxWj1WCdFiAi/qGR9muaLpjDTtUclYjGGnjkU7Paep37UyaEQ7pvBm/Txsikw7EMpLUujHbyuRoC6xAmOqlNRABmTgKT5n9a/TjdR4odtuqLHFvR7Piw+zuXn9v7IPy/EmGgL6GX7KSYTMCrl3T3+sa0adeMAJ/YcHSNt4WOjJYmsO1DYA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PoXLLDn/jgp7yPn6kSoIWwofoWFJBPKocVTTLDIjeg0=;
+ b=ZXpJtkcwWtYyafywHVD0rS5p+1poqC+c6P8nkMFaKfJyMEAtq/dKMt8Ic/U8SpZF3o7ppbW3bRoeEbSnXTpUlefN/K/U3zcqAuhlUpbSMLOvySD048Pq+mlptGpjWRt2IRv88Vmh93Ie9XFUjpotGtX3zopink6IiccV0xoGdTqXQ+rRp7/PGt4uH3b9Bvkpnq9T7DjaiSG6yHKTWsuqpzxkeQTkzCsuUGY2fxp/0+49P+1ynvT9lf+9K1NKayMr0OD6U/lBYe3uGLIQuZtO9EL6v9jZEQ5BFgAXQ2EusyDczh8XW6K6agLi2jkd3J8iZtFaWzkN5HtCWimUBLz94Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PoXLLDn/jgp7yPn6kSoIWwofoWFJBPKocVTTLDIjeg0=;
+ b=pKqnq0/gyzZ21db51w2jwj4UByYJVZgfrTYEKnujOCPylheD58Uo7LDMoQbGLnCbzRXCRGRB790CaG5mjVUv0x8zU6xIrXNENqmB9l55gPttwnvCFveEdgePBZ8ad2CyI076SoB1j2pXbC/jjQCUhl7TWnBreOLQEItsARTBFTw=
+Authentication-Results: yadro.com; dkim=none (message not signed)
+ header.d=none;yadro.com; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4440.namprd10.prod.outlook.com (2603:10b6:510:35::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4264.20; Tue, 29 Jun
+ 2021 03:01:12 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::4c61:9532:4af0:8796]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::4c61:9532:4af0:8796%7]) with mapi id 15.20.4264.026; Tue, 29 Jun 2021
+ 03:01:12 +0000
+To:     Dmitry Bogdanov <d.bogdanov@yadro.com>
+Cc:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux@yadro.com>
+Subject: Re: [PATCH] scsi: target: fix prot handling in WRITE SAME 32
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1o8bpl6re.fsf@ca-mkp.ca.oracle.com>
+References: <20210616095632.16775-1-d.bogdanov@yadro.com>
+Date:   Mon, 28 Jun 2021 23:01:09 -0400
+In-Reply-To: <20210616095632.16775-1-d.bogdanov@yadro.com> (Dmitry Bogdanov's
+        message of "Wed, 16 Jun 2021 12:56:32 +0300")
+Content-Type: text/plain
+X-Originating-IP: [138.3.200.58]
+X-ClientProxiedBy: SN4PR0201CA0058.namprd02.prod.outlook.com
+ (2603:10b6:803:20::20) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-In-Reply-To: <1621845419-14194-3-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SN4PR0201CA0058.namprd02.prod.outlook.com (2603:10b6:803:20::20) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4264.20 via Frontend Transport; Tue, 29 Jun 2021 03:01:12 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: fb4f294e-f381-430d-340b-08d93aaa273f
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4440:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB4440B4B66CA0A2BEEB577FBC8E029@PH0PR10MB4440.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: s00+QYeZHnrYn++Qmb2zhLyWEZjsG5F8pMWHeSELHaBCTsp1LTK+fDNP5fYYU7g2pZGk9YTMaimDU9nWj+KgP6091nnflIpv9OE+NUVyUCwAD0slHVsabDk+bGAa5Chh+CBWQU5OGiRNrCl9tcXY808O9Au1u3Lgyhf2vKL7frcQ6mr3zljQaSEtcZ+Bl9gLLAWAvEDu7nSR1aKFF1rVcDmed1N3mCnsodaBRig5Ge20c1spQ88oqLtuJrDhuQJnWFGB/QHLc0kX5B7HcC+BMx9U2bfOkKXw2/vHoEKb9C0v4B12Qnz4nCM9XxySJWs4k841dzO28+KNkDNCqbtDdI2LRgnToutzuV1Hz/IdK0ON6iI2HNO9iP3uUdZzsLrtqPWB6c5+NGu+k5XEaQaQo26w3G/s3KqH+ua6hBm9CQmZGGwpawMUwRlme/BmxpwPMHob0zWcA70ouEiXWCgWD/DU05yh3eklgPteUPVzCmhe7gFYAkS+qL1PdUJUw21pngTQEHHccACUtFCP1kGyDRUa6BjNIqx1BmDMeMkriV1ImhmATgXZYrmK2ef8eKRkPkEywSnorKBnzsDzoLuU0mrJZ1Upe+I6nNLdamzjXp1r8io4eoCki8EVqaQowlzPZjW143pWEY8dv/hoyZFPE0x94H0/77Y7o8sOMOfN1fUzAq6Fl+K10SLE9yCavWwQdiQnZb7s8YPlaItyCCyMaw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(136003)(396003)(39860400002)(346002)(366004)(54906003)(316002)(6666004)(956004)(83380400001)(478600001)(38100700002)(2906002)(38350700002)(4326008)(7696005)(66476007)(86362001)(66946007)(52116002)(36916002)(6916009)(5660300002)(26005)(186003)(4744005)(8936002)(8676002)(16526019)(66556008)(55016002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?7sutTJFgUQOjRF87sAGDMuREL4PLLuANrkrb9Yx4sQ1lHzlGse89dTbRIJwS?=
+ =?us-ascii?Q?+eut9vYLO+/QlCj8UTEGxtkSE+Fl9bXcUdTGw26XuI/6ZhgmjIDeTyie8dwZ?=
+ =?us-ascii?Q?2wfCVmM5Onf1wQKqsRGYPB7YuIfpqu1tOX+3Yy6Q7vEy4B1Pv7gwTsn9PJuA?=
+ =?us-ascii?Q?CZgzXvXGvBT260XL+mi5N0c+xkZyCnpaHPBcHnJ1WaDZt1DLNPrNLgELYVo2?=
+ =?us-ascii?Q?Ti4F9W6imCerTr8hGsAVx5R9KJt5enLTnw+AFHoxWEctYoLewA5JQJlrV1BN?=
+ =?us-ascii?Q?ieNgEaS6e7zqp8f0P0qH5LL2svVgY3z+RWS1R88dF9WJQXBKR8loBMB5lld8?=
+ =?us-ascii?Q?TFVR+MD8yWwxP4jp6+/+v3zKi9SxZzbDoU0JdArNtcynIOCgCAKhxhYN47iP?=
+ =?us-ascii?Q?0UT951UGf1lsLZaxKlUDXJezWEaAATfVDiutSFoAItsZdZHUmVCOR59ryXva?=
+ =?us-ascii?Q?yJb59bsmO/NoHOBFrfqPMAMUVKr+TxlKv+CND7vGYI6U3AIyQHl6E9OsxH8S?=
+ =?us-ascii?Q?IyPM1wzBtryufR6R8adKimNYIlOh35wRCETcYkF9kKoS5bVCT5xmjUKV6RXT?=
+ =?us-ascii?Q?ZWH9evEvGJDDdcdnnQjpMhnXYvbF9v76J3qSoaeW9/jkXMCRAXho+vU9Zt00?=
+ =?us-ascii?Q?0r5tDACDCqoMLw1z61tGIs9wJ7GRqoGrxniFVlqe+ClK/HB+0tbETccu2mvY?=
+ =?us-ascii?Q?MZvk57CaXwrKXCoYh0xXFy5P9rHnKP2wdJ65P0JABAFgc55O/YJ5V0nmfuRd?=
+ =?us-ascii?Q?vbFK2iMjAHHgkbWhbBAqRfeTStZ5ZbDBqrVHh4XRSzD2LjThdQl2iXb05EM7?=
+ =?us-ascii?Q?JlbYqd3RxvregGjEQSL7kOigJcAnMFgACqx/ZvEzWQR/PJ+iYyPSecnSY77Z?=
+ =?us-ascii?Q?r1wvUMf7eebt7UOWlct+vcTxvrYFkJEGBtmq43Vx04CkMlr96c91hJ5KDzq4?=
+ =?us-ascii?Q?I9mSmSZKgF6/hAE/HQjgQ5RceN1q/IcdO63xEgR3ZSA21dMVwKIK3wIPT4DI?=
+ =?us-ascii?Q?00dgcRvpmb34P7WJOLBLCuCpF78MofV4upCE8dhDNwYiXsLiWa/+BHNYwKHT?=
+ =?us-ascii?Q?te93GX35s83cumLZzeZFClwo3PXlwXkuCIQYcR64ndBlPZrYs5cD+Zv6sZzY?=
+ =?us-ascii?Q?lqTje4boWu6MiZ/G7o68ZZfaZ7KwUgWAhlDufwY03ETFHg81S4gTFdngWrVg?=
+ =?us-ascii?Q?YhI9BDFQ7qffMpyeyS/RP552/rtVO+SuPA2PP3+dC40MsSfgX1QcOnndF+vw?=
+ =?us-ascii?Q?VyIWv+nZrpfLuToLPXDm8w71383MbP8vqbMtvT7196Ag63ycCMg0+gsPFGLY?=
+ =?us-ascii?Q?7WZeraK1sMaCZwzg/xjTkDJm?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fb4f294e-f381-430d-340b-08d93aaa273f
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Jun 2021 03:01:12.7796
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 3N3CoqLLjcV3eNmzRbw/8+bg+7TXJfz1TBN8rZmZ7U+tkYuZL3KuLpoZJXl282a77XpIVLkRTFvkFQ9FPmg5rDnyr6j8yoSOHu3OfKcLq+M=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4440
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10029 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 bulkscore=0 spamscore=0
+ suspectscore=0 mlxscore=0 mlxlogscore=999 adultscore=0 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2106290020
+X-Proofpoint-ORIG-GUID: nWiBbjmOVH_wSxKD3FEgumbMVJjZLM-y
+X-Proofpoint-GUID: nWiBbjmOVH_wSxKD3FEgumbMVJjZLM-y
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 5/24/21 1:36 AM, Can Guo wrote:
-> Current UFS IRQ handler is completely wrapped by host lock, and because
-> ufshcd_send_command() is also protected by host lock, when IRQ handler
-> fires, not only the CPU running the IRQ handler cannot send new requests,
-> the rest CPUs can neither. Move the host lock wrapping the IRQ handler into
-> specific branches, i.e., ufshcd_uic_cmd_compl(), ufshcd_check_errors(),
-> ufshcd_tmc_handler() and ufshcd_transfer_req_compl(). Meanwhile, to further
-> reduce occpuation of host lock in ufshcd_transfer_req_compl(), host lock is
-> no longer required to call __ufshcd_transfer_req_compl(). As per test, the
-> optimization can bring considerable gain to random read/write performance.
 
-Hi Can,
+Dmitry,
 
-Since this patch has been applied on the AOSP kernel we see 100%
-reproducible lockups appearing on multiple test setups. Examples of call
-traces:
+> WRITE SAME 32 command handling reads WRPROTECT at the wrong offset
+> in 1st octet instead of 10th octet.
 
-blk_execute_rq()
-__scsi_execute()
-sd_sync_cache()
-sd_suspend_common()
-sd_suspend_system()
-scsi_bus_suspend()
-__device_suspend()
+Instead of twiddling all these offsets I think it would be cleaner to
+turn the sbc_setup_write_same() flags[] into an 'unsigned char
+protect'. And then fix up sbc_check_prot() to take 'protect' as argument
+instead of the full CDB and indexing into that.
 
-blk_execute_rq()
-__scsi_execute()
-ufshcd_clear_ua_wlun()
-ufshcd_err_handling_unprepare()
-ufshcd_err_handler()
-process_one_work()
+Another option would be passing the index but since cdb[0] is only used
+for a rare error message I'm not sure it's worth it.
 
-Reverting this patch and the next patch from this series solved the
-lockups. Do you prefer to revert this patch or do you perhaps want us to
-test a potential fix?
-
-Thanks,
-
-Bart.
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
