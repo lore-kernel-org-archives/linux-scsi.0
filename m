@@ -2,87 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.9 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	PDS_BAD_THREAD_QP_64,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 11FCCC11F67
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 15:58:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D26E3C11F69
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 16:29:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D654761D88
-	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 15:58:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9EF861DE6
+	for <linux-scsi@archiver.kernel.org>; Tue, 29 Jun 2021 16:29:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233252AbhF2QA5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 29 Jun 2021 12:00:57 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:20030 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232698AbhF2QA4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Jun 2021 12:00:56 -0400
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 15TFr7ZV008984
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 15:58:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id; s=corp-2020-01-29;
- bh=cbElCSRsxd7p8yRTL5MxPpckOCWOZCWBKU/ktqTWeHM=;
- b=hhEKDi6zhDV+x3S4mkJqDp9lYKZtlrOgYtLMxChhDjnJ3GVi61F8JRBKcpebqUuPhHW5
- XzFXQJOUmM8roJiGi/HoPo+Vk8sUoWr6A11KvVzLddxmmBRkcfNhXvalIMN0ZKXnp5qc
- eIygVZG6vIttiXyG+UouEm63JrbJsn0Hrp4GVnGSjXKbFpG9lDf5g/r6cuKzUFeV9JF9
- 23mwmbGUWEaWiDrIlAZKQyBKiqLBQAaJ7gk4LWqSE6xAd2rKtlpB54R3od1gOzQsvAy6
- 2Jhh79TuHDDj7w7U7HEp9q85G9k2RhSM3ckeZAUrFLufd8W4nzTBCMiGJ0usvBxERMBd yA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 39f6y3kymw-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 15:58:28 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 15TFuBo6188002
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 15:58:27 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3020.oracle.com with ESMTP id 39ee0v5140-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 15:58:27 +0000
-Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 15TFwR0Q004388
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Jun 2021 15:58:27 GMT
-Received: from qvle-mac.us.oracle.com (dhcp-10-159-139-26.vpn.oracle.com [10.159.139.26])
-        by userp3020.oracle.com with ESMTP id 39ee0v5135-1;
-        Tue, 29 Jun 2021 15:58:27 +0000
-From:   Quat Le <quat.le@oracle.com>
-To:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     Quat Le <quat.le@oracle.com>
-Subject: [PATCH] scsi: Retry I/O for Notify (Enable Spinup) Required error.
-Date:   Tue, 29 Jun 2021 08:58:26 -0700
-Message-Id: <20210629155826.48441-1-quat.le@oracle.com>
-X-Mailer: git-send-email 2.17.2 (Apple Git-113)
-X-Proofpoint-GUID: S4UeHoTFr9BYD0gVmHZPMK0wkymAl-8J
-X-Proofpoint-ORIG-GUID: S4UeHoTFr9BYD0gVmHZPMK0wkymAl-8J
+        id S232673AbhF2QcE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 29 Jun 2021 12:32:04 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:49000 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232689AbhF2QcC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 29 Jun 2021 12:32:02 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id AE63545EB8;
+        Tue, 29 Jun 2021 16:29:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        mime-version:content-transfer-encoding:content-type:content-type
+        :content-language:accept-language:in-reply-to:references
+        :message-id:date:date:subject:subject:from:from:received
+        :received:received:received; s=mta-01; t=1624984172; x=
+        1626798573; bh=qr5ky+gkEtYKemIN3GVjSxU+hq3oL/XSUADtw6tLNtA=; b=j
+        cGbNPC4XT5j13/c34n/kSA+gKkffJHw3VKCc5gR6jMn86XUIEzSxHWZPAwi5dDxR
+        6YzxM0UCxqorMyoJnz8WyX1YIGKCgFbA8F0JQ1TWJ/Tahr+3sKpVvGkRDM/MYKZi
+        UlUydPyvNDS7aF888ZsmsbVa2ubGXBqWfBK45wLaFk=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id JaTW_Z1BNMpq; Tue, 29 Jun 2021 19:29:32 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id A950045EB9;
+        Tue, 29 Jun 2021 19:29:32 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (172.17.100.103) by
+ T-EXCH-03.corp.yadro.com (172.17.100.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Tue, 29 Jun 2021 19:29:31 +0300
+Received: from T-EXCH-03.corp.yadro.com ([fe80::39f4:7b05:b1d3:5272]) by
+ T-EXCH-03.corp.yadro.com ([fe80::39f4:7b05:b1d3:5272%14]) with mapi id
+ 15.01.0669.032; Tue, 29 Jun 2021 19:29:31 +0300
+From:   Dmitriy Bogdanov <d.bogdanov@yadro.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>
+Subject: RE: [PATCH] scsi: target: fix prot handling in WRITE SAME 32
+Thread-Topic: [PATCH] scsi: target: fix prot handling in WRITE SAME 32
+Thread-Index: AQHXYpXs/f5zpGiqxE6M7ake5We8B6sqYOsdgADgY8A=
+Date:   Tue, 29 Jun 2021 16:29:31 +0000
+Message-ID: <f974e27f0393448e814ea0fa1e845d24@yadro.com>
+References: <20210616095632.16775-1-d.bogdanov@yadro.com>
+ <yq1o8bpl6re.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1o8bpl6re.fsf@ca-mkp.ca.oracle.com>
+Accept-Language: ru-RU, en-US
+Content-Language: ru-RU
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.199.0.175]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If the device is power-cycled, it takes time for the initiator to
-transmit the periodic NOTIFY (ENABLE SPINUP) SAS primitive, and for the
-device to respond to the primitive to become ACTIVE. Retry the I/O
-request to allow the device time to become ACTIVE.
+Hi Martin,
 
-Signed-off-by: Quat Le <quat.le@oracle.com>
----
- drivers/scsi/scsi_lib.c | 1 +
- 1 file changed, 1 insertion(+)
+> > WRITE SAME 32 command handling reads WRPROTECT at the wrong offset in=20
+> > 1st octet instead of 10th octet.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 532304d42f00..269bfb8f9165 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -728,6 +728,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 				case 0x07: /* operation in progress */
- 				case 0x08: /* Long write in progress */
- 				case 0x09: /* self test in progress */
-+				case 0x11: /* notify (enable spinup) required */
- 				case 0x14: /* space allocation in progress */
- 				case 0x1a: /* start stop unit in progress */
- 				case 0x1b: /* sanitize in progress */
--- 
-2.17.2 (Apple Git-113)
+> Instead of twiddling all these offsets I think it would be cleaner to tur=
+n the sbc_setup_write_same() flags[] into an 'unsigned char protect'. And t=
+hen fix up
+> sbc_check_prot() to take 'protect' as argument instead of the full CDB an=
+d indexing into that.
 
+OK, I will prepare new version of the patch.
+
+> Another option would be passing the index but since cdb[0] is only used f=
+or a rare error message I'm not sure it's worth it.
+
+BR,
+ Dmitry
