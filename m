@@ -7,55 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C220C11F67
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 21:12:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2743C11F6A
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 21:12:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 61F246128A
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 21:12:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC59961410
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 21:12:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234053AbhGAVPK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jul 2021 17:15:10 -0400
-Received: from mail-pg1-f182.google.com ([209.85.215.182]:36416 "EHLO
-        mail-pg1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233922AbhGAVPK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2021 17:15:10 -0400
-Received: by mail-pg1-f182.google.com with SMTP id e33so7394621pgm.3
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Jul 2021 14:12:38 -0700 (PDT)
+        id S233922AbhGAVPM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jul 2021 17:15:12 -0400
+Received: from mail-pg1-f180.google.com ([209.85.215.180]:46999 "EHLO
+        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233998AbhGAVPL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2021 17:15:11 -0400
+Received: by mail-pg1-f180.google.com with SMTP id w15so7342579pgk.13
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Jul 2021 14:12:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=s20zXO0dLIDFGzVBLRtuSwjiyxrUNmAGgZq5yA2U39M=;
-        b=MccNjE8f+loY61qCDuOIz7IhfXl/fCczzb/XAZZq0Ifrf7TaaMo0OH7RvZpyNfXsxA
-         yNmCkFr7RJeBjG9QCkhtYCDu5fhAXoZpR1cTDr7kXwMAUKQQjFhBJFJHnNHLELnY3ZIj
-         pPaEbRsbjvL3Y8zfFPJYJkpnhxamk5ZQxoOj2hjLG44VvbyxcpEq3xo9UfmrD14rlIvN
-         p++XNu0ZbfsxNT5HhxGJ/apQb19NIzMQfxSdUnO8my5iimXMbkg1TeH9rmf56/jSiBsA
-         z29XrB38NksMYETFOWWVLQeaWfZpgD8EIKAQXbX1vJFtVzG7prAH3CL5un/mWuNga1gM
-         GAYA==
-X-Gm-Message-State: AOAM531/uaMxRb/dniW5/XytNzSV9ycTFroQ14BHw/EMbFP9JnXIg3P3
-        oIMAeAsUSNlJKtXd6WMkZvw=
-X-Google-Smtp-Source: ABdhPJxKgRZUPe9yrFe+fJvoKpleYJw/mdVEzUKw+oCTTzB3WkhRN0gsJvIiIN8D3NiIKkQS53ol+w==
-X-Received: by 2002:a65:6658:: with SMTP id z24mr1493619pgv.266.1625173958262;
-        Thu, 01 Jul 2021 14:12:38 -0700 (PDT)
+        bh=Tvy4oyg81mRNZ/70SX4cfmRXeU6IQli/ctKCwyLrD7A=;
+        b=bLtc4V1r1i/Z764x2OtGj11ZA97K+1QjOlUKv2/xsKT4oyaVVX0yEQDOeV2QyNlEs4
+         Tv/pn+LiN6JtAf80WgLyllUPJfi06iQ1/eA45QmSTyQJCiEi4VKVnL4mRb6wzYLmOpV+
+         +jUscnTpd/MHLCD28GszJBIQ5FzURrsOJi1kn3u9GKLG7D5CyYoSACp+EXqupz9CtQ4r
+         b1k86bqv5qfl9xWMu9vouyF4Bm23GTy7GnWSoDcYS9yP1QkxOXxgg6Og8FbAENQmkjZ1
+         tak4uxGQnaBfvzYhdfkazncOnmnQEhfsJTXjPGxHOMPDQh6ynUIhyWRMEVYH481T+MZo
+         tVbQ==
+X-Gm-Message-State: AOAM5319P4GBy33G+cK4g5/ydy+6yok7vf4gRDlcJ+Pll+qGHrM+++y7
+        1LvZH8HtVyj9e3TVn2rnxjE=
+X-Google-Smtp-Source: ABdhPJynkHAGRxmbzGGOcIzqO/y3A/xVVosoQVYc0xi0V5aaABK0nlvJ5P3TLVsD4ls+sRoEQk93+w==
+X-Received: by 2002:aa7:8f28:0:b029:312:3176:13fa with SMTP id y8-20020aa78f280000b0290312317613famr1910377pfr.53.1625173960350;
+        Thu, 01 Jul 2021 14:12:40 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:6a75:b07:a0d:8bd5])
-        by smtp.gmail.com with ESMTPSA id k25sm900832pfa.213.2021.07.01.14.12.36
+        by smtp.gmail.com with ESMTPSA id k25sm900832pfa.213.2021.07.01.14.12.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jul 2021 14:12:37 -0700 (PDT)
+        Thu, 01 Jul 2021 14:12:39 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>,
+        Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>,
         John Garry <john.garry@huawei.com>,
-        Yves-Alexis Perez <corsac@debian.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Jason Yan <yanaijie@huawei.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Yufen Yu <yuyufen@huawei.com>
-Subject: [PATCH 02/21] libsas: Only abort commands from inside the error handler
-Date:   Thu,  1 Jul 2021 14:12:05 -0700
-Message-Id: <20210701211224.17070-3-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH 03/21] Clear host_eh_scheduled from inside the SCSI error handler
+Date:   Thu,  1 Jul 2021 14:12:06 -0700
+Message-Id: <20210701211224.17070-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210701211224.17070-1-bvanassche@acm.org>
 References: <20210701211224.17070-1-bvanassche@acm.org>
@@ -65,72 +60,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-According to the information I found in patch commit descriptions, for SATA
-devices commands must be aborted from inside the libsas error handler.
-Check host->ehandler to determine whether or not running inside the error
-handler since host->host_eh_scheduled != 0 indicates that the SCSI error
-handler has been scheduled but does not mean that is already running. This
-patch restores code that was removed by commit 909657615d9b ("scsi: libsas:
-allow async aborts").
+The current protocol for scheduling the SCSI error handler explicitly
+is as follows:
+1. The LLD registers a transport layer that defines a eh_strategy_handler.
+2. The LLD observes an error, sets variables that indicate the nature of the
+   error and calls scsi_schedule_eh(). Currently only the ATA core and libsas
+   use scsi_schedule_eh().
+3. scsi_schedule_eh() increments host_eh_scheduled.
+4. The SCSI error handling thread wakes up and invokes eh_strategy_handler.
+5. After all errors have been handled and before the eh_strategy_handler
+   implementation returns, host_eh_scheduled is cleared. This must be done
+   in such a way that all errors that happened while the error handler was
+   running are either handled or result in rerunning the error handler.
+
+Making LLDs responsible for clearing host_eh_scheduled is error prone.
+Hence clear host_eh_scheduled from inside the SCSI error handler. A side
+effect of this patch is that if scsi_schedule_eh() is called while the
+SCSI error handler is active that it will be reactivated immediately.
 
 Cc: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>
 Cc: Ming Lei <ming.lei@redhat.com>
 Cc: John Garry <john.garry@huawei.com>
-Cc: Yves-Alexis Perez <corsac@debian.org>
-Fixes: c9f926000fe3 ("scsi: libsas: Disable asynchronous aborts for SATA devices")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/libsas/sas_scsi_host.c | 5 ++++-
- include/scsi/libsas.h               | 1 +
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_error.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index ee44a0d7730b..95e4d58ab9d4 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -462,6 +462,7 @@ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
- 	int res = TMF_RESP_FUNC_FAILED;
- 	struct sas_task *task = TO_SAS_TASK(cmd);
- 	struct Scsi_Host *host = cmd->device->host;
-+	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(host);
- 	struct domain_device *dev = cmd_to_domain_dev(cmd);
- 	struct sas_internal *i = to_sas_internal(host->transportt);
- 	unsigned long flags;
-@@ -471,7 +472,7 @@ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c6cd5a8e5c85..665cc44d8877 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2242,6 +2242,13 @@ int scsi_error_handler(void *data)
+ 			continue;
+ 		}
  
- 	spin_lock_irqsave(host->host_lock, flags);
- 	/* We cannot do async aborts for SATA devices */
--	if (dev_is_sata(dev) && !host->host_eh_scheduled) {
-+	if (dev_is_sata(dev) && !ha->eh_running) {
- 		spin_unlock_irqrestore(host->host_lock, flags);
- 		return FAILED;
- 	}
-@@ -731,6 +732,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 	tries++;
- 	retry = true;
- 	spin_lock_irq(shost->host_lock);
-+	ha->eh_running = true;
- 	list_splice_init(&shost->eh_cmd_q, &eh_work_q);
- 	spin_unlock_irq(shost->host_lock);
- 
-@@ -767,6 +769,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
- 
- 	/* check if any new eh work was scheduled during the last run */
- 	spin_lock_irq(&ha->lock);
-+	ha->eh_running = false;
- 	if (ha->eh_active == 0) {
- 		shost->host_eh_scheduled = 0;
- 		retry = false;
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index 6fe125a71b60..4a8fb324140e 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -364,6 +364,7 @@ struct sas_ha_struct {
- 	struct mutex	  drain_mutex;
- 	unsigned long	  state;
- 	spinlock_t	  lock;
-+	bool		  eh_running;
- 	int		  eh_active;
- 	wait_queue_head_t eh_wait_q;
- 	struct list_head  eh_dev_q;
++		/*
++		 * Clear host_eh_scheduled before handling any errors such that
++		 * calling scsi_schedule_eh() while errors are being handled
++		 * causes the error handler to be rerun.
++		 */
++		shost->host_eh_scheduled = 0;
++
+ 		if (shost->transportt->eh_strategy_handler)
+ 			shost->transportt->eh_strategy_handler(shost);
+ 		else
