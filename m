@@ -2,57 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D952AC11F64
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 11:34:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DAC1C11F64
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 14:35:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B64FF61467
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 11:34:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D45461414
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 14:35:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236230AbhGALhQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jul 2021 07:37:16 -0400
-Received: from verein.lst.de ([213.95.11.211]:47319 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236130AbhGALhQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Jul 2021 07:37:16 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 01CD567357; Thu,  1 Jul 2021 13:34:42 +0200 (CEST)
-Date:   Thu, 1 Jul 2021 13:34:42 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Martin Wilck <mwilck@suse.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>,
-        Alasdair G Kergon <agk@redhat.com>,
-        Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, dm-devel@redhat.com,
-        Hannes Reinecke <hare@suse.de>,
-        Daniel Wagner <dwagner@suse.de>, linux-block@vger.kernel.org,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Benjamin Marzinski <bmarzins@redhat.com>, nkoenig@redhat.com,
-        emilne@redhat.com
-Subject: Re: [PATCH v5 3/3] dm mpath: add CONFIG_DM_MULTIPATH_SG_IO -
- failover for SG_IO
-Message-ID: <20210701113442.GA10793@lst.de>
-References: <20210628151558.2289-1-mwilck@suse.com> <20210628151558.2289-4-mwilck@suse.com> <20210701075629.GA25768@lst.de> <de1e3dcbd26a4c680b27b557ea5384ba40fc7575.camel@suse.com>
+        id S232134AbhGAOiY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jul 2021 10:38:24 -0400
+Received: from mail-pj1-f50.google.com ([209.85.216.50]:42632 "EHLO
+        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229978AbhGAOiY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2021 10:38:24 -0400
+Received: by mail-pj1-f50.google.com with SMTP id p17-20020a17090b0111b02901723ab8d11fso4074662pjz.1;
+        Thu, 01 Jul 2021 07:35:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=rhwwrVZz+3q2u34WXXvY5qtEuhJYAxQ78ls6PGqWemA=;
+        b=Y0NIfppQFYZh9z1ccl6P9Hht4rtGz55e+VtNRG6z67I8DIYrNxFMN0fWN+E5Tt1zVX
+         SUN5X9Q/SIzwhFWJHBGtPnGeAXUDOTsW1cvWirxsS/x/arWSspvVh5TvGQB56X1PZ9jt
+         NoBLInFH0aMl5SDkszy99d0252dMjnFbM13goHTOTyRsIrJcU4Uya8enJjdCR6mCnOsc
+         sIMYClyDblp4JF7BOnI5LdDRGC8K4t5MQJEPYawiD3LlFTeWSraERZr3W9mjgcDLoZoS
+         oGmLXsn/jTCuIpDWu5zqSHhjReIQE6eQmkLoAxz3PWKcqVIUBwKZVk6cN4ZswZMsQsPK
+         U9XA==
+X-Gm-Message-State: AOAM533Nbdk7phjEFIEgGbkKmp2gInr/4ukk7auBMLYjRznEejvJDYdC
+        S+troVwUYITlY1qpMByCk34=
+X-Google-Smtp-Source: ABdhPJxapccyljp3iISjUHH2+Nn7rh6IyOfdRchRc/IaMWHzTY6TGwdWsXOAPOH/MXX2xbAEwlRyAw==
+X-Received: by 2002:a17:903:248e:b029:101:fa49:3f96 with SMTP id p14-20020a170903248eb0290101fa493f96mr217849plw.16.1625150152343;
+        Thu, 01 Jul 2021 07:35:52 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:6a75:b07:a0d:8bd5? ([2601:647:4000:d7:6a75:b07:a0d:8bd5])
+        by smtp.gmail.com with ESMTPSA id c9sm236888pfb.82.2021.07.01.07.35.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 01 Jul 2021 07:35:51 -0700 (PDT)
+Subject: Re: [PATCH v5 2/3] scsi: sd: send REQUEST SENSE for
+ BLIST_MEDIA_CHANGE devices in runtime_resume()
+To:     Martin Kepplinger <martin.kepplinger@puri.sm>
+Cc:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, kernel@puri.sm,
+        stern@rowland.harvard.edu
+References: <20210630084453.186764-1-martin.kepplinger@puri.sm>
+ <20210630084453.186764-3-martin.kepplinger@puri.sm>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <e84173b0-7ee5-4987-10ce-babc9f262be3@acm.org>
+Date:   Thu, 1 Jul 2021 07:35:49 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <de1e3dcbd26a4c680b27b557ea5384ba40fc7575.camel@suse.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20210630084453.186764-3-martin.kepplinger@puri.sm>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 01, 2021 at 12:35:53PM +0200, Martin Wilck wrote:
-> I respectfully disagree. Users of dm-multipath devices expect that IO
-> succeeds as long as there's at least one healthy path. This is a
-> fundamental property of multipath devices. Whether IO is sent
-> "normally" or via SG_IO doesn't make a difference wrt this expectation.
+On 6/30/21 1:44 AM, Martin Kepplinger wrote:
+> For SD cardreader devices that have the BLIST_MEDIA_CHANGE flag set,
+> a MEDIA CHANGE unit attention is received after resuming from runtime
+> suspend. Send a REQUEST SENSE to avoid that.
 
-If you have those (pretty reasonable) expections don't use SG_IO.
-That is what the regular read/write path is for.  SG_IO gives you
-raw access to the SCSI logic unit, and you get to keep the pieces
-if anything goes wrong.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
