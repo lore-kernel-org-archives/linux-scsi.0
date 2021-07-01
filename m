@@ -7,50 +7,63 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05083C11F67
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 21:12:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77869C11F67
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 21:12:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1C5661410
-	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 21:12:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59AE361405
+	for <linux-scsi@archiver.kernel.org>; Thu,  1 Jul 2021 21:12:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234094AbhGAVPR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jul 2021 17:15:17 -0400
-Received: from mail-pj1-f43.google.com ([209.85.216.43]:54267 "EHLO
-        mail-pj1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233916AbhGAVPR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2021 17:15:17 -0400
-Received: by mail-pj1-f43.google.com with SMTP id q91so5074616pjk.3
-        for <linux-scsi@vger.kernel.org>; Thu, 01 Jul 2021 14:12:45 -0700 (PDT)
+        id S233663AbhGAVP2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 1 Jul 2021 17:15:28 -0400
+Received: from mail-pl1-f175.google.com ([209.85.214.175]:41719 "EHLO
+        mail-pl1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230063AbhGAVP2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2021 17:15:28 -0400
+Received: by mail-pl1-f175.google.com with SMTP id z4so4412012plg.8
+        for <linux-scsi@vger.kernel.org>; Thu, 01 Jul 2021 14:12:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ACIV/Uv9G7E37R3LvG77aEJt5LYtj5RU4MTXVZOrnX0=;
-        b=BRyx6N2mPvFu53dNcf5gC+IxlXnxS9UfLUpuVAuyKSyM8WtsNXfnPU+YaJ4/TUT98n
-         +YKtVNrTg4N2tAfP5vibB8x0I6FjgtElmII814G5Vxyk3QcVEfrA3qu+S+Fwev1iiEB0
-         6RBsl21hQjRZHf2UOy/JhkzovLNMkLG8jUn/Jyv86Ks5BdbLOH9udYB44/1+IhF/CFgo
-         pLS5Q17OJAjJs7MRuuMT0cLgjRZhi6vFIt9xNhSiu80JG4E+Ifpr57AcbPA3IX+dugXg
-         1nzug1co/sy/IQfoK9AM4KmatFu5zHJ8msnpCbWQsxENARnn1IV4EwT7SMXPkEXzEzMh
-         E6ew==
-X-Gm-Message-State: AOAM533dDTGdVOykVh9+pXq+CS2PucgBmF4HZh3tG7DVoIo8iIlDJGW7
-        BeExHTMH7OrWh6BXQSBp94U=
-X-Google-Smtp-Source: ABdhPJwAyu6wuVEAIMnG3IosFk9vCKtB39wD50mUA9PFo0zgNJlc1Cbdb+e/QqiQ+ho3kAYKwqmcMA==
-X-Received: by 2002:a17:90a:108f:: with SMTP id c15mr1516388pja.152.1625173965541;
-        Thu, 01 Jul 2021 14:12:45 -0700 (PDT)
+        bh=nHyFy4iEYNI06JKzg9bSk9GilHncFw7tlMl0BSofy4A=;
+        b=s2R+QJdLv7SzycEN5TTuzoFww6AyjKlOdM6VaRSSCAX/902LZ8r3mC1zlHi+nM0Qpw
+         Zsh9IWPylXBg3Rlr1LfA9ivy0neboN5Tjnp3mMiVzroYBEzGRWTsd3GN6ADNihCgJ5LL
+         t5/xYyFtbXF/Ue+vOJOsdYgMCTIpeEfJK90+h5Xq6lqYP+spOMnYvb/yuCmoJCeYQWtC
+         e63aLqJE/psZNS7o9tcMA69v+AKhKFj/eW3/eYBAej2hcqv2QdgmOf1XGrTFTX1N9EL5
+         vd1TUmXmhwuMHZpzredzney1BWjgnVRirVIF33cOtlQ2ZKGBaE5dQGIVPXFTX73JGaAI
+         sroA==
+X-Gm-Message-State: AOAM530J65o4YJDdsBTMsAALiz9RYk2uzdv/bUGX2mRPfNKAKAkc+9nF
+        LAqeEiyDGg3Ke0X2DKmP40U=
+X-Google-Smtp-Source: ABdhPJzDkI/Po/UaYX4xRw8T4yIdrBassLIxPuhAED/krnfVfwpo+V5amf+kMqVnKryNJtaY8WAVXg==
+X-Received: by 2002:a17:902:8c83:b029:129:17e5:a1cc with SMTP id t3-20020a1709028c83b029012917e5a1ccmr1546360plo.49.1625173977050;
+        Thu, 01 Jul 2021 14:12:57 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:6a75:b07:a0d:8bd5])
-        by smtp.gmail.com with ESMTPSA id k25sm900832pfa.213.2021.07.01.14.12.43
+        by smtp.gmail.com with ESMTPSA id k25sm900832pfa.213.2021.07.01.14.12.54
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Jul 2021 14:12:44 -0700 (PDT)
+        Thu, 01 Jul 2021 14:12:56 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>,
-        Ming Lei <ming.lei@redhat.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH 05/21] ata: Stop clearing host_eh_scheduled from error handlers
-Date:   Thu,  1 Jul 2021 14:12:08 -0700
-Message-Id: <20210701211224.17070-6-bvanassche@acm.org>
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Pedro Sousa <pedrom.sousa@synopsys.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Bean Huo <beanhuo@micron.com>, Yue Hu <huyue2@yulong.com>,
+        Sergey Shtylyov <s.shtylyov@omprussia.ru>
+Subject: [PATCH 06/21] ufs: Reduce power management code duplication
+Date:   Thu,  1 Jul 2021 14:12:09 -0700
+Message-Id: <20210701211224.17070-7-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210701211224.17070-1-bvanassche@acm.org>
 References: <20210701211224.17070-1-bvanassche@acm.org>
@@ -60,97 +73,461 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that the caller of sas_ata_strategy_handler() clears host_eh_scheduled,
-remove the code from the ATA core that that clears host_eh_scheduled.
+Move the dev_get_drvdata() calls into the ufshcd_{system,runtime}_*()
+functions. Remove ufshcd_runtime_idle() since it is empty. This patch
+does not change any functionality.
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: John Garry <john.garry@huawei.com>
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ata/libata-core.c |  2 --
- drivers/ata/libata-eh.c   | 30 +++---------------------------
- include/linux/libata.h    |  1 -
- 3 files changed, 3 insertions(+), 30 deletions(-)
+ drivers/scsi/ufs/cdns-pltfrm.c        |  7 ++--
+ drivers/scsi/ufs/tc-dwc-g210-pci.c    | 32 ++----------------
+ drivers/scsi/ufs/tc-dwc-g210-pltfrm.c |  7 ++--
+ drivers/scsi/ufs/ufs-exynos.c         |  7 ++--
+ drivers/scsi/ufs/ufs-hisi.c           |  7 ++--
+ drivers/scsi/ufs/ufs-mediatek.c       |  7 ++--
+ drivers/scsi/ufs/ufs-qcom.c           |  7 ++--
+ drivers/scsi/ufs/ufshcd-pci.c         | 48 ++-------------------------
+ drivers/scsi/ufs/ufshcd-pltfrm.c      | 47 --------------------------
+ drivers/scsi/ufs/ufshcd-pltfrm.h      | 18 ----------
+ drivers/scsi/ufs/ufshcd.c             | 41 ++++++++++++-----------
+ drivers/scsi/ufs/ufshcd.h             |  9 +++--
+ 12 files changed, 41 insertions(+), 196 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 61c762961ca8..b26fb305a56f 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -69,7 +69,6 @@ const struct ata_port_operations ata_base_port_ops = {
- 	.postreset		= ata_std_postreset,
- 	.error_handler		= ata_std_error_handler,
- 	.sched_eh		= ata_std_sched_eh,
--	.end_eh			= ata_std_end_eh,
- };
- 
- const struct ata_port_operations sata_port_ops = {
-@@ -6419,7 +6418,6 @@ struct ata_port_operations ata_dummy_port_ops = {
- 	.qc_issue		= ata_dummy_qc_issue,
- 	.error_handler		= ata_dummy_error_handler,
- 	.sched_eh		= ata_std_sched_eh,
--	.end_eh			= ata_std_end_eh,
- };
- EXPORT_SYMBOL_GPL(ata_dummy_port_ops);
- 
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index bb3637762985..e88ffbe31a36 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -724,12 +724,9 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
- 		ata_for_each_link(link, ap, HOST_FIRST)
- 			memset(&link->eh_info, 0, sizeof(link->eh_info));
- 
--		/* end eh (clear host_eh_scheduled) while holding
--		 * ap->lock such that if exception occurs after this
--		 * point but before EH completion, SCSI midlayer will
--		 * re-initiate EH.
--		 */
--		ap->ops->end_eh(ap);
-+		/* end eh while holding ap->lock */
-+		if (ap->ops->end_eh)
-+			ap->ops->end_eh(ap);
- 
- 		spin_unlock_irqrestore(ap->lock, flags);
- 		ata_eh_release(ap);
-@@ -936,27 +933,6 @@ void ata_std_sched_eh(struct ata_port *ap)
+diff --git a/drivers/scsi/ufs/cdns-pltfrm.c b/drivers/scsi/ufs/cdns-pltfrm.c
+index 908ff39c4856..7da8be2f35c4 100644
+--- a/drivers/scsi/ufs/cdns-pltfrm.c
++++ b/drivers/scsi/ufs/cdns-pltfrm.c
+@@ -318,11 +318,8 @@ static int cdns_ufs_pltfrm_remove(struct platform_device *pdev)
  }
- EXPORT_SYMBOL_GPL(ata_std_sched_eh);
  
--/**
-- * ata_std_end_eh - non-libsas ata_ports complete eh with this common routine
-- * @ap: ATA port to end EH for
-- *
-- * In the libata object model there is a 1:1 mapping of ata_port to
-- * shost, so host fields can be directly manipulated under ap->lock, in
-- * the libsas case we need to hold a lock at the ha->level to coordinate
-- * these events.
-- *
-- *	LOCKING:
-- *	spin_lock_irqsave(host lock)
-- */
--void ata_std_end_eh(struct ata_port *ap)
+ static const struct dev_pm_ops cdns_ufs_dev_pm_ops = {
+-	.suspend         = ufshcd_pltfrm_suspend,
+-	.resume          = ufshcd_pltfrm_resume,
+-	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+-	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+-	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
++	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
++	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+ 	.prepare	 = ufshcd_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
+diff --git a/drivers/scsi/ufs/tc-dwc-g210-pci.c b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+index ec4589afbc13..679289e1a78e 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210-pci.c
++++ b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+@@ -23,31 +23,6 @@ static int tc_type = TC_G210_INV;
+ module_param(tc_type, int, 0);
+ MODULE_PARM_DESC(tc_type, "Test Chip Type (20 = 20-bit, 40 = 40-bit)");
+ 
+-static int tc_dwc_g210_pci_suspend(struct device *dev)
 -{
--	struct Scsi_Host *host = ap->scsi_host;
--
--	host->host_eh_scheduled = 0;
+-	return ufshcd_system_suspend(dev_get_drvdata(dev));
 -}
--EXPORT_SYMBOL(ata_std_end_eh);
 -
+-static int tc_dwc_g210_pci_resume(struct device *dev)
+-{
+-	return ufshcd_system_resume(dev_get_drvdata(dev));
+-}
+-
+-static int tc_dwc_g210_pci_runtime_suspend(struct device *dev)
+-{
+-	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
+-}
+-
+-static int tc_dwc_g210_pci_runtime_resume(struct device *dev)
+-{
+-	return ufshcd_runtime_resume(dev_get_drvdata(dev));
+-}
+-
+-static int tc_dwc_g210_pci_runtime_idle(struct device *dev)
+-{
+-	return ufshcd_runtime_idle(dev_get_drvdata(dev));
+-}
+-
+ /*
+  * struct ufs_hba_dwc_vops - UFS DWC specific variant operations
+  */
+@@ -143,11 +118,8 @@ tc_dwc_g210_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ }
+ 
+ static const struct dev_pm_ops tc_dwc_g210_pci_pm_ops = {
+-	.suspend	= tc_dwc_g210_pci_suspend,
+-	.resume		= tc_dwc_g210_pci_resume,
+-	.runtime_suspend = tc_dwc_g210_pci_runtime_suspend,
+-	.runtime_resume  = tc_dwc_g210_pci_runtime_resume,
+-	.runtime_idle    = tc_dwc_g210_pci_runtime_idle,
++	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
++	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+ 	.prepare	 = ufshcd_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
+diff --git a/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c b/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
+index a1268e4f44d6..783ec43efa78 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
++++ b/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
+@@ -84,11 +84,8 @@ static int tc_dwc_g210_pltfm_remove(struct platform_device *pdev)
+ }
+ 
+ static const struct dev_pm_ops tc_dwc_g210_pltfm_pm_ops = {
+-	.suspend	= ufshcd_pltfrm_suspend,
+-	.resume		= ufshcd_pltfrm_resume,
+-	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+-	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+-	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
++	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
++	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+ };
+ 
+ static struct platform_driver tc_dwc_g210_pltfm_driver = {
+diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+index cf46d6f86e0e..5aa096e5b6cc 100644
+--- a/drivers/scsi/ufs/ufs-exynos.c
++++ b/drivers/scsi/ufs/ufs-exynos.c
+@@ -1287,11 +1287,8 @@ static const struct of_device_id exynos_ufs_of_match[] = {
+ };
+ 
+ static const struct dev_pm_ops exynos_ufs_pm_ops = {
+-	.suspend	= ufshcd_pltfrm_suspend,
+-	.resume		= ufshcd_pltfrm_resume,
+-	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+-	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+-	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
++	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
++	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+ 	.prepare	 = ufshcd_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 526b911655fe..3b4117ddb3c8 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -569,11 +569,8 @@ static int ufs_hisi_remove(struct platform_device *pdev)
+ }
+ 
+ static const struct dev_pm_ops ufs_hisi_pm_ops = {
+-	.suspend	= ufshcd_pltfrm_suspend,
+-	.resume		= ufshcd_pltfrm_resume,
+-	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+-	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+-	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
++	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
++	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+ 	.prepare	 = ufshcd_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index 32ae67e40086..fe6e678faa2c 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -1123,11 +1123,8 @@ static int ufs_mtk_remove(struct platform_device *pdev)
+ }
+ 
+ static const struct dev_pm_ops ufs_mtk_pm_ops = {
+-	.suspend         = ufshcd_pltfrm_suspend,
+-	.resume          = ufshcd_pltfrm_resume,
+-	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+-	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+-	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
++	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
++	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+ 	.prepare	 = ufshcd_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 9b1d18d7c9bb..9d9770f1db4f 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1546,11 +1546,8 @@ MODULE_DEVICE_TABLE(acpi, ufs_qcom_acpi_match);
+ #endif
+ 
+ static const struct dev_pm_ops ufs_qcom_pm_ops = {
+-	.suspend	= ufshcd_pltfrm_suspend,
+-	.resume		= ufshcd_pltfrm_resume,
+-	.runtime_suspend = ufshcd_pltfrm_runtime_suspend,
+-	.runtime_resume  = ufshcd_pltfrm_runtime_resume,
+-	.runtime_idle    = ufshcd_pltfrm_runtime_idle,
++	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
++	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+ 	.prepare	 = ufshcd_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index e6c334bfb4c2..b3bcc5c882da 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -385,48 +385,6 @@ static struct ufs_hba_variant_ops ufs_intel_lkf_hba_vops = {
+ 	.device_reset		= ufs_intel_device_reset,
+ };
+ 
+-#ifdef CONFIG_PM_SLEEP
+-/**
+- * ufshcd_pci_suspend - suspend power management function
+- * @dev: pointer to PCI device handle
+- *
+- * Returns 0 if successful
+- * Returns non-zero otherwise
+- */
+-static int ufshcd_pci_suspend(struct device *dev)
+-{
+-	return ufshcd_system_suspend(dev_get_drvdata(dev));
+-}
+-
+-/**
+- * ufshcd_pci_resume - resume power management function
+- * @dev: pointer to PCI device handle
+- *
+- * Returns 0 if successful
+- * Returns non-zero otherwise
+- */
+-static int ufshcd_pci_resume(struct device *dev)
+-{
+-	return ufshcd_system_resume(dev_get_drvdata(dev));
+-}
+-
+-#endif /* !CONFIG_PM_SLEEP */
+-
+-#ifdef CONFIG_PM
+-static int ufshcd_pci_runtime_suspend(struct device *dev)
+-{
+-	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
+-}
+-static int ufshcd_pci_runtime_resume(struct device *dev)
+-{
+-	return ufshcd_runtime_resume(dev_get_drvdata(dev));
+-}
+-static int ufshcd_pci_runtime_idle(struct device *dev)
+-{
+-	return ufshcd_runtime_idle(dev_get_drvdata(dev));
+-}
+-#endif /* !CONFIG_PM */
 -
  /**
-  *	ata_port_schedule_eh - schedule error handling without a qc
-  *	@ap: ATA port to schedule EH for
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 5f550eb27f81..88f4f7e466fb 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -1356,7 +1356,6 @@ extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
- 		      ata_postreset_fn_t postreset);
- extern void ata_std_error_handler(struct ata_port *ap);
- extern void ata_std_sched_eh(struct ata_port *ap);
--extern void ata_std_end_eh(struct ata_port *ap);
- extern int ata_link_nr_enabled(struct ata_link *link);
+  * ufshcd_pci_shutdown - main function to put the controller in reset state
+  * @pdev: pointer to PCI device handle
+@@ -510,10 +468,8 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ }
  
- /*
+ static const struct dev_pm_ops ufshcd_pci_pm_ops = {
+-	SET_RUNTIME_PM_OPS(ufshcd_pci_runtime_suspend,
+-			   ufshcd_pci_runtime_resume,
+-			   ufshcd_pci_runtime_idle)
+-	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_pci_suspend, ufshcd_pci_resume)
++	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
++	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+ #ifdef CONFIG_PM_SLEEP
+ 	.prepare	= ufshcd_suspend_prepare,
+ 	.complete	= ufshcd_resume_complete,
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index 298e22ef907e..8859c13f4e09 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -170,53 +170,6 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
+-#ifdef CONFIG_PM
+-/**
+- * ufshcd_pltfrm_suspend - suspend power management function
+- * @dev: pointer to device handle
+- *
+- * Returns 0 if successful
+- * Returns non-zero otherwise
+- */
+-int ufshcd_pltfrm_suspend(struct device *dev)
+-{
+-	return ufshcd_system_suspend(dev_get_drvdata(dev));
+-}
+-EXPORT_SYMBOL_GPL(ufshcd_pltfrm_suspend);
+-
+-/**
+- * ufshcd_pltfrm_resume - resume power management function
+- * @dev: pointer to device handle
+- *
+- * Returns 0 if successful
+- * Returns non-zero otherwise
+- */
+-int ufshcd_pltfrm_resume(struct device *dev)
+-{
+-	return ufshcd_system_resume(dev_get_drvdata(dev));
+-}
+-EXPORT_SYMBOL_GPL(ufshcd_pltfrm_resume);
+-
+-int ufshcd_pltfrm_runtime_suspend(struct device *dev)
+-{
+-	return ufshcd_runtime_suspend(dev_get_drvdata(dev));
+-}
+-EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_suspend);
+-
+-int ufshcd_pltfrm_runtime_resume(struct device *dev)
+-{
+-	return ufshcd_runtime_resume(dev_get_drvdata(dev));
+-}
+-EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_resume);
+-
+-int ufshcd_pltfrm_runtime_idle(struct device *dev)
+-{
+-	return ufshcd_runtime_idle(dev_get_drvdata(dev));
+-}
+-EXPORT_SYMBOL_GPL(ufshcd_pltfrm_runtime_idle);
+-
+-#endif /* CONFIG_PM */
+-
+ void ufshcd_pltfrm_shutdown(struct platform_device *pdev)
+ {
+ 	ufshcd_shutdown((struct ufs_hba *)platform_get_drvdata(pdev));
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.h b/drivers/scsi/ufs/ufshcd-pltfrm.h
+index 772a8e848098..c33e28ac6ef6 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.h
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.h
+@@ -33,22 +33,4 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 		       const struct ufs_hba_variant_ops *vops);
+ void ufshcd_pltfrm_shutdown(struct platform_device *pdev);
+ 
+-#ifdef CONFIG_PM
+-
+-int ufshcd_pltfrm_suspend(struct device *dev);
+-int ufshcd_pltfrm_resume(struct device *dev);
+-int ufshcd_pltfrm_runtime_suspend(struct device *dev);
+-int ufshcd_pltfrm_runtime_resume(struct device *dev);
+-int ufshcd_pltfrm_runtime_idle(struct device *dev);
+-
+-#else /* !CONFIG_PM */
+-
+-#define ufshcd_pltfrm_suspend	NULL
+-#define ufshcd_pltfrm_resume	NULL
+-#define ufshcd_pltfrm_runtime_suspend	NULL
+-#define ufshcd_pltfrm_runtime_resume	NULL
+-#define ufshcd_pltfrm_runtime_idle	NULL
+-
+-#endif /* CONFIG_PM */
+-
+ #endif /* UFSHCD_PLTFRM_H_ */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 5b31de83a63a..a34aa6d486c7 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -9204,15 +9204,17 @@ static int ufshcd_resume(struct ufs_hba *hba)
+ }
+ 
+ /**
+- * ufshcd_system_suspend - system suspend routine
+- * @hba: per adapter instance
++ * ufshcd_system_suspend - system suspend callback
++ * @dev: Device associated with the UFS controller.
+  *
+- * Check the description of ufshcd_suspend() function for more details.
++ * Executed before putting the system into a sleep state in which the contents
++ * of main memory are preserved.
+  *
+  * Returns 0 for success and non-zero for failure
+  */
+-int ufshcd_system_suspend(struct ufs_hba *hba)
++int ufshcd_system_suspend(struct device *dev)
+ {
++	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	int ret = 0;
+ 	ktime_t start = ktime_get();
+ 
+@@ -9229,16 +9231,19 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ EXPORT_SYMBOL(ufshcd_system_suspend);
+ 
+ /**
+- * ufshcd_system_resume - system resume routine
+- * @hba: per adapter instance
++ * ufshcd_system_resume - system resume callback
++ * @dev: Device associated with the UFS controller.
++ *
++ * Executed after waking the system up from a sleep state in which the contents
++ * of main memory were preserved.
+  *
+  * Returns 0 for success and non-zero for failure
+  */
+-
+-int ufshcd_system_resume(struct ufs_hba *hba)
++int ufshcd_system_resume(struct device *dev)
+ {
+-	int ret = 0;
++	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	ktime_t start = ktime_get();
++	int ret = 0;
+ 
+ 	if (pm_runtime_suspended(hba->dev))
+ 		goto out;
+@@ -9255,15 +9260,16 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ EXPORT_SYMBOL(ufshcd_system_resume);
+ 
+ /**
+- * ufshcd_runtime_suspend - runtime suspend routine
+- * @hba: per adapter instance
++ * ufshcd_runtime_suspend - runtime suspend callback
++ * @dev: Device associated with the UFS controller.
+  *
+  * Check the description of ufshcd_suspend() function for more details.
+  *
+  * Returns 0 for success and non-zero for failure
+  */
+-int ufshcd_runtime_suspend(struct ufs_hba *hba)
++int ufshcd_runtime_suspend(struct device *dev)
+ {
++	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	int ret;
+ 	ktime_t start = ktime_get();
+ 
+@@ -9278,7 +9284,7 @@ EXPORT_SYMBOL(ufshcd_runtime_suspend);
+ 
+ /**
+  * ufshcd_runtime_resume - runtime resume routine
+- * @hba: per adapter instance
++ * @dev: Device associated with the UFS controller.
+  *
+  * This function basically brings controller
+  * to active state. Following operations are done in this function:
+@@ -9286,8 +9292,9 @@ EXPORT_SYMBOL(ufshcd_runtime_suspend);
+  * 1. Turn on all the controller related clocks
+  * 2. Turn ON VCC rail
+  */
+-int ufshcd_runtime_resume(struct ufs_hba *hba)
++int ufshcd_runtime_resume(struct device *dev)
+ {
++	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	int ret;
+ 	ktime_t start = ktime_get();
+ 
+@@ -9300,12 +9307,6 @@ int ufshcd_runtime_resume(struct ufs_hba *hba)
+ }
+ EXPORT_SYMBOL(ufshcd_runtime_resume);
+ 
+-int ufshcd_runtime_idle(struct ufs_hba *hba)
+-{
+-	return 0;
+-}
+-EXPORT_SYMBOL(ufshcd_runtime_idle);
+-
+ /**
+  * ufshcd_shutdown - shutdown routine
+  * @hba: per adapter instance
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index c98d540ac044..dc75426c609f 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1009,11 +1009,10 @@ static inline u8 ufshcd_wb_get_query_index(struct ufs_hba *hba)
+ 	return 0;
+ }
+ 
+-extern int ufshcd_runtime_suspend(struct ufs_hba *hba);
+-extern int ufshcd_runtime_resume(struct ufs_hba *hba);
+-extern int ufshcd_runtime_idle(struct ufs_hba *hba);
+-extern int ufshcd_system_suspend(struct ufs_hba *hba);
+-extern int ufshcd_system_resume(struct ufs_hba *hba);
++extern int ufshcd_runtime_suspend(struct device *dev);
++extern int ufshcd_runtime_resume(struct device *dev);
++extern int ufshcd_system_suspend(struct device *dev);
++extern int ufshcd_system_resume(struct device *dev);
+ extern int ufshcd_shutdown(struct ufs_hba *hba);
+ extern int ufshcd_dme_configure_adapt(struct ufs_hba *hba,
+ 				      int agreed_gear,
