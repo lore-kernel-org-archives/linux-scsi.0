@@ -2,69 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 300C0C11F68
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 13:15:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFCEC11F69
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 13:43:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1D68D6141D
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 13:15:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49AB2613CE
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 13:43:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232524AbhGBNST (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Jul 2021 09:18:19 -0400
-Received: from youngberry.canonical.com ([91.189.89.112]:33076 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232484AbhGBNSS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2021 09:18:18 -0400
-Received: from 1.general.cking.uk.vpn ([10.172.193.212] helo=localhost)
-        by youngberry.canonical.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.93)
-        (envelope-from <colin.king@canonical.com>)
-        id 1lzJ1D-0003O6-0J; Fri, 02 Jul 2021 13:15:43 +0000
-From:   Colin King <colin.king@canonical.com>
-To:     Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: qla2xxx: remove redundant continue statement in a for-loop
-Date:   Fri,  2 Jul 2021 14:15:42 +0100
-Message-Id: <20210702131542.19880-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.31.1
+        id S232885AbhGBNqI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Jul 2021 09:46:08 -0400
+Received: from mail-pj1-f41.google.com ([209.85.216.41]:42532 "EHLO
+        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232891AbhGBNqH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2021 09:46:07 -0400
+Received: by mail-pj1-f41.google.com with SMTP id p17-20020a17090b0111b02901723ab8d11fso6112999pjz.1;
+        Fri, 02 Jul 2021 06:43:35 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=A8O7QLpS69tWkUIOVJYRaUSUHM9jeCpg1TDyB8l/WfE=;
+        b=AkzIIjjQFagT3MRFqRHlIig3OTeoysRuD6PGzd9LgGnf2Q2dLHhpiyoAzz/rGSi50j
+         eJXy9AUd8vY32OlGDgC1a624ub/qk5diKa709qB3qbROkHBTNecmCtNRpPp5TapGLw5s
+         Dzx4w6EB7jHLwcHVeMiQ/MC5cbbpiQheyLWhrrXj875cJrQJDUdW6JmDeXrSQVDXXhq1
+         XOTquTEj6MrU6HMvOyfGVFiZ3pqwo1Wh4w/8BMmK7haaXErBBYQdag44HWZ5VNWgue+J
+         QnZ9Bee1tw330AzIVEnO+JM9VcmPq6FYkNpnh2PFuegihk6k9tTHSCpok7XT8Bn7dI9Z
+         n3Kg==
+X-Gm-Message-State: AOAM532lx13mbV5AIwu7ca6HYc7Eeq5+n/EBIVdrjNrsKfVxkhryEwG7
+        5BCp0v0/nmBy5R34f+iRTYw=
+X-Google-Smtp-Source: ABdhPJzXiskbJbYqJP+kYAuyYuVXSmi+ghRxO8IMEExGuk/sE1rHVR9pt46XfZdmem3E39NYRg+/6A==
+X-Received: by 2002:a17:90b:3142:: with SMTP id ip2mr14954286pjb.63.1625233415268;
+        Fri, 02 Jul 2021 06:43:35 -0700 (PDT)
+Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id m205sm2975341pfd.25.2021.07.02.06.43.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 02 Jul 2021 06:43:34 -0700 (PDT)
+Subject: Re: [PATCH v5 2/3] scsi: sd: send REQUEST SENSE for
+ BLIST_MEDIA_CHANGE devices in runtime_resume()
+To:     Martin Kepplinger <martin.kepplinger@puri.sm>,
+        Christoph Hellwig <hch@infradead.org>
+Cc:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com, kernel@puri.sm,
+        stern@rowland.harvard.edu
+References: <20210630084453.186764-1-martin.kepplinger@puri.sm>
+ <20210630084453.186764-3-martin.kepplinger@puri.sm>
+ <YN3WD4Vem5Zx8Dvq@infradead.org>
+ <b1d39dfbe1398192ef1181fc98d6b7e6bedeb649.camel@puri.sm>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <232717d6-fa10-aaec-cd15-8ed5e7e1117e@acm.org>
+Date:   Fri, 2 Jul 2021 06:43:31 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <b1d39dfbe1398192ef1181fc98d6b7e6bedeb649.camel@puri.sm>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On 7/2/21 1:04 AM, Martin Kepplinger wrote:
+> Am Donnerstag, dem 01.07.2021 um 15:49 +0100 schrieb Christoph Hellwig:
+>> On Wed, Jun 30, 2021 at 10:44:52AM +0200, Martin Kepplinger wrote:
+>>> +       struct scsi_disk *sdkp = dev_get_drvdata(dev);
+>>> +       struct scsi_device *sdp = sdkp->device;
+>>> +       int timeout, res;
+>>> +
+>>> +       timeout = sdp->request_queue->rq_timeout *
+>>> SD_FLUSH_TIMEOUT_MULTIPLIER;
+>>
+>> Is REQUEST SENSE reqlly a so slow operation on these devices that
+>> we need to override the timeout?
+> 
+> using SD_TIMEOUT works equally fine for me. Is that what you'd rather
+> like to see?
+> 
+> Bart, is SD_TIMEOUT equally ok for you? If so, I'll resend with your
+> reviewed-by.
 
-The continue statement at the end of the for-loop is redundant,
-remove it.
+Hi Martin,
 
-Addresses-Coverity: ("Continue has no effect")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/qla2xxx/qla_sup.c | 1 -
- 1 file changed, 1 deletion(-)
+I prefer sdp->request_queue->rq_timeout instead of SD_TIMEOUT since the 
+former is configurable via sysfs.
 
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
-index 060c89237777..a0aeba69513d 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -2936,7 +2936,6 @@ qla28xx_write_flash_data(scsi_qla_host_t *vha, uint32_t *dwptr, uint32_t faddr,
- 		liter += dburst - 1;
- 		faddr += dburst - 1;
- 		dwptr += dburst - 1;
--		continue;
- 	}
- 
- write_protect:
--- 
-2.31.1
+Thanks,
 
+Bart.
