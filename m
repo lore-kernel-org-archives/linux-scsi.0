@@ -2,136 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8E23C11F67
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 00:09:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5275C11F69
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 08:05:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7BF036108B
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 00:09:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B831E61411
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 08:05:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234253AbhGBALy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 1 Jul 2021 20:11:54 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:47651 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234195AbhGBALx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Jul 2021 20:11:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625184562;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=SMNrgBD2P+mpu5V6r1wSaYNHV2zW5QRjAUAFoKSsKrk=;
-        b=KUjb7KTiOC0IWiDPUOiXqKiYl4pMzKrgN4WFPMlPrh05fB+tFmGmz7Fah4+7tAryH1kunw
-        LRr0jQSAwdYgSKA74gnUV9xXCrxtVGcqNmI3961JPBrCs92mZljPVlOr6m3CsBz888+tbd
-        6TdFKsK/CoVmPVbGMrOSmwvGr2LxbJ4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-568-9miYEK19OdqoJwpVg5seYQ-1; Thu, 01 Jul 2021 20:09:21 -0400
-X-MC-Unique: 9miYEK19OdqoJwpVg5seYQ-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B5470100B3AD;
-        Fri,  2 Jul 2021 00:09:19 +0000 (UTC)
-Received: from T590 (ovpn-12-65.pek2.redhat.com [10.72.12.65])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DAB0B10016F5;
-        Fri,  2 Jul 2021 00:09:12 +0000 (UTC)
-Date:   Fri, 2 Jul 2021 08:09:08 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Tyrel Datwyler <tyreld@linux.ibm.com>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        james.bottomley@hansenpartnership.com, brking@linux.ibm.com,
-        stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: core: fix bad pointer dereference when ehandler
- kthread is invalid
-Message-ID: <YN5ZJGp2l/AP8x3L@T590>
-References: <20210701195659.3185475-1-tyreld@linux.ibm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210701195659.3185475-1-tyreld@linux.ibm.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+        id S230146AbhGBIHr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Jul 2021 04:07:47 -0400
+Received: from comms.puri.sm ([159.203.221.185]:43932 "EHLO comms.puri.sm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229519AbhGBIHr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Jul 2021 04:07:47 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id 9B003DF80A;
+        Fri,  2 Jul 2021 01:04:44 -0700 (PDT)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id D7DRqfSlUVAH; Fri,  2 Jul 2021 01:04:40 -0700 (PDT)
+Message-ID: <b1d39dfbe1398192ef1181fc98d6b7e6bedeb649.camel@puri.sm>
+Subject: Re: [PATCH v5 2/3] scsi: sd: send REQUEST SENSE for
+ BLIST_MEDIA_CHANGE devices in runtime_resume()
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     bvanassche@acm.org, jejb@linux.ibm.com,
+        linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        kernel@puri.sm, stern@rowland.harvard.edu
+Date:   Fri, 02 Jul 2021 10:04:35 +0200
+In-Reply-To: <YN3WD4Vem5Zx8Dvq@infradead.org>
+References: <20210630084453.186764-1-martin.kepplinger@puri.sm>
+         <20210630084453.186764-3-martin.kepplinger@puri.sm>
+         <YN3WD4Vem5Zx8Dvq@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.3-1 
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 01, 2021 at 01:56:59PM -0600, Tyrel Datwyler wrote:
-> Commit 66a834d ("scsi: core: Fix error handling of scsi_host_alloc()")
-> changed the allocation logic to call put_device() to perform host
-> cleanup with the assumption that IDA removal and stopping the kthread
-> would properly be peformed in scsi_host_dev_release(). However, in the
-> unlikely case that the error handler thread fails to spawn
-> shost->ehandler is set to ERR_PTR(-ENOMEM). The error handler cleanup
-> code in scsi_host_dev_release() will call kthread_stop() if
-> shost->ehandler != NULL which will always be the case whether the
-> kthread was succesfully spawned or not. In the case that it failed to
-> spawn this has the nasty side effect of trying to dereference an
-> invalid pointer when kthread_stop() is called. The follwing splat
-> provides an example of this behavior in the wild:
+Am Donnerstag, dem 01.07.2021 um 15:49 +0100 schrieb Christoph Hellwig:
+> On Wed, Jun 30, 2021 at 10:44:52AM +0200, Martin Kepplinger wrote:
+> > +       struct scsi_disk *sdkp = dev_get_drvdata(dev);
+> > +       struct scsi_device *sdp = sdkp->device;
+> > +       int timeout, res;
+> > +
+> > +       timeout = sdp->request_queue->rq_timeout *
+> > SD_FLUSH_TIMEOUT_MULTIPLIER;
 > 
-> scsi host11: error handler thread failed to spawn, error = -4
-> Kernel attempted to read user page (10c) - exploit attempt? (uid: 0)
-> BUG: Kernel NULL pointer dereference on read at 0x0000010c
-> Faulting instruction address: 0xc00000000818e9a8
-> Oops: Kernel access of bad area, sig: 11 [#1]
-> LE PAGE_SIZE=64K MMU=Hash SMP NR_CPUS=2048 NUMA pSeries
-> Modules linked in: ibmvscsi(+) scsi_transport_srp dm_multipath dm_mirror dm_region
->  hash dm_log dm_mod fuse overlay squashfs loop
-> CPU: 12 PID: 274 Comm: systemd-udevd Not tainted 5.13.0-rc7 #1
-> NIP:  c00000000818e9a8 LR: c0000000089846e8 CTR: 0000000000007ee8
-> REGS: c000000037d12ea0 TRAP: 0300   Not tainted  (5.13.0-rc7)
-> MSR:  800000000280b033 &lt;SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE&gt;  CR: 28228228
-> XER: 20040001
-> CFAR: c0000000089846e4 DAR: 000000000000010c DSISR: 40000000 IRQMASK: 0
-> GPR00: c0000000089846e8 c000000037d13140 c000000009cc1100 fffffffffffffffc
-> GPR04: 0000000000000001 0000000000000000 0000000000000000 c000000037dc0000
-> GPR08: 0000000000000000 c000000037dc0000 0000000000000001 00000000fffff7ff
-> GPR12: 0000000000008000 c00000000a049000 c000000037d13d00 000000011134d5a0
-> GPR16: 0000000000001740 c0080000190d0000 c0080000190d1740 c000000009129288
-> GPR20: c000000037d13bc0 0000000000000001 c000000037d13bc0 c0080000190b7898
-> GPR24: c0080000190b7708 0000000000000000 c000000033bb2c48 0000000000000000
-> GPR28: c000000046b28280 0000000000000000 000000000000010c fffffffffffffffc
-> NIP [c00000000818e9a8] kthread_stop+0x38/0x230
-> LR [c0000000089846e8] scsi_host_dev_release+0x98/0x160
-> Call Trace:
-> [c000000033bb2c48] 0xc000000033bb2c48 (unreliable)
-> [c0000000089846e8] scsi_host_dev_release+0x98/0x160
-> [c00000000891e960] device_release+0x60/0x100
-> [c0000000087e55c4] kobject_release+0x84/0x210
-> [c00000000891ec78] put_device+0x28/0x40
-> [c000000008984ea4] scsi_host_alloc+0x314/0x430
-> [c0080000190b38bc] ibmvscsi_probe+0x54/0xad0 [ibmvscsi]
-> [c000000008110104] vio_bus_probe+0xa4/0x4b0
-> [c00000000892a860] really_probe+0x140/0x680
-> [c00000000892aefc] driver_probe_device+0x15c/0x200
-> [c00000000892b63c] device_driver_attach+0xcc/0xe0
-> [c00000000892b740] __driver_attach+0xf0/0x200
-> [c000000008926f28] bus_for_each_dev+0xa8/0x130
-> [c000000008929ce4] driver_attach+0x34/0x50
-> [c000000008928fc0] bus_add_driver+0x1b0/0x300
-> [c00000000892c798] driver_register+0x98/0x1a0
-> [c00000000810eb60] __vio_register_driver+0x80/0xe0
-> [c0080000190b4a30] ibmvscsi_module_init+0x9c/0xdc [ibmvscsi]
-> [c0000000080121d0] do_one_initcall+0x60/0x2d0
-> [c000000008261abc] do_init_module+0x7c/0x320
-> [c000000008265700] load_module+0x2350/0x25b0
-> [c000000008265cb4] __do_sys_finit_module+0xd4/0x160
-> [c000000008031110] system_call_exception+0x150/0x2d0
-> [c00000000800d35c] system_call_common+0xec/0x278
-> 
-> Fix this be nulling shost->ehandler when the kthread fails to spawn.
-> 
-> Cc: stable@vger.kernel.org
-> Fixes: 66a834d ("scsi: core: Fix error handling of scsi_host_alloc()")
-> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+> Is REQUEST SENSE reqlly a so slow operation on these devices that
+> we need to override the timeout?
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+using SD_TIMEOUT works equally fine for me. Is that what you'd rather
+like to see?
 
+Bart, is SD_TIMEOUT equally ok for you? If so, I'll resend with your
+reviewed-by.
 
-Thanks,
-Ming
+thank you for reviewing!
+
+                            martin
 
