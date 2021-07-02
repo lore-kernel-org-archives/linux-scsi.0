@@ -2,100 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 68C32C07E95
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 20:31:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85346C07E95
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 22:37:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4378161278
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 20:31:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E6B661416
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 22:37:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230289AbhGBUeQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Jul 2021 16:34:16 -0400
-Received: from netrider.rowland.org ([192.131.102.5]:44503 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S230116AbhGBUeQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2021 16:34:16 -0400
-Received: (qmail 49922 invoked by uid 1000); 2 Jul 2021 16:31:42 -0400
-Date:   Fri, 2 Jul 2021 16:31:42 -0400
-From:   Alan Stern <stern@rowland.harvard.edu>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.com>,
-        chenxiang <chenxiang66@hisilicon.com>,
-        Xiejianqin <xiejianqin@hisilicon.com>
-Subject: Re: SCSI layer RPM deadlock debug suggestion
-Message-ID: <20210702203142.GA49307@rowland.harvard.edu>
-References: <9e90d035-fac1-432a-1d34-de5805d8f799@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9e90d035-fac1-432a-1d34-de5805d8f799@huawei.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        id S230037AbhGBWkI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Jul 2021 18:40:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34960 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229847AbhGBWkI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Jul 2021 18:40:08 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 4BEF8613DD;
+        Fri,  2 Jul 2021 22:37:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1625265455;
+        bh=FxGp8BLLF23wyYPze/F4ar6AiPJPJ/mIwGIR/lhcCaE=;
+        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+        b=nJNRRTf+c9b3pMSaWwFoHYJnz2eUMwZhVs7qCPu7yYxff6txZrWfudENiaaxiI//l
+         +VMuYAfT1i7YjG78Kc6Tn+IgeGSwPHkSL3h8+PnS/a7uOBNLXa+Hcm56oFirQxE9YB
+         YEnlimWcNtkuWEv1U+oeQ1wPAM1fUzdPEQ6+kAf6H4+RkWumkfH5vazZoXL/eeuWfF
+         qDhnZVUBsK84Ha4baSkSKNc+afKUOOqwjYeCcIzbp9nEPlRg/10IxMzKqQN3nOBV8J
+         EEXR3JT0/xd+KUrnqb5/6mydxkjCiLmb6/zVMpIwCJyXpH+KGwuTZcnA/QejXPQzwH
+         iTAh/XrPmzKyg==
+Subject: Re: [GIT PULL] first round of SCSI updates for the 5.13+ merge window
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <e118d4b2fb924156f791564483336e7125276c47.camel@HansenPartnership.com>
+References: <e118d4b2fb924156f791564483336e7125276c47.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <e118d4b2fb924156f791564483336e7125276c47.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+X-PR-Tracked-Commit-Id: 041761f4a4db662e38b4ae9d510b8beb24c7d4b6
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: bd31b9efbf549d9630bf2f269a3a56dcb29fcac1
+Message-Id: <162526545516.21733.11922753738856768647.pr-tracker-bot@kernel.org>
+Date:   Fri, 02 Jul 2021 22:37:35 +0000
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jul 02, 2021 at 06:03:20PM +0100, John Garry wrote:
-> Hi guys,
-> 
-> We're experiencing a deadlock between trying to remove a SATA device and
-> doing a rescan in scsi_rescan_device().
-> 
-> I'm just looking for a suggestion on how to solve.
-> 
-> The background is that the host (hisi sas v3 hw) uses SAS SCSI transport and
-> supports RPM. In the testcase, the host and disks are put to suspend. Then
-> we run fio on the disk to make them active and then immediately hard reset
-> the disk link, which causes the disk to be disconnected (please don't ask
-> why ...).
-> 
-> We find that there is a conflict between the rescan and the device removal
-> code, resulting in a deadlock:
+The pull request you sent on Fri, 02 Jul 2021 09:11:40 +0100:
 
-> The rescan holds the sdev_gendev.device lock in scsi_rescan_device(), while
-> the removal code in __scsi_remove_device() wants to grab it.
-> 
-> However the rescan will not release (the lock) until the blk_queue_enter()
-> succeeds, above. That can happen 2x ways:
-> 
-> - the queue is dying, which would not happen until after the device_del() in
-> __scsi_remove_device(), so not going to happen
-> 
-> - q->pm_only falls to 0. This would be when scsi_runtime_resume() ->
-> sdev_runtime_resume() -> blk_post_runtime_resume(err = 0) ->
-> blk_set_runtime_active() is called. However, I find that the err argument
-> for me is -5, which comes from sdev_runtime_resume() -> pm->runtime_resume
-> (=sd_resume()), which fails. That sd_resume() -> sd_start_stop_device()
-> fails as the disk is not attached. So we go into error state:
-> 
-> $:more /sys/devices/pci0000:b4/0000:b4:04.0/host3/port-3:0/end_device-3:0/target3:0:0/3:0:0:0/power/runtime_status
-> error
-> 
-> Removing commit e27829dc92e5 ("scsi: serialize ->rescan against ->remove")
-> solves this issue for me, but that is there for a reason.
-> 
-> Any suggestion on how to fix this deadlock?
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
 
-This is indeed a tricky question.  It seems like we should allow a 
-runtime resume to succeed if the only reason it failed was that the 
-device has been removed.
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/bd31b9efbf549d9630bf2f269a3a56dcb29fcac1
 
-More generally, perhaps we should always consider that a runtime 
-resume succeeds.  Any remaining problems will be dealt with by the 
-device's driver and subsystem once the device is marked as 
-runtime-active again.
+Thank you!
 
-Suppose you try changing blk_post_runtime_resume() so that it always 
-calls blk_set_runtime_active() regardless of the value of err.  Does 
-that fix the problem?
-
-And more importantly, will it cause any other problems...?
-
-Alan Stern
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
