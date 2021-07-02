@@ -2,95 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFCEC11F69
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 13:43:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66C4DC11F68
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 14:21:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 49AB2613CE
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 13:43:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DFBA61427
+	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 14:21:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232885AbhGBNqI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Jul 2021 09:46:08 -0400
-Received: from mail-pj1-f41.google.com ([209.85.216.41]:42532 "EHLO
-        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232891AbhGBNqH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2021 09:46:07 -0400
-Received: by mail-pj1-f41.google.com with SMTP id p17-20020a17090b0111b02901723ab8d11fso6112999pjz.1;
-        Fri, 02 Jul 2021 06:43:35 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=A8O7QLpS69tWkUIOVJYRaUSUHM9jeCpg1TDyB8l/WfE=;
-        b=AkzIIjjQFagT3MRFqRHlIig3OTeoysRuD6PGzd9LgGnf2Q2dLHhpiyoAzz/rGSi50j
-         eJXy9AUd8vY32OlGDgC1a624ub/qk5diKa709qB3qbROkHBTNecmCtNRpPp5TapGLw5s
-         Dzx4w6EB7jHLwcHVeMiQ/MC5cbbpiQheyLWhrrXj875cJrQJDUdW6JmDeXrSQVDXXhq1
-         XOTquTEj6MrU6HMvOyfGVFiZ3pqwo1Wh4w/8BMmK7haaXErBBYQdag44HWZ5VNWgue+J
-         QnZ9Bee1tw330AzIVEnO+JM9VcmPq6FYkNpnh2PFuegihk6k9tTHSCpok7XT8Bn7dI9Z
-         n3Kg==
-X-Gm-Message-State: AOAM532lx13mbV5AIwu7ca6HYc7Eeq5+n/EBIVdrjNrsKfVxkhryEwG7
-        5BCp0v0/nmBy5R34f+iRTYw=
-X-Google-Smtp-Source: ABdhPJzXiskbJbYqJP+kYAuyYuVXSmi+ghRxO8IMEExGuk/sE1rHVR9pt46XfZdmem3E39NYRg+/6A==
-X-Received: by 2002:a17:90b:3142:: with SMTP id ip2mr14954286pjb.63.1625233415268;
-        Fri, 02 Jul 2021 06:43:35 -0700 (PDT)
-Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id m205sm2975341pfd.25.2021.07.02.06.43.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 02 Jul 2021 06:43:34 -0700 (PDT)
-Subject: Re: [PATCH v5 2/3] scsi: sd: send REQUEST SENSE for
- BLIST_MEDIA_CHANGE devices in runtime_resume()
-To:     Martin Kepplinger <martin.kepplinger@puri.sm>,
-        Christoph Hellwig <hch@infradead.org>
-Cc:     jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
-        linux-pm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, kernel@puri.sm,
-        stern@rowland.harvard.edu
-References: <20210630084453.186764-1-martin.kepplinger@puri.sm>
- <20210630084453.186764-3-martin.kepplinger@puri.sm>
- <YN3WD4Vem5Zx8Dvq@infradead.org>
- <b1d39dfbe1398192ef1181fc98d6b7e6bedeb649.camel@puri.sm>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <232717d6-fa10-aaec-cd15-8ed5e7e1117e@acm.org>
-Date:   Fri, 2 Jul 2021 06:43:31 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S232835AbhGBOXf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Jul 2021 10:23:35 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:60374 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232744AbhGBOXf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2021 10:23:35 -0400
+Received: from imap.suse.de (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        (using TLSv1.2 with cipher ECDHE-ECDSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 32C2321BA8;
+        Fri,  2 Jul 2021 14:21:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1625235662; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=VdVlVyMIhZYAE1Rur9k142DKOHes23GQyE4Lr9maiIU=;
+        b=olHbqMS57DAacAU+Lg3glkWbNeqcp6j+ip15Y50wSYgxyEyicO/nen9Jf6VOZgrkd3H3xR
+        AlLf0Yt4e+JeDbmI2YBrVPgDUrJqzzNE5mUpQc/w7JTqh6QCzhZimqh8TFU0MzAC5waB5l
+        nw5HOXsraebA8/RE9ka7rTOO8b/AoJA=
+Received: from imap3-int (imap-alt.suse-dmz.suse.de [192.168.254.47])
+        by imap.suse.de (Postfix) with ESMTP id BD73211C84;
+        Fri,  2 Jul 2021 14:21:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1625235662; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=VdVlVyMIhZYAE1Rur9k142DKOHes23GQyE4Lr9maiIU=;
+        b=olHbqMS57DAacAU+Lg3glkWbNeqcp6j+ip15Y50wSYgxyEyicO/nen9Jf6VOZgrkd3H3xR
+        AlLf0Yt4e+JeDbmI2YBrVPgDUrJqzzNE5mUpQc/w7JTqh6QCzhZimqh8TFU0MzAC5waB5l
+        nw5HOXsraebA8/RE9ka7rTOO8b/AoJA=
+Received: from director2.suse.de ([192.168.254.72])
+        by imap3-int with ESMTPSA
+        id 1ymoLM0g32C4XgAALh3uQQ
+        (envelope-from <mwilck@suse.com>); Fri, 02 Jul 2021 14:21:01 +0000
+Message-ID: <003727e7a195cb0f525cc2d7abda3a19ff16eb98.camel@suse.com>
+Subject: Re: [dm-devel] [PATCH v5 3/3] dm mpath: add
+ CONFIG_DM_MULTIPATH_SG_IO - failover for SG_IO
+From:   Martin Wilck <mwilck@suse.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org,
+        Daniel Wagner <dwagner@suse.de>, emilne@redhat.com,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        nkoenig@redhat.com, Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        Alasdair G Kergon <agk@redhat.com>
+Date:   Fri, 02 Jul 2021 16:21:01 +0200
+In-Reply-To: <20210701113442.GA10793@lst.de>
+References: <20210628151558.2289-1-mwilck@suse.com>
+         <20210628151558.2289-4-mwilck@suse.com> <20210701075629.GA25768@lst.de>
+         <de1e3dcbd26a4c680b27b557ea5384ba40fc7575.camel@suse.com>
+         <20210701113442.GA10793@lst.de>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.40.2 
 MIME-Version: 1.0
-In-Reply-To: <b1d39dfbe1398192ef1181fc98d6b7e6bedeb649.camel@puri.sm>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/2/21 1:04 AM, Martin Kepplinger wrote:
-> Am Donnerstag, dem 01.07.2021 um 15:49 +0100 schrieb Christoph Hellwig:
->> On Wed, Jun 30, 2021 at 10:44:52AM +0200, Martin Kepplinger wrote:
->>> +       struct scsi_disk *sdkp = dev_get_drvdata(dev);
->>> +       struct scsi_device *sdp = sdkp->device;
->>> +       int timeout, res;
->>> +
->>> +       timeout = sdp->request_queue->rq_timeout *
->>> SD_FLUSH_TIMEOUT_MULTIPLIER;
->>
->> Is REQUEST SENSE reqlly a so slow operation on these devices that
->> we need to override the timeout?
+On Do, 2021-07-01 at 13:34 +0200, Christoph Hellwig wrote:
+> On Thu, Jul 01, 2021 at 12:35:53PM +0200, Martin Wilck wrote:
+> > I respectfully disagree. Users of dm-multipath devices expect that
+> > IO
+> > succeeds as long as there's at least one healthy path. This is a
+> > fundamental property of multipath devices. Whether IO is sent
+> > "normally" or via SG_IO doesn't make a difference wrt this
+> > expectation.
 > 
-> using SD_TIMEOUT works equally fine for me. Is that what you'd rather
-> like to see?
-> 
-> Bart, is SD_TIMEOUT equally ok for you? If so, I'll resend with your
-> reviewed-by.
+> If you have those (pretty reasonable) expections don't use SG_IO.
+> That is what the regular read/write path is for.� SG_IO gives you
+> raw access to the SCSI logic unit, and you get to keep the pieces
+> if anything goes wrong.
 
-Hi Martin,
+With this logic, if some paths are down, SG_IO commands on multipath
+devices yield random results. On one path a command would fail, and on
+another it would succeed. User space has no way to control or even see
+what path is being used. That's a very fragile user space API, on the
+fringe of being useless IMO.
 
-I prefer sdp->request_queue->rq_timeout instead of SD_TIMEOUT since the 
-former is configurable via sysfs.
+If user space is interested in the error handling semantics you
+describe, it can run SG_IO on individual SCSI devices any time. With
+the change I am proposing, nothing is lost for user space. If user
+space decides to do SG_IO on a multipath device, it has a different
+expectation, which my patch set implements. IMO we should strive to
+match the semantics for ioctls on natively multipathed NVMe namespaces.
 
-Thanks,
+Regards
+Martin
 
-Bart.
+
