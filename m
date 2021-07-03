@@ -2,116 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 049A5C07E95
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 22:47:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C795FC07E95
+	for <linux-scsi@archiver.kernel.org>; Sat,  3 Jul 2021 02:32:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D3B9461416
-	for <linux-scsi@archiver.kernel.org>; Fri,  2 Jul 2021 22:47:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9ABD961424
+	for <linux-scsi@archiver.kernel.org>; Sat,  3 Jul 2021 02:32:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230056AbhGBWtn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 2 Jul 2021 18:49:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39140 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234201AbhGBWth (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2021 18:49:37 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60DA3C061764
-        for <linux-scsi@vger.kernel.org>; Fri,  2 Jul 2021 15:47:04 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id d25so15375625lji.7
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Jul 2021 15:47:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linux-foundation.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=i96gpHGmTqGyzL1pRnwYPnBFinTz4+ocAC93WptRIao=;
-        b=hp1aHE8ygjAGHlmTsQeB3xMJAGF+yLnZeuFihIhiI5Bc0Bb1qlcnAU2lE6/h8MXc4Z
-         Z+9940FafwWiyXs2NhVd9WoxXmtmwvH4iCtbYSH9fV5b5cfh27i3NRTYi+e+wUuHVdLV
-         vJsVZLg1nx9Z20Qatfa5yOWxl41UD9//VJcXg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=i96gpHGmTqGyzL1pRnwYPnBFinTz4+ocAC93WptRIao=;
-        b=TTkmttsIiYz/OMXUxk2tarTIzv6I2XVtTH3h7fjd+7aZ0xX8G5n8Q1oXqINUnLog9H
-         I09Ecxf6pKeobNRaoGouHC3HkZn388fePDm7+832DuERd7xCr97VfZGi9+XDkHt2Qz3v
-         zw9busqD9PUBDzTP3xuga3C7GeHOcADfYIFmDwIo9Yi+YgbhqxMrXKE41E0bvdLxYHso
-         329HT1zzI7vUg7m1ltWdphevRk8d/GZlNgGy+c/M5A1wdl4v2IBj9LMZ/Qfk687Hjk9I
-         /tB0PDXvsoByTT/SaOI7Xtm1d0MBgImOgdAm60ds1C+6SMcjuNOJq2MI3hczoVGGxytV
-         zlbw==
-X-Gm-Message-State: AOAM532v8fCIeS4HDpriP9VNuki1eMmhTDR5VEhFf9f0/dxZsFV1kO1z
-        41aUMUgl8Mi40nwJlfCIejEUYBS87BCm8zPsZvk=
-X-Google-Smtp-Source: ABdhPJyOEfGu7uqN07J70o5BRi+F8GaVQn4r1ttA3MgaXYZJSwuHgubIbTCa8CUN2S1YabanZ1fdtQ==
-X-Received: by 2002:a05:651c:2042:: with SMTP id t2mr1245075ljo.439.1625266022504;
-        Fri, 02 Jul 2021 15:47:02 -0700 (PDT)
-Received: from mail-lj1-f171.google.com (mail-lj1-f171.google.com. [209.85.208.171])
-        by smtp.gmail.com with ESMTPSA id t18sm392762lfk.54.2021.07.02.15.47.01
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 02 Jul 2021 15:47:02 -0700 (PDT)
-Received: by mail-lj1-f171.google.com with SMTP id x20so15417845ljc.5
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Jul 2021 15:47:01 -0700 (PDT)
-X-Received: by 2002:a2e:b553:: with SMTP id a19mr1260817ljn.507.1625266021672;
- Fri, 02 Jul 2021 15:47:01 -0700 (PDT)
+        id S230127AbhGCCem (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 2 Jul 2021 22:34:42 -0400
+Received: from szxga08-in.huawei.com ([45.249.212.255]:10240 "EHLO
+        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230051AbhGCCem (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Jul 2021 22:34:42 -0400
+Received: from dggeml756-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4GGwnJ0mdRz1BVMM;
+        Sat,  3 Jul 2021 10:26:44 +0800 (CST)
+Received: from [10.174.179.14] (10.174.179.14) by
+ dggeml756-chm.china.huawei.com (10.1.199.158) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Sat, 3 Jul 2021 10:32:06 +0800
+Subject: Re: [PATCH 02/21] libsas: Only abort commands from inside the error
+ handler
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
+        Ming Lei <ming.lei@redhat.com>,
+        John Garry <john.garry@huawei.com>,
+        Yves-Alexis Perez <corsac@debian.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Yufen Yu <yuyufen@huawei.com>
+References: <20210701211224.17070-1-bvanassche@acm.org>
+ <20210701211224.17070-3-bvanassche@acm.org>
+From:   Jason Yan <yanaijie@huawei.com>
+Message-ID: <779caa02-6c9f-183b-2f3d-2b7dc5c877ef@huawei.com>
+Date:   Sat, 3 Jul 2021 10:32:06 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
+ Thunderbird/68.4.2
 MIME-Version: 1.0
-References: <e118d4b2fb924156f791564483336e7125276c47.camel@HansenPartnership.com>
-In-Reply-To: <e118d4b2fb924156f791564483336e7125276c47.camel@HansenPartnership.com>
-From:   Linus Torvalds <torvalds@linux-foundation.org>
-Date:   Fri, 2 Jul 2021 15:46:45 -0700
-X-Gmail-Original-Message-ID: <CAHk-=wiErhCUj8tGjcZS9mA7Efnv4JO1aMg06GfSqL8nacG4xA@mail.gmail.com>
-Message-ID: <CAHk-=wiErhCUj8tGjcZS9mA7Efnv4JO1aMg06GfSqL8nacG4xA@mail.gmail.com>
-Subject: Re: [GIT PULL] first round of SCSI updates for the 5.13+ merge window
-To:     James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20210701211224.17070-3-bvanassche@acm.org>
+Content-Type: text/plain; charset="gbk"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.174.179.14]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggeml756-chm.china.huawei.com (10.1.199.158)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Jul 2, 2021 at 1:11 AM James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
->
-> This series consists of the usual driver updates (ufs, ibmvfc,
-> megaraid_sas, lpfc, elx, mpi3mr, qedi, iscsi, storvsc, mpt3sas) with
-> elx and mpi3mr being new drivers.  The major core change is a rework to
-> drop the status byte handling macros and the old bit shifted
-> definitions and the rest of the updates are minor fixes.
+Hi Bart,
 
-Grr. I noticed this too late.
+ÔÚ 2021/7/2 5:12, Bart Van Assche Ð´µÀ:
+> According to the information I found in patch commit descriptions, for SATA
+> devices commands must be aborted from inside the libsas error handler.
+> Check host->ehandler to determine whether or not running inside the error
+> handler since host->host_eh_scheduled != 0 indicates that the SCSI error
+> handler has been scheduled but does not mean that is already running. This
+> patch restores code that was removed by commit 909657615d9b ("scsi: libsas:
+> allow async aborts").
+> 
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: John Garry <john.garry@huawei.com>
+> Cc: Yves-Alexis Perez <corsac@debian.org>
+> Fixes: c9f926000fe3 ("scsi: libsas: Disable asynchronous aborts for SATA devices")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/libsas/sas_scsi_host.c | 5 ++++-
+>   include/scsi/libsas.h               | 1 +
+>   2 files changed, 5 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+> index ee44a0d7730b..95e4d58ab9d4 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -462,6 +462,7 @@ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+>   	int res = TMF_RESP_FUNC_FAILED;
+>   	struct sas_task *task = TO_SAS_TASK(cmd);
+>   	struct Scsi_Host *host = cmd->device->host;
+> +	struct sas_ha_struct *ha = SHOST_TO_SAS_HA(host);
+>   	struct domain_device *dev = cmd_to_domain_dev(cmd);
+>   	struct sas_internal *i = to_sas_internal(host->transportt);
+>   	unsigned long flags;
+> @@ -471,7 +472,7 @@ int sas_eh_abort_handler(struct scsi_cmnd *cmd)
+>   
+>   	spin_lock_irqsave(host->host_lock, flags);
+>   	/* We cannot do async aborts for SATA devices */
+> -	if (dev_is_sata(dev) && !host->host_eh_scheduled) {
+> +	if (dev_is_sata(dev) && !ha->eh_running) {
+>   		spin_unlock_irqrestore(host->host_lock, flags);
+>   		return FAILED;
+>   	}
 
-Why do we have that
 
-        default y
+No idea why sas_eh_abort_handler() is only used by isci. The other
+libsas drivers just let the error handler do the aborting work. So my
+question is can the isci driver delete this callback and let the error
+handler do this? If so, then we cann remove this function directly.
 
-for "config FC_APPID".
+Thanks,
+Jason
 
-That makes absolutely zero sense to me. Not only don't we do "default
-y" for new features _anyway_, but something like this is certainly
-much too specialized to warrant it.
 
-To make matters worse, it actually asks for this stupid thing *TWICE*.
-Even if you say no the first time, it will then later on ask about
-BLK_CGROUP_FC_APPID, and if you make the mistake to say 'y' on that
-second try to push this feature, that will then do a "select FC_APPID"
-to turn it on.
-
-So honestly, it feels like
-
- (a) the "default y" is just completely wrong in all ways
-
- (b) this "config FC_APPID" shouldn't be a question AT ALL
-
-IOW, it should likely purely be enabled by that 'select' for people
-who decide they want BLK_CGROUP_FC_APPID (which properly defaults to
-'n').
-
-Pls advise. Or just send me a patch to fix it. Because the current
-situation is most definitely not ok.
-
-            Linus
+> @@ -731,6 +732,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
+>   	tries++;
+>   	retry = true;
+>   	spin_lock_irq(shost->host_lock);
+> +	ha->eh_running = true;
+>   	list_splice_init(&shost->eh_cmd_q, &eh_work_q);
+>   	spin_unlock_irq(shost->host_lock);
+>   
+> @@ -767,6 +769,7 @@ void sas_scsi_recover_host(struct Scsi_Host *shost)
+>   
+>   	/* check if any new eh work was scheduled during the last run */
+>   	spin_lock_irq(&ha->lock);
+> +	ha->eh_running = false;
+>   	if (ha->eh_active == 0) {
+>   		shost->host_eh_scheduled = 0;
+>   		retry = false;
+> diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+> index 6fe125a71b60..4a8fb324140e 100644
+> --- a/include/scsi/libsas.h
+> +++ b/include/scsi/libsas.h
+> @@ -364,6 +364,7 @@ struct sas_ha_struct {
+>   	struct mutex	  drain_mutex;
+>   	unsigned long	  state;
+>   	spinlock_t	  lock;
+> +	bool		  eh_running;
+>   	int		  eh_active;
+>   	wait_queue_head_t eh_wait_q;
+>   	struct list_head  eh_dev_q;
+> .
+> 
