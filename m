@@ -2,120 +2,63 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8FC2C07E95
-	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jul 2021 07:54:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B515FC07E95
+	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jul 2021 08:45:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D29C461090
-	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jul 2021 07:54:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 899B66145D
+	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jul 2021 08:45:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229743AbhGDH51 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 4 Jul 2021 03:57:27 -0400
-Received: from comms.puri.sm ([159.203.221.185]:34052 "EHLO comms.puri.sm"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229549AbhGDH50 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 4 Jul 2021 03:57:26 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id 13087DF30C;
-        Sun,  4 Jul 2021 00:54:22 -0700 (PDT)
-Received: from comms.puri.sm ([127.0.0.1])
-        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id zPZxBJM7Ax6i; Sun,  4 Jul 2021 00:54:21 -0700 (PDT)
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
-To:     martin.kepplinger@puri.sm, bvanassche@acm.org
-Cc:     hch@infradead.org, jejb@linux.ibm.com, kernel@puri.sm,
-        linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        stern@rowland.harvard.edu
-Subject: [PATCH v6 2/3] scsi: sd: send REQUEST SENSE for BLIST_MEDIA_CHANGE devices in runtime_resume()
-Date:   Sun,  4 Jul 2021 09:54:02 +0200
-Message-Id: <20210704075403.147114-3-martin.kepplinger@puri.sm>
-In-Reply-To: <20210704075403.147114-1-martin.kepplinger@puri.sm>
-References: <20210704075403.147114-1-martin.kepplinger@puri.sm>
-Content-Transfer-Encoding: 8bit
+        id S229502AbhGDIsa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 4 Jul 2021 04:48:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55792 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229492AbhGDIsa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jul 2021 04:48:30 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C252C061762
+        for <linux-scsi@vger.kernel.org>; Sun,  4 Jul 2021 01:45:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=7PP6p0F8q9jYwNxRZoT6R7IPAy+bbP8SEbqlPdThlCk=; b=dAn3teqSnfZcXKgHx5k9e8ZMFS
+        KoJG6pjSt0x7HK/Oly0pvwvySdJ1rOkDkEA/WcjzTEgtHDfztPy2n1pnkMQ3cabVJl/Mrcdk8E41R
+        VTsciOJ3EKBVYlc0Omj10ZpuKcJlM35676fQe16SJDc78YHQqWobyDuDnTCsgYTrgOHA1fyidouRg
+        QVC32ihFJv8XKdPCzjnpCnAqyx5sATKeOLhTz50ewq8u7K9lXvdjjUOrk71KndX3vrUFajhOCzzck
+        Z9fY45rAovyYF1cdDApB/P397lzqdaRTPnTQjrPJVdP5OGjot6ucV0koUrAM+cTcshV5M4nUpmVPC
+        qvCByW9Q==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1lzxkS-009B6f-Gh; Sun, 04 Jul 2021 08:45:23 +0000
+Date:   Sun, 4 Jul 2021 09:45:08 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, torvalds@linux-foundation.org,
+        muneendra.kumar@broadcom.com
+Subject: Re: [PATCH] scsi: blkcg: Fix application ID config options
+Message-ID: <YOF1FBdMd65S6L57@infradead.org>
+References: <20210703155833.3267-1-martin.petersen@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210703155833.3267-1-martin.petersen@oracle.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For SD cardreader devices that have the BLIST_MEDIA_CHANGE flag set,
-a MEDIA CHANGE unit attention is received after resuming from runtime
-suspend. Send a REQUEST SENSE to avoid that.
+On Sat, Jul 03, 2021 at 11:58:33AM -0400, Martin K. Petersen wrote:
+> -	depends on BLK_CGROUP=y
+> +	depends on BLK_CGROUP=y && NVME_FC
 
-The "downside" is that for these devices we now rely on users not to
-really change the medium (SD card) *during* a runtime suspend/resume
-cycle, i.e. when not unmounting.
+BLK_CGROUP is a bool, so I think this can simply be:
 
-To enable runtime PM for an SD cardreader (device number 0:0:0:0), do:
+	depends on BLK_CGROUP && NVME_FC
 
-echo 0 > /sys/module/block/parameters/events_dfl_poll_msecs
-echo 1000 > /sys/bus/scsi/devices/0:0:0:0/power/autosuspend_delay_ms
-echo auto > /sys/bus/scsi/devices/0:0:0:0/power/control
+Otherwise this looks much better:
 
-Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/sd.c | 23 ++++++++++++++++++++++-
- 1 file changed, 22 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 6d2d63629a90..34554224b89a 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -63,6 +63,7 @@
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_dbg.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_devinfo.h>
- #include <scsi/scsi_driver.h>
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_host.h>
-@@ -114,6 +115,7 @@ static void sd_shutdown(struct device *);
- static int sd_suspend_system(struct device *);
- static int sd_suspend_runtime(struct device *);
- static int sd_resume(struct device *);
-+static int sd_resume_runtime(struct device *);
- static void sd_rescan(struct device *);
- static blk_status_t sd_init_command(struct scsi_cmnd *SCpnt);
- static void sd_uninit_command(struct scsi_cmnd *SCpnt);
-@@ -608,7 +610,7 @@ static const struct dev_pm_ops sd_pm_ops = {
- 	.poweroff		= sd_suspend_system,
- 	.restore		= sd_resume,
- 	.runtime_suspend	= sd_suspend_runtime,
--	.runtime_resume		= sd_resume,
-+	.runtime_resume		= sd_resume_runtime,
- };
- 
- static struct scsi_driver sd_template = {
-@@ -3720,6 +3722,25 @@ static int sd_resume(struct device *dev)
- 	return ret;
- }
- 
-+static int sd_resume_runtime(struct device *dev)
-+{
-+	struct scsi_disk *sdkp = dev_get_drvdata(dev);
-+	struct scsi_device *sdp = sdkp->device;
-+
-+	if (sdp->sdev_bflags & BLIST_MEDIA_CHANGE) {
-+		/* clear the devices' sense data */
-+		static const u8 cmd[10] = { REQUEST_SENSE };
-+
-+		if (scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL,
-+				 NULL, sdp->request_queue->rq_timeout, 1, 0,
-+				 RQF_PM, NULL))
-+			sd_printk(KERN_NOTICE, sdkp,
-+				  "Failed to clear sense data\n");
-+	}
-+
-+	return sd_resume(dev);
-+}
-+
- /**
-  *	init_sd - entry point for this driver (both when built in or when
-  *	a module).
--- 
-2.30.2
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
