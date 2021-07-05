@@ -2,226 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_NO_TEXT,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F475C07E99
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 14:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB8B3C07E99
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 14:54:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 131E961946
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 14:54:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B161C61955
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 14:54:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231572AbhGEO5b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Jul 2021 10:57:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58670 "EHLO
+        id S231582AbhGEO5e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Jul 2021 10:57:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58682 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230504AbhGEO5b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 10:57:31 -0400
-Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5C837C061574
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Jul 2021 07:54:54 -0700 (PDT)
-Received: by mail-pf1-x42a.google.com with SMTP id y2so3741153pff.11
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jul 2021 07:54:54 -0700 (PDT)
+        with ESMTP id S230504AbhGEO5e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 10:57:34 -0400
+Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24338C061574
+        for <linux-scsi@vger.kernel.org>; Mon,  5 Jul 2021 07:54:57 -0700 (PDT)
+Received: by mail-pl1-x633.google.com with SMTP id o4so7314697plg.1
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Jul 2021 07:54:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version;
-        bh=ITrlDOqHObdtThsykOyImIWdM8vJK/9uUKBUKUm0pE4=;
-        b=NpzX3wmgUjV4l1QlFrrQDtPcHFrtmyxN7sXGOUojamBG+3lhL2H8z6IepMVRPlRhOz
-         EHgEytzBXtW38pTiydT4dmIMalzEocwy0JiuBifOi7NIWqbJpvC/dlI7e3wGKF71WF/o
-         iY7KqcWtjcrlFX+SmJK7CfuzXdcBMTfGiYf7E=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version;
+        bh=m1a9XtHKaYNJYrw3A0wYqMG07LaJGRy9cN3eFJvC298=;
+        b=J/+T7s5EHpiMaQO8SoP2LSBLIyOEhFK2dBisdZVtr7wC7h0ICHCsiIvT4Wkoco/b34
+         0uYOQC7eVYWBYZDx3IGNJ/SBEaEDRIRCxrCgugbju7pfGfxwqIAaFe1d9jrF53Q3MKm9
+         RSmwLjWgUBRtgktNQvJVfSPzTFPmt+K71/Wkk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=ITrlDOqHObdtThsykOyImIWdM8vJK/9uUKBUKUm0pE4=;
-        b=trGKIKgl/0s9Gmdjv8Ie3V8MEaIeyrk7JTgxMCWr94TuDVwQPsvr1u7Yq0gkgwAtqf
-         Dhn2uSH4THAFmM88VfCRpF/ed/iztDtykcn9r1PxuVOEKPVAYpBO80lQedBBOPi35Rdm
-         zi9TamFwSx4L9Qhj+OzNCyzy+x7nlQ3HnLpZDxuyETsAOWNrStl5FZlFz70lgdQ3zWUg
-         fOycEJpA8EBVrjmxVHATQHOEflMUf4AcFeQ6Rhr412pizaemFTqFX10KF21CmlqE66PW
-         9rIzes49dGNCB3GEQP+YBn4BZigt2gpIRtoGrVWcimLqaDUalbyQSnDrd4sQbpyByGTa
-         vAKQ==
-X-Gm-Message-State: AOAM532SjVW9C3PJwEWC2mu0TMi4zLfzSbSZv529zjV9hVYl+7bl/eeL
-        QxVGYU34IWHymvvFuFwE1z+5+22Mr6hd1Yco/W7eQwZaYGUJx04kysffj5Faj+fTOMoEPmKoYaw
-        0QtnkiPYE68Zb61wXK7GVQdKZ6Q+rM5X5xv8XP8ezcD0zDrd+9RCAFv5pluCZwIeyBTB2+bRIWo
-        nAn34MkNvhXh1XyA==
-X-Google-Smtp-Source: ABdhPJzCGktl5se7A3Z6JwR+1xqEcTubxDqLodqghIHqJWsYdqr+4SG8dKiHDPMfP1eQ0hFoyexE3A==
-X-Received: by 2002:a63:8948:: with SMTP id v69mr13949430pgd.99.1625496893269;
-        Mon, 05 Jul 2021 07:54:53 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version;
+        bh=m1a9XtHKaYNJYrw3A0wYqMG07LaJGRy9cN3eFJvC298=;
+        b=UsJ3uQPP3XwBfZmiQRaTxr5kR0vX1e/u+sSvgVQbJBFajJQK1VjhDEubLpEIeKEI7r
+         I6yneuzK8XvDmfAgubnpt5YerCCKFHDge6nCsoC2fzjjsDZb0s9+ZMVXDnDYEhedUy3c
+         doeR9MpOns1zeIjRaaFohEtQnXGTBWxQW+TefQR2yfOBbV86bSmBGhkkgGADSgKl5CmM
+         /3C01HiJuDSI9VxgQrN992Ff7J9F3X5795PIblCQeQ+m/nZCHpiOxkYxviGN7WOrFYB9
+         18VK4lALltfLFeEfyzC6VxsSmMwfN6ECN3lrf8gGXtZjDDAvnaYTjcE94QuVKIF77iwc
+         Pa4A==
+X-Gm-Message-State: AOAM533Sdh9A4UjVPt/z9pRsnekDRRgkdVJFH6Nss76zty/vghSDrk9n
+        KaRJFSdTduyEf3l/6cgnSsamAKwO0ETrvHj5yV+OkUbmgskK4g4pz8qI9rOiCIfneLgtAHTGRPB
+        hoLnw7+1UUjbBJ3VFiFNKx9gETAm/1nNOU7jRG3ZVdHH/QAhsGxwSpUGMiuC9xA0MMwx3g0zZEt
+        uFtwffovIIhat4Ww==
+X-Google-Smtp-Source: ABdhPJw6UtxdcoQ/3H7PDfeF98lzfoGh36KRayKO1v1lI4reA+k2/lZWWGszA8KxO73vZgHmFZN54w==
+X-Received: by 2002:a17:90a:d48f:: with SMTP id s15mr15714989pju.161.1625496895999;
+        Mon, 05 Jul 2021 07:54:55 -0700 (PDT)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id g9sm12215162pfj.49.2021.07.05.07.54.50
+        by smtp.gmail.com with ESMTPSA id g9sm12215162pfj.49.2021.07.05.07.54.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jul 2021 07:54:52 -0700 (PDT)
+        Mon, 05 Jul 2021 07:54:55 -0700 (PDT)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     thenzl@redhat.com, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpt3sas: Move IOC state to Ready state during shutdown
-Date:   Mon,  5 Jul 2021 20:29:50 +0530
-Message-Id: <20210705145951.32258-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Bump driver version to 38.100.00.00
+Date:   Mon,  5 Jul 2021 20:29:51 +0530
+Message-Id: <20210705145951.32258-2-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20210705145951.32258-1-sreekanth.reddy@broadcom.com>
+References: <20210705145951.32258-1-sreekanth.reddy@broadcom.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000f18ae105c6617cc9"
+        boundary="00000000000018828f05c6617db7"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000f18ae105c6617cc9
+--00000000000018828f05c6617db7
 Content-Transfer-Encoding: 8bit
 
-During shutdown just move the IOC state to Ready state
-by issuing MUR. No need to free any IOC memory pools.
+Bump driver version to 38.100.00.00
 
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 32 ++++++++++++++--------------
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  4 ++++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |  7 +++++-
- 3 files changed, 26 insertions(+), 17 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index c39955239d1c..19b1c0cf5f2a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2983,13 +2983,13 @@ _base_check_enable_msix(struct MPT3SAS_ADAPTER *ioc)
- }
- 
- /**
-- * _base_free_irq - free irq
-+ * mpt3sas_base_free_irq - free irq
-  * @ioc: per adapter object
-  *
-  * Freeing respective reply_queue from the list.
-  */
--static void
--_base_free_irq(struct MPT3SAS_ADAPTER *ioc)
-+void
-+mpt3sas_base_free_irq(struct MPT3SAS_ADAPTER *ioc)
- {
- 	struct adapter_reply_queue *reply_q, *next;
- 
-@@ -3191,12 +3191,12 @@ _base_check_and_enable_high_iops_queues(struct MPT3SAS_ADAPTER *ioc,
- }
- 
- /**
-- * _base_disable_msix - disables msix
-+ * mpt3sas_base_disable_msix - disables msix
-  * @ioc: per adapter object
-  *
-  */
--static void
--_base_disable_msix(struct MPT3SAS_ADAPTER *ioc)
-+void
-+mpt3sas_base_disable_msix(struct MPT3SAS_ADAPTER *ioc)
- {
- 	if (!ioc->msix_enable)
- 		return;
-@@ -3304,8 +3304,8 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
- 	for (i = 0; i < ioc->reply_queue_count; i++) {
- 		r = _base_request_irq(ioc, i);
- 		if (r) {
--			_base_free_irq(ioc);
--			_base_disable_msix(ioc);
-+			mpt3sas_base_free_irq(ioc);
-+			mpt3sas_base_disable_msix(ioc);
- 			goto try_ioapic;
- 		}
- 	}
-@@ -3342,8 +3342,8 @@ mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER *ioc)
- 
- 	dexitprintk(ioc, ioc_info(ioc, "%s\n", __func__));
- 
--	_base_free_irq(ioc);
--	_base_disable_msix(ioc);
-+	mpt3sas_base_free_irq(ioc);
-+	mpt3sas_base_disable_msix(ioc);
- 
- 	kfree(ioc->replyPostRegisterIndex);
- 	ioc->replyPostRegisterIndex = NULL;
-@@ -7613,14 +7613,14 @@ _base_diag_reset(struct MPT3SAS_ADAPTER *ioc)
- }
- 
- /**
-- * _base_make_ioc_ready - put controller in READY state
-+ * mpt3sas_base_make_ioc_ready - put controller in READY state
-  * @ioc: per adapter object
-  * @type: FORCE_BIG_HAMMER or SOFT_RESET
-  *
-  * Return: 0 for success, non-zero for failure.
-  */
--static int
--_base_make_ioc_ready(struct MPT3SAS_ADAPTER *ioc, enum reset_type type)
-+int
-+mpt3sas_base_make_ioc_ready(struct MPT3SAS_ADAPTER *ioc, enum reset_type type)
- {
- 	u32 ioc_state;
- 	int rc;
-@@ -7897,7 +7897,7 @@ mpt3sas_base_free_resources(struct MPT3SAS_ADAPTER *ioc)
- 	if (ioc->chip_phys && ioc->chip) {
- 		mpt3sas_base_mask_interrupts(ioc);
- 		ioc->shost_recovery = 1;
--		_base_make_ioc_ready(ioc, SOFT_RESET);
-+		mpt3sas_base_make_ioc_ready(ioc, SOFT_RESET);
- 		ioc->shost_recovery = 0;
- 	}
- 
-@@ -8017,7 +8017,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	ioc->build_sg_mpi = &_base_build_sg;
- 	ioc->build_zero_len_sge_mpi = &_base_build_zero_len_sge;
- 
--	r = _base_make_ioc_ready(ioc, SOFT_RESET);
-+	r = mpt3sas_base_make_ioc_ready(ioc, SOFT_RESET);
- 	if (r)
- 		goto out_free_resources;
- 
-@@ -8471,7 +8471,7 @@ mpt3sas_base_hard_reset_handler(struct MPT3SAS_ADAPTER *ioc,
- 	_base_pre_reset_handler(ioc);
- 	mpt3sas_wait_for_commands_to_complete(ioc);
- 	mpt3sas_base_mask_interrupts(ioc);
--	r = _base_make_ioc_ready(ioc, type);
-+	r = mpt3sas_base_make_ioc_ready(ioc, type);
- 	if (r)
- 		goto out;
- 	_base_clear_outstanding_commands(ioc);
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index d4834c8ee9c0..0c6c3df0038d 100644
+index 0c6c3df0038d..ec0be3e80561 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -1730,6 +1730,10 @@ do {	ioc_err(ioc, "In func: %s\n", __func__); \
- 	status, mpi_request, sz); } while (0)
- 
- int mpt3sas_wait_for_ioc(struct MPT3SAS_ADAPTER *ioc, int wait_count);
-+int
-+mpt3sas_base_make_ioc_ready(struct MPT3SAS_ADAPTER *ioc, enum reset_type type);
-+void mpt3sas_base_free_irq(struct MPT3SAS_ADAPTER *ioc);
-+void mpt3sas_base_disable_msix(struct MPT3SAS_ADAPTER *ioc);
- 
- /* scsih shared API */
- struct scsi_cmnd *mpt3sas_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc,
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 866d118f7931..8e64a6f14542 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -11295,7 +11295,12 @@ scsih_shutdown(struct pci_dev *pdev)
- 
- 	_scsih_ir_shutdown(ioc);
- 	_scsih_nvme_shutdown(ioc);
--	mpt3sas_base_detach(ioc);
-+	mpt3sas_base_mask_interrupts(ioc);
-+	ioc->shost_recovery = 1;
-+	mpt3sas_base_make_ioc_ready(ioc, SOFT_RESET);
-+	ioc->shost_recovery = 0;
-+	mpt3sas_base_free_irq(ioc);
-+	mpt3sas_base_disable_msix(ioc);
- }
- 
+@@ -77,9 +77,9 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"37.101.00.00"
+-#define MPT3SAS_MAJOR_VERSION		37
+-#define MPT3SAS_MINOR_VERSION		101
++#define MPT3SAS_DRIVER_VERSION		"38.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		38
++#define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
  
 -- 
 2.27.0
 
 
---000000000000f18ae105c6617cc9
+--00000000000018828f05c6617db7
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -292,13 +172,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIDweiFqOveutVpjfg0u3
-vGSD9hFEox2+n2Bhm3XqDpdEMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMDcwNTE0NTQ1M1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFJMntUdm2jCy26FVW6b
+9Srzwru8SpvzrMm3H/5lavKrMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMDcwNTE0NTQ1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQAJLEvaLJLTNPpCxh0KVnTZqDNR/tX26FmVJBIb
-37dGzHWcZipJpzE/zuVDaWc+2kQtRASgsDhXuieUUNBAhm+BmcMC3Ak20utuJDkbKx0yWhpg9ORw
-1+uyxBGGQ8HveCKKPFo4oF1fk/UovUkvKh5NjZrUPTfkXIo3UrG7L6IvhieaDyonausmVPUirIWa
-8HTFEUFDtoLdDMLDtDZI0GiUeOQojT4NutngXqUf1Fg8PoFOvljVXN8fTioSeziThBrvnw7TWbSj
-+NthOl1fg/b5iKLNw86AR+nA4cSowAN2X/10dmXoiqXLHoZm6qXW3Hc4E1GZtD1Z8cPdG8gHPu4x
---000000000000f18ae105c6617cc9--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA5yGLPhs40agFLbVSDflsRS1sJHhrZ00UGJiQc
+y1w9UCf26DuTjhjUHStUVHGsWO10Q6I4wQ/LHNZ3yal2L+98B5HK8X/bNImkqdc60sKSzLrpHp00
+SfTLdHO7WMmjg0sHDvk2T5C1tPaIL8xZ2sOI5SToIRJb8+Evo1iZphv1SPGMdPjBNHnd3RZqUFfJ
+i5ePL5EWpKBRlsFaQUjUF59YeolctAHNRePK4nae5amT2hz2EoSCy4I6bWrhXF9FrdD1K3he4EGC
+phFnIfcuPDA90Qp8BjjnBTPbHe4tRHtye11Zr72n6BePB11YUEr6MKiKm0Ryd83aapMSuZXNxu5m
+--00000000000018828f05c6617db7--
