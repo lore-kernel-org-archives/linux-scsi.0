@@ -2,139 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17A96C07E99
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 13:20:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7138FC07E99
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 13:48:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E81686141C
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 13:20:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BE7B6162A
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 13:48:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231172AbhGENX0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Jul 2021 09:23:26 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:45228 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230188AbhGENXZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 09:23:25 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        id S231433AbhGENvC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Jul 2021 09:51:02 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:60320 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231332AbhGENut (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 09:50:49 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 0EA7322A26;
-        Mon,  5 Jul 2021 13:20:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1625491248; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 03AC41FE7C;
+        Mon,  5 Jul 2021 13:48:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1625492892; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=mIVly2Qrkd/pklMXlBaJB7oFJ0jfhqeSXbqUG9Aen4c=;
-        b=UeYCDtdU9AS+n1az1+oqhhff6kvy+gC8Tr3y3ZHqnrq1wgQiW8l21+DhO+OnD5TG6H8rll
-        LOsjC3rlJ4qpZtU8UpLaYgH97UZzlcZmNexLOLWng5r+uqS2RBsvzQPmoA3I5ukd9gSqqK
-        eTZbb5dWzErbctXzWkY1sAAvwC1Ox1A=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1625491248;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=mIVly2Qrkd/pklMXlBaJB7oFJ0jfhqeSXbqUG9Aen4c=;
-        b=K2Uap0+6dI/xjlR2Zk0KEwGqK66SkWRqIVgJY+LFyP5fQG6m6FIXIrLJAHz+vKPGEpC/h9
-        YNgana9TW/DZu8CQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        bh=B7c4IiH2aa4P20xqWaw5e/T+wJYbnW/4u5C/hJC+kBk=;
+        b=EDeU8Zpz/vEp2RScFVaVhyOvVu+BPXm1C6oEBSEPeQCXms8NCEWDYdDw6FrrMEGL5v2sGU
+        1GFOp/hNtOloGoYdQGxlOKTEdlFTkr+QOIbnBeH3/54mj2sjaxBPOacW9DBYMi/JnF6on3
+        AD/My80J4l6zWVZ9tiyCCnhoZ5jfq1g=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id C5E9113838;
-        Mon,  5 Jul 2021 13:20:47 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 830F313A61;
+        Mon,  5 Jul 2021 13:48:11 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id SNS/Li8H42DSLQAAGKfGzw
-        (envelope-from <hare@suse.de>); Mon, 05 Jul 2021 13:20:47 +0000
-Subject: Re: SCSI layer RPM deadlock debug suggestion
-To:     Alan Stern <stern@rowland.harvard.edu>,
-        John Garry <john.garry@huawei.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.com>,
-        chenxiang <chenxiang66@hisilicon.com>,
-        Xiejianqin <xiejianqin@hisilicon.com>
-References: <9e90d035-fac1-432a-1d34-de5805d8f799@huawei.com>
- <20210702203142.GA49307@rowland.harvard.edu>
- <ec4a3038-34b0-084f-a1bd-039827465dd1@acm.org>
- <1081c3ed-0762-58c7-8b99-8b3721c710bd@huawei.com>
- <20210705131712.GB116379@rowland.harvard.edu>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <a5b9109c-cad6-0057-29c9-8974fda3347c@suse.de>
-Date:   Mon, 5 Jul 2021 15:20:46 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id Ah7JHZsN42D0AwAAMHmgww
+        (envelope-from <mwilck@suse.com>); Mon, 05 Jul 2021 13:48:11 +0000
+Message-ID: <a088aa5c8459c001403bda9384b38213f8232fc6.camel@suse.com>
+Subject: Re: [dm-devel] [PATCH v5 3/3] dm mpath: add
+ CONFIG_DM_MULTIPATH_SG_IO - failover for SG_IO
+From:   Martin Wilck <mwilck@suse.com>
+To:     Hannes Reinecke <hare@suse.de>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     linux-scsi@vger.kernel.org, Daniel Wagner <dwagner@suse.de>,
+        Mike Snitzer <snitzer@redhat.com>, emilne@redhat.com,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        nkoenig@redhat.com, Bart Van Assche <Bart.VanAssche@sandisk.com>,
+        Alasdair G Kergon <agk@redhat.com>
+Date:   Mon, 05 Jul 2021 15:48:10 +0200
+In-Reply-To: <5909eff8-82fb-039e-41d3-1612c22498a9@suse.de>
+References: <20210628151558.2289-1-mwilck@suse.com>
+         <20210628151558.2289-4-mwilck@suse.com> <20210701075629.GA25768@lst.de>
+         <de1e3dcbd26a4c680b27b557ea5384ba40fc7575.camel@suse.com>
+         <20210701113442.GA10793@lst.de>
+         <003727e7a195cb0f525cc2d7abda3a19ff16eb98.camel@suse.com>
+         <e6d76740-e0ed-861a-ef0c-959e738c3ef5@redhat.com>
+         <5909eff8-82fb-039e-41d3-1612c22498a9@suse.de>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.40.2 
 MIME-Version: 1.0
-In-Reply-To: <20210705131712.GB116379@rowland.harvard.edu>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/5/21 3:17 PM, Alan Stern wrote:
-> On Mon, Jul 05, 2021 at 01:00:39PM +0100, John Garry wrote:
->> On 05/07/2021 00:45, Bart Van Assche wrote:
->>
->> Hi Alan and Bart,
->>
->> Thanks for the suggestions.
->>
->>>>> Removing commit e27829dc92e5 ("scsi: serialize ->rescan against ->remove")
->>>>> solves this issue for me, but that is there for a reason.
->>>>>
->>>>> Any suggestion on how to fix this deadlock?
->>>> This is indeed a tricky question.  It seems like we should allow a
->>>> runtime resume to succeed if the only reason it failed was that the
->>>> device has been removed.
->>>>
->>>> More generally, perhaps we should always consider that a runtime
->>>> resume succeeds.  Any remaining problems will be dealt with by the
->>>> device's driver and subsystem once the device is marked as
->>>> runtime-active again.
->>>>
->>>> Suppose you try changing blk_post_runtime_resume() so that it always
->>>> calls blk_set_runtime_active() regardless of the value of err.  Does
->>>> that fix the problem?
->>>>
->>>> And more importantly, will it cause any other problems...?
->>> That would cause trouble for the UFS driver and other drivers for which
->>> runtime resume can fail due to e.g. the link between host and device
->>> being in a bad state.
-> 
-> I don't understand how that could work.  If a device fails to resume
-> from runtime suspend, no matter whether the reason is temporary or
-> permanent, how can the system use it again?
-> 
-> And if the system can't use it again, what harm is there in pretending
-> that the runtime resume succeeded?
-> 
-'xactly.
-Especially as we _do_ have error recovery on SCSI, so we should be 
-treating a failure to resume just like any other SCSI error; in the end, 
-we need to equip SCSI EH to deal with these kind of states anyway.
-And we already do, as we're sending 'START STOP UNIT' already to spin up 
-drives which are found to be spun down.
+On Mo, 2021-07-05 at 15:11 +0200, Hannes Reinecke wrote:
+> On 7/5/21 3:02 PM, Paolo Bonzini wrote:
+> > On 02/07/21 16:21, Martin Wilck wrote:
+> > > > SG_IO gives you raw access to the SCSI logic unit, and you get
+> > > > to
+> > > > keep the pieces if anything goes wrong.
+> > > 
+> > > That's a very fragile user space API, on the fringe of being
+> > > useless
+> > > IMO.
+> > 
+> > Indeed.� If SG_IO is for raw access to an ITL nexus, it shouldn't
+> > be
+> > supported at all by mpath devices.� If on the other hand SG_IO is
+> > for
+> > raw access to a LUN, there is no reason for it to not support
+> > failover.
+> > 
+> Or we look at IO_URING_OP_URING_CMD, to send raw cdbs via io_uring.
+> And delegate SG_IO to raw access to an ITL nexus.
+> Doesn't help with existing issues, but should get a clean way
+> forward.
 
-So I'm all for always returning 'success' from the 'resume' callback and 
-let SCSI EH deal with any eventual fallout.
+I still have to understand how this would help with the retrying
+semantics. Wouldn't we get the exact same problem if a path error
+occurs?
 
-Cheers,
+Regards,
+Martin
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+
