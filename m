@@ -2,83 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34703C07E95
-	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jul 2021 23:52:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85986C07E95
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 02:49:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14172613D8
-	for <linux-scsi@archiver.kernel.org>; Sun,  4 Jul 2021 23:52:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5217E613D2
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 02:49:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229731AbhGDXys (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 4 Jul 2021 19:54:48 -0400
-Received: from mail-pf1-f170.google.com ([209.85.210.170]:35680 "EHLO
-        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229549AbhGDXys (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jul 2021 19:54:48 -0400
-Received: by mail-pf1-f170.google.com with SMTP id d12so15187286pfj.2
-        for <linux-scsi@vger.kernel.org>; Sun, 04 Jul 2021 16:52:12 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=NxNH0kxML0Dkl/1cZmmPZ61GxtNAUf5BhrnxufZsodw=;
-        b=f8Sy/X3uQQYimWtnYX+brwV18Ao2rgPmFk6WCij4I6bmUNPjTsaggJDl0yMadZP6zp
-         sb+VBrs8lt+PqSxpuUCPFhT2ZW5BpXTDz0YkTRKJGH/dpt93OXuOpO7mb0PPHUmzvjHT
-         CgAmIPD63KhojRajNmL5lLDHKZzaIuKfRpd+aU0j9irYt6Ir79bcMfGnqboMw0M+Dyxs
-         S8Z2Sflw9vLol0nzSsOtyVcyZKTVVBCTkWn4rY9/2X1YFoDanVA2tlzBwK75YQ+64dQ3
-         CYjCWNPO+JbfgL4DzaCymRO0PzOk0uWlC/OdXPQEffkOPywlo3hFbWoPovn7XSXbzeiZ
-         0hPQ==
-X-Gm-Message-State: AOAM5327NF9D7QhU4NTMSkc7r3aciS0qzSzdstw0RcyX0IjJRbJpcRE5
-        Uad5uAoESPWpuOfwFi7VVTg=
-X-Google-Smtp-Source: ABdhPJzY0ZR677LsCqiEC7MPR2Y32i2u1MwDDcnInBQwlSE90/NZR4m6Qe4fWUSll8GdrwiTt6viOw==
-X-Received: by 2002:a63:d60b:: with SMTP id q11mr12433765pgg.270.1625442731757;
-        Sun, 04 Jul 2021 16:52:11 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:5a94:252a:6c7b:1c5a? ([2601:647:4000:d7:5a94:252a:6c7b:1c5a])
-        by smtp.gmail.com with ESMTPSA id o16sm5326980pjw.51.2021.07.04.16.52.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 04 Jul 2021 16:52:11 -0700 (PDT)
-Subject: Re: [PATCH 02/21] libsas: Only abort commands from inside the error
- handler
-To:     Jason Yan <yanaijie@huawei.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>,
+        id S229715AbhGECvx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 4 Jul 2021 22:51:53 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:26155 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229681AbhGECvx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Jul 2021 22:51:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1625453356;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=BLeXj+8XKMxLFChu+De6U7Z5h/Ve0EnpqGdSTfh+Oog=;
+        b=NHJZgpONmyuxBVJzep3ZjC0iordRam/hK+we7ygjzSmoPLKDWlIogOjILg3OX4gkbdUo6D
+        Pyhxg2/44gTwtRCHjEMHFxqCiKwEb8lC1ASrVhYbjUyIwWReyjtXbymjPtbxfdE39wwh9R
+        dGN83Q6j+CwTZ5RdVCm0/sJPYAQEFmU=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-430-xXC6zSW9MTmViJGyU_E-qA-1; Sun, 04 Jul 2021 22:49:15 -0400
+X-MC-Unique: xXC6zSW9MTmViJGyU_E-qA-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DD287100B3AC;
+        Mon,  5 Jul 2021 02:49:12 +0000 (UTC)
+Received: from T590 (ovpn-13-193.pek2.redhat.com [10.72.13.193])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 759025C1A1;
+        Mon,  5 Jul 2021 02:48:57 +0000 (UTC)
+Date:   Mon, 5 Jul 2021 10:48:53 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     "Michael S. Tsirkin" <mst@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>,
+        Daniel Wagner <dwagner@suse.de>,
+        Wen Xiong <wenxiong@us.ibm.com>,
         John Garry <john.garry@huawei.com>,
-        Yves-Alexis Perez <corsac@debian.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Yufen Yu <yuyufen@huawei.com>
-References: <20210701211224.17070-1-bvanassche@acm.org>
- <20210701211224.17070-3-bvanassche@acm.org>
- <779caa02-6c9f-183b-2f3d-2b7dc5c877ef@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <97cd426c-e421-0912-311c-930b277cdb22@acm.org>
-Date:   Sun, 4 Jul 2021 16:52:09 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        Hannes Reinecke <hare@suse.de>,
+        Keith Busch <kbusch@kernel.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Jason Wang <jasowang@redhat.com>,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH V2 5/6] virtio: add one field into virtio_device for
+ recording if device uses managed irq
+Message-ID: <YOJzFe3xcLK279Wv@T590>
+References: <20210702150555.2401722-1-ming.lei@redhat.com>
+ <20210702150555.2401722-6-ming.lei@redhat.com>
+ <20210702115430-mutt-send-email-mst@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <779caa02-6c9f-183b-2f3d-2b7dc5c877ef@huawei.com>
-Content-Type: text/plain; charset=gbk
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210702115430-mutt-send-email-mst@kernel.org>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/2/21 7:32 PM, Jason Yan wrote:
-> No idea why sas_eh_abort_handler() is only used by isci. The other
-> libsas drivers just let the error handler do the aborting work. So my
-> question is can the isci driver delete this callback and let the error
-> handler do this? If so, then we cann remove this function directly.
+On Fri, Jul 02, 2021 at 11:55:40AM -0400, Michael S. Tsirkin wrote:
+> On Fri, Jul 02, 2021 at 11:05:54PM +0800, Ming Lei wrote:
+> > blk-mq needs to know if the device uses managed irq, so add one field
+> > to virtio_device for recording if device uses managed irq.
+> > 
+> > If the driver use managed irq, this flag has to be set so it can be
+> > passed to blk-mq.
+> > 
+> > Cc: "Michael S. Tsirkin" <mst@redhat.com>
+> > Cc: Jason Wang <jasowang@redhat.com>
+> > Cc: virtualization@lists.linux-foundation.org
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> 
+> 
+> The API seems somewhat confusing. virtio does not request
+> a managed irq as such, does it? I think it's a decision taken
+> by the irq core.
 
-Hmm ... I think that's a question for an isci expert. Unfortunately I'm
-not familiar with the isci driver myself.
+vp_request_msix_vectors():
+
+        if (desc) {
+                flags |= PCI_IRQ_AFFINITY;
+                desc->pre_vectors++; /* virtio config vector */
+                vdev->use_managed_irq = true;
+        }
+
+        err = pci_alloc_irq_vectors_affinity(vp_dev->pci_dev, nvectors,
+                                             nvectors, flags, desc);
+
+Managed irq is used once PCI_IRQ_AFFINITY is passed to
+pci_alloc_irq_vectors_affinity().
+
+> 
+> Any way to query the irq to find out if it's managed?
+
+So far the managed info isn't exported via /proc/irq, but if one irq is
+managed, its smp_affinity & smp_affinity_list attributes can't be
+changed successfully.
+
+If irq's debugfs is enabled, this info can be retrieved.
+
 
 Thanks,
+Ming
 
-Bart.
