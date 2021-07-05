@@ -2,106 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-20.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB8B3C07E99
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 14:54:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 941A5C07E99
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 16:11:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B161C61955
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 14:54:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 709D360698
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 16:11:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231582AbhGEO5e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Jul 2021 10:57:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58682 "EHLO
+        id S229495AbhGEQN7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Jul 2021 12:13:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47542 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230504AbhGEO5e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 10:57:34 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24338C061574
-        for <linux-scsi@vger.kernel.org>; Mon,  5 Jul 2021 07:54:57 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id o4so7314697plg.1
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Jul 2021 07:54:57 -0700 (PDT)
+        with ESMTP id S229560AbhGEQN6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 12:13:58 -0400
+Received: from mail-oi1-x230.google.com (mail-oi1-x230.google.com [IPv6:2607:f8b0:4864:20::230])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BED97C061574
+        for <linux-scsi@vger.kernel.org>; Mon,  5 Jul 2021 09:11:21 -0700 (PDT)
+Received: by mail-oi1-x230.google.com with SMTP id m3so2306235oig.10
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Jul 2021 09:11:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version;
-        bh=m1a9XtHKaYNJYrw3A0wYqMG07LaJGRy9cN3eFJvC298=;
-        b=J/+T7s5EHpiMaQO8SoP2LSBLIyOEhFK2dBisdZVtr7wC7h0ICHCsiIvT4Wkoco/b34
-         0uYOQC7eVYWBYZDx3IGNJ/SBEaEDRIRCxrCgugbju7pfGfxwqIAaFe1d9jrF53Q3MKm9
-         RSmwLjWgUBRtgktNQvJVfSPzTFPmt+K71/Wkk=
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=k1NCOcnIC88mj0UJkhqrEStL0KAsdDg0/V8C/SF95/g=;
+        b=C1MzUzaDwdpfkssezyZWN4pHHMhpUo7QEHVBNCrv8WrooQzJq+S+OTvI1Q0xDOqp8E
+         3rKOS30Ybr7GIFU3nj8eKW2DLQE1S/yIiFWhtOnR5L0s4F953RNC4Mp6o7J8YBZK81fs
+         Odbm7rtGg8TTVoqj/EHEizwq0LooDIrTpU/EM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version;
-        bh=m1a9XtHKaYNJYrw3A0wYqMG07LaJGRy9cN3eFJvC298=;
-        b=UsJ3uQPP3XwBfZmiQRaTxr5kR0vX1e/u+sSvgVQbJBFajJQK1VjhDEubLpEIeKEI7r
-         I6yneuzK8XvDmfAgubnpt5YerCCKFHDge6nCsoC2fzjjsDZb0s9+ZMVXDnDYEhedUy3c
-         doeR9MpOns1zeIjRaaFohEtQnXGTBWxQW+TefQR2yfOBbV86bSmBGhkkgGADSgKl5CmM
-         /3C01HiJuDSI9VxgQrN992Ff7J9F3X5795PIblCQeQ+m/nZCHpiOxkYxviGN7WOrFYB9
-         18VK4lALltfLFeEfyzC6VxsSmMwfN6ECN3lrf8gGXtZjDDAvnaYTjcE94QuVKIF77iwc
-         Pa4A==
-X-Gm-Message-State: AOAM533Sdh9A4UjVPt/z9pRsnekDRRgkdVJFH6Nss76zty/vghSDrk9n
-        KaRJFSdTduyEf3l/6cgnSsamAKwO0ETrvHj5yV+OkUbmgskK4g4pz8qI9rOiCIfneLgtAHTGRPB
-        hoLnw7+1UUjbBJ3VFiFNKx9gETAm/1nNOU7jRG3ZVdHH/QAhsGxwSpUGMiuC9xA0MMwx3g0zZEt
-        uFtwffovIIhat4Ww==
-X-Google-Smtp-Source: ABdhPJw6UtxdcoQ/3H7PDfeF98lzfoGh36KRayKO1v1lI4reA+k2/lZWWGszA8KxO73vZgHmFZN54w==
-X-Received: by 2002:a17:90a:d48f:: with SMTP id s15mr15714989pju.161.1625496895999;
-        Mon, 05 Jul 2021 07:54:55 -0700 (PDT)
-Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id g9sm12215162pfj.49.2021.07.05.07.54.53
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 Jul 2021 07:54:55 -0700 (PDT)
-From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Cc:     thenzl@redhat.com, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpt3sas: Bump driver version to 38.100.00.00
-Date:   Mon,  5 Jul 2021 20:29:51 +0530
-Message-Id: <20210705145951.32258-2-sreekanth.reddy@broadcom.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210705145951.32258-1-sreekanth.reddy@broadcom.com>
-References: <20210705145951.32258-1-sreekanth.reddy@broadcom.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=k1NCOcnIC88mj0UJkhqrEStL0KAsdDg0/V8C/SF95/g=;
+        b=LX4CEfTN9Qq13wABhf41yQQiVRHgLCdIFmLHKhsFETrl01eAAzjphARwHp3srqK3x5
+         1VXvyzWYK0iojWSKy9hOv7Igvkpl4nZEmssLzeJms2AeSJKk4xyajCL2mUfYn/8rAYl0
+         Ln9Kd7v4GilkkmIUM/VsOJY5F61IFY6PO4Nx/tH8jMWL33dKldnNQawAbPoWGYT3VLOs
+         gfayTkRTE/aHpqzKE2JaHOz0byzcOOpXZlBj+8qWr7sFU9cJ9KDDsFkeoGgeX2mvf+01
+         RxEmIN5o8QLTKpfpeHSntcn4ytGrLtuIbVpMwVTQh+8rMhEXmF6ahftRqY2fmLfH7UZ6
+         xdhA==
+X-Gm-Message-State: AOAM5333E8cEGZrsT15xUa4LkNRQRGLXqrBoTdIw31lYR3MZGTumbNxz
+        cTJcluG9hnApFCooC48dyw8KnhK6lT9dO5hD59BN/Q==
+X-Google-Smtp-Source: ABdhPJyaQ1yoLYTcXIVmEk765guvadY3GK3dj5GqbdyU+hm21cizbq7outAV3ijVEgxit9GRCRuFm9tHr4W4PqogjU4=
+X-Received: by 2002:aca:f496:: with SMTP id s144mr5667525oih.152.1625501480925;
+ Mon, 05 Jul 2021 09:11:20 -0700 (PDT)
 MIME-Version: 1.0
+References: <20210624150837.9950-1-thenzl@redhat.com> <CAK=zhgqxmqb8LLU8wY7NU5F34hcbABYyO0ToHZVT2kgyz+ya_g@mail.gmail.com>
+In-Reply-To: <CAK=zhgqxmqb8LLU8wY7NU5F34hcbABYyO0ToHZVT2kgyz+ya_g@mail.gmail.com>
+From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Date:   Mon, 5 Jul 2021 21:41:09 +0530
+Message-ID: <CAK=zhgpOVJzT4=xoaL0yN1oq+7C=jJHeGFriis6b0tqnU-Q42w@mail.gmail.com>
+Subject: Re: [PATCH] mpt3sas: a shutdown fix
+To:     Tomas Henzl <thenzl@redhat.com>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000018828f05c6617db7"
+        boundary="00000000000060a69c05c6628ef0"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000018828f05c6617db7
-Content-Transfer-Encoding: 8bit
+--00000000000060a69c05c6628ef0
+Content-Type: text/plain; charset="UTF-8"
 
-Bump driver version to 38.100.00.00
+On Tue, Jun 29, 2021 at 1:07 PM Sreekanth Reddy
+<sreekanth.reddy@broadcom.com> wrote:
+>
+> Tomas,
+>
+> During shutdown, we have to move the Controller state from Operational
+> state to Ready state by issuing MUR (message unit reset). otherwise we
+> may observe firmware faults when it sends some events or interrupts
+> during reboot.
+>
+> Shall I post the new patch with the proper fix?
 
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Tomas,
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 0c6c3df0038d..ec0be3e80561 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -77,9 +77,9 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"37.101.00.00"
--#define MPT3SAS_MAJOR_VERSION		37
--#define MPT3SAS_MINOR_VERSION		101
-+#define MPT3SAS_DRIVER_VERSION		"38.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		38
-+#define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
- 
--- 
-2.27.0
+Can you please try with below patch which I have posted today,
+
+[PATCH] mpt3sas: Move IOC state to Ready state during shutdown
+
+Thanks,
+Sreekanth
 
 
---00000000000018828f05c6617db7
+>
+> Thanks,
+> Sreekanth
+>
+>
+> On Thu, Jun 24, 2021 at 8:38 PM Tomas Henzl <thenzl@redhat.com> wrote:
+> >
+> > A driver doesn't have to to free allocated memory when in shutdown
+> > it is enough when it quiesces itself. This patch hardens the driver
+> > when additional commands are queued after .shutdown has been called.
+> >
+> > Signed-off-by: Tomas Henzl <thenzl@redhat.com>
+> > ---
+> >  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > index dc2aaaf645d3..1885d13005cb 100644
+> > --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> > @@ -11293,7 +11293,7 @@ scsih_shutdown(struct pci_dev *pdev)
+> >
+> >         _scsih_ir_shutdown(ioc);
+> >         _scsih_nvme_shutdown(ioc);
+> > -       mpt3sas_base_detach(ioc);
+> > +       mpt3sas_base_stop_watchdog(ioc);
+> >  }
+> >
+> >
+> > --
+> > 2.31.1
+> >
+
+--00000000000060a69c05c6628ef0
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -172,13 +194,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFJMntUdm2jCy26FVW6b
-9Srzwru8SpvzrMm3H/5lavKrMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMDcwNTE0NTQ1NlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICNV/c1qAvvltC7RT5xo
+02vELGyZpk9+8C7eGxjWLlkbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMDcwNTE2MTEyMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQA5yGLPhs40agFLbVSDflsRS1sJHhrZ00UGJiQc
-y1w9UCf26DuTjhjUHStUVHGsWO10Q6I4wQ/LHNZ3yal2L+98B5HK8X/bNImkqdc60sKSzLrpHp00
-SfTLdHO7WMmjg0sHDvk2T5C1tPaIL8xZ2sOI5SToIRJb8+Evo1iZphv1SPGMdPjBNHnd3RZqUFfJ
-i5ePL5EWpKBRlsFaQUjUF59YeolctAHNRePK4nae5amT2hz2EoSCy4I6bWrhXF9FrdD1K3he4EGC
-phFnIfcuPDA90Qp8BjjnBTPbHe4tRHtye11Zr72n6BePB11YUEr6MKiKm0Ryd83aapMSuZXNxu5m
---00000000000018828f05c6617db7--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQARnuhFFzUbXvD61SukZax31IWhJU4WQ1gs7uk9
+6mDve5Ns0W0uM3FVYo7CiIO27MG6hh5Mf09dyUCOZGKYjlAVQpikpSePvx48Xg0U3Ybsiy60ZR4R
+vljgdbdjVUMd5U04wA+qsUFrBLH+O4nELpG7uuJ4CjAi8wKESAZ4+8Fg9WHPxfxiIb6zXUdo4+04
+Xwey0YBwC/FozGYxZav/Or9mjc4H659vPG3JYAoUjpRj+lbk1fIIzZpsJbgWXRpTo4ds4nrywN2K
+hPEw5DEpbRc+WYFOIkhdxkbN5yYbLe+K7D0BB1VYPwYmQquksnZ5UbEelO8iOAriyrXE5WyUHOqI
+--00000000000060a69c05c6628ef0--
