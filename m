@@ -2,110 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6B8FC07E9C
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 13:11:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 02994C07E99
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 13:17:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA9D0613FC
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 13:11:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D43076141C
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 13:17:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231332AbhGENOK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Jul 2021 09:14:10 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:48982 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230188AbhGENOJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 09:14:09 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id D14FE1FE7F;
-        Mon,  5 Jul 2021 13:11:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1625490691; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5ZDKiqoQQ6Yq9IjrWOV+/xJ+X1cvH5LjKAXJnqar+i8=;
-        b=lfgaGR8m1Uvar/aco6idU/TH+Ds5ER1QA/207vREM4mAVpOVawbklT41UptTD/BbaD0oF6
-        wXfRT7EiFk96WCmfM5yIukEK0LWq60fg11FMPZdLu5XZc9SnBgk5DX45QG28wG5UVqySof
-        JRerra161SiLQ++5YFgDTC/1y5JZqwM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1625490691;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5ZDKiqoQQ6Yq9IjrWOV+/xJ+X1cvH5LjKAXJnqar+i8=;
-        b=1+KLmnvCd2Q1dkgR0SNka6z+nR6LDThrH4vs3QqcwV6ZHtfNojzPoSM74r8xVBC+O2KviV
-        0cI9jzfL7mrUQ2AA==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 5D3EE13790;
-        Mon,  5 Jul 2021 13:11:31 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id +jCSFQMF42CrKgAAGKfGzw
-        (envelope-from <hare@suse.de>); Mon, 05 Jul 2021 13:11:31 +0000
-Subject: Re: [dm-devel] [PATCH v5 3/3] dm mpath: add CONFIG_DM_MULTIPATH_SG_IO
- - failover for SG_IO
-To:     Paolo Bonzini <pbonzini@redhat.com>,
-        Martin Wilck <mwilck@suse.com>, Christoph Hellwig <hch@lst.de>
-Cc:     Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org,
-        Daniel Wagner <dwagner@suse.de>, emilne@redhat.com,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        nkoenig@redhat.com, Bart Van Assche <Bart.VanAssche@sandisk.com>,
-        Alasdair G Kergon <agk@redhat.com>
-References: <20210628151558.2289-1-mwilck@suse.com>
- <20210628151558.2289-4-mwilck@suse.com> <20210701075629.GA25768@lst.de>
- <de1e3dcbd26a4c680b27b557ea5384ba40fc7575.camel@suse.com>
- <20210701113442.GA10793@lst.de>
- <003727e7a195cb0f525cc2d7abda3a19ff16eb98.camel@suse.com>
- <e6d76740-e0ed-861a-ef0c-959e738c3ef5@redhat.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <5909eff8-82fb-039e-41d3-1612c22498a9@suse.de>
-Date:   Mon, 5 Jul 2021 15:11:30 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.10.0
+        id S231183AbhGENTu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Jul 2021 09:19:50 -0400
+Received: from netrider.rowland.org ([192.131.102.5]:51155 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S230188AbhGENTu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 09:19:50 -0400
+Received: (qmail 116627 invoked by uid 1000); 5 Jul 2021 09:17:12 -0400
+Date:   Mon, 5 Jul 2021 09:17:12 -0400
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     John Garry <john.garry@huawei.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Hannes Reinecke <hare@suse.com>,
+        chenxiang <chenxiang66@hisilicon.com>,
+        Xiejianqin <xiejianqin@hisilicon.com>
+Subject: Re: SCSI layer RPM deadlock debug suggestion
+Message-ID: <20210705131712.GB116379@rowland.harvard.edu>
+References: <9e90d035-fac1-432a-1d34-de5805d8f799@huawei.com>
+ <20210702203142.GA49307@rowland.harvard.edu>
+ <ec4a3038-34b0-084f-a1bd-039827465dd1@acm.org>
+ <1081c3ed-0762-58c7-8b99-8b3721c710bd@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <e6d76740-e0ed-861a-ef0c-959e738c3ef5@redhat.com>
-Content-Type: text/plain; charset=iso-8859-15; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1081c3ed-0762-58c7-8b99-8b3721c710bd@huawei.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/5/21 3:02 PM, Paolo Bonzini wrote:
-> On 02/07/21 16:21, Martin Wilck wrote:
->>> SG_IO gives you raw access to the SCSI logic unit, and you get to
->>> keep the pieces if anything goes wrong.
->>
->> That's a very fragile user space API, on the fringe of being useless
->> IMO.
+On Mon, Jul 05, 2021 at 01:00:39PM +0100, John Garry wrote:
+> On 05/07/2021 00:45, Bart Van Assche wrote:
 > 
-> Indeed.  If SG_IO is for raw access to an ITL nexus, it shouldn't be
-> supported at all by mpath devices.  If on the other hand SG_IO is for
-> raw access to a LUN, there is no reason for it to not support failover.
+> Hi Alan and Bart,
 > 
-Or we look at IO_URING_OP_URING_CMD, to send raw cdbs via io_uring.
-And delegate SG_IO to raw access to an ITL nexus.
-Doesn't help with existing issues, but should get a clean way forward.
+> Thanks for the suggestions.
+> 
+> > > > Removing commit e27829dc92e5 ("scsi: serialize ->rescan against ->remove")
+> > > > solves this issue for me, but that is there for a reason.
+> > > > 
+> > > > Any suggestion on how to fix this deadlock?
+> > > This is indeed a tricky question.  It seems like we should allow a
+> > > runtime resume to succeed if the only reason it failed was that the
+> > > device has been removed.
+> > > 
+> > > More generally, perhaps we should always consider that a runtime
+> > > resume succeeds.  Any remaining problems will be dealt with by the
+> > > device's driver and subsystem once the device is marked as
+> > > runtime-active again.
+> > > 
+> > > Suppose you try changing blk_post_runtime_resume() so that it always
+> > > calls blk_set_runtime_active() regardless of the value of err.  Does
+> > > that fix the problem?
+> > > 
+> > > And more importantly, will it cause any other problems...?
+> > That would cause trouble for the UFS driver and other drivers for which
+> > runtime resume can fail due to e.g. the link between host and device
+> > being in a bad state.
 
-... I think I've even tendered a topic at LSF for this ...
+I don't understand how that could work.  If a device fails to resume 
+from runtime suspend, no matter whether the reason is temporary or 
+permanent, how can the system use it again?
 
-Cheers,
+And if the system can't use it again, what harm is there in pretending 
+that the runtime resume succeeded?
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+> > How about checking the SCSI device state inside scsi_rescan_device() and
+> > skipping the rescan if the SCSI device state is SDEV_CANCEL or SDEV_DEL?
+> > 
+> 
+> I find that the device state is SDEV_RUNNING for me at that point (so it
+> cannot work).
+> 
+> > Adding such a check inside __scsi_execute() would break sd_remove() and
+> > sd_shutdown() since both use __scsi_execute() to submit a SYNCHRONIZE
+> > CACHE command to the device.
+> 
+> Could we somehow signal from __scsi_remove_device() earlier that the request
+> queue is dying or at least in some error state, so that blk_queue_enter() in
+> the rescan can fail?
+> 
+> Currently we don't call blk_cleanup_queue() -> blk_set_queue_dying() until
+> after the device_del(sdev_gendev) call in __scsi_remove_device().
+
+I don't think that can be done.  device_del() calls the driver's 
+remove routine, which may want to communicate with the device.  If the 
+request queue is already in an error state, it won't be able to do so.
+
+Alan Stern
