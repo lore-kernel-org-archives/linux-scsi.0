@@ -2,105 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AFF0AC07E99
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 09:56:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14133C07E99
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 12:07:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 953BA613C1
-	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 09:56:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DF459610C7
+	for <linux-scsi@archiver.kernel.org>; Mon,  5 Jul 2021 12:07:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230442AbhGEJ6r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 5 Jul 2021 05:58:47 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30907 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230291AbhGEJ6q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 05:58:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625478969;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=PeaDOEsW8hmBgMT8bkDyX/sakYJ1dxNWFoVs9+ntx2c=;
-        b=jI2HqPk3mNcS9DAeCi0p0cTPEw8+sK2E9Cib0IEipAXo/9oYYpllyhTU5kB1cESLIaFme3
-        ZbSGvkqP2Z8psiPyHVBS1s3WdtRtLmYwQ9ps8s1LIbkI4El1fU9YA4gdPKeujFVhIDHZkd
-        23nOcGNPIoWAkNYzjEAUcp2ZbLxBR1Q=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-161-L6ETD3HBN4mQzsy7WT4bmg-1; Mon, 05 Jul 2021 05:56:06 -0400
-X-MC-Unique: L6ETD3HBN4mQzsy7WT4bmg-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A0BA5802E29;
-        Mon,  5 Jul 2021 09:56:03 +0000 (UTC)
-Received: from T590 (ovpn-13-193.pek2.redhat.com [10.72.13.193])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id D32B42EB04;
-        Mon,  5 Jul 2021 09:55:54 +0000 (UTC)
-Date:   Mon, 5 Jul 2021 17:55:49 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        id S231252AbhGEMK0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 5 Jul 2021 08:10:26 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3364 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230435AbhGEMKZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Jul 2021 08:10:25 -0400
+Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GJPGf3WVFz6H8Th;
+        Mon,  5 Jul 2021 19:53:46 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Mon, 5 Jul 2021 14:07:47 +0200
+Received: from [10.47.92.124] (10.47.92.124) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Mon, 5 Jul 2021
+ 13:07:46 +0100
+Subject: Re: SCSI layer RPM deadlock debug suggestion
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Alan Stern <stern@rowland.harvard.edu>
+CC:     Christoph Hellwig <hch@lst.de>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>,
-        Daniel Wagner <dwagner@suse.de>,
-        Wen Xiong <wenxiong@us.ibm.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Keith Busch <kbusch@kernel.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH V2 3/6] scsi: add flag of .use_managed_irq to 'struct
- Scsi_Host'
-Message-ID: <YOLXJZF7wo/IiFMU@T590>
-References: <20210702150555.2401722-1-ming.lei@redhat.com>
- <20210702150555.2401722-4-ming.lei@redhat.com>
- <47fc5ed1-29e3-9226-a111-26c271cb6d90@huawei.com>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Hannes Reinecke <hare@suse.com>,
+        chenxiang <chenxiang66@hisilicon.com>,
+        Xiejianqin <xiejianqin@hisilicon.com>
+References: <9e90d035-fac1-432a-1d34-de5805d8f799@huawei.com>
+ <20210702203142.GA49307@rowland.harvard.edu>
+ <ec4a3038-34b0-084f-a1bd-039827465dd1@acm.org>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <1081c3ed-0762-58c7-8b99-8b3721c710bd@huawei.com>
+Date:   Mon, 5 Jul 2021 13:00:39 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <47fc5ed1-29e3-9226-a111-26c271cb6d90@huawei.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <ec4a3038-34b0-084f-a1bd-039827465dd1@acm.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.92.124]
+X-ClientProxiedBy: lhreml741-chm.china.huawei.com (10.201.108.191) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 05, 2021 at 10:25:38AM +0100, John Garry wrote:
-> On 02/07/2021 16:05, Ming Lei wrote:
-> > blk-mq needs this information of using managed irq for improving
-> > deactivating hctx, so add such flag to 'struct Scsi_Host', then
-> > drivers can pass such flag to blk-mq via scsi_mq_setup_tags().
-> > 
-> > The rule is that driver has to tell blk-mq if managed irq is used.
-> > 
-> > Signed-off-by: Ming Lei<ming.lei@redhat.com>
-> 
-> As was said before, can we have something like this instead of relying on
-> the LLDs to do the setting:
-> 
-> --------->8------------
-> 
-> diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
-> index b595a94c4d16..2037a5b69fe1 100644
-> --- a/block/blk-mq-pci.c
-> +++ b/block/blk-mq-pci.c
-> @@ -37,7 +37,7 @@ int blk_mq_pci_map_queues(struct blk_mq_queue_map *qmap,
-> struct pci_dev *pdev,
->  		for_each_cpu(cpu, mask)
->  			qmap->mq_map[cpu] = qmap->queue_offset + queue;
->  	}
-> -
-> +	qmap->drain_hwq = 1;
+On 05/07/2021 00:45, Bart Van Assche wrote:
 
-The thing is that blk_mq_pci_map_queues() is allowed to be called for
-non-managed irqs. Also some managed irq consumers don't use blk_mq_pci_map_queues().
+Hi Alan and Bart,
 
-So this way just provides hint about managed irq uses, but we really
-need to get this flag set if driver uses managed irq.
+Thanks for the suggestions.
 
+>>> Removing commit e27829dc92e5 ("scsi: serialize ->rescan against ->remove")
+>>> solves this issue for me, but that is there for a reason.
+>>>
+>>> Any suggestion on how to fix this deadlock?
+>> This is indeed a tricky question.  It seems like we should allow a
+>> runtime resume to succeed if the only reason it failed was that the
+>> device has been removed.
+>>
+>> More generally, perhaps we should always consider that a runtime
+>> resume succeeds.  Any remaining problems will be dealt with by the
+>> device's driver and subsystem once the device is marked as
+>> runtime-active again.
+>>
+>> Suppose you try changing blk_post_runtime_resume() so that it always
+>> calls blk_set_runtime_active() regardless of the value of err.  Does
+>> that fix the problem?
+>>
+>> And more importantly, will it cause any other problems...?
+> That would cause trouble for the UFS driver and other drivers for which
+> runtime resume can fail due to e.g. the link between host and device
+> being in a bad state.
+> 
+> How about checking the SCSI device state inside scsi_rescan_device() and
+> skipping the rescan if the SCSI device state is SDEV_CANCEL or SDEV_DEL?
+> 
+
+I find that the device state is SDEV_RUNNING for me at that point (so it 
+cannot work).
+
+> Adding such a check inside __scsi_execute() would break sd_remove() and
+> sd_shutdown() since both use __scsi_execute() to submit a SYNCHRONIZE
+> CACHE command to the device.
+
+Could we somehow signal from __scsi_remove_device() earlier that the 
+request queue is dying or at least in some error state, so that 
+blk_queue_enter() in the rescan can fail?
+
+Currently we don't call blk_cleanup_queue() -> blk_set_queue_dying() 
+until after the device_del(sdev_gendev) call in __scsi_remove_device().
 
 Thanks,
-Ming
-
+John
