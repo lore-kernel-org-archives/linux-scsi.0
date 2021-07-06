@@ -2,114 +2,180 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F23EC07E9B
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 10:32:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7201FC07E9C
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 10:36:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA5F0619AC
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 10:32:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 594DB619AB
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 10:36:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231338AbhGFKfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jul 2021 06:35:12 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:51016 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231216AbhGFKfI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2021 06:35:08 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 6A2D4226DF;
-        Tue,  6 Jul 2021 10:32:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1625567549; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oYa45f4FhhRp+3FK6NuiOaD625cS0Uqo4Ax5m9HnxYw=;
-        b=NRj74pTdCy5DxHYIxwbfnLobgD/j6f23HzVf1OS9cvWIpyYUH8n+sd/dgaOSLmFDrHpQwW
-        ntq1sDwz1GcrYxQPfeX1lejGBgKrhFPt/zH+Y9WApyi1yPwV8pPTrRHWhe6gW3wFhzk2lU
-        RxnD8JjhQBW5aXrxZEc7cyAOxaw7AlM=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1625567549;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=oYa45f4FhhRp+3FK6NuiOaD625cS0Uqo4Ax5m9HnxYw=;
-        b=+GzqWh4ZemorKBDqD5TsMk/iO0aFymDwcLq1fcK+Fv9dr8pvI2650ZYx/AMlfgFtXRywqv
-        9NhBrXf50dxV8kCw==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 1A6351372D;
-        Tue,  6 Jul 2021 10:32:29 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id 3XK7Az0x5GAKZQAAGKfGzw
-        (envelope-from <hare@suse.de>); Tue, 06 Jul 2021 10:32:29 +0000
-Subject: Re: [PATCH V2 3/6] scsi: add flag of .use_managed_irq to 'struct
- Scsi_Host'
-To:     Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>
-Cc:     John Garry <john.garry@huawei.com>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>,
-        Daniel Wagner <dwagner@suse.de>,
-        Wen Xiong <wenxiong@us.ibm.com>,
-        Keith Busch <kbusch@kernel.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>
-References: <20210702150555.2401722-1-ming.lei@redhat.com>
- <20210702150555.2401722-4-ming.lei@redhat.com>
- <47fc5ed1-29e3-9226-a111-26c271cb6d90@huawei.com> <YOLXJZF7wo/IiFMU@T590>
- <20210706053719.GA17027@lst.de> <YOQJD2dgeb8wobOk@T590>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <fb71bccf-0d92-68ed-ad42-cac23fede5a8@suse.de>
-Date:   Tue, 6 Jul 2021 12:32:27 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+        id S231414AbhGFKii (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jul 2021 06:38:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34158 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231419AbhGFKig (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2021 06:38:36 -0400
+Received: from mail-wr1-x435.google.com (mail-wr1-x435.google.com [IPv6:2a00:1450:4864:20::435])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E8BDFC0613E0
+        for <linux-scsi@vger.kernel.org>; Tue,  6 Jul 2021 03:35:56 -0700 (PDT)
+Received: by mail-wr1-x435.google.com with SMTP id a8so13800536wrp.5
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Jul 2021 03:35:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:content-transfer-encoding:in-reply-to;
+        bh=6xuYHcNFKOKQBrKUFUDH+4OX/ZzxgolWWFVCDDtB2Y0=;
+        b=Yt+wwRbDrooYfJ07+RIOcvlbNAmDArbrvJ7r1S0Vf2cjg/rLU7fAYgPxXpkS/Es1c/
+         LcGWWFOVsEF/0XQJw8Ic4i6Dtc59Y/PIazeWXS81o/I5/ykvg7NDoqtNhU6ZQY0qgpts
+         hX13gyhgO6x+I73AAGb4ZN/+qaseZR6quq5U1fL8NFgVa2YoJXURs1gKcClPP7oowGFt
+         CUO7YRn27lhbGlEADkw/xBbGzLYaM6sE1cZhR+vatbGDVqfyXQOHsgSlmcoOTDifCPOm
+         ISHjTYrtj1Tj6vkK+FyowiPdLCC1ljyYKvKt5eTXHZu+z0mb6AF50iygoibOaTtpwXde
+         Om/w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=6xuYHcNFKOKQBrKUFUDH+4OX/ZzxgolWWFVCDDtB2Y0=;
+        b=sAaEOPpaI2G0kgnBJtHu0MLcGxMyI9kn8P1wW0hz82uXyIVic5Tn8dXgB4JH/4Nuj0
+         16qZcmVgKsnSQQFEEFrWEJMRlMLFm5cKaO/4tJA3r9qkBglTcK8g5gih7mqDW6Yzpe45
+         KeVCYHlilIxo5dcxM0Sc77odwp5px7hYAhOovPy9RXqeC3rgrr3ryNbcnaI2wmwGYpNZ
+         KE83Q9UwB55kJwJ/4/huEWYx4M2YP4EuV3HbPv6XAMpnAaVYZKID32wPdyz3Pfas7vVB
+         9W0mO8D4Wic7v+a8P2g5A0PPbVHhtW6J/kSXtWpd/+z2oA4Oq9/mKfxm/ZJYVfNicCTi
+         WPSQ==
+X-Gm-Message-State: AOAM531o5lxsOlv7NTJB9KLsAZUIE9tVIyFMyZij0eDGwwlApRE8i+LE
+        O6MsR3CCoWPc/KUlqMkSBGzglg==
+X-Google-Smtp-Source: ABdhPJxx+Xr4AcuLpRSkCC4EtytSRujE0SZ0zcPphvKN4FEK+8OpQKjY5aHg/Lctw2KdmVZr98nK+A==
+X-Received: by 2002:a05:6000:12d0:: with SMTP id l16mr21397024wrx.189.1625567755049;
+        Tue, 06 Jul 2021 03:35:55 -0700 (PDT)
+Received: from dell ([109.180.115.218])
+        by smtp.gmail.com with ESMTPSA id l9sm16428319wrp.14.2021.07.06.03.35.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 Jul 2021 03:35:54 -0700 (PDT)
+Date:   Tue, 6 Jul 2021 11:35:52 +0100
+From:   Lee Jones <lee.jones@linaro.org>
+To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        kernel@pengutronix.de, linux-kernel@vger.kernel.org,
+        Russell King <linux@armlinux.org.uk>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Geoff Levand <geoff@infradead.org>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        linux-arm-kernel@lists.infradead.org, linux-mips@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-acpi@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-sunxi@lists.linux.dev, linux-cxl@vger.kernel.org,
+        nvdimm@lists.linux.dev, dmaengine@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, linux-fpga@vger.kernel.org,
+        linux-input@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-i3c@lists.infradead.org,
+        industrypack-devel@lists.sourceforge.net,
+        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
+        netdev@vger.kernel.org, linux-ntb@googlegroups.com,
+        linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+        linux-remoteproc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        alsa-devel@alsa-project.org, linux-arm-msm@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-staging@lists.linux.dev,
+        greybus-dev@lists.linaro.org, target-devel@vger.kernel.org,
+        linux-usb@vger.kernel.org, linux-serial@vger.kernel.org,
+        virtualization@lists.linux-foundation.org, kvm@vger.kernel.org,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH] bus: Make remove callback return void
+Message-ID: <YOQxRS8HLTYthWNn@dell>
+References: <20210706095037.1425211-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <YOQJD2dgeb8wobOk@T590>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210706095037.1425211-1-u.kleine-koenig@pengutronix.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/6/21 9:41 AM, Ming Lei wrote:
-> On Tue, Jul 06, 2021 at 07:37:19AM +0200, Christoph Hellwig wrote:
->> On Mon, Jul 05, 2021 at 05:55:49PM +0800, Ming Lei wrote:
->>> The thing is that blk_mq_pci_map_queues() is allowed to be called for
->>> non-managed irqs. Also some managed irq consumers don't use blk_mq_pci_map_queues().
->>>
->>> So this way just provides hint about managed irq uses, but we really
->>> need to get this flag set if driver uses managed irq.
->>
->> blk_mq_pci_map_queues is absolutely intended to only be used by
->> managed irqs.  I wonder if we can enforce that somehow?
-> 
-> It may break some scsi drivers.
-> 
-> And blk_mq_pci_map_queues() just calls pci_irq_get_affinity() to
-> retrieve the irq's affinity, and the irq can be one non-managed irq,
-> which affinity is set via either irq_set_affinity_hint() from kernel
-> or /proc/irq/.
-> 
-But that's static, right? IE blk_mq_pci_map_queues() will be called once 
-during module init; so what happens if the user changes the mapping 
-later on? How will that be transferred to the driver?
+On Tue, 06 Jul 2021, Uwe Kleine-König wrote:
 
-Cheers,
+> The driver core ignores the return value of this callback because there
+> is only little it can do when a device disappears.
+> 
+> This is the final bit of a long lasting cleanup quest where several
+> buses were converted to also return void from their remove callback.
+> Additionally some resource leaks were fixed that were caused by drivers
+> returning an error code in the expectation that the driver won't go
+> away.
+> 
+> With struct bus_type::remove returning void it's prevented that newly
+> implemented buses return an ignored error code and so don't anticipate
+> wrong expectations for driver authors.
+> 
+> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+> ---
+> Hello,
+> 
+> this patch depends on "PCI: endpoint: Make struct pci_epf_driver::remove
+> return void" that is not yet applied, see
+> https://lore.kernel.org/r/20210223090757.57604-1-u.kleine-koenig@pengutronix.de.
+> 
+> I tested it using allmodconfig on amd64 and arm, but I wouldn't be
+> surprised if I still missed to convert a driver. So it would be great to
+> get this into next early after the merge window closes.
+> 
+> I send this mail to all people that get_maintainer.pl emits for this
+> patch. I wonder how many recipents will refuse this mail because of the
+> long Cc: list :-)
+> 
+> Best regards
+> Uwe
+> 
+>  arch/arm/common/locomo.c                  | 3 +--
+>  arch/arm/common/sa1111.c                  | 4 +---
+>  arch/arm/mach-rpc/ecard.c                 | 4 +---
+>  arch/mips/sgi-ip22/ip22-gio.c             | 3 +--
+>  arch/parisc/kernel/drivers.c              | 5 ++---
+>  arch/powerpc/platforms/ps3/system-bus.c   | 3 +--
+>  arch/powerpc/platforms/pseries/ibmebus.c  | 3 +--
+>  arch/powerpc/platforms/pseries/vio.c      | 3 +--
+>  drivers/acpi/bus.c                        | 3 +--
+>  drivers/amba/bus.c                        | 4 +---
+>  drivers/base/auxiliary.c                  | 4 +---
+>  drivers/base/isa.c                        | 4 +---
+>  drivers/base/platform.c                   | 4 +---
+>  drivers/bcma/main.c                       | 6 ++----
+>  drivers/bus/sunxi-rsb.c                   | 4 +---
+>  drivers/cxl/core.c                        | 3 +--
+>  drivers/dax/bus.c                         | 4 +---
+>  drivers/dma/idxd/sysfs.c                  | 4 +---
+>  drivers/firewire/core-device.c            | 4 +---
+>  drivers/firmware/arm_scmi/bus.c           | 4 +---
+>  drivers/firmware/google/coreboot_table.c  | 4 +---
+>  drivers/fpga/dfl.c                        | 4 +---
+>  drivers/hid/hid-core.c                    | 4 +---
+>  drivers/hid/intel-ish-hid/ishtp/bus.c     | 4 +---
+>  drivers/hv/vmbus_drv.c                    | 5 +----
+>  drivers/hwtracing/intel_th/core.c         | 4 +---
+>  drivers/i2c/i2c-core-base.c               | 5 +----
+>  drivers/i3c/master.c                      | 4 +---
+>  drivers/input/gameport/gameport.c         | 3 +--
+>  drivers/input/serio/serio.c               | 3 +--
+>  drivers/ipack/ipack.c                     | 4 +---
+>  drivers/macintosh/macio_asic.c            | 4 +---
+>  drivers/mcb/mcb-core.c                    | 4 +---
+>  drivers/media/pci/bt8xx/bttv-gpio.c       | 3 +--
+>  drivers/memstick/core/memstick.c          | 3 +--
 
-Hannes
+>  drivers/mfd/mcp-core.c                    | 3 +--
+
+Acked-by: Lee Jones <lee.jones@linaro.org>
+
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Lee Jones [李琼斯]
+Senior Technical Lead - Developer Services
+Linaro.org │ Open source software for Arm SoCs
+Follow Linaro: Facebook | Twitter | Blog
