@@ -2,260 +2,174 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD8C9C11F66
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 18:32:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44B16C07E96
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 18:39:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A841361C69
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 18:32:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E400610A0
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 18:39:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231466AbhGFSfL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jul 2021 14:35:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58434 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231450AbhGFSfK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2021 14:35:10 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F469C06175F
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Jul 2021 11:32:31 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m0prl-0007tU-Bf; Tue, 06 Jul 2021 20:32:17 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m0prk-0001yr-79; Tue, 06 Jul 2021 20:32:16 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m0prk-0004ND-2r; Tue, 06 Jul 2021 20:32:16 +0200
-Date:   Tue, 6 Jul 2021 20:32:15 +0200
-From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     nvdimm@lists.linux.dev, Alexey Kardashevskiy <aik@ozlabs.ru>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Samuel Iglesias Gonsalvez <siglesias@igalia.com>,
-        Jens Taprogge <jens.taprogge@taprogge.org>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Samuel Holland <samuel@sholland.org>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
-        xen-devel@lists.xenproject.org,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Julien Grall <jgrall@amazon.com>,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Alex Elder <elder@kernel.org>, linux-parisc@vger.kernel.org,
-        Geoff Levand <geoff@infradead.org>, linux-fpga@vger.kernel.org,
-        linux-usb@vger.kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        linux-kernel@vger.kernel.org, linux-spi@vger.kernel.org,
-        Thorsten Scherer <t.scherer@eckelmann.de>,
-        kernel@pengutronix.de, Jon Mason <jdmason@kudzu.us>,
-        linux-ntb@googlegroups.com, Wu Hao <hao.wu@intel.com>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Manohar Vanga <manohar.vanga@gmail.com>,
-        linux-wireless@vger.kernel.org,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        virtualization@lists.linux-foundation.org,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        target-devel@vger.kernel.org,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        linux-i2c@vger.kernel.org,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Ira Weiny <ira.weiny@intel.com>, Helge Deller <deller@gmx.de>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        industrypack-devel@lists.sourceforge.net,
-        linux-mips@vger.kernel.org, Len Brown <lenb@kernel.org>,
-        alsa-devel@alsa-project.org, linux-arm-msm@vger.kernel.org,
-        linux-media@vger.kernel.org, Maxime Ripard <mripard@kernel.org>,
-        Johan Hovold <johan@kernel.org>, greybus-dev@lists.linaro.org,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        linux-arm-kernel@lists.infradead.org,
-        Johannes Thumshirn <morbidrsa@gmail.com>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Wolfram Sang <wsa@kernel.org>,
-        Joey Pabalan <jpabalanb@gmail.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
-        Bodo Stroesser <bostroesser@gmail.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Tom Rix <trix@redhat.com>, Jason Wang <jasowang@redhat.com>,
-        SeongJae Park <sjpark@amazon.de>, linux-hyperv@vger.kernel.org,
-        platform-driver-x86@vger.kernel.org, Frank Li <lznuaa@gmail.com>,
-        netdev@vger.kernel.org, Qinglang Miao <miaoqinglang@huawei.com>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Mark Gross <mgross@linux.intel.com>,
-        linux-staging@lists.linux.dev, Dexuan Cui <decui@microsoft.com>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Chen-Yu Tsai <wens@csie.org>, linux-input@vger.kernel.org,
-        Matt Porter <mporter@kernel.crashing.org>,
-        Allen Hubbe <allenbh@gmail.com>, Alex Dubov <oakad@yahoo.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Jiri Kosina <jikos@kernel.org>,
-        Vladimir Zapolskiy <vz@mleia.com>,
-        Russell King <rmk+kernel@armlinux.org.uk>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        Moritz Fischer <mdf@kernel.org>, linux-cxl@vger.kernel.org,
-        Michael Buesch <m@bues.ch>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Cristian Marussi <cristian.marussi@arm.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martyn Welch <martyn@welchs.me.uk>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        linux-mmc@vger.kernel.org, linux-sunxi@lists.linux.dev,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Sven Van Asbroeck <TheSven73@gmail.com>, kvm@vger.kernel.org,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        linux-remoteproc@vger.kernel.org,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Kirti Wankhede <kwankhede@nvidia.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        linux-i3c@lists.infradead.org,
-        linux1394-devel@lists.sourceforge.net,
-        Lee Jones <lee.jones@linaro.org>,
-        Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Russell King <linux@armlinux.org.uk>,
-        Andy Gross <agross@kernel.org>, linux-serial@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>,
-        Michael Jamet <michael.jamet@intel.com>,
-        William Breathitt Gray <vilhelm.gray@gmail.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Juergen Gross <jgross@suse.com>, linuxppc-dev@lists.ozlabs.org,
-        Takashi Iwai <tiwai@suse.com>,
-        Alexandre Bounine <alex.bou9@gmail.com>,
-        Vinod Koul <vkoul@kernel.org>, Mark Brown <broonie@kernel.org>,
-        Marc Zyngier <maz@kernel.org>, dmaengine@vger.kernel.org,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Johannes Thumshirn <jth@kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>
-Subject: Re: [PATCH v2 4/4] bus: Make remove callback return void
-Message-ID: <20210706183215.tcd7i4pwz2gxtxtb@pengutronix.de>
-References: <20210706154803.1631813-1-u.kleine-koenig@pengutronix.de>
- <20210706154803.1631813-5-u.kleine-koenig@pengutronix.de>
+        id S231509AbhGFSmK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jul 2021 14:42:10 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:14354 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231208AbhGFSmJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2021 14:42:09 -0400
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 166IWKrN023178;
+        Tue, 6 Jul 2021 18:39:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=0EJJkXd6CLrTBsOf421Lr1BEBzGuDx/I90k2m/dXZm0=;
+ b=Iy0O2sngPRKIAjgt7d2guq/HgGLGCH9SBihL5WsdPTFq2uaeHzUJy2kXrhryTLqXDwUs
+ emHt3TaWu7Qk/QbuocH3kdqLqYBUIXBCNhgU0desVIUcRaF9icyZR+hxYrJX07AjXf3R
+ NQaWnTUlO2UV8rn4UuXye6JCBS3g1sCpkXvprfzTsQPGhEMudgYt4Lh5C3Qof92PDbPS
+ aCYiPb/rSNAybj1oiuiqcv2IMNUs1sXZHRb3KJO6iKZMTs2YeLGJ+xtBZmcC5f25IVCq
+ qGF6GeyoxxdxBifaZdZmyGPwLUPwFXGOq/PANXoT3CyFd0sGq+NFwIIoC1T3YMmKwsKy hA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by mx0b-00069f02.pphosted.com with ESMTP id 39m2aaahdt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 06 Jul 2021 18:39:26 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 166IUook008736;
+        Tue, 6 Jul 2021 18:39:25 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2100.outbound.protection.outlook.com [104.47.55.100])
+        by userp3020.oracle.com with ESMTP id 39k1nvj1hc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 06 Jul 2021 18:39:24 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=cD6Lgw+nsxCAylWTN6T/8rgPAs8hWsYITEXg+IX9TQrgz+H/DIcXhekT/VXYfkILqZvi2m0/wXETK7+FxbXG+YzSPB+s1+dpGsI50B41djrBFw0G8Sv/t0UujcxSItv/No6AM5A68BIwYd8R/yMvCAFUyVm3GA2xy4M6xlvZDDoirPVLUwVZSRvZ8RFq1tTmPMrx3VwHQfzgvE8PpYFGvsapVY04cohTLSGCqh0imnZqbGXdiiF7hzhYzWMszp1emrl1IqKuMgolVurh/w6oySydIjLCM9M/mMAnlNRigrdWjC71vGulK2VuvoxBzbkBql9gsTDBQob0Wm+/FKrlTQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0EJJkXd6CLrTBsOf421Lr1BEBzGuDx/I90k2m/dXZm0=;
+ b=hWNp7fQD/VsAJg2hD3+bvUggjaouGHS4R3hQsdWUOL+WTU+eoTb4gfdR76lIcWH0Ce0WzHzZ89uK2C8NGSbbEuvhWllBqOIIqEG4RA0OJNIQ20ss1VGRbzxZ99GzW/X071LrW+0/1C5A6tPLB4zxfRHZeOIzndwtK9DpAaIdxt0xfjn89vG9KzfvaFKbA2rt/dMkbsgmkBxnRJR8MtFLxWghxRTpH7EK4UNFpI41MBAec/x5HSjtG15JWIUS1xe62ogf4MPsergZzW7KdItXyW9nOdmBvLz5h3jZeF+iOZfsAuOvJkkdThw0khdCPdpZGsSKpGx+fKtGiFszDi4ewA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0EJJkXd6CLrTBsOf421Lr1BEBzGuDx/I90k2m/dXZm0=;
+ b=Qb2bmMjXzv0EeqBt+8R2hMIiWAEVyJtafxHWjOYMIVik1YSrdESg0BGtvHCgOiMeFGNNKdXcdX4QxHmnUXPx9/B+2WZtltpQS73eFCtzuECsYg+Yv+0xs+RLCcqHI4V3LozS4cMxZuqv4ElETk390QkaYzrrsr86cuLwAAYLLu0=
+Authentication-Results: broadcom.com; dkim=none (message not signed)
+ header.d=none;broadcom.com; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4727.namprd10.prod.outlook.com (2603:10b6:510:3f::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4287.22; Tue, 6 Jul
+ 2021 18:39:22 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::153e:22d1:d177:d4f1]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::153e:22d1:d177:d4f1%7]) with mapi id 15.20.4287.033; Tue, 6 Jul 2021
+ 18:39:22 +0000
+To:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v2] mpi3mr: Fix W=1 compilation warnings
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1lf6je1fa.fsf@ca-mkp.ca.oracle.com>
+References: <20210629141110.3098-1-sreekanth.reddy@broadcom.com>
+        <yq1czs4jvul.fsf@ca-mkp.ca.oracle.com>
+        <CAK=zhgrV4BwY2VzhGN=BbFj_2DutUUnD+33dmGqbN_ivz4-0Xg@mail.gmail.com>
+Date:   Tue, 06 Jul 2021 14:39:19 -0400
+In-Reply-To: <CAK=zhgrV4BwY2VzhGN=BbFj_2DutUUnD+33dmGqbN_ivz4-0Xg@mail.gmail.com>
+        (Sreekanth Reddy's message of "Sun, 4 Jul 2021 22:39:37 +0530")
+Content-Type: text/plain
+X-ClientProxiedBy: SN6PR08CA0019.namprd08.prod.outlook.com
+ (2603:10b6:805:66::32) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="q2vlxiybuwkj6z7s"
-Content-Disposition: inline
-In-Reply-To: <20210706154803.1631813-5-u.kleine-koenig@pengutronix.de>
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SN6PR08CA0019.namprd08.prod.outlook.com (2603:10b6:805:66::32) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4308.20 via Frontend Transport; Tue, 6 Jul 2021 18:39:21 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 69cce786-aab1-4088-7b34-08d940ad5f69
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4727:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB4727CC0BF4CAE4DAC4169BA18E1B9@PH0PR10MB4727.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: aqgnsPkpRYq6Cx8jUhLzXOrQPtn2uZ4GdAbEzrmBTrdjsOU9itZDcrhcVzh2PVV9SEsdzsIjSh1Exh5VXxsoZlZn42uFPDmxfgm08XGMoUc0Jbv2Pcgkcd8w9xUfU88DamIX27N1OkAcElYnI54IlcIbffZT+a1Rgs1Z4j6JplNroKH5HQgfN70v19PB6/r3H0WqcKATMy4ZY2XuKh2/fhFsZhU17KWJ8BbkXEC6hyFt/XmHopv2gh60AyMFehiR/uI6epgS8N8089mMCQ5ugD63d8t/bhKTLSJyO7eW+L3PvAJBH2b/akq8DjmD/oG8iRGWWe26k0BqwF2CRtBuVViw6lv+IXb/rfgGqHqlpLPt699FHEKQ3YZWn8GHY6x/YpGeUDxmiZFHr91FohRy34i9GPtiurAR4Wf8VPJ6pqVF/Xj4r4B1/KimMUEkMBAiNC/D935Wy2zrhUE3i7V6qDL5Cu7deiYfCy2ti75LDRTxxXW5OTHUnf3y0dljOZ3n9ci3gyMg7419gw14nQD1fsD6gA41rAV27qaIHxyiKh6gvE5QLoElJZAf0fdegrtzHyaKzl70wL/vEenn8FcRdghVqKIXk+GWN4W42ADp4/D6/wfTdm+OkpxJLUxVP6yqjN8tSgnZc9paCRjdcyaERfl84qEcxkha6N3Qouq7Em1knbSDjVK5jhqvh6OphR0lkwenrnC1/hoKmk0rzeJ6h0KIqcC/U9K4gJgzEzc7wuM=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(376002)(366004)(136003)(396003)(39860400002)(346002)(55016002)(83380400001)(5660300002)(36916002)(4326008)(8936002)(316002)(66946007)(66556008)(2906002)(66476007)(7696005)(6916009)(478600001)(4744005)(956004)(26005)(54906003)(38100700002)(8676002)(86362001)(38350700002)(186003)(52116002)(32563001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?6tZkVFwjxSX4l0+dhGZWcuRt7WDDwcxjAWUmao7qSDhTUtUrr6zkxaeSaoY5?=
+ =?us-ascii?Q?RiqRa/ALbXBTXA8WRIFtE36iIUBzavcVN6vb3XWpBdq9KTezuH5dwb4YISBh?=
+ =?us-ascii?Q?wf69q0Qe1Idi6hybRThwsuNCtJxjS/RRqpcoi97HMVJmM1CRzWcGcEjeUMD0?=
+ =?us-ascii?Q?M4Dy/gyl5xn5prRUcQ8J9T2W4/v58Ryb4mM/uIVUEUM8OR0gYn6fiKp1QhtS?=
+ =?us-ascii?Q?S15eJ4Au2jkywPJbvkmWADVrA6QMpB18SRepeJHHCq/uwo38k3l8XIp26BfJ?=
+ =?us-ascii?Q?IbyhWm3ITs1tTwvAiO2BZIMylryu0XQVlvZdG9ErurWMD/Qe26YA0KtcFNYg?=
+ =?us-ascii?Q?LpoeMcK601rb6eNkfU1Exc5nCR9t9TyGNkhUADoM+6hiGd9oMktd/KtATGnd?=
+ =?us-ascii?Q?KBBacSRr6B4iOnNIuzvMnshy8TkIkJGMUhabG7iLvFzkLIg7pdqHR+8PIXLg?=
+ =?us-ascii?Q?QEhNXa1FVlf3ALOVayVIrOBfZG1/ndT0b85d/XdJLP4dt7ipNAoBDNcPqnTA?=
+ =?us-ascii?Q?ytPOOHvuo+EoG7gmATdwox7YT4SclducFywUNDdb3Edro3NSLNAkG8Sn6+mw?=
+ =?us-ascii?Q?vzKisQzDR2msbM/h0SSEAgc8+m0ODCPlJjw5dEGHDahd0SRybkeZwGVAuXuW?=
+ =?us-ascii?Q?JclQNlhRTMWPO2FRMNYTPEUdYyE6CgEcC7CuhkswusllzbX+eR3YIvQ5zILo?=
+ =?us-ascii?Q?fDy/dCIHz4LakFyL1pogWnCJ/OHxPWGSN49ff+LcIVRCerN9CR6xaRgbQDyL?=
+ =?us-ascii?Q?umIRJdLbBbKgAicfsEExBgHNyPZvD2LiAv8y41OU9bxSczQNh/l54vTD+862?=
+ =?us-ascii?Q?qG58Kj/YbrLenO9dapfA5CBxPBbeWvaIx4Z40+3QeO7ZkHoBX9rpMKkjBjve?=
+ =?us-ascii?Q?X278h8qAVXkzNngAA6cpkKljTt96O1iub7PUR+71SPTa6ahf6EEC9D0UTkd1?=
+ =?us-ascii?Q?VJH9wotRVqvOEIh6pKkueZKRr7gxYslM3/aVXLDtn/dKmjGIJPx7g1e9WHkx?=
+ =?us-ascii?Q?MpJmZ8OykT6oeACcakQqM/piciizK+gERWv1SyGvy5Toi+kJNX/LxNzUQISO?=
+ =?us-ascii?Q?E/1aMIwkFUpyJrCZqRAzfn8GE+StKwrDcB/Nede3hCH8Q/M5P0K37MkPiLyR?=
+ =?us-ascii?Q?XYwt0vjA9joa4aNgeCxId/mENHZDraowilUPlaYs1c8ToGvdPDJIkrxAfB+4?=
+ =?us-ascii?Q?QMbcKbB3p7aJYevJgnwtcqj8QfgdCHVWqTRBBuFBS/PxUlcdReBZwvkjkwkO?=
+ =?us-ascii?Q?4tUsPPWjz0PMuAcGjicYQheZxeVvx7d/AjwPjYbNFCoDohpNlAap1SSR/I3r?=
+ =?us-ascii?Q?DPtRkhfR9bKBW6EBTEgNipLz?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 69cce786-aab1-4088-7b34-08d940ad5f69
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Jul 2021 18:39:22.5606
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: tkiOO3nlxLfqcFPBfC8I1uT4iUtKwtj6z+jIFRO/r/HyCgJWbkU8r/EcXZ4Qp7oiGa7UFxvSzU4oCtFgrYQBH5XzHLNjrLmL0Qs2FvPGuLc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4727
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10037 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 phishscore=0
+ adultscore=0 suspectscore=0 mlxscore=0 mlxlogscore=999 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2104190000
+ definitions=main-2107060087
+X-Proofpoint-ORIG-GUID: wLYKKgi5ZoljLvHrm5HvXI5Bb88lNND0
+X-Proofpoint-GUID: wLYKKgi5ZoljLvHrm5HvXI5Bb88lNND0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---q2vlxiybuwkj6z7s
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Sreekanth,
 
-Hello,
+> I verified strscpy() is not adding any null terminator when source
+> string length is greater than destination buffer size.
 
-v1 was acked by some more after I stopped looking in my mailbox while
-preparing v2:
+That's odd. The point of strscpy() is that it guarantees termination:
 
-On Tue, Jul 06, 2021 at 05:48:03PM +0200, Uwe Kleine-K=F6nig wrote:
-> The driver core ignores the return value of this callback because there
-> is only little it can do when a device disappears.
->=20
-> This is the final bit of a long lasting cleanup quest where several
-> buses were converted to also return void from their remove callback.
-> Additionally some resource leaks were fixed that were caused by drivers
-> returning an error code in the expectation that the driver won't go
-> away.
->=20
-> With struct bus_type::remove returning void it's prevented that newly
-> implemented buses return an ignored error code and so don't anticipate
-> wrong expectations for driver authors.
->=20
-> Acked-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk> (For ARM, Am=
-ba and related parts)
-> Acked-by: Mark Brown <broonie@kernel.org>
-> Acked-by: Chen-Yu Tsai <wens@csie.org> (for drivers/bus/sunxi-rsb.c)
-> Acked-by: Pali Roh=E1r <pali@kernel.org>
-> Acked-by: Mauro Carvalho Chehab <mchehab@kernel.org> (for drivers/media)
-> Acked-by: Hans de Goede <hdegoede@redhat.com> (For drivers/platform)
-> Acked-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
-> Acked-By: Vinod Koul <vkoul@kernel.org>
-> Acked-by: Juergen Gross <jgross@suse.com> (For Xen)
-> Acked-by: Lee Jones <lee.jones@linaro.org> (For drivers/mfd)
-> Acked-by: Johannes Thumshirn <jth@kernel.org> (For drivers/mcb)
-> Acked-by: Johan Hovold <johan@kernel.org>
-> Acked-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org> (For drive=
-rs/slimbus)
-> Acked-by: Kirti Wankhede <kwankhede@nvidia.com> (For drivers/vfio)
-> Acked-by: Maximilian Luz <luzmaximilian@gmail.com>
-> Acked-by: Heikki Krogerus <heikki.krogerus@linux.intel.com> (For ulpi and=
- typec)
-> Acked-by: Samuel Iglesias Gons=E1lvez <siglesias@igalia.com> (For ipack)
-> Reviewed-by: Tom Rix <trix@redhat.com> (For fpga)
-> Acked-by: Geoff Levand <geoff@infradead.org> (For ps3)
+---8<---
+/**
+ * strscpy - Copy a C-string into a sized buffer
+ * @dest: Where to copy the string to
+ * @src: Where to copy the string from
+ * @count: Size of destination buffer
+ *
+ * Copy the string, or as much of it as fits, into the dest buffer.  The
+ * behavior is undefined if the string buffers overlap.  The destination
+ * buffer is always NUL terminated, unless it's zero-sized.
+---8<---
 
-Acked-by: Yehezkel Bernat <YehezkelShB@gmail.com> (For thunderbolt)
-Reviewed-by: Mathieu Poirier <mathieu.poirier@linaro.org>
-Acked-by: Alexander Shishkin <alexander.shishkin@linux.intel.com> (For inte=
-l_th)
-Acked-by: Dominik Brodowski <linux@dominikbrodowski.net> (For pcmcia)
+I tested it and it works fine for me.
 
-> Signed-off-by: Uwe Kleine-K=F6nig <u.kleine-koenig@pengutronix.de>
-
-Best regards
-Uwe
-
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | https://www.pengutronix.de/ |
-
---q2vlxiybuwkj6z7s
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmDkoawACgkQwfwUeK3K
-7AkRFgf/Qj+Sw4DQa5XQzuIke1atkI5Z9SH6bby9lfgLCjU/9fFWokjZXUFUlHEd
-p6KCgzwG5JD4RoIVKyntr/S7rR3FlCH5aMtgDi4xzKWybmOwAdP5XCSzU6ois1Cd
-G76Gg954N8CBAyFE6c0p18Fu1R1fscGQQDIF6yrUJ6p9WbpckBTw8xuX/AOicKcu
-r9s0okuUVqJmb0eM1Io+LGgjIvSLaUPl2lFnllwI6ztli3Wwo3NhHhy0iFZN9q1n
-IAXVYkylaIeq6hoC+Fo0NN0/ZNZRsV+s2qlzlaQkj8zQmyYqfN369rEDpTajwdlU
-JoOxFMsceOjeYMAEfCEfUeEBRom3lw==
-=mbzo
------END PGP SIGNATURE-----
-
---q2vlxiybuwkj6z7s--
+-- 
+Martin K. Petersen	Oracle Linux Engineering
