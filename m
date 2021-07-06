@@ -2,141 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04718C07E9B
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 18:08:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5150C07E96
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 18:16:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DDBF261076
-	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 18:08:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A95261C68
+	for <linux-scsi@archiver.kernel.org>; Tue,  6 Jul 2021 18:16:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231190AbhGFSLC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 6 Jul 2021 14:11:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52928 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230082AbhGFSLB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2021 14:11:01 -0400
-Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EB38C061765
-        for <linux-scsi@vger.kernel.org>; Tue,  6 Jul 2021 11:08:23 -0700 (PDT)
-Received: by mail-ot1-x331.google.com with SMTP id 7-20020a9d0d070000b0290439abcef697so22495439oti.2
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Jul 2021 11:08:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=rFh4HQBpaw9ewOD7eKuJ7KI9YAzHhN8tlxJ6LopMKHs=;
-        b=Sz6rE6fIxKghlltcLCE+UXPsQefAUgPvTMscjeRzq2kl6NTGV49umux5xM0XcDuF3f
-         KuSKKfkZ8nSISGEXHz3w1v+CP9bxuRJkim+LBmkXAMBhskBSVWy4R8UYC7L1pwY+g7hz
-         Zg3WKG3mRVhsusU5VFmdXh5UPocqhZf4lahEU95r9tDGNbsVfHF1Q4HkA+YZfm/i81fd
-         v0xNi9dJEaEvf856OdG6fjSc31APYItT+IUiPzbg0w9QbfcYoXqLRo58SwLlUHuXr/Qb
-         gjgu5RAVRwk/bKL57rYJjqGIxVt7qPeDusZUEamQ36NdV7/ZYwdc/uo7wSJkJLcpf0tD
-         jOXA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=rFh4HQBpaw9ewOD7eKuJ7KI9YAzHhN8tlxJ6LopMKHs=;
-        b=SCLT3wK4ddMczfVSItoeQPa6+pIqx05bj3O9/nmbWEg0lEJJOI64+kjdSFl6/2L4GJ
-         +JSOTYBezYBQ7GtD9Fs46+EFyVPEND8NagihG/LzGA9vxNylYg8UKne5dF65M28d1Uto
-         DbMiGDjnt7ZcQKN3j4BPMaY15tEC2HNU15ca+CR5NWJFJr1kjlICDaqMu/61C6hGFvLj
-         xI/HepGMjpzMsfMB6ozyfZViEvvZA1IijftQD1RFD/Cv/WT1C7+/plc0x/X1VhjpJp2U
-         yVgAIbJtcktGPwGEuYqzGrNeC9pKKrCuqyDUwGYoctGJie8BzWZle2EGYDXIvuihPPbx
-         oBIQ==
-X-Gm-Message-State: AOAM530qkubO/lwD3jb5Y2gTQwfGUC6IUAgpYbpmg+cBcc7Ar7AGZ4E5
-        e0JKOEvTFclvl/u9rL4nqYAh5w==
-X-Google-Smtp-Source: ABdhPJwwC8pa+wbm0v5SSaX+DFJoQ7jJmXTjdD3iH0933Y2rw8Y2+zYlxp2w0qjcBNkHXGnjSvRJ6w==
-X-Received: by 2002:a9d:3d3:: with SMTP id f77mr16276146otf.43.1625594902170;
-        Tue, 06 Jul 2021 11:08:22 -0700 (PDT)
-Received: from yoga (104-57-184-186.lightspeed.austtx.sbcglobal.net. [104.57.184.186])
-        by smtp.gmail.com with ESMTPSA id 68sm497113otd.74.2021.07.06.11.08.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 06 Jul 2021 11:08:21 -0700 (PDT)
-Date:   Tue, 6 Jul 2021 13:08:18 -0500
-From:   Bjorn Andersson <bjorn.andersson@linaro.org>
-To:     Uwe Kleine-K?nig <u.kleine-koenig@pengutronix.de>
-Cc:     kernel@pengutronix.de, linux-arm-kernel@lists.infradead.org,
-        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linuxppc-dev@lists.ozlabs.org, linux-acpi@vger.kernel.org,
-        linux-wireless@vger.kernel.org, linux-sunxi@lists.linux.dev,
-        linux-cxl@vger.kernel.org, nvdimm@lists.linux.dev,
-        dmaengine@vger.kernel.org, linux1394-devel@lists.sourceforge.net,
-        linux-fpga@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-i2c@vger.kernel.org,
-        linux-i3c@lists.infradead.org,
-        industrypack-devel@lists.sourceforge.net,
-        linux-media@vger.kernel.org, linux-mmc@vger.kernel.org,
-        netdev@vger.kernel.org, linux-ntb@googlegroups.com,
-        linux-pci@vger.kernel.org, platform-driver-x86@vger.kernel.org,
-        linux-remoteproc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        alsa-devel@alsa-project.org, linux-arm-msm@vger.kernel.org,
-        linux-spi@vger.kernel.org, linux-staging@lists.linux.dev,
-        greybus-dev@lists.linaro.org, target-devel@vger.kernel.org,
-        linux-usb@vger.kernel.org, linux-serial@vger.kernel.org,
-        virtualization@lists.linux-foundation.org, kvm@vger.kernel.org,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v2 4/4] bus: Make remove callback return void
-Message-ID: <YOSb1+yeVeLxiSRc@yoga>
-References: <20210706154803.1631813-1-u.kleine-koenig@pengutronix.de>
- <20210706154803.1631813-5-u.kleine-koenig@pengutronix.de>
+        id S230032AbhGFSS6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 6 Jul 2021 14:18:58 -0400
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:56937 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229954AbhGFSS6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Jul 2021 14:18:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1625595380; x=1657131380;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=bh9tLpUYfRHpBdEH/hoayQHkE0kEyRqmUgvJ86oiQlw=;
+  b=GOihT6itNrhW1WT5t6PdHFjTcuDSb9Hd3XS6b3KPfbsDN1inzKunF0/g
+   F5tCZvUvW3DjCvjCm2Xaqbbzdj+7avJpxTuOxq/VK7KF1TOiyRkSsZViV
+   AnUI5cdw+JKPmf9tbaC0YTrBSmrTsX4+1q7h99J03Q4VBvU9Tg2VYuZU+
+   Z7gJcf0d6QE/EHyh9sxEBZjt1EGATrJnB9PMDwo6p7S/hkgEddcLN/k4H
+   ZCvyBQ+ZhO24fpq6JmlFX041c2miyYUntU1nHhKPVo5gGEfW2UhOsOXER
+   gHskTAkx08jORQw0ORGXr2Ku5Rjwk0Pa8czMi+IkQHfVc24iVwq+LPNKA
+   Q==;
+IronPort-SDR: sGyd5kae2XsK8iNkmyY5vn0C3qBMDaZM2tLmfjJ2/UIGyaOApwb6xu9mlhUkCCRWXZsamkuxDs
+ iDtK/sMT4ILvTXnThUYGhfAFvLA2o4zbYDoYcNFW78o/04A8EgsxQmoF/IDw1FZAwjgFfJv+AM
+ yNGqXB9ywOWi0968vksqKYhrF/QrI/g1Dl1tqiuMoN+G0PY1NIdJYBZJhjLHnRaLB4166QLaKB
+ ZKXVbDw2B+D9aAdXsk6Qk9fvds8KbzGMheuW2IdfI+xk2gXMfALzWXMrkb1FV1ohTN/Dklak01
+ i54=
+X-IronPort-AV: E=Sophos;i="5.83,329,1616482800"; 
+   d="scan'208";a="127272694"
+Received: from smtpout.microchip.com (HELO smtp.microsemi.com) ([198.175.253.82])
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 06 Jul 2021 11:16:20 -0700
+Received: from AUSMBX1.microsemi.net (10.10.76.217) by AUSMBX2.microsemi.net
+ (10.10.76.218) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 6 Jul 2021
+ 11:16:18 -0700
+Received: from brunhilda.pdev.net (10.238.32.34) by ausmbx1.microsemi.net
+ (10.10.76.217) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Tue, 6 Jul 2021 11:16:18 -0700
+Received: by brunhilda.pdev.net (Postfix, from userid 1467)
+        id 5495770204B; Tue,  6 Jul 2021 13:16:18 -0500 (CDT)
+From:   Don Brace <don.brace@microchip.com>
+To:     <hch@infradead.org>, <martin.peterson@oracle.com>,
+        <jejb@linux.vnet.ibm.com>, <linux-scsi@vger.kernel.org>
+CC:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
+        <mike.mcgowen@microchip.com>, <murthy.bhat@microchip.com>,
+        <balsundar.p@microchip.com>, <joseph.szczypek@hpe.com>,
+        <jeff@canonical.com>, <POSWALD@suse.com>,
+        <john.p.donnelly@oracle.com>, <mwilck@suse.com>,
+        <pmenzel@molgen.mpg.de>, <linux-kernel@vger.kernel.org>
+Subject: [smartpqi updates  PATCH 0/9] smartpqi updates
+Date:   Tue, 6 Jul 2021 13:16:09 -0500
+Message-ID: <20210706181618.27960-1-don.brace@microchip.com>
+X-Mailer: git-send-email 2.28.0.rc1.9.ge7ae437ac1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210706154803.1631813-5-u.kleine-koenig@pengutronix.de>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue 06 Jul 10:48 CDT 2021, Uwe Kleine-K?nig wrote:
+These patches are based on Martin Peterson's 5.14/scsi-queue tree
+https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git 
+      5.14/scsi-queue
 
-> The driver core ignores the return value of this callback because there
-> is only little it can do when a device disappears.
-> 
-> This is the final bit of a long lasting cleanup quest where several
-> buses were converted to also return void from their remove callback.
-> Additionally some resource leaks were fixed that were caused by drivers
-> returning an error code in the expectation that the driver won't go
-> away.
-> 
-> With struct bus_type::remove returning void it's prevented that newly
-> implemented buses return an ignored error code and so don't anticipate
-> wrong expectations for driver authors.
-> 
+Most of these patches consist of adding new PCI devices. The remainder
+are simple updates to correct some rare issues and clean up some
+driver messages.
 
-Thanks for doing this!
+This set of changes consist of:
+  * Add in new PCI-IDs.
+    5 of these patches are adding in new PCI-IDs.
+  * Removing unnecessary unsupported feature messages.
+  * Update copyright information.
+  * Enhance reset messages.
+    - Add SCSI command CDB[0] value to message.
+    - Also check for a 0 length SCSI command that can occur if
+      sg_reset is issued without any outstanding SCSI commands.
+  * Clean up a rare initialization issue where interrupts are
+    enabled before the supporting controller context has been
+    fully initialized causing NULL pointer access.
+  * Update the driver version to 2.1.10-020
 
-Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org> (rpmsg and apr)
 
-[..]
-> diff --git a/drivers/rpmsg/rpmsg_core.c b/drivers/rpmsg/rpmsg_core.c
-> index c1404d3dae2c..7f6fac618ab2 100644
-> --- a/drivers/rpmsg/rpmsg_core.c
-> +++ b/drivers/rpmsg/rpmsg_core.c
-> @@ -530,7 +530,7 @@ static int rpmsg_dev_probe(struct device *dev)
->  	return err;
->  }
->  
-> -static int rpmsg_dev_remove(struct device *dev)
-> +static void rpmsg_dev_remove(struct device *dev)
->  {
->  	struct rpmsg_device *rpdev = to_rpmsg_device(dev);
->  	struct rpmsg_driver *rpdrv = to_rpmsg_driver(rpdev->dev.driver);
-> @@ -546,8 +546,6 @@ static int rpmsg_dev_remove(struct device *dev)
->  
->  	if (rpdev->ept)
->  		rpmsg_destroy_ept(rpdev->ept);
-> -
-> -	return err;
+Balsundar P (2):
+  smartpqi: add PCI id for H3C P4408 controller
+  smartpqi: add PCI IDs for new ZTE controllers
 
-This leaves err assigned but never used, but I don't mind following up
-with a patch cleaning that up after this has landed.
+Don Brace (1):
+  smartpqi: update version to 2.1.10-020
 
->  }
->  
->  static struct bus_type rpmsg_bus = {
+Kevin Barnett (2):
+  smartpqi: rm unsupported controller features msgs
+  smartpqi: update copyright notices
 
-Regards,
-Bjorn
+Mahesh Rajashekhara (1):
+  smartpqi: add pci id for H3C controller
+
+Mike McGowen (2):
+  smartpqi: add PCI-ID for new Norsi controller
+  smartpqi: fix isr accessing null structure member
+
+Murthy Bhat (1):
+  smartpqi: add SCSI cmd info for resets
+
+ drivers/scsi/smartpqi/smartpqi.h              |  6 +-
+ drivers/scsi/smartpqi/smartpqi_init.c         | 69 ++++++++++++++-----
+ .../scsi/smartpqi/smartpqi_sas_transport.c    |  4 +-
+ drivers/scsi/smartpqi/smartpqi_sis.c          |  4 +-
+ drivers/scsi/smartpqi/smartpqi_sis.h          |  4 +-
+ 5 files changed, 61 insertions(+), 26 deletions(-)
+
+-- 
+2.28.0.rc1.9.ge7ae437ac1
+
