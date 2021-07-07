@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A8BC11F89
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC7ECC11F79
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6AEB161CCB
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA2B1619C6
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232500AbhGGPiP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 11:38:15 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55364 "EHLO
+        id S232575AbhGGPif (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 11:38:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232392AbhGGPiE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 11:38:04 -0400
-Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A6CEC061767;
-        Wed,  7 Jul 2021 08:35:18 -0700 (PDT)
-Received: by mail-pg1-x531.google.com with SMTP id f5so2634931pgv.3;
-        Wed, 07 Jul 2021 08:35:18 -0700 (PDT)
+        with ESMTP id S232405AbhGGPiK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 11:38:10 -0400
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A092DC061767;
+        Wed,  7 Jul 2021 08:35:28 -0700 (PDT)
+Received: by mail-pf1-x42f.google.com with SMTP id f20so2523200pfa.1;
+        Wed, 07 Jul 2021 08:35:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=XnnD+WKjmMaIcoxzXQeIqu3OOT9S8jIhhegPGmtXPps=;
-        b=oaL0A1JtN7PBLGoV1YGeMFUgyp9SyUFco9uhf2pPj9nDoTX16X2ZY93jk5mSlH+DsN
-         SvCLYXZI+R7feW0Jx0OMtXNb4f62D1NKXZBhVGBE//ZTEOLu6B147uN+5g6H2xL9diy5
-         ufW4ucIzb9GScnOrnpTdTFdTQX2AYyQODtFUohD33rBRHrIipu1aU1jrbbynVzOeLZPr
-         5hxECBpjjXTRzk23jlBCHvmcAXtPztCNhXumUoIHe4jBxeK8cDgUJZKiMEk8kLBBHCU6
-         7G8klAIhGVfKVULa1RhqCfv0O34Au8CkmaWIXjZAzuWOdrG/V8D3KqnPCDtjK/EdzTix
-         jn7Q==
+        bh=uSViD25AWGJ6J+QgAwUoKBubGeqJPy/dkYcV0Fzox+c=;
+        b=hxtJfit4Ppjmah6XFuSxBgEgKz4f338nj5l+EvxtZhggrVRUinn9AOrQHtV3DDZKcM
+         Ej5ATK6iOzTsbjVivb/g+9BTMQWADu3EwiqxqN0N034NnjHVc5RFaWjZZi8FrmBMNjDc
+         kTVnavRihE+IY8ODngcmJiywHcuNcHf6IcItZHfq52OJ3mn628/zSiJ1ZgbxaWVOUSz0
+         Bsu309dV76TSTZYXHHmFastBrfBKRfU/I05CMDCuXl3O9z1Cu5af5rOCjJWqoHIbc7yU
+         FHWKIg6ac9HX4tS5ngN1//k6dwB1ZObR8FLS5h0F4YZI3QaLm7LWUf48h70wjoQGvKbN
+         Okyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=XnnD+WKjmMaIcoxzXQeIqu3OOT9S8jIhhegPGmtXPps=;
-        b=k3Yd1lhZLnfByRS79qDjc7DpGBJP4uNhBuUMuchuNEWRHcTpEhQ6o9Qr6FtDe4hM8u
-         F9TWMNVH7ZCcpBKL++rKhxX55s+c+TNfNNRCC5vh/sbO/XetZJwyVzCbKJcZ9JqrYMwz
-         uwSyDqQ+dC3pyUDTfdvJ1adh8GAfzGN7KGWzI/hpD4xw15+DaAwDTJuuuXRRlff9cuqb
-         Pob6nnWvbq+sPBFEAR0vscBopnzTI9BUCrF2/Hq9bE2NhOk1aEGB/lyioPGmTyi8bsxp
-         wAYx+ydsb888C8sk0MRcz8QVlc0VTZaTVb3AdyMVDMZ6MmbyfoscSMcrjCBEOTd6OIX4
-         rv5g==
-X-Gm-Message-State: AOAM531GA0bmP5Lph6oy7sUPdwGKH8Otx7afMpcu4cKo3XfbGgNd6yIo
-        GNH8cheCpvC/L/BykHT73Lo=
-X-Google-Smtp-Source: ABdhPJxV6H7qeqYvuTG8QtTM4W1lsIpIcrJFKXi7bJYXvWIOKqZZzABLwFM0i62fKflJpqZul4Pglw==
-X-Received: by 2002:a63:3dcb:: with SMTP id k194mr26633987pga.202.1625672118056;
-        Wed, 07 Jul 2021 08:35:18 -0700 (PDT)
+        bh=uSViD25AWGJ6J+QgAwUoKBubGeqJPy/dkYcV0Fzox+c=;
+        b=huUgUTD1/CC+64EN43Lvl9a08Ht7ZWQUVWKKHRoyLhfzGxqMZXkscpIlM7xJl1aKQw
+         4BPTnXREPmUWknSG/LmYz1Bg8NvhrwtRaui2dbACQHjvddCgAWgYRxn28bH3+b0o5N6N
+         bRidBzamiCzEq7kpVIjjjOlC/cgk7LrQbpsfofmKvxGaN1kcuxcSUshT0mN0ivskQTUA
+         gECHuh5j+2JmYFpfce5xK3Ck43P9smUOFaoIfkazuZUX1dCCP7qyXKifKvI8JDHb5dti
+         Du1VGaYIFrhtbLVTKmaPchHru91O5smthHr1z3FW+92OhoKz7U5dPwtPY8m34rwvuIUp
+         AzOw==
+X-Gm-Message-State: AOAM533VksNR95xY9w6+vNgFWQu7pcnp4aIaax3Q/2m4oSMdLrohg7C+
+        h/wANF4IgWYTuJBzWTssYyU=
+X-Google-Smtp-Source: ABdhPJxV4DDJMJ1p4O1TlHaSs9jPf4KD9VnkCZ6P4EFyDuvhbptUFuslKTwEut8HFiRhRRaysKUCzA==
+X-Received: by 2002:a63:4b23:: with SMTP id y35mr26837209pga.179.1625672128224;
+        Wed, 07 Jul 2021 08:35:28 -0700 (PDT)
 Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:0:6b7f:cf3e:bbf2:d229])
-        by smtp.gmail.com with ESMTPSA id y11sm21096877pfo.160.2021.07.07.08.35.17
+        by smtp.gmail.com with ESMTPSA id y11sm21096877pfo.160.2021.07.07.08.35.27
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Jul 2021 08:35:17 -0700 (PDT)
+        Wed, 07 Jul 2021 08:35:27 -0700 (PDT)
 From:   Tianyu Lan <ltykernel@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
@@ -78,9 +78,9 @@ Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
         linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
         vkuznets@redhat.com, brijesh.singh@amd.com, anparri@microsoft.com
-Subject: [RFC PATCH V4 05/12] HV: Add ghcb hvcall support for SNP VM
-Date:   Wed,  7 Jul 2021 11:34:46 -0400
-Message-Id: <20210707153456.3976348-6-ltykernel@gmail.com>
+Subject: [RFC PATCH V4 09/12] HV/IOMMU: Enable swiotlb bounce buffer for Isolation VM
+Date:   Wed,  7 Jul 2021 11:34:50 -0400
+Message-Id: <20210707153456.3976348-10-ltykernel@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210707153456.3976348-1-ltykernel@gmail.com>
 References: <20210707153456.3976348-1-ltykernel@gmail.com>
@@ -92,159 +92,196 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-Hyper-V provides ghcb hvcall to handle VMBus
-HVCALL_SIGNAL_EVENT and HVCALL_POST_MESSAGE
-msg in SNP Isolation VM. Add such support.
+Hyper-V Isolation VM requires bounce buffer support to copy
+data from/to encrypted memory and so enable swiotlb force
+mode to use swiotlb bounce buffer for DMA transaction.
+
+In Isolation VM with AMD SEV, the bounce buffer needs to be
+accessed via extra address space which is above shared_gpa_boundary
+(E.G 39 bit address line) reported by Hyper-V CPUID ISOLATION_CONFIG.
+The access physical address will be original physical address +
+shared_gpa_boundary. The shared_gpa_boundary in the AMD SEV SNP
+spec is called virtual top of memory(vTOM). Memory addresses below
+vTOM are automatically treated as private while memory above
+vTOM is treated as shared.
+
+Swiotlb bounce buffer code calls set_memory_decrypted_map()
+to mark bounce buffer visible to host and map it in extra
+address space.
+
+Hyper-V initalizes swiotlb bounce buffer and default swiotlb
+needs to be disabled. pci_swiotlb_detect_override() and
+pci_swiotlb_detect_4gb() enable the default one. To override
+the setting, hyperv_swiotlb_detect() needs to run before
+these detect functions which depends on the pci_xen_swiotlb_
+init(). Make pci_xen_swiotlb_init() depends on the hyperv_swiotlb
+_detect() to keep the order.
+
+The map function vmap_pfn() can't work in the early place
+hyperv_iommu_swiotlb_init() and so initialize swiotlb bounce
+buffer in the hyperv_iommu_swiotlb_later_init().
 
 Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 ---
- arch/x86/hyperv/ivm.c           | 42 +++++++++++++++++++++++++++++++++
- arch/x86/include/asm/mshyperv.h |  1 +
- drivers/hv/connection.c         |  6 ++++-
- drivers/hv/hv.c                 |  8 ++++++-
- include/asm-generic/mshyperv.h  | 29 +++++++++++++++++++++++
- 5 files changed, 84 insertions(+), 2 deletions(-)
+ arch/x86/xen/pci-swiotlb-xen.c |  3 +-
+ drivers/hv/vmbus_drv.c         |  3 ++
+ drivers/iommu/hyperv-iommu.c   | 62 ++++++++++++++++++++++++++++++++++
+ include/linux/hyperv.h         |  1 +
+ 4 files changed, 68 insertions(+), 1 deletion(-)
 
-diff --git a/arch/x86/hyperv/ivm.c b/arch/x86/hyperv/ivm.c
-index c7b54631ca0d..8a6f4e9e3d6c 100644
---- a/arch/x86/hyperv/ivm.c
-+++ b/arch/x86/hyperv/ivm.c
-@@ -15,6 +15,48 @@
- #include <asm/io.h>
- #include <asm/mshyperv.h>
+diff --git a/arch/x86/xen/pci-swiotlb-xen.c b/arch/x86/xen/pci-swiotlb-xen.c
+index 54f9aa7e8457..43bd031aa332 100644
+--- a/arch/x86/xen/pci-swiotlb-xen.c
++++ b/arch/x86/xen/pci-swiotlb-xen.c
+@@ -4,6 +4,7 @@
  
-+u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size)
+ #include <linux/dma-map-ops.h>
+ #include <linux/pci.h>
++#include <linux/hyperv.h>
+ #include <xen/swiotlb-xen.h>
+ 
+ #include <asm/xen/hypervisor.h>
+@@ -91,6 +92,6 @@ int pci_xen_swiotlb_init_late(void)
+ EXPORT_SYMBOL_GPL(pci_xen_swiotlb_init_late);
+ 
+ IOMMU_INIT_FINISH(pci_xen_swiotlb_detect,
+-		  NULL,
++		  hyperv_swiotlb_detect,
+ 		  pci_xen_swiotlb_init,
+ 		  NULL);
+diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
+index 92cb3f7d21d9..5e3bb76d4dee 100644
+--- a/drivers/hv/vmbus_drv.c
++++ b/drivers/hv/vmbus_drv.c
+@@ -23,6 +23,7 @@
+ #include <linux/cpu.h>
+ #include <linux/sched/task_stack.h>
+ 
++#include <linux/dma-map-ops.h>
+ #include <linux/delay.h>
+ #include <linux/notifier.h>
+ #include <linux/ptrace.h>
+@@ -2080,6 +2081,7 @@ struct hv_device *vmbus_device_create(const guid_t *type,
+ 	return child_device_obj;
+ }
+ 
++static u64 vmbus_dma_mask = DMA_BIT_MASK(64);
+ /*
+  * vmbus_device_register - Register the child device
+  */
+@@ -2120,6 +2122,7 @@ int vmbus_device_register(struct hv_device *child_device_obj)
+ 	}
+ 	hv_debug_add_dev_dir(child_device_obj);
+ 
++	child_device_obj->device.dma_mask = &vmbus_dma_mask;
+ 	return 0;
+ 
+ err_kset_unregister:
+diff --git a/drivers/iommu/hyperv-iommu.c b/drivers/iommu/hyperv-iommu.c
+index e285a220c913..d7ea8e05b991 100644
+--- a/drivers/iommu/hyperv-iommu.c
++++ b/drivers/iommu/hyperv-iommu.c
+@@ -13,14 +13,22 @@
+ #include <linux/irq.h>
+ #include <linux/iommu.h>
+ #include <linux/module.h>
++#include <linux/hyperv.h>
++#include <linux/io.h>
+ 
+ #include <asm/apic.h>
+ #include <asm/cpu.h>
+ #include <asm/hw_irq.h>
+ #include <asm/io_apic.h>
++#include <asm/iommu.h>
++#include <asm/iommu_table.h>
+ #include <asm/irq_remapping.h>
+ #include <asm/hypervisor.h>
+ #include <asm/mshyperv.h>
++#include <asm/swiotlb.h>
++#include <linux/dma-map-ops.h>
++#include <linux/dma-direct.h>
++#include <linux/set_memory.h>
+ 
+ #include "irq_remapping.h"
+ 
+@@ -36,6 +44,8 @@
+ static cpumask_t ioapic_max_cpumask = { CPU_BITS_NONE };
+ static struct irq_domain *ioapic_ir_domain;
+ 
++static unsigned long hyperv_io_tlb_start, hyperv_io_tlb_size;
++
+ static int hyperv_ir_set_affinity(struct irq_data *data,
+ 		const struct cpumask *mask, bool force)
+ {
+@@ -337,4 +347,56 @@ static const struct irq_domain_ops hyperv_root_ir_domain_ops = {
+ 	.free = hyperv_root_irq_remapping_free,
+ };
+ 
++void __init hyperv_iommu_swiotlb_init(void)
 +{
-+	union hv_ghcb *hv_ghcb;
-+	void **ghcb_base;
-+	unsigned long flags;
++	unsigned long bytes;
++	void *vstart;
 +
-+	if (!ms_hyperv.ghcb_base)
-+		return -EFAULT;
++	/*
++	 * Allocate Hyper-V swiotlb bounce buffer at early place
++	 * to reserve large contiguous memory.
++	 */
++	hyperv_io_tlb_size = 200 * 1024 * 1024;
++	hyperv_io_tlb_start = memblock_alloc_low(PAGE_ALIGN(hyperv_io_tlb_size),
++						 HV_HYP_PAGE_SIZE);
 +
-+	WARN_ON(in_nmi());
++	if (!hyperv_io_tlb_start) {
++		pr_warn("Fail to allocate Hyper-V swiotlb buffer.\n");
++		return;
++	}
++}
 +
-+	local_irq_save(flags);
-+	ghcb_base = (void **)this_cpu_ptr(ms_hyperv.ghcb_base);
-+	hv_ghcb = (union hv_ghcb *)*ghcb_base;
-+	if (!hv_ghcb) {
-+		local_irq_restore(flags);
-+		return -EFAULT;
++int __init hyperv_swiotlb_detect(void)
++{
++	if (hypervisor_is_type(X86_HYPER_MS_HYPERV)
++	    && hv_is_isolation_supported()) {
++		/*
++		 * Enable swiotlb force mode in Isolation VM to
++		 * use swiotlb bounce buffer for dma transaction.
++		 */
++		swiotlb_force = SWIOTLB_FORCE;
++		return 1;
 +	}
 +
-+	memset(hv_ghcb, 0x00, HV_HYP_PAGE_SIZE);
-+	hv_ghcb->ghcb.protocol_version = 1;
-+	hv_ghcb->ghcb.ghcb_usage = 1;
-+
-+	hv_ghcb->hypercall.outputgpa = (u64)output;
-+	hv_ghcb->hypercall.hypercallinput.asuint64 = 0;
-+	hv_ghcb->hypercall.hypercallinput.callcode = control;
-+
-+	if (input_size)
-+		memcpy(hv_ghcb->hypercall.hypercalldata, input, input_size);
-+
-+	VMGEXIT();
-+
-+	hv_ghcb->ghcb.ghcb_usage = 0xffffffff;
-+	memset(hv_ghcb->ghcb.save.valid_bitmap, 0,
-+	       sizeof(hv_ghcb->ghcb.save.valid_bitmap));
-+
-+	local_irq_restore(flags);
-+
-+	return hv_ghcb->hypercall.hypercalloutput.callstatus;
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(hv_ghcb_hypercall);
 +
- void hv_ghcb_msr_write(u64 msr, u64 value)
- {
- 	union hv_ghcb *hv_ghcb;
-diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
-index f9cc3753040a..fe03e3e833ac 100644
---- a/arch/x86/include/asm/mshyperv.h
-+++ b/arch/x86/include/asm/mshyperv.h
-@@ -258,6 +258,7 @@ void hv_sint_rdmsrl_ghcb(u64 msr, u64 *value);
- void hv_signal_eom_ghcb(void);
- void hv_ghcb_msr_write(u64 msr, u64 value);
- void hv_ghcb_msr_read(u64 msr, u64 *value);
-+u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size);
++void __init hyperv_iommu_swiotlb_later_init(void)
++{
++	void *hyperv_io_tlb_remap;
++	int ret;
++
++	/*
++	 * Swiotlb bounce buffer needs to be mapped in extra address
++	 * space. Map function doesn't work in the early place and so
++	 * call swiotlb_late_init_with_tbl() here.
++	 */
++	swiotlb_late_init_with_tbl(hyperv_io_tlb_start,
++				   hyperv_io_tlb_size >> IO_TLB_SHIFT);
++}
++
++IOMMU_INIT_FINISH(hyperv_swiotlb_detect,
++		  NULL, hyperv_iommu_swiotlb_init,
++		  hyperv_iommu_swiotlb_later_init);
++
+ #endif
+diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
+index 06eccaba10c5..babbe19f57e2 100644
+--- a/include/linux/hyperv.h
++++ b/include/linux/hyperv.h
+@@ -1759,6 +1759,7 @@ int hyperv_write_cfg_blk(struct pci_dev *dev, void *buf, unsigned int len,
+ int hyperv_reg_block_invalidate(struct pci_dev *dev, void *context,
+ 				void (*block_invalidate)(void *context,
+ 							 u64 block_mask));
++int __init hyperv_swiotlb_detect(void);
  
- #define hv_get_synint_state_ghcb(int_num, val)			\
- 	hv_sint_rdmsrl_ghcb(HV_X64_MSR_SINT0 + int_num, val)
-diff --git a/drivers/hv/connection.c b/drivers/hv/connection.c
-index 311cd005b3be..186fd4c8acd4 100644
---- a/drivers/hv/connection.c
-+++ b/drivers/hv/connection.c
-@@ -445,6 +445,10 @@ void vmbus_set_event(struct vmbus_channel *channel)
- 
- 	++channel->sig_events;
- 
--	hv_do_fast_hypercall8(HVCALL_SIGNAL_EVENT, channel->sig_event);
-+	if (hv_isolation_type_snp())
-+		hv_ghcb_hypercall(HVCALL_SIGNAL_EVENT, &channel->sig_event,
-+				NULL, sizeof(u64));
-+	else
-+		hv_do_fast_hypercall8(HVCALL_SIGNAL_EVENT, channel->sig_event);
- }
- EXPORT_SYMBOL_GPL(vmbus_set_event);
-diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
-index 59f7173c4d9f..e5c9fc467893 100644
---- a/drivers/hv/hv.c
-+++ b/drivers/hv/hv.c
-@@ -98,7 +98,13 @@ int hv_post_message(union hv_connection_id connection_id,
- 	aligned_msg->payload_size = payload_size;
- 	memcpy((void *)aligned_msg->payload, payload, payload_size);
- 
--	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
-+	if (hv_isolation_type_snp())
-+		status = hv_ghcb_hypercall(HVCALL_POST_MESSAGE,
-+				(void *)aligned_msg, NULL,
-+				sizeof(struct hv_input_post_message));
-+	else
-+		status = hv_do_hypercall(HVCALL_POST_MESSAGE,
-+				aligned_msg, NULL);
- 
- 	/* Preemption must remain disabled until after the hypercall
- 	 * so some other thread can't get scheduled onto this cpu and
-diff --git a/include/asm-generic/mshyperv.h b/include/asm-generic/mshyperv.h
-index e6d6886faed1..8f6f283fb5b5 100644
---- a/include/asm-generic/mshyperv.h
-+++ b/include/asm-generic/mshyperv.h
-@@ -30,6 +30,35 @@
- 
- union hv_ghcb {
- 	struct ghcb ghcb;
-+	struct {
-+		u64 hypercalldata[509];
-+		u64 outputgpa;
-+		union {
-+			union {
-+				struct {
-+					u32 callcode        : 16;
-+					u32 isfast          : 1;
-+					u32 reserved1       : 14;
-+					u32 isnested        : 1;
-+					u32 countofelements : 12;
-+					u32 reserved2       : 4;
-+					u32 repstartindex   : 12;
-+					u32 reserved3       : 4;
-+				};
-+				u64 asuint64;
-+			} hypercallinput;
-+			union {
-+				struct {
-+					u16 callstatus;
-+					u16 reserved1;
-+					u32 elementsprocessed : 12;
-+					u32 reserved2         : 20;
-+				};
-+				u64 asunit64;
-+			} hypercalloutput;
-+		};
-+		u64 reserved2;
-+	} hypercall;
- } __packed __aligned(PAGE_SIZE);
- 
- struct ms_hyperv_info {
+ struct hyperv_pci_block_ops {
+ 	int (*read_block)(struct pci_dev *dev, void *buf, unsigned int buf_len,
 -- 
 2.25.1
 
