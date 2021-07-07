@@ -2,130 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CD93C07E95
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:15:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00BFDC07E9E
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3F2BA61CC1
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:15:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CE801619C6
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232133AbhGGPSb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 11:18:31 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3373 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232050AbhGGPSb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 11:18:31 -0400
-Received: from fraeml737-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GKjQQ0F8Vz6M4Sh;
-        Wed,  7 Jul 2021 23:05:02 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml737-chm.china.huawei.com (10.206.15.218) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 7 Jul 2021 17:15:49 +0200
-Received: from [10.47.24.69] (10.47.24.69) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 7 Jul 2021
- 16:15:48 +0100
-Subject: Re: SCSI layer RPM deadlock debug suggestion
-To:     Hannes Reinecke <hare@suse.de>,
-        Alan Stern <stern@rowland.harvard.edu>
-CC:     Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.com>,
-        chenxiang <chenxiang66@hisilicon.com>,
-        Xiejianqin <xiejianqin@hisilicon.com>
-References: <9e90d035-fac1-432a-1d34-de5805d8f799@huawei.com>
- <20210702203142.GA49307@rowland.harvard.edu>
- <ec4a3038-34b0-084f-a1bd-039827465dd1@acm.org>
- <1081c3ed-0762-58c7-8b99-8b3721c710bd@huawei.com>
- <20210705131712.GB116379@rowland.harvard.edu>
- <a5b9109c-cad6-0057-29c9-8974fda3347c@suse.de>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <47f35811-33c5-9620-45d5-8201e5ec5db3@huawei.com>
-Date:   Wed, 7 Jul 2021 16:08:34 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.2
+        id S232296AbhGGPhr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 11:37:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55264 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231516AbhGGPhp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 11:37:45 -0400
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65455C061574;
+        Wed,  7 Jul 2021 08:35:04 -0700 (PDT)
+Received: by mail-pf1-x436.google.com with SMTP id w22so2508366pff.5;
+        Wed, 07 Jul 2021 08:35:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jkolUPwi5vmrrny8Lv1Ra8OVYttbBuLIiyALxAjfV3U=;
+        b=uMrytKrdPPAXlONXoKnZbDo6E2aSYBoFVoQVDqkbtkCONIx0wfe5zboS/QgKGbqPlK
+         HS7DtVjHbxLaSrJiY3p/LKmA3t54P4RWelPEkaOkO8stQ7CAdvAy7zQxCEhobAKO24Uc
+         yzBRueqU/xom01Q9hKCy71J3KiVnkJ5uKwhY48+BfUMU4AbwU4AHP4T0qES8oolzCvTS
+         TR/u5P+44atse+4WTf8EAqCmkpOdPJMPQcSu8WGo5Hw7d5AOnMUTkIvh5Nho1JiSvb7Y
+         Ull2Bm5sux8+oXfXdMFGsGaeiQSo5wus3T4DkOI5mIPdsA0acl20F6nCBoK1W6wpKLxn
+         8ZDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jkolUPwi5vmrrny8Lv1Ra8OVYttbBuLIiyALxAjfV3U=;
+        b=CUMj9W3aL8lU2QnQkjLQZXa/8d3NKOx8Vh9Bg3H1+ZhelrN2msyf0holaYSdJkWL3c
+         XKPg9559X/e07MfY1rHPQPXYvyVE3w2IIAWMnzbOOzxm71TOBwgxyXsgYAY4/zkYEDCs
+         FhwRjNpfi4RUvlNWx0BdmrR6B6x7w/JQM5Y3LuFwgksJfFqYhSgV/cL7vr+0751X3MR0
+         7ocE1glg1s6b7C8Aky+2eGDwd0XYo2S6o0gzvxdtTEP+f5FULn65mcL//lyYoXfwbcP3
+         e/HtssXnGG1deHOl9vDrBn6judlm+G/Vw36eS9ogxHqBQNHi8V87+AavZHMFEBLZNw7x
+         7qGQ==
+X-Gm-Message-State: AOAM533yZlmQ26bFPPMC0okqHj6LLmMxubzZ79nC0LNqofszEsNagUlS
+        xWc8t8m/o3sRGbjsgoofSl0=
+X-Google-Smtp-Source: ABdhPJyD+VDToE/d2GDA5bL79Z5IjrRMQN05lni8aQ82HOiaAKMvr6K+0cHHIUktpTxzsCLuEpzwiw==
+X-Received: by 2002:a62:5547:0:b029:2ec:8f20:4e2 with SMTP id j68-20020a6255470000b02902ec8f2004e2mr26077347pfb.71.1625672103921;
+        Wed, 07 Jul 2021 08:35:03 -0700 (PDT)
+Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:0:6b7f:cf3e:bbf2:d229])
+        by smtp.gmail.com with ESMTPSA id y11sm21096877pfo.160.2021.07.07.08.35.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 07 Jul 2021 08:35:03 -0700 (PDT)
+From:   Tianyu Lan <ltykernel@gmail.com>
+To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
+        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        Tianyu.Lan@microsoft.com, rppt@kernel.org,
+        kirill.shutemov@linux.intel.com, akpm@linux-foundation.org,
+        thomas.lendacky@amd.com, ardb@kernel.org,
+        nramas@linux.microsoft.com, robh@kernel.org, keescook@chromium.org,
+        martin.b.radev@gmail.com, pgonda@google.com, hannes@cmpxchg.org,
+        krish.sadhukhan@oracle.com, saravanand@fb.com,
+        xen-devel@lists.xenproject.org, rientjes@google.com, tj@kernel.org,
+        michael.h.kelley@microsoft.com
+Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, brijesh.singh@amd.com, anparri@microsoft.com
+Subject: [RFC PATCH V4 00/12] x86/Hyper-V: Add Hyper-V Isolation VM support
+Date:   Wed,  7 Jul 2021 11:34:41 -0400
+Message-Id: <20210707153456.3976348-1-ltykernel@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <a5b9109c-cad6-0057-29c9-8974fda3347c@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.47.24.69]
-X-ClientProxiedBy: lhreml717-chm.china.huawei.com (10.201.108.68) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->>>>>> Any suggestion on how to fix this deadlock?
->>>>> This is indeed a tricky question.  It seems like we should allow a
->>>>> runtime resume to succeed if the only reason it failed was that the
->>>>> device has been removed.
->>>>>
->>>>> More generally, perhaps we should always consider that a runtime
->>>>> resume succeeds.  Any remaining problems will be dealt with by the
->>>>> device's driver and subsystem once the device is marked as
->>>>> runtime-active again.
->>>>>
->>>>> Suppose you try changing blk_post_runtime_resume() so that it always
->>>>> calls blk_set_runtime_active() regardless of the value of err.  Does
->>>>> that fix the problem?
->>>>>
+From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-Hi Alan,
+Hyper-V provides two kinds of Isolation VMs. VBS(Virtualization-based
+security) and AMD SEV-SNP unenlightened Isolation VMs. This patchset
+is to add support for these Isolation VM support in Linux.
 
-I tried that suggestion with the following change:
+The memory of these vms are encrypted and host can't access guest
+memory directly. Hyper-V provides new host visibility hvcall and
+the guest needs to call new hvcall to mark memory visible to host
+before sharing memory with host. For security, all network/storage
+stack memory should not be shared with host and so there is bounce
+buffer requests.
 
+Vmbus channel ring buffer already plays bounce buffer role because
+all data from/to host needs to copy from/to between the ring buffer
+and IO stack memory. So mark vmbus channel ring buffer visible.
 
---- a/block/blk-pm.c
-+++ b/block/blk-pm.c
-@@ -185,9 +185,8 @@ EXPORT_SYMBOL(blk_pre_runtime_resume);
-   */
-void blk_post_runtime_resume(struct request_queue *q, int err)
-{
--
-+       err = 0;
-         if (!q->dev)
-                 return;
-         if (!err) {
+There are two exceptions - packets sent by vmbus_sendpacket_
+pagebuffer() and vmbus_sendpacket_mpb_desc(). These packets
+contains IO stack memory address and host will access these memory.
+So add allocation bounce buffer support in vmbus for these packets.
 
+For SNP isolation VM, guest needs to access the shared memory via
+extra address space which is specified by Hyper-V CPUID HYPERV_CPUID_
+ISOLATION_CONFIG. The access physical address of the shared memory
+should be bounce buffer memory GPA plus with shared_gpa_boundary
+reported by CPUID.
 
-And that looks to solve the deadlock which I was seeing. I'm not sure on 
-side-effects elsewhere.
+Change since v3:
+       - Add interface set_memory_decrypted_map() to decrypt memory and
+         map bounce buffer in extra address space 
+       - Remove swiotlb remap function and store the remap address
+         returned by set_memory_decrypted_map() in swiotlb mem data structure.
+       - Introduce hv_set_mem_enc() to make code more readable in the __set_memory_enc_dec().
 
-We'll test it a bit more.
+Change since v2:
+       - Remove not UIO driver in Isolation VM patch
+       - Use vmap_pfn() to replace ioremap_page_range function in
+       order to avoid exposing symbol ioremap_page_range() and
+       ioremap_page_range()
+       - Call hv set mem host visibility hvcall in set_memory_encrypted/decrypted()
+       - Enable swiotlb force mode instead of adding Hyper-V dma map/unmap hook
+       - Fix code style
 
-Thanks,
-John
+Tianyu Lan (12):
+  x86/HV: Initialize shared memory boundary in the Isolation VM.
+  x86/HV: Add new hvcall guest address host visibility support
+  HV: Mark vmbus ring buffer visible to host in Isolation VM
+  HV: Add Write/Read MSR registers via ghcb page
+  HV: Add ghcb hvcall support for SNP VM
+  HV/Vmbus: Add SNP support for VMbus channel initiate message
+  HV/Vmbus: Initialize VMbus ring buffer for Isolation VM
+  x86/Swiotlb/HV: Add Swiotlb bounce buffer remap function for HV IVM
+  HV/IOMMU: Enable swiotlb bounce buffer for Isolation VM
+  HV/Netvsc: Add Isolation VM support for netvsc driver
+  HV/Storvsc: Add Isolation VM support for storvsc driver
+  x86/HV: Not set memory decrypted/encrypted during kexec alloc/free
+    page in IVM
 
->>>>> And more importantly, will it cause any other problems...?
->>>> That would cause trouble for the UFS driver and other drivers for which
->>>> runtime resume can fail due to e.g. the link between host and device
->>>> being in a bad state.
->>
->> I don't understand how that could work.  If a device fails to resume
->> from runtime suspend, no matter whether the reason is temporary or
->> permanent, how can the system use it again?
->>
->> And if the system can't use it again, what harm is there in pretending
->> that the runtime resume succeeded?
->>
-> 'xactly.
-> Especially as we _do_ have error recovery on SCSI, so we should be 
-> treating a failure to resume just like any other SCSI error; in the end, 
-> we need to equip SCSI EH to deal with these kind of states anyway.
-> And we already do, as we're sending 'START STOP UNIT' already to spin up 
-> drives which are found to be spun down.
-> 
-> So I'm all for always returning 'success' from the 'resume' callback and 
-> let SCSI EH deal with any eventual fallout.
+ arch/x86/hyperv/Makefile           |   2 +-
+ arch/x86/hyperv/hv_init.c          |  25 +--
+ arch/x86/hyperv/ivm.c              | 299 +++++++++++++++++++++++++++++
+ arch/x86/include/asm/hyperv-tlfs.h |  18 ++
+ arch/x86/include/asm/mshyperv.h    |  84 +++++++-
+ arch/x86/include/asm/set_memory.h  |   2 +
+ arch/x86/include/asm/sev-es.h      |   4 +
+ arch/x86/kernel/cpu/mshyperv.c     |   5 +
+ arch/x86/kernel/machine_kexec_64.c |   5 +-
+ arch/x86/kernel/sev-es-shared.c    |  21 +-
+ arch/x86/mm/pat/set_memory.c       |  34 +++-
+ arch/x86/xen/pci-swiotlb-xen.c     |   3 +-
+ drivers/hv/Kconfig                 |   1 +
+ drivers/hv/channel.c               |  48 ++++-
+ drivers/hv/connection.c            |  71 ++++++-
+ drivers/hv/hv.c                    | 129 +++++++++----
+ drivers/hv/hyperv_vmbus.h          |   3 +
+ drivers/hv/ring_buffer.c           |  84 ++++++--
+ drivers/hv/vmbus_drv.c             |   3 +
+ drivers/iommu/hyperv-iommu.c       |  62 ++++++
+ drivers/net/hyperv/hyperv_net.h    |   6 +
+ drivers/net/hyperv/netvsc.c        | 144 +++++++++++++-
+ drivers/net/hyperv/rndis_filter.c  |   2 +
+ drivers/scsi/storvsc_drv.c         |  68 ++++++-
+ include/asm-generic/hyperv-tlfs.h  |   1 +
+ include/asm-generic/mshyperv.h     |  53 ++++-
+ include/linux/hyperv.h             |  16 ++
+ include/linux/swiotlb.h            |   4 +
+ kernel/dma/swiotlb.c               |  11 +-
+ 29 files changed, 1097 insertions(+), 111 deletions(-)
+ create mode 100644 arch/x86/hyperv/ivm.c
 
+-- 
+2.25.1
 
