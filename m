@@ -2,170 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4FCBC07E95
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 19:03:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46626C07E95
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 20:16:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD2E561CC2
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 19:03:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2122361CBB
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 20:16:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230436AbhGGTGi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 15:06:38 -0400
-Received: from mga11.intel.com ([192.55.52.93]:10328 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230004AbhGGTGh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Jul 2021 15:06:37 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10037"; a="206354197"
-X-IronPort-AV: E=Sophos;i="5.84,221,1620716400"; 
-   d="scan'208";a="206354197"
-Received: from orsmga005.jf.intel.com ([10.7.209.41])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Jul 2021 12:03:57 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,221,1620716400"; 
-   d="scan'208";a="628119658"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.79]) ([10.237.72.79])
-  by orsmga005.jf.intel.com with ESMTP; 07 Jul 2021 12:03:52 -0700
-Subject: Re: [PATCH v4 06/10] scsi: ufs: Remove host_sem used in
- suspend/resume
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1624433711-9339-1-git-send-email-cang@codeaurora.org>
- <1624433711-9339-8-git-send-email-cang@codeaurora.org>
- <ed59d61a-6951-2acd-4f89-40f8dc5015e1@intel.com>
- <9105f328ee6ce916a7f01027b0d28332@codeaurora.org>
- <a87e5ca5-390f-8ca0-41bf-27cdc70e3316@intel.com>
- <1b351766a6e40d0df90b3adec964eb33@codeaurora.org>
- <a654d2ef-b333-1c56-42c6-3d69e9f44bd0@intel.com>
- <3970b015e444c1f1714c7e7bd4c44651@codeaurora.org>
- <f1c997f3-66e4-3f1f-08f5-83449b65c397@intel.com>
- <7c6e2baa3578eb30f2d4bd1696e800eb@codeaurora.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <bd464b9f-b6d5-cd52-7377-c64c0cf933ff@intel.com>
-Date:   Wed, 7 Jul 2021 22:04:06 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-MIME-Version: 1.0
-In-Reply-To: <7c6e2baa3578eb30f2d4bd1696e800eb@codeaurora.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        id S230233AbhGGUTR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 16:19:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34122 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230120AbhGGUTR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 16:19:17 -0400
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B69B6C061574
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 13:16:36 -0700 (PDT)
+Received: by mail-pj1-x102d.google.com with SMTP id b8-20020a17090a4888b02901725eedd346so2367414pjh.4
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 13:16:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=wglB+IbvMmtFDHmzOA/hNEV2wgHilB9Tfw6um82nPuU=;
+        b=bYv5jkv1VpKOl+u/0e2UBJW92oh452GIx1Zpa+eZwUk0dqeT6BBwC0cbzBmPocRICE
+         LRsakLj6f24bVCZVgqhRCBWGEKjgztwyVEknk/o/oaNWTZd+cBAyVyvQwgWm9RqZQazm
+         J4p/rnneY4A5wRi0VZjkU5rp8FfaR6VpE9GwM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=wglB+IbvMmtFDHmzOA/hNEV2wgHilB9Tfw6um82nPuU=;
+        b=W9BWqFr20JQEGwUOujGlDsJ+UIAIoR+3/2Ki4g9I7DUdc/m/PMR+VvD0ZTmdsR5vZV
+         ixTsdggpr5sJ+YFeuTi4KVM1Ffgmhk/CcrsuMWVqykouPOjJQFBNdVyziDD/2qyOwuOs
+         UcWK9swJDq3DDTrqMBQFwE1j0oDvi259iR+C1Ci/HFH2zZIABYlGjCTx46+hmuaZaF27
+         fVJX7KHpwB0bsQVIXuGyiE5r0un6eW3Qm6517oRA8xI/ZwA8pXHXmkS4LAYDkfhi37Pm
+         lq0EUgn7Hjmhf36AJhSnL8es40rc+gkSQHlTX98V7ImklgxBmjgD12TTvU0J0TacZdDB
+         iOmw==
+X-Gm-Message-State: AOAM531Y9zTGS6d5ojHxp5GMmF0qXwB+6mhcwql76VWhm0Td1eHKxjqy
+        b1njXvA0sB7tMy/dJ26OkujEOYyuA91wV+0P
+X-Google-Smtp-Source: ABdhPJwzAmSmyrzZZ+5XyRNXGrnEVn8TJQsl2DYSERN4NMipF4Ch7g2ZjriYroJoPufviWufnMchKg==
+X-Received: by 2002:a17:90a:4893:: with SMTP id b19mr27264703pjh.45.1625688995919;
+        Wed, 07 Jul 2021 13:16:35 -0700 (PDT)
+Received: from smtpclient.apple ([192.30.189.3])
+        by smtp.gmail.com with ESMTPSA id z3sm29420pgl.77.2021.07.07.13.16.34
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 07 Jul 2021 13:16:35 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 15.0 \(3681.0.2.1.2\))
+Subject: Re: [PATCH 1/1]: scsi scsi_dh_alua: don't fail I/O until transition
+ time expires
+From:   Brian Bunker <brian@purestorage.com>
+In-Reply-To: <B5561C06-0029-45C5-9291-A66DAF48C303@purestorage.com>
+Date:   Wed, 7 Jul 2021 13:16:34 -0700
+Cc:     linux-scsi@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <82F24BD9-6888-4E60-B821-CA026194A0BD@purestorage.com>
+References: <622E6257-85C7-4F9B-9CCD-2EF1791CB21F@purestorage.com>
+ <23d45b9e-2c56-d637-dd2f-ea5a1ef267ac@suse.de>
+ <27C07B47-22C8-4447-BB09-1386C64C21A0@purestorage.com>
+ <add9c9c2-ed37-e973-6d8f-1d98c94905e4@suse.de>
+ <AF99F82D-7451-412C-AD21-8CF5593E6F59@purestorage.com>
+ <B5561C06-0029-45C5-9291-A66DAF48C303@purestorage.com>
+To:     Hannes Reinecke <hare@suse.de>
+X-Mailer: Apple Mail (2.3681.0.2.1.2)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28/06/21 10:26 am, Can Guo wrote:
-> On 2021-06-24 18:04, Adrian Hunter wrote:
->> On 24/06/21 9:31 am, Can Guo wrote:
->>> On 2021-06-24 14:23, Adrian Hunter wrote:
->>>> On 24/06/21 9:12 am, Can Guo wrote:
->>>>> On 2021-06-24 13:52, Adrian Hunter wrote:
->>>>>> On 24/06/21 5:16 am, Can Guo wrote:
->>>>>>> On 2021-06-23 22:30, Adrian Hunter wrote:
->>>>>>>> On 23/06/21 10:35 am, Can Guo wrote:
->>>>>>>>> To protect system suspend/resume from being disturbed by error handling,
->>>>>>>>> instead of using host_sem, let error handler call lock_system_sleep() and
->>>>>>>>> unlock_system_sleep() which achieve the same purpose. Remove the host_sem
->>>>>>>>> used in suspend/resume paths to make the code more readable.
->>>>>>>>>
->>>>>>>>> Suggested-by: Bart Van Assche <bvanassche@acm.org>
->>>>>>>>> Signed-off-by: Can Guo <cang@codeaurora.org>
->>>>>>>>> ---
->>>>>>>>>  drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
->>>>>>>>>  1 file changed, 7 insertions(+), 5 deletions(-)
->>>>>>>>>
->>>>>>>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>>>>>>>> index 3695dd2..a09e4a2 100644
->>>>>>>>> --- a/drivers/scsi/ufs/ufshcd.c
->>>>>>>>> +++ b/drivers/scsi/ufs/ufshcd.c
->>>>>>>>> @@ -5907,6 +5907,11 @@ static void ufshcd_clk_scaling_suspend(struct ufs_hba *hba, bool suspend)
->>>>>>>>>
->>>>>>>>>  static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->>>>>>>>>  {
->>>>>>>>> +    /*
->>>>>>>>> +     * It is not safe to perform error handling while suspend or resume is
->>>>>>>>> +     * in progress. Hence the lock_system_sleep() call.
->>>>>>>>> +     */
->>>>>>>>> +    lock_system_sleep();
->>>>>>>>
->>>>>>>> It looks to me like the system takes this lock quite early, even before
->>>>>>>> freezing tasks, so if anything needs the error handler to run it will
->>>>>>>> deadlock.
->>>>>>>
->>>>>>> Hi Adrian,
->>>>>>>
->>>>>>> UFS/hba system suspend/resume does not invoke or call error handling in a
->>>>>>> synchronous way. So, whatever UFS errors (which schedules the error handler)
->>>>>>> happens during suspend/resume, error handler will just wait here till system
->>>>>>> suspend/resume release the lock. Hence no worries of deadlock here.
->>>>>>
->>>>>> It looks to me like the state can change to UFSHCD_STATE_EH_SCHEDULED_FATAL
->>>>>> and since user processes are not frozen, nor file systems sync'ed, everything
->>>>>> is going to deadlock.
->>>>>> i.e.
->>>>>> I/O is blocked waiting on error handling
->>>>>> error handling is blocked waiting on lock_system_sleep()
->>>>>> suspend is blocked waiting on I/O
->>>>>>
->>>>>
->>>>> Hi Adrian,
->>>>>
->>>>> First of all, enter_state(suspend_state_t state) uses mutex_trylock(&system_transition_mutex).
->>>>
->>>> Yes, in the case I am outlining it gets the mutex.
->>>>
->>>>> Second, even that happens, in ufshcd_queuecommand(), below logic will break the cycle, by
->>>>> fast failing the PM request (below codes are from the code tip with this whole series applied).
->>>>
->>>> It won't get that far because the suspend will be waiting to sync filesystems.
->>>> Filesystems will be waiting on I/O.
->>>> I/O will be waiting on the error handler.
->>>> The error handler will be waiting on system_transition_mutex.
->>>> But system_transition_mutex is already held by PM core.
->>>
->>> Hi Adrian,
->>>
->>> You are right.... I missed the action of syncing filesystems...
->>>
->>> Using back host_sem in suspend_prepare()/resume_complete() won't have this
->>> problem of deadlock, right?
->>
->> I am not sure, but what was problem that the V3 patch was fixing?
->> Can you give an example?
-> 
-> V3 was moving host_sem from wl_system_suspend/resume() to
-> ufshcd_suspend_prepare()/ufshcd_resume_complete(). It is to
-> make sure error handling does not run concurrenly with system
-> PM, since error handling is recovering/clearing runtime PM
-> errors of all the scsi devices under hba (in patch #8). Having the
-> error handling doing so (in patch 8) is because runtime PM framework
-> may save the runtime errors of the supplier to one or more consumers (
-> unlike the children - parent relationship), for example if wlu resume
-> fails, sda and/or other scsi devices may save the resume error, then
-> they will be left runtime suspended permanently.
+Just checking back in. It seems that there are at least two ways to fix =
+this problem. It seems like it can be done in either the ALUA device =
+handler or in drivers/md/dm-mpath.c. At this point, however, the failing =
+of the path when ALUA state transitioning is hit breaks what used to =
+work and what we believe should work. Where should we go from here?
 
-Sorry for the slow reply.  I was going to do some more investigation but
-never found time.
+Thanks,
+Brian
 
-I was wondering if it would be simpler to do the error recovery for
-wl_system_suspend/resume() before exiting wl_system_suspend/resume().
+Brian Bunker
+SW Eng
+brian@purestorage.com
 
-Then it would be possible to do something along the lines:
-	- prevent runtime suspend while the error handler is outstanding
-	- at suspend, block queuing of the error handler work and flush it
-	- at resume, allow queuing of the error handler work
+
+
+> On Jun 17, 2021, at 12:19 PM, Brian Bunker <brian@purestorage.com> =
+wrote:
+>=20
+> drivers/md/dm-mpath.c
+
