@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 664C6C07E9C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A115FC07E95
 	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4DC7461CCE
+	by mail.kernel.org (Postfix) with ESMTP id 8A90161CD2
 	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232724AbhGGSqx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 14:46:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41778 "EHLO
+        id S232661AbhGGSqy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 14:46:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41798 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232640AbhGGSqr (ORCPT
+        with ESMTP id S231948AbhGGSqr (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 14:46:47 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 474A4C061574
-        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 11:44:07 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id p9so2068217pjl.3
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 11:44:07 -0700 (PDT)
+Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADCCFC061765
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 11:44:06 -0700 (PDT)
+Received: by mail-pg1-x535.google.com with SMTP id v7so3257010pgl.2
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 11:44:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=1XRHycLuBv2mlw/4Sks8C19TtCruVWziBnfzmR/aUIE=;
-        b=THVKqtrgmuAxvn8ENg9qPNpX1BDiejMP5Q4oA8oiPMLIR3FN9udjUk1J60YCEYbCrS
-         2A8ullvmXJTby4oRCeKfxEnGbmhpXcSduszchxIAjQAVRVaImVm8f1egQUG2Gv1LxGtE
-         LqDRrUpumBYXUpQl4KRJuxQvk2Mr7gkODaltpEuDdw+uioUrPl+e8EIg8foa5MV+4Yot
-         3lc3bpz5SR+N2k09UqTDJz4xoHjPYKfE78zLr9WOKkorWd2jgSuFqX0VfQ8t1DuvSgh0
-         IJ4VVNA4tTg0UBQu3dJEl3u49pI8CzGlhj6XP5FpN1Sqa7LO1J+7jCPCEse3Yk3hPx6i
-         KKfw==
+        bh=n8/aFQB7mqMNfN205fqFBT5VKFuSC7RRpVl/FyjQWqA=;
+        b=h6BFYwgNxXve2bXHtltGqps2vxJMM5YXPunnHu7QkImBarZ3sIntEYNyeXNuWe3plR
+         oQ4fRX5NVfiaGEtXFL8+TXfw/PLYrPspOicQss/WmGBo9L3sl2HVVWdKOeNAUtL/FlAu
+         y9PQOtOnf4mEgYpHyFpWuJq8Y/gV4/2pjKBhNh/qOM8BhY1mDZuX5FiiT1FEK8n9ct43
+         5HYnHIDxdK3Zf2iR6IxuURBHo8rQNHM7sdUBDLVHvNkGvDaJJyPW6mPoXKPih/kOwsRV
+         x8mFR0AcoyjuC1n7nZZrYJY9l1EEDcVLw+GdcQVcJez2ruNsuxOgC0+e6BBoAQpv53cN
+         HW3Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=1XRHycLuBv2mlw/4Sks8C19TtCruVWziBnfzmR/aUIE=;
-        b=j9XT+Ys1OPCev3wjKeZv6V838UatrjVSslyI65YZkC1BIhWfyupG/01XJopBrp8sqJ
-         diRejxGsb9zEZN+Mg5/5RS7q82t97wkPOtUPU/f7i5wkW6cx8z9GCX2t17ZTywfuAF77
-         y0ZSm7ZRYGtRmqPrWRtYJMa24caX+OeOdSePg1+fmMfrMg1yEimDdXJ4cBJwIyLUoLy8
-         A48NV4Sf+S1kcFA0mcObni2J0Wpxv9qY2QMcDO0+7xybusQBqreKuretXwhAczh5Ue85
-         RdNbIyayClFIE9+lcCDgZWHeC+fSXqQ0DICki5CglBwrpYaN8DOESKIvDPdVOZJtRsrP
-         7RMA==
-X-Gm-Message-State: AOAM530IE97NvBUprglEFVd7QjyKgVlZT15MxjrNxQsK1J74bjB6THfW
-        PVw3XVI1MEDQHTrInqYAMIJYNMlHw8I=
-X-Google-Smtp-Source: ABdhPJxLsiKuZLlICd5dO8FS6mC/5I9JQaYj5s4+xz80BXwvQ/TICZhQPhJwsW4u6Kmff3oAiH9vCA==
-X-Received: by 2002:a17:90b:124f:: with SMTP id gx15mr476005pjb.8.1625683446797;
+        bh=n8/aFQB7mqMNfN205fqFBT5VKFuSC7RRpVl/FyjQWqA=;
+        b=SiS5yXgk75t6Ah1T6bX+Jg5eJ1oThhWDlbJC6EMPhdnCXg10KfaX6gMEmmEZAq5jXY
+         HMbMEzxesfKzs62QUQO3aUqRDT5uYu2EiQNplM34FmHtoM6ZcFG0AkvwsQHXsfdbZDLe
+         Z6bec/jU+TG4IdUjgM2u9OU/AHKgoZcDXSfbsO83m8YvDTSEkREBEt3CslzKglAtd0hW
+         AEZXxUWuOhQYGsbMqAg3Nh69t3Qoy6NbL310UA0hTpmZo3rEFkYXnjXW+OPZNGoj7e5L
+         53V9puhu8MiuantJiQpVE/ppci++exxuoZf8ZidTGmEO62AB2d4aGSIKr446h/Vm2Cis
+         IcWg==
+X-Gm-Message-State: AOAM530GfPku2XFjU+p1ddneoJdonpa5UXBAdVbdENok0VNLTX3nOmQ7
+        q9zfAbNgQrLOTHLC9lcEgj9JruZkZWo=
+X-Google-Smtp-Source: ABdhPJzoleVXqJJ8JS5D17/Ds/o0Ca9GTV0JixkF4GI7q1iQFmyauxjInjwli3aIoKPb/zkeod/urw==
+X-Received: by 2002:a65:50ca:: with SMTP id s10mr28064030pgp.68.1625683446180;
         Wed, 07 Jul 2021 11:44:06 -0700 (PDT)
 Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id z3sm23578631pgl.77.2021.07.07.11.44.06
+        by smtp.gmail.com with ESMTPSA id z3sm23578631pgl.77.2021.07.07.11.44.05
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Jul 2021 11:44:06 -0700 (PDT)
+        Wed, 07 Jul 2021 11:44:05 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 17/20] lpfc: Skip reg_vpi when link is down for SLI3 in ADISC cmpl path
-Date:   Wed,  7 Jul 2021 11:43:48 -0700
-Message-Id: <20210707184351.67872-18-jsmart2021@gmail.com>
+Subject: [PATCH 16/20] lpfc: Call discovery state machine when handling PLOGI/ADISC completions
+Date:   Wed,  7 Jul 2021 11:43:47 -0700
+Message-Id: <20210707184351.67872-17-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210707184351.67872-1-jsmart2021@gmail.com>
 References: <20210707184351.67872-1-jsmart2021@gmail.com>
@@ -72,43 +72,71 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During RSCN storms, some instances of LIP on SLI-3 adapters lead to a
-situation where FLOGIs keep failing with firmware indicating an illegal
-command error code.  This situation was preceded by an ADISC completion
-that was processed while the link was down. This path on SLI-3 performs
-a CLEAR_LA and attempts to activate a VPI with REG_VPI.  Later, as the
-FLOGI completes, it's no longer in sync with the VPI state.  In SLI-3
-it is illegal to have an active VPI during FLOGI.
+In the PLOGI and ADISC completion handling, the device removal event
+could be skipped during some link errors. This could leave a stale node
+in UNUSED state.  Driver unload would hang for a long time waiting for
+this node to be freed.
 
-Resolve by circumventing the SLI-3 path that performs the CLEAR_LA and
-REG_VPI. The path will be taken after the FLOGI after the next Link Up.
+Resolve by taking the following steps:
+- Always post ADISC completion events to discovery state machine upon
+  ADISC completion.
+- In case of a completion error for PLOGI/ADISC, ensure that init
+  refcount is dropped if not registered with transport.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/scsi/lpfc/lpfc_els.c | 15 ++++-----------
+ 1 file changed, 4 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 11e56534b8f0..342c7e28ee95 100644
+index 32f5f00f0a85..11e56534b8f0 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2610,6 +2610,14 @@ lpfc_adisc_done(struct lpfc_vport *vport)
- 	if ((phba->sli3_options & LPFC_SLI3_NPIV_ENABLED) &&
- 	    !(vport->fc_flag & FC_RSCN_MODE) &&
- 	    (phba->sli_rev < LPFC_SLI_REV4)) {
+@@ -2031,9 +2031,7 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				 irsp->un.ulpWord[4]);
+ 
+ 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
+-		if (lpfc_error_lost_link(irsp))
+-			goto check_plogi;
+-		else
++		if (!lpfc_error_lost_link(irsp))
+ 			lpfc_disc_state_machine(vport, ndlp, cmdiocb,
+ 						NLP_EVT_CMPL_PLOGI);
+ 
+@@ -2086,7 +2084,6 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 					NLP_EVT_CMPL_PLOGI);
+ 	}
+ 
+- check_plogi:
+ 	if (disc && vport->num_disc_nodes) {
+ 		/* Check to see if there are more PLOGIs to be sent */
+ 		lpfc_more_plogi(vport);
+@@ -2755,12 +2752,9 @@ lpfc_cmpl_els_adisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 				 "2755 ADISC failure DID:%06X Status:x%x/x%x\n",
+ 				 ndlp->nlp_DID, irsp->ulpStatus,
+ 				 irsp->un.ulpWord[4]);
+-		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
+-		if (lpfc_error_lost_link(irsp))
+-			goto check_adisc;
+-		else
+-			lpfc_disc_state_machine(vport, ndlp, cmdiocb,
+-						NLP_EVT_CMPL_ADISC);
 +
-+		/*
-+		 * If link is down, clear_la and reg_vpi will be done after
-+		 * flogi following a link up event
-+		 */
-+		if (!lpfc_is_link_up(phba))
-+			return;
-+
- 		/* The ADISCs are complete.  Doesn't matter if they
- 		 * succeeded or failed because the ADISC completion
- 		 * routine guarantees to call the state machine and
++		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
++				NLP_EVT_CMPL_ADISC);
+ 
+ 		/* As long as this node is not registered with the SCSI or NVMe
+ 		 * transport, it is no longer an active node. Otherwise
+@@ -2778,7 +2772,6 @@ lpfc_cmpl_els_adisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
+ 					NLP_EVT_CMPL_ADISC);
+ 
+- check_adisc:
+ 	/* Check to see if there are more ADISCs to be sent */
+ 	if (disc && vport->num_disc_nodes)
+ 		lpfc_more_adisc(vport);
 -- 
 2.26.2
 
