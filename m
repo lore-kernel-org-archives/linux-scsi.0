@@ -5,57 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1766C11F6B
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66AA4C11F90
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C967761CCF
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 54B1561CC3
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232491AbhGGPiO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 11:38:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55374 "EHLO
+        id S232537AbhGGPiW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 11:38:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55410 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232424AbhGGPiE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 11:38:04 -0400
-Received: from mail-pl1-x632.google.com (mail-pl1-x632.google.com [IPv6:2607:f8b0:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1DAFEC0613DD;
-        Wed,  7 Jul 2021 08:35:21 -0700 (PDT)
-Received: by mail-pl1-x632.google.com with SMTP id i13so1262700plb.10;
-        Wed, 07 Jul 2021 08:35:21 -0700 (PDT)
+        with ESMTP id S232507AbhGGPiR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 11:38:17 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C14DC061574;
+        Wed,  7 Jul 2021 08:35:35 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id p4-20020a17090a9304b029016f3020d867so1888051pjo.3;
+        Wed, 07 Jul 2021 08:35:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=DW09bNLqhYERQ+eFNE9hKu+s7sJ/vWcqsCTKXxunGqM=;
-        b=cIFDaKgiiPtOdys0ckFLlqTXvpBjxusQHPyVw0git1HI34eAQHldx1OHbAukO02qK2
-         jO41MxrAmo6HuVHrCcEi0xkyqRkM+X07+/a8n7GutyGjN6M3VL2n+zEkXM+gzp++4APs
-         5eqR8YGL9FGVPiJEAcADtZHttI9CTB309h0GZhRqTr4jDQbTFZz2KPsVZ9aaArAaU8Yd
-         wsluRatX1USADsiLfYwFP8U2SJX7psfyyN4Biux95YHUEPsfaAAiksQhTEREch+tDoiK
-         VcTzQD2l/W8BVVTENf+Y3WTsexFQxrH7AdvSsm9F6ENcdIGE+NXQ7BUousTxHQ57SIzM
-         ZQpg==
+        bh=TDHZQgnHR8D2Lbss+oxbhfWYDj9fVT4IV0q165q+scY=;
+        b=jlhWksTt9ZXMQ3V5VZdagp4ykYr1NEm+E0/uwOYCfTgwiWHndiHvF1l07h0g10O76p
+         /1E2rtwwZ9f1CUV+vUiBNbbCbTCtaahPxUZ7tRHr/nHBT2W6v86oKAwn8ZCCNPMumLn2
+         0rXBqE/jPPwXQxXwuI41eD0/HivvOqDW6houVOHuI1fZVGi2I+zpMwIEd/ablG8Mh+Xd
+         5CUPqxt1iAquu91aga4I00EZPhCMpR6UmUQsadux88HjkMINPdMyFaX59QQ6qLR52QGu
+         HmmUFOOXJe8oM/DULJDYHJsB1MTWsYHfYYloQags21tXXhIuF7MvwEDioPNBthxVDBiR
+         2eeQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=DW09bNLqhYERQ+eFNE9hKu+s7sJ/vWcqsCTKXxunGqM=;
-        b=EmLKscGfqWx1AqWvby1jg4ekocCSjGvOs3QJUiFYklzQ1eXIqDohMwuSdbc2qgkaNr
-         80RbDW1pBERtHLWgnjUt3JaG0/55+sDmCwgiEIHSLIIAQRHsOhe5hxt8V0nOdOKKznCE
-         SrFkNvvxMsQCfzopPC/gxFgWZuzfh5/V67ajbQZkRMUxu1FXk/rtb2+TIWwvAhehvzYk
-         99sc/BvITKM1qFWxsEk7ROmzJ1ZdAC7LhvdCa67jpqkYxEO6PfUqlqOyrMy9ETzu+30E
-         /tAErSsEWNZZc3wuEBjq/WygSZ6hwN2+yuNgsvQ7fHMSKahilxvbb5ifEVkHNiEFtjLr
-         brDw==
-X-Gm-Message-State: AOAM533gG/g4SjmMCApb3vspJHITYq1lJNC1rzHl38HCdwdPD7pJ8z8c
-        OrnFPha+9mH3FFnaoeliaeg=
-X-Google-Smtp-Source: ABdhPJyGjZuqYuFFmQx9QyS7olrh0yJpKtElu89yKB6il9SeIMJNaibflmW/N5TqdWyGiGrRemLEcg==
-X-Received: by 2002:a17:902:bf45:b029:129:8147:3a93 with SMTP id u5-20020a170902bf45b029012981473a93mr15498734pls.84.1625672120601;
-        Wed, 07 Jul 2021 08:35:20 -0700 (PDT)
+        bh=TDHZQgnHR8D2Lbss+oxbhfWYDj9fVT4IV0q165q+scY=;
+        b=IDZUupkRUhpyNycUhy0vo8D0ug8b3DJMEvfMY06R9ZUaj9Z3mN+3vRxI9DJqXVIl0+
+         RZQoOYQyD5nP/SfFzBlf4vudetliWRRyIrnXAD+qRHUAac+WoCXfNaP3XhcnJ0KQ3FHy
+         aEPJaR1/Ha6chHeJFl1QW80xoky3vngbrTAd+ERKjpXETVJS0lqCoBA2ouHQkTDk56dY
+         oQ4rGsRbMQrfBkVOy9HIERVUoD8dVcQPFAOVqLvSYnqc++liibWUUm29JytNlampYY2E
+         IXL1COBs6ChXfAcPMNhi794GdXC/r1CKT9A5p8RtkxbFY9sgIHeHEUckn3zCEk521fNs
+         qQKw==
+X-Gm-Message-State: AOAM531waqw2u406sLXlyV5YvFHQ+sxvx3RWggWTNxJX3cFYzEDowzmY
+        aHlNzTrh00JhYuL8msGGaPg=
+X-Google-Smtp-Source: ABdhPJxmKhX5fK2x5od9d5gvzBUJ0Dcm3yqb9eF3Fi8VSAbfNgyMwfqdNVErf+9OlaGCHUhH+iCf7g==
+X-Received: by 2002:a17:902:b604:b029:128:bfa5:3c4c with SMTP id b4-20020a170902b604b0290128bfa53c4cmr21695343pls.29.1625672135173;
+        Wed, 07 Jul 2021 08:35:35 -0700 (PDT)
 Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:0:6b7f:cf3e:bbf2:d229])
-        by smtp.gmail.com with ESMTPSA id y11sm21096877pfo.160.2021.07.07.08.35.19
+        by smtp.gmail.com with ESMTPSA id y11sm21096877pfo.160.2021.07.07.08.35.34
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Jul 2021 08:35:20 -0700 (PDT)
+        Wed, 07 Jul 2021 08:35:34 -0700 (PDT)
 From:   Tianyu Lan <ltykernel@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
@@ -78,9 +78,9 @@ Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
         linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
         vkuznets@redhat.com, brijesh.singh@amd.com, anparri@microsoft.com
-Subject: [RFC PATCH V4 06/12] HV/Vmbus: Add SNP support for VMbus channel initiate message
-Date:   Wed,  7 Jul 2021 11:34:47 -0400
-Message-Id: <20210707153456.3976348-7-ltykernel@gmail.com>
+Subject: [RFC PATCH V4 12/12] x86/HV: Not set memory decrypted/encrypted during kexec alloc/free page in IVM
+Date:   Wed,  7 Jul 2021 11:34:53 -0400
+Message-Id: <20210707153456.3976348-13-ltykernel@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210707153456.3976348-1-ltykernel@gmail.com>
 References: <20210707153456.3976348-1-ltykernel@gmail.com>
@@ -92,149 +92,45 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-The monitor pages in the CHANNELMSG_INITIATE_CONTACT msg are shared
-with host in Isolation VM and so it's necessary to use hvcall to set
-them visible to host. In Isolation VM with AMD SEV SNP, the access
-address should be in the extra space which is above shared gpa
-boundary. So remap these pages into the extra address(pa +
-shared_gpa_boundary).
+Hyper-V Isolation VM reuses set_memory_decrypted/encrypted function
+and not needs to decrypt/encrypt memory in arch_kexec_post_alloc(pre_free)
+_pages() just likes AMD SEV VM. So skip them.
 
 Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 ---
- drivers/hv/connection.c   | 65 +++++++++++++++++++++++++++++++++++++++
- drivers/hv/hyperv_vmbus.h |  1 +
- 2 files changed, 66 insertions(+)
+ arch/x86/kernel/machine_kexec_64.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/hv/connection.c b/drivers/hv/connection.c
-index 186fd4c8acd4..a32bde143e4c 100644
---- a/drivers/hv/connection.c
-+++ b/drivers/hv/connection.c
-@@ -19,6 +19,7 @@
- #include <linux/vmalloc.h>
- #include <linux/hyperv.h>
- #include <linux/export.h>
-+#include <linux/io.h>
- #include <asm/mshyperv.h>
+diff --git a/arch/x86/kernel/machine_kexec_64.c b/arch/x86/kernel/machine_kexec_64.c
+index c078b0d3ab0e..0cadc64b6873 100644
+--- a/arch/x86/kernel/machine_kexec_64.c
++++ b/arch/x86/kernel/machine_kexec_64.c
+@@ -26,6 +26,7 @@
+ #include <asm/kexec-bzimage64.h>
+ #include <asm/setup.h>
+ #include <asm/set_memory.h>
++#include <asm/mshyperv.h>
  
- #include "hyperv_vmbus.h"
-@@ -104,6 +105,12 @@ int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo, u32 version)
- 
- 	msg->monitor_page1 = virt_to_phys(vmbus_connection.monitor_pages[0]);
- 	msg->monitor_page2 = virt_to_phys(vmbus_connection.monitor_pages[1]);
-+
-+	if (hv_is_isolation_supported()) {
-+		msg->monitor_page1 += ms_hyperv.shared_gpa_boundary;
-+		msg->monitor_page2 += ms_hyperv.shared_gpa_boundary;
-+	}
-+
- 	msg->target_vcpu = hv_cpu_number_to_vp_number(VMBUS_CONNECT_CPU);
- 
- 	/*
-@@ -148,6 +155,31 @@ int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo, u32 version)
- 		return -ECONNREFUSED;
- 	}
- 
-+	if (hv_is_isolation_supported()) {
-+		vmbus_connection.monitor_pages_va[0]
-+			= vmbus_connection.monitor_pages[0];
-+		vmbus_connection.monitor_pages[0]
-+			= memremap(msg->monitor_page1, HV_HYP_PAGE_SIZE,
-+				   MEMREMAP_WB);
-+		if (!vmbus_connection.monitor_pages[0])
-+			return -ENOMEM;
-+
-+		vmbus_connection.monitor_pages_va[1]
-+			= vmbus_connection.monitor_pages[1];
-+		vmbus_connection.monitor_pages[1]
-+			= memremap(msg->monitor_page2, HV_HYP_PAGE_SIZE,
-+				   MEMREMAP_WB);
-+		if (!vmbus_connection.monitor_pages[1]) {
-+			memunmap(vmbus_connection.monitor_pages[0]);
-+			return -ENOMEM;
-+		}
-+
-+		memset(vmbus_connection.monitor_pages[0], 0x00,
-+		       HV_HYP_PAGE_SIZE);
-+		memset(vmbus_connection.monitor_pages[1], 0x00,
-+		       HV_HYP_PAGE_SIZE);
-+	}
-+
- 	return ret;
- }
- 
-@@ -159,6 +191,7 @@ int vmbus_connect(void)
- 	struct vmbus_channel_msginfo *msginfo = NULL;
- 	int i, ret = 0;
- 	__u32 version;
-+	u64 pfn[2];
- 
- 	/* Initialize the vmbus connection */
- 	vmbus_connection.conn_state = CONNECTING;
-@@ -216,6 +249,16 @@ int vmbus_connect(void)
- 		goto cleanup;
- 	}
- 
-+	if (hv_is_isolation_supported()) {
-+		pfn[0] = virt_to_hvpfn(vmbus_connection.monitor_pages[0]);
-+		pfn[1] = virt_to_hvpfn(vmbus_connection.monitor_pages[1]);
-+		if (hv_mark_gpa_visibility(2, pfn,
-+				VMBUS_PAGE_VISIBLE_READ_WRITE)) {
-+			ret = -EFAULT;
-+			goto cleanup;
-+		}
-+	}
-+
- 	msginfo = kzalloc(sizeof(*msginfo) +
- 			  sizeof(struct vmbus_channel_initiate_contact),
- 			  GFP_KERNEL);
-@@ -282,6 +325,8 @@ int vmbus_connect(void)
- 
- void vmbus_disconnect(void)
+ #ifdef CONFIG_ACPI
+ /*
+@@ -598,7 +599,7 @@ void arch_kexec_unprotect_crashkres(void)
+  */
+ int arch_kexec_post_alloc_pages(void *vaddr, unsigned int pages, gfp_t gfp)
  {
-+	u64 pfn[2];
-+
+-	if (sev_active())
++	if (sev_active() || hv_is_isolation_supported())
+ 		return 0;
+ 
  	/*
- 	 * First send the unload request to the host.
- 	 */
-@@ -301,6 +346,26 @@ void vmbus_disconnect(void)
- 		vmbus_connection.int_page = NULL;
- 	}
+@@ -611,7 +612,7 @@ int arch_kexec_post_alloc_pages(void *vaddr, unsigned int pages, gfp_t gfp)
  
-+	if (hv_is_isolation_supported()) {
-+		if (vmbus_connection.monitor_pages_va[0]) {
-+			memunmap(vmbus_connection.monitor_pages[0]);
-+			vmbus_connection.monitor_pages[0]
-+				= vmbus_connection.monitor_pages_va[0];
-+			vmbus_connection.monitor_pages_va[0] = NULL;
-+		}
-+
-+		if (vmbus_connection.monitor_pages_va[1]) {
-+			memunmap(vmbus_connection.monitor_pages[1]);
-+			vmbus_connection.monitor_pages[1]
-+				= vmbus_connection.monitor_pages_va[1];
-+			vmbus_connection.monitor_pages_va[1] = NULL;
-+		}
-+
-+		pfn[0] = virt_to_hvpfn(vmbus_connection.monitor_pages[0]);
-+		pfn[1] = virt_to_hvpfn(vmbus_connection.monitor_pages[1]);
-+		hv_mark_gpa_visibility(2, pfn, VMBUS_PAGE_NOT_VISIBLE);
-+	}
-+
- 	hv_free_hyperv_page((unsigned long)vmbus_connection.monitor_pages[0]);
- 	hv_free_hyperv_page((unsigned long)vmbus_connection.monitor_pages[1]);
- 	vmbus_connection.monitor_pages[0] = NULL;
-diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-index 42f3d9d123a1..40bc0eff6665 100644
---- a/drivers/hv/hyperv_vmbus.h
-+++ b/drivers/hv/hyperv_vmbus.h
-@@ -240,6 +240,7 @@ struct vmbus_connection {
- 	 * is child->parent notification
- 	 */
- 	struct hv_monitor_page *monitor_pages[2];
-+	void *monitor_pages_va[2];
- 	struct list_head chn_msg_list;
- 	spinlock_t channelmsg_lock;
+ void arch_kexec_pre_free_pages(void *vaddr, unsigned int pages)
+ {
+-	if (sev_active())
++	if (sev_active() || hv_is_isolation_supported())
+ 		return;
  
+ 	/*
 -- 
 2.25.1
 
