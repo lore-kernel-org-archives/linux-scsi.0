@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78CA1C07E9B
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1058C07E9C
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6581A61CC8
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C891C61CD1
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232597AbhGGSqn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 14:46:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41758 "EHLO
+        id S232561AbhGGSqm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 14:46:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232066AbhGGSqk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 14:46:40 -0400
-Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D1805C061574
-        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 11:43:59 -0700 (PDT)
-Received: by mail-pj1-x102e.google.com with SMTP id b5-20020a17090a9905b029016fc06f6c5bso2216729pjp.5
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 11:43:59 -0700 (PDT)
+        with ESMTP id S231361AbhGGSqj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 14:46:39 -0400
+Received: from mail-pf1-x42e.google.com (mail-pf1-x42e.google.com [IPv6:2607:f8b0:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C716C061768
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 11:43:58 -0700 (PDT)
+Received: by mail-pf1-x42e.google.com with SMTP id 145so3082305pfv.0
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 11:43:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=HpTK0Ngh8TzknRVT34FEqY8VYWrDYSmyhcMUIVCJs4k=;
-        b=EcSXSy4e6HndTKpb3MdY4Zwsxc0Wky50OtQViKdxxx6Kps6lznl06xkKjINKtikr8t
-         R5+JnIZwdl5XVMMehsGLmXEO1kGJCzjL3Es5iC2L7JAuKi+hejiRbDtNMXiUAvcFot4V
-         pKdwfYsoOF6yAvd4QVtwaz+QfvxMw7FhL2Ii8irfd6aynwqdJ3UZmSz28Hxm99TOWbxP
-         ztIMm9zpWvTkZOCBedbTwRcBJG0GSfq/hNqrVQMf7vE3toJk+4l+JflSrGphReKZ1XiE
-         DAzDpflk3NTmU+i3PIJeKuR9x9VUOq+d5+sERbhRzoVP1LQIpQT2DttzrsVVhbEGQ1D5
-         1V5Q==
+        bh=5tH2/DTXmjYGTFufvhLqLupDSMJ7Y2vU3YGAlX27NgI=;
+        b=fFIsQ6cxEZIaUYsM6A/yquypJx/VPNI1x3CqENaYgeZS8S5a01/AFlLDsCvxGPpNtr
+         VQyaoP7f5ei/Hg79q4okZVL3v+fvVva88YQUupJ4FdPuA4MaocqLrZEKyX2CVjwh3CBu
+         AmFzXCjKzwf0hRPu+oxwI7StIxPO5ZjOfiNH9WyF9f8ntEyFuZdGD1OALUpeLnxSvXiB
+         dTkWzCFKD2XfxtGyCKxDhjdG5TgyJe/Vx47EDd8c63zk0rxAt7SjhhcxweW1eHkPkOYa
+         6J1GZVm3YooiP9FQf8ATOclW7tVSkwckBF4s5NG6WLxh8C/au/BryU8V5kaFP5u+Hb4x
+         QnhA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HpTK0Ngh8TzknRVT34FEqY8VYWrDYSmyhcMUIVCJs4k=;
-        b=eJ8HaVn8YUfVPzz1Cmqfy3vRQP6Sne+zqOJwYHq7Oxzh4LKwtoYkCGEmjMvENcQpB/
-         aRLg1geuD0ejdMQi+CHs5PjCtNZ92DgxgE7zZxYW9CV6+cnIT8sFCkS6cWS27r2tboRg
-         eJJ0JsMLNm8+Qxbt+MjDdbwOi5PXMDzvFfUR3Bqlh8eksA7yPJ2d6JJAr5bLEFNaWVIy
-         VBuHmGq0iSeo+6itivSOFyxOVPwscGCYtn8AB6kTC15Iad6RcK8EG8lmiLQYSxOMZQsN
-         ujmqIPNpfTOMGYTsefRzEsaP4fhZZlMGQme9oWHjv5Vv62tN46Bna6fJWc/BbobozsSR
-         LW3A==
-X-Gm-Message-State: AOAM5328bxWsdwEPOOyXvYEamlIi3COx8YBL/qrhZRKY30YV3NiSbpBP
-        WVREwI2ljk8PF04T5SB0ovhyRgyUU+k=
-X-Google-Smtp-Source: ABdhPJxQMChuMIkpzAZghviaxtq8zPpzPJPgcX/uXLkdqRZ5GpX+ZP1TrKUakUVpCxN7VHJ2z+hBZA==
-X-Received: by 2002:a17:902:dad0:b029:129:c3fa:715 with SMTP id q16-20020a170902dad0b0290129c3fa0715mr4099845plx.45.1625683439348;
-        Wed, 07 Jul 2021 11:43:59 -0700 (PDT)
+        bh=5tH2/DTXmjYGTFufvhLqLupDSMJ7Y2vU3YGAlX27NgI=;
+        b=WtMSmya6AdTmlLnwQDQRzKJ6Rr/vmoW2e9691b9KaI5Ltm8gKXeSYsOpHnuphZtwUy
+         qJn4g0TSkHnjz7ivYVBO5AXynptZ/idIIlyJXdYzZ02nAIxpUJb8UZ/O9oisIDXjD5n2
+         Esu9rxA3R0E/xZicoNevUdmdH5Acd9bTEFMNt2fTU7QXUkF9j/0LIW/7uM/EwlwOyaWm
+         cvMiJVDc70XWepY3TqoZJnbCiVQOO5sGxNFgVKpm0HgamUjg3jzASkDWtM5CTe2icZr0
+         y9r5fsrGIFlPPo9IXcEj0uRi33tcas0lu4rVzkar8ZHSWGQuBzM9RM+IhioSHYqN+jdn
+         aGTQ==
+X-Gm-Message-State: AOAM533Jfq0qqW/ioCfEMloiFynn8g7ct5CVMqlJCIdQpHdNkT1xM88Z
+        DE80AwipIEAVMxl+8/d7rzx2czVziZA=
+X-Google-Smtp-Source: ABdhPJxLY3Ng0ckx+5Mmg8ij0F/PzdHUVAGoMHofc0JpRVlTaOtcAjsaT5w/Q5Cfsn+VjmXURbcXbA==
+X-Received: by 2002:a63:2c8a:: with SMTP id s132mr27587227pgs.65.1625683438012;
+        Wed, 07 Jul 2021 11:43:58 -0700 (PDT)
 Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id z3sm23578631pgl.77.2021.07.07.11.43.58
+        by smtp.gmail.com with ESMTPSA id z3sm23578631pgl.77.2021.07.07.11.43.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Jul 2021 11:43:59 -0700 (PDT)
+        Wed, 07 Jul 2021 11:43:57 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 06/20] lpfc: Fix target reset handler from falsely returning FAILURE
-Date:   Wed,  7 Jul 2021 11:43:37 -0700
-Message-Id: <20210707184351.67872-7-jsmart2021@gmail.com>
+Subject: [PATCH 04/20] lpfc: Fix function description comments for vmid routines
+Date:   Wed,  7 Jul 2021 11:43:35 -0700
+Message-Id: <20210707184351.67872-5-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210707184351.67872-1-jsmart2021@gmail.com>
 References: <20210707184351.67872-1-jsmart2021@gmail.com>
@@ -72,107 +72,45 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Previous logic accidentally overrides the status variable to
-FAILURE when target reset status is SUCCESS.
-
-Refactor the non-SUCCESS logic of lpfc_vmid_vport_cleanup(), which
-resolves the false override.
+Update comment headers for functions lpfc_vmid_cmd and lpfc_vmid_poll
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 68 +++++++++++++++++++----------------
- 1 file changed, 37 insertions(+), 31 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c   | 5 ++---
+ drivers/scsi/lpfc/lpfc_init.c | 2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 1b248c237be1..10002a13c5c6 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -6273,6 +6273,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 	struct lpfc_scsi_event_header scsi_event;
- 	int status;
- 	u32 logit = LOG_FCP;
-+	u32 dev_loss_tmo = vport->cfg_devloss_tmo;
- 	unsigned long flags;
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 610b6dabb3b5..1acb8820a08e 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -3884,9 +3884,8 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ /**
+  * lpfc_vmid_cmd - Build and send a FDMI cmd to the specified NPort
+  * @vport: pointer to a host virtual N_Port data structure.
+- * @ndlp: ndlp to send FDMI cmd to (if NULL use FDMI_DID)
+- * cmdcode: FDMI command to send
+- * mask: Mask of HBA or PORT Attributes to send
++ * @cmdcode: application server command code to send
++ * @vmid: pointer to vmid info structure
+  *
+  * Builds and sends a FDMI command using the CT subsystem.
+  */
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 51f4058a75b8..6867b02219b0 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -4845,7 +4845,7 @@ lpfc_sli4_fcf_redisc_wait_tmo(struct timer_list *t)
  
-@@ -6314,39 +6315,44 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 
- 	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
- 					FCP_TARGET_RESET);
--	if (status != SUCCESS)
--		logit =  LOG_TRACE_EVENT;
--	spin_lock_irqsave(&pnode->lock, flags);
--	if (status != SUCCESS &&
--	    (!(pnode->upcall_flags & NLP_WAIT_FOR_LOGO)) &&
--	     !pnode->logo_waitq) {
--		pnode->logo_waitq = &waitq;
--		pnode->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
--		pnode->nlp_flag |= NLP_ISSUE_LOGO;
--		pnode->upcall_flags |= NLP_WAIT_FOR_LOGO;
--		spin_unlock_irqrestore(&pnode->lock, flags);
--		lpfc_unreg_rpi(vport, pnode);
--		wait_event_timeout(waitq,
--				   (!(pnode->upcall_flags & NLP_WAIT_FOR_LOGO)),
--				    msecs_to_jiffies(vport->cfg_devloss_tmo *
--				    1000));
--
--		if (pnode->upcall_flags & NLP_WAIT_FOR_LOGO) {
--			lpfc_printf_vlog(vport, KERN_ERR, LOG_TRACE_EVENT,
--				"0725 SCSI layer TGTRST failed & LOGO TMO "
--				" (%d, %llu) return x%x\n", tgt_id,
--				 lun_id, status);
--			spin_lock_irqsave(&pnode->lock, flags);
--			pnode->upcall_flags &= ~NLP_WAIT_FOR_LOGO;
-+	if (status != SUCCESS) {
-+		logit = LOG_TRACE_EVENT;
-+
-+		/* Issue LOGO, if no LOGO is outstanding */
-+		spin_lock_irqsave(&pnode->lock, flags);
-+		if (!(pnode->upcall_flags & NLP_WAIT_FOR_LOGO) &&
-+		    !pnode->logo_waitq) {
-+			pnode->logo_waitq = &waitq;
-+			pnode->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
-+			pnode->nlp_flag |= NLP_ISSUE_LOGO;
-+			pnode->upcall_flags |= NLP_WAIT_FOR_LOGO;
-+			spin_unlock_irqrestore(&pnode->lock, flags);
-+			lpfc_unreg_rpi(vport, pnode);
-+			wait_event_timeout(waitq,
-+					   (!(pnode->upcall_flags &
-+					      NLP_WAIT_FOR_LOGO)),
-+					   msecs_to_jiffies(dev_loss_tmo *
-+							    1000));
-+
-+			if (pnode->upcall_flags & NLP_WAIT_FOR_LOGO) {
-+				lpfc_printf_vlog(vport, KERN_ERR, logit,
-+						 "0725 SCSI layer TGTRST "
-+						 "failed & LOGO TMO (%d, %llu) "
-+						 "return x%x\n",
-+						 tgt_id, lun_id, status);
-+				spin_lock_irqsave(&pnode->lock, flags);
-+				pnode->upcall_flags &= ~NLP_WAIT_FOR_LOGO;
-+			} else {
-+				spin_lock_irqsave(&pnode->lock, flags);
-+			}
-+			pnode->logo_waitq = NULL;
-+			spin_unlock_irqrestore(&pnode->lock, flags);
-+			status = SUCCESS;
-+
- 		} else {
--			spin_lock_irqsave(&pnode->lock, flags);
-+			spin_unlock_irqrestore(&pnode->lock, flags);
-+			status = FAILED;
- 		}
--		pnode->logo_waitq = NULL;
--		spin_unlock_irqrestore(&pnode->lock, flags);
--		status = SUCCESS;
--	} else {
--		status = FAILED;
--		spin_unlock_irqrestore(&pnode->lock, flags);
- 	}
- 
- 	lpfc_printf_vlog(vport, KERN_ERR, logit,
+ /**
+  * lpfc_vmid_poll - VMID timeout detection
+- * @ptr: Map to lpfc_hba data structure pointer.
++ * @t: Timer context used to obtain the pointer to lpfc hba data structure.
+  *
+  * This routine is invoked when there is no I/O on by a VM for the specified
+  * amount of time. When this situation is detected, the VMID has to be
 -- 
 2.26.2
 
