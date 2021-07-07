@@ -5,57 +5,57 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66AA4C11F90
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85A8BC11F89
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 54B1561CC3
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AEB161CCB
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 15:35:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232537AbhGGPiW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 11:38:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55410 "EHLO
+        id S232500AbhGGPiP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 11:38:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232507AbhGGPiR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 11:38:17 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C14DC061574;
-        Wed,  7 Jul 2021 08:35:35 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id p4-20020a17090a9304b029016f3020d867so1888051pjo.3;
-        Wed, 07 Jul 2021 08:35:35 -0700 (PDT)
+        with ESMTP id S232392AbhGGPiE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 11:38:04 -0400
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8A6CEC061767;
+        Wed,  7 Jul 2021 08:35:18 -0700 (PDT)
+Received: by mail-pg1-x531.google.com with SMTP id f5so2634931pgv.3;
+        Wed, 07 Jul 2021 08:35:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=TDHZQgnHR8D2Lbss+oxbhfWYDj9fVT4IV0q165q+scY=;
-        b=jlhWksTt9ZXMQ3V5VZdagp4ykYr1NEm+E0/uwOYCfTgwiWHndiHvF1l07h0g10O76p
-         /1E2rtwwZ9f1CUV+vUiBNbbCbTCtaahPxUZ7tRHr/nHBT2W6v86oKAwn8ZCCNPMumLn2
-         0rXBqE/jPPwXQxXwuI41eD0/HivvOqDW6houVOHuI1fZVGi2I+zpMwIEd/ablG8Mh+Xd
-         5CUPqxt1iAquu91aga4I00EZPhCMpR6UmUQsadux88HjkMINPdMyFaX59QQ6qLR52QGu
-         HmmUFOOXJe8oM/DULJDYHJsB1MTWsYHfYYloQags21tXXhIuF7MvwEDioPNBthxVDBiR
-         2eeQ==
+        bh=XnnD+WKjmMaIcoxzXQeIqu3OOT9S8jIhhegPGmtXPps=;
+        b=oaL0A1JtN7PBLGoV1YGeMFUgyp9SyUFco9uhf2pPj9nDoTX16X2ZY93jk5mSlH+DsN
+         SvCLYXZI+R7feW0Jx0OMtXNb4f62D1NKXZBhVGBE//ZTEOLu6B147uN+5g6H2xL9diy5
+         ufW4ucIzb9GScnOrnpTdTFdTQX2AYyQODtFUohD33rBRHrIipu1aU1jrbbynVzOeLZPr
+         5hxECBpjjXTRzk23jlBCHvmcAXtPztCNhXumUoIHe4jBxeK8cDgUJZKiMEk8kLBBHCU6
+         7G8klAIhGVfKVULa1RhqCfv0O34Au8CkmaWIXjZAzuWOdrG/V8D3KqnPCDtjK/EdzTix
+         jn7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=TDHZQgnHR8D2Lbss+oxbhfWYDj9fVT4IV0q165q+scY=;
-        b=IDZUupkRUhpyNycUhy0vo8D0ug8b3DJMEvfMY06R9ZUaj9Z3mN+3vRxI9DJqXVIl0+
-         RZQoOYQyD5nP/SfFzBlf4vudetliWRRyIrnXAD+qRHUAac+WoCXfNaP3XhcnJ0KQ3FHy
-         aEPJaR1/Ha6chHeJFl1QW80xoky3vngbrTAd+ERKjpXETVJS0lqCoBA2ouHQkTDk56dY
-         oQ4rGsRbMQrfBkVOy9HIERVUoD8dVcQPFAOVqLvSYnqc++liibWUUm29JytNlampYY2E
-         IXL1COBs6ChXfAcPMNhi794GdXC/r1CKT9A5p8RtkxbFY9sgIHeHEUckn3zCEk521fNs
-         qQKw==
-X-Gm-Message-State: AOAM531waqw2u406sLXlyV5YvFHQ+sxvx3RWggWTNxJX3cFYzEDowzmY
-        aHlNzTrh00JhYuL8msGGaPg=
-X-Google-Smtp-Source: ABdhPJxmKhX5fK2x5od9d5gvzBUJ0Dcm3yqb9eF3Fi8VSAbfNgyMwfqdNVErf+9OlaGCHUhH+iCf7g==
-X-Received: by 2002:a17:902:b604:b029:128:bfa5:3c4c with SMTP id b4-20020a170902b604b0290128bfa53c4cmr21695343pls.29.1625672135173;
-        Wed, 07 Jul 2021 08:35:35 -0700 (PDT)
+        bh=XnnD+WKjmMaIcoxzXQeIqu3OOT9S8jIhhegPGmtXPps=;
+        b=k3Yd1lhZLnfByRS79qDjc7DpGBJP4uNhBuUMuchuNEWRHcTpEhQ6o9Qr6FtDe4hM8u
+         F9TWMNVH7ZCcpBKL++rKhxX55s+c+TNfNNRCC5vh/sbO/XetZJwyVzCbKJcZ9JqrYMwz
+         uwSyDqQ+dC3pyUDTfdvJ1adh8GAfzGN7KGWzI/hpD4xw15+DaAwDTJuuuXRRlff9cuqb
+         Pob6nnWvbq+sPBFEAR0vscBopnzTI9BUCrF2/Hq9bE2NhOk1aEGB/lyioPGmTyi8bsxp
+         wAYx+ydsb888C8sk0MRcz8QVlc0VTZaTVb3AdyMVDMZ6MmbyfoscSMcrjCBEOTd6OIX4
+         rv5g==
+X-Gm-Message-State: AOAM531GA0bmP5Lph6oy7sUPdwGKH8Otx7afMpcu4cKo3XfbGgNd6yIo
+        GNH8cheCpvC/L/BykHT73Lo=
+X-Google-Smtp-Source: ABdhPJxV6H7qeqYvuTG8QtTM4W1lsIpIcrJFKXi7bJYXvWIOKqZZzABLwFM0i62fKflJpqZul4Pglw==
+X-Received: by 2002:a63:3dcb:: with SMTP id k194mr26633987pga.202.1625672118056;
+        Wed, 07 Jul 2021 08:35:18 -0700 (PDT)
 Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:0:6b7f:cf3e:bbf2:d229])
-        by smtp.gmail.com with ESMTPSA id y11sm21096877pfo.160.2021.07.07.08.35.34
+        by smtp.gmail.com with ESMTPSA id y11sm21096877pfo.160.2021.07.07.08.35.17
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Jul 2021 08:35:34 -0700 (PDT)
+        Wed, 07 Jul 2021 08:35:17 -0700 (PDT)
 From:   Tianyu Lan <ltykernel@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
@@ -78,9 +78,9 @@ Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
         linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
         vkuznets@redhat.com, brijesh.singh@amd.com, anparri@microsoft.com
-Subject: [RFC PATCH V4 12/12] x86/HV: Not set memory decrypted/encrypted during kexec alloc/free page in IVM
-Date:   Wed,  7 Jul 2021 11:34:53 -0400
-Message-Id: <20210707153456.3976348-13-ltykernel@gmail.com>
+Subject: [RFC PATCH V4 05/12] HV: Add ghcb hvcall support for SNP VM
+Date:   Wed,  7 Jul 2021 11:34:46 -0400
+Message-Id: <20210707153456.3976348-6-ltykernel@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210707153456.3976348-1-ltykernel@gmail.com>
 References: <20210707153456.3976348-1-ltykernel@gmail.com>
@@ -92,45 +92,159 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-Hyper-V Isolation VM reuses set_memory_decrypted/encrypted function
-and not needs to decrypt/encrypt memory in arch_kexec_post_alloc(pre_free)
-_pages() just likes AMD SEV VM. So skip them.
+Hyper-V provides ghcb hvcall to handle VMBus
+HVCALL_SIGNAL_EVENT and HVCALL_POST_MESSAGE
+msg in SNP Isolation VM. Add such support.
 
 Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 ---
- arch/x86/kernel/machine_kexec_64.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ arch/x86/hyperv/ivm.c           | 42 +++++++++++++++++++++++++++++++++
+ arch/x86/include/asm/mshyperv.h |  1 +
+ drivers/hv/connection.c         |  6 ++++-
+ drivers/hv/hv.c                 |  8 ++++++-
+ include/asm-generic/mshyperv.h  | 29 +++++++++++++++++++++++
+ 5 files changed, 84 insertions(+), 2 deletions(-)
 
-diff --git a/arch/x86/kernel/machine_kexec_64.c b/arch/x86/kernel/machine_kexec_64.c
-index c078b0d3ab0e..0cadc64b6873 100644
---- a/arch/x86/kernel/machine_kexec_64.c
-+++ b/arch/x86/kernel/machine_kexec_64.c
-@@ -26,6 +26,7 @@
- #include <asm/kexec-bzimage64.h>
- #include <asm/setup.h>
- #include <asm/set_memory.h>
-+#include <asm/mshyperv.h>
+diff --git a/arch/x86/hyperv/ivm.c b/arch/x86/hyperv/ivm.c
+index c7b54631ca0d..8a6f4e9e3d6c 100644
+--- a/arch/x86/hyperv/ivm.c
++++ b/arch/x86/hyperv/ivm.c
+@@ -15,6 +15,48 @@
+ #include <asm/io.h>
+ #include <asm/mshyperv.h>
  
- #ifdef CONFIG_ACPI
- /*
-@@ -598,7 +599,7 @@ void arch_kexec_unprotect_crashkres(void)
-  */
- int arch_kexec_post_alloc_pages(void *vaddr, unsigned int pages, gfp_t gfp)
++u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size)
++{
++	union hv_ghcb *hv_ghcb;
++	void **ghcb_base;
++	unsigned long flags;
++
++	if (!ms_hyperv.ghcb_base)
++		return -EFAULT;
++
++	WARN_ON(in_nmi());
++
++	local_irq_save(flags);
++	ghcb_base = (void **)this_cpu_ptr(ms_hyperv.ghcb_base);
++	hv_ghcb = (union hv_ghcb *)*ghcb_base;
++	if (!hv_ghcb) {
++		local_irq_restore(flags);
++		return -EFAULT;
++	}
++
++	memset(hv_ghcb, 0x00, HV_HYP_PAGE_SIZE);
++	hv_ghcb->ghcb.protocol_version = 1;
++	hv_ghcb->ghcb.ghcb_usage = 1;
++
++	hv_ghcb->hypercall.outputgpa = (u64)output;
++	hv_ghcb->hypercall.hypercallinput.asuint64 = 0;
++	hv_ghcb->hypercall.hypercallinput.callcode = control;
++
++	if (input_size)
++		memcpy(hv_ghcb->hypercall.hypercalldata, input, input_size);
++
++	VMGEXIT();
++
++	hv_ghcb->ghcb.ghcb_usage = 0xffffffff;
++	memset(hv_ghcb->ghcb.save.valid_bitmap, 0,
++	       sizeof(hv_ghcb->ghcb.save.valid_bitmap));
++
++	local_irq_restore(flags);
++
++	return hv_ghcb->hypercall.hypercalloutput.callstatus;
++}
++EXPORT_SYMBOL_GPL(hv_ghcb_hypercall);
++
+ void hv_ghcb_msr_write(u64 msr, u64 value)
  {
--	if (sev_active())
-+	if (sev_active() || hv_is_isolation_supported())
- 		return 0;
+ 	union hv_ghcb *hv_ghcb;
+diff --git a/arch/x86/include/asm/mshyperv.h b/arch/x86/include/asm/mshyperv.h
+index f9cc3753040a..fe03e3e833ac 100644
+--- a/arch/x86/include/asm/mshyperv.h
++++ b/arch/x86/include/asm/mshyperv.h
+@@ -258,6 +258,7 @@ void hv_sint_rdmsrl_ghcb(u64 msr, u64 *value);
+ void hv_signal_eom_ghcb(void);
+ void hv_ghcb_msr_write(u64 msr, u64 value);
+ void hv_ghcb_msr_read(u64 msr, u64 *value);
++u64 hv_ghcb_hypercall(u64 control, void *input, void *output, u32 input_size);
  
- 	/*
-@@ -611,7 +612,7 @@ int arch_kexec_post_alloc_pages(void *vaddr, unsigned int pages, gfp_t gfp)
+ #define hv_get_synint_state_ghcb(int_num, val)			\
+ 	hv_sint_rdmsrl_ghcb(HV_X64_MSR_SINT0 + int_num, val)
+diff --git a/drivers/hv/connection.c b/drivers/hv/connection.c
+index 311cd005b3be..186fd4c8acd4 100644
+--- a/drivers/hv/connection.c
++++ b/drivers/hv/connection.c
+@@ -445,6 +445,10 @@ void vmbus_set_event(struct vmbus_channel *channel)
  
- void arch_kexec_pre_free_pages(void *vaddr, unsigned int pages)
- {
--	if (sev_active())
-+	if (sev_active() || hv_is_isolation_supported())
- 		return;
+ 	++channel->sig_events;
  
- 	/*
+-	hv_do_fast_hypercall8(HVCALL_SIGNAL_EVENT, channel->sig_event);
++	if (hv_isolation_type_snp())
++		hv_ghcb_hypercall(HVCALL_SIGNAL_EVENT, &channel->sig_event,
++				NULL, sizeof(u64));
++	else
++		hv_do_fast_hypercall8(HVCALL_SIGNAL_EVENT, channel->sig_event);
+ }
+ EXPORT_SYMBOL_GPL(vmbus_set_event);
+diff --git a/drivers/hv/hv.c b/drivers/hv/hv.c
+index 59f7173c4d9f..e5c9fc467893 100644
+--- a/drivers/hv/hv.c
++++ b/drivers/hv/hv.c
+@@ -98,7 +98,13 @@ int hv_post_message(union hv_connection_id connection_id,
+ 	aligned_msg->payload_size = payload_size;
+ 	memcpy((void *)aligned_msg->payload, payload, payload_size);
+ 
+-	status = hv_do_hypercall(HVCALL_POST_MESSAGE, aligned_msg, NULL);
++	if (hv_isolation_type_snp())
++		status = hv_ghcb_hypercall(HVCALL_POST_MESSAGE,
++				(void *)aligned_msg, NULL,
++				sizeof(struct hv_input_post_message));
++	else
++		status = hv_do_hypercall(HVCALL_POST_MESSAGE,
++				aligned_msg, NULL);
+ 
+ 	/* Preemption must remain disabled until after the hypercall
+ 	 * so some other thread can't get scheduled onto this cpu and
+diff --git a/include/asm-generic/mshyperv.h b/include/asm-generic/mshyperv.h
+index e6d6886faed1..8f6f283fb5b5 100644
+--- a/include/asm-generic/mshyperv.h
++++ b/include/asm-generic/mshyperv.h
+@@ -30,6 +30,35 @@
+ 
+ union hv_ghcb {
+ 	struct ghcb ghcb;
++	struct {
++		u64 hypercalldata[509];
++		u64 outputgpa;
++		union {
++			union {
++				struct {
++					u32 callcode        : 16;
++					u32 isfast          : 1;
++					u32 reserved1       : 14;
++					u32 isnested        : 1;
++					u32 countofelements : 12;
++					u32 reserved2       : 4;
++					u32 repstartindex   : 12;
++					u32 reserved3       : 4;
++				};
++				u64 asuint64;
++			} hypercallinput;
++			union {
++				struct {
++					u16 callstatus;
++					u16 reserved1;
++					u32 elementsprocessed : 12;
++					u32 reserved2         : 20;
++				};
++				u64 asunit64;
++			} hypercalloutput;
++		};
++		u64 reserved2;
++	} hypercall;
+ } __packed __aligned(PAGE_SIZE);
+ 
+ struct ms_hyperv_info {
 -- 
 2.25.1
 
