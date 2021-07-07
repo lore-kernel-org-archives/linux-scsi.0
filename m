@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A115FC07E95
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6410CC07E9B
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A90161CD2
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 530BF61CCE
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 18:44:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232661AbhGGSqy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S232328AbhGGSqy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 7 Jul 2021 14:46:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41798 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231948AbhGGSqr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 14:46:47 -0400
-Received: from mail-pg1-x535.google.com (mail-pg1-x535.google.com [IPv6:2607:f8b0:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADCCFC061765
-        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 11:44:06 -0700 (PDT)
-Received: by mail-pg1-x535.google.com with SMTP id v7so3257010pgl.2
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 11:44:06 -0700 (PDT)
+        with ESMTP id S232673AbhGGSqs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 14:46:48 -0400
+Received: from mail-pf1-x42c.google.com (mail-pf1-x42c.google.com [IPv6:2607:f8b0:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EDE2EC061760
+        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 11:44:07 -0700 (PDT)
+Received: by mail-pf1-x42c.google.com with SMTP id 17so3060808pfz.4
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 11:44:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=n8/aFQB7mqMNfN205fqFBT5VKFuSC7RRpVl/FyjQWqA=;
-        b=h6BFYwgNxXve2bXHtltGqps2vxJMM5YXPunnHu7QkImBarZ3sIntEYNyeXNuWe3plR
-         oQ4fRX5NVfiaGEtXFL8+TXfw/PLYrPspOicQss/WmGBo9L3sl2HVVWdKOeNAUtL/FlAu
-         y9PQOtOnf4mEgYpHyFpWuJq8Y/gV4/2pjKBhNh/qOM8BhY1mDZuX5FiiT1FEK8n9ct43
-         5HYnHIDxdK3Zf2iR6IxuURBHo8rQNHM7sdUBDLVHvNkGvDaJJyPW6mPoXKPih/kOwsRV
-         x8mFR0AcoyjuC1n7nZZrYJY9l1EEDcVLw+GdcQVcJez2ruNsuxOgC0+e6BBoAQpv53cN
-         HW3Q==
+        bh=Q2+jTCdmK1CyvXp8vVBUgDilW7nXpcJW8iITvEhfUhU=;
+        b=VgpWYxcz5OrHwQhU7bxnJMqT1SPPL4JonlRCYEh7zG1dAUE7vw7H5TNrNTLnN8kDIC
+         x9cNk0X4JB0fsyXpas3W0OqHxZmzmJSQIZXASLO1ipZHwQ7vd8csOtb1kf5mFTj3RYJ7
+         3n+iZHsZXzu4aayt72AmD/ThgrAOsFlxSQh7CcnCknL2B9snZHuP7kfV1yEzWMi6Ad/Y
+         GfClNogEmLJe0cW7BLGU8J9BwFHFd+VG0hAtVKK3LD2Ci7ey/Z7tGjmtVWG8yIRhx3bp
+         yBLseslVP/fWxaOeB2LYsv3MvoA86Z3vQ1hd9aTp/a2VCQ8jlsPnjxbngenUw3YwxDUf
+         FWEg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=n8/aFQB7mqMNfN205fqFBT5VKFuSC7RRpVl/FyjQWqA=;
-        b=SiS5yXgk75t6Ah1T6bX+Jg5eJ1oThhWDlbJC6EMPhdnCXg10KfaX6gMEmmEZAq5jXY
-         HMbMEzxesfKzs62QUQO3aUqRDT5uYu2EiQNplM34FmHtoM6ZcFG0AkvwsQHXsfdbZDLe
-         Z6bec/jU+TG4IdUjgM2u9OU/AHKgoZcDXSfbsO83m8YvDTSEkREBEt3CslzKglAtd0hW
-         AEZXxUWuOhQYGsbMqAg3Nh69t3Qoy6NbL310UA0hTpmZo3rEFkYXnjXW+OPZNGoj7e5L
-         53V9puhu8MiuantJiQpVE/ppci++exxuoZf8ZidTGmEO62AB2d4aGSIKr446h/Vm2Cis
-         IcWg==
-X-Gm-Message-State: AOAM530GfPku2XFjU+p1ddneoJdonpa5UXBAdVbdENok0VNLTX3nOmQ7
-        q9zfAbNgQrLOTHLC9lcEgj9JruZkZWo=
-X-Google-Smtp-Source: ABdhPJzoleVXqJJ8JS5D17/Ds/o0Ca9GTV0JixkF4GI7q1iQFmyauxjInjwli3aIoKPb/zkeod/urw==
-X-Received: by 2002:a65:50ca:: with SMTP id s10mr28064030pgp.68.1625683446180;
-        Wed, 07 Jul 2021 11:44:06 -0700 (PDT)
+        bh=Q2+jTCdmK1CyvXp8vVBUgDilW7nXpcJW8iITvEhfUhU=;
+        b=ZfJEgb+qvZrDEdzTgUz3vD+/jQ6pCZCLcXxBo3DVOWiNIOZDLuBlEPN6AxMzELJ6gP
+         YKAm+d2u1OxqXuOu53HPE9uN+dvM4AluLR2ELc+qmJsx3rFaDw7PKetL2LaLmIMU63Sb
+         W1Yq33ewkeNGKc3f0qv8WKoTfS7xhSG+Uhgu7Nu8bmo+vF2aqxHDPemPvMbT1dxCpApG
+         avcatg6xZXhzyTot8Zg36rQLbt5Yj6zJceO/sOi7Yjaf60BiLbeTgfUpq9YSeeefQ7zo
+         Y+uFeZjVS5kEo58prqXPHaIqZ2EmApTHnhPrfsPV+ftkw+3J+TU0DYxRjA/ZN1OA5ZEW
+         3Fbw==
+X-Gm-Message-State: AOAM531Dz1MxOMi11goyU2J2JHHBEgBOAscS7ww25B6KCm6tNmRlTrYE
+        7Uyz1W8/9zqxe9VkUp+vpL9ZSXgSLCg=
+X-Google-Smtp-Source: ABdhPJxhfVRPsXeFKx5X6CEn76BmksDrK32gztCF8i+NXvYHL2olMwZO1TT34guBKpA9NC4uOnhpmw==
+X-Received: by 2002:aa7:921a:0:b029:2cf:b55b:9d52 with SMTP id 26-20020aa7921a0000b02902cfb55b9d52mr26441635pfo.35.1625683447419;
+        Wed, 07 Jul 2021 11:44:07 -0700 (PDT)
 Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id z3sm23578631pgl.77.2021.07.07.11.44.05
+        by smtp.gmail.com with ESMTPSA id z3sm23578631pgl.77.2021.07.07.11.44.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 07 Jul 2021 11:44:05 -0700 (PDT)
+        Wed, 07 Jul 2021 11:44:07 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 16/20] lpfc: Call discovery state machine when handling PLOGI/ADISC completions
-Date:   Wed,  7 Jul 2021 11:43:47 -0700
-Message-Id: <20210707184351.67872-17-jsmart2021@gmail.com>
+Subject: [PATCH 18/20] lpfc: Skip issuing ADISC when node is in NPR state
+Date:   Wed,  7 Jul 2021 11:43:49 -0700
+Message-Id: <20210707184351.67872-19-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210707184351.67872-1-jsmart2021@gmail.com>
 References: <20210707184351.67872-1-jsmart2021@gmail.com>
@@ -72,71 +72,88 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the PLOGI and ADISC completion handling, the device removal event
-could be skipped during some link errors. This could leave a stale node
-in UNUSED state.  Driver unload would hang for a long time waiting for
-this node to be freed.
+When a node moves to NPR state due to a device recovery event, the
+nlp_fc4_types in the node are cleared. An ADISC received for a node in
+the NPR state triggers an ADISC. Without fc4 types being known, the
+calls to register with the transport are no-op'd, thus no additional
+references are placed on the node by transport re-registrations. A
+subsequent RSCN could trigger another unregister request, which will
+decrement the reference counts, leading to the ref count hitting zero
+and the node being freed while futher discovery on the node is being
+attempted by the RSCN event handling.
 
-Resolve by taking the following steps:
-- Always post ADISC completion events to discovery state machine upon
-  ADISC completion.
-- In case of a completion error for PLOGI/ADISC, ensure that init
-  refcount is dropped if not registered with transport.
+Fix by skipping the trigger of an ADISC when in NPR state. The normal
+ADISC process will kick off in the regular discovery path after receiving
+a response from name server.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 15 ++++-----------
- 1 file changed, 4 insertions(+), 11 deletions(-)
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 34 +++++++++++++++++-------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 32f5f00f0a85..11e56534b8f0 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2031,9 +2031,7 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				 irsp->un.ulpWord[4]);
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 46c1905f6f39..27263f02ab9f 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -736,9 +736,13 @@ lpfc_rcv_padisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		 * is already in MAPPED or UNMAPPED state.  Catch this
+ 		 * condition and don't set the nlp_state again because
+ 		 * it causes an unnecessary transport unregister/register.
++		 *
++		 * Nodes marked for ADISC will move MAPPED or UNMAPPED state
++		 * after issuing ADISC
+ 		 */
+ 		if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET)) {
+-			if (ndlp->nlp_state != NLP_STE_MAPPED_NODE)
++			if ((ndlp->nlp_state != NLP_STE_MAPPED_NODE) &&
++			    !(ndlp->nlp_flag & NLP_NPR_ADISC))
+ 				lpfc_nlp_set_state(vport, ndlp,
+ 						   NLP_STE_MAPPED_NODE);
+ 		}
+@@ -2646,14 +2650,13 @@ lpfc_rcv_prli_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb, ndlp, NULL);
  
- 		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
--		if (lpfc_error_lost_link(irsp))
--			goto check_plogi;
--		else
-+		if (!lpfc_error_lost_link(irsp))
- 			lpfc_disc_state_machine(vport, ndlp, cmdiocb,
- 						NLP_EVT_CMPL_PLOGI);
- 
-@@ -2086,7 +2084,6 @@ lpfc_cmpl_els_plogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 					NLP_EVT_CMPL_PLOGI);
- 	}
- 
-- check_plogi:
- 	if (disc && vport->num_disc_nodes) {
- 		/* Check to see if there are more PLOGIs to be sent */
- 		lpfc_more_plogi(vport);
-@@ -2755,12 +2752,9 @@ lpfc_cmpl_els_adisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 				 "2755 ADISC failure DID:%06X Status:x%x/x%x\n",
- 				 ndlp->nlp_DID, irsp->ulpStatus,
- 				 irsp->un.ulpWord[4]);
--		/* Do not call DSM for lpfc_els_abort'ed ELS cmds */
--		if (lpfc_error_lost_link(irsp))
--			goto check_adisc;
--		else
--			lpfc_disc_state_machine(vport, ndlp, cmdiocb,
--						NLP_EVT_CMPL_ADISC);
-+
-+		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
-+				NLP_EVT_CMPL_ADISC);
- 
- 		/* As long as this node is not registered with the SCSI or NVMe
- 		 * transport, it is no longer an active node. Otherwise
-@@ -2778,7 +2772,6 @@ lpfc_cmpl_els_adisc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		lpfc_disc_state_machine(vport, ndlp, cmdiocb,
- 					NLP_EVT_CMPL_ADISC);
- 
-- check_adisc:
- 	/* Check to see if there are more ADISCs to be sent */
- 	if (disc && vport->num_disc_nodes)
- 		lpfc_more_adisc(vport);
+ 	if (!(ndlp->nlp_flag & NLP_DELAY_TMO)) {
+-		if (ndlp->nlp_flag & NLP_NPR_ADISC) {
+-			spin_lock_irq(&ndlp->lock);
+-			ndlp->nlp_flag &= ~NLP_NPR_ADISC;
+-			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
+-			spin_unlock_irq(&ndlp->lock);
+-			lpfc_nlp_set_state(vport, ndlp, NLP_STE_ADISC_ISSUE);
+-			lpfc_issue_els_adisc(vport, ndlp, 0);
+-		} else {
++		/*
++		 * ADISC nodes will be handled in regular discovery path after
++		 * receiving response from NS.
++		 *
++		 * For other nodes, Send PLOGI to trigger an implicit LOGO.
++		 */
++		if (!(ndlp->nlp_flag & NLP_NPR_ADISC)) {
+ 			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
+ 			lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
+@@ -2686,12 +2689,13 @@ lpfc_rcv_padisc_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	 */
+ 	if (!(ndlp->nlp_flag & NLP_DELAY_TMO) &&
+ 	    !(ndlp->nlp_flag & NLP_NPR_2B_DISC)) {
+-		if (ndlp->nlp_flag & NLP_NPR_ADISC) {
+-			ndlp->nlp_flag &= ~NLP_NPR_ADISC;
+-			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
+-			lpfc_nlp_set_state(vport, ndlp, NLP_STE_ADISC_ISSUE);
+-			lpfc_issue_els_adisc(vport, ndlp, 0);
+-		} else {
++		/*
++		 * ADISC nodes will be handled in regular discovery path after
++		 * receiving response from NS.
++		 *
++		 * For other nodes, Send PLOGI to trigger an implicit LOGO.
++		 */
++		if (!(ndlp->nlp_flag & NLP_NPR_ADISC)) {
+ 			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
+ 			lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
 -- 
 2.26.2
 
