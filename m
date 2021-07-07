@@ -2,95 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46626C07E95
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 20:16:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A517C07E95
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 20:44:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2122361CBB
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 20:16:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5571B61CCA
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 20:44:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230233AbhGGUTR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 16:19:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34122 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230120AbhGGUTR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 16:19:17 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B69B6C061574
-        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 13:16:36 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id b8-20020a17090a4888b02901725eedd346so2367414pjh.4
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 13:16:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=wglB+IbvMmtFDHmzOA/hNEV2wgHilB9Tfw6um82nPuU=;
-        b=bYv5jkv1VpKOl+u/0e2UBJW92oh452GIx1Zpa+eZwUk0dqeT6BBwC0cbzBmPocRICE
-         LRsakLj6f24bVCZVgqhRCBWGEKjgztwyVEknk/o/oaNWTZd+cBAyVyvQwgWm9RqZQazm
-         J4p/rnneY4A5wRi0VZjkU5rp8FfaR6VpE9GwM=
+        id S230109AbhGGUq6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 16:46:58 -0400
+Received: from mail-pl1-f177.google.com ([209.85.214.177]:35838 "EHLO
+        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229519AbhGGUq6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 16:46:58 -0400
+Received: by mail-pl1-f177.google.com with SMTP id b5so1755424plg.2
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 13:44:17 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
-         :content-transfer-encoding:message-id:references:to;
-        bh=wglB+IbvMmtFDHmzOA/hNEV2wgHilB9Tfw6um82nPuU=;
-        b=W9BWqFr20JQEGwUOujGlDsJ+UIAIoR+3/2Ki4g9I7DUdc/m/PMR+VvD0ZTmdsR5vZV
-         ixTsdggpr5sJ+YFeuTi4KVM1Ffgmhk/CcrsuMWVqykouPOjJQFBNdVyziDD/2qyOwuOs
-         UcWK9swJDq3DDTrqMBQFwE1j0oDvi259iR+C1Ci/HFH2zZIABYlGjCTx46+hmuaZaF27
-         fVJX7KHpwB0bsQVIXuGyiE5r0un6eW3Qm6517oRA8xI/ZwA8pXHXmkS4LAYDkfhi37Pm
-         lq0EUgn7Hjmhf36AJhSnL8es40rc+gkSQHlTX98V7ImklgxBmjgD12TTvU0J0TacZdDB
-         iOmw==
-X-Gm-Message-State: AOAM531Y9zTGS6d5ojHxp5GMmF0qXwB+6mhcwql76VWhm0Td1eHKxjqy
-        b1njXvA0sB7tMy/dJ26OkujEOYyuA91wV+0P
-X-Google-Smtp-Source: ABdhPJwzAmSmyrzZZ+5XyRNXGrnEVn8TJQsl2DYSERN4NMipF4Ch7g2ZjriYroJoPufviWufnMchKg==
-X-Received: by 2002:a17:90a:4893:: with SMTP id b19mr27264703pjh.45.1625688995919;
-        Wed, 07 Jul 2021 13:16:35 -0700 (PDT)
-Received: from smtpclient.apple ([192.30.189.3])
-        by smtp.gmail.com with ESMTPSA id z3sm29420pgl.77.2021.07.07.13.16.34
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 07 Jul 2021 13:16:35 -0700 (PDT)
-Content-Type: text/plain;
-        charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 15.0 \(3681.0.2.1.2\))
-Subject: Re: [PATCH 1/1]: scsi scsi_dh_alua: don't fail I/O until transition
- time expires
-From:   Brian Bunker <brian@purestorage.com>
-In-Reply-To: <B5561C06-0029-45C5-9291-A66DAF48C303@purestorage.com>
-Date:   Wed, 7 Jul 2021 13:16:34 -0700
-Cc:     linux-scsi@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <82F24BD9-6888-4E60-B821-CA026194A0BD@purestorage.com>
-References: <622E6257-85C7-4F9B-9CCD-2EF1791CB21F@purestorage.com>
- <23d45b9e-2c56-d637-dd2f-ea5a1ef267ac@suse.de>
- <27C07B47-22C8-4447-BB09-1386C64C21A0@purestorage.com>
- <add9c9c2-ed37-e973-6d8f-1d98c94905e4@suse.de>
- <AF99F82D-7451-412C-AD21-8CF5593E6F59@purestorage.com>
- <B5561C06-0029-45C5-9291-A66DAF48C303@purestorage.com>
-To:     Hannes Reinecke <hare@suse.de>
-X-Mailer: Apple Mail (2.3681.0.2.1.2)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=E5cl8rfaUsiZGZU1cjcb26qMdu3tn0gNckj8eKKLuSE=;
+        b=q+rkqd6XHhf8TTElDRS0rTEoF3F9i4L9IdLwptQd9C5BbwOJuYNuQVuAxNajf+NSTk
+         dNSQpCqY8nDbcf70RsDtIOdJdfHOD79yh3tmLx65Cjpt/DNkHFJuxh0U22BijvFB7WAS
+         q3TQJEryRT2642xu9bUBtRBDESC4m6Z1RPLWPmRdTbahCoRqjqnT1Z/esGmIw5CaRWHL
+         SQQvXqo/ChnPvdA+5LVtduGUuJ8yDqNnoZxoUOxgLDJrXWiqfMdMWYYNx9tB9NtJApaE
+         9n7t6RNKcIqBPL84ua0dMf8TDHLb1IG/UQwQiZVsMYt0I0tH9DovK3esXv0Z8JRkNlPB
+         Q7WA==
+X-Gm-Message-State: AOAM533URJim+YoHFeggZbH5H01X513NktbUMg8YzZvBVo4bZc/iOMjx
+        ADQwGbvkDKyrTBWneWHMMiI=
+X-Google-Smtp-Source: ABdhPJxs9P34qb9P/ZI3C7UlLpXtLhNN2ioPwwSpadbfijgPPPQ9MXSgy+QCNk53cMm88U3UdzhoMA==
+X-Received: by 2002:a17:90b:4b52:: with SMTP id mi18mr11017778pjb.37.1625690656846;
+        Wed, 07 Jul 2021 13:44:16 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:6679:27d9:f7a8:3b7e? ([2601:647:4000:d7:6679:27d9:f7a8:3b7e])
+        by smtp.gmail.com with ESMTPSA id f20sm83290pfv.47.2021.07.07.13.44.15
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 07 Jul 2021 13:44:16 -0700 (PDT)
+Subject: Re: [PATCH 07/21] ufs: Only include power management code if
+ necessary
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>
+References: <20210701211224.17070-1-bvanassche@acm.org>
+ <20210701211224.17070-8-bvanassche@acm.org>
+ <DM6PR04MB657574076FC4E3FDAF5914C6FC1C9@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <307aabfd-d1f0-d27e-8a2c-ed3dd19393dd@acm.org>
+Date:   Wed, 7 Jul 2021 13:44:14 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
+MIME-Version: 1.0
+In-Reply-To: <DM6PR04MB657574076FC4E3FDAF5914C6FC1C9@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Just checking back in. It seems that there are at least two ways to fix =
-this problem. It seems like it can be done in either the ALUA device =
-handler or in drivers/md/dm-mpath.c. At this point, however, the failing =
-of the path when ALUA state transitioning is hit breaks what used to =
-work and what we believe should work. Where should we go from here?
+On 7/4/21 11:33 PM, Avri Altman wrote:
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index a34aa6d486c7..37302a8b3937 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -8736,6 +8736,7 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba
+>> *hba)
+>>                 usleep_range(5000, 5100);
+>>  }
+>>
+>> +#ifdef CONFIG_PM
+> Maybe move this few lines up to include ufshcd_vreg_set_lpm as well?
 
-Thanks,
-Brian
+The following call chain requires that ufshcd_vreg_set_lpm() is always
+available: ufshcd_shutdown() -> ufshcd_suspend() -> ufshcd_vreg_set_lpm().
 
-Brian Bunker
-SW Eng
-brian@purestorage.com
+> Are there any ufs platforms that doesn't use pm management?
+> Automotive platforms maybe?
 
+I'm not sure whether there is any platform on which UFS PM is disabled.
+My purpose with this patch is to document which code is not used if
+power management is disabled.
 
-
-> On Jun 17, 2021, at 12:19 PM, Brian Bunker <brian@purestorage.com> =
-wrote:
->=20
-> drivers/md/dm-mpath.c
+Bart.
 
