@@ -2,76 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20E9FC07E9B
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 16:58:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5015C07E95
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 17:13:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 038E761CCB
-	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 16:58:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF97E61C17
+	for <linux-scsi@archiver.kernel.org>; Wed,  7 Jul 2021 17:13:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230406AbhGGRBF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 7 Jul 2021 13:01:05 -0400
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:50852 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230376AbhGGRBE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 13:01:04 -0400
-Received: from cwcc.thunk.org (pool-72-74-133-215.bstnma.fios.verizon.net [72.74.133.215])
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id 167Gw96L029559
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 7 Jul 2021 12:58:10 -0400
-Received: by cwcc.thunk.org (Postfix, from userid 15806)
-        id CA98E15C3CC6; Wed,  7 Jul 2021 12:58:09 -0400 (EDT)
-Date:   Wed, 7 Jul 2021 12:58:09 -0400
-From:   "Theodore Ts'o" <tytso@mit.edu>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     leah.rumancik@gmail.com, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-Subject: Re: [PATCH] ext4: fix EXT4_IOC_CHECKPOINT
-Message-ID: <YOXdIZARJ0Rwtfbd@mit.edu>
-References: <20210707085644.3041867-1-hch@lst.de>
+        id S230396AbhGGRQG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 7 Jul 2021 13:16:06 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3374 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229519AbhGGRQF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Jul 2021 13:16:05 -0400
+Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GKlyD0Bmlz6H9FN;
+        Thu,  8 Jul 2021 00:59:16 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Wed, 7 Jul 2021 19:13:23 +0200
+Received: from [10.47.24.69] (10.47.24.69) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 7 Jul 2021
+ 18:13:22 +0100
+Subject: Re: [bug report] shared tags causes IO hang and performance drop
+To:     Ming Lei <ming.lei@redhat.com>
+CC:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Douglas Gilbert <dgilbert@interlog.com>,
+        Hannes Reinecke <hare@suse.com>
+References: <0c85fe52-ebc7-68b3-2dbe-dfad5d604346@huawei.com>
+ <c1d5abaa-c460-55f8-5351-16f09d6aa81f@huawei.com> <YIbS1dgSYrsAeGvZ@T590>
+ <55743a51-4d6f-f481-cebf-e2af9c657911@huawei.com> <YIbkX2G0+dp3PV+u@T590>
+ <9ad15067-ba7b-a335-ae71-8c4328856b91@huawei.com> <YIdTyyVE5azlYwtO@T590>
+ <ab83eec4-20f1-ad74-7f43-52a4a87a8aa9@huawei.com> <YIfVVRheF9ZWjzbh@T590>
+ <cb81d990-e5a6-49b1-5d96-8079a80c73f5@huawei.com> <YIfe+mpcV17XsHuL@T590>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <ddb65e36-28e8-b5ff-9ae9-37fe3d455acb@huawei.com>
+Date:   Wed, 7 Jul 2021 18:06:08 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210707085644.3041867-1-hch@lst.de>
+In-Reply-To: <YIfe+mpcV17XsHuL@T590>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.24.69]
+X-ClientProxiedBy: lhreml717-chm.china.huawei.com (10.201.108.68) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 07, 2021 at 10:56:44AM +0200, Christoph Hellwig wrote:
-> Issuing a discard for any kind of "contention deletion SLO" is highly
-> dangerous as discard as defined by Linux (as well the underlying NVMe,
-> SCSI, ATA, eMMC and virtio primitivies) are defined to not guarantee
-> erasing of data but just allow optional and nondeterministic reclamation
-> of space.  Instead issuing write zeroes is the only think to perform
-> such an operation.  Remove the highly dangerous and misleading discard
-> mode for EXT4_IOC_CHECKPOINT and only support the write zeroes based
-> on, and clean up the resulting mess including the dry run mode.
+On 27/04/2021 10:52, Ming Lei wrote:
+>>> Then you just waste lots of memory, I remember that scsi request payload
+>>> is a bit big.
+>> It's true that we waste much memory for regular static requests for when
+>> using hostwide tags today.
+>>
+>> One problem in trying to use a single set of "hostwide" static requests is
+>> that we call blk_mq_init_request(..., hctx_idx, ...) ->
+>> set->ops->init_request(.., hctx_idx, ...) for each static rq, and this would
+>> not work for a single set of "hostwide" requests.
+>>
+>> And I see a similar problem for a "request queue-wide" sched static
+>> requests.
+>>
+>> Maybe we can improve this in future.
+> OK, fair enough.
+> 
 
-A discard is not "dangerous"; how it behaves is simply not necessarily
-guaranteed by the standards specification.  The userspace which uses
-the ioctl simply needs to know how a particular block device might
-react when it is given a discard.
+JFYI, I am working on this now.
 
-I'll note that there is a similar issue with "WRITE SAME" or "ZEROOUT.
-A WRITE SAME might take a fraction of a second --- or it might take
-days --- depending on how the storage device is implemented.  It is
-similarly unspecified by the various standards specification.  Hence,
-userspace needs to know something about the block device before
-deciding whether or not it would be good idea to issue a "WRITE SAME"
-operation for large number of blocks.
+My idea is to introduce a hostwide and request-wide static requests (for 
+hostwide tagset), and have the per-hctx tags point at them, so that we 
+don't need to allocate per-hctx static requests.
 
-This is why the API is implemented in terms of what command will be
-issued to the block device, and not what the semantic meaning is for
-that particular command.  That's up to the userspace application to
-know out of band, and we should be able to give the privileged
-application the freedom to decide which command makes the most amount
-of sense.
+SCSI init_request callback just ignores hctx_idx passed, so then we can 
+just call init_request(hctx_idx = 0) for those hostwide/request 
+queue-wide static requests.
 
-	 	      	  	    		   - Ted
+Thanks,
+John
+
