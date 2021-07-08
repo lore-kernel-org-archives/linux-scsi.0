@@ -2,102 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4CD7C07E96
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 06:05:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15D7BC11F66
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 06:35:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C1BE261CE6
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 06:05:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB9F161CD1
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 06:35:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229763AbhGHGIf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jul 2021 02:08:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49804 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229608AbhGHGIe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2021 02:08:34 -0400
-Received: from mail-pg1-x52a.google.com (mail-pg1-x52a.google.com [IPv6:2607:f8b0:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAEF5C061574
-        for <linux-scsi@vger.kernel.org>; Wed,  7 Jul 2021 23:05:52 -0700 (PDT)
-Received: by mail-pg1-x52a.google.com with SMTP id t9so4858454pgn.4
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Jul 2021 23:05:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=x42eN8t1nMi/Qglwv0rlMAjFJm2O+TOdrEms1zHn4NQ=;
-        b=tOGLoDCjJytRKdTKXzCyYio9r+dpnqrIzljrH/SEZ6NBACxwh+dBkb8lum4raL+Byb
-         4iYCphC41sEg9DKDi9bmeClMjkuwL7EUtBd5g40XG0ROiz6tOgnq86m907rBIlqeB9R4
-         QKXNR7gbJFI6cbQcrsJ5yrTBPKZYckKE9Tb9DaCIrXYbHnKtpFkGJBghidhlDWZ6Xx6x
-         IOi6TOJMrz5amgLuUKmMNn4IULO04xxd7xRS82Htl1kTEhBB8pou3xybuzwQhBCxpI95
-         1rfNN1IB1xVzz8RvKfz72TOsOn8carJtzyVv+LHG0CXxiAsX4yF/8JPKskgqYUX6n654
-         Hikw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=x42eN8t1nMi/Qglwv0rlMAjFJm2O+TOdrEms1zHn4NQ=;
-        b=Q1fbVvZMRphd5e6rFgpantGU7cpAeAW0602sAJzqcpGdyO8nM491UVZITeoTAR2l/y
-         QGCe1K8byJ06nNNAJK0KsVtfV+oEkn350hKfCmI0IlD01sK5Sb/bWa0kKNo/mRh/NRub
-         4YGbJHQuNsntZxExOzU8HosCvCvB296Z9Lh/ssirayFeL2TumwWhzj9ZeRxuIxy/vQyX
-         TLRBD/iS+5El65FIg5ijIGue3hKEvGY0oYDEIi26JP0gIuH3eAe5w8HWHj9M3UkfplF5
-         MrWJg/JhIAtyqbPdRq1PiWAwSi5COcJRxeKCxSCkGjPX9i2Sb3ylX6sZlIlB470km1Op
-         vGOg==
-X-Gm-Message-State: AOAM532bGOSyf2gTULwt3RsrP2d/m1lzA78iqfJN9dixZRhOvGN0RNpB
-        J6QK3o/Hji90SWOH1XZgMJoRu2YKnrc=
-X-Google-Smtp-Source: ABdhPJxAY/FpP2nc+9GkK5Hnw1a5db47aHRayb7swtKRyTTDHzdoBKcMgmfXzeV/kaJcF3wEmTaaag==
-X-Received: by 2002:a05:6a00:168a:b029:2fb:6bb0:aba with SMTP id k10-20020a056a00168ab02902fb6bb00abamr30009557pfc.32.1625724352361;
-        Wed, 07 Jul 2021 23:05:52 -0700 (PDT)
-Received: from jianchwadeMacBook-Pro.local ([154.48.252.69])
-        by smtp.gmail.com with ESMTPSA id 198sm367989pfw.21.2021.07.07.23.05.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 Jul 2021 23:05:52 -0700 (PDT)
-Subject: Re: Discard performance regression after "scsi: sd: Remove LBPRZ
- dependency for discards"
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-References: <279cb008-4c92-0535-efdd-6e877bea7349@gmail.com>
- <yq1pmvtbiy2.fsf@ca-mkp.ca.oracle.com>
-From:   Wang Jianchao <jianchao.wan9@gmail.com>
-Message-ID: <f1331877-5221-5aaa-d896-ff487dbdf2d6@gmail.com>
-Date:   Thu, 8 Jul 2021 14:05:49 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.11.0
+        id S230405AbhGHGiN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jul 2021 02:38:13 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20888 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230462AbhGHGiL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2021 02:38:11 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1625726129;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=zPy2uiaqDpvQKzXrMQTnHDaQviTPg5vo1248ee1WfqU=;
+        b=RHu2CLoRLG5KfJcCTmrnnqRvASauzbakAjf0y5nfgC4rbeVo4ONIPRqSc8NLnc99b/LTmH
+        DiWC3FMRpepa3F861CzU2UDGhFJ3zrdm8lFTp7VwHro5lntnIIZPvzgJJJCdQaQXMppKjY
+        cPQ3MCUltpAeAU8v/YEe7g4oiP2Ox1M=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-419-eKj7iy7QOOuaFRG8CwjXVQ-1; Thu, 08 Jul 2021 02:35:25 -0400
+X-MC-Unique: eKj7iy7QOOuaFRG8CwjXVQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 39804100C660;
+        Thu,  8 Jul 2021 06:35:23 +0000 (UTC)
+Received: from T590 (ovpn-12-112.pek2.redhat.com [10.72.12.112])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7A42B5D6A8;
+        Thu,  8 Jul 2021 06:35:04 +0000 (UTC)
+Date:   Thu, 8 Jul 2021 14:34:59 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Thomas Gleixner <tglx@linutronix.de>, Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>,
+        Daniel Wagner <dwagner@suse.de>,
+        Wen Xiong <wenxiong@us.ibm.com>,
+        John Garry <john.garry@huawei.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Keith Busch <kbusch@kernel.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Jason Wang <jasowang@redhat.com>,
+        virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH V2 5/6] virtio: add one field into virtio_device for
+ recording if device uses managed irq
+Message-ID: <YOack2zlRnGmjWWz@T590>
+References: <20210702150555.2401722-1-ming.lei@redhat.com>
+ <20210702150555.2401722-6-ming.lei@redhat.com>
+ <20210706054203.GC17027@lst.de>
+ <87bl7eqyr2.ffs@nanos.tec.linutronix.de>
+ <YOV3HgWG6F3geECm@T590>
+ <20210707140529.GA24637@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <yq1pmvtbiy2.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210707140529.GA24637@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks so much for your comment, Martin ;)
-That's really helpful.
+On Wed, Jul 07, 2021 at 04:05:29PM +0200, Christoph Hellwig wrote:
+> On Wed, Jul 07, 2021 at 05:42:54PM +0800, Ming Lei wrote:
+> > The problem is that how blk-mq looks at that flag, since the device
+> > representing the controller which allocates irq vectors isn't visible
+> > to blk-mq.
+> 
+> In blk_mq_pci_map_queues and similar helpers.
 
-Jianchao
+Firstly it depends if drivers call into these helpers, so this way
+is fragile.
 
-On 2021/7/8 11:23 AM, Martin K. Petersen wrote:
-> 
-> Wang,
-> 
->> We have a sata ssd with following parameters,
->>
->>   max_ws_blocks = 0
->>   max_unmap_blocks = 262143
->>   lbprz = 1
->>   lbpu = 1
->>   unmap_limit_for_ws = 0
-> 
-> The device is explicitly asking for us to use UNMAP so the older kernel
-> choosing WRITE SAME(16) was not correct.
-> 
-> I have been working on an update to the discard/zeroing heuristics that
-> I'll post when 5.15 opens next week. But based on what's reported it by
-> your device we would still choose UNMAP for discards. LBPRZ only affects
-> which command we use for zeroing.
-> 
+Secondly, I think it isn't good to expose specific physical devices
+into blk-mq which shouldn't deal with physical device directly, also
+all the three helpers just duplicates same logic except for retrieving
+each vector's affinity from specific physical device.
+
+I will think about how to cleanup them.
+
+
+Thanks,
+Ming
+
