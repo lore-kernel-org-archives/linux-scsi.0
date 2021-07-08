@@ -2,97 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15D7BC11F66
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 06:35:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52F26C07E96
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 07:40:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB9F161CD1
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 06:35:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36D3B61CE5
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 07:40:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230405AbhGHGiN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jul 2021 02:38:13 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20888 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230462AbhGHGiL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2021 02:38:11 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625726129;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=zPy2uiaqDpvQKzXrMQTnHDaQviTPg5vo1248ee1WfqU=;
-        b=RHu2CLoRLG5KfJcCTmrnnqRvASauzbakAjf0y5nfgC4rbeVo4ONIPRqSc8NLnc99b/LTmH
-        DiWC3FMRpepa3F861CzU2UDGhFJ3zrdm8lFTp7VwHro5lntnIIZPvzgJJJCdQaQXMppKjY
-        cPQ3MCUltpAeAU8v/YEe7g4oiP2Ox1M=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-419-eKj7iy7QOOuaFRG8CwjXVQ-1; Thu, 08 Jul 2021 02:35:25 -0400
-X-MC-Unique: eKj7iy7QOOuaFRG8CwjXVQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 39804100C660;
-        Thu,  8 Jul 2021 06:35:23 +0000 (UTC)
-Received: from T590 (ovpn-12-112.pek2.redhat.com [10.72.12.112])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7A42B5D6A8;
-        Thu,  8 Jul 2021 06:35:04 +0000 (UTC)
-Date:   Thu, 8 Jul 2021 14:34:59 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Thomas Gleixner <tglx@linutronix.de>, Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>,
-        Daniel Wagner <dwagner@suse.de>,
-        Wen Xiong <wenxiong@us.ibm.com>,
-        John Garry <john.garry@huawei.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Keith Busch <kbusch@kernel.org>,
-        Damien Le Moal <damien.lemoal@wdc.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Jason Wang <jasowang@redhat.com>,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH V2 5/6] virtio: add one field into virtio_device for
- recording if device uses managed irq
-Message-ID: <YOack2zlRnGmjWWz@T590>
-References: <20210702150555.2401722-1-ming.lei@redhat.com>
- <20210702150555.2401722-6-ming.lei@redhat.com>
- <20210706054203.GC17027@lst.de>
- <87bl7eqyr2.ffs@nanos.tec.linutronix.de>
- <YOV3HgWG6F3geECm@T590>
- <20210707140529.GA24637@lst.de>
+        id S230515AbhGHHmu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jul 2021 03:42:50 -0400
+Received: from mo4-p02-ob.smtp.rzone.de ([85.215.255.80]:11526 "EHLO
+        mo4-p02-ob.smtp.rzone.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229838AbhGHHmt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2021 03:42:49 -0400
+X-Greylist: delayed 348 seconds by postgrey-1.27 at vger.kernel.org; Thu, 08 Jul 2021 03:42:48 EDT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1625729648;
+    s=strato-dkim-0002; d=aepfle.de;
+    h=In-Reply-To:References:Message-ID:Subject:Cc:To:From:Date:Cc:Date:
+    From:Subject:Sender;
+    bh=Ie8bhNxcgTEIyaHnXue+qUsCeFcFU7OWzE+Hs21wg9g=;
+    b=nKxlYYk9ExTxZ9BuI9EhfpAje6vEfx0GVmBer00VZb2GlgTta4a3e6mEReme+AVLKJ
+    x1g28GBLyGoFvM6gaG5z7b+cV6ZJFLoem/obwXB9+z0+SoPV6pwNVVIIk3/UOPHsneyg
+    GWLwYXUqnjer9VpKH4m9Cx5Kv703S9RZFcbTVNL6kEIMVP91SRDKJaQgZM42hrAkVc4e
+    lmSSydRxnY+lu4pZdDi8VibLUhPOJminze/kIh5/0FPTHkurK2p5a/EfuKxM/KIN1xWG
+    WfgjyRn1yLU1J5t4Nvhf0XjMie6PdfNUCxeSR2W7CoeJ26/3wkjbXCgr0r3rPyjQAbxh
+    dA9w==
+Authentication-Results: strato.com;
+    dkim=none
+X-RZG-AUTH: ":P2EQZWCpfu+qG7CngxMFH1J+3q8wa/QDiZbDmui9LcK/RdXt7GAQpV1nK0bLlEYINdoY/p1XzQbc+3kk9TsJTnzSvdM+YSIzPms="
+X-RZG-CLASS-ID: mo00
+Received: from aepfle.de
+    by smtp.strato.de (RZmta 47.28.1 AUTH)
+    with ESMTPSA id 30791cx687Y4Yio
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+        (Client did not present a certificate);
+    Thu, 8 Jul 2021 09:34:04 +0200 (CEST)
+Date:   Thu, 8 Jul 2021 09:34:00 +0200
+From:   Olaf Hering <olaf@aepfle.de>
+To:     Tianyu Lan <ltykernel@gmail.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
+        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        rppt@kernel.org, akpm@linux-foundation.org,
+        kirill.shutemov@linux.intel.com, Tianyu.Lan@microsoft.com,
+        thomas.lendacky@amd.com, ardb@kernel.org,
+        nramas@linux.microsoft.com, robh@kernel.org, keescook@chromium.org,
+        rientjes@google.com, pgonda@google.com, martin.b.radev@gmail.com,
+        hannes@cmpxchg.org, saravanand@fb.com, krish.sadhukhan@oracle.com,
+        xen-devel@lists.xenproject.org, tj@kernel.org,
+        michael.h.kelley@microsoft.com, iommu@lists.linux-foundation.org,
+        linux-arch@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, vkuznets@redhat.com, brijesh.singh@amd.com,
+        anparri@microsoft.com
+Subject: Re: [RFC PATCH V4 01/12] x86/HV: Initialize shared memory boundary
+ in the Isolation VM.
+Message-ID: <20210708073400.GA28528@aepfle.de>
+References: <20210707153456.3976348-1-ltykernel@gmail.com>
+ <20210707153456.3976348-2-ltykernel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210707140529.GA24637@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210707153456.3976348-2-ltykernel@gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 07, 2021 at 04:05:29PM +0200, Christoph Hellwig wrote:
-> On Wed, Jul 07, 2021 at 05:42:54PM +0800, Ming Lei wrote:
-> > The problem is that how blk-mq looks at that flag, since the device
-> > representing the controller which allocates irq vectors isn't visible
-> > to blk-mq.
-> 
-> In blk_mq_pci_map_queues and similar helpers.
+On Wed, Jul 07, Tianyu Lan wrote:
 
-Firstly it depends if drivers call into these helpers, so this way
-is fragile.
+> +++ b/include/asm-generic/mshyperv.h
+> @@ -34,8 +34,18 @@ struct ms_hyperv_info {
 
-Secondly, I think it isn't good to expose specific physical devices
-into blk-mq which shouldn't deal with physical device directly, also
-all the three helpers just duplicates same logic except for retrieving
-each vector's affinity from specific physical device.
+>  	void  __percpu **ghcb_base;
 
-I will think about how to cleanup them.
-
+It would be cool if the cover letter states which commit id this series is based on.
 
 Thanks,
-Ming
-
+Olaf
