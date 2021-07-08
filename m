@@ -2,186 +2,176 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5522CC07E96
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 20:43:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C6ADC07E96
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 21:18:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 35D16616E9
-	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 20:43:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B39161878
+	for <linux-scsi@archiver.kernel.org>; Thu,  8 Jul 2021 21:18:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230451AbhGHUpw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 8 Jul 2021 16:45:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48280 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230238AbhGHUpv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2021 16:45:51 -0400
-Received: from mail-lf1-x135.google.com (mail-lf1-x135.google.com [IPv6:2a00:1450:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5A7D8C061574
-        for <linux-scsi@vger.kernel.org>; Thu,  8 Jul 2021 13:43:08 -0700 (PDT)
-Received: by mail-lf1-x135.google.com with SMTP id u18so9052492lfl.2
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Jul 2021 13:43:08 -0700 (PDT)
+        id S230501AbhGHVU5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 8 Jul 2021 17:20:57 -0400
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:27066 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230442AbhGHVU5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Jul 2021 17:20:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1625779094; x=1657315094;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=CPlE9XEtZUM6FOGm1D0BhNgf/n4z4+R6/W72/AmNqJk=;
+  b=dQic+Ad8oJhG0Qqu8YOJ+Cwk0x4BeJXCm+S1RvnLVMvD6f47fCrirIse
+   9UEDeaSqE5SMomOnoGFw/xtbpBIyy+AzAoMcOhmtVhnblxSTsmBPOxWTk
+   cL9xNu033uQFvpauNWwOQ/OR9Ioh9pmk6L3bsXDxPaebdnhch8RrWXiMO
+   B43Ll63fi4d/DivfTBOU3PYRIRDElUJITvA6KvHRqjy8bXewnJ81e1VeL
+   c0q4enTK9sLzBb84BwIH14n3/hOScFubJnltnb7Zck9h7hF+lX+bxHAqk
+   Pi2q9KGQgyx86iq+qwK6ZGbqwiWh1x7XymkVBDIE2AVyIqkmkczpzZf1r
+   Q==;
+IronPort-SDR: q0kPMWffG/KK9eDhrpv5IRUe0cPOY/gRQA7FIqKr0Htcozn6ZJWamdhf2fod1oDoKDEjpovCDI
+ TtlTLqp5sBIMAA8M1c6eWqkLX1Eflsx9/40ChatGRLCfMG4QuiHJJC/w1JQIwQ6/GK7lks9iIl
+ p3yK0vx17rugTkXjbBcYQUqSWI0NDZ3D9btKmoSSllgi8l5Hh7jksbdhOv/ZcM7tC26X1F3SJu
+ WxiPDmvs8yS26qK5WezNO5WMJKlDSeRtWPXo0sKeFbdQPUQDPDPNLXgMjmRYKCNTUUBkdIuVEo
+ 6mA=
+X-IronPort-AV: E=Sophos;i="5.84,225,1620716400"; 
+   d="scan'208";a="121428190"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 08 Jul 2021 14:18:14 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Thu, 8 Jul 2021 14:17:54 -0700
+Received: from NAM11-DM6-obe.outbound.protection.outlook.com (10.10.215.89) by
+ email.microchip.com (10.10.87.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2
+ via Frontend Transport; Thu, 8 Jul 2021 14:17:54 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=GhWJcxw5V1kqT06EH9vYVpsQNDRWHwD5QA8x5/JveG4elJXTX8UjbPdJFerij5NQziSYv00c2r6U+eS5KFlgCc/YYYGKWAf/cpu8GR/Udv9/XTCra3KXi64+dgv75m6i4p2VcEADh9BTfxcAXHO6pLFqELZZhv+nEzvsS+0co/5Aso8/61HXhIl6+dJvlRFTsaYQyS0hYOic5TB6JHevyC37tyCQp1/zkHBsZMMKANREGMnyzAKM4lklU4+0pBuev5SY41qO3SL4/yDcx/2tJ/HXHfeVUW5Is+f5le9QA1zDS+63TNbKRGVB/4ioJCPnpCb2Y3nr08FkS8n7i1mYOA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CPlE9XEtZUM6FOGm1D0BhNgf/n4z4+R6/W72/AmNqJk=;
+ b=DiHZevWSev3JohhijmPKK1/r0rdUOl8Z5TAJA4hhh0RNM2FKvUSdVEOb1I1M/eQ6ItAxVx/vHsj2jB4uGKoWx1ic60WLJ1kmfSd8/ygGhe5FF9AE2ADAj0ctRtP3usSuVElqdi6YuKS/0TFbooWZBVATtqzkPdP257xXYAGmMzHBLS6buBytWb1TmI6M4WdYwU5e1/HLg99itvI1lg7k+WiG6Z5rq9Muw29IqbyY8pXlGGlARrq6pnwi3JR1g0QBp3iHtt1RADwkTy8cnFEyuVL4GDGwZ1je+1sb567XXITVzjBhM9Qv19OgzDIRpGhIebF+Jj+Lw1tcC/6GDRpL4Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microchip.com; dmarc=pass action=none
+ header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=fvUEZxos9r3uyMbGQTe8Jua7nmJkSUlsS9MdSywTPhw=;
-        b=f0+0DAGORb5YXt00m5CbaxCOk8RNIax6cTjzIXE382v9uFH+acpqDetgn7jjij/uyY
-         LJe8dbGDnCJ4ddGUdpcJPTbnLuujjfkDjnQq07aQ96/S/dvt1OSvEJzbJgBwAkKI0Sr9
-         e+VWzRfp8bGqSWHW34h/MRoh4gEcNONT/VXI4=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=fvUEZxos9r3uyMbGQTe8Jua7nmJkSUlsS9MdSywTPhw=;
-        b=Zttdq8u2HLRwvTdRu43vJGAJ14w/EQ+KvM30f6yC++RrVghAA+SOUHDNgjJPtJtq/0
-         xCM7GV1KTJTlRr/WK2B/NJG1TaGYERn1k9WGiCcKuGfASyZHGrJYEbwZt2IoI49CrmvH
-         vvW8Ah77hJVC7gWBhqo47tFaGKesX3+Fcb3f9cEB2tY4GwBsVbBCwtdbIvKheTCwEzQx
-         P7fKR6uYbepRjQQqb6lp3cgC9BDbvrXU/khrwkNuLlCsf7qSvW4Or5P54S7uALXOf2fZ
-         bnKBl4ZUH+OnWb96/+JwzzX0/B90fEqJXOhJ7GXYsty6Za+jsNPQinB7FBzyeMOvimuC
-         ew0A==
-X-Gm-Message-State: AOAM530Yyjd7hpT5oDYQQdQAIZS2XrYu3asLaDLXvH0waJODY0Y37mWk
-        iGz5nPw8D6LOqQ2yEOoq6NILWV6Sd1W6IAciOv3XzXSWH9wnFKjk
-X-Google-Smtp-Source: ABdhPJwC+G8QhBFARx1E+pL77uVrExBGiigF5LmnYh58H5PyPYmsGWH1Blv+wsHzY8syQmyPm/1Fgl0f3yKPF6xbZWA=
-X-Received: by 2002:ac2:5b1e:: with SMTP id v30mr20703550lfn.226.1625776986435;
- Thu, 08 Jul 2021 13:43:06 -0700 (PDT)
+ d=microchiptechnology.onmicrosoft.com;
+ s=selector2-microchiptechnology-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=CPlE9XEtZUM6FOGm1D0BhNgf/n4z4+R6/W72/AmNqJk=;
+ b=iXTO90CdFsmPeHKru9DUHEH78NdooRk8vp8pNp/iJ6ZhCpyXYxfB35GrgHzMohhsuShUCRE0m9AqUvTPL7YrpEVkizCn4Hp8yEFUy7qBFuAUE0c7gFvjjKealiRq8Z/Y6Xf59T89vNud7mwRtQxffTxYRNbOIsQIJ+GXJevPPao=
+Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
+ by SA2PR11MB5195.namprd11.prod.outlook.com (2603:10b6:806:11a::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4308.20; Thu, 8 Jul
+ 2021 21:17:53 +0000
+Received: from SN6PR11MB2848.namprd11.prod.outlook.com
+ ([fe80::e0af:535:1998:c7ac]) by SN6PR11MB2848.namprd11.prod.outlook.com
+ ([fe80::e0af:535:1998:c7ac%3]) with mapi id 15.20.4287.033; Thu, 8 Jul 2021
+ 21:17:53 +0000
+From:   <Don.Brace@microchip.com>
+To:     <pmenzel@molgen.mpg.de>, <Mike.McGowen@microchip.com>
+CC:     <Kevin.Barnett@microchip.com>, <Scott.Teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <Scott.Benesh@microchip.com>,
+        <Gerry.Morong@microchip.com>, <Mahesh.Rajashekhara@microchip.com>,
+        <Murthy.Bhat@microchip.com>, <Balsundar.P@microchip.com>,
+        <joseph.szczypek@hpe.com>, <jeff@canonical.com>,
+        <POSWALD@suse.com>, <john.p.donnelly@oracle.com>,
+        <mwilck@suse.com>, <linux-kernel@vger.kernel.org>,
+        <hch@infradead.org>, <martin.peterson@oracle.com>,
+        <jejb@linux.vnet.ibm.com>, <linux-scsi@vger.kernel.org>
+Subject: RE: [smartpqi updates PATCH 8/9] smartpqi: fix isr accessing null
+ structure member
+Thread-Topic: [smartpqi updates PATCH 8/9] smartpqi: fix isr accessing null
+ structure member
+Thread-Index: AQHXcwR19cOb1mBLfUaIuK6YIkbO1as5le5A
+Date:   Thu, 8 Jul 2021 21:17:53 +0000
+Message-ID: <SN6PR11MB284815D78832CA5B5E4EA701E1199@SN6PR11MB2848.namprd11.prod.outlook.com>
+References: <20210706181618.27960-1-don.brace@microchip.com>
+ <20210706181618.27960-9-don.brace@microchip.com>
+ <fa3b5d5a-fdd3-48c7-b8d5-1a732b09bf68@molgen.mpg.de>
+In-Reply-To: <fa3b5d5a-fdd3-48c7-b8d5-1a732b09bf68@molgen.mpg.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: molgen.mpg.de; dkim=none (message not signed)
+ header.d=none;molgen.mpg.de; dmarc=none action=none
+ header.from=microchip.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 677f40e5-3cf0-42bf-bf50-08d94255d950
+x-ms-traffictypediagnostic: SA2PR11MB5195:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <SA2PR11MB5195BDA43B0AA55B021EE20BE1199@SA2PR11MB5195.namprd11.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:9508;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: TuDsm7+V/jxb6EMwZxWvhTM+CTDHkt7me/ktgpA83EX+iZPo1+8Pip/Wr8I9zNKMMd0DFbpumaMF5ApRsK4f8uLx/FoJ78TvOjzGaWLaakB7zGkedL/Mp8u+9ynZ7m0qHOUdlRey3Io2kwd3Xyp1SPqI5rJJNIcXtPp1JpuLeEsSLnWLojSwWKgpk/tBxNGDmOsBA5Oq0Z6DW1w5pfNv/WtdiQPnHYEQxE8VbsfW3vHhVaAF7WI5e+0y0z/sPPfXyxDOZs6looq9ql4Iac818ojwmP03cMfVIm7zZYj0a4BVGbkTIcSwJxaIoqh2ko9huUjMUbGVeQt/RdUwE97bVsQtl/QAlXo+oh8n/IYYsOyvyGqIM8J1+DLZeMf1cCEkSF3f+2D8ySv7URihsLh7JiRGYhRABjQggehCxpzwPs+pAyT3ILwqT8907eHJ+kRehHz1tZYuCVt4V2d3+/WJbQusLjol/2l8fgJoH1zL8Rc4LVapJWRPuevtfz9AI0wpgX5jgjDW4pmmz7ZNFuInczhjm4Aqki8exPIN+TbF9tNiRe36QaJuSV81RuE0LHkNmwNKW9fx9eMElNFxbJ4avTwN4bLLRO8/nP+u8dBtiETwmTRcDLoUkdUAnZ2UX9slxXV3fAvYxztAeDQP08LWPg==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(376002)(346002)(39860400002)(366004)(136003)(122000001)(5660300002)(8936002)(8676002)(52536014)(76116006)(66946007)(6506007)(2906002)(66556008)(66476007)(64756008)(316002)(66446008)(7696005)(83380400001)(6636002)(55016002)(38100700002)(4744005)(54906003)(15650500001)(86362001)(71200400001)(33656002)(478600001)(26005)(7416002)(110136005)(9686003)(186003)(4326008);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?SzY1c1hnK0UvRk1xdmxmYUNNMXRWNnJiazhMNEE4RG5EM3FQcjgwVktBWEJr?=
+ =?utf-8?B?MUdyNmxSWlN4dlgrTE40ZWJUMVFSUXVsRUl5b2RvR05HS2hoY0RIMCthVS9r?=
+ =?utf-8?B?Zjk4aVlZMmlvTlZxTy9RUEttdXZqQ0lEcUNHZ0R3anpYcTFuY2ZmRmJJL2Zm?=
+ =?utf-8?B?TisxYkZXbTFMQVZ5Z0FtOHpIK3NKS0J4Wk5BalRDdEpvS3dkNDlRNWtlaHBh?=
+ =?utf-8?B?aUo3VUhqMGhMZnZ2ZmU2N1JWN3g4a3V2b3R2M083YjFrYkdjbXJvRVd2a3pJ?=
+ =?utf-8?B?YXZEYWIxNXRhaVc5cDNQbWYzUmVhRzFCN1hIOStQRjZXVC85d0MwT0pJYmVw?=
+ =?utf-8?B?Y0ZhbE1qeGoxcmNuLzJXd2hkckhReVRSWEFwR0dJRnhZVTZXRUhydzlaTnBN?=
+ =?utf-8?B?bC8wMVZuckdTdzZwcER0Wnc5VHA3enExVzNJWnd6L1FYQW8wNzF5eGx4QUJI?=
+ =?utf-8?B?b1dNeXR4cmF4RGt4cHBzdGNGakFaNXpTdWQ0MzRTYUF3aUs2dFYyVGxPRkZa?=
+ =?utf-8?B?Y1ZWdytzNngrWWUvNFRWNjZINGFNRmc4TDRueG1udUZqeUt4TVQydzZibjNC?=
+ =?utf-8?B?SThuZnBaTHI3c1NST3JnL3BBTmVsc0VhMmhHcElhNlpYamZlWTk5V0RzMWp5?=
+ =?utf-8?B?T2JxTXUyb3g2V29nWFhKeXUrQjZrN3Z0eU5GbzJsZCtad1E0cFplYlJLaGl1?=
+ =?utf-8?B?Nkt6eCtYeUpYdmxMcU0zQWU3UFhPVHZsNXI3eXBndHdwSnJVcWZzZGNrVXRM?=
+ =?utf-8?B?aEdNSzhCKzAvTVhnRDBtYjZKNk8rWDRrZ1VKdkNPOGgwYVlyZHpTdllnaWts?=
+ =?utf-8?B?ektxem9UVHZWY294SXNURnhtMVdONy9LWVNIblNuZndUZXFjOVdvZkJkZzMv?=
+ =?utf-8?B?QWpYSFV4QWNYQVYwbHFNQjRRd0JnNS9JVVhacXVFNkkzNG9CTWJNUTRsc2ps?=
+ =?utf-8?B?TVhCYkdSU3UrbE9RbHNQbHRoRVV6STFtT3NEeTVvVVNLc3B1TkZOY3Zjbkk3?=
+ =?utf-8?B?dHRvbk1OZ1RhRWVEM25kNnduWHlGdytNZHVaVGV1NVpyQzRnU0tzTy9vQWFJ?=
+ =?utf-8?B?a3VKbE5jVzhaSnNvM1pPUVdzR2VqZkVseXF0MlZya0tnQjYyNWhBWXJDRDdJ?=
+ =?utf-8?B?ajJHZXphOUFDdldzZ3o0cHNZM1I0Kzk2aWlpZS9MLzFxRExkRFdMM0dZbEtw?=
+ =?utf-8?B?UzZKVHpGbHJDSHc3dWVNK21EZ2RTdEc2aU5JVkxkTy9YNmovQllPbTF3S1Ur?=
+ =?utf-8?B?ZmRjVjNVaTFLRStvaGthUTdyUiszZENVcXJybkQxcHd1NVUzeVpERTFXdWRI?=
+ =?utf-8?B?d0xlaSt4Q2pmci9yVXlRZDVNbkxUdkJjSmI5Nlk2NzBOOCs0Wi91WGxDbU5L?=
+ =?utf-8?B?bzZtcHkyVGlZR1ZPUHMyU1RCVklvd0t0ZmdtUnY4SnBtaWl6TDZJQjFrWGlv?=
+ =?utf-8?B?Z0R6L0w2bFIzUEltYXdLWGQ4OHhzUlJqZUpJRURWMHBzQy8xdWlLZTVVdkhU?=
+ =?utf-8?B?TnFyMnZldjhxUXIvUVBNdDkyaXEzQWFIVlRYdHo3WjhEa2NScmppcVg3aThD?=
+ =?utf-8?B?WGdNRHVTNnQ5eWpJTjVtalBIanoreUYrS3ZNVzB1ZnRTN3hzZW9oUEZObjZu?=
+ =?utf-8?B?Mng3YUVMMzJjbE9ubmpkV21RRjBoQ29pbG1tTTNGcUFzUFR2THVqSm1IZlJX?=
+ =?utf-8?B?bW5Yam05WHE3bXpqNkxtSHdPRTZJQ21vZ2ZMblRDdGlZVkdoamlLNFpvVkRO?=
+ =?utf-8?Q?I8jRAQZZMAl1I3UCeXmWem/j/rpS+TdAuhVnFyt?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-From:   Brian Bunker <brian@purestorage.com>
-Date:   Thu, 8 Jul 2021 13:42:55 -0700
-Message-ID: <CAHZQxyKJ1qFatzhR-k19PXjAPo7eC0ZgwgaGKwfndB=jEO8mRQ@mail.gmail.com>
-Subject: [PATCH 1/1]: scsi dm-mpath do not fail paths which are in ALUA state transitioning
-To:     linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2848.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 677f40e5-3cf0-42bf-bf50-08d94255d950
+X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Jul 2021 21:17:53.3697
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: B03yRiUh84bcSRMpQYujcshXTS6Br9H8GtMkQLEKYsW+rfHQalcCvh83+2WC+K23r8dtlK4OgCkTyF2Q3DFSxw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB5195
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In a controller failover do not fail paths that are transitioning or
-an unexpected I/O error will return when accessing a multipath device.
-
-Consider this case, a two controller array with paths coming from a
-primary and a secondary controller. During any upgrade there will be a
-transition from a secondary to a primary state.
-
-1. In the beginning all paths active / optimized:
-3624a9370602220bd9986439b00012c1e dm-12 PURE,FlashArray
-size=3.0T features='0' hwhandler='1 alua' wp=rw
-`-+- policy='service-time 0' prio=50 status=active
-  |- 13:0:0:11 sdch 69:80  active ready running
-  |- 14:0:0:11 sdce 69:32  active ready running
-  |- 15:0:0:11 sdcf 69:48  active ready running
-  |- 1:0:0:11  sdci 69:96  active ready running
-  |- 9:0:0:11  sdck 69:128 active ready running
-  |- 10:0:0:11 sdcg 69:64  active ready running
-  |- 11:0:0:11 sdcd 69:16  active ready running
-  `- 12:0:0:11 sdcj 69:112 active ready running
-
-CT0 paths - sdce, sdcf, sdcg, sdcd
-CT1 paths - sdch, sdci, sdck, sdcj
-
-2. Run I/O to the multipath device:
-[root@init115-15 ~]# /opt/Purity/bin/bb/pureload -m initthreads=32 /dev/dm-12
-Thu Jul  8 13:33:47 2021: /opt/Purity/bin/bb/pureload num_cpus = 64
-Thu Jul  8 13:33:47 2021: /opt/Purity/bin/bb/pureload num numa nodes 2
-Thu Jul  8 13:33:47 2021: /opt/Purity/bin/bb/pureload Starting test
-with 32 threads
-
-3. In an upgrade the primary controller is failed and the secondary
-controller transitions to primary. From an ALUA paths perspective, the
-paths to the previous primary go to ALUA state unavailable while the
-paths transitioning to the promoting primary move to ALUA state
-transitioning.
-
-It is expected that 4 paths will fail:
-Jul  8 13:33:58 init115-15 kernel: sd 14:0:0:11: [sdce] tag#1178 Add.
-Sense: Logical unit not accessible, target port in unavailable state
-Jul  8 13:33:58 init115-15 kernel: sd 15:0:0:11: [sdcf] tag#1374 Add.
-Sense: Logical unit not accessible, target port in unavailable state
-Jul  8 13:33:58 init115-15 kernel: sd 10:0:0:11: [sdcg] tag#600 Add.
-Sense: Logical unit not accessible, target port in unavailable state
-Jul  8 13:33:58 init115-15 kernel: sd 11:0:0:11: [sdcd] tag#1460 Add.
-Sense: Logical unit not accessible, target port in unavailable state
-
-Jul  8 13:33:58 init115-15 kernel: device-mapper: multipath: 253:12:
-Failing path 69:64.
-Jul  8 13:33:58 init115-15 kernel: device-mapper: multipath: 253:12:
-Failing path 69:48.
-Jul  8 13:33:58 init115-15 kernel: device-mapper: multipath: 253:12:
-Failing path 69:16.
-Jul  8 13:33:58 init115-15 kernel: device-mapper: multipath: 253:12:
-Failing path 69:32.
-
-Jul  8 13:33:58 init115-15 multipathd[46030]:
-3624a9370602220bd9986439b00012c1e: remaining active paths: 7
-Jul  8 13:33:58 init115-15 multipathd[46030]:
-3624a9370602220bd9986439b00012c1e: remaining active paths: 6
-Jul  8 13:33:59 init115-15 multipathd[46030]:
-3624a9370602220bd9986439b00012c1e: remaining active paths: 5
-Jul  8 13:33:59 init115-15 multipathd[46030]:
-3624a9370602220bd9986439b00012c1e: remaining active paths: 4
-
-4. It is not expected that the remaining 4 paths will also fail. This
-was not the case until the change which introduced BLK_STS_AGAIN into
-the SCSI ALUA device handler. With that change new I/O which reaches
-that handler on paths that are in ALUA state transitioning will result
-in those paths failing. Previous Linux versions, before that change,
-will not return an I/O error back to the client application.
-Similarly, this problem does not happen in other operating systems,
-e.g. ESXi, Windows, AIX, etc.
-
-5. It is not expected that the paths to the promoting primary fail yet they do:
-Jul  8 13:33:59 init115-15 kernel: device-mapper: multipath: 253:12:
-Failing path 69:96.
-Jul  8 13:33:59 init115-15 kernel: device-mapper: multipath: 253:12:
-Failing path 69:112.
-Jul  8 13:33:59 init115-15 kernel: device-mapper: multipath: 253:12:
-Failing path 69:80.
-Jul  8 13:33:59 init115-15 kernel: device-mapper: multipath: 253:12:
-Failing path 69:128.
-Jul  8 13:33:59 init115-15 multipath[53813]: dm-12: no usable paths found
-Jul  8 13:33:59 init115-15 multipath[53833]: dm-12: no usable paths found
-Jul  8 13:33:59 init115-15 multipath[53853]: dm-12: no usable paths found
-
-Jul  8 13:33:59 init115-15 multipathd[46030]:
-3624a9370602220bd9986439b00012c1e: remaining active paths: 3
-Jul  8 13:33:59 init115-15 multipathd[46030]:
-3624a9370602220bd9986439b00012c1e: remaining active paths: 2
-Jul  8 13:33:59 init115-15 multipathd[46030]:
-3624a9370602220bd9986439b00012c1e: remaining active paths: 1
-Jul  8 13:33:59 init115-15 multipathd[46030]:
-3624a9370602220bd9986439b00012c1e: remaining active paths: 0
-
-6. The error gets back to the user of the muitipath device unexpectedly:
-Thu Jul  8 13:33:59 2021: /opt/Purity/bin/bb/pureload I/O Error: io
-43047 fd 36  op read  offset 00000028ef7a7000  size 4096  errno 11
-rsize -1
-
-The earlier patch I made for this was not desirable, so I am proposing
-this much smaller patch which will similarly not allow the
-transitioning paths to result in immediate failure.
-
-Signed-off-by: Brian Bunker <brian@purestorage.com>
-Acked-by: Krishna Kant <krishna.kant@purestorage.com>
-Acked-by: Seamus Connor <sconnor@purestorage.com>
-
-____
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index bced42f082b0..d5d6be96068d 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -1657,7 +1657,7 @@ static int multipath_end_io(struct dm_target
-*ti, struct request *clone,
-                else
-                        r = DM_ENDIO_REQUEUE;
-
--               if (pgpath)
-+               if (pgpath && (error != BLK_STS_AGAIN))
-                        fail_path(pgpath);
-
-                if (!atomic_read(&m->nr_valid_paths) &&
-
-
-Brian Bunker
-SW Eng
-brian@purestorage.com
+RnJvbTogUGF1bCBNZW56ZWwgW21haWx0bzpwbWVuemVsQG1vbGdlbi5tcGcuZGVdIA0KU3ViamVj
+dDogUmU6IFtzbWFydHBxaSB1cGRhdGVzIFBBVENIIDgvOV0gc21hcnRwcWk6IGZpeCBpc3IgYWNj
+ZXNzaW5nIG51bGwgc3RydWN0dXJlIG1lbWJlcg0KDQpEZWFyIERvbiwgZGVhciBNaWtlLA0KDQoN
+CkFtIDA2LjA3LjIxIHVtIDIwOjE2IHNjaHJpZWIgRG9uIEJyYWNlOg0KPiBGcm9tOiBNaWtlIE1j
+R293ZW4gPG1pa2UubWNnb3dlbkBtaWNyb2NoaXAuY29tPg0KPg0KPiBDb3JyZWN0IGRyaXZlcidz
+IElTUiBhY2Nlc3NpbmcgYSBkYXRhIHN0cnVjdHVyZSBtZW1iZXIgdGhhdCBoYXMgbm90IA0KPiBi
+ZWVuIGZ1bGx5IGluaXRpYWxpemVkIGR1cmluZyBkcml2ZXIgaW5pdC4NCg0KRG9lcyB0aGF0IGNy
+YXNoIHRoZSBMaW51eCBrZXJuZWw/DQpEb246IA0KTm8uIEkgdXBkYXRlZCB0aGUgdGl0bGUgYW5k
+IGRlc2NyaXB0aW9uIHRvIHJlZmxlY3QgdGhpcy4gSXQgcmVzdWx0ZWQgaW4gc29tZSBicmllZiBh
+Y2Nlc3MgdG8gdW5pbml0aWFsaXplZCBtZW1iZXJzLg0KVGhpcyB3YXMgZm91bmQgZHVyaW5nIHNv
+bWUgaW50ZXJuYWwgdGVzdGluZywgbm8gYnVncyB3ZXJlIGV2ZXIgZmlsZWQgZm9yIHRoaXMgY2hh
+bmdlLg0KIA0KVGhhbmtzIGZvciB5b3VyIHJldmlldy4NCg0KPiAgICAtIFRoZSBwcWkgcXVldWUg
+Z3JvdXBzIGNhbiBiZSBudWxsIHdoZW4gYW4gaW50ZXJydXB0IGZpcmVzLg0KDQpJZiBpdCBmaXhl
+cyBhIGNyYXNoKD8pLCBwbGVhc2UgYWRkIGEgRml4ZXM6IHRhZyBzbyBpdCBjYW4gYmUgYmFja3Bv
+cnRlZCB0byB0aGUgc3RhYmxlIHNlcmllcy4NCg0KDQoNCktpbmQgcmVnYXJkcywNCg0KUGF1bA0K
