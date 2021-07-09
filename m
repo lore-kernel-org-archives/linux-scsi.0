@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BE74C07E99
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CC53C07E99
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08A21613C8
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 274DF61357
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230390AbhGIUaQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 16:30:16 -0400
-Received: from mail-pf1-f174.google.com ([209.85.210.174]:34376 "EHLO
-        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230288AbhGIUaP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 16:30:15 -0400
-Received: by mail-pf1-f174.google.com with SMTP id o201so4724118pfd.1
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Jul 2021 13:27:31 -0700 (PDT)
+        id S230406AbhGIUaT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 16:30:19 -0400
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:40595 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230288AbhGIUaT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 16:30:19 -0400
+Received: by mail-pj1-f44.google.com with SMTP id b14-20020a17090a7aceb029017261c7d206so8878763pjl.5
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Jul 2021 13:27:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=aFFnPhD4xne40vQ5XGBvPkSKKLB0qYKiY2N77tI6SvM=;
-        b=kdSzOG9WE9Y2HUgdiRIubydKB12eC9Uy3bt1SS+aqPKty2yzgxPKZHWN6Vab/WnHca
-         6kABBGojVewbhD3pJ2E5ubfc1g+bDvX8BJyv7fl5UBuGSghbZYQRpFfeB/Gf22Ic0idW
-         ++1giTG9GcqjwcplXGC74uvFCWS0JDtIrfCd9TbvUYyJg6iFxb7bjPSB8SRG02BBPm3A
-         eAxU0JQ8lrs+PoJaupkElvwW5uSbQxedDGRcLXLnHenK2W+rvsCK1DZ6eviEUlM4giZn
-         VdkV8nO4qH/XUvpwfFDYJ0KOxxPGk9ZnFfHEUowuvmZb9fA4gL/FYWXfegb7+I3LYz3q
-         cErw==
-X-Gm-Message-State: AOAM531393q4rc+qMsrY8i5B6waOnBx0L4GLZxJblTqG34Dl3SVicaT0
-        JhUKbcMkwV0KCg9gwpcAPSM=
-X-Google-Smtp-Source: ABdhPJyPFwnXJ5mOtRehpQIC93tqM9WcsykADPtJAo9nfylNadbb3U1LfzuJeLTAauXNAtmsfw6WYw==
-X-Received: by 2002:a62:19c6:0:b029:319:4a01:407d with SMTP id 189-20020a6219c60000b02903194a01407dmr38186402pfz.1.1625862450630;
-        Fri, 09 Jul 2021 13:27:30 -0700 (PDT)
+        bh=M+X/nT63jv6SpvTa/gSvzdarwOAZF5VFG8Gx+9Z4Ud0=;
+        b=i0l3ugwbEpL0Of59QPejDeLcVQNnf4jnIibyZcaVFINboEY3WHT7pvD5pyTFPAGEpA
+         eCqmnWFVZxhYKy45AJg9H9j0Nno1sHBJcHhLM8Z54S7Wl0xEbPOxzGyrrUAM8pjUVE42
+         zqkcUxzMJIrI4ek7e9ZffpbeVpzoG+00QvYssCl6+RTnxblyhzvt8u4CTkLN0UKdOWTq
+         0slvXxVug1s9y90LNjNPwTRxCBZxNwILx/6sVudPGkQ+QK9fMauPqsLKyP7BROgcMj5E
+         ndOY9HYo80I6aa6esH0EcPKeiQnV4C9PS3oaPCx+npWRA3G7v/CVR/hdavjTTDnhXq1q
+         oVhQ==
+X-Gm-Message-State: AOAM533kmPuNwW807zL7Ref3dXe6r/T2FKFzYRh9m5reGx4TqhTMznwJ
+        EBghjq8Z54r3YZgQapOVN98=
+X-Google-Smtp-Source: ABdhPJwP3NWF1M2f8+ZIdGBjLmm5AClgPGMmQdxseZDIRSink7lU542a6gcmVydXXs7Shpa/vI7tog==
+X-Received: by 2002:a17:902:7d83:b029:11d:75c2:79a6 with SMTP id a3-20020a1709027d83b029011d75c279a6mr32674857plm.62.1625862454034;
+        Fri, 09 Jul 2021 13:27:34 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:eeaf:c266:e6cc:b591])
-        by smtp.gmail.com with ESMTPSA id e16sm8812927pgl.54.2021.07.09.13.27.28
+        by smtp.gmail.com with ESMTPSA id e16sm8812927pgl.54.2021.07.09.13.27.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jul 2021 13:27:30 -0700 (PDT)
+        Fri, 09 Jul 2021 13:27:33 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
         Akinobu Mita <akinobu.mita@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Can Guo <cang@codeaurora.org>,
         Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v2 10/19] scsi: ufs: Inline ufshcd_outstanding_req_clear()
-Date:   Fri,  9 Jul 2021 13:26:29 -0700
-Message-Id: <20210709202638.9480-12-bvanassche@acm.org>
+Subject: [PATCH v2 11/19] scsi: ufs: Rename __ufshcd_transfer_req_compl()
+Date:   Fri,  9 Jul 2021 13:26:30 -0700
+Message-Id: <20210709202638.9480-13-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210709202638.9480-1-bvanassche@acm.org>
 References: <20210709202638.9480-1-bvanassche@acm.org>
@@ -66,46 +66,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Inline ufshcd_outstanding_req_clear() since it only has one caller and
-since its body is only one line long.
+Before patch "scsi: ufs: Optimize host lock on transfer requests send/compl
+paths", the host lock was held around __ufshcd_transfer_req_compl() and the
+double underscore prefix indicated this. Since the SCSI host lock is no
+longer held around __ufshcd_transfer_req_compl() calls, remove the double
+underscore prefix.
 
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Cc: Adrian Hunter <adrian.hunter@intel.com>
 Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Can Guo <cang@codeaurora.org>
 Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 4bed4791720a..81a27104308d 100644
+index 81a27104308d..0cb84a744dad 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -743,16 +743,6 @@ static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
- 		ufshcd_writel(hba, ~(1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
+@@ -5183,12 +5183,12 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
  }
  
--/**
-- * ufshcd_outstanding_req_clear - Clear a bit in outstanding request field
-- * @hba: per adapter instance
-- * @tag: position of the bit to be cleared
-- */
--static inline void ufshcd_outstanding_req_clear(struct ufs_hba *hba, int tag)
--{
--	clear_bit(tag, &hba->outstanding_reqs);
--}
--
  /**
-  * ufshcd_get_lists_status - Check UCRDY, UTRLRDY and UTMRLRDY
-  * @reg: Register value of host controller status
-@@ -2900,7 +2890,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 		 * we also need to clear the outstanding_request
- 		 * field in hba
- 		 */
--		ufshcd_outstanding_req_clear(hba, lrbp->task_tag);
-+		clear_bit(lrbp->task_tag, &hba->outstanding_reqs);
+- * __ufshcd_transfer_req_compl - handle SCSI and query command completion
++ * ufshcd_transfer_req_compl - handle SCSI and query command completion
+  * @hba: per adapter instance
+  * @completed_reqs: requests to complete
+  */
+-static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+-					unsigned long completed_reqs)
++static void ufshcd_transfer_req_compl(struct ufs_hba *hba,
++				      unsigned long completed_reqs)
+ {
+ 	struct ufshcd_lrb *lrbp;
+ 	struct scsi_cmnd *cmd;
+@@ -5273,7 +5273,7 @@ static irqreturn_t ufshcd_trc_handler(struct ufs_hba *hba, bool use_utrlcnr)
  	}
  
- 	return err;
+ 	if (completed_reqs) {
+-		__ufshcd_transfer_req_compl(hba, completed_reqs);
++		ufshcd_transfer_req_compl(hba, completed_reqs);
+ 		return IRQ_HANDLED;
+ 	} else {
+ 		return IRQ_NONE;
+@@ -6812,7 +6812,7 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ 			err = ufshcd_clear_cmd(hba, pos);
+ 			if (err)
+ 				break;
+-			__ufshcd_transfer_req_compl(hba, pos);
++			ufshcd_transfer_req_compl(hba, pos);
+ 		}
+ 	}
+ 
+@@ -6987,7 +6987,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 	 */
+ 	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
+ 		ufshcd_update_evt_hist(hba, UFS_EVT_ABORT, lrbp->lun);
+-		__ufshcd_transfer_req_compl(hba, (1UL << tag));
++		ufshcd_transfer_req_compl(hba, 1UL << tag);
+ 		set_bit(tag, &hba->outstanding_reqs);
+ 		spin_lock_irqsave(host->host_lock, flags);
+ 		hba->force_reset = true;
+@@ -7004,7 +7004,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 
+ 	if (!err) {
+ cleanup:
+-		__ufshcd_transfer_req_compl(hba, (1UL << tag));
++		ufshcd_transfer_req_compl(hba, 1UL << tag);
+ out:
+ 		err = SUCCESS;
+ 	} else {
