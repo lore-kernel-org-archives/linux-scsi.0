@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B31B8C07E9C
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31C6CC07E9B
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98C85613C8
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1A33D613C9
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231454AbhGIIOE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 04:14:04 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:22253 "EHLO
+        id S231480AbhGIIOI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 04:14:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:38964 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231414AbhGIIOD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:14:03 -0400
+        by vger.kernel.org with ESMTP id S231458AbhGIIOI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:14:08 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625818280;
+        s=mimecast20190719; t=1625818284;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=vk9L1G0njXZFju3Oa4mrApnhj5rcqMsMKonFv8gUeQA=;
-        b=a3ArBK4bvx9bnNTEB7zmp97c75+UNzZQ/zTnZJnr/M4sU+Trnhcu4/GzHBWlNw0pyi0dP1
-        6XCXkQZszmH4vJDyjMgcoR/PnGjEYBarV8mbuj+9Sg/tdFBTL9XCF0/xMthAHJo6RLdkPg
-        uKfnaWAHj+YZ71yQBw9AURNM1uNpyR0=
+        bh=SrR2xOhsWwMcxQ7gA7t7ElNB6dEuVROBnVSLBdn7FcE=;
+        b=OVls1Z70dSXzsgTPDhhYF0MnytuitdDl14YKj5V/e7q5fHdJf9Z+NzmFnZKXugQ8SWOKIG
+        qxh0PoSKCX3gMcvUpLIMXF3kNRFQEvWciBIg1+pTrNK8ceEjQxDenkwVqNtwDZddXUq8+a
+        LWg9s3q7/0Uyt4vHkoND2i2tm50cIy0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-469-aA_Q4guMN7ur9y0N5-yJzg-1; Fri, 09 Jul 2021 04:11:16 -0400
-X-MC-Unique: aA_Q4guMN7ur9y0N5-yJzg-1
+ us-mta-53-pVL0D9-uO_-Xmp8BVC4Ijg-1; Fri, 09 Jul 2021 04:11:20 -0400
+X-MC-Unique: pVL0D9-uO_-Xmp8BVC4Ijg-1
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B34D81084F40;
-        Fri,  9 Jul 2021 08:11:14 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8A12A192FDA0;
+        Fri,  9 Jul 2021 08:11:18 +0000 (UTC)
 Received: from localhost (ovpn-13-13.pek2.redhat.com [10.72.13.13])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4CE625D6D3;
-        Fri,  9 Jul 2021 08:11:09 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C07D05D6D3;
+        Fri,  9 Jul 2021 08:11:17 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -53,9 +53,9 @@ Cc:     Sagi Grimberg <sagi@grimberg.me>, Daniel Wagner <dwagner@suse.de>,
         Keith Busch <kbusch@kernel.org>,
         Damien Le Moal <damien.lemoal@wdc.com>,
         Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 06/10] virito: add APIs for retrieving vq affinity
-Date:   Fri,  9 Jul 2021 16:10:01 +0800
-Message-Id: <20210709081005.421340-7-ming.lei@redhat.com>
+Subject: [PATCH V3 07/10] virtio: blk/scsi: replace blk_mq_virtio_map_queues with blk_mq_dev_map_queues
+Date:   Fri,  9 Jul 2021 16:10:02 +0800
+Message-Id: <20210709081005.421340-8-ming.lei@redhat.com>
 In-Reply-To: <20210709081005.421340-1-ming.lei@redhat.com>
 References: <20210709081005.421340-1-ming.lei@redhat.com>
 MIME-Version: 1.0
@@ -65,48 +65,75 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-virtio-blk/virtio-scsi needs this API for retrieving vq's affinity.
+Replace blk_mq_virtio_map_queues with blk_mq_dev_map_queues which is more
+generic from blk-mq viewpoint, so we can unify all map queue
+implementation.
+
+Meantime we can pass 'use_manage_irq' info to blk-mq via
+blk_mq_dev_map_queues(), this info needn't be 100% accurate, and what
+we need is that true has to be passed in if the hba really uses managed
+irq.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/virtio/virtio.c | 10 ++++++++++
- include/linux/virtio.h  |  2 ++
- 2 files changed, 12 insertions(+)
+ drivers/block/virtio_blk.c | 12 ++++++++++--
+ drivers/scsi/virtio_scsi.c | 11 ++++++++++-
+ 2 files changed, 20 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/virtio/virtio.c b/drivers/virtio/virtio.c
-index 4b15c00c0a0a..ab593a8350d4 100644
---- a/drivers/virtio/virtio.c
-+++ b/drivers/virtio/virtio.c
-@@ -448,6 +448,16 @@ int virtio_device_restore(struct virtio_device *dev)
- EXPORT_SYMBOL_GPL(virtio_device_restore);
- #endif
+diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
+index e4bd3b1fc3c2..9188b5bcbe78 100644
+--- a/drivers/block/virtio_blk.c
++++ b/drivers/block/virtio_blk.c
+@@ -677,12 +677,20 @@ static int virtblk_init_request(struct blk_mq_tag_set *set, struct request *rq,
+ 	return 0;
+ }
  
-+const struct cpumask *virtio_get_vq_affinity(struct virtio_device *dev,
-+		int index)
++static const struct cpumask *virtblk_get_vq_affinity(void *dev_data,
++		int offset, int queue)
 +{
-+	if (!dev->config->get_vq_affinity)
-+		return NULL;
++	struct virtio_device *vdev = dev_data;
 +
-+	return dev->config->get_vq_affinity(dev, index);
++	return virtio_get_vq_affinity(vdev, offset + queue);
 +}
-+EXPORT_SYMBOL_GPL(virtio_get_vq_affinity);
 +
- static int virtio_init(void)
+ static int virtblk_map_queues(struct blk_mq_tag_set *set)
  {
- 	if (bus_register(&virtio_bus) != 0)
-diff --git a/include/linux/virtio.h b/include/linux/virtio.h
-index b1894e0323fa..99fbba9981cc 100644
---- a/include/linux/virtio.h
-+++ b/include/linux/virtio.h
-@@ -139,6 +139,8 @@ int virtio_device_restore(struct virtio_device *dev);
- #endif
+ 	struct virtio_blk *vblk = set->driver_data;
  
- size_t virtio_max_dma_size(struct virtio_device *vdev);
-+const struct cpumask *virtio_get_vq_affinity(struct virtio_device *dev,
-+		int index);
+-	return blk_mq_virtio_map_queues(&set->map[HCTX_TYPE_DEFAULT],
+-					vblk->vdev, 0);
++	return blk_mq_dev_map_queues(&set->map[HCTX_TYPE_DEFAULT], vblk->vdev,
++				     0, virtblk_get_vq_affinity, true, true);
+ }
  
- #define virtio_device_for_each_vq(vdev, vq) \
- 	list_for_each_entry(vq, &vdev->vqs, list)
+ static const struct blk_mq_ops virtio_mq_ops = {
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index fd69a03d6137..c4b97a0926df 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -712,12 +712,21 @@ static int virtscsi_abort(struct scsi_cmnd *sc)
+ 	return virtscsi_tmf(vscsi, cmd);
+ }
+ 
++static const struct cpumask *virtscsi_get_vq_affinity(void *dev_data,
++		int offset, int queue)
++{
++	struct virtio_device *vdev = dev_data;
++
++	return virtio_get_vq_affinity(vdev, offset + queue);
++}
++
+ static int virtscsi_map_queues(struct Scsi_Host *shost)
+ {
+ 	struct virtio_scsi *vscsi = shost_priv(shost);
+ 	struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
+ 
+-	return blk_mq_virtio_map_queues(qmap, vscsi->vdev, 2);
++	return blk_mq_dev_map_queues(qmap, vscsi->vdev, 2,
++			virtscsi_get_vq_affinity, true, true);
+ }
+ 
+ static void virtscsi_commit_rqs(struct Scsi_Host *shost, u16 hwq)
 -- 
 2.31.1
 
