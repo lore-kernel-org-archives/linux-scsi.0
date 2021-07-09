@@ -7,56 +7,58 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10243C07E99
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:28:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71EAAC07E99
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:28:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC910613CA
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:28:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55BD9613BE
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:28:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230441AbhGIUao (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 16:30:44 -0400
-Received: from mail-pf1-f170.google.com ([209.85.210.170]:38906 "EHLO
-        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230288AbhGIUao (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 16:30:44 -0400
-Received: by mail-pf1-f170.google.com with SMTP id j9so4125677pfc.5
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Jul 2021 13:28:00 -0700 (PDT)
+        id S229846AbhGIUax (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 16:30:53 -0400
+Received: from mail-pg1-f174.google.com ([209.85.215.174]:36641 "EHLO
+        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229542AbhGIUax (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 16:30:53 -0400
+Received: by mail-pg1-f174.google.com with SMTP id f5so11093304pgv.3
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Jul 2021 13:28:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=yIqcARBqiGZX6Ca+A19nIR5VcgpsR9u3VP5zuFHwlX4=;
-        b=L4KpIIQhVkCvonxUP2/xSdXWwOQaWJe+GZRzILTCXzx936LDLxqN5X05h28v6PVvX0
-         icLAzbSN+SOntXJC2z+XzQsGpNlwj2WnIuUScULkXn01A1MGnZWJTw1vxrXRtZ5xgbG2
-         vJnBronIY8YrlxuqfamAY7w+tzx9O1jJqcx9pwFeHX6cWCMVjb+BZ+Vjd/tvCRb/r9Rv
-         0XQL9RuMUILEoFYS1Xa6uONlYvi5bEb+A1atP71VnlBFB9BwuCqb9HkPXIypm97G2ARN
-         pvx5QQYNSHWxlzpqV+fulPh/G/nvJCAHspsU4n8d4OhpJpBn6Eyj9ZV4bYvaXxH+/bZA
-         oizw==
-X-Gm-Message-State: AOAM530Asng790z/0wqgXAG3gYglWCBUMWvq/FBEQ633MtmhqFZFyW5E
-        i9PduOSnnD+oON7/L3blIzk=
-X-Google-Smtp-Source: ABdhPJysOAuKCh/VE9K/BqoBsP1DL1/sutZzKYvXBEi0nK1sVVOFr/1tGa9M6U+fOzzJtx62GzEgmQ==
-X-Received: by 2002:a63:f306:: with SMTP id l6mr40590868pgh.46.1625862479994;
-        Fri, 09 Jul 2021 13:27:59 -0700 (PDT)
+        bh=4wZdH0yp9otSrfTPJ24LQileMhqPTyuhfvX8YzPYX7k=;
+        b=ahcrNOWVnZJURBtugc7sebFaE8kFMmXxG3xTjUIypJ1TidC88RuKCO+GL63nbuxqEI
+         0z34t3DXfwxPCnuULfcEAtQgldvefBPo9ZIlgA3yjsqg9D0AyvoQ6D00Ib0gKgMqn0+F
+         kElvmP4Ku3AhSvXRCHQk6z0nOebQTeKO8jU+DCVyTXDXgEUf7I0Alncwg0ty9b1IgBb7
+         UFJx6yQ10RfHnHoePBj2ciLk78PhDAhyl8+9H6xi40jJuUTg9bLC4my3PBsb+SqX095R
+         66TI8w3UvhofOz4GtyDNrZSq8rwkn5A3YIKFWvyLflgEtQkZ8qFrzpn2P7E6vt1EV1yj
+         BJ2A==
+X-Gm-Message-State: AOAM530r1JhKW2+ZxjNLe7TXxoWgaDZiFbpfWVW4fq/wSxwfTC0Cmm5E
+        HvzOZ1nz28HgWt56ViPByak=
+X-Google-Smtp-Source: ABdhPJz5T+/cYOJPBgWXmdSUTWM8MMijWSxgaiwLOAGLjL98d4sEGPG93WgGZ3rfNCGJjpXKUyLnyA==
+X-Received: by 2002:a63:eb04:: with SMTP id t4mr40876455pgh.84.1625862489340;
+        Fri, 09 Jul 2021 13:28:09 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:eeaf:c266:e6cc:b591])
-        by smtp.gmail.com with ESMTPSA id e16sm8812927pgl.54.2021.07.09.13.27.58
+        by smtp.gmail.com with ESMTPSA id e16sm8812927pgl.54.2021.07.09.13.28.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jul 2021 13:27:59 -0700 (PDT)
+        Fri, 09 Jul 2021 13:28:08 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
         Akinobu Mita <akinobu.mita@gmail.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v2 18/19] scsi: ufs: Retry aborted SCSI commands instead of completing these successfully
-Date:   Fri,  9 Jul 2021 13:26:37 -0700
-Message-Id: <20210709202638.9480-20-bvanassche@acm.org>
+        Randy Dunlap <rdunlap@infradead.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Eric Biggers <ebiggers@google.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH v2 19/19] scsi: ufs: Add fault injection support
+Date:   Fri,  9 Jul 2021 13:26:38 -0700
+Message-Id: <20210709202638.9480-21-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210709202638.9480-1-bvanassche@acm.org>
 References: <20210709202638.9480-1-bvanassche@acm.org>
@@ -66,139 +68,179 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Neither SAM nor the UFS standard require that the UFS controller fills in
-the completion status of commands that have been aborted (LUN RESET aborts
-pending commands). Hence do not rely on the completion status provided by
-the UFS controller for aborted commands but instead ask the SCSI core to
-retry SCSI commands that have been aborted.
+Make it easier to test the UFS error and abort handlers.
 
-Cc: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Can Guo <cang@codeaurora.org>
-Cc: Asutosh Das <asutoshd@codeaurora.org>
-Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 38 ++++++++++++++++++++++++++------------
- 1 file changed, 26 insertions(+), 12 deletions(-)
+ drivers/scsi/ufs/Kconfig               |  7 +++
+ drivers/scsi/ufs/Makefile              |  1 +
+ drivers/scsi/ufs/ufs-fault-injection.c | 67 ++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs-fault-injection.h | 24 +++++++++
+ drivers/scsi/ufs/ufshcd.c              |  8 +++
+ 5 files changed, 107 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufs-fault-injection.c
+ create mode 100644 drivers/scsi/ufs/ufs-fault-injection.h
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ae21240a6548..46126964669d 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5202,10 +5202,12 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_hba *hba, u32 intr_status)
- /**
-  * ufshcd_transfer_req_compl - handle SCSI and query command completion
-  * @hba: per adapter instance
-- * @completed_reqs: requests to complete
-+ * @completed_reqs: bitmask that indicates which requests to complete
-+ * @retry_requests: whether to ask the SCSI core to retry completed requests
-  */
- static void ufshcd_transfer_req_compl(struct ufs_hba *hba,
--				      unsigned long completed_reqs)
-+				      unsigned long completed_reqs,
-+				      bool retry_requests)
- {
- 	struct ufshcd_lrb *lrbp;
- 	struct scsi_cmnd *cmd;
-@@ -5221,7 +5223,8 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba,
- 			if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
- 				ufshcd_update_monitor(hba, lrbp);
- 			ufshcd_add_command_trace(hba, index, UFS_CMD_COMP);
--			result = ufshcd_transfer_rsp_status(hba, lrbp);
-+			result = retry_requests ? DID_BUS_BUSY << 16 :
-+				ufshcd_transfer_rsp_status(hba, lrbp);
- 			scsi_dma_unmap(cmd);
- 			cmd->result = result;
- 			/* Mark completed command as NULL in LRB */
-@@ -5247,13 +5250,15 @@ static void ufshcd_transfer_req_compl(struct ufs_hba *hba,
- /**
-  * ufshcd_trc_handler - handle transfer requests completion
-  * @hba: per adapter instance
-+ * @retry_requests: whether or not to ask to retry requests
-  * @use_utrlcnr: get completed requests from UTRLCNR
-  *
-  * Returns
-  *  IRQ_HANDLED - If interrupt is valid
-  *  IRQ_NONE    - If invalid interrupt
-  */
--static irqreturn_t ufshcd_trc_handler(struct ufs_hba *hba, bool use_utrlcnr)
-+static irqreturn_t ufshcd_trc_handler(struct ufs_hba *hba, bool retry_requests,
-+				      bool use_utrlcnr)
- {
- 	unsigned long completed_reqs;
- 	unsigned long flags;
-@@ -5289,7 +5294,7 @@ static irqreturn_t ufshcd_trc_handler(struct ufs_hba *hba, bool use_utrlcnr)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 2d137953e7b4..4272d7365595 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -183,3 +183,10 @@ config SCSI_UFS_CRYPTO
+ 	  Enabling this makes it possible for the kernel to use the crypto
+ 	  capabilities of the UFS device (if present) to perform crypto
+ 	  operations on data being transferred to/from the device.
++
++config SCSI_UFS_FAULT_INJECTION
++       bool "UFS Fault Injection Support"
++       depends on SCSI_UFSHCD && FAULT_INJECTION
++       help
++         Enable fault injection support in the UFS driver. This makes it easier
++	 to test the UFS error handler and abort handler.
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index 06f3a3fe4a44..006d50236079 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -8,6 +8,7 @@ ufshcd-core-y				+= ufshcd.o ufs-sysfs.o
+ ufshcd-core-$(CONFIG_DEBUG_FS)		+= ufs-debugfs.o
+ ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+ ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
++ufshcd-core-$(CONFIG_SCSI_UFS_FAULT_INJECTION) += ufs-fault-injection.o
  
- 	if (completed_reqs) {
--		ufshcd_transfer_req_compl(hba, completed_reqs);
-+		ufshcd_transfer_req_compl(hba, completed_reqs, retry_requests);
- 		return IRQ_HANDLED;
- 	} else {
- 		return IRQ_NONE;
-@@ -5768,7 +5773,14 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
- /* Complete requests that have door-bell cleared */
- static void ufshcd_complete_requests(struct ufs_hba *hba)
- {
--	ufshcd_trc_handler(hba, false);
-+	ufshcd_trc_handler(hba, /*retry_requests=*/false,
-+			   /*use_utrlcnr=*/false);
-+	ufshcd_tmc_handler(hba);
+ obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.o
+ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
+diff --git a/drivers/scsi/ufs/ufs-fault-injection.c b/drivers/scsi/ufs/ufs-fault-injection.c
+new file mode 100644
+index 000000000000..f1e126a70019
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs-fault-injection.c
+@@ -0,0 +1,67 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++
++#include <linux/kconfig.h>
++#include <linux/module.h>
++#include <linux/fault-inject.h>
++#include "ufs-fault-injection.h"
++
++static int ufs_fault_get(char *buffer, const struct kernel_param *kp);
++static int ufs_fault_set(const char *val, const struct kernel_param *kp);
++
++static const struct kernel_param_ops ufs_fault_ops = {
++	.get = ufs_fault_get,
++	.set = ufs_fault_set,
++};
++
++enum { FAULT_ATTR_SIZE = 80 };
++
++/*
++ * For more details about fault injection, please refer to
++ * Documentation/fault-injection/fault-injection.rst.
++ */
++#define UFS_FAULT_ATTR(storage_class, name)				\
++storage_class char g_##name##_str[FAULT_ATTR_SIZE];			\
++module_param_cb(name, &ufs_fault_ops, g_##name##_str, 0644);		\
++MODULE_PARM_DESC(name,							\
++"Fault injection. " #name "=<interval>,<probability>,<space>,<times>");	\
++storage_class DECLARE_FAULT_ATTR(ufs_##name##_attr)
++
++UFS_FAULT_ATTR(static, trigger_eh);
++UFS_FAULT_ATTR(static, timeout);
++
++static int ufs_fault_get(char *buffer, const struct kernel_param *kp)
++{
++	const char *fault_str = kp->arg;
++
++	return sysfs_emit(buffer, "%s\n", fault_str);
 +}
 +
-+static void ufshcd_retry_aborted_requests(struct ufs_hba *hba)
++static int ufs_fault_set(const char *val, const struct kernel_param *kp)
 +{
-+	ufshcd_trc_handler(hba, /*retry_requests=*/true, /*use_utrlcnr=*/false);
- 	ufshcd_tmc_handler(hba);
++	struct fault_attr *attr = NULL;
++
++	if (kp->arg == g_trigger_eh_str)
++		attr = &ufs_trigger_eh_attr;
++	else if (kp->arg == g_timeout_str)
++		attr = &ufs_timeout_attr;
++
++	if (WARN_ON_ONCE(!attr))
++		return -EINVAL;
++
++	if (!setup_fault_attr(attr, (char *)val))
++		return -EINVAL;
++
++	strlcpy(kp->arg, val, FAULT_ATTR_SIZE);
++
++	return 0;
++}
++
++bool ufs_trigger_eh(void)
++{
++	return should_fail(&ufs_trigger_eh_attr, 1);
++}
++
++bool ufs_fail_completion(void)
++{
++	return should_fail(&ufs_timeout_attr, 1);
++}
+diff --git a/drivers/scsi/ufs/ufs-fault-injection.h b/drivers/scsi/ufs/ufs-fault-injection.h
+new file mode 100644
+index 000000000000..6d0cd8e10c87
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs-fault-injection.h
+@@ -0,0 +1,24 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++
++#ifndef _UFS_FAULT_INJECTION_H
++#define _UFS_FAULT_INJECTION_H
++
++#include <linux/kconfig.h>
++#include <linux/types.h>
++
++#ifdef CONFIG_SCSI_UFS_FAULT_INJECTION
++bool ufs_trigger_eh(void);
++bool ufs_fail_completion(void);
++#else
++static inline bool ufs_trigger_eh(void)
++{
++	return false;
++}
++
++static inline bool ufs_fail_completion(void)
++{
++	return false;
++}
++#endif
++
++#endif /* _UFS_FAULT_INJECTION_H */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 46126964669d..686486c25412 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -24,6 +24,7 @@
+ #include "unipro.h"
+ #include "ufs-sysfs.h"
+ #include "ufs-debugfs.h"
++#include "ufs-fault-injection.h"
+ #include "ufs_bsg.h"
+ #include "ufshcd-crypto.h"
+ #include <asm/unaligned.h>
+@@ -2750,6 +2751,10 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	ufshcd_send_command(hba, tag);
+ out:
+ 	up_read(&hba->clk_scaling_lock);
++
++	if (ufs_trigger_eh())
++		scsi_schedule_eh(hba->host);
++
+ 	return err;
  }
  
-@@ -6088,8 +6100,7 @@ static void ufshcd_err_handler(struct Scsi_Host *host)
- 	}
+@@ -5274,6 +5279,9 @@ static irqreturn_t ufshcd_trc_handler(struct ufs_hba *hba, bool retry_requests,
+ 	    !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
+ 		ufshcd_reset_intr_aggr(hba);
  
- lock_skip_pending_xfer_clear:
--	/* Complete the requests that are cleared by s/w */
--	ufshcd_complete_requests(hba);
-+	ufshcd_retry_aborted_requests(hba);
- 
++	if (ufs_fail_completion())
++		return IRQ_HANDLED;
++
  	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->silence_err_logs = false;
-@@ -6390,7 +6401,8 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
- 		retval |= ufshcd_tmc_handler(hba);
- 
- 	if (intr_status & UTP_TRANSFER_REQ_COMPL)
--		retval |= ufshcd_trc_handler(hba, ufshcd_use_utrlcnr(hba));
-+		retval |= ufshcd_trc_handler(hba, /*retry_requests=*/false,
-+					     ufshcd_use_utrlcnr(hba));
- 
- 	return retval;
- }
-@@ -6804,7 +6816,8 @@ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 			err = ufshcd_clear_cmd(hba, pos);
- 			if (err)
- 				break;
--			ufshcd_transfer_req_compl(hba, pos);
-+			ufshcd_transfer_req_compl(hba, pos,
-+						  /*retry_requests=*/true);
- 		}
- 	}
- 
-@@ -6966,7 +6979,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		dev_err(hba->dev,
- 		"%s: cmd was completed, but without a notifying intr, tag = %d",
- 		__func__, tag);
--		ufshcd_transfer_req_compl(hba, 1UL << tag);
-+		ufshcd_transfer_req_compl(hba, 1UL << tag,
-+					  /*retry_requests=*/false);
- 		goto release;
- 	}
- 
-@@ -7032,7 +7046,7 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
- 	 */
- 	ufshcd_hba_stop(hba);
- 	hba->silence_err_logs = true;
--	ufshcd_complete_requests(hba);
-+	ufshcd_retry_aborted_requests(hba);
- 	hba->silence_err_logs = false;
- 
- 	/* scale up clocks to max frequency before full reinitialization */
+ 	if (use_utrlcnr) {
+ 		completed_reqs = ufshcd_readl(hba,
