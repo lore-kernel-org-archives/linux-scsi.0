@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DB2AC07E99
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:10:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72C59C07E99
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DB2E613CA
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:10:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5522A613C3
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231404AbhGIINf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 04:13:35 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20418 "EHLO
+        id S231414AbhGIINr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 04:13:47 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:40936 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231403AbhGIINf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:13:35 -0400
+        by vger.kernel.org with ESMTP id S231347AbhGIINp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:13:45 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625818252;
+        s=mimecast20190719; t=1625818262;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=hTFmuCN1nhaQls6kJgr9OGlbYp4H896z+x88MfyTwr8=;
-        b=SK8mApN4IEuQx0lP6miJWywiijc5aCyNZtRXBGDbUjC7JgbPCxKNDzHGTAMVXmWJq8kXxz
-        1XHIf0IfVDPz1lrHgzmNYTlwWx+NoVnC3UN88WrC1iJpAOww0ZiyE4+VvKnuC9Eunu+AgP
-        oqyLKUM/1zhM5dWNnivVnKJZiQkh4fg=
+        bh=Ae4rwY22KJlGMWYfTdNuML5h3kZw5x2TXcHut6UGzGc=;
+        b=WdbloYBM5Vt3yesD1waPqkra7UyVAov6Wt4Ugz7dfJUR3qYvh2nszSuNqlSlJD2XVM4j/H
+        v3akiMxy+kUAZeomjB3/v719jogJt00GFHyod+tUt7IPi74qhIn0B2tnL8QSD4dwTTwian
+        gMWga395ejUIjSCmtPFcyYeeFFbg4H8=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-433-bX2_Ubk3MfGti4POoUDefg-1; Fri, 09 Jul 2021 04:10:51 -0400
-X-MC-Unique: bX2_Ubk3MfGti4POoUDefg-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-559-jMNzBXjnNbKEGRrQ4kao1A-1; Fri, 09 Jul 2021 04:10:58 -0400
+X-MC-Unique: jMNzBXjnNbKEGRrQ4kao1A-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 139871084F40;
-        Fri,  9 Jul 2021 08:10:49 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 51761804302;
+        Fri,  9 Jul 2021 08:10:56 +0000 (UTC)
 Received: from localhost (ovpn-13-13.pek2.redhat.com [10.72.13.13])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C14EB5C1D5;
-        Fri,  9 Jul 2021 08:10:37 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 349DE189C7;
+        Fri,  9 Jul 2021 08:10:51 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -53,102 +53,93 @@ Cc:     Sagi Grimberg <sagi@grimberg.me>, Daniel Wagner <dwagner@suse.de>,
         Keith Busch <kbusch@kernel.org>,
         Damien Le Moal <damien.lemoal@wdc.com>,
         Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 02/10] blk-mq: Introduce blk_mq_dev_map_queues
-Date:   Fri,  9 Jul 2021 16:09:57 +0800
-Message-Id: <20210709081005.421340-3-ming.lei@redhat.com>
+Subject: [PATCH V3 03/10] blk-mq: pass use managed irq info to blk_mq_dev_map_queues
+Date:   Fri,  9 Jul 2021 16:09:58 +0800
+Message-Id: <20210709081005.421340-4-ming.lei@redhat.com>
 In-Reply-To: <20210709081005.421340-1-ming.lei@redhat.com>
 References: <20210709081005.421340-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Introduce blk_mq_dev_map_queues so that we can remove all kinds of
-map_queues implementation(pci, virtio, rdma, ...) out of block layer.
+Managed irq is special because genirq core will shut down it when all
+cpus in its affinity mask are offline, so blk-mq has to drain requests
+and prevent new allocation on the hw queue before its managed irq
+is shutdown.
+
+In current implementation, we drain all hctx when the last cpu in
+hctx->cpumask is going to be offline. However, we need to avoid the
+draining of hw queues which don't use managed irq, one kind of user
+is nvme fc/rdma/tcp because these controllers require to submit connection
+request successfully even though all cpus in hctx->cpumask are offline.
+And we have lots of kernel panic reports on blk_mq_alloc_request_hctx().
+
+Once we know if one qmap uses managed irq or not, we needn't to drain
+requests for hctx which doesn't use managed irq, and we can allow to
+allocate request on hctx in which all CPUs in hctx->cpumask are offline,
+then not only fix kernel panic in blk_mq_alloc_request_hctx(), but also
+meet nvme fc/rdma/tcp's requirement.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-mq-map.c     | 53 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/blk-mq.h |  5 ++++
- 2 files changed, 58 insertions(+)
+ block/blk-mq-map.c     | 6 +++++-
+ include/linux/blk-mq.h | 5 +++--
+ 2 files changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/block/blk-mq-map.c b/block/blk-mq-map.c
-index 3db84d3197f1..e3ba2ef1e9e2 100644
+index e3ba2ef1e9e2..6b453f8d7965 100644
 --- a/block/blk-mq-map.c
 +++ b/block/blk-mq-map.c
-@@ -94,3 +94,56 @@ int blk_mq_hw_queue_to_node(struct blk_mq_queue_map *qmap, unsigned int index)
+@@ -103,6 +103,8 @@ int blk_mq_hw_queue_to_node(struct blk_mq_queue_map *qmap, unsigned int index)
+  * @dev_data:	Device data passed to get_queue_affinity()
+  * @fallback:	If true, fallback to default blk-mq mapping in case of
+  * any failure
++ * @managed_irq: If driver is likely to use managed irq, pass @managed_irq
++ * as true.
+  *
+  * Generic function to setup each queue mapping in @qmap. It will query
+  * each queue's affinity via @get_queue_affinity and built queue mapping
+@@ -113,7 +115,7 @@ int blk_mq_hw_queue_to_node(struct blk_mq_queue_map *qmap, unsigned int index)
+  */
+ int blk_mq_dev_map_queues(struct blk_mq_queue_map *qmap, void *dev_data,
+ 		int dev_off, get_queue_affinty_fn *get_queue_affinity,
+-		bool fallback)
++		bool fallback, bool managed_irq)
+ {
+ 	const struct cpumask *mask;
+ 	unsigned int queue, cpu;
+@@ -136,6 +138,8 @@ int blk_mq_dev_map_queues(struct blk_mq_queue_map *qmap, void *dev_data,
+ 			qmap->mq_map[cpu] = qmap->queue_offset + queue;
+ 	}
  
- 	return NUMA_NO_NODE;
- }
++	qmap->use_managed_irq = managed_irq;
 +
-+/**
-+ * blk_mq_dev_map_queues - provide generic queue mapping
-+ * @qmap:	CPU to hardware queue map.
-+ * @dev_off:	Offset to use for the device
-+ * @get_queue_affinity:	Callback to retrieve queue affinity
-+ * @dev_data:	Device data passed to get_queue_affinity()
-+ * @fallback:	If true, fallback to default blk-mq mapping in case of
-+ * any failure
-+ *
-+ * Generic function to setup each queue mapping in @qmap. It will query
-+ * each queue's affinity via @get_queue_affinity and built queue mapping
-+ * that maps a queue to the CPUs in the queue affinity.
-+ *
-+ * Driver has to set correct @dev_data, so that the driver callback
-+ * of @get_queue_affinity can work correctly.
-+ */
-+int blk_mq_dev_map_queues(struct blk_mq_queue_map *qmap, void *dev_data,
-+		int dev_off, get_queue_affinty_fn *get_queue_affinity,
-+		bool fallback)
-+{
-+	const struct cpumask *mask;
-+	unsigned int queue, cpu;
-+
-+	/*
-+	 * fallback to default mapping if driver doesn't provide
-+	 * get_queue_affinity callback
-+	 */
-+	if (!get_queue_affinity) {
-+		fallback = true;
-+		goto fallback;
-+	}
-+
-+	for (queue = 0; queue < qmap->nr_queues; queue++) {
-+		mask = get_queue_affinity(dev_data, dev_off, queue);
-+		if (!mask)
-+			goto fallback;
-+
-+		for_each_cpu(cpu, mask)
-+			qmap->mq_map[cpu] = qmap->queue_offset + queue;
-+	}
-+
-+	return 0;
-+
-+fallback:
-+	if (!fallback) {
-+		WARN_ON_ONCE(qmap->nr_queues > 1);
-+		blk_mq_clear_mq_map(qmap);
-+		return 0;
-+	}
-+	return blk_mq_map_queues(qmap);
-+}
-+EXPORT_SYMBOL_GPL(blk_mq_dev_map_queues);
+ 	return 0;
+ 
+ fallback:
 diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index fd2de2b422ed..b6090d691594 100644
+index b6090d691594..a2cd85ac0354 100644
 --- a/include/linux/blk-mq.h
 +++ b/include/linux/blk-mq.h
-@@ -553,7 +553,12 @@ void blk_mq_freeze_queue_wait(struct request_queue *q);
- int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
- 				     unsigned long timeout);
+@@ -192,7 +192,8 @@ struct blk_mq_hw_ctx {
+ struct blk_mq_queue_map {
+ 	unsigned int *mq_map;
+ 	unsigned int nr_queues;
+-	unsigned int queue_offset;
++	unsigned int queue_offset:31;
++	unsigned int use_managed_irq:1;
+ };
  
-+typedef const struct cpumask * (get_queue_affinty_fn)(void *dev_data,
-+		int dev_off, int queue_idx);
+ /**
+@@ -558,7 +559,7 @@ typedef const struct cpumask * (get_queue_affinty_fn)(void *dev_data,
  int blk_mq_map_queues(struct blk_mq_queue_map *qmap);
-+int blk_mq_dev_map_queues(struct blk_mq_queue_map *qmap, void *dev_data,
-+		int dev_off, get_queue_affinty_fn *get_queue_affinity,
-+		bool fallback);
+ int blk_mq_dev_map_queues(struct blk_mq_queue_map *qmap, void *dev_data,
+ 		int dev_off, get_queue_affinty_fn *get_queue_affinity,
+-		bool fallback);
++		bool fallback, bool managed_irq);
  void blk_mq_update_nr_hw_queues(struct blk_mq_tag_set *set, int nr_hw_queues);
  
  void blk_mq_quiesce_queue_nowait(struct request_queue *q);
