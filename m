@@ -2,146 +2,143 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7FB2C07E99
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 07:24:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E167C07E9B
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:10:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9344E611F1
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 07:24:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EB2C613CF
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:10:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231126AbhGIH1H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 03:27:07 -0400
-Received: from mx3.molgen.mpg.de ([141.14.17.11]:59353 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230121AbhGIH1G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 03:27:06 -0400
-Received: from [192.168.0.3] (ip5f5aeb5a.dynamic.kabel-deutschland.de [95.90.235.90])
-        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        id S231382AbhGIINQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 04:13:16 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:44107 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231278AbhGIINQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:13:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1625818233;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=C1gJOuWhuvnc9KCkfOjk/ntBVmRGSL89MKV7NbOH/eY=;
+        b=ht3MRcaMd6oKJG0Xx0+sxK5DXoxbzBH1yhsjQ68v/zSG30H3BNyDPn7eKRMtv4nY3dtWQw
+        Z3ckHfe7Yui4VXtJqdobHFbjzxChxjmCYsnZ7623iRnxCW52sDhUeMZd9W+wWGNns0y5j7
+        IORskpT4xQRGl2zSrMakaDVgaPgYpjE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-109-GedepIcWMLaOkz_xiC_LYQ-1; Fri, 09 Jul 2021 04:10:29 -0400
+X-MC-Unique: GedepIcWMLaOkz_xiC_LYQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: pmenzel)
-        by mx.molgen.mpg.de (Postfix) with ESMTPSA id 9015E61E5FE33;
-        Fri,  9 Jul 2021 09:24:21 +0200 (CEST)
-Subject: Re: [smartpqi updates PATCH 2/9] smartpqi: rm unsupported controller
- features msgs
-To:     Don.Brace@microchip.com, Kevin.Barnett@microchip.com
-Cc:     Scott.Teel@microchip.com, Justin.Lindley@microchip.com,
-        Scott.Benesh@microchip.com, Gerry.Morong@microchip.com,
-        Mahesh.Rajashekhara@microchip.com, Mike.McGowen@microchip.com,
-        Murthy.Bhat@microchip.com, Balsundar.P@microchip.com,
-        joseph.szczypek@hpe.com, jeff@canonical.com, POSWALD@suse.com,
-        john.p.donnelly@oracle.com, mwilck@suse.com,
-        linux-kernel@vger.kernel.org, hch@infradead.org,
-        martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 67DD0100C609;
+        Fri,  9 Jul 2021 08:10:27 +0000 (UTC)
+Received: from localhost (ovpn-13-13.pek2.redhat.com [10.72.13.13])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3A8D72C00F;
+        Fri,  9 Jul 2021 08:10:16 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-scsi@vger.kernel.org
-References: <20210706181618.27960-1-don.brace@microchip.com>
- <20210706181618.27960-3-don.brace@microchip.com>
- <17eeaf22-4625-d733-dcfb-ec2322dd0ca6@molgen.mpg.de>
- <SN6PR11MB284877FDAB929F223AEC14B5E1199@SN6PR11MB2848.namprd11.prod.outlook.com>
-From:   Paul Menzel <pmenzel@molgen.mpg.de>
-Message-ID: <4b68177b-4c61-74fd-eee7-83b938200278@molgen.mpg.de>
-Date:   Fri, 9 Jul 2021 09:24:21 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
+Cc:     Sagi Grimberg <sagi@grimberg.me>, Daniel Wagner <dwagner@suse.de>,
+        Wen Xiong <wenxiong@us.ibm.com>,
+        John Garry <john.garry@huawei.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Keith Busch <kbusch@kernel.org>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH V3 0/10] blk-mq: cleanup map queues & fix blk_mq_alloc_request_hctx
+Date:   Fri,  9 Jul 2021 16:09:55 +0800
+Message-Id: <20210709081005.421340-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <SN6PR11MB284877FDAB929F223AEC14B5E1199@SN6PR11MB2848.namprd11.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-[I corrected Martin’s email from peterson to peters*e*n. Don, you should 
-have also receive a bounce message from the MTA. I guess Martin has 
-these as a list subscriber nevertheless, but I suggest to resend the 
-series as soon as possible.]
+Hi,
 
-Dear Don,
+blk_mq_alloc_request_hctx() is used by NVMe fc/rdma/tcp/loop to connect
+io queue. Also the sw ctx is chosen as the 1st online cpu in hctx->cpumask.
+However, all cpus in hctx->cpumask may be offline.
 
+This usage model isn't well supported by blk-mq which supposes allocator is
+always done on one online CPU in hctx->cpumask. This assumption is
+related with managed irq, which also requires blk-mq to drain inflight
+request in this hctx when the last cpu in hctx->cpumask is going to
+offline.
 
-Thank you for your reply.
+However, NVMe fc/rdma/tcp/loop don't use managed irq, so we should allow
+them to ask for request allocation when the specified hctx is inactive
+(all cpus in hctx->cpumask are offline). Fix blk_mq_alloc_request_hctx() by
+allowing to allocate request when all CPUs of this hctx are offline.
 
-
-Am 08.07.21 um 21:04 schrieb Don.Brace@microchip.com:
-> -----Original Message-----
-> From: Paul Menzel [mailto:pmenzel@molgen.mpg.de]
-> Sent: Wednesday, July 7, 2021 2:29 AM
-> Subject: Re: [smartpqi updates PATCH 2/9] smartpqi: rm unsupported controller features msgs
-
-> Am 06.07.21 um 20:16 schrieb Don Brace:
->> From: Kevin Barnett <kevin.barnett@microchip.com>
->>
->> Remove "Feature XYZ not supported by controller" messages.
->>
->> During driver initialization, the driver examines the PQI Table Feature bits.
->> These bits are used by the controller to advertise features supported
->> by the controller. For any features not supported by the controller,
->> the driver would display a message in the form:
->>           "Feature XYZ not supported by controller"
->> Some of these "negative" messages were causing customer confusion.
-> 
-> As it’s info log level and not warning or notice, these message are
-> useful in my opinion. You could downgrade them to debug, but I do not
-> see why. If customers do not want to see these info messages, they
-> should filter them out.
-> 
-> For completeness, is there an alternative to list the unsupported
-> features from the firmware for example from sysfs?
-
-> Don> Thanks for your Review. At this time we would prefer to not
-> provide messages about unsupported features.
-
-Only because a customer complained? That is not a good enough reason in 
-my opinion. Log messages, often grepped for, are an interface which 
-should only be changed with caution.
-
-If these absent feature message were present for a long time, and you 
-suddenly remove them, people looking a newer Linux kernel messages, 
-users conclude the feature is supported now. That is quite a downside in 
-my opinion.
-
-> We may add them back at some point but we have taken them out of our
-> out-of-box driver also so we hope to keep the driver code in sync.
-That’s why you should develop for Linux master branch and upstream 
-*first* to get external reviews. That argument should not count for 
-Linux upstream reviews in my opinion.
+Also cleans up map queues helpers, replace current pci/virtio/rdma
+helpers with blk_mq_dev_map_queues(), and deal with the device
+difference by passing one callback from driver, and the actual only
+difference is that how to retrieve queue affinity. Finally the single helper
+can meet all driver's requirement.
 
 
-Kind regards,
+V3:
+	- cleanup map queues helpers, and remove pci/virtio/rdma queue
+	  helpers
+	- store use managed irq info into qmap
 
-Paul
+
+V2:
+	- use flag of BLK_MQ_F_MANAGED_IRQ
+	- pass BLK_MQ_F_MANAGED_IRQ from driver explicitly
+	- kill BLK_MQ_F_STACKING
 
 
->> Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
->> Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
->> Reviewed-by: Scott Teel <scott.teel@microchip.com>
->> Signed-off-by: Kevin Barnett <kevin.barnett@microchip.com>
->> Signed-off-by: Don Brace <don.brace@microchip.com>
->> ---
->>    drivers/scsi/smartpqi/smartpqi_init.c | 5 +----
->>    1 file changed, 1 insertion(+), 4 deletions(-)
->>
->> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c
->> b/drivers/scsi/smartpqi/smartpqi_init.c
->> index d977c7b30d5c..7958316841a4 100644
->> --- a/drivers/scsi/smartpqi/smartpqi_init.c
->> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
->> @@ -7255,11 +7255,8 @@ struct pqi_firmware_feature {
->>    static void pqi_firmware_feature_status(struct pqi_ctrl_info *ctrl_info,
->>        struct pqi_firmware_feature *firmware_feature)
->>    {
->> -     if (!firmware_feature->supported) {
->> -             dev_info(&ctrl_info->pci_dev->dev, "%s not supported by controller\n",
->> -                     firmware_feature->feature_name);
->> +     if (!firmware_feature->supported)
->>                return;
->> -     }
->>
->>        if (firmware_feature->enabled) {
->>                dev_info(&ctrl_info->pci_dev->dev,
->>
+Ming Lei (10):
+  blk-mq: rename blk-mq-cpumap.c as blk-mq-map.c
+  blk-mq: Introduce blk_mq_dev_map_queues
+  blk-mq: pass use managed irq info to blk_mq_dev_map_queues
+  scsi: replace blk_mq_pci_map_queues with blk_mq_dev_map_queues
+  nvme: replace blk_mq_pci_map_queues with blk_mq_dev_map_queues
+  virito: add APIs for retrieving vq affinity
+  virtio: blk/scsi: replace blk_mq_virtio_map_queues with
+    blk_mq_dev_map_queues
+  nvme: rdma: replace blk_mq_rdma_map_queues with blk_mq_dev_map_queues
+  blk-mq: remove map queue helpers for pci, rdma and virtio
+  blk-mq: don't deactivate hctx if managed irq isn't used
+
+ block/Makefile                            |  5 +-
+ block/{blk-mq-cpumap.c => blk-mq-map.c}   | 57 +++++++++++++++++++++++
+ block/blk-mq-pci.c                        | 48 -------------------
+ block/blk-mq-rdma.c                       | 44 -----------------
+ block/blk-mq-virtio.c                     | 46 ------------------
+ block/blk-mq.c                            | 27 +++++++----
+ block/blk-mq.h                            |  5 ++
+ drivers/block/virtio_blk.c                | 12 ++++-
+ drivers/nvme/host/pci.c                   | 12 ++++-
+ drivers/nvme/host/rdma.c                  | 18 +++++--
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c    | 21 ++++-----
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  5 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c |  4 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  9 ++--
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  6 ++-
+ drivers/scsi/qla2xxx/qla_os.c             |  4 +-
+ drivers/scsi/scsi_priv.h                  |  9 ++++
+ drivers/scsi/smartpqi/smartpqi_init.c     |  7 ++-
+ drivers/scsi/virtio_scsi.c                | 11 ++++-
+ drivers/virtio/virtio.c                   | 10 ++++
+ include/linux/blk-mq.h                    |  8 +++-
+ include/linux/virtio.h                    |  2 +
+ 22 files changed, 186 insertions(+), 184 deletions(-)
+ rename block/{blk-mq-cpumap.c => blk-mq-map.c} (58%)
+ delete mode 100644 block/blk-mq-pci.c
+ delete mode 100644 block/blk-mq-rdma.c
+ delete mode 100644 block/blk-mq-virtio.c
+
+-- 
+2.31.1
+
