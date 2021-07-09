@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B685BC07E99
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D08CC07E99
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 985CC613C7
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04CF0613C8
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231516AbhGIIOR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 04:14:17 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:33700 "EHLO
+        id S231490AbhGIIOY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 04:14:24 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:24227 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231477AbhGIIOQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:14:16 -0400
+        by vger.kernel.org with ESMTP id S231405AbhGIIOY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:14:24 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625818293;
+        s=mimecast20190719; t=1625818300;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=uAae/n/zle4IpDOSCa7FGlf3dZkUVsBnDfub+cgN0WQ=;
-        b=V0b9S0tJy8WoWywNmXQrbUCV+V5ymP2z3AcO+Hq+lkBJ4eGQAwSdyLgW4Ot/9Cqeo+3CrD
-        eqiPgEQComusZmV2JsqokpSYll8lv+NlTzmKJ1q3JPIxIVuBCMUa3YTrQosmNKEkUt/om3
-        iscs9EhMTbZ/K2qXjRIhsxaG26t4/Ek=
+        bh=iT5qAbZzpLMpsoq75G/ZOQir94LXNCD21dvckqRvoz8=;
+        b=XNxpssc9wKEqrPm9QAY131R/3ObDpqAWVFbpnhtB74So31mmzfYafpWWJPR7+KQK8afvOa
+        Y+9UFqFhWGjPE15spubY0tVWdyTnPb5bXdbj8jrFqDAGgy97Yu5jtHIuNtM+Z5SW9/SVwG
+        gL2Ij246W0jqjLoHenVxnm5eqL3fgh4=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-58-DXw8UBVePIamzHzY9TYfDg-1; Fri, 09 Jul 2021 04:11:32 -0400
-X-MC-Unique: DXw8UBVePIamzHzY9TYfDg-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+ us-mta-457-ucmI_8ZvNZWVexsyOIdx3g-1; Fri, 09 Jul 2021 04:11:39 -0400
+X-MC-Unique: ucmI_8ZvNZWVexsyOIdx3g-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 18847A40C0;
-        Fri,  9 Jul 2021 08:11:30 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 53F94804141;
+        Fri,  9 Jul 2021 08:11:37 +0000 (UTC)
 Received: from localhost (ovpn-13-13.pek2.redhat.com [10.72.13.13])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9CF5260C04;
-        Fri,  9 Jul 2021 08:11:24 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 8EA9119D9F;
+        Fri,  9 Jul 2021 08:11:32 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -53,202 +53,118 @@ Cc:     Sagi Grimberg <sagi@grimberg.me>, Daniel Wagner <dwagner@suse.de>,
         Keith Busch <kbusch@kernel.org>,
         Damien Le Moal <damien.lemoal@wdc.com>,
         Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 09/10] blk-mq: remove map queue helpers for pci, rdma and virtio
-Date:   Fri,  9 Jul 2021 16:10:04 +0800
-Message-Id: <20210709081005.421340-10-ming.lei@redhat.com>
+Subject: [PATCH V3 10/10] blk-mq: don't deactivate hctx if managed irq isn't used
+Date:   Fri,  9 Jul 2021 16:10:05 +0800
+Message-Id: <20210709081005.421340-11-ming.lei@redhat.com>
 In-Reply-To: <20210709081005.421340-1-ming.lei@redhat.com>
 References: <20210709081005.421340-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now we have switched to blk_mq_dev_map_queues(), so remove these
-helpers and source files.
+blk-mq deactivates one hctx when the last CPU in hctx->cpumask become
+offline by draining all requests originated from this hctx and moving new
+allocation on other active hctx. This way is for avoiding inflight IO in
+case of managed irq because managed irq is shutdown when the last CPU in
+the irq's affinity becomes offline.
+
+However, lots of drivers(nvme fc, rdma, tcp, loop, ...) don't use managed
+irq, so they needn't to deactivate hctx when the last CPU becomes offline.
+Also, some of them are the only user of blk_mq_alloc_request_hctx() which
+is used for connecting io queue. And their requirement is that the connect
+request needs to be submitted successfully via one specified hctx even though
+all CPUs in this hctx->cpumask have become offline.
+
+Addressing the requirement for nvme fc/rdma/loop by allowing to
+allocate request from one hctx when all CPUs in this hctx are offline,
+since these drivers don't use managed irq.
+
+Finally don't deactivate one hctx when it doesn't use managed irq.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/Makefile        |  3 ---
- block/blk-mq-pci.c    | 48 -------------------------------------------
- block/blk-mq-rdma.c   | 44 ---------------------------------------
- block/blk-mq-virtio.c | 46 -----------------------------------------
- 4 files changed, 141 deletions(-)
- delete mode 100644 block/blk-mq-pci.c
- delete mode 100644 block/blk-mq-rdma.c
- delete mode 100644 block/blk-mq-virtio.c
+ block/blk-mq.c | 27 +++++++++++++++++----------
+ block/blk-mq.h |  5 +++++
+ 2 files changed, 22 insertions(+), 10 deletions(-)
 
-diff --git a/block/Makefile b/block/Makefile
-index 0f31c7e8a475..9437518a16ae 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -31,9 +31,6 @@ obj-$(CONFIG_IOSCHED_BFQ)	+= bfq.o
- obj-$(CONFIG_BLK_CMDLINE_PARSER)	+= cmdline-parser.o
- obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o blk-integrity.o
- obj-$(CONFIG_BLK_DEV_INTEGRITY_T10)	+= t10-pi.o
--obj-$(CONFIG_BLK_MQ_PCI)	+= blk-mq-pci.o
--obj-$(CONFIG_BLK_MQ_VIRTIO)	+= blk-mq-virtio.o
--obj-$(CONFIG_BLK_MQ_RDMA)	+= blk-mq-rdma.o
- obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
- obj-$(CONFIG_BLK_WBT)		+= blk-wbt.o
- obj-$(CONFIG_BLK_DEBUG_FS)	+= blk-mq-debugfs.o
-diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
-deleted file mode 100644
-index b595a94c4d16..000000000000
---- a/block/blk-mq-pci.c
-+++ /dev/null
-@@ -1,48 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2016 Christoph Hellwig.
-- */
--#include <linux/kobject.h>
--#include <linux/blkdev.h>
--#include <linux/blk-mq.h>
--#include <linux/blk-mq-pci.h>
--#include <linux/pci.h>
--#include <linux/module.h>
--
--#include "blk-mq.h"
--
--/**
-- * blk_mq_pci_map_queues - provide a default queue mapping for PCI device
-- * @qmap:	CPU to hardware queue map.
-- * @pdev:	PCI device associated with @set.
-- * @offset:	Offset to use for the pci irq vector
-- *
-- * This function assumes the PCI device @pdev has at least as many available
-- * interrupt vectors as @set has queues.  It will then query the vector
-- * corresponding to each queue for it's affinity mask and built queue mapping
-- * that maps a queue to the CPUs that have irq affinity for the corresponding
-- * vector.
-- */
--int blk_mq_pci_map_queues(struct blk_mq_queue_map *qmap, struct pci_dev *pdev,
--			    int offset)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 2e9fd0ec63d7..d00546d3b757 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -427,6 +427,15 @@ struct request *blk_mq_alloc_request(struct request_queue *q, unsigned int op,
+ }
+ EXPORT_SYMBOL(blk_mq_alloc_request);
+ 
++static inline int blk_mq_first_mapped_cpu(struct blk_mq_hw_ctx *hctx)
++{
++	int cpu = cpumask_first_and(hctx->cpumask, cpu_online_mask);
++
++	if (cpu >= nr_cpu_ids)
++		cpu = cpumask_first(hctx->cpumask);
++	return cpu;
++}
++
+ struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
+ 	unsigned int op, blk_mq_req_flags_t flags, unsigned int hctx_idx)
+ {
+@@ -468,7 +477,10 @@ struct request *blk_mq_alloc_request_hctx(struct request_queue *q,
+ 	data.hctx = q->queue_hw_ctx[hctx_idx];
+ 	if (!blk_mq_hw_queue_mapped(data.hctx))
+ 		goto out_queue_exit;
+-	cpu = cpumask_first_and(data.hctx->cpumask, cpu_online_mask);
++
++	WARN_ON_ONCE(blk_mq_hctx_use_managed_irq(data.hctx));
++
++	cpu = blk_mq_first_mapped_cpu(data.hctx);
+ 	data.ctx = __blk_mq_get_ctx(q, cpu);
+ 
+ 	if (!q->elevator)
+@@ -1501,15 +1513,6 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+ 	hctx_unlock(hctx, srcu_idx);
+ }
+ 
+-static inline int blk_mq_first_mapped_cpu(struct blk_mq_hw_ctx *hctx)
 -{
--	const struct cpumask *mask;
--	unsigned int queue, cpu;
+-	int cpu = cpumask_first_and(hctx->cpumask, cpu_online_mask);
 -
--	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		mask = pci_irq_get_affinity(pdev, queue + offset);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			qmap->mq_map[cpu] = qmap->queue_offset + queue;
--	}
--
--	return 0;
--
--fallback:
--	WARN_ON_ONCE(qmap->nr_queues > 1);
--	blk_mq_clear_mq_map(qmap);
--	return 0;
+-	if (cpu >= nr_cpu_ids)
+-		cpu = cpumask_first(hctx->cpumask);
+-	return cpu;
 -}
--EXPORT_SYMBOL_GPL(blk_mq_pci_map_queues);
-diff --git a/block/blk-mq-rdma.c b/block/blk-mq-rdma.c
-deleted file mode 100644
-index 14f968e58b8f..000000000000
---- a/block/blk-mq-rdma.c
-+++ /dev/null
-@@ -1,44 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2017 Sagi Grimberg.
-- */
--#include <linux/blk-mq.h>
--#include <linux/blk-mq-rdma.h>
--#include <rdma/ib_verbs.h>
 -
--/**
-- * blk_mq_rdma_map_queues - provide a default queue mapping for rdma device
-- * @map:	CPU to hardware queue map.
-- * @dev:	rdma device to provide a mapping for.
-- * @first_vec:	first interrupt vectors to use for queues (usually 0)
-- *
-- * This function assumes the rdma device @dev has at least as many available
-- * interrupt vetors as @set has queues.  It will then query it's affinity mask
-- * and built queue mapping that maps a queue to the CPUs that have irq affinity
-- * for the corresponding vector.
-- *
-- * In case either the driver passed a @dev with less vectors than
-- * @set->nr_hw_queues, or @dev does not provide an affinity mask for a
-- * vector, we fallback to the naive mapping.
-- */
--int blk_mq_rdma_map_queues(struct blk_mq_queue_map *map,
--		struct ib_device *dev, int first_vec)
--{
--	const struct cpumask *mask;
--	unsigned int queue, cpu;
--
--	for (queue = 0; queue < map->nr_queues; queue++) {
--		mask = ib_get_vector_affinity(dev, first_vec + queue);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			map->mq_map[cpu] = map->queue_offset + queue;
--	}
--
--	return 0;
--
--fallback:
--	return blk_mq_map_queues(map);
--}
--EXPORT_SYMBOL_GPL(blk_mq_rdma_map_queues);
-diff --git a/block/blk-mq-virtio.c b/block/blk-mq-virtio.c
-deleted file mode 100644
-index 7b8a42c35102..000000000000
---- a/block/blk-mq-virtio.c
-+++ /dev/null
-@@ -1,46 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2016 Christoph Hellwig.
-- */
--#include <linux/device.h>
--#include <linux/blk-mq.h>
--#include <linux/blk-mq-virtio.h>
--#include <linux/virtio_config.h>
--#include <linux/module.h>
--#include "blk-mq.h"
--
--/**
-- * blk_mq_virtio_map_queues - provide a default queue mapping for virtio device
-- * @qmap:	CPU to hardware queue map.
-- * @vdev:	virtio device to provide a mapping for.
-- * @first_vec:	first interrupt vectors to use for queues (usually 0)
-- *
-- * This function assumes the virtio device @vdev has at least as many available
-- * interrupt vectors as @set has queues.  It will then query the vector
-- * corresponding to each queue for it's affinity mask and built queue mapping
-- * that maps a queue to the CPUs that have irq affinity for the corresponding
-- * vector.
-- */
--int blk_mq_virtio_map_queues(struct blk_mq_queue_map *qmap,
--		struct virtio_device *vdev, int first_vec)
--{
--	const struct cpumask *mask;
--	unsigned int queue, cpu;
--
--	if (!vdev->config->get_vq_affinity)
--		goto fallback;
--
--	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		mask = vdev->config->get_vq_affinity(vdev, first_vec + queue);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			qmap->mq_map[cpu] = qmap->queue_offset + queue;
--	}
--
--	return 0;
--fallback:
--	return blk_mq_map_queues(qmap);
--}
--EXPORT_SYMBOL_GPL(blk_mq_virtio_map_queues);
+ /*
+  * It'd be great if the workqueue API had a way to pass
+  * in a mask and had some smarts for more clever placement.
+@@ -2556,6 +2559,10 @@ static int blk_mq_hctx_notify_offline(unsigned int cpu, struct hlist_node *node)
+ 	struct blk_mq_hw_ctx *hctx = hlist_entry_safe(node,
+ 			struct blk_mq_hw_ctx, cpuhp_online);
+ 
++	/* hctx needn't to be deactivated in case managed irq isn't used */
++	if (!blk_mq_hctx_use_managed_irq(hctx))
++		return 0;
++
+ 	if (!cpumask_test_cpu(cpu, hctx->cpumask) ||
+ 	    !blk_mq_last_cpu_in_hctx(cpu, hctx))
+ 		return 0;
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index d08779f77a26..bee755ed0903 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -119,6 +119,11 @@ static inline struct blk_mq_hw_ctx *blk_mq_map_queue(struct request_queue *q,
+ 	return ctx->hctxs[type];
+ }
+ 
++static inline bool blk_mq_hctx_use_managed_irq(struct blk_mq_hw_ctx *hctx)
++{
++	return hctx->queue->tag_set->map[hctx->type].use_managed_irq;
++}
++
+ /*
+  * sysfs helpers
+  */
 -- 
 2.31.1
 
