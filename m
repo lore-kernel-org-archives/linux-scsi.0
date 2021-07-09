@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78D57C07E99
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B685BC07E99
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 627AB613C7
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 985CC613C7
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 08:11:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231458AbhGIIOK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 04:14:10 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:53663 "EHLO
+        id S231516AbhGIIOR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 04:14:17 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:33700 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231493AbhGIIOK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:14:10 -0400
+        by vger.kernel.org with ESMTP id S231477AbhGIIOQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 04:14:16 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1625818287;
+        s=mimecast20190719; t=1625818293;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2pWtjFqz4jcPDiQr4SNjA0YIVAycnQdj9d42Z4ShVyU=;
-        b=ItSE0U0mrYa+2llLr7uIkin7GGrlZVWqbceCsPgh6YVVYtXIPFJ0PgPkQYsoc4i91twF7w
-        18JQMyuC2F1b1JVIAHR4CZvLDgzEQJZo1eSUPPdyG692fvzzcMhDhxQZXYwsRoJWonvNoG
-        nGWdwBrT9zt7Le4d/XRZzbfiNJflxzs=
+        bh=uAae/n/zle4IpDOSCa7FGlf3dZkUVsBnDfub+cgN0WQ=;
+        b=V0b9S0tJy8WoWywNmXQrbUCV+V5ymP2z3AcO+Hq+lkBJ4eGQAwSdyLgW4Ot/9Cqeo+3CrD
+        eqiPgEQComusZmV2JsqokpSYll8lv+NlTzmKJ1q3JPIxIVuBCMUa3YTrQosmNKEkUt/om3
+        iscs9EhMTbZ/K2qXjRIhsxaG26t4/Ek=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-529-9u95PXq0PKmRu83R5m5DqA-1; Fri, 09 Jul 2021 04:11:23 -0400
-X-MC-Unique: 9u95PXq0PKmRu83R5m5DqA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+ us-mta-58-DXw8UBVePIamzHzY9TYfDg-1; Fri, 09 Jul 2021 04:11:32 -0400
+X-MC-Unique: DXw8UBVePIamzHzY9TYfDg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CD89C8042FE;
-        Fri,  9 Jul 2021 08:11:21 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 18847A40C0;
+        Fri,  9 Jul 2021 08:11:30 +0000 (UTC)
 Received: from localhost (ovpn-13-13.pek2.redhat.com [10.72.13.13])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0E73B5D6D3;
-        Fri,  9 Jul 2021 08:11:20 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 9CF5260C04;
+        Fri,  9 Jul 2021 08:11:24 +0000 (UTC)
 From:   Ming Lei <ming.lei@redhat.com>
 To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -53,68 +53,202 @@ Cc:     Sagi Grimberg <sagi@grimberg.me>, Daniel Wagner <dwagner@suse.de>,
         Keith Busch <kbusch@kernel.org>,
         Damien Le Moal <damien.lemoal@wdc.com>,
         Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 08/10] nvme: rdma: replace blk_mq_rdma_map_queues with blk_mq_dev_map_queues
-Date:   Fri,  9 Jul 2021 16:10:03 +0800
-Message-Id: <20210709081005.421340-9-ming.lei@redhat.com>
+Subject: [PATCH V3 09/10] blk-mq: remove map queue helpers for pci, rdma and virtio
+Date:   Fri,  9 Jul 2021 16:10:04 +0800
+Message-Id: <20210709081005.421340-10-ming.lei@redhat.com>
 In-Reply-To: <20210709081005.421340-1-ming.lei@redhat.com>
 References: <20210709081005.421340-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace blk_mq_virtio_map_queues with blk_mq_dev_map_queues which is more
-generic from blk-mq viewpoint, so we can unify all map queue
-implementation.
-
-Meantime we can pass 'use_manage_irq' info to blk-mq via
-blk_mq_dev_map_queues(), this info needn't be 100% accurate, and what
-we need is that true has to be passed in if the hba really uses managed
-irq.
+Now we have switched to blk_mq_dev_map_queues(), so remove these
+helpers and source files.
 
 Signed-off-by: Ming Lei <ming.lei@redhat.com>
 ---
- drivers/nvme/host/rdma.c | 18 ++++++++++++++----
- 1 file changed, 14 insertions(+), 4 deletions(-)
+ block/Makefile        |  3 ---
+ block/blk-mq-pci.c    | 48 -------------------------------------------
+ block/blk-mq-rdma.c   | 44 ---------------------------------------
+ block/blk-mq-virtio.c | 46 -----------------------------------------
+ 4 files changed, 141 deletions(-)
+ delete mode 100644 block/blk-mq-pci.c
+ delete mode 100644 block/blk-mq-rdma.c
+ delete mode 100644 block/blk-mq-virtio.c
 
-diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
-index a9e70cefd7ed..dc47df03a39a 100644
---- a/drivers/nvme/host/rdma.c
-+++ b/drivers/nvme/host/rdma.c
-@@ -2169,6 +2169,14 @@ static void nvme_rdma_complete_rq(struct request *rq)
- 	nvme_complete_rq(rq);
- }
- 
-+static const struct cpumask *nvme_rdma_get_queue_affinity(
-+		void *dev_data, int offset, int queue)
-+{
-+	struct ib_device *dev = dev_data;
-+
-+	return ib_get_vector_affinity(dev, offset + queue);
-+}
-+
- static int nvme_rdma_map_queues(struct blk_mq_tag_set *set)
- {
- 	struct nvme_rdma_ctrl *ctrl = set->driver_data;
-@@ -2192,10 +2200,12 @@ static int nvme_rdma_map_queues(struct blk_mq_tag_set *set)
- 			ctrl->io_queues[HCTX_TYPE_DEFAULT];
- 		set->map[HCTX_TYPE_READ].queue_offset = 0;
- 	}
--	blk_mq_rdma_map_queues(&set->map[HCTX_TYPE_DEFAULT],
--			ctrl->device->dev, 0);
--	blk_mq_rdma_map_queues(&set->map[HCTX_TYPE_READ],
--			ctrl->device->dev, 0);
-+	blk_mq_dev_map_queues(&set->map[HCTX_TYPE_DEFAULT],
-+			ctrl->device->dev, 0, nvme_rdma_get_queue_affinity,
-+			true, false);
-+	blk_mq_dev_map_queues(&set->map[HCTX_TYPE_READ],
-+			ctrl->device->dev, 0, nvme_rdma_get_queue_affinity,
-+			true, false);
- 
- 	if (opts->nr_poll_queues && ctrl->io_queues[HCTX_TYPE_POLL]) {
- 		/* map dedicated poll queues only if we have queues left */
+diff --git a/block/Makefile b/block/Makefile
+index 0f31c7e8a475..9437518a16ae 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -31,9 +31,6 @@ obj-$(CONFIG_IOSCHED_BFQ)	+= bfq.o
+ obj-$(CONFIG_BLK_CMDLINE_PARSER)	+= cmdline-parser.o
+ obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o blk-integrity.o
+ obj-$(CONFIG_BLK_DEV_INTEGRITY_T10)	+= t10-pi.o
+-obj-$(CONFIG_BLK_MQ_PCI)	+= blk-mq-pci.o
+-obj-$(CONFIG_BLK_MQ_VIRTIO)	+= blk-mq-virtio.o
+-obj-$(CONFIG_BLK_MQ_RDMA)	+= blk-mq-rdma.o
+ obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
+ obj-$(CONFIG_BLK_WBT)		+= blk-wbt.o
+ obj-$(CONFIG_BLK_DEBUG_FS)	+= blk-mq-debugfs.o
+diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
+deleted file mode 100644
+index b595a94c4d16..000000000000
+--- a/block/blk-mq-pci.c
++++ /dev/null
+@@ -1,48 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2016 Christoph Hellwig.
+- */
+-#include <linux/kobject.h>
+-#include <linux/blkdev.h>
+-#include <linux/blk-mq.h>
+-#include <linux/blk-mq-pci.h>
+-#include <linux/pci.h>
+-#include <linux/module.h>
+-
+-#include "blk-mq.h"
+-
+-/**
+- * blk_mq_pci_map_queues - provide a default queue mapping for PCI device
+- * @qmap:	CPU to hardware queue map.
+- * @pdev:	PCI device associated with @set.
+- * @offset:	Offset to use for the pci irq vector
+- *
+- * This function assumes the PCI device @pdev has at least as many available
+- * interrupt vectors as @set has queues.  It will then query the vector
+- * corresponding to each queue for it's affinity mask and built queue mapping
+- * that maps a queue to the CPUs that have irq affinity for the corresponding
+- * vector.
+- */
+-int blk_mq_pci_map_queues(struct blk_mq_queue_map *qmap, struct pci_dev *pdev,
+-			    int offset)
+-{
+-	const struct cpumask *mask;
+-	unsigned int queue, cpu;
+-
+-	for (queue = 0; queue < qmap->nr_queues; queue++) {
+-		mask = pci_irq_get_affinity(pdev, queue + offset);
+-		if (!mask)
+-			goto fallback;
+-
+-		for_each_cpu(cpu, mask)
+-			qmap->mq_map[cpu] = qmap->queue_offset + queue;
+-	}
+-
+-	return 0;
+-
+-fallback:
+-	WARN_ON_ONCE(qmap->nr_queues > 1);
+-	blk_mq_clear_mq_map(qmap);
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(blk_mq_pci_map_queues);
+diff --git a/block/blk-mq-rdma.c b/block/blk-mq-rdma.c
+deleted file mode 100644
+index 14f968e58b8f..000000000000
+--- a/block/blk-mq-rdma.c
++++ /dev/null
+@@ -1,44 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2017 Sagi Grimberg.
+- */
+-#include <linux/blk-mq.h>
+-#include <linux/blk-mq-rdma.h>
+-#include <rdma/ib_verbs.h>
+-
+-/**
+- * blk_mq_rdma_map_queues - provide a default queue mapping for rdma device
+- * @map:	CPU to hardware queue map.
+- * @dev:	rdma device to provide a mapping for.
+- * @first_vec:	first interrupt vectors to use for queues (usually 0)
+- *
+- * This function assumes the rdma device @dev has at least as many available
+- * interrupt vetors as @set has queues.  It will then query it's affinity mask
+- * and built queue mapping that maps a queue to the CPUs that have irq affinity
+- * for the corresponding vector.
+- *
+- * In case either the driver passed a @dev with less vectors than
+- * @set->nr_hw_queues, or @dev does not provide an affinity mask for a
+- * vector, we fallback to the naive mapping.
+- */
+-int blk_mq_rdma_map_queues(struct blk_mq_queue_map *map,
+-		struct ib_device *dev, int first_vec)
+-{
+-	const struct cpumask *mask;
+-	unsigned int queue, cpu;
+-
+-	for (queue = 0; queue < map->nr_queues; queue++) {
+-		mask = ib_get_vector_affinity(dev, first_vec + queue);
+-		if (!mask)
+-			goto fallback;
+-
+-		for_each_cpu(cpu, mask)
+-			map->mq_map[cpu] = map->queue_offset + queue;
+-	}
+-
+-	return 0;
+-
+-fallback:
+-	return blk_mq_map_queues(map);
+-}
+-EXPORT_SYMBOL_GPL(blk_mq_rdma_map_queues);
+diff --git a/block/blk-mq-virtio.c b/block/blk-mq-virtio.c
+deleted file mode 100644
+index 7b8a42c35102..000000000000
+--- a/block/blk-mq-virtio.c
++++ /dev/null
+@@ -1,46 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2016 Christoph Hellwig.
+- */
+-#include <linux/device.h>
+-#include <linux/blk-mq.h>
+-#include <linux/blk-mq-virtio.h>
+-#include <linux/virtio_config.h>
+-#include <linux/module.h>
+-#include "blk-mq.h"
+-
+-/**
+- * blk_mq_virtio_map_queues - provide a default queue mapping for virtio device
+- * @qmap:	CPU to hardware queue map.
+- * @vdev:	virtio device to provide a mapping for.
+- * @first_vec:	first interrupt vectors to use for queues (usually 0)
+- *
+- * This function assumes the virtio device @vdev has at least as many available
+- * interrupt vectors as @set has queues.  It will then query the vector
+- * corresponding to each queue for it's affinity mask and built queue mapping
+- * that maps a queue to the CPUs that have irq affinity for the corresponding
+- * vector.
+- */
+-int blk_mq_virtio_map_queues(struct blk_mq_queue_map *qmap,
+-		struct virtio_device *vdev, int first_vec)
+-{
+-	const struct cpumask *mask;
+-	unsigned int queue, cpu;
+-
+-	if (!vdev->config->get_vq_affinity)
+-		goto fallback;
+-
+-	for (queue = 0; queue < qmap->nr_queues; queue++) {
+-		mask = vdev->config->get_vq_affinity(vdev, first_vec + queue);
+-		if (!mask)
+-			goto fallback;
+-
+-		for_each_cpu(cpu, mask)
+-			qmap->mq_map[cpu] = qmap->queue_offset + queue;
+-	}
+-
+-	return 0;
+-fallback:
+-	return blk_mq_map_queues(qmap);
+-}
+-EXPORT_SYMBOL_GPL(blk_mq_virtio_map_queues);
 -- 
 2.31.1
 
