@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C7C1C07E99
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7273AC07E99
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C2F561357
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A538613C8
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230242AbhGIU34 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 16:29:56 -0400
-Received: from mail-pg1-f177.google.com ([209.85.215.177]:38419 "EHLO
-        mail-pg1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229909AbhGIU34 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 16:29:56 -0400
-Received: by mail-pg1-f177.google.com with SMTP id h4so11089249pgp.5
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Jul 2021 13:27:12 -0700 (PDT)
+        id S230256AbhGIU37 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 16:29:59 -0400
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:35594 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229909AbhGIU37 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 16:29:59 -0400
+Received: by mail-pj1-f44.google.com with SMTP id h1-20020a17090a3d01b0290172d33bb8bcso8920830pjc.0
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Jul 2021 13:27:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=8Ntj/bvMAxLIpLT1WsjuA3LgZB7irv2YvgmITcVnPzM=;
-        b=mbguzSRa+2eV22i94sLFdRv+IBDxAElKLOT6xFWetsf4+k23/EJbLBQechuVKyLFtV
-         VLOCctls5s6uHnrcBaRd7swtSYJZK2KKMa1a6zN9PAf/NRU/CydipMw3C6Wg11OlEUI/
-         XQbO+n87++2P+FZxnkqVvPSSA+FWrHxeqVfeg1LcT66rf+KrxGOOC48KrEpHWFwcrE6g
-         Ff2JP3eR/tYXyzVGztlEbW5OOeLXR4n27uWfTShV4YQuehnNyBUnnmPShl8K2nMm8w60
-         DmLuTzN72Y9aA8CRcswmY3AmE1AjSWpPO9OXw85nx6iudAT1A8nqnmX/u8lVLkWur/3N
-         HzeA==
-X-Gm-Message-State: AOAM532gsYTXthblCsZ1/W8vM+Jf6jpKaX7HSmN3N8qyMOhT0CEMBsOI
-        wXTj9XcJ4g0v1rPGmgKf1G8=
-X-Google-Smtp-Source: ABdhPJx6vWRCpZfFxklkIooBF1T5mqWV0wqFDHIdHA2RMDSeSPuzoq4pIMDuuf3YbP0FJvmDa1tzCQ==
-X-Received: by 2002:a63:230c:: with SMTP id j12mr39759617pgj.382.1625862432140;
-        Fri, 09 Jul 2021 13:27:12 -0700 (PDT)
+        bh=ZxG8FSjJ+H6UcHhqSpfKZ7Z8e5I0Em+SOZHonYacPSA=;
+        b=iDpU/rl+Hv61iR5KHFP+iOOr0PHZG6GaBo4nM8kr2jIR5vEZbPqxNTwnOjShcizN+T
+         g2PP0a1P9vh0Mn54gqGLhYIyGJfecrgrNPSblE8fkTXr1I4R5WR/ArDQFDRksxk2h5sq
+         4fcJJayRsSR2yS/TQIX1UhD4MaMJv8n4RHa93hTjl/YtqWHtssbPvi5Y4bUJLytwrj9P
+         yFp0Do8k1V4D6cqlZqbd+L7nbrG87ddLXhAvyPOT4rStfBWaX7y66mF9wHJMa1LTDUXl
+         RmmMgZ0o4cJN+gE22eS7s6EtKMjiqvNYQ90DJIOZOtIJ2Pfafk5TWqMNJH3X/0bCpj9z
+         G9mQ==
+X-Gm-Message-State: AOAM533AgfTTT1dDVWoPMlAY4dep4OpJjJ9BMKGrGwHFkK0QYjRehFX4
+        kpxIG0H+ne+82JLpvwMqas4YXzThYaI=
+X-Google-Smtp-Source: ABdhPJyEMon6ClKtaWNSxExqmifPvG3Y8t+wBSYMVjSXeEiwsJTNZOEJuu1PwNETbtZpYCp7/Ad+aw==
+X-Received: by 2002:a17:902:a60f:b029:129:b2dc:e921 with SMTP id u15-20020a170902a60fb0290129b2dce921mr17186674plq.11.1625862435458;
+        Fri, 09 Jul 2021 13:27:15 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:eeaf:c266:e6cc:b591])
-        by smtp.gmail.com with ESMTPSA id e16sm8812927pgl.54.2021.07.09.13.27.10
+        by smtp.gmail.com with ESMTPSA id e16sm8812927pgl.54.2021.07.09.13.27.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jul 2021 13:27:11 -0700 (PDT)
+        Fri, 09 Jul 2021 13:27:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
         Akinobu Mita <akinobu.mita@gmail.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v2 05/19] scsi: ufs: Use DECLARE_COMPLETION_ONSTACK() where appropriate
-Date:   Fri,  9 Jul 2021 13:26:24 -0700
-Message-Id: <20210709202638.9480-7-bvanassche@acm.org>
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH v2 06/19] scsi: ufs: Remove ufshcd_valid_tag()
+Date:   Fri,  9 Jul 2021 13:26:25 -0700
+Message-Id: <20210709202638.9480-8-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210709202638.9480-1-bvanassche@acm.org>
 References: <20210709202638.9480-1-bvanassche@acm.org>
@@ -66,82 +65,107 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From Documentation/scheduler/completion.rst: "When a completion is declared
-as a local variable within a function, then the initialization should
-always use DECLARE_COMPLETION_ONSTACK() explicitly, not just to make
-lockdep happy, but also to make it clear that limited scope had been
-considered and is intentional."
+scsi_add_host() allocates shost->can_queue tags. ufshcd_init() sets
+shost->can_queue to hba->nutrs. In other words, we know that tag values
+will less than hba->nutrs. Hence remove the checks that verify that
+blk_get_request() returns a tag less than hba->nutrs. This check
+was introduced by commit 14497328b6a6 ("scsi: ufs: verify command tag
+validity").
 
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Cc: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Can Guo <cang@codeaurora.org>
-Cc: Asutosh Das <asutoshd@codeaurora.org>
-Cc: Avri Altman <avri.altman@wdc.com>
+Keep the tag >= 0 check because it helps to detect use-after-free issues.
+
+CC: Avri Altman <avri.altman@wdc.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 42 ++++++++++-----------------------------
+ 1 file changed, 10 insertions(+), 32 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 86ca9e1ce5aa..2148e123e9db 100644
+index 2148e123e9db..fa52117fdb3e 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2949,11 +2949,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 		enum dev_cmd_type cmd_type, int timeout)
+@@ -253,11 +253,6 @@ static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
+ static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
+ static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
+ 
+-static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
+-{
+-	return tag >= 0 && tag < hba->nutrs;
+-}
+-
+ static inline void ufshcd_enable_irq(struct ufs_hba *hba)
  {
- 	struct request_queue *q = hba->cmd_queue;
-+	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request *req;
- 	struct ufshcd_lrb *lrbp;
- 	int err;
- 	int tag;
--	struct completion wait;
- 
- 	down_read(&hba->clk_scaling_lock);
- 
-@@ -2975,7 +2975,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 		goto out;
- 	}
- 
--	init_completion(&wait);
- 	lrbp = &hba->lrb[tag];
- 	WARN_ON(lrbp->cmd);
- 	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
-@@ -3980,14 +3979,13 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
+ 	if (!hba->is_irq_enabled) {
+@@ -2701,20 +2696,12 @@ static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
   */
- static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
  {
--	struct completion uic_async_done;
-+	DECLARE_COMPLETION_ONSTACK(uic_async_done);
- 	unsigned long flags;
- 	u8 status;
- 	int ret;
- 	bool reenable_intr = false;
- 
- 	mutex_lock(&hba->uic_cmd_mutex);
--	init_completion(&uic_async_done);
- 	ufshcd_add_delay_before_dme_cmd(hba);
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
-@@ -6660,11 +6658,11 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 					enum query_opcode desc_op)
- {
- 	struct request_queue *q = hba->cmd_queue;
-+	DECLARE_COMPLETION_ONSTACK(wait);
- 	struct request *req;
++	struct ufs_hba *hba = shost_priv(host);
++	int tag = cmd->request->tag;
  	struct ufshcd_lrb *lrbp;
+-	struct ufs_hba *hba;
+-	int tag;
  	int err = 0;
- 	int tag;
--	struct completion wait;
- 	u8 upiu_flags;
  
- 	down_read(&hba->clk_scaling_lock);
-@@ -6682,7 +6680,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 		goto out;
+-	hba = shost_priv(host);
+-
+-	tag = cmd->request->tag;
+-	if (!ufshcd_valid_tag(hba, tag)) {
+-		dev_err(hba->dev,
+-			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
+-			__func__, tag, cmd, cmd->request);
+-		BUG();
+-	}
++	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+ 
+ 	if (!down_read_trylock(&hba->clk_scaling_lock))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -2968,7 +2955,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 		goto out_unlock;
  	}
+ 	tag = req->tag;
+-	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
++	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
  
--	init_completion(&wait);
- 	lrbp = &hba->lrb[tag];
- 	WARN_ON(lrbp->cmd);
- 	lrbp->cmd = NULL;
+ 	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
+ 		err = -EBUSY;
+@@ -6673,7 +6660,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 		goto out_unlock;
+ 	}
+ 	tag = req->tag;
+-	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
++	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+ 
+ 	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
+ 		err = -EBUSY;
+@@ -6975,24 +6962,15 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+  */
+ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ {
+-	struct Scsi_Host *host;
+-	struct ufs_hba *hba;
++	struct Scsi_Host *host = cmd->device->host;
++	struct ufs_hba *hba = shost_priv(host);
++	unsigned int tag = cmd->request->tag;
++	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+ 	unsigned long flags;
+-	unsigned int tag;
+ 	int err = 0;
+-	struct ufshcd_lrb *lrbp;
+ 	u32 reg;
+ 
+-	host = cmd->device->host;
+-	hba = shost_priv(host);
+-	tag = cmd->request->tag;
+-	lrbp = &hba->lrb[tag];
+-	if (!ufshcd_valid_tag(hba, tag)) {
+-		dev_err(hba->dev,
+-			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
+-			__func__, tag, cmd, cmd->request);
+-		BUG();
+-	}
++	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+ 
+ 	ufshcd_hold(hba, false);
+ 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
