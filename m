@@ -7,55 +7,57 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7273AC07E99
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C63CDC07E99
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A538613C8
-	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B029B613BE
+	for <linux-scsi@archiver.kernel.org>; Fri,  9 Jul 2021 20:27:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230256AbhGIU37 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 16:29:59 -0400
-Received: from mail-pj1-f44.google.com ([209.85.216.44]:35594 "EHLO
-        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229909AbhGIU37 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 16:29:59 -0400
-Received: by mail-pj1-f44.google.com with SMTP id h1-20020a17090a3d01b0290172d33bb8bcso8920830pjc.0
-        for <linux-scsi@vger.kernel.org>; Fri, 09 Jul 2021 13:27:15 -0700 (PDT)
+        id S230327AbhGIUaE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 16:30:04 -0400
+Received: from mail-pj1-f41.google.com ([209.85.216.41]:53923 "EHLO
+        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230288AbhGIUaD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Jul 2021 16:30:03 -0400
+Received: by mail-pj1-f41.google.com with SMTP id p9so6369274pjl.3
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Jul 2021 13:27:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ZxG8FSjJ+H6UcHhqSpfKZ7Z8e5I0Em+SOZHonYacPSA=;
-        b=iDpU/rl+Hv61iR5KHFP+iOOr0PHZG6GaBo4nM8kr2jIR5vEZbPqxNTwnOjShcizN+T
-         g2PP0a1P9vh0Mn54gqGLhYIyGJfecrgrNPSblE8fkTXr1I4R5WR/ArDQFDRksxk2h5sq
-         4fcJJayRsSR2yS/TQIX1UhD4MaMJv8n4RHa93hTjl/YtqWHtssbPvi5Y4bUJLytwrj9P
-         yFp0Do8k1V4D6cqlZqbd+L7nbrG87ddLXhAvyPOT4rStfBWaX7y66mF9wHJMa1LTDUXl
-         RmmMgZ0o4cJN+gE22eS7s6EtKMjiqvNYQ90DJIOZOtIJ2Pfafk5TWqMNJH3X/0bCpj9z
-         G9mQ==
-X-Gm-Message-State: AOAM533AgfTTT1dDVWoPMlAY4dep4OpJjJ9BMKGrGwHFkK0QYjRehFX4
-        kpxIG0H+ne+82JLpvwMqas4YXzThYaI=
-X-Google-Smtp-Source: ABdhPJyEMon6ClKtaWNSxExqmifPvG3Y8t+wBSYMVjSXeEiwsJTNZOEJuu1PwNETbtZpYCp7/Ad+aw==
-X-Received: by 2002:a17:902:a60f:b029:129:b2dc:e921 with SMTP id u15-20020a170902a60fb0290129b2dce921mr17186674plq.11.1625862435458;
-        Fri, 09 Jul 2021 13:27:15 -0700 (PDT)
+        bh=zADYFtnLinSyEjm2Uc6wfMGy4VKxXm40TPQ+naIvA68=;
+        b=kQ2Kfs5/WY9clnF8K2XrjF4TYG/mKLCiAJT+RNP2M92D4l5xqe1ceW/M35M1dh5y1q
+         k1dMIeHnO2ZoyG7Wwy6sgP08iIE+UuK8iL6MWkGW6VKWA3w2bY6EmwZxoqV/A+TgH+BG
+         UzWW5QItoYYbmx69Tx0cKg/Pr41YDnKwaebl1fX33QpL6ZyLb8MPjuwuorifuv8kXydI
+         54+9qbWL+E5O2Qgetr2cX4n4O83SIlSgMmbbD747EgWriPZ1RuZwRdyAPuxbJDoyQ7Pt
+         syIu6RNu5AuFCtfiGHjqJF6dUhrqGjliZWJKeP0lSO2PxIRvxAC5G9QHeqkNjBL8O1Q6
+         ONJQ==
+X-Gm-Message-State: AOAM531so2rvknvX1GcsxtOeTcU8qZ6mvPECEpBC/txFDNBcRNtJeSkR
+        al98zGbWJ/NsMcS5htpA6WI=
+X-Google-Smtp-Source: ABdhPJxPd1Mb4Dfxi9eqhHVq2ZbkFS7Du3BSkSSEoKeItP3ltO2xWwp9mnfZgHxJd0rf7/gfzM1ZxA==
+X-Received: by 2002:a17:902:bd07:b029:121:9fa2:96a0 with SMTP id p7-20020a170902bd07b02901219fa296a0mr32786105pls.75.1625862439765;
+        Fri, 09 Jul 2021 13:27:19 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:eeaf:c266:e6cc:b591])
-        by smtp.gmail.com with ESMTPSA id e16sm8812927pgl.54.2021.07.09.13.27.13
+        by smtp.gmail.com with ESMTPSA id e16sm8812927pgl.54.2021.07.09.13.27.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Jul 2021 13:27:14 -0700 (PDT)
+        Fri, 09 Jul 2021 13:27:19 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
         Akinobu Mita <akinobu.mita@gmail.com>,
         Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Can Guo <cang@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
         Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-Subject: [PATCH v2 06/19] scsi: ufs: Remove ufshcd_valid_tag()
-Date:   Fri,  9 Jul 2021 13:26:25 -0700
-Message-Id: <20210709202638.9480-8-bvanassche@acm.org>
+        Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v2 07/19] scsi: ufs: Verify UIC locking requirements at runtime
+Date:   Fri,  9 Jul 2021 13:26:26 -0700
+Message-Id: <20210709202638.9480-9-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210709202638.9480-1-bvanassche@acm.org>
 References: <20210709202638.9480-1-bvanassche@acm.org>
@@ -65,107 +67,94 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-scsi_add_host() allocates shost->can_queue tags. ufshcd_init() sets
-shost->can_queue to hba->nutrs. In other words, we know that tag values
-will less than hba->nutrs. Hence remove the checks that verify that
-blk_get_request() returns a tag less than hba->nutrs. This check
-was introduced by commit 14497328b6a6 ("scsi: ufs: verify command tag
-validity").
+Instead of documenting the locking requirements of the UIC code as comments,
+use lockdep_assert_held() such that lockdep verifies the lockdep
+requirements at runtime if lockdep is enabled.
 
-Keep the tag >= 0 check because it helps to detect use-after-free issues.
-
-CC: Avri Altman <avri.altman@wdc.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 42 ++++++++++-----------------------------
- 1 file changed, 10 insertions(+), 32 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 16 +++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  2 +-
+ 2 files changed, 10 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 2148e123e9db..fa52117fdb3e 100644
+index fa52117fdb3e..bf47ef41326e 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -253,11 +253,6 @@ static inline void ufshcd_wb_toggle_flush(struct ufs_hba *hba, bool enable);
- static void ufshcd_hba_vreg_set_lpm(struct ufs_hba *hba);
- static void ufshcd_hba_vreg_set_hpm(struct ufs_hba *hba);
+@@ -2242,15 +2242,15 @@ static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
+ }
  
--static inline bool ufshcd_valid_tag(struct ufs_hba *hba, int tag)
--{
--	return tag >= 0 && tag < hba->nutrs;
--}
--
- static inline void ufshcd_enable_irq(struct ufs_hba *hba)
- {
- 	if (!hba->is_irq_enabled) {
-@@ -2701,20 +2696,12 @@ static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb, int i)
+ /**
+- * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
++ * ufshcd_dispatch_uic_cmd - Dispatch an UIC command to the Unipro layer
+  * @hba: per adapter instance
+  * @uic_cmd: UIC command
+- *
+- * Mutex must be held.
   */
- static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ static inline void
+ ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
  {
-+	struct ufs_hba *hba = shost_priv(host);
-+	int tag = cmd->request->tag;
- 	struct ufshcd_lrb *lrbp;
--	struct ufs_hba *hba;
--	int tag;
- 	int err = 0;
++	lockdep_assert_held(&hba->uic_cmd_mutex);
++
+ 	WARN_ON(hba->active_uic_cmd);
  
--	hba = shost_priv(host);
--
--	tag = cmd->request->tag;
--	if (!ufshcd_valid_tag(hba, tag)) {
--		dev_err(hba->dev,
--			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
--			__func__, tag, cmd, cmd->request);
--		BUG();
--	}
-+	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+ 	hba->active_uic_cmd = uic_cmd;
+@@ -2268,11 +2268,10 @@ ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ }
  
- 	if (!down_read_trylock(&hba->clk_scaling_lock))
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -2968,7 +2955,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 		goto out_unlock;
- 	}
- 	tag = req->tag;
--	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
-+	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
- 
- 	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
- 		err = -EBUSY;
-@@ -6673,7 +6660,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
- 		goto out_unlock;
- 	}
- 	tag = req->tag;
--	WARN_ON_ONCE(!ufshcd_valid_tag(hba, tag));
-+	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
- 
- 	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
- 		err = -EBUSY;
-@@ -6975,24 +6962,15 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
+ /**
+- * ufshcd_wait_for_uic_cmd - Wait complectioin of UIC command
++ * ufshcd_wait_for_uic_cmd - Wait for completion of an UIC command
+  * @hba: per adapter instance
+  * @uic_cmd: UIC command
+  *
+- * Must be called with mutex held.
+  * Returns 0 only if success.
   */
- static int ufshcd_abort(struct scsi_cmnd *cmd)
- {
--	struct Scsi_Host *host;
--	struct ufs_hba *hba;
-+	struct Scsi_Host *host = cmd->device->host;
-+	struct ufs_hba *hba = shost_priv(host);
-+	unsigned int tag = cmd->request->tag;
-+	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+ static int
+@@ -2281,6 +2280,8 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+ 	int ret;
  	unsigned long flags;
--	unsigned int tag;
- 	int err = 0;
--	struct ufshcd_lrb *lrbp;
- 	u32 reg;
  
--	host = cmd->device->host;
--	hba = shost_priv(host);
--	tag = cmd->request->tag;
--	lrbp = &hba->lrb[tag];
--	if (!ufshcd_valid_tag(hba, tag)) {
--		dev_err(hba->dev,
--			"%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
--			__func__, tag, cmd, cmd->request);
--		BUG();
--	}
-+	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
- 
- 	ufshcd_hold(hba, false);
- 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	lockdep_assert_held(&hba->uic_cmd_mutex);
++
+ 	if (wait_for_completion_timeout(&uic_cmd->done,
+ 					msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
+ 		ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
+@@ -2310,14 +2311,15 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+  * @uic_cmd: UIC command
+  * @completion: initialize the completion only if this is set to true
+  *
+- * Identical to ufshcd_send_uic_cmd() expect mutex. Must be called
+- * with mutex held and host_lock locked.
+  * Returns 0 only if success.
+  */
+ static int
+ __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
+ 		      bool completion)
+ {
++	lockdep_assert_held(&hba->uic_cmd_mutex);
++	lockdep_assert_held(hba->host->host_lock);
++
+ 	if (!ufshcd_ready_for_uic_cmd(hba)) {
+ 		dev_err(hba->dev,
+ 			"Controller not ready to accept UIC commands\n");
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 79f6c261dfff..0dfb5e97ec0d 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -683,7 +683,7 @@ struct ufs_hba_monitor {
+  * @priv: pointer to variant specific private data
+  * @irq: Irq number of the controller
+  * @active_uic_cmd: handle of active UIC command
+- * @uic_cmd_mutex: mutex for uic command
++ * @uic_cmd_mutex: mutex for UIC command
+  * @tmf_tag_set: TMF tag set.
+  * @tmf_queue: Used to allocate TMF tags.
+  * @pwr_done: completion for power mode change
