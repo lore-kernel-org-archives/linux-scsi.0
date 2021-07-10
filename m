@@ -7,39 +7,38 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 13AEEC07E99
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79EB0C07E9E
 	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 016976141A
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6269661419
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233941AbhGJCaI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:30:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43180 "EHLO mail.kernel.org"
+        id S233981AbhGJCaM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:30:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43326 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233996AbhGJC2K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:28:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AB46B61400;
-        Sat, 10 Jul 2021 02:25:02 +0000 (UTC)
+        id S233829AbhGJC2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:28:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 275CD6141E;
+        Sat, 10 Jul 2021 02:25:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883903;
-        bh=Kr0xudVvbrwiz2B7bAj/y6fZJUNZ7Ay/QCc3GFot3sk=;
+        s=k20201202; t=1625883910;
+        bh=JPtE6/POe2kzDiNAsnf2rJwrMZwZuBqlLA51f9qPsE8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Emrz5OwFRY1SjZ7F6Z+QdegdlWkRiZiGjCqo4D6mfeqaHm73YsuIcR0m/iRVzW0nY
-         C+04xWlt62fzTvuRAtcbkZj6CYBER68i8ebdUSsAYI+lICKf6bvwfQIR06w9+VQzDp
-         4a6G8zlGrZ9/wIEE/OZdF2E6k9fzJAjgvaa1A9eF5VQYfJPz3NMjo6xtITHa86SJhA
-         5eJaNF3rfTrVNEwTR5MpKY+60ed4dz2eZRNO8OsuXUV6eVEh2kV9UsZrwpHOS+35Ue
-         Ro4rqdImEHFDprXacFXfjwC89YcIxYX0XcHzb7PX0DxWv81pGPg6V/0YIrL+p5qhFz
-         iMNGAHnzTGvTQ==
+        b=rmeREEa1SADrSV3P5GBGeq+y/0yimPz0dpdu6PGid/RSDmAXuKnuGeVaLPSoIGDqd
+         rEY7SuUKCXv4f03MY/MVwVorhahf2SYTc89Pv3N5yy0QT1lQKBEEWPOum9x9Yl2KAF
+         c3pT2GFzQAJQUs7+P4rT9q7Gn8DCIIL19O/HxYWbI91EsJcKNM+96E7byg6zCmPGCL
+         MV258sc0YMKeoeITpEhD7TL3UtROzIP/w/VppaBVcyERlfMhmnifhJ1B4+HTdJBRjf
+         799o+M3ZdFO8Lw7M6DIF0lve7CPMZFUFBcLQFpci4cW536lG75Oivd5+Ymm8Xtl4YF
+         b/gqfdCLeiSMQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 26/93] scsi: lpfc: Fix crash when lpfc_sli4_hba_setup() fails to initialize the SGLs
-Date:   Fri,  9 Jul 2021 22:23:20 -0400
-Message-Id: <20210710022428.3169839-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 32/93] scsi: scsi_dh_alua: Check for negative result value
+Date:   Fri,  9 Jul 2021 22:23:26 -0400
+Message-Id: <20210710022428.3169839-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022428.3169839-1-sashal@kernel.org>
 References: <20210710022428.3169839-1-sashal@kernel.org>
@@ -51,52 +50,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
 
-[ Upstream commit 5aa615d195f1e142c662cb2253f057c9baec7531 ]
+[ Upstream commit 7e26e3ea028740f934477ec01ba586ab033c35aa ]
 
-The driver is encountering a crash in lpfc_free_iocb_list() while
-performing initial attachment.
+scsi_execute() will now return a negative error if there was an error prior
+to command submission; evaluate that instead if checking for DRIVER_ERROR.
 
-Code review found this to be an errant failure path that was taken, jumping
-to a tag that then referenced structures that were uninitialized.
+[mkp: build fix]
 
-Fix the failure path.
-
-Link: https://lore.kernel.org/r/20210514195559.119853-9-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20210427083046.31620-6-hare@suse.de
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index bf171ef61abd..990b700de689 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -7825,7 +7825,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 				"0393 Error %d during rpi post operation\n",
- 				rc);
- 		rc = -ENODEV;
--		goto out_destroy_queue;
-+		goto out_free_iocblist;
- 	}
- 	lpfc_sli4_node_prep(phba);
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index df5a3bbeba5e..4743317a269a 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -548,12 +548,12 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 			kfree(buff);
+ 			return SCSI_DH_OK;
+ 		}
+-		if (!scsi_sense_valid(&sense_hdr)) {
++		if (retval < 0 || !scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: rtpg failed, result %d\n",
+ 				    ALUA_DH_NAME, retval);
+ 			kfree(buff);
+-			if (driver_byte(retval) == DRIVER_ERROR)
++			if (retval < 0)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 			return SCSI_DH_IO;
+ 		}
+@@ -775,11 +775,11 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 	retval = submit_stpg(sdev, pg->group_id, &sense_hdr);
  
-@@ -7991,8 +7991,9 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- out_unset_queue:
- 	/* Unset all the queues set up in this routine when error out */
- 	lpfc_sli4_queue_unset(phba);
--out_destroy_queue:
-+out_free_iocblist:
- 	lpfc_free_iocb_list(phba);
-+out_destroy_queue:
- 	lpfc_sli4_queue_destroy(phba);
- out_stop_timers:
- 	lpfc_stop_hba_timers(phba);
+ 	if (retval) {
+-		if (!scsi_sense_valid(&sense_hdr)) {
++		if (retval < 0 || !scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: stpg failed, result %d",
+ 				    ALUA_DH_NAME, retval);
+-			if (driver_byte(retval) == DRIVER_ERROR)
++			if (retval < 0)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 		} else {
+ 			sdev_printk(KERN_INFO, sdev, "%s: stpg failed\n",
 -- 
 2.30.2
 
