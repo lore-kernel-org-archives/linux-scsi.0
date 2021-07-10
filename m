@@ -5,41 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A010C11F6B
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC598C11F70
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6D70861402
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9390261443
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234092AbhGJCaQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:30:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42926 "EHLO mail.kernel.org"
+        id S233598AbhGJCaw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:30:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43262 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234065AbhGJC3E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:29:04 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D64F56142C;
-        Sat, 10 Jul 2021 02:25:23 +0000 (UTC)
+        id S233655AbhGJC2P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:28:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6ADF26141A;
+        Sat, 10 Jul 2021 02:25:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883924;
-        bh=bx2NjaHIi7EIzUuk5t5pEMwJV/11m704jcJmZ6JoNMI=;
+        s=k20201202; t=1625883908;
+        bh=xcdolrNeNMaw5/ECuZ9AThaPRl2bBtKdmrWZmvYR+2U=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ttk6fO5hvI7xc+wP3IB71hayRvQcEjnAJ6nRLgqJi9+X4VGLXcMTWQZlDaBfO90Ru
-         rhPn/jqh6qnUecZ4BhFD/nfFgIGOci8cOejJp4NnMkHlUrFD1XAyFPlXW/eF67mXJZ
-         83iLp87NwlzcrPUX7ldY/wDf9oUORi0Xo113gncSZCVyJ1mBMPBhHpLyuQCyKbD2k+
-         tTNvKHk22lqzwwNYPSrLOEsfQXJsaoLs3toBWhGiooVo+eHMmZFL0Csf9L2xUl42aS
-         HXKh8M3cmN70TKcbfuRusNUs80Wywbtm/505e1O7w2wzS25z/QEscw0J+MZHII0aZ7
-         /wZnPalO6/xYA==
+        b=vQCDnv/o/Jh2VoOLVlyuSHJ+WqRgtcyQsY2QYHoikgD7QUeGd9FXDPaUOl1rl1BEw
+         XUUQld9kFRKO/jUOrsxwep+q/ysptQi8pCClkU4aSyxdRSM4JQBTh8X0wm3aJ3oR5N
+         GZUGtuaMXjEVvSzNZzzP4PPzRi+MNUFhdnUY8xABZLMWI+5ihEuMLiH57oXuRQiHO5
+         oQOosBwqa/oCIIMQVpj2KL4g5L5MPrsPAT2wTqIbFv2Vxc8V4X6VtSzrObnmBZFl0X
+         o7Ae8NPsM2Zc3KK9Ag7XzOUf262WaUrUPe/Nt7V3xRxLc8IgvYxOp3L4KI6Ms20oCZ
+         cfPUMQJf02bxA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
+Cc:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 42/93] scsi: qedi: Fix TMF session block/unblock use
-Date:   Fri,  9 Jul 2021 22:23:36 -0400
-Message-Id: <20210710022428.3169839-42-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 30/93] scsi: mpt3sas: Fix deadlock while cancelling the running firmware event
+Date:   Fri,  9 Jul 2021 22:23:24 -0400
+Message-Id: <20210710022428.3169839-30-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022428.3169839-1-sashal@kernel.org>
 References: <20210710022428.3169839-1-sashal@kernel.org>
@@ -51,46 +51,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit 2819b4ae2873d50fd55292877b0231ec936c3b2e ]
+[ Upstream commit e2fac6c44ae06e58ac02181b048af31195883c31 ]
 
-Drivers shouldn't be calling block/unblock session for tmf handling because
-the functions can change the session state from under libiscsi.
-iscsi_queuecommand's call to iscsi_prep_scsi_cmd_pdu->
-iscsi_check_tmf_restrictions will prevent new cmds from being sent to qedi
-after we've started handling a TMF. So we don't need to try and block it in
-the driver, and we can remove these block calls.
+Do not cancel current running firmware event work if the event type is
+different from MPT3SAS_REMOVE_UNRESPONDING_DEVICES.  Otherwise a deadlock
+can be observed while cancelling the current firmware event work if a hard
+reset operation is called as part of processing the current event.
 
-Link: https://lore.kernel.org/r/20210525181821.7617-25-michael.christie@oracle.com
-Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/20210518051625.1596742-2-suganath-prabu.subramani@broadcom.com
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_fw.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index c12bb2dd5ff9..4c87640e6a91 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -159,14 +159,9 @@ static void qedi_tmf_resp_work(struct work_struct *work)
- 	set_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
- 	resp_hdr_ptr =  (struct iscsi_tm_rsp *)qedi_cmd->tmf_resp_buf;
- 
--	iscsi_block_session(session->cls_session);
- 	rval = qedi_cleanup_all_io(qedi, qedi_conn, qedi_cmd->task, true);
--	if (rval) {
--		iscsi_unblock_session(session->cls_session);
-+	if (rval)
- 		goto exit_tmf_resp;
--	}
--
--	iscsi_unblock_session(session->cls_session);
- 
- 	spin_lock(&session->back_lock);
- 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 5f845d7094fc..738b71653e9c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3526,6 +3526,28 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 	ioc->fw_events_cleanup = 1;
+ 	while ((fw_event = dequeue_next_fw_event(ioc)) ||
+ 	     (fw_event = ioc->current_event)) {
++
++		/*
++		 * Don't call cancel_work_sync() for current_event
++		 * other than MPT3SAS_REMOVE_UNRESPONDING_DEVICES;
++		 * otherwise we may observe deadlock if current
++		 * hard reset issued as part of processing the current_event.
++		 *
++		 * Orginal logic of cleaning the current_event is added
++		 * for handling the back to back host reset issued by the user.
++		 * i.e. during back to back host reset, driver use to process
++		 * the two instances of MPT3SAS_REMOVE_UNRESPONDING_DEVICES
++		 * event back to back and this made the drives to unregister
++		 * the devices from SML.
++		 */
++
++		if (fw_event == ioc->current_event &&
++		    ioc->current_event->event !=
++		    MPT3SAS_REMOVE_UNRESPONDING_DEVICES) {
++			ioc->current_event = NULL;
++			continue;
++		}
++
+ 		/*
+ 		 * Wait on the fw_event to complete. If this returns 1, then
+ 		 * the event was never executed, and we need a put for the
 -- 
 2.30.2
 
