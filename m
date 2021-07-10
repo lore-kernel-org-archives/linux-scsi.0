@@ -5,42 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A37DC11F75
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7027BC11F77
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5412A6143B
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45C0E61447
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234033AbhGJCaz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:30:55 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42072 "EHLO mail.kernel.org"
+        id S234102AbhGJCa4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:30:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42146 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233919AbhGJC2s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:28:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 18BBA613E6;
-        Sat, 10 Jul 2021 02:25:17 +0000 (UTC)
+        id S232299AbhGJC3B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:29:01 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 13D4561421;
+        Sat, 10 Jul 2021 02:25:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883918;
-        bh=vvNFKjo3S7GYrtBrbT3IM7WLg8q6w99zy/ti0f4UP0k=;
+        s=k20201202; t=1625883920;
+        bh=bzc/ABxpMwoYv0TSB1lhRvRFIJmSPp8+RUpG31QUD6w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=F5M1LHgGEuh1bAlWyG4C5rhonM76Lp4pmnCKam/LTg5jZTJ3XSLxQDOZO6S8vcd6w
-         ZSGZwiXGt3b8nnAthyuggnM6syAVqbQws8+Nr8FQ3LQtgqnVfIDRxVsb3L3Tq452Mt
-         4lIeSz6WezVS1yqSuFj77j8ZkJOiYWQc/CrEgepflc3J/ImYkXY5AtfdBtVG423y4f
-         dzXfucmEZvPy6eGXV0BQ9ejdrKcrrm/T0v0TW9VRSuqHLjSKkoDR0gXUDlNdNTjdpn
-         Y3z2cOz4aPoePK/0WBceuBkiRIrRMfypTa2j0nqE+l1JM/15R+zfloLhXENwC/Cnl6
-         iBBSHDcPLUS8A==
+        b=TEwCQkObbGJ8xGEMgbwk1PIf80AaIbnFJCvIwEgVx5sM3E7Ar1EtYD3z6KU0UanlM
+         kRxO6qs9r91NrLPeiWzPe0ILkGXR+N2SrJV3QLw9VG3o3D5DUkCCoEijYLSuOnkCM1
+         fpjmbWvfJXKPdFfljst16rku4purlmtRnbQ1nzZM4KWruj8fQqS+xU97rUbrqS0vpC
+         HxSGtWY7QF8iKRIpcFhl8j3njX0o9Xhgv3ZjZjaZYSklZ3FqaRaRNc6htzHsIS3zs3
+         zcd/fEt0MlhndgJxT84peSiHS9yAbPxPhgDka89h+X3NLYQczrmQj0vQs8NPc2jsMP
+         9XkF+kwY7OZGw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
         Lee Duncan <lduncan@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 37/93] scsi: iscsi: Add iscsi_cls_conn refcount helpers
-Date:   Fri,  9 Jul 2021 22:23:31 -0400
-Message-Id: <20210710022428.3169839-37-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 39/93] scsi: iscsi: Fix shost->max_id use
+Date:   Fri,  9 Jul 2021 22:23:33 -0400
+Message-Id: <20210710022428.3169839-39-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022428.3169839-1-sashal@kernel.org>
 References: <20210710022428.3169839-1-sashal@kernel.org>
@@ -54,93 +53,96 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit b1d19e8c92cfb0ded180ef3376c20e130414e067 ]
+[ Upstream commit bdd4aad7ff92ae39c2e93c415bb6761cb8b584da ]
 
-There are a couple places where we could free the iscsi_cls_conn while it's
-still in use. This adds some helpers to get/put a refcount on the struct
-and converts an exiting user. Subsequent commits will then use the helpers
-to fix 2 bugs in the eh code.
+The iscsi offload drivers are setting the shost->max_id to the max number
+of sessions they support. The problem is that max_id is not the max number
+of targets but the highest identifier the targets can have. To use it to
+limit the number of targets we need to set it to max sessions - 1, or we
+can end up with a session we might not have preallocated resources for.
 
-Link: https://lore.kernel.org/r/20210525181821.7617-11-michael.christie@oracle.com
+Link: https://lore.kernel.org/r/20210525181821.7617-15-michael.christie@oracle.com
 Reviewed-by: Lee Duncan <lduncan@suse.com>
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libiscsi.c             |  7 ++-----
- drivers/scsi/scsi_transport_iscsi.c | 12 ++++++++++++
- include/scsi/scsi_transport_iscsi.h |  2 ++
- 3 files changed, 16 insertions(+), 5 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c  | 4 ++--
+ drivers/scsi/bnx2i/bnx2i_iscsi.c | 2 +-
+ drivers/scsi/cxgbi/libcxgbi.c    | 4 ++--
+ drivers/scsi/qedi/qedi_main.c    | 2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 41b8192d207d..67ac0a46889c 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1348,7 +1348,6 @@ void iscsi_session_failure(struct iscsi_session *session,
- 			   enum iscsi_err err)
- {
- 	struct iscsi_conn *conn;
--	struct device *dev;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 5c3513a4b450..1643e2225692 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -416,7 +416,7 @@ static struct beiscsi_hba *beiscsi_hba_alloc(struct pci_dev *pcidev)
+ 			"beiscsi_hba_alloc - iscsi_host_alloc failed\n");
+ 		return NULL;
+ 	}
+-	shost->max_id = BE2_MAX_SESSIONS;
++	shost->max_id = BE2_MAX_SESSIONS - 1;
+ 	shost->max_channel = 0;
+ 	shost->max_cmd_len = BEISCSI_MAX_CMD_LEN;
+ 	shost->max_lun = BEISCSI_NUM_MAX_LUN;
+@@ -5318,7 +5318,7 @@ static int beiscsi_enable_port(struct beiscsi_hba *phba)
+ 	/* Re-enable UER. If different TPE occurs then it is recoverable. */
+ 	beiscsi_set_uer_feature(phba);
  
- 	spin_lock_bh(&session->frwd_lock);
- 	conn = session->leadconn;
-@@ -1357,10 +1356,8 @@ void iscsi_session_failure(struct iscsi_session *session,
- 		return;
+-	phba->shost->max_id = phba->params.cxns_per_ctrl;
++	phba->shost->max_id = phba->params.cxns_per_ctrl - 1;
+ 	phba->shost->can_queue = phba->params.ios_per_ctrl;
+ 	ret = beiscsi_init_port(phba);
+ 	if (ret < 0) {
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index fdd446765311..21efc73b87be 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -791,7 +791,7 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+ 		return NULL;
+ 	shost->dma_boundary = cnic->pcidev->dma_mask;
+ 	shost->transportt = bnx2i_scsi_xport_template;
+-	shost->max_id = ISCSI_MAX_CONNS_PER_HBA;
++	shost->max_id = ISCSI_MAX_CONNS_PER_HBA - 1;
+ 	shost->max_channel = 0;
+ 	shost->max_lun = 512;
+ 	shost->max_cmd_len = 16;
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index f078b3c4e083..ecb134b4699f 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -337,7 +337,7 @@ void cxgbi_hbas_remove(struct cxgbi_device *cdev)
+ EXPORT_SYMBOL_GPL(cxgbi_hbas_remove);
+ 
+ int cxgbi_hbas_add(struct cxgbi_device *cdev, u64 max_lun,
+-		unsigned int max_id, struct scsi_host_template *sht,
++		unsigned int max_conns, struct scsi_host_template *sht,
+ 		struct scsi_transport_template *stt)
+ {
+ 	struct cxgbi_hba *chba;
+@@ -357,7 +357,7 @@ int cxgbi_hbas_add(struct cxgbi_device *cdev, u64 max_lun,
+ 
+ 		shost->transportt = stt;
+ 		shost->max_lun = max_lun;
+-		shost->max_id = max_id;
++		shost->max_id = max_conns - 1;
+ 		shost->max_channel = 0;
+ 		shost->max_cmd_len = SCSI_MAX_VARLEN_CDB_SIZE;
+ 
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 69c5b5ee2169..b33eff9ea80b 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -642,7 +642,7 @@ static struct qedi_ctx *qedi_host_alloc(struct pci_dev *pdev)
+ 		goto exit_setup_shost;
  	}
  
--	dev = get_device(&conn->cls_conn->dev);
-+	iscsi_get_conn(conn->cls_conn);
- 	spin_unlock_bh(&session->frwd_lock);
--	if (!dev)
--	        return;
- 	/*
- 	 * if the host is being removed bypass the connection
- 	 * recovery initialization because we are going to kill
-@@ -1370,7 +1367,7 @@ void iscsi_session_failure(struct iscsi_session *session,
- 		iscsi_conn_error_event(conn->cls_conn, err);
- 	else
- 		iscsi_conn_failure(conn, err);
--	put_device(dev);
-+	iscsi_put_conn(conn->cls_conn);
- }
- EXPORT_SYMBOL_GPL(iscsi_session_failure);
- 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index c53c3f9fa526..a7db7c06f21c 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2351,6 +2351,18 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
- }
- EXPORT_SYMBOL_GPL(iscsi_destroy_conn);
- 
-+void iscsi_put_conn(struct iscsi_cls_conn *conn)
-+{
-+	put_device(&conn->dev);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_put_conn);
-+
-+void iscsi_get_conn(struct iscsi_cls_conn *conn)
-+{
-+	get_device(&conn->dev);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_get_conn);
-+
- /*
-  * iscsi interface functions
-  */
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 8a26a2ffa952..600f12105791 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -433,6 +433,8 @@ extern void iscsi_remove_session(struct iscsi_cls_session *session);
- extern void iscsi_free_session(struct iscsi_cls_session *session);
- extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
- 						int dd_size, uint32_t cid);
-+extern void iscsi_put_conn(struct iscsi_cls_conn *conn);
-+extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
- extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
- extern void iscsi_unblock_session(struct iscsi_cls_session *session);
- extern void iscsi_block_session(struct iscsi_cls_session *session);
+-	shost->max_id = QEDI_MAX_ISCSI_CONNS_PER_HBA;
++	shost->max_id = QEDI_MAX_ISCSI_CONNS_PER_HBA - 1;
+ 	shost->max_channel = 0;
+ 	shost->max_lun = ~0;
+ 	shost->max_cmd_len = 16;
 -- 
 2.30.2
 
