@@ -7,38 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79EB0C07E9E
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F37C07E99
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6269661419
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 180726141A
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233981AbhGJCaM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:30:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43326 "EHLO mail.kernel.org"
+        id S234055AbhGJCaN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:30:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42616 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233829AbhGJC2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:28:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 275CD6141E;
-        Sat, 10 Jul 2021 02:25:10 +0000 (UTC)
+        id S233847AbhGJC2h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:28:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 76C2C613E4;
+        Sat, 10 Jul 2021 02:25:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883910;
-        bh=JPtE6/POe2kzDiNAsnf2rJwrMZwZuBqlLA51f9qPsE8=;
+        s=k20201202; t=1625883913;
+        bh=peK/yRLGmU4j94WUdNqjbMXbEbJqgP3hCL91x9cS0hU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rmeREEa1SADrSV3P5GBGeq+y/0yimPz0dpdu6PGid/RSDmAXuKnuGeVaLPSoIGDqd
-         rEY7SuUKCXv4f03MY/MVwVorhahf2SYTc89Pv3N5yy0QT1lQKBEEWPOum9x9Yl2KAF
-         c3pT2GFzQAJQUs7+P4rT9q7Gn8DCIIL19O/HxYWbI91EsJcKNM+96E7byg6zCmPGCL
-         MV258sc0YMKeoeITpEhD7TL3UtROzIP/w/VppaBVcyERlfMhmnifhJ1B4+HTdJBRjf
-         799o+M3ZdFO8Lw7M6DIF0lve7CPMZFUFBcLQFpci4cW536lG75Oivd5+Ymm8Xtl4YF
-         b/gqfdCLeiSMQ==
+        b=m2jPKj8S10Ig36lzUp77zY48HwvXvQ9nygEdWgWN2qCHfJ/qE7VFWX3OQaz9NEjwb
+         jElKQeTYjSwRGEzkeT0Ka6lGMqGYYwK9Mg+1vaZYXecDK7ot/d83RI+OGKyIIdDM9i
+         8vkyh4CpvQVRBnFCKEwwjrhgtK+i1y7Q6XI6mDNNGbzzdRvMFOEKILaywSwtQwS7Fw
+         vsDuTG635rE3I54dW9nQTZt5sujkH4OYWvr+gsLhfwGATXlSdw06RJQAV7c+YLqs89
+         xyOQxVQJem4SATtmqwwdO8j6QPoSlmuyaHd2348Cz/EhUEqedNPm2qcRRsImqwbmJ5
+         UELaAGvXam7hw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.de>,
+Cc:     Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 32/93] scsi: scsi_dh_alua: Check for negative result value
-Date:   Fri,  9 Jul 2021 22:23:26 -0400
-Message-Id: <20210710022428.3169839-32-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 34/93] scsi: megaraid_sas: Fix resource leak in case of probe failure
+Date:   Fri,  9 Jul 2021 22:23:28 -0400
+Message-Id: <20210710022428.3169839-34-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022428.3169839-1-sashal@kernel.org>
 References: <20210710022428.3169839-1-sashal@kernel.org>
@@ -50,56 +52,76 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-[ Upstream commit 7e26e3ea028740f934477ec01ba586ab033c35aa ]
+[ Upstream commit b5438f48fdd8e1c3f130d32637511efd32038152 ]
 
-scsi_execute() will now return a negative error if there was an error prior
-to command submission; evaluate that instead if checking for DRIVER_ERROR.
+The driver doesn't clean up all the allocated resources properly when
+scsi_add_host(), megasas_start_aen() function fails during the PCI device
+probe.
 
-[mkp: build fix]
+Clean up all those resources.
 
-Link: https://lore.kernel.org/r/20210427083046.31620-6-hare@suse.de
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Link: https://lore.kernel.org/r/20210528131307.25683-3-chandrakanth.patil@broadcom.com
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 13 +++++++++++++
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 +
+ 2 files changed, 14 insertions(+)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index df5a3bbeba5e..4743317a269a 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -548,12 +548,12 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 			kfree(buff);
- 			return SCSI_DH_OK;
- 		}
--		if (!scsi_sense_valid(&sense_hdr)) {
-+		if (retval < 0 || !scsi_sense_valid(&sense_hdr)) {
- 			sdev_printk(KERN_INFO, sdev,
- 				    "%s: rtpg failed, result %d\n",
- 				    ALUA_DH_NAME, retval);
- 			kfree(buff);
--			if (driver_byte(retval) == DRIVER_ERROR)
-+			if (retval < 0)
- 				return SCSI_DH_DEV_TEMP_BUSY;
- 			return SCSI_DH_IO;
- 		}
-@@ -775,11 +775,11 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 	retval = submit_stpg(sdev, pg->group_id, &sense_hdr);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index cc45cdac1384..e58b0e558981 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -7439,11 +7439,16 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	return 0;
  
- 	if (retval) {
--		if (!scsi_sense_valid(&sense_hdr)) {
-+		if (retval < 0 || !scsi_sense_valid(&sense_hdr)) {
- 			sdev_printk(KERN_INFO, sdev,
- 				    "%s: stpg failed, result %d",
- 				    ALUA_DH_NAME, retval);
--			if (driver_byte(retval) == DRIVER_ERROR)
-+			if (retval < 0)
- 				return SCSI_DH_DEV_TEMP_BUSY;
- 		} else {
- 			sdev_printk(KERN_INFO, sdev, "%s: stpg failed\n",
+ fail_start_aen:
++	instance->unload = 1;
++	scsi_remove_host(instance->host);
+ fail_io_attach:
+ 	megasas_mgmt_info.count--;
+ 	megasas_mgmt_info.max_index--;
+ 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
+ 
++	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
++		del_timer_sync(&instance->sriov_heartbeat_timer);
++
+ 	instance->instancet->disable_intr(instance);
+ 	megasas_destroy_irqs(instance);
+ 
+@@ -7451,8 +7456,16 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 		megasas_release_fusion(instance);
+ 	else
+ 		megasas_release_mfi(instance);
++
+ 	if (instance->msix_vectors)
+ 		pci_free_irq_vectors(instance->pdev);
++	instance->msix_vectors = 0;
++
++	if (instance->fw_crash_state != UNAVAILABLE)
++		megasas_free_host_crash_buffer(instance);
++
++	if (instance->adapter_type != MFI_SERIES)
++		megasas_fusion_stop_watchdog(instance);
+ fail_init_mfi:
+ 	scsi_host_put(host);
+ fail_alloc_instance:
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index b0c01cf0428f..35925e68bf55 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -5193,6 +5193,7 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
+ 		if (!fusion->log_to_span) {
+ 			dev_err(&instance->pdev->dev, "Failed from %s %d\n",
+ 				__func__, __LINE__);
++			kfree(instance->ctrl_context);
+ 			return -ENOMEM;
+ 		}
+ 	}
 -- 
 2.30.2
 
