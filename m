@@ -7,39 +7,38 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C133C11F6A
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BFBC11F6C
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 23573613C5
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 00DA5613D3
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234788AbhGJCfw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:35:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53380 "EHLO mail.kernel.org"
+        id S234923AbhGJCfx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:35:53 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53588 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235691AbhGJCe7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:34:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3199461407;
-        Sat, 10 Jul 2021 02:32:10 +0000 (UTC)
+        id S235756AbhGJCfD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:35:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 82C8E613E6;
+        Sat, 10 Jul 2021 02:32:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884331;
-        bh=mxqQrdLG/E9N+IMHQqsVt7/SN+k6aipg4GiStHlgieg=;
+        s=k20201202; t=1625884338;
+        bh=FouFDJmTwQE7solqH69bOIMe0yKX0MOK+I9G50PhMqM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VYPx3+bHhpffrrBU9Uw7CeIcGMHy1alJ3gdugXV8JZwrFmZrbpo2oIXqGTeOwtUfR
-         5RR0Fdzjbbh8lC+6bjMT9wHEvkNGobW54Jjv+2vubO+7ci9VI5NIsKkC+Go2CCDcVh
-         LNHax8DlXvRA/MKpgNW1jHlAmYMxlPqwt1DCETdkshZKUhBLaoa6eMx8Gj52RsOXHE
-         nqZUwj/99FO4dfn2qmRgOBAZ4VOOsjvYNhN/Eecd5WATbNVmPq9DMsF2S7J0XI62om
-         W8I+9nZXb4FLjVysHBgImkn0RA7k5sWMHn4vz652wTuKOyjW5/8rVuYemkrB8S/+2q
-         9GEKodATRkQyw==
+        b=lYeYOLeKTdtAk0Cb8j9xSdl3PX4D+P/OEQHztIq1ajMlP5Q6sxojZMTGxQbVM9u6T
+         S5EA0oTO3f0vwnHGMWkYUCyiXvNuxYk6/EiyHNmW0hGB+4prAwq7yOTx7iNYN1x5BP
+         SGiv/UhGcNJMh90W8Gs3Uy9q5c3VhVzdPAyC4Qz9roZLV6OoSOQl2eKQDZCm5/7Y4a
+         ohrMb/7QS+yzBljUQ9bdzko2CCLsSDMOVxBtIBgZCr4m69XpnmqDb8Xn4UvNzYMxZe
+         LJw3nuRG5i+U4vjnUyy7ncsyRop1imBol+SOvTV8gixGaeNkfn+auD1vu2yg0l1CJw
+         WQEyYeSYpoxLw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        John Garry <john.garry@huawei.com>,
+Cc:     Hannes Reinecke <hare@suse.de>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 05/39] scsi: hisi_sas: Propagate errors in interrupt_init_v1_hw()
-Date:   Fri,  9 Jul 2021 22:31:30 -0400
-Message-Id: <20210710023204.3171428-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 11/39] scsi: scsi_dh_alua: Check for negative result value
+Date:   Fri,  9 Jul 2021 22:31:36 -0400
+Message-Id: <20210710023204.3171428-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710023204.3171428-1-sashal@kernel.org>
 References: <20210710023204.3171428-1-sashal@kernel.org>
@@ -51,83 +50,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
+From: Hannes Reinecke <hare@suse.de>
 
-[ Upstream commit ab17122e758ef68fb21033e25c041144067975f5 ]
+[ Upstream commit 7e26e3ea028740f934477ec01ba586ab033c35aa ]
 
-After commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have the
-error codes returned by platform_get_irq() ready for the propagation
-upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
-probing. Let's propagate the error codes from devm_request_irq() as well
-since I don't see the reason to override them with -ENOENT...
+scsi_execute() will now return a negative error if there was an error prior
+to command submission; evaluate that instead if checking for DRIVER_ERROR.
 
-Link: https://lore.kernel.org/r/49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru
-Acked-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+[mkp: build fix]
+
+Link: https://lore.kernel.org/r/20210427083046.31620-6-hare@suse.de
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 8aa3222fe486..5a777e48963b 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1697,7 +1697,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 				dev_err(dev,
- 					"irq init: fail map phy interrupt %d\n",
- 					idx);
--				return -ENOENT;
-+				return irq;
- 			}
- 
- 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
-@@ -1706,7 +1706,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 				dev_err(dev, "irq init: could not request "
- 					"phy interrupt %d, rc=%d\n",
- 					irq, rc);
--				return -ENOENT;
-+				return rc;
- 			}
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index efd2b4312528..41e8c9e68878 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -562,12 +562,12 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 			kfree(buff);
+ 			return SCSI_DH_OK;
  		}
- 	}
-@@ -1717,7 +1717,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (!irq) {
- 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
- 				idx);
--			return -ENOENT;
-+			return irq;
+-		if (!scsi_sense_valid(&sense_hdr)) {
++		if (retval < 0 || !scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: rtpg failed, result %d\n",
+ 				    ALUA_DH_NAME, retval);
+ 			kfree(buff);
+-			if (driver_byte(retval) == DRIVER_ERROR)
++			if (retval < 0)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 			return SCSI_DH_IO;
  		}
+@@ -789,11 +789,11 @@ static unsigned alua_stpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 	retval = submit_stpg(sdev, pg->group_id, &sense_hdr);
  
- 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
-@@ -1725,7 +1725,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (rc) {
- 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
- 				irq, rc);
--			return -ENOENT;
-+			return rc;
- 		}
- 	}
- 
-@@ -1735,7 +1735,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (!irq) {
- 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
- 				idx);
--			return -ENOENT;
-+			return irq;
- 		}
- 
- 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
-@@ -1744,7 +1744,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 			dev_err(dev,
- 				"irq init: could not request fatal interrupt %d, rc=%d\n",
- 				irq, rc);
--			return -ENOENT;
-+			return rc;
- 		}
- 	}
- 
+ 	if (retval) {
+-		if (!scsi_sense_valid(&sense_hdr)) {
++		if (retval < 0 || !scsi_sense_valid(&sense_hdr)) {
+ 			sdev_printk(KERN_INFO, sdev,
+ 				    "%s: stpg failed, result %d",
+ 				    ALUA_DH_NAME, retval);
+-			if (driver_byte(retval) == DRIVER_ERROR)
++			if (retval < 0)
+ 				return SCSI_DH_DEV_TEMP_BUSY;
+ 		} else {
+ 			sdev_printk(KERN_INFO, sdev, "%s: stpg failed\n",
 -- 
 2.30.2
 
