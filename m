@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F8EC11F69
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7820C11F66
 	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:22:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E761860BD3
+	by mail.kernel.org (Postfix) with ESMTP id DF579613F2
 	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:22:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232335AbhGJCZ1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:25:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42236 "EHLO mail.kernel.org"
+        id S232644AbhGJCZZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:25:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41906 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232837AbhGJCZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:25:14 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7798D613E1;
-        Sat, 10 Jul 2021 02:22:29 +0000 (UTC)
+        id S233044AbhGJCZS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:25:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5212560BD3;
+        Sat, 10 Jul 2021 02:22:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883750;
-        bh=GALYTMi0q4oqnQg08S1v1yOu2ngih8jxNsM0/bWku4Q=;
+        s=k20201202; t=1625883754;
+        bh=Hy9kKlJWwUkCQ/3hWKbyzb+3jJ97A1OvJQWsXTDd0n8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sOsDEvxc4Q2d7O7OjIxutMnEeh/ykq5VdJWfeFJpbR2QLgcQLRs1ZI5xRYMbOQJ02
-         XFAq6sFb/jmhWRn5MUQeout6Tji7Pse5Um1JCYwQUKhp/fwNr4gDsXyd2FjgELAesB
-         M0noW8MrJkxAksxJJMo+iU01qwsSKW6WscWRGqZV8oVpPUcfexOGlcsA9tu+Tyl9of
-         kNrPnwIRB1CiF/oRyz55jLRJoiR9iPwUD/8VMgvhgwYdOhEo3rdun70oA9LFx3ePQK
-         iCajBShBmstKsnuWsgjUs6245cqScB2oIBDMja9dwxW3636bcwuXik+BHfJ2ccEWza
-         8XxnRnzBZL7cA==
+        b=D63DM4pKecYUYs2mHfPN+UDS1FVszss8Oq2AzwJcEtafpEP8WcNprVffdc4SmJL5B
+         gI61X3Zh35Wcz9wX/0tZTcGz+pz6Ieh9iHDMP/HjYrnUqt94KYb/LTjJH2V8Hp71yf
+         wjWv0L58mnkP8LvEkrDuv5io2rhaE3vwV3t+zLDecyQKJ4Zoa5bnZC+APbhgzmdQFv
+         fOMCXwRFUEdFhwezODrU3rp/9JQDM58HZ2t1p6S/6eDfotcDMsdXfUzjBuDb54m36A
+         igHv4ToBH4teCp9druiNXsBLrpHjyalpAenxKQxW3VQX7oM7RpRbkzyV/16JT5aFhb
+         IRKd8/McYnigA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        John Garry <john.garry@huawei.com>,
+Cc:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 026/104] scsi: hisi_sas: Propagate errors in interrupt_init_v1_hw()
-Date:   Fri,  9 Jul 2021 22:20:38 -0400
-Message-Id: <20210710022156.3168825-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 029/104] scsi: core: Cap scsi_host cmd_per_lun at can_queue
+Date:   Fri,  9 Jul 2021 22:20:41 -0400
+Message-Id: <20210710022156.3168825-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022156.3168825-1-sashal@kernel.org>
 References: <20210710022156.3168825-1-sashal@kernel.org>
@@ -51,83 +51,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
+From: John Garry <john.garry@huawei.com>
 
-[ Upstream commit ab17122e758ef68fb21033e25c041144067975f5 ]
+[ Upstream commit ea2f0f77538c50739b9fb4de4700cee5535e1f77 ]
 
-After commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have the
-error codes returned by platform_get_irq() ready for the propagation
-upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
-probing. Let's propagate the error codes from devm_request_irq() as well
-since I don't see the reason to override them with -ENOENT...
+The sysfs handling function sdev_store_queue_depth() enforces that the sdev
+queue depth cannot exceed shost can_queue. The initial sdev queue depth
+comes from shost cmd_per_lun. However, the LLDD may manually set
+cmd_per_lun to be larger than can_queue, which leads to an initial sdev
+queue depth greater than can_queue.
 
-Link: https://lore.kernel.org/r/49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru
-Acked-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Such an issue was reported in [0], which caused a hang. That has since been
+fixed in commit fc09acb7de31 ("scsi: scsi_debug: Fix cmd_per_lun, set to
+max_queue").
+
+Stop this possibly happening for other drivers by capping shost cmd_per_lun
+at shost can_queue.
+
+[0] https://lore.kernel.org/linux-scsi/YHaez6iN2HHYxYOh@T590/
+
+Link: https://lore.kernel.org/r/1621434662-173079-1-git-send-email-john.garry@huawei.com
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/hosts.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 3e359ac752fd..3cba7bfba296 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1649,7 +1649,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 			if (irq < 0) {
- 				dev_err(dev, "irq init: fail map phy interrupt %d\n",
- 					idx);
--				return -ENOENT;
-+				return irq;
- 			}
- 
- 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
-@@ -1657,7 +1657,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 			if (rc) {
- 				dev_err(dev, "irq init: could not request phy interrupt %d, rc=%d\n",
- 					irq, rc);
--				return -ENOENT;
-+				return rc;
- 			}
- 		}
- 	}
-@@ -1668,7 +1668,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (irq < 0) {
- 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
- 				idx);
--			return -ENOENT;
-+			return irq;
- 		}
- 
- 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
-@@ -1676,7 +1676,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (rc) {
- 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
- 				irq, rc);
--			return -ENOENT;
-+			return rc;
- 		}
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index b93dd8ef4ac8..ce34da53af1b 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -220,6 +220,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 		goto fail;
  	}
  
-@@ -1686,7 +1686,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (irq < 0) {
- 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
- 				idx);
--			return -ENOENT;
-+			return irq;
- 		}
- 
- 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
-@@ -1694,7 +1694,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (rc) {
- 			dev_err(dev, "irq init: could not request fatal interrupt %d, rc=%d\n",
- 				irq, rc);
--			return -ENOENT;
-+			return rc;
- 		}
- 	}
- 
++	shost->cmd_per_lun = min_t(short, shost->cmd_per_lun,
++				   shost->can_queue);
++
+ 	error = scsi_init_sense_cache(shost);
+ 	if (error)
+ 		goto fail;
 -- 
 2.30.2
 
