@@ -7,42 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07B15C07E9C
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:19:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E464EC11F67
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E58A7613C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:19:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD0E0613C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:19:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232756AbhGJCWF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:22:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37792 "EHLO mail.kernel.org"
+        id S232786AbhGJCWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:22:06 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38444 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232248AbhGJCVa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:21:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 618DC613F4;
-        Sat, 10 Jul 2021 02:18:45 +0000 (UTC)
+        id S232307AbhGJCVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:21:34 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D9B36613F7;
+        Sat, 10 Jul 2021 02:18:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883526;
-        bh=DgZ4n4lwkY8rKPLEC+ZeOpoHkFCXVKuTIhJRxg1Tq7A=;
+        s=k20201202; t=1625883529;
+        bh=7qYOdwUMptCr5BbkWuan4Mf4wHExUrwkhqKgzUYttF4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iyLL8FHUuk0mE/eube0Eqe1tJSZ/3+pBUxBwTQcHuWKPr6znBMOLXVo4Z1PH3wSqS
-         4HIVUSBwLXhDdMFWCl4qQmpZFQixks9HP4/s3HPkhc2yTL+Fw0zyURuoiUuJ/l9bjl
-         NMtd4g4S/viPKM+pGnvk7fwSD9oGjFE08juERP2gonMqyfBgd0JIHXROyKb6AaCvI1
-         7Eg2rYIjteblAYdHVMcbcWL1ageN0BdYwiZ0n3I0HTf/45FlcIBjwYt9CkLdB/RgFW
-         CjZLXFB6yzJV64FusSHddERF9vSfGcY6+1eZjjkh4IgP+itURGlgPEs0jRpXalVsuj
-         v7Xq5TM82NhTQ==
+        b=khtPYnJeI6G/rz9tm0ZG1DAS13n4P8QIGckpyOCPM5K4ETfHmfFYelErPlH08OX7b
+         FL335/boxZrwsFUUVCY+JXItm/KdbRoRtWYBZ4hAXaeGuwNkPFMszJ+QhBOowJ40+3
+         DuIx+lQOSRediq5EGC0ZkLaNHWPK+UUE89CO6C0gn1U7Q0xt1rQnWZ0YTcT/JL6MPL
+         NNZr5j13vX4pIrgA6L2cVQP2QApSBTsqHYOE2bgS+MtLxE+AUe+43KfjElKhKN8Ysz
+         RnnTtsUc4YGDrwdX9x4SRoxJdfANfSADEF/kwZxGN8PVtP3DnS8aZPTValGHMMiogy
+         6di72hd1mB/9g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Tomas Henzl <thenzl@redhat.com>,
-        kernel test robot <lkp@intel.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 042/114] scsi: megaraid_sas: Handle missing interrupts while re-enabling IRQs
-Date:   Fri,  9 Jul 2021 22:16:36 -0400
-Message-Id: <20210710021748.3167666-42-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 044/114] scsi: iscsi: Add iscsi_cls_conn refcount helpers
+Date:   Fri,  9 Jul 2021 22:16:38 -0400
+Message-Id: <20210710021748.3167666-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710021748.3167666-1-sashal@kernel.org>
 References: <20210710021748.3167666-1-sashal@kernel.org>
@@ -54,74 +52,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit 9bedd36e9146b34dda4d6994e3aa1d72bc6442c1 ]
+[ Upstream commit b1d19e8c92cfb0ded180ef3376c20e130414e067 ]
 
-While reenabling the IRQ after IRQ poll there may be a small window for the
-firmware to post the replies with interrupts raised. In that case the
-driver will not see the interrupts which leads to I/O timeout.
+There are a couple places where we could free the iscsi_cls_conn while it's
+still in use. This adds some helpers to get/put a refcount on the struct
+and converts an exiting user. Subsequent commits will then use the helpers
+to fix 2 bugs in the eh code.
 
-This issue only happens when there are many I/O completions on a single
-reply queue. This forces the driver to switch between the interrupt and IRQ
-context.
-
-Make the driver process the reply queue one more time after enabling the
-IRQ.
-
-Link: https://lore.kernel.org/linux-scsi/20201102072746.27410-1-sreekanth.reddy@broadcom.com/
-Link: https://lore.kernel.org/r/20210528131307.25683-5-chandrakanth.patil@broadcom.com
-Cc: Tomas Henzl <thenzl@redhat.com>
-Reported-by: kernel test robot <lkp@intel.com>
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Link: https://lore.kernel.org/r/20210525181821.7617-11-michael.christie@oracle.com
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++++++--
- 1 file changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/libiscsi.c             |  7 ++-----
+ drivers/scsi/scsi_transport_iscsi.c | 12 ++++++++++++
+ include/scsi/scsi_transport_iscsi.h |  2 ++
+ 3 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 8bf7db921758..123fa271c27f 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3739,6 +3739,7 @@ static void megasas_sync_irqs(unsigned long instance_addr)
- 		if (irq_ctx->irq_poll_scheduled) {
- 			irq_ctx->irq_poll_scheduled = false;
- 			enable_irq(irq_ctx->os_irq);
-+			complete_cmd_fusion(instance, irq_ctx->MSIxIndex, irq_ctx);
- 		}
- 	}
- }
-@@ -3770,6 +3771,7 @@ int megasas_irqpoll(struct irq_poll *irqpoll, int budget)
- 		irq_poll_complete(irqpoll);
- 		irq_ctx->irq_poll_scheduled = false;
- 		enable_irq(irq_ctx->os_irq);
-+		complete_cmd_fusion(instance, irq_ctx->MSIxIndex, irq_ctx);
- 	}
- 
- 	return num_entries;
-@@ -3786,6 +3788,7 @@ megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 2aaf83678654..ab39d7f65bbb 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1361,7 +1361,6 @@ void iscsi_session_failure(struct iscsi_session *session,
+ 			   enum iscsi_err err)
  {
- 	struct megasas_instance *instance =
- 		(struct megasas_instance *)instance_addr;
-+	struct megasas_irq_context *irq_ctx = NULL;
- 	u32 count, MSIxIndex;
+ 	struct iscsi_conn *conn;
+-	struct device *dev;
  
- 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
-@@ -3794,8 +3797,10 @@ megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
- 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
+ 	spin_lock_bh(&session->frwd_lock);
+ 	conn = session->leadconn;
+@@ -1370,10 +1369,8 @@ void iscsi_session_failure(struct iscsi_session *session,
  		return;
+ 	}
  
--	for (MSIxIndex = 0 ; MSIxIndex < count; MSIxIndex++)
--		complete_cmd_fusion(instance, MSIxIndex, NULL);
-+	for (MSIxIndex = 0 ; MSIxIndex < count; MSIxIndex++) {
-+		irq_ctx = &instance->irq_context[MSIxIndex];
-+		complete_cmd_fusion(instance, MSIxIndex, irq_ctx);
-+	}
+-	dev = get_device(&conn->cls_conn->dev);
++	iscsi_get_conn(conn->cls_conn);
+ 	spin_unlock_bh(&session->frwd_lock);
+-	if (!dev)
+-	        return;
+ 	/*
+ 	 * if the host is being removed bypass the connection
+ 	 * recovery initialization because we are going to kill
+@@ -1383,7 +1380,7 @@ void iscsi_session_failure(struct iscsi_session *session,
+ 		iscsi_conn_error_event(conn->cls_conn, err);
+ 	else
+ 		iscsi_conn_failure(conn, err);
+-	put_device(dev);
++	iscsi_put_conn(conn->cls_conn);
  }
+ EXPORT_SYMBOL_GPL(iscsi_session_failure);
  
- /**
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 82491343e94a..869cfc329da9 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2348,6 +2348,18 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_destroy_conn);
+ 
++void iscsi_put_conn(struct iscsi_cls_conn *conn)
++{
++	put_device(&conn->dev);
++}
++EXPORT_SYMBOL_GPL(iscsi_put_conn);
++
++void iscsi_get_conn(struct iscsi_cls_conn *conn)
++{
++	get_device(&conn->dev);
++}
++EXPORT_SYMBOL_GPL(iscsi_get_conn);
++
+ /*
+  * iscsi interface functions
+  */
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 8874016b3c9a..eb6ed499324d 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -435,6 +435,8 @@ extern void iscsi_remove_session(struct iscsi_cls_session *session);
+ extern void iscsi_free_session(struct iscsi_cls_session *session);
+ extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
+ 						int dd_size, uint32_t cid);
++extern void iscsi_put_conn(struct iscsi_cls_conn *conn);
++extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
+ extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
+ extern void iscsi_unblock_session(struct iscsi_cls_session *session);
+ extern void iscsi_block_session(struct iscsi_cls_session *session);
 -- 
 2.30.2
 
