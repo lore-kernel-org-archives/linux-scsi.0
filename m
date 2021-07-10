@@ -4,42 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_NONE,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AA48C11F73
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 375F5C11F69
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04CF7613C5
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22A23613C9
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235152AbhGJCf6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:35:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53552 "EHLO mail.kernel.org"
+        id S234189AbhGJCga (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:36:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53516 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235699AbhGJCe7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:34:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E06E6613DF;
-        Sat, 10 Jul 2021 02:32:13 +0000 (UTC)
+        id S233820AbhGJCf1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:35:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C0380613EE;
+        Sat, 10 Jul 2021 02:32:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884334;
-        bh=PvYicS1MzkHzIS9KQy8XMlGrWB35iLyEPJpc6q/fTNE=;
+        s=k20201202; t=1625884343;
+        bh=oep/XyLwiWnpfAbcpvPIkwg+OxWb5tuaJb/5MWBdVoo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=S/wen5Xz8UU9bJYNHtHzRRPrL96Ov9X+IppftqWnuTcjVZ9bSE9bs3rxlS+im3+Fi
-         6p9u7gOdD+UsZbP37mgZiM8AbJ9gQ5TvQGe63aQi2+6BXkoEBNs+IszgZnR+3w9FAh
-         BGqZNz581dBK/C0hc/Ikmu7b5kwL0En7+VQes20Yhu+kLGpwkhUOxLZplptHzO1Hrp
-         za9XctHprQG2jMctN3XEnCAU+ZTbfPmsvZUmMpxiqvEL00lYgZeghg4Pd7DoGg1FVe
-         x2rdxRDMi1fzHf5DRzYkvMIVW1E87o1X3g0FFQW48036iI+oCvDGoIW6ezdblUuubD
-         4eDX8YfbysTWg==
+        b=selQSDO0ozxgQemBHuqKuH2omDZCsf1rcHDuHNvPIDttLtHyk2TSErIAAER5Q0W5P
+         QkWUyuuBETjlrrjT916pGCXnvKwHnAoTgVSJL41YnwJ8vXxgPs9csLuEq4n3zeV2P6
+         +WH6YzOh03QHjxUCMSQfYzbxXPH3pbaLlAEgXQprDItHJpB9bJllEnSjoY5I2An7ks
+         ShM2oVsrkteibWX7aM49V4RJOKg5zrhPQliYQh70poUtg7ygWCm78UFQxlfwSv4YeM
+         RQbrfUMg8ESNsfNCIJBouoLKPZDyRDnpq0bcbyyXobCH2PR+NJbS+m4eGaV5yOFwqs
+         b5af2T9leAaTg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 08/39] scsi: core: Cap scsi_host cmd_per_lun at can_queue
-Date:   Fri,  9 Jul 2021 22:31:33 -0400
-Message-Id: <20210710023204.3171428-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 15/39] scsi: iscsi: Fix shost->max_id use
+Date:   Fri,  9 Jul 2021 22:31:40 -0400
+Message-Id: <20210710023204.3171428-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710023204.3171428-1-sashal@kernel.org>
 References: <20210710023204.3171428-1-sashal@kernel.org>
@@ -51,49 +51,98 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit ea2f0f77538c50739b9fb4de4700cee5535e1f77 ]
+[ Upstream commit bdd4aad7ff92ae39c2e93c415bb6761cb8b584da ]
 
-The sysfs handling function sdev_store_queue_depth() enforces that the sdev
-queue depth cannot exceed shost can_queue. The initial sdev queue depth
-comes from shost cmd_per_lun. However, the LLDD may manually set
-cmd_per_lun to be larger than can_queue, which leads to an initial sdev
-queue depth greater than can_queue.
+The iscsi offload drivers are setting the shost->max_id to the max number
+of sessions they support. The problem is that max_id is not the max number
+of targets but the highest identifier the targets can have. To use it to
+limit the number of targets we need to set it to max sessions - 1, or we
+can end up with a session we might not have preallocated resources for.
 
-Such an issue was reported in [0], which caused a hang. That has since been
-fixed in commit fc09acb7de31 ("scsi: scsi_debug: Fix cmd_per_lun, set to
-max_queue").
-
-Stop this possibly happening for other drivers by capping shost cmd_per_lun
-at shost can_queue.
-
-[0] https://lore.kernel.org/linux-scsi/YHaez6iN2HHYxYOh@T590/
-
-Link: https://lore.kernel.org/r/1621434662-173079-1-git-send-email-john.garry@huawei.com
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Link: https://lore.kernel.org/r/20210525181821.7617-15-michael.christie@oracle.com
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hosts.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/be2iscsi/be_main.c  | 4 ++--
+ drivers/scsi/bnx2i/bnx2i_iscsi.c | 2 +-
+ drivers/scsi/cxgbi/libcxgbi.c    | 4 ++--
+ drivers/scsi/qedi/qedi_main.c    | 2 +-
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index fa03be813f2c..9462564b2147 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -218,6 +218,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 		goto fail;
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 3660059784f7..a5b807c676fc 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -423,7 +423,7 @@ static struct beiscsi_hba *beiscsi_hba_alloc(struct pci_dev *pcidev)
+ 			"beiscsi_hba_alloc - iscsi_host_alloc failed\n");
+ 		return NULL;
+ 	}
+-	shost->max_id = BE2_MAX_SESSIONS;
++	shost->max_id = BE2_MAX_SESSIONS - 1;
+ 	shost->max_channel = 0;
+ 	shost->max_cmd_len = BEISCSI_MAX_CMD_LEN;
+ 	shost->max_lun = BEISCSI_NUM_MAX_LUN;
+@@ -5336,7 +5336,7 @@ static int beiscsi_enable_port(struct beiscsi_hba *phba)
+ 	/* Re-enable UER. If different TPE occurs then it is recoverable. */
+ 	beiscsi_set_uer_feature(phba);
+ 
+-	phba->shost->max_id = phba->params.cxns_per_ctrl;
++	phba->shost->max_id = phba->params.cxns_per_ctrl - 1;
+ 	phba->shost->can_queue = phba->params.ios_per_ctrl;
+ 	ret = beiscsi_init_port(phba);
+ 	if (ret < 0) {
+diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+index 718a0335cfbb..9a5795d5a347 100644
+--- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
++++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
+@@ -793,7 +793,7 @@ struct bnx2i_hba *bnx2i_alloc_hba(struct cnic_dev *cnic)
+ 		return NULL;
+ 	shost->dma_boundary = cnic->pcidev->dma_mask;
+ 	shost->transportt = bnx2i_scsi_xport_template;
+-	shost->max_id = ISCSI_MAX_CONNS_PER_HBA;
++	shost->max_id = ISCSI_MAX_CONNS_PER_HBA - 1;
+ 	shost->max_channel = 0;
+ 	shost->max_lun = 512;
+ 	shost->max_cmd_len = 16;
+diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
+index 559d8bda4cca..01f5ebee3229 100644
+--- a/drivers/scsi/cxgbi/libcxgbi.c
++++ b/drivers/scsi/cxgbi/libcxgbi.c
+@@ -339,7 +339,7 @@ void cxgbi_hbas_remove(struct cxgbi_device *cdev)
+ EXPORT_SYMBOL_GPL(cxgbi_hbas_remove);
+ 
+ int cxgbi_hbas_add(struct cxgbi_device *cdev, u64 max_lun,
+-		unsigned int max_id, struct scsi_host_template *sht,
++		unsigned int max_conns, struct scsi_host_template *sht,
+ 		struct scsi_transport_template *stt)
+ {
+ 	struct cxgbi_hba *chba;
+@@ -359,7 +359,7 @@ int cxgbi_hbas_add(struct cxgbi_device *cdev, u64 max_lun,
+ 
+ 		shost->transportt = stt;
+ 		shost->max_lun = max_lun;
+-		shost->max_id = max_id;
++		shost->max_id = max_conns - 1;
+ 		shost->max_channel = 0;
+ 		shost->max_cmd_len = 16;
+ 
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index fe26144d390a..7665fd641886 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -629,7 +629,7 @@ static struct qedi_ctx *qedi_host_alloc(struct pci_dev *pdev)
+ 		goto exit_setup_shost;
  	}
  
-+	shost->cmd_per_lun = min_t(short, shost->cmd_per_lun,
-+				   shost->can_queue);
-+
- 	error = scsi_init_sense_cache(shost);
- 	if (error)
- 		goto fail;
+-	shost->max_id = QEDI_MAX_ISCSI_CONNS_PER_HBA;
++	shost->max_id = QEDI_MAX_ISCSI_CONNS_PER_HBA - 1;
+ 	shost->max_channel = 0;
+ 	shost->max_lun = ~0;
+ 	shost->max_cmd_len = 16;
 -- 
 2.30.2
 
