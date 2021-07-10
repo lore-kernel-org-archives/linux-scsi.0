@@ -7,39 +7,38 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7820C11F66
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:22:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A6A3C07E99
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:22:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF579613F2
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:22:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65D10613F2
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:22:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232644AbhGJCZZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:25:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41906 "EHLO mail.kernel.org"
+        id S232433AbhGJCZa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:25:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42176 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233044AbhGJCZS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:25:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 5212560BD3;
-        Sat, 10 Jul 2021 02:22:33 +0000 (UTC)
+        id S232813AbhGJCZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:25:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 63B19613D9;
+        Sat, 10 Jul 2021 02:22:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883754;
-        bh=Hy9kKlJWwUkCQ/3hWKbyzb+3jJ97A1OvJQWsXTDd0n8=;
+        s=k20201202; t=1625883749;
+        bh=HXXsm6bDL23ZwcCamIIW0m6ncof559sel1rCAX8ztzU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=D63DM4pKecYUYs2mHfPN+UDS1FVszss8Oq2AzwJcEtafpEP8WcNprVffdc4SmJL5B
-         gI61X3Zh35Wcz9wX/0tZTcGz+pz6Ieh9iHDMP/HjYrnUqt94KYb/LTjJH2V8Hp71yf
-         wjWv0L58mnkP8LvEkrDuv5io2rhaE3vwV3t+zLDecyQKJ4Zoa5bnZC+APbhgzmdQFv
-         fOMCXwRFUEdFhwezODrU3rp/9JQDM58HZ2t1p6S/6eDfotcDMsdXfUzjBuDb54m36A
-         igHv4ToBH4teCp9druiNXsBLrpHjyalpAenxKQxW3VQX7oM7RpRbkzyV/16JT5aFhb
-         IRKd8/McYnigA==
+        b=RYqjXXwB9ic+BLB2GNoyYoNk7sQtbAO6djs6wgaCbvvYpjrkh2R3XUWdY5qhJBn0c
+         YET53rUzPaAc3orpxH0IkPjaxp2KFPZWapk/vIIY0hH/tC0hqr6eiTyv5x3yTBGgwF
+         MeCMgJa1G99AUcvh/PqDeKrMuPa7m3Pk6sQQB7Rg3CTQWpwcrNmbzzmR3DxH7jZLEJ
+         XH3dZe0RsrmNahykN812GxItKgpIEZIrIaT7jWtlTP4owv1a1xrmT/G+PVM91zfabm
+         T1iLHm2dKC3oHYwsCeEXY34SGpkvdF6Q9qrABLqSo9givs7ICG+IGJLDvBNZbY4x7F
+         71sVUGrWTP4+w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     ching Huang <ching2048@areca.com.tw>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 029/104] scsi: core: Cap scsi_host cmd_per_lun at can_queue
-Date:   Fri,  9 Jul 2021 22:20:41 -0400
-Message-Id: <20210710022156.3168825-29-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 025/104] scsi: arcmsr: Fix doorbell status being updated late on ARC-1886
+Date:   Fri,  9 Jul 2021 22:20:37 -0400
+Message-Id: <20210710022156.3168825-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022156.3168825-1-sashal@kernel.org>
 References: <20210710022156.3168825-1-sashal@kernel.org>
@@ -51,49 +50,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+From: ching Huang <ching2048@areca.com.tw>
 
-[ Upstream commit ea2f0f77538c50739b9fb4de4700cee5535e1f77 ]
+[ Upstream commit d9a231226f28261a787535e08d0c78669e1ad010 ]
 
-The sysfs handling function sdev_store_queue_depth() enforces that the sdev
-queue depth cannot exceed shost can_queue. The initial sdev queue depth
-comes from shost cmd_per_lun. However, the LLDD may manually set
-cmd_per_lun to be larger than can_queue, which leads to an initial sdev
-queue depth greater than can_queue.
+It is possible for the IOP to be delayed in updating the doorbell
+status. The doorbell status should not be 0 so loop until the value
+changes.
 
-Such an issue was reported in [0], which caused a hang. That has since been
-fixed in commit fc09acb7de31 ("scsi: scsi_debug: Fix cmd_per_lun, set to
-max_queue").
-
-Stop this possibly happening for other drivers by capping shost cmd_per_lun
-at shost can_queue.
-
-[0] https://lore.kernel.org/linux-scsi/YHaez6iN2HHYxYOh@T590/
-
-Link: https://lore.kernel.org/r/1621434662-173079-1-git-send-email-john.garry@huawei.com
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Link: https://lore.kernel.org/r/afdfdf7eabecf14632492c4987a6b9ac6312a7ad.camel@areca.com.tw
+Signed-off-by: ching Huang <ching2048@areca.com.tw>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hosts.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/arcmsr/arcmsr_hba.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index b93dd8ef4ac8..ce34da53af1b 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -220,6 +220,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 		goto fail;
- 	}
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 930972cda38c..42e494a7106c 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2419,10 +2419,17 @@ static void arcmsr_hbaD_doorbell_isr(struct AdapterControlBlock *pACB)
  
-+	shost->cmd_per_lun = min_t(short, shost->cmd_per_lun,
-+				   shost->can_queue);
-+
- 	error = scsi_init_sense_cache(shost);
- 	if (error)
- 		goto fail;
+ static void arcmsr_hbaE_doorbell_isr(struct AdapterControlBlock *pACB)
+ {
+-	uint32_t outbound_doorbell, in_doorbell, tmp;
++	uint32_t outbound_doorbell, in_doorbell, tmp, i;
+ 	struct MessageUnit_E __iomem *reg = pACB->pmuE;
+ 
+-	in_doorbell = readl(&reg->iobound_doorbell);
++	if (pACB->adapter_type == ACB_ADAPTER_TYPE_F) {
++		for (i = 0; i < 5; i++) {
++			in_doorbell = readl(&reg->iobound_doorbell);
++			if (in_doorbell != 0)
++				break;
++		}
++	} else
++		in_doorbell = readl(&reg->iobound_doorbell);
+ 	outbound_doorbell = in_doorbell ^ pACB->in_doorbell;
+ 	do {
+ 		writel(0, &reg->host_int_status); /* clear interrupt */
 -- 
 2.30.2
 
