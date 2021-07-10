@@ -5,54 +5,53 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 305C8C07E9B
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 09:20:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 274C3C07E9C
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 09:22:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 114A7613DC
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 09:20:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07F02613DA
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 09:22:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232198AbhGJJXb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Jul 2021 05:23:31 -0400
-Received: from mxout04.lancloud.ru ([45.84.86.114]:54206 "EHLO
-        mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231877AbhGJJXb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jul 2021 05:23:31 -0400
-X-Greylist: delayed 353 seconds by postgrey-1.27 at vger.kernel.org; Sat, 10 Jul 2021 05:23:30 EDT
+        id S232387AbhGJJZC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Jul 2021 05:25:02 -0400
+Received: from mxout02.lancloud.ru ([45.84.86.82]:36286 "EHLO
+        mxout02.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231877AbhGJJZC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jul 2021 05:25:02 -0400
 Received: from LanCloud
-DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 2035420ABA32
-Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout02.lancloud.ru D6FF323421C7
 Received: from LanCloud
 Received: from LanCloud
-Subject: Re: [PATCH AUTOSEL 4.19 05/39] scsi: hisi_sas: Propagate errors in
+Received: from LanCloud
+Subject: Re: [PATCH AUTOSEL 4.14 05/33] scsi: hisi_sas: Propagate errors in
  interrupt_init_v1_hw()
 To:     Sasha Levin <sashal@kernel.org>, <linux-kernel@vger.kernel.org>,
         <stable@vger.kernel.org>
 CC:     John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         <linux-scsi@vger.kernel.org>
-References: <20210710023204.3171428-1-sashal@kernel.org>
- <20210710023204.3171428-5-sashal@kernel.org>
+References: <20210710023516.3172075-1-sashal@kernel.org>
+ <20210710023516.3172075-5-sashal@kernel.org>
 From:   Sergey Shtylyov <s.shtylyov@omp.ru>
 Organization: Open Mobile Platform
-Message-ID: <3e2af821-00e3-6db9-5820-696fdbe003d6@omp.ru>
-Date:   Sat, 10 Jul 2021 12:20:43 +0300
+Message-ID: <56cc4caa-bf15-86c7-48f2-54f9e688b437@omp.ru>
+Date:   Sat, 10 Jul 2021 12:14:47 +0300
 User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <20210710023204.3171428-5-sashal@kernel.org>
+In-Reply-To: <20210710023516.3172075-5-sashal@kernel.org>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 X-Originating-IP: [192.168.11.198]
-X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+X-ClientProxiedBy: LFEXT01.lancloud.ru (fd00:f066::141) To
  LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10.07.2021 5:31, Sasha Levin wrote:
+On 10.07.2021 5:34, Sasha Levin wrote:
 
 > From: Sergey Shtylyov <s.shtylyov@omp.ru>
 > 
@@ -74,19 +73,21 @@ On 10.07.2021 5:31, Sasha Levin wrote:
 >   1 file changed, 6 insertions(+), 6 deletions(-)
 > 
 > diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-> index 8aa3222fe486..5a777e48963b 100644
+> index 08eca20b0b81..8b41545ff8d9 100644
 > --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 > +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
 [...]
-> @@ -1717,7 +1717,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+> @@ -1766,7 +1766,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
 >   		if (!irq) {
 >   			dev_err(dev, "irq init: could not map cq interrupt %d\n",
 >   				idx);
 > -			return -ENOENT;
 > +			return irq;
 
-    This patch is borked too, we don't want to return 0 here...
+    Wait! You apparently hadn't ported back the commit 
+6c11dc060427e07ca144eacaccd696106b361b06. Please either do that or drop this 
+patch.
 
 [...]
 
-MBR, Sergei
+MBR, Sergey
