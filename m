@@ -5,42 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E464EC11F67
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A286BC11F68
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:19:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD0E0613C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:19:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89D6E613F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:19:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232786AbhGJCWG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:22:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38444 "EHLO mail.kernel.org"
+        id S232521AbhGJCWH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:22:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:38546 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232307AbhGJCVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:21:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D9B36613F7;
-        Sat, 10 Jul 2021 02:18:48 +0000 (UTC)
+        id S232537AbhGJCVi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:21:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 13204613EB;
+        Sat, 10 Jul 2021 02:18:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883529;
-        bh=7qYOdwUMptCr5BbkWuan4Mf4wHExUrwkhqKgzUYttF4=;
+        s=k20201202; t=1625883533;
+        bh=5uGHoFbxC057inXKnuUYBivDyaNYMVwoUbIjXcXUV6s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=khtPYnJeI6G/rz9tm0ZG1DAS13n4P8QIGckpyOCPM5K4ETfHmfFYelErPlH08OX7b
-         FL335/boxZrwsFUUVCY+JXItm/KdbRoRtWYBZ4hAXaeGuwNkPFMszJ+QhBOowJ40+3
-         DuIx+lQOSRediq5EGC0ZkLaNHWPK+UUE89CO6C0gn1U7Q0xt1rQnWZ0YTcT/JL6MPL
-         NNZr5j13vX4pIrgA6L2cVQP2QApSBTsqHYOE2bgS+MtLxE+AUe+43KfjElKhKN8Ysz
-         RnnTtsUc4YGDrwdX9x4SRoxJdfANfSADEF/kwZxGN8PVtP3DnS8aZPTValGHMMiogy
-         6di72hd1mB/9g==
+        b=gZWzc+vUO8ls2moF+sZozFVEUqELmr9YGA/7N/0/oH0FgwisZmgh3TcR3M0UKvVHj
+         QLv9uYqX+XRS18qaXzyfwO/wStezn5oALjd2pSWYTjQXxKUOp836mi6R1QnwYR9zrp
+         DHp/vbJCxEc2bSLWM72+2UOUo7OobUI7qLfy0bxtwG+7AgMm7TeEB8I4YIJf/5S3Fa
+         OeyBJYQ+iOoMSQGzPgtiWmyjBzNrwMp5AgJfqf8r93hyim97VznoS+PxebyXevKvJA
+         SlwZXr0Mm4FLxX34LG/JUlYXQPdrIBDdAME1aWR+w6zHIJZXA0LR29dW49WZZpdXq2
+         4PHcaXPUSTbhQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 044/114] scsi: iscsi: Add iscsi_cls_conn refcount helpers
-Date:   Fri,  9 Jul 2021 22:16:38 -0400
-Message-Id: <20210710021748.3167666-44-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 047/114] scsi: qedi: Fix null ref during abort handling
+Date:   Fri,  9 Jul 2021 22:16:41 -0400
+Message-Id: <20210710021748.3167666-47-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710021748.3167666-1-sashal@kernel.org>
 References: <20210710021748.3167666-1-sashal@kernel.org>
@@ -54,93 +53,34 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit b1d19e8c92cfb0ded180ef3376c20e130414e067 ]
+[ Upstream commit 5777b7f0f03ce49372203b6521631f62f2810c8f ]
 
-There are a couple places where we could free the iscsi_cls_conn while it's
-still in use. This adds some helpers to get/put a refcount on the struct
-and converts an exiting user. Subsequent commits will then use the helpers
-to fix 2 bugs in the eh code.
+If qedi_process_cmd_cleanup_resp finds the cmd it frees the work and sets
+list_tmf_work to NULL, so qedi_tmf_work should check if list_tmf_work is
+non-NULL when it wants to force cleanup.
 
-Link: https://lore.kernel.org/r/20210525181821.7617-11-michael.christie@oracle.com
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+Link: https://lore.kernel.org/r/20210525181821.7617-20-michael.christie@oracle.com
+Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libiscsi.c             |  7 ++-----
- drivers/scsi/scsi_transport_iscsi.c | 12 ++++++++++++
- include/scsi/scsi_transport_iscsi.h |  2 ++
- 3 files changed, 16 insertions(+), 5 deletions(-)
+ drivers/scsi/qedi/qedi_fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 2aaf83678654..ab39d7f65bbb 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1361,7 +1361,6 @@ void iscsi_session_failure(struct iscsi_session *session,
- 			   enum iscsi_err err)
- {
- 	struct iscsi_conn *conn;
--	struct device *dev;
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index 440ddd2309f1..cf57b4e49700 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -1453,7 +1453,7 @@ static void qedi_tmf_work(struct work_struct *work)
  
- 	spin_lock_bh(&session->frwd_lock);
- 	conn = session->leadconn;
-@@ -1370,10 +1369,8 @@ void iscsi_session_failure(struct iscsi_session *session,
- 		return;
- 	}
- 
--	dev = get_device(&conn->cls_conn->dev);
-+	iscsi_get_conn(conn->cls_conn);
- 	spin_unlock_bh(&session->frwd_lock);
--	if (!dev)
--	        return;
- 	/*
- 	 * if the host is being removed bypass the connection
- 	 * recovery initialization because we are going to kill
-@@ -1383,7 +1380,7 @@ void iscsi_session_failure(struct iscsi_session *session,
- 		iscsi_conn_error_event(conn->cls_conn, err);
- 	else
- 		iscsi_conn_failure(conn, err);
--	put_device(dev);
-+	iscsi_put_conn(conn->cls_conn);
- }
- EXPORT_SYMBOL_GPL(iscsi_session_failure);
- 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 82491343e94a..869cfc329da9 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2348,6 +2348,18 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
- }
- EXPORT_SYMBOL_GPL(iscsi_destroy_conn);
- 
-+void iscsi_put_conn(struct iscsi_cls_conn *conn)
-+{
-+	put_device(&conn->dev);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_put_conn);
-+
-+void iscsi_get_conn(struct iscsi_cls_conn *conn)
-+{
-+	get_device(&conn->dev);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_get_conn);
-+
- /*
-  * iscsi interface functions
-  */
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 8874016b3c9a..eb6ed499324d 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -435,6 +435,8 @@ extern void iscsi_remove_session(struct iscsi_cls_session *session);
- extern void iscsi_free_session(struct iscsi_cls_session *session);
- extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
- 						int dd_size, uint32_t cid);
-+extern void iscsi_put_conn(struct iscsi_cls_conn *conn);
-+extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
- extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
- extern void iscsi_unblock_session(struct iscsi_cls_session *session);
- extern void iscsi_block_session(struct iscsi_cls_session *session);
+ ldel_exit:
+ 	spin_lock_bh(&qedi_conn->tmf_work_lock);
+-	if (!qedi_cmd->list_tmf_work) {
++	if (qedi_cmd->list_tmf_work) {
+ 		list_del_init(&list_work->list);
+ 		qedi_cmd->list_tmf_work = NULL;
+ 		kfree(list_work);
 -- 
 2.30.2
 
