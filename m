@@ -5,44 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA221C07E9B
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 443C6C11F69
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:41:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B92506124C
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27F35613C5
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:41:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234529AbhGJClV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:41:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58380 "EHLO mail.kernel.org"
+        id S234771AbhGJCnu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:43:50 -0400
+Received: from mail.kernel.org ([198.145.29.99]:33904 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235810AbhGJCjr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:39:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6015761443;
-        Sat, 10 Jul 2021 02:36:10 +0000 (UTC)
+        id S235245AbhGJCnD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:43:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1F07561402;
+        Sat, 10 Jul 2021 02:39:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884571;
-        bh=TiQYvcovXcuWxhXrwDltshWtuLuUnM5inbCJuwD5Fus=;
+        s=k20201202; t=1625884757;
+        bh=eJIcAsOzfMPpHKScpnkmSvY/icU7A2T/nrgaYPhE3b0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dP4Bmwh5Qy8z6RBONEOIs5BDGg35RWjNJ2yY9knMdWzGNydvs5nRHiTLpZppyMDQd
-         mzgCz9dG0je7uX3LBL6g806T5GQ3QmdJ14SNOonzVzuZ1cTfqu8LHFU36Yh98cPmZw
-         quSBra4WQMeJ7i1Jpihsy9ZjXpQ6xwvajWBHiSpL/tsqlgH9m6/9nS8fXGJa4e+uKm
-         IlKOstlvgjrLh+tRBs4XGiclALK5FYmgBi3FX0iK1XL5g51n1yASbvym7H8gnxrQPi
-         Cn8rAqCnBsZ1VJmmKKtoulmJ6h0PuDP9L5ctRDD41P5So3LXZucrnHjyStQ6ZHQIOi
-         qugtJuCwnZRmQ==
+        b=Et9EaAGA0BPiQpeuNiHdf7HIxsAxO2Mci1PG886rGkapE0XV2ej7rhb9cZGDTvXHR
+         co7ATVosl7Lv39HH4UB6opzjiKqktE4bZeIR4RH6MOfY3Wp/RqZexO+6oWzELK9yHf
+         k+cawNJ6vMrHTKgrqidYlQILvMxKOkOyjKav8j798kd7VtUCS9ipI3KuIJA8IAdb4E
+         uNObLyQyCBxI0MgDx1ibWMAWtce4hjBlMMRdsMMPiPepKojkYN92FtmzXXtd4WNvfc
+         Z+mWC/cuntckFvjRPTK2foqdzDjKlDkDgMLJlW2hRmuipH5gdIJcSEATg110H1ZQag
+         rU5VpY9bOvrWQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 05/26] scsi: lpfc: Fix "Unexpected timeout" error in direct attach topology
-Date:   Fri,  9 Jul 2021 22:35:43 -0400
-Message-Id: <20210710023604.3172486-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 04/23] scsi: lpfc: Fix "Unexpected timeout" error in direct attach topology
+Date:   Fri,  9 Jul 2021 22:38:53 -0400
+Message-Id: <20210710023912.3172972-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210710023604.3172486-1-sashal@kernel.org>
-References: <20210710023604.3172486-1-sashal@kernel.org>
+In-Reply-To: <20210710023912.3172972-1-sashal@kernel.org>
+References: <20210710023912.3172972-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -77,10 +77,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 9 insertions(+)
 
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 7d4a5bb91606..f17adfe1326b 100644
+index 5be938b47f48..b66b1ed6d2af 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1159,6 +1159,15 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+@@ -1142,6 +1142,15 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
  			phba->fcf.fcf_redisc_attempted = 0; /* reset */
  			goto out;
  		}
