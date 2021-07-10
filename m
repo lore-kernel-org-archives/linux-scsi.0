@@ -5,44 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5CF2C11F6B
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:30:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C133C11F6A
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BB52A613C8
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:30:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23573613C5
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:33:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234587AbhGJCd0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:33:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48606 "EHLO mail.kernel.org"
+        id S234788AbhGJCfw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:35:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53380 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232135AbhGJCba (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:31:30 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 90A73613EB;
-        Sat, 10 Jul 2021 02:27:42 +0000 (UTC)
+        id S235691AbhGJCe7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:34:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3199461407;
+        Sat, 10 Jul 2021 02:32:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884063;
-        bh=gAzHfHwMcrbK0IuXaFlkK9UgQAbquYqjzfgSqsleyfc=;
+        s=k20201202; t=1625884331;
+        bh=mxqQrdLG/E9N+IMHQqsVt7/SN+k6aipg4GiStHlgieg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fWm2yQ0rSRd+Xoa3xQNFZ0+WtBhLc/8nLvpJ++gbYUczA0Gi6DveGpkTTtvOHMlhq
-         zInsoMus/IUtH6VaMUwB2GXB96YcMxF5iC7IF6swuQxa+YsbHCWVuAFkKebM79lYKZ
-         lINj5/w2sohKuHxkdHBvIAKoDXAS1rktMqjDFAMTagep5pgvofnjpeya9pJmOTsb3G
-         J4N+XkEYTV7ngRkK9oLenF5w+arOjlX5Ac7IXbukgUy6EqD7MT0wwrOYVHEDRhfqmG
-         IpkeATQ8npunGtztajZ9Mh+xlcZmJMXrHLm/gvOeYIX81pSZNlM+MjpbTOZog4qfHb
-         IguktaZ8AXDjQ==
+        b=VYPx3+bHhpffrrBU9Uw7CeIcGMHy1alJ3gdugXV8JZwrFmZrbpo2oIXqGTeOwtUfR
+         5RR0Fdzjbbh8lC+6bjMT9wHEvkNGobW54Jjv+2vubO+7ci9VI5NIsKkC+Go2CCDcVh
+         LNHax8DlXvRA/MKpgNW1jHlAmYMxlPqwt1DCETdkshZKUhBLaoa6eMx8Gj52RsOXHE
+         nqZUwj/99FO4dfn2qmRgOBAZ4VOOsjvYNhN/Eecd5WATbNVmPq9DMsF2S7J0XI62om
+         W8I+9nZXb4FLjVysHBgImkn0RA7k5sWMHn4vz652wTuKOyjW5/8rVuYemkrB8S/+2q
+         9GEKodATRkQyw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 26/63] scsi: qedi: Fix null ref during abort handling
-Date:   Fri,  9 Jul 2021 22:26:32 -0400
-Message-Id: <20210710022709.3170675-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 05/39] scsi: hisi_sas: Propagate errors in interrupt_init_v1_hw()
+Date:   Fri,  9 Jul 2021 22:31:30 -0400
+Message-Id: <20210710023204.3171428-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210710022709.3170675-1-sashal@kernel.org>
-References: <20210710022709.3170675-1-sashal@kernel.org>
+In-Reply-To: <20210710023204.3171428-1-sashal@kernel.org>
+References: <20210710023204.3171428-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,36 +51,83 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-[ Upstream commit 5777b7f0f03ce49372203b6521631f62f2810c8f ]
+[ Upstream commit ab17122e758ef68fb21033e25c041144067975f5 ]
 
-If qedi_process_cmd_cleanup_resp finds the cmd it frees the work and sets
-list_tmf_work to NULL, so qedi_tmf_work should check if list_tmf_work is
-non-NULL when it wants to force cleanup.
+After commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have the
+error codes returned by platform_get_irq() ready for the propagation
+upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
+probing. Let's propagate the error codes from devm_request_irq() as well
+since I don't see the reason to override them with -ENOENT...
 
-Link: https://lore.kernel.org/r/20210525181821.7617-20-michael.christie@oracle.com
-Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru
+Acked-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index 90aa64604ad7..37b8f08d5020 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -1451,7 +1451,7 @@ static void qedi_tmf_work(struct work_struct *work)
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 8aa3222fe486..5a777e48963b 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1697,7 +1697,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				dev_err(dev,
+ 					"irq init: fail map phy interrupt %d\n",
+ 					idx);
+-				return -ENOENT;
++				return irq;
+ 			}
  
- ldel_exit:
- 	spin_lock_bh(&qedi_conn->tmf_work_lock);
--	if (!qedi_cmd->list_tmf_work) {
-+	if (qedi_cmd->list_tmf_work) {
- 		list_del_init(&list_work->list);
- 		qedi_cmd->list_tmf_work = NULL;
- 		kfree(list_work);
+ 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
+@@ -1706,7 +1706,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				dev_err(dev, "irq init: could not request "
+ 					"phy interrupt %d, rc=%d\n",
+ 					irq, rc);
+-				return -ENOENT;
++				return rc;
+ 			}
+ 		}
+ 	}
+@@ -1717,7 +1717,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (!irq) {
+ 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
+ 				idx);
+-			return -ENOENT;
++			return irq;
+ 		}
+ 
+ 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
+@@ -1725,7 +1725,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (rc) {
+ 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			return rc;
+ 		}
+ 	}
+ 
+@@ -1735,7 +1735,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (!irq) {
+ 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
+ 				idx);
+-			return -ENOENT;
++			return irq;
+ 		}
+ 
+ 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
+@@ -1744,7 +1744,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 			dev_err(dev,
+ 				"irq init: could not request fatal interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			return rc;
+ 		}
+ 	}
+ 
 -- 
 2.30.2
 
