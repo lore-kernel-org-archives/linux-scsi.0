@@ -7,42 +7,43 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ACAAC11F72
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E0A2C11F73
 	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 28922613C5
+	by mail.kernel.org (Postfix) with ESMTP id 5B34B6124C
 	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233185AbhGJClT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:41:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58450 "EHLO mail.kernel.org"
+        id S234383AbhGJClN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:41:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58372 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235811AbhGJCjr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:39:47 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 245D461441;
-        Sat, 10 Jul 2021 02:36:09 +0000 (UTC)
+        id S235609AbhGJCji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:39:38 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3311E613C9;
+        Sat, 10 Jul 2021 02:35:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884569;
-        bh=Dij0Ao0YicGgV1e19xlHHk5GMgXy4+H8nCFRBrXWngI=;
+        s=k20201202; t=1625884530;
+        bh=JIcmLJqymwUEEHgol2NPI4hF0P9g4p7Tc2m4Dooggz0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OQQzjIdj0LBndY8RX82A1Rqv+tKymV2G9hPeh74fvTKGWcE2BuOqBnSgPW9CCy1G3
-         s4PjGzBBXPzy5EpUTei2vf2khNAsio0KVat17SOamaF6zZMs/LHT9ll8y1dubUuvFf
-         47X8M3GkSlgHWfQbdHV3jDYxVb4PBeKn9j1dRfnCa5DBrCwtq1vXJGOqeI3JvbjP6K
-         D16Fp6AQMw1N0NkM7pJ9DFFcwsROBaiQWqv8D5+XyG1C0EKfmjyHccAe/2rn1E22AJ
-         DgtDkwxe5TRqXmqwpO8/fn3ZGpPThVM/NLF1tWugMqNEk+XIw/h/MKQp12XDo1Yrcq
-         DysbXf0L46kNQ==
+        b=FVzV4iv/cTnqe1nc2r2Vyz48Nol8Tx+ZnmOtNywsLz4KaRI/SVIWTXakdTnAycTFC
+         bqiZaeqVcMQWtLulPVPOfRkiPP24PcvGnH6BCfd5wgOGKotgz4Qn5xESVSX/eZczks
+         arFAIDy7Uo6tUk8d2CIBD/JlmrmSoPrkn1LKhn9ABKDlIiGkFXxP1LySCwI10gExlb
+         5y9fSC4gU4ivU+N5b5lBRMYoKdfJGrtref3XZt/wABVfJIdQnSGBhheGoch67UqJFU
+         HA19bdWPhcdEzhXgvT3D30KsoTOtKRs1hdiJYR5BbTFHVTakU3TLHIKyTmaqFyxhbi
+         nTSUprwLAPl5A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
-        John Garry <john.garry@huawei.com>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Lee Duncan <lduncan@suse.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 04/26] scsi: hisi_sas: Propagate errors in interrupt_init_v1_hw()
-Date:   Fri,  9 Jul 2021 22:35:42 -0400
-Message-Id: <20210710023604.3172486-4-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 11/33] scsi: iscsi: Add iscsi_cls_conn refcount helpers
+Date:   Fri,  9 Jul 2021 22:34:53 -0400
+Message-Id: <20210710023516.3172075-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210710023604.3172486-1-sashal@kernel.org>
-References: <20210710023604.3172486-1-sashal@kernel.org>
+In-Reply-To: <20210710023516.3172075-1-sashal@kernel.org>
+References: <20210710023516.3172075-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,83 +52,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit ab17122e758ef68fb21033e25c041144067975f5 ]
+[ Upstream commit b1d19e8c92cfb0ded180ef3376c20e130414e067 ]
 
-After commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have the
-error codes returned by platform_get_irq() ready for the propagation
-upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
-probing. Let's propagate the error codes from devm_request_irq() as well
-since I don't see the reason to override them with -ENOENT...
+There are a couple places where we could free the iscsi_cls_conn while it's
+still in use. This adds some helpers to get/put a refcount on the struct
+and converts an exiting user. Subsequent commits will then use the helpers
+to fix 2 bugs in the eh code.
 
-Link: https://lore.kernel.org/r/49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru
-Acked-by: John Garry <john.garry@huawei.com>
-Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+Link: https://lore.kernel.org/r/20210525181821.7617-11-michael.christie@oracle.com
+Reviewed-by: Lee Duncan <lduncan@suse.com>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/libiscsi.c             |  7 ++-----
+ drivers/scsi/scsi_transport_iscsi.c | 12 ++++++++++++
+ include/scsi/scsi_transport_iscsi.h |  2 ++
+ 3 files changed, 16 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index c0ac49d8bc8d..5c49806a7ae3 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1709,7 +1709,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 				dev_err(dev,
- 					"irq init: fail map phy interrupt %d\n",
- 					idx);
--				return -ENOENT;
-+				return irq;
- 			}
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 21efe27ebfcc..f3dfec02abec 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1385,7 +1385,6 @@ void iscsi_session_failure(struct iscsi_session *session,
+ 			   enum iscsi_err err)
+ {
+ 	struct iscsi_conn *conn;
+-	struct device *dev;
  
- 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
-@@ -1718,7 +1718,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 				dev_err(dev, "irq init: could not request "
- 					"phy interrupt %d, rc=%d\n",
- 					irq, rc);
--				return -ENOENT;
-+				return rc;
- 			}
- 		}
- 	}
-@@ -1729,7 +1729,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (!irq) {
- 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
- 				idx);
--			return -ENOENT;
-+			return irq;
- 		}
- 
- 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
-@@ -1737,7 +1737,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (rc) {
- 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
- 				irq, rc);
--			return -ENOENT;
-+			return rc;
- 		}
+ 	spin_lock_bh(&session->frwd_lock);
+ 	conn = session->leadconn;
+@@ -1394,10 +1393,8 @@ void iscsi_session_failure(struct iscsi_session *session,
+ 		return;
  	}
  
-@@ -1747,7 +1747,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 		if (!irq) {
- 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
- 				idx);
--			return -ENOENT;
-+			return irq;
- 		}
+-	dev = get_device(&conn->cls_conn->dev);
++	iscsi_get_conn(conn->cls_conn);
+ 	spin_unlock_bh(&session->frwd_lock);
+-	if (!dev)
+-	        return;
+ 	/*
+ 	 * if the host is being removed bypass the connection
+ 	 * recovery initialization because we are going to kill
+@@ -1407,7 +1404,7 @@ void iscsi_session_failure(struct iscsi_session *session,
+ 		iscsi_conn_error_event(conn->cls_conn, err);
+ 	else
+ 		iscsi_conn_failure(conn, err);
+-	put_device(dev);
++	iscsi_put_conn(conn->cls_conn);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_session_failure);
  
- 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
-@@ -1756,7 +1756,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
- 			dev_err(dev,
- 				"irq init: could not request fatal interrupt %d, rc=%d\n",
- 				irq, rc);
--			return -ENOENT;
-+			return rc;
- 		}
- 	}
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index d385eddb1a43..95c61fb4b81b 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2306,6 +2306,18 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
+ }
+ EXPORT_SYMBOL_GPL(iscsi_destroy_conn);
  
++void iscsi_put_conn(struct iscsi_cls_conn *conn)
++{
++	put_device(&conn->dev);
++}
++EXPORT_SYMBOL_GPL(iscsi_put_conn);
++
++void iscsi_get_conn(struct iscsi_cls_conn *conn)
++{
++	get_device(&conn->dev);
++}
++EXPORT_SYMBOL_GPL(iscsi_get_conn);
++
+ /*
+  * iscsi interface functions
+  */
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index b266d2a3bcb1..484e9787d817 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -436,6 +436,8 @@ extern void iscsi_remove_session(struct iscsi_cls_session *session);
+ extern void iscsi_free_session(struct iscsi_cls_session *session);
+ extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
+ 						int dd_size, uint32_t cid);
++extern void iscsi_put_conn(struct iscsi_cls_conn *conn);
++extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
+ extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
+ extern void iscsi_unblock_session(struct iscsi_cls_session *session);
+ extern void iscsi_block_session(struct iscsi_cls_session *session);
 -- 
 2.30.2
 
