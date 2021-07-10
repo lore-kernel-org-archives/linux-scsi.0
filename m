@@ -5,41 +5,40 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B846C07E99
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:18:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A92FEC07E9C
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:18:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4363761404
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:18:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97338613F2
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:18:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232208AbhGJCVY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:21:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37724 "EHLO mail.kernel.org"
+        id S232021AbhGJCV3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:21:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37850 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232201AbhGJCVQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:21:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 184B1613B5;
-        Sat, 10 Jul 2021 02:18:31 +0000 (UTC)
+        id S231879AbhGJCVM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:21:12 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 40A4B613D1;
+        Sat, 10 Jul 2021 02:18:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883511;
-        bh=Elb+7p9SglnvDhRyzw1xYcYUIDGc7OsoSjYlFESURLw=;
+        s=k20201202; t=1625883507;
+        bh=HXXsm6bDL23ZwcCamIIW0m6ncof559sel1rCAX8ztzU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=UdqYQaC5PFp2sVU6UEZXCwjlZZqvPdNWR6290J9iTqz6kbSFslL+D2gqkyD5o6xXz
-         hQMClf9qRqfRVK0HVKO4K/zKOLFUCo9nfdxribWf9iJwdg8L5VEDMMWUEBVLE27QHG
-         5qz8maIbvB0wIFXveEXn2sF4Hw/t9VlWOO6pqSr1FM31/uaMPdGrDpY15kTufg3fL/
-         GmZzK1P20SO0RIX58DO9M5ut8rvUvQV5UvmkIIUWXCxFy4jJMgm6d4GBHlBs1YJKGN
-         uTl4TAnqcmsIK6DEgEaKxNlv1XKCF3tLJEsmazxkY9h1HYt1PHzxFet/j5N0I6IPl2
-         3wHjAaeDMPTUQ==
+        b=Io8nl7/MFpyrZhnaOsrJGLvOA786UIJ/EccOL3zPTgxKImhdDRI4G00yd3nEqMii9
+         eZM8rxlVo9I/04EghOtYLJh0AfMlO2OLYcevU4wfNBN44r2oa07PZv3AR6WS+bOxHP
+         pdYemckiDXqLru1jl2lCL76jDGTRqUh+Cxwu3do1E96Jr9YIb5Q3qykywJ6yMJvk4i
+         kHGVkW4tNSFVvBDfFH6rLOLDYmCqQgV6z5LcBwPcfCdBTfKRvrA8L2yub7JGIW4xIQ
+         ETlKh7lFUI0a789PtdYDX6NlDquGNKcOXwJyONsEmJkuT/N8d+hnRLdnunoNMBReGo
+         pgR0W+MTxH0Sw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     ching Huang <ching2048@areca.com.tw>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 031/114] scsi: lpfc: Fix crash when lpfc_sli4_hba_setup() fails to initialize the SGLs
-Date:   Fri,  9 Jul 2021 22:16:25 -0400
-Message-Id: <20210710021748.3167666-31-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 028/114] scsi: arcmsr: Fix doorbell status being updated late on ARC-1886
+Date:   Fri,  9 Jul 2021 22:16:22 -0400
+Message-Id: <20210710021748.3167666-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710021748.3167666-1-sashal@kernel.org>
 References: <20210710021748.3167666-1-sashal@kernel.org>
@@ -51,52 +50,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: ching Huang <ching2048@areca.com.tw>
 
-[ Upstream commit 5aa615d195f1e142c662cb2253f057c9baec7531 ]
+[ Upstream commit d9a231226f28261a787535e08d0c78669e1ad010 ]
 
-The driver is encountering a crash in lpfc_free_iocb_list() while
-performing initial attachment.
+It is possible for the IOP to be delayed in updating the doorbell
+status. The doorbell status should not be 0 so loop until the value
+changes.
 
-Code review found this to be an errant failure path that was taken, jumping
-to a tag that then referenced structures that were uninitialized.
-
-Fix the failure path.
-
-Link: https://lore.kernel.org/r/20210514195559.119853-9-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/afdfdf7eabecf14632492c4987a6b9ac6312a7ad.camel@areca.com.tw
+Signed-off-by: ching Huang <ching2048@areca.com.tw>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/arcmsr/arcmsr_hba.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index fc3682f15f50..3106ebc586f6 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -7959,7 +7959,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 				"0393 Error %d during rpi post operation\n",
- 				rc);
- 		rc = -ENODEV;
--		goto out_destroy_queue;
-+		goto out_free_iocblist;
- 	}
- 	lpfc_sli4_node_prep(phba);
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 930972cda38c..42e494a7106c 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2419,10 +2419,17 @@ static void arcmsr_hbaD_doorbell_isr(struct AdapterControlBlock *pACB)
  
-@@ -8125,8 +8125,9 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- out_unset_queue:
- 	/* Unset all the queues set up in this routine when error out */
- 	lpfc_sli4_queue_unset(phba);
--out_destroy_queue:
-+out_free_iocblist:
- 	lpfc_free_iocb_list(phba);
-+out_destroy_queue:
- 	lpfc_sli4_queue_destroy(phba);
- out_stop_timers:
- 	lpfc_stop_hba_timers(phba);
+ static void arcmsr_hbaE_doorbell_isr(struct AdapterControlBlock *pACB)
+ {
+-	uint32_t outbound_doorbell, in_doorbell, tmp;
++	uint32_t outbound_doorbell, in_doorbell, tmp, i;
+ 	struct MessageUnit_E __iomem *reg = pACB->pmuE;
+ 
+-	in_doorbell = readl(&reg->iobound_doorbell);
++	if (pACB->adapter_type == ACB_ADAPTER_TYPE_F) {
++		for (i = 0; i < 5; i++) {
++			in_doorbell = readl(&reg->iobound_doorbell);
++			if (in_doorbell != 0)
++				break;
++		}
++	} else
++		in_doorbell = readl(&reg->iobound_doorbell);
+ 	outbound_doorbell = in_doorbell ^ pACB->in_doorbell;
+ 	do {
+ 		writel(0, &reg->host_int_status); /* clear interrupt */
 -- 
 2.30.2
 
