@@ -5,40 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A6A3C07E99
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:22:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9772DC07E9C
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:23:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 65D10613F2
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:22:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8420461420
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:23:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232433AbhGJCZa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:25:30 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42176 "EHLO mail.kernel.org"
+        id S232165AbhGJCZq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:25:46 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41746 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232813AbhGJCZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:25:13 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 63B19613D9;
-        Sat, 10 Jul 2021 02:22:28 +0000 (UTC)
+        id S233146AbhGJCZW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:25:22 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 16A6A613B7;
+        Sat, 10 Jul 2021 02:22:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883749;
-        bh=HXXsm6bDL23ZwcCamIIW0m6ncof559sel1rCAX8ztzU=;
+        s=k20201202; t=1625883757;
+        bh=1v074zr1y4wIdMNpxUqEowUJUqs4/NJN4Zf3nkxRxvU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=RYqjXXwB9ic+BLB2GNoyYoNk7sQtbAO6djs6wgaCbvvYpjrkh2R3XUWdY5qhJBn0c
-         YET53rUzPaAc3orpxH0IkPjaxp2KFPZWapk/vIIY0hH/tC0hqr6eiTyv5x3yTBGgwF
-         MeCMgJa1G99AUcvh/PqDeKrMuPa7m3Pk6sQQB7Rg3CTQWpwcrNmbzzmR3DxH7jZLEJ
-         XH3dZe0RsrmNahykN812GxItKgpIEZIrIaT7jWtlTP4owv1a1xrmT/G+PVM91zfabm
-         T1iLHm2dKC3oHYwsCeEXY34SGpkvdF6Q9qrABLqSo9givs7ICG+IGJLDvBNZbY4x7F
-         71sVUGrWTP4+w==
+        b=fUlZUCUt/bndpVEt62q431orYD8LfUYQ4yri3X2WnalgQh7nh7DVXuUgMnN3WmhIg
+         +0MBUwCF+wHjZRjdNjolgBfi5sfj+0LA8idgrN8DOylsiaSyCylZy2Qzrf8C7FJmPs
+         9PzpB/jEqPIOvwZ4iRpaRvW1L3CBYkGNOjgZFc79iaGMkxLcE0fmmEH2Kx+GldQxmC
+         nFGxhfSjQl3xtGNloAwNeL3GxA+0kSb534vgvp2CY44TYMhu83TTnB8tUiojHR7qMw
+         H3iRjX6PhtlQQBbQfOBugqwRo+qrcyK2UI+AHnJlQT4ax/SdZhcP5PLY3JnyDQZu7b
+         yjYuHMrayFHZg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     ching Huang <ching2048@areca.com.tw>,
+Cc:     Suganath Prabu S <suganath-prabu.subramani@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 025/104] scsi: arcmsr: Fix doorbell status being updated late on ARC-1886
-Date:   Fri,  9 Jul 2021 22:20:37 -0400
-Message-Id: <20210710022156.3168825-25-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.12 032/104] scsi: mpt3sas: Fix deadlock while cancelling the running firmware event
+Date:   Fri,  9 Jul 2021 22:20:44 -0400
+Message-Id: <20210710022156.3168825-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022156.3168825-1-sashal@kernel.org>
 References: <20210710022156.3168825-1-sashal@kernel.org>
@@ -50,46 +51,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ching Huang <ching2048@areca.com.tw>
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 
-[ Upstream commit d9a231226f28261a787535e08d0c78669e1ad010 ]
+[ Upstream commit e2fac6c44ae06e58ac02181b048af31195883c31 ]
 
-It is possible for the IOP to be delayed in updating the doorbell
-status. The doorbell status should not be 0 so loop until the value
-changes.
+Do not cancel current running firmware event work if the event type is
+different from MPT3SAS_REMOVE_UNRESPONDING_DEVICES.  Otherwise a deadlock
+can be observed while cancelling the current firmware event work if a hard
+reset operation is called as part of processing the current event.
 
-Link: https://lore.kernel.org/r/afdfdf7eabecf14632492c4987a6b9ac6312a7ad.camel@areca.com.tw
-Signed-off-by: ching Huang <ching2048@areca.com.tw>
+Link: https://lore.kernel.org/r/20210518051625.1596742-2-suganath-prabu.subramani@broadcom.com
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 930972cda38c..42e494a7106c 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -2419,10 +2419,17 @@ static void arcmsr_hbaD_doorbell_isr(struct AdapterControlBlock *pACB)
- 
- static void arcmsr_hbaE_doorbell_isr(struct AdapterControlBlock *pACB)
- {
--	uint32_t outbound_doorbell, in_doorbell, tmp;
-+	uint32_t outbound_doorbell, in_doorbell, tmp, i;
- 	struct MessageUnit_E __iomem *reg = pACB->pmuE;
- 
--	in_doorbell = readl(&reg->iobound_doorbell);
-+	if (pACB->adapter_type == ACB_ADAPTER_TYPE_F) {
-+		for (i = 0; i < 5; i++) {
-+			in_doorbell = readl(&reg->iobound_doorbell);
-+			if (in_doorbell != 0)
-+				break;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index ae1973878cc7..d68a3a42c3fb 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3696,6 +3696,28 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 	ioc->fw_events_cleanup = 1;
+ 	while ((fw_event = dequeue_next_fw_event(ioc)) ||
+ 	     (fw_event = ioc->current_event)) {
++
++		/*
++		 * Don't call cancel_work_sync() for current_event
++		 * other than MPT3SAS_REMOVE_UNRESPONDING_DEVICES;
++		 * otherwise we may observe deadlock if current
++		 * hard reset issued as part of processing the current_event.
++		 *
++		 * Orginal logic of cleaning the current_event is added
++		 * for handling the back to back host reset issued by the user.
++		 * i.e. during back to back host reset, driver use to process
++		 * the two instances of MPT3SAS_REMOVE_UNRESPONDING_DEVICES
++		 * event back to back and this made the drives to unregister
++		 * the devices from SML.
++		 */
++
++		if (fw_event == ioc->current_event &&
++		    ioc->current_event->event !=
++		    MPT3SAS_REMOVE_UNRESPONDING_DEVICES) {
++			ioc->current_event = NULL;
++			continue;
 +		}
-+	} else
-+		in_doorbell = readl(&reg->iobound_doorbell);
- 	outbound_doorbell = in_doorbell ^ pACB->in_doorbell;
- 	do {
- 		writel(0, &reg->host_int_status); /* clear interrupt */
++
+ 		/*
+ 		 * Wait on the fw_event to complete. If this returns 1, then
+ 		 * the event was never executed, and we need a put for the
 -- 
 2.30.2
 
