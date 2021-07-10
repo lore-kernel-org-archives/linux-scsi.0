@@ -4,45 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D88FC11F68
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E4C5C11F69
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:29:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18449613AF
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DEDF613AF
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:29:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234397AbhGJCbD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:31:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42974 "EHLO mail.kernel.org"
+        id S234332AbhGJCbw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:31:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48846 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234344AbhGJC3X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:29:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D6E9861441;
-        Sat, 10 Jul 2021 02:25:47 +0000 (UTC)
+        id S234003AbhGJCaN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:30:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C7EDD613F3;
+        Sat, 10 Jul 2021 02:27:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883948;
-        bh=YqEKOD+jbFI2SPkTCsG8hHcld8NPo8tsmJX1Z8hqID4=;
+        s=k20201202; t=1625884048;
+        bh=h2yxPyKWWpnj3mp6+FSK7ru6lObvPXYoFVjXC4aATeQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=cECSv5uig8b0K58gWeMMhx24CFUx1kB9Jrbx0kiBocVNkJpFFSxkhQdFmJZ29e154
-         XC8uvTCbnwkxqnwVM8lZ/h/tdmkyFA0Q5vyj1zW/x8Ry5Gpu6Jy5LIS1pb7+E4NnNO
-         6m0C/MFGLI1n4g0b2P2Eaiv93w8YY48AV/qO89Vy6IvWND3ryuZtXpjFCnq//WdVaz
-         hg7Qjt63a3DZ1ODF7oBdrULCT2vfIwIU2w1XW9IhYRrUyr+4b24Cu+HOrdYDfSkAJw
-         6mye+jd4gYMCDiDP85qwMB3F/Tb7nswpg1oxuMytXjj3nJyUpH1xm4fkL5YNsZ8+pf
-         PEHC6QUGv8IdA==
+        b=R3SthkAyqhk0J/6MibHAqb8jByDvMYnbmo6TI9H2ARIEVZvzmWXRGznsQLQnrWs8/
+         U14N9zrifrl1WDTSrKhB2RUeY6CAEE1/arr3srfaayxqkyINBIz2qJDuT6OBMSXG/F
+         BQmrBZ1kr26fOgLf7x8/zzEE/M+ZJbxp1N26EV9RchiaM7Z82xUnEjSqOtICQ/2naP
+         2MwEi5dIyEPLfg2XS9hqPZzWIejnyF1Z/bV/5Yuh5n07cHX/hEzCH3GPWGL7AAGKVn
+         7zUj96sY0zFwSG28B7fy10euWhL+wA8EBKeSC9v/demHsBZb2u2BGlCYCvionDJDpl
+         2Xulq6SqqX1hA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Michael Kelley <mikelley@microsoft.com>,
+Cc:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-hyperv@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 61/93] scsi: storvsc: Correctly handle multiple flags in srb_status
-Date:   Fri,  9 Jul 2021 22:23:55 -0400
-Message-Id: <20210710022428.3169839-61-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 15/63] scsi: core: Cap scsi_host cmd_per_lun at can_queue
+Date:   Fri,  9 Jul 2021 22:26:21 -0400
+Message-Id: <20210710022709.3170675-15-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210710022428.3169839-1-sashal@kernel.org>
-References: <20210710022428.3169839-1-sashal@kernel.org>
+In-Reply-To: <20210710022709.3170675-1-sashal@kernel.org>
+References: <20210710022709.3170675-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,118 +51,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Michael Kelley <mikelley@microsoft.com>
+From: John Garry <john.garry@huawei.com>
 
-[ Upstream commit 52e1b3b3daa9d53f0204bf474ee1d4b1beb38234 ]
+[ Upstream commit ea2f0f77538c50739b9fb4de4700cee5535e1f77 ]
 
-Hyper-V is observed to sometimes set multiple flags in the srb_status, such
-as ABORTED and ERROR. Current code in storvsc_handle_error() handles only a
-single flag being set, and does nothing when multiple flags are set.  Fix
-this by changing the case statement into a series of "if" statements
-testing individual flags. The functionality for handling each flag is
-unchanged.
+The sysfs handling function sdev_store_queue_depth() enforces that the sdev
+queue depth cannot exceed shost can_queue. The initial sdev queue depth
+comes from shost cmd_per_lun. However, the LLDD may manually set
+cmd_per_lun to be larger than can_queue, which leads to an initial sdev
+queue depth greater than can_queue.
 
-Link: https://lore.kernel.org/r/1622827263-12516-3-git-send-email-mikelley@microsoft.com
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
+Such an issue was reported in [0], which caused a hang. That has since been
+fixed in commit fc09acb7de31 ("scsi: scsi_debug: Fix cmd_per_lun, set to
+max_queue").
+
+Stop this possibly happening for other drivers by capping shost cmd_per_lun
+at shost can_queue.
+
+[0] https://lore.kernel.org/linux-scsi/YHaez6iN2HHYxYOh@T590/
+
+Link: https://lore.kernel.org/r/1621434662-173079-1-git-send-email-john.garry@huawei.com
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/storvsc_drv.c | 61 +++++++++++++++++++++-----------------
- 1 file changed, 33 insertions(+), 28 deletions(-)
+ drivers/scsi/hosts.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index ded00a89bfc4..0ee0b80006e0 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -994,17 +994,40 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 	struct storvsc_scan_work *wrk;
- 	void (*process_err_fn)(struct work_struct *work);
- 	struct hv_host_device *host_dev = shost_priv(host);
--	bool do_work = false;
- 
--	switch (SRB_STATUS(vm_srb->srb_status)) {
--	case SRB_STATUS_ERROR:
-+	/*
-+	 * In some situations, Hyper-V sets multiple bits in the
-+	 * srb_status, such as ABORTED and ERROR. So process them
-+	 * individually, with the most specific bits first.
-+	 */
-+
-+	if (vm_srb->srb_status & SRB_STATUS_INVALID_LUN) {
-+		set_host_byte(scmnd, DID_NO_CONNECT);
-+		process_err_fn = storvsc_remove_lun;
-+		goto do_work;
-+	}
-+
-+	if (vm_srb->srb_status & SRB_STATUS_ABORTED) {
-+		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID &&
-+		    /* Capacity data has changed */
-+		    (asc == 0x2a) && (ascq == 0x9)) {
-+			process_err_fn = storvsc_device_scan;
-+			/*
-+			 * Retry the I/O that triggered this.
-+			 */
-+			set_host_byte(scmnd, DID_REQUEUE);
-+			goto do_work;
-+		}
-+	}
-+
-+	if (vm_srb->srb_status & SRB_STATUS_ERROR) {
- 		/*
- 		 * Let upper layer deal with error when
- 		 * sense message is present.
- 		 */
--
- 		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID)
--			break;
-+			return;
-+
- 		/*
- 		 * If there is an error; offline the device since all
- 		 * error recovery strategies would have already been
-@@ -1017,37 +1040,19 @@ static void storvsc_handle_error(struct vmscsi_request *vm_srb,
- 			set_host_byte(scmnd, DID_PASSTHROUGH);
- 			break;
- 		/*
--		 * On Some Windows hosts TEST_UNIT_READY command can return
--		 * SRB_STATUS_ERROR, let the upper level code deal with it
--		 * based on the sense information.
-+		 * On some Hyper-V hosts TEST_UNIT_READY command can
-+		 * return SRB_STATUS_ERROR. Let the upper level code
-+		 * deal with it based on the sense information.
- 		 */
- 		case TEST_UNIT_READY:
- 			break;
- 		default:
- 			set_host_byte(scmnd, DID_ERROR);
- 		}
--		break;
--	case SRB_STATUS_INVALID_LUN:
--		set_host_byte(scmnd, DID_NO_CONNECT);
--		do_work = true;
--		process_err_fn = storvsc_remove_lun;
--		break;
--	case SRB_STATUS_ABORTED:
--		if (vm_srb->srb_status & SRB_STATUS_AUTOSENSE_VALID &&
--		    (asc == 0x2a) && (ascq == 0x9)) {
--			do_work = true;
--			process_err_fn = storvsc_device_scan;
--			/*
--			 * Retry the I/O that triggered this.
--			 */
--			set_host_byte(scmnd, DID_REQUEUE);
--		}
--		break;
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index ff36432c8fbc..1e0496f71e5a 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -219,6 +219,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 		goto fail;
  	}
-+	return;
  
--	if (!do_work)
--		return;
--
-+do_work:
- 	/*
- 	 * We need to schedule work to process this error; schedule it.
- 	 */
++	shost->cmd_per_lun = min_t(short, shost->cmd_per_lun,
++				   shost->can_queue);
++
+ 	error = scsi_init_sense_cache(shost);
+ 	if (error)
+ 		goto fail;
 -- 
 2.30.2
 
