@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3A01C11F6B
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23B52C11F6D
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D49C5613D3
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BD33613DF
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234615AbhGJClO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:41:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58440 "EHLO mail.kernel.org"
+        id S235096AbhGJClQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:41:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58436 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235607AbhGJCji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S235603AbhGJCji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 9 Jul 2021 22:39:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 644716140A;
-        Sat, 10 Jul 2021 02:35:25 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B29BC61404;
+        Sat, 10 Jul 2021 02:35:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884526;
-        bh=8reeUWS3OZIXMIggPrH9xwvCwsqYreQzFLQhwmF0rjI=;
+        s=k20201202; t=1625884522;
+        bh=rHxthK1+Cw4VJf1piyGcFFv6xnz2BwQWElOink4w288=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=sHWVWQj0gmvLr5LHLdkVwl+5AQrc1p7eHRyNbcWRG7sXuc4fBAk+A3rxDLcpo3I5b
-         XNXPeTfgDOR/KPVpcCPEDDSo0Qn60A6E0S0RkqzxObzHOMT1M2Pd5gqyAjkj+G04Mu
-         Q/N3LMvXOlrFayZ2S/ePmpaZuJkgqiehCw+oSnBrbhfor1UiO74IaGH0VFdws+nsyb
-         20lF3IS8O0nPYXtEbbhsB97LCBBjlD9isQbCHO4SVvQ6mX18dlfxm6CITMSDuYgkrV
-         1YrfI2whVexZHZrvaNGPH3PL8D1eYZmFAXkkiFaI6YVSJz/XdZxO4gKRWbPRzsQpCP
-         R7ewK79sHM+Pw==
+        b=F3wnIX9Z5N6fNzoVDbKso61oBU24XRM7AdVR5Yv6zZiNsnVr/Syql4FcbNTrcgErK
+         nmIsdhiyUYpzb5GmqqHkibOLro6zbtB+zaQG/52T8oJ480Gm5OvDgD6EVUX9en9Wkh
+         S+uVrR7PjDmrsAEBchy7BBYDubiVyyfG5odOHoAilRk+/FUrc6prSocUBlToKOPWPf
+         zcZuBlvxs18PJTvmv3lOMHRpbKPeml+V9l0TrMMTC/1ku5AUTV+0UjYQTq2BPeJVY/
+         QURkZ2TboWRcs50OjTa1+HonRxv+5rPYZm6pTqdkL8rwbZCx2I8S3as/eohWl5Ei10
+         9vCe+T5Fm2zWA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 08/33] scsi: core: Cap scsi_host cmd_per_lun at can_queue
-Date:   Fri,  9 Jul 2021 22:34:50 -0400
-Message-Id: <20210710023516.3172075-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 05/33] scsi: hisi_sas: Propagate errors in interrupt_init_v1_hw()
+Date:   Fri,  9 Jul 2021 22:34:47 -0400
+Message-Id: <20210710023516.3172075-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710023516.3172075-1-sashal@kernel.org>
 References: <20210710023516.3172075-1-sashal@kernel.org>
@@ -51,49 +51,83 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: John Garry <john.garry@huawei.com>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-[ Upstream commit ea2f0f77538c50739b9fb4de4700cee5535e1f77 ]
+[ Upstream commit ab17122e758ef68fb21033e25c041144067975f5 ]
 
-The sysfs handling function sdev_store_queue_depth() enforces that the sdev
-queue depth cannot exceed shost can_queue. The initial sdev queue depth
-comes from shost cmd_per_lun. However, the LLDD may manually set
-cmd_per_lun to be larger than can_queue, which leads to an initial sdev
-queue depth greater than can_queue.
+After commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have the
+error codes returned by platform_get_irq() ready for the propagation
+upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
+probing. Let's propagate the error codes from devm_request_irq() as well
+since I don't see the reason to override them with -ENOENT...
 
-Such an issue was reported in [0], which caused a hang. That has since been
-fixed in commit fc09acb7de31 ("scsi: scsi_debug: Fix cmd_per_lun, set to
-max_queue").
-
-Stop this possibly happening for other drivers by capping shost cmd_per_lun
-at shost can_queue.
-
-[0] https://lore.kernel.org/linux-scsi/YHaez6iN2HHYxYOh@T590/
-
-Link: https://lore.kernel.org/r/1621434662-173079-1-git-send-email-john.garry@huawei.com
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: John Garry <john.garry@huawei.com>
+Link: https://lore.kernel.org/r/49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru
+Acked-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/hosts.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 5788a2ce3571..4b771bf0c9e4 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -213,6 +213,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 		goto fail;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 08eca20b0b81..8b41545ff8d9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1746,7 +1746,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				dev_err(dev,
+ 					"irq init: fail map phy interrupt %d\n",
+ 					idx);
+-				return -ENOENT;
++				return irq;
+ 			}
+ 
+ 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
+@@ -1755,7 +1755,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				dev_err(dev, "irq init: could not request "
+ 					"phy interrupt %d, rc=%d\n",
+ 					irq, rc);
+-				return -ENOENT;
++				return rc;
+ 			}
+ 		}
+ 	}
+@@ -1766,7 +1766,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (!irq) {
+ 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
+ 				idx);
+-			return -ENOENT;
++			return irq;
+ 		}
+ 
+ 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
+@@ -1774,7 +1774,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (rc) {
+ 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			return rc;
+ 		}
  	}
  
-+	shost->cmd_per_lun = min_t(short, shost->cmd_per_lun,
-+				   shost->can_queue);
-+
- 	error = scsi_init_sense_cache(shost);
- 	if (error)
- 		goto fail;
+@@ -1784,7 +1784,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (!irq) {
+ 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
+ 				idx);
+-			return -ENOENT;
++			return irq;
+ 		}
+ 
+ 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
+@@ -1793,7 +1793,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 			dev_err(dev,
+ 				"irq init: could not request fatal interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			return rc;
+ 		}
+ 	}
+ 
 -- 
 2.30.2
 
