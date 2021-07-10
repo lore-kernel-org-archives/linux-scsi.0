@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FD1FC07E99
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:23:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A23AC11F69
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:23:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58495613D1
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:23:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56E73613E4
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:23:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232937AbhGJC0G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:26:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42704 "EHLO mail.kernel.org"
+        id S233105AbhGJC0J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:26:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42924 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233213AbhGJCZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:25:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 18C76613D6;
-        Sat, 10 Jul 2021 02:22:47 +0000 (UTC)
+        id S233266AbhGJCZj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:25:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4788D613D1;
+        Sat, 10 Jul 2021 02:22:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883768;
-        bh=fD1LaNOTlbKiJbWhZW7R5n9qQL7aHKWvIPGQEkN4bWA=;
+        s=k20201202; t=1625883775;
+        bh=jdfYX0R3B7r3OaAnlg2mI6ZrXYkuBBieHVRjDgBSaa0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bhf/AVK6bn5j79seIQa9GErOLTWVgHJPwntqQND2+9HpR0BurMBhRz647xQWWwgBj
-         q5FH+CU3cqC/BQTCGX26J6YWZ1Sr7NrdKdp+T6ruMR6NqrmrEk9F1lOWnwIq5ytTKu
-         KVJp78mrdrgsj3vqpWR5ITElOi5eF2WtJdhsGnJ2evFlwzG4xtUO8RWlUDOsuf1vWq
-         tbg1qGLpvktcvBRukZbxEquJrgI8SJD1jUv15JEEncQe+epSWKGbzChPx6cMEYrAgv
-         Uqc3bTcl6z/Bl1ToXW8VNT+ypL/I78EJqk+H0RuO0O5ws9ansTKnlgJIiXmk0+G+0T
-         9PU9L/KTIoUZg==
+        b=XKcONEKoMQ/F7wU/IU6+nayQTIWoNOB96Ntut7ffHvmL/ZEVm1NooYKedSZFmR4Sh
+         MXjDs1Xj+gpSFM+aio5R6XdTsJ2M7QoEM7gqiuVUk6MIkaDs5zHWV/mHENRuRhxzpu
+         tEEgokmz7Laal+hYAHSEPE5Z2qpKgYo/z98RHDCEIncC8hHL8J+4rHi3Y08WCFwFX2
+         JS+bs25eAMAe+rEP4D0smc6s0PQ5s6rFakifY5FhpobM8M6LqAIiSoURgF3gG0N1dh
+         m3Ji+QnqmwHVZPXJBhE6QbU9yox0LhWLjD8JLrGz3Rrh3XGiXILGQZXzRaqMQKO3sW
+         b/0BCoNYYfudQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
-Subject: [PATCH AUTOSEL 5.12 039/104] scsi: iscsi: Stop queueing during ep_disconnect
-Date:   Fri,  9 Jul 2021 22:20:51 -0400
-Message-Id: <20210710022156.3168825-39-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.12 044/104] scsi: qedi: Fix race during abort timeouts
+Date:   Fri,  9 Jul 2021 22:20:56 -0400
+Message-Id: <20210710022156.3168825-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022156.3168825-1-sashal@kernel.org>
 References: <20210710022156.3168825-1-sashal@kernel.org>
@@ -54,291 +53,189 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit 891e2639deae721dc43764a44fa255890dc34313 ]
+[ Upstream commit 2ce002366a3fcc3f9616d4583194f65dde0ad253 ]
 
-During ep_disconnect we have been doing iscsi_suspend_tx/queue to block new
-I/O but every driver except cxgbi and iscsi_tcp can still get I/O from
-__iscsi_conn_send_pdu() if we haven't called iscsi_conn_failure() before
-ep_disconnect. This could happen if we were terminating the session, and
-the logout timed out before it was even sent to libiscsi.
+If the SCSI cmd completes after qedi_tmf_work calls iscsi_itt_to_task then
+the qedi qedi_cmd->task_id could be freed and used for another cmd. If we
+then call qedi_iscsi_cleanup_task with that task_id we will be cleaning up
+the wrong cmd.
 
-Fix the issue by adding a helper which reverses the bind_conn call that
-allows new I/O to be queued. Drivers implementing ep_disconnect can use this
-to make sure new I/O is not queued to them when handling the disconnect.
+Wait to release the task_id until the last put has been done on the
+iscsi_task. Because libiscsi grabs a ref to the task when sending the
+abort, we know that for the non-abort timeout case that the task_id we are
+referencing is for the cmd that was supposed to be aborted.
 
-Link: https://lore.kernel.org/r/20210525181821.7617-3-michael.christie@oracle.com
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+A latter commit will fix the case where the abort times out while we are
+running qedi_tmf_work.
+
+Link: https://lore.kernel.org/r/20210525181821.7617-21-michael.christie@oracle.com
+Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |  1 +
- drivers/scsi/be2iscsi/be_main.c          |  1 +
- drivers/scsi/bnx2i/bnx2i_iscsi.c         |  1 +
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c       |  1 +
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c       |  1 +
- drivers/scsi/libiscsi.c                  | 70 +++++++++++++++++++++---
- drivers/scsi/qedi/qedi_iscsi.c           |  1 +
- drivers/scsi/qla4xxx/ql4_os.c            |  1 +
- drivers/scsi/scsi_transport_iscsi.c      | 10 +++-
- include/scsi/libiscsi.h                  |  1 +
- include/scsi/scsi_transport_iscsi.h      |  1 +
- 11 files changed, 78 insertions(+), 11 deletions(-)
+ drivers/scsi/qedi/qedi_fw.c    | 15 ---------------
+ drivers/scsi/qedi/qedi_iscsi.c | 20 +++++++++++++++++---
+ 2 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 8fcaa1136f2c..6baebcb6d14d 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -1002,6 +1002,7 @@ static struct iscsi_transport iscsi_iser_transport = {
- 	/* connection management */
- 	.create_conn            = iscsi_iser_conn_create,
- 	.bind_conn              = iscsi_iser_conn_bind,
-+	.unbind_conn		= iscsi_conn_unbind,
- 	.destroy_conn           = iscsi_conn_teardown,
- 	.attr_is_visible	= iser_attr_is_visible,
- 	.set_param              = iscsi_iser_set_param,
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 90fcddb76f46..e9658a67d9da 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -5809,6 +5809,7 @@ struct iscsi_transport beiscsi_iscsi_transport = {
- 	.destroy_session = beiscsi_session_destroy,
- 	.create_conn = beiscsi_conn_create,
- 	.bind_conn = beiscsi_conn_bind,
-+	.unbind_conn = iscsi_conn_unbind,
- 	.destroy_conn = iscsi_conn_teardown,
- 	.attr_is_visible = beiscsi_attr_is_visible,
- 	.set_iface_param = beiscsi_iface_set_param,
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 1e6d8f62ea3c..b6c1da46d582 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -2276,6 +2276,7 @@ struct iscsi_transport bnx2i_iscsi_transport = {
- 	.destroy_session	= bnx2i_session_destroy,
- 	.create_conn		= bnx2i_conn_create,
- 	.bind_conn		= bnx2i_conn_bind,
-+	.unbind_conn		= iscsi_conn_unbind,
- 	.destroy_conn		= bnx2i_conn_destroy,
- 	.attr_is_visible	= bnx2i_attr_is_visible,
- 	.set_param		= iscsi_set_param,
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index 37d99357120f..edcd3fab6973 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -117,6 +117,7 @@ static struct iscsi_transport cxgb3i_iscsi_transport = {
- 	/* connection management */
- 	.create_conn	= cxgbi_create_conn,
- 	.bind_conn	= cxgbi_bind_conn,
-+	.unbind_conn	= iscsi_conn_unbind,
- 	.destroy_conn	= iscsi_tcp_conn_teardown,
- 	.start_conn	= iscsi_conn_start,
- 	.stop_conn	= iscsi_conn_stop,
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 2c3491528d42..efb3e2b3398e 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -134,6 +134,7 @@ static struct iscsi_transport cxgb4i_iscsi_transport = {
- 	/* connection management */
- 	.create_conn	= cxgbi_create_conn,
- 	.bind_conn		= cxgbi_bind_conn,
-+	.unbind_conn	= iscsi_conn_unbind,
- 	.destroy_conn	= iscsi_tcp_conn_teardown,
- 	.start_conn		= iscsi_conn_start,
- 	.stop_conn		= iscsi_conn_stop,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 4834219497ee..2aaf83678654 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1387,23 +1387,32 @@ void iscsi_session_failure(struct iscsi_session *session,
- }
- EXPORT_SYMBOL_GPL(iscsi_session_failure);
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index cf57b4e49700..c12bb2dd5ff9 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -73,7 +73,6 @@ static void qedi_process_logout_resp(struct qedi_ctx *qedi,
+ 	spin_unlock(&qedi_conn->list_lock);
  
--void iscsi_conn_failure(struct iscsi_conn *conn, enum iscsi_err err)
-+static bool iscsi_set_conn_failed(struct iscsi_conn *conn)
- {
- 	struct iscsi_session *session = conn->session;
+ 	cmd->state = RESPONSE_RECEIVED;
+-	qedi_clear_task_idx(qedi, cmd->task_id);
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr, NULL, 0);
  
--	spin_lock_bh(&session->frwd_lock);
--	if (session->state == ISCSI_STATE_FAILED) {
--		spin_unlock_bh(&session->frwd_lock);
--		return;
--	}
-+	if (session->state == ISCSI_STATE_FAILED)
-+		return false;
+ 	spin_unlock(&session->back_lock);
+@@ -138,7 +137,6 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
+ 	spin_unlock(&qedi_conn->list_lock);
  
- 	if (conn->stop_stage == 0)
- 		session->state = ISCSI_STATE_FAILED;
--	spin_unlock_bh(&session->frwd_lock);
+ 	cmd->state = RESPONSE_RECEIVED;
+-	qedi_clear_task_idx(qedi, cmd->task_id);
  
- 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
- 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
--	iscsi_conn_error_event(conn->cls_conn, err);
-+	return true;
-+}
-+
-+void iscsi_conn_failure(struct iscsi_conn *conn, enum iscsi_err err)
-+{
-+	struct iscsi_session *session = conn->session;
-+	bool needs_evt;
-+
-+	spin_lock_bh(&session->frwd_lock);
-+	needs_evt = iscsi_set_conn_failed(conn);
-+	spin_unlock_bh(&session->frwd_lock);
-+
-+	if (needs_evt)
-+		iscsi_conn_error_event(conn->cls_conn, err);
- }
- EXPORT_SYMBOL_GPL(iscsi_conn_failure);
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr,
+ 			     qedi_conn->gen_pdu.resp_buf,
+@@ -164,13 +162,11 @@ static void qedi_tmf_resp_work(struct work_struct *work)
+ 	iscsi_block_session(session->cls_session);
+ 	rval = qedi_cleanup_all_io(qedi, qedi_conn, qedi_cmd->task, true);
+ 	if (rval) {
+-		qedi_clear_task_idx(qedi, qedi_cmd->task_id);
+ 		iscsi_unblock_session(session->cls_session);
+ 		goto exit_tmf_resp;
+ 	}
  
-@@ -2180,6 +2189,51 @@ static void iscsi_check_transport_timeouts(struct timer_list *t)
- 	spin_unlock(&session->frwd_lock);
+ 	iscsi_unblock_session(session->cls_session);
+-	qedi_clear_task_idx(qedi, qedi_cmd->task_id);
+ 
+ 	spin_lock(&session->back_lock);
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
+@@ -245,8 +241,6 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
+ 		goto unblock_sess;
+ 	}
+ 
+-	qedi_clear_task_idx(qedi, qedi_cmd->task_id);
+-
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
+ 	kfree(resp_hdr_ptr);
+ 
+@@ -314,7 +308,6 @@ static void qedi_process_login_resp(struct qedi_ctx *qedi,
+ 		  "Freeing tid=0x%x for cid=0x%x\n",
+ 		  cmd->task_id, qedi_conn->iscsi_conn_id);
+ 	cmd->state = RESPONSE_RECEIVED;
+-	qedi_clear_task_idx(qedi, cmd->task_id);
  }
  
-+/**
-+ * iscsi_conn_unbind - prevent queueing to conn.
-+ * @cls_conn: iscsi conn ep is bound to.
-+ * @is_active: is the conn in use for boot or is this for EH/termination
-+ *
-+ * This must be called by drivers implementing the ep_disconnect callout.
-+ * It disables queueing to the connection from libiscsi in preparation for
-+ * an ep_disconnect call.
-+ */
-+void iscsi_conn_unbind(struct iscsi_cls_conn *cls_conn, bool is_active)
-+{
-+	struct iscsi_session *session;
-+	struct iscsi_conn *conn;
-+
-+	if (!cls_conn)
-+		return;
-+
-+	conn = cls_conn->dd_data;
-+	session = conn->session;
-+	/*
-+	 * Wait for iscsi_eh calls to exit. We don't wait for the tmf to
-+	 * complete or timeout. The caller just wants to know what's running
-+	 * is everything that needs to be cleaned up, and no cmds will be
-+	 * queued.
-+	 */
-+	mutex_lock(&session->eh_mutex);
-+
-+	iscsi_suspend_queue(conn);
-+	iscsi_suspend_tx(conn);
-+
-+	spin_lock_bh(&session->frwd_lock);
-+	if (!is_active) {
-+		/*
-+		 * if logout timed out before userspace could even send a PDU
-+		 * the state might still be in ISCSI_STATE_LOGGED_IN and
-+		 * allowing new cmds and TMFs.
-+		 */
-+		if (session->state == ISCSI_STATE_LOGGED_IN)
-+			iscsi_set_conn_failed(conn);
-+	}
-+	spin_unlock_bh(&session->frwd_lock);
-+	mutex_unlock(&session->eh_mutex);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_conn_unbind);
-+
- static void iscsi_prep_abort_task_pdu(struct iscsi_task *task,
- 				      struct iscsi_tm *hdr)
- {
+ static void qedi_get_rq_bdq_buf(struct qedi_ctx *qedi,
+@@ -468,7 +461,6 @@ static int qedi_process_nopin_mesg(struct qedi_ctx *qedi,
+ 		}
+ 
+ 		spin_unlock(&qedi_conn->list_lock);
+-		qedi_clear_task_idx(qedi, cmd->task_id);
+ 	}
+ 
+ done:
+@@ -673,7 +665,6 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
+ 	if (qedi_io_tracing)
+ 		qedi_trace_io(qedi, task, cmd->task_id, QEDI_IO_TRACE_RSP);
+ 
+-	qedi_clear_task_idx(qedi, cmd->task_id);
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)hdr,
+ 			     conn->data, datalen);
+ error:
+@@ -730,7 +721,6 @@ static void qedi_process_nopin_local_cmpl(struct qedi_ctx *qedi,
+ 		  cqe->itid, cmd->task_id);
+ 
+ 	cmd->state = RESPONSE_RECEIVED;
+-	qedi_clear_task_idx(qedi, cmd->task_id);
+ 
+ 	spin_lock_bh(&session->back_lock);
+ 	__iscsi_put_task(task);
+@@ -748,7 +738,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 	itt_t protoitt = 0;
+ 	int found = 0;
+ 	struct qedi_cmd *qedi_cmd = NULL;
+-	u32 rtid = 0;
+ 	u32 iscsi_cid;
+ 	struct qedi_conn *qedi_conn;
+ 	struct qedi_cmd *dbg_cmd;
+@@ -779,7 +768,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 			found = 1;
+ 			mtask = qedi_cmd->task;
+ 			tmf_hdr = (struct iscsi_tm *)mtask->hdr;
+-			rtid = work->rtid;
+ 
+ 			list_del_init(&work->list);
+ 			kfree(work);
+@@ -821,8 +809,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 			if (qedi_cmd->state == CLEANUP_WAIT_FAILED)
+ 				qedi_cmd->state = CLEANUP_RECV;
+ 
+-			qedi_clear_task_idx(qedi_conn->qedi, rtid);
+-
+ 			spin_lock(&qedi_conn->list_lock);
+ 			if (likely(dbg_cmd->io_cmd_in_list)) {
+ 				dbg_cmd->io_cmd_in_list = false;
+@@ -856,7 +842,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
+ 			  "Freeing tid=0x%x for cid=0x%x\n",
+ 			  cqe->itid, qedi_conn->iscsi_conn_id);
+-		qedi_clear_task_idx(qedi_conn->qedi, cqe->itid);
+ 
+ 	} else {
+ 		qedi_get_proto_itt(qedi, cqe->itid, &ptmp_itt);
 diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-index 08c05403cd72..ef16537c523c 100644
+index ef16537c523c..a7003847bd4c 100644
 --- a/drivers/scsi/qedi/qedi_iscsi.c
 +++ b/drivers/scsi/qedi/qedi_iscsi.c
-@@ -1401,6 +1401,7 @@ struct iscsi_transport qedi_iscsi_transport = {
- 	.destroy_session = qedi_session_destroy,
- 	.create_conn = qedi_conn_create,
- 	.bind_conn = qedi_conn_bind,
-+	.unbind_conn = iscsi_conn_unbind,
- 	.start_conn = qedi_conn_start,
- 	.stop_conn = iscsi_conn_stop,
- 	.destroy_conn = qedi_conn_destroy,
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 7bd9a4a04ad5..ff663cb330c2 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -259,6 +259,7 @@ static struct iscsi_transport qla4xxx_iscsi_transport = {
- 	.start_conn             = qla4xxx_conn_start,
- 	.create_conn            = qla4xxx_conn_create,
- 	.bind_conn              = qla4xxx_conn_bind,
-+	.unbind_conn		= iscsi_conn_unbind,
- 	.stop_conn              = iscsi_conn_stop,
- 	.destroy_conn           = qla4xxx_conn_destroy,
- 	.set_param              = iscsi_set_param,
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 441f0152193f..82491343e94a 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2964,7 +2964,7 @@ static int iscsi_if_ep_connect(struct iscsi_transport *transport,
+@@ -772,7 +772,6 @@ static int qedi_mtask_xmit(struct iscsi_conn *conn, struct iscsi_task *task)
+ 	}
+ 
+ 	cmd->conn = conn->dd_data;
+-	cmd->scsi_cmd = NULL;
+ 	return qedi_iscsi_send_generic_request(task);
  }
  
- static int iscsi_if_ep_disconnect(struct iscsi_transport *transport,
--				  u64 ep_handle)
-+				  u64 ep_handle, bool is_active)
- {
- 	struct iscsi_cls_conn *conn;
- 	struct iscsi_endpoint *ep;
-@@ -2981,6 +2981,8 @@ static int iscsi_if_ep_disconnect(struct iscsi_transport *transport,
- 		conn->ep = NULL;
- 		mutex_unlock(&conn->ep_mutex);
- 		conn->state = ISCSI_CONN_FAILED;
+@@ -783,6 +782,10 @@ static int qedi_task_xmit(struct iscsi_task *task)
+ 	struct qedi_cmd *cmd = task->dd_data;
+ 	struct scsi_cmnd *sc = task->sc;
+ 
++	/* Clear now so in cleanup_task we know it didn't make it */
++	cmd->scsi_cmd = NULL;
++	cmd->task_id = U16_MAX;
 +
-+		transport->unbind_conn(conn, is_active);
+ 	if (test_bit(QEDI_IN_SHUTDOWN, &qedi_conn->qedi->flags))
+ 		return -ENODEV;
+ 
+@@ -1383,13 +1386,24 @@ static umode_t qedi_attr_is_visible(int param_type, int param)
+ 
+ static void qedi_cleanup_task(struct iscsi_task *task)
+ {
+-	if (!task->sc || task->state == ISCSI_TASK_PENDING) {
++	struct qedi_cmd *cmd;
++
++	if (task->state == ISCSI_TASK_PENDING) {
+ 		QEDI_INFO(NULL, QEDI_LOG_IO, "Returning ref_cnt=%d\n",
+ 			  refcount_read(&task->refcount));
+ 		return;
  	}
  
- 	transport->ep_disconnect(ep);
-@@ -3012,7 +3014,8 @@ iscsi_if_transport_ep(struct iscsi_transport *transport,
- 		break;
- 	case ISCSI_UEVENT_TRANSPORT_EP_DISCONNECT:
- 		rc = iscsi_if_ep_disconnect(transport,
--					    ev->u.ep_disconnect.ep_handle);
-+					    ev->u.ep_disconnect.ep_handle,
-+					    false);
- 		break;
- 	}
- 	return rc;
-@@ -3737,7 +3740,7 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct nlmsghdr *nlh, uint32_t *group)
- 		conn = iscsi_conn_lookup(ev->u.b_conn.sid, ev->u.b_conn.cid);
+-	qedi_iscsi_unmap_sg_list(task->dd_data);
++	if (task->sc)
++		qedi_iscsi_unmap_sg_list(task->dd_data);
++
++	cmd = task->dd_data;
++	if (cmd->task_id != U16_MAX)
++		qedi_clear_task_idx(iscsi_host_priv(task->conn->session->host),
++				    cmd->task_id);
++
++	cmd->task_id = U16_MAX;
++	cmd->scsi_cmd = NULL;
+ }
  
- 		if (conn && conn->ep)
--			iscsi_if_ep_disconnect(transport, conn->ep->id);
-+			iscsi_if_ep_disconnect(transport, conn->ep->id, true);
- 
- 		if (!session || !conn) {
- 			err = -EINVAL;
-@@ -4656,6 +4659,7 @@ iscsi_register_transport(struct iscsi_transport *tt)
- 	int err;
- 
- 	BUG_ON(!tt);
-+	WARN_ON(tt->ep_disconnect && !tt->unbind_conn);
- 
- 	priv = iscsi_if_transport_lookup(tt);
- 	if (priv)
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 02f966e9358f..091f284bd6e9 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -424,6 +424,7 @@ extern int iscsi_conn_start(struct iscsi_cls_conn *);
- extern void iscsi_conn_stop(struct iscsi_cls_conn *, int);
- extern int iscsi_conn_bind(struct iscsi_cls_session *, struct iscsi_cls_conn *,
- 			   int);
-+extern void iscsi_conn_unbind(struct iscsi_cls_conn *cls_conn, bool is_active);
- extern void iscsi_conn_failure(struct iscsi_conn *conn, enum iscsi_err err);
- extern void iscsi_session_failure(struct iscsi_session *session,
- 				  enum iscsi_err err);
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index fc5a39839b4b..8874016b3c9a 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -82,6 +82,7 @@ struct iscsi_transport {
- 	void (*destroy_session) (struct iscsi_cls_session *session);
- 	struct iscsi_cls_conn *(*create_conn) (struct iscsi_cls_session *sess,
- 				uint32_t cid);
-+	void (*unbind_conn) (struct iscsi_cls_conn *conn, bool is_active);
- 	int (*bind_conn) (struct iscsi_cls_session *session,
- 			  struct iscsi_cls_conn *cls_conn,
- 			  uint64_t transport_eph, int is_leading);
+ struct iscsi_transport qedi_iscsi_transport = {
 -- 
 2.30.2
 
