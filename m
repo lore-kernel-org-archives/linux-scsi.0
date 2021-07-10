@@ -2,145 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B581C11F70
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:42:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A8D7AC07E95
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 08:17:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 58175613EB
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:42:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F46F613D2
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 08:17:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234740AbhGJCpR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:45:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33766 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235353AbhGJCnq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:43:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B0B50613EC;
-        Sat, 10 Jul 2021 02:39:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884761;
-        bh=frp5os3e6XNWtslDHOui4v0epU+AQnVOVRCsFNp/VSM=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=miesT1rH0pAwqzqVtEc7m8BMBW9Qk+V8UIsWzMOOEXbec4RdJu+qBuCTmpADvtah5
-         XwIb6mE7tl+JvPAoc2fW4upEhNsVXJ4u9oeBKAiqE1JTXOtZxa3jI0KV+7LohsnO7v
-         ajYU99XXqz41QlOWoubWAhJGA29oYpJ5eEYCTJ0AAd5cbnmXzwBKOgWpDeUv2dnGV0
-         JKGts+Y6Wd1aVfdnm091BGDQ2bLB9ota37E2L4jPjjK9018q6dNfsfMFhGsjp/uxhX
-         dIfpk/oTmx3TfuXvSR5Y4eVx2E3k+/cg9jaOSCByFjoFtm1eeOkRVEsDqllQrfCQda
-         dUkd7rjSJz88A==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 07/23] scsi: iscsi: Add iscsi_cls_conn refcount helpers
-Date:   Fri,  9 Jul 2021 22:38:56 -0400
-Message-Id: <20210710023912.3172972-7-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210710023912.3172972-1-sashal@kernel.org>
-References: <20210710023912.3172972-1-sashal@kernel.org>
+        id S232385AbhGJIU0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Jul 2021 04:20:26 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:56434 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232305AbhGJIU0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jul 2021 04:20:26 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 7CD73221DA;
+        Sat, 10 Jul 2021 08:17:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1625905060; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=XlCJsVkeheOEKSyl+Piw4umEyiBxk5Vn0AEGvCPIyps=;
+        b=mJCCcLw7AfAY+2JCBkivhh0QEehheIdPTd9Q26fS8ZAkLGy4xnlH3eLFmX6nJTf5ROqBqr
+        nQ48O8WD3JSe2YkkhZTDw1pL1bt+Hr6/0z9ybCBlqvnxzoH9YrOHkvKXdhr0nvIAgs6Qxq
+        L62WclkV2zA/JxDYRMUEC1qc8SBQt9k=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1625905060;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=XlCJsVkeheOEKSyl+Piw4umEyiBxk5Vn0AEGvCPIyps=;
+        b=984auJNWZjCf/giCK6BOh5FpYUPmJ1nOJpzkBxIjVYx76HIObOLd0PHK3RYVOnM3FmDVC3
+        26tSsNtXUVycCjDQ==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 490491340F;
+        Sat, 10 Jul 2021 08:17:40 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id FZI4EKRX6WC0bAAAGKfGzw
+        (envelope-from <hare@suse.de>); Sat, 10 Jul 2021 08:17:40 +0000
+Subject: Re: [PATCH v2 01/19] scsi: Fix the documentation of the
+ scsi_execute() time parameter
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Akinobu Mita <akinobu.mita@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        John Garry <john.garry@huawei.com>
+References: <20210709202638.9480-1-bvanassche@acm.org>
+ <20210709202638.9480-3-bvanassche@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <98927496-419c-3676-ec13-23e4b593cb9e@suse.de>
+Date:   Sat, 10 Jul 2021 10:17:39 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
+In-Reply-To: <20210709202638.9480-3-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+On 7/9/21 10:26 PM, Bart Van Assche wrote:
+> The unit of the scsi_execute() timeout parameter is 1/HZ seconds instead of
+> one second, just like the timeouts used in the block layer. Fix the
+> documentation header above the definition of the scsi_execute() macro.
+> 
+> Reviewed-by: Avri Altman <avri.altman@wdc.com>
+> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: John Garry <john.garry@huawei.com>
+> Fixes: "[SCSI] use scatter lists for all block pc requests and simplify hw handlers" # v2.6.16.28
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/scsi_lib.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 7184f93dfe15..4b56e06faa5e 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -194,7 +194,7 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+>    * @bufflen:	len of buffer
+>    * @sense:	optional sense buffer
+>    * @sshdr:	optional decoded sense header
+> - * @timeout:	request timeout in seconds
+> + * @timeout:	request timeout in HZ
+>    * @retries:	number of times to retry request
+>    * @flags:	flags for ->cmd_flags
+>    * @rq_flags:	flags for ->rq_flags
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-[ Upstream commit b1d19e8c92cfb0ded180ef3376c20e130414e067 ]
+Cheers,
 
-There are a couple places where we could free the iscsi_cls_conn while it's
-still in use. This adds some helpers to get/put a refcount on the struct
-and converts an exiting user. Subsequent commits will then use the helpers
-to fix 2 bugs in the eh code.
-
-Link: https://lore.kernel.org/r/20210525181821.7617-11-michael.christie@oracle.com
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/scsi/libiscsi.c             |  7 ++-----
- drivers/scsi/scsi_transport_iscsi.c | 12 ++++++++++++
- include/scsi/scsi_transport_iscsi.h |  2 ++
- 3 files changed, 16 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 18b8d86ef74b..0713d02cf112 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1384,7 +1384,6 @@ void iscsi_session_failure(struct iscsi_session *session,
- 			   enum iscsi_err err)
- {
- 	struct iscsi_conn *conn;
--	struct device *dev;
- 
- 	spin_lock_bh(&session->frwd_lock);
- 	conn = session->leadconn;
-@@ -1393,10 +1392,8 @@ void iscsi_session_failure(struct iscsi_session *session,
- 		return;
- 	}
- 
--	dev = get_device(&conn->cls_conn->dev);
-+	iscsi_get_conn(conn->cls_conn);
- 	spin_unlock_bh(&session->frwd_lock);
--	if (!dev)
--	        return;
- 	/*
- 	 * if the host is being removed bypass the connection
- 	 * recovery initialization because we are going to kill
-@@ -1406,7 +1403,7 @@ void iscsi_session_failure(struct iscsi_session *session,
- 		iscsi_conn_error_event(conn->cls_conn, err);
- 	else
- 		iscsi_conn_failure(conn, err);
--	put_device(dev);
-+	iscsi_put_conn(conn->cls_conn);
- }
- EXPORT_SYMBOL_GPL(iscsi_session_failure);
- 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 42bc4b71b0ba..e0159e6a1065 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2328,6 +2328,18 @@ int iscsi_destroy_conn(struct iscsi_cls_conn *conn)
- }
- EXPORT_SYMBOL_GPL(iscsi_destroy_conn);
- 
-+void iscsi_put_conn(struct iscsi_cls_conn *conn)
-+{
-+	put_device(&conn->dev);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_put_conn);
-+
-+void iscsi_get_conn(struct iscsi_cls_conn *conn)
-+{
-+	get_device(&conn->dev);
-+}
-+EXPORT_SYMBOL_GPL(iscsi_get_conn);
-+
- /*
-  * iscsi interface functions
-  */
-diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
-index 6183d20a01fb..e673c7c9c5fb 100644
---- a/include/scsi/scsi_transport_iscsi.h
-+++ b/include/scsi/scsi_transport_iscsi.h
-@@ -437,6 +437,8 @@ extern void iscsi_free_session(struct iscsi_cls_session *session);
- extern int iscsi_destroy_session(struct iscsi_cls_session *session);
- extern struct iscsi_cls_conn *iscsi_create_conn(struct iscsi_cls_session *sess,
- 						int dd_size, uint32_t cid);
-+extern void iscsi_put_conn(struct iscsi_cls_conn *conn);
-+extern void iscsi_get_conn(struct iscsi_cls_conn *conn);
- extern int iscsi_destroy_conn(struct iscsi_cls_conn *conn);
- extern void iscsi_unblock_session(struct iscsi_cls_session *session);
- extern void iscsi_block_session(struct iscsi_cls_session *session);
+Hannes
 -- 
-2.30.2
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
