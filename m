@@ -2,120 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8D7AC07E95
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 08:17:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 305C8C07E9B
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 09:20:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F46F613D2
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 08:17:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 114A7613DC
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 09:20:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232385AbhGJIU0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Jul 2021 04:20:26 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:56434 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232305AbhGJIU0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jul 2021 04:20:26 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 7CD73221DA;
-        Sat, 10 Jul 2021 08:17:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1625905060; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XlCJsVkeheOEKSyl+Piw4umEyiBxk5Vn0AEGvCPIyps=;
-        b=mJCCcLw7AfAY+2JCBkivhh0QEehheIdPTd9Q26fS8ZAkLGy4xnlH3eLFmX6nJTf5ROqBqr
-        nQ48O8WD3JSe2YkkhZTDw1pL1bt+Hr6/0z9ybCBlqvnxzoH9YrOHkvKXdhr0nvIAgs6Qxq
-        L62WclkV2zA/JxDYRMUEC1qc8SBQt9k=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1625905060;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=XlCJsVkeheOEKSyl+Piw4umEyiBxk5Vn0AEGvCPIyps=;
-        b=984auJNWZjCf/giCK6BOh5FpYUPmJ1nOJpzkBxIjVYx76HIObOLd0PHK3RYVOnM3FmDVC3
-        26tSsNtXUVycCjDQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 490491340F;
-        Sat, 10 Jul 2021 08:17:40 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id FZI4EKRX6WC0bAAAGKfGzw
-        (envelope-from <hare@suse.de>); Sat, 10 Jul 2021 08:17:40 +0000
-Subject: Re: [PATCH v2 01/19] scsi: Fix the documentation of the
- scsi_execute() time parameter
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Akinobu Mita <akinobu.mita@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        John Garry <john.garry@huawei.com>
-References: <20210709202638.9480-1-bvanassche@acm.org>
- <20210709202638.9480-3-bvanassche@acm.org>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <98927496-419c-3676-ec13-23e4b593cb9e@suse.de>
-Date:   Sat, 10 Jul 2021 10:17:39 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+        id S232198AbhGJJXb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Jul 2021 05:23:31 -0400
+Received: from mxout04.lancloud.ru ([45.84.86.114]:54206 "EHLO
+        mxout04.lancloud.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231877AbhGJJXb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jul 2021 05:23:31 -0400
+X-Greylist: delayed 353 seconds by postgrey-1.27 at vger.kernel.org; Sat, 10 Jul 2021 05:23:30 EDT
+Received: from LanCloud
+DKIM-Filter: OpenDKIM Filter v2.11.0 mxout04.lancloud.ru 2035420ABA32
+Received: from LanCloud
+Received: from LanCloud
+Received: from LanCloud
+Subject: Re: [PATCH AUTOSEL 4.19 05/39] scsi: hisi_sas: Propagate errors in
+ interrupt_init_v1_hw()
+To:     Sasha Levin <sashal@kernel.org>, <linux-kernel@vger.kernel.org>,
+        <stable@vger.kernel.org>
+CC:     John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>
+References: <20210710023204.3171428-1-sashal@kernel.org>
+ <20210710023204.3171428-5-sashal@kernel.org>
+From:   Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+Message-ID: <3e2af821-00e3-6db9-5820-696fdbe003d6@omp.ru>
+Date:   Sat, 10 Jul 2021 12:20:43 +0300
+User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <20210709202638.9480-3-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20210710023204.3171428-5-sashal@kernel.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [192.168.11.198]
+X-ClientProxiedBy: LFEXT02.lancloud.ru (fd00:f066::142) To
+ LFEX1907.lancloud.ru (fd00:f066::207)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/9/21 10:26 PM, Bart Van Assche wrote:
-> The unit of the scsi_execute() timeout parameter is 1/HZ seconds instead of
-> one second, just like the timeouts used in the block layer. Fix the
-> documentation header above the definition of the scsi_execute() macro.
+On 10.07.2021 5:31, Sasha Levin wrote:
+
+> From: Sergey Shtylyov <s.shtylyov@omp.ru>
 > 
-> Reviewed-by: Avri Altman <avri.altman@wdc.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: John Garry <john.garry@huawei.com>
-> Fixes: "[SCSI] use scatter lists for all block pc requests and simplify hw handlers" # v2.6.16.28
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> [ Upstream commit ab17122e758ef68fb21033e25c041144067975f5 ]
+> 
+> After commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have the
+> error codes returned by platform_get_irq() ready for the propagation
+> upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
+> probing. Let's propagate the error codes from devm_request_irq() as well
+> since I don't see the reason to override them with -ENOENT...
+> 
+> Link: https://lore.kernel.org/r/49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru
+> Acked-by: John Garry <john.garry@huawei.com>
+> Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Signed-off-by: Sasha Levin <sashal@kernel.org>
 > ---
->   drivers/scsi/scsi_lib.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
+>   drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 12 ++++++------
+>   1 file changed, 6 insertions(+), 6 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 7184f93dfe15..4b56e06faa5e 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -194,7 +194,7 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
->    * @bufflen:	len of buffer
->    * @sense:	optional sense buffer
->    * @sshdr:	optional decoded sense header
-> - * @timeout:	request timeout in seconds
-> + * @timeout:	request timeout in HZ
->    * @retries:	number of times to retry request
->    * @flags:	flags for ->cmd_flags
->    * @rq_flags:	flags for ->rq_flags
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+> index 8aa3222fe486..5a777e48963b 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+[...]
+> @@ -1717,7 +1717,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+>   		if (!irq) {
+>   			dev_err(dev, "irq init: could not map cq interrupt %d\n",
+>   				idx);
+> -			return -ENOENT;
+> +			return irq;
 
-Cheers,
+    This patch is borked too, we don't want to return 0 here...
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+[...]
+
+MBR, Sergei
