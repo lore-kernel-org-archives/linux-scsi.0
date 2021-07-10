@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 652BDC11F66
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ACAAC11F72
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4803D6124C
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28922613C5
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234884AbhGJClR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:41:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58374 "EHLO mail.kernel.org"
+        id S233185AbhGJClT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:41:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58450 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235602AbhGJCji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:39:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3186D61402;
-        Sat, 10 Jul 2021 02:35:24 +0000 (UTC)
+        id S235811AbhGJCjr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:39:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 245D461441;
+        Sat, 10 Jul 2021 02:36:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884524;
-        bh=wmV8iyBEUoYiuZ5xN6avshIW+jVVIrbNhyw4H0BG0V4=;
+        s=k20201202; t=1625884569;
+        bh=Dij0Ao0YicGgV1e19xlHHk5GMgXy4+H8nCFRBrXWngI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=fNrVQ4yGhdBQEw6OKCizpBYmeHYyxo9Y78awap/7rdv7VVbuRKDJAvVk8EgBQLwcI
-         2q8fQh+tIQWQgbEbFmvBHhjQWE/LV7yTIQbMeDbWH0SXq2E87yGQu51uBoYPnidJkX
-         kdDWDlXhqUmqClOawZjy0tNP6AND5M/LCz+Q9Uz2UtU7zaSytlb55Whz+YpNegq3yB
-         FpeAs1R+rOamJ8LOj4n8pIOvWeykx5XWUoPfAsthZqcFRiQI3EMGdWo6UEMm3xJTUU
-         aj1MNZsGDQ85B+z3YctpfdVCKHnO2yywbwLyXDbh75A1Als6Gm6dE14eD1djQl5vOF
-         768ZbzkoLqJ5g==
+        b=OQQzjIdj0LBndY8RX82A1Rqv+tKymV2G9hPeh74fvTKGWcE2BuOqBnSgPW9CCy1G3
+         s4PjGzBBXPzy5EpUTei2vf2khNAsio0KVat17SOamaF6zZMs/LHT9ll8y1dubUuvFf
+         47X8M3GkSlgHWfQbdHV3jDYxVb4PBeKn9j1dRfnCa5DBrCwtq1vXJGOqeI3JvbjP6K
+         D16Fp6AQMw1N0NkM7pJ9DFFcwsROBaiQWqv8D5+XyG1C0EKfmjyHccAe/2rn1E22AJ
+         DgtDkwxe5TRqXmqwpO8/fn3ZGpPThVM/NLF1tWugMqNEk+XIw/h/MKQp12XDo1Yrcq
+         DysbXf0L46kNQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 07/33] scsi: lpfc: Fix crash when lpfc_sli4_hba_setup() fails to initialize the SGLs
-Date:   Fri,  9 Jul 2021 22:34:49 -0400
-Message-Id: <20210710023516.3172075-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 04/26] scsi: hisi_sas: Propagate errors in interrupt_init_v1_hw()
+Date:   Fri,  9 Jul 2021 22:35:42 -0400
+Message-Id: <20210710023604.3172486-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210710023516.3172075-1-sashal@kernel.org>
-References: <20210710023516.3172075-1-sashal@kernel.org>
+In-Reply-To: <20210710023604.3172486-1-sashal@kernel.org>
+References: <20210710023604.3172486-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,52 +51,83 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-[ Upstream commit 5aa615d195f1e142c662cb2253f057c9baec7531 ]
+[ Upstream commit ab17122e758ef68fb21033e25c041144067975f5 ]
 
-The driver is encountering a crash in lpfc_free_iocb_list() while
-performing initial attachment.
+After commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have the
+error codes returned by platform_get_irq() ready for the propagation
+upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
+probing. Let's propagate the error codes from devm_request_irq() as well
+since I don't see the reason to override them with -ENOENT...
 
-Code review found this to be an errant failure path that was taken, jumping
-to a tag that then referenced structures that were uninitialized.
-
-Fix the failure path.
-
-Link: https://lore.kernel.org/r/20210514195559.119853-9-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru
+Acked-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 27578816d852..20deb6715c36 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -7032,7 +7032,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 				"0393 Error %d during rpi post operation\n",
- 				rc);
- 		rc = -ENODEV;
--		goto out_destroy_queue;
-+		goto out_free_iocblist;
- 	}
- 	lpfc_sli4_node_prep(phba);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index c0ac49d8bc8d..5c49806a7ae3 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1709,7 +1709,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				dev_err(dev,
+ 					"irq init: fail map phy interrupt %d\n",
+ 					idx);
+-				return -ENOENT;
++				return irq;
+ 			}
  
-@@ -7157,8 +7157,9 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- out_unset_queue:
- 	/* Unset all the queues set up in this routine when error out */
- 	lpfc_sli4_queue_unset(phba);
--out_destroy_queue:
-+out_free_iocblist:
- 	lpfc_free_iocb_list(phba);
-+out_destroy_queue:
- 	lpfc_sli4_queue_destroy(phba);
- out_stop_timers:
- 	lpfc_stop_hba_timers(phba);
+ 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
+@@ -1718,7 +1718,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 				dev_err(dev, "irq init: could not request "
+ 					"phy interrupt %d, rc=%d\n",
+ 					irq, rc);
+-				return -ENOENT;
++				return rc;
+ 			}
+ 		}
+ 	}
+@@ -1729,7 +1729,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (!irq) {
+ 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
+ 				idx);
+-			return -ENOENT;
++			return irq;
+ 		}
+ 
+ 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
+@@ -1737,7 +1737,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (rc) {
+ 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			return rc;
+ 		}
+ 	}
+ 
+@@ -1747,7 +1747,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (!irq) {
+ 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
+ 				idx);
+-			return -ENOENT;
++			return irq;
+ 		}
+ 
+ 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
+@@ -1756,7 +1756,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 			dev_err(dev,
+ 				"irq init: could not request fatal interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			return rc;
+ 		}
+ 	}
+ 
 -- 
 2.30.2
 
