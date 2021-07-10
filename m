@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33F37C07E99
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 268C0C11F69
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 180726141A
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 140116141A
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:27:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234055AbhGJCaN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:30:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42616 "EHLO mail.kernel.org"
+        id S234085AbhGJCaP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:30:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42924 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233847AbhGJC2h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:28:37 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 76C2C613E4;
-        Sat, 10 Jul 2021 02:25:12 +0000 (UTC)
+        id S233095AbhGJC3D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:29:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 56793613CC;
+        Sat, 10 Jul 2021 02:25:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883913;
-        bh=peK/yRLGmU4j94WUdNqjbMXbEbJqgP3hCL91x9cS0hU=;
+        s=k20201202; t=1625883922;
+        bh=5uGHoFbxC057inXKnuUYBivDyaNYMVwoUbIjXcXUV6s=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=m2jPKj8S10Ig36lzUp77zY48HwvXvQ9nygEdWgWN2qCHfJ/qE7VFWX3OQaz9NEjwb
-         jElKQeTYjSwRGEzkeT0Ka6lGMqGYYwK9Mg+1vaZYXecDK7ot/d83RI+OGKyIIdDM9i
-         8vkyh4CpvQVRBnFCKEwwjrhgtK+i1y7Q6XI6mDNNGbzzdRvMFOEKILaywSwtQwS7Fw
-         vsDuTG635rE3I54dW9nQTZt5sujkH4OYWvr+gsLhfwGATXlSdw06RJQAV7c+YLqs89
-         xyOQxVQJem4SATtmqwwdO8j6QPoSlmuyaHd2348Cz/EhUEqedNPm2qcRRsImqwbmJ5
-         UELaAGvXam7hw==
+        b=cvluvZ+KIjuhXRP5PU/0PiEG8SocuCKWFn18NMDVMcsDGxwcChDkKvCk1HAgGjqBt
+         Jqw6M5y9HhAFcebiKzIdh8FhIiWrN+NCtEv6fhiZxqjz8RBnjjwycGsOdGh3KJZsWN
+         Kqtm5rJuRzddeVoNEAj15fM0hk/vdPEksw7Ij8QOHCiT44VXgyjjiOARXAn6kqxZyr
+         WxIb9k9IQAW39ichkgURYGWz4p1Q/W/Hyj/PafsvpVhwS+y/FFzKgPIW1/AbFuTZxF
+         3FWTDBdQggLdoKpMRcrTF4VqcF3uuZ1kAmWoqpf4VJan7lfjuQ6lsGczojZUJovfSD
+         QQMGh103hHZ7g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 34/93] scsi: megaraid_sas: Fix resource leak in case of probe failure
-Date:   Fri,  9 Jul 2021 22:23:28 -0400
-Message-Id: <20210710022428.3169839-34-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 40/93] scsi: qedi: Fix null ref during abort handling
+Date:   Fri,  9 Jul 2021 22:23:34 -0400
+Message-Id: <20210710022428.3169839-40-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022428.3169839-1-sashal@kernel.org>
 References: <20210710022428.3169839-1-sashal@kernel.org>
@@ -52,76 +51,36 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit b5438f48fdd8e1c3f130d32637511efd32038152 ]
+[ Upstream commit 5777b7f0f03ce49372203b6521631f62f2810c8f ]
 
-The driver doesn't clean up all the allocated resources properly when
-scsi_add_host(), megasas_start_aen() function fails during the PCI device
-probe.
+If qedi_process_cmd_cleanup_resp finds the cmd it frees the work and sets
+list_tmf_work to NULL, so qedi_tmf_work should check if list_tmf_work is
+non-NULL when it wants to force cleanup.
 
-Clean up all those resources.
-
-Link: https://lore.kernel.org/r/20210528131307.25683-3-chandrakanth.patil@broadcom.com
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Link: https://lore.kernel.org/r/20210525181821.7617-20-michael.christie@oracle.com
+Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   | 13 +++++++++++++
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  1 +
- 2 files changed, 14 insertions(+)
+ drivers/scsi/qedi/qedi_fw.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index cc45cdac1384..e58b0e558981 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -7439,11 +7439,16 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 	return 0;
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index 440ddd2309f1..cf57b4e49700 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -1453,7 +1453,7 @@ static void qedi_tmf_work(struct work_struct *work)
  
- fail_start_aen:
-+	instance->unload = 1;
-+	scsi_remove_host(instance->host);
- fail_io_attach:
- 	megasas_mgmt_info.count--;
- 	megasas_mgmt_info.max_index--;
- 	megasas_mgmt_info.instance[megasas_mgmt_info.max_index] = NULL;
- 
-+	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
-+		del_timer_sync(&instance->sriov_heartbeat_timer);
-+
- 	instance->instancet->disable_intr(instance);
- 	megasas_destroy_irqs(instance);
- 
-@@ -7451,8 +7456,16 @@ static int megasas_probe_one(struct pci_dev *pdev,
- 		megasas_release_fusion(instance);
- 	else
- 		megasas_release_mfi(instance);
-+
- 	if (instance->msix_vectors)
- 		pci_free_irq_vectors(instance->pdev);
-+	instance->msix_vectors = 0;
-+
-+	if (instance->fw_crash_state != UNAVAILABLE)
-+		megasas_free_host_crash_buffer(instance);
-+
-+	if (instance->adapter_type != MFI_SERIES)
-+		megasas_fusion_stop_watchdog(instance);
- fail_init_mfi:
- 	scsi_host_put(host);
- fail_alloc_instance:
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index b0c01cf0428f..35925e68bf55 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -5193,6 +5193,7 @@ megasas_alloc_fusion_context(struct megasas_instance *instance)
- 		if (!fusion->log_to_span) {
- 			dev_err(&instance->pdev->dev, "Failed from %s %d\n",
- 				__func__, __LINE__);
-+			kfree(instance->ctrl_context);
- 			return -ENOMEM;
- 		}
- 	}
+ ldel_exit:
+ 	spin_lock_bh(&qedi_conn->tmf_work_lock);
+-	if (!qedi_cmd->list_tmf_work) {
++	if (qedi_cmd->list_tmf_work) {
+ 		list_del_init(&list_work->list);
+ 		qedi_cmd->list_tmf_work = NULL;
+ 		kfree(list_work);
 -- 
 2.30.2
 
