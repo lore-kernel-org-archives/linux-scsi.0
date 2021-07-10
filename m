@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E95B4C11F69
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8071FC07E9B
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CED69613D9
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66002613D9
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234303AbhGJCa6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:30:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42882 "EHLO mail.kernel.org"
+        id S234322AbhGJCa7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:30:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42974 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232549AbhGJC3B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:29:01 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 93B53613EE;
-        Sat, 10 Jul 2021 02:25:18 +0000 (UTC)
+        id S234064AbhGJC3E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:29:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 950F6613DF;
+        Sat, 10 Jul 2021 02:25:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883919;
-        bh=PvjX7xW0sJ5JRFUqe1i8YaSMb3TRfJSr/FJf++lF5MA=;
+        s=k20201202; t=1625883923;
+        bh=ArcTJUQFJhjtZVnSwZ6CHw+bSHriqoU8IPKhN32TlV0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ovNSWASCAntegdtMOjykxz7KTlI6ckNw27J6SzrZlFfaeHFugwZfUC6NXi0Oj9jDg
-         7q/S7dy4LD4ojAaiS9+LQbirXXftEVz0enSytaYcc6Y6nWTmlLJVFouH9gZAniHZqJ
-         p0HXi5p07rVq9W/REEkXvDwO1fFxkTKHamtbhLcbC3EwOM//cdKKQRnh+CvSsjb31S
-         w9y9o5Egj3oa3VTc5PRsm00PA3ir9agDRmobMvK2/E4F6eO99ZdPk0e8vevBvTHwJw
-         ATqoeqtoMoILnBH6UgVRKmr0PrAE0EH3jWW/TH8hPcwX5tUliOeoL2e3CWiX2cIzko
-         wFTxPEf/HmV3g==
+        b=YVTltaeLwfcFmu3FED8lxacsOxP0NvMogV97OQAlnZytEQNUrX89baMIRUUYK+UkW
+         WCsx1EuZufX4HwhBOVO0vjT8NrvrS/KCspadfk/axC2XeUbZgj+L++wdQeZarBB+b/
+         aTH16ws1oUfO5cjvYomSHdBc/zOqYzmA4ByA8pLgFhc2WIuzAASvJWzx98eoI2gZ7o
+         wH6PWfPlIB5dSIUCrK3UP+hWzNInUezY+eYEtOhP7XTvvYzIPryPVidZOs/eswbtuq
+         qofMkUY3bDvj4q9zefuat9Fr0IGBqxwlgr5jQLkz/j/57WDU+QvfbzjFTtEgKI5iT5
+         ftkE9NPSENrUw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Mike Christie <michael.christie@oracle.com>,
-        Lee Duncan <lduncan@suse.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 38/93] scsi: iscsi: Fix conn use after free during resets
-Date:   Fri,  9 Jul 2021 22:23:32 -0400
-Message-Id: <20210710022428.3169839-38-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 41/93] scsi: qedi: Fix race during abort timeouts
+Date:   Fri,  9 Jul 2021 22:23:35 -0400
+Message-Id: <20210710022428.3169839-41-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022428.3169839-1-sashal@kernel.org>
 References: <20210710022428.3169839-1-sashal@kernel.org>
@@ -54,408 +53,189 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit ec29d0ac29be366450a7faffbcf8cba3a6a3b506 ]
+[ Upstream commit 2ce002366a3fcc3f9616d4583194f65dde0ad253 ]
 
-If we haven't done a unbind target call we can race where
-iscsi_conn_teardown wakes up the EH thread and then frees the conn while
-those threads are still accessing the conn ehwait.
+If the SCSI cmd completes after qedi_tmf_work calls iscsi_itt_to_task then
+the qedi qedi_cmd->task_id could be freed and used for another cmd. If we
+then call qedi_iscsi_cleanup_task with that task_id we will be cleaning up
+the wrong cmd.
 
-We can only do one TMF per session so this just moves the TMF fields from
-the conn to the session. We can then rely on the
-iscsi_session_teardown->iscsi_remove_session->__iscsi_unbind_session call
-to remove the target and it's devices, and know after that point there is
-no device or scsi-ml callout trying to access the session.
+Wait to release the task_id until the last put has been done on the
+iscsi_task. Because libiscsi grabs a ref to the task when sending the
+abort, we know that for the non-abort timeout case that the task_id we are
+referencing is for the cmd that was supposed to be aborted.
 
-Link: https://lore.kernel.org/r/20210525181821.7617-14-michael.christie@oracle.com
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+A latter commit will fix the case where the abort times out while we are
+running qedi_tmf_work.
+
+Link: https://lore.kernel.org/r/20210525181821.7617-21-michael.christie@oracle.com
+Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/libiscsi.c | 115 +++++++++++++++++++---------------------
- include/scsi/libiscsi.h |  11 ++--
- 2 files changed, 60 insertions(+), 66 deletions(-)
+ drivers/scsi/qedi/qedi_fw.c    | 15 ---------------
+ drivers/scsi/qedi/qedi_iscsi.c | 20 +++++++++++++++++---
+ 2 files changed, 17 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 67ac0a46889c..bd050befbafb 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -230,11 +230,11 @@ static int iscsi_prep_ecdb_ahs(struct iscsi_task *task)
-  */
- static int iscsi_check_tmf_restrictions(struct iscsi_task *task, int opcode)
- {
--	struct iscsi_conn *conn = task->conn;
--	struct iscsi_tm *tmf = &conn->tmhdr;
-+	struct iscsi_session *session = task->conn->session;
-+	struct iscsi_tm *tmf = &session->tmhdr;
- 	u64 hdr_lun;
+diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+index cf57b4e49700..c12bb2dd5ff9 100644
+--- a/drivers/scsi/qedi/qedi_fw.c
++++ b/drivers/scsi/qedi/qedi_fw.c
+@@ -73,7 +73,6 @@ static void qedi_process_logout_resp(struct qedi_ctx *qedi,
+ 	spin_unlock(&qedi_conn->list_lock);
  
--	if (conn->tmf_state == TMF_INITIAL)
-+	if (session->tmf_state == TMF_INITIAL)
- 		return 0;
+ 	cmd->state = RESPONSE_RECEIVED;
+-	qedi_clear_task_idx(qedi, cmd->task_id);
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr, NULL, 0);
  
- 	if ((tmf->opcode & ISCSI_OPCODE_MASK) != ISCSI_OP_SCSI_TMFUNC)
-@@ -254,24 +254,19 @@ static int iscsi_check_tmf_restrictions(struct iscsi_task *task, int opcode)
- 		 * Fail all SCSI cmd PDUs
- 		 */
- 		if (opcode != ISCSI_OP_SCSI_DATA_OUT) {
--			iscsi_conn_printk(KERN_INFO, conn,
--					  "task [op %x itt "
--					  "0x%x/0x%x] "
--					  "rejected.\n",
--					  opcode, task->itt,
--					  task->hdr_itt);
-+			iscsi_session_printk(KERN_INFO, session,
-+					     "task [op %x itt 0x%x/0x%x] rejected.\n",
-+					     opcode, task->itt, task->hdr_itt);
- 			return -EACCES;
- 		}
- 		/*
- 		 * And also all data-out PDUs in response to R2T
- 		 * if fast_abort is set.
- 		 */
--		if (conn->session->fast_abort) {
--			iscsi_conn_printk(KERN_INFO, conn,
--					  "task [op %x itt "
--					  "0x%x/0x%x] fast abort.\n",
--					  opcode, task->itt,
--					  task->hdr_itt);
-+		if (session->fast_abort) {
-+			iscsi_session_printk(KERN_INFO, session,
-+					     "task [op %x itt 0x%x/0x%x] fast abort.\n",
-+					     opcode, task->itt, task->hdr_itt);
- 			return -EACCES;
- 		}
- 		break;
-@@ -284,7 +279,7 @@ static int iscsi_check_tmf_restrictions(struct iscsi_task *task, int opcode)
- 		 */
- 		if (opcode == ISCSI_OP_SCSI_DATA_OUT &&
- 		    task->hdr_itt == tmf->rtt) {
--			ISCSI_DBG_SESSION(conn->session,
-+			ISCSI_DBG_SESSION(session,
- 					  "Preventing task %x/%x from sending "
- 					  "data-out due to abort task in "
- 					  "progress\n", task->itt,
-@@ -923,20 +918,21 @@ iscsi_data_in_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- static void iscsi_tmf_rsp(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- {
- 	struct iscsi_tm_rsp *tmf = (struct iscsi_tm_rsp *)hdr;
-+	struct iscsi_session *session = conn->session;
+ 	spin_unlock(&session->back_lock);
+@@ -138,7 +137,6 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
+ 	spin_unlock(&qedi_conn->list_lock);
  
- 	conn->exp_statsn = be32_to_cpu(hdr->statsn) + 1;
- 	conn->tmfrsp_pdus_cnt++;
+ 	cmd->state = RESPONSE_RECEIVED;
+-	qedi_clear_task_idx(qedi, cmd->task_id);
  
--	if (conn->tmf_state != TMF_QUEUED)
-+	if (session->tmf_state != TMF_QUEUED)
- 		return;
- 
- 	if (tmf->response == ISCSI_TMF_RSP_COMPLETE)
--		conn->tmf_state = TMF_SUCCESS;
-+		session->tmf_state = TMF_SUCCESS;
- 	else if (tmf->response == ISCSI_TMF_RSP_NO_TASK)
--		conn->tmf_state = TMF_NOT_FOUND;
-+		session->tmf_state = TMF_NOT_FOUND;
- 	else
--		conn->tmf_state = TMF_FAILED;
--	wake_up(&conn->ehwait);
-+		session->tmf_state = TMF_FAILED;
-+	wake_up(&session->ehwait);
- }
- 
- static int iscsi_send_nopout(struct iscsi_conn *conn, struct iscsi_nopin *rhdr)
-@@ -1784,15 +1780,14 @@ EXPORT_SYMBOL_GPL(iscsi_target_alloc);
- 
- static void iscsi_tmf_timedout(struct timer_list *t)
- {
--	struct iscsi_conn *conn = from_timer(conn, t, tmf_timer);
--	struct iscsi_session *session = conn->session;
-+	struct iscsi_session *session = from_timer(session, t, tmf_timer);
- 
- 	spin_lock(&session->frwd_lock);
--	if (conn->tmf_state == TMF_QUEUED) {
--		conn->tmf_state = TMF_TIMEDOUT;
-+	if (session->tmf_state == TMF_QUEUED) {
-+		session->tmf_state = TMF_TIMEDOUT;
- 		ISCSI_DBG_EH(session, "tmf timedout\n");
- 		/* unblock eh_abort() */
--		wake_up(&conn->ehwait);
-+		wake_up(&session->ehwait);
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr,
+ 			     qedi_conn->gen_pdu.resp_buf,
+@@ -164,13 +162,11 @@ static void qedi_tmf_resp_work(struct work_struct *work)
+ 	iscsi_block_session(session->cls_session);
+ 	rval = qedi_cleanup_all_io(qedi, qedi_conn, qedi_cmd->task, true);
+ 	if (rval) {
+-		qedi_clear_task_idx(qedi, qedi_cmd->task_id);
+ 		iscsi_unblock_session(session->cls_session);
+ 		goto exit_tmf_resp;
  	}
- 	spin_unlock(&session->frwd_lock);
- }
-@@ -1815,8 +1810,8 @@ static int iscsi_exec_task_mgmt_fn(struct iscsi_conn *conn,
- 		return -EPERM;
- 	}
- 	conn->tmfcmd_pdus_cnt++;
--	conn->tmf_timer.expires = timeout * HZ + jiffies;
--	add_timer(&conn->tmf_timer);
-+	session->tmf_timer.expires = timeout * HZ + jiffies;
-+	add_timer(&session->tmf_timer);
- 	ISCSI_DBG_EH(session, "tmf set timeout\n");
- 
- 	spin_unlock_bh(&session->frwd_lock);
-@@ -1830,12 +1825,12 @@ static int iscsi_exec_task_mgmt_fn(struct iscsi_conn *conn,
- 	 * 3) session is terminated or restarted or userspace has
- 	 * given up on recovery
- 	 */
--	wait_event_interruptible(conn->ehwait, age != session->age ||
-+	wait_event_interruptible(session->ehwait, age != session->age ||
- 				 session->state != ISCSI_STATE_LOGGED_IN ||
--				 conn->tmf_state != TMF_QUEUED);
-+				 session->tmf_state != TMF_QUEUED);
- 	if (signal_pending(current))
- 		flush_signals(current);
--	del_timer_sync(&conn->tmf_timer);
-+	del_timer_sync(&session->tmf_timer);
- 
- 	mutex_lock(&session->eh_mutex);
- 	spin_lock_bh(&session->frwd_lock);
-@@ -2195,17 +2190,17 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 	}
- 
- 	/* only have one tmf outstanding at a time */
--	if (conn->tmf_state != TMF_INITIAL)
-+	if (session->tmf_state != TMF_INITIAL)
- 		goto failed;
--	conn->tmf_state = TMF_QUEUED;
-+	session->tmf_state = TMF_QUEUED;
- 
--	hdr = &conn->tmhdr;
-+	hdr = &session->tmhdr;
- 	iscsi_prep_abort_task_pdu(task, hdr);
- 
- 	if (iscsi_exec_task_mgmt_fn(conn, hdr, age, session->abort_timeout))
- 		goto failed;
- 
--	switch (conn->tmf_state) {
-+	switch (session->tmf_state) {
- 	case TMF_SUCCESS:
- 		spin_unlock_bh(&session->frwd_lock);
- 		/*
-@@ -2220,7 +2215,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 		 */
- 		spin_lock_bh(&session->frwd_lock);
- 		fail_scsi_task(task, DID_ABORT);
--		conn->tmf_state = TMF_INITIAL;
-+		session->tmf_state = TMF_INITIAL;
- 		memset(hdr, 0, sizeof(*hdr));
- 		spin_unlock_bh(&session->frwd_lock);
- 		iscsi_start_tx(conn);
-@@ -2231,7 +2226,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 		goto failed_unlocked;
- 	case TMF_NOT_FOUND:
- 		if (!sc->SCp.ptr) {
--			conn->tmf_state = TMF_INITIAL;
-+			session->tmf_state = TMF_INITIAL;
- 			memset(hdr, 0, sizeof(*hdr));
- 			/* task completed before tmf abort response */
- 			ISCSI_DBG_EH(session, "sc completed while abort	in "
-@@ -2240,7 +2235,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 		}
- 		fallthrough;
- 	default:
--		conn->tmf_state = TMF_INITIAL;
-+		session->tmf_state = TMF_INITIAL;
- 		goto failed;
- 	}
- 
-@@ -2297,11 +2292,11 @@ int iscsi_eh_device_reset(struct scsi_cmnd *sc)
- 	conn = session->leadconn;
- 
- 	/* only have one tmf outstanding at a time */
--	if (conn->tmf_state != TMF_INITIAL)
-+	if (session->tmf_state != TMF_INITIAL)
- 		goto unlock;
--	conn->tmf_state = TMF_QUEUED;
-+	session->tmf_state = TMF_QUEUED;
- 
--	hdr = &conn->tmhdr;
-+	hdr = &session->tmhdr;
- 	iscsi_prep_lun_reset_pdu(sc, hdr);
- 
- 	if (iscsi_exec_task_mgmt_fn(conn, hdr, session->age,
-@@ -2310,7 +2305,7 @@ int iscsi_eh_device_reset(struct scsi_cmnd *sc)
- 		goto unlock;
- 	}
- 
--	switch (conn->tmf_state) {
-+	switch (session->tmf_state) {
- 	case TMF_SUCCESS:
- 		break;
- 	case TMF_TIMEDOUT:
-@@ -2318,7 +2313,7 @@ int iscsi_eh_device_reset(struct scsi_cmnd *sc)
- 		iscsi_conn_failure(conn, ISCSI_ERR_SCSI_EH_SESSION_RST);
- 		goto done;
- 	default:
--		conn->tmf_state = TMF_INITIAL;
-+		session->tmf_state = TMF_INITIAL;
- 		goto unlock;
- 	}
- 
-@@ -2330,7 +2325,7 @@ int iscsi_eh_device_reset(struct scsi_cmnd *sc)
- 	spin_lock_bh(&session->frwd_lock);
- 	memset(hdr, 0, sizeof(*hdr));
- 	fail_scsi_tasks(conn, sc->device->lun, DID_ERROR);
--	conn->tmf_state = TMF_INITIAL;
-+	session->tmf_state = TMF_INITIAL;
- 	spin_unlock_bh(&session->frwd_lock);
- 
- 	iscsi_start_tx(conn);
-@@ -2353,8 +2348,7 @@ void iscsi_session_recovery_timedout(struct iscsi_cls_session *cls_session)
- 	spin_lock_bh(&session->frwd_lock);
- 	if (session->state != ISCSI_STATE_LOGGED_IN) {
- 		session->state = ISCSI_STATE_RECOVERY_FAILED;
--		if (session->leadconn)
--			wake_up(&session->leadconn->ehwait);
-+		wake_up(&session->ehwait);
- 	}
- 	spin_unlock_bh(&session->frwd_lock);
- }
-@@ -2399,7 +2393,7 @@ int iscsi_eh_session_reset(struct scsi_cmnd *sc)
- 	iscsi_conn_failure(conn, ISCSI_ERR_SCSI_EH_SESSION_RST);
- 
- 	ISCSI_DBG_EH(session, "wait for relogin\n");
--	wait_event_interruptible(conn->ehwait,
-+	wait_event_interruptible(session->ehwait,
- 				 session->state == ISCSI_STATE_TERMINATE ||
- 				 session->state == ISCSI_STATE_LOGGED_IN ||
- 				 session->state == ISCSI_STATE_RECOVERY_FAILED);
-@@ -2460,11 +2454,11 @@ static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
- 	conn = session->leadconn;
- 
- 	/* only have one tmf outstanding at a time */
--	if (conn->tmf_state != TMF_INITIAL)
-+	if (session->tmf_state != TMF_INITIAL)
- 		goto unlock;
--	conn->tmf_state = TMF_QUEUED;
-+	session->tmf_state = TMF_QUEUED;
- 
--	hdr = &conn->tmhdr;
-+	hdr = &session->tmhdr;
- 	iscsi_prep_tgt_reset_pdu(sc, hdr);
- 
- 	if (iscsi_exec_task_mgmt_fn(conn, hdr, session->age,
-@@ -2473,7 +2467,7 @@ static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
- 		goto unlock;
- 	}
- 
--	switch (conn->tmf_state) {
-+	switch (session->tmf_state) {
- 	case TMF_SUCCESS:
- 		break;
- 	case TMF_TIMEDOUT:
-@@ -2481,7 +2475,7 @@ static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
- 		iscsi_conn_failure(conn, ISCSI_ERR_SCSI_EH_SESSION_RST);
- 		goto done;
- 	default:
--		conn->tmf_state = TMF_INITIAL;
-+		session->tmf_state = TMF_INITIAL;
- 		goto unlock;
- 	}
- 
-@@ -2493,7 +2487,7 @@ static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
- 	spin_lock_bh(&session->frwd_lock);
- 	memset(hdr, 0, sizeof(*hdr));
- 	fail_scsi_tasks(conn, -1, DID_ERROR);
--	conn->tmf_state = TMF_INITIAL;
-+	session->tmf_state = TMF_INITIAL;
- 	spin_unlock_bh(&session->frwd_lock);
- 
- 	iscsi_start_tx(conn);
-@@ -2800,7 +2794,10 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
- 	session->tt = iscsit;
- 	session->dd_data = cls_session->dd_data + sizeof(*session);
- 
-+	session->tmf_state = TMF_INITIAL;
-+	timer_setup(&session->tmf_timer, iscsi_tmf_timedout, 0);
- 	mutex_init(&session->eh_mutex);
-+
- 	spin_lock_init(&session->frwd_lock);
- 	spin_lock_init(&session->back_lock);
- 
-@@ -2904,7 +2901,6 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
- 	conn->c_stage = ISCSI_CONN_INITIAL_STAGE;
- 	conn->id = conn_idx;
- 	conn->exp_statsn = 0;
--	conn->tmf_state = TMF_INITIAL;
- 
- 	timer_setup(&conn->transport_timer, iscsi_check_transport_timeouts, 0);
- 
-@@ -2930,8 +2926,7 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
- 		goto login_task_data_alloc_fail;
- 	conn->login_task->data = conn->data = data;
- 
--	timer_setup(&conn->tmf_timer, iscsi_tmf_timedout, 0);
--	init_waitqueue_head(&conn->ehwait);
-+	init_waitqueue_head(&session->ehwait);
- 
- 	return cls_conn;
- 
-@@ -2966,7 +2961,7 @@ void iscsi_conn_teardown(struct iscsi_cls_conn *cls_conn)
- 		 * leading connection? then give up on recovery.
- 		 */
- 		session->state = ISCSI_STATE_TERMINATE;
--		wake_up(&conn->ehwait);
-+		wake_up(&session->ehwait);
- 	}
- 	spin_unlock_bh(&session->frwd_lock);
- 
-@@ -3041,7 +3036,7 @@ int iscsi_conn_start(struct iscsi_cls_conn *cls_conn)
- 		 * commands after successful recovery
- 		 */
- 		conn->stop_stage = 0;
--		conn->tmf_state = TMF_INITIAL;
-+		session->tmf_state = TMF_INITIAL;
- 		session->age++;
- 		if (session->age == 16)
- 			session->age = 0;
-@@ -3055,7 +3050,7 @@ int iscsi_conn_start(struct iscsi_cls_conn *cls_conn)
- 	spin_unlock_bh(&session->frwd_lock);
  
  	iscsi_unblock_session(session->cls_session);
--	wake_up(&conn->ehwait);
-+	wake_up(&session->ehwait);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(iscsi_conn_start);
-@@ -3142,7 +3137,7 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
- 	spin_lock_bh(&session->frwd_lock);
- 	fail_scsi_tasks(conn, -1, DID_TRANSPORT_DISRUPTED);
- 	fail_mgmt_tasks(session, conn);
--	memset(&conn->tmhdr, 0, sizeof(conn->tmhdr));
-+	memset(&session->tmhdr, 0, sizeof(session->tmhdr));
- 	spin_unlock_bh(&session->frwd_lock);
- 	mutex_unlock(&session->eh_mutex);
- }
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index b3bbd10eb3f0..2b5f97224f69 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -195,12 +195,6 @@ struct iscsi_conn {
- 	unsigned long		suspend_tx;	/* suspend Tx */
- 	unsigned long		suspend_rx;	/* suspend Rx */
+-	qedi_clear_task_idx(qedi, qedi_cmd->task_id);
  
--	/* abort */
--	wait_queue_head_t	ehwait;		/* used in eh_abort() */
--	struct iscsi_tm		tmhdr;
--	struct timer_list	tmf_timer;
--	int			tmf_state;	/* see TMF_INITIAL, etc.*/
+ 	spin_lock(&session->back_lock);
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
+@@ -245,8 +241,6 @@ static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
+ 		goto unblock_sess;
+ 	}
+ 
+-	qedi_clear_task_idx(qedi, qedi_cmd->task_id);
 -
- 	/* negotiated params */
- 	unsigned		max_recv_dlength; /* initiator_max_recv_dsl*/
- 	unsigned		max_xmit_dlength; /* target_max_recv_dsl */
-@@ -270,6 +264,11 @@ struct iscsi_session {
- 	 * and recv lock.
- 	 */
- 	struct mutex		eh_mutex;
-+	/* abort */
-+	wait_queue_head_t	ehwait;		/* used in eh_abort() */
-+	struct iscsi_tm		tmhdr;
-+	struct timer_list	tmf_timer;
-+	int			tmf_state;	/* see TMF_INITIAL, etc.*/
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
+ 	kfree(resp_hdr_ptr);
  
- 	/* iSCSI session-wide sequencing */
- 	uint32_t		cmdsn;
+@@ -314,7 +308,6 @@ static void qedi_process_login_resp(struct qedi_ctx *qedi,
+ 		  "Freeing tid=0x%x for cid=0x%x\n",
+ 		  cmd->task_id, qedi_conn->iscsi_conn_id);
+ 	cmd->state = RESPONSE_RECEIVED;
+-	qedi_clear_task_idx(qedi, cmd->task_id);
+ }
+ 
+ static void qedi_get_rq_bdq_buf(struct qedi_ctx *qedi,
+@@ -468,7 +461,6 @@ static int qedi_process_nopin_mesg(struct qedi_ctx *qedi,
+ 		}
+ 
+ 		spin_unlock(&qedi_conn->list_lock);
+-		qedi_clear_task_idx(qedi, cmd->task_id);
+ 	}
+ 
+ done:
+@@ -673,7 +665,6 @@ static void qedi_scsi_completion(struct qedi_ctx *qedi,
+ 	if (qedi_io_tracing)
+ 		qedi_trace_io(qedi, task, cmd->task_id, QEDI_IO_TRACE_RSP);
+ 
+-	qedi_clear_task_idx(qedi, cmd->task_id);
+ 	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)hdr,
+ 			     conn->data, datalen);
+ error:
+@@ -730,7 +721,6 @@ static void qedi_process_nopin_local_cmpl(struct qedi_ctx *qedi,
+ 		  cqe->itid, cmd->task_id);
+ 
+ 	cmd->state = RESPONSE_RECEIVED;
+-	qedi_clear_task_idx(qedi, cmd->task_id);
+ 
+ 	spin_lock_bh(&session->back_lock);
+ 	__iscsi_put_task(task);
+@@ -748,7 +738,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 	itt_t protoitt = 0;
+ 	int found = 0;
+ 	struct qedi_cmd *qedi_cmd = NULL;
+-	u32 rtid = 0;
+ 	u32 iscsi_cid;
+ 	struct qedi_conn *qedi_conn;
+ 	struct qedi_cmd *dbg_cmd;
+@@ -779,7 +768,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 			found = 1;
+ 			mtask = qedi_cmd->task;
+ 			tmf_hdr = (struct iscsi_tm *)mtask->hdr;
+-			rtid = work->rtid;
+ 
+ 			list_del_init(&work->list);
+ 			kfree(work);
+@@ -821,8 +809,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 			if (qedi_cmd->state == CLEANUP_WAIT_FAILED)
+ 				qedi_cmd->state = CLEANUP_RECV;
+ 
+-			qedi_clear_task_idx(qedi_conn->qedi, rtid);
+-
+ 			spin_lock(&qedi_conn->list_lock);
+ 			if (likely(dbg_cmd->io_cmd_in_list)) {
+ 				dbg_cmd->io_cmd_in_list = false;
+@@ -856,7 +842,6 @@ static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
+ 		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
+ 			  "Freeing tid=0x%x for cid=0x%x\n",
+ 			  cqe->itid, qedi_conn->iscsi_conn_id);
+-		qedi_clear_task_idx(qedi_conn->qedi, cqe->itid);
+ 
+ 	} else {
+ 		qedi_get_proto_itt(qedi, cqe->itid, &ptmp_itt);
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index 08c05403cd72..604c4f408bc1 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -772,7 +772,6 @@ static int qedi_mtask_xmit(struct iscsi_conn *conn, struct iscsi_task *task)
+ 	}
+ 
+ 	cmd->conn = conn->dd_data;
+-	cmd->scsi_cmd = NULL;
+ 	return qedi_iscsi_send_generic_request(task);
+ }
+ 
+@@ -783,6 +782,10 @@ static int qedi_task_xmit(struct iscsi_task *task)
+ 	struct qedi_cmd *cmd = task->dd_data;
+ 	struct scsi_cmnd *sc = task->sc;
+ 
++	/* Clear now so in cleanup_task we know it didn't make it */
++	cmd->scsi_cmd = NULL;
++	cmd->task_id = U16_MAX;
++
+ 	if (test_bit(QEDI_IN_SHUTDOWN, &qedi_conn->qedi->flags))
+ 		return -ENODEV;
+ 
+@@ -1383,13 +1386,24 @@ static umode_t qedi_attr_is_visible(int param_type, int param)
+ 
+ static void qedi_cleanup_task(struct iscsi_task *task)
+ {
+-	if (!task->sc || task->state == ISCSI_TASK_PENDING) {
++	struct qedi_cmd *cmd;
++
++	if (task->state == ISCSI_TASK_PENDING) {
+ 		QEDI_INFO(NULL, QEDI_LOG_IO, "Returning ref_cnt=%d\n",
+ 			  refcount_read(&task->refcount));
+ 		return;
+ 	}
+ 
+-	qedi_iscsi_unmap_sg_list(task->dd_data);
++	if (task->sc)
++		qedi_iscsi_unmap_sg_list(task->dd_data);
++
++	cmd = task->dd_data;
++	if (cmd->task_id != U16_MAX)
++		qedi_clear_task_idx(iscsi_host_priv(task->conn->session->host),
++				    cmd->task_id);
++
++	cmd->task_id = U16_MAX;
++	cmd->scsi_cmd = NULL;
+ }
+ 
+ struct iscsi_transport qedi_iscsi_transport = {
 -- 
 2.30.2
 
