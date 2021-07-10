@@ -5,41 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 795A5C07E9C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3A01C11F6B
 	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6209F613CA
+	by mail.kernel.org (Postfix) with ESMTP id D49C5613D3
 	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235033AbhGJClP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:41:15 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58438 "EHLO mail.kernel.org"
+        id S234615AbhGJClO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:41:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58440 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235605AbhGJCji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S235607AbhGJCji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 9 Jul 2021 22:39:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E986161407;
-        Sat, 10 Jul 2021 02:35:22 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 644716140A;
+        Sat, 10 Jul 2021 02:35:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884523;
-        bh=61jupdmQGE4DaqZyoqeliw9Kz+c4O+YUOWY+gabZ3hI=;
+        s=k20201202; t=1625884526;
+        bh=8reeUWS3OZIXMIggPrH9xwvCwsqYreQzFLQhwmF0rjI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=PZXop379VChv6MUkaRPk7tDT0y3T0HLbJLneX2j3WXWjn5fcsXSgQY8qd1bCkWOOS
-         EMuP/DvHG6G9ueQ2y9Apv+5oKBwT/zZeio6Zb+MPKAmN2uCAX9nU0f32PC1kEYkxeN
-         58FACFOxWgH2YMkJKejAhab8O2wp7qbm0Yxm2oWO96rwoG3PsaNSvqL/JTYQBLWWAI
-         z5AnJ8F3zab4WcWVuxTQLDEOrGkGunf9N7GsE/2tzuuZi+VTpKNEtUvvaXsRfwx672
-         NLVy/yTDWbMkueIfrJKoISxXfE+fHgBgpYGg/tmA3PGad78F//++UZrBt+8RVVTvvt
-         NOGL8uy/C5PsQ==
+        b=sHWVWQj0gmvLr5LHLdkVwl+5AQrc1p7eHRyNbcWRG7sXuc4fBAk+A3rxDLcpo3I5b
+         XNXPeTfgDOR/KPVpcCPEDDSo0Qn60A6E0S0RkqzxObzHOMT1M2Pd5gqyAjkj+G04Mu
+         Q/N3LMvXOlrFayZ2S/ePmpaZuJkgqiehCw+oSnBrbhfor1UiO74IaGH0VFdws+nsyb
+         20lF3IS8O0nPYXtEbbhsB97LCBBjlD9isQbCHO4SVvQ6mX18dlfxm6CITMSDuYgkrV
+         1YrfI2whVexZHZrvaNGPH3PL8D1eYZmFAXkkiFaI6YVSJz/XdZxO4gKRWbPRzsQpCP
+         R7ewK79sHM+Pw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     John Garry <john.garry@huawei.com>, Ming Lei <ming.lei@redhat.com>,
+        Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 06/33] scsi: lpfc: Fix "Unexpected timeout" error in direct attach topology
-Date:   Fri,  9 Jul 2021 22:34:48 -0400
-Message-Id: <20210710023516.3172075-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 08/33] scsi: core: Cap scsi_host cmd_per_lun at can_queue
+Date:   Fri,  9 Jul 2021 22:34:50 -0400
+Message-Id: <20210710023516.3172075-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710023516.3172075-1-sashal@kernel.org>
 References: <20210710023516.3172075-1-sashal@kernel.org>
@@ -51,51 +51,49 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: John Garry <john.garry@huawei.com>
 
-[ Upstream commit e30d55137edef47434c40d7570276a0846fe922c ]
+[ Upstream commit ea2f0f77538c50739b9fb4de4700cee5535e1f77 ]
 
-An 'unexpected timeout' message may be seen in a point-2-point topology.
-The message occurs when a PLOGI is received before the driver is notified
-of FLOGI completion. The FLOGI completion failure causes discovery to be
-triggered for a second time. The discovery timer is restarted but no new
-discovery activity is initiated, thus the timeout message eventually
-appears.
+The sysfs handling function sdev_store_queue_depth() enforces that the sdev
+queue depth cannot exceed shost can_queue. The initial sdev queue depth
+comes from shost cmd_per_lun. However, the LLDD may manually set
+cmd_per_lun to be larger than can_queue, which leads to an initial sdev
+queue depth greater than can_queue.
 
-In point-2-point, when discovery has progressed before the FLOGI completion
-is processed, it is not a failure. Add code to FLOGI completion to detect
-that discovery has progressed and exit the FLOGI handling (noop'ing it).
+Such an issue was reported in [0], which caused a hang. That has since been
+fixed in commit fc09acb7de31 ("scsi: scsi_debug: Fix cmd_per_lun, set to
+max_queue").
 
-Link: https://lore.kernel.org/r/20210514195559.119853-4-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Stop this possibly happening for other drivers by capping shost cmd_per_lun
+at shost can_queue.
+
+[0] https://lore.kernel.org/linux-scsi/YHaez6iN2HHYxYOh@T590/
+
+Link: https://lore.kernel.org/r/1621434662-173079-1-git-send-email-john.garry@huawei.com
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/hosts.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 566e8d07cb05..8dc60961e47e 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1170,6 +1170,15 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			phba->fcf.fcf_redisc_attempted = 0; /* reset */
- 			goto out;
- 		}
-+	} else if (vport->port_state > LPFC_FLOGI &&
-+		   vport->fc_flag & FC_PT2PT) {
-+		/*
-+		 * In a p2p topology, it is possible that discovery has
-+		 * already progressed, and this completion can be ignored.
-+		 * Recheck the indicated topology.
-+		 */
-+		if (!sp->cmn.fPort)
-+			goto out;
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 5788a2ce3571..4b771bf0c9e4 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -213,6 +213,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 		goto fail;
  	}
  
- flogifail:
++	shost->cmd_per_lun = min_t(short, shost->cmd_per_lun,
++				   shost->can_queue);
++
+ 	error = scsi_init_sense_cache(shost);
+ 	if (error)
+ 		goto fail;
 -- 
 2.30.2
 
