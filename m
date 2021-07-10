@@ -5,40 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63623C07E9C
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:18:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C417C07E9C
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:18:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 43751613CF
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:18:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22D7A613C3
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:18:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231642AbhGJCUl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:20:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36990 "EHLO mail.kernel.org"
+        id S232338AbhGJCVT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:21:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37894 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229606AbhGJCUk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:20:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 677E0613CC;
-        Sat, 10 Jul 2021 02:17:55 +0000 (UTC)
+        id S231981AbhGJCVN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:21:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 60079613CC;
+        Sat, 10 Jul 2021 02:18:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883476;
-        bh=IYoubfj/OlkMZZB5SY71eKlG6nEiNmDXtp7ZUMa6i/A=;
+        s=k20201202; t=1625883509;
+        bh=GALYTMi0q4oqnQg08S1v1yOu2ngih8jxNsM0/bWku4Q=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aavYFtroZ2SF1hetHju66MbxSQsoP5wlOzooVrGeJ1UenmsYmc14AO0LIGju7V6Tu
-         nlTLhVEOOluVJU7XWo1A+Al8ScoUJAglJsm6cHdBpAl68dEl+w/GrdhEd2JFldwUb1
-         aRavOQB4agC81zUWPtIs1yvwBMBlO3xch3dzMHmDAvnUdSzHzgADiilFsxELtseGYY
-         oJoRn0QLCU99V2c0SRWAsEKxQvD4KzOWIkEYTNjVLsMHZAkPO6x0a5dquawtFVXVi0
-         2qA/NL44ARc6DC17U6CXkWbNJPQFIsDj5HAam1vOV/4RJBIisEbdCEty8rTBrhHziW
-         li8zBKiNItBrg==
+        b=jK1/hTm4oo9XEccW0zo0Cbln/yVLFKri3wSdEAQkbkNJydKkTPHN/0qejgzWxjalB
+         hripJohY7EFG7Qa6bFdqxyfvWs8AkQMs3JOXYWNTJkDSE7Q9pif83zRnt+5A2iUV45
+         1XzNpO6xEMK+zJ9nmwY1n1tL5L9of3WCFpDgO2VH/BvkhHZIhmlcQzqiD/7mBQv72P
+         WN1AdBPKf8bIr3IVkqA0lVENUSOBxu6GLjIo/pOUAE2dkTXfv/VYRB/Ma3hcdJICK1
+         sg+GJs1P3KYtfy/HMVxuThK9xwSqzdJyoPXM47guVXkwS93jfkwl8mEU8R3dSc9qb+
+         s9gczVyExKQSw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     ching Huang <ching2048@areca.com.tw>,
+Cc:     Sergey Shtylyov <s.shtylyov@omp.ru>,
+        John Garry <john.garry@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 005/114] scsi: arcmsr: Fix the wrong CDB payload report to IOP
-Date:   Fri,  9 Jul 2021 22:15:59 -0400
-Message-Id: <20210710021748.3167666-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 029/114] scsi: hisi_sas: Propagate errors in interrupt_init_v1_hw()
+Date:   Fri,  9 Jul 2021 22:16:23 -0400
+Message-Id: <20210710021748.3167666-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710021748.3167666-1-sashal@kernel.org>
 References: <20210710021748.3167666-1-sashal@kernel.org>
@@ -50,39 +51,83 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ching Huang <ching2048@areca.com.tw>
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
 
-[ Upstream commit 5b8644968d2ca85abb785e83efec36934974b0c2 ]
+[ Upstream commit ab17122e758ef68fb21033e25c041144067975f5 ]
 
-This patch fixes the wrong CDB payload report to IOP.
+After commit 6c11dc060427 ("scsi: hisi_sas: Fix IRQ checks") we have the
+error codes returned by platform_get_irq() ready for the propagation
+upsream in interrupt_init_v1_hw() -- that will fix still broken deferred
+probing. Let's propagate the error codes from devm_request_irq() as well
+since I don't see the reason to override them with -ENOENT...
 
-Link: https://lore.kernel.org/r/d2c97df3c817595c6faf582839316209022f70da.camel@areca.com.tw
-Signed-off-by: ching Huang <ching2048@areca.com.tw>
+Link: https://lore.kernel.org/r/49ba93a3-d427-7542-d85a-b74fe1a33a73@omp.ru
+Acked-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Sergey Shtylyov <s.shtylyov@omp.ru>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 4b79661275c9..930972cda38c 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1923,8 +1923,12 @@ static void arcmsr_post_ccb(struct AdapterControlBlock *acb, struct CommandContr
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+index 3e359ac752fd..3cba7bfba296 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
+@@ -1649,7 +1649,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 			if (irq < 0) {
+ 				dev_err(dev, "irq init: fail map phy interrupt %d\n",
+ 					idx);
+-				return -ENOENT;
++				return irq;
+ 			}
  
- 		if (ccb->arc_cdb_size <= 0x300)
- 			arc_cdb_size = (ccb->arc_cdb_size - 1) >> 6 | 1;
--		else
--			arc_cdb_size = (((ccb->arc_cdb_size + 0xff) >> 8) + 2) << 1 | 1;
-+		else {
-+			arc_cdb_size = ((ccb->arc_cdb_size + 0xff) >> 8) + 2;
-+			if (arc_cdb_size > 0xF)
-+				arc_cdb_size = 0xF;
-+			arc_cdb_size = (arc_cdb_size << 1) | 1;
-+		}
- 		ccb_post_stamp = (ccb->smid | arc_cdb_size);
- 		writel(0, &pmu->inbound_queueport_high);
- 		writel(ccb_post_stamp, &pmu->inbound_queueport_low);
+ 			rc = devm_request_irq(dev, irq, phy_interrupts[j], 0,
+@@ -1657,7 +1657,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 			if (rc) {
+ 				dev_err(dev, "irq init: could not request phy interrupt %d, rc=%d\n",
+ 					irq, rc);
+-				return -ENOENT;
++				return rc;
+ 			}
+ 		}
+ 	}
+@@ -1668,7 +1668,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (irq < 0) {
+ 			dev_err(dev, "irq init: could not map cq interrupt %d\n",
+ 				idx);
+-			return -ENOENT;
++			return irq;
+ 		}
+ 
+ 		rc = devm_request_irq(dev, irq, cq_interrupt_v1_hw, 0,
+@@ -1676,7 +1676,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (rc) {
+ 			dev_err(dev, "irq init: could not request cq interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			return rc;
+ 		}
+ 	}
+ 
+@@ -1686,7 +1686,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (irq < 0) {
+ 			dev_err(dev, "irq init: could not map fatal interrupt %d\n",
+ 				idx);
+-			return -ENOENT;
++			return irq;
+ 		}
+ 
+ 		rc = devm_request_irq(dev, irq, fatal_interrupts[i], 0,
+@@ -1694,7 +1694,7 @@ static int interrupt_init_v1_hw(struct hisi_hba *hisi_hba)
+ 		if (rc) {
+ 			dev_err(dev, "irq init: could not request fatal interrupt %d, rc=%d\n",
+ 				irq, rc);
+-			return -ENOENT;
++			return rc;
+ 		}
+ 	}
+ 
 -- 
 2.30.2
 
