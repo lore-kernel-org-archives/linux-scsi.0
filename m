@@ -5,41 +5,41 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCEB3C07E9E
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 795A5C07E9C
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C9F1D6124C
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6209F613CA
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:38:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234366AbhGJClM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:41:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58376 "EHLO mail.kernel.org"
+        id S235033AbhGJClP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:41:15 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58438 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235615AbhGJCji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S235605AbhGJCji (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 9 Jul 2021 22:39:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 36D2761409;
-        Sat, 10 Jul 2021 02:35:32 +0000 (UTC)
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E986161407;
+        Sat, 10 Jul 2021 02:35:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625884533;
-        bh=emOo2aHnIfRVPklH5pf65FQLyk1hn0nHm2BI7xulBqE=;
+        s=k20201202; t=1625884523;
+        bh=61jupdmQGE4DaqZyoqeliw9Kz+c4O+YUOWY+gabZ3hI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Gq1L/VA3tYwfqA7wzMLQruNulDHozfXkOURWUIBhzxYp7dNAybS+6SoCvp/obLTj2
-         herfKA7FW6mDlgWR2qK7HxmrEARcCEYMX9PBIX/YPY2yQho93FQi3wEm+mbEOpXtIW
-         evUUeGULnHupjyrD0Ir1VXDi7V/LYtDbK5abh1WUnw0dx9YrbcZiYrR76IK79ug1JJ
-         upDhnHazWvIlu+z0o6B4w6RRkRB5i2iPm0wYTqKYVYghmHq8AB+phPuz986vqiqrCO
-         /gR/wOrYvd04c8ZZfN9BdUObeL1B9U8XsqNxERXGaZvYwiAc2baNei071It/VrZgxn
-         9k4GWVtMBwtQg==
+        b=PZXop379VChv6MUkaRPk7tDT0y3T0HLbJLneX2j3WXWjn5fcsXSgQY8qd1bCkWOOS
+         EMuP/DvHG6G9ueQ2y9Apv+5oKBwT/zZeio6Zb+MPKAmN2uCAX9nU0f32PC1kEYkxeN
+         58FACFOxWgH2YMkJKejAhab8O2wp7qbm0Yxm2oWO96rwoG3PsaNSvqL/JTYQBLWWAI
+         z5AnJ8F3zab4WcWVuxTQLDEOrGkGunf9N7GsE/2tzuuZi+VTpKNEtUvvaXsRfwx672
+         NLVy/yTDWbMkueIfrJKoISxXfE+fHgBgpYGg/tmA3PGad78F//++UZrBt+8RVVTvvt
+         NOGL8uy/C5PsQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 13/33] scsi: qedi: Fix null ref during abort handling
-Date:   Fri,  9 Jul 2021 22:34:55 -0400
-Message-Id: <20210710023516.3172075-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 06/33] scsi: lpfc: Fix "Unexpected timeout" error in direct attach topology
+Date:   Fri,  9 Jul 2021 22:34:48 -0400
+Message-Id: <20210710023516.3172075-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710023516.3172075-1-sashal@kernel.org>
 References: <20210710023516.3172075-1-sashal@kernel.org>
@@ -51,36 +51,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 5777b7f0f03ce49372203b6521631f62f2810c8f ]
+[ Upstream commit e30d55137edef47434c40d7570276a0846fe922c ]
 
-If qedi_process_cmd_cleanup_resp finds the cmd it frees the work and sets
-list_tmf_work to NULL, so qedi_tmf_work should check if list_tmf_work is
-non-NULL when it wants to force cleanup.
+An 'unexpected timeout' message may be seen in a point-2-point topology.
+The message occurs when a PLOGI is received before the driver is notified
+of FLOGI completion. The FLOGI completion failure causes discovery to be
+triggered for a second time. The discovery timer is restarted but no new
+discovery activity is initiated, thus the timeout message eventually
+appears.
 
-Link: https://lore.kernel.org/r/20210525181821.7617-20-michael.christie@oracle.com
-Reviewed-by: Manish Rangankar <mrangankar@marvell.com>
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+In point-2-point, when discovery has progressed before the FLOGI completion
+is processed, it is not a failure. Add code to FLOGI completion to detect
+that discovery has progressed and exit the FLOGI handling (noop'ing it).
+
+Link: https://lore.kernel.org/r/20210514195559.119853-4-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedi/qedi_fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-index e8f2c662471e..662444bb67f6 100644
---- a/drivers/scsi/qedi/qedi_fw.c
-+++ b/drivers/scsi/qedi/qedi_fw.c
-@@ -1474,7 +1474,7 @@ static void qedi_tmf_work(struct work_struct *work)
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 566e8d07cb05..8dc60961e47e 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -1170,6 +1170,15 @@ lpfc_cmpl_els_flogi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			phba->fcf.fcf_redisc_attempted = 0; /* reset */
+ 			goto out;
+ 		}
++	} else if (vport->port_state > LPFC_FLOGI &&
++		   vport->fc_flag & FC_PT2PT) {
++		/*
++		 * In a p2p topology, it is possible that discovery has
++		 * already progressed, and this completion can be ignored.
++		 * Recheck the indicated topology.
++		 */
++		if (!sp->cmn.fPort)
++			goto out;
+ 	}
  
- ldel_exit:
- 	spin_lock_bh(&qedi_conn->tmf_work_lock);
--	if (!qedi_cmd->list_tmf_work) {
-+	if (qedi_cmd->list_tmf_work) {
- 		list_del_init(&list_work->list);
- 		qedi_cmd->list_tmf_work = NULL;
- 		kfree(list_work);
+ flogifail:
 -- 
 2.30.2
 
