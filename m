@@ -5,41 +5,44 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DF09C11F67
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE58C07E9C
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E12BF6143B
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E573C61443
+	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 02:28:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232741AbhGJCav (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 9 Jul 2021 22:30:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:42574 "EHLO mail.kernel.org"
+        id S233954AbhGJCay (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 9 Jul 2021 22:30:54 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42738 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233828AbhGJC2P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Jul 2021 22:28:15 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DF6B1613DC;
-        Sat, 10 Jul 2021 02:25:08 +0000 (UTC)
+        id S233860AbhGJC2p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Jul 2021 22:28:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7826361411;
+        Sat, 10 Jul 2021 02:25:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1625883909;
-        bh=DHpdsGlTnLmqejQwndL91YHZHzGmomgPIabgNGWW8Rs=;
+        s=k20201202; t=1625883916;
+        bh=KBOJmizCTXpjlem00JjDHTtMyvjuwH6oFWqShjOD0cM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WCuQ/3h/4ZXqRgAPSt1UCqbGnaVPAKgoVRHsF4fN4FmBRjxv0p2bvmeL7QNKDc4py
-         GDFC1ldL+LfhTjMKeJ3eklh7sTetzdfH+PJKx5FQUVkwOjiSYupHE1Iw2N9JEJe9GS
-         ktEQthVrf2OsZxdJ0aJ1zMwxG6j/jLl8XFzBwoB591R1zLo/ncXWwWCQXNibgPEkI/
-         /485Jb4b5LJbG+sClgauprg9E0w/iRXbrP1S6gwH1o1tzyrCaSJ/YaOCPztVSmDW6g
-         uNNBqjMZ2K5hh37CUJ3Fd8MutYENKfLWzCjx2sGXSZWtELHmVo5RHRwHvRfL6eqkMs
-         cukLMMcpeccBg==
+        b=hCeAv8dv5KPyZP/UqFEuuqWZsXV99uK0W9yu0SZT+bWFsgM0IHD5e/4bMu2LFpMTL
+         gjPyPqqijn5I5qoctrF8TOgsthfFIY+stX5k/ZuNhq+ZfzPHGySNashFYPFFlkxFYt
+         SWJmOeNH/eBdmvtinpuVg2+G/cxNV8bJYmqWQJ67kv4+vo+yCB+I9rDm8Jf3yqUx4E
+         9eBzSEJXdggCTq3SAjO4CZhIjBnwcZISdR5PZDAku0+daalKMa7SNk8qpbqZH5IHmX
+         b8XJQemP0aujq98Mk0bvGwkHcdjRb8S77gUI3IJhRJiEsd1qTux9xR+yzHiM/6v7Xf
+         EmKrWomELEL7A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>,
+Cc:     Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        Tomas Henzl <thenzl@redhat.com>,
+        kernel test robot <lkp@intel.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 31/93] scsi: core: Fixup calling convention for scsi_mode_sense()
-Date:   Fri,  9 Jul 2021 22:23:25 -0400
-Message-Id: <20210710022428.3169839-31-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 36/93] scsi: megaraid_sas: Handle missing interrupts while re-enabling IRQs
+Date:   Fri,  9 Jul 2021 22:23:30 -0400
+Message-Id: <20210710022428.3169839-36-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210710022428.3169839-1-sashal@kernel.org>
 References: <20210710022428.3169839-1-sashal@kernel.org>
@@ -51,161 +54,74 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-[ Upstream commit 8793613de913e03e7c884f4cc56e350bc716431e ]
+[ Upstream commit 9bedd36e9146b34dda4d6994e3aa1d72bc6442c1 ]
 
-The description for scsi_mode_sense() claims to return the number of valid
-bytes on success, which is not what the code does.  Additionally there is
-no gain in returning the SCSI status, as everything the callers do is to
-check against scsi_result_is_good(), which is what scsi_mode_sense() does
-already.  So change the calling convention to return a standard error code
-on failure, and 0 on success, and adapt the description and all callers.
+While reenabling the IRQ after IRQ poll there may be a small window for the
+firmware to post the replies with interrupts raised. In that case the
+driver will not see the interrupts which leads to I/O timeout.
 
-Link: https://lore.kernel.org/r/20210427083046.31620-4-hare@suse.de
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+This issue only happens when there are many I/O completions on a single
+reply queue. This forces the driver to switch between the interrupt and IRQ
+context.
+
+Make the driver process the reply queue one more time after enabling the
+IRQ.
+
+Link: https://lore.kernel.org/linux-scsi/20201102072746.27410-1-sreekanth.reddy@broadcom.com/
+Link: https://lore.kernel.org/r/20210528131307.25683-5-chandrakanth.patil@broadcom.com
+Cc: Tomas Henzl <thenzl@redhat.com>
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_lib.c           | 10 ++++++----
- drivers/scsi/scsi_transport_sas.c |  9 ++++-----
- drivers/scsi/sd.c                 | 12 ++++++------
- drivers/scsi/sr.c                 |  2 +-
- 4 files changed, 17 insertions(+), 16 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 31d7a6ddc9db..c639d30ade68 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2071,9 +2071,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
-  *	@sshdr: place to put sense data (or NULL if no sense to be collected).
-  *		must be SCSI_SENSE_BUFFERSIZE big.
-  *
-- *	Returns zero if unsuccessful, or the header offset (either 4
-- *	or 8 depending on whether a six or ten byte command was
-- *	issued) if successful.
-+ *	Returns zero if successful, or a negative error number on failure
-  */
- int
- scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
-@@ -2120,6 +2118,8 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 
- 	result = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buffer, len,
- 				  sshdr, timeout, retries, NULL);
-+	if (result < 0)
-+		return result;
- 
- 	/* This code looks awful: what it's doing is making sure an
- 	 * ILLEGAL REQUEST sense return identifies the actual command
-@@ -2164,13 +2164,15 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 			data->block_descriptor_length = buffer[3];
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 35925e68bf55..13022a42fd6f 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3667,6 +3667,7 @@ static void megasas_sync_irqs(unsigned long instance_addr)
+ 		if (irq_ctx->irq_poll_scheduled) {
+ 			irq_ctx->irq_poll_scheduled = false;
+ 			enable_irq(irq_ctx->os_irq);
++			complete_cmd_fusion(instance, irq_ctx->MSIxIndex, irq_ctx);
  		}
- 		data->header_length = header_length;
-+		result = 0;
- 	} else if ((status_byte(result) == CHECK_CONDITION) &&
- 		   scsi_sense_valid(sshdr) &&
- 		   sshdr->sense_key == UNIT_ATTENTION && retry_count) {
- 		retry_count--;
- 		goto retry;
  	}
--
-+	if (result > 0)
-+		result = -EIO;
- 	return result;
  }
- EXPORT_SYMBOL(scsi_mode_sense);
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index c9abed8429c9..4a96fb05731d 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -1229,16 +1229,15 @@ int sas_read_port_mode_page(struct scsi_device *sdev)
- 	char *buffer = kzalloc(BUF_SIZE, GFP_KERNEL), *msdata;
- 	struct sas_end_device *rdev = sas_sdev_to_rdev(sdev);
- 	struct scsi_mode_data mode_data;
--	int res, error;
-+	int error;
- 
- 	if (!buffer)
- 		return -ENOMEM;
- 
--	res = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
--			      &mode_data, NULL);
-+	error = scsi_mode_sense(sdev, 1, 0x19, buffer, BUF_SIZE, 30*HZ, 3,
-+				&mode_data, NULL);
- 
--	error = -EINVAL;
--	if (!scsi_status_is_good(res))
-+	if (error)
- 		goto out;
- 
- 	msdata = buffer +  mode_data.header_length +
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 01f87bcab3dd..f0c0935d7909 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2687,18 +2687,18 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- 		 * 5: Illegal Request, Sense Code 24: Invalid field in
- 		 * CDB.
- 		 */
--		if (!scsi_status_is_good(res))
-+		if (res < 0)
- 			res = sd_do_mode_sense(sdkp, 0, 0, buffer, 4, &data, NULL);
- 
- 		/*
- 		 * Third attempt: ask 255 bytes, as we did earlier.
- 		 */
--		if (!scsi_status_is_good(res))
-+		if (res < 0)
- 			res = sd_do_mode_sense(sdkp, 0, 0x3F, buffer, 255,
- 					       &data, NULL);
+@@ -3698,6 +3699,7 @@ int megasas_irqpoll(struct irq_poll *irqpoll, int budget)
+ 		irq_poll_complete(irqpoll);
+ 		irq_ctx->irq_poll_scheduled = false;
+ 		enable_irq(irq_ctx->os_irq);
++		complete_cmd_fusion(instance, irq_ctx->MSIxIndex, irq_ctx);
  	}
  
--	if (!scsi_status_is_good(res)) {
-+	if (res < 0) {
- 		sd_first_printk(KERN_WARNING, sdkp,
- 			  "Test WP failed, assume Write Enabled\n");
- 	} else {
-@@ -2759,7 +2759,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 	res = sd_do_mode_sense(sdkp, dbd, modepage, buffer, first_len,
- 			&data, &sshdr);
+ 	return num_entries;
+@@ -3714,6 +3716,7 @@ megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
+ {
+ 	struct megasas_instance *instance =
+ 		(struct megasas_instance *)instance_addr;
++	struct megasas_irq_context *irq_ctx = NULL;
+ 	u32 count, MSIxIndex;
  
--	if (!scsi_status_is_good(res))
-+	if (res < 0)
- 		goto bad_sense;
+ 	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
+@@ -3722,8 +3725,10 @@ megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
+ 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
+ 		return;
  
- 	if (!data.header_length) {
-@@ -2791,7 +2791,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 		res = sd_do_mode_sense(sdkp, dbd, modepage, buffer, len,
- 				&data, &sshdr);
+-	for (MSIxIndex = 0 ; MSIxIndex < count; MSIxIndex++)
+-		complete_cmd_fusion(instance, MSIxIndex, NULL);
++	for (MSIxIndex = 0 ; MSIxIndex < count; MSIxIndex++) {
++		irq_ctx = &instance->irq_context[MSIxIndex];
++		complete_cmd_fusion(instance, MSIxIndex, irq_ctx);
++	}
+ }
  
--	if (scsi_status_is_good(res)) {
-+	if (!res) {
- 		int offset = data.header_length + data.block_descriptor_length;
- 
- 		while (offset < len) {
-@@ -2909,7 +2909,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 	res = scsi_mode_sense(sdp, 1, 0x0a, buffer, 36, SD_TIMEOUT,
- 			      sdkp->max_retries, &data, &sshdr);
- 
--	if (!scsi_status_is_good(res) || !data.header_length ||
-+	if (res < 0 || !data.header_length ||
- 	    data.length < 6) {
- 		sd_first_printk(KERN_WARNING, sdkp,
- 			  "getting Control mode page failed, assume no ATO\n");
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 77961f058367..726b7048a767 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -930,7 +930,7 @@ static void get_capabilities(struct scsi_cd *cd)
- 	rc = scsi_mode_sense(cd->device, 0, 0x2a, buffer, ms_len,
- 			     SR_TIMEOUT, 3, &data, NULL);
- 
--	if (!scsi_status_is_good(rc) || data.length > ms_len ||
-+	if (rc < 0 || data.length > ms_len ||
- 	    data.header_length + data.block_descriptor_length > data.length) {
- 		/* failed, drive doesn't have capabilities mode page */
- 		cd->cdi.speed = 1;
+ /**
 -- 
 2.30.2
 
