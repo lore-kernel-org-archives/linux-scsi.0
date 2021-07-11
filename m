@@ -2,66 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FBE6C07E95
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 15:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9462C07E95
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jul 2021 03:36:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B0B661357
-	for <linux-scsi@archiver.kernel.org>; Sat, 10 Jul 2021 15:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8549561206
+	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jul 2021 03:36:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231975AbhGJPWW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 10 Jul 2021 11:22:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:33748 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229805AbhGJPWU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 10 Jul 2021 11:22:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D66DC61357;
-        Sat, 10 Jul 2021 15:19:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1625930375;
-        bh=wmv3i0bl05QfU7AkJuYqTwOAkbHj2WKCpijd4L8v89o=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JpG4z3cw9rrZJclLN3ssfKpvpPk1dox9uREMy0NmNPE8+zRurQIXLW1cy6IW9FmOU
-         unSLInVbK+LyclIki/b+qOa+7Ec0xhLau1oeLFUOYe4pKXDk52tg02nuoPNv4sS74H
-         LvVv+rf6a1gm17ZrEHvaj0wxz5hizFecXclCU9BA=
-Date:   Sat, 10 Jul 2021 17:19:33 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     "Rafael J . Wysocki" <rafael@kernel.org>,
-        Saravana Kannan <saravanak@google.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
+        id S229951AbhGKDjT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 10 Jul 2021 23:39:19 -0400
+Received: from mail-pj1-f53.google.com ([209.85.216.53]:36479 "EHLO
+        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229704AbhGKDjT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Jul 2021 23:39:19 -0400
+Received: by mail-pj1-f53.google.com with SMTP id d9-20020a17090ae289b0290172f971883bso10018784pjz.1
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Jul 2021 20:36:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=BJv5Q2mUDVi5xcdQYYlqkcpXwW1wCTQ+oAZZb+FZouY=;
+        b=UqwMXWPC46kcqPGuOT6smcn+P2WmCVxWo/OstbmJmEgwo7dmRoO2aeaBTJ9cncUIOP
+         xTlAxsL+Pwl3/t8uNItzwyLI53c9qVcW7b40PVmPM8sG3k2yquRxMKCsmWG6yK9a0oLF
+         9trY73vDVPSMO0KhBSd/WH8Jg1nNP/nI/5gOqxuNAkQ4odPTZnVbOD9+/DmoAB+P6USy
+         7+Nk9lRcTiKhI9YWbd3PU+JYVyr8UIbbZHzVdMEOuG8maVhXJJ4gar/3n+lkpX5YmNlD
+         h4lc66Os2RaM7Xkhx5mFgttNnQvWtsVuopPB9SpXOVQ53fjI0Kzz1K9B39TSuqj/50mf
+         Xppg==
+X-Gm-Message-State: AOAM532klT5Qn9MagflsKspF7ZlBsxVaP8T3q0ebFNclTTJ+wiao3WJI
+        hLPb9uFZyPM84n3Azn4fHX0=
+X-Google-Smtp-Source: ABdhPJzphGWilpAJQ1oWZefHL7MTEBMzmXfkknkbCYbCjbQtASISUAkw/lEUEiHHhpYK7Or7xunlDg==
+X-Received: by 2002:a17:90a:8e82:: with SMTP id f2mr7464632pjo.177.1625974591695;
+        Sat, 10 Jul 2021 20:36:31 -0700 (PDT)
+Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:4cac:d4d:4724:a273])
+        by smtp.gmail.com with ESMTPSA id z9sm10689468pfa.2.2021.07.10.20.36.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 10 Jul 2021 20:36:30 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH V3 1/3] driver core: Prevent warning when removing a
- device link from unregistered consumer
-Message-ID: <YOm6hWQ+RL7ILm3p@kroah.com>
-References: <20210710103819.12532-1-adrian.hunter@intel.com>
- <20210710103819.12532-2-adrian.hunter@intel.com>
+        Hannes Reinecke <hare@suse.de>,
+        Russell King <linux@armlinux.org.uk>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Douglas Gilbert <dgilbert@interlog.com>
+Subject: [PATCH] scsi: fas216: Fix a build error
+Date:   Sat, 10 Jul 2021 20:36:23 -0700
+Message-Id: <20210711033623.11267-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210710103819.12532-2-adrian.hunter@intel.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Jul 10, 2021 at 01:38:17PM +0300, Adrian Hunter wrote:
-> sysfs_remove_link() causes a warning if the parent directory does not
-> exist. That can happen if the device link consumer has not been registered.
-> So do not attempt sysfs_remove_link() in that case.
-> 
-> Fixes: 287905e68dd29 ("driver core: Expose device link details in sysfs")
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-> ---
->  drivers/base/core.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+Use SAM_STAT_GOOD instead of GOOD since GOOD has been removed.
 
-No Cc: stable for this?  Why not?
+Cc: Hannes Reinecke <hare@suse.de>
+Fixes: 3d45cefc8edd ("scsi: core: Drop obsolete Linux-specific SCSI status codes")
+Fixes: df1303147649 ("scsi: fas216: Use get_status_byte() to avoid using Linux-specific status codes")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/arm/fas216.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 30ed3d23635a..6baa9b36367d 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -2010,7 +2010,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
+ 		   "request sense complete, result=0x%04x%02x%02x",
+ 		   result, SCpnt->SCp.Message, SCpnt->SCp.Status);
+ 
+-	if (result != DID_OK || SCpnt->SCp.Status != GOOD)
++	if (result != DID_OK || SCpnt->SCp.Status != SAM_STAT_GOOD)
+ 		/*
+ 		 * Something went wrong.  Make sure that we don't
+ 		 * have valid data in the sense buffer that could
