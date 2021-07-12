@@ -2,153 +2,182 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D46C07E99
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 21:27:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9396AC07E99
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 21:38:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1225561279
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 21:27:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72C2761242
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 21:38:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234544AbhGLVaJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Jul 2021 17:30:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:48479 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231837AbhGLVaJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Jul 2021 17:30:09 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626125240;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=50O7XoIosnaTFvNclTBE2xrsoJwPx7yETNcoEdpke38=;
-        b=F9a2vVjJoBp/q7ULwV97nPFogI780NA5wiy4Zsx2/4wfi97ES/UVypkx4FD9fVrdgCKdwX
-        W9zFLW2qGLPQQmUPgdlJcFFkBh7tW4+QBIG3spohSPp3Lvvv9KwU3IkK/jZNChFcNA3SvT
-        HXlSat2NOnIwOX54vDBtXH97Tpu4AKk=
-Received: from mail-lj1-f198.google.com (mail-lj1-f198.google.com
- [209.85.208.198]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-374-8BxonWfWOWyJVpsLDB-YAA-1; Mon, 12 Jul 2021 17:27:19 -0400
-X-MC-Unique: 8BxonWfWOWyJVpsLDB-YAA-1
-Received: by mail-lj1-f198.google.com with SMTP id c20-20020a2ea7940000b029013767626146so7769708ljf.15
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Jul 2021 14:27:18 -0700 (PDT)
+        id S234649AbhGLVla (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jul 2021 17:41:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42618 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229842AbhGLVla (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2021 17:41:30 -0400
+Received: from mail-lf1-x12d.google.com (mail-lf1-x12d.google.com [IPv6:2a00:1450:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1643AC0613DD
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Jul 2021 14:38:40 -0700 (PDT)
+Received: by mail-lf1-x12d.google.com with SMTP id b26so13786445lfo.4
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Jul 2021 14:38:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=mklevc/R5KovzmDP+adIiwGymVPkRVyHS2MxHb0OMgM=;
+        b=f+61re/HqoEq+rndu80qtznwa7X37+14PmBK7oKMaBCMo7cN6QxWgWhw0vXsImV1UB
+         ge2KlP0wdieMENJU/BOFKlyEhbnTAcWoQ7EpgQVBdjKM9A0uOb52mijtA426suDmlwon
+         CaKmGci/AtalSCc9jvn9Os3cpMMtbRvK+9jfo=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=50O7XoIosnaTFvNclTBE2xrsoJwPx7yETNcoEdpke38=;
-        b=Zz1lJwYcOEPp6dw/VC4353nBHNZ6Mu3oJ/CMLzp316dBRKAwEKfbS5NsmWKJN6K102
-         Xcz18CeU+Wzx3WbeZanmUXvlnaZmq4joFEhyZwukK4AFUm0TLgnK7rYt9LtyEgmR7EjW
-         2BPsNUShbHpjfABj6a64Ajr47QMSHQ8dj5am17JzAhNF9tI1BJF7D+TaA51JfBGUm5KR
-         RyNqZGDI9LojNK1edU/kZ+NL6iXa7kFTB3qnVTbXDdbO0PY0Uzl4vkccrZ+XDFwsthCz
-         P7tNGAlcULBf8BDvs+BIveqZ+iV440NoN/NlPnTBY6xbvX+4vkC+8iXfCzP9GMvZW5P4
-         PgoQ==
-X-Gm-Message-State: AOAM532gvRTf38wwYMXlQ5OlxOsJlJwx+5IM69dcRRltF/Zj9C4sllLD
-        yg0aw1hZ5SzFtfCcW5ZDlgqWiwXkNqwSOHad3teCY1daayvkBP21WlxL/sB5JeNB1Q7vMNTWuSH
-        aSMTuO14/NxyzFoD6Fq+f0mLqOSgHcrHTOKNRcg==
-X-Received: by 2002:a05:6512:33d3:: with SMTP id d19mr632520lfg.114.1626125237475;
-        Mon, 12 Jul 2021 14:27:17 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxMir1sZ9GqMa7WvPLCmNlPEblioxslUn0DyeGBQ95oerEYIFyQhf9KJgWR3Td5whCmT13/5lNHXg0IXQuMJlU=
-X-Received: by 2002:a05:6512:33d3:: with SMTP id d19mr632454lfg.114.1626125237173;
- Mon, 12 Jul 2021 14:27:17 -0700 (PDT)
+        bh=mklevc/R5KovzmDP+adIiwGymVPkRVyHS2MxHb0OMgM=;
+        b=SUAxxDxOBefpKaKZkHvJT+wPW4hEDnnPAqR4BIU1dlV5lkJJ0AJsmnFZmqiVhOVqtk
+         iomfqsHHAyMZUL/PnJIf/Am6fuoNZlXGMH6GFEjLzhQzfXyE894/WOPNF1M/C7AiI6kV
+         m+BDM2SlKxnwRcM8vZUCty5sK/+9zn9sY1Ghif1U7wwQrG7nKtcQIVHDPWozGVBQ5c+Y
+         vx/aQLq3TQpAn+ac0SIKTQYL8/uLuyHASoG2BDgkDoTU43PKWhFDyPccdm+vPcPKGIgv
+         XlSPL2tcnM8G3EfWtcbEkGypjeAeCo2e8g0xsmCznUPX7wnWt3m72x1fK5ZaegeQhMa/
+         UuNA==
+X-Gm-Message-State: AOAM530n3i6HIQBYkFT4UYTOmeLim/jeWhXQF4jWGxwgnIVDZDUpLgzp
+        UsMidfBjToEEonWVy6WMfzUCfJBhm+QYfg7EDYoLNw==
+X-Google-Smtp-Source: ABdhPJzTLpWBM+6lPao6y4ScCMIX74RBcUCpUOUdKMEt2Xa7kvuwgjlOSEXUadMnHIfpXCdo/8Ot8/VEh/V6pGDxlEI=
+X-Received: by 2002:ac2:592b:: with SMTP id v11mr644333lfi.59.1626125918279;
+ Mon, 12 Jul 2021 14:38:38 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210629152746.2953364-1-nitesh@redhat.com> <CAFki+LnUGiEE-7Uf-x8-TQZYZ+3Migrr=81gGLYszxaK-6A9WQ@mail.gmail.com>
- <YOrWqPYPkZp6nRLS@unreal>
-In-Reply-To: <YOrWqPYPkZp6nRLS@unreal>
-From:   Nitesh Lal <nilal@redhat.com>
-Date:   Mon, 12 Jul 2021 17:27:05 -0400
-Message-ID: <CAFki+L=FYOTQ1+-MHWmTuA6ZxTUcZA9t41HRL2URYgv03oFbDg@mail.gmail.com>
-Subject: Re: [PATCH v2 00/14] genirq: Cleanup the usage of irq_set_affinity_hint
-To:     Leon Romanovsky <leonro@nvidia.com>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marcelo Tosatti <mtosatti@redhat.com>,
-        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
-        frederic@kernel.org, Juri Lelli <juri.lelli@redhat.com>,
-        Alex Belits <abelits@marvell.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
-        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
-        Stefan Assmann <sassmann@redhat.com>,
-        Tomas Henzl <thenzl@redhat.com>, kashyap.desai@broadcom.com,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, Ken Cox <jkc@redhat.com>,
-        faisal.latif@intel.com, shiraz.saleem@intel.com, tariqt@nvidia.com,
-        Alaa Hleihel <ahleihel@redhat.com>,
-        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
-        saeedm@nvidia.com, benve@cisco.com, govind@gmx.com,
-        jassisinghbrar@gmail.com, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
-        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
-        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
-        Al Stone <ahs3@redhat.com>
+References: <CAHZQxyKJ1qFatzhR-k19PXjAPo7eC0ZgwgaGKwfndB=jEO8mRQ@mail.gmail.com>
+ <32a96fc27c250fb5772a0b301576ad702b8ea934.camel@suse.com>
+In-Reply-To: <32a96fc27c250fb5772a0b301576ad702b8ea934.camel@suse.com>
+From:   Brian Bunker <brian@purestorage.com>
+Date:   Mon, 12 Jul 2021 14:38:27 -0700
+Message-ID: <CAHZQxyLmDFf+7tmZQFm7e6Xt97vSuav0f8kBbZjcwaufQX+x0w@mail.gmail.com>
+Subject: Re: [PATCH 1/1]: scsi dm-mpath do not fail paths which are in ALUA
+ state transitioning
+To:     Martin Wilck <mwilck@suse.com>
+Cc:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Leon,
+Martin,
 
-On Sun, Jul 11, 2021 at 7:32 AM Leon Romanovsky <leonro@nvidia.com> wrote:
+Please confirm that your kernel included ee8868c5c78f ("scsi:
+scsi_dh_alua: Retry RTPG on a different path after failure").
+That commit should cause the RTPG to be retried on other map members
+which are not in failed state, thus avoiding this phenomenon.
+
+In my case, there are no other map members that are not in the failed
+state. One set of paths goes to the ALUA unavailable state when the
+primary fails, and the second set of paths moves to ALUA state
+transitioning as the previous secondary becomes the primary. If the
+paths are failed which are transitioning, an all paths down state
+happens which is not expected. There should be a time for which
+transitioning is a transient state until the next state is entered.
+Failing a path assuming there would be non-failed paths seems wrong.
+
+The purpose of that patch was to set the state of the transitioning
+path to failed in order to make sure IO is retried on a different path.
+Your patch would undermine this purpose.
+
+I agree this is what happens but those transitioning paths might be
+the only non-failed paths available. I don't think it is reasonable to
+fail them. This is the same as treating transitioning as standby or
+unavailable. As you point out this happened with the commit you
+mention. Before this commit what I am doing does not result in an all
+paths down error, and similarly, it does not in earlier Linux versions
+or other OS's under the same condition. I see this as a regression.
+
+Thanks,
+Brian
+
+On Mon, Jul 12, 2021 at 2:19 AM Martin Wilck <mwilck@suse.com> wrote:
 >
-> On Thu, Jul 08, 2021 at 03:24:20PM -0400, Nitesh Lal wrote:
-> > On Tue, Jun 29, 2021 at 11:28 AM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
+> Hello Brian,
 >
-> <...>
->
-> > >
-> > >  drivers/infiniband/hw/i40iw/i40iw_main.c      |  4 +-
-> > >  drivers/mailbox/bcm-flexrm-mailbox.c          |  4 +-
-> > >  drivers/net/ethernet/cisco/enic/enic_main.c   |  8 +--
-> > >  drivers/net/ethernet/emulex/benet/be_main.c   |  4 +-
-> > >  drivers/net/ethernet/huawei/hinic/hinic_rx.c  |  4 +-
-> > >  drivers/net/ethernet/intel/i40e/i40e_main.c   |  8 +--
-> > >  drivers/net/ethernet/intel/iavf/iavf_main.c   |  8 +--
-> > >  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 10 ++--
-> > >  drivers/net/ethernet/mellanox/mlx4/eq.c       |  8 ++-
-> > >  .../net/ethernet/mellanox/mlx5/core/pci_irq.c |  6 +--
-> > >  drivers/scsi/lpfc/lpfc_init.c                 |  4 +-
-> > >  drivers/scsi/megaraid/megaraid_sas_base.c     | 27 +++++-----
-> > >  drivers/scsi/mpt3sas/mpt3sas_base.c           | 21 ++++----
-> > >  include/linux/interrupt.h                     | 53 ++++++++++++++++++-
-> > >  kernel/irq/manage.c                           |  8 +--
-> > >  15 files changed, 113 insertions(+), 64 deletions(-)
-> > >
-> > > --
-> > >
-> > >
+> On Do, 2021-07-08 at 13:42 -0700, Brian Bunker wrote:
+> > In a controller failover do not fail paths that are transitioning or
+> > an unexpected I/O error will return when accessing a multipath device.
 > >
-> > Gentle ping.
-> > Any comments or suggestions on any of the patches included in this series?
+> > Consider this case, a two controller array with paths coming from a
+> > primary and a secondary controller. During any upgrade there will be a
+> > transition from a secondary to a primary state.
+> >
+> > [...]
+> > 4. It is not expected that the remaining 4 paths will also fail. This
+> > was not the case until the change which introduced BLK_STS_AGAIN into
+> > the SCSI ALUA device handler. With that change new I/O which reaches
+> > that handler on paths that are in ALUA state transitioning will result
+> > in those paths failing. Previous Linux versions, before that change,
+> > will not return an I/O error back to the client application.
+> > Similarly, this problem does not happen in other operating systems,
+> > e.g. ESXi, Windows, AIX, etc.
 >
-> Please wait for -rc1, rebase and resend.
-> At least i40iw was deleted during merge window.
+> Please confirm that your kernel included ee8868c5c78f ("scsi:
+> scsi_dh_alua: Retry RTPG on a different path after failure").
+> That commit should cause the RTPG to be retried on other map members
+> which are not in failed state, thus avoiding this phenomenon.
+>
+>
+> > [...]
+> >
+> > 6. The error gets back to the user of the muitipath device
+> > unexpectedly:
+> > Thu Jul  8 13:33:59 2021: /opt/Purity/bin/bb/pureload I/O Error: io
+> > 43047 fd 36  op read  offset 00000028ef7a7000  size 4096  errno 11
+> > rsize -1
+> >
+> > The earlier patch I made for this was not desirable, so I am proposing
+> > this much smaller patch which will similarly not allow the
+> > transitioning paths to result in immediate failure.
+> >
+> > Signed-off-by: Brian Bunker <brian@purestorage.com>
+> > Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+> > Acked-by: Seamus Connor <sconnor@purestorage.com>
+> >
+> > ____
+> > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> > index bced42f082b0..d5d6be96068d 100644
+> > --- a/drivers/md/dm-mpath.c
+> > +++ b/drivers/md/dm-mpath.c
+> > @@ -1657,7 +1657,7 @@ static int multipath_end_io(struct dm_target
+> > *ti, struct request *clone,
+> >                 else
+> >                         r = DM_ENDIO_REQUEUE;
+> >
+> > -               if (pgpath)
+> > +               if (pgpath && (error != BLK_STS_AGAIN))
+> >                         fail_path(pgpath);
+> >
+> >                 if (!atomic_read(&m->nr_valid_paths) &&
+> >
+>
+> I doubt that this is correct. If you look at the commit msg of
+> 268940b80fa4 ("scsi: scsi_dh_alua: Return BLK_STS_AGAIN for ALUA
+> transitioning state"):
+>
+>
+>  "When the ALUA state indicates transitioning we should not retry the command
+>  immediately, but rather complete the command with BLK_STS_AGAIN to signal
+>  the completion handler that it might be retried.  This allows multipathing
+>  to redirect the command to another path if possible, and avoid stalls
+>  during lengthy transitioning times."
+>
+> The purpose of that patch was to set the state of the transitioning
+> path to failed in order to make sure IO is retried on a different path.
+> Your patch would undermine this purpose.
+>
+> Regards
+> Martin
+>
 >
 
-In -rc1 some non-trivial mlx5 changes also went in.  I was going through
-these changes and it seems after your patch
-
-e4e3f24b822f: ("net/mlx5: Provide cpumask at EQ creation phase")
-
-we do want to control the affinity for the mlx5 interrupts from the driver.
-Is that correct? This would mean that we should use
-irq_set_affinity_and_hint() instead
-of irq_update_affinity_hint().
 
 -- 
-Thanks
-Nitesh
-
+Brian Bunker
+PURE Storage, Inc.
+brian@purestorage.com
