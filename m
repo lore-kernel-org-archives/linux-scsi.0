@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DD4EEC07E99
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 05:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7587DC07E9B
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 05:55:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C156E610A6
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 05:55:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DA57610CB
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 05:55:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231901AbhGLF6G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Jul 2021 01:58:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48618 "EHLO
+        id S231373AbhGLF6f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jul 2021 01:58:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48738 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230419AbhGLF6F (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2021 01:58:05 -0400
+        with ESMTP id S230342AbhGLF6f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2021 01:58:35 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4954AC0613DD;
-        Sun, 11 Jul 2021 22:55:17 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0F4DC0613DD;
+        Sun, 11 Jul 2021 22:55:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=F4G+fDWiB9RFsl1l009XKqDHQx8vaGg8A2qOsUiKMzo=; b=Hg7DZpsrKy4syd9qjB2iPlUryI
-        PQcQUxprF7sX3y7Aej2F0iavPDcPXnEqBw5i3JMe4oY4WT069nr6oCOf6dezwVKBS9Fgw4Sxr8aob
-        WN0g6ByV6mchXK+xav+pLjJcwEry9Ul0gTnJrEjOIwJcPGfDVueLmXMAa+9SvD1VBS3b/tpYh4uKn
-        vKOWTo/LncmI4NRhAtjpUUhs/6WwPcx2h43QqaTTWwoEdhNLAi1M/nS2fyYv2PCeAXJdMJAa8pfZU
-        PZPSCeHtfyw9Q+0ZIZJQ2at/k87F2/vMrhNlpoEOOM++LGsUn9P+FBKda+wOdqADINJJ147Tgegl5
-        lKoChiUg==;
+        bh=8AfnmbpUDdkLdltELGG87m4a8NMpkulaxYq3rJ/t8x8=; b=B6XqSu+hm7k3+fZTWGYDq6RlnS
+        6ahS9uZyX4aXvdbY3gnKlBmz5P5TcoBRiGTZyALr7zxYM9Z3acZmIT3vOt6jrWyfm3tasrvasq7wN
+        SdfhARUbsFkPDueIkka+26nug4crcRcAvHpsAoPhh5AL0qWD8f9INzjOGvA3YP8Vx8OVsCMIjHJXr
+        zG69oHc5r6l/PBwZe6GixehfjnmJOSos3FL7OCW7F+zEtrO2k8eL3d8lV/gK95dRIJusha5T6MadA
+        DKjhQfNiF7Gjhw7TXaIgh77m3cyBPhFwpXo/AixK+ruZS4gmmNxSuOFq5H93WjP+fIquFdJIk6Oor
+        O6Or5f3Q==;
 Received: from [2001:4bb8:184:8b7c:bd9:61b8:39ba:d78a] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m2otu-00GvON-EC; Mon, 12 Jul 2021 05:54:50 +0000
+        id 1m2ouD-00GvPa-3Y; Mon, 12 Jul 2021 05:55:08 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Jens Axboe <axboe@kernel.dk>,
@@ -42,9 +42,9 @@ To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
 Cc:     Doug Gilbert <dgilbert@interlog.com>,
         =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 15/24] scsi_ioctl: remove scsi_req_init
-Date:   Mon, 12 Jul 2021 07:48:07 +0200
-Message-Id: <20210712054816.4147559-16-hch@lst.de>
+Subject: [PATCH 16/24] scsi_ioctl: move scsi_command_size_tbl to scsi_common.c
+Date:   Mon, 12 Jul 2021 07:48:08 +0200
+Message-Id: <20210712054816.4147559-17-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210712054816.4147559-1-hch@lst.de>
 References: <20210712054816.4147559-1-hch@lst.de>
@@ -55,71 +55,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Merge scsi_req_init into its only caller.
+Move the SCSI command size table towards the rest of the common SCSI
+code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/scsi_ioctl.c          | 15 ---------------
- drivers/scsi/scsi_lib.c     |  7 ++++++-
- include/scsi/scsi_request.h |  2 --
- 3 files changed, 6 insertions(+), 18 deletions(-)
+ block/scsi_ioctl.c         | 8 --------
+ drivers/scsi/scsi_common.c | 6 ++++++
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
 diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index 006da3e829a2..76fbe5287876 100644
+index 76fbe5287876..ccc06b8e88c6 100644
 --- a/block/scsi_ioctl.c
 +++ b/block/scsi_ioctl.c
-@@ -817,21 +817,6 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
- }
- EXPORT_SYMBOL(scsi_cmd_ioctl);
+@@ -29,14 +29,6 @@ struct blk_cmd_filter {
  
--/**
-- * scsi_req_init - initialize certain fields of a scsi_request structure
-- * @req: Pointer to a scsi_request structure.
-- * Initializes .__cmd[], .cmd, .cmd_len and .sense_len but no other members
-- * of struct scsi_request.
-- */
--void scsi_req_init(struct scsi_request *req)
+ static struct blk_cmd_filter blk_default_cmd_filter;
+ 
+-/* Command group 3 is reserved and should never be used.  */
+-const unsigned char scsi_command_size_tbl[8] =
 -{
--	memset(req->__cmd, 0, sizeof(req->__cmd));
--	req->cmd = req->__cmd;
--	req->cmd_len = BLK_MAX_CDB;
--	req->sense_len = 0;
--}
--EXPORT_SYMBOL(scsi_req_init);
+-	6, 10, 10, 12,
+-	16, 12, 10, 10
+-};
+-EXPORT_SYMBOL(scsi_command_size_tbl);
 -
- static int __init blk_scsi_ioctl_init(void)
+ static int sg_get_version(int __user *p)
  {
- 	blk_set_cmd_filter_defaults(&blk_default_cmd_filter);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index c9a91a52e637..4914b01e8e59 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1082,8 +1082,13 @@ EXPORT_SYMBOL(scsi_alloc_sgtables);
- static void scsi_initialize_rq(struct request *rq)
- {
- 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-+	struct scsi_request *req = &cmd->req;
+ 	static const int sg_version_num = 30527;
+diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
+index 90349498f686..8aac4e5e8c4c 100644
+--- a/drivers/scsi/scsi_common.c
++++ b/drivers/scsi/scsi_common.c
+@@ -10,6 +10,12 @@
+ #include <asm/unaligned.h>
+ #include <scsi/scsi_common.h>
+ 
++/* Command group 3 is reserved and should never be used.  */
++const unsigned char scsi_command_size_tbl[8] = {
++	6, 10, 10, 12, 16, 12, 10, 10
++};
++EXPORT_SYMBOL(scsi_command_size_tbl);
 +
-+	memset(req->__cmd, 0, sizeof(req->__cmd));
-+	req->cmd = req->__cmd;
-+	req->cmd_len = BLK_MAX_CDB;
-+	req->sense_len = 0;
- 
--	scsi_req_init(&cmd->req);
- 	init_rcu_head(&cmd->rcu);
- 	cmd->jiffies_at_alloc = jiffies;
- 	cmd->retries = 0;
-diff --git a/include/scsi/scsi_request.h b/include/scsi/scsi_request.h
-index b06f28c74908..9129b23e12bc 100644
---- a/include/scsi/scsi_request.h
-+++ b/include/scsi/scsi_request.h
-@@ -28,6 +28,4 @@ static inline void scsi_req_free_cmd(struct scsi_request *req)
- 		kfree(req->cmd);
- }
- 
--void scsi_req_init(struct scsi_request *req);
--
- #endif /* _SCSI_SCSI_REQUEST_H */
+ /* NB: These are exposed through /proc/scsi/scsi and form part of the ABI.
+  * You may not alter any existing entry (although adding new ones is
+  * encouraged once assigned by ANSI/INCITS T10).
 -- 
 2.30.2
 
