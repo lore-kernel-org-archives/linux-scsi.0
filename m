@@ -2,144 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E617C07E9C
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 14:13:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2907FC07E99
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 15:50:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 776DF61106
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 14:13:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D77A61221
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 15:50:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234869AbhGLOQn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Jul 2021 10:16:43 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50678 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234096AbhGLOQn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Jul 2021 10:16:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626099234;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=afUNjuJXnPmwCmF5+FQfjA8ufj+e69/ivLf91qDfwSM=;
-        b=TbZxTk65cPuUu0PsJHuvtTv9FKg9xurhx2dLBUbOpZD47o0581fIAEnJ9GPb6iC8Q9ZOdu
-        RfID2cPFe5oL93LD/sgZfnBOLT9qLMh/h834LwBK4fs57YlWQL2p9c/O9D4MUHJNT8Kxxm
-        A81L7MlVXl7duWPBUqGc9qPEgnGmxBc=
-Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
- [209.85.167.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-41-YEgLCrwyNoWZBKiCCqhBhA-1; Mon, 12 Jul 2021 10:13:53 -0400
-X-MC-Unique: YEgLCrwyNoWZBKiCCqhBhA-1
-Received: by mail-lf1-f70.google.com with SMTP id z13-20020a056512376db0290329474fcc99so6547382lft.0
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Jul 2021 07:13:53 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=afUNjuJXnPmwCmF5+FQfjA8ufj+e69/ivLf91qDfwSM=;
-        b=Z0N/8LRz06IOuX+hArxDrHatEzedd8wMccEuTutGHRztFua7yNMTzvXTamFV+FSQDS
-         l4n3wCHQgmmfQJAfioIqGK/DBr9WjvGlKdu452ZHKlG1BBtXLPygQfK6lrinTl2K6W0m
-         vknUa2LrPz5vap166WwFBpPM9lNWNXFESkQBNLcwDtMafJtt/PnQAloxc0Z6n0gj2gHX
-         lWFH+BxofnmOclTulCOphtOZEojruDze09JzDkB7f9eS5mmogCbahJzSG0qpDAkVBWvv
-         dQ9uUv4fxi4uYsYALudhRVyrGi7qijhLdIz6a0waT3MDDIVV0W8F2YvY/KDRh5YfwlVN
-         Xf+w==
-X-Gm-Message-State: AOAM533HHFBOnG47zgGYyW0NtpzwjHOyF6S+FgQftldKUFoTEsuTnyEE
-        7zHXbOE5A4hECdhcui9J1UGEJZrq7q6NNIPUFYCOnRfrqImU8NSB9PKYnT2ALe2vOAHUVXHo0r4
-        cAI+P7IkyIiRvwoiME4mse8oQ0h1bnHbjmm2hcw==
-X-Received: by 2002:a05:6512:33d3:: with SMTP id d19mr16315953lfg.114.1626099231944;
-        Mon, 12 Jul 2021 07:13:51 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwbVotmura6ZuXfGUNMWJgcOo2t2QFX2iHzhetzzTWpDB1SmKe/MGcsinyZmILKUBXZAM4S3H2xTgXGvDKvNv8=
-X-Received: by 2002:a05:6512:33d3:: with SMTP id d19mr16315896lfg.114.1626099231489;
- Mon, 12 Jul 2021 07:13:51 -0700 (PDT)
+        id S235594AbhGLPxK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jul 2021 11:53:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46820 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230228AbhGLPxK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2021 11:53:10 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3B6DAC0613DD;
+        Mon, 12 Jul 2021 08:50:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=bOhjFz7uGsGcQZZ8QK6W3MRBAREVYViBKiRmdl8xXwA=; b=ZjD+Fa++0ZHEvs1h7NEiJrDanX
+        m13JcoVlE1TERMvtNuxMg52F6u+wN3kQNzx1RWyYweExjFn6dhBI0RlDWxa7Hy7w1K4VfA9JhNBKC
+        /noDEWqUXr4sfVmhh06u1oizxrkZJFb7qioEylRvnZqDk56LnrhGSRu9GINXXOrIJsu32A2+movGr
+        a+zIQYvK1NeThS+qwrvRoVPQS6ZWYjXT6lRsposAK5L46hsqd/FLTkdUxTPAAL51qVU59x59XSSla
+        pjFsqZuYGNcVnq38BSEeMLCrOHvZEsbwQEdJz8phWBpfhLjC3b3yUzad7tzz/FhCKceLpEoQZEl4V
+        VY8K3nPA==;
+Received: from [2001:4bb8:184:8b7c:bd9:61b8:39ba:d78a] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1m2yC2-000BAg-5q; Mon, 12 Jul 2021 15:50:11 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Guenter Roeck <linux@roeck-us.net>
+Subject: [PATCH] sd: don't mess with SD_MINORS for CONFIG_DEBUG_BLOCK_EXT_DEVT
+Date:   Mon, 12 Jul 2021 17:50:01 +0200
+Message-Id: <20210712155001.125632-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-References: <20210629152746.2953364-1-nitesh@redhat.com> <CAFki+LnUGiEE-7Uf-x8-TQZYZ+3Migrr=81gGLYszxaK-6A9WQ@mail.gmail.com>
- <YOrWqPYPkZp6nRLS@unreal>
-In-Reply-To: <YOrWqPYPkZp6nRLS@unreal>
-From:   Nitesh Lal <nilal@redhat.com>
-Date:   Mon, 12 Jul 2021 10:13:40 -0400
-Message-ID: <CAFki+LnZnq2T9WjDn76wKR9=kk6Zf93zrWbGrnnhgRUiehQ-RA@mail.gmail.com>
-Subject: Re: [PATCH v2 00/14] genirq: Cleanup the usage of irq_set_affinity_hint
-To:     Leon Romanovsky <leonro@nvidia.com>
-Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marcelo Tosatti <mtosatti@redhat.com>,
-        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
-        frederic@kernel.org, Juri Lelli <juri.lelli@redhat.com>,
-        Alex Belits <abelits@marvell.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
-        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
-        Stefan Assmann <sassmann@redhat.com>,
-        Tomas Henzl <thenzl@redhat.com>, kashyap.desai@broadcom.com,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, Ken Cox <jkc@redhat.com>,
-        faisal.latif@intel.com, shiraz.saleem@intel.com, tariqt@nvidia.com,
-        Alaa Hleihel <ahleihel@redhat.com>,
-        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
-        saeedm@nvidia.com, benve@cisco.com, govind@gmx.com,
-        jassisinghbrar@gmail.com, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
-        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
-        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
-        Al Stone <ahs3@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Jul 11, 2021 at 7:32 AM Leon Romanovsky <leonro@nvidia.com> wrote:
->
-> On Thu, Jul 08, 2021 at 03:24:20PM -0400, Nitesh Lal wrote:
-> > On Tue, Jun 29, 2021 at 11:28 AM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
->
-> <...>
->
-> > >
-> > >  drivers/infiniband/hw/i40iw/i40iw_main.c      |  4 +-
-> > >  drivers/mailbox/bcm-flexrm-mailbox.c          |  4 +-
-> > >  drivers/net/ethernet/cisco/enic/enic_main.c   |  8 +--
-> > >  drivers/net/ethernet/emulex/benet/be_main.c   |  4 +-
-> > >  drivers/net/ethernet/huawei/hinic/hinic_rx.c  |  4 +-
-> > >  drivers/net/ethernet/intel/i40e/i40e_main.c   |  8 +--
-> > >  drivers/net/ethernet/intel/iavf/iavf_main.c   |  8 +--
-> > >  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 10 ++--
-> > >  drivers/net/ethernet/mellanox/mlx4/eq.c       |  8 ++-
-> > >  .../net/ethernet/mellanox/mlx5/core/pci_irq.c |  6 +--
-> > >  drivers/scsi/lpfc/lpfc_init.c                 |  4 +-
-> > >  drivers/scsi/megaraid/megaraid_sas_base.c     | 27 +++++-----
-> > >  drivers/scsi/mpt3sas/mpt3sas_base.c           | 21 ++++----
-> > >  include/linux/interrupt.h                     | 53 ++++++++++++++++++-
-> > >  kernel/irq/manage.c                           |  8 +--
-> > >  15 files changed, 113 insertions(+), 64 deletions(-)
-> > >
-> > > --
-> > >
-> > >
-> >
-> > Gentle ping.
-> > Any comments or suggestions on any of the patches included in this series?
->
-> Please wait for -rc1, rebase and resend.
-> At least i40iw was deleted during merge window.
->
+No need to give up the original sd minor even with this option,
+and if we did we'd also need to fix the number of minors for
+this configuration to actually work.
 
-Right, will rebase on top of 5.14-rc1 and resend.
+Fixes: 7c3f828b522b0 ("block: refactor device number setup in __device_add_disk")
+Reported-by: Guenter Roeck <linux@roeck-us.net>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Guenter Roeck <linux@roeck-us.net>
+---
+ drivers/scsi/sd.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 6d2d63629a90..b8d55af763f9 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -98,11 +98,7 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
+ MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
+ 
+-#if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
+ #define SD_MINORS	16
+-#else
+-#define SD_MINORS	0
+-#endif
+ 
+ static void sd_config_discard(struct scsi_disk *, unsigned int);
+ static void sd_config_write_same(struct scsi_disk *);
 -- 
-Thanks
-Nitesh
+2.30.2
 
