@@ -2,65 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C80D4C07E96
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jul 2021 18:22:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1836DC07E99
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 04:47:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACA7D610D2
-	for <linux-scsi@archiver.kernel.org>; Sun, 11 Jul 2021 18:22:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E92CD610A6
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 04:47:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235789AbhGKSZA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 11 Jul 2021 14:25:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45146 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235781AbhGKSY5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 11 Jul 2021 14:24:57 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id D1A4D60240;
-        Sun, 11 Jul 2021 18:22:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626027730;
-        bh=6QV5IIy4YSccpVJwf7K0V3zWheiaawRzbTuzGJZHO6I=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=bk+CD7idtuLTaFMXizgMWWtuEhRmoCFBSRVTFSv8qYnsZTiIPL5vqWBEH+N75SQoC
-         FYV+vRwcFu5/5xyF+GBsU8foxf2SmXICcDELiog+bmrBKu/Jnt07kWz0OclhV4+/MV
-         gPGRfBCaf9rbeDIJEFP4iDkfp/hicdrW0OiqW6zCzhpVVRqYEPLykpW+4L4mtRGkM7
-         Ar9cauUJZTEBTMqK0haEH0V3/mznEJF4y+Q4RMF7TEfx5T8GI/kjxDMp/DSwhES/L6
-         N70nRO3ZKiU62Tx3kdG1z+pMUbf4dgsZ5+VbfSA+8fvmmCfqVMXM+QIA05moKmqWSk
-         t/t9bDtgzgWvw==
-Subject: Re: [GIT PULL] final round of SCSI updates for the 5.13+ merge window
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <64e271620b6a9a8a12848f9fa5dc8d4c31be8123.camel@HansenPartnership.com>
-References: <64e271620b6a9a8a12848f9fa5dc8d4c31be8123.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <64e271620b6a9a8a12848f9fa5dc8d4c31be8123.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-X-PR-Tracked-Commit-Id: 5f638e5ac61ef1b9b588efdf688acc0a4cecdca2
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8b9cc17a46215af733c83bea36366419133dfa09
-Message-Id: <162602773082.20558.8448928583496792144.pr-tracker-bot@kernel.org>
-Date:   Sun, 11 Jul 2021 18:22:10 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S230114AbhGLEt5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jul 2021 00:49:57 -0400
+Received: from szxga02-in.huawei.com ([45.249.212.188]:6914 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229466AbhGLEt4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2021 00:49:56 -0400
+Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.57])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4GNWP33kk4z7BSs;
+        Mon, 12 Jul 2021 12:43:35 +0800 (CST)
+Received: from dggpemm500017.china.huawei.com (7.185.36.178) by
+ dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Mon, 12 Jul 2021 12:47:07 +0800
+Received: from [10.174.178.220] (10.174.178.220) by
+ dggpemm500017.china.huawei.com (7.185.36.178) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Mon, 12 Jul 2021 12:47:06 +0800
+From:   Wenchao Hao <haowenchao@huawei.com>
+Subject: [bug report]scsi: drive letter drift problem
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        "Jason Wang" <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        "Stefan Hajnoczi" <stefanha@redhat.com>,
+        <linux-scsi@vger.kernel.org>,
+        <virtualization@lists.linux-foundation.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     Zhiqiang Liu <liuzhiqiang26@huawei.com>, Wu Bo <wubo40@huawei.com>,
+        <linfeilong@huawei.com>, <yuzhanzhan@huawei.com>,
+        <haowenchao@huawei.com>
+Message-ID: <7ae2293e-71a9-f68e-0bfb-b4a70ecf493e@huawei.com>
+Date:   Mon, 12 Jul 2021 12:47:05 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.9.1
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-Originating-IP: [10.174.178.220]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggpemm500017.china.huawei.com (7.185.36.178)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sun, 11 Jul 2021 08:04:52 +0100:
+We deploy two SCSI disk in one SCSI host(virtio-scsi bus) for one 
+machine, whose ids are [0:0:0:0] and [0:0:1:0].
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+Mostly, the device letter are assigned as following after reboot:
+[0:0:0:0] --> sda
+[0:0:1:0] --> sdb
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8b9cc17a46215af733c83bea36366419133dfa09
+While in rare cases, the device letter shown as following:
+[0:0:0:0] --> sdb
+[0:0:1:0] --> sda
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+Could we guarantee "sda" is assigned to [0:0:0:0] and "sdb" is assigned 
+to [0:0:1:0] or not?
+If we can, then how?
