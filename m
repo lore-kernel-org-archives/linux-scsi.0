@@ -2,626 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B49AEC07E99
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 09:52:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E617C07E9C
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 14:13:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99C4B6108B
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 09:52:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 776DF61106
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 14:13:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236843AbhGLJzh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Jul 2021 05:55:37 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:11631 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235379AbhGLJze (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2021 05:55:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1626083566; x=1657619566;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=vwAwp81rljsx2H4LcUfW8BBtCK98ExwmCxEH3093kbc=;
-  b=inwvuUZGA/bvveVkBNs4DldULMvbgZaAAyHlH0Vf6hffTVk/vj0pThoi
-   vk3mQSX4qZagEXnPeQGbT8NaMk8gv3qVAyMxGwr0u2LhYviWcHiY2iKeG
-   QexTFZza90vWjoXnCR8p2mHT60RoZ3DzE8yIc5FH959hOG/ywYOl0aFNw
-   lg4eqdYw//qntbQofMQ2B3K1zCODASVjI+T8ISFHEsusKGs2hePSf0NH5
-   AlbZO6sOEynKSDgMHSpGhJl6C1TBp1tgjRwJ5t+zsJClmuBA6wBCnvgTz
-   3SgJw7iZq1M3CX6501/rxrEc9Qc1hpQqM2Dr5Voi3mC+ZamXvOuqmIayh
-   w==;
-IronPort-SDR: 2Caj6DRIhYmeTRud1uVs50wMVJnZpDdevwTsNujLnyZIsd3kcGF/J65E2rUbPGLzf2ZJBmhph9
- GaFrB4Qv5dgEe7ZjLmprtVFMbQpwlbkUmA0Y4ONxlGCRe+x00naOOZep/nxZJnpOYE1dwqyMLW
- oHbWCgRb+gkDlfaR7gRLSd4M+Onx1spgXsLK7ubjkPqJ+1I+YpcwdUSGwF1YLndVi8Kdi3GSfY
- 4PW6boa7U6lkYoPmGu9Kn+bXnUxzp+Wk6JLEluTC2cDFmlQNyQfkkmN0kAz1hUj6l2q9i+TUNs
- lqc=
-X-IronPort-AV: E=Sophos;i="5.84,232,1620662400"; 
-   d="scan'208";a="285877148"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 12 Jul 2021 17:52:45 +0800
-IronPort-SDR: 3aawXQK5zL6PSEknlJ8wMjb1/zsZ2CnwvxM4D+b+JGb0fz2skqqzivUmuh1lP5pxpFhJJWcIez
- Uz9/5+6hj0aHeSJR4tG5DDSJTcQj0cJJi1WVpWNxkyPtNTbPUGdcYrU1uCSB4Q6AN04CqJbUVw
- SIc7DnjlCCQZ22lBclfLgCFuLQtBlU0XL/dFArrzYEbRDyeRF3UqAtL0P0v35yTsHv1Jbh2rSz
- idLu7F3ye+erOiWKWCUTGxYIebqMfX5VkaVyEOlIRCoD9Oj2VE8sYcKAx68S6DT7iOMspfEBle
- qTKeFLKlHrJHYYnV503pGQ4q
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Jul 2021 02:29:30 -0700
-IronPort-SDR: xKIeySFHfS+LtO4zBqV4/JbGWPtTKBsjPJgp+xxKSNDXDujuN7Vzqbe0Tr9KOqvOgVMApr2WRf
- 6OqDeM6MhoG971UUHHTywCDyV9S1GG1m60nQNrv0SLGxkwhkMyptvhfqL1nGKAv2d78QSCXbbO
- 6zdIP1jsKGHq2zhrCRAfmvvI/X8GKEXYFqrAvUbtMzxNMdsdGQ2R3rO4iaP7BpyvfRIQpNrdIr
- 8+SDVyUFoKywDjyDh+x0QNmS4sO7uxz2RJH14N5z+pjs8zvUMwBP4KJKpU3T9w3HTXYiG6PMOb
- VE0=
-WDCIronportException: Internal
-Received: from bxygm33.sdcorp.global.sandisk.com ([10.0.231.247])
-  by uls-op-cesaip02.wdc.com with ESMTP; 12 Jul 2021 02:52:41 -0700
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, Bart Van Assche <bvanassche@acm.org>,
-        yongmyung lee <ymhungry.lee@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        alim.akhtar@samsung.com, asutoshd@codeaurora.org,
-        Zang Leigang <zangleigang@hisilicon.com>,
-        Avi Shchislowski <avi.shchislowski@wdc.com>,
-        Bean Huo <beanhuo@micron.com>, cang@codeaurora.org,
-        stanley.chu@mediatek.com, Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v12 12/12] scsi: ufshpb: Make host mode parameters configurable
-Date:   Mon, 12 Jul 2021 12:50:39 +0300
-Message-Id: <20210712095039.8093-13-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210712095039.8093-1-avri.altman@wdc.com>
-References: <20210712095039.8093-1-avri.altman@wdc.com>
+        id S234869AbhGLOQn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jul 2021 10:16:43 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50678 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234096AbhGLOQn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Jul 2021 10:16:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1626099234;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=afUNjuJXnPmwCmF5+FQfjA8ufj+e69/ivLf91qDfwSM=;
+        b=TbZxTk65cPuUu0PsJHuvtTv9FKg9xurhx2dLBUbOpZD47o0581fIAEnJ9GPb6iC8Q9ZOdu
+        RfID2cPFe5oL93LD/sgZfnBOLT9qLMh/h834LwBK4fs57YlWQL2p9c/O9D4MUHJNT8Kxxm
+        A81L7MlVXl7duWPBUqGc9qPEgnGmxBc=
+Received: from mail-lf1-f70.google.com (mail-lf1-f70.google.com
+ [209.85.167.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-41-YEgLCrwyNoWZBKiCCqhBhA-1; Mon, 12 Jul 2021 10:13:53 -0400
+X-MC-Unique: YEgLCrwyNoWZBKiCCqhBhA-1
+Received: by mail-lf1-f70.google.com with SMTP id z13-20020a056512376db0290329474fcc99so6547382lft.0
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Jul 2021 07:13:53 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=afUNjuJXnPmwCmF5+FQfjA8ufj+e69/ivLf91qDfwSM=;
+        b=Z0N/8LRz06IOuX+hArxDrHatEzedd8wMccEuTutGHRztFua7yNMTzvXTamFV+FSQDS
+         l4n3wCHQgmmfQJAfioIqGK/DBr9WjvGlKdu452ZHKlG1BBtXLPygQfK6lrinTl2K6W0m
+         vknUa2LrPz5vap166WwFBpPM9lNWNXFESkQBNLcwDtMafJtt/PnQAloxc0Z6n0gj2gHX
+         lWFH+BxofnmOclTulCOphtOZEojruDze09JzDkB7f9eS5mmogCbahJzSG0qpDAkVBWvv
+         dQ9uUv4fxi4uYsYALudhRVyrGi7qijhLdIz6a0waT3MDDIVV0W8F2YvY/KDRh5YfwlVN
+         Xf+w==
+X-Gm-Message-State: AOAM533HHFBOnG47zgGYyW0NtpzwjHOyF6S+FgQftldKUFoTEsuTnyEE
+        7zHXbOE5A4hECdhcui9J1UGEJZrq7q6NNIPUFYCOnRfrqImU8NSB9PKYnT2ALe2vOAHUVXHo0r4
+        cAI+P7IkyIiRvwoiME4mse8oQ0h1bnHbjmm2hcw==
+X-Received: by 2002:a05:6512:33d3:: with SMTP id d19mr16315953lfg.114.1626099231944;
+        Mon, 12 Jul 2021 07:13:51 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwbVotmura6ZuXfGUNMWJgcOo2t2QFX2iHzhetzzTWpDB1SmKe/MGcsinyZmILKUBXZAM4S3H2xTgXGvDKvNv8=
+X-Received: by 2002:a05:6512:33d3:: with SMTP id d19mr16315896lfg.114.1626099231489;
+ Mon, 12 Jul 2021 07:13:51 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20210629152746.2953364-1-nitesh@redhat.com> <CAFki+LnUGiEE-7Uf-x8-TQZYZ+3Migrr=81gGLYszxaK-6A9WQ@mail.gmail.com>
+ <YOrWqPYPkZp6nRLS@unreal>
+In-Reply-To: <YOrWqPYPkZp6nRLS@unreal>
+From:   Nitesh Lal <nilal@redhat.com>
+Date:   Mon, 12 Jul 2021 10:13:40 -0400
+Message-ID: <CAFki+LnZnq2T9WjDn76wKR9=kk6Zf93zrWbGrnnhgRUiehQ-RA@mail.gmail.com>
+Subject: Re: [PATCH v2 00/14] genirq: Cleanup the usage of irq_set_affinity_hint
+To:     Leon Romanovsky <leonro@nvidia.com>
+Cc:     Nitesh Narayan Lal <nitesh@redhat.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, linux-api@vger.kernel.org,
+        linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marcelo Tosatti <mtosatti@redhat.com>,
+        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
+        frederic@kernel.org, Juri Lelli <juri.lelli@redhat.com>,
+        Alex Belits <abelits@marvell.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
+        peterz@infradead.org, davem@davemloft.net,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
+        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
+        Stefan Assmann <sassmann@redhat.com>,
+        Tomas Henzl <thenzl@redhat.com>, kashyap.desai@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        shivasharan.srikanteshwara@broadcom.com,
+        sathya.prakash@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, Ken Cox <jkc@redhat.com>,
+        faisal.latif@intel.com, shiraz.saleem@intel.com, tariqt@nvidia.com,
+        Alaa Hleihel <ahleihel@redhat.com>,
+        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
+        saeedm@nvidia.com, benve@cisco.com, govind@gmx.com,
+        jassisinghbrar@gmail.com, ajit.khaparde@broadcom.com,
+        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
+        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
+        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
+        Al Stone <ahs3@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We can make use of this commit, to elaborate some more of the host
-control mode logic, explaining what role play each and every variable.
+On Sun, Jul 11, 2021 at 7:32 AM Leon Romanovsky <leonro@nvidia.com> wrote:
+>
+> On Thu, Jul 08, 2021 at 03:24:20PM -0400, Nitesh Lal wrote:
+> > On Tue, Jun 29, 2021 at 11:28 AM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
+>
+> <...>
+>
+> > >
+> > >  drivers/infiniband/hw/i40iw/i40iw_main.c      |  4 +-
+> > >  drivers/mailbox/bcm-flexrm-mailbox.c          |  4 +-
+> > >  drivers/net/ethernet/cisco/enic/enic_main.c   |  8 +--
+> > >  drivers/net/ethernet/emulex/benet/be_main.c   |  4 +-
+> > >  drivers/net/ethernet/huawei/hinic/hinic_rx.c  |  4 +-
+> > >  drivers/net/ethernet/intel/i40e/i40e_main.c   |  8 +--
+> > >  drivers/net/ethernet/intel/iavf/iavf_main.c   |  8 +--
+> > >  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 10 ++--
+> > >  drivers/net/ethernet/mellanox/mlx4/eq.c       |  8 ++-
+> > >  .../net/ethernet/mellanox/mlx5/core/pci_irq.c |  6 +--
+> > >  drivers/scsi/lpfc/lpfc_init.c                 |  4 +-
+> > >  drivers/scsi/megaraid/megaraid_sas_base.c     | 27 +++++-----
+> > >  drivers/scsi/mpt3sas/mpt3sas_base.c           | 21 ++++----
+> > >  include/linux/interrupt.h                     | 53 ++++++++++++++++++-
+> > >  kernel/irq/manage.c                           |  8 +--
+> > >  15 files changed, 113 insertions(+), 64 deletions(-)
+> > >
+> > > --
+> > >
+> > >
+> >
+> > Gentle ping.
+> > Any comments or suggestions on any of the patches included in this series?
+>
+> Please wait for -rc1, rebase and resend.
+> At least i40iw was deleted during merge window.
+>
 
-While at it, allow those parameters to be configurable.
+Right, will rebase on top of 5.14-rc1 and resend.
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Daejun Park <daejun7.park@samsung.com>
----
- Documentation/ABI/testing/sysfs-driver-ufs |  76 +++++-
- drivers/scsi/ufs/ufshpb.c                  | 288 +++++++++++++++++++--
- drivers/scsi/ufs/ufshpb.h                  |  20 ++
- 3 files changed, 367 insertions(+), 17 deletions(-)
-
-diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
-index 3971b31975c6..cfd6f8fc2c97 100644
---- a/Documentation/ABI/testing/sysfs-driver-ufs
-+++ b/Documentation/ABI/testing/sysfs-driver-ufs
-@@ -1449,7 +1449,7 @@ Description:	This entry shows the maximum HPB data size for using single HPB
- 
- 		The file is read only.
- 
--What:		/sys/bus/platform/drivers/ufshcd/*/flags/wb_enable
-+What:		/sys/bus/platform/drivers/ufshcd/*/flags/hpb_enable
- Date:		June 2021
- Contact:	Daejun Park <daejun7.park@samsung.com>
- Description:	This entry shows the status of HPB.
-@@ -1460,3 +1460,77 @@ Description:	This entry shows the status of HPB.
- 		== ============================
- 
- 		The file is read only.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/activation_thld
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	In host control mode, reads are the major source of activation
-+		trials.  once this threshold hs met, the region is added to the
-+		"to-be-activated" list.  Since we reset the read counter upon
-+		write, this include sending a rb command updating the region
-+		ppn as well.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/normalization_factor
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	In host control mode, We think of the regions as "buckets".
-+		Those buckets are being filled with reads, and emptied on write.
-+		We use entries_per_srgn - the amount of blocks in a subregion as
-+		our bucket size.  This applies because HPB1.0 only concern a
-+		single-block reads.  Once the bucket size is crossed, we trigger
-+		a normalization work - not only to avoid overflow, but mainly
-+		because we want to keep those counters normalized, as we are
-+		using those reads as a comparative score, to make various decisions.
-+		The normalization is dividing (shift right) the read counter by
-+		the normalization_factor. If during consecutive normalizations
-+		an active region has exhaust its reads - inactivate it.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/eviction_thld_enter
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	Region deactivation is often due to the fact that eviction took
-+		place: a region become active on the expense of another. This is
-+		happening when the max-active-regions limit has crossed.
-+		In host mode, eviction is considered an extreme measure. We
-+		want to verify that the entering region has enough reads, and
-+		the exiting region has much less reads.  eviction_thld_enter is
-+		the min reads that a region must have in order to be considered
-+		as a candidate to evict other region.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/eviction_thld_exit
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	same as above for the exiting region. A region is consider to
-+		be a candidate to be evicted, only if it has less reads than
-+		eviction_thld_exit.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/read_timeout_ms
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	In order not to hang on to “cold” regions, we shall inactivate
-+		a region that has no READ access for a predefined amount of
-+		time - read_timeout_ms. If read_timeout_ms has expired, and the
-+		region is dirty - it is less likely that we can make any use of
-+		HPB-READing it.  So we inactivate it.  Still, deactivation has
-+		its overhead, and we may still benefit from HPB-READing this
-+		region if it is clean - see read_timeout_expiries.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/read_timeout_expiries
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	if the region read timeout has expired, but the region is clean,
-+		just re-wind its timer for another spin.  Do that as long as it
-+		is clean and did not exhaust its read_timeout_expiries threshold.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/timeout_polling_interval_ms
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	the frequency in which the delayed worker that checks the
-+		read_timeouts is awaken.
-+
-+What:		/sys/class/scsi_device/*/device/hpb_param_sysfs/inflight_map_req
-+Date:		February 2021
-+Contact:	Avri Altman <avri.altman@wdc.com>
-+Description:	in host control mode the host is the originator of map requests.
-+		To not flood the device with map requests, use a simple throttling
-+		mechanism that limits the number of inflight map requests.
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index b638a413bdb2..d240817ef02f 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -17,7 +17,6 @@
- #include "../sd.h"
- 
- #define ACTIVATION_THRESHOLD 8 /* 8 IOs */
--#define EVICTION_THRESHOLD (ACTIVATION_THRESHOLD << 5) /* 256 IOs */
- #define READ_TO_MS 1000
- #define READ_TO_EXPIRIES 100
- #define POLLING_INTERVAL_MS 200
-@@ -195,7 +194,7 @@ static void ufshpb_iterate_rgn(struct ufshpb_lu *hpb, int rgn_idx, int srgn_idx,
- 		} else {
- 			srgn->reads++;
- 			rgn->reads++;
--			if (srgn->reads == ACTIVATION_THRESHOLD)
-+			if (srgn->reads == hpb->params.activation_thld)
- 				activate = true;
- 		}
- 		spin_unlock(&rgn->rgn_lock);
-@@ -744,10 +743,11 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
- 	struct bio *bio;
- 
- 	if (hpb->is_hcm &&
--	    hpb->num_inflight_map_req >= THROTTLE_MAP_REQ_DEFAULT) {
-+	    hpb->num_inflight_map_req >= hpb->params.inflight_map_req) {
- 		dev_info(&hpb->sdev_ufs_lu->sdev_dev,
- 			 "map_req throttle. inflight %d throttle %d",
--			 hpb->num_inflight_map_req, THROTTLE_MAP_REQ_DEFAULT);
-+			 hpb->num_inflight_map_req,
-+			 hpb->params.inflight_map_req);
- 		return NULL;
- 	}
- 
-@@ -1053,6 +1053,7 @@ static void ufshpb_read_to_handler(struct work_struct *work)
- 	struct victim_select_info *lru_info = &hpb->lru_info;
- 	struct ufshpb_region *rgn, *next_rgn;
- 	unsigned long flags;
-+	unsigned int poll;
- 	LIST_HEAD(expired_list);
- 
- 	if (test_and_set_bit(TIMEOUT_WORK_RUNNING, &hpb->work_data_bits))
-@@ -1071,7 +1072,7 @@ static void ufshpb_read_to_handler(struct work_struct *work)
- 				list_add(&rgn->list_expired_rgn, &expired_list);
- 			else
- 				rgn->read_timeout = ktime_add_ms(ktime_get(),
--							 READ_TO_MS);
-+						hpb->params.read_timeout_ms);
- 		}
- 	}
- 
-@@ -1089,8 +1090,9 @@ static void ufshpb_read_to_handler(struct work_struct *work)
- 
- 	clear_bit(TIMEOUT_WORK_RUNNING, &hpb->work_data_bits);
- 
-+	poll = hpb->params.timeout_polling_interval_ms;
- 	schedule_delayed_work(&hpb->ufshpb_read_to_work,
--			      msecs_to_jiffies(POLLING_INTERVAL_MS));
-+			      msecs_to_jiffies(poll));
- }
- 
- static void ufshpb_add_lru_info(struct victim_select_info *lru_info,
-@@ -1100,8 +1102,11 @@ static void ufshpb_add_lru_info(struct victim_select_info *lru_info,
- 	list_add_tail(&rgn->list_lru_rgn, &lru_info->lh_lru_rgn);
- 	atomic_inc(&lru_info->active_cnt);
- 	if (rgn->hpb->is_hcm) {
--		rgn->read_timeout = ktime_add_ms(ktime_get(), READ_TO_MS);
--		rgn->read_timeout_expiries = READ_TO_EXPIRIES;
-+		rgn->read_timeout =
-+			ktime_add_ms(ktime_get(),
-+				     rgn->hpb->params.read_timeout_ms);
-+		rgn->read_timeout_expiries =
-+			rgn->hpb->params.read_timeout_expiries;
- 	}
- }
- 
-@@ -1130,7 +1135,8 @@ static struct ufshpb_region *ufshpb_victim_lru_info(struct ufshpb_lu *hpb)
- 		 * in host control mode, verify that the exiting region
- 		 * has less reads
- 		 */
--		if (hpb->is_hcm && rgn->reads > (EVICTION_THRESHOLD >> 1))
-+		if (hpb->is_hcm &&
-+		    rgn->reads > hpb->params.eviction_thld_exit)
- 			continue;
- 
- 		victim_rgn = rgn;
-@@ -1346,7 +1352,8 @@ static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
- 			 * in host control mode, verify that the entering
- 			 * region has enough reads
- 			 */
--			if (hpb->is_hcm && rgn->reads < EVICTION_THRESHOLD) {
-+			if (hpb->is_hcm &&
-+			    rgn->reads < hpb->params.eviction_thld_enter) {
- 				ret = -EACCES;
- 				goto out;
- 			}
-@@ -1697,6 +1704,7 @@ static void ufshpb_normalization_work_handler(struct work_struct *work)
- 	struct ufshpb_lu *hpb = container_of(work, struct ufshpb_lu,
- 					     ufshpb_normalization_work);
- 	int rgn_idx;
-+	u8 factor = hpb->params.normalization_factor;
- 
- 	for (rgn_idx = 0; rgn_idx < hpb->rgns_per_lu; rgn_idx++) {
- 		struct ufshpb_region *rgn = hpb->rgn_tbl + rgn_idx;
-@@ -1707,7 +1715,7 @@ static void ufshpb_normalization_work_handler(struct work_struct *work)
- 		for (srgn_idx = 0; srgn_idx < hpb->srgns_per_rgn; srgn_idx++) {
- 			struct ufshpb_subregion *srgn = rgn->srgn_tbl + srgn_idx;
- 
--			srgn->reads >>= 1;
-+			srgn->reads >>= factor;
- 			rgn->reads += srgn->reads;
- 		}
- 		spin_unlock(&rgn->rgn_lock);
-@@ -2030,8 +2038,247 @@ requeue_timeout_ms_store(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RW(requeue_timeout_ms);
- 
-+ufshpb_sysfs_param_show_func(activation_thld);
-+static ssize_t
-+activation_thld_store(struct device *dev, struct device_attribute *attr,
-+		      const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= 0)
-+		return -EINVAL;
-+
-+	hpb->params.activation_thld = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(activation_thld);
-+
-+ufshpb_sysfs_param_show_func(normalization_factor);
-+static ssize_t
-+normalization_factor_store(struct device *dev, struct device_attribute *attr,
-+			   const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= 0 || val > ilog2(hpb->entries_per_srgn))
-+		return -EINVAL;
-+
-+	hpb->params.normalization_factor = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(normalization_factor);
-+
-+ufshpb_sysfs_param_show_func(eviction_thld_enter);
-+static ssize_t
-+eviction_thld_enter_store(struct device *dev, struct device_attribute *attr,
-+			  const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= hpb->params.eviction_thld_exit)
-+		return -EINVAL;
-+
-+	hpb->params.eviction_thld_enter = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(eviction_thld_enter);
-+
-+ufshpb_sysfs_param_show_func(eviction_thld_exit);
-+static ssize_t
-+eviction_thld_exit_store(struct device *dev, struct device_attribute *attr,
-+			 const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= hpb->params.activation_thld)
-+		return -EINVAL;
-+
-+	hpb->params.eviction_thld_exit = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(eviction_thld_exit);
-+
-+ufshpb_sysfs_param_show_func(read_timeout_ms);
-+static ssize_t
-+read_timeout_ms_store(struct device *dev, struct device_attribute *attr,
-+		      const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	/* read_timeout >> timeout_polling_interval */
-+	if (val < hpb->params.timeout_polling_interval_ms * 2)
-+		return -EINVAL;
-+
-+	hpb->params.read_timeout_ms = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(read_timeout_ms);
-+
-+ufshpb_sysfs_param_show_func(read_timeout_expiries);
-+static ssize_t
-+read_timeout_expiries_store(struct device *dev, struct device_attribute *attr,
-+			    const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= 0)
-+		return -EINVAL;
-+
-+	hpb->params.read_timeout_expiries = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(read_timeout_expiries);
-+
-+ufshpb_sysfs_param_show_func(timeout_polling_interval_ms);
-+static ssize_t
-+timeout_polling_interval_ms_store(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	/* timeout_polling_interval << read_timeout */
-+	if (val <= 0 || val > hpb->params.read_timeout_ms / 2)
-+		return -EINVAL;
-+
-+	hpb->params.timeout_polling_interval_ms = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(timeout_polling_interval_ms);
-+
-+ufshpb_sysfs_param_show_func(inflight_map_req);
-+static ssize_t inflight_map_req_store(struct device *dev,
-+				      struct device_attribute *attr,
-+				      const char *buf, size_t count)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct ufshpb_lu *hpb = ufshpb_get_hpb_data(sdev);
-+	int val;
-+
-+	if (!hpb)
-+		return -ENODEV;
-+
-+	if (!hpb->is_hcm)
-+		return -EOPNOTSUPP;
-+
-+	if (kstrtouint(buf, 0, &val))
-+		return -EINVAL;
-+
-+	if (val <= 0 || val > hpb->sdev_ufs_lu->queue_depth - 1)
-+		return -EINVAL;
-+
-+	hpb->params.inflight_map_req = val;
-+
-+	return count;
-+}
-+static DEVICE_ATTR_RW(inflight_map_req);
-+
-+static void ufshpb_hcm_param_init(struct ufshpb_lu *hpb)
-+{
-+	hpb->params.activation_thld = ACTIVATION_THRESHOLD;
-+	hpb->params.normalization_factor = 1;
-+	hpb->params.eviction_thld_enter = (ACTIVATION_THRESHOLD << 5);
-+	hpb->params.eviction_thld_exit = (ACTIVATION_THRESHOLD << 4);
-+	hpb->params.read_timeout_ms = READ_TO_MS;
-+	hpb->params.read_timeout_expiries = READ_TO_EXPIRIES;
-+	hpb->params.timeout_polling_interval_ms = POLLING_INTERVAL_MS;
-+	hpb->params.inflight_map_req = THROTTLE_MAP_REQ_DEFAULT;
-+}
-+
- static struct attribute *hpb_dev_param_attrs[] = {
- 	&dev_attr_requeue_timeout_ms.attr,
-+	&dev_attr_activation_thld.attr,
-+	&dev_attr_normalization_factor.attr,
-+	&dev_attr_eviction_thld_enter.attr,
-+	&dev_attr_eviction_thld_exit.attr,
-+	&dev_attr_read_timeout_ms.attr,
-+	&dev_attr_read_timeout_expiries.attr,
-+	&dev_attr_timeout_polling_interval_ms.attr,
-+	&dev_attr_inflight_map_req.attr,
- 	NULL,
- };
- 
-@@ -2115,6 +2362,8 @@ static void ufshpb_stat_init(struct ufshpb_lu *hpb)
- static void ufshpb_param_init(struct ufshpb_lu *hpb)
- {
- 	hpb->params.requeue_timeout_ms = HPB_REQUEUE_TIME_MS;
-+	if (hpb->is_hcm)
-+		ufshpb_hcm_param_init(hpb);
- }
- 
- static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
-@@ -2169,9 +2418,13 @@ static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
- 	ufshpb_stat_init(hpb);
- 	ufshpb_param_init(hpb);
- 
--	if (hpb->is_hcm)
-+	if (hpb->is_hcm) {
-+		unsigned int poll;
-+
-+		poll = hpb->params.timeout_polling_interval_ms;
- 		schedule_delayed_work(&hpb->ufshpb_read_to_work,
--				      msecs_to_jiffies(POLLING_INTERVAL_MS));
-+				      msecs_to_jiffies(poll));
-+	}
- 
- 	return 0;
- 
-@@ -2350,10 +2603,13 @@ void ufshpb_resume(struct ufs_hba *hba)
- 			continue;
- 		ufshpb_set_state(hpb, HPB_PRESENT);
- 		ufshpb_kick_map_work(hpb);
--		if (hpb->is_hcm)
--			schedule_delayed_work(&hpb->ufshpb_read_to_work,
--				msecs_to_jiffies(POLLING_INTERVAL_MS));
-+		if (hpb->is_hcm) {
-+			unsigned int poll =
-+				hpb->params.timeout_polling_interval_ms;
- 
-+			schedule_delayed_work(&hpb->ufshpb_read_to_work,
-+				msecs_to_jiffies(poll));
-+		}
- 	}
- }
- 
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index edf565e9036f..c74a6c35a446 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -185,8 +185,28 @@ struct victim_select_info {
- 	atomic_t active_cnt;
- };
- 
-+/**
-+ * ufshpb_params - ufs hpb parameters
-+ * @requeue_timeout_ms - requeue threshold of wb command (0x2)
-+ * @activation_thld - min reads [IOs] to activate/update a region
-+ * @normalization_factor - shift right the region's reads
-+ * @eviction_thld_enter - min reads [IOs] for the entering region in eviction
-+ * @eviction_thld_exit - max reads [IOs] for the exiting region in eviction
-+ * @read_timeout_ms - timeout [ms] from the last read IO to the region
-+ * @read_timeout_expiries - amount of allowable timeout expireis
-+ * @timeout_polling_interval_ms - frequency in which timeouts are checked
-+ * @inflight_map_req - number of inflight map requests
-+ */
- struct ufshpb_params {
- 	unsigned int requeue_timeout_ms;
-+	unsigned int activation_thld;
-+	unsigned int normalization_factor;
-+	unsigned int eviction_thld_enter;
-+	unsigned int eviction_thld_exit;
-+	unsigned int read_timeout_ms;
-+	unsigned int read_timeout_expiries;
-+	unsigned int timeout_polling_interval_ms;
-+	unsigned int inflight_map_req;
- };
- 
- struct ufshpb_stats {
 -- 
-2.25.1
+Thanks
+Nitesh
 
