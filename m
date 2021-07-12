@@ -5,36 +5,36 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00FB5C07E99
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 05:52:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8D93C07E99
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 05:53:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB2996108B
-	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 05:52:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF17B610CC
+	for <linux-scsi@archiver.kernel.org>; Mon, 12 Jul 2021 05:53:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231705AbhGLFz1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 12 Jul 2021 01:55:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47996 "EHLO
+        id S231529AbhGLFzs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 12 Jul 2021 01:55:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48084 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230107AbhGLFz0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2021 01:55:26 -0400
+        with ESMTP id S230107AbhGLFzs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Jul 2021 01:55:48 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28CF4C0613DD;
-        Sun, 11 Jul 2021 22:52:39 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0601C0613DD;
+        Sun, 11 Jul 2021 22:53:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=fo3kNG7b55xaIkyx+YG36Cj/Alt4VuwOsi2pzRZrHB4=; b=BTcwuxlMqj9imJvf32IRsYQSXn
-        rLM/SRHMzPnoB6C/CSpYJhwm9veSKoKaZntLqAnBinQdN3tfJou/6qGgsjmIHMt2TFQBY5tMVd/rG
-        PD4d2xO6oV6oY6kcuqxnPipTSwgdEamXnm5XCM35xKA5ytmtqkDUdmptezQ4h9jWojjEPyByEK9oP
-        iMm50OBx9w7+XMFEdw46HNFr+vDMKUXmvCi5D6zTh3cRO3uACAYhzVCGMkXrctwDufpQz+HmdiNt0
-        90SD91/+DkPIIbS5FZW7k3QRXESQfDMyNd5PMf/Ud1kRGHGJ/DUJ6bEIIQ+B99xsa4O2gSeGnq0qI
-        BaTN7BCw==;
+        bh=HzWyPz4teTBG8ua4v37F1g8cLsKRrQ80n47QdpU5Sj8=; b=ZLIu8MmJm/ueVQFJUKqhXaq9Me
+        22ULlXvJRbRbc1o4o6xpsap0dRpAkatD/I2krZ51HGW0xhKi7upAHbAcfes9jWLV0q7MfdbNj1dvl
+        t0r1eQT3fbXT585zJBevo9G+YxY4OdOJGXb1AsN4+eA8ER7is/bYTMokZ2ybqDcy1ONLc9Hgb8FsB
+        Fe1+wxDbLxIir+E7G09G8wrd4JTaeUQ7Qgy0egwqlXV9SWsCPe6sytMBm5/Z5TO4KwMLv3cIct+sR
+        Mx1CONkkjvL0BSgfoE/aWfP9J/Y6hDcSt0ARKX1vPBIReILoFOLv0q9/KgOgLTpICJ9wWuI19S/hR
+        jz4rqT4Q==;
 Received: from [2001:4bb8:184:8b7c:bd9:61b8:39ba:d78a] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m2orI-00GvCV-LJ; Mon, 12 Jul 2021 05:52:08 +0000
+        id 1m2ore-00GvEn-1g; Mon, 12 Jul 2021 05:52:26 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Jens Axboe <axboe@kernel.dk>,
@@ -42,9 +42,9 @@ To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
 Cc:     Doug Gilbert <dgilbert@interlog.com>,
         =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 08/24] cdrom: remove the call to scsi_cmd_blk_ioctl from cdrom_ioctl
-Date:   Mon, 12 Jul 2021 07:48:00 +0200
-Message-Id: <20210712054816.4147559-9-hch@lst.de>
+Subject: [PATCH 09/24] scsi_ioctl: remove scsi_cmd_blk_ioctl
+Date:   Mon, 12 Jul 2021 07:48:01 +0200
+Message-Id: <20210712054816.4147559-10-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210712054816.4147559-1-hch@lst.de>
 References: <20210712054816.4147559-1-hch@lst.de>
@@ -55,73 +55,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Only the sr driver can handle SCSI passthrough requests, so move the
-call to scsi_cmd_blk_ioctl there.
+Open code scsi_cmd_blk_ioctl in its two callers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/Kconfig        | 1 -
- drivers/block/paride/Kconfig | 1 -
- drivers/cdrom/cdrom.c        | 7 -------
- drivers/scsi/sr.c            | 3 +++
- 4 files changed, 3 insertions(+), 9 deletions(-)
+ block/scsi_ioctl.c     | 13 -------------
+ drivers/scsi/sd.c      |  5 ++++-
+ drivers/scsi/sr.c      |  8 ++++++--
+ include/linux/blkdev.h |  2 --
+ 4 files changed, 10 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
-index 63056cfd4b62..4652bcdb9efb 100644
---- a/drivers/block/Kconfig
-+++ b/drivers/block/Kconfig
-@@ -74,7 +74,6 @@ config N64CART
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index d247431a6853..f8138438c56f 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -854,19 +854,6 @@ int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
+ }
+ EXPORT_SYMBOL(scsi_verify_blk_ioctl);
  
- config CDROM
- 	tristate
--	select BLK_SCSI_REQUEST
- 
- config GDROM
- 	tristate "SEGA Dreamcast GD-ROM drive"
-diff --git a/drivers/block/paride/Kconfig b/drivers/block/paride/Kconfig
-index 7c6ae1036927..a295634597ba 100644
---- a/drivers/block/paride/Kconfig
-+++ b/drivers/block/paride/Kconfig
-@@ -27,7 +27,6 @@ config PARIDE_PCD
- 	tristate "Parallel port ATAPI CD-ROMs"
- 	depends on PARIDE
- 	select CDROM
--	select BLK_SCSI_REQUEST # only for the generic cdrom code
- 	help
- 	  This option enables the high-level driver for ATAPI CD-ROM devices
- 	  connected through a parallel port. If you chose to build PARIDE
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index feb827eefd1a..8882b311bafd 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -3357,13 +3357,6 @@ int cdrom_ioctl(struct cdrom_device_info *cdi, struct block_device *bdev,
- 	void __user *argp = (void __user *)arg;
- 	int ret;
- 
--	/*
--	 * Try the generic SCSI command ioctl's first.
--	 */
--	ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
--	if (ret != -ENOTTY)
+-int scsi_cmd_blk_ioctl(struct block_device *bd, fmode_t mode,
+-		       unsigned int cmd, void __user *arg)
+-{
+-	int ret;
+-
+-	ret = scsi_verify_blk_ioctl(bd, cmd);
+-	if (ret < 0)
 -		return ret;
 -
- 	switch (cmd) {
- 	case CDROMMULTISESSION:
- 		return cdrom_ioctl_multisession(cdi, argp);
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index c5e163a659d2..7948416f40d5 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -579,6 +579,9 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+-	return scsi_cmd_ioctl(bd->bd_disk->queue, bd->bd_disk, mode, cmd, arg);
+-}
+-EXPORT_SYMBOL(scsi_cmd_blk_ioctl);
+-
+ /**
+  * scsi_req_init - initialize certain fields of a scsi_request structure
+  * @req: Pointer to a scsi_request structure.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1c9dbdaaef22..ca918b0047fa 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1586,7 +1586,10 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
  	case SCSI_IOCTL_GET_BUS_NUMBER:
  		break;
  	default:
-+		ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
-+		if (ret != -ENOTTY)
+-		error = scsi_cmd_blk_ioctl(bdev, mode, cmd, p);
++		error = scsi_verify_blk_ioctl(bdev, cmd);
++		if (error < 0)
++			return error;
++		error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
+ 		if (error != -ENOTTY)
+ 			return error;
+ 	}
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7948416f40d5..b903e54c57fd 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -556,7 +556,8 @@ static void sr_block_release(struct gendisk *disk, fmode_t mode)
+ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 			  unsigned long arg)
+ {
+-	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
++	struct gendisk *disk = bdev->bd_disk;
++	struct scsi_cd *cd = scsi_cd(disk);
+ 	struct scsi_device *sdev = cd->device;
+ 	void __user *argp = (void __user *)arg;
+ 	int ret;
+@@ -579,7 +580,10 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
+ 	case SCSI_IOCTL_GET_BUS_NUMBER:
+ 		break;
+ 	default:
+-		ret = scsi_cmd_blk_ioctl(bdev, mode, cmd, argp);
++		ret = scsi_verify_blk_ioctl(bdev, cmd);
++		if (ret < 0)
 +			goto put;
- 		ret = cdrom_ioctl(&cd->cdi, bdev, mode, cmd, arg);
- 		if (ret != -ENOSYS)
++		ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
+ 		if (ret != -ENOTTY)
  			goto put;
+ 		ret = cdrom_ioctl(&cd->cdi, bdev, mode, cmd, arg);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 3177181c4326..19aa3d5429c0 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -889,8 +889,6 @@ extern blk_status_t blk_insert_cloned_request(struct request_queue *q,
+ int blk_rq_append_bio(struct request *rq, struct bio *bio);
+ extern void blk_queue_split(struct bio **);
+ extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
+-extern int scsi_cmd_blk_ioctl(struct block_device *, fmode_t,
+-			      unsigned int, void __user *);
+ extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 			  unsigned int, void __user *);
+ extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
 -- 
 2.30.2
 
