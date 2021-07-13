@@ -2,115 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F09ECC11F6A
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 09:11:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F04E9C07E95
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 09:13:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D48FF61183
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 09:11:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1A0961375
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 09:13:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234934AbhGMJOL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jul 2021 05:14:11 -0400
-Received: from verein.lst.de ([213.95.11.211]:57900 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234916AbhGMJOK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Jul 2021 05:14:10 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 9AF1767373; Tue, 13 Jul 2021 11:11:14 +0200 (CEST)
-Date:   Tue, 13 Jul 2021 11:11:14 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Russell King (Oracle)" <linux@armlinux.org.uk>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Guo Ren <guoren@kernel.org>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Nick Hu <nickhu@andestech.com>,
-        Greentime Hu <green.hu@gmail.com>,
-        Vincent Chen <deanbo422@gmail.com>,
-        Helge Deller <deller@gmx.de>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        Rich Felker <dalias@libc.org>,
-        Geoff Levand <geoff@infradead.org>,
-        Paul Cercueil <paul@crapouillou.net>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Alex Shi <alexs@kernel.org>, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-csky@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linux-sh@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-mm@kvack.org,
-        linux-doc@vger.kernel.org
-Subject: Re: flush_kernel_dcache_page fixes and removal
-Message-ID: <20210713091113.GA23518@lst.de>
-References: <20210712060928.4161649-1-hch@lst.de> <20210713084648.GF22278@shell.armlinux.org.uk>
+        id S234867AbhGMJQB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Jul 2021 05:16:01 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:41632 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234752AbhGMJQA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2021 05:16:00 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 4C51E21FBA;
+        Tue, 13 Jul 2021 09:13:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1626167590; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xJJZGqRKvaoSQWrGeiCwSEP1fPLBYIr1w75j4HAXvsE=;
+        b=ajuUlFVm2PAIkObw9NmxyQ/sgtaT0h2DJiL+skP2C05ZGWo4FbInyTcegYMD9L/qxdAgOh
+        6I5Oc3CMUoVpFf+xRwwoV47tdKMxcTEYYp7nkbvyHvEmnGPDWqQKYciUxMIPTJIqoiRjO/
+        AdhuIDCg2JG9/ztZwW3qsH8a41io9gY=
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 239C213B3B;
+        Tue, 13 Jul 2021 09:13:10 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id RjoFBiZZ7WBjUQAAMHmgww
+        (envelope-from <mwilck@suse.com>); Tue, 13 Jul 2021 09:13:10 +0000
+Message-ID: <82ec344b73abce8460a82474b6f150fbc576943c.camel@suse.com>
+Subject: Re: [PATCH 1/1]: scsi dm-mpath do not fail paths which are in ALUA
+ state transitioning
+From:   Martin Wilck <mwilck@suse.com>
+To:     Brian Bunker <brian@purestorage.com>
+Cc:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Date:   Tue, 13 Jul 2021 11:13:09 +0200
+In-Reply-To: <CAHZQxyLmDFf+7tmZQFm7e6Xt97vSuav0f8kBbZjcwaufQX+x0w@mail.gmail.com>
+References: <CAHZQxyKJ1qFatzhR-k19PXjAPo7eC0ZgwgaGKwfndB=jEO8mRQ@mail.gmail.com>
+         <32a96fc27c250fb5772a0b301576ad702b8ea934.camel@suse.com>
+         <CAHZQxyLmDFf+7tmZQFm7e6Xt97vSuav0f8kBbZjcwaufQX+x0w@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.40.2 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210713084648.GF22278@shell.armlinux.org.uk>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 13, 2021 at 09:46:48AM +0100, Russell King (Oracle) wrote:
-> I think you need to be careful - I seem to have a recollection that the
-> reason we ended up with flush_kernel_dcache_page() was the need to avoid
-> the taking of the mmap lock for 32-bit ARM VIVT based CPUs in
-> flush_dcache_page(). 32-bit ARM flush_dcache_page() can block.
+Hello Brian,
 
-Where can arm32 flush_dcache_page block?  __flush_dcache_aliases does
-walk mapping->i_mmap, but using a spinlock hidden under
-flush_dcache_mmap_lock.  If flush_dcache_page did block plenty of code
-already calling it e.g. from interrupt and block submission contexts
-in various mmc/sdcard drivers would be rather unhappy.  Even today
-calls to flush_kernel_dcache_page page in the block I/O path are
-vastly outnumber by calls to flush_dcache_page.
-
-> The second issue I have is that, when we are reading a page into a page
-> cache page, how can that page be mapped to userspace? Isn't that a
-> violation of semantics? If the page is mapped to userspace but does not
-> contain data from the underlying storage device, then the page contains
-> stale data (if it's a new page, lets hope that's zeroed and not some
-> previous contents - which would be a massive security hole.)
-
-I did not come up with the rules, but these are the existing documented
-ones for flush_dcache_page:
-
-        Any time the kernel writes to a page cache page, _OR_
-	the kernel is about to read from a page cache page and
-	user space shared/writable mappings of this page potentially
-	exist, this routine is called.
-
-So writing to (aka reading into) a page cache page is not conditional
-on it being mapped yet.  Only the kernel reading from the page cache
-page has this condition.
-
-> As I
-> understand it, the flush_kernel_dcache_page() calls in the block layer
-> are primarily there to cope with drivers that do PIO read to write to a
-> page cache page to ensure that later userspace mappings can see the data
-> in the page cache page - by ensuring that the page cache pages are in
-> the same state as far as caches go as if they had been DMA'd to.
-
-PIO is one big case, but also kernel generated data and all kinds of
-bounce buffering schemes.
-
-> We know that the current implementation works fine - you're now
-> proposing to radically change it, asserting that it's buggy. I'm
-> nervous about this change.
-
-Do we know it works?  There are very few calls to
-flush_dcache_kernel_page and very few implementations that differ from
-flush_dcache_page.  For arm32 the relevant drivers would mostly be
-mmc drivers using the sg_miter interface, are they even used much on
-the platforms where the difference exists?
-
+On Mo, 2021-07-12 at 14:38 -0700, Brian Bunker wrote:
+> Martin,
 > 
-> -- 
-> RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-> FTTP is here! 40Mbps down 10Mbps up. Decent connectivity at last!
----end quoted text---
+> > Please confirm that your kernel included ee8868c5c78f ("scsi:
+> > scsi_dh_alua: Retry RTPG on a different path after failure").
+> > That commit should cause the RTPG to be retried on other map 
+> > members
+> > which are not in failed state, thus avoiding this phenomenon.
+> 
+> In my case, there are no other map members that are not in the failed
+> state. One set of paths goes to the ALUA unavailable state when the
+> primary fails, and the second set of paths moves to ALUA state
+> transitioning as the previous secondary becomes the primary.
+
+IMO this is the problem. How does your array respond to SCSI commands
+while ports are transitioning? 
+
+SPC5 (§5.16.2.6) says that the server should either fail all commands
+with BUSY or CHECK CONDITION/NOT READY/LOGICAL UNIT NOT
+ACCESSIBLE/ASYMMETRIC ACCESS STATE TRANSITION (a), or should support
+all TMFs and a subset of SCSI commands, while responding with
+CC/NR/AAST to all other commands (b). SPC6 (§5.18.2.6) is no different.
+
+No matter how you read that paragraph, it's pretty clear that
+"transitioning" is generally not a healthy state to attempt I/O.
+
+Are you saying that on your server, the transitioning ports are able to
+process regular I/O commands like READ and WRITE? If that's the case,
+why do you pretend to be "transitioning" at all, rather than in an
+active state? If it's not the case, why would it make sense for the
+host to retry I/O on the transitioning path?
+
+>  If the
+> paths are failed which are transitioning, an all paths down state
+> happens which is not expected.
+
+IMO it _is_ expected if in fact no path is able to process SCSI
+commands at the given point in time.
+
+>  There should be a time for which
+> transitioning is a transient state until the next state is entered.
+> Failing a path assuming there would be non-failed paths seems wrong.
+
+This is a misunderstanding. The path isn't failed because of
+assumptions about other paths. It is failed because we know that it's
+non-functional, and thus we must try other paths, if there are any.
+
+Before 268940b80fa4 ("scsi: scsi_dh_alua: Return BLK_STS_AGAIN for ALUA
+transitioning state"), I/O was indeed retried on transitioning paths,
+possibly forever. This posed a serious problem when a transitioning
+path was about to be removed (e.g. dev_loss_tmo expired). And I'm still
+quite convinced that it was wrong in general, because by all reasonable
+means a "transitioning" path isn't usable for the host.
+
+If we find a transitioning path, it might make sense to retry on other
+paths first and eventually switch back to the transitioning path, when
+all others have failed hard (e.g. "unavailable" state). However, this
+logic doesn't exist in the kernel. In theory, it could be mapped to a
+"transitioning" priority group in device-mapper multipath. But prio
+groups are managed in user space (multipathd), which treats
+transitioning paths as "almost failed" (priority 0) anyway. We can
+discuss enhancing multipathd such that it re-checks transitioning paths
+more frequently, in order to be able to reinstate them ASAP.
+
+According to what you said above, the "transitioning" ports in the
+problem situation ("second set") are those that were in "unavailable"
+state before, which means "failed" as far as device mapper is concerned
+- IOW, the paths in question would be unused anyway, until they got
+reinstated, which wouldn't happen before they are fully up. With this
+in mind, I have to say I don't understand why your proposed patch would
+help at all. Please explain.
+
+> > The purpose of that patch was to set the state of the transitioning
+> > path to failed in order to make sure IO is retried on a different  >
+> path.
+> > Your patch would undermine this purpose.
+
+(Additional indentation added by me) Can you please use proper quoting?
+You were mixing my statements and your own. 
+
+> I agree this is what happens but those transitioning paths might be
+> the only non-failed paths available. I don't think it is reasonable
+> to
+> fail them. This is the same as treating transitioning as standby or
+> unavailable.
+
+Right, and according to the SPC spec (see above), that makes more sense
+than treating it as "active".
+
+Storage vendors seem to interpret "transitioning" very differently,
+both in terms of commands supported and in terms of time required to
+reach the target state. That makes it hard to deal with it correctly on
+the host side.
+
+>  As you point out this happened with the commit you
+> mention. Before this commit what I am doing does not result in an all
+> paths down error, and similarly, it does not in earlier Linux
+> versions
+> or other OS's under the same condition. I see this as a regression.
+
+If you use a suitable "no_path_retry" setting in multipathd, you should
+be able to handle the situation you describe just fine by queueing the
+I/O until the transitioning paths are fully up. IIUC, on your server
+"transitioning" is a transient state that ends quickly, so queueing
+shouldn't be an issue. E.g. if you are certain that "transitioning"
+won't last longer than 10s, you could set "no_path_retry 2".
+
+Regards,
+Martin
+
+
+
