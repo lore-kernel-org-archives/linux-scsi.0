@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 116C4C07E96
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1C11C11F67
 	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 21:02:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF9866115B
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 21:02:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC1706115B
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 21:02:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235838AbhGMVFk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jul 2021 17:05:40 -0400
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:24265 "EHLO
+        id S235821AbhGMVFl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Jul 2021 17:05:41 -0400
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:8300 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235601AbhGMVFg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2021 17:05:36 -0400
+        with ESMTP id S235545AbhGMVFf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2021 17:05:35 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1626210166; x=1657746166;
+  t=1626210165; x=1657746165;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=eC9h7AuB2uBlbeufFeAaVi7C6flhHEAtOrptRD5MlTE=;
-  b=S/sJTjVKVbFJOPHO7LwzrBXu2IdFodv0qm/Yg2Jutfg0dUjqN/tbsIud
-   iWmpOMwKjNpCO9tYQsJyD3drGXRTM/MbqQ/Hr7sGGa9mOCVcvS8Ao40nH
-   e1uuNIAVM4QayrLEazDZS7lBmaCri0DtL3Xb29guk0JU4ckvqWWte/liK
-   wYBO+E26OgTRPPvnXMLzeh68MhTTuGOvv4MriY36AIo5pvSEDGNZGWrz8
-   rZzxvM8+hfDlIIEohr6a6IgjrWMe3WGRVt3KaTcKEW9T9T3JzuVE+WInw
-   V1hs0bG/ST88hmqXo0QbP7TdR1JVywncq0RGUrUJmPbCgungXFECaWZl8
+  bh=YCU1lNbnN3QiScgV4I4qmlBlxDGRHX9C+VP7ZGwbfYg=;
+  b=pisslaDmmA7ROmT7kCGx/w0VZ2aQOnowOnwoQhMyWBzwcXEioeqz1vdW
+   e8CeV8NTZU6qhGTVlXdZQ5q7AzDRKVFy28KmCd2iRXe9Wfuzn/v+xW7Wp
+   or1vwKGlpJyUVgXKxcHkrslctIX8nqATe2fQ6I8XI/9SJVXjGIZwJilnS
+   7hXUhLYImsyCdXqUOuTmYgsVNV05m5zmWVTqAiw3L092PoQ4RvXENBWC3
+   S+SMkefWCTdCOLsxT043/gvHTLiLc/FxrboTlr0qm6f7dQ+FCJ3J011KK
+   T8iAWh1FeT3DN6W/O1lrXAqx0c31/Wop/E09uaN+yDZ92KI7zbT/QA8Eq
    g==;
-IronPort-SDR: x9DE1I3L4QYAKX7NQYwYt5LO84qKfarHuzsNeckxREcIBKy6Ml3K3NP4A5kExL+pOC9STOTgFE
- 2JwjiQ4EqFPiyV1vHHVcWuYWP0qk2FxKthbcQvREte7AwWMn7/UZYxxRo/md4QcRnC6sFgZRSh
- p8fP+DuvNtuF7vkYczppCZNURd88fznEORPA4QZkhCalF4I5p50tKeDBlKSIom//hNWCu91I/+
- OJdvilckfGzERjVMt0VM2deOwyEVmMf/M9bxDmi0GAG7ebuDKzFmfaIfUamtW3z0GiaOoPmBQe
- Byo=
+IronPort-SDR: 5ni/sRww5tZghr+xVpS/r2c7ExmTKUt4lrY4IDXe6EMQAGhqOjVGsipd/4nyqCUw3iUNYSrsJf
+ G7E+0H4HV4r0PTjDVXEDAyig2/Wti4FGRuFOLlUQh53ahTB4/5SwozXTcyYj8FGHPS3VTv290n
+ fuMHY/7bueWscMHkUGsNmtHgI2gdYrRjZun6i1VSUOMEHQlwdqxzPi4HxYeWAvhGKX6J37W+Mg
+ OATm+3q8nr/cFOQ4LlVq7eRc/Ru2bqopzb8hDofJPg8cweUPPzj5ENAsUme1TNBwVYSi9nOIio
+ EC8=
 X-IronPort-AV: E=Sophos;i="5.84,237,1620716400"; 
-   d="scan'208";a="124447488"
+   d="scan'208";a="121925990"
 Received: from f5out.microchip.com (HELO smtp.microsemi.com) ([198.175.253.81])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 13 Jul 2021 14:02:45 -0700
-Received: from AVMBX2.microsemi.net (10.10.46.68) by AVMBX1.microsemi.net
- (10.10.46.67) with Microsoft SMTP Server (version=TLS1_2,
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 13 Jul 2021 14:02:44 -0700
+Received: from AUSMBX1.microsemi.net (10.10.76.217) by AVMBX2.microsemi.net
+ (10.10.46.68) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 13 Jul
  2021 14:02:43 -0700
-Received: from brunhilda.pdev.net (10.238.32.34) by avmbx2.microsemi.net
- (10.10.46.68) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+Received: from brunhilda.pdev.net (10.238.32.34) by ausmbx1.microsemi.net
+ (10.10.76.217) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
  Transport; Tue, 13 Jul 2021 14:02:43 -0700
 Received: by brunhilda.pdev.net (Postfix, from userid 1467)
-        id 8431E703501; Tue, 13 Jul 2021 16:02:43 -0500 (CDT)
+        id 917F0703519; Tue, 13 Jul 2021 16:02:43 -0500 (CDT)
 From:   Don Brace <don.brace@microchip.com>
 To:     <hch@infradead.org>, <martin.peterson@oracle.com>,
         <jejb@linux.vnet.ibm.com>, <linux-scsi@vger.kernel.org>
@@ -61,9 +61,9 @@ CC:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jeff@canonical.com>, <POSWALD@suse.com>,
         <john.p.donnelly@oracle.com>, <mwilck@suse.com>,
         <pmenzel@molgen.mpg.de>, <linux-kernel@vger.kernel.org>
-Subject: [smartpqi updates V2 PATCH 6/9] smartpqi: add PCI-ID for new ntcom controller
-Date:   Tue, 13 Jul 2021 16:02:40 -0500
-Message-ID: <20210713210243.40594-7-don.brace@microchip.com>
+Subject: [smartpqi updates V2 PATCH 8/9] smartpqi: fix isr accessing uninitialized data
+Date:   Tue, 13 Jul 2021 16:02:42 -0500
+Message-ID: <20210713210243.40594-9-don.brace@microchip.com>
 X-Mailer: git-send-email 2.28.0.rc1.9.ge7ae437ac1
 In-Reply-To: <20210713210243.40594-1-don.brace@microchip.com>
 References: <20210713210243.40594-1-don.brace@microchip.com>
@@ -76,8 +76,13 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Mike McGowen <mike.mcgowen@microchip.com>
 
-Add support for Norsi ntcom Raid-24i controller
-VID_0x9005, DID_0x028f, SVID_0x1dfc, SDID_0x3161
+Correct driver's ISR accessing a data structure member
+that has not been fully initialized during driver
+initialization.
+  - The pqi queue groups can have uninitialized members
+    when an interrupt fires. This has not resulted in
+    any driver crashes. This was found during our own
+    internal testing. No bugs were ever filed.
 
 Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
@@ -85,24 +90,27 @@ Reviewed-by: Scott Teel <scott.teel@microchip.com>
 Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/smartpqi/smartpqi_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index ffc7ca221e27..c0b181ba795c 100644
+index f0e84354f782..ab1c9c483478 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -9181,6 +9181,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_GIGABYTE, 0x1000)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1dfc, 0x3161)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_ANY_ID, PCI_ANY_ID)
+@@ -7760,11 +7760,11 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ 
+ 	pqi_init_operational_queues(ctrl_info);
+ 
+-	rc = pqi_request_irqs(ctrl_info);
++	rc = pqi_create_queues(ctrl_info);
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = pqi_create_queues(ctrl_info);
++	rc = pqi_request_irqs(ctrl_info);
+ 	if (rc)
+ 		return rc;
+ 
 -- 
 2.28.0.rc1.9.ge7ae437ac1
 
