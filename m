@@ -7,49 +7,49 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1C11C11F67
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 21:02:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E864AC07E96
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 21:02:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC1706115B
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 21:02:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D221461152
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 21:02:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235821AbhGMVFl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jul 2021 17:05:41 -0400
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:8300 "EHLO
+        id S235936AbhGMVFm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Jul 2021 17:05:42 -0400
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:24255 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235545AbhGMVFf (ORCPT
+        with ESMTP id S235536AbhGMVFf (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2021 17:05:35 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
   t=1626210165; x=1657746165;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=YCU1lNbnN3QiScgV4I4qmlBlxDGRHX9C+VP7ZGwbfYg=;
-  b=pisslaDmmA7ROmT7kCGx/w0VZ2aQOnowOnwoQhMyWBzwcXEioeqz1vdW
-   e8CeV8NTZU6qhGTVlXdZQ5q7AzDRKVFy28KmCd2iRXe9Wfuzn/v+xW7Wp
-   or1vwKGlpJyUVgXKxcHkrslctIX8nqATe2fQ6I8XI/9SJVXjGIZwJilnS
-   7hXUhLYImsyCdXqUOuTmYgsVNV05m5zmWVTqAiw3L092PoQ4RvXENBWC3
-   S+SMkefWCTdCOLsxT043/gvHTLiLc/FxrboTlr0qm6f7dQ+FCJ3J011KK
-   T8iAWh1FeT3DN6W/O1lrXAqx0c31/Wop/E09uaN+yDZ92KI7zbT/QA8Eq
-   g==;
-IronPort-SDR: 5ni/sRww5tZghr+xVpS/r2c7ExmTKUt4lrY4IDXe6EMQAGhqOjVGsipd/4nyqCUw3iUNYSrsJf
- G7E+0H4HV4r0PTjDVXEDAyig2/Wti4FGRuFOLlUQh53ahTB4/5SwozXTcyYj8FGHPS3VTv290n
- fuMHY/7bueWscMHkUGsNmtHgI2gdYrRjZun6i1VSUOMEHQlwdqxzPi4HxYeWAvhGKX6J37W+Mg
- OATm+3q8nr/cFOQ4LlVq7eRc/Ru2bqopzb8hDofJPg8cweUPPzj5ENAsUme1TNBwVYSi9nOIio
- EC8=
+  bh=A12LawP3oulzMcsMcOVjEE4RtDeE3oxjrT+YdNBnJlM=;
+  b=LADUZM0wnjXRMzVwURsfEVbJReyvgmy2leGDl+sLrQfBTa/ltKbP7aJx
+   NeUf9js9WeywV6Zk9R6ZIda9noE1/11MOfHKRyvb34xJjXmemTH4l1GEF
+   ihvYC+lGT9DDx6SFy1cAeLhwRm9GXnbQ3BhACK07QoRfsaUglSqWcG9Nr
+   9dwxl1Mn26Wwcv9zhMwgyW38D4+2I4XqylPPoIczPwE2z076V5aUB0eTL
+   nDxNsea3m4s+36EUr6w5Bt2boIK/F8t/NZleCPV2tdAnk3jEKQ487Nt3+
+   4wWT7Qilo6ywCNH8e73SqyU+h6eoMk4rXgNlqzmAv6nufVwnnu4ELpACz
+   w==;
+IronPort-SDR: DcXKj7Lq9JsM241q2cq5ZpnN7AUjfhFioe/gs/OfeUnHM121s/OouebGIG1VXf2AZwIpxE7iTH
+ xGYo6COJlupNqTEUUXjzOtKb13cgTHZSK0H/AEw+3ZTjAfrkoPtqsZpg5F1Mb2DVtzculhqXkZ
+ zCspJb1qSObGBnkcLQYlTQexjf6sRLwGMZfaqq69rprDL1VX6SwJwyY8mTTxufCdsp+ZBoF8e0
+ o2o5vGNpM+ymW0pHTcdXASIipOFUWqfzeZdKUUCIdowylFcYI2Jxsyxqy1cK/gAWc89f6fDR76
+ 61E=
 X-IronPort-AV: E=Sophos;i="5.84,237,1620716400"; 
-   d="scan'208";a="121925990"
+   d="scan'208";a="124447486"
 Received: from f5out.microchip.com (HELO smtp.microsemi.com) ([198.175.253.81])
-  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 13 Jul 2021 14:02:44 -0700
-Received: from AUSMBX1.microsemi.net (10.10.76.217) by AVMBX2.microsemi.net
- (10.10.46.68) with Microsoft SMTP Server (version=TLS1_2,
+  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 13 Jul 2021 14:02:45 -0700
+Received: from AUSMBX1.microsemi.net (10.10.76.217) by AVMBX1.microsemi.net
+ (10.10.46.67) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 13 Jul
  2021 14:02:43 -0700
 Received: from brunhilda.pdev.net (10.238.32.34) by ausmbx1.microsemi.net
  (10.10.76.217) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
  Transport; Tue, 13 Jul 2021 14:02:43 -0700
 Received: by brunhilda.pdev.net (Postfix, from userid 1467)
-        id 917F0703519; Tue, 13 Jul 2021 16:02:43 -0500 (CDT)
+        id 7E37B7034C6; Tue, 13 Jul 2021 16:02:43 -0500 (CDT)
 From:   Don Brace <don.brace@microchip.com>
 To:     <hch@infradead.org>, <martin.peterson@oracle.com>,
         <jejb@linux.vnet.ibm.com>, <linux-scsi@vger.kernel.org>
@@ -61,9 +61,9 @@ CC:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
         <jeff@canonical.com>, <POSWALD@suse.com>,
         <john.p.donnelly@oracle.com>, <mwilck@suse.com>,
         <pmenzel@molgen.mpg.de>, <linux-kernel@vger.kernel.org>
-Subject: [smartpqi updates V2 PATCH 8/9] smartpqi: fix isr accessing uninitialized data
-Date:   Tue, 13 Jul 2021 16:02:42 -0500
-Message-ID: <20210713210243.40594-9-don.brace@microchip.com>
+Subject: [smartpqi updates V2 PATCH 5/9] smartpqi: add SCSI cmd info for resets
+Date:   Tue, 13 Jul 2021 16:02:39 -0500
+Message-ID: <20210713210243.40594-6-don.brace@microchip.com>
 X-Mailer: git-send-email 2.28.0.rc1.9.ge7ae437ac1
 In-Reply-To: <20210713210243.40594-1-don.brace@microchip.com>
 References: <20210713210243.40594-1-don.brace@microchip.com>
@@ -74,43 +74,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike McGowen <mike.mcgowen@microchip.com>
+From: Murthy Bhat <Murthy.Bhat@microchip.com>
 
-Correct driver's ISR accessing a data structure member
-that has not been fully initialized during driver
-initialization.
-  - The pqi queue groups can have uninitialized members
-    when an interrupt fires. This has not resulted in
-    any driver crashes. This was found during our own
-    internal testing. No bugs were ever filed.
+Report on SCSI command that has triggered the reset.
+ - Also add check for NULL SCSI commands resulting from
+   issuing sg_reset when there is no outstanding commands.
+
+   Example:
+   sg_reset -d /dev/sgXY
+   smartpqi 0000:39:00.0: resetting scsi 4:0:1:0 due to cmd 0x12
 
 Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
 Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
 Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: Murthy Bhat <Murthy.Bhat@microchip.com>
 Signed-off-by: Don Brace <don.brace@microchip.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index f0e84354f782..ab1c9c483478 100644
+index 29382b290243..ffc7ca221e27 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -7760,11 +7760,11 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+@@ -6033,8 +6033,10 @@ static int pqi_eh_device_reset_handler(struct scsi_cmnd *scmd)
+ 	mutex_lock(&ctrl_info->lun_reset_mutex);
  
- 	pqi_init_operational_queues(ctrl_info);
+ 	dev_err(&ctrl_info->pci_dev->dev,
+-		"resetting scsi %d:%d:%d:%d\n",
+-		shost->host_no, device->bus, device->target, device->lun);
++		"resetting scsi %d:%d:%d:%d due to cmd 0x%02x\n",
++		shost->host_no,
++		device->bus, device->target, device->lun,
++		scmd->cmd_len > 0 ? scmd->cmnd[0] : 0xff);
  
--	rc = pqi_request_irqs(ctrl_info);
-+	rc = pqi_create_queues(ctrl_info);
- 	if (rc)
- 		return rc;
- 
--	rc = pqi_create_queues(ctrl_info);
-+	rc = pqi_request_irqs(ctrl_info);
- 	if (rc)
- 		return rc;
- 
+ 	pqi_check_ctrl_health(ctrl_info);
+ 	if (pqi_ctrl_offline(ctrl_info))
 -- 
 2.28.0.rc1.9.ge7ae437ac1
 
