@@ -2,236 +2,334 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 388C5C07E95
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 01:24:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21C59C11F66
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 02:58:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EFD461370
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 01:24:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E2B3613B0
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 02:58:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237350AbhGNB1X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jul 2021 21:27:23 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:54220 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237301AbhGNB1V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Jul 2021 21:27:21 -0400
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 16E1G9xk008091;
-        Wed, 14 Jul 2021 01:24:19 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2020-01-29;
- bh=VYOXpVebynldywJu372KYB6+7mzh6yf2B86R6VkGjbw=;
- b=M9VV6ajLypuHfvBlIJE7icN7/VT/cy2RtM4GYNJ/8GETm8jBi3EYsFsB2CpqaSeAtOTD
- lPDXINPT5ZSKD/2aUKMlRgAvhHoh0i9Tt0RyxPbKO1pnANiwnOtZx/0uZSBF3nLqgUZp
- yC+cjaYKSyFJrjXMshASnMR+uDApzKowosqC0+lFuzpyZnv6urst7YtLACfx2b8vwdAm
- FNf2/0AW8IyKo2QJmYcwNZHy1eqJOEflaf42fqRX4xcjyqPXEceV8NhYpxxUOnQRtOw0
- LWFZJvwI9g7j0p4OYiPPuIGv94BamUmazoD1NCASHNG6y/M841d19Szvb91s329eWgF5 iw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 39rqm0up9j-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 14 Jul 2021 01:24:19 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 16E1GlEm051207;
-        Wed, 14 Jul 2021 01:24:18 GMT
-Received: from nam10-bn7-obe.outbound.protection.outlook.com (mail-bn7nam10lp2105.outbound.protection.outlook.com [104.47.70.105])
-        by userp3030.oracle.com with ESMTP id 39q0p6jsb2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 14 Jul 2021 01:24:18 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cdTDkPs78IWI7Qkrnq/WwU9Vt2LbgpxL2YsFTLOml2vL0xwByPF8U8XhfcBsdyr/Gti6wxtalESn3GGA7RZK2LO4M8Ci+nl1skdjlTsLq99luNc3mCFTojhKVBAwU9hGDhIrGrLz8UO8LVJkmNM5agjsN9Bveu4xfTl1p70vC9ElK7WBXPSlOxvpJKkpK3Fbbkef1HaBZsxFaSb3FurQswU5rJJ6STjwJTLV+zkZynAfROzGSg62BSEMarileWO1Jx4KaAuzVf+/1m4x5iKuTJibtpCNv+0E+LG5fzwzCsIgCp7i1fUyRXzDAF0W6yxFAIuqPe7DKLS/bz640Ot9+w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VYOXpVebynldywJu372KYB6+7mzh6yf2B86R6VkGjbw=;
- b=NBBzHyPPOP0+ehOrKSKdlDBvaRNc6PDfsh3mO1f8AfYXpD37s0NzIS5RyWhAT0NDaPqMTNUY1T6TBxx8Vkphc4ggZRAYdCsuNSmypkRJtqBoEGUBxV2ivTzI8vmT2+QP/pqhaieR4NnvWO3o7WrErZEl+h8Z2GtwlObxDgqf1Wg3Itm+xc5oprLPptaPhkyEkjjPhGc0/HfIJ16Wb2sIHhShZmiMcu5ngITjW8gwP8Z/O+ss75YsSgz8/EXLhKNwQDIGXIq/MTlGRbUheQQRbjqri66h5wow2f4pZa4qTEu/fQzBw3nLE3QOuJipvCYPeesYo/OfgZckE7wVJuttFw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=VYOXpVebynldywJu372KYB6+7mzh6yf2B86R6VkGjbw=;
- b=mpDllG84KWDxAsqi/xPXr2wtSC+2HiI2zMaZvU+v5M/qLMG2+T47Gu95h/lXcE5LWkYGxkq0iJ8ZNKxGiC3vW3ihIqPy5a7Ws6suWmCAOUOOaFCHhTjKyM6xc7L8qU+u+ss27jsfUTo0kuLyCEq0fsw9JIjfcP6R29gJjAxzyow=
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
-Received: from CO1PR10MB4722.namprd10.prod.outlook.com (2603:10b6:303:9e::12)
- by MWHPR1001MB2285.namprd10.prod.outlook.com (2603:10b6:301:2e::32) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4308.25; Wed, 14 Jul
- 2021 01:24:15 +0000
-Received: from CO1PR10MB4722.namprd10.prod.outlook.com
- ([fe80::f8c1:a59:f070:5a5f]) by CO1PR10MB4722.namprd10.prod.outlook.com
- ([fe80::f8c1:a59:f070:5a5f%3]) with mapi id 15.20.4308.027; Wed, 14 Jul 2021
- 01:24:15 +0000
-Subject: Re: [smartpqi updates V2 PATCH 7/9] smartpqi: add PCI IDs for new ZTE
- controllers
-To:     Don Brace <don.brace@microchip.com>, hch@infradead.org,
-        martin.peterson@oracle.com, jejb@linux.vnet.ibm.com,
-        linux-scsi@vger.kernel.org
-Cc:     Kevin.Barnett@microchip.com, scott.teel@microchip.com,
-        Justin.Lindley@microchip.com, scott.benesh@microchip.com,
-        gerry.morong@microchip.com, mahesh.rajashekhara@microchip.com,
-        mike.mcgowen@microchip.com, murthy.bhat@microchip.com,
-        balsundar.p@microchip.com, joseph.szczypek@hpe.com,
-        jeff@canonical.com, POSWALD@suse.com, mwilck@suse.com,
-        pmenzel@molgen.mpg.de, linux-kernel@vger.kernel.org
-References: <20210713210243.40594-1-don.brace@microchip.com>
- <20210713210243.40594-8-don.brace@microchip.com>
-From:   John Donnelly <john.p.donnelly@oracle.com>
-Message-ID: <dc485e6c-3f85-ae1b-959d-9543b4fb9563@oracle.com>
-Date:   Tue, 13 Jul 2021 20:24:09 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-In-Reply-To: <20210713210243.40594-8-don.brace@microchip.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BL0PR05CA0021.namprd05.prod.outlook.com
- (2603:10b6:208:91::31) To CO1PR10MB4722.namprd10.prod.outlook.com
- (2603:10b6:303:9e::12)
+        id S237798AbhGNDBG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Jul 2021 23:01:06 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:54010 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237599AbhGNDBG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2021 23:01:06 -0400
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210714025813epoutp01447e7961f6d101b5c64baaaafd37aa27~RiO1fWhvR2467224672epoutp01q
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2021 02:58:13 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210714025813epoutp01447e7961f6d101b5c64baaaafd37aa27~RiO1fWhvR2467224672epoutp01q
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1626231493;
+        bh=AMeM28TWS2aSGP/MAjlG2xGWYbtuetrCX55zs4BkF/g=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=bWkxH0LEnNdZA8fDf+whIUa38CXS7ZzY31MJVyJlQuDZsoe16FE9f30UY3Ozt/cyk
+         VVQKuhaizjKsHPbft0pFO/QoMEzvp28Y3Kv0e9iP0X0OOBaH98aGfIgidjpcQFYuhG
+         /KlTgduk53lRsPFTv1sIAnsDFMCTuOi+F1LDec/Y=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas5p1.samsung.com (KnoxPortal) with ESMTP id
+        20210714025813epcas5p19d227b492fc6629a8cfae3e2ce8c07dd~RiO1CZivx0747107471epcas5p1O;
+        Wed, 14 Jul 2021 02:58:13 +0000 (GMT)
+Received: from epsmges5p1new.samsung.com (unknown [182.195.40.198]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4GPhyV75QSz4x9Q2; Wed, 14 Jul
+        2021 02:58:10 +0000 (GMT)
+Received: from epcas5p3.samsung.com ( [182.195.41.41]) by
+        epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        E6.F5.09476.2C25EE06; Wed, 14 Jul 2021 11:58:10 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+        20210713121146epcas5p43b800ea149a3377964752693720ab045~RWI3Iz1Uv3166131661epcas5p4j;
+        Tue, 13 Jul 2021 12:11:46 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20210713121146epsmtrp17414a113ec99b803512e9a52af24e429~RWI3H17v82983729837epsmtrp11;
+        Tue, 13 Jul 2021 12:11:46 +0000 (GMT)
+X-AuditID: b6c32a49-6b7ff70000002504-9f-60ee52c2936b
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        66.4C.08394.2038DE06; Tue, 13 Jul 2021 21:11:46 +0900 (KST)
+Received: from alimakhtar02 (unknown [107.122.12.5]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20210713121142epsmtip23164bb2e8c7b6f91ad394664adc7866e~RWIzA8EvI3107731077epsmtip2b;
+        Tue, 13 Jul 2021 12:11:41 +0000 (GMT)
+From:   "Alim Akhtar" <alim.akhtar@samsung.com>
+To:     "'Krzysztof Kozlowski'" <krzk@kernel.org>,
+        "'Chanho Park'" <chanho61.park@samsung.com>
+Cc:     "'James E . J . Bottomley'" <jejb@linux.ibm.com>,
+        "'Martin K . Petersen'" <martin.petersen@oracle.com>,
+        "'Can Guo'" <cang@codeaurora.org>,
+        "'Jaegeuk Kim'" <jaegeuk@kernel.org>,
+        "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
+        "'Avri Altman'" <avri.altman@wdc.com>,
+        "'Adrian Hunter'" <adrian.hunter@intel.com>,
+        "'Christoph Hellwig'" <hch@infradead.org>,
+        "'Bart Van Assche'" <bvanassche@acm.org>,
+        "'jongmin jeong'" <jjmin.jeong@samsung.com>,
+        "'Gyunghoon Kwon'" <goodjob.kwon@samsung.com>,
+        <linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <robh+dt@kernel.org>
+In-Reply-To: <CAJKOXPfJOGz7WhCk4HPtDh0=13gy0q=r5isLNkKz+yetAshAfw@mail.gmail.com>
+Subject: RE: [PATCH 13/15] scsi: ufs: ufs-exynos: support exynosauto v9 ufs
+ driver
+Date:   Tue, 13 Jul 2021 17:41:40 +0530
+Message-ID: <02a401d777e0$3ff92070$bfeb6150$@samsung.com>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from [192.168.1.106] (47.220.66.60) by BL0PR05CA0021.namprd05.prod.outlook.com (2603:10b6:208:91::31) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.12 via Frontend Transport; Wed, 14 Jul 2021 01:24:11 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 3c2cce52-cc7c-41a9-9ea1-08d9466617b2
-X-MS-TrafficTypeDiagnostic: MWHPR1001MB2285:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <MWHPR1001MB2285B3FCC22A9BA0BD5D9E22C7139@MWHPR1001MB2285.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1148;
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: XwhSV1flBYSxv0G/urvnbbcjeLusGuRMQZqYya5m3e4r1nXp/6KftfWmtciR0RHW7wIAgx7gSlVrSV8LEWqlhROvbUB1+MGRp0so0m0TwVGPujVBXsNCS09YS7PYfcxem2qaRgZDHmjyAdn10JxEnrg0vEYrR4bwPcXIHf7iYKBWHVRSCoo1u6L1euR2e/hXBEXzv7/v5Y96V5hrO5e9oCgR0KpXABWsYUTfUv0JgXprAxp8vi5q70iTRsM8WasNvZWkpEWEM/1qzVQLuKMRgceQl8ITJeKfOpZYGjhkSx9naXjVNUCn3HvLZxAxlF831kF14m6GRXNrcA4O2yXneuslqsJkifiLJlV/iSHR+OdisRVmfFViSDcUZfL9P+er76ezUugOhY3NKTJgt70d4RYEkLKyBFjOa3a1lraweBPMvA01wDK8dOaENF3eJRqzWaY9AKGHQNgXVKc9BbNc5vRCJ4fek38cEQ6cJ51x3RWUaPfOfVdfkaBUVfJwzC/p6aY/0LaBhqdvwB6G+vTbTHFrYZWAtbFv8a2Vjch/yrcsBJWcFr2RkjwehZIx7xlRJWE+UBTNo/AzJhPK5r6cODmPVEIDvVb9M5CaJyYm0ItfiuBg0OnE77UxI/zMVMzR67hsUC73Cb4IbY9awdcj3cZln/q5WlxpDX5zEtxYkoDIZJlvRACf61HhV1Bx5rIdHBXrmGjM7OcC41GrgQnPWoYw9HvUzV0/eVb6utgEBew=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO1PR10MB4722.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(136003)(39860400002)(366004)(396003)(346002)(376002)(7416002)(31686004)(36756003)(2616005)(38100700002)(478600001)(2906002)(956004)(5660300002)(4326008)(6486002)(53546011)(26005)(16576012)(66946007)(186003)(31696002)(8936002)(66556008)(316002)(8676002)(86362001)(66476007)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MUlER3VqQ0FEZGhha1RFWEFJY3paRnFpYWt2STBEU2Z2ckJXZTFJVzFCamlj?=
- =?utf-8?B?UXVIVnhaalhZQ0RHTnl0VWgzWW1qTUxPQVUxWHRxb1prQkZWclBUeVVrZkVi?=
- =?utf-8?B?L2l3L2xFZ1FFdTc2SmlQZ2dDUDB0a3pZRVJCVzVwaGtmNHZja05BdHFiQU1y?=
- =?utf-8?B?Q2M0R1RzMjRIVXI3Q2gzVStFT0sweTMxem92OXA2QWZFUTdTWGJWdEV6L3hN?=
- =?utf-8?B?cFR4TVpYTjk2R1NpdjRuN09vSTcwb0dMUVptWXJsTWR1cXQvdmVScHNsRnRh?=
- =?utf-8?B?Ui90U0NwdGNtOTRwYTJ1NURzb0Fod2RtOXNlZzRGdlNwcG5CTjNZcHo5L0lP?=
- =?utf-8?B?S0ZGNnY5UVY2RmNCalNwK2RzNm4rSC8yTDhySU1WUXJrMnlLdjlrTGVvQTVu?=
- =?utf-8?B?YWl0T3RqYU4rUU1IR0MrWW1WK2xsMkcvMTlRMHI5ZnVMYW9ncDBlc21HemJw?=
- =?utf-8?B?dVJRdW1qSmdZY3FwRy9aSEU3ZkxMY3Z0K2lJcVM0N1BhY3o5endsNC9XbnlN?=
- =?utf-8?B?a3hzeVBjRHJTeXZpQm5PNnZMV3pBajZkUHFxSVpDUnZ1aUgwR0lkY2RQamla?=
- =?utf-8?B?Q0Rnbk1jaDJFdncyb3dwM3JCS1g0RlNYd25OZVlKQXdMeUY3T21oVXVUWVQ2?=
- =?utf-8?B?Y0gwWFRwVUlaZUtXQi9JT0Vhc09vWUZKdmVmVkFRdHR4K1ZiMFQvVGhQOE5q?=
- =?utf-8?B?VFpYdDNGNno4N0hLdjNIU1FtSENoNFR1bzV5M3FFV1BnVUM0YWw2dXh3cW82?=
- =?utf-8?B?b3lMdjNvU3JnSTlWRUtNdjl0TVRiemVzaXFNVjlPWDd2bkFIQ0QxMVprRzdB?=
- =?utf-8?B?NXdYd254SVdqa1J1VmR2dSt6eEluc3RXM1BCVGFJZ1I4clFTYS9ZZFltV1BW?=
- =?utf-8?B?LzNjY0lvRHpuaWo4dkdFNmRkd3NYMTM0Y0tqU3d3d09oZndlVXRTSTNhUGhz?=
- =?utf-8?B?QWJvby94RWNBV1BoRzJYa0dObzgvb0x0YW5WNjdWbTB0cmJXWitWMWcwbVBG?=
- =?utf-8?B?Y0R1V1pBenlGVzNZZ1ZEanQ0YWI2NTdGelVZb00zN2IxVmp6alJXZmJoTE1Q?=
- =?utf-8?B?NktsOVAyMUQ3cTc3cEJrYVpjNHRQaG1LTjVUb0Ercmh2bm9sUzIrS29kUjdD?=
- =?utf-8?B?QUovQXB1VWNCQVFQZHA3WFBiZkQwYnhMOERabGZJZWZjOEVLcGV0K3VldU5N?=
- =?utf-8?B?RUFHcWlYdTV6WVRWN0U5MUh4TG1ESFZISVplcmR6eGZ4YkVRdUdXRmVvR24w?=
- =?utf-8?B?dlZWR3dUQ1M2SXd5OUo3dk9pMlNtU3JKYTdBSC83Sy9PZ2lDd1pMWm95R3V3?=
- =?utf-8?B?clpMaWRyNitGKzI3UitLeXRRK0NIVk0wZ2U2dTFpWTB2c3lmTkthR3U3WW9S?=
- =?utf-8?B?THN6N3BlZ3FYKzVCc3Jza1Y4Zk4yZE44dUZVWXhTdFFMVTJYVjBZNiszbWZM?=
- =?utf-8?B?b1Z2c0VJNzNEM0RCKzluenZxbGNnVE02cXJQU241ZnFuMGZGbmVzYmtoOG9N?=
- =?utf-8?B?bDk3VGxRNkcybGlJRTdQRWxBVkc5aHBYcnZFUjNaaGpaamIrMXpyVWlCU0lo?=
- =?utf-8?B?dFpJVFM0dXd1OUUwV0Y0MGVLSzJqMEFib1lhYW5NRTRyNStGcFFFTGgxbXhJ?=
- =?utf-8?B?MUVjbGVSSjVKcXFmQ1NyL0J2dWpnbWFSTS92Q1NDcDA0MTJoc1ZDaktnODZ0?=
- =?utf-8?B?MUhoYWR6Sm1WaTJFWUN4WUg4dThYUWUzMmNLdTE0RXB1RmxxRkJDT0REOC9C?=
- =?utf-8?Q?VeMsHzKkU1QYXp0tPxz0ce38KxZYFgNPmPFFDYk?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3c2cce52-cc7c-41a9-9ea1-08d9466617b2
-X-MS-Exchange-CrossTenant-AuthSource: CO1PR10MB4722.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2021 01:24:14.9718
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: BD5puEahABEGIDRb+My+XntUuHIga1Mw7NznQ2lq+w9SQ7YKawdVn53NBF1jTxJjnyZ/xUkgLCgrogLrTn/ow4WymM03ifGkNRauyyO7EIQ=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MWHPR1001MB2285
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10044 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0
- phishscore=0 spamscore=0 bulkscore=0 mlxlogscore=999 mlxscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2104190000 definitions=main-2107140004
-X-Proofpoint-GUID: IoSRBqwphZqCuCRXw2iAsKi0cZdGnBON
-X-Proofpoint-ORIG-GUID: IoSRBqwphZqCuCRXw2iAsKi0cZdGnBON
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQHyb2Euai2N4dYCWMtDA4PYCPryVgEgh/xhAisXkWEBe0FBs6rkqgfw
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrNJsWRmVeSWpSXmKPExsWy7bCmpu6hoHcJBlO/mlucfLKGzeLlz6ts
+        FtM+/GS2+LR+GavF5f3aFj07nS1OT1jEZPFk/Sxmi0U3tjFZrLxmYXH+/AZ2i5tbjrJYzDi/
+        j8mi+/oONovlx/8xWbTuPcLuIOBx+Yq3x+W+XiaPzSu0PBbvecnksWlVJ5vHhEUHGD0+Pr3F
+        4tG3ZRWjx+dNch7tB7qZAriicmwyUhNTUosUUvOS81My89JtlbyD453jTc0MDHUNLS3MlRTy
+        EnNTbZVcfAJ03TJzgP5QUihLzCkFCgUkFhcr6dvZFOWXlqQqZOQXl9gqpRak5BQYGhXoFSfm
+        Fpfmpesl5+daGRoYGJkCVSbkZHz/qV6w1K7i+Lo9bA2Mj3S6GDk5JARMJA5d/cTYxcjFISSw
+        m1HicWsHE4TziVGi8edOKOcbo8TlzjesMC07X26BSuxllHi19S0zSEJI4CWjRO92bRCbTUBX
+        YsfiNjYQW0QgRmLlpOXMIA3MAqdYJE7tPcsEkuAUCJRYs3oS2FRhgRCJBS19LCA2i4CqxJSn
+        n4HiHBy8ApYSzx55g4R5BQQlTs58AlbCLKAtsWzha2aIgxQkfj5dxgqxy01i4713TBA14hJH
+        f/aA7ZUQ+MEhMfvLNjaIBheJ/lWToL4Rlnh1fAs7hC0l8bK/jR1kr4RAtkTPLmOIcI3E0nnH
+        WCBse4kDV+awgJQwC2hKrN+lDxGWlZh6ah3UWj6J3t9PmCDivBI75sHYqhLN765CjZGWmNjd
+        zTqBUWkWks9mIflsFpIPZiFsW8DIsopRMrWgODc9tdi0wDAvtRw5ujcxglO5lucOxrsPPugd
+        YmTiYDzEKMHBrCTCu9TobYIQb0piZVVqUX58UWlOavEhRlNgaE9klhJNzgdmk7ySeENTIzMz
+        A0sDU2MLM0Mlcd6l7IcShATSE0tSs1NTC1KLYPqYODilGpgKbLs2zCgI1hdqcTtrFfekakWI
+        +d7GuWc83y6Z7Ol42SSk+u0f+7aoGwGlAvrT8vUED11cX3nNOL5llbrPo01+u9auX9m1+N2f
+        5OV9WRNnsWxUDP+216jtyA/ji23paebbni3r+3j40t6zufc9Q5cw7nMV3md0WXu7bPz26DuL
+        XaPzds1ece5JuuuXfxYNDVtuzV/3nOHxhs51KywfmXAGPl81aeL3jqeyDRPuB6tNfn5XW1C8
+        60kmh1P9uqYEdxNtx+3/GL4+XvIyy/DMXzN+q1VfODI62b3WTD5gKntz/c/1j/YLVec0C/3b
+        kH+S77GgkVKmjKvxbbncW5xHBc97Lj3999Isttbkd22dWnVpSizFGYmGWsxFxYkAjSlU9m4E
+        AAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrCIsWRmVeSWpSXmKPExsWy7bCSvC5T89sEgwOX+S1OPlnDZvHy51U2
+        i2kffjJbfFq/jNXi8n5ti56dzhanJyxisniyfhazxaIb25gsVl6zsDh/fgO7xc0tR1ksZpzf
+        x2TRfX0Hm8Xy4/+YLFr3HmF3EPC4fMXb43JfL5PH5hVaHov3vGTy2LSqk81jwqIDjB4fn95i
+        8ejbsorR4/MmOY/2A91MAVxRXDYpqTmZZalF+nYJXBkPVpxnK3huU3Hx+CmWBsY52l2MnBwS
+        AiYSO19uYepi5OIQEtjNKHFnTwcjREJa4vrGCewQtrDEyn/PwWwhgeeMEn0nUkFsNgFdiR2L
+        29hAbBGBGImZ294yggxiFrjCIrGr7QkzxNROJokvW6+BTeUUCJRYs3oSK4gtLBAk8XXRDhYQ
+        m0VAVWLK089AcQ4OXgFLiWePvEHCvAKCEidnPgErYRbQlnh68ymcvWzha2aI4xQkfj5dxgpx
+        hJvExnvvmCBqxCWO/uxhnsAoPAvJqFlIRs1CMmoWkpYFjCyrGCVTC4pz03OLDQsM81LL9YoT
+        c4tL89L1kvNzNzGCI1pLcwfj9lUf9A4xMnEwHmKU4GBWEuFdavQ2QYg3JbGyKrUoP76oNCe1
+        +BCjNAeLkjjvha6T8UIC6YklqdmpqQWpRTBZJg5OqQamEzud9gi2WfoVM26fqixx4du7pbeX
+        6jLdnyxxPKG/VtBniUd66fKn3Z7aEVMer3U4HM7uzsSn/JcpUiJGzqErv/67yNyLt/KEos9/
+        fpfbpSmV0BO6655O9vZukb/aWhEF8ZeXmLKb/W8Of/e/rFt4mZl58MO0zkXle3o/Xsq7LHhf
+        w0mG5VpezdPutX+sDrkrhIUvEq+/tofr+Z2yEtWVxVNywwoXamkbXZ/LLj3jBX/mqZ3fVY5M
+        1vHbmxDE4HZjaWHBn4+TM49Xv6yaMyshyemCpFT7lZNFs5dfOxt0eLPrmk9HbrnqPbh6x0zx
+        relHIT+e3mMnwxaHh024+G3SAz+X7uT5srcVmRdOzuRXYinOSDTUYi4qTgQAOoP+qVcDAAA=
+X-CMS-MailID: 20210713121146epcas5p43b800ea149a3377964752693720ab045
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210709065747epcas2p483ee186906567e9e61a2a2c10209fc79
+References: <CGME20210709065747epcas2p483ee186906567e9e61a2a2c10209fc79@epcas2p4.samsung.com>
+        <20210709065711.25195-1-chanho61.park@samsung.com>
+        <20210709065711.25195-14-chanho61.park@samsung.com>
+        <CAJKOXPfJOGz7WhCk4HPtDh0=13gy0q=r5isLNkKz+yetAshAfw@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/13/21 4:02 PM, Don Brace wrote:
-> From: Balsundar P <balsundar.p@microchip.com>
-> 
-> Added support for ZTE RM241-18i 2G device ID.
-> VID_9005, DID_028F, SVID_1CF2 and SDID_5445
-> 
-> Added support for ZTE RM242-18i 4G device ID.
-> VID_9005, DID_028F, SVID_1CF2 and SDID_5446
-> 
-> Added support for ZTE RM243-18i device ID.
-> VID_9005, DID_028F, SVID_1CF2 and SDID_5447
-> 
-> Added support for ZTE SDPSA/B-18i 4G device ID.
-> VID_9005, DID_028F, SVID_1CF2 and SDID_0B27
-> 
-> Added support for ZTE SDPSA/B_I-18i device ID.
-> VID_9005, DID_028F, SVID_1CF2 and SDID_0B29
-> 
-> Added support for ZTE SDPSA/B_L-18i 2G device ID.
-> VID_9005, DID_028F, SVID_1CF2 and SDID_0B45
-> 
-> Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-> Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-> Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-> Reviewed-by: Scott Teel <scott.teel@microchip.com>
-> Signed-off-by: Balsundar P <balsundar.p@microchip.com>
-> Signed-off-by: Don Brace <don.brace@microchip.com>
 
 
-Acked-by:  John Donnelly <john.p.donnelly@oracle.com>
+> -----Original Message-----
+> From: Krzysztof Kozlowski <krzk=40kernel.org>
+> Sent: 13 July 2021 16:28
+> To: Chanho Park <chanho61.park=40samsung.com>
+> Cc: Alim Akhtar <alim.akhtar=40samsung.com>; James E . J . Bottomley
+> <jejb=40linux.ibm.com>; Martin K . Petersen <martin.petersen=40oracle.com=
+>;
+> Can Guo <cang=40codeaurora.org>; Jaegeuk Kim <jaegeuk=40kernel.org>;
+> Kiwoong Kim <kwmad.kim=40samsung.com>; Avri Altman
+> <avri.altman=40wdc.com>; Adrian Hunter <adrian.hunter=40intel.com>;
+> Christoph Hellwig <hch=40infradead.org>; Bart Van Assche
+> <bvanassche=40acm.org>; jongmin jeong <jjmin.jeong=40samsung.com>;
+> Gyunghoon Kwon <goodjob.kwon=40samsung.com>; linux-samsung-
+> soc=40vger.kernel.org; linux-scsi=40vger.kernel.org
+> Subject: Re: =5BPATCH 13/15=5D scsi: ufs: ufs-exynos: support exynosauto =
+v9 ufs
+> driver
+>=20
+> -On Fri, 9 Jul 2021 at 08:59, Chanho Park <chanho61.park=40samsung.com>
+> wrote:
+> >
+> > This patch adds to support ufs variant for ExynosAuto v9 SoC. This
+> > requires control UFS IP sharability register via syscon and regmap.
+> > Regarding uic_attr, most of values can be shared with exynos7 except
+> > tx_dif_p_nsec value.
+> >
+> > Signed-off-by: Chanho Park <chanho61.park=40samsung.com>
+> > ---
+> >  drivers/scsi/ufs/ufs-exynos.c =7C 97
+> > +++++++++++++++++++++++++++++++++++
+> >  1 file changed, 97 insertions(+)
+> >
+> > diff --git a/drivers/scsi/ufs/ufs-exynos.c
+> > b/drivers/scsi/ufs/ufs-exynos.c index 9669afe8f1f4..82f915f7a447
+> > 100644
+> > --- a/drivers/scsi/ufs/ufs-exynos.c
+> > +++ b/drivers/scsi/ufs/ufs-exynos.c
+> > =40=40 -15,6 +15,7 =40=40
+> >  =23include <linux/mfd/syscon.h>
+> >  =23include <linux/phy/phy.h>
+> >  =23include <linux/platform_device.h>
+> > +=23include <linux/regmap.h>
+> >
+> >  =23include =22ufshcd.h=22
+> >  =23include =22ufshcd-pltfrm.h=22
+> > =40=40 -76,6 +77,12 =40=40
+> >                                  UIC_TRANSPORT_NO_CONNECTION_RX =7C=5C
+> >                                  UIC_TRANSPORT_BAD_TC)
+> >
+> > +/* FSYS UFS Sharability */
+>=20
+> Sharability -> Shareability
+>=20
+> > +=23define UFS_WR_SHARABLE                BIT(2)
+> > +=23define UFS_RD_SHARABLE                BIT(1)
+> > +=23define UFS_SHARABLE           (UFS_WR_SHARABLE =7C UFS_RD_SHARABLE)
+> > +=23define UFS_SHARABILITY_OFFSET 0x710
+> > +
+> >  enum =7B
+> >         UNIPRO_L1_5 =3D 0,/* PHY Adapter */
+> >         UNIPRO_L2,      /* Data Link */
+> > =40=40 -151,6 +158,80 =40=40 static int exynos7_ufs_drv_init(struct dev=
+ice *dev,
+> struct exynos_ufs *ufs)
+> >         return 0;
+> >  =7D
+> >
+> > +static int exynosauto_ufs_drv_init(struct device *dev, struct
+> > +exynos_ufs *ufs) =7B
+> > +       struct exynos_ufs_uic_attr *attr =3D ufs->drv_data->uic_attr;
+> > +
+> > +       /* IO Coherency setting */
+> > +       if (ufs->sysreg) =7B
+> > +               return regmap_update_bits(ufs->sysreg,
+> UFS_SHARABILITY_OFFSET,
+> > +                                         UFS_SHARABLE, UFS_SHARABLE);
+> > +       =7D
+> > +
+> > +       attr->tx_dif_p_nsec =3D 3200000;
+> > +
+> > +       return 0;
+> > +=7D
+> > +
+> > +static int exynosauto_ufs_pre_link(struct exynos_ufs *ufs) =7B
+> > +       struct ufs_hba *hba =3D ufs->hba;
+> > +       int i;
+> > +
+> > +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x200), 0x40);
+> > +       for_each_ufs_rx_lane(ufs, i) =7B
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x12, i),
+> > +                              DIV_ROUND_UP(NSEC_PER_SEC, ufs->mclk_rat=
+e));
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x11, i), 0x0);
+> > +
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1b, i), 0x2);
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1c, i), 0x8a);
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1d, i), 0xa3);
+> > +
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1b, i), 0x2);
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1c, i), 0x8a);
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x1d, i), 0xa3);
+> > +
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x2f, i), 0x79);
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x84, i), 0x1);
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x25, i), 0xf6);
+> > +       =7D
+> > +
+> > +       for_each_ufs_tx_lane(ufs, i) =7B
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xaa, i),
+> > +                              DIV_ROUND_UP(NSEC_PER_SEC, ufs->mclk_rat=
+e));
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xa9, i), 0x02);
+> > +
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xab, i), 0x8);
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xac, i), 0x22);
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0xad, i), 0x8);
+> > +
+> > +               ufshcd_dme_set(hba, UIC_ARG_MIB_SEL(0x04, i), 0x1);
+> > +       =7D
+> > +
+> > +       ufshcd_dme_set(hba, UIC_ARG_MIB(0x200), 0x0);
+> > +
+> > +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE),
+> 0x0);
+> > +
+> > +       ufshcd_dme_set(hba, UIC_ARG_MIB(0xa011), 0x8000);
+> > +
+> > +       return 0;
+> > +=7D
+> > +
+> > +static int exynosauto_ufs_pre_pwr_change(struct exynos_ufs *ufs,
+> > +                                        struct ufs_pa_layer_attr
+> > +*pwr) =7B
+> > +       struct ufs_hba *hba =3D ufs->hba;
+> > +
+> > +       /* PACP_PWR_req and delivered to the remote DME */
+> > +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
+> 12000);
+> > +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
+> 32000);
+> > +       ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
+> 16000);
+> > +
+> > +       return 0;
+> > +=7D
+> > +
+>=20
+> No need for double line.
+>=20
+> > +
+> >  static int exynos7_ufs_pre_link(struct exynos_ufs *ufs)  =7B
+> >         struct ufs_hba *hba =3D ufs->hba; =40=40 -1305,6 +1386,20 =40=
+=40 static
+> > struct exynos_ufs_uic_attr exynos7_uic_attr =3D =7B
+> >         .pa_dbg_option_suite            =3D 0x30103,
+> >  =7D;
+> >
+> > +static struct exynos_ufs_drv_data exynosauto_ufs_drvs =3D =7B
+> > +       .uic_attr               =3D &exynos7_uic_attr,
+> > +       .quirks                 =3D UFSHCD_QUIRK_PRDT_BYTE_GRAN =7C
+> > +                                 UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR =7C
+> > +                                 UFSHCD_QUIRK_BROKEN_OCS_FATAL_ERROR =
+=7C
+> > +                                 UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_=
+SETTING,
+> > +       .opts                   =3D EXYNOS_UFS_OPT_BROKEN_AUTO_CLK_CTRL=
+ =7C
+> > +                                 EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR =
+=7C
+> > +                                 EXYNOS_UFS_OPT_BROKEN_RX_SEL_IDX,
+> > +       .drv_init               =3D exynosauto_ufs_drv_init,
+> > +       .pre_link               =3D exynosauto_ufs_pre_link,
+> > +       .pre_pwr_change         =3D exynosauto_ufs_pre_pwr_change,
+> > +=7D;
+> > +
+> >  static struct exynos_ufs_drv_data exynos_ufs_drvs =3D =7B
+> >         .uic_attr               =3D &exynos7_uic_attr,
+> >         .quirks                 =3D UFSHCD_QUIRK_PRDT_BYTE_GRAN =7C
+> > =40=40 -1330,6 +1425,8 =40=40 static struct exynos_ufs_drv_data
+> > exynos_ufs_drvs =3D =7B  static const struct of_device_id
+> exynos_ufs_of_match=5B=5D =3D =7B
+> >         =7B .compatible =3D =22samsung,exynos7-ufs=22,
+> >           .data       =3D &exynos_ufs_drvs =7D,
+> > +       =7B .compatible =3D =22samsung,exynosautov9-ufs=22,
+> > +         .data       =3D &exynosauto_ufs_drvs =7D,
+>=20
+> This compatible is not documented. It seems that no one document
+> exynos7-ufs but that's not an excuse. :)
+>=20
+I was post along with UFS driver =5B1=5D, had Rob's Reviewed-by as well, no=
+t sure why it is not merged.=20
+Let me ping Rob on this.
+=5B1=5D https://www.mail-archive.com/linux-kernel=40vger.kernel.org/msg2176=
+074.html
 
-
-> ---
->   drivers/scsi/smartpqi/smartpqi_init.c | 24 ++++++++++++++++++++++++
->   1 file changed, 24 insertions(+)
-> 
-> diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-> index c0b181ba795c..f0e84354f782 100644
-> --- a/drivers/scsi/smartpqi/smartpqi_init.c
-> +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -9185,6 +9185,30 @@ static const struct pci_device_id pqi_pci_id_table[] = {
->   		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
->   			       0x1dfc, 0x3161)
->   	},
-> +	{
-> +		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-> +			       0x1cf2, 0x5445)
-> +	},
-> +	{
-> +		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-> +			       0x1cf2, 0x5446)
-> +	},
-> +	{
-> +		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-> +			       0x1cf2, 0x5447)
-> +	},
-> +	{
-> +		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-> +			       0x1cf2, 0x0b27)
-> +	},
-> +	{
-> +		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-> +			       0x1cf2, 0x0b29)
-> +	},
-> +	{
-> +		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-> +			       0x1cf2, 0x0b45)
-> +	},
->   	{
->   		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
->   			       PCI_ANY_ID, PCI_ANY_ID)
-> 
+> Best regards,
+> Krzysztof
 
