@@ -2,157 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77A9BC07E96
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 13:29:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC5CAC07E95
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 16:49:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 60E1A60E0B
-	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 13:29:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C97A2610C7
+	for <linux-scsi@archiver.kernel.org>; Tue, 13 Jul 2021 16:49:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236624AbhGMNcm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 13 Jul 2021 09:32:42 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:40866 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236588AbhGMNcl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Jul 2021 09:32:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626182991;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jdeapieNS3PVuhbaSMCjhCNHL9ow03NjgZ6/hSsB7Qg=;
-        b=eVALn4XCl3v0oqQ/4JZZEzt8VcYt0JTODFs+kQHjgovfEcgFuB61tTnNE0ZmOaFGdTsCpO
-        au2m6HRIhH8etKICURRj6WBCcr8XWZjB5Eo9wkMbagMuyfbtZePqoxjwDnceR+DwulC503
-        +k1NJitUcgIFSrFzWuY6zVi3Il56s3k=
-Received: from mail-ed1-f72.google.com (mail-ed1-f72.google.com
- [209.85.208.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-208-bgcCPGVzOaq5Yd8P4I5r_g-1; Tue, 13 Jul 2021 09:29:49 -0400
-X-MC-Unique: bgcCPGVzOaq5Yd8P4I5r_g-1
-Received: by mail-ed1-f72.google.com with SMTP id y18-20020a0564022712b029038ffac1995eso12021649edd.12
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Jul 2021 06:29:49 -0700 (PDT)
+        id S229944AbhGMQwK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 13 Jul 2021 12:52:10 -0400
+Received: from mail-pj1-f52.google.com ([209.85.216.52]:41561 "EHLO
+        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229555AbhGMQwK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Jul 2021 12:52:10 -0400
+Received: by mail-pj1-f52.google.com with SMTP id oj10-20020a17090b4d8ab0290172f77377ebso2530522pjb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Jul 2021 09:49:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=jdeapieNS3PVuhbaSMCjhCNHL9ow03NjgZ6/hSsB7Qg=;
-        b=Y3j4E6/IE8C1HMgrWcKHIl7rORnLPNdj+MVENFlw4SFayWyW1N10gfUO4KmIaQljYw
-         IPBkbH8HQDeBlB0T4Wyg5a7boBCmfoNLFZBXmKf/ManVNbh6S3oGsCH0BNJN33+y23i8
-         +vkb3BkuXj0SyA8rII2Xrqf45ZA2BGixgiQHzAENNeEMO15SB2Bs9mZ0rkLckrkMM0k7
-         KgFRTY4BDd1r0HKE105e23oDRunWMhIbGJvHyprVH8Qfl4SD6oWJx7W5Hp7YiHLKl8C8
-         a5EQKQtn4RXXZMJyNP6A26mF0K3SLhfkEHZBG+ViOekTOE1OAK0SPM4itlrGrDFtVthA
-         4kKQ==
-X-Gm-Message-State: AOAM5339eH8u5xFYOXyp8/pZO9ZfuhMa3C8kdj77oDoelsdz+pFaE/k9
-        6w6vtDUQKKBeHNAnukKd9ulGnihe5yCQxoVnazN/0ghLKJVVhJEX+66C9ZwQYhjHn0xFidCw7s7
-        y86qttYluzSL0xg0/6+6Vk2PLxcJaElFVzbWCDQ==
-X-Received: by 2002:aa7:dcd2:: with SMTP id w18mr5825655edu.145.1626182988593;
-        Tue, 13 Jul 2021 06:29:48 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJw5wxQUQPgyLKUdlRZ2gZvYByjQxwh5vHfj9Zl/5/TUt6KM+BkoCgzKzFw3XseQAusiiqmnSZ0tdUwu4kYrB74=
-X-Received: by 2002:aa7:dcd2:: with SMTP id w18mr5825614edu.145.1626182988415;
- Tue, 13 Jul 2021 06:29:48 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=7Qmnf/Yu6OfI8w51LkazDbPue61DpnihELZ9rMyJ+8M=;
+        b=CdjQTCGbw/awU16fEWqjWL3JG6u+wnsQdiWuZf1EjZrm4JqEw3f39QAOg7qr46R9Nk
+         RmTJwAo2ysm5B9Unvkkkpvcj2BecSr6hYNcKVrdXDNw48tX9+B09Y4r3Oge+/uwWuuZg
+         pc1UDsOwrVkNMItk85H0hQcl+UvQK7EcrWSwfF4w/T1Jy6yjgrDHN0o57mG9DTWRzOIr
+         DCbmeCLvwDebj09BIapgfUajSqmtwSVb5cj6CA43+CwDW44KflQC3uKOezPwNeQmDLUd
+         /v60u0uqn8OUjcI9IfgBydzOg9vPcorDUgiI2zfn0BHxALsWGTRv5Tp60/GQFalPfOuu
+         nCxA==
+X-Gm-Message-State: AOAM5314pJs6v2EAp7j4VDY/RY4C/ghgMCaD9MOgOs+AvbANA/nv+fd4
+        w9z8mGkValzERMQ2FNT0+MM=
+X-Google-Smtp-Source: ABdhPJwbu88LeXxftJmubF3XHikfdHbS9QKMgKcwlowKp/pJlGBwnzSQVNTKCvzvnGyCpyxZdpMdiw==
+X-Received: by 2002:a17:90a:c003:: with SMTP id p3mr5152115pjt.14.1626194959670;
+        Tue, 13 Jul 2021 09:49:19 -0700 (PDT)
+Received: from ?IPv6:2620:0:1000:2004:d6d0:1357:913a:795c? ([2620:0:1000:2004:d6d0:1357:913a:795c])
+        by smtp.gmail.com with ESMTPSA id f31sm21966453pgm.1.2021.07.13.09.49.17
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 13 Jul 2021 09:49:19 -0700 (PDT)
+Subject: Re: [PATCH v2 13/19] scsi: ufs: Fix a race in the completion path
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Akinobu Mita <akinobu.mita@gmail.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>
+References: <20210709202638.9480-1-bvanassche@acm.org>
+ <20210709202638.9480-15-bvanassche@acm.org>
+ <DM6PR04MB65750B644072145010B7D952FC169@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <fe3076c3-f835-b7e4-c5be-4ba55d5e0e41@acm.org>
+Date:   Tue, 13 Jul 2021 09:49:16 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-References: <20210629152746.2953364-1-nitesh@redhat.com> <CAFki+LnUGiEE-7Uf-x8-TQZYZ+3Migrr=81gGLYszxaK-6A9WQ@mail.gmail.com>
- <YOrWqPYPkZp6nRLS@unreal> <CAFki+L=FYOTQ1+-MHWmTuA6ZxTUcZA9t41HRL2URYgv03oFbDg@mail.gmail.com>
- <YO0eKv2GJcADQTHH@unreal>
-In-Reply-To: <YO0eKv2GJcADQTHH@unreal>
-From:   Nitesh Lal <nilal@redhat.com>
-Date:   Tue, 13 Jul 2021 09:29:37 -0400
-Message-ID: <CAFki+L=LtHFvL5+h2JtWhKMDdR5=ABzOFnvdXCDcPfGisDb-9A@mail.gmail.com>
-Subject: Re: [PATCH v2 00/14] genirq: Cleanup the usage of irq_set_affinity_hint
-To:     Leon Romanovsky <leon@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, linux-api@vger.kernel.org,
-        linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marcelo Tosatti <mtosatti@redhat.com>,
-        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
-        frederic@kernel.org, Juri Lelli <juri.lelli@redhat.com>,
-        Alex Belits <abelits@marvell.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
-        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
-        Stefan Assmann <sassmann@redhat.com>,
-        Tomas Henzl <thenzl@redhat.com>, kashyap.desai@broadcom.com,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, Ken Cox <jkc@redhat.com>,
-        faisal.latif@intel.com, shiraz.saleem@intel.com, tariqt@nvidia.com,
-        Alaa Hleihel <ahleihel@redhat.com>,
-        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
-        saeedm@nvidia.com, benve@cisco.com, govind@gmx.com,
-        jassisinghbrar@gmail.com, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
-        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
-        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
-        Al Stone <ahs3@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <DM6PR04MB65750B644072145010B7D952FC169@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 13, 2021 at 1:01 AM Leon Romanovsky <leon@kernel.org> wrote:
->
-> On Mon, Jul 12, 2021 at 05:27:05PM -0400, Nitesh Lal wrote:
-> > Hi Leon,
-> >
+On 7/11/21 5:29 AM, Avri Altman wrote:
+>>
+>> The following unlikely races can be triggered by the completion path
+>> (ufshcd_trc_handler()):
+>> - After the UTRLCNR register has been read from interrupt context and
+>>    before it is cleared, the UFS error handler reads the UTRLCNR register.
+>>    Hold the SCSI host lock until the UTRLCNR register has been cleared to
+>>    prevent that this register is accessed from another CPU before it has
+>>    been cleared.
+>> - After the doorbell register has been read and before outstanding_reqs
+>>    is cleared, the error handler reads the doorbell register. This can also
+>>    result in double completions. Fix this by clearing outstanding_reqs
+>>    before calling ufshcd_transfer_req_compl().
+>>
+>> Due to this change ufshcd_trc_handler() no longer updates
+>> outstanding_reqs
+>> atomically. Hence protect all other outstanding_reqs changes with the SCSI
+>> host lock.
+> But isn't the whole point of REG_UTP_TRANSFER_REQ_LIST_COMPL is to eliminate the host lock
+> As a source of contention?
 
-<snip>
+How about avoiding contention by introducing a new spinlock to protect 
+hba->outstanding_reqs?
 
-> > > >
-> > > > Gentle ping.
-> > > > Any comments or suggestions on any of the patches included in this series?
-> > >
-> > > Please wait for -rc1, rebase and resend.
-> > > At least i40iw was deleted during merge window.
-> > >
-> >
-> > In -rc1 some non-trivial mlx5 changes also went in.  I was going through
-> > these changes and it seems after your patch
-> >
-> > e4e3f24b822f: ("net/mlx5: Provide cpumask at EQ creation phase")
-> >
-> > we do want to control the affinity for the mlx5 interrupts from the driver.
-> > Is that correct?
->
-> We would like to create devices with correct affinity from the
-> beginning. For this, we will introduce extension to devlink to control
-> affinity that will be used prior initialization sequence.
->
-> Currently, netdev users who don't want irqbalance are digging into
-> their procfs, reconfigure affinity on already existing devices and
-> hope for the best.
->
-> This is even more cumbersome for the SIOV use case, where every physical
-> NIC PCI device will/can create thousands of lightweights netdevs that will
-> be forwarded to the containers later. These containers are limited to known
-> CPU cores, so no reason do not limit netdev device too.
->
-> The same goes for other sub-functions of that PCI device, like RDMA,
-> vdpa e.t.c.
->
-> > This would mean that we should use irq_set_affinity_and_hint() instead
-> > of irq_update_affinity_hint().
->
-> I think so.
->
+>> This patch is a performance improvement because it reduces the number of
+>> atomic operations in the hot path (test_and_clear_bit()).
+> Both Can & Stanley reported a performance improvement of RR with "Optimize host lock..".
+> Can those short numerical studies can be repeated with this patch?
 
-Thanks, will make that change in the patch and re-send.
-I will also drop your reviewed-by for the mlx5 patch so that you can
-have a look at it again, please let me know if you have any
-objections.
+I will measure the performance impact of this patch for rq_affinity=2 as 
+soon as I have the time. As you may know we are close to an internal 
+deadline.
 
--- 
-Thanks
-Nitesh
+Thanks,
 
+Bart.
