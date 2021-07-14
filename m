@@ -2,229 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB71C11F6A
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 10:27:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD88EC07E9C
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 11:19:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A12E0613B7
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 10:27:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BDA30613C1
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 11:19:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238905AbhGNK35 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 06:29:57 -0400
-Received: from foss.arm.com ([217.140.110.172]:32922 "EHLO foss.arm.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230270AbhGNK3w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Jul 2021 06:29:52 -0400
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-        by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 354A311D4;
-        Wed, 14 Jul 2021 03:27:00 -0700 (PDT)
-Received: from bogus (unknown [10.57.79.213])
-        by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 2FF633F774;
-        Wed, 14 Jul 2021 03:26:27 -0700 (PDT)
-Date:   Wed, 14 Jul 2021 11:25:29 +0100
-From:   Sudeep Holla <sudeep.holla@arm.com>
-To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        kernel@pengutronix.de, Sudeep Holla <sudeep.holla@arm.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Alexandre Bounine <alex.bou9@gmail.com>,
-        Alex Dubov <oakad@yahoo.com>, Alex Elder <elder@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Andy Gross <agross@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bodo Stroesser <bostroesser@gmail.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Cristian Marussi <cristian.marussi@arm.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Dexuan Cui <decui@microsoft.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Finn Thain <fthain@linux-m68k.org>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Frank Li <lznuaa@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Geoff Levand <geoff@infradead.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Harald Freudenberger <freude@linux.ibm.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Helge Deller <deller@gmx.de>, Ira Weiny <ira.weiny@intel.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jason Wang <jasowang@redhat.com>,
-        Jens Taprogge <jens.taprogge@taprogge.org>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Jiri Kosina <jikos@kernel.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Joey Pabalan <jpabalanb@gmail.com>,
-        Johan Hovold <johan@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Johannes Thumshirn <morbidrsa@gmail.com>,
-        Jon Mason <jdmason@kudzu.us>, Juergen Gross <jgross@suse.com>,
-        Julien Grall <jgrall@amazon.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Kirti Wankhede <kwankhede@nvidia.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Lee Jones <lee.jones@linaro.org>, Len Brown <lenb@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Manohar Vanga <manohar.vanga@gmail.com>,
-        Marc Zyngier <maz@kernel.org>, Mark Brown <broonie@kernel.org>,
-        Mark Gross <mgross@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martyn Welch <martyn@welchs.me.uk>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Maxime Ripard <mripard@kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Michael Buesch <m@bues.ch>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Jamet <michael.jamet@intel.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Moritz Fischer <mdf@kernel.org>,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Rich Felker <dalias@libc.org>,
-        Rikard Falkeborn <rikard.falkeborn@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
-        Samuel Holland <samuel@sholland.org>,
-        Samuel Iglesias Gonsalvez <siglesias@igalia.com>,
-        SeongJae Park <sjpark@amazon.de>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sven Van Asbroeck <TheSven73@gmail.com>,
-        Takashi Iwai <tiwai@suse.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Thorsten Scherer <t.scherer@eckelmann.de>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Tom Rix <trix@redhat.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Vineeth Vijayan <vneethv@linux.ibm.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        William Breathitt Gray <vilhelm.gray@gmail.com>,
-        Wolfram Sang <wsa@kernel.org>, Wu Hao <hao.wu@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        YueHaibing <yuehaibing@huawei.com>,
-        Yufen Yu <yuyufen@huawei.com>, alsa-devel@alsa-project.org,
-        dmaengine@vger.kernel.org, greybus-dev@lists.linaro.org,
-        industrypack-devel@lists.sourceforge.net, kvm@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-fpga@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-i3c@lists.infradead.org,
-        linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-media@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-ntb@googlegroups.com, linux-parisc@vger.kernel.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-sh@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-sunxi@lists.linux.dev,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, nvdimm@lists.linux.dev,
-        platform-driver-x86@vger.kernel.org, sparclinux@vger.kernel.org,
-        target-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org,
-        Johannes Thumshirn <jth@kernel.org>,
-        "Rafael J . Wysocki" <rafael@kernel.org>
-Subject: Re: [PATCH v4 5/5] bus: Make remove callback return void
-Message-ID: <20210714102529.ehwquc2s2qlbccyg@bogus>
-References: <20210713193522.1770306-1-u.kleine-koenig@pengutronix.de>
- <20210713193522.1770306-6-u.kleine-koenig@pengutronix.de>
+        id S239045AbhGNLWX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 07:22:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45948 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232161AbhGNLWV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 07:22:21 -0400
+Received: from mail-ed1-x533.google.com (mail-ed1-x533.google.com [IPv6:2a00:1450:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F7B1C06175F;
+        Wed, 14 Jul 2021 04:19:29 -0700 (PDT)
+Received: by mail-ed1-x533.google.com with SMTP id dj21so2684908edb.0;
+        Wed, 14 Jul 2021 04:19:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:references:from:message-id:date:user-agent:mime-version
+         :in-reply-to:content-language:content-transfer-encoding;
+        bh=t9BiriwpOcNEknMm/iM0jLz5+veRh3lTn49M6YjFIAg=;
+        b=hlIl5a1YaVJjTVmyVNJnn1PWoxiuSvlzAUJuzged3kbs3f0MnU3O6thtTUDVgDi92h
+         a6lVeKJkqp820ALDwGpl0U4ZoxAMjMn+acN9pcaGjCoFS1XYuXtgTSIiCcsOc/c7MsP8
+         SV7Ic6lu7fje6N2E7q3i3Gdu7cHTbVqzUHZLBHfD0bbPc+hF+ZjxM+XZGWfRuzu9go1z
+         z5rtou2E5Z9P1+P+XLCjbPmePtW3jjmWFaqHG8cW+A6CPjQ0Vuh7TsCvNw/S1tFCMBK5
+         /BTyNdrp012ROvh3zA1ftXagejr6fJjP4/LUtc1mqDEBgzXR03Il/kL+LBMq1e71S5df
+         9iLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=t9BiriwpOcNEknMm/iM0jLz5+veRh3lTn49M6YjFIAg=;
+        b=t7cme94IFJwjHHgXpu0THyNluAff06f/cEkgCn9x73zRQxSbQ7+TQiST9rtv2hQjBR
+         MaEcBeM4b1tIgIK5YYQBWeodWDOIcH1Wx66BNNo0Epk4CLorR5LdD2bKvYG7brSABJsV
+         958RFGiADhcdkjf2VzwOTB7ahwlW1S24vw344DmltTSdD0yDgixhFkV46fpF0ojeRxEg
+         9tFdnqJMsZpiGjCkBwc7PPG17Ps91OC7E0oJu11IDBnqSiG1g8gjnBpprjZ2sFHvoXgU
+         8aqBblBw/tW5gggLU9cEvjK2KPO++qAtG3AZrhNgcFo7lj66sacN/dIBxgr7V7nszwYs
+         8IrQ==
+X-Gm-Message-State: AOAM533OAwsToo0zagXhXFKU0Pp/5Td99PpBsR5Fh0eW3RKd5RkFw5/X
+        l2F0ot9TDiLxWY4Abo6tx60=
+X-Google-Smtp-Source: ABdhPJyStSekdjayeUViGApOVQNa7pYq8yu4/35Q8QcMoWOA1JNSFYmBgCv5OylZFSiL/p6MZ/P2KA==
+X-Received: by 2002:a05:6402:35d4:: with SMTP id z20mr13349613edc.138.1626261567652;
+        Wed, 14 Jul 2021 04:19:27 -0700 (PDT)
+Received: from [192.168.0.108] ([77.127.114.213])
+        by smtp.gmail.com with ESMTPSA id v16sm137541edc.52.2021.07.14.04.19.22
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Jul 2021 04:19:27 -0700 (PDT)
+Subject: Re: [PATCH v3 14/14] net/mlx4: Use irq_update_affinity_hint
+To:     Nitesh Narayan Lal <nitesh@redhat.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
+        tglx@linutronix.de, jesse.brandeburg@intel.com,
+        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
+        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
+        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
+        peterz@infradead.org, davem@davemloft.net,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
+        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
+        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
+        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
+        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
+        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
+        somnath.kotur@broadcom.com, nilal@redhat.com,
+        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
+        ahs3@redhat.com, leonro@nvidia.com, chandrakanth.patil@broadcom.com
+References: <20210713211502.464259-1-nitesh@redhat.com>
+ <20210713211502.464259-15-nitesh@redhat.com>
+From:   Tariq Toukan <ttoukan.linux@gmail.com>
+Message-ID: <c2d794bf-20b4-95fa-dfba-e85cf6b74bd4@gmail.com>
+Date:   Wed, 14 Jul 2021 14:19:20 +0300
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210713193522.1770306-6-u.kleine-koenig@pengutronix.de>
+In-Reply-To: <20210713211502.464259-15-nitesh@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 13, 2021 at 09:35:22PM +0200, Uwe Kleine-König wrote:
-> The driver core ignores the return value of this callback because there
-> is only little it can do when a device disappears.
+
+
+On 7/14/2021 12:15 AM, Nitesh Narayan Lal wrote:
+> The driver uses irq_set_affinity_hint() to update the affinity_hint mask
+> that is consumed by the userspace to distribute the interrupts. However,
+> under the hood irq_set_affinity_hint() also applies the provided cpumask
+> (if not NULL) as the affinity for the given interrupt which is an
+> undocumented side effect.
 > 
-> This is the final bit of a long lasting cleanup quest where several
-> buses were converted to also return void from their remove callback.
-> Additionally some resource leaks were fixed that were caused by drivers
-> returning an error code in the expectation that the driver won't go
-> away.
+> To remove this side effect irq_set_affinity_hint() has been marked
+> as deprecated and new interfaces have been introduced. Hence, replace the
+> irq_set_affinity_hint() with the new interface irq_update_affinity_hint()
+> that only updates the affinity_hint pointer.
 > 
-> With struct bus_type::remove returning void it's prevented that newly
-> implemented buses return an ignored error code and so don't anticipate
-> wrong expectations for driver authors.
-> 
+> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+> Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
+> ---
 
-[...]
+Thanks for you patch.
+Reviewed-by: Tariq Toukan <tariqt@nvidia.com>
 
-> diff --git a/drivers/firmware/arm_scmi/bus.c b/drivers/firmware/arm_scmi/bus.c
-> index 784cf0027da3..2682c3df651c 100644
-> --- a/drivers/firmware/arm_scmi/bus.c
-> +++ b/drivers/firmware/arm_scmi/bus.c
-> @@ -116,15 +116,13 @@ static int scmi_dev_probe(struct device *dev)
->  	return scmi_drv->probe(scmi_dev);
->  }
->  
-> -static int scmi_dev_remove(struct device *dev)
-> +static void scmi_dev_remove(struct device *dev)
->  {
->  	struct scmi_driver *scmi_drv = to_scmi_driver(dev->driver);
->  	struct scmi_device *scmi_dev = to_scmi_dev(dev);
->  
->  	if (scmi_drv->remove)
->  		scmi_drv->remove(scmi_dev);
-> -
-> -	return 0;
->  }
->  
->  static struct bus_type scmi_bus_type = {
-
-Acked-by: Sudeep Holla <sudeep.holla@arm.com>
-
---
-Regards,
-Sudeep
+Tariq
