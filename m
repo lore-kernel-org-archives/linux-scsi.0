@@ -2,100 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 570FCC07E9A
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 17:41:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F493C07E9A
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 18:09:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A4FF613C5
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 17:41:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1AEBF611C0
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 18:09:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239759AbhGNRn5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 13:43:57 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3414 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229738AbhGNRn5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 13:43:57 -0400
-Received: from fraeml740-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GQ4JL245yz6L82C;
-        Thu, 15 Jul 2021 01:29:54 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml740-chm.china.huawei.com (10.206.15.221) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 14 Jul 2021 19:41:03 +0200
-Received: from [10.47.83.59] (10.47.83.59) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 14 Jul
- 2021 18:41:02 +0100
-Subject: Re: SCSI layer RPM deadlock debug suggestion
-To:     Alan Stern <stern@rowland.harvard.edu>
-CC:     Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.com>,
-        "chenxiang (M)" <chenxiang66@hisilicon.com>,
-        Xiejianqin <xiejianqin@hisilicon.com>
-References: <9e90d035-fac1-432a-1d34-de5805d8f799@huawei.com>
- <20210702203142.GA49307@rowland.harvard.edu>
- <ec4a3038-34b0-084f-a1bd-039827465dd1@acm.org>
- <1081c3ed-0762-58c7-8b99-8b3721c710bd@huawei.com>
- <20210705131712.GB116379@rowland.harvard.edu>
- <a5b9109c-cad6-0057-29c9-8974fda3347c@suse.de>
- <47f35811-33c5-9620-45d5-8201e5ec5db3@huawei.com>
- <20210714161027.GC380727@rowland.harvard.edu>
- <dc75007c-4a07-d1a9-6b86-2f6d2dc59271@huawei.com>
- <20210714171016.GE380727@rowland.harvard.edu>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <71293d49-9cdf-3fce-5824-8e8f390ee91a@huawei.com>
-Date:   Wed, 14 Jul 2021 18:41:08 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S230264AbhGNSMP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 14:12:15 -0400
+Received: from mail-pg1-f179.google.com ([209.85.215.179]:39757 "EHLO
+        mail-pg1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229651AbhGNSMP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 14:12:15 -0400
+Received: by mail-pg1-f179.google.com with SMTP id a2so3319630pgi.6;
+        Wed, 14 Jul 2021 11:09:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=LIzD3a4Y0Ejr+434x3kFvkLLT9Fc2hxKYkwrbGXVjSY=;
+        b=enqIO1V/DfyIEJFQR86o+piWXwL4Ut323CcN7t9BSZkB4QtHUPQipbrILyqSCZbPO6
+         fkE3apmIc7rzYSEwglk6hhdtsaYUEqNWaxYZ+rNBRn71oViLc+ZSz5Uj4T4rxhHhb0uK
+         tzb3/tK2XoXMaDfdSJXJrgr1uFfcwYNI8uemM8mWn9VOPxuR8Oe2uHQ0E5H/alirItnL
+         qiB40yr/EHlkLgb9YRmnqENXS7hBHEel79UMpTbnoxCtmP+JIHa0D26dCS1kMc01RuBB
+         Ar9Zosq0eYNYfE7fOUIz9Tf1NmuFZyvcnUpaUUF/G6M+K9u3Mki58FdkhpXcX2lZdKM5
+         Ossg==
+X-Gm-Message-State: AOAM5322m2GsCN0EgVvYe+NXGa81o5D9mQkymxBNNmGc1hsEKl3ltDLp
+        Ja/NKctCvKALJ73AAGHkUMk=
+X-Google-Smtp-Source: ABdhPJx9teTmAtYN19Yd/nQG8C6ZbdsPelnS5mxH8YBC7VR+v8bydqlC8BZSICOe/VSBsiH69KOoAw==
+X-Received: by 2002:a63:e26:: with SMTP id d38mr5923790pgl.42.1626286163206;
+        Wed, 14 Jul 2021 11:09:23 -0700 (PDT)
+Received: from ?IPv6:2620:0:1000:2004:91cc:a7b9:6739:15bc? ([2620:0:1000:2004:91cc:a7b9:6739:15bc])
+        by smtp.gmail.com with ESMTPSA id q17sm2787438pjd.42.2021.07.14.11.09.21
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 Jul 2021 11:09:22 -0700 (PDT)
+Subject: Re: [PATCH] scsi: ufs: add missing host_lock in setup_xfer_req
+To:     Bean Huo <huobean@gmail.com>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc:     Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20210701005117.3846179-1-jaegeuk@kernel.org>
+ <38432018-e8bf-f9f3-00bf-cd4b81c95c88@acm.org>
+ <69b367bc44084f901d0d71fb8f9633ea7e5df36b.camel@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <b0cd26d0-6ebc-b633-8669-a558597cc91d@acm.org>
+Date:   Wed, 14 Jul 2021 11:09:20 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <20210714171016.GE380727@rowland.harvard.edu>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+In-Reply-To: <69b367bc44084f901d0d71fb8f9633ea7e5df36b.camel@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.83.59]
-X-ClientProxiedBy: lhreml735-chm.china.huawei.com (10.201.108.86) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/07/2021 18:10, Alan Stern wrote:
->> Hi Alan,
->>
->> Sorry for not getting back to you sooner. Testing so far with the originally
->> proposed change [0] has not raised any issues and has solved the deadlock.
->>
->> But we have a list of other problems to deal with in the RPM area related to
->> the LLDD/libsas, so were waiting to address all of them (or at least have a
->> plan) before progressing this change.
->>
->> One such issue is that when we issue the link-reset which causes the device
->> to be lost in the test, the disk is not found again. The customer may not be
->> happy with this, so we're investigating solutions.
->>
->> As for your change itself, I had something similar sitting on our dev
->> branch:
->>
->> [0]https://github.com/hisilicon/kernel-dev/commit/3696ca85c1e00257c96e40154d28b936742430c4
->>
->> For me, I'm happy to hold off on any change, but if you think it's serious
->> enough to progress your patch, below, now, then I think that should be ok.
-> No, I don't think it's all that serious.  The scenario is probably
-> pretty rare in real life, outside of a few odd circumstances like yours.
-> I'm happy to wait until you're comfortable with a full set of changes.
+On 7/13/21 12:45 PM, Bean Huo wrote:
+> This change only impacts on the Samsung exynos platform. and Can's
+> optimization patch is to optimise the host_lock,, and removed
+> host_lock, now add back in this function makes sense to me.
+> but I am thinking how about hba->host_sem?
 
-Fine, and I'll ask for your change to be tested also, even though 
-effectively it looks identical to what was tested already.
+Hi Bean,
+
+Calls of exynos_ufs_specify_nexus_t_xfer_req() must be serialized, hence 
+Jaegeuks' patch. This function is called from the I/O submission path so 
+performance matters. My understanding is that spinlocks have less 
+overhead than semaphores. Hence the choice for a spinlock.
 
 Thanks,
-john
+
+Bart.
