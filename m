@@ -2,43 +2,46 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F03B3C07E9A
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 15:11:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA7F1C11F68
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 15:11:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D94FC613D1
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 15:11:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3388613B6
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 15:11:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239563AbhGNPOH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 11:14:07 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3403 "EHLO
+        id S239580AbhGNPOJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 11:14:09 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3404 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232360AbhGNPOH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 11:14:07 -0400
-Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GQ12W2F5Dz6K604;
-        Wed, 14 Jul 2021 23:02:43 +0800 (CST)
+        with ESMTP id S239576AbhGNPOJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 11:14:09 -0400
+Received: from fraeml703-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GQ12Y4Q6hz6K64C;
+        Wed, 14 Jul 2021 23:02:45 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ fraeml703-chm.china.huawei.com (10.206.15.52) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Wed, 14 Jul 2021 17:11:13 +0200
+ 15.1.2176.2; Wed, 14 Jul 2021 17:11:15 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Wed, 14 Jul 2021 16:11:11 +0100
+ 15.1.2176.2; Wed, 14 Jul 2021 16:11:13 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>
 CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>,
         <kashyap.desai@broadcom.com>, <hare@suse.de>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH 0/9] blk-mq: Reduce static requests memory footprint for shared sbitmap
-Date:   Wed, 14 Jul 2021 23:06:26 +0800
-Message-ID: <1626275195-215652-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 1/9] blk-mq: Change rqs check in blk_mq_free_rqs()
+Date:   Wed, 14 Jul 2021 23:06:27 +0800
+Message-ID: <1626275195-215652-2-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1626275195-215652-1-git-send-email-john.garry@huawei.com>
+References: <1626275195-215652-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -49,51 +52,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently a full set of static requests are allocated per hw queue per
-tagset when shared sbitmap is used.
+The original code in commit 24d2f90309b23 ("blk-mq: split out tag
+initialization, support shared tags") would check tags->rqs is non-NULL and
+then dereference tags->rqs[].
 
-However, only tagset->queue_depth number of requests may be active at
-any given time. As such, only tagset->queue_depth number of static
-requests are required.
+Then in commit 2af8cbe30531 ("blk-mq: split tag ->rqs[] into two"), we
+started to dereference tags->static_rqs[], but continued to check non-NULL
+tags->rqs.
 
-The same goes for using an IO scheduler, which allocates a full set of
-static requests per hw queue per request queue.
+Check tags->static_rqs as non-NULL instead, which is more logical.
 
-This series very significantly reduces memory usage in both scenarios by
-allocating static rqs per tagset and per request queue, respectively,
-rather than per hw queue per tagset and per request queue.
+Signed-off-by: John Garry <john.garry@huawei.com>
+---
+ block/blk-mq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-For megaraid sas driver on my 128-CPU arm64 system with 1x SATA disk, we
-save approx. 300MB(!) [370MB -> 60MB]
-
-A couple of patches are marked as RFC, as maybe there is a better
-implementation approach.
-
-Any more testing would be appreciated also.
-
-John Garry (9):
-  blk-mq: Change rqs check in blk_mq_free_rqs()
-  block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ
-  blk-mq: Relocate shared sbitmap resize in blk_mq_update_nr_requests()
-  blk-mq: Add blk_mq_tag_resize_sched_shared_sbitmap()
-  blk-mq: Invert check in blk_mq_update_nr_requests()
-  blk-mq: Refactor blk_mq_{alloc,free}_rqs
-  blk-mq: Allocate per tag set static rqs for shared sbitmap
-  blk-mq: Allocate per request queue static rqs for shared sbitmap
-  blk-mq: Clear mappings for shared sbitmap sched static rqs
-
- block/blk-core.c       |   2 +-
- block/blk-mq-sched.c   |  57 ++++++++++++--
- block/blk-mq-sched.h   |   2 +-
- block/blk-mq-tag.c     |  22 ++++--
- block/blk-mq-tag.h     |   1 +
- block/blk-mq.c         | 165 +++++++++++++++++++++++++++++++----------
- block/blk-mq.h         |   9 +++
- drivers/block/rbd.c    |   2 +-
- include/linux/blk-mq.h |   4 +
- include/linux/blkdev.h |   6 +-
- 10 files changed, 215 insertions(+), 55 deletions(-)
-
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 2c4ac51e54eb..ae28f470893c 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2348,7 +2348,7 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+ {
+ 	struct page *page;
+ 
+-	if (tags->rqs && set->ops->exit_request) {
++	if (tags->static_rqs && set->ops->exit_request) {
+ 		int i;
+ 
+ 		for (i = 0; i < tags->nr_tags; i++) {
 -- 
 2.26.2
 
