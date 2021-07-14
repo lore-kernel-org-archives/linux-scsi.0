@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-24.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3D8AC1B08C
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:54:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85953C47E48
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:54:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AACA2613C3
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:54:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 721D960240
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:54:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240909AbhGNT5j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 15:57:39 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49772 "EHLO mail.kernel.org"
+        id S240977AbhGNT5l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 15:57:41 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49364 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240044AbhGNTvV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Jul 2021 15:51:21 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A6C5D613F9;
-        Wed, 14 Jul 2021 19:48:28 +0000 (UTC)
+        id S241125AbhGNTw0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Jul 2021 15:52:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B7C4261412;
+        Wed, 14 Jul 2021 19:48:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626292109;
+        s=k20201202; t=1626292126;
         bh=EOn9u7CR6/zKn+iKpJ5wP4mwdhdoEP+PkurRyOi8y00=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DChLe3WAtSEF0ex689hlhk7t0B3kkLBj5RwIxMr/31laxQl1b5j81v2htHpqtSIU3
-         Pi6vR9ancqCcN+Y3uHfuInim8HyTgsE5DV50C5BEf5zipjg9An1Vq8jD8QYfnVXtTf
-         vvaxuP1wPQC4+MOUdP9c+5uejOQszx+gyNlWCuq5J1n6U2e4VY6dmsZhL1ZDMHpAQz
-         /9NjDmhSU6i1cgwABTyW1qKcMidkeU00WPQ99LIPJyMdln6XFiSoZXy32Io3hplY4K
-         jlUgitZDE4Q9qomAheuZfD0f7WtQdvkrAm47m8MiBkMWkvoT0Ru6vdeUnaEa6xO++X
-         VkL0EljyfYceA==
+        b=jpiYSKLtz60+k0nuV34sK+KqUhgF+hE6ru8PafTBY84OqMV29QjcUp41UImhreH70
+         N4ef8rMLKzUt0bdKzZxcsCyEXa4vmF2oSpo+JNM/BVAie92vUMw9FCMnKcAXGE0D+M
+         Z8EisE9PMpta7ZoYIgszL5C+nejtuufVhc5StlGphW1ZUl/CTCfjzR6gh4kAxee1BV
+         NV0xZA3nNRS3RnpuwosYgIscjlCGT1OXno/5skJcwsJ01K9OM25CDr+ji570VKiO24
+         Z/v2OiWWkwGcp7EPP/wqwq91YAIyGxxgXS8YcXVOJ+Bo8uEHdj81xhjEOhi/tYV0nf
+         5ueHGBxMsdTXA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Colin Ian King <colin.king@canonical.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 16/18] scsi: aic7xxx: Fix unintentional sign extension issue on left shift of u8
-Date:   Wed, 14 Jul 2021 15:48:04 -0400
-Message-Id: <20210714194806.55962-16-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 09/10] scsi: aic7xxx: Fix unintentional sign extension issue on left shift of u8
+Date:   Wed, 14 Jul 2021 15:48:32 -0400
+Message-Id: <20210714194833.56197-9-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210714194806.55962-1-sashal@kernel.org>
-References: <20210714194806.55962-1-sashal@kernel.org>
+In-Reply-To: <20210714194833.56197-1-sashal@kernel.org>
+References: <20210714194833.56197-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
