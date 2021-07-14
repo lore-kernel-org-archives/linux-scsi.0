@@ -2,43 +2,43 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-24.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5D548C47E48
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:44:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F4199C47E4B
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:44:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48292613E6
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:44:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC7EF613F2
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:44:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235331AbhGNTrm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 15:47:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:37912 "EHLO mail.kernel.org"
+        id S237807AbhGNTrp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 15:47:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37944 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237778AbhGNTqi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Jul 2021 15:46:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 27A43613EA;
-        Wed, 14 Jul 2021 19:42:46 +0000 (UTC)
+        id S237852AbhGNTqm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Jul 2021 15:46:42 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A8F03613D4;
+        Wed, 14 Jul 2021 19:42:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626291766;
-        bh=jWSKzkJ1vsphKuArPC7UbEpDSmeIB1msXfkM5MF16iA=;
+        s=k20201202; t=1626291771;
+        bh=gAYJAht+ugGKIDyLtcTWxTkmXeHkTo1VFA86EfkkVBU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=abBdj9WKu9CtyNA6tOI3pbtZF9h/rvE1yWNpXlN40V1Pxq1sC0BNMjAYEVRe1iudA
-         yxKHI3PCWVxVV9707jquc173HHt2LJoTRQ2fKF4mpY2nawppwBlu/+kjAT4ODht+Sp
-         MB1SdqQIFx/7GMuUAxYwk5nkkXQFaE4QABNWDRKm3VFuEeMxv4s8WDM7kmVVy/6J4F
-         RyNd54dqa7rbR5WZRD3WL7C/RILPmnC8xJBtGY5cv5Z4tMcXL0SVx/XoMDpz3j09Or
-         6NSdZKgNn5C3nXiWekdJq0eh8Qpbxo6I3l9jc/lbqTVMb9+ArLO30Gi8cOT9GFlSbG
-         iBTOrgrKHIrDg==
+        b=dx5lizI4QdTvswMjSpXN08mUbgtq84HdiEeStyQNQ4A35ovvBi9r1RKoK/3D9jQFY
+         JNe9xOdut2FfF0PQxCbQ/ANwm5rixj199kvkPRe2b308v8pvWHbBYWsYECnclkD5aR
+         IRh2cvfvYLGLTcqsH/KoQZgeAB3aBuoZ3quoN6h+joeir+7XKMIkb2bSsi6pqaEmvP
+         gFU89p5p/TO4HoKm6D/wkX4UyBvf/pGCgQrHCrjhlOyp5bueWaF3C0eXKMfVGqPwTH
+         TgJ1zzzICUNGrcPeQoJ9WevHPUhvrgejYYfd/S/wa39pB6o+FQ4NncorCFrBEfeCoc
+         agGyrEwpvPd9A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Colin Ian King <colin.king@canonical.com>,
+Cc:     Javed Hasan <jhasan@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.12 092/102] scsi: aic7xxx: Fix unintentional sign extension issue on left shift of u8
-Date:   Wed, 14 Jul 2021 15:40:25 -0400
-Message-Id: <20210714194036.53141-92-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.12 095/102] scsi: libfc: Fix array index out of bound exception
+Date:   Wed, 14 Jul 2021 15:40:28 -0400
+Message-Id: <20210714194036.53141-95-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210714194036.53141-1-sashal@kernel.org>
 References: <20210714194036.53141-1-sashal@kernel.org>
@@ -50,43 +50,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Javed Hasan <jhasan@marvell.com>
 
-[ Upstream commit 332a9dd1d86f1e7203fc7f0fd7e82f0b304200fe ]
+[ Upstream commit b27c4577557045f1ab3cdfeabfc7f3cd24aca1fe ]
 
-The shifting of the u8 integer returned fom ahc_inb(ahc, port+3) by 24 bits
-to the left will be promoted to a 32 bit signed int and then sign-extended
-to a u64. In the event that the top bit of the u8 is set then all then all
-the upper 32 bits of the u64 end up as also being set because of the
-sign-extension. Fix this by casting the u8 values to a u64 before the 24
-bit left shift.
+Fix array index out of bound exception in fc_rport_prli_resp().
 
-[ This dates back to 2002, I found the offending commit from the git
-history git://git.kernel.org/pub/scm/linux/kernel/git/tglx/history.git,
-commit f58eb66c0b0a ("Update aic7xxx driver to 6.2.10...") ]
-
-Link: https://lore.kernel.org/r/20210621151727.20667-1-colin.king@canonical.com
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Link: https://lore.kernel.org/r/20210615165939.24327-1-jhasan@marvell.com
+Signed-off-by: Javed Hasan <jhasan@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Addresses-Coverity: ("Unintended sign extension")
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aic7xxx/aic7xxx_core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libfc/fc_rport.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_core.c b/drivers/scsi/aic7xxx/aic7xxx_core.c
-index 4b04ab8908f8..a396f048a031 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -493,7 +493,7 @@ ahc_inq(struct ahc_softc *ahc, u_int port)
- 	return ((ahc_inb(ahc, port))
- 	      | (ahc_inb(ahc, port+1) << 8)
- 	      | (ahc_inb(ahc, port+2) << 16)
--	      | (ahc_inb(ahc, port+3) << 24)
-+	      | (((uint64_t)ahc_inb(ahc, port+3)) << 24)
- 	      | (((uint64_t)ahc_inb(ahc, port+4)) << 32)
- 	      | (((uint64_t)ahc_inb(ahc, port+5)) << 40)
- 	      | (((uint64_t)ahc_inb(ahc, port+6)) << 48)
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 56003208d2e7..06e75425d5e3 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1162,6 +1162,7 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 		resp_code = (pp->spp.spp_flags & FC_SPP_RESP_MASK);
+ 		FC_RPORT_DBG(rdata, "PRLI spp_flags = 0x%x spp_type 0x%x\n",
+ 			     pp->spp.spp_flags, pp->spp.spp_type);
++
+ 		rdata->spp_type = pp->spp.spp_type;
+ 		if (resp_code != FC_SPP_RESP_ACK) {
+ 			if (resp_code == FC_SPP_RESP_CONF)
+@@ -1184,11 +1185,13 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 		/*
+ 		 * Call prli provider if we should act as a target
+ 		 */
+-		prov = fc_passive_prov[rdata->spp_type];
+-		if (prov) {
+-			memset(&temp_spp, 0, sizeof(temp_spp));
+-			prov->prli(rdata, pp->prli.prli_spp_len,
+-				   &pp->spp, &temp_spp);
++		if (rdata->spp_type < FC_FC4_PROV_SIZE) {
++			prov = fc_passive_prov[rdata->spp_type];
++			if (prov) {
++				memset(&temp_spp, 0, sizeof(temp_spp));
++				prov->prli(rdata, pp->prli.prli_spp_len,
++					   &pp->spp, &temp_spp);
++			}
+ 		}
+ 		/*
+ 		 * Check if the image pair could be established
 -- 
 2.30.2
 
