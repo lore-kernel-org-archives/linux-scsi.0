@@ -2,112 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D43E3C11F66
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 18:26:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF44C07E9A
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 18:28:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD0C3613C8
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 18:26:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 976F4613C5
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 18:28:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240041AbhGNS3U (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 14:29:20 -0400
-Received: from mail-oi1-f169.google.com ([209.85.167.169]:40915 "EHLO
-        mail-oi1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240069AbhGNS3S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 14:29:18 -0400
-Received: by mail-oi1-f169.google.com with SMTP id l26so3314214oic.7;
-        Wed, 14 Jul 2021 11:26:25 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=L5C7sNY8TB8NPeFGL9sYtQQ8gOiI4hebauC48DXYqLw=;
-        b=qNzqeJCaD6KrKxNweCdDhWl3hVReBqg8TLQKLlDZ6Frypg4GnaicU9dj+dXpepQNfj
-         CYWw4reeK2USblBevTB2fcSLkeMf0SET7cOa0QsGaz11jC1Xv5xvbAukn7QnWqAVVxWc
-         zoADW4XfS0Cze1VIAGUO20YoFfp91dLPKh4uGgf4wwGIaNP0uweCfOMEmlKknX+1/6Ic
-         feIAV8hoY2gVzJDDpIe4JP6a2C2geL+/0CDIYTYrYFb4mMtYgyYzH3kCAHYyL2GPy3Sr
-         CiZ4FFVUcNzibZuwfNPWTlEOsy/c6gmeZk6UktiTee4/6V6aZpa0fLQBBhMEHfYWwiM/
-         I5qA==
-X-Gm-Message-State: AOAM5327q5nWk2JXnZ4dgjU9KZ41G0FkAIpRAqq2pdT229EnUQ60ZVaI
-        cG1gf1ryEWQEf+/CMuUFlzTxBtYZqyAVfJGe2cc=
-X-Google-Smtp-Source: ABdhPJytKbKxR4JGMpQiSKO3EgwP/rucDajdJBRhLTyT4fycctOoVGx8u5M8vo8so275hBs1Y9CdCgTUAOM34EMbgJQ=
-X-Received: by 2002:aca:3502:: with SMTP id c2mr1867706oia.157.1626287185145;
- Wed, 14 Jul 2021 11:26:25 -0700 (PDT)
+        id S239944AbhGNSbk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 14:31:40 -0400
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:55496 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230080AbhGNSbk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 14:31:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1626287328; x=1657823328;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=hXxOvXw4eeJpjDBFqXC+wHjs9TywmXrN9BduamjpANo=;
+  b=mbWddmUBwDQEuKk1RrHIBmEXbWH8Quw1aiD8L8pHLeLXFQlH1aLdabif
+   4FPA0lv9NPMmUKNxD1yP3RqhHNDekhJ4DVKopcS8M3y6zdjY4f6uLJjyr
+   d7xFMy5is93NJJkT0+/xMReGYobY1TZPmG/xZcPJYTxi35euCpELU5pdB
+   mWNX1xftWyGQ+i4/Od0HqsRpCWGZnjUJ+T25efAw56C7YsKjyBihgLWeb
+   AiICXL2BLwjpVtqu6h5GQeXIeZBXb+K+bx7Z6bFa0ggdlDcIxS7o7hEQT
+   3A5wRCFxVho74mU6XML3gLnwS6nSHHcaIIjoAeDyBlxFVAgznJ+jv+hgo
+   Q==;
+IronPort-SDR: uf8EjJDclI18xmegvKNl088WOALhUrO7tBiGBr49v6XyTzkPyGKIQujuWRYbmSTnJqRUbwAtfj
+ Fg5H+HNZWClFogcgVxzfA/2BrLfRDOFDAr1dj+XoDfV3LSDOwcvBqn9+pTb/byHjS3E0tnMKVB
+ yl6vqut+o0YmyVUSpgYCHifzGszFEw/GaxUQZF31JAkoEQPmkBSqw5VjBf7+vymGqSp84IrwE5
+ ahm5g7D+tE6KawofbTY6YWIKI24q+f32nDKyUUQH32q7XBbWFjgC9h7Ke529qXG2LxfVTpY8yQ
+ sr8=
+X-IronPort-AV: E=Sophos;i="5.84,239,1620716400"; 
+   d="scan'208";a="135875338"
+Received: from f5out.microchip.com (HELO smtp.microsemi.com) ([198.175.253.81])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 14 Jul 2021 11:28:47 -0700
+Received: from AUSMBX1.microsemi.net (10.10.76.217) by AVMBX1.microsemi.net
+ (10.10.46.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Wed, 14 Jul
+ 2021 11:28:47 -0700
+Received: from brunhilda.pdev.net (10.238.32.34) by ausmbx1.microsemi.net
+ (10.10.76.217) with Microsoft SMTP Server id 15.1.2176.2 via Frontend
+ Transport; Wed, 14 Jul 2021 11:28:47 -0700
+Received: by brunhilda.pdev.net (Postfix, from userid 1467)
+        id 40494702821; Wed, 14 Jul 2021 13:28:47 -0500 (CDT)
+From:   Don Brace <don.brace@microchip.com>
+To:     <hch@infradead.org>, <martin.petersen@oracle.com>,
+        <jejb@linux.vnet.ibm.com>, <linux-scsi@vger.kernel.org>
+CC:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
+        <mike.mcgowen@microchip.com>, <murthy.bhat@microchip.com>,
+        <balsundar.p@microchip.com>, <joseph.szczypek@hpe.com>,
+        <jeff@canonical.com>, <POSWALD@suse.com>,
+        <john.p.donnelly@oracle.com>, <mwilck@suse.com>,
+        <pmenzel@molgen.mpg.de>, <linux-kernel@vger.kernel.org>
+Subject: [smartpqi updates V3 PATCH 4/9] smartpqi: change Kconfig menu entry to microchip
+Date:   Wed, 14 Jul 2021 13:28:42 -0500
+Message-ID: <20210714182847.50360-5-don.brace@microchip.com>
+X-Mailer: git-send-email 2.28.0.rc1.9.ge7ae437ac1
+In-Reply-To: <20210714182847.50360-1-don.brace@microchip.com>
+References: <20210714182847.50360-1-don.brace@microchip.com>
 MIME-Version: 1.0
-References: <20210710103819.12532-1-adrian.hunter@intel.com> <20210710103819.12532-3-adrian.hunter@intel.com>
-In-Reply-To: <20210710103819.12532-3-adrian.hunter@intel.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Wed, 14 Jul 2021 20:26:14 +0200
-Message-ID: <CAJZ5v0gCiHucpwejmHEJFgzUCPvWMXfth1JEUiAvLR=U-c9DrA@mail.gmail.com>
-Subject: Re: [PATCH V3 2/3] driver core: Add ability to delete device links of
- unregistered devices
-To:     Adrian Hunter <adrian.hunter@intel.com>
-Cc:     "Rafael J . Wysocki" <rafael@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Saravana Kannan <saravanak@google.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Linux PM <linux-pm@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Jul 10, 2021 at 12:38 PM Adrian Hunter <adrian.hunter@intel.com> wrote:
->
-> Managed device links are deleted by device_del(). However it is possible to
-> add a device link to a consumer before device_add(), and then discover an
+Change Microsemi to Microchip
+---
+ drivers/scsi/smartpqi/Kconfig | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-I would say "discovering an error"
+diff --git a/drivers/scsi/smartpqi/Kconfig b/drivers/scsi/smartpqi/Kconfig
+index eac7baecf42f..6f83e2df4d64 100644
+--- a/drivers/scsi/smartpqi/Kconfig
++++ b/drivers/scsi/smartpqi/Kconfig
+@@ -38,14 +38,14 @@
+ # HEREUNDER, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES
+ 
+ config SCSI_SMARTPQI
+-	tristate "Microsemi PQI Driver"
++	tristate "Microchip PQI Driver"
+ 	depends on PCI && SCSI && !S390
+ 	select SCSI_SAS_ATTRS
+ 	select RAID_ATTRS
+ 	help
+-	This driver supports Microsemi PQI controllers.
++	This driver supports Microchip PQI controllers.
+ 
+-	<http://www.microsemi.com>
++	<http://www.microchip.com>
+ 
+ 	To compile this driver as a module, choose M here: the
+ 	module will be called smartpqi.
+-- 
+2.28.0.rc1.9.ge7ae437ac1
 
-> error prevents the device from being used. In that case normally references
-> to the device would be dropped and the device would be deleted. However the
-> device link holds a reference to the device, so the device link and device
-> remain indefinitely (unless the supplier is deleted).
->
-> Amend device link removal to accept removal of a link with an
-> unregistered consumer device.
->
-> Suggested-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-> Fixes: b294ff3e34490 ("scsi: ufs: core: Enable power management for wlun")
-
-This patch by itself doesn't fix the above one, so the tag doesn't
-seem to be suitable here.
-
-Frankly, I would consider folding it into the third patch in the
-series in which case please feel free to add
-
-Reviewed-by: Rafael J. Wysocki <rafael@kernel.org>
-
-to the resulting combo patch.
-
-> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-> ---
->  drivers/base/core.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/base/core.c b/drivers/base/core.c
-> index 2de8f7d8cf54..983e895d4ced 100644
-> --- a/drivers/base/core.c
-> +++ b/drivers/base/core.c
-> @@ -887,6 +887,8 @@ static void device_link_put_kref(struct device_link *link)
->  {
->         if (link->flags & DL_FLAG_STATELESS)
->                 kref_put(&link->kref, __device_link_del);
-> +       else if (!device_is_registered(link->consumer))
-> +               __device_link_del(&link->kref);
->         else
->                 WARN(1, "Unable to drop a managed device link reference\n");
->  }
-> --
-> 2.17.1
->
