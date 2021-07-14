@@ -2,154 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52E55C12002
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 21:06:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46C2DC12002
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 21:10:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AC82613D6
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 21:06:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 23DF3613DA
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 21:10:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230209AbhGNVJK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 17:09:10 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:55180 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235152AbhGNVJJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 17:09:09 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 9E5D2202D5;
-        Wed, 14 Jul 2021 21:06:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1626296776; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5DJb0dKj4aj+q50I6rF1YT6HHWwJTgnoT08vDnIwjk0=;
-        b=N4e3Sv2w/cFGNB/z3Qom9BPATinh/1NLh41GLEPvLbD0F3ZZUBQGxFIqqqIdzAnrFdE/qu
-        ZgF5H7FmTfKD7tIOP12Bg/ip8s4WlY5W2tByf1cooTmma70ZmkILK1vnX7PlG0bLji6+sf
-        oP/g7+xkwLygS3H9IvjrEvSjvX89wiw=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 733A513C14;
-        Wed, 14 Jul 2021 21:06:16 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id 5B77GchR72CUYAAAMHmgww
-        (envelope-from <mwilck@suse.com>); Wed, 14 Jul 2021 21:06:16 +0000
-Message-ID: <2733dbd6e8da6510c1b5f3407661717fa3f1d52c.camel@suse.com>
-Subject: Re: [PATCH 1/1]: scsi dm-mpath do not fail paths which are in ALUA
- state transitioning
-From:   Martin Wilck <mwilck@suse.com>
-To:     Brian Bunker <brian@purestorage.com>
-Cc:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-Date:   Wed, 14 Jul 2021 23:06:15 +0200
-In-Reply-To: <CAHZQxy++GoK=XJv1UoO1zGvoUNfKK6RrASbctGeUA6zt80RuhA@mail.gmail.com>
-References: <CAHZQxyKJ1qFatzhR-k19PXjAPo7eC0ZgwgaGKwfndB=jEO8mRQ@mail.gmail.com>
-         <32a96fc27c250fb5772a0b301576ad702b8ea934.camel@suse.com>
-         <CAHZQxyLmDFf+7tmZQFm7e6Xt97vSuav0f8kBbZjcwaufQX+x0w@mail.gmail.com>
-         <82ec344b73abce8460a82474b6f150fbc576943c.camel@suse.com>
-         <CAHZQxyLEsQWjTV_P8YPhConyQiOOtzc+oNmuT=Oi1=WMyysmCg@mail.gmail.com>
-         <CAHZQxy+crC90wWuHMKA=9CE-gHSiDTEC_jQDnH0Otx=R7PM-SQ@mail.gmail.com>
-         <3ec7da52f5645d2cd139fce7f00243f4746e9b18.camel@suse.com>
-         <CAHZQxy++GoK=XJv1UoO1zGvoUNfKK6RrASbctGeUA6zt80RuhA@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-15"
-User-Agent: Evolution 3.40.2 
+        id S235198AbhGNVNC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 17:13:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42834 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234356AbhGNVNC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 17:13:02 -0400
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 26A0CC06175F
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2021 14:10:10 -0700 (PDT)
+Received: by mail-ed1-x52f.google.com with SMTP id h8so5079123eds.4
+        for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2021 14:10:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=9uzONcSIwSvl/pOxJOzDp3VJ9SlzLyneKW4SatXrve0=;
+        b=pF78DQd3hRcf0zfw2/aK2cvyFbKaxhNFM84q+NyCz6khrdCWBL0RQfIIAQ18tWkjgk
+         w0oCVNiG4KBuOcX8yJ05jW7+ULPIRsGE81/YxRRwTVuoTqIb4doWhthGyk+L0Ck2XSmw
+         sfV5WhE7w+w0ml3kUmEgHq/drUYhfzv68v0M/74TT/uRLlDyvD7wIXbUQeEAMInvCTQ+
+         aCXOnzPijORzbLuJltQrChrLuPjrEs58ztFRwc3p0ZhhEtPaPk7pHiFBSZfqltFXBuzd
+         fo6W7juN70fUmtngdPyPmyelVV/iQFrhQjdR+EU5qISBZGJKGGsSpr9tgW6wgrKwJL9X
+         J9QA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=9uzONcSIwSvl/pOxJOzDp3VJ9SlzLyneKW4SatXrve0=;
+        b=s6iNGmBSTHZ+kwiYjTbP6RlBt9RxGPGUuvm9eOS3+M139fMaDZsR5L99GVOTg3moFb
+         UtGlVikLZWxzB30/L1DPo/5Ica+RX1AwAH7E9TWGszmQP0DWzTw3wdzSK7Zmh2EmK98b
+         YCJE6zpJZ2uA8vCukoG8kJSz5KqlDbzVfKghT7CQ0biS44VbJAVuGShrEQnnQsQVhl6L
+         uiu2Nx3t53JouZqQTJGBh3BvQs9H8TZHqJP6ThFknEC+RFbqP6CSBmVxIR1G4MUZUh1S
+         ZyglfTBcE0RlawYmuAQzrGG6AGRgZfHRVetRLhkCJjrvizTS76uIsVW0GbvTPr8ihlx9
+         0DTQ==
+X-Gm-Message-State: AOAM5308RB84tbQqpfbx01SIZ7WxztnGn3Kgz7OvYIM6TBn3phhsOG+S
+        zJappCP6UUyE9G4bjBpY6JM=
+X-Google-Smtp-Source: ABdhPJzBoonaeFgvZVh++0NBlAbhFE7XtYJhbj1aiIVZwDCXznHtMxNNtlEI2LlwNgWKQv0FpycQKQ==
+X-Received: by 2002:a05:6402:b4e:: with SMTP id bx14mr432262edb.158.1626297008773;
+        Wed, 14 Jul 2021 14:10:08 -0700 (PDT)
+Received: from ubuntu-laptop (ip5f5bec65.dynamic.kabel-deutschland.de. [95.91.236.101])
+        by smtp.googlemail.com with ESMTPSA id ce21sm1168195ejc.25.2021.07.14.14.10.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 14 Jul 2021 14:10:08 -0700 (PDT)
+Message-ID: <fa22a560c024cb62c397f2f07b7d6269c7ff1d0d.camel@gmail.com>
+Subject: Re: [PATCH v2 06/19] scsi: ufs: Remove ufshcd_valid_tag()
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Akinobu Mita <akinobu.mita@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Date:   Wed, 14 Jul 2021 23:10:06 +0200
+In-Reply-To: <20210709202638.9480-8-bvanassche@acm.org>
+References: <20210709202638.9480-1-bvanassche@acm.org>
+         <20210709202638.9480-8-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mi, 2021-07-14 at 11:13 -0700, Brian Bunker wrote:
-> On Wed, Jul 14, 2021 at 1:39 AM Martin Wilck <mwilck@suse.com> wrote:
+On Fri, 2021-07-09 at 13:26 -0700, Bart Van Assche wrote:
+> scsi_add_host() allocates shost->can_queue tags. ufshcd_init() sets
 > 
-> > 
-> > When a command fails with ALUA TRANSITIONING status, we must make
-> > sure
-> > that:
-> > 
-> >  1) The command itself is not retried on the path at hand, neither
-> > on
-> > the SCSI layer nor on the blk-mq layer. The former was the case
-> > anyway,
-> > the latter is guaranteed by 0d88232010d5 ("scsi: core: Return
-> > BLK_STS_AGAIN for ALUA transitioning").
-> > 
-> >  2) No new commands are sent down this path until it reaches a
-> > usable
-> > final state. This is achieved on the SCSI layer by alua_prep_fn(),
-> > with
-> > 268940b80fa4 ("scsi: scsi_dh_alua: Return BLK_STS_AGAIN for ALUA
-> > transitioning state").
-> > 
-> > These two items would still be true with your patch applied.
-> > However,
-> > the problem is that if the path isn't failed, dm-multipath would
-> > continue sending I/O down this path. If the path isn't set to
-> > failed
-> > state, the path selector algorithm may or may not choose a
-> > different
-> > path next time. In the worst case, dm-multipath would busy-loop
-> > retrying the I/O on the same path. Please consider the following:
-> > 
-> > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> > index 86518aec32b4..3f3a89fc2b3b 100644
-> > --- a/drivers/md/dm-mpath.c
-> > +++ b/drivers/md/dm-mpath.c
-> > @@ -1654,12 +1654,12 @@ static int multipath_end_io(struct
-> > dm_target *ti, struct request *clone,
-> >         if (error && blk_path_error(error)) {
-> >                 struct multipath *m = ti->private;
-> > 
-> > -               if (error == BLK_STS_RESOURCE)
-> > +               if (error == BLK_STS_RESOURCE || error ==
-> > BLK_STS_AGAIN)
-> >                         r = DM_ENDIO_DELAY_REQUEUE;
-> >                 else
-> >                         r = DM_ENDIO_REQUEUE;
-> > 
-> > -               if (pgpath)
-> > +               if (pgpath && (error != BLK_STS_AGAIN))
-> >                         fail_path(pgpath);
-> > 
-> > This way we'd avoid busy-looping by delaying the retry. This would
-> > cause I/O delay in the case where some healthy paths are still in
-> > the
-> > same dm-multipath priority group as the transitioning path. I
-> > suppose
-> > this is a minor problem, because in the default case for ALUA
-> > (group_by_prio in multipathd), all paths in the PG would have
-> > switched
-> > to "transitioning" simultaneously.
-> > 
-> > Note that multipathd assigns priority 0 (the same prio as
-> > "unavailable") if it happens to notice a "transitioning" path. This
-> > is
-> > something we may want to change eventually. In your specific case,
-> > it
-> > would cause the paths to be temporarily re-grouped, all paths being
-> > moved to the same non-functional PG. The way you describe it, for
-> > your
-> > storage at least, "transitioning" should be assigned a higher
-> > priority.
-> > > 
-> > 
+> shost->can_queue to hba->nutrs. In other words, we know that tag
+> values
 > 
-> Yes. I tried it with this change and it works. Should I re-submit
-> this
-> modified version or do you want to do it? 
+> will less than hba->nutrs. Hence remove the checks that verify that
+> 
+> blk_get_request() returns a tag less than hba->nutrs. This check
+> 
+> was introduced by commit 14497328b6a6 ("scsi: ufs: verify command tag
+> 
+> validity").
+> 
+> 
+> 
+> Keep the tag >= 0 check because it helps to detect use-after-free
+> issues.
+> 
+> 
+> 
+> CC: Avri Altman <avri.altman@wdc.com>
+> 
+> Cc: Alim Akhtar <alim.akhtar@samsung.com>
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Yes, please.
+Bart,
+you need to rebase this patch.
 
-Regards,
-Martin
-
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
