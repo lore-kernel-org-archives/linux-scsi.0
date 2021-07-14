@@ -2,80 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_IN_DEF_DKIM_WL
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F84EC07E9A
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 15:06:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F03B3C07E9A
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 15:11:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03AA8613CF
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 15:06:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D94FC613D1
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 15:11:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239545AbhGNPJp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 11:09:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41258 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232230AbhGNPJn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 11:09:43 -0400
-Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C9FAC061760
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2021 08:06:51 -0700 (PDT)
-Received: by mail-ot1-x331.google.com with SMTP id 7-20020a9d0d070000b0290439abcef697so2806094oti.2
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Jul 2021 08:06:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=8YiH8+P/GYggmS9FkGJgJ7JmHee/6ylMrnanql7uyQo=;
-        b=LP05I3DgupzAgfL4J5btk9IhIEy02Yv9jrcfj9/XbgglJLC745V5qheogVfIs4Ow0Q
-         hxlHqnYGaKKoMU+US66ZRH23IT7uBIQFjxJ4PFF4Fno1P3rrfY7lBBYbVNI2HyKTraAy
-         H898D6Llhi15EGceNXC21s7ZwQE6C2YXv7Ku+RupGb5kAE2Wl0CTuRTiH7z/Ly1iQSfo
-         jp5t6bnTJ2sEwzwUoZdOlLNhgfKGGPoWj0zVS0Ea1T/3ntzi5+q8JVtGQIIfL4Wh0IpN
-         03DMNL3VYn55sQB8yv85ywC6VPv+7whiWHTpWXZxMJti315W++e3+7MPiE0Co6wfa/+c
-         68Xg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=8YiH8+P/GYggmS9FkGJgJ7JmHee/6ylMrnanql7uyQo=;
-        b=foaa0aBq2dHrwXbIQJ/X9AoaHYgFSw8EClkF0dlpABXKhSlpFHIueICaW8FKgEQfrS
-         zmYBl3wabkUYFI1cr1lRJh1c8scpYVoTVNTHcoSzrtt7Xx0h0Av5heDPPGgtoKNm8hhj
-         SDrJctgptt5EpxgZt+T/pTVzyCClGQrhVHguLS6h/QIv21xzzznYcMiYC6CF9m8wSoWd
-         k2aGq+XYkGyu1d08Y4AnYxqQgP+2Z76YxnJ76pbk6Z8HWF4Mb5ZAxqWAeICF0nKDquI5
-         BHeuwD+jbyflrXcyVaNuUsS4BJUqWndO6fx/TNHjnUr7/a50rTPDvxhNXPq9XOOLvDSg
-         qwGA==
-X-Gm-Message-State: AOAM5330gG8qPB6pihh7uxeAmVp1tHl/3MWhdpzB/41TXBbXp5oyWDdK
-        pjJ9B0dKxPfhyuPqfEQGAVEdNBwM8WY/rwg/0Vd6Kg==
-X-Google-Smtp-Source: ABdhPJxxWjFSbu10XUt6ENkGkcYIsqHhifAJ2KXMlLHv0EUApj91lhGmpBGjyb7d74F82HXlMaGXswhZJJ3WqsqIgRg=
-X-Received: by 2002:a9d:d04:: with SMTP id 4mr8898501oti.251.1626275210727;
- Wed, 14 Jul 2021 08:06:50 -0700 (PDT)
+        id S239563AbhGNPOH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 11:14:07 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3403 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232360AbhGNPOH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Jul 2021 11:14:07 -0400
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GQ12W2F5Dz6K604;
+        Wed, 14 Jul 2021 23:02:43 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Wed, 14 Jul 2021 17:11:13 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.2; Wed, 14 Jul 2021 16:11:11 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>,
+        <kashyap.desai@broadcom.com>, <hare@suse.de>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH 0/9] blk-mq: Reduce static requests memory footprint for shared sbitmap
+Date:   Wed, 14 Jul 2021 23:06:26 +0800
+Message-ID: <1626275195-215652-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-References: <20210714143239.2529044-1-geert@linux-m68k.org> <CAMuHMdWv8-6fBDLb8cFvvLxsb7RkEVkLNUBeCm-9yN9_iJkg-g@mail.gmail.com>
-In-Reply-To: <CAMuHMdWv8-6fBDLb8cFvvLxsb7RkEVkLNUBeCm-9yN9_iJkg-g@mail.gmail.com>
-From:   Marco Elver <elver@google.com>
-Date:   Wed, 14 Jul 2021 17:06:23 +0200
-Message-ID: <CANpmjNO7reWQQCce+grJsfEjNcGzvrrsF2450DhE4CzCkvFt0w@mail.gmail.com>
-Subject: Re: Build regressions/improvements in v5.14-rc1
-To:     Geert Uytterhoeven <geert@linux-m68k.org>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Steen Hegelund <Steen.Hegelund@microchip.com>,
-        linux-um <linux-um@lists.infradead.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        kasan-dev <kasan-dev@googlegroups.com>,
-        netdev <netdev@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 14 Jul 2021 at 16:44, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-[...]
->   + /kisskb/src/include/linux/compiler_attributes.h: error:
-> "__GCC4_has_attribute___no_sanitize_coverage__" is not defined
-> [-Werror=undef]:  => 29:29
+Currently a full set of static requests are allocated per hw queue per
+tagset when shared sbitmap is used.
 
-https://lkml.kernel.org/r/20210714150159.2866321-1-elver@google.com
+However, only tagset->queue_depth number of requests may be active at
+any given time. As such, only tagset->queue_depth number of static
+requests are required.
 
-Thanks for the report.
+The same goes for using an IO scheduler, which allocates a full set of
+static requests per hw queue per request queue.
+
+This series very significantly reduces memory usage in both scenarios by
+allocating static rqs per tagset and per request queue, respectively,
+rather than per hw queue per tagset and per request queue.
+
+For megaraid sas driver on my 128-CPU arm64 system with 1x SATA disk, we
+save approx. 300MB(!) [370MB -> 60MB]
+
+A couple of patches are marked as RFC, as maybe there is a better
+implementation approach.
+
+Any more testing would be appreciated also.
+
+John Garry (9):
+  blk-mq: Change rqs check in blk_mq_free_rqs()
+  block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ
+  blk-mq: Relocate shared sbitmap resize in blk_mq_update_nr_requests()
+  blk-mq: Add blk_mq_tag_resize_sched_shared_sbitmap()
+  blk-mq: Invert check in blk_mq_update_nr_requests()
+  blk-mq: Refactor blk_mq_{alloc,free}_rqs
+  blk-mq: Allocate per tag set static rqs for shared sbitmap
+  blk-mq: Allocate per request queue static rqs for shared sbitmap
+  blk-mq: Clear mappings for shared sbitmap sched static rqs
+
+ block/blk-core.c       |   2 +-
+ block/blk-mq-sched.c   |  57 ++++++++++++--
+ block/blk-mq-sched.h   |   2 +-
+ block/blk-mq-tag.c     |  22 ++++--
+ block/blk-mq-tag.h     |   1 +
+ block/blk-mq.c         | 165 +++++++++++++++++++++++++++++++----------
+ block/blk-mq.h         |   9 +++
+ drivers/block/rbd.c    |   2 +-
+ include/linux/blk-mq.h |   4 +
+ include/linux/blkdev.h |   6 +-
+ 10 files changed, 215 insertions(+), 55 deletions(-)
+
+-- 
+2.26.2
+
