@@ -7,40 +7,38 @@ X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34D16C12002
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:54:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ADD8C1B08C
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:54:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1E39C6100A
-	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:54:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 38E86613CA
+	for <linux-scsi@archiver.kernel.org>; Wed, 14 Jul 2021 19:54:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239544AbhGNT5L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 14 Jul 2021 15:57:11 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46236 "EHLO mail.kernel.org"
+        id S239930AbhGNT5M (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 14 Jul 2021 15:57:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46244 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240291AbhGNTti (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Jul 2021 15:49:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 9808461430;
-        Wed, 14 Jul 2021 19:44:59 +0000 (UTC)
+        id S240299AbhGNTtj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Jul 2021 15:49:39 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A37C46142F;
+        Wed, 14 Jul 2021 19:45:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626291900;
-        bh=I3Ug9ORhyZx+aWxRuZx6kk5NUv0HFnwkrWAbBsEC8Ac=;
+        s=k20201202; t=1626291904;
+        bh=oKjWj7Onv+W+k1uW4T3TWlfaX1bu26QRsVcZxGXlQgo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=IMn/fqGPKSl6Q+by1LI4uwsyXoSttQ/NpV8JKwN+FL+WdxygfW2wE+oMWBvm5+E6K
-         3C5eM0DGRCFXmush47ByMR6pnou7dEFxl8j2GB5BKaz+9VqajPicM+6H12aIcAtDVF
-         8WdVHTwCSjp4r+n5ZB65HVfW+BOvYesMLOdXdVzoo1vVV3kU4go12sJu74QRgTL8HE
-         KCw/B7Cqsq6daGIegFVezz90nfS0RMzfUJ11axKKo2Lg0hUWMnbgGeCQOcQdx1IRo/
-         We9rlPLOOMro6o8duq+kKLccq/l77WnhtTmveZjY6Ukt5JOpJbQciVN6Ewos054oMJ
-         hbfGySj5++yYQ==
+        b=bOKChI4ca4e3Tb44jEqdo6TPW4CY/gXDuzT1BqSw4wa5LpXtVlxYXmTccuRUCN7kU
+         jvmBuzG71czgc9eybXWL4YpRy/l6gYZO2yxhu/zSqmjxgrbsq7OeoivtV29UUdBvRZ
+         /dcgcEjPy1nR0Kw/EKmQFfXYdj8AGX96sqJ0m8sXAjrQaYov/7rZ1XiWQAJRZWI2vT
+         3UfEat2SkbSl1Ttn//p9lq249gwYIWqmIkXlrIhzKqkunsIeItnZCU57bQ5Ngd06hy
+         fkpKnQ5etA14J0eB0ta+EJ3HlbeeLSS0+cQSn48lPjnOod5EMJ0HM5bOsr+mP9kVPX
+         JQvzdZTIU5PfQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yufen Yu <yuyufen@huawei.com>, Wu Bo <wubo40@huawei.com>,
-        John Garry <john.garry@huawei.com>,
-        Jason Yan <yanaijie@huawei.com>,
+Cc:     Javed Hasan <jhasan@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 79/88] scsi: libsas: Add LUN number check in .slave_alloc callback
-Date:   Wed, 14 Jul 2021 15:42:54 -0400
-Message-Id: <20210714194303.54028-79-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 82/88] scsi: qedf: Add check to synchronize abort and flush
+Date:   Wed, 14 Jul 2021 15:42:57 -0400
+Message-Id: <20210714194303.54028-82-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210714194303.54028-1-sashal@kernel.org>
 References: <20210714194303.54028-1-sashal@kernel.org>
@@ -52,163 +50,96 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Yufen Yu <yuyufen@huawei.com>
+From: Javed Hasan <jhasan@marvell.com>
 
-[ Upstream commit 49da96d77938db21864dae6b7736b71e96c1d203 ]
+[ Upstream commit df99446d5c2a63dc6e6920c8090da0e9da6539d5 ]
 
-Offlining a SATA device connected to a hisi SAS controller and then
-scanning the host will result in detecting 255 non-existent devices:
+A race condition was observed between qedf_cleanup_fcport() and
+qedf_process_error_detect()->qedf_initiate_abts():
 
-  # lsscsi
-  [2:0:0:0]    disk    ATA      Samsung SSD 860  2B6Q  /dev/sda
-  [2:0:1:0]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdb
-  [2:0:2:0]    disk    SEAGATE  ST600MM0006      B001  /dev/sdc
-  # echo "offline" > /sys/block/sdb/device/state
-  # echo "- - -" > /sys/class/scsi_host/host2/scan
-  # lsscsi
-  [2:0:0:0]    disk    ATA      Samsung SSD 860  2B6Q  /dev/sda
-  [2:0:1:0]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdb
-  [2:0:1:1]    disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdh
-  ...
-  [2:0:1:255]  disk    ATA      WDC WD2003FYYS-3 1D01  /dev/sdjb
+ [2069091.203145] BUG: unable to handle kernel NULL pointer dereference at 0000000000000030
+ [2069091.213100] IP: [<ffffffffc0666cc6>] qedf_process_error_detect+0x96/0x130 [qedf]
+ [2069091.223391] PGD 1943049067 PUD 194304e067 PMD 0
+ [2069091.233420] Oops: 0000 [#1] SMP
+ [2069091.361820] CPU: 1 PID: 14751 Comm: kworker/1:46 Kdump: loaded Tainted: P           OE  ------------   3.10.0-1160.25.1.el7.x86_64 #1
+ [2069091.388474] Hardware name: HPE Synergy 480 Gen10/Synergy 480 Gen10 Compute Module, BIOS I42 04/08/2020
+ [2069091.402148] Workqueue: qedf_io_wq qedf_fp_io_handler [qedf]
+ [2069091.415780] task: ffff9bb9f5190000 ti: ffff9bacaef9c000 task.ti: ffff9bacaef9c000
+ [2069091.429590] RIP: 0010:[<ffffffffc0666cc6>]  [<ffffffffc0666cc6>] qedf_process_error_detect+0x96/0x130 [qedf]
+ [2069091.443666] RSP: 0018:ffff9bacaef9fdb8  EFLAGS: 00010246
+ [2069091.457692] RAX: 0000000000000000 RBX: ffff9bbbbbfb18a0 RCX: ffffffffc0672310
+ [2069091.471997] RDX: 00000000000005de RSI: ffffffffc066e7f0 RDI: ffff9beb3f4538d8
+ [2069091.486130] RBP: ffff9bacaef9fdd8 R08: 0000000000006000 R09: 0000000000006000
+ [2069091.500321] R10: 0000000000001551 R11: ffffb582996ffff8 R12: ffffb5829b39cc18
+ [2069091.514779] R13: ffff9badab380c28 R14: ffffd5827f643900 R15: 0000000000000040
+ [2069091.529472] FS:  0000000000000000(0000) GS:ffff9beb3f440000(0000) knlGS:0000000000000000
+ [2069091.543926] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+ [2069091.558942] CR2: 0000000000000030 CR3: 000000193b9a2000 CR4: 00000000007607e0
+ [2069091.573424] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+ [2069091.587876] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+ [2069091.602007] PKRU: 00000000
+ [2069091.616010] Call Trace:
+ [2069091.629902]  [<ffffffffc0663969>] qedf_process_cqe+0x109/0x2e0 [qedf]
+ [2069091.643941]  [<ffffffffc0663b66>] qedf_fp_io_handler+0x26/0x60 [qedf]
+ [2069091.657948]  [<ffffffff85ebddcf>] process_one_work+0x17f/0x440
+ [2069091.672111]  [<ffffffff85ebeee6>] worker_thread+0x126/0x3c0
+ [2069091.686057]  [<ffffffff85ebedc0>] ? manage_workers.isra.26+0x2a0/0x2a0
+ [2069091.700033]  [<ffffffff85ec5da1>] kthread+0xd1/0xe0
+ [2069091.713891]  [<ffffffff85ec5cd0>] ? insert_kthread_work+0x40/0x40
 
-After a REPORT LUN command issued to the offline device fails, the SCSI
-midlayer tries to do a sequential scan of all devices whose LUN number is
-not 0. However, SATA does not support LUN numbers at all.
+Add check in qedf_process_error_detect(). When flush is active, let the
+cmds be completed from the cleanup contex.
 
-Introduce a generic sas_slave_alloc() handler which will return -ENXIO for
-SATA devices if the requested LUN number is larger than 0 and make libsas
-drivers use this function as their .slave_alloc callback.
-
-Link: https://lore.kernel.org/r/20210622034037.1467088-1-yuyufen@huawei.com
-Reported-by: Wu Bo <wubo40@huawei.com>
-Suggested-by: John Garry <john.garry@huawei.com>
-Reviewed-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Jason Yan <yanaijie@huawei.com>
-Signed-off-by: Yufen Yu <yuyufen@huawei.com>
+Link: https://lore.kernel.org/r/20210624171802.598-1-jhasan@marvell.com
+Signed-off-by: Javed Hasan <jhasan@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/aic94xx/aic94xx_init.c    | 1 +
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 1 +
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c | 1 +
- drivers/scsi/isci/init.c               | 1 +
- drivers/scsi/libsas/sas_scsi_host.c    | 9 +++++++++
- drivers/scsi/mvsas/mv_init.c           | 1 +
- drivers/scsi/pm8001/pm8001_init.c      | 1 +
- 8 files changed, 16 insertions(+)
+ drivers/scsi/qedf/qedf_io.c | 22 +++++++++++++++++++++-
+ 1 file changed, 21 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index a195bfe9eccc..7a78606598c4 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -53,6 +53,7 @@ static struct scsi_host_template aic94xx_sht = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler	= sas_eh_device_reset_handler,
- 	.eh_target_reset_handler	= sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-index 6c2a97f80b12..b997a190bd06 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v1_hw.c
-@@ -1769,6 +1769,7 @@ static struct scsi_host_template sht_v1_hw = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 6ef8730c61a6..b75d54339e40 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -3545,6 +3545,7 @@ static struct scsi_host_template sht_v2_hw = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-index e9a82a390672..50a1c3478a6e 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v3_hw.c
-@@ -3126,6 +3126,7 @@ static struct scsi_host_template sht_v3_hw = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/isci/init.c b/drivers/scsi/isci/init.c
-index 93bc9019667f..9d7cc62ace2e 100644
---- a/drivers/scsi/isci/init.c
-+++ b/drivers/scsi/isci/init.c
-@@ -167,6 +167,7 @@ static struct scsi_host_template isci_sht = {
- 	.eh_abort_handler		= sas_eh_abort_handler,
- 	.eh_device_reset_handler        = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler        = sas_eh_target_reset_handler,
-+	.slave_alloc			= sas_slave_alloc,
- 	.target_destroy			= sas_target_destroy,
- 	.ioctl				= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 1bf939818c98..ee44a0d7730b 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -911,6 +911,14 @@ void sas_task_abort(struct sas_task *task)
- 		blk_abort_request(sc->request);
- }
- 
-+int sas_slave_alloc(struct scsi_device *sdev)
-+{
-+	if (dev_is_sata(sdev_to_domain_dev(sdev)) && sdev->lun)
-+		return -ENXIO;
-+
-+	return 0;
-+}
-+
- void sas_target_destroy(struct scsi_target *starget)
+diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+index 4869ef813dc4..63f99f4eeed9 100644
+--- a/drivers/scsi/qedf/qedf_io.c
++++ b/drivers/scsi/qedf/qedf_io.c
+@@ -1520,9 +1520,19 @@ void qedf_process_error_detect(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
  {
- 	struct domain_device *found_dev = starget->hostdata;
-@@ -957,5 +965,6 @@ EXPORT_SYMBOL_GPL(sas_task_abort);
- EXPORT_SYMBOL_GPL(sas_phy_reset);
- EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
- EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
-+EXPORT_SYMBOL_GPL(sas_slave_alloc);
- EXPORT_SYMBOL_GPL(sas_target_destroy);
- EXPORT_SYMBOL_GPL(sas_ioctl);
-diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
-index 6aa2697c4a15..b03c0f35d7b0 100644
---- a/drivers/scsi/mvsas/mv_init.c
-+++ b/drivers/scsi/mvsas/mv_init.c
-@@ -46,6 +46,7 @@ static struct scsi_host_template mvs_sht = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 0c0c886c7371..13b8ddec6189 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -101,6 +101,7 @@ static struct scsi_host_template pm8001_sht = {
- 	.max_sectors		= SCSI_DEFAULT_MAX_SECTORS,
- 	.eh_device_reset_handler = sas_eh_device_reset_handler,
- 	.eh_target_reset_handler = sas_eh_target_reset_handler,
-+	.slave_alloc		= sas_slave_alloc,
- 	.target_destroy		= sas_target_destroy,
- 	.ioctl			= sas_ioctl,
- #ifdef CONFIG_COMPAT
+ 	int rval;
+ 
++	if (io_req == NULL) {
++		QEDF_INFO(NULL, QEDF_LOG_IO, "io_req is NULL.\n");
++		return;
++	}
++
++	if (io_req->fcport == NULL) {
++		QEDF_INFO(NULL, QEDF_LOG_IO, "fcport is NULL.\n");
++		return;
++	}
++
+ 	if (!cqe) {
+ 		QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_IO,
+-			  "cqe is NULL for io_req %p\n", io_req);
++			"cqe is NULL for io_req %p\n", io_req);
+ 		return;
+ 	}
+ 
+@@ -1538,6 +1548,16 @@ void qedf_process_error_detect(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
+ 		  le32_to_cpu(cqe->cqe_info.err_info.rx_buf_off),
+ 		  le32_to_cpu(cqe->cqe_info.err_info.rx_id));
+ 
++	/* When flush is active, let the cmds be flushed out from the cleanup context */
++	if (test_bit(QEDF_RPORT_IN_TARGET_RESET, &io_req->fcport->flags) ||
++		(test_bit(QEDF_RPORT_IN_LUN_RESET, &io_req->fcport->flags) &&
++		 io_req->sc_cmd->device->lun == (u64)io_req->fcport->lun_reset_lun)) {
++		QEDF_ERR(&qedf->dbg_ctx,
++			"Dropping EQE for xid=0x%x as fcport is flushing",
++			io_req->xid);
++		return;
++	}
++
+ 	if (qedf->stop_io_on_error) {
+ 		qedf_stop_all_io(qedf);
+ 		return;
 -- 
 2.30.2
 
