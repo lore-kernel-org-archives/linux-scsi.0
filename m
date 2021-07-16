@@ -2,201 +2,319 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25747C07E95
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jul 2021 08:59:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6CF6C07E95
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jul 2021 11:29:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0817261357
-	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jul 2021 08:59:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB0C9613FA
+	for <linux-scsi@archiver.kernel.org>; Fri, 16 Jul 2021 11:29:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238253AbhGPJC1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 16 Jul 2021 05:02:27 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:30730 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237916AbhGPJCZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jul 2021 05:02:25 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1626425972; x=1657961972;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=BIAp4iW3NKXGsIe4dBLCnWzi5ngxJr6Z+ZweKSNbV14=;
-  b=PDmq1/sbtoHNFQO/e3bY+ivruRNwvpEPXtsOO9BYQzM5tg3QlTlulHun
-   JS4RISPaTpBN1F8d1g/GzQ/8ZYtbP2kjxqIHA4wYB6yu6n5nIdgtrlp/P
-   YglEU+EIlfnAp136Cf3JtAkVzC7QoJNIBRjlsJXNG7JNlZ5Jsv5B9zhFJ
-   c32W26t6YnkshYc2VnIeC2XZ74TSyMjGln7jQQJOKMGsxdQHE2F3/kftx
-   UoGnLn33QbZaQmPF26fcFKgvL3yRFznUnOxAzsAZCRj6LEQMCezyh8nUo
-   G2Lbn3UiqGeMv3cQIwF3pgPHgSzvNOIX/125/LXKBuXefsVJMl/ani1J4
-   w==;
-X-IronPort-AV: E=Sophos;i="5.84,244,1620662400"; 
-   d="scan'208";a="175331267"
-Received: from mail-dm6nam12lp2176.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.176])
-  by ob1.hgst.iphmx.com with ESMTP; 16 Jul 2021 16:59:29 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HcpKTz9fJI3Te2z8UJVkDehEzp1KoSNwODLzs5J7+k9kBHvO2sh2xwQV2+OoZIPOFl07nMX7qy4ek2KimexRo69JJL2umJIB2dH6XT0byrmyFTrTOUrdPeZl6wtr1p1/vxrj2IdiKkQ70pnmK214pho42bVKulZL0zcAD6d90aZaDcPdPsN0eenxfyvlST4zkDEciBCzmJDGEb3GNhVHqLH25ys1H9g225C/Oj3stSqC1l3i5E4bAd/ICDeBPJMIpxtwUhO7r2Qq+kiNII9DWLx8zrkEx/SZIXHe5GB3TiTldR3U18Umstf10H6sY/pOGyY9o8oZo5lpf+bmAcIW8A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lf/HWhWxPEmHkq6qsFVnl4664DHM/XbuR9c/9JZoqdc=;
- b=Lcfp9hFSVJNPQjHooKXZPvKAbII2fy61hRGhZt3baO5ql4JuO/WTINom69vfhXqCML1YBQh7ZfZVur8cK3LNdyg6Xr4Te+ymAXZ/LrnDABJSURH4raJ+QbF2PMgOGC+KccS/Ilr+MmLn1qNg/WV/OdEG6q3UpcY8YfqnA1fhzkCG65TxrqX8lkjjP2+m2kzTRKcjrGXpQj7w+EGteClWeMsTEXFyz3uojMb2ncUgDAGRjl0fHVvxY8MubHISQ42WAawSrIflXj6sG6x5SLk7OFxsSQUklmGs41xsv78h/IfnGJa9uZPLenmHZdFUtwKJbm3VWA2+weyy62SgEuUfWQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S232038AbhGPLcD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 16 Jul 2021 07:32:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58352 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231386AbhGPLcB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Jul 2021 07:32:01 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0BCE3C06175F;
+        Fri, 16 Jul 2021 04:29:07 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id cu14so6307549pjb.0;
+        Fri, 16 Jul 2021 04:29:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lf/HWhWxPEmHkq6qsFVnl4664DHM/XbuR9c/9JZoqdc=;
- b=awW4EwDBK1csTq5QhhBbvci8i9SF+A1NtHN+EDLAjsk3k0QFKP9scmTyLrwDp/XzMOBao2gdfvb9n8t81qsBSm8CZQYLx0vWZvw5SPDJjCkqL94SoBy7fW6mm/x+Uz0a1F4XWfzT3GUC0ub2/fY3lTiVQgbivT5ZMVJeqx3PPF8=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB6589.namprd04.prod.outlook.com (2603:10b6:5:1ba::18) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4331.21; Fri, 16 Jul 2021 08:59:27 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::ccfd:eb59:ccfe:66e4]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::ccfd:eb59:ccfe:66e4%5]) with mapi id 15.20.4331.026; Fri, 16 Jul 2021
- 08:59:27 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Akinobu Mita <akinobu.mita@gmail.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: RE: [PATCH v2 14/19] scsi: ufs: Use the doorbell register instead of
- the UTRLCNR register
-Thread-Topic: [PATCH v2 14/19] scsi: ufs: Use the doorbell register instead of
- the UTRLCNR register
-Thread-Index: AQHXdQDkoQbF3p7QeUywlBF1m/Jwb6tFVg9g
-Date:   Fri, 16 Jul 2021 08:59:27 +0000
-Message-ID: <DM6PR04MB65751F02951275FD945F66ACFC119@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20210709202638.9480-1-bvanassche@acm.org>
- <20210709202638.9480-16-bvanassche@acm.org>
-In-Reply-To: <20210709202638.9480-16-bvanassche@acm.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: acm.org; dkim=none (message not signed)
- header.d=none;acm.org; dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 34fd817b-6b6e-4e8d-3131-08d948380431
-x-ms-traffictypediagnostic: DM6PR04MB6589:
-x-microsoft-antispam-prvs: <DM6PR04MB65891D87C0054DA7289E6AE4FC119@DM6PR04MB6589.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: VdAu5nFsOBvjzCNRqHCNYXOzFesqQUBLl9fdGYRsrmjZmoegfhekvep3IFBsqdohmVCE8D6gk450Xr1OV6Pg7DJ+WrTWmHafLhQqSGeoNze/VmYocZV38v79syw156vkIl2+zExno3EpJ+HyF0D3/WfE05HjrKhh3l0Gf7RGCzI7J1I8DoDJlAL3OOTlo/0BObIKgWS97ub8ZoxhY+DpfCMpEzWgUM4l1Qga+Vu3NRBCvTR6Oe8Znp2Q1z0OfZiqAYWjhbrrF3LWfWwcV4i4/U+drXkMU+KzlsTeUZaJqy8Y0KkQ22H/lUCAEOnoMT6AoQzTz9jBTI+FDuPNrVajoO0wZqD3IYWzgJp1rn7BqzLZOFU3bkQ09Prmv63T9jQgzoOKM+2WILRUh1xMgNPyNKVCbOg20SiZfHUHZfSsrM5fwI4MIf49p1JcGODmNfmIJssMrHlQd2j/3Vay84CKpOae/7qp9l7uJ9624IXIXpMQy1oD/1DFMzuE/rLtW1ozwZVi1MXPbsuTy98YCCGvN4G1pRh28dCk/0txLzNMdI5xVIgRDpAcswJlo6H4slIM8OjhImonuQ5k1vg6zx9gkoKIykZRqbW+WgtSoc/ABnvpPcHmiNYpX5df8gxju7a4QuQiR+/MEvopcTNdVnf6huBWdQG4285z0EuusB2UYgA7XKFGqciGghl94jM4B1BwDnpG19DSRJFnJA9e4uoMlw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(366004)(39860400002)(396003)(136003)(346002)(66446008)(76116006)(186003)(66476007)(66556008)(64756008)(6506007)(66946007)(4326008)(26005)(7696005)(7416002)(71200400001)(86362001)(38100700002)(122000001)(52536014)(478600001)(83380400001)(9686003)(316002)(55016002)(33656002)(5660300002)(110136005)(8676002)(2906002)(8936002)(54906003)(38070700004);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?3yUoDTqoQoSTjovTBimpK4jj+4aYp91HToa8HIOG5ESXSGVAYwyIKkDfIrd1?=
- =?us-ascii?Q?PnHvtPQ3MZSJW8nRAQ2+asJIRRd/8olnZJwzdcg6bMjq7g9YQZZM6Rl7vIJB?=
- =?us-ascii?Q?I/DAaZ+IybL0ShXbb/Io/fhEpRkNBNRYuhKnpUIsRbI/znheyrWPBUt5nDwy?=
- =?us-ascii?Q?MnhpEhMt1Zz0drzLMSiqbyT3u5RIQjRjCi5twPoZDZL+dUO96Mfh2m93lPfX?=
- =?us-ascii?Q?4OClTEVTyXHPhyHNsOM0TZ6U+SMur7utByKIVgvCaH43cEwASmn54yoLdd7B?=
- =?us-ascii?Q?wzptcV725MKpeghSsnAdmnqFeUwHrka/wm5tWdLH/2RR0H4kqMNu8IwnfOhB?=
- =?us-ascii?Q?oLIZp1rEg8lHNKVv4aVy8gEeGHMNyYUCieXaJi46fYiVnIhirEckkBL3/7YZ?=
- =?us-ascii?Q?HhWnoxBXd9Hy71rKKXLxpIuXFTfC8gKZqRammUEZo8mlVO50pJuBrGO56xPw?=
- =?us-ascii?Q?TlO1NpOsK9Yb7GPHbxLFaROY+KM1TVwZyELFJ4icxqsmBmMgaC5oVRMdaUaW?=
- =?us-ascii?Q?QJ3ZvtszEEcm5FuL+uLV8ZJ9VnIKz2oOQ3W8QZ2plMK1o+LXjGdAJmBFonLR?=
- =?us-ascii?Q?6Vz0gENnzs6NMRhWJTAGayY54qXQMgua3Y8jKyjncH5Rd3YN6xAu0FuZdt0/?=
- =?us-ascii?Q?OMTEx5T2AQPHPXOotIYRuCza3kqxQku15HnRbzNzRzRZB4zMQKcxzfIuABA1?=
- =?us-ascii?Q?Sn9FQE9vN8hnlFgYiQJmLGj0urJ8YOyIXc2VwaLVxf3+WbnqYPJIaegXJavN?=
- =?us-ascii?Q?bCN9vFF/JPOjmE2FcIFa/v6eRa0W2TdSNyouSpm8NLOtLOknf3ONvxoyzDu9?=
- =?us-ascii?Q?SlsjIbsRka75Z9ViyrQUkt0HgmcGUx++tOZ5nVypguM33GxVX/z+P8KzHtxB?=
- =?us-ascii?Q?nPs4AlenwjcXrlPolhc95JsVzfXk4YJD69n62KHD1xPheGb5dOr/KlGDdkZK?=
- =?us-ascii?Q?n67bQXAYdKwQyeuGoZ8mESFEE2f9aVg2dCQSfTxSE/5/lALv+rlImdmV7CbR?=
- =?us-ascii?Q?wy+CAyO3UdtBOEAgYzy54LH7XCfRTWoqG3cTnUNdSsCcelrxakFb+KI7j7BC?=
- =?us-ascii?Q?SRRlAPQ1443Xqt/gqFr63Lpx5dsih6CI7SN0Q2jobJoOl+UhHPHGcrP1194A?=
- =?us-ascii?Q?KWyQQBXRBhi41oto6+ulGv2Z5gRF7IoK0B3mHUObYb6kvCyctjAr9Xc0lQUS?=
- =?us-ascii?Q?3dlerFPomKFR74uPb7vQqVm7mxM/KM6+VRdnLG3DynrIvhTQP/z+zjvq2R+Y?=
- =?us-ascii?Q?+ZyUWovpiPeRPqgNuWB+7l5dRNyd0uKzQaCGDKTg3CMO5HpGAKjaxYx3leyB?=
- =?us-ascii?Q?zwY=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=MC5tChpyKDO9MxxhXN9qZeQy1Mbjt8+9z3nY5NfMrUQ=;
+        b=ai/jTwHWpQ5ES8PMU98tuswbaKLWebk9PuXn2q1k6WFGj1G6QK8waj1cFO2kWCzYfw
+         JPZBeWXpzkPCDH/6D2aqmjoJMZIk1O6Ez+QNZRxuJckz/ylEE5QycBPYLVZuzErqZCM6
+         APqGlcjdHpfiFxTq1m0wVyCkchEdcqr85E3IrKHvhb7eo3EQmjCI9t3nJNQH6cDHEIQ8
+         Y8uV6AVSRQwmq+D3hXDsQOBG5jsLsA74ye2D1LZiji62oqefOO6ONec9hwCmPp4rNzzc
+         xOP67hSzylBNqujqRUb+v74RnoLI1l9SeV7ixAGeEsYDAFo9FrBKehoYPQR+2P1Oii0w
+         TL2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=MC5tChpyKDO9MxxhXN9qZeQy1Mbjt8+9z3nY5NfMrUQ=;
+        b=tRWTHMOi5IuuvRKu7TOVi/f7gxSXi0lv3jB/dTRK/KFeToy7AUPB6Je1CS/CkoHtzj
+         Ck1K/WWvqheRu9bnyjT9GisPc4NzMFefmtKVNyEgPC7MdD4LJf8VTD4jpoDc6/8T23/W
+         O0Z91prRW3/P5AZDetcK+Gdrc1bK0m4irwfhwXhDmq5OO03ClM5GAujwhBCJ3Su9ZJL5
+         WeeTy0qmRSfDn3UyTRY8inymjyd3NNKTK517Vd1w5rggYcclSc+9IAfAWTtII5LpWNA8
+         zOEEVi2M8ZSmRaCVGEA4nlRWLx54jAiVs6oWaL/gZ6aX6SCES2FmfUN5NfHeS2QSrfhS
+         /w2Q==
+X-Gm-Message-State: AOAM531pw3qxALr/hCZAsOz5lrH8Dt8oJ1DBYWAoAaB0gxI31hwj1t2I
+        FihtO2MZVmo31X1nxiYFjrE=
+X-Google-Smtp-Source: ABdhPJwxJFnGjK1YW5gQxdhUo/44vTB568gogq0iVx4wSRn8sVexjTyhX6yvzwP3YtrcPC1etetpEA==
+X-Received: by 2002:a17:90a:1641:: with SMTP id x1mr9698536pje.160.1626434946395;
+        Fri, 16 Jul 2021 04:29:06 -0700 (PDT)
+Received: from localhost.localdomain ([49.37.48.177])
+        by smtp.gmail.com with ESMTPSA id a15sm9861353pff.128.2021.07.16.04.29.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Jul 2021 04:29:05 -0700 (PDT)
+From:   Dwaipayan Ray <dwaipayanray1@gmail.com>
+To:     njavali@marvell.com, mrangankar@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        lukas.bulwahn@gmail.com, Dwaipayan Ray <dwaipayanray1@gmail.com>
+Subject: [PATCH] scsi: qla4xxx: convert uses of __constant_cpu_to_<foo> to cpu_to_<foo>
+Date:   Fri, 16 Jul 2021 16:58:52 +0530
+Message-Id: <20210716112852.24598-1-dwaipayanray1@gmail.com>
+X-Mailer: git-send-email 2.28.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 34fd817b-6b6e-4e8d-3131-08d948380431
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Jul 2021 08:59:27.4241
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: JupMIFCGZ75VudptIALRW3kGHhxuLJ4Il6KsxWWmnJ9FsYr9b1FRV0RfOljoHrHq+S6S3anEMornofGOrL4JdA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6589
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+The macros cpu_to_le16 and cpu_to_le32 has special cases for constants.
+So their __constant_<foo> versions are not required.
 
-Using the UTRLCNR register implies performing two MMIO accesses in the hot =
-path while reading the doorbell register only involves a single MMIO operat=
-ion. Hence do not use the UTRLNCR register.
+In little endian systems, both cpu_to_le16 and __constant_cpu_to_le16
+expand to the same expression. Same is the case with cpu_to_le32.
 
-Isn't this patch, and the one before, practically reverting
-6f7151729647 (scsi: ufs: Utilize Transfer Request List Completion Notificat=
-ion Register)?
-Wouldn't it be simpler then just revert it in #13, and add whatever is need=
-ed in #14?
+In big endian systems, cpu_to_le16 expands to __swab16 which has a
+__builtin_constant_p check. Similarly, cpu_to_le32 expands to __swab32.
 
-Thanks,
-Avri
+So these macros can be safely used with constants, and hence all those
+uses are converted. This was discovered as a part of a checkpatch
+evaluation, looking at all reports of WARNING:CONSTANT_CONVERSION
+error type.
 
-Cc: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Can Guo <cang@codeaurora.org>
-Cc: Asutosh Das <asutoshd@codeaurora.org>
-Cc: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Dwaipayan Ray <dwaipayanray1@gmail.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 2 +-
- drivers/scsi/ufs/ufshcd.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/qla4xxx/ql4_init.c |  4 ++--
+ drivers/scsi/qla4xxx/ql4_iocb.c |  2 +-
+ drivers/scsi/qla4xxx/ql4_mbx.c  | 30 +++++++++++++++---------------
+ drivers/scsi/qla4xxx/ql4_nx.c   | 10 +++++-----
+ drivers/scsi/qla4xxx/ql4_os.c   | 10 +++++-----
+ 5 files changed, 28 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index 99=
-6b95ab74aa..becd9e2829f4 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6388,7 +6388,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba=
-, u32 intr_status)
-                retval |=3D ufshcd_tmc_handler(hba);
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index f786ac2f5548..301bc09c8365 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -119,8 +119,8 @@ int qla4xxx_init_rings(struct scsi_qla_host *ha)
+ 		 * the interrupt_handler to think there are responses to be
+ 		 * processed when there aren't.
+ 		 */
+-		ha->shadow_regs->req_q_out = __constant_cpu_to_le32(0);
+-		ha->shadow_regs->rsp_q_in = __constant_cpu_to_le32(0);
++		ha->shadow_regs->req_q_out = cpu_to_le32(0);
++		ha->shadow_regs->rsp_q_in = cpu_to_le32(0);
+ 		wmb();
+ 
+ 		writel(0, &ha->reg->req_q_in);
+diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
+index cbd1e6ffcd67..c57cec6fff6d 100644
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c
++++ b/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -160,7 +160,7 @@ static void qla4xxx_build_scsi_iocbs(struct srb *srb,
+ 
+ 	if (!scsi_bufflen(cmd) || cmd->sc_data_direction == DMA_NONE) {
+ 		/* No data being transferred */
+-		cmd_entry->ttlByteCnt = __constant_cpu_to_le32(0);
++		cmd_entry->ttlByteCnt = cpu_to_le32(0);
+ 		return;
+ 	}
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index 187d78aa4f67..cd71074f3abe 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -645,8 +645,8 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
+ 	/* Fill in the request and response queue information. */
+ 	init_fw_cb->rqq_consumer_idx = cpu_to_le16(ha->request_out);
+ 	init_fw_cb->compq_producer_idx = cpu_to_le16(ha->response_in);
+-	init_fw_cb->rqq_len = __constant_cpu_to_le16(REQUEST_QUEUE_DEPTH);
+-	init_fw_cb->compq_len = __constant_cpu_to_le16(RESPONSE_QUEUE_DEPTH);
++	init_fw_cb->rqq_len = cpu_to_le16(REQUEST_QUEUE_DEPTH);
++	init_fw_cb->compq_len = cpu_to_le16(RESPONSE_QUEUE_DEPTH);
+ 	init_fw_cb->rqq_addr_lo = cpu_to_le32(LSDW(ha->request_dma));
+ 	init_fw_cb->rqq_addr_hi = cpu_to_le32(MSDW(ha->request_dma));
+ 	init_fw_cb->compq_addr_lo = cpu_to_le32(LSDW(ha->response_dma));
+@@ -656,20 +656,20 @@ int qla4xxx_initialize_fw_cb(struct scsi_qla_host * ha)
+ 
+ 	/* Set up required options. */
+ 	init_fw_cb->fw_options |=
+-		__constant_cpu_to_le16(FWOPT_SESSION_MODE |
+-				       FWOPT_INITIATOR_MODE);
++		cpu_to_le16(FWOPT_SESSION_MODE |
++			    FWOPT_INITIATOR_MODE);
+ 
+ 	if (is_qla80XX(ha))
+ 		init_fw_cb->fw_options |=
+-		    __constant_cpu_to_le16(FWOPT_ENABLE_CRBDB);
++		    cpu_to_le16(FWOPT_ENABLE_CRBDB);
+ 
+-	init_fw_cb->fw_options &= __constant_cpu_to_le16(~FWOPT_TARGET_MODE);
++	init_fw_cb->fw_options &= cpu_to_le16(~FWOPT_TARGET_MODE);
+ 
+ 	init_fw_cb->add_fw_options = 0;
+ 	init_fw_cb->add_fw_options |=
+-			__constant_cpu_to_le16(ADFWOPT_SERIALIZE_TASK_MGMT);
++			cpu_to_le16(ADFWOPT_SERIALIZE_TASK_MGMT);
+ 	init_fw_cb->add_fw_options |=
+-			__constant_cpu_to_le16(ADFWOPT_AUTOCONN_DISABLE);
++			cpu_to_le16(ADFWOPT_AUTOCONN_DISABLE);
+ 
+ 	if (qla4xxx_set_ifcb(ha, &mbox_cmd[0], &mbox_sts[0], init_fw_cb_dma)
+ 		!= QLA_SUCCESS) {
+@@ -1613,7 +1613,7 @@ int qla4xxx_get_chap(struct scsi_qla_host *ha, char *username, char *password,
+ 
+ 	strlcpy(password, chap_table->secret, QL4_CHAP_MAX_SECRET_LEN);
+ 	strlcpy(username, chap_table->name, QL4_CHAP_MAX_NAME_LEN);
+-	chap_table->cookie = __constant_cpu_to_le16(CHAP_VALID_COOKIE);
++	chap_table->cookie = cpu_to_le16(CHAP_VALID_COOKIE);
+ 
+ exit_get_chap:
+ 	dma_pool_free(ha->chap_dma_pool, chap_table, chap_dma);
+@@ -1655,7 +1655,7 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
+ 	chap_table->secret_len = strlen(password);
+ 	strncpy(chap_table->secret, password, MAX_CHAP_SECRET_LEN - 1);
+ 	strncpy(chap_table->name, username, MAX_CHAP_NAME_LEN - 1);
+-	chap_table->cookie = __constant_cpu_to_le16(CHAP_VALID_COOKIE);
++	chap_table->cookie = cpu_to_le16(CHAP_VALID_COOKIE);
+ 
+ 	if (is_qla40XX(ha)) {
+ 		chap_size = MAX_CHAP_ENTRIES_40XX * sizeof(*chap_table);
+@@ -1721,7 +1721,7 @@ int qla4xxx_get_uni_chap_at_index(struct scsi_qla_host *ha, char *username,
+ 
+ 	mutex_lock(&ha->chap_sem);
+ 	chap_table = (struct ql4_chap_table *)ha->chap_list + chap_index;
+-	if (chap_table->cookie != __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
++	if (chap_table->cookie != cpu_to_le16(CHAP_VALID_COOKIE)) {
+ 		rval = QLA_ERROR;
+ 		goto exit_unlock_uni_chap;
+ 	}
+@@ -1784,7 +1784,7 @@ int qla4xxx_get_chap_index(struct scsi_qla_host *ha, char *username,
+ 	for (i = 0; i < max_chap_entries; i++) {
+ 		chap_table = (struct ql4_chap_table *)ha->chap_list + i;
+ 		if (chap_table->cookie !=
+-		    __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
++		    cpu_to_le16(CHAP_VALID_COOKIE)) {
+ 			if (i > MAX_RESRV_CHAP_IDX && free_index == -1)
+ 				free_index = i;
+ 			continue;
+@@ -2105,18 +2105,18 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
+ 
+ 	if (conn->max_recv_dlength)
+ 		fw_ddb_entry->iscsi_max_rcv_data_seg_len =
+-		  __constant_cpu_to_le16((conn->max_recv_dlength / BYTE_UNITS));
++		  cpu_to_le16((conn->max_recv_dlength / BYTE_UNITS));
+ 
+ 	if (sess->max_r2t)
+ 		fw_ddb_entry->iscsi_max_outsnd_r2t = cpu_to_le16(sess->max_r2t);
+ 
+ 	if (sess->first_burst)
+ 		fw_ddb_entry->iscsi_first_burst_len =
+-		       __constant_cpu_to_le16((sess->first_burst / BYTE_UNITS));
++		       cpu_to_le16((sess->first_burst / BYTE_UNITS));
+ 
+ 	if (sess->max_burst)
+ 		fw_ddb_entry->iscsi_max_burst_len =
+-			__constant_cpu_to_le16((sess->max_burst / BYTE_UNITS));
++			cpu_to_le16((sess->max_burst / BYTE_UNITS));
+ 
+ 	if (sess->time2wait)
+ 		fw_ddb_entry->iscsi_def_time2wait =
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 66a487795c53..47adff9f0506 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -3658,7 +3658,7 @@ qla4_82xx_read_flash_data(struct scsi_qla_host *ha, uint32_t *dwptr,
+ 			    "Do ROM fast read failed\n");
+ 			goto done_read;
+ 		}
+-		dwptr[i] = __constant_cpu_to_le32(val);
++		dwptr[i] = cpu_to_le32(val);
+ 	}
+ 
+ done_read:
+@@ -3721,9 +3721,9 @@ qla4_8xxx_get_flt_info(struct scsi_qla_host *ha, uint32_t flt_addr)
+ 			goto no_flash_data;
+ 	}
+ 
+-	if (*wptr == __constant_cpu_to_le16(0xffff))
++	if (*wptr == cpu_to_le16(0xffff))
+ 		goto no_flash_data;
+-	if (flt->version != __constant_cpu_to_le16(1)) {
++	if (flt->version != cpu_to_le16(1)) {
+ 		DEBUG2(ql4_printk(KERN_INFO, ha, "Unsupported FLT detected: "
+ 			"version=0x%x length=0x%x checksum=0x%x.\n",
+ 			le16_to_cpu(flt->version), le16_to_cpu(flt->length),
+@@ -3826,7 +3826,7 @@ qla4_82xx_get_fdt_info(struct scsi_qla_host *ha)
+ 	qla4_82xx_read_optrom_data(ha, (uint8_t *)ha->request_ring,
+ 	    hw->flt_region_fdt << 2, OPTROM_BURST_SIZE);
+ 
+-	if (*wptr == __constant_cpu_to_le16(0xffff))
++	if (*wptr == cpu_to_le16(0xffff))
+ 		goto no_flash_data;
+ 
+ 	if (fdt->sig[0] != 'Q' || fdt->sig[1] != 'L' || fdt->sig[2] != 'I' ||
+@@ -3883,7 +3883,7 @@ qla4_82xx_get_idc_param(struct scsi_qla_host *ha)
+ 	qla4_82xx_read_optrom_data(ha, (uint8_t *)ha->request_ring,
+ 			QLA82XX_IDC_PARAM_ADDR , 8);
+ 
+-	if (*wptr == __constant_cpu_to_le32(0xffffffff)) {
++	if (*wptr == cpu_to_le32(0xffffffff)) {
+ 		ha->nx_dev_init_timeout = ROM_DEV_INIT_TIMEOUT;
+ 		ha->nx_reset_timeout = ROM_DRV_RESET_ACK_TIMEOUT;
+ 	} else {
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 6ee7ea4c27e0..3f7737386193 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -702,7 +702,7 @@ static int qla4xxx_get_chap_by_index(struct scsi_qla_host *ha,
+ 
+ 	*chap_entry = (struct ql4_chap_table *)ha->chap_list + chap_index;
+ 	if ((*chap_entry)->cookie !=
+-	     __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
++	     cpu_to_le16(CHAP_VALID_COOKIE)) {
+ 		*chap_entry = NULL;
+ 	} else {
+ 		rval = QLA_SUCCESS;
+@@ -745,7 +745,7 @@ static int qla4xxx_find_free_chap_index(struct scsi_qla_host *ha,
+ 		chap_table = (struct ql4_chap_table *)ha->chap_list + i;
+ 
+ 		if ((chap_table->cookie !=
+-		    __constant_cpu_to_le16(CHAP_VALID_COOKIE)) &&
++		    cpu_to_le16(CHAP_VALID_COOKIE)) &&
+ 		   (i > MAX_RESRV_CHAP_IDX)) {
+ 				free_index = i;
+ 				break;
+@@ -794,7 +794,7 @@ static int qla4xxx_get_chap_list(struct Scsi_Host *shost, uint16_t chap_tbl_idx,
+ 	for (i = chap_tbl_idx; i < max_chap_entries; i++) {
+ 		chap_table = (struct ql4_chap_table *)ha->chap_list + i;
+ 		if (chap_table->cookie !=
+-		    __constant_cpu_to_le16(CHAP_VALID_COOKIE))
++		    cpu_to_le16(CHAP_VALID_COOKIE))
+ 			continue;
+ 
+ 		chap_rec->chap_tbl_idx = i;
+@@ -923,7 +923,7 @@ static int qla4xxx_delete_chap(struct Scsi_Host *shost, uint16_t chap_tbl_idx)
+ 		goto exit_delete_chap;
+ 	}
+ 
+-	chap_table->cookie = __constant_cpu_to_le16(0xFFFF);
++	chap_table->cookie = cpu_to_le16(0xFFFF);
+ 
+ 	offset = FLASH_CHAP_OFFSET |
+ 			(chap_tbl_idx * sizeof(struct ql4_chap_table));
+@@ -6043,7 +6043,7 @@ static int qla4xxx_get_bidi_chap(struct scsi_qla_host *ha, char *username,
+ 	for (i = 0; i < max_chap_entries; i++) {
+ 		chap_table = (struct ql4_chap_table *)ha->chap_list + i;
+ 		if (chap_table->cookie !=
+-		    __constant_cpu_to_le16(CHAP_VALID_COOKIE)) {
++		    cpu_to_le16(CHAP_VALID_COOKIE)) {
+ 			continue;
+ 		}
+ 
+-- 
+2.28.0
 
-        if (intr_status & UTP_TRANSFER_REQ_COMPL)
--               retval |=3D ufshcd_trc_handler(hba, ufshcd_has_utrlcnr(hba)=
-);
-+               retval |=3D ufshcd_trc_handler(hba,=20
-+ ufshcd_use_utrlcnr(hba));
-
-        return retval;
- }
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index f8=
-766e8f3cac..b3d9b487846f 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1184,9 +1184,9 @@ static inline u32 ufshcd_vops_get_ufs_hci_version(str=
-uct ufs_hba *hba)
-        return ufshcd_readl(hba, REG_UFS_VERSION);  }
-
--static inline bool ufshcd_has_utrlcnr(struct ufs_hba *hba)
-+static inline bool ufshcd_use_utrlcnr(struct ufs_hba *hba)
- {
--       return (hba->ufs_version >=3D ufshci_version(3, 0));
-+       return false;
- }
-
- static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba,
