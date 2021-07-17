@@ -2,785 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FD22C636C9
-	for <linux-scsi@archiver.kernel.org>; Sat, 17 Jul 2021 06:39:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1686C636C9
+	for <linux-scsi@archiver.kernel.org>; Sat, 17 Jul 2021 15:29:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB4D7613C3
-	for <linux-scsi@archiver.kernel.org>; Sat, 17 Jul 2021 06:39:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C4F6461154
+	for <linux-scsi@archiver.kernel.org>; Sat, 17 Jul 2021 15:29:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230403AbhGQGlp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 17 Jul 2021 02:41:45 -0400
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:42480 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230224AbhGQGlo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 17 Jul 2021 02:41:44 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 44BF1128113F;
-        Fri, 16 Jul 2021 23:38:48 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1626503928;
-        bh=2Mq5Lz5NhmlSSHzeBAtJq+IR8/tsr2JwMkvUmNtbQBY=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=DEhsHEii+K3IKaIykr9wDYRqYtkWl/PT7GSHiNSTkzgmZ4MPA1c9TpGp+jVwtD7+9
-         j1e/M/NqggTb9Z5b4yI7ErUjTWY5Lx5rEs21AXH3Df1bAJNhZB0MGVzTKQSQ+YY0WK
-         VLNMv7xWQ8U8By2+PasogMkZ+QwfPWcPg1JDIgrg=
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id G4mIzWQ7wYWZ; Fri, 16 Jul 2021 23:38:48 -0700 (PDT)
-Received: from [192.168.42.44] (host86-170-216-82.range86-170.btcentralplus.com [86.170.216.82])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id D3FDD128113E;
-        Fri, 16 Jul 2021 23:38:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1626503928;
-        bh=2Mq5Lz5NhmlSSHzeBAtJq+IR8/tsr2JwMkvUmNtbQBY=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=DEhsHEii+K3IKaIykr9wDYRqYtkWl/PT7GSHiNSTkzgmZ4MPA1c9TpGp+jVwtD7+9
-         j1e/M/NqggTb9Z5b4yI7ErUjTWY5Lx5rEs21AXH3Df1bAJNhZB0MGVzTKQSQ+YY0WK
-         VLNMv7xWQ8U8By2+PasogMkZ+QwfPWcPg1JDIgrg=
-Message-ID: <57d614d67af1c091c40a520bb8e2dca27e08833e.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.14-rc1
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 17 Jul 2021 07:38:43 +0100
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S234604AbhGQPcY convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 17 Jul 2021 11:32:24 -0400
+Received: from pegase1.c-s.fr ([93.17.236.30]:31512 "EHLO pegase1.c-s.fr"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234255AbhGQPcX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 17 Jul 2021 11:32:23 -0400
+Received: from localhost (mailhub3.si.c-s.fr [192.168.12.233])
+        by localhost (Postfix) with ESMTP id 4GRsTx3TnMzB6G4;
+        Sat, 17 Jul 2021 17:29:25 +0200 (CEST)
+X-Virus-Scanned: amavisd-new at c-s.fr
+Received: from pegase1.c-s.fr ([192.168.12.234])
+        by localhost (pegase1.c-s.fr [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id CsnSEz9Ns0sb; Sat, 17 Jul 2021 17:29:25 +0200 (CEST)
+Received: from vm-hermes.si.c-s.fr (vm-hermes.si.c-s.fr [192.168.25.253])
+        by pegase1.c-s.fr (Postfix) with ESMTP id 4GRsTx2MlBzB6FJ;
+        Sat, 17 Jul 2021 17:29:25 +0200 (CEST)
+Received: by vm-hermes.si.c-s.fr (Postfix, from userid 33)
+        id C1C925EF; Sat, 17 Jul 2021 17:34:35 +0200 (CEST)
+Received: from 37-171-38-5.coucou-networks.fr
+ (37-171-38-5.coucou-networks.fr [37.171.38.5]) by messagerie.c-s.fr (Horde
+ Framework) with HTTP; Sat, 17 Jul 2021 17:34:35 +0200
+Date:   Sat, 17 Jul 2021 17:34:35 +0200
+Message-ID: <20210717173435.Horde.Yjk9m3mjnYfLI-Xv6-IIdg8@messagerie.c-s.fr>
+From:   Christophe Leroy <christophe.leroy@csgroup.eu>
+To:     Tyrel Datwyler <tyreld@linux.ibm.com>
+Cc:     linuxppc-dev@lists.ozlabs.org, brking@linux.ibm.com,
+        stable@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        james.bottomley@hansenpartnership.com
+Subject: Re: [PATCH] ibmvfc: fix command state accounting and stale response
+ detection
+In-Reply-To: <20210716205220.1101150-1-tyreld@linux.ibm.com>
+User-Agent: Internet Messaging Program (IMP) H5 (6.2.3)
+Content-Type: text/plain; charset=UTF-8; format=flowed; DelSp=Yes
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-1 core fix for an oops which can occur if the error handling thread
-fails to start for some reason and the driver is removed.  The other
-fixes are all minor ones in drivers.
+Tyrel Datwyler <tyreld@linux.ibm.com> a écrit :
 
-The patch is available here:
+> Prior to commit 1f4a4a19508d ("scsi: ibmvfc: Complete commands outside
+> the host/queue lock") responses to commands were completed sequentially
+> with the host lock held such that a command had a basic binary state of
+> active or free. It was therefore a simple affair of ensuring the
+> assocaiated ibmvfc_event to a VIOS response was valid by testing that it
+> was not already free. The lock relexation work to complete commands
+> outside the lock inadverdently made it a trinary command state such that
+> a command is either in flight, received and being completed, or
+> completed and now free. This breaks the stale command detection logic as
+> a command may be still marked active and been placed on the delayed
+> completion list when a second stale response for the same command
+> arrives. This can lead to double completions and list corruption. This
+> issue was exposed by a recent VIOS regression were a missing memory
+> barrier could occasionally result in the ibmvfc client receiveing a
+> duplicate response for the same command.
+>
+> Fix the issue by introducing the atomic ibmvfc_event.active to track the
+> trinary state of a command. The state is explicitly set to 1 when a
+> command is successfully sent. The CRQ response handlers use
+> atomic_dec_if_positive() to test for stale responses and correctly
+> transition to the completion state when a active command is received.
+> Finally, atomic_dec_and_test() is used to sanity check transistions
+> when commands are freed as a result of a completion, or moved to the
+> purge list as a result of error handling or adapter reset.
+>
+> Cc: stable@vger.kernel.org
+> Fixes: 1f4a4a19508d ("scsi: ibmvfc: Complete commands outside the  
+> host/queue lock")
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+> ---
+>  drivers/scsi/ibmvscsi/ibmvfc.c | 19 +++++++++++++++++--
+>  drivers/scsi/ibmvscsi/ibmvfc.h |  1 +
+>  2 files changed, 18 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index bee1bec49c09..935b01ee44b7 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -807,6 +807,13 @@ static int ibmvfc_init_event_pool(struct  
+> ibmvfc_host *vhost,
+>  	for (i = 0; i < size; ++i) {
+>  		struct ibmvfc_event *evt = &pool->events[i];
+>
+> +		/*
+> +		 * evt->active states
+> +		 *  1 = in flight
+> +		 *  0 = being completed
+> +		 * -1 = free/freed
+> +		 */
+> +		atomic_set(&evt->active, -1);
+>  		atomic_set(&evt->free, 1);
+>  		evt->crq.valid = 0x80;
+>  		evt->crq.ioba = cpu_to_be64(pool->iu_token + (sizeof(*evt->xfer_iu) * i));
+> @@ -1017,6 +1024,7 @@ static void ibmvfc_free_event(struct ibmvfc_event *evt)
+>
+>  	BUG_ON(!ibmvfc_valid_event(pool, evt));
+>  	BUG_ON(atomic_inc_return(&evt->free) != 1);
+> +	BUG_ON(atomic_dec_and_test(&evt->active));
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Avoid new BUG_ONs. See  
+https://www.kernel.org/doc/html/latest/process/deprecated.html
 
-The short changelog is:
+>
+>  	spin_lock_irqsave(&evt->queue->l_lock, flags);
+>  	list_add_tail(&evt->queue_list, &evt->queue->free);
+> @@ -1072,6 +1080,12 @@ static void ibmvfc_complete_purge(struct  
+> list_head *purge_list)
+>   **/
+>  static void ibmvfc_fail_request(struct ibmvfc_event *evt, int error_code)
+>  {
+> +	/*
+> +	 * Anything we are failing should still be active. Otherwise, it
+> +	 * implies we already got a response for the command and are doing
+> +	 * something bad like double completing it.
+> +	 */
+> +	BUG_ON(!atomic_dec_and_test(&evt->active));
 
-Bart Van Assche (2):
-      scsi: fas216: Fix a build error
-      scsi: core: Fix the documentation of the scsi_execute() time parameter
+Same
 
-Jaegeuk Kim (1):
-      scsi: ufs: core: Add missing host_lock in ufshcd_vops_setup_xfer_req()
-
-Randy Dunlap (1):
-      scsi: pm8001: Clean up kernel-doc and comments
-
-Sreekanth Reddy (1):
-      scsi: mpi3mr: Fix W=1 compilation warnings
-
-Steffen Maier (1):
-      scsi: zfcp: Report port fc_security as unknown early during remote cable pull
-
-Tyrel Datwyler (1):
-      scsi: core: Fix bad pointer dereference when ehandler kthread is invalid
-
-And the diffstat:
-
- drivers/s390/scsi/zfcp_sysfs.c    |  1 +
- drivers/scsi/arm/fas216.c         |  2 +-
- drivers/scsi/hosts.c              |  1 +
- drivers/scsi/mpi3mr/mpi3mr_fw.c   | 15 ++++++------
- drivers/scsi/pm8001/pm8001_ctl.c  | 48 ++++++++++++++++++++-----------------
- drivers/scsi/pm8001/pm8001_hwi.c  | 18 +++++++-------
- drivers/scsi/pm8001/pm8001_init.c | 29 ++++++++++++-----------
- drivers/scsi/pm8001/pm8001_sas.c  | 41 +++++++++++++++++---------------
- drivers/scsi/pm8001/pm80xx_hwi.c  | 50 +++++++++++++++++++--------------------
- drivers/scsi/scsi_lib.c           |  2 +-
- drivers/scsi/ufs/ufshcd.h         |  9 +++++--
- 11 files changed, 115 insertions(+), 101 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/s390/scsi/zfcp_sysfs.c b/drivers/s390/scsi/zfcp_sysfs.c
-index 544efd4c42f0..b8cd75a872ee 100644
---- a/drivers/s390/scsi/zfcp_sysfs.c
-+++ b/drivers/s390/scsi/zfcp_sysfs.c
-@@ -487,6 +487,7 @@ static ssize_t zfcp_sysfs_port_fc_security_show(struct device *dev,
- 	if (0 == (status & ZFCP_STATUS_COMMON_OPEN) ||
- 	    0 == (status & ZFCP_STATUS_COMMON_UNBLOCKED) ||
- 	    0 == (status & ZFCP_STATUS_PORT_PHYS_OPEN) ||
-+	    0 != (status & ZFCP_STATUS_PORT_LINK_TEST) ||
- 	    0 != (status & ZFCP_STATUS_COMMON_ERP_FAILED) ||
- 	    0 != (status & ZFCP_STATUS_COMMON_ACCESS_BOXED))
- 		i = sprintf(buf, "unknown\n");
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 30ed3d23635a..6baa9b36367d 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2010,7 +2010,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
- 		   "request sense complete, result=0x%04x%02x%02x",
- 		   result, SCpnt->SCp.Message, SCpnt->SCp.Status);
- 
--	if (result != DID_OK || SCpnt->SCp.Status != GOOD)
-+	if (result != DID_OK || SCpnt->SCp.Status != SAM_STAT_GOOD)
- 		/*
- 		 * Something went wrong.  Make sure that we don't
- 		 * have valid data in the sense buffer that could
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 929a3b043ad7..3f6f14f0cafb 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -488,6 +488,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 		shost_printk(KERN_WARNING, shost,
- 			"error handler thread failed to spawn, error = %ld\n",
- 			PTR_ERR(shost->ehandler));
-+		shost->ehandler = NULL;
- 		goto fail;
- 	}
- 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 9eceafca59bc..2dba2b0af166 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2607,14 +2607,13 @@ static int mpi3mr_issue_iocinit(struct mpi3mr_ioc *mrioc)
- 		goto out;
- 	}
- 	drv_info->information_length = cpu_to_le32(data_len);
--	strncpy(drv_info->driver_signature, "Broadcom", sizeof(drv_info->driver_signature));
--	strncpy(drv_info->os_name, utsname()->sysname, sizeof(drv_info->os_name));
--	drv_info->os_name[sizeof(drv_info->os_name) - 1] = 0;
--	strncpy(drv_info->os_version, utsname()->release, sizeof(drv_info->os_version));
--	drv_info->os_version[sizeof(drv_info->os_version) - 1] = 0;
--	strncpy(drv_info->driver_name, MPI3MR_DRIVER_NAME, sizeof(drv_info->driver_name));
--	strncpy(drv_info->driver_version, MPI3MR_DRIVER_VERSION, sizeof(drv_info->driver_version));
--	strncpy(drv_info->driver_release_date, MPI3MR_DRIVER_RELDATE, sizeof(drv_info->driver_release_date));
-+	strscpy(drv_info->driver_signature, "Broadcom", sizeof(drv_info->driver_signature));
-+	strscpy(drv_info->os_name, utsname()->sysname, sizeof(drv_info->os_name));
-+	strscpy(drv_info->os_version, utsname()->release, sizeof(drv_info->os_version));
-+	strscpy(drv_info->driver_name, MPI3MR_DRIVER_NAME, sizeof(drv_info->driver_name));
-+	strscpy(drv_info->driver_version, MPI3MR_DRIVER_VERSION, sizeof(drv_info->driver_version));
-+	strscpy(drv_info->driver_release_date, MPI3MR_DRIVER_RELDATE,
-+	    sizeof(drv_info->driver_release_date));
- 	drv_info->driver_capabilities = 0;
- 	memcpy((u8 *)&mrioc->driver_info, (u8 *)drv_info,
- 	    sizeof(mrioc->driver_info));
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index 0b8802beb7ce..ec05c42e8ee6 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -77,7 +77,7 @@ DEVICE_ATTR(interface_rev, S_IRUGO, pm8001_ctl_mpi_interface_rev_show, NULL);
-  * @attr: device attribute (unused)
-  * @buf: the buffer returned
-  *
-- * A sysfs 'read only' shost attribute.
-+ * A sysfs 'read-only' shost attribute.
-  */
- static ssize_t controller_fatal_error_show(struct device *cdev,
- 		struct device_attribute *attr, char *buf)
-@@ -149,7 +149,7 @@ static ssize_t pm8001_ctl_ila_version_show(struct device *cdev,
- static DEVICE_ATTR(ila_version, 0444, pm8001_ctl_ila_version_show, NULL);
- 
- /**
-- * pm8001_ctl_inactive_fw_version_show - Inacative firmware version number
-+ * pm8001_ctl_inactive_fw_version_show - Inactive firmware version number
-  * @cdev: pointer to embedded class device
-  * @attr: device attribute (unused)
-  * @buf: the buffer returned
-@@ -396,6 +396,7 @@ static DEVICE_ATTR(aap_log, S_IRUGO, pm8001_ctl_aap_log_show, NULL);
-  * @cdev:pointer to embedded class device
-  * @attr: device attribute (unused)
-  * @buf: the buffer returned
-+ *
-  * A sysfs 'read-only' shost attribute.
-  */
- static ssize_t pm8001_ctl_ib_queue_log_show(struct device *cdev,
-@@ -430,6 +431,7 @@ static DEVICE_ATTR(ib_log, S_IRUGO, pm8001_ctl_ib_queue_log_show, NULL);
-  * @cdev:pointer to embedded class device
-  * @attr: device attribute (unused)
-  * @buf: the buffer returned
-+ *
-  * A sysfs 'read-only' shost attribute.
-  */
- 
-@@ -464,6 +466,7 @@ static DEVICE_ATTR(ob_log, S_IRUGO, pm8001_ctl_ob_queue_log_show, NULL);
-  * @cdev:pointer to embedded class device
-  * @attr: device attribute (unused)
-  * @buf:the buffer returned
-+ *
-  * A sysfs 'read-only' shost attribute.
-  */
- static ssize_t pm8001_ctl_bios_version_show(struct device *cdev,
-@@ -555,13 +558,13 @@ static ssize_t pm8001_ctl_iop_log_show(struct device *cdev,
- static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
- 
- /**
-- ** pm8001_ctl_fatal_log_show - fatal error logging
-- ** @cdev:pointer to embedded class device
-- ** @attr: device attribute
-- ** @buf: the buffer returned
-- **
-- ** A sysfs 'read-only' shost attribute.
-- **/
-+ * pm8001_ctl_fatal_log_show - fatal error logging
-+ * @cdev:pointer to embedded class device
-+ * @attr: device attribute
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
- 
- static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
-@@ -575,13 +578,13 @@ static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
- static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
- 
- /**
-- ** non_fatal_log_show - non fatal error logging
-- ** @cdev:pointer to embedded class device
-- ** @attr: device attribute
-- ** @buf: the buffer returned
-- **
-- ** A sysfs 'read-only' shost attribute.
-- **/
-+ * non_fatal_log_show - non fatal error logging
-+ * @cdev:pointer to embedded class device
-+ * @attr: device attribute
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
- static ssize_t non_fatal_log_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
- {
-@@ -620,12 +623,13 @@ static ssize_t non_fatal_count_store(struct device *cdev,
- static DEVICE_ATTR_RW(non_fatal_count);
- 
- /**
-- ** pm8001_ctl_gsm_log_show - gsm dump collection
-- ** @cdev:pointer to embedded class device
-- ** @attr: device attribute (unused)
-- ** @buf: the buffer returned
-- ** A sysfs 'read-only' shost attribute.
-- **/
-+ * pm8001_ctl_gsm_log_show - gsm dump collection
-+ * @cdev:pointer to embedded class device
-+ * @attr: device attribute (unused)
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' shost attribute.
-+ */
- static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
- {
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 33f8217577b1..17c0f26e683a 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -384,7 +384,7 @@ static void update_outbnd_queue_table(struct pm8001_hba_info *pm8001_ha,
- 
- /**
-  * pm8001_bar4_shift - function is called to shift BAR base address
-- * @pm8001_ha : our hba card infomation
-+ * @pm8001_ha : our hba card information
-  * @shiftValue : shifting value in memory bar.
-  */
- int pm8001_bar4_shift(struct pm8001_hba_info *pm8001_ha, u32 shiftValue)
-@@ -1151,7 +1151,7 @@ static void pm8001_hw_chip_rst(struct pm8001_hba_info *pm8001_ha)
- }
- 
- /**
-- * pm8001_chip_iounmap - which maped when initialized.
-+ * pm8001_chip_iounmap - which mapped when initialized.
-  * @pm8001_ha: our hba card information
-  */
- void pm8001_chip_iounmap(struct pm8001_hba_info *pm8001_ha)
-@@ -1187,10 +1187,10 @@ pm8001_chip_intx_interrupt_enable(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_cw32(pm8001_ha, 0, MSGU_ODCR, ODCR_CLEAR_ALL);
- }
- 
-- /**
--  * pm8001_chip_intx_interrupt_disable- disable PM8001 chip interrupt
--  * @pm8001_ha: our hba card information
--  */
-+/**
-+ * pm8001_chip_intx_interrupt_disable - disable PM8001 chip interrupt
-+ * @pm8001_ha: our hba card information
-+ */
- static void
- pm8001_chip_intx_interrupt_disable(struct pm8001_hba_info *pm8001_ha)
- {
-@@ -1876,8 +1876,8 @@ static void pm8001_send_read_log(struct pm8001_hba_info *pm8001_ha,
-  * @piomb: the message contents of this outbound message.
-  *
-  * When FW has completed a ssp request for example a IO request, after it has
-- * filled the SG data with the data, it will trigger this event represent
-- * that he has finished the job,please check the coresponding buffer.
-+ * filled the SG data with the data, it will trigger this event representing
-+ * that he has finished the job; please check the corresponding buffer.
-  * So we will tell the caller who maybe waiting the result to tell upper layer
-  * that the task has been finished.
-  */
-@@ -3522,7 +3522,7 @@ hw_event_phy_down(struct pm8001_hba_info *pm8001_ha, void *piomb)
-  *
-  * when sas layer find a device it will notify LLDD, then the driver register
-  * the domain device to FW, this event is the return device ID which the FW
-- * has assigned, from now,inter-communication with FW is no longer using the
-+ * has assigned, from now, inter-communication with FW is no longer using the
-  * SAS address, use device ID which FW assigned.
-  */
- int pm8001_mpi_reg_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 313248c7bab9..47db7e0beae6 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -233,7 +233,7 @@ static irqreturn_t pm8001_interrupt_handler_msix(int irq, void *opaque)
- /**
-  * pm8001_interrupt_handler_intx - main INTx interrupt handler.
-  * @irq: interrupt number
-- * @dev_id: sas_ha structure. The HBA is retrieved from sas_has structure.
-+ * @dev_id: sas_ha structure. The HBA is retrieved from sas_ha structure.
-  */
- 
- static irqreturn_t pm8001_interrupt_handler_intx(int irq, void *dev_id)
-@@ -439,9 +439,9 @@ static int pm8001_alloc(struct pm8001_hba_info *pm8001_ha,
- }
- 
- /**
-- * pm8001_ioremap - remap the pci high physical address to kernal virtual
-+ * pm8001_ioremap - remap the pci high physical address to kernel virtual
-  * address so that we can access them.
-- * @pm8001_ha:our hba structure.
-+ * @pm8001_ha: our hba structure.
-  */
- static int pm8001_ioremap(struct pm8001_hba_info *pm8001_ha)
- {
-@@ -652,7 +652,7 @@ static void  pm8001_post_sas_ha_init(struct Scsi_Host *shost,
-  * pm8001_init_sas_add - initialize sas address
-  * @pm8001_ha: our ha struct.
-  *
-- * Currently we just set the fixed SAS address to our HBA,for manufacture,
-+ * Currently we just set the fixed SAS address to our HBA, for manufacture,
-  * it should read from the EEPROM
-  */
- static void pm8001_init_sas_add(struct pm8001_hba_info *pm8001_ha)
-@@ -790,7 +790,7 @@ struct pm8001_mpi3_phy_pg_trx_config {
- };
- 
- /**
-- * pm8001_get_internal_phy_settings : Retrieves the internal PHY settings
-+ * pm8001_get_internal_phy_settings - Retrieves the internal PHY settings
-  * @pm8001_ha : our adapter
-  * @phycfg : PHY config page to populate
-  */
-@@ -810,7 +810,7 @@ void pm8001_get_internal_phy_settings(struct pm8001_hba_info *pm8001_ha,
- }
- 
- /**
-- * pm8001_get_external_phy_settings : Retrieves the external PHY settings
-+ * pm8001_get_external_phy_settings - Retrieves the external PHY settings
-  * @pm8001_ha : our adapter
-  * @phycfg : PHY config page to populate
-  */
-@@ -830,7 +830,7 @@ void pm8001_get_external_phy_settings(struct pm8001_hba_info *pm8001_ha,
- }
- 
- /**
-- * pm8001_get_phy_mask : Retrieves the mask that denotes if a PHY is int/ext
-+ * pm8001_get_phy_mask - Retrieves the mask that denotes if a PHY is int/ext
-  * @pm8001_ha : our adapter
-  * @phymask : The PHY mask
-  */
-@@ -868,7 +868,7 @@ void pm8001_get_phy_mask(struct pm8001_hba_info *pm8001_ha, int *phymask)
- }
- 
- /**
-- * pm8001_set_phy_settings_ven_117c_12G() : Configure ATTO 12Gb PHY settings
-+ * pm8001_set_phy_settings_ven_117c_12G() - Configure ATTO 12Gb PHY settings
-  * @pm8001_ha : our adapter
-  */
- static
-@@ -903,7 +903,7 @@ int pm8001_set_phy_settings_ven_117c_12G(struct pm8001_hba_info *pm8001_ha)
- }
- 
- /**
-- * pm8001_configure_phy_settings : Configures PHY settings based on vendor ID.
-+ * pm8001_configure_phy_settings - Configures PHY settings based on vendor ID.
-  * @pm8001_ha : our hba.
-  */
- static int pm8001_configure_phy_settings(struct pm8001_hba_info *pm8001_ha)
-@@ -1053,8 +1053,8 @@ static u32 pm8001_request_irq(struct pm8001_hba_info *pm8001_ha)
-  * @ent: pci device id
-  *
-  * This function is the main initialization function, when register a new
-- * pci driver it is invoked, all struct an hardware initilization should be done
-- * here, also, register interrupt
-+ * pci driver it is invoked, all struct and hardware initialization should be
-+ * done here, also, register interrupt.
-  */
- static int pm8001_pci_probe(struct pci_dev *pdev,
- 			    const struct pci_device_id *ent)
-@@ -1172,10 +1172,11 @@ static int pm8001_pci_probe(struct pci_dev *pdev,
- 	return rc;
- }
- 
--/*
-+/**
-  * pm8001_init_ccb_tag - allocate memory to CCB and tag.
-  * @pm8001_ha: our hba card information.
-  * @shost: scsi host which has been allocated outside.
-+ * @pdev: pci device.
-  */
- static int
- pm8001_init_ccb_tag(struct pm8001_hba_info *pm8001_ha, struct Scsi_Host *shost,
-@@ -1270,7 +1271,7 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
-  * pm8001_pci_suspend - power management suspend main entry point
-  * @dev: Device struct
-  *
-- * Returns 0 success, anything else error.
-+ * Return: 0 on success, anything else on error.
-  */
- static int __maybe_unused pm8001_pci_suspend(struct device *dev)
- {
-@@ -1315,7 +1316,7 @@ static int __maybe_unused pm8001_pci_suspend(struct device *dev)
-  * pm8001_pci_resume - power management resume main entry point
-  * @dev: Device struct
-  *
-- * Returns 0 success, anything else error.
-+ * Return: 0 on success, anything else on error.
-  */
- static int __maybe_unused pm8001_pci_resume(struct device *dev)
- {
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 6f33d821e545..48548a95327b 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -98,14 +98,16 @@ void pm8001_tag_init(struct pm8001_hba_info *pm8001_ha)
- 		pm8001_tag_free(pm8001_ha, i);
- }
- 
-- /**
--  * pm8001_mem_alloc - allocate memory for pm8001.
--  * @pdev: pci device.
--  * @virt_addr: the allocated virtual address
--  * @pphys_addr_hi: the physical address high byte address.
--  * @pphys_addr_lo: the physical address low byte address.
--  * @mem_size: memory size.
--  */
-+/**
-+ * pm8001_mem_alloc - allocate memory for pm8001.
-+ * @pdev: pci device.
-+ * @virt_addr: the allocated virtual address
-+ * @pphys_addr: DMA address for this device
-+ * @pphys_addr_hi: the physical address high byte address.
-+ * @pphys_addr_lo: the physical address low byte address.
-+ * @mem_size: memory size.
-+ * @align: requested byte alignment
-+ */
- int pm8001_mem_alloc(struct pci_dev *pdev, void **virt_addr,
- 	dma_addr_t *pphys_addr, u32 *pphys_addr_hi,
- 	u32 *pphys_addr_lo, u32 mem_size, u32 align)
-@@ -339,7 +341,7 @@ static int pm8001_task_prep_ssp_tm(struct pm8001_hba_info *pm8001_ha,
- }
- 
- /**
--  * pm8001_task_prep_ssp - the dispatcher function,prepare ssp data for ssp task
-+  * pm8001_task_prep_ssp - the dispatcher function, prepare ssp data for ssp task
-   * @pm8001_ha: our hba card information
-   * @ccb: the ccb which attached to ssp task
-   */
-@@ -554,10 +556,10 @@ void pm8001_ccb_task_free(struct pm8001_hba_info *pm8001_ha,
- 	pm8001_tag_free(pm8001_ha, ccb_idx);
- }
- 
-- /**
--  * pm8001_alloc_dev - find a empty pm8001_device
--  * @pm8001_ha: our hba card information
--  */
-+/**
-+ * pm8001_alloc_dev - find a empty pm8001_device
-+ * @pm8001_ha: our hba card information
-+ */
- static struct pm8001_device *pm8001_alloc_dev(struct pm8001_hba_info *pm8001_ha)
- {
- 	u32 dev;
-@@ -705,7 +707,7 @@ static void pm8001_tmf_timedout(struct timer_list *t)
-   * @parameter: ssp task parameter.
-   *
-   * when errors or exception happened, we may want to do something, for example
--  * abort the issued task which result in this execption, it is done by calling
-+  * abort the issued task which result in this exception, it is done by calling
-   * this function, note it is also with the task execute interface.
-   */
- static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
-@@ -984,11 +986,12 @@ void pm8001_open_reject_retry(
- }
- 
- /**
-- * pm8001_I_T_nexus_reset()
--  * Standard mandates link reset for ATA  (type 0) and hard reset for
--  * SSP (type 1) , only for RECOVERY
--  * @dev: the device structure for the device to reset.
--  */
-+ * pm8001_I_T_nexus_reset() - reset the initiator/target connection
-+ * @dev: the device structure for the device to reset.
-+ *
-+ * Standard mandates link reset for ATA (type 0) and hard reset for
-+ * SSP (type 1), only for RECOVERY
-+ */
- int pm8001_I_T_nexus_reset(struct domain_device *dev)
- {
- 	int rc = TMF_RESP_FUNC_FAILED;
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 45ecd9639977..6ffe17b849ae 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -140,7 +140,7 @@ ssize_t pm80xx_get_fatal_dump(struct device *cdev,
- 		pm8001_ha->fatal_bar_loc = 0;
- 	}
- 
--	/* Read until accum_len is retrived */
-+	/* Read until accum_len is retrieved */
- 	accum_len = pm8001_mr32(fatal_table_address,
- 				MPI_FATAL_EDUMP_TABLE_ACCUM_LEN);
- 	/* Determine length of data between previously stored transfer length
-@@ -1011,7 +1011,7 @@ static int mpi_init_check(struct pm8001_hba_info *pm8001_ha)
- 			   value);
- 		return -EBUSY;
- 	}
--	/* check the MPI-State for initialization upto 100ms*/
-+	/* check the MPI-State for initialization up to 100ms*/
- 	max_wait_count = 5;/* 100 msec */
- 	do {
- 		msleep(FW_READY_INTERVAL);
-@@ -1093,7 +1093,7 @@ static int init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
- 
- 	value = pm8001_cr32(pm8001_ha, 0, MSGU_SCRATCH_PAD_0);
- 
--	/**
-+	/*
- 	 * lower 26 bits of SCRATCHPAD0 register describes offset within the
- 	 * PCIe BAR where the MPI configuration table is present
- 	 */
-@@ -1101,7 +1101,7 @@ static int init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
- 
- 	pm8001_dbg(pm8001_ha, DEV, "Scratchpad 0 Offset: 0x%x value 0x%x\n",
- 		   offset, value);
--	/**
-+	/*
- 	 * Upper 6 bits describe the offset within PCI config space where BAR
- 	 * is located.
- 	 */
-@@ -1109,7 +1109,7 @@ static int init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
- 	pcibar = get_pci_bar_index(pcilogic);
- 	pm8001_dbg(pm8001_ha, INIT, "Scratchpad 0 PCI BAR: %d\n", pcibar);
- 
--	/**
-+	/*
- 	 * Make sure the offset falls inside the ioremapped PCI BAR
- 	 */
- 	if (offset > pm8001_ha->io_mem[pcibar].memsize) {
-@@ -1121,7 +1121,7 @@ static int init_pci_device_addresses(struct pm8001_hba_info *pm8001_ha)
- 	pm8001_ha->main_cfg_tbl_addr = base_addr =
- 		pm8001_ha->io_mem[pcibar].memvirtaddr + offset;
- 
--	/**
-+	/*
- 	 * Validate main configuration table address: first DWord should read
- 	 * "PMCS"
- 	 */
-@@ -1385,7 +1385,7 @@ pm80xx_get_encrypt_info(struct pm8001_hba_info *pm8001_ha)
- }
- 
- /**
-- * pm80xx_encrypt_update - update flash with encryption informtion
-+ * pm80xx_encrypt_update - update flash with encryption information
-  * @pm8001_ha: our hba card information.
-  */
- static int pm80xx_encrypt_update(struct pm8001_hba_info *pm8001_ha)
-@@ -1422,7 +1422,7 @@ static int pm80xx_encrypt_update(struct pm8001_hba_info *pm8001_ha)
- }
- 
- /**
-- * pm80xx_chip_init - the main init function that initialize whole PM8001 chip.
-+ * pm80xx_chip_init - the main init function that initializes whole PM8001 chip.
-  * @pm8001_ha: our hba card information
-  */
- static int pm80xx_chip_init(struct pm8001_hba_info *pm8001_ha)
-@@ -1541,7 +1541,7 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
- }
- 
- /**
-- * pm80xx_fatal_errors - returns non zero *ONLY* when fatal errors
-+ * pm80xx_fatal_errors - returns non-zero *ONLY* when fatal errors
-  * @pm8001_ha: our hba card information
-  *
-  * Fatal errors are recoverable only after a host reboot.
-@@ -1576,8 +1576,8 @@ pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha)
- }
- 
- /**
-- * pm80xx_chip_soft_rst - soft reset the PM8001 chip, so that the clear all
-- * the FW register status to the originated status.
-+ * pm80xx_chip_soft_rst - soft reset the PM8001 chip, so that all
-+ * FW register status are reset to the originated status.
-  * @pm8001_ha: our hba card information
-  */
- 
-@@ -1895,13 +1895,13 @@ static void pm80xx_send_read_log(struct pm8001_hba_info *pm8001_ha,
- }
- 
- /**
-- * mpi_ssp_completion- process the event that FW response to the SSP request.
-+ * mpi_ssp_completion - process the event that FW response to the SSP request.
-  * @pm8001_ha: our hba card information
-  * @piomb: the message contents of this outbound message.
-  *
-  * When FW has completed a ssp request for example a IO request, after it has
-- * filled the SG data with the data, it will trigger this event represent
-- * that he has finished the job,please check the coresponding buffer.
-+ * filled the SG data with the data, it will trigger this event representing
-+ * that he has finished the job; please check the corresponding buffer.
-  * So we will tell the caller who maybe waiting the result to tell upper layer
-  * that the task has been finished.
-  */
-@@ -3217,7 +3217,7 @@ mpi_smp_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
- }
- 
- /**
-- * pm80xx_hw_event_ack_req- For PM8001,some events need to acknowage to FW.
-+ * pm80xx_hw_event_ack_req- For PM8001, some events need to acknowledge to FW.
-  * @pm8001_ha: our hba card information
-  * @Qnum: the outbound queue message number.
-  * @SEA: source of event to ack
-@@ -3275,7 +3275,7 @@ static void hw_event_port_recover(struct pm8001_hba_info *pm8001_ha,
- }
- 
- /**
-- * hw_event_sas_phy_up -FW tells me a SAS phy up event.
-+ * hw_event_sas_phy_up - FW tells me a SAS phy up event.
-  * @pm8001_ha: our hba card information
-  * @piomb: IO message buffer
-  */
-@@ -3353,7 +3353,7 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- }
- 
- /**
-- * hw_event_sata_phy_up -FW tells me a SATA phy up event.
-+ * hw_event_sata_phy_up - FW tells me a SATA phy up event.
-  * @pm8001_ha: our hba card information
-  * @piomb: IO message buffer
-  */
-@@ -3400,7 +3400,7 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- }
- 
- /**
-- * hw_event_phy_down -we should notify the libsas the phy is down.
-+ * hw_event_phy_down - we should notify the libsas the phy is down.
-  * @pm8001_ha: our hba card information
-  * @piomb: IO message buffer
-  */
-@@ -3500,7 +3500,7 @@ static int mpi_phy_start_resp(struct pm8001_hba_info *pm8001_ha, void *piomb)
- }
- 
- /**
-- * mpi_thermal_hw_event -The hw event has come.
-+ * mpi_thermal_hw_event - a thermal hw event has come.
-  * @pm8001_ha: our hba card information
-  * @piomb: IO message buffer
-  */
-@@ -3530,7 +3530,7 @@ static int mpi_thermal_hw_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
- }
- 
- /**
-- * mpi_hw_event -The hw event has come.
-+ * mpi_hw_event - The hw event has come.
-  * @pm8001_ha: our hba card information
-  * @piomb: IO message buffer
-  */
-@@ -4025,7 +4025,7 @@ static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	case OPC_OUB_SET_DEV_INFO:
- 		pm8001_dbg(pm8001_ha, MSG, "OPC_OUB_SET_DEV_INFO\n");
- 		break;
--	/* spcv specifc commands */
-+	/* spcv specific commands */
- 	case OPC_OUB_PHY_START_RESP:
- 		pm8001_dbg(pm8001_ha, MSG,
- 			   "OPC_OUB_PHY_START_RESP opcode:%x\n", opc);
-@@ -4186,7 +4186,7 @@ static void build_smp_cmd(u32 deviceID, __le32 hTag,
- }
- 
- /**
-- * pm80xx_chip_smp_req - send a SMP task to FW
-+ * pm80xx_chip_smp_req - send an SMP task to FW
-  * @pm8001_ha: our hba card information.
-  * @ccb: the ccb information this request used.
-  */
-@@ -4346,7 +4346,7 @@ static int check_enc_sat_cmd(struct sas_task *task)
- }
- 
- /**
-- * pm80xx_chip_ssp_io_req - send a SSP task to FW
-+ * pm80xx_chip_ssp_io_req - send an SSP task to FW
-  * @pm8001_ha: our hba card information.
-  * @ccb: the ccb information this request used.
-  */
-@@ -4750,13 +4750,13 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
- 	payload.ase_sh_lm_slr_phyid = cpu_to_le32(SPINHOLD_DISABLE |
- 			LINKMODE_AUTO | pm8001_ha->link_rate | phy_id);
- 	/* SSC Disable and SAS Analog ST configuration */
--	/**
-+	/*
- 	payload.ase_sh_lm_slr_phyid =
- 		cpu_to_le32(SSC_DISABLE_30 | SAS_ASE | SPINHOLD_DISABLE |
- 		LINKMODE_AUTO | LINKRATE_15 | LINKRATE_30 | LINKRATE_60 |
- 		phy_id);
- 	Have to add "SAS PHY Analog Setup SPASTI 1 Byte" Based on need
--	**/
-+	*/
- 
- 	payload.sas_identify.dev_type = SAS_END_DEVICE;
- 	payload.sas_identify.initiator_bits = SAS_PROTOCOL_ALL;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 8f9727e525aa..7456a26aef51 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -194,7 +194,7 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
-  * @bufflen:	len of buffer
-  * @sense:	optional sense buffer
-  * @sshdr:	optional decoded sense header
-- * @timeout:	request timeout in seconds
-+ * @timeout:	request timeout in HZ
-  * @retries:	number of times to retry request
-  * @flags:	flags for ->cmd_flags
-  * @rq_flags:	flags for ->rq_flags
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c98d540ac044..194755c9ddfe 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1229,8 +1229,13 @@ static inline int ufshcd_vops_pwr_change_notify(struct ufs_hba *hba,
- static inline void ufshcd_vops_setup_xfer_req(struct ufs_hba *hba, int tag,
- 					bool is_scsi_cmd)
- {
--	if (hba->vops && hba->vops->setup_xfer_req)
--		return hba->vops->setup_xfer_req(hba, tag, is_scsi_cmd);
-+	if (hba->vops && hba->vops->setup_xfer_req) {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(hba->host->host_lock, flags);
-+		hba->vops->setup_xfer_req(hba, tag, is_scsi_cmd);
-+		spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	}
- }
- 
- static inline void ufshcd_vops_setup_task_mgmt(struct ufs_hba *hba,
 
