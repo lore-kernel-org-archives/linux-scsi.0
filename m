@@ -2,106 +2,233 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C974DC07E9D
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Jul 2021 16:12:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 211F9C07E95
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Jul 2021 18:10:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B7BFE6145B
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Jul 2021 16:12:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 104FD610F7
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Jul 2021 18:10:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346881AbhGSPbS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Jul 2021 11:31:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46662 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348511AbhGSPYx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jul 2021 11:24:53 -0400
-Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [IPv6:2001:4d48:ad52:32c8:5054:ff:fe00:142])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A601CC08E88C;
-        Mon, 19 Jul 2021 08:15:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=DEv5AMPYTsRvufOgvEX+iyR62xQvFefugMO+OsVkHzc=; b=DdKXacyQxn7Hz8fN7PJPr6m9x
-        d4hT/T0CJ5vKsm+NrCyfhhcEa16qr7fh5ZmNRudBMiNsh2jWmw+8ed7lCBIMi/jmkxYayCvxuuGFK
-        4hGzvSFep0kUFA1ZNBEEQeCQdSfzUhQ6zgFkq82drCAMx1t9UybqRKDrNW6URJC1JvCwW0DMXWT0J
-        m8V5Vgh2JPge/tTVm8IONzCUUTFB5PbqFmG7VItuZoc2Wg8A7OONJFrHCYD+gnCyml/DiKV1jbrlh
-        EcOJfYmvL8Ub22suPEmn9SZalhR+cT/W6dvmJJoHr8kHoEp/k9Sarl2dHD3wp1WISKxfd40O6Ylfs
-        YGaL+yUww==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:46332)
-        by pandora.armlinux.org.uk with esmtpsa (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <linux@armlinux.org.uk>)
-        id 1m5VPo-00054L-KD; Mon, 19 Jul 2021 16:42:44 +0100
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.92)
-        (envelope-from <linux@shell.armlinux.org.uk>)
-        id 1m5VPi-00066F-Ex; Mon, 19 Jul 2021 16:42:38 +0100
-Date:   Mon, 19 Jul 2021 16:42:38 +0100
-From:   "Russell King (Oracle)" <linux@armlinux.org.uk>
-To:     Herbert Xu <herbert@gondor.apana.org.au>
-Cc:     hch@lst.de, torvalds@linux-foundation.org,
-        akpm@linux-foundation.org, James.Bottomley@hansenpartnership.com,
-        guoren@kernel.org, tsbogend@alpha.franken.de, nickhu@andestech.com,
-        green.hu@gmail.com, deanbo422@gmail.com, deller@gmx.de,
-        ysato@users.sourceforge.jp, dalias@libc.org, geoff@infradead.org,
-        paul@crapouillou.net, ulf.hansson@linaro.org, alexs@kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-csky@vger.kernel.org, linux-mips@vger.kernel.org,
-        linux-parisc@vger.kernel.org, linux-sh@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-mm@kvack.org, linux-doc@vger.kernel.org
-Subject: Re: flush_kernel_dcache_page fixes and removal
-Message-ID: <20210719154238.GS22278@shell.armlinux.org.uk>
-References: <20210713084648.GF22278@shell.armlinux.org.uk>
- <20210719053851.GA16780@gondor.apana.org.au>
+        id S1351994AbhGSRaH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Jul 2021 13:30:07 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:23721 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1379919AbhGSR13 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Jul 2021 13:27:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1626718087;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=IBF1HhagFH513KCNaC2u9KBtrM6AyFS1DGmN7/wZdAA=;
+        b=DzQq+QCoN/o1crVKrN6gL19XA6Q5K3KT6CYgPy98lxSQ9rySP5Yy3Ey63TgcsjxaIqq6FH
+        +urCnX+HqOH4hpG9gHuIZ5Tl/tZlktvk41phRezR0VUN19TdSCfVxOOx6upy80ZBtRa658
+        DP1SgJXwjM3/68oW6Y54CvtYhjq/geE=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-354-_Q69ehj8NUSZbCa1hvPJdw-1; Mon, 19 Jul 2021 14:08:06 -0400
+X-MC-Unique: _Q69ehj8NUSZbCa1hvPJdw-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 254B41023F57;
+        Mon, 19 Jul 2021 18:08:05 +0000 (UTC)
+Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id A38F460CA1;
+        Mon, 19 Jul 2021 18:07:52 +0000 (UTC)
+From:   Nitesh Narayan Lal <nitesh@redhat.com>
+To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
+        tglx@linutronix.de, jesse.brandeburg@intel.com,
+        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
+        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
+        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
+        peterz@infradead.org, davem@davemloft.net,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
+        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com,
+        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
+        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
+        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
+        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
+        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
+        somnath.kotur@broadcom.com, nilal@redhat.com,
+        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
+        ahs3@redhat.com, leonro@nvidia.com,
+        chandrakanth.patil@broadcom.com, bjorn.andersson@linaro.org,
+        chunkuang.hu@kernel.org, yongqiang.niu@mediatek.com,
+        baolin.wang7@gmail.com, poros@redhat.com, minlei@redhat.com,
+        emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        _govind@gmx.com, ley.foon.tan@intel.com, kabel@kernel.org,
+        viresh.kumar@linaro.org, Tushar.Khandelwal@arm.com,
+        luobin9@huawei.com
+Subject: [PATCH v4 00/14] genirq: Cleanup the usage of irq_set_affinity_hint
+Date:   Mon, 19 Jul 2021 14:07:32 -0400
+Message-Id: <20210719180746.1008665-1-nitesh@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210719053851.GA16780@gondor.apana.org.au>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-Sender: Russell King (Oracle) <linux@armlinux.org.uk>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Jul 19, 2021 at 01:38:51PM +0800, Herbert Xu wrote:
-> Russell King Oracle <linux@armlinux.org.uk> wrote:
-> >
-> > I think you need to be careful - I seem to have a recollection that the
-> > reason we ended up with flush_kernel_dcache_page() was the need to avoid
-> > the taking of the mmap lock for 32-bit ARM VIVT based CPUs in
-> > flush_dcache_page(). 32-bit ARM flush_dcache_page() can block.
-> > 
-> > If you're sure that all these changes you're making do not end up
-> > calling flush_dcache_page() from a path where we are atomic, then fine.
-> 
-> The Crypto API has been calling flush_dcache_page from softirq
-> context since before the advent of git (see crypto/scatterwalk.c
-> from the initial import).  So if 32-bit ARM blocks on it then this
-> has been broken for almost 20 years.
+The drivers currently rely on irq_set_affinity_hint() to either set the
+affinity_hint that is consumed by the userspace and/or to enforce a custom
+affinity.
 
-I think what's confusing me is the naming of flush_dcache_mmap_lock().
-The mmap lock is a read-write semaphore (see linux/mmap-lock.h), and
-is even called "mmap_lock" in mm_struct, but this has nothing to do
-with flush_dcache_mmap_lock().
+irq_set_affinity_hint() as the name suggests is originally introduced to
+only set the affinity_hint to help the userspace in guiding the interrupts
+and not the affinity itself. However, since the commit
 
-So no, flush_dcache_mmap_lock() doesn't block as I first thought, and
-therefore flush_dcache_page() doesn't block either.
+        e2e64a932556 "genirq: Set initial affinity in irq_set_affinity_hint()"
 
-Sorry for the noise.
+irq_set_affinity_hint() also started applying the provided cpumask (if not
+NULL) as the affinity for the interrupts. The issue that this commit was
+trying to solve is to allow the drivers to enforce their affinity mask to
+distribute the interrupts across the CPUs such that they don't always end
+up on CPU0. This issue has been resolved within the irq subsystem since the
+commit
 
-However, I now seem to remember some discussion in the past when I was
-trying to get people to use flush_dcache_page() to solve the coherency
-problems when block drivers were doing PIO to page cache pages. I seem
-to remember there being objections to it, which is one of the reasons
-we ended up with a lighter weight flush_kernel_dcache_page(). But
-shrug, dim and distant memories.
+        a0c9259dc4e1 "irq/matrix: Spread interrupts on allocation"
 
--- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTP is here! 40Mbps down 10Mbps up. Decent connectivity at last!
+Hence, there is no need for the drivers to overwrite the affinity to spread
+as it is dynamically performed at the time of allocation.
+
+Also, irq_set_affinity_hint() setting affinity unconditionally introduces
+issues for the drivers that only want to set their affinity_hint and not the
+affinity itself as for these driver interrupts the default_smp_affinity_mask
+is completely ignored (for detailed investigation please refer to [1]).
+
+Unfortunately reverting the commit e2e64a932556 is not an option at this
+point for two reasons [2]:
+
+- Several drivers for a valid reason (performance) rely on this API to
+  enforce their affinity mask
+
+- Until very recently this was the only exported interface that was
+  available
+
+To clear this out Thomas has come up with the following interfaces:
+
+- irq_set_affinity(): only sets affinity of an IRQ [3]
+- irq_update_affinity_hint(): Only sets the hint [4]
+- irq_set_affinity_and_hint(): Sets both affinity and the hint mask [4]
+
+The first API is already merged in the linus's tree and the patch
+that introduces the other two interfaces is included with this patch-set.
+
+To move to the stage where we can safely get rid of the
+irq_set_affinity_hint(), which has been marked deprecated, we have to
+move all its consumers to these new interfaces. In this patch-set, I have
+done that for a few drivers and will hopefully try to move the remaining of
+them in the coming days.
+
+Testing
+-------
+In terms of testing, I have performed some basic testing on x86 to verify
+things such as the interrupts are evenly spread on all CPUs, hint mask is
+correctly set etc. for the drivers - i40e, iavf, mlx5, mlx4, ixgbe, and
+enic on top of:
+
+        git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git
+
+So more testing is probably required for these and the drivers that I didn't
+test and any help will be much appreciated.
+
+
+Notes
+-----
+- For the mpt3sas driver I decided to go with the usage of
+  irq_set_affinity_and_hint over irq_set_affinity based on my analysis of
+  it and the megaraid driver. However, if we are sure that it is not
+  required then I can replace it with just irq_set_affinity as one of its
+  comment suggests.
+
+Change from v3 [5]
+------------------
+- Replaced irq_set_affinity_and_hint with irq_update_affinity_hint in
+  irdma (Leon Romanovsky)
+- rebased the patches on top of 5.14-rc2
+
+
+Change from v2 [6]
+------------------
+
+- Rebased on top of 5.14-rc1 (Leon Romanovsky)
+  + After discussion with Leon [7], made changes in the mlx5 patch to use
+    irq_set_affinity_and_hint over irq_update_affinity_hint
+  + i40iw is replaced with irdma driver, hence made the respective changes
+    in irdma (also replcaed irq_update_affinity_hint with
+    irq_set_affinity_and_hint).
+
+Change from v1 [8]
+------------------
+- Fixed compilation error by adding the new interface definitions for cases
+  where CONFIG_SMP is not defined
+
+- Fixed function usage in megaraid_sas and removed unnecessary variable
+  (Robin Murphy)
+
+- Removed unwanted #if/endif from mlx4 (Leon Romanovsky)
+
+- Other indentation related fixes
+
+ 
+[1] https://lore.kernel.org/lkml/1a044a14-0884-eedb-5d30-28b4bec24b23@redhat.com/
+[2] https://lore.kernel.org/linux-pci/d1d5e797-49ee-4968-88c6-c07119343492@arm.com/
+[3] https://lore.kernel.org/linux-arm-kernel/20210518091725.046774792@linutronix.de/
+[4] https://lore.kernel.org/patchwork/patch/1434326/
+[5] https://lore.kernel.org/linux-scsi/20210713211502.464259-1-nitesh@redhat.com/
+[6] https://lore.kernel.org/lkml/20210629152746.2953364-1-nitesh@redhat.com/
+[7] https://lore.kernel.org/lkml/YO0eKv2GJcADQTHH@unreal/
+[8] https://lore.kernel.org/linux-scsi/20210617182242.8637-1-nitesh@redhat.com/
+
+Nitesh Narayan Lal (13):
+  iavf: Use irq_update_affinity_hint
+  i40e: Use irq_update_affinity_hint
+  scsi: megaraid_sas: Use irq_set_affinity_and_hint
+  scsi: mpt3sas: Use irq_set_affinity_and_hint
+  RDMA/irdma: Use irq_update_affinity_hint
+  enic: Use irq_update_affinity_hint
+  be2net: Use irq_update_affinity_hint
+  ixgbe: Use irq_update_affinity_hint
+  mailbox: Use irq_update_affinity_hint
+  scsi: lpfc: Use irq_set_affinity
+  hinic: Use irq_set_affinity_and_hint
+  net/mlx5: Use irq_set_affinity_and_hint
+  net/mlx4: Use irq_update_affinity_hint
+
+Thomas Gleixner (1):
+  genirq: Provide new interfaces for affinity hints
+
+ drivers/infiniband/hw/irdma/hw.c              |  4 +-
+ drivers/mailbox/bcm-flexrm-mailbox.c          |  4 +-
+ drivers/net/ethernet/cisco/enic/enic_main.c   |  8 +--
+ drivers/net/ethernet/emulex/benet/be_main.c   |  4 +-
+ drivers/net/ethernet/huawei/hinic/hinic_rx.c  |  4 +-
+ drivers/net/ethernet/intel/i40e/i40e_main.c   |  8 +--
+ drivers/net/ethernet/intel/iavf/iavf_main.c   |  8 +--
+ drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 10 ++--
+ drivers/net/ethernet/mellanox/mlx4/eq.c       |  8 ++-
+ .../net/ethernet/mellanox/mlx5/core/pci_irq.c |  8 +--
+ drivers/scsi/lpfc/lpfc_init.c                 |  4 +-
+ drivers/scsi/megaraid/megaraid_sas_base.c     | 27 +++++-----
+ drivers/scsi/mpt3sas/mpt3sas_base.c           | 21 ++++----
+ include/linux/interrupt.h                     | 53 ++++++++++++++++++-
+ kernel/irq/manage.c                           |  8 +--
+ 15 files changed, 114 insertions(+), 65 deletions(-)
+
+--  
+
+
