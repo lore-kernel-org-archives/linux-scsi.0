@@ -2,136 +2,89 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37CFBC07E95
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Jul 2021 18:14:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A68F8C07E9D
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Jul 2021 23:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15CFA61181
-	for <linux-scsi@archiver.kernel.org>; Mon, 19 Jul 2021 18:14:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99F65610F7
+	for <linux-scsi@archiver.kernel.org>; Mon, 19 Jul 2021 23:39:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1355247AbhGSRd6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Jul 2021 13:33:58 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38385 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1380483AbhGSR3S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Jul 2021 13:29:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626718196;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zD/AaGcE7EIGISn2zwz3u10joSTkCMi6Zhxs5OikZmo=;
-        b=PIDc4WsCI6alsU5IS3jnIC7uIJ42z75OBQM2CbevTDEwA3T5B8eXDryq3z04j7Z2tHZUqv
-        GUApkl4mpobJx/513Ir2DXONqboJ4SAKpeO72EInkQ1164decBdtlCUohWHd8Y46hOzOJS
-        mUb8MxSSy+ZvFJn6hkzhWA7+KtNM8d0=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-450-OX8iL4c7Mt2f8Y44nDHi2Q-1; Mon, 19 Jul 2021 14:09:55 -0400
-X-MC-Unique: OX8iL4c7Mt2f8Y44nDHi2Q-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 111D9192D785;
-        Mon, 19 Jul 2021 18:09:54 +0000 (UTC)
-Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 727D7610AF;
-        Mon, 19 Jul 2021 18:09:49 +0000 (UTC)
-From:   Nitesh Narayan Lal <nitesh@redhat.com>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
-        tglx@linutronix.de, jesse.brandeburg@intel.com,
-        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
-        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
-        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
-        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
-        somnath.kotur@broadcom.com, nilal@redhat.com,
-        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
-        ahs3@redhat.com, leonro@nvidia.com,
-        chandrakanth.patil@broadcom.com, bjorn.andersson@linaro.org,
-        chunkuang.hu@kernel.org, yongqiang.niu@mediatek.com,
-        baolin.wang7@gmail.com, poros@redhat.com, minlei@redhat.com,
-        emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        _govind@gmx.com, ley.foon.tan@intel.com, kabel@kernel.org,
-        viresh.kumar@linaro.org, Tushar.Khandelwal@arm.com,
-        luobin9@huawei.com
-Subject: [PATCH v4 12/14] hinic: Use irq_set_affinity_and_hint
-Date:   Mon, 19 Jul 2021 14:07:44 -0400
-Message-Id: <20210719180746.1008665-13-nitesh@redhat.com>
-In-Reply-To: <20210719180746.1008665-1-nitesh@redhat.com>
-References: <20210719180746.1008665-1-nitesh@redhat.com>
+        id S1346541AbhGSW6O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 19 Jul 2021 18:58:14 -0400
+Received: from mail-pj1-f46.google.com ([209.85.216.46]:41552 "EHLO
+        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243150AbhGSWa5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Jul 2021 18:30:57 -0400
+Received: by mail-pj1-f46.google.com with SMTP id jx7-20020a17090b46c7b02901757deaf2c8so1389263pjb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Jul 2021 16:11:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=I526wSzOkW00CVxYXad8tWeRPw9m3Gt17/KZq068/AA=;
+        b=fN2Kv4Yce9HmRQ4wTAkKI2dKTlQqinvSOx5E5DBmqTZhIa1oQ7yEvTvlxhu6/uOxxA
+         xaIRZ+XZoY5doEJ4lriZamIxDjNlZkpilcCRbDexTaWHweR1Ht5Vb2N/d7kQruVIrkLH
+         IBry/8vnuMiYPLML0PsLClA/G4tDDwlh4J07Essj8qTvxemDHmfG11CG7CEiMXK+kibe
+         gKyEkG7giC/sR1iQ0N3mtUZS26MsMTOg9hz2U/79qAen++Q/SLfuvlPZtLu34VFyR+uF
+         9LlqIhPX1r0uIr3GSK4XTyC39A3ei9/IXOVdSyaBuEKV1RR5uX/f5mwLlKLc9/8id8Db
+         swAg==
+X-Gm-Message-State: AOAM5304UCfcGtLgL61r0D1d2QXSUqeuxk6VyT4OMCxT4DNnKfYKFLZK
+        VNFAwnIYfI1o0LY3t8wg+aw=
+X-Google-Smtp-Source: ABdhPJx+gMyR3YFvAvIePUmM2o9//jognnaCMgE3wvh6dbcj7DPA+xF3mn1Rq3GsJotcRJrS4Af1Zg==
+X-Received: by 2002:a17:90b:3617:: with SMTP id ml23mr26792259pjb.236.1626736296849;
+        Mon, 19 Jul 2021 16:11:36 -0700 (PDT)
+Received: from bvanassche-glaptop.corp.google.com ([2620:0:1000:2004:b968:4d11:8f24:cf85])
+        by smtp.gmail.com with ESMTPSA id n32sm20855140pfv.59.2021.07.19.16.11.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Jul 2021 16:11:35 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+Subject: [PATCH] scsi: ufs: Fix memory corruption by ufshcd_read_desc_param()
+Date:   Mon, 19 Jul 2021 16:11:22 -0700
+Message-Id: <20210719231127.869088-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.32.0.402.g57bb445576-goog
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver uses irq_set_affinity_hint() to:
+If param_offset > buff_len then the memcpy() statement in
+ufshcd_read_desc_param() corrupts memory since it copies
+256 + buff_len - param_offset bytes into a buffer with size buff_len.
+Since param_offset < 256 this results in writing past the bound of the
+output buffer.
 
-- Set the affinity_hint which is consumed by the userspace for
-  distributing the interrupts
-
-- Enforce affinity
-
-As per commit 352f58b0d9f2 ("net-next/hinic: Set Rxq irq to specific cpu
-for NUMA"), the hinic driver enforces its own affinity to bind IRQs to the
-local NUMA node. However, irq_set_affinity_hint() applying the provided
-cpumask as an affinity for the interrupt is an undocumented side effect.
-
-To remove this side effect irq_set_affinity_hint() has been marked as
-deprecated and new interfaces have been introduced. Hence, replace the
-irq_set_affinity_hint() with the new interface irq_set_affinity_and_hint()
-where the provided mask needs to be applied as the affinity and
-affinity_hint pointer needs to be set and replace with
-irq_update_affinity_hint() where only affinity_hint needs to be updated.
-
-Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+Fixes: cbe193f6f093 ("scsi: ufs: Fix potential NULL pointer access during memcpy")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/net/ethernet/huawei/hinic/hinic_rx.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/huawei/hinic/hinic_rx.c b/drivers/net/ethernet/huawei/hinic/hinic_rx.c
-index fed3b6bc0d76..b33ed4d92b71 100644
---- a/drivers/net/ethernet/huawei/hinic/hinic_rx.c
-+++ b/drivers/net/ethernet/huawei/hinic/hinic_rx.c
-@@ -548,7 +548,7 @@ static int rx_request_irq(struct hinic_rxq *rxq)
- 		goto err_req_irq;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 89da2cf2c969..00502ffe9b4a 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3365,7 +3365,9 @@ int ufshcd_read_desc_param(struct ufs_hba *hba,
  
- 	cpumask_set_cpu(qp->q_id % num_online_cpus(), &rq->affinity_mask);
--	err = irq_set_affinity_hint(rq->irq, &rq->affinity_mask);
-+	err = irq_set_affinity_and_hint(rq->irq, &rq->affinity_mask);
- 	if (err)
- 		goto err_irq_affinity;
- 
-@@ -565,7 +565,7 @@ static void rx_free_irq(struct hinic_rxq *rxq)
- {
- 	struct hinic_rq *rq = rxq->rq;
- 
--	irq_set_affinity_hint(rq->irq, NULL);
-+	irq_update_affinity_hint(rq->irq, NULL);
- 	free_irq(rq->irq, rxq);
- 	rx_del_napi(rxq);
- }
--- 
-2.27.0
-
+ 	if (is_kmalloc) {
+ 		/* Make sure we don't copy more data than available */
+-		if (param_offset + param_size > buff_len)
++		if (buff_len < param_offset)
++			param_size = 0;
++		else if (param_offset + param_size > buff_len)
+ 			param_size = buff_len - param_offset;
+ 		memcpy(param_read_buf, &desc_buf[param_offset], param_size);
+ 	}
