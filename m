@@ -2,224 +2,416 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A4F3C07E95
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 17:07:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 633EAC07E9B
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 20:48:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E231D610C7
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 17:07:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F32F61004
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 20:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234850AbhGTQ0c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Jul 2021 12:26:32 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3439 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229790AbhGTQZI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Jul 2021 12:25:08 -0400
-Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GTlHW1hQMz6FD8P;
-        Wed, 21 Jul 2021 00:56:55 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Tue, 20 Jul 2021 19:05:44 +0200
-Received: from [10.47.85.214] (10.47.85.214) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.2; Tue, 20 Jul
- 2021 18:05:43 +0100
-Subject: Re: [PATCH 0/9] blk-mq: Reduce static requests memory footprint for
- shared sbitmap
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>,
-        "hare@suse.de" <hare@suse.de>
-References: <1626275195-215652-1-git-send-email-john.garry@huawei.com>
- <YPbqMSjZIA8l0jHQ@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <22a23f4d-9d6b-308d-7a32-75c5adffe8d2@huawei.com>
-Date:   Tue, 20 Jul 2021 18:05:42 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S235338AbhGTUGJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jul 2021 16:06:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60814 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236897AbhGTTpQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Jul 2021 15:45:16 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 56E9760BBB;
+        Tue, 20 Jul 2021 20:25:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1626812753;
+        bh=l5xDkWzCR3urdpTjqmcMUpN6o09NewdpR8Jc68Liw0U=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=VBe4HBaGXZMGD0ZdODVsdKbrJ8SORqt3SuXaX37yK3AHshxYDbXGRQXluA6mx7jW3
+         pTBW48mt4sopqYvfTU+bZO/p3bIz4jENtO9uPBTi0SuDufiC+I7vrG7Ce/qo8tgdbL
+         Vv6L36N+yjTOuiDCZaFxIklqrdMuw+BZDERVBNSuKxTccmMm+0DpHaq2hVxlihY0dP
+         QgyoMfzVLFJnhH8igTsTFxC4OBQeb5IzLYxfferXAP0fHcTPB3F6Yr+8KbAgAJLPf2
+         a0unVf6CWv1kUs6z+N9Cr2G8gL44dgqsGt8dlJjFYXR6m7PEcLW13zfgVQ2ipy0CDg
+         OpoYDDMZUiahA==
+Date:   Tue, 20 Jul 2021 22:25:42 +0200
+From:   Wolfram Sang <wsa@kernel.org>
+To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        kernel@pengutronix.de,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Alexandre Bounine <alex.bou9@gmail.com>,
+        Alex Dubov <oakad@yahoo.com>, Alex Elder <elder@kernel.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Andy Gross <agross@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Ben Widawsky <ben.widawsky@intel.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bodo Stroesser <bostroesser@gmail.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Cristian Marussi <cristian.marussi@arm.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Dexuan Cui <decui@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Frank Li <lznuaa@gmail.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Geoff Levand <geoff@infradead.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Hans de Goede <hdegoede@redhat.com>,
+        Harald Freudenberger <freude@linux.ibm.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Helge Deller <deller@gmx.de>, Ira Weiny <ira.weiny@intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jason Wang <jasowang@redhat.com>,
+        Jens Taprogge <jens.taprogge@taprogge.org>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Jiri Kosina <jikos@kernel.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Joey Pabalan <jpabalanb@gmail.com>,
+        Johan Hovold <johan@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Johannes Thumshirn <morbidrsa@gmail.com>,
+        Jon Mason <jdmason@kudzu.us>, Juergen Gross <jgross@suse.com>,
+        Julien Grall <jgrall@amazon.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Lee Jones <lee.jones@linaro.org>, Len Brown <lenb@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Manohar Vanga <manohar.vanga@gmail.com>,
+        Marc Zyngier <maz@kernel.org>, Mark Brown <broonie@kernel.org>,
+        Mark Gross <mgross@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martyn Welch <martyn@welchs.me.uk>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Maxime Ripard <mripard@kernel.org>,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Maxim Levitsky <maximlevitsky@gmail.com>,
+        Michael Buesch <m@bues.ch>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Michael Jamet <michael.jamet@intel.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Moritz Fischer <mdf@kernel.org>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Rich Felker <dalias@libc.org>,
+        Rikard Falkeborn <rikard.falkeborn@gmail.com>,
+        Rob Herring <robh@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
+        Samuel Holland <samuel@sholland.org>,
+        Samuel Iglesias Gonsalvez <siglesias@igalia.com>,
+        SeongJae Park <sjpark@amazon.de>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Sven Van Asbroeck <TheSven73@gmail.com>,
+        Takashi Iwai <tiwai@suse.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Thorsten Scherer <t.scherer@eckelmann.de>,
+        Tomas Winkler <tomas.winkler@intel.com>,
+        Tom Rix <trix@redhat.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Vineeth Vijayan <vneethv@linux.ibm.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        William Breathitt Gray <vilhelm.gray@gmail.com>,
+        Wu Hao <hao.wu@intel.com>,
+        Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        YueHaibing <yuehaibing@huawei.com>,
+        Yufen Yu <yuyufen@huawei.com>, alsa-devel@alsa-project.org,
+        dmaengine@vger.kernel.org, greybus-dev@lists.linaro.org,
+        industrypack-devel@lists.sourceforge.net, kvm@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, linux-cxl@vger.kernel.org,
+        linux-fpga@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-i3c@lists.infradead.org,
+        linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-m68k@lists.linux-m68k.org, linux-media@vger.kernel.org,
+        linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-ntb@googlegroups.com, linux-parisc@vger.kernel.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-sh@vger.kernel.org, linux-spi@vger.kernel.org,
+        linux-staging@lists.linux.dev, linux-sunxi@lists.linux.dev,
+        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, nvdimm@lists.linux.dev,
+        platform-driver-x86@vger.kernel.org, sparclinux@vger.kernel.org,
+        target-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org,
+        Johannes Thumshirn <jth@kernel.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>
+Subject: Re: [PATCH v4 5/5] bus: Make remove callback return void
+Message-ID: <YPcxRgfZymtjJ4ih@kunai>
+Mail-Followup-To: Wolfram Sang <wsa@kernel.org>,
+        Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        kernel@pengutronix.de,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Alexandre Bounine <alex.bou9@gmail.com>,
+        Alex Dubov <oakad@yahoo.com>, Alex Elder <elder@kernel.org>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        Alison Schofield <alison.schofield@intel.com>,
+        Allen Hubbe <allenbh@gmail.com>,
+        Andreas Noever <andreas.noever@gmail.com>,
+        Andy Gross <agross@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
+        Ben Widawsky <ben.widawsky@intel.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Bodo Stroesser <bostroesser@gmail.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        Christian Borntraeger <borntraeger@de.ibm.com>,
+        Cornelia Huck <cohuck@redhat.com>,
+        Cristian Marussi <cristian.marussi@arm.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        David Woodhouse <dwmw@amazon.co.uk>,
+        Dexuan Cui <decui@microsoft.com>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Dominik Brodowski <linux@dominikbrodowski.net>,
+        Finn Thain <fthain@linux-m68k.org>,
+        Florian Fainelli <f.fainelli@gmail.com>,
+        Frank Li <lznuaa@gmail.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        Geoff Levand <geoff@infradead.org>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Hannes Reinecke <hare@suse.de>, Hans de Goede <hdegoede@redhat.com>,
+        Harald Freudenberger <freude@linux.ibm.com>,
+        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+        Heiko Carstens <hca@linux.ibm.com>, Helge Deller <deller@gmx.de>,
+        Ira Weiny <ira.weiny@intel.com>, Jakub Kicinski <kuba@kernel.org>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Jaroslav Kysela <perex@perex.cz>, Jason Wang <jasowang@redhat.com>,
+        Jens Taprogge <jens.taprogge@taprogge.org>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Jiri Kosina <jikos@kernel.org>, Jiri Slaby <jirislaby@kernel.org>,
+        Joey Pabalan <jpabalanb@gmail.com>, Johan Hovold <johan@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Johannes Thumshirn <morbidrsa@gmail.com>,
+        Jon Mason <jdmason@kudzu.us>, Juergen Gross <jgross@suse.com>,
+        Julien Grall <jgrall@amazon.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        Kirti Wankhede <kwankhede@nvidia.com>,
+        Kishon Vijay Abraham I <kishon@ti.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        "K. Y. Srinivasan" <kys@microsoft.com>,
+        Lee Jones <lee.jones@linaro.org>, Len Brown <lenb@kernel.org>,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Manohar Vanga <manohar.vanga@gmail.com>,
+        Marc Zyngier <maz@kernel.org>, Mark Brown <broonie@kernel.org>,
+        Mark Gross <mgross@linux.intel.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Martyn Welch <martyn@welchs.me.uk>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Matt Porter <mporter@kernel.crashing.org>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Maxime Ripard <mripard@kernel.org>,
+        Maximilian Luz <luzmaximilian@gmail.com>,
+        Maxim Levitsky <maximlevitsky@gmail.com>,
+        Michael Buesch <m@bues.ch>, Michael Ellerman <mpe@ellerman.id.au>,
+        Michael Jamet <michael.jamet@intel.com>,
+        "Michael S. Tsirkin" <mst@redhat.com>,
+        Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Mike Christie <michael.christie@oracle.com>,
+        Moritz Fischer <mdf@kernel.org>, Ohad Ben-Cohen <ohad@wizery.com>,
+        Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Rich Felker <dalias@libc.org>,
+        Rikard Falkeborn <rikard.falkeborn@gmail.com>,
+        Rob Herring <robh@kernel.org>, Russell King <linux@armlinux.org.uk>,
+        "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
+        Samuel Holland <samuel@sholland.org>,
+        Samuel Iglesias Gonsalvez <siglesias@igalia.com>,
+        SeongJae Park <sjpark@amazon.de>,
+        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
+        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Stefan Richter <stefanr@s5r6.in-berlin.de>,
+        Stephen Boyd <sboyd@kernel.org>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Sven Van Asbroeck <TheSven73@gmail.com>,
+        Takashi Iwai <tiwai@suse.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Thorsten Scherer <t.scherer@eckelmann.de>,
+        Tomas Winkler <tomas.winkler@intel.com>, Tom Rix <trix@redhat.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Vineeth Vijayan <vneethv@linux.ibm.com>,
+        Vinod Koul <vkoul@kernel.org>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        William Breathitt Gray <vilhelm.gray@gmail.com>,
+        Wu Hao <hao.wu@intel.com>, Yehezkel Bernat <YehezkelShB@gmail.com>,
+        Yoshinori Sato <ysato@users.sourceforge.jp>,
+        YueHaibing <yuehaibing@huawei.com>, Yufen Yu <yuyufen@huawei.com>,
+        alsa-devel@alsa-project.org, dmaengine@vger.kernel.org,
+        greybus-dev@lists.linaro.org,
+        industrypack-devel@lists.sourceforge.net, kvm@vger.kernel.org,
+        linux1394-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        linux-cxl@vger.kernel.org, linux-fpga@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-i2c@vger.kernel.org,
+        linux-i3c@lists.infradead.org, linux-input@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-m68k@lists.linux-m68k.org,
+        linux-media@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-ntb@googlegroups.com,
+        linux-parisc@vger.kernel.org, linux-pci@vger.kernel.org,
+        linuxppc-dev@lists.ozlabs.org, linux-remoteproc@vger.kernel.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-serial@vger.kernel.org, linux-sh@vger.kernel.org,
+        linux-spi@vger.kernel.org, linux-staging@lists.linux.dev,
+        linux-sunxi@lists.linux.dev, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+        nvdimm@lists.linux.dev, platform-driver-x86@vger.kernel.org,
+        sparclinux@vger.kernel.org, target-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        xen-devel@lists.xenproject.org, Johannes Thumshirn <jth@kernel.org>,
+        "Rafael J . Wysocki" <rafael@kernel.org>
+References: <20210713193522.1770306-1-u.kleine-koenig@pengutronix.de>
+ <20210713193522.1770306-6-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <YPbqMSjZIA8l0jHQ@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.85.214]
-X-ClientProxiedBy: lhreml712-chm.china.huawei.com (10.201.108.63) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="o9Bjd73EPYzHYRI8"
+Content-Disposition: inline
+In-Reply-To: <20210713193522.1770306-6-u.kleine-koenig@pengutronix.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 20/07/2021 16:22, Ming Lei wrote:
-> On Wed, Jul 14, 2021 at 11:06:26PM +0800, John Garry wrote:
->> Currently a full set of static requests are allocated per hw queue per
->> tagset when shared sbitmap is used.
->>
->> However, only tagset->queue_depth number of requests may be active at
->> any given time. As such, only tagset->queue_depth number of static
->> requests are required.
->>
->> The same goes for using an IO scheduler, which allocates a full set of
->> static requests per hw queue per request queue.
->>
->> This series very significantly reduces memory usage in both scenarios by
->> allocating static rqs per tagset and per request queue, respectively,
->> rather than per hw queue per tagset and per request queue.
->>
->> For megaraid sas driver on my 128-CPU arm64 system with 1x SATA disk, we
->> save approx. 300MB(!) [370MB -> 60MB]
->>
->> A couple of patches are marked as RFC, as maybe there is a better
->> implementation approach.
 
-Hi Ming,
+--o9Bjd73EPYzHYRI8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-To be clear, my concerns with my implementation were:
-a. Interface of __blk_mq_{alloc,free}_rqs was a bit strange in passing a 
-struct list_head * and struct request ** . But maybe it's ok.
-b. We need to ensure that the host should not expect a set of static rqs 
-per hw queue, i.e. should not use blk_mq_ops.init_request hctx_idx 
-argument. The guard I have added is effectively useless against that. I 
-am thinking that we should have a variant of blk_mq_ops.init_request 
-without a hctx_idx argument, which needs to be used for shared sbitmap.
+On Tue, Jul 13, 2021 at 09:35:22PM +0200, Uwe Kleine-K=C3=B6nig wrote:
+> The driver core ignores the return value of this callback because there
+> is only little it can do when a device disappears.
+>=20
+> This is the final bit of a long lasting cleanup quest where several
+> buses were converted to also return void from their remove callback.
+> Additionally some resource leaks were fixed that were caused by drivers
+> returning an error code in the expectation that the driver won't go
+> away.
+>=20
+> With struct bus_type::remove returning void it's prevented that newly
+> implemented buses return an ignored error code and so don't anticipate
+> wrong expectations for driver authors.
+>=20
+> Acked-by: Russell King (Oracle) <rmk+kernel@armlinux.org.uk> (For ARM, Am=
+ba and related parts)
+> Acked-by: Mark Brown <broonie@kernel.org>
+> Acked-by: Chen-Yu Tsai <wens@csie.org> (for sunxi-rsb)
+> Acked-by: Pali Roh=C3=A1r <pali@kernel.org>
+> Acked-by: Mauro Carvalho Chehab <mchehab@kernel.org> (for media)
+> Acked-by: Hans de Goede <hdegoede@redhat.com> (For drivers/platform)
+> Acked-by: Alexandre Belloni <alexandre.belloni@bootlin.com>
+> Acked-By: Vinod Koul <vkoul@kernel.org>
+> Acked-by: Juergen Gross <jgross@suse.com> (For xen)
+> Acked-by: Lee Jones <lee.jones@linaro.org> (For mfd)
+> Acked-by: Johannes Thumshirn <jth@kernel.org> (For mcb)
+> Acked-by: Johan Hovold <johan@kernel.org>
+> Acked-by: Srinivas Kandagatla <srinivas.kandagatla@linaro.org> (For slimb=
+us)
+> Acked-by: Kirti Wankhede <kwankhede@nvidia.com> (For vfio)
+> Acked-by: Maximilian Luz <luzmaximilian@gmail.com>
+> Acked-by: Heikki Krogerus <heikki.krogerus@linux.intel.com> (For ulpi and=
+ typec)
+> Acked-by: Samuel Iglesias Gons=C3=A1lvez <siglesias@igalia.com> (For ipac=
+k)
+> Reviewed-by: Tom Rix <trix@redhat.com> (For fpga)
+> Acked-by: Geoff Levand <geoff@infradead.org> (For ps3)
+> Acked-by: Yehezkel Bernat <YehezkelShB@gmail.com> (For thunderbolt)
+> Reviewed-by: Mathieu Poirier <mathieu.poirier@linaro.org>
+> Acked-by: Alexander Shishkin <alexander.shishkin@linux.intel.com> (For in=
+tel_th)
+> Acked-by: Dominik Brodowski <linux@dominikbrodowski.net> (For pcmcia)
+> Reviewed-by: Cornelia Huck <cohuck@redhat.com> (For drivers/s390 and driv=
+ers/vfio)
+> Acked-by: Rafael J. Wysocki <rafael@kernel.org> (For ACPI)
+> Acked-by: Bjorn Andersson <bjorn.andersson@linaro.org> (rpmsg and apr)
+> Acked-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com> (For =
+intel-ish-hid)
+> Acked-by: Dan Williams <dan.j.williams@intel.com> (For CXL, DAX, and NVDI=
+MM)
+> Acked-by: William Breathitt Gray <vilhelm.gray@gmail.com> (For isa)
+> Acked-by: Stefan Richter <stefanr@s5r6.in-berlin.de> (For firewire)
+> Acked-by: Benjamin Tissoires <benjamin.tissoires@redhat.com> (For hid)
+> Acked-by: Thorsten Scherer <t.scherer@eckelmann.de> (For siox)
+> Acked-by: Sven Van Asbroeck <TheSven73@gmail.com> (For anybuss)
+> Acked-by: Ulf Hansson <ulf.hansson@linaro.org> (For MMC)
+> Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
 
-> 
-> There is another candidate for addressing this issue, and looks simpler:
+Acked-by: Wolfram Sang <wsa@kernel.org> # for I2C
 
-Thanks, I think that this solution does not deal with b., above, either.
+Thanks, Uwe!
 
-> 
->   block/blk-mq-sched.c |  4 ++++
->   block/blk-mq-tag.c   |  4 ++++
->   block/blk-mq-tag.h   |  3 +++
->   block/blk-mq.c       | 18 ++++++++++++++++++
->   block/blk-mq.h       | 11 +++++++++++
->   5 files changed, 40 insertions(+)
-> 
-> diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-> index c838d81ac058..b9236ee0fe4e 100644
-> --- a/block/blk-mq-sched.c
-> +++ b/block/blk-mq-sched.c
-> @@ -538,6 +538,10 @@ static int blk_mq_sched_alloc_tags(struct request_queue *q,
->   	if (!hctx->sched_tags)
->   		return -ENOMEM;
->   
-> +	blk_mq_set_master_tags(hctx->sched_tags,
-> +			q->queue_hw_ctx[0]->sched_tags, hctx->flags,
-> +			hctx_idx);
-> +
->   	ret = blk_mq_alloc_rqs(set, hctx->sched_tags, hctx_idx, q->nr_requests);
->   	if (ret)
->   		blk_mq_sched_free_tags(set, hctx, hctx_idx);
-> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-> index 86f87346232a..c471a073234d 100644
-> --- a/block/blk-mq-tag.c
-> +++ b/block/blk-mq-tag.c
-> @@ -608,6 +608,10 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
->   				tags->nr_reserved_tags, set->flags);
->   		if (!new)
->   			return -ENOMEM;
-> +
-> +		blk_mq_set_master_tags(new,
-> +			hctx->queue->queue_hw_ctx[0]->sched_tags, set->flags,
-> +			hctx->queue_num);
->   		ret = blk_mq_alloc_rqs(set, new, hctx->queue_num, tdepth);
->   		if (ret) {
->   			blk_mq_free_rq_map(new, set->flags);
-> diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
-> index 8ed55af08427..0a3fbbc61e06 100644
-> --- a/block/blk-mq-tag.h
-> +++ b/block/blk-mq-tag.h
-> @@ -21,6 +21,9 @@ struct blk_mq_tags {
->   	struct request **static_rqs;
->   	struct list_head page_list;
->   
-> +	/* only used for blk_mq_is_sbitmap_shared() */
-> +	struct blk_mq_tags	*master;
 
-It is a bit odd to have a pointer to struct blk_mq_tags in struct 
-blk_mq_tags like this
+--o9Bjd73EPYzHYRI8
+Content-Type: application/pgp-signature; name="signature.asc"
 
-> +
->   	/*
->   	 * used to clear request reference in rqs[] before freeing one
->   	 * request pool
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index 2c4ac51e54eb..ef8a6a7e5f7c 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -2348,6 +2348,15 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
->   {
->   	struct page *page;
->   
-> +	if (blk_mq_is_sbitmap_shared(set->flags)) {
-> +		if (tags->master)
-> +			tags = tags->master;
-> +		if (hctx_idx < set->nr_hw_queues - 1) {
-> +			blk_mq_clear_rq_mapping(set, tags, hctx_idx);
-> +			return;
-> +		}
-> +	}
-> +
->   	if (tags->rqs && set->ops->exit_request) {
->   		int i;
->   
-> @@ -2444,6 +2453,12 @@ int blk_mq_alloc_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
->   	size_t rq_size, left;
->   	int node;
->   
-> +	if (blk_mq_is_sbitmap_shared(set->flags) && tags->master) {
-> +		memcpy(tags->static_rqs, tags->master->static_rqs,
-> +		       sizeof(tags->static_rqs[0]) * tags->nr_tags);
-> +		return 0;
-> +	}
-> +
->   	node = blk_mq_hw_queue_to_node(&set->map[HCTX_TYPE_DEFAULT], hctx_idx);
->   	if (node == NUMA_NO_NODE)
->   		node = set->numa_node;
-> @@ -2860,6 +2875,9 @@ static bool __blk_mq_alloc_map_and_request(struct blk_mq_tag_set *set,
->   	if (!set->tags[hctx_idx])
->   		return false;
->   
-> +	blk_mq_set_master_tags(set->tags[hctx_idx], set->tags[0], flags,
-> +			       hctx_idx);
-> +
->   	ret = blk_mq_alloc_rqs(set, set->tags[hctx_idx], hctx_idx,
->   				set->queue_depth);
->   	if (!ret)
-> diff --git a/block/blk-mq.h b/block/blk-mq.h
-> index d08779f77a26..a08b89be6acc 100644
-> --- a/block/blk-mq.h
-> +++ b/block/blk-mq.h
-> @@ -354,5 +354,16 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
->   	return __blk_mq_active_requests(hctx) < depth;
->   }
->   
-> +static inline void blk_mq_set_master_tags(struct blk_mq_tags *tags,
-> +		struct blk_mq_tags *master_tags, unsigned int flags,
-> +		unsigned int hctx_idx)
-> +{
-> +	if (blk_mq_is_sbitmap_shared(flags)) {
-> +		if (hctx_idx)
-> +			tags->master = master_tags;
-> +		else
-> +			tags->master = NULL;
-> +	}
-> +}
->   
->   #endif
-> 
+-----BEGIN PGP SIGNATURE-----
 
-I'll check this solution a bit further.
+iQIzBAABCgAdFiEEOZGx6rniZ1Gk92RdFA3kzBSgKbYFAmD3MUIACgkQFA3kzBSg
+KbYzoQ//fHsReQ7gV79Uj6MfHENOZAAxSFMd8yIWNeX0Ug8crVQ2fzQgvlotUS1y
+62KPO9MFbi37+nfCWwl5uNEiDPwYjpB+jM/jfqJ849ngfiIQyUqCK7qr5b1FIWkp
+TuEV1Rx/wlpmxMEjKFAuo+/5OkXVwvpxQGiqBemOeTmOKjqITCpXEBkYqDqqI/MY
+lnzwpE8R30sf8IH/aThtb9dZBz+8y2mry6nVtSbMMmZ0VAYgwEPmuPLfa9CIhaCJ
+Oqe6Uf+sJs/emp0nfyZ5IDXvO8vE5kgPoy0l/smHEtejHLUkHBKf4MusKOzDdbax
+Uk48fnhKgbhxbVN0guT7IzWvRG+80hU4Ns9YPjmHYNXr4Wg03//hoAv4otMAAqXU
+Tjk9sEMBGHasqHZ0e1j3xTRhxQOwTJjzwVNhkrTX4HIZ/k0gXQK0ojBXxGvWeds2
+yQ7FUakyf1LQBmrLwssWSXbyp+W6tVodIUmnebSK1IpVd7YK4NZPf796yD44Ckzd
+XM4O5xTksxr5X+cEsNNLxhXFMohR/BOpLCj4R1+vpRNyMTHLIqfsI7GL+TJh+Mri
++kuq0TQgbTRlrIw/jfTcenYmXhQte4oeFQa3uVwGY2b+5kB/zRMTKThU0e2Vpd+8
+Kifz6u9a8LEGAMrLNXVd1B/uHQSOMYeeIzsuZ+BHqVxDsyNvJds=
+=zPVh
+-----END PGP SIGNATURE-----
 
-Thanks,
-John
+--o9Bjd73EPYzHYRI8--
