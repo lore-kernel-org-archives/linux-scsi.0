@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 430DCC636CE
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 23:31:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34239C636C9
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 23:31:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C6C3611C1
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 23:31:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DBE560FDA
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 23:31:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237121AbhGTWuj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Jul 2021 18:50:39 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49646 "EHLO
+        id S237195AbhGTWvI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jul 2021 18:51:08 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:20319 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235929AbhGTWq6 (ORCPT
+        by vger.kernel.org with ESMTP id S230282AbhGTWqf (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Jul 2021 18:46:58 -0400
+        Tue, 20 Jul 2021 18:46:35 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626823655;
+        s=mimecast20190719; t=1626823633;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=pTIHCu/v1m6aglqrxVgqlM1EFt4mjK9q8YlegEPDsXA=;
-        b=esYGFG0n1pHBctTDDqMWIR1jvLOc5FXFuwE+PsB2c4fZzoPkX7p87FvXg4RdYjUZaZP/bI
-        hUcO+0P1VtI1/cumz4PDwF57qx51Jjt04F9q3xJvIPKin/efJjNNO23IGbpLIKKHdoMwhR
-        +ZjwlU8JfW06Z3wxBTQKiI++9Hf9hSM=
+        bh=zuZd/erhcH5JqKd76Lbo99r5gRHYSZoylCGlNGoCcSY=;
+        b=FJIT0wQKWZrl5UPZho/U0SKV7P5ZqmcywYHQ9h8l0sAdlssUDycf3D1gaQ9W0xeppLSmyG
+        AR6y/WW235pqb6E39/0qU2w1LOjqSjUhJegs26nnYslaMxB4zAnCKOrbuLCYPbWiv47k0n
+        z4Wl84xP2ot9MN3p6mpabzRKvorO9Es=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-143-LmqW4iHAOAiYpLG32LmiJA-1; Tue, 20 Jul 2021 19:27:34 -0400
-X-MC-Unique: LmqW4iHAOAiYpLG32LmiJA-1
+ us-mta-307-6zAPg_1qOTCDfODJHYRTeQ-1; Tue, 20 Jul 2021 19:27:12 -0400
+X-MC-Unique: 6zAPg_1qOTCDfODJHYRTeQ-1
 Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A0F69802C80;
-        Tue, 20 Jul 2021 23:27:32 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6166E1084F4B;
+        Tue, 20 Jul 2021 23:27:10 +0000 (UTC)
 Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0345A69CB4;
-        Tue, 20 Jul 2021 23:27:27 +0000 (UTC)
+        by smtp.corp.redhat.com (Postfix) with ESMTP id AED9669CB4;
+        Tue, 20 Jul 2021 23:27:05 +0000 (UTC)
 From:   Nitesh Narayan Lal <nitesh@redhat.com>
 To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
@@ -73,9 +73,9 @@ To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
         _govind@gmx.com, kabel@kernel.org, viresh.kumar@linaro.org,
         Tushar.Khandelwal@arm.com, kuba@kernel.org
-Subject: [PATCH v5 10/14] mailbox: Use irq_update_affinity_hint
-Date:   Tue, 20 Jul 2021 19:26:20 -0400
-Message-Id: <20210720232624.1493424-11-nitesh@redhat.com>
+Subject: [PATCH v5 06/14] RDMA/irdma: Use irq_update_affinity_hint
+Date:   Tue, 20 Jul 2021 19:26:16 -0400
+Message-Id: <20210720232624.1493424-7-nitesh@redhat.com>
 In-Reply-To: <20210720232624.1493424-1-nitesh@redhat.com>
 References: <20210720232624.1493424-1-nitesh@redhat.com>
 MIME-Version: 1.0
@@ -85,55 +85,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver uses irq_set_affinity_hint() to:
+The driver uses irq_set_affinity_hint() to update the affinity_hint mask
+that is consumed by the userspace to distribute the interrupts. However,
+under the hood irq_set_affinity_hint() also applies the provided cpumask
+(if not NULL) as the affinity for the given interrupt which is an
+undocumented side effect.
 
-- Set the affinity_hint which is consumed by the userspace for
-  distributing the interrupts
-
-- Enforce affinity
-
-As per commit 6ac17fe8c14a ("mailbox: bcm-flexrm-mailbox: Set IRQ affinity
-hint for FlexRM ring IRQs") the latter is done to ensure that the FlexRM
-ring interrupts are evenly spread across all available CPUs. However, since
-commit a0c9259dc4e1 ("irq/matrix: Spread interrupts on allocation") the
-spreading of interrupts is dynamically performed at the time of allocation.
-Hence, there is no need for the drivers to enforce their own affinity for
-the spreading of interrupts.
-
-Also, irq_set_affinity_hint() applying the provided cpumask as an affinity
-for the interrupt is an undocumented side effect. To remove this side
-effect irq_set_affinity_hint() has been marked as deprecated and new
-interfaces have been introduced. Hence, replace the irq_set_affinity_hint()
-with the new interface irq_update_affinity_hint() that only sets the
-affinity_hint pointer.
+To remove this side effect irq_set_affinity_hint() has been marked
+as deprecated and new interfaces have been introduced. Hence, replace the
+irq_set_affinity_hint() with the new interface irq_update_affinity_hint()
+that only updates the affinity_hint pointer.
 
 Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
 ---
- drivers/mailbox/bcm-flexrm-mailbox.c | 4 ++--
+ drivers/infiniband/hw/irdma/hw.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/mailbox/bcm-flexrm-mailbox.c b/drivers/mailbox/bcm-flexrm-mailbox.c
-index 78073ad1f2f1..16982c13d323 100644
---- a/drivers/mailbox/bcm-flexrm-mailbox.c
-+++ b/drivers/mailbox/bcm-flexrm-mailbox.c
-@@ -1298,7 +1298,7 @@ static int flexrm_startup(struct mbox_chan *chan)
- 	val = (num_online_cpus() < val) ? val / num_online_cpus() : 1;
- 	cpumask_set_cpu((ring->num / val) % num_online_cpus(),
- 			&ring->irq_aff_hint);
--	ret = irq_set_affinity_hint(ring->irq, &ring->irq_aff_hint);
-+	ret = irq_update_affinity_hint(ring->irq, &ring->irq_aff_hint);
- 	if (ret) {
- 		dev_err(ring->mbox->dev,
- 			"failed to set IRQ affinity hint for ring%d\n",
-@@ -1425,7 +1425,7 @@ static void flexrm_shutdown(struct mbox_chan *chan)
+diff --git a/drivers/infiniband/hw/irdma/hw.c b/drivers/infiniband/hw/irdma/hw.c
+index 7afb8a6a0526..ec8de708a4df 100644
+--- a/drivers/infiniband/hw/irdma/hw.c
++++ b/drivers/infiniband/hw/irdma/hw.c
+@@ -537,7 +537,7 @@ static void irdma_destroy_irq(struct irdma_pci_f *rf,
+ 	struct irdma_sc_dev *dev = &rf->sc_dev;
  
- 	/* Release IRQ */
- 	if (ring->irq_requested) {
--		irq_set_affinity_hint(ring->irq, NULL);
-+		irq_update_affinity_hint(ring->irq, NULL);
- 		free_irq(ring->irq, ring);
- 		ring->irq_requested = false;
+ 	dev->irq_ops->irdma_dis_irq(dev, msix_vec->idx);
+-	irq_set_affinity_hint(msix_vec->irq, NULL);
++	irq_update_affinity_hint(msix_vec->irq, NULL);
+ 	free_irq(msix_vec->irq, dev_id);
+ }
+ 
+@@ -1087,7 +1087,7 @@ irdma_cfg_ceq_vector(struct irdma_pci_f *rf, struct irdma_ceq *iwceq,
  	}
+ 	cpumask_clear(&msix_vec->mask);
+ 	cpumask_set_cpu(msix_vec->cpu_affinity, &msix_vec->mask);
+-	irq_set_affinity_hint(msix_vec->irq, &msix_vec->mask);
++	irq_update_affinity_hint(msix_vec->irq, &msix_vec->mask);
+ 	if (status) {
+ 		ibdev_dbg(&rf->iwdev->ibdev, "ERR: ceq irq config fail\n");
+ 		return IRDMA_ERR_CFG;
 -- 
 2.27.0
 
