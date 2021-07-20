@@ -2,115 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15751C07E95
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 11:01:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0302FC07E95
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 14:08:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F341061175
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 11:01:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA9966113A
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 14:08:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237751AbhGTKUr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Jul 2021 06:20:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38588 "EHLO mail.kernel.org"
+        id S238867AbhGTNXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jul 2021 09:23:20 -0400
+Received: from verein.lst.de ([213.95.11.211]:55312 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237949AbhGTKRI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Jul 2021 06:17:08 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8B18F600D4;
-        Tue, 20 Jul 2021 10:57:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626778648;
-        bh=bdf2hozCtuEnUqdMt6xaxcdfnjHriJn7RXww2E+/On4=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-        b=baWqsIyGT5V+m7oB/FnRFSDTAAXKSNw++0r/WdXfyfYRvIFT/6dyYSNmTmjKCh36K
-         /ddI3a9+S5yiNai4CFsMlrrcPLR0BVIml6H6tzPIrxDTYSiQCyX45dwrM6xGcjXWo0
-         zZK4GnLqAVACej9JZ27JM0oyMJjwFOu9YwwEO4cV7Hn88/3E0IybTVfiX6leFUlZSo
-         21L9a6H3CBo3JBWllXxZyLHTaaqPyTOP0OgndmFAjpmkdkamH2zmacjnAuMAsJRIgS
-         hglf0VIX7+Ias8+nX1j2knvYpTHsBa96RAAcIFR0s1J0A8KIXDuoAWXyvMf7jEjEys
-         6T1Gk3fetpLPA==
-Date:   Tue, 20 Jul 2021 12:57:02 +0200
-From:   Jakub Kicinski <kuba@kernel.org>
-To:     Nitesh Narayan Lal <nitesh@redhat.com>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
-        tglx@linutronix.de, jesse.brandeburg@intel.com,
-        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
-        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
-        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
-        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
-        somnath.kotur@broadcom.com, nilal@redhat.com,
-        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
-        ahs3@redhat.com, leonro@nvidia.com,
-        chandrakanth.patil@broadcom.com, bjorn.andersson@linaro.org,
-        chunkuang.hu@kernel.org, yongqiang.niu@mediatek.com,
-        baolin.wang7@gmail.com, poros@redhat.com, minlei@redhat.com,
-        emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        _govind@gmx.com, ley.foon.tan@intel.com, kabel@kernel.org,
-        viresh.kumar@linaro.org, Tushar.Khandelwal@arm.com,
-        luobin9@huawei.com
-Subject: Re: [PATCH v4 01/14] genirq: Provide new interfaces for affinity
- hints
-Message-ID: <20210720125702.28053dd6@cakuba>
-In-Reply-To: <20210719180746.1008665-2-nitesh@redhat.com>
-References: <20210719180746.1008665-1-nitesh@redhat.com>
-        <20210719180746.1008665-2-nitesh@redhat.com>
+        id S239348AbhGTNOG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Jul 2021 09:14:06 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id C76616736F; Tue, 20 Jul 2021 15:54:37 +0200 (CEST)
+Date:   Tue, 20 Jul 2021 15:54:37 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Tianyu Lan <ltykernel@gmail.com>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
+        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        kirill.shutemov@linux.intel.com, akpm@linux-foundation.org,
+        rppt@kernel.org, Tianyu.Lan@microsoft.com, thomas.lendacky@amd.com,
+        ardb@kernel.org, robh@kernel.org, nramas@linux.microsoft.com,
+        pgonda@google.com, martin.b.radev@gmail.com, david@redhat.com,
+        krish.sadhukhan@oracle.com, saravanand@fb.com,
+        xen-devel@lists.xenproject.org, keescook@chromium.org,
+        rientjes@google.com, hannes@cmpxchg.org,
+        michael.h.kelley@microsoft.com, iommu@lists.linux-foundation.org,
+        linux-arch@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, vkuznets@redhat.com, brijesh.singh@amd.com,
+        anparri@microsoft.com
+Subject: Re: [Resend RFC PATCH V4 09/13] x86/Swiotlb/HV: Add Swiotlb bounce
+ buffer remap function for HV IVM
+Message-ID: <20210720135437.GA13554@lst.de>
+References: <20210707154629.3977369-1-ltykernel@gmail.com> <20210707154629.3977369-10-ltykernel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210707154629.3977369-10-ltykernel@gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 19 Jul 2021 14:07:33 -0400, Nitesh Narayan Lal wrote:
-> From: Thomas Gleixner <tglx@linutronix.de>
-> 
-> The discussion about removing the side effect of irq_set_affinity_hint() of
-> actually applying the cpumask (if not NULL) as affinity to the interrupt,
-> unearthed a few unpleasantries:
-> 
->   1) The modular perf drivers rely on the current behaviour for the very
->      wrong reasons.
-> 
->   2) While none of the other drivers prevents user space from changing
->      the affinity, a cursorily inspection shows that there are at least
->      expectations in some drivers.
-> 
-> #1 needs to be cleaned up anyway, so that's not a problem
-> 
-> #2 might result in subtle regressions especially when irqbalanced (which
->    nowadays ignores the affinity hint) is disabled.
-> 
-> Provide new interfaces:
-> 
->   irq_update_affinity_hint()  - Only sets the affinity hint pointer
->   irq_set_affinity_and_hint() - Set the pointer and apply the affinity to
->                                 the interrupt
-> 
-> Make irq_set_affinity_hint() a wrapper around irq_apply_affinity_hint() and
-> document it to be phased out.
-> 
-> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
-> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-> Link: https://lore.kernel.org/r/20210501021832.743094-1-jesse.brandeburg@intel.com
 
-include/linux/interrupt.h:343: warning: Function parameter or member 'm' not described in 'irq_update_affinity_hint'
-include/linux/interrupt.h:343: warning: Excess function parameter 'cpumask' description in 'irq_update_affinity_hint'
-include/linux/interrupt.h:358: warning: Function parameter or member 'm' not described in 'irq_set_affinity_and_hint'
-include/linux/interrupt.h:358: warning: Excess function parameter 'cpumask' description in 'irq_set_affinity_and_hint'
+Please split the swiotlb changes into a separate patch from the
+consumer.
+
+>  }
+> +
+> +/*
+> + * hv_map_memory - map memory to extra space in the AMD SEV-SNP Isolation VM.
+> + */
+> +unsigned long hv_map_memory(unsigned long addr, unsigned long size)
+> +{
+> +	unsigned long *pfns = kcalloc(size / HV_HYP_PAGE_SIZE,
+> +				      sizeof(unsigned long),
+> +		       GFP_KERNEL);
+> +	unsigned long vaddr;
+> +	int i;
+> +
+> +	if (!pfns)
+> +		return (unsigned long)NULL;
+> +
+> +	for (i = 0; i < size / HV_HYP_PAGE_SIZE; i++)
+> +		pfns[i] = virt_to_hvpfn((void *)addr + i * HV_HYP_PAGE_SIZE) +
+> +			(ms_hyperv.shared_gpa_boundary >> HV_HYP_PAGE_SHIFT);
+> +
+> +	vaddr = (unsigned long)vmap_pfn(pfns, size / HV_HYP_PAGE_SIZE,
+> +					PAGE_KERNEL_IO);
+> +	kfree(pfns);
+> +
+> +	return vaddr;
+
+This seems to miss a 'select VMAP_PFN'.  But more importantly I don't
+think this actually works.  Various DMA APIs do expect a struct page
+backing, so how is this going to work with say dma_mmap_attrs or
+dma_get_sgtable_attrs?
+
+> +static unsigned long __map_memory(unsigned long addr, unsigned long size)
+> +{
+> +	if (hv_is_isolation_supported())
+> +		return hv_map_memory(addr, size);
+> +
+> +	return addr;
+> +}
+> +
+> +static void __unmap_memory(unsigned long addr)
+> +{
+> +	if (hv_is_isolation_supported())
+> +		hv_unmap_memory(addr);
+> +}
+> +
+> +unsigned long set_memory_decrypted_map(unsigned long addr, unsigned long size)
+> +{
+> +	if (__set_memory_enc_dec(addr, size / PAGE_SIZE, false))
+> +		return (unsigned long)NULL;
+> +
+> +	return __map_memory(addr, size);
+> +}
+> +
+> +int set_memory_encrypted_unmap(unsigned long addr, unsigned long size)
+> +{
+> +	__unmap_memory(addr);
+> +	return __set_memory_enc_dec(addr, size / PAGE_SIZE, true);
+> +}
+
+Why this obsfucation into all kinds of strange helpers?  Also I think
+we want an ops vectors (or alternative calls) instead of the random
+if checks here.
+
+> + * @vstart:	The virtual start address of the swiotlb memory pool. The swiotlb
+> + *		memory pool may be remapped in the memory encrypted case and store
+
+Normall we'd call this vaddr or cpu_addr.
+
+> -	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
+> -	memset(vaddr, 0, bytes);
+> +	mem->vstart = (void *)set_memory_decrypted_map((unsigned long)vaddr, bytes);
+
+Please always pass kernel virtual addresses as pointers.
+
+And I think these APIs might need better names, e.g.
+
+arch_dma_map_decrypted and arch_dma_unmap_decrypted.
+
+Also these will need fallback versions for non-x86 architectures that
+currently use memory encryption.
