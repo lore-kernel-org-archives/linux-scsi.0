@@ -2,142 +2,204 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0302FC07E95
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 14:08:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78A9BC636C8
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 15:58:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA9966113A
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 14:08:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A8EF61164
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 15:58:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238867AbhGTNXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Jul 2021 09:23:20 -0400
-Received: from verein.lst.de ([213.95.11.211]:55312 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239348AbhGTNOG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Jul 2021 09:14:06 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id C76616736F; Tue, 20 Jul 2021 15:54:37 +0200 (CEST)
-Date:   Tue, 20 Jul 2021 15:54:37 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Tianyu Lan <ltykernel@gmail.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
-        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
-        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
-        kirill.shutemov@linux.intel.com, akpm@linux-foundation.org,
-        rppt@kernel.org, Tianyu.Lan@microsoft.com, thomas.lendacky@amd.com,
-        ardb@kernel.org, robh@kernel.org, nramas@linux.microsoft.com,
-        pgonda@google.com, martin.b.radev@gmail.com, david@redhat.com,
-        krish.sadhukhan@oracle.com, saravanand@fb.com,
-        xen-devel@lists.xenproject.org, keescook@chromium.org,
-        rientjes@google.com, hannes@cmpxchg.org,
-        michael.h.kelley@microsoft.com, iommu@lists.linux-foundation.org,
-        linux-arch@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        id S239799AbhGTPR7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jul 2021 11:17:59 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:37508 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241214AbhGTOph (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Jul 2021 10:45:37 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1626794762;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VvhRyI9qx2opvkzxayFq3lx3Fi91A+65gJ9KuJmJw0Y=;
+        b=ABjbqeQc8tgEuI/Wo8oTCCUnwDrfhNUnbm5xS4feM83FscDbELbsVRdwohoqtjD6vuNG/7
+        0xMe/a/YhzZkUagnIfX4r4EwvTgWirF/8baBK+3IHECar7N8gwvZTsA3teUMza+bbPIF+W
+        zfAZaBaHz9uKumFb+BOHZ1fnbSgBfV8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-250-t1xGmvbZPOu_b0e2Gaa-1g-1; Tue, 20 Jul 2021 11:22:40 -0400
+X-MC-Unique: t1xGmvbZPOu_b0e2Gaa-1g-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7462E80414C;
+        Tue, 20 Jul 2021 15:22:39 +0000 (UTC)
+Received: from T590 (ovpn-12-98.pek2.redhat.com [10.72.12.98])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C4FDE60877;
+        Tue, 20 Jul 2021 15:22:30 +0000 (UTC)
+Date:   Tue, 20 Jul 2021 23:22:25 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, vkuznets@redhat.com, brijesh.singh@amd.com,
-        anparri@microsoft.com
-Subject: Re: [Resend RFC PATCH V4 09/13] x86/Swiotlb/HV: Add Swiotlb bounce
- buffer remap function for HV IVM
-Message-ID: <20210720135437.GA13554@lst.de>
-References: <20210707154629.3977369-1-ltykernel@gmail.com> <20210707154629.3977369-10-ltykernel@gmail.com>
+        kashyap.desai@broadcom.com, hare@suse.de
+Subject: Re: [PATCH 0/9] blk-mq: Reduce static requests memory footprint for
+ shared sbitmap
+Message-ID: <YPbqMSjZIA8l0jHQ@T590>
+References: <1626275195-215652-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210707154629.3977369-10-ltykernel@gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <1626275195-215652-1-git-send-email-john.garry@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Jul 14, 2021 at 11:06:26PM +0800, John Garry wrote:
+> Currently a full set of static requests are allocated per hw queue per
+> tagset when shared sbitmap is used.
+> 
+> However, only tagset->queue_depth number of requests may be active at
+> any given time. As such, only tagset->queue_depth number of static
+> requests are required.
+> 
+> The same goes for using an IO scheduler, which allocates a full set of
+> static requests per hw queue per request queue.
+> 
+> This series very significantly reduces memory usage in both scenarios by
+> allocating static rqs per tagset and per request queue, respectively,
+> rather than per hw queue per tagset and per request queue.
+> 
+> For megaraid sas driver on my 128-CPU arm64 system with 1x SATA disk, we
+> save approx. 300MB(!) [370MB -> 60MB]
+> 
+> A couple of patches are marked as RFC, as maybe there is a better
+> implementation approach.
 
-Please split the swiotlb changes into a separate patch from the
-consumer.
+There is another candidate for addressing this issue, and looks simpler:
 
->  }
-> +
-> +/*
-> + * hv_map_memory - map memory to extra space in the AMD SEV-SNP Isolation VM.
-> + */
-> +unsigned long hv_map_memory(unsigned long addr, unsigned long size)
-> +{
-> +	unsigned long *pfns = kcalloc(size / HV_HYP_PAGE_SIZE,
-> +				      sizeof(unsigned long),
-> +		       GFP_KERNEL);
-> +	unsigned long vaddr;
-> +	int i;
-> +
-> +	if (!pfns)
-> +		return (unsigned long)NULL;
-> +
-> +	for (i = 0; i < size / HV_HYP_PAGE_SIZE; i++)
-> +		pfns[i] = virt_to_hvpfn((void *)addr + i * HV_HYP_PAGE_SIZE) +
-> +			(ms_hyperv.shared_gpa_boundary >> HV_HYP_PAGE_SHIFT);
-> +
-> +	vaddr = (unsigned long)vmap_pfn(pfns, size / HV_HYP_PAGE_SIZE,
-> +					PAGE_KERNEL_IO);
-> +	kfree(pfns);
-> +
-> +	return vaddr;
+ block/blk-mq-sched.c |  4 ++++
+ block/blk-mq-tag.c   |  4 ++++
+ block/blk-mq-tag.h   |  3 +++
+ block/blk-mq.c       | 18 ++++++++++++++++++
+ block/blk-mq.h       | 11 +++++++++++
+ 5 files changed, 40 insertions(+)
 
-This seems to miss a 'select VMAP_PFN'.  But more importantly I don't
-think this actually works.  Various DMA APIs do expect a struct page
-backing, so how is this going to work with say dma_mmap_attrs or
-dma_get_sgtable_attrs?
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index c838d81ac058..b9236ee0fe4e 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -538,6 +538,10 @@ static int blk_mq_sched_alloc_tags(struct request_queue *q,
+ 	if (!hctx->sched_tags)
+ 		return -ENOMEM;
+ 
++	blk_mq_set_master_tags(hctx->sched_tags,
++			q->queue_hw_ctx[0]->sched_tags, hctx->flags,
++			hctx_idx);
++
+ 	ret = blk_mq_alloc_rqs(set, hctx->sched_tags, hctx_idx, q->nr_requests);
+ 	if (ret)
+ 		blk_mq_sched_free_tags(set, hctx, hctx_idx);
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 86f87346232a..c471a073234d 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -608,6 +608,10 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
+ 				tags->nr_reserved_tags, set->flags);
+ 		if (!new)
+ 			return -ENOMEM;
++
++		blk_mq_set_master_tags(new,
++			hctx->queue->queue_hw_ctx[0]->sched_tags, set->flags,
++			hctx->queue_num);
+ 		ret = blk_mq_alloc_rqs(set, new, hctx->queue_num, tdepth);
+ 		if (ret) {
+ 			blk_mq_free_rq_map(new, set->flags);
+diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
+index 8ed55af08427..0a3fbbc61e06 100644
+--- a/block/blk-mq-tag.h
++++ b/block/blk-mq-tag.h
+@@ -21,6 +21,9 @@ struct blk_mq_tags {
+ 	struct request **static_rqs;
+ 	struct list_head page_list;
+ 
++	/* only used for blk_mq_is_sbitmap_shared() */
++	struct blk_mq_tags	*master;
++
+ 	/*
+ 	 * used to clear request reference in rqs[] before freeing one
+ 	 * request pool
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 2c4ac51e54eb..ef8a6a7e5f7c 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2348,6 +2348,15 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+ {
+ 	struct page *page;
+ 
++	if (blk_mq_is_sbitmap_shared(set->flags)) {
++		if (tags->master)
++			tags = tags->master;
++		if (hctx_idx < set->nr_hw_queues - 1) {
++			blk_mq_clear_rq_mapping(set, tags, hctx_idx);
++			return;
++		}
++	}
++
+ 	if (tags->rqs && set->ops->exit_request) {
+ 		int i;
+ 
+@@ -2444,6 +2453,12 @@ int blk_mq_alloc_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+ 	size_t rq_size, left;
+ 	int node;
+ 
++	if (blk_mq_is_sbitmap_shared(set->flags) && tags->master) {
++		memcpy(tags->static_rqs, tags->master->static_rqs,
++		       sizeof(tags->static_rqs[0]) * tags->nr_tags);
++		return 0;
++	}
++
+ 	node = blk_mq_hw_queue_to_node(&set->map[HCTX_TYPE_DEFAULT], hctx_idx);
+ 	if (node == NUMA_NO_NODE)
+ 		node = set->numa_node;
+@@ -2860,6 +2875,9 @@ static bool __blk_mq_alloc_map_and_request(struct blk_mq_tag_set *set,
+ 	if (!set->tags[hctx_idx])
+ 		return false;
+ 
++	blk_mq_set_master_tags(set->tags[hctx_idx], set->tags[0], flags,
++			       hctx_idx);
++
+ 	ret = blk_mq_alloc_rqs(set, set->tags[hctx_idx], hctx_idx,
+ 				set->queue_depth);
+ 	if (!ret)
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index d08779f77a26..a08b89be6acc 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -354,5 +354,16 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
+ 	return __blk_mq_active_requests(hctx) < depth;
+ }
+ 
++static inline void blk_mq_set_master_tags(struct blk_mq_tags *tags,
++		struct blk_mq_tags *master_tags, unsigned int flags,
++		unsigned int hctx_idx)
++{
++	if (blk_mq_is_sbitmap_shared(flags)) {
++		if (hctx_idx)
++			tags->master = master_tags;
++		else
++			tags->master = NULL;
++	}
++}
+ 
+ #endif
 
-> +static unsigned long __map_memory(unsigned long addr, unsigned long size)
-> +{
-> +	if (hv_is_isolation_supported())
-> +		return hv_map_memory(addr, size);
-> +
-> +	return addr;
-> +}
-> +
-> +static void __unmap_memory(unsigned long addr)
-> +{
-> +	if (hv_is_isolation_supported())
-> +		hv_unmap_memory(addr);
-> +}
-> +
-> +unsigned long set_memory_decrypted_map(unsigned long addr, unsigned long size)
-> +{
-> +	if (__set_memory_enc_dec(addr, size / PAGE_SIZE, false))
-> +		return (unsigned long)NULL;
-> +
-> +	return __map_memory(addr, size);
-> +}
-> +
-> +int set_memory_encrypted_unmap(unsigned long addr, unsigned long size)
-> +{
-> +	__unmap_memory(addr);
-> +	return __set_memory_enc_dec(addr, size / PAGE_SIZE, true);
-> +}
 
-Why this obsfucation into all kinds of strange helpers?  Also I think
-we want an ops vectors (or alternative calls) instead of the random
-if checks here.
+Thanks,
+Ming
 
-> + * @vstart:	The virtual start address of the swiotlb memory pool. The swiotlb
-> + *		memory pool may be remapped in the memory encrypted case and store
-
-Normall we'd call this vaddr or cpu_addr.
-
-> -	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
-> -	memset(vaddr, 0, bytes);
-> +	mem->vstart = (void *)set_memory_decrypted_map((unsigned long)vaddr, bytes);
-
-Please always pass kernel virtual addresses as pointers.
-
-And I think these APIs might need better names, e.g.
-
-arch_dma_map_decrypted and arch_dma_unmap_decrypted.
-
-Also these will need fallback versions for non-x86 architectures that
-currently use memory encryption.
