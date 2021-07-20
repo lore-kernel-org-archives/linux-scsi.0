@@ -2,38 +2,38 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2E63C07E95
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 03:58:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC2ADC07E9B
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 05:24:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 881D760FE7
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 03:58:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF34B6113C
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 05:24:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345019AbhGTDST (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 19 Jul 2021 23:18:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:50120 "EHLO mail.kernel.org"
+        id S239352AbhGTEoO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jul 2021 00:44:14 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60212 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1343827AbhGTDSS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Jul 2021 23:18:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id B4CBA6100C
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Jul 2021 03:58:57 +0000 (UTC)
+        id S238098AbhGTEoN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Jul 2021 00:44:13 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPS id 1643261164
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Jul 2021 05:24:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1626753537;
-        bh=BlQYcGphJyD0SRmUBARLvW6q2ZwqJJ57bj/XBArIwrM=;
+        s=k20201202; t=1626758692;
+        bh=WwlfGEVNhNCyZHREx8SzkM7XkMFbnyctXcx946r8/Aw=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=k5VM4v5uyrsPLdh2vgM1t7K2jwFMPkmD6Q/xtwfEtKBeWn1CCTIqEswAhIpQTVNzw
-         SF/24nBTDQtiXxHTG6gxc/eNCfx+q152f4aVPjy40HarMueA/RCt0R9MNCPikwEalV
-         GSdKFD+q1n2hWWTS317odaVbpa/iv5OcJ190sePeLnK8n/qnldMMQiVTA7EFzORN83
-         EjU96bZZJUmlmGl1RasvyBktLWQkvoVyhAvBPmlQZIoiSZsn8L3obaYr8R8Ey/Sa2M
-         sVoSphFCp9j6UXJW/qz5wJ4iRs6re8wM47IEPXX51QP1d+e6CCRXNCfUYj2qE7A3J1
-         F5k+fdGX/GANQ==
+        b=k2Hz9w4ad9h8EgRGTdnczZdhDeLNmEF08lA7DxbvAz8ftUb/vL1OxPz3iRADfkuFH
+         i50za+bUKigWCisyGbjhuljUM/NbX0iTnLp+6LV78LRTh1zi6KvUdb80KBjF9w2P5O
+         oPdtbEDc6xQK/3EBJb3I/2ozBGLAtZw1mi+ecTGWs3npWRh+Y4HwCrhVmWdSn7lhNt
+         7cNT4Ap+hp9tXC3UOWfCyGyMFtB/eSixat7cASTwcs46lDN4qdWsTfcXxD2wK2cX9Q
+         LySN90/0gIYguiC7TQeIDzKMCIoJohc+CqorfNPkm2lORhU3Wn3HO2JTtBVf6Xmdfn
+         Y59VsPtDzHJ2w==
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-scsi@vger.kernel.org
 Subject: [Bug 213759] CD tray ejected on hibernate resume
-Date:   Tue, 20 Jul 2021 03:58:57 +0000
+Date:   Tue, 20 Jul 2021 05:24:51 +0000
 X-Bugzilla-Reason: CC
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
@@ -48,8 +48,8 @@ X-Bugzilla-Resolution:
 X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: cc
-Message-ID: <bug-213759-11613-UbNpnIfbOH@https.bugzilla.kernel.org/>
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-213759-11613-GKC8Gp8a2X@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-213759-11613@https.bugzilla.kernel.org/>
 References: <bug-213759-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -63,16 +63,11 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D213759
 
-limanyi (limanyi@uniontech.com) changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |limanyi@uniontech.com
-
---- Comment #2 from limanyi (limanyi@uniontech.com) ---
-I'm the author of this patch:
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?=
-h=3Dv5.14-rc2&id=3D7dd753ca59d6c8cc09aa1ed24f7657524803c7f3
+--- Comment #3 from limanyi@uniontech.com (limanyi@uniontech.com) ---
+Seeing this problem on Linux 5.14-rc2, CD tray (which is empty and untouche=
+d)
+is ejected on resume from hibernation.I'm looking for the root cause of the
+problem.
 
 --=20
 You may reply to this email to add a comment.
