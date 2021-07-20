@@ -5,106 +5,110 @@ X-Spam-Level:
 X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5396DC07E9B
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 07:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D572FC07E9B
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 07:58:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 31145610FB
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 07:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3F6961186
+	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 07:58:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229916AbhGTHL2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Jul 2021 03:11:28 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:57224 "EHLO
+        id S231345AbhGTHR6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jul 2021 03:17:58 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:47393 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231211AbhGTHKO (ORCPT
+        by vger.kernel.org with ESMTP id S230219AbhGTHRh (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Jul 2021 03:10:14 -0400
+        Tue, 20 Jul 2021 03:17:37 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626767452;
+        s=mimecast20190719; t=1626767896;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=31b1F8Fs9meCS0LWk72Ne5IXkpfxV4uBGgF8zXGM3V4=;
-        b=X05CLxkBiMvQVnuwvdobu9LPdd53JX46wcIiBz617srGboiOXe/K22wJUIbgDsRnJxsOfJ
-        kOws8sKAc0fLjtMcGn2xcubqm/Q+qASk1WUstb/A9uS7XPYlcEYHYq2NMXUDkrodKQzE6j
-        XjYoDEJpjhG8j2sq0sRGhSOiqZVeUTU=
+        bh=NFMTyImv7wJ/Lu22tt8HP2f3dRmnsJ3zxKWLopmWFOc=;
+        b=a2+5tLdqeRW+hQjdJhRcGDfSbmOsIbLJtrWSg9o+TiywjCPZ1+msLR93uqwauPHMdrSSdI
+        Y3J2+VYIL++/8NJDXxfqa/uZJGG/4nMMP1T9GprtbSWjXMdWfGsCuXyUMU+nvA6VvYEdWl
+        QrlX3VBAXA+70eTZvdez5rjbSDHiSf0=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-342-d-TlirZ1NjmM2LMdE6L2HA-1; Tue, 20 Jul 2021 03:50:47 -0400
-X-MC-Unique: d-TlirZ1NjmM2LMdE6L2HA-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-101-J4Yj1sX1OJCfSEO06gyv9g-1; Tue, 20 Jul 2021 03:58:14 -0400
+X-MC-Unique: J4Yj1sX1OJCfSEO06gyv9g-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 92D581966320;
-        Tue, 20 Jul 2021 07:50:46 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 76BCF804141;
+        Tue, 20 Jul 2021 07:58:12 +0000 (UTC)
 Received: from T590 (ovpn-13-101.pek2.redhat.com [10.72.13.101])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 30A895C1C5;
-        Tue, 20 Jul 2021 07:50:32 +0000 (UTC)
-Date:   Tue, 20 Jul 2021 15:50:28 +0800
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4C0DA6E0B7;
+        Tue, 20 Jul 2021 07:58:01 +0000 (UTC)
+Date:   Tue, 20 Jul 2021 15:57:57 +0800
 From:   Ming Lei <ming.lei@redhat.com>
 To:     John Garry <john.garry@huawei.com>
 Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         kashyap.desai@broadcom.com, hare@suse.de
-Subject: Re: [PATCH 3/9] blk-mq: Relocate shared sbitmap resize in
- blk_mq_update_nr_requests()
-Message-ID: <YPaARLPPZxcbat8H@T590>
+Subject: Re: [PATCH 4/9] blk-mq: Add blk_mq_tag_resize_sched_shared_sbitmap()
+Message-ID: <YPaCBSrQNP5ciIVh@T590>
 References: <1626275195-215652-1-git-send-email-john.garry@huawei.com>
- <1626275195-215652-4-git-send-email-john.garry@huawei.com>
+ <1626275195-215652-5-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1626275195-215652-4-git-send-email-john.garry@huawei.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <1626275195-215652-5-git-send-email-john.garry@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 14, 2021 at 11:06:29PM +0800, John Garry wrote:
-> For shared sbitmap, if the call to blk_mq_tag_update_depth() was
-> successful for any hctx when hctx->sched_tags is not set, then it would be
-> successful for all (due to nature in which blk_mq_tag_update_depth()
-> fails).
+On Wed, Jul 14, 2021 at 11:06:30PM +0800, John Garry wrote:
+> Put the functionality to resize the sched shared sbitmap in a common
+> function.
 > 
-> As such, there is no need to call blk_mq_tag_resize_shared_sbitmap() for
-> each hctx. So relocate the call until after the hctx iteration under the
-> !q->elevator check, which is equivalent (to !hctx->sched_tags).
+> Since the same formula is always used to resize, and it can be got from
+> the request queue argument, so just pass the request queue pointer.
 > 
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  block/blk-mq.c | 13 ++++++++-----
->  1 file changed, 8 insertions(+), 5 deletions(-)
+>  block/blk-mq-sched.c |  3 +--
+>  block/blk-mq-tag.c   | 10 ++++++++++
+>  block/blk-mq-tag.h   |  1 +
+>  block/blk-mq.c       |  3 +--
+>  4 files changed, 13 insertions(+), 4 deletions(-)
 > 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index ae28f470893c..56e3c6fdba60 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -3624,8 +3624,6 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
->  		if (!hctx->sched_tags) {
->  			ret = blk_mq_tag_update_depth(hctx, &hctx->tags, nr,
->  							false);
-> -			if (!ret && blk_mq_is_sbitmap_shared(set->flags))
-> -				blk_mq_tag_resize_shared_sbitmap(set, nr);
->  		} else {
->  			ret = blk_mq_tag_update_depth(hctx, &hctx->sched_tags,
->  							nr, true);
-> @@ -3643,9 +3641,14 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+> diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+> index f5cb2931c20d..1e028183557d 100644
+> --- a/block/blk-mq-sched.c
+> +++ b/block/blk-mq-sched.c
+> @@ -584,8 +584,7 @@ static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
+>  					&queue->sched_breserved_tags;
 >  	}
->  	if (!ret) {
->  		q->nr_requests = nr;
-> -		if (q->elevator && blk_mq_is_sbitmap_shared(set->flags))
-> -			sbitmap_queue_resize(&q->sched_bitmap_tags,
-> -					     nr - set->reserved_tags);
-> +		if (blk_mq_is_sbitmap_shared(set->flags)) {
-> +			if (q->elevator) {
-> +				sbitmap_queue_resize(&q->sched_bitmap_tags,
-> +						     nr - set->reserved_tags);
-> +			} else {
-> +				blk_mq_tag_resize_shared_sbitmap(set, nr);
-> +			}
+>  
+> -	sbitmap_queue_resize(&queue->sched_bitmap_tags,
+> -			     queue->nr_requests - set->reserved_tags);
+> +	blk_mq_tag_resize_sched_shared_sbitmap(queue);
+>  
+>  	return 0;
+>  }
+> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+> index 86f87346232a..55c7f1bf41c7 100644
+> --- a/block/blk-mq-tag.c
+> +++ b/block/blk-mq-tag.c
+> @@ -634,6 +634,16 @@ void blk_mq_tag_resize_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int s
+>  	sbitmap_queue_resize(&set->__bitmap_tags, size - set->reserved_tags);
+>  }
+>  
+> +/*
+> + * We always resize with q->nr_requests - q->tag_set->reserved_tags, so
+> + * don't bother passing a size.
+> + */
+> +void blk_mq_tag_resize_sched_shared_sbitmap(struct request_queue *q)
+> +{
+> +	sbitmap_queue_resize(&q->sched_bitmap_tags,
+> +			     q->nr_requests - q->tag_set->reserved_tags);
+> +}
 
-The above two {} can be removed.
+It is a bit hard to follow the resize part of the name, since no size
+parameter passed in. Maybe update is better?
 
 -- 
 Ming
