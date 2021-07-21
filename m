@@ -2,118 +2,214 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2F85C636C9
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9BBFC636CE
 	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jul 2021 10:44:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4D5A60238
+	by mail.kernel.org (Postfix) with ESMTP id CB1E461175
 	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jul 2021 10:44:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239190AbhGUKCr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jul 2021 06:02:47 -0400
-Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:59384
-        "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S238792AbhGUJep (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Jul 2021 05:34:45 -0400
-Received: from localhost (1.general.cking.uk.vpn [10.172.193.212])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id CB2333F243;
-        Wed, 21 Jul 2021 10:15:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1626862521;
-        bh=SjoWjrqwnItTOh5zDKu4Dx2Q1flNerPBza5NTZJ0c4o=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type;
-        b=A0ZhYv4iW0I+Z2k/Ro32erSR/secBJ8GyhpKr2JJSa15MBEbZ1MnqSlPwwxaWlhW/
-         UMZnLhgaHe8Th/kdWSL7Q0ZMZPYAzYYDkyVL08TpT3Td2wLegXsLmsNxQm3f5SSsMX
-         bElzX+GVl93BYfXLWQbyAN5KfMnxBhS1rp++q2i26x/ddkUbcwtHb80NxmdgLCUkMO
-         PCzBPk22zj5ocdWaY1QKVEG1lpD94tpY+5aWlSijC6fzdACGCYki3cyxS20FHtZCus
-         RycbsTED2KJ0nxkyyT1Y3xL2yQshXG54AIeveRRqoLolaB4iPHQC7VfSlfJq+IQYFC
-         V7qCObWbSqs5g==
-From:   Colin King <colin.king@canonical.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Varun Prakash <varun@chelsio.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: target: remove redundant assignment to variable ret
-Date:   Wed, 21 Jul 2021 11:15:19 +0100
-Message-Id: <20210721101519.42299-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.31.1
+        id S238247AbhGUKDF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jul 2021 06:03:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57708 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238399AbhGUJtQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 05:49:16 -0400
+Received: from mail-pf1-x433.google.com (mail-pf1-x433.google.com [IPv6:2607:f8b0:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED7E0C0613DE;
+        Wed, 21 Jul 2021 03:29:05 -0700 (PDT)
+Received: by mail-pf1-x433.google.com with SMTP id y4so1876672pfi.9;
+        Wed, 21 Jul 2021 03:29:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:subject:to:cc:references:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=crPkDkWQEoNERdMjzIoNvDVdZYJX2jUbiteH/e0Of1o=;
+        b=dpQF0qK/cZ1PBWjC1lNEtBNPQIY0ndTZOqudg/5nG+laJtg1EvtFbUy2df++wHmiLi
+         c6BCC2uROfhvdYwDWYWD1jecOacp6hyTQ93iH+xQCYDh0nO8befGldO1/+g9lnr74Jsv
+         CmOUB7aNlqIYBSVTdBy1KAz3fTJhPWw+/jwvvEOOadVZwZ+pWi0tv3SIK/XfCdM4Yw0C
+         CMWaIHisnetIQUkh+1i2GqoZdEdpLDithfUWVY4II/1DHvEJRJ2d7y6Gld4xfxrZsKbY
+         6Msig5LVrt5yFu08e+wuLM0X3juclFNnUEU2LztUJ2yenbExU+zvtkxD1pUa0R4LM97z
+         RFOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=crPkDkWQEoNERdMjzIoNvDVdZYJX2jUbiteH/e0Of1o=;
+        b=BGoM8rWEoFRz3ZFStBFzvULs6PV+o0kMohNo8Q/+wbZxq/+Iqn0SLdGDUEqFXz66mw
+         vn29lhlCQYArzWBu/CcKbQ049PV5TJka1Oi7qdjh4D6BAJl334EzbW78ivZIRz03CoUg
+         xZSfAwMCkgkKt0nI4ywk7xoFRtusPyf2+6ZtFaldppntdmr6Eh0LNBlK6lPXfa2fkK93
+         m28UOubUIa6tzvnhIfYPr4ZQTmjRdZaeOjmzz7E3i1xQQ193DkJ/EEcMjlQanc6lTtaZ
+         OPfLwEwK4m9zriep0PHsf6AFLKIiqdfeAIilHguwCzg5dYhY/Q5qD/LfpqbXJP+VXyva
+         dzPQ==
+X-Gm-Message-State: AOAM532DS6SvJ2XDxwRhiIR1Mu+lFnJE0dO86GxK8lbh5LD2kxGXTUGZ
+        ckgTnEP8QFEAvL4uepBJ57s=
+X-Google-Smtp-Source: ABdhPJwGK1w7GFZui+UX4nxgbHVeI56Iu2D5hjeSldD82+ip3NkTL1jWcNoRnxoO7LnJTjwfoGvugw==
+X-Received: by 2002:a65:6187:: with SMTP id c7mr35068030pgv.349.1626863345481;
+        Wed, 21 Jul 2021 03:29:05 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:18:efec::4b1])
+        by smtp.gmail.com with ESMTPSA id t37sm26803912pfg.14.2021.07.21.03.28.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 21 Jul 2021 03:29:05 -0700 (PDT)
+From:   Tianyu Lan <ltykernel@gmail.com>
+Subject: Re: [Resend RFC PATCH V4 09/13] x86/Swiotlb/HV: Add Swiotlb bounce
+ buffer remap function for HV IVM
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
+        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com,
+        kirill.shutemov@linux.intel.com, akpm@linux-foundation.org,
+        rppt@kernel.org, Tianyu.Lan@microsoft.com, thomas.lendacky@amd.com,
+        ardb@kernel.org, robh@kernel.org, nramas@linux.microsoft.com,
+        pgonda@google.com, martin.b.radev@gmail.com, david@redhat.com,
+        krish.sadhukhan@oracle.com, saravanand@fb.com,
+        xen-devel@lists.xenproject.org, keescook@chromium.org,
+        rientjes@google.com, hannes@cmpxchg.org,
+        michael.h.kelley@microsoft.com, iommu@lists.linux-foundation.org,
+        linux-arch@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, vkuznets@redhat.com, brijesh.singh@amd.com,
+        anparri@microsoft.com
+References: <20210707154629.3977369-1-ltykernel@gmail.com>
+ <20210707154629.3977369-10-ltykernel@gmail.com>
+ <20210720135437.GA13554@lst.de>
+Message-ID: <8f1a285d-4b67-8041-d326-af565b2756c0@gmail.com>
+Date:   Wed, 21 Jul 2021 18:28:48 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210720135437.GA13554@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Thanks for review.
 
-The variable ret is being initialized with a value that is never
-read, the assignment is redundant and can be removed.
+On 7/20/2021 9:54 PM, Christoph Hellwig wrote:
+> 
+> Please split the swiotlb changes into a separate patch from the
+> consumer.
 
-Addresses-Coverity: ("Unused value")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/target/iscsi/cxgbit/cxgbit_ddp.c | 2 +-
- drivers/target/loopback/tcm_loop.c       | 4 ++--
- drivers/target/target_core_iblock.c      | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+OK. Will update.
 
-diff --git a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-index b044999ad002..072afd070f3e 100644
---- a/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-+++ b/drivers/target/iscsi/cxgbit/cxgbit_ddp.c
-@@ -234,7 +234,7 @@ cxgbit_get_r2t_ttt(struct iscsi_conn *conn, struct iscsi_cmd *cmd,
- 	struct cxgbit_device *cdev = csk->com.cdev;
- 	struct cxgbit_cmd *ccmd = iscsit_priv_cmd(cmd);
- 	struct cxgbi_task_tag_info *ttinfo = &ccmd->ttinfo;
--	int ret = -EINVAL;
-+	int ret;
- 
- 	if ((!ccmd->setup_ddp) ||
- 	    (!test_bit(CSK_DDP_ENABLE, &csk->com.flags)))
-diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
-index 6d0b0e67e79e..fdc36274cb39 100644
---- a/drivers/target/loopback/tcm_loop.c
-+++ b/drivers/target/loopback/tcm_loop.c
-@@ -241,7 +241,7 @@ static int tcm_loop_abort_task(struct scsi_cmnd *sc)
- {
- 	struct tcm_loop_hba *tl_hba;
- 	struct tcm_loop_tpg *tl_tpg;
--	int ret = FAILED;
-+	int ret;
- 
- 	/*
- 	 * Locate the tcm_loop_hba_t pointer
-@@ -261,7 +261,7 @@ static int tcm_loop_device_reset(struct scsi_cmnd *sc)
- {
- 	struct tcm_loop_hba *tl_hba;
- 	struct tcm_loop_tpg *tl_tpg;
--	int ret = FAILED;
-+	int ret;
- 
- 	/*
- 	 * Locate the tcm_loop_hba_t pointer
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 44d9d028f716..4069a1edcfa3 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -83,7 +83,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	struct blk_integrity *bi;
- 	fmode_t mode;
- 	unsigned int max_write_zeroes_sectors;
--	int ret = -ENOMEM;
-+	int ret;
- 
- 	if (!(ib_dev->ibd_flags & IBDF_HAS_UDEV_PATH)) {
- 		pr_err("Missing udev_path= parameters for IBLOCK\n");
--- 
-2.31.1
+> 
+>>   }
+>> +
+>> +/*
+>> + * hv_map_memory - map memory to extra space in the AMD SEV-SNP Isolation VM.
+>> + */
+>> +unsigned long hv_map_memory(unsigned long addr, unsigned long size)
+>> +{
+>> +	unsigned long *pfns = kcalloc(size / HV_HYP_PAGE_SIZE,
+>> +				      sizeof(unsigned long),
+>> +		       GFP_KERNEL);
+>> +	unsigned long vaddr;
+>> +	int i;
+>> +
+>> +	if (!pfns)
+>> +		return (unsigned long)NULL;
+>> +
+>> +	for (i = 0; i < size / HV_HYP_PAGE_SIZE; i++)
+>> +		pfns[i] = virt_to_hvpfn((void *)addr + i * HV_HYP_PAGE_SIZE) +
+>> +			(ms_hyperv.shared_gpa_boundary >> HV_HYP_PAGE_SHIFT);
+>> +
+>> +	vaddr = (unsigned long)vmap_pfn(pfns, size / HV_HYP_PAGE_SIZE,
+>> +					PAGE_KERNEL_IO);
+>> +	kfree(pfns);
+>> +
+>> +	return vaddr;
+> 
+> This seems to miss a 'select VMAP_PFN'. 
+
+VMAP_PFN has been selected in the previous patch "RFC PATCH V4 08/13]
+HV/Vmbus: Initialize VMbus ring buffer for Isolation VM"
+
+> But more importantly I don't
+> think this actually works.  Various DMA APIs do expect a struct page
+> backing, so how is this going to work with say dma_mmap_attrs or
+> dma_get_sgtable_attrs?
+
+dma_mmap_attrs() and dma_get_sgtable_attrs() get input virtual address
+belonging to backing memory with struct page and returns bounce buffer
+dma physical address which is below shared_gpa_boundary(vTOM) and passed
+to Hyper-V via vmbus protocol.
+
+The new map virtual address is only to access bounce buffer in swiotlb
+code and will not be used other places. It's stored in the mem->vstart.
+So the new API set_memory_decrypted_map() in this series is only called
+in the swiotlb code. Other platforms may replace set_memory_decrypted()
+with set_memory_decrypted_map() as requested.
+
+> 
+>> +static unsigned long __map_memory(unsigned long addr, unsigned long size)
+>> +{
+>> +	if (hv_is_isolation_supported())
+>> +		return hv_map_memory(addr, size);
+>> +
+>> +	return addr;
+>> +}
+>> +
+>> +static void __unmap_memory(unsigned long addr)
+>> +{
+>> +	if (hv_is_isolation_supported())
+>> +		hv_unmap_memory(addr);
+>> +}
+>> +
+>> +unsigned long set_memory_decrypted_map(unsigned long addr, unsigned long size)
+>> +{
+>> +	if (__set_memory_enc_dec(addr, size / PAGE_SIZE, false))
+>> +		return (unsigned long)NULL;
+>> +
+>> +	return __map_memory(addr, size);
+>> +}
+>> +
+>> +int set_memory_encrypted_unmap(unsigned long addr, unsigned long size)
+>> +{
+>> +	__unmap_memory(addr);
+>> +	return __set_memory_enc_dec(addr, size / PAGE_SIZE, true);
+>> +}
+> 
+> Why this obsfucation into all kinds of strange helpers?  Also I think
+> we want an ops vectors (or alternative calls) instead of the random
+> if checks here.
+
+Yes, agree and will add ops for different platforms to map/unmap memory.
+
+> 
+>> + * @vstart:	The virtual start address of the swiotlb memory pool. The swiotlb
+>> + *		memory pool may be remapped in the memory encrypted case and store
+> 
+> Normall we'd call this vaddr or cpu_addr.
+
+OK. Will update.
+
+> 
+>> -	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
+>> -	memset(vaddr, 0, bytes);
+>> +	mem->vstart = (void *)set_memory_decrypted_map((unsigned long)vaddr, bytes);
+> 
+> Please always pass kernel virtual addresses as pointers.
+> 
+> And I think these APIs might need better names, e.g.
+> 
+> arch_dma_map_decrypted and arch_dma_unmap_decrypted.
+> 
+> Also these will need fallback versions for non-x86 architectures that
+> currently use memory encryption.
+
+Sure. Will update in the next version.
 
