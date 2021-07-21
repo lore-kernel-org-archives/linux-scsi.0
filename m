@@ -2,185 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79B5EC6377B
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 23:38:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29F1BC12002
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jul 2021 03:14:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C75D6124C
-	for <linux-scsi@archiver.kernel.org>; Tue, 20 Jul 2021 23:38:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FEB360FDB
+	for <linux-scsi@archiver.kernel.org>; Wed, 21 Jul 2021 03:14:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235993AbhGTW4j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 20 Jul 2021 18:56:39 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43584 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235428AbhGTWq0 (ORCPT
+        id S232437AbhGUCdU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 20 Jul 2021 22:33:20 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:47198 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232078AbhGUCcn (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Jul 2021 18:46:26 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1626823624;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=LcUE+Ykyp7TUpfxrTLCdo1t8nVQ8beSKO1+WFe5MKv4=;
-        b=U3rM0zJD5RIK51MWsiiNrPmHXNGbRK7OWl2rtcwf2cOYs39LSyQh+RxPF+GjWZwNxkLQIC
-        yVGDJioo/t4Egq0bvvz2G/mCmk9KDlE/WlP7CqUBsrYVeCQYZ6Rr4ylIca6LITYjogFJs3
-        1mhPJU5gFxo3RrFwfMstKdUdsBtBUcY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-231-eI4qYkZXO2y2V6D_Ub4Jww-1; Tue, 20 Jul 2021 19:27:02 -0400
-X-MC-Unique: eI4qYkZXO2y2V6D_Ub4Jww-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id E9B9B8030B5;
-        Tue, 20 Jul 2021 23:27:00 +0000 (UTC)
-Received: from virtlab719.virt.lab.eng.bos.redhat.com (virtlab719.virt.lab.eng.bos.redhat.com [10.19.153.15])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id D9E6369CB4;
-        Tue, 20 Jul 2021 23:26:52 +0000 (UTC)
-From:   Nitesh Narayan Lal <nitesh@redhat.com>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
-        tglx@linutronix.de, jesse.brandeburg@intel.com,
-        robin.murphy@arm.com, mtosatti@redhat.com, mingo@kernel.org,
-        jbrandeb@kernel.org, frederic@kernel.org, juri.lelli@redhat.com,
-        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
-        peterz@infradead.org, davem@davemloft.net,
-        akpm@linux-foundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
-        pjwaskiewicz@gmail.com, sassmann@redhat.com, thenzl@redhat.com,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
-        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
-        somnath.kotur@broadcom.com, nilal@redhat.com,
-        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
-        ahs3@redhat.com, leonro@nvidia.com,
-        chandrakanth.patil@broadcom.com, bjorn.andersson@linaro.org,
-        chunkuang.hu@kernel.org, yongqiang.niu@mediatek.com,
-        baolin.wang7@gmail.com, poros@redhat.com, minlei@redhat.com,
-        emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        _govind@gmx.com, kabel@kernel.org, viresh.kumar@linaro.org,
-        Tushar.Khandelwal@arm.com, kuba@kernel.org
-Subject: [PATCH v5 04/14] scsi: megaraid_sas: Use irq_set_affinity_and_hint
-Date:   Tue, 20 Jul 2021 19:26:14 -0400
-Message-Id: <20210720232624.1493424-5-nitesh@redhat.com>
-In-Reply-To: <20210720232624.1493424-1-nitesh@redhat.com>
-References: <20210720232624.1493424-1-nitesh@redhat.com>
+        Tue, 20 Jul 2021 22:32:43 -0400
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 16L36sRw026988;
+        Wed, 21 Jul 2021 03:13:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=oSvTZu1AExwDkn+byWbvd5czm/LUlAN8v+a0g7Xhi18=;
+ b=o1XJ1dme8gFaBcot27WWOZjyutanNCkzFrrejVZ+dACBAzL2X7RfHQ9Pbog426qhRQQd
+ bM5ucGflIWQRn22KcPO2kILX8DsS2j4Yv9+5iJH78zZb+OPE5jOvASwEUlt1PKnMaRbV
+ beHsfXUAr57QtrlqJNjjnKEjiARzGR6ABRBurThv58CnDoUk8yGFdYvDt47FA0wLeZii
+ yOAv0CDWiYkN134YIROFHrCII9xosVf8qef38oLSV300U6Fq73Fa7Zt6J6uug3sKBx1d
+ zgzvnT6ozPEBPsNJj4IlGxvOluGUByZ8cFG9EfZ5+1UENXHp+mYOmZEZdIcDbYnTTpdj hg== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=oSvTZu1AExwDkn+byWbvd5czm/LUlAN8v+a0g7Xhi18=;
+ b=wlyDx4ZuL1r9zzxW3L3J45CimKPOcLjOWtZ/ZQSA8oDyV2l6WlPI7Uzr1kuQZ39H/I5s
+ LXgKb+6eNaDqrkew1DGNNkyl/uFRaZx9TuYxj08OH5QgSlW1DJarwbA7UDUgKqW3WTei
+ 7TF475hurUV0bmIMk8zrLR6BXoFXHtbT5mLGHGH4dT7tOCJPoNsDtLtvl+9ADo/Q4O6B
+ 0ykCeOM3DRQUqjGRyBW3waOQ04yj7Q1w8LCDF4OS0pYk4YC5iCXf0Ss7UZvKDvR4TU6M
+ D/KxPYYAhlUh0hMI+pLU9YJs/lWo0CmWScABuIzFLPdsb4hP5KS91vqPofRnLwW4vA2c rg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 39w83cv8uh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 21 Jul 2021 03:13:01 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 16L358TO180969;
+        Wed, 21 Jul 2021 03:13:00 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2174.outbound.protection.outlook.com [104.47.59.174])
+        by aserp3020.oracle.com with ESMTP id 39uq188cvr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 21 Jul 2021 03:13:00 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=nkOYNUEjZk/YZwaZ05kjwCBeHdJe5vFh9FyGCUuvs5izxE1xS9ELywMWKmsNti+U3iJQlnBEV3n7AvXgA84c6ICTMu1Cqy7UCp1UB1hHFgffyoVY2+uTwo6eMGQEzxd4DDPlFXLqvZClFhppwhyO39dqNqvP2VVPsdKwJPk43kJjn4qjRwak7LEqjdDmHm+MQ/M8BYu782W8at0coreUvZj6qEbKrf17qht8z3BBuOJh8NsFla5+RsfANCsoiD9jawukZjlTd/RYXljaBvnIE2TBFkNo4bTQIxolbQYPnTxIgh2aW5XXDJAwO7nvbYHnznTwVKrzG798heB4W558NQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oSvTZu1AExwDkn+byWbvd5czm/LUlAN8v+a0g7Xhi18=;
+ b=eU9N8QHeJV+y/m5109aOCZ4hipaSRuyuEc9z+ErFng6iNiUMVZxX6OrdhEVeoPM/shrLCLveATVuenchSw/G+tvofCTyZ1FaDD0MRKv0yIkkoOuBEKRbE8/Kd2llq1DJtYEiPG7t7WQFlkObdTSa7TkamD3AvrJblS0auxe3ALvAGVMZ3wS4rMzRi1vCFZj8jOi25JZ7bSIELhDlxWrjjkq/PdjGJ/XDEInk18+o9lg/Ya5dvTWHo2Xin/6XXmndZtgis42whnyuGpETbmmi7mJDqjtAoDTV19cB934RHRizx2nwHwRiyZgRL1BeTPzVyBnJOycW3T2f1ZOmZ7PhXw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oSvTZu1AExwDkn+byWbvd5czm/LUlAN8v+a0g7Xhi18=;
+ b=NQoJG+ZilO9BshRhXRhh6UCGjlsyO3UOlN4wP10skVsud0NMSkhI1zb/KZiFA/AqZLJ5HxvBR/4jVyKpSJcu+PL/0kfirmpDXmFx+T61lsXiMkE0HucQeV4P0uMQZZoHCtsLyXyYzFvxwOVu8aSerd47y9DTz8ZMON+ljN2KfPk=
+Authentication-Results: huawei.com; dkim=none (message not signed)
+ header.d=none;huawei.com; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4422.namprd10.prod.outlook.com (2603:10b6:510:38::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4331.22; Wed, 21 Jul
+ 2021 03:12:56 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::153e:22d1:d177:d4f1]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::153e:22d1:d177:d4f1%8]) with mapi id 15.20.4331.034; Wed, 21 Jul 2021
+ 03:12:56 +0000
+To:     Jason Yan <yanaijie@huawei.com>
+Cc:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: libsas: allow libsas include scsi header files
+ directly
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq135s8z7f9.fsf@ca-mkp.ca.oracle.com>
+References: <20210716074551.771312-1-yanaijie@huawei.com>
+Date:   Tue, 20 Jul 2021 23:12:52 -0400
+In-Reply-To: <20210716074551.771312-1-yanaijie@huawei.com> (Jason Yan's
+        message of "Fri, 16 Jul 2021 15:45:51 +0800")
+Content-Type: text/plain
+X-ClientProxiedBy: SA9PR13CA0132.namprd13.prod.outlook.com
+ (2603:10b6:806:27::17) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SA9PR13CA0132.namprd13.prod.outlook.com (2603:10b6:806:27::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4352.10 via Frontend Transport; Wed, 21 Jul 2021 03:12:55 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 39570d91-87b0-4600-9b6c-08d94bf56f8c
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4422:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB4422965F42CD769E9FC0C9148EE39@PH0PR10MB4422.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: NJxI2YbOOW73SmiCB4kMXSeZiyOMsuOd/7bkAkNfZW3VJg89lGeC9eRZbYXWXKbNXLBuP4I0qdbAQ5RYP4yO8h3alGIipzfFYCN1rPjJQVh4wqMNIsgPqy3JXQUj1+Pq8xDaRt6yltxF8yNkOTO7lx7TPSywEw2xWy8Q/UWdbXdkoM5lGTQBdy0iKuIqjtJgPsIipXxhoFuYyEcQPawy4tnpCnVDElwGC1sdYGfHK8hhXafsEPq4PlJkjXlUoRzsx0MjCbyuf4ZYtwE43yEquKywwzwxTTMq0VjSfBQAixz8BgFlY/g6cNNk4qOxfIvlH8RxtlN8+oJxtsNMPUECZ/81JFbwUkqqr7PCsDBDmbk1XZQ92P8LCtmbIcz/NEvsW88jTr0K3JP8f8HUY9OzY5tJTw65YyJPug/KIYhzeDNkrchTfzCCiZZVhCIOCj3AlrhLaZT3nlTxspUVjSIgfuxPX3A3isKIBMxzmcfN8q5baM3saXBdX6vmpmGF1hE7qHzpW+wKRt+lokL4L6nduQwWEOoOjoPQXlkBhZxwpISuhXmbOACbJe4avZAvSrIojT/hVAiCkqfkSlWTwQTF8HwDLLJQd1frmjXJSyZFt0sdpMV0oH8Oqiyrpm86cQLKV3RYzTYuzlw+PDYc5Wqa7RUukXglPHXxuaWnslYIvOHNm8D1BQJYTOZh4aMLA9I4YNVKa8q4jgPHQEArjX1Y/Q==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(346002)(39860400002)(376002)(366004)(136003)(396003)(55016002)(6916009)(38100700002)(6666004)(38350700002)(5660300002)(8676002)(54906003)(2906002)(26005)(956004)(4326008)(186003)(52116002)(86362001)(36916002)(558084003)(66946007)(66556008)(478600001)(7696005)(8936002)(316002)(66476007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Wt/ZdKFLsoAKse/4xKzYwMCiNOW61RqA/tH+RZSEsTdGhEJqhPAkXnon1nRc?=
+ =?us-ascii?Q?kQCfL5DKUYGe+TcHAyczHdyd+AvoLurFOs+ECRDVbPP50736NpZJ2b4crs4/?=
+ =?us-ascii?Q?AGnAn8Eru8oFIdvo2bmIk1ss6tULlL9ZTkWrC7GpqqhRSrL1vJB2QS46MOjK?=
+ =?us-ascii?Q?lBBuzuUkyYoQLq+dlfjz4LpyCOr4MIpAHIozSLPZuesfkQH7kJLntUuclvDW?=
+ =?us-ascii?Q?5tc3/xtdRiV73Fn45lsr4Ge1BAwFbLE1avL2oPda7cIE17j5Xq9EMcYU/ILD?=
+ =?us-ascii?Q?zK4faq71xxZj5cABN8utoV1Nwwnb/GEzFeZGDyc8EAJD60wrDfNr3FdRHg69?=
+ =?us-ascii?Q?n/ws/e0tNuxZCY0/4Ey03iI/YolDOPJHHTWjowCNxHlmOTqfeYkvimz8zKWs?=
+ =?us-ascii?Q?z8ARDD6+hSH4bWfRY+gxnkyzyUzomBKvBwwKD++IQS/0Bx0jQAN4RBB38fQV?=
+ =?us-ascii?Q?wMsodT1op0T347sOYyghPcW+EWl/wtDwRGwjnan+WFMw2zYRDfc804/L3KNw?=
+ =?us-ascii?Q?ZB8r9UVlW3A+22E43q5egH3zQ3JYzcWUhVelC/nFxWia3k4i1owtftpKqcuj?=
+ =?us-ascii?Q?o3ZK+ueC9mOclgJ3eqLdeKKbiVVO40Y5WFXjuNP0Cq+xY6C0igQ9TCFw1w0E?=
+ =?us-ascii?Q?FblYEUWOfkr5FLXb4ztPd1a7d4zAZAZbWkn0Y+ytQ05vQ3RPWJFZmvHowPoe?=
+ =?us-ascii?Q?/3K82CkvFyjhbaTCj3EpXRVwE2O3eR3lkby3SXLurUJybo6C8N2GzWLlq7KO?=
+ =?us-ascii?Q?sDWxzRPRRrtq6m3sT8cXb3/79eIDd4JtWpcexeU7CSmPMw7YWLbOgQMFQSKZ?=
+ =?us-ascii?Q?N3S+Pk4VYYGB+XzcbP5PNTxypcVYsvJYPZbcMx3b52TL3FWX84/ARSaIAkPh?=
+ =?us-ascii?Q?2ArMNdLp9bBJrwvHnRKzA8nmmypxNi9jpQS+CxlpERJgWMCyIRN9c0/VduKS?=
+ =?us-ascii?Q?1lEkcZy0K85dmISeBoDxnwBhU01cYHbdR52HwfaQ0FSv8T58i+rCXPBmO7sZ?=
+ =?us-ascii?Q?bH4T8Yb+lu0VoeluSjvLbOY99vmirJSCOVwLVGUtzXfUcKgZXCrfmZJkt2DL?=
+ =?us-ascii?Q?LwJD/w8X1yKGTdmA8+QrV4vEzq6fyw++3RsDIbb+hpIIjYpkCDcsEJumVanY?=
+ =?us-ascii?Q?Dw4nQWaQWU/evS8jbm6jl/8fASGPPJNoF5C2n5vMLP2/87L3dlcXgr/Cns1A?=
+ =?us-ascii?Q?8XEoZp3L+WUsddLTLaQ5sprXbRXK0sxxN4izF6wdvwpdUjB5WmYlelFhnK+i?=
+ =?us-ascii?Q?12KHC5lj6N6VNggfIHx7vpY2arOYnt9s7xYC2Sbx5IQEb0VvCoLAMsij7RZT?=
+ =?us-ascii?Q?IJYqzge13MvAgIa8/Mp4so9y?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 39570d91-87b0-4600-9b6c-08d94bf56f8c
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jul 2021 03:12:56.1337
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: mAN3/sRf0EoG0XcCjuTJQ7C7r9zD7MrJ901mnJKMuBsZDcckKKRScdkfED46eW2SqNW/hrYfQTZAvMCt15Zl5TeJKDJ/Z9kBAgwwL0Kh58A=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4422
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10051 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0
+ mlxlogscore=999 suspectscore=0 bulkscore=0 spamscore=0 phishscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2104190000 definitions=main-2107210016
+X-Proofpoint-GUID: HzJLtCKwZwQ2FWcJzgUe75hbFnnpnTNJ
+X-Proofpoint-ORIG-GUID: HzJLtCKwZwQ2FWcJzgUe75hbFnnpnTNJ
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver uses irq_set_affinity_hint() specifically for the high IOPS
-queue interrupts for two purposes:
 
-- To set the affinity_hint which is consumed by the userspace for
-  distributing the interrupts
+Jason,
 
-- To apply an affinity that it provides
+> libsas needs to include some header files in the scsi
+> directory. However they are now hardcoded with the path "../" in the C
+> files. Let's do this in the Makefile to avoid the hardcode.
 
-The driver enforces its own affinity to bind the high IOPS queue interrupts
-to the local NUMA node. However, irq_set_affinity_hint() applying the
-provided cpumask as an affinity for the interrupt is an undocumented side
-effect.
+Applied to 5.15/scsi-staging, thanks!
 
-To remove this side effect irq_set_affinity_hint() has been marked
-as deprecated and new interfaces have been introduced. Hence, replace the
-irq_set_affinity_hint() with the new interface irq_set_affinity_and_hint()
-where the provided mask needs to be applied as the affinity and
-affinity_hint pointer needs to be set and replace with
-irq_update_affinity_hint() where only affinity_hint needs to be updated.
-
-Change the megasas_set_high_iops_queue_affinity_hint function name to
-megasas_set_high_iops_queue_affinity_and_hint to clearly indicate that the
-function is setting both affinity and affinity_hint.
-
-Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 27 +++++++++++++----------
- 1 file changed, 15 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index ec10b2497310..836a1b13f71b 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5718,7 +5718,7 @@ megasas_setup_irqs_msix(struct megasas_instance *instance, u8 is_probe)
- 				"Failed to register IRQ for vector %d.\n", i);
- 			for (j = 0; j < i; j++) {
- 				if (j < instance->low_latency_index_start)
--					irq_set_affinity_hint(
-+					irq_update_affinity_hint(
- 						pci_irq_vector(pdev, j), NULL);
- 				free_irq(pci_irq_vector(pdev, j),
- 					 &instance->irq_context[j]);
-@@ -5761,7 +5761,7 @@ megasas_destroy_irqs(struct megasas_instance *instance) {
- 	if (instance->msix_vectors)
- 		for (i = 0; i < instance->msix_vectors; i++) {
- 			if (i < instance->low_latency_index_start)
--				irq_set_affinity_hint(
-+				irq_update_affinity_hint(
- 				    pci_irq_vector(instance->pdev, i), NULL);
- 			free_irq(pci_irq_vector(instance->pdev, i),
- 				 &instance->irq_context[i]);
-@@ -5892,22 +5892,25 @@ int megasas_get_device_list(struct megasas_instance *instance)
- }
- 
- /**
-- * megasas_set_high_iops_queue_affinity_hint -	Set affinity hint for high IOPS queues
-- * @instance:					Adapter soft state
-- * return:					void
-+ * megasas_set_high_iops_queue_affinity_and_hint -	Set affinity and hint
-+ *							for high IOPS queues
-+ * @instance:						Adapter soft state
-+ * return:						void
-  */
- static inline void
--megasas_set_high_iops_queue_affinity_hint(struct megasas_instance *instance)
-+megasas_set_high_iops_queue_affinity_and_hint(struct megasas_instance *instance)
- {
- 	int i;
--	int local_numa_node;
-+	unsigned int irq;
-+	const struct cpumask *mask;
- 
- 	if (instance->perf_mode == MR_BALANCED_PERF_MODE) {
--		local_numa_node = dev_to_node(&instance->pdev->dev);
-+		mask = cpumask_of_node(dev_to_node(&instance->pdev->dev));
- 
--		for (i = 0; i < instance->low_latency_index_start; i++)
--			irq_set_affinity_hint(pci_irq_vector(instance->pdev, i),
--				cpumask_of_node(local_numa_node));
-+		for (i = 0; i < instance->low_latency_index_start; i++) {
-+			irq = pci_irq_vector(instance->pdev, i);
-+			irq_set_affinity_and_hint(irq, mask);
-+		}
- 	}
- }
- 
-@@ -5996,7 +5999,7 @@ megasas_alloc_irq_vectors(struct megasas_instance *instance)
- 		instance->msix_vectors = 0;
- 
- 	if (instance->smp_affinity_enable)
--		megasas_set_high_iops_queue_affinity_hint(instance);
-+		megasas_set_high_iops_queue_affinity_and_hint(instance);
- }
- 
- /**
 -- 
-2.27.0
-
+Martin K. Petersen	Oracle Linux Engineering
