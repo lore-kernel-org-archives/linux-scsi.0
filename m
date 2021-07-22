@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6EADC07E9D
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C11C07E9D
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C09986124B
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4720F61261
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230399AbhGVCyx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jul 2021 22:54:53 -0400
-Received: from mail-pj1-f43.google.com ([209.85.216.43]:36373 "EHLO
-        mail-pj1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230366AbhGVCyw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 22:54:52 -0400
-Received: by mail-pj1-f43.google.com with SMTP id ds11-20020a17090b08cbb0290172f971883bso2319839pjb.1
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2021 20:35:27 -0700 (PDT)
+        id S230527AbhGVCy5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jul 2021 22:54:57 -0400
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:38869 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230286AbhGVCyy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 22:54:54 -0400
+Received: by mail-pj1-f54.google.com with SMTP id j8-20020a17090aeb08b0290173bac8b9c9so2304247pjz.3
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2021 20:35:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=JrnO2fd8PQeMK4bwjGvzeGCXA6m1dtIHE9vp+QYr+oU=;
-        b=cf6Op478IcU04oOR+8tst+JoO9WL6wJjmP9uF4212Tc2qcfRGwK9TiXq+ojxiSAP8c
-         19+3LpSbiNWDog7E7v+Gnkdd7/AZ5w8BNydBvzbtZvgnqw8t9HutiyQL6bagYr4pHp71
-         Gn0B7N54miJWUv6csxIBPHDu+8yjYo4apV8NRlmiBYf537QH9II4okJrHTtuNoBeBb3S
-         yx6A9Xk3WgHsfDf6410c6I6sQkEpwnMIejaU7loCXnKGRtpOTBnxB9ObaEjq9GY19IBm
-         48OyY9BIkeaoEUySP3dbwrykWXoBrjnPWz140dfHKQpygDGniWEo426eX+XDl/9zuGem
-         aEbQ==
-X-Gm-Message-State: AOAM530ZQCbET+t5cEvX7kCja+eERJL9lcFUAlMy3TEN7mCVHZU3QgaW
-        T1ThsN66cPsAaWZ8pawDQkQ=
-X-Google-Smtp-Source: ABdhPJwrMwDlK6wmO5/HVN3g8jgVn90NRV1HzOad2FN3kdTJuCu9hce7PU8DGmjaUoo7vLetrK+fHw==
-X-Received: by 2002:a17:902:8d92:b029:113:91e7:89d6 with SMTP id v18-20020a1709028d92b029011391e789d6mr30535549plo.85.1626924927021;
-        Wed, 21 Jul 2021 20:35:27 -0700 (PDT)
+        bh=v0GWws2OAsH1ul1LzZ9S16twx2o4RWhgGMwE8zRCCzU=;
+        b=UX87bExEkiIhmc3PDc/6yfFYggVTZs45sDvzMk58AvWMo+FkrZ4Mmth+hphs37usvG
+         vWUDwp6UYwrJibXmu337QwSm6IJZ+cBRKFRsh2/rbXakZyENcR2/Zun02HL2oy06xzj3
+         K5w7+Ct0NxY3LDEhfoaq+uxuGxKa4AuP645VHWafrTxKoY+lzk1/MyWGowYy/V3SIBgp
+         b6R3O2FNNY/zMR0VLTExYXAmG1ug6k2vB03YtBxpe2mM+8WlFMh020/pllMyz2io3dU0
+         cR5thBmFclo2og1/umdAi13+r6r7ApUZXlv3e/OAoBItm8+lYK1FCVOSDSOSChNMdnTF
+         l44g==
+X-Gm-Message-State: AOAM530l4r5mqKi+BLGSra7vpuqN8PBkki+d5ByMHn+yNojVOZAok4wd
+        T13Or4todMfogpI9F6H0MJ9xOOdAnvI=
+X-Google-Smtp-Source: ABdhPJzCP6iNGiTd0NE/bcC2C6BKQK23G+grtDzq60SRfr+E1SovlhZx21ROcTE29B8uwEu8vB6CEw==
+X-Received: by 2002:a17:90a:f40a:: with SMTP id ch10mr6767610pjb.149.1626924930345;
+        Wed, 21 Jul 2021 20:35:30 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:30e2:954a:f4a0:3224])
-        by smtp.gmail.com with ESMTPSA id n6sm32060258pgb.60.2021.07.21.20.35.25
+        by smtp.gmail.com with ESMTPSA id n6sm32060258pgb.60.2021.07.21.20.35.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jul 2021 20:35:26 -0700 (PDT)
+        Wed, 21 Jul 2021 20:35:29 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>
-Subject: [PATCH v3 08/18] scsi: ufs: Improve static type checking for the host controller state
-Date:   Wed, 21 Jul 2021 20:34:29 -0700
-Message-Id: <20210722033439.26550-9-bvanassche@acm.org>
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>
+Subject: [PATCH v3 09/18] scsi: ufs: Remove several wmb() calls
+Date:   Wed, 21 Jul 2021 20:34:30 -0700
+Message-Id: <20210722033439.26550-10-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210722033439.26550-1-bvanassche@acm.org>
 References: <20210722033439.26550-1-bvanassche@acm.org>
@@ -66,98 +65,86 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Assign a name to the enumeration type for UFS host controller states and
-remove the default clause from switch statements on this enumeration type
-to make the compiler warn about unhandled enumeration labels.
+From arch/arm/include/asm/io.h
 
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+  #define __iowmb() wmb()
+  [ ... ]
+  #define writel(v,c) ({ __iowmb(); writel_relaxed(v,c); })
+
+From Documentation/memory-barriers.txt: "Note that, when using writel(), a
+prior wmb() is not needed to guarantee that the cache coherent memory
+writes have completed before writing to the MMIO region."
+
+In other words, calling wmb() before writel() is not necessary. Hence
+remove the wmb() calls that precede a writel() call. Remove the wmb()
+calls that precede a ufshcd_send_command() call since the latter function
+uses writel(). Remove the wmb() call from ufshcd_wait_for_dev_cmd()
+since the following chain of events guarantees that the CPU will see
+up-to-date LRB values:
+* UFS controller writes to host memory.
+* UFS controller posts completion interrupt after the memory writes from
+  the previous step are visible to the CPU.
+* complete(hba->dev_cmd.complete) is called from the UFS interrupt handler.
+* The wait_for_completion(hba->dev_cmd.complete) call in
+  ufshcd_wait_for_dev_cmd() returns.
+
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Can Guo <cang@codeaurora.org>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 15 ---------------
- drivers/scsi/ufs/ufshcd.h | 25 +++++++++++++++++++++++--
- 2 files changed, 23 insertions(+), 17 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 11 -----------
+ 1 file changed, 11 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 233a1cf53dce..f467630be7df 100644
+index f467630be7df..d1c3a984d803 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -127,15 +127,6 @@ enum {
- 	UFSHCD_CAN_QUEUE	= 32,
- };
- 
--/* UFSHCD states */
--enum {
--	UFSHCD_STATE_RESET,
--	UFSHCD_STATE_ERROR,
--	UFSHCD_STATE_OPERATIONAL,
--	UFSHCD_STATE_EH_SCHEDULED_FATAL,
--	UFSHCD_STATE_EH_SCHEDULED_NON_FATAL,
--};
--
- /* UFSHCD error handling flags */
- enum {
- 	UFSHCD_EH_IN_PROGRESS = (1 << 0),
-@@ -2736,12 +2727,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 		set_host_byte(cmd, DID_ERROR);
- 		cmd->scsi_done(cmd);
+@@ -2769,8 +2769,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		ufshcd_release(hba);
  		goto out;
--	default:
--		dev_WARN_ONCE(hba->dev, 1, "%s: invalid state %d\n",
--				__func__, hba->ufshcd_state);
--		set_host_byte(cmd, DID_BAD_TARGET);
--		cmd->scsi_done(cmd);
--		goto out;
  	}
+-	/* Make sure descriptors are ready before ringing the doorbell */
+-	wmb();
  
- 	hba->req_abort_count = 0;
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index be9e6c683abe..8dcf0df770a2 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -476,6 +476,27 @@ struct ufs_stats {
- 	struct ufs_event_hist event[UFS_EVT_CNT];
- };
+ 	ufshcd_send_command(hba, tag);
+ out:
+@@ -2880,8 +2878,6 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+ 	time_left = wait_for_completion_timeout(hba->dev_cmd.complete,
+ 			msecs_to_jiffies(max_timeout));
  
-+/**
-+ * enum ufshcd_state - UFS host controller state
-+ * @UFSHCD_STATE_RESET: Link is not operational. Postpone SCSI command
-+ *	processing.
-+ * @UFSHCD_STATE_OPERATIONAL: The host controller is operational and can process
-+ *	SCSI commands.
-+ * @UFSHCD_STATE_EH_SCHEDULED_NON_FATAL: The error handler has been scheduled.
-+ *	SCSI commands may be submitted to the controller.
-+ * @UFSHCD_STATE_EH_SCHEDULED_FATAL: The error handler has been scheduled. Fail
-+ *	newly submitted SCSI commands with error code DID_BAD_TARGET.
-+ * @UFSHCD_STATE_ERROR: An unrecoverable error occurred, e.g. link recovery
-+ *	failed. Fail all SCSI commands with error code DID_ERROR.
-+ */
-+enum ufshcd_state {
-+	UFSHCD_STATE_RESET,
-+	UFSHCD_STATE_OPERATIONAL,
-+	UFSHCD_STATE_EH_SCHEDULED_NON_FATAL,
-+	UFSHCD_STATE_EH_SCHEDULED_FATAL,
-+	UFSHCD_STATE_ERROR,
-+};
-+
- enum ufshcd_quirks {
- 	/* Interrupt aggregation support is broken */
- 	UFSHCD_QUIRK_BROKEN_INTR_AGGR			= 1 << 0,
-@@ -687,7 +708,7 @@ struct ufs_hba_monitor {
-  * @tmf_tag_set: TMF tag set.
-  * @tmf_queue: Used to allocate TMF tags.
-  * @pwr_done: completion for power mode change
-- * @ufshcd_state: UFSHCD states
-+ * @ufshcd_state: UFSHCD state
-  * @eh_flags: Error handling flags
-  * @intr_mask: Interrupt Mask Bits
-  * @ee_ctrl_mask: Exception event control mask
-@@ -785,7 +806,7 @@ struct ufs_hba {
- 	struct mutex uic_cmd_mutex;
- 	struct completion *uic_async_done;
+-	/* Make sure descriptors are ready before ringing the doorbell */
+-	wmb();
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->dev_cmd.complete = NULL;
+ 	if (likely(time_left)) {
+@@ -2960,8 +2956,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 	hba->dev_cmd.complete = &wait;
  
--	u32 ufshcd_state;
-+	enum ufshcd_state ufshcd_state;
- 	u32 eh_flags;
- 	u32 intr_mask;
- 	u16 ee_ctrl_mask; /* Exception event mask */
+ 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+-	/* Make sure descriptors are ready before ringing the doorbell */
+-	wmb();
+ 
+ 	ufshcd_send_command(hba, tag);
+ 	err = ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+@@ -6521,9 +6515,6 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	/* send command to the controller */
+ 	__set_bit(task_tag, &hba->outstanding_tasks);
+ 
+-	/* Make sure descriptors are ready before ringing the task doorbell */
+-	wmb();
+-
+ 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TASK_REQ_DOOR_BELL);
+ 	/* Make sure that doorbell is committed immediately */
+ 	wmb();
+@@ -6695,8 +6686,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 	hba->dev_cmd.complete = &wait;
+ 
+ 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+-	/* Make sure descriptors are ready before ringing the doorbell */
+-	wmb();
+ 
+ 	ufshcd_send_command(hba, tag);
+ 	/*
