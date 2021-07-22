@@ -7,40 +7,40 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF29CC636C8
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E349C07E9D
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A926F6124B
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2F1F60FF4
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231169AbhGVCzR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jul 2021 22:55:17 -0400
-Received: from mail-pj1-f52.google.com ([209.85.216.52]:40896 "EHLO
-        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231156AbhGVCzQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 22:55:16 -0400
-Received: by mail-pj1-f52.google.com with SMTP id u9-20020a17090a1f09b029017554809f35so2283213pja.5
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2021 20:35:52 -0700 (PDT)
+        id S231160AbhGVCzW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jul 2021 22:55:22 -0400
+Received: from mail-pj1-f42.google.com ([209.85.216.42]:54936 "EHLO
+        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231163AbhGVCzV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 22:55:21 -0400
+Received: by mail-pj1-f42.google.com with SMTP id j1so2550185pjj.4
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2021 20:35:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Fb2RY2/wstAyuLtAtIt20ooGDzmuUYR3su3nCi4Jx+0=;
-        b=aSXbGIMOHoW8+AEiGtvd1qQg1jpkvHq92vDkdIX4fryw+fkAVdO9UF0uKZeeUb5Sxd
-         gryboD4Q9Q8t1/dnMA7VqafeJ/vXg+7ia2J48+AQVtPAX14e+APC/LMfMEAXDEUx4Jd4
-         CcQjDlfeH57LkEqU/KvGL0Ba312L1l/gElUkGgNG8CBbXHiGcUoWe5LD1TfkY252USvL
-         WB4ao3a3Wo3aY7kfP6aRs8xMLmkxm/sc1LhR3PaACIS0+EoB9bAuJ++Iogx75CuY60ok
-         3nqhU0bFm5TbZcSbdILMtaSLBs4TFKRnYKA2jmtSW63aPskTj1j8nGKS2leP5BTeW8YY
-         MUzg==
-X-Gm-Message-State: AOAM531LeKjYljlO1ZbwDKPCx/g7lOEoWdd4F/H8RVtUxrsM/LbFEpyk
-        0hQV0G9f+RLom72WBQ8V27g=
-X-Google-Smtp-Source: ABdhPJxB2H+SLTrb6ekNeROP4kLxnutyY2vInxEcC+U8rwzZbCVNDoN6kCjhJr65quXLVZo6h34Lww==
-X-Received: by 2002:a62:be18:0:b029:318:df2e:c17c with SMTP id l24-20020a62be180000b0290318df2ec17cmr40368164pff.30.1626924951670;
-        Wed, 21 Jul 2021 20:35:51 -0700 (PDT)
+        bh=tRzuh0w47yQoCM3k02xB3WQ2QEgPkeHzrmD4Ibxw350=;
+        b=j+s+Ji/9h7Ehjr4GQ/ac0AorEsoCUx6Pbju75kAJLKlkuogcHdojGkcNbSsFzP94ox
+         JaBecXH2+TVzd1LhKKRH6vQS3D3wWdQ152PVr9I7Zm3S2tBhHCdCaa/FvASAuXuUHUiP
+         G520Qb75YJMgtdD4LBdCL/IIMdFnwyEq1yzHUU8YuP8wUZOgs8PAo0644MxYxTzE7JtB
+         TZ0epBkQxDD9hK8J2upFxwaCrgSQakkd9Dp8Ab+MZVY35fY0b+LZeHZjPKgIVwaemmNM
+         GWPZgh6stu8seC45yFuRKRDDv/aQBa9yup+Mm39B5JXNsDxW+8Dxrs6aFTPizXU0L6C6
+         ND+g==
+X-Gm-Message-State: AOAM533sBbUBO2julkHDeK+4eT2xpuqFPilAwlCrONh4CS5RgTtJJZ1v
+        DYB622CpLKYiow5g/iP5z4U=
+X-Google-Smtp-Source: ABdhPJwYhE15aKNZhURc9XUgx+U2lwsK878FdL9NAVhd488TvCV0KBI8JM1u7FcNyPvzdwSspyjZYw==
+X-Received: by 2002:a65:690f:: with SMTP id s15mr27735409pgq.21.1626924955007;
+        Wed, 21 Jul 2021 20:35:55 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:30e2:954a:f4a0:3224])
-        by smtp.gmail.com with ESMTPSA id n6sm32060258pgb.60.2021.07.21.20.35.50
+        by smtp.gmail.com with ESMTPSA id n6sm32060258pgb.60.2021.07.21.20.35.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jul 2021 20:35:51 -0700 (PDT)
+        Wed, 21 Jul 2021 20:35:54 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
@@ -53,9 +53,9 @@ Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
         Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v3 14/18] scsi: ufs: Fix the SCSI abort handler
-Date:   Wed, 21 Jul 2021 20:34:35 -0700
-Message-Id: <20210722033439.26550-15-bvanassche@acm.org>
+Subject: [PATCH v3 15/18] scsi: ufs: Request sense data asynchronously
+Date:   Wed, 21 Jul 2021 20:34:36 -0700
+Message-Id: <20210722033439.26550-16-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210722033439.26550-1-bvanassche@acm.org>
 References: <20210722033439.26550-1-bvanassche@acm.org>
@@ -65,156 +65,117 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make the following changes in ufshcd_abort():
-- Return FAILED instead of SUCCESS if the abort handler notices that a SCSI
-  command has already been completed. Returning SUCCESS in this case
-  triggers a use-after-free and may trigger a kernel crash.
-- Fix the code for aborting SCSI commands submitted to a WLUN.
+Clearing a unit attention synchronously from inside the UFS error handler
+may trigger the following deadlock:
+- ufshcd_err_handler() calls ufshcd_err_handling_unprepare() and the latter
+  function calls ufshcd_clear_ua_wluns().
+- ufshcd_clear_ua_wluns() submits a REQUEST SENSE command and that command
+  activates the SCSI error handler.
+- The SCSI error handler calls ufshcd_host_reset_and_restore().
+- ufshcd_host_reset_and_restore() executes the following code:
+  ufshcd_schedule_eh_work(hba);
+  flush_work(&hba->eh_work);
 
-The current approach for aborting SCSI commands that have been submitted to
-a WLUN and that timed out is as follows:
-- Report to the SCSI core that the command has completed successfully.
-  Let the block layer free any data buffers associated with the command.
-- Mark the command as outstanding in 'outstanding_reqs'.
-- If the block layer tries to reuse the tag associated with the aborted
-  command, busy-wait until the tag is freed.
-
-This approach can result in:
-- Memory corruption if the controller accesses the data buffer after the
-  block layer has freed the associated data buffers.
-- A race condition if ufshcd_queuecommand() or ufshcd_exec_dev_cmd()
-  checks the bit that corresponds to an aborted command in 'outstanding_reqs'
-  after it has been cleared and before it is reset.
-- High energy consumption if ufshcd_queuecommand() repeatedly returns
-  SCSI_MLQUEUE_HOST_BUSY.
-
-Fix this by reporting to the SCSI error handler that aborting a SCSI
-command failed if the SCSI command was submitted to a WLUN.
+This sequence results in a deadlock (circular wait). Fix this by requesting
+sense data asynchronously.
 
 Cc: Adrian Hunter <adrian.hunter@intel.com>
 Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Can Guo <cang@codeaurora.org>
 Cc: Asutosh Das <asutoshd@codeaurora.org>
 Cc: Avri Altman <avri.altman@wdc.com>
-Fixes: 7a7e66c65d41 ("scsi: ufs: Fix a race condition between ufshcd_abort() and eh_work()")
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 54 ++++++++++++++-------------------------
- 1 file changed, 19 insertions(+), 35 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 64 ++++++++++++++++++++-------------------
+ 1 file changed, 33 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a3ad83a3bae0..c35e101c5834 100644
+index c35e101c5834..75730a43fcca 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2724,15 +2724,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	WARN_ON(ufshcd_is_clkgating_allowed(hba) &&
- 		(hba->clk_gating.state != CLKS_ON));
- 
--	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
--		if (hba->pm_op_in_progress)
--			set_host_byte(cmd, DID_BAD_TARGET);
--		else
--			err = SCSI_MLQUEUE_HOST_BUSY;
--		ufshcd_release(hba);
--		goto out;
--	}
--
- 	lrbp = &hba->lrb[tag];
- 	WARN_ON(lrbp->cmd);
- 	lrbp->cmd = cmd;
-@@ -2929,11 +2920,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 	req->timeout = msecs_to_jiffies(2 * timeout);
- 	blk_mq_start_request(req);
- 
--	if (unlikely(test_bit(tag, &hba->outstanding_reqs))) {
--		err = -EBUSY;
--		goto out;
--	}
--
- 	lrbp = &hba->lrb[tag];
- 	WARN_ON(lrbp->cmd);
- 	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
-@@ -6922,19 +6908,19 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	unsigned int tag = cmd->request->tag;
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	unsigned long flags;
--	int err = 0;
-+	int err = FAILED;
- 	u32 reg;
- 
- 	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
- 
- 	ufshcd_hold(hba, false);
- 	reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--	/* If command is already aborted/completed, return SUCCESS */
-+	/* If command is already aborted/completed, return FAILED. */
- 	if (!(test_bit(tag, &hba->outstanding_reqs))) {
- 		dev_err(hba->dev,
- 			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
- 			__func__, tag, hba->outstanding_reqs, reg);
--		goto out;
-+		goto release;
- 	}
- 
- 	/* Print Transfer Request of aborted task */
-@@ -6963,7 +6949,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		dev_err(hba->dev,
- 		"%s: cmd was completed, but without a notifying intr, tag = %d",
- 		__func__, tag);
--		goto cleanup;
-+		__ufshcd_transfer_req_compl(hba, 1UL << tag);
-+		goto release;
- 	}
- 
- 	/*
-@@ -6976,36 +6963,33 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	 */
- 	if (lrbp->lun == UFS_UPIU_UFS_DEVICE_WLUN) {
- 		ufshcd_update_evt_hist(hba, UFS_EVT_ABORT, lrbp->lun);
--		__ufshcd_transfer_req_compl(hba, (1UL << tag));
--		set_bit(tag, &hba->outstanding_reqs);
-+
- 		spin_lock_irqsave(host->host_lock, flags);
- 		hba->force_reset = true;
- 		ufshcd_schedule_eh_work(hba);
- 		spin_unlock_irqrestore(host->host_lock, flags);
--		goto out;
-+		goto release;
- 	}
- 
- 	/* Skip task abort in case previous aborts failed and report failure */
--	if (lrbp->req_abort_skip)
--		err = -EIO;
--	else
--		err = ufshcd_try_to_abort_task(hba, tag);
-+	if (lrbp->req_abort_skip) {
-+		dev_err(hba->dev, "%s: skipping abort\n", __func__);
-+		ufshcd_set_req_abort_skip(hba, hba->outstanding_reqs);
-+		goto release;
-+	}
- 
--	if (!err) {
--cleanup:
--		__ufshcd_transfer_req_compl(hba, (1UL << tag));
--out:
--		err = SUCCESS;
--	} else {
-+	err = ufshcd_try_to_abort_task(hba, tag);
-+	if (err) {
- 		dev_err(hba->dev, "%s: failed with err %d\n", __func__, err);
- 		ufshcd_set_req_abort_skip(hba, hba->outstanding_reqs);
- 		err = FAILED;
-+		goto release;
- 	}
- 
--	/*
--	 * This ufshcd_release() corresponds to the original scsi cmd that got
--	 * aborted here (as we won't get any IRQ for it).
--	 */
-+	err = SUCCESS;
-+
-+release:
-+	/* Matches the ufshcd_hold() call at the start of this function. */
- 	ufshcd_release(hba);
- 	return err;
+@@ -7820,8 +7820,39 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ 	return ret;
  }
+ 
++static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
++{
++	if (error != BLK_STS_OK)
++		pr_err("%s: REQUEST SENSE failed (%d)", __func__, error);
++	blk_put_request(rq);
++}
++
+ static int
+-ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp);
++ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
++{
++	/*
++	 * From SPC-6: the REQUEST SENSE command with any allocation length
++	 * clears the sense data.
++	 */
++	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, 0, 0};
++	struct scsi_request *rq;
++	struct request *req;
++
++	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, /*flags=*/0);
++	if (IS_ERR(req))
++		return PTR_ERR(req);
++
++	rq = scsi_req(req);
++	rq->cmd_len = ARRAY_SIZE(cmd);
++	memcpy(rq->cmd, cmd, rq->cmd_len);
++	rq->retries = 3;
++	req->timeout = 1 * HZ;
++	req->rq_flags |= RQF_PM | RQF_QUIET;
++
++	blk_execute_rq_nowait(/*bd_disk=*/NULL, req, /*at_head=*/true,
++			      ufshcd_request_sense_done);
++	return 0;
++}
+ 
+ static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
+ {
+@@ -7849,7 +7880,7 @@ static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
+ 	if (ret)
+ 		goto out_err;
+ 
+-	ret = ufshcd_send_request_sense(hba, sdp);
++	ret = ufshcd_request_sense_async(hba, sdp);
+ 	scsi_device_put(sdp);
+ out_err:
+ 	if (ret)
+@@ -8444,35 +8475,6 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
+ 	}
+ }
+ 
+-static int
+-ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
+-{
+-	unsigned char cmd[6] = {REQUEST_SENSE,
+-				0,
+-				0,
+-				0,
+-				UFS_SENSE_SIZE,
+-				0};
+-	char *buffer;
+-	int ret;
+-
+-	buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
+-	if (!buffer) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	ret = scsi_execute(sdp, cmd, DMA_FROM_DEVICE, buffer,
+-			UFS_SENSE_SIZE, NULL, NULL,
+-			msecs_to_jiffies(1000), 3, 0, RQF_PM, NULL);
+-	if (ret)
+-		pr_err("%s: failed with err %d\n", __func__, ret);
+-
+-	kfree(buffer);
+-out:
+-	return ret;
+-}
+-
+ /**
+  * ufshcd_set_dev_pwr_mode - sends START STOP UNIT command to set device
+  *			     power mode
