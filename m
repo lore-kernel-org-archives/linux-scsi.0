@@ -6,52 +6,71 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E212AC432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 19:17:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08F1AC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 19:20:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8F4F60EB2
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 19:17:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DB93260EB6
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 19:20:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230366AbhGVSg7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Jul 2021 14:36:59 -0400
-Received: from verein.lst.de ([213.95.11.211]:35727 "EHLO verein.lst.de"
+        id S230079AbhGVSkL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Jul 2021 14:40:11 -0400
+Received: from verein.lst.de ([213.95.11.211]:35748 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230380AbhGVSgy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Jul 2021 14:36:54 -0400
+        id S229556AbhGVSkL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Jul 2021 14:40:11 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 12D5867373; Thu, 22 Jul 2021 21:17:28 +0200 (CEST)
-Date:   Thu, 22 Jul 2021 21:17:27 +0200
+        id 2416C67373; Thu, 22 Jul 2021 21:20:43 +0200 (CEST)
+Date:   Thu, 22 Jul 2021 21:20:42 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
         FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
         Doug Gilbert <dgilbert@interlog.com>,
         Kai =?iso-8859-1?Q?M=E4kisara?= <Kai.Makisara@kolumbus.fi>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 19/24] scsi: rename CONFIG_BLK_SCSI_REQUEST to
- CONFIG_SCSI_COMMON
-Message-ID: <20210722191727.GA15240@lst.de>
-References: <20210712054816.4147559-1-hch@lst.de> <20210712054816.4147559-20-hch@lst.de> <yq1zguew84u.fsf@ca-mkp.ca.oracle.com>
+Subject: Re: [PATCH 21/24] scsi: consolidate the START STOP UNIT handling
+Message-ID: <20210722192042.GB15240@lst.de>
+References: <20210712054816.4147559-1-hch@lst.de> <20210712054816.4147559-22-hch@lst.de> <75da1d81-4a0f-ae5e-d511-6a036d0d2472@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <yq1zguew84u.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <75da1d81-4a0f-ae5e-d511-6a036d0d2472@acm.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 22, 2021 at 01:51:28PM -0400, Martin K. Petersen wrote:
-> 
-> Christoph,
-> 
-> > CONFIG_BLK_SCSI_REQUEST is rather misnamed now as it just enabled
-> > building a small amount of code shared by the scsi initiator, target
-> > and consumers of the scsi_request passthrough API.  Rename it and also
-> > allow building it as a module.
-> 
-> Build now fails. Needs:
+On Thu, Jul 22, 2021 at 11:44:33AM -0700, Bart Van Assche wrote:
+> On 7/11/21 10:48 PM, Christoph Hellwig wrote:
+>> +	char cdb[MAX_COMMAND_SIZE] = { };
+>
+> How about using 'u8' instead of 'char'?
 
-Interesting - this did not show up in any of my builds and not in weeks
-of buildbot coverage.  But I'll add the include just to be on the safe
-side.
+Sure.
+
+>
+> Additionally, MAX_COMMAND_SIZE equals 16. According to SBC-4 6 bytes is 
+> enough for the START STOP UNIT command.
+
+This just keeps the existing logic.
+
+>
+>> +	cdb[0] = START_STOP;
+>> +	cdb[4] = data;
+>
+> Please combine the above two statements with the cdb[] declaration into a 
+> single line.
+
+Just keeping the style of the existing code, which seems fine.  Even
+when initializing at declaration time this would have to be multiple
+lines to stay readable.
+
+> Additionally, please split data into two arguments to make calls of this 
+> function easier to read. This is what I found in SBC-4:
+> * bit 1 of byte 4 has the name LOEJ (load eject).
+> * bit 0 of byte 4 has the name START (start unit).
+
+Not sure how that really helps anyone.  And again I'm not trying to
+do a grand rewrite, just consoidating the existing code a bit.
