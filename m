@@ -2,363 +2,290 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-27.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CC00C64981
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 08:46:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B5BEC63793
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 11:03:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4218961351
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 08:46:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1D1796121E
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 11:03:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231341AbhGVIFc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Jul 2021 04:05:32 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55882 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231189AbhGVIFZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Jul 2021 04:05:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id A43AE6128C;
-        Thu, 22 Jul 2021 08:45:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1626943559;
-        bh=iHEKpKP05yPtSDo0WVw13tR4OsPIw3x7iurEQu7Pc7Q=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=d2l4V14jYNVya/romP2w2ezg4x2LnX47K9dLSJmCxQOKyIqkdonEoIsuSyzycFfD4
-         aHamBXJweC7B8K4Qi3lPBaud6oc7vHctb7fViEzj6oXWZWpeL9VSuOZpThr23TyNei
-         Kh7xAATxCTMeB2NBX21iFqK668swZChaCi9FSwpo=
-Date:   Thu, 22 Jul 2021 10:45:55 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-Cc:     kernel@pengutronix.de,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Alexandre Belloni <alexandre.belloni@bootlin.com>,
-        Alexandre Bounine <alex.bou9@gmail.com>,
-        Alex Dubov <oakad@yahoo.com>, Alex Elder <elder@kernel.org>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Alison Schofield <alison.schofield@intel.com>,
-        Allen Hubbe <allenbh@gmail.com>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Andy Gross <agross@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Benjamin Tissoires <benjamin.tissoires@redhat.com>,
-        Ben Widawsky <ben.widawsky@intel.com>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bodo Stroesser <bostroesser@gmail.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Chen-Yu Tsai <wens@csie.org>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Cornelia Huck <cohuck@redhat.com>,
-        Cristian Marussi <cristian.marussi@arm.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        David Woodhouse <dwmw@amazon.co.uk>,
-        Dexuan Cui <decui@microsoft.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Dominik Brodowski <linux@dominikbrodowski.net>,
-        Eric Farman <farman@linux.ibm.com>,
-        Finn Thain <fthain@linux-m68k.org>,
-        Florian Fainelli <f.fainelli@gmail.com>,
-        Frank Li <lznuaa@gmail.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Geoff Levand <geoff@infradead.org>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Halil Pasic <pasic@linux.ibm.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Harald Freudenberger <freude@linux.ibm.com>,
-        Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Helge Deller <deller@gmx.de>, Ira Weiny <ira.weiny@intel.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jason Wang <jasowang@redhat.com>,
-        Jens Taprogge <jens.taprogge@taprogge.org>,
-        Jernej Skrabec <jernej.skrabec@gmail.com>,
-        Jiri Kosina <jikos@kernel.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Joey Pabalan <jpabalanb@gmail.com>,
-        Johan Hovold <johan@kernel.org>,
-        Johannes Berg <johannes@sipsolutions.net>,
-        Johannes Thumshirn <morbidrsa@gmail.com>,
-        Jon Mason <jdmason@kudzu.us>, Juergen Gross <jgross@suse.com>,
-        Julien Grall <jgrall@amazon.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        Kirti Wankhede <kwankhede@nvidia.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Lee Jones <lee.jones@linaro.org>, Len Brown <lenb@kernel.org>,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Manohar Vanga <manohar.vanga@gmail.com>,
-        Marc Zyngier <maz@kernel.org>, Mark Brown <broonie@kernel.org>,
-        Mark Gross <mgross@linux.intel.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Martyn Welch <martyn@welchs.me.uk>,
-        Mathieu Poirier <mathieu.poirier@linaro.org>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Matt Porter <mporter@kernel.crashing.org>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Maxime Ripard <mripard@kernel.org>,
-        Maximilian Luz <luzmaximilian@gmail.com>,
-        Maxim Levitsky <maximlevitsky@gmail.com>,
-        Michael Buesch <m@bues.ch>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Michael Jamet <michael.jamet@intel.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Mike Christie <michael.christie@oracle.com>,
-        Moritz Fischer <mdf@kernel.org>,
-        Ohad Ben-Cohen <ohad@wizery.com>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Peter Oberparleiter <oberpar@linux.ibm.com>,
-        "Rafael J. Wysocki" <rjw@rjwysocki.net>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Rich Felker <dalias@libc.org>,
-        Rikard Falkeborn <rikard.falkeborn@gmail.com>,
-        Rob Herring <robh@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
-        Samuel Holland <samuel@sholland.org>,
-        Samuel Iglesias Gonsalvez <siglesias@igalia.com>,
-        SeongJae Park <sjpark@amazon.de>,
-        Srinivas Kandagatla <srinivas.kandagatla@linaro.org>,
-        Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Stephen Boyd <sboyd@kernel.org>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Sudeep Holla <sudeep.holla@arm.com>,
-        Sven Van Asbroeck <TheSven73@gmail.com>,
-        Takashi Iwai <tiwai@suse.com>,
-        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
-        Thorsten Scherer <t.scherer@eckelmann.de>,
-        Tomas Winkler <tomas.winkler@intel.com>,
-        Tom Rix <trix@redhat.com>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Ulf Hansson <ulf.hansson@linaro.org>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Vineeth Vijayan <vneethv@linux.ibm.com>,
-        Vinod Koul <vkoul@kernel.org>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        William Breathitt Gray <vilhelm.gray@gmail.com>,
-        Wolfram Sang <wsa@kernel.org>, Wu Hao <hao.wu@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Yoshinori Sato <ysato@users.sourceforge.jp>,
-        YueHaibing <yuehaibing@huawei.com>,
-        Yufen Yu <yuyufen@huawei.com>, alsa-devel@alsa-project.org,
-        dmaengine@vger.kernel.org, greybus-dev@lists.linaro.org,
-        industrypack-devel@lists.sourceforge.net, kvm@vger.kernel.org,
-        linux1394-devel@lists.sourceforge.net, linux-acpi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-fpga@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-i2c@vger.kernel.org, linux-i3c@lists.infradead.org,
-        linux-input@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-m68k@lists.linux-m68k.org, linux-media@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org,
-        linux-ntb@googlegroups.com, linux-parisc@vger.kernel.org,
-        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-remoteproc@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-        linux-sh@vger.kernel.org, linux-spi@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-sunxi@lists.linux.dev,
-        linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org,
-        netdev@vger.kernel.org, nvdimm@lists.linux.dev,
-        platform-driver-x86@vger.kernel.org, sparclinux@vger.kernel.org,
-        target-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v4 0/5] bus: Make remove callback return void
-Message-ID: <YPkwQwf0dUKnGA7L@kroah.com>
-References: <20210713193522.1770306-1-u.kleine-koenig@pengutronix.de>
- <YPfyZen4Y0uDKqDT@kroah.com>
+        id S231513AbhGVKWd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Jul 2021 06:22:33 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:54958 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231286AbhGVKWc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Jul 2021 06:22:32 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 8E1C148A6C;
+        Thu, 22 Jul 2021 11:03:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        mime-version:content-transfer-encoding:content-type:content-type
+        :content-language:accept-language:in-reply-to:references
+        :message-id:date:date:subject:subject:from:from:received
+        :received:received:received; s=mta-01; t=1626951784; x=
+        1628766185; bh=id7EW5tJlMBcdgL+pskGpJceVrot5gFOIDRWiVSCMuM=; b=A
+        N2AqeoK/byST7ZEo7ApO/MpyY1dfvWOonoHsTZOgcl34LjhJ0AgfKvvqvjr33nG0
+        pLHJ+XDfoQLx+4+xmc5wBMUrQ+TeqSQlmM3461IUzBmVrFDo284btm157JRA4zko
+        0me698Ta+BWcEm0254QVxY4JwPS9HO57HL1GVq3ihQ=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id rEQ7_FuonnFG; Thu, 22 Jul 2021 14:03:04 +0300 (MSK)
+Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 5683341317;
+        Thu, 22 Jul 2021 14:03:03 +0300 (MSK)
+Received: from T-EXCH-04.corp.yadro.com (172.17.100.104) by
+ T-EXCH-04.corp.yadro.com (172.17.100.104) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Thu, 22 Jul 2021 14:03:02 +0300
+Received: from T-EXCH-04.corp.yadro.com ([fe80::d8c5:6f0a:3d48:18df]) by
+ T-EXCH-04.corp.yadro.com ([fe80::d8c5:6f0a:3d48:18df%15]) with mapi id
+ 15.01.0669.032; Thu, 22 Jul 2021 14:03:02 +0300
+From:   Sergey Samoylenko <s.samoylenko@yadro.com>
+To:     David Disseldorp <ddiss@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>
+CC:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "michael.christie@oracle.com" <michael.christie@oracle.com>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>
+Subject: RE: [PATCH 0/1] scsi: target: core: Fix sense key for invalid XCOPY
+ request
+Thread-Topic: [PATCH 0/1] scsi: target: core: Fix sense key for invalid XCOPY
+ request
+Thread-Index: AQHXaOrulzhKjQiRek2XLeHree9A8KtN7zSAgAECYhA=
+Date:   Thu, 22 Jul 2021 11:03:02 +0000
+Message-ID: <a860bf3f89594f6982ce126ebaa0ab94@yadro.com>
+References: <20210624111926.63176-1-s.samoylenko@yadro.com>
+ <20210721234505.45c93a48@suse.de>
+In-Reply-To: <20210721234505.45c93a48@suse.de>
+Accept-Language: ru-RU, en-US
+Content-Language: ru-RU
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.199.0.226]
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <YPfyZen4Y0uDKqDT@kroah.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Jul 21, 2021 at 12:09:41PM +0200, Greg Kroah-Hartman wrote:
-> On Tue, Jul 13, 2021 at 09:35:17PM +0200, Uwe Kleine-König wrote:
-> > Hello,
-> > 
-> > this is v4 of the final patch set for my effort to make struct
-> > bus_type::remove return void.
-> > 
-> > The first four patches contain cleanups that make some of these
-> > callbacks (more obviously) always return 0. They are acked by the
-> > respective maintainers. Bjorn Helgaas explicitly asked to include the
-> > pci patch (#1) into this series, so Greg taking this is fine. I assume
-> > the s390 people are fine with Greg taking patches #2 to #4, too, they
-> > didn't explicitly said so though.
-> > 
-> > The last patch actually changes the prototype and so touches quite some
-> > drivers and has the potential to conflict with future developments, so I
-> > consider it beneficial to put these patches into next soon. I expect
-> > that it will be Greg who takes the complete series, he already confirmed
-> > via irc (for v2) to look into this series.
-> > 
-> > The only change compared to v3 is in the fourth patch where I modified a
-> > few more drivers to fix build failures. Some of them were found by build
-> > bots (thanks!), some of them I found myself using a regular expression
-> > search. The newly modified files are:
-> > 
-> >  arch/sparc/kernel/vio.c
-> >  drivers/nubus/bus.c
-> >  drivers/sh/superhyway/superhyway.c
-> >  drivers/vlynq/vlynq.c
-> >  drivers/zorro/zorro-driver.c
-> >  sound/ac97/bus.c
-> > 
-> > Best regards
-> > Uwe
-> 
-> Now queued up.  I can go make a git tag that people can pull from after
-> 0-day is finished testing this to verify all is good, if others need it.
+Hi David,
 
-Ok, here's a tag that any other subsystem can pull from if they want
-these changes in their tree before 5.15-rc1 is out.  I might pull it
-into my char-misc-next tree as well just to keep that tree sane as it
-seems to pick up new busses on a regular basis...
+> Hi Sergey,
+>
+> On Thu, 24 Jun 2021 14:19:25 +0300, Sergey Samoylenko wrote:
+>
+>> EXTENDED COPY tests in libiscsi [1] show that TCM doesn't follow SPC4=20
+>> when detects invalid parameters in a XCOPY command or IO errors. The=20
+>> replies from TCM contain wrong sense key or ASCQ for incorrect=20
+>> request.
+>>=20
+>> The series fixes the following tests from libiscsi:
+>
+> We've hit this too. The incorrect sense reporting appears to also affect =
+VMware XCOPY fallback to initiator driven READ/WRITE. I'm pretty sure this =
+is a regression from
+> d877d7275be34ad70ce92bcbb4bb36cec77ed004, so should probably be marked as=
+ such via a Fixes tag.
+>
+> Cheers, David
 
-thanks,
+The d877d7275be34ad70ce92bcbb4bb36cec77ed004 was added for v4.10.x kernel a=
+nd it was necessary
+for to avoid LUN removal race conditions. Later you excluded using configfs=
+ in the XCOPY workqueue.
+It was the 2896c93811e39d63a4d9b63ccf12a8fbc226e5e4.
 
-greg k-h
+If we remove the d877d7275be34ad70ce92bcbb4bb36cec77ed004, will it break an=
+ything?
+We have accumulated many changes between v4.10 and v5.14.
 
------------------------------------
+David, maybe can we move the helper 'target_complete_cmd_with_sense' from y=
+our path to mainline kernel?
+I think it will be useful in the future.
+
+Best regards,
+Sergey
 
 
-The following changes since commit 2734d6c1b1a089fb593ef6a23d4b70903526fe0c:
 
-  Linux 5.14-rc2 (2021-07-18 14:13:49 -0700)
+From 2e96d8ac2695a13edf71976bd099003dda52056d Mon Sep 17 00:00:00 2001
+From: Mike Christie <michaelc@cs.wisc.edu>
+Date: Wed, 29 Jul 2015 04:23:49 -0500
+Subject: [PATCH] target: compare and write backend driver sense handling
+References: fate#318836
+Patch-mainline: Not yet, SES2 clustered LIO/RBD
 
-are available in the Git repository at:
+Currently, backend drivers seem to only fail IO with
+SAM_STAT_CHECK_CONDITION which gets us
+TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE.
+For compare and write support we will want to be able to fail with
+TCM_MISCOMPARE_VERIFY. This patch adds a new helper that allows backend
+drivers to fail with specific sense codes.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core.git tags/bus_remove_return_void-5.15
+It also allows the backend driver to set the miscompare offset.
 
-for you to fetch changes up to fc7a6209d5710618eb4f72a77cd81b8d694ecf89:
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Acked-by: David Disseldorp <ddiss@suse.de>
+[ddiss@suse.de rebase against ab78fef4d5 and 9ec1e1ce3a]
+---
+ drivers/target/target_core_transport.c |   34 ++++++++++++++++++++++++++++=
+++---
+ include/target/target_core_backend.h   |    1
+ include/target/target_core_base.h      |    5 +++-
+ 3 files changed, 36 insertions(+), 4 deletions(-)
 
-  bus: Make remove callback return void (2021-07-21 11:53:42 +0200)
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -718,8 +718,7 @@ static void target_complete_failure_work
+ {
+  struct se_cmd *cmd =3D container_of(work, struct se_cmd, work);
 
-----------------------------------------------------------------
-Bus: Make remove callback return void tag
+- transport_generic_request_failure(cmd,
+-     TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE);
++ transport_generic_request_failure(cmd, cmd->sense_reason);
+ }
 
-Tag for other trees/branches to pull from in order to have a stable
-place to build off of if they want to add new busses for 5.15.
+ /*
+@@ -837,7 +836,8 @@ static bool target_cmd_interrupted(struc
+ }
 
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+ /* May be called from interrupt context so must not sleep. */
+-void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
++static void __target_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
++         sense_reason_t sense_reason)
+ {
+  int success;
+  unsigned long flags;
+@@ -846,6 +846,7 @@ void target_complete_cmd(struct se_cmd *
+    return;
 
-----------------------------------------------------------------
-Uwe Kleine-König (5):
-      PCI: endpoint: Make struct pci_epf_driver::remove return void
-      s390/cio: Make struct css_driver::remove return void
-      s390/ccwgroup: Drop if with an always false condition
-      s390/scm: Make struct scm_driver::remove return void
-      bus: Make remove callback return void
+  cmd->scsi_status =3D scsi_status;
++ cmd->sense_reason =3D sense_reason;
 
- arch/arm/common/locomo.c                  | 3 +--
- arch/arm/common/sa1111.c                  | 4 +---
- arch/arm/mach-rpc/ecard.c                 | 4 +---
- arch/mips/sgi-ip22/ip22-gio.c             | 3 +--
- arch/parisc/kernel/drivers.c              | 5 ++---
- arch/powerpc/platforms/ps3/system-bus.c   | 3 +--
- arch/powerpc/platforms/pseries/ibmebus.c  | 3 +--
- arch/powerpc/platforms/pseries/vio.c      | 3 +--
- arch/s390/include/asm/eadm.h              | 2 +-
- arch/sparc/kernel/vio.c                   | 4 +---
- drivers/acpi/bus.c                        | 3 +--
- drivers/amba/bus.c                        | 4 +---
- drivers/base/auxiliary.c                  | 4 +---
- drivers/base/isa.c                        | 4 +---
- drivers/base/platform.c                   | 4 +---
- drivers/bcma/main.c                       | 6 ++----
- drivers/bus/sunxi-rsb.c                   | 4 +---
- drivers/cxl/core.c                        | 3 +--
- drivers/dax/bus.c                         | 4 +---
- drivers/dma/idxd/sysfs.c                  | 4 +---
- drivers/firewire/core-device.c            | 4 +---
- drivers/firmware/arm_scmi/bus.c           | 4 +---
- drivers/firmware/google/coreboot_table.c  | 4 +---
- drivers/fpga/dfl.c                        | 4 +---
- drivers/hid/hid-core.c                    | 4 +---
- drivers/hid/intel-ish-hid/ishtp/bus.c     | 4 +---
- drivers/hv/vmbus_drv.c                    | 5 +----
- drivers/hwtracing/intel_th/core.c         | 4 +---
- drivers/i2c/i2c-core-base.c               | 5 +----
- drivers/i3c/master.c                      | 4 +---
- drivers/input/gameport/gameport.c         | 3 +--
- drivers/input/serio/serio.c               | 3 +--
- drivers/ipack/ipack.c                     | 4 +---
- drivers/macintosh/macio_asic.c            | 4 +---
- drivers/mcb/mcb-core.c                    | 4 +---
- drivers/media/pci/bt8xx/bttv-gpio.c       | 3 +--
- drivers/memstick/core/memstick.c          | 3 +--
- drivers/mfd/mcp-core.c                    | 3 +--
- drivers/misc/mei/bus.c                    | 4 +---
- drivers/misc/tifm_core.c                  | 3 +--
- drivers/mmc/core/bus.c                    | 4 +---
- drivers/mmc/core/sdio_bus.c               | 4 +---
- drivers/net/netdevsim/bus.c               | 3 +--
- drivers/ntb/core.c                        | 4 +---
- drivers/ntb/ntb_transport.c               | 4 +---
- drivers/nubus/bus.c                       | 6 ++----
- drivers/nvdimm/bus.c                      | 3 +--
- drivers/pci/endpoint/pci-epf-core.c       | 7 ++-----
- drivers/pci/pci-driver.c                  | 3 +--
- drivers/pcmcia/ds.c                       | 4 +---
- drivers/platform/surface/aggregator/bus.c | 4 +---
- drivers/platform/x86/wmi.c                | 4 +---
- drivers/pnp/driver.c                      | 3 +--
- drivers/rapidio/rio-driver.c              | 4 +---
- drivers/rpmsg/rpmsg_core.c                | 7 ++-----
- drivers/s390/block/scm_drv.c              | 4 +---
- drivers/s390/cio/ccwgroup.c               | 6 +-----
- drivers/s390/cio/chsc_sch.c               | 3 +--
- drivers/s390/cio/css.c                    | 7 +++----
- drivers/s390/cio/css.h                    | 2 +-
- drivers/s390/cio/device.c                 | 9 +++------
- drivers/s390/cio/eadm_sch.c               | 4 +---
- drivers/s390/cio/scm.c                    | 5 +++--
- drivers/s390/cio/vfio_ccw_drv.c           | 3 +--
- drivers/s390/crypto/ap_bus.c              | 4 +---
- drivers/scsi/scsi_debug.c                 | 3 +--
- drivers/sh/superhyway/superhyway.c        | 8 ++------
- drivers/siox/siox-core.c                  | 4 +---
- drivers/slimbus/core.c                    | 4 +---
- drivers/soc/qcom/apr.c                    | 4 +---
- drivers/spi/spi.c                         | 4 +---
- drivers/spmi/spmi.c                       | 3 +--
- drivers/ssb/main.c                        | 4 +---
- drivers/staging/fieldbus/anybuss/host.c   | 4 +---
- drivers/staging/greybus/gbphy.c           | 4 +---
- drivers/target/loopback/tcm_loop.c        | 5 ++---
- drivers/thunderbolt/domain.c              | 4 +---
- drivers/tty/serdev/core.c                 | 4 +---
- drivers/usb/common/ulpi.c                 | 4 +---
- drivers/usb/serial/bus.c                  | 4 +---
- drivers/usb/typec/bus.c                   | 4 +---
- drivers/vdpa/vdpa.c                       | 4 +---
- drivers/vfio/mdev/mdev_driver.c           | 4 +---
- drivers/virtio/virtio.c                   | 3 +--
- drivers/vlynq/vlynq.c                     | 4 +---
- drivers/vme/vme.c                         | 4 +---
- drivers/xen/xenbus/xenbus.h               | 2 +-
- drivers/xen/xenbus/xenbus_probe.c         | 4 +---
- drivers/zorro/zorro-driver.c              | 3 +--
- include/linux/device/bus.h                | 2 +-
- include/linux/pci-epf.h                   | 2 +-
- sound/ac97/bus.c                          | 6 ++----
- sound/aoa/soundbus/core.c                 | 4 +---
- 93 files changed, 107 insertions(+), 263 deletions(-)
+  spin_lock_irqsave(&cmd->t_state_lock, flags);
+  switch (cmd->scsi_status) {
+@@ -871,8 +872,22 @@ void target_complete_cmd(struct se_cmd *
+  else
+    queue_work(target_completion_wq, &cmd->work);
+ }
++
++void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
++{
++ __target_complete_cmd(cmd, scsi_status, scsi_status ?
++          TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE :
++          TCM_NO_SENSE);
++}
+ EXPORT_SYMBOL(target_complete_cmd);
+
++void target_complete_cmd_with_sense(struct se_cmd *cmd,
++           sense_reason_t sense_reason)
++{
++ __target_complete_cmd(cmd, SAM_STAT_CHECK_CONDITION, sense_reason);
++}
++EXPORT_SYMBOL(target_complete_cmd_with_sense);
++
+ void target_set_cmd_data_length(struct se_cmd *cmd, int length)
+ {
+  if (length < cmd->data_length) {
+@@ -1917,6 +1932,7 @@ void transport_generic_request_failure(s
+  case TCM_UNSUPPORTED_TARGET_DESC_TYPE_CODE:
+  case TCM_TOO_MANY_SEGMENT_DESCS:
+  case TCM_UNSUPPORTED_SEGMENT_DESC_TYPE_CODE:
++ case TCM_MISCOMPARE_VERIFY:
+    break;
+  case TCM_OUT_OF_RESOURCES:
+    cmd->scsi_status =3D SAM_STAT_TASK_SET_FULL;
+@@ -3101,11 +3117,13 @@ bool transport_wait_for_tasks(struct se_
+ }
+ EXPORT_SYMBOL(transport_wait_for_tasks);
+
++
+ struct sense_info {
+  u8 key;
+  u8 asc;
+  u8 ascq;
+  bool add_sector_info;
++ bool add_sense_info;
+ };
+
+ static const struct sense_info sense_info_table[] =3D {
+@@ -3203,6 +3221,7 @@ static const struct sense_info sense_inf
+    .key =3D MISCOMPARE,
+    .asc =3D 0x1d, /* MISCOMPARE DURING VERIFY OPERATION */
+    .ascq =3D 0x00,
++   .add_sense_info =3D true,
+  },
+  [TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED] =3D {
+    .key =3D ABORTED_COMMAND,
+@@ -3255,6 +3274,13 @@ static const struct sense_info sense_inf
+  },
+ };
+
++static void transport_err_sense_info(unsigned char *buffer, u32 info)
++{
++ buffer[SPC_INFO_VALIDITY_OFFSET] |=3D 0x80;
++ /* Sense Information */
++ put_unaligned_be32(info, &buffer[3]);
++}
++
+ /**
+  * translate_sense_reason - translate a sense reason into T10 key, asc and=
+ ascq
+  * @cmd: SCSI command in which the resulting sense buffer or SCSI status w=
+ill
+@@ -3304,6 +3330,8 @@ static void translate_sense_reason(struc
+    WARN_ON_ONCE(scsi_set_sense_information(buffer,
+              cmd->scsi_sense_length,
+              cmd->bad_sector) < 0);
++ if (si->add_sense_info)
++   transport_err_sense_info(buffer, cmd->sense_info);
+ }
+
+ int
+--- a/include/target/target_core_backend.h
++++ b/include/target/target_core_backend.h
+@@ -74,6 +74,7 @@ void  target_backend_unregister(const str
+
+ void target_complete_cmd(struct se_cmd *, u8);
+ void target_set_cmd_data_length(struct se_cmd *, int);
++void target_complete_cmd_with_sense(struct se_cmd *, sense_reason_t);
+ void target_complete_cmd_with_length(struct se_cmd *, u8, int);
+
+ void transport_copy_sense_to_cmd(struct se_cmd *, unsigned char *);
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -22,11 +22,12 @@
+  */
+ #define TRANSPORT_SENSE_BUFFER     96
+ /* Used by transport_send_check_condition_and_sense() */
++#define SPC_INFO_VALIDITY_OFFSET   0
+ #define SPC_SENSE_KEY_OFFSET     2
+ #define SPC_ADD_SENSE_LEN_OFFSET   7
+ #define SPC_DESC_TYPE_OFFSET     8
+ #define SPC_ADDITIONAL_DESC_LEN_OFFSET   9
+-#define SPC_VALIDITY_OFFSET      10
++#define SPC_CMD_INFO_VALIDITY_OFFSET   10
+ #define SPC_ASC_KEY_OFFSET     12
+ #define SPC_ASCQ_KEY_OFFSET      13
+ #define TRANSPORT_IQN_LEN      224
+@@ -452,6 +453,8 @@ enum target_core_dif_check {
+ #define TCM_ACA_TAG  0x24
+
+ struct se_cmd {
++ sense_reason_t    sense_reason;
++ u32     sense_info;
+  /* SAM response code being sent to initiator */
+  u8      scsi_status;
+  u8      scsi_asc;
+
+
+
