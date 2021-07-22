@@ -7,53 +7,55 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AE41C07E9D
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1992C636C8
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 508E961260
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BFE461261
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230390AbhGVCyh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jul 2021 22:54:37 -0400
-Received: from mail-pj1-f41.google.com ([209.85.216.41]:42501 "EHLO
-        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230286AbhGVCyh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 22:54:37 -0400
-Received: by mail-pj1-f41.google.com with SMTP id i16-20020a17090acf90b02901736d9d2218so3611965pju.1
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2021 20:35:12 -0700 (PDT)
+        id S230143AbhGVCyn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jul 2021 22:54:43 -0400
+Received: from mail-pl1-f171.google.com ([209.85.214.171]:42811 "EHLO
+        mail-pl1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230286AbhGVCyk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 22:54:40 -0400
+Received: by mail-pl1-f171.google.com with SMTP id v14so2949234plg.9
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2021 20:35:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=G2MF5bnircQnxJthwB/xNQ1YlfiMwCda0AznENpU+zw=;
-        b=kR+LGjPABHyleUE264/4uFEKPxzNq5cJEaIUJ2FGZ9+T3S0h+oL/VYXf9HEGHsHCf+
-         gZHYO0dx8lw9i1fBqQiDknQLZmXmqeW6dWcQmyPM6agcQzex0K3gTOuVvI19PqovwPeh
-         9dixTPqC8zawSfGY360D9y8gyFveepjj2pIqN9ZgmG0JZfHtxNSdNtpoU5TnH+dzMFIE
-         A/XLMpPIwAbUudZD6F95WHHyKQzgOitUSlz3r7z3VN6GYL47IWIPoKMBR9bt7z5Cfngu
-         FARQLXrNU0KwkeCwzgGCY30R+WB1eYGYQ8fUQpWfwhkqS9RmKw+sPYT3uESZPw5HHj/z
-         jYxQ==
-X-Gm-Message-State: AOAM533Mr4jzawNvJ/VPfjSXwWb6R1VmOg6ACKDTC/69JVrjHSwaaOHc
-        9sNN2FM3os1EDonDXMOXroQ=
-X-Google-Smtp-Source: ABdhPJx8yP1YKDua9fE4136TN92Uuh5TRMNsOT2wf+2YHG8orfdCj5Oh/JugsL97tVnN7b4CjINfeA==
-X-Received: by 2002:a17:90b:3a89:: with SMTP id om9mr7152204pjb.55.1626924911618;
-        Wed, 21 Jul 2021 20:35:11 -0700 (PDT)
+        bh=LpI2d7GgOwsdcKaD/y+g/lzSPb1tbQyo56Gc3mKL63c=;
+        b=cY6rFc0ww3x3W4gqcVgP7Ps1iTpsW7VIuInxDDV00zfAcajvzUZJQ3BhOgYbgMs6eP
+         Z3RNgSx9hE1mI6ae+D4bCcGKgpgP707Z/Kn1nxFwhYVLmudv2YQHFdwkRA6S2dr2RAmb
+         jkdObvSVDoQ9yCdIoa3hfV73L5s8mTPplnH7nyd+fzPIQxgzCJ1yH6cJVvNz9EH3JpfA
+         32PSZYwJz6BZmDrfr33IwGp9adwToKxUYnd+oh0Zh47XWwKn2yDELRmk0o05WdM/zKcI
+         p88yOXpGKGFNKh9Uno5ja5Gr+NwtJ0LiRiRpljcKTpgU5R65UsTuxyUUWHqN9+sBU7kH
+         j/4w==
+X-Gm-Message-State: AOAM532FQvcBJhyBYozXboV7FpoIh/t1JkyWhKynAY0JwxEPs1vPcLek
+        ub0lztrB7gtlvQslptkYcJw=
+X-Google-Smtp-Source: ABdhPJzDnV8iXWGEIdNHt+YAywRELL3LRDL1JzTEQYwoiYTkFiAK3JBuwWPNrZqEM9SQVhAiyBt+Lw==
+X-Received: by 2002:a62:3045:0:b029:32b:880f:c03a with SMTP id w66-20020a6230450000b029032b880fc03amr39664358pfw.22.1626924914917;
+        Wed, 21 Jul 2021 20:35:14 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:30e2:954a:f4a0:3224])
-        by smtp.gmail.com with ESMTPSA id n6sm32060258pgb.60.2021.07.21.20.35.10
+        by smtp.gmail.com with ESMTPSA id n6sm32060258pgb.60.2021.07.21.20.35.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jul 2021 20:35:11 -0700 (PDT)
+        Wed, 21 Jul 2021 20:35:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
         Avri Altman <avri.altman@wdc.com>,
         Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
         Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Stanley Chu <stanley.chu@mediatek.com>
-Subject: [PATCH v3 04/18] scsi: ufs: Rename the second ufshcd_probe_hba() argument
-Date:   Wed, 21 Jul 2021 20:34:25 -0700
-Message-Id: <20210722033439.26550-5-bvanassche@acm.org>
+        Matthias Brugger <matthias.bgg@gmail.com>
+Subject: [PATCH v3 05/18] scsi: ufs: Use DECLARE_COMPLETION_ONSTACK() where appropriate
+Date:   Wed, 21 Jul 2021 20:34:26 -0700
+Message-Id: <20210722033439.26550-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210722033439.26550-1-bvanassche@acm.org>
 References: <20210722033439.26550-1-bvanassche@acm.org>
@@ -63,47 +65,83 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rename the second argument of ufshcd_probe_hba() such that the name of
-that argument reflects its purpose instead of how the function is called.
-See also commit 1b9e21412f72 ("scsi: ufs: Split ufshcd_probe_hba() based
-on its called flow").
+From Documentation/scheduler/completion.rst: "When a completion is declared
+as a local variable within a function, then the initialization should
+always use DECLARE_COMPLETION_ONSTACK() explicitly, not just to make
+lockdep happy, but also to make it clear that limited scope had been
+considered and is intentional."
 
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
 Reviewed-by: Bean Huo <beanhuo@micron.com>
-Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Can Guo <cang@codeaurora.org>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0503ebe197f6..36b60afcce34 100644
+index 36b60afcce34..17afd1b0bd2c 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7968,13 +7968,13 @@ static int ufshcd_clear_ua_wluns(struct ufs_hba *hba)
- }
- 
- /**
-- * ufshcd_probe_hba - probe hba to detect device and initialize
-+ * ufshcd_probe_hba - probe hba to detect device and initialize it
-  * @hba: per-adapter instance
-- * @async: asynchronous execution or not
-+ * @init_dev_params: whether or not to call ufshcd_device_params_init().
-  *
-  * Execute link-startup and verify device initialization
-  */
--static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
-+static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+@@ -2948,11 +2948,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 		enum dev_cmd_type cmd_type, int timeout)
  {
- 	int ret;
+ 	struct request_queue *q = hba->cmd_queue;
++	DECLARE_COMPLETION_ONSTACK(wait);
+ 	struct request *req;
+ 	struct ufshcd_lrb *lrbp;
+ 	int err;
+ 	int tag;
+-	struct completion wait;
+ 
+ 	down_read(&hba->clk_scaling_lock);
+ 
+@@ -2977,7 +2977,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 
+-	init_completion(&wait);
+ 	lrbp = &hba->lrb[tag];
+ 	WARN_ON(lrbp->cmd);
+ 	err = ufshcd_compose_dev_cmd(hba, lrbp, cmd_type, tag);
+@@ -3984,14 +3983,13 @@ EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
+  */
+ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ {
+-	struct completion uic_async_done;
++	DECLARE_COMPLETION_ONSTACK(uic_async_done);
  	unsigned long flags;
-@@ -8006,7 +8006,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
- 	 * Initialize UFS device parameters used by driver, these
- 	 * parameters are associated with UFS descriptors.
- 	 */
--	if (async) {
-+	if (init_dev_params) {
- 		ret = ufshcd_device_params_init(hba);
- 		if (ret)
- 			goto out;
+ 	u8 status;
+ 	int ret;
+ 	bool reenable_intr = false;
+ 
+ 	mutex_lock(&hba->uic_cmd_mutex);
+-	init_completion(&uic_async_done);
+ 	ufshcd_add_delay_before_dme_cmd(hba);
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+@@ -6664,11 +6662,11 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 					enum query_opcode desc_op)
+ {
+ 	struct request_queue *q = hba->cmd_queue;
++	DECLARE_COMPLETION_ONSTACK(wait);
+ 	struct request *req;
+ 	struct ufshcd_lrb *lrbp;
+ 	int err = 0;
+ 	int tag;
+-	struct completion wait;
+ 	u8 upiu_flags;
+ 
+ 	down_read(&hba->clk_scaling_lock);
+@@ -6686,7 +6684,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hba *hba,
+ 		goto out;
+ 	}
+ 
+-	init_completion(&wait);
+ 	lrbp = &hba->lrb[tag];
+ 	WARN_ON(lrbp->cmd);
+ 	lrbp->cmd = NULL;
