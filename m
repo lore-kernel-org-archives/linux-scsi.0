@@ -2,128 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86B69C63793
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 13:09:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 126ECC63793
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 13:28:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 67F0D61241
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 13:09:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EAA2D60FE7
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 13:28:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232064AbhGVM3L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Jul 2021 08:29:11 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:15048 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230418AbhGVM3L (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 08:29:11 -0400
-Received: from dggeme754-chm.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4GVt4X25DBzZrfs;
-        Thu, 22 Jul 2021 21:06:20 +0800 (CST)
-Received: from [10.174.178.185] (10.174.178.185) by
- dggeme754-chm.china.huawei.com (10.3.19.100) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2176.2; Thu, 22 Jul 2021 21:09:43 +0800
-Subject: Re: [PATH v2] scsi: scsi_dh_rdac: Avoid crash during rdac_bus_attach
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20210113063103.2698953-1-yebin10@huawei.com>
-From:   yebin <yebin10@huawei.com>
-Message-ID: <60F96E17.6030306@huawei.com>
-Date:   Thu, 22 Jul 2021 21:09:43 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:38.0) Gecko/20100101
- Thunderbird/38.1.0
+        id S232164AbhGVMr3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Jul 2021 08:47:29 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:45882 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232145AbhGVMrZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 08:47:25 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 705E72264F;
+        Thu, 22 Jul 2021 13:27:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1626960479; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TNXQNB/96woKgdHnQ7p8XYn2uueQuNS+714AUhZqOLw=;
+        b=gXcDaYquz57iBbAGCdlKrN3nd5w3j6u/7o6cF/7SeSw4hFQUaCq4r2f7zGpWXlKOm1FemV
+        WSoYzwFy3sVg8sDgMiX3A88k8kOFZ3HJy0io/Pro4yFy9+HYcnVOtCaRTadgcrIhIDqle2
+        O9y2F7wD6EAZDiufGO2EhaNj7ZDg0aU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1626960479;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=TNXQNB/96woKgdHnQ7p8XYn2uueQuNS+714AUhZqOLw=;
+        b=vc6XakHcJTxGQgii0IjB1GKqZad22wXDiDNk046O5L2alVUqg2YJ2CAPpd3bArhsTm1WFO
+        xdkiFXh+1cikEaBQ==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 34126139A1;
+        Thu, 22 Jul 2021 13:27:59 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id 2RQsC19y+WByeQAAGKfGzw
+        (envelope-from <ddiss@suse.de>); Thu, 22 Jul 2021 13:27:59 +0000
+Date:   Thu, 22 Jul 2021 15:27:58 +0200
+From:   David Disseldorp <ddiss@suse.de>
+To:     Sergey Samoylenko <s.samoylenko@yadro.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "michael.christie@oracle.com" <michael.christie@oracle.com>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>
+Subject: Re: [PATCH 0/1] scsi: target: core: Fix sense key for invalid XCOPY
+ request
+Message-ID: <20210722152758.3adaa28b@suse.de>
+In-Reply-To: <a860bf3f89594f6982ce126ebaa0ab94@yadro.com>
+References: <20210624111926.63176-1-s.samoylenko@yadro.com>
+        <20210721234505.45c93a48@suse.de>
+        <a860bf3f89594f6982ce126ebaa0ab94@yadro.com>
 MIME-Version: 1.0
-In-Reply-To: <20210113063103.2698953-1-yebin10@huawei.com>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.178.185]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- dggeme754-chm.china.huawei.com (10.3.19.100)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/1/13 14:31, Ye Bin wrote:
-> We get follow BUG_ON when rdac scan:
-> [595952.944297] kernel BUG at drivers/scsi/device_handler/scsi_dh_rdac.c:427!
-> [595952.951143] Internal error: Oops - BUG: 0 [#1] SMP
-> ......
-> [595953.251065] Call trace:
-> [595953.259054]  check_ownership+0xb0/0x118
-> [595953.269794]  rdac_bus_attach+0x1f0/0x4b0
-> [595953.273787]  scsi_dh_handler_attach+0x3c/0xe8
-> [595953.278211]  scsi_dh_add_device+0xc4/0xe8
-> [595953.282291]  scsi_sysfs_add_sdev+0x8c/0x2a8
-> [595953.286544]  scsi_probe_and_add_lun+0x9fc/0xd00
-> [595953.291142]  __scsi_scan_target+0x598/0x630
-> [595953.295395]  scsi_scan_target+0x120/0x130
-> [595953.299481]  fc_user_scan+0x1a0/0x1c0 [scsi_transport_fc]
-> [595953.304944]  store_scan+0xb0/0x108
-> [595953.308420]  dev_attr_store+0x44/0x60
-> [595953.312160]  sysfs_kf_write+0x58/0x80
-> [595953.315893]  kernfs_fop_write+0xe8/0x1f0
-> [595953.319888]  __vfs_write+0x60/0x190
-> [595953.323448]  vfs_write+0xac/0x1c0
-> [595953.326836]  ksys_write+0x74/0xf0
-> [595953.330221]  __arm64_sys_write+0x24/0x30
->
-> BUG_ON code is in check_ownership:
->                  list_for_each_entry_rcu(tmp, &h->ctlr->dh_list, node) {
->                          /* h->sdev should always be valid */
->                          BUG_ON(!tmp->sdev);
->                          tmp->sdev->access_state = access_state;
->                  }
-> rdac_bus_attach
-> 	initialize_controller
-> 		list_add_rcu(&h->node, &h->ctlr->dh_list);
-> 		h->sdev = sdev;
-> rdac_bus_detach
-> 	list_del_rcu(&h->node);
-> 	h->sdev = NULL;
->
-> Test as follow steps:
-> (1) Find IO error, remove disk;
-> (2) Insert disk back;
-> (3) trigger scan disk;
->
-> There is race between rdac_bus_attach and rdac_bus_detach, maybe access
-> rdac_dh_data which h->sdev has been set NULL when process rdac attach. And also
-> find that "h->sdev" set value after add list, this may lead to reference NULL ptr.
->
-> Signed-off-by: Ye Bin <yebin10@huawei.com>
-> ---
->   drivers/scsi/device_handler/scsi_dh_rdac.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> index 5efc959493ec..85a71bafaea7 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_rdac.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
-> @@ -453,8 +453,8 @@ static int initialize_controller(struct scsi_device *sdev,
->   		if (!h->ctlr)
->   			err = SCSI_DH_RES_TEMP_UNAVAIL;
->   		else {
-> -			list_add_rcu(&h->node, &h->ctlr->dh_list);
->   			h->sdev = sdev;
-> +			list_add_rcu(&h->node, &h->ctlr->dh_list);
->   		}
->   		spin_unlock(&list_lock);
->   		err = SCSI_DH_OK;
-> @@ -778,11 +778,11 @@ static void rdac_bus_detach( struct scsi_device *sdev )
->   	spin_lock(&list_lock);
->   	if (h->ctlr) {
->   		list_del_rcu(&h->node);
-> -		h->sdev = NULL;
->   		kref_put(&h->ctlr->kref, release_controller);
->   	}
->   	spin_unlock(&list_lock);
->   	sdev->handler_data = NULL;
-> +	synchronize_rcu();
->   	kfree(h);
->   }
->   
-ping ...
+On Thu, 22 Jul 2021 11:03:02 +0000, Sergey Samoylenko wrote:
+
+> Hi David,
+> 
+> > Hi Sergey,
+> >
+> > On Thu, 24 Jun 2021 14:19:25 +0300, Sergey Samoylenko wrote:
+> >  
+> >> EXTENDED COPY tests in libiscsi [1] show that TCM doesn't follow SPC4 
+> >> when detects invalid parameters in a XCOPY command or IO errors. The 
+> >> replies from TCM contain wrong sense key or ASCQ for incorrect 
+> >> request.
+> >> 
+> >> The series fixes the following tests from libiscsi:  
+> >
+> > We've hit this too. The incorrect sense reporting appears to also affect VMware XCOPY fallback to initiator driven READ/WRITE. I'm pretty sure this is a regression from
+> > d877d7275be34ad70ce92bcbb4bb36cec77ed004, so should probably be marked as such via a Fixes tag.
+> >
+> > Cheers, David  
+> 
+> The d877d7275be34ad70ce92bcbb4bb36cec77ed004 was added for v4.10.x kernel and it was necessary
+> for to avoid LUN removal race conditions. Later you excluded using configfs in the XCOPY workqueue.
+> It was the 2896c93811e39d63a4d9b63ccf12a8fbc226e5e4.
+> 
+> If we remove the d877d7275be34ad70ce92bcbb4bb36cec77ed004, will it break anything?
+> We have accumulated many changes between v4.10 and v5.14.
+> 
+> David, maybe can we move the helper 'target_complete_cmd_with_sense' from your path to mainline kernel?
+> I think it will be useful in the future.
+
+I don't think it makes sense to revert d877d7275be34. I agree that
+Mike's target_complete_cmd_with_sense() patch should be helpful for
+proper sense propagation here.
+
+Cheers, David
