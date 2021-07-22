@@ -2,222 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C7AFC63793
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 16:14:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27A7AC6377D
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 17:31:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 37F886128A
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 16:14:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 149E261363
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 17:31:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229535AbhGVPeU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Jul 2021 11:34:20 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:44112 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229476AbhGVPeT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 11:34:19 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id B53451FF25;
-        Thu, 22 Jul 2021 16:14:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1626970493; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5ng5IfXWcOXMnGCxvCfLVT7wuMduhf0fLfHw2lU8tn4=;
-        b=KrC85AGy0e2fIXGUostHedYczHE3OwfLcyb6+DqyuPhsewZhd8xZD+Z/T8wTIOHIj/vZs6
-        wJkgToFzotOnz+2NlyhdfGWcUH6ar5TMLLJwswgfoZeK/I2j10rQp6yH4b5HHqWlPTgLiE
-        9B4nitL9UDyOz6inOiSi5q12TzY8FpQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1626970493;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=5ng5IfXWcOXMnGCxvCfLVT7wuMduhf0fLfHw2lU8tn4=;
-        b=BxGjnR3Iw+A/Zkb+YwWN90qaXrFry1Ff0Uu8bB7bhMfuxumwsguyiRbgkzhGB5foNy1h2r
-        7QNFW58H0hEbacBQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 90F8613C49;
-        Thu, 22 Jul 2021 16:14:53 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id n0rYIX2Z+WA7JwAAGKfGzw
-        (envelope-from <hare@suse.de>); Thu, 22 Jul 2021 16:14:53 +0000
-Subject: Re: [PATCH 2/4] scsi: sd: add concurrent positioning ranges support
-To:     Damien Le Moal <damien.lemoal@wdc.com>,
-        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-ide@vger.kernel.org
-References: <20210721104205.885115-1-damien.lemoal@wdc.com>
- <20210721104205.885115-3-damien.lemoal@wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <c24e49dd-2605-aa9d-a6d7-47e519788d51@suse.de>
-Date:   Thu, 22 Jul 2021 18:14:53 +0200
+        id S229710AbhGVQum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Jul 2021 12:50:42 -0400
+Received: from mail-pj1-f47.google.com ([209.85.216.47]:35415 "EHLO
+        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229456AbhGVQum (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 12:50:42 -0400
+Received: by mail-pj1-f47.google.com with SMTP id pf12-20020a17090b1d8cb0290175c085e7a5so5375789pjb.0;
+        Thu, 22 Jul 2021 10:31:17 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=eVHHVSJjH/j4gmKR/ewmFGqTfbLl6ki6lavAgxsu1EQ=;
+        b=pnsg0T/kiezzwlzGwRmw9bZmvzfDb8IrSwC/BJctYYB28eMDgTy+6veFxGLiUuu0Rb
+         WzUzqhfWsM+VRm4FNiIwj9UaVLaFn1Tl5Tr6arucZiQ1bJ0v36zO8imB2/XQrdRTKPYQ
+         hegy649HjExvKLkXMNR6ziYlRuJuRnBlEvk/jBH1u/Ocfc5qWV4ir33dNhrICT1J4eFF
+         zL9U9+LtL2gU1bJThnNBGcUVuaKZtmHQouIvU1hBnEAAn8JdGKngqNZSD/0XWzFsVO8z
+         0thRbgdV5Y3zCwyuOz0R5xIprcOuAZWNl8s3ilA6KqBL7fUrMHRnXkfea3zd9vSXr17M
+         Vlug==
+X-Gm-Message-State: AOAM533hE7N9oJ5ZmHA5oudP0/C+7fu9AAqfsP6RiypwCYw7EBObrPc4
+        mUxY7Of/j/104fiherTrekyygOHueIhI6nO6mSs=
+X-Google-Smtp-Source: ABdhPJzoI32Y15CTTXdn9b1qibFFEWlkdl6pVaD8oYFGAZtMFUv8axwd9e2dKBbJq5DYIpj59G2M6A==
+X-Received: by 2002:a63:34a:: with SMTP id 71mr980706pgd.289.1626975076439;
+        Thu, 22 Jul 2021 10:31:16 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:6539:4b6a:66a5:486f])
+        by smtp.gmail.com with ESMTPSA id m21sm26165407pjz.36.2021.07.22.10.31.14
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 22 Jul 2021 10:31:15 -0700 (PDT)
+Subject: Re: [PATCH 01/24] bsg: remove support for SCSI_IOCTL_SEND_COMMAND
+To:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc:     Doug Gilbert <dgilbert@interlog.com>,
+        =?UTF-8?Q?Kai_M=c3=a4kisara?= <Kai.Makisara@kolumbus.fi>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+References: <20210712054816.4147559-1-hch@lst.de>
+ <20210712054816.4147559-2-hch@lst.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <07be7708-2084-d682-15f8-626ad0a5753f@acm.org>
+Date:   Thu, 22 Jul 2021 10:31:13 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <20210721104205.885115-3-damien.lemoal@wdc.com>
+In-Reply-To: <20210712054816.4147559-2-hch@lst.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/21/21 12:42 PM, Damien Le Moal wrote:
-> Add the sd_read_cpr() function to the sd scsi disk driver to discover
-> if a device has multiple concurrent positioning ranges (i.e. multiple
-> actuators on an HDD). This new function is called from
-> sd_revalidate_disk() and uses the block layer functions
-> blk_alloc_cranges() and blk_queue_set_cranges() to set a device
-> cranges according to the information retrieved from log page B9h,
-> if the device supports it.
+On 7/11/21 10:47 PM, Christoph Hellwig wrote:
+> SCSI_IOCTL_SEND_COMMAND has been deprecated longer than bsg exists
+> and has been warning for just as long.  More importantly it harcodes
+> SCSI CDBs and thus will do the wrong thing on non-scsi bsg nodes.
 > 
-> The format of the Concurrent Positioning Ranges VPD page B9h is defined
-> in section 6.6.6 of SBC-5.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Fixes: aa387cc89567 ("block: add bsg helper library")
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->   drivers/scsi/sd.c | 80 +++++++++++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/sd.h |  1 +
->   2 files changed, 81 insertions(+)
+>   block/bsg.c | 5 ++++-
+>   1 file changed, 4 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b8d55af763f9..b1e767a01b9f 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3125,6 +3125,85 @@ static void sd_read_security(struct scsi_disk *sdkp, unsigned char *buffer)
->   		sdkp->security = 1;
->   }
->   
-> +static inline sector_t sd64_to_sectors(struct scsi_disk *sdkp, u8 *buf)
-> +{
-> +	return logical_to_sectors(sdkp->device, get_unaligned_be64(buf));
-> +}
-> +
-> +/**
-> + * sd_read_cpr - Query concurrent positioning ranges
-> + * @sdkp:	disk to query
-> + */
-> +static void sd_read_cpr(struct scsi_disk *sdkp)
-> +{
-> +	unsigned char *buffer, *desc;
-> +	struct blk_cranges *cr = NULL;
-> +	unsigned int nr_cpr = 0;
-> +	int i, vpd_len, buf_len = SD_BUF_SIZE;
-> +
-> +	/*
-> +	 * We need to have the capacity set first for the block layer to be
-> +	 * able to check the ranges.
-> +	 */
-> +	if (sdkp->first_scan)
-> +		return;
-> +
-> +	if (!sdkp->capacity)
-> +		goto out;
-> +
-> +	/*
-> +	 * Concurrent Positioning Ranges VPD: there can be at most 256 ranges,
-> +	 * leading to a maximum page size of 64 + 256*32 bytes.
-> +	 */
-> +	buf_len = 64 + 256*32;
-> +	buffer = kmalloc(buf_len, GFP_KERNEL);
-> +	if (!buffer || scsi_get_vpd_page(sdkp->device, 0xb9, buffer, buf_len))
-> +		goto out;
-> +
-> +	/* We must have at least a 64B header and one 32B range descriptor */
-> +	vpd_len = get_unaligned_be16(&buffer[2]) + 3;
-> +	if (vpd_len > buf_len || vpd_len < 64 + 32 || (vpd_len & 31)) {
-> +		sd_printk(KERN_ERR, sdkp,
-> +			  "Invalid Concurrent Positioning Ranges VPD page\n");
-> +		goto out;
-> +	}
-> +
-> +	nr_cpr = (vpd_len - 64) / 32;
-> +	if (nr_cpr == 1) {
-> +		nr_cpr = 0;
-> +		goto out;
-> +	}
-> +
-> +	cr = blk_alloc_cranges(sdkp->disk, nr_cpr);
-> +	if (!cr) {
-> +		nr_cpr = 0;
-> +		goto out;
-> +	}
-> +
-> +	desc = &buffer[64];
-> +	for (i = 0; i < nr_cpr; i++, desc += 32) {
-> +		if (desc[0] != i) {
-> +			sd_printk(KERN_ERR, sdkp,
-> +				"Invalid Concurrent Positioning Range number\n");
-> +			nr_cpr = 0;
-> +			break;
-> +		}
-> +
-> +		cr->ranges[i].sector = sd64_to_sectors(sdkp, desc + 8);
-> +		cr->ranges[i].nr_sectors = sd64_to_sectors(sdkp, desc + 16);
-> +	}
-> +
-> +out:
-> +	blk_queue_set_cranges(sdkp->disk, cr);
-
-See? We are _are_ creating a new set of ranges.
-So why bother updating the old ones?
-
-> +	if (nr_cpr && sdkp->nr_actuators != nr_cpr) {
-> +		sd_printk(KERN_NOTICE, sdkp,
-> +			  "%u concurrent positioning ranges\n", nr_cpr);
-> +		sdkp->nr_actuators = nr_cpr;
-> +	}
-> +
-> +	kfree(buffer);
-> +}
-> +
->   /*
->    * Determine the device's preferred I/O size for reads and writes
->    * unless the reported value is unreasonably small, large, not a
-> @@ -3240,6 +3319,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->   		sd_read_app_tag_own(sdkp, buffer);
->   		sd_read_write_same(sdkp, buffer);
->   		sd_read_security(sdkp, buffer);
-> +		sd_read_cpr(sdkp);
+> diff --git a/block/bsg.c b/block/bsg.c
+> index 1f196563ae6c..79b42c5cafeb 100644
+> --- a/block/bsg.c
+> +++ b/block/bsg.c
+> @@ -373,10 +373,13 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+>   	case SG_GET_RESERVED_SIZE:
+>   	case SG_SET_RESERVED_SIZE:
+>   	case SG_EMULATED_HOST:
+> -	case SCSI_IOCTL_SEND_COMMAND:
+>   		return scsi_cmd_ioctl(bd->queue, NULL, file->f_mode, cmd, uarg);
+>   	case SG_IO:
+>   		return bsg_sg_io(bd->queue, file->f_mode, uarg);
+> +	case SCSI_IOCTL_SEND_COMMAND:
+> +		pr_warn_ratelimited("%s: calling unsupported SCSI_IOCTL_SEND_COMMAND\n",
+> +				current->comm);
+> +		return -EINVAL;
+>   	default:
+>   		return -ENOTTY;
 >   	}
->   
->   	/*
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index b59136c4125b..2e5932bde43d 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -106,6 +106,7 @@ struct scsi_disk {
->   	u8		protection_type;/* Data Integrity Field */
->   	u8		provisioning_mode;
->   	u8		zeroing_mode;
-> +	u8		nr_actuators;		/* Number of actuators */
->   	unsigned	ATO : 1;	/* state of disk ATO bit */
->   	unsigned	cache_override : 1; /* temp override of WCE,RCD */
->   	unsigned	WCE : 1;	/* state of disk WCE bit */
-> 
-Otherwise:
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+The Fixes: tag will cause this patch to be backported to stable trees. 
+Is that intentional?
 
-Cheers,
+Anyway:
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
