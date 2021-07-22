@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3836C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 22:17:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A9A5C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 22:17:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E6A360EB0
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 22:17:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5270460EB1
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 22:17:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232372AbhGVVhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Jul 2021 17:37:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41116 "EHLO
+        id S232224AbhGVVhJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Jul 2021 17:37:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232353AbhGVVhE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 17:37:04 -0400
-Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 911EBC06175F
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Jul 2021 15:17:38 -0700 (PDT)
-Received: by mail-pl1-x62c.google.com with SMTP id e14so944096plh.8
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Jul 2021 15:17:38 -0700 (PDT)
+        with ESMTP id S232360AbhGVVhH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 17:37:07 -0400
+Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 015E0C061575
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Jul 2021 15:17:41 -0700 (PDT)
+Received: by mail-pj1-x1029.google.com with SMTP id my10so8085932pjb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Jul 2021 15:17:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=S6L5JoLm7ERfQzYreo0rw0ybPp7foqqDbX/XALrv3ns=;
-        b=Q4IQH0qbWhdgZLzD44A836Lzqmdy9iCI+Cwn0e3tHj3IP7FUJAOQc7FgrnjrBlEQ4t
-         olJLA7RK65gD+tfOL2bMACGx1dliiW2kgGoAr1DImvm8X4/PSiaYtoayOKwPNSpSeuuT
-         D0tq0xfNP8puUzFX6CCYR1AirvYniIaO5Xx2dLTt+iP64DZVO5vtHTdUXexVFTbwCG9R
-         +7paNTEZRmcUASXLpN0pcQ8xJ0TfI4Rvbrxt3fWxWwiVCzlz0LmUOGKJEeV2KpUdQ/lU
-         OPn4t/l0ot/w/VRnbjkdzNFepFqj6Y6paGfao/g9qw3riJYlTnXYb6Rh4oi9lGpppat4
-         S47A==
+        bh=3+Jvc6e7UyBtZFvasOd7rc7EfG0SG3w2P23Afyr5MIY=;
+        b=dgnUcCnw12OkbOydLCkpuDG3ZVwCTUBx5p9PlnXWLZKZOARFs4dOQZZAe1MH1xFAm9
+         4SGGwoavcxvBUpZ/SgclMHik2iDTk3757XrbBEQOo9kJi3qXl24vubadCmyFA2cb0ILd
+         HV4tuJwkjfthBPqn4iGjgqICuRTy62yO9PaQDh72hf68GGD29XzdzOfBtuat5T9U4aTs
+         Hz+FhocCg263two1GoT27UhjOD4uLWMoncWbBXBbgcLlGHuCcAALj2iXReLuLh1I5BMI
+         ec0+UnJIRMqKzIHAgqb3FNBO3Sp8RKlTVdlAzeEfpH6ehDxlXB5+PvZ2UaWeUVN9trAw
+         cEOw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=S6L5JoLm7ERfQzYreo0rw0ybPp7foqqDbX/XALrv3ns=;
-        b=MzxJs74dWaz22i2zYPJUjRzVYBiKDIN2kp+3QCBlAPe9dFh3T2O+IG2mzwaKw4eIAl
-         CoVDDHG/NXtbgCWFJUPrTQGVgTTG/iNOyc5EZRl2Cr63ibDmb0LQLw6IUkyoC8n/AsUI
-         fG8yf8kFXaMAxgZO5iCxtVxfmkfc78hF8w1AXVXaVKw9UQLUnTd6TAsnmGodpA7ot7yc
-         8fWv7zWCUugXs5o1F6HxiKdpvMPV+A6wsE+eqaBzW7ZHkajG2o2ftklPpUjFJ0KCEFMo
-         fKE6REJ33qArauAtrGi8WAJl0pa/GHCFjQ8kDH7WfdfPSTqJoanLwMZqG9kXiMloasTd
-         VDbg==
-X-Gm-Message-State: AOAM532cqAyyDxqMRHAf+tqmeY0DExI6AFLURegDQ8I2ZAB4spI8gpk3
-        mCKCTmCS9zkj80DQdKWAxF1PLwlFSC8=
-X-Google-Smtp-Source: ABdhPJxVRNg7vVfPWHdo6FJxkRi8OlA73BrESum1o5BR4HurT7lBbUh31B7s7HDVZHQHytj+cw6+0w==
-X-Received: by 2002:a63:a42:: with SMTP id z2mr1969220pgk.245.1626992258068;
-        Thu, 22 Jul 2021 15:17:38 -0700 (PDT)
+        bh=3+Jvc6e7UyBtZFvasOd7rc7EfG0SG3w2P23Afyr5MIY=;
+        b=uQ8hCsSAr/EQhHrp2hgCzjYgRKPxfeyc3s9DG1tukxyX22dWMRm+zy8L2HJVNNOULu
+         MHLEHAiYZancwRJnel5OBEVSg6CEAtKdUJukI+NjsdvUKG3wVBc5TY/C8IItW1yeE2z3
+         ewOvY7FXa6LrpZ/QLK+oJTWZY6UdJk/2K/ZuvnH8IXd6VQsla9TIKLMue8TWFcWtgjPR
+         iBGv2TvrZJoxXXtIxMo20DSMqz0vW/bhZIXZJ37osJ2lWgqt7W48TewjvusZbwOHF36p
+         anuPWo4Gf6R5eZk+Nqcl+K2XXGt13jbHcjMr+ITIWUwau8mqUtVtuRzIGk4h8fuWHeYe
+         tctw==
+X-Gm-Message-State: AOAM531GFg0FMDIOvXLMKoJWm/50raclgq5IGGsGoLJ/I72p3BnGtc5Z
+        lStqixPEsGw4jbCQxKL00gcqLLRb5TA=
+X-Google-Smtp-Source: ABdhPJx1rtWVhesQwE9yOAraomQlOQYgdMDZyU3wYDw5vm4TkurXZV25kC+ZMFOWWtoCLB2voXOe6Q==
+X-Received: by 2002:a63:ef02:: with SMTP id u2mr2096258pgh.298.1626992260493;
+        Thu, 22 Jul 2021 15:17:40 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id a18sm31374460pfi.6.2021.07.22.15.17.35
+        by smtp.gmail.com with ESMTPSA id a18sm31374460pfi.6.2021.07.22.15.17.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jul 2021 15:17:37 -0700 (PDT)
+        Thu, 22 Jul 2021 15:17:40 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 3/6] lpfc: Revise Topology and RAS support checks for new adapters
-Date:   Thu, 22 Jul 2021 15:17:18 -0700
-Message-Id: <20210722221721.74388-4-jsmart2021@gmail.com>
+Subject: [PATCH 4/6] lpfc: Add 256Gb link speed support
+Date:   Thu, 22 Jul 2021 15:17:19 -0700
+Message-Id: <20210722221721.74388-5-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210722221721.74388-1-jsmart2021@gmail.com>
 References: <20210722221721.74388-1-jsmart2021@gmail.com>
@@ -72,204 +72,134 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Support for Topology and RAS logging capabilities were qualified by pcie
-device id checks necessitating additional driver changes for new device
-ids.
-
-Reduce reliance on specific pcie device ids by substituting checks for
-sli family information. This automatically picks up support on the newest
-hardware.
+Update routines to support 256Gb link speed for LPe37000/LPe38000
+adapters. 256Gb speeds can be seen on trunk links.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 14 +++++++++-----
- drivers/scsi/lpfc/lpfc_hw4.h  |  4 ++++
- drivers/scsi/lpfc/lpfc_init.c | 34 ++++++++++++++++++++--------------
- drivers/scsi/lpfc/lpfc_mbox.c |  5 +++--
- drivers/scsi/lpfc/lpfc_scsi.c |  8 ++------
- 5 files changed, 38 insertions(+), 27 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c    | 3 +++
+ drivers/scsi/lpfc/lpfc_ct.c      | 5 +++++
+ drivers/scsi/lpfc/lpfc_els.c     | 8 ++++++++
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 1 +
+ drivers/scsi/lpfc/lpfc_init.c    | 5 +++++
+ drivers/scsi/lpfc/lpfc_scsi.h    | 4 ++++
+ 6 files changed, 26 insertions(+)
 
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 457989cfc0b7..a5154856bc0f 100644
+index a5154856bc0f..869c2b6f1515 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -4038,6 +4038,7 @@ lpfc_topology_store(struct device *dev, struct device_attribute *attr,
- 	const char *val_buf = buf;
- 	int err;
- 	uint32_t prev_val;
-+	u8 sli_family, if_type;
+@@ -6745,6 +6745,9 @@ lpfc_get_host_speed(struct Scsi_Host *shost)
+ 		case LPFC_LINK_SPEED_128GHZ:
+ 			fc_host_speed(shost) = FC_PORTSPEED_128GBIT;
+ 			break;
++		case LPFC_LINK_SPEED_256GHZ:
++			fc_host_speed(shost) = FC_PORTSPEED_256GBIT;
++			break;
+ 		default:
+ 			fc_host_speed(shost) = FC_PORTSPEED_UNKNOWN;
+ 			break;
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index 1acb8820a08e..a1c85fa135a9 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -2846,6 +2846,8 @@ lpfc_fdmi_port_attr_support_speed(struct lpfc_vport *vport,
  
- 	if (!strncmp(buf, "nolip ", strlen("nolip "))) {
- 		nolip = 1;
-@@ -4061,13 +4062,16 @@ lpfc_topology_store(struct device *dev, struct device_attribute *attr,
- 		/*
- 		 * The 'topology' is not a configurable parameter if :
- 		 *   - persistent topology enabled
--		 *   - G7/G6 with no private loop support
-+		 *   - ASIC_GEN_NUM >= 0xC, with no private loop support
- 		 */
--
-+		sli_family = bf_get(lpfc_sli_intf_sli_family,
-+				    &phba->sli4_hba.sli_intf);
-+		if_type = bf_get(lpfc_sli_intf_if_type,
-+				 &phba->sli4_hba.sli_intf);
- 		if ((phba->hba_flag & HBA_PERSISTENT_TOPO ||
--		     (!phba->sli4_hba.pc_sli4_params.pls &&
--		     (phba->pcidev->device == PCI_DEVICE_ID_LANCER_G6_FC ||
--		     phba->pcidev->device == PCI_DEVICE_ID_LANCER_G7_FC))) &&
-+		    (!phba->sli4_hba.pc_sli4_params.pls &&
-+		     (sli_family == LPFC_SLI_INTF_FAMILY_G6 ||
-+		      if_type == LPFC_SLI_INTF_IF_TYPE_6))) &&
- 		    val == 4) {
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 				"3114 Loop mode not supported\n");
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index c31a0cbcc208..aadbb0de629d 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -94,6 +94,9 @@ struct lpfc_sli_intf {
- #define LPFC_SLI_INTF_FAMILY_BE3	0x1
- #define LPFC_SLI_INTF_FAMILY_LNCR_A0	0xa
- #define LPFC_SLI_INTF_FAMILY_LNCR_B0	0xb
-+#define LPFC_SLI_INTF_FAMILY_G6		0xc
-+#define LPFC_SLI_INTF_FAMILY_G7		0xd
-+#define LPFC_SLI_INTF_FAMILY_G7P	0xe
- #define lpfc_sli_intf_slirev_SHIFT		4
- #define lpfc_sli_intf_slirev_MASK		0x0000000F
- #define lpfc_sli_intf_slirev_WORD		word0
-@@ -4719,6 +4722,7 @@ union lpfc_wqe128 {
+ 	ae->un.AttrInt = 0;
+ 	if (!(phba->hba_flag & HBA_FCOE_MODE)) {
++		if (phba->lmt & LMT_256Gb)
++			ae->un.AttrInt |= HBA_PORTSPEED_256GFC;
+ 		if (phba->lmt & LMT_128Gb)
+ 			ae->un.AttrInt |= HBA_PORTSPEED_128GFC;
+ 		if (phba->lmt & LMT_64Gb)
+@@ -2927,6 +2929,9 @@ lpfc_fdmi_port_attr_speed(struct lpfc_vport *vport,
+ 		case LPFC_LINK_SPEED_128GHZ:
+ 			ae->un.AttrInt = HBA_PORTSPEED_128GFC;
+ 			break;
++		case LPFC_LINK_SPEED_256GHZ:
++			ae->un.AttrInt = HBA_PORTSPEED_256GFC;
++			break;
+ 		default:
+ 			ae->un.AttrInt = HBA_PORTSPEED_UNKNOWN;
+ 			break;
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 342c7e28ee95..08ae2b12b92c 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -6105,6 +6105,12 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
+ 	case LPFC_LINK_SPEED_64GHZ:
+ 		rdp_speed = RDP_PS_64GB;
+ 		break;
++	case LPFC_LINK_SPEED_128GHZ:
++		rdp_speed = RDP_PS_128GB;
++		break;
++	case LPFC_LINK_SPEED_256GHZ:
++		rdp_speed = RDP_PS_256GB;
++		break;
+ 	default:
+ 		rdp_speed = RDP_PS_UNKNOWN;
+ 		break;
+@@ -6112,6 +6118,8 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
  
- #define MAGIC_NUMBER_G6 0xFEAA0003
- #define MAGIC_NUMBER_G7 0xFEAA0005
-+#define MAGIC_NUMBER_G7P 0xFEAA0020
+ 	desc->info.port_speed.speed = cpu_to_be16(rdp_speed);
  
- struct lpfc_grp_hdr {
- 	uint32_t size;
++	if (phba->lmt & LMT_256Gb)
++		rdp_cap |= RDP_PS_256GB;
+ 	if (phba->lmt & LMT_128Gb)
+ 		rdp_cap |= RDP_PS_128GB;
+ 	if (phba->lmt & LMT_64Gb)
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 32fb3be42b26..6da2daf7d9e3 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -3331,6 +3331,7 @@ lpfc_mbx_process_link_up(struct lpfc_hba *phba, struct lpfc_mbx_read_top *la)
+ 		case LPFC_LINK_SPEED_32GHZ:
+ 		case LPFC_LINK_SPEED_64GHZ:
+ 		case LPFC_LINK_SPEED_128GHZ:
++		case LPFC_LINK_SPEED_256GHZ:
+ 			break;
+ 		default:
+ 			phba->fc_linkspeed = LPFC_LINK_SPEED_UNKNOWN;
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f08129c67a2e..ead8e91e8625 100644
+index ead8e91e8625..2c0aaa0a301d 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -8550,9 +8550,12 @@ lpfc_map_topology(struct lpfc_hba *phba, struct lpfc_mbx_read_config *rd_config)
- 	}
- 	/* FW supports persistent topology - override module parameter value */
- 	phba->hba_flag |= HBA_PERSISTENT_TOPO;
--	switch (phba->pcidev->device) {
--	case PCI_DEVICE_ID_LANCER_G7_FC:
--	case PCI_DEVICE_ID_LANCER_G6_FC:
+@@ -4679,6 +4679,8 @@ static void lpfc_host_supported_speeds_set(struct Scsi_Host *shost)
+ 	if (phba->hba_flag & HBA_FCOE_MODE)
+ 		return;
+ 
++	if (phba->lmt & LMT_256Gb)
++		fc_host_supported_speeds(shost) |= FC_PORTSPEED_256GBIT;
+ 	if (phba->lmt & LMT_128Gb)
+ 		fc_host_supported_speeds(shost) |= FC_PORTSPEED_128GBIT;
+ 	if (phba->lmt & LMT_64Gb)
+@@ -5087,6 +5089,9 @@ lpfc_sli4_port_speed_parse(struct lpfc_hba *phba, uint32_t evt_code,
+ 		case LPFC_FC_LA_SPEED_128G:
+ 			port_speed = 128000;
+ 			break;
++		case LPFC_FC_LA_SPEED_256G:
++			port_speed = 256000;
++			break;
+ 		default:
+ 			port_speed = 0;
+ 		}
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
+index f76667b7da7b..46989532c23d 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.h
++++ b/drivers/scsi/lpfc/lpfc_scsi.h
+@@ -142,6 +142,10 @@ struct lpfc_scsicmd_bkt {
+ #define FC_PORTSPEED_128GBIT	0x2000
+ #endif
+ 
++#ifndef FC_PORTSPEED_256GBIT
++#define FC_PORTSPEED_256GBIT	0x4000
++#endif
 +
-+	/* if ASIC_GEN_NUM >= 0xC) */
-+	if ((bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
-+		    LPFC_SLI_INTF_IF_TYPE_6) ||
-+	    (bf_get(lpfc_sli_intf_sli_family, &phba->sli4_hba.sli_intf) ==
-+		    LPFC_SLI_INTF_FAMILY_G6)) {
- 		if (!tf) {
- 			phba->cfg_topology = ((pt == LINK_FLAGS_LOOP)
- 					? FLAGS_TOPOLOGY_MODE_LOOP
-@@ -8560,8 +8563,7 @@ lpfc_map_topology(struct lpfc_hba *phba, struct lpfc_mbx_read_config *rd_config)
- 		} else {
- 			phba->hba_flag &= ~HBA_PERSISTENT_TOPO;
- 		}
--		break;
--	default:	/* G5 */
-+	} else { /* G5 */
- 		if (tf) {
- 			/* If topology failover set - pt is '0' or '1' */
- 			phba->cfg_topology = (pt ? FLAGS_TOPOLOGY_MODE_PT_LOOP :
-@@ -8571,7 +8573,6 @@ lpfc_map_topology(struct lpfc_hba *phba, struct lpfc_mbx_read_config *rd_config)
- 					? FLAGS_TOPOLOGY_MODE_PT_PT
- 					: FLAGS_TOPOLOGY_MODE_LOOP);
- 		}
--		break;
- 	}
- 	if (phba->hba_flag & HBA_PERSISTENT_TOPO) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
-@@ -12991,7 +12992,9 @@ lpfc_log_write_firmware_error(struct lpfc_hba *phba, uint32_t offset,
- 	const struct firmware *fw)
- {
- 	int rc;
-+	u8 sli_family;
+ #define TXRDY_PAYLOAD_LEN	12
  
-+	sli_family = bf_get(lpfc_sli_intf_sli_family, &phba->sli4_hba.sli_intf);
- 	/* Three cases:  (1) FW was not supported on the detected adapter.
- 	 * (2) FW update has been locked out administratively.
- 	 * (3) Some other error during FW update.
-@@ -12999,10 +13002,12 @@ lpfc_log_write_firmware_error(struct lpfc_hba *phba, uint32_t offset,
- 	 * for admin diagnosis.
- 	 */
- 	if (offset == ADD_STATUS_FW_NOT_SUPPORTED ||
--	    (phba->pcidev->device == PCI_DEVICE_ID_LANCER_G6_FC &&
-+	    (sli_family == LPFC_SLI_INTF_FAMILY_G6 &&
- 	     magic_number != MAGIC_NUMBER_G6) ||
--	    (phba->pcidev->device == PCI_DEVICE_ID_LANCER_G7_FC &&
--	     magic_number != MAGIC_NUMBER_G7)) {
-+	    (sli_family == LPFC_SLI_INTF_FAMILY_G7 &&
-+	     magic_number != MAGIC_NUMBER_G7) ||
-+	    (sli_family == LPFC_SLI_INTF_FAMILY_G7P &&
-+	     magic_number != MAGIC_NUMBER_G7P)) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 				"3030 This firmware version is not supported on"
- 				" this HBA model. Device:%x Magic:%x Type:%x "
-@@ -14053,17 +14058,18 @@ lpfc_sli4_oas_verify(struct lpfc_hba *phba)
- void
- lpfc_sli4_ras_init(struct lpfc_hba *phba)
- {
--	switch (phba->pcidev->device) {
--	case PCI_DEVICE_ID_LANCER_G6_FC:
--	case PCI_DEVICE_ID_LANCER_G7_FC:
-+	/* if ASIC_GEN_NUM >= 0xC) */
-+	if ((bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
-+		    LPFC_SLI_INTF_IF_TYPE_6) ||
-+	    (bf_get(lpfc_sli_intf_sli_family, &phba->sli4_hba.sli_intf) ==
-+		    LPFC_SLI_INTF_FAMILY_G6)) {
- 		phba->ras_fwlog.ras_hwsupport = true;
- 		if (phba->cfg_ras_fwlog_func == PCI_FUNC(phba->pcidev->devfn) &&
- 		    phba->cfg_ras_fwlog_buffsize)
- 			phba->ras_fwlog.ras_enabled = true;
- 		else
- 			phba->ras_fwlog.ras_enabled = false;
--		break;
--	default:
-+	} else {
- 		phba->ras_fwlog.ras_hwsupport = false;
- 	}
- }
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index 84bc373190d8..6c754ee96bee 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -513,8 +513,9 @@ lpfc_init_link(struct lpfc_hba * phba,
- 		break;
- 	}
- 
--	if ((phba->pcidev->device == PCI_DEVICE_ID_LANCER_G6_FC ||
--	     phba->pcidev->device == PCI_DEVICE_ID_LANCER_G7_FC) &&
-+	/* Topology handling for ASIC_GEN_NUM 0xC and later */
-+	if ((phba->sli4_hba.pc_sli4_params.sli_family == LPFC_SLI_INTF_FAMILY_G6 ||
-+	     phba->sli4_hba.pc_sli4_params.if_type == LPFC_SLI_INTF_IF_TYPE_6) &&
- 	    !(phba->sli4_hba.pc_sli4_params.pls) &&
- 	    mb->un.varInitLnk.link_flags & FLAGS_TOPOLOGY_MODE_LOOP) {
- 		mb->un.varInitLnk.link_flags = FLAGS_TOPOLOGY_MODE_PT_PT;
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 10002a13c5c6..ee4ff4855866 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5029,12 +5029,8 @@ lpfc_check_pci_resettable(struct lpfc_hba *phba)
- 		}
- 
- 		/* Check for valid Emulex Device ID */
--		switch (ptr->device) {
--		case PCI_DEVICE_ID_LANCER_FC:
--		case PCI_DEVICE_ID_LANCER_G6_FC:
--		case PCI_DEVICE_ID_LANCER_G7_FC:
--			break;
--		default:
-+		if (phba->sli_rev != LPFC_SLI_REV4 ||
-+		    phba->hba_flag & HBA_FCOE_MODE) {
- 			lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 					"8347 Incapable PCI reset device: "
- 					"0x%04x\n", ptr->device);
+ /* For sysfs/debugfs tmp string max len */
 -- 
 2.26.2
 
