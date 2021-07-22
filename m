@@ -2,96 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-17.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2964AC6377D
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 17:32:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9764C63798
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 17:34:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01F96611C1
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 17:32:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D30A961279
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 17:34:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229751AbhGVQvn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Jul 2021 12:51:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60784 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229456AbhGVQvm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 12:51:42 -0400
-Received: from mail-wm1-x331.google.com (mail-wm1-x331.google.com [IPv6:2a00:1450:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0567BC061575;
-        Thu, 22 Jul 2021 10:32:17 -0700 (PDT)
-Received: by mail-wm1-x331.google.com with SMTP id a80-20020a1c98530000b0290245467f26a4so123485wme.0;
-        Thu, 22 Jul 2021 10:32:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
-        bh=MGeh56W62eK1hUI+wy5/PVDZC2f+e5pmmh2hY+I14MU=;
-        b=G2MfvDi+mldKJYf+TVgjnyifVOvpHLgB2k53AwkYamHiyXHmTyDKLFUqTs5h+Rjgih
-         Ta6rD4sn6WlPpTiVGr7NRzzwluKUNaKFLMwQHO8BP1xvmOOPPsP7oL4EToNgTigVtjF6
-         mmy94+NOd83orVDahHQ5/jcHeU2R7B4DqwkryrTjhk4e9HFWcLwRmvtVjENy+OGu9eQ4
-         kgB+g09tUj9vLVXf7wtakZ0MoN+Uz0ykHlaJBRciwVVg1mlbGQUS2DS8yozi3cMervOV
-         /HB9T2CvTlmxOAZsvAg/yLU20bdjjFSGHgUGkU+vn0098j6JuiUzqYMzgbQgPoqyO5Ej
-         fjIA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=MGeh56W62eK1hUI+wy5/PVDZC2f+e5pmmh2hY+I14MU=;
-        b=pNz/34ccGFEbSMTdJtE1hDzPqBgEfFtnti0p/KweBd+5ub9PO5Uep+iYOWlRhg4qHc
-         WhvJk8wq0Udz+0zDTsfvAV2nLg8hDNPUdVR9LvU8RlHREIIOr2ed2jg80J2s+v1Rt36x
-         FAAxQX3i2J2CqBuznfd5Qe935tyOidK3iM9wtniP4dlXvIPLHdF1TYlU6/IX3+yMNRFF
-         VjhbBxo5qM60RTXWW80207F7zcoDYObi3GprZ3FWo85HWj+wSQKHFx1R17QbIDF/Gd3Q
-         TF1qvcqHAizR8GREPKzeuCsPSprqH1H+8NqoyUKRsRgA3j+b2GSyqTCGS9vPW/P+TI7S
-         29oQ==
-X-Gm-Message-State: AOAM530m8IhcFxmYg8b8hwTopIFzsGg/SnbJTTq0iaGb16wJPtxefD4X
-        YWZtYprqZIG8w+zKubLv/yE=
-X-Google-Smtp-Source: ABdhPJzPAk/FJIkSAcuG4mS2521g3bfenS4eHybiHNRXIWhmRNWD/n8ikjjB4Hf45Zzdb+Yj3blavw==
-X-Received: by 2002:a7b:c041:: with SMTP id u1mr636335wmc.95.1626975135612;
-        Thu, 22 Jul 2021 10:32:15 -0700 (PDT)
-Received: from pc ([196.235.233.206])
-        by smtp.gmail.com with ESMTPSA id z17sm17018074wrr.35.2021.07.22.10.32.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Jul 2021 10:32:15 -0700 (PDT)
-Date:   Thu, 22 Jul 2021 18:32:12 +0100
-From:   Salah Triki <salah.triki@gmail.com>
-To:     aacraid@microsemi.com, "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        gregkh@linuxfoundation.org
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [RESEND] scsi: aacraid: aachba: replace if with max()
-Message-ID: <20210722173212.GA5685@pc>
+        id S230013AbhGVQyC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Jul 2021 12:54:02 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:51324 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229585AbhGVQyB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 12:54:01 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 50B49226BC;
+        Thu, 22 Jul 2021 17:34:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1626975275; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=UVNEB66lw00LZyjfdJubG4hiEl41mccx3vM8iqlnI0w=;
+        b=hXm2tvvB5f0k/HICDgBCVx77TSqhxhbWpzCQABH92Y2gXhT+8gp+i6SnWqLEg2luNEuIYo
+        fdiSZyQbG49YB0j8tOUtUWsbBR8DSfbgYSBrQzhvU6k2DV9n0lqcGJz7JuCfqevm/9X293
+        QxYRDaid1yFrLBFCTSpy+1ZdjDHYMkk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1626975275;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=UVNEB66lw00LZyjfdJubG4hiEl41mccx3vM8iqlnI0w=;
+        b=uhiAxtW+A/GqLvhE4ZOGyMwubnlAU1B2xDO7msm1mzOrHuEePeTg3gG7UkxXo5LyPqpzv5
+        nMxg1b0icELnQyBA==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 27CD113C49;
+        Thu, 22 Jul 2021 17:34:35 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id zcsECCus+WArNQAAGKfGzw
+        (envelope-from <hare@suse.de>); Thu, 22 Jul 2021 17:34:35 +0000
+Subject: Re: [PATCH 3/4] libata: support concurrent positioning ranges log
+To:     Damien Le Moal <damien.lemoal@wdc.com>,
+        linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
+        linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-ide@vger.kernel.org
+References: <20210721104205.885115-1-damien.lemoal@wdc.com>
+ <20210721104205.885115-4-damien.lemoal@wdc.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <a53b07da-f012-ccfe-05a9-88a79abe6721@suse.de>
+Date:   Thu, 22 Jul 2021 19:34:34 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20210721104205.885115-4-damien.lemoal@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace if with max() in order to make code more clean.
+On 7/21/21 12:42 PM, Damien Le Moal wrote:
+> Add support to discover if an ATA device supports the Concurrent
+> Positioning Ranges Log (address 0x47), indicating that the device is
+> capable of seeking to multiple different locations in parallel using
+> multiple actuators serving different LBA ranges.
+> 
+> Also add support to translate the concurrent positioning ranges log
+> into its equivalent Concurrent Positioning Ranges VPD page B9h in
+> libata-scsi.c.
+> 
+> The format of the Concurrent Positioning Ranges Log is defined in ACS-5
+> r9.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>   drivers/ata/libata-core.c | 57 +++++++++++++++++++++++++++++++++++++++
+>   drivers/ata/libata-scsi.c | 46 ++++++++++++++++++++++++-------
+>   include/linux/ata.h       |  1 +
+>   include/linux/libata.h    | 11 ++++++++
+>   4 files changed, 106 insertions(+), 9 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Salah Triki <salah.triki@gmail.com>
----
- drivers/scsi/aacraid/aachba.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 46b8dffce2dd..330224f08fd3 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -485,8 +485,8 @@ int aac_get_containers(struct aac_dev *dev)
- 	if (status != -ERESTARTSYS)
- 		aac_fib_free(fibptr);
- 
--	if (maximum_num_containers < MAXIMUM_NUM_CONTAINERS)
--		maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
-+	maximum_num_containers = max(maximum_num_containers, MAXIMUM_NUM_CONTAINERS);
-+
- 	if (dev->fsa_dev == NULL ||
- 		dev->maximum_num_containers != maximum_num_containers) {
- 
+Hannes
 -- 
-2.25.1
-
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
