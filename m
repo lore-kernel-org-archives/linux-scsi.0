@@ -7,55 +7,59 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 713CBC636C8
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38BA9C636C8
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CA1A61260
-	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 237E261279
+	for <linux-scsi@archiver.kernel.org>; Thu, 22 Jul 2021 03:35:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230476AbhGVCy7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 21 Jul 2021 22:54:59 -0400
-Received: from mail-pl1-f169.google.com ([209.85.214.169]:34366 "EHLO
-        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230286AbhGVCy7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 22:54:59 -0400
-Received: by mail-pl1-f169.google.com with SMTP id b2so2964779plx.1
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2021 20:35:34 -0700 (PDT)
+        id S230522AbhGVCzH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 21 Jul 2021 22:55:07 -0400
+Received: from mail-pj1-f49.google.com ([209.85.216.49]:41817 "EHLO
+        mail-pj1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231135AbhGVCzE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Jul 2021 22:55:04 -0400
+Received: by mail-pj1-f49.google.com with SMTP id jx7-20020a17090b46c7b02901757deaf2c8so3635590pjb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 21 Jul 2021 20:35:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=iX5KvthYfrgwYibesp9gzRxU0hi+HpCBmooUh6FFA9Q=;
-        b=E0ibXy0W8pEFuAlGAM2q70ISIHidojdFBuXvHFU7tMU9hjNn2Iqeb+6xLBpia4s/+R
-         lz41uUoZWoXVMq47mJ7z5h3h71K1jtfjjPRV1TOzCNCNAKXjB4vWh+sOskPRRAHSfkGf
-         k1Ur16+dZJLS1dTr87+rZ4bZveWC/f0ej7bfEoVRODP92Q8i58x+qJH7jgIDbz9ADgJf
-         8A3/K/5yBc5Fym5X+Hw92pHDZK93deK3Pz6eiOTH7rpw7hEvak5wDroRJOjMSW94TfE2
-         GdCO042QFa3XrkZEIz6yKhKkoBT99Bx2ezaBVRRZnaK3NrNuHEg1bi3qyxjYBekkXY88
-         uB8A==
-X-Gm-Message-State: AOAM532RK4pm6CImMhXD7HOZnGreOif1YOuv/fsf2LulV2GoVbyxIYZp
-        2jpFyOGnc7ofkXqXn6J/S0A=
-X-Google-Smtp-Source: ABdhPJx8F7MBNlVEZX4eNpIFSv3GceKhw9GskKHxZoHV5VF2Nwn9i36G+pyonsytkKWZmLKlDeEhXg==
-X-Received: by 2002:a17:90a:d598:: with SMTP id v24mr36692039pju.185.1626924933729;
-        Wed, 21 Jul 2021 20:35:33 -0700 (PDT)
+        bh=lZrlOp/r+YewIsmclgvpGDlOLO/N9nbD/l3NVgcfnkU=;
+        b=Y69DMooaKLv9j0bvmeZnG4sgSbzx5f4d/U+N2XOQ+E5+CyfJheigAB1pO9axr9brPW
+         HG7Q9GbxUahVo0zD5qD9W8Q97Fwi8Ivd3GBXx2xRRiaUOVz/xuqjjgnYF8wLEsRsW50B
+         bZzALHrV46RLqCRCty1oE+VvBfL/VciRThlQ7KELbcsrXnO2dmlgXIuL3qwX5JAjRBKD
+         oRcT5wWKPEhUeRK5Ou8L0+LBgusfd7Zu5uk11C77pUAWawnVlA0Z3Ataq+WkYuCg9LCb
+         Y+R2uVWq8Kl4SF/IcfjXcsnLKlejO3SAJedtWbDdMS66wmhwQnWURmYEbsoaqxkcM6ag
+         eKEg==
+X-Gm-Message-State: AOAM532BPc0QtGT3IgMQg+wl+QuhO1TkXylASx4Mmy1O9Itb5OzQ0WsO
+        Hz23SnPCEfeun3zetiVHcdk=
+X-Google-Smtp-Source: ABdhPJwNjTGo7HWguk1ErANyvrs59WSTXuVR8LvN2+EujWGO7IFkGm6nhwzFbOe6Yw7vE72Y89f8IQ==
+X-Received: by 2002:a17:90a:f0cf:: with SMTP id fa15mr38390284pjb.83.1626924939279;
+        Wed, 21 Jul 2021 20:35:39 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:30e2:954a:f4a0:3224])
-        by smtp.gmail.com with ESMTPSA id n6sm32060258pgb.60.2021.07.21.20.35.32
+        by smtp.gmail.com with ESMTPSA id n6sm32060258pgb.60.2021.07.21.20.35.37
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 Jul 2021 20:35:33 -0700 (PDT)
+        Wed, 21 Jul 2021 20:35:38 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
         Can Guo <cang@codeaurora.org>,
         Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v3 10/18] scsi: ufs: Inline ufshcd_outstanding_req_clear()
-Date:   Wed, 21 Jul 2021 20:34:31 -0700
-Message-Id: <20210722033439.26550-11-bvanassche@acm.org>
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>,
+        Caleb Connolly <caleb@connolly.tech>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Subject: [PATCH v3 11/18] scsi: ufs: Revert "Utilize Transfer Request List Completion Notification Register"
+Date:   Wed, 21 Jul 2021 20:34:32 -0700
+Message-Id: <20210722033439.26550-12-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210722033439.26550-1-bvanassche@acm.org>
 References: <20210722033439.26550-1-bvanassche@acm.org>
@@ -65,46 +69,156 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Inline ufshcd_outstanding_req_clear() since it only has one caller and
-since its body is only one line long.
+Using the UTRLCNR register involves two MMIO accesses in the hot path while
+using the doorbell register only involves a single MMIO access. Since MMIO
+accesses take time, do not use the UTRLCNR register. The spinlock contention
+on the SCSI host lock that is reintroduced by this patch will be addressed
+by a later patch.
 
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
+This reverts commit 6f7151729647e58ac7c522081255fd0c07b38105.
+
 Cc: Adrian Hunter <adrian.hunter@intel.com>
 Cc: Stanley Chu <stanley.chu@mediatek.com>
 Cc: Can Guo <cang@codeaurora.org>
 Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Avri Altman <avri.altman@wdc.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 12 +-----------
- 1 file changed, 1 insertion(+), 11 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 52 +++++++++++----------------------------
+ drivers/scsi/ufs/ufshcd.h |  5 ----
+ drivers/scsi/ufs/ufshci.h |  1 -
+ 3 files changed, 15 insertions(+), 43 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d1c3a984d803..4c6d832f5e81 100644
+index 4c6d832f5e81..cb588b705fbb 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -742,16 +742,6 @@ static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
- 		ufshcd_writel(hba, ~(1 << pos), REG_UTP_TASK_REQ_LIST_CLEAR);
+@@ -2087,6 +2087,7 @@ static inline
+ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ {
+ 	struct ufshcd_lrb *lrbp = &hba->lrb[task_tag];
++	unsigned long flags;
+ 
+ 	lrbp->issue_time_stamp = ktime_get();
+ 	lrbp->compl_time_stamp = ktime_set(0, 0);
+@@ -2095,19 +2096,10 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ 	ufshcd_clk_scaling_start_busy(hba);
+ 	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
+ 		ufshcd_start_monitor(hba, lrbp);
+-	if (ufshcd_has_utrlcnr(hba)) {
+-		set_bit(task_tag, &hba->outstanding_reqs);
+-		ufshcd_writel(hba, 1 << task_tag,
+-			      REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-	} else {
+-		unsigned long flags;
+-
+-		spin_lock_irqsave(hba->host->host_lock, flags);
+-		set_bit(task_tag, &hba->outstanding_reqs);
+-		ufshcd_writel(hba, 1 << task_tag,
+-			      REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	}
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	set_bit(task_tag, &hba->outstanding_reqs);
++	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	/* Make sure that doorbell is committed immediately */
+ 	wmb();
+ }
+@@ -5234,17 +5226,17 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
  }
  
--/**
-- * ufshcd_outstanding_req_clear - Clear a bit in outstanding request field
-- * @hba: per adapter instance
-- * @tag: position of the bit to be cleared
-- */
--static inline void ufshcd_outstanding_req_clear(struct ufs_hba *hba, int tag)
+ /**
+- * ufshcd_trc_handler - handle transfer requests completion
++ * ufshcd_transfer_req_compl - handle SCSI and query command completion
+  * @hba: per adapter instance
+- * @use_utrlcnr: get completed requests from UTRLCNR
+  *
+  * Returns
+  *  IRQ_HANDLED - If interrupt is valid
+  *  IRQ_NONE    - If invalid interrupt
+  */
+-static irqreturn_t ufshcd_trc_handler(struct ufs_hba *hba, bool use_utrlcnr)
++static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+ {
+-	unsigned long completed_reqs = 0;
++	unsigned long completed_reqs, flags;
++	u32 tr_doorbell;
+ 
+ 	/* Resetting interrupt aggregation counters first and reading the
+ 	 * DOOR_BELL afterward allows us to handle all the completed requests.
+@@ -5257,24 +5249,10 @@ static irqreturn_t ufshcd_trc_handler(struct ufs_hba *hba, bool use_utrlcnr)
+ 	    !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
+ 		ufshcd_reset_intr_aggr(hba);
+ 
+-	if (use_utrlcnr) {
+-		u32 utrlcnr;
+-
+-		utrlcnr = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_LIST_COMPL);
+-		if (utrlcnr) {
+-			ufshcd_writel(hba, utrlcnr,
+-				      REG_UTP_TRANSFER_REQ_LIST_COMPL);
+-			completed_reqs = utrlcnr;
+-		}
+-	} else {
+-		unsigned long flags;
+-		u32 tr_doorbell;
+-
+-		spin_lock_irqsave(hba->host->host_lock, flags);
+-		tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-		completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	}
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	completed_reqs = tr_doorbell ^ hba->outstanding_reqs;
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	if (completed_reqs) {
+ 		__ufshcd_transfer_req_compl(hba, completed_reqs);
+@@ -5756,7 +5734,7 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ /* Complete requests that have door-bell cleared */
+ static void ufshcd_complete_requests(struct ufs_hba *hba)
+ {
+-	ufshcd_trc_handler(hba, false);
++	ufshcd_transfer_req_compl(hba);
+ 	ufshcd_tmc_handler(hba);
+ }
+ 
+@@ -6397,7 +6375,7 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+ 		retval |= ufshcd_tmc_handler(hba);
+ 
+ 	if (intr_status & UTP_TRANSFER_REQ_COMPL)
+-		retval |= ufshcd_trc_handler(hba, ufshcd_has_utrlcnr(hba));
++		retval |= ufshcd_transfer_req_compl(hba);
+ 
+ 	return retval;
+ }
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 8dcf0df770a2..a44baec43dd5 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1176,11 +1176,6 @@ static inline u32 ufshcd_vops_get_ufs_hci_version(struct ufs_hba *hba)
+ 	return ufshcd_readl(hba, REG_UFS_VERSION);
+ }
+ 
+-static inline bool ufshcd_has_utrlcnr(struct ufs_hba *hba)
 -{
--	clear_bit(tag, &hba->outstanding_reqs);
+-	return (hba->ufs_version >= ufshci_version(3, 0));
 -}
 -
- /**
-  * ufshcd_get_lists_status - Check UCRDY, UTRLRDY and UTMRLRDY
-  * @reg: Register value of host controller status
-@@ -2899,7 +2889,7 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
- 		 * we also need to clear the outstanding_request
- 		 * field in hba
- 		 */
--		ufshcd_outstanding_req_clear(hba, lrbp->task_tag);
-+		clear_bit(lrbp->task_tag, &hba->outstanding_reqs);
- 	}
- 
- 	return err;
+ static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba,
+ 			bool up, enum ufs_notify_change_status status)
+ {
+diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+index 5affb1fce5ad..de95be5d11d4 100644
+--- a/drivers/scsi/ufs/ufshci.h
++++ b/drivers/scsi/ufs/ufshci.h
+@@ -39,7 +39,6 @@ enum {
+ 	REG_UTP_TRANSFER_REQ_DOOR_BELL		= 0x58,
+ 	REG_UTP_TRANSFER_REQ_LIST_CLEAR		= 0x5C,
+ 	REG_UTP_TRANSFER_REQ_LIST_RUN_STOP	= 0x60,
+-	REG_UTP_TRANSFER_REQ_LIST_COMPL		= 0x64,
+ 	REG_UTP_TASK_REQ_LIST_BASE_L		= 0x70,
+ 	REG_UTP_TASK_REQ_LIST_BASE_H		= 0x74,
+ 	REG_UTP_TASK_REQ_DOOR_BELL		= 0x78,
