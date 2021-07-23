@@ -7,59 +7,59 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D5BC4320E
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jul 2021 01:22:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89B7FC4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jul 2021 01:22:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C00A460EBF
-	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jul 2021 01:22:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7134260EBA
+	for <linux-scsi@archiver.kernel.org>; Fri, 23 Jul 2021 01:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233023AbhGWAlb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 22 Jul 2021 20:41:31 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:48056 "EHLO
+        id S233064AbhGWAld (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 22 Jul 2021 20:41:33 -0400
+Received: from esa6.hgst.iphmx.com ([216.71.154.45]:43109 "EHLO
         esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232892AbhGWAl3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 20:41:29 -0400
+        with ESMTP id S233029AbhGWAlc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Jul 2021 20:41:32 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1627003324; x=1658539324;
+  t=1627003327; x=1658539327;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=rjkR44Lk/cFTdVetpq2dRFuzZc5qVOAdsqkfc7s5dnQ=;
-  b=atvxlAX1oDGV/BdNXt0ynWiOyVtPA7GhOUiPlU+HVoV2VIitFau9TVT4
-   H05SnG87/h1am1qG7fJ1b33PFUsr9ngO1FE8qqoAOVIMnCjIA80rOWZj0
-   J2j7EV3ztARuaxG+NT+A2Yu8YjS3U4IV0+riJ17vAZLOcCYyk6FWE6Nih
-   yb6gtZRc/X6Uq4PrE5G90gQfwgyU8QKi9JdTXoYG37mu6H+ZKGTH9I0tw
-   rlUFUGkv3/PpvwjBO00LrfgHjTwrEcqT3fnHmbvrx1l1uqhup1QOb3ijy
-   rj79SiGyq+RRegAfl0c6g12Bpaj6GibPxC1mC2toxtpTbafw5G8XXsmA9
-   Q==;
+  bh=B74m1WPQJ1Anw6j+wAJvH4NcdpcYe8kHRul4WECACgI=;
+  b=QzIdWvSdrralVLonJ7jIGYijWRNdU4G2gvDH1atgB3ezii19JAi3JSzj
+   indhw8SU3he5AYwyOyZQnPVGhAhfmT+NRir6AgTgfzNSLMXoiy+QGMDrh
+   LA4r3UrSQLkvu6FahaeiP51EXKSoZ0F5R2PnWhdlBVsk17cPv98izqISP
+   w9WTlhN3tnU8X0QKkNCSFp73Tc+r102jWHmEKB4vrXHfnTyKAwPqJUlgi
+   2iR8BFvNQ3ozPdu5GqiFCqjFHHOtopCrsc5C1zmZYo8Lm0VUvEMV/Of8p
+   xGiGUwN3/pk3Xy180V+k+mOFbHfjz/hL8AiXoPbzGhUPwHGVchzLofz6V
+   w==;
 X-IronPort-AV: E=Sophos;i="5.84,262,1620662400"; 
-   d="scan'208";a="175874112"
+   d="scan'208";a="175874121"
 Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 23 Jul 2021 09:22:04 +0800
-IronPort-SDR: OyxdrLMj1kOKYdtDt2elWH4KZUW6t+mqXzCKNKoZ8hnZyrvCnktGLWJKoVJ0ChaVlqEh7LbBz1
- +OYgkued59sPbaXsKn2E38aLl6G1G6eK0vT3vL4Z4y7D0XerY6PO/as8bTCCniNyD4KdkrGyAS
- CbTe4cfsYNsN5TFsGZp4lPsV0vwzgU6XdFDtaISZIB6iA8PaA0L/1AhdgolvuGJTU/UZuGZPAV
- m5pQbRnsdgpJ7Xz1ckBScPniE/Pq9tAVjCgvOUs81PzYzQt7QEdkL1xv+43HJtbMUcATldwC1p
- BjYRNNtMbPOB5Y9jeLow/CKd
+  by ob1.hgst.iphmx.com with ESMTP; 23 Jul 2021 09:22:07 +0800
+IronPort-SDR: J5ZAUh8pyXtipbo2T43v4GFJ1PTH98B+cVp8eXXam+lrsxBqrqFxreW1qJK7q5AmGOhpjKGYcP
+ 46KtObmsutd0zk8BKcUHsmCAjUAy0zC80VyI4BKaHEV1PfRCMRPUfM5bXVLbwIh6HWlCenexIG
+ 545se4GNDfxr8HCW51crCE8xdNoItcndche0qPkcd5f9KE4wNaRQvlB/X5RRq17Hra7ZPoiv2V
+ mJjELsH4cVFVs2nWgXb7syQK3YUnNaIPKYkYs+l8UAmIcOpvvDSwogcjD5yxzzc1oIzHKMnQFP
+ dhmJYFqLe6HAwILgllABZPvy
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2021 17:59:54 -0700
-IronPort-SDR: C2baeqziIo9BoXf1SQiW6ZRDtC2txouVi7FOUiznTsrbilmWF1Glqv28ZjjEoOd2h3I4tsEyqD
- 3C6ePztD1w3mMqUYP5jrHjMmZk6G3WKZWKYcUjQlVEUH/lTKCm+SfF0l+/UA1z4uHgyz22JkuS
- 2NVYmPsmMHDwLxWrA3MkeVDaIBpvQmfFOHI15517uv++I1QFlLNm4lH9xOAIuaQsUGJSu9y9eX
- bD+m9WyHzS/CrwclubWkYKk3uYFnPntapzFqq3A3P/Kon7VeYXlFdoG5POyPYBzE6cfQ7DypkH
- sOc=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Jul 2021 17:59:57 -0700
+IronPort-SDR: E46FiGsneFzIt13tjtO+ZB/xAIi//lD9b9uCntk5GjOufKpRyOXsLyuGfC7So/6FAyPN99ciT3
+ pO3mJbw4hDG/1PV03d4Ej0kwgun8EzDC3nA7sr8lHPqyZCkcJcwQ2E5SvUDFO86q9qk57HvCMu
+ 3uW2PDZpNuiHorEWMom4XL2WFDrdUgBZ+7kbyg5QaRw/YwTR8ooAOj+mTgVEQNmBxRwBmiNV+t
+ c0hJW00wTttk+D/rnKPbOWt2k+vCN6uceamk4e2IQqw2WwqWnbvm4T9eB7sRmZYhK2WkjnzeI6
+ REA=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 22 Jul 2021 18:22:02 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 22 Jul 2021 18:22:04 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
         linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-ide@vger.kernel.org
 Cc:     Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v2 1/4] block: Add concurrent positioning ranges support
-Date:   Fri, 23 Jul 2021 10:21:57 +0900
-Message-Id: <20210723012200.953825-2-damien.lemoal@wdc.com>
+Subject: [PATCH v2 3/4] libata: support concurrent positioning ranges log
+Date:   Fri, 23 Jul 2021 10:21:59 +0900
+Message-Id: <20210723012200.953825-4-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210723012200.953825-1-damien.lemoal@wdc.com>
 References: <20210723012200.953825-1-damien.lemoal@wdc.com>
@@ -69,468 +69,225 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The Concurrent Positioning Ranges VPD page (for SCSI) and Log (for ATA)
-contain parameters describing the number of sets of contiguous LBAs that
-can be served independently by a single LUN multi-actuator disk. This
-patch provides the blk_queue_set_cranges() function allowing a device
-driver to signal to the block layer that a disk has multiple actuators,
-each one serving a contiguous range of sectors. To describe the set
-of sector ranges representing the different actuators of a device, the
-data type struct blk_cranges is introduced.
+Add support to discover if an ATA device supports the Concurrent
+Positioning Ranges Log (address 0x47), indicating that the device is
+capable of seeking to multiple different locations in parallel using
+multiple actuators serving different LBA ranges.
 
-For a device with multiple actuators, a struct blk_cranges is attached
-to the device request queue by the blk_queue_set_cranges() function. The
-function blk_alloc_cranges() is provided for drivers to allocate this
-structure.
+Also add support to translate the concurrent positioning ranges log
+into its equivalent Concurrent Positioning Ranges VPD page B9h in
+libata-scsi.c.
 
-The blk_cranges structure contains kobjects (struct kobject) to register
-with sysfs the set of sector ranges defined by a device. On initial
-device scan, this registration is done from blk_register_queue() using
-the block layer internal function blk_register_cranges(). If a driver
-calls blk_queue_set_cranges() for a registered queue, e.g. when a device
-is revalidated, blk_queue_set_cranges() will execute
-blk_register_cranges() to update the queue sysfs attribute files.
-
-The sysfs file structure created starts from the cranges sub-directory
-and contains the start sector and number of sectors served by an
-actuator, with the information for each actuator grouped in one
-directory per actuator. E.g. for a dual actuator drive, we have:
-
-$ tree /sys/block/sdk/queue/cranges/
-/sys/block/sdk/queue/cranges/
-|-- 0
-|   |-- nr_sectors
-|   `-- sector
-`-- 1
-    |-- nr_sectors
-    `-- sector
-
-For a regular single actuator device, the cranges directory does not
-exist.
-
-Device revalidation may lead to changes to this structure and to the
-attribute values. When manipulated, the queue sysfs_lock and
-sysfs_dir_lock are held for atomicity, similarly to how the blk-mq and
-elevator sysfs queue sub-directories are protected.
-
-The code related to the management of cranges is added in the new
-file block/blk-cranges.c.
+The format of the Concurrent Positioning Ranges Log is defined in ACS-5
+r9.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- block/Makefile         |   2 +-
- block/blk-cranges.c    | 286 +++++++++++++++++++++++++++++++++++++++++
- block/blk-sysfs.c      |  13 ++
- block/blk.h            |   3 +
- include/linux/blkdev.h |  29 +++++
- 5 files changed, 332 insertions(+), 1 deletion(-)
- create mode 100644 block/blk-cranges.c
+ drivers/ata/libata-core.c | 52 +++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-scsi.c | 48 +++++++++++++++++++++++++++++-------
+ include/linux/ata.h       |  1 +
+ include/linux/libata.h    | 15 +++++++++++
+ 4 files changed, 107 insertions(+), 9 deletions(-)
 
-diff --git a/block/Makefile b/block/Makefile
-index bfbe4e13ca1e..e477e6ca9ea6 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -9,7 +9,7 @@ obj-$(CONFIG_BLOCK) := bio.o elevator.o blk-core.o blk-sysfs.o \
- 			blk-lib.o blk-mq.o blk-mq-tag.o blk-stat.o \
- 			blk-mq-sysfs.o blk-mq-cpumap.o blk-mq-sched.o ioctl.o \
- 			genhd.o ioprio.o badblocks.o partitions/ blk-rq-qos.o \
--			disk-events.o
-+			disk-events.o blk-cranges.o
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 61c762961ca8..ab3f61ea743e 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2363,6 +2363,57 @@ static void ata_dev_config_trusted(struct ata_device *dev)
+ 		dev->flags |= ATA_DFLAG_TRUSTED;
+ }
  
- obj-$(CONFIG_BOUNCE)		+= bounce.o
- obj-$(CONFIG_BLK_SCSI_REQUEST)	+= scsi_ioctl.o
-diff --git a/block/blk-cranges.c b/block/blk-cranges.c
-new file mode 100644
-index 000000000000..e8ff0d40a5c9
---- /dev/null
-+++ b/block/blk-cranges.c
-@@ -0,0 +1,286 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ *  Block device concurrent positioning ranges.
-+ *
-+ *  Copyright (C) 2021 Western Digital Corporation or its Affiliates.
-+ */
-+#include <linux/kernel.h>
-+#include <linux/blkdev.h>
-+#include <linux/slab.h>
-+#include <linux/init.h>
-+
-+#include "blk.h"
-+
-+static ssize_t blk_crange_sector_show(struct blk_crange *cr, char *page)
++static void ata_dev_config_cpr(struct ata_device *dev)
 +{
-+	return sprintf(page, "%llu\n", cr->sector);
-+}
++	unsigned int err_mask;
++	size_t buf_len;
++	int i, nr_cpr = 0;
++	struct ata_cpr_log *cpr_log = NULL;
++	u8 *desc, *buf = NULL;
 +
-+static ssize_t blk_crange_nr_sectors_show(struct blk_crange *cr, char *page)
-+{
-+	return sprintf(page, "%llu\n", cr->nr_sectors);
-+}
-+
-+struct blk_crange_sysfs_entry {
-+	struct attribute attr;
-+	ssize_t (*show)(struct blk_crange *cr, char *page);
-+};
-+
-+static struct blk_crange_sysfs_entry blk_crange_sector_entry = {
-+	.attr = { .name = "sector", .mode = 0444 },
-+	.show = blk_crange_sector_show,
-+};
-+
-+static struct blk_crange_sysfs_entry blk_crange_nr_sectors_entry = {
-+	.attr = { .name = "nr_sectors", .mode = 0444 },
-+	.show = blk_crange_nr_sectors_show,
-+};
-+
-+static struct attribute *blk_crange_attrs[] = {
-+	&blk_crange_sector_entry.attr,
-+	&blk_crange_nr_sectors_entry.attr,
-+	NULL,
-+};
-+ATTRIBUTE_GROUPS(blk_crange);
-+
-+static ssize_t blk_crange_sysfs_show(struct kobject *kobj,
-+				     struct attribute *attr, char *page)
-+{
-+	struct blk_crange_sysfs_entry *entry;
-+	struct blk_crange *cr;
-+	struct request_queue *q;
-+	ssize_t ret;
-+
-+	entry = container_of(attr, struct blk_crange_sysfs_entry, attr);
-+	cr = container_of(kobj, struct blk_crange, kobj);
-+	q = cr->queue;
-+
-+	mutex_lock(&q->sysfs_lock);
-+	ret = entry->show(cr, page);
-+	mutex_unlock(&q->sysfs_lock);
-+
-+	return ret;
-+}
-+
-+static const struct sysfs_ops blk_crange_sysfs_ops = {
-+	.show	= blk_crange_sysfs_show,
-+};
-+
-+/*
-+ * Dummy release function to make kobj happy.
-+ */
-+static void blk_cranges_sysfs_nop_release(struct kobject *kobj)
-+{
-+}
-+
-+static struct kobj_type blk_crange_ktype = {
-+	.sysfs_ops	= &blk_crange_sysfs_ops,
-+	.default_groups	= blk_crange_groups,
-+	.release	= blk_cranges_sysfs_nop_release,
-+};
-+
-+static struct kobj_type blk_cranges_ktype = {
-+	.release	= blk_cranges_sysfs_nop_release,
-+};
-+
-+/**
-+ * blk_register_cranges - register with sysfs a set of concurrent ranges
-+ * @disk:		Target disk
-+ * @new_cranges:	New set of concurrent ranges
-+ *
-+ * Register with sysfs a set of concurrent ranges for @disk. If @new_cranges
-+ * is not NULL, this set of concurrent ranges is registered and the
-+ * old set specified by q->cranges is unregistered. Otherwise, q->cranges
-+ * is registered if it is not already.
-+ */
-+int blk_register_cranges(struct gendisk *disk, struct blk_cranges *new_cranges)
-+{
-+	struct request_queue *q = disk->queue;
-+	struct blk_cranges *cranges;
-+	int i, ret;
-+
-+	lockdep_assert_held(&q->sysfs_dir_lock);
-+	lockdep_assert_held(&q->sysfs_lock);
-+
-+	/* If a new range set is specified, unregister the old one */
-+	if (new_cranges) {
-+		if (q->cranges)
-+			blk_unregister_cranges(disk);
-+		q->cranges = new_cranges;
-+	}
-+
-+	cranges = q->cranges;
-+	if (!cranges)
-+		return 0;
++	if (!ata_identify_page_supported(dev,
++				 ATA_LOG_CONCURRENT_POSITIONING_RANGES))
++		goto out;
 +
 +	/*
-+	 * At this point, q->cranges is the new set of sector ranges that needs
-+	 * to be registered with sysfs.
++	 * Read IDENTIFY DEVICE data log, page 0x47
++	 * (concurrent positioning ranges). We can have at most 255 32B range
++	 * descriptors plus a 64B header.
 +	 */
-+	WARN_ON(cranges->sysfs_registered);
-+	ret = kobject_init_and_add(&cranges->kobj, &blk_cranges_ktype,
-+				   &q->kobj, "%s", "cranges");
-+	if (ret)
-+		goto free;
++	buf_len = (64 + 255 * 32 + 511) & ~511;
++	buf = kzalloc(buf_len, GFP_KERNEL);
++	if (!buf)
++		goto out;
 +
-+	for (i = 0; i < cranges->nr_ranges; i++) {
-+		cranges->ranges[i].queue = q;
-+		ret = kobject_init_and_add(&cranges->ranges[i].kobj,
-+					   &blk_crange_ktype, &cranges->kobj,
-+					   "%d", i);
-+		if (ret)
-+			goto delete_obj;
++	err_mask = ata_read_log_page(dev, ATA_LOG_IDENTIFY_DEVICE,
++				     ATA_LOG_CONCURRENT_POSITIONING_RANGES,
++				     buf, buf_len >> 9);
++	if (err_mask)
++		goto out;
++
++	nr_cpr = buf[0];
++	if (!nr_cpr)
++		goto out;
++
++	cpr_log = kzalloc(struct_size(cpr_log, cpr, nr_cpr), GFP_KERNEL);
++	if (!cpr_log)
++		goto out;
++
++	cpr_log->nr_cpr = nr_cpr;
++	desc = &buf[64];
++	for (i = 0; i < nr_cpr; i++, desc += 32) {
++		cpr_log->cpr[i].num = desc[0];
++		cpr_log->cpr[i].num_storage_elements = desc[1];
++		cpr_log->cpr[i].start_lba = get_unaligned_le64(&desc[8]);
++		cpr_log->cpr[i].num_lbas = get_unaligned_le64(&desc[16]);
 +	}
 +
-+	cranges->sysfs_registered = true;
-+
-+	return 0;
-+
-+delete_obj:
-+	while (--i >= 0)
-+		kobject_del(&cranges->ranges[i].kobj);
-+	kobject_del(&cranges->kobj);
-+free:
-+	kfree(cranges);
-+	q->cranges = NULL;
-+	return ret;
++out:
++	swap(dev->cpr_log, cpr_log);
++	kfree(cpr_log);
++	kfree(buf);
 +}
 +
-+void blk_unregister_cranges(struct gendisk *disk)
-+{
-+	struct request_queue *q = disk->queue;
-+	struct blk_cranges *cranges = q->cranges;
-+	int i;
-+
-+	lockdep_assert_held(&q->sysfs_dir_lock);
-+	lockdep_assert_held(&q->sysfs_lock);
-+
-+	if (!cranges)
-+		return;
-+
-+	if (cranges->sysfs_registered) {
-+		for (i = 0; i < cranges->nr_ranges; i++)
-+			kobject_del(&cranges->ranges[i].kobj);
-+		kobject_del(&cranges->kobj);
-+	}
-+
-+	kfree(cranges);
-+	q->cranges = NULL;
-+}
-+
-+static bool blk_check_ranges(struct gendisk *disk, struct blk_cranges *cr)
-+{
-+	sector_t capacity = get_capacity(disk);
-+	sector_t min_sector = (sector_t)-1;
-+	sector_t max_sector = 0;
-+	int i;
-+
-+	/*
-+	 * Sector ranges may overlap but should overall contain all sectors
-+	 * within the disk capacity.
-+	 */
-+	for (i = 0; i < cr->nr_ranges; i++) {
-+		min_sector = min(min_sector, cr->ranges[i].sector);
-+		max_sector = max(max_sector, cr->ranges[i].sector +
-+					     cr->ranges[i].nr_sectors);
-+	}
-+
-+	if (min_sector != 0 || max_sector < capacity) {
-+		pr_warn("Invalid concurrent ranges: missing sectors\n");
-+		return false;
-+	}
-+
-+	if (max_sector > capacity) {
-+		pr_warn("Invalid concurrent ranges: beyond capacity\n");
-+		return false;
-+	}
-+
-+	return true;
-+}
-+
-+static bool blk_cranges_changed(struct gendisk *disk, struct blk_cranges *new)
-+{
-+	struct blk_cranges *old = disk->queue->cranges;
-+	int i;
-+
-+	if (!old || old->nr_ranges != new->nr_ranges)
-+		return true;
-+
-+	for (i = 0; i < new->nr_ranges; i++) {
-+		if (old->ranges[i].sector != new->ranges[i].sector ||
-+		    old->ranges[i].nr_sectors != new->ranges[i].nr_sectors)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
-+/**
-+ * blk_alloc_cranges - Allocate a concurrent positioning range structure
-+ * @disk:	target disk
-+ * @nr_ranges:	Number of concurrent ranges
-+ *
-+ * Allocate a struct blk_cranges structure with @nr_ranges range descriptors.
-+ */
-+struct blk_cranges *blk_alloc_cranges(struct gendisk *disk, int nr_ranges)
-+{
-+	struct blk_cranges *cr;
-+
-+	cr = kzalloc_node(struct_size(cr, ranges, nr_ranges), GFP_KERNEL,
-+			  disk->queue->node);
-+	if (cr)
-+		cr->nr_ranges = nr_ranges;
-+	return cr;
-+}
-+EXPORT_SYMBOL_GPL(blk_alloc_cranges);
-+
-+/**
-+ * blk_queue_set_cranges - Set a disk concurrent positioning ranges
-+ * @disk:	target disk
-+ * @cr:		concurrent ranges structure
-+ *
-+ * Set the concurrant positioning ranges information of the request queue
-+ * of @disk to @cr. If @cr is NULL and the concurrent ranges structure
-+ * already set, if any, is cleared. If there are no differences between
-+ * @cr and the concurrent ranges structure already set, @cr is freed.
-+ */
-+void blk_queue_set_cranges(struct gendisk *disk, struct blk_cranges *cr)
-+{
-+	struct request_queue *q = disk->queue;
-+
-+	if (WARN_ON_ONCE(cr && !cr->nr_ranges)) {
-+		kfree(cr);
-+		cr = NULL;
-+	}
-+
-+	mutex_lock(&q->sysfs_dir_lock);
-+	mutex_lock(&q->sysfs_lock);
-+
-+	if (cr && !blk_check_ranges(disk, cr)) {
-+		kfree(cr);
-+		cr = NULL;
-+	}
-+
-+	if (!blk_cranges_changed(disk, cr)) {
-+		kfree(cr);
-+		goto unlock;
-+	}
-+
-+	/*
-+	 * This may be called for a registered queue. E.g. during a device
-+	 * revalidation. If that is the case, we need to register the new set
-+	 * of concurrent ranges. If the queue is not already registered, the
-+	 * device request queue registration will register the ranges.
-+	 */
-+	if (blk_queue_registered(q)) {
-+		blk_register_cranges(disk, cr);
-+	} else {
-+		swap(q->cranges, cr);
-+		kfree(cr);
-+	}
-+
-+unlock:
-+	mutex_unlock(&q->sysfs_lock);
-+	mutex_unlock(&q->sysfs_dir_lock);
-+}
-+EXPORT_SYMBOL_GPL(blk_queue_set_cranges);
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 370d83c18057..aeac98ecc5a0 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -899,9 +899,21 @@ int blk_register_queue(struct gendisk *disk)
+ /**
+  *	ata_dev_configure - Configure the specified ATA/ATAPI device
+  *	@dev: Target device to configure
+@@ -2591,6 +2642,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 		ata_dev_config_sense_reporting(dev);
+ 		ata_dev_config_zac(dev);
+ 		ata_dev_config_trusted(dev);
++		ata_dev_config_cpr(dev);
+ 		dev->cdb_len = 32;
  	}
  
- 	mutex_lock(&q->sysfs_lock);
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index b9588c52815d..5cadbb9a8bf2 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1937,7 +1937,7 @@ static unsigned int ata_scsiop_inq_std(struct ata_scsi_args *args, u8 *rbuf)
+  */
+ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+ {
+-	int num_pages;
++	int i, num_pages = 0;
+ 	static const u8 pages[] = {
+ 		0x00,	/* page 0x00, this page */
+ 		0x80,	/* page 0x80, unit serial no page */
+@@ -1947,13 +1947,17 @@ static unsigned int ata_scsiop_inq_00(struct ata_scsi_args *args, u8 *rbuf)
+ 		0xb1,	/* page 0xb1, block device characteristics page */
+ 		0xb2,	/* page 0xb2, thin provisioning page */
+ 		0xb6,	/* page 0xb6, zoned block device characteristics */
++		0xb9,	/* page 0xb9, concurrent positioning ranges */
+ 	};
+ 
+-	num_pages = sizeof(pages);
+-	if (!(args->dev->flags & ATA_DFLAG_ZAC))
+-		num_pages--;
++	for (i = 0; i < sizeof(pages); i++) {
++		if (pages[i] == 0xb6 &&
++		    !(args->dev->flags & ATA_DFLAG_ZAC))
++			continue;
++		rbuf[num_pages + 4] = pages[i];
++		num_pages++;
++	}
+ 	rbuf[3] = num_pages;	/* number of supported VPD pages */
+-	memcpy(rbuf + 4, pages, num_pages);
+ 	return 0;
+ }
+ 
+@@ -2163,6 +2167,26 @@ static unsigned int ata_scsiop_inq_b6(struct ata_scsi_args *args, u8 *rbuf)
+ 	return 0;
+ }
+ 
++static unsigned int ata_scsiop_inq_b9(struct ata_scsi_args *args, u8 *rbuf)
++{
++	struct ata_cpr_log *cpr_log = args->dev->cpr_log;
++	u8 *desc = &rbuf[64];
++	int i;
 +
-+	ret = blk_register_cranges(disk, NULL);
-+	if (ret) {
-+		mutex_unlock(&q->sysfs_lock);
-+		mutex_unlock(&q->sysfs_dir_lock);
-+		kobject_del(&q->kobj);
-+		blk_trace_remove_sysfs(dev);
-+		kobject_put(&dev->kobj);
-+		return ret;
++	/* SCSI Concurrent Positioning Ranges VPD page: SBC-5 rev 1 or later */
++	rbuf[1] = 0xb9;
++	put_unaligned_be16(64 + (int)cpr_log->nr_cpr * 32 - 4, &rbuf[3]);
++
++	for (i = 0; i < cpr_log->nr_cpr; i++, desc += 32) {
++		desc[0] = cpr_log->cpr[i].num;
++		desc[1] = cpr_log->cpr[i].num_storage_elements;
++		put_unaligned_be64(cpr_log->cpr[i].start_lba, &desc[8]);
++		put_unaligned_be64(cpr_log->cpr[i].num_lbas, &desc[16]);
 +	}
 +
- 	if (q->elevator) {
- 		ret = elv_register_queue(q, false);
- 		if (ret) {
-+			blk_unregister_cranges(disk);
- 			mutex_unlock(&q->sysfs_lock);
- 			mutex_unlock(&q->sysfs_dir_lock);
- 			kobject_del(&q->kobj);
-@@ -985,6 +997,7 @@ void blk_unregister_queue(struct gendisk *disk)
- 	mutex_lock(&q->sysfs_lock);
- 	if (q->elevator)
- 		elv_unregister_queue(q);
-+	blk_unregister_cranges(disk);
- 	mutex_unlock(&q->sysfs_lock);
- 	mutex_unlock(&q->sysfs_dir_lock);
- 
-diff --git a/block/blk.h b/block/blk.h
-index 4b885c0f6708..650c0d87987c 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -368,4 +368,7 @@ extern struct device_attribute dev_attr_events;
- extern struct device_attribute dev_attr_events_async;
- extern struct device_attribute dev_attr_events_poll_msecs;
- 
-+int blk_register_cranges(struct gendisk *disk, struct blk_cranges *new_cranges);
-+void blk_unregister_cranges(struct gendisk *disk);
++	return 0;
++}
 +
- #endif /* BLK_INTERNAL_H */
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 3177181c4326..cd58aa1090a3 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -378,6 +378,29 @@ static inline int blkdev_zone_mgmt_ioctl(struct block_device *bdev,
+ /**
+  *	modecpy - Prepare response for MODE SENSE
+  *	@dest: output buffer
+@@ -4162,11 +4186,17 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
+ 			ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b2);
+ 			break;
+ 		case 0xb6:
+-			if (dev->flags & ATA_DFLAG_ZAC) {
++			if (dev->flags & ATA_DFLAG_ZAC)
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b6);
+-				break;
+-			}
+-			fallthrough;
++			else
++				ata_scsi_set_invalid_field(dev, cmd, 2, 0xff);
++			break;
++		case 0xb9:
++			if (dev->cpr_log)
++				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_b9);
++			else
++				ata_scsi_set_invalid_field(dev, cmd, 2, 0xff);
++			break;
+ 		default:
+ 			ata_scsi_set_invalid_field(dev, cmd, 2, 0xff);
+ 			break;
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index 1b44f40c7700..199e47e97d64 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -329,6 +329,7 @@ enum {
+ 	ATA_LOG_SECURITY	  = 0x06,
+ 	ATA_LOG_SATA_SETTINGS	  = 0x08,
+ 	ATA_LOG_ZONED_INFORMATION = 0x09,
++	ATA_LOG_CONCURRENT_POSITIONING_RANGES = 0x47,
  
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
-+/*
-+ * Concurrent sector ranges: struct blk_crange describes range of
-+ * contiguous sectors that can be served by independent resources on the
-+ * device. The set of ranges defined in struct blk_cranges must overall
-+ * include all sectors within the device capacity.
-+ * For a device with multiple ranges, e.g. a single LUN multi-actuator HDD,
-+ * requests targeting sectors in different ranges can be executed in parallel.
-+ * A request can straddle a range boundary.
-+ */
-+struct blk_crange {
-+	struct kobject		kobj;
-+	struct request_queue	*queue;
-+	sector_t		sector;
-+	sector_t		nr_sectors;
-+};
-+
-+struct blk_cranges {
-+	struct kobject		kobj;
-+	bool			sysfs_registered;
-+	unsigned int		nr_ranges;
-+	struct blk_crange	ranges[];
-+};
-+
- struct request_queue {
- 	struct request		*last_merge;
- 	struct elevator_queue	*elevator;
-@@ -570,6 +593,9 @@ struct request_queue {
- 
- #define BLK_MAX_WRITE_HINTS	5
- 	u64			write_hints[BLK_MAX_WRITE_HINTS];
-+
-+	/* Concurrent sector ranges */
-+	struct blk_cranges	*cranges;
+ 	/* Identify device SATA settings log:*/
+ 	ATA_LOG_DEVSLP_OFFSET	  = 0x30,
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 3fcd24236793..b159a245d88c 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -670,6 +670,18 @@ struct ata_ering {
+ 	struct ata_ering_entry	ring[ATA_ERING_SIZE];
  };
  
- /* Keep blk_queue_flag_name[] in sync with the definitions below */
-@@ -1163,6 +1189,9 @@ extern void blk_queue_required_elevator_features(struct request_queue *q,
- extern bool blk_queue_can_use_dma_map_merging(struct request_queue *q,
- 					      struct device *dev);
- 
-+struct blk_cranges *blk_alloc_cranges(struct gendisk *disk, int nr_ranges);
-+void blk_queue_set_cranges(struct gendisk *disk, struct blk_cranges *cr);
++struct ata_cpr {
++	u8			num;
++	u8			num_storage_elements;
++	u64			start_lba;
++	u64			num_lbas;
++};
 +
- /*
-  * Number of physical segments as sent to the device.
-  *
++struct ata_cpr_log {
++	u8			nr_cpr;
++	struct ata_cpr		cpr[];
++};
++
+ struct ata_device {
+ 	struct ata_link		*link;
+ 	unsigned int		devno;		/* 0 or 1 */
+@@ -729,6 +741,9 @@ struct ata_device {
+ 	u32			zac_zones_optimal_nonseq;
+ 	u32			zac_zones_max_open;
+ 
++	/* Concurrent positioning ranges */
++	struct ata_cpr_log	*cpr_log;
++
+ 	/* error history */
+ 	int			spdn_cnt;
+ 	/* ering is CLEAR_END, read comment above CLEAR_END */
 -- 
 2.31.1
 
