@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60C5AC4338F
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jul 2021 07:24:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4166C4338F
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jul 2021 07:24:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3BB7A60E8F
-	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jul 2021 07:24:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC2B560E93
+	for <linux-scsi@archiver.kernel.org>; Sat, 24 Jul 2021 07:24:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234343AbhGXGnl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 24 Jul 2021 02:43:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35658 "EHLO
+        id S234339AbhGXGoI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 24 Jul 2021 02:44:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35762 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234227AbhGXGnk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jul 2021 02:43:40 -0400
+        with ESMTP id S234227AbhGXGoI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Jul 2021 02:44:08 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5C35C061575;
-        Sat, 24 Jul 2021 00:24:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89B08C061575;
+        Sat, 24 Jul 2021 00:24:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:Content-Type:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-ID:Content-Description;
-        bh=qA5AVEckjlp0uAOqGEQLdSPZfbde2E/thIYJSYmY6Yo=; b=r573B2leMFXX6GmOGVu7kR8dMo
-        ymL5nUSsxzqCwW0Le6TP9c91VM4fALa0MXUq3buNQvw8J0q7zrbvsh7vXmWnNoaxJKL8Y0ie53Ljt
-        8klFDIU/W16Hc2cYoKo4f5fXrRTXJDgScow3K0uKbBmEgJddSCPf7aSUMqAp5yC2b4ndamvgqiQc/
-        eNHjge1vnj0y4oVOl75Ab6s10WxBRhqYiivZV0LkT7pdb0RU0KyaP5fqd2Ubr1tilgymrjwMFQEqk
-        D7/X5cWFmnxpUTUS/7sTb6QXp4HDGfGCPj3YIfzzv3sjDCpK7W2p7FhZKjhlGw+MW6qqoB9ffa/gV
-        wf1gaAHA==;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
+        Content-Type:Content-ID:Content-Description;
+        bh=56eoWLO47IvIFAbgiAKF+s3rQCOaIBzrE6eyQkwv5yE=; b=AKOar4DPD79ujIA0WONOBDHvNs
+        Xw4OlThGJSJhMghhAxiooffqe7xSWOZQP+nzrJukht65gyufaJ+CrWOCk4PHYPWQ3pRZEjC6dgkGE
+        96TKzBygc4X5Az3SDqXjyvPa94sm7/xmQR/B9uVc5BU5W5tgXqsn+QscqEBuaChJAdUi2T2RSTb/R
+        sBN6hd6Ejz194rG3ESzmm60MvtkwWuQTE4jZl35rHGg211mtiIUAizXhqnpM4sNknpxd6Q+hJ21Xr
+        +PA7MN8E4PkLB34MnmYwJfWU9BOjrnNza3VHSdxYGrvRlhQsZd3JvLsuxzgquogWNGxFMc+AEkafV
+        udUzaFTw==;
 Received: from [2001:4bb8:184:87c5:85d0:a26b:ef67:d32c] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m7C0Y-00C59v-0O; Sat, 24 Jul 2021 07:23:43 +0000
+        id 1m7C0s-00C5Bu-U1; Sat, 24 Jul 2021 07:24:05 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Jens Axboe <axboe@kernel.dk>,
@@ -42,117 +42,224 @@ To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
 Cc:     Doug Gilbert <dgilbert@interlog.com>,
         =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 10/24] scsi_ioctl: remove scsi_verify_blk_ioctl
-Date:   Sat, 24 Jul 2021 09:20:19 +0200
-Message-Id: <20210724072033.1284840-11-hch@lst.de>
+Subject: [PATCH 11/24] scsi: call scsi_cmd_ioctl from scsi_ioctl
+Date:   Sat, 24 Jul 2021 09:20:20 +0200
+Message-Id: <20210724072033.1284840-12-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210724072033.1284840-1-hch@lst.de>
 References: <20210724072033.1284840-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Just verify that the device is no a partition or the caller has admin
-privіleges at the beginning of the sr ioctl method manually and open
-code the trivial check for sd as well.
+Ensure SCSI ULD only have to call a single ioctl helper.  This also adds
+a bunch of missing ioctls to the ch driver, and removes the need for a
+duplicate implementation of  SCSI_IOCTL_SEND_COMMAND command.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/scsi_ioctl.c     | 12 ------------
- drivers/scsi/sd.c      |  8 ++------
- drivers/scsi/sr.c      |  6 +++---
- include/linux/blkdev.h |  1 -
- 4 files changed, 5 insertions(+), 22 deletions(-)
+ drivers/scsi/ch.c         |  2 +-
+ drivers/scsi/scsi_ioctl.c | 17 ++++++++++++-----
+ drivers/scsi/sd.c         | 18 +-----------------
+ drivers/scsi/sg.c         |  2 +-
+ drivers/scsi/sr.c         | 16 ++--------------
+ drivers/scsi/st.c         | 10 +---------
+ include/scsi/scsi_ioctl.h |  4 +++-
+ 7 files changed, 21 insertions(+), 48 deletions(-)
 
-diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
-index f8138438c56f..ca7b84452d9d 100644
---- a/block/scsi_ioctl.c
-+++ b/block/scsi_ioctl.c
-@@ -842,18 +842,6 @@ int scsi_cmd_ioctl(struct request_queue *q, struct gendisk *bd_disk, fmode_t mod
- }
- EXPORT_SYMBOL(scsi_cmd_ioctl);
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 87df8cd880e0..159ab7ccaf7b 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -877,7 +877,7 @@ static long ch_ioctl(struct file *file,
+ 	}
  
--int scsi_verify_blk_ioctl(struct block_device *bd, unsigned int cmd)
--{
--	if (bd && !bdev_is_partition(bd))
--		return 0;
--
--	if (capable(CAP_SYS_RAWIO))
--		return 0;
--
--	return -ENOIOCTLCMD;
--}
--EXPORT_SYMBOL(scsi_verify_blk_ioctl);
--
+ 	default:
+-		return scsi_ioctl(ch->device, cmd, argp);
++		return scsi_ioctl(ch->device, NULL, file->f_mode, cmd, argp);
+ 
+ 	}
+ }
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index 7b2e3cc85e66..7739575b5229 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -192,6 +192,8 @@ static int scsi_ioctl_get_pci(struct scsi_device *sdev, void __user *arg)
  /**
-  * scsi_req_init - initialize certain fields of a scsi_request structure
-  * @req: Pointer to a scsi_request structure.
+  * scsi_ioctl - Dispatch ioctl to scsi device
+  * @sdev: scsi device receiving ioctl
++ * @disk: disk receiving the ioctl
++ * @mode: mode the block/char device is opened with
+  * @cmd: which ioctl is it
+  * @arg: data associated with ioctl
+  *
+@@ -199,10 +201,13 @@ static int scsi_ioctl_get_pci(struct scsi_device *sdev, void __user *arg)
+  * does not take a major/minor number as the dev field.  Rather, it takes
+  * a pointer to a &struct scsi_device.
+  */
+-int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
++int scsi_ioctl(struct scsi_device *sdev, struct gendisk *disk, fmode_t mode,
++		int cmd, void __user *arg)
+ {
++	struct request_queue *q = sdev->request_queue;
+ 	char scsi_cmd[MAX_COMMAND_SIZE];
+ 	struct scsi_sense_hdr sense_hdr;
++	int error;
+ 
+ 	/* Check for deprecated ioctls ... all the ioctls which don't
+ 	 * follow the new unique numbering scheme are deprecated */
+@@ -220,6 +225,12 @@ int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 		break;
+ 	}
+ 
++	if (cmd != SCSI_IOCTL_GET_IDLUN && cmd != SCSI_IOCTL_GET_BUS_NUMBER) {
++		error = scsi_cmd_ioctl(q, disk, mode, cmd, arg);
++		if (error != -ENOTTY)
++			return error;
++	}
++
+ 	switch (cmd) {
+ 	case SCSI_IOCTL_GET_IDLUN: {
+ 		struct scsi_idlun v = {
+@@ -237,10 +248,6 @@ int scsi_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 		return put_user(sdev->host->host_no, (int __user *)arg);
+ 	case SCSI_IOCTL_PROBE_HOST:
+ 		return ioctl_probe(sdev->host, arg);
+-	case SCSI_IOCTL_SEND_COMMAND:
+-		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+-			return -EACCES;
+-		return sg_scsi_ioctl(sdev->request_queue, NULL, 0, arg);
+ 	case SCSI_IOCTL_DOORLOCK:
+ 		return scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
+ 	case SCSI_IOCTL_DOORUNLOCK:
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 72099d3892f0..78025acad6e3 100644
+index 78025acad6e3..d8b0bd6d9a9b 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -1554,9 +1554,8 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
- 	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=%s, "
- 				    "cmd=0x%x\n", disk->disk_name, cmd));
+@@ -1570,23 +1570,7 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
  
--	error = scsi_verify_blk_ioctl(bdev, cmd);
--	if (error < 0)
--		return error;
-+	if (bdev_is_partition(bdev) && !capable(CAP_SYS_RAWIO))
-+		return -ENOIOCTLCMD;
- 
- 	/*
- 	 * If we are in the middle of error recovery, don't let anyone
-@@ -1582,9 +1581,6 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
- 	case SCSI_IOCTL_GET_BUS_NUMBER:
- 		break;
- 	default:
--		error = scsi_verify_blk_ioctl(bdev, cmd);
--		if (error < 0)
+ 	if (is_sed_ioctl(cmd))
+ 		return sed_ioctl(sdkp->opal_dev, cmd, p);
+-
+-	/*
+-	 * Send SCSI addressing ioctls directly to mid level, send other
+-	 * ioctls to block level and then onto mid level if they can't be
+-	 * resolved.
+-	 */
+-	switch (cmd) {
+-	case SCSI_IOCTL_GET_IDLUN:
+-	case SCSI_IOCTL_GET_BUS_NUMBER:
+-		break;
+-	default:
+-		error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
+-		if (error != -ENOTTY)
 -			return error;
- 		error = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, p);
- 		if (error != -ENOTTY)
- 			return error;
+-	}
+-
+-	return scsi_ioctl(sdp, cmd, p);
++	return scsi_ioctl(sdp, disk, mode, cmd, p);
+ }
+ 
+ static void set_media_not_present(struct scsi_disk *sdkp)
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index c3562c2d0dca..6cb1e4b6eac2 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1165,7 +1165,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
+ 	ret = sg_ioctl_common(filp, sdp, sfp, cmd_in, p);
+ 	if (ret != -ENOIOCTLCMD)
+ 		return ret;
+-	return scsi_ioctl(sdp->device, cmd_in, p);
++	return scsi_ioctl(sdp->device, NULL, filp->f_mode, cmd_in, p);
+ }
+ 
+ static __poll_t
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index b903e54c57fd..e6eadba4d638 100644
+index e6eadba4d638..b98e77fe700b 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
-@@ -562,6 +562,9 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	void __user *argp = (void __user *)arg;
- 	int ret;
+@@ -574,24 +574,12 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
  
-+	if (bdev_is_partition(bdev) && !capable(CAP_SYS_RAWIO))
-+		return -ENOIOCTLCMD;
-+
- 	mutex_lock(&cd->lock);
+ 	scsi_autopm_get_device(sdev);
  
- 	ret = scsi_ioctl_block_when_processing_errors(sdev, cmd,
-@@ -580,9 +583,6 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 	case SCSI_IOCTL_GET_BUS_NUMBER:
- 		break;
- 	default:
--		ret = scsi_verify_blk_ioctl(bdev, cmd);
--		if (ret < 0)
+-	/*
+-	 * Send SCSI addressing ioctls directly to mid level, send other
+-	 * ioctls to cdrom/block level.
+-	 */
+-	switch (cmd) {
+-	case SCSI_IOCTL_GET_IDLUN:
+-	case SCSI_IOCTL_GET_BUS_NUMBER:
+-		break;
+-	default:
+-		ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
+-		if (ret != -ENOTTY)
 -			goto put;
- 		ret = scsi_cmd_ioctl(disk->queue, disk, mode, cmd, argp);
- 		if (ret != -ENOTTY)
++	if (ret != CDROMCLOSETRAY && ret != CDROMEJECT) {
+ 		ret = cdrom_ioctl(&cd->cdi, bdev, mode, cmd, arg);
+ 		if (ret != -ENOSYS)
  			goto put;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 19aa3d5429c0..e2b972a85012 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -888,7 +888,6 @@ extern blk_status_t blk_insert_cloned_request(struct request_queue *q,
- 				     struct request *rq);
- int blk_rq_append_bio(struct request *rq, struct bio *bio);
- extern void blk_queue_split(struct bio **);
--extern int scsi_verify_blk_ioctl(struct block_device *, unsigned int);
- extern int scsi_cmd_ioctl(struct request_queue *, struct gendisk *, fmode_t,
- 			  unsigned int, void __user *);
- extern int sg_scsi_ioctl(struct request_queue *, struct gendisk *, fmode_t,
+ 	}
+-
+-	ret = scsi_ioctl(sdev, cmd, argp);
++	ret = scsi_ioctl(sdev, disk, mode, cmd, argp);
+ 
+ put:
+ 	scsi_autopm_put_device(sdev);
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 9274f665bc0f..2d1b0594af69 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -3823,24 +3823,16 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 	mutex_unlock(&STp->lock);
+ 
+ 	switch (cmd_in) {
+-	case SCSI_IOCTL_GET_IDLUN:
+-	case SCSI_IOCTL_GET_BUS_NUMBER:
+-		break;
+ 	case SG_IO:
+ 	case SCSI_IOCTL_SEND_COMMAND:
+ 	case CDROM_SEND_PACKET:
+ 		if (!capable(CAP_SYS_RAWIO))
+ 			return -EPERM;
+-		fallthrough;
+ 	default:
+-		retval = scsi_cmd_ioctl(STp->disk->queue, STp->disk,
+-					file->f_mode, cmd_in, p);
+-		if (retval != -ENOTTY)
+-			return retval;
+ 		break;
+ 	}
+ 
+-	retval = scsi_ioctl(STp->device, cmd_in, p);
++	retval = scsi_ioctl(STp->device, STp->disk, file->f_mode, cmd_in, p);
+ 	if (!retval && cmd_in == SCSI_IOCTL_STOP_UNIT) {
+ 		/* unload */
+ 		STp->rew_at_close = 0;
+diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
+index cdb3ba3451e7..defbe8084eb8 100644
+--- a/include/scsi/scsi_ioctl.h
++++ b/include/scsi/scsi_ioctl.h
+@@ -18,6 +18,7 @@
+ 
+ #ifdef __KERNEL__
+ 
++struct gendisk;
+ struct scsi_device;
+ 
+ /*
+@@ -43,7 +44,8 @@ typedef struct scsi_fctargaddress {
+ 
+ int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
+ 		int cmd, bool ndelay);
+-extern int scsi_ioctl(struct scsi_device *, int, void __user *);
++int scsi_ioctl(struct scsi_device *sdev, struct gendisk *disk, fmode_t mode,
++		int cmd, void __user *arg);
+ 
+ #endif /* __KERNEL__ */
+ #endif /* _SCSI_IOCTL_H */
 -- 
 2.30.2
 
