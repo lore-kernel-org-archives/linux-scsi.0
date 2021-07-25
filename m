@@ -7,78 +7,78 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB58C4338F
-	for <linux-scsi@archiver.kernel.org>; Sun, 25 Jul 2021 12:40:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD7D7C4338F
+	for <linux-scsi@archiver.kernel.org>; Sun, 25 Jul 2021 13:20:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF75960F35
-	for <linux-scsi@archiver.kernel.org>; Sun, 25 Jul 2021 12:40:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9631860E09
+	for <linux-scsi@archiver.kernel.org>; Sun, 25 Jul 2021 13:20:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230284AbhGYMAK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 25 Jul 2021 08:00:10 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:16723 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230264AbhGYMAK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Jul 2021 08:00:10 -0400
+        id S230356AbhGYMjw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 25 Jul 2021 08:39:52 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:12433 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230192AbhGYMjw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Jul 2021 08:39:52 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1627216841; x=1658752841;
+  t=1627219222; x=1658755222;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=g8PqeHkXh0kh4txCrrg51sHstFx6jMade3wXGDIja/w=;
-  b=pysiV0//+8YV9BF8mbMXup/ouDG36if+/lKS4bR42ULYb7z5ab2gtrZ5
-   VdXHfVjbsmFw/ncX1VUwzjEo5/ItYO7zxJdyP58YNRYx1w2sVl6nq+/KC
-   7X6DXXSGbAPgXweF/UN129+Cw8j9ifxyDaxWMLakcGLGg1ywA1lvCUA95
-   Tc8fuuBywC8Q5ucowPr3CxlA/62K5ZKJEjhrzUAKh6/iIaK2tcKKXOh1t
-   /RVfB5pBvS493XmxMncqpauGY5BFYJYLnu8sZOZpJHCDPhWkP4GNshiOy
-   CqY1xlF5FlSO5LG1m1yQb+l1D31jVgm4Vpyl7tnmyxgBTQq9zlOSdlV6i
-   w==;
+  bh=QILe7nH880Yfzlh0yxKjgUs5Swli9PcUvDBoAYO7lyg=;
+  b=r8ElOnwLvo3VE5J07iOwfaUCl+hQSw0ovTl216SKC8zSLadX40jS5hrW
+   siMaTWmd0A8HlKDAgO7eUlKRLFx4EKnTdi64x+ar0A2tu3bRqR6fH/8Ao
+   Iw6z7z/IqBVQDnOkv3ESiN1U/wn+vFXCnMfNdo0zExbOxqzqbrZ0JFNx6
+   tjkVv7wxpxgrOJ1LO0Lk1+1HKuAZmbwxBsSskAXXLHA2GbAd3+1tx2E3U
+   2lffN+b8q57tbPj7NB/Z4aQlbCIjAH/Dl6NuozLxvSlc09/gqCWoPFsKa
+   xADCafrGVTvWCj9BaA0pw3fn5tYhVKSpJHrEkauPSWutmRYTeSTV5uqe7
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.84,266,1620662400"; 
-   d="scan'208";a="176011889"
-Received: from mail-mw2nam12lp2044.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.44])
-  by ob1.hgst.iphmx.com with ESMTP; 25 Jul 2021 20:40:40 +0800
+   d="scan'208";a="279268690"
+Received: from mail-dm6nam10lp2104.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.104])
+  by ob1.hgst.iphmx.com with ESMTP; 25 Jul 2021 21:20:21 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=O5fVn1p5by8gWNGOXSMFRuubCrBypwn0I8lBEOs+UiVfMmFQIW81cbrcLqnjF7/V8i2CCfEyQsMVqLPfCzR8AIJwD2RPvBF+mdUZappeX2mQm5yCISaEViEQ+XVEBwAfYNWgNpqPjl6OTx+cjAZ4GoV8CYr12Oblanqwju+FhlBLwvIqmInSPFMKCIHo3Nge7GYQVURz4KRONaXrlyHIEENCnnqr3Uix/+tzEPP/Re6nyT3qFar2LCxrIlfCswCaHNEgokBpQZejXwzx2jfPgwoh3dRmvXcBpBueBX89e6bowv18b7G+cfGEzvRkuwGY6vOhS+o2+tNSOA7bBwvY4A==
+ b=O71CuiPoTIvN8TR03/8wEupGtMqMVzUpbKUin4xo7wJZkqBs5i1+wlBDrY4rTn1NAS+gPYPMbaDhGmxYAoqJLv0oTDAOETpR/gsiwV8d1acvZlsBZ7R3+Kh3FR3u17tsD1eVThubwNkpQUOZjRPvZI5RW6xxtOQzvIjzOxS6phi3B+8ZvuGrkXajCHPDR1I2HFUgX4C5+UhapIqk3EsLDLvG6sfZUSEEhiJ40QlZ4pu3RCgQ01r9BFJdys5oDuR3oJntGaaVK1txcNSwJZSy5dvo876py2lzrpCZH/RU+MEzUN+aQ2XqoWUXlwxqzkY6AJHBWAB+JQ6ovQAa354T7w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CWygvP3nA9RAFFsUyWr0wOnW1ydrjFTJgRK2SRxD2l0=;
- b=D0ldZ4/yOE3KYKrEdBciEpqvmz5fhh09EAPJG9YjJEw3PURASC+AjBUSJcrlzpNJ4XzfhKMpUJ14GPps8Ydfk79TDFG0OnVhLMmAYKj1KSUaKOaflU8F9O1WHm9C1Cd+oLIeYTypoa9L5YO6mjkbvoDJFlmAiyigF62IZt06lCRXN88ZUNmYs70K2k9s5FAb6pBi5/xe5ulTrBnl3PyULpRYvcYGx8l94rQNt8WRcdTHfZQzh5XQP240A1c4uzDxu7ACkUZ0wOnxDBNTohrsRUMwWfPjNaJ85xC7dBkn0gdL8fgxRpXlXBkrTKX8Dz/e2hkTyHAOTGZXgTp1jHKkDQ==
+ bh=Inv6yA6VnyAe7PryaiFHBqiTowtrRqUqbGEqh649pnE=;
+ b=MMY5ZB71NDuPKTht/2Sy1milS2WKdPEjt62/Za/6ffhMVOQ7wZNUXTA35z5tooaoBhnnwq0Glupj8FT7VU2Bt1nt7r676vGynLLXf1N0gk+PHiNq3p1GD1c4sfFZcDgTPbJcqIQKTzLiL+FrHidyYZVEObAk4YZzhbI4vp7ujQvTeD8pm5bN2MNosF4io/HFml1ZMuXGrSyXgUPceE7emPAByfe2VSqMVokfNUuiRihV/QbSm9UoKA4S3fsQ6Sh9z0wIyx43N+qDY8fknenoJDF9cyVJ7O7kc+7GMFRj8N3O+3auUgJWakWzrqafg4JDt4fAwnnmcxEbP4+f6x+B4Q==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CWygvP3nA9RAFFsUyWr0wOnW1ydrjFTJgRK2SRxD2l0=;
- b=qNPIcOaXzdko9meHckbw07W8k1O2DIPhKvYIuqZEYDXi+Dcim8WaYORMNoNho03n7jZ/TDAFcc1ywPDAA5AGyC274xbnvFtS1askoHae9+o3E0MmZQIc2eKQ/o1MM62ZNexhfWRJT+3h2jM5crZhVLMiz7t9RBhOt3RvJCqnWwo=
+ bh=Inv6yA6VnyAe7PryaiFHBqiTowtrRqUqbGEqh649pnE=;
+ b=0E0aAgCJkdW4zX4vU8cvbvzda6ua9NGCIbbIBzJxWGXGeGDJX1UXOEGAnYz9fm8qCbC8VyyzBGIwnM5SI2skv7pmYuWQVe5Mmt6rARL4/ZbfIW4NZok/gqfE6SSnm7kovKiupm1SFYIGT3iA9SzvgiYO/T5QvYwKPn+JlCfsebs=
 Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB5019.namprd04.prod.outlook.com (2603:10b6:5:11::32) with Microsoft
+ DM6PR04MB4844.namprd04.prod.outlook.com (2603:10b6:5:1f::33) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4352.29; Sun, 25 Jul 2021 12:40:35 +0000
+ 15.20.4352.29; Sun, 25 Jul 2021 13:20:20 +0000
 Received: from DM6PR04MB6575.namprd04.prod.outlook.com
  ([fe80::ccfd:eb59:ccfe:66e4]) by DM6PR04MB6575.namprd04.prod.outlook.com
  ([fe80::ccfd:eb59:ccfe:66e4%7]) with mapi id 15.20.4352.031; Sun, 25 Jul 2021
- 12:40:35 +0000
+ 13:20:20 +0000
 From:   Avri Altman <Avri.Altman@wdc.com>
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
 CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Can Guo <cang@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-Subject: RE: [PATCH v3 01/18] scsi: ufs: Fix memory corruption by
- ufshcd_read_desc_param()
-Thread-Topic: [PATCH v3 01/18] scsi: ufs: Fix memory corruption by
- ufshcd_read_desc_param()
-Thread-Index: AQHXfqqLiK9Pr9p6n0q0qB1K4QofmatTpgPg
-Date:   Sun, 25 Jul 2021 12:40:34 +0000
-Message-ID: <DM6PR04MB657567852F54BBC6BAEF288DFCE79@DM6PR04MB6575.namprd04.prod.outlook.com>
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>
+Subject: RE: [PATCH v3 09/18] scsi: ufs: Remove several wmb() calls
+Thread-Topic: [PATCH v3 09/18] scsi: ufs: Remove several wmb() calls
+Thread-Index: AQHXfqqiP0mxlZQv4EadUI/0R11BX6tTsb2A
+Date:   Sun, 25 Jul 2021 13:20:19 +0000
+Message-ID: <DM6PR04MB6575F9CC44AFA830C4442FB0FCE79@DM6PR04MB6575.namprd04.prod.outlook.com>
 References: <20210722033439.26550-1-bvanassche@acm.org>
- <20210722033439.26550-2-bvanassche@acm.org>
-In-Reply-To: <20210722033439.26550-2-bvanassche@acm.org>
+ <20210722033439.26550-10-bvanassche@acm.org>
+In-Reply-To: <20210722033439.26550-10-bvanassche@acm.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -86,40 +86,40 @@ X-MS-TNEF-Correlator:
 authentication-results: acm.org; dkim=none (message not signed)
  header.d=none;acm.org; dmarc=none action=none header.from=wdc.com;
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 0dbe8c86-421d-4300-a0ac-08d94f696620
-x-ms-traffictypediagnostic: DM6PR04MB5019:
-x-microsoft-antispam-prvs: <DM6PR04MB501974C1166A36821A24598FFCE79@DM6PR04MB5019.namprd04.prod.outlook.com>
+x-ms-office365-filtering-correlation-id: 8ce21ccd-65a8-4fc4-8584-08d94f6ef396
+x-ms-traffictypediagnostic: DM6PR04MB4844:
+x-microsoft-antispam-prvs: <DM6PR04MB48446ED42321BC4872267C61FCE79@DM6PR04MB4844.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
+x-ms-oob-tlc-oobclassifiers: OLM:5236;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: QXX6j5boyrv14BYkav/hLHq8jXlc8XRgXLky/sLUe5icNhjBT5JGVwUWL5mOaESSFUNW3PqQSS9BhBJWYNC2L0aph8aQdwS/Idb/0WDe9UJvTkDDQ38eK7BdPfmKtQidS1oNnNOqznLQIzXbhoIpPLqtZmNtc0f49gkIhBy3Ov+pmMfV1QJtczAdB+DEIBl2w2q1QCj8h0CFXZPdHjopHdWv7lMWQARIOzS49JJNslbi479okp2nE2Bx2T+G2C3+f82dGu6khQOPmxDQ+qdjcPL06Aw0Jv2w7Cvtx90Spdz/NWoGOgw2izAE4NQYv7tWKAuXJ07vIgnYVw+Ym3m/+tAXM0nHyJgvmy1uw+ikdUvcS0n8Bb72ySF+z+ury9Uv9m0o0fHaunbzGNuBlIw9VxBA6oBe/PGU3wgnu6SHwbfa4mOL4HQyXNs5BMj9VRXUwhmV/LoT0FrkUV1mMUt58rozgxW8ll2DBb5UzCqSVsjHpqp6vdXavy+e4YWSEpVmQxhB1pm5w+MdZMsbgY6HGMOEF5Yns5BmuXiqYddYzFtnAP2496NgPhvJglRafCMd1qmKdB27UBmyd/Q+ckr50nIPS057x8NT5WgqjCPLa8SyB/EGIbU4vhJren8s0E+f063IV+D0dsM1lP/A/wAD5RrCxZuHHrJnXjyKknMN4WuOLZ8SPaLO7hj8DneO8RlEmEG2qSu+itL7y9Hzh29hsA==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(376002)(346002)(366004)(136003)(39860400002)(64756008)(66946007)(33656002)(66476007)(66556008)(38100700002)(4326008)(54906003)(76116006)(122000001)(8936002)(110136005)(186003)(86362001)(83380400001)(5660300002)(66446008)(26005)(316002)(2906002)(71200400001)(8676002)(6506007)(478600001)(9686003)(7696005)(55016002)(52536014)(38070700004);DIR:OUT;SFP:1102;
+x-microsoft-antispam-message-info: +skclTMljtH7zjSVZFGYOJGo0sVvoes7jYx5uDaLR0ya7yGi+VEzvy19mGhmDmRlDxNbGp/d5SofmtJQL18qwr79Fuv4j23wblZDaqWR1F2yaKCcK+ODF0eIc8Qq+8EWw6hP0S5CMBaVA5qFtD81wfKX7dUnG06V4iEkwNvZiyhH5OpQZaL3KjRIWOecxn2ygF+ljpTVCRN8iuCfPjeoalft2s+10pUL9JPV29YARcbCQG8vvbf3IJBiSDVAJ01FPvL55OH8t5SEiW3biS7uCiENj9GlWbzHA8a+bCh+6px6v73iofh99uHaKc6NtfcemUls4yvX/I9LYAv8M5zcnSxmOgvcDWLDwrBCbsFm2NvmI97Jm8t53CXoNU8j/4lw2e2TKT4AGVXN0noVXBfqDGG8JNHprnCgQFpnIXE1F19hkk+CC6ceFcybuS3mEeyG3Xv6hI4x568gccsAdGlHfJB2XBGDZHOHjzzAdmn9Bo6/SvDRMBJ5lDs9hMtJmh6Yh0Yi05T0kMQ8YYaC6Utg9CHYDMm/7RcWfg1eOck+k2JT+Yf4KK75ufpZAVNtuk0MBTL9s496YAV3xrG92p2XrxOghd2fjeOH62TkAk/Wds9JcxPGrKY2gIQ/gO6cUVpwg+vcYO/rCdI6IyohwHELXTbxQf7I9TEolX9ll8y/05xOvx6ymOCdJewTS0N/ePz5JWB6aw8sKTc83SQLxDik7Q==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(136003)(376002)(366004)(346002)(396003)(122000001)(33656002)(38100700002)(64756008)(66476007)(66946007)(66556008)(86362001)(52536014)(76116006)(5660300002)(7416002)(66446008)(26005)(2906002)(83380400001)(71200400001)(186003)(9686003)(4326008)(478600001)(110136005)(7696005)(316002)(8936002)(8676002)(54906003)(55016002)(6506007)(38070700004);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?KrXYFo2xZzIDbA3HI5AJt0u+fkGaTLPtb4V8OY+nhRFnZsIIpjlHykRWuJkC?=
- =?us-ascii?Q?sZ1bVWSQvaGQGx+NUMPTIbyl8pIo2WIlIBL1ScQWyBFr9HsRyg4YpbF8T2DE?=
- =?us-ascii?Q?7JnlXIlCpD1lVsAuMluhTXASM21hyF7+MDsVtnpn+x8b1M0Mlq8soQMYS0Br?=
- =?us-ascii?Q?Krxmbcx/V4pybpFIFyyoj4dzoCiBfNFq/pGcBd+iW53QrRs5kkXIu4q3oOW8?=
- =?us-ascii?Q?Gl4JSvOWaiBInE17qScExIaEjryPZ24bBbpih73Zk3TvPaBi0gW9b3cdPDVG?=
- =?us-ascii?Q?5H+UFdQgoQWb1FBPEasWaBuJ5UG7JTPIDoTASr8fmdcBw7bLua4XPKoyXVvY?=
- =?us-ascii?Q?cGdPOIDXYDdYSCzLCIATH3+wRJ6E96jgiPt8E/KoGQbhDNYjUThhM6JKw1yl?=
- =?us-ascii?Q?N71F5I6+Ou+en7vfhKw2JjDe68EF9n4vDeEXmIhF98gIQJGWMmtocEJcLO5w?=
- =?us-ascii?Q?P1q8Om6txcKpEiq3V07lNSCem/ajqbip3y95hnSTOnM7XvcHuKMccIWak+aY?=
- =?us-ascii?Q?sfQaYNllnR7IsZmQW/rufcLglnHBwJVWueb7ot5XyoNf+KfDeN1MF9QoRWtQ?=
- =?us-ascii?Q?RPjKmE4SR4prSmaZ+zz0e2SWiiyNSx4dles2kVexvA7Ngo8QNYYQAR1FtDCC?=
- =?us-ascii?Q?4qGzgduwduiYgw4FT9Rif2rAQqh3NZbJGc+sL5WeskfrJlmOeu9A+rPz/VoR?=
- =?us-ascii?Q?x2KpxQPiKZ422pD/ezHqNyM5+tisAo9YnnKoTxq3ZQdfIWCQjEAetZ3DmICh?=
- =?us-ascii?Q?1BM5uLS/StNwNnIQRzWXg2RpKCk/BvRH9nLsintB9C6M7Lq+ddgjbexbpA3m?=
- =?us-ascii?Q?mUexTtnUQEiOwhH40p9oUeAy0poIeRmISt8GuleGs2rlIHFl4xcQA/zeRlJ6?=
- =?us-ascii?Q?lptYFP1mCCi/rM9eeEntsmgDfxJYTSdvZrRHJpO/dD/cEY73biClQ6ckitm9?=
- =?us-ascii?Q?YoQpN+Uux9JkLt0l4AChGzzSwYWUP/sNkZLRTtz+jLIDsp19RYBhJPovHoAD?=
- =?us-ascii?Q?ZD7QjrzrAEsFeVPyXtdzmOvhBigccx95rBvwL3MlOHi6r6OaWB09Y+Z8VyZz?=
- =?us-ascii?Q?MUE/5kO+MtyQcz+WrDJAlwaMUWguWfvaN113s9F8WpbMshGrya2wNkYilV/o?=
- =?us-ascii?Q?0FA1RFtXseqyaxkz+zOEUn+IPZqqGMopJkajP39Dw0qftSgtRzYmiGapaQ5E?=
- =?us-ascii?Q?XsB8YQ2IYCtEbZM1/3cLb+eXnzdXZ+mHIqTVpxVs6grzvFe+Rk0sNZmICdAn?=
- =?us-ascii?Q?DBX3JFwyj6UN9cR5DddJhfDKA99zjd/HQrQhVho1nAwynIZ3/WMO0Q+19nKC?=
- =?us-ascii?Q?RFg=3D?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Iak4nxe47CWAM9je7A8tOx84PqMOGr0GhdY0mijXvZuaAqrlowYJV/0qV0PB?=
+ =?us-ascii?Q?vZprHEeFSoVaZmNprxtO6tu/2UTHMSw8FRIA1qEYxTBDJvKlj/KOFinwOS8R?=
+ =?us-ascii?Q?b+1fztAtEON8m/TdkyMlCCSJVeYOvDjF2i3Fwksnk9IAjWpBwRMh80YhD1VA?=
+ =?us-ascii?Q?YhIOiwzz4xFzOXELuuPwkz+vZICF+nQfW3NatCrLbMbFnlmT6JdPIsic/lX8?=
+ =?us-ascii?Q?rHB7sGM13gqgDgG2UjiQrE+4+FLRdbm25l6yFWLZDvXIj9y5uROG9cSaWxOo?=
+ =?us-ascii?Q?QZM6o4iVOGyx5lxZieIugrCLmit0uL0HS8uv7GacCJg50ls/6mgeiwLqNB1I?=
+ =?us-ascii?Q?OYkkomOa7+H89Mdmd2WZCvHxc+5kp7PkTmgJMRw8cbY8lDlFaR6d9XkfUdZU?=
+ =?us-ascii?Q?vnmiIrUjAEp+9Ua5zuwpNartyrrhYGvnhWmMeCXbH+l9rTwWvsWTB9rIDsk3?=
+ =?us-ascii?Q?rPeYXKhG/KsrxlIt1fasOcJ6paBKAIHc1oDuW68ptwyz3DexKZS42ZpdmMP4?=
+ =?us-ascii?Q?S91M5bQkiOvLIFCT4gLtu3y+wZM7rne4JAu6vWqupWfijlMAgj1Ue/vugM9K?=
+ =?us-ascii?Q?JKq84dXrrO2MV5KGK9VUxaUxsUwBEIhw7CWUMCzooQWX5evC7OZMWVQ0UbYa?=
+ =?us-ascii?Q?phctSG+MRQvvvZUZwegvqTRNj5T0t0cUGeD78dwSXbDm56+OT4Yuu91dBuzM?=
+ =?us-ascii?Q?x4MTSdV1mDKBiBkbuB+JuHlDN7qx4XyFKCGnU3D7uU5pWCc08AN+KtHl7OGU?=
+ =?us-ascii?Q?PFq/qjs1B0JzVHpEyqR6qOjE9S1ZB8iF8pvSi3UZmnSsFfgeTTBcQ3iJ/b3T?=
+ =?us-ascii?Q?s7JFbimC2JuhRBZgGI5167zOsWao2+3/G7ikrPsMnJtLBT5UOLpZQD61NJjv?=
+ =?us-ascii?Q?g5GHK28WiGGf/VAjNtkXsPcDihzD5va1QWnOMp3+9/egzyxbNnk7m5YtPpFE?=
+ =?us-ascii?Q?deI3Hw54PnpqNril6RQzePWwNaWg3SRMBwi10gKVhAuBKTBwkFzJZhUCL8s2?=
+ =?us-ascii?Q?6Ee5Z3dFWbMcgGbxkVo0fc30Qh/jYTRVVGUd5/Imvipu/D0yaTq++RZgfhPa?=
+ =?us-ascii?Q?ouEJxQZJ1r5m4Al3czTlARqqUKe2KpEGwJlpwGBaGc+NU5ywQA1X1BchAOfM?=
+ =?us-ascii?Q?q5Fu8+j/Uy4if3dR1F8Q2IDq67dJmSlPwTC/5qGXViOQ2kodDQm64lbOBI3/?=
+ =?us-ascii?Q?tNCSFteepaFHkb4F7FGJY6lk2wVguBOzjoog8UEhaRcqPDH6zRZdDNVc4YD+?=
+ =?us-ascii?Q?sDsixTHGOjmJD3NkXlzTxZoShdSJrdSDggkDY48swnNFazrlVBB5JbXXeX3r?=
+ =?us-ascii?Q?4QW9GPF5nYMFo0Xs3ooyFOHo?=
 x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
@@ -127,62 +127,113 @@ MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0dbe8c86-421d-4300-a0ac-08d94f696620
-X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jul 2021 12:40:34.7883
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8ce21ccd-65a8-4fc4-8584-08d94f6ef396
+X-MS-Exchange-CrossTenant-originalarrivaltime: 25 Jul 2021 13:20:20.0106
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 5JcIZJFRk7kQZnLexhsucsxb3x+zQwYzcy2mnIZT7jdLxWlyRd5zI41KpkIzzhwMkirbm8CHrvSu1ERFcIRrKA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB5019
+X-MS-Exchange-CrossTenant-userprincipalname: 8SFNeQxcoT3iWy/WDgV3VPvyhaummzGQ5nL1s1xTmhHSy9hCZ6RDoHyTmBLpkt543k2feRUcyy4yvFpbEY1zow==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB4844
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+=20
+> From arch/arm/include/asm/io.h
 >=20
-> If param_offset > buff_len then the memcpy() statement in
-> ufshcd_read_desc_param() corrupts memory since it copies
-> 256 + buff_len - param_offset bytes into a buffer with size buff_len.
-> Since param_offset < 256 this results in writing past the bound of the ou=
-tput
-> buffer.
+>   #define __iowmb() wmb()
+>   [ ... ]
+>   #define writel(v,c) ({ __iowmb(); writel_relaxed(v,c); })
 >=20
-> Fixes: cbe193f6f093 ("scsi: ufs: Fix potential NULL pointer access during
-> memcpy")
+> From Documentation/memory-barriers.txt: "Note that, when using writel(),
+> a
+> prior wmb() is not needed to guarantee that the cache coherent memory
+> writes have completed before writing to the MMIO region."
+>=20
+> In other words, calling wmb() before writel() is not necessary. Hence
+> remove the wmb() calls that precede a writel() call. Remove the wmb()
+> calls that precede a ufshcd_send_command() call since the latter function
+> uses writel(). Remove the wmb() call from ufshcd_wait_for_dev_cmd()
+> since the following chain of events guarantees that the CPU will see
+> up-to-date LRB values:
+> * UFS controller writes to host memory.
+> * UFS controller posts completion interrupt after the memory writes from
+>   the previous step are visible to the CPU.
+> * complete(hba->dev_cmd.complete) is called from the UFS interrupt
+> handler.
+> * The wait_for_completion(hba->dev_cmd.complete) call in
+>   ufshcd_wait_for_dev_cmd() returns.
+>=20
+> Cc: Adrian Hunter <adrian.hunter@intel.com>
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Can Guo <cang@codeaurora.org>
+> Cc: Asutosh Das <asutoshd@codeaurora.org>
+> Cc: Avri Altman <avri.altman@wdc.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Tested-by: Avri altman <avri.altman@wdc.com>
 
-Your fix is fine IMO.
-However, the root cause of this weird bug is that rpmb has its own unit des=
-criptor,
-But ufshcd_map_desc_id_to_length doesn't accept index as argument, and retu=
-rned 0x2d instead of 0x23, as it should.
 
-Thanks,
-Avri
 > ---
->  drivers/scsi/ufs/ufshcd.c | 8 +++++---
->  1 file changed, 5 insertions(+), 3 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 11 -----------
+>  1 file changed, 11 deletions(-)
 >=20
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
-> 064a44e628d6..6c251afe65f9 100644
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index f467630be7df..d1c3a984d803 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3418,9 +3418,11 @@ int ufshcd_read_desc_param(struct ufs_hba
-> *hba,
->=20
->         if (is_kmalloc) {
->                 /* Make sure we don't copy more data than available */
-> -               if (param_offset + param_size > buff_len)
-> -                       param_size =3D buff_len - param_offset;
-> -               memcpy(param_read_buf, &desc_buf[param_offset], param_siz=
-e);
-> +               if (param_offset >=3D buff_len)
-> +                       ret =3D -EINVAL;
-> +               else
-> +                       memcpy(param_read_buf, &desc_buf[param_offset],
-> +                              min_t(u32, param_size, buff_len -
-> + param_offset));
+> @@ -2769,8 +2769,6 @@ static int ufshcd_queuecommand(struct Scsi_Host
+> *host, struct scsi_cmnd *cmd)
+>                 ufshcd_release(hba);
+>                 goto out;
 >         }
+> -       /* Make sure descriptors are ready before ringing the doorbell */
+> -       wmb();
+>=20
+>         ufshcd_send_command(hba, tag);
 >  out:
->         if (is_kmalloc)
+> @@ -2880,8 +2878,6 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba
+> *hba,
+>         time_left =3D wait_for_completion_timeout(hba->dev_cmd.complete,
+>                         msecs_to_jiffies(max_timeout));
+>=20
+> -       /* Make sure descriptors are ready before ringing the doorbell */
+> -       wmb();
+>         spin_lock_irqsave(hba->host->host_lock, flags);
+>         hba->dev_cmd.complete =3D NULL;
+>         if (likely(time_left)) {
+> @@ -2960,8 +2956,6 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba
+> *hba,
+>         hba->dev_cmd.complete =3D &wait;
+>=20
+>         ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp-
+> >ucd_req_ptr);
+> -       /* Make sure descriptors are ready before ringing the doorbell */
+> -       wmb();
+>=20
+>         ufshcd_send_command(hba, tag);
+>         err =3D ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+> @@ -6521,9 +6515,6 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba
+> *hba,
+>         /* send command to the controller */
+>         __set_bit(task_tag, &hba->outstanding_tasks);
+>=20
+> -       /* Make sure descriptors are ready before ringing the task doorbe=
+ll */
+> -       wmb();
+> -
+>         ufshcd_writel(hba, 1 << task_tag, REG_UTP_TASK_REQ_DOOR_BELL);
+>         /* Make sure that doorbell is committed immediately */
+>         wmb();
+> @@ -6695,8 +6686,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct
+> ufs_hba *hba,
+>         hba->dev_cmd.complete =3D &wait;
+>=20
+>         ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp-
+> >ucd_req_ptr);
+> -       /* Make sure descriptors are ready before ringing the doorbell */
+> -       wmb();
+>=20
+>         ufshcd_send_command(hba, tag);
+>         /*
