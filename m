@@ -2,91 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42597C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 11:49:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 88CFBC432BE
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 15:17:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2029D60F37
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 11:49:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EA4760F51
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 15:17:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233591AbhGZLJC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jul 2021 07:09:02 -0400
-Received: from smtpbg702.qq.com ([203.205.195.102]:55711 "EHLO
-        smtpproxy21.qq.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233570AbhGZLJC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2021 07:09:02 -0400
-X-Greylist: delayed 166106 seconds by postgrey-1.27 at vger.kernel.org; Mon, 26 Jul 2021 07:09:01 EDT
-X-QQ-mid: bizesmtp45t1627300161t2s8pii1
-Received: from localhost.localdomain (unknown [58.240.82.166])
-        by esmtp6.qq.com (ESMTP) with 
-        id ; Mon, 26 Jul 2021 19:49:14 +0800 (CST)
-X-QQ-SSF: 01400000008000103000B00B0000000
-X-QQ-FEAT: jIuKqQTmtbxgJRL5evlLzzhIfzh9cGgegIfQuWljjhTp3gZaLojByFuQkd8/r
-        QoEnU2NESUFgX5AEhatsPcpPQbE7/4tg/ODcTKZ2+vTA24kf2ksX0Lvh5XQwFGKEhM6bfdd
-        WlfiYDrUrV2GYNO0DMMOIBG7ksfcGd/MoGqcpwKxyWoOowlwW30K4Um078CZQZphfYCFzfZ
-        Rt0VIdhcj/uDCCWw/u5GYEtvk7/EZudMw/ts9fnnK2cbQck3l5A0aCao/sqLwXBsdEVpmg/
-        S6T7VPUaLZdrJb2GAcXWig63ma0S1KpxlKtOyoCbpzFizVsZscTo/2bTKkMMv7YL3ihkUKj
-        WmqdRVHg2LutzPIzoKRxCAfQf+oPw==
-X-QQ-GoodBg: 2
-From:   Li Manyi <limanyi@uniontech.com>
-To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Li Manyi <limanyi@uniontech.com>
-Subject: [PATCH] scsi: sr: Return correct event when media event code is 3
-Date:   Mon, 26 Jul 2021 19:49:13 +0800
-Message-Id: <20210726114913.6760-1-limanyi@uniontech.com>
-X-Mailer: git-send-email 2.20.1
+        id S234983AbhGZOgz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jul 2021 10:36:55 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:44206 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S234941AbhGZOgy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Jul 2021 10:36:54 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 1E06A46169;
+        Mon, 26 Jul 2021 15:17:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received; s=mta-01; t=1627312640; x=
+        1629127041; bh=mwkYi8+lEBsrM4/D2o1xt/YV+mLTsFqLxpB6vBgpD/A=; b=W
+        fpjCT6I1odg+2GL1wfW2M7GirEFMSkB5ErnLLIFdgoOH5UZH/SuXifA47DSxnM8q
+        /H73SB5BvUOV1lsFMzBFVAj2RhMk45rKPDbduJkiVvooQ+GOGB7x+eoZwpocWAYR
+        zKmT61EYnb1HAh5dzN/eVoD18vEL+drbP6p2ubSIqg=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id AKMVHgCWRvVt; Mon, 26 Jul 2021 18:17:20 +0300 (MSK)
+Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 57531412C6;
+        Mon, 26 Jul 2021 18:17:19 +0300 (MSK)
+Received: from yadro.com (10.199.0.6) by T-EXCH-04.corp.yadro.com
+ (172.17.100.104) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 26
+ Jul 2021 18:17:18 +0300
+From:   Sergey Samoylenko <s.samoylenko@yadro.com>
+To:     <martin.petersen@oracle.com>, <michael.christie@oracle.com>,
+        <ddiss@suse.de>, <bvanassche@acm.org>,
+        <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Sergey Samoylenko <s.samoylenko@yadro.com>
+Subject: [v2 0/2] target: core: Fix sense key for invalid XCOPY request
+Date:   Mon, 26 Jul 2021 18:16:44 +0300
+Message-ID: <20210726151646.32631-1-s.samoylenko@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:uniontech.com:qybgforeign:qybgforeign2
-X-QQ-Bgrelay: 1
+Content-Type: text/plain
+X-Originating-IP: [10.199.0.6]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-04.corp.yadro.com (172.17.100.104)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-the description for media event code 0: NoChg
-Media status is unchanged.
+EXTENDED COPY tests in libiscsi [1] show that TCM doesn't
+follow SPC4 when detects invalid parameters in a XCOPY
+command or IO errors. The replies from TCM contain wrong sense
+key or ASCQ for incorrect request.
 
-the description for media event code 1: EjectRequest
-The Drive has received a request from the user (usually through a
-mechanical switch on the Drive) to eject the specified slot or media.
+The series fixes the following tests from libiscsi:
 
-the description for media event code 2: NewMedia
-The specified slot (or the Drive) has received new media, and is
-ready to access it.
+  SCSI.ExtendedCopy.DescrType
+  SCSI.ExtendedCopy.DescrLimits
+  SCSI.ExtendedCopy.ParamHdr
+  SCSI.ExtendedCopy.ValidSegDescr
+  SCSI.ExtendedCopy.ValidTgtDescr
 
-the description for media event code 3: MediaRemoval
-The media has been removed from the specified slot, and the
-Drive is unable to access the media without user intervention.
-This applies to media changers only.
+1. https://github.com/sahlberg/libiscsi
 
-fix bug: https://bugzilla.kernel.org/show_bug.cgi?id=213759
+Sergey Samoylenko (2):
+  target: allows backend drivers to fail with specific sense codes
+  target: core: Fix sense key for invalid XCOPY request
 
-Signed-off-by: Li Manyi <limanyi@uniontech.com>
----
- drivers/scsi/sr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_transport.c | 21 ++++++++++++++++++---
+ drivers/target/target_core_xcopy.c     | 26 +++++++++++++++-----------
+ include/target/target_core_backend.h   |  1 +
+ include/target/target_core_base.h      |  2 ++
+ 4 files changed, 36 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 94c254e9012e..a6d3ac0a6cbc 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -221,7 +221,7 @@ static unsigned int sr_get_events(struct scsi_device *sdev)
- 	else if (med->media_event_code == 2)
- 		return DISK_EVENT_MEDIA_CHANGE;
- 	else if (med->media_event_code == 3)
--		return DISK_EVENT_EJECT_REQUEST;
-+		return DISK_EVENT_MEDIA_CHANGE;
- 	return 0;
- }
- 
 -- 
-2.20.1
-
-
+2.25.1
 
