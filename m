@@ -2,145 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98EF8C432BE
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 15:17:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FBB8C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 17:59:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7B2DE60F59
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 15:17:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 017FD60F6D
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 17:59:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235013AbhGZOhG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jul 2021 10:37:06 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:44238 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S234941AbhGZOhE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Jul 2021 10:37:04 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 452BC48EBC;
-        Mon, 26 Jul 2021 15:17:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received; s=mta-01; t=
-        1627312651; x=1629127052; bh=PXbKZB+ReRYrdxv/kfaQPbo6yUy4XvDW665
-        ytPV6Ndk=; b=K8mQcHwqd7BmkbqwY+swmZlseathCbq8fvSe+acpoS3fsCfKzhE
-        vjhgBVAUkakbkmuD2EfRVDhJqWIHjeCjH3dfj5vBYprVapf9xFSyF5xZTaLP9wFe
-        ifujsGp81UZK+0qmj3NWLXvfrs6A31YbdpiOIb6hL8XSEbU1JJu4tx40=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 8wUCBJ6FAn81; Mon, 26 Jul 2021 18:17:31 +0300 (MSK)
-Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 057ED412C6;
-        Mon, 26 Jul 2021 18:17:31 +0300 (MSK)
-Received: from yadro.com (10.199.0.6) by T-EXCH-04.corp.yadro.com
- (172.17.100.104) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 26
- Jul 2021 18:17:30 +0300
-From:   Sergey Samoylenko <s.samoylenko@yadro.com>
-To:     <martin.petersen@oracle.com>, <michael.christie@oracle.com>,
-        <ddiss@suse.de>, <bvanassche@acm.org>,
-        <target-devel@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        Sergey Samoylenko <s.samoylenko@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Konstantin Shelekhin <k.shelekhin@yadro.com>
-Subject: [v2 2/2] target: core: Fix sense key for invalid XCOPY request
-Date:   Mon, 26 Jul 2021 18:16:46 +0300
-Message-ID: <20210726151646.32631-3-s.samoylenko@yadro.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210726151646.32631-1-s.samoylenko@yadro.com>
-References: <20210726151646.32631-1-s.samoylenko@yadro.com>
+        id S231570AbhGZRTP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jul 2021 13:19:15 -0400
+Received: from mail-pj1-f45.google.com ([209.85.216.45]:36502 "EHLO
+        mail-pj1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230488AbhGZRTP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2021 13:19:15 -0400
+Received: by mail-pj1-f45.google.com with SMTP id ds11-20020a17090b08cbb0290172f971883bso86843pjb.1;
+        Mon, 26 Jul 2021 10:59:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=3Cku6Rze8FYvo3mRLiCQNQ614ck9Z1LgtQwmHqzhZnQ=;
+        b=Oyh9YQRUeDmPzj5Mahvl5C4l0NDUBm/YL3ccY4lIUfuoF1/sxJFX8E7smDL9x1oIHy
+         gD0uYYFLvAO8c/GVug7hRohErDia17IijOf8sdS5Nit9I52E4i43cIExHVVkJb1GGSFY
+         AfpeyR/F5MA3wmMy+7SO0oJo+aKmFE1Zr/dKGhi2wz23hu1hFLlI/g/NuxK1pgxxctds
+         zQIrPikFwNjwJ7w9W8r8XPXOoJqKPtzWxchG03WrOaM4tDGhPuNNuZkaLbJ8XTfpGXx/
+         AIfmJkMJSj2DFFHgoG5QrSGCSIbFqSU2nNJA+EPgWujtcr9NDNAkT4G0sF/LX5hqM1UJ
+         tl1w==
+X-Gm-Message-State: AOAM531Cu0Pltpu8KYYovU7B+/F555svcDG3oGrE8Nisj9jhGItGxG7F
+        1E6Vptk4mdx79otrEjkMiI+Ub/Ef0xJTmS8q
+X-Google-Smtp-Source: ABdhPJyqqdSMxLUKWTrIpCwWEiv2aqujjYIwSwGKXgw8gZKdcN1sIWvgYSJj/i0IHVYwbMPLp9jRgA==
+X-Received: by 2002:a17:90a:f296:: with SMTP id fs22mr172129pjb.155.1627322383125;
+        Mon, 26 Jul 2021 10:59:43 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:6048:349e:fe7d:d8c7])
+        by smtp.gmail.com with ESMTPSA id a13sm362007pgt.58.2021.07.26.10.59.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 26 Jul 2021 10:59:42 -0700 (PDT)
+Subject: Re: [PATCH -next] scsi: ufs: fix build warning without CONFIG_PM
+To:     YueHaibing <yuehaibing@huawei.com>, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20210611130601.34336-1-yuehaibing@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <99c99d97-5849-cf40-709b-aebe53b80ce3@acm.org>
+Date:   Mon, 26 Jul 2021 10:59:41 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
+In-Reply-To: <20210611130601.34336-1-yuehaibing@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.199.0.6]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-04.corp.yadro.com (172.17.100.104)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-TCM fails to pass the following tests in libiscsi:
+On 6/11/21 6:06 AM, YueHaibing wrote:
+> drivers/scsi/ufs/ufshcd.c:9770:12: warning: ‘ufshcd_rpmb_resume’ defined but not used [-Wunused-function]
+>   static int ufshcd_rpmb_resume(struct device *dev)
+>              ^~~~~~~~~~~~~~~~~~
+> drivers/scsi/ufs/ufshcd.c:9037:12: warning: ‘ufshcd_wl_runtime_resume’ defined but not used [-Wunused-function]
+>   static int ufshcd_wl_runtime_resume(struct device *dev)
+>              ^~~~~~~~~~~~~~~~~~~~~~~~
+> drivers/scsi/ufs/ufshcd.c:9017:12: warning: ‘ufshcd_wl_runtime_suspend’ defined but not used [-Wunused-function]
+>   static int ufshcd_wl_runtime_suspend(struct device *dev)
+>              ^~~~~~~~~~~~~~~~~~~~~~~~~
+> 
+> Move it into #ifdef block to fix this.
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 4 +++-
+>   1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index b87ff68aa9aa..0c54589e186a 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -8926,6 +8926,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>   	return ret;
+>   }
+>   
+> +#ifdef CONFIG_PM_SLEEP
+>   static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>   {
+>   	int ret;
+> @@ -9053,7 +9054,6 @@ static int ufshcd_wl_runtime_resume(struct device *dev)
+>   	return ret;
+>   }
+>   
+> -#ifdef CONFIG_PM_SLEEP
+>   static int ufshcd_wl_suspend(struct device *dev)
+>   {
+>   	struct scsi_device *sdev = to_scsi_device(dev);
+> @@ -9766,6 +9766,7 @@ static inline int ufshcd_clear_rpmb_uac(struct ufs_hba *hba)
+>   	return ret;
+>   }
+>   
+> +#ifdef CONFIG_PM_SLEEP
+>   static int ufshcd_rpmb_resume(struct device *dev)
+>   {
+>   	struct ufs_hba *hba = wlun_dev_to_hba(dev);
+> @@ -9774,6 +9775,7 @@ static int ufshcd_rpmb_resume(struct device *dev)
+>   		ufshcd_clear_rpmb_uac(hba);
+>   	return 0;
+>   }
+> +#endif
+>   
+>   static const struct dev_pm_ops ufs_rpmb_pm_ops = {
+>   	SET_RUNTIME_PM_OPS(NULL, ufshcd_rpmb_resume, NULL)
 
-  SCSI.ExtendedCopy.DescrType
-  SCSI.ExtendedCopy.DescrLimits
-  SCSI.ExtendedCopy.ParamHdr
-  SCSI.ExtendedCopy.ValidSegDescr
-  SCSI.ExtendedCopy.ValidTgtDescr
+Hi YueHaibing,
 
-XCOPY always returns the same NOT READY sense key for all
-detected errors. It changes a sense key for invalid requests
-to ILLEGAL REQUEST sense key, for aborted transferring data
-(IO error and etc.) to COPY ABORTED.
+Can you take a look at 
+https://lore.kernel.org/linux-scsi/20210722033439.26550-1-bvanassche@acm.org/T/#m6e7a02fc79634b5b77cfb77849253ac41d021389? 
+I let the kernel robot verify that patch before I posted it on the 
+linux-scsi mailing list.
 
-Fixes: d877d7275be34ad ("target: Fix a deadlock between the XCOPY code and iSCSI session shutdown")
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Reviewed-by: Konstantin Shelekhin <k.shelekhin@yadro.com>
-Signed-off-by: Sergey Samoylenko <s.samoylenko@yadro.com>
----
- drivers/target/target_core_xcopy.c | 26 +++++++++++++++-----------
- 1 file changed, 15 insertions(+), 11 deletions(-)
+Thanks,
 
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 0f1319336f3e..64baf3e8c079 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -674,12 +674,16 @@ static void target_xcopy_do_work(struct work_struct *work)
- 	unsigned int max_sectors;
- 	int rc = 0;
- 	unsigned short nolb, max_nolb, copied_nolb = 0;
-+	sense_reason_t sense_rc;
- 
--	if (target_parse_xcopy_cmd(xop) != TCM_NO_SENSE)
-+	sense_rc = target_parse_xcopy_cmd(xop);
-+	if (sense_rc != TCM_NO_SENSE)
- 		goto err_free;
- 
--	if (WARN_ON_ONCE(!xop->src_dev) || WARN_ON_ONCE(!xop->dst_dev))
-+	if (WARN_ON_ONCE(!xop->src_dev) || WARN_ON_ONCE(!xop->dst_dev)) {
-+		sense_rc = TCM_INVALID_PARAMETER_LIST;
- 		goto err_free;
-+	}
- 
- 	src_dev = xop->src_dev;
- 	dst_dev = xop->dst_dev;
-@@ -762,20 +766,20 @@ static void target_xcopy_do_work(struct work_struct *work)
- 	return;
- 
- out:
-+	/*
-+	 * The XCOPY command was aborted after some data was transferred.
-+	 * Terminate command with CHECK CONDITION status, with the sense key
-+	 * set to COPY ABORTED.
-+	 */
-+	sense_rc = TCM_COPY_TARGET_DEVICE_NOT_REACHABLE;
- 	xcopy_pt_undepend_remotedev(xop);
- 	target_free_sgl(xop->xop_data_sg, xop->xop_data_nents);
- 
- err_free:
- 	kfree(xop);
--	/*
--	 * Don't override an error scsi status if it has already been set
--	 */
--	if (ec_cmd->scsi_status == SAM_STAT_GOOD) {
--		pr_warn_ratelimited("target_xcopy_do_work: rc: %d, Setting X-COPY"
--			" CHECK_CONDITION -> sending response\n", rc);
--		ec_cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
--	}
--	target_complete_cmd(ec_cmd, ec_cmd->scsi_status);
-+	pr_warn_ratelimited("target_xcopy_do_work: rc: %d, sense: %u,"
-+		" XCOPY operation failed\n", rc, sense_rc);
-+	target_complete_cmd_with_sense(ec_cmd, sense_rc);
- }
- 
- /*
--- 
-2.25.1
-
+Bart.
