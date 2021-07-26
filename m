@@ -8,58 +8,58 @@ X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01DB5C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BA11C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7D4160F8F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 060B560F9B
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232772AbhGZTjE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jul 2021 15:39:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54734 "EHLO
+        id S232682AbhGZTjH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jul 2021 15:39:07 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54754 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232649AbhGZTjD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2021 15:39:03 -0400
-Received: from mail-qv1-xf4a.google.com (mail-qv1-xf4a.google.com [IPv6:2607:f8b0:4864:20::f4a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 508D6C061760
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:31 -0700 (PDT)
-Received: by mail-qv1-xf4a.google.com with SMTP id bp16-20020a05621407f0b02902cec39ab618so9216662qvb.5
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:31 -0700 (PDT)
+        with ESMTP id S232921AbhGZTjF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2021 15:39:05 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEBD1C061765
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:33 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id p71-20020a25424a0000b029056092741626so15385723yba.19
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=Dtq28Xg8/uLolUu+qWIKeO61eazTXjlrFQKAF/MncPI=;
-        b=hz0ZRwZXl5oZHOaXjrQRjl2HnZZcPnSKBtMsJXpFVgVs49kEYZDETQnbXjsHMkKaD2
-         0q70L1uD6/YSbaMbT94Kh3w5QcOGxS9iZEVgPRXs4T4KIytYvYwytkGvJCPv44cKed+A
-         Jx2e3lGmgKXaVLkoHV/ye5c8QTgzzRl/QnKkoqe36ST0qM2ptLulRN7hL9BTXm0aNSOo
-         sHl5nu+5DiX6Wrr4Jx9Lhyul/5A3lbF+7T7PSan7G/xURtsRYcoh4yP9g+zHzFEqKzPM
-         m/19zx8izWOJXhRgChVehgR+Czxi7wG6owsMcpZbaH9PhB3AM1+VAV8t1r3Szvve8Dmg
-         Iy5w==
+        bh=VfDxoCReDm+XfUOmdfI9bwSV32koHBs4WIv0MpubLz8=;
+        b=KJHhZGIp4jKvBjwR8O5xZinTKKgnfulQvUjEgb+F8mv9/+TkC4BS8c3I7LTiIUplYI
+         jKJ84XNavPSxt+ubLiJ7rIDR0uyoFhe5VK7uUfSYKUv8+lEzz3ztai0iCfzEjsyrc4Gu
+         CiQHkVOix5C1w6WigMb2jk2qYNeNWcujzxhnMQ7B5RzMXuyPjMtDG+N1i+AkJdDhZ9Bv
+         WNO2pHOHRuoROieddUvjkx79vK0QNp+ilZwkCe/PdT8+4S3jigZ9lkt8YNDhvf5pHrS0
+         KaysMxSZlBn2h2XX92Y0cgyMh+zpH7OBGX2ANVuzEZRvbNTqKagru6PKoeZpxXyfjWc8
+         /wGw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=Dtq28Xg8/uLolUu+qWIKeO61eazTXjlrFQKAF/MncPI=;
-        b=D3jjGVRO7R9ukuoz8JulZVriObjMYWIgfv2rh45OfX4pvqXHqP6SG0Jwa64HRlz1vK
-         /E+dYhFdKiU4wZt9W/eIah/cFRJ70EXchZbNHMi00BDYA0Ex5XXr21QtRWU66+olJ1QY
-         dQqrqLnbY6EShJDrNdBPhCU53PDXdVoQvEEVZ9kUM09H89F9uqE5AUwpQA+M6fnpD3ks
-         i9o2zsFYCSdXCvRluwI9/fBh/yKD2fuAbnQiVuTC7yLG70b5Nag0Qkw5K4WzlyaA8MRt
-         uUsWPOJfIuHpmP/q5caMEkjs2X+fs+iCosFj26MmWdgZ6MktUUCeVZOPO6lOkYYnaC8o
-         S/4A==
-X-Gm-Message-State: AOAM531LvVd8/5fRJOA2jY6koi8ENfGiaHYO4udxfK36ak23XAzTzdvv
-        Wh9LpIraFZhqu7YLk9oFfcxvELDA
-X-Google-Smtp-Source: ABdhPJyWjm8hvRlnL19m07zY5k1mL8W4fLKVX43wTTv/q2nEIW5TXdtGEIi490bOn5d3qy09VnkgMF6pBw==
+        bh=VfDxoCReDm+XfUOmdfI9bwSV32koHBs4WIv0MpubLz8=;
+        b=PaCtUdvlMykE/yXUe3Ejy0PzDIedi236s7Idy1BtoP+Egxk+RC/oEE6Z9UO51F1aVM
+         FctMUZHCr+YYFWvXxNMu7yIBDVu4uf2b4mmOyvv8oXw+xDUzD71Y/bPQWqFQ2WSu0ki1
+         biBn9GpSk+6v3E/T9J9Drbiyyg2FjYe+XzlUGhUpL02m+qOU2k3gNYn8TGm1S0o1+i7G
+         sPAhEObHCrYjyROGLD3i+lqjTinbM7T1BpoYyRaaIifT4m1uDWdKeANTNEeJtN4FPhG/
+         vrOv4R72nGEENm4LkJ1ed/EFYwxYJmDfaxI2xeQSCRfCUSafDxRs6bKj71HmKBNYwuVp
+         3Pnw==
+X-Gm-Message-State: AOAM532EAa9uX6pu3BUgTwKE3pmpwbjIo0PxiIpMu1u8cZgIlbrncyxO
+        QCeuLQGxx7C3lvUB03jQIwgELMsW
+X-Google-Smtp-Source: ABdhPJx9RgyvReiw/itct0/6JahGn7Hxif/512W9GnqlhzG71X1cOjsqKVl/nn9ymlpKHxYahaaVw+vQyA==
 X-Received: from fawn.svl.corp.google.com ([2620:15c:2cd:202:ccf7:db54:b9d7:814f])
- (user=morbo job=sendgmr) by 2002:a05:6214:1747:: with SMTP id
- dc7mr15897755qvb.27.1627330770376; Mon, 26 Jul 2021 13:19:30 -0700 (PDT)
-Date:   Mon, 26 Jul 2021 13:19:22 -0700
+ (user=morbo job=sendgmr) by 2002:a25:2593:: with SMTP id l141mr14862499ybl.489.1627330772904;
+ Mon, 26 Jul 2021 13:19:32 -0700 (PDT)
+Date:   Mon, 26 Jul 2021 13:19:23 -0700
 In-Reply-To: <20210726201924.3202278-1-morbo@google.com>
-Message-Id: <20210726201924.3202278-2-morbo@google.com>
+Message-Id: <20210726201924.3202278-3-morbo@google.com>
 Mime-Version: 1.0
 References: <20210714091747.2814370-1-morbo@google.com> <20210726201924.3202278-1-morbo@google.com>
 X-Mailer: git-send-email 2.32.0.432.gabb21c7263-goog
-Subject: [PATCH v2 1/3] base: mark 'no_warn' as unused
+Subject: [PATCH v2 2/3] bnx2x: remove unused variable 'cur_data_offset'
 From:   Bill Wendling <morbo@google.com>
 To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, clang-built-linux@googlegroups.com,
@@ -79,32 +79,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Fix the following build warning:
+Fix the clang build warning:
 
-  drivers/base/module.c:36:6: error: variable 'no_warn' set but not used [-Werror,-Wunused-but-set-variable]
-        int no_warn;
-
-This variable is used to remove another warning, but causes a warning
-itself. Mark it as 'unused' to avoid that.
+  drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c:1862:13: error: variable 'cur_data_offset' set but not used [-Werror,-Wunused-but-set-variable]
+        dma_addr_t cur_data_offset;
 
 Signed-off-by: Bill Wendling <morbo@google.com>
 ---
- drivers/base/module.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/base/module.c b/drivers/base/module.c
-index 46ad4d636731..10494336d601 100644
---- a/drivers/base/module.c
-+++ b/drivers/base/module.c
-@@ -33,7 +33,7 @@ static void module_create_drivers_dir(struct module_kobject *mk)
- void module_add_driver(struct module *mod, struct device_driver *drv)
+diff --git a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
+index 27943b0446c2..f255fd0b16db 100644
+--- a/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
++++ b/drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c
+@@ -1858,7 +1858,6 @@ void bnx2x_iov_adjust_stats_req(struct bnx2x *bp)
  {
- 	char *driver_name;
--	int no_warn;
-+	int __maybe_unused no_warn;
- 	struct module_kobject *mk = NULL;
+ 	int i;
+ 	int first_queue_query_index, num_queues_req;
+-	dma_addr_t cur_data_offset;
+ 	struct stats_query_entry *cur_query_entry;
+ 	u8 stats_count = 0;
+ 	bool is_fcoe = false;
+@@ -1879,10 +1878,6 @@ void bnx2x_iov_adjust_stats_req(struct bnx2x *bp)
+ 	       BNX2X_NUM_ETH_QUEUES(bp), is_fcoe, first_queue_query_index,
+ 	       first_queue_query_index + num_queues_req);
  
- 	if (!drv)
+-	cur_data_offset = bp->fw_stats_data_mapping +
+-		offsetof(struct bnx2x_fw_stats_data, queue_stats) +
+-		num_queues_req * sizeof(struct per_queue_stats);
+-
+ 	cur_query_entry = &bp->fw_stats_req->
+ 		query[first_queue_query_index + num_queues_req];
+ 
+@@ -1933,7 +1928,6 @@ void bnx2x_iov_adjust_stats_req(struct bnx2x *bp)
+ 			       cur_query_entry->funcID,
+ 			       j, cur_query_entry->index);
+ 			cur_query_entry++;
+-			cur_data_offset += sizeof(struct per_queue_stats);
+ 			stats_count++;
+ 
+ 			/* all stats are coalesced to the leading queue */
 -- 
 2.32.0.432.gabb21c7263-goog
 
