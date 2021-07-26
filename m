@@ -2,127 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-21.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
+	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FBB8C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 17:59:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54AB7C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 017FD60F6D
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 17:59:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36B9960F8F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231570AbhGZRTP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jul 2021 13:19:15 -0400
-Received: from mail-pj1-f45.google.com ([209.85.216.45]:36502 "EHLO
-        mail-pj1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230488AbhGZRTP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2021 13:19:15 -0400
-Received: by mail-pj1-f45.google.com with SMTP id ds11-20020a17090b08cbb0290172f971883bso86843pjb.1;
-        Mon, 26 Jul 2021 10:59:44 -0700 (PDT)
+        id S232359AbhGZTjB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jul 2021 15:39:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54716 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230421AbhGZTjA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2021 15:39:00 -0400
+Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B66A0C061757
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:28 -0700 (PDT)
+Received: by mail-yb1-xb49.google.com with SMTP id f22-20020a25b0960000b029055ed6ffbea6so15353811ybj.14
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20161025;
+        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
+         :cc;
+        bh=GsN8HCqVh5N8aSJwsQzyNpefHB2pESiItXifSlAmSSM=;
+        b=gJdCKTbk2C37vKwDcBCzX6vy3NgrJaCdDO8ylX4jL5Efkl2THEgpciZ+Gfqpi1pNu+
+         uz26sJGw6z1vPs7dtWhk3sYsIs7+y9MTiHK5v5yI865S++oSd16Nctp8n7nUT3Zj8zzi
+         6QLaLHEEcBGQrCRMx7m+rBZ3I//g9e+H6PPfSwhHOcYcQS9yh5jeI/vbv5ydjBavNrJj
+         YRem8g5HR3BObvLbZY4p2i6KNKemqng7M1oG5CxGQFLuez26dnrjalCM9GaZH58s/TzH
+         7JwmhrgZ00ztjpGMEkzhVpegunGGT7RAb+M41Lv048GixgOjdctrvQDap6++zAdAeABt
+         zxmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=3Cku6Rze8FYvo3mRLiCQNQ614ck9Z1LgtQwmHqzhZnQ=;
-        b=Oyh9YQRUeDmPzj5Mahvl5C4l0NDUBm/YL3ccY4lIUfuoF1/sxJFX8E7smDL9x1oIHy
-         gD0uYYFLvAO8c/GVug7hRohErDia17IijOf8sdS5Nit9I52E4i43cIExHVVkJb1GGSFY
-         AfpeyR/F5MA3wmMy+7SO0oJo+aKmFE1Zr/dKGhi2wz23hu1hFLlI/g/NuxK1pgxxctds
-         zQIrPikFwNjwJ7w9W8r8XPXOoJqKPtzWxchG03WrOaM4tDGhPuNNuZkaLbJ8XTfpGXx/
-         AIfmJkMJSj2DFFHgoG5QrSGCSIbFqSU2nNJA+EPgWujtcr9NDNAkT4G0sF/LX5hqM1UJ
-         tl1w==
-X-Gm-Message-State: AOAM531Cu0Pltpu8KYYovU7B+/F555svcDG3oGrE8Nisj9jhGItGxG7F
-        1E6Vptk4mdx79otrEjkMiI+Ub/Ef0xJTmS8q
-X-Google-Smtp-Source: ABdhPJyqqdSMxLUKWTrIpCwWEiv2aqujjYIwSwGKXgw8gZKdcN1sIWvgYSJj/i0IHVYwbMPLp9jRgA==
-X-Received: by 2002:a17:90a:f296:: with SMTP id fs22mr172129pjb.155.1627322383125;
-        Mon, 26 Jul 2021 10:59:43 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:6048:349e:fe7d:d8c7])
-        by smtp.gmail.com with ESMTPSA id a13sm362007pgt.58.2021.07.26.10.59.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 26 Jul 2021 10:59:42 -0700 (PDT)
-Subject: Re: [PATCH -next] scsi: ufs: fix build warning without CONFIG_PM
-To:     YueHaibing <yuehaibing@huawei.com>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210611130601.34336-1-yuehaibing@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <99c99d97-5849-cf40-709b-aebe53b80ce3@acm.org>
-Date:   Mon, 26 Jul 2021 10:59:41 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.11.0
-MIME-Version: 1.0
-In-Reply-To: <20210611130601.34336-1-yuehaibing@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
+         :references:subject:from:to:cc;
+        bh=GsN8HCqVh5N8aSJwsQzyNpefHB2pESiItXifSlAmSSM=;
+        b=AfdnDWVlbTGnYa813gRfMD1/0hxHeHds9xbl+D/OKs8BomY+iB0ozewtrWYLhV5/of
+         Q3mtpVGmxa6q+YTqAE9/WIHjS1jfcfBvhPu/9FJNZDNOjQ+3WVWziKgU0x5RUGvr8odV
+         6FgtxU/CkCB+HBaA94yqyFEXoW/3TbF/anZ7TpZpc8LquyJO7nHW7WFVx4q6WNXaGlTc
+         KFU9u5PQO+8hpgimDXjPpPMrCRsCXzcBpjF4Nex9z7IGZckctaG7z9zsQq+focMCQtYw
+         m82sunTCXKmoy/VyZP6UMGE5Ryt+akiBkRdgUAXxDhLdAZRjwJOv/glyi2/ahkj7bHc8
+         anVg==
+X-Gm-Message-State: AOAM533/2lqxUxiKuAAchni4d3Fc9qOONrQz9U3h7rr1R9U8/LQBKJ6p
+        bL+WfBV/3VErk3/Gf/lGZ0mVcfuL
+X-Google-Smtp-Source: ABdhPJyOQYwh3EiuCdUYc7I7SF9y2w6LHgoEfYxWl8nVzf1ebeI5lLJPSEbw4ycEaE0y5KP0ZO54TwepYg==
+X-Received: from fawn.svl.corp.google.com ([2620:15c:2cd:202:ccf7:db54:b9d7:814f])
+ (user=morbo job=sendgmr) by 2002:a25:ba10:: with SMTP id t16mr26601022ybg.87.1627330767966;
+ Mon, 26 Jul 2021 13:19:27 -0700 (PDT)
+Date:   Mon, 26 Jul 2021 13:19:21 -0700
+In-Reply-To: <20210714091747.2814370-1-morbo@google.com>
+Message-Id: <20210726201924.3202278-1-morbo@google.com>
+Mime-Version: 1.0
+References: <20210714091747.2814370-1-morbo@google.com>
+X-Mailer: git-send-email 2.32.0.432.gabb21c7263-goog
+Subject: [PATCH v2 0/3] Fix clang -Wunused-but-set-variable warnings
+From:   Bill Wendling <morbo@google.com>
+To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, clang-built-linux@googlegroups.com,
+        Nathan Chancellor <nathan@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        Ariel Elior <aelior@marvell.com>,
+        Sudarsana Kalluru <skalluru@marvell.com>,
+        GR-everest-linux-l2@marvell.com,
+        "David S . Miller" <davem@davemloft.net>,
+        Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Bill Wendling <morbo@google.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/11/21 6:06 AM, YueHaibing wrote:
-> drivers/scsi/ufs/ufshcd.c:9770:12: warning: ‘ufshcd_rpmb_resume’ defined but not used [-Wunused-function]
->   static int ufshcd_rpmb_resume(struct device *dev)
->              ^~~~~~~~~~~~~~~~~~
-> drivers/scsi/ufs/ufshcd.c:9037:12: warning: ‘ufshcd_wl_runtime_resume’ defined but not used [-Wunused-function]
->   static int ufshcd_wl_runtime_resume(struct device *dev)
->              ^~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/ufs/ufshcd.c:9017:12: warning: ‘ufshcd_wl_runtime_suspend’ defined but not used [-Wunused-function]
->   static int ufshcd_wl_runtime_suspend(struct device *dev)
->              ^~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> Move it into #ifdef block to fix this.
-> 
-> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
-> ---
->   drivers/scsi/ufs/ufshcd.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index b87ff68aa9aa..0c54589e186a 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -8926,6 +8926,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->   	return ret;
->   }
->   
-> +#ifdef CONFIG_PM_SLEEP
->   static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->   {
->   	int ret;
-> @@ -9053,7 +9054,6 @@ static int ufshcd_wl_runtime_resume(struct device *dev)
->   	return ret;
->   }
->   
-> -#ifdef CONFIG_PM_SLEEP
->   static int ufshcd_wl_suspend(struct device *dev)
->   {
->   	struct scsi_device *sdev = to_scsi_device(dev);
-> @@ -9766,6 +9766,7 @@ static inline int ufshcd_clear_rpmb_uac(struct ufs_hba *hba)
->   	return ret;
->   }
->   
-> +#ifdef CONFIG_PM_SLEEP
->   static int ufshcd_rpmb_resume(struct device *dev)
->   {
->   	struct ufs_hba *hba = wlun_dev_to_hba(dev);
-> @@ -9774,6 +9775,7 @@ static int ufshcd_rpmb_resume(struct device *dev)
->   		ufshcd_clear_rpmb_uac(hba);
->   	return 0;
->   }
-> +#endif
->   
->   static const struct dev_pm_ops ufs_rpmb_pm_ops = {
->   	SET_RUNTIME_PM_OPS(NULL, ufshcd_rpmb_resume, NULL)
+These patches clean up warnings from clang's '-Wunused-but-set-variable' flag.
 
-Hi YueHaibing,
+Changes for v2:
+- Mark "no_warn" as "__maybe_unused" to avoid separate warning.
 
-Can you take a look at 
-https://lore.kernel.org/linux-scsi/20210722033439.26550-1-bvanassche@acm.org/T/#m6e7a02fc79634b5b77cfb77849253ac41d021389? 
-I let the kernel robot verify that patch before I posted it on the 
-linux-scsi mailing list.
+Bill Wendling (3):
+  base: mark 'no_warn' as unused
+  bnx2x: remove unused variable 'cur_data_offset'
+  scsi: qla2xxx: remove unused variable 'status'
 
-Thanks,
+ drivers/base/module.c                             | 2 +-
+ drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c | 6 ------
+ drivers/scsi/qla2xxx/qla_nx.c                     | 2 --
+ 3 files changed, 1 insertion(+), 9 deletions(-)
 
-Bart.
+-- 
+2.32.0.432.gabb21c7263-goog
+
