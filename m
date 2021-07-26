@@ -2,63 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
+X-Spam-Status: No, score=-26.3 required=3.0 tests=BAYES_00,DKIMWL_WL_MED,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT,
-	USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT,USER_IN_DEF_DKIM_WL autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54AB7C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01DB5C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36B9960F8F
-	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7D4160F8F
+	for <linux-scsi@archiver.kernel.org>; Mon, 26 Jul 2021 20:19:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232359AbhGZTjB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 26 Jul 2021 15:39:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54716 "EHLO
+        id S232772AbhGZTjE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 26 Jul 2021 15:39:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54734 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230421AbhGZTjA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2021 15:39:00 -0400
-Received: from mail-yb1-xb49.google.com (mail-yb1-xb49.google.com [IPv6:2607:f8b0:4864:20::b49])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B66A0C061757
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:28 -0700 (PDT)
-Received: by mail-yb1-xb49.google.com with SMTP id f22-20020a25b0960000b029055ed6ffbea6so15353811ybj.14
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:28 -0700 (PDT)
+        with ESMTP id S232649AbhGZTjD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Jul 2021 15:39:03 -0400
+Received: from mail-qv1-xf4a.google.com (mail-qv1-xf4a.google.com [IPv6:2607:f8b0:4864:20::f4a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 508D6C061760
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:31 -0700 (PDT)
+Received: by mail-qv1-xf4a.google.com with SMTP id bp16-20020a05621407f0b02902cec39ab618so9216662qvb.5
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Jul 2021 13:19:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=google.com; s=20161025;
         h=date:in-reply-to:message-id:mime-version:references:subject:from:to
          :cc;
-        bh=GsN8HCqVh5N8aSJwsQzyNpefHB2pESiItXifSlAmSSM=;
-        b=gJdCKTbk2C37vKwDcBCzX6vy3NgrJaCdDO8ylX4jL5Efkl2THEgpciZ+Gfqpi1pNu+
-         uz26sJGw6z1vPs7dtWhk3sYsIs7+y9MTiHK5v5yI865S++oSd16Nctp8n7nUT3Zj8zzi
-         6QLaLHEEcBGQrCRMx7m+rBZ3I//g9e+H6PPfSwhHOcYcQS9yh5jeI/vbv5ydjBavNrJj
-         YRem8g5HR3BObvLbZY4p2i6KNKemqng7M1oG5CxGQFLuez26dnrjalCM9GaZH58s/TzH
-         7JwmhrgZ00ztjpGMEkzhVpegunGGT7RAb+M41Lv048GixgOjdctrvQDap6++zAdAeABt
-         zxmA==
+        bh=Dtq28Xg8/uLolUu+qWIKeO61eazTXjlrFQKAF/MncPI=;
+        b=hz0ZRwZXl5oZHOaXjrQRjl2HnZZcPnSKBtMsJXpFVgVs49kEYZDETQnbXjsHMkKaD2
+         0q70L1uD6/YSbaMbT94Kh3w5QcOGxS9iZEVgPRXs4T4KIytYvYwytkGvJCPv44cKed+A
+         Jx2e3lGmgKXaVLkoHV/ye5c8QTgzzRl/QnKkoqe36ST0qM2ptLulRN7hL9BTXm0aNSOo
+         sHl5nu+5DiX6Wrr4Jx9Lhyul/5A3lbF+7T7PSan7G/xURtsRYcoh4yP9g+zHzFEqKzPM
+         m/19zx8izWOJXhRgChVehgR+Czxi7wG6owsMcpZbaH9PhB3AM1+VAV8t1r3Szvve8Dmg
+         Iy5w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:in-reply-to:message-id:mime-version
          :references:subject:from:to:cc;
-        bh=GsN8HCqVh5N8aSJwsQzyNpefHB2pESiItXifSlAmSSM=;
-        b=AfdnDWVlbTGnYa813gRfMD1/0hxHeHds9xbl+D/OKs8BomY+iB0ozewtrWYLhV5/of
-         Q3mtpVGmxa6q+YTqAE9/WIHjS1jfcfBvhPu/9FJNZDNOjQ+3WVWziKgU0x5RUGvr8odV
-         6FgtxU/CkCB+HBaA94yqyFEXoW/3TbF/anZ7TpZpc8LquyJO7nHW7WFVx4q6WNXaGlTc
-         KFU9u5PQO+8hpgimDXjPpPMrCRsCXzcBpjF4Nex9z7IGZckctaG7z9zsQq+focMCQtYw
-         m82sunTCXKmoy/VyZP6UMGE5Ryt+akiBkRdgUAXxDhLdAZRjwJOv/glyi2/ahkj7bHc8
-         anVg==
-X-Gm-Message-State: AOAM533/2lqxUxiKuAAchni4d3Fc9qOONrQz9U3h7rr1R9U8/LQBKJ6p
-        bL+WfBV/3VErk3/Gf/lGZ0mVcfuL
-X-Google-Smtp-Source: ABdhPJyOQYwh3EiuCdUYc7I7SF9y2w6LHgoEfYxWl8nVzf1ebeI5lLJPSEbw4ycEaE0y5KP0ZO54TwepYg==
+        bh=Dtq28Xg8/uLolUu+qWIKeO61eazTXjlrFQKAF/MncPI=;
+        b=D3jjGVRO7R9ukuoz8JulZVriObjMYWIgfv2rh45OfX4pvqXHqP6SG0Jwa64HRlz1vK
+         /E+dYhFdKiU4wZt9W/eIah/cFRJ70EXchZbNHMi00BDYA0Ex5XXr21QtRWU66+olJ1QY
+         dQqrqLnbY6EShJDrNdBPhCU53PDXdVoQvEEVZ9kUM09H89F9uqE5AUwpQA+M6fnpD3ks
+         i9o2zsFYCSdXCvRluwI9/fBh/yKD2fuAbnQiVuTC7yLG70b5Nag0Qkw5K4WzlyaA8MRt
+         uUsWPOJfIuHpmP/q5caMEkjs2X+fs+iCosFj26MmWdgZ6MktUUCeVZOPO6lOkYYnaC8o
+         S/4A==
+X-Gm-Message-State: AOAM531LvVd8/5fRJOA2jY6koi8ENfGiaHYO4udxfK36ak23XAzTzdvv
+        Wh9LpIraFZhqu7YLk9oFfcxvELDA
+X-Google-Smtp-Source: ABdhPJyWjm8hvRlnL19m07zY5k1mL8W4fLKVX43wTTv/q2nEIW5TXdtGEIi490bOn5d3qy09VnkgMF6pBw==
 X-Received: from fawn.svl.corp.google.com ([2620:15c:2cd:202:ccf7:db54:b9d7:814f])
- (user=morbo job=sendgmr) by 2002:a25:ba10:: with SMTP id t16mr26601022ybg.87.1627330767966;
- Mon, 26 Jul 2021 13:19:27 -0700 (PDT)
-Date:   Mon, 26 Jul 2021 13:19:21 -0700
-In-Reply-To: <20210714091747.2814370-1-morbo@google.com>
-Message-Id: <20210726201924.3202278-1-morbo@google.com>
+ (user=morbo job=sendgmr) by 2002:a05:6214:1747:: with SMTP id
+ dc7mr15897755qvb.27.1627330770376; Mon, 26 Jul 2021 13:19:30 -0700 (PDT)
+Date:   Mon, 26 Jul 2021 13:19:22 -0700
+In-Reply-To: <20210726201924.3202278-1-morbo@google.com>
+Message-Id: <20210726201924.3202278-2-morbo@google.com>
 Mime-Version: 1.0
-References: <20210714091747.2814370-1-morbo@google.com>
+References: <20210714091747.2814370-1-morbo@google.com> <20210726201924.3202278-1-morbo@google.com>
 X-Mailer: git-send-email 2.32.0.432.gabb21c7263-goog
-Subject: [PATCH v2 0/3] Fix clang -Wunused-but-set-variable warnings
+Subject: [PATCH v2 1/3] base: mark 'no_warn' as unused
 From:   Bill Wendling <morbo@google.com>
 To:     linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
         linux-scsi@vger.kernel.org, clang-built-linux@googlegroups.com,
@@ -78,21 +79,32 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-These patches clean up warnings from clang's '-Wunused-but-set-variable' flag.
+Fix the following build warning:
 
-Changes for v2:
-- Mark "no_warn" as "__maybe_unused" to avoid separate warning.
+  drivers/base/module.c:36:6: error: variable 'no_warn' set but not used [-Werror,-Wunused-but-set-variable]
+        int no_warn;
 
-Bill Wendling (3):
-  base: mark 'no_warn' as unused
-  bnx2x: remove unused variable 'cur_data_offset'
-  scsi: qla2xxx: remove unused variable 'status'
+This variable is used to remove another warning, but causes a warning
+itself. Mark it as 'unused' to avoid that.
 
- drivers/base/module.c                             | 2 +-
- drivers/net/ethernet/broadcom/bnx2x/bnx2x_sriov.c | 6 ------
- drivers/scsi/qla2xxx/qla_nx.c                     | 2 --
- 3 files changed, 1 insertion(+), 9 deletions(-)
+Signed-off-by: Bill Wendling <morbo@google.com>
+---
+ drivers/base/module.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/base/module.c b/drivers/base/module.c
+index 46ad4d636731..10494336d601 100644
+--- a/drivers/base/module.c
++++ b/drivers/base/module.c
+@@ -33,7 +33,7 @@ static void module_create_drivers_dir(struct module_kobject *mk)
+ void module_add_driver(struct module *mod, struct device_driver *drv)
+ {
+ 	char *driver_name;
+-	int no_warn;
++	int __maybe_unused no_warn;
+ 	struct module_kobject *mk = NULL;
+ 
+ 	if (!drv)
 -- 
 2.32.0.432.gabb21c7263-goog
 
