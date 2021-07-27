@@ -2,176 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BF11C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jul 2021 12:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A264DC4320A
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jul 2021 14:08:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19C2660F51
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jul 2021 12:36:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AE4B61AED
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jul 2021 14:08:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232027AbhG0Mgp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Jul 2021 08:36:45 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:65233 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231931AbhG0Mgo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jul 2021 08:36:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1627389404; x=1658925404;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references;
-  bh=XLlR3TBwvAId3GFwFU6XBIXH72v88cus8s8lFXx1h78=;
-  b=gWMEakf/dVkbGr0NNsvpyrbGeot7iUnp85AzTlc1sHOwTu79fM4pgck2
-   FXxFbLOcPZBItoDbDXgR2YMShF20lCl7xX6RxDvpUvN8/BQFhwvPtuEev
-   ZpUpzePsP3XqKjB0/6r3dQUd99UtUe+RnTDqqVFrM9OEZRbovmFaKbpuI
-   KKpbYBgDgzW265MwCnVYzTR1oOUFQsgRxYtRLxClzN2MlIwKtATVihuUA
-   dua2kDfgcFSkaCaH6pToF46yOWsm8Wtkf1PPVJ431EC2cGGWAr3X39Z2o
-   3+r9I2Kg1CF3zWjoSOIiwhHaD/awDBTU63raqUc43Gf206EgdK0b9Qtil
-   w==;
-X-IronPort-AV: E=Sophos;i="5.84,273,1620662400"; 
-   d="scan'208";a="287155367"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 27 Jul 2021 20:36:44 +0800
-IronPort-SDR: k2p/yuqsKkOWn4gYfsI85sgHsFPQcnuKkJ9/KJKGEnYiZh2ucov6E0GUu/Il0FrqH4HZnD1ar/
- muojwTZmFocT+6aWR6RM2wKTjxEu9JJJC0T4wDVRUpWs7I81wntKV4er74ntqOBlO7vtVJlYaA
- CycvrMz2HaZp9TKAJgojIXLTF4iZfZJ76OdYtRkBx/7IPvkdEkij0t8bpzBOiHBSDP0eSVlQqe
- p1GsXurx0h+LyrGszL8VjdCk4flyk1S2PJhyBVQifjzZd0wPIMiHlvfmoRffRZpGL47OMIdfoN
- w2qQ6BDwnJ6bSXAJR3h7LA7Y
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jul 2021 05:12:39 -0700
-IronPort-SDR: wMSmSfZ7+qHTxLKXRPIIFBVOqFInEjXwW1Rt6lv910MHw1ZVjPBL3u0LWA5AQACjTUF+1axDJT
- wTsT1jOURvkPFfcZfEuUGvZUUw3RVAOzVGOUhPEsy9VXjodAL5c0X3cSC0Wb1DewD26APqvwnt
- 0/kPTnAXLlEC5lpN7QuWo4Y5Vxaub2totJhF3ZvLCSkQxqYVr3wDRqFlMSUWJxv1GwsebyCvUj
- yz6FVBu0jQHotBuKOqAC1jGFdIcxsaskjECHkIgJuTPHb0KZsqY7QPWddrqrlmnfGRihZOWJ//
- 3sE=
-WDCIronportException: Internal
-Received: from bxygm33.sdcorp.global.sandisk.com (HELO BXYGM33.ad.shared) ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 27 Jul 2021 05:36:42 -0700
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        id S237198AbhG0OIA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Jul 2021 10:08:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43204 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237118AbhG0OHu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jul 2021 10:07:50 -0400
+Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DDD8FC061383
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2021 07:07:45 -0700 (PDT)
+Received: by mail-wr1-x433.google.com with SMTP id h14so7418559wrx.10
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2021 07:07:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=gy+H1N9N6DR0ftnDTJGoy9DwqVrX41262Xlh40A7Ya8=;
+        b=Mxa5j3eGmHvyLHKN4YdxCEffE2iV+FC/unO5E/jQn7RJ6rHOSAJ+Dlypqlv4+hfkFN
+         agxfpgfeXedaMl3aYhCKKe6Fh5J94PD0e7Sn4BHKqWvyWMK+oaVY16l5m0ChRdNaLqfV
+         KC5Eek5fXit+a4JMEDzBG+F5xTDLpZrhL+T61L3enQjBM6Bjdap7Py5GOfFFdF9qxRtl
+         lphOdkznh10eoh1uAp8B7QXIh1z0hXkMV0jCwqeEADSdY9gRWc7BQ+0QuMOWqcM6mrRF
+         6XnARPy9eiAOu9K/gEd9Dz/QMlohLah8m8hk5gIryv5rUJByEISkDVX2Ea0BJrViWGJW
+         IjLQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:subject:from:in-reply-to:date:cc
+         :content-transfer-encoding:message-id:references:to;
+        bh=gy+H1N9N6DR0ftnDTJGoy9DwqVrX41262Xlh40A7Ya8=;
+        b=T6vjAEA1Va3ZIqXjumurQaJwNMRSmxtI35jPC2h2XHBkU8oxeDXkbQFuCXDc3cMQJK
+         t5NtWRzL7O55u1kNOYK6gBOJz6lyKKP9FrmUG9TW61SKC5MlwIgv057yjGY4eW7P/kru
+         aAiopr4XTvj+z2PDTsQVSUMy4zBEdZ1hTgVznabKTDU6oseSuVjCsCXTxsImvV8yyIxc
+         ndBqiHs2vQZvxF706WB/o1Er767au+d5CD4hyOIktJBgSfq4lE/w+kn47TGxvQTbfA0e
+         uN8UxmqE8H++Bw873y0FgCLFGWtBiwslMNWODIEpwO/CAxiSWMTLfU7CZaVLQshV4G6L
+         QVVg==
+X-Gm-Message-State: AOAM533A38mVFjduIBjvHHSPOEGlq2JbdT9YwPfDnSD/P01Rs8FZFA/A
+        hJVGOOFDs7NhpaHxl2woelq6bg==
+X-Google-Smtp-Source: ABdhPJyljXyXETDqZYAlbw22CtgEl9gmEpP+h9Jqw2EFewal2uuu3n89OW+dwrv8RCXg0TTm/xeCHg==
+X-Received: by 2002:adf:cf07:: with SMTP id o7mr24567946wrj.216.1627394864054;
+        Tue, 27 Jul 2021 07:07:44 -0700 (PDT)
+Received: from [192.168.61.233] ([37.162.12.50])
+        by smtp.gmail.com with ESMTPSA id g16sm4298272wro.63.2021.07.27.07.07.42
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 27 Jul 2021 07:07:43 -0700 (PDT)
+Content-Type: text/plain;
+        charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 12.4 \(3445.104.11\))
+Subject: Re: [PATCH v3 1/4] block: Add concurrent positioning ranges support
+From:   Paolo Valente <paolo.valente@linaro.org>
+In-Reply-To: <DM6PR04MB7081B7619AAD7EB4236DACA8E7E89@DM6PR04MB7081.namprd04.prod.outlook.com>
+Date:   Tue, 27 Jul 2021 16:07:41 +0200
+Cc:     Hannes Reinecke <hare@suse.de>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Bean Huo <beanhuo@micron.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 3/3] scsi: ufs: Generalize ufs_is_valid_unit_desc_lun()
-Date:   Tue, 27 Jul 2021 15:35:46 +0300
-Message-Id: <20210727123546.17228-4-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210727123546.17228-1-avri.altman@wdc.com>
-References: <20210727123546.17228-1-avri.altman@wdc.com>
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Transfer-Encoding: quoted-printable
+Message-Id: <F59D5B88-5CEF-4A61-A8AC-9FF572A462DC@linaro.org>
+References: <20210726013806.84815-1-damien.lemoal@wdc.com>
+ <20210726013806.84815-2-damien.lemoal@wdc.com>
+ <751621a5-a35b-c799-439c-8982433a6be5@suse.de>
+ <DM6PR04MB7081141B64D9501BDA876433E7E89@DM6PR04MB7081.namprd04.prod.outlook.com>
+ <0ec2ea13-208f-1a5e-7b11-37317b5e56b8@suse.de>
+ <DM6PR04MB7081B7619AAD7EB4236DACA8E7E89@DM6PR04MB7081.namprd04.prod.outlook.com>
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>
+X-Mailer: Apple Mail (2.3445.104.11)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ufs_is_valid_unit_desc_lun() test for specific wb offset case, and does
-not verify that the requested field does not exceed the descriptor size.
 
-So do that, and while at it, move it to ufshcd.h where it should be.
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/scsi/ufs/ufs-sysfs.c |  2 +-
- drivers/scsi/ufs/ufs.h       | 19 -------------------
- drivers/scsi/ufs/ufshcd.c    |  2 +-
- drivers/scsi/ufs/ufshcd.h    | 25 +++++++++++++++++++++++++
- 4 files changed, 27 insertions(+), 21 deletions(-)
+> Il giorno 26 lug 2021, alle ore 13:33, Damien Le Moal =
+<Damien.LeMoal@wdc.com> ha scritto:
+>=20
+> On 2021/07/26 17:47, Hannes Reinecke wrote:
+>> On 7/26/21 10:30 AM, Damien Le Moal wrote:
+>>> On 2021/07/26 16:34, Hannes Reinecke wrote:
+>> [ .. ]
+>>>> In principle it looks good, but what would be the appropriate =
+action
+>>>> when invalid ranges are being detected during revalidation?
+>>>> The current code will leave the original ones intact, but I guess =
+that's
+>>>> questionable as the current settings are most likely invalid.
+>>>=20
+>>> Nope. In that case, the old ranges are removed. In =
+blk_queue_set_cranges(),
+>>> there is:
+>>>=20
+>>> +		if (!blk_check_ranges(disk, cr)) {
+>>> +			kfree(cr);
+>>> +			cr =3D NULL;
+>>> +			goto reg;
+>>> +		}
+>>>=20
+>>> So for incorrect ranges, we will register "NULL", so no ranges. The =
+old ranges
+>>> are gone.
+>>>=20
+>>=20
+>> Right. So that's the first concern addressed.
+>=20
+> Not that at the scsi layer, if there is an error retrieving the ranges
+> informations, blk_queue_set_cranges(q, NULL) is called, so the same =
+happen: the
+> ranges set are removed and no range information will appear in sysfs.
+>=20
 
-diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
-index 52bd807f7940..0d6dfaa70d2f 100644
---- a/drivers/scsi/ufs/ufs-sysfs.c
-+++ b/drivers/scsi/ufs/ufs-sysfs.c
-@@ -1136,7 +1136,7 @@ static ssize_t _pname##_show(struct device *dev,			\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	struct ufs_hba *hba = shost_priv(sdev->host);			\
- 	u8 lun = ufshcd_scsi_to_upiu_lun(sdev->lun);			\
--	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun,		\
-+	if (!ufs_is_valid_unit_desc_lun(hba, lun,			\
- 				_duname##_DESC_PARAM##_puname))		\
- 		return -EINVAL;						\
- 	return ufs_sysfs_read_desc_param(hba, QUERY_DESC_IDN_##_duname,	\
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index d0be8d4c8091..366ece129a4d 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -571,23 +571,4 @@ enum ufs_trace_tsf_t {
- 	UFS_TSF_CDB, UFS_TSF_OSF, UFS_TSF_TM_INPUT, UFS_TSF_TM_OUTPUT
- };
- 
--/**
-- * ufs_is_valid_unit_desc_lun - checks if the given LUN has a unit descriptor
-- * @dev_info: pointer of instance of struct ufs_dev_info
-- * @lun: LU number to check
-- * @return: true if the lun has a matching unit descriptor, false otherwise
-- */
--static inline bool ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info,
--		u8 lun, u8 param_offset)
--{
--	if (!dev_info || !dev_info->max_lu_supported) {
--		pr_err("Max General LU supported by UFS isn't initialized\n");
--		return false;
--	}
--	/* WB is available only for the logical unit from 0 to 7 */
--	if (param_offset == UNIT_DESC_PARAM_WB_BUF_ALLOC_UNITS)
--		return lun < UFS_UPIU_MAX_WB_LUN_ID;
--	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
--}
--
- #endif /* End of Header */
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index eec1bc95391b..7f4c8f0c0459 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3555,7 +3555,7 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
- 	 * Unit descriptors are only available for general purpose LUs (LUN id
- 	 * from 0 to 7) and RPMB Well known LU.
- 	 */
--	if (!ufs_is_valid_unit_desc_lun(&hba->dev_info, lun, param_offset))
-+	if (!ufs_is_valid_unit_desc_lun(hba, lun, param_offset))
- 		return -EOPNOTSUPP;
- 
- 	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_UNIT, lun,
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index c77bef77ec87..395c1f5ecf9d 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1122,6 +1122,31 @@ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
- int ufshcd_suspend_prepare(struct device *dev);
- void ufshcd_resume_complete(struct device *dev);
- 
-+/**
-+ * ufs_is_valid_unit_desc_lun - checks if the given LUN has a unit descriptor
-+ * @dev_info: pointer of instance of struct ufs_dev_info
-+ * @lun: LU number to check
-+ * @return: true if the lun has a matching unit descriptor, false otherwise
-+ */
-+static inline bool ufs_is_valid_unit_desc_lun(struct ufs_hba *hba, u8 lun,
-+					      u8 param_offset)
-+{
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
-+	u8 desc_size = lun == UFS_UPIU_RPMB_WLUN ?
-+			hba->desc_size[QUERY_DESC_IDN_UNIT_RPMB] :
-+			hba->desc_size[QUERY_DESC_IDN_UNIT];
-+
-+	if (!dev_info || !dev_info->max_lu_supported) {
-+		pr_err("Max General LU supported by UFS isn't initialized\n");
-+		return false;
-+	}
-+
-+	if (param_offset >= desc_size)
-+		return false;
-+
-+	return lun == UFS_UPIU_RPMB_WLUN || (lun < dev_info->max_lu_supported);
-+}
-+
- /* Wrapper functions for safely calling variant operations */
- static inline const char *ufshcd_get_var_name(struct ufs_hba *hba)
- {
--- 
-2.17.1
+As a very personal opinion, silent failures are often misleading when
+trying to understand what is going wrong in a system.  But I guess
+this is however the best option.
+
+Thanks,
+Paolo
+
+>>=20
+>>>> I would vote for de-register the old ones and implement an error =
+state
+>>>> (using an error pointer?); that would signal that there _are_ =
+ranges,
+>>>> but we couldn't parse them properly.
+>>>> Hmm?
+>>>=20
+>>> With the current code, the information "there are ranges" will be =
+completely
+>>> gone if the ranges are bad... dmesg will have a message about it, =
+but that's it.
+>>>=20
+>> So there will be no additional information in sysfs in case of =
+incorrect=20
+>> ranges?
+>=20
+> Yep, there will be no queue/cranges directory. The drive will be the =
+same as a
+> single actuator one.
+>=20
+>> Hmm. Not sure if I like that, but then it might be the best option =
+after=20
+>> all. So you can add my:
+>=20
+> Nothing much that we can do. If we fail to retrieve the ranges, or the =
+ranges
+> are incorrect, access optimization by FS or scheduler is not really =
+possible.
+> Note that the drive will still work. Only any eventual optimization =
+will be
+> turned off.
+>=20
+>> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>=20
+> Thanks !
+>=20
+>>=20
+>> Cheers,
+>>=20
+>> Hannes
+>>=20
+>=20
+>=20
+> --=20
+> Damien Le Moal
+> Western Digital Research
 
