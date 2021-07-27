@@ -2,163 +2,170 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E4E7C432BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jul 2021 10:14:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9824CC4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jul 2021 10:56:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E670061527
-	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jul 2021 10:14:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7969C610D0
+	for <linux-scsi@archiver.kernel.org>; Tue, 27 Jul 2021 10:56:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236131AbhG0KOf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 27 Jul 2021 06:14:35 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:60320 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236109AbhG0KOd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jul 2021 06:14:33 -0400
-Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210727101432epoutp04c48f530df2983eebaf98907ae37308f3~VnkfmwIcB0449904499epoutp04z
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2021 10:14:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210727101432epoutp04c48f530df2983eebaf98907ae37308f3~VnkfmwIcB0449904499epoutp04z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1627380872;
-        bh=nZ1LCnQEGfjxzpmsjN08zuPFIpxfoOlId6rhiX44kIw=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=km3mQd3wYH2R7ikr2WIZCcLK4PA2ZH+JpGS4LVbpN9i0sm577ebLqdtJt4/YPNd9I
-         H+Fz1LudJJ6TJY7REi6oS8ELX4jGuupZ5udyZGMjXon33U5cARNAZHUPYcUh70SUu/
-         dJ1AL5VbGK8m54ooxIb/sqe9O35272QS/D5y5qYU=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20210727101430epcas2p4aa8950c6b075720f16f5616e6c00d52d~VnkeoTVtH0094800948epcas2p4Q;
-        Tue, 27 Jul 2021 10:14:30 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.40.189]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4GYt1x60WBz4x9Q0; Tue, 27 Jul
-        2021 10:14:29 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        F5.F3.09921.58CDFF06; Tue, 27 Jul 2021 19:14:29 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20210727101429epcas2p31b7bdb200636151e5db7581075d6e730~Vnkc6QtGy2125721257epcas2p3N;
-        Tue, 27 Jul 2021 10:14:29 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20210727101429epsmtrp23ff64c19799c9fc76eb51001d0a8672c~Vnkc4cFym1459314593epsmtrp2X;
-        Tue, 27 Jul 2021 10:14:29 +0000 (GMT)
-X-AuditID: b6c32a45-fb3ff700000026c1-79-60ffdc85aca8
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        ED.58.08394.48CDFF06; Tue, 27 Jul 2021 19:14:28 +0900 (KST)
-Received: from KORCO039056 (unknown [10.229.8.156]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20210727101428epsmtip17fd4a4ef22105533c8a0130908eba7d4~VnkckeuyL0258102581epsmtip1U;
-        Tue, 27 Jul 2021 10:14:28 +0000 (GMT)
-From:   "Chanho Park" <chanho61.park@samsung.com>
-To:     "'Bean Huo'" <huobean@gmail.com>,
-        "'Krzysztof Kozlowski'" <krzk@kernel.org>,
-        "'Alim Akhtar'" <alim.akhtar@samsung.com>,
-        "'James E . J . Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K . Petersen'" <martin.petersen@oracle.com>
-Cc:     "'Can Guo'" <cang@codeaurora.org>,
-        "'Jaegeuk Kim'" <jaegeuk@kernel.org>,
-        "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
-        "'Avri Altman'" <avri.altman@wdc.com>,
-        "'Adrian Hunter'" <adrian.hunter@intel.com>,
-        "'Christoph Hellwig'" <hch@infradead.org>,
-        "'Bart Van Assche'" <bvanassche@acm.org>,
-        "'jongmin jeong'" <jjmin.jeong@samsung.com>,
-        "'Gyunghoon Kwon'" <goodjob.kwon@samsung.com>,
-        <linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-In-Reply-To: <602ee8bc56891f0f0429afe274d7174ec325172e.camel@gmail.com>
-Subject: RE: [PATCH v2 14/15] scsi: ufs: ufs-exynos: multi-host
- configuration for exynosauto
-Date:   Tue, 27 Jul 2021 19:14:28 +0900
-Message-ID: <004601d782d0$2f43cd20$8dcb6760$@samsung.com>
+        id S236416AbhG0K4D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 27 Jul 2021 06:56:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55456 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236342AbhG0K4C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Jul 2021 06:56:02 -0400
+Received: from mail-pl1-x62c.google.com (mail-pl1-x62c.google.com [IPv6:2607:f8b0:4864:20::62c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 59408C061760
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2021 03:56:02 -0700 (PDT)
+Received: by mail-pl1-x62c.google.com with SMTP id k1so15206607plt.12
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Jul 2021 03:56:02 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=5WhMoPs2B43sv8MJ7YXpsSS9RNSscLg4R61aF3kLPZU=;
+        b=EzRYjFuFq3pYthYMFfv6CbZz2PpmqWv1Pym5aa2vmurTn9daxHhS0HihOZ13Yzo3UE
+         qEoM9agAoCNy3YvkRBS1qseYVKhm24QdXrhUBIYRZn2ERpNYs0VbRe/uFnjwrXdHdVlR
+         NK3QAII7ctPO6oIJ1LUVDIMPr9361hDok2uP0=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=5WhMoPs2B43sv8MJ7YXpsSS9RNSscLg4R61aF3kLPZU=;
+        b=JU6FOVd3zmXmx+aMYaG8SvoH0j9F54G7InLgj57Zbnq6OKS3DlCJY1r9sPqytTpJz/
+         p/R0QWXZGzFuQ010oCbHx6Slnj7AM4cn1tHDk7s/FEV7/EK93I5frv3mz7/zMJ9vZw/5
+         /vsyWHi6/tBlUzKMn8OJIlSt4cj3hASlRMdQBn6BXaHuSCR7zaOejtYIZZgTcPkJm0GK
+         4Q9ygUzrT/wuMst6eexf3QnZJAJZ1s4r4c7eY5MK+qsL2zNEuqgOmqhGeL7l+PHAFjfY
+         ZwC8fD7d7F+25I6VKZf5qT7hIAnlkuQD+XCqZ6nmOxIZn9h9v283Z4Ha7Qhu7Qpw7y/L
+         T9kA==
+X-Gm-Message-State: AOAM530SHKk++0kv/wsNkARXkWXYlFUMPIhfDcfdlyx8D0kENBOJtswU
+        KKfMECw35zhDiUbEbL+Gm71CreLr9XVONyT623pKtA==
+X-Google-Smtp-Source: ABdhPJw3zA/5DDab8XOr1VtQRtTX8CEm6/rTHXAy5dufuQWvYbiV4bveOm5XoSg86/xKhqu0KoiS8wD4ooiCRiprtkU=
+X-Received: by 2002:a62:e90b:0:b029:30e:4530:8dca with SMTP id
+ j11-20020a62e90b0000b029030e45308dcamr22725510pfh.17.1627383361511; Tue, 27
+ Jul 2021 03:56:01 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQJIF3zu3g+/Awptn47LJA2vs45sGwKSU/P/Ail7aZYBcufzmAMJoF0fATgHUheqIduGwA==
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrPJsWRmVeSWpSXmKPExsWy7bCmmW7rnf8JBqte6VqcfLKGzeLBvG1s
-        Fi9/XmWzmPbhJ7PFp/XLWC16djpbnJ6wiMliztkGJosn62cxWyy6sY3JYuU1C4vz5zewW9zc
-        cpTFYsb5fUwW3dd3sFksP/6PyUHA4/IVb4/Lfb1MHjtn3WX32LxCy2PxnpdMHptWdbJ5TFh0
-        gNHj49NbLB59W1YxenzeJOfRfqCbKYA7KscmIzUxJbVIITUvOT8lMy/dVsk7ON453tTMwFDX
-        0NLCXEkhLzE31VbJxSdA1y0zB+gbJYWyxJxSoFBAYnGxkr6dTVF+aUmqQkZ+cYmtUmpBSk6B
-        oWGBXnFibnFpXrpecn6ulaGBgZEpUGVCTsbExQvYC7awVpzddpilgbGHpYuRk0NCwETi5r7r
-        7F2MXBxCAjsYJfb1tzKBJIQEPjFKPHvjCZH4xiix6uBsJpiOH5+a2CASexklnixuZIVwXjBK
-        LF3eywZSxSagL/GyYxsriC0CkuhfLApSxCxwglli4a8pzCAJTgF3ianLJoMdIiwQJ3F5+TZG
-        EJtFQFVi2cU1QDUcHLwClhLTTqWBhHkFBCVOznwCVs4soC2xbOFrZoiLFCR+Pl0GtStMouHX
-        GyaIGhGJ2Z1tzCB7JQSaOSXuHV0C9bSLxIRte6GahSVeHd/CDmFLSXx+t5cNoqGbUaL10X+o
-        xGpGic5GHwjbXuLX9C2sIMcxC2hKrN+lD2JKCChLHLkFdRufRMfhv+wQYV6JjjYhiEZ1iQPb
-        p0NdICvRPecz6wRGpVlIPpuF5LNZSD6YhbBrASPLKkax1ILi3PTUYqMCQ+TI3sQITularjsY
-        J7/9oHeIkYmD8RCjBAezkgivw4rfCUK8KYmVValF+fFFpTmpxYcYTYFBPZFZSjQ5H5hV8kri
-        DU2NzMwMLE0tTM2MLJTEeTXiviYICaQnlqRmp6YWpBbB9DFxcEo1MPGruaQ69M352HXo6Kf3
-        fCx8ytdnOC2YISe6Zk1msbfzHKWL91yrM6cpbb50t8ie9yzn+zj/ZgXvixxerfxykjZpi39O
-        3LO4546VWX6iTvFevU9X2++uUEtbHBKg+Ftw4U/+JVv2/ouS8/NS1XC1St01nZV7Z7ZO5hmp
-        9U+3bOx+kTlDpWLH1VeGYsKh/U6OT7Zndufz2m/cfGFpkmlYfMfp/49f6Bmd4A09H7v7wdpe
-        7/WeKlUZ5yYGM3Zt5L63WcXyx4E2ngs3pZa+f+Q2z35feWBr2eST0ZU/l/7+rJvHt/n8h1ee
-        i+3Kuq4kJCa6zmCvE8qcueL53o2JP08oHRXLlj78W3m/ufffufH+t5VYijMSDbWYi4oTAW6y
-        +bpyBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrNIsWRmVeSWpSXmKPExsWy7bCSnG7Lnf8JBt9azC1OPlnDZvFg3jY2
-        i5c/r7JZTPvwk9ni0/plrBY9O50tTk9YxGQx52wDk8WT9bOYLRbd2MZksfKahcX58xvYLW5u
-        OcpiMeP8PiaL7us72CyWH//H5CDgcfmKt8flvl4mj52z7rJ7bF6h5bF4z0smj02rOtk8Jiw6
-        wOjx8ektFo++LasYPT5vkvNoP9DNFMAdxWWTkpqTWZZapG+XwJWxYPY7toI5rBWNG88xNTB+
-        Ye5i5OSQEDCR+PGpiQ3EFhLYzSgx54cuRFxW4tm7HewQtrDE/ZYjrF2MXEA1zxglZj5aC9bA
-        JqAv8bJjG1hCROAVo8SJq+1sIA6zwAVmiev/f7JBtLxikvi16BsjSAungLvE1GWTWUBsYYEY
-        iWMbNoDFWQRUJZZdXAN0EwcHr4ClxLRTaSBhXgFBiZMzn4CVMwtoS/Q+bGWEsZctfA31goLE
-        z6fLWEFsEYEwiYZfb5ggakQkZne2MU9gFJ6FZNQsJKNmIRk1C0nLAkaWVYySqQXFuem5xYYF
-        hnmp5XrFibnFpXnpesn5uZsYwfGtpbmDcfuqD3qHGJk4GA8xSnAwK4nwOqz4nSDEm5JYWZVa
-        lB9fVJqTWnyIUZqDRUmc90LXyXghgfTEktTs1NSC1CKYLBMHp1QD07Wu9Am+ZeESxrs7eNUO
-        G7AbHlza7HD51pvzzhVfKhuOnPEzS/n5yHb1/NIvB6IEmz6GnsqVMZncaLNhmfZy9/cN0+1X
-        +29W7764V/HjUrfqrqe80RM/y0qUBedPuCDNXz3j3MoXJr7MXzfoHPX8mB/0+M79zHlH40Uu
-        9HV7uq+5FWYdeL/zU+a0Fesz8kqu7taVLRHPWpXYsjp9Z1F93ENelZorq2fqBvJxuDbNemD7
-        cDdTSND8/YUyxu3vTzSaMboIxL6K46vr2mgx5c+92s+SNalfsm023Vkn85lbWenV0YWOTp5/
-        jFc1am+6E/OYXy+40FPuwW5hW902vh974yrkN259L5v8XTZtwTIXJZbijERDLeai4kQAHyIs
-        F14DAAA=
-X-CMS-MailID: 20210727101429epcas2p31b7bdb200636151e5db7581075d6e730
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210714071200epcas2p3f76e68f6bbb4755574dba2055a8130ab
-References: <20210714071131.101204-1-chanho61.park@samsung.com>
-        <CGME20210714071200epcas2p3f76e68f6bbb4755574dba2055a8130ab@epcas2p3.samsung.com>
-        <20210714071131.101204-15-chanho61.park@samsung.com>
-        <2b4f4e6d76cdc517843fe8880312541c754d5352.camel@gmail.com>
-        <000601d7820a$9aa11210$cfe33630$@samsung.com>
-        <602ee8bc56891f0f0429afe274d7174ec325172e.camel@gmail.com>
+References: <20210708074642.23599-1-harshvardhan.jha@oracle.com>
+In-Reply-To: <20210708074642.23599-1-harshvardhan.jha@oracle.com>
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+Date:   Tue, 27 Jul 2021 16:25:35 +0530
+Message-ID: <CAL2rwxoDwkrsZNQjdpft==8wVY5nDaNUd03ixtbrbArMSPWbow@mail.gmail.com>
+Subject: Re: [PATCH] scsi: megaraid_mm: Fix end of loop tests for list_for_each_entry
+To:     Harshvardhan Jha <harshvardhan.jha@oracle.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Dan Carpenter <dan.carpenter@oracle.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="00000000000036892c05c818b7c8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > A PH has its own doorbell register and each VHs also has it as well.
-> >
-> > The TASK_TAG=5B7:5=5D can be used to distinguish the origin of the
-> > request among VHs and remaining TASK_TAG=5B4:0=5D will be used for
-> > supporting 32 tags.
-> >
-> >
-> >
-> > Best Regards,
-> >
-> > Chanho Park
->=20
-> Thanks for your reply.
->=20
-> so you split the =22Task Tag=22 filed byte3 in the UPIU header to two
-> parts, bit7=7Ebit5 is for the VHs ID, and bit4=7Ebit0 is for the task ID.
-> but this is not defined in the Spec 2.1. correct?
->=20
+--00000000000036892c05c818b7c8
+Content-Type: text/plain; charset="UTF-8"
 
-You're right.
-For PH, TASK_TAG=5B7:5=5D will be set to =220=22 but a VHID will be used in=
- case of VH.
+On Thu, Jul 8, 2021 at 1:16 PM Harshvardhan Jha
+<harshvardhan.jha@oracle.com> wrote:
+>
+> The list_for_each_entry() iterator, "adapter" in this code, can never be
+> NULL.  If we exit the loop without finding the correct  adapter then
+> "adapter" points invalid memory that is an offset from the list head.
+> This will eventually lead to memory corruption and presumably a kernel
+> crash.
+>
+> Signed-off-by: Harshvardhan Jha <harshvardhan.jha@oracle.com>
+Looks good.
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-Best Regards,
-Chanho Park
+--00000000000036892c05c818b7c8
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
+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
+GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
+uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
+hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
+kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
+zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
+rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
+3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICnBM5SB3Vm4UD32Tm8/blMgE6svs3kE
+WZ5L3XQTzJbbMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDcy
+NzEwNTYwMlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQB9B3S81IyXzGXS8RYrRkrI21UAQtUoDWgMgi9gVKxuyU3nyypo
+t5pTvAnpeUfV0gcyg99a2WBEX2klhdHpBKB8AaheAJtJB44p/p5Tf+HVXRE6OjBFzy7DJXHFn9D1
+a4025kOGpmQGVCHnBnEChHgF+E+ekxkHDY1K8u1JJC6y9SWz/m6c6WX/6gW2rpypLm/pZ+WVZfva
+w2HSHPlmZchcobbIyMJEfRolQlYKEwECxinsBV3a19EOBnqfIfDk6SxxrnB0NWQKMVdBzSeX8TYC
+6Zj675pd1fzkNxoU+uGxeDdqZHB8KPM9oQx+tOBLkJK6JZxwxhpu1tnGpv3Ug5Os
+--00000000000036892c05c818b7c8--
