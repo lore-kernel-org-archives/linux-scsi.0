@@ -7,114 +7,113 @@ X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E70DC4338F
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jul 2021 05:43:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5D26C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jul 2021 06:58:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D071960F91
-	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jul 2021 05:43:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF999600EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 28 Jul 2021 06:58:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231484AbhG1FnG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jul 2021 01:43:06 -0400
-Received: from mailout2.samsung.com ([203.254.224.25]:39645 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229814AbhG1FnF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jul 2021 01:43:05 -0400
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210728054303epoutp0273ad8989daa732dfd7ef3ffd0d8f985e~V3gvqN17W2096320963epoutp02V
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Jul 2021 05:43:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210728054303epoutp0273ad8989daa732dfd7ef3ffd0d8f985e~V3gvqN17W2096320963epoutp02V
+        id S232798AbhG1G6I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jul 2021 02:58:08 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:60041 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234736AbhG1G6G (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jul 2021 02:58:06 -0400
+Received: from epcas3p4.samsung.com (unknown [182.195.41.22])
+        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210728065803epoutp01d5addb9aa31162af1b6e9fb545bfa07a~V4iOyeuQ_1509615096epoutp01h
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Jul 2021 06:58:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210728065803epoutp01d5addb9aa31162af1b6e9fb545bfa07a~V4iOyeuQ_1509615096epoutp01h
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1627450983;
-        bh=evLbZQmnWSYds85XDS8YxQQPRr+aceNo1PP5/vPEgmQ=;
+        s=mail20170921; t=1627455483;
+        bh=H2o4m4pKd0K9U3wtLTLdqOwHzB37lZW8wBYjITgRe3U=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=rFWHprDEqlIeudfQIQhwyEsqPBc2dXc2gFZ5s6pHevg5a304Knw7/N7HNew4kz1Ak
-         AhgUN0kwA+N3ctc6E5p3w0tY8p9tK4fWbe7tIYkWPmuNkfFsXEallfgZFlZv9LSj3d
-         wFWoO1Cn3ZZoWuDLosv9cKTr1jIlBpS1sauo0pBY=
-Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        b=qOyxVsLMU77kz9VYQ6rH3qI1bM7JaQIv3Ad0gsX62DfZ1S4K8zKGjt7UJNT0Lwa7b
+         UhMyiUCF9BJ6p+hd7Gwit9q1mL5Cd4jnXN/UbxR9K60Z4vzo6+Q0S/ChpaZCMjOAfM
+         qmDwUgiTVW8GFNJs9V9VrQcW4JqEGIq0WVW+INsM=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
         epcas3p2.samsung.com (KnoxPortal) with ESMTP id
-        20210728054302epcas3p2a02c08b1979b1ab6e337cfe7c8d71399~V3gu4U4fl2857528575epcas3p2y;
-        Wed, 28 Jul 2021 05:43:02 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
-        (Postfix) with ESMTP id 4GZMyG1m0lz4x9QL; Wed, 28 Jul 2021 05:43:02 +0000
+        20210728065802epcas3p2c765b5a5bf016ce1649de7d2288bc64d~V4iOOaTNF1541415414epcas3p2J;
+        Wed, 28 Jul 2021 06:58:02 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp1.localdomain
+        (Postfix) with ESMTP id 4GZPcp4m8Fz4x9Py; Wed, 28 Jul 2021 06:58:02 +0000
         (GMT)
 Mime-Version: 1.0
-Subject: RE: [PATCH 2/3] scsi: ufs: Map the correct size to the rpmb unit
- descriptor
+Subject: RE: [PATCH v3 06/18] scsi: ufs: Remove ufshcd_valid_tag()
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
-To:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Avri Altman <avri.altman@wdc.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>
 CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
         Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
         ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
         Daejun Park <daejun7.park@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <20210727123546.17228-3-avri.altman@wdc.com>
+In-Reply-To: <20210722033439.26550-7-bvanassche@acm.org>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <2038148563.21627450982237.JavaMail.epsvc@epcpadp4>
-Date:   Wed, 28 Jul 2021 14:06:39 +0900
-X-CMS-MailID: 20210728050639epcms2p7d9d9973d58c5ee7a23046462ee983796
+Message-ID: <2038148563.21627455482667.JavaMail.epsvc@epcpadp4>
+Date:   Wed, 28 Jul 2021 15:48:16 +0900
+X-CMS-MailID: 20210728064816epcms2p4dbbf9b7182422ed2ee53b4b64aa4e9da
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 X-Hop-Count: 3
-X-CMS-RootMailID: 20210727123637epcas2p23457bd807cee66ec4c4e487a3a15ef33
-References: <20210727123546.17228-3-avri.altman@wdc.com>
-        <20210727123546.17228-1-avri.altman@wdc.com>
-        <CGME20210727123637epcas2p23457bd807cee66ec4c4e487a3a15ef33@epcms2p7>
+X-CMS-RootMailID: 20210722033524epcas2p31e41c1db6883aaa644edf23bbe8a1ca2
+References: <20210722033439.26550-7-bvanassche@acm.org>
+        <20210722033439.26550-1-bvanassche@acm.org>
+        <CGME20210722033524epcas2p31e41c1db6883aaa644edf23bbe8a1ca2@epcms2p4>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Avri,
+Hi Bart,
 
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index 579cf6f9e7a1..d0be8d4c8091 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -167,6 +167,7 @@ enum desc_idn {
->          QUERY_DESC_IDN_GEOMETRY                = 0x7,
->          QUERY_DESC_IDN_POWER                = 0x8,
->          QUERY_DESC_IDN_HEALTH           = 0x9,
-> +        QUERY_DESC_IDN_UNIT_RPMB        = 0xA,
->          QUERY_DESC_IDN_MAX,
-
-By adding QUERY_DESC_IDN_UNIT_RPMB, the value of QUERY_DESC_IDN_MAX is
-changed to 0xB.
-...
-
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 74ccfd2b80ce..eec1bc95391b 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3319,11 +3319,13 @@ int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
->   * @desc_len: mapped desc length (out)
+> @@ -6979,24 +6966,15 @@ static int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag)
 >   */
->  void ufshcd_map_desc_id_to_length(struct ufs_hba *hba, enum desc_idn desc_id,
-> -                                  int *desc_len)
-> +                                  int desc_index, int *desc_len)
+>  static int ufshcd_abort(struct scsi_cmnd *cmd)
 >  {
->          if (desc_id >= QUERY_DESC_IDN_MAX || desc_id == QUERY_DESC_IDN_RFU_0 ||
->              desc_id == QUERY_DESC_IDN_RFU_1)
->                  *desc_len = 0;
+> -        struct Scsi_Host *host;
+> -        struct ufs_hba *hba;
+> +        struct Scsi_Host *host = cmd->device->host;
+> +        struct ufs_hba *hba = shost_priv(host);
+> +        unsigned int tag = cmd->request->tag;
+> +        struct ufshcd_lrb *lrbp = &hba->lrb[tag];
 
-So, if user sending desc_id as 0xA, it can not be detected as invalid descriptor.
+If tag < 0, lrbp will be assigned incorrect pointer.
 
-> +        else if (desc_index == UFS_UPIU_RPMB_WLUN)
-> +                *desc_len = hba->desc_size[QUERY_DESC_IDN_UNIT_RPMB];
->          else
->                  *desc_len = hba->desc_size[desc_id];
->  }
+>          unsigned long flags;
+> -        unsigned int tag;
+>          int err = 0;
+> -        struct ufshcd_lrb *lrbp;
+>          u32 reg;
+>  
+> -        host = cmd->device->host;
+> -        hba = shost_priv(host);
+> -        tag = cmd->request->tag;
+> -        lrbp = &hba->lrb[tag];
+> -        if (!ufshcd_valid_tag(hba, tag)) {
+> -                dev_err(hba->dev,
+> -                        "%s: invalid command tag %d: cmd=0x%p, cmd->request=0x%p",
+> -                        __func__, tag, cmd, cmd->request);
+> -                BUG();
+> -        }
+> +        WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+>  
+>          ufshcd_hold(hba, false);
+>          reg = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
 
 Thanks,
 Daejun
