@@ -7,86 +7,89 @@ X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 23679C4320A
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Jul 2021 01:28:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13049C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Jul 2021 01:30:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DFF26103A
-	for <linux-scsi@archiver.kernel.org>; Thu, 29 Jul 2021 01:28:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFAAF60F43
+	for <linux-scsi@archiver.kernel.org>; Thu, 29 Jul 2021 01:30:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233187AbhG2B2H (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 28 Jul 2021 21:28:07 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:32352 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233142AbhG2B2G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jul 2021 21:28:06 -0400
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20210729012802epoutp0134b56e7267ade0ae3697744d025b5613~WHrYdaRwU2547925479epoutp01K
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2021 01:28:02 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20210729012802epoutp0134b56e7267ade0ae3697744d025b5613~WHrYdaRwU2547925479epoutp01K
+        id S233197AbhG2BaI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 28 Jul 2021 21:30:08 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:27919 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233142AbhG2BaH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Jul 2021 21:30:07 -0400
+Received: from epcas3p1.samsung.com (unknown [182.195.41.19])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210729013003epoutp0437b5824f1715caec745c5b389a7c5adb~WHtJDOC2o1475714757epoutp04z
+        for <linux-scsi@vger.kernel.org>; Thu, 29 Jul 2021 01:30:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210729013003epoutp0437b5824f1715caec745c5b389a7c5adb~WHtJDOC2o1475714757epoutp04z
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1627522082;
-        bh=WzdIPXlft7/OFpH9NKbzflmeKiAe6dUJINLgwLFCHsc=;
+        s=mail20170921; t=1627522203;
+        bh=nc411u8xYr70oG2ZWOibXBg/rWcbdAtPphHBq1O5BD8=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=oO9pBRVwadk2VizNNOLZpqm/yS3GLbe8e1lHgyGzAfGuKUna1vWdtyrkPj1Utes7Y
-         vUYl9YgMDLHkTIDcdJxxJo5ECUGh4YEFkPYjh+K9km29knRJ9iP/IyBX9n+3OPNVpS
-         lc11xteQnQo4dTuV40cAOs61/SlcUDBgP6vPUJK0=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
-        20210729012802epcas3p1f59893112269dca7af55a79613247eec~WHrX4tOrT0457604576epcas3p1a;
-        Thu, 29 Jul 2021 01:28:02 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp2.localdomain
-        (Postfix) with ESMTP id 4GZtFZ1TD4z4x9QB; Thu, 29 Jul 2021 01:28:02 +0000
+        b=gGNlc+Uj6+1TRjjDXOYrTeJ5meZMe/j1cFQX8hi7GnBNAMyfApxfY7sxCZvlOa45i
+         9e+M4GIr7LU1qjADTH05ZCWUCI8GTfCSpsFKEMrALfnL9l/nzJgE3xazVB8D6cwsB0
+         gXmOQAZgq+zQ/s0UifQd1SSK4l2wZksW1UdAOMCU=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas3p3.samsung.com (KnoxPortal) with ESMTP id
+        20210729013002epcas3p3ed64fe50b4770c37fbabf4e0ade934f1~WHtH5vLdT3174231742epcas3p3C;
+        Thu, 29 Jul 2021 01:30:02 +0000 (GMT)
+Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp1.localdomain
+        (Postfix) with ESMTP id 4GZtHt2qXxz4x9Pr; Thu, 29 Jul 2021 01:30:02 +0000
         (GMT)
 Mime-Version: 1.0
-Subject: RE: [PATCH v3 12/18] scsi: ufs: Optimize serialization of
- setup_xfer_req() calls
+Subject: RE: [PATCH v3 13/18] scsi: ufs: Optimize SCSI command processing
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
         Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
+        Can Guo <cang@codeaurora.org>,
         Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         Matthias Brugger <matthias.bgg@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
+        Bean Huo <beanhuo@micron.com>,
         Kiwoong Kim <kwmad.kim@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Daejun Park <daejun7.park@samsung.com>
+        Keoseong Park <keosung.park@samsung.com>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <20210722033439.26550-13-bvanassche@acm.org>
+In-Reply-To: <20210722033439.26550-14-bvanassche@acm.org>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <1796371666.41627522082177.JavaMail.epsvc@epcpadp4>
-Date:   Thu, 29 Jul 2021 10:25:00 +0900
-X-CMS-MailID: 20210729012500epcms2p2c7976b7b4b65e997e778f9291c9c2e3f
+Message-ID: <1891546521.01627522202382.JavaMail.epsvc@epcpadp3>
+Date:   Thu, 29 Jul 2021 10:25:02 +0900
+X-CMS-MailID: 20210729012502epcms2p1b7b0f63eed6c4f8a73a1d086e8d22631
 Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 X-Hop-Count: 3
-X-CMS-RootMailID: 20210722033552epcas2p39f68ea806091ffa9755a25b778d70101
-References: <20210722033439.26550-13-bvanassche@acm.org>
+X-CMS-RootMailID: 20210722033553epcas2p2818d9c1f046e8514415a72a4ddddc3db
+References: <20210722033439.26550-14-bvanassche@acm.org>
         <20210722033439.26550-1-bvanassche@acm.org>
-        <CGME20210722033552epcas2p39f68ea806091ffa9755a25b778d70101@epcms2p2>
+        <CGME20210722033553epcas2p2818d9c1f046e8514415a72a4ddddc3db@epcms2p1>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Bart,
 
->Reduce the number of times the host lock is taken in the hot path.
->Additionally, inline ufshcd_vops_setup_xfer_req() because that function is
->too short to keep it.
+>Use a spinlock to protect hba->outstanding_reqs instead of using atomic
+>operations to update this member variable.
+> 
+>This patch is a performance improvement because it reduces the number of
+>atomic operations in the hot path (test_and_clear_bit()) and because it
+>reduces the lock contention on the SCSI host lock. On my test setup this
+>patch improves IOPS by about 1%.
 
 Reviewed-by: Daejun Park <daejun7.park@samsung.com>
 
