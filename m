@@ -2,98 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D514C4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 16:05:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 117B9C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 16:33:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 64AC560EBD
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 16:05:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E16A460F4A
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 16:33:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229601AbhG3QFP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Jul 2021 12:05:15 -0400
-Received: from mail-pj1-f52.google.com ([209.85.216.52]:37608 "EHLO
-        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229570AbhG3QFO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jul 2021 12:05:14 -0400
-Received: by mail-pj1-f52.google.com with SMTP id a4-20020a17090aa504b0290176a0d2b67aso21506834pjq.2;
-        Fri, 30 Jul 2021 09:05:08 -0700 (PDT)
+        id S229717AbhG3Qd2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Jul 2021 12:33:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45916 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229698AbhG3QdY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jul 2021 12:33:24 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BB18C06175F
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Jul 2021 09:33:18 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id u9-20020a17090a1f09b029017554809f35so21536054pja.5
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Jul 2021 09:33:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=0nwD6XTYPEmsLsHNrgKGqslYtt4dO1wy54e7IY0qBik=;
+        b=RoKU7FaMpTMNDPDhH5Bb8tcD62pbrURvblCzoW+NZvkjVkCg/+1lMiGddX+VdC0Gu/
+         KZYe3BxGnYj3b18w6QB6x/P+RT6/+dH/s/vo7W1d6egqUoKd4omWSpyt1ihfVRblmcD6
+         WAkcN8/X/oSkPhVzJisoTwDRTsVenJb52MFGxf5RQLcYRezHRkejb0i7cIFbeBBisxHp
+         g3zKsz205ayNkXzkMkhZbSXYMWaYFRM4hYBjtGvHFm9PT/afEpQZ1L4bhNOr2DeEhfIU
+         lZA5d6WGzYNz5SwuePah3C8OrPFCPylRx2MIlX5hvqBR9Em9xy3DFnsaYWZhTAJKF4cq
+         8R/g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=Mb1gO+6STzLWuQhCsk6+1XZIXPWL26jkAcu9s9eX/WM=;
-        b=LOtV3XNjZJohMmWgMYVuJTC7qRGR7Bmo2BFoyfuyY8/8WpDTTJDibU4S88ng2z0TwQ
-         j7q9YBy6RQBkYihYVQI+Le+hLa5snX7YUhtZK5KjWE4dC7kLo01htdu/ZOEaJSihI5I1
-         7B+f2JjFtSi9wQ35DnkExeAcZVtKMbQ/GBjii3l2NXSlS+8mDcfDW713To2fWmAMQZ50
-         WEr/HPfxU7ii0vYMHbmTyqVlax3zS9p3IswT0krHqHX/pBynvf3b8m+XvOf2Ls2zm3zf
-         S/yvK6e5eCu4SYx0AbX6+hbRlm/KxrNOLTmFy4c98Aa3cTEdSDVF8nCZ2O8GWZTEjZ/g
-         x5BQ==
-X-Gm-Message-State: AOAM533jWpYEU2JWyAGfWPdPsQFXdIaJQCQ3X96dwvaUPmTGzdboaDHS
-        t/Xejicxqw8SxeVDnRAYNAU=
-X-Google-Smtp-Source: ABdhPJwy2js4U4Iak2ex7sFLzTif9lZyITB6DErOQjLoUeAcFMkysbqnCLlnlpw94AUCOgqEqlpJxw==
-X-Received: by 2002:aa7:9546:0:b029:32e:5fdf:9576 with SMTP id w6-20020aa795460000b029032e5fdf9576mr3353456pfq.5.1627661107884;
-        Fri, 30 Jul 2021 09:05:07 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:684a:6173:abee:6f13])
-        by smtp.gmail.com with ESMTPSA id r128sm2997972pfc.155.2021.07.30.09.05.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 30 Jul 2021 09:05:07 -0700 (PDT)
-Subject: Re: [PATCH] scsi: ufs: Allow async suspend/resume callbacks
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Vincent Palomares <paillon@google.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20210728012743.1063928-1-paillon@google.com>
- <DM6PR04MB6575579560F7CB1B71103F28FCEB9@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <1630ebc3-b40e-31e3-1efa-67717e186b0a@acm.org>
-Date:   Fri, 30 Jul 2021 09:05:05 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        bh=0nwD6XTYPEmsLsHNrgKGqslYtt4dO1wy54e7IY0qBik=;
+        b=krwjpSmRpbOtlnNK6/c2fbryjB/FExzwWoMgTmmes9zlynQgU68V1ZQ2L9Aq3dyNTe
+         zrO1qwl8dzNmcn5uDMcKPILzTHNhDm4vSsYWq2W9CXal64cQzkjfhg1UoU/Y3ZjKUDIX
+         EiHstl3RCC0JFjvCOf5+Ucmu5FWuFr1fIZTtcQT9PXzVZVwC0guAxRXx1lLuDyx9r7Pf
+         QnMrTz/hXO+lJpztUK7aI2SK50zgZt660OcKFUbP8RzYpFBQrFDeQro0284gm/fZdaB7
+         GCDvXqENhIXNBMTrBioGs5zIATnA2Qh+8/U99tft6e/nExhBxEvGqphFS2UQ9CH6dH/+
+         3v+Q==
+X-Gm-Message-State: AOAM532fWcG1q6b++D2zByAIDeYmape829DnIcYoZE2whYUjiiacS/vY
+        etSbY680y6t8GE2fEFfip+o/NhusHr0=
+X-Google-Smtp-Source: ABdhPJyb5tWakGUhI80PGdAKE+1lMy9CEFvAvcifHTMyZ4DdorEbSWpFku+PRu41HwFSUsQVhFJGZA==
+X-Received: by 2002:a17:90a:bd98:: with SMTP id z24mr3924406pjr.99.1627662798023;
+        Fri, 30 Jul 2021 09:33:18 -0700 (PDT)
+Received: from localhost.localdomain.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id f24sm2912505pjj.45.2021.07.30.09.33.15
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 Jul 2021 09:33:17 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>
+Subject: [PATCH] lpfc: fix possible ABBA deadlock in nvmet_xri_aborted
+Date:   Fri, 30 Jul 2021 09:33:09 -0700
+Message-Id: <20210730163309.25809-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-In-Reply-To: <DM6PR04MB6575579560F7CB1B71103F28FCEB9@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 7/28/21 11:48 PM, Avri Altman wrote:
-> Vincent wrote:
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index b87ff68aa9aa..9ec5c308a0ea 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -9625,6 +9625,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem
->> *mmio_base, unsigned int irq)
->>          async_schedule(ufshcd_async_scan, hba);
->>          ufs_sysfs_add_nodes(hba->dev);
->>
->> +       device_enable_async_suspend(dev);
->>          return 0;
-> Isn't device_enable_async_suspend is being called for each lun in scsi_sysfs_add_sdev Anyway?
+The lpfc_sli4_nvmet_xri_aborted routine takes out the abts_buf_list_lock
+and traverses the buffer contexts to match the xri. Upon match, it then
+takes the context lock before potentially removing the context from the
+associated buffer list. This violates the lock hierarchy used elsewhere
+in the driver of locking context, then the abts_buf_list_lock - thus a
+possible deadlock.
 
-Hi Avri,
+Resolve by: after matching, release the abts_buf_list_lock, then take
+the context lock, and if to be deleted from the list, retake the
+abts_buf_list_lock, maintaining lock hierarchy. This matches same list
+lock hierarchy as elsewhere in the driver
 
-Our measurements have shown that resume takes longer than it should with 
-encryption enabled. While suspending we change the power mode of the UFS 
-device to a mode in which it loses crypto keys. Restoring crypto keys 
-during resume (blk_ksm_reprogram_all_keys()) takes about 31 ms. This is 
-the long pole and takes much more time than resuming LUNs. This patch 
-makes UFS resume happen concurrently with resuming other devices in the 
-system instead of serializing it. Measurements have shown that this 
-patch significantly improves the time needed to resume an Android device.
+Reported-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_nvmet.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index f2d9a3580887..6e3dd0b9bcfa 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1797,19 +1797,22 @@ lpfc_sli4_nvmet_xri_aborted(struct lpfc_hba *phba,
+ 		if (ctxp->ctxbuf->sglq->sli4_xritag != xri)
+ 			continue;
+ 
+-		spin_lock(&ctxp->ctxlock);
++		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
++				       iflag);
++
++		spin_lock_irqsave(&ctxp->ctxlock, iflag);
+ 		/* Check if we already received a free context call
+ 		 * and we have completed processing an abort situation.
+ 		 */
+ 		if (ctxp->flag & LPFC_NVME_CTX_RLS &&
+ 		    !(ctxp->flag & LPFC_NVME_ABORT_OP)) {
++			spin_lock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
+ 			list_del_init(&ctxp->list);
++			spin_unlock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
+ 			released = true;
+ 		}
+ 		ctxp->flag &= ~LPFC_NVME_XBUSY;
+-		spin_unlock(&ctxp->ctxlock);
+-		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
+-				       iflag);
++		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
+ 
+ 		rrq_empty = list_empty(&phba->active_rrq_list);
+ 		ndlp = lpfc_findnode_did(phba->pport, ctxp->sid);
+-- 
+2.26.2
+
