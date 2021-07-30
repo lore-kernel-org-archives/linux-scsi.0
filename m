@@ -3,122 +3,159 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 117B9C4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 16:33:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FEFAC4320A
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 16:38:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E16A460F4A
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 16:33:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6217560F00
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 16:38:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229717AbhG3Qd2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Jul 2021 12:33:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45916 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229698AbhG3QdY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jul 2021 12:33:24 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8BB18C06175F
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Jul 2021 09:33:18 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id u9-20020a17090a1f09b029017554809f35so21536054pja.5
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Jul 2021 09:33:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=0nwD6XTYPEmsLsHNrgKGqslYtt4dO1wy54e7IY0qBik=;
-        b=RoKU7FaMpTMNDPDhH5Bb8tcD62pbrURvblCzoW+NZvkjVkCg/+1lMiGddX+VdC0Gu/
-         KZYe3BxGnYj3b18w6QB6x/P+RT6/+dH/s/vo7W1d6egqUoKd4omWSpyt1ihfVRblmcD6
-         WAkcN8/X/oSkPhVzJisoTwDRTsVenJb52MFGxf5RQLcYRezHRkejb0i7cIFbeBBisxHp
-         g3zKsz205ayNkXzkMkhZbSXYMWaYFRM4hYBjtGvHFm9PT/afEpQZ1L4bhNOr2DeEhfIU
-         lZA5d6WGzYNz5SwuePah3C8OrPFCPylRx2MIlX5hvqBR9Em9xy3DFnsaYWZhTAJKF4cq
-         8R/g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=0nwD6XTYPEmsLsHNrgKGqslYtt4dO1wy54e7IY0qBik=;
-        b=krwjpSmRpbOtlnNK6/c2fbryjB/FExzwWoMgTmmes9zlynQgU68V1ZQ2L9Aq3dyNTe
-         zrO1qwl8dzNmcn5uDMcKPILzTHNhDm4vSsYWq2W9CXal64cQzkjfhg1UoU/Y3ZjKUDIX
-         EiHstl3RCC0JFjvCOf5+Ucmu5FWuFr1fIZTtcQT9PXzVZVwC0guAxRXx1lLuDyx9r7Pf
-         QnMrTz/hXO+lJpztUK7aI2SK50zgZt660OcKFUbP8RzYpFBQrFDeQro0284gm/fZdaB7
-         GCDvXqENhIXNBMTrBioGs5zIATnA2Qh+8/U99tft6e/nExhBxEvGqphFS2UQ9CH6dH/+
-         3v+Q==
-X-Gm-Message-State: AOAM532fWcG1q6b++D2zByAIDeYmape829DnIcYoZE2whYUjiiacS/vY
-        etSbY680y6t8GE2fEFfip+o/NhusHr0=
-X-Google-Smtp-Source: ABdhPJyb5tWakGUhI80PGdAKE+1lMy9CEFvAvcifHTMyZ4DdorEbSWpFku+PRu41HwFSUsQVhFJGZA==
-X-Received: by 2002:a17:90a:bd98:: with SMTP id z24mr3924406pjr.99.1627662798023;
-        Fri, 30 Jul 2021 09:33:18 -0700 (PDT)
-Received: from localhost.localdomain.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id f24sm2912505pjj.45.2021.07.30.09.33.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Jul 2021 09:33:17 -0700 (PDT)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>
-Subject: [PATCH] lpfc: fix possible ABBA deadlock in nvmet_xri_aborted
-Date:   Fri, 30 Jul 2021 09:33:09 -0700
-Message-Id: <20210730163309.25809-1-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
+        id S229698AbhG3QiJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Jul 2021 12:38:09 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:46904 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229510AbhG3QiH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Jul 2021 12:38:07 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id C2E472026F;
+        Fri, 30 Jul 2021 16:38:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1627663080; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=S4rmQ0t6FOsVPyieg+nbFNJTk5NgyFjY1/w97IN97D8=;
+        b=ZjOZWfcxS9KflllB1FF8GnFPGqczIyz5RdxnsytaRteG1+EWM+2WlyROWzBpSlUaFqKvFo
+        6wKMLGAQZXRPulJFF+PzVQ8cMlmVeslBXOEPwkVSjCAaJjJyp13anX3NZHWsrAWaWe5rzz
+        dDFb/xHXSTGDrSE+zYYVs175kSSDq8s=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1627663080;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=S4rmQ0t6FOsVPyieg+nbFNJTk5NgyFjY1/w97IN97D8=;
+        b=69GHUABe+p+Us7ii6vPm1BN4apDLt6eE4NoSoyguBwxH01xP7OVpVmIEnpEcMHEjXE0HGr
+        MhtsreQryxYCqmAQ==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 74CCA13806;
+        Fri, 30 Jul 2021 16:38:00 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id QOp4GugqBGH6GwAAGKfGzw
+        (envelope-from <ddiss@suse.de>); Fri, 30 Jul 2021 16:38:00 +0000
+Date:   Fri, 30 Jul 2021 18:37:58 +0200
+From:   David Disseldorp <ddiss@suse.de>
+To:     Sergey Samoylenko <s.samoylenko@yadro.com>
+Cc:     <martin.petersen@oracle.com>, <michael.christie@oracle.com>,
+        <bvanassche@acm.org>, <target-devel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>
+Subject: Re: [v2 1/2] target: allows backend drivers to fail with specific
+ sense codes
+Message-ID: <20210730183758.6efb3f95@suse.de>
+In-Reply-To: <20210726151646.32631-2-s.samoylenko@yadro.com>
+References: <20210726151646.32631-1-s.samoylenko@yadro.com>
+        <20210726151646.32631-2-s.samoylenko@yadro.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The lpfc_sli4_nvmet_xri_aborted routine takes out the abts_buf_list_lock
-and traverses the buffer contexts to match the xri. Upon match, it then
-takes the context lock before potentially removing the context from the
-associated buffer list. This violates the lock hierarchy used elsewhere
-in the driver of locking context, then the abts_buf_list_lock - thus a
-possible deadlock.
+Hi Sergey,
 
-Resolve by: after matching, release the abts_buf_list_lock, then take
-the context lock, and if to be deleted from the list, retake the
-abts_buf_list_lock, maintaining lock hierarchy. This matches same list
-lock hierarchy as elsewhere in the driver
+On Mon, 26 Jul 2021 18:16:45 +0300, Sergey Samoylenko wrote:
 
-Reported-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
----
- drivers/scsi/lpfc/lpfc_nvmet.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+> Currently, backend drivers can fail IO with
+> SAM_STAT_CHECK_CONDITION which gets us
+> TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE. The patch adds
+> a new helper that allows backend drivers to fail with
+> specific sense codes.
+> 
+> This is based on a patch from Mike Christie <michael.christie@oracle.com>.
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index f2d9a3580887..6e3dd0b9bcfa 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1797,19 +1797,22 @@ lpfc_sli4_nvmet_xri_aborted(struct lpfc_hba *phba,
- 		if (ctxp->ctxbuf->sglq->sli4_xritag != xri)
- 			continue;
- 
--		spin_lock(&ctxp->ctxlock);
-+		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
-+				       iflag);
-+
-+		spin_lock_irqsave(&ctxp->ctxlock, iflag);
- 		/* Check if we already received a free context call
- 		 * and we have completed processing an abort situation.
- 		 */
- 		if (ctxp->flag & LPFC_NVME_CTX_RLS &&
- 		    !(ctxp->flag & LPFC_NVME_ABORT_OP)) {
-+			spin_lock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
- 			list_del_init(&ctxp->list);
-+			spin_unlock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
- 			released = true;
- 		}
- 		ctxp->flag &= ~LPFC_NVME_XBUSY;
--		spin_unlock(&ctxp->ctxlock);
--		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
--				       iflag);
-+		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
- 
- 		rrq_empty = list_empty(&phba->active_rrq_list);
- 		ndlp = lpfc_findnode_did(phba->pport, ctxp->sid);
--- 
-2.26.2
+This looks good and works for me, but I have one comment...
 
+> Cc: Mike Christie <michael.christie@oracle.com>
+> Cc: David Disseldorp <ddiss@suse.de>
+> [ Moved target_complete_cmd_with_sense() helper to mainline ]
+> Signed-off-by: Sergey Samoylenko <s.samoylenko@yadro.com>
+> ---
+>  drivers/target/target_core_transport.c | 21 ++++++++++++++++++---
+>  include/target/target_core_backend.h   |  1 +
+>  include/target/target_core_base.h      |  2 ++
+>  3 files changed, 21 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 26ceabe34de5..d2a2892bda9c 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -736,8 +736,7 @@ static void target_complete_failure_work(struct work_struct *work)
+>  {
+>  	struct se_cmd *cmd = container_of(work, struct se_cmd, work);
+>  
+> -	transport_generic_request_failure(cmd,
+> -			TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE);
+> +	transport_generic_request_failure(cmd, cmd->sense_reason);
+>  }
+>  
+>  /*
+> @@ -855,7 +854,8 @@ static bool target_cmd_interrupted(struct se_cmd *cmd)
+>  }
+>  
+>  /* May be called from interrupt context so must not sleep. */
+> -void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+> +static void __target_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
+> +				  sense_reason_t sense_reason)
+>  {
+>  	struct se_wwn *wwn = cmd->se_sess->se_tpg->se_tpg_wwn;
+>  	int success, cpu;
+> @@ -865,6 +865,7 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+>  		return;
+>  
+>  	cmd->scsi_status = scsi_status;
+> +	cmd->sense_reason = sense_reason;
+>  
+>  	spin_lock_irqsave(&cmd->t_state_lock, flags);
+>  	switch (cmd->scsi_status) {
+> @@ -893,8 +894,22 @@ void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+>  
+>  	queue_work_on(cpu, target_completion_wq, &cmd->work);
+>  }
+> +
+> +void target_complete_cmd(struct se_cmd *cmd, u8 scsi_status)
+> +{
+> +	__target_complete_cmd(cmd, scsi_status, scsi_status ?
+> +			      TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE :
+> +			      TCM_NO_SENSE);
+> +}
+>  EXPORT_SYMBOL(target_complete_cmd);
+>  
+> +void target_complete_cmd_with_sense(struct se_cmd *cmd,
+> +				    sense_reason_t sense_reason)
+> +{
+> +	__target_complete_cmd(cmd, SAM_STAT_CHECK_CONDITION, sense_reason);
+> +}
+> +EXPORT_SYMBOL(target_complete_cmd_with_sense);
+> +
+
+It's a little unclear from the function prototype that this actually
+fails the command with SAM_STAT_CHECK_CONDITION. I could imagine people
+erroneously calling target_complete_cmd_with_sense(cmd, TCM_NO_SENSE)
+and expecting success.
+I think it might be a bit clearer if you just export
+__target_complete_cmd() as target_complete_cmd_with_sense() with all
+three parameters and leave it up to the caller to flag
+CHECK_CONDITION.
+
+Cheers, David
