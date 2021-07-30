@@ -2,288 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F478C4320A
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 07:27:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 537B1C432BE
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 08:06:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7CB861050
-	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 07:27:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3ED7D61050
+	for <linux-scsi@archiver.kernel.org>; Fri, 30 Jul 2021 08:06:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237694AbhG3H2A (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 30 Jul 2021 03:28:00 -0400
-Received: from verein.lst.de ([213.95.11.211]:59863 "EHLO verein.lst.de"
+        id S238083AbhG3IGz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 30 Jul 2021 04:06:55 -0400
+Received: from mga03.intel.com ([134.134.136.65]:13027 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230311AbhG3H17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Jul 2021 03:27:59 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id E45F967373; Fri, 30 Jul 2021 09:27:52 +0200 (CEST)
-Date:   Fri, 30 Jul 2021 09:27:52 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Anders Roxell <anders.roxell@linaro.org>
-Cc:     hch@lst.de, "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jens Axboe <axboe@kernel.dk>,
-        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
-        Kai.Makisara@kolumbus.fi, dgilbert@interlog.com,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-next@vger.kernel.org, broonie@kernel.org,
-        sfr@canb.auug.org.au, lkft-triage@lists.linaro.org
-Subject: Re: [PATCH 14/24] bsg: move bsg_scsi_ops to drivers/scsi/
-Message-ID: <20210730072752.GB23847@lst.de>
-References: <20210724072033.1284840-1-hch@lst.de> <20210724072033.1284840-15-hch@lst.de>
+        id S230422AbhG3IGs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Jul 2021 04:06:48 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10060"; a="213084655"
+X-IronPort-AV: E=Sophos;i="5.84,281,1620716400"; 
+   d="scan'208";a="213084655"
+Received: from orsmga005.jf.intel.com ([10.7.209.41])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2021 01:06:43 -0700
+X-IronPort-AV: E=Sophos;i="5.84,281,1620716400"; 
+   d="scan'208";a="635393118"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by orsmga005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2021 01:06:29 -0700
+Received: from andy by smile with local (Exim 4.94.2)
+        (envelope-from <andriy.shevchenko@intel.com>)
+        id 1m9NXA-003JSv-6T; Fri, 30 Jul 2021 11:06:20 +0300
+Date:   Fri, 30 Jul 2021 11:06:20 +0300
+From:   Andy Shevchenko <andriy.shevchenko@intel.com>
+To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Geert Uytterhoeven <geert@linux-m68k.org>,
+        kernel@pengutronix.de,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Paul Mackerras <paulus@samba.org>,
+        Russell Currey <ruscur@russell.cc>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        Ingo Molnar <mingo@redhat.com>,
+        Arnaldo Carvalho de Melo <acme@kernel.org>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Jiri Olsa <jolsa@redhat.com>,
+        Namhyung Kim <namhyung@kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Borislav Petkov <bp@alien8.de>, x86@kernel.org,
+        "H. Peter Anvin" <hpa@zytor.com>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Salil Mehta <salil.mehta@huawei.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Vadym Kochan <vkochan@marvell.com>,
+        Taras Chornyi <tchornyi@marvell.com>,
+        Jiri Pirko <jiri@nvidia.com>, Ido Schimmel <idosch@nvidia.com>,
+        Simon Horman <simon.horman@corigine.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Juergen Gross <jgross@suse.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Michael Buesch <m@bues.ch>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Fiona Trahe <fiona.trahe@intel.com>,
+        Wojciech Ziemba <wojciech.ziemba@intel.com>,
+        Alexander Duyck <alexanderduyck@fb.com>,
+        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
+        linux-perf-users@vger.kernel.org, linux-wireless@vger.kernel.org,
+        linux-crypto@vger.kernel.org, qat-linux@intel.com,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, oss-drivers@corigine.com,
+        xen-devel@lists.xenproject.org, linux-usb@vger.kernel.org
+Subject: Re: [PATCH v1 0/5] PCI: Drop duplicated tracking of a pci_dev's
+ bound driver
+Message-ID: <YQOy/OTvY66igEoe@smile.fi.intel.com>
+References: <20210729203740.1377045-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20210724072033.1284840-15-hch@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210729203740.1377045-1-u.kleine-koenig@pengutronix.de>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Jul 29, 2021 at 10:47:45AM +0200, Anders Roxell wrote:
-> From: Christoph Hellwig <hch@lst.de>
+On Thu, Jul 29, 2021 at 10:37:35PM +0200, Uwe Kleine-König wrote:
+> Hello,
 > 
-> > Move the SCSI-specific bsg code in the SCSI midlayer instead of in the
-> > common bsg code.  This just keeps the common bsg code block/ and also
-> > allows building it as a module.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> struct pci_dev tracks the bound pci driver twice. This series is about
+> removing this duplication.
 > 
-> [ Please ignore if its already been reported ]
+> The first two patches are just cleanups. The third patch introduces a
+> wrapper that abstracts access to struct pci_dev->driver. In the next
+> patch (hopefully) all users are converted to use the new wrapper and
+> finally the fifth patch removes the duplication.
 > 
-> When building arm's defconfig 'footbridge_defconfig' on linux-next tag next-20210728 I see the following error.
+> Note this series is only build tested (allmodconfig on several
+> architectures).
+> 
+> I'm open to restructure this series if this simplifies things. E.g. the
+> use of the new wrapper in drivers/pci could be squashed into the patch
+> introducing the wrapper. Patch 4 could be split by maintainer tree or
+> squashed into patch 3 completely.
 
-Can you try this patch on top?
+I see only patch 4 and this cover letter...
 
----
-From d92a8160ce3fbe64a250482522ca0456277781f9 Mon Sep 17 00:00:00 2001
-From: Christoph Hellwig <hch@lst.de>
-Date: Mon, 5 Jul 2021 15:02:43 +0200
-Subject: cdrom: move the guts of cdrom_read_cdda_bpc into the sr driver
-
-cdrom_read_cdda_bpc relies on sending SCSI command to the low level
-driver using a REQ_OP_SCSI_IN request.  This isn't generic block
-layer functionality, so some the actual low-level code into the sr
-driver and call it through a new read_cdda_bpc method in the
-cdrom_device_ops structure.
-
-With this the CDROM code does not have to pull in
-scsi_normalize_sense and this depend on CONFIG_SCSI_COMMON.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/cdrom/cdrom.c | 71 +++++--------------------------------------
- drivers/scsi/sr.c     | 56 +++++++++++++++++++++++++++++++++-
- include/linux/cdrom.h |  6 ++--
- 3 files changed, 67 insertions(+), 66 deletions(-)
-
-diff --git a/drivers/cdrom/cdrom.c b/drivers/cdrom/cdrom.c
-index 8882b311bafd..bd2e5b1560f5 100644
---- a/drivers/cdrom/cdrom.c
-+++ b/drivers/cdrom/cdrom.c
-@@ -629,7 +629,7 @@ int register_cdrom(struct gendisk *disk, struct cdrom_device_info *cdi)
- 	if (CDROM_CAN(CDC_MRW_W))
- 		cdi->exit = cdrom_mrw_exit;
- 
--	if (cdi->disk)
-+	if (cdi->ops->read_cdda_bpc)
- 		cdi->cdda_method = CDDA_BPC_FULL;
- 	else
- 		cdi->cdda_method = CDDA_OLD;
-@@ -2159,81 +2159,26 @@ static int cdrom_read_cdda_old(struct cdrom_device_info *cdi, __u8 __user *ubuf,
- static int cdrom_read_cdda_bpc(struct cdrom_device_info *cdi, __u8 __user *ubuf,
- 			       int lba, int nframes)
- {
--	struct request_queue *q = cdi->disk->queue;
--	struct request *rq;
--	struct scsi_request *req;
--	struct bio *bio;
--	unsigned int len;
-+	int max_frames = (queue_max_sectors(cdi->disk->queue) << 9) /
-+			  CD_FRAMESIZE_RAW;
- 	int nr, ret = 0;
- 
--	if (!q)
--		return -ENXIO;
--
--	if (!blk_queue_scsi_passthrough(q)) {
--		WARN_ONCE(true,
--			  "Attempt read CDDA info through a non-SCSI queue\n");
--		return -EINVAL;
--	}
--
- 	cdi->last_sense = 0;
- 
- 	while (nframes) {
--		nr = nframes;
- 		if (cdi->cdda_method == CDDA_BPC_SINGLE)
- 			nr = 1;
--		if (nr * CD_FRAMESIZE_RAW > (queue_max_sectors(q) << 9))
--			nr = (queue_max_sectors(q) << 9) / CD_FRAMESIZE_RAW;
--
--		len = nr * CD_FRAMESIZE_RAW;
--
--		rq = blk_get_request(q, REQ_OP_DRV_IN, 0);
--		if (IS_ERR(rq)) {
--			ret = PTR_ERR(rq);
--			break;
--		}
--		req = scsi_req(rq);
--
--		ret = blk_rq_map_user(q, rq, NULL, ubuf, len, GFP_KERNEL);
--		if (ret) {
--			blk_put_request(rq);
--			break;
--		}
--
--		req->cmd[0] = GPCMD_READ_CD;
--		req->cmd[1] = 1 << 2;
--		req->cmd[2] = (lba >> 24) & 0xff;
--		req->cmd[3] = (lba >> 16) & 0xff;
--		req->cmd[4] = (lba >>  8) & 0xff;
--		req->cmd[5] = lba & 0xff;
--		req->cmd[6] = (nr >> 16) & 0xff;
--		req->cmd[7] = (nr >>  8) & 0xff;
--		req->cmd[8] = nr & 0xff;
--		req->cmd[9] = 0xf8;
--
--		req->cmd_len = 12;
--		rq->timeout = 60 * HZ;
--		bio = rq->bio;
--
--		blk_execute_rq(cdi->disk, rq, 0);
--		if (scsi_req(rq)->result) {
--			struct scsi_sense_hdr sshdr;
--
--			ret = -EIO;
--			scsi_normalize_sense(req->sense, req->sense_len,
--					     &sshdr);
--			cdi->last_sense = sshdr.sense_key;
--		}
--
--		if (blk_rq_unmap_user(bio))
--			ret = -EFAULT;
--		blk_put_request(rq);
-+		else
-+			nr = min(nframes, max_frames);
- 
-+		ret = cdi->ops->read_cdda_bpc(cdi, ubuf, lba, nr,
-+					      &cdi->last_sense);
- 		if (ret)
- 			break;
- 
- 		nframes -= nr;
- 		lba += nr;
--		ubuf += len;
-+		ubuf += (nr * CD_FRAMESIZE_RAW);
- 	}
- 
- 	return ret;
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index b98e77fe700b..6203a8b58d40 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -120,6 +120,8 @@ static void get_capabilities(struct scsi_cd *);
- static unsigned int sr_check_events(struct cdrom_device_info *cdi,
- 				    unsigned int clearing, int slot);
- static int sr_packet(struct cdrom_device_info *, struct packet_command *);
-+static int sr_read_cdda_bpc(struct cdrom_device_info *cdi, void __user *ubuf,
-+		u32 lba, u32 nr, u8 *last_sense);
- 
- static const struct cdrom_device_ops sr_dops = {
- 	.open			= sr_open,
-@@ -133,8 +135,9 @@ static const struct cdrom_device_ops sr_dops = {
- 	.get_mcn		= sr_get_mcn,
- 	.reset			= sr_reset,
- 	.audio_ioctl		= sr_audio_ioctl,
--	.capability		= SR_CAPABILITIES,
- 	.generic_packet		= sr_packet,
-+	.read_cdda_bpc		= sr_read_cdda_bpc,
-+	.capability		= SR_CAPABILITIES,
- };
- 
- static void sr_kref_release(struct kref *kref);
-@@ -951,6 +954,57 @@ static int sr_packet(struct cdrom_device_info *cdi,
- 	return cgc->stat;
- }
- 
-+static int sr_read_cdda_bpc(struct cdrom_device_info *cdi, void __user *ubuf,
-+		u32 lba, u32 nr, u8 *last_sense)
-+{
-+	struct gendisk *disk = cdi->disk;
-+	u32 len = nr * CD_FRAMESIZE_RAW;
-+	struct scsi_request *req;
-+	struct request *rq;
-+	struct bio *bio;
-+	int ret;
-+
-+	rq = blk_get_request(disk->queue, REQ_OP_DRV_IN, 0);
-+	if (IS_ERR(rq))
-+		return PTR_ERR(rq);
-+	req = scsi_req(rq);
-+
-+	ret = blk_rq_map_user(disk->queue, rq, NULL, ubuf, len, GFP_KERNEL);
-+	if (ret)
-+		goto out_put_request;
-+
-+	req->cmd[0] = GPCMD_READ_CD;
-+	req->cmd[1] = 1 << 2;
-+	req->cmd[2] = (lba >> 24) & 0xff;
-+	req->cmd[3] = (lba >> 16) & 0xff;
-+	req->cmd[4] = (lba >>  8) & 0xff;
-+	req->cmd[5] = lba & 0xff;
-+	req->cmd[6] = (nr >> 16) & 0xff;
-+	req->cmd[7] = (nr >>  8) & 0xff;
-+	req->cmd[8] = nr & 0xff;
-+	req->cmd[9] = 0xf8;
-+	req->cmd_len = 12;
-+	rq->timeout = 60 * HZ;
-+	bio = rq->bio;
-+
-+	blk_execute_rq(disk, rq, 0);
-+	if (scsi_req(rq)->result) {
-+		struct scsi_sense_hdr sshdr;
-+
-+		scsi_normalize_sense(req->sense, req->sense_len,
-+				     &sshdr);
-+		*last_sense = sshdr.sense_key;
-+		ret = -EIO;
-+	}
-+
-+	if (blk_rq_unmap_user(bio))
-+		ret = -EFAULT;
-+out_put_request:
-+	blk_put_request(rq);
-+	return ret;
-+}
-+
-+
- /**
-  *	sr_kref_release - Called to free the scsi_cd structure
-  *	@kref: pointer to embedded kref
-diff --git a/include/linux/cdrom.h b/include/linux/cdrom.h
-index f48d0a31deae..c4fef00abdf3 100644
---- a/include/linux/cdrom.h
-+++ b/include/linux/cdrom.h
-@@ -86,11 +86,13 @@ struct cdrom_device_ops {
- 	/* play stuff */
- 	int (*audio_ioctl) (struct cdrom_device_info *,unsigned int, void *);
- 
--/* driver specifications */
--	const int capability;   /* capability flags */
- 	/* handle uniform packets for scsi type devices (scsi,atapi) */
- 	int (*generic_packet) (struct cdrom_device_info *,
- 			       struct packet_command *);
-+	int (*read_cdda_bpc)(struct cdrom_device_info *cdi, void __user *ubuf,
-+			       u32 lba, u32 nframes, u8 *last_sense);
-+/* driver specifications */
-+	const int capability;   /* capability flags */
- };
- 
- int cdrom_multisession(struct cdrom_device_info *cdi,
 -- 
-2.30.2
+With Best Regards,
+Andy Shevchenko
+
 
