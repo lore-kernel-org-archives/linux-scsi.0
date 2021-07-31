@@ -2,163 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18A93C432BE
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 12:10:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B68D3C4338F
+	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 14:44:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E6E0460FE7
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 12:10:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9264460FE7
+	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 14:44:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232812AbhGaMKT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 31 Jul 2021 08:10:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49726 "EHLO
+        id S233235AbhGaOou (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 31 Jul 2021 10:44:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232787AbhGaMKR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Jul 2021 08:10:17 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED2DAC0613D3
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Jul 2021 05:10:10 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m9nnU-0007Ot-05; Sat, 31 Jul 2021 14:08:56 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m9nnD-0007eB-Mm; Sat, 31 Jul 2021 14:08:39 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1m9nnD-0001LE-Jt; Sat, 31 Jul 2021 14:08:39 +0200
-Date:   Sat, 31 Jul 2021 14:08:36 +0200
-From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
-To:     Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        linux-pci@vger.kernel.org, Alexander Duyck <alexanderduyck@fb.com>,
-        Russell Currey <ruscur@russell.cc>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        oss-drivers@corigine.com, Oliver O'Halloran <oohall@gmail.com>,
-        "H. Peter Anvin" <hpa@zytor.com>, Jiri Olsa <jolsa@redhat.com>,
-        linux-perf-users@vger.kernel.org,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        linux-scsi@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
-        Ido Schimmel <idosch@nvidia.com>, x86@kernel.org,
-        qat-linux@intel.com,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linux-wireless@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Fiona Trahe <fiona.trahe@intel.com>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Borislav Petkov <bp@alien8.de>, Michael Buesch <m@bues.ch>,
-        Jiri Pirko <jiri@nvidia.com>,
-        Namhyung Kim <namhyung@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>,
-        Juergen Gross <jgross@suse.com>,
-        Salil Mehta <salil.mehta@huawei.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        xen-devel@lists.xenproject.org, Vadym Kochan <vkochan@marvell.com>,
-        MPT-FusionLinux.pdl@broadcom.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org,
-        Wojciech Ziemba <wojciech.ziemba@intel.com>,
-        linux-kernel@vger.kernel.org, Taras Chornyi <tchornyi@marvell.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        linux-crypto@vger.kernel.org, kernel@pengutronix.de,
-        netdev@vger.kernel.org, Frederic Barrat <fbarrat@linux.ibm.com>,
-        Paul Mackerras <paulus@samba.org>,
-        linuxppc-dev@lists.ozlabs.org,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v1 4/5] PCI: Adapt all code locations to not use struct
- pci_dev::driver directly
-Message-ID: <20210731120836.vegno6voijvlflws@pengutronix.de>
-References: <20210729203740.1377045-1-u.kleine-koenig@pengutronix.de>
- <20210729203740.1377045-5-u.kleine-koenig@pengutronix.de>
- <2b5e8cb5-fac2-5da2-f87b-d287d2c5ea81@oracle.com>
+        with ESMTP id S232770AbhGaOot (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Jul 2021 10:44:49 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D486C0613D3
+        for <linux-scsi@vger.kernel.org>; Sat, 31 Jul 2021 07:44:43 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id j1so19346734pjv.3
+        for <linux-scsi@vger.kernel.org>; Sat, 31 Jul 2021 07:44:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gapp-nthu-edu-tw.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=vUu/An5wB7mKqjDMd75yR8XlG+aIbo0A8ZFdh1+yc+A=;
+        b=ezuxOqu25SjG9tz+5Z7akhB9BboGO0rBA2GPIy3MFzQmHk4LMAfvt1weRsu4l2uN3H
+         2juUX735KauvYZ0BJ2w3q/KyWSbPNZ1CJYuiHFiq5UM5SsdGy1DkZjz8+xo5S9gk1oM+
+         ZgUN90DdLUBFXLy5CrYP40tQS88yzrldEhncsEsYQDKq+H21vUUgJzzUPNM9EwApOmYa
+         /8oCP6YnvGx9ZSz2DBJa0uw1Cn9F91vuDfX1l7jvMtJneM0mzJ64DjXL/Z8eI4BG+PR+
+         y1V2feBhgU103CMZ5cOSEDXQjeyDdHBcHCxQIkRnwKgIl3JU+FYeZ/wfbT4Soc86pcgZ
+         9FZw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=vUu/An5wB7mKqjDMd75yR8XlG+aIbo0A8ZFdh1+yc+A=;
+        b=M3rdWV9KnN/py79g5PQY29YtmYLIYgaoeLE7IgH1g0EEptWY3MT1+AtDEExxPdMMOK
+         BRVd1BahcDniYKToAbAVGXX7XpGcuFnjATwEb7C7fHbhDGGID9xnotI7EXtL1OdhDVsp
+         Yhv4setFaOhXoJ49br/8O7CNWadg2YXqy4lchaW5B1fvGXr6S/huj/bSLFx9em33I2XL
+         QoqQ+EmovI1zx0zXLCUaXg+XAh+B3AJ3+pP9V/67MFg/o+9LxrD1pa/ZmV20ktra/f9v
+         xpmtTXbdrMOKkvWl/NpDqEIRwYRjMsNDLfvq35rh6niafgNeVMryAomyxsxx87j54fxX
+         6c7w==
+X-Gm-Message-State: AOAM532S9/DRbylagh/X9u3bfzPZeaRqbzW2u2WwsWfw+as/+qfxPW/r
+        saScBDnKPemc8WzxwcReJEokCTeohpGnTa68f1B1uA==
+X-Google-Smtp-Source: ABdhPJyaM9nXDTpolqS541wHVh/30k6cn1ziMrEGHeoLFPS5IsudeDrOScND+LQvAJa+3icVzVbehDcrWugnWXpIg2o=
+X-Received: by 2002:a63:5908:: with SMTP id n8mr1762766pgb.202.1627742682542;
+ Sat, 31 Jul 2021 07:44:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="rawlqk3jhoxts24y"
-Content-Disposition: inline
-In-Reply-To: <2b5e8cb5-fac2-5da2-f87b-d287d2c5ea81@oracle.com>
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+References: <20210722033439.26550-1-bvanassche@acm.org> <20210722033439.26550-3-bvanassche@acm.org>
+In-Reply-To: <20210722033439.26550-3-bvanassche@acm.org>
+From:   Stanley Chu <chu.stanley@gapp.nthu.edu.tw>
+Date:   Sat, 31 Jul 2021 22:44:31 +0800
+Message-ID: <CAOBeenZgzmm-oBhiwJXXBrtBQ=vbTGv8He56c6m6u=zJ5yHXpg@mail.gmail.com>
+Subject: Re: [PATCH v3 02/18] scsi: ufs: Reduce power management code duplication
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Lee Jones <lee.jones@linaro.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Sergey Shtylyov <s.shtylyov@omprussia.ru>,
+        Keoseong Park <keosung.park@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Hi Bart,
 
---rawlqk3jhoxts24y
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> Move the dev_get_drvdata() calls into the ufshcd_{system,runtime}_*()
+> functions. Remove ufshcd_runtime_idle() since it is empty. This patch
+> does not change any functionality.
+>
 
-Hello Boris,
-
-On Fri, Jul 30, 2021 at 04:37:31PM -0400, Boris Ostrovsky wrote:
-> On 7/29/21 4:37 PM, Uwe Kleine-K=F6nig wrote:
-> > --- a/drivers/pci/xen-pcifront.c
-> > +++ b/drivers/pci/xen-pcifront.c
-> > @@ -599,12 +599,12 @@ static pci_ers_result_t pcifront_common_process(i=
-nt cmd,
-> >  	result =3D PCI_ERS_RESULT_NONE;
-> > =20
-> >  	pcidev =3D pci_get_domain_bus_and_slot(domain, bus, devfn);
-> > -	if (!pcidev || !pcidev->driver) {
-> > +	pdrv =3D pci_driver_of_dev(pcidev);
-> > +	if (!pcidev || !pdrv) {
->=20
-> If pcidev is NULL we are dead by the time we reach 'if' statement.
-
-Oh, you're right. So this needs something like:
-
-	if (!pcidev || !(pdrv =3D pci_driver_of_dev(pcidev)))
-
-or repeating the call to pci_driver_of_dev for each previous usage of
-pdev->driver.
-
-If there are no other preferences I'd got with the first approach for
-v2.
-
-Best regards and thanks for catching,
-Uwe
-
---=20
-Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
-Industrial Linux Solutions                 | https://www.pengutronix.de/ |
-
---rawlqk3jhoxts24y
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmEFPUEACgkQwfwUeK3K
-7AlQoAgAidQUuX/L2YhXMvP0F+SSjym4ILhKdbRYnWojo/QbFUE8WbOQueAZA76q
-NW0vq2X07i0bUwTfbZoOgqSFvMfXJiETcN9R48epPUGWS2IT17NE8EgtH+/srht0
-sGGI7bia2a1L++nruccUllCf1qMfngKRQUhatVOPYqIs2dX3ijjjpSAxHh8L+gjC
-nOMgWu7lZm7QQawBjQGfirpYGBUFdAh3odwm/JHN7+cZKC6dbhLYGm2WS8db1bCI
-4k4EO2RpSeuZb9XaFPq9DEWy1exgtgjnmKt3Szrp31/xWizjhMEOrZVWfWD1bjUa
-rWcmnDR4bm4Fz/MdVFhjJq2XJQoIDw==
-=2o5y
------END PGP SIGNATURE-----
-
---rawlqk3jhoxts24y--
+Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
