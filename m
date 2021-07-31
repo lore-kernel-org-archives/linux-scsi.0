@@ -2,79 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C93EEC4338F
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 07:42:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E46F1C4338F
+	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 07:44:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A946460F35
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 07:42:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BE72960F35
+	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 07:44:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232196AbhGaHmi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 31 Jul 2021 03:42:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39620 "EHLO
+        id S232459AbhGaHok (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 31 Jul 2021 03:44:40 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40138 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229703AbhGaHmg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Jul 2021 03:42:36 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 11E7FC06175F;
-        Sat, 31 Jul 2021 00:42:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=rlo3QB3I2AB7Bz2AwleEutVkwfwO0IMbz3hVgybva0w=; b=vzYN3YNjjUh9jaXpMLFTKHaAC9
-        ZvXQpev6s4QxZ5L8n+eybYJ1XZwrMoQ7oT+LOZVpVmbyf9mkema7TOL+3cmNcUNJYulDa9DpJFuij
-        uaeCg4k5tEemBubRrn5QizCUkiWjg37DopwKebPGqJkY+uKF//HSpFMfNik+jnCUbUXHtdxvlHU9g
-        yaKpQo/mWFv/R/5lPRRF4vI7xfolXHOXvy/54vV8V8Zm/3QbXTZu4zLquV1zM5tCH2kNQoVVYU41B
-        uIM3htMQS5zOP6YOyS+UnmgJh2IKk5oMwVXrKARlVx4eVRQI65GcZxQnk/WJPXxP0ED5rvSYZLkRo
-        s+yZ1G1w==;
-Received: from 213-225-38-220.nat.highway.a1.net ([213.225.38.220] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1m9jco-001V93-4z; Sat, 31 Jul 2021 07:41:57 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 2/2] bsg-lib: fix commands without data transfer in bsg_transport_sg_io_fn
-Date:   Sat, 31 Jul 2021 09:40:27 +0200
-Message-Id: <20210731074027.1185545-3-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210731074027.1185545-1-hch@lst.de>
-References: <20210731074027.1185545-1-hch@lst.de>
+        with ESMTP id S229703AbhGaHoj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Jul 2021 03:44:39 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 216B9C06175F;
+        Sat, 31 Jul 2021 00:44:34 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id t21so13753144plr.13;
+        Sat, 31 Jul 2021 00:44:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=OVTr4RHlnafMTThe6BOdvnTER0K+cVoQjOpy5dSFrGo=;
+        b=RQ/v4gffX8Bzi6BWq4kPLZoQ4cY9tqm+UMcgr/rN2k7UYSgtb5AM9Kz4XHckTyajn1
+         Yptrm4jgZte5O3h6tLp/pwpX4nsqnO5VO4dxuAXVfZmH1RA2e/IJm8L0Ydk/QdaVsNmb
+         v2Z+h3HpNuy6HZrS5oXunddRlirl1Xrzq9NV98sgdvWeH+VZBf9df1eLP6pAyvC7F9v9
+         Y+oKqhUvXnZl7W9K3sstsZteJNQSoMQInAqOueLjjxS5cGi2zxyOSBxCcbEFQKccfLBY
+         nhy9X7ceEK/k3PbRRkm9Ey/KCT1/EkbycxOpzcpScg4nhw6ZdkVzqFFxMUroO631MJ54
+         jqeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=OVTr4RHlnafMTThe6BOdvnTER0K+cVoQjOpy5dSFrGo=;
+        b=EhFP+6qM+LE8jv4hVDSfSAmxxu2g1w8/pXoWgghKIAM0ERY0Dsd1oxgbAaN3fZlkL/
+         cIyPC/9WBEwkfaH8syxz+EAh2lYWXuYr6gKC173UW8iRvk8e0l4Q0RQKeK/vLNFMQJ+6
+         V0xkdxzwfmCb6AFGX3yJJ6ZRQtlnR1P6wX4xnRzM4sxz91RkGhokh97NSUSGshYCDI61
+         wSGHW74hrG1PX+OKmpbq53ibAExFgtfOcwvi5gOswMt/Tr56ZSUPmDqq5n2Y7XNxoB6Y
+         Ss0LMaACtEi3I6BDhSaapd5vQXuvsbyVOWaIPhWAbxsWp3KnP90kO6fn8tZKFEqV1Idc
+         ms9Q==
+X-Gm-Message-State: AOAM530fZbVtnU7T0w66NqfAqYoZ8vc5Af0H8f/yIoZaw5cOiomGEfxg
+        rz7mzZDPPZj+eALZ0MfI6Yg=
+X-Google-Smtp-Source: ABdhPJyYUyIqlICz+hWa2rP9J8+e4Lb4rL9Q7x6cMrvn18Av3AkzQHiDMt+u8FQDZp58+zRgTeITaA==
+X-Received: by 2002:a17:902:e851:b029:12c:9284:8c2b with SMTP id t17-20020a170902e851b029012c92848c2bmr5317703plg.57.1627717473700;
+        Sat, 31 Jul 2021 00:44:33 -0700 (PDT)
+Received: from localhost.localdomain ([45.135.186.29])
+        by smtp.gmail.com with ESMTPSA id j25sm4635720pfe.198.2021.07.31.00.44.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 31 Jul 2021 00:44:33 -0700 (PDT)
+From:   Tuo Li <islituo@gmail.com>
+To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
+        Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>
+Subject: [PATCH] megaraid: fix possible uninitialized-variable access in megadev_ioctl()
+Date:   Sat, 31 Jul 2021 00:44:10 -0700
+Message-Id: <20210731074410.71376-1-islituo@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Set ret to 0 after the initial permission checks to avoid leaking
--EPERM for commands without data transfer.
+The variable pthru_dma_hndl is not initialized at the beginning of the
+function megadev_ioctl(). It remains uninitialized if the variable
+uioc.xferlen is zero at line 3275. However, it is accessed at line 3311:
+  mc.xferaddr = (u32)data_dma_hndl;
 
-Fixes: 75ca56409e5b ("scsi: bsg: Move the whole request execution into the SCSI/transport
-handlers")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+To fix this possible bug, pthru_dma_hndl is initialized to zero at the
+beginning of the function megadev_ioctl().
+
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+Signed-off-by: Tuo Li <islituo@gmail.com>
 ---
- block/bsg-lib.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/megaraid.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index 239ebf747141..ccb98276c964 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -72,6 +72,7 @@ static int bsg_transport_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
- 		job->bidi_bio = NULL;
- 	}
- 
-+	ret = 0;
- 	if (hdr->dout_xfer_len) {
- 		ret = blk_rq_map_user(rq->q, rq, NULL, uptr64(hdr->dout_xferp),
- 				hdr->dout_xfer_len, GFP_KERNEL);
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 56910e94dbf2..8b0676b862fb 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -2975,7 +2975,7 @@ megadev_ioctl(struct file *filep, unsigned int cmd, unsigned long arg)
+ 	mega_passthru	*pthru;		/* copy user passthru here */
+ 	dma_addr_t	pthru_dma_hndl;
+ 	void		*data = NULL;	/* data to be transferred */
+-	dma_addr_t	data_dma_hndl;	/* dma handle for data xfer area */
++	dma_addr_t	data_dma_hndl = 0;	/* dma handle for data xfer area */
+ 	megacmd_t	mc;
+ #if MEGA_HAVE_STATS
+ 	megastat_t	__user *ustats = NULL;
 -- 
-2.30.2
+2.25.1
 
