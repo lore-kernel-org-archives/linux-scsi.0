@@ -2,88 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87344C4338F
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 14:49:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D4EC4320A
+	for <linux-scsi@archiver.kernel.org>; Sun,  1 Aug 2021 03:30:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6539C60FE7
-	for <linux-scsi@archiver.kernel.org>; Sat, 31 Jul 2021 14:49:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64FC261074
+	for <linux-scsi@archiver.kernel.org>; Sun,  1 Aug 2021 03:30:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233255AbhGaOtQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 31 Jul 2021 10:49:16 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33512 "EHLO
+        id S230390AbhHADaw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 31 Jul 2021 23:30:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233271AbhGaOtP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Jul 2021 10:49:15 -0400
-Received: from mail-pj1-x1029.google.com (mail-pj1-x1029.google.com [IPv6:2607:f8b0:4864:20::1029])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C4F5C06175F
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Jul 2021 07:49:05 -0700 (PDT)
-Received: by mail-pj1-x1029.google.com with SMTP id l19so19445351pjz.0
-        for <linux-scsi@vger.kernel.org>; Sat, 31 Jul 2021 07:49:05 -0700 (PDT)
+        with ESMTP id S229761AbhHADav (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Jul 2021 23:30:51 -0400
+Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 950B0C06175F
+        for <linux-scsi@vger.kernel.org>; Sat, 31 Jul 2021 20:30:43 -0700 (PDT)
+Received: by mail-pj1-x102c.google.com with SMTP id l19so20872499pjz.0
+        for <linux-scsi@vger.kernel.org>; Sat, 31 Jul 2021 20:30:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gapp-nthu-edu-tw.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=uS/8eZw40GesqzhF7lVX2xV8dW5LTzB5oO2GcYreBAg=;
-        b=XUWkY2HdckcIRNL7YSE8fQWXAW+gV8T0plYFze2f32gWcVRnBpesYyeK8bJfZjcsO+
-         2/X3pZcby2aauRbTcF03jA6CJkuzPZJ7yvLLu+TJSypUyqnHr96FADRUrDnpx6m5ycyk
-         prbaTXxF6otVCEmhkrRK6VlgoVKt9NGGizQrq84xUd3jJrvri0od8kBAS+Ex6Qo5DpGb
-         NR6McpJVOkbCqmPZ+xNRjXa2VeoZHYd5P8GbsPds60QEXvBSiHy0odrh86Hh51zQjoo9
-         HXAh10zbJMApXrpaK86uDTYj3MtU+uN3lOkGODaQTyxBJkTojdT6ctxvMENmDtasjXL+
-         QGsw==
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=f9edfBUeVsTh74HmqsxezUMifARYRRH8It18mZO5R+w=;
+        b=CaBwmpbFwB8rdNl56HY68y0LPkeJGJjjXqcDZMn7rewvB0ZtnsF2pyycWMsyzU7udU
+         1Rb+DWK30InQzWNhMKV1claBViLUUJlBxu5Q9F673qmHrvAqmQKBzcTryBx+LVOobiL4
+         Jjj/BsYmhUb0dsFpGbMdTO6SXcE9lRbgZEhAjhoXookQlRzZUtE38T+OPPBUErlmDTTP
+         SzCXC4F2jXAeoABjQlQsY4d5qoIDQOmfbFLpcIQxT+gzlrW4motyPtsU14IhZD7PPnRP
+         bzYBiYjuqSATtItJoqCfv+I+AJKj7GGx1T7Fa2wSe1aMZ6qtPEZIkSZJchyMcfudoRPL
+         +UvQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=uS/8eZw40GesqzhF7lVX2xV8dW5LTzB5oO2GcYreBAg=;
-        b=iOj5NsPsbtSY+QMJqArc6bMmeDwTnjzgpb55RGj3JkefyxyRhyDGMHZDW185L6ZhOc
-         +kak1QnRbz6nsxIb863Yz1zuKsegtvM6zH5wPTt/hnNzDzocCbwJzPXC5LhLD2JawoZN
-         iuJ6dHeVlTCSObVUjmo69j/3nlYaWCPa+7zUrBAzqi0qTKGr5cw8qkJf6NepfVG471PB
-         h1wcX4IQUSXvy/R80kMJgQKZ95Xfv3+wNSr5O3gX6HQa0LUTARadZJ5whe/+ubw80rO7
-         pMQkWM+Cx1oqF8rRGTfo0uyZ+Xb+81SPKcqUp/no1m5XwY0l5WLNZ5W9SpcQorm6pe5m
-         2WjA==
-X-Gm-Message-State: AOAM532Ty1vSp9VTqBjsasF3dXZVlJDRmpUy96deEN1ZizKBrux1MGT8
-        MLMBf0i8KCUkFjOIXTVUsnjcfsRKZLmeljRny+IzLg==
-X-Google-Smtp-Source: ABdhPJyhQCZQ7uDajChAsumTsGXSKd/+8YRaIJz8pW6soPRN+ohYJD52YTdAPJBk/Yv49iwU/bltpivn5zcKQZNAzpE=
-X-Received: by 2002:a65:6487:: with SMTP id e7mr6953397pgv.27.1627742945068;
- Sat, 31 Jul 2021 07:49:05 -0700 (PDT)
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=f9edfBUeVsTh74HmqsxezUMifARYRRH8It18mZO5R+w=;
+        b=afrDPcvEjBrdcFESQNMdw8dKyy6D2/3fYqX1loXxs5uUIVdTrbG3ecATFqAL0OE3W9
+         kwk+3rJy+o9RLBQbZdWxKWBOQCv73rwBdSSYPoI8tNZiS6XlEuiN+lZJghiO1ch6VbYj
+         PnaeWls6xgrqh8a1NefVtASi7BZSRyfUXGNTAcKT1FjIHWu53WZvv5tAaNvUqEoGBMdU
+         3hfXlZzGMFY9n9x/FNJhlSidLqZ9H5wqoWZZzDbY6LXtR3JA3gvuUonSGZbV/R93EGrL
+         Y0p45X0ConopZ5FbqJwMK9jgDuTs5HlIWYh/E925LwvNViShUkPOTSB1QpZGlxaRQleq
+         WeWA==
+X-Gm-Message-State: AOAM533z2pw+HjyBerLYKfUItQ9DdJfYwA87oP8QqNIfmGAaOAey23kA
+        y6XWuKrGK8ctKAeD8CtG6VxJlIcG0AoJUBOF2kqjm5dG2fo=
+X-Google-Smtp-Source: ABdhPJx5l6/flQRVpyEZGpcrjTQGA1O70EONzVOKr5fFLaCwT9oa7tUd9uvpWE6iPtJn6uCzRFKO/5CwRNBS4FiA9tk=
+X-Received: by 2002:a63:ff51:: with SMTP id s17mr1275714pgk.415.1627788642223;
+ Sat, 31 Jul 2021 20:30:42 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210722033439.26550-1-bvanassche@acm.org> <CGME20210722033513epcas2p22e4c2e6ea644992ede2739ebe381d53f@epcms2p8>
- <20210722033439.26550-4-bvanassche@acm.org> <1381713434.61627520283503.JavaMail.epsvc@epcpadp4>
-In-Reply-To: <1381713434.61627520283503.JavaMail.epsvc@epcpadp4>
-From:   Stanley Chu <chu.stanley@gapp.nthu.edu.tw>
-Date:   Sat, 31 Jul 2021 22:48:54 +0800
-Message-ID: <CAOBeenbNhUk3t-For7UDAk4OcGC1wgiauYS+Gj6zM9dgwvAYBw@mail.gmail.com>
-Subject: Re: [PATCH v3 03/18] scsi: ufs: Only include power management code if necessary
-To:     daejun7.park@samsung.com
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>
+From:   =?UTF-8?B?5Lq/5LiA?= <teroincn@gmail.com>
+Date:   Sun, 1 Aug 2021 11:30:32 +0800
+Message-ID: <CANTwqXDL8+utcMG15b1DWEFderrb92+Zbdvt4Z1zOd5YoH32mQ@mail.gmail.com>
+Subject: [BUG]scsi: bnx2fc: bnx2fc_els.c: two refcount leak in function
+ bnx2fc_initiate_seq_cleanup and bnx2fc_eh_abort
+To:     skashyap@marvell.com, jhasan@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com
+Cc:     linux-scsi@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+Hi,
 
->
-> >This patch slightly reduces the UFS driver size if built with power
-> >management support disabled.
->
+I found there are two possible refcount leak in the bnx2fc driver in v5.14-rc3:
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+In bnx2fc_initiate_seq_cleanup :
+946: kref_get(&orig_io_req->refcount);
+
+this refcnt increment won't be released in:
+994: cleanup_err:
+995: return rc;
+
+
+similar issue happens in bnx2fc_eh_abort:
+1161: kref_get(&io_req->refcount);
+1187: return FAILED;
+
+Is it a refcount leak or just a valid refcount increment?
+Any feedback would be appreciated, thanks~ :)
+
+
+Best wishes,
+Lin Yi
