@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DD4DC4320A
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 09:02:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E294C4320E
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 09:03:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2AB6560F39
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 09:02:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 05A96610CC
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 09:03:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232732AbhHBJC5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Aug 2021 05:02:57 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:6555 "EHLO
+        id S232940AbhHBJDE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Aug 2021 05:03:04 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:6561 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232711AbhHBJCs (ORCPT
+        with ESMTP id S232856AbhHBJCs (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2021 05:02:48 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
   t=1627894957; x=1659430957;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=Q0qi0MmsrsEfp9dtr19KJjoVUyafiktr3GhxDwTWet4=;
-  b=TfEZ+2/YRmY9ay08BK4xGHYPGDNbXzCFvRKC8hinZqwGiQA8xkq50wMN
-   pLtaNF6Ai9V+8hRNH+gMcTPoeWbTKX0LwkWonWW/k93qwT9vmkSSKJ0mv
-   7EVtLJplZaY4QMyRA4rbEWV8t4ojqVnSaaf6krK/oMSlkloELBN8djrsi
-   PSdSWO/nPiXaYksLPtcS3zNYW7rGUyeGF1XqPH/cz6pBD9EPnRrOoPHDp
-   lQZeS+CmvyK9AtTR7O8od4/N+qsp+BxD/pcm3WFxLmiuG4rBuXt2hOi17
-   OHhhhotUluZkXBzBh338WvLWMNKunVk1XXaKWc5BvkocqtvDiWIl3YYC6
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=UsY3zNp+4Y74npaMKBNtjE5KDrgJ0zn2Z35nPaW5zAw=;
+  b=Gy6xEpswTaRX/cFKp1hC7z1pOCCDTymYAaDrYfwVGaKoGEs5FZ4OVgpK
+   p6dxD6yXslTPamOoMLQ7E0U3E0Wndj+rwyk4/pMJfQCGt9TcjpzsAfjVx
+   srjU13QdkNNUhmfejjvy79pNvRMkxB4m+EgYopqdOPlptD1o8U1z3pl6q
+   lgm06iJ0vYLrwpgAhhTkr3FHGDaMN7nZUZwzEkcIAiZ7PLhBkGmRjUnwr
+   lQahc4bGPsC0uy96GzzrRMOFKvVuUGxIkPL1F208m/x5NWKeyrFcf/2tg
+   UuYZMgdWoBBVzJTudkQtG4+puzG33D1JGJjyHuv6UtAnSo0XyRsEa58ML
    g==;
 X-IronPort-AV: E=Sophos;i="5.84,288,1620662400"; 
-   d="scan'208";a="180887615"
+   d="scan'208";a="180887618"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 02 Aug 2021 17:02:33 +0800
-IronPort-SDR: /7eJNYOEH7Dybwfr9k8mF9Vr6IC19A+HORD3feFg1oObAA437AyKYmyjONyb2YVrNNkEj49Y4n
- u/xj5ieaCPVldQCoxroinVrH4IBTe674E866IjTrx7DrSHX89JibD5Z7UecWr1iMmafdW8q08F
- KGqqQS3YtwoHr3UzldsrVla4+E/LuV5Z2V2ZOmGj0ITkytPFglr+zCb1fY2/Ya3Xwi158iw4tG
- HhEg7nIC/DdypovO7cPOQ5q3CLxI8kaND9wDqp+iU8cOD2RVbtDxnrus9+b9fEcvT68xjLWL/4
- WLsVefdGZtEaYOrR+OxGOh8s
+  by ob1.hgst.iphmx.com with ESMTP; 02 Aug 2021 17:02:35 +0800
+IronPort-SDR: kta8M1woVs3bLcxqlGIRVr48DXQTmu1rk+dX5oRxMdJCoMPBaAPfnvw/MCiHX7tkCehVWeYeYa
+ bBzrkOCJle2boHkv7Z+aoAuwjQKPWaH/r6JCdmj3GZ47elXRaGWuqPHnUAdxLoiw7rU12OdUT1
+ +tSHZ7lkmPK211LUxewU7xO07amgFu1l/ocTwx0DhiHCqaIbiDcRSUjugTZmEvKgvLg8MyKwiW
+ nJ6NSKs0G3fFsUHsVlRehu6MNFKdCn5vB28dWu5PBr+n2q76BqT0+q45zv0zDKBLQsrqrSaail
+ b5yqENajdawuSjuB/YfNTryG
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2021 01:40:08 -0700
-IronPort-SDR: YJ1UWZNsR3Ufmh6thlc5JH78U2AyUnIaRmvgU9EsZWEMadN03/APgJ6mNSycLiOS0fo2SQMngD
- gZEPNLa+Bj98fVv1Ure0s+gE8CC8oN18wItY/QkpT6PRV8hFiI1EHmUWpZqPrLK/9CR/CVmU7v
- fxgB5LId0JLJL9NwUFrpUlJk5GxIUwQ6sKMlY34xLjAO8+tvpoK6hcrpYoURcxBHQi5goHv4Qb
- zYS9t+B9gkbRo+Ly4Vr3g1TqHkNNlSE6j/baQLIIfOYFk1htDIXQJcSLM/Q7+t1MPxgjhzM5mk
- jvg=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Aug 2021 01:40:11 -0700
+IronPort-SDR: hDPe+nS0Z6HFpfRLqYn91XXcM27Q5PFchkFGfaY/sylQOz+vHRErky7KYwVB2iFBd6S42vTH+0
+ vw0r/bzSv3dQSxHeEOIKZx8HAhwYxv8uCNi4wMjYt/tqpbL5ptLZtl3cSiComBHhQhD0LSrIjY
+ PLjur0cBlAZGt+qOkjKg7ngkBsTDFt8Qibk+kTcdc+R/2USZKDiYsyqBY69P7K6wo3WbqKRHQo
+ GBMiXDW6zfkowJLTTSVYXWT558wBXBS5rRerabXtJrZiJwSvKQR7nIguAPn1HLGSedgtMwqt33
+ hFY=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 02 Aug 2021 02:02:33 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 02 Aug 2021 02:02:36 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org,
@@ -60,42 +60,167 @@ Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 0/7] libata cleanups and improvements
-Date:   Mon,  2 Aug 2021 18:02:25 +0900
-Message-Id: <20210802090232.1166195-1-damien.lemoal@wdc.com>
+Subject: [PATCH 2/7] libata: cleanup ata_dev_configure()
+Date:   Mon,  2 Aug 2021 18:02:27 +0900
+Message-Id: <20210802090232.1166195-3-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210802090232.1166195-1-damien.lemoal@wdc.com>
+References: <20210802090232.1166195-1-damien.lemoal@wdc.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The first three patches of this series cleanup libata-core code in the
-area of device configuration (ata_dev_configure() function).
-Patch 4 improves ata_read_log_page() handling to avoid unnecessary
-warning messages and patch 5 adds an informational message on device
-scan to advertize the features supported by a device.
+Introduce the helper functions ata_dev_config_lba() and
+ata_dev_config_chs() to configure the addressing capabilities of a
+device. Each helper takes a string as argument for the addressing
+information printed after these helpers execution completes.
 
-Path 6 adds the new sysfs ahci device attribute ncq_prio_supported to
-indicate that a disk supports NCQ priority. Patch 7 does the same for
-the mpt3sas driver, adding the sas_ncq_prio_supported device attribute.
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/ata/libata-core.c | 110 ++++++++++++++++++++------------------
+ 1 file changed, 59 insertions(+), 51 deletions(-)
 
-Damien Le Moal (7):
-  libata: cleanup device sleep capability detection
-  libata: cleanup ata_dev_configure()
-  libata: cleanup NCQ priority handling
-  libata: fix ata_read_log_page() warning
-  libata: print feature list on device scan
-  libahci: Introduce ncq_prio_supported sysfs sttribute
-  scsi: mpt3sas: Introduce sas_ncq_prio_supported sysfs sttribute
-
- drivers/ata/libahci.c              |   1 +
- drivers/ata/libata-core.c          | 249 +++++++++++++++--------------
- drivers/ata/libata-sata.c          |  61 ++++---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c |  20 +++
- include/linux/libata.h             |   5 +
- 5 files changed, 191 insertions(+), 145 deletions(-)
-
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 9b39a4e2e567..1849f858761b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2363,6 +2363,52 @@ static void ata_dev_config_trusted(struct ata_device *dev)
+ 		dev->flags |= ATA_DFLAG_TRUSTED;
+ }
+ 
++static int ata_dev_config_lba(struct ata_device *dev,
++			      char *info, size_t infosz)
++{
++	const u16 *id = dev->id;
++	int info_ofst;
++
++	dev->flags |= ATA_DFLAG_LBA;
++
++	if (ata_id_has_lba48(id)) {
++		dev->flags |= ATA_DFLAG_LBA48;
++		strcpy(info, "LBA48 ");
++
++		if (dev->n_sectors >= (1UL << 28) &&
++		    ata_id_has_flush_ext(id))
++			dev->flags |= ATA_DFLAG_FLUSH_EXT;
++	} else {
++		strcpy(info, "LBA ");
++	}
++	info_ofst = strlen(info);
++
++	/* config NCQ */
++	return ata_dev_config_ncq(dev, info + info_ofst,
++				  infosz - info_ofst);
++}
++
++static void ata_dev_config_chs(struct ata_device *dev,
++			       char *info, size_t infosz)
++{
++	const u16 *id = dev->id;
++
++	/* Default translation */
++	dev->cylinders	= id[1];
++	dev->heads	= id[3];
++	dev->sectors	= id[6];
++
++	if (ata_id_current_chs_valid(id)) {
++		/* Current CHS translation is valid. */
++		dev->cylinders = id[54];
++		dev->heads     = id[55];
++		dev->sectors   = id[56];
++	}
++
++	snprintf(info, infosz, "CHS %u/%u/%u",
++		 dev->cylinders, dev->heads, dev->sectors);
++}
++
+ static void ata_dev_config_devslp(struct ata_device *dev)
+ {
+ 	u8 *sata_setting = dev->link->ap->sector_buf;
+@@ -2418,6 +2464,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 	char revbuf[7];		/* XYZ-99\0 */
+ 	char fwrevbuf[ATA_ID_FW_REV_LEN+1];
+ 	char modelbuf[ATA_ID_PROD_LEN+1];
++	char lba_info[40];
+ 	int rc;
+ 
+ 	if (!ata_dev_enabled(dev) && ata_msg_info(ap)) {
+@@ -2539,61 +2586,22 @@ int ata_dev_configure(struct ata_device *dev)
+ 		}
+ 
+ 		if (ata_id_has_lba(id)) {
+-			const char *lba_desc;
+-			char ncq_desc[24];
+-
+-			lba_desc = "LBA";
+-			dev->flags |= ATA_DFLAG_LBA;
+-			if (ata_id_has_lba48(id)) {
+-				dev->flags |= ATA_DFLAG_LBA48;
+-				lba_desc = "LBA48";
+-
+-				if (dev->n_sectors >= (1UL << 28) &&
+-				    ata_id_has_flush_ext(id))
+-					dev->flags |= ATA_DFLAG_FLUSH_EXT;
+-			}
+-
+-			/* config NCQ */
+-			rc = ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
++			rc = ata_dev_config_lba(dev, lba_info, sizeof(lba_info));
+ 			if (rc)
+ 				return rc;
+-
+-			/* print device info to dmesg */
+-			if (ata_msg_drv(ap) && print_info) {
+-				ata_dev_info(dev, "%s: %s, %s, max %s\n",
+-					     revbuf, modelbuf, fwrevbuf,
+-					     ata_mode_string(xfer_mask));
+-				ata_dev_info(dev,
+-					     "%llu sectors, multi %u: %s %s\n",
+-					(unsigned long long)dev->n_sectors,
+-					dev->multi_count, lba_desc, ncq_desc);
+-			}
+ 		} else {
+-			/* CHS */
+-
+-			/* Default translation */
+-			dev->cylinders	= id[1];
+-			dev->heads	= id[3];
+-			dev->sectors	= id[6];
+-
+-			if (ata_id_current_chs_valid(id)) {
+-				/* Current CHS translation is valid. */
+-				dev->cylinders = id[54];
+-				dev->heads     = id[55];
+-				dev->sectors   = id[56];
+-			}
++			ata_dev_config_chs(dev, lba_info, sizeof(lba_info));
++		}
+ 
+-			/* print device info to dmesg */
+-			if (ata_msg_drv(ap) && print_info) {
+-				ata_dev_info(dev, "%s: %s, %s, max %s\n",
+-					     revbuf,	modelbuf, fwrevbuf,
+-					     ata_mode_string(xfer_mask));
+-				ata_dev_info(dev,
+-					     "%llu sectors, multi %u, CHS %u/%u/%u\n",
+-					     (unsigned long long)dev->n_sectors,
+-					     dev->multi_count, dev->cylinders,
+-					     dev->heads, dev->sectors);
+-			}
++		/* print device info to dmesg */
++		if (ata_msg_drv(ap) && print_info) {
++			ata_dev_info(dev, "%s: %s, %s, max %s\n",
++				     revbuf, modelbuf, fwrevbuf,
++				     ata_mode_string(xfer_mask));
++			ata_dev_info(dev,
++				     "%llu sectors, multi %u, %s\n",
++				     (unsigned long long)dev->n_sectors,
++				     dev->multi_count, lba_info);
+ 		}
+ 
+ 		ata_dev_config_devslp(dev);
 -- 
 2.31.1
 
