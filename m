@@ -2,111 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-9.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B064C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 13:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5136AC4320E
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 13:18:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D7AB360F70
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 13:16:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F96D61103
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 13:18:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233764AbhHBNQv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Aug 2021 09:16:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58814 "EHLO
+        id S233818AbhHBNSq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Aug 2021 09:18:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59262 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233691AbhHBNQv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2021 09:16:51 -0400
-Received: from mail-wr1-x429.google.com (mail-wr1-x429.google.com [IPv6:2a00:1450:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 89D3AC06175F
-        for <linux-scsi@vger.kernel.org>; Mon,  2 Aug 2021 06:16:41 -0700 (PDT)
-Received: by mail-wr1-x429.google.com with SMTP id h14so21421565wrx.10
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Aug 2021 06:16:41 -0700 (PDT)
+        with ESMTP id S233621AbhHBNSp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2021 09:18:45 -0400
+Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EAE61C06175F;
+        Mon,  2 Aug 2021 06:18:34 -0700 (PDT)
+Received: by mail-pl1-x634.google.com with SMTP id k2so2014040plk.13;
+        Mon, 02 Aug 2021 06:18:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=XB0+sK2y2OhCGvitjXQoX7WS7ISvhgZ+PL1Z1Roq38I=;
-        b=mYzTT79zmgzQXAenLJy8HLipMdIujoNx2hGOPinURJ8okWLHAkZ6M+lprpgwy3/wh1
-         Vu7RhqO1HVnv1axwVCMl343lN8JUYsU6DZdU92bBuYjaeS7HEIVk9VBcCDBwNWYwZMeg
-         tnYH2QSz33FPhFU/BF00PHh4Y1iE6AvbTRo4WR3eNcDG30NY7GmlhBytxaXayBPpxTe9
-         w053dz10UjYrFqpowOEMsYBny7A7GMjA16IK8oGsbQuO/Dh+xh6B4xkk1NdhDgOq4a7l
-         rPxs2qolnj38ASJzFOaJ69zRAVKVDR5XLTYekfX+Oa90rvcPnLWavFNtzDhHMG06Ojkf
-         CIUA==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=NCI3lHDyDwNRa9nHRAWUMeIv6E94OBk/ArQgKFFM5dk=;
+        b=PML2k1Dht8uODKlH3PjAFdc6s/CTDMJQb0vSXp+tWKBkOZKDTm+GB/eR8aVXQ70FAX
+         jEcnBX+WXP5rLcq4W5X5HFrW9hJ51Vmvgvy8hGNIdNIWJPbXr/Z0woDD3x3PwhBautYj
+         f/s264QOiroQXi9rnewmDedviFD+3T3gC4ei7Z5FsKr/y65Ls/dYfdoaKAM+Ec2wHvVd
+         aA36ny4fOTLJxiB1mC/JAk1BfVfacZyAbJGrI98dEdqVsjhB5uZtuVM6yydcCZZA8s9D
+         eyWMrETGzJOpt/w2FVnHDuzrREi+J5sEiaxqqYpsUx4zqF5/iQRjwnI3UJJpHaysMi13
+         lAfA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=XB0+sK2y2OhCGvitjXQoX7WS7ISvhgZ+PL1Z1Roq38I=;
-        b=Kq2wUvcSrTgdAq1cQmTDUhRnndhCmmSLmx/Xk1d6XRgkME8BoSyK/X9PKMlGqwTI7U
-         /UADUQ6pTou5NkqDb0m+GOkd55MK4ZXnOZCkZb7Tx8ly28VQiu+cEaFkDw3eGhWvtkwS
-         P509f+oE9AmgfdnEVGFjImC4sJxZRu/daVtsFABfDegM1j9ACSRxspJKW9oO7yvoYKeo
-         p7W6ohgbl1ferZ6WwzKBh6hBtPFZID9lvDuXd9JbmAW7mC3RBB5tGjpWYuFUr0jY8qEi
-         f58Spz3n4VWE3AjsK0Bio2xNJpCgdC3yLDZa+bsCKKpZBUy6Ci+jOcwBLsV/rOlBrCZv
-         D5VQ==
-X-Gm-Message-State: AOAM531Ed5n/0YmcBwBFLs+kAmNBJtLpiCe8Myoxz9sB4DOZE5BQ/2lc
-        2SOGUGIJxkAW4hsmrboEnEY=
-X-Google-Smtp-Source: ABdhPJzUDtUwCsgBLGqiS+bFo3v3sASRHoSyy2nR+wuIrjZfHwgvRS9kGNlUnn/IrheaptUOWjwwWw==
-X-Received: by 2002:adf:ebd2:: with SMTP id v18mr18143202wrn.248.1627910200238;
-        Mon, 02 Aug 2021 06:16:40 -0700 (PDT)
-Received: from ubuntu-laptop (ip5f5bfdd7.dynamic.kabel-deutschland.de. [95.91.253.215])
-        by smtp.googlemail.com with ESMTPSA id s13sm10355406wmc.47.2021.08.02.06.16.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Aug 2021 06:16:40 -0700 (PDT)
-Message-ID: <644b3783c170defc89fb6aa4844b30ccd10a6c01.camel@gmail.com>
-Subject: Re: [PATCH v3 15/18] scsi: ufs: Request sense data asynchronously
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>
-Date:   Mon, 02 Aug 2021 15:16:39 +0200
-In-Reply-To: <20210722033439.26550-16-bvanassche@acm.org>
-References: <20210722033439.26550-1-bvanassche@acm.org>
-         <20210722033439.26550-16-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=NCI3lHDyDwNRa9nHRAWUMeIv6E94OBk/ArQgKFFM5dk=;
+        b=khpHzfdb9tFSzqyN0wiW5r4TqwVMhp2UUlSP/aVzzTwFp5M3PTr+4Mz+visrQkvPQS
+         TQO+X45KPzP8NnmaRUw3n8xHw8pvEo0sCPHWZ6eixqIdSeXnuDD1EVVBKl6zwi9C0sSn
+         N71ZpMrkNueSj7AVFI42RQf9AlyrMNdfhtQcLtLyyxes9baPlo1Ctb9jJ2hBCkyWgVvk
+         MCBr88ZhSEPQ6N7MTUVhOEsSQAujk1Vd5m5Vb2QjcQrUH/K1s5vG965mOrHT/BV7gCQM
+         kpVahJwmwY6bpf1b5ZlarLPEx/e77pWavTvA2nT3GeNxAb54M57xjuev2N3iCG+CCnQi
+         utnw==
+X-Gm-Message-State: AOAM533mFDFVR8VbjYD4p5efbmsQMovwecA9fHQaED3gQ9aMZdLJkLd9
+        6YMPVNhnCAW7Vk/pQ8llkk0=
+X-Google-Smtp-Source: ABdhPJzFSB7pHIeqEWjNLoxbHlaMRkkWu5nfzAixwCVuwFPeXy4oAXbwBpyGfDBS8UB6XOVjOVOqpg==
+X-Received: by 2002:a62:5587:0:b029:3af:776c:2d02 with SMTP id j129-20020a6255870000b02903af776c2d02mr16019093pfb.11.1627910314492;
+        Mon, 02 Aug 2021 06:18:34 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
+        by smtp.gmail.com with ESMTPSA id e13sm12540053pfd.11.2021.08.02.06.18.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Aug 2021 06:18:32 -0700 (PDT)
+Subject: Re: [PATCH 05/13] HV: Add Write/Read MSR registers via ghcb page
+To:     Joerg Roedel <joro@8bytes.org>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        jgross@suse.com, sstabellini@kernel.org, will@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, arnd@arndb.de, hch@lst.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
+        Tianyu.Lan@microsoft.com, rientjes@google.com,
+        martin.b.radev@gmail.com, akpm@linux-foundation.org,
+        rppt@kernel.org, kirill.shutemov@linux.intel.com,
+        aneesh.kumar@linux.ibm.com, krish.sadhukhan@oracle.com,
+        saravanand@fb.com, xen-devel@lists.xenproject.org,
+        pgonda@google.com, david@redhat.com, keescook@chromium.org,
+        hannes@cmpxchg.org, sfr@canb.auug.org.au,
+        michael.h.kelley@microsoft.com, iommu@lists.linux-foundation.org,
+        linux-arch@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, vkuznets@redhat.com, anparri@microsoft.com
+References: <20210728145232.285861-1-ltykernel@gmail.com>
+ <20210728145232.285861-6-ltykernel@gmail.com> <YQfk9G+k0Tj8ihyu@8bytes.org>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <988f20e4-821f-b493-c25d-ca9107a6e891@gmail.com>
+Date:   Mon, 2 Aug 2021 21:18:15 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
+In-Reply-To: <YQfk9G+k0Tj8ihyu@8bytes.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-07-21 at 20:34 -0700, Bart Van Assche wrote:
-> Clearing a unit attention synchronously from inside the UFS error
-> handler
-> may trigger the following deadlock:
-> - ufshcd_err_handler() calls ufshcd_err_handling_unprepare() and the
-> latter
->   function calls ufshcd_clear_ua_wluns().
-> - ufshcd_clear_ua_wluns() submits a REQUEST SENSE command and that
-> command
->   activates the SCSI error handler.
-> - The SCSI error handler calls ufshcd_host_reset_and_restore().
-> - ufshcd_host_reset_and_restore() executes the following code:
->   ufshcd_schedule_eh_work(hba);
->   flush_work(&hba->eh_work);
+On 8/2/2021 8:28 PM, Joerg Roedel wrote:
+> On Wed, Jul 28, 2021 at 10:52:20AM -0400, Tianyu Lan wrote:
+>> +void hv_ghcb_msr_write(u64 msr, u64 value)
+>> +{
+>> +	union hv_ghcb *hv_ghcb;
+>> +	void **ghcb_base;
+>> +	unsigned long flags;
+>> +
+>> +	if (!ms_hyperv.ghcb_base)
+>> +		return;
+>> +
+>> +	WARN_ON(in_nmi());
+>> +
+>> +	local_irq_save(flags);
+>> +	ghcb_base = (void **)this_cpu_ptr(ms_hyperv.ghcb_base);
+>> +	hv_ghcb = (union hv_ghcb *)*ghcb_base;
+>> +	if (!hv_ghcb) {
+>> +		local_irq_restore(flags);
+>> +		return;
+>> +	}
+>> +
+>> +	memset(hv_ghcb, 0x00, HV_HYP_PAGE_SIZE);
 > 
-> This sequence results in a deadlock (circular wait). Fix this by
-> requesting
-> sense data asynchronously.
+> Do you really need to zero out the whole 4k? The validation bitmap
+> should be enough, there are no secrets on the page anyway.
+> Same in hv_ghcb_msr_read().
+
+OK. Thanks for suggestion. I will have a try.
+
 > 
-> Cc: Adrian Hunter <adrian.hunter@intel.com>
-> Cc: Stanley Chu <stanley.chu@mediatek.com>
-> Cc: Can Guo <cang@codeaurora.org>
-> Cc: Asutosh Das <asutoshd@codeaurora.org>
-> Cc: Avri Altman <avri.altman@wdc.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>> +enum es_result sev_es_ghcb_hv_call(struct ghcb *ghcb,
+>> +				   struct es_em_ctxt *ctxt,
+>> +				   u64 exit_code, u64 exit_info_1,
+>> +				   u64 exit_info_2)
+>>   {
+>>   	enum es_result ret;
+>>   
+>> @@ -109,7 +109,16 @@ static enum es_result sev_es_ghcb_hv_call(struct ghcb *ghcb,
+>>   	ghcb_set_sw_exit_info_1(ghcb, exit_info_1);
+>>   	ghcb_set_sw_exit_info_2(ghcb, exit_info_2);
+>>   
+>> -	sev_es_wr_ghcb_msr(__pa(ghcb));
+>> +	/*
+>> +	 * Hyper-V runs paravisor with SEV. Ghcb page is allocated by
+>> +	 * paravisor and not needs to be updated in the Linux guest.
+>> +	 * Otherwise, the ghcb page's PA reported by paravisor is above
+>> +	 * VTOM. Hyper-V use this function with NULL for ctxt point and
+>> +	 * skip setting ghcb page in such case.
+>> +	 */
+>> +	if (ctxt)
+>> +		sev_es_wr_ghcb_msr(__pa(ghcb));
+> 
+> No, do not make this function work with ctxt==NULL. Instead, factor out
+> a helper function which contains what Hyper-V needs and use that in
+> sev_es_ghcb_hv_call() and Hyper-V code.
+> 
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+OK. Will update.
 
+>> +union hv_ghcb {
+>> +	struct ghcb ghcb;
+>> +} __packed __aligned(PAGE_SIZE);
+> 
+> I am curious what this will end up being good for.
+> 
+
+Hyper-V introduces a specific hypercall request in GHCB page and use 
+same union in the Linux Hyper-V code to read/write MSR and call the new 
+hypercall request.
