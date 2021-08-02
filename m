@@ -2,115 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE8C5C432BE
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 14:22:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9429FC4338F
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 14:25:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF96A60F36
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 14:22:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DAE460F51
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 14:25:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236134AbhHBOWo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Aug 2021 10:22:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45974 "EHLO
+        id S234344AbhHBOZZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Aug 2021 10:25:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235963AbhHBOWj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2021 10:22:39 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 412A2C0701F8;
-        Mon,  2 Aug 2021 07:09:00 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id t3so17633081plg.9;
-        Mon, 02 Aug 2021 07:09:00 -0700 (PDT)
+        with ESMTP id S234296AbhHBOZO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2021 10:25:14 -0400
+Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EA7EBC0619CD
+        for <linux-scsi@vger.kernel.org>; Mon,  2 Aug 2021 07:24:23 -0700 (PDT)
+Received: by mail-wr1-x432.google.com with SMTP id c9so1436711wri.8
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Aug 2021 07:24:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=/cdM8HpdDM3Yh7GGE7exLVKVMbD9iA/9tyiszM+STgg=;
-        b=EyGzIbCm/4WfGRl2TIpRtI8exR5hEZdzfziWgkyJF2rPPiSQ75H+98IAopMmYevfFk
-         Ov/fJ43JIQnILsE3s/0qzNMc0nrf6uUXE2j26BExy5g7B3BpTmvtolJxygg5zsp4OzjQ
-         /7pE2ruUo+gM4LDOxH4S0QCLE3cZn8HjYiXLd7zaPCzN5tcqN75mDO2ycYHk5nf3h82W
-         fzBmyU3qV/42PwBr8KexEQmrjqnx6SCVYEPtgGSjDXNVb1Uffuv26Hb9ID8hcdFyzcOI
-         2ZeoAyGM+UdW1S66kVSqZMjoR5QEIes/nzm112DtVAisubEuzui0RUvnkB/UUMAP1zyE
-         JLjQ==
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=cRjjWg/mWYijYBQxH9somoLlXnUOB5FQM1XApkQdmuU=;
+        b=sQnxkI4oOKLx2yeazySxbdu45qzpcUXP3Lvl+kjwHg9qAcv7nRH6K5TX1T9v+iYB/V
+         Yo2TDRvJUmS7Q5RXWE0OuOWLM7oRLUe5vDnLawxrIpP+11ElAcNaIy6sx++/wdnNa6C7
+         ezsrkRv5AtI4nlWroIuUwp5Hw74PAhvsxpXgaj9ejsL9GwrDYJkqxUho8kGGnBaeSwtj
+         /fYxyORjLTdRnQU9qizsFrWksHCTCBTekRYQG1otez3M/7JR1NEJliTNuhaMAn6/iIZB
+         KlmKtDrOvWYVWkZjZQhEJWZDcVV/3VStSlf4+tvDliEhZxwDY48C+z15kptNcf2TZDfF
+         gZOA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=/cdM8HpdDM3Yh7GGE7exLVKVMbD9iA/9tyiszM+STgg=;
-        b=KCWguRI6XpOC4NANbUmdJU8A2dKRuK8R8fYdNL+T/y2i5pq1CEhNeHe45HxKcHKw7Z
-         86ge4xwUvuutP+xU1LxjDEeMvvNjEsVWu2kVa3U1QxxpQMMqARf+5y4M5fp/khkhQT23
-         WayH5FKCOBE0JERAK67O8grW/MY7MUbLdbbWxBbVYcVSUcyh3kvrpJ027G0GPXcFrgJd
-         UpAq0gShQ9irj3syRYMy17jpzm0mTlxc4mw7VdyGEl2MeNxeiaz/fntlkl+o3aK2BXvW
-         IafCL2rZu5XdS8ynS5ivAMw16b68P7ejnCqw++4vWtdbqJ+rzfAWUBmbl4xjDMNqrhOw
-         FRkw==
-X-Gm-Message-State: AOAM531p54V5x9dsA35BewNi8pOllVsm8IvlHH0EVAzNGznsHIXa1fAx
-        kOnx+1AHhY0DeljgNcI3H8g=
-X-Google-Smtp-Source: ABdhPJz9/oIt1d6cc74gFPmQ4IHl6g1R2CxfQ4Ko9VZ15V7BmdIE77nzkycqmmDE/JgZuYIJykKPEQ==
-X-Received: by 2002:aa7:8148:0:b029:31b:10b4:f391 with SMTP id d8-20020aa781480000b029031b10b4f391mr16506898pfn.69.1627913339735;
-        Mon, 02 Aug 2021 07:08:59 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:18:efec::4b1])
-        by smtp.gmail.com with ESMTPSA id fz10sm11071046pjb.40.2021.08.02.07.08.46
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Aug 2021 07:08:59 -0700 (PDT)
-Subject: Re: [PATCH 13/13] HV/Storvsc: Add Isolation VM support for storvsc
- driver
-To:     Joerg Roedel <joro@8bytes.org>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, will@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, arnd@arndb.de, hch@lst.de,
-        m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
-        Tianyu.Lan@microsoft.com, rientjes@google.com,
-        martin.b.radev@gmail.com, akpm@linux-foundation.org,
-        rppt@kernel.org, kirill.shutemov@linux.intel.com,
-        aneesh.kumar@linux.ibm.com, krish.sadhukhan@oracle.com,
-        saravanand@fb.com, xen-devel@lists.xenproject.org,
-        pgonda@google.com, david@redhat.com, keescook@chromium.org,
-        hannes@cmpxchg.org, sfr@canb.auug.org.au,
-        michael.h.kelley@microsoft.com, iommu@lists.linux-foundation.org,
-        linux-arch@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, vkuznets@redhat.com, anparri@microsoft.com
-References: <20210728145232.285861-1-ltykernel@gmail.com>
- <20210728145232.285861-14-ltykernel@gmail.com> <YQfxA/AYfOqyqNh0@8bytes.org>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <eaeb75b7-7e98-ad2d-0e2c-0565b9db79dd@gmail.com>
-Date:   Mon, 2 Aug 2021 22:08:43 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=cRjjWg/mWYijYBQxH9somoLlXnUOB5FQM1XApkQdmuU=;
+        b=ora5CqRLaZ8GWVKw4PSfzXLNLee0R1v7tRudIp3d5g77tvO2rGWhzJ5MJ7GDlltSLn
+         SXrcLJAw+Exdu9fHRQYN2/QC7F2zS4ybSUmdJh0E6iU/kodmhgF7vQBqJjeablOcKiKt
+         8HVxv6tkwztGEoQABAaEjUKMcIWdeI3HrroIp+nEUaVap3yLD+qusq2o13yBWGJI9Icn
+         r35D3vWCUQ8UEXI181fUGbUDNrxLBhdN9s5kXbMSJtSaJJn51bcLi/qVM1E5vUziIXjA
+         EOVj45Pnz7eahbteP6PQXvNy2PTndeQIq/QOS5HjkjcIMDJhIaE7xCEgJFWXeIr1dhxi
+         4uWg==
+X-Gm-Message-State: AOAM530jCiT2LncBsMtHzvjzCChZbhQlPs2oWM2uKEnNeRucTQqLVlvQ
+        HDz0aY8Q+GmqQzKfeqbfe4Y=
+X-Google-Smtp-Source: ABdhPJyu5gH0YwmbyPE+gc9JEcdp7+UQZZc4ijsLLwddljKO8oMXxpxkeJ/72uaJtH289MfPXMABXw==
+X-Received: by 2002:adf:f081:: with SMTP id n1mr18397915wro.235.1627914262620;
+        Mon, 02 Aug 2021 07:24:22 -0700 (PDT)
+Received: from ubuntu-laptop (ip5f5bfdd7.dynamic.kabel-deutschland.de. [95.91.253.215])
+        by smtp.googlemail.com with ESMTPSA id l5sm12983089wrc.90.2021.08.02.07.24.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Aug 2021 07:24:22 -0700 (PDT)
+Message-ID: <29c9d9024018d05c0bc51d87187627a4d04983e0.camel@gmail.com>
+Subject: Re: [PATCH v3 16/18] scsi: ufs: Synchronize SCSI and UFS error
+ handling
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Keoseong Park <keosung.park@samsung.com>
+Date:   Mon, 02 Aug 2021 16:24:21 +0200
+In-Reply-To: <20210722033439.26550-17-bvanassche@acm.org>
+References: <20210722033439.26550-1-bvanassche@acm.org>
+         <20210722033439.26550-17-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-In-Reply-To: <YQfxA/AYfOqyqNh0@8bytes.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/2/2021 9:20 PM, Joerg Roedel wrote:
-> On Wed, Jul 28, 2021 at 10:52:28AM -0400, Tianyu Lan wrote:
->> In Isolation VM, all shared memory with host needs to mark visible
->> to host via hvcall. vmbus_establish_gpadl() has already done it for
->> storvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
->> mpb_desc() still need to handle. Use DMA API to map/umap these
->> memory during sending/receiving packet and Hyper-V DMA ops callback
->> will use swiotlb function to allocate bounce buffer and copy data
->> from/to bounce buffer.
+On Wed, 2021-07-21 at 20:34 -0700, Bart Van Assche wrote:
+> Use the SCSI error handler instead of a custom error handling
+> strategy.
+> This change reduces the number of potential races in the UFS drivers
+> since
+> the UFS error handler and the SCSI error handler no longer run
+> concurrently.
 > 
-> I am wondering why you dont't use DMA-API unconditionally? It provides
-> enough abstraction to do the right thing for isolated and legacy VMs.
+> Cc: Adrian Hunter <adrian.hunter@intel.com>
+> Cc: Stanley Chu <stanley.chu@mediatek.com>
+> Cc: Can Guo <cang@codeaurora.org>
+> Cc: Asutosh Das <asutoshd@codeaurora.org>
+> Cc: Avri Altman <avri.altman@wdc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > 
 
-In VMbus, there is already a similar bounce buffer design and so there 
-is no need to call DMA-API for such buffer. Calling DMA-API is to use
-swiotlb bounce buffer for those buffer which hasn't been covered. This
-is why need to conditionally call DMA API.
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Tested-by: Bean Huo <beanhuo@micron.com>
+
