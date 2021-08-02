@@ -2,121 +2,164 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A78AC4338F
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 15:24:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D12EEC4338F
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 15:26:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 52CDF610A8
-	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 15:24:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCB10610FD
+	for <linux-scsi@archiver.kernel.org>; Mon,  2 Aug 2021 15:26:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234852AbhHBPYz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 2 Aug 2021 11:24:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34356 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234789AbhHBPYy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2021 11:24:54 -0400
-Received: from mail-wr1-x433.google.com (mail-wr1-x433.google.com [IPv6:2a00:1450:4864:20::433])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09697C061760
-        for <linux-scsi@vger.kernel.org>; Mon,  2 Aug 2021 08:24:44 -0700 (PDT)
-Received: by mail-wr1-x433.google.com with SMTP id h13so8454878wrp.1
-        for <linux-scsi@vger.kernel.org>; Mon, 02 Aug 2021 08:24:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=ebknOusjh/yi4rvlQyvQU3B8lOo8KXDPlVtM0QgkjMk=;
-        b=Tj4gfaGQ0jry5fjeeWsUa3YShEsZbJyB7zbHH6r8VALuZRhM2/ktZkypKgkAiI5xXJ
-         OOhAl9ude5Mba0LdkoDEN8Wb8jzE+F7JX9mNJsd26JlQ8CxbKRHvpVPc5pSkoGRkb2o0
-         QaffUTiUAj4JiLPtizd8l0RqaaKTLT+2HBb7r1F7KWM302N+zVnHqTKBHHP6Oud+gh/U
-         2OB8+RSnplHmn92zHF1IKf5vaVLEQwRIM+mcvoLkeWlyMo/V+sIyL/1Uxh7hzuP73xJ3
-         +nRhWaRMqzxVbcfRkFMmEO+I8LkpRkG9srk06pHEkh+WkQcq4G5IZo85QlEjJLyMskMI
-         WIXA==
+        id S234848AbhHBP1D (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 2 Aug 2021 11:27:03 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:42707 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234101AbhHBP1D (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Aug 2021 11:27:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1627918013;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=ZDhUhOE7wVvhlT6fRTts0o1L7ni+IAaP4sO+YA1/LPs=;
+        b=JkMVuMMwf8wW3Szfi2Eq3lOa7og66x5Tgtp9ar0NOGPTRyN2ELz6Mtcj0C6clz6E8Tfm7B
+        IGg0TtgeMiWc8+1+QBu6Ou2AMnhlEmdN/zHu8Z52SxQzgbx02tbBt8VYwNAIiYYs9rARt3
+        /ccuYWUSXjFp6i1Xx17+ch9Gx4TlKA4=
+Received: from mail-lj1-f200.google.com (mail-lj1-f200.google.com
+ [209.85.208.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-278-qMfovuBlOHGvg-vYy1Dltg-1; Mon, 02 Aug 2021 11:26:52 -0400
+X-MC-Unique: qMfovuBlOHGvg-vYy1Dltg-1
+Received: by mail-lj1-f200.google.com with SMTP id a14-20020a05651c030eb0290191f8d27e33so3295856ljp.23
+        for <linux-scsi@vger.kernel.org>; Mon, 02 Aug 2021 08:26:51 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=ebknOusjh/yi4rvlQyvQU3B8lOo8KXDPlVtM0QgkjMk=;
-        b=Ky2MLHyYKodk4wUhfiNLznvpGaG4Hof393k5FWu+F0B6Sq2paxtHWgmX7l0aQxkud0
-         lY9GEyQzAA+S8m61TnbGAnXIqcx8uQSzN+DOa1AxfPtnSCPnbJDBrrSfEF+NYAAPs2Xe
-         AaKr2TiwmgEEPD9w0NyokaVbx45NXyu+Pa1JeLcw24UdYTwVgPGaldxgRqyuLzbVf/nG
-         rlcfLB6ukrHXOQpaJXjSLv5tG6Q9wWAs4Y9deCpHxgJqaQZj5rRfc6Wy0rvGHVL3T0vf
-         4WvsdScEEBMEyqspXUtXbi+54WpHbgrA/O2S4lAAeyYqm5R+dEDHTyVhf3MYzHuQyZGk
-         oo/Q==
-X-Gm-Message-State: AOAM531MqltVHzmfYWyjmhYD94Ac4PzNLPoaZKP2lrk4IiQrR2xcU4v4
-        iLcAyDhsWUpcio1jHGg7XBQ=
-X-Google-Smtp-Source: ABdhPJxjggRgjhynOfR4Mf8NxVdFNMZvQO7/+CGtJdnP9FjZbghiMhR4GXI8vh2RPcu6f9SGjXmegw==
-X-Received: by 2002:a5d:4b4e:: with SMTP id w14mr18099569wrs.341.1627917882724;
-        Mon, 02 Aug 2021 08:24:42 -0700 (PDT)
-Received: from ubuntu-laptop (ip5f5bfdd7.dynamic.kabel-deutschland.de. [95.91.253.215])
-        by smtp.googlemail.com with ESMTPSA id p10sm4150690wme.30.2021.08.02.08.24.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Aug 2021 08:24:42 -0700 (PDT)
-Message-ID: <779aae9841331229e29fd3be23de55cec776af16.camel@gmail.com>
-Subject: Re: [PATCH v3 11/18] scsi: ufs: Revert "Utilize Transfer Request
- List Completion Notification Register"
-From:   Bean Huo <huobean@gmail.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Caleb Connolly <caleb@connolly.tech>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Date:   Mon, 02 Aug 2021 17:24:41 +0200
-In-Reply-To: <20210722033439.26550-12-bvanassche@acm.org>
-References: <20210722033439.26550-1-bvanassche@acm.org>
-         <20210722033439.26550-12-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ZDhUhOE7wVvhlT6fRTts0o1L7ni+IAaP4sO+YA1/LPs=;
+        b=rT1hN2DwNKwaw7zmAf58cvRmL1HVtN2thTi4++MpQWt+Q+wuBAGb/gTw0GWRyYE/7y
+         EodDITb5/pOv8SsvwkKwZCfSKirKXpaPZtn495HM/HfAOEJQmScriTQ88jksMQ3qrDQ/
+         RBY97b0N4TcLfvzVLryWVhHNmeag9LPywg+Ost37RhaRJBU4bJlBMrufrggASG7pQ5e/
+         wJtO3mOBUuFaifmrX1Sb6OJkm/wCpD24toebYE27hLzStK06zrUXtjJbfUxxTG/c9D2a
+         73XCm8Gz+vn9KUZpDYWpCuZ3unitHNv2CA0UY1vT5BOG4943jeqI0/s8xoxcV0kaT9/h
+         7WAA==
+X-Gm-Message-State: AOAM531iUcfzO7QnMvp6SKV4N7WUf+d9yLnZQSiLk/KozgEPyYD7mQhZ
+        Z4wtJufa9qhlJpyfvuyHIhPyqGv4LuXaTG27N9HyQctCuCKP98HAjL5bKw+PNKLLg10YEsGVhcL
+        D+n4efD/8CVyfnB2wRQO+mty7yIRcLlqkzV6BbQ==
+X-Received: by 2002:a05:6512:2189:: with SMTP id b9mr7974389lft.159.1627918010525;
+        Mon, 02 Aug 2021 08:26:50 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwxJTM6knPaot69WHjAFEXmr/LkoWJIS6PDNnEfEDimuXafoRs+es8u51ckxQOEF4QZT1655o4pRGDQ381sdSI=
+X-Received: by 2002:a05:6512:2189:: with SMTP id b9mr7974367lft.159.1627918010313;
+ Mon, 02 Aug 2021 08:26:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+References: <20210720232624.1493424-1-nitesh@redhat.com>
+In-Reply-To: <20210720232624.1493424-1-nitesh@redhat.com>
+From:   Nitesh Lal <nilal@redhat.com>
+Date:   Mon, 2 Aug 2021 11:26:39 -0400
+Message-ID: <CAFki+LkNzk0ajUeuBnJZ6mp1kxB0+zZf60tw1Vfq+nPy-bvftQ@mail.gmail.com>
+Subject: Re: [PATCH v5 00/14] genirq: Cleanup the abuse of irq_set_affinity_hint()
+To:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, jassisinghbrar@gmail.com,
+        Viresh Kumar <viresh.kumar@linaro.org>,
+        Tushar.Khandelwal@arm.com, manivannan.sadhasivam@linaro.org,
+        lewis.hanly@microchip.com, ley.foon.tan@intel.com,
+        kabel@kernel.org, huangguangbin2@huawei.com, davem@davemloft.net,
+        benve@cisco.com, govind@gmx.com, kashyap.desai@broadcom.com,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        shivasharan.srikanteshwara@broadcom.com,
+        sathya.prakash@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        suganath-prabu.subramani@broadcom.com, ajit.khaparde@broadcom.com,
+        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
+        linux-pci@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>,
+        rostedt@goodmis.org, Marc Zyngier <maz@kernel.org>
+Cc:     Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Robin Murphy <robin.murphy@arm.com>,
+        Marcelo Tosatti <mtosatti@redhat.com>,
+        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
+        Frederic Weisbecker <frederic@kernel.org>,
+        Juri Lelli <juri.lelli@redhat.com>,
+        Alex Belits <abelits@marvell.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        akpm@linuxfoundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, Neil Horman <nhorman@tuxdriver.com>,
+        pjwaskiewicz@gmail.com, Stefan Assmann <sassmann@redhat.com>,
+        Tomas Henzl <thenzl@redhat.com>, james.smart@broadcom.com,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Ken Cox <jkc@redhat.com>, faisal.latif@intel.com,
+        shiraz.saleem@intel.com, tariqt@nvidia.com,
+        Alaa Hleihel <ahleihel@redhat.com>,
+        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
+        saeedm@nvidia.com, Nitesh Lal <nilal@redhat.com>,
+        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
+        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
+        Al Stone <ahs3@redhat.com>,
+        Leon Romanovsky <leonro@nvidia.com>,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        bjorn.andersson@linaro.org, chunkuang.hu@kernel.org,
+        yongqiang.niu@mediatek.com, baolin.wang7@gmail.com,
+        Petr Oros <poros@redhat.com>, Ming Lei <minlei@redhat.com>,
+        Ewan Milne <emilne@redhat.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, Jakub Kicinski <kuba@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-07-21 at 20:34 -0700, Bart Van Assche wrote:
-> Using the UTRLCNR register involves two MMIO accesses in the hot path
-> while
-> using the doorbell register only involves a single MMIO access. Since
-> MMIO
-> accesses take time, do not use the UTRLCNR register. The spinlock
-> contention
-> on the SCSI host lock that is reintroduced by this patch will be
-> addressed
-> by a later patch.
-> 
-> This reverts commit 6f7151729647e58ac7c522081255fd0c07b38105.
-> 
-> Cc: Adrian Hunter <adrian.hunter@intel.com>
-> Cc: Stanley Chu <stanley.chu@mediatek.com>
-> Cc: Can Guo <cang@codeaurora.org>
-> Cc: Asutosh Das <asutoshd@codeaurora.org>
-> Cc: Avri Altman <avri.altman@wdc.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> 
+On Tue, Jul 20, 2021 at 7:26 PM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
+>
+> The drivers currently rely on irq_set_affinity_hint() to either set the
+> affinity_hint that is consumed by the userspace and/or to enforce a custom
+> affinity.
+>
+> irq_set_affinity_hint() as the name suggests is originally introduced to
+> only set the affinity_hint to help the userspace in guiding the interrupts
+> and not the affinity itself. However, since the commit
+>
+>         e2e64a932556 "genirq: Set initial affinity in irq_set_affinity_hint()"
+>
 
-Hi Bart, 
+[...]
 
-I did the comparison test on my platform, it is very difficult to get a
-very clear and fair result between two changes. but lamely speaking, on
-the small chunk size read/write, your changes wins. but on the big
-chunk size, It is not very clear, the gap between the two changes can
-be ignored.
+>  drivers/infiniband/hw/irdma/hw.c              |  4 +-
+>  drivers/mailbox/bcm-flexrm-mailbox.c          |  4 +-
+>  drivers/net/ethernet/cisco/enic/enic_main.c   |  8 +--
+>  drivers/net/ethernet/emulex/benet/be_main.c   |  4 +-
+>  drivers/net/ethernet/huawei/hinic/hinic_rx.c  |  4 +-
+>  drivers/net/ethernet/intel/i40e/i40e_main.c   |  8 +--
+>  drivers/net/ethernet/intel/iavf/iavf_main.c   |  8 +--
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 10 ++--
+>  drivers/net/ethernet/mellanox/mlx4/eq.c       |  8 ++-
+>  .../net/ethernet/mellanox/mlx5/core/pci_irq.c |  8 +--
+>  drivers/scsi/lpfc/lpfc_init.c                 |  4 +-
+>  drivers/scsi/megaraid/megaraid_sas_base.c     | 27 +++++-----
+>  drivers/scsi/mpt3sas/mpt3sas_base.c           | 21 ++++----
+>  include/linux/interrupt.h                     | 53 ++++++++++++++++++-
+>  kernel/irq/manage.c                           |  8 +--
+>  15 files changed, 114 insertions(+), 65 deletions(-)
+>
+> --
+>
+>
 
-Tested-by: Bean Huo <beanhuo@micron.com>
+Gentle ping.
+Any comments on the following patches:
 
-Bean
+  genirq: Provide new interfaces for affinity hints
+  scsi: megaraid_sas: Use irq_set_affinity_and_hint
+  scsi: mpt3sas: Use irq_set_affinity_and_hint
+  enic: Use irq_update_affinity_hint
+  be2net: Use irq_update_affinity_hint
+  mailbox: Use irq_update_affinity_hint
+  hinic: Use irq_set_affinity_and_hint
+
+or any other patches?
+
+-- 
+Thanks
+Nitesh
 
