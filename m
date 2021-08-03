@@ -2,186 +2,188 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08545C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 22:09:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B406C4320A
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 23:35:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC8FF600EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 22:09:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3CE3F60EE8
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 23:35:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231474AbhHCWJa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Aug 2021 18:09:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58502 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbhHCWJa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2021 18:09:30 -0400
-Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 892A7C061757
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Aug 2021 15:09:17 -0700 (PDT)
-Received: by mail-lf1-x12b.google.com with SMTP id c16so1079781lfc.2
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Aug 2021 15:09:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=ZcdSrPnrlxA/BFQBwtGCMOgA2xpA1nJhAuYQJdN18JA=;
-        b=U1JpWbUwjtZmK8MoPzFsn/kmN9T4fqoEYAy7aWCKlZ0rdrbpQFwiOFJbgqVAXKv3fu
-         mygMh8p/9fyyu95TMUGTp07SbAzcDFDmyWUhILOILhpjAOi87mvP13PggJyCwpNLPWFl
-         Lro9O2DOAhQhb2heLhlmGYHbrqxeEbiBsTLyk=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=ZcdSrPnrlxA/BFQBwtGCMOgA2xpA1nJhAuYQJdN18JA=;
-        b=jGQIXdZ9H8ZIR8ZoLoZKLzlU6RZnRT4J76387Xpu/xcL5KT7CbHCaZeV/xTlDg4xzE
-         ED4WrIA7VSWF3YC3kjxAT+NUDfvHcVO16qiOZkr4m1iauM8ghxAp0GD9nE/B/2/l+xwr
-         J7LFD9vPA1n2XksVC5LRSME0WIMo86z3GSkmRL9h+NG5vB8vnZBIVgUm37mFPXChbkNL
-         do4plCBykwTP8s/BSDDvZxE46bRcXj6JElUgfzwYltnba9AjBr3K7IaDksOS5yvsriGe
-         Oh6V9R4szYH/PZa5mzXmjh8Cc73aoYO0w+QczHEsF2Rm1n+P7SY4t0jU67c9wCHyqcD8
-         jYdg==
-X-Gm-Message-State: AOAM531voq17Ludgqf3QOugtqSmqky8QeTAR3RpXMIYt/uzLMiZyOjQN
-        MkH7VMhwQyfsgAwzzeszXMJfzdgAXKeNiK7Fc0hn4w==
-X-Google-Smtp-Source: ABdhPJzZnVTzt+EHctZS+OWmQTXP+U6LwDuRc/jLJV5X1V4D57BsVq0/qGTAISAKiGOyDqWNhrONSDtaZRFJse5LjTk=
-X-Received: by 2002:a05:6512:3f9c:: with SMTP id x28mr14491496lfa.245.1628028555850;
- Tue, 03 Aug 2021 15:09:15 -0700 (PDT)
+        id S234234AbhHCXfi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Aug 2021 19:35:38 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:33098 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234178AbhHCXfh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2021 19:35:37 -0400
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210803233524epoutp032735205163501f8160ffabda19490cec~X8AvvEXZd3058830588epoutp03W
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Aug 2021 23:35:24 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210803233524epoutp032735205163501f8160ffabda19490cec~X8AvvEXZd3058830588epoutp03W
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1628033724;
+        bh=QHkAlDyGSuVzU5TssxLvoaQvhRh5Joz67L+1dX4LHOY=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=F17tfjmb36QMNBnmU0rNtCKsfDQkl9l/sJYeZ9+PLhwDt3c/ODYMND50q6Z+3cPxf
+         LVcByG0aNCOUk2Yv7mFjyNWJRdEj1800zebE4lFU7wMMFkaR+v2DoUd+1efedFac/O
+         vgmgUZhHlvwvghBFd7xUxCzt27XynR1X/O9ZTmYU=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20210803233523epcas2p4e219074c4b16cee48ab5ec4660376447~X8Au7XGvl0890708907epcas2p4I;
+        Tue,  3 Aug 2021 23:35:23 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.181]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4GfWSn0DQYz4x9Ps; Tue,  3 Aug
+        2021 23:35:21 +0000 (GMT)
+Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        57.B7.09921.8B2D9016; Wed,  4 Aug 2021 08:35:20 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20210803233520epcas2p4c4005ef331ac281020bc76a502de1fe4~X8ArrLR3h0892908929epcas2p41;
+        Tue,  3 Aug 2021 23:35:20 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20210803233519epsmtrp25606bfd3eb8337751e772e22e37f7b5f~X8Arp_0NX2516625166epsmtrp2Z;
+        Tue,  3 Aug 2021 23:35:19 +0000 (GMT)
+X-AuditID: b6c32a45-fb3ff700000026c1-dc-6109d2b80d5e
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        47.81.08394.7B2D9016; Wed,  4 Aug 2021 08:35:19 +0900 (KST)
+Received: from KORCO039056 (unknown [10.229.8.156]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20210803233519epsmtip2e498a22bb8e0a277e02e331b67389444~X8ArXzg6I0166901669epsmtip2Z;
+        Tue,  3 Aug 2021 23:35:19 +0000 (GMT)
+From:   "Chanho Park" <chanho61.park@samsung.com>
+To:     "'Bean Huo'" <huobean@gmail.com>,
+        "'Alim Akhtar'" <alim.akhtar@samsung.com>,
+        "'James E . J . Bottomley'" <jejb@linux.ibm.com>,
+        "'Martin K . Petersen'" <martin.petersen@oracle.com>
+Cc:     "'Can Guo'" <cang@codeaurora.org>,
+        "'Jaegeuk Kim'" <jaegeuk@kernel.org>,
+        "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
+        "'Avri Altman'" <avri.altman@wdc.com>,
+        "'Adrian Hunter'" <adrian.hunter@intel.com>,
+        "'Christoph Hellwig'" <hch@infradead.org>,
+        "'Bart Van Assche'" <bvanassche@acm.org>,
+        "'jongmin jeong'" <jjmin.jeong@samsung.com>,
+        "'Gyunghoon Kwon'" <goodjob.kwon@samsung.com>,
+        <linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+In-Reply-To: <73a79fbbec661cd898feda9064a10c6c182d7fad.camel@gmail.com>
+Subject: RE: [PATCH 14/15] scsi: ufs: ufs-exynos: multi-host configuration
+ for exynosauto
+Date:   Wed, 4 Aug 2021 08:35:19 +0900
+Message-ID: <000001d788c0$38ba49b0$aa2edd10$@samsung.com>
 MIME-Version: 1.0
-References: <CAHZQxyLY3vNeuNiEHC3SzWzBgUaN-ZPOYyZ3bA=Ah63WYwgdfw@mail.gmail.com>
- <eace208b-fd4a-2a98-5dc7-7262bf7a390c@suse.de> <b43346cc42a2fb11c7f976cb000e5a825c6445bc.camel@suse.com>
- <CAHZQxyK+nQfd724D7WH2my-ZV19Nzd8f7MMSftfFHg3NCw1Vzg@mail.gmail.com>
-In-Reply-To: <CAHZQxyK+nQfd724D7WH2my-ZV19Nzd8f7MMSftfFHg3NCw1Vzg@mail.gmail.com>
-From:   Brian Bunker <brian@purestorage.com>
-Date:   Tue, 3 Aug 2021 15:09:04 -0700
-Message-ID: <CAHZQxyLNvnuRK_MacrkXCJzggkZqMJu_RvBwU8xk2n1aFiu-dQ@mail.gmail.com>
-Subject: Re: [PATCH] scsi: dm-mpath: do not fail paths when the target returns
- ALUA state transition
-To:     Martin Wilck <mwilck@suse.com>
-Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
-        Hannes Reinecke <hare@suse.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQEgh/xhOfR89Em7SpyJUmGCKeOVGQJl2E6sAko8FTQBPPGrXqyhAjbQ
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrFJsWRmVeSWpSXmKPExsWy7bCmme6OS5yJBosOaVmcfLKGzeLBvG1s
+        Fi9/XmWzmPbhJ7PFp/XLWC16djpbnJ6wiMliztkGJosn62cxWyy6sY3JYuU1C4ubW46yWMw4
+        v4/Jovv6DjaL5cf/MTnwe1y+4u1xua+XyWPnrLvsHptXaHks3vOSyWPTqk42jwmLDjB6fHx6
+        i8Wjb8sqRo/Pm+Q82g90MwVwR+XYZKQmpqQWKaTmJeenZOal2yp5B8c7x5uaGRjqGlpamCsp
+        5CXmptoqufgE6Lpl5gA9oqRQlphTChQKSCwuVtK3synKLy1JVcjILy6xVUotSMkpMDQs0CtO
+        zC0uzUvXS87PtTI0MDAyBapMyMk41LCKqeA7f8WZ09vZGxgf8XQxcnJICJhIfGw5ytzFyMUh
+        JLCDUeLV2R42COcTo8Sc47uYIJxvjBLP7x9kh2lZ/+MOVGIvo8Tht3fYQBJCAi8YJZ7cEASx
+        2QT0JV52bGMFKRIR2M0o0X3iByNIglngBLPE5FPMIDangLtE64ZvTCC2sEC0xPwXP1lAbBYB
+        FYm5J1rBbF4BS4nFJzaxQdiCEidnPmGBmKMtsWzha2aIixQkfj5dxgpiiwi4Sfx4fpsJokZE
+        YnZnG1TNBw6JRw8MIGwXiekHO6DiwhKvjm+B+kxK4vO7vWD/Swh0M0q0PvoPlVjNKNHZ6ANh
+        20v8mr4FaBkH0AJNifW79EFMCQFliSO3oE7jk+g4/JcdIswr0dEmBNGoLnFg+3QWCFtWonvO
+        Z9YJjEqzkDw2C8ljs5A8MAth1wJGllWMYqkFxbnpqcVGBYbIkb2JEZzItVx3ME5++0HvECMT
+        B+MhRgkOZiUR3tAbHIlCvCmJlVWpRfnxRaU5qcWHGE2BQT2RWUo0OR+YS/JK4g1NjczMDCxN
+        LUzNjCyUxHk14r4mCAmkJ5akZqemFqQWwfQxcXBKNTAlfImfbalUHKAXai2b078puXcbTwV7
+        34dvTf+6Fj/cziJzfup3r3NLoi64CU5yO/yd83K1+/7O6OdLU0sf57jlb+xfOlvuRXcxZ3Xn
+        chmzgmCxxjLv27dePHR69qs9nMn5c5+38rldy5/N5cmc+0+vZtumvucPk7emTMg+ePS+1Ix7
+        lsoimytmlLs2TLxkwnj7WnRIncxE3Tmadr7Ga+pYzN9Xux/TaWK+M+3sVrPbh+dGXWwMFdSa
+        dii9nL/KbNtKOaYjZjvevpn9nT+k11ou8WovQ6U/x0umOUuZBaxWnFmbPCWgb8Ly4kMM3z52
+        p5z5t3bVOt4zbBkezCI3r6XIeJm82/bwdf/+wLorN62UWIozEg21mIuKEwGtgdpJbQQAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGIsWRmVeSWpSXmKPExsWy7bCSvO72S5yJBjf2GVmcfLKGzeLBvG1s
+        Fi9/XmWzmPbhJ7PFp/XLWC16djpbnJ6wiMliztkGJosn62cxWyy6sY3JYuU1C4ubW46yWMw4
+        v4/Jovv6DjaL5cf/MTnwe1y+4u1xua+XyWPnrLvsHptXaHks3vOSyWPTqk42jwmLDjB6fHx6
+        i8Wjb8sqRo/Pm+Q82g90MwVwR3HZpKTmZJalFunbJXBlLPi1gq3gNX/F7NlWDYzneLoYOTkk
+        BEwk1v+4w9TFyMUhJLCbUWLG0luMEAlZiWfvdrBD2MIS91uOsEIUPWOUWLf4PhNIgk1AX+Jl
+        xzZWEFtEYC+jxPueEpAiZoELzBIXdj9hg+j4zyhx899ZsCpOAXeJ1g3fwLqFBSIltq5ZAraC
+        RUBFYu6JVhYQm1fAUmLxiU1sELagxMmZT8DizALaEk9vPoWzly18zQxxnoLEz6fLoK5wk/jx
+        /DYTRI2IxOzONuYJjMKzkIyahWTULCSjZiFpWcDIsopRMrWgODc9t9iwwDAvtVyvODG3uDQv
+        XS85P3cTIziqtTR3MG5f9UHvECMTB+MhRgkOZiUR3tAbHIlCvCmJlVWpRfnxRaU5qcWHGKU5
+        WJTEeS90nYwXEkhPLEnNTk0tSC2CyTJxcEo1MCkXpd64fnSJRMC76Sxb1D0t1uZE6wdk9t/6
+        zf7Iw/6rteD6LUlxdqJ8U28pTbzCaHWyRpO5faaxvqiMVHd4t9y2+BV9VncZLE3cpunGvfmW
+        vzlxVYjYJVvVYiHun0yT399vzOk1vnC3qNNhpXXGPc4tdk8mrOV9bRctfupQcb5HTs1pAe66
+        9QVnpr/hjn43XdOvSvObIa+AV86jIvu6ei+Hiy7GDwQZuL3mGj6J1ayYYMi2Y3LoaY/v8aXe
+        e9ljnPo51s7rT7kc4vp5VXPgHtst96b82aTf9GZ/o8hapmgbrokvmY94CxxQ6doi3vX0zq4Q
+        nuLXxi9d3x9qjTU51nFE63ucsvLlxItqXAxKLMUZiYZazEXFiQA8R3PRWQMAAA==
+X-CMS-MailID: 20210803233520epcas2p4c4005ef331ac281020bc76a502de1fe4
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210709065747epcas2p10c59e097d9770fc02134cb0545c9de4f
+References: <20210709065711.25195-1-chanho61.park@samsung.com>
+        <CGME20210709065747epcas2p10c59e097d9770fc02134cb0545c9de4f@epcas2p1.samsung.com>
+        <20210709065711.25195-15-chanho61.park@samsung.com>
+        <73a79fbbec661cd898feda9064a10c6c182d7fad.camel@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Martin and Hannes,
+> > We divide this M-HCI as PH(Physical Host) and VHs(Virtual Host). The
+> > PH
+> >
+> > supports all UFSHCI functions(all SAPs) same as conventional UFSHCI
+> > but
+> >
+> > the VH only supports data transfer function. Thus, except UTP_CMD_SAP
+> > and
+> >
+> > UTP_TMPSAP, the PH should handle all the physical features.
+>=20
+> Hi Chanho park,
+>=20
+> You mentioned this in your coverletter:
+>=20
+> =22There are two types of host controllers on the UFS host controller tha=
+t
+> we designed. The UFS device has a Function Arbitor that arranges commands
+> of each host. When each host transmits a command to the Arbitor, the
+> Arbitor transmits it to the UTP layer=22.
+>=20
+> where does this =22Function Arbitor=22 exit? From your comments, seems it
+> exists on the UFS device side? right? If this is true, where is related
+> code in your patch??
 
-Any resolution to this issue?
+The =22Function Arbiter=22 is in our ufs controller as H/W and it is respon=
+sible to arrange UTP_CMD/UTP_TM among PH and VHs. When we set MHCTL registe=
+r, the controller will enable the multi-host capability and the arbiter wil=
+l be automatically enabled as well.
 
-Thanks,
-Brian
++static int exynosauto_ufs_post_hce_enable(struct exynos_ufs *ufs)
++=7B
++	struct ufs_hba *hba =3D ufs->hba;
++
++	/* Enable Virtual Host =231 */
++	ufshcd_rmwl(hba, MHCTRL_EN_VH_MASK, MHCTRL_EN_VH(1), MHCTRL);
++	/* Default VH Transfer permissions */
++	hci_writel(ufs, 0x03FFE1FE, HCI_MH_ALLOWABLE_TRAN_OF_VH);
++	/* IID information is replaced in TASKTAG=5B7:5=5D instead of IID in UCD =
+*/
++	hci_writel(ufs, 0x1, HCI_MH_IID_IN_TASK_TAG);
++
++	return 0;
++=7D
 
-On Fri, Jul 16, 2021 at 11:39 AM Brian Bunker <brian@purestorage.com> wrote:
->
-> On Fri, Jul 16, 2021 at 1:25 AM Martin Wilck <mwilck@suse.com> wrote:
-> >
-> > Hannes,
-> >
-> > On Fr, 2021-07-16 at 08:27 +0200, Hannes Reinecke wrote:
-> > > On 7/15/21 6:57 PM, Brian Bunker wrote:
-> > > > When paths return an ALUA state transition, do not fail those paths.
-> > > > The expectation is that the transition is short lived until the new
-> > > > ALUA state is entered. There might not be other paths in an online
-> > > > state to serve the request which can lead to an unexpected I/O error
-> > > > on the multipath device.
-> > > >
-> > > > Signed-off-by: Brian Bunker <brian@purestorage.com>
-> > > > Acked-by: Krishna Kant <krishna.kant@purestorage.com>
-> > > > Acked-by: Seamus Connor <sconnor@purestorage.com>
-> > > > --
-> > > > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> > > > index bced42f082b0..28948cc481f9 100644
-> > > > --- a/drivers/md/dm-mpath.c
-> > > > +++ b/drivers/md/dm-mpath.c
-> > > > @@ -1652,12 +1652,12 @@ static int multipath_end_io(struct dm_target
-> > > > *ti, struct request *clone,
-> > > >          if (error && blk_path_error(error)) {
-> > > >                  struct multipath *m = ti->private;
-> > > >
-> > > > -               if (error == BLK_STS_RESOURCE)
-> > > > +               if (error == BLK_STS_RESOURCE || error ==
-> > > > BLK_STS_AGAIN)
-> > > >                          r = DM_ENDIO_DELAY_REQUEUE;
-> > > >                  else
-> > > >                          r = DM_ENDIO_REQUEUE;
-> > > >
-> > > > -               if (pgpath)
-> > > > +               if (pgpath && (error != BLK_STS_AGAIN))
-> > > >                          fail_path(pgpath);
-> > > >
-> > > >                  if (!atomic_read(&m->nr_valid_paths) &&
-> > > > --
-> > >
-> > > Sorry, but this will lead to regressions during failover for arrays
-> > > taking longer time (some take up to 30 minutes for a complete
-> > > failover).
-> > > And for those it's absolutely crucial to _not_ retry I/O on the paths
-> > > in
-> > > transitioning.
-> >
-> > This won't happen.
-> >
-> > As argued in https://marc.info/?l=linux-scsi&m=162625194203635&w=2,
-> > your previous patches avoid the request being requeued on the SCSI
-> > queue, even with Brian's patch on top. IMO that means that the deadlock
-> > situation analyzed earlier can't occur. If you disagree, please explain
-> > in detail.
-> >
-> > By not failing the path, the request can be requeued on the dm level,
-> > and dm can decide to try the transitioning path again. But the request
-> > wouldn't be added to the SCSI queue, because alua_prep_fn() would
-> > prevent that.
-> >
-> > So, in the worst case, dm would retry queueing the request on the
-> > transitioning path over and over again. By adding a delay, we avoid
-> > busy-looping. This has basically the same effect as queueing on the dm
-> > layer in the first place: the request stays queued on the dm level most
-> > of the time. Except for the fact that the queueing would stop earlier:
-> > as soon as the kernel notices that the path is not transitioning any
-> > more. By not failing the dm paths, we don't depend on user space to
-> > reinstate them, which is the right thing to do for a transitioning
-> > state IMO.
-> >
-> > > And you already admitted that 'queue_if_no_path' would resolve this
-> > > problem, so why not update the device configuration in multipath-
-> > > tools
-> > > to have the correct setting for your array?
->
-> The reason I don't like queue_if_no_path for a solution is that there
-> are times we do want to tail all of the paths as quickly as possible
-> (e.g. a cluster sharing a resource). If we add some non zero value to
-> no_path_retry we would be forcing that configuration to unnecessarily
-> wait, and those customers will see this delay as a regression. This is
-> where a distinction between an ALUA state of standby or unavailable
-> vs. a transition ALUA state is attractive.
->
-> >
-> > I think Brian is right that setting transitioning paths to failed state
-> > in dm is highly questionable.
-> >
-> > So far, in dm-multipath, we haven't set paths to failed state because
-> > of ALUA state transitions. We've been mapping ALUA states to priorities
-> > instead. We don't even fail paths in ALUA "unavailable" state, so why
-> > do it for "transitioning"?
-> >
-> > Thanks
-> > Martin
-> >
-> >
->
-> Thanks,
-> Brian
->
-> --
-> Brian Bunker
-> PURE Storage, Inc.
-> brian@purestorage.com
+> Maybe you only submited partial of your real driver
+> parch for this controller??
 
+Yes. The series is the initial version but it contains most of multi-host c=
+apabilities. Most of things can be handled by our UFS controller so we can =
+make driver code simpler as much as possible. Only =231 VH can be supported=
+ in this patch at the moment but I have a plan to support more VHs later.
 
+Best Regards,
+Chanho Park
 
--- 
-Brian Bunker
-PURE Storage, Inc.
-brian@purestorage.com
