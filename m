@@ -2,90 +2,186 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 362E9C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 18:49:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08545C4338F
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 22:09:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04EFA61050
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 18:49:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC8FF600EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 22:09:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231815AbhHCStV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Aug 2021 14:49:21 -0400
-Received: from mail-pl1-f177.google.com ([209.85.214.177]:40862 "EHLO
-        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231878AbhHCStV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2021 14:49:21 -0400
-Received: by mail-pl1-f177.google.com with SMTP id c16so158476plh.7
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Aug 2021 11:49:09 -0700 (PDT)
+        id S231474AbhHCWJa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 3 Aug 2021 18:09:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58502 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229663AbhHCWJa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2021 18:09:30 -0400
+Received: from mail-lf1-x12b.google.com (mail-lf1-x12b.google.com [IPv6:2a00:1450:4864:20::12b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 892A7C061757
+        for <linux-scsi@vger.kernel.org>; Tue,  3 Aug 2021 15:09:17 -0700 (PDT)
+Received: by mail-lf1-x12b.google.com with SMTP id c16so1079781lfc.2
+        for <linux-scsi@vger.kernel.org>; Tue, 03 Aug 2021 15:09:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=purestorage.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=ZcdSrPnrlxA/BFQBwtGCMOgA2xpA1nJhAuYQJdN18JA=;
+        b=U1JpWbUwjtZmK8MoPzFsn/kmN9T4fqoEYAy7aWCKlZ0rdrbpQFwiOFJbgqVAXKv3fu
+         mygMh8p/9fyyu95TMUGTp07SbAzcDFDmyWUhILOILhpjAOi87mvP13PggJyCwpNLPWFl
+         Lro9O2DOAhQhb2heLhlmGYHbrqxeEbiBsTLyk=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=zHkfgYI2cETb9XEOzI7SWa4JaICpv8jwfx07tHvyu6E=;
-        b=Upu/wN1fGq7mYRgFyW7p6JBkqEFxjuiHfQggnsdBBc5MlEGuZfZw3anDUpQJ0UcSN8
-         YG+Zt3+8JzyNp7PTVDi53fzyTrZRLXAAOOuKU7x7W+oF3zTKVPLQfDcawJkUtrCSwH5a
-         QATMVjOmw2TT29T+/Vs5D4CJSdlFI1OpucqU0x2/KSp8Sta2ntJIHn5aFwiKM4JcIeyt
-         wQXN0MBRPBCKt1mo3FnD2pQ/bdeUJ1E4hzKw6we8/rf/SXvd7nvULAxRArBniT7jjCsD
-         5Y7UISAOibYca04OZoo8X5TiGX02sKcRlntHXXTipg8lIiPgCVCrOJMl6hevi0ArywPD
-         hYDg==
-X-Gm-Message-State: AOAM530yd86vQGj3v8s+Ysy1ZUAtbTcSZZnWno05uXAZrH9Tnst1FTt8
-        mI7uhxV2RPf45ZquBZJOJ4s=
-X-Google-Smtp-Source: ABdhPJySM5yFIAignX3Rj5wXXaYMCwXmnHVsvVLPnKkKDxHsQUnJIIsUuGEx5EydxeUigAL4CfG+LQ==
-X-Received: by 2002:a62:6103:0:b029:396:f515:94bf with SMTP id v3-20020a6261030000b0290396f51594bfmr23608728pfb.4.1628016548621;
-        Tue, 03 Aug 2021 11:49:08 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:f630:1578:90bf:ff92])
-        by smtp.gmail.com with ESMTPSA id t9sm19646474pgc.81.2021.08.03.11.49.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 03 Aug 2021 11:49:07 -0700 (PDT)
-Subject: Re: [PATCH v3 11/18] scsi: ufs: Revert "Utilize Transfer Request List
- Completion Notification Register"
-To:     Bean Huo <huobean@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        Caleb Connolly <caleb@connolly.tech>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-References: <20210722033439.26550-1-bvanassche@acm.org>
- <20210722033439.26550-12-bvanassche@acm.org>
- <779aae9841331229e29fd3be23de55cec776af16.camel@gmail.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <e42d41ca-5dcf-4492-c170-8e69aff82b09@acm.org>
-Date:   Tue, 3 Aug 2021 11:49:05 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=ZcdSrPnrlxA/BFQBwtGCMOgA2xpA1nJhAuYQJdN18JA=;
+        b=jGQIXdZ9H8ZIR8ZoLoZKLzlU6RZnRT4J76387Xpu/xcL5KT7CbHCaZeV/xTlDg4xzE
+         ED4WrIA7VSWF3YC3kjxAT+NUDfvHcVO16qiOZkr4m1iauM8ghxAp0GD9nE/B/2/l+xwr
+         J7LFD9vPA1n2XksVC5LRSME0WIMo86z3GSkmRL9h+NG5vB8vnZBIVgUm37mFPXChbkNL
+         do4plCBykwTP8s/BSDDvZxE46bRcXj6JElUgfzwYltnba9AjBr3K7IaDksOS5yvsriGe
+         Oh6V9R4szYH/PZa5mzXmjh8Cc73aoYO0w+QczHEsF2Rm1n+P7SY4t0jU67c9wCHyqcD8
+         jYdg==
+X-Gm-Message-State: AOAM531voq17Ludgqf3QOugtqSmqky8QeTAR3RpXMIYt/uzLMiZyOjQN
+        MkH7VMhwQyfsgAwzzeszXMJfzdgAXKeNiK7Fc0hn4w==
+X-Google-Smtp-Source: ABdhPJzZnVTzt+EHctZS+OWmQTXP+U6LwDuRc/jLJV5X1V4D57BsVq0/qGTAISAKiGOyDqWNhrONSDtaZRFJse5LjTk=
+X-Received: by 2002:a05:6512:3f9c:: with SMTP id x28mr14491496lfa.245.1628028555850;
+ Tue, 03 Aug 2021 15:09:15 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <779aae9841331229e29fd3be23de55cec776af16.camel@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <CAHZQxyLY3vNeuNiEHC3SzWzBgUaN-ZPOYyZ3bA=Ah63WYwgdfw@mail.gmail.com>
+ <eace208b-fd4a-2a98-5dc7-7262bf7a390c@suse.de> <b43346cc42a2fb11c7f976cb000e5a825c6445bc.camel@suse.com>
+ <CAHZQxyK+nQfd724D7WH2my-ZV19Nzd8f7MMSftfFHg3NCw1Vzg@mail.gmail.com>
+In-Reply-To: <CAHZQxyK+nQfd724D7WH2my-ZV19Nzd8f7MMSftfFHg3NCw1Vzg@mail.gmail.com>
+From:   Brian Bunker <brian@purestorage.com>
+Date:   Tue, 3 Aug 2021 15:09:04 -0700
+Message-ID: <CAHZQxyLNvnuRK_MacrkXCJzggkZqMJu_RvBwU8xk2n1aFiu-dQ@mail.gmail.com>
+Subject: Re: [PATCH] scsi: dm-mpath: do not fail paths when the target returns
+ ALUA state transition
+To:     Martin Wilck <mwilck@suse.com>
+Cc:     Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/2/21 8:24 AM, Bean Huo wrote:
-> I did the comparison test on my platform, it is very difficult to get a
-> very clear and fair result between two changes. but lamely speaking, on
-> the small chunk size read/write, your changes wins. but on the big
-> chunk size, It is not very clear, the gap between the two changes can
-> be ignored.
-> 
-> Tested-by: Bean Huo <beanhuo@micron.com>
+Martin and Hannes,
 
-Thanks for having tested this patch :-)
+Any resolution to this issue?
 
-Bart.
+Thanks,
+Brian
 
+On Fri, Jul 16, 2021 at 11:39 AM Brian Bunker <brian@purestorage.com> wrote:
+>
+> On Fri, Jul 16, 2021 at 1:25 AM Martin Wilck <mwilck@suse.com> wrote:
+> >
+> > Hannes,
+> >
+> > On Fr, 2021-07-16 at 08:27 +0200, Hannes Reinecke wrote:
+> > > On 7/15/21 6:57 PM, Brian Bunker wrote:
+> > > > When paths return an ALUA state transition, do not fail those paths.
+> > > > The expectation is that the transition is short lived until the new
+> > > > ALUA state is entered. There might not be other paths in an online
+> > > > state to serve the request which can lead to an unexpected I/O error
+> > > > on the multipath device.
+> > > >
+> > > > Signed-off-by: Brian Bunker <brian@purestorage.com>
+> > > > Acked-by: Krishna Kant <krishna.kant@purestorage.com>
+> > > > Acked-by: Seamus Connor <sconnor@purestorage.com>
+> > > > --
+> > > > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> > > > index bced42f082b0..28948cc481f9 100644
+> > > > --- a/drivers/md/dm-mpath.c
+> > > > +++ b/drivers/md/dm-mpath.c
+> > > > @@ -1652,12 +1652,12 @@ static int multipath_end_io(struct dm_target
+> > > > *ti, struct request *clone,
+> > > >          if (error && blk_path_error(error)) {
+> > > >                  struct multipath *m = ti->private;
+> > > >
+> > > > -               if (error == BLK_STS_RESOURCE)
+> > > > +               if (error == BLK_STS_RESOURCE || error ==
+> > > > BLK_STS_AGAIN)
+> > > >                          r = DM_ENDIO_DELAY_REQUEUE;
+> > > >                  else
+> > > >                          r = DM_ENDIO_REQUEUE;
+> > > >
+> > > > -               if (pgpath)
+> > > > +               if (pgpath && (error != BLK_STS_AGAIN))
+> > > >                          fail_path(pgpath);
+> > > >
+> > > >                  if (!atomic_read(&m->nr_valid_paths) &&
+> > > > --
+> > >
+> > > Sorry, but this will lead to regressions during failover for arrays
+> > > taking longer time (some take up to 30 minutes for a complete
+> > > failover).
+> > > And for those it's absolutely crucial to _not_ retry I/O on the paths
+> > > in
+> > > transitioning.
+> >
+> > This won't happen.
+> >
+> > As argued in https://marc.info/?l=linux-scsi&m=162625194203635&w=2,
+> > your previous patches avoid the request being requeued on the SCSI
+> > queue, even with Brian's patch on top. IMO that means that the deadlock
+> > situation analyzed earlier can't occur. If you disagree, please explain
+> > in detail.
+> >
+> > By not failing the path, the request can be requeued on the dm level,
+> > and dm can decide to try the transitioning path again. But the request
+> > wouldn't be added to the SCSI queue, because alua_prep_fn() would
+> > prevent that.
+> >
+> > So, in the worst case, dm would retry queueing the request on the
+> > transitioning path over and over again. By adding a delay, we avoid
+> > busy-looping. This has basically the same effect as queueing on the dm
+> > layer in the first place: the request stays queued on the dm level most
+> > of the time. Except for the fact that the queueing would stop earlier:
+> > as soon as the kernel notices that the path is not transitioning any
+> > more. By not failing the dm paths, we don't depend on user space to
+> > reinstate them, which is the right thing to do for a transitioning
+> > state IMO.
+> >
+> > > And you already admitted that 'queue_if_no_path' would resolve this
+> > > problem, so why not update the device configuration in multipath-
+> > > tools
+> > > to have the correct setting for your array?
+>
+> The reason I don't like queue_if_no_path for a solution is that there
+> are times we do want to tail all of the paths as quickly as possible
+> (e.g. a cluster sharing a resource). If we add some non zero value to
+> no_path_retry we would be forcing that configuration to unnecessarily
+> wait, and those customers will see this delay as a regression. This is
+> where a distinction between an ALUA state of standby or unavailable
+> vs. a transition ALUA state is attractive.
+>
+> >
+> > I think Brian is right that setting transitioning paths to failed state
+> > in dm is highly questionable.
+> >
+> > So far, in dm-multipath, we haven't set paths to failed state because
+> > of ALUA state transitions. We've been mapping ALUA states to priorities
+> > instead. We don't even fail paths in ALUA "unavailable" state, so why
+> > do it for "transitioning"?
+> >
+> > Thanks
+> > Martin
+> >
+> >
+>
+> Thanks,
+> Brian
+>
+> --
+> Brian Bunker
+> PURE Storage, Inc.
+> brian@purestorage.com
+
+
+
+-- 
+Brian Bunker
+PURE Storage, Inc.
+brian@purestorage.com
