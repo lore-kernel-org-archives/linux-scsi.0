@@ -2,65 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1AC8C4320A
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 20:15:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BEABC41537
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 20:21:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B2FAB60F41
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 20:15:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED30060EEA
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 20:21:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240827AbhHDUQH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Aug 2021 16:16:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:52490 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231342AbhHDUQH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 4 Aug 2021 16:16:07 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 4F77A60FC3;
-        Wed,  4 Aug 2021 20:15:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628108154;
-        bh=7jkHW7pRWM4taXR8B8hOvaQf3R7wec2KH6SPgDOOjrs=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=tzt7HhRHtuPLQgXXS76PFNwZvoFpeLwgMMAfdsaqD2XB3jXkKLqPBgm4NlGfJjAjA
-         WsIbPrm1szhnRDxhrbFJzdM65+gOh8D14SJO74qzCiy+MmupuDacVOn0R6ZbtZr60Y
-         LpUTf6SXmatLpbsGIhMSd5g8uCzRRsQkad+lhxY85FD4nF226KUT+nOj8ByaloxMEr
-         PkOCwg+DqgvHjoJ+9+YDJuqs0pP0munPWLVNs988C1dhs3NBbf2b3OftajaAIn+l3r
-         4dGCZuiCm9IqyamyyIeF5ps+xIDKiCOwe24VQYDrcGmC8bdCTVMakqgsx2OoAaXQd6
-         uRgBi5Xbq/Txg==
-Subject: Re: [GIT PULL] SCSI fixes for 5.14-rc4
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <271d6e9404dd961ec5ca9983b4730f61401bc3be.camel@HansenPartnership.com>
-References: <271d6e9404dd961ec5ca9983b4730f61401bc3be.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <271d6e9404dd961ec5ca9983b4730f61401bc3be.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: f0f82e2476f6adb9c7a0135cfab8091456990c99
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 251a1524293d0a90c4d5060f65f42a3016280049
-Message-Id: <162810815427.7114.9142732045601287531.pr-tracker-bot@kernel.org>
-Date:   Wed, 04 Aug 2021 20:15:54 +0000
-To:     James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
+        id S239753AbhHDUVu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Aug 2021 16:21:50 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50698 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S237196AbhHDUVt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2021 16:21:49 -0400
+Received: from pps.filterd (m0098420.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 174K3b3S027888;
+        Wed, 4 Aug 2021 16:21:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=hQCkWrDKw+f0Qv7rWr1AWT3JpUiz+Y5WwoNmgnAor8Y=;
+ b=at7gX6utL2mxFSJ5ot3R9uFQZORPo5b+aW+0Nc/v2q2QOG33K/o3BpyfMu/BXx3lL8LP
+ /WJZgvLRKBvbD1/rjM+62ykmcKXMb5B8lXzdNyF3ndXx3WCYAc7zukrg13aJ9/RXs5Qd
+ Hv43+C8dewJ0aLnxkAKXYJaR/ozlNBH/lnlnS0uIXWGEACwk2HjjWzUT5zazpC2a/hKJ
+ NqWUkrMb/sHfRKHxx9LlHuVZZSM7zSn1agrlTH+fiU/oPu1foY3B8+ikZHhc/yBtaGQa
+ bRls7Aa00sGCH+xeSJOS8pd6AB8HvdpyvdEC3V2Ps1wrUBhuMUaiDqLHE6ViZoYJFMxU dw== 
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3a7349au45-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 04 Aug 2021 16:21:01 -0400
+Received: from m0098420.ppops.net (m0098420.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 174K53o5040734;
+        Wed, 4 Aug 2021 16:21:01 -0400
+Received: from ppma03fra.de.ibm.com (6b.4a.5195.ip4.static.sl-reverse.com [149.81.74.107])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3a7349au35-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 04 Aug 2021 16:21:01 -0400
+Received: from pps.filterd (ppma03fra.de.ibm.com [127.0.0.1])
+        by ppma03fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 174KDk27007699;
+        Wed, 4 Aug 2021 20:20:59 GMT
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by ppma03fra.de.ibm.com with ESMTP id 3a4x58rysg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 04 Aug 2021 20:20:59 +0000
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 174KKutq55378394
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 4 Aug 2021 20:20:56 GMT
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 7F33FA405F;
+        Wed,  4 Aug 2021 20:20:56 +0000 (GMT)
+Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id A2ABFA405B;
+        Wed,  4 Aug 2021 20:20:55 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.145.177.42])
+        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Wed,  4 Aug 2021 20:20:55 +0000 (GMT)
+Subject: Re: [PATCH 13/15] dasd: use bvec_virt
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Geoff Levand <geoff@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Song Liu <song@kernel.org>, Mike Snitzer <snitzer@redhat.com>,
+        Coly Li <colyli@suse.de>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-um@lists.infradead.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20210804095634.460779-1-hch@lst.de>
+ <20210804095634.460779-14-hch@lst.de>
+From:   Stefan Haberland <sth@linux.ibm.com>
+Message-ID: <21a3d9f5-0d19-20df-3e1f-1306d3532065@linux.ibm.com>
+Date:   Wed, 4 Aug 2021 22:20:55 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
+MIME-Version: 1.0
+In-Reply-To: <20210804095634.460779-14-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: g2iztJ7yJ58Rl8eh9OT3oPwrSBuko_Bu
+X-Proofpoint-GUID: PvY6hFlhjxewVL6fNOXkI6j9KZyDnlPf
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
+ definitions=2021-08-04_06:2021-08-04,2021-08-04 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
+ clxscore=1011 impostorscore=0 malwarescore=0 mlxlogscore=999 spamscore=0
+ adultscore=0 mlxscore=0 suspectscore=0 lowpriorityscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2107140000 definitions=main-2108040122
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Wed, 04 Aug 2021 10:29:57 -0700:
+Am 04.08.21 um 11:56 schrieb Christoph Hellwig:
+> Use bvec_virt instead of open coding it.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Looks good.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/251a1524293d0a90c4d5060f65f42a3016280049
+Reviewed-by: Stefan Haberland <sth@linux.ibm.com>
 
-Thank you!
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
