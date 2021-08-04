@@ -2,43 +2,35 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24895C43214
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 10:10:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E25C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 10:11:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C1EC60BD3
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 10:10:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39D2C60F02
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 10:11:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237438AbhHDKKO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Aug 2021 06:10:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51860 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236492AbhHDKKH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2021 06:10:07 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5115DC0613D5;
-        Wed,  4 Aug 2021 03:09:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=6DgUtwKNyR1a0g7YYdfnNpZ/CC1UQP+ErbVil3kCh1c=; b=hZg7Heuoi1cW7PM8NkA+rSJm9t
-        I2KlL1Sq8tSDfak/FYjW0iTlFpdM5JzQt+VxoIwm3u6Cf0t5JALt5DeWfL4rLzTCjZs067eyLYZLM
-        oAktJ5QR1BLAByF6wFWgdt4Vf1Khj9xH1AL98dEMW+T87DmVpV4fRP4C7bDFj9sy6O3iVhyU//xl6
-        P6JCchl+81L6Iok4jXIyH34HXYiPyikdLQOYd+laX0rbeAjKMSfl89ueQtR3ycxjZ4FbfjSD8Ew5Y
-        CAibi0DxATQ3bTiNdF5b7p1AIZ6NMjq/rlAWEiXu+FBq1odEVzUr/20Am2cHt5372vzKoxOhgZisY
-        TVzqe11g==;
-Received: from [2a02:1205:5023:1f80:c068:bd3d:78b3:7d37] (helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mBDnx-005g2S-Sm; Wed, 04 Aug 2021 10:07:32 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
+        id S236963AbhHDKLV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Aug 2021 06:11:21 -0400
+Received: from ivanoab7.miniserver.com ([37.128.132.42]:56360 "EHLO
+        www.kot-begemot.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237455AbhHDKKX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2021 06:10:23 -0400
+Received: from tun252.jain.kot-begemot.co.uk ([192.168.18.6] helo=jain.kot-begemot.co.uk)
+        by www.kot-begemot.co.uk with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <anton.ivanov@cambridgegreys.com>)
+        id 1mBDqd-0007cx-Mc; Wed, 04 Aug 2021 10:10:03 +0000
+Received: from jain.kot-begemot.co.uk ([192.168.3.3])
+        by jain.kot-begemot.co.uk with esmtp (Exim 4.92)
+        (envelope-from <anton.ivanov@cambridgegreys.com>)
+        id 1mBDqa-00016q-Pt; Wed, 04 Aug 2021 11:10:03 +0100
+Subject: Re: [PATCH 11/15] ubd: use bvec_virt
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
 Cc:     Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
         Geoff Levand <geoff@infradead.org>,
         Ilya Dryomov <idryomov@gmail.com>,
         Paolo Bonzini <pbonzini@redhat.com>,
@@ -54,40 +46,51 @@ Cc:     Richard Weinberger <richard@nod.at>,
         linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
         linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
         linux-scsi@vger.kernel.org
-Subject: [PATCH 14/15] dcssblk: use bvec_virt
-Date:   Wed,  4 Aug 2021 11:56:33 +0200
-Message-Id: <20210804095634.460779-15-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210804095634.460779-1-hch@lst.de>
 References: <20210804095634.460779-1-hch@lst.de>
+ <20210804095634.460779-12-hch@lst.de>
+From:   Anton Ivanov <anton.ivanov@cambridgegreys.com>
+Message-ID: <0abadeca-d0fc-26ad-088e-2b137a029957@cambridgegreys.com>
+Date:   Wed, 4 Aug 2021 11:10:00 +0100
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20210804095634.460779-12-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Clacks-Overhead: GNU Terry Pratchett
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use bvec_virt instead of open coding it.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/s390/block/dcssblk.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/s390/block/dcssblk.c b/drivers/s390/block/dcssblk.c
-index 29180bdf0977..5be3d1c39a78 100644
---- a/drivers/s390/block/dcssblk.c
-+++ b/drivers/s390/block/dcssblk.c
-@@ -892,8 +892,7 @@ dcssblk_submit_bio(struct bio *bio)
- 
- 	index = (bio->bi_iter.bi_sector >> 3);
- 	bio_for_each_segment(bvec, bio, iter) {
--		page_addr = (unsigned long)
--			page_address(bvec.bv_page) + bvec.bv_offset;
-+		page_addr = (unsigned long)bvec_virt(&bvec);
- 		source_addr = dev_info->start + (index<<12) + bytes_done;
- 		if (unlikely((page_addr & 4095) != 0) || (bvec.bv_len & 4095) != 0)
- 			// More paranoia.
+On 04/08/2021 10:56, Christoph Hellwig wrote:
+> Use bvec_virt instead of open coding it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   arch/um/drivers/ubd_kern.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/arch/um/drivers/ubd_kern.c b/arch/um/drivers/ubd_kern.c
+> index e497185dd393..cd9dc0556e91 100644
+> --- a/arch/um/drivers/ubd_kern.c
+> +++ b/arch/um/drivers/ubd_kern.c
+> @@ -1268,8 +1268,7 @@ static void ubd_map_req(struct ubd *dev, struct io_thread_req *io_req,
+>   		rq_for_each_segment(bvec, req, iter) {
+>   			BUG_ON(i >= io_req->desc_cnt);
+>   
+> -			io_req->io_desc[i].buffer =
+> -				page_address(bvec.bv_page) + bvec.bv_offset;
+> +			io_req->io_desc[i].buffer = bvec_virt(&bvec);
+>   			io_req->io_desc[i].length = bvec.bv_len;
+>   			i++;
+>   		}
+> 
+Acked-By: Anton Ivanov <anton.ivanov@cambridgegreys.com>
+
 -- 
-2.30.2
-
+Anton R. Ivanov
+Cambridgegreys Limited. Registered in England. Company Number 10273661
+https://www.cambridgegreys.com/
