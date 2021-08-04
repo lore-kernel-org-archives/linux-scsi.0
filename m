@@ -2,105 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.4 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD875C432BE
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 15:09:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FE84C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 15:33:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE0CB60EE9
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 15:09:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AB8F60F14
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 15:33:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238300AbhHDPJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Aug 2021 11:09:15 -0400
-Received: from smtp-relay-canonical-1.canonical.com ([185.125.188.121]:58360
-        "EHLO smtp-relay-canonical-1.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236354AbhHDPJP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2021 11:09:15 -0400
-Received: from [10.172.193.212] (1.general.cking.uk.vpn [10.172.193.212])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id 328733F0FC;
-        Wed,  4 Aug 2021 15:09:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1628089741;
-        bh=w8XV7w2n45SjiUVSnEHbqA1jcvtFXp2hov1ShVkQg8k=;
-        h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
-         In-Reply-To:Content-Type;
-        b=mEpAuy/XwuGuC/10SZHxdMskcUYTphpV64DVRbuPq9jaJxYtLMDKASnjL5ZZBdCqj
-         JaRhDqdHHEpqNrpROK/mHJfPzKFqrvOxzflTAFkLSCkkEV1v4UEu8gjXAY7p8xORwN
-         EyEIMT+n9nlKJIEjCNyd2YdomxXlcg8TRo41vCGex0HtJsUYOHpBhAaRd4mOFPZGgQ
-         SDZIAyu3gD+kRAFfxc0gOt8QDtzuY8vH+HzbfSXQaULg9ArCnXVKoerQbkNrtWLgTg
-         x4IhH0B6sMO7vimpxOkMu2hyPQoHBj2Fl/nCVk9iV43FSshKw8IROAM3wWiJ2M4VRK
-         MUhxYutDRsq8A==
-Subject: Re: [PATCH][next[next]] scsi: qla2xxx: Remove redundant
- initialization of variable num_cnt
-To:     Himanshu Madhani <himanshu.madhani@oracle.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
+        id S239088AbhHDPdQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Aug 2021 11:33:16 -0400
+Received: from mga03.intel.com ([134.134.136.65]:43712 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239087AbhHDPdN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 4 Aug 2021 11:33:13 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10065"; a="213973803"
+X-IronPort-AV: E=Sophos;i="5.84,294,1620716400"; 
+   d="scan'208";a="213973803"
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by orsmga103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2021 08:32:57 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,294,1620716400"; 
+   d="scan'208";a="480219774"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by fmsmga008.fm.intel.com with ESMTP; 04 Aug 2021 08:32:54 -0700
+Subject: Re: [PATCH V4 2/2] scsi: ufshcd: Fix device links when BOOT WLUN
+ fails to probe
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Saravana Kannan <saravanak@google.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210804131344.112635-1-colin.king@canonical.com>
- <7ac5f319-fd4c-f2e0-e318-71a4d7661693@oracle.com>
-From:   Colin Ian King <colin.king@canonical.com>
-Message-ID: <80e9bea5-2e4e-0d8a-5123-0ed7f72916be@canonical.com>
-Date:   Wed, 4 Aug 2021 16:09:00 +0100
+        linux-scsi@vger.kernel.org, Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Rafael J . Wysocki" <rafael@kernel.org>
+References: <20210716114408.17320-1-adrian.hunter@intel.com>
+ <20210716114408.17320-3-adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <c78aac34-5c55-f6b6-3450-d5c3f09781fa@intel.com>
+Date:   Wed, 4 Aug 2021 18:33:27 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+ Firefox/78.0 Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <7ac5f319-fd4c-f2e0-e318-71a4d7661693@oracle.com>
+In-Reply-To: <20210716114408.17320-3-adrian.hunter@intel.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/08/2021 16:08, Himanshu Madhani wrote:
-> 
-> 
-> On 8/4/21 8:13 AM, Colin King wrote:
->> From: Colin Ian King <colin.king@canonical.com>
->>
->> The variable num_cnt is being initialized with a value that is never
->> read, it is being updated later on. The assignment is redundant and
->> can be removed.
->>
->> Addresses-Coverity: ("Unused value")
->> Signed-off-by: Colin Ian King <colin.king@canonical.com>
->> ---
->>   drivers/scsi/qla2xxx/qla_edif.c | 2 +-
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/qla2xxx/qla_edif.c
->> b/drivers/scsi/qla2xxx/qla_edif.c
->> index fde410989c03..2db954a7aaf1 100644
->> --- a/drivers/scsi/qla2xxx/qla_edif.c
->> +++ b/drivers/scsi/qla2xxx/qla_edif.c
->> @@ -875,7 +875,7 @@ static int
->>   qla_edif_app_getfcinfo(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
->>   {
->>       int32_t            rval = 0;
->> -    int32_t            num_cnt = 1;
->> +    int32_t            num_cnt;
->>       struct fc_bsg_reply    *bsg_reply = bsg_job->reply;
->>       struct app_pinfo_req    app_req;
->>       struct app_pinfo_reply    *app_reply;
->>
-> 
-> Looks Good.
-> 
-> (I am curious if that extra "next" in patch subject was a typo or some
-> workflow added that)
 
-It was an accidental double paste. My bad.
+Martin, perhaps you could consider picking up this patch if no one objects?
 
+
+On 16/07/21 2:44 pm, Adrian Hunter wrote:
+> Managed device links are deleted by device_del(). However it is possible to
+> add a device link to a consumer before device_add(), and then discovering
+> an error prevents the device from being used. In that case normally
+> references to the device would be dropped and the device would be deleted.
+> However the device link holds a reference to the device, so the device link
+> and device remain indefinitely (unless the supplier is deleted).
 > 
-> Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+> For UFSHCD, if a LUN fails to probe (e.g. absent BOOT WLUN), the device
+> will not have been registered but can still have a device link holding a
+> reference to the device. The unwanted device link will prevent runtime
+> suspend indefinitely.
+> 
+> Amend device link removal to accept removal of a link with an unregistered
+> consumer device (suggested by Rafael), and fix UFSHCD by explicitly
+> deleting the device link when SCSI destroys the SCSI device.
+> 
+> Fixes: b294ff3e34490 ("scsi: ufs: core: Enable power management for wlun")
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+> Reviewed-by: Rafael J. Wysocki <rafael@kernel.org>
+> ---
+>  drivers/base/core.c       |  2 ++
+>  drivers/scsi/ufs/ufshcd.c | 23 +++++++++++++++++++++--
+>  2 files changed, 23 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/base/core.c b/drivers/base/core.c
+> index 2de8f7d8cf54..983e895d4ced 100644
+> --- a/drivers/base/core.c
+> +++ b/drivers/base/core.c
+> @@ -887,6 +887,8 @@ static void device_link_put_kref(struct device_link *link)
+>  {
+>  	if (link->flags & DL_FLAG_STATELESS)
+>  		kref_put(&link->kref, __device_link_del);
+> +	else if (!device_is_registered(link->consumer))
+> +		__device_link_del(&link->kref);
+>  	else
+>  		WARN(1, "Unable to drop a managed device link reference\n");
+>  }
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 708b3b62fc4d..9864a8ee0263 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5020,15 +5020,34 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+>  static void ufshcd_slave_destroy(struct scsi_device *sdev)
+>  {
+>  	struct ufs_hba *hba;
+> +	unsigned long flags;
+>  
+>  	hba = shost_priv(sdev->host);
+>  	/* Drop the reference as it won't be needed anymore */
+>  	if (ufshcd_scsi_to_upiu_lun(sdev->lun) == UFS_UPIU_UFS_DEVICE_WLUN) {
+> -		unsigned long flags;
+> -
+>  		spin_lock_irqsave(hba->host->host_lock, flags);
+>  		hba->sdev_ufs_device = NULL;
+>  		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +	} else if (hba->sdev_ufs_device) {
+> +		struct device *supplier = NULL;
+> +
+> +		/* Ensure UFS Device WLUN exists and does not disappear */
+> +		spin_lock_irqsave(hba->host->host_lock, flags);
+> +		if (hba->sdev_ufs_device) {
+> +			supplier = &hba->sdev_ufs_device->sdev_gendev;
+> +			get_device(supplier);
+> +		}
+> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
+> +
+> +		if (supplier) {
+> +			/*
+> +			 * If a LUN fails to probe (e.g. absent BOOT WLUN), the
+> +			 * device will not have been registered but can still
+> +			 * have a device link holding a reference to the device.
+> +			 */
+> +			device_link_remove(&sdev->sdev_gendev, supplier);
+> +			put_device(supplier);
+> +		}
+>  	}
+>  }
+>  
 > 
 
