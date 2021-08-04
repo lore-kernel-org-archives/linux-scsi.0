@@ -8,54 +8,54 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AEA1C4320E
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 18:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C085EC4320A
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 18:46:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7893B60EE9
-	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 18:46:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2F9D60F38
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 18:46:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240609AbhHDSqX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 4 Aug 2021 14:46:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57792 "EHLO
+        id S240404AbhHDSqg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Aug 2021 14:46:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57872 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238776AbhHDSp6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2021 14:45:58 -0400
-Received: from mail-pj1-x102a.google.com (mail-pj1-x102a.google.com [IPv6:2607:f8b0:4864:20::102a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8F8BAC0613D5;
-        Wed,  4 Aug 2021 11:45:44 -0700 (PDT)
-Received: by mail-pj1-x102a.google.com with SMTP id mz5-20020a17090b3785b0290176ecf64922so10071011pjb.3;
-        Wed, 04 Aug 2021 11:45:44 -0700 (PDT)
+        with ESMTP id S240525AbhHDSqI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2021 14:46:08 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D80CC0617A2;
+        Wed,  4 Aug 2021 11:45:51 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id ca5so4324434pjb.5;
+        Wed, 04 Aug 2021 11:45:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=xXQzWRnOQGUWqB+ZM33hvekRvxcc1wpDyoNFD4aToCk=;
-        b=FiUdj+gW80nlBadNvGa224FgdJrnH3XD2czve78TSUuKoGj+SH7xEZI8dzU5uoecQG
-         3qjwoAep1EGHHUlfujdGoM5ykU2ex99D0zrJ/DYS3B+tzaMfBQbcdjnMLbd3Y80gcc6K
-         hJA6jwqY26g0ucBTZ4K9voDWw/5cntNwM8Jgxqp8qZ5elg6Zo3SC5QxHbwaRrqnW5Xg3
-         etfk/Cc+8WjmA0R+np/cg2B2gSMdMn/0CQFfX3uW6pSok3A/mdKu0clpcXJNZ8Ru+3Oy
-         AZRKNtJB1F7XzA6APSv+bDDtnudlTvPGa+0xEYbbs4c0CgGnlMIs7746PwKJns3xk2eg
-         MPKg==
+        bh=keWJNY0TOKB46dPy1a/lrsXD5LLzekP9Z6jv0dmU95k=;
+        b=OKNw+imaxI+fKOKyGJdfYZ5km1N/ZyKxdiMPvCbxRTQzEagGFnMNZ8hCxP6Sj6xn6j
+         8KbLWhyMRHkQmMVFkye9sBUZlXjhh8UqKho3pmGuplw+iTiugnihtsIGME3R3XrfAG5H
+         FUgexFeXQrB9IQ2fqvPylT91eErThlRo25/1oPqWdSkxozsc8oI1ihmsEk/Ll5Dw0u1F
+         o6jbVB+vn7AlYYHpPVq8eT2rTTaXqchZYuA3nRXRGf97kY6Tz+EWKFVGvvYBWNa7kfKD
+         T6RcaK5jNA10IOxgxVIhxweeyuzwX4C5MVdXqqUYHM3fNjpeE6BJft1kYkIJHBAYMQIh
+         l45Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=xXQzWRnOQGUWqB+ZM33hvekRvxcc1wpDyoNFD4aToCk=;
-        b=TZVWa7ORv1NKm+XRdipN1WCyGbIRW28HhznP6r0J+yeIs3AIBWQ+n/K99E8hc8BjbF
-         yyQn2ONzDC8q/rbr9mSeNReBiTJyQOcKk9z+qWYs2WP9PH52T5AlfSSj1XkGuM8ytGO4
-         gSitUQmv67Ac4xp4YeY50RF5B0w1ITJ3vbK1tujt/mcGV2/qsNqL8fXpD/m9Md4u7Xo0
-         QnVhBgcHPyIn/gE9etPn2mXHDt4TO0VbXs7yDtPLbmyaaWfj8isxx4V6xpOVtpwA6Ga6
-         Hoqy4QBHNv9d1XZ8u8LOugVxjH4/ab8mrW7ttd7g2SGt9zHw9SSIkwQd3xM3aV5MgHxp
-         yqGQ==
-X-Gm-Message-State: AOAM532beXu12Ak6qP8K2vzeKN3psr+P838j7+hU7Lt4PFINZmsfXpR1
-        BEvhVZFypEXaZGBCFrM1eP4=
-X-Google-Smtp-Source: ABdhPJz+hluDYc09sNWmf5pqVmvxzgE7rDibc4Msp9gaLPNInBQUAXxAq7mQp2H3cn83sH8kLQzpWg==
-X-Received: by 2002:a17:90b:60c:: with SMTP id gb12mr11265442pjb.101.1628102744183;
-        Wed, 04 Aug 2021 11:45:44 -0700 (PDT)
+        bh=keWJNY0TOKB46dPy1a/lrsXD5LLzekP9Z6jv0dmU95k=;
+        b=ugY4U/YIIwNTT3md6MS1tIr46VoYjyE8/74HYwvathLStRabvFNU0G5qu9XpUsm6dO
+         3VIAjdMnYCpLl0xm+zGlD239LgsuKF6vfd2pi55IOYn0y27uLD3N6um1k5EtApLz3xYj
+         g5+cP6NLbc7fCncP/LUOFKqolXvu/3XApjxHMEwa6PZaamRpxzr3e7SGgVgBWASzoNgA
+         etTBr+gsmR0RoqOZXnXaBYcbGEXLTvRhHd2/NjQ6gvF2qFML503EzZWsiMK5czP7VIDp
+         SIPIXSwagC6GDIDC49FKeCVLNS4OQ+dSMkklCjpx/X/DaZ9IX0NwQrk8AdHmbJVjfqBN
+         B4pw==
+X-Gm-Message-State: AOAM53334NwTkCG+OmP0num17EdiNBZaF3S3H3k4H1s8T4fr3HLnRenn
+        K8VHJueWHp9PQD52KqqqOJs=
+X-Google-Smtp-Source: ABdhPJwys0uU3bab3cbhhZkGrABiePfZp0CgNlBTq2zsAkdo8ijSiGByWQDUWb34Oh21nzInCwt3JA==
+X-Received: by 2002:a17:902:c94f:b029:12c:dd57:c580 with SMTP id i15-20020a170902c94fb029012cdd57c580mr554023pla.42.1628102751128;
+        Wed, 04 Aug 2021 11:45:51 -0700 (PDT)
 Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:f:1947:6842:b8a8:6f83])
-        by smtp.gmail.com with ESMTPSA id f5sm3325647pjo.23.2021.08.04.11.45.43
+        by smtp.gmail.com with ESMTPSA id f5sm3325647pjo.23.2021.08.04.11.45.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 04 Aug 2021 11:45:43 -0700 (PDT)
+        Wed, 04 Aug 2021 11:45:50 -0700 (PDT)
 From:   Tianyu Lan <ltykernel@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
@@ -78,9 +78,9 @@ Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
         linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
         vkuznets@redhat.com, parri.andrea@gmail.com
-Subject: [PATCH V2 08/14] HV/Vmbus: Add SNP support for VMbus channel initiate message
-Date:   Wed,  4 Aug 2021 14:45:04 -0400
-Message-Id: <20210804184513.512888-9-ltykernel@gmail.com>
+Subject: [PATCH V2 11/14] x86/Swiotlb: Add Swiotlb bounce buffer remap function for HV IVM
+Date:   Wed,  4 Aug 2021 14:45:07 -0400
+Message-Id: <20210804184513.512888-12-ltykernel@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210804184513.512888-1-ltykernel@gmail.com>
 References: <20210804184513.512888-1-ltykernel@gmail.com>
@@ -92,153 +92,139 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-The monitor pages in the CHANNELMSG_INITIATE_CONTACT msg are shared
-with host in Isolation VM and so it's necessary to use hvcall to set
-them visible to host. In Isolation VM with AMD SEV SNP, the access
-address should be in the extra space which is above shared gpa
-boundary. So remap these pages into the extra address(pa +
-shared_gpa_boundary). Introduce monitor_pages_va to store
-the remap address and unmap these va when disconnect vmbus.
+In Isolation VM with AMD SEV, bounce buffer needs to be accessed via
+extra address space which is above shared_gpa_boundary
+(E.G 39 bit address line) reported by Hyper-V CPUID ISOLATION_CONFIG.
+The access physical address will be original physical address +
+shared_gpa_boundary. The shared_gpa_boundary in the AMD SEV SNP
+spec is called virtual top of memory(vTOM). Memory addresses below
+vTOM are automatically treated as private while memory above
+vTOM is treated as shared.
+
+Use dma_map_decrypted() in the swiotlb code, store remap address returned
+and use the remap address to copy data from/to swiotlb bounce buffer.
 
 Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
 ---
 Change since v1:
-        * Not remap monitor pages in the non-SNP isolation VM.
----
- drivers/hv/connection.c   | 65 +++++++++++++++++++++++++++++++++++++++
- drivers/hv/hyperv_vmbus.h |  1 +
- 2 files changed, 66 insertions(+)
+       * Make swiotlb_init_io_tlb_mem() return error code and return
+         error when dma_map_decrypted() fails.
 
-diff --git a/drivers/hv/connection.c b/drivers/hv/connection.c
-index 6d315c1465e0..bf0ac3167bd2 100644
---- a/drivers/hv/connection.c
-+++ b/drivers/hv/connection.c
-@@ -19,6 +19,7 @@
- #include <linux/vmalloc.h>
- #include <linux/hyperv.h>
- #include <linux/export.h>
-+#include <linux/io.h>
- #include <asm/mshyperv.h>
- 
- #include "hyperv_vmbus.h"
-@@ -104,6 +105,12 @@ int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo, u32 version)
- 
- 	msg->monitor_page1 = virt_to_phys(vmbus_connection.monitor_pages[0]);
- 	msg->monitor_page2 = virt_to_phys(vmbus_connection.monitor_pages[1]);
-+
-+	if (hv_isolation_type_snp()) {
-+		msg->monitor_page1 += ms_hyperv.shared_gpa_boundary;
-+		msg->monitor_page2 += ms_hyperv.shared_gpa_boundary;
-+	}
-+
- 	msg->target_vcpu = hv_cpu_number_to_vp_number(VMBUS_CONNECT_CPU);
- 
- 	/*
-@@ -148,6 +155,31 @@ int vmbus_negotiate_version(struct vmbus_channel_msginfo *msginfo, u32 version)
- 		return -ECONNREFUSED;
- 	}
- 
-+	if (hv_isolation_type_snp()) {
-+		vmbus_connection.monitor_pages_va[0]
-+			= vmbus_connection.monitor_pages[0];
-+		vmbus_connection.monitor_pages[0]
-+			= memremap(msg->monitor_page1, HV_HYP_PAGE_SIZE,
-+				   MEMREMAP_WB);
-+		if (!vmbus_connection.monitor_pages[0])
-+			return -ENOMEM;
-+
-+		vmbus_connection.monitor_pages_va[1]
-+			= vmbus_connection.monitor_pages[1];
-+		vmbus_connection.monitor_pages[1]
-+			= memremap(msg->monitor_page2, HV_HYP_PAGE_SIZE,
-+				   MEMREMAP_WB);
-+		if (!vmbus_connection.monitor_pages[1]) {
-+			memunmap(vmbus_connection.monitor_pages[0]);
-+			return -ENOMEM;
-+		}
-+
-+		memset(vmbus_connection.monitor_pages[0], 0x00,
-+		       HV_HYP_PAGE_SIZE);
-+		memset(vmbus_connection.monitor_pages[1], 0x00,
-+		       HV_HYP_PAGE_SIZE);
-+	}
-+
- 	return ret;
+Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
+---
+ include/linux/swiotlb.h |  4 ++++
+ kernel/dma/swiotlb.c    | 32 ++++++++++++++++++++++++--------
+ 2 files changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
+index f507e3eacbea..584560ecaa8e 100644
+--- a/include/linux/swiotlb.h
++++ b/include/linux/swiotlb.h
+@@ -72,6 +72,9 @@ extern enum swiotlb_force swiotlb_force;
+  * @end:	The end address of the swiotlb memory pool. Used to do a quick
+  *		range check to see if the memory was in fact allocated by this
+  *		API.
++ * @vaddr:	The vaddr of the swiotlb memory pool. The swiotlb
++ *		memory pool may be remapped in the memory encrypted case and store
++ *		virtual address for bounce buffer operation.
+  * @nslabs:	The number of IO TLB blocks (in groups of 64) between @start and
+  *		@end. For default swiotlb, this is command line adjustable via
+  *		setup_io_tlb_npages.
+@@ -89,6 +92,7 @@ extern enum swiotlb_force swiotlb_force;
+ struct io_tlb_mem {
+ 	phys_addr_t start;
+ 	phys_addr_t end;
++	void *vaddr;
+ 	unsigned long nslabs;
+ 	unsigned long used;
+ 	unsigned int index;
+diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
+index 1fa81c096c1d..29b6d888ef3b 100644
+--- a/kernel/dma/swiotlb.c
++++ b/kernel/dma/swiotlb.c
+@@ -176,7 +176,7 @@ void __init swiotlb_update_mem_attributes(void)
+ 	memset(vaddr, 0, bytes);
  }
  
-@@ -159,6 +191,7 @@ int vmbus_connect(void)
- 	struct vmbus_channel_msginfo *msginfo = NULL;
- 	int i, ret = 0;
- 	__u32 version;
-+	u64 pfn[2];
- 
- 	/* Initialize the vmbus connection */
- 	vmbus_connection.conn_state = CONNECTING;
-@@ -216,6 +249,16 @@ int vmbus_connect(void)
- 		goto cleanup;
- 	}
- 
-+	if (hv_is_isolation_supported()) {
-+		pfn[0] = virt_to_hvpfn(vmbus_connection.monitor_pages[0]);
-+		pfn[1] = virt_to_hvpfn(vmbus_connection.monitor_pages[1]);
-+		if (hv_mark_gpa_visibility(2, pfn,
-+				VMBUS_PAGE_VISIBLE_READ_WRITE)) {
-+			ret = -EFAULT;
-+			goto cleanup;
-+		}
-+	}
-+
- 	msginfo = kzalloc(sizeof(*msginfo) +
- 			  sizeof(struct vmbus_channel_initiate_contact),
- 			  GFP_KERNEL);
-@@ -284,6 +327,8 @@ int vmbus_connect(void)
- 
- void vmbus_disconnect(void)
+-static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
++static int swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
+ 				    unsigned long nslabs, bool late_alloc)
  {
-+	u64 pfn[2];
-+
- 	/*
- 	 * First send the unload request to the host.
- 	 */
-@@ -303,6 +348,26 @@ void vmbus_disconnect(void)
- 		vmbus_connection.int_page = NULL;
+ 	void *vaddr = phys_to_virt(start);
+@@ -194,14 +194,21 @@ static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
+ 		mem->slots[i].alloc_size = 0;
  	}
  
-+	if (hv_is_isolation_supported()) {
-+		if (vmbus_connection.monitor_pages_va[0]) {
-+			memunmap(vmbus_connection.monitor_pages[0]);
-+			vmbus_connection.monitor_pages[0]
-+				= vmbus_connection.monitor_pages_va[0];
-+			vmbus_connection.monitor_pages_va[0] = NULL;
-+		}
-+
-+		if (vmbus_connection.monitor_pages_va[1]) {
-+			memunmap(vmbus_connection.monitor_pages[1]);
-+			vmbus_connection.monitor_pages[1]
-+				= vmbus_connection.monitor_pages_va[1];
-+			vmbus_connection.monitor_pages_va[1] = NULL;
-+		}
-+
-+		pfn[0] = virt_to_hvpfn(vmbus_connection.monitor_pages[0]);
-+		pfn[1] = virt_to_hvpfn(vmbus_connection.monitor_pages[1]);
-+		hv_mark_gpa_visibility(2, pfn, VMBUS_PAGE_NOT_VISIBLE);
+-	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
+-	memset(vaddr, 0, bytes);
++	mem->vaddr = dma_map_decrypted(vaddr, bytes);
++	if (!mem->vaddr) {
++		pr_err("Failed to decrypt memory.\n");
++		return -ENOMEM;
 +	}
 +
- 	hv_free_hyperv_page((unsigned long)vmbus_connection.monitor_pages[0]);
- 	hv_free_hyperv_page((unsigned long)vmbus_connection.monitor_pages[1]);
- 	vmbus_connection.monitor_pages[0] = NULL;
-diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-index 42f3d9d123a1..40bc0eff6665 100644
---- a/drivers/hv/hyperv_vmbus.h
-+++ b/drivers/hv/hyperv_vmbus.h
-@@ -240,6 +240,7 @@ struct vmbus_connection {
- 	 * is child->parent notification
- 	 */
- 	struct hv_monitor_page *monitor_pages[2];
-+	void *monitor_pages_va[2];
- 	struct list_head chn_msg_list;
- 	spinlock_t channelmsg_lock;
++	memset(mem->vaddr, 0, bytes);
++	return 0;
+ }
  
+ int __init swiotlb_init_with_tbl(char *tlb, unsigned long nslabs, int verbose)
+ {
+ 	struct io_tlb_mem *mem;
+ 	size_t alloc_size;
++	int ret;
+ 
+ 	if (swiotlb_force == SWIOTLB_NO_FORCE)
+ 		return 0;
+@@ -216,7 +223,11 @@ int __init swiotlb_init_with_tbl(char *tlb, unsigned long nslabs, int verbose)
+ 		panic("%s: Failed to allocate %zu bytes align=0x%lx\n",
+ 		      __func__, alloc_size, PAGE_SIZE);
+ 
+-	swiotlb_init_io_tlb_mem(mem, __pa(tlb), nslabs, false);
++	ret = swiotlb_init_io_tlb_mem(mem, __pa(tlb), nslabs, false);
++	if (ret) {
++		memblock_free(__pa(mem), alloc_size);
++		return ret;
++	}
+ 
+ 	io_tlb_default_mem = mem;
+ 	if (verbose)
+@@ -304,6 +315,8 @@ int
+ swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
+ {
+ 	struct io_tlb_mem *mem;
++	int size = get_order(struct_size(mem, slots, nslabs));
++	int ret;
+ 
+ 	if (swiotlb_force == SWIOTLB_NO_FORCE)
+ 		return 0;
+@@ -312,12 +325,15 @@ swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
+ 	if (WARN_ON_ONCE(io_tlb_default_mem))
+ 		return -ENOMEM;
+ 
+-	mem = (void *)__get_free_pages(GFP_KERNEL,
+-		get_order(struct_size(mem, slots, nslabs)));
++	mem = (void *)__get_free_pages(GFP_KERNEL, size);
+ 	if (!mem)
+ 		return -ENOMEM;
+ 
+-	swiotlb_init_io_tlb_mem(mem, virt_to_phys(tlb), nslabs, true);
++	ret = swiotlb_init_io_tlb_mem(mem, virt_to_phys(tlb), nslabs, true);
++	if (ret) {
++		free_pages((unsigned long)mem, size);
++		return ret;
++	}
+ 
+ 	io_tlb_default_mem = mem;
+ 	swiotlb_print_info();
+@@ -360,7 +376,7 @@ static void swiotlb_bounce(struct device *dev, phys_addr_t tlb_addr, size_t size
+ 	phys_addr_t orig_addr = mem->slots[index].orig_addr;
+ 	size_t alloc_size = mem->slots[index].alloc_size;
+ 	unsigned long pfn = PFN_DOWN(orig_addr);
+-	unsigned char *vaddr = phys_to_virt(tlb_addr);
++	unsigned char *vaddr = mem->vaddr + tlb_addr - mem->start;
+ 	unsigned int tlb_offset;
+ 
+ 	if (orig_addr == INVALID_PHYS_ADDR)
 -- 
 2.25.1
 
