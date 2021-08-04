@@ -2,188 +2,179 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B406C4320A
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 23:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93AD9C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 06:38:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CE3F60EE8
-	for <linux-scsi@archiver.kernel.org>; Tue,  3 Aug 2021 23:35:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7239460EC0
+	for <linux-scsi@archiver.kernel.org>; Wed,  4 Aug 2021 06:38:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234234AbhHCXfi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 3 Aug 2021 19:35:38 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:33098 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234178AbhHCXfh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Aug 2021 19:35:37 -0400
-Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210803233524epoutp032735205163501f8160ffabda19490cec~X8AvvEXZd3058830588epoutp03W
-        for <linux-scsi@vger.kernel.org>; Tue,  3 Aug 2021 23:35:24 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210803233524epoutp032735205163501f8160ffabda19490cec~X8AvvEXZd3058830588epoutp03W
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1628033724;
-        bh=QHkAlDyGSuVzU5TssxLvoaQvhRh5Joz67L+1dX4LHOY=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=F17tfjmb36QMNBnmU0rNtCKsfDQkl9l/sJYeZ9+PLhwDt3c/ODYMND50q6Z+3cPxf
-         LVcByG0aNCOUk2Yv7mFjyNWJRdEj1800zebE4lFU7wMMFkaR+v2DoUd+1efedFac/O
-         vgmgUZhHlvwvghBFd7xUxCzt27XynR1X/O9ZTmYU=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20210803233523epcas2p4e219074c4b16cee48ab5ec4660376447~X8Au7XGvl0890708907epcas2p4I;
-        Tue,  3 Aug 2021 23:35:23 +0000 (GMT)
-Received: from epsmges2p1.samsung.com (unknown [182.195.40.181]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4GfWSn0DQYz4x9Ps; Tue,  3 Aug
-        2021 23:35:21 +0000 (GMT)
-Received: from epcas2p2.samsung.com ( [182.195.41.54]) by
-        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        57.B7.09921.8B2D9016; Wed,  4 Aug 2021 08:35:20 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
-        20210803233520epcas2p4c4005ef331ac281020bc76a502de1fe4~X8ArrLR3h0892908929epcas2p41;
-        Tue,  3 Aug 2021 23:35:20 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-        20210803233519epsmtrp25606bfd3eb8337751e772e22e37f7b5f~X8Arp_0NX2516625166epsmtrp2Z;
-        Tue,  3 Aug 2021 23:35:19 +0000 (GMT)
-X-AuditID: b6c32a45-fb3ff700000026c1-dc-6109d2b80d5e
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        47.81.08394.7B2D9016; Wed,  4 Aug 2021 08:35:19 +0900 (KST)
-Received: from KORCO039056 (unknown [10.229.8.156]) by epsmtip2.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20210803233519epsmtip2e498a22bb8e0a277e02e331b67389444~X8ArXzg6I0166901669epsmtip2Z;
-        Tue,  3 Aug 2021 23:35:19 +0000 (GMT)
-From:   "Chanho Park" <chanho61.park@samsung.com>
-To:     "'Bean Huo'" <huobean@gmail.com>,
-        "'Alim Akhtar'" <alim.akhtar@samsung.com>,
-        "'James E . J . Bottomley'" <jejb@linux.ibm.com>,
-        "'Martin K . Petersen'" <martin.petersen@oracle.com>
-Cc:     "'Can Guo'" <cang@codeaurora.org>,
-        "'Jaegeuk Kim'" <jaegeuk@kernel.org>,
-        "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
-        "'Avri Altman'" <avri.altman@wdc.com>,
-        "'Adrian Hunter'" <adrian.hunter@intel.com>,
-        "'Christoph Hellwig'" <hch@infradead.org>,
-        "'Bart Van Assche'" <bvanassche@acm.org>,
-        "'jongmin jeong'" <jjmin.jeong@samsung.com>,
-        "'Gyunghoon Kwon'" <goodjob.kwon@samsung.com>,
-        <linux-samsung-soc@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-In-Reply-To: <73a79fbbec661cd898feda9064a10c6c182d7fad.camel@gmail.com>
-Subject: RE: [PATCH 14/15] scsi: ufs: ufs-exynos: multi-host configuration
- for exynosauto
-Date:   Wed, 4 Aug 2021 08:35:19 +0900
-Message-ID: <000001d788c0$38ba49b0$aa2edd10$@samsung.com>
-MIME-Version: 1.0
+        id S235618AbhHDGir (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 4 Aug 2021 02:38:47 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:16860 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235419AbhHDGir (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Aug 2021 02:38:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1628059115; x=1659595115;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=nYxIV+NBTCWjTLi94/suldUwke/rcH2VdKHKBGrlzvU=;
+  b=cMCtF8fRszEP3aLVEqpKcQAi6Pjrh27E9jiHYNyJtHSs5chSvQLw8FR7
+   2bnga9lGVHhbXntE0N2CyLJv6TQrX2e34NRrFaD0kX5qS+ynqVSX8t+DQ
+   PSjG9MsdsEReZkLJJ6r5JYtJIs3YoIqYdw4SZtlaQoQmTtQcwftID1DFv
+   17+HAV9/cb8Q6MVBOdzLHHs3/bCyCKpbS0bFStAlmqjU0h25x7n5cq5vg
+   gVhFIr8ywBGmZ76/TvFuJQ45cYbrvxOYsJoYg8kiKBqFQWFLeGT+MK3pn
+   uM4FoW0H+QyyKw0NUOeGOHxDqaXyDWZSVm9b3hMmjUUDOywMQafR5mOJH
+   g==;
+X-IronPort-AV: E=Sophos;i="5.84,293,1620662400"; 
+   d="scan'208";a="287839708"
+Received: from mail-bn1nam07lp2049.outbound.protection.outlook.com (HELO NAM02-BN1-obe.outbound.protection.outlook.com) ([104.47.51.49])
+  by ob1.hgst.iphmx.com with ESMTP; 04 Aug 2021 14:38:33 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Gn57vCetV8R7vywyjMT/Qp+cW/tllZo/MZ47R9aRHWmNfE9BftVhwSGIFd4yts29HSV5Adek7pxvWbCqR6mHmFbdO5pFy6zFF+E4d8IvEAIFE/36ejXYilGy1Iftsscvsv7A9iYKOvWjpN8toRKlq+9ddJUrmeAnEZjJUVvcln3b9NJsm3UeHtIYlIaMSV1hKz/vm4XTfMraDkCqqlFEIMZNRnVNzaGV0i6XSgqVm5lgL5tro4JPTzmuI2lUbjCvG63SFxNVnBx+wjhWYpZWpvkroorEw90KXmF1AB9rJQj2EJF5CBYm57Q3yHzyuPGBRPSxlpkK6u28zq8ABSZppQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=M0ozNMrXhhH/izb5koAe3YDb71giXKh8i3Kk+PS/Yw4=;
+ b=ZycObIdM2CdMmq7qIpiheyCe8cJe9Y2lnxvtySSIp9ZzGO+uEDbWDzXTc/5ehzksrgYY3L63O5LpJKEhn590+2IVOg8ESyapSRETjY8LS9i21MiTWhiKE7usM2mUdPnd7vwe4fDaeMJoUYT3XosNrLAwBDQK/zKu0cnNUmIf+xv0dd+UpOUdQ3i8JJKEaShS4JP+z2ZP/Mda5fBMwgFuUsRze8g/8S9NJnA+K+h7ntiH+0QrPONiZNl5sW8R4MBIySchm6tpCs6nhuMWH0a4+S05I5pdc6rg6rNU8Nz1FNbVwmyiEVn86OJWxcYJqRHXqaHt9xISI5SfDfoXYtVVEQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=M0ozNMrXhhH/izb5koAe3YDb71giXKh8i3Kk+PS/Yw4=;
+ b=HbNTCQ02IoPH573k8eC5CoM2WFyhW3CQi8z7WCxS+PMrC7X4/P2KO8JZYhtud+Rdu/eiKlFsgIJcbstu3UGm72pY76ehaocF2357goo8SpYl7cRVjayEPXwvwmQtW78JVMR0belZjNXKqO96UzCVCIgZiPoMeAnzyyEES+d1Lkc=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM6PR04MB6589.namprd04.prod.outlook.com (2603:10b6:5:1ba::18) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4373.18; Wed, 4 Aug 2021 06:38:32 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::ccfd:eb59:ccfe:66e4]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::ccfd:eb59:ccfe:66e4%7]) with mapi id 15.20.4373.026; Wed, 4 Aug 2021
+ 06:38:32 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Bean Huo <huobean@gmail.com>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "stanley.chu@mediatek.com" <stanley.chu@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "cang@codeaurora.org" <cang@codeaurora.org>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] scsi: ufs: Remove useless if-state in
+ ufshcd_add_command_trace
+Thread-Topic: [PATCH] scsi: ufs: Remove useless if-state in
+ ufshcd_add_command_trace
+Thread-Index: AQHXh8ld0Lx2t1dhZ0+LdbWRaSJCIKti5lcg
+Date:   Wed, 4 Aug 2021 06:38:32 +0000
+Message-ID: <DM6PR04MB65755981B606ECC00D1F198BFCF19@DM6PR04MB6575.namprd04.prod.outlook.com>
+References: <20210802180803.100033-1-huobean@gmail.com>
+In-Reply-To: <20210802180803.100033-1-huobean@gmail.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: gmail.com; dkim=none (message not signed)
+ header.d=none;gmail.com; dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: d1208a3f-71c0-4c29-6f5c-08d957127a96
+x-ms-traffictypediagnostic: DM6PR04MB6589:
+x-microsoft-antispam-prvs: <DM6PR04MB65893FDC2985097BD701B8BFFCF19@DM6PR04MB6589.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:415;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: oJ+Vp/TvtGsuUOi7m1Ii7wmGFrQe7RaRbDKKPTH+kG55yCwqX8dxXBxs6gWq699Xpzq/KDgCMBo/Xe9kt9rmsGzV88tPcj04iz9LSylcqF+bWRUEEMysrrvI0ObMY5Z4qGkY4CGr2kjp7VTVc2NzrPymGewShmbETjMNPGHa0SbgRnAAaK0e5Yl0l63tGs+wlByO+Ri6q64zjbWNzsTndkb/qM6rqFKQPRHdtbNyXI1Nbf1D7bAUa/7Paz/TC2swvFhaI38LjZbGgdETVNfJYAzNKQss/88sYc9nimbj09Jfo0EO/Sw27o+sptSSa7EwsJE+eZj8p1sZcUbsS93tgxJazajM4n6E6DtiDser7ljHkJ5ZbrsvpT2umOlGtHiak5hqTN5ayI71TODkTrq9o7/nSqpo5590Xllc312VFaOe21L0pI2etKNwJalfDKTW0Z2/CxB6ytBgf4dlKm6rR4uATJH6fEFWhjiyUdIjPwTRFEAJApWUwkZzNGyguS/9Um3pP0egdRzFttU6QiIs2WzpR5UXuaBiPIQoh3e0W5MyCi/Xj3X2MZDDTXl0jDpFrbsY0b4CuihfxBC1NX2cG9p4+3YkjYLqp55PRY4NQXLK7qs+pS3muXtWTFSFyfqjoEn8WZyJSGZxtCTTIoUIrusxoot2m4VfE3bKA/AkDojxV+Pg4x/sroZpiVCULxN+WfnFtqCnDtlq0ckzRrdTJA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(39860400002)(366004)(376002)(136003)(396003)(346002)(2906002)(83380400001)(478600001)(7696005)(8936002)(110136005)(33656002)(4744005)(54906003)(76116006)(66476007)(5660300002)(8676002)(66556008)(66446008)(66946007)(4326008)(64756008)(55016002)(26005)(38070700005)(71200400001)(6506007)(52536014)(186003)(38100700002)(9686003)(86362001)(122000001)(316002);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?A/rAsMlJYJf1H3272KjouGAAnCAq8LtlGojaxoKYvG/BeVLK4sw53T2mALBw?=
+ =?us-ascii?Q?jrtR6URHcbaethBzdCi5WNlE2vUe8S/5pFrXAZxX7m+zuPUhXujK3VnVM3Zn?=
+ =?us-ascii?Q?qSCmEowIG3SbbPSDQoNEmmTb6RM//rQZ2P61nmiCD5U33rXcgWAwpeL2Ah+v?=
+ =?us-ascii?Q?6I8U2G8T/dTHGPP5AVPR74djnAoKN3QLfslS7yrSmxM2O6F3pt1rCtOS4b2k?=
+ =?us-ascii?Q?vMKvtsZeMmIVGgMSoNMgToZ6WalZ4VJkP0PyxV+oM8kI0kBXHNPirgr9Mq9d?=
+ =?us-ascii?Q?ertNktC55OY8JJcyEyA52XDC07epwHkX0jQksOLTPrQ/5EdfpTTUJ34op7QT?=
+ =?us-ascii?Q?FeKrRVJS2KJQp4A8HdowBlqprN9uFq8q+N9aYKzPIP3JHeS9cCDZensQv/LY?=
+ =?us-ascii?Q?pzZmZrgXCdTmtCzMGxLQEbIBYNB5qhVFXoLyJh2TQXUFccENJ/VZS65jbpXX?=
+ =?us-ascii?Q?wq1rE8bCareApsUK+Cr0mw0X4Xr3t5H4NYIh8SFeuVaz4vIIzomRIjrUvH4V?=
+ =?us-ascii?Q?Vo1+t6ffIRNDVLRpa8B6ywl15KL4lQwPfso9W1fU319MnFSzxESq0gjuYQyZ?=
+ =?us-ascii?Q?+GO3Tak6VJ8XMuRDt1xu1Hb6Q7GMe+O2/+AcuslON6gPiIp65kp4i8+ReBuU?=
+ =?us-ascii?Q?zbNd2kl0L3yabH88jYI2LxEdvJzuCRBmXnaGNFqIOdjCcIt373GwbdWL184e?=
+ =?us-ascii?Q?7XmWCEBnjyXmozCgSlr2QG/Kjo0qYPOk0SSTkEpm11pm1W2lC4U8vj1nkTMg?=
+ =?us-ascii?Q?X4EFwFDxDHyrAuBO8KdtgXkZ54FpSWtSTnysHWuUzaNsFFuE/PcdSp2h7xMz?=
+ =?us-ascii?Q?abE+ZIsJpRKVFbuTzkmFHrXWKXAmlNuFwC81jEYiqmpldi1oMn1My+wBSTYN?=
+ =?us-ascii?Q?In34HiIIfVnHDW8b7QLPwu2UnLrDBJRk0k8xyxWU0rF8ZxjIHC0AvfF5yU32?=
+ =?us-ascii?Q?5Spue9/SVN8Lpp4y4GIIT32jKoVhihCFmeodfM6nX5bHerm6R7gvpOh/Ws4T?=
+ =?us-ascii?Q?mmDs041bGbftJtPS4QLVCjl7pwFPZWwP7IDEpS6ItXb1abICcrCOuzF4G6vW?=
+ =?us-ascii?Q?vXSWBatvAFetJo4Hx4HwcnHerYwFkw0ag/BF8QPlfgE77kxgduLB0RaYcCbf?=
+ =?us-ascii?Q?CUKkJ3s+JY9Mri7b3kpoAqGbqEnR4UDD7epyzkfkt0CTvLJEclaF6n6eN7ZU?=
+ =?us-ascii?Q?eo8dnqqD/3J6j83OwRCUfC4dyFS+fsy+CR0P0Q+XFA9/jrj88tu7gsQUeJXn?=
+ =?us-ascii?Q?vlHKk0TukAtwl4Gmk3YazYnsXHIzWlzyHEg7W04SLtmUwCzm6TQ6lTTzo+eN?=
+ =?us-ascii?Q?e8MI8brWQoosAIUppyorHC76?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQEgh/xhOfR89Em7SpyJUmGCKeOVGQJl2E6sAko8FTQBPPGrXqyhAjbQ
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrFJsWRmVeSWpSXmKPExsWy7bCmme6OS5yJBosOaVmcfLKGzeLBvG1s
-        Fi9/XmWzmPbhJ7PFp/XLWC16djpbnJ6wiMliztkGJosn62cxWyy6sY3JYuU1C4ubW46yWMw4
-        v4/Jovv6DjaL5cf/MTnwe1y+4u1xua+XyWPnrLvsHptXaHks3vOSyWPTqk42jwmLDjB6fHx6
-        i8Wjb8sqRo/Pm+Q82g90MwVwR+XYZKQmpqQWKaTmJeenZOal2yp5B8c7x5uaGRjqGlpamCsp
-        5CXmptoqufgE6Lpl5gA9oqRQlphTChQKSCwuVtK3synKLy1JVcjILy6xVUotSMkpMDQs0CtO
-        zC0uzUvXS87PtTI0MDAyBapMyMk41LCKqeA7f8WZ09vZGxgf8XQxcnJICJhIfGw5ytzFyMUh
-        JLCDUeLV2R42COcTo8Sc47uYIJxvjBLP7x9kh2lZ/+MOVGIvo8Tht3fYQBJCAi8YJZ7cEASx
-        2QT0JV52bGMFKRIR2M0o0X3iByNIglngBLPE5FPMIDangLtE64ZvTCC2sEC0xPwXP1lAbBYB
-        FYm5J1rBbF4BS4nFJzaxQdiCEidnPmGBmKMtsWzha2aIixQkfj5dxgpiiwi4Sfx4fpsJokZE
-        YnZnG1TNBw6JRw8MIGwXiekHO6DiwhKvjm+B+kxK4vO7vWD/Swh0M0q0PvoPlVjNKNHZ6ANh
-        20v8mr4FaBkH0AJNifW79EFMCQFliSO3oE7jk+g4/JcdIswr0dEmBNGoLnFg+3QWCFtWonvO
-        Z9YJjEqzkDw2C8ljs5A8MAth1wJGllWMYqkFxbnpqcVGBYbIkb2JEZzItVx3ME5++0HvECMT
-        B+MhRgkOZiUR3tAbHIlCvCmJlVWpRfnxRaU5qcWHGE2BQT2RWUo0OR+YS/JK4g1NjczMDCxN
-        LUzNjCyUxHk14r4mCAmkJ5akZqemFqQWwfQxcXBKNTAlfImfbalUHKAXai2b078puXcbTwV7
-        34dvTf+6Fj/cziJzfup3r3NLoi64CU5yO/yd83K1+/7O6OdLU0sf57jlb+xfOlvuRXcxZ3Xn
-        chmzgmCxxjLv27dePHR69qs9nMn5c5+38rldy5/N5cmc+0+vZtumvucPk7emTMg+ePS+1Ix7
-        lsoimytmlLs2TLxkwnj7WnRIncxE3Tmadr7Ga+pYzN9Xux/TaWK+M+3sVrPbh+dGXWwMFdSa
-        dii9nL/KbNtKOaYjZjvevpn9nT+k11ou8WovQ6U/x0umOUuZBaxWnFmbPCWgb8Ly4kMM3z52
-        p5z5t3bVOt4zbBkezCI3r6XIeJm82/bwdf/+wLorN62UWIozEg21mIuKEwGtgdpJbQQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGIsWRmVeSWpSXmKPExsWy7bCSvO72S5yJBjf2GVmcfLKGzeLBvG1s
-        Fi9/XmWzmPbhJ7PFp/XLWC16djpbnJ6wiMliztkGJosn62cxWyy6sY3JYuU1C4ubW46yWMw4
-        v4/Jovv6DjaL5cf/MTnwe1y+4u1xua+XyWPnrLvsHptXaHks3vOSyWPTqk42jwmLDjB6fHx6
-        i8Wjb8sqRo/Pm+Q82g90MwVwR3HZpKTmZJalFunbJXBlLPi1gq3gNX/F7NlWDYzneLoYOTkk
-        BEwk1v+4w9TFyMUhJLCbUWLG0luMEAlZiWfvdrBD2MIS91uOsEIUPWOUWLf4PhNIgk1AX+Jl
-        xzZWEFtEYC+jxPueEpAiZoELzBIXdj9hg+j4zyhx899ZsCpOAXeJ1g3fwLqFBSIltq5ZAraC
-        RUBFYu6JVhYQm1fAUmLxiU1sELagxMmZT8DizALaEk9vPoWzly18zQxxnoLEz6fLoK5wk/jx
-        /DYTRI2IxOzONuYJjMKzkIyahWTULCSjZiFpWcDIsopRMrWgODc9t9iwwDAvtVyvODG3uDQv
-        XS85P3cTIziqtTR3MG5f9UHvECMTB+MhRgkOZiUR3tAbHIlCvCmJlVWpRfnxRaU5qcWHGKU5
-        WJTEeS90nYwXEkhPLEnNTk0tSC2CyTJxcEo1MCkXpd64fnSJRMC76Sxb1D0t1uZE6wdk9t/6
-        zf7Iw/6rteD6LUlxdqJ8U28pTbzCaHWyRpO5faaxvqiMVHd4t9y2+BV9VncZLE3cpunGvfmW
-        vzlxVYjYJVvVYiHun0yT399vzOk1vnC3qNNhpXXGPc4tdk8mrOV9bRctfupQcb5HTs1pAe66
-        9QVnpr/hjn43XdOvSvObIa+AV86jIvu6ei+Hiy7GDwQZuL3mGj6J1ayYYMi2Y3LoaY/v8aXe
-        e9ljnPo51s7rT7kc4vp5VXPgHtst96b82aTf9GZ/o8hapmgbrokvmY94CxxQ6doi3vX0zq4Q
-        nuLXxi9d3x9qjTU51nFE63ucsvLlxItqXAxKLMUZiYZazEXFiQA8R3PRWQMAAA==
-X-CMS-MailID: 20210803233520epcas2p4c4005ef331ac281020bc76a502de1fe4
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210709065747epcas2p10c59e097d9770fc02134cb0545c9de4f
-References: <20210709065711.25195-1-chanho61.park@samsung.com>
-        <CGME20210709065747epcas2p10c59e097d9770fc02134cb0545c9de4f@epcas2p1.samsung.com>
-        <20210709065711.25195-15-chanho61.park@samsung.com>
-        <73a79fbbec661cd898feda9064a10c6c182d7fad.camel@gmail.com>
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d1208a3f-71c0-4c29-6f5c-08d957127a96
+X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Aug 2021 06:38:32.5550
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: rL2lgI++KsgE/UAOj5xigtiA4rDdE3KfZz67zv1kxEIRJlN+L6ZfCFxqJGghikjU5Ut8rGwPPWKctT0EphKuCQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB6589
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > We divide this M-HCI as PH(Physical Host) and VHs(Virtual Host). The
-> > PH
-> >
-> > supports all UFSHCI functions(all SAPs) same as conventional UFSHCI
-> > but
-> >
-> > the VH only supports data transfer function. Thus, except UTP_CMD_SAP
-> > and
-> >
-> > UTP_TMPSAP, the PH should handle all the physical features.
 >=20
-> Hi Chanho park,
+> From: Bean Huo <beanhuo@micron.com>
 >=20
-> You mentioned this in your coverletter:
+> ufshcd_add_cmd_upiu_trace() will be called anyway, so move if-state down,
+> make code simpler.
 >=20
-> =22There are two types of host controllers on the UFS host controller tha=
-t
-> we designed. The UFS device has a Function Arbitor that arranges commands
-> of each host. When each host transmits a command to the Arbitor, the
-> Arbitor transmits it to the UTP layer=22.
+> Signed-off-by: Bean Huo <beanhuo@micron.com>
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+
+
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 9 +++------
+>  1 file changed, 3 insertions(+), 6 deletions(-)
 >=20
-> where does this =22Function Arbitor=22 exit? From your comments, seems it
-> exists on the UFS device side? right? If this is true, where is related
-> code in your patch??
-
-The =22Function Arbiter=22 is in our ufs controller as H/W and it is respon=
-sible to arrange UTP_CMD/UTP_TM among PH and VHs. When we set MHCTL registe=
-r, the controller will enable the multi-host capability and the arbiter wil=
-l be automatically enabled as well.
-
-+static int exynosauto_ufs_post_hce_enable(struct exynos_ufs *ufs)
-+=7B
-+	struct ufs_hba *hba =3D ufs->hba;
-+
-+	/* Enable Virtual Host =231 */
-+	ufshcd_rmwl(hba, MHCTRL_EN_VH_MASK, MHCTRL_EN_VH(1), MHCTRL);
-+	/* Default VH Transfer permissions */
-+	hci_writel(ufs, 0x03FFE1FE, HCI_MH_ALLOWABLE_TRAN_OF_VH);
-+	/* IID information is replaced in TASKTAG=5B7:5=5D instead of IID in UCD =
-*/
-+	hci_writel(ufs, 0x1, HCI_MH_IID_IN_TASK_TAG);
-+
-+	return 0;
-+=7D
-
-> Maybe you only submited partial of your real driver
-> parch for this controller??
-
-Yes. The series is the initial version but it contains most of multi-host c=
-apabilities. Most of things can be handled by our UFS controller so we can =
-make driver code simpler as much as possible. Only =231 VH can be supported=
- in this patch at the moment but I have a plan to support more VHs later.
-
-Best Regards,
-Chanho Park
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c index
+> 064a44e628d6..02f54153fd6d 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -380,14 +380,11 @@ static void ufshcd_add_command_trace(struct
+> ufs_hba *hba, unsigned int tag,
+>         if (!cmd)
+>                 return;
+>=20
+> -       if (!trace_ufshcd_command_enabled()) {
+> -               /* trace UPIU W/O tracing command */
+> -               ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
+> -               return;
+> -       }
+> -
+>         /* trace UPIU also */
+>         ufshcd_add_cmd_upiu_trace(hba, tag, str_t);
+> +       if (!trace_ufshcd_command_enabled())
+> +               return;
+> +
+>         opcode =3D cmd->cmnd[0];
+>         lba =3D scsi_get_lba(cmd);
+>=20
+> --
+> 2.25.1
 
