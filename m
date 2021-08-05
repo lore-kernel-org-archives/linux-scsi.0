@@ -2,145 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-21.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC7EEC4320A
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 04:18:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD233C4320E
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 06:19:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92F7561073
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 04:18:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92CED60F70
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 06:19:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234999AbhHEES0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 00:18:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58424 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230215AbhHEES0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Aug 2021 00:18:26 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BA10F60EE8;
-        Thu,  5 Aug 2021 04:18:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628137092;
-        bh=mB5MPS4/ftvIsrloxEwJS3TMsTJM3QZc0j0Jm9hQDTU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ft/IvNgtM0BjaNgo8URgJEl9VK4qdiNqXXHbKxXc2OEo95uBzW+IO/BAgxGjDzsdp
-         HFLR+Fzy/p/NrEkV2M3hCF8skWxinorua25+mbs6oKE71XNjVnkIxVhqF28zhBBBmG
-         MD3E2nYng9lEAoPG3Oj1tc3FiucKaK/Z5xNbhInDCqQXnbsVLKoBlRpu3ponfCNyRQ
-         JGeYBxgNyIZi7MfPRvF3F/RJ5q9kRAtaYAZp3QS+0qIgAI0FBTLaTvZL6MBVKNwpOz
-         BqCdawVBLSuBqUsHtz4xEGRkF70spLCNj4/gDPa55hUpgAk3XnpCXeWlil+YammEtP
-         qYLByuFGplkSA==
-Date:   Wed, 4 Aug 2021 23:20:53 -0500
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        id S235974AbhHEGTg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 02:19:36 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42422 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229778AbhHEGTf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 02:19:35 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D05E6C061765;
+        Wed,  4 Aug 2021 23:19:20 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id ca5so6501966pjb.5;
+        Wed, 04 Aug 2021 23:19:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=GPxSQQeg/1xiiyvVf6IgyfR1PvTtE3HCXKKlX2KChmc=;
+        b=V5w+ybPXrBNZFwHylRHg7rLTipyjlhw9ZDQ76A723nwt4KYZXnpCLhNt5qRXWJLnUz
+         ns0pAxgoAX0FbczJG7KHplZcFTegN6qQUKWb/PSSmwZu/OvBw0aHUhbNf7soDCUxpQpu
+         dJnsbdhyVy/Mey/zdLlAwQJ4qCmrYe/ZXqRSxEvP/islz8hze1WIb5AsmPhoG/k+6Pmx
+         yliX/LegaE3ek+3cBL+qyZYBcYOdCC/tlouQBW3cUQiV/inabja4Uimyhv5d2PiBKLoY
+         Q60AKN4ylBZpw4S84Bgk3HjSJ/J8cxSsTDaLqoZ3frHqIliZL+Y6mBTMfQcJvv5O6gyq
+         yltg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=GPxSQQeg/1xiiyvVf6IgyfR1PvTtE3HCXKKlX2KChmc=;
+        b=tE787G8F29DLojAOq4MObK+j888ZYaK57tNpcrVhcYjaGkg2GIe+0dz1bOgg0Br7YJ
+         P/1xsQ66z6S7mLTL/E4AcR+SnJM2NBB3XiCACjxprSgOg38rtXjaCqkEHgcOSEKOia33
+         AXAOzIabSbMrdzwCa0+zhkpXwzzCDEYcXid2fIZF8LIStSlTziZ4z3SD6hxE/rm2q4iQ
+         2cM5iEnmnHRhokTS3St39ad1QuTuGh5fCi7YPlrVEeYGHB4NKB1IymmwHqYSSZAS4UkI
+         bTV3t5465RQmqB/LrHG2sLGss61hJnpwWoiNAUSYaJGJZOmUuoAj+2qVvbAiB9Lp57gk
+         2wEA==
+X-Gm-Message-State: AOAM530etfjHyYPhX4Krs+U/p0XP2OWPoOG+peE/hMWIB9fK+bxWZH/i
+        Z8H3DijWZQmV/w60q2q/RxiE0PwTL989Zw==
+X-Google-Smtp-Source: ABdhPJzeskio9QxTfARCpVMY2gidZf6SLUjVWuxeo150xpv+qmxRaymRfQR/fNIHsIoETSfCeZLEfQ==
+X-Received: by 2002:a17:90a:2c0c:: with SMTP id m12mr1622578pjd.107.1628144360352;
+        Wed, 04 Aug 2021 23:19:20 -0700 (PDT)
+Received: from [192.168.50.71] (ip70-175-137-120.oc.oc.cox.net. [70.175.137.120])
+        by smtp.gmail.com with ESMTPSA id k8sm4815975pfu.116.2021.08.04.23.19.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 04 Aug 2021 23:19:20 -0700 (PDT)
+Subject: Re: [PATCH 01/15] bvec: add a bvec_virt helper
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Geoff Levand <geoff@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Song Liu <song@kernel.org>, Mike Snitzer <snitzer@redhat.com>,
+        Coly Li <colyli@suse.de>, Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-hardening@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH v2 4/4][next] scsi: megaraid_sas: Replace one-element array
- with flexible-array member in MR_PD_CFG_SEQ_NUM_SYNC
-Message-ID: <3860f4f6f06dff8e6aea4a8318e9515a0e9cbde3.1628136510.git.gustavoars@kernel.org>
-References: <cover.1628136510.git.gustavoars@kernel.org>
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-um@lists.infradead.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20210804095634.460779-1-hch@lst.de>
+ <20210804095634.460779-2-hch@lst.de>
+From:   Chaitanya Kulkarni <ckulkarnilinux@gmail.com>
+Message-ID: <77fc6660-9c6a-0810-d04f-b6661fa0621b@gmail.com>
+Date:   Wed, 4 Aug 2021 23:19:20 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cover.1628136510.git.gustavoars@kernel.org>
+In-Reply-To: <20210804095634.460779-2-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Replace one-element array with a flexible-array member in struct
-MR_PD_CFG_SEQ_NUM_SYNC and use the struct_size() helper.
 
-This helps with the ongoing efforts to globally enable -Warray-bounds
-and get us closer to being able to tighten the FORTIFY_SOURCE routines
-on memcpy().
 
-Link: https://en.wikipedia.org/wiki/Flexible_array_member
-Link: https://www.kernel.org/doc/html/v5.10/process/deprecated.html#zero-length-and-one-element-arrays
-Link: https://github.com/KSPP/linux/issues/79
-Link: https://github.com/KSPP/linux/issues/109
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
-Changes in v2:
- - None.
+On 8/4/2021 2:56 AM, Christoph Hellwig wrote:
+> Add a helper to get the virtual address for a bvec.  This avoids that
+> all callers need to know about the page + offset representation.
+> 
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
 
- drivers/scsi/megaraid/megaraid_sas_base.c   | 14 +++++++-------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 +-
- 3 files changed, 9 insertions(+), 9 deletions(-)
+Looks good.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index d072f9caeb4a..a4131dd510e3 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5782,10 +5782,10 @@ megasas_setup_jbod_map(struct megasas_instance *instance)
- {
- 	int i;
- 	struct fusion_context *fusion = instance->ctrl_context;
--	u32 pd_seq_map_sz;
-+	size_t pd_seq_map_sz;
- 
--	pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
--		(sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES - 1));
-+	pd_seq_map_sz = struct_size((struct MR_PD_CFG_SEQ_NUM_SYNC *)0, seq,
-+				    MAX_PHYSICAL_DEVICES);
- 
- 	instance->use_seqnum_jbod_fp =
- 		instance->support_seqnum_jbod_fp;
-@@ -7961,7 +7961,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 	struct Scsi_Host *host;
- 	struct megasas_instance *instance;
- 	struct fusion_context *fusion;
--	u32 pd_seq_map_sz;
-+	size_t pd_seq_map_sz;
- 
- 	instance = pci_get_drvdata(pdev);
- 
-@@ -8033,9 +8033,9 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 
- 	if (instance->adapter_type != MFI_SERIES) {
- 		megasas_release_fusion(instance);
--			pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
--				(sizeof(struct MR_PD_CFG_SEQ) *
--					(MAX_PHYSICAL_DEVICES - 1));
-+			pd_seq_map_sz =
-+				struct_size((struct MR_PD_CFG_SEQ_NUM_SYNC *)0,
-+					    seq, MAX_PHYSICAL_DEVICES);
- 		for (i = 0; i < 2 ; i++) {
- 			if (fusion->ld_map[i])
- 				dma_free_coherent(&instance->pdev->dev,
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 06399c026a8d..a824fb641fda 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1310,7 +1310,7 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
- 
- 	pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id & 1)];
- 	pd_seq_h = fusion->pd_seq_phys[(instance->pd_seq_map_id & 1)];
--	pd_seq_map_sz = struct_size(pd_sync, seq, MAX_PHYSICAL_DEVICES - 1);
-+	pd_seq_map_sz = struct_size(pd_sync, seq, MAX_PHYSICAL_DEVICES);
- 
- 	cmd = megasas_get_cmd(instance);
- 	if (!cmd) {
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 5fe2f7a6eebe..af39d9c20cc6 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -1249,7 +1249,7 @@ struct MR_PD_CFG_SEQ {
- struct MR_PD_CFG_SEQ_NUM_SYNC {
- 	__le32 size;
- 	__le32 count;
--	struct MR_PD_CFG_SEQ seq[1];
-+	struct MR_PD_CFG_SEQ seq[];
- } __packed;
- 
- /* stream detection */
+Reviewed-by: Chaitanya Kulkarni <kch@kernel.org>
+
 -- 
-2.27.0
-
+-ck
