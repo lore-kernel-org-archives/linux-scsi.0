@@ -2,244 +2,198 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0303CC4320E
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 16:02:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C3AFC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 16:22:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CD3866115B
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 16:02:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 823A161156
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 16:22:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242783AbhHEQCw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 12:02:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35548 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242864AbhHEQBq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 12:01:46 -0400
-Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6FD7EC061765;
-        Thu,  5 Aug 2021 09:01:32 -0700 (PDT)
-Received: by mail-pj1-x1033.google.com with SMTP id cl16-20020a17090af690b02901782c35c4ccso6855772pjb.5;
-        Thu, 05 Aug 2021 09:01:32 -0700 (PDT)
+        id S229695AbhHEQWo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 12:22:44 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30604 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S229437AbhHEQWn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 12:22:43 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 175GBcMG015070
+        for <linux-scsi@vger.kernel.org>; Thu, 5 Aug 2021 09:22:29 -0700
+Received: from pps.reinject (localhost [127.0.0.1])
+        by mx0a-0016f401.pphosted.com with ESMTP id 3a8bkb9m0f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 09:22:29 -0700
+Received: from m0045849.ppops.net (m0045849.ppops.net [127.0.0.1])
+        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 175GHc1x024813
+        for <linux-scsi@vger.kernel.org>; Thu, 5 Aug 2021 09:22:28 -0700
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2177.outbound.protection.outlook.com [104.47.59.177])
+        by mx0a-0016f401.pphosted.com with ESMTP id 3a8bkb9m0d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 05 Aug 2021 09:22:28 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=KFJRhCHF6JW0hcfbZq9vGCVFLS2dYaoUf3wmnr0fI8Unj6r7ggEvVJNTPuDSTsDb5K8S9TxlfU6WzvWtMXxsF1xHhqpVcQQy+rYeUm52VoJIY3SsXJw+DwDJuRavs5Ca4DGhGfQKbytTlY0dpKMAdOiMcEfaRUHTq2hi13ylmaLhliiumJjoxEmqKigqFsFnIi7zbIgO9gFbZxyfTpD/lgHDbZfgzFohQPz9hsjMNqoNzhueAEgFX+kFqJmRbq3QAHpGS3a2MAmnj8T7hC7RcvvguY9PIo69CFBCta4l5qFG20lrPqATOcd4uv7x4pirKmvnlc/dzTlbhbdM+uOlWg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AV9ujKmvQO3p61kk4B1a3ib+mkae+AKmZoL/EnKNAPY=;
+ b=gYeQKZaPDXE9huVn6zXbCjuCKx5KaVkaK+2JDhDVpqzfipAUc+lU4TvLhRCTrprPgMJoPVLbySLaG85yzIdnOyyiQv7ekGpQasAS5Q+CtkPQGD+ljwkQjTvVJubhHmZJzUAdJCljZ2wi4B1EfvvSpfOc38red8ftADEISStCZrbeDgdqnowNqzXcamfNCJ7xpMyiRxyaOanOdkD3ZhdV9dsi4+jffLOcZN90drZS/klg0SKJ2Vp8Cz8Tp0YvOqZGhvyTnibTeoKhx0ZvUc+/FZ24VKbDW6Y7LLFI3iDWYg5MtggGmoAc8RRu95qpOHbH9eKa8j8mZKG2Pv+YMekBLA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=marvell.com; dmarc=pass action=none header.from=marvell.com;
+ dkim=pass header.d=marvell.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=WRaE9XH9PPGoXiSu1dW4fjpmpf14LbZ6tQkVM+U7n10=;
-        b=GSFXT25Y8QFtHBJ7Qb7q4VAwsUY5K+kxxL51Vu7CUSo5Qr1zNOx1q3QBVMAXPj3OPQ
-         nRzVQ/kqGDl0c3sX8BA4DeG6jz2z6/KdrVccWpUVxhYmIvAzsnIFt1YmISLVMXqFIu91
-         dAtETqrNQzV7k0/ax431VOxHYRC135stzFHs6xKJXt0iHtd61HjXiMV+1RfNH9dz3DeD
-         w9sm9eSvfkn60dEVJBG7O7kJfoVZgFZTqzV/wvTe5KFCplBsPqryD0Xx9PW7GhBoU1Mb
-         kWugm3Jdhw3Swvy6AN/blHN6qhz7yNnjqVCRHrf0cSvt4KeuXGIyjoBEYwPv3aLNvNvX
-         tRTw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=WRaE9XH9PPGoXiSu1dW4fjpmpf14LbZ6tQkVM+U7n10=;
-        b=DsOEzym+tbJtYzgVuS3XRH9LSjoLEqRWV+4h6aooOU5tC15fT9JlRfsEi8K2E3skcL
-         zOpimKqmntkGv5qkRM840IVEOYfC1oFqEmRMgiubkhJ1XC66+CboamxqXunYQxbGrp/L
-         FAkhTyApXwzGw5LPHzpF52bfjSGlHJu6wXrV3Tom/OnhmPEgAw3TWNSCoY9lt9TjYeDA
-         z/bSk3fxrmuhNflNFVkLNURwxdaDf4MFp60mCuE5Y3bEw760V3TRfSyNv4gflWi7KBl3
-         Ue02T5dsSP+Mg5dKOUtsu9IBYI4Vo4PnoHcxdecJEA/k3oMRJD4KKUh3VF6+1sb3NTgP
-         CEYw==
-X-Gm-Message-State: AOAM533lUbA85o6FjP1EIKjY4DHVv/C6mwPwhB/ah0XJcFZPCBjvE6hN
-        NNes4MrvQeh2y63MJXsp+hQ=
-X-Google-Smtp-Source: ABdhPJwoNGkEzz3DrJnTKb2SFzGjUTk2Tk5DdSuGsTxsp/IyxTQK1MeB89eXdy5AjPBJiBI0XRW7Ag==
-X-Received: by 2002:a63:d458:: with SMTP id i24mr1081624pgj.289.1628179292003;
-        Thu, 05 Aug 2021 09:01:32 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
-        by smtp.gmail.com with ESMTPSA id gw4sm6494737pjb.1.2021.08.05.09.01.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Aug 2021 09:01:31 -0700 (PDT)
-Subject: Re: [PATCH V2 11/14] x86/Swiotlb: Add Swiotlb bounce buffer remap
- function for HV IVM
-From:   Tianyu Lan <ltykernel@gmail.com>
-To:     Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, parri.andrea@gmail.com, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        boris.ostrovsky@oracle.com, jgross@suse.com,
-        sstabellini@kernel.org, joro@8bytes.org, will@kernel.org,
-        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, arnd@arndb.de, hch@lst.de,
-        m.szyprowski@samsung.com, robin.murphy@arm.com,
-        Tianyu.Lan@microsoft.com, rppt@kernel.org,
-        kirill.shutemov@linux.intel.com, akpm@linux-foundation.org,
-        brijesh.singh@amd.com, thomas.lendacky@amd.com, pgonda@google.com,
-        david@redhat.com, krish.sadhukhan@oracle.com, saravanand@fb.com,
-        aneesh.kumar@linux.ibm.com, xen-devel@lists.xenproject.org,
-        martin.b.radev@gmail.com, ardb@kernel.org, rientjes@google.com,
-        tj@kernel.org, keescook@chromium.org,
-        michael.h.kelley@microsoft.com
-References: <20210804184513.512888-1-ltykernel@gmail.com>
- <20210804184513.512888-12-ltykernel@gmail.com>
-Message-ID: <9b1815bd-9019-360f-f648-5c99211a3474@gmail.com>
-Date:   Fri, 6 Aug 2021 00:01:15 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
-MIME-Version: 1.0
-In-Reply-To: <20210804184513.512888-12-ltykernel@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ d=marvell.onmicrosoft.com; s=selector1-marvell-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AV9ujKmvQO3p61kk4B1a3ib+mkae+AKmZoL/EnKNAPY=;
+ b=lWSjhpfRErjLetZkHjqszD8Z649PQfZ0FE7WTzYHC3+FlgF26bjOdewpLS+CQWQuiPGgpoFU5euEPmic+jXTM40376FtmTNIhNTRhHPci4cxi1vT0FHj6U6l80JLfzyBzCcCVI6OKtqFQj+A9sItBBFSsrlufCBS/pHcb3BB5aI=
+Received: from CO6PR18MB4500.namprd18.prod.outlook.com (2603:10b6:5:356::24)
+ by CO1PR18MB4586.namprd18.prod.outlook.com (2603:10b6:303:e1::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.18; Thu, 5 Aug
+ 2021 16:22:25 +0000
+Received: from CO6PR18MB4500.namprd18.prod.outlook.com
+ ([fe80::ec6d:161f:8ac4:9ba8]) by CO6PR18MB4500.namprd18.prod.outlook.com
+ ([fe80::ec6d:161f:8ac4:9ba8%5]) with mapi id 15.20.4394.017; Thu, 5 Aug 2021
+ 16:22:25 +0000
+From:   Nilesh Javali <njavali@marvell.com>
+To:     Himanshu Madhani <himanshu.madhani@oracle.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        GR-QLogic-Storage-Upstream <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: RE: [PATCH 14/14] qla2xxx: Update version to 10.02.06.100-k
+Thread-Topic: [PATCH 14/14] qla2xxx: Update version to 10.02.06.100-k
+Thread-Index: AQHXieRP8sTHsDGCqky/4Z4Le6CZnKtlEZiAgAABKqA=
+Date:   Thu, 5 Aug 2021 16:22:25 +0000
+Message-ID: <CO6PR18MB4500D0C33034F48ABE82377EAFF29@CO6PR18MB4500.namprd18.prod.outlook.com>
+References: <20210805102005.20183-1-njavali@marvell.com>
+ <20210805102005.20183-15-njavali@marvell.com>
+ <C4D3D8B1-2DC1-46D0-BFAC-088137F8D72A@oracle.com>
+In-Reply-To: <C4D3D8B1-2DC1-46D0-BFAC-088137F8D72A@oracle.com>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: oracle.com; dkim=none (message not signed)
+ header.d=none;oracle.com; dmarc=none action=none header.from=marvell.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 228272b8-aa88-4ae4-a332-08d9582d3655
+x-ms-traffictypediagnostic: CO1PR18MB4586:
+x-ms-exchange-transport-forked: True
+x-microsoft-antispam-prvs: <CO1PR18MB4586F54B9462225B660AE7C3AFF29@CO1PR18MB4586.namprd18.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:5797;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: V7NYB6o7U4hULibN2Exj8UAwVeKo2WPnWtpml8BsJGQBdUW606V7hBUrJS39z7vEnrCG0voRc0KFz4vHS3dPPbpX2toElvzR07jaH5bggGxZZlB1XojZz6FFlfRVJ0T48vcL6pyS0edRBCj8sWKnUs4NCNQjxqz0DxX+pfjtjq4TkHxYc1AASYDN90BT7NNXTbAqai4v6oispuQblWSlHH7fPGy3GPD/mAQFoLcbxd/e/aD8V3C7OmLNJZMdICXj2IqQ17caJqLP4ZgdPCP5xHMl3abBMxbOG+ItQrHnZbIOExUC+uxFLPch7H/PrQVgGW/78HhAGF1KzM3E7Vqb0Z868QEIMjRlMY29pwwWZTZNzTVxQSRXG2A/oii6Me9acn1R5oaRCg7qYYuKzPuxsfMRUSm8f21OKr8I/EqqneLgFw6dQWKv+DtYUcTtSuDfODYfaZaYBGMJRvYx3W19RGwQl3NCb3MHPOvePFwxEDOVSqiFBCuIsRN6+Rvbpv7oVet907ctv0q+MvqzqEnSp19x4zf39VoTDMbsA/AaC5o5pyc34OrfrlkcyZiQlWMS7+W6PGeItU0+5sEkJ0Wuj6MhfHdonlliKhzcXWBwQOh//6LWgHvjXm41GnKmLGHBTzdZ2q6r8exNKro5BYvdDbBQg0AHb3A7j+6mOoDFyIDK3jsYr7cJ/AvkA/9Xbugv17J/LHDh2yYTOkQUSiAKGQ==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CO6PR18MB4500.namprd18.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(39860400002)(366004)(376002)(396003)(136003)(2906002)(6506007)(9686003)(66556008)(38100700002)(64756008)(71200400001)(66446008)(122000001)(478600001)(55016002)(7696005)(4326008)(15650500001)(316002)(53546011)(66476007)(66946007)(76116006)(33656002)(186003)(26005)(54906003)(8676002)(83380400001)(6916009)(38070700005)(52536014)(107886003)(86362001)(5660300002)(8936002);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?IbRmV3dmmdDsKmGnWYUdAGHsU7LTEOGXX9Vh8OMXxEPcuWZhPkIE4NI0JW9N?=
+ =?us-ascii?Q?ndC/D+BEH0dUEZnSP1FF5E8DvjlTeSOtJsgbTx8iM6YdPQxoxeaMGtCGz5Q4?=
+ =?us-ascii?Q?mylssNMbUKMncJQ2jq6jAV+Gc6vfURoJoQp2mcR/LV+MkcnjZ+7GQWtE5NgC?=
+ =?us-ascii?Q?gtmovw3z0r0jEh13/6qM5VtY72WfvalCPQ80YeKNs6RYqaC11xvvirQWB5Dv?=
+ =?us-ascii?Q?CLfAUqZgKsMTi6whG75Y7Wmqq4yhT4BHOpg7fTm84oMSzFQ3QRPZAh2Jj5QO?=
+ =?us-ascii?Q?CYQnhsOdgqEBmFA0+uxeNhU3Vp+nBvqH0C8lyLltaBEXylM87lx3/DOFSPPS?=
+ =?us-ascii?Q?1tWhSaUMBdg2HBtRqbdd+zbGSnsfM6Tb5f1rccOqbWyTrsbnj6H0eP9iwy5K?=
+ =?us-ascii?Q?Y/rsKT6j+WeusnJTomrjUmM3fliG1LTmdcz3cp2lGW/PM/FQGKO9QX1JY5gP?=
+ =?us-ascii?Q?g7iQ+MZ+W+Ka5HCSB6P3YZzv13eqHYwNKx5pOAgbAsRriYcXKz/HQdz2hPXv?=
+ =?us-ascii?Q?ynNUwxdMTJ7qarIVV1qoAMnuUDiIDYrVqx0A06MVUHyu2XQNmmHGur2Sgb8N?=
+ =?us-ascii?Q?JKHM+oeZrW/819teSCPCFGpasNY6riRWsWtzz+9Jj5CKrjRiz74LOEGPXFAu?=
+ =?us-ascii?Q?xUz4T6fBDCn6zDPtx0R3pta2lmYhh5uSjz7aKFJlrzuxCBzATcP1pM0IQkYb?=
+ =?us-ascii?Q?LRDYbSDz2nh4nMHuDP1zhpB1PKm+JEQqQ9w5N49vuGUYdAODHytrtojSfG6X?=
+ =?us-ascii?Q?10smTa2I9wOXhqw0t2iU94TxshrYpBuaMsF6ewxAH6PFoMmOalTmSQjECrJ3?=
+ =?us-ascii?Q?Tnj1PYLI3NHmYKcEJJQAaqJ0vy4f2xHbSNyskhTqNZlDqpR4SXKQkms0b+ty?=
+ =?us-ascii?Q?7LQVdTvvY++RzyNlDWVT6vFpAodE1a2c/hrUIOXzPDYNwwx8Tu99j6i8dOP+?=
+ =?us-ascii?Q?JD0YsEzKmndkt9oMcOuj6ITjLcez7Ue+vsHp+GpAN0PlDFVJapKjtcI0bRpP?=
+ =?us-ascii?Q?Xq9hIx2JLmVW0CoaM80WnQaaz9iZGjgyqVRvB+ct2rCeznjmcWkW2KJehc6q?=
+ =?us-ascii?Q?HAAfKDmvtG5dzRrWdZcWZ9cCosbLdYip0SW+vnWyxSNq19FfffnlQWBrHv81?=
+ =?us-ascii?Q?+teJKofETgFsGi0SONg7F45DggUoqHesuKPuFXevRqm1zUdUE5/UcStRBNmE?=
+ =?us-ascii?Q?I0RiUtKKVMuDGiEtOgK5n1VgYJEaM/aFbRu21KJba81eB7B8YfLGUHFTwwAk?=
+ =?us-ascii?Q?nL0f6i774saalAmu9h5BQ8qdTztvygI1DoE9zIcMs938pUHJWDDI/Z+HLwWC?=
+ =?us-ascii?Q?ctiA7r1Bnjbqkswfwit7/QFZ?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+X-OriginatorOrg: marvell.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CO6PR18MB4500.namprd18.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 228272b8-aa88-4ae4-a332-08d9582d3655
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Aug 2021 16:22:25.7034
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 70e1fb47-1155-421d-87fc-2e58f638b6e0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: CVMW8eDdeACLEcRoqyvaRfqBZotNoXzk5WqrS9r4ASpsJ6fLuygdO++YMXPRky1BW2NgB2mXsqrI4jEvXvz4mA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR18MB4586
+X-Proofpoint-GUID: 0uaT22O0gJh6g8Sipyl_AeiVS0tGEQBP
+X-Proofpoint-ORIG-GUID: 5nf-QAf573-tImBVIXDmfZuDhdNQE1sw
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
+ definitions=2021-08-05_05:2021-08-05,2021-08-05 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Konrad:
-      Could you have a look at this new version? The change since v1 is 
-make swiotlb_init_io_tlb_mem() return error code when 
-dma_map_decrypted() fails according your previous comment. If this 
-change is ok, could you give your ack and this series needs to be merged 
-via Hyper-V next tree.
 
-Thanks.
 
-On 8/5/2021 2:45 AM, Tianyu Lan wrote:
-> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> 
-> In Isolation VM with AMD SEV, bounce buffer needs to be accessed via
-> extra address space which is above shared_gpa_boundary
-> (E.G 39 bit address line) reported by Hyper-V CPUID ISOLATION_CONFIG.
-> The access physical address will be original physical address +
-> shared_gpa_boundary. The shared_gpa_boundary in the AMD SEV SNP
-> spec is called virtual top of memory(vTOM). Memory addresses below
-> vTOM are automatically treated as private while memory above
-> vTOM is treated as shared.
-> 
-> Use dma_map_decrypted() in the swiotlb code, store remap address returned
-> and use the remap address to copy data from/to swiotlb bounce buffer.
-> 
-> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> ---
-> Change since v1:
->         * Make swiotlb_init_io_tlb_mem() return error code and return
->           error when dma_map_decrypted() fails.
-> 
-> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> ---
->   include/linux/swiotlb.h |  4 ++++
->   kernel/dma/swiotlb.c    | 32 ++++++++++++++++++++++++--------
->   2 files changed, 28 insertions(+), 8 deletions(-)
-> 
-> diff --git a/include/linux/swiotlb.h b/include/linux/swiotlb.h
-> index f507e3eacbea..584560ecaa8e 100644
-> --- a/include/linux/swiotlb.h
-> +++ b/include/linux/swiotlb.h
-> @@ -72,6 +72,9 @@ extern enum swiotlb_force swiotlb_force;
->    * @end:	The end address of the swiotlb memory pool. Used to do a quick
->    *		range check to see if the memory was in fact allocated by this
->    *		API.
-> + * @vaddr:	The vaddr of the swiotlb memory pool. The swiotlb
-> + *		memory pool may be remapped in the memory encrypted case and store
-> + *		virtual address for bounce buffer operation.
->    * @nslabs:	The number of IO TLB blocks (in groups of 64) between @start and
->    *		@end. For default swiotlb, this is command line adjustable via
->    *		setup_io_tlb_npages.
-> @@ -89,6 +92,7 @@ extern enum swiotlb_force swiotlb_force;
->   struct io_tlb_mem {
->   	phys_addr_t start;
->   	phys_addr_t end;
-> +	void *vaddr;
->   	unsigned long nslabs;
->   	unsigned long used;
->   	unsigned int index;
-> diff --git a/kernel/dma/swiotlb.c b/kernel/dma/swiotlb.c
-> index 1fa81c096c1d..29b6d888ef3b 100644
-> --- a/kernel/dma/swiotlb.c
-> +++ b/kernel/dma/swiotlb.c
-> @@ -176,7 +176,7 @@ void __init swiotlb_update_mem_attributes(void)
->   	memset(vaddr, 0, bytes);
->   }
->   
-> -static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
-> +static int swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
->   				    unsigned long nslabs, bool late_alloc)
->   {
->   	void *vaddr = phys_to_virt(start);
-> @@ -194,14 +194,21 @@ static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
->   		mem->slots[i].alloc_size = 0;
->   	}
->   
-> -	set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT);
-> -	memset(vaddr, 0, bytes);
-> +	mem->vaddr = dma_map_decrypted(vaddr, bytes);
-> +	if (!mem->vaddr) {
-> +		pr_err("Failed to decrypt memory.\n");
-> +		return -ENOMEM;
-> +	}
-> +
-> +	memset(mem->vaddr, 0, bytes);
-> +	return 0;
->   }
->   
->   int __init swiotlb_init_with_tbl(char *tlb, unsigned long nslabs, int verbose)
->   {
->   	struct io_tlb_mem *mem;
->   	size_t alloc_size;
-> +	int ret;
->   
->   	if (swiotlb_force == SWIOTLB_NO_FORCE)
->   		return 0;
-> @@ -216,7 +223,11 @@ int __init swiotlb_init_with_tbl(char *tlb, unsigned long nslabs, int verbose)
->   		panic("%s: Failed to allocate %zu bytes align=0x%lx\n",
->   		      __func__, alloc_size, PAGE_SIZE);
->   
-> -	swiotlb_init_io_tlb_mem(mem, __pa(tlb), nslabs, false);
-> +	ret = swiotlb_init_io_tlb_mem(mem, __pa(tlb), nslabs, false);
-> +	if (ret) {
-> +		memblock_free(__pa(mem), alloc_size);
-> +		return ret;
-> +	}
->   
->   	io_tlb_default_mem = mem;
->   	if (verbose)
-> @@ -304,6 +315,8 @@ int
->   swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
->   {
->   	struct io_tlb_mem *mem;
-> +	int size = get_order(struct_size(mem, slots, nslabs));
-> +	int ret;
->   
->   	if (swiotlb_force == SWIOTLB_NO_FORCE)
->   		return 0;
-> @@ -312,12 +325,15 @@ swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
->   	if (WARN_ON_ONCE(io_tlb_default_mem))
->   		return -ENOMEM;
->   
-> -	mem = (void *)__get_free_pages(GFP_KERNEL,
-> -		get_order(struct_size(mem, slots, nslabs)));
-> +	mem = (void *)__get_free_pages(GFP_KERNEL, size);
->   	if (!mem)
->   		return -ENOMEM;
->   
-> -	swiotlb_init_io_tlb_mem(mem, virt_to_phys(tlb), nslabs, true);
-> +	ret = swiotlb_init_io_tlb_mem(mem, virt_to_phys(tlb), nslabs, true);
-> +	if (ret) {
-> +		free_pages((unsigned long)mem, size);
-> +		return ret;
-> +	}
->   
->   	io_tlb_default_mem = mem;
->   	swiotlb_print_info();
-> @@ -360,7 +376,7 @@ static void swiotlb_bounce(struct device *dev, phys_addr_t tlb_addr, size_t size
->   	phys_addr_t orig_addr = mem->slots[index].orig_addr;
->   	size_t alloc_size = mem->slots[index].alloc_size;
->   	unsigned long pfn = PFN_DOWN(orig_addr);
-> -	unsigned char *vaddr = phys_to_virt(tlb_addr);
-> +	unsigned char *vaddr = mem->vaddr + tlb_addr - mem->start;
->   	unsigned int tlb_offset;
->   
->   	if (orig_addr == INVALID_PHYS_ADDR)
-> 
+> -----Original Message-----
+> From: Himanshu Madhani <himanshu.madhani@oracle.com>
+> Sent: Thursday, August 5, 2021 9:28 PM
+> To: Nilesh Javali <njavali@marvell.com>
+> Cc: Martin Petersen <martin.petersen@oracle.com>; linux-
+> scsi@vger.kernel.org; GR-QLogic-Storage-Upstream <GR-QLogic-Storage-
+> Upstream@marvell.com>
+> Subject: [EXT] Re: [PATCH 14/14] qla2xxx: Update version to 10.02.06.100-=
+k
+>=20
+> External Email
+>=20
+> ----------------------------------------------------------------------
+>=20
+>=20
+> > On Aug 5, 2021, at 5:20 AM, Nilesh Javali <njavali@marvell.com> wrote:
+> >
+> > Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> > ---
+> > drivers/scsi/qla2xxx/qla_version.h | 6 +++---
+> > 1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+> > diff --git a/drivers/scsi/qla2xxx/qla_version.h
+> b/drivers/scsi/qla2xxx/qla_version.h
+> > index 2e05dd74b5cb..8b0ace50b52f 100644
+> > --- a/drivers/scsi/qla2xxx/qla_version.h
+> > +++ b/drivers/scsi/qla2xxx/qla_version.h
+> > @@ -6,9 +6,9 @@
+> > /*
+> >  * Driver version
+> >  */
+> > -#define QLA2XXX_VERSION      "10.02.00.107-k"
+> > +#define QLA2XXX_VERSION      "10.02.06.100-k"
+> >
+> > #define QLA_DRIVER_MAJOR_VER	10
+> > #define QLA_DRIVER_MINOR_VER	2
+> > -#define QLA_DRIVER_PATCH_VER	0
+> > -#define QLA_DRIVER_BETA_VER	107
+> > +#define QLA_DRIVER_PATCH_VER	6
+> > +#define QLA_DRIVER_BETA_VER	100
+> > --
+> > 2.19.0.rc0
+> >
+>=20
+> Just curious..
+>=20
+> Why bump Patch version for the driver? And numbering does not make
+> sense.. please explain
+
+This is just for internalizing and identification purpose, to keep upstream=
+ driver version in sync with qla2x out-of-box driver.
+The combination of major, minor, patch versions (10.02.06) would let us kno=
+w association with respective OOB version whereas the beta version=20
+would tell the series number (100, 200,...) for that particular patch versi=
+on. It's for internal tracking only.=20
+
+Thanks for reviewing the patches. I would send v2 for this series.
+
+Thanks,
+Nilesh
+
