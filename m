@@ -4,50 +4,52 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33C4AC4320E
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E870AC4320A
 	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 17D446112F
+	by mail.kernel.org (Postfix) with ESMTP id CF9E061078
 	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242913AbhHETT1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 15:19:27 -0400
-Received: from mail-pj1-f46.google.com ([209.85.216.46]:46021 "EHLO
-        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242914AbhHETTU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 15:19:20 -0400
-Received: by mail-pj1-f46.google.com with SMTP id m10-20020a17090a34cab0290176b52c60ddso11947668pjf.4
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:19:02 -0700 (PDT)
+        id S242893AbhHETT2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 15:19:28 -0400
+Received: from mail-pj1-f49.google.com ([209.85.216.49]:36395 "EHLO
+        mail-pj1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242802AbhHETTY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 15:19:24 -0400
+Received: by mail-pj1-f49.google.com with SMTP id u13-20020a17090abb0db0290177e1d9b3f7so17324015pjr.1
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:19:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Z9le2znCFiWxH/qpKzW0BBcMGqfV1LOmADjtvCBfw3k=;
-        b=CgPhQNusz3hprWzn3tua+FTGy8UujQoalyViFvVwy89STIp4eBsVD8CkuQtRyKFc0U
-         8+JsLRnktSlahpwKn/smGoOfzzklGinwXU+Fii1VgAts858rbsi7wE9m+/PVgc6+paZk
-         OgUbN2VqD4EvjHVSAc2udUKwLz4nFY1Wd4Q42YIZnVtx6/0eZNWYn5C6VEyYzeLf7DHb
-         92uU4VvTiAl7lyJV30jlEkrCEGtDVh+eMo7osp+cKapAw4SmeKsbaGZMC9j8MyMJwMc+
-         8EtNhWaZcU27i8WjsiRXB+vUgPN5xpPTZglXkNN6yf0/gAY0hptcnNPIYwXngEgKBni7
-         JR/Q==
-X-Gm-Message-State: AOAM532Q6YPpwMPm72VvGgIALKgT2k88FiRDN54MdgGLkcL4wC920d+r
-        s5e8zZl022J6wgbY3ngwH7Y=
-X-Google-Smtp-Source: ABdhPJzJBLlMmITfAQzKsgUTX0hrAdod2jF5vl8VHZYPP6DCln8asw1qsmWMvdPJ+k0T1/xqIuQM6g==
-X-Received: by 2002:a17:90b:a54:: with SMTP id gw20mr6159119pjb.215.1628191142346;
-        Thu, 05 Aug 2021 12:19:02 -0700 (PDT)
+        bh=wjHPmJeqPk5ydGEPAsbeM+wR0ly8Ex7oFJ5KgXs11aQ=;
+        b=CYWwhJYfPxilRjOzokGQUh6kzjDRp7OoAlxkAev9fR2V0H1tAX1MA4pTdtGyRCqDsn
+         0zRvfwRE+VoQEPITwPV0vvAEELsanGkqLeBI4hHcAqu7oHtp2xhkA2uBSRH1yRHkAf5D
+         uN/vca/u5hs00J7cRZtn2teCSNa5uMfAKPMBziONOefXNFB/m1HEQvHFhabi8mEZTPmp
+         oY8Z75GeCOKPIFMQkzPrZhuR/+cxuJYGb693BfuymZ9y22Qr7mMTztdoYpyQaJXiV3Pf
+         pjw4C4osOfkSxBEnKQo0Wb17SmO2CLkEgI4nD/QIH89dUU0SZwheRLSdzn4FqA1iLOGu
+         RuvA==
+X-Gm-Message-State: AOAM530BH3rwELkaiIgmSnoD6kFwX+Bk6nFymT+V6YeJ6+s/6znK8yjb
+        bpjWZ+i3LSUWBq3UwJQUQEw=
+X-Google-Smtp-Source: ABdhPJz9ZpKlnjShrW5TWE5i+7d7lBbJiM3oxDz3wCsO01+afoOMW7T/nfQivpRQ4WoQRbnrS8t9bg==
+X-Received: by 2002:a63:6645:: with SMTP id a66mr604905pgc.339.1628191149560;
+        Thu, 05 Aug 2021 12:19:09 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:93c2:eaf5:530d:627d])
-        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.19.01
+        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.19.08
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Aug 2021 12:19:01 -0700 (PDT)
+        Thu, 05 Aug 2021 12:19:09 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 15/52] aha1542: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Thu,  5 Aug 2021 12:17:51 -0700
-Message-Id: <20210805191828.3559897-16-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        Colin Ian King <colin.king@canonical.com>
+Subject: [PATCH v4 17/52] csiostor: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Thu,  5 Aug 2021 12:17:53 -0700
+Message-Id: <20210805191828.3559897-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0.605.g8dce9f2422-goog
 In-Reply-To: <20210805191828.3559897-1-bvanassche@acm.org>
 References: <20210805191828.3559897-1-bvanassche@acm.org>
@@ -62,38 +64,35 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/aha1542.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/csiostor/csio_scsi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index 1210e61afb18..584a59522038 100644
---- a/drivers/scsi/aha1542.c
-+++ b/drivers/scsi/aha1542.c
-@@ -262,11 +262,12 @@ static void aha1542_free_cmd(struct scsi_cmnd *cmd)
- 	struct aha1542_cmd *acmd = scsi_cmd_priv(cmd);
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 56b9ad0a1ca0..3b2eb6ce1fcf 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -1786,7 +1786,7 @@ csio_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmnd)
+ 	struct csio_scsi_qset *sqset;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
  
- 	if (cmd->sc_data_direction == DMA_FROM_DEVICE) {
-+		struct request *rq = scsi_cmd_to_rq(cmd);
- 		void *buf = acmd->data_buffer;
- 		struct req_iterator iter;
- 		struct bio_vec bv;
+-	sqset = &hw->sqset[ln->portid][blk_mq_rq_cpu(cmnd->request)];
++	sqset = &hw->sqset[ln->portid][blk_mq_rq_cpu(scsi_cmd_to_rq(cmnd))];
  
--		rq_for_each_segment(bv, cmd->request, iter) {
-+		rq_for_each_segment(bv, rq, iter) {
- 			memcpy_to_page(bv.bv_page, bv.bv_offset, buf,
- 				       bv.bv_len);
- 			buf += bv.bv_len;
-@@ -447,11 +448,12 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- #endif
- 
- 	if (cmd->sc_data_direction == DMA_TO_DEVICE) {
-+		struct request *rq = scsi_cmd_to_rq(cmd);
- 		void *buf = acmd->data_buffer;
- 		struct req_iterator iter;
- 		struct bio_vec bv;
- 
--		rq_for_each_segment(bv, cmd->request, iter) {
-+		rq_for_each_segment(bv, rq, iter) {
- 			memcpy_from_page(buf, bv.bv_page, bv.bv_offset,
- 					 bv.bv_len);
- 			buf += bv.bv_len;
+ 	nr = fc_remote_port_chkready(rport);
+ 	if (nr) {
+@@ -1989,13 +1989,13 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
+ 		csio_info(hw,
+ 			"Aborted SCSI command to (%d:%llu) tag %u\n",
+ 			cmnd->device->id, cmnd->device->lun,
+-			cmnd->request->tag);
++			scsi_cmd_to_rq(cmnd)->tag);
+ 		return SUCCESS;
+ 	} else {
+ 		csio_info(hw,
+ 			"Failed to abort SCSI command, (%d:%llu) tag %u\n",
+ 			cmnd->device->id, cmnd->device->lun,
+-			cmnd->request->tag);
++			scsi_cmd_to_rq(cmnd)->tag);
+ 		return FAILED;
+ 	}
+ }
