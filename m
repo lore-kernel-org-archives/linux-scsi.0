@@ -4,34 +4,34 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-21.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FB28C4320A
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 04:17:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC7EEC4320A
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 04:18:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 124AA61029
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 04:17:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92F7561073
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 04:18:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236037AbhHEERm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 00:17:42 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57886 "EHLO mail.kernel.org"
+        id S234999AbhHEES0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 00:18:26 -0400
+Received: from mail.kernel.org ([198.145.29.99]:58424 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230215AbhHEERh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Aug 2021 00:17:37 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B0BD460EE8;
-        Thu,  5 Aug 2021 04:17:22 +0000 (UTC)
+        id S230215AbhHEES0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Aug 2021 00:18:26 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BA10F60EE8;
+        Thu,  5 Aug 2021 04:18:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628137043;
-        bh=RTGwVC+e9lhvKEwZi7nLPinHG/f37RvaD3B5wfWsEIU=;
+        s=k20201202; t=1628137092;
+        bh=mB5MPS4/ftvIsrloxEwJS3TMsTJM3QZc0j0Jm9hQDTU=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=GxifsXfmL6DnJo2RffAXP6/4ec+BTljLySYSlKCStKrr1G+PjoCdVDA1F7hobU+ZS
-         ccFA49K5s+aRNlei6pweCcIAgdR/OAJLLGC4VApvvTCoT+JjK6nBVdO/xLyFbHaBFv
-         Ryc/UeXAcnp5hM+MzjIw0iV7BQPyMYlzBftNJJ8jKh9SR7cjU7KRgM2CjOiLm0T+nI
-         5DfAzOpreAffTKu0gTkMW0MIEq2R9W7iPAsdbzr0AvaJxijT0DwxQlvZV7ECKThXKQ
-         3TAhbieG1JAdLl/LEJ+23IHxLG665+K+US8wPCwA0hMKzQG5d6/jWdlsa3rIEAuMnD
-         N53zjdGkr4LLA==
-Date:   Wed, 4 Aug 2021 23:20:04 -0500
+        b=Ft/IvNgtM0BjaNgo8URgJEl9VK4qdiNqXXHbKxXc2OEo95uBzW+IO/BAgxGjDzsdp
+         HFLR+Fzy/p/NrEkV2M3hCF8skWxinorua25+mbs6oKE71XNjVnkIxVhqF28zhBBBmG
+         MD3E2nYng9lEAoPG3Oj1tc3FiucKaK/Z5xNbhInDCqQXnbsVLKoBlRpu3ponfCNyRQ
+         JGeYBxgNyIZi7MfPRvF3F/RJ5q9kRAtaYAZp3QS+0qIgAI0FBTLaTvZL6MBVKNwpOz
+         BqCdawVBLSuBqUsHtz4xEGRkF70spLCNj4/gDPa55hUpgAk3XnpCXeWlil+YammEtP
+         qYLByuFGplkSA==
+Date:   Wed, 4 Aug 2021 23:20:53 -0500
 From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
@@ -42,9 +42,9 @@ Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
         megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
         linux-hardening@vger.kernel.org,
         "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Subject: [PATCH v2 3/4][next] scsi: megaraid_sas: Replace one-element array
- with flexible-array member in MR_DRV_RAID_MAP
-Message-ID: <b43d4083d9788bb746dc0b2205d6a67ebb609b0d.1628136510.git.gustavoars@kernel.org>
+Subject: [PATCH v2 4/4][next] scsi: megaraid_sas: Replace one-element array
+ with flexible-array member in MR_PD_CFG_SEQ_NUM_SYNC
+Message-ID: <3860f4f6f06dff8e6aea4a8318e9515a0e9cbde3.1628136510.git.gustavoars@kernel.org>
 References: <cover.1628136510.git.gustavoars@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -55,7 +55,7 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Replace one-element array with a flexible-array member in struct
-MR_DRV_RAID_MAP and use the flex_array_size() helper.
+MR_PD_CFG_SEQ_NUM_SYNC and use the struct_size() helper.
 
 This helps with the ongoing efforts to globally enable -Warray-bounds
 and get us closer to being able to tighten the FORTIFY_SOURCE routines
@@ -70,47 +70,77 @@ Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 Changes in v2:
  - None.
 
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 6 +++---
- drivers/scsi/megaraid/megaraid_sas_fusion.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 14 +++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  2 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 +-
+ 3 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index da1cad1ee123..9cb36ef96c2c 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -229,8 +229,8 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance, u64 map_id)
- 					le32_to_cpu(desc_table->raid_map_desc_offset));
- 				memcpy(pDrvRaidMap->ldSpanMap,
- 				       fw_map_dyn->ld_span_map,
--				       sizeof(struct MR_LD_SPAN_MAP) *
--				       le32_to_cpu(desc_table->raid_map_desc_elements));
-+				       flex_array_size(pDrvRaidMap, ldSpanMap,
-+				       le32_to_cpu(desc_table->raid_map_desc_elements)));
- 			break;
- 			default:
- 				dev_dbg(&instance->pdev->dev, "wrong number of desctableElements %d\n",
-@@ -254,7 +254,7 @@ static int MR_PopulateDrvRaidMap(struct megasas_instance *instance, u64 map_id)
- 			pDrvRaidMap->ldTgtIdToLd[i] =
- 				(u16)fw_map_ext->ldTgtIdToLd[i];
- 		memcpy(pDrvRaidMap->ldSpanMap, fw_map_ext->ldSpanMap,
--		       sizeof(struct MR_LD_SPAN_MAP) * ld_count);
-+		       flex_array_size(pDrvRaidMap, ldSpanMap, ld_count));
- 		memcpy(pDrvRaidMap->arMapInfo, fw_map_ext->arMapInfo,
- 		       sizeof(struct MR_ARRAY_INFO) * MAX_API_ARRAYS_EXT);
- 		memcpy(pDrvRaidMap->devHndlInfo, fw_map_ext->devHndlInfo,
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index d072f9caeb4a..a4131dd510e3 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -5782,10 +5782,10 @@ megasas_setup_jbod_map(struct megasas_instance *instance)
+ {
+ 	int i;
+ 	struct fusion_context *fusion = instance->ctrl_context;
+-	u32 pd_seq_map_sz;
++	size_t pd_seq_map_sz;
+ 
+-	pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
+-		(sizeof(struct MR_PD_CFG_SEQ) * (MAX_PHYSICAL_DEVICES - 1));
++	pd_seq_map_sz = struct_size((struct MR_PD_CFG_SEQ_NUM_SYNC *)0, seq,
++				    MAX_PHYSICAL_DEVICES);
+ 
+ 	instance->use_seqnum_jbod_fp =
+ 		instance->support_seqnum_jbod_fp;
+@@ -7961,7 +7961,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
+ 	struct fusion_context *fusion;
+-	u32 pd_seq_map_sz;
++	size_t pd_seq_map_sz;
+ 
+ 	instance = pci_get_drvdata(pdev);
+ 
+@@ -8033,9 +8033,9 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 
+ 	if (instance->adapter_type != MFI_SERIES) {
+ 		megasas_release_fusion(instance);
+-			pd_seq_map_sz = sizeof(struct MR_PD_CFG_SEQ_NUM_SYNC) +
+-				(sizeof(struct MR_PD_CFG_SEQ) *
+-					(MAX_PHYSICAL_DEVICES - 1));
++			pd_seq_map_sz =
++				struct_size((struct MR_PD_CFG_SEQ_NUM_SYNC *)0,
++					    seq, MAX_PHYSICAL_DEVICES);
+ 		for (i = 0; i < 2 ; i++) {
+ 			if (fusion->ld_map[i])
+ 				dma_free_coherent(&instance->pdev->dev,
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 06399c026a8d..a824fb641fda 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1310,7 +1310,7 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+ 
+ 	pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id & 1)];
+ 	pd_seq_h = fusion->pd_seq_phys[(instance->pd_seq_map_id & 1)];
+-	pd_seq_map_sz = struct_size(pd_sync, seq, MAX_PHYSICAL_DEVICES - 1);
++	pd_seq_map_sz = struct_size(pd_sync, seq, MAX_PHYSICAL_DEVICES);
+ 
+ 	cmd = megasas_get_cmd(instance);
+ 	if (!cmd) {
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 9adb8b30f422..5fe2f7a6eebe 100644
+index 5fe2f7a6eebe..af39d9c20cc6 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -1182,7 +1182,7 @@ struct MR_DRV_RAID_MAP {
- 		devHndlInfo[MAX_RAIDMAP_PHYSICAL_DEVICES_DYN];
- 	u16 ldTgtIdToLd[MAX_LOGICAL_DRIVES_DYN];
- 	struct MR_ARRAY_INFO arMapInfo[MAX_API_ARRAYS_DYN];
--	struct MR_LD_SPAN_MAP      ldSpanMap[1];
-+	struct MR_LD_SPAN_MAP      ldSpanMap[];
+@@ -1249,7 +1249,7 @@ struct MR_PD_CFG_SEQ {
+ struct MR_PD_CFG_SEQ_NUM_SYNC {
+ 	__le32 size;
+ 	__le32 count;
+-	struct MR_PD_CFG_SEQ seq[1];
++	struct MR_PD_CFG_SEQ seq[];
+ } __packed;
  
- };
- 
+ /* stream detection */
 -- 
 2.27.0
 
