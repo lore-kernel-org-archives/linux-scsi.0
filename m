@@ -7,48 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CAB7C4338F
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CCABC432BE
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3549260BD3
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24C2C61132
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242863AbhHETT0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S242871AbhHETT0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 5 Aug 2021 15:19:26 -0400
-Received: from mail-pj1-f41.google.com ([209.85.216.41]:35691 "EHLO
-        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242910AbhHETTU (ORCPT
+Received: from mail-pj1-f45.google.com ([209.85.216.45]:38672 "EHLO
+        mail-pj1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242922AbhHETTU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 15:19:20 -0400
-Received: by mail-pj1-f41.google.com with SMTP id s22-20020a17090a1c16b0290177caeba067so17373334pjs.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:18:59 -0700 (PDT)
+Received: by mail-pj1-f45.google.com with SMTP id mz5-20020a17090b3785b0290176ecf64922so17277822pjb.3
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:19:04 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=eKg6z51wFV7biatzkNM4Hts6TkZNBCWvFreLQRIkp/I=;
-        b=cXj1MWbKXH4MxvwhQ80K4O++lFYOQfgAq3+GRrpSepDAW5kkcuXqFjyMOmdCZEfNLZ
-         A+mB6sNw1AcY/jpQx0HHL/x85snK3F/qxVLfKCYpZlzC/UE2At7fPr6wPufDU07x1Wm5
-         5zvbiktdMiV90FQqmz+HE2UnfHuGHIiFlheKLLNv/7fzajXpuap3xRJhV62fWQ2j9Ced
-         bvnp5ekdKvnTmGlNwWHSihFj9acfVe+5HzEKc729rgsKCWYCs7dAIAfpFuEZIKH3+DKB
-         1okxT1vr0vReRuKRByT743WZLuiJrP0Nx8wnkQxaGwbkYPoDpjy6vTujnPaZaNMdVf7p
-         29Pw==
-X-Gm-Message-State: AOAM530HrDR1kQ7sdee1PMT6RDh/IEyPuJHHCPR8+lKVMUBxhGCaSB7d
-        cbntBCoSJhudKAeAgwA6eRw=
-X-Google-Smtp-Source: ABdhPJxIsVpLPw47WBMpwMTgq84/yHgAIcoOCU4lKIYCjpcVMS7JQnKqKsfW0zmylaVKq3VOmTkJUg==
-X-Received: by 2002:a17:90b:3d8:: with SMTP id go24mr16880616pjb.235.1628191139503;
-        Thu, 05 Aug 2021 12:18:59 -0700 (PDT)
+        bh=q36SflnryTrObAIdoPQMJHITJRxt4At+O2hiMdePM0I=;
+        b=cPqmrqwhao26Vh7OlkGv5bxvPSHuNOG7ZX3B2WOMbyFouwa3RgXVdKn96AD4JEzhNI
+         mMxByQD6OzIwR/QlMbgF2RZzDlShcl0Ozjhbc7xs2WHAl6MGT9/QeeaY1RPPH3UK4Z5O
+         65y5vDc4oJtT9LT0CFJbOjf6qBzP0IFVbH2SQuiGcmAhoayLqLSXRx+wfhjQGlOF3xbG
+         JsJvsRRY7tucTQW13L+QLIrifA4haKMde6190qSUMno81ip2tYN8Z4bkJ7sAHaz96Uqh
+         I40Hx9j6mbvIqcgMJYNiTdcQ3606b3IIzywLU1ks9HreyAcpUwbDirvkji9UCFXEzxmX
+         tZXQ==
+X-Gm-Message-State: AOAM533ZHee7jjH3v1lIhxP7QjaYOox4Ee1WsfaVexZYRWl+fo/6FU6z
+        pvQSbTv9y3dCGkI4WnW/ujM=
+X-Google-Smtp-Source: ABdhPJwHYTysltJ7SlmmHC8NDapsXkAaVjWSG+HG6copYz5z1WzQ9DuzKdd9yQIHE0RaKPH1/R85Ww==
+X-Received: by 2002:a17:90b:17c3:: with SMTP id me3mr16457575pjb.203.1628191143843;
+        Thu, 05 Aug 2021 12:19:03 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:93c2:eaf5:530d:627d])
-        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.18.58
+        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.19.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Aug 2021 12:18:58 -0700 (PDT)
+        Thu, 05 Aug 2021 12:19:03 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 13/52] aacraid: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Thu,  5 Aug 2021 12:17:49 -0700
-Message-Id: <20210805191828.3559897-14-bvanassche@acm.org>
+Subject: [PATCH v4 16/52] bnx2i: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Thu,  5 Aug 2021 12:17:52 -0700
+Message-Id: <20210805191828.3559897-17-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0.605.g8dce9f2422-goog
 In-Reply-To: <20210805191828.3559897-1-bvanassche@acm.org>
 References: <20210805191828.3559897-1-bvanassche@acm.org>
@@ -63,33 +65,19 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/aacraid/aachba.c  | 2 +-
- drivers/scsi/aacraid/commsup.c | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/bnx2i/bnx2i_hwi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 267934d2f14b..c2d6f0a9e0b1 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1504,7 +1504,7 @@ static struct aac_srb * aac_scsi_common(struct fib * fib, struct scsi_cmnd * cmd
- 	srbcmd->id       = cpu_to_le32(scmd_id(cmd));
- 	srbcmd->lun      = cpu_to_le32(cmd->device->lun);
- 	srbcmd->flags    = cpu_to_le32(flag);
--	timeout = cmd->request->timeout/HZ;
-+	timeout = scsi_cmd_to_rq(cmd)->timeout / HZ;
- 	if (timeout == 0)
- 		timeout = (dev->sa_firmware ? AAC_SA_TIMEOUT : AAC_ARC_TIMEOUT);
- 	srbcmd->timeout  = cpu_to_le32(timeout);  // timeout in seconds
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 54eb4d41bc2c..deb32c9f4b3e 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -224,7 +224,7 @@ struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
- {
- 	struct fib *fibptr;
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 43e8a1dafec0..5521469ce678 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -1918,7 +1918,7 @@ static int bnx2i_queue_scsi_cmd_resp(struct iscsi_session *session,
  
--	fibptr = &dev->fibs[scmd->request->tag];
-+	fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
- 	/*
- 	 *	Null out fields that depend on being zero at the start of
- 	 *	each I/O
+ 	spin_unlock(&session->back_lock);
+ 
+-	p = &per_cpu(bnx2i_percpu, blk_mq_rq_cpu(sc->request));
++	p = &per_cpu(bnx2i_percpu, blk_mq_rq_cpu(scsi_cmd_to_rq(sc)));
+ 	spin_lock(&p->p_work_lock);
+ 	if (unlikely(!p->iothread)) {
+ 		rc = -EINVAL;
