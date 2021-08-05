@@ -2,95 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74258C4338F
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 10:26:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCC0C4320A
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 12:01:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5737B60724
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 10:26:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C5CB6113B
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 12:01:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240339AbhHEK0Y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 06:26:24 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:3360 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S240337AbhHEK0X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 06:26:23 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 175AC5fQ010038
-        for <linux-scsi@vger.kernel.org>; Thu, 5 Aug 2021 03:26:09 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=zd1VvNFkTogfoqRX7K+rXw2EKNorUCl2OlfHJ2TKlZo=;
- b=T3+As8lqXL5GUwY5VE4pYPYyZupwVZGOmzsueeRSwzn842eBlzoiXcU+jPAHy5T9q9J4
- Up5+raqAPQ49sS4VlhT4PkhEekd67odO/VU/fpZ5zIO0PpEOKNGBjZFhFV1Q/Gc0VpMP
- 7DmadwzhC/5OyoMR9ESWfUchYoG3pxgLDV9p7QnApfQceW6l8TOhn8jjLSh9srF0Byrl
- KIyOZkZINZnJV6aTCyE8k9dm56ive0+yZmhSQ6R/Jh7l4PU4QoOvzeht0ZBDf9IJzMAb
- 1kmNPlGUCrVvrsNMo+eTf/hAb1S5dYulWLnL9vTFJyz+vvGpH78iLbtgbSte2zZ8pBSQ 3w== 
-Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0a-0016f401.pphosted.com with ESMTP id 3a8bkb8e39-2
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 03:26:09 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
- (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 5 Aug
- 2021 03:26:07 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Thu, 5 Aug 2021 03:26:08 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id 007DD3F7061;
-        Thu,  5 Aug 2021 03:26:07 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 175AQ7rX020323;
-        Thu, 5 Aug 2021 03:26:07 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 175AQ7QH020322;
-        Thu, 5 Aug 2021 03:26:07 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 14/14] qla2xxx: Update version to 10.02.06.100-k
-Date:   Thu, 5 Aug 2021 03:20:05 -0700
-Message-ID: <20210805102005.20183-15-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20210805102005.20183-1-njavali@marvell.com>
-References: <20210805102005.20183-1-njavali@marvell.com>
+        id S241199AbhHEMBb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 08:01:31 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39492 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230446AbhHEMBa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Aug 2021 08:01:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3A71D61132;
+        Thu,  5 Aug 2021 12:01:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628164876;
+        bh=16APo6fE3eY2p/uODzQ81+asSQi2UhYxhFw1Qx5gvPA=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=GBn0dlwHiVqhZLu0Fo3yWrc2WkaZ8Qxmkal+0DaBkwi+BvGzswN7HO32obdM883P8
+         GLXYp5zrCYFSooklqA/+FyCoX3FEdOBcszKoImj7aROLY8frbXu3pVDXLBfWyIDif2
+         7JZlUtaEG2Cs6EnBQrEMitiERfXIseQJZZ3Es/tUNvGXwIwE504ASrY3BUGa8BFQKq
+         Yn0f6WglLCJr4+2CLWe8GOkmTcQiNYAJ5IZ1S2rgdE92TbRixoDwaSh1iAiFVe10Uo
+         tXvaCfm8noqmXKtlQN9Az7jhyrZ6iFBXdlKQsstatDnle26sVhwJ2Qmu8JmMHb8E4/
+         AZo5dSnvsRRxg==
+Message-ID: <440e1815a8b6f1605b6bce51af6eceadf8e742f7.camel@kernel.org>
+Subject: Re: [PATCH 07/15] rbd: use bvec_virt
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Geoff Levand <geoff@infradead.org>,
+        Ilya Dryomov <idryomov@gmail.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Song Liu <song@kernel.org>, Mike Snitzer <snitzer@redhat.com>,
+        Coly Li <colyli@suse.de>, Stefan Haberland <sth@linux.ibm.com>,
+        Jan Hoeppner <hoeppner@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        linux-block@vger.kernel.org, dm-devel@redhat.com,
+        linux-um@lists.infradead.org, ceph-devel@vger.kernel.org,
+        virtualization@lists.linux-foundation.org,
+        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Date:   Thu, 05 Aug 2021 08:01:13 -0400
+In-Reply-To: <20210804095634.460779-8-hch@lst.de>
+References: <20210804095634.460779-1-hch@lst.de>
+         <20210804095634.460779-8-hch@lst.de>
+Content-Type: text/plain; charset="ISO-8859-15"
+User-Agent: Evolution 3.40.3 (3.40.3-1.fc34) 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: eKnlOD6N9qcO9dOSfFYpEvUs4Dq-KRmn
-X-Proofpoint-ORIG-GUID: eKnlOD6N9qcO9dOSfFYpEvUs4Dq-KRmn
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
- definitions=2021-08-05_03:2021-08-05,2021-08-05 signatures=0
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_version.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On Wed, 2021-08-04 at 11:56 +0200, Christoph Hellwig wrote:
+> Use bvec_virt instead of open coding it.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/block/rbd.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+> diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+> index 6d596c2c2cd6..e65c9d706f6f 100644
+> --- a/drivers/block/rbd.c
+> +++ b/drivers/block/rbd.c
+> @@ -2986,8 +2986,7 @@ static bool is_zero_bvecs(struct bio_vec *bvecs, u32 bytes)
+>  	};
+>  
+>  	ceph_bvec_iter_advance_step(&it, bytes, ({
+> -		if (memchr_inv(page_address(bv.bv_page) + bv.bv_offset, 0,
+> -			       bv.bv_len))
+> +		if (memchr_inv(bvec_virt(&bv), 0, bv.bv_len))
+>  			return false;
+>  	}));
+>  	return true;
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 2e05dd74b5cb..8b0ace50b52f 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -6,9 +6,9 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.02.00.107-k"
-+#define QLA2XXX_VERSION      "10.02.06.100-k"
- 
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	2
--#define QLA_DRIVER_PATCH_VER	0
--#define QLA_DRIVER_BETA_VER	107
-+#define QLA_DRIVER_PATCH_VER	6
-+#define QLA_DRIVER_BETA_VER	100
--- 
-2.19.0.rc0
+LGTM
+
+Reviewed-by: Jeff Layton <jlayton@kernel.org>
 
