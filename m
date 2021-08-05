@@ -2,114 +2,202 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.4 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49660C00143
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 16:31:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 727F0C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:18:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 359096113B
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 16:31:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 568506113B
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:18:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235464AbhHEQb6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 12:31:58 -0400
-Received: from mail-pj1-f44.google.com ([209.85.216.44]:56138 "EHLO
-        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235024AbhHEQb0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 12:31:26 -0400
-Received: by mail-pj1-f44.google.com with SMTP id ca5so10130954pjb.5;
-        Thu, 05 Aug 2021 09:31:12 -0700 (PDT)
+        id S242445AbhHETSz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 15:18:55 -0400
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:50949 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242602AbhHETSy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 15:18:54 -0400
+Received: by mail-pj1-f54.google.com with SMTP id l19so11376055pjz.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:18:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=hHUTsKDnxap0EiJI1vbHiNIpoH+R0H2TboThtqpCWSc=;
-        b=lhkCxai7p7X3kxlL+3aFu4AkkT/AuEAkn4qjbZ5qp7nA2Ve4sA9kaHiXjwKbegxXxl
-         bdDFiS35OADff4FyLBYrr+MIJOFxvC/z7uIma/WqUWN1gR75oE51jG8z+0DV9FY9iVtA
-         AhaUsltZUkl0UcQPG3YZUVQf2mtUqZ1BQQZOQ7AgxpNXQ2dIFZA+stbDCUHxi0jyB8r1
-         YtF5f/F0OSHgERAttAZpWuSdVMauY8O/qRqs0YXTBkaF6kSCTIebS9eQC6VAu2cNynsK
-         r1vGbFMBECcXVlYtH9t72lBoIqfxq2qqw/4YyJZMQR5E2j5SaGAHtoDExfDtYwSi/Pn/
-         7NIw==
-X-Gm-Message-State: AOAM532NVQvi01jv+RTHcRVQQEM2540eDDCJlxLSDDFCCq3csShDM8I/
-        3CXxi/n2nx1Fkt/eca0RHO8=
-X-Google-Smtp-Source: ABdhPJyCuisk5RzZy6da7AsZoR/DaZLZHn4oZn9ITXuwK2Rjv1pBKXahTV8aXSruiOZbF6hVQSA8vQ==
-X-Received: by 2002:a17:90a:9f91:: with SMTP id o17mr15924247pjp.29.1628181071870;
-        Thu, 05 Aug 2021 09:31:11 -0700 (PDT)
+        bh=hibJHfs5ETE7VDF3VtyKAdZsBoM5+E/EDpKZeRH6Whc=;
+        b=PJTYe+G7KzhX84NyJwbP+diS7iLiAWCyiLK0+Met4BHrVx/YJskB83UpUz1q3g71uI
+         4FIfAlAWyoNg5itVrVQaeky3Kh5CVkQFYCtTBs2q/3JpoNpO9cddYsqx4gpejfXwP32+
+         qDDDr2Q1EjTc4fLViG7I5e7hLNpzfVySvh84/l2/RZgJidu7d2dwhevBUVXXwMca3z5U
+         FQgoMADqqhN+HMTsGwymxfGwfhQxpWU2uERSWbt1PbRZunjPprcF7spFpQnKqR+v8WO7
+         mzokl/ToRAmOjmvfxtnJ3CLMclEXSjoeGyrnl2u5JSf/QCF4GJNpyefyF6dBQz19Va6I
+         AZcA==
+X-Gm-Message-State: AOAM533DCUg8ZaExojh2fSM5aouCC/skSpqhaLVyycSrgsgMGnau4274
+        wP8BDw3lsXtscFFikY3bJDz/5cEqTXtGJq7x
+X-Google-Smtp-Source: ABdhPJyDr7JGfQ9RxiCfOBJfq/Qno8MyORcrMKzKX6l4UyJH1sbA3FK+m5k+Ykb52LBL+plDr86/FA==
+X-Received: by 2002:a62:8407:0:b029:39a:59dc:a237 with SMTP id k7-20020a6284070000b029039a59dca237mr6769104pfd.30.1628191118855;
+        Thu, 05 Aug 2021 12:18:38 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:93c2:eaf5:530d:627d])
-        by smtp.gmail.com with ESMTPSA id r4sm6334361pjo.46.2021.08.05.09.31.09
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 05 Aug 2021 09:31:10 -0700 (PDT)
-Subject: Re: [dm-devel] [PATCH 10/15] sd: use bvec_virt
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     Jan Hoeppner <hoeppner@linux.ibm.com>,
-        Mike Snitzer <snitzer@redhat.com>,
-        linux-nvme@lists.infradead.org,
-        virtualization@lists.linux-foundation.org,
-        Song Liu <song@kernel.org>, dm-devel@redhat.com,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Richard Weinberger <richard@nod.at>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        linux-um@lists.infradead.org, Coly Li <colyli@suse.de>,
-        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
-        Stefan Haberland <sth@linux.ibm.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        ceph-devel@vger.kernel.org, linux-block@vger.kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Geoff Levand <geoff@infradead.org>,
-        Phillip Lougher <phillip@squashfs.org.uk>
-References: <20210804095634.460779-1-hch@lst.de>
- <20210804095634.460779-11-hch@lst.de>
+        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.18.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 05 Aug 2021 12:18:38 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <8b487c0f-71be-19d6-249c-9cd1ba228548@acm.org>
-Date:   Thu, 5 Aug 2021 09:31:08 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v4 00/52] Remove the request pointer from struct scsi_cmnd
+Date:   Thu,  5 Aug 2021 12:17:36 -0700
+Message-Id: <20210805191828.3559897-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.32.0.605.g8dce9f2422-goog
 MIME-Version: 1.0
-In-Reply-To: <20210804095634.460779-11-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/4/21 2:56 AM, Christoph Hellwig wrote:
-> Use bvec_virt instead of open coding it.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/scsi/sd.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b8d55af763f9..5b5b8266e142 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -886,7 +886,7 @@ static blk_status_t sd_setup_unmap_cmnd(struct scsi_cmnd *cmd)
->   	cmd->cmnd[0] = UNMAP;
->   	cmd->cmnd[8] = 24;
->   
-> -	buf = page_address(rq->special_vec.bv_page);
-> +	buf = bvec_virt(&rq->special_vec);
->   	put_unaligned_be16(6 + 16, &buf[0]);
->   	put_unaligned_be16(16, &buf[2]);
->   	put_unaligned_be64(lba, &buf[8]);
+Hi Martin,
 
-The patch description is not correct. The above patch involves a 
-functional change while the patch description suggests that no 
-functionality has been changed.
+This patch series implements the following two changes for all SCSI drivers:
+- Use blk_mq_rq_from_pdu() instead of the request member of struct scsi_cmnd
+  since adding an offset to a pointer is faster than pointer indirection.
+- Remove the request pointer from struct scsi_cmnd.
 
-Although the above patch looks fine to me, why has page_address() been 
-changed into bvec_virt() in the sd driver? My understanding is that the 
-sd driver always sets bv_offset to zero.
+Please consider this patch series for kernel v5.14.
 
 Thanks,
 
 Bart.
 
+Changes compared to v2:
+- Added several more Acked-by tags.
+- Rebased this patch series.
+
+Changes compared to v2:
+- Added a patch for the aha1542 driver since a recent change introduced a
+  scsi_cmnd.request dereference in that driver.
+- In patch 2, renamed a local variable in a macro from 'rq' into '__rq'.  
+- Added several more Acked-by tags.
+
+Changes compared to v1:
+- Renamed blk_req() into scsi_cmd_to_rq().
+- Added several Acked-by tags.
+
+Bart Van Assche (52):
+  core: Introduce the scsi_cmd_to_rq() function
+  core: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  sd: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  sr: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  scsi_transport_fc: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  scsi_transport_spi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  ata: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  RDMA/iser: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  RDMA/srp: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  zfcp: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  53c700: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  NCR5380: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  aacraid: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  advansys: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  aha1542: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  bnx2i: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  csiostor: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  cxlflash: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  dpt_i2o: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  fnic: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  hisi_sas: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  hpsa: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  ibmvfc: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  ibmvscsi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  ips: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  libsas: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  lpfc: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  megaraid: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  mpi3mr: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  mpt3sas: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  mvumi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  myrb: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  myrs: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  ncr53c8xx: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  qedf: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  qedi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  qla1280: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  qla2xxx: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  qla4xxx: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  qlogicpti: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  scsi_debug: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  smartpqi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  snic: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  stex: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  sun3_scsi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  sym53c8xx: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  ufs: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  virtio_scsi: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  xen-scsifront: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  tcm_loop: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  usb-storage: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+  core: Remove the request member from struct scsi_cmnd
+
+ drivers/ata/libata-eh.c                     |  5 +-
+ drivers/ata/libata-scsi.c                   | 10 +--
+ drivers/ata/pata_falcon.c                   |  4 +-
+ drivers/infiniband/ulp/iser/iser_memory.c   |  2 +-
+ drivers/infiniband/ulp/srp/ib_srp.c         |  6 +-
+ drivers/s390/scsi/zfcp_fsf.c                |  2 +-
+ drivers/scsi/53c700.c                       |  2 +-
+ drivers/scsi/NCR5380.c                      |  6 +-
+ drivers/scsi/aacraid/aachba.c               |  2 +-
+ drivers/scsi/aacraid/commsup.c              |  2 +-
+ drivers/scsi/advansys.c                     |  4 +-
+ drivers/scsi/aha1542.c                      |  6 +-
+ drivers/scsi/bnx2i/bnx2i_hwi.c              |  2 +-
+ drivers/scsi/csiostor/csio_scsi.c           |  6 +-
+ drivers/scsi/cxlflash/main.c                |  2 +-
+ drivers/scsi/dpt_i2o.c                      |  4 +-
+ drivers/scsi/fnic/fnic_scsi.c               | 51 ++++++++-------
+ drivers/scsi/hisi_sas/hisi_sas_main.c       |  4 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c      |  2 +-
+ drivers/scsi/hpsa.c                         |  6 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c              |  2 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c            |  2 +-
+ drivers/scsi/ips.c                          |  2 +-
+ drivers/scsi/libsas/sas_ata.c               |  2 +-
+ drivers/scsi/libsas/sas_scsi_host.c         |  2 +-
+ drivers/scsi/lpfc/lpfc_scsi.c               | 71 ++++++++++-----------
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  4 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 10 +--
+ drivers/scsi/mpi3mr/mpi3mr_os.c             |  8 +--
+ drivers/scsi/mpt3sas/mpt3sas_base.c         |  4 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c        |  6 +-
+ drivers/scsi/mvumi.c                        |  2 +-
+ drivers/scsi/myrb.c                         | 11 ++--
+ drivers/scsi/myrs.c                         | 11 ++--
+ drivers/scsi/ncr53c8xx.c                    |  4 +-
+ drivers/scsi/qedf/qedf_io.c                 |  8 +--
+ drivers/scsi/qedi/qedi_fw.c                 |  9 +--
+ drivers/scsi/qla1280.c                      |  5 +-
+ drivers/scsi/qla2xxx/qla_os.c               |  4 +-
+ drivers/scsi/qla4xxx/ql4_iocb.c             |  2 +-
+ drivers/scsi/qla4xxx/ql4_os.c               |  4 +-
+ drivers/scsi/qlogicpti.c                    |  2 +-
+ drivers/scsi/scsi.c                         |  2 +-
+ drivers/scsi/scsi_debug.c                   | 13 ++--
+ drivers/scsi/scsi_error.c                   | 16 ++---
+ drivers/scsi/scsi_lib.c                     | 29 +++++----
+ drivers/scsi/scsi_logging.c                 | 18 +++---
+ drivers/scsi/scsi_transport_fc.c            |  2 +-
+ drivers/scsi/scsi_transport_spi.c           |  2 +-
+ drivers/scsi/sd.c                           | 33 +++++-----
+ drivers/scsi/sd_zbc.c                       | 10 +--
+ drivers/scsi/smartpqi/smartpqi_init.c       |  4 +-
+ drivers/scsi/snic/snic_scsi.c               | 10 +--
+ drivers/scsi/sr.c                           | 13 ++--
+ drivers/scsi/stex.c                         |  6 +-
+ drivers/scsi/sun3_scsi.c                    |  2 +-
+ drivers/scsi/sym53c8xx_2/sym_glue.c         |  4 +-
+ drivers/scsi/ufs/ufshcd.c                   | 11 ++--
+ drivers/scsi/ufs/ufshpb.c                   | 19 +++---
+ drivers/scsi/virtio_scsi.c                  |  4 +-
+ drivers/scsi/xen-scsifront.c                |  2 +-
+ drivers/target/loopback/tcm_loop.c          |  4 +-
+ drivers/usb/storage/transport.c             |  2 +-
+ include/scsi/scsi_cmnd.h                    | 17 +++--
+ include/scsi/scsi_device.h                  | 16 +++--
+ 65 files changed, 269 insertions(+), 273 deletions(-)
 
