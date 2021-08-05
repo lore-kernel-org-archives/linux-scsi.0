@@ -7,48 +7,53 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D157C4338F
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E23CBC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E3036112F
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C57936113B
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242897AbhHETTo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 15:19:44 -0400
-Received: from mail-pj1-f53.google.com ([209.85.216.53]:51137 "EHLO
-        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242929AbhHETTj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 15:19:39 -0400
-Received: by mail-pj1-f53.google.com with SMTP id l19so11381284pjz.0
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:19:24 -0700 (PDT)
+        id S242696AbhHETTs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 15:19:48 -0400
+Received: from mail-pj1-f51.google.com ([209.85.216.51]:40851 "EHLO
+        mail-pj1-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233095AbhHETTq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 15:19:46 -0400
+Received: by mail-pj1-f51.google.com with SMTP id t7-20020a17090a5d87b029017807007f23so14097644pji.5
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:19:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=KAGONwU2Ix3aXwytjxc1FfNzoxkRboKLNCgioIOWq0o=;
-        b=fvHkCOyoMArhOXMnf8y1GlYUFsh0gq4Tqzo+7M+eqcq4iqQ/1jU9RLCg/A46eK3NWZ
-         qKB1mIjg0hTFix8w8wHtMRURQumBIosnJP898tQFqMIh7C41QeCepft8e3jvvQFm5yqG
-         tqR0LUR9l5ATS0fDiFSxRSVVVVTbSrcZYrv5NWKDrmveeakGF+x9O0V82z0cxQ3LJMP4
-         F4gb9uuSCU6UOEXVSS5h6Q6McflLVt4KKtiibvA7KSLwDbdx0ulX6pDsAovWV0blrkoh
-         tfLAIX2nISIWX7+qKmfZ9vyTloxBPtSx0EUxY7OEMd4pdz5l4sI/wjzIWMW+AUwwbxx2
-         l6HA==
-X-Gm-Message-State: AOAM530VDN7B8ZV8nvUNg2JdZZUee0aQVM9+80hGomezmtAjiuS+TaFt
-        n5RknLtT8On1kY6Ctr3UwO8=
-X-Google-Smtp-Source: ABdhPJxOIBClH4bz/+UUrvubrUG8EHrh0jdGOhTzf0np6vjS0OHtS0d9vkKPKS9Mxcwufjh0c8PllA==
-X-Received: by 2002:a17:90b:1018:: with SMTP id gm24mr6370281pjb.86.1628191163861;
-        Thu, 05 Aug 2021 12:19:23 -0700 (PDT)
+        bh=kyOahvkq1h3DOY3qITSDD5gFbmTjhnTK0RoyJ9/ojBg=;
+        b=hM8chBI1olUOhoENsLJdfarP6B5RAhva+rQG/wDGhb0iYUi5+beWSCFacwBOFpVJDw
+         6N6Pb06Q6OmGAql+ud3WQ5/DrlpdYqgNLFnh9lVhFWrBf3KeALsmeea/t3xDcDA4QozD
+         yicMxvc5BQMYtrgNp+ZdiTZKNtyXIwPWstnlcUDuGUEGPWqz7Buqmfqs39UO1XnYbI5M
+         4YKUUEwseWBBoh0G94IUloRuYBhHGest181ScqlSN1pIHKxWNUbFzgarS2c+55sW8j8e
+         MgbPQvhUPoZwqlB0Vso9D4ZuumrQ5VzTv96RB/nzLom1+g6RQl38qstMCs+fUpiwMdf0
+         P2IA==
+X-Gm-Message-State: AOAM533LyN94n9fbajNd5slxtrPPJRr3URhQxWauxYZjRgJPHmtfG+DY
+        H7H60H7ngk0fxgAFejRu61M=
+X-Google-Smtp-Source: ABdhPJxn/4Q4kVPWfYAABN7zs9XauNi6TobgZJ0pzNFK/+8vdMmCbLSaBNjtglDiFWxZ8CL+WmHlNA==
+X-Received: by 2002:a17:902:ab88:b029:12b:d2ee:c26f with SMTP id f8-20020a170902ab88b029012bd2eec26fmr5628938plr.38.1628191171712;
+        Thu, 05 Aug 2021 12:19:31 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:93c2:eaf5:530d:627d])
-        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.19.22
+        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.19.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Aug 2021 12:19:22 -0700 (PDT)
+        Thu, 05 Aug 2021 12:19:31 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 25/52] ips: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Thu,  5 Aug 2021 12:18:01 -0700
-Message-Id: <20210805191828.3559897-26-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        John Garry <john.garry@huawei.com>,
+        Jason Yan <yanaijie@huawei.com>,
+        Luo Jiaxing <luojiaxing@huawei.com>,
+        Liu Shixin <liushixin2@huawei.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Jolly Shah <jollys@google.com>, Yufen Yu <yuyufen@huawei.com>
+Subject: [PATCH v4 26/52] libsas: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Thu,  5 Aug 2021 12:18:02 -0700
+Message-Id: <20210805191828.3559897-27-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0.605.g8dce9f2422-goog
 In-Reply-To: <20210805191828.3559897-1-bvanassche@acm.org>
 References: <20210805191828.3559897-1-bvanassche@acm.org>
@@ -63,19 +68,33 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ips.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libsas/sas_ata.c       | 2 +-
+ drivers/scsi/libsas/sas_scsi_host.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 8b33c9871484..cdd94fb2aab7 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -3735,7 +3735,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 		scb->cmd.dcdb.segment_4G = 0;
- 		scb->cmd.dcdb.enhanced_sg = 0;
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 1e0df6b17227..a315715b3622 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -596,7 +596,7 @@ void sas_ata_task_abort(struct sas_task *task)
  
--		TimeOut = scb->scsi_cmd->request->timeout;
-+		TimeOut = scsi_cmd_to_rq(scb->scsi_cmd)->timeout;
+ 	/* Bounce SCSI-initiated commands to the SCSI EH */
+ 	if (qc->scsicmd) {
+-		blk_abort_request(qc->scsicmd->request);
++		blk_abort_request(scsi_cmd_to_rq(qc->scsicmd));
+ 		return;
+ 	}
  
- 		if (ha->subsys->param[4] & 0x00100000) {	/* If NEW Tape DCDB is Supported */
- 			if (!scb->sg_len) {
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 5db10248f187..08ffb8788290 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -908,7 +908,7 @@ void sas_task_abort(struct sas_task *task)
+ 	if (dev_is_sata(task->dev))
+ 		sas_ata_task_abort(task);
+ 	else
+-		blk_abort_request(sc->request);
++		blk_abort_request(scsi_cmd_to_rq(sc));
+ }
+ 
+ int sas_slave_alloc(struct scsi_device *sdev)
