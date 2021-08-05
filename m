@@ -7,50 +7,48 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7FAAC4338F
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF7EDC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A01F46112F
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B21AB6112F
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 19:19:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242899AbhHETTd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 15:19:33 -0400
-Received: from mail-pj1-f45.google.com ([209.85.216.45]:44803 "EHLO
-        mail-pj1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242687AbhHETT1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 15:19:27 -0400
-Received: by mail-pj1-f45.google.com with SMTP id e2-20020a17090a4a02b029016f3020d867so11971856pjh.3
-        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:19:12 -0700 (PDT)
+        id S242910AbhHETTg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 15:19:36 -0400
+Received: from mail-pj1-f49.google.com ([209.85.216.49]:51092 "EHLO
+        mail-pj1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242926AbhHETTc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 15:19:32 -0400
+Received: by mail-pj1-f49.google.com with SMTP id l19so11380175pjz.0
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Aug 2021 12:19:14 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Xh8XA54Imxo9ILc5L+S6WvBmWu7PpD2lkFGz180jRy0=;
-        b=sAeNlJwTK0OXDftXzQ83lcLKIAreoa4TIM9GEa32JPoa8sWkjNuFeMbl+JFfsmHtVs
-         7ZtGAiU89fDo/bIl7kt71I4C3R5DCTN02RT9AedcESzfjHlawMob9yb5CJqdfcQdZIqZ
-         9VN8C1D/zgqhDbheCuo/pqzjU16G8kzb1Edn4TyLU6F7Ycpcqg8drMOZPcOMQ33dcBKg
-         ylpAhFaS6/u0k2bnXqoMUmjWDZF2edGRHAZCPk3gKqwqcBDDG4i/wYl7qRvRw9uaxcFW
-         sX6UuPd1YFNTT/Tr748fA6FNZa7JCQHrUkh7IUrH4jesr/hG2A0URyjqDxl0RA9rh2IH
-         xJlg==
-X-Gm-Message-State: AOAM530Hou9vmoHQtYpE8KuN93MtJTU0nui2gXgcxlj+vix8M03pbsc3
-        K2gox08Bp1+tOgXm96tc6us=
-X-Google-Smtp-Source: ABdhPJxzSK3rnlPh70KtkMV2iWAtEpyK1d4aWYe3ogvY2DW/ZxWWrvE0XKEgzxJa9wfm7qehHcMzrQ==
-X-Received: by 2002:a17:902:8642:b029:12c:dda2:30c3 with SMTP id y2-20020a1709028642b029012cdda230c3mr5154530plt.84.1628191152422;
-        Thu, 05 Aug 2021 12:19:12 -0700 (PDT)
+        bh=FLBqhpYN0grV+1zqOeqSk0d9e0RE5O4DnT9sKxruf4I=;
+        b=Fm/O5KDlLPtYPtF/A89i1dNp2a/PIKrOutSCENVhlMCBRI7ktkPPKniPKvhkMJy31X
+         HoL4d97pmtEFWlLYS7sXCnbnwE2yNCzt4dGOt9Ej/Y6/Ljp7np72oqdNTlwZgFnRkFxb
+         JJspBl7Wa2oR6ZRjXoyx2rlh4S4s5aX/kFZAPJlV+A09LxQfDi20zhSEq0luRt5/m4in
+         VTmU6VK48QTVtN3GMivpKNh2c1W+KJLErREu73Grqo3NcQVc78GlqEBAyS4cym2wIeZy
+         mqCi9ywZ9iGPQdSC6y0/g4etiiIXNX7UVRtwxmfDJM4261dapWH/PYIojNiBuqnIReei
+         tXtw==
+X-Gm-Message-State: AOAM530N2uB6KdqYBUXh+gyu+CUhhUk+vFxzGMSYKs2aq05WaGWBYlv8
+        6fXit5NwFQI49ArS8gmeBIM=
+X-Google-Smtp-Source: ABdhPJwPl0YG7YPTzY+7FFPECHd9Kf6fc+kV4OAc1LSX+Q6HDQvAsHFhyBP0R9EzByqIWd/AByY1aA==
+X-Received: by 2002:a63:ce54:: with SMTP id r20mr1403320pgi.164.1628191154000;
+        Thu, 05 Aug 2021 12:19:14 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:93c2:eaf5:530d:627d])
-        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.19.09
+        by smtp.gmail.com with ESMTPSA id t1sm8859429pgr.65.2021.08.05.12.19.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 05 Aug 2021 12:19:10 -0700 (PDT)
+        Thu, 05 Aug 2021 12:19:13 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "Manoj N. Kumar" <manoj@linux.ibm.com>,
-        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 18/52] cxlflash: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Thu,  5 Aug 2021 12:17:54 -0700
-Message-Id: <20210805191828.3559897-19-bvanassche@acm.org>
+Subject: [PATCH v4 19/52] dpt_i2o: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Thu,  5 Aug 2021 12:17:55 -0700
+Message-Id: <20210805191828.3559897-20-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0.605.g8dce9f2422-goog
 In-Reply-To: <20210805191828.3559897-1-bvanassche@acm.org>
 References: <20210805191828.3559897-1-bvanassche@acm.org>
@@ -65,19 +63,28 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/cxlflash/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/dpt_i2o.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 222593bc2afe..2f1894588e0b 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -433,7 +433,7 @@ static u32 cmd_to_target_hwq(struct Scsi_Host *host, struct scsi_cmnd *scp,
- 		hwq = afu->hwq_rr_count++ % afu->num_hwqs;
- 		break;
- 	case HWQ_MODE_TAG:
--		tag = blk_mq_unique_tag(scp->request);
-+		tag = blk_mq_unique_tag(scsi_cmd_to_rq(scp));
- 		hwq = blk_mq_unique_tag_to_hwq(tag);
- 		break;
- 	case HWQ_MODE_CPU:
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index a18a4a08f049..7af96d14c9bc 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -652,7 +652,7 @@ static int adpt_abort(struct scsi_cmnd * cmd)
+ 	msg[2] = 0;
+ 	msg[3]= 0;
+ 	/* Add 1 to avoid firmware treating it as invalid command */
+-	msg[4] = cmd->request->tag + 1;
++	msg[4] = scsi_cmd_to_rq(cmd)->tag + 1;
+ 	if (pHba->host)
+ 		spin_lock_irq(pHba->host->host_lock);
+ 	rcode = adpt_i2o_post_wait(pHba, msg, sizeof(msg), FOREVER);
+@@ -2236,7 +2236,7 @@ static s32 adpt_scsi_to_i2o(adpt_hba* pHba, struct scsi_cmnd* cmd, struct adpt_d
+ 	msg[1] = ((0xff<<24)|(HOST_TID<<12)|d->tid);
+ 	msg[2] = 0;
+ 	/* Add 1 to avoid firmware treating it as invalid command */
+-	msg[3] = cmd->request->tag + 1;
++	msg[3] = scsi_cmd_to_rq(cmd)->tag + 1;
+ 	// Our cards use the transaction context as the tag for queueing
+ 	// Adaptec/DPT Private stuff 
+ 	msg[4] = I2O_CMD_SCSI_EXEC|(DPT_ORGANIZATION_ID<<16);
