@@ -7,58 +7,58 @@ X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA87C4338F
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 06:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D4B9C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 06:35:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BF6D60525
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 06:34:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0563A61050
+	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 06:35:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232167AbhHEGej (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 02:34:39 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:9592 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231377AbhHEGej (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 02:34:39 -0400
+        id S236711AbhHEGgC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 02:36:02 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:18384 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230183AbhHEGgB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 02:36:01 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1628145263; x=1659681263;
+  t=1628145347; x=1659681347;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=fSedysrwhwPWELbxjmVEWOYfBS0WItRlPoQ6eabqP50=;
-  b=o19HsTFzVTCRKS+Mt5HqrD7APBZP3jbzx578EP8BGkWzCL84TP98htHX
-   0yTev6C3CcHfNvqbuesGZCuGEMULN78Id7Nm89yANCPsmbsaAB2HLjb8P
-   G+tWvMgWA14ODxFAk3yH83HZ4Vx4Mnt/iPgPmu1pXmf3LQXLUieFHoThu
-   7/G7zUWSHdRnOkJ4jDSheTnWn6BuexL/M0TXaQyDcqfcA8Byx0oJLiFbL
-   SKx6/SFnst1o2E/agIGUerHVwM7crD1sA4ZXjPIvT/wobFcIni7ssMjaF
-   eVoupmQqfJ7nMeyvwD8wuDmoMptRO6MFASuJ5veNjoWhZRD065gZR2oYi
-   w==;
+  bh=1mC1jv4AnmuLHSweHyjPT9qCK5jwKZdPgFGLWXnfw4Q=;
+  b=jGT27xdQZjinuEPbHYy2aFEoD2MUwMx0QVEGjwt6aaheInkbJH2bm05A
+   zQHX/yGt9DoOLt+hF/wWPSQi6eFTIAlpd2qhlPrhQYZ+vYi363Iiw1i1D
+   SORGAxZzL+lOtXEdiurqKbLU26K8a0/l1rfEawl+AjL4c/ydO9NDbg4pF
+   gO8udAHP5pQ3mO8lfxSvrCiSRI1eosov7ltjLkDXCWRCaKrqgTsIDiqxj
+   FNeSVG6nQMzorz6IIqD/ZT/PV9JcAmGje/Jmbz6nIM11xwk4huLrInBMH
+   xsKVVzgQ0aKQiP/n+Ip/zCZ2WRwcppCvby3MKwfjwlo34IG9PnRCIujnq
+   Q==;
 X-IronPort-AV: E=Sophos;i="5.84,296,1620662400"; 
-   d="scan'208";a="181189442"
-Received: from mail-dm6nam12lp2173.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.173])
-  by ob1.hgst.iphmx.com with ESMTP; 05 Aug 2021 14:34:22 +0800
+   d="scan'208";a="280215639"
+Received: from mail-dm6nam12lp2174.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.174])
+  by ob1.hgst.iphmx.com with ESMTP; 05 Aug 2021 14:35:46 +0800
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GpFDXVPfXanVxkRFG/903ALdIydl8KkNeME/AP86JK3NhqXwhdSCcUMr3/qyLJ9qFv81IyqtpTbQi8jK8cPuDkyEHkKQ8uYlyZZ/XD7OLerNxqQ5Pk7b+GcU7DobGbu1ARVwWWxMVJOddzD6Hujd4LIaQw+3dLwX7f65hM4HnIDY9Cd0YZ1r0urOYpHgjMYD0yZCr2LD8H6fCFpYe3JeUMsK7ulpnDBO6RW3vkA0NQrJELVfjY2I7o9e01WaPJcsWA4/oQDMcXh2qqO02WB3xFNmxISasWjK32KpuKpiT2nqRK/X5AhabvYl+0I/KPc7a52hIs/ULdejHsp2ZSKqjg==
+ b=OorktE2eepOXT5GWq2qR0vaB40SQ69wKIVWYeqlRqaV+PhLoWFe3+cwfxVWRbVNsbmGbwt+QdrihHnHWAhlc3JRU/yLCyvIeFWYAEOtpbXH3bVtRn5HTlLnDLDjgSTl1lqJcViTZbegsxIcNWREX+I9iRaDwLPXHldODIz9QXaP837NWqAMNz+Uk52mNH2jPedGRCgNIh8/WR1JRSizRTRHGkzsWF33uxgR/RHzMGyBhQFYonZKLUVEcGFOXkp+KNpxB46XMp1mdOc8ci6VtCB0zX2UTUoc7uOrBqB2YaarfW711DU+OsgWAb0/h2pZz7QmU7jTxApItWfALosCYAA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RB9bndwj57g2Oqx/j/4y36TWCDesxWZRbPgBkARv+xg=;
- b=WCLR6I72LhHf2FJEMbNtQYhHet8LHSKBLTK6oh+LKN64uX6pMNrhbj4siwM5Pm6mAVpAWPPsT58hu76J4fjWgo2jO1MN9cDg5kXqKWq5FaIY/njpxDGVnWq+Q60aFXjtpe5pLYEaYHhWaGrGn5dKS+rTsD/rIhUr+y7YYk+kMPGHThP36GDwpdnU+Q555uJATu08DYHZGI4qe8OG6RdU9gkADPR+NTit0v2xg2G/Qavg/X+H9PB5PJxSD5MD0VoTwCuku3koLS8ExxGgmsbk44R1yC1p92gcVOYQip6ptvruPwOZ/A1yg34pQ8WoqDLOhKmSA/CF7zSerob10rvopw==
+ bh=XAMYT9uYkzdYowMlnHbiYm+P5kNC0WYp0Yk7404EveE=;
+ b=DFYjPg8ovPI96aVFJdF7Z9CCOMrqPeCQ2AjYQWG15TbVxxBDMUcvis/jQFaM4fchAU0eyxjcE/4gQL4RbU89SDyBtZ9nF8moKjC3Px0hekqkEFQQ0R4jUQXVTO1eyf4EtnauXyhblfueWFKquQVTrPDQeQixDCG8zTv++ucaaW8sdkPI5V68T/HlSJCRJLYKNe5WzqjGXxwvQGA1U97NNAleGpyDWhA7G+GZuH3bR/dLZGf1ze7UAns6TNo0J/AvwkCI+xClUtaLbpylr5+hnLZ0Lj3dCyr0aJZ/oF99eZ4Jim8OUNd3FS0lKej9MSKlEDVWvrZ+1IG7+LzWXFAocg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
  header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=RB9bndwj57g2Oqx/j/4y36TWCDesxWZRbPgBkARv+xg=;
- b=SeVHyP3NBufoXkXce+oePrSBnZgMao6pyqCJ+7rCDzOa/2Cp3MtyN2ZA86LYWzL+2b3lLhhQUgu3w7fVoHV+0V6qa1MPixECUESEdUED6yHgg8KK51NzpCTWIZbb2bRshrBfGWNNGAm9MlVw61fWCI1sj4Yrog489QJMx5SThBg=
+ bh=XAMYT9uYkzdYowMlnHbiYm+P5kNC0WYp0Yk7404EveE=;
+ b=h0p/9VJ21x0tYAxKQse5Hde4vmoCSgMb9dLHD9T9YGJ2PXYvh3au8rhz0Z/CejER7THtXXwo8/X5gOP8IUCiigoNFT81jVFK6TiCpGvI48pi6vrMvFLyfV9Ax1eF9JkiQm6IpRA5w7aHh4SPqbFnpKdJ9050uzNHOkc2OOlXx+M=
 Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
  DM5PR04MB1132.namprd04.prod.outlook.com (2603:10b6:3:a4::7) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4373.26; Thu, 5 Aug 2021 06:34:22 +0000
+ 15.20.4373.26; Thu, 5 Aug 2021 06:35:44 +0000
 Received: from DM6PR04MB6575.namprd04.prod.outlook.com
  ([fe80::ccfd:eb59:ccfe:66e4]) by DM6PR04MB6575.namprd04.prod.outlook.com
  ([fe80::ccfd:eb59:ccfe:66e4%7]) with mapi id 15.20.4373.026; Thu, 5 Aug 2021
- 06:34:22 +0000
+ 06:35:44 +0000
 From:   Avri Altman <Avri.Altman@wdc.com>
 To:     Bean Huo <huobean@gmail.com>,
         "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
@@ -72,16 +72,14 @@ To:     Bean Huo <huobean@gmail.com>,
         "daejun7.park@samsung.com" <daejun7.park@samsung.com>
 CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v1 1/2] scsi: ufs: Add L2P entry swap quirk for Micron UFS
- in HPB READ command
-Thread-Topic: [PATCH v1 1/2] scsi: ufs: Add L2P entry swap quirk for Micron
- UFS in HPB READ command
-Thread-Index: AQHXiV2V2+N3YA8RXkihQlAMhvC5z6tkdIGQ
-Date:   Thu, 5 Aug 2021 06:34:22 +0000
-Message-ID: <DM6PR04MB6575F7580C428373EAAA33B4FCF29@DM6PR04MB6575.namprd04.prod.outlook.com>
+Subject: RE: [PATCH v1 2/2] scsi: ufs: Add lu_enable sysfs node
+Thread-Topic: [PATCH v1 2/2] scsi: ufs: Add lu_enable sysfs node
+Thread-Index: AQHXiV2VphT64o2uAUWAn60TCQgVQatkdSMw
+Date:   Thu, 5 Aug 2021 06:35:44 +0000
+Message-ID: <DM6PR04MB657589C9EE72DD8B4F62C6BDFCF29@DM6PR04MB6575.namprd04.prod.outlook.com>
 References: <20210804182128.458356-1-huobean@gmail.com>
- <20210804182128.458356-2-huobean@gmail.com>
-In-Reply-To: <20210804182128.458356-2-huobean@gmail.com>
+ <20210804182128.458356-3-huobean@gmail.com>
+In-Reply-To: <20210804182128.458356-3-huobean@gmail.com>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
@@ -89,40 +87,40 @@ X-MS-TNEF-Correlator:
 authentication-results: gmail.com; dkim=none (message not signed)
  header.d=none;gmail.com; dmarc=none action=none header.from=wdc.com;
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 5d07693a-e302-4c81-3fc3-08d957db0fd3
+x-ms-office365-filtering-correlation-id: 6f8d0e8d-875a-4b71-8517-08d957db4090
 x-ms-traffictypediagnostic: DM5PR04MB1132:
-x-microsoft-antispam-prvs: <DM5PR04MB11329DC189884FE14EC3C3CFFCF29@DM5PR04MB1132.namprd04.prod.outlook.com>
+x-microsoft-antispam-prvs: <DM5PR04MB1132C22105F9493A4DC103A2FCF29@DM5PR04MB1132.namprd04.prod.outlook.com>
 wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7691;
+x-ms-oob-tlc-oobclassifiers: OLM:341;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: J+aBEsuIUvdU5gJxilYWzVc8qGc9jvveuY/h48x8lWuy8QCAdgBWx+QZEYVFoECUG7hp8qDqiuCFdmBJQhOHM9plKC7eK+vEowt2VSHLxp7bxNiOvGzgnIltFWGjL7w5HIAwzQnVHNNUlLUyCWuEwKDa+nV6AKI9r9scb11If6A47aOnI6w2SLlXSM58m4G/UzzaSXLqPRqW321lxCAQvw7SxuAcML/exQakp5xRcrdaS9IEMpBYo6oEvKoYI6LQHl9GApZfMx/7J6r3zci1vHeceT2qlsaJisVr1oQgQvH84OPcYu3tCV9gcx6KVaHYxnp/R0BzWrPX4rfZWnl+W/QkwrtHNufaTQn9m7c/ScTF13PiBqOy00S44pg9xY5Udm8itzdKbaMaewAC739BCtOzfdSxBU2dqJVg476rOWeb5g+Q2mlDSWSKj4UWXRyAS0+z0ydo2Ff9LV8TFapvUrfzxOUqFbsAu52d5MU+hePX8xes4upDr6nYllmW/5R9rZwqO9APsOwPGNO+HHQVExlqOBGQcFxk/OwmwRzUxNlingrvfchruO3UFWstm8ULMv+E6Hq3UAUPjJWz2fmLzFaCFIMmsqKIhDpzIDFMy31MykGkw00MM3MJtZnJndcuyDpNYw22cXUHccgtKqcrPtF2Amwd46mM2mKGIMJHaXzbIfrDhfd17E8RXB3D6jM6WTzvBpmfhBwm1tpoQ49vmAdsga92wrLMJxkLiLC1lho=
+x-microsoft-antispam-message-info: oG7FxCTDETTQCu//vmc6tlQDnitkdzlsTA1ULCu463balA+n+eNJlIh7c1v1KxECXjEftpR5sepc728pzZbMVlbHJVSCzjAS862FMdafPmR1dqG67IbXddlEGwwXFRzRlCL8ogDuqVBT+Zjzj4jgrQ1DAyQXVLGuODWL3kkCeoWD1/DFi588W9u/hmYtUpfi4etPVbUvxbxr6HE43qO8AD+ZaonCmCB5FXmQzVZnRnt+rrSGb2HWO4skxYDm00SHnUwPdgUQPCQXfpLDcE/x046bdcY090U0rNikmN1i9lpRpDF3yKcI5JyJhIKZiUVCm2c0Hf+YidLmOaeCVsLIg5XBi9mV5SZeQ8WiXFtSyQyaI80oQr9DEAbS2dwzfYWLsL4Tt0Sx+PUwhVtK40E42Pn3HS/iOYq4NVWP53E0jYUmNvS4UVuU3Fh48Bp5PEwVOxp8l77QbBiVbt/CRNORhRlzAvCPu8iOcVApTT40tUAt+Ajk1irlhlynDKmO+4AZ9T+MJXWIf9AP1x1qCa3jiH93oActwy0mJUfkpeIhEGKTd31xCeNxYNYcBlcnIgRAyFpDV5xl+dFRF5reWp/exD4QrTe3CXNan6YQt5rj1D1lqB8q1OkzL+s7w/B3GaDhQeZOJODwhs4N1XxayFnOkRfwR8A+54ERsaNtsfyagrJHtKVKrl/Q8Iuq5s/K27L2+UlXU6T0Fxcw+bXAzwTEN2hBT7OrcPnHj8Jq1o2tPTg=
 x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(39860400002)(346002)(136003)(366004)(376002)(52536014)(122000001)(76116006)(66476007)(186003)(478600001)(66556008)(71200400001)(9686003)(66946007)(64756008)(66446008)(316002)(54906003)(921005)(38100700002)(110136005)(2906002)(7416002)(38070700005)(55016002)(7696005)(5660300002)(33656002)(86362001)(8676002)(83380400001)(4326008)(26005)(6506007)(8936002);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?zk5Qz1DEWoOhbOdDLKWym1EgiQ003HotQJg99zY7HWFbvKGSSx9soH6TTUEz?=
- =?us-ascii?Q?jPogp020pSriKmMY6w1lf0L+WCU1SqNHXWSJbklufgwD5d1WyOi2D1umDk8v?=
- =?us-ascii?Q?L2aWlGdI2GdSemnQ8R/5Nfm0wdK+aU3cz1v7qdrGuyTBzmpOJBuwSBclsFEy?=
- =?us-ascii?Q?ThpWC79P5Wvg7mRm8I6/1Op5HnqOxCCQkzAW7HRolq49XsSIGwCEZm+8/sSy?=
- =?us-ascii?Q?EitL4vnJtRA7WSOou4QpP2KAPXPIQTXIvEKCI7ij4EaodAwBO1U1LuEfJCLa?=
- =?us-ascii?Q?b2IohQuS8GIxla6DVJdzV8HiaGjPfgkyraN/cJHnKHQ2SU+TI5fwg9a13Ytd?=
- =?us-ascii?Q?3nNqWL7dGYMANFMGeqEjQgoOLqj31iGHJYw7/xveGHMWaVPSpv3D2vKB2K7N?=
- =?us-ascii?Q?s04Jl6kRnVXSEGwnPb+GrSHjpMRTD3iQYYxA8SO0zjHZCVg5ri9aT1UlLXpt?=
- =?us-ascii?Q?2Gg5bPghV6q/zeWlHXrZbApUZoUYQd7xb53XhzkbeCpLEBKfCsNSAlWmvXa4?=
- =?us-ascii?Q?7Kok6vKs/IDXcb8s0DSNoOhYpwXO0u4NDIki0J7NTADb0+pyFFfhtF/kJjge?=
- =?us-ascii?Q?NLZSF4rrp3mPYsn6M/jUc1OdHwjgyP44IPanWhNclVUgFb6Cs4eh3Ky+K/7N?=
- =?us-ascii?Q?hJwON/ucE4ZEKNcIZ2UkJF/nvVqSUM3NjJ6CxcPjSpTmf7mhCJ5OGsMLhfFI?=
- =?us-ascii?Q?viyFHDuQsz7i2VnJYBZ9vjO8L290CkM1RvITQ3nzo3duOql+jwu2ZjgrN8ip?=
- =?us-ascii?Q?jFZoM/ujhe0sbeIgs0iDbwjwZP5Klj8Gmy1l8XgnINsYLUyvKPl0rpKUQ8Iu?=
- =?us-ascii?Q?IFS1VKwvGfGFaJLCmIQs4qUazhDaxZksujZcXg53wdQkM3r7Tx1XwgFqthIt?=
- =?us-ascii?Q?4OoMTBme71URNXloBC2ZkvlWekLQ20BuWxLWNDhbiFkYQt1uf+VmIgKuJAsG?=
- =?us-ascii?Q?Kw6FO/GRl2XUlDcJh+AiMVh5mMFQSSYlvMP8MENHJK/CjxskN6d4oq4wB6z0?=
- =?us-ascii?Q?gf124df4KkWTBl+lHRSk/uGv7WVvqhs2RRCcaetwaeiT3ULEZ0zv5pmFW2LR?=
- =?us-ascii?Q?La1IzyxkIOX9hwjX84azsCCr7mAoGYIKWrbi4mPdg9EyLM7ir4bu7CGkP++3?=
- =?us-ascii?Q?Z0L5O1CJ/6V3+H+9CedAG0ey9zbgNgiD91h27FgQAoZ/ceVOnEglxxrUwKnU?=
- =?us-ascii?Q?jcGa0gGjJL2UERAs+yN4VB+hXivHMAnw0SIRaLuL4IwqP5KtmJHtd864Sbr3?=
- =?us-ascii?Q?tdgCuJvJv+pcLC5c9CIzDTs4G6B2QZ8TbLvJx7NIZxBSL7/96PrI53InBBBl?=
- =?us-ascii?Q?rCnf6jd5IoVyVwRh6j1GksRR?=
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?/lZiKPaxGiGInLqrf4Q7+T07V7bVOXjcgehIGRlU6cdqo8XyB4tBdYBC3w6K?=
+ =?us-ascii?Q?Drtkmo31RVKgF2yLFen0I9vbNqleFOjFNv41uShM9/aEhGohu55bSRRzoiuz?=
+ =?us-ascii?Q?HOu08XAvm4s582Hm7cvvhk7u3XQRoIIpwFj6HtqAaGrY4MiE/AnQ3+mskjaB?=
+ =?us-ascii?Q?8zIV4hGker7U8yxqj0+2TgtEGfSJ0yyelV5aX/YMHWexs2lSMZkDaLQ6hd9n?=
+ =?us-ascii?Q?vHg88f1FOFgxktwFi4IDPdKqalNPp3B6jHSEsoPp1fGhrKQVymojW1Nx5tOB?=
+ =?us-ascii?Q?y4x76NE0mOVQosf/y4i1RaIGNfB7fYTryGBEnKL2vl/cWRCJYnpwtsChuW32?=
+ =?us-ascii?Q?ApGIplVFF5gZo681U0EYY205Qf2CgUanZHuUAUrULV0KdV4ZaKpNw4m/0moF?=
+ =?us-ascii?Q?wA24O9XtHV56SB1hxGih2OMgXkSmG7yT4Tt9dz3bLoBytcGzrKo7Mce9ucTm?=
+ =?us-ascii?Q?6fvYY3m2ZcBtvisZ2z/Nwsum00p3skNijjrEwBkPtszB82fu/t9CV6z4i5ur?=
+ =?us-ascii?Q?9k3v94ZbRzjZgIZCAVN02GqZOb5WagpIRcEPRldtD+nk+g0M04lfvIqvG3O3?=
+ =?us-ascii?Q?EGW4rbeLz9gdZ9ioP01n3lzqj8fFwAJ+K1hQ6bBgEkTgZ9aRyDao9u9jqTnt?=
+ =?us-ascii?Q?cw8AetmEGLRpMitAcUwe/a67A0jMIidIpLfDvhLjcn4N0neJplKOTJvafs/z?=
+ =?us-ascii?Q?SaLkuACqk+xdHcUDVPeqEtdPqGGAq1tSdMqOe7XohY4lN3goxGPH5Sw7sx7k?=
+ =?us-ascii?Q?1GWJACckkxyAO9cKnte/KupwtFVFkTcLB2uKWYUN3LUChlA3mHUKOEmM7FAA?=
+ =?us-ascii?Q?p/1ZDcKc/U5FBA7aqwT2I4B1HdgdulFqVZ4eoJ/3DB5TQHIoVekKMwtOJl5N?=
+ =?us-ascii?Q?tK6o9hqsr23hSTqd0H9YTZOjP1tBCrG6O5xBgPsgegTtbkRAhetp+g32i8f2?=
+ =?us-ascii?Q?v7oBh6C8DO/VcMiFNGP3+/r36g1WDcstfuPDnm1pf4IS1Y8jxTy/menaxpHr?=
+ =?us-ascii?Q?Pu8MmAsC94R1A7Qmfp5x3C6fTg09BTXQibTqyBu7tWeBfny4fxy9PyoHSGYs?=
+ =?us-ascii?Q?UVt/yegHKuVpjW8qvQr7OshsAEk6V0OVusPvyZkcPdCxptzFSTmgDRWc7IMo?=
+ =?us-ascii?Q?Poz6UERaC5bH7dMU+3RKVpWT7f0YUk2RapYmJOzP8wHa7LFHy1wus5OPO1LZ?=
+ =?us-ascii?Q?xNfUVtKSep0XNXadMq8VhHIi0Y4fTd1u4kBSGT1/Yy7Yt8RrvtnUrzvfgAD4?=
+ =?us-ascii?Q?qRj6+eMzEyxPqd2vYHuWvYU3TpUR8PE99UtyeW6tcMwT6nb8UKk4Km/Na5sk?=
+ =?us-ascii?Q?oUnApiTGT85njj54+Vld3BWX?=
 x-ms-exchange-transport-forked: True
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
@@ -130,13 +128,13 @@ MIME-Version: 1.0
 X-OriginatorOrg: wdc.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5d07693a-e302-4c81-3fc3-08d957db0fd3
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Aug 2021 06:34:22.3995
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6f8d0e8d-875a-4b71-8517-08d957db4090
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Aug 2021 06:35:44.1397
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: InZr69G+l2V7GBrib6B49XsKSK8BMKNNFi2xofNjw0MTIPAUU33tq3UvLAf+vm33uMMXChCXzRUZwwEi0HdOkw==
+X-MS-Exchange-CrossTenant-userprincipalname: Obg8L/KQXh/SphglscC7kd9p28rPzWEXjflBku5uovYpJw0Qdg8bqc/jU+HrAgi4QJfLZDc4tHwxp0Vrmc8C+Q==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB1132
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
@@ -144,103 +142,42 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 > From: Bean Huo <beanhuo@micron.com>
 >=20
-> For the Micron UFS, L2P entry need to be swapped in HPB READ command
-> before sending HPB READ command to the UFS device. Add this quirk
-> UFS_DEVICE_QUIRK_SWAP_L2P_ENTRY_FOR_HPB_READ to fix this
-> inconsistency.
+> We need to check HPB being enabled on which LU from the userspace tool,
+> so, add lu_enable sysfs node.
 >=20
-> Fixes: 2fff76f87542 ("scsi: ufs: ufshpb: Prepare HPB read for cached sub-
-> region")
-Not really needed - the patch is fine.
-
 > Signed-off-by: Bean Huo <beanhuo@micron.com>
 Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Tested-by: Avri Altman <avri.altman@wdc.com>
 
 > ---
->  drivers/scsi/ufs/ufs_quirks.h |  6 ++++++
->  drivers/scsi/ufs/ufshcd.c     |  3 ++-
->  drivers/scsi/ufs/ufshpb.c     | 15 ++++++++++-----
->  3 files changed, 18 insertions(+), 6 deletions(-)
+>  drivers/scsi/ufs/ufs-sysfs.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
 >=20
-> diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.=
-h
-> index 07f559ac5883..35ec9ea79869 100644
-> --- a/drivers/scsi/ufs/ufs_quirks.h
-> +++ b/drivers/scsi/ufs/ufs_quirks.h
-> @@ -116,4 +116,10 @@ struct ufs_dev_fix {
->   */
->  #define UFS_DEVICE_QUIRK_DELAY_AFTER_LPM        (1 << 11)
+> diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+> index 08fe037069bc..5c405ff7b6ea 100644
+> --- a/drivers/scsi/ufs/ufs-sysfs.c
+> +++ b/drivers/scsi/ufs/ufs-sysfs.c
+> @@ -1163,6 +1163,7 @@ static DEVICE_ATTR_RO(_pname)
+>  #define UFS_UNIT_DESC_PARAM(_name, _uname, _size)                      \
+>         UFS_LUN_DESC_PARAM(_name, _uname, UNIT, _size)
 >=20
-> +/*
-> + * Some UFS devices require L2P entry should be swapped before being sen=
-t to
-> the
-> + * UFS device for HPB READ command.
-> + */
-> +#define UFS_DEVICE_QUIRK_SWAP_L2P_ENTRY_FOR_HPB_READ (1 << 12)
-> +
->  #endif /* UFS_QUIRKS_H_ */
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 47a5085f16a9..c3a14d3b0030 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -199,7 +199,8 @@ ufs_get_desired_pm_lvl_for_dev_link_state(enum
-> ufs_dev_pwr_mode dev_state,
->  static struct ufs_dev_fix ufs_fixups[] =3D {
->         /* UFS cards deviations table */
->         UFS_FIX(UFS_VENDOR_MICRON, UFS_ANY_MODEL,
-> -               UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM),
-> +               UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
-> +               UFS_DEVICE_QUIRK_SWAP_L2P_ENTRY_FOR_HPB_READ),
->         UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
->                 UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
->                 UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE |
-> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-> index 54e8e019bdbe..d0eb14be47a3 100644
-> --- a/drivers/scsi/ufs/ufshpb.c
-> +++ b/drivers/scsi/ufs/ufshpb.c
-> @@ -323,15 +323,19 @@ ufshpb_get_pos_from_lpn(struct ufshpb_lu *hpb,
-> unsigned long lpn, int *rgn_idx,
->  }
+> +UFS_UNIT_DESC_PARAM(lu_enable, _LU_ENABLE, 1);
+>  UFS_UNIT_DESC_PARAM(boot_lun_id, _BOOT_LUN_ID, 1);
+>  UFS_UNIT_DESC_PARAM(lun_write_protect, _LU_WR_PROTECT, 1);
+>  UFS_UNIT_DESC_PARAM(lun_queue_depth, _LU_Q_DEPTH, 1);
+> @@ -1181,8 +1182,8 @@
+> UFS_UNIT_DESC_PARAM(hpb_pinned_region_start_offset,
+> _HPB_PIN_RGN_START_OFF, 2);
+>  UFS_UNIT_DESC_PARAM(hpb_number_pinned_regions,
+> _HPB_NUM_PIN_RGNS, 2);
+>  UFS_UNIT_DESC_PARAM(wb_buf_alloc_units, _WB_BUF_ALLOC_UNITS, 4);
 >=20
->  static void
-> -ufshpb_set_hpb_read_to_upiu(struct ufshpb_lu *hpb, struct ufshcd_lrb *lr=
-bp,
-> -                           u32 lpn, __be64 ppn, u8 transfer_len, int rea=
-d_id)
-> +ufshpb_set_hpb_read_to_upiu(struct ufs_hba *hba, struct ufshpb_lu *hpb,
-> +                           struct ufshcd_lrb *lrbp, u32 lpn, __be64 ppn,
-> +                           u8 transfer_len, int read_id)
->  {
->         unsigned char *cdb =3D lrbp->cmd->cmnd;
 > -
-> +       __be64 ppn_tmp =3D ppn;
->         cdb[0] =3D UFSHPB_READ;
->=20
-> +       if (hba->dev_quirks &
-> UFS_DEVICE_QUIRK_SWAP_L2P_ENTRY_FOR_HPB_READ)
-> +               ppn_tmp =3D swab64(ppn);
-> +
->         /* ppn value is stored as big-endian in the host memory */
-> -       memcpy(&cdb[6], &ppn, sizeof(__be64));
-> +       memcpy(&cdb[6], &ppn_tmp, sizeof(__be64));
->         cdb[14] =3D transfer_len;
->         cdb[15] =3D read_id;
->=20
-> @@ -689,7 +693,8 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lr=
-b
-> *lrbp)
->                 }
->         }
->=20
-> -       ufshpb_set_hpb_read_to_upiu(hpb, lrbp, lpn, ppn, transfer_len, re=
-ad_id);
-> +       ufshpb_set_hpb_read_to_upiu(hba, hpb, lrbp, lpn, ppn, transfer_le=
-n,
-> +                                   read_id);
->=20
->         hpb->stats.hit_cnt++;
->         return 0;
+>  static struct attribute *ufs_sysfs_unit_descriptor[] =3D {
+> +       &dev_attr_lu_enable.attr,
+>         &dev_attr_boot_lun_id.attr,
+>         &dev_attr_lun_write_protect.attr,
+>         &dev_attr_lun_queue_depth.attr,
 > --
 > 2.25.1
 
