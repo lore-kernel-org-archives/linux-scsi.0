@@ -2,117 +2,67 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.9 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	FSL_HELO_FAKE,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C412CC43214
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 18:46:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C4F3C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 19:33:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A824560EC0
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 18:46:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6256261165
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 19:33:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243377AbhHFSqf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Aug 2021 14:46:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60014 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231889AbhHFSqf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 14:46:35 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00C1AC0613CF;
-        Fri,  6 Aug 2021 11:46:18 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id t7-20020a17090a5d87b029017807007f23so20864357pji.5;
-        Fri, 06 Aug 2021 11:46:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=lq+ZJabFR/aEqAVLWWQwRS+Bk30mmVgINsLo2QOd63g=;
-        b=oPU85Ks4t/BD97TfUEBxq2w8KeO5d4b1Nvchn+Yv7kB9wyq/mf6St5MBYsxebm3xyK
-         2TryVrMzKvdFR8lsNpJJvPTGVD4xpl+ayOSVdJa9rxZqEG8whTlQ9VyP8dlNEQrJJob9
-         L1GJYfPOIitMNMopL09Z+xctxoFgA0e1jTOj55Hexm/8/2DIwLeTuQql2G/TkU9C3erd
-         aqjtHdqEda9mrydWw7Nl7tQlscqzQhgaTkh3FsV8iPW0Y607/KxDgxiwjF79JrWcFsfS
-         nD/+RPX0BYNASPKwyYxj4WgS75i+bpNHRnG/mqXLAaY3TvvGXIOmp2cf1T5bSsVeRVnR
-         2OKQ==
+        id S230031AbhHFTdQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Aug 2021 15:33:16 -0400
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:36402 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229748AbhHFTdP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 15:33:15 -0400
+Received: by mail-pj1-f44.google.com with SMTP id u13-20020a17090abb0db0290177e1d9b3f7so24255250pjr.1
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Aug 2021 12:32:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=lq+ZJabFR/aEqAVLWWQwRS+Bk30mmVgINsLo2QOd63g=;
-        b=DucPVjjs0ZsvWYowKi+0i2xiOpQfbZ6htuepHQYDtVV/xB/HOyWy+ZEUwaJBaj0E7T
-         kqI8tS6Q/8ExE6mn69Knt+K0ZVfSFAjwkpHwH3RCwazvCphLC6UIVLj+Mb0gxQfjJMc7
-         PmVoomIqHbYgxr/nGguyYDSLiflnRYfNcAbWrOdEZ7yUia+cTZyrKDKV7EB4UI9EabHj
-         EUmf89xO0vXQB3iHCUXddkfov+Ym17e/RvZ9yiKdA4x7Z6jqPldTi+qhfyL7s4VbR1up
-         J7yhgnB3TSS1Wm+k6fA5IWB6rZ0Aj0oA+K8hpr9UOPW9avLdg7XdL/BzYCAmh7/t4D/E
-         RwbA==
-X-Gm-Message-State: AOAM530kZahHgGV18PkCCoCHNrird3Zmbke3lYJzSsa6g40sQ1CheERm
-        D2mu3sep3fbmrkoIGFsOfyI=
-X-Google-Smtp-Source: ABdhPJzzMFSdpyMOk7GztnyuZ8fgTAmGVjar/iMG55IOe92tbJufWKgnV6AdQl2ufQFq5C/G1yNdUw==
-X-Received: by 2002:a62:8f86:0:b029:32e:33d7:998b with SMTP id n128-20020a628f860000b029032e33d7998bmr12215091pfd.64.1628275577437;
-        Fri, 06 Aug 2021 11:46:17 -0700 (PDT)
-Received: from google.com ([2620:15c:202:201:8873:2b2a:719c:18c7])
-        by smtp.gmail.com with ESMTPSA id jz24sm10017062pjb.9.2021.08.06.11.46.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Aug 2021 11:46:16 -0700 (PDT)
-Date:   Fri, 6 Aug 2021 11:46:13 -0700
-From:   Dmitry Torokhov <dmitry.torokhov@gmail.com>
-To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-Cc:     "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        Helge Deller <deller@gmx.de>, Corey Minyard <minyard@acm.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        Jaroslav Kysela <perex@perex.cz>,
-        Takashi Iwai <tiwai@suse.com>, linux-parisc@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        linux-input@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
-        alsa-devel@alsa-project.org, kernel@pengutronix.de
-Subject: Re: [PATCH] parisc: Make struct parisc_driver::remove() return void
-Message-ID: <YQ2DdZG2tQuzM22U@google.com>
-References: <20210806093938.1950990-1-u.kleine-koenig@pengutronix.de>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=nWpDQmZNg8zKVk12QskQ7NNS05C4fI/JmZBKLdKyu8Q=;
+        b=SMFpXbTbzf2/l//Kx6Te2PIFDzhB8slWmIuGsyu4OtPESLZnwzJTmQUfJY75N6/Q9H
+         lbLvMl3VF5yagJvhlQ8zo+yujV3vkEk3xh6PdOOuZvTawps1ntMEh5Z6OE76vjdpEfRf
+         dwEJnP+euFtFJW1RTPNQFdSYPQR5o1CtuYtPmEJjB8eBsnZ2xRx2NhPuW9IjyyTlQ1vw
+         kxBDtjC4/YKj0g/U2nMxGfvc91G+HdH0GW4z+4azKMuJdW5/3CnZGPS3f+5H2Ct5pVB/
+         nyTsI4UyODBev/kYgqXUuk4DV4ftZeviNojArhPrg2XztIVCnpXWkYZi4xmGOkWbjRES
+         MurA==
+X-Gm-Message-State: AOAM5337f99veXdagtFQOMUkWVJDPNXXeYEIHWHXuxrH7K9lNvReEvnP
+        MvONtaT1f+9EHvjVHZqqkgc=
+X-Google-Smtp-Source: ABdhPJxJyA23OkDYsw1XXgrzdf4Me3qUHgaqCObhNaKYmhE3prt9uLBEMCIcpfqFNg1hTuwzhb5TnA==
+X-Received: by 2002:aa7:9828:0:b029:3bd:dc3d:de5f with SMTP id q8-20020aa798280000b02903bddc3dde5fmr12190848pfl.47.1628278377851;
+        Fri, 06 Aug 2021 12:32:57 -0700 (PDT)
+Received: from ?IPv6:2601:647:4802:9070:4a77:cdda:c1bf:a6b7? ([2601:647:4802:9070:4a77:cdda:c1bf:a6b7])
+        by smtp.gmail.com with ESMTPSA id b204sm11732552pfb.81.2021.08.06.12.32.55
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 06 Aug 2021 12:32:57 -0700 (PDT)
+Subject: Re: [PATCH v4 08/52] RDMA/iser: Use scsi_cmd_to_rq() instead of
+ scsi_cmnd.request
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Max Gurtovoy <mgurtovoy@nvidia.com>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+References: <20210805191828.3559897-1-bvanassche@acm.org>
+ <20210805191828.3559897-9-bvanassche@acm.org>
+From:   Sagi Grimberg <sagi@grimberg.me>
+Message-ID: <823ffdea-df7b-af67-25e9-7a7c7878cc1d@grimberg.me>
+Date:   Fri, 6 Aug 2021 12:32:52 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.11.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210806093938.1950990-1-u.kleine-koenig@pengutronix.de>
+In-Reply-To: <20210805191828.3559897-9-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 06, 2021 at 11:39:38AM +0200, Uwe Kleine-König wrote:
-> The caller of this function (parisc_driver_remove() in
-> arch/parisc/kernel/drivers.c) ignores the return value, so better don't
-> return any value at all to not wake wrong expectations in driver authors.
-> 
-> The only function that could return a non-zero value before was
-> ipmi_parisc_remove() which returns the return value of
-> ipmi_si_remove_by_dev(). Make this function return void, too, as for all
-> other callers the value is ignored, too.
-> 
-> Also fold in a small checkpatch fix for:
-> 
-> WARNING: Unnecessary space before function pointer arguments
-> +	void (*remove) (struct parisc_device *dev);
-> 
-> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
-> ---
-
-...
-
->  drivers/input/keyboard/hilkbd.c          | 4 +---
->  drivers/input/serio/gscps2.c             | 3 +--
-
-Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-
-Thanks.
-
--- 
-Dmitry
+Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
