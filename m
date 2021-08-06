@@ -2,165 +2,368 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A535C4320A
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 17:13:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BC93C4320E
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 17:49:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B3F2611CE
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 17:13:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 302A0610E7
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 17:49:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240485AbhHFRN5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Aug 2021 13:13:57 -0400
-Received: from mail-mw2nam12on2120.outbound.protection.outlook.com ([40.107.244.120]:25761
-        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S240060AbhHFRN4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 6 Aug 2021 13:13:56 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=HIpICOrnPxU+R5Yz+rmiQwELvRYxxgQWbqxiZBWIOADwXzRwGLI9Mvv14Hu4YcZiE9Xah/BddHXn3b9gXfBo61ROx4QY/amtCkksANESu16sXh8BLstR58QS3njKaGVpFazIrbnApb145S6bT8mYql2hyM9yeOf0wFJ3/HX6QovDKo61gE1KqSYijtyir/Rr71+zFk3xiBKJ8N+bO98exTWe9oCL6T4YmS55/zjyeefTjoVOnaTYwQo95QZe45CeXetovzMvW7JDMOBiCagevDmpp8zA8vrRF3AZgE7EVwfpG0Kt5SdxU7Na4LMF7cns8p4qt0ALO/7L3ti6UEi6Og==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iMg/Ex1knzITTGLOlsQMCcuBLJO9tqAq8WapbMwJLcA=;
- b=IX8VpcW9AB1L//Sjqhe5kK8TV3GTGCUIEYyv+WZ6TBtxaJmHC/iBbjOXSC9XL6SXUqnV2butXzYVJLtVoIHPujdLuvu+CNn/wpA186kxqMsdPh59MLHIq1NtfDH2EvkLXeew6DyQ8D9NFnMJNlvaloLDT49f6+a70pdAmp/bwTaRwxU9bKxhpJRw9J3JopOLEdIyjNAe84iWF0arChARb3B2WUMForO137KkO9PVMMy24AW86ezKhKqlkJLsU9JdThe9trdYc7s/I21n9LMpzbzj9eu/uCnV7Z0FVvugh6ceFLTjMlOnFgWS2VJwe6AnzY4hO7Bx04mv2PKApzUcNg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iMg/Ex1knzITTGLOlsQMCcuBLJO9tqAq8WapbMwJLcA=;
- b=Vj6vt9yOeaAx2P0OWb31Q/Jh0MdjY9tH+fVqERSN5o+LDMIm0Kfdmc2MmepiYHUE0okxD6wJJmJSnPVlMOVKpSk4hHFevoN9S9xVMiu6cwQg9r9eSp6b/InfKbufTQ+1dEUk96XwykETuwQuf0jmq+OkURhpYpFANsyUO0iIsSw=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-Received: from DM6PR21MB1514.namprd21.prod.outlook.com (2603:10b6:5:22d::11)
- by DM6PR21MB1273.namprd21.prod.outlook.com (2603:10b6:5:16c::27) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.0; Fri, 6 Aug
- 2021 17:13:28 +0000
-Received: from DM6PR21MB1514.namprd21.prod.outlook.com
- ([fe80::b170:236f:1f2:5670]) by DM6PR21MB1514.namprd21.prod.outlook.com
- ([fe80::b170:236f:1f2:5670%9]) with mapi id 15.20.4415.009; Fri, 6 Aug 2021
- 17:13:27 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     kys@microsoft.com, martin.petersen@oracle.com,
-        longli@microsoft.com, wei.liu@kernel.org, jejb@linux.ibm.com,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     mikelley@microsoft.com
-Subject: [PATCH 1/1] scsi: storvsc: Log TEST_UNIT_READY errors as warnings
-Date:   Fri,  6 Aug 2021 10:12:50 -0700
-Message-Id: <1628269970-87876-1-git-send-email-mikelley@microsoft.com>
-X-Mailer: git-send-email 1.8.3.1
-Content-Type: text/plain
-X-ClientProxiedBy: MW4PR03CA0207.namprd03.prod.outlook.com
- (2603:10b6:303:b8::32) To DM6PR21MB1514.namprd21.prod.outlook.com
- (2603:10b6:5:22d::11)
+        id S241918AbhHFRts (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Aug 2021 13:49:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47346 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241751AbhHFRtr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 13:49:47 -0400
+Received: from mail-oi1-x236.google.com (mail-oi1-x236.google.com [IPv6:2607:f8b0:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BC008C0613CF;
+        Fri,  6 Aug 2021 10:49:31 -0700 (PDT)
+Received: by mail-oi1-x236.google.com with SMTP id n16so13161937oij.2;
+        Fri, 06 Aug 2021 10:49:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=sender:date:from:to:cc:subject:message-id:reply-to:references
+         :mime-version:content-disposition:content-transfer-encoding
+         :in-reply-to;
+        bh=eFtBGQc5loUVM+0/DNWgWpoePp5ZhuL8S0GVMtXHMIc=;
+        b=c/RKj6Q6AXQOwH/BglolT9Gmve+5CQUqa8jQMlDcp1qHJ67Cv9Nh0yWfh1WMTK7s+s
+         El4bLCesvV256KalKV2jGAhIFxT5s2Fy6rnLVjPuPRlOg8kdfRlsmDvtX/gjz2ADHGLT
+         xXe3EkgSt34r+KjQfyPXGZfzgMY1H4gd1FMAyYuj6dRd+FY9k+xbpiVSIb3g7zFJdRZn
+         eR8w6+cM1F1+efrM8CHtKpw6hpavUc9Y3ZNe04pkRbjyuV0VlEpeCsqj2eYG0bUrysbJ
+         /q5t1V3AsSbHouhe1+Al+gSRRj+OsgW6aRqGbav5ClWK1hYkhRl4dSYW843+DHY4aguo
+         an7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :reply-to:references:mime-version:content-disposition
+         :content-transfer-encoding:in-reply-to;
+        bh=eFtBGQc5loUVM+0/DNWgWpoePp5ZhuL8S0GVMtXHMIc=;
+        b=WL+eMF+DRmWA7WYaEahsiF3Rr135VLQXUKHRMDEtj3NyCOCS97bJbP/kpzPukYl3VP
+         zjt5XRh19cCJU3Pk2ZJhMUOg1Ni9D0axoe8WBwTVZOB/26jQGaiv/QEAW51nm0LZnul8
+         qHzIDQhYaef6/WojNemFZzT05wfsaC3NrKJ6Z2lTs6GGeV0mknulYsMIj3fY6WfRyt8U
+         EmbGUY+oLd8QmuYjLBBl/dDlSUXsl+qaiZcMaNNHeHBLxQqBkXcPmHjdPlmiyxRLoe5o
+         obQb+Hv1KKDSJq2J7UoNUHZJKVsB85y0tZslZwhb9oTqujlmelYHbN4ZNw6k5TgeqBKj
+         7KCQ==
+X-Gm-Message-State: AOAM53008DsxtDwZjSrdn+Bgsr/M79iA3A9TrQyJ3V4V4ssNh1mJw0Ai
+        Gyrnt77XGzSZmTHb6Y8/2w==
+X-Google-Smtp-Source: ABdhPJzQwMQJhnpf5WGGeW7ehSTg1CfNc6NoFP+r5AvHbvQzcUqHwQr3HxYMO0h1BtcAAu6t6GW5vQ==
+X-Received: by 2002:aca:39c6:: with SMTP id g189mr10161760oia.47.1628272170976;
+        Fri, 06 Aug 2021 10:49:30 -0700 (PDT)
+Received: from serve.minyard.net (serve.minyard.net. [2001:470:b8f6:1b::1])
+        by smtp.gmail.com with ESMTPSA id c26sm1660710otu.38.2021.08.06.10.49.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 06 Aug 2021 10:49:30 -0700 (PDT)
+Sender: Corey Minyard <tcminyard@gmail.com>
+Received: from minyard.net (unknown [IPv6:2001:470:b8f6:1b:54cf:2a6b:50cd:9862])
+        by serve.minyard.net (Postfix) with ESMTPSA id DB6091800D4;
+        Fri,  6 Aug 2021 17:49:28 +0000 (UTC)
+Date:   Fri, 6 Aug 2021 12:49:27 -0500
+From:   Corey Minyard <minyard@acm.org>
+To:     Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+Cc:     "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, linux-parisc@vger.kernel.org,
+        openipmi-developer@lists.sourceforge.net,
+        linux-input@vger.kernel.org, netdev@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org,
+        alsa-devel@alsa-project.org, kernel@pengutronix.de
+Subject: Re: [PATCH] parisc: Make struct parisc_driver::remove() return void
+Message-ID: <20210806174927.GJ3406@minyard.net>
+Reply-To: minyard@acm.org
+References: <20210806093938.1950990-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from mhkdev.corp.microsoft.com (131.107.159.16) by MW4PR03CA0207.namprd03.prod.outlook.com (2603:10b6:303:b8::32) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.15 via Frontend Transport; Fri, 6 Aug 2021 17:13:27 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 7b1407a4-6d10-4a7f-b46c-08d958fd81c0
-X-MS-TrafficTypeDiagnostic: DM6PR21MB1273:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM6PR21MB1273A961557B5E37BCC9526ED7F39@DM6PR21MB1273.namprd21.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 0s/24IxxNRm50mYwt9B4Tfg07S/qS/hV0ybb809upfU+TnOOGeK7JSO8u/uW+r9H9XyBiMoV6GUH2YhTXW0GtbKs1QuIxWnbnIfShTN4SCy31Onjs91OEyXfkC38Jlk8cgTNVG/eg74UDHYfeBjDNFyBHKIVth9w2mycqGc0yZhudiDoZ5uQW0l3Hm0o6V8kQuYuwL4VENwkRsaS7quRBMmjkMH/oMujz33UkIO/AtsGZlQhO5+4VW38OZHnuumnbJpBwBIWdFA+92Snm+tsDOy7zstNG161OV2Tb5eu8q8Uy3hhrHZuaDcvONTeHK6Byy84sQI5XoH8+W5UqTB3tQqOhpCZHqeBzVONFoHiZGTfvf0tOTZ2ANSnqA6xHMMlJ4/JG0LebhsrotMpmeT4bgvJmSKe/aD28ZCrlD30GEtyi4pxdDYrsY7Gfjk5tzPdrCTclObTfA0Yw3/R6w6N1svnSVttFUqDkzWMyPaDMjGgXfhb89Y9JRQsKBliyLXAY+RTMXpIdkfOG+zmx4KvEngsZyRbrRY1UofwffyLCrqWcg6ZD+f/RqIUtg8YBCkRdR5rIMBoD3Ca0NK1pXXNaJNIPQ4x1lO4caBm5Ohboopm5YvaTv8T+O0rc7YYJpjmK5cden8bHPaysqiWm48Y4ctAVFY9W/4F585cbsT8A1Xog7WIu+08LZiXK1Tush/JWO2evarI8J9f3AM4kyl3Sg==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR21MB1514.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(38350700002)(10290500003)(107886003)(508600001)(6666004)(36756003)(38100700002)(8936002)(2906002)(8676002)(4326008)(5660300002)(316002)(6486002)(52116002)(82950400001)(7696005)(956004)(66556008)(66946007)(66476007)(2616005)(83380400001)(186003)(82960400001)(86362001)(26005);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?hMznagI/wECcailEZUZENYiMOURE09F+j838oaPX9Pyc8JIo11FZNA/5KIkd?=
- =?us-ascii?Q?+bWEYyv2zuAa7QHZfYQgxGUW9JtvWNIz+TlFXuANNQqVElaa+ocXrUYnzOmt?=
- =?us-ascii?Q?w4ba42k+FoEdK7hFvES1jwtLPNCpFUlx8V6z/GMyVXqR8Bf9lBBb0rckW6ve?=
- =?us-ascii?Q?heRTE9pm0+4pmGM/YZPPe4UwsRAYZI6tO/YyIONaeBfk0yD3O4vJiG4oQSLs?=
- =?us-ascii?Q?oatcp/8SF6Hfh1ILaaWoYL0V9fTM9irxT7SCUUjnhoEcFPnT8rOCmmcpKomM?=
- =?us-ascii?Q?74JZsuAct8rE8PB9+gEW8h73pxjbNgo+QGS4r3/UYhA1XIf/HL7UZOdczWFi?=
- =?us-ascii?Q?NceIAjsABUtPHtj42lqRqi2u864oowfcK2ZIRXgTfpM6s8i4fxPMWHDvsqf7?=
- =?us-ascii?Q?9HuQia+arVbVk0W4QiGmwip5P+m2rFTEiSCqFF+NkDM02IPsrFmOZNR/ggnZ?=
- =?us-ascii?Q?AlI3Qn9as67NKK4MrMnhrb7MKvibfi8SxtS5zNfd0WyZjIIinzb4Z93Qqeox?=
- =?us-ascii?Q?dD7Q34XAd44GIfJLtrGNn1g39jXpGmPaIgQ0gUitsYpYiB8oAgsTpgnwOfNM?=
- =?us-ascii?Q?yTMTNMzEgjlTx12xFEVVvYuXAkMqwzahOSh59b7ClaLt9LIi9pbE6ryD5BCF?=
- =?us-ascii?Q?JuNMg7rTYPzxCEJpPmlubcphPV3rRspiAwmuSw2gKFotoeiI6LqqcBeqDHcq?=
- =?us-ascii?Q?3K2Ws2cy5pxfGS/cKvUPe6TZA3RMvUtX9Y9WRWW7bBeOFVAXXK4tQgiZxRfY?=
- =?us-ascii?Q?/yG173oLgfk11S2rFCRhHHf8q7t6uaNa+OB99IdExySUg4PcaOqOTOxVtvzp?=
- =?us-ascii?Q?VG4plXCC6PUxbzzS7vN0NuNSvDKm/OUNUlv+Dr+X6GeI1FhtPgCJmzR9sEB1?=
- =?us-ascii?Q?vbtnn7aTrSg9Mu4ij74rNxvbI+wvZLv0fqOey2l05a1nbYpbLFMWiS2K4KJL?=
- =?us-ascii?Q?A9VgiBflMGOUZpthoAFpeilgcfkiElZbTvIYkn1gAOcwvgNPn4L1Np0xdLPR?=
- =?us-ascii?Q?6pbK6rgFFGwCBK1EypBmt4wntOEy3TFuxl+07/CD76IeY2crZ+406xtpg4+q?=
- =?us-ascii?Q?WYm7aXkvOhdlIOBDSbvXV4vU6Cvd0SJ4i9Y9WeniATGMop59zZ1CwPPxWDzn?=
- =?us-ascii?Q?xhH29P9u5gwVQdT7Ll3ZoR5ciCIMKhh+J6KYgveG4SJok1baJMSx7c37AkaU?=
- =?us-ascii?Q?Gjt8FTLM7SEX3+igRJzsJuLceez1RqiIj5rnC1TJypkkV+NKtNnWeHOEIMPT?=
- =?us-ascii?Q?8yzY7HZ52rCiQT6E7vifZ16Ct7V3iG7K9Ai7Ts0fA0Rz+2gK8RbCTT12db5T?=
- =?us-ascii?Q?SQ4NSLw/hfivkkfgksge6DkQ?=
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7b1407a4-6d10-4a7f-b46c-08d958fd81c0
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR21MB1514.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Aug 2021 17:13:27.7611
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: nz1xTaqyY/jMXfWJq7KD4yiPZcGL1smXHQ6zSqXLkk0MEsouGtRjl1f5lYo1FufdOSSPwxEPUnRgRpZ6rPvn0A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR21MB1273
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210806093938.1950990-1-u.kleine-koenig@pengutronix.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 08f76547f08d ("scsi: storvsc: Update error logging")
-added more robust logging of errors, particularly those reported
-as Hyper-V errors. But this change produces extra logging noise
-in that TEST_UNIT_READY may report errors during the normal
-course of detecting device adds and removes.
+On Fri, Aug 06, 2021 at 11:39:38AM +0200, Uwe Kleine-König wrote:
+> The caller of this function (parisc_driver_remove() in
+> arch/parisc/kernel/drivers.c) ignores the return value, so better don't
+> return any value at all to not wake wrong expectations in driver authors.
+> 
+> The only function that could return a non-zero value before was
+> ipmi_parisc_remove() which returns the return value of
+> ipmi_si_remove_by_dev(). Make this function return void, too, as for all
+> other callers the value is ignored, too.
+> 
+> Also fold in a small checkpatch fix for:
+> 
+> WARNING: Unnecessary space before function pointer arguments
+> +	void (*remove) (struct parisc_device *dev);
+> 
+> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+> ---
+>  arch/parisc/include/asm/parisc-device.h  | 4 ++--
+>  drivers/char/ipmi/ipmi_si_intf.c         | 6 +-----
+>  drivers/char/ipmi/ipmi_si_parisc.c       | 4 ++--
+>  drivers/char/ipmi/ipmi_si_platform.c     | 4 +++-
+>  drivers/input/keyboard/hilkbd.c          | 4 +---
+>  drivers/input/serio/gscps2.c             | 3 +--
+>  drivers/net/ethernet/i825xx/lasi_82596.c | 3 +--
+>  drivers/parport/parport_gsc.c            | 3 +--
+>  drivers/scsi/lasi700.c                   | 4 +---
+>  drivers/scsi/zalon.c                     | 4 +---
+>  drivers/tty/serial/mux.c                 | 3 +--
+>  sound/parisc/harmony.c                   | 3 +--
+>  12 files changed, 16 insertions(+), 29 deletions(-)
+> 
+> diff --git a/arch/parisc/include/asm/parisc-device.h b/arch/parisc/include/asm/parisc-device.h
+> index d02d144c6012..4de3b391d812 100644
+> --- a/arch/parisc/include/asm/parisc-device.h
+> +++ b/arch/parisc/include/asm/parisc-device.h
+> @@ -34,8 +34,8 @@ struct parisc_driver {
+>  	struct parisc_driver *next;
+>  	char *name; 
+>  	const struct parisc_device_id *id_table;
+> -	int (*probe) (struct parisc_device *dev); /* New device discovered */
+> -	int (*remove) (struct parisc_device *dev);
+> +	int (*probe)(struct parisc_device *dev); /* New device discovered */
+> +	void (*remove)(struct parisc_device *dev);
+>  	struct device_driver drv;
+>  };
+>  
+> diff --git a/drivers/char/ipmi/ipmi_si_intf.c b/drivers/char/ipmi/ipmi_si_intf.c
+> index 62929a3e397e..bb466981dc1b 100644
+> --- a/drivers/char/ipmi/ipmi_si_intf.c
+> +++ b/drivers/char/ipmi/ipmi_si_intf.c
+> @@ -2228,22 +2228,18 @@ static void cleanup_one_si(struct smi_info *smi_info)
+>  	kfree(smi_info);
+>  }
+>  
+> -int ipmi_si_remove_by_dev(struct device *dev)
+> +void ipmi_si_remove_by_dev(struct device *dev)
 
-Fix this by logging TEST_UNIT_READY errors as warnings, so that
-log lines are produced only if the storvsc log level is changed
-to WARN level on the kernel boot line.
+This function is also used by ipmi_si_platform.c, so you can't change
+this.
 
-Fixes: 08f76547f08d ("scsi: storvsc: Update error logging")
-Signed-off-by: Michael Kelley <mikelley@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+-corey
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 328bb96..37506b3 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1199,14 +1199,24 @@ static void storvsc_on_io_completion(struct storvsc_device *stor_device,
- 		vstor_packet->vm_srb.sense_info_length);
- 
- 	if (vstor_packet->vm_srb.scsi_status != 0 ||
--	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS)
--		storvsc_log(device, STORVSC_LOGGING_ERROR,
-+	    vstor_packet->vm_srb.srb_status != SRB_STATUS_SUCCESS) {
-+
-+		/*
-+		 * Log TEST_UNIT_READY errors only as warnings. Hyper-V can
-+		 * return errors when detecting devices using TEST_UNIT_READY,
-+		 * and logging these as errors produces unhelpful noise.
-+		 */
-+		int loglevel = (stor_pkt->vm_srb.cdb[0] == TEST_UNIT_READY) ?
-+			STORVSC_LOGGING_WARN : STORVSC_LOGGING_ERROR;
-+
-+		storvsc_log(device, loglevel,
- 			"tag#%d cmd 0x%x status: scsi 0x%x srb 0x%x hv 0x%x\n",
- 			request->cmd->request->tag,
- 			stor_pkt->vm_srb.cdb[0],
- 			vstor_packet->vm_srb.scsi_status,
- 			vstor_packet->vm_srb.srb_status,
- 			vstor_packet->status);
-+	}
- 
- 	if (vstor_packet->vm_srb.scsi_status == SAM_STAT_CHECK_CONDITION &&
- 	    (vstor_packet->vm_srb.srb_status & SRB_STATUS_AUTOSENSE_VALID))
--- 
-1.8.3.1
-
+>  {
+>  	struct smi_info *e;
+> -	int rv = -ENOENT;
+>  
+>  	mutex_lock(&smi_infos_lock);
+>  	list_for_each_entry(e, &smi_infos, link) {
+>  		if (e->io.dev == dev) {
+>  			cleanup_one_si(e);
+> -			rv = 0;
+>  			break;
+>  		}
+>  	}
+>  	mutex_unlock(&smi_infos_lock);
+> -
+> -	return rv;
+>  }
+>  
+>  struct device *ipmi_si_remove_by_data(int addr_space, enum si_type si_type,
+> diff --git a/drivers/char/ipmi/ipmi_si_parisc.c b/drivers/char/ipmi/ipmi_si_parisc.c
+> index 11c9160275df..2be2967f6b5f 100644
+> --- a/drivers/char/ipmi/ipmi_si_parisc.c
+> +++ b/drivers/char/ipmi/ipmi_si_parisc.c
+> @@ -29,9 +29,9 @@ static int __init ipmi_parisc_probe(struct parisc_device *dev)
+>  	return ipmi_si_add_smi(&io);
+>  }
+>  
+> -static int __exit ipmi_parisc_remove(struct parisc_device *dev)
+> +static void __exit ipmi_parisc_remove(struct parisc_device *dev)
+>  {
+> -	return ipmi_si_remove_by_dev(&dev->dev);
+> +	ipmi_si_remove_by_dev(&dev->dev);
+>  }
+>  
+>  static const struct parisc_device_id ipmi_parisc_tbl[] __initconst = {
+> diff --git a/drivers/char/ipmi/ipmi_si_platform.c b/drivers/char/ipmi/ipmi_si_platform.c
+> index 380a6a542890..505cc978c97a 100644
+> --- a/drivers/char/ipmi/ipmi_si_platform.c
+> +++ b/drivers/char/ipmi/ipmi_si_platform.c
+> @@ -411,7 +411,9 @@ static int ipmi_probe(struct platform_device *pdev)
+>  
+>  static int ipmi_remove(struct platform_device *pdev)
+>  {
+> -	return ipmi_si_remove_by_dev(&pdev->dev);
+> +	ipmi_si_remove_by_dev(&pdev->dev);
+> +
+> +	return 0;
+>  }
+>  
+>  static int pdev_match_name(struct device *dev, const void *data)
+> diff --git a/drivers/input/keyboard/hilkbd.c b/drivers/input/keyboard/hilkbd.c
+> index 62ccfebf2f60..c1a4d5055de6 100644
+> --- a/drivers/input/keyboard/hilkbd.c
+> +++ b/drivers/input/keyboard/hilkbd.c
+> @@ -316,11 +316,9 @@ static int __init hil_probe_chip(struct parisc_device *dev)
+>  	return hil_keyb_init();
+>  }
+>  
+> -static int __exit hil_remove_chip(struct parisc_device *dev)
+> +static void __exit hil_remove_chip(struct parisc_device *dev)
+>  {
+>  	hil_keyb_exit();
+> -
+> -	return 0;
+>  }
+>  
+>  static const struct parisc_device_id hil_tbl[] __initconst = {
+> diff --git a/drivers/input/serio/gscps2.c b/drivers/input/serio/gscps2.c
+> index 2f9775de3c5b..a9065c6ab550 100644
+> --- a/drivers/input/serio/gscps2.c
+> +++ b/drivers/input/serio/gscps2.c
+> @@ -411,7 +411,7 @@ static int __init gscps2_probe(struct parisc_device *dev)
+>   * @return: success/error report
+>   */
+>  
+> -static int __exit gscps2_remove(struct parisc_device *dev)
+> +static void __exit gscps2_remove(struct parisc_device *dev)
+>  {
+>  	struct gscps2port *ps2port = dev_get_drvdata(&dev->dev);
+>  
+> @@ -425,7 +425,6 @@ static int __exit gscps2_remove(struct parisc_device *dev)
+>  #endif
+>  	dev_set_drvdata(&dev->dev, NULL);
+>  	kfree(ps2port);
+> -	return 0;
+>  }
+>  
+>  
+> diff --git a/drivers/net/ethernet/i825xx/lasi_82596.c b/drivers/net/ethernet/i825xx/lasi_82596.c
+> index 96c6f4f36904..48e001881c75 100644
+> --- a/drivers/net/ethernet/i825xx/lasi_82596.c
+> +++ b/drivers/net/ethernet/i825xx/lasi_82596.c
+> @@ -196,7 +196,7 @@ lan_init_chip(struct parisc_device *dev)
+>  	return retval;
+>  }
+>  
+> -static int __exit lan_remove_chip(struct parisc_device *pdev)
+> +static void __exit lan_remove_chip(struct parisc_device *pdev)
+>  {
+>  	struct net_device *dev = parisc_get_drvdata(pdev);
+>  	struct i596_private *lp = netdev_priv(dev);
+> @@ -205,7 +205,6 @@ static int __exit lan_remove_chip(struct parisc_device *pdev)
+>  	dma_free_noncoherent(&pdev->dev, sizeof(struct i596_private), lp->dma,
+>  		       lp->dma_addr, DMA_BIDIRECTIONAL);
+>  	free_netdev (dev);
+> -	return 0;
+>  }
+>  
+>  static const struct parisc_device_id lan_tbl[] __initconst = {
+> diff --git a/drivers/parport/parport_gsc.c b/drivers/parport/parport_gsc.c
+> index 1e43b3f399a8..4332692ca4b8 100644
+> --- a/drivers/parport/parport_gsc.c
+> +++ b/drivers/parport/parport_gsc.c
+> @@ -378,7 +378,7 @@ static int __init parport_init_chip(struct parisc_device *dev)
+>  	return 0;
+>  }
+>  
+> -static int __exit parport_remove_chip(struct parisc_device *dev)
+> +static void __exit parport_remove_chip(struct parisc_device *dev)
+>  {
+>  	struct parport *p = dev_get_drvdata(&dev->dev);
+>  	if (p) {
+> @@ -397,7 +397,6 @@ static int __exit parport_remove_chip(struct parisc_device *dev)
+>  		parport_put_port(p);
+>  		kfree (ops); /* hope no-one cached it */
+>  	}
+> -	return 0;
+>  }
+>  
+>  static const struct parisc_device_id parport_tbl[] __initconst = {
+> diff --git a/drivers/scsi/lasi700.c b/drivers/scsi/lasi700.c
+> index 6d14a7a94d0b..86fe19e0468d 100644
+> --- a/drivers/scsi/lasi700.c
+> +++ b/drivers/scsi/lasi700.c
+> @@ -134,7 +134,7 @@ lasi700_probe(struct parisc_device *dev)
+>  	return -ENODEV;
+>  }
+>  
+> -static int __exit
+> +static void __exit
+>  lasi700_driver_remove(struct parisc_device *dev)
+>  {
+>  	struct Scsi_Host *host = dev_get_drvdata(&dev->dev);
+> @@ -146,8 +146,6 @@ lasi700_driver_remove(struct parisc_device *dev)
+>  	free_irq(host->irq, host);
+>  	iounmap(hostdata->base);
+>  	kfree(hostdata);
+> -
+> -	return 0;
+>  }
+>  
+>  static struct parisc_driver lasi700_driver __refdata = {
+> diff --git a/drivers/scsi/zalon.c b/drivers/scsi/zalon.c
+> index 7eac76cccc4c..f1e5cf8a17d9 100644
+> --- a/drivers/scsi/zalon.c
+> +++ b/drivers/scsi/zalon.c
+> @@ -168,15 +168,13 @@ static const struct parisc_device_id zalon_tbl[] __initconst = {
+>  
+>  MODULE_DEVICE_TABLE(parisc, zalon_tbl);
+>  
+> -static int __exit zalon_remove(struct parisc_device *dev)
+> +static void __exit zalon_remove(struct parisc_device *dev)
+>  {
+>  	struct Scsi_Host *host = dev_get_drvdata(&dev->dev);
+>  
+>  	scsi_remove_host(host);
+>  	ncr53c8xx_release(host);
+>  	free_irq(dev->irq, host);
+> -
+> -	return 0;
+>  }
+>  
+>  static struct parisc_driver zalon_driver __refdata = {
+> diff --git a/drivers/tty/serial/mux.c b/drivers/tty/serial/mux.c
+> index be640d9863cd..643dfbcc43f9 100644
+> --- a/drivers/tty/serial/mux.c
+> +++ b/drivers/tty/serial/mux.c
+> @@ -496,7 +496,7 @@ static int __init mux_probe(struct parisc_device *dev)
+>  	return 0;
+>  }
+>  
+> -static int __exit mux_remove(struct parisc_device *dev)
+> +static void __exit mux_remove(struct parisc_device *dev)
+>  {
+>  	int i, j;
+>  	int port_count = (long)dev_get_drvdata(&dev->dev);
+> @@ -518,7 +518,6 @@ static int __exit mux_remove(struct parisc_device *dev)
+>  	}
+>  
+>  	release_mem_region(dev->hpa.start + MUX_OFFSET, port_count * MUX_LINE_OFFSET);
+> -	return 0;
+>  }
+>  
+>  /* Hack.  This idea was taken from the 8250_gsc.c on how to properly order
+> diff --git a/sound/parisc/harmony.c b/sound/parisc/harmony.c
+> index 1440db8b4177..2e3e5aa47682 100644
+> --- a/sound/parisc/harmony.c
+> +++ b/sound/parisc/harmony.c
+> @@ -968,11 +968,10 @@ snd_harmony_probe(struct parisc_device *padev)
+>  	return err;
+>  }
+>  
+> -static int __exit
+> +static void __exit
+>  snd_harmony_remove(struct parisc_device *padev)
+>  {
+>  	snd_card_free(parisc_get_drvdata(padev));
+> -	return 0;
+>  }
+>  
+>  static struct parisc_driver snd_harmony_driver __refdata = {
+> -- 
+> 2.30.2
+> 
