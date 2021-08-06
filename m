@@ -7,84 +7,84 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 329AEC432BE
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 04:00:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87880C4320A
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 04:00:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 14958611C6
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 04:00:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 67F44611C5
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 04:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236367AbhHFEA4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Aug 2021 00:00:56 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:14104 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235416AbhHFEAx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 00:00:53 -0400
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 1763tejO004705;
+        id S236742AbhHFEA5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Aug 2021 00:00:57 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:55606 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235355AbhHFEAy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 00:00:54 -0400
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 1763uLpi012206;
         Fri, 6 Aug 2021 04:00:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=EHxbfiXOr8AmuXUao0jGUJigZ9wMFu5N24G/8uV6XxI=;
- b=OqUOAAI+tTM5ujh5kyfiKTedwq28u80vO+VDU0rWCKKcT21jtl8zaJ4X7enCFMRcN/7S
- QUtM0vCKS0xmr+TX0ueXfZc74UltshDtS+LO7hAIKRUn//UgcwNkY9AeY8aJBJ+o9uYG
- 9zTMBbrzoUdbQ9+0+UWjdFeMfNSyJjkgqhb3sN/3bQ0WFy3fopr1ERhrX3XDDEGPCU+O
- tqWA/hGq0KtKwp96ZxTMIOgWpdhEMjJXvi+SXH9NHeofxnKBSw4I0hnA5rzphiJZtvCv
- ooWqbAzxJjTMTBhk2oLNfFeeHGhFuWgyW9fsRISHmIYLK+a70/5NOjKrHdWz+ia4OHpB 7Q== 
+ s=corp-2021-07-09; bh=YviDSQJP9md+3VbFrMcjINm5/gRY+KieCsNkmNc8Xgo=;
+ b=WnczntRdEcO8qGwELSj9J4vqBW4Qc/I0kN4H2Z0VjzfoQAv0CBCk2BDtHuJNjN11v1MV
+ WGiNKmCb4P36wzLHZdO2+/pXh1ikm1DLyHWX8GLWiepoSbkF+1RaDi+j48vP+eZjjqAE
+ xa+6GncuU/6oMJHafchzQwwQ3Oqv2JZc9ixQxOChI/cZ6Qep84JxOUuhcbn6zbyUqRyO
+ j0SVLbPNKIOF+esW+c/efs19K6EbiGcoC905ydPq1qm0DqFAuT6V1qiDhpP6BymNxSUW
+ szaocwbq78qzYYxUDFkWfyEfE1lv+MQsFoaB9TehCekHJjonVi0rPuiHhQgnA5+Rh4Mw jg== 
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2020-01-29; bh=EHxbfiXOr8AmuXUao0jGUJigZ9wMFu5N24G/8uV6XxI=;
- b=dnObSKsFmtxpZMBkrgmxQOxrFGf1Vcv9DgEnqzDKKpIOCE188ilS8lWelV78aoMBEl1h
- QxDJ8tOXQaULGetMf+jxppy9hoBdFxsvI/PbbHce0I6Ztgpl8Ul19chXWzQSpM0HhfG+
- EKq5WwBTJS7R+GhK3luZC8Q9Rxfu4Y99a2c7U9hJsxiTdhc1yz3Q5jg9r4Z938vi67Z0
- 2DHQw3MLEsBenfj5Db8KsU8UeaR1wdsacIkn9WVg6ZEy0rgfnsv+B0MNq/Bv9cS1pA9y
- pbNcHzbzh1JwzImL1RSK9ncXyQo1Nvkrk0WF7xpa2jepsv0DS0MbjJs8Ofq/va9WRk0y sQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3a8p6rgmb5-1
+ s=corp-2020-01-29; bh=YviDSQJP9md+3VbFrMcjINm5/gRY+KieCsNkmNc8Xgo=;
+ b=FYD6AXxVfU0QQKwYH1Z+45XSSwVVD4UDoyvko+E/lFHBmvmoag5/5ufu1QD/ZFS4COEI
+ 3KtY03Zi63vIb2iEttV3WRdBigrkotATLTfw3MwQP4vAyY5Jq2rTolNShnnbYrTOnGIM
+ gwJ/JGr9oZyUjNZS1L4/+Nkz7iNQTZdmJuZPH+l+Z/jQdv38FRYgqyThCwrzYA6dQaB5
+ k4C4MGdGVjuu5hkIcsiwsFFjdlxqgYFafKvs9S1M6cXUvHvKGV+QN0dS7XJ/rqjjtMnW
+ L8vJQjnxNgJqnbxJy+qW1tOuHzW2h5DUs+E7oPO4JXvdccBqk4B/i7TkzLYXtMBrRJo8 lg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3a843pay3g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Fri, 06 Aug 2021 04:00:37 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 1763thsX153451;
-        Fri, 6 Aug 2021 04:00:35 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12lp2175.outbound.protection.outlook.com [104.47.55.175])
-        by userp3030.oracle.com with ESMTP id 3a4un511hj-1
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 17640L3I002843;
+        Fri, 6 Aug 2021 04:00:37 GMT
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2041.outbound.protection.outlook.com [104.47.56.41])
+        by aserp3030.oracle.com with ESMTP id 3a78d9tj6d-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Aug 2021 04:00:34 +0000
+        Fri, 06 Aug 2021 04:00:36 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=naQ2q+dJKp2pgfGMT1RlxhuR6n2Q6MNDmPtQvXfQZODTWCfZkLHjkyKsYXDXEdMhVJkBk+ho5l2HX4YwTB2jETVxEZ22X1/QmzE9IUzm2Z7n1JVhpR6ZRzo28Uf1IlQLbOsPOFsHqqPDFsW2gxSrl42yG8oUur271Sa6WES5j2CmWNaFa61u90WgAw3pzEJkoMR6HTUJf/D7t+zswfda0nDhu1ztLq1dWXOPT7en9qYeTB8yEdE//re+09EhErMfi3keqgctpWGyySLgMH/dN2taH4RA3EV+x+X0Enu+N9rObiWc03RO8MA0JLOrvOmhW2F16puih+uJadDXf+U4Cw==
+ b=bB6nD84TU+yIlrwnCtpX1lq9fZL96XsCW5p07pymYW1jZku01xuSIukCZbTmt5lY10CZftfIFn+euKEdfQV6MbM3s6qBwfB1/+J3ipg8ZtjYCL8zANY5sy3bJn89gTEWyEJTJjyPh44nvYcgyYLsaluCxJohonr2pAesofglToMTYRDK5wEFz1VKmrMK1oPL+1JolPrIv8qoHzsCLH+tdNc+M5kCjRee6jPFT0n/38DbSRDStDGEO6dZYKNvFQ0aOuq0OtNNZHDDkV3DSNiEAEBrU50wT7FRGK8703IFZuM2gCM/sFa+/qLtVFBPtLevX17/pdt3h8gwlPOIXK0FHQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EHxbfiXOr8AmuXUao0jGUJigZ9wMFu5N24G/8uV6XxI=;
- b=FNzxZCY8+ksJD+oiEMyX+v8F5h9qjAR20lKJxxCQixx7Niv5dMvk9w31Z64yO8WxsRtop7N4T93q79UVFWmtZbJ4maTZDWXsuJcbCbOxcgwH6hKwF1/TfsykfuVw4b5aJoHd7DBnbZcj6EqhAJ4HHu8wSHayC6eHdvHQe9i/l/2zIM8YAwzAuC7FC5B1f5YUhGwTqt5j4FrfST+NoAT1W8PXJckZ8Z96eayp6frOb7NmFOa/eI5xDspEIrzGA+1zLhrGJ2GNQ4jWFL0DsNGl/uPpg/dL4u45TqRu6zqEreUOS28ixLeJ50EEbvm2yBiZ53ozGAxyBWie1mOvGrXgSQ==
+ bh=YviDSQJP9md+3VbFrMcjINm5/gRY+KieCsNkmNc8Xgo=;
+ b=iH7hZZv8Vqx4ukoO5hnvpRZOTLJ7H95RzDz7YPrDlpygMpAC2E8wxQ0WcvQBEm3WoSnMdUmZsRX2LtW/t8ax+nsOH2RC9KfPDkWMP2Lt8N6/8tnSfq9PuuCFm7xPIm7xP8Y9gDfS63cW3Q9g6ZKaj+2LsNidOyoc2rtlYyI0LYrzCgDhzYZzACNmsf3OoJrwpYwTJgBOICyNJk3hLu97L49jJ1UZqZZ8fB9v/LO4zfRW8Hw7xqnm5WXjY5n2VVG3CulEdQI7TcYshBvORTIubzQyxrSUynnENMiDE/o/Raul3tB5LnSAy1RemLa0q0ZX3DanhYd4ntH3dpojEVDyBg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=EHxbfiXOr8AmuXUao0jGUJigZ9wMFu5N24G/8uV6XxI=;
- b=ChAdOm/9wIbJa90CVw3MyIj/MV1mrrQgTkohSQw4W1iBhE/Se0FpUIGBCPTCS7LGNzkCI4Qp1zLHk95r+wLyCrDJKeGaRoOVedPsmLQRTEyVryEfxNjx+zPJeuwUZBar2txYsA8xLKoO8PI6FRIwFQu5iIfpF2ETLUUShWeJOBc=
+ bh=YviDSQJP9md+3VbFrMcjINm5/gRY+KieCsNkmNc8Xgo=;
+ b=bxBu2yrlkF7iXSlGpDiZc6YrE577DM/6xekb0yI3XJEPgcMzg32dYiPeR4RnljD+ZDYkk2LG+1tpx2QCBtwlSmLFofzFYYSY8wXUlGdEMwc0PrylpEoN8FHKKtfen3GCBtVn2WH84ntATR4sYwQgpI94XJyP9z7H3dhmeKYbRAc=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB5515.namprd10.prod.outlook.com (2603:10b6:510:109::7) with
+ by PH0PR10MB5595.namprd10.prod.outlook.com (2603:10b6:510:f7::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.21; Fri, 6 Aug
- 2021 04:00:33 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.17; Fri, 6 Aug
+ 2021 04:00:35 +0000
 Received: from PH0PR10MB4759.namprd10.prod.outlook.com
  ([fe80::153e:22d1:d177:d4f1]) by PH0PR10MB4759.namprd10.prod.outlook.com
  ([fe80::153e:22d1:d177:d4f1%8]) with mapi id 15.20.4373.026; Fri, 6 Aug 2021
- 04:00:33 +0000
+ 04:00:35 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: [PATCH v2 3/5] scsi: mpi3mr: Use the proper SCSI midlayer interfaces for PI
-Date:   Fri,  6 Aug 2021 00:00:21 -0400
-Message-Id: <20210806040023.5355-4-martin.petersen@oracle.com>
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+Subject: [PATCH v2 5/5] scsi: lpfc: Use the proper SCSI midlayer interfaces for PI
+Date:   Fri,  6 Aug 2021 00:00:23 -0400
+Message-Id: <20210806040023.5355-6-martin.petersen@oracle.com>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210806040023.5355-1-martin.petersen@oracle.com>
 References: <20210806040023.5355-1-martin.petersen@oracle.com>
@@ -95,167 +95,435 @@ X-ClientProxiedBy: SN4PR0601CA0007.namprd06.prod.outlook.com
  (2603:10b6:510:3d::12)
 MIME-Version: 1.0
 X-MS-Exchange-MessageSentRepresentingType: 1
-Received: from ca-mkp.mkp.ca.oracle.com (138.3.201.9) by SN4PR0601CA0007.namprd06.prod.outlook.com (2603:10b6:803:2f::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.15 via Frontend Transport; Fri, 6 Aug 2021 04:00:32 +0000
+Received: from ca-mkp.mkp.ca.oracle.com (138.3.201.9) by SN4PR0601CA0007.namprd06.prod.outlook.com (2603:10b6:803:2f::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.15 via Frontend Transport; Fri, 6 Aug 2021 04:00:34 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 5e5cf2a3-a682-4812-db42-08d9588ebd03
-X-MS-TrafficTypeDiagnostic: PH0PR10MB5515:
+X-MS-Office365-Filtering-Correlation-Id: cd01e1ff-79ab-4e3e-e1c0-08d9588ebe1e
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5595:
 X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <PH0PR10MB55159DABF5129E26661498E98EF39@PH0PR10MB5515.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:1247;
+X-Microsoft-Antispam-PRVS: <PH0PR10MB5595468FC58F6C2C00D571F98EF39@PH0PR10MB5595.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:339;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: IeBC1gxlWWlX/+UqP+L8c4LKX80YpUx1L4dT9tmCNIsWFcfMnLtDL1pyMip23XCb97kW9WCwKBIAjDcQB5VSpnC8ShbbW1Ph1iiCOy6iU3+dddfFD9E72dW2Hjo/NxUqIuACnAJq/I0pxK+2SxMvL1xf36VDHm418kp5pvEmR2Xc4M2CY8PYbO85VYORYuoNZMgjrAj6t5eilsbIIXSfDRXAkaYIOvBGmCmvxfVtkoGwKErUE2XCu04GTTq+eAS3+3dFWWVW5F2rqTXd8uQ9LFUImK/VZj/rLUXh8x4B/M0GoVYNJHLVOhk6GZW4xJ/875YPTepAeAOvbIQdOpalrkGRTC1ZJX8dyLbTZ4zJAVtFXfZUfLb4tI/FuQPjPH3BX1z1yLSHTLwmsTfJEvKQ7FQ+v0W/iAmtn53DFYtyBgz0fQPyh6TSqKoxZWfJ5SbAYcAIrxOOJswIq2YJp9CjicoimAPXgbE359rJbBoVuD3lvlbgbEWxjDvJI3BlI1ExtfBxpuRB01Nspy6lKxVaIM6JlMH5Bqwy9MDQHGJnD05tnQq1ju4JbP7YGtZGxAhjOBdboMaxQkBgmYfpL+ocekMrHRYcZXV87tno4MUcR3YTDK3eMWG1Rf9/eDeWZ8xetsNHAUyPR8ZVovbd4HFOjz7WXzewC8deKATFSAMH7YvqTTOFwmCaKme74DeKs3cmWN7sIm3pL0lgqtqgvmGTBaZ7K2EwWP1lrlCTNoQeiZ8=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(86362001)(1076003)(8936002)(66946007)(8676002)(186003)(6916009)(4326008)(66476007)(66556008)(26005)(6666004)(83380400001)(38100700002)(508600001)(956004)(316002)(2616005)(36756003)(38350700002)(2906002)(54906003)(7696005)(6486002)(52116002)(5660300002)(32563001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: RoX+mgBJ27qD69z5gfcXIDYnv5U3x63T2bP29u8K5oLL740h9s5w4XpZwUWC05246I1xU8JmSHVhvJIRcAeP6I0QbJmJAH6iWszT7j/ZQj0CO1CwyEGvYhffgJJQBb/5BOw4N0Eipi5PZXKcuCdA/aPkBxdDpvj1DLDVlAuPOKeYI0OX06wIwWTnNcKWH2FkvQ3HFrrJ2DKIeT5WigLLAhU1MrPg4EzYN4PgfE1jd8OG6nVQ3+DCK0opWTPD0o1Izw90nvOk4FBQxx7bmV8hIF3eYh7KQ1/hXuEcej4G9BKJWCwnXCqzOzsfHFOLgjR+e6kpQetHrck/OfGPE6jW5I9QJRQjzQrfwaJQhjuEJTecs24SlZZj9q2usC3h66501FGEq/3NBAxpTkDQRn+jsLCsmF++GEr4GvtVIXP5kUzWJ8PONB0ox666Z7enyz9XqbPyugKfEM8uL8u/iPeLKj0O+B2ab40JTRPYYGcg5ZfwvW4rwEYHxZYAu/dHynK/qR9CqwpqmscGy/ri0srcMQvQn5XHVayNuQT4yac1OmGaSvVv5e026guhcZj19+2zBxuCF3Jq3x5bjQbg1gxhZ3DCPqorjz2bOdzuu1NkhXbdmBsJvny2vYdF16+A0Rqeu6lpuCo5rxAwEJDj69eD6E5Bvj+ZIyW4nPu0eTxgr5boTfv3BHl4gtji+spn4f+leabxSUj8n9MBDXHvR68yFA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(136003)(39860400002)(346002)(376002)(366004)(8936002)(6916009)(8676002)(36756003)(52116002)(316002)(7696005)(2906002)(66946007)(54906003)(6666004)(26005)(30864003)(6486002)(186003)(2616005)(956004)(83380400001)(66476007)(86362001)(4326008)(1076003)(38100700002)(478600001)(38350700002)(5660300002)(66556008);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?IKX9g/UUgu1M/YhzQMT36up9hGBrE2CWAptkqTFjbCm2HnKlj0wCnNESJg1G?=
- =?us-ascii?Q?IDP4pvHkEmTUICEkvMTEcbu+o/WtybKwRTHt9luc9txsAof+MsivgVnw/rLL?=
- =?us-ascii?Q?/d49mSMjdyPLSufdwORdQ3qg+FJNoi3EhBVBqdzSczWvvOFwvrWOdvbH1G3O?=
- =?us-ascii?Q?mykGON/efirOHe8g/x+o4Tu2uZz77RJa3WAS3RSbh1JSsTwAeBmHrThlHnh2?=
- =?us-ascii?Q?5/ZzVNPU3Ex8anE8ADJwvBGYoFQJpkjRys7twXIYKh+ZKdpO7Hwp2yDuzPtY?=
- =?us-ascii?Q?lUC82knvn2jPlFZo+ylAttA9pqY+X+u0SqVDRiARuUkQnio7nUKA7ZSFFiTA?=
- =?us-ascii?Q?DeWxLkRTTdOYIOdeO/0d/i4E1l8eoo2fvWPtKhZB4sb/vnt2y/LmblGJEDJn?=
- =?us-ascii?Q?fnAfk5v92v1+qxiGBjgdFx3qb2+UmuKMTx4oO2++BBs+TNHQGvbdyqlWJvHn?=
- =?us-ascii?Q?SNUd64O/BMPCx389QORTCB6ycjPYIoaGyQ/e30VSoVpVHxJ/mpVDECKnbbUm?=
- =?us-ascii?Q?qGG+n1jD33JHCh2VGo1Dy1N9GfMEZF1JSG3xFRCZeBPpC8O7HZPqR+HkZcks?=
- =?us-ascii?Q?w0rtN4Suapl/3ap86JaOodc98IypqDKSU8Ez3YlPg/s0CXnkb+qZDwO90BDg?=
- =?us-ascii?Q?8FvXfytByWwE1wRdtvStjy4D41V+dImhBa9SlRht4IVMRr2jOyytX2IMcEsh?=
- =?us-ascii?Q?TfU6GCW/HhM/Xk06RDRe5q74EwttseVEoelUbXU8e7ojQ5WC64gFrKJNUc2y?=
- =?us-ascii?Q?OLojh1sseGh+evEDTmkgZ1wIA3q4+0VcnRpIPCSf/7o0APaNT9gX31QO8WMu?=
- =?us-ascii?Q?hJzbiQqh6GxWcjYNqsmpg0TT8bb2OJ/OnkkqwST4iJLilEzMAokek2JyTA5U?=
- =?us-ascii?Q?16IoxRCIjULPxG09iCSfL3vBmZeYehGIjSDTt63Vzer7XqiE1gB0nn1pRJum?=
- =?us-ascii?Q?tzoWFQzslhm0DWUBK4UUicrdb7VjW6RUvVdfWW+uMsx08SwL84ktq8tKxRFs?=
- =?us-ascii?Q?yT/Acg+BgKWFK6BNZaESjoA4TfakD5h34jFbYdbJPIu7Zg35dRogGbyiNyrY?=
- =?us-ascii?Q?wi94xC/LHSl0Hph7cKzqul7ihpGsQz4QovEBmRe1Td5P1PKyBtKDBLXOBnXn?=
- =?us-ascii?Q?O0lvzdPkwoQfnxYfpRZBY7Y/DaTOgn6gSdDS4RWKWxbH/rAvzBe4CmiPy++6?=
- =?us-ascii?Q?wB3msq9DZgTRYVRJtx7Ay4xd9TeZXmizLFrAW3eW2h3Dpyc65gaFVFOhmuH2?=
- =?us-ascii?Q?K87r4bjN8eJhRjtQb4bW31z5W2pWmKzl0BPwNTfbvlYA76efc6YE+wX8jiwg?=
- =?us-ascii?Q?pcFuGCPmu7TRZlgFZYmoTXR6?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?53+Qlmwr8RTTp3UqTVefD5eLUr7eonbLk0WJdOkZ1JFoJHNNttIwYp/Vz7xE?=
+ =?us-ascii?Q?E44QardDG1loaH0u6eDVjH3lSZSSV4/chqINXK6wGCFoV3dDVsRB8JN17GnW?=
+ =?us-ascii?Q?QVhiqgmb4YUCY8ufqb0Mk01S9Azm3Z7sZpj/BCA2GeEJBLkuNdZ9mQojzA4M?=
+ =?us-ascii?Q?nv8v9bq7uJL2IA0m6CuYCEQlcDUdBOqVX+Wq9Nz11u2zCPyXzseZ3oHfLK8o?=
+ =?us-ascii?Q?E0lTkuZMPufcr4jRpckWBU5+r/AHOM9XKGB/J40GR5kh+P3H9zKqzC0EIakN?=
+ =?us-ascii?Q?8+XxWIQ0A9ZVpsek+89N5F1E5B3qcn7kNZ82YOP4tO1x/xfdUTHmOwk1TH3J?=
+ =?us-ascii?Q?zdBoYyd7znRNhwwu7VIxbqchxMF413sYHL7iU3SiI4YPF5vaCr9PPUBwPE8e?=
+ =?us-ascii?Q?cg7lhbS6iZpMO2yVGSZ7L5zyopoz8pOAG9Mq9xuRjf4sNOW+mbv/Cy1sALiK?=
+ =?us-ascii?Q?z0EyUWp1+TYcDnjW1DsNtPYXXEoR4KXVEv9JUsEDNYuHUUgBxo1vGGy5Dp+e?=
+ =?us-ascii?Q?GCv5QB7iDTXtfWpr2TEkbPovsL1zUpxvIfRKA9qSc6Z8CrcT3aDx9Av4edAC?=
+ =?us-ascii?Q?97Cdg/cPO5wzOldSPvdJcKmQXvFgkS2iS/gbPorW+1ZCacRaJnlAdIKEBZ9b?=
+ =?us-ascii?Q?rlTQCIzPSB38uY3+MvhHzqrsH1f26Gdbwh2he2LyQ2mEbZE6Zwq9EN403NDG?=
+ =?us-ascii?Q?nro5SOvaGsncnaSe+MbEvxCB05jv36CCbYTTjit0GMcun5NkHSgvb2vh1c6j?=
+ =?us-ascii?Q?whli0aX/d9Um0BD+CTr1REfAWkeZ0OcSteXMH7l2heIQbmcMshXwCl3mLlAO?=
+ =?us-ascii?Q?L44dqsSCsg42F3DPzjLl6YxYDfevOFmmLbF9ksqmIy8uS5jMqiseBWkv5kCh?=
+ =?us-ascii?Q?89iKZlOF0iIsZ10VsFJOHjpXTJbI0Ca+TKvTXUWNWU3MagodvHemeJZ8J3cj?=
+ =?us-ascii?Q?yIJFmMfGl4dMt6LAE/L5pD2grsXqZJTd2lrM/ODCkn7YfZKAfRNaB1t5xZ84?=
+ =?us-ascii?Q?jBICvugKTvHWDUUGCuW7yvz8TB5n8cYIBiNii40FK/A+Be9ciX8QgSlkAa68?=
+ =?us-ascii?Q?1O179fPJBPXImo5/El/5JZ3J/MCVbjp+Lo9isvScO86Fv+NDdqKzDuBrA3I4?=
+ =?us-ascii?Q?59XQB+AMxJLOPWd2MTClA9JTN6KebFX0bfZu6DLlS3vqHQYWyvSys95w6PV6?=
+ =?us-ascii?Q?OlTR4zM1VDzEl+pLwLxn1Zp8Ixt6fesqVpKJ15HLLCPjjbzRBOhFYbr20q3U?=
+ =?us-ascii?Q?HRBf68G0qmDmS2YKMQAK/6/FcwrZ6tmQIjZ49yAaXWfU4GKGROMWNR71UCpd?=
+ =?us-ascii?Q?DTnFSXSABdh+P/FaAIsYA/j/?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5e5cf2a3-a682-4812-db42-08d9588ebd03
+X-MS-Exchange-CrossTenant-Network-Message-Id: cd01e1ff-79ab-4e3e-e1c0-08d9588ebe1e
 X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Aug 2021 04:00:33.0906
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Aug 2021 04:00:34.9543
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: uzJF7yjjxql7CGynEsdGXcABNmaoM831Rn/0bvrhEKKny/L0NEuIkZgn6XGN8RZjq7Nt3Rd9lll+FEeVQEQ0tggNUjpvbePT/eeumE5p6LA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5515
+X-MS-Exchange-CrossTenant-UserPrincipalName: /rj1J46EIyAxjFWfoGLe38wknMCSLFlnlL5IKl9U0nJMSpyqNzvCspMkzjaF3peC/zL2JwUofVW/R/tcHztQcRt2SJ9VjxHrszm4LLxdrX0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5595
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10067 signatures=668682
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 phishscore=0 malwarescore=0
- suspectscore=0 mlxscore=0 adultscore=0 mlxlogscore=999 spamscore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 mlxscore=0 adultscore=0
+ malwarescore=0 phishscore=0 bulkscore=0 spamscore=0 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2107140000
- definitions=main-2108060024
-X-Proofpoint-ORIG-GUID: rD5yl_LYfwz0OuwozvqlpUTUBElRjVYf
-X-Proofpoint-GUID: rD5yl_LYfwz0OuwozvqlpUTUBElRjVYf
+ definitions=main-2108060025
+X-Proofpoint-ORIG-GUID: KNjUH6MsuS7c_DTHHEhPQyJbsLWL4P-w
+X-Proofpoint-GUID: KNjUH6MsuS7c_DTHHEhPQyJbsLWL4P-w
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Use the SCSI midlayer interfaces to query protection interval, reference
-tag, and per-command DIX flags
+tag, per-command DIX flags, and logical block count.
 
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>
+CC: James Smart <james.smart@broadcom.com>
+CC: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 59 +++++++++++----------------------
- 1 file changed, 20 insertions(+), 39 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 116 ++++++++++++++--------------------
+ 1 file changed, 46 insertions(+), 70 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 24ac7ddec749..3df5507c4768 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -1963,7 +1963,6 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
- {
- 	u16 eedp_flags = 0;
- 	unsigned char prot_op = scsi_get_prot_op(scmd);
--	unsigned char prot_type = scsi_get_prot_type(scmd);
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index ee4ff4855866..9c27f285d86e 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -96,30 +96,6 @@ static void lpfc_vmid_update_entry(struct lpfc_vport *vport, struct scsi_cmnd
+ static void lpfc_vmid_assign_cs_ctl(struct lpfc_vport *vport,
+ 				    struct lpfc_vmid *vmid);
  
- 	switch (prot_op) {
- 	case SCSI_PROT_NORMAL:
-@@ -1983,60 +1982,42 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
- 		scsiio_req->msg_flags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
- 		break;
- 	case SCSI_PROT_READ_PASS:
--		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK |
--		    MPI3_EEDPFLAGS_CHK_REF_TAG | MPI3_EEDPFLAGS_CHK_APP_TAG |
--		    MPI3_EEDPFLAGS_CHK_GUARD;
-+		eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK;
- 		scsiio_req->msg_flags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
- 		break;
- 	case SCSI_PROT_WRITE_PASS:
--		if (scsi_host_get_guard(scmd->device->host)
--		    & SHOST_DIX_GUARD_IP) {
--			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REGEN |
--			    MPI3_EEDPFLAGS_CHK_APP_TAG |
--			    MPI3_EEDPFLAGS_CHK_GUARD |
--			    MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
-+		if (scmd->prot_flags & SCSI_PROT_IP_CHECKSUM) {
-+			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK_REGEN;
- 			scsiio_req->sgl[0].eedp.application_tag_translation_mask =
- 			    0xffff;
--		} else {
--			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK |
--			    MPI3_EEDPFLAGS_CHK_REF_TAG |
--			    MPI3_EEDPFLAGS_CHK_APP_TAG |
--			    MPI3_EEDPFLAGS_CHK_GUARD;
--		}
-+		} else
-+			eedp_flags = MPI3_EEDPFLAGS_EEDP_OP_CHECK;
-+
- 		scsiio_req->msg_flags |= MPI3_SCSIIO_MSGFLAGS_METASGL_VALID;
- 		break;
- 	default:
- 		return;
- 	}
- 
--	if (scsi_host_get_guard(scmd->device->host) & SHOST_DIX_GUARD_IP)
-+	if (scmd->prot_flags & SCSI_PROT_GUARD_CHECK)
-+		eedp_flags |= MPI3_EEDPFLAGS_CHK_GUARD;
-+
-+	if (scmd->prot_flags & SCSI_PROT_IP_CHECKSUM)
- 		eedp_flags |= MPI3_EEDPFLAGS_HOST_GUARD_IP_CHKSUM;
- 
--	switch (prot_type) {
--	case SCSI_PROT_DIF_TYPE0:
--		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
-+	if (scmd->prot_flags & SCSI_PROT_REF_CHECK) {
-+		eedp_flags |= MPI3_EEDPFLAGS_CHK_REF_TAG |
-+			MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
- 		scsiio_req->cdb.eedp32.primary_reference_tag =
--		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
--		break;
--	case SCSI_PROT_DIF_TYPE1:
--	case SCSI_PROT_DIF_TYPE2:
--		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG |
--		    MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE |
--		    MPI3_EEDPFLAGS_CHK_GUARD;
--		scsiio_req->cdb.eedp32.primary_reference_tag =
--		    cpu_to_be32(t10_pi_ref_tag(scmd->request));
--		break;
--	case SCSI_PROT_DIF_TYPE3:
--		eedp_flags |= MPI3_EEDPFLAGS_CHK_GUARD |
--		    MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE;
--		break;
+-static inline unsigned
+-lpfc_cmd_blksize(struct scsi_cmnd *sc)
+-{
+-	return sc->device->sector_size;
+-}
 -
--	default:
--		scsiio_req->msg_flags &= ~(MPI3_SCSIIO_MSGFLAGS_METASGL_VALID);
--		return;
-+			cpu_to_be32(scsi_prot_ref_tag(scmd));
+-#define LPFC_CHECK_PROTECT_GUARD	1
+-#define LPFC_CHECK_PROTECT_REF		2
+-static inline unsigned
+-lpfc_cmd_protect(struct scsi_cmnd *sc, int flag)
+-{
+-	return 1;
+-}
+-
+-static inline unsigned
+-lpfc_cmd_guard_csum(struct scsi_cmnd *sc)
+-{
+-	if (lpfc_prot_group_type(NULL, sc) == LPFC_PG_TYPE_NO_DIF)
+-		return 0;
+-	if (scsi_host_get_guard(sc->device->host) == SHOST_DIX_GUARD_IP)
+-		return 1;
+-	return 0;
+-}
+-
+ /**
+  * lpfc_sli4_set_rsp_sgl_last - Set the last bit in the response sge.
+  * @phba: Pointer to HBA object.
+@@ -1046,13 +1022,13 @@ lpfc_bg_err_inject(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		return 0;
+ 
+ 	sgpe = scsi_prot_sglist(sc);
+-	lba = t10_pi_ref_tag(sc->request);
++	lba = scsi_prot_ref_tag(sc);
+ 	if (lba == LPFC_INVALID_REFTAG)
+ 		return 0;
+ 
+ 	/* First check if we need to match the LBA */
+ 	if (phba->lpfc_injerr_lba != LPFC_INJERR_LBA_OFF) {
+-		blksize = lpfc_cmd_blksize(sc);
++		blksize = scsi_prot_interval(sc);
+ 		numblks = (scsi_bufflen(sc) + blksize - 1) / blksize;
+ 
+ 		/* Make sure we have the right LBA if one is specified */
+@@ -1441,7 +1417,7 @@ lpfc_sc_to_bg_opcodes(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ {
+ 	uint8_t ret = 0;
+ 
+-	if (lpfc_cmd_guard_csum(sc)) {
++	if (sc->prot_flags & SCSI_PROT_IP_CHECKSUM) {
+ 		switch (scsi_get_prot_op(sc)) {
+ 		case SCSI_PROT_READ_INSERT:
+ 		case SCSI_PROT_WRITE_STRIP:
+@@ -1521,7 +1497,7 @@ lpfc_bg_err_opcodes(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ {
+ 	uint8_t ret = 0;
+ 
+-	if (lpfc_cmd_guard_csum(sc)) {
++	if (sc->prot_flags & SCSI_PROT_IP_CHECKSUM) {
+ 		switch (scsi_get_prot_op(sc)) {
+ 		case SCSI_PROT_READ_INSERT:
+ 		case SCSI_PROT_WRITE_STRIP:
+@@ -1629,7 +1605,7 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		goto out;
+ 
+ 	/* extract some info from the scsi command for pde*/
+-	reftag = t10_pi_ref_tag(sc->request);
++	reftag = scsi_prot_ref_tag(sc);
+ 	if (reftag == LPFC_INVALID_REFTAG)
+ 		goto out;
+ 
+@@ -1668,12 +1644,12 @@ lpfc_bg_setup_bpl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	 * protection data is automatically generated, not checked.
+ 	 */
+ 	if (datadir == DMA_FROM_DEVICE) {
+-		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_GUARD))
++		if (sc->prot_flags & SCSI_PROT_GUARD_CHECK)
+ 			bf_set(pde6_ce, pde6, checking);
+ 		else
+ 			bf_set(pde6_ce, pde6, 0);
+ 
+-		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_REF))
++		if (sc->prot_flags & SCSI_PROT_REF_CHECK)
+ 			bf_set(pde6_re, pde6, checking);
+ 		else
+ 			bf_set(pde6_re, pde6, 0);
+@@ -1791,8 +1767,8 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		goto out;
+ 
+ 	/* extract some info from the scsi command */
+-	blksize = lpfc_cmd_blksize(sc);
+-	reftag = t10_pi_ref_tag(sc->request);
++	blksize = scsi_prot_interval(sc);
++	reftag = scsi_prot_ref_tag(sc);
+ 	if (reftag == LPFC_INVALID_REFTAG)
+ 		goto out;
+ 
+@@ -1832,12 +1808,12 @@ lpfc_bg_setup_bpl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		bf_set(pde6_optx, pde6, txop);
+ 		bf_set(pde6_oprx, pde6, rxop);
+ 
+-		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_GUARD))
++		if (sc->prot_flags & SCSI_PROT_GUARD_CHECK)
+ 			bf_set(pde6_ce, pde6, checking);
+ 		else
+ 			bf_set(pde6_ce, pde6, 0);
+ 
+-		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_REF))
++		if (sc->prot_flags & SCSI_PROT_REF_CHECK)
+ 			bf_set(pde6_re, pde6, checking);
+ 		else
+ 			bf_set(pde6_re, pde6, 0);
+@@ -2023,7 +1999,7 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		goto out;
+ 
+ 	/* extract some info from the scsi command for pde*/
+-	reftag = t10_pi_ref_tag(sc->request);
++	reftag = scsi_prot_ref_tag(sc);
+ 	if (reftag == LPFC_INVALID_REFTAG)
+ 		goto out;
+ 
+@@ -2051,12 +2027,12 @@ lpfc_bg_setup_sgl(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 	 * protection data is automatically generated, not checked.
+ 	 */
+ 	if (sc->sc_data_direction == DMA_FROM_DEVICE) {
+-		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_GUARD))
++		if (sc->prot_flags & SCSI_PROT_GUARD_CHECK)
+ 			bf_set(lpfc_sli4_sge_dif_ce, diseed, checking);
+ 		else
+ 			bf_set(lpfc_sli4_sge_dif_ce, diseed, 0);
+ 
+-		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_REF))
++		if (sc->prot_flags & SCSI_PROT_REF_CHECK)
+ 			bf_set(lpfc_sli4_sge_dif_re, diseed, checking);
+ 		else
+ 			bf_set(lpfc_sli4_sge_dif_re, diseed, 0);
+@@ -2223,8 +2199,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		goto out;
+ 
+ 	/* extract some info from the scsi command */
+-	blksize = lpfc_cmd_blksize(sc);
+-	reftag = t10_pi_ref_tag(sc->request);
++	blksize = scsi_prot_interval(sc);
++	reftag = scsi_prot_ref_tag(sc);
+ 	if (reftag == LPFC_INVALID_REFTAG)
+ 		goto out;
+ 
+@@ -2281,9 +2257,8 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		diseed->ref_tag = cpu_to_le32(reftag);
+ 		diseed->ref_tag_tran = diseed->ref_tag;
+ 
+-		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_GUARD)) {
++		if (sc->prot_flags & SCSI_PROT_GUARD_CHECK) {
+ 			bf_set(lpfc_sli4_sge_dif_ce, diseed, checking);
+-
+ 		} else {
+ 			bf_set(lpfc_sli4_sge_dif_ce, diseed, 0);
+ 			/*
+@@ -2300,7 +2275,7 @@ lpfc_bg_setup_sgl_prot(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		}
+ 
+ 
+-		if (lpfc_cmd_protect(sc, LPFC_CHECK_PROTECT_REF))
++		if (sc->prot_flags & SCSI_PROT_REF_CHECK)
+ 			bf_set(lpfc_sli4_sge_dif_re, diseed, checking);
+ 		else
+ 			bf_set(lpfc_sli4_sge_dif_re, diseed, 0);
+@@ -2557,7 +2532,7 @@ lpfc_bg_scsi_adjust_dl(struct lpfc_hba *phba,
+ 	 * DIF (trailer) attached to it. Must ajust FCP data length
+ 	 * to account for the protection data.
+ 	 */
+-	fcpdl += (fcpdl / lpfc_cmd_blksize(sc)) * 8;
++	fcpdl += (fcpdl / scsi_prot_interval(sc)) * 8;
+ 
+ 	return fcpdl;
+ }
+@@ -2811,14 +2786,14 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 		 * data length is a multiple of the blksize.
+ 		 */
+ 		sgde = scsi_sglist(cmd);
+-		blksize = lpfc_cmd_blksize(cmd);
++		blksize = scsi_prot_interval(cmd);
+ 		data_src = (uint8_t *)sg_virt(sgde);
+ 		data_len = sgde->length;
+ 		if ((data_len & (blksize - 1)) == 0)
+ 			chk_guard = 1;
+ 
+ 		src = (struct scsi_dif_tuple *)sg_virt(sgpe);
+-		start_ref_tag = t10_pi_ref_tag(cmd->request);
++		start_ref_tag = scsi_prot_ref_tag(cmd);
+ 		if (start_ref_tag == LPFC_INVALID_REFTAG)
+ 			goto out;
+ 		start_app_tag = src->app_tag;
+@@ -2839,7 +2814,8 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 				/* First Guard Tag checking */
+ 				if (chk_guard) {
+ 					guard_tag = src->guard_tag;
+-					if (lpfc_cmd_guard_csum(cmd))
++					if (cmd->prot_flags
++					    & SCSI_PROT_IP_CHECKSUM)
+ 						sum = lpfc_bg_csum(data_src,
+ 								   blksize);
+ 					else
+@@ -2910,7 +2886,7 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 		phba->bg_guard_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+ 				"9069 BLKGRD: reftag %x grd_tag err %x != %x\n",
+-				t10_pi_ref_tag(cmd->request),
++				scsi_prot_ref_tag(cmd),
+ 				sum, guard_tag);
+ 
+ 	} else if (err_type == BGS_REFTAG_ERR_MASK) {
+@@ -2920,7 +2896,7 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 		phba->bg_reftag_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+ 				"9066 BLKGRD: reftag %x ref_tag err %x != %x\n",
+-				t10_pi_ref_tag(cmd->request),
++				scsi_prot_ref_tag(cmd),
+ 				ref_tag, start_ref_tag);
+ 
+ 	} else if (err_type == BGS_APPTAG_ERR_MASK) {
+@@ -2930,7 +2906,7 @@ lpfc_calc_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd)
+ 		phba->bg_apptag_err_cnt++;
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_FCP | LOG_BG,
+ 				"9041 BLKGRD: reftag %x app_tag err %x != %x\n",
+-				t10_pi_ref_tag(cmd->request),
++				scsi_prot_ref_tag(cmd),
+ 				app_tag, start_app_tag);
+ 	}
+ }
+@@ -2992,7 +2968,7 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				" 0x%x lba 0x%llx blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+ 				(unsigned long long)scsi_get_lba(cmd),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_logical_block_count(cmd), bgstat, bghm);
  	}
  
--	switch (scmd->device->sector_size) {
-+	if (scmd->prot_flags & SCSI_PROT_REF_INCREMENT)
-+		eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
-+
-+	eedp_flags |= MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE;
-+
-+	switch (scsi_prot_interval(scmd)) {
- 	case 512:
- 		scsiio_req->sgl[0].eedp.user_data_size = MPI3_EEDP_UDS_512;
- 		break;
+ 	if (lpfc_bgs_get_reftag_err(bgstat)) {
+@@ -3007,7 +2983,7 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				" 0x%x lba 0x%llx blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+ 				(unsigned long long)scsi_get_lba(cmd),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 	}
+ 
+ 	if (lpfc_bgs_get_apptag_err(bgstat)) {
+@@ -3022,7 +2998,7 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				" 0x%x lba 0x%llx blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+ 				(unsigned long long)scsi_get_lba(cmd),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 	}
+ 
+ 	if (lpfc_bgs_get_hi_water_mark_present(bgstat)) {
+@@ -3066,7 +3042,7 @@ lpfc_sli4_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				" 0x%x lba 0x%llx blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+ 				(unsigned long long)scsi_get_lba(cmd),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 
+ 		/* Calcuate what type of error it was */
+ 		lpfc_calc_bg_err(phba, lpfc_cmd);
+@@ -3103,8 +3079,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				"9072 BLKGRD: Invalid BG Profile in cmd "
+ 				"0x%x reftag 0x%x blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+-				t10_pi_ref_tag(cmd->request),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_prot_ref_tag(cmd),
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 		ret = (-1);
+ 		goto out;
+ 	}
+@@ -3115,8 +3091,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				"9073 BLKGRD: Invalid BG PDIF Block in cmd "
+ 				"0x%x reftag 0x%x blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+-				t10_pi_ref_tag(cmd->request),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_prot_ref_tag(cmd),
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 		ret = (-1);
+ 		goto out;
+ 	}
+@@ -3131,8 +3107,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				"9055 BLKGRD: Guard Tag error in cmd "
+ 				"0x%x reftag 0x%x blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+-				t10_pi_ref_tag(cmd->request),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_prot_ref_tag(cmd),
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 	}
+ 
+ 	if (lpfc_bgs_get_reftag_err(bgstat)) {
+@@ -3146,8 +3122,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				"9056 BLKGRD: Ref Tag error in cmd "
+ 				"0x%x reftag 0x%x blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+-				t10_pi_ref_tag(cmd->request),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_prot_ref_tag(cmd),
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 	}
+ 
+ 	if (lpfc_bgs_get_apptag_err(bgstat)) {
+@@ -3161,8 +3137,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				"9061 BLKGRD: App Tag error in cmd "
+ 				"0x%x reftag 0x%x blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+-				t10_pi_ref_tag(cmd->request),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_prot_ref_tag(cmd),
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 	}
+ 
+ 	if (lpfc_bgs_get_hi_water_mark_present(bgstat)) {
+@@ -3205,8 +3181,8 @@ lpfc_parse_bg_err(struct lpfc_hba *phba, struct lpfc_io_buf *lpfc_cmd,
+ 				"9057 BLKGRD: Unknown error in cmd "
+ 				"0x%x reftag 0x%x blk cnt 0x%x "
+ 				"bgstat=x%x bghm=x%x\n", cmd->cmnd[0],
+-				t10_pi_ref_tag(cmd->request),
+-				blk_rq_sectors(cmd->request), bgstat, bghm);
++				scsi_prot_ref_tag(cmd),
++				scsi_logical_block_count(cmd), bgstat, bghm);
+ 
+ 		/* Calcuate what type of error it was */
+ 		lpfc_calc_bg_err(phba, lpfc_cmd);
+@@ -5553,8 +5529,8 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 					 "reftag x%x cnt %u pt %x\n",
+ 					 dif_op_str[scsi_get_prot_op(cmnd)],
+ 					 cmnd->cmnd[0],
+-					 t10_pi_ref_tag(cmnd->request),
+-					 blk_rq_sectors(cmnd->request),
++					 scsi_prot_ref_tag(cmnd),
++					 scsi_logical_block_count(cmnd),
+ 					 (cmnd->cmnd[1]>>5));
+ 		}
+ 		err = lpfc_bg_scsi_prep_dma_buf(phba, lpfc_cmd);
+@@ -5565,8 +5541,8 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 					 "9038 BLKGRD: rcvd PROT_NORMAL cmd: "
+ 					 "x%x reftag x%x cnt %u pt %x\n",
+ 					 cmnd->cmnd[0],
+-					 t10_pi_ref_tag(cmnd->request),
+-					 blk_rq_sectors(cmnd->request),
++					 scsi_prot_ref_tag(cmnd),
++					 scsi_logical_block_count(cmnd),
+ 					 (cmnd->cmnd[1]>>5));
+ 		}
+ 		err = lpfc_scsi_prep_dma_buf(phba, lpfc_cmd);
 -- 
 2.32.0
 
