@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F03BC19F31
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 07:43:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04D99C41537
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 07:43:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 348B961050
+	by mail.kernel.org (Postfix) with ESMTP id ED65F61050
 	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 07:43:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239110AbhHFHnT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Aug 2021 03:43:19 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:24071 "EHLO
+        id S240125AbhHFHnU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Aug 2021 03:43:20 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:24074 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237114AbhHFHnO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 03:43:14 -0400
+        with ESMTP id S238682AbhHFHnP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 03:43:15 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1628235778; x=1659771778;
+  t=1628235780; x=1659771780;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Fl178F5dJP4MrjAB3i84z1UPjR8a6z38mtu0l91vz0c=;
-  b=jq24dfZkOtgmCZOgMQKMa0Dx6WuyDuvuofwutpJjkWIx4Iqg4W2WRvK7
-   NSWBaAgvANfJ7+yiOGyMB7f70nK3Wgb/9yIbWrysawK90Hwgo/JV7kFnI
-   /uc+8V5HKr5BAiZ7Ln66S61BisG7ljRw0ILrH3D+4RKt0A44zrujVMRXf
-   nW9C74oVAAJUhZ4aPW9aedDT7nl1F4rNDTS+BZSWkDYTF5J5P73ftyt6J
-   4nxIbag6KZVVP3VWuP7YVTftQLUGq5G65J9ykRF6nS+7jS27RCO11aIKI
-   Me6mhhQ+GVZIbBDJspMzpsZEhxH4LUBsPZ8bmzof2OIcPa2OVrZH1CktC
-   Q==;
+  bh=/GKiBcGNCHf0CUSVfrIJTyG1d7bktg9vl+k7UAd6i/o=;
+  b=b9p3MsgbUx4qa2jam2QdN+FGo3KrL5/DpH2bkbGwtkfvei2M3thoyXqf
+   edd2bTPBPv/0/SKiybbUMVhgr311LTqwwgg1AIe13X74JLph+YqZ2APou
+   l7kPCeyrqZdWAaiKSQU/6B2OyK9fRbX/bHnMDU5Nl3uvHRkW5BE9sJ75z
+   PJlxCYRlpAGibkxtpVuJw0DALoAHJzClJs/Te4fygXEp7kV4YmzHPOTL7
+   L400XV2lH6riqBJ1VWWwzQXkHKWUwBbn15fgXgk9CkORWmXsDAdu6uGCd
+   bhg+WVSP17XRFT94NBq4RfBhpSvRA4NCFaFshore1JpV/dt4mO8aD/nYs
+   g==;
 X-IronPort-AV: E=Sophos;i="5.84,300,1620662400"; 
-   d="scan'208";a="181296848"
+   d="scan'208";a="181296849"
 Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 06 Aug 2021 15:42:58 +0800
-IronPort-SDR: Z0Utv644KZAARpXSPue5ziqrUh8p3y9VNUhtagJ8vQLunRa/RIt6J95ioKq26K1MXPTotcRing
- sWHt1gtkfQ9XT5kp6RKXYPRp4jGJPZQEUCKTkMO19+E7o5sYHI9nJb/opNNGZscNoTfDBu4r1u
- k+cWkL1bjkYqbmD0sqj2LKwywXzFGPP/qbrvSeru4eB3Hqv2knDNf0L++izCkXKRDSqCEh65g3
- psfCZxctSMMZh1c4p28oTs4birIdTnaC3xsRdYakcYSAGexqBKy7ixKxlS5SxPvMcIPcoNRhqH
- MuWAIcTwHR8Dls9rYZMP8I8U
+  by ob1.hgst.iphmx.com with ESMTP; 06 Aug 2021 15:43:00 +0800
+IronPort-SDR: AVYJqk3FCXQsr1CDddDPVcBmq2RMnqBEAbiD2SnpU9GROkTKKg13kBNSpcyjEyernGHLaARlhW
+ tGRbrk9HBz7zZ+02sYqsFNLtDXheahfntZFWRy9dcCx0m07BY4UubLEXhPF3Hpn/bPPNTOoRhp
+ Z0v4fdjvckj0ME/WMOsg/UO7KRdVL7VzOt5rMdursLAJU6OXpUZb0NVS76toNb0aCWsObpS/YW
+ wlATbxAgzrWw05jR1DOj2jPLOXn/sAmm4R43H+m7Bok6kFphJukB0Z4VmcVKXVZQK/v/XezPIu
+ NfOOMjwgzEA3jsRjB/HyAyD1
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2021 00:20:27 -0700
-IronPort-SDR: hxnQVcRG+RVxt5TNy2+i3atUir5L2heCClnd1puHSz63USDGYrCK4vWjAm2wZ5EvHMe/aQo/H0
- /ooqtwOfmek9Qx5KQv6NqMP5CbrYKYzco3yqRsSihlpE/ogioSaPaXUgsYeWIDLA4Gfh/dBt+D
- fAPKbhimRLvAeGC7G8e2BWcNGkWz32/bqe5qEXCU8L7n02FU5zhgX+kIsAtWn6dMpS9ROOEwtq
- bOJ5HQvpyy8RZmw6TYv/aTntEo1gqfZ6knFJrXisIQSTqrDMz57MNcNO6Jm6bR9doY7KDg5QXn
- jog=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2021 00:20:28 -0700
+IronPort-SDR: y5vwB1t9n3hakKfYwHzE8HPyADy7ix4E9S9eVdpqtqKMI6G1Bcs1BSN8AVwSw2Ydl/3eBGX9BL
+ aDf+4TIJiZIWoMK0Q7BIJ0c/8datMmNi//xQTq2exriqycue4z5tL11fBG/lJWGbq//Fo16F8b
+ Vh67iPXYFj4cYVdXiOFJEg2hqINZ1OBg+rvrzhtOsuAOM23CJEUfUfXekTiOcQ3c3bzlJIVvJA
+ B+SVpc/+zx0md5DIou3XAl/6F1rcvwVX/ng3h99sc/3H3r40YXL7VxPlXk3pPmH4BR5ekL+/L/
+ y10=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 06 Aug 2021 00:42:57 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 06 Aug 2021 00:42:59 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org,
@@ -60,9 +60,9 @@ Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v2 3/9] libata: cleanup device sleep capability detection
-Date:   Fri,  6 Aug 2021 16:42:46 +0900
-Message-Id: <20210806074252.398482-4-damien.lemoal@wdc.com>
+Subject: [PATCH v2 4/9] libata: cleanup ata_dev_configure()
+Date:   Fri,  6 Aug 2021 16:42:47 +0900
+Message-Id: <20210806074252.398482-5-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210806074252.398482-1-damien.lemoal@wdc.com>
 References: <20210806074252.398482-1-damien.lemoal@wdc.com>
@@ -72,90 +72,155 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move the code to retrieve the device sleep capability and timings out of
-ata_dev_configure() into the helper function ata_dev_config_devslp().
-While at it, mark the device as supporting the device sleep capability
-only if the sata settings page was retrieved successfully to ensure that
-the timing information is correctly initialized.
+Introduce the helper functions ata_dev_config_lba() and
+ata_dev_config_chs() to configure the addressing capabilities of a
+device. Each helper takes a string as argument for the addressing
+information printed after these helpers execution completes.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/ata/libata-core.c | 55 +++++++++++++++++++++++----------------
- 1 file changed, 32 insertions(+), 23 deletions(-)
+ drivers/ata/libata-core.c | 110 ++++++++++++++++++++------------------
+ 1 file changed, 59 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index fe49197caf99..b13194432e5a 100644
+index b13194432e5a..2b6054cdd8fc 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -2363,6 +2363,37 @@ static void ata_dev_config_trusted(struct ata_device *dev)
+@@ -2363,6 +2363,52 @@ static void ata_dev_config_trusted(struct ata_device *dev)
  		dev->flags |= ATA_DFLAG_TRUSTED;
  }
  
-+static void ata_dev_config_devslp(struct ata_device *dev)
++static int ata_dev_config_lba(struct ata_device *dev,
++			      char *info, size_t infosz)
 +{
-+	u8 *sata_setting = dev->link->ap->sector_buf;
-+	unsigned int err_mask;
-+	int i, j;
++	const u16 *id = dev->id;
++	int info_ofst;
 +
-+	/*
-+	 * Check device sleep capability. Get DevSlp timing variables
-+	 * from SATA Settings page of Identify Device Data Log.
-+	 */
-+	if (!ata_id_has_devslp(dev->id))
-+		return;
++	dev->flags |= ATA_DFLAG_LBA;
 +
-+	err_mask = ata_read_log_page(dev,
-+				     ATA_LOG_IDENTIFY_DEVICE,
-+				     ATA_LOG_SATA_SETTINGS,
-+				     sata_setting, 1);
-+	if (err_mask) {
-+		ata_dev_dbg(dev,
-+			    "failed to get SATA Settings Log, Emask 0x%x\n",
-+			    err_mask);
-+		return;
++	if (ata_id_has_lba48(id)) {
++		dev->flags |= ATA_DFLAG_LBA48;
++		strscpy(info, "LBA48 ", infosz);
++
++		if (dev->n_sectors >= (1UL << 28) &&
++		    ata_id_has_flush_ext(id))
++			dev->flags |= ATA_DFLAG_FLUSH_EXT;
++	} else {
++		strscpy(info, "LBA ", infosz);
 +	}
++	info_ofst = strlen(info);
 +
-+	dev->flags |= ATA_DFLAG_DEVSLP;
-+	for (i = 0; i < ATA_LOG_DEVSLP_SIZE; i++) {
-+		j = ATA_LOG_DEVSLP_OFFSET + i;
-+		dev->devslp_timing[i] = sata_setting[j];
-+	}
++	/* config NCQ */
++	return ata_dev_config_ncq(dev, info + info_ofst,
++				  infosz - info_ofst);
 +}
 +
- /**
-  *	ata_dev_configure - Configure the specified ATA/ATAPI device
-  *	@dev: Target device to configure
-@@ -2565,29 +2596,7 @@ int ata_dev_configure(struct ata_device *dev)
- 			}
++static void ata_dev_config_chs(struct ata_device *dev,
++			       char *info, size_t infosz)
++{
++	const u16 *id = dev->id;
++
++	/* Default translation */
++	dev->cylinders	= id[1];
++	dev->heads	= id[3];
++	dev->sectors	= id[6];
++
++	if (ata_id_current_chs_valid(id)) {
++		/* Current CHS translation is valid. */
++		dev->cylinders = id[54];
++		dev->heads     = id[55];
++		dev->sectors   = id[56];
++	}
++
++	snprintf(info, infosz, "CHS %u/%u/%u",
++		 dev->cylinders, dev->heads, dev->sectors);
++}
++
+ static void ata_dev_config_devslp(struct ata_device *dev)
+ {
+ 	u8 *sata_setting = dev->link->ap->sector_buf;
+@@ -2418,6 +2464,7 @@ int ata_dev_configure(struct ata_device *dev)
+ 	char revbuf[7];		/* XYZ-99\0 */
+ 	char fwrevbuf[ATA_ID_FW_REV_LEN+1];
+ 	char modelbuf[ATA_ID_PROD_LEN+1];
++	char lba_info[40];
+ 	int rc;
+ 
+ 	if (!ata_dev_enabled(dev) && ata_msg_info(ap)) {
+@@ -2539,61 +2586,22 @@ int ata_dev_configure(struct ata_device *dev)
  		}
  
--		/* Check and mark DevSlp capability. Get DevSlp timing variables
--		 * from SATA Settings page of Identify Device Data Log.
--		 */
--		if (ata_id_has_devslp(dev->id)) {
--			u8 *sata_setting = ap->sector_buf;
--			int i, j;
+ 		if (ata_id_has_lba(id)) {
+-			const char *lba_desc;
+-			char ncq_desc[24];
 -
--			dev->flags |= ATA_DFLAG_DEVSLP;
--			err_mask = ata_read_log_page(dev,
--						     ATA_LOG_IDENTIFY_DEVICE,
--						     ATA_LOG_SATA_SETTINGS,
--						     sata_setting,
--						     1);
--			if (err_mask)
--				ata_dev_dbg(dev,
--					    "failed to get Identify Device Data, Emask 0x%x\n",
--					    err_mask);
--			else
--				for (i = 0; i < ATA_LOG_DEVSLP_SIZE; i++) {
--					j = ATA_LOG_DEVSLP_OFFSET + i;
--					dev->devslp_timing[i] = sata_setting[j];
--				}
--		}
-+		ata_dev_config_devslp(dev);
- 		ata_dev_config_sense_reporting(dev);
- 		ata_dev_config_zac(dev);
- 		ata_dev_config_trusted(dev);
+-			lba_desc = "LBA";
+-			dev->flags |= ATA_DFLAG_LBA;
+-			if (ata_id_has_lba48(id)) {
+-				dev->flags |= ATA_DFLAG_LBA48;
+-				lba_desc = "LBA48";
+-
+-				if (dev->n_sectors >= (1UL << 28) &&
+-				    ata_id_has_flush_ext(id))
+-					dev->flags |= ATA_DFLAG_FLUSH_EXT;
+-			}
+-
+-			/* config NCQ */
+-			rc = ata_dev_config_ncq(dev, ncq_desc, sizeof(ncq_desc));
++			rc = ata_dev_config_lba(dev, lba_info, sizeof(lba_info));
+ 			if (rc)
+ 				return rc;
+-
+-			/* print device info to dmesg */
+-			if (ata_msg_drv(ap) && print_info) {
+-				ata_dev_info(dev, "%s: %s, %s, max %s\n",
+-					     revbuf, modelbuf, fwrevbuf,
+-					     ata_mode_string(xfer_mask));
+-				ata_dev_info(dev,
+-					     "%llu sectors, multi %u: %s %s\n",
+-					(unsigned long long)dev->n_sectors,
+-					dev->multi_count, lba_desc, ncq_desc);
+-			}
+ 		} else {
+-			/* CHS */
+-
+-			/* Default translation */
+-			dev->cylinders	= id[1];
+-			dev->heads	= id[3];
+-			dev->sectors	= id[6];
+-
+-			if (ata_id_current_chs_valid(id)) {
+-				/* Current CHS translation is valid. */
+-				dev->cylinders = id[54];
+-				dev->heads     = id[55];
+-				dev->sectors   = id[56];
+-			}
++			ata_dev_config_chs(dev, lba_info, sizeof(lba_info));
++		}
+ 
+-			/* print device info to dmesg */
+-			if (ata_msg_drv(ap) && print_info) {
+-				ata_dev_info(dev, "%s: %s, %s, max %s\n",
+-					     revbuf,	modelbuf, fwrevbuf,
+-					     ata_mode_string(xfer_mask));
+-				ata_dev_info(dev,
+-					     "%llu sectors, multi %u, CHS %u/%u/%u\n",
+-					     (unsigned long long)dev->n_sectors,
+-					     dev->multi_count, dev->cylinders,
+-					     dev->heads, dev->sectors);
+-			}
++		/* print device info to dmesg */
++		if (ata_msg_drv(ap) && print_info) {
++			ata_dev_info(dev, "%s: %s, %s, max %s\n",
++				     revbuf, modelbuf, fwrevbuf,
++				     ata_mode_string(xfer_mask));
++			ata_dev_info(dev,
++				     "%llu sectors, multi %u, %s\n",
++				     (unsigned long long)dev->n_sectors,
++				     dev->multi_count, lba_info);
+ 		}
+ 
+ 		ata_dev_config_devslp(dev);
 -- 
 2.31.1
 
