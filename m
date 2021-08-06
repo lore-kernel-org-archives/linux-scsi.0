@@ -2,169 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B27A1C4320A
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 21:24:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D71CCC4320A
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 22:12:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A2E96108D
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 21:24:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE12161179
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 22:12:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240733AbhHFVZK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Aug 2021 17:25:10 -0400
-Received: from mail.kernel.org ([198.145.29.99]:38082 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240338AbhHFVZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 6 Aug 2021 17:25:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4064360EE8;
-        Fri,  6 Aug 2021 21:24:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628285093;
-        bh=OJXVvQV1lg0BTpnm4/Nv7ym7sLl0HIhqKTRdfOznYwg=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=goH/1yJM9CgOOo+OcwLI85KOcKMTJKy8qsbi9kmA/eUKLp96x9J8M/JAw+C0HoXtl
-         LLP9C54GqLgkjnKpGR9kkrYUXUKz/g5bCUA/CpaOzR6XQzlUTgr5y3Dk7zGrmBxX8N
-         en5fOF69mFY7iz78CR1nGEcyNekjfw/CZ0EQbDXeU3Hh82nmIhL0nXS2kQ3mhduoVP
-         XswzHNEybaPpFHtw5KHBi3RP5f5dPsW9v9eFEsYvxzj76KiOdi8Bw4rMEV5B6PvQ1z
-         CLKL2wH1wGanKV5ZinDF8ZSKormkVT85L0UCSY8TizkDvEv+r8Jkclod/etLJWRRFl
-         2rifLx8uQfKtA==
-Date:   Fri, 6 Aug 2021 16:24:52 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-Cc:     Mark Rutland <mark.rutland@arm.com>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        linux-pci@vger.kernel.org, Alexander Duyck <alexanderduyck@fb.com>,
-        Russell Currey <ruscur@russell.cc>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        oss-drivers@corigine.com, Paul Mackerras <paulus@samba.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, Jiri Olsa <jolsa@redhat.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        linux-perf-users@vger.kernel.org,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        linux-scsi@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
-        Ido Schimmel <idosch@nvidia.com>, x86@kernel.org,
-        qat-linux@intel.com,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Ingo Molnar <mingo@redhat.com>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        linux-wireless@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Fiona Trahe <fiona.trahe@intel.com>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Borislav Petkov <bp@alien8.de>, Michael Buesch <m@bues.ch>,
-        Jiri Pirko <jiri@nvidia.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Namhyung Kim <namhyung@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>,
-        Juergen Gross <jgross@suse.com>,
-        Salil Mehta <salil.mehta@huawei.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        xen-devel@lists.xenproject.org, Vadym Kochan <vkochan@marvell.com>,
-        MPT-FusionLinux.pdl@broadcom.com,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-usb@vger.kernel.org,
-        Wojciech Ziemba <wojciech.ziemba@intel.com>,
-        linux-kernel@vger.kernel.org, Taras Chornyi <tchornyi@marvell.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        linux-crypto@vger.kernel.org, kernel@pengutronix.de,
-        netdev@vger.kernel.org, Frederic Barrat <fbarrat@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        linuxppc-dev@lists.ozlabs.org,
-        "David S. Miller" <davem@davemloft.net>
-Subject: Re: [PATCH v2 0/6] PCI: Drop duplicated tracking of a pci_dev's
- bound driver
-Message-ID: <20210806212452.GA1867870@bjorn-Precision-5520>
+        id S237272AbhHFWNA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Aug 2021 18:13:00 -0400
+Received: from mail-pj1-f42.google.com ([209.85.216.42]:39794 "EHLO
+        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231577AbhHFWNA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 18:13:00 -0400
+Received: by mail-pj1-f42.google.com with SMTP id u21-20020a17090a8915b02901782c36f543so15838608pjn.4;
+        Fri, 06 Aug 2021 15:12:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=6HRtuA39Az3shzqSL/ACCUU5ZgIfTtFc9KrRUNMmSP4=;
+        b=dR0lZ+7ooWetMcKxWb99/s7oUghRVaXSOLEtRg9R7YSknwbXbbDi4ecVXz/EHlnkVf
+         IHqzi+LYhJgBnRpA20ZQfg8awX535CeviTaWBz4IJmrFScb+rvd6BN7mWYi9QsUIhvPl
+         CGwoc9WWMlyo5gmPqQyPD8isrLGNG3Adj8aCmsUVpZpIA1YfZ9Bn7X/+E/uQPEX/gc8+
+         1JVo7vz+jKZ2hjflpraZpaCnhEcmlGBkh2VC8AOWY07V1eryrOceH3A2YFIuq3EfEtYX
+         Hv9JfwgUy9FnRS3ZKO8pfueHHEeeJgYv6N6u+hDWnlyGJlZttUlNvC340qPujGs+vNog
+         d/mQ==
+X-Gm-Message-State: AOAM5315r1hU5ddVWT7+EBVMSxnk4pGbuOD3PukmiiAHqOXkd9cua5yL
+        XIK9WwttmV4+WE7+a8CQb6aBJP+CnCI0+HId
+X-Google-Smtp-Source: ABdhPJxqqw23/WJD2xpyIGP6m110WAwWM2tiap/cmyMtoOaPY4n5iapk4141156XtFjGgtsqkQ2O8g==
+X-Received: by 2002:a63:2fc2:: with SMTP id v185mr116386pgv.71.1628287962249;
+        Fri, 06 Aug 2021 15:12:42 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:1655:15af:599e:3de1])
+        by smtp.gmail.com with ESMTPSA id p8sm11362530pfw.35.2021.08.06.15.12.40
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 06 Aug 2021 15:12:41 -0700 (PDT)
+Subject: Re: [PATCH][next] scsi: ufs: Fix unsigned int compared with less than
+ zero
+To:     Colin King <colin.king@canonical.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20210806144301.19864-1-colin.king@canonical.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <e9e4dcf0-f42d-a4c6-0be8-5c7cb84c91ea@acm.org>
+Date:   Fri, 6 Aug 2021 15:12:40 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210806064623.3lxl4clzbjpmchef@pengutronix.de>
+In-Reply-To: <20210806144301.19864-1-colin.king@canonical.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 06, 2021 at 08:46:23AM +0200, Uwe Kleine-König wrote:
-> On Thu, Aug 05, 2021 at 06:42:34PM -0500, Bjorn Helgaas wrote:
-
-> > I looked at all the bus_type.probe() methods, it looks like pci_dev is
-> > not the only offender here.  At least the following also have a driver
-> > pointer in the device struct:
-> > 
-> >   parisc_device.driver
-> >   acpi_device.driver
-> >   dio_dev.driver
-> >   hid_device.driver
-> >   pci_dev.driver
-> >   pnp_dev.driver
-> >   rio_dev.driver
-> >   zorro_dev.driver
+On 8/6/21 7:43 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 > 
-> Right, when I converted zorro_dev it was pointed out that the code was
-> copied from pci and the latter has the same construct. :-)
-> See
-> https://lore.kernel.org/r/20210730191035.1455248-5-u.kleine-koenig@pengutronix.de
-> for the patch, I don't find where pci was pointed out, maybe it was on
-> irc only.
-
-Oh, thanks!  I looked to see if you'd done something similar
-elsewhere, but I missed this one.
-
-> > Looking through the places that care about pci_dev.driver (the ones
-> > updated by patch 5/6), many of them are ... a little dubious to begin
-> > with.  A few need the "struct pci_error_handlers *err_handler"
-> > pointer, so that's probably legitimate.  But many just need a name,
-> > and should probably be using dev_driver_string() instead.
+> Variable tag is currently and unsigned int and is being compared to
+> less than zero, this check is always false. Fix this by making tag
+> an int.
 > 
-> Yeah, I considered adding a function to get the driver name from a
-> pci_dev and a function to get the error handlers. Maybe it's an idea to
-> introduce these two and then use to_pci_driver(pdev->dev.driver) for the
-> few remaining users? Maybe doing that on top of my current series makes
-> sense to have a clean switch from pdev->driver to pdev->dev.driver?!
+> Addresses-Coverity: ("Macro compares unsigned to 0")
+> Fixes: 4728ab4a8e64 ("scsi: ufs: Remove ufshcd_valid_tag()")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 47a5085f16a9..21378682cb4f 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6976,7 +6976,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+>   {
+>   	struct Scsi_Host *host = cmd->device->host;
+>   	struct ufs_hba *hba = shost_priv(host);
+> -	unsigned int tag = cmd->request->tag;
+> +	int tag = cmd->request->tag;
+>   	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
+>   	unsigned long flags;
+>   	int err = FAILED;
 
-I'd propose using dev_driver_string() for these places:
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-  eeh_driver_name() (could change callers to use dev_driver_string())
-  bcma_host_pci_probe()
-  qm_alloc_uacce()
-  hns3_get_drvinfo()
-  prestera_pci_probe()
-  mlxsw_pci_probe()
-  nfp_get_drvinfo()
-  ssb_pcihost_probe()
+Thanks!
 
-The use in mpt_device_driver_register() looks unnecessary: it's only
-to get a struct pci_device_id *, which is passed to ->probe()
-functions that don't need it.
-
-The use in adf_enable_aer() looks wrong: it sets the err_handler
-pointer in one of the adf_driver structs.  I think those structs
-should be basically immutable, and the drivers that call
-adf_enable_aer() from their .probe() methods should set
-".err_handler = &adf_err_handler" in their static adf_driver
-definitions instead.
-
-I think that basically leaves these:
-
-  uncore_pci_probe()     # .id_table, custom driver "registration"
-  match_id()             # .id_table, arch/x86/kernel/probe_roms.c
-  xhci_pci_quirks()      # .id_table
-  pci_error_handlers()   # roll-your-own AER handling, drivers/misc/cxl/guest.c
-
-I think it would be fine to use to_pci_driver(pdev->dev.driver) for
-these few.
-
-Bjorn
+Bart.
