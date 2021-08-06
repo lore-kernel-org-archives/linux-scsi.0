@@ -2,163 +2,204 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64D53C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 23:42:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD88EC4338F
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 02:12:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B6E261102
-	for <linux-scsi@archiver.kernel.org>; Thu,  5 Aug 2021 23:42:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 919E161186
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 02:12:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239982AbhHEXmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 5 Aug 2021 19:42:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36664 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238198AbhHEXmv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Aug 2021 19:42:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C4D0E610CD;
-        Thu,  5 Aug 2021 23:42:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628206956;
-        bh=Z/61WgkabawKvCqT33aQpch4UJfYpbpJ/lpjJTDKmJE=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=KuDKmWy8QxzyN9WG7Q1pVzQ6S5j62PkYn7/jQtSiQ405ZyO5HsJaxlGQ4ptwW9KWQ
-         8JzTD06NkExqlaqFClHSIgp3ZV4HCT08Q0ZvAqUHpT3JHz2y5xKJeL0G0pylHGRvn6
-         U5xMy5iYmp2VcbacJIAcWlgxiuyj7K4SXjueq2YyorPxHzpAkvrgrNXJfYWPF6dNbg
-         +rqlXTqZ1NVd0xWfnIPttHUHPunKRAjCa2hTqiMX3yjjCM3obbaCQHJI0obD1yIuBB
-         sBxx4HfHs+13rY1cXK0ifZwIzG7diuJ8rdtPvOtsYTWDljySsOW/3p75koSGgoeKnq
-         J3gIMCJ0Jo3qg==
-Date:   Thu, 5 Aug 2021 18:42:34 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, kernel@pengutronix.de,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-pci@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        Russell Currey <ruscur@russell.cc>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        Peter Zijlstra <peterz@infradead.org>,
-        Ingo Molnar <mingo@redhat.com>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Jiri Olsa <jolsa@redhat.com>,
-        Namhyung Kim <namhyung@kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Borislav Petkov <bp@alien8.de>, x86@kernel.org,
-        "H. Peter Anvin" <hpa@zytor.com>,
-        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Salil Mehta <salil.mehta@huawei.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Vadym Kochan <vkochan@marvell.com>,
-        Taras Chornyi <tchornyi@marvell.com>,
-        Jiri Pirko <jiri@nvidia.com>, Ido Schimmel <idosch@nvidia.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Michael Buesch <m@bues.ch>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Fiona Trahe <fiona.trahe@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@intel.com>,
-        Wojciech Ziemba <wojciech.ziemba@intel.com>,
-        Alexander Duyck <alexanderduyck@fb.com>,
-        linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org,
-        linux-perf-users@vger.kernel.org, linux-wireless@vger.kernel.org,
-        linux-crypto@vger.kernel.org, qat-linux@intel.com,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        netdev@vger.kernel.org, oss-drivers@corigine.com,
-        xen-devel@lists.xenproject.org, linux-usb@vger.kernel.org
-Subject: Re: [PATCH v2 0/6] PCI: Drop duplicated tracking of a pci_dev's
- bound driver
-Message-ID: <20210805234234.GA1797883@bjorn-Precision-5520>
+        id S236411AbhHFCMc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 5 Aug 2021 22:12:32 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:33722 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234051AbhHFCM3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Aug 2021 22:12:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1628215934; x=1659751934;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=RqzOkI5ttvdRoYiqijsbefZvlSlJQIXX6ugj6QSR6zY=;
+  b=hNBCSmwdyr+RDa8V+8L7zyhXhE+Nzm6DVlTN7Kk6tM/AakzBPKhCtETv
+   fFMGW1g6Asoiv/zVcp2EjkbgLTg00WpcYu8mEpTTNmwIZoNGVx2lVDyvz
+   jvLsjSk0LI8hmSgEF/5M9DhvtJ4bBeTZv/ufe+30ttZr0QwvbHJcm4Itt
+   5TBebne51ilYlqxZ4zSDIjylI1B2fHOse8pU3r3jjef28eZxL0OVp/9Jp
+   N4vKqcWArb6fP4PpV9FwN3M56w8Na2lly1bnOqEZdKrsHJX2zm34130t9
+   bbwU4x1+2r+JjhM7rkEG7M44MRdXjHd7qa7mEEwtVjNWVFDUgrcRg7nGw
+   A==;
+X-IronPort-AV: E=Sophos;i="5.84,299,1620662400"; 
+   d="scan'208";a="288024619"
+Received: from mail-dm6nam12lp2169.outbound.protection.outlook.com (HELO NAM12-DM6-obe.outbound.protection.outlook.com) ([104.47.59.169])
+  by ob1.hgst.iphmx.com with ESMTP; 06 Aug 2021 10:12:14 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=bTGjAB1XoMapTwSQRsSsUrN9B+3GIthk0VN8ZQ8iBvw5ZlKLK0nL04SzQwezo3Q2vhZB19xd741z3g53CuVXmtN/8zdaiLafSTSQLzM0j/2087fn81ubszc/FU8r7Yspa2zVTo4RWCr+ea42O3l0aUByygyUkqodx0oPGqr0rxAMGjMpG1beTtMZUsFppHl7JXq8OPvRoEUBj6peWDaCJAoBTviz9ROZZgfMVf6Y5OBLh257rCK1ARvbm7KSdwj9zOzAordh4uNvnngRV8BytRMiXanIcES29tfnoJLtxW7VUWGNnawA4MmP+M+0//jvf2wzd1WP7mg0eaMvTaAL1Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XjjEOzKrNBPPpt+RNH0VEAuvWmi19LTVVNLeB+od4Ro=;
+ b=Xf2sJqPfusIxbffhwubq48ZaGobjAzYPuu8Np+AqAw/4N5BlfH4ANsTp2ECJikP6KL++7lIAM2Te7ZJmqABMchwslbgBIq1xJsNm2rLfNwlagX2RkR45H5XgMB901+WSxCOcem7OtovI8XAGzckyUMqklhiVMK0kjNbZPe6DU6eCiTcJmfKW/yXk6x3kUVMsZd1K1Tdp2C1yy/Qe1K/UcqhmhSFGO9Qnu461IqCf1Dw24rXPMm7lnKm7tqK9mVnM2ACT5+JRY62OrUIYu+Uq2cEHzKfvkpIuvsO5Z9xwMdoF9QTx4eMZhC2C7WKdoq57JEUhoqsIPFQ7enLzFd9ZjA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=XjjEOzKrNBPPpt+RNH0VEAuvWmi19LTVVNLeB+od4Ro=;
+ b=oqKdRPp5DK+Ll+7kVKKcdTY1tBM6Qzja1Wens1ZFYMQujuoVtN2J+y4hQ5Q5OEH7R85rrBgliwes+ZgvCbQ0/1q+ePFyerdzxEmqhBBKBF2BKqbmac0t039Bcw+UyjcojHGJVbfmHO9jeVNJNVX/oBWO7JlHT4Mc97QaYNDBYxw=
+Received: from DM6PR04MB7081.namprd04.prod.outlook.com (2603:10b6:5:244::21)
+ by DM5PR04MB0668.namprd04.prod.outlook.com (2603:10b6:3:f9::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4373.21; Fri, 6 Aug
+ 2021 02:12:04 +0000
+Received: from DM6PR04MB7081.namprd04.prod.outlook.com
+ ([fe80::e521:352:1d70:31c]) by DM6PR04MB7081.namprd04.prod.outlook.com
+ ([fe80::e521:352:1d70:31c%7]) with mapi id 15.20.4394.018; Fri, 6 Aug 2021
+ 02:12:04 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+CC:     Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 0/4] Initial support for multi-actuator HDDs
+Thread-Topic: [PATCH v3 0/4] Initial support for multi-actuator HDDs
+Thread-Index: AQHXgb7nBT0SP/zb8kqWuIxTGXvQIg==
+Date:   Fri, 6 Aug 2021 02:12:04 +0000
+Message-ID: <DM6PR04MB70810037B2C180490FD0C623E7F39@DM6PR04MB7081.namprd04.prod.outlook.com>
+References: <20210726013806.84815-1-damien.lemoal@wdc.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: f1bb9c59-3200-4bc6-fd63-08d9587f9588
+x-ms-traffictypediagnostic: DM5PR04MB0668:
+x-microsoft-antispam-prvs: <DM5PR04MB0668F45CEA1C550377DEE019E7F39@DM5PR04MB0668.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:8882;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: mOEr+oS/VGxZks3y5zhFmn6F+JSVttv7fh0zfnUvUXiQY+WH12lo+EWw0JNRopgX9e66I4rGtNEORblW06VUwaLynTrXfmUMARPTMwNq9ix0K7EindSO1R3o/ZP6JvcxWlR8EGU6dlbMQCQlKP0OxYJt074C2m9Kwgg+acF08AeS5+JgWc6GRq2Sxyn/pQ38KvuzV1ab/CS5spUpk5MByT23BgSuxUPVVRGGXtPWM711DwrFH2hi1m+6aaqvx8qvu0wkzO5GVHxjj+H4MOn1JduEoKeAB2BHs5A6KV69nMoxFVmugLnhK5HwgNCnhs6j3ymdenfz/zTbNRrp8lAgJrjWvQg6XL7rOeGmXxZjCjmxLPf5rogDMHKiWe5rH2oXFdKeS/RwCVYByKZ5t5T8yj1HqU4YmdV9qV5gdyPpk1IXxcEdmCK3g27GMToeqUuOQdLnTDwHD+eB4SCsR0IykNGaIOBooL0ZzjcTrk3SHIiO5f6xYsHG9PCY2OhSCnTTsq09Cs4mesfoArfl2SRDn70/x0h/f+GbGbLp9yamcJxnF+vHa9W48Tj7pxyeZGaHGlZx0bOZ2GXxcBsa/1o7P+U0oYKrziTfgznL1CwI9HdOIyAJvwA8Mvrx7cunLtNxA4BmiEzgAFCSIU8yfPvCe694EUK7dr1gXT0eEC8hABKgcHtSy1VDwqs+kd2+zcGwGzgYYYI/p6Mj9XRl55sk9g==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB7081.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(346002)(366004)(376002)(396003)(136003)(39860400002)(55016002)(8936002)(4326008)(71200400001)(110136005)(33656002)(38100700002)(91956017)(8676002)(53546011)(52536014)(76116006)(7696005)(122000001)(64756008)(6506007)(38070700005)(478600001)(5660300002)(66556008)(66476007)(83380400001)(66946007)(2906002)(316002)(66446008)(9686003)(186003)(86362001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?LgfqxLVve/35wOVkfpDd6Bgf9VF0cIPcoi3cbNqmaf186zjzWe1ZMGOE+RLm?=
+ =?us-ascii?Q?Ds19NMsAtpEHiqsHseXwfamVOSqWiUs+SK7nGS7S0xm+zmcAWq7HkJiGsVAo?=
+ =?us-ascii?Q?tg1PR33ERd5xD8PfJMymGM5wp30roLqMHCCbq2malgZQV6Q5EHQlIHeaL+Rw?=
+ =?us-ascii?Q?RADmdKq5MWACyYpJ+5a0W2zkewIb07yK4f1b+i9wG2F1VBrEcpRlGaMSw1Kc?=
+ =?us-ascii?Q?AWFnRL42u7jacWwbqGcKytMhI1Pb2Ec20IJ1EAlfgINjeFm1HbopbQEi9E0C?=
+ =?us-ascii?Q?sEOBGQX8gcyDrjRkmCQLsZQ0tsNrt04zOeSleXCE1mG/akx/TKe4P9FpbZbk?=
+ =?us-ascii?Q?i0/AqqCiBUeJHoMVIR+ipe07XN7yjrlNly3vwXFDsSg42Jmzdyw2C2r1dAsU?=
+ =?us-ascii?Q?i1Ce8AcongMvfHuN4fQeqT2gS65oSZ0tjPgZnlwegnhSWxqx1mM9Y+5MhnMr?=
+ =?us-ascii?Q?sTXIiE/rNFeobR9jfZUDEtt9X4gtYy5tj6qH37K25kbjieXI/J9/CNXjQfXY?=
+ =?us-ascii?Q?duxb+F0FzOJsYeehZn7jiPMmCcnPrOEMB/vDcH7is60K7Y8j9CNnVW0wVfgu?=
+ =?us-ascii?Q?/9yiKEd3Q2yw2pobRgHXN2LxDXRxpa34Rh8/R2w+j3DKMMAuGlCC8trOcjOu?=
+ =?us-ascii?Q?eJXN7F9TVhtVl4V1JRosa1TEo851b1u3yEOtb3UkziHPwUNZv8GJvPw8xQ4q?=
+ =?us-ascii?Q?uEb/sN4ay8ckOeYMnTy4W44iuWlfVUv5KFhRSTIPRT9blJXIwOyx227oufF4?=
+ =?us-ascii?Q?I7hZYXJDZmoGxQONe8QQBegHefFcR3ebr6KnhceRsXhZ0AldMVjjoNoo3HS2?=
+ =?us-ascii?Q?BEu/hnkqrNGqSllcgl1KdWJaGa7NvALDxzvb92K3NKAaYywvhZvdjQfXCXeS?=
+ =?us-ascii?Q?XTl0ksQswQawqLD5gGnjANX96aSexpiCUh0PuBxzsIQw08AAUsP+MUGxdwcu?=
+ =?us-ascii?Q?ED6eaz+bytLNKWIlxwVnqtt+4Kh8MqgMXHzliZVlq8dbattgmid7ekkmrkLa?=
+ =?us-ascii?Q?AsBOSQZzsxuHPo0eP1LGSD0bboxkHoq8zlP+AVXLZ/AZhxFq9LfcOwPcJk3O?=
+ =?us-ascii?Q?pCusWTupE8Nwt1/IHvbBvq+w0w71vZZlDRGjZN2fByNePhaKtvEfT+pm0Sd4?=
+ =?us-ascii?Q?chqBSbcPU+UgPQVZVfMJ2xH8Eq1kKgztvIq1LNSfuJR+OC87H1WLwhAi5CY0?=
+ =?us-ascii?Q?C8QiTLVq80AsNibKk8TDKZ5M774Ho6gb0KhU5oG0zIDkR1fegv0cwAKGcW/Z?=
+ =?us-ascii?Q?2oSJh8vqfhrAflnGzDtuR/2Crb2OnmpOXZ2xpy0UvDMqb2K3n2CEAfjInwuL?=
+ =?us-ascii?Q?8JnTSyW9PcMIWk8xcucKNR3YTHiLwzSreE7RtaX4MyHo4ZPX3BijWBp8XPCG?=
+ =?us-ascii?Q?WjI+s0izwEXzk/W31DVUXw0uyd1ougHDnqIVZDEF09ZLwNG6EA=3D=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210803100150.1543597-1-u.kleine-koenig@pengutronix.de>
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB7081.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f1bb9c59-3200-4bc6-fd63-08d9587f9588
+X-MS-Exchange-CrossTenant-originalarrivaltime: 06 Aug 2021 02:12:04.1046
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: P4aBkCS4kJ7bdZgtHif6Y7kOYdKUiju0jSYg24w9DllLvOI/gTednE42dIizx5xkie6DkM81/vmzhu8XYoqN7g==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB0668
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 03, 2021 at 12:01:44PM +0200, Uwe Kleine-König wrote:
-> Hello,
-> 
-> changes since v1 (https://lore.kernel.org/linux-pci/20210729203740.1377045-1-u.kleine-koenig@pengutronix.de):
-> 
-> - New patch to simplify drivers/pci/xen-pcifront.c, spotted and
->   suggested by Boris Ostrovsky
-> - Fix a possible NULL pointer dereference I introduced in xen-pcifront.c
-> - A few whitespace improvements
-> - Add a commit log to patch #6 (formerly #5)
-> 
-> I also expanded the audience for patches #4 and #6 to allow affected
-> people to actually see the changes to their drivers.
-> 
-> Interdiff can be found below.
-> 
-> The idea is still the same: After a few cleanups (#1 - #3) a new macro
-> is introduced abstracting access to struct pci_dev->driver. All users
-> are then converted to use this and in the last patch the macro is
-> changed to make use of struct pci_dev::dev->driver to get rid of the
-> duplicated tracking.
-
-I love the idea of this series!
-
-I looked at all the bus_type.probe() methods, it looks like pci_dev is
-not the only offender here.  At least the following also have a driver
-pointer in the device struct:
-
-  parisc_device.driver
-  acpi_device.driver
-  dio_dev.driver
-  hid_device.driver
-  pci_dev.driver
-  pnp_dev.driver
-  rio_dev.driver
-  zorro_dev.driver
-
-Do you plan to do the same for all of them, or is there some reason
-why they need the pointer and PCI doesn't?
-
-In almost all cases, other buses define a "to_<bus>_driver()"
-interface.  In fact, PCI already has a to_pci_driver().
-
-This series adds pci_driver_of_dev(), which basically just means we
-can do this:
-
-  pdrv = pci_driver_of_dev(pdev);
-
-instead of this:
-
-  pdrv = to_pci_driver(pdev->dev.driver);
-
-I don't see any other "<bus>_driver_of_dev()" interfaces, so I assume
-other buses just live with the latter style?  I'd rather not be
-different and have two ways to get the "struct pci_driver *" unless
-there's a good reason.
-
-Looking through the places that care about pci_dev.driver (the ones
-updated by patch 5/6), many of them are ... a little dubious to begin
-with.  A few need the "struct pci_error_handlers *err_handler"
-pointer, so that's probably legitimate.  But many just need a name,
-and should probably be using dev_driver_string() instead.
-
-Bjorn
+On 2021/07/26 10:38, Damien Le Moal wrote:=0A=
+> Single LUN multi-actuator hard-disks are cappable to seek and execute=0A=
+> multiple commands in parallel. This capability is exposed to the host=0A=
+> using the Concurrent Positioning Ranges VPD page (SCSI) and Log (ATA).=0A=
+> Each positioning range describes the contiguous set of LBAs that an=0A=
+> actuator serves.=0A=
+> =0A=
+> This series adds support the scsi disk driver to retreive this=0A=
+> information and advertize it to user space through sysfs. libata is also=
+=0A=
+> modified to handle ATA drives.=0A=
+> =0A=
+> The first patch adds the block layer plumbing to expose concurrent=0A=
+> sector ranges of the device through sysfs as a sub-directory of the=0A=
+> device sysfs queue directory. Patch 2 and 3 add support to sd and=0A=
+> libata. Finally patch 4 documents the sysfs queue attributed changes.=0A=
+> =0A=
+> This series does not attempt in any way to optimize accesses to=0A=
+> multi-actuator devices (e.g. block IO scheduler or filesystems). This=0A=
+> initial support only exposes the actuators information to user space=0A=
+> through sysfs.=0A=
+=0A=
+Jens, Martin,=0A=
+=0A=
+re-ping... Any comment on this series ?=0A=
+=0A=
+> =0A=
+> Changes from v2:=0A=
+> * Update patch 1 to fix a compilation warning for a potential NULL=0A=
+>   pointer dereference of the cr argument of blk_queue_set_cranges().=0A=
+>   Warning reported by the kernel test robot <lkp@intel.com>).=0A=
+> =0A=
+> Changes from v1:=0A=
+> * Moved libata-scsi hunk from patch 1 to patch 3 where it belongs=0A=
+> * Fixed unintialized variable in patch 2=0A=
+>   Reported-by: kernel test robot <lkp@intel.com>=0A=
+>   Reported-by: Dan Carpenter <dan.carpenter@oracle.com=0A=
+> * Changed patch 3 adding struct ata_cpr_log to contain both the number=0A=
+>   of concurrent ranges and the array of concurrent ranges.=0A=
+> * Added a note in the documentation (patch 4) about the unit used for=0A=
+>   the concurrent ranges attributes.=0A=
+> =0A=
+> Damien Le Moal (4):=0A=
+>   block: Add concurrent positioning ranges support=0A=
+>   scsi: sd: add concurrent positioning ranges support=0A=
+>   libata: support concurrent positioning ranges log=0A=
+>   doc: document sysfs queue/cranges attributes=0A=
+> =0A=
+>  Documentation/block/queue-sysfs.rst |  30 ++-=0A=
+>  block/Makefile                      |   2 +-=0A=
+>  block/blk-cranges.c                 | 295 ++++++++++++++++++++++++++++=
+=0A=
+>  block/blk-sysfs.c                   |  13 ++=0A=
+>  block/blk.h                         |   3 +=0A=
+>  drivers/ata/libata-core.c           |  52 +++++=0A=
+>  drivers/ata/libata-scsi.c           |  48 ++++-=0A=
+>  drivers/scsi/sd.c                   |  81 ++++++++=0A=
+>  drivers/scsi/sd.h                   |   1 +=0A=
+>  include/linux/ata.h                 |   1 +=0A=
+>  include/linux/blkdev.h              |  29 +++=0A=
+>  include/linux/libata.h              |  15 ++=0A=
+>  12 files changed, 559 insertions(+), 11 deletions(-)=0A=
+>  create mode 100644 block/blk-cranges.c=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
