@@ -2,81 +2,216 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2079DC4320A
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 11:23:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 29140C432BE
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 11:31:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC47660EE8
-	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 11:23:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EC2960FE7
+	for <linux-scsi@archiver.kernel.org>; Fri,  6 Aug 2021 11:31:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245447AbhHFLXa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 6 Aug 2021 07:23:30 -0400
-Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:49210
-        "EHLO smtp-relay-canonical-0.canonical.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231173AbhHFLXa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 07:23:30 -0400
-Received: from localhost (1.general.cking.uk.vpn [10.172.193.212])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id 7CB9C3F049;
-        Fri,  6 Aug 2021 11:23:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1628248993;
-        bh=H1p/HXx7/C4MAn4Q4UfTW04vI5AaqbugvXyofQ0obOw=;
-        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type;
-        b=TpI9lSCmRlzMVuV3y9ww8ZdpkNWG4J8Gk5L//ujzTGfFHwA99qmPBv7ndCCzlLsSp
-         P9vyYOC2j+zHjDjv6fakqwsYGzLCb6MnHvmBaswtRVQSbf+SBuLVZ87CKGHeuHmF8C
-         4CsjJOr+l8RKrTxbmn6F8f6+LevmfWVZhFc4wKynJU/AYOmJmJrAL34KYFNFWpjYnJ
-         OLMMCWNlHhpR2GeUTZUeGFjqGsOaw1IhQQox9pnSaLvPk35RzZcV2BVUN8eafQcRTH
-         SDSiWFV2XgA9tD/D7nkF6tqwuyjyIBZiIG8mYF5b6KdEI0Q4IC8hytIJfu0ci600XW
-         SNJSlI4VXl/KQ==
-From:   Colin King <colin.king@canonical.com>
-To:     Karan Tilak Kumar <kartilak@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: snic: Remove redundant assignment to variable ret
-Date:   Fri,  6 Aug 2021 12:23:13 +0100
-Message-Id: <20210806112313.12434-1-colin.king@canonical.com>
-X-Mailer: git-send-email 2.31.1
+        id S242886AbhHFLcC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 6 Aug 2021 07:32:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45876 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242813AbhHFLcB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Aug 2021 07:32:01 -0400
+Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C62FAC061798
+        for <linux-scsi@vger.kernel.org>; Fri,  6 Aug 2021 04:31:45 -0700 (PDT)
+Received: by mail-pl1-x62d.google.com with SMTP id i10so6672928pla.3
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Aug 2021 04:31:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=LJBi3mCI3d0G7kWTJeu0r7PGXkQrYJhwA7MLbZTJ82w=;
+        b=USNNLJXfQm3DyWOgcCGHJ6wus1Fkh2pqX4uxlP1/PPqTzce6idXSoTlSm/LyIlTWdu
+         ZdmMc4mNZ2vMrfg53YT2j1P5G5zuRQbJqneBmKi8Aw9y4eZMBOhSabICQcTGXE6bPd0e
+         OOwIweTab73hM2rhzmDPMuX90ZENvGC4vkTUU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=LJBi3mCI3d0G7kWTJeu0r7PGXkQrYJhwA7MLbZTJ82w=;
+        b=ceh1gWCZGiUBa915bP+MxHRBWB5EUP8+sZUNicOL8so1RjeEa9SdZKwV3QNXbgGmvx
+         TE4V/TfQCs7WnIsqLm+TTlDOWKO9lEnGJL7WiynRmlQF0vzNIXybH0awweOnTyqW5xYL
+         HRgo+WDS+gXJ5rQwDqOA1E7HxZfZIY4/1DkYoG4Ih/7yZ42whdFc8v+GD8iSFhLOCZNi
+         utfGCE7RA/zbv2Ye90eUmoKErq+ARtwNFFF7XmSu2j0FbSUdrCDj3YsyDhtKb2c9bRNH
+         5TjhjzStfqEIKRDMkNhegIwYacC8UpAtOvE8Su+Y7zRH8tis0kkzpymLBG+ETwPTOmbz
+         Kxlg==
+X-Gm-Message-State: AOAM533K8DWIDy4IPGyMdMgy+lNNWClsSaKEIP7YmFFj7YZkm2mjRwyE
+        nPneCCpVG0diIk4Fazts3I32EuRMwo5PpDNg39gaoHr1i2F0qQ==
+X-Google-Smtp-Source: ABdhPJzhCivQnMUOksiAttetSTcJXOtjmTzXvmHLDwVH/6STxIombyEykHE2elX3cpgDa8R/pgIyGruGpSmZKaALc+I=
+X-Received: by 2002:a17:90a:2a8e:: with SMTP id j14mr20429914pjd.208.1628249504446;
+ Fri, 06 Aug 2021 04:31:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+References: <20210720232624.1493424-1-nitesh@redhat.com> <20210720232624.1493424-5-nitesh@redhat.com>
+In-Reply-To: <20210720232624.1493424-5-nitesh@redhat.com>
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+Date:   Fri, 6 Aug 2021 17:01:17 +0530
+Message-ID: <CAL2rwxqz4dcjdbqtPMaCTud+3jPhuFvJeuVgt774Rpm-+_KJxQ@mail.gmail.com>
+Subject: Re: [PATCH v5 04/14] scsi: megaraid_sas: Use irq_set_affinity_and_hint
+To:     Nitesh Narayan Lal <nitesh@redhat.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
+        Thomas Gleixner <tglx@linutronix.de>,
+        jesse.brandeburg@intel.com, robin.murphy@arm.com,
+        mtosatti@redhat.com, mingo@kernel.org, jbrandeb@kernel.org,
+        frederic@kernel.org, juri.lelli@redhat.com, abelits@marvell.com,
+        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
+        peterz@infradead.org, "David S. Miller" <davem@davemloft.net>,
+        akpm@linux-foundation.org, sfr@canb.auug.org.au,
+        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
+        chris.friesen@windriver.com, maz@kernel.org, nhorman@tuxdriver.com,
+        pjwaskiewicz@gmail.com, sassmann@redhat.com,
+        Tomas Henzl <thenzl@redhat.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Shivasharan Srikanteshwara 
+        <shivasharan.srikanteshwara@broadcom.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
+        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
+        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
+        benve@cisco.com, govind@gmx.com, jassisinghbrar@gmail.com,
+        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
+        Somnath Kotur <somnath.kotur@broadcom.com>,
+        Nitesh Lal <nilal@redhat.com>, tatyana.e.nikolova@intel.com,
+        mustafa.ismail@intel.com, ahs3@redhat.com, leonro@nvidia.com,
+        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+        bjorn.andersson@linaro.org, chunkuang.hu@kernel.org,
+        yongqiang.niu@mediatek.com, baolin.wang7@gmail.com,
+        poros@redhat.com, minlei@redhat.com,
+        Ewan Milne <emilne@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>, _govind@gmx.com,
+        kabel@kernel.org, viresh.kumar@linaro.org,
+        Tushar.Khandelwal@arm.com, kuba@kernel.org
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000005ac1d705c8e2617d"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+--0000000000005ac1d705c8e2617d
+Content-Type: text/plain; charset="UTF-8"
 
-The variable ret is being initialized with a value that is never read,
-the assignment is redundant and can be removed.
+On Wed, Jul 21, 2021 at 4:57 AM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
+>
+> The driver uses irq_set_affinity_hint() specifically for the high IOPS
+> queue interrupts for two purposes:
+>
+> - To set the affinity_hint which is consumed by the userspace for
+>   distributing the interrupts
+>
+> - To apply an affinity that it provides
+>
+> The driver enforces its own affinity to bind the high IOPS queue interrupts
+> to the local NUMA node. However, irq_set_affinity_hint() applying the
+> provided cpumask as an affinity for the interrupt is an undocumented side
+> effect.
+>
+> To remove this side effect irq_set_affinity_hint() has been marked
+> as deprecated and new interfaces have been introduced. Hence, replace the
+> irq_set_affinity_hint() with the new interface irq_set_affinity_and_hint()
+> where the provided mask needs to be applied as the affinity and
+> affinity_hint pointer needs to be set and replace with
+> irq_update_affinity_hint() where only affinity_hint needs to be updated.
+>
+> Change the megasas_set_high_iops_queue_affinity_hint function name to
+> megasas_set_high_iops_queue_affinity_and_hint to clearly indicate that the
+> function is setting both affinity and affinity_hint.
+>
+> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
+Looks good.
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-Addresses-Coverity: ("Unused value")
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/snic/snic_scsi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+--0000000000005ac1d705c8e2617d
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index 6dd0ff188bb4..92f5b65c2a27 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -2383,7 +2383,7 @@ snic_host_reset(struct scsi_cmnd *sc)
- {
- 	struct Scsi_Host *shost = sc->device->host;
- 	u32 start_time  = jiffies;
--	int ret = FAILED;
-+	int ret;
- 
- 	SNIC_SCSI_DBG(shost,
- 		      "host reset:sc %p sc_cmd 0x%x req %p tag %d flags 0x%llx\n",
--- 
-2.31.1
-
+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
+GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
+uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
+hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
+kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
+zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
+rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
+3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEICClRGnU34JeOANfwPN09QLWPCxn3+Gr
+domU4wk4bC65MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDgw
+NjExMzE0NVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQBG3ptR7Upgft8i48vuo/ts0G69CYpfWH2zO2uF54uh8SZqkYJL
+U0de0L4D8+c2tHmSh2v7u6IUpPaCzizlubn7PHzYYOZ9n/kYVXDQx25YpaGa9VmcSFjTGXToXpZV
+VDb7sq/b1TNYdcUF+NGdVdN3hRMG9CmgVr6dX4tiCMlFYUWlenwsqlOXD41a6rQFI3KbcXMB/wqQ
+2pM6Yq8xz7tVakC0/kD251VMHL1unvr3K5GkHGOYzIKpUUFxIveb6hz/a7S6sFEI2P54InMBRVXT
+1qG+CNUDYEr8uKoGAfY7B6RCw4dp0noqaBT9p83LTMYXQ76Xn039TFgo+cnPzVIA
+--0000000000005ac1d705c8e2617d--
