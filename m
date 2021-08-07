@@ -2,126 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E66BC4320E
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 12:00:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EFBC4320A
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 13:47:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E01AA610FB
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 12:00:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DD58610FC
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 13:47:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232076AbhHGMAq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Aug 2021 08:00:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60402 "EHLO
+        id S232323AbhHGNro (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Aug 2021 09:47:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55360 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230012AbhHGMAp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2021 08:00:45 -0400
-Received: from mail-yb1-xb29.google.com (mail-yb1-xb29.google.com [IPv6:2607:f8b0:4864:20::b29])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 708D6C0613CF;
-        Sat,  7 Aug 2021 05:00:27 -0700 (PDT)
-Received: by mail-yb1-xb29.google.com with SMTP id w17so20187347ybl.11;
-        Sat, 07 Aug 2021 05:00:27 -0700 (PDT)
+        with ESMTP id S232210AbhHGNrm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2021 09:47:42 -0400
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 766BAC0613CF;
+        Sat,  7 Aug 2021 06:47:24 -0700 (PDT)
+Received: by mail-pj1-x102d.google.com with SMTP id a8so20890285pjk.4;
+        Sat, 07 Aug 2021 06:47:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=WyWRBH02aF7TMZK2H9iKEqjuVSj2aT5mi1GkBNRCyKg=;
-        b=QOdR5x9JTDfThKVhuyhEYPReV0+hyqKytp6bhrDU9jtJxybQG/OIAaA3oWXzAmhUeI
-         OpdNdHL2cTWOdcoGJdjl6SMiapPShk5dqCtzePXNHkSDDTyDYEUVEMRWoeWDVMRgEvWT
-         F3WsjtH95W2GEqcxmYbu5Nki6iHjaP/wAYl8B41Jx1LBzEzxM7r/El9yGNDidzRbvvqa
-         Kmis+CIiKYZTjEfn/MyNVZZE/sJlnMzcMNu5e2sZtEh+M3pQUSfAAN/s+5gpulRT28gX
-         WpDFxD9aYBck7JqESW1IHpFohPSZLTlNkFRqH4KUtyrj9Pxrh4lb4vBKQjKvBi3tS5E+
-         KYxQ==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ZMFTuQL4XCv0rc6vS643hPfckJse4ED4dcB9MFxryLI=;
+        b=HSSjpVcOrBSkXxvrGMNszf1jTujgdJsnJypdiKYbb45gl3/tFrtk0oL+9RUiC3RZ8q
+         m4StoJLry5Q043GaW7MMiZCfujNN6jwoFLLN3NT/yykYh0kM7kNsNb/85NBpy++xpfQ6
+         62k3kL1029qP8Ftx4tWDe12kMEwBdnJN/zJSHfWTvt39MZ3DrFdLIeLh+OuvnKHmh/Gz
+         b9OE+rsTmPNk/icz/UKMWm1/cB0bnx7OaGVyjOnZ1emLdLRbJ5MntCctBIizFYkgNs29
+         AtIGl6kFgYACRh3+/j1kQaqgUWItnWLOviMz1eEHWOMLHuT2OQcSJPwoCqMfeE/l+gr4
+         w82A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=WyWRBH02aF7TMZK2H9iKEqjuVSj2aT5mi1GkBNRCyKg=;
-        b=FENVn+x4TjHqCmYz0t/+7EfVYf1QGqh+zYpVEYmMGPTqnHOOisyXnxzs+6hlVBhG+N
-         QQph2pPY6TkLAa3m8sU5mMDcy4AbNmu15kNxTPMh6DRzmYDaBbUc85RmuCV1GgVPqryW
-         EgWH6cNXsXTLSpg6B9wVdvY2oBP9UeTHGYzrneA/3AB/2K+eaIJpiLLBRcK3tG7HJVWy
-         PmCOFC3lrqXyvRa0Wpq4I6Uqs1KnDmVexInUNu2TpoP7L058z7s7FQ5UCxjlV4esc5Xh
-         WYznK39bNlKg0rsWYXzKfSaqIiE+k6l8K5fA5SOb3CL1CbUEZEhfI1nTa5rZz4m7xdaV
-         hF5g==
-X-Gm-Message-State: AOAM532Vo5TEnmV+KE0rkq3yYrSNcJSnBO2C/YT8KQjFaTRcaDHjTde0
-        nUc2OVB7nPEWNSFFrrQgxPso62OY9pkddZvu+yA=
-X-Google-Smtp-Source: ABdhPJxo9qHswzoJFxioC74Rd4uuv/McBZ+hRPGpGsGEvfuOE6rZWY4LuFWwzY6Vg59fOtg8kqf5oNFF1j4ZtwtEzDU=
-X-Received: by 2002:a25:1546:: with SMTP id 67mr19373700ybv.331.1628337626600;
- Sat, 07 Aug 2021 05:00:26 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=ZMFTuQL4XCv0rc6vS643hPfckJse4ED4dcB9MFxryLI=;
+        b=GTe78ELVdXrlPF//QJJW72mg8zQhXaYqnwDU6LB+hWedcML6MxPHhyb9wX1buZEDk7
+         3GeKO5YARmtyrkZV+3a34O6H53hDGGrIWoJYalBUF6LC62VHmCcAd7TJANF1C3lva1VB
+         ZmLf0qUM+ymvR8yJ55NZBSJgelPCQBDH7ZNL3Hsjwmj4qVXSmAs849qtC/OwEzArjPkL
+         gJ1lVWfgEyMeynU2k5S4IdinJwgd8euGVoaXWsunzkomnQmIiyZXdgqPP30B4uIw4J9q
+         GCGL5xXPz4LL2BIqN1Sq7w5dQqqv4OZUrcwzPVCE0BFFXnLCsZL8YUHVdsfAQgo2pNK6
+         fBVw==
+X-Gm-Message-State: AOAM533tNbVsxWdy42kAM/EiOeveXMwushiflZyNij0WwYiNtucfQm2n
+        O+1AQW/Zo6fZFocwgs/mWYI=
+X-Google-Smtp-Source: ABdhPJwKf7wveW3mv3Hsx+FRzuBF07e9vF3DKGLpwloGVQheIxNqEXH+yvWW5sAOI/DbjgNJvFnMpw==
+X-Received: by 2002:a62:e50c:0:b029:2f9:b9b1:d44f with SMTP id n12-20020a62e50c0000b02902f9b9b1d44fmr15981967pff.42.1628344043999;
+        Sat, 07 Aug 2021 06:47:23 -0700 (PDT)
+Received: from localhost.localdomain ([45.135.186.87])
+        by smtp.gmail.com with ESMTPSA id bj6sm15849521pjb.53.2021.08.07.06.47.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 07 Aug 2021 06:47:23 -0700 (PDT)
+From:   Tuo Li <islituo@gmail.com>
+To:     martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
+        Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>
+Subject: [PATCH] scsi: target: pscsi: Fix possible null-pointer dereference in pscsi_complete_cmd()
+Date:   Sat,  7 Aug 2021 06:46:51 -0700
+Message-Id: <20210807134651.245436-1-islituo@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20210807091927.1974404-1-u.kleine-koenig@pengutronix.de>
-In-Reply-To: <20210807091927.1974404-1-u.kleine-koenig@pengutronix.de>
-From:   Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Date:   Sat, 7 Aug 2021 12:59:50 +0100
-Message-ID: <CADVatmO7Wtc8+4mzorrmcwKv2QXg579avynK==9D1Dqz9PHaJw@mail.gmail.com>
-Subject: Re: [PATCH v2] parisc: Make struct parisc_driver::remove() return void
-To:     =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-Cc:     "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-        Helge Deller <deller@gmx.de>,
-        Sascha Hauer <kernel@pengutronix.de>,
-        alsa-devel@alsa-project.org, Corey Minyard <minyard@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Takashi Iwai <tiwai@suse.com>, linux-scsi@vger.kernel.org,
-        netdev <netdev@vger.kernel.org>,
-        linux-parisc <linux-parisc@vger.kernel.org>,
-        linux-serial@vger.kernel.org, linux-input@vger.kernel.org,
-        Jakub Kicinski <kuba@kernel.org>,
-        openipmi-developer@lists.sourceforge.net,
-        Jaroslav Kysela <perex@perex.cz>,
-        Jiri Slaby <jirislaby@kernel.org>,
-        "David S. Miller" <davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, Aug 7, 2021 at 10:19 AM Uwe Kleine-K=C3=B6nig
-<u.kleine-koenig@pengutronix.de> wrote:
->
-> The caller of this function (parisc_driver_remove() in
-> arch/parisc/kernel/drivers.c) ignores the return value, so better don't
-> return any value at all to not wake wrong expectations in driver authors.
->
-> The only function that could return a non-zero value before was
-> ipmi_parisc_remove() which returns the return value of
-> ipmi_si_remove_by_dev(). Make this function return void, too, as for all
-> other callers the value is ignored, too.
->
-> Also fold in a small checkpatch fix for:
->
-> WARNING: Unnecessary space before function pointer arguments
-> +       void (*remove) (struct parisc_device *dev);
->
-> Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com> (for drivers/input)
-> Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
-> ---
-> changes since v1 sent with Message-Id:
-> 20210806093938.1950990-1-u.kleine-koenig@pengutronix.de:
->
->  - Fix a compiler error noticed by the kernel test robot
->  - Add Ack for Dmitry
->
->  arch/parisc/include/asm/parisc-device.h  | 4 ++--
->  drivers/char/ipmi/ipmi_si.h              | 2 +-
->  drivers/char/ipmi/ipmi_si_intf.c         | 6 +-----
->  drivers/char/ipmi/ipmi_si_parisc.c       | 4 ++--
->  drivers/char/ipmi/ipmi_si_platform.c     | 4 +++-
->  drivers/input/keyboard/hilkbd.c          | 4 +---
->  drivers/input/serio/gscps2.c             | 3 +--
->  drivers/net/ethernet/i825xx/lasi_82596.c | 3 +--
->  drivers/parport/parport_gsc.c            | 3 +--
+The return value of transport_kmap_data_sg() is assigned to the variable
+buf:
+  buf = transport_kmap_data_sg(cmd);
 
-Acked-by:  Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+And then it is checked:
+  if (!buf) {
 
+This indicates that buf can be NULL. However, it is dereferenced in the
+following statements:
+  if (!(buf[3] & 0x80))
+    buf[3] |= 0x80;
+  if (!(buf[2] & 0x80))
+	buf[2] |= 0x80;
 
---=20
-Regards
-Sudip
+To fix these possible null-pointer dereferences, dereference buf only when
+it is not NULL.
+
+Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+Signed-off-by: Tuo Li <islituo@gmail.com>
+---
+ drivers/target/target_core_pscsi.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+index 2629d2ef3970..560815729182 100644
+--- a/drivers/target/target_core_pscsi.c
++++ b/drivers/target/target_core_pscsi.c
+@@ -620,14 +620,14 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
+ 			buf = transport_kmap_data_sg(cmd);
+ 			if (!buf) {
+ 				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
+-			}
+-
+-			if (cdb[0] == MODE_SENSE_10) {
+-				if (!(buf[3] & 0x80))
+-					buf[3] |= 0x80;
+ 			} else {
+-				if (!(buf[2] & 0x80))
+-					buf[2] |= 0x80;
++				if (cdb[0] == MODE_SENSE_10) {
++					if (!(buf[3] & 0x80))
++						buf[3] |= 0x80;
++				} else {
++					if (!(buf[2] & 0x80))
++						buf[2] |= 0x80;
++				}
+ 			}
+ 
+ 			transport_kunmap_data_sg(cmd);
+-- 
+2.25.1
+
