@@ -2,126 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E04E8C4320A
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 04:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FC03C432BE
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 09:12:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BC7D061185
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 04:19:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7C4761104
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 09:12:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231200AbhHGETl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Aug 2021 00:19:41 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:14369 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231247AbhHGETg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2021 00:19:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1628309958; x=1659845958;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=v0axotK745BOmKq1hqhT1UMPhW1oSJVk5yL66WtuDMY=;
-  b=BB8/By+o0e4/B6z29KzwfC5z5obDG0XLhArYYRkeo7myZeHEIZgNWV9X
-   KztVOSO1QB7ddbOlnhAhnZk6SPqKRtELY1YLSyiY8JawqZDHgujXAXi0C
-   KIliX2zJI+Ip+YBacoog1CtTw+dLY0YwFotMzYOxkfp2nM4WUTyD9356M
-   GLfE3EUrfBWZyTsv6+QlA3Edk0lEi8izo8m7LgfyirxcR4Y2zWNa7aYiY
-   TDKuU58/BnIQ2gy12RnBIpOJichaPOkNCaN4W5cPvyBBsgnnB8xOAzGsd
-   GP3tSKm3Ce6COqKF9Hi/fULE+Sdp4xOmKotHUvfSkL06MggaC2FRJFRwH
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.84,301,1620662400"; 
-   d="scan'208";a="181363694"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Aug 2021 12:19:16 +0800
-IronPort-SDR: zwxci9ZM89sg1h8Vu/whG5sAWRbWxnsDFVUVl3u/a+DjEMbI2mtlXmi+7WNOsGmjsFomua6gd3
- zloT3oSlD32oG+jk4x5G7PldyZk++PnIT1moKdsdn0auXytOnzquoILVexMtiYk3A5cUXUMm+F
- AETfb1dd56445qTdNzr9rtnyRrik/t0nYVQYQyWURQiEZgsRIgfuHScyAJ1L4r5eY973R/j/Su
- 7KeI+2U+Ecfhkid9i7zJB4vf/8TFgiWDnWdqhAizrjt2e7vtVcZizCk4UKhENEV040Onp/uY5L
- ucRRbCvgyGHXGtpYkCmQMoaz
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Aug 2021 20:56:45 -0700
-IronPort-SDR: voDHxoG7w99GokpiODviS6Bnk/ekEg4inL25ebaj4mmnPclmXaU1Mc+8AMvVCN2/jNa/u29CjN
- u4HVWit2l0ioZ9DrNHdu2DS20WHWull1uScOkstaLQhoMpuJY34f/piet1GJSUlkTAwBkdI17k
- Zv8in9dBkXU6La6UaCtlDLZig6k6IupWHbQ/bYND6Te90nmjmB2UI8LSQIPjC3t0YX3TaqeKuc
- uaB7cQBYIEN+sPPyEZw3PcHAx0vhrsQdX5RdEMGqj66Zpf6BLhQYqrlw6JlG+UHe6x+CUFrQkf
- fNo=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip01.wdc.com with ESMTP; 06 Aug 2021 21:19:16 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v4 10/10] scsi: mpt3sas: Introduce sas_ncq_prio_supported sysfs sttribute
-Date:   Sat,  7 Aug 2021 13:18:59 +0900
-Message-Id: <20210807041859.579409-11-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210807041859.579409-1-damien.lemoal@wdc.com>
-References: <20210807041859.579409-1-damien.lemoal@wdc.com>
+        id S231719AbhHGJMW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Aug 2021 05:12:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51720 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229765AbhHGJMV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2021 05:12:21 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE733C0613CF
+        for <linux-scsi@vger.kernel.org>; Sat,  7 Aug 2021 02:12:04 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mCIMv-00079k-AT; Sat, 07 Aug 2021 11:11:49 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mCIMp-0007S4-8u; Sat, 07 Aug 2021 11:11:43 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mCIMp-00079k-7J; Sat, 07 Aug 2021 11:11:43 +0200
+Date:   Sat, 7 Aug 2021 11:11:35 +0200
+From:   Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>
+To:     Corey Minyard <minyard@acm.org>
+Cc:     kernel@pengutronix.de, alsa-devel@alsa-project.org,
+        linux-parisc@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Helge Deller <deller@gmx.de>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        linux-scsi@vger.kernel.org, Takashi Iwai <tiwai@suse.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        netdev@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-input@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
+        openipmi-developer@lists.sourceforge.net,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH] parisc: Make struct parisc_driver::remove() return void
+Message-ID: <20210807091135.xgenctifq3wgn3ro@pengutronix.de>
+References: <20210806093938.1950990-1-u.kleine-koenig@pengutronix.de>
+ <20210806174927.GJ3406@minyard.net>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+        protocol="application/pgp-signature"; boundary="45vk6qaqgnzlimcx"
+Content-Disposition: inline
+In-Reply-To: <20210806174927.GJ3406@minyard.net>
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Similarly to AHCI, introduce the device sysfs attribute
-sas_ncq_prio_supported to advertize if a SATA device supports the NCQ
-priority feature. Without this new attribute, the user can only
-discover if a SATA device supports NCQ priority by trying to enable
-the feature use with the sas_ncq_prio_enable sysfs device attribute,
-which fails when the device does not support high priroity commands.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+--45vk6qaqgnzlimcx
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index b66140e4c370..f83d4d32d459 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3918,6 +3918,24 @@ sas_device_handle_show(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RO(sas_device_handle);
- 
-+/**
-+ * sas_ncq_prio_supported_show - Indicate if device supports NCQ priority
-+ * @dev: pointer to embedded device
-+ * @attr: sas_ncq_prio_supported attribute descriptor
-+ * @buf: the buffer returned
-+ *
-+ * A sysfs 'read-only' sdev attribute, only works with SATA
-+ */
-+static ssize_t
-+sas_ncq_prio_supported_show(struct device *dev,
-+			    struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+
-+	return sysfs_emit(buf, "%d\n", scsih_ncq_prio_supp(sdev));
-+}
-+static DEVICE_ATTR_RO(sas_ncq_prio_supported);
-+
- /**
-  * sas_ncq_prio_enable_show - send prioritized io commands to device
-  * @dev: pointer to embedded device
-@@ -3960,6 +3978,7 @@ static DEVICE_ATTR_RW(sas_ncq_prio_enable);
- struct device_attribute *mpt3sas_dev_attrs[] = {
- 	&dev_attr_sas_address,
- 	&dev_attr_sas_device_handle,
-+	&dev_attr_sas_ncq_prio_supported,
- 	&dev_attr_sas_ncq_prio_enable,
- 	NULL,
- };
--- 
-2.31.1
+Hello,
 
+On Fri, Aug 06, 2021 at 12:49:27PM -0500, Corey Minyard wrote:
+> On Fri, Aug 06, 2021 at 11:39:38AM +0200, Uwe Kleine-K=F6nig wrote:
+> > -int ipmi_si_remove_by_dev(struct device *dev)
+> > +void ipmi_si_remove_by_dev(struct device *dev)
+>=20
+> This function is also used by ipmi_si_platform.c, so you can't change
+> this.
+
+Did you see that I adapted ipmi_si_platform.c below? That is an instance
+of "Make [ipmi_si_remove_by_dev] return void, too, as for all other
+callers the value is ignored, too." (In ipmi_si_platform.c the return
+value is used in a struct platform_driver::remove function. The value
+returned there is ignored, see commit
+e5e1c209788138f33ca6558bf9f572f6904f486d.)
+
+Best regards
+Uwe
+
+--=20
+Pengutronix e.K.                           | Uwe Kleine-K=F6nig            |
+Industrial Linux Solutions                 | https://www.pengutronix.de/ |
+
+--45vk6qaqgnzlimcx
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmEOTkQACgkQwfwUeK3K
+7Alj/wf+K39kaQNGHDkIhb/MnReZtTqJ7A4TTKfWOCggUIlF0kf2wXSKnlTK2HPV
+BPYqMYRAi5ZeO6n1X4beQCN8FSCnnD+s52mCB1nRELRizA8xhnIdK0uD8tqGR43c
+iRUEonO4k6ZppBtRgK5uABKENDAaDRQvylQZ9PAzunPbORpMEJJ9U9uaL7fUDtSz
+wwjGdfUTeuKFdZN8Ac+OfR7pgHkixcvH9/ECq/VzrsclVCB5DMtP9hckr0LPn5u1
+9mtgbkWMsFcj+FfkPo8KZgKoPA+NuTmhK6X17hUR5m7eNrPDt05uVH+MiBmmsY+s
+p6siiJxoVX8l60PKy7apKloWP9Ku8w==
+=Hx8e
+-----END PGP SIGNATURE-----
+
+--45vk6qaqgnzlimcx--
