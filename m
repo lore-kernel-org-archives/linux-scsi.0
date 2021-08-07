@@ -2,156 +2,126 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88652C4338F
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 10:56:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E66BC4320E
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 12:00:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6DC07603E7
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 10:56:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E01AA610FB
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 12:00:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231995AbhHGK4p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Aug 2021 06:56:45 -0400
-Received: from smtpbg704.qq.com ([203.205.195.105]:33057 "EHLO
-        smtpproxy21.qq.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S231687AbhHGK4o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2021 06:56:44 -0400
-X-QQ-mid: bizesmtp41t1628333771tok4ud4z
-Received: from localhost.localdomain (unknown [125.69.42.194])
-        by esmtp6.qq.com (ESMTP) with 
-        id ; Sat, 07 Aug 2021 18:56:10 +0800 (CST)
-X-QQ-SSF: 01000000002000B0C000B00A0000000
-X-QQ-FEAT: Rrz2csB1TU0Qwsk/qlXbx4vcERuTtEo3P+PTX+6ijfugqOkKyBpVs+cDPGAcT
-        PrKQvolgJ1MLaQdWeIQWbQURTHoc9bM3bahOktDStKRWr6ooBTl4s2k5hsIEmbXlWEa//Z9
-        jJDi+B2Bu7yOkZRFvOl7qO0xf5Y6Lr00hRr9QeRKeadgZTkcU3hFVKwLOS74e92vjpIGtv+
-        zc1lI6I9iGzUqMIRBnQnkrFsNo1a0FEgUxxy0iFu1gpXcc507SBhnAGdQ75vNTTlMihgYh2
-        kZ9lUwZ7hyKIvfhba9Mrs4GMPFeVM/sk7uTdhPEgi52fhipmRAI/olH1pUujSO5X5ENHGC5
-        XQ6CY7n
-X-QQ-GoodBg: 0
-From:   Jason Wang <wangborong@cdjrlc.com>
-To:     martin.petersen@oracle.com
-Cc:     jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Jason Wang <wangborong@cdjrlc.com>
-Subject: [PATCH] scsi: aha1542: Remove unneeded semicolon
-Date:   Sat,  7 Aug 2021 18:55:25 +0800
-Message-Id: <20210807105525.192240-1-wangborong@cdjrlc.com>
-X-Mailer: git-send-email 2.32.0
+        id S232076AbhHGMAq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Aug 2021 08:00:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60402 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230012AbhHGMAp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2021 08:00:45 -0400
+Received: from mail-yb1-xb29.google.com (mail-yb1-xb29.google.com [IPv6:2607:f8b0:4864:20::b29])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 708D6C0613CF;
+        Sat,  7 Aug 2021 05:00:27 -0700 (PDT)
+Received: by mail-yb1-xb29.google.com with SMTP id w17so20187347ybl.11;
+        Sat, 07 Aug 2021 05:00:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc:content-transfer-encoding;
+        bh=WyWRBH02aF7TMZK2H9iKEqjuVSj2aT5mi1GkBNRCyKg=;
+        b=QOdR5x9JTDfThKVhuyhEYPReV0+hyqKytp6bhrDU9jtJxybQG/OIAaA3oWXzAmhUeI
+         OpdNdHL2cTWOdcoGJdjl6SMiapPShk5dqCtzePXNHkSDDTyDYEUVEMRWoeWDVMRgEvWT
+         F3WsjtH95W2GEqcxmYbu5Nki6iHjaP/wAYl8B41Jx1LBzEzxM7r/El9yGNDidzRbvvqa
+         Kmis+CIiKYZTjEfn/MyNVZZE/sJlnMzcMNu5e2sZtEh+M3pQUSfAAN/s+5gpulRT28gX
+         WpDFxD9aYBck7JqESW1IHpFohPSZLTlNkFRqH4KUtyrj9Pxrh4lb4vBKQjKvBi3tS5E+
+         KYxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=WyWRBH02aF7TMZK2H9iKEqjuVSj2aT5mi1GkBNRCyKg=;
+        b=FENVn+x4TjHqCmYz0t/+7EfVYf1QGqh+zYpVEYmMGPTqnHOOisyXnxzs+6hlVBhG+N
+         QQph2pPY6TkLAa3m8sU5mMDcy4AbNmu15kNxTPMh6DRzmYDaBbUc85RmuCV1GgVPqryW
+         EgWH6cNXsXTLSpg6B9wVdvY2oBP9UeTHGYzrneA/3AB/2K+eaIJpiLLBRcK3tG7HJVWy
+         PmCOFC3lrqXyvRa0Wpq4I6Uqs1KnDmVexInUNu2TpoP7L058z7s7FQ5UCxjlV4esc5Xh
+         WYznK39bNlKg0rsWYXzKfSaqIiE+k6l8K5fA5SOb3CL1CbUEZEhfI1nTa5rZz4m7xdaV
+         hF5g==
+X-Gm-Message-State: AOAM532Vo5TEnmV+KE0rkq3yYrSNcJSnBO2C/YT8KQjFaTRcaDHjTde0
+        nUc2OVB7nPEWNSFFrrQgxPso62OY9pkddZvu+yA=
+X-Google-Smtp-Source: ABdhPJxo9qHswzoJFxioC74Rd4uuv/McBZ+hRPGpGsGEvfuOE6rZWY4LuFWwzY6Vg59fOtg8kqf5oNFF1j4ZtwtEzDU=
+X-Received: by 2002:a25:1546:: with SMTP id 67mr19373700ybv.331.1628337626600;
+ Sat, 07 Aug 2021 05:00:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QQ-SENDSIZE: 520
-Feedback-ID: bizesmtp:cdjrlc.com:qybgforeign:qybgforeign2
-X-QQ-Bgrelay: 1
+References: <20210807091927.1974404-1-u.kleine-koenig@pengutronix.de>
+In-Reply-To: <20210807091927.1974404-1-u.kleine-koenig@pengutronix.de>
+From:   Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Date:   Sat, 7 Aug 2021 12:59:50 +0100
+Message-ID: <CADVatmO7Wtc8+4mzorrmcwKv2QXg579avynK==9D1Dqz9PHaJw@mail.gmail.com>
+Subject: Re: [PATCH v2] parisc: Make struct parisc_driver::remove() return void
+To:     =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Cc:     "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        Helge Deller <deller@gmx.de>,
+        Sascha Hauer <kernel@pengutronix.de>,
+        alsa-devel@alsa-project.org, Corey Minyard <minyard@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Takashi Iwai <tiwai@suse.com>, linux-scsi@vger.kernel.org,
+        netdev <netdev@vger.kernel.org>,
+        linux-parisc <linux-parisc@vger.kernel.org>,
+        linux-serial@vger.kernel.org, linux-input@vger.kernel.org,
+        Jakub Kicinski <kuba@kernel.org>,
+        openipmi-developer@lists.sourceforge.net,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jiri Slaby <jirislaby@kernel.org>,
+        "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The semicolon after a code block bracket is unneeded in C. Thus, we can
-remove the redundant semicolon from the code safely.
+On Sat, Aug 7, 2021 at 10:19 AM Uwe Kleine-K=C3=B6nig
+<u.kleine-koenig@pengutronix.de> wrote:
+>
+> The caller of this function (parisc_driver_remove() in
+> arch/parisc/kernel/drivers.c) ignores the return value, so better don't
+> return any value at all to not wake wrong expectations in driver authors.
+>
+> The only function that could return a non-zero value before was
+> ipmi_parisc_remove() which returns the return value of
+> ipmi_si_remove_by_dev(). Make this function return void, too, as for all
+> other callers the value is ignored, too.
+>
+> Also fold in a small checkpatch fix for:
+>
+> WARNING: Unnecessary space before function pointer arguments
+> +       void (*remove) (struct parisc_device *dev);
+>
+> Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com> (for drivers/input)
+> Signed-off-by: Uwe Kleine-K=C3=B6nig <u.kleine-koenig@pengutronix.de>
+> ---
+> changes since v1 sent with Message-Id:
+> 20210806093938.1950990-1-u.kleine-koenig@pengutronix.de:
+>
+>  - Fix a compiler error noticed by the kernel test robot
+>  - Add Ack for Dmitry
+>
+>  arch/parisc/include/asm/parisc-device.h  | 4 ++--
+>  drivers/char/ipmi/ipmi_si.h              | 2 +-
+>  drivers/char/ipmi/ipmi_si_intf.c         | 6 +-----
+>  drivers/char/ipmi/ipmi_si_parisc.c       | 4 ++--
+>  drivers/char/ipmi/ipmi_si_platform.c     | 4 +++-
+>  drivers/input/keyboard/hilkbd.c          | 4 +---
+>  drivers/input/serio/gscps2.c             | 3 +--
+>  drivers/net/ethernet/i825xx/lasi_82596.c | 3 +--
+>  drivers/parport/parport_gsc.c            | 3 +--
 
-Signed-off-by: Jason Wang <wangborong@cdjrlc.com>
----
- drivers/scsi/aha1542.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-index 1210e61afb18..7229748a57b9 100644
---- a/drivers/scsi/aha1542.c
-+++ b/drivers/scsi/aha1542.c
-@@ -304,7 +304,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
- 		if (flag & SCRD)
- 			printk("SCRD ");
- 		printk("status %02x\n", inb(STATUS(sh->io_port)));
--	};
-+	}
- #endif
- 	number_serviced = 0;
- 
-@@ -346,7 +346,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
- 			if (!number_serviced)
- 				shost_printk(KERN_WARNING, sh, "interrupt received, but no mail.\n");
- 			return IRQ_HANDLED;
--		};
-+		}
- 
- 		mbo = (scsi2int(mb[mbi].ccbptr) - (unsigned long)aha1542->ccb_handle) / sizeof(struct ccb);
- 		mbistatus = mb[mbi].status;
-@@ -411,7 +411,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
- 						 */
- 		my_done(tmp_cmd);
- 		number_serviced++;
--	};
-+	}
- }
- 
- static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
-@@ -537,7 +537,7 @@ static void setup_mailboxes(struct Scsi_Host *sh)
- 		any2scsi(aha1542->mb[i].ccbptr,
- 			 aha1542->ccb_handle + i * sizeof(struct ccb));
- 		aha1542->mb[AHA1542_MAILBOXES + i].status = 0;
--	};
-+	}
- 	aha1542_intr_reset(sh->io_port);	/* reset interrupts, so they don't block */
- 	any2scsi(mb_cmd + 2, aha1542->mb_handle);
- 	if (aha1542_out(sh->io_port, mb_cmd, 5))
-@@ -552,7 +552,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
- 	i = inb(STATUS(sh->io_port));
- 	if (i & DF) {
- 		i = inb(DATA(sh->io_port));
--	};
-+	}
- 	aha1542_outb(sh->io_port, CMD_RETCONF);
- 	aha1542_in(sh->io_port, inquiry_result, 3, 0);
- 	if (!wait_mask(INTRFLAGS(sh->io_port), INTRMASK, HACC, 0, 0))
-@@ -581,7 +581,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
- 	default:
- 		shost_printk(KERN_ERR, sh, "Unable to determine DMA channel.\n");
- 		return -1;
--	};
-+	}
- 	switch (inquiry_result[1]) {
- 	case 0x40:
- 		sh->irq = 15;
-@@ -604,7 +604,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
- 	default:
- 		shost_printk(KERN_ERR, sh, "Unable to determine IRQ level.\n");
- 		return -1;
--	};
-+	}
- 	sh->this_id = inquiry_result[2] & 7;
- 	return 0;
- }
-@@ -639,7 +639,7 @@ static int aha1542_mbenable(struct Scsi_Host *sh)
- 
- 		if (aha1542_out(sh->io_port, mbenable_cmd, 3))
- 			goto fail;
--	};
-+	}
- 	while (0) {
- fail:
- 		shost_printk(KERN_ERR, sh, "Mailbox init failed\n");
-@@ -657,7 +657,7 @@ static int aha1542_query(struct Scsi_Host *sh)
- 	i = inb(STATUS(sh->io_port));
- 	if (i & DF) {
- 		i = inb(DATA(sh->io_port));
--	};
-+	}
- 	aha1542_outb(sh->io_port, CMD_INQUIRY);
- 	aha1542_in(sh->io_port, inquiry_result, 4, 0);
- 	if (!wait_mask(INTRFLAGS(sh->io_port), INTRMASK, HACC, 0, 0))
-@@ -676,7 +676,7 @@ static int aha1542_query(struct Scsi_Host *sh)
- 	if (inquiry_result[0] == 0x43) {
- 		shost_printk(KERN_INFO, sh, "Emulation mode not supported for AHA-1740 hardware, use aha1740 driver instead.\n");
- 		return 1;
--	};
-+	}
- 
- 	/*
- 	 * Always call this - boards that do not support extended bios translation
--- 
-2.32.0
+Acked-by:  Sudip Mukherjee <sudipm.mukherjee@gmail.com>
 
 
-
+--=20
+Regards
+Sudip
