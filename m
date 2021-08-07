@@ -2,124 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EFBC4320A
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 13:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A615C4338F
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 18:09:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DD58610FC
-	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 13:47:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53B0261057
+	for <linux-scsi@archiver.kernel.org>; Sat,  7 Aug 2021 18:09:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232323AbhHGNro (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 7 Aug 2021 09:47:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55360 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232210AbhHGNrm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2021 09:47:42 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 766BAC0613CF;
-        Sat,  7 Aug 2021 06:47:24 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id a8so20890285pjk.4;
-        Sat, 07 Aug 2021 06:47:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=ZMFTuQL4XCv0rc6vS643hPfckJse4ED4dcB9MFxryLI=;
-        b=HSSjpVcOrBSkXxvrGMNszf1jTujgdJsnJypdiKYbb45gl3/tFrtk0oL+9RUiC3RZ8q
-         m4StoJLry5Q043GaW7MMiZCfujNN6jwoFLLN3NT/yykYh0kM7kNsNb/85NBpy++xpfQ6
-         62k3kL1029qP8Ftx4tWDe12kMEwBdnJN/zJSHfWTvt39MZ3DrFdLIeLh+OuvnKHmh/Gz
-         b9OE+rsTmPNk/icz/UKMWm1/cB0bnx7OaGVyjOnZ1emLdLRbJ5MntCctBIizFYkgNs29
-         AtIGl6kFgYACRh3+/j1kQaqgUWItnWLOviMz1eEHWOMLHuT2OQcSJPwoCqMfeE/l+gr4
-         w82A==
+        id S229648AbhHGSJw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 7 Aug 2021 14:09:52 -0400
+Received: from mail-pl1-f177.google.com ([209.85.214.177]:46719 "EHLO
+        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229590AbhHGSJw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Aug 2021 14:09:52 -0400
+Received: by mail-pl1-f177.google.com with SMTP id k2so11620679plk.13
+        for <linux-scsi@vger.kernel.org>; Sat, 07 Aug 2021 11:09:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=ZMFTuQL4XCv0rc6vS643hPfckJse4ED4dcB9MFxryLI=;
-        b=GTe78ELVdXrlPF//QJJW72mg8zQhXaYqnwDU6LB+hWedcML6MxPHhyb9wX1buZEDk7
-         3GeKO5YARmtyrkZV+3a34O6H53hDGGrIWoJYalBUF6LC62VHmCcAd7TJANF1C3lva1VB
-         ZmLf0qUM+ymvR8yJ55NZBSJgelPCQBDH7ZNL3Hsjwmj4qVXSmAs849qtC/OwEzArjPkL
-         gJ1lVWfgEyMeynU2k5S4IdinJwgd8euGVoaXWsunzkomnQmIiyZXdgqPP30B4uIw4J9q
-         GCGL5xXPz4LL2BIqN1Sq7w5dQqqv4OZUrcwzPVCE0BFFXnLCsZL8YUHVdsfAQgo2pNK6
-         fBVw==
-X-Gm-Message-State: AOAM533tNbVsxWdy42kAM/EiOeveXMwushiflZyNij0WwYiNtucfQm2n
-        O+1AQW/Zo6fZFocwgs/mWYI=
-X-Google-Smtp-Source: ABdhPJwKf7wveW3mv3Hsx+FRzuBF07e9vF3DKGLpwloGVQheIxNqEXH+yvWW5sAOI/DbjgNJvFnMpw==
-X-Received: by 2002:a62:e50c:0:b029:2f9:b9b1:d44f with SMTP id n12-20020a62e50c0000b02902f9b9b1d44fmr15981967pff.42.1628344043999;
-        Sat, 07 Aug 2021 06:47:23 -0700 (PDT)
-Received: from localhost.localdomain ([45.135.186.87])
-        by smtp.gmail.com with ESMTPSA id bj6sm15849521pjb.53.2021.08.07.06.47.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 07 Aug 2021 06:47:23 -0700 (PDT)
-From:   Tuo Li <islituo@gmail.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
-        Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>
-Subject: [PATCH] scsi: target: pscsi: Fix possible null-pointer dereference in pscsi_complete_cmd()
-Date:   Sat,  7 Aug 2021 06:46:51 -0700
-Message-Id: <20210807134651.245436-1-islituo@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        bh=tZzmRxzt0VE6W84i4AswQkTsmvNClx5onOdSgeCGFiA=;
+        b=WOXn93kFAXBNXk3obtbO8JKA5ailEBOi7Bp7DCyszODvNBwkhmWS/zk17KAog6x1SX
+         HWUyAxgwO69AZUtpA5nL3/DxwTmsp+IiD27cIng33bLQYQZUNkJjf60w28Zma3pToy3i
+         m9VKILrW6tvgOmsHA1bTHVa+Qa2nhZIWl8nIhNZi81C/eQMPa2CkcnnceZxGzksXo6Qs
+         KE0+MoO56dyeZJp3/8PTbMdSXW8IZ4Byircb0uNZNl1meMo7QPpTbYYcbzXMGjtojQ6s
+         1C7bDze0KQJlNWeU3W8zeMnvRA5Qe8U4zNd/MbsGL7E/oJJhOuRXp+kJ2+StGE4VfVIw
+         a4+w==
+X-Gm-Message-State: AOAM531ySPUPMifsU5vmwQ1UB2Z1Q/FUKRNj9uUl5cgwf9quTKAqAB7A
+        ZlueL9111kpDczkmuN1qoo12tjM3hSg=
+X-Google-Smtp-Source: ABdhPJz2fhrUpCX7voB/gD/SWUhOkS3rxH/5sZPKAS5GEKlrOGKTVV27UWN0xl9wUQBvOSGxJ1G0GA==
+X-Received: by 2002:a63:f050:: with SMTP id s16mr276001pgj.258.1628359774177;
+        Sat, 07 Aug 2021 11:09:34 -0700 (PDT)
+Received: from ?IPv6:2601:647:4000:d7:e0e1:c61c:7863:f2a1? ([2601:647:4000:d7:e0e1:c61c:7863:f2a1])
+        by smtp.gmail.com with ESMTPSA id p21sm10682973pfo.8.2021.08.07.11.09.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 07 Aug 2021 11:09:33 -0700 (PDT)
+Subject: Re: [PATCH v4 12/52] NCR5380: Use scsi_cmd_to_rq() instead of
+ scsi_cmnd.request
+To:     Michael Schmitz <schmitzmic@gmail.com>,
+        Finn Thain <fthain@linux-m68k.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20210805191828.3559897-1-bvanassche@acm.org>
+ <20210805191828.3559897-13-bvanassche@acm.org>
+ <b2ff95ac-49b2-6967-799-66bf23d3b7e@linux-m68k.org>
+ <041a2d03-c37e-288c-c042-95b825bf2fbc@acm.org>
+ <5ec19a0b-d49c-8f6d-9452-f8b1a43f2a22@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <db7a1272-d36b-2556-cbe8-a62dd0a6d3d2@acm.org>
+Date:   Sat, 7 Aug 2021 11:09:31 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <5ec19a0b-d49c-8f6d-9452-f8b1a43f2a22@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The return value of transport_kmap_data_sg() is assigned to the variable
-buf:
-  buf = transport_kmap_data_sg(cmd);
+On 8/6/21 1:24 PM, Michael Schmitz wrote:
+> Am 07.08.2021 um 03:56 schrieb Bart Van Assche:
+>> On 8/6/21 2:24 AM, Finn Thain wrote:
+>>> On Thu, 5 Aug 2021, Bart Van Assche wrote:
+>>>
+>>>> Prepare for removal of the request pointer by using scsi_cmd_to_rq()
+>>>> instead. This patch does not change any functionality.
+>>>>
+>>>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>>>
+>>> Acked-by: Finn Thain <fthain@linux-m68k.org>
+>>>
+>>> Did you consider replacing rq_data_dir(cmd->request) with
+>>> cmd->sc_data_direction for this driver?
+>>
+>> That's an interesting suggestion but I prefer to minimize the number of
+>> changes I make in NCR5380 drivers since I do not have access to a setup
+>> on which I can test any of these drivers.
+> 
+> The NCR5380 driver gets frequent testing on my Atari, so unless it's
+> something integration specific, we ought to see any regressions there.
 
-And then it is checked:
-  if (!buf) {
+How about replacing patch 12/52 with the (totally untested) patch below?
 
-This indicates that buf can be NULL. However, it is dereferenced in the
-following statements:
-  if (!(buf[3] & 0x80))
-    buf[3] |= 0x80;
-  if (!(buf[2] & 0x80))
-	buf[2] |= 0x80;
+Thanks,
 
-To fix these possible null-pointer dereferences, dereference buf only when
-it is not NULL.
+Bart.
 
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Signed-off-by: Tuo Li <islituo@gmail.com>
+
+Subject: [PATCH] NCR5380: Use sc_data_direction instead of rq_data_dir()
+
+This patch prepares for the removal of the request pointer from struct
+scsi_cmnd and does not change any functionality.
+
+Suggested-by: Finn Thain <fthain@linux-m68k.org>
+Cc: Finn Thain <fthain@linux-m68k.org>
+Cc: Michael Schmitz <schmitzmic@gmail.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/target/target_core_pscsi.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/NCR5380.c   | 6 +++---
+ drivers/scsi/sun3_scsi.c | 3 ++-
+ 2 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 2629d2ef3970..560815729182 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -620,14 +620,14 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
- 			buf = transport_kmap_data_sg(cmd);
- 			if (!buf) {
- 				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
--			}
--
--			if (cdb[0] == MODE_SENSE_10) {
--				if (!(buf[3] & 0x80))
--					buf[3] |= 0x80;
- 			} else {
--				if (!(buf[2] & 0x80))
--					buf[2] |= 0x80;
-+				if (cdb[0] == MODE_SENSE_10) {
-+					if (!(buf[3] & 0x80))
-+						buf[3] |= 0x80;
-+				} else {
-+					if (!(buf[2] & 0x80))
-+						buf[2] |= 0x80;
-+				}
- 			}
- 
- 			transport_kunmap_data_sg(cmd);
--- 
-2.25.1
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 3baadd068768..a85589a2a8af 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -778,7 +778,7 @@ static void NCR5380_dma_complete(struct Scsi_Host *instance)
+ 	}
 
+ #ifdef CONFIG_SUN3
+-	if ((sun3scsi_dma_finish(rq_data_dir(hostdata->connected->request)))) {
++	if (sun3scsi_dma_finish(hostdata->connected->sc_data_direction)) {
+ 		pr_err("scsi%d: overrun in UDC counter -- not prepared to deal with this!\n",
+ 		       instance->host_no);
+ 		BUG();
+@@ -1710,7 +1710,7 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 				count = sun3scsi_dma_xfer_len(hostdata, cmd);
+
+ 				if (count > 0) {
+-					if (rq_data_dir(cmd->request))
++					if (cmd->sc_data_direction == DMA_TO_DEVICE)
+ 						sun3scsi_dma_send_setup(hostdata,
+ 						                        cmd->SCp.ptr, count);
+ 					else
+@@ -2158,7 +2158,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
+ 		count = sun3scsi_dma_xfer_len(hostdata, tmp);
+
+ 		if (count > 0) {
+-			if (rq_data_dir(tmp->request))
++			if (tmp->sc_data_direction == DMA_TO_DEVICE)
+ 				sun3scsi_dma_send_setup(hostdata,
+ 				                        tmp->SCp.ptr, count);
+ 			else
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 2e3fbc2fae97..af71ab112a84 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -366,10 +366,11 @@ static inline int sun3scsi_dma_start(unsigned long count, unsigned char *data)
+ }
+
+ /* clean up after our dma is done */
+-static int sun3scsi_dma_finish(int write_flag)
++static int sun3scsi_dma_finish(enum dma_data_direction data_dir)
+ {
+ 	unsigned short __maybe_unused count;
+ 	unsigned short fifo;
++	const bool write_flag = data_dir == DMA_TO_DEVICE;
+ 	int ret = 0;
+ 	
+ 	sun3_dma_active = 0;
