@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53004C4320A
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Aug 2021 09:00:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAA07C4338F
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Aug 2021 09:01:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 38A0160E9B
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Aug 2021 09:00:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D13960F9E
+	for <linux-scsi@archiver.kernel.org>; Sun,  8 Aug 2021 09:01:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231450AbhHHJBP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Aug 2021 05:01:15 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:50653 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230301AbhHHJBO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Aug 2021 05:01:14 -0400
+        id S231378AbhHHJB1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 8 Aug 2021 05:01:27 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:13558 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231130AbhHHJBZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Aug 2021 05:01:25 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1628413256; x=1659949256;
+  t=1628413266; x=1659949266;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references;
-  bh=6B2CQU5+UkLRTV6KdGFECN3I7kOpqa+xwRhIgxF3D9A=;
-  b=UD0mWTLsDGf3USg/2QJ+Qu9B4Nl+y4M854sCSv3iW2vly0pjqwmnNDCw
-   LMqM9ik/wFfpmamtg5AyG7ovaRvlz/JvdN4ff8Asg71cA78O9ank049pY
-   YlTXdN95EJeOFVO9sV6u3FpRJn/gCfJVQDIHYX+PN3wr7guEH2lPb8vHi
-   RiCB+L3AvofGwpVDyx7m5b0jW7N4cTDKUMUVLRmxpwv8eJg5BeRG/c00U
-   ahSPk7/CakbeieeaNVj38ltju7jkZLfVo9gYydDWhn3MoUoXzu9PcpJPt
-   YH4XkJvq10hktDMQAT8uoPwytGZlcosQDjZUo8ngduxiKrNvcIPNoaLRC
+  bh=L0NSUOIkoI+fROYlx4Yf7xoPnBxt8xZkGjTL7cMuIzM=;
+  b=iF2zxYBbYVOduapr7Ohx9sz/IFrr+1WKfBpARuNxZ3w84mnBEoiHIqTG
+   Zxi/eDMxom1UxesotRKYa39Wi3NrByWcXb1z12Cp/nAC5JzRlZtj8dq7Y
+   qzxpeb4UzTmtvX4NynRyjv8/V5Fo3PtRLY2/xdxGk7xw6XMJnddTusD/8
+   LWDeImcN9+RM8TTr2GR1pJYWXge/13aOAbx3xrq6KDp2hYWr65dCeyLu6
+   GtREBr1wrHTBsB4b+ow8sZqNmrGR6IeJ8XbKnizhAL9rTTRQyXjuWZMXY
+   LAOjBC6ecHipRz/xbrhwrY/+WnE3ZHogW1SYN1jxI1/vaDGL9R7JwIALM
    w==;
 X-IronPort-AV: E=Sophos;i="5.84,305,1620662400"; 
-   d="scan'208";a="288168028"
+   d="scan'208";a="176607213"
 Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Aug 2021 17:00:55 +0800
-IronPort-SDR: SjiJLIpTnTJwNxyaB4twf/JhkPMUq6C7qruGg3GJgP0z+gx04xi96wi2kGT3AVvMllWiemZTJs
- eKBhJitmVxNgoOZm2ZfR6DgADAi5GDmeB8qEJih+nWOgRwAV/obMjDl95IjUBbMO+YpEsWK9Bk
- Wn5LqRId18wqBAKDfeSk9ERJYPYN1N/qGjLzsA8FGjLLHh+PXMnyX1bwstkYMKEEBJ5Y8WznWn
- qP6gjdo16+1UPglmiAcB60Z6/m7YAJgbvh0jz18I2R6C5eXKZi7jKxOzzrlmZw3WSIh+mud3lP
- +YEpbybqXMT3B+6hItpTTuog
+  by ob1.hgst.iphmx.com with ESMTP; 08 Aug 2021 17:01:05 +0800
+IronPort-SDR: BrGufTHlmjocwAIDaVv6HcFG5cfkxUT5TbSdEvwu6BMaUMKjHd3EPmCQR/JJCzXQ2Kddv859Iz
+ 4Bsm/zpH6WWMFYGXT14JNg+3JUR7xFZ2+J9WXo/ALUJ9/PWTXJUecuV03Zz90+QtwmVTjC/IvS
+ zCc4F0uDwBI651vdvrGyzxYT8GOpPS0Rhq4UZS5j6rMZjKW7sYoa6qbDjaZEKXIxp76LhBgyCQ
+ z4A4/Q+WlbtkKRTk8K4swXdBG9y5p7bc+KpeB5J1g7K5hdLfqmFJSwNBfqKoUrmwQiRSzzcjCc
+ LdzGaNXdl6lfTmjFdSszfCzD
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2021 01:36:30 -0700
-IronPort-SDR: 07lasYtr7CfWz+iI2OWhYHfFO0K7Qt7DVXzowy6cK9b/esIEbwoqSwJhIT+1Z/d5bYo6pvwgKf
- AK7mSAtJptbxr92CITg8VT1+saIy6eRHKsOwELek7l++Tdvb+ar/C1UFESueg0+8jGUH3O4Z83
- QzQU4fL1tO12sndpr+C7YYft3blQhp1ucVpOhKEG6+fNaEVdN4HuJrAv/UyWKTJPPon8GG4iRH
- 5sauHDsxLAb+xH+D+ydZ/JnX5KEXDhNEquEFHufe1EHMxQpVhOvQwyTbsATosJMnHGgR7d/4XM
- 3eQ=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2021 01:36:41 -0700
+IronPort-SDR: MU9xphad+5f6aLHiqnvIgymRq1tR6ei0x0ECwrUoZgqk8yYD5K+nLXOoqDSav+sIbjplo/bv7G
+ EmQUwCEtup5EofqpMxs/uN976jOqWtIs6890ElDmOCH+QHvkbaEK3NamGw7X9CGXwF/33AOXAX
+ z9BL5AYx3Nn5sXyjLyY3wVhtXS3f3j1IT7n/iosiKMCYJfRlafDqU1Kq4ugK5Z71/olJQ39O+T
+ OS49yI+LeUadc1FwJu3HTaOAr0qnZRX7QDh7k2awittBGExJ92L13hBn40cZ1RUc9aW3K5vprr
+ 3AU=
 WDCIronportException: Internal
 Received: from bxygm33.sdcorp.global.sandisk.com (HELO BXYGM33.ad.shared) ([10.0.231.247])
-  by uls-op-cesaip02.wdc.com with ESMTP; 08 Aug 2021 02:00:54 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 08 Aug 2021 02:01:04 -0700
 From:   Avri Altman <avri.altman@wdc.com>
 To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -58,9 +58,9 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
         Daejun Park <daejun7.park@samsung.com>,
         Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 2/4] scsi: ufshpb: Use a correct max multi chunk
-Date:   Sun,  8 Aug 2021 12:00:22 +0300
-Message-Id: <20210808090024.21721-3-avri.altman@wdc.com>
+Subject: [PATCH 3/4] scsi: ufshpb: Verify that num_inflight_map_req is non-negative
+Date:   Sun,  8 Aug 2021 12:00:23 +0300
+Message-Id: <20210808090024.21721-4-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210808090024.21721-1-avri.altman@wdc.com>
 References: <20210808090024.21721-1-avri.altman@wdc.com>
@@ -68,42 +68,80 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In HPB2.0, if pre_req_min_tr_len < transfer_len < pre_req_max_tr_len
-the driver is expected to send a HPB-WRITE-BUFFER companion to HPB-READ.
+num_inflight_map_req should not be negative.  It is incremented and
+decremented without any protection, allowing it theoretically to be
+negative, should some weird unbalanced count occur.
 
-The upper bound should fit into a single byte, regardless of
-bMAX_ DATA_SIZE_FOR_HPB_SINGLE_CMD which being an attribute (u32) can
-be significantly larger.
+Verify that the those calls are properly serialized.
 
-To further illustrate the issue let us consider the following scenario:
- - SCSI_DEFAULT_MAX_SECTORS is 1024 limiting the IO chunks to 512KB
- - The OEM changes scsi_host_template .max_sectors to be 2048, which
-   allows a 1M requests: transfer_len = 256
- - pre_req_max_tr_len = HPB_MULTI_CHUNK_HIGH = 256
- - ufshpb_is_supported_chunk returns true (256 <= 256)
- - WARN_ON_ONCE(256 > 256) doesn't warn
- - ufshpb_set_hpb_read_to_upiu cast transfer_len to u8: transfer_len = 0
- - the command is failing with illegal request
-
-Fixes: 41d8a9333cc9 (scsi: ufs: ufshpb: Add HPB 2.0 support)
+Fixes: 33845a2d844b (scsi: ufs: ufshpb: Limit the number of in-flight map requests)
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/scsi/ufs/ufshpb.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshpb.c | 10 ++++++++++
+ drivers/scsi/ufs/ufshpb.h |  4 +++-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+index 8e92c61ed9d4..cd48367f94cc 100644
+--- a/drivers/scsi/ufs/ufshpb.c
++++ b/drivers/scsi/ufs/ufshpb.c
+@@ -756,6 +756,7 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
+ {
+ 	struct ufshpb_req *map_req;
+ 	struct bio *bio;
++	unsigned long flags;
+ 
+ 	if (hpb->is_hcm &&
+ 	    hpb->num_inflight_map_req >= hpb->params.inflight_map_req) {
+@@ -780,7 +781,10 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
+ 
+ 	map_req->rb.srgn_idx = srgn->srgn_idx;
+ 	map_req->rb.mctx = srgn->mctx;
++
++	spin_lock_irqsave(&hpb->param_lock, flags);
+ 	hpb->num_inflight_map_req++;
++	spin_unlock_irqrestore(&hpb->param_lock, flags);
+ 
+ 	return map_req;
+ }
+@@ -788,9 +792,14 @@ static struct ufshpb_req *ufshpb_get_map_req(struct ufshpb_lu *hpb,
+ static void ufshpb_put_map_req(struct ufshpb_lu *hpb,
+ 			       struct ufshpb_req *map_req)
+ {
++	unsigned long flags;
++
+ 	bio_put(map_req->bio);
+ 	ufshpb_put_req(hpb, map_req);
++
++	spin_lock_irqsave(&hpb->param_lock, flags);
+ 	hpb->num_inflight_map_req--;
++	spin_unlock_irqrestore(&hpb->param_lock, flags);
+ }
+ 
+ static int ufshpb_clear_dirty_bitmap(struct ufshpb_lu *hpb,
+@@ -2387,6 +2396,7 @@ static int ufshpb_lu_hpb_init(struct ufs_hba *hba, struct ufshpb_lu *hpb)
+ 
+ 	spin_lock_init(&hpb->rgn_state_lock);
+ 	spin_lock_init(&hpb->rsp_list_lock);
++	spin_lock_init(&hpb->param_lock);
+ 
+ 	INIT_LIST_HEAD(&hpb->lru_info.lh_lru_rgn);
+ 	INIT_LIST_HEAD(&hpb->lh_act_srgn);
 diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index c74a6c35a446..6df317dfe034 100644
+index 6df317dfe034..a79e07398970 100644
 --- a/drivers/scsi/ufs/ufshpb.h
 +++ b/drivers/scsi/ufs/ufshpb.h
-@@ -32,7 +32,7 @@
- /* hpb support chunk size */
- #define HPB_LEGACY_CHUNK_HIGH			1
- #define HPB_MULTI_CHUNK_LOW			7
--#define HPB_MULTI_CHUNK_HIGH			256
-+#define HPB_MULTI_CHUNK_HIGH			255
- 
- /* hpb vender defined opcode */
- #define UFSHPB_READ				0xF8
+@@ -237,7 +237,9 @@ struct ufshpb_lu {
+ 	struct ufshpb_req *pre_req;
+ 	int num_inflight_pre_req;
+ 	int throttle_pre_req;
+-	int num_inflight_map_req;
++	int num_inflight_map_req; /* hold param_lock */
++	spinlock_t param_lock;
++
+ 	struct list_head lh_pre_req_free;
+ 	int cur_read_id;
+ 	int pre_req_min_tr_len;
 -- 
 2.17.1
 
