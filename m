@@ -2,100 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.5 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B003C4338F
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Aug 2021 09:01:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D92B1C4320A
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 04:19:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 801B360F9E
-	for <linux-scsi@archiver.kernel.org>; Sun,  8 Aug 2021 09:01:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC2CB60184
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 04:19:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231545AbhHHJBl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 8 Aug 2021 05:01:41 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:59571 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231130AbhHHJBk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Aug 2021 05:01:40 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1628413281; x=1659949281;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references;
-  bh=bjgGRXxjJDNLHzEfzuNKdyk/I6//YiMoxvenotPsMHA=;
-  b=chq0CCd2+dy8PTMMG+WrxC6g+2ATXbOd78f3EsUlCKeFdlc4t63uGXZW
-   lsVgPljKp9tdxnZYVxh7pjEgX6+xvyuSSldLE0lRcKFF3Z56npu6FWi+m
-   1JkPE4f9GHtAN22X4BNJk67awgzA3oioYApobmbpIhWMfFROWtXWEQmlC
-   1M8eXyGODR4tZyGtMAUetwCf7KxFhF5RCB07x8FbrQwF/zIZcyF8NV4gF
-   55FQUqDvjld0LcisakJNa7joIYF5pMsj+e6eeQeXofOdDTR75YtJv2bg6
-   5FCot8nmCq8BR9FVjyM6lX4Nb7u0ukLOaWTKmTcH23OTFvqjFugFB3q5m
-   A==;
-X-IronPort-AV: E=Sophos;i="5.84,305,1620662400"; 
-   d="scan'208";a="280449782"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 08 Aug 2021 17:01:21 +0800
-IronPort-SDR: fJaxbcIW++bYCTtmNWhuc3GRBvQE4JfjebWgsmJKzsSxIRwgVeOgPmrnpWS8XD2XeGsw8oGSep
- uVg/QLPX2e0ULpeGMbYF3ymPgVxv557bb2sWPIoSsSqsBl0lc7330kGjuIIlFkSxUWx1yBx8ww
- cfIKgMbYGBQK7hWzx+ZhiGytuW2HsNkp4dyB+o3hA4UZQiICnuEGBT7HlMrlA+crssB/8QX/tA
- ONjkKClXBawQtRK8Vor9uMPa+DDGrVuymehtAsys5kI3tKJ6zcqJWNDdZ3n4SnC4P6EwiC2gko
- Yp0FKtNjhBuiZey7swp5PHD7
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Aug 2021 01:36:56 -0700
-IronPort-SDR: lPE7UCqk6qeiVobRoFkeWH+ksh8W4hROFo5RGGkKM71ycIe8DqVLg//RTI76zsRLo2co6DlP3t
- q8MLY3qUtbN7prth2t08xKQmGPpEhp0z33jEjoVILevtBzNxbnvglZwQZcpKKIVIdSVlfJ3ffT
- dqiB2BLmjTjxO976EEK94ipktntTVLoXMlEWO+sWsGTln1lF+Bzs6ik69cfj4L7jUIopJiAy2B
- 9mJfktIjNB/xDswzDRDXbB66qYsz8ReDBd38r/KQoSwa4HhE2y3ltMbKOWr7ptjAWobPg8StT4
- wJE=
-WDCIronportException: Internal
-Received: from bxygm33.sdcorp.global.sandisk.com (HELO BXYGM33.ad.shared) ([10.0.231.247])
-  by uls-op-cesaip02.wdc.com with ESMTP; 08 Aug 2021 02:01:19 -0700
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bart Van Assche <bvanassche@acm.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 4/4] scsi: ufshpb: Do not report victim error in HCM
-Date:   Sun,  8 Aug 2021 12:00:24 +0300
-Message-Id: <20210808090024.21721-5-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210808090024.21721-1-avri.altman@wdc.com>
-References: <20210808090024.21721-1-avri.altman@wdc.com>
+        id S231675AbhHIET7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Aug 2021 00:19:59 -0400
+Received: from mail-ed1-f45.google.com ([209.85.208.45]:36405 "EHLO
+        mail-ed1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230394AbhHIET7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 00:19:59 -0400
+Received: by mail-ed1-f45.google.com with SMTP id b7so22642278edu.3;
+        Sun, 08 Aug 2021 21:19:37 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=5hPnLfQOdhJ9VmhjHCFa74vmYcG7vey0A+Y6VMqc53E=;
+        b=o5PGXIZWnReQszCos4kWlfLBt0BR2K+i/ixajhAC0ytTL+YgV8pwCUSwODB7AK4Orr
+         LBvPtAqCZYIbNdEc4vemBXGCfiFDb0TWVKOKrXRLmhVeVya4oGnaLkpoa99coPcK0ycO
+         yCD+b+RubYjEXdoIy6QH+G1jv7YhNOZhJ03Q7EZCLLhMAgY5+hsgpHdEgrDnM4jZBSsi
+         8qxUqy2W8UZrr151UCS7CQq/2KfKpQLguObnqFSdFanXSwSKKCV8+iCcLfFtpWeEss6U
+         Jj+59B3m1vjkJCTZwOmmGRLoIi/b+02G4Wm0kUZ3YVy4Wdk3HgjXqDoF6Jp8UWPC+9ch
+         B8fA==
+X-Gm-Message-State: AOAM530zpLhmZx5pZ+t/qf7hxsTGnv/3Fj+Se6yxwE+K5fCKtXA1HXSn
+        snRSjh4UdEJ7Cy8lqWZVAJc=
+X-Google-Smtp-Source: ABdhPJxLBa4EXTSLKfWMi4nEZ8Wk8PrT9QK9XE4M+ir2fnBq9dIuQxK16aytPtIw8dDJgnbvoCv0Eg==
+X-Received: by 2002:a05:6402:5251:: with SMTP id t17mr22730430edd.157.1628482776972;
+        Sun, 08 Aug 2021 21:19:36 -0700 (PDT)
+Received: from ?IPv6:2a0b:e7c0:0:107::70f? ([2a0b:e7c0:0:107::70f])
+        by smtp.gmail.com with ESMTPSA id z70sm3240588ede.76.2021.08.08.21.19.35
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 08 Aug 2021 21:19:36 -0700 (PDT)
+Subject: Re: [PATCH v2] parisc: Make struct parisc_driver::remove() return
+ void
+To:     =?UTF-8?Q?Uwe_Kleine-K=c3=b6nig?= <u.kleine-koenig@pengutronix.de>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Helge Deller <deller@gmx.de>
+Cc:     kernel@pengutronix.de, alsa-devel@alsa-project.org,
+        Corey Minyard <minyard@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
+        Takashi Iwai <tiwai@suse.com>,
+        Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        linux-parisc@vger.kernel.org, linux-serial@vger.kernel.org,
+        linux-input@vger.kernel.org, Jakub Kicinski <kuba@kernel.org>,
+        openipmi-developer@lists.sourceforge.net,
+        Jaroslav Kysela <perex@perex.cz>,
+        "David S. Miller" <davem@davemloft.net>
+References: <20210807091927.1974404-1-u.kleine-koenig@pengutronix.de>
+From:   Jiri Slaby <jirislaby@kernel.org>
+Message-ID: <bef58281-91b3-b2d6-ace8-afe0d08221e1@kernel.org>
+Date:   Mon, 9 Aug 2021 06:19:34 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
+MIME-Version: 1.0
+In-Reply-To: <20210807091927.1974404-1-u.kleine-koenig@pengutronix.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In host control mode, eviction is perceived as an extreme measure.
-There are several conditions that both the entering and exiting regions
-should meet, so that eviction will take place.
+On 07. 08. 21, 11:19, Uwe Kleine-König wrote:
+> The caller of this function (parisc_driver_remove() in
+> arch/parisc/kernel/drivers.c) ignores the return value, so better don't
+> return any value at all to not wake wrong expectations in driver authors.
+> 
+> The only function that could return a non-zero value before was
+> ipmi_parisc_remove() which returns the return value of
+> ipmi_si_remove_by_dev(). Make this function return void, too, as for all
+> other callers the value is ignored, too.
+> 
+> Also fold in a small checkpatch fix for:
+> 
+> WARNING: Unnecessary space before function pointer arguments
+> +	void (*remove) (struct parisc_device *dev);
+> 
+> Acked-by: Dmitry Torokhov <dmitry.torokhov@gmail.com> (for drivers/input)
+> Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+> ---
+> changes since v1 sent with Message-Id:
+> 20210806093938.1950990-1-u.kleine-koenig@pengutronix.de:
+> 
+>   - Fix a compiler error noticed by the kernel test robot
+>   - Add Ack for Dmitry
+> 
+>   arch/parisc/include/asm/parisc-device.h  | 4 ++--
+>   drivers/char/ipmi/ipmi_si.h              | 2 +-
+>   drivers/char/ipmi/ipmi_si_intf.c         | 6 +-----
+>   drivers/char/ipmi/ipmi_si_parisc.c       | 4 ++--
+>   drivers/char/ipmi/ipmi_si_platform.c     | 4 +++-
+>   drivers/input/keyboard/hilkbd.c          | 4 +---
+>   drivers/input/serio/gscps2.c             | 3 +--
+>   drivers/net/ethernet/i825xx/lasi_82596.c | 3 +--
+>   drivers/parport/parport_gsc.c            | 3 +--
+>   drivers/scsi/lasi700.c                   | 4 +---
+>   drivers/scsi/zalon.c                     | 4 +---
+>   drivers/tty/serial/mux.c                 | 3 +--
 
-The common case however, is that those conditions are rarely met, so it
-is normal that the act of eviction fails.  Therefore, Do not report an
-error in host control mode if eviction fails.
+For the TTY piece:
+Acked-by: Jiri Slaby <jirislaby@kernel.org>
 
-Fixes: 6c59cb501b86 (scsi: ufs: ufshpb: Make eviction depend on region's reads)
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/scsi/ufs/ufshpb.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index cd48367f94cc..aafb55136c7e 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -1385,7 +1385,8 @@ static int ufshpb_add_region(struct ufshpb_lu *hpb, struct ufshpb_region *rgn)
- 			victim_rgn = ufshpb_victim_lru_info(hpb);
- 			if (!victim_rgn) {
- 				dev_warn(&hpb->sdev_ufs_lu->sdev_dev,
--				    "cannot get victim region error\n");
-+				    "cannot get victim region %s\n",
-+				    hpb->is_hcm ? "" : "error");
- 				ret = -ENOMEM;
- 				goto out;
- 			}
+thanks,
 -- 
-2.17.1
-
+-- 
+js
+suse labs
