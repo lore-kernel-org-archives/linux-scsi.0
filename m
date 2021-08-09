@@ -7,49 +7,47 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B2F7C4320A
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19161C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DACA60F38
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E933A60F38
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237046AbhHIXFe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Aug 2021 19:05:34 -0400
-Received: from mail-pj1-f53.google.com ([209.85.216.53]:36511 "EHLO
-        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237061AbhHIXFa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 19:05:30 -0400
-Received: by mail-pj1-f53.google.com with SMTP id u13-20020a17090abb0db0290177e1d9b3f7so1463629pjr.1
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Aug 2021 16:05:09 -0700 (PDT)
+        id S237038AbhHIXFg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Aug 2021 19:05:36 -0400
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:42616 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236943AbhHIXFb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 19:05:31 -0400
+Received: by mail-pj1-f44.google.com with SMTP id mq2-20020a17090b3802b0290178911d298bso2421629pjb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Aug 2021 16:05:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=T8SlbbTX7ZS3tdWtl1+UcAtfQLkoGrPBUdkthnafFic=;
-        b=XxOBYzDmdYBO+LEx8ummtogaFEHILe3O+xaaa5MeB+C64lGgGmnFCgdzErqniXOTsy
-         NueTedPjweX3sXUdPEaYi6knlbUxog0BZ35pQisw9WGuABXaEpQMnZBFhhhNu4c7YEvv
-         a7YiihtdhCmSVAoq1nOAnoVUc3YlYpRqzUaVhVmwcu0rR8JZkhLfbwO+K9lV2vel1RGV
-         r9Mq5Bkxm+rLu/dzrm0zi3oqjCS85gB0ml0tqYj1+xK2be9p0oSwdytSMB1coj0F/WVu
-         XSqoHMYNlobg1X/M7+ySfXmgvPYanOYqyJQm/2zRkCnD+FuJAAiIby57aOWx1km24fax
-         PNbw==
-X-Gm-Message-State: AOAM530+nKuTY/7fXtn0xW2tqlUPna0hfri6DlDyNAQctmtCIjoL3alv
-        kUaL2xrpGITxsQvgSO1r30I=
-X-Google-Smtp-Source: ABdhPJy+NwQzLLOxIONZ7ySO7t2N8croqaSnpwwwGb95QZQCpzwTuP+8ts5DiBgAPqzng7eJFwy4dg==
-X-Received: by 2002:a05:6a00:1897:b029:3ca:fd44:9137 with SMTP id x23-20020a056a001897b02903cafd449137mr10312214pfh.36.1628550309368;
-        Mon, 09 Aug 2021 16:05:09 -0700 (PDT)
+        bh=G12c21RJ3AXLCNGZiS6sOUi3k1PYPMRZz1Ev3xIt3vE=;
+        b=q3k9Q5yuVCdSl07TGE98fWMk/c9WC/uE//IylVgqq14UyV2S/VfWrAmqXvkq3tTssH
+         5s6dbYQHqqKGokxkqpew0G/DOpfPXmuxQU7xKt+tcTwITV14MsCSN6Ku6aZrHCYnMaD3
+         F/XkAvfPBA2IOAi2/hEMBdBuiGL2skPwrmRZa327fPFJrQScBXCWapAnfxNRREw3DDUe
+         LAOCj3xMokXhLbB2g26G9zDjLT9/HswxgJZpGAf6krN8+zYyn/WgmB4C3OxnDDVAnZPv
+         rqtnz+AobvtBDDBhLYHcE5IhaZH+IGGO160796d9vT4wiM3Nj/JZuYO+GFMYKq/oD57Z
+         nbYA==
+X-Gm-Message-State: AOAM531v8AN7LcPR+S5IvLFreZU6HBYTrkgX/cPhoH9TkxxCB5FIhloR
+        qF4HPo60AXXRfcvl3ZsoTjE=
+X-Google-Smtp-Source: ABdhPJx/LGLgiIU4uVyljjVmfZFe62elvfZm1FCTwc0pAVGE9Z/QQsoqY4CplmCS+bDjdGOlrGa4eQ==
+X-Received: by 2002:a65:40c6:: with SMTP id u6mr46143pgp.390.1628550310673;
+        Mon, 09 Aug 2021 16:05:10 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:7dd4:e46e:368b:7454])
-        by smtp.gmail.com with ESMTPSA id j6sm24102260pgq.0.2021.08.09.16.05.08
+        by smtp.gmail.com with ESMTPSA id j6sm24102260pgq.0.2021.08.09.16.05.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Aug 2021 16:05:08 -0700 (PDT)
+        Mon, 09 Aug 2021 16:05:10 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v5 43/52] snic: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Mon,  9 Aug 2021 16:03:46 -0700
-Message-Id: <20210809230355.8186-44-bvanassche@acm.org>
+Subject: [PATCH v5 44/52] stex: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+Date:   Mon,  9 Aug 2021 16:03:47 -0700
+Message-Id: <20210809230355.8186-45-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210809230355.8186-1-bvanassche@acm.org>
 References: <20210809230355.8186-1-bvanassche@acm.org>
@@ -64,55 +62,37 @@ instead. This patch does not change any functionality.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/snic/snic_scsi.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/stex.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index 6dd0ff188bb4..d5a807c9c0d3 100644
---- a/drivers/scsi/snic/snic_scsi.c
-+++ b/drivers/scsi/snic/snic_scsi.c
-@@ -33,7 +33,7 @@
- #include "snic_io.h"
- #include "snic.h"
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 491b435273a6..f1ba7f5b52a8 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -540,7 +540,7 @@ stex_ss_send_cmd(struct st_hba *hba, struct req_msg *req, u16 tag)
+ 	msg_h = (struct st_msg_header *)req - 1;
+ 	if (likely(cmd)) {
+ 		msg_h->channel = (u8)cmd->device->channel;
+-		msg_h->timeout = cpu_to_le16(cmd->request->timeout/HZ);
++		msg_h->timeout = cpu_to_le16(scsi_cmd_to_rq(cmd)->timeout / HZ);
+ 	}
+ 	addr = hba->dma_handle + hba->req_head * hba->rq_size;
+ 	addr += (hba->ccb[tag].sg_count+4)/11;
+@@ -690,7 +690,7 @@ stex_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
  
--#define snic_cmd_tag(sc)	(((struct scsi_cmnd *) sc)->request->tag)
-+#define snic_cmd_tag(sc)	(scsi_cmd_to_rq(sc)->tag)
+ 	cmd->scsi_done = done;
  
- const char *snic_state_str[] = {
- 	[SNIC_INIT]	= "SNIC_INIT",
-@@ -1636,7 +1636,7 @@ snic_abort_cmd(struct scsi_cmnd *sc)
- 	u32 start_time = jiffies;
+-	tag = cmd->request->tag;
++	tag = scsi_cmd_to_rq(cmd)->tag;
  
- 	SNIC_SCSI_DBG(snic->shost, "abt_cmd:sc %p :0x%x :req = %p :tag = %d\n",
--		       sc, sc->cmnd[0], sc->request, tag);
-+		       sc, sc->cmnd[0], scsi_cmd_to_rq(sc), tag);
- 
- 	if (unlikely(snic_get_state(snic) != SNIC_ONLINE)) {
- 		SNIC_HOST_ERR(snic->shost,
-@@ -2152,7 +2152,7 @@ snic_device_reset(struct scsi_cmnd *sc)
- 	int dr_supp = 0;
- 
- 	SNIC_SCSI_DBG(shost, "dev_reset:sc %p :0x%x :req = %p :tag = %d\n",
--		      sc, sc->cmnd[0], sc->request,
-+		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
- 		      snic_cmd_tag(sc));
- 	dr_supp = snic_dev_reset_supported(sc->device);
- 	if (!dr_supp) {
-@@ -2387,7 +2387,7 @@ snic_host_reset(struct scsi_cmnd *sc)
- 
- 	SNIC_SCSI_DBG(shost,
- 		      "host reset:sc %p sc_cmd 0x%x req %p tag %d flags 0x%llx\n",
--		      sc, sc->cmnd[0], sc->request,
-+		      sc, sc->cmnd[0], scsi_cmd_to_rq(sc),
- 		      snic_cmd_tag(sc), CMD_FLAGS(sc));
- 
- 	ret = snic_reset(shost, sc);
-@@ -2494,7 +2494,7 @@ snic_scsi_cleanup(struct snic *snic, int ex_tag)
- 		sc->result = DID_TRANSPORT_DISRUPTED << 16;
- 		SNIC_HOST_INFO(snic->shost,
- 			       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
--			       sc, sc->request->tag, CMD_FLAGS(sc), rqi,
-+			       sc, scsi_cmd_to_rq(sc)->tag, CMD_FLAGS(sc), rqi,
- 			       jiffies_to_msecs(jiffies - st_time));
- 
- 		/* Update IO stats */
+ 	if (unlikely(tag >= host->can_queue))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -1246,7 +1246,7 @@ static int stex_abort(struct scsi_cmnd *cmd)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct st_hba *hba = (struct st_hba *)host->hostdata;
+-	u16 tag = cmd->request->tag;
++	u16 tag = scsi_cmd_to_rq(cmd)->tag;
+ 	void __iomem *base;
+ 	u32 data;
+ 	int result = SUCCESS;
