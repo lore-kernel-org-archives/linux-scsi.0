@@ -2,68 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55B94C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 21:57:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4720C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 22:12:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E61F60F55
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 21:57:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C56860C41
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 22:12:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235553AbhHIV5n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Aug 2021 17:57:43 -0400
-Received: from mail-pl1-f173.google.com ([209.85.214.173]:46788 "EHLO
-        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232193AbhHIV5l (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 17:57:41 -0400
-Received: by mail-pl1-f173.google.com with SMTP id k2so18103288plk.13
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Aug 2021 14:57:21 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=3aPm5YLAD1kJXF8sjPtt6iDFT3xvszHRATpOLfro8gI=;
-        b=BXxp7RwiPEmnzNVpdsluhGqkTy7JiztePMhx80F5CMHNB1qSmeSgcah4hXDcnkCX/X
-         plgFVon8C5YbpJCOc74lBzHTHGs5+bbIJYiEdAm/t/f263YT3lcRym8TF3VPkglzX+YX
-         Z5UewuSGtPcMXKIpnPiSUo5yO6I12Lx2coWgsZnUn8kQFqiJUucl89KsxVBlKL30owW6
-         S5nmEASgj1StmALve5yQsHueakvPkP8NJYzZ9LGhbGQsXIVMfTeGxXklXH4po92LzBlO
-         qKwitlijQPPZ4z8EZzDt/F05dHQc/AlHxXkQMbh1i4YMGM5zI4CYCB2CCRtmm80puaCT
-         x+wA==
-X-Gm-Message-State: AOAM530kd6LTC87fdWSSiXX4ryZgTHkoTU/lrql9nZLgnwqwrsK7kKWh
-        ZM3+c94J306AG09BivBQMzCDMin5NaA=
-X-Google-Smtp-Source: ABdhPJzQ7LG8DK1kR50XoZrluxvZkIdW8/Er/YGA8YtEV+N7ZjjIhbjXr5LqHALh75DKYv6wC7WV5Q==
-X-Received: by 2002:a62:e714:0:b029:3c4:8544:b2b7 with SMTP id s20-20020a62e7140000b02903c48544b2b7mr26073596pfh.5.1628546240368;
-        Mon, 09 Aug 2021 14:57:20 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:7dd4:e46e:368b:7454? ([2601:647:4000:d7:7dd4:e46e:368b:7454])
-        by smtp.gmail.com with ESMTPSA id y12sm21124146pfr.68.2021.08.09.14.57.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Aug 2021 14:57:19 -0700 (PDT)
-Subject: Re: [PATCH v2 2/5] scsi: isci: Use the proper SCSI midlayer
- interfaces for PI
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <20210806040023.5355-1-martin.petersen@oracle.com>
- <20210806040023.5355-3-martin.petersen@oracle.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <fe157cc2-ee8c-58fd-a18c-1bbd753d15ea@acm.org>
-Date:   Mon, 9 Aug 2021 14:57:17 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S236614AbhHIWNI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Aug 2021 18:13:08 -0400
+Received: from mga04.intel.com ([192.55.52.120]:46227 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232683AbhHIWNH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Aug 2021 18:13:07 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10070"; a="212935547"
+X-IronPort-AV: E=Sophos;i="5.84,308,1620716400"; 
+   d="scan'208";a="212935547"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Aug 2021 15:12:46 -0700
+X-IronPort-AV: E=Sophos;i="5.84,308,1620716400"; 
+   d="scan'208";a="444723667"
+Received: from jasonkon-mobl1.amr.corp.intel.com (HELO [10.209.114.115]) ([10.209.114.115])
+  by fmsmga007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Aug 2021 15:12:43 -0700
+Subject: Re: [PATCH V3 03/13] x86/HV: Add new hvcall guest address host
+ visibility support
+To:     Tianyu Lan <ltykernel@gmail.com>, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com,
+        bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
+        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
+        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
+        Tianyu.Lan@microsoft.com, pgonda@google.com,
+        martin.b.radev@gmail.com, akpm@linux-foundation.org,
+        kirill.shutemov@linux.intel.com, rppt@kernel.org,
+        sfr@canb.auug.org.au, saravanand@fb.com,
+        krish.sadhukhan@oracle.com, aneesh.kumar@linux.ibm.com,
+        xen-devel@lists.xenproject.org, rientjes@google.com,
+        hannes@cmpxchg.org, tj@kernel.org, michael.h.kelley@microsoft.com
+Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, parri.andrea@gmail.com
+References: <20210809175620.720923-1-ltykernel@gmail.com>
+ <20210809175620.720923-4-ltykernel@gmail.com>
+From:   Dave Hansen <dave.hansen@intel.com>
+Autocrypt: addr=dave.hansen@intel.com; keydata=
+ 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
+ z5cecg==
+Message-ID: <a0499916-38e2-0b1e-f2b9-ef760f6d4d92@intel.com>
+Date:   Mon, 9 Aug 2021 15:12:33 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210806040023.5355-3-martin.petersen@oracle.com>
+In-Reply-To: <20210809175620.720923-4-ltykernel@gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/5/21 9:00 PM, Martin K. Petersen wrote:
-> Use scsi_prot_ref_tag() instead of scsi_get_lba() to get the reference tag
-> for a given I/O.
+On 8/9/21 10:56 AM, Tianyu Lan wrote:
+> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
+> 
+> Add new hvcall guest address host visibility support to mark
+> memory visible to host. Call it inside set_memory_decrypted
+> /encrypted(). Add HYPERVISOR feature check in the
+> hv_is_isolation_supported() to optimize in non-virtualization
+> environment.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+From an x86/mm perspective:
+
+Acked-by: Dave Hansen <dave.hansen@intel.com>
+
+A tiny nit:
+
+> diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
+> index 0bb4d9ca7a55..b3683083208a 100644
+> --- a/arch/x86/hyperv/hv_init.c
+> +++ b/arch/x86/hyperv/hv_init.c
+> @@ -607,6 +607,12 @@ EXPORT_SYMBOL_GPL(hv_get_isolation_type);
+>  
+>  bool hv_is_isolation_supported(void)
+>  {
+> +	if (!cpu_feature_enabled(X86_FEATURE_HYPERVISOR))
+> +		return 0;
+> +
+> +	if (!hypervisor_is_type(X86_HYPER_MS_HYPERV))
+> +		return 0;
+> +
+>  	return hv_get_isolation_type() != HV_ISOLATION_TYPE_NONE;
+>  }
+This might be worthwhile to move to a header.  That ensures that
+hv_is_isolation_supported() use can avoid even a function call.  But, I
+see this is used in modules and its use here is also in a slow path, so
+it's not a big deal
