@@ -2,111 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA71C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B97DFC4338F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:31:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 51C2261002
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9281560295
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:31:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237059AbhHIXFy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Aug 2021 19:05:54 -0400
-Received: from mail-pj1-f47.google.com ([209.85.216.47]:33707 "EHLO
-        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236260AbhHIXFv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 19:05:51 -0400
-Received: by mail-pj1-f47.google.com with SMTP id 28-20020a17090a031cb0290178dcd8a4d1so250787pje.0
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Aug 2021 16:05:30 -0700 (PDT)
+        id S235565AbhHIXbU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Aug 2021 19:31:20 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56308 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233018AbhHIXbU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 19:31:20 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F6B5C0613D3;
+        Mon,  9 Aug 2021 16:30:59 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id gz13-20020a17090b0ecdb0290178c0e0ce8bso1253608pjb.1;
+        Mon, 09 Aug 2021 16:30:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Dd77W/KdeOM9nG8N1j3qwDuFZ1a4i1+lpHneiX4PFBQ=;
+        b=ZjzFDsu1U54J10WducqkKlbv0YSaNe9G7InZWfzrFx2SDdCbSUxRWh+UwOuuc/mlNd
+         A4IEOXnA5+MA0H0HDvrg1DEvKa1WvsjYE1S9I4s1qKCQOAqvq8v8xaFlHfbbAvu8r6cb
+         03sNp9yDJDdz70JArCBPd7HxuvmF52ZA5QVKBjN2W26RopXJkOB5aPf+JcBLDdAwRSpN
+         n/dSIoiCh/boJRdge3wyoMGdgJG8MzJpYVU9guN/5WpuzkMZIxWiGBb0RV9IWUr/V1pz
+         2OmrGUZGFl7g1cUO3PMv8ZkGG7rV5wl4Zlb60YrBPIWmoDORbPFTdhN/RkKZzVoX5oU9
+         vpFQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=Pe/i7NHwGLMp09YGkFixTOKu2VqoRlITK4RnDEIHQlU=;
-        b=cWL1DZ2DRZ2kpbpI3Cv6lwmWo5jc/7Szqu74JSkfFXdtBsgV6YKA2iJuF7nCUrNbeE
-         CwRHuXF2cfR17wEpvPgnTRoeEyoa9ADXShYPOIxA+SiZqrLxahVGGX56yXh6D1ZGtp7P
-         aVzVO0Y1qub4Rzvkrrycw6ovc4V5sCDHWvFD88A4MKZuEcQbZlocYH8vNdPSnCgEDiA3
-         zxLk5ELIcyP5qO3FJzm+ZJyMC2WXogSfg8U+Q8CiSqCZiFXCCCP8Ny8KPqrHQV/wOQRu
-         2GZ1vxJwkYKw6pSMRks2EKi54wQAhsOCsR7LCbQjE52R2JrNkL7ldg+otLll3ND8aba5
-         vzcQ==
-X-Gm-Message-State: AOAM5313iZ7QOhJ8l8kLXYFRlbgTLe0byK9SBEaxbiQH/DI7W9F0Jdtp
-        kikvQ5tDY02k6dlTBY3ar9c=
-X-Google-Smtp-Source: ABdhPJwEhSd9Rm6cLkjMW5Xq5heUH/HPAj7lP3R9+UzhvuMHwCf+tfA55eSL0wDaHSQnna9B/pcGAA==
-X-Received: by 2002:a62:db85:0:b029:3cd:cd0a:3137 with SMTP id f127-20020a62db850000b02903cdcd0a3137mr911101pfg.11.1628550330073;
-        Mon, 09 Aug 2021 16:05:30 -0700 (PDT)
-Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:7dd4:e46e:368b:7454])
-        by smtp.gmail.com with ESMTPSA id j6sm24102260pgq.0.2021.08.09.16.05.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Aug 2021 16:05:29 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v5 52/52] core: Remove the request member from struct scsi_cmnd
-Date:   Mon,  9 Aug 2021 16:03:55 -0700
-Message-Id: <20210809230355.8186-53-bvanassche@acm.org>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20210809230355.8186-1-bvanassche@acm.org>
-References: <20210809230355.8186-1-bvanassche@acm.org>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Dd77W/KdeOM9nG8N1j3qwDuFZ1a4i1+lpHneiX4PFBQ=;
+        b=qNRT83zfX5mdorLD1H4/bhDP75sbFfcCbgt4/R6Y40161xijGwiZcEhxaW0YtO/Flz
+         2ApGFDosx0pDBlEfJxbzXbFduqxZkiKHSQI5PIwEojAOgW2HkDxpyvk+fcCBccCmbOQL
+         XKB8BLSmoeicW6Cu2/GPkXvp+1elsgCVem+X9HiaerVZCteKaHnAagAS0xn3FGYXL4LT
+         36qj+GLyNibvuMuV16ePUVbWJzt/l9M3lbcG65qcfkARdi6bOB6KHoQy7WeSbqc/cewc
+         ofd1o0CKbVdF32NnODwnmGQPdHpCqVr/3W3NXj31Wc0W7OAYpMggqtT44QCSbn8upXAS
+         Lccg==
+X-Gm-Message-State: AOAM531m6ztq9dLNZ/bQQEbXud9WK9T3/9VFBoxI9dSHxyM9Myt/fYa2
+        qw6NrcVUgqbNlaGux1xaFH0=
+X-Google-Smtp-Source: ABdhPJw5xbAE7wEbcyMapsNiIsZXhrs3pdJY/wi8Ue4J/gYrZz/U0HT2rOfKimjwPnOHnjO+5GFFlA==
+X-Received: by 2002:a62:7716:0:b029:3c6:aa94:5a8d with SMTP id s22-20020a6277160000b02903c6aa945a8dmr20528455pfc.38.1628551858998;
+        Mon, 09 Aug 2021 16:30:58 -0700 (PDT)
+Received: from [10.69.44.239] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id z18sm17074733pfn.88.2021.08.09.16.30.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 09 Aug 2021 16:30:58 -0700 (PDT)
+Subject: Re: [PATCH] lpfc: move initialization of phba->poll_list earlier to
+ avoid crash
+To:     "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
+Cc:     stable@vger.kernel.org, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com
+References: <20210809150947.18104-1-emilne@redhat.com>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <621ef873-2924-1227-2aa0-815b2b82dc92@gmail.com>
+Date:   Mon, 9 Aug 2021 16:30:55 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210809150947.18104-1-emilne@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Since all scsi_cmnd.request users are gone, remove the request pointer
-from struct scsi_cmnd.
+On 8/9/2021 8:09 AM, Ewan D. Milne wrote:
+> The phba->poll_list is traversed in case of an error in lpfc_sli4_hba_setup(),
+> so it must be initialized earlier in case the error path is taken.
+> 
+> [  490.030738] lpfc 0000:65:00.0: 0:1413 Failed to init iocb list.
+> [  490.036661] BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+> [  490.044485] PGD 0 P4D 0
+> [  490.047027] Oops: 0000 [#1] SMP PTI
+> [  490.050518] CPU: 0 PID: 7 Comm: kworker/0:1 Kdump: loaded Tainted: G          I      --------- -  - 4.18.
+> [  490.060511] Hardware name: Dell Inc. PowerEdge R440/0WKGTH, BIOS 1.4.8 05/22/2018
+> [  490.067994] Workqueue: events work_for_cpu_fn
+> [  490.072371] RIP: 0010:lpfc_sli4_cleanup_poll_list+0x20/0xb0 [lpfc]
+> [  490.078546] Code: cf e9 04 f7 fe ff 0f 1f 40 00 0f 1f 44 00 00 41 57 49 89 ff 41 56 41 55 41 54 4d 8d a79
+> [  490.097291] RSP: 0018:ffffbd1a463dbcc8 EFLAGS: 00010246
+> [  490.102518] RAX: 0000000000008200 RBX: ffff945cdb8c0000 RCX: 0000000000000000
+> [  490.109649] RDX: 0000000000018200 RSI: ffff9468d0e16818 RDI: 0000000000000000
+> [  490.116783] RBP: ffff945cdb8c1740 R08: 00000000000015c5 R09: 0000000000000042
+> [  490.123915] R10: 0000000000000000 R11: ffffbd1a463dbab0 R12: ffff945cdb8c25c0
+> [  490.131049] R13: 00000000fffffff4 R14: 0000000000001800 R15: ffff945cdb8c0000
+> [  490.138182] FS:  0000000000000000(0000) GS:ffff9468d0e00000(0000) knlGS:0000000000000000
+> [  490.146267] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+> [  490.152013] CR2: 0000000000000000 CR3: 000000042ca10002 CR4: 00000000007706f0
+> [  490.159146] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> [  490.166277] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+> [  490.173409] PKRU: 55555554
+> [  490.176123] Call Trace:
+> [  490.178598]  lpfc_sli4_queue_destroy+0x7f/0x3c0 [lpfc]
+> [  490.183745]  lpfc_sli4_hba_setup+0x1bc7/0x23e0 [lpfc]
+> [  490.188797]  ? kernfs_activate+0x63/0x80
+> [  490.192721]  ? kernfs_add_one+0xe7/0x130
+> [  490.196647]  ? __kernfs_create_file+0x80/0xb0
+> [  490.201020]  ? lpfc_pci_probe_one_s4.isra.48+0x46f/0x9e0 [lpfc]
+> [  490.206944]  lpfc_pci_probe_one_s4.isra.48+0x46f/0x9e0 [lpfc]
+> [  490.212697]  lpfc_pci_probe_one+0x179/0xb70 [lpfc]
+> [  490.217492]  local_pci_probe+0x41/0x90
+> [  490.221246]  work_for_cpu_fn+0x16/0x20
+> [  490.224994]  process_one_work+0x1a7/0x360
+> [  490.229009]  ? create_worker+0x1a0/0x1a0
+> [  490.232933]  worker_thread+0x1cf/0x390
+> [  490.236687]  ? create_worker+0x1a0/0x1a0
+> [  490.240612]  kthread+0x116/0x130
+> [  490.243846]  ? kthread_flush_work_fn+0x10/0x10
+> [  490.248293]  ret_from_fork+0x35/0x40
+> [  490.251869] Modules linked in: lpfc(+) xt_CHECKSUM ipt_MASQUERADE xt_conntrack ipt_REJECT nf_reject_ipv4i
+> [  490.332609] CR2: 0000000000000000
+> 
+> Fixes: 93a4d6f40198 ("scsi: lpfc: Add registration for CPU Offline/Online events")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_init.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 5983e05b648f..e29523a1b530 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -13193,6 +13193,8 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
+>   	if (!phba)
+>   		return -ENOMEM;
+>   
+> +	INIT_LIST_HEAD(&phba->poll_list);
+> +
+>   	/* Perform generic PCI device enabling operation */
+>   	error = lpfc_enable_pci_dev(phba);
+>   	if (error)
+> @@ -13327,7 +13329,6 @@ lpfc_pci_probe_one_s4(struct pci_dev *pdev, const struct pci_device_id *pid)
+>   	/* Enable RAS FW log support */
+>   	lpfc_sli4_ras_setup(phba);
+>   
+> -	INIT_LIST_HEAD(&phba->poll_list);
+>   	timer_setup(&phba->cpuhp_poll_timer, lpfc_sli4_poll_hbtimer, 0);
+>   	cpuhp_state_add_instance_nocalls(lpfc_cpuhp_state, &phba->cpuhp);
+>   
+> 
 
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/scsi_error.c | 1 -
- drivers/scsi/scsi_lib.c   | 1 -
- include/scsi/scsi_cmnd.h  | 3 ---
- 3 files changed, 5 deletions(-)
+Looks good. Thanks Ewan.
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d85d308a0683..b6c86cce57bf 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -2377,7 +2377,6 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
- 
- 	scmd = (struct scsi_cmnd *)(rq + 1);
- 	scsi_init_command(dev, scmd);
--	scmd->request = rq;
- 	scmd->cmnd = scsi_req(rq)->cmd;
- 
- 	scmd->scsi_done		= scsi_reset_provider_done_command;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 909a422ec8f4..9ba1aa7530a9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1540,7 +1540,6 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
- 
- 	scsi_init_command(sdev, cmd);
- 
--	cmd->request = req;
- 	cmd->tag = req->tag;
- 	cmd->prot_op = SCSI_PROT_NORMAL;
- 	if (blk_rq_bytes(req))
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index b9265b15d37a..ddc9671b325b 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -111,9 +111,6 @@ struct scsi_cmnd {
- 				   reconnects.   Probably == sector
- 				   size */
- 
--	struct request *request;	/* The command we are
--				   	   working on */
--
- 	unsigned char *sense_buffer;
- 				/* obtained by REQUEST SENSE when
- 				 * CHECK CONDITION is received on original
+Reviewed-by: James Smart <jsmart2021@gmail.com>
+
+-- james
