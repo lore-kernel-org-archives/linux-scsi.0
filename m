@@ -2,149 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 576D0C4320A
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 11:50:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA6ABC4338F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 13:43:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33C3660F55
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 11:50:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F91360E76
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 13:43:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234488AbhHILvD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Aug 2021 07:51:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37068 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234295AbhHILvC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 07:51:02 -0400
-Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CBC24C0613D3;
-        Mon,  9 Aug 2021 04:50:41 -0700 (PDT)
-Received: by mail-pj1-x1031.google.com with SMTP id s22-20020a17090a1c16b0290177caeba067so34110367pjs.0;
-        Mon, 09 Aug 2021 04:50:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding:content-language;
-        bh=lEzRqawbCO3Oz7zqhJzZDzxmM9xxyvbKbGJKK51n77s=;
-        b=CGGbHiQxQHOtVwEfubzZ9ceQPWqmETo95FQMcSqJ0TCV2NzJ9F0fuC3wm/RCnSVZRG
-         Z5wfMX20T4zAnugcvmObELxDMvAfiA9i05R3D86KdMluIyMeW7LNQ7qDLkiZGME09a+n
-         /qspJvkO+BTbNWqmzQqscmIVX799p/dhOPaHU9sg4Ev+7YK54vf4byFGi7Idl0ioojXN
-         +c3GokUwZvjCMXT4CFAFbtPnB6Hak/lmGqHob1fNDdTCHPN1n6Y9rAcDfX4xy3k+eV1J
-         tkXE1oibwbxSXIyroWAAjsNdKB0kvGXA4l2ghjQisC/7svtWGQSnq7O97HsqM+P3aNba
-         ovxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding
-         :content-language;
-        bh=lEzRqawbCO3Oz7zqhJzZDzxmM9xxyvbKbGJKK51n77s=;
-        b=A97jSCOkVTzJB3GNNsADe4xz+yuX/nmKbigmMzHf909KxQdnuJus0AHSzM3/61bWmv
-         O5Aa0wxCQuOF7r2m1gVMWs4xDIHtP3jTOLfepLZs+NG4N+ssB5f7Gi1iy1r/vVqAXc69
-         uKn+/hSHni0nqKaI5QjE1VPa9OdPujhmyHdnrYeumO8D5K8pVIwdusbjglapT2VDBDvq
-         K/2cQSqPabn/gOrX8/2Wg80YJHuO8Ilw4jYuOVTz/BcckCXT0Eh+jglPfWHZhPtI1gYX
-         ZSJaRDy4Q9zvE0X9qw779Cqzi6EjVjnv3xi0N6sV9Kt7zXhk+jdKVVYmm6Av95QoIf7H
-         iMMQ==
-X-Gm-Message-State: AOAM533/mHWAHH0uRzB90rbjosJ8cDt51kYcTbGBv+7yzAgISvvn0qbh
-        Alyr0G1zB8AWkamDI17hMiY=
-X-Google-Smtp-Source: ABdhPJxJrRwYquMEhsP80YPY2COvRlMDmLJN3BmTl+5y3TJFofzDG7vEJ3GquXp8SItJi85ZD/nmGw==
-X-Received: by 2002:a17:902:c641:b029:12c:ef04:fa86 with SMTP id s1-20020a170902c641b029012cef04fa86mr9762891pls.40.1628509841418;
-        Mon, 09 Aug 2021 04:50:41 -0700 (PDT)
-Received: from [10.177.0.134] ([85.203.23.214])
-        by smtp.gmail.com with ESMTPSA id z16sm22469492pgu.21.2021.08.09.04.50.38
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 09 Aug 2021 04:50:41 -0700 (PDT)
-Subject: Re: [PATCH] scsi: target: pscsi: Fix possible null-pointer
- dereference in pscsi_complete_cmd()
-To:     Bodo Stroesser <bostroesser@gmail.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
-        TOTE Robot <oslab@tsinghua.edu.cn>, martin.petersen@oracle.com
-References: <20210807134651.245436-1-islituo@gmail.com>
- <dea07ecc-7700-5ee7-aa40-2d4455dc6c3f@gmail.com>
-From:   Tuo Li <islituo@gmail.com>
-Message-ID: <7c6622d0-2f28-27a7-250e-9a8fd79691a8@gmail.com>
-Date:   Mon, 9 Aug 2021 19:50:37 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S233726AbhHINni (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Aug 2021 09:43:38 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:7811 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233102AbhHINni (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 09:43:38 -0400
+Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.55])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Gjy2Z39jgzYmhN;
+        Mon,  9 Aug 2021 21:43:02 +0800 (CST)
+Received: from dggema773-chm.china.huawei.com (10.1.198.217) by
+ dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2176.2; Mon, 9 Aug 2021 21:43:15 +0800
+Received: from localhost.huawei.com (10.175.124.27) by
+ dggema773-chm.china.huawei.com (10.1.198.217) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2176.2; Mon, 9 Aug 2021 21:43:14 +0800
+From:   <lijinlin3@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     <john.garry@huawei.com>, <bvanassche@acm.org>,
+        <qiulaibin@huawei.com>, <linfeilong@huawei.com>,
+        <wubo40@huawei.com>, <lijinlin3@huawei.com>
+Subject: [PATCH v2] scsi: core: Fix hang of freezing queue between blocking and running device
+Date:   Mon, 9 Aug 2021 22:13:08 +0800
+Message-ID: <20210809141308.3700854-1-lijinlin3@huawei.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <dea07ecc-7700-5ee7-aa40-2d4455dc6c3f@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.124.27]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ dggema773-chm.china.huawei.com (10.1.198.217)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Thanks for your feedback. We will prepare a V2 patch and put the 
-transport_kunmap_data_sg()
-into the else-branch of the if (!buf).
+From: Li Jinlin <lijinlin3@huawei.com>
 
-Best wishes,
-Tuo Li
+We found a hang issue, the test steps are as follows:
+  1. blocking device via scsi_device_set_state()
+  2. dd if=/dev/sda of=/mnt/t.log bs=1M count=10
+  3. echo none > /sys/block/sda/queue/scheduler
+  4. echo "running" >/sys/block/sda/device/state
 
-On 2021/8/9 18:36, Bodo Stroesser wrote:
-> On 07.08.21 15:46, Tuo Li wrote:
->> The return value of transport_kmap_data_sg() is assigned to the variable
->> buf:
->>    buf = transport_kmap_data_sg(cmd);
->>
->> And then it is checked:
->>    if (!buf) {
->>
->> This indicates that buf can be NULL. However, it is dereferenced in the
->> following statements:
->>    if (!(buf[3] & 0x80))
->>      buf[3] |= 0x80;
->>    if (!(buf[2] & 0x80))
->>     buf[2] |= 0x80;
->>
->> To fix these possible null-pointer dereferences, dereference buf only 
->> when
->> it is not NULL.
->>
->> Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
->> Signed-off-by: Tuo Li <islituo@gmail.com>
->> ---
->>   drivers/target/target_core_pscsi.c | 14 +++++++-------
->>   1 file changed, 7 insertions(+), 7 deletions(-)
->>
->> diff --git a/drivers/target/target_core_pscsi.c 
->> b/drivers/target/target_core_pscsi.c
->> index 2629d2ef3970..560815729182 100644
->> --- a/drivers/target/target_core_pscsi.c
->> +++ b/drivers/target/target_core_pscsi.c
->> @@ -620,14 +620,14 @@ static void pscsi_complete_cmd(struct se_cmd 
->> *cmd, u8 scsi_status,
->>               buf = transport_kmap_data_sg(cmd);
->>               if (!buf) {
->>                   ; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
->> -            }
->> -
->> -            if (cdb[0] == MODE_SENSE_10) {
->> -                if (!(buf[3] & 0x80))
->> -                    buf[3] |= 0x80;
->>               } else {
->> -                if (!(buf[2] & 0x80))
->> -                    buf[2] |= 0x80;
->> +                if (cdb[0] == MODE_SENSE_10) {
->> +                    if (!(buf[3] & 0x80))
->> +                        buf[3] |= 0x80;
->> +                } else {
->> +                    if (!(buf[2] & 0x80))
->> +                        buf[2] |= 0x80;
->> +                }
->>               }
->>                 transport_kunmap_data_sg(cmd);
->>
->
-> I'm wondering whether we should better put the
-> transport_kunmap_data_sg into the else-branch of the if (!buf)?
-> AFAICS, calling it after transport_kmap_data_sg failed does not
-> cause problems, but I feel it would be cleaner.
->
-> Otherwise it looks good to me.
+Step 3 and 4 should finish this work after step 4, but they hangs.
+
+  CPU#0               CPU#1                CPU#2
+  ---------------     ----------------     ----------------
+                                           Step 1: blocking device
+
+                                           Step 2: dd xxxx
+                                                  ^^^^^^ get request
+                                                         q_usage_counter++
+
+                      Step 3: switching scheculer
+                      elv_iosched_store
+                        elevator_switch
+                          blk_mq_freeze_queue
+                            blk_freeze_queue
+                              > blk_freeze_queue_start
+                                ^^^^^^ mq_freeze_depth++
+
+                              > blk_mq_run_hw_queues
+                                ^^^^^^ can't run queue when dev blocked
+
+                              > blk_mq_freeze_queue_wait
+                                ^^^^^^ Hang here!!!
+                                       wait q_usage_counter==0
+
+  Step 4: running device
+  store_state_field
+    scsi_rescan_device
+      scsi_attach_vpd
+        scsi_vpd_inquiry
+          __scsi_execute
+            blk_get_request
+              blk_mq_alloc_request
+                blk_queue_enter
+                ^^^^^^ Hang here!!!
+                       wait mq_freeze_depth==0
+
+    blk_mq_run_hw_queues
+    ^^^^^^ dispatch IO, q_usage_counter will reduce to zero
+
+                            blk_mq_unfreeze_queue
+                            ^^^^^ mq_freeze_depth--
+
+Step 3 and 4 wait for each other.
+
+To fix this, we need to run queue before rescanning device when the device
+state changes to SDEV_RUNNING.
+
+Fixes: f0f82e2476f6 ("scsi: core: Fix capacity set to zero after offlinining device")
+Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
+Signed-off-by: Qiu Laibin <qiulaibin@huawei.com>
+---
+changes since v1 send with Message-ID:
+20210805143231.1713299-1-lijinlin3@huawei.com
+
+ - Modify the subject to make it distinct
+ - Modify the message to fix typo and make it distinct
+ - Reduce the number of SOB
+
+ drivers/scsi/scsi_sysfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index c3a710bceba0..aa701582c950 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -809,12 +809,12 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+ 	ret = scsi_device_set_state(sdev, state);
+ 	/*
+ 	 * If the device state changes to SDEV_RUNNING, we need to
+-	 * rescan the device to revalidate it, and run the queue to
+-	 * avoid I/O hang.
++	 * run the queue to avoid I/O hang, and rescan the device
++	 * to revalidate it.
+ 	 */
+ 	if (ret == 0 && state == SDEV_RUNNING) {
+-		scsi_rescan_device(dev);
+ 		blk_mq_run_hw_queues(sdev->request_queue, true);
++		scsi_rescan_device(dev);
+ 	}
+ 	mutex_unlock(&sdev->state_mutex);
+ 
+-- 
+2.27.0
 
