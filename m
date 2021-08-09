@@ -7,48 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2016C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DA71C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAB5B60F38
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 51C2261002
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 23:05:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237058AbhHIXFv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Aug 2021 19:05:51 -0400
-Received: from mail-pj1-f52.google.com ([209.85.216.52]:47090 "EHLO
-        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236260AbhHIXFu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 19:05:50 -0400
-Received: by mail-pj1-f52.google.com with SMTP id w13-20020a17090aea0db029017897a5f7bcso2379039pjy.5
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Aug 2021 16:05:29 -0700 (PDT)
+        id S237059AbhHIXFy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Aug 2021 19:05:54 -0400
+Received: from mail-pj1-f47.google.com ([209.85.216.47]:33707 "EHLO
+        mail-pj1-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236260AbhHIXFv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 19:05:51 -0400
+Received: by mail-pj1-f47.google.com with SMTP id 28-20020a17090a031cb0290178dcd8a4d1so250787pje.0
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Aug 2021 16:05:30 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=yjbZV+3MrAdmbLBg1BOHv8e475oZ5SyVoPXmEaezYSc=;
-        b=sexUkDqTPWEd13ubHr7sxq0CE/DDHh2OKsoPFXwNVR2pd6Z9HJQ/aJXI2mVuTDAO0b
-         AnS55hP2fx882SeDztq0bKF9Vay1+jfS6aoUyfKwm3vXbzHXkBQ3RQ0eFPmZAL57G0wg
-         HUd0TaGMDK1TUOHpE4Qq0IyGq5XPlWMxkUM+FeCvJ13KHX+64z4to9JnJXjPQHqwDcwO
-         mj9vv5vVoxa0vWhDr3iP/Nq2q2TXlMX4sD8g9RfBlkDA8DdX45Mek138nZ4ZfkOxjTxY
-         XSegy5N5IJVDU9B2N7fnKpSu9G4b6BAU4ciikjoKZCzY3euNVV2zxPUFgj2dIHldcRQ4
-         uHMw==
-X-Gm-Message-State: AOAM5323m3z1UVuG40MivnNHb45dphYuI8rJu03OO6gfu4ijUCTKMcJ2
-        6umWYAR1z7240o+QCZXUe0w=
-X-Google-Smtp-Source: ABdhPJylxPEvIK7XPB4kCphUpx6pf/0bn2WecLXCY3YGRHFSVsvpCJN4gKo/0VjIjjkStw/cTfHfyg==
-X-Received: by 2002:a63:ed47:: with SMTP id m7mr339276pgk.194.1628550328553;
-        Mon, 09 Aug 2021 16:05:28 -0700 (PDT)
+        bh=Pe/i7NHwGLMp09YGkFixTOKu2VqoRlITK4RnDEIHQlU=;
+        b=cWL1DZ2DRZ2kpbpI3Cv6lwmWo5jc/7Szqu74JSkfFXdtBsgV6YKA2iJuF7nCUrNbeE
+         CwRHuXF2cfR17wEpvPgnTRoeEyoa9ADXShYPOIxA+SiZqrLxahVGGX56yXh6D1ZGtp7P
+         aVzVO0Y1qub4Rzvkrrycw6ovc4V5sCDHWvFD88A4MKZuEcQbZlocYH8vNdPSnCgEDiA3
+         zxLk5ELIcyP5qO3FJzm+ZJyMC2WXogSfg8U+Q8CiSqCZiFXCCCP8Ny8KPqrHQV/wOQRu
+         2GZ1vxJwkYKw6pSMRks2EKi54wQAhsOCsR7LCbQjE52R2JrNkL7ldg+otLll3ND8aba5
+         vzcQ==
+X-Gm-Message-State: AOAM5313iZ7QOhJ8l8kLXYFRlbgTLe0byK9SBEaxbiQH/DI7W9F0Jdtp
+        kikvQ5tDY02k6dlTBY3ar9c=
+X-Google-Smtp-Source: ABdhPJwEhSd9Rm6cLkjMW5Xq5heUH/HPAj7lP3R9+UzhvuMHwCf+tfA55eSL0wDaHSQnna9B/pcGAA==
+X-Received: by 2002:a62:db85:0:b029:3cd:cd0a:3137 with SMTP id f127-20020a62db850000b02903cdcd0a3137mr911101pfg.11.1628550330073;
+        Mon, 09 Aug 2021 16:05:30 -0700 (PDT)
 Received: from asus.hsd1.ca.comcast.net ([2601:647:4000:d7:7dd4:e46e:368b:7454])
-        by smtp.gmail.com with ESMTPSA id j6sm24102260pgq.0.2021.08.09.16.05.27
+        by smtp.gmail.com with ESMTPSA id j6sm24102260pgq.0.2021.08.09.16.05.28
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Aug 2021 16:05:28 -0700 (PDT)
+        Mon, 09 Aug 2021 16:05:29 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v5 51/52] usb-storage: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-Date:   Mon,  9 Aug 2021 16:03:54 -0700
-Message-Id: <20210809230355.8186-52-bvanassche@acm.org>
+        Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+        Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH v5 52/52] core: Remove the request member from struct scsi_cmnd
+Date:   Mon,  9 Aug 2021 16:03:55 -0700
+Message-Id: <20210809230355.8186-53-bvanassche@acm.org>
 X-Mailer: git-send-email 2.32.0
 In-Reply-To: <20210809230355.8186-1-bvanassche@acm.org>
 References: <20210809230355.8186-1-bvanassche@acm.org>
@@ -58,25 +59,54 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Prepare for removal of the request pointer by using scsi_cmd_to_rq()
-instead. This patch does not change any functionality.
+Since all scsi_cmnd.request users are gone, remove the request pointer
+from struct scsi_cmnd.
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/usb/storage/transport.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_error.c | 1 -
+ drivers/scsi/scsi_lib.c   | 1 -
+ include/scsi/scsi_cmnd.h  | 3 ---
+ 3 files changed, 5 deletions(-)
 
-diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
-index f4304ce69350..4c5a0a49035f 100644
---- a/drivers/usb/storage/transport.c
-+++ b/drivers/usb/storage/transport.c
-@@ -551,7 +551,7 @@ static void last_sector_hacks(struct us_data *us, struct scsi_cmnd *srb)
- 	/* Did this command access the last sector? */
- 	sector = (srb->cmnd[2] << 24) | (srb->cmnd[3] << 16) |
- 			(srb->cmnd[4] << 8) | (srb->cmnd[5]);
--	disk = srb->request->rq_disk;
-+	disk = scsi_cmd_to_rq(srb)->rq_disk;
- 	if (!disk)
- 		goto done;
- 	sdkp = scsi_disk(disk);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index d85d308a0683..b6c86cce57bf 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -2377,7 +2377,6 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 
+ 	scmd = (struct scsi_cmnd *)(rq + 1);
+ 	scsi_init_command(dev, scmd);
+-	scmd->request = rq;
+ 	scmd->cmnd = scsi_req(rq)->cmd;
+ 
+ 	scmd->scsi_done		= scsi_reset_provider_done_command;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 909a422ec8f4..9ba1aa7530a9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1540,7 +1540,6 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
+ 
+ 	scsi_init_command(sdev, cmd);
+ 
+-	cmd->request = req;
+ 	cmd->tag = req->tag;
+ 	cmd->prot_op = SCSI_PROT_NORMAL;
+ 	if (blk_rq_bytes(req))
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index b9265b15d37a..ddc9671b325b 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -111,9 +111,6 @@ struct scsi_cmnd {
+ 				   reconnects.   Probably == sector
+ 				   size */
+ 
+-	struct request *request;	/* The command we are
+-				   	   working on */
+-
+ 	unsigned char *sense_buffer;
+ 				/* obtained by REQUEST SENSE when
+ 				 * CHECK CONDITION is received on original
