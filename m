@@ -2,60 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BF73C4320E
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 17:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B54FDC43216
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 17:57:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E984D6101D
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 17:57:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AD01610EA
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 17:57:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235914AbhHIR5W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Aug 2021 13:57:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36580 "EHLO
+        id S235956AbhHIR5a (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Aug 2021 13:57:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36620 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235007AbhHIR4z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 13:56:55 -0400
-Received: from mail-pl1-x630.google.com (mail-pl1-x630.google.com [IPv6:2607:f8b0:4864:20::630])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E584BC0613D3;
-        Mon,  9 Aug 2021 10:56:34 -0700 (PDT)
-Received: by mail-pl1-x630.google.com with SMTP id u16so17335809ple.2;
-        Mon, 09 Aug 2021 10:56:34 -0700 (PDT)
+        with ESMTP id S235047AbhHIR5I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 13:57:08 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEA65C0617A4;
+        Mon,  9 Aug 2021 10:56:46 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id nt11so6031705pjb.2;
+        Mon, 09 Aug 2021 10:56:46 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=Men1AZwUmuVs+mP8DF3xiO7Kxjvnd8nVq1v+nRjKpCQ=;
-        b=khPH2C+O3EAicxhd7Ol8cKTH5M6jlmzfQ8AO/O1nDTvaVoKxSYt9ZFCTLGRbikb5lh
-         PDJ33DWVYKUJkew4s5UHIfYAMLSYuNH+uf/XtXD0IORwvY1DIt7A3cBWxmGFheDk576S
-         V3f7/9klpb/XtUJHfTr/xvgxlJQr/zFFSZScoCFNkrbrD15HrsX7R1uv6/aQEWxckoRN
-         9QsVgqkiNeWlCadxH+8e5eldRu1GEL06smeSmjiPy+yGlokaFMzt3CKLV48oxtK81odS
-         6JMrI0ItN47jYQqCSSni4G8Qh04K6SLFdJInx7pD26u4zhhajSI26iXbbtm/G5rwvFIk
-         Sluw==
+        bh=PA42IhHl11PQF+ziOZyqqkyOZi1yWIuNrwvqLKrflPI=;
+        b=h/75TBkZzgYxlqy+5bEldf+iKBjJjuhF9/Luw6D8+gOXVqnAuffjZyZ8csnCHDNkaP
+         TBTvI5UGDLYZrsK4GmYd4KQc+RdWgrfqYrfbFj4qldX8+cUJjwg+jP8IXuDHZJNZVkMx
+         dqt2tJ9id7Atn6XSeMLFGDJd1i/ItPabnc2w1Ou3dfKiAut9APiCcAttSlaxhKd7OD/O
+         LOEDuYsC/sv3oUNGHz6aktEyuu3eBzTJBZiHW3J5x/IjafBs1g2Y/KGYNhEkna86o9xN
+         FAWDsRYmSWvZzVnsYGN53JtMkrKJ/gW510NPFotXeN7Wa7z/uT9Mf7pgcf/x7yOe62Mi
+         h8Cw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Men1AZwUmuVs+mP8DF3xiO7Kxjvnd8nVq1v+nRjKpCQ=;
-        b=Iu7Bs9HEPK+IYFLWNzBYSiegmJx8Kr5Sq6IjH/1zNHL30si0YMsfMPwDJ++bOoAk9Y
-         DyLGuZHppqwZVX/4ZkwtMnt4XcKn1q2QQUi6iY3Zs14aOCiU+e/cGLJ3NcN1dTDs/+4F
-         kFgloxSiD7LwYzRTo6SWobR1D56AhxUOF1thqFFODvw/USKtcZEmf24oAHumjNZDyQCD
-         vz0ZoFXU+24QLPkuw2bropDwf1+HS91BPS1TDmAIA/NjyU25mxy53VKZr3pejO7PF0Nk
-         a56/Ehyh/I1LrZUa6Kh/Xd1LsB6TK8x/pdtHuPxYnANJr1CsU+DAkVuDRhKGI5VAEapL
-         sXIQ==
-X-Gm-Message-State: AOAM53078DmUhBS9v1cWsaZK0uFmO++BOuXqOiFqhTjo+HA5roQb0Ydm
-        rUJK5JAcRjEQAKa4yHtmjUU=
-X-Google-Smtp-Source: ABdhPJzwKjD0clYdhmrGRt/ZwcFYRptbvrLB1rs9cJlW5QDBm6ePK+6Ij95/tTvvfr9i4l9z3WVYCQ==
-X-Received: by 2002:a17:90b:21c9:: with SMTP id ll9mr314744pjb.161.1628531794508;
-        Mon, 09 Aug 2021 10:56:34 -0700 (PDT)
+        bh=PA42IhHl11PQF+ziOZyqqkyOZi1yWIuNrwvqLKrflPI=;
+        b=Re9/m4RuEgyPWpsctExaUZ0M51gzvKLZAbFpZ3VklhAZUKUKMEC7HevI+QxRnQvP40
+         kUFjzSnBgC/KgQKQJwT/HdIDxamoDLbVaQ5Uu/Jl97FsrypSUBmIYmfitj7vc0AqD9Hl
+         gmGAonR/WoBPeFjj/QAES9mLTnoMNNlulKsNlbJqUiF8WB6e58IrGlBUfVVHLKmBYwmi
+         eTe++cZh+OPbYT8kpN62TaYFvIYjbSDgg9LQMCu+NyXhI5fHPVcg7ys+GpG0HIDmtV2p
+         krul1+paSZ2zGeVo6AT6D3CO9rAqx5hDD+ZkRXiqxnsa7mr5m5SFiZT4cZ46GABfPAKa
+         QwaQ==
+X-Gm-Message-State: AOAM5328+j8z3klyfj3ZtUKR6tEdL4qX1rcxdLVVa5P3C4tZYinKuANt
+        zWxAW4AnsEIojc7+OBWH2vY=
+X-Google-Smtp-Source: ABdhPJz2DoChBqY2+CqrU5gCYpuDqXcBgTbb8ssn2WkHPgcTXqW+Ddha4uJTbpahTSBY5KgKQGNxrQ==
+X-Received: by 2002:a17:902:8f87:b029:12c:dda2:39bf with SMTP id z7-20020a1709028f87b029012cdda239bfmr21283718plo.59.1628531806316;
+        Mon, 09 Aug 2021 10:56:46 -0700 (PDT)
 Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:2:106e:6ed1:5da1:2ac4])
-        by smtp.gmail.com with ESMTPSA id x14sm20589708pfa.127.2021.08.09.10.56.33
+        by smtp.gmail.com with ESMTPSA id x14sm20589708pfa.127.2021.08.09.10.56.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Aug 2021 10:56:34 -0700 (PDT)
+        Mon, 09 Aug 2021 10:56:46 -0700 (PDT)
 From:   Tianyu Lan <ltykernel@gmail.com>
 To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
         wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
@@ -78,9 +77,9 @@ Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
         linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
         vkuznets@redhat.com, parri.andrea@gmail.com, dave.hansen@intel.com
-Subject: [PATCH V3 04/13] HV: Mark vmbus ring buffer visible to host in Isolation VM
-Date:   Mon,  9 Aug 2021 13:56:08 -0400
-Message-Id: <20210809175620.720923-5-ltykernel@gmail.com>
+Subject: [PATCH V3 09/13] DMA: Add dma_map_decrypted/dma_unmap_encrypted() function
+Date:   Mon,  9 Aug 2021 13:56:13 -0400
+Message-Id: <20210809175620.720923-10-ltykernel@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210809175620.720923-1-ltykernel@gmail.com>
 References: <20210809175620.720923-1-ltykernel@gmail.com>
@@ -92,148 +91,85 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Tianyu Lan <Tianyu.Lan@microsoft.com>
 
-Mark vmbus ring buffer visible with set_memory_decrypted() when
-establish gpadl handle.
-
-Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
+In Hyper-V Isolation VM with AMD SEV, swiotlb boucne buffer
+needs to be mapped into address space above vTOM and so
+introduce dma_map_decrypted/dma_unmap_encrypted() to map/unmap
+bounce buffer memory. The platform can populate man/unmap callback
+in the dma memory decrypted ops.
 ---
- drivers/hv/channel.c   | 44 ++++++++++++++++++++++++++++++++++++++++--
- include/linux/hyperv.h | 11 +++++++++++
- 2 files changed, 53 insertions(+), 2 deletions(-)
+ include/linux/dma-map-ops.h |  9 +++++++++
+ kernel/dma/mapping.c        | 22 ++++++++++++++++++++++
+ 2 files changed, 31 insertions(+)
 
-diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
-index f3761c73b074..4c4717c26240 100644
---- a/drivers/hv/channel.c
-+++ b/drivers/hv/channel.c
-@@ -17,6 +17,7 @@
- #include <linux/hyperv.h>
- #include <linux/uio.h>
- #include <linux/interrupt.h>
-+#include <linux/set_memory.h>
- #include <asm/page.h>
- #include <asm/mshyperv.h>
+diff --git a/include/linux/dma-map-ops.h b/include/linux/dma-map-ops.h
+index 0d53a96a3d64..01d60a024e45 100644
+--- a/include/linux/dma-map-ops.h
++++ b/include/linux/dma-map-ops.h
+@@ -71,6 +71,11 @@ struct dma_map_ops {
+ 	unsigned long (*get_merge_boundary)(struct device *dev);
+ };
  
-@@ -465,7 +466,14 @@ static int __vmbus_establish_gpadl(struct vmbus_channel *channel,
- 	struct list_head *curr;
- 	u32 next_gpadl_handle;
- 	unsigned long flags;
--	int ret = 0;
-+	int ret = 0, index;
-+
-+	index = atomic_inc_return(&channel->gpadl_index) - 1;
-+
-+	if (index > VMBUS_GPADL_RANGE_COUNT - 1) {
-+		pr_err("Gpadl handle position(%d) has been occupied.\n", index);
-+		return -ENOSPC;
-+	}
- 
- 	next_gpadl_handle =
- 		(atomic_inc_return(&vmbus_connection.next_gpadl_handle) - 1);
-@@ -474,6 +482,13 @@ static int __vmbus_establish_gpadl(struct vmbus_channel *channel,
- 	if (ret)
- 		return ret;
- 
-+	ret = set_memory_decrypted((unsigned long)kbuffer,
-+				   HVPFN_UP(size));
-+	if (ret) {
-+		pr_warn("Failed to set host visibility.\n");
-+		return ret;
-+	}
-+
- 	init_completion(&msginfo->waitevent);
- 	msginfo->waiting_channel = channel;
- 
-@@ -539,6 +554,10 @@ static int __vmbus_establish_gpadl(struct vmbus_channel *channel,
- 	/* At this point, we received the gpadl created msg */
- 	*gpadl_handle = gpadlmsg->gpadl;
- 
-+	channel->gpadl_array[index].size = size;
-+	channel->gpadl_array[index].buffer = kbuffer;
-+	channel->gpadl_array[index].gpadlhandle = *gpadl_handle;
-+
- cleanup:
- 	spin_lock_irqsave(&vmbus_connection.channelmsg_lock, flags);
- 	list_del(&msginfo->msglistentry);
-@@ -549,6 +568,13 @@ static int __vmbus_establish_gpadl(struct vmbus_channel *channel,
- 	}
- 
- 	kfree(msginfo);
-+
-+	if (ret) {
-+		set_memory_encrypted((unsigned long)kbuffer,
-+				     HVPFN_UP(size));
-+		atomic_dec(&channel->gpadl_index);
-+	}
-+
- 	return ret;
- }
- 
-@@ -676,6 +702,7 @@ static int __vmbus_open(struct vmbus_channel *newchannel,
- 
- 	/* Establish the gpadl for the ring buffer */
- 	newchannel->ringbuffer_gpadlhandle = 0;
-+	atomic_set(&newchannel->gpadl_index, 0);
- 
- 	err = __vmbus_establish_gpadl(newchannel, HV_GPADL_RING,
- 				      page_address(newchannel->ringbuffer_page),
-@@ -811,7 +838,7 @@ int vmbus_teardown_gpadl(struct vmbus_channel *channel, u32 gpadl_handle)
- 	struct vmbus_channel_gpadl_teardown *msg;
- 	struct vmbus_channel_msginfo *info;
- 	unsigned long flags;
--	int ret;
-+	int ret, i;
- 
- 	info = kzalloc(sizeof(*info) +
- 		       sizeof(struct vmbus_channel_gpadl_teardown), GFP_KERNEL);
-@@ -859,6 +886,19 @@ int vmbus_teardown_gpadl(struct vmbus_channel *channel, u32 gpadl_handle)
- 	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
- 
- 	kfree(info);
-+
-+	/* Find gpadl buffer virtual address and size. */
-+	for (i = 0; i < VMBUS_GPADL_RANGE_COUNT; i++)
-+		if (channel->gpadl_array[i].gpadlhandle == gpadl_handle)
-+			break;
-+
-+	if (set_memory_encrypted((unsigned long)channel->gpadl_array[i].buffer,
-+			HVPFN_UP(channel->gpadl_array[i].size)))
-+		pr_warn("Fail to set mem host visibility.\n");
-+
-+	channel->gpadl_array[i].gpadlhandle = 0;
-+	atomic_dec(&channel->gpadl_index);
-+
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(vmbus_teardown_gpadl);
-diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-index ddc8713ce57b..90b542597143 100644
---- a/include/linux/hyperv.h
-+++ b/include/linux/hyperv.h
-@@ -803,6 +803,14 @@ struct vmbus_device {
- 
- #define VMBUS_DEFAULT_MAX_PKT_SIZE 4096
- 
-+struct vmbus_gpadl {
-+	u32 gpadlhandle;
-+	u32 size;
-+	void *buffer;
++struct dma_memory_decrypted_ops {
++	void *(*map)(void *addr, unsigned long size);
++	void (*unmap)(void *addr);
 +};
 +
-+#define VMBUS_GPADL_RANGE_COUNT		3
+ #ifdef CONFIG_DMA_OPS
+ #include <asm/dma-mapping.h>
+ 
+@@ -374,6 +379,10 @@ static inline void debug_dma_dump_mappings(struct device *dev)
+ }
+ #endif /* CONFIG_DMA_API_DEBUG */
+ 
++void *dma_map_decrypted(void *addr, unsigned long size);
++int dma_unmap_decrypted(void *addr, unsigned long size);
 +
- struct vmbus_channel {
- 	struct list_head listentry;
+ extern const struct dma_map_ops dma_dummy_ops;
++extern struct dma_memory_decrypted_ops dma_memory_generic_decrypted_ops;
  
-@@ -823,6 +831,9 @@ struct vmbus_channel {
- 	struct completion rescind_event;
+ #endif /* _LINUX_DMA_MAP_OPS_H */
+diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
+index 2b06a809d0b9..6fb150dc1750 100644
+--- a/kernel/dma/mapping.c
++++ b/kernel/dma/mapping.c
+@@ -13,11 +13,13 @@
+ #include <linux/of_device.h>
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
++#include <asm/set_memory.h>
+ #include "debug.h"
+ #include "direct.h"
  
- 	u32 ringbuffer_gpadlhandle;
-+	/* GPADL_RING and Send/Receive GPADL_BUFFER. */
-+	struct vmbus_gpadl gpadl_array[VMBUS_GPADL_RANGE_COUNT];
-+	atomic_t gpadl_index;
+ bool dma_default_coherent;
  
- 	/* Allocated memory for ring buffer */
- 	struct page *ringbuffer_page;
++struct dma_memory_decrypted_ops dma_memory_generic_decrypted_ops;
+ /*
+  * Managed DMA API
+  */
+@@ -736,3 +738,23 @@ unsigned long dma_get_merge_boundary(struct device *dev)
+ 	return ops->get_merge_boundary(dev);
+ }
+ EXPORT_SYMBOL_GPL(dma_get_merge_boundary);
++
++void *dma_map_decrypted(void *addr, unsigned long size)
++{
++	if (set_memory_decrypted((unsigned long)addr,
++				 size / PAGE_SIZE))
++		return NULL;
++
++	if (dma_memory_generic_decrypted_ops.map)
++		return dma_memory_generic_decrypted_ops.map(addr, size);
++	else
++		return addr;
++}
++
++int dma_unmap_encrypted(void *addr, unsigned long size)
++{
++	if (dma_memory_generic_decrypted_ops.unmap)
++		dma_memory_generic_decrypted_ops.unmap(addr);
++
++	return set_memory_encrypted((unsigned long)addr, size / PAGE_SIZE);
++}
 -- 
 2.25.1
 
