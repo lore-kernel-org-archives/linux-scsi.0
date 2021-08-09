@@ -2,250 +2,248 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8517DC43216
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 17:57:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA678C432BE
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 18:14:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6425061158
-	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 17:57:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC7DF61056
+	for <linux-scsi@archiver.kernel.org>; Mon,  9 Aug 2021 18:14:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236090AbhHIR6G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 9 Aug 2021 13:58:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36646 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235877AbhHIR5T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Aug 2021 13:57:19 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4877DC061381;
-        Mon,  9 Aug 2021 10:56:56 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id s22-20020a17090a1c16b0290177caeba067so152472pjs.0;
-        Mon, 09 Aug 2021 10:56:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=29igml5xJQT7NZ/zHELD608zwBtMw+CBZNUu6aD3TXw=;
-        b=ZCoB9o0cvriAk3/PPGeEVPrIAnIqymJpX+yMC18ujzQkba5lyQWncuyzod11hNntU1
-         1bk6U1EvfSLpZGhLCGAu8NGIa9wsSZRoZ9K8ij4t9yrTzMssHz4c12UmzGHuYx3Qqwqe
-         5euceZzMuwpmGsvwlu4n571z1nUyoA5EMVamLrK2Fv4kQgex9w+3kQMyU5XErr3GN4CH
-         2w3uSc7qIzutfvO/NUn4XoFUmpELqTdpw+eF5ttK+V/67fPZ9sLruj8gW2s9Uld8o0/F
-         kbW1vumljR+S/wuC/e/qZtU3IDoreR6eEJ755vt4a2DdwykGjIka2gxZnJUQ0sS84g+E
-         rg5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=29igml5xJQT7NZ/zHELD608zwBtMw+CBZNUu6aD3TXw=;
-        b=qGvB+/JUzfBNYVauQkeF1xf+apgWgI0k7DF5buLkhwA+XLSczpnTRAhejsn4t3Pj+d
-         V7o9qDsjWroY8UTqw96AC+UcI5r8GggnGQ58/KwAKBZz/fDBZMK833rkTXos20czK/63
-         RYtgwyRX1LQj13qaSKNSj/PxRuKs9T+Ivpgn00x0FfdO+sUBMk3EX1LWojOWHFWUO2qF
-         GQg2N7SgsToNZjh2E5LAv4dRMxQS8r3eVtHEIoxG+ht30LafqSRqDRTaSuTH8XVSrC92
-         A9IPgUaF9hiq+N5zItFtfwub5qmpPQry1l2uiY4neJfweq8YV3lCdJ0Xe79z5t3Yxwqf
-         B2qA==
-X-Gm-Message-State: AOAM533J0A21SykhullACAC8qqGpjGuXe3qM1kH1ZSNi70Z6N6N/fora
-        +bxU9rP1wHo8qhzFqNuDWcM=
-X-Google-Smtp-Source: ABdhPJyrAc9rzm4dB2lw3/nEgFaiXcijpmPD2rziJMns8K4uV1C97emxRFnkmN6KdkTyhlwj4rqtkA==
-X-Received: by 2002:a17:90a:a112:: with SMTP id s18mr323042pjp.27.1628531815828;
-        Mon, 09 Aug 2021 10:56:55 -0700 (PDT)
-Received: from ubuntu-Virtual-Machine.corp.microsoft.com ([2001:4898:80e8:2:106e:6ed1:5da1:2ac4])
-        by smtp.gmail.com with ESMTPSA id x14sm20589708pfa.127.2021.08.09.10.56.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Aug 2021 10:56:55 -0700 (PDT)
-From:   Tianyu Lan <ltykernel@gmail.com>
-To:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
-        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
-        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
-        Tianyu.Lan@microsoft.com, pgonda@google.com,
-        martin.b.radev@gmail.com, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        sfr@canb.auug.org.au, saravanand@fb.com,
-        krish.sadhukhan@oracle.com, aneesh.kumar@linux.ibm.com,
-        xen-devel@lists.xenproject.org, rientjes@google.com,
-        hannes@cmpxchg.org, tj@kernel.org, michael.h.kelley@microsoft.com
-Cc:     iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, parri.andrea@gmail.com, dave.hansen@intel.com
-Subject: [PATCH V3 13/13] HV/Storvsc: Add Isolation VM support for storvsc driver
-Date:   Mon,  9 Aug 2021 13:56:17 -0400
-Message-Id: <20210809175620.720923-14-ltykernel@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210809175620.720923-1-ltykernel@gmail.com>
-References: <20210809175620.720923-1-ltykernel@gmail.com>
+        id S235041AbhHISOm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 9 Aug 2021 14:14:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53688 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234847AbhHISOk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Aug 2021 14:14:40 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5978561002;
+        Mon,  9 Aug 2021 18:14:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628532859;
+        bh=qXeJ0P/U8JvDxO9kR9G0/0wx57hQ6JjYEoFVv0vPQv8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=WW6aFqzA3dvX3Ze6M+eftHp7JaBZzCklo9aY7tR1PQm8w/hnkzEnuCle4tCjoZiSe
+         nT6rKeORsoNdjHgHs9BqQjZRVKkrC6rxN1uu2Ygmc41jcEEm8UEVPbXxSnQ6K0Wfj8
+         qSINXH8XorzrEZOa15qbiDu7ItPII0bkSjch0lXkcnkoO4HSU1QbFOtyKkGI+wZYNN
+         0+0+St5OBLuFlSt+oW4UklxyjCkK/jpDv/4IACdl9gU6SOxr0i2z8LDiCotUp5Fcfn
+         PGIel408/Vk6fQxN4caUeDLV9ODEWUpMqiy48I+zaYWawQn9qjAcLm5+IUrHSYXRZm
+         w1DE8HFaMxc8g==
+Date:   Mon, 9 Aug 2021 13:14:18 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+Cc:     Mark Rutland <mark.rutland@arm.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Peter Zijlstra <peterz@infradead.org>,
+        linux-pci@vger.kernel.org, Alexander Duyck <alexanderduyck@fb.com>,
+        Russell Currey <ruscur@russell.cc>, x86@kernel.org,
+        oss-drivers@corigine.com, netdev@vger.kernel.org,
+        Paul Mackerras <paulus@samba.org>,
+        "H. Peter Anvin" <hpa@zytor.com>, Jiri Olsa <jolsa@redhat.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Taras Chornyi <tchornyi@marvell.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        linux-scsi@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        qat-linux@intel.com,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Ingo Molnar <mingo@redhat.com>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Fiona Trahe <fiona.trahe@intel.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Ido Schimmel <idosch@nvidia.com>,
+        Arnaldo Carvalho de Melo <acme@kernel.org>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Borislav Petkov <bp@alien8.de>, Michael Buesch <m@bues.ch>,
+        Jiri Pirko <jiri@nvidia.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Namhyung Kim <namhyung@kernel.org>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        Andy Shevchenko <andriy.shevchenko@intel.com>,
+        Juergen Gross <jgross@suse.com>,
+        Salil Mehta <salil.mehta@huawei.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        xen-devel@lists.xenproject.org, Vadym Kochan <vkochan@marvell.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-perf-users@vger.kernel.org,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-crypto@vger.kernel.org,
+        kernel@pengutronix.de,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Simon Horman <simon.horman@corigine.com>,
+        Wojciech Ziemba <wojciech.ziemba@intel.com>,
+        linuxppc-dev@lists.ozlabs.org,
+        "David S. Miller" <davem@davemloft.net>
+Subject: Re: [PATCH v2 0/6] PCI: Drop duplicated tracking of a pci_dev's
+ bound driver
+Message-ID: <20210809181418.GA2168343@bjorn-Precision-5520>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20210807092645.52kn4ustyjudztvl@pengutronix.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tianyu Lan <Tianyu.Lan@microsoft.com>
+On Sat, Aug 07, 2021 at 11:26:45AM +0200, Uwe Kleine-König wrote:
+> On Fri, Aug 06, 2021 at 04:24:52PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Aug 06, 2021 at 08:46:23AM +0200, Uwe Kleine-König wrote:
+> > > On Thu, Aug 05, 2021 at 06:42:34PM -0500, Bjorn Helgaas wrote:
+> > 
+> > > > I looked at all the bus_type.probe() methods, it looks like pci_dev is
+> > > > not the only offender here.  At least the following also have a driver
+> > > > pointer in the device struct:
+> > > > 
+> > > >   parisc_device.driver
+> > > >   acpi_device.driver
+> > > >   dio_dev.driver
+> > > >   hid_device.driver
+> > > >   pci_dev.driver
+> > > >   pnp_dev.driver
+> > > >   rio_dev.driver
+> > > >   zorro_dev.driver
+> > > 
+> > > Right, when I converted zorro_dev it was pointed out that the code was
+> > > copied from pci and the latter has the same construct. :-)
+> > > See
+> > > https://lore.kernel.org/r/20210730191035.1455248-5-u.kleine-koenig@pengutronix.de
+> > > for the patch, I don't find where pci was pointed out, maybe it was on
+> > > irc only.
+> > 
+> > Oh, thanks!  I looked to see if you'd done something similar
+> > elsewhere, but I missed this one.
+> > 
+> > > > Looking through the places that care about pci_dev.driver (the ones
+> > > > updated by patch 5/6), many of them are ... a little dubious to begin
+> > > > with.  A few need the "struct pci_error_handlers *err_handler"
+> > > > pointer, so that's probably legitimate.  But many just need a name,
+> > > > and should probably be using dev_driver_string() instead.
+> > > 
+> > > Yeah, I considered adding a function to get the driver name from a
+> > > pci_dev and a function to get the error handlers. Maybe it's an idea to
+> > > introduce these two and then use to_pci_driver(pdev->dev.driver) for the
+> > > few remaining users? Maybe doing that on top of my current series makes
+> > > sense to have a clean switch from pdev->driver to pdev->dev.driver?!
+> > 
+> > I'd propose using dev_driver_string() for these places:
+> > 
+> >   eeh_driver_name() (could change callers to use dev_driver_string())
+> >   bcma_host_pci_probe()
+> >   qm_alloc_uacce()
+> >   hns3_get_drvinfo()
+> >   prestera_pci_probe()
+> >   mlxsw_pci_probe()
+> >   nfp_get_drvinfo()
+> >   ssb_pcihost_probe()
+> 
+> So the idea is:
+> 
+> 	PCI: Simplify pci_device_remove()
+> 	PCI: Drop useless check from pci_device_probe()
+> 	xen/pci: Drop some checks that are always true
+> 
+> are kept as is as preparation. (Do you want to take them from this v2,
+> or should I include them again in v3?)
 
-In Isolation VM, all shared memory with host needs to mark visible
-to host via hvcall. vmbus_establish_gpadl() has already done it for
-storvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
-mpb_desc() still need to handle. Use DMA API to map/umap these
-memory during sending/receiving packet and Hyper-V DMA ops callback
-will use swiotlb function to allocate bounce buffer and copy data
-from/to bounce buffer.
+Easiest if you include them until we merge the series.
 
-Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
----
- drivers/scsi/storvsc_drv.c | 68 +++++++++++++++++++++++++++++++++++---
- 1 file changed, 63 insertions(+), 5 deletions(-)
+> Then convert the list of functions above to use dev_driver_string() in a
+> 4th patch.
+> 
+> > The use in mpt_device_driver_register() looks unnecessary: it's only
+> > to get a struct pci_device_id *, which is passed to ->probe()
+> > functions that don't need it.
+> 
+> This is patch #5.
+> 
+> > The use in adf_enable_aer() looks wrong: it sets the err_handler
+> > pointer in one of the adf_driver structs.  I think those structs
+> > should be basically immutable, and the drivers that call
+> > adf_enable_aer() from their .probe() methods should set
+> > ".err_handler = &adf_err_handler" in their static adf_driver
+> > definitions instead.
+> 
+> I don't understand that one without some research, probably this yields
+> at least one patch.
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 328bb961c281..78320719bdd8 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -21,6 +21,8 @@
- #include <linux/device.h>
- #include <linux/hyperv.h>
- #include <linux/blkdev.h>
-+#include <linux/io.h>
-+#include <linux/dma-mapping.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
-@@ -427,6 +429,8 @@ struct storvsc_cmd_request {
- 	u32 payload_sz;
- 
- 	struct vstor_packet vstor_packet;
-+	u32 hvpg_count;
-+	struct hv_dma_range *dma_range;
+Yeah, it's a little messy because you'd have to make adf_err_handler
+non-static and add an extern for it.  Sample below.
+
+> > I think that basically leaves these:
+> > 
+> >   uncore_pci_probe()     # .id_table, custom driver "registration"
+> >   match_id()             # .id_table, arch/x86/kernel/probe_roms.c
+> >   xhci_pci_quirks()      # .id_table
+> >   pci_error_handlers()   # roll-your-own AER handling, drivers/misc/cxl/guest.c
+> > 
+> > I think it would be fine to use to_pci_driver(pdev->dev.driver) for
+> > these few.
+> 
+> Converting these will be patch 7 then and patch 8 can then drop the
+> duplicated handling.
+> 
+> Sounds reasonable?
+
+Sounds good to me.  Thanks for working on this!
+
+Bjorn
+
+
+diff --git a/drivers/crypto/qat/qat_4xxx/adf_drv.c b/drivers/crypto/qat/qat_4xxx/adf_drv.c
+index a8805c815d16..75e6c5540523 100644
+--- a/drivers/crypto/qat/qat_4xxx/adf_drv.c
++++ b/drivers/crypto/qat/qat_4xxx/adf_drv.c
+@@ -310,6 +310,7 @@ static struct pci_driver adf_driver = {
+ 	.probe = adf_probe,
+ 	.remove = adf_remove,
+ 	.sriov_configure = adf_sriov_configure,
++	.err_handler = adf_err_handler,
  };
  
- 
-@@ -509,6 +513,14 @@ struct storvsc_scan_work {
- 	u8 tgt_id;
- };
- 
-+#define storvsc_dma_map(dev, page, offset, size, dir) \
-+	dma_map_page(dev, page, offset, size, dir)
-+
-+#define storvsc_dma_unmap(dev, dma_range, dir)		\
-+		dma_unmap_page(dev, dma_range.dma,	\
-+			       dma_range.mapping_size,	\
-+			       dir ? DMA_FROM_DEVICE : DMA_TO_DEVICE)
-+
- static void storvsc_device_scan(struct work_struct *work)
- {
- 	struct storvsc_scan_work *wrk;
-@@ -1260,6 +1272,7 @@ static void storvsc_on_channel_callback(void *context)
- 	struct hv_device *device;
- 	struct storvsc_device *stor_device;
- 	struct Scsi_Host *shost;
-+	int i;
- 
- 	if (channel->primary_channel != NULL)
- 		device = channel->primary_channel->device_obj;
-@@ -1314,6 +1327,15 @@ static void storvsc_on_channel_callback(void *context)
- 				request = (struct storvsc_cmd_request *)scsi_cmd_priv(scmnd);
- 			}
- 
-+			if (request->dma_range) {
-+				for (i = 0; i < request->hvpg_count; i++)
-+					storvsc_dma_unmap(&device->device,
-+						request->dma_range[i],
-+						request->vstor_packet.vm_srb.data_in == READ_TYPE);
-+
-+				kfree(request->dma_range);
-+			}
-+
- 			storvsc_on_receive(stor_device, packet, request);
- 			continue;
- 		}
-@@ -1810,7 +1832,9 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 		unsigned int hvpgoff, hvpfns_to_add;
- 		unsigned long offset_in_hvpg = offset_in_hvpage(sgl->offset);
- 		unsigned int hvpg_count = HVPFN_UP(offset_in_hvpg + length);
-+		dma_addr_t dma;
- 		u64 hvpfn;
-+		u32 size;
- 
- 		if (hvpg_count > MAX_PAGE_BUFFER_COUNT) {
- 
-@@ -1824,6 +1848,13 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 		payload->range.len = length;
- 		payload->range.offset = offset_in_hvpg;
- 
-+		cmd_request->dma_range = kcalloc(hvpg_count,
-+				 sizeof(*cmd_request->dma_range),
-+				 GFP_ATOMIC);
-+		if (!cmd_request->dma_range) {
-+			ret = -ENOMEM;
-+			goto free_payload;
-+		}
- 
- 		for (i = 0; sgl != NULL; sgl = sg_next(sgl)) {
- 			/*
-@@ -1847,9 +1878,29 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 			 * last sgl should be reached at the same time that
- 			 * the PFN array is filled.
- 			 */
--			while (hvpfns_to_add--)
--				payload->range.pfn_array[i++] =	hvpfn++;
-+			while (hvpfns_to_add--) {
-+				size = min(HV_HYP_PAGE_SIZE - offset_in_hvpg,
-+					   (unsigned long)length);
-+				dma = storvsc_dma_map(&dev->device, pfn_to_page(hvpfn++),
-+						      offset_in_hvpg, size,
-+						      scmnd->sc_data_direction);
-+				if (dma_mapping_error(&dev->device, dma)) {
-+					ret = -ENOMEM;
-+					goto free_dma_range;
-+				}
-+
-+				if (offset_in_hvpg) {
-+					payload->range.offset = dma & ~HV_HYP_PAGE_MASK;
-+					offset_in_hvpg = 0;
-+				}
-+
-+				cmd_request->dma_range[i].dma = dma;
-+				cmd_request->dma_range[i].mapping_size = size;
-+				payload->range.pfn_array[i++] = dma >> HV_HYP_PAGE_SHIFT;
-+				length -= size;
-+			}
- 		}
-+		cmd_request->hvpg_count = hvpg_count;
- 	}
- 
- 	cmd_request->payload = payload;
-@@ -1860,13 +1911,20 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 	put_cpu();
- 
- 	if (ret == -EAGAIN) {
--		if (payload_sz > sizeof(cmd_request->mpb))
--			kfree(payload);
- 		/* no more space */
--		return SCSI_MLQUEUE_DEVICE_BUSY;
-+		ret = SCSI_MLQUEUE_DEVICE_BUSY;
-+		goto free_dma_range;
- 	}
- 
- 	return 0;
-+
-+free_dma_range:
-+	kfree(cmd_request->dma_range);
-+
-+free_payload:
-+	if (payload_sz > sizeof(cmd_request->mpb))
-+		kfree(payload);
-+	return ret;
+ module_pci_driver(adf_driver);
+diff --git a/drivers/crypto/qat/qat_common/adf_aer.c b/drivers/crypto/qat/qat_common/adf_aer.c
+index d2ae293d0df6..701c3c5f8b9b 100644
+--- a/drivers/crypto/qat/qat_common/adf_aer.c
++++ b/drivers/crypto/qat/qat_common/adf_aer.c
+@@ -166,7 +166,7 @@ static void adf_resume(struct pci_dev *pdev)
+ 	dev_info(&pdev->dev, "Device is up and running\n");
  }
  
- static struct scsi_host_template scsi_driver = {
--- 
-2.25.1
-
+-static const struct pci_error_handlers adf_err_handler = {
++const struct pci_error_handlers adf_err_handler = {
+ 	.error_detected = adf_error_detected,
+ 	.slot_reset = adf_slot_reset,
+ 	.resume = adf_resume,
+@@ -187,7 +187,6 @@ int adf_enable_aer(struct adf_accel_dev *accel_dev)
+ 	struct pci_dev *pdev = accel_to_pci_dev(accel_dev);
+ 	struct pci_driver *pdrv = pdev->driver;
+ 
+-	pdrv->err_handler = &adf_err_handler;
+ 	pci_enable_pcie_error_reporting(pdev);
+ 	return 0;
+ }
+diff --git a/drivers/crypto/qat/qat_common/adf_common_drv.h b/drivers/crypto/qat/qat_common/adf_common_drv.h
+index c61476553728..98a29e0b8769 100644
+--- a/drivers/crypto/qat/qat_common/adf_common_drv.h
++++ b/drivers/crypto/qat/qat_common/adf_common_drv.h
+@@ -95,6 +95,7 @@ void adf_ae_fw_release(struct adf_accel_dev *accel_dev);
+ int adf_ae_start(struct adf_accel_dev *accel_dev);
+ int adf_ae_stop(struct adf_accel_dev *accel_dev);
+ 
++extern const struct pci_error_handlers adf_err_handler;
+ int adf_enable_aer(struct adf_accel_dev *accel_dev);
+ void adf_disable_aer(struct adf_accel_dev *accel_dev);
+ void adf_reset_sbr(struct adf_accel_dev *accel_dev);
