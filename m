@@ -7,67 +7,70 @@ X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EBE3CC4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 06:21:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 091E9C4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 06:21:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D29F36105A
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 06:21:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA7B461052
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 06:21:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237762AbhHJGVe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 02:21:34 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:51538 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235202AbhHJGVe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 02:21:34 -0400
+        id S237764AbhHJGV6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 02:21:58 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:48170 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235202AbhHJGV6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 02:21:58 -0400
 Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id B34B61FE26;
-        Tue, 10 Aug 2021 06:21:11 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 2F25F21FC4;
+        Tue, 10 Aug 2021 06:21:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1628576471; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1628576496; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=sgbjpFOYqZOfyOG0tFhKFzVnUIoPzMxQy4lhnTe4ZCg=;
-        b=TuyAR3FCXQQytECl4jmbobAqJRIUxvkufSKzc4fPf6aobEe/Z9Ydqw5jf3Z6JkfP6YUofV
-        msuaC7VdZoDNrEC6ru35YtOYI/7HKM6yeqatB8DyZm8t0kg3vEhtDxgQ/QmS+0Im4BletD
-        EeAKkoEZ5wti/maHXN3Ea2C0LSMUrzs=
+        bh=u+BbV+Qcldxyu5SN7ra1qdkBjbQvaQMR71fo+JV3g3o=;
+        b=bXk5276iy3CjQCFzkuKj9EP8wePs5LRIOysQ6Ayo+hKdqtav7vur66W8kKtQdVLGClBzf8
+        eRy9lL726zV6QGG9NiDki+6lguo6dH3RpOLD3N7SGOdNmiQVS4K0lPBvHiHK5dwPc3sIPp
+        t1HAxPNRnSuzg+y3F6weqobQy8JjIwk=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1628576471;
+        s=susede2_ed25519; t=1628576496;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=sgbjpFOYqZOfyOG0tFhKFzVnUIoPzMxQy4lhnTe4ZCg=;
-        b=pGxjTBRcO311QH2oRWVVwC+TNts+v3GuTVAI+vpRuRslkfkrlRxiVupkWE7lMGnUTrdqP3
-        8FzkdI7nRBUIHHDw==
+        bh=u+BbV+Qcldxyu5SN7ra1qdkBjbQvaQMR71fo+JV3g3o=;
+        b=vOli/e2mvEt++U1DgpE6dUao6TDK3GyNzvs4pfo6n+sFC3hV8iEhs6LclQ8COsMWdGZxDa
+        pK9Q7Pcq7cOdHyBg==
 Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 972E2133D0;
-        Tue, 10 Aug 2021 06:21:11 +0000 (UTC)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id ECF62133D0;
+        Tue, 10 Aug 2021 06:21:35 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap1.suse-dmz.suse.de with ESMTPSA
-        id DgUYJNcaEmFiOwAAGKfGzw
-        (envelope-from <hare@suse.de>); Tue, 10 Aug 2021 06:21:11 +0000
-Subject: Re: [PATCH v5 09/52] RDMA/srp: Use scsi_cmd_to_rq() instead of
+        id 1Lf4OO8aEmF2OwAAGKfGzw
+        (envelope-from <hare@suse.de>); Tue, 10 Aug 2021 06:21:35 +0000
+Subject: Re: [PATCH v5 10/52] zfcp: Use scsi_cmd_to_rq() instead of
  scsi_cmnd.request
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     linux-scsi@vger.kernel.org, Benjamin Block <bblock@linux.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>
 References: <20210809230355.8186-1-bvanassche@acm.org>
- <20210809230355.8186-10-bvanassche@acm.org>
+ <20210809230355.8186-11-bvanassche@acm.org>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <98c5db43-b031-1c99-5d67-df4dee5840e2@suse.de>
-Date:   Tue, 10 Aug 2021 08:21:10 +0200
+Message-ID: <3a73791c-1d43-99ee-360e-6e4471b468b0@suse.de>
+Date:   Tue, 10 Aug 2021 08:21:34 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <20210809230355.8186-10-bvanassche@acm.org>
+In-Reply-To: <20210809230355.8186-11-bvanassche@acm.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -79,10 +82,25 @@ On 8/10/21 1:03 AM, Bart Van Assche wrote:
 > Prepare for removal of the request pointer by using scsi_cmd_to_rq()
 > instead. This patch does not change any functionality.
 > 
+> Acked-by: Benjamin Block <bblock@linux.ibm.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
->   drivers/infiniband/ulp/srp/ib_srp.c | 9 +++++----
->   1 file changed, 5 insertions(+), 4 deletions(-)
+>   drivers/s390/scsi/zfcp_fsf.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+> index 1990216cf289..6da8f6d05d39 100644
+> --- a/drivers/s390/scsi/zfcp_fsf.c
+> +++ b/drivers/s390/scsi/zfcp_fsf.c
+> @@ -2377,7 +2377,7 @@ static void zfcp_fsf_req_trace(struct zfcp_fsf_req *req, struct scsi_cmnd *scsi)
+>   		}
+>   	}
+>   
+> -	blk_add_driver_data(scsi->request, &blktrc, sizeof(blktrc));
+> +	blk_add_driver_data(scsi_cmd_to_rq(scsi), &blktrc, sizeof(blktrc));
+>   }
+>   
+>   /**
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
