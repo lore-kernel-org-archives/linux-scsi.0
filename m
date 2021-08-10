@@ -2,186 +2,162 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58A17C432BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 11:04:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CFA5C43214
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 11:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40FAA60FC4
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 11:04:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FC3A60F25
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 11:04:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238026AbhHJLEZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 07:04:25 -0400
-Received: from mail-wm1-f49.google.com ([209.85.128.49]:37841 "EHLO
-        mail-wm1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230048AbhHJLEY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 07:04:24 -0400
-Received: by mail-wm1-f49.google.com with SMTP id l34-20020a05600c1d22b02902573c214807so1653649wms.2;
-        Tue, 10 Aug 2021 04:04:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=h9AyImD9UvKdyZgMt8rSQ3Uk0c9+Og7qG6N7oOE6PXA=;
-        b=kknAMMFV3iMz7H80toJ2ORuFVGtBvrkwJSfkuHhCKbXuVF4OQrz5PzJeOs0Xuz5j7p
-         xhL01MjmRsVdVz+M1yfRR6HD0JtOpP9lWpZ2u7MXBMiK1QDNFeMlAHjMMT4+7RL64lZ/
-         RpW/x+ew/PaPWvQIdT40J1Iowt1KgPE4VrCtwiCPn8thDNonKp409qm/GB1+UzcDGSjn
-         jhZmnZFZgbsxFJKCtuVxgZlNwskbq6ZXK3i/8jlp36f7Dulvq2C4aLQ6xJakO46mL0ha
-         LVO7IMmMrZ0bzcvNmLbMSR1bSK02iDDOlflDfU95laObwOK3RlOqUoWtNz6qIE8/bTXV
-         e7MQ==
-X-Gm-Message-State: AOAM530vZi9rm76tpq+UMpAaKrkGothBLTB+7QkuShDZb1+suRtR6Gms
-        ncPISjSddmFAV61dsjlXEHI=
-X-Google-Smtp-Source: ABdhPJyrk1wBfHB9MekkHvpHW9x6fYmFebxaC/tx0zZS+XISdOGMjx9hLm+CPvA9MFZ9+dQ3n/YQhA==
-X-Received: by 2002:a05:600c:3798:: with SMTP id o24mr4061437wmr.18.1628593441621;
-        Tue, 10 Aug 2021 04:04:01 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
-        by smtp.gmail.com with ESMTPSA id q3sm3504575wmf.37.2021.08.10.04.04.00
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 10 Aug 2021 04:04:01 -0700 (PDT)
-Date:   Tue, 10 Aug 2021 11:03:59 +0000
-From:   Wei Liu <wei.liu@kernel.org>
-To:     Tianyu Lan <ltykernel@gmail.com>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
-        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
-        hch@lst.de, m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
-        Tianyu.Lan@microsoft.com, pgonda@google.com,
-        martin.b.radev@gmail.com, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        sfr@canb.auug.org.au, saravanand@fb.com,
-        krish.sadhukhan@oracle.com, aneesh.kumar@linux.ibm.com,
-        xen-devel@lists.xenproject.org, rientjes@google.com,
-        hannes@cmpxchg.org, tj@kernel.org, michael.h.kelley@microsoft.com,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, parri.andrea@gmail.com, dave.hansen@intel.com
-Subject: Re: [PATCH V3 03/13] x86/HV: Add new hvcall guest address host
- visibility support
-Message-ID: <20210810110359.i4qodw7h36zrsicp@liuwe-devbox-debian-v2>
-References: <20210809175620.720923-1-ltykernel@gmail.com>
- <20210809175620.720923-4-ltykernel@gmail.com>
+        id S240031AbhHJLFJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 07:05:09 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:10216 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240023AbhHJLFH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 07:05:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1628593486; x=1660129486;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=LbaREnCtYSN0OglWNwO+1hFk/pBwVFTO5sQWlBlXqy0=;
+  b=gOnd68ETkHkBIa8AiWN6WNedO3pFvC1m6ZLTcrzCpc0XeeBtD3Lwx5UA
+   Rc0tIVgsrYqo+/KjfDb1EkG2KerIRdhuKaS7tfwi/iSo1YDUuTWExxRm0
+   IsbtBkHQ6pwrGXomBtN2NLyYatTrdkT/dlNtaM3Gd5hIwzpMDfKQbOKOd
+   A6iEc9TwdTr7VTc+5k+mfKX5mcl2Vq0r6e7tDPSlc4RxFJd3I+QuO1HOb
+   m93PQHBpJxagu47gLT2IQashwCKkO6HuxtP8Rb3gqE32kpwTJVqHh/bZW
+   KhvqoO/ACYn608lq1SuMKkqDF1x2TkMgjWkd8WVlQXt4/maulSwqJZTW1
+   w==;
+X-IronPort-AV: E=Sophos;i="5.84,310,1620662400"; 
+   d="scan'208";a="280626767"
+Received: from mail-mw2nam12lp2047.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.47])
+  by ob1.hgst.iphmx.com with ESMTP; 10 Aug 2021 19:04:45 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=HhLqjYK7FwF+SFwnsspBtCbjkVP5vZhElf5I/i3gvLd3EheAOnqv9Njh0g/yoGmlJF37sse4AuMoL3uj2SAXyqtf8/iD7WvSr/tL7/uvI+1uhFmqjJYupkBm6o4J8iLXBcjoXIH1rQdZac0mH0RsteARBD5j46eoC96hKMHHnhfu69BIn9CkuW3ndsgmBESXtyxyKERtEbnZTbkCtRg62tYVBUkLtdfdtialdCik49rUhboI/WwPpd6E+bdxGlZ1lpFx3IO0aZwyhK2hGQZemUWXPLQmKof1iTUMJJonIYIb4YFhNiobHvwjwRsWyilFx6+0VuPRE5tUXZUIDMIRvQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LbaREnCtYSN0OglWNwO+1hFk/pBwVFTO5sQWlBlXqy0=;
+ b=QblpJY8g0OXNyz/vLxuH6d7EcF32s32xLJkZ/OX3mKJeXGQELwxbcXIVEJJgsUrkynGNQoGza1pzrdpt5XWSR/ILEp3LJO9dpgSzDDZqFKB6Pxvqc73nTCcvAu9HTIQ35fiy00IKNxJQCi+iHc9PhRQC40+i4+RM8Sh2qSM+lQltf4KPa7o5puFqAJ9PTmQt5O56O2JfpE9ubriNBHcU7DakIW/psRJI/ShX92FntCbwKdJf+QGGbOYR/OyFDfFX7uLooOgyYC+D4o05ANDW2FBkyFsouG1celq4UCbJbI2nj0pesmbhsFccsa1SDsLNvF9xTwfKKJ/yoveiPZ6kxw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=LbaREnCtYSN0OglWNwO+1hFk/pBwVFTO5sQWlBlXqy0=;
+ b=FsUMt3GulA7OEShXq551htZF1RwuscvPqtGZ0Xfs+uzxwThxMD5l/TqarWtMPYOpCbXy2V6LPVBGvWNvkp5y03mcIdbthjiaIyhRU8wCb/hB+S5q1GSrPwxJnv15zLsC89/cn2vTTK4tGP7rRzsQDprEdov/+Oj4itO6q9IpiJc=
+Received: from DM6PR04MB7081.namprd04.prod.outlook.com (2603:10b6:5:244::21)
+ by DM5PR04MB0668.namprd04.prod.outlook.com (2603:10b6:3:f9::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4394.19; Tue, 10 Aug
+ 2021 11:04:43 +0000
+Received: from DM6PR04MB7081.namprd04.prod.outlook.com
+ ([fe80::e521:352:1d70:31c]) by DM6PR04MB7081.namprd04.prod.outlook.com
+ ([fe80::e521:352:1d70:31c%7]) with mapi id 15.20.4394.023; Tue, 10 Aug 2021
+ 11:04:43 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     "hch@infradead.org" <hch@infradead.org>
+CC:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
+        Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 4/4] doc: document sysfs queue/cranges attributes
+Thread-Topic: [PATCH v3 4/4] doc: document sysfs queue/cranges attributes
+Thread-Index: AQHXgb7vPpxOSpGKb0+IT3aKVVl58A==
+Date:   Tue, 10 Aug 2021 11:04:43 +0000
+Message-ID: <DM6PR04MB708111B30543090C836A310FE7F79@DM6PR04MB7081.namprd04.prod.outlook.com>
+References: <20210726013806.84815-1-damien.lemoal@wdc.com>
+ <20210726013806.84815-5-damien.lemoal@wdc.com>
+ <YRI4d39W1LMov/UZ@infradead.org>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: infradead.org; dkim=none (message not signed)
+ header.d=none;infradead.org; dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: becf6153-dd73-4e38-dc3f-08d95beea876
+x-ms-traffictypediagnostic: DM5PR04MB0668:
+x-ld-processed: b61c8803-16f3-4c35-9b17-6f65f441df86,ExtAddr
+x-microsoft-antispam-prvs: <DM5PR04MB0668FD85F97E28D64E446687E7F79@DM5PR04MB0668.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:3383;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: NP0LGYXMHdYNZvttuRJKgJ3PigmNvdKXYzPlQtSna9uCOQNooWQjtTHRqv7QjQHWDQfLv7SR2lehUKVgTtizudBQWeNM2BRHA7+AdKY5Pn9gCDSAKa9POf0O183yXNhVn26NKmZ4yps4JsoIPk4qbQemJqzaqCsXtmwv3dXTHTd4VhNuBSRTXmJVLCgGCP3IgEeo+kYlTc43e8GF450oWpE/kn9/O9+joO6T9KyfyaNc36SB9+NOAE59HAU0cOerb2zpk+S9Xr3XG4lPlEHE8y8S15RwGKDesZJPlBvf5EWBAydDQhkkLRf4QpyOKMXMgjWeyh7aOdEHZgV6z9q+te8GxqvoBP2D+VkC0GBxoEejgo9S6Ulmo8e2uNumEBYPYC1gbQIewbdDWbscShxOMbKLmUbgFfT0/F39foluWEtusFexpfFmxP+om8TW9lDSNWKornWjpm8Op9iFiGJcyHKS8x4t20U3ISVwy4Q4vhmCnUSYhW7i+vbBH0NmUt/xzLP8UyqsFI56EoNO/wVJXrxBu5nTajsVZsTWqACQJtczTGaKoXCeXbQxogz6yZMHfRZ4oVq49V0mKjH8JgJFltx+CfFU7c+tEOzB8+vW98WjKvRj1ZlFO/qfDDb3BsydHPF87Gajfx77P5qt5npwxjPzmskWlxb3qDi7Ex7qQmqC6+8J8LYKBo7XmCxxaLUOlLaCn4kSuYbnkkV5GYG5ZA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB7081.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(136003)(39860400002)(366004)(346002)(376002)(76116006)(66946007)(91956017)(83380400001)(186003)(52536014)(66446008)(64756008)(66556008)(4326008)(86362001)(66476007)(33656002)(38070700005)(38100700002)(122000001)(2906002)(6916009)(53546011)(54906003)(7696005)(9686003)(4744005)(8936002)(6506007)(5660300002)(8676002)(55016002)(71200400001)(316002)(478600001);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?idAazhOHyMu/Y3vWWR3AVA79uLlhm0iEfnw/b/DC7TTCsqwWSFRc/CHkD/o5?=
+ =?us-ascii?Q?i7pH36IfT2rMVN7nBxeH6tsYJleXcVW078wn4dlxerWa3oZBvck7cpF8S+87?=
+ =?us-ascii?Q?QdDYTTqlqScK31V/9ZRyuiLG36cn1vfteBcERfKhnmClvwu4IYbVdMBzncb2?=
+ =?us-ascii?Q?hzN5UgadR6GlPnqyz8iQSCz2v0l5kRt8XsUw+mp0FMW0gC5+/mb+j1vVp4MW?=
+ =?us-ascii?Q?OmKaJfEEkNsfV6/NdjKVewedOdr0UwlzE2uA/tbpY+Wkf7YrSEBZ7sNb/kyI?=
+ =?us-ascii?Q?A8jqRUbBVOhv2DgS+t0DEtpH2hc83wA0lDa8G90Oc5W4KumKs26e+Wn8NtfS?=
+ =?us-ascii?Q?aQxRNvLTFj8MIumGvfiXip3lWksGIbXGWtD6aN5VA7oehTP5dQJjCm6Gj16J?=
+ =?us-ascii?Q?7sIA2XOXNeGMyOlroWboYg/ifBPW0K1A/a8jat3oMkjJ/pxsYM+rvJIcYL17?=
+ =?us-ascii?Q?pY0D7zmzNyLh9nioodxwJobMiyBKStdDJjhGkPhAaDvFMCiKV9mG0P0BrrYO?=
+ =?us-ascii?Q?x1F4wXtnZCcWG1LMxbfgXJ0ljuEL/Sv4xxH0B5deuFOxlpQDpBG7pgPjerY3?=
+ =?us-ascii?Q?1YcL9QqqNoPUM2M5w/DePRR9XG5A4VTzWoLbWGzCcEa9SPTTd3d5YQEP8eXk?=
+ =?us-ascii?Q?RLwtfHF6kZ283+tXXxm6rVm98QBl4hDu3ZIVVNWZCOqIqec6Nyudj8pt/aC5?=
+ =?us-ascii?Q?k5bYUk5801j+rpX5PhFKYBx42vSka73gD33mv8khsPvOb1uslE3974cPS+LY?=
+ =?us-ascii?Q?wH3AmIiNZyRuytUg2FYTIB5wnZrwAUmMuOOUSdZkIQf2f80jrdiio41w7k9V?=
+ =?us-ascii?Q?sBc40jPlgp96qvxmQMh/0YOV18san5sskUHngnm8fFyouR1sdWkqxKhjE1Xm?=
+ =?us-ascii?Q?kGAWc/5mV6hpxK8dtoqrcW7AURdVCbAuKJ06cc/O2DZdMmJmYiz60LVgo60E?=
+ =?us-ascii?Q?8qa73BH5Uo30jb4xpFOKrmNxpJqgXZcEWBbs9jHowjZvwGk9WA7YI8hfEIfQ?=
+ =?us-ascii?Q?0HyBxyBJE9+CEVb6mwL6QxezuaTkQlPZxcK7JKoEucdw3KvJ2idweSy4YBRQ?=
+ =?us-ascii?Q?zquNXZAuYU8Vv2SySEc38ySl5nNNobk/dUVEe6GKnFWviO3ZMa9K95qDEK15?=
+ =?us-ascii?Q?ESq2glkThOy4iTO1NH71Z6z41mZBYvncGNitD+ALgIaMlIxrRVl2pidZnHek?=
+ =?us-ascii?Q?2feToqhoDM/Y4807QuhSAahNItjTBbU/Tnbi7twKc3wKD4X0xf7j8qZ0eM3G?=
+ =?us-ascii?Q?tHEyy0emP++gWI0tBdm8DOPQY/xKl9NUuAMBqELQrDkMIg24HLHeMMbcerlS?=
+ =?us-ascii?Q?0kqMFkk/JDY4HWOs2EgH+LS2rhOa6RppsxRhkz6lNEO9Ny0P3d4TmhVkCgpn?=
+ =?us-ascii?Q?qjpEB259LeIq9WNNWybPRInwPGQaCN90gtn+oTmA2oL/5CVS7g=3D=3D?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210809175620.720923-4-ltykernel@gmail.com>
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB7081.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: becf6153-dd73-4e38-dc3f-08d95beea876
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Aug 2021 11:04:43.4211
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: C2EGON4L5L2JAS+kiaQFcalUMyX6XguhHlTahX+CCnSoFBQ9/Flz/lx15Wq5BY5C2QF9vQJVz3baV7cqzV0vfw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB0668
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 09, 2021 at 01:56:07PM -0400, Tianyu Lan wrote:
-> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> 
-> Add new hvcall guest address host visibility support to mark
-> memory visible to host. Call it inside set_memory_decrypted
-> /encrypted(). Add HYPERVISOR feature check in the
-> hv_is_isolation_supported() to optimize in non-virtualization
-> environment.
-> 
-> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> ---
-> Change since v2:
->        * Rework __set_memory_enc_dec() and call Hyper-V and AMD function
->          according to platform check.
-> 
-> Change since v1:
->        * Use new staic call x86_set_memory_enc to avoid add Hyper-V
->          specific check in the set_memory code.
-> ---
->  arch/x86/hyperv/Makefile           |   2 +-
->  arch/x86/hyperv/hv_init.c          |   6 ++
->  arch/x86/hyperv/ivm.c              | 114 +++++++++++++++++++++++++++++
->  arch/x86/include/asm/hyperv-tlfs.h |  20 +++++
->  arch/x86/include/asm/mshyperv.h    |   4 +-
->  arch/x86/mm/pat/set_memory.c       |  19 +++--
->  include/asm-generic/hyperv-tlfs.h  |   1 +
->  include/asm-generic/mshyperv.h     |   1 +
->  8 files changed, 160 insertions(+), 7 deletions(-)
->  create mode 100644 arch/x86/hyperv/ivm.c
-> 
-> diff --git a/arch/x86/hyperv/Makefile b/arch/x86/hyperv/Makefile
-> index 48e2c51464e8..5d2de10809ae 100644
-> --- a/arch/x86/hyperv/Makefile
-> +++ b/arch/x86/hyperv/Makefile
-> @@ -1,5 +1,5 @@
->  # SPDX-License-Identifier: GPL-2.0-only
-> -obj-y			:= hv_init.o mmu.o nested.o irqdomain.o
-> +obj-y			:= hv_init.o mmu.o nested.o irqdomain.o ivm.o
->  obj-$(CONFIG_X86_64)	+= hv_apic.o hv_proc.o
->  
->  ifdef CONFIG_X86_64
-> diff --git a/arch/x86/hyperv/hv_init.c b/arch/x86/hyperv/hv_init.c
-> index 0bb4d9ca7a55..b3683083208a 100644
-> --- a/arch/x86/hyperv/hv_init.c
-> +++ b/arch/x86/hyperv/hv_init.c
-> @@ -607,6 +607,12 @@ EXPORT_SYMBOL_GPL(hv_get_isolation_type);
->  
->  bool hv_is_isolation_supported(void)
->  {
-> +	if (!cpu_feature_enabled(X86_FEATURE_HYPERVISOR))
-> +		return 0;
-
-Nit: false instead of 0.
-
-> +
-> +	if (!hypervisor_is_type(X86_HYPER_MS_HYPERV))
-> +		return 0;
-> +
->  	return hv_get_isolation_type() != HV_ISOLATION_TYPE_NONE;
->  }
->  
-[...]
-> +int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
-> +			   enum hv_mem_host_visibility visibility)
-> +{
-> +	struct hv_gpa_range_for_visibility **input_pcpu, *input;
-> +	u16 pages_processed;
-> +	u64 hv_status;
-> +	unsigned long flags;
-> +
-> +	/* no-op if partition isolation is not enabled */
-> +	if (!hv_is_isolation_supported())
-> +		return 0;
-> +
-> +	if (count > HV_MAX_MODIFY_GPA_REP_COUNT) {
-> +		pr_err("Hyper-V: GPA count:%d exceeds supported:%lu\n", count,
-> +			HV_MAX_MODIFY_GPA_REP_COUNT);
-> +		return -EINVAL;
-> +	}
-> +
-> +	local_irq_save(flags);
-> +	input_pcpu = (struct hv_gpa_range_for_visibility **)
-> +			this_cpu_ptr(hyperv_pcpu_input_arg);
-> +	input = *input_pcpu;
-> +	if (unlikely(!input)) {
-> +		local_irq_restore(flags);
-> +		return -EINVAL;
-> +	}
-> +
-> +	input->partition_id = HV_PARTITION_ID_SELF;
-> +	input->host_visibility = visibility;
-> +	input->reserved0 = 0;
-> +	input->reserved1 = 0;
-> +	memcpy((void *)input->gpa_page_list, pfn, count * sizeof(*pfn));
-> +	hv_status = hv_do_rep_hypercall(
-> +			HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY, count,
-> +			0, input, &pages_processed);
-> +	local_irq_restore(flags);
-> +
-> +	if (!(hv_status & HV_HYPERCALL_RESULT_MASK))
-> +		return 0;
-> +
-> +	return hv_status & HV_HYPERCALL_RESULT_MASK;
-
-Joseph introduced a few helper functions in 753ed9c95c37d. They will
-make the code simpler.
-
-Wei.
+On 2021/08/10 17:28, Christoph Hellwig wrote:=0A=
+> On Mon, Jul 26, 2021 at 10:38:06AM +0900, Damien Le Moal wrote:=0A=
+>> Update the file Documentation/block/queue-sysfs.rst to add a description=
+=0A=
+>> of a device queue sysfs entries related to concurrent sector ranges=0A=
+>> (e.g. concurrent positioning ranges for multi-actuator hard-disks).=0A=
+>>=0A=
+>> While at it, also fix a typo in this file introduction paragraph.=0A=
+> =0A=
+> That should really be a separate patch.=0A=
+=0A=
+OK. Will split that part out in a different patch (and cc stable maybe).=0A=
+=0A=
+> =0A=
+> Otherwise looks good:=0A=
+> =0A=
+> Reviewed-by: Christoph Hellwig <hch@lst.de>=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
