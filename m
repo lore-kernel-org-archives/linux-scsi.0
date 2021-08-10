@@ -2,133 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A768FC4320A
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 04:06:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E183EC4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 04:38:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8667D60FC4
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 04:06:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C40256101D
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 04:38:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230267AbhHJEGu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 00:06:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60742 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229459AbhHJEGu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 00:06:50 -0400
-Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8FC32C0613D3;
-        Mon,  9 Aug 2021 21:06:28 -0700 (PDT)
-Received: by mail-pj1-x1036.google.com with SMTP id m24-20020a17090a7f98b0290178b1a81700so3382339pjl.4;
-        Mon, 09 Aug 2021 21:06:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=6N0BAQWqIGCG70KaJSvwhn7HVFBd23LUGqOl1pjWdBc=;
-        b=n7zYqLMlnbTCPRqciEhJZGm7QNfHHw+f7bBaw6TxaydriNoApNDBwKySN/HHqclhFT
-         RqYmn1Z/csUrTrchNgL/ShPIE1VraPv2LnG9UJKsecqpkwzfQ1pPXROa6h4PEcXuG7iA
-         OWLmo60MDlOOntppb+vDVnF5w0dTTomnEqTCE9LcGamNIHivkzW0ALZsrXTFKXnwNXdl
-         CBCFVsaNOy+UCW66Y/p6Rrylv3lJ73NV1UFT3jsFRll4hhzXgj/nrcNwdOo5jf3D8yxG
-         nItMYS1PY4/y48Fj2F5UNMsRCBvWRMHrNyPHc81Q4ogHAKLiH8lgoBg/DH5iYVcg/T+P
-         R7jw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=6N0BAQWqIGCG70KaJSvwhn7HVFBd23LUGqOl1pjWdBc=;
-        b=ZBKBLnte+Dg+nLEFHKOuFY1uvDSVvu96Ep1YhOtwTx6KRp8SyS0O71DX5g+HPRiilK
-         7Zpo3qQr6swiGKola4Qh9uDrIgaU1860yPAJIma3X9f5bHc+ju054IiKgZZav8fU+JNn
-         BeAkHuIby2NeA0YgQmskVF6VzUlILfpEPYURoyEsyoluayDQ4YEd6iGkFYIEhIppVKnc
-         Y8q1y+dpiQRr/GMJw/jQ0Z5cfWZqvlsbhG96nPMPbJGqivDPQzfqDjcNKFAatzfIDf+2
-         QnzJ3s/bIJjvdsimr/xrPW4Nml1qatP/xANYXXa0q9XAiRUeLAT6osPytPwT1VM6Jwxo
-         4raQ==
-X-Gm-Message-State: AOAM530+DE+myM0QhaLMM1Z9lkI/YC/y89kj6FtPQW9DmeY8JZ5eXlmM
-        nnTs1/4MIiA040zzUD42psU=
-X-Google-Smtp-Source: ABdhPJxTpRcRZtpoL5iMuIP30OCDIud6VfWt/11NbbIIa+65NLjd2rqyoYDwiuUiBPxD7Ti/aQWSGA==
-X-Received: by 2002:a05:6a00:16d2:b029:300:200b:6572 with SMTP id l18-20020a056a0016d2b0290300200b6572mr21419129pfc.62.1628568388014;
-        Mon, 09 Aug 2021 21:06:28 -0700 (PDT)
-Received: from localhost.localdomain ([45.135.186.103])
-        by smtp.gmail.com with ESMTPSA id s7sm21562339pfk.12.2021.08.09.21.06.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 09 Aug 2021 21:06:27 -0700 (PDT)
-From:   Tuo Li <islituo@gmail.com>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
-        Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>
-Subject: [PATCH v2] scsi: target: pscsi: Fix possible null-pointer dereference in pscsi_complete_cmd()
-Date:   Mon,  9 Aug 2021 21:04:13 -0700
-Message-Id: <20210810040414.248167-1-islituo@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        id S235432AbhHJEi2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 00:38:28 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:4002 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S237076AbhHJEiX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Aug 2021 00:38:23 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 17A4aNdZ008544
+        for <linux-scsi@vger.kernel.org>; Mon, 9 Aug 2021 21:37:56 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=qe+r+M1slMROX4Pjk6hOX6+24WTPsgM0jmpLbhebw9A=;
+ b=YARFdTzgceSge2MjPDXeCjLo59pCwC5bVyyg4eQhAGe9R6EjtTqH52v039JeyGP6Q15i
+ a4E6HtQlGcJfiFRiUwVGYpuTgu1QeDOzVvpZfGt7RPwR468tMdWwEtwnqDi0Zxx9fybD
+ u0ld6568F2EeCL8YX1+fT6L4SzKqi092tOvhGJeRoKuMuxgBEm0r8yo3ES1CY3SFbzAt
+ WnRzbZUUCGKtcI5dnIq867fh6Ie0DU90KugyXPo/dQLGu3mUyH4LCG6+64Yr6sSQvCh1
+ /sjqFUlHCuNMtI7B53EZkKfSg/oF3FpqUrz4PPI67fqCy5JY45C4w0IcvhMe66FkJ1JM yw== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com with ESMTP id 3abfu2gf2t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Aug 2021 21:37:56 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 9 Aug
+ 2021 21:37:54 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Mon, 9 Aug 2021 21:37:54 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id A46AB3F7044;
+        Mon,  9 Aug 2021 21:37:54 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 17A4bsBv001180;
+        Mon, 9 Aug 2021 21:37:54 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 17A4bULE001171;
+        Mon, 9 Aug 2021 21:37:30 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH v2 00/14] qla2xxx driver bug fixes
+Date:   Mon, 9 Aug 2021 21:37:06 -0700
+Message-ID: <20210810043720.1137-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-ORIG-GUID: RswbzE4YbxAgc4pZgSI8R5OWzpGS7j1W
+X-Proofpoint-GUID: RswbzE4YbxAgc4pZgSI8R5OWzpGS7j1W
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
+ definitions=2021-08-10_01:2021-08-06,2021-08-10 signatures=0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The return value of transport_kmap_data_sg() is assigned to the variable
-buf:
-  buf = transport_kmap_data_sg(cmd);
+Martin,
 
-And then it is checked:
-  if (!buf) {
+Please apply the qla2xxx driver bug fixes to the scsi tree at your
+earliest convenience.
 
-This indicates that buf can be NULL. However, it is dereferenced in the
-following statements:
-  if (!(buf[3] & 0x80))
-    buf[3] |= 0x80;
-  if (!(buf[2] & 0x80))
-    buf[2] |= 0x80;
-
-To fix these possible null-pointer dereferences, dereference buf and call 
-transport_kunmap_data_sg() only when buf is not NULL.
-
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Signed-off-by: Tuo Li <islituo@gmail.com>
----
 v2:
-* Put transport_kunmap_data_sg() into the else-branch of the if (!bug).
-  Thank Bodo Stroesser for helpful advice.
----
- drivers/target/target_core_pscsi.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+- Add Reviewed-by tag
+- fix split of log message across lines (04/14)
+- fix commit message (06/16)
+- add Cc stable and Fixes tags
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 2629d2ef3970..75ef52f008ff 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -620,17 +620,17 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
- 			buf = transport_kmap_data_sg(cmd);
- 			if (!buf) {
- 				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
--			}
--
--			if (cdb[0] == MODE_SENSE_10) {
--				if (!(buf[3] & 0x80))
--					buf[3] |= 0x80;
- 			} else {
--				if (!(buf[2] & 0x80))
--					buf[2] |= 0x80;
--			}
-+				if (cdb[0] == MODE_SENSE_10) {
-+					if (!(buf[3] & 0x80))
-+						buf[3] |= 0x80;
-+				} else {
-+					if (!(buf[2] & 0x80))
-+						buf[2] |= 0x80;
-+				}
- 
--			transport_kunmap_data_sg(cmd);
-+				transport_kunmap_data_sg(cmd);
-+			}
- 		}
- 	}
- after_mode_sense:
+Thanks,
+Nilesh
+
+Arun Easi (3):
+  qla2xxx: Add host attribute to trigger MPI hang
+  qla2xxx: Show OS name and version in FDMI-1
+  qla2xxx: suppress unnecessary log messages during login
+
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.06.100-k
+
+Quinn Tran (5):
+  qla2xxx: adjust request/response queue size for 28xx
+  qla2xxx: add debug print of 64G link speed
+  qla2xxx: fix port type info
+  qla2xxx: fix unsafe removal from link list
+  qla2xxx: fix npiv create erroneous error
+
+Saurav Kashyap (5):
+  qla2xxx: Change %p to %px in the log messages
+  qla2xxx: Changes to support FCP2 Target
+  qla2xxx: Changes to support kdump kernel
+  qla2xxx: Changes to support kdump kernel for NVMe BFS
+  qla2xxx: Sync queue idx with queue_pair_map idx
+
+ drivers/scsi/qla2xxx/qla_attr.c    |  25 +++++
+ drivers/scsi/qla2xxx/qla_dbg.c     |   3 +-
+ drivers/scsi/qla2xxx/qla_def.h     |  11 +-
+ drivers/scsi/qla2xxx/qla_edif.c    |  78 +++++++-------
+ drivers/scsi/qla2xxx/qla_gs.c      |   6 +-
+ drivers/scsi/qla2xxx/qla_init.c    |  63 +++++++----
+ drivers/scsi/qla2xxx/qla_iocb.c    |  18 ++--
+ drivers/scsi/qla2xxx/qla_isr.c     |  51 +++++----
+ drivers/scsi/qla2xxx/qla_mbx.c     |   2 +-
+ drivers/scsi/qla2xxx/qla_mid.c     |  58 +++++-----
+ drivers/scsi/qla2xxx/qla_nvme.c    |  61 +++++------
+ drivers/scsi/qla2xxx/qla_os.c      | 110 +++++++++++--------
+ drivers/scsi/qla2xxx/qla_sup.c     |   4 +-
+ drivers/scsi/qla2xxx/qla_target.c  | 168 +++++++++++++++--------------
+ drivers/scsi/qla2xxx/qla_tmpl.c    |   8 +-
+ drivers/scsi/qla2xxx/qla_version.h |   6 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  18 ++--
+ 17 files changed, 383 insertions(+), 307 deletions(-)
+
+
+base-commit: 2c03a047d2fcae6d526e8630c820bc40560ec1eb
 -- 
-2.25.1
+2.19.0.rc0
 
