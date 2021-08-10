@@ -4,33 +4,33 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABAEC4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15D19C4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:22:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3FD3C60F41
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:21:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E63B860FDA
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:22:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241079AbhHJOWD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 10:22:03 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54656 "EHLO mail.kernel.org"
+        id S241410AbhHJOW3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 10:22:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55154 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243495AbhHJOTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Aug 2021 10:19:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id ADF7361179;
-        Tue, 10 Aug 2021 14:17:12 +0000 (UTC)
+        id S242719AbhHJOS2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Aug 2021 10:18:28 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 14311610FF;
+        Tue, 10 Aug 2021 14:16:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628605033;
-        bh=JPSvbA6z+4XkcwN21qZQQSJK10TkHR2cb1jPaxsUSkE=;
+        s=k20201202; t=1628605006;
+        bh=qHc2rfSYFv/TMHp2CozCBZWjbBMZ0+ljM3C6bgtbvcM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aJ0OUekxrGCjuMytF64pordibpqPHbHTGs2n79VMoCK2xSoDY04bB9z27mKD6gtgl
-         o3Ya1RpE4a4WKwGDcV5i0iqvoJ77cB+ALOYh7AWke97YREbuTnbItyzNknzGXvmQC5
-         y8qhSFzQu8rmdOYJHjgIuRb+7Bvt3enyrbYPk2pFwIO2eroX6SiUz6CM+A9hKiUf2o
-         4KEMlXdb0yWTy42Vdxgr2faEIPbkrhzydDmE031ZrU3tyA7xuywFigSe5/vFL0V6lL
-         8w7DficcCa2rl4VB212q83AwWERZIRLuN+tIrr3GBmlCPnqGEByO3C8E9m/qQnlUrq
-         6bi+neP96EqPQ==
+        b=hcafgsHiXThF74DV8KdyHF3xdzNljwXPHmP5Nsyv4NSTnqZSys0FSpG8hrYbwVCEG
+         dth2OW7EhrdR9T3+ituBglP581/WV9w5Op5/sHEciZ2y0d1giFejynssyv3TqJja0L
+         6B4zmAL24nG2vsTLQvQGc9eKhpEC7YBdNfFcCuryfW/SC2IlaEhdD8QfVyxWmzKTua
+         VFz9pi6sdFDU3mnJb9g3If0IE3ahnDeYa6e4JlXbJg8IoFCgoTPYT2Csq9cgpBMjmB
+         S0PBrH0rV8ywP1ghB4WzZL3QTrnlXLpnHQ62jyDqvwuMIEPd1PA5d/XzY9ymbm+2tc
+         3nsf6IUQ0BzqA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Harshvardhan Jha <harshvardhan.jha@oracle.com>,
@@ -38,12 +38,12 @@ Cc:     Harshvardhan Jha <harshvardhan.jha@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>,
         megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 4/6] scsi: megaraid_mm: Fix end of loop tests for list_for_each_entry()
-Date:   Tue, 10 Aug 2021 10:17:05 -0400
-Message-Id: <20210810141707.3118714-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 04/10] scsi: megaraid_mm: Fix end of loop tests for list_for_each_entry()
+Date:   Tue, 10 Aug 2021 10:16:35 -0400
+Message-Id: <20210810141641.3118360-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210810141707.3118714-1-sashal@kernel.org>
-References: <20210810141707.3118714-1-sashal@kernel.org>
+In-Reply-To: <20210810141641.3118360-1-sashal@kernel.org>
+References: <20210810141641.3118360-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -71,10 +71,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 15 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
-index a70692779a16..34067dfd2841 100644
+index 65b6f6ace3a5..8ec308c5970f 100644
 --- a/drivers/scsi/megaraid/megaraid_mm.c
 +++ b/drivers/scsi/megaraid/megaraid_mm.c
-@@ -246,7 +246,7 @@ mraid_mm_get_adapter(mimd_t __user *umimd, int *rval)
+@@ -250,7 +250,7 @@ mraid_mm_get_adapter(mimd_t __user *umimd, int *rval)
  	mimd_t		mimd;
  	uint32_t	adapno;
  	int		iterator;
@@ -83,7 +83,7 @@ index a70692779a16..34067dfd2841 100644
  
  	if (copy_from_user(&mimd, umimd, sizeof(mimd_t))) {
  		*rval = -EFAULT;
-@@ -262,12 +262,16 @@ mraid_mm_get_adapter(mimd_t __user *umimd, int *rval)
+@@ -266,12 +266,16 @@ mraid_mm_get_adapter(mimd_t __user *umimd, int *rval)
  
  	adapter = NULL;
  	iterator = 0;
@@ -102,7 +102,7 @@ index a70692779a16..34067dfd2841 100644
  		*rval = -ENODEV;
  		return NULL;
  	}
-@@ -735,6 +739,7 @@ ioctl_done(uioc_t *kioc)
+@@ -739,6 +743,7 @@ ioctl_done(uioc_t *kioc)
  	uint32_t	adapno;
  	int		iterator;
  	mraid_mmadp_t*	adapter;
@@ -110,7 +110,7 @@ index a70692779a16..34067dfd2841 100644
  
  	/*
  	 * When the kioc returns from driver, make sure it still doesn't
-@@ -757,19 +762,23 @@ ioctl_done(uioc_t *kioc)
+@@ -761,19 +766,23 @@ ioctl_done(uioc_t *kioc)
  		iterator	= 0;
  		adapter		= NULL;
  		adapno		= kioc->adapno;
