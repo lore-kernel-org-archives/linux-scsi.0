@@ -2,96 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53C77C432BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 13:48:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A992CC432BE
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A21261058
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 13:48:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C28960F02
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:15:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241885AbhHJNs3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 09:48:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54614 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240131AbhHJNs3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 09:48:29 -0400
-Received: from mail-pl1-x633.google.com (mail-pl1-x633.google.com [IPv6:2607:f8b0:4864:20::633])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 333BEC0613D3;
-        Tue, 10 Aug 2021 06:48:07 -0700 (PDT)
-Received: by mail-pl1-x633.google.com with SMTP id d1so21071872pll.1;
-        Tue, 10 Aug 2021 06:48:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-transfer-encoding:content-language;
-        bh=CNbvPsnGAfa3fu8fS5mw3q/ySea1UUbi6hadd0bmWeo=;
-        b=hoINABunSBYQ2JkYYVpHWvnqfcKfMeuLsEs5RBPS9/roCQMZMiD8Wxk9YzMTPbAdEd
-         YzUET3flnDrEnas2moHTKPj3eqswt2kl5ojHJntcAq8jcq2IuxIMYACvccw+Lm85ZX7M
-         aTNYTHMibdUa38vFxAe5MBByd9PxmMuhpsXSTHF0c8hmGdN2V/LQfCSpHOUcMdE2n7MT
-         jtyOHqPjjBavBY4g4/yMQVtRbmLKampGH4MPxTklXrluLEYLLNczihZlhKO8zIvnnvZ9
-         iz+y5QDYlyCqWxuviWQBmvC1EeSkgtS6YU61oTcz6Rxw4sxi0GTJYiBp2PZZj+q1mwqw
-         fBNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-transfer-encoding:content-language;
-        bh=CNbvPsnGAfa3fu8fS5mw3q/ySea1UUbi6hadd0bmWeo=;
-        b=N3+0KnM+5IZ4US73trrCGcKJutOc9pjhRFK8mV46n+9gBCxlTzLg/y3VMTA94OqpU2
-         tYJZmWkIv/v1HUmPrjHgcQ6WKPX9b0li+9BwN5vjZBn2gsG95lmRJGunc96Gi2RNxHHu
-         sTdUzvOg5WDKoeduk6+yrskxNvFjxL/y0Tb9GzDPjmnr4iNjmQdBtW5QmmvhUM8f8PwP
-         NuTb1Za89AWjSmPqi8zmXLDYi7k0e3CGMx9C3Qi5ScxSlr0hWW2scn3qzJkZxkWiEwjR
-         DGf3hhdDxi1sMl9vP1jOawtHczFu/bKB0nSQj5TOqGkAUEC3wGuSb8I+WC63QXidTssK
-         XaZg==
-X-Gm-Message-State: AOAM5311Z8iG3aSKOMGDCSYMp1Er7bX38o4ih4+lnpie/E4T7YMsh6G7
-        TxFMyF6mnhV6A+eCVKFKf164oR5K0SB46FZG
-X-Google-Smtp-Source: ABdhPJxDb2+ly1WlR776U/zcEbiEs6orYG1yRVBz/Bbo75OnSuxjbvfHOT0X/0rejyW2zB2iDRDzYQ==
-X-Received: by 2002:a17:902:d890:b029:12d:f2:e8d6 with SMTP id b16-20020a170902d890b029012d00f2e8d6mr7240709plz.42.1628603286547;
-        Tue, 10 Aug 2021 06:48:06 -0700 (PDT)
-Received: from [10.178.0.62] ([85.203.23.37])
-        by smtp.gmail.com with ESMTPSA id x13sm22637326pjh.30.2021.08.10.06.48.04
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 10 Aug 2021 06:48:06 -0700 (PDT)
-To:     martin.petersen@oracle.com
-Cc:     baijiaju1990@gmail.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org,
-        Linux Kernel <linux-kernel@vger.kernel.org>
-From:   Tuo Li <islituo@gmail.com>
-Subject: [BUG] scsi: iscsi: possible null-pointer dereference in
- iscsit_tpg_add_network_portal()
-Message-ID: <89aaa039-2f03-f657-a555-a6a99f38db6d@gmail.com>
-Date:   Tue, 10 Aug 2021 21:48:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S242256AbhHJOPm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 10:15:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51266 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S242197AbhHJOPh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Aug 2021 10:15:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AB8A460F02;
+        Tue, 10 Aug 2021 14:15:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1628604915;
+        bh=QI4CIrLHLF0c+/CtvW+aELJ7gfzhZZI94zKlXwQ6kgA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=oVPiJW/soiHATxHxigW7AYDJj9QIAJDL4OEoy5HJ5kBQMF47EB4kDzJxBXLMFT9UE
+         P4PVykeUTl0Vy2pkeaUGolfj0Wn1bOIPIO2VD6WuVw6bnFWOIPq5ozNw0YNZUqIsMm
+         jsqU883+KzvwWErX/se7/vnd7TLCkxTz0JywXyw0KwSM7c43QRlSuZ2DrmFr0vwooS
+         IPo5+xEtzuOkp8giUHqoIiOZ2Fb8WCb+5ypoc5qwNJ9gZ9IuJMMKMvqkmjtt8Cozti
+         kSlARyUw15PWb+WWHa7D655uJLRN2AcZBZiby8EezCgeV7K9B8q6KCUXNa3o/rYsag
+         YDA9xDpV3rJ6A==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Igor Pylypiv <ipylypiv@google.com>,
+        Vishakha Channapattan <vishakhavc@google.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 07/24] scsi: pm80xx: Fix TMF task completion race condition
+Date:   Tue, 10 Aug 2021 10:14:48 -0400
+Message-Id: <20210810141505.3117318-7-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210810141505.3117318-1-sashal@kernel.org>
+References: <20210810141505.3117318-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+X-stable: review
+X-Patchwork-Hint: Ignore
 Content-Transfer-Encoding: 8bit
-Content-Language: en-US
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+From: Igor Pylypiv <ipylypiv@google.com>
 
-Our static analysis tool finds a possible null-pointer dereference in 
-the iscsi driver in Linux 5.14.0-rc3:
+[ Upstream commit d712d3fb484b7fa8d1d57e9ca6f134bb9d8c18b1 ]
 
-The variable tpg->tpg_tiqn is checked in:
-496:    if (tpg->tpg_tiqn)
+The TMF timeout timer may trigger at the same time when the response from a
+controller is being handled. When this happens the SAS task may get freed
+before the response processing is finished.
 
-This indicates that it can be NULL. If so, a null-pointer dereference 
-will occur:
-508:    pr_debug("CORE[%s] - Added Network Portal: %pISpc,%hu on %s\n", 
-tpg->tpg_tiqn->tiqn, ...)
+Fix this by calling complete() only when SAS_TASK_STATE_DONE is not set.
 
-I am not quite sure whether this possible null-pointer dereference is 
-real and how to fix it if it is real.
-Any feedback would be appreciated, thanks!
+A similar race condition was fixed in commit b90cd6f2b905 ("scsi: libsas:
+fix a race condition when smp task timeout")
 
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+Link: https://lore.kernel.org/r/20210707185945.35559-1-ipylypiv@google.com
+Reviewed-by: Vishakha Channapattan <vishakhavc@google.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/pm8001/pm8001_sas.c | 32 +++++++++++++++-----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
 
-Best wishes,
-Tuo Li
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 335cf37e6cb9..2e429e31f1f0 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -684,8 +684,7 @@ int pm8001_dev_found(struct domain_device *dev)
+ 
+ void pm8001_task_done(struct sas_task *task)
+ {
+-	if (!del_timer(&task->slow_task->timer))
+-		return;
++	del_timer(&task->slow_task->timer);
+ 	complete(&task->slow_task->completion);
+ }
+ 
+@@ -693,9 +692,14 @@ static void pm8001_tmf_timedout(struct timer_list *t)
+ {
+ 	struct sas_task_slow *slow = from_timer(slow, t, timer);
+ 	struct sas_task *task = slow->task;
++	unsigned long flags;
+ 
+-	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+-	complete(&task->slow_task->completion);
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
++		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
++		complete(&task->slow_task->completion);
++	}
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ }
+ 
+ #define PM8001_TASK_TIMEOUT 20
+@@ -748,13 +752,10 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
+ 		}
+ 		res = -TMF_RESP_FUNC_FAILED;
+ 		/* Even TMF timed out, return direct. */
+-		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+-			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+-				pm8001_dbg(pm8001_ha, FAIL,
+-					   "TMF task[%x]timeout.\n",
+-					   tmf->tmf);
+-				goto ex_err;
+-			}
++		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
++			pm8001_dbg(pm8001_ha, FAIL, "TMF task[%x]timeout.\n",
++				   tmf->tmf);
++			goto ex_err;
+ 		}
+ 
+ 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
+@@ -834,12 +835,9 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+ 		wait_for_completion(&task->slow_task->completion);
+ 		res = TMF_RESP_FUNC_FAILED;
+ 		/* Even TMF timed out, return direct. */
+-		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+-			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+-				pm8001_dbg(pm8001_ha, FAIL,
+-					   "TMF task timeout.\n");
+-				goto ex_err;
+-			}
++		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
++			pm8001_dbg(pm8001_ha, FAIL, "TMF task timeout.\n");
++			goto ex_err;
+ 		}
+ 
+ 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
+-- 
+2.30.2
+
