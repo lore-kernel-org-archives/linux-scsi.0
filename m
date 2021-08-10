@@ -2,126 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51919C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 06:48:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EFA4C432BE
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 07:19:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 320A661052
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 06:48:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 624DF61076
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 07:19:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237919AbhHJGsX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 02:48:23 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:53766 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236024AbhHJGsV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 02:48:21 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 6F7DF1FE26;
-        Tue, 10 Aug 2021 06:47:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1628578079; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TfslFNPkBhXLBsvLqtfYoG1YSnJja/Qd9XavD2B2vuI=;
-        b=lEwgG5K1tiPqmyLw/E4n769/2no2qTggp8q6qHJkba866EILlrkuYwG/l+cnIqr2tky1cl
-        Mka06X8z0jDj7YqXLnMe4ijgT0BPI0Jg/NFKhAbixWE/6Q9xShyfoUDoyjqZoO5S5GvWMH
-        bv3sgNFdyDBvE8ipnLlX6KTK6iWbFlk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1628578079;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TfslFNPkBhXLBsvLqtfYoG1YSnJja/Qd9XavD2B2vuI=;
-        b=ZI0j27lQhveMTQ5cfk/jAZ+eTt3h9WZbi5p37Y+91qMvGs8B/NgaZXWpToS3t+sDVbAJXJ
-        3wwd4PQy9z2huTCQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 471CA133F9;
-        Tue, 10 Aug 2021 06:47:59 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id jb1FDx8hEmGUQAAAGKfGzw
-        (envelope-from <hare@suse.de>); Tue, 10 Aug 2021 06:47:59 +0000
-Subject: Re: [PATCH v4 10/11] qla2xxx: Increment EDIF command and completion
- counts
-To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com
-References: <20210624052606.21613-1-njavali@marvell.com>
- <20210624052606.21613-11-njavali@marvell.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <86a16d29-8528-cf04-9f9f-130dcc85a35f@suse.de>
-Date:   Tue, 10 Aug 2021 08:47:58 +0200
+        id S231430AbhHJHTG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 03:19:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47194 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229484AbhHJHTG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 03:19:06 -0400
+Received: from mail-wr1-x436.google.com (mail-wr1-x436.google.com [IPv6:2a00:1450:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 23BD9C0613D3;
+        Tue, 10 Aug 2021 00:18:44 -0700 (PDT)
+Received: by mail-wr1-x436.google.com with SMTP id r6so2626157wrt.4;
+        Tue, 10 Aug 2021 00:18:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=gWww76GCF5bdJ3wwOyrVrOe81eD6ccbw3CbNhzGl6sA=;
+        b=NZkGabqAvmYmZUO16jJsqhjL/CVU0Sj7skB8PuJhN/s7osQ3QymAZOFTma81Cnb1gT
+         gyTR2VraTsCp515ookPa3CDbMKBwIZF6CDbBRp9+yA9YQm6QJ8VhaAzGEBv+tRZKt6J+
+         bMdoQyA0GtZ87GGhT2cO8yvSXHBpjWqax6Sdl4mGfTpyV0O8LSqbRK9FHeC9J24mCXsk
+         uXti+uGGUSHGAAJPfwbtGGszxhLiNkkaHLBLXnYidNI+9GnrH/qH08ouH5pgtoWwxT02
+         +dCFV7bh6Cq6DDvneOO5EEhh6zzjUwc2/wWY3isQD2YQSL/HO/sBie9U48PTfn2w5+x7
+         cIig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=gWww76GCF5bdJ3wwOyrVrOe81eD6ccbw3CbNhzGl6sA=;
+        b=eweDzgqKh4sUcNpEuLEJZ47OM4weXu0FeIwDkMQTo4HEe7DDM+iyt4Q0u0xOsU3niJ
+         RmY3zG4vD0hmcu4DvLEsY0gd8x1bcq8jzt9UobtopVdezTEi/HXJnyOofCAmYnSxS+6b
+         aD2fasKahjubd+6Wry6nbvFUq8d2Gldu2uv1+VOdGOTa5Ir42eqtRLmiLn2NN0/Q6pKw
+         6qAVVEYEWlqmbOGb1EQvOUEjapH1cPUhfDhZmI7AKnuSJnwaDsFPaOYwuT1zXj/XoIqo
+         J+rIg1rx3E3XF8ChYdAZHTf4ycT3QzbVAxFhs3FJ/ZgIoha8poOPKg4VDui4IVPcNzK5
+         mRPg==
+X-Gm-Message-State: AOAM532bKvVYDJG/6yikB5GhKIMUvA8+yliMs2tBwOZfQGqURTsCfJMv
+        GhEIibpfUZBWosgQsNspu/k=
+X-Google-Smtp-Source: ABdhPJzeEI+6Wv48bLWllrtYVIG0GxMW7kOVFVZN/f/T4Pmfr25NEsZMy6wo5bmChExdxlHB+PCWKA==
+X-Received: by 2002:a05:6000:18c2:: with SMTP id w2mr29071731wrq.282.1628579922602;
+        Tue, 10 Aug 2021 00:18:42 -0700 (PDT)
+Received: from [192.168.178.40] (ipbcc187b7.dynamic.kabel-deutschland.de. [188.193.135.183])
+        by smtp.gmail.com with ESMTPSA id d8sm22313152wrv.20.2021.08.10.00.18.41
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 10 Aug 2021 00:18:42 -0700 (PDT)
+Subject: Re: [PATCH v2] scsi: target: pscsi: Fix possible null-pointer
+ dereference in pscsi_complete_cmd()
+To:     Tuo Li <islituo@gmail.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
+        TOTE Robot <oslab@tsinghua.edu.cn>
+References: <20210810040414.248167-1-islituo@gmail.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <e45b6019-0ccd-cb8a-20cd-80f8f26146d9@gmail.com>
+Date:   Tue, 10 Aug 2021 09:18:41 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.11.0
 MIME-Version: 1.0
-In-Reply-To: <20210624052606.21613-11-njavali@marvell.com>
+In-Reply-To: <20210810040414.248167-1-islituo@gmail.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 6/24/21 7:26 AM, Nilesh Javali wrote:
-> From: Quinn Tran <qutran@marvell.com>
+On 10.08.21 06:04, Tuo Li wrote:
+> The return value of transport_kmap_data_sg() is assigned to the variable
+> buf:
+>    buf = transport_kmap_data_sg(cmd);
 > 
-> Increment the command and the completion counts.
+> And then it is checked:
+>    if (!buf) {
 > 
-> Signed-off-by: Quinn Tran <qutran@marvell.com>
-> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> This indicates that buf can be NULL. However, it is dereferenced in the
+> following statements:
+>    if (!(buf[3] & 0x80))
+>      buf[3] |= 0x80;
+>    if (!(buf[2] & 0x80))
+>      buf[2] |= 0x80;
+> 
+> To fix these possible null-pointer dereferences, dereference buf and call
+> transport_kunmap_data_sg() only when buf is not NULL.
+> 
+> Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
+> Signed-off-by: Tuo Li <islituo@gmail.com>
 > ---
->   drivers/scsi/qla2xxx/qla_edif.c | 1 +
->   drivers/scsi/qla2xxx/qla_isr.c  | 3 +--
->   2 files changed, 2 insertions(+), 2 deletions(-)
+> v2:
+> * Put transport_kunmap_data_sg() into the else-branch of the if (!bug).
+>    Thank Bodo Stroesser for helpful advice.
+> ---
+>   drivers/target/target_core_pscsi.c | 18 +++++++++---------
+>   1 file changed, 9 insertions(+), 9 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-> index 8e730cc882e6..ccbe0e1bfcbc 100644
-> --- a/drivers/scsi/qla2xxx/qla_edif.c
-> +++ b/drivers/scsi/qla2xxx/qla_edif.c
-> @@ -2926,6 +2926,7 @@ qla28xx_start_scsi_edif(srb_t *sp)
->   		req->ring_ptr++;
->   	}
->   
-> +	sp->qpair->cmd_cnt++;
->   	/* Set chip new ring index. */
->   	wrt_reg_dword(req->req_q_in, req->ring_index);
->   
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index ce4f93fb4d25..e8928fd83049 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -3192,10 +3192,9 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
->   		return;
->   	}
->   
-> -	sp->qpair->cmd_completion_cnt++;
+> diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
+> index 2629d2ef3970..75ef52f008ff 100644
+> --- a/drivers/target/target_core_pscsi.c
+> +++ b/drivers/target/target_core_pscsi.c
+> @@ -620,17 +620,17 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
+>   			buf = transport_kmap_data_sg(cmd);
+>   			if (!buf) {
+>   				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
+> -			}
 > -
->   	/* Fast path completion. */
->   	qla_chk_edif_rx_sa_delete_pending(vha, sp, sts24);
-> +	sp->qpair->cmd_completion_cnt++;
+> -			if (cdb[0] == MODE_SENSE_10) {
+> -				if (!(buf[3] & 0x80))
+> -					buf[3] |= 0x80;
+>   			} else {
+> -				if (!(buf[2] & 0x80))
+> -					buf[2] |= 0x80;
+> -			}
+> +				if (cdb[0] == MODE_SENSE_10) {
+> +					if (!(buf[3] & 0x80))
+> +						buf[3] |= 0x80;
+> +				} else {
+> +					if (!(buf[2] & 0x80))
+> +						buf[2] |= 0x80;
+> +				}
 >   
->   	if (comp_status == CS_COMPLETE && scsi_status == 0) {
->   		qla2x00_process_completed_request(vha, req, handle);
+> -			transport_kunmap_data_sg(cmd);
+> +				transport_kunmap_data_sg(cmd);
+> +			}
+>   		}
+>   	}
+>   after_mode_sense:
 > 
-Please fix up the patch description (the patch doesn't add counter 
-increments, it just moves them to the correct place).
 
-Cheers,
+Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Regards,
+Bodo
