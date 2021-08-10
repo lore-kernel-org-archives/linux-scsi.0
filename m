@@ -4,44 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 453DFC4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:21:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ABAEC4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:21:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 299EF60F41
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:21:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3FD3C60F41
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:21:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233318AbhHJOV5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 10:21:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54272 "EHLO mail.kernel.org"
+        id S241079AbhHJOWD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 10:22:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54656 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S243330AbhHJOTl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Aug 2021 10:19:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B465B61163;
-        Tue, 10 Aug 2021 14:17:02 +0000 (UTC)
+        id S243495AbhHJOTy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Aug 2021 10:19:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ADF7361179;
+        Tue, 10 Aug 2021 14:17:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628605023;
-        bh=kln+TdL2yLTp4Awig9Sffb7Fm7JG6GfX55GX2Gh1dxg=;
+        s=k20201202; t=1628605033;
+        bh=JPSvbA6z+4XkcwN21qZQQSJK10TkHR2cb1jPaxsUSkE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=dFf+Ka8DhGH9SMiWJtJDwo2s+S+m1e2cu5zkLiitNzOwBELjFEL3cyUaDqvpJ/Qu+
-         B//P4bw3Aaqv7cTYO108a6Z34+NyaThx5zsyiCei3sC/ReFODLuOclEcRfgy+WWr7I
-         z0gprHp4tTqRGXBFWX/q9CgzSc+T0wLpcTIsHTwWvX6Cm+OEW2Bo15LZPp/NXe85G8
-         E5DCokKp223rW9jzpE6BER+F/53UIGveExB4aPzkrU2ONeov3ONhkO05Ib/V1ls37D
-         MA6e0NVr6GLBUiWylVoA0Akk7YDiFCb8HLVc94rwJ2u12FBMV+CVHtQNp50KYWfcIL
-         GfC5ZSvUUB9Dg==
+        b=aJ0OUekxrGCjuMytF64pordibpqPHbHTGs2n79VMoCK2xSoDY04bB9z27mKD6gtgl
+         o3Ya1RpE4a4WKwGDcV5i0iqvoJ77cB+ALOYh7AWke97YREbuTnbItyzNknzGXvmQC5
+         y8qhSFzQu8rmdOYJHjgIuRb+7Bvt3enyrbYPk2pFwIO2eroX6SiUz6CM+A9hKiUf2o
+         4KEMlXdb0yWTy42Vdxgr2faEIPbkrhzydDmE031ZrU3tyA7xuywFigSe5/vFL0V6lL
+         8w7DficcCa2rl4VB212q83AwWERZIRLuN+tIrr3GBmlCPnqGEByO3C8E9m/qQnlUrq
+         6bi+neP96EqPQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+Cc:     Harshvardhan Jha <harshvardhan.jha@oracle.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 6/8] scsi: core: Avoid printing an error if target_alloc() returns -ENXIO
-Date:   Tue, 10 Aug 2021 10:16:53 -0400
-Message-Id: <20210810141655.3118498-6-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.4 4/6] scsi: megaraid_mm: Fix end of loop tests for list_for_each_entry()
+Date:   Tue, 10 Aug 2021 10:17:05 -0400
+Message-Id: <20210810141707.3118714-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210810141655.3118498-1-sashal@kernel.org>
-References: <20210810141655.3118498-1-sashal@kernel.org>
+In-Reply-To: <20210810141707.3118714-1-sashal@kernel.org>
+References: <20210810141707.3118714-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,43 +52,91 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+From: Harshvardhan Jha <harshvardhan.jha@oracle.com>
 
-[ Upstream commit 70edd2e6f652f67d854981fd67f9ad0f1deaea92 ]
+[ Upstream commit 77541f78eadfe9fdb018a7b8b69f0f2af2cf4b82 ]
 
-Avoid printing a 'target allocation failed' error if the driver
-target_alloc() callback function returns -ENXIO. This return value
-indicates that the corresponding H:C:T:L entry is empty.
+The list_for_each_entry() iterator, "adapter" in this code, can never be
+NULL.  If we exit the loop without finding the correct adapter then
+"adapter" points invalid memory that is an offset from the list head.  This
+will eventually lead to memory corruption and presumably a kernel crash.
 
-Removing this error reduces the scan time if the user issues SCAN_WILD_CARD
-scan operation through sysfs parameter on a host with a lot of empty
-H:C:T:L entries.
-
-Avoiding the printk on -ENXIO matches the behavior of the other callback
-functions during scanning.
-
-Link: https://lore.kernel.org/r/20210726115402.1936-1-sreekanth.reddy@broadcom.com
-Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Link: https://lore.kernel.org/r/20210708074642.23599-1-harshvardhan.jha@oracle.com
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Signed-off-by: Harshvardhan Jha <harshvardhan.jha@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_scan.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/megaraid/megaraid_mm.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 397deb69c659..e51819e3a508 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -460,7 +460,8 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
- 		error = shost->hostt->target_alloc(starget);
+diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+index a70692779a16..34067dfd2841 100644
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -246,7 +246,7 @@ mraid_mm_get_adapter(mimd_t __user *umimd, int *rval)
+ 	mimd_t		mimd;
+ 	uint32_t	adapno;
+ 	int		iterator;
+-
++	bool		is_found;
  
- 		if(error) {
--			dev_printk(KERN_ERR, dev, "target allocation failed, error %d\n", error);
-+			if (error != -ENXIO)
-+				dev_err(dev, "target allocation failed, error %d\n", error);
- 			/* don't want scsi_target_reap to do the final
- 			 * put because it will be under the host lock */
- 			scsi_target_destroy(starget);
+ 	if (copy_from_user(&mimd, umimd, sizeof(mimd_t))) {
+ 		*rval = -EFAULT;
+@@ -262,12 +262,16 @@ mraid_mm_get_adapter(mimd_t __user *umimd, int *rval)
+ 
+ 	adapter = NULL;
+ 	iterator = 0;
++	is_found = false;
+ 
+ 	list_for_each_entry(adapter, &adapters_list_g, list) {
+-		if (iterator++ == adapno) break;
++		if (iterator++ == adapno) {
++			is_found = true;
++			break;
++		}
+ 	}
+ 
+-	if (!adapter) {
++	if (!is_found) {
+ 		*rval = -ENODEV;
+ 		return NULL;
+ 	}
+@@ -735,6 +739,7 @@ ioctl_done(uioc_t *kioc)
+ 	uint32_t	adapno;
+ 	int		iterator;
+ 	mraid_mmadp_t*	adapter;
++	bool		is_found;
+ 
+ 	/*
+ 	 * When the kioc returns from driver, make sure it still doesn't
+@@ -757,19 +762,23 @@ ioctl_done(uioc_t *kioc)
+ 		iterator	= 0;
+ 		adapter		= NULL;
+ 		adapno		= kioc->adapno;
++		is_found	= false;
+ 
+ 		con_log(CL_ANN, ( KERN_WARNING "megaraid cmm: completed "
+ 					"ioctl that was timedout before\n"));
+ 
+ 		list_for_each_entry(adapter, &adapters_list_g, list) {
+-			if (iterator++ == adapno) break;
++			if (iterator++ == adapno) {
++				is_found = true;
++				break;
++			}
+ 		}
+ 
+ 		kioc->timedout = 0;
+ 
+-		if (adapter) {
++		if (is_found)
+ 			mraid_mm_dealloc_kioc( adapter, kioc );
+-		}
++
+ 	}
+ 	else {
+ 		wake_up(&wait_q);
 -- 
 2.30.2
 
