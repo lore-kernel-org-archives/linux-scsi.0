@@ -4,44 +4,44 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45250C4320A
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:22:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60EC8C4320A
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:22:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2DB0461075
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:22:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4493F60F02
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:22:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242327AbhHJOWb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 10:22:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53840 "EHLO mail.kernel.org"
+        id S241910AbhHJOW7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 10:22:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55154 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242736AbhHJOS3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Aug 2021 10:18:29 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B22DB61103;
-        Tue, 10 Aug 2021 14:16:48 +0000 (UTC)
+        id S241500AbhHJOVA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Aug 2021 10:21:00 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 05E0461154;
+        Tue, 10 Aug 2021 14:17:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628605009;
-        bh=sJ2imIScDrbHpEF5E/7Kj7O/+S7DmbkGg5TtuFP58Zc=;
+        s=k20201202; t=1628605034;
+        bh=LrZIhe6z4uO8ZThowy/ME7qmZWiSPMtwKteL7zmAs+M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Rk605rqNjCEk2kJ30FptX2zMxVxg0OU0NtQ4ZfVmiop2TTgvs04x2Hac7l/nIl4Tc
-         56+OeXBoIsKWWaxLPeBOdopeWk9Z3QQW3OemiY4LBbFR6JfonS9LTdxM+l82SpY4T/
-         ONWcMM2f5x4pAS7GiEGXr2iZ12GKMgnu8G3dMBLupZewD2c5L1jsslssztSv5JCdg2
-         0KT36mvNnQIPA/pn4XG4tq51aIUTtic/k4zDsK+qvb96z6XWXktvvocQscs10pzNMp
-         74Rca+BKgL7G/ru9WQB5qJbelaOSpnAy2GTHrNytYSLUUvxfqlBJ07C7ryHalzkOrf
-         J9psm/HlKIuCA==
+        b=QGcgI/J5eNRGwQZEeMd9eSgPgm/eZpKAZWCb6p/9UMmiYb2mwTMOuPJaynQCYRzwV
+         tvUesUMtR64yXIUWWNw0KtIrzjxshMa4P91fPEpD4VvieywzfYOYipM8Txb7OpKjYq
+         rbE46yaWb17SvUyMoHSKpKe7hPrZ8dcKyASTpJ8uyPlg9r9wuZPgYnTfARfcAEE7Vm
+         lh7C2MVvSPHZ+VM/nTZlRcKJg3r5ej+rvUbB9kVPMjWq+GFLPtnoJfEGDjtSyYiabs
+         u0v3SyIGRrdl6fpwY07IaX0gXjtLJDpVkIorvB1exxFRRK7kwpPs6HSp4hrYNs7nBQ
+         cfhcvQnySuZjQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 06/10] scsi: core: Avoid printing an error if target_alloc() returns -ENXIO
-Date:   Tue, 10 Aug 2021 10:16:37 -0400
-Message-Id: <20210810141641.3118360-6-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.4 5/6] scsi: core: Avoid printing an error if target_alloc() returns -ENXIO
+Date:   Tue, 10 Aug 2021 10:17:06 -0400
+Message-Id: <20210810141707.3118714-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210810141641.3118360-1-sashal@kernel.org>
-References: <20210810141641.3118360-1-sashal@kernel.org>
+In-Reply-To: <20210810141707.3118714-1-sashal@kernel.org>
+References: <20210810141707.3118714-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -74,10 +74,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 40acc060b655..95ca7039f493 100644
+index 647a057a9b6c..5e34c7ed483c 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -462,7 +462,8 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+@@ -457,7 +457,8 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
  		error = shost->hostt->target_alloc(starget);
  
  		if(error) {
