@@ -5,42 +5,42 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C05AFC43216
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E35B0C4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:15:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6A48610EA
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:15:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BEFB260F41
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:15:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242327AbhHJOPo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 10:15:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51488 "EHLO mail.kernel.org"
+        id S242292AbhHJOP4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 10:15:56 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51814 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242257AbhHJOPj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Aug 2021 10:15:39 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1CE7B60F94;
-        Tue, 10 Aug 2021 14:15:16 +0000 (UTC)
+        id S242212AbhHJOPm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Aug 2021 10:15:42 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D96EC60FC4;
+        Tue, 10 Aug 2021 14:15:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628604917;
-        bh=P+YzYrlZhUn53bFc5ZxXrutdcR1RWaHonkzVq/K0Vvg=;
+        s=k20201202; t=1628604920;
+        bh=ZE1n9CGxG+xYGurd3eXlT7kdR9y/DHVpGDNDZghSffY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=euaQz/iTkh5W/hk5yGeuHtzOWs5Nv7LMxQmwuNdOd6dSWXTUSl6txHj2muXecgEac
-         aioXDN9MeCj2ha4cYLQvTqplDuC7uMZ/DUvipnd8CYcQ8BmpDz027/c4o2/YLey00o
-         ZXZaMIvhO0gELypCpqM18g3rg6NcxjBDZjA8Vnc/Rd42ly+5lSwWoxX2fPZsm88rZ/
-         cFmEIDSlOh2h/ZmruEBEQdrVsVAr8xTh0H4ImGFR3s/3OR+6v5enJpsiJGPJZhHN2P
-         2Z09OjlXvyoGCdyOwlKO3h4Y6rKSCpbAo6zYdsKQFEXSm5UUmMdJtYcSvpOS+BxhM3
-         ysXLeIGc837XQ==
+        b=Kwe7mbboTAY1RZDNLHXVJ0lkBAOXnMNAnTd84nLz6UUH78hRMxD3BBdAvoIaejTHB
+         TMhOwcF8ZRTWWAOcEPNaukpTnOvgL9W49DMBXgr0BXbA9Hc9pc7oiUy7B7NZC1ggy3
+         CmL9pVVNksfey2aCxv5a+I6fj6QM4XT9PFCF06OilX+LOFffUD/NhlExGqEB3w/sVm
+         x+nkCjJBs+87lFmqqsHhgBPgiQIvbqqt2p2LMEt/r18kbbYCGIRBnTEI+44IwyaMu3
+         MCPtSdSxqMOqTzTtE8Chn+HhEpuSmQDZfFA/nnBtZejZ1hr+uyl/YWVoHo44Hefhx3
+         zc64nHAMbcVjw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Harshvardhan Jha <harshvardhan.jha@oracle.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
+Cc:     lijinlin <lijinlin3@huawei.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Wu Bo <wubo40@huawei.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 08/24] scsi: megaraid_mm: Fix end of loop tests for list_for_each_entry()
-Date:   Tue, 10 Aug 2021 10:14:49 -0400
-Message-Id: <20210810141505.3117318-8-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 11/24] scsi: core: Fix capacity set to zero after offlinining device
+Date:   Tue, 10 Aug 2021 10:14:52 -0400
+Message-Id: <20210810141505.3117318-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210810141505.3117318-1-sashal@kernel.org>
 References: <20210810141505.3117318-1-sashal@kernel.org>
@@ -52,91 +52,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Harshvardhan Jha <harshvardhan.jha@oracle.com>
+From: lijinlin <lijinlin3@huawei.com>
 
-[ Upstream commit 77541f78eadfe9fdb018a7b8b69f0f2af2cf4b82 ]
+[ Upstream commit f0f82e2476f6adb9c7a0135cfab8091456990c99 ]
 
-The list_for_each_entry() iterator, "adapter" in this code, can never be
-NULL.  If we exit the loop without finding the correct adapter then
-"adapter" points invalid memory that is an offset from the list head.  This
-will eventually lead to memory corruption and presumably a kernel crash.
+After adding physical volumes to a volume group through vgextend, the
+kernel will rescan the partitions. This in turn will cause the device
+capacity to be queried.
 
-Link: https://lore.kernel.org/r/20210708074642.23599-1-harshvardhan.jha@oracle.com
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
-Signed-off-by: Harshvardhan Jha <harshvardhan.jha@oracle.com>
+If the device status is set to offline through sysfs at this time, READ
+CAPACITY command will return a result which the host byte is
+DID_NO_CONNECT, and the capacity of the device will be set to zero in
+read_capacity_error(). After setting device status back to running, the
+capacity of the device will remain stuck at zero.
+
+Fix this issue by rescanning device when the device state changes to
+SDEV_RUNNING.
+
+Link: https://lore.kernel.org/r/20210727034455.1494960-1-lijinlin3@huawei.com
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: lijinlin <lijinlin3@huawei.com>
+Signed-off-by: Wu Bo <wubo40@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/megaraid/megaraid_mm.c | 21 +++++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ drivers/scsi/scsi_sysfs.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
-index abf7b401f5b9..c509440bd161 100644
---- a/drivers/scsi/megaraid/megaraid_mm.c
-+++ b/drivers/scsi/megaraid/megaraid_mm.c
-@@ -238,7 +238,7 @@ mraid_mm_get_adapter(mimd_t __user *umimd, int *rval)
- 	mimd_t		mimd;
- 	uint32_t	adapno;
- 	int		iterator;
--
-+	bool		is_found;
- 
- 	if (copy_from_user(&mimd, umimd, sizeof(mimd_t))) {
- 		*rval = -EFAULT;
-@@ -254,12 +254,16 @@ mraid_mm_get_adapter(mimd_t __user *umimd, int *rval)
- 
- 	adapter = NULL;
- 	iterator = 0;
-+	is_found = false;
- 
- 	list_for_each_entry(adapter, &adapters_list_g, list) {
--		if (iterator++ == adapno) break;
-+		if (iterator++ == adapno) {
-+			is_found = true;
-+			break;
-+		}
- 	}
- 
--	if (!adapter) {
-+	if (!is_found) {
- 		*rval = -ENODEV;
- 		return NULL;
- 	}
-@@ -725,6 +729,7 @@ ioctl_done(uioc_t *kioc)
- 	uint32_t	adapno;
- 	int		iterator;
- 	mraid_mmadp_t*	adapter;
-+	bool		is_found;
- 
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 32489d25158f..ae9bfc658203 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -807,11 +807,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
+ 	mutex_lock(&sdev->state_mutex);
+ 	ret = scsi_device_set_state(sdev, state);
  	/*
- 	 * When the kioc returns from driver, make sure it still doesn't
-@@ -747,19 +752,23 @@ ioctl_done(uioc_t *kioc)
- 		iterator	= 0;
- 		adapter		= NULL;
- 		adapno		= kioc->adapno;
-+		is_found	= false;
+-	 * If the device state changes to SDEV_RUNNING, we need to run
+-	 * the queue to avoid I/O hang.
++	 * If the device state changes to SDEV_RUNNING, we need to
++	 * rescan the device to revalidate it, and run the queue to
++	 * avoid I/O hang.
+ 	 */
+-	if (ret == 0 && state == SDEV_RUNNING)
++	if (ret == 0 && state == SDEV_RUNNING) {
++		scsi_rescan_device(dev);
+ 		blk_mq_run_hw_queues(sdev->request_queue, true);
++	}
+ 	mutex_unlock(&sdev->state_mutex);
  
- 		con_log(CL_ANN, ( KERN_WARNING "megaraid cmm: completed "
- 					"ioctl that was timedout before\n"));
- 
- 		list_for_each_entry(adapter, &adapters_list_g, list) {
--			if (iterator++ == adapno) break;
-+			if (iterator++ == adapno) {
-+				is_found = true;
-+				break;
-+			}
- 		}
- 
- 		kioc->timedout = 0;
- 
--		if (adapter) {
-+		if (is_found)
- 			mraid_mm_dealloc_kioc( adapter, kioc );
--		}
-+
- 	}
- 	else {
- 		wake_up(&wait_q);
+ 	return ret == 0 ? count : -EINVAL;
 -- 
 2.30.2
 
