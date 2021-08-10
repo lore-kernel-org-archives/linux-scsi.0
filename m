@@ -5,45 +5,45 @@ X-Spam-Level:
 X-Spam-Status: No, score=-19.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E35B0C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:15:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A7E2C43214
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:16:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BEFB260F41
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:15:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 467A761077
+	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 14:16:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242292AbhHJOP4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 10:15:56 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51814 "EHLO mail.kernel.org"
+        id S242657AbhHJOQ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 10 Aug 2021 10:16:29 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53816 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242212AbhHJOPm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Aug 2021 10:15:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D96EC60FC4;
-        Tue, 10 Aug 2021 14:15:19 +0000 (UTC)
+        id S242268AbhHJOQP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Aug 2021 10:16:15 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 24C20610A7;
+        Tue, 10 Aug 2021 14:15:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1628604920;
-        bh=ZE1n9CGxG+xYGurd3eXlT7kdR9y/DHVpGDNDZghSffY=;
+        s=k20201202; t=1628604948;
+        bh=X32CSpRw5m3YxVpFqf32TgeBgt7/BOBOoWhxI/BFt7M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Kwe7mbboTAY1RZDNLHXVJ0lkBAOXnMNAnTd84nLz6UUH78hRMxD3BBdAvoIaejTHB
-         TMhOwcF8ZRTWWAOcEPNaukpTnOvgL9W49DMBXgr0BXbA9Hc9pc7oiUy7B7NZC1ggy3
-         CmL9pVVNksfey2aCxv5a+I6fj6QM4XT9PFCF06OilX+LOFffUD/NhlExGqEB3w/sVm
-         x+nkCjJBs+87lFmqqsHhgBPgiQIvbqqt2p2LMEt/r18kbbYCGIRBnTEI+44IwyaMu3
-         MCPtSdSxqMOqTzTtE8Chn+HhEpuSmQDZfFA/nnBtZejZ1hr+uyl/YWVoHo44Hefhx3
-         zc64nHAMbcVjw==
+        b=IKN3U20vDGOhrNIMRTl/0oFa3Q3zxmqnlQelQyY/Rujf7GeXUyfy+m2iwmWOQT1BV
+         hVWHXae7kVApaA/ZHHVPqF5gvl43laOVE3ErBQjAJrIOr5lS5fYtOgCYwAX0INiAVN
+         7+FSOmK4IJlvWNFvHdQy5IV+sVp2HG3EYl9kbJywCLhLANX7wlNFHZBOIC+6lqZ4vL
+         ijtrHHU3ERVFqxNEyrpY7NrdQHro5K6ndXBsu9+607QkZ9ZgyFVztTKa2T2NEtXEyR
+         FO5vLwZXQct4c5QF5ILJCyQbZpcEvKRXZ1HFmAIZDEVwsewfzhg+rVNMWDHxsCY9qX
+         5HmrxlXcXuV0w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     lijinlin <lijinlin3@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Wu Bo <wubo40@huawei.com>,
+Cc:     Igor Pylypiv <ipylypiv@google.com>,
+        Vishakha Channapattan <vishakhavc@google.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 11/24] scsi: core: Fix capacity set to zero after offlinining device
-Date:   Tue, 10 Aug 2021 10:14:52 -0400
-Message-Id: <20210810141505.3117318-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 07/20] scsi: pm80xx: Fix TMF task completion race condition
+Date:   Tue, 10 Aug 2021 10:15:25 -0400
+Message-Id: <20210810141538.3117707-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210810141505.3117318-1-sashal@kernel.org>
-References: <20210810141505.3117318-1-sashal@kernel.org>
+In-Reply-To: <20210810141538.3117707-1-sashal@kernel.org>
+References: <20210810141538.3117707-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,55 +52,94 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: lijinlin <lijinlin3@huawei.com>
+From: Igor Pylypiv <ipylypiv@google.com>
 
-[ Upstream commit f0f82e2476f6adb9c7a0135cfab8091456990c99 ]
+[ Upstream commit d712d3fb484b7fa8d1d57e9ca6f134bb9d8c18b1 ]
 
-After adding physical volumes to a volume group through vgextend, the
-kernel will rescan the partitions. This in turn will cause the device
-capacity to be queried.
+The TMF timeout timer may trigger at the same time when the response from a
+controller is being handled. When this happens the SAS task may get freed
+before the response processing is finished.
 
-If the device status is set to offline through sysfs at this time, READ
-CAPACITY command will return a result which the host byte is
-DID_NO_CONNECT, and the capacity of the device will be set to zero in
-read_capacity_error(). After setting device status back to running, the
-capacity of the device will remain stuck at zero.
+Fix this by calling complete() only when SAS_TASK_STATE_DONE is not set.
 
-Fix this issue by rescanning device when the device state changes to
-SDEV_RUNNING.
+A similar race condition was fixed in commit b90cd6f2b905 ("scsi: libsas:
+fix a race condition when smp task timeout")
 
-Link: https://lore.kernel.org/r/20210727034455.1494960-1-lijinlin3@huawei.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: lijinlin <lijinlin3@huawei.com>
-Signed-off-by: Wu Bo <wubo40@huawei.com>
+Link: https://lore.kernel.org/r/20210707185945.35559-1-ipylypiv@google.com
+Reviewed-by: Vishakha Channapattan <vishakhavc@google.com>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_sysfs.c | 9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.c | 32 +++++++++++++++-----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 32489d25158f..ae9bfc658203 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -807,11 +807,14 @@ store_state_field(struct device *dev, struct device_attribute *attr,
- 	mutex_lock(&sdev->state_mutex);
- 	ret = scsi_device_set_state(sdev, state);
- 	/*
--	 * If the device state changes to SDEV_RUNNING, we need to run
--	 * the queue to avoid I/O hang.
-+	 * If the device state changes to SDEV_RUNNING, we need to
-+	 * rescan the device to revalidate it, and run the queue to
-+	 * avoid I/O hang.
- 	 */
--	if (ret == 0 && state == SDEV_RUNNING)
-+	if (ret == 0 && state == SDEV_RUNNING) {
-+		scsi_rescan_device(dev);
- 		blk_mq_run_hw_queues(sdev->request_queue, true);
-+	}
- 	mutex_unlock(&sdev->state_mutex);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index 39de9a9360d3..c3bb58885033 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -684,8 +684,7 @@ int pm8001_dev_found(struct domain_device *dev)
  
- 	return ret == 0 ? count : -EINVAL;
+ void pm8001_task_done(struct sas_task *task)
+ {
+-	if (!del_timer(&task->slow_task->timer))
+-		return;
++	del_timer(&task->slow_task->timer);
+ 	complete(&task->slow_task->completion);
+ }
+ 
+@@ -693,9 +692,14 @@ static void pm8001_tmf_timedout(struct timer_list *t)
+ {
+ 	struct sas_task_slow *slow = from_timer(slow, t, timer);
+ 	struct sas_task *task = slow->task;
++	unsigned long flags;
+ 
+-	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
+-	complete(&task->slow_task->completion);
++	spin_lock_irqsave(&task->task_state_lock, flags);
++	if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
++		task->task_state_flags |= SAS_TASK_STATE_ABORTED;
++		complete(&task->slow_task->completion);
++	}
++	spin_unlock_irqrestore(&task->task_state_lock, flags);
+ }
+ 
+ #define PM8001_TASK_TIMEOUT 20
+@@ -748,13 +752,10 @@ static int pm8001_exec_internal_tmf_task(struct domain_device *dev,
+ 		}
+ 		res = -TMF_RESP_FUNC_FAILED;
+ 		/* Even TMF timed out, return direct. */
+-		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+-			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+-				pm8001_dbg(pm8001_ha, FAIL,
+-					   "TMF task[%x]timeout.\n",
+-					   tmf->tmf);
+-				goto ex_err;
+-			}
++		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
++			pm8001_dbg(pm8001_ha, FAIL, "TMF task[%x]timeout.\n",
++				   tmf->tmf);
++			goto ex_err;
+ 		}
+ 
+ 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
+@@ -834,12 +835,9 @@ pm8001_exec_internal_task_abort(struct pm8001_hba_info *pm8001_ha,
+ 		wait_for_completion(&task->slow_task->completion);
+ 		res = TMF_RESP_FUNC_FAILED;
+ 		/* Even TMF timed out, return direct. */
+-		if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
+-			if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
+-				pm8001_dbg(pm8001_ha, FAIL,
+-					   "TMF task timeout.\n");
+-				goto ex_err;
+-			}
++		if (task->task_state_flags & SAS_TASK_STATE_ABORTED) {
++			pm8001_dbg(pm8001_ha, FAIL, "TMF task timeout.\n");
++			goto ex_err;
+ 		}
+ 
+ 		if (task->task_status.resp == SAS_TASK_COMPLETE &&
 -- 
 2.30.2
 
