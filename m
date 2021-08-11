@@ -2,155 +2,161 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B2CCFC4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 23:47:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 774DFC4320A
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Aug 2021 08:09:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F6B860F41
-	for <linux-scsi@archiver.kernel.org>; Tue, 10 Aug 2021 23:47:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B4A560F41
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Aug 2021 08:09:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235507AbhHJXrW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 10 Aug 2021 19:47:22 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:56358 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235242AbhHJXrW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Aug 2021 19:47:22 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1628639219; x=1660175219;
-  h=subject:to:cc:references:from:message-id:date:
-   mime-version:in-reply-to:content-transfer-encoding;
-  bh=dPGMvByzWLSxA0BgxLV93qSge/w5rLHLRxcrSB2fbiw=;
-  b=A2BP/Bfi4VvFOcKxoO/wvN/KUNmv6dzcXrjWFtTKbiL3uRjRcM77YV9t
-   kZV3edyozu1ARrSsukUzHzQrtY+Io9t6A4DqvTu64AxSfXRdsJ+jhVPgh
-   xSARRha9OVFutlhgnHyodx+pnfFxKGRhAtCIX5N/yDzQDmLmfLe3RX3sR
-   WS90VrY0ctzlFWMSbORBVEUWFTggEd7HrbtOmlg3mYbx2dI8yrjbV/PfG
-   vwC4//5l8yQO/UQLNdaeGsoHO4DfzPN9l37hX4vf3rTLtjvSNCMJKXQU0
-   Bd93S99eyTi16frZt7g8MHHJIrj50qXk7lEI8I9Jfb/s1afZkvvbMn54c
-   Q==;
-X-IronPort-AV: E=Sophos;i="5.84,311,1620662400"; 
-   d="scan'208";a="280695923"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 11 Aug 2021 07:46:58 +0800
-IronPort-SDR: N5zGXHRk7OnNBIPkjd6thnWTYks0Cv54H3wYvl+Wyb7Pr9hm024ccnlFaYHN4Ve/645530IoCA
- tTqlUrLpMxbJhTZnrQuIfGQdL68ux1ckM9tk3UeT41umMh3QuNfLuA2h22GvHkenUx5ySB5eTx
- 6EPB+aqHXgFevWhpYHmEh4Xm9O+hHVT4Nsr4rJ+efNSDZDoPjpFKj7rICFIrBCYuuBhg5PhIH1
- ata0sPd1/LRZPn/EMpVIKyY1VxYKtoDfpYE+9RX6IrAob6POmo6zBnvjs5F/XFZ1WX247Z0IKX
- gE7YtMfijDVzISWLyGULOjcy
-Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2021 16:22:30 -0700
-IronPort-SDR: PW9leUjEgCXoA6Lny2a34BA0Gagq+Sg29TNCIQXNZfVlkRxpcDrKEaN7ez/qfCUBj67hf+MqrN
- RWwG7kgwFYpz7DjFoVuY0zrRAP1eO/lp/ZsTmMXxMULb6Hy1nVEdhYfhIIvatUZsYzffJOL3DL
- P3eKhhp33gfu+1/w5LBOP4+ww6z9mt9FvlptVwXEKkdd2/fdf71WxXOedDUXRD87POrJ6I79qY
- HicZiPn5zRj7ijeXj3Hg8qkFyDRu7Unj8FwOJ+LUhPIVdI+r3oXHvLRpiJpRz3vq5HsWkJU2u6
- 41w=
-WDCIronportException: Internal
-Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
-  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Aug 2021 16:46:59 -0700
-Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4GkqNy2hhhz1RvlH
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Aug 2021 16:46:58 -0700 (PDT)
-Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
-        reason="pass (just generated, assumed good)"
-        header.d=opensource.wdc.com
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
-        opensource.wdc.com; h=content-transfer-encoding:content-language
-        :content-type:in-reply-to:mime-version:user-agent:date
-        :message-id:organization:from:references:to:subject; s=dkim; t=
-        1628639218; x=1631231219; bh=dPGMvByzWLSxA0BgxLV93qSge/w5rLHLRxc
-        rSB2fbiw=; b=aqHJamFTSQ6eUwc2aNEtw+zLXWpUQqiaKYgscxwrw7UVLIfvK+w
-        +RMJNBWXFX69Axxl2No3y2gjENEOx2jKtq9Lhj/NKmQeTTVpa4T831T3WienpSEe
-        LuoqyDJw3vcL3g6n8HQupKaI4V3L1KNLzUPUkY8JMKOVkI8FQe5iYwNejKdcix35
-        8YgkaDLfwHWiEhga2M/2Q4g6GXanTzLbPgJdn/y89oCkIt2XgW0g+yigRq3Va0iA
-        wkvDQuNyOmzqDbY77bg/5K9OsvdsXZATpGpWv36HNx6FgEg8kgRAKe0TzzX8+SF5
-        QrmuGMdUaDMwwxfg4nPUA529+Lss/vmJFyw==
-X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
-Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
-        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id UxrthWxChaWu for <linux-scsi@vger.kernel.org>;
-        Tue, 10 Aug 2021 16:46:58 -0700 (PDT)
-Received: from [10.225.48.54] (unknown [10.225.48.54])
-        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4GkqNw3xCJz1RvlC;
-        Tue, 10 Aug 2021 16:46:56 -0700 (PDT)
-Subject: Re: [PATCH v3 1/4] block: Add concurrent positioning ranges support
-To:     "hch@infradead.org" <hch@infradead.org>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.de>
-References: <20210726013806.84815-1-damien.lemoal@wdc.com>
- <20210726013806.84815-2-damien.lemoal@wdc.com>
- <YRI3kMc39XPRLe/u@infradead.org>
- <DM6PR04MB7081844211DF94238A3FC6B4E7F79@DM6PR04MB7081.namprd04.prod.outlook.com>
- <YRKjGeOZLVnTjQNv@infradead.org>
-From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
-Organization: Western Digital
-Message-ID: <53369ff7-017e-d72e-7eb6-418d6e258074@opensource.wdc.com>
-Date:   Wed, 11 Aug 2021 08:46:54 +0900
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.12.0
+        id S236313AbhHKIJT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Aug 2021 04:09:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51246 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235491AbhHKIH5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2021 04:07:57 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 29A86C06179B
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Aug 2021 01:06:50 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mDjG9-000161-Uk; Wed, 11 Aug 2021 10:06:45 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mDjG8-0000Ok-K4; Wed, 11 Aug 2021 10:06:44 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mDjG5-0002xQ-I8; Wed, 11 Aug 2021 10:06:41 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        linux-pci@vger.kernel.org, kernel@pengutronix.de,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Subject: [PATCH v3 5/8] scsi: message: fusion: Remove unused parameter of mpt_pci driver's probe()
+Date:   Wed, 11 Aug 2021 10:06:34 +0200
+Message-Id: <20210811080637.2596434-6-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210811080637.2596434-1-u.kleine-koenig@pengutronix.de>
+References: <20210811080637.2596434-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-In-Reply-To: <YRKjGeOZLVnTjQNv@infradead.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=Qw3P/Tfw3H2aE9nuVn1p4NHDqaHGErEmfJmO6L2HF80=; m=FydmVf3EHrOfk/Erk3jkwyQcrbBSqB9qg6qvIrOZYWc=; p=swgwO0gHobGOw9bvcebWnvhUeGHl0wdD920V7Jm9gyE=; g=2a2dbd5e6a461e2ef057dc0c5df0fe68c3d03bd6
+X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmEThPAACgkQwfwUeK3K7An6AQf9HbB AWMOP2HMDlnih7eHXcXdJtSx6gTmG1dHIjZmnFWItgP26RdvnX62x8rIvIYjYw2RmjiqbG7zaeHc5 2uS/EZPYcswtt7b9MHXONx4XxFXjfETgxDVmQTKE94r51OU4oYTRqhEw1bJl2PhMZVWmiYqlPV8ea yEW6fWZEXsZG4OyL19XX0gyKsKpKvV7Cdt69drzVkU3iye/Rrzgu0XBORdQohcSbeSVlNvN1ag/AS /vDB+UoTm463yoTsdfacXoZHbKLtrbt86WMYr0+TBYCM/0hj1UmSCaOX8qIyUR7IWRIIkiFsR3REY +Fkh6XUXXyDGFHkpVI21a/oLbHVWNXw==
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/08/11 1:02, hch@infradead.org wrote:
-> On Tue, Aug 10, 2021 at 11:03:41AM +0000, Damien Le Moal wrote:
->>>> + * Dummy release function to make kobj happy.
->>>> + */
->>>> +static void blk_cranges_sysfs_nop_release(struct kobject *kobj)
->>>> +{
->>>> +}
->>>
->>> How do we ensure the kobj is still alive while it is accessed?
->>
->> q->sysfs_lock ensures that. This mutex is taken whenever revalidate registers
->> new ranges (see blk_queue_set_cranges below), and is taken also when the ranges
->> are unregistered (on revalidate if the ranges changed and when the request queue
->> is unregistered). And blk_crange_sysfs_show() takes that lock too. So the kobj
->> cannot be freed while it is being accessed (the sysfs inode lock also prevents
->> it since kobj_del() will take the inode lock).
-> 
-> Does it?  It only protects the access inside of it, but not the object
-> lifetime.
+The only two drivers don't make use of the id parameter, so drop it.
 
-Alloc & free of the cranges structure (the top kobj) are under the
-q->sysfs_lock, always. With the accesses also under that same lock, this is
-mutually exclusive and all protected. Furthermore, the crange
-kobj_add()/kobj_del() do a kobj_get()/kobj_put() on the parent kobj, which is
-the request queue kobj. So the queue cannot go away under the crange struct.
+This removes a usage of struct pci_dev::driver which is planned to be
+removed as it tracks duplicate data.
 
-I can add a kobj_get/put for the crange struct, but I really do not see the need
-for that. Or am I missing something ?
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/message/fusion/mptbase.c | 7 ++-----
+ drivers/message/fusion/mptbase.h | 2 +-
+ drivers/message/fusion/mptctl.c  | 4 ++--
+ drivers/message/fusion/mptlan.c  | 2 +-
+ 4 files changed, 6 insertions(+), 9 deletions(-)
 
->>>> +void blk_queue_set_cranges(struct gendisk *disk, struct blk_cranges *cr)
->>>
->>> s/blk_queue/disk/
->>
->> Hmmm... The argument is a gendisk, but it is the request queue that is modified.
->> So following other functions like this, isn't blk_queue_ prefix better ?
-> 
-> Do we have blk_queue_ functions that take a gendisk anywhere?  The
-> ones I noticed (and the ones I've recently added) all use disk_.
-
-The only one I can find is blk_queue_set_zoned(), which we could probably rename
-to disk_set_zoned(). There are blk_revalidate_disk_zones() and blkdev_nr_zones()
-which also take a gendisk and could probably be renamed as
-disk_revalidate_zones() and disk_nr_zones() for consistency.
-
-Will rename to disk_set_cranges().
-
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 7f7abc9069f7..b94d5e4fdc23 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -829,7 +829,6 @@ int
+ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ {
+ 	MPT_ADAPTER	*ioc;
+-	const struct pci_device_id *id;
+ 
+ 	if (!cb_idx || cb_idx >= MPT_MAX_PROTOCOL_DRIVERS)
+ 		return -EINVAL;
+@@ -838,10 +837,8 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ 
+ 	/* call per pci device probe entry point */
+ 	list_for_each_entry(ioc, &ioc_list, list) {
+-		id = ioc->pcidev->driver ?
+-		    ioc->pcidev->driver->id_table : NULL;
+ 		if (dd_cbfunc->probe)
+-			dd_cbfunc->probe(ioc->pcidev, id);
++			dd_cbfunc->probe(ioc->pcidev);
+ 	 }
+ 
+ 	return 0;
+@@ -2032,7 +2029,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	for(cb_idx = 0; cb_idx < MPT_MAX_PROTOCOL_DRIVERS; cb_idx++) {
+ 		if(MptDeviceDriverHandlers[cb_idx] &&
+ 		  MptDeviceDriverHandlers[cb_idx]->probe) {
+-			MptDeviceDriverHandlers[cb_idx]->probe(pdev,id);
++			MptDeviceDriverHandlers[cb_idx]->probe(pdev);
+ 		}
+ 	}
+ 
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index b9e0376be723..4bd0682c65d3 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -257,7 +257,7 @@ typedef enum {
+ } MPT_DRIVER_CLASS;
+ 
+ struct mpt_pci_driver{
+-	int  (*probe) (struct pci_dev *dev, const struct pci_device_id *id);
++	int  (*probe) (struct pci_dev *dev);
+ 	void (*remove) (struct pci_dev *dev);
+ };
+ 
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 72025996cd70..ae433c150b37 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -114,7 +114,7 @@ static int mptctl_do_reset(MPT_ADAPTER *iocp, unsigned long arg);
+ static int mptctl_hp_hostinfo(MPT_ADAPTER *iocp, unsigned long arg, unsigned int cmd);
+ static int mptctl_hp_targetinfo(MPT_ADAPTER *iocp, unsigned long arg);
+ 
+-static int  mptctl_probe(struct pci_dev *, const struct pci_device_id *);
++static int  mptctl_probe(struct pci_dev *);
+ static void mptctl_remove(struct pci_dev *);
+ 
+ #ifdef CONFIG_COMPAT
+@@ -2838,7 +2838,7 @@ static long compat_mpctl_ioctl(struct file *f, unsigned int cmd, unsigned long a
+  */
+ 
+ static int
+-mptctl_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++mptctl_probe(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 
+diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
+index 3261cac762de..7c1af5e6eb0b 100644
+--- a/drivers/message/fusion/mptlan.c
++++ b/drivers/message/fusion/mptlan.c
+@@ -1377,7 +1377,7 @@ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
+ }
+ 
+ static int
+-mptlan_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++mptlan_probe(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+ 	struct net_device	*dev;
 -- 
-Damien Le Moal
-Western Digital Research
+2.30.2
+
