@@ -8,64 +8,64 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7F1AC4338F
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Aug 2021 13:17:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2532C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Aug 2021 13:25:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B833760EE2
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Aug 2021 13:17:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D849260EE2
+	for <linux-scsi@archiver.kernel.org>; Wed, 11 Aug 2021 13:25:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230487AbhHKNRn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Aug 2021 09:17:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39916 "EHLO
+        id S231814AbhHKNZY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Aug 2021 09:25:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41812 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230033AbhHKNRm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2021 09:17:42 -0400
-Received: from mail-pl1-x629.google.com (mail-pl1-x629.google.com [IPv6:2607:f8b0:4864:20::629])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49538C061765;
-        Wed, 11 Aug 2021 06:17:19 -0700 (PDT)
-Received: by mail-pl1-x629.google.com with SMTP id l11so2659416plk.6;
-        Wed, 11 Aug 2021 06:17:19 -0700 (PDT)
+        with ESMTP id S231878AbhHKNZR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2021 09:25:17 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6F1DC061799;
+        Wed, 11 Aug 2021 06:24:53 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id s22-20020a17090a1c16b0290177caeba067so9600431pjs.0;
+        Wed, 11 Aug 2021 06:24:53 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=AurmHbnu8tfyA/yzKLIfssWMJAWF2LYw49Rd9z7EAkk=;
-        b=dZwrnERaSbZZNDXN+dyFAet/wCemiwH1eUgrw9DGNN7uvH775b2YuDSDDyNAza72vU
-         lPcRL2Mwm+atA3ek24Hz8D5Xgm766noYbhqjO8yG+PKWfcY4ah2sR63Og1JO9mxP4QCv
-         groTxtG5alNaP0greoq/Fyav3UJXYQ+tPP7UAvp94itF5gVKODNvAICbF5valSAhQa8K
-         AkvH+x2IPku9Xu+GNiJPKGPI5g+A5oVHNJg9OVC/EQnGarsLgbcKzkZw3eMpfXLe5csP
-         gAvECrewBVBBsFL3xrv5fkTkaEa2gZAghE0ybYmLU6h0rnTEVjj2vaISuGMcsfSqXePe
-         uCTA==
+        bh=7W29cLmj2qeifcnEP+7O9P/s+IF/H1sNoqJtFlRWsVM=;
+        b=hnX6Fbn3sZNtOM0IiEjv1p5YklFP81Bx39I9A/hm6HUH+C+J57XpkEwFzHcIVlP3Ou
+         hyOCZTAARs3+F3TCUwhzoWcybTIfu7twMhC+VPW9C5AzqkikmxFnNgu4Ch1Lgb+jbCEk
+         esnijG6uQoRQ4SnFVBjdVjCHAuOWl2Mn61MlleatPIJyuLS6UaYQwGnmPvmjLIpTJa2S
+         HpRguc5JtGBixyfV56y9+E5Csy/9F3iNtVtLVCp1O0cUJ6iHi77Z3dGBXlhhuwZkfO7G
+         cERbkGm/efRUt3qUMW77gWk8w6ay9QX0RY9XUIjNf2yt7WJTVWNrHUtpDXbA11D7iukP
+         q8sA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=AurmHbnu8tfyA/yzKLIfssWMJAWF2LYw49Rd9z7EAkk=;
-        b=ZPaCLiDdqDXrVPsk/LOd7+L7A6LGnVWXTSvpXsU/g449OCh7MB0Q90yyIKr5BUW62T
-         tVUP9ipdVbOYT0MhRsEkeWnTi4861LSyK22vmGo+QAw2GvNhswpLIshPgBsM/BiLelVz
-         DPRKV02fdYZUKEP1oTk0uX1MGM+3qxb4e4aGdG6lxbg1p70CUNri2xmAkc+SulaGgsSC
-         Cp6wjF7HQhNAzptie4UsnHEAu7BgzWp8wmx7p38T35MOyUUUOaWv7i7hE7SPqRp4gARH
-         5u2KxX6urNYgIFttfgY2KtM2CB9tnZnx8FgkpgGOLR3OmxXPiyhzGE+Ofw+r48VfnetQ
-         ntew==
-X-Gm-Message-State: AOAM532WfYzzxPy6aH0sRiOIUcqJd4Kyr0dD6cGG+a6PpxYcvtudB3mG
-        ySlMk7ZtXGvhN/tXweI9nMI=
-X-Google-Smtp-Source: ABdhPJz65d07WF/BHnXwATnHXb5Mrw6MDXV1vO+KkYtuH3CYo83l807tZO8lx1fcHfUv27K9rm1dnQ==
-X-Received: by 2002:a63:5802:: with SMTP id m2mr298909pgb.171.1628687838850;
-        Wed, 11 Aug 2021 06:17:18 -0700 (PDT)
+        bh=7W29cLmj2qeifcnEP+7O9P/s+IF/H1sNoqJtFlRWsVM=;
+        b=jaoCHeE+CDa5sZkhbNkkIwi5Q+Wgmdzj99ucu4wEFmfmP98y9yfQysMn5MHax0zxAh
+         /luHG6FnWfhwNkTN+VW2xokbRUVV/5bg1V0GePkXyQmnY1hZSbbFbHnKoXugj1vER/2i
+         P+eaXzU4d4chmDWtuWlYmxJmTw21mgEavTNKjE08i/1Bfdk1w0M3B9ExYrN8Pxht79Wa
+         3E+PvXC3rVTZlCMPYPJ2tneQQwIXSyk4zBHLW0uVhZQvilxvTponGKh6daawbgMa4agx
+         Hti+r27fNfQgJDBgM+CLtL3gLpe0rFB6WU5LREUcTx7Jh1cguCmInOuHYJAGnB0wdqSR
+         3pNQ==
+X-Gm-Message-State: AOAM530SQ/QftenBx6R3RRKbvoiqlC4vLcGmLiMearROYwZ9B4G9lNeR
+        d65kFe4OhoT/vJ1KBL3R+/Y=
+X-Google-Smtp-Source: ABdhPJwpFtYj0IsB7kGWdVscS5MzJTwhgZR+O1kLVBlilObCPUMi6o50vbf4pj2FDByS5trpGAgqxA==
+X-Received: by 2002:a63:86c8:: with SMTP id x191mr244739pgd.166.1628688293331;
+        Wed, 11 Aug 2021 06:24:53 -0700 (PDT)
 Received: from localhost.localdomain ([45.135.186.103])
-        by smtp.gmail.com with ESMTPSA id bk24sm6651019pjb.26.2021.08.11.06.17.15
+        by smtp.gmail.com with ESMTPSA id 11sm32404623pgh.52.2021.08.11.06.24.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Aug 2021 06:17:18 -0700 (PDT)
+        Wed, 11 Aug 2021 06:24:52 -0700 (PDT)
 From:   Tuo Li <islituo@gmail.com>
-To:     kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com, jejb@linux.ibm.com,
+To:     sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
+        suganath-prabu.subramani@broadcom.com, jejb@linux.ibm.com,
         martin.petersen@oracle.com
-Cc:     megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+Cc:     MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org, baijiaju1990@gmail.com,
         Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>
-Subject: [PATCH] [SCSI] megaraid_sas: Fix possible divide-by-zero bugs in megaraid_sas_fp.c
-Date:   Wed, 11 Aug 2021 06:16:47 -0700
-Message-Id: <20210811131647.9300-1-islituo@gmail.com>
+Subject: [PATCH] scsi: mpt3sas: Fix a possible divide-by-zero bug in base_mod64()
+Date:   Wed, 11 Aug 2021 06:24:39 -0700
+Message-Id: <20210811132439.10370-1-islituo@gmail.com>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -73,53 +73,37 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In the function mega_mod64(). the variable is checked in:
+The variable divisor is checked in:
   if (!divisor)
 
-This indicates that divisor can be zero.
+This indicates that divisor can be NULL.
 If so, a divide-by-zero bug will occur:
-  remainder = do_div(d, divisor);
+  remainder = do_div(dividend, divisor);
 
-Also, in the function mega_div64_32(), a divide-by-zero bug can also occur 
-if divisor is NULL.
-
-To fix these divide-by-zero bugs, the functions return 0 if divisor is 
-zero.
+To fix the possible bug, the function returns 0 when divisor is zero.
 
 Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
 Signed-off-by: Tuo Li <islituo@gmail.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fp.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 83f69c33b01a..05eb0d201aed 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -72,8 +72,10 @@ u32 mega_mod64(u64 dividend, u32 divisor)
- 	u64 d;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 19b1c0cf5f2a..3550998ea38b 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1594,8 +1594,10 @@ static u32 base_mod64(u64 dividend, u32 divisor)
+ {
  	u32 remainder;
  
 -	if (!divisor)
 +	if (!divisor) {
- 		printk(KERN_ERR "megasas : DIVISOR is zero, in div fn\n");
+ 		pr_err("mpt3sas: DIVISOR is zero, in div fn\n");
 +		return 0;
 +	}
- 	d = dividend;
- 	remainder = do_div(d, divisor);
+ 	remainder = do_div(dividend, divisor);
  	return remainder;
-@@ -90,8 +92,10 @@ static u64 mega_div64_32(uint64_t dividend, uint32_t divisor)
- {
- 	u64 d = dividend;
- 
--	if (!divisor)
-+	if (!divisor) {
- 		printk(KERN_ERR "megasas : DIVISOR is zero in mod fn\n");
-+		return 0;
-+	}
- 
- 	do_div(d, divisor);
- 
+ }
 -- 
 2.25.1
 
