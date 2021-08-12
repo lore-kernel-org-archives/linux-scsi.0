@@ -2,210 +2,146 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6A87C4320E
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Aug 2021 15:47:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEEA0C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 02:26:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4EDC60FA0
-	for <linux-scsi@archiver.kernel.org>; Wed, 11 Aug 2021 15:47:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A697B6056B
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 02:26:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233337AbhHKPr4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 11 Aug 2021 11:47:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48376 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232973AbhHKPrw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2021 11:47:52 -0400
-Received: from mail-qv1-xf2d.google.com (mail-qv1-xf2d.google.com [IPv6:2607:f8b0:4864:20::f2d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7B34EC0613D5
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Aug 2021 08:47:28 -0700 (PDT)
-Received: by mail-qv1-xf2d.google.com with SMTP id 3so1388052qvd.2
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Aug 2021 08:47:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=6tF0dzi2GoJvxRdrYyAAeHG1Gte82wPM17JrCS4BiWU=;
-        b=UXyizVxPbrX/ffO5vk1uTZCI3O+SQFcvKh3pwlfARjYUXRDVMM0lnbsmAm+4/CmcDd
-         RXQr+rHEJdAXljdSQXw5qvITjwjdaNBOONM4cJPt9phyAS+qZNNWtp35HH+FHj5ycvgb
-         fWxDfUbyWlCU62RjANC9dBIMNP0cS8KUlJ/j2OtBROe6yfnYfn7UDKxBhAMQ6zRhEpHz
-         zF3v5mxK71hcsTu5nV46w+IkZajUww0GZGBdnE2VRc5LpzRxpooYp5/2b/9RTB4PzO39
-         0y6pDEs1ieHZqItmWkvBUr7uL2/NigEDmzeqsH44SM9lUfFHCygUFBEs27tSlDEZrj+4
-         mgFQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition
-         :content-transfer-encoding:in-reply-to;
-        bh=6tF0dzi2GoJvxRdrYyAAeHG1Gte82wPM17JrCS4BiWU=;
-        b=r3KOYmXVqRkes5zONrRT31GyceCqUoklcUQ7RZVSW2CNEY5m3JMKRTsT6qtVahAQjF
-         2JJDMmeaD1QeMgF3cHt1udiv3BKvf8NihbyOdUg0xyErAO2RZRmnRYxI3akMNpmkz5qD
-         FtygtJjil7xTzl9qFs0+NUa1zFdXkFHrj+0VQq1bpfmmlrgdgU61oYVEDtT9slZaqOqB
-         Qi8Iyqf+tJn5LYWeRDIAmib/bvhW1AbfeC6dsM4y5sA3kG5B83s4T5eTMgq/eRlKpYxd
-         iHU6glg/qqSuR13hvjM6BQQud2M0dsMJRNVx7IgfK2YiGZgztb2g773yC0Mv0HW3pa+R
-         VbkA==
-X-Gm-Message-State: AOAM533weiW/zdouqANosCETugQwNTLX0hPX7xoggEkEKX2YwjJ8zhS9
-        LOssEgnwDKujFIO8UgLNupM=
-X-Google-Smtp-Source: ABdhPJwWSRzPrvsv+tYJs6C+nDL/OS5EuWU3sYtrRCXdLj2qKd0feb6HW9LDRQkhBbSIvrjgqU6RZQ==
-X-Received: by 2002:a05:6214:10e6:: with SMTP id q6mr35176740qvt.11.1628696847569;
-        Wed, 11 Aug 2021 08:47:27 -0700 (PDT)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id k5sm495317qtq.6.2021.08.11.08.47.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 11 Aug 2021 08:47:27 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Date:   Wed, 11 Aug 2021 08:47:25 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     Shai Malin <smalin@marvell.com>
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-        malin1024@gmail.com, Manish Rangankar <mrangankar@marvell.com>
-Subject: Re: [PATCH v2] scsi: qedi: Add support for fastpath doorvell recovery
-Message-ID: <20210811154725.GA1122984@roeck-us.net>
-References: <20210804221412.5048-1-smalin@marvell.com>
+        id S233640AbhHLC1N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 11 Aug 2021 22:27:13 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:55294 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229729AbhHLC1M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Aug 2021 22:27:12 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1628735208; x=1660271208;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=oyDc3RkVhBAkytz5i1T7Vr3QZ0lcUkXM3PwELPUqjKg=;
+  b=ILt6FpwZ8wvayyH8/Uns4x6oAzA5JbdNDgufIdmAmjpE2lXwOwILBEcy
+   NCT40OpxHqIT70M8CCfGNu8KF6uEkrHVikAherT6IMsNzLhb0iirix1K8
+   pwRzSHMoXcwMcP8Pbm/FcflduhCcIpB6Pwvazal9ACXYskrvnC0+q7m1v
+   foYT+QTprVTpskzxMBeanvV4s0ODO2hmLuzIo3W8aGzmnHT3nGTsJVRv7
+   PGIofwHAuj0NVOISl9jlNGTBcOZR4dl4ATs71scGp807H3WtPLdcw6AkH
+   9cH74zS2msAAxnzJtYLPngLB8+XPMRuPCyUEga6Idjtp6FJeIJ7uoKRNF
+   A==;
+X-IronPort-AV: E=Sophos;i="5.84,314,1620662400"; 
+   d="scan'208";a="280823436"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 12 Aug 2021 10:26:47 +0800
+IronPort-SDR: K4IDMOqqRVYdA9knFfcud/MQdjfvXOnVSJcR4YWmkeXxwJ9WjEJetUR3EA4DVQkuqBaLhdpxLj
+ XGgoQNoHoUouHv1TouwPdRu+lABjBP0wt/TR3pTiaTr4WazgZ4ZsEUcj/rwcAQN9Z32gticdoL
+ iASNSmSy1bgwxBkMZtwt44STmysLlbJhH0mo6+FtAFGYdEdx5Ph9Vouw5G2cXSZcsfwdQFp78Q
+ HSws10/Z9L9MNp/5kANldnv8A/R3zOx1HqM1CElzloUhijaM+CfS9jok/4+ZMaaAPOZumypP66
+ eZPfzsfFtPyhj2kkS3pOH1F4
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Aug 2021 19:04:06 -0700
+IronPort-SDR: KV+44CP4TlrGMAu2vQokGzgK1dMAF/Lw80OLF0vmMjyR4SLS48sDRO3k2r6a1NaV2L0aEVni09
+ dAzAINK2JNNxPt3Hk+rbnLj7PNG8Oeo7HAcKSIBoDVuKQjkN0TGkybMQJC/uj3n558tMs/nHOa
+ XJsMq9wm5rJ6zMMXJfLrfWDGqbSnDyTwZ6tywvBln1aHlF8pbGqYNYIIZUGLCPEn9rdsMiWMJY
+ 1m4eqsUjcH9empNbbPJqTcQ5P7K/jINawEBuK8Rzx9Zka14OSW0s/mV8hGvWcis9mEMq/skGLn
+ 95I=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip02.wdc.com with ESMTP; 11 Aug 2021 19:26:46 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH v4 0/5] Initial support for multi-actuator HDDs
+Date:   Thu, 12 Aug 2021 11:26:21 +0900
+Message-Id: <20210812022626.694329-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210804221412.5048-1-smalin@marvell.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 05, 2021 at 01:14:12AM +0300, Shai Malin wrote:
-> Driver fastpath employs doorbells to indicate to the device that work
-> is available. Each doorbell translates to a message sent to the device
-> over the pci. These messages are queued by the doorbell queue HW block,
-> and handled by the HW.
-> If a sufficient amount of CPU cores are sending messages at a sufficient
-> rate, the queue can overflow, and messages can be dropped. There are
-> many entities in the driver which can send doorbell messages.
-> When overflow happens, a fatal HW attention is indicated, and the
-> Doorbell HW block stops accepting new doorbell messages until recovery
-> procedure is done.
-> 
-> When overflow occurs, all doorbells are dropped. Since doorbells are
-> aggregatives, if more doorbells are sent nothing has to be done.
-> But if the "last" doorbell is dropped, the doorbelling entity doesn’t know
-> this happened, and may wait forever for the device to perform the action.
-> The doorbell recovery mechanism addresses just that - it sends the last
-> doorbell of every entity.
-> 
-> Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
-> Signed-off-by: Shai Malin <smalin@marvell.com>
-> ---
->  drivers/scsi/qedi/qedi_fw.c    | 14 ++++----------
->  drivers/scsi/qedi/qedi_iscsi.c | 33 ++++++++++++++++++++++++++++++++-
->  drivers/scsi/qedi/qedi_iscsi.h |  1 +
->  3 files changed, 37 insertions(+), 11 deletions(-)
-> 
-> diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-> index 71333d3c5c86..e7064f62c833 100644
-> --- a/drivers/scsi/qedi/qedi_fw.c
-> +++ b/drivers/scsi/qedi/qedi_fw.c
-> @@ -936,17 +936,11 @@ void qedi_fp_process_cqes(struct qedi_work *work)
->  
->  static void qedi_ring_doorbell(struct qedi_conn *qedi_conn)
->  {
-> -	struct iscsi_db_data dbell = { 0 };
-> +	qedi_conn->ep->db_data.sq_prod = qedi_conn->ep->fw_sq_prod_idx;
->  
-> -	dbell.agg_flags = 0;
-> -
-> -	dbell.params |= DB_DEST_XCM << ISCSI_DB_DATA_DEST_SHIFT;
-> -	dbell.params |= DB_AGG_CMD_SET << ISCSI_DB_DATA_AGG_CMD_SHIFT;
-> -	dbell.params |=
-> -		   DQ_XCM_ISCSI_SQ_PROD_CMD << ISCSI_DB_DATA_AGG_VAL_SEL_SHIFT;
-> -
-> -	dbell.sq_prod = qedi_conn->ep->fw_sq_prod_idx;
-> -	writel(*(u32 *)&dbell, qedi_conn->ep->p_doorbell);
-> +	/* wmb - Make sure fw idx is coherent */
-> +	wmb();
-> +	writel(*(u32 *)&qedi_conn->ep->db_data, qedi_conn->ep->p_doorbell);
->  
->  	/* Make sure fw write idx is coherent, and include both memory barriers
->  	 * as a failsafe as for some architectures the call is the same but on
-> diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-> index 97f83760da88..8ac8aabc1ef6 100644
-> --- a/drivers/scsi/qedi/qedi_iscsi.c
-> +++ b/drivers/scsi/qedi/qedi_iscsi.c
-> @@ -499,8 +499,8 @@ static u16 qedi_calc_mss(u16 pmtu, u8 is_ipv6, u8 tcp_ts_en, u8 vlan_en)
->  
->  static int qedi_iscsi_offload_conn(struct qedi_endpoint *qedi_ep)
->  {
-> -	struct qedi_ctx *qedi = qedi_ep->qedi;
->  	struct qed_iscsi_params_offload *conn_info;
-> +	struct qedi_ctx *qedi = qedi_ep->qedi;
->  	int rval;
->  	int i;
->  
-> @@ -577,8 +577,34 @@ static int qedi_iscsi_offload_conn(struct qedi_endpoint *qedi_ep)
->  		  "Default cq index [%d], mss [%d]\n",
->  		  conn_info->default_cq, conn_info->mss);
->  
-> +	/* Prepare the doorbell parameters */
-> +	qedi_ep->db_data.agg_flags = 0;
-> +	qedi_ep->db_data.params = 0;
-> +	SET_FIELD(qedi_ep->db_data.params, ISCSI_DB_DATA_DEST, DB_DEST_XCM);
-> +	SET_FIELD(qedi_ep->db_data.params, ISCSI_DB_DATA_AGG_CMD,
-> +		  DB_AGG_CMD_MAX);
-> +	SET_FIELD(qedi_ep->db_data.params, ISCSI_DB_DATA_AGG_VAL_SEL,
-> +		  DQ_XCM_ISCSI_SQ_PROD_CMD);
-> +	SET_FIELD(qedi_ep->db_data.params, ISCSI_DB_DATA_BYPASS_EN, 1);
-> +
-> +	/* Register doorbell with doorbell recovery mechanism */
-> +	rval = qedi_ops->common->db_recovery_add(qedi->cdev,
-> +						 qedi_ep->p_doorbell,
-> +						 &qedi_ep->db_data,
-> +						 DB_REC_WIDTH_32B,
-> +						 DB_REC_KERNEL);
-> +	if (rval) {
-> +		kfree(conn_info);
-> +		return rval;
-> +	}
-> +
->  	rval = qedi_ops->offload_conn(qedi->cdev, qedi_ep->handle, conn_info);
->  	if (rval)
-> +		/* delete doorbell from doorbell recovery mechanism */
-> +		rval = qedi_ops->common->db_recovery_del(qedi->cdev,
-> +							 qedi_ep->p_doorbell,
-> +							 &qedi_ep->db_data);
-> +
->  		QEDI_ERR(&qedi->dbg_ctx, "offload_conn returned %d, ep=%p\n",
->  			 rval, qedi_ep);
+Single LUN multi-actuator hard-disks are cappable to seek and execute
+multiple commands in parallel. This capability is exposed to the host
+using the Concurrent Positioning Ranges VPD page (SCSI) and Log (ATA).
+Each positioning range describes the contiguous set of LBAs that an
+actuator serves.
 
-Due to missing { } this will now always result in QEDI_ERR() execution
-(and possibly a C compiler warning).
+This series adds support the scsi disk driver to retreive this
+information and advertize it to user space through sysfs. libata is also
+modified to handle ATA drives.
 
-Guenter
+The first patch adds the block layer plumbing to expose concurrent
+sector ranges of the device through sysfs as a sub-directory of the
+device sysfs queue directory. Patch 2 and 3 add support to sd and
+libata. Finally patch 4 documents the sysfs queue attributed changes.
+Patch 5 fixes a typo in the document file (strictly speaking, not
+related to this series).
 
->  
-> @@ -1109,6 +1135,11 @@ static void qedi_ep_disconnect(struct iscsi_endpoint *ep)
->  	    test_bit(QEDI_IN_RECOVERY, &qedi->flags))
->  		goto ep_release_conn;
->  
-> +	/* Delete doorbell from doorbell recovery mechanism */
-> +	ret = qedi_ops->common->db_recovery_del(qedi->cdev,
-> +					       qedi_ep->p_doorbell,
-> +					       &qedi_ep->db_data);
-> +
->  	ret = qedi_ops->destroy_conn(qedi->cdev, qedi_ep->handle, abrt_conn);
->  	if (ret) {
->  		QEDI_WARN(&qedi->dbg_ctx,
-> diff --git a/drivers/scsi/qedi/qedi_iscsi.h b/drivers/scsi/qedi/qedi_iscsi.h
-> index 758735209e15..a31c5de74754 100644
-> --- a/drivers/scsi/qedi/qedi_iscsi.h
-> +++ b/drivers/scsi/qedi/qedi_iscsi.h
-> @@ -80,6 +80,7 @@ struct qedi_endpoint {
->  	u32 handle;
->  	u32 fw_cid;
->  	void __iomem *p_doorbell;
-> +	struct iscsi_db_data db_data;
->  
->  	/* Send queue management */
->  	struct iscsi_wqe *sq;
-> -- 
-> 2.22.0
-> 
+This series does not attempt in any way to optimize accesses to
+multi-actuator devices (e.g. block IO scheduler or filesystems). This
+initial support only exposes the actuators information to user space
+through sysfs.
+
+Changes from v3:
+* Modified patch 1:
+  - Prefix functions that take a struct gendisk as argument with
+    "disk_". Modified patch 2 accordingly.
+  - Added a functional release operation for struct blk_cranges kobj to
+    ensure that this structure is freed only after all references to it
+    are released, including kobject_del() execution for all crange sysfs
+    entries.
+* Added patch 5 to separate the typo fix from the crange documentation
+  addition.
+* Added reviewed-by tags
+
+Changes from v2:
+* Update patch 1 to fix a compilation warning for a potential NULL
+  pointer dereference of the cr argument of blk_queue_set_cranges().
+  Warning reported by the kernel test robot <lkp@intel.com>).
+
+Changes from v1:
+* Moved libata-scsi hunk from patch 1 to patch 3 where it belongs
+* Fixed unintialized variable in patch 2
+  Reported-by: kernel test robot <lkp@intel.com>
+  Reported-by: Dan Carpenter <dan.carpenter@oracle.com
+* Changed patch 3 adding struct ata_cpr_log to contain both the number
+  of concurrent ranges and the array of concurrent ranges.
+* Added a note in the documentation (patch 4) about the unit used for
+  the concurrent ranges attributes.
+
+Damien Le Moal (4):
+  block: Add concurrent positioning ranges support
+  scsi: sd: add concurrent positioning ranges support
+  libata: support concurrent positioning ranges log
+  doc: document sysfs queue/cranges attributes
+
+Damien Le Moal (5):
+  block: Add concurrent positioning ranges support
+  scsi: sd: add concurrent positioning ranges support
+  libata: support concurrent positioning ranges log
+  doc: document sysfs queue/cranges attributes
+  doc: Fix typo in request queue sysfs documentation
+
+ Documentation/block/queue-sysfs.rst |  30 ++-
+ block/Makefile                      |   2 +-
+ block/blk-cranges.c                 | 310 ++++++++++++++++++++++++++++
+ block/blk-sysfs.c                   |  26 ++-
+ block/blk.h                         |   4 +
+ drivers/ata/libata-core.c           |  52 +++++
+ drivers/ata/libata-scsi.c           |  48 ++++-
+ drivers/scsi/sd.c                   |  81 ++++++++
+ drivers/scsi/sd.h                   |   1 +
+ include/linux/ata.h                 |   1 +
+ include/linux/blkdev.h              |  29 +++
+ include/linux/libata.h              |  15 ++
+ 12 files changed, 580 insertions(+), 19 deletions(-)
+ create mode 100644 block/blk-cranges.c
+
+-- 
+2.31.1
+
