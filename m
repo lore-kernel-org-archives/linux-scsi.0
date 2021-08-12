@@ -2,94 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 541C7C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 15:38:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BD0DC432BE
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 16:10:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EC8460F35
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 15:38:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4A96F6103A
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 16:10:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237922AbhHLPjJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Aug 2021 11:39:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36358 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234287AbhHLPjJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2021 11:39:09 -0400
-Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BEB17C061756;
-        Thu, 12 Aug 2021 08:38:43 -0700 (PDT)
-Received: by mail-pl1-x636.google.com with SMTP id d1so7837491pll.1;
-        Thu, 12 Aug 2021 08:38:43 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=JDlSeWOgXcTARSX0Sb/7iqT+nIM3mRl7e9seVpJTDsQ=;
-        b=eKwdoqgzbDwCSyrgnVW4fQAzUSWeoRx/kyQpFmKK+Fp7BDnr2/nHtS2A8lP7dy74pV
-         DhjbUbYBUBvR9ptLkWXPFGdb66asLd49SRfdmf9wxKJzWqlZ8T7NSu4mDDdOyr8QYGjC
-         0lNFiTw2Utqsdhq+i1tE7yKdLkrhwYJ4GcUjf5y7cP+4awTK44NJV01YV+BxlT3oQexu
-         0CRKAKLjxtq43dNgpQlyRzLdedFvCS41p+H+3bYjSaKBrgs7oVUsW9kyJWLlM734zPxy
-         UEVzFvb9jP9wMt2dE2D+cHyIUPC4b4v/Fn8lr0Ong2WornEq8pHks9kPtVFyDLYSburS
-         y7eQ==
+        id S230270AbhHLQKl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Aug 2021 12:10:41 -0400
+Received: from mail-pl1-f182.google.com ([209.85.214.182]:34520 "EHLO
+        mail-pl1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229791AbhHLQKl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2021 12:10:41 -0400
+Received: by mail-pl1-f182.google.com with SMTP id d1so7951625pll.1
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2021 09:10:16 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+        h=x-gm-message-state:subject:to:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=JDlSeWOgXcTARSX0Sb/7iqT+nIM3mRl7e9seVpJTDsQ=;
-        b=hJM2eKZLuZWUGB1ZtYM8wIiGMxjrCxMiW8u7lE1hFTvrP8+0ra24mXUBHibngk+tEl
-         VQ5BjEmaA/xjwH1pnIA8isw4jKFnHG9NR1BnFQLkQvBmwb/oe45twLb22dqWGeuJtLF2
-         EzK7E5Yan3jWQkbmv5bPeK4HK9dHKtYKW3YjSdIeLwCvu3U7M4EM/QRmoIqxnMiI9Kob
-         /jyyw4/zqn0DkARto5BXYYHE6GJofaBpqbOmsJr/MuQ1loD9veIqsNgctoZ7Hbcin3Py
-         OSNla+20BPGXPB/3duAIOSw+aeRJMlj8hW5QZyTlexSg0GYhb+xYlafuGHhrm/ULzryv
-         whog==
-X-Gm-Message-State: AOAM531lCJB/VtPrvzReAuDOevNIq+02KskgqcOvIJR24csxf9ar/okT
-        pKeCX4OOPOMDqeI3EMSzdxI=
-X-Google-Smtp-Source: ABdhPJzM/sI+FsioyGJB+Q38ExsQyZIIBjJUHCnSB8L/yQaI33b3CkRfajWOppoDj5zZgXKq84mYaQ==
-X-Received: by 2002:a17:90a:648b:: with SMTP id h11mr5000375pjj.141.1628782723341;
-        Thu, 12 Aug 2021 08:38:43 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::4b1? ([2404:f801:9000:1a:efea::4b1])
-        by smtp.gmail.com with ESMTPSA id y7sm4139094pfp.102.2021.08.12.08.38.29
+        bh=AsblYZXWc/F/1s+n0V2i1w9eu6KrUP3XUXa3LRfRkws=;
+        b=VKoUuPvxY7e+wftI4goP1+H11vvufw6LWOOOoXJuU0XeXMfxwcf2d7W3Ddk6UMU7vZ
+         gxB7I6wp4TwDvjEyAdLHMwFYumRv9NrhO3si5ae/3INiYCfzrJ3K9YmhQLmmsEUk+1rp
+         5apqcyuCvq7pU9GPMFiQ7dc96f/VUtkpI0eFwIUWOEi+p3Qo20TFrM5V6RD7H3ZQny61
+         cYBhvJ0EhPFCufk+f/ncX2WbiM1ynPbokKTS6tJ0M+UgtN3A0gTwPC5oRZ6doh2Ey2Hd
+         WkUuXcxqYFxTH+M2ABbhq608jVAiOBpb4llRlPryTj8MPevNs8HQ9Sx9lTQfhGQXVW+Q
+         xxWg==
+X-Gm-Message-State: AOAM530hJGXeztXeK/R8D1piPAcWxEm45MS6/tfYrFvwg8XCnKcCk3FU
+        O0krqeuH9dZDORYMHWBw5bM=
+X-Google-Smtp-Source: ABdhPJyM49Q0Irlc3w36K9UmZcLfqs3QeASjbi0fyGMBK/Cyb5epVXSHCZb2DVV6l09L97182kWkUw==
+X-Received: by 2002:a17:90b:102:: with SMTP id p2mr17153022pjz.126.1628784615797;
+        Thu, 12 Aug 2021 09:10:15 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:1:f9eb:d821:2884:27fd])
+        by smtp.gmail.com with ESMTPSA id e4sm4196531pgt.22.2021.08.12.09.10.14
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 12 Aug 2021 08:38:42 -0700 (PDT)
-Subject: Re: [PATCH V3 09/13] DMA: Add dma_map_decrypted/dma_unmap_encrypted()
- function
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
-        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
-        m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
-        Tianyu.Lan@microsoft.com, pgonda@google.com,
-        martin.b.radev@gmail.com, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        sfr@canb.auug.org.au, saravanand@fb.com,
-        krish.sadhukhan@oracle.com, aneesh.kumar@linux.ibm.com,
-        xen-devel@lists.xenproject.org, rientjes@google.com,
-        hannes@cmpxchg.org, tj@kernel.org, michael.h.kelley@microsoft.com,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, parri.andrea@gmail.com, dave.hansen@intel.com
-References: <20210809175620.720923-1-ltykernel@gmail.com>
- <20210809175620.720923-10-ltykernel@gmail.com>
- <20210812122657.GB19050@lst.de>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <0598906d-9a47-34a9-16bf-4bacff7fa058@gmail.com>
-Date:   Thu, 12 Aug 2021 23:38:27 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        Thu, 12 Aug 2021 09:10:15 -0700 (PDT)
+Subject: Re: [PATCH] scsi: cleanup scsi_get_vpd_page()
+To:     Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20210812074346.1048470-1-damien.lemoal@wdc.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <f8b378b5-fa32-c9bc-2505-76ffc449e56b@acm.org>
+Date:   Thu, 12 Aug 2021 09:10:14 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210812122657.GB19050@lst.de>
+In-Reply-To: <20210812074346.1048470-1-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -97,20 +60,70 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-
-On 8/12/2021 8:26 PM, Christoph Hellwig wrote:
-> On Mon, Aug 09, 2021 at 01:56:13PM -0400, Tianyu Lan wrote:
->> From: Tianyu Lan <Tianyu.Lan@microsoft.com>
->>
->> In Hyper-V Isolation VM with AMD SEV, swiotlb boucne buffer
->> needs to be mapped into address space above vTOM and so
->> introduce dma_map_decrypted/dma_unmap_encrypted() to map/unmap
->> bounce buffer memory. The platform can populate man/unmap callback
->> in the dma memory decrypted ops.
+On 8/12/21 12:43 AM, Damien Le Moal wrote:
+> Get rid of all the gotos in scsi_get_vpd_page() to improve the code
+> readability and make it more compact. Also update the outdated kernel
+> doc comment for that function.
 > 
-> Nothing here looks actually DMA related, and the names are horribly
-> confusing vs the actual dma_map_* calls.
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>   drivers/scsi/scsi.c | 37 ++++++++++++++++++-------------------
+>   1 file changed, 18 insertions(+), 19 deletions(-)
 > 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index b241f9e3885c..14f7bb5e16cc 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -339,47 +339,46 @@ static int scsi_vpd_inquiry(struct scsi_device *sdev, unsigned char *buffer,
+>    *
+>    * SCSI devices may optionally supply Vital Product Data.  Each 'page'
+>    * of VPD is defined in the appropriate SCSI document (eg SPC, SBC).
+> - * If the device supports this VPD page, this routine returns a pointer
+> - * to a buffer containing the data from that page.  The caller is
+> - * responsible for calling kfree() on this pointer when it is no longer
+> - * needed.  If we cannot retrieve the VPD page this routine returns %NULL.
+> + * If the device supports this VPD page, this routine fills @buf
+> + * with the data from that page and return 0. If the VPD page is not
+> + * supported or its content cannot be retrieved, -EINVAL is returned.
+>    */
+>   int scsi_get_vpd_page(struct scsi_device *sdev, u8 page, unsigned char *buf,
+>   		      int buf_len)
+>   {
+> +	bool found = false;
+>   	int i, result;
+>   
+>   	if (sdev->skip_vpd_pages)
+> -		goto fail;
+> +		return -EINVAL;
+>   
+>   	/* Ask for all the pages supported by this device */
+>   	result = scsi_vpd_inquiry(sdev, buf, 0, buf_len);
+>   	if (result < 4)
+> -		goto fail;
+> +		return -EINVAL;
 
-OK. So this still need to keep in the set_memory.c file.
+The above conversions look fine to me.
+
+>   	/* If the user actually wanted this page, we can skip the rest */
+>   	if (page == 0)
+>   		return 0;
+>   
+> -	for (i = 4; i < min(result, buf_len); i++)
+> -		if (buf[i] == page)
+> -			goto found;
+> +	for (i = 4; i < min(result, buf_len); i++) {
+> +		if (buf[i] == page) {
+> +			found = true;
+> +			break;
+> +		}
+> +	}
+
+The above change goes against the kernel coding style and in my opinion 
+makes this function harder to read. Please keep the goto.
+
+Additionally, it is not clear to me why memchr() has been open-coded in 
+this function?
+
+Thanks,
+
+Bart.
