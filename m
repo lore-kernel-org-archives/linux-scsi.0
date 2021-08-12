@@ -5,36 +5,36 @@ X-Spam-Level:
 X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C9E6C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 07:49:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 65C8FC4320A
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 07:50:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 39AEF6103E
-	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 07:49:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 448926101E
+	for <linux-scsi@archiver.kernel.org>; Thu, 12 Aug 2021 07:50:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232348AbhHLHtl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Aug 2021 03:49:41 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40210 "EHLO
+        id S234745AbhHLHuj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Aug 2021 03:50:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40434 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234795AbhHLHtk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2021 03:49:40 -0400
+        with ESMTP id S232348AbhHLHui (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2021 03:50:38 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFAFFC061765;
-        Thu, 12 Aug 2021 00:49:15 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E6C2DC061765;
+        Thu, 12 Aug 2021 00:50:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=qrqINKx/pIKIjST1oisE3ozmHc4lciwrBwhfjJb45VA=; b=R1IGYmi8e5eCfOeb8AN5WSab6n
-        nqmIzXkv8UqB/uVv1swxzSdKV4Q5M6g6OhJ92ZtqbNGNd5LhKZQviWOyNtmiTEJr3sgvs16tBVblS
-        zoIomFfBWgEp4R2YV8/HBnYuHKRB//87kCvegZNLGBozB8d78T3LxJLKwhXULA0hz6DlIc/nxM4F8
-        aBIcsF8cKaXMBRL7L7zSkb9uqiydH0twieuZAPvdgDK7bJYVDygVzoP9v7JvGiN/49GwzyMSvQ0dQ
-        D59LNRpQQPrC+Klkwq+qAT++airvREu+BVz1KjKdQZe7C/5CwrSbMHu7dBPX9evIdL9LVhNss8PNc
-        LkgtUZLQ==;
+        bh=VSY5+aubavQCko7U0IzQq6eA1rwvwuw7Ga9+zkk/gDE=; b=MAGur+QNSb3QD96Ne2cCvzwkKX
+        Xe33rRpJIRihHJB56E3gDlIEZ7VWrocfC9iWYbBNw5QsT7ji7uyZwwA15HWiNm2US1o5xXERhM+AX
+        zI5970qcHSOLUBcdi77C0UNvBSX4PBbcHsgDNTzvk5ikqPnLZ/yRGsab3K8WcKnLxTkM87VXjn68D
+        djQcAwZn/gFVCDcP/pzZgPw52nV5a0emb9sJoS5ETbOu5kmCK9/VtRDNAeErj0dZqVbwxzGmQmX/F
+        lgA3M8eqHjXEYlMZ+bnM5f0cu0pbvYfEJ8aHL0nTL8SjqSTrLKK4sBeb3Yva44Vsv6Sv6EaMef4Ix
+        NHx3AOBQ==;
 Received: from [2001:4bb8:184:6215:d7d:1904:40de:694d] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mE5R5-00EIoG-K9; Thu, 12 Aug 2021 07:47:47 +0000
+        id 1mE5Ro-00EIpR-Fd; Thu, 12 Aug 2021 07:48:31 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Stefan Haberland <sth@linux.ibm.com>,
@@ -45,9 +45,9 @@ Cc:     Stefan Haberland <sth@linux.ibm.com>,
         Luis Chamberlain <mcgrof@kernel.org>,
         linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 1/8] nvme: use blk_mq_alloc_disk
-Date:   Thu, 12 Aug 2021 09:46:35 +0200
-Message-Id: <20210812074642.18592-2-hch@lst.de>
+Subject: [PATCH 2/8] st: do not allocate a gendisk
+Date:   Thu, 12 Aug 2021 09:46:36 +0200
+Message-Id: <20210812074642.18592-3-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210812074642.18592-1-hch@lst.de>
 References: <20210812074642.18592-1-hch@lst.de>
@@ -58,98 +58,169 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Switch to use the blk_mq_alloc_disk helper for allocating the
-request_queue and gendisk.
+st is a character driver and thus does not need to allocate a gendisk,
+which is only used for file system-like block layer I/O on block
+devices.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/nvme/host/core.c | 33 +++++++++++++--------------------
- 1 file changed, 13 insertions(+), 20 deletions(-)
+ drivers/scsi/st.c | 49 ++++++++++++-----------------------------------
+ drivers/scsi/st.h |  2 +-
+ 2 files changed, 13 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index cb12d8b94e82..1fd199a8168f 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -3729,9 +3729,14 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
- 	if (!ns)
- 		goto out_free_id;
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index c6f14540ae03..d1abc020f3c0 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -309,13 +309,8 @@ static char * st_incompatible(struct scsi_device* SDp)
+ }
+ 
  
--	ns->queue = blk_mq_init_queue(ctrl->tagset);
--	if (IS_ERR(ns->queue))
-+	disk = blk_mq_alloc_disk(ctrl->tagset, ns);
-+	if (IS_ERR(disk))
- 		goto out_free_ns;
-+	disk->fops = &nvme_bdev_ops;
-+	disk->private_data = ns;
-+
-+	ns->disk = disk;
-+	ns->queue = disk->queue;
- 
- 	if (ctrl->opts && ctrl->opts->data_digest)
- 		blk_queue_flag_set(QUEUE_FLAG_STABLE_WRITES, ns->queue);
-@@ -3740,20 +3745,12 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
- 	if (ctrl->ops->flags & NVME_F_PCI_P2PDMA)
- 		blk_queue_flag_set(QUEUE_FLAG_PCI_P2PDMA, ns->queue);
- 
--	ns->queue->queuedata = ns;
- 	ns->ctrl = ctrl;
- 	kref_init(&ns->kref);
- 
- 	if (nvme_init_ns_head(ns, nsid, ids, id->nmic & NVME_NS_NMIC_SHARED))
--		goto out_free_queue;
-+		goto out_cleanup_disk;
- 
--	disk = alloc_disk_node(0, node);
--	if (!disk)
--		goto out_unlink_ns;
+-static inline char *tape_name(struct scsi_tape *tape)
+-{
+-	return tape->disk->disk_name;
+-}
 -
--	disk->fops = &nvme_bdev_ops;
--	disk->private_data = ns;
--	disk->queue = ns->queue;
- 	/*
- 	 * Without the multipath code enabled, multiple controller per
- 	 * subsystems are visible as devices and thus we cannot use the
-@@ -3762,15 +3759,14 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
- 	if (!nvme_mpath_set_disk_name(ns, disk->disk_name, &disk->flags))
- 		sprintf(disk->disk_name, "nvme%dn%d", ctrl->instance,
- 			ns->head->instance);
--	ns->disk = disk;
+ #define st_printk(prefix, t, fmt, a...) \
+-	sdev_prefix_printk(prefix, (t)->device, tape_name(t), fmt, ##a)
++	sdev_prefix_printk(prefix, (t)->device, (t)->name, fmt, ##a)
+ #ifdef DEBUG
+ #define DEBC_printk(t, fmt, a...) \
+ 	if (debugging) { st_printk(ST_DEB_MSG, t, fmt, ##a ); }
+@@ -363,7 +358,7 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
+ 	int result = SRpnt->result;
+ 	u8 scode;
+ 	DEB(const char *stp;)
+-	char *name = tape_name(STp);
++	char *name = STp->name;
+ 	struct st_cmdstatus *cmdstatp;
  
- 	if (nvme_update_ns_info(ns, id))
--		goto out_put_disk;
-+		goto out_unlink_ns;
+ 	if (!result)
+@@ -3841,8 +3836,9 @@ static long st_ioctl_common(struct file *file, unsigned int cmd_in, void __user
+ 			    !capable(CAP_SYS_RAWIO))
+ 				i = -EPERM;
+ 			else
+-				i = scsi_cmd_ioctl(STp->disk->queue, STp->disk,
+-						   file->f_mode, cmd_in, p);
++				i = scsi_cmd_ioctl(STp->device->request_queue,
++						   NULL, file->f_mode, cmd_in,
++						   p);
+ 			if (i != -ENOTTY)
+ 				return i;
+ 			break;
+@@ -4216,7 +4212,7 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
  
- 	if ((ctrl->quirks & NVME_QUIRK_LIGHTNVM) && id->vs[0] == 0x1) {
- 		if (nvme_nvm_register(ns, disk->disk_name, node)) {
- 			dev_warn(ctrl->device, "LightNVM init failure\n");
--			goto out_put_disk;
-+			goto out_unlink_ns;
- 		}
+ 	i = mode << (4 - ST_NBR_MODE_BITS);
+ 	snprintf(name, 10, "%s%s%s", rew ? "n" : "",
+-		 tape->disk->disk_name, st_formats[i]);
++		 tape->name, st_formats[i]);
+ 
+ 	dev = device_create(&st_sysfs_class, &tape->device->sdev_gendev,
+ 			    cdev_devno, &tape->modes[mode], "%s", name);
+@@ -4271,7 +4267,6 @@ static void remove_cdevs(struct scsi_tape *tape)
+ static int st_probe(struct device *dev)
+ {
+ 	struct scsi_device *SDp = to_scsi_device(dev);
+-	struct gendisk *disk = NULL;
+ 	struct scsi_tape *tpnt = NULL;
+ 	struct st_modedef *STm;
+ 	struct st_partstat *STps;
+@@ -4301,27 +4296,13 @@ static int st_probe(struct device *dev)
+ 		goto out;
  	}
  
-@@ -3789,10 +3785,7 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
- 	kfree(id);
+-	disk = alloc_disk(1);
+-	if (!disk) {
+-		sdev_printk(KERN_ERR, SDp,
+-			    "st: out of memory. Device not attached.\n");
+-		goto out_buffer_free;
+-	}
+-
+ 	tpnt = kzalloc(sizeof(struct scsi_tape), GFP_KERNEL);
+ 	if (tpnt == NULL) {
+ 		sdev_printk(KERN_ERR, SDp,
+ 			    "st: Can't allocate device descriptor.\n");
+-		goto out_put_disk;
++		goto out_buffer_free;
+ 	}
+ 	kref_init(&tpnt->kref);
+-	tpnt->disk = disk;
+-	disk->private_data = &tpnt->driver;
+-	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
+-	 * take queue reference that release_disk() expects. */
+-	if (!blk_get_queue(SDp->request_queue))
+-		goto out_put_disk;
+-	disk->queue = SDp->request_queue;
+ 	tpnt->driver = &st_template;
  
+ 	tpnt->device = SDp;
+@@ -4394,10 +4375,10 @@ static int st_probe(struct device *dev)
+ 	idr_preload_end();
+ 	if (error < 0) {
+ 		pr_warn("st: idr allocation failed: %d\n", error);
+-		goto out_put_queue;
++		goto out_free_tape;
+ 	}
+ 	tpnt->index = error;
+-	sprintf(disk->disk_name, "st%d", tpnt->index);
++	sprintf(tpnt->name, "st%d", tpnt->index);
+ 	tpnt->stats = kzalloc(sizeof(struct scsi_tape_stats), GFP_KERNEL);
+ 	if (tpnt->stats == NULL) {
+ 		sdev_printk(KERN_ERR, SDp,
+@@ -4414,9 +4395,9 @@ static int st_probe(struct device *dev)
+ 	scsi_autopm_put_device(SDp);
+ 
+ 	sdev_printk(KERN_NOTICE, SDp,
+-		    "Attached scsi tape %s\n", tape_name(tpnt));
++		    "Attached scsi tape %s\n", tpnt->name);
+ 	sdev_printk(KERN_INFO, SDp, "%s: try direct i/o: %s (alignment %d B)\n",
+-		    tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
++		    tpnt->name, tpnt->try_dio ? "yes" : "no",
+ 		    queue_dma_alignment(SDp->request_queue) + 1);
+ 
+ 	return 0;
+@@ -4428,10 +4409,7 @@ static int st_probe(struct device *dev)
+ 	spin_lock(&st_index_lock);
+ 	idr_remove(&st_index_idr, tpnt->index);
+ 	spin_unlock(&st_index_lock);
+-out_put_queue:
+-	blk_put_queue(disk->queue);
+-out_put_disk:
+-	put_disk(disk);
++out_free_tape:
+ 	kfree(tpnt);
+ out_buffer_free:
+ 	kfree(buffer);
+@@ -4470,7 +4448,6 @@ static int st_remove(struct device *dev)
+ static void scsi_tape_release(struct kref *kref)
+ {
+ 	struct scsi_tape *tpnt = to_scsi_tape(kref);
+-	struct gendisk *disk = tpnt->disk;
+ 
+ 	tpnt->device = NULL;
+ 
+@@ -4480,8 +4457,6 @@ static void scsi_tape_release(struct kref *kref)
+ 		kfree(tpnt->buffer);
+ 	}
+ 
+-	disk->private_data = NULL;
+-	put_disk(disk);
+ 	kfree(tpnt->stats);
+ 	kfree(tpnt);
  	return;
-- out_put_disk:
--	/* prevent double queue cleanup */
--	ns->disk->queue = NULL;
--	put_disk(ns->disk);
-+
-  out_unlink_ns:
- 	mutex_lock(&ctrl->subsys->lock);
- 	list_del_rcu(&ns->siblings);
-@@ -3800,8 +3793,8 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
- 		list_del_init(&ns->head->entry);
- 	mutex_unlock(&ctrl->subsys->lock);
- 	nvme_put_ns_head(ns->head);
-- out_free_queue:
--	blk_cleanup_queue(ns->queue);
-+ out_cleanup_disk:
-+	blk_cleanup_disk(disk);
-  out_free_ns:
- 	kfree(ns);
-  out_free_id:
+diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
+index 9d3c38bb0794..c0ef0d9aaf8a 100644
+--- a/drivers/scsi/st.h
++++ b/drivers/scsi/st.h
+@@ -187,7 +187,7 @@ struct scsi_tape {
+ 	unsigned char last_cmnd[6];
+ 	unsigned char last_sense[16];
+ #endif
+-	struct gendisk *disk;
++	char name[DISK_NAME_LEN];
+ 	struct kref     kref;
+ 	struct scsi_tape_stats *stats;
+ };
 -- 
 2.30.2
 
