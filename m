@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B8E7CC432BE
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 23:00:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FED2C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 23:00:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A098760F51
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 23:00:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8597060FC4
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 23:00:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235359AbhHMXBV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Aug 2021 19:01:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41510 "EHLO
+        id S235362AbhHMXBX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Aug 2021 19:01:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235342AbhHMXBV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Aug 2021 19:01:21 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B5154C061756
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Aug 2021 16:00:53 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id m24-20020a17090a7f98b0290178b1a81700so18109185pjl.4
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Aug 2021 16:00:53 -0700 (PDT)
+        with ESMTP id S235368AbhHMXBX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Aug 2021 19:01:23 -0400
+Received: from mail-pj1-x1033.google.com (mail-pj1-x1033.google.com [IPv6:2607:f8b0:4864:20::1033])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2F9BCC061756
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Aug 2021 16:00:56 -0700 (PDT)
+Received: by mail-pj1-x1033.google.com with SMTP id a8so17503539pjk.4
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Aug 2021 16:00:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=RIVK96bKPkdnIkHGr5K4QFuikQwUgsi8aLcsQ7LYOlc=;
-        b=Z8kw2Q9JfaBM6rzGOVE3+qusTTo0vei0EtBoOjaF6qGW2URWq6oysZIGcWHz7fyLYo
-         EgIBfCKTMjFD0aj1vXVakRBw3vXy5FEiFxr3hl0ScDTsIFUpZaG3wLO1ksWSIQwqhZAH
-         KPDE3225j/sVoG/LteIKIHMs0HQVSz9beOD13uKWTxX7AT66qp3kWpIFm9ZXkecwwYyM
-         v5nwNziG1Ervq+oIxWp2OMQEe3TuManB16g2qH7ELKycP2JHYWoBJUI2AGQSq17LMT3n
-         t4Owh5u0TJcqXgMdtFuDq9qqtC4P5QnHT2TAbw8tbZ3UvkxHNDfaO4Gfqz7LZl5/2V7X
-         RBDA==
+        bh=GGdOX/OswSVFo3hmSz8Mv9xR/mWnzPB45uvX1NWHtnA=;
+        b=ug9s5/mm9xrRhtd6twfyb9sViXZTn8NcTztbfRSLv2Zc8K5BTMylu99ZXANg/B6qOa
+         InLSYWtfFtdxU9VjDZxYc8SkeELH7PQXAsGzM1xTR5CgbtJFIM81fUc+bmJreA4zmrjG
+         cXXXu/9t9ACLlClDSwbrZNuTv1vvKQjxpq3vjY4+Vmr/Wd3XFCyhI2I7Uq8LLVpVL+Ln
+         AGEGmTJOSVMSVyI20yz0M7Vmouo0n+yLRv4QKF4vA12fTKw69dyQfqdbRubZ63jn04oy
+         +uWOX2caQ2O7HKYeH5aGblRP82xqkMGaiToO4eHVL9gLR84ZLFALkS6eaohDmaiX/L3O
+         YJ1Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=RIVK96bKPkdnIkHGr5K4QFuikQwUgsi8aLcsQ7LYOlc=;
-        b=ildcuGyOEuUF6NLzIVRg7yzUhseb3fEjQ92vZ7hwVBsG6M5fQ+uccaTGucR+iqymyF
-         1MCix+FG7xCQ0KeBO0wtpxSB5bR15obtGIP819i9KinFUDdtQft7LxqAmoTer+Iv7I4v
-         Z0MFa+1Zy0fgs6uvTy3rhZwjnnai2g6RUoX6aAMt1lgDDrxw8k+i31ATkrQii7ViHlO7
-         pK0FqcL7oEUET0HIxp4a3PZku7fvukzW2fRxBm8//QGt5/+hz2ewEC8bnd5cw715Y0h1
-         b9Kub8zPZyeRJ6ny/QWFfyIduCrLWJYg/NB3FiaKaJXx8j8lLypDTTHDg4xBriMk+J1c
-         XsPQ==
-X-Gm-Message-State: AOAM530kz0ewN937/WOqV2LSoVI9uYNhslBm9uu5n80Qt1sjCYpeNDpH
-        gF8Kpan+Z52oi5qyExJ7Vv/RDnIg60s=
-X-Google-Smtp-Source: ABdhPJzbhYmObsUSRVO6O1R/VqKQkjQTMBzSoo/7NAnMjTu7Ik9NSahPe2kTTTlBjygTVeu5ZWjr2w==
-X-Received: by 2002:a62:6042:0:b029:3cd:d392:643 with SMTP id u63-20020a6260420000b02903cdd3920643mr4587081pfb.43.1628895653200;
-        Fri, 13 Aug 2021 16:00:53 -0700 (PDT)
+        bh=GGdOX/OswSVFo3hmSz8Mv9xR/mWnzPB45uvX1NWHtnA=;
+        b=qAIDSFaqhskTIIcOwtxnRpY+Ckt9OEe3OcKr3c7MfCumVhgH0S++4SlxjyzTVJvUhQ
+         toYJq2Snz23iIlDL9aJgqhTwes5YecjmFMm/8BADPI3E5paaZ1MUZ1d6RtcxXzXo+toX
+         5i8Xs6H6zAegNc0ZuK6x8CGtOL0Q4qbhyDt+qtd4B+nkerGPOUent60dF3GsgEYzvdlY
+         dNPJ8IDpd3ncWWuVv2PW3DVoKfGfoToSiV3IkZUUBEEBBGKgzwFSkoqvUC3vAnL+PF/B
+         XZjK9xGhf0mDh/sMV044hPAdvBuM1DJzde9ZddtEJqivTT239KIIdJWbs8up0LyfaaOq
+         TLbQ==
+X-Gm-Message-State: AOAM531yedDrlMGk9adQck7yNVuu0w+MSKjKy8O3sgEtNuubH+GmSyvT
+        b4JyTdVb+36YpkZMfr0sS9AxWWju3Dc=
+X-Google-Smtp-Source: ABdhPJyxxRnNEmu72rB+6LmP7HT51MUfzbSUG4CRWsJmFnmdwg3MSI6o9YZfxQD5h2VD69Rlet5L5w==
+X-Received: by 2002:a17:90a:d910:: with SMTP id c16mr4819219pjv.33.1628895655640;
+        Fri, 13 Aug 2021 16:00:55 -0700 (PDT)
 Received: from localhost.localdomain.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id e8sm4001997pgg.31.2021.08.13.16.00.51
+        by smtp.gmail.com with ESMTPSA id e8sm4001997pgg.31.2021.08.13.16.00.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Aug 2021 16:00:53 -0700 (PDT)
+        Fri, 13 Aug 2021 16:00:55 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH v2 02/16] lpfc: Add SET_HOST_DATA mbox cmd to pass date/time info to firmware
-Date:   Fri, 13 Aug 2021 16:00:25 -0700
-Message-Id: <20210813230039.110546-3-jsmart2021@gmail.com>
+Subject: [PATCH v2 03/16] lpfc: Add MIB feature enablement support
+Date:   Fri, 13 Aug 2021 16:00:26 -0700
+Message-Id: <20210813230039.110546-4-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210813230039.110546-1-jsmart2021@gmail.com>
 References: <20210813230039.110546-1-jsmart2021@gmail.com>
@@ -72,136 +72,268 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Implement the SET_HOST_DATA mbox command to set date / time during
-initialization.  It is used by the firmware for various purposes
-including congestion management and firmware dumps.
+MIB support is currently limited to detecting support in the adapter
+and ensuring FDMI support is enabled if present.  For the new framework
+MIB support also requires active enablement of support via the
+SET_FEATURES command with the firmware.
+
+Rework the MIB detection and enablement for the following:
+- Move detection away from the get_sli4_parameters routine, and into the
+  hba_setup path. get_sli4_parameters is only called once at attachment
+  while hba_setup is called as part of any sli port reset path. This
+  ensures detection after fw download.
+- Update SET_FEATURES mbx command for the MIB enablement feature and
+  add support for the feature.
+- Create the cmf_setup routine to encapsulate the detection of MIB
+  support and perform the enablement of the MIB support feature.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h | 30 ++++++++++++++++++++-
- drivers/scsi/lpfc/lpfc_sli.c | 51 +++++++++++++++++++++++++++++++++++-
- 2 files changed, 79 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_ct.c     |  15 +++--
+ drivers/scsi/lpfc/lpfc_hw4.h    |   7 +++
+ drivers/scsi/lpfc/lpfc_init.c   |  15 -----
+ drivers/scsi/lpfc/lpfc_logmsg.h |   3 +
+ drivers/scsi/lpfc/lpfc_sli.c    | 103 ++++++++++++++++++++++++++++++++
+ 5 files changed, 123 insertions(+), 20 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+index a1c85fa135a9..435349f893ad 100644
+--- a/drivers/scsi/lpfc/lpfc_ct.c
++++ b/drivers/scsi/lpfc/lpfc_ct.c
+@@ -2332,24 +2332,29 @@ lpfc_cmpl_ct_disc_fdmi(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		break;
+ 	case SLI_MGMT_RPA:
+ 		if (vport->port_type == LPFC_PHYSICAL_PORT &&
+-		    phba->cfg_enable_mi &&
+-		    phba->sli4_hba.pc_sli4_params.mi_ver > LPFC_MIB1_SUPPORT) {
++		    phba->sli4_hba.pc_sli4_params.mi_ver) {
+ 			/* mi is only for the phyical port, no vports */
+ 			if (phba->link_flag & LS_CT_VEN_RPA) {
+ 				lpfc_printf_vlog(vport, KERN_INFO,
+-						 LOG_DISCOVERY | LOG_ELS,
++						 LOG_DISCOVERY | LOG_ELS |
++						 LOG_CGN_MGMT,
+ 						 "6449 VEN RPA FDMI Success\n");
+ 				phba->link_flag &= ~LS_CT_VEN_RPA;
+ 				break;
+ 			}
+ 
++			lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
++					"6210 Issue Vendor MI FDMI %x\n",
++					phba->sli4_hba.pc_sli4_params.mi_ver);
++
++			/* CGN is only for the physical port, no vports */
+ 			if (lpfc_fdmi_cmd(vport, ndlp, cmd,
+ 					  LPFC_FDMI_VENDOR_ATTR_mi) == 0)
+ 				phba->link_flag |= LS_CT_VEN_RPA;
+ 			lpfc_printf_log(phba, KERN_INFO,
+ 					LOG_DISCOVERY | LOG_ELS,
+ 					"6458 Send MI FDMI:%x Flag x%x\n",
+-					phba->sli4_hba.pc_sli4_params.mi_value,
++					phba->sli4_hba.pc_sli4_params.mi_ver,
+ 					phba->link_flag);
+ 		} else {
+ 			lpfc_printf_log(phba, KERN_INFO,
+@@ -3348,7 +3353,7 @@ lpfc_fdmi_vendor_attr_mi(struct lpfc_vport *vport,
+ 	ae = (struct lpfc_fdmi_attr_entry *)&ad->AttrValue;
+ 	memset(ae, 0, 256);
+ 	sprintf(mibrevision, "ELXE2EM:%04d",
+-		phba->sli4_hba.pc_sli4_params.mi_value);
++		phba->sli4_hba.pc_sli4_params.mi_ver);
+ 	strncpy(ae->un.AttrString, &mibrevision[0], sizeof(ae->un.AttrString));
+ 	len = strnlen(ae->un.AttrString, sizeof(ae->un.AttrString));
+ 	len += (len & 3) ? (4 - (len & 3)) : 4;
 diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index aadbb0de629d..658b9c558237 100644
+index 658b9c558237..fdc22e5d5fac 100644
 --- a/drivers/scsi/lpfc/lpfc_hw4.h
 +++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -3427,12 +3427,40 @@ struct lpfc_mbx_set_feature {
- 
- 
- #define LPFC_SET_HOST_OS_DRIVER_VERSION    0x2
-+#define LPFC_SET_HOST_DATE_TIME		   0x4
-+
-+struct lpfc_mbx_set_host_date_time {
-+	uint32_t word6;
-+#define lpfc_mbx_set_host_month_WORD	word6
-+#define lpfc_mbx_set_host_month_SHIFT	16
-+#define lpfc_mbx_set_host_month_MASK	0xFF
-+#define lpfc_mbx_set_host_day_WORD	word6
-+#define lpfc_mbx_set_host_day_SHIFT	8
-+#define lpfc_mbx_set_host_day_MASK	0xFF
-+#define lpfc_mbx_set_host_year_WORD	word6
-+#define lpfc_mbx_set_host_year_SHIFT	0
-+#define lpfc_mbx_set_host_year_MASK	0xFF
-+	uint32_t word7;
-+#define lpfc_mbx_set_host_hour_WORD	word7
-+#define lpfc_mbx_set_host_hour_SHIFT	16
-+#define lpfc_mbx_set_host_hour_MASK	0xFF
-+#define lpfc_mbx_set_host_min_WORD	word7
-+#define lpfc_mbx_set_host_min_SHIFT	8
-+#define lpfc_mbx_set_host_min_MASK	0xFF
-+#define lpfc_mbx_set_host_sec_WORD	word7
-+#define lpfc_mbx_set_host_sec_SHIFT     0
-+#define lpfc_mbx_set_host_sec_MASK      0xFF
-+};
-+
- struct lpfc_mbx_set_host_data {
- #define LPFC_HOST_OS_DRIVER_VERSION_SIZE   48
+@@ -3393,6 +3393,7 @@ struct lpfc_sli4_parameters {
+ #define LPFC_SET_UE_RECOVERY		0x10
+ #define LPFC_SET_MDS_DIAGS		0x12
+ #define LPFC_SET_DUAL_DUMP		0x1e
++#define LPFC_SET_ENABLE_MI		0x21
+ struct lpfc_mbx_set_feature {
  	struct mbox_header header;
- 	uint32_t param_id;
- 	uint32_t param_len;
--	uint8_t  data[LPFC_HOST_OS_DRIVER_VERSION_SIZE];
-+	union {
-+		uint8_t data[LPFC_HOST_OS_DRIVER_VERSION_SIZE];
-+		struct  lpfc_mbx_set_host_date_time tm;
-+	} un;
- };
+ 	uint32_t feature;
+@@ -3416,6 +3417,12 @@ struct lpfc_mbx_set_feature {
+ #define LPFC_DISABLE_DUAL_DUMP		0
+ #define LPFC_ENABLE_DUAL_DUMP		1
+ #define LPFC_QUERY_OP_DUAL_DUMP		2
++#define lpfc_mbx_set_feature_mi_SHIFT		0
++#define lpfc_mbx_set_feature_mi_MASK		0x0000ffff
++#define lpfc_mbx_set_feature_mi_WORD		word6
++#define lpfc_mbx_set_feature_milunq_SHIFT	16
++#define lpfc_mbx_set_feature_milunq_MASK	0x0000ffff
++#define lpfc_mbx_set_feature_milunq_WORD	word6
+ 	uint32_t word7;
+ #define lpfc_mbx_set_feature_UERP_SHIFT 0
+ #define lpfc_mbx_set_feature_UERP_MASK  0x0000ffff
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 2c0aaa0a301d..6e75471525eb 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -12350,21 +12350,6 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+ 	else
+ 		phba->nsler = 0;
  
- struct lpfc_mbx_set_trunk_mode {
+-	/* Save PB info for use during HBA setup */
+-	sli4_params->mi_ver = bf_get(cfg_mi_ver, mbx_sli4_parameters);
+-	sli4_params->mib_bde_cnt = bf_get(cfg_mib_bde_cnt, mbx_sli4_parameters);
+-	sli4_params->mib_size = mbx_sli4_parameters->mib_size;
+-	sli4_params->mi_value = LPFC_DFLT_MIB_VAL;
+-
+-	/* Next we check for Vendor MIB support */
+-	if (sli4_params->mi_ver && phba->cfg_enable_mi)
+-		phba->cfg_fdmi_on = LPFC_FDMI_SUPPORT;
+-
+-	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
+-			"6461 MIB attr %d  enable %d  FDMI %d buf %d:%d\n",
+-			sli4_params->mi_ver, phba->cfg_enable_mi,
+-			sli4_params->mi_value, sli4_params->mib_bde_cnt,
+-			sli4_params->mib_size);
+ 	return 0;
+ }
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_logmsg.h b/drivers/scsi/lpfc/lpfc_logmsg.h
+index 5660a8729462..d719a16c0f96 100644
+--- a/drivers/scsi/lpfc/lpfc_logmsg.h
++++ b/drivers/scsi/lpfc/lpfc_logmsg.h
+@@ -44,6 +44,9 @@
+ #define LOG_NVME_DISC   0x00200000      /* NVME Discovery/Connect events. */
+ #define LOG_NVME_ABTS   0x00400000      /* NVME ABTS events. */
+ #define LOG_NVME_IOERR  0x00800000      /* NVME IO Error events. */
++#define LOG_RSVD1	0x01000000	/* Reserved */
++#define LOG_RSVD2	0x02000000	/* Reserved */
++#define LOG_CGN_MGMT    0x04000000	/* Congestion Mgmt events */
+ #define LOG_TRACE_EVENT 0x80000000	/* Dmp the DBG log on this err */
+ #define LOG_ALL_MSG	0x7fffffff	/* LOG all messages */
+ 
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 47dd13719901..9ff4abb966af 100644
+index 9ff4abb966af..5489cc7d06d5 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -7369,7 +7369,7 @@ lpfc_set_host_data(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
- 	mbox->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_OS_DRIVER_VERSION;
- 	mbox->u.mqe.un.set_host_data.param_len =
- 					LPFC_HOST_OS_DRIVER_VERSION_SIZE;
--	snprintf(mbox->u.mqe.un.set_host_data.data,
-+	snprintf(mbox->u.mqe.un.set_host_data.un.data,
- 		 LPFC_HOST_OS_DRIVER_VERSION_SIZE,
- 		 "Linux %s v"LPFC_DRIVER_VERSION,
- 		 (phba->hba_flag & HBA_FCOE_MODE) ? "FCoE" : "FC");
-@@ -7499,6 +7499,51 @@ static void lpfc_sli4_dip(struct lpfc_hba *phba)
+@@ -6447,6 +6447,14 @@ lpfc_set_features(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox,
+ 		mbox->u.mqe.un.set_feature.feature = LPFC_SET_DUAL_DUMP;
+ 		mbox->u.mqe.un.set_feature.param_len = 4;
+ 		break;
++	case LPFC_SET_ENABLE_MI:
++		mbox->u.mqe.un.set_feature.feature = LPFC_SET_ENABLE_MI;
++		mbox->u.mqe.un.set_feature.param_len = 4;
++		bf_set(lpfc_mbx_set_feature_milunq, &mbox->u.mqe.un.set_feature,
++		       phba->pport->cfg_lun_queue_depth);
++		bf_set(lpfc_mbx_set_feature_mi, &mbox->u.mqe.un.set_feature,
++		       phba->sli4_hba.pc_sli4_params.mi_ver);
++		break;
+ 	}
+ 
+ 	return;
+@@ -7499,6 +7507,99 @@ static void lpfc_sli4_dip(struct lpfc_hba *phba)
  	}
  }
  
++/**
++ * lpfc_cmf_setup - Initialize idle_stat tracking
++ * @phba: Pointer to HBA context object.
++ *
++ * This is called from HBA setup during driver load or when the HBA
++ * comes online. this does all the initialization to support CMF and MI.
++ **/
 +static int
-+lpfc_set_host_tm(struct lpfc_hba *phba)
++lpfc_cmf_setup(struct lpfc_hba *phba)
 +{
 +	LPFC_MBOXQ_t *mboxq;
-+	uint32_t len, rc;
-+	struct timespec64 cur_time;
-+	struct tm broken;
-+	uint32_t month, day, year;
-+	uint32_t hour, minute, second;
-+	struct lpfc_mbx_set_host_date_time *tm;
++	struct lpfc_mqe *mqe;
++	struct lpfc_pc_sli4_params *sli4_params;
++	struct lpfc_sli4_parameters *mbx_sli4_parameters;
++	int length;
++	int rc, mi_ver;
 +
 +	mboxq = (LPFC_MBOXQ_t *)mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
 +	if (!mboxq)
 +		return -ENOMEM;
++	mqe = &mboxq->u.mqe;
 +
-+	len = sizeof(struct lpfc_mbx_set_host_data) -
-+		sizeof(struct lpfc_sli4_cfg_mhdr);
++	/* Read the port's SLI4 Config Parameters */
++	length = (sizeof(struct lpfc_mbx_get_sli4_parameters) -
++		  sizeof(struct lpfc_sli4_cfg_mhdr));
 +	lpfc_sli4_config(phba, mboxq, LPFC_MBOX_SUBSYSTEM_COMMON,
-+			 LPFC_MBOX_OPCODE_SET_HOST_DATA, len,
-+			 LPFC_SLI4_MBX_EMBED);
-+
-+	mboxq->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_DATE_TIME;
-+	mboxq->u.mqe.un.set_host_data.param_len =
-+			sizeof(struct lpfc_mbx_set_host_date_time);
-+	tm = &mboxq->u.mqe.un.set_host_data.un.tm;
-+	ktime_get_real_ts64(&cur_time);
-+	time64_to_tm(cur_time.tv_sec, 0, &broken);
-+	month = broken.tm_mon + 1;
-+	day = broken.tm_mday;
-+	year = broken.tm_year - 100;
-+	hour = broken.tm_hour;
-+	minute = broken.tm_min;
-+	second = broken.tm_sec;
-+	bf_set(lpfc_mbx_set_host_month, tm, month);
-+	bf_set(lpfc_mbx_set_host_day, tm, day);
-+	bf_set(lpfc_mbx_set_host_year, tm, year);
-+	bf_set(lpfc_mbx_set_host_hour, tm, hour);
-+	bf_set(lpfc_mbx_set_host_min, tm, minute);
-+	bf_set(lpfc_mbx_set_host_sec, tm, second);
++			 LPFC_MBOX_OPCODE_GET_SLI4_PARAMETERS,
++			 length, LPFC_SLI4_MBX_EMBED);
 +
 +	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
++	if (unlikely(rc)) {
++		mempool_free(mboxq, phba->mbox_mem_pool);
++		return rc;
++	}
++
++	/* Gather info on MI support */
++	sli4_params = &phba->sli4_hba.pc_sli4_params;
++	mbx_sli4_parameters = &mqe->un.get_sli4_parameters.sli4_parameters;
++	sli4_params->mi_ver = bf_get(cfg_mi_ver, mbx_sli4_parameters);
++
++	/* Are we forcing MI off via module parameter? */
++	if (!phba->cfg_enable_mi)
++		sli4_params->mi_ver = 0;
++
++	/* Always try to enable MI feature if we can */
++	if (sli4_params->mi_ver) {
++		lpfc_set_features(phba, mboxq, LPFC_SET_ENABLE_MI);
++		rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
++		mi_ver = bf_get(lpfc_mbx_set_feature_mi,
++				 &mboxq->u.mqe.un.set_feature);
++
++		if (rc == MBX_SUCCESS) {
++			if (mi_ver) {
++				lpfc_printf_log(phba,
++						KERN_WARNING, LOG_CGN_MGMT,
++						"6215 MI is enabled\n");
++				sli4_params->mi_ver = mi_ver;
++			} else {
++				lpfc_printf_log(phba,
++						KERN_WARNING, LOG_CGN_MGMT,
++						"6338 MI is disabled\n");
++				sli4_params->mi_ver = 0;
++			}
++		} else {
++			/* mi_ver is already set from GET_SLI4_PARAMETERS */
++			lpfc_printf_log(phba, KERN_INFO,
++					LOG_CGN_MGMT | LOG_INIT,
++					"6245 Enable MI Mailbox x%x (x%x/x%x) "
++					"failed, rc:x%x mi:x%x\n",
++					bf_get(lpfc_mqe_command, &mboxq->u.mqe),
++					lpfc_sli_config_mbox_subsys_get
++						(phba, mboxq),
++					lpfc_sli_config_mbox_opcode_get
++						(phba, mboxq),
++					rc, sli4_params->mi_ver);
++		}
++	} else {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_CGN_MGMT,
++				"6217 MI is disabled\n");
++	}
++
++	/* Ensure FDMI is enabled for MI if enable_mi is set */
++	if (sli4_params->mi_ver)
++		phba->cfg_fdmi_on = LPFC_FDMI_SUPPORT;
++
++	lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
++			"6470 Setup MI version %d\n",
++			sli4_params->mi_ver);
++
 +	mempool_free(mboxq, phba->mbox_mem_pool);
-+	return rc;
++	return 0;
 +}
 +
- /**
-  * lpfc_sli4_hba_setup - SLI4 device initialization PCI function
-  * @phba: Pointer to HBA context object.
-@@ -7588,6 +7633,10 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 		goto out_free_mbox;
- 	}
+ static int
+ lpfc_set_host_tm(struct lpfc_hba *phba)
+ {
+@@ -7637,6 +7738,8 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_INIT,
+ 			"6468 Set host date / time: Status x%x:\n", rc);
  
-+	rc = lpfc_set_host_tm(phba);
-+	lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_INIT,
-+			"6468 Set host date / time: Status x%x:\n", rc);
++	lpfc_cmf_setup(phba);
 +
  	/*
  	 * Continue initialization with default values even if driver failed
