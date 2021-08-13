@@ -2,88 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C1ECC4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 13:54:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC758C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 14:52:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5229660F11
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 13:54:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CFA71610CC
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 14:52:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240785AbhHMNyn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Aug 2021 09:54:43 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3649 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240762AbhHMNyj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Aug 2021 09:54:39 -0400
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GmQ4m5BBYz6D8Vt;
-        Fri, 13 Aug 2021 21:53:28 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Fri, 13 Aug 2021 15:54:11 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.2; Fri, 13 Aug 2021 14:54:08 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <satishkh@cisco.com>, <sebaddel@cisco.com>, <kartilak@cisco.com>,
-        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <hare@suse.de>, <hch@lst.de>, <bvanassche@acm.org>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH 3/3] scsi: Remove scsi_cmnd.tag
-Date:   Fri, 13 Aug 2021 21:49:13 +0800
-Message-ID: <1628862553-179450-4-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1628862553-179450-1-git-send-email-john.garry@huawei.com>
-References: <1628862553-179450-1-git-send-email-john.garry@huawei.com>
+        id S240850AbhHMOxZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Aug 2021 10:53:25 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:51288 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239145AbhHMOxZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Aug 2021 10:53:25 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 49330201E3;
+        Fri, 13 Aug 2021 14:52:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1628866377; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=mCbvlNAE/XCCePf2KtRtVGsFAqd9edK7rNW6LfivHNo=;
+        b=1cRQRhOhx/KQkAp7bLFA70GT0BNGlvG3x/mm0twST+Zsb6Nj2f44rs1BBDlcENeLigeWRS
+        ht4pN3enbbcYDuTNUrxre8HmgGpRbaGsgeM6bHCrq1iUpjoqk5JQd2uINwJclhjtWpT0DI
+        KTuIu639r/5J0HX9gPHJ67x8GqO1On8=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1628866377;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=mCbvlNAE/XCCePf2KtRtVGsFAqd9edK7rNW6LfivHNo=;
+        b=PSESSqk875+8LxbRQRzv6Pf70TjQtr8ywahA2iY2wpnul/H5j5CiBODRL9e14iXWrwKAZh
+        xn6HkAa/vG8DG4Dw==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id EB46513806;
+        Fri, 13 Aug 2021 14:52:56 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id I+nZN0iHFmFSEQAAGKfGzw
+        (envelope-from <ddiss@suse.de>); Fri, 13 Aug 2021 14:52:56 +0000
+Date:   Fri, 13 Aug 2021 16:52:55 +0200
+From:   David Disseldorp <ddiss@suse.de>
+To:     Sergey Samoylenko <s.samoylenko@yadro.com>
+Cc:     <martin.petersen@oracle.com>, <michael.christie@oracle.com>,
+        <bvanassche@acm.org>, <target-devel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Konstantin Shelekhin <k.shelekhin@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Anastasia Kovaleva <a.kovaleva@yadro.com>
+Subject: Re: [PATCH 1/1] scsi: target: core: Add 8Fh VPD page
+Message-ID: <20210813165255.650257ce@suse.de>
+In-Reply-To: <20210729201943.40222-2-s.samoylenko@yadro.com>
+References: <20210729201943.40222-1-s.samoylenko@yadro.com>
+        <20210729201943.40222-2-s.samoylenko@yadro.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It is never read, so get rid of it.
+Hi Sergey,
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/scsi_lib.c  | 1 -
- include/scsi/scsi_cmnd.h | 1 -
- 2 files changed, 2 deletions(-)
+On Thu, 29 Jul 2021 23:19:43 +0300, Sergey Samoylenko wrote:
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9ba1aa7530a9..572673873ddf 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1540,7 +1540,6 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
- 
- 	scsi_init_command(sdev, cmd);
- 
--	cmd->tag = req->tag;
- 	cmd->prot_op = SCSI_PROT_NORMAL;
- 	if (blk_rq_bytes(req))
- 		cmd->sc_data_direction = rq_dma_dir(req);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 6c5a1c1c6b1e..eaf04c9a1dfc 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -139,7 +139,6 @@ struct scsi_cmnd {
- 	int flags;		/* Command flags */
- 	unsigned long state;	/* Command completion state */
- 
--	unsigned char tag;	/* SCSI-II queued command tag */
- 	unsigned int extra_len;	/* length of alignment and padding */
- };
- 
--- 
-2.26.2
+> The 8Fh VPD page announces the capabilities supported by
+> the TCM XCOPY manager. It helps to expand the coverage of
+> the third-party copy manager with SCSI testing utilities.
 
+Please list which initiators use this VPD page, if you know of any.
+Also, is there any test coverage for this? I don't see anything in
+libiscsi...
+
+> Reviewed-by: Konstantin Shelekhin <k.shelekhin@yadro.com>
+> Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> Reviewed-by: Anastasia Kovaleva <a.kovaleva@yadro.com>
+> Signed-off-by: Sergey Samoylenko <s.samoylenko@yadro.com>
+> ---
+>  drivers/target/target_core_spc.c | 230 ++++++++++++++++++++++++++++++-
+>  1 file changed, 226 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+> index 22703a0dbd07..169341712b10 100644
+> --- a/drivers/target/target_core_spc.c
+> +++ b/drivers/target/target_core_spc.c
+...
+> +/* Third-party Copy VPD page */
+> +static sense_reason_t
+> +spc_emulate_evpd_8f(struct se_cmd *cmd, unsigned char *buf)
+> +{
+> +	struct se_device *dev = cmd->se_dev;
+> +	int off;
+> +	u16 page_len;
+> +
+> +	if (!dev->dev_attrib.emulate_3pc)
+> +		return TCM_INVALID_CDB_FIELD;
+> +
+> +	/*
+> +	 * Since the Third-party copy manager in TCM is quite simple
+> +	 * and supports only two commands, the function sets
+> +	 * many descriptor parameters as constants.
+> +	 *
+> +	 * As the Copy manager supports the EXTENDED COPY(LID1) command,
+> +	 * the Third-party Copy VPD page should include five mandatory
+> +	 * Third-party copy descriptors. Its are:
+> +	 *   0001h - Supported Commands
+> +	 *   0004h - Parameter Data
+> +	 *   0008h - Supported Descriptors
+> +	 *   000Ch - Supported CSCD Descriptor IDs
+> +	 *   8001h - General Copy Operations
+> +	 *
+> +	 * See spc4 section 7.8.17
+> +	 */
+> +
+> +	off = 4;
+> +
+> +	/* fill descriptors */
+> +	off += spc_evpd_8f_encode_supp_cmds(&buf[off]);
+> +	off += spc_evpd_8f_encode_param_data(&buf[off]);
+> +	off += spc_evpd_8f_encode_supp_descrs(&buf[off]);
+> +	off += spc_evpd_8f_encode_supp_cscd_descr_id(&buf[off]);
+> +	off += spc_evpd_8f_encode_general_copy_ops(&buf[off]);
+
+This looks risky in terms of buf overrun. I think it'd be good to pass
+a @remaining or @buf_end param to these helper functions.
+
+Cheers, David
