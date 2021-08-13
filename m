@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 869F7C4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 23:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ACBFC4320A
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 23:01:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5E33D60FC4
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 23:01:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6FEFD60724
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 23:01:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235392AbhHMXBo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 13 Aug 2021 19:01:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41578 "EHLO
+        id S235446AbhHMXBr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 13 Aug 2021 19:01:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41598 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235440AbhHMXBg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Aug 2021 19:01:36 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D61BC0617AD
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Aug 2021 16:01:09 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id a8so17504406pjk.4
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Aug 2021 16:01:09 -0700 (PDT)
+        with ESMTP id S235480AbhHMXBl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Aug 2021 19:01:41 -0400
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4DBD7C0617AD
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Aug 2021 16:01:14 -0700 (PDT)
+Received: by mail-pj1-x1036.google.com with SMTP id nt11so17556353pjb.2
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Aug 2021 16:01:14 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=LkuYj2ysOwnCh8t89oLZM1e5OOYtT3bPSd8gwuIXLt8=;
-        b=nUgYYWjccuM8DESSjp1uREOyX6Jw6f4O6FRaEbzGuP3O64LwELoVR+nGydPz9R5E7Y
-         Nods61pQvjcBDP8tW/BedFsvIkbltqdWp0d+N9ak2cWYwHkK37DoZqSjnSXXaXpKlpWG
-         oOM4pW9Jpi6EnWxICu+Z7RjMwjBdLCk5IogLRfQNpGgljqYJafYwtwnptHMv1Bzmsz6L
-         cL1n795xjdMAeYhnnTEaPUvHXGqO95baY6dSV1yP/rgy3jGhYcZHZ3UnoXzNQlO7f8KK
-         upD97bSRP60KQgpnsAZLBPRkM3DwMVvzk/EVHw4rx1hu1N3SUiDd3JlS69alZua9geOQ
-         C5kg==
+        bh=1r9F4BcVJaFoaV+ssKQiiY/3FWjB0yLdcG6fY/wnbdU=;
+        b=rV53c4g6/SSDho6pXz9bkAqOtIjvZyavnTwFvClOTuCeHRuEJ4IiYbZy5q6YjZs5IV
+         WMy8hla6Z04kPqCr6wRnB0VE2AL96W+wcv5kHoXDQv7z8o65J1oeyFk1z/ieeq0457lQ
+         kj3DGv6WP7C3weJHs9sU8BEKn4cX9v6Bn/QYbPJmTxNstfVdj6jSFHjtUA39ATa9hGxD
+         luOCLxMqSIjoadZJqmT3Cct7QifIiXemlarBbVW9ilrH7NBmoGUh8WfOfHomR/JejLrp
+         3kL7MRf4D4NSNHQ/cPx0RK1Qb7sr5ITzGmwXH/aIRUO77t9M/iIRNUm11eaBmC4YapJw
+         2+bQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=LkuYj2ysOwnCh8t89oLZM1e5OOYtT3bPSd8gwuIXLt8=;
-        b=JfDdSae5SWm8wF34hYUt8ch8gIH/LZ4JC+i+HFbdna3Tsfyz7J3l9L3+XZkCHCJBwc
-         aEcoPMsIhfMBzGunVzDKZ0rmUJge9vYFMH32kvWFBlaat53I3hUVaIYqB1OZs7+289eA
-         cSEjQzQreg0DoSX3LMw3CUiQXIe/mSMJr79PLk49M1nv3FKfwpgiCE8Kov0+YhcUwTLa
-         fwtwJdc0/8PTxMrCIO+GZJ7lqkwxB8gPcU3j76R4sqmgZ4Cg0HQ/nN9ePAI2iibvbS7+
-         3N9o3yhtLMWcPFF9ujRInrnSqoudHR673WQYXs5zg4ca5G0YKCGvBdWoYcvUTjX66ONa
-         HJ2Q==
-X-Gm-Message-State: AOAM531cigjnvUD7UdkuwTeBv2SSmDhgV/xhve6prDKKS2ltYr77/p9C
-        E/nwAOAfhEWfdXT9UiCPqX6JyodNVJ0=
-X-Google-Smtp-Source: ABdhPJxvxd2OcehDBf6XIA3CJGzl3d7/k9DxHnjaJmHKKYk2L5F9jiCWUhdGrgrhaNMA4BZkpw6C6w==
-X-Received: by 2002:a63:1952:: with SMTP id 18mr4300886pgz.15.1628895668859;
-        Fri, 13 Aug 2021 16:01:08 -0700 (PDT)
+        bh=1r9F4BcVJaFoaV+ssKQiiY/3FWjB0yLdcG6fY/wnbdU=;
+        b=Il7zyTw3+2lrT0g07LPf6uMNzgWVxpt2/HAKPhtpr35KICHhxQLFeFnz7xsxVqkBjh
+         tLWUSOKp+qoFd5v9focQ8LXzWNeRyaYRLLdn01R12T/Cn1Fcl8ZCrEUVKx4qDDTODVbj
+         OCZ+GZut+Lc+XifURX74DXIO52kG1x2glwpErHplDJW4i6+ilL4yAAeF5j/OJS9IAxaw
+         Uw12fWdp7qMpbxZbvPYIfrihEESpxTeSmtgIIVdxMHtaNI2pbb0xKq4xKySq0MrvymUm
+         2frJZS+/cevdF8V3o/DrfKSDz35ufG/YkCBMtTXdX1PQUYUxIxKtAGAnQDOeXx5yA//E
+         NQDA==
+X-Gm-Message-State: AOAM531UxOhqWWemUWhqR+cLFmF7i5P5pX4IY2fS5q7X6I+vU8Ept8Hx
+        njddQqIVNumL39NeFWip02HMaNls8wI=
+X-Google-Smtp-Source: ABdhPJx8ltwxwAHc8zt9AuOVfb0YhNVxJiX60dcTDOlFWVATyyh7HsUXi14yYNbkyCakuNr5TMwazQ==
+X-Received: by 2002:a17:902:7c87:b029:12c:8f2d:4238 with SMTP id y7-20020a1709027c87b029012c8f2d4238mr3874787pll.50.1628895673774;
+        Fri, 13 Aug 2021 16:01:13 -0700 (PDT)
 Received: from localhost.localdomain.localdomain ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id e8sm4001997pgg.31.2021.08.13.16.01.06
+        by smtp.gmail.com with ESMTPSA id e8sm4001997pgg.31.2021.08.13.16.01.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 13 Aug 2021 16:01:08 -0700 (PDT)
+        Fri, 13 Aug 2021 16:01:13 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH v2 08/16] lpfc: add cmfsync WQE support
-Date:   Fri, 13 Aug 2021 16:00:31 -0700
-Message-Id: <20210813230039.110546-9-jsmart2021@gmail.com>
+Subject: [PATCH v2 10/16] lpfc: Add rx monitoring statistics
+Date:   Fri, 13 Aug 2021 16:00:33 -0700
+Message-Id: <20210813230039.110546-11-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210813230039.110546-1-jsmart2021@gmail.com>
 References: <20210813230039.110546-1-jsmart2021@gmail.com>
@@ -72,433 +72,199 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When congestion mgmt is enabled, cmf has the driver regularly issue
-a command to synchronize reporting of congestion mgmt events such as
-fpin and signal delivery.
-
-This patch adds the definition of the CMF_SYNC WQE and its CQE fields
-as well as support for issuing the command. The patch also adds the
-few remaining cmf-related SLI additions, such as feature definition for
-enablement of CMF and notifications to the driver if the cm enablement
-mode changes.
+The driver provides overwatch of the cm behavior by maintaining a set
+of rx io statistics. This information is also used in later updating
+of the cm statistics buffer.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc.h      |   4 +
- drivers/scsi/lpfc/lpfc_crtn.h |   1 +
- drivers/scsi/lpfc/lpfc_hw4.h  |  87 ++++++++++++++++-
- drivers/scsi/lpfc/lpfc_sli.c  | 178 ++++++++++++++++++++++++++++++++++
- drivers/scsi/lpfc/lpfc_sli.h  |   1 +
- 5 files changed, 268 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc.h      | 21 +++++++++++++++
+ drivers/scsi/lpfc/lpfc_init.c | 50 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_mem.c  |  4 +++
+ drivers/scsi/lpfc/lpfc_scsi.c |  2 ++
+ drivers/scsi/lpfc/lpfc_sli.c  | 15 +++++++++++
+ 5 files changed, 92 insertions(+)
 
 diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 5a356a1d517c..12972bfed923 100644
+index 298b908e9126..640075885540 100644
 --- a/drivers/scsi/lpfc/lpfc.h
 +++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1499,6 +1499,10 @@ struct lpfc_hba {
- 	u32 cmf_active_mode;
- #define LPFC_CFG_OFF		0
+@@ -1546,6 +1546,12 @@ struct lpfc_hba {
+ 	u32 cgn_sig_freq;
+ 	u32 cgn_acqe_cnt;
  
-+#define LPFC_CMF_INTERVAL 90
-+#define  LPFC_CMF_BLK_SIZE 512
-+#define LPFC_MAX_CMF_INFO 32
-+
- 	/* Signal / FPIN handling for Congestion Mgmt */
- 	u8 cgn_reg_fpin;           /* Negotiated value from RDF */
- 	u8 cgn_init_reg_fpin;      /* Initial value from READ_CONFIG */
-diff --git a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
-index 947c4ba847f6..3621acf9437d 100644
---- a/drivers/scsi/lpfc/lpfc_crtn.h
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h
-@@ -79,6 +79,7 @@ void lpfc_init_congestion_stat(struct lpfc_hba *phba);
- void lpfc_init_congestion_buf(struct lpfc_hba *phba);
- int lpfc_sli4_cgn_params_read(struct lpfc_hba *phba);
- int lpfc_config_cgn_signal(struct lpfc_hba *phba);
-+int lpfc_issue_cmf_sync_wqe(struct lpfc_hba *phba, u32 ms, u64 total);
++	/* RX monitor handling for CMF */
++	struct rxtable_entry *rxtable;  /* RX_monitor information */
++	atomic_t rxtable_idx_head;
++#define LPFC_RXMONITOR_TABLE_IN_USE     (LPFC_MAX_RXMONITOR_ENTRY + 73)
++	atomic_t rxtable_idx_tail;
++	atomic_t rx_max_read_cnt;       /* Maximum read bytes */
+ 	uint64_t rx_block_cnt;
  
- void lpfc_mbx_cmpl_local_config_link(struct lpfc_hba *, LPFC_MBOXQ_t *);
- void lpfc_mbx_cmpl_reg_login(struct lpfc_hba *, LPFC_MBOXQ_t *);
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 973af1f86d28..73b249d0d964 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -397,6 +397,12 @@ struct lpfc_wcqe_complete {
- #define lpfc_wcqe_c_ersp0_MASK		0x0000FFFF
- #define lpfc_wcqe_c_ersp0_WORD		word0
- 	uint32_t total_data_placed;
-+#define lpfc_wcqe_c_cmf_cg_SHIFT	31
-+#define lpfc_wcqe_c_cmf_cg_MASK		0x00000001
-+#define lpfc_wcqe_c_cmf_cg_WORD		total_data_placed
-+#define lpfc_wcqe_c_cmf_bw_SHIFT	0
-+#define lpfc_wcqe_c_cmf_bw_MASK		0x0FFFFFFF
-+#define lpfc_wcqe_c_cmf_bw_WORD		total_data_placed
- 	uint32_t parameter;
- #define lpfc_wcqe_c_bg_edir_SHIFT	5
- #define lpfc_wcqe_c_bg_edir_MASK	0x00000001
-@@ -691,6 +697,7 @@ struct lpfc_register {
- #define lpfc_sliport_eqdelay_id_MASK	0xfff
- #define lpfc_sliport_eqdelay_id_WORD	word0
- #define LPFC_SEC_TO_USEC		1000000
-+#define LPFC_SEC_TO_MSEC		1000
- 
- /* The following Registers apply to SLI4 if_type 0 UCNAs. They typically
-  * reside in BAR 2.
-@@ -3397,12 +3404,13 @@ struct lpfc_sli4_parameters {
- #define cfg_max_tow_xri_WORD			word20
- 
- 	uint32_t word21;
--#define cfg_mib_bde_cnt_SHIFT			16
--#define cfg_mib_bde_cnt_MASK			0x000000ff
--#define cfg_mib_bde_cnt_WORD			word21
- #define cfg_mi_ver_SHIFT			0
- #define cfg_mi_ver_MASK				0x0000ffff
- #define cfg_mi_ver_WORD				word21
-+#define cfg_cmf_SHIFT				24
-+#define cfg_cmf_MASK				0x000000ff
-+#define cfg_cmf_WORD				word21
-+
- 	uint32_t mib_size;
- 	uint32_t word23;                        /* RESERVED */
- 
-@@ -3434,6 +3442,7 @@ struct lpfc_sli4_parameters {
- #define LPFC_SET_CGN_SIGNAL		0x1f
- #define LPFC_SET_DUAL_DUMP		0x1e
- #define LPFC_SET_ENABLE_MI		0x21
-+#define LPFC_SET_ENABLE_CMF		0x24
- struct lpfc_mbx_set_feature {
- 	struct mbox_header header;
- 	uint32_t feature;
-@@ -3460,6 +3469,9 @@ struct lpfc_mbx_set_feature {
- #define LPFC_DISABLE_DUAL_DUMP		0
- #define LPFC_ENABLE_DUAL_DUMP		1
- #define LPFC_QUERY_OP_DUAL_DUMP		2
-+#define lpfc_mbx_set_feature_cmf_SHIFT		0
-+#define lpfc_mbx_set_feature_cmf_MASK		0x00000001
-+#define lpfc_mbx_set_feature_cmf_WORD		word6
- #define lpfc_mbx_set_feature_mi_SHIFT		0
- #define lpfc_mbx_set_feature_mi_MASK		0x0000ffff
- #define lpfc_mbx_set_feature_mi_WORD		word6
-@@ -4005,6 +4017,7 @@ struct lpfc_mcqe {
- #define LPFC_TRAILER_CODE_GRP5	0x5
- #define LPFC_TRAILER_CODE_FC	0x10
- #define LPFC_TRAILER_CODE_SLI	0x11
-+#define LPFC_TRAILER_CODE_CMSTAT        0x13
+ 	/* Congestion parameters from flash */
+@@ -1591,6 +1597,21 @@ struct lpfc_hba {
+ 	struct dbg_log_ent dbg_log[DBG_LOG_SZ];
  };
  
- struct lpfc_acqe_link {
-@@ -4264,6 +4277,7 @@ struct lpfc_acqe_sli {
- #define LPFC_SLI_EVENT_TYPE_DIAG_DUMP		0x5
- #define LPFC_SLI_EVENT_TYPE_MISCONFIGURED	0x9
- #define LPFC_SLI_EVENT_TYPE_REMOTE_DPORT	0xA
-+#define LPFC_SLI_EVENT_TYPE_PORT_PARAMS_CHG	0xE
- #define LPFC_SLI_EVENT_TYPE_MISCONF_FAWWN	0xF
- #define LPFC_SLI_EVENT_TYPE_EEPROM_FAILURE	0x10
- #define LPFC_SLI_EVENT_TYPE_CGN_SIGNAL		0x11
-@@ -4674,6 +4688,69 @@ struct create_xri_wqe {
- #define T_REQUEST_TAG 3
- #define T_XRI_TAG 1
- 
-+struct cmf_sync_wqe {
-+	uint32_t rsrvd[3];
-+	uint32_t word3;
-+#define	cmf_sync_interval_SHIFT	0
-+#define	cmf_sync_interval_MASK	0x00000ffff
-+#define	cmf_sync_interval_WORD	word3
-+#define	cmf_sync_afpin_SHIFT	16
-+#define	cmf_sync_afpin_MASK	0x000000001
-+#define	cmf_sync_afpin_WORD	word3
-+#define	cmf_sync_asig_SHIFT	17
-+#define	cmf_sync_asig_MASK	0x000000001
-+#define	cmf_sync_asig_WORD	word3
-+#define	cmf_sync_op_SHIFT	20
-+#define	cmf_sync_op_MASK	0x00000000f
-+#define	cmf_sync_op_WORD	word3
-+#define	cmf_sync_ver_SHIFT	24
-+#define	cmf_sync_ver_MASK	0x0000000ff
-+#define	cmf_sync_ver_WORD	word3
-+#define LPFC_CMF_SYNC_VER	1
-+	uint32_t event_tag;
-+	uint32_t word5;
-+#define	cmf_sync_wsigmax_SHIFT	0
-+#define	cmf_sync_wsigmax_MASK	0x00000ffff
-+#define	cmf_sync_wsigmax_WORD	word5
-+#define	cmf_sync_wsigcnt_SHIFT	16
-+#define	cmf_sync_wsigcnt_MASK	0x00000ffff
-+#define	cmf_sync_wsigcnt_WORD	word5
-+	uint32_t word6;
-+	uint32_t word7;
-+#define	cmf_sync_cmnd_SHIFT	8
-+#define	cmf_sync_cmnd_MASK	0x0000000ff
-+#define	cmf_sync_cmnd_WORD	word7
-+	uint32_t word8;
-+	uint32_t word9;
-+#define	cmf_sync_reqtag_SHIFT	0
-+#define	cmf_sync_reqtag_MASK	0x00000ffff
-+#define	cmf_sync_reqtag_WORD	word9
-+#define	cmf_sync_wfpinmax_SHIFT	16
-+#define	cmf_sync_wfpinmax_MASK	0x0000000ff
-+#define	cmf_sync_wfpinmax_WORD	word9
-+#define	cmf_sync_wfpincnt_SHIFT	24
-+#define	cmf_sync_wfpincnt_MASK	0x0000000ff
-+#define	cmf_sync_wfpincnt_WORD	word9
-+	uint32_t word10;
-+#define cmf_sync_qosd_SHIFT	9
-+#define cmf_sync_qosd_MASK	0x00000001
-+#define cmf_sync_qosd_WORD	word10
-+	uint32_t word11;
-+#define cmf_sync_cmd_type_SHIFT	0
-+#define cmf_sync_cmd_type_MASK	0x0000000f
-+#define cmf_sync_cmd_type_WORD	word11
-+#define cmf_sync_wqec_SHIFT	7
-+#define cmf_sync_wqec_MASK	0x00000001
-+#define cmf_sync_wqec_WORD	word11
-+#define cmf_sync_cqid_SHIFT	16
-+#define cmf_sync_cqid_MASK	0x0000ffff
-+#define cmf_sync_cqid_WORD	word11
-+	uint32_t read_bytes;
-+	uint32_t word13;
-+	uint32_t word14;
-+	uint32_t word15;
++#define LPFC_MAX_RXMONITOR_ENTRY	800
++struct rxtable_entry {
++	uint64_t total_bytes;   /* Total no of read bytes requested */
++	uint64_t rcv_bytes;     /* Total no of read bytes completed */
++	uint64_t avg_io_size;
++	uint64_t avg_io_latency;/* Average io latency in microseconds */
++	uint64_t max_read_cnt;  /* Maximum read bytes */
++	uint64_t max_bytes_per_interval;
++	uint32_t cmf_busy;
++	uint32_t cmf_info;      /* CMF_SYNC_WQE info */
++	uint32_t io_cnt;
++	uint32_t timer_utilization;
++	uint32_t timer_interval;
 +};
 +
- struct abort_cmd_wqe {
- 	uint32_t rsrvd[3];
- 	uint32_t word3;
-@@ -4803,6 +4880,7 @@ union lpfc_wqe {
- 	struct fcp_iread64_wqe fcp_iread;
- 	struct fcp_iwrite64_wqe fcp_iwrite;
- 	struct abort_cmd_wqe abort_cmd;
-+	struct cmf_sync_wqe cmf_sync;
- 	struct create_xri_wqe create_xri;
- 	struct xmit_bcast64_wqe xmit_bcast64;
- 	struct xmit_seq64_wqe xmit_sequence;
-@@ -4823,6 +4901,7 @@ union lpfc_wqe128 {
- 	struct fcp_iread64_wqe fcp_iread;
- 	struct fcp_iwrite64_wqe fcp_iwrite;
- 	struct abort_cmd_wqe abort_cmd;
-+	struct cmf_sync_wqe cmf_sync;
- 	struct create_xri_wqe create_xri;
- 	struct xmit_bcast64_wqe xmit_bcast64;
- 	struct xmit_seq64_wqe xmit_sequence;
-@@ -4866,6 +4945,7 @@ struct lpfc_grp_hdr {
- #define FCP_COMMAND_TRSP	0x3
- #define FCP_COMMAND_TSEND	0x7
- #define OTHER_COMMAND		0x8
-+#define CMF_SYNC_COMMAND	0xA
- #define ELS_COMMAND_NON_FIP	0xC
- #define ELS_COMMAND_FIP		0xD
+ static inline struct Scsi_Host *
+ lpfc_shost_from_vport(struct lpfc_vport *vport)
+ {
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 65d5ee9b3e30..b4b5326cb57c 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -5452,9 +5452,13 @@ lpfc_cmf_timer(struct hrtimer *timer)
+ {
+ 	struct lpfc_hba *phba = container_of(timer, struct lpfc_hba,
+ 					     cmf_timer);
++	struct rxtable_entry *entry;
+ 	uint32_t io_cnt;
++	uint32_t head, tail;
++	uint32_t busy, max_read;
+ 	uint64_t total, rcv, lat, mbpi;
+ 	int timer_interval = LPFC_CMF_INTERVAL;
++	uint32_t ms;
+ 	struct lpfc_cgn_stat *cgs;
+ 	int cpu;
  
-@@ -4887,6 +4967,7 @@ struct lpfc_grp_hdr {
- #define CMD_FCP_TRECEIVE64_WQE  0xA1
- #define CMD_FCP_TRSP64_WQE      0xA3
- #define CMD_GEN_REQUEST64_WQE   0xC2
-+#define CMD_CMF_SYNC_WQE	0xE8
+@@ -5479,6 +5483,14 @@ lpfc_cmf_timer(struct hrtimer *timer)
+ 	 */
+ 	atomic_set(&phba->cmf_stop_io, 1);
  
- #define CMD_WQE_MASK            0xff
++	/* First we need to calculate the actual ms between
++	 * the last timer interrupt and this one. We ask for
++	 * LPFC_CMF_INTERVAL, however the actual time may
++	 * vary depending on system overhead.
++	 */
++	ms = lpfc_calc_cmf_latency(phba);
++
++
+ 	/* Immediately after we calculate the time since the last
+ 	 * timer interrupt, set the start time for the next
+ 	 * interrupt
+@@ -5525,6 +5537,8 @@ lpfc_cmf_timer(struct hrtimer *timer)
+ 		atomic_add(io_cnt, &phba->cgn_latency_evt_cnt);
+ 		atomic64_add(lat, &phba->cgn_latency_evt);
+ 	}
++	busy = atomic_xchg(&phba->cmf_busy, 0);
++	max_read = atomic_xchg(&phba->rx_max_read_cnt, 0);
  
+ 	/* Calculate MBPI for the next timer interval */
+ 	if (mbpi) {
+@@ -5539,6 +5553,42 @@ lpfc_cmf_timer(struct hrtimer *timer)
+ 			phba->cmf_max_bytes_per_interval = mbpi;
+ 	}
+ 
++	/* Save rxmonitor information for debug */
++	if (phba->rxtable) {
++		head = atomic_xchg(&phba->rxtable_idx_head,
++				   LPFC_RXMONITOR_TABLE_IN_USE);
++		entry = &phba->rxtable[head];
++		entry->total_bytes = total;
++		entry->rcv_bytes = rcv;
++		entry->cmf_busy = busy;
++		entry->cmf_info = phba->cmf_active_info;
++		if (io_cnt) {
++			entry->avg_io_latency = lat / io_cnt;
++			entry->avg_io_size = rcv / io_cnt;
++		} else {
++			entry->avg_io_latency = 0;
++			entry->avg_io_size = 0;
++		}
++		entry->max_read_cnt = max_read;
++		entry->io_cnt = io_cnt;
++		entry->max_bytes_per_interval = mbpi;
++		if (phba->cmf_active_mode == LPFC_CFG_MANAGED)
++			entry->timer_utilization = phba->cmf_last_ts;
++		else
++			entry->timer_utilization = ms;
++		entry->timer_interval = ms;
++		phba->cmf_last_ts = 0;
++
++		/* Increment rxtable index */
++		head = (head + 1) % LPFC_MAX_RXMONITOR_ENTRY;
++		tail = atomic_read(&phba->rxtable_idx_tail);
++		if (head == tail) {
++			tail = (tail + 1) % LPFC_MAX_RXMONITOR_ENTRY;
++			atomic_set(&phba->rxtable_idx_tail, tail);
++		}
++		atomic_set(&phba->rxtable_idx_head, head);
++	}
++
+ 	if (phba->cmf_active_mode == LPFC_CFG_MONITOR) {
+ 		/* If Monitor mode, check if we are oversubscribed
+ 		 * against the full line rate.
+diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
+index bbb181ab334b..7cb9f4b52b49 100644
+--- a/drivers/scsi/lpfc/lpfc_mem.c
++++ b/drivers/scsi/lpfc/lpfc_mem.c
+@@ -344,6 +344,10 @@ lpfc_mem_free_all(struct lpfc_hba *phba)
+ 		phba->cgn_i = NULL;
+ 	}
+ 
++	/* Free RX table */
++	kfree(phba->rxtable);
++	phba->rxtable = NULL;
++
+ 	/* Free the iocb lookup array */
+ 	kfree(psli->iocbq_lookup);
+ 	psli->iocbq_lookup = NULL;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 11f26582e68c..e85c911f3b6c 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -3981,6 +3981,8 @@ lpfc_update_cmf_cmd(struct lpfc_hba *phba, uint32_t size)
+ 			atomic_inc(&phba->cmf_busy);
+ 			return -EBUSY;
+ 		}
++		if (size > atomic_read(&phba->rx_max_read_cnt))
++			atomic_set(&phba->rx_max_read_cnt, size);
+ 	}
+ 
+ 	cgs = this_cpu_ptr(phba->cmf_stat);
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index b42c2dc49c83..4d1c190823d1 100644
+index 6d256a509ea3..3dfb90a04783 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -1768,6 +1768,184 @@ lpfc_sli_ringtx_get(struct lpfc_hba *phba, struct lpfc_sli_ring *pring)
- 	return cmd_iocb;
+@@ -8066,6 +8066,21 @@ lpfc_cmf_setup(struct lpfc_hba *phba)
+ 	atomic64_set(&phba->cgn_latency_evt, 0);
+ 
+ 	phba->cmf_interval_rate = LPFC_CMF_INTERVAL;
++
++	/* Allocate RX Monitor Buffer */
++	if (!phba->rxtable) {
++		phba->rxtable = kmalloc_array(LPFC_MAX_RXMONITOR_ENTRY,
++					      sizeof(struct rxtable_entry),
++					      GFP_KERNEL);
++		if (!phba->rxtable) {
++			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
++					"2644 Failed to alloc memory "
++					"for RX Monitor Buffer\n");
++			return -ENOMEM;
++		}
++	}
++	atomic_set(&phba->rxtable_idx_head, 0);
++	atomic_set(&phba->rxtable_idx_tail, 0);
+ 	return 0;
  }
  
-+/**
-+ * lpfc_cmf_sync_cmpl - Process a CMF_SYNC_WQE cmpl
-+ * @phba: Pointer to HBA context object.
-+ * @cmdiocb: Pointer to driver command iocb object.
-+ * @cmf_cmpl: Pointer to completed WCQE.
-+ *
-+ * This routine will inform the driver of any BW adjustments we need
-+ * to make. These changes will be picked up during the next CMF
-+ * timer interrupt. In addition, any BW changes will be logged
-+ * with LOG_CGN_MGMT.
-+ **/
-+static void
-+lpfc_cmf_sync_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
-+		   struct lpfc_wcqe_complete *cmf_cmpl)
-+{
-+	union lpfc_wqe128 *wqe;
-+	uint32_t status, info;
-+	uint64_t bw;
-+	int asig, afpin, sigcnt, fpincnt;
-+	int cg, tdp;
-+
-+	/* First check for error */
-+	status = bf_get(lpfc_wcqe_c_status, cmf_cmpl);
-+	if (status) {
-+		lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
-+				"6211 CMF_SYNC_WQE Error "
-+				"req_tag x%x status x%x hwstatus x%x "
-+				"tdatap x%x parm x%x\n",
-+				bf_get(lpfc_wcqe_c_request_tag, cmf_cmpl),
-+				bf_get(lpfc_wcqe_c_status, cmf_cmpl),
-+				bf_get(lpfc_wcqe_c_hw_status, cmf_cmpl),
-+				cmf_cmpl->total_data_placed,
-+				cmf_cmpl->parameter);
-+		goto out;
-+	}
-+
-+	/* Gather congestion information on a successful cmpl */
-+	info = cmf_cmpl->parameter;
-+	tdp = bf_get(lpfc_wcqe_c_cmf_bw, cmf_cmpl);
-+	cg = bf_get(lpfc_wcqe_c_cmf_cg, cmf_cmpl);
-+
-+	/* Get BW requirement from firmware */
-+	bw = (uint64_t)tdp * LPFC_CMF_BLK_SIZE;
-+	if (!bw) {
-+		lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
-+				"6212 CMF_SYNC_WQE x%x: NULL bw\n",
-+				bf_get(lpfc_wcqe_c_request_tag, cmf_cmpl));
-+		goto out;
-+	}
-+
-+	/* Gather information needed for logging if a BW change is required */
-+	wqe = &cmdiocb->wqe;
-+	asig = bf_get(cmf_sync_asig, &wqe->cmf_sync);
-+	afpin = bf_get(cmf_sync_afpin, &wqe->cmf_sync);
-+	fpincnt = bf_get(cmf_sync_wfpincnt, &wqe->cmf_sync);
-+	sigcnt = bf_get(cmf_sync_wsigcnt, &wqe->cmf_sync);
-+
-+out:
-+	lpfc_sli_release_iocbq(phba, cmdiocb);
-+}
-+
-+/**
-+ * lpfc_issue_cmf_sync_wqe - Issue a CMF_SYNC_WQE
-+ * @phba: Pointer to HBA context object.
-+ * @ms:   ms to set in WQE interval, 0 means use init op
-+ * @total: Total rcv bytes for this interval
-+ *
-+ * This routine is called every CMF timer interrupt. Its purpose is
-+ * to issue a CMF_SYNC_WQE to the firmware to inform it of any events
-+ * that may indicate we have congestion (FPINs or Signals). Upon
-+ * completion, the firmware will indicate any BW restrictions the
-+ * driver may need to take.
-+ **/
-+int
-+lpfc_issue_cmf_sync_wqe(struct lpfc_hba *phba, u32 ms, u64 total)
-+{
-+	union lpfc_wqe128 *wqe;
-+	struct lpfc_iocbq *sync_buf;
-+	unsigned long iflags;
-+	u32 ret_val;
-+	u32 atot, wtot, max;
-+
-+	/* First address any alarm / warning activity */
-+	atot = atomic_xchg(&phba->cgn_sync_alarm_cnt, 0);
-+	wtot = atomic_xchg(&phba->cgn_sync_warn_cnt, 0);
-+
-+	/* ONLY Managed mode will send the CMF_SYNC_WQE to the HBA */
-+	if (phba->cmf_active_mode != LPFC_CFG_MANAGED ||
-+	    phba->link_state == LPFC_LINK_DOWN)
-+		return 0;
-+
-+	spin_lock_irqsave(&phba->hbalock, iflags);
-+	sync_buf = __lpfc_sli_get_iocbq(phba);
-+	if (!sync_buf) {
-+		lpfc_printf_log(phba, KERN_ERR, LOG_CGN_MGMT,
-+				"6213 No available WQEs for CMF_SYNC_WQE\n");
-+		ret_val = ENOMEM;
-+		goto out_unlock;
-+	}
-+
-+	wqe = &sync_buf->wqe;
-+
-+	/* WQEs are reused.  Clear stale data and set key fields to zero */
-+	memset(wqe, 0, sizeof(*wqe));
-+
-+	/* If this is the very first CMF_SYNC_WQE, issue an init operation */
-+	if (!ms) {
-+		lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
-+				"6441 CMF Init %d - CMF_SYNC_WQE\n",
-+				phba->fc_eventTag);
-+		bf_set(cmf_sync_op, &wqe->cmf_sync, 1); /* 1=init */
-+		bf_set(cmf_sync_interval, &wqe->cmf_sync, LPFC_CMF_INTERVAL);
-+		goto initpath;
-+	}
-+
-+	bf_set(cmf_sync_op, &wqe->cmf_sync, 0); /* 0=recalc */
-+	bf_set(cmf_sync_interval, &wqe->cmf_sync, ms);
-+
-+	/* Check for alarms / warnings */
-+	if (atot) {
-+		if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM) {
-+			/* We hit an Signal alarm condition */
-+			bf_set(cmf_sync_asig, &wqe->cmf_sync, 1);
-+		} else {
-+			/* We hit a FPIN alarm condition */
-+			bf_set(cmf_sync_afpin, &wqe->cmf_sync, 1);
-+		}
-+	} else if (wtot) {
-+		if (phba->cgn_reg_signal == EDC_CG_SIG_WARN_ONLY ||
-+		    phba->cgn_reg_signal == EDC_CG_SIG_WARN_ALARM) {
-+			/* We hit an Signal warning condition */
-+			max = LPFC_SEC_TO_MSEC / lpfc_fabric_cgn_frequency *
-+				lpfc_acqe_cgn_frequency;
-+			bf_set(cmf_sync_wsigmax, &wqe->cmf_sync, max);
-+			bf_set(cmf_sync_wsigcnt, &wqe->cmf_sync, wtot);
-+		} else {
-+			/* We hit a FPIN warning condition */
-+			bf_set(cmf_sync_wfpinmax, &wqe->cmf_sync, 1);
-+			bf_set(cmf_sync_wfpincnt, &wqe->cmf_sync, 1);
-+		}
-+	}
-+
-+	/* Update total read blocks during previous timer interval */
-+	wqe->cmf_sync.read_bytes = (u32)(total / LPFC_CMF_BLK_SIZE);
-+
-+initpath:
-+	bf_set(cmf_sync_ver, &wqe->cmf_sync, LPFC_CMF_SYNC_VER);
-+	wqe->cmf_sync.event_tag = phba->fc_eventTag;
-+	bf_set(cmf_sync_cmnd, &wqe->cmf_sync, CMD_CMF_SYNC_WQE);
-+
-+	/* Setup reqtag to match the wqe completion. */
-+	bf_set(cmf_sync_reqtag, &wqe->cmf_sync, sync_buf->iotag);
-+
-+	bf_set(cmf_sync_qosd, &wqe->cmf_sync, 1);
-+
-+	bf_set(cmf_sync_cmd_type, &wqe->cmf_sync, CMF_SYNC_COMMAND);
-+	bf_set(cmf_sync_wqec, &wqe->cmf_sync, 1);
-+	bf_set(cmf_sync_cqid, &wqe->cmf_sync, LPFC_WQE_CQ_ID_DEFAULT);
-+
-+	sync_buf->vport = phba->pport;
-+	sync_buf->wqe_cmpl = lpfc_cmf_sync_cmpl;
-+	sync_buf->iocb_cmpl = NULL;
-+	sync_buf->context1 = NULL;
-+	sync_buf->context2 = NULL;
-+	sync_buf->context3 = NULL;
-+	sync_buf->sli4_xritag = NO_XRI;
-+
-+	sync_buf->iocb_flag |= LPFC_IO_CMF;
-+	ret_val = lpfc_sli4_issue_wqe(phba, &phba->sli4_hba.hdwq[0], sync_buf);
-+	if (ret_val)
-+		lpfc_printf_log(phba, KERN_INFO, LOG_CGN_MGMT,
-+				"6214 Cannot issue CMF_SYNC_WQE: x%x\n",
-+				ret_val);
-+out_unlock:
-+	spin_unlock_irqrestore(&phba->hbalock, iflags);
-+	return ret_val;
-+}
-+
- /**
-  * lpfc_sli_next_iocb_slot - Get next iocb slot in the ring
-  * @phba: Pointer to HBA context object.
-diff --git a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
-index dde8eb9d796d..dc7cc2f37089 100644
---- a/drivers/scsi/lpfc/lpfc_sli.h
-+++ b/drivers/scsi/lpfc/lpfc_sli.h
-@@ -107,6 +107,7 @@ struct lpfc_iocbq {
- #define LPFC_IO_NVME_LS		0x400000 /* NVME LS command */
- #define LPFC_IO_NVMET		0x800000 /* NVMET command */
- #define LPFC_IO_VMID            0x1000000 /* VMID tagged IO */
-+#define LPFC_IO_CMF		0x4000000 /* CMF command */
- 
- 	uint32_t drvrTimeout;	/* driver timeout in seconds */
- 	struct lpfc_vport *vport;/* virtual port pointer */
 -- 
 2.26.2
 
