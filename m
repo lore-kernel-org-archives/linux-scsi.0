@@ -5,63 +5,64 @@ X-Spam-Level:
 X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4738DC4320A
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 02:08:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B25BEC432BE
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 02:08:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2721B61038
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 02:08:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8AFA0610A5
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 02:08:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233036AbhHMCJR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S235026AbhHMCJR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 12 Aug 2021 22:09:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38046 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237439AbhHMCJP (ORCPT
+        with ESMTP id S237705AbhHMCJP (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2021 22:09:15 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28DA3C0613D9
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2021 19:08:49 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id a20so9958166plm.0
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2021 19:08:49 -0700 (PDT)
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13C74C061756
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2021 19:08:50 -0700 (PDT)
+Received: by mail-pj1-x102d.google.com with SMTP id a8so13059502pjk.4
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2021 19:08:50 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=HV+mPt6iqIvNf+b8Pv184+3EokhRnXWswjNODyW7aqA=;
-        b=OVQ+lKkBuj1kHRzktUrValmP68+dY9boz+MTrSfBezE7XDtyXk7tYucgQrSkfHmnSa
-         SyS5rbNBhWytd6+7N5Q4deHjW3+ZCXKaRdUe+zOHJLj9eaLliIIzM0OzZGBFKysm5iBD
-         JZdEuqtIQEcRV0PVTEIWQtjOBji/Uvl3MFtuT1Z1JGGuMOTWdIu2KM4+gGD/SEEDS8zl
-         ApsFTOKH2VWgq3a9CyuJ0LBMJNkx6qr7sm+sNyfZKZERV3rPxtA7neVV2060fgrTkceR
-         y/hs2keS3STPhUvE+j5d7ctPcLrsCyxp4SNXDZI1qVQRYW1HScIBQZrD6PgzaMJpqeFR
-         rSSA==
+        bh=RIVK96bKPkdnIkHGr5K4QFuikQwUgsi8aLcsQ7LYOlc=;
+        b=bW4EucJHhduN57eybmDumiDt/ur5UiyroFG/F0iFiB5OfAi4Xv4XpaqrBxvJtVg8fD
+         XxM0oeLVyO8tak7eKS43tHfnM4ab02vt5xLcoRS5cY1nQBhNrO2TQO8k00yVz7230edg
+         AmtJOnjCrdTZSUs3+E2ANNbLhKhJ/ASEabmHG4Dtqjpl68jkpKbejpGuqWZhO12pIUDp
+         DPEpUunwy/u43/o/SIbvIw+mMrDqoXcA5ITZsH79ZuMPkVHnzrAULlYD9GLvzJL0VTjh
+         zA+9lIEMQp0wZn1QI/IIPC3gfKu4UN36GxKGQLPKcXfsW7rqcBjYudvJNY26r9GOiFO+
+         4r4Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=HV+mPt6iqIvNf+b8Pv184+3EokhRnXWswjNODyW7aqA=;
-        b=dPaHnT0Zz4eql+qpIBzaxRUfMVLcD5tWSbcB5I8fYItGfWL21y45el5st7ogDExlIE
-         ut2bqzgDB/sLi3T89msIT2d4Ea8sgr4/qp+Kmfr5P6Q5mkB+/WQbRDrIyXoSFtFh6nbv
-         OthILSD640k0vB1wBVROjtw5MbIrmIBOqGUoJNJbWyn9E00aeu3KSOHhIaFmKCnBXTVt
-         32Uxz6KIa8fHaIMaEBC5FCVjJggLTug1V9FbXGYEWaQL8dPS/W0cuOQjEmtxuT8zWcHA
-         +OtD4BNUk0lgZYSDx9IBMORR95fOmmbtSvqeI5khCy9oNjBSPosKvGk4EgBZjYorZAdV
-         lx6w==
-X-Gm-Message-State: AOAM531oNM+mV3JL9hBlL96G/Y51wSqX05vZSlXYn/AeFKQEG0j3r44G
-        jjUILZnvo71mgzGjxDcJNdBKl8sWWwI=
-X-Google-Smtp-Source: ABdhPJw0J5/OiilIh593yLJ4iR0xP6eF6Ki0pIOhTpWHWlhUhdcdbkSzPxR9VcMRTDp6E0GE1zzkuA==
-X-Received: by 2002:a62:d159:0:b029:3e0:9a9f:fff8 with SMTP id t25-20020a62d1590000b02903e09a9ffff8mr151991pfl.44.1628820528642;
-        Thu, 12 Aug 2021 19:08:48 -0700 (PDT)
+        bh=RIVK96bKPkdnIkHGr5K4QFuikQwUgsi8aLcsQ7LYOlc=;
+        b=KQwwNCHLI0M34wSuXPL+q/iKVPBBGytm/9UkZgl/QScRqWZQ1AW0Jo5vmKGm+EBRSH
+         cpVcWkAHeFkrO7nS86+5tDqMPGhbDQ16C8kSEcUkANrjV59tRca5+CZmwTcFRLhioMNf
+         QI7+0tZMMzGuyveWxayrmjgHaDk0kl2BY+ojPkOUFXoI5mi/w2BSTGvztmMZmCadjYSc
+         kPnkhj/lUlPyD4ULaCLgkeyHrKKYI1Qf8brFz2k2YZ+zhW7OITYorz+UNrg+GHmMGMhQ
+         X26+df7OMkPrCLXm+DLIcde/IOs7gSp96f0KJ5V/FiCTgXK5VHjmXgBtoQ852jS/SflQ
+         3MSQ==
+X-Gm-Message-State: AOAM530SIhD5LRsOJ2e6k4WoBvARey3CUTZ6BT5KU6kEhPB/APyiQ5/J
+        sHySOaSzf4+/+P9N6u6S0VttgmQxv6U=
+X-Google-Smtp-Source: ABdhPJxUn0VL4evKD3IvMiSL+LlWH1LHVM7Jyy9G7Hlr+9lQ2u6H8KgAapt3Q35Vag4txCOqwyWXKw==
+X-Received: by 2002:a17:90a:990f:: with SMTP id b15mr151687pjp.188.1628820529475;
+        Thu, 12 Aug 2021 19:08:49 -0700 (PDT)
 Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
         by smtp.gmail.com with ESMTPSA id ca7sm102619pjb.11.2021.08.12.19.08.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Aug 2021 19:08:48 -0700 (PDT)
+        Thu, 12 Aug 2021 19:08:49 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>
-Subject: [PATCH 01/16] fc: Add EDC ELS definition
-Date:   Thu, 12 Aug 2021 19:07:57 -0700
-Message-Id: <20210813020812.99014-2-jsmart2021@gmail.com>
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>
+Subject: [PATCH 02/16] lpfc: Add SET_HOST_DATA mbox cmd to pass date/time info to firmware
+Date:   Thu, 12 Aug 2021 19:07:58 -0700
+Message-Id: <20210813020812.99014-3-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210813020812.99014-1-jsmart2021@gmail.com>
 References: <20210813020812.99014-1-jsmart2021@gmail.com>
@@ -71,161 +72,140 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Add Exchange Diagnostic Capabilities (EDC) ELS definition and
-the following capability descriptors:
-  Link Fault Capability Descriptor
-  Congestion Signaling Capability Descriptor
+Implement the SET_HOST_DATA mbox command to set date / time during
+initialization.  It is used by the firmware for various purposes
+including congestion management and firmware dumps.
 
-Definition taken from FC-LS-5 r5.01
-
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- include/uapi/scsi/fc/fc_els.h | 106 ++++++++++++++++++++++++++++++++++
- 1 file changed, 106 insertions(+)
+ drivers/scsi/lpfc/lpfc_hw4.h | 30 ++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_sli.c | 51 +++++++++++++++++++++++++++++++++++-
+ 2 files changed, 79 insertions(+), 2 deletions(-)
 
-diff --git a/include/uapi/scsi/fc/fc_els.h b/include/uapi/scsi/fc/fc_els.h
-index 91d4be987220..c9812c5c2fc4 100644
---- a/include/uapi/scsi/fc/fc_els.h
-+++ b/include/uapi/scsi/fc/fc_els.h
-@@ -41,6 +41,7 @@ enum fc_els_cmd {
- 	ELS_REC =	0x13,	/* read exchange concise */
- 	ELS_SRR =	0x14,	/* sequence retransmission request */
- 	ELS_FPIN =	0x16,	/* Fabric Performance Impact Notification */
-+	ELS_EDC =	0x17,	/* Exchange Diagnostic Capabilities */
- 	ELS_RDP =	0x18,	/* Read Diagnostic Parameters */
- 	ELS_RDF =	0x19,	/* Register Diagnostic Functions */
- 	ELS_PRLI =	0x20,	/* process login */
-@@ -111,6 +112,7 @@ enum fc_els_cmd {
- 	[ELS_REC] =	"REC",			\
- 	[ELS_SRR] =	"SRR",			\
- 	[ELS_FPIN] =	"FPIN",			\
-+	[ELS_EDC] =	"EDC",			\
- 	[ELS_RDP] =	"RDP",			\
- 	[ELS_RDF] =	"RDF",			\
- 	[ELS_PRLI] =	"PRLI",			\
-@@ -218,6 +220,10 @@ enum fc_els_rjt_explan {
- enum fc_ls_tlv_dtag {
- 	ELS_DTAG_LS_REQ_INFO =		0x00000001,
- 		/* Link Service Request Information Descriptor */
-+	ELS_DTAG_LNK_FAULT_CAP =	0x0001000D,
-+		/* Link Fault Capability Descriptor */
-+	ELS_DTAG_CG_SIGNAL_CAP =	0x0001000F,
-+		/* Congestion Signaling Capability Descriptor */
- 	ELS_DTAG_LNK_INTEGRITY =	0x00020001,
- 		/* Link Integrity Notification Descriptor */
- 	ELS_DTAG_DELIVERY =		0x00020002,
-@@ -236,6 +242,8 @@ enum fc_ls_tlv_dtag {
-  */
- #define FC_LS_TLV_DTAG_INIT {					      \
- 	{ ELS_DTAG_LS_REQ_INFO,		"Link Service Request Information" }, \
-+	{ ELS_DTAG_LNK_FAULT_CAP,	"Link Fault Capability" },	      \
-+	{ ELS_DTAG_CG_SIGNAL_CAP,	"Congestion Signaling Capability" },  \
- 	{ ELS_DTAG_LNK_INTEGRITY,	"Link Integrity Notification" },      \
- 	{ ELS_DTAG_DELIVERY,		"Delivery Notification Present" },    \
- 	{ ELS_DTAG_PEER_CONGEST,	"Peer Congestion Notification" },     \
-@@ -1144,4 +1152,102 @@ struct fc_els_rdf_resp {
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index aadbb0de629d..658b9c558237 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -3427,12 +3427,40 @@ struct lpfc_mbx_set_feature {
+ 
+ 
+ #define LPFC_SET_HOST_OS_DRIVER_VERSION    0x2
++#define LPFC_SET_HOST_DATE_TIME		   0x4
++
++struct lpfc_mbx_set_host_date_time {
++	uint32_t word6;
++#define lpfc_mbx_set_host_month_WORD	word6
++#define lpfc_mbx_set_host_month_SHIFT	16
++#define lpfc_mbx_set_host_month_MASK	0xFF
++#define lpfc_mbx_set_host_day_WORD	word6
++#define lpfc_mbx_set_host_day_SHIFT	8
++#define lpfc_mbx_set_host_day_MASK	0xFF
++#define lpfc_mbx_set_host_year_WORD	word6
++#define lpfc_mbx_set_host_year_SHIFT	0
++#define lpfc_mbx_set_host_year_MASK	0xFF
++	uint32_t word7;
++#define lpfc_mbx_set_host_hour_WORD	word7
++#define lpfc_mbx_set_host_hour_SHIFT	16
++#define lpfc_mbx_set_host_hour_MASK	0xFF
++#define lpfc_mbx_set_host_min_WORD	word7
++#define lpfc_mbx_set_host_min_SHIFT	8
++#define lpfc_mbx_set_host_min_MASK	0xFF
++#define lpfc_mbx_set_host_sec_WORD	word7
++#define lpfc_mbx_set_host_sec_SHIFT     0
++#define lpfc_mbx_set_host_sec_MASK      0xFF
++};
++
+ struct lpfc_mbx_set_host_data {
+ #define LPFC_HOST_OS_DRIVER_VERSION_SIZE   48
+ 	struct mbox_header header;
+ 	uint32_t param_id;
+ 	uint32_t param_len;
+-	uint8_t  data[LPFC_HOST_OS_DRIVER_VERSION_SIZE];
++	union {
++		uint8_t data[LPFC_HOST_OS_DRIVER_VERSION_SIZE];
++		struct  lpfc_mbx_set_host_date_time tm;
++	} un;
  };
  
+ struct lpfc_mbx_set_trunk_mode {
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 47dd13719901..9ff4abb966af 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -7369,7 +7369,7 @@ lpfc_set_host_data(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
+ 	mbox->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_OS_DRIVER_VERSION;
+ 	mbox->u.mqe.un.set_host_data.param_len =
+ 					LPFC_HOST_OS_DRIVER_VERSION_SIZE;
+-	snprintf(mbox->u.mqe.un.set_host_data.data,
++	snprintf(mbox->u.mqe.un.set_host_data.un.data,
+ 		 LPFC_HOST_OS_DRIVER_VERSION_SIZE,
+ 		 "Linux %s v"LPFC_DRIVER_VERSION,
+ 		 (phba->hba_flag & HBA_FCOE_MODE) ? "FCoE" : "FC");
+@@ -7499,6 +7499,51 @@ static void lpfc_sli4_dip(struct lpfc_hba *phba)
+ 	}
+ }
  
-+/*
-+ * Diagnostic Capability Descriptors for EDC ELS
-+ */
++static int
++lpfc_set_host_tm(struct lpfc_hba *phba)
++{
++	LPFC_MBOXQ_t *mboxq;
++	uint32_t len, rc;
++	struct timespec64 cur_time;
++	struct tm broken;
++	uint32_t month, day, year;
++	uint32_t hour, minute, second;
++	struct lpfc_mbx_set_host_date_time *tm;
 +
-+/*
-+ * Diagnostic: Link Fault Capability Descriptor
-+ */
-+struct fc_diag_lnkflt_desc {
-+	__be32		desc_tag;	/* Descriptor Tag (0x0001000D) */
-+	__be32		desc_len;	/* Length of Descriptor (in bytes).
-+					 * Size of descriptor excluding
-+					 * desc_tag and desc_len fields.
-+					 * 12 bytes
-+					 */
-+	__be32		degrade_activate_threshold;
-+	__be32		degrade_deactivate_threshold;
-+	__be32		fec_degrade_interval;
-+};
++	mboxq = (LPFC_MBOXQ_t *)mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
++	if (!mboxq)
++		return -ENOMEM;
 +
-+enum fc_edc_cg_signal_cap_types {
-+	/* Note: Capability: bits 31:4 Rsvd; bits 3:0 are capabilities */
-+	EDC_CG_SIG_NOTSUPPORTED =	0x00, /* neither supported */
-+	EDC_CG_SIG_WARN_ONLY =		0x01,
-+	EDC_CG_SIG_WARN_ALARM =		0x02, /* both supported */
-+};
++	len = sizeof(struct lpfc_mbx_set_host_data) -
++		sizeof(struct lpfc_sli4_cfg_mhdr);
++	lpfc_sli4_config(phba, mboxq, LPFC_MBOX_SUBSYSTEM_COMMON,
++			 LPFC_MBOX_OPCODE_SET_HOST_DATA, len,
++			 LPFC_SLI4_MBX_EMBED);
 +
-+/*
-+ * Initializer useful for decoding table.
-+ * Please keep this in sync with the above definitions.
-+ */
-+#define FC_EDC_CG_SIGNAL_CAP_TYPES_INIT {				\
-+	{ EDC_CG_SIG_NOTSUPPORTED,	"Signaling Not Supported" },	\
-+	{ EDC_CG_SIG_WARN_ONLY,		"Warning Signal" },		\
-+	{ EDC_CG_SIG_WARN_ALARM,	"Warning and Alarm Signals" },	\
++	mboxq->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_DATE_TIME;
++	mboxq->u.mqe.un.set_host_data.param_len =
++			sizeof(struct lpfc_mbx_set_host_date_time);
++	tm = &mboxq->u.mqe.un.set_host_data.un.tm;
++	ktime_get_real_ts64(&cur_time);
++	time64_to_tm(cur_time.tv_sec, 0, &broken);
++	month = broken.tm_mon + 1;
++	day = broken.tm_mday;
++	year = broken.tm_year - 100;
++	hour = broken.tm_hour;
++	minute = broken.tm_min;
++	second = broken.tm_sec;
++	bf_set(lpfc_mbx_set_host_month, tm, month);
++	bf_set(lpfc_mbx_set_host_day, tm, day);
++	bf_set(lpfc_mbx_set_host_year, tm, year);
++	bf_set(lpfc_mbx_set_host_hour, tm, hour);
++	bf_set(lpfc_mbx_set_host_min, tm, minute);
++	bf_set(lpfc_mbx_set_host_sec, tm, second);
++
++	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
++	mempool_free(mboxq, phba->mbox_mem_pool);
++	return rc;
 +}
 +
-+enum fc_diag_cg_sig_freq_types {
-+	EDC_CG_SIGFREQ_CNT_MIN =	1,	/* Min Frequency Count */
-+	EDC_CG_SIGFREQ_CNT_MAX =	999,	/* Max Frequency Count */
+ /**
+  * lpfc_sli4_hba_setup - SLI4 device initialization PCI function
+  * @phba: Pointer to HBA context object.
+@@ -7588,6 +7633,10 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 		goto out_free_mbox;
+ 	}
+ 
++	rc = lpfc_set_host_tm(phba);
++	lpfc_printf_log(phba, KERN_ERR, LOG_MBOX | LOG_INIT,
++			"6468 Set host date / time: Status x%x:\n", rc);
 +
-+	EDC_CG_SIGFREQ_SEC =		0x1,	/* Units: seconds */
-+	EDC_CG_SIGFREQ_MSEC =		0x2,	/* Units: milliseconds */
-+};
-+
-+struct fc_diag_cg_sig_freq {
-+	__be16		count;		/* Time between signals
-+					 * note: upper 6 bits rsvd
-+					 */
-+	__be16		units;		/* Time unit for count
-+					 * note: upper 12 bits rsvd
-+					 */
-+};
-+
-+/*
-+ * Diagnostic: Congestion Signaling Capability Descriptor
-+ */
-+struct fc_diag_cg_sig_desc {
-+	__be32		desc_tag;	/* Descriptor Tag (0x0001000F) */
-+	__be32		desc_len;	/* Length of Descriptor (in bytes).
-+					 * Size of descriptor excluding
-+					 * desc_tag and desc_len fields.
-+					 * 16 bytes
-+					 */
-+	__be32				xmt_signal_capability;
-+	struct fc_diag_cg_sig_freq	xmt_signal_frequency;
-+	__be32				rcv_signal_capability;
-+	struct fc_diag_cg_sig_freq	rcv_signal_frequency;
-+};
-+
-+/*
-+ * ELS_EDC - Exchange Diagnostic Capabilities
-+ */
-+struct fc_els_edc {
-+	__u8		edc_cmd;	/* command (0x17) */
-+	__u8		edc_zero[3];	/* specified as zero - part of cmd */
-+	__be32		desc_len;	/* Length of Descriptor List (in bytes).
-+					 * Size of ELS excluding edc_cmd,
-+					 * edc_zero and desc_len fields.
-+					 */
-+	struct fc_tlv_desc	desc[0];
-+					/* Diagnostic Descriptor list */
-+};
-+
-+/*
-+ * ELS EDC LS_ACC Response.
-+ */
-+struct fc_els_edc_resp {
-+	struct fc_els_ls_acc	acc_hdr;
-+	__be32			desc_list_len;	/* Length of response (in
-+						 * bytes). Excludes acc_hdr
-+						 * and desc_list_len fields.
-+						 */
-+	struct fc_els_lsri_desc	lsri;
-+	struct fc_tlv_desc	desc[0];
-+				    /* Supported Diagnostic Descriptor list */
-+};
-+
-+
- #endif /* _FC_ELS_H_ */
+ 	/*
+ 	 * Continue initialization with default values even if driver failed
+ 	 * to read FCoE param config regions, only read parameters if the
 -- 
 2.26.2
 
