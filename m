@@ -2,141 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEA7DC4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 02:09:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E71E2C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 02:20:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D2D0F610A5
-	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 02:09:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB21361101
+	for <linux-scsi@archiver.kernel.org>; Fri, 13 Aug 2021 02:20:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238116AbhHMCJo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 12 Aug 2021 22:09:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38114 "EHLO
+        id S237946AbhHMCVM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 12 Aug 2021 22:21:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238110AbhHMCJZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2021 22:09:25 -0400
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06A90C0617AF
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2021 19:09:00 -0700 (PDT)
-Received: by mail-pl1-x62b.google.com with SMTP id a5so9896707plh.5
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2021 19:09:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=AsxydOY+lNRb2e3ADR2di+F/3cNRDqMO4+kiJOm870I=;
-        b=tZ69nqxkDawlA1u8gt3ihzxxBAcC2+F7H17vTaCMfjuzIVNBDaamTeRfyzsHpqSE01
-         5tA6k+AJjHgJ59NDd5wD4xQsJriBKdIr1RBgSZZVZ7rv3dO0kRIxsKoQsngj4Fwat6WZ
-         QwlBp3pgOr0favwS4mTjmLAEai8en+PZYaEy75cXfXaWf23SVvNBLuwh1ACdv09x+twh
-         CofeRg9sdEpvg3lQFU/ihI+AxhGiao5Z6xXq5m09vIPeWwoV0SKUDBSgGgh+iajPEvb+
-         3a8AjZ4TOcQNvtozjmhHIm5K6xurqY0sMxUzMQFdIRNK5w6IZcW9xEya/TsNrKECXE0r
-         8JEQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=AsxydOY+lNRb2e3ADR2di+F/3cNRDqMO4+kiJOm870I=;
-        b=Ft+U96A//gO3iuOuR7nzDU34HcLrLfW317mDG/zZdvs4NqCT3Z10xKEtE+QzBwro45
-         AdMhmV/HwjcBcqbwxwk6hGD96h7TqFKCNe08o1Kjgj1+mi0P1jBtPUbIAfoOwQNvjOsx
-         1jVXEc4jp98z5RG5ECA2VU4uJiddNW0z3G18nfJf2cqv91H1I/rNMkojAjflt7iFfGcR
-         092LhSfFGsgBRONgpEK1TI495tYZ2YA9exxvrIckh4KylWeAcC+3bViXqvb0V5aiDcJA
-         t2m/5StG2oh3m2dqyA926CIie+m7JWxd5xv0UAZycQH7ncEf1whgoiNBIMx5VJEQQOyK
-         1dQQ==
-X-Gm-Message-State: AOAM532q1zMBa2q+aVLYCqdOM/xS4nGaa1QUIKNgTJVh3E2z/nx2Gz6g
-        vOdIkZqksqj6Ou61RJUhXwlBOdQM4tg=
-X-Google-Smtp-Source: ABdhPJxsJQdeKrhZ+Ic3q63tP5qLs7ofsmO1/XUKvgP+CxYmoumOQbCd6V+vaQsC3hbdAdAR2e1hug==
-X-Received: by 2002:a17:90b:3810:: with SMTP id mq16mr68027pjb.129.1628820539472;
-        Thu, 12 Aug 2021 19:08:59 -0700 (PDT)
-Received: from localhost.localdomain (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
-        by smtp.gmail.com with ESMTPSA id ca7sm102619pjb.11.2021.08.12.19.08.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Aug 2021 19:08:59 -0700 (PDT)
-From:   James Smart <jsmart2021@gmail.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 16/16] lpfc: Copyright updates for 14.0.0.1 patches
-Date:   Thu, 12 Aug 2021 19:08:12 -0700
-Message-Id: <20210813020812.99014-17-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.26.2
-In-Reply-To: <20210813020812.99014-1-jsmart2021@gmail.com>
-References: <20210813020812.99014-1-jsmart2021@gmail.com>
+        with ESMTP id S237804AbhHMCVM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Aug 2021 22:21:12 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15F66C061756
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Aug 2021 19:20:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=e+nlkE820lU4KobT+HYr0X8I0SfcV+5x8KDeOW4LtAM=; b=KdIJwgu4PZQHdOAKoIlKq2vOA7
+        Zq4fAxwQuF1hVzOXH5cNJ/Vwgzk2Uedyta66qHuLRIQF+JbRBNdxDzIVL34t794smIPd8pzxsEMxE
+        z59WIj1Pg5M4eudyZhZ6COE1cV20c79khf0BbYIJL3j0Y/1gin90e+ArVOWQQXJ7Ds+UBHiWxhss2
+        12p4dZ3rFh+U9oJMi4Y3uMBtvUDj4+y7J6AnCpeMeqwxAEz/AGtpcMxdgPXbt50V26tSk3kYblHlh
+        7ard6aPhwcPuoXKui+GfI1y7H8uanYHMXtHBEwRJ4fz6qSIc1glE5CfQiuw4z3++la7JndJNYnIgF
+        lPG66dLQ==;
+Received: from willy by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mEMnN-00FEFh-9v; Fri, 13 Aug 2021 02:19:50 +0000
+Date:   Fri, 13 Aug 2021 03:19:41 +0100
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH v5 14/52] advansys: Use scsi_cmd_to_rq() instead of
+ scsi_cmnd.request
+Message-ID: <YRXWvYiOd1pRcTdJ@casper.infradead.org>
+References: <20210809230355.8186-1-bvanassche@acm.org>
+ <20210809230355.8186-15-bvanassche@acm.org>
+ <b4dd9bf7-1d4b-9a09-2100-dcf0c3aeb434@suse.de>
+ <95223f29-1ced-a7a7-7fc7-90a3578f0447@acm.org>
+ <yq135rftlva.fsf@ca-mkp.ca.oracle.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <yq135rftlva.fsf@ca-mkp.ca.oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Update copyrights to 2021 for files modified in the 14.0.0.1 patch set.
+On Wed, Aug 11, 2021 at 10:58:10PM -0400, Martin K. Petersen wrote:
+> Thoughts?
 
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
----
- drivers/scsi/lpfc/lpfc_bsg.h     | 2 +-
- drivers/scsi/lpfc/lpfc_debugfs.h | 2 +-
- drivers/scsi/lpfc/lpfc_logmsg.h  | 2 +-
- drivers/scsi/lpfc/lpfc_mem.c     | 2 +-
- 4 files changed, 4 insertions(+), 4 deletions(-)
+Seems a bit verbose to me.
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.h b/drivers/scsi/lpfc/lpfc_bsg.h
-index 17012bcc7c38..749d6c43cfce 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.h
-+++ b/drivers/scsi/lpfc/lpfc_bsg.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2019 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2021 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2010-2015 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
-index dd4cdd8563eb..a5bf71b34972 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.h
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2019 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2021 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2007-2011 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_logmsg.h b/drivers/scsi/lpfc/lpfc_logmsg.h
-index d719a16c0f96..7d480c798794 100644
---- a/drivers/scsi/lpfc/lpfc_logmsg.h
-+++ b/drivers/scsi/lpfc/lpfc_logmsg.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2021 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2004-2009 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-diff --git a/drivers/scsi/lpfc/lpfc_mem.c b/drivers/scsi/lpfc/lpfc_mem.c
-index 7cb9f4b52b49..870e53b8f81d 100644
---- a/drivers/scsi/lpfc/lpfc_mem.c
-+++ b/drivers/scsi/lpfc/lpfc_mem.c
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2018 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2021 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2004-2014 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
--- 
-2.26.2
+> -	qc = ata_qc_new_init(dev, scsi_cmd_to_rq(cmd)->tag);
+> +	qc = ata_qc_new_init(dev, scsi_cmd_to_tag(cmd));
+
+	qc = ata_qc_new_init(dev, scmd_tag(cmd));
+
+would fit with scmd_printk(), scmd_id(), scmd_channel(), etc.
 
