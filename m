@@ -2,64 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A16CCC432BE
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 12:38:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A4E5C432BE
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:39:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 89CF66325E
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 12:38:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C00063250
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:39:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232086AbhHPMiv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Aug 2021 08:38:51 -0400
-Received: from verein.lst.de ([213.95.11.211]:54273 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231190AbhHPMiu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Aug 2021 08:38:50 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 811C36736F; Mon, 16 Aug 2021 14:38:02 +0200 (CEST)
-Date:   Mon, 16 Aug 2021 14:38:02 +0200
+        id S238532AbhHPNkX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Aug 2021 09:40:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52556 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238345AbhHPNkT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 09:40:19 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B08EC0A891A;
+        Mon, 16 Aug 2021 06:21:25 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=WrmoQ8Kp3XO7sv0E/Vt68M24WtgLki2ksIFJXIBFGrE=; b=sKevCjd4WMSoqB+bP3aS+IEo7d
+        nSLie8iOwyZEVhvTLgmVIGfcbxq2+KZbHtbvhKQCVaCX5t5IVbmowLoyzLOYEu5NrRX3gtAomlfyj
+        PMTMFUuGH9lvbNOxrMVkLvoWR11oZN37yPhVRsh5M6jdVAOu6QSb3klEfGYwOlhtIQHUYndIdAoei
+        WwvVAE1gUZgz+Wz4Q4jlAxMORhgriM8G0XubGpA516e06UzoOK73UrFvHmDPsT2cSRBZADcBAj7e7
+        5+PFktdSB6e9MyiLZD6YHkM6E/nOPseaUzhmWZEP6nwpbJRmypdh66FCcZciU+NLCksusRDnwB4+O
+        D/EolM0A==;
+Received: from [2001:4bb8:188:1b1:3731:604a:a6cd:dc60] (helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mFcWG-001OSC-41; Mon, 16 Aug 2021 13:19:23 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Richard Weinberger <richard@nod.at>,
-        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-        Geoff Levand <geoff@infradead.org>,
-        Ilya Dryomov <idryomov@gmail.com>,
-        Paolo Bonzini <pbonzini@redhat.com>,
-        Stefan Hajnoczi <stefanha@redhat.com>,
-        Song Liu <song@kernel.org>, Mike Snitzer <snitzer@redhat.com>,
-        Coly Li <colyli@suse.de>, Stefan Haberland <sth@linux.ibm.com>,
+Cc:     Stefan Haberland <sth@linux.ibm.com>,
         Jan Hoeppner <hoeppner@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        linux-block@vger.kernel.org, dm-devel@redhat.com,
-        linux-um@lists.infradead.org, ceph-devel@vger.kernel.org,
-        virtualization@lists.linux-foundation.org,
-        linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: add a bvec_virt helper
-Message-ID: <20210816123802.GA18385@lst.de>
-References: <20210804095634.460779-1-hch@lst.de>
+        Doug Gilbert <dgilbert@interlog.com>,
+        =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+        linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: ensure each gendisk always has a request_queue reference v2
+Date:   Mon, 16 Aug 2021 15:19:01 +0200
+Message-Id: <20210816131910.615153-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210804095634.460779-1-hch@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-ping.
+Hi Jens,
 
-On Wed, Aug 04, 2021 at 11:56:19AM +0200, Christoph Hellwig wrote:
-> Hi Jens,
-> 
-> this series adds a bvec_virt helper to return the virtual address of the
-> data in bvec to replace the open coded calculation, and as a reminder
-> that generall bio/bvec data can be in high memory unless it is caller
-> controller or in an architecture specific driver where highmem is
-> impossible.
----end quoted text---
+this is the final batch of the gendisk interface cleanup series.  This
+remove the last uses of the legacy alloc_disk interface and ensures we
+always have a request_queue reference for a gendisk.
+
+Changes since v1:
+ - rebased to the latest for-5.15/block tree to fix minor conflicts
+ - add a new patch to fix to fix a queue to disk look issue exposed
+   by the bdi move
+
+Diffstat:
+ block/bfq-iosched.c             |    2 -
+ block/blk-cgroup.c              |    4 +--
+ block/blk-mq.c                  |    8 +++---
+ block/blk-settings.c            |    8 +++---
+ block/blk-sysfs.c               |   13 ++++------
+ block/blk-wbt.c                 |   10 ++++----
+ block/genhd.c                   |   32 ++++++++++++--------------
+ drivers/nvme/host/core.c        |   33 ++++++++++----------------
+ drivers/s390/block/dasd_genhd.c |    7 ++++-
+ drivers/scsi/sd.c               |    6 +++-
+ drivers/scsi/sg.c               |   32 +++++++-------------------
+ drivers/scsi/sr.c               |    7 ++++-
+ drivers/scsi/st.c               |   49 +++++++++-------------------------------
+ drivers/scsi/st.h               |    2 -
+ include/linux/blk-mq.h          |   10 ++------
+ include/linux/blkdev.h          |    5 +---
+ include/linux/genhd.h           |   30 +++---------------------
+ include/trace/events/kyber.h    |    6 ++--
+ 18 files changed, 98 insertions(+), 166 deletions(-)
