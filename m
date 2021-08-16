@@ -2,192 +2,197 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D82C432BE
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Aug 2021 15:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 200A8C4320E
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 08:32:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A66C761208
-	for <linux-scsi@archiver.kernel.org>; Sun, 15 Aug 2021 15:21:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE6F761B28
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 08:32:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237950AbhHOPWA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 15 Aug 2021 11:22:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36614 "EHLO
+        id S234821AbhHPIc6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Aug 2021 04:32:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38242 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232412AbhHOPV7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Aug 2021 11:21:59 -0400
-Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C02C0C061764;
-        Sun, 15 Aug 2021 08:21:29 -0700 (PDT)
-Received: by mail-pj1-x1035.google.com with SMTP id om1-20020a17090b3a8100b0017941c44ce4so10162032pjb.3;
-        Sun, 15 Aug 2021 08:21:29 -0700 (PDT)
+        with ESMTP id S234929AbhHPIc4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 04:32:56 -0400
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8390C0613CF
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 01:32:24 -0700 (PDT)
+Received: by mail-qk1-x72e.google.com with SMTP id y144so5207463qkb.6
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 01:32:24 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:subject:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=lqJuD6ruM5b7S82+pL+Pgu4dT3Aqj2AS9hae1tFkdRo=;
-        b=UDo6cP9FMCJZ7xCJSIXhjRcP0ErAenE3P03nucshW6LzGwza1JB05cdoyvyJEbpJya
-         8aLc4Djx0DAWFPSijwKCksggpzGOsA8NJq7xgbAAE0ffHXqq0QXSiy6tfbcSn5jEQof6
-         2ma3PA51qPRAxAYmuW2j7KtkKsDVNuEpegmAaBxh1f/jI4N5cAWqPcx4oFXN2pO1Ashc
-         87gLBUkKiBVoGeCUHLrBIQIIXvlCZHYUAOsOdCOfo4PAkq83QiSfgI8TAI23zhfr8YUr
-         vMCV/udIh/MHgkHngzhYrcPnpUZMQSk6GK/ENzO0mZC8nGBR7d73iCxBtmg3WUTr+cQr
-         /F0g==
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=HYtmGhl1AghXFJT5u08dPW89E0A7ubFJxRBTU0c/D+E=;
+        b=DjtuDSDSm8Ax49Ts09MHWLF79Eu0Ph+Nf62f+Mk/GLzqjU0GRmb3HwsXnYJQXdJxqC
+         2Cc2IeHeA3fw6kPOd1efJpt6J7xW2jVBO8YrK/JvktHmGbdKs7pGer26MCyt2lKSaqYt
+         DketXnsYeVsh5/u1+46IMzckOZkpAq1i8GDYM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=lqJuD6ruM5b7S82+pL+Pgu4dT3Aqj2AS9hae1tFkdRo=;
-        b=ZVdCSxt5oTv6CnY39LlyLRn847IwRlpBN5V0/Bq5k/X8IoaLwPgwqCkfeuU1sJh4n7
-         gWRcKDAwDDSNxZIrKXCf+TGZGvyDEM1KrVvThAK1uP/q8txmxR3l5gduHLLPlqPPTqk+
-         CxmGo6iyQinvrONetSSbt9IyI88waMKbQxY9gyRiN7gU+behL3EYcd79CqBEh/XMqNYI
-         4zGH8CJ0bmmNbV7a7wQSPtW7/Q5wlKpNVFYPFGAZ322UN0o5l94v20AHwvCUaoHOPGt9
-         THWwsTYvsEncli1xKl7+grfXEvtzqG0tzyPTDLU0pMc4N3kKmx+5jJFau8UaFxj26FJg
-         M/nA==
-X-Gm-Message-State: AOAM532Gsw0iF7YuEWzOrcrK4Trtn/ga8ERe7NJRWZJX+4AJXbjfSaAf
-        uzYA9Mw0O9MJkABbTZshFu0=
-X-Google-Smtp-Source: ABdhPJxpcs+C9yGRhB/oJwUav2sPEXUGNBEjk6Xqpn3/4lgsrB3QPLQ97I5YOwA+8w9+RuIKBCv5Rw==
-X-Received: by 2002:a63:770f:: with SMTP id s15mr11711033pgc.137.1629040889118;
-        Sun, 15 Aug 2021 08:21:29 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:18:efec::50b])
-        by smtp.gmail.com with ESMTPSA id nn18sm6289319pjb.21.2021.08.15.08.21.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 15 Aug 2021 08:21:28 -0700 (PDT)
-From:   Tianyu Lan <ltykernel@gmail.com>
-Subject: Re: [PATCH V3 04/13] HV: Mark vmbus ring buffer visible to host in
- Isolation VM
-To:     Michael Kelley <mikelley@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "will@kernel.org" <will@kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "ardb@kernel.org" <ardb@kernel.org>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "pgonda@google.com" <pgonda@google.com>,
-        "martin.b.radev@gmail.com" <martin.b.radev@gmail.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
-        "saravanand@fb.com" <saravanand@fb.com>,
-        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
-        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "rientjes@google.com" <rientjes@google.com>,
-        "hannes@cmpxchg.org" <hannes@cmpxchg.org>,
-        "tj@kernel.org" <tj@kernel.org>
-Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-References: <20210809175620.720923-1-ltykernel@gmail.com>
- <20210809175620.720923-5-ltykernel@gmail.com>
- <MWHPR21MB1593CCBBBB83E721F8FDACD3D7F99@MWHPR21MB1593.namprd21.prod.outlook.com>
-Message-ID: <43d4cb59-5ddd-516d-1f5c-4a1a799a9f2d@gmail.com>
-Date:   Sun, 15 Aug 2021 23:21:14 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=HYtmGhl1AghXFJT5u08dPW89E0A7ubFJxRBTU0c/D+E=;
+        b=svNxLwSegsRZd/E8TBxccST1fh6pog4tQLIfsw3DsyKdHjEAae6wuSFAn9t+7SSET9
+         CKppviZEmgGMf1oh2YXa5RdTTPKZwT81vfaZXWBjiCqEPRUcYv4EXjwyc0BGZQXNbs4T
+         glEVRgU7YdBIvXYeWODcdwYfRfSaKRZYmAr/YZ+oSQKqkGL/ma+lypmVeuFpbiWpCYrv
+         b7nFiYFtwgw5qhsuBhHY8cTGRiYeSgx2/BtDE10/ZxQ2HtL/hKkImTq7MZcKyAXKOmK4
+         SMEf3yK8XT8Ry9xbe+i6YnlpF60Uv9p40TxAJTwfvrRHYtCDsFFgx5rFErIQXbjb5JBI
+         j4aA==
+X-Gm-Message-State: AOAM530+S33vNSy1QgdY2gBfhApstonDsfzMCES3I5fh1ujkXlocB9sS
+        J0suMOHyR5/qutM//5z7Um3MfNxJUdLQdxhedjwxiA==
+X-Google-Smtp-Source: ABdhPJxNv8vpKQpN7GpusizXMyvMCrQlXZhpUMt5DOVgWT9dcNxBiR+B5FUGNNIik3rn7CUmc2ljSU8n8LCUzuW6VmI=
+X-Received: by 2002:a05:620a:1342:: with SMTP id c2mr293487qkl.264.1629102743869;
+ Mon, 16 Aug 2021 01:32:23 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <MWHPR21MB1593CCBBBB83E721F8FDACD3D7F99@MWHPR21MB1593.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20210809230355.8186-1-bvanassche@acm.org> <20210809230355.8186-30-bvanassche@acm.org>
+In-Reply-To: <20210809230355.8186-30-bvanassche@acm.org>
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+Date:   Mon, 16 Aug 2021 14:02:12 +0530
+Message-ID: <CAHsXFKFTOGb5Spt-U4ejxC-=i-iFuaggSR=4HZgUjgVRg++Lxg@mail.gmail.com>
+Subject: Re: [PATCH v5 29/52] mpi3mr: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="0000000000005fa9b805c9a90a98"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+--0000000000005fa9b805c9a90a98
+Content-Type: text/plain; charset="UTF-8"
 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/mpi3mr/mpi3mr_os.c | 8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
+>
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> index 24ac7ddec749..bc1c32f599de 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
+> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+> @@ -50,7 +50,7 @@ static u16 mpi3mr_host_tag_for_scmd(struct mpi3mr_ioc *mrioc,
+>         u32 unique_tag;
+>         u16 host_tag, hw_queue;
+>
+> -       unique_tag = blk_mq_unique_tag(scmd->request);
+> +       unique_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
+>
+>         hw_queue = blk_mq_unique_tag_to_hwq(unique_tag);
+>         if (hw_queue >= mrioc->num_op_reply_q)
+> @@ -2016,7 +2016,7 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
+>         case SCSI_PROT_DIF_TYPE0:
+>                 eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
+>                 scsiio_req->cdb.eedp32.primary_reference_tag =
+> -                   cpu_to_be32(t10_pi_ref_tag(scmd->request));
+> +                   cpu_to_be32(t10_pi_ref_tag(scsi_cmd_to_rq(scmd)));
+>                 break;
+>         case SCSI_PROT_DIF_TYPE1:
+>         case SCSI_PROT_DIF_TYPE2:
+> @@ -2024,7 +2024,7 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
+>                     MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE |
+>                     MPI3_EEDPFLAGS_CHK_GUARD;
+>                 scsiio_req->cdb.eedp32.primary_reference_tag =
+> -                   cpu_to_be32(t10_pi_ref_tag(scmd->request));
+> +                   cpu_to_be32(t10_pi_ref_tag(scsi_cmd_to_rq(scmd)));
+Bart,
 
-On 8/13/2021 6:20 AM, Michael Kelley wrote:
->> @@ -474,6 +482,13 @@ static int __vmbus_establish_gpadl(struct vmbus_channel *channel,
->>   	if (ret)
->>   		return ret;
->>
->> +	ret = set_memory_decrypted((unsigned long)kbuffer,
->> +				   HVPFN_UP(size));
->> +	if (ret) {
->> +		pr_warn("Failed to set host visibility.\n");
-> Enhance this message a bit.  "Failed to set host visibility for new GPADL\n"
-> and also output the value of ret.
+t10_pi_ref_tag API is replaced by scsi_prot_ref_tag in the patch below
+posted by Martin.
 
-OK. This looks better. Thanks.
+https://patchwork.kernel.org/project/linux-scsi/patch/20210806040023.5355-4-martin.petersen@oracle.com/
 
-> 
->> @@ -539,6 +554,10 @@ static int __vmbus_establish_gpadl(struct vmbus_channel *channel,
->>   	/* At this point, we received the gpadl created msg */
->>   	*gpadl_handle = gpadlmsg->gpadl;
->>
->> +	channel->gpadl_array[index].size = size;
->> +	channel->gpadl_array[index].buffer = kbuffer;
->> +	channel->gpadl_array[index].gpadlhandle = *gpadl_handle;
->> +
-> I can see the merits of transparently stashing the memory address and size
-> that will be needed by vmbus_teardown_gpadl(), so that the callers of
-> __vmbus_establish_gpadl() don't have to worry about it.  But doing the
-> stashing transparently is somewhat messy.
-> 
-> Given that the callers are already have memory allocated to save the
-> GPADL handle, a little refactoring would make for a much cleaner solution.
-> Instead of having memory allocated for the 32-bit GPADL handle, callers
-> should allocate the slightly larger struct vmbus_gpadl that you've
-> defined below.  The calling interfaces can be updated to take a pointer
-> to this structure instead of a pointer to the 32-bit GPADL handle, and
-> you can save the memory address and size right along with the GPADL
-> handle.  This approach touches a few more files, but I think there are
-> only two callers outside of the channel management code -- netvsc
-> and hv_uio -- so it's not a big change.
+Rebase is required for mpi3mr and mpt3sas driver changes in this series.
 
-Yes, this is a good suggestion and Will update in the next version.
+Kashyap
 
-> 
->> @@ -859,6 +886,19 @@ int vmbus_teardown_gpadl(struct vmbus_channel *channel, u32 gpadl_handle)
->>   	spin_unlock_irqrestore(&vmbus_connection.channelmsg_lock, flags);
->>
->>   	kfree(info);
->> +
->> +	/* Find gpadl buffer virtual address and size. */
->> +	for (i = 0; i < VMBUS_GPADL_RANGE_COUNT; i++)
->> +		if (channel->gpadl_array[i].gpadlhandle == gpadl_handle)
->> +			break;
->> +
->> +	if (set_memory_encrypted((unsigned long)channel->gpadl_array[i].buffer,
->> +			HVPFN_UP(channel->gpadl_array[i].size)))
->> +		pr_warn("Fail to set mem host visibility.\n");
-> Enhance this message a bit: "Failed to set host visibility in GPADL teardown\n".
-> Also output the returned error code to help in debugging any occurrences of
-> a failure
-Yes, agree. Will update.
+--0000000000005fa9b805c9a90a98
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
-Thanks.
+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
+P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
+4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
+BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
+YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
+BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
+YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
+Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
+HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
+BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
+OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
+gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
+GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
+vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
+MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
+MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
+VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIB57ayr3/0y8fYhN+CjePW8tHS9r
+SgoTwEC/hMqQ8szCMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDgxNjA4MzIyNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
+AwQCATANBgkqhkiG9w0BAQEFAASCAQDHZLZ0XaddDL4I2vTY83fhwfZX8JDwT7wmMHJjYGun+HUg
+SV7ESCWFzvU13om7EouqT9DUsMTidsnsjM527v7eWyvFDp3Y4PI4vItK67hpdhpMxYXTzvic7c2t
+/1EGK+m85BZ3odcbpdeYA7AxBpO/SjMOq5w8PglN9R3ILrjG0+MJZSPIKZHKcG0utZGGz6X7kcf8
+OMpixdUyJXQdhEC0QArQ2QR6tG5Hh7Ef5XC74Xy+qMYhTY/o/vuPcfk9OymqOUn6Xl2dT0lV05VE
+muDahsMvoLQrBQxl8a1CKr6yCWOgrlncXznUMa2Q8TZroNzaa89QwOT8FAYUST4S9Opg
+--0000000000005fa9b805c9a90a98--
