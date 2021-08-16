@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D5BC4320A
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:40:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B315DC4320E
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:41:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 98B9B6323E
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:40:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F4516323E
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:41:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239455AbhHPNlI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Aug 2021 09:41:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51836 "EHLO
+        id S237151AbhHPNll (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Aug 2021 09:41:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239208AbhHPNlD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 09:41:03 -0400
+        with ESMTP id S235747AbhHPNlg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 09:41:36 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 234FBC0698D8;
-        Mon, 16 Aug 2021 06:24:14 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64EB4C00F77F;
+        Mon, 16 Aug 2021 06:25:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=VSY5+aubavQCko7U0IzQq6eA1rwvwuw7Ga9+zkk/gDE=; b=u316wH5b9viMoG6IYMkp0/CXhg
-        6Z682ZdTrS3u7Uds+I6k8HICM2TcP7IbREqUfYdV90cDa6e7KLa+VnagQYF/5ioB7Ns0qD4ogeQ8b
-        +sEzTsnMw5Nkt7pG8yLQScRL7xfwxbD+HpouQuMoR423V91ye/SgFQpXQLNx/sCyxROm5UtrnOuDm
-        B7Fa+q2y7sGrhjbq1mn/DmN/WmeoZCKhtW2b5g9V8nAB69EKki2ZMgYufEb9diF7ql8ITgefGa63M
-        tiz44oiHS6vUtpEdpkLrhIOyn61e9h8QvsXdnl0fHA9h3l4YymN/pXogb/IDoG5u+AQyd4nohBuwg
-        7sfb4kMg==;
+        bh=+ZgCPc9R+8ZqAnkdxHmSlgsiJBgy6LBHpiGslEIsu7U=; b=dO4o2M86J6ptELbV4b5rwBkFiq
+        S7niRGq4woW7YSYEhu4MEg+5dP3lov20yQrdrg2E9kLSZhfGhYxFqNQJLuYHvPNRCNF3uX9DEofwa
+        +oFRXc8GowVDnrOFyvD3dG4e0td+01wJt1o244hvwSzxIX/MP2vZl6IbDTU9CF3Gb796z7rs5Mgrm
+        Vr8UHj2fUikBj4ZZBPdySdBa0JYIxW52M/ZJkcLdpvCed1Eq4naSWB7Xo4KmOwj7TN3X61bPXW2hF
+        tcqITKujeNxhmrdZj+7RY50wd/sJXKXm06fucpaMLmGOnxAfWRiYdJSdAUeKeHwbRDAygMr/3yjok
+        k06/Ee+g==;
 Received: from [2001:4bb8:188:1b1:3731:604a:a6cd:dc60] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mFcYP-001Ocv-GO; Mon, 16 Aug 2021 13:21:47 +0000
+        id 1mFcZY-001Ok5-Oj; Mon, 16 Aug 2021 13:23:25 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Stefan Haberland <sth@linux.ibm.com>,
@@ -45,9 +45,9 @@ Cc:     Stefan Haberland <sth@linux.ibm.com>,
         Luis Chamberlain <mcgrof@kernel.org>,
         linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 2/9] st: do not allocate a gendisk
-Date:   Mon, 16 Aug 2021 15:19:03 +0200
-Message-Id: <20210816131910.615153-3-hch@lst.de>
+Subject: [PATCH 3/9] sg: do not allocate a gendisk
+Date:   Mon, 16 Aug 2021 15:19:04 +0200
+Message-Id: <20210816131910.615153-4-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210816131910.615153-1-hch@lst.de>
 References: <20210816131910.615153-1-hch@lst.de>
@@ -58,169 +58,140 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-st is a character driver and thus does not need to allocate a gendisk,
+sg is a character driver and thus does not need to allocate a gendisk,
 which is only used for file system-like block layer I/O on block
 devices.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/st.c | 49 ++++++++++++-----------------------------------
- drivers/scsi/st.h |  2 +-
- 2 files changed, 13 insertions(+), 38 deletions(-)
+ drivers/scsi/sg.c | 32 +++++++++-----------------------
+ 1 file changed, 9 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index c6f14540ae03..d1abc020f3c0 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -309,13 +309,8 @@ static char * st_incompatible(struct scsi_device* SDp)
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 91e2221bbb0d..477267add49d 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -166,7 +166,7 @@ typedef struct sg_device { /* holds the state of each scsi generic device */
+ 	bool exclude;		/* 1->open(O_EXCL) succeeded and is active */
+ 	int open_cnt;		/* count of opens (perhaps < num(sfds) ) */
+ 	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10-> all devs */
+-	struct gendisk *disk;
++	char name[DISK_NAME_LEN];
+ 	struct cdev * cdev;	/* char_dev [sysfs: /sys/cdev/major/sg<n>] */
+ 	struct kref d_ref;
+ } Sg_device;
+@@ -202,8 +202,7 @@ static void sg_device_destroy(struct kref *kref);
+ #define SZ_SG_REQ_INFO sizeof(sg_req_info_t)
+ 
+ #define sg_printk(prefix, sdp, fmt, a...) \
+-	sdev_prefix_printk(prefix, (sdp)->device,		\
+-			   (sdp)->disk->disk_name, fmt, ##a)
++	sdev_prefix_printk(prefix, (sdp)->device, (sdp)->name, fmt, ##a)
+ 
+ /*
+  * The SCSI interfaces that use read() and write() as an asynchronous variant of
+@@ -832,7 +831,7 @@ sg_common_write(Sg_fd * sfp, Sg_request * srp,
+ 
+ 	srp->rq->timeout = timeout;
+ 	kref_get(&sfp->f_ref); /* sg_rq_end_io() does kref_put(). */
+-	blk_execute_rq_nowait(sdp->disk, srp->rq, at_head, sg_rq_end_io);
++	blk_execute_rq_nowait(NULL, srp->rq, at_head, sg_rq_end_io);
+ 	return 0;
  }
- 
  
--static inline char *tape_name(struct scsi_tape *tape)
--{
--	return tape->disk->disk_name;
--}
--
- #define st_printk(prefix, t, fmt, a...) \
--	sdev_prefix_printk(prefix, (t)->device, tape_name(t), fmt, ##a)
-+	sdev_prefix_printk(prefix, (t)->device, (t)->name, fmt, ##a)
- #ifdef DEBUG
- #define DEBC_printk(t, fmt, a...) \
- 	if (debugging) { st_printk(ST_DEB_MSG, t, fmt, ##a ); }
-@@ -363,7 +358,7 @@ static int st_chk_result(struct scsi_tape *STp, struct st_request * SRpnt)
- 	int result = SRpnt->result;
- 	u8 scode;
- 	DEB(const char *stp;)
--	char *name = tape_name(STp);
-+	char *name = STp->name;
- 	struct st_cmdstatus *cmdstatp;
+@@ -1119,8 +1118,7 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
+ 		return put_user(max_sectors_bytes(sdp->device->request_queue),
+ 				ip);
+ 	case BLKTRACESETUP:
+-		return blk_trace_setup(sdp->device->request_queue,
+-				       sdp->disk->disk_name,
++		return blk_trace_setup(sdp->device->request_queue, NULL,
+ 				       MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
+ 				       NULL, p);
+ 	case BLKTRACESTART:
+@@ -1456,7 +1454,7 @@ static struct class *sg_sysfs_class;
+ static int sg_sysfs_valid = 0;
  
- 	if (!result)
-@@ -3841,8 +3836,9 @@ static long st_ioctl_common(struct file *file, unsigned int cmd_in, void __user
- 			    !capable(CAP_SYS_RAWIO))
- 				i = -EPERM;
- 			else
--				i = scsi_cmd_ioctl(STp->disk->queue, STp->disk,
--						   file->f_mode, cmd_in, p);
-+				i = scsi_cmd_ioctl(STp->device->request_queue,
-+						   NULL, file->f_mode, cmd_in,
-+						   p);
- 			if (i != -ENOTTY)
- 				return i;
- 			break;
-@@ -4216,7 +4212,7 @@ static int create_one_cdev(struct scsi_tape *tape, int mode, int rew)
- 
- 	i = mode << (4 - ST_NBR_MODE_BITS);
- 	snprintf(name, 10, "%s%s%s", rew ? "n" : "",
--		 tape->disk->disk_name, st_formats[i]);
-+		 tape->name, st_formats[i]);
- 
- 	dev = device_create(&st_sysfs_class, &tape->device->sdev_gendev,
- 			    cdev_devno, &tape->modes[mode], "%s", name);
-@@ -4271,7 +4267,6 @@ static void remove_cdevs(struct scsi_tape *tape)
- static int st_probe(struct device *dev)
+ static Sg_device *
+-sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
++sg_alloc(struct scsi_device *scsidp)
  {
- 	struct scsi_device *SDp = to_scsi_device(dev);
--	struct gendisk *disk = NULL;
- 	struct scsi_tape *tpnt = NULL;
- 	struct st_modedef *STm;
- 	struct st_partstat *STps;
-@@ -4301,27 +4296,13 @@ static int st_probe(struct device *dev)
- 		goto out;
- 	}
+ 	struct request_queue *q = scsidp->request_queue;
+ 	Sg_device *sdp;
+@@ -1492,9 +1490,7 @@ sg_alloc(struct gendisk *disk, struct scsi_device *scsidp)
+ 
+ 	SCSI_LOG_TIMEOUT(3, sdev_printk(KERN_INFO, scsidp,
+ 					"sg_alloc: dev=%d \n", k));
+-	sprintf(disk->disk_name, "sg%d", k);
+-	disk->first_minor = k;
+-	sdp->disk = disk;
++	sprintf(sdp->name, "sg%d", k);
+ 	sdp->device = scsidp;
+ 	mutex_init(&sdp->open_rel_lock);
+ 	INIT_LIST_HEAD(&sdp->sfds);
+@@ -1521,19 +1517,11 @@ static int
+ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
+ {
+ 	struct scsi_device *scsidp = to_scsi_device(cl_dev->parent);
+-	struct gendisk *disk;
+ 	Sg_device *sdp = NULL;
+ 	struct cdev * cdev = NULL;
+ 	int error;
+ 	unsigned long iflags;
  
 -	disk = alloc_disk(1);
 -	if (!disk) {
--		sdev_printk(KERN_ERR, SDp,
--			    "st: out of memory. Device not attached.\n");
--		goto out_buffer_free;
+-		pr_warn("%s: alloc_disk failed\n", __func__);
+-		return -ENOMEM;
 -	}
+-	disk->major = SCSI_GENERIC_MAJOR;
 -
- 	tpnt = kzalloc(sizeof(struct scsi_tape), GFP_KERNEL);
- 	if (tpnt == NULL) {
- 		sdev_printk(KERN_ERR, SDp,
- 			    "st: Can't allocate device descriptor.\n");
--		goto out_put_disk;
-+		goto out_buffer_free;
- 	}
- 	kref_init(&tpnt->kref);
--	tpnt->disk = disk;
--	disk->private_data = &tpnt->driver;
--	/* SCSI tape doesn't register this gendisk via add_disk().  Manually
--	 * take queue reference that release_disk() expects. */
--	if (!blk_get_queue(SDp->request_queue))
--		goto out_put_disk;
--	disk->queue = SDp->request_queue;
- 	tpnt->driver = &st_template;
+ 	error = -ENOMEM;
+ 	cdev = cdev_alloc();
+ 	if (!cdev) {
+@@ -1543,7 +1531,7 @@ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
+ 	cdev->owner = THIS_MODULE;
+ 	cdev->ops = &sg_fops;
  
- 	tpnt->device = SDp;
-@@ -4394,10 +4375,10 @@ static int st_probe(struct device *dev)
- 	idr_preload_end();
- 	if (error < 0) {
- 		pr_warn("st: idr allocation failed: %d\n", error);
--		goto out_put_queue;
-+		goto out_free_tape;
- 	}
- 	tpnt->index = error;
--	sprintf(disk->disk_name, "st%d", tpnt->index);
-+	sprintf(tpnt->name, "st%d", tpnt->index);
- 	tpnt->stats = kzalloc(sizeof(struct scsi_tape_stats), GFP_KERNEL);
- 	if (tpnt->stats == NULL) {
- 		sdev_printk(KERN_ERR, SDp,
-@@ -4414,9 +4395,9 @@ static int st_probe(struct device *dev)
- 	scsi_autopm_put_device(SDp);
+-	sdp = sg_alloc(disk, scsidp);
++	sdp = sg_alloc(scsidp);
+ 	if (IS_ERR(sdp)) {
+ 		pr_warn("%s: sg_alloc failed\n", __func__);
+ 		error = PTR_ERR(sdp);
+@@ -1561,7 +1549,7 @@ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
+ 		sg_class_member = device_create(sg_sysfs_class, cl_dev->parent,
+ 						MKDEV(SCSI_GENERIC_MAJOR,
+ 						      sdp->index),
+-						sdp, "%s", disk->disk_name);
++						sdp, "%s", sdp->name);
+ 		if (IS_ERR(sg_class_member)) {
+ 			pr_err("%s: device_create failed\n", __func__);
+ 			error = PTR_ERR(sg_class_member);
+@@ -1589,7 +1577,6 @@ sg_add_device(struct device *cl_dev, struct class_interface *cl_intf)
+ 	kfree(sdp);
  
- 	sdev_printk(KERN_NOTICE, SDp,
--		    "Attached scsi tape %s\n", tape_name(tpnt));
-+		    "Attached scsi tape %s\n", tpnt->name);
- 	sdev_printk(KERN_INFO, SDp, "%s: try direct i/o: %s (alignment %d B)\n",
--		    tape_name(tpnt), tpnt->try_dio ? "yes" : "no",
-+		    tpnt->name, tpnt->try_dio ? "yes" : "no",
- 		    queue_dma_alignment(SDp->request_queue) + 1);
- 
- 	return 0;
-@@ -4428,10 +4409,7 @@ static int st_probe(struct device *dev)
- 	spin_lock(&st_index_lock);
- 	idr_remove(&st_index_idr, tpnt->index);
- 	spin_unlock(&st_index_lock);
--out_put_queue:
--	blk_put_queue(disk->queue);
--out_put_disk:
+ out:
 -	put_disk(disk);
-+out_free_tape:
- 	kfree(tpnt);
- out_buffer_free:
- 	kfree(buffer);
-@@ -4470,7 +4448,6 @@ static int st_remove(struct device *dev)
- static void scsi_tape_release(struct kref *kref)
- {
- 	struct scsi_tape *tpnt = to_scsi_tape(kref);
--	struct gendisk *disk = tpnt->disk;
+ 	if (cdev)
+ 		cdev_del(cdev);
+ 	return error;
+@@ -1613,7 +1600,6 @@ sg_device_destroy(struct kref *kref)
+ 	SCSI_LOG_TIMEOUT(3,
+ 		sg_printk(KERN_INFO, sdp, "sg_device_destroy\n"));
  
- 	tpnt->device = NULL;
+-	put_disk(sdp->disk);
+ 	kfree(sdp);
+ }
  
-@@ -4480,8 +4457,6 @@ static void scsi_tape_release(struct kref *kref)
- 		kfree(tpnt->buffer);
- 	}
- 
--	disk->private_data = NULL;
--	put_disk(disk);
- 	kfree(tpnt->stats);
- 	kfree(tpnt);
- 	return;
-diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
-index 9d3c38bb0794..c0ef0d9aaf8a 100644
---- a/drivers/scsi/st.h
-+++ b/drivers/scsi/st.h
-@@ -187,7 +187,7 @@ struct scsi_tape {
- 	unsigned char last_cmnd[6];
- 	unsigned char last_sense[16];
- #endif
--	struct gendisk *disk;
-+	char name[DISK_NAME_LEN];
- 	struct kref     kref;
- 	struct scsi_tape_stats *stats;
- };
+@@ -2606,7 +2592,7 @@ static int sg_proc_seq_show_debug(struct seq_file *s, void *v)
+ 		goto skip;
+ 	read_lock(&sdp->sfd_lock);
+ 	if (!list_empty(&sdp->sfds)) {
+-		seq_printf(s, " >>> device=%s ", sdp->disk->disk_name);
++		seq_printf(s, " >>> device=%s ", sdp->name);
+ 		if (atomic_read(&sdp->detaching))
+ 			seq_puts(s, "detaching pending close ");
+ 		else if (sdp->device) {
 -- 
 2.30.2
 
