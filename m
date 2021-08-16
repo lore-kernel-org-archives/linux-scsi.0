@@ -2,197 +2,139 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 200A8C4320E
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 08:32:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACA45C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 09:44:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EE6F761B28
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 08:32:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8899861B70
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 09:44:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234821AbhHPIc6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Aug 2021 04:32:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38242 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234929AbhHPIc4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 04:32:56 -0400
-Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8390C0613CF
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 01:32:24 -0700 (PDT)
-Received: by mail-qk1-x72e.google.com with SMTP id y144so5207463qkb.6
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 01:32:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=HYtmGhl1AghXFJT5u08dPW89E0A7ubFJxRBTU0c/D+E=;
-        b=DjtuDSDSm8Ax49Ts09MHWLF79Eu0Ph+Nf62f+Mk/GLzqjU0GRmb3HwsXnYJQXdJxqC
-         2Cc2IeHeA3fw6kPOd1efJpt6J7xW2jVBO8YrK/JvktHmGbdKs7pGer26MCyt2lKSaqYt
-         DketXnsYeVsh5/u1+46IMzckOZkpAq1i8GDYM=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=HYtmGhl1AghXFJT5u08dPW89E0A7ubFJxRBTU0c/D+E=;
-        b=svNxLwSegsRZd/E8TBxccST1fh6pog4tQLIfsw3DsyKdHjEAae6wuSFAn9t+7SSET9
-         CKppviZEmgGMf1oh2YXa5RdTTPKZwT81vfaZXWBjiCqEPRUcYv4EXjwyc0BGZQXNbs4T
-         glEVRgU7YdBIvXYeWODcdwYfRfSaKRZYmAr/YZ+oSQKqkGL/ma+lypmVeuFpbiWpCYrv
-         b7nFiYFtwgw5qhsuBhHY8cTGRiYeSgx2/BtDE10/ZxQ2HtL/hKkImTq7MZcKyAXKOmK4
-         SMEf3yK8XT8Ry9xbe+i6YnlpF60Uv9p40TxAJTwfvrRHYtCDsFFgx5rFErIQXbjb5JBI
-         j4aA==
-X-Gm-Message-State: AOAM530+S33vNSy1QgdY2gBfhApstonDsfzMCES3I5fh1ujkXlocB9sS
-        J0suMOHyR5/qutM//5z7Um3MfNxJUdLQdxhedjwxiA==
-X-Google-Smtp-Source: ABdhPJxNv8vpKQpN7GpusizXMyvMCrQlXZhpUMt5DOVgWT9dcNxBiR+B5FUGNNIik3rn7CUmc2ljSU8n8LCUzuW6VmI=
-X-Received: by 2002:a05:620a:1342:: with SMTP id c2mr293487qkl.264.1629102743869;
- Mon, 16 Aug 2021 01:32:23 -0700 (PDT)
+        id S235391AbhHPJog convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Aug 2021 05:44:36 -0400
+Received: from de-smtp-delivery-105.mimecast.com ([194.104.109.105]:58129 "EHLO
+        de-smtp-delivery-105.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230506AbhHPJog (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Aug 2021 05:44:36 -0400
+X-Greylist: delayed 369 seconds by postgrey-1.27 at vger.kernel.org; Mon, 16 Aug 2021 05:44:35 EDT
+Received: from GBR01-LO2-obe.outbound.protection.outlook.com
+ (mail-lo2gbr01lp2052.outbound.protection.outlook.com [104.47.21.52]) (Using
+ TLS) by relay.mimecast.com with ESMTP id de-mta-7-tAVT4TBrNxyCYsKs2sMypQ-1;
+ Mon, 16 Aug 2021 11:37:52 +0200
+X-MC-Unique: tAVT4TBrNxyCYsKs2sMypQ-1
+Received: from CWXP265MB2680.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:89::10)
+ by CWXP265MB3221.GBRP265.PROD.OUTLOOK.COM (2603:10a6:400:b9::13) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.13; Mon, 16 Aug
+ 2021 09:37:51 +0000
+Received: from CWXP265MB2680.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::4971:9c81:8b96:f29f]) by CWXP265MB2680.GBRP265.PROD.OUTLOOK.COM
+ ([fe80::4971:9c81:8b96:f29f%2]) with mapi id 15.20.4415.023; Mon, 16 Aug 2021
+ 09:37:51 +0000
+From:   =?iso-8859-1?Q?Christian_L=F6hle?= <CLoehle@hyperstone.com>
+To:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: sd: Do not exit sd_spinup_disk quietly
+Thread-Topic: [PATCH] scsi: sd: Do not exit sd_spinup_disk quietly
+Thread-Index: AQHXkoIH1dJPthk+/U+6Ae1Ef5Tiig==
+Date:   Mon, 16 Aug 2021 09:37:51 +0000
+Message-ID: <CWXP265MB26803209FD08A64222EEEA02C4FD9@CWXP265MB2680.GBRP265.PROD.OUTLOOK.COM>
+Accept-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 0a9829e2-baf4-4d03-804a-08d96099845a
+x-ms-traffictypediagnostic: CWXP265MB3221:
+x-microsoft-antispam-prvs: <CWXP265MB322143F21778B7A3783C4A20C4FD9@CWXP265MB3221.GBRP265.PROD.OUTLOOK.COM>
+x-ms-oob-tlc-oobclassifiers: OLM:6790
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0
+x-microsoft-antispam-message-info: 7JCC3AQahDKlsndyInvgUzhCHTWz65lg8zLa7eFv+yt/6LIPZmVuPt96x7uRkOTpSdhAm+nXJB/gZgAZTLGjtzdZVWvVB1T59Rg/xkqjpH/wuOu1UONYOuH4DRQm7fOCKpC2mYbdRxrlvqjDQAzUZtrmj3fVnr2Gefhal/A+p8v0al8xtRGK2DSjWYLKOVEtC1sUdJjsQ2TXdZwMZKUcISSMWsCcXc5XeF69NjNGldS18NAT3fvNsWGS9Zw5GUhdkZFgL8qQnEzPeerTkTaYknuD8Jo6TwIdMG4+fq7QJnyn3ixtj8XZTWDp1bJq8/g2XyICsQrns4u8RYNzCpW6eczn/TIntA7TBNMAWvgSccqW81pqMY76JrlhHB8t4UmBd8HI87AXFWOIEMBegw1oAcYfcIFYtyRDP88eoUbhp5mG5ulEHuQ1CrZpdA9T7tio6ctUNSCikBm+1EJ3wO11o9nz40ga37s3RYUiT7j+3dgIxVUXfrmJDpqe+Xc2xaNZQQpmq2tTUElzfKbcRQOronYJ9hqvsGUvj/wOzlkA8oZTljJehmvfMjIUfNgCqC+sDBJ2vA6VKtxFXr47zdY29CuKHAiQK/7uAG5ciE7dluOFdOVtpgAqUn2BxldYwsFjCnxXrTEgOdaWcFOZjkL0BU0ZNnH9oCcaDAIceKqYojoNh36HdfT3DI5N0n3xAr/Nbyz+wivws4szEBY2k17C7A==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWXP265MB2680.GBRP265.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(396003)(346002)(366004)(376002)(39830400003)(136003)(122000001)(71200400001)(64756008)(316002)(8936002)(66446008)(86362001)(2906002)(26005)(38100700002)(76116006)(91956017)(66476007)(66946007)(66556008)(5660300002)(55016002)(478600001)(4744005)(38070700005)(9686003)(110136005)(186003)(33656002)(8676002)(7696005)(6506007)(83380400001)(52536014);DIR:OUT;SFP:1101
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?iso-8859-1?Q?AqV3c9kjYQScEG09e+qNYzRSyrCDgG/K1mDHHdiMkoNolcIzraFbYY3tZ6?=
+ =?iso-8859-1?Q?frSnLus7O3s0QCWQSeSY0zxYlZyDvZH4YenOaXRkTJnQOxE8RbjhBd9wW4?=
+ =?iso-8859-1?Q?dhYFbOxHFWQ3g536ijnZs8lva7FwxT4mOeq7mq7U80ykXfvJSS1H2VIvwJ?=
+ =?iso-8859-1?Q?c94EMV3SHW15FnuTQN/5fqmmILuO8DRBQjGUqqZAUaO48LbjuLclW8yZ7/?=
+ =?iso-8859-1?Q?2vth24AMQGxV3UcG/Joxci0sQKGrmYTRld+uFiFkZUBcco4JRDJ0WabzOe?=
+ =?iso-8859-1?Q?4MI2/f+l/ejvrV6Iyw7efy8E1PVkEXdpcD5ZfBrwFi5Vcbm7FiGMcqWtcu?=
+ =?iso-8859-1?Q?WB7aXo5sLHij2qzWL6WkaxC8X6X4fdPtAJNPHPiw0yUohsCh53b2XzKeRB?=
+ =?iso-8859-1?Q?L6bvAJGyuTxlZgUtQoxClpCfaWaELIr8YI7TQMxEn/WWF+UlM63QotbuG/?=
+ =?iso-8859-1?Q?qbMVc34bbjBbU1ixsX4YUqEjNHSBa6gwf3fEOn9il8HdUhCBKEImWdQH9B?=
+ =?iso-8859-1?Q?O2IIMGvMQPp7x1fmfWYE7fu+N1pqTK23d0MnjpBMUYbRP55rkZxOEHSG9U?=
+ =?iso-8859-1?Q?Rpv8QqPqAkxEB07m9zvr1G2Vuhlq+KHoOvn2lWJXDHEjZEu3jQTZ+olvTX?=
+ =?iso-8859-1?Q?Ulb2CvPeJq0bjJZrPvNzhW9QVSUu0dWKQC/00CuugybRDt4lj12VfC6fzu?=
+ =?iso-8859-1?Q?ULIVKRGPdGIUrMQwz6f+IVXDfo30lrnuzLmT+H7z3ry2X3oB7wDvKdj9AD?=
+ =?iso-8859-1?Q?PRg56Mh4YnE1w1ruoW7Mu0S8tGdX7QJpeUqztKqDi02zr7nI7pjSyR9TqN?=
+ =?iso-8859-1?Q?ZOko9FHpXXKzf62UPbw6drQcgr99JG2SqDFe58lg5/vI3gxFsHt0Oqjzg/?=
+ =?iso-8859-1?Q?fSog3GF9vAQkcKNIP9clQpG+Vq2cG2yZHCZpFPF/PqZdKD9Mdh0vxLQKxO?=
+ =?iso-8859-1?Q?MFK6mIUZFB6IvhEOjkueihGAYlfHGW+WGXiZaTfWdiKw5L4VsASJDsSQM4?=
+ =?iso-8859-1?Q?4Bw2jckwmy4UNZqqJNJBdIMeiTW+76HgSR5BLjIXVlvee0JbIJAmwO8Ody?=
+ =?iso-8859-1?Q?hO6wGILytk0O7NJShdwcvv+xuARRHX5bNgqqriEnnuNNAHJ6iPWvXLM6GI?=
+ =?iso-8859-1?Q?rfwyEDLpbvecytL8R+PHB/QJ5mdcghOv55wm0L0iYR3m0sRqWvqsEeIYH6?=
+ =?iso-8859-1?Q?ZR//wvB8FAApOwixuzApmU7gMZL8xIdMrWhIZPpbqS/g95YpL7G3X5msB+?=
+ =?iso-8859-1?Q?K+LB4XFRHlZQQ0bdBdlUif28vJGxqkBKCAKg9zWOIUYy6n1dONINuZ3aW9?=
+ =?iso-8859-1?Q?1/ejlsKoFRi+XSf0/pa7pqSdtm1YhVeZO8vLLA5cBpm7QO8=3D?=
+x-ms-exchange-transport-forked: True
 MIME-Version: 1.0
-References: <20210809230355.8186-1-bvanassche@acm.org> <20210809230355.8186-30-bvanassche@acm.org>
-In-Reply-To: <20210809230355.8186-30-bvanassche@acm.org>
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-Date:   Mon, 16 Aug 2021 14:02:12 +0530
-Message-ID: <CAHsXFKFTOGb5Spt-U4ejxC-=i-iFuaggSR=4HZgUjgVRg++Lxg@mail.gmail.com>
-Subject: Re: [PATCH v5 29/52] mpi3mr: Use scsi_cmd_to_rq() instead of scsi_cmnd.request
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000005fa9b805c9a90a98"
+X-OriginatorOrg: hyperstone.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: CWXP265MB2680.GBRP265.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0a9829e2-baf4-4d03-804a-08d96099845a
+X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Aug 2021 09:37:51.5794
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 86f203eb-e878-4188-b297-34c118c18b11
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: m3iQ9Ie17MPngmfjeDHj9Et0irWp0j6VakUQaWFXXH97txYLh5KoYkXtUB5fs+8z8EJjTSVU6rIl2Pvnl6q1xA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CWXP265MB3221
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: hyperstone.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000005fa9b805c9a90a98
-Content-Type: text/plain; charset="UTF-8"
+The sd_spinup_disk function logs what is happening nicely.
+Unfortunately this output stops if the media was marked removed
+in the meantime. To prevent a puzzling output, add a print
+for this case, too.
 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/mpi3mr/mpi3mr_os.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> index 24ac7ddec749..bc1c32f599de 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -50,7 +50,7 @@ static u16 mpi3mr_host_tag_for_scmd(struct mpi3mr_ioc *mrioc,
->         u32 unique_tag;
->         u16 host_tag, hw_queue;
->
-> -       unique_tag = blk_mq_unique_tag(scmd->request);
-> +       unique_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
->
->         hw_queue = blk_mq_unique_tag_to_hwq(unique_tag);
->         if (hw_queue >= mrioc->num_op_reply_q)
-> @@ -2016,7 +2016,7 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
->         case SCSI_PROT_DIF_TYPE0:
->                 eedp_flags |= MPI3_EEDPFLAGS_INCR_PRI_REF_TAG;
->                 scsiio_req->cdb.eedp32.primary_reference_tag =
-> -                   cpu_to_be32(t10_pi_ref_tag(scmd->request));
-> +                   cpu_to_be32(t10_pi_ref_tag(scsi_cmd_to_rq(scmd)));
->                 break;
->         case SCSI_PROT_DIF_TYPE1:
->         case SCSI_PROT_DIF_TYPE2:
-> @@ -2024,7 +2024,7 @@ static void mpi3mr_setup_eedp(struct mpi3mr_ioc *mrioc,
->                     MPI3_EEDPFLAGS_ESC_MODE_APPTAG_DISABLE |
->                     MPI3_EEDPFLAGS_CHK_GUARD;
->                 scsiio_req->cdb.eedp32.primary_reference_tag =
-> -                   cpu_to_be32(t10_pi_ref_tag(scmd->request));
-> +                   cpu_to_be32(t10_pi_ref_tag(scsi_cmd_to_rq(scmd)));
-Bart,
+Signed-off-by: Christian Loehle <cloehle@hyperstone.com>
+---
+ drivers/scsi/sd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-t10_pi_ref_tag API is replaced by scsi_prot_ref_tag in the patch below
-posted by Martin.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index b8d55af763f9..7e556f5b57e0 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2180,8 +2180,10 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+ 			 * doesn't have any media in it, don't bother
+ 			 * with any more polling.
+ 			 */
+-			if (media_not_present(sdkp, &sshdr))
++			if (media_not_present(sdkp, &sshdr)) {
++				sd_printk(KERN_NOTICE, sdkp, "Media removed, stopped polling\n");
+ 				return;
++			}
+ 
+ 			if (the_result)
+ 				sense_valid = scsi_sense_valid(&sshdr);
+-- 
+2.32.0
 
-https://patchwork.kernel.org/project/linux-scsi/patch/20210806040023.5355-4-martin.petersen@oracle.com/
+Hyperstone GmbH | Line-Eid-Strasse 3 | 78467 Konstanz
+Managing Directors: Dr. Jan Peter Berns.
+Commercial register of local courts: Freiburg HRB381782
 
-Rebase is required for mpi3mr and mpt3sas driver changes in this series.
-
-Kashyap
-
---0000000000005fa9b805c9a90a98
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
-4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
-BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
-YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
-BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
-MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
-YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
-Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
-HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
-BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
-OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
-gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
-GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
-vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
-MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
-MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
-VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIB57ayr3/0y8fYhN+CjePW8tHS9r
-SgoTwEC/hMqQ8szCMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDgxNjA4MzIyNFowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
-CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQDHZLZ0XaddDL4I2vTY83fhwfZX8JDwT7wmMHJjYGun+HUg
-SV7ESCWFzvU13om7EouqT9DUsMTidsnsjM527v7eWyvFDp3Y4PI4vItK67hpdhpMxYXTzvic7c2t
-/1EGK+m85BZ3odcbpdeYA7AxBpO/SjMOq5w8PglN9R3ILrjG0+MJZSPIKZHKcG0utZGGz6X7kcf8
-OMpixdUyJXQdhEC0QArQ2QR6tG5Hh7Ef5XC74Xy+qMYhTY/o/vuPcfk9OymqOUn6Xl2dT0lV05VE
-muDahsMvoLQrBQxl8a1CKr6yCWOgrlncXznUMa2Q8TZroNzaa89QwOT8FAYUST4S9Opg
---0000000000005fa9b805c9a90a98--
