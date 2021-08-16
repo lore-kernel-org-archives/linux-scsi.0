@@ -2,155 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6F8FC432BE
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 15:53:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33D60C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 16:29:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7D57C60F58
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 15:53:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BCB360F58
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 16:29:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233552AbhHPPxX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Aug 2021 11:53:23 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:59916 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237170AbhHPPux (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Aug 2021 11:50:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629129021;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=e9V47nu1tdB3HihFEHa605ngQMwEj5TNSAxNMSmRQs8=;
-        b=YMhwCDMNNsCMc4wPLeW2KCj2rNQUa9hS5ABC/V8xZe4A6y9+Ng0Qx48lSdsfUYRqNCkg3n
-        83BcRK3SHZJzm/gqgq6CaulvqEnilaE0QSBJHP8UVJXayfwY3JKduJGAI5LkuAxMPOP/dR
-        BjzgHLIex+RdV+L6BjBlbTwUbaxUe5E=
-Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
- [209.85.167.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-450-EuvcB2v0Mv6EsP0fk_CElg-1; Mon, 16 Aug 2021 11:50:20 -0400
-X-MC-Unique: EuvcB2v0Mv6EsP0fk_CElg-1
-Received: by mail-lf1-f72.google.com with SMTP id d21-20020a05651233d500b003cd423f70efso852532lfg.23
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 08:50:19 -0700 (PDT)
+        id S229697AbhHPQ3n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Aug 2021 12:29:43 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36576 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229600AbhHPQ3m (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 12:29:42 -0400
+Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 224CBC061764
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 09:29:11 -0700 (PDT)
+Received: by mail-pl1-x62a.google.com with SMTP id f3so21312887plg.3
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 09:29:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=pWtezKFyikH3cSpXd0m8JXnvMa0CZ94sCB0c7l5CI3w=;
+        b=rF319z5ikWGuE1kvUgF6ozZ882P1hCtwhzJIrAkkuGACLL9lNIa0KVjnFfmIKFi1UH
+         PmDtws8ifux+6f1yRyboHE99KuPmCMXAJKs200CS/WrikN4zygz0q2JDgvg/h0awiSxv
+         Tg5WmSC3ljc4682PSJ6vM9mufeVMvMJ7tfvBbOSVG3bFtdu32zbupA3wMk2UUsYm6u9J
+         Tn0X5Ec7CdR7yqX5w9kEEktywhTV+yNCo52AakSFPI/J6uPNScPqwjz6SiFwSlYyLAqb
+         rc49X2qGBmsx1hThp485SQ3zLvpYdr6U747TxJW6U1XCPFvHZl5yrv9yd//f1NPQtJ/i
+         RG+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=e9V47nu1tdB3HihFEHa605ngQMwEj5TNSAxNMSmRQs8=;
-        b=VNuty3IPcdUCcnW+H0DobudMnrxY8nR0t44qHGTQmRNCU2RDvRbmublhmpDrhfQahr
-         D+X2AQN3qBCd40crUEL14JCR+pNTwVGT6d+b4hcTWMlAfKaYC1zat+h//dQ9KpTV4grY
-         St/Fq7Eq+CxMAIR+8oTGGYNFJCuqmSkMBS2zNnGUjyD8Tz2m3m1cAwX/nR3jIs4pIvWA
-         rpttqWbxRV9VwqpzQt6vmw3Iyj0MbtgfSKoPqjPx2bMpmCl40uNkgVvhUrP0RsB5JbUs
-         cWPuoiErVpoo3J1BldjMtq+0nWqbZUeyN4+Gt9XjHGrg3dqgeXukFtk81oF960WTWGY0
-         o2zg==
-X-Gm-Message-State: AOAM531Sn9LNysTUntnea44WplST0w2sTLx6qZMTiNWDYbHC+yizusY8
-        PaY/EBmH7oTvG9OD+Ni4KkM8iRZbDLwyAwekYplYxPG73McKK2SCUm+SnxKekBjT5O0PLIZSlXh
-        rmRC8QgMVGp0BUdSMqYtcI12EMgrY61wepVZuvQ==
-X-Received: by 2002:a05:6512:456:: with SMTP id y22mr5533283lfk.647.1629129018302;
-        Mon, 16 Aug 2021 08:50:18 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJwYKp8N35ngSFV1JQgPEtrP2LghXpp0ovI3XuTPw6uhwPl2Oh6I/VaDu17nmxri46bGsTbAB55Bxd3XRif017c=
-X-Received: by 2002:a05:6512:456:: with SMTP id y22mr5533214lfk.647.1629129018115;
- Mon, 16 Aug 2021 08:50:18 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=pWtezKFyikH3cSpXd0m8JXnvMa0CZ94sCB0c7l5CI3w=;
+        b=qOJ3bXet9mH7yymyIwm6qLK8OSnxkNG+VrElmJgZ6gCCOyqVbemGyz1vFD2Y9qTnEr
+         kWZmmeiF4T37vJ7C70bkrMjWDh3EXqV8+td0dl2voqK3rSSwc9B31m/SQA2PDlrmhJwf
+         m20ppwK8fmrj7w9nS6b3jqz2lsol+Tqvs98QdidPYa0ulI2amc/VLAd66PkeLu3PZN1B
+         2zJ98SOoZ702Md1EY3Q9LE/3G6Bza10bzLMqlq3xL4CQjJ42rlDXNZHcyCr8eEAdAQDc
+         gD1xn0XDl5k1TphkOUEUEBo7lqHWX4kNo6kNqc7cxxvt+1lomTl+dYn+n4oSDJVPEcng
+         jYFQ==
+X-Gm-Message-State: AOAM530NX4ff/9RbK8SpwCfhXBejc4f692WpKqI28ZJVaNa/RmahxmtE
+        UAuqKEJIG4AvCXI/SwirK7dkIFP9KtQ=
+X-Google-Smtp-Source: ABdhPJws0xTo3hAO+n2u/Q9GLmkH0Los156mQ4D7dCF/Qp0ajawwwepGjqjL4KBzLVj3e3sDjsSheg==
+X-Received: by 2002:a17:90a:e641:: with SMTP id ep1mr1679539pjb.209.1629131350597;
+        Mon, 16 Aug 2021 09:29:10 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id h5sm11257938pfv.131.2021.08.16.09.29.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 16 Aug 2021 09:29:10 -0700 (PDT)
+From:   James Smart <jsmart2021@gmail.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v3 00/16] lpfc: Update lpfc to revision 14.0.0.1
+Date:   Mon, 16 Aug 2021 09:28:45 -0700
+Message-Id: <20210816162901.121235-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
 MIME-Version: 1.0
-References: <20210720232624.1493424-1-nitesh@redhat.com> <CAFki+LkNzk0ajUeuBnJZ6mp1kxB0+zZf60tw1Vfq+nPy-bvftQ@mail.gmail.com>
-In-Reply-To: <CAFki+LkNzk0ajUeuBnJZ6mp1kxB0+zZf60tw1Vfq+nPy-bvftQ@mail.gmail.com>
-From:   Nitesh Lal <nilal@redhat.com>
-Date:   Mon, 16 Aug 2021 11:50:06 -0400
-Message-ID: <CAFki+LkyTNeorQ5e_6_Ud==X7dt27G38ZjhEewuhqGLfanjw_A@mail.gmail.com>
-Subject: Re: [PATCH v5 00/14] genirq: Cleanup the abuse of irq_set_affinity_hint()
-To:     netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-        davem@davemloft.net, benve@cisco.com, _govind@gmx.com,
-        jassisinghbrar@gmail.com, Viresh Kumar <viresh.kumar@linaro.org>,
-        ajit.khaparde@broadcom.com, sriharsha.basavapatna@broadcom.com,
-        somnath.kotur@broadcom.com
-Cc:     linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Marcelo Tosatti <mtosatti@redhat.com>,
-        Ingo Molnar <mingo@kernel.org>, jbrandeb@kernel.org,
-        Frederic Weisbecker <frederic@kernel.org>,
-        Juri Lelli <juri.lelli@redhat.com>,
-        Alex Belits <abelits@marvell.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, rostedt@goodmis.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        akpm@linuxfoundation.org, sfr@canb.auug.org.au,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
-        Neil Horman <nhorman@tuxdriver.com>, pjwaskiewicz@gmail.com,
-        Stefan Assmann <sassmann@redhat.com>,
-        Tomas Henzl <thenzl@redhat.com>, james.smart@broadcom.com,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Ken Cox <jkc@redhat.com>, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com,
-        Alaa Hleihel <ahleihel@redhat.com>,
-        Kamal Heib <kheib@redhat.com>, borisp@nvidia.com,
-        saeedm@nvidia.com, Nitesh Lal <nilal@redhat.com>,
-        "Nikolova, Tatyana E" <tatyana.e.nikolova@intel.com>,
-        "Ismail, Mustafa" <mustafa.ismail@intel.com>,
-        Al Stone <ahs3@redhat.com>,
-        Leon Romanovsky <leonro@nvidia.com>,
-        Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
-        bjorn.andersson@linaro.org, chunkuang.hu@kernel.org,
-        yongqiang.niu@mediatek.com, baolin.wang7@gmail.com,
-        Petr Oros <poros@redhat.com>, Ming Lei <minlei@redhat.com>,
-        Ewan Milne <emilne@redhat.com>, jejb@linux.ibm.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        kabel@kernel.org, Jakub Kicinski <kuba@kernel.org>,
-        kashyap.desai@broadcom.com,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        suganath-prabu.subramani@broadcom.com,
-        Thomas Gleixner <tglx@linutronix.de>, ley.foon.tan@intel.com,
-        huangguangbin2@huawei.com, jbrunet@baylibre.com,
-        johannes@sipsolutions.net, snelson@pensando.io,
-        lewis.hanly@microchip.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 2, 2021 at 11:26 AM Nitesh Lal <nilal@redhat.com> wrote:
->
-> On Tue, Jul 20, 2021 at 7:26 PM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
-> >
-> > The drivers currently rely on irq_set_affinity_hint() to either set the
-> > affinity_hint that is consumed by the userspace and/or to enforce a custom
-> > affinity.
-> >
+Update lpfc to revision 14.0.0.1
 
-[...]
+This patch set adds support the Congestion Management Framework (CMF)
+which a component of Emulex San Manager (ESM). ESM is an inband
+monitoring and management solution.  CMF performs congestion monitoring
+and adaptive management with roles split between the adapter and the
+driver.
 
->
-> Gentle ping.
-> Any comments on the following patches:
->
->   genirq: Provide new interfaces for affinity hints
->   scsi: megaraid_sas: Use irq_set_affinity_and_hint
->   scsi: mpt3sas: Use irq_set_affinity_and_hint
->   enic: Use irq_update_affinity_hint
->   be2net: Use irq_update_affinity_hint
->   mailbox: Use irq_update_affinity_hint
->   hinic: Use irq_set_affinity_and_hint
->
-> or any other patches?
->
+The CMF framework consists of tables and buffers exchanged between
+the adapter and the driver. The tables indicate whether congestion is
+to be managed, values for management, and congestion statistics. When
+fully managed, periodic synchronization occurs between the driver
+and the adapter.
 
-Any comments on the following patches:
+The patches were cut against Martin's 5.15/scsi-queue tree
 
-  enic: Use irq_update_affinity_hint
-  be2net: Use irq_update_affinity_hint
-  mailbox: Use irq_update_affinity_hint
-  hinic: Use irq_set_affinity_and_hint
+V2:
+ Patch 5:
+   Addressed kernel test robot warnings for printk arg types. Substituted
+     0x%zx for %ld for sizeof args.
 
-or any other patches?
-Any help in testing will also be very useful.
+v3:
+ Patch 9/10/11:
+   Address krobot cross compile errors: "__aeabi_ldivmod". Use div_u64
+     instead of explicit divide.
+
+James Smart (16):
+  fc: Add EDC ELS definition
+  lpfc: Add SET_HOST_DATA mbox cmd to pass date/time info to firmware
+  lpfc: Add MIB feature enablement support
+  lpfc: Expand FPIN and RDF receive logging
+  lpfc: Add EDC ELS support
+  lpfc: Add cm statistics buffer support
+  lpfc: Add support for cm enablement buffer
+  lpfc: add cmfsync WQE support
+  lpfc: Add support for the CM framework
+  lpfc: Add rx monitoring statistics
+  lpfc: Add support for maintaining the cm statistics buffer
+  lpfc: Add debugfs support for cm framework buffers
+  lpfc: Add cmf_info sysfs entry
+  lpfc: Add bsg support for retrieving adapter cmf data
+  lpfc: Update lpfc version to 14.0.0.1
+  lpfc: Copyright updates for 14.0.0.1 patches
+
+ drivers/scsi/lpfc/lpfc.h         |  252 ++++++
+ drivers/scsi/lpfc/lpfc_attr.c    |  226 ++++-
+ drivers/scsi/lpfc/lpfc_bsg.c     |   89 ++
+ drivers/scsi/lpfc/lpfc_bsg.h     |   10 +-
+ drivers/scsi/lpfc/lpfc_crtn.h    |   28 +
+ drivers/scsi/lpfc/lpfc_ct.c      |   17 +-
+ drivers/scsi/lpfc/lpfc_debugfs.c |  223 +++++
+ drivers/scsi/lpfc/lpfc_debugfs.h |   11 +-
+ drivers/scsi/lpfc/lpfc_els.c     | 1065 ++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c |   23 +-
+ drivers/scsi/lpfc/lpfc_hw.h      |    2 +
+ drivers/scsi/lpfc/lpfc_hw4.h     |  249 +++++-
+ drivers/scsi/lpfc/lpfc_init.c    | 1402 +++++++++++++++++++++++++++++-
+ drivers/scsi/lpfc/lpfc_logmsg.h  |    5 +-
+ drivers/scsi/lpfc/lpfc_mem.c     |   15 +-
+ drivers/scsi/lpfc/lpfc_nvme.c    |   44 +-
+ drivers/scsi/lpfc/lpfc_nvme.h    |    3 -
+ drivers/scsi/lpfc/lpfc_scsi.c    |  187 +++-
+ drivers/scsi/lpfc/lpfc_sli.c     |  772 +++++++++++++++-
+ drivers/scsi/lpfc/lpfc_sli.h     |    2 +
+ drivers/scsi/lpfc/lpfc_sli4.h    |    1 +
+ drivers/scsi/lpfc/lpfc_version.h |    2 +-
+ include/uapi/scsi/fc/fc_els.h    |  106 +++
+ 23 files changed, 4620 insertions(+), 114 deletions(-)
 
 -- 
-Thanks
-Nitesh
+2.26.2
 
