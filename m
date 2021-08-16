@@ -2,160 +2,170 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-20.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4DD9C43214
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 18:12:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5685AC4320A
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 18:14:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 870F760D07
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 18:12:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35F6560EFF
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 18:14:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230009AbhHPSMa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Aug 2021 14:12:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60542 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229481AbhHPSMa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 14:12:30 -0400
-Received: from mail-io1-xd30.google.com (mail-io1-xd30.google.com [IPv6:2607:f8b0:4864:20::d30])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50899C061764;
-        Mon, 16 Aug 2021 11:11:58 -0700 (PDT)
-Received: by mail-io1-xd30.google.com with SMTP id a15so5587798iot.2;
-        Mon, 16 Aug 2021 11:11:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=OgXtNKQVWNS/t9DnTxT4k+sKuavXVHdSyozmTrDmIzs=;
-        b=VQMcJfqDIF28JPMngb0oQ/7fJS4RV/h/jGqHDfDcji1nnRVIW5va2razqqgzHvBHOS
-         TGfaCQjdn1vsY7Aam4D1pRST+6Ff/b4jXbQdLkSUS/jeJp2FMDX4bx1t2rZgASQVXNPn
-         WOJw/pN70skdHEW9+0y1qly5biPDnQ+jn9qcKqMzwA6DZEksN2oYTuSgCkTJlXiMqKBz
-         Et09bRVTahG0zDEiaW3HwGOd6dqWseR7SEYxBZQ4cNJ2DaOZuDpgFczJoNGB3XsmyVO1
-         YQZzJ7c0yfYdDp8kx9lkckpUCjm21/JIkZG4vjROEk/KkAooM4GdibKsTu5Il6ecpfmq
-         277w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=OgXtNKQVWNS/t9DnTxT4k+sKuavXVHdSyozmTrDmIzs=;
-        b=dBmopis+IxKL3SfqvUk3TepQgG2G+tsn/g5hw4Y2elP/wPmhe2iWLMNXAGYtv+qCA3
-         n8LuFk6wTwCNFIlNQhpU4DEsblNDre1awaeeKwoz0d7peXIYZi4AGeDBmW8nkG+lXMjm
-         q8my3wGuUSG90o1p44hFPPKXecHZfP8a3M2mVDrwoXVR8ADPEEfQ5O/IPYSiONRiHFUK
-         Qzi3hZuisZjb8lw2cCSdnsGPobJpoT2sKzk7JDC7MOyh0uYs5pmXF1raY/jq4uGVx1R7
-         HQ3JDPbeF+ZIGwex5HIKNtOndK/ivmqqPtD7AXSpTESzSWex/b5MRJGipVLUPXF7qeBL
-         nMQA==
-X-Gm-Message-State: AOAM530KUO7xM7Nf3dy+6ibNmmvJjJc3fyUkW+mJAexzGku/k7VJhjFC
-        /adnouicA0Uqtv95R2mrBVw5PdgCg2yPBnDQk3Y=
-X-Google-Smtp-Source: ABdhPJxe4xcrw0U4Dd1whvty55tfoYVW3p2Pw16+UKKJO6nXVsQXetYWVAQeXSpRs8A+FqzmkFphq0Q/eIfOk9SMXqI=
-X-Received: by 2002:a5d:9eda:: with SMTP id a26mr150414ioe.166.1629137517690;
- Mon, 16 Aug 2021 11:11:57 -0700 (PDT)
+        id S230170AbhHPSOl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Aug 2021 14:14:41 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:39588 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229481AbhHPSOj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Aug 2021 14:14:39 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 8522B4AB7F;
+        Mon, 16 Aug 2021 18:14:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        in-reply-to:content-disposition:content-type:content-type
+        :mime-version:references:message-id:subject:subject:from:from
+        :date:date:received:received:received; s=mta-01; t=1629137641;
+         x=1630952042; bh=jjOlrOal2xp49reqXeUtwQnhcJUmZfCoWXdHsH5GYQg=; b=
+        aJ4MHXG2/iLxl6a9bX1nT55Z19GP0k71DfJuNsRsxvOzgIEFYrZEoCtX/H7Fl0iW
+        1P+cai+gozGpXZHbifjoWw5DCsMiPj5V4LqlhhkNav/xniAIudLtW1b90ZbegZfM
+        QK57MOe2L1qXeQn2mcBtp5tYArsOw+rVkkeu6v752ng=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id 8uSiNkITcgMP; Mon, 16 Aug 2021 21:14:01 +0300 (MSK)
+Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 25D574AAFF;
+        Mon, 16 Aug 2021 21:14:01 +0300 (MSK)
+Received: from localhost (172.22.1.233) by T-EXCH-04.corp.yadro.com
+ (172.17.100.104) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Mon, 16
+ Aug 2021 21:14:00 +0300
+Date:   Mon, 16 Aug 2021 21:13:59 +0300
+From:   Roman Bolshakov <r.bolshakov@yadro.com>
+To:     David Disseldorp <ddiss@suse.de>
+CC:     Sergey Samoylenko <s.samoylenko@yadro.com>,
+        <martin.petersen@oracle.com>, <michael.christie@oracle.com>,
+        <bvanassche@acm.org>, <target-devel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Konstantin Shelekhin <k.shelekhin@yadro.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Anastasia Kovaleva <a.kovaleva@yadro.com>
+Subject: Re: [PATCH 1/1] scsi: target: core: Add 8Fh VPD page
+Message-ID: <YRqq50h81kYFFHki@SPB-NB-133.local>
+References: <20210729201943.40222-1-s.samoylenko@yadro.com>
+ <20210729201943.40222-2-s.samoylenko@yadro.com>
+ <20210813165255.650257ce@suse.de>
 MIME-Version: 1.0
-References: <20210720232624.1493424-1-nitesh@redhat.com> <20210720232624.1493424-11-nitesh@redhat.com>
-In-Reply-To: <20210720232624.1493424-11-nitesh@redhat.com>
-From:   Jassi Brar <jassisinghbrar@gmail.com>
-Date:   Mon, 16 Aug 2021 13:11:47 -0500
-Message-ID: <CABb+yY3Wz57dYZ8pa5zHatGRu1RFmyRK+UvN+B8txCcOUTPQzw@mail.gmail.com>
-Subject: Re: [PATCH v5 10/14] mailbox: Use irq_update_affinity_hint
-To:     Nitesh Narayan Lal <nitesh@redhat.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        "<netdev@vger.kernel.org>" <netdev@vger.kernel.org>,
-        linux-api@vger.kernel.org, linux-pci@vger.kernel.org,
-        Thomas Gleixner <tglx@linutronix.de>,
-        jesse.brandeburg@intel.com, Robin Murphy <robin.murphy@arm.com>,
-        mtosatti@redhat.com, mingo@kernel.org, jbrandeb@kernel.org,
-        frederic@kernel.org, juri.lelli@redhat.com, abelits@marvell.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Steven Rostedt <rostedt@goodmis.org>, peterz@infradead.org,
-        "David S . Miller" <davem@davemloft.net>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        stephen@networkplumber.org, rppt@linux.vnet.ibm.com,
-        chris.friesen@windriver.com, Marc Zyngier <maz@kernel.org>,
-        nhorman@tuxdriver.com, pjwaskiewicz@gmail.com, sassmann@redhat.com,
-        thenzl@redhat.com, kashyap.desai@broadcom.com,
-        sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        benve@cisco.com, govind@gmx.com, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
-        nilal@redhat.com, tatyana.e.nikolova@intel.com,
-        mustafa.ismail@intel.com, ahs3@redhat.com, leonro@nvidia.com,
-        chandrakanth.patil@broadcom.com,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
-        Chun-Kuang Hu <chunkuang.hu@kernel.org>,
-        Yongqiang Niu <yongqiang.niu@mediatek.com>,
-        Baolin Wang <baolin.wang7@gmail.com>, poros@redhat.com,
-        minlei@redhat.com, emilne@redhat.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, _govind@gmx.com, kabel@kernel.org,
-        Viresh Kumar <viresh.kumar@linaro.org>,
-        Tushar Khandelwal <Tushar.Khandelwal@arm.com>,
-        Jakub Kicinski <kuba@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20210813165255.650257ce@suse.de>
+X-Originating-IP: [172.22.1.233]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-04.corp.yadro.com (172.17.100.104)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Jul 20, 2021 at 6:27 PM Nitesh Narayan Lal <nitesh@redhat.com> wrote:
->
-> The driver uses irq_set_affinity_hint() to:
->
-> - Set the affinity_hint which is consumed by the userspace for
->   distributing the interrupts
->
-> - Enforce affinity
->
-> As per commit 6ac17fe8c14a ("mailbox: bcm-flexrm-mailbox: Set IRQ affinity
-> hint for FlexRM ring IRQs") the latter is done to ensure that the FlexRM
-> ring interrupts are evenly spread across all available CPUs. However, since
-> commit a0c9259dc4e1 ("irq/matrix: Spread interrupts on allocation") the
-> spreading of interrupts is dynamically performed at the time of allocation.
-> Hence, there is no need for the drivers to enforce their own affinity for
-> the spreading of interrupts.
->
-> Also, irq_set_affinity_hint() applying the provided cpumask as an affinity
-> for the interrupt is an undocumented side effect. To remove this side
-> effect irq_set_affinity_hint() has been marked as deprecated and new
-> interfaces have been introduced. Hence, replace the irq_set_affinity_hint()
-> with the new interface irq_update_affinity_hint() that only sets the
-> affinity_hint pointer.
->
-> Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-> ---
->  drivers/mailbox/bcm-flexrm-mailbox.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/mailbox/bcm-flexrm-mailbox.c b/drivers/mailbox/bcm-flexrm-mailbox.c
-> index 78073ad1f2f1..16982c13d323 100644
-> --- a/drivers/mailbox/bcm-flexrm-mailbox.c
-> +++ b/drivers/mailbox/bcm-flexrm-mailbox.c
-> @@ -1298,7 +1298,7 @@ static int flexrm_startup(struct mbox_chan *chan)
->         val = (num_online_cpus() < val) ? val / num_online_cpus() : 1;
->         cpumask_set_cpu((ring->num / val) % num_online_cpus(),
->                         &ring->irq_aff_hint);
-> -       ret = irq_set_affinity_hint(ring->irq, &ring->irq_aff_hint);
-> +       ret = irq_update_affinity_hint(ring->irq, &ring->irq_aff_hint);
->         if (ret) {
->                 dev_err(ring->mbox->dev,
->                         "failed to set IRQ affinity hint for ring%d\n",
-> @@ -1425,7 +1425,7 @@ static void flexrm_shutdown(struct mbox_chan *chan)
->
->         /* Release IRQ */
->         if (ring->irq_requested) {
-> -               irq_set_affinity_hint(ring->irq, NULL);
-> +               irq_update_affinity_hint(ring->irq, NULL);
->                 free_irq(ring->irq, ring);
->                 ring->irq_requested = false;
->         }
->
-Seems ok to me. But I don't have the h/w to test.
+On Fri, Aug 13, 2021 at 04:52:55PM +0200, David Disseldorp wrote:
+> Hi Sergey,
+> 
+> On Thu, 29 Jul 2021 23:19:43 +0300, Sergey Samoylenko wrote:
+> 
+> > The 8Fh VPD page announces the capabilities supported by
+> > the TCM XCOPY manager. It helps to expand the coverage of
+> > the third-party copy manager with SCSI testing utilities.
+> 
+> Please list which initiators use this VPD page, if you know of any.
+> Also, is there any test coverage for this? I don't see anything in
+> libiscsi...
+> 
 
-Acked-by: Jassi Brar <jaswinder.singh@linaro.org>
+Hi David,
 
-cheers.
+ESXi is one of the hosts that inspects Third Party Copy VPD Page.
+Windows detects ODX support using the page [1][2].
+
+The page is also used by libiscsi to detect presence and features of
+copy manager as was agreed with Bart in the PR [3]:
+
+"Implementing REPORT SUPPORTED OPERATION CODES in LIO would require more
+work than implementing the third-party copy VPD page.
+
+I'm fine with relying on the third-party copy VPD page, or in other
+words, to skip the copy offloading tests if that page is not supported.
+
+There are plans to implement XCOPY support in the Linux kernel sd
+driver. If nobody else volunteers I plan to work on this myself. I'm
+considering to only support SCSI targets that support the third-party
+copy VPD page. Or in other words, we will need support for that VPD page
+anyway."
+
+1. https://www.slideshare.net/CalvinChen5/a-joint-effort-of-the-storage-industry
+2. http://sg.danny.cz/sg/ddpt_xcopy_odx.html
+3. https://github.com/sahlberg/libiscsi/pull/353
+
+> > Reviewed-by: Konstantin Shelekhin <k.shelekhin@yadro.com>
+> > Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+> > Reviewed-by: Anastasia Kovaleva <a.kovaleva@yadro.com>
+> > Signed-off-by: Sergey Samoylenko <s.samoylenko@yadro.com>
+> > ---
+> >  drivers/target/target_core_spc.c | 230 ++++++++++++++++++++++++++++++-
+> >  1 file changed, 226 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+> > index 22703a0dbd07..169341712b10 100644
+> > --- a/drivers/target/target_core_spc.c
+> > +++ b/drivers/target/target_core_spc.c
+> ...
+> > +/* Third-party Copy VPD page */
+> > +static sense_reason_t
+> > +spc_emulate_evpd_8f(struct se_cmd *cmd, unsigned char *buf)
+> > +{
+> > +	struct se_device *dev = cmd->se_dev;
+> > +	int off;
+> > +	u16 page_len;
+> > +
+> > +	if (!dev->dev_attrib.emulate_3pc)
+> > +		return TCM_INVALID_CDB_FIELD;
+> > +
+> > +	/*
+> > +	 * Since the Third-party copy manager in TCM is quite simple
+> > +	 * and supports only two commands, the function sets
+> > +	 * many descriptor parameters as constants.
+> > +	 *
+> > +	 * As the Copy manager supports the EXTENDED COPY(LID1) command,
+> > +	 * the Third-party Copy VPD page should include five mandatory
+> > +	 * Third-party copy descriptors. Its are:
+> > +	 *   0001h - Supported Commands
+> > +	 *   0004h - Parameter Data
+> > +	 *   0008h - Supported Descriptors
+> > +	 *   000Ch - Supported CSCD Descriptor IDs
+> > +	 *   8001h - General Copy Operations
+> > +	 *
+> > +	 * See spc4 section 7.8.17
+> > +	 */
+> > +
+> > +	off = 4;
+> > +
+> > +	/* fill descriptors */
+> > +	off += spc_evpd_8f_encode_supp_cmds(&buf[off]);
+> > +	off += spc_evpd_8f_encode_param_data(&buf[off]);
+> > +	off += spc_evpd_8f_encode_supp_descrs(&buf[off]);
+> > +	off += spc_evpd_8f_encode_supp_cscd_descr_id(&buf[off]);
+> > +	off += spc_evpd_8f_encode_general_copy_ops(&buf[off]);
+> 
+> This looks risky in terms of buf overrun. I think it'd be good to pass
+> a @remaining or @buf_end param to these helper functions.
+> 
+
+It's doable but would require to change the signature of all existing
+VPD handlers. SE_INQUIRY_BUF is hardcoded to 1kb but it's also capped by
+EDTL to avoid buffer overruns:
+
+  memcpy(rbuf, buf, min_t(u32, SE_INQUIRY_BUF, cmd->data_length));
+
+Regards,
+Roman
