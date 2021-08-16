@@ -7,34 +7,34 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C979EC4320A
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:42:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E18FC43216
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:43:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ADBCC6324D
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:42:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4882B63282
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 13:43:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236889AbhHPNnL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Aug 2021 09:43:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53176 "EHLO
+        id S236345AbhHPNo2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Aug 2021 09:44:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53112 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237361AbhHPNnJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 09:43:09 -0400
+        with ESMTP id S237818AbhHPNmw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Aug 2021 09:42:52 -0400
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 37C2BC06807D;
-        Mon, 16 Aug 2021 06:30:54 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 413D9C0363EB;
+        Mon, 16 Aug 2021 06:29:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=Z9Yri10K8M6BGWsRMrTxjIL24t36teCRg8L/pCbSkH8=; b=oG5gOuW0HzJM1OtrDGoUAqkcm6
-        EUTmPZK9dTTxPIk9iHscmU26urUK0QQYRXEOBAi/bGIBXubzyJ2hvFjHMtCcIwa4IkxDIUDotxF/m
-        OwKAGW3farxT2NRauRfLByQ2l4iDWaL92S+uvrZgItcNeqgbqc4Mxx63rD/lxVSukC+SfxjthoQ+E
-        7fdO9qh3k/mg72P44vGRuxmcYn5n951Wl3T/9zaRPovcHBXmz2e16zVs5xPAnRetAhYK3craFqxJa
-        ACZ0gPNAU+9asBoBW+QM437oIlXha/0BqnfwvY8N6GegluALpo7QasyHEnppYNs/tB3YPmgzoOl+0
-        ARv0jBkw==;
+        bh=PDnZhy0QacZQFKggiG8wQPxbE9N2h5O9os3Tc7qV/9I=; b=OlvxcAF6osuKcwgJujjEEXGeUt
+        iys0eiLifOMI/aV13K+zle9dsnRMjO9gNlYREiINoLOcWuXIOOy4I/55hCTbmIlLAFg/xGMrItpKv
+        +KqtCoNZQeFpSXa4z5vi9PxyhtmhwGOlzr4EcmL9XWS3wwq/F1wgAm85LqWo/RoWz1vfSrGjY1/Ra
+        BSjmFA+fvsnchVm7n+o8cuWbaxDilVhc32J/7RDUMynJ3PhaP4z3MDQSTa9b5YU5b9IsRKVBMDq7U
+        /58bA4a7hELmC86nVItbnFPPDu8SF8Oe9kXEOseh4GmvT0U5xQ1pCg8RtCOz8PbhLvbCSg8TDhNT0
+        XGDgK/MA==;
 Received: from [2001:4bb8:188:1b1:3731:604a:a6cd:dc60] (helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mFcfm-001PUw-0D; Mon, 16 Aug 2021 13:29:15 +0000
+        id 1mFcex-001PLQ-IG; Mon, 16 Aug 2021 13:28:29 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Stefan Haberland <sth@linux.ibm.com>,
@@ -45,9 +45,9 @@ Cc:     Stefan Haberland <sth@linux.ibm.com>,
         Luis Chamberlain <mcgrof@kernel.org>,
         linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
         linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH 8/9] block: hold a request_queue reference for the lifetime of struct gendisk
-Date:   Mon, 16 Aug 2021 15:19:09 +0200
-Message-Id: <20210816131910.615153-9-hch@lst.de>
+Subject: [PATCH 7/9] block: pass a request_queue to __blk_alloc_disk
+Date:   Mon, 16 Aug 2021 15:19:08 +0200
+Message-Id: <20210816131910.615153-8-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210816131910.615153-1-hch@lst.de>
 References: <20210816131910.615153-1-hch@lst.de>
@@ -58,80 +58,153 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Acquire the queue ref dropped in disk_release in __blk_alloc_disk so any
-allocate gendisk always has a queue reference.
+Pass in a request_queue and assign disk->queue in __blk_alloc_disk to
+ensure struct gendisk always has a valid ->queue pointer.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/genhd.c         | 19 +++++++------------
- include/linux/genhd.h |  1 -
- 2 files changed, 7 insertions(+), 13 deletions(-)
+ block/blk-mq.c                  | 3 +--
+ block/genhd.c                   | 7 ++++---
+ drivers/s390/block/dasd_genhd.c | 4 ++--
+ drivers/scsi/sd.c               | 4 ++--
+ drivers/scsi/sr.c               | 4 ++--
+ include/linux/genhd.h           | 3 ++-
+ 6 files changed, 13 insertions(+), 12 deletions(-)
 
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 8ac30c343c06..2ca7e7c94b18 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -3143,12 +3143,11 @@ struct gendisk *__blk_mq_alloc_disk(struct blk_mq_tag_set *set, void *queuedata,
+ 	if (IS_ERR(q))
+ 		return ERR_CAST(q);
+ 
+-	disk = __alloc_disk_node(set->numa_node, lkclass);
++	disk = __alloc_disk_node(q, set->numa_node, lkclass);
+ 	if (!disk) {
+ 		blk_cleanup_queue(q);
+ 		return ERR_PTR(-ENOMEM);
+ 	}
+-	disk->queue = q;
+ 	return disk;
+ }
+ EXPORT_SYMBOL(__blk_mq_alloc_disk);
 diff --git a/block/genhd.c b/block/genhd.c
-index f18122ee2778..6294517cebe6 100644
+index caeda726189c..f18122ee2778 100644
 --- a/block/genhd.c
 +++ b/block/genhd.c
-@@ -551,15 +551,6 @@ void device_add_disk(struct device *parent, struct gendisk *disk,
- 	register_disk(parent, disk, groups);
- 	blk_register_queue(disk);
- 
--	/*
--	 * Take an extra ref on queue which will be put on disk_release()
--	 * so that it sticks around as long as @disk is there.
--	 */
--	if (blk_get_queue(disk->queue))
--		set_bit(GD_QUEUE_REF, &disk->state);
--	else
--		WARN_ON_ONCE(1);
--
- 	disk_add_events(disk);
- 	blk_integrity_add(disk);
- }
-@@ -1087,8 +1078,7 @@ static void disk_release(struct device *dev)
- 	disk_release_events(disk);
- 	kfree(disk->random);
- 	xa_destroy(&disk->part_tbl);
--	if (test_bit(GD_QUEUE_REF, &disk->state) && disk->queue)
--		blk_put_queue(disk->queue);
-+	blk_put_queue(disk->queue);
- 	iput(disk->part0->bd_inode);	/* frees the disk */
+@@ -1254,7 +1254,8 @@ dev_t blk_lookup_devt(const char *name, int partno)
+ 	return devt;
  }
  
-@@ -1259,9 +1249,12 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
+-struct gendisk *__alloc_disk_node(int node_id, struct lock_class_key *lkclass)
++struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
++		struct lock_class_key *lkclass)
  {
  	struct gendisk *disk;
  
-+	if (!blk_get_queue(q))
-+		return NULL;
-+
- 	disk = kzalloc_node(sizeof(struct gendisk), GFP_KERNEL, node_id);
- 	if (!disk)
--		return NULL;
-+		goto out_put_queue;
+@@ -1281,6 +1282,7 @@ struct gendisk *__alloc_disk_node(int node_id, struct lock_class_key *lkclass)
+ 	disk_to_dev(disk)->type = &disk_type;
+ 	device_initialize(disk_to_dev(disk));
+ 	inc_diskseq(disk);
++	disk->queue = q;
+ 	lockdep_init_map(&disk->lockdep_map, "(bio completion)", lkclass, 0);
+ #ifdef CONFIG_BLOCK_HOLDER_DEPRECATED
+ 	INIT_LIST_HEAD(&disk->slave_bdevs);
+@@ -1307,12 +1309,11 @@ struct gendisk *__blk_alloc_disk(int node, struct lock_class_key *lkclass)
+ 	if (!q)
+ 		return NULL;
  
- 	disk->bdi = bdi_alloc(node_id);
- 	if (!disk->bdi)
-@@ -1296,6 +1289,8 @@ struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
- 	bdi_put(disk->bdi);
- out_free_disk:
- 	kfree(disk);
-+out_put_queue:
-+	blk_put_queue(q);
- 	return NULL;
+-	disk = __alloc_disk_node(node, lkclass);
++	disk = __alloc_disk_node(q, node, lkclass);
+ 	if (!disk) {
+ 		blk_cleanup_queue(q);
+ 		return NULL;
+ 	}
+-	disk->queue = q;
+ 	return disk;
  }
- EXPORT_SYMBOL(__alloc_disk_node);
+ EXPORT_SYMBOL(__blk_alloc_disk);
+diff --git a/drivers/s390/block/dasd_genhd.c b/drivers/s390/block/dasd_genhd.c
+index 6e44515b4d33..fa966e0db6ca 100644
+--- a/drivers/s390/block/dasd_genhd.c
++++ b/drivers/s390/block/dasd_genhd.c
+@@ -40,7 +40,8 @@ int dasd_gendisk_alloc(struct dasd_block *block)
+ 	if (base->devindex >= DASD_PER_MAJOR)
+ 		return -EBUSY;
+ 
+-	gdp = __alloc_disk_node(NUMA_NO_NODE, &dasd_bio_compl_lkclass);
++	gdp = __alloc_disk_node(block->request_queue, NUMA_NO_NODE,
++				&dasd_bio_compl_lkclass);
+ 	if (!gdp)
+ 		return -ENOMEM;
+ 
+@@ -76,7 +77,6 @@ int dasd_gendisk_alloc(struct dasd_block *block)
+ 	    test_bit(DASD_FLAG_DEVICE_RO, &base->flags))
+ 		set_disk_ro(gdp, 1);
+ 	dasd_add_link_to_gendisk(gdp, base);
+-	gdp->queue = block->request_queue;
+ 	block->gdp = gdp;
+ 	set_capacity(block->gdp, 0);
+ 	device_add_disk(&base->cdev->dev, block->gdp, NULL);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 4e22d1bb6226..93e92dec77ed 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3409,7 +3409,8 @@ static int sd_probe(struct device *dev)
+ 	if (!sdkp)
+ 		goto out;
+ 
+-	gd = __alloc_disk_node(NUMA_NO_NODE, &sd_bio_compl_lkclass);
++	gd = __alloc_disk_node(sdp->request_queue, NUMA_NO_NODE,
++			       &sd_bio_compl_lkclass);
+ 	if (!gd)
+ 		goto out_free;
+ 
+@@ -3459,7 +3460,6 @@ static int sd_probe(struct device *dev)
+ 
+ 	gd->fops = &sd_fops;
+ 	gd->private_data = &sdkp->driver;
+-	gd->queue = sdkp->device->request_queue;
+ 
+ 	/* defaults, until the device tells us otherwise */
+ 	sdp->sector_size = 512;
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 2c45b4140e67..a0df27db4d61 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -714,7 +714,8 @@ static int sr_probe(struct device *dev)
+ 
+ 	kref_init(&cd->kref);
+ 
+-	disk = __alloc_disk_node(NUMA_NO_NODE, &sr_bio_compl_lkclass);
++	disk = __alloc_disk_node(sdev->request_queue, NUMA_NO_NODE,
++				 &sr_bio_compl_lkclass);
+ 	if (!disk)
+ 		goto fail_free;
+ 	mutex_init(&cd->lock);
+@@ -765,7 +766,6 @@ static int sr_probe(struct device *dev)
+ 
+ 	set_capacity(disk, cd->capacity);
+ 	disk->private_data = &cd->driver;
+-	disk->queue = sdev->request_queue;
+ 
+ 	if (register_cdrom(disk, &cd->cdi))
+ 		goto fail_minor;
 diff --git a/include/linux/genhd.h b/include/linux/genhd.h
-index 13e90e6231d8..55acefdd8a20 100644
+index d20f101be758..13e90e6231d8 100644
 --- a/include/linux/genhd.h
 +++ b/include/linux/genhd.h
-@@ -149,7 +149,6 @@ struct gendisk {
- 	unsigned long state;
- #define GD_NEED_PART_SCAN		0
- #define GD_READ_ONLY			1
--#define GD_QUEUE_REF			2
+@@ -259,7 +259,8 @@ static inline sector_t get_capacity(struct gendisk *disk)
+ int bdev_disk_changed(struct gendisk *disk, bool invalidate);
+ void blk_drop_partitions(struct gendisk *disk);
  
- 	struct mutex open_mutex;	/* open/close mutex */
- 	unsigned open_partitions;	/* number of open partitions */
+-struct gendisk *__alloc_disk_node(int node_id, struct lock_class_key *lkclass);
++struct gendisk *__alloc_disk_node(struct request_queue *q, int node_id,
++		struct lock_class_key *lkclass);
+ extern void put_disk(struct gendisk *disk);
+ struct gendisk *__blk_alloc_disk(int node, struct lock_class_key *lkclass);
+ 
 -- 
 2.30.2
 
