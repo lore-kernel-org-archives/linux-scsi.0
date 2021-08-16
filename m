@@ -2,397 +2,165 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MSGID_FROM_MTA_HEADER,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A08D2C4320E
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 17:28:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D1EBC4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 17:34:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8A00B6103A
-	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 17:28:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F3ACF60F41
+	for <linux-scsi@archiver.kernel.org>; Mon, 16 Aug 2021 17:34:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231465AbhHPR3P (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 16 Aug 2021 13:29:15 -0400
-Received: from mail-mw2nam10on2135.outbound.protection.outlook.com ([40.107.94.135]:11936
-        "EHLO NAM10-MW2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S230468AbhHPR3O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Aug 2021 13:29:14 -0400
+        id S229699AbhHPRfH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 16 Aug 2021 13:35:07 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:41078 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229590AbhHPRfH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Aug 2021 13:35:07 -0400
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 17GHWH1c027660;
+        Mon, 16 Aug 2021 17:34:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=Bmn6Pgx7f1+ue6hiFggK9HoACGUrMGEDMHqDfSD0AmQ=;
+ b=aOtSlMrVbHuV7kOH7G763FsN1TCKryhE3J4WEIJci99cT8rNtdHcBLcPjhrQJ3AemC87
+ BoENksbD/INJBuvN8D4Sv+KjCz0Tqa4ams7ftfdb3WopeIz8BlaO9YRSJODIuJkrfXfN
+ 98XL3baAhyWnuQKqmHBOW1nJ9L/8mvlGM0BKrAhUOD9J85As6W+L/6qw8oEHzIJV9iBT
+ rEm2KnHpPygHFvmjObX+Ii43w+qXuRO2a8Sfl0F3g+RBpFCjN3ox6oEsQlmBroiS3Sla
+ L2BBfkbJ1BjwWMvUzAxIf6f7Ii0mlmyRGAx/s/draqVKgp0pG77AUkDWdSf5TLwvimKy wg== 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2020-01-29;
+ bh=Bmn6Pgx7f1+ue6hiFggK9HoACGUrMGEDMHqDfSD0AmQ=;
+ b=J4MSdXj+4tbg2p4ALwHh68V/fzCMMQ2yBwc0xIXQHthKFb7LM2xRx7CRz2nlvELL/vMk
+ p6psnkhaLxsP0X1sFq0f1mwGls1MoSX60SO4BCybbJ37yBqOjF/c+V4g8H+hbcyNu1Wr
+ ipK3j01aD0PXctY/LyX5mSInG8BcNmoa3A2oo3q/F+/vIOVnL8GZqBeIlYamMwsx5Nnp
+ lgv/JmyEbiGvl3kqc+BgX7lKRGkYy4g9lEYi+4HOAa62ndUxJce89YztZj3t2xU22oTB
+ WcgKKMiB3YCfZBzJPSCQGEizASQKNN525XMkcIffcCa3n/HuW79Zc9aLVizYnCr46imP Dg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3afgmb9rv1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Aug 2021 17:34:17 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.42/8.16.0.42) with SMTP id 17GHUiPO108864;
+        Mon, 16 Aug 2021 17:34:17 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10lp2107.outbound.protection.outlook.com [104.47.55.107])
+        by aserp3020.oracle.com with ESMTP id 3ae5n630sj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Aug 2021 17:34:16 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=kkDMkuYinqTWXuSGdKjWplTTLVEYvD0n0AeitWm68HT1vey6j7JHipo85rlV/nMKmxxxeqM89noq4tBX4DUdFyekQfcpoDxpfxUaoeaXeWw6ZB1pwtNGtLbycDiD6IGyo2Z7F04Do67d6+U9bTGST+Q6Sx86ZwuzHsg2ZQmpRxRf6L7fktyrIRjAV72WG9DC3B/R7NvQOLPD/+Bvdt2AS3DRJb4/9zFNThUswrRhDaVpqe+u4glsW6TyZlbhbJQ5mplEAj+0by7AElewzldRTWUhNWiViKWLoO/WJ4pnDthRAu7T3UZPLPICKgFCEwwnYG9DGivY0gPZxhspBZxCsw==
+ b=imN2JFmUi8cAba/29w1fWe7JS6OJTd/FC5LEQafrs6a150Alohtoi8TFSKqICW+cEbgPOS9N3e7JCipmZVX+Wj/o2sD3p+6KtzusFQeuwKLAQQoKeM7uBg1S73+p2Ds8wuJhMcrOn0U/567kjCNcoifFjkjyVGMJbH91GKlrZHRMpQ+XnvCg6lSGzbox9pMVdLnZ3hCDKCewMY5SV0kNSdJUFerEJo+z7xRVRrEzBOXGxPf25208Z8vyl6lBT0ovRnBG940P9CHlmcl3Hn3lWRJi5Js2e9AlWFHaYOLtSDYCXiGWGzNeYf+eGKOLlhv0r0wT4u7NkBfMc4tnXn2blg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hHYh+59p26U2UEzCDzT7jwLliJZHyK2g/ne2bVbIPAI=;
- b=VK3flP4Xsefbxbx6oEQvBWLJPos4oPreI9oPA4YhfmI0/NcV19rDwoa1HYHMQfdp3rNLTNwKOUqIwJXiWym/Se+M51DwyeGbXxDcD/LbC73aJrRUoN0v/3ixnD4ApOaHn5u+REjlwSDZoj4j2+hTbpaDtt5OqamqshJ0ySZWIxNo84IoqtX4dWivnxtjfZkxUM/KUq+R+YaoxHTKM9P7bZZaZ9maRTRD3Pfua7YnfLbl5VeeO/+Iqu7wUIbLxGFJHA+mtvtZy4h+KSVVbJjD9QLpO7bLPwtvaG3S5C+d++7Hsfv65f58uFhJHJLKhit//og6igVzvghTPKfK6vEjkQ==
+ bh=Bmn6Pgx7f1+ue6hiFggK9HoACGUrMGEDMHqDfSD0AmQ=;
+ b=VycmV9AHhjnWpHjXcGMuLSofC7Ebc0TysPAaPSUNJyYk59JtPtTn05xV+FOLlRgRe+yJawn/aBYdw8gNbVLUTPTXi3HjVyN7foIC+RozSs+/Cw+FifIdDhqPpVXW1LsstIydjetQVQ1rE9ROUNEM7KmGFMvO62xmQ6tYV3ENDqHidJvZ4OJv6Mubv7PMI5GtAnytair4O4nbJhSLeEQckLII84koDNsUyCZfJ1Hc8JN+SVsxmaZovyaK7lTDp84HKYjlDKiMJ4us53sruPnVMsAuxKqOBwqz824YiMX9CwsSD4IYvHlHYh73C7+lNOc52xEORDRiynArNvnEMiYcAA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=hHYh+59p26U2UEzCDzT7jwLliJZHyK2g/ne2bVbIPAI=;
- b=Y2wLsNBjtIbhX2b89vDjzy5ketAUC/2M5O/sWgybGg1fgH3/Xk9ADGV2VIBkGQb8Ua831dvUEwT1E+zdc9EfR4zNnveKlGnWcnUpMte9a0I8W+3ep0NUFBjlxZb5jcfRL09PhDj1Aub5LifuwlwV2R51MW6yvpU7jhmJT7Tmh+o=
-Received: from MWHPR21MB1593.namprd21.prod.outlook.com (2603:10b6:301:7c::11)
- by MW2PR2101MB1820.namprd21.prod.outlook.com (2603:10b6:302:b::32) with
+ bh=Bmn6Pgx7f1+ue6hiFggK9HoACGUrMGEDMHqDfSD0AmQ=;
+ b=qHw2JmLoEIkaDjl5hMHAwYV9DwN+BpqTUNT9FHpVt+2MTeool3K0i/wPJXnulC4GhSPa8Mw4I3KhmB0h5vh+ouqhRVlgNtfKve9opmZql2TMj76PcoLLCmVW3aICFxTzww9SY6nl6/r+jyTx2dhiB3RBaBGAtTfzPzTorD7LEJo=
+Authentication-Results: huawei.com; dkim=none (message not signed)
+ header.d=none;huawei.com; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4760.namprd10.prod.outlook.com (2603:10b6:510:3b::23) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.7; Mon, 16 Aug
- 2021 17:28:31 +0000
-Received: from MWHPR21MB1593.namprd21.prod.outlook.com
- ([fe80::e8f7:b582:9e2d:ba55]) by MWHPR21MB1593.namprd21.prod.outlook.com
- ([fe80::e8f7:b582:9e2d:ba55%2]) with mapi id 15.20.4436.012; Mon, 16 Aug 2021
- 17:28:31 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     Tianyu Lan <ltykernel@gmail.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "will@kernel.org" <will@kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "ardb@kernel.org" <ardb@kernel.org>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "pgonda@google.com" <pgonda@google.com>,
-        "martin.b.radev@gmail.com" <martin.b.radev@gmail.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
-        "saravanand@fb.com" <saravanand@fb.com>,
-        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
-        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "rientjes@google.com" <rientjes@google.com>,
-        "hannes@cmpxchg.org" <hannes@cmpxchg.org>,
-        "tj@kernel.org" <tj@kernel.org>
-CC:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-Subject: RE: [PATCH V3 08/13] HV/Vmbus: Initialize VMbus ring buffer for
- Isolation VM
-Thread-Topic: [PATCH V3 08/13] HV/Vmbus: Initialize VMbus ring buffer for
- Isolation VM
-Thread-Index: AQHXjUfrruzh6q5VrEqe79CjktZwpKt2SJQQ
-Date:   Mon, 16 Aug 2021 17:28:30 +0000
-Message-ID: <MWHPR21MB1593FFD7F3402753751F433CD7FD9@MWHPR21MB1593.namprd21.prod.outlook.com>
-References: <20210809175620.720923-1-ltykernel@gmail.com>
- <20210809175620.720923-9-ltykernel@gmail.com>
-In-Reply-To: <20210809175620.720923-9-ltykernel@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=151d8e1b-315b-4252-a2ea-b7f2a7065a33;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-08-16T15:15:38Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: fa5be945-23b3-4ed1-df7c-08d960db447d
-x-ms-traffictypediagnostic: MW2PR2101MB1820:
-x-ms-exchange-transport-forked: True
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <MW2PR2101MB1820F281C0DAC2708EC4E328D7FD9@MW2PR2101MB1820.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:4125;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: Cy1VRzpxjngCTtD+qEfFJY00HjkGcEaStnVTRNFU6y1O13ZQLFZKFSxdfHf/+QqYgpCedc0SZ1CWAGNTsKy1TBF6x6+lJSLB9mtGeH5K1GtsfLsjB160btEG3867oJNlMTPviOaei9km64uNhBe2HnMiuB33yhkvbgPFODMbJ0BP7Br8DGKtyPgXh1nxwMDdofSDR6YOpRWoNHecKi8DCkfhIwbVJmimFuEoBLw0KCsJyBPtoKYRMSRCKFDxmFL6zwLSfOeIaczASCa1aMJ1sgP3w76hFgc1iV3kmscUEUs8C6owAOzskGO7RfmjMmqjAR3/LkqoHpnc8Z5vdOX/YMoCZB1yTYyWyhM61EMoCuRv6Do/lMcTbYs1ADp22nQ2tG9Pmo5O5JJCRft5XeZjCrulyjqwV5+36dKTZ1z9IVL09SYmGHn8ezW8uqG9UwTETZciM0B4FnNNNiHpgXsmRDFC75EGrHsXIJRM0ZaLP38C7EWsKDSObAeKsfzCjK6IzkXnvNpJCWzGOPGtyh8OT5PWQsm6q3stGP7uqCdI4glnxRvFBZH3nfZ2254yVj1ksQOWOboqhMx5dhsYDfZBE4V6hsYSfyU3LA9sUycKQ6gxO6iWZtURlE4P5//DsX1bQvkYylE2ijry3PKZ0qFwXCHyknwv8Hn3mOSluXPLy1KSplmZWTbBd9DGdxTs+9PC7mUSbBlqyMR7njvxCt2ft/3J+ERcOOEWsYZ+qbXevyQ=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(6506007)(52536014)(7696005)(55016002)(5660300002)(71200400001)(122000001)(54906003)(8990500004)(38100700002)(110136005)(316002)(8936002)(921005)(8676002)(86362001)(83380400001)(82950400001)(82960400001)(508600001)(10290500003)(7406005)(2906002)(9686003)(7416002)(38070700005)(66946007)(66556008)(66476007)(33656002)(64756008)(26005)(66446008)(4326008)(186003)(76116006);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?ben7dDwl6TZm/A+N/mESE+SLutP1QPFf2Evz2K8zpwOXL+3Fw4+ul9VQ4Byi?=
- =?us-ascii?Q?7Gf+0dYjVak0urDn4bWjGwnmm//jxOh5Cuvt9B3BBX/4hF/P/pq8m6b9Fuvo?=
- =?us-ascii?Q?Y+hXelCN97QDw9MBF4eJkiTZ6BHoox3CUGWhZBoKicY3QRLEU99MN7mb6RDF?=
- =?us-ascii?Q?ItRMBNO/Ih+8+Wq/HbdwnP4chSQaD+v74qs0UnSfgnJX/noEqATo2GZVWzEz?=
- =?us-ascii?Q?zq+8Ty733WGSxfI/w0v8yClegLTL562gLcezYYNwAspfZedQo3i/GZpim/OD?=
- =?us-ascii?Q?kjZ1/nnc12JsPyueFETezNo2QFSjqrCzhhdond423+RvT1fGuVBMo+uKA2a5?=
- =?us-ascii?Q?eVIT/x3YTT9szUYUox6KHY24Cyjp0HM9G62kPuHLcZNjdlbOSvGx6SrwOgGY?=
- =?us-ascii?Q?iFDl9L3uo2IL+OjfmPZjsIeqsBqEiF9IGSqrelaEIG9XQ+8ZRhp/VndPGDC3?=
- =?us-ascii?Q?XBB6kDyUkmzNI6KTqCRsjcnNzz6dzPmBQ3kr+OwOSXjEMfcHWIDNPYllANVY?=
- =?us-ascii?Q?h+h1fk028vIxt+73vPzCngrznAjrnYEJTFKBtNMSdfZS57viSgBMf0hSuysY?=
- =?us-ascii?Q?am2Gl8qESbs9/SHNNwYpIT9yFkApIhsNvdSVEJcNHxMo5DdGdy1+UkB8FaAC?=
- =?us-ascii?Q?R4Bp924wI+MLpwVVfCxylPPIiUz7Qa6WSe8V2eKb9wn6S4i3SAFFfgGkqKwg?=
- =?us-ascii?Q?2OpesXz6Fgo/qsZbxz+VEhLXHQQPFPIuBnOsOT31IVw0BxM76J4gIFOGSDPn?=
- =?us-ascii?Q?KxZFlzvZai8C9rjiLMR4t5tWEmS2fbrVqyUMfvXd+Mah4jieWwnOwUv0sWmW?=
- =?us-ascii?Q?rdMlLRz8lPuoyv6o2FdOt6RNZ5ln2gR3QRdOBiNfaA60xBT/otCkoUO8m5IN?=
- =?us-ascii?Q?0EODYclRNbkRDBt19m32vrgirCZd/5sXQ8SYDUbc5vYY5pSDjC0+A+9h00uE?=
- =?us-ascii?Q?/0x8r6vTDOTaFP4HmeMAkGfHETbt7TwmBEo1S55Pmg9OsWUWFhlXCTUrQE3h?=
- =?us-ascii?Q?VT0V5NcDWrY1fuFfKLIbfFkTOhMBpT11mpdQ/1WsA7xSuyS27AhAUdUWTb/j?=
- =?us-ascii?Q?qCfbkGfmfsZLkiDbvZ0obXWsWPsETqKLNn9r1MNpI3JVrZx2SrzU9jLZmrap?=
- =?us-ascii?Q?4DrRcFfT86vru5OOiFY8brUK+nsNEOclgh6tQwYmcbdaPaH1536wsFI5Gzje?=
- =?us-ascii?Q?nnV4sT41eduDc4Xo5GDjg2+4D9Ll4pngjhtNbmakUwmRpfWkMx3zddtYMhNc?=
- =?us-ascii?Q?/rTCWr6WOk2VpjF1suaymdG3sBEGdsuHVYdJe1en7H7tndS8MJ91SpOE29kf?=
- =?us-ascii?Q?GLDSGqMPurTGO/wsxu9yMAws?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4415.17; Mon, 16 Aug
+ 2021 17:34:15 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::c0ed:36a0:7bc8:f2dc]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::c0ed:36a0:7bc8:f2dc%6]) with mapi id 15.20.4415.023; Mon, 16 Aug 2021
+ 17:34:15 +0000
+To:     John Garry <john.garry@huawei.com>
+Cc:     <satishkh@cisco.com>, <sebaddel@cisco.com>, <kartilak@cisco.com>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <hare@suse.de>, <hch@lst.de>, <bvanassche@acm.org>
+Subject: Re: [PATCH 0/3] Remove scsi_cmnd.tag
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq14kbppa42.fsf@ca-mkp.ca.oracle.com>
+References: <1628862553-179450-1-git-send-email-john.garry@huawei.com>
+Date:   Mon, 16 Aug 2021 13:34:12 -0400
+In-Reply-To: <1628862553-179450-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Fri, 13 Aug 2021 21:49:10 +0800")
+Content-Type: text/plain
+X-ClientProxiedBy: SJ0PR05CA0188.namprd05.prod.outlook.com
+ (2603:10b6:a03:330::13) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from ca-mkp.ca.oracle.com (138.3.200.58) by SJ0PR05CA0188.namprd05.prod.outlook.com (2603:10b6:a03:330::13) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.9 via Frontend Transport; Mon, 16 Aug 2021 17:34:14 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 52b9e8bd-8662-4f2a-9f36-08d960dc1149
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4760:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB4760ED96036283A55F79CCA38EFD9@PH0PR10MB4760.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:3826;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 84VmwWtDVNlGNVRl7VjPWgIzrikbfGGfdbeoOYfWeMgU5VKld5tRRfOvOsMqe9YZxgGww232tRHmacFZ1yw328NaPU2Tfg+Ey/LmV8OGldz+DJ+2efjd+HKbdI35sXrphPbSnopT1yTajl9yo1Np3GlZhckwqNmmjLgKIVBA6zyNmFNZn2ZPMtHnV1y1mCpKRSYB2/7ZB6VhTDsVb+RBC2JjUee62GRv3In/lCVBzz/nM3httqGYVL1wrwbgA+08H0ihTvL4udhljX3zLv3CKM6VW2oLC2F5aJCfzRx20fQeaVDgOUq+Xw0vSEga8i4zgdFfiXv8mr+F1EY9N+jB8T83fcA4vxE6P6X5yWeSsfmp5V54O91raO8WdyLHdwEv5rGtE+FlnBk8XJMJYogxkT83xE9R4z/5gLSeZG5QNYXJogcTCAO9nQqRq/JDSie/sc0DLdaWqeSCKM1lnbKnIoyJ4Vk71DNfgZZcAC+2JgO5/gCCBfGH784V9rMwQp/tv4ZqlN/wnGPgYocV5S2wM47qc5zu106bjO2herE/2Kp5ewXaMmOWWOpTaUY28xgnueKmAg0XWOKg+Mmrj2Xm7wyPzB0b2mwyFuIE9RzCy8VdI2mEogWqNf04S+3/h+nnFEZ7OfwQ/ozflMMC9UhFFI9r/al9TXiSuxCezPZh1TAJS+clQ3Aji7oc8zOt573ixSD2YRuAlcjofWPI594emg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(396003)(346002)(376002)(136003)(39860400002)(366004)(186003)(7416002)(38100700002)(38350700002)(4326008)(8936002)(8676002)(86362001)(55016002)(36916002)(7696005)(52116002)(54906003)(66476007)(66556008)(558084003)(478600001)(66946007)(6916009)(316002)(2906002)(26005)(5660300002)(956004);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?DldhfN9sUqNhBhgeRJxeGaPFREccIUEv2TD+GziiXIeE/WI9cx+4x5YAgh0l?=
+ =?us-ascii?Q?l/t3HM1XYKYbWqZF2MMrb94VtuenI2/8f/4W241JH0iO4CYCDNTiXngbdhzH?=
+ =?us-ascii?Q?Ngf8O+enji4f7eacWzp+KZY/e5QaJmpW/lPzjwin1i3l6I5aLt92R3r5vUL3?=
+ =?us-ascii?Q?TDdIpeYMK4JHM7AFoJG259MMThJAi4FITjfu8tECjDqwlo41vFQJ40BujufZ?=
+ =?us-ascii?Q?ZGlKY5hiTFCXdVP57Y6IR3xN+5gQcJYkQWB4P6+VxIa7/DB2misZ5YB4dJFK?=
+ =?us-ascii?Q?NCc9Eqtgwsk8Evez5mViDHQlFg+jsyUT3CbmqQLOcIl3qsF7ZOhsE/JhzE5t?=
+ =?us-ascii?Q?gI6IVTrk3tY/dJv1DG2yGwxwKn1tHjDvjZ57eTRzWb1Iu1BZhy5llz/McGFy?=
+ =?us-ascii?Q?gMmfBocs2NQtTGEfIw26XN+oNXRY+EYCGL+r1tcRc9aLOoMIwJnbxCJ7m55U?=
+ =?us-ascii?Q?Axhcuy86QrMv3I5jR9OJT/X6JAZZWzNcxxc3yKouTeI+NMGzn9M5fYVAw3Id?=
+ =?us-ascii?Q?MipGxjYhdCe/CBUfXH0K7hd9LhBY6EgIqHPjIX1djblU+4zNT7QcYOfkezCt?=
+ =?us-ascii?Q?7b3nE3o36ybOzUXTSaIeBY+a9dpPy9VmHe0JSzp9OepMnnhiueORZ6mReSiG?=
+ =?us-ascii?Q?m5EclKpfOcmAYyEVQtc/tQKpj/cZwHG1Lkjx7wOyfw7mSi68ZocUcjDLbZzn?=
+ =?us-ascii?Q?qyFeH4DUTG/2Lv+j2+jsqx7dAPWYffy+QYZlt/NU56g+2fnmJBsy2DMf3UuK?=
+ =?us-ascii?Q?v4y6qlPtJrpo7rguKf04Y8V+S1kW7IoDRKQpNe1xaJdODc+lGJ4ppRXkbp47?=
+ =?us-ascii?Q?uM58foIUh2Ua58pOaR4g+F/YqSt0u8Qyd1deZlcFMF9b//CeFuzJitMAtvGG?=
+ =?us-ascii?Q?G+bNq1Q9XqbXtnRy4XMrLWsslEdX0zN4jutJ1jTKgfN4220WeQSn3T5vdK+P?=
+ =?us-ascii?Q?3Gk5z2gYBJErAr+h5GvMMWpQ+GTZDZ3doRCpABfMaXTtby24ODJZiHkn9Ea2?=
+ =?us-ascii?Q?nIY979mrXcGo9o5spPKdvooAnxyL9cywImFhboTy5umR9IWEDMB4okZkCir8?=
+ =?us-ascii?Q?HqtnImSu5CspjtKttTDDEdQkFORzkB9pjReiTc5As6Ztc4izaA2fDQJktXZ7?=
+ =?us-ascii?Q?HjO3i0sw4yYhVziudoa7cYYZSBIbDyQO3HRXWJ6Qq3Ip4c1IBK9fjJeCswoA?=
+ =?us-ascii?Q?lvI0aebNjyBxFYkUZsmAeI4HTjmIDN9dwbgX6MOjzwW9N7FN6UEG8vXa7DG2?=
+ =?us-ascii?Q?2inV2wkHZJd/4aLkhU6H9KEbDehr4jHqltacmzFmwVsoHhMxzx70CRyr5sHw?=
+ =?us-ascii?Q?dD9dLBfDr/8syPc8zN6Na1PT?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 52b9e8bd-8662-4f2a-9f36-08d960dc1149
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fa5be945-23b3-4ed1-df7c-08d960db447d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 16 Aug 2021 17:28:31.0231
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 Aug 2021 17:34:15.0636
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: tT+BSF4rsIeFfkzSAY0V79Lyuyb8X0fbhGGUrf8L36tusFWN9emLBabBYYeM164icPiU94iltqVfQ5nefEVEmFVU5KOQeQQLV9kdItNYO6c=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW2PR2101MB1820
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: xyVx1y5NQycZhjvXzSxogsrUOqQ5in43HUFMqkaS4A9ERTeOydEkEoyXJx7J9DLtnSba1QG2dSkX/+3NpPFj0sV56due1Wg5LoP4DfzM2Qw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4760
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=10078 signatures=668682
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0 bulkscore=0
+ suspectscore=0 mlxlogscore=927 phishscore=0 mlxscore=0 spamscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2107140000
+ definitions=main-2108160111
+X-Proofpoint-ORIG-GUID: 13Y-kcto_g9NdUqKAlD58BLmTk9ocjDJ
+X-Proofpoint-GUID: 13Y-kcto_g9NdUqKAlD58BLmTk9ocjDJ
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tianyu Lan <ltykernel@gmail.com> Sent: Monday, August 9, 2021 10:56 A=
-M
->=20
-> VMbus ring buffer are shared with host and it's need to
 
-s/it's need/it needs/
+John,
 
-> be accessed via extra address space of Isolation VM with
-> SNP support. This patch is to map the ring buffer
-> address in extra address space via ioremap(). HV host
+> There is no need for scsi_cmnd.tag, so remove it.
 
-It's actually using vmap_pfn(), not ioremap().
+Applied to 5.15/scsi-staging, thanks!
 
-> visibility hvcall smears data in the ring buffer and
-> so reset the ring buffer memory to zero after calling
-> visibility hvcall.
->=20
-> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> ---
->  drivers/hv/Kconfig        |  1 +
->  drivers/hv/channel.c      | 10 +++++
->  drivers/hv/hyperv_vmbus.h |  2 +
->  drivers/hv/ring_buffer.c  | 84 ++++++++++++++++++++++++++++++---------
->  4 files changed, 79 insertions(+), 18 deletions(-)
->=20
-> diff --git a/drivers/hv/Kconfig b/drivers/hv/Kconfig
-> index d1123ceb38f3..dd12af20e467 100644
-> --- a/drivers/hv/Kconfig
-> +++ b/drivers/hv/Kconfig
-> @@ -8,6 +8,7 @@ config HYPERV
->  		|| (ARM64 && !CPU_BIG_ENDIAN))
->  	select PARAVIRT
->  	select X86_HV_CALLBACK_VECTOR if X86
-> +	select VMAP_PFN
->  	help
->  	  Select this option to run Linux as a Hyper-V client operating
->  	  system.
-> diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
-> index 4c4717c26240..60ef881a700c 100644
-> --- a/drivers/hv/channel.c
-> +++ b/drivers/hv/channel.c
-> @@ -712,6 +712,16 @@ static int __vmbus_open(struct vmbus_channel *newcha=
-nnel,
->  	if (err)
->  		goto error_clean_ring;
->=20
-> +	err =3D hv_ringbuffer_post_init(&newchannel->outbound,
-> +				      page, send_pages);
-> +	if (err)
-> +		goto error_free_gpadl;
-> +
-> +	err =3D hv_ringbuffer_post_init(&newchannel->inbound,
-> +				      &page[send_pages], recv_pages);
-> +	if (err)
-> +		goto error_free_gpadl;
-> +
->  	/* Create and init the channel open message */
->  	open_info =3D kzalloc(sizeof(*open_info) +
->  			   sizeof(struct vmbus_channel_open_channel),
-> diff --git a/drivers/hv/hyperv_vmbus.h b/drivers/hv/hyperv_vmbus.h
-> index 40bc0eff6665..15cd23a561f3 100644
-> --- a/drivers/hv/hyperv_vmbus.h
-> +++ b/drivers/hv/hyperv_vmbus.h
-> @@ -172,6 +172,8 @@ extern int hv_synic_cleanup(unsigned int cpu);
->  /* Interface */
->=20
->  void hv_ringbuffer_pre_init(struct vmbus_channel *channel);
-> +int hv_ringbuffer_post_init(struct hv_ring_buffer_info *ring_info,
-> +		struct page *pages, u32 page_cnt);
->=20
->  int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
->  		       struct page *pages, u32 pagecnt, u32 max_pkt_size);
-> diff --git a/drivers/hv/ring_buffer.c b/drivers/hv/ring_buffer.c
-> index 2aee356840a2..d4f93fca1108 100644
-> --- a/drivers/hv/ring_buffer.c
-> +++ b/drivers/hv/ring_buffer.c
-> @@ -17,6 +17,8 @@
->  #include <linux/vmalloc.h>
->  #include <linux/slab.h>
->  #include <linux/prefetch.h>
-> +#include <linux/io.h>
-> +#include <asm/mshyperv.h>
->=20
->  #include "hyperv_vmbus.h"
->=20
-> @@ -179,43 +181,89 @@ void hv_ringbuffer_pre_init(struct vmbus_channel *c=
-hannel)
->  	mutex_init(&channel->outbound.ring_buffer_mutex);
->  }
->=20
-> -/* Initialize the ring buffer. */
-> -int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
-> -		       struct page *pages, u32 page_cnt, u32 max_pkt_size)
-> +int hv_ringbuffer_post_init(struct hv_ring_buffer_info *ring_info,
-> +		       struct page *pages, u32 page_cnt)
->  {
-> +	u64 physic_addr =3D page_to_pfn(pages) << PAGE_SHIFT;
-> +	unsigned long *pfns_wraparound;
-> +	void *vaddr;
->  	int i;
-> -	struct page **pages_wraparound;
->=20
-> -	BUILD_BUG_ON((sizeof(struct hv_ring_buffer) !=3D PAGE_SIZE));
-> +	if (!hv_isolation_type_snp())
-> +		return 0;
-> +
-> +	physic_addr +=3D ms_hyperv.shared_gpa_boundary;
->=20
->  	/*
->  	 * First page holds struct hv_ring_buffer, do wraparound mapping for
->  	 * the rest.
->  	 */
-> -	pages_wraparound =3D kcalloc(page_cnt * 2 - 1, sizeof(struct page *),
-> +	pfns_wraparound =3D kcalloc(page_cnt * 2 - 1, sizeof(unsigned long),
->  				   GFP_KERNEL);
-> -	if (!pages_wraparound)
-> +	if (!pfns_wraparound)
->  		return -ENOMEM;
->=20
-> -	pages_wraparound[0] =3D pages;
-> +	pfns_wraparound[0] =3D physic_addr >> PAGE_SHIFT;
->  	for (i =3D 0; i < 2 * (page_cnt - 1); i++)
-> -		pages_wraparound[i + 1] =3D &pages[i % (page_cnt - 1) + 1];
-> -
-> -	ring_info->ring_buffer =3D (struct hv_ring_buffer *)
-> -		vmap(pages_wraparound, page_cnt * 2 - 1, VM_MAP, PAGE_KERNEL);
-> -
-> -	kfree(pages_wraparound);
-> +		pfns_wraparound[i + 1] =3D (physic_addr >> PAGE_SHIFT) +
-> +			i % (page_cnt - 1) + 1;
->=20
-> -
-> -	if (!ring_info->ring_buffer)
-> +	vaddr =3D vmap_pfn(pfns_wraparound, page_cnt * 2 - 1, PAGE_KERNEL_IO);
-> +	kfree(pfns_wraparound);
-> +	if (!vaddr)
->  		return -ENOMEM;
->=20
-> -	ring_info->ring_buffer->read_index =3D
-> -		ring_info->ring_buffer->write_index =3D 0;
-> +	/* Clean memory after setting host visibility. */
-> +	memset((void *)vaddr, 0x00, page_cnt * PAGE_SIZE);
-> +
-> +	ring_info->ring_buffer =3D (struct hv_ring_buffer *)vaddr;
-> +	ring_info->ring_buffer->read_index =3D 0;
-> +	ring_info->ring_buffer->write_index =3D 0;
->=20
->  	/* Set the feature bit for enabling flow control. */
->  	ring_info->ring_buffer->feature_bits.value =3D 1;
->=20
-> +	return 0;
-> +}
-> +
-> +/* Initialize the ring buffer. */
-> +int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
-> +		       struct page *pages, u32 page_cnt, u32 max_pkt_size)
-> +{
-> +	int i;
-> +	struct page **pages_wraparound;
-> +
-> +	BUILD_BUG_ON((sizeof(struct hv_ring_buffer) !=3D PAGE_SIZE));
-> +
-> +	if (!hv_isolation_type_snp()) {
-> +		/*
-> +		 * First page holds struct hv_ring_buffer, do wraparound mapping for
-> +		 * the rest.
-> +		 */
-> +		pages_wraparound =3D kcalloc(page_cnt * 2 - 1, sizeof(struct page *),
-> +					   GFP_KERNEL);
-> +		if (!pages_wraparound)
-> +			return -ENOMEM;
-> +
-> +		pages_wraparound[0] =3D pages;
-> +		for (i =3D 0; i < 2 * (page_cnt - 1); i++)
-> +			pages_wraparound[i + 1] =3D &pages[i % (page_cnt - 1) + 1];
-> +
-> +		ring_info->ring_buffer =3D (struct hv_ring_buffer *)
-> +			vmap(pages_wraparound, page_cnt * 2 - 1, VM_MAP, PAGE_KERNEL);
-> +
-> +		kfree(pages_wraparound);
-> +
-> +		if (!ring_info->ring_buffer)
-> +			return -ENOMEM;
-> +
-> +		ring_info->ring_buffer->read_index =3D
-> +			ring_info->ring_buffer->write_index =3D 0;
-> +
-> +		/* Set the feature bit for enabling flow control. */
-> +		ring_info->ring_buffer->feature_bits.value =3D 1;
-> +	}
-> +
->  	ring_info->ring_size =3D page_cnt << PAGE_SHIFT;
->  	ring_info->ring_size_div10_reciprocal =3D
->  		reciprocal_value(ring_info->ring_size / 10);
-> --
-> 2.25.1
-
-This patch does the following:
-
-1) The existing ring buffer wrap-around mapping functionality is still
-executed in hv_ringbuffer_init() when not doing SNP isolation.
-This mapping is based on an array of struct page's that describe the
-contiguous physical memory.
-
-2) New ring buffer wrap-around mapping functionality is added in
-hv_ringbuffer_post_init() for the SNP isolation case.  The case is
-handled in hv_ringbuffer_post_init() because it must be done after
-the GPADL is established, since that's where the host visibility
-is set.  What's interesting is that this case is exactly the same
-as #1 above, except that the mapping is based on physical
-memory addresses instead of struct page's.  We have to use physical
-addresses because of applying the GPA boundary, and there are no
-struct page's for those physical addresses.
-
-Unfortunately, this duplicates a lot of logic in #1 and #2, except
-for the struct page vs. physical address difference.
-
-Proposal:  Couldn't we always do #2, even for the normal case
-where SNP isolation is not being used?   The difference would
-only be in whether the GPA boundary is added.  And it looks like
-the normal case could be done after the GPADL is established,
-as setting up the GPADL doesn't have any dependencies on
-having the ring buffer mapped.  This approach would remove
-a lot of duplication.  Just move the calls to hv_ringbuffer_init()
-to after the GPADL is established, and do all the work there for
-both cases.
-
-Michael
+-- 
+Martin K. Petersen	Oracle Linux Engineering
