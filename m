@@ -7,55 +7,54 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58F32C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:16:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B9F7C432BE
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:16:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41E4D60720
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:16:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 14DBA60EE4
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:16:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239527AbhHQJRW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 05:17:22 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:47450 "EHLO
+        id S239532AbhHQJRX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 05:17:23 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:47532 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235981AbhHQJRP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 05:17:15 -0400
+        with ESMTP id S236163AbhHQJRQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 05:17:16 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id D6A5620014;
+        by smtp-out2.suse.de (Postfix) with ESMTP id E217720017;
         Tue, 17 Aug 2021 09:16:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1629191801; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=QM8+N+Fjtm2c/LTrtQP2sO2xn/YHy1e/vJXLx+ti6dY=;
-        b=qIQN5a6Wh/6GU14vlgdsOTO73syHpo220zwQSUrAM+MX2MdeKYtbUCZyzFGSAzhjcE7W9w
-        IiYJGGFvnhf36hosmVMkkeoVNtU2mUJ/YkXF6D1ABTTf5KUjE4exOk+Mbr5QUho7dTgYCc
-        /ZRlyE7E7yiTKuc4Cy8KF4rkv7u7iWs=
+        bh=Bo6uQ0chpkau1qtFdd+KxWArWfDmM9TOCYqEcMyKxnU=;
+        b=csr5XW9ZK81X6rduIClK9TyLvgh9eVUk88XtabGCgP0O95SWnq09YCHyI3hJeVgT1Qreu4
+        OtQNXAqeALCH9JfOPmnUmk5CG4iycEIBnzB+Ag2Hkl1ebTtN+XbuHu8/8F4UeOg1bpTsR4
+        OKsPpFXebxF/b/I2b40lrKj7Rv/k0LY=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1629191801;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=QM8+N+Fjtm2c/LTrtQP2sO2xn/YHy1e/vJXLx+ti6dY=;
-        b=VpNbocFnXNj0u1VgNcXi9UJZfZsklCW01+f6knUojr+Rruwgh/Zo+UiD+hz4Gv4ipjuaQo
-        7KMZRwgEocxp9zBQ==
+        bh=Bo6uQ0chpkau1qtFdd+KxWArWfDmM9TOCYqEcMyKxnU=;
+        b=kPppFjHYXX6dsT4oPfZhPMx8WKfu7BGww1uB9+HWLnQyZgYsIzczAj+mQ9vzM560NOnx5x
+        aegDSu3BWzvuVTAA==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id C7F61A3B9A;
+        by relay2.suse.de (Postfix) with ESMTP id B86A8A3B96;
         Tue, 17 Aug 2021 09:16:41 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id C5B54518CE6F; Tue, 17 Aug 2021 11:16:41 +0200 (CEST)
+        id AD84D518CE67; Tue, 17 Aug 2021 11:16:41 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Hannes Reinecke <hare@suse.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>
-Subject: [PATCH 08/51] zfcp: open-code fc_block_scsi_eh() for host reset
-Date:   Tue, 17 Aug 2021 11:14:13 +0200
-Message-Id: <20210817091456.73342-9-hare@suse.de>
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Subject: [PATCH 04/51] ips: Do not try to abort command from host reset
+Date:   Tue, 17 Aug 2021 11:14:09 +0200
+Message-Id: <20210817091456.73342-5-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210817091456.73342-1-hare@suse.de>
 References: <20210817091456.73342-1-hare@suse.de>
@@ -65,64 +64,53 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When issuing a host reset we should be waiting for all
-ports to become unblocked; just waiting for one might
-be resulting in host reset to return too early.
+The code for aborting an outstanding command is a copy of the
+functionality from command abort. As we already have called this
+function once we reach host reset there's no point in trying to
+do so again.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
-Cc: Steffen Maier <maier@linux.ibm.com>
-Cc: Benjamin Block <bblock@linux.ibm.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
 ---
- drivers/s390/scsi/zfcp_scsi.c | 29 +++++++++++++++++++++++------
- 1 file changed, 23 insertions(+), 6 deletions(-)
+ drivers/scsi/ips.c | 18 ------------------
+ 1 file changed, 18 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 9da9b2b2a580..9393f1587e8a 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -373,9 +373,11 @@ static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 8b33c9871484..3760bcfc40d1 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -835,7 +835,6 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 	int i;
+ 	ips_ha_t *ha;
+ 	ips_scb_t *scb;
+-	ips_copp_wait_item_t *item;
  
- static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
- {
--	struct zfcp_scsi_dev *zfcp_sdev = sdev_to_zfcp(scpnt->device);
--	struct zfcp_adapter *adapter = zfcp_sdev->port->adapter;
--	int ret = SUCCESS, fc_ret;
-+	struct Scsi_Host *host = scpnt->device->host;
-+	struct zfcp_adapter *adapter = (struct zfcp_adapter *)host->hostdata[0];
-+	int ret = SUCCESS;
-+	unsigned long flags;
-+	struct zfcp_port *port;
+ 	METHOD_TRACE("ips_eh_reset", 1);
  
- 	if (!(adapter->connection_features & FSF_FEATURE_NPIV_MODE)) {
- 		zfcp_erp_port_forced_reopen_all(adapter, 0, "schrh_p");
-@@ -383,9 +385,24 @@ static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
- 	}
- 	zfcp_erp_adapter_reopen(adapter, 0, "schrh_1");
- 	zfcp_erp_wait(adapter);
--	fc_ret = fc_block_scsi_eh(scpnt);
--	if (fc_ret)
--		ret = fc_ret;
-+retry_rport_blocked:
-+	spin_lock_irqsave(host->host_lock, flags);
-+	list_for_each_entry(port, &adapter->port_list, list) {
-+		struct fc_rport *rport = port->rport;
-+
-+		if (rport->port_state == FC_PORTSTATE_BLOCKED) {
-+			if (rport->flags & FC_RPORT_FAST_FAIL_TIMEDOUT)
-+				ret = FAST_IO_FAIL;
-+			else
-+				ret = NEEDS_RETRY;
-+			break;
-+		}
-+	}
-+	spin_unlock_irqrestore(host->host_lock, flags);
-+	if (ret == NEEDS_RETRY) {
-+		msleep(1000);
-+		goto retry_rport_blocked;
-+	}
+@@ -860,23 +859,6 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 	if (!ha->active)
+ 		return (FAILED);
  
- 	zfcp_dbf_scsi_eh("schrh_r", adapter, ~0, ret);
- 	return ret;
+-	/* See if the command is on the copp queue */
+-	item = ha->copp_waitlist.head;
+-	while ((item) && (item->scsi_cmd != SC))
+-		item = item->next;
+-
+-	if (item) {
+-		/* Found it */
+-		ips_removeq_copp(&ha->copp_waitlist, item);
+-		return (SUCCESS);
+-	}
+-
+-	/* See if the command is on the wait queue */
+-	if (ips_removeq_wait(&ha->scb_waitlist, SC)) {
+-		/* command not sent yet */
+-		return (SUCCESS);
+-	}
+-
+ 	/* An explanation for the casual observer:                              */
+ 	/* Part of the function of a RAID controller is automatic error         */
+ 	/* detection and recovery.  As such, the only problem that physically   */
 -- 
 2.29.2
 
