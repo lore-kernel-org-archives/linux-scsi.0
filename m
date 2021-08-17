@@ -2,70 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BC70C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 17:14:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E82BCC4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 17:36:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6F10A60FDA
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 17:14:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CDEA260FBF
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 17:36:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231319AbhHQRPF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 13:15:05 -0400
-Received: from mail-pj1-f43.google.com ([209.85.216.43]:52770 "EHLO
-        mail-pj1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbhHQRPD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 13:15:03 -0400
-Received: by mail-pj1-f43.google.com with SMTP id nt11so152347pjb.2;
-        Tue, 17 Aug 2021 10:14:30 -0700 (PDT)
+        id S232261AbhHQRhF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 13:37:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42638 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232228AbhHQRhE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 13:37:04 -0400
+Received: from mail-pj1-x102e.google.com (mail-pj1-x102e.google.com [IPv6:2607:f8b0:4864:20::102e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0F671C061764
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Aug 2021 10:36:31 -0700 (PDT)
+Received: by mail-pj1-x102e.google.com with SMTP id bo18so325446pjb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Aug 2021 10:36:30 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=TeRaJER16oAValHzJCwzMcfjYBsSJhIdIhqlazTmkEU=;
+        b=EcjuP5druQJZpYZLSsYW10u3vVKioEP+qLKNZPle9JHcSJSbuaqSeR5S4tIID+APqY
+         sZtKdPVhheZNNuiI42v/RGfcW+tnP+C4y8RHvTV4jIEi8OAZat05n9+bXoSlGULZ1ZYU
+         n3frWi+DAGrOrgMzpRFcokuOsmjM98uD38xK9hRxQP34mmXMJcxbMXkvPeuATBgJ+B7b
+         7D88Fa00kJUcdA+TBwcoJ0j5V8CI17hmPIieKB+a4ZSIEC+FPnAjHS9FzPkMfm35vnTz
+         iMrWmVrdzJBFaigGUQNA2MNSYlnEhlvibWdYTBdVRDYtD1ica4QKnwKm5jzeVebMbMqk
+         X74g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=v2ezKXtmZ+KjzYhpA8Y6VRyR3KOD/971FoOogNR18Hs=;
-        b=AH0Pf/fxVX60UAFVupMs2HrhXm/SeXCyGTdjRPsamQF/3aZsZHK1c7X3oF1ccKup9m
-         8X/i722eoiiGnVAkeabMka6Odu0OIJNmwd0ztRKT+7r0qN13Bo9dMzsl3T88K1EN8gws
-         33lbu7QGIcVeZaFNUXE2DLXd/4/ToB1oNXsVNQokhNwjjtVuwtXy0q2TYhGk4QINv3vX
-         QblcpR+ujJ3/FdzXbje5uftWevEyBr+5XdJFukmMhtjIdtulZp8KDotYRjFfZDcO9XRj
-         cB8PyXuAXUOMBPOj1vFAneMYuNHMfQUbbxhl5bjFnCxOeywjADUcP3l9AZUmpI6J/B0p
-         zR4g==
-X-Gm-Message-State: AOAM531p4Ei5/9qdGJx2W266mjHtPG+KAvjWIX/3PSsN/9iVV+eSYlM+
-        mZ05yLWtLz1mP8TITDHeCiI=
-X-Google-Smtp-Source: ABdhPJxyRl0ks4xxfdYxuKBl/CqSpHH1tc/kfe77IZhXj/2ic6tgtgAm7bavNRKoa2tEHngKC7nW9Q==
-X-Received: by 2002:a17:90a:3b4b:: with SMTP id t11mr4532753pjf.182.1629220470271;
-        Tue, 17 Aug 2021 10:14:30 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae3f:1e44:e6d0:4a44])
-        by smtp.gmail.com with ESMTPSA id x13sm2822931pjh.30.2021.08.17.10.14.27
+        bh=TeRaJER16oAValHzJCwzMcfjYBsSJhIdIhqlazTmkEU=;
+        b=LyRGWN7xqzR5ALGJD0lrDrTWWgh3jWq2XoIH6wXrN/N4e7WsGhxtysUNmcABCju+dx
+         INnZ8O1g8gjXIqnyVNJQbTBVKE5Y4SF4mt5VjJHDBMzyLyOD7Qa9gLOsjRj/6lUUQUng
+         h0tz15wOqzsq4RXt6TqrwM4JdrkTRtgbrtGY+TbtqfwAz0ysvwaABqRoLaQFuB49zNWL
+         FYFEilut5yE0OgHbZZakTLYXhHsfznSzo6vTMvDwbNeqLdwJWPkBvkxQS9m0ibtypc6g
+         WtnTANOUuFjW828TRyJWxOJMA0hmm+kRuE9FxsJBLYr5Ma7yRorDAtR+hnLjn7gbpGc4
+         cR4w==
+X-Gm-Message-State: AOAM5302wm2WQ3/FPU22vid5H6ZWu1yU0dVg1hGAiAPTfeBwcDZ6IjD3
+        SWzPEPuaTqpIw77dfQbGFrE=
+X-Google-Smtp-Source: ABdhPJy/hzhDAVf6ibw/RmfE1If+fJJJe5Qqkzb3ADWH1S8GUve089tqRxTyDjSf1gs5dntEu2LTrA==
+X-Received: by 2002:a17:90a:f314:: with SMTP id ca20mr4841736pjb.210.1629221790454;
+        Tue, 17 Aug 2021 10:36:30 -0700 (PDT)
+Received: from [10.69.44.239] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id 31sm3991270pgy.26.2021.08.17.10.36.27
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Aug 2021 10:14:29 -0700 (PDT)
-Subject: Re: [PATCH 3/7] block: copy offload support infrastructure
-To:     SelvaKumar S <selvakuma.s1@samsung.com>,
-        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org
-Cc:     linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
-        kbusch@kernel.org, axboe@kernel.dk, damien.lemoal@wdc.com,
-        asml.silence@gmail.com, johannes.thumshirn@wdc.com, hch@lst.de,
-        willy@infradead.org, kch@kernel.org, martin.petersen@oracle.com,
-        mpatocka@redhat.com, djwong@kernel.org, snitzer@redhat.com,
-        agk@redhat.com, selvajove@gmail.com, joshiiitr@gmail.com,
-        nj.shetty@samsung.com, nitheshshetty@gmail.com,
-        joshi.k@samsung.com, javier.gonz@samsung.com,
-        Mike Snitzer <snitzer@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tue, 17 Aug 2021 10:36:30 -0700 (PDT)
+Subject: Re: [PATCH 02/51] lpfc: drop lpfc_no_handler()
+To:     Hannes Reinecke <hare@suse.de>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20210817101423.12367-1-selvakuma.s1@samsung.com>
- <CGME20210817101758epcas5p1ec353b3838d64654e69488229256d9eb@epcas5p1.samsung.com>
- <20210817101423.12367-4-selvakuma.s1@samsung.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <ad3561b9-775d-dd4d-0d92-6343440b1f8f@acm.org>
-Date:   Tue, 17 Aug 2021 10:14:27 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
+References: <20210817091456.73342-1-hare@suse.de>
+ <20210817091456.73342-3-hare@suse.de>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <aecc4964-d14f-6ea3-3eb9-7a2700c358a9@gmail.com>
+Date:   Tue, 17 Aug 2021 10:36:25 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210817101423.12367-4-selvakuma.s1@samsung.com>
+In-Reply-To: <20210817091456.73342-3-hare@suse.de>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -73,23 +79,19 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/21 3:14 AM, SelvaKumar S wrote:
-> Introduce REQ_OP_COPY, a no-merge copy offload operation. Create
-> bio with control information as payload and submit to the device.
-> Larger copy operation may be divided if necessary by looking at device
-> limits. REQ_OP_COPY(19) is a write op and takes zone_write_lock when
-> submitted to zoned device.
-> Native copy offload is not supported for stacked devices.
+On 8/17/2021 2:14 AM, Hannes Reinecke wrote:
+> The default SCSI EH action for a non-existing EH callback is to
+> return FAILED, so having a callback just returning FAILED is pointless.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Cc: James Smart <james.smart@broadcom.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_scsi.c | 10 ----------
+>   1 file changed, 10 deletions(-)
+> 
 
-Using a single operation for copy-offloading instead of separate 
-operations for reading and writing is fundamentally incompatible with 
-the device mapper. I think we need a copy-offloading implementation that 
-is compatible with the device mapper.
+Looks good
 
-Storing the parameters of the copy operation in the bio payload is 
-incompatible with the current implementation of bio_split().
+Reviewed-by: James Smart <jsmart2021@gmail.com>
 
-In other words, I think there are fundamental problems with this patch 
-series.
-
-Bart.
+-- james
