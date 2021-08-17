@@ -2,208 +2,167 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 764E4C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 14:56:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B51AEC4320E
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 15:36:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C94E6054E
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 14:56:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 99BF560EE4
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 15:36:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237975AbhHQO4k (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 10:56:40 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:63486 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232705AbhHQO4k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Aug 2021 10:56:40 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 17HEiC0M090609;
-        Tue, 17 Aug 2021 10:55:55 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pp1;
- bh=KlDhjTlXDG2wys5BYoFlpJza6TZlKxDU7N3QUG1sXv0=;
- b=UTGs85hJQbFZI3DmDxbuW7Zs6XGMUuAPZ83zZNxmKj9M1FeLeo9GMKO1RK+wr0io7aN2
- guI0cZYYEJy+6oqRMuu9se3E4Evfzntxsw3GR7T1fXJQzai1uT4VXJI2kThT60FctzPj
- CJ02mG4V3GI3ABB/0WswRB0S2lLdh78yeRDzDKnaa8c0cJLKk9/ejYCTAGW/I5Bm8Qhd
- i09FBT3WCV5GX6JNscgJ/32IeqVIxhGOL2qb01qLHBvqsioJdzZSw/E1TlTcKao00XRW
- q+4CwkLdR6fycJuDNdCE7JKDCXQJ/4BZPTWR4O1Adul1SUGIBoW3OYLroPbkSR0xTmKN TA== 
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3agcsq5h8v-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 17 Aug 2021 10:55:55 -0400
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 17HEtq95025180;
-        Tue, 17 Aug 2021 14:55:53 GMT
-Received: from b06avi18626390.portsmouth.uk.ibm.com (b06avi18626390.portsmouth.uk.ibm.com [9.149.26.192])
-        by ppma04ams.nl.ibm.com with ESMTP id 3ae5f8d2mq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 17 Aug 2021 14:55:53 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06avi18626390.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 17HEqPMj57803176
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Aug 2021 14:52:25 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6DC90AE063;
-        Tue, 17 Aug 2021 14:55:50 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E4459AE051;
-        Tue, 17 Aug 2021 14:55:49 +0000 (GMT)
-Received: from li-c43276cc-23ad-11b2-a85c-bda00957cb67.ibm.com (unknown [9.145.34.10])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 17 Aug 2021 14:55:49 +0000 (GMT)
-Subject: Re: [PATCH 10/51] scsi: Use Scsi_Host as argument for
- eh_host_reset_handler
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org
-References: <20210817091456.73342-1-hare@suse.de>
- <20210817091456.73342-11-hare@suse.de>
-From:   Steffen Maier <maier@linux.ibm.com>
-Message-ID: <a1694063-bf66-42e0-d892-ee5a8bc1b67c@linux.ibm.com>
-Date:   Tue, 17 Aug 2021 16:55:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
-In-Reply-To: <20210817091456.73342-11-hare@suse.de>
+        id S237767AbhHQPhN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 11:37:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43406 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231893AbhHQPhL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 11:37:11 -0400
+Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B0F4C061764;
+        Tue, 17 Aug 2021 08:36:38 -0700 (PDT)
+Received: by mail-pj1-x1034.google.com with SMTP id oa17so32662515pjb.1;
+        Tue, 17 Aug 2021 08:36:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=jBb72hVOoT632QaKCIWdx6/CC01Jwh36ZqbBo7qR29w=;
+        b=MZ87ScQaeTXUx2zc3QJX8paFfZdkSVdSMUYc0v0LY2+hc8AhlF3aqwldmB/BXXfh/z
+         xVUkX3EuT93f+Ekid/9wOV8vd4VGMuUzHWRKeiBzsSym+hW8V3hELzVo+u+KhQB9PaFI
+         yKaN6w7ws4iHi95okxDvcvyCJdiEqWiExOJPn7Rtxomj/p9ErurP79QsKnpF40UWedHY
+         wXhiv+BXDH0p6Ybpa+matnVITHtpuG4LstcJLEA+MFTvG9pqsO1LvATqA0RHijA20GDK
+         RCmlz/5mC+apSlI/jvD+4R9BoBCU6SvqrbqxGY696R6zje19Bg6nqx+tPpa86481eswl
+         CE+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=jBb72hVOoT632QaKCIWdx6/CC01Jwh36ZqbBo7qR29w=;
+        b=DoKahIvjPv5ERb/sjGq5RyfrvGPaR61WnTwe+BKIzIP7CwBfpmkHKiYD2FyiqSjcHe
+         5LwVegZbsxOVUPKJ5PH/zF6ZH6HqwdkhApKAszY2nDrN7zebfhGfSrs3BJw95i45c3xp
+         6WTBv1jw7IbiGRWhuIbWxkJdBDrymO2fMyqlK1MFuBDLjxySPnqKBMUT5/dklKUtx9TZ
+         vbStajETAWrG0+9+7QXsNGlWuMIfNmPBTB5ZKqJsabJd7XpHMe985tp6NWBsnMh7NWmV
+         g5mPxWHm4aBoLIrADSzi2ifSmxmak32+7rdkCe2kx/JKPIMy7Y4AtZ1yWHnNsHdg9jTV
+         QrWw==
+X-Gm-Message-State: AOAM531g9bNl4Ihuzhsr5pklrb3WVQ+aL+enk7AF2qjRW6K5UOkj7q9W
+        36rehwhwJyPr0nOLCeKMboM=
+X-Google-Smtp-Source: ABdhPJyI43P3qYYJRg0q+cd32Cif7a9Xl5o4vVONB3bqiCMyd2bKoq7nZrIha1ZM+VxRpd1t2YLiqw==
+X-Received: by 2002:a17:903:31c3:b029:ed:6f74:49c7 with SMTP id v3-20020a17090331c3b02900ed6f7449c7mr3321877ple.12.1629214598127;
+        Tue, 17 Aug 2021 08:36:38 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:18:efec::50b])
+        by smtp.gmail.com with ESMTPSA id q68sm3828407pgq.5.2021.08.17.08.36.24
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 17 Aug 2021 08:36:37 -0700 (PDT)
+Subject: Re: [PATCH V3 08/13] HV/Vmbus: Initialize VMbus ring buffer for
+ Isolation VM
+To:     Michael Kelley <mikelley@microsoft.com>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
+        "hpa@zytor.com" <hpa@zytor.com>,
+        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+        "luto@kernel.org" <luto@kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
+        "jgross@suse.com" <jgross@suse.com>,
+        "sstabellini@kernel.org" <sstabellini@kernel.org>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "will@kernel.org" <will@kernel.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
+        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
+        "ardb@kernel.org" <ardb@kernel.org>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "pgonda@google.com" <pgonda@google.com>,
+        "martin.b.radev@gmail.com" <martin.b.radev@gmail.com>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
+        "rppt@kernel.org" <rppt@kernel.org>,
+        "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
+        "saravanand@fb.com" <saravanand@fb.com>,
+        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
+        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+        "rientjes@google.com" <rientjes@google.com>,
+        "hannes@cmpxchg.org" <hannes@cmpxchg.org>,
+        "tj@kernel.org" <tj@kernel.org>
+Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        vkuznets <vkuznets@redhat.com>,
+        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
+        "dave.hansen@intel.com" <dave.hansen@intel.com>
+References: <20210809175620.720923-1-ltykernel@gmail.com>
+ <20210809175620.720923-9-ltykernel@gmail.com>
+ <MWHPR21MB1593FFD7F3402753751F433CD7FD9@MWHPR21MB1593.namprd21.prod.outlook.com>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <9de7c3ae-8f3f-3fc4-0491-b9df24f03cb6@gmail.com>
+Date:   Tue, 17 Aug 2021 23:36:22 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <MWHPR21MB1593FFD7F3402753751F433CD7FD9@MWHPR21MB1593.namprd21.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: rFNkgKf8l-PAoZGakoHa_0ojOrqdlrBf
-X-Proofpoint-GUID: rFNkgKf8l-PAoZGakoHa_0ojOrqdlrBf
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
-MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
- definitions=2021-08-17_04:2021-08-17,2021-08-17 signatures=0
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 mlxscore=0
- clxscore=1015 adultscore=0 impostorscore=0 phishscore=0 suspectscore=0
- lowpriorityscore=0 spamscore=0 bulkscore=0 malwarescore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2107140000 definitions=main-2108170089
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/21 11:14 AM, Hannes Reinecke wrote:
-> Issuing a host reset should not rely on any commands.
-> So use Scsi_Host as argument for eh_host_reset_handler.
+
+
+On 8/17/2021 1:28 AM, Michael Kelley wrote:
+> This patch does the following:
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-Reviewed-by: Steffen Maier <maier@linux.ibm.com> # for zfcp and common code
-
-Acked-by: Steffen Maier <maier@linux.ibm.com> # for zfcp
-
-> ---
->   Documentation/scsi/scsi_eh.rst                |  2 +-
->   Documentation/scsi/scsi_mid_low_api.rst       |  4 +-
-
->   drivers/s390/scsi/zfcp_scsi.c                 |  3 +-
-
->   drivers/scsi/scsi_error.c                     |  2 +-
-
->   include/scsi/scsi_host.h                      |  2 +-
->   78 files changed, 271 insertions(+), 334 deletions(-)
+> 1) The existing ring buffer wrap-around mapping functionality is still
+> executed in hv_ringbuffer_init() when not doing SNP isolation.
+> This mapping is based on an array of struct page's that describe the
+> contiguous physical memory.
 > 
-> diff --git a/Documentation/scsi/scsi_eh.rst b/Documentation/scsi/scsi_eh.rst
-> index 7d78c2475615..1ca451ad57df 100644
-> --- a/Documentation/scsi/scsi_eh.rst
-> +++ b/Documentation/scsi/scsi_eh.rst
-> @@ -216,7 +216,7 @@ considered to fail always.
->       int (* eh_abort_handler)(struct scsi_cmnd *);
->       int (* eh_device_reset_handler)(struct scsi_cmnd *);
->       int (* eh_bus_reset_handler)(struct scsi_cmnd *);
-> -    int (* eh_host_reset_handler)(struct scsi_cmnd *);
-> +    int (* eh_host_reset_handler)(struct Scsi_Host *);
+> 2) New ring buffer wrap-around mapping functionality is added in
+> hv_ringbuffer_post_init() for the SNP isolation case.  The case is
+> handled in hv_ringbuffer_post_init() because it must be done after
+> the GPADL is established, since that's where the host visibility
+> is set.  What's interesting is that this case is exactly the same
+> as #1 above, except that the mapping is based on physical
+> memory addresses instead of struct page's.  We have to use physical
+> addresses because of applying the GPA boundary, and there are no
+> struct page's for those physical addresses.
 > 
->   Higher-severity actions are taken only when lower-severity actions
->   cannot recover some of failed scmds.  Also, note that failure of the
-> diff --git a/Documentation/scsi/scsi_mid_low_api.rst b/Documentation/scsi/scsi_mid_low_api.rst
-> index 63ddea2b9640..784587ea7eee 100644
-> --- a/Documentation/scsi/scsi_mid_low_api.rst
-> +++ b/Documentation/scsi/scsi_mid_low_api.rst
-> @@ -777,7 +777,7 @@ Details::
+> Unfortunately, this duplicates a lot of logic in #1 and #2, except
+> for the struct page vs. physical address difference.
 > 
->       /**
->       *      eh_host_reset_handler - reset host (host bus adapter)
-> -    *      @scp: SCSI host that contains this device should be reset
-> +    *      @shp: SCSI host that contains this device should be reset
->       *
->       *      Returns SUCCESS if command aborted else FAILED
->       *
-> @@ -794,7 +794,7 @@ Details::
->       *
->       *      Optionally defined in: LLD
->       **/
-> -	int eh_host_reset_handler(struct scsi_cmnd * scp)
-> +	int eh_host_reset_handler(struct Scsi_Host * shp)
-> 
-> 
->       /**
-
-
-> diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-> index 9393f1587e8a..8bfa8ffd9ff6 100644
-> --- a/drivers/s390/scsi/zfcp_scsi.c
-> +++ b/drivers/s390/scsi/zfcp_scsi.c
-> @@ -371,9 +371,8 @@ static int zfcp_scsi_eh_target_reset_handler(struct scsi_cmnd *scpnt)
->   	return ret;
->   }
-> 
-> -static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
-> +static int zfcp_scsi_eh_host_reset_handler(struct Scsi_Host *host)
->   {
-> -	struct Scsi_Host *host = scpnt->device->host;
->   	struct zfcp_adapter *adapter = (struct zfcp_adapter *)host->hostdata[0];
->   	int ret = SUCCESS;
->   	unsigned long flags;
-
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 58a252c38992..8218e2976482 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -811,7 +811,7 @@ static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
->   	if (!hostt->eh_host_reset_handler)
->   		return FAILED;
-> 
-> -	rtn = hostt->eh_host_reset_handler(scmd);
-> +	rtn = hostt->eh_host_reset_handler(host);
-> 
->   	if (rtn == SUCCESS) {
->   		if (!hostt->skip_settle_delay)
-
-
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 75363707b73f..3b1acf91f4d0 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -142,7 +142,7 @@ struct scsi_host_template {
->   	int (* eh_device_reset_handler)(struct scsi_cmnd *);
->   	int (* eh_target_reset_handler)(struct scsi_cmnd *);
->   	int (* eh_bus_reset_handler)(struct scsi_cmnd *);
-> -	int (* eh_host_reset_handler)(struct scsi_cmnd *);
-> +	int (* eh_host_reset_handler)(struct Scsi_Host *);
-> 
->   	/*
->   	 * Before the mid layer attempts to scan for a new device where none
+> Proposal:  Couldn't we always do #2, even for the normal case
+> where SNP isolation is not being used?   The difference would
+> only be in whether the GPA boundary is added.  And it looks like
+> the normal case could be done after the GPADL is established,
+> as setting up the GPADL doesn't have any dependencies on
+> having the ring buffer mapped.  This approach would remove
+> a lot of duplication.  Just move the calls to hv_ringbuffer_init()
+> to after the GPADL is established, and do all the work there for
+> both cases.
 > 
 
+Hi Michael:
+     Thanks for suggestion. I just keep the original logic in current
+code. I will try combining these two functions and report back.
 
--- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
-
-Linux on IBM Z Development
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Matthias Hartmann
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+Thanks.
