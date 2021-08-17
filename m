@@ -7,54 +7,53 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B26BC43214
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FE13C4320A
 	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:17:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 856FD60720
+	by mail.kernel.org (Postfix) with ESMTP id 3B89D60720
 	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:17:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235212AbhHQJRt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S239559AbhHQJRt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Tue, 17 Aug 2021 05:17:49 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:47534 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239432AbhHQJRT (ORCPT
+Received: from smtp-out1.suse.de ([195.135.220.28]:33302 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235578AbhHQJRT (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 05:17:19 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id 6B43520023;
+        by smtp-out1.suse.de (Postfix) with ESMTP id B0FD721D82;
         Tue, 17 Aug 2021 09:16:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1629191802; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=gwQFFobjGKn1eFNVCznnhG0NDDwrqbaBnG1htLXLF4E=;
-        b=qEPghMSw+xkZ8e04iUE+10xKBD9O4kb2/qHg16Bmy/Xs0XB1VV2lcgg2K5WugtyQ+j652/
-        KA7kw6kXtYdmVQf/igIUgzVqkJRc+Z2pFkTT9GeKOWyxGJ8pErMff5nRUjnnRqZrzLEhOY
-        WuKzqxG9QYvo7zjXV41zODQ/7rkZC1w=
+        bh=dYeNAqtanRT97Ug5X4+g/Wpej5jaqummjiGA1PAD0wQ=;
+        b=sSkC6a36ZJlzGF8uaWAonO+k9Bgng51PLt7oQAJOBC2gpZ3khHOmxQqBS6ocwvOFaAOzY4
+        6QSnjn3ta5uhHPWy0yb7QudMf1NA0vMfH4XhwzyZu6jibV13ICEV1ViifBo85avw+9wFLW
+        8jEVdaqizF5gkbIvcon6kbFQY00wyWU=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1629191802;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=gwQFFobjGKn1eFNVCznnhG0NDDwrqbaBnG1htLXLF4E=;
-        b=nE/j4Ud3l0u2ZVrbNxywJUGew6G8vODwwlaE2Zr3TmKIYutO9ww8pFFui/sO55qi3wtSqQ
-        fTOaVXVbVZkJpkAA==
+        bh=dYeNAqtanRT97Ug5X4+g/Wpej5jaqummjiGA1PAD0wQ=;
+        b=t1rrJVoTqpwhjSKVcfCg8fATuE5C0b1Q8QoE/pGJmfSHT2b/IsLlpfHgUjBt1jy7m85E8V
+        7JR4Fuq1Blkp4wDQ==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 654CFA3BAF;
+        by relay2.suse.de (Postfix) with ESMTP id AC2FBA3B94;
         Tue, 17 Aug 2021 09:16:42 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 6254B518CE9D; Tue, 17 Aug 2021 11:16:42 +0200 (CEST)
+        id A9367518CEB3; Tue, 17 Aug 2021 11:16:42 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>,
-        Saurav Kashyap <skashyap@marvell.com>
-Subject: [PATCH 31/51] qedf: use fc rport as argument for qedf_initiate_tmf()
-Date:   Tue, 17 Aug 2021 11:14:36 +0200
-Message-Id: <20210817091456.73342-32-hare@suse.de>
+        Hannes Reinecke <hare@suse.com>
+Subject: [PATCH 42/51] aic7xxx: do not reference scsi command when resetting device
+Date:   Tue, 17 Aug 2021 11:14:47 +0200
+Message-Id: <20210817091456.73342-43-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210817091456.73342-1-hare@suse.de>
 References: <20210817091456.73342-1-hare@suse.de>
@@ -64,282 +63,261 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When sending a TMF we're only concerned with the rport and the LUN ID,
-so use struct fc_rport as argument for qedf_initiate_tmf().
+When sending a device reset we should not take a reference to the
+scsi command.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
-Cc: Saurav Kashyap <skashyap@marvell.com>
 ---
- drivers/scsi/qedf/qedf.h      |  5 ++-
- drivers/scsi/qedf/qedf_io.c   | 80 ++++++++++-------------------------
- drivers/scsi/qedf/qedf_main.c | 17 ++++----
- 3 files changed, 35 insertions(+), 67 deletions(-)
+ drivers/scsi/aic7xxx/aic7xxx_osm.c | 102 +++++++++++++++--------------
+ 1 file changed, 54 insertions(+), 48 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
-index ba94413fe2ea..631ebb59a2ac 100644
---- a/drivers/scsi/qedf/qedf.h
-+++ b/drivers/scsi/qedf/qedf.h
-@@ -113,6 +113,7 @@ struct qedf_ioreq {
- #define QEDF_CMD_ERR_SCSI_DONE		0x5
- 	u8 io_req_flags;
- 	uint8_t tm_flags;
-+	u64 tm_lun;
- 	struct qedf_rport *fcport;
- #define	QEDF_CMD_ST_INACTIVE		0
- #define	QEDFC_CMD_ST_IO_ACTIVE		1
-@@ -489,7 +490,7 @@ extern void qedf_process_warning_compl(struct qedf_ctx *qedf,
- 	struct fcoe_cqe *cqe, struct qedf_ioreq *io_req);
- extern void qedf_process_error_detect(struct qedf_ctx *qedf,
- 	struct fcoe_cqe *cqe, struct qedf_ioreq *io_req);
--extern void qedf_flush_active_ios(struct qedf_rport *fcport, int lun);
-+extern void qedf_flush_active_ios(struct qedf_rport *fcport, u64 lun);
- extern void qedf_release_cmd(struct kref *ref);
- extern int qedf_initiate_abts(struct qedf_ioreq *io_req,
- 	bool return_scsi_cmd_on_abts);
-@@ -514,7 +515,7 @@ extern int qedf_initiate_cleanup(struct qedf_ioreq *io_req,
- 	bool return_scsi_cmd_on_abts);
- extern void qedf_process_cleanup_compl(struct qedf_ctx *qedf,
- 	struct fcoe_cqe *cqe, struct qedf_ioreq *io_req);
--extern int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags);
-+extern int qedf_initiate_tmf(struct fc_rport *rport, u64 lun, u8 tm_flags);
- extern void qedf_process_tmf_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- 	struct qedf_ioreq *io_req);
- extern void qedf_process_cqe(struct qedf_ctx *qedf, struct fcoe_cqe *cqe);
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index 6b5b6a75ac88..f6883bf6461c 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -546,7 +546,7 @@ static int qedf_build_bd_list_from_sg(struct qedf_ioreq *io_req)
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index 36e58cf0416b..26ca71e2ddd0 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -366,7 +366,8 @@ static void ahc_linux_queue_cmd_complete(struct ahc_softc *ahc,
+ 					 struct scsi_cmnd *cmd);
+ static void ahc_linux_freeze_simq(struct ahc_softc *ahc);
+ static void ahc_linux_release_simq(struct ahc_softc *ahc);
+-static int  ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag);
++static int  ahc_linux_queue_recovery_cmd(struct scsi_device *sdev,
++					 struct scsi_cmnd *cmd);
+ static void ahc_linux_initialize_scsi_bus(struct ahc_softc *ahc);
+ static u_int ahc_linux_user_tagdepth(struct ahc_softc *ahc,
+ 				     struct ahc_devinfo *devinfo);
+@@ -730,7 +731,7 @@ ahc_linux_abort(struct scsi_cmnd *cmd)
+ {
+ 	int error;
+ 
+-	error = ahc_linux_queue_recovery_cmd(cmd, SCB_ABORT);
++	error = ahc_linux_queue_recovery_cmd(cmd->device, cmd);
+ 	if (error != SUCCESS)
+ 		printk("aic7xxx_abort returns 0x%x\n", error);
+ 	return (error);
+@@ -744,7 +745,7 @@ ahc_linux_dev_reset(struct scsi_cmnd *cmd)
+ {
+ 	int error;
+ 
+-	error = ahc_linux_queue_recovery_cmd(cmd, SCB_DEVICE_RESET);
++	error = ahc_linux_queue_recovery_cmd(cmd->device, NULL);
+ 	if (error != SUCCESS)
+ 		printk("aic7xxx_dev_reset returns 0x%x\n", error);
+ 	return (error);
+@@ -2031,11 +2032,12 @@ ahc_linux_release_simq(struct ahc_softc *ahc)
  }
  
- static void qedf_build_fcp_cmnd(struct qedf_ioreq *io_req,
--				  struct fcp_cmnd *fcp_cmnd)
-+				struct fcp_cmnd *fcp_cmnd)
+ static int
+-ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
++ahc_linux_queue_recovery_cmd(struct scsi_device *sdev,
++			     struct scsi_cmnd *cmd)
  {
- 	struct scsi_cmnd *sc_cmd = io_req->sc_cmd;
+ 	struct ahc_softc *ahc;
+ 	struct ahc_linux_device *dev;
+-	struct scb *pending_scb;
++	struct scb *pending_scb = NULL, *scb;
+ 	u_int  saved_scbptr;
+ 	u_int  active_scb_index;
+ 	u_int  last_phase;
+@@ -2048,18 +2050,19 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 	int    disconnected;
+ 	unsigned long flags;
  
-@@ -554,8 +554,12 @@ static void qedf_build_fcp_cmnd(struct qedf_ioreq *io_req,
- 	memset(fcp_cmnd, 0, FCP_CMND_LEN);
+-	pending_scb = NULL;
+ 	paused = FALSE;
+ 	wait = FALSE;
+-	ahc = *(struct ahc_softc **)cmd->device->host->hostdata;
++	ahc = *(struct ahc_softc **)sdev->host->hostdata;
  
- 	/* 8 bytes: SCSI LUN info */
--	int_to_scsilun(sc_cmd->device->lun,
--			(struct scsi_lun *)&fcp_cmnd->fc_lun);
-+	if (io_req->cmd_type == QEDF_TASK_MGMT_CMD)
-+		int_to_scsilun(io_req->tm_lun,
-+			       (struct scsi_lun *)&fcp_cmnd->fc_lun);
-+	else
-+		int_to_scsilun(sc_cmd->device->lun,
-+			       (struct scsi_lun *)&fcp_cmnd->fc_lun);
+-	scmd_printk(KERN_INFO, cmd, "Attempting to queue a%s message\n",
+-	       flag == SCB_ABORT ? "n ABORT" : " TARGET RESET");
++	sdev_printk(KERN_INFO, sdev, "Attempting to queue a%s message\n",
++	       cmd ? "n ABORT" : " TARGET RESET");
  
- 	/* 4 bytes: flag info */
- 	fcp_cmnd->fc_pri_ta = 0;
-@@ -1065,8 +1069,9 @@ static void qedf_parse_fcp_rsp(struct qedf_ioreq *io_req,
- 		io_req->fcp_resid = fcp_rsp->fcp_resid;
+-	printk("CDB:");
+-	for (cdb_byte = 0; cdb_byte < cmd->cmd_len; cdb_byte++)
+-		printk(" 0x%x", cmd->cmnd[cdb_byte]);
+-	printk("\n");
++	if (cmd) {
++		printk("CDB:");
++		for (cdb_byte = 0; cdb_byte < cmd->cmd_len; cdb_byte++)
++			printk(" 0x%x", cmd->cmnd[cdb_byte]);
++		printk("\n");
++	}
  
- 	io_req->scsi_comp_flags = rsp_flags;
--	CMD_SCSI_STATUS(sc_cmd) = io_req->cdb_status =
--	    fcp_rsp->scsi_status_code;
-+	if (sc_cmd)
-+		CMD_SCSI_STATUS(sc_cmd) = io_req->cdb_status =
-+			fcp_rsp->scsi_status_code;
+ 	ahc_lock(ahc, &flags);
  
- 	if (rsp_flags &
- 	    FCOE_FCP_RSP_FLAGS_FCP_RSP_LEN_VALID)
-@@ -1097,7 +1102,7 @@ static void qedf_parse_fcp_rsp(struct qedf_ioreq *io_req,
+@@ -2070,7 +2073,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 	 * at all, and the system wanted us to just abort the
+ 	 * command, return success.
+ 	 */
+-	dev = scsi_transport_device_data(cmd->device);
++	dev = scsi_transport_device_data(sdev);
+ 
+ 	if (dev == NULL) {
+ 		/*
+@@ -2078,13 +2081,12 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 		 * so we must not still own the command.
+ 		 */
+ 		printk("%s:%d:%d:%d: Is not an active device\n",
+-		       ahc_name(ahc), cmd->device->channel, cmd->device->id,
+-		       (u8)cmd->device->lun);
++		       ahc_name(ahc), sdev->channel, sdev->id, (u8)sdev->lun);
+ 		retval = SUCCESS;
+ 		goto no_cmd;
  	}
  
- 	/* The sense buffer can be NULL for TMF commands */
--	if (sc_cmd->sense_buffer) {
-+	if (sc_cmd && sc_cmd->sense_buffer) {
- 		memset(sc_cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
- 		if (fcp_sns_len)
- 			memcpy(sc_cmd->sense_buffer, sense_data,
-@@ -1595,7 +1600,7 @@ static void qedf_flush_els_req(struct qedf_ctx *qedf,
- /* A value of -1 for lun is a wild card that means flush all
-  * active SCSI I/Os for the target.
-  */
--void qedf_flush_active_ios(struct qedf_rport *fcport, int lun)
-+void qedf_flush_active_ios(struct qedf_rport *fcport, u64 lun)
- {
- 	struct qedf_ioreq *io_req;
- 	struct qedf_ctx *qedf;
-@@ -1783,10 +1788,6 @@ void qedf_flush_active_ios(struct qedf_rport *fcport, int lun)
- 			kref_put(&io_req->refcount, qedf_release_cmd);
- 			continue;
+-	if ((dev->flags & (AHC_DEV_Q_BASIC|AHC_DEV_Q_TAGGED)) == 0
++	if (cmd && (dev->flags & (AHC_DEV_Q_BASIC|AHC_DEV_Q_TAGGED)) == 0
+ 	 && ahc_search_untagged_queues(ahc, cmd, cmd->device->id,
+ 				       cmd->device->channel + 'A',
+ 				       (u8)cmd->device->lun,
+@@ -2099,25 +2101,28 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 	/*
+ 	 * See if we can find a matching cmd in the pending list.
+ 	 */
+-	LIST_FOREACH(pending_scb, &ahc->pending_scbs, pending_links) {
+-		if (pending_scb->io_ctx == cmd)
++	LIST_FOREACH(scb, &ahc->pending_scbs, pending_links) {
++		if (cmd && scb->io_ctx == cmd) {
++			pending_scb = scb;
+ 			break;
++		}
+ 	}
+ 
+-	if (pending_scb == NULL && flag == SCB_DEVICE_RESET) {
+-
++	if (!cmd) {
+ 		/* Any SCB for this device will do for a target reset */
+-		LIST_FOREACH(pending_scb, &ahc->pending_scbs, pending_links) {
+-			if (ahc_match_scb(ahc, pending_scb, scmd_id(cmd),
+-					  scmd_channel(cmd) + 'A',
++		LIST_FOREACH(scb, &ahc->pending_scbs, pending_links) {
++			if (ahc_match_scb(ahc, scb, sdev->id,
++					  sdev->channel + 'A',
+ 					  CAM_LUN_WILDCARD,
+-					  SCB_LIST_NULL, ROLE_INITIATOR))
++					  SCB_LIST_NULL, ROLE_INITIATOR)) {
++				pending_scb = scb;
+ 				break;
++			}
  		}
--		if (lun > -1) {
--			if (io_req->lun != lun)
--				continue;
--		}
+ 	}
+ 
+ 	if (pending_scb == NULL) {
+-		scmd_printk(KERN_INFO, cmd, "Command not found\n");
++		sdev_printk(KERN_INFO, sdev, "Command not found\n");
+ 		goto no_cmd;
+ 	}
+ 
+@@ -2148,22 +2153,22 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 	ahc_dump_card_state(ahc);
+ 
+ 	disconnected = TRUE;
+-	if (flag == SCB_ABORT) {
+-		if (ahc_search_qinfifo(ahc, cmd->device->id,
+-				       cmd->device->channel + 'A',
+-				       cmd->device->lun,
++	if (cmd) {
++		if (ahc_search_qinfifo(ahc, sdev->id,
++				       sdev->channel + 'A',
++				       sdev->lun,
+ 				       pending_scb->hscb->tag,
+ 				       ROLE_INITIATOR, CAM_REQ_ABORTED,
+ 				       SEARCH_COMPLETE) > 0) {
+ 			printk("%s:%d:%d:%d: Cmd aborted from QINFIFO\n",
+-			       ahc_name(ahc), cmd->device->channel,
+-			       cmd->device->id, (u8)cmd->device->lun);
++			       ahc_name(ahc), sdev->channel,
++			       sdev->id, (u8)sdev->lun);
+ 			retval = SUCCESS;
+ 			goto done;
+ 		}
+-	} else if (ahc_search_qinfifo(ahc, cmd->device->id,
+-				      cmd->device->channel + 'A',
+-				      cmd->device->lun,
++	} else if (ahc_search_qinfifo(ahc, sdev->id,
++				      sdev->channel + 'A',
++				      sdev->lun,
+ 				      pending_scb->hscb->tag,
+ 				      ROLE_INITIATOR, /*status*/0,
+ 				      SEARCH_COUNT) > 0) {
+@@ -2176,7 +2181,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 		bus_scb = ahc_lookup_scb(ahc, ahc_inb(ahc, SCB_TAG));
+ 		if (bus_scb == pending_scb)
+ 			disconnected = FALSE;
+-		else if (flag != SCB_ABORT
++		else if (!cmd
+ 		      && ahc_inb(ahc, SAVED_SCSIID) == pending_scb->hscb->scsiid
+ 		      && ahc_inb(ahc, SAVED_LUN) == SCB_GET_LUN(pending_scb))
+ 			disconnected = FALSE;
+@@ -2196,18 +2201,18 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 	saved_scsiid = ahc_inb(ahc, SAVED_SCSIID);
+ 	if (last_phase != P_BUSFREE
+ 	 && (pending_scb->hscb->tag == active_scb_index
+-	  || (flag == SCB_DEVICE_RESET
+-	   && SCSIID_TARGET(ahc, saved_scsiid) == scmd_id(cmd)))) {
++	  || (!cmd && SCSIID_TARGET(ahc, saved_scsiid) == sdev->id))) {
  
  		/*
- 		 * Use kref_get_unless_zero in the unlikely case the command
-@@ -2295,7 +2296,7 @@ void qedf_process_cleanup_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- 	complete(&io_req->cleanup_done);
- }
+ 		 * We're active on the bus, so assert ATN
+ 		 * and hope that the target responds.
+ 		 */
+ 		pending_scb = ahc_lookup_scb(ahc, active_scb_index);
+-		pending_scb->flags |= SCB_RECOVERY_SCB|flag;
++		pending_scb->flags |= SCB_RECOVERY_SCB;
++		pending_scb->flags |= cmd ? SCB_ABORT : SCB_DEVICE_RESET;
+ 		ahc_outb(ahc, MSG_OUT, HOST_MSG);
+ 		ahc_outb(ahc, SCSISIGO, last_phase|ATNO);
+-		scmd_printk(KERN_INFO, cmd, "Device is active, asserting ATN\n");
++		sdev_printk(KERN_INFO, sdev, "Device is active, asserting ATN\n");
+ 		wait = TRUE;
+ 	} else if (disconnected) {
  
--static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
-+static int qedf_execute_tmf(struct qedf_rport *fcport, u64 tm_lun,
- 	uint8_t tm_flags)
- {
- 	struct qedf_ioreq *io_req;
-@@ -2305,17 +2306,10 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
- 	int rc = 0;
- 	uint16_t xid;
- 	int tmo = 0;
--	int lun = 0;
- 	unsigned long flags;
- 	struct fcoe_wqe *sqe;
- 	u16 sqe_idx;
+@@ -2228,7 +2233,8 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 		 * an unsolicited reselection occurred.
+ 		 */
+ 		pending_scb->hscb->control |= MK_MESSAGE|DISCONNECTED;
+-		pending_scb->flags |= SCB_RECOVERY_SCB|flag;
++		pending_scb->flags |= SCB_RECOVERY_SCB;
++		pending_scb->flags |= cmd ? SCB_ABORT : SCB_DEVICE_RESET;
  
--	if (!sc_cmd) {
--		QEDF_ERR(&qedf->dbg_ctx, "sc_cmd is NULL\n");
--		return FAILED;
--	}
--
--	lun = (int)sc_cmd->device->lun;
- 	if (!test_bit(QEDF_RPORT_SESSION_READY, &fcport->flags)) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "fcport not offloaded\n");
- 		rc = FAILED;
-@@ -2335,7 +2329,7 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
- 		qedf->target_resets++;
- 
- 	/* Initialize rest of io_req fields */
--	io_req->sc_cmd = sc_cmd;
-+	io_req->sc_cmd = NULL;
- 	io_req->fcport = fcport;
- 	io_req->cmd_type = QEDF_TASK_MGMT_CMD;
- 
-@@ -2349,6 +2343,7 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
- 
- 	/* Default is to return a SCSI command when an error occurs */
- 	io_req->return_scsi_cmd_on_abts = false;
-+	io_req->tm_lun = tm_lun;
- 
- 	/* Obtain exchange id */
- 	xid = io_req->xid;
-@@ -2403,7 +2398,7 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
- 
- 
- 	if (tm_flags == FCP_TMF_LUN_RESET)
--		qedf_flush_active_ios(fcport, lun);
-+		qedf_flush_active_ios(fcport, tm_lun);
- 	else
- 		qedf_flush_active_ios(fcport, -1);
- 
-@@ -2418,23 +2413,18 @@ static int qedf_execute_tmf(struct qedf_rport *fcport, struct scsi_cmnd *sc_cmd,
- 	return rc;
- }
- 
--int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
-+int qedf_initiate_tmf(struct fc_rport *rport, u64 lun, u8 tm_flags)
- {
--	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
- 	struct fc_rport_libfc_priv *rp = rport->dd_data;
- 	struct qedf_rport *fcport = (struct qedf_rport *)&rp[1];
--	struct qedf_ctx *qedf;
--	struct fc_lport *lport = shost_priv(sc_cmd->device->host);
-+	struct qedf_ctx *qedf = fcport->qedf;
-+	struct fc_lport *lport = rp->local_port;
- 	int rc = SUCCESS;
--	int rval;
--	struct qedf_ioreq *io_req = NULL;
--	int ref_cnt = 0;
- 	struct fc_rport_priv *rdata = fcport->rdata;
- 
- 	QEDF_ERR(NULL,
--		 "tm_flags 0x%x sc_cmd %p op = 0x%02x target_id = 0x%x lun=%d\n",
--		 tm_flags, sc_cmd, sc_cmd->cmd_len ? sc_cmd->cmnd[0] : 0xff,
--		 rport->scsi_target_id, (int)sc_cmd->device->lun);
-+		 "tm_flags 0x%x target_id = 0x%x lun=%llu\n",
-+		 tm_flags, rport->scsi_target_id, lun);
- 
- 	if (!rdata || !kref_get_unless_zero(&rdata->kref)) {
- 		QEDF_ERR(NULL, "stale rport\n");
-@@ -2445,33 +2435,10 @@ int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 		 (tm_flags == FCP_TMF_TGT_RESET) ? "TARGET RESET" :
- 		 "LUN RESET");
- 
--	if (sc_cmd->SCp.ptr) {
--		io_req = (struct qedf_ioreq *)sc_cmd->SCp.ptr;
--		ref_cnt = kref_read(&io_req->refcount);
--		QEDF_ERR(NULL,
--			 "orig io_req = %p xid = 0x%x ref_cnt = %d.\n",
--			 io_req, io_req->xid, ref_cnt);
--	}
--
--	rval = fc_remote_port_chkready(rport);
--	if (rval) {
--		QEDF_ERR(NULL, "device_reset rport not ready\n");
--		rc = FAILED;
--		goto tmf_err;
--	}
--
--	rc = fc_block_scsi_eh(sc_cmd);
-+	rc = fc_block_rport(rport);
- 	if (rc)
- 		goto tmf_err;
- 
--	if (!fcport) {
--		QEDF_ERR(NULL, "device_reset: rport is NULL\n");
--		rc = FAILED;
--		goto tmf_err;
--	}
--
--	qedf = fcport->qedf;
--
- 	if (!qedf) {
- 		QEDF_ERR(NULL, "qedf is NULL.\n");
- 		rc = FAILED;
-@@ -2508,7 +2475,7 @@ int qedf_initiate_tmf(struct scsi_cmnd *sc_cmd, u8 tm_flags)
- 		goto tmf_err;
+ 		/*
+ 		 * Remove any cached copy of this SCB in the
+@@ -2237,9 +2243,9 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 		 * same element in the SCB, SCB_NEXT, for
+ 		 * both the qinfifo and the disconnected list.
+ 		 */
+-		ahc_search_disc_list(ahc, cmd->device->id,
+-				     cmd->device->channel + 'A',
+-				     cmd->device->lun, pending_scb->hscb->tag,
++		ahc_search_disc_list(ahc, sdev->id,
++				     sdev->channel + 'A',
++				     sdev->lun, pending_scb->hscb->tag,
+ 				     /*stop_on_first*/TRUE,
+ 				     /*remove*/TRUE,
+ 				     /*save_state*/FALSE);
+@@ -2262,9 +2268,9 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 		 * so we are the next SCB for this target
+ 		 * to run.
+ 		 */
+-		ahc_search_qinfifo(ahc, cmd->device->id,
+-				   cmd->device->channel + 'A',
+-				   cmd->device->lun, SCB_LIST_NULL,
++		ahc_search_qinfifo(ahc, sdev->id,
++				   sdev->channel + 'A',
++				   (u8)sdev->lun, SCB_LIST_NULL,
+ 				   ROLE_INITIATOR, CAM_REQUEUE_REQ,
+ 				   SEARCH_COMPLETE);
+ 		ahc_qinfifo_requeue_tail(ahc, pending_scb);
+@@ -2273,7 +2279,7 @@ ahc_linux_queue_recovery_cmd(struct scsi_cmnd *cmd, scb_flag flag)
+ 		printk("Device is disconnected, re-queuing SCB\n");
+ 		wait = TRUE;
+ 	} else {
+-		scmd_printk(KERN_INFO, cmd, "Unable to deliver message\n");
++		sdev_printk(KERN_INFO, sdev, "Unable to deliver message\n");
+ 		retval = FAILED;
+ 		goto done;
  	}
- 
--	rc = qedf_execute_tmf(fcport, sc_cmd, tm_flags);
-+	rc = qedf_execute_tmf(fcport, lun, tm_flags);
- 
- tmf_err:
- 	kref_put(&rdata->kref, fc_rport_destroy);
-@@ -2525,7 +2492,6 @@ void qedf_process_tmf_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- 	fcp_rsp = &cqe->cqe_info.rsp_info;
- 	qedf_parse_fcp_rsp(io_req, fcp_rsp);
- 
--	io_req->sc_cmd = NULL;
- 	complete(&io_req->tm_done);
- }
- 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 38be2e2274a8..bc211d8101e1 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -857,18 +857,19 @@ static int qedf_eh_abort(struct scsi_cmnd *sc_cmd)
- 
- static int qedf_eh_target_reset(struct scsi_cmnd *sc_cmd)
- {
--	QEDF_ERR(NULL, "%d:0:%d:%lld: TARGET RESET Issued...",
--		 sc_cmd->device->host->host_no, sc_cmd->device->id,
--		 sc_cmd->device->lun);
--	return qedf_initiate_tmf(sc_cmd, FCP_TMF_TGT_RESET);
-+	struct scsi_target *starget = scsi_target(sc_cmd->device);
-+	struct fc_rport *rport = starget_to_rport(starget);
-+
-+	QEDF_ERR(NULL, "TARGET RESET Issued...");
-+	return qedf_initiate_tmf(rport, 0, FCP_TMF_TGT_RESET);
- }
- 
- static int qedf_eh_device_reset(struct scsi_cmnd *sc_cmd)
- {
--	QEDF_ERR(NULL, "%d:0:%d:%lld: LUN RESET Issued... ",
--		 sc_cmd->device->host->host_no, sc_cmd->device->id,
--		 sc_cmd->device->lun);
--	return qedf_initiate_tmf(sc_cmd, FCP_TMF_LUN_RESET);
-+	struct fc_rport *rport = starget_to_rport(scsi_target(sc_cmd->device));
-+
-+	QEDF_ERR(NULL, "LUN RESET Issued...\n");
-+	return qedf_initiate_tmf(rport, sc_cmd->device->lun, FCP_TMF_LUN_RESET);
- }
- 
- bool qedf_wait_for_upload(struct qedf_ctx *qedf)
 -- 
 2.29.2
 
