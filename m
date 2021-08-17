@@ -2,168 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7808BC432BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 13:11:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FA13C4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 13:46:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5347F60EBD
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 13:11:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03B3B60E09
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 13:46:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237457AbhHQNLc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 09:11:32 -0400
-Received: from new2-smtp.messagingengine.com ([66.111.4.224]:53551 "EHLO
-        new2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235463AbhHQNLc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Aug 2021 09:11:32 -0400
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
-        by mailnew.nyi.internal (Postfix) with ESMTP id 444E1580B2A;
-        Tue, 17 Aug 2021 09:10:54 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute2.internal (MEProxy); Tue, 17 Aug 2021 09:10:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=fm1; bh=xtNL7MKvR9ER8Xw7XRE1SJsC55Q
-        OmDv7otUyicJm4bA=; b=zer8n5c3j65hjKCHqkCGfl7KA/KMsl5U8k7Gkzel8tR
-        TB9PI4MLkW/CsWyttCV718/Ezeg2KfSbE33Bmy+N03zQwuYViIzqWajW6HhFYAMB
-        T41t+W4D8rMMtfjW2XkfwJ8zNCeTUZ6mFAOzGABBfEignNnGKN/QHd6u2L6yxgjg
-        +ehHVphHjSSTCzdhTGiOhB9cB2xq/fqCtvTc6wacj2OA5IiF1YgwFDicoutu3irW
-        jgZJU1oVUqY0X49hcNkqyGadiWyt+WtFQxe2gNEeLNB1wPMnKO2/2Kgu0KYOs4ya
-        86F69zuBMaulEEvZVL1RPQ3Y66VyW/AWB4/8UdKN7Jg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=xtNL7M
-        KvR9ER8Xw7XRE1SJsC55QOmDv7otUyicJm4bA=; b=IU/RH3WYRX9P+Jn+dkkuT7
-        EnXAX2O/xHkvrYUHdZz98lZlo0GdmrLa5HFuXS1UEUgK9+iGc5vlzJKfh0ExfE10
-        kEgU+s9elo8x/Glle06gMwI4/EYiclv5hbLPNV7wpWR81lO2xGXHA1QFR5LJpK7j
-        83GTufZQ01ZoL6624wL7nl4fksfoL0otcGbCkkrYz6aWpeAH/TNhU/v1IY7/l+ff
-        pdu/a20hpeZFkbrXzl9djWdO/DSfvor6FgTJH2BzAYJfY1iA/pzRJ1dfjfxVxTu+
-        0hY1VlH4kLev0OveuoxsSYdvCHMWET2WJ/4amZ+FHAq5ZYxU230ST7MoOvmVE8nQ
-        ==
-X-ME-Sender: <xms:W7UbYXkXz1mNG4J3L4VevBCW7wBAC2mDvKSHjuLsVcKOeiHHAsPgXw>
-    <xme:W7UbYa3QxSV-P89lhoDi9siFRC30TI09CkEYvQPeHPIjNcDAtutDygDVQbKGjEh6J
-    3tp13HYufkIWQ>
-X-ME-Received: <xmr:W7UbYdqfkSuiS6CCeDvxOgEk9CHGuH81JpR_YuLNR96d90Yifphuqc7F7v71elMWvChmgrX90BeFSfuMVWfHSubuA1MG8807>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrleefgdeivdcutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpeffhffvuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepifhrvghgucfm
-    jfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecuggftrfgrthhtvghrnhepveeuheejgf
-    ffgfeivddukedvkedtleelleeghfeljeeiueeggeevueduudekvdetnecuvehluhhsthgv
-    rhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepghhrvghgsehkrhhorghhrd
-    gtohhm
-X-ME-Proxy: <xmx:W7UbYflXehCXBOklU-0G37vBlXBPdTZuSDHH_nrKNU6iC_GBDCNPcQ>
-    <xmx:W7UbYV3v8DIwmaiwnox9y_cHAlXfKggU_odGNHlQ8yM5rD1fUnzFqA>
-    <xmx:W7UbYesURvgWKauLhOo5gPvWnVQmJI2vs64LFeQTh4B5i0vmBaJOPA>
-    <xmx:XrUbYQ0juNV9Td0BZ3gsdfZytA5Vfox6EvMokvxxPhkCTRtE1TeNhw>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 17 Aug 2021 09:10:50 -0400 (EDT)
-Date:   Tue, 17 Aug 2021 15:10:48 +0200
-From:   Greg KH <greg@kroah.com>
-To:     SelvaKumar S <selvakuma.s1@samsung.com>
-Cc:     linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
-        kbusch@kernel.org, axboe@kernel.dk, damien.lemoal@wdc.com,
-        asml.silence@gmail.com, johannes.thumshirn@wdc.com, hch@lst.de,
-        willy@infradead.org, kch@kernel.org, martin.petersen@oracle.com,
-        mpatocka@redhat.com, bvanassche@acm.org, djwong@kernel.org,
-        snitzer@redhat.com, agk@redhat.com, selvajove@gmail.com,
-        joshiiitr@gmail.com, nj.shetty@samsung.com,
-        nitheshshetty@gmail.com, joshi.k@samsung.com,
-        javier.gonz@samsung.com
-Subject: Re: [PATCH 4/7] block: Introduce a new ioctl for simple copy
-Message-ID: <YRu1WFImFulfpk7s@kroah.com>
-References: <20210817101423.12367-1-selvakuma.s1@samsung.com>
- <CGME20210817101803epcas5p10cda1d52f8a8f1172e34b1f9cf8eef3b@epcas5p1.samsung.com>
- <20210817101423.12367-5-selvakuma.s1@samsung.com>
+        id S237629AbhHQNqt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 09:46:49 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:42754 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235092AbhHQNqt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 09:46:49 -0400
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 2F7C021F53;
+        Tue, 17 Aug 2021 13:46:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1629207975; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=l7jTUWlxIPDJE3WnmFI07Fex/glV838jERqXX6KJQ+Q=;
+        b=K9RSAssqzxrXj8a50iudIgg7pyqFIW5yDlX1eaZ6mPH9uSDy/TXvo5Ey9VLbwDVBV3S3tm
+        Pk5SPOCi5sUR4RKcIdtzESKRMbcvMFpqcFL95s5R6uIvme7HPt28F3FBDG6devFlTPm39V
+        J4IsYpTb9MMtCzCzH6YFOlHPan9UixY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1629207975;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=l7jTUWlxIPDJE3WnmFI07Fex/glV838jERqXX6KJQ+Q=;
+        b=6l47T/1cWCOdRofmkThunJh9L5pBp6QtLB+i9aH8iLr1lSNWNeQOXOzB1RcuvTfmCGtc+D
+        8mUxvfRXrbkHQDDQ==
+Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 0913A13A91;
+        Tue, 17 Aug 2021 13:46:15 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap2.suse-dmz.suse.de with ESMTPSA
+        id rtTDAKe9G2HIKgAAMHmgww
+        (envelope-from <hare@suse.de>); Tue, 17 Aug 2021 13:46:15 +0000
+Subject: Re: [PATCH 07/51] megaraid: pass in NULL scb for host reset
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+References: <20210817091456.73342-1-hare@suse.de>
+ <20210817091456.73342-8-hare@suse.de> <20210817122609.GF30436@lst.de>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <513fa87d-12c6-d572-c493-b5b663dbbc87@suse.de>
+Date:   Tue, 17 Aug 2021 15:46:14 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210817101423.12367-5-selvakuma.s1@samsung.com>
+In-Reply-To: <20210817122609.GF30436@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 17, 2021 at 03:44:20PM +0530, SelvaKumar S wrote:
-> From: Nitesh Shetty <nj.shetty@samsung.com>
+On 8/17/21 2:26 PM, Christoph Hellwig wrote:
+> On Tue, Aug 17, 2021 at 11:14:12AM +0200, Hannes Reinecke wrote:
+>> When calling a host reset we shouldn't rely on the command triggering
+>> the reset, so allow megaraid_abort_and_reset() to be called with a
+>> NULL scb.
+>> And drop the pointless 'bus_reset' and 'target_reset' handlers, which
+>> just call the same function as host_reset.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>>  drivers/scsi/megaraid.c | 42 ++++++++++++++++-------------------------
+>>  1 file changed, 16 insertions(+), 26 deletions(-)
+>>
+>> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+>> index 56910e94dbf2..7c53933fb1b4 100644
+>> --- a/drivers/scsi/megaraid.c
+>> +++ b/drivers/scsi/megaraid.c
+>> @@ -1905,7 +1905,7 @@ megaraid_reset(struct scsi_cmnd *cmd)
+>>  
+>>  	spin_lock_irq(&adapter->lock);
+>>  
+>> -	rval =  megaraid_abort_and_reset(adapter, cmd, SCB_RESET);
+>> +	rval =  megaraid_abort_and_reset(adapter, NULL, SCB_RESET);
+>>  
+>>  	/*
+>>  	 * This is required here to complete any completed requests
+>> @@ -1944,7 +1944,7 @@ megaraid_abort_and_reset(adapter_t *adapter, struct scsi_cmnd *cmd, int aor)
+>>  
+>>  		scb = list_entry(pos, scb_t, list);
 > 
-> Add new BLKCOPY ioctl that offloads copying of one or more sources ranges
-> to a destination in the device. COPY ioctl accepts a 'copy_range'
-> structure that contains destination (in sectors), no of sources and
-> pointer to the array of source ranges. Each source range is represented by
-> 'range_entry' that contains start and length of source ranges (in sectors)
+> Ther's a dev_warn before this, which dereferences cmd.
 > 
-> MAX_COPY_NR_RANGE, limits the number of entries for the IOCTL and
-> MAX_COPY_TOTAL_LENGTH limits the total copy length, IOCTL can handle.
+>> -		if (scb->cmd == cmd) { /* Found command */
+>> +		if (!cmd || scb->cmd == cmd) { /* Found command */
+>>  
+>>  			scb->state |= aor;
 > 
-> Example code, to issue BLKCOPY:
-> /* Sample example to copy three source-ranges [0, 8] [16, 8] [32,8] to
->  * [64,24], on the same device */
+> But more importantly, this function doesn't make much sense for the
+> !cmd case, as it doesn't really do anything when not matched. It
+> seems like the legacy megaraid driver should just stop calling it
+> for resets.
 > 
-> int main(void)
-> {
-> 	int ret, fd;
-> 	struct range_entry source_range[] = {{.src = 0, .len = 8},
-> 		{.src = 16, .len = 8}, {.src = 32, .len = 8},};
-> 	struct copy_range cr;
-> 
-> 	cr.dest = 64;
-> 	cr.nr_range = 3;
-> 	cr.range_list = (__u64)&source_range;
-> 
-> 	fd = open("/dev/nvme0n1", O_RDWR);
-> 	if (fd < 0) return 1;
-> 
-> 	ret = ioctl(fd, BLKCOPY, &cr);
-> 	if (ret < 0) printf("copy failure\n");
-> 
-> 	close(fd);
-> 
-> 	return ret;
-> }
-> 
-> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
-> Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
-> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
-> ---
->  block/ioctl.c           | 33 +++++++++++++++++++++++++++++++++
->  include/uapi/linux/fs.h |  8 ++++++++
->  2 files changed, 41 insertions(+)
-> 
-> diff --git a/block/ioctl.c b/block/ioctl.c
-> index eb0491e90b9a..2af56d01e9fe 100644
-> --- a/block/ioctl.c
-> +++ b/block/ioctl.c
-> @@ -143,6 +143,37 @@ static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,
->  				    GFP_KERNEL, flags);
->  }
->  
-> +static int blk_ioctl_copy(struct block_device *bdev, fmode_t mode,
-> +		unsigned long arg)
-> +{
-> +	struct copy_range crange;
-> +	struct range_entry *rlist;
-> +	int ret;
-> +
-> +	if (!(mode & FMODE_WRITE))
-> +		return -EBADF;
-> +
-> +	if (copy_from_user(&crange, (void __user *)arg, sizeof(crange)))
-> +		return -EFAULT;
-> +
-> +	rlist = kmalloc_array(crange.nr_range, sizeof(*rlist),
-> +			GFP_KERNEL);
+Well, it does the usual RAID HBA host reset: wait for commands to
+complete (That's the '!cmd' case).
+So as such I guess there is a value in having a host reset function;
+we might, however, look at separating the functions.
 
-No error checking for huge values of nr_range?  Is that wise?  You
-really want userspace to be able to allocate "all" of the kernel memory
-in the system?
+Cheers,
 
-thanks,
-
-greg k-h
+Hannes
+-- 
+Dr. Hannes Reinecke		           Kernel Storage Architect
+hare@suse.de			                  +49 911 74053 688
+SUSE Software Solutions Germany GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), GF: Felix Imendörffer
