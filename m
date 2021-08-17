@@ -2,153 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D126C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 07:46:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BA31C4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 07:53:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BE5060EBC
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 07:46:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7B8546023B
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 07:53:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238532AbhHQHqr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 03:46:47 -0400
-Received: from szxga02-in.huawei.com ([45.249.212.188]:13436 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238439AbhHQHqn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 03:46:43 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Gpjfm4jPYzdbm7;
-        Tue, 17 Aug 2021 15:42:24 +0800 (CST)
-Received: from dggema773-chm.china.huawei.com (10.1.198.217) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Tue, 17 Aug 2021 15:46:06 +0800
-Received: from [10.174.179.2] (10.174.179.2) by dggema773-chm.china.huawei.com
- (10.1.198.217) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2176.2; Tue, 17
- Aug 2021 15:46:05 +0800
-Subject: Re: [PATCH v2] scsi: core: Fix hang of freezing queue between
- blocking and running device
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-CC:     <john.garry@huawei.com>, <bvanassche@acm.org>,
-        <qiulaibin@huawei.com>, <linfeilong@huawei.com>,
-        <wubo40@huawei.com>
-References: <20210809141308.3700854-1-lijinlin3@huawei.com>
-From:   Li Jinlin <lijinlin3@huawei.com>
-Message-ID: <8d0583de-f818-1be7-ac08-c84cfd5988f6@huawei.com>
-Date:   Tue, 17 Aug 2021 15:46:04 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.6.0
+        id S234492AbhHQHyD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 03:54:03 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:36390 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234402AbhHQHyD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 03:54:03 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id 518531FF16;
+        Tue, 17 Aug 2021 07:53:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
+        t=1629186809; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=jR5mksTQbMltOxfHYpILuo1Kmh9W414axExGd8Q3OB0=;
+        b=HphugntEi7+X/tZ11u0rhZgS7jZB7TudHmVPqugZ2uGB9+l4YfRIPqwl4IzJVmPqYBm7bW
+        hbU7CaM/clEV0EMVtsoK21SxUGO292CtDD1b4vw+iDck+ObPiwJGCJEHqwOAcNY/1FEN1c
+        OlxROHsMfS91F0XGur9aqm45KOE4pFs=
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 1736413318;
+        Tue, 17 Aug 2021 07:53:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id f5Y3A/lqG2EscAAAGKfGzw
+        (envelope-from <mwilck@suse.com>); Tue, 17 Aug 2021 07:53:29 +0000
+From:   mwilck@suse.com
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Hannes Reinecke <hare@suse.de>
+Cc:     linux-scsi@vger.kernel.org
+Subject: [PATCH RESEND] ibmvfc: do not wait for initial device scan
+Date:   Tue, 17 Aug 2021 09:53:06 +0200
+Message-Id: <20210817075306.11315-1-mwilck@suse.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
-In-Reply-To: <20210809141308.3700854-1-lijinlin3@huawei.com>
-Content-Type: text/plain; charset="gbk"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.2]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggema773-chm.china.huawei.com (10.1.198.217)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/8/9 22:13, Li Jinlin wrote:
-> From: Li Jinlin <lijinlin3@huawei.com>
-> 
-> We found a hang issue, the test steps are as follows:
->   1. blocking device via scsi_device_set_state()
->   2. dd if=/dev/sda of=/mnt/t.log bs=1M count=10
->   3. echo none > /sys/block/sda/queue/scheduler
->   4. echo "running" >/sys/block/sda/device/state
-> 
-> Step 3 and 4 should finish this work after step 4, but they hangs.
-> 
->   CPU#0               CPU#1                CPU#2
->   ---------------     ----------------     ----------------
->                                            Step 1: blocking device
-> 
->                                            Step 2: dd xxxx
->                                                   ^^^^^^ get request
->                                                          q_usage_counter++
-> 
->                       Step 3: switching scheculer
->                       elv_iosched_store
->                         elevator_switch
->                           blk_mq_freeze_queue
->                             blk_freeze_queue
->                               > blk_freeze_queue_start
->                                 ^^^^^^ mq_freeze_depth++
-> 
->                               > blk_mq_run_hw_queues
->                                 ^^^^^^ can't run queue when dev blocked
-> 
->                               > blk_mq_freeze_queue_wait
->                                 ^^^^^^ Hang here!!!
->                                        wait q_usage_counter==0
-> 
->   Step 4: running device
->   store_state_field
->     scsi_rescan_device
->       scsi_attach_vpd
->         scsi_vpd_inquiry
->           __scsi_execute
->             blk_get_request
->               blk_mq_alloc_request
->                 blk_queue_enter
->                 ^^^^^^ Hang here!!!
->                        wait mq_freeze_depth==0
-> 
->     blk_mq_run_hw_queues
->     ^^^^^^ dispatch IO, q_usage_counter will reduce to zero
-> 
->                             blk_mq_unfreeze_queue
->                             ^^^^^ mq_freeze_depth--
-> 
-> Step 3 and 4 wait for each other.
-> 
-> To fix this, we need to run queue before rescanning device when the device
-> state changes to SDEV_RUNNING.
-> 
-> Fixes: f0f82e2476f6 ("scsi: core: Fix capacity set to zero after offlinining device")
-> Signed-off-by: Li Jinlin <lijinlin3@huawei.com>
-> Signed-off-by: Qiu Laibin <qiulaibin@huawei.com>
-> ---
-> changes since v1 send with Message-ID:
-> 20210805143231.1713299-1-lijinlin3@huawei.com
-> 
->  - Modify the subject to make it distinct
->  - Modify the message to fix typo and make it distinct
->  - Reduce the number of SOB
-> 
->  drivers/scsi/scsi_sysfs.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index c3a710bceba0..aa701582c950 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -809,12 +809,12 @@ store_state_field(struct device *dev, struct device_attribute *attr,
->  	ret = scsi_device_set_state(sdev, state);
->  	/*
->  	 * If the device state changes to SDEV_RUNNING, we need to
-> -	 * rescan the device to revalidate it, and run the queue to
-> -	 * avoid I/O hang.
-> +	 * run the queue to avoid I/O hang, and rescan the device
-> +	 * to revalidate it.
->  	 */
->  	if (ret == 0 && state == SDEV_RUNNING) {
-> -		scsi_rescan_device(dev);
->  		blk_mq_run_hw_queues(sdev->request_queue, true);
-> +		scsi_rescan_device(dev);
->  	}
->  	mutex_unlock(&sdev->state_mutex);
->  
-> 
+From: Hannes Reinecke <hare@suse.de>
 
-Ping.
+The initial device scan might take some time, and there really is
+no need to wait for it during probe().
+So return immediately from scsi_scan_host() during probe() and avoid
+any udev stalls during booting.
 
-Thanks,
-Li Jinlin
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Martin Wilck <mwilck@suse.com>
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+---
+Patch resent unchanged, with my s-o-b and Tyler's a-b added.
+
+ drivers/scsi/ibmvscsi/ibmvfc.c | 11 ++++++++---
+ drivers/scsi/ibmvscsi/ibmvfc.h |  1 +
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 935b01ee44b7..9d6550488db1 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -3292,14 +3292,18 @@ static int ibmvfc_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ 	int done = 0;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+-	if (time >= (init_timeout * HZ)) {
++	if (!vhost->scan_timeout)
++		done = 1;
++	else if (time >= (vhost->scan_timeout * HZ)) {
+ 		dev_info(vhost->dev, "Scan taking longer than %d seconds, "
+-			 "continuing initialization\n", init_timeout);
++			 "continuing initialization\n", vhost->scan_timeout);
+ 		done = 1;
+ 	}
+ 
+-	if (vhost->scan_complete)
++	if (vhost->scan_complete) {
++		vhost->scan_timeout = init_timeout;
+ 		done = 1;
++	}
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 	return done;
+ }
+@@ -6084,6 +6088,7 @@ static int ibmvfc_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	vhost->client_scsi_channels = min(shost->nr_hw_queues, nr_scsi_channels);
+ 	vhost->using_channels = 0;
+ 	vhost->do_enquiry = 1;
++	vhost->scan_timeout = 0;
+ 
+ 	strcpy(vhost->partition_name, "UNKNOWN");
+ 	init_waitqueue_head(&vhost->work_wait_q);
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.h b/drivers/scsi/ibmvscsi/ibmvfc.h
+index 92fb889d7eb0..3718406e0988 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.h
++++ b/drivers/scsi/ibmvscsi/ibmvfc.h
+@@ -876,6 +876,7 @@ struct ibmvfc_host {
+ 	int reinit;
+ 	int delay_init;
+ 	int scan_complete;
++	int scan_timeout;
+ 	int logged_in;
+ 	int mq_enabled;
+ 	int using_channels;
+-- 
+2.32.0
+
