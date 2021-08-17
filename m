@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2BC9C432BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:16:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D311C43214
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:16:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BA1BA600CC
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:16:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66EA360FA0
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 09:16:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239569AbhHQJRa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 05:17:30 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:33308 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239294AbhHQJRQ (ORCPT
+        id S239573AbhHQJRb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 05:17:31 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:47558 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234347AbhHQJRQ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 05:17:16 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id 344AE21D3D;
+        by smtp-out2.suse.de (Postfix) with ESMTP id 01C9E2001A;
         Tue, 17 Aug 2021 09:16:42 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1629191802; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=M021yZTyA7R+S7ex7SM+pePBigXQFhOuMlMB00LdKPQ=;
-        b=WT58ZYf0LDN1RBOI/BpU56bodQdA0l3yjEqslt9x8kqQ//Q6Gbph+0s7zKlzoRIoi9XpXj
-        wZHNAVt4x/Xs+ccA8iGer1ERQPx2ZsIHbW6gYU4th0pKAFl+JmMsDC4B1eUp0Q/Ct1cHlv
-        HUkwHBLfJvaDD1PyuC+AV6HY85an9tk=
+        bh=2AbeA5ShB3lXtR9kF5FC6uyxPwkXQ0MdHy4poxrqhk0=;
+        b=ccx9zG8nS1oK2H96MUksKbv6GUzL6e+eQdSE3A88uo/M6/yiUBF7vVsJbFRvTeFCMt736y
+        wQ3PHt69qaDBjqTtqGgnG9YC4OFzJGJKZSzEVaVUSDVn9fofbArVVOJ2edeRp+bDPnqYO7
+        HsvTmt7ziRnxhkiXSarJAsDSVLpanM0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1629191802;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=M021yZTyA7R+S7ex7SM+pePBigXQFhOuMlMB00LdKPQ=;
-        b=CBp3+dVBQ74GcWSlwhOvhnZqHERbq/FIsPhRrF26QW4qZUrDE7t+lvdYiF/z1XuxAjPDbZ
-        7TFmT+fSsfotgRBw==
+        bh=2AbeA5ShB3lXtR9kF5FC6uyxPwkXQ0MdHy4poxrqhk0=;
+        b=KbUK1V0105gEad1UlvP2M8aKyUKySrx87eMAOdm5RaonriJjsdoauDhXde4bCrFpiY8zpT
+        7YcbUeo2K9BkkoAw==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 2E6A7A3BA6;
-        Tue, 17 Aug 2021 09:16:42 +0000 (UTC)
+        by relay2.suse.de (Postfix) with ESMTP id EE814A3BA0;
+        Tue, 17 Aug 2021 09:16:41 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id 2B351518CE8B; Tue, 17 Aug 2021 11:16:42 +0200 (CEST)
+        id EB7C7518CE7B; Tue, 17 Aug 2021 11:16:41 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
         linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
         Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 22/51] libiscsi: use cls_session as argument for target and session reset
-Date:   Tue, 17 Aug 2021 11:14:27 +0200
-Message-Id: <20210817091456.73342-23-hare@suse.de>
+Subject: [PATCH 14/51] pmcraid: Select device in pmcraid_eh_bus_reset_handler()
+Date:   Tue, 17 Aug 2021 11:14:19 +0200
+Message-Id: <20210817091456.73342-15-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210817091456.73342-1-hare@suse.de>
 References: <20210817091456.73342-1-hare@suse.de>
@@ -63,132 +63,102 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-iscsi_eh_target_reset() and iscsi_eh_session_reset() only depend
-on the cls_session, so use that as an argument.
+The reset code requires a device to be selected, but we shouldn't
+rely on the command to provide a device for us. So select the first
+device on the bus when sending down a bus reset.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_main.c | 10 +++++++++-
- drivers/scsi/libiscsi.c         | 21 +++++++++------------
- include/scsi/libiscsi.h         |  2 +-
- 3 files changed, 19 insertions(+), 14 deletions(-)
+ drivers/scsi/pmcraid.c | 46 ++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 38 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index e70f69f791db..d76902c4128c 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -367,6 +367,14 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
- 	return rc;
+diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
+index f9cd69889fe7..f29107536887 100644
+--- a/drivers/scsi/pmcraid.c
++++ b/drivers/scsi/pmcraid.c
+@@ -2691,7 +2691,7 @@ static int pmcraid_error_handler(struct pmcraid_cmd *cmd)
+  *	SUCCESS / FAILED
+  */
+ static int pmcraid_reset_device(
+-	struct scsi_cmnd *scsi_cmd,
++	struct scsi_device *scsi_dev,
+ 	unsigned long timeout,
+ 	u8 modifier)
+ {
+@@ -2703,11 +2703,11 @@ static int pmcraid_reset_device(
+ 	u32 ioasc;
+ 
+ 	pinstance =
+-		(struct pmcraid_instance *)scsi_cmd->device->host->hostdata;
+-	res = scsi_cmd->device->hostdata;
++		(struct pmcraid_instance *)scsi_dev->host->hostdata;
++	res = scsi_dev->hostdata;
+ 
+ 	if (!res) {
+-		sdev_printk(KERN_ERR, scsi_cmd->device,
++		sdev_printk(KERN_ERR, scsi_dev,
+ 			    "reset_device: NULL resource pointer\n");
+ 		return FAILED;
+ 	}
+@@ -3018,16 +3018,46 @@ static int pmcraid_eh_device_reset_handler(struct scsi_cmnd *scmd)
+ {
+ 	scmd_printk(KERN_INFO, scmd,
+ 		    "resetting device due to an I/O command timeout.\n");
+-	return pmcraid_reset_device(scmd,
++	return pmcraid_reset_device(scmd->device,
+ 				    PMCRAID_INTERNAL_TIMEOUT,
+ 				    RESET_DEVICE_LUN);
  }
  
-+static int beiscsi_eh_session_reset(struct scsi_cmnd *sc)
-+{
-+	struct iscsi_cls_session *cls_session;
+ static int pmcraid_eh_bus_reset_handler(struct scsi_cmnd *scmd)
+ {
+-	scmd_printk(KERN_INFO, scmd,
++	struct Scsi_Host *host = scmd->device->host;
++	struct pmcraid_instance *pinstance =
++		(struct pmcraid_instance *)host->hostdata;
++	struct pmcraid_resource_entry *res = NULL;
++	struct pmcraid_resource_entry *temp;
++	struct scsi_device *sdev = NULL;
++	unsigned long lock_flags;
 +
-+	cls_session = starget_to_session(scsi_target(sc->device));
-+	return iscsi_eh_session_reset(cls_session);
-+}
++	/*
++	 * The reset device code insists on us passing down
++	 * a device, so grab the first device on the bus.
++	 */
++	spin_lock_irqsave(&pinstance->resource_lock, lock_flags);
++	list_for_each_entry(temp, &pinstance->used_res_q, queue) {
++		if (scmd->device->channel == PMCRAID_VSET_BUS_ID &&
++		    RES_IS_VSET(temp->cfg_entry)) {
++			res = temp;
++			break;
++		} else if (scmd->device->channel == PMCRAID_PHYS_BUS_ID &&
++			   RES_IS_GSCSI(temp->cfg_entry)) {
++			res = temp;
++			break;
++		}
++	}
++	if (res)
++		sdev = res->scsi_dev;
++	spin_unlock_irqrestore(&pinstance->resource_lock, lock_flags);
++	if (!sdev)
++		return FAILED;
 +
- /*------------------- PCI Driver operations and data ----------------- */
- static const struct pci_device_id beiscsi_pci_id_table[] = {
- 	{ PCI_DEVICE(BE_VENDOR_ID, BE_DEVICE_ID1) },
-@@ -390,7 +398,7 @@ static struct scsi_host_template beiscsi_sht = {
- 	.eh_timed_out = iscsi_eh_cmd_timed_out,
- 	.eh_abort_handler = beiscsi_eh_abort,
- 	.eh_device_reset_handler = beiscsi_eh_device_reset,
--	.eh_target_reset_handler = iscsi_eh_session_reset,
-+	.eh_target_reset_handler = beiscsi_eh_session_reset,
- 	.shost_attrs = beiscsi_attrs,
- 	.sg_tablesize = BEISCSI_SGLIST_ELEMENTS,
- 	.can_queue = BE2_IO_DEPTH,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 4683c183e9d4..0006a3692c9a 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -2488,13 +2488,11 @@ EXPORT_SYMBOL_GPL(iscsi_session_recovery_timedout);
-  * This function will wait for a relogin, session termination from
-  * userspace, or a recovery/replacement timeout.
-  */
--int iscsi_eh_session_reset(struct scsi_cmnd *sc)
-+int iscsi_eh_session_reset(struct iscsi_cls_session *cls_session)
- {
--	struct iscsi_cls_session *cls_session;
- 	struct iscsi_session *session;
- 	struct iscsi_conn *conn;
- 
--	cls_session = starget_to_session(scsi_target(sc->device));
- 	session = cls_session->dd_data;
- 
- 	mutex_lock(&session->eh_mutex);
-@@ -2541,7 +2539,7 @@ int iscsi_eh_session_reset(struct scsi_cmnd *sc)
++	sdev_printk(KERN_INFO, sdev,
+ 		    "Doing bus reset due to an I/O command timeout.\n");
+-	return pmcraid_reset_device(scmd,
++	return pmcraid_reset_device(sdev,
+ 				    PMCRAID_RESET_BUS_TIMEOUT,
+ 				    RESET_DEVICE_BUS);
  }
- EXPORT_SYMBOL_GPL(iscsi_eh_session_reset);
- 
--static void iscsi_prep_tgt_reset_pdu(struct scsi_cmnd *sc, struct iscsi_tm *hdr)
-+static void iscsi_prep_tgt_reset_pdu(struct iscsi_tm *hdr)
+@@ -3036,7 +3066,7 @@ static int pmcraid_eh_target_reset_handler(struct scsi_cmnd *scmd)
  {
- 	memset(hdr, 0, sizeof(*hdr));
- 	hdr->opcode = ISCSI_OP_SCSI_TMFUNC | ISCSI_OP_IMMEDIATE;
-@@ -2556,19 +2554,16 @@ static void iscsi_prep_tgt_reset_pdu(struct scsi_cmnd *sc, struct iscsi_tm *hdr)
-  *
-  * This will attempt to send a warm target reset.
-  */
--static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
-+static int iscsi_eh_target_reset(struct iscsi_cls_session *cls_session)
- {
--	struct iscsi_cls_session *cls_session;
- 	struct iscsi_session *session;
- 	struct iscsi_conn *conn;
- 	struct iscsi_tm *hdr;
- 	int rc = FAILED;
- 
--	cls_session = starget_to_session(scsi_target(sc->device));
- 	session = cls_session->dd_data;
- 
--	ISCSI_DBG_EH(session, "tgt Reset [sc %p tgt %s]\n", sc,
--		     session->targetname);
-+	ISCSI_DBG_EH(session, "tgt Reset [tgt %s]\n", session->targetname);
- 
- 	mutex_lock(&session->eh_mutex);
- 	spin_lock_bh(&session->frwd_lock);
-@@ -2586,7 +2581,7 @@ static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
- 	session->tmf_state = TMF_QUEUED;
- 
- 	hdr = &session->tmhdr;
--	iscsi_prep_tgt_reset_pdu(sc, hdr);
-+	iscsi_prep_tgt_reset_pdu(hdr);
- 
- 	if (iscsi_exec_task_mgmt_fn(conn, hdr, session->age,
- 				    session->tgt_reset_timeout)) {
-@@ -2638,11 +2633,13 @@ static int iscsi_eh_target_reset(struct scsi_cmnd *sc)
-  */
- int iscsi_eh_recover_target(struct scsi_cmnd *sc)
- {
-+	struct iscsi_cls_session *cls_session;
- 	int rc;
- 
--	rc = iscsi_eh_target_reset(sc);
-+	cls_session = starget_to_session(scsi_target(sc->device));
-+	rc = iscsi_eh_target_reset(cls_session);
- 	if (rc == FAILED)
--		rc = iscsi_eh_session_reset(sc);
-+		rc = iscsi_eh_session_reset(cls_session);
- 	return rc;
+ 	scmd_printk(KERN_INFO, scmd,
+ 		    "Doing target reset due to an I/O command timeout.\n");
+-	return pmcraid_reset_device(scmd,
++	return pmcraid_reset_device(scmd->device,
+ 				    PMCRAID_INTERNAL_TIMEOUT,
+ 				    RESET_DEVICE_TARGET);
  }
- EXPORT_SYMBOL_GPL(iscsi_eh_recover_target);
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 4ee233e5a6ff..3401feb088df 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -379,7 +379,7 @@ struct iscsi_host {
-  */
- extern int iscsi_eh_abort(struct scsi_cmnd *sc);
- extern int iscsi_eh_recover_target(struct scsi_cmnd *sc);
--extern int iscsi_eh_session_reset(struct scsi_cmnd *sc);
-+extern int iscsi_eh_session_reset(struct iscsi_cls_session *cls_session);
- extern int iscsi_eh_device_reset(struct scsi_cmnd *sc);
- extern int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc);
- extern enum blk_eh_timer_return iscsi_eh_cmd_timed_out(struct scsi_cmnd *sc);
 -- 
 2.29.2
 
