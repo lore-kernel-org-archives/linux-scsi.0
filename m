@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D688C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 05:14:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38A32C432BE
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 05:14:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03CEA60FBF
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 05:14:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 222C760FBF
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 05:14:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237911AbhHQFOf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 01:14:35 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:30854 "EHLO
+        id S237962AbhHQFOh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 01:14:37 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:28782 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234162AbhHQFO1 (ORCPT
+        by vger.kernel.org with ESMTP id S237825AbhHQFO1 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 17 Aug 2021 01:14:27 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.0.43) with SMTP id 17GMLCqX012247
+        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.0.43) with SMTP id 17GMLCqW012247
         for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 22:13:54 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=DK28IP58wmj3xFaBRwXT+XKuKuBfFYrdQzl2GDv3ToY=;
- b=EXXYfAIYtgC4C2sOJ+vcVKZybmhBBYaHoYGAhd8HbRRPKH3y0+BKMooDt6BiouC+wY21
- kajA0kaO0/yR+y1SmO4blumVnV50GNqXkI1mgktWAj1RcPo3x2IaikqeKThNDA8SDbkG
- gstVfOylIgA821G+Gs5vKIJwbWdmi5Ap+j8VplQpwiyqz/2yDJmv7az1/WZrv0Xn3vs4
- lorHqnWSJcK6dJOZ1bHyuXMC7lWS1qrXp9dWCb+Lg7lh/TljJr6J9a+I49zgDvwRFw+L
- pa6H9GB3M/voay7IuzARQBAyWBVLuj2pYiy/hDKvO1eOVlNm1Ws3kkxIZ/cRMKwYnNqw iA== 
+ content-type; s=pfpt0220; bh=RM1fSl2crR14hHjMgmBTrlnlx8nOZD/9FLc03o+1L4A=;
+ b=DA4QBh27ucVDTBlal6nhY46Glr06vnkifMMTTNQrCUgH1NH5Bc5xOq+W4OuTawnF+1Hi
+ kXA0FU3SyZYqbwh48QvRxkatOFtxtB7J8xxarIaDEpCfsFg9gxJ2cktvnnjm+7Vt3Yr3
+ 0H4hugEYf644rDxZWOt45uwgQ13pkHsP0lk6UXCJq18X2grTlGKfKCbAHtSnK22YBXl4
+ iJuybQlziOeEKU4PH/WHhXwuCzsMC9eEjijbwbNvws65PfkU/tmJ01RLccc6VEjHZULP
+ BL7Vop0/SOv83l+ykxcClcIzCiJo3qdDl1NFeJ+seCcCxqucH7qVXWDUDlizAfObCrR+ EA== 
 Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3ag0qxh1v6-2
+        by mx0b-0016f401.pphosted.com with ESMTP id 3ag0qxh1v6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
         for <linux-scsi@vger.kernel.org>; Mon, 16 Aug 2021 22:13:54 -0700
 Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
@@ -42,28 +42,28 @@ Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
  (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
  Transport; Mon, 16 Aug 2021 22:13:52 -0700
 Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id EFB9C3F70A9;
+        by maili.marvell.com (Postfix) with ESMTP id D35D93F70A8;
         Mon, 16 Aug 2021 22:13:51 -0700 (PDT)
 Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 17H5Dpf9002560;
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 17H5Dpo4002556;
         Mon, 16 Aug 2021 22:13:51 -0700
 Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 17H5Dptk002559;
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 17H5DpFJ002555;
         Mon, 16 Aug 2021 22:13:51 -0700
 From:   Nilesh Javali <njavali@marvell.com>
 To:     <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>,
         <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 12/12] qla2xxx: Update version to 10.02.06.200-k
-Date:   Mon, 16 Aug 2021 22:13:15 -0700
-Message-ID: <20210817051315.2477-13-njavali@marvell.com>
+Subject: [PATCH 11/12] qla2xxx: edif: fix returnvar.cocci warnings
+Date:   Mon, 16 Aug 2021 22:13:14 -0700
+Message-ID: <20210817051315.2477-12-njavali@marvell.com>
 X-Mailer: git-send-email 2.12.0
 In-Reply-To: <20210817051315.2477-1-njavali@marvell.com>
 References: <20210817051315.2477-1-njavali@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: NtavSiclBN-Bha9vAQfzqBmt4NE6d4r7
-X-Proofpoint-GUID: NtavSiclBN-Bha9vAQfzqBmt4NE6d4r7
+X-Proofpoint-ORIG-GUID: Rg3O7niHh8XUeYjsMK12x2_2If1YUw-Q
+X-Proofpoint-GUID: Rg3O7niHh8XUeYjsMK12x2_2If1YUw-Q
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
  definitions=2021-08-17_01,2021-08-16_02,2020-04-07_01
@@ -71,27 +71,44 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: kernel test robot <lkp@intel.com>
+
+drivers/scsi/qla2xxx/qla_edif.c:213:25-29: Unneeded variable: "rval". Return "0"
+on line 264
+
+Remove unneeded variable used to store return value.
+
+Generated by: scripts/coccinelle/misc/returnvar.cocci
+
+Fixes: 7ebb336e45ef ("scsi: qla2xxx: edif: Add start + stop bsgs")
+Reported-by: kernel test robot <lkp@intel.com>
+Signed-off-by: kernel test robot <lkp@intel.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_version.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_edif.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
-index 8b0ace50b52f..055040cbef9b 100644
---- a/drivers/scsi/qla2xxx/qla_version.h
-+++ b/drivers/scsi/qla2xxx/qla_version.h
-@@ -6,9 +6,9 @@
- /*
-  * Driver version
-  */
--#define QLA2XXX_VERSION      "10.02.06.100-k"
-+#define QLA2XXX_VERSION      "10.02.06.200-k"
+diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
+index dc10874a0c99..ad746c62f0d4 100644
+--- a/drivers/scsi/qla2xxx/qla_edif.c
++++ b/drivers/scsi/qla2xxx/qla_edif.c
+@@ -628,7 +628,6 @@ qla_edif_app_start(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
+ static int
+ qla_edif_app_stop(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
+ {
+-	int32_t                 rval = 0;
+ 	struct app_stop         appstop;
+ 	struct fc_bsg_reply     *bsg_reply = bsg_job->reply;
+ 	struct fc_port  *fcport, *tf;
+@@ -679,7 +678,7 @@ qla_edif_app_stop(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
  
- #define QLA_DRIVER_MAJOR_VER	10
- #define QLA_DRIVER_MINOR_VER	2
- #define QLA_DRIVER_PATCH_VER	6
--#define QLA_DRIVER_BETA_VER	100
-+#define QLA_DRIVER_BETA_VER	200
+ 	/* no return interface to app - it assumes we cleaned up ok */
+ 
+-	return rval;
++	return 0;
+ }
+ 
+ static int
 -- 
 2.23.1
 
