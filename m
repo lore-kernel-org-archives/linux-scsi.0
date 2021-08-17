@@ -2,330 +2,219 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.9 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A93F1C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 18:09:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B67A8C4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 20:30:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F1B560FE6
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 18:09:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9E30A60FD9
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 20:30:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232870AbhHQSKN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 14:10:13 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:49970 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232880AbhHQSKM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 14:10:12 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id 6ACC221FAA;
-        Tue, 17 Aug 2021 18:09:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1629223776; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
+        id S234254AbhHQUav (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 16:30:51 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:24859 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230459AbhHQUat (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Aug 2021 16:30:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1629232215;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=Yf13cKoZwtr0fEGQ9si3b5x2310rWTYLji8+U4E5n2I=;
-        b=A+bi7Xl8QLa0mTtSmqmc+iVRcqvc0lpLVWfgKU6hayjN4plMUXRJpZPdMskf4gs5kIY3U+
-        K/foqHEprLYyfbRw0sN4QxcXRmSd+YOvs/vIzYEpk+K7TN8u4twBsnVDf9wNYSJVzJo810
-        UC/1Otd8f2bJ/VfBa7ydMrH2Begna7o=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1629223776;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Yf13cKoZwtr0fEGQ9si3b5x2310rWTYLji8+U4E5n2I=;
-        b=XMBFu5Zms7LiVigGDU4ll72eIjheAKSTA3W9NkP3XhvOXclzjJcleWRIyj2wDNBBzGb/7z
-        sUC1q/a67/nQMcAA==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        bh=1AzhVHNoK9/20Cs/2nFYANQH0mGD63ytSsU0paNtXcA=;
+        b=X9E1fucILElXctiFUEw7YkwfD1oHVnsX5H5mldsQN8Zd6jzDx4SJVsVkRlfzRjfyKEgY7h
+        u3LiHjFVINKrnQMehA7ewxb0GWAkLc51VncZZLXGGMyq64TYwhdwsmK0XhogZJUhyZTRvx
+        aAlLaf/7geuczrnNd2TjLez+AiCBodo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-32-oJPkAuZMNWKAa0j1_RC_Og-1; Tue, 17 Aug 2021 16:30:12 -0400
+X-MC-Unique: oJPkAuZMNWKAa0j1_RC_Og-1
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 2CA94136BF;
-        Tue, 17 Aug 2021 18:09:36 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id rcgBCWD7G2E0fQAAGKfGzw
-        (envelope-from <hare@suse.de>); Tue, 17 Aug 2021 18:09:36 +0000
-Subject: Re: [PATCH 49/51] scsi: Move eh_device_reset_handler() to use
- scsi_device as argument
-To:     Steffen Maier <maier@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-References: <20210817091456.73342-1-hare@suse.de>
- <20210817091456.73342-50-hare@suse.de>
- <0a09a529-7e28-1b56-3ca3-7b172956f3a5@linux.ibm.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <fc1a49dd-28e8-54a0-b94a-67857296b60c@suse.de>
-Date:   Tue, 17 Aug 2021 20:09:35 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 3636A801AC5;
+        Tue, 17 Aug 2021 20:30:09 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 70BBB5C1D5;
+        Tue, 17 Aug 2021 20:29:59 +0000 (UTC)
+Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 17HKTwMF031021;
+        Tue, 17 Aug 2021 16:29:58 -0400
+Received: from localhost (mpatocka@localhost)
+        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 17HKTtxE031017;
+        Tue, 17 Aug 2021 16:29:55 -0400
+X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
+Date:   Tue, 17 Aug 2021 16:29:55 -0400 (EDT)
+From:   Mikulas Patocka <mpatocka@redhat.com>
+X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
+To:     SelvaKumar S <selvakuma.s1@samsung.com>
+cc:     linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+        snitzer@redhat.com, djwong@kernel.org, dm-devel@redhat.com,
+        hch@lst.de, agk@redhat.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, nitheshshetty@gmail.com,
+        willy@infradead.org, nj.shetty@samsung.com, kch@kernel.org,
+        selvajove@gmail.com, javier.gonz@samsung.com, kbusch@kernel.org,
+        axboe@kernel.dk, damien.lemoal@wdc.com, joshi.k@samsung.com,
+        martin.petersen@oracle.com, linux-api@vger.kernel.org,
+        johannes.thumshirn@wdc.com, linux-fsdevel@vger.kernel.org,
+        joshiiitr@gmail.com, asml.silence@gmail.com
+Subject: Re: [dm-devel] [PATCH 7/7] dm kcopyd: add simple copy offload
+ support
+In-Reply-To: <20210817101423.12367-8-selvakuma.s1@samsung.com>
+Message-ID: <alpine.LRH.2.02.2108171626250.30363@file01.intranet.prod.int.rdu2.redhat.com>
+References: <20210817101423.12367-1-selvakuma.s1@samsung.com> <CGME20210817101822epcas5p470644cf681d5e8db5367dc7998305c65@epcas5p4.samsung.com> <20210817101423.12367-8-selvakuma.s1@samsung.com>
+User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
 MIME-Version: 1.0
-In-Reply-To: <0a09a529-7e28-1b56-3ca3-7b172956f3a5@linux.ibm.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/21 6:13 PM, Steffen Maier wrote:
-> On 8/17/21 11:14 AM, Hannes Reinecke wrote:
->> When resetting a device we shouldn't depend on an existing SCSI
->> command, as this might be completed at any time.
->> Rather we should use 'struct scsi_device' as argument for
->> eh_device_reset_handler().
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> 
-> Acked-by: Steffen Maier <maier@linux.ibm.com> # for zfcp
-> 
-> However, independent review comments for common code below...
-> 
->> ---
->>   Documentation/scsi/scsi_eh.rst                |  2 +-
->>   Documentation/scsi/scsi_mid_low_api.rst       |  4 +--
-> 
->>   drivers/s390/scsi/zfcp_scsi.c                 |  4 +--
-> 
->>   drivers/scsi/scsi_error.c                     | 35 +++++++++++++------
-> 
->>   include/scsi/scsi_host.h                      |  2 +-
->>   62 files changed, 314 insertions(+), 329 deletions(-)
->>
->> diff --git a/Documentation/scsi/scsi_eh.rst 
->> b/Documentation/scsi/scsi_eh.rst
->> index e09c81a54702..23f0d09668d9 100644
->> --- a/Documentation/scsi/scsi_eh.rst
->> +++ b/Documentation/scsi/scsi_eh.rst
->> @@ -214,7 +214,7 @@ considered to fail always.
->>   ::
->>
->>       int (* eh_abort_handler)(struct scsi_cmnd *);
->> -    int (* eh_device_reset_handler)(struct scsi_cmnd *);
->> +    int (* eh_device_reset_handler)(struct scsi_device *);
->>       int (* eh_target_reset_handler)(struct scsi_target *);
->>       int (* eh_bus_reset_handler)(struct Scsi_Host *, int);
->>       int (* eh_host_reset_handler)(struct Scsi_Host *);
->> diff --git a/Documentation/scsi/scsi_mid_low_api.rst 
->> b/Documentation/scsi/scsi_mid_low_api.rst
->> index 0afc1b4f89af..4650c0c6a22a 100644
->> --- a/Documentation/scsi/scsi_mid_low_api.rst
->> +++ b/Documentation/scsi/scsi_mid_low_api.rst
->> @@ -778,7 +778,7 @@ Details::
->>
->>       /**
->>       *      eh_device_reset_handler - issue SCSI device reset
->> -    *      @scp: identifies SCSI device to be reset
->> +    *      @sdev: identifies SCSI device to be reset
->>       *
->>       *      Returns SUCCESS if command aborted else FAILED
->>       *
->> @@ -791,7 +791,7 @@ Details::
->>       *
->>       *      Optionally defined in: LLD
->>       **/
->> -    int eh_device_reset_handler(struct scsi_cmnd * scp)
->> +    int eh_device_reset_handler(struct scsi_device * sdev)
->>
->>
->>       /**
-> 
-> 
->> diff --git a/drivers/s390/scsi/zfcp_scsi.c 
->> b/drivers/s390/scsi/zfcp_scsi.c
->> index 6492c3b1b12f..4fa626763bb6 100644
->> --- a/drivers/s390/scsi/zfcp_scsi.c
->> +++ b/drivers/s390/scsi/zfcp_scsi.c
->> @@ -333,10 +333,8 @@ static int zfcp_scsi_task_mgmt_function(struct 
->> scsi_device *sdev, u8 tm_flags)
->>       return retval;
->>   }
->>
->> -static int zfcp_scsi_eh_device_reset_handler(struct scsi_cmnd *scpnt)
->> +static int zfcp_scsi_eh_device_reset_handler(struct scsi_device *sdev)
->>   {
->> -    struct scsi_device *sdev = scpnt->device;
->> -
->>       return zfcp_scsi_task_mgmt_function(sdev, FCP_TMF_LUN_RESET);
->>   }
->>
-> 
-> 
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index 1d8e2f655833..44e29558b068 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -910,7 +910,7 @@ static enum scsi_disposition 
->> scsi_try_bus_device_reset(struct scsi_cmnd *scmd)
-> 
->>     struct scsi_host_template *hostt = scmd->device->host->hostt;
-> 
->>       if (!hostt->eh_device_reset_handler)
->>           return FAILED;
->>
->> -    rtn = hostt->eh_device_reset_handler(scmd);
->> +    rtn = hostt->eh_device_reset_handler(scmd->device);
->>       if (rtn == SUCCESS)
->>           __scsi_report_device_reset(scmd->device, NULL);
->>       return rtn;
-> 
-> ok
-> (now that we use scmd->device 3 times in this function we could 
-> introduce a local variable sdev, similarly as starget in patch 36; but 
-> that would be more changed lines)
-> 
-> 
->> @@ -1195,6 +1195,7 @@ scsi_eh_action(struct scsi_cmnd *scmd, enum 
->> scsi_disposition rtn)
->>    * scsi_eh_finish_cmd - Handle a cmd that eh is finished with.
-> 
-> That old comment seems now in front of the new internal 
-> __scsi_eh_finish_cmd rathern than scsi_eh_finish_cmd ?
-> 
->>    * @scmd:    Original SCSI cmd that eh has finished.
->>    * @done_q:    Queue for processed commands.
->> + * @result:    Final command status to be set
-> 
-> You introduce a 3rd argument named "host_byte" (not "result") below?
-> 
->>    *
->>    * Notes:
->>    *    We don't want to use the normal command completion while we 
->> are are
-> 
->>  *    still handling errors - it may cause other commands to be queued,
->>  *    and that would disturb what we are doing.  Thus we really want to
-> 
->> @@ -1203,10 +1204,18 @@ scsi_eh_action(struct scsi_cmnd *scmd, enum 
->> scsi_disposition rtn)
->>    *    keep a list of pending commands for final completion, and once we
->>    *    are ready to leave error handling we handle completion for real.
->>    */
->> -void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head 
->> *done_q)
->> +void __scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head 
->> *done_q,
-> 
-> Should that new internal helper be static?
-> 
->> +            int host_byte)
->>   {
->> +    if (host_byte)
->> +        set_host_byte(scmd, host_byte);
->>       list_move_tail(&scmd->eh_entry, done_q);
->>   }
->> +
-> 
-> I whish we still had a kdoc for the actual API function 
-> scsi_eh_finish_cmd().
-> 
->> +void scsi_eh_finish_cmd(struct scsi_cmnd *scmd, struct list_head 
->> *done_q)
->> +{
->> +    __scsi_eh_finish_cmd(scmd, done_q, 0);
->> +}
->>   EXPORT_SYMBOL(scsi_eh_finish_cmd);
->>
->>   /**
->> @@ -1381,7 +1390,8 @@ static int scsi_eh_test_devices(struct list_head 
->> *cmd_list,
->>                   if (finish_cmds &&
->>                       (try_stu ||
->>                        scsi_eh_action(scmd, SUCCESS) == SUCCESS))
->> -                    scsi_eh_finish_cmd(scmd, done_q);
->> +                    __scsi_eh_finish_cmd(scmd, done_q,
->> +                                 DID_RESET);
->>                   else
->>                       list_move_tail(&scmd->eh_entry, work_q);
->>               }
->> @@ -1529,8 +1539,9 @@ static int scsi_eh_bus_device_reset(struct 
->> Scsi_Host *shost,
->>                                work_q, eh_entry) {
->>                       if (scmd->device == sdev &&
->>                           scsi_eh_action(scmd, rtn) != FAILED)
->> -                        scsi_eh_finish_cmd(scmd,
->> -                                   done_q);
->> +                        __scsi_eh_finish_cmd(scmd,
->> +                                     done_q,
->> +                                     DID_RESET);
->>                   }
->>               }
->>           } else {
->> @@ -1598,7 +1609,8 @@ static int scsi_eh_target_reset(struct Scsi_Host 
->> *shost,
->>               if (rtn == SUCCESS)
->>                   list_move_tail(&scmd->eh_entry, &check_list);
->>               else if (rtn == FAST_IO_FAIL)
->> -                scsi_eh_finish_cmd(scmd, done_q);
->> +                __scsi_eh_finish_cmd(scmd, done_q,
->> +                             DID_TRANSPORT_DISRUPTED);
->>               else
->>                   /* push back on work queue for further processing */
->>                   list_move(&scmd->eh_entry, work_q);
->> @@ -1663,8 +1675,9 @@ static int scsi_eh_bus_reset(struct Scsi_Host 
->> *shost,
->>               list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
->>                   if (channel == scmd_channel(scmd)) {
->>                       if (rtn == FAST_IO_FAIL)
->> -                        scsi_eh_finish_cmd(scmd,
->> -                                   done_q);
->> +                        __scsi_eh_finish_cmd(scmd,
->> +                                     done_q,
->> +                                     DID_TRANSPORT_DISRUPTED);
->>                       else
->>                           list_move_tail(&scmd->eh_entry,
->>                                      &check_list);
->> @@ -1707,9 +1720,9 @@ static int scsi_eh_host_reset(struct Scsi_Host 
->> *shost,
->>           if (rtn == SUCCESS) {
->>               list_splice_init(work_q, &check_list);
->>           } else if (rtn == FAST_IO_FAIL) {
->> -            list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
->> -                    scsi_eh_finish_cmd(scmd, done_q);
->> -            }
->> +            list_for_each_entry_safe(scmd, next, work_q, eh_entry)
->> +                __scsi_eh_finish_cmd(scmd, done_q,
->> +                             DID_TRANSPORT_DISRUPTED);
->>           } else {
->>               SCSI_LOG_ERROR_RECOVERY(3,
->>                   shost_printk(KERN_INFO, shost,
-> 
-> I don't understand the RESET vs. DISRUPTED depending on escalation level.
-> Care to explain in the patch description (or even code comment)?
-> Is there any functional change compared to today and if so which?
-> 
-> 
-Well.
-That's arguably slightly odd, but anyway:
-_in principle_ an EH handler might return FAST_IO_FAIL, which would 
-indicate that the EH function could not complete due the transport being 
-busy (eg RSCN processing taking longer than expected). In that case it's 
-expected to be a transient condition, which might/should be resolved 
-with a simple retry.
-Hence we should indicate that by completing commands with 
-DID_TRANSPORT_DISRUPTED, to allow upper layers to retry.
 
-Having said that it's slightly odd to have FAST_IO_FAIL being returned 
-from a host reset, as really the intention is that the driver will be in 
-a stable state after reset.
-But this doesn't seem to be true for zfcp, as we're calling 
-fc_block_rport() after the reset itself, which means that there's a 
-chance we'll be running into this situation.
 
-Cheers,
+On Tue, 17 Aug 2021, SelvaKumar S wrote:
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+> Introduce copy_jobs to use copy-offload, if supported by underlying devices
+> otherwise fall back to existing method.
+
+dm-kcopyd is usually used on the dm-linear target. And this patchset 
+doesn't support passing copy requests through the linear target - so this 
+patch doesn't seem useful.
+
+Mikulas
+
+> run_copy_jobs() calls block layer copy offload API, if both source and
+> destination request queue are same and support copy offload.
+> On successful completion, destination regions copied count is made zero,
+> failed regions are processed via existing method.
+> 
+> Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
+> Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> ---
+>  drivers/md/dm-kcopyd.c | 56 +++++++++++++++++++++++++++++++++++++-----
+>  1 file changed, 50 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/md/dm-kcopyd.c b/drivers/md/dm-kcopyd.c
+> index 37b03ab7e5c9..d9ee105a6127 100644
+> --- a/drivers/md/dm-kcopyd.c
+> +++ b/drivers/md/dm-kcopyd.c
+> @@ -74,18 +74,20 @@ struct dm_kcopyd_client {
+>  	atomic_t nr_jobs;
+>  
+>  /*
+> - * We maintain four lists of jobs:
+> + * We maintain five lists of jobs:
+>   *
+> - * i)   jobs waiting for pages
+> - * ii)  jobs that have pages, and are waiting for the io to be issued.
+> - * iii) jobs that don't need to do any IO and just run a callback
+> - * iv) jobs that have completed.
+> + * i)	jobs waiting to try copy offload
+> + * ii)   jobs waiting for pages
+> + * iii)  jobs that have pages, and are waiting for the io to be issued.
+> + * iv) jobs that don't need to do any IO and just run a callback
+> + * v) jobs that have completed.
+>   *
+> - * All four of these are protected by job_lock.
+> + * All five of these are protected by job_lock.
+>   */
+>  	spinlock_t job_lock;
+>  	struct list_head callback_jobs;
+>  	struct list_head complete_jobs;
+> +	struct list_head copy_jobs;
+>  	struct list_head io_jobs;
+>  	struct list_head pages_jobs;
+>  };
+> @@ -579,6 +581,43 @@ static int run_io_job(struct kcopyd_job *job)
+>  	return r;
+>  }
+>  
+> +static int run_copy_job(struct kcopyd_job *job)
+> +{
+> +	int r, i, count = 0;
+> +	unsigned long flags = 0;
+> +	struct range_entry srange;
+> +
+> +	struct request_queue *src_q, *dest_q;
+> +
+> +	for (i = 0; i < job->num_dests; i++) {
+> +		srange.src = job->source.sector;
+> +		srange.len = job->source.count;
+> +
+> +		src_q = bdev_get_queue(job->source.bdev);
+> +		dest_q = bdev_get_queue(job->dests[i].bdev);
+> +
+> +		if (src_q != dest_q && !src_q->limits.copy_offload)
+> +			break;
+> +
+> +		r = blkdev_issue_copy(job->source.bdev, 1, &srange,
+> +			job->dests[i].bdev, job->dests[i].sector, GFP_KERNEL, flags);
+> +		if (r)
+> +			break;
+> +
+> +		job->dests[i].count = 0;
+> +		count++;
+> +	}
+> +
+> +	if (count == job->num_dests) {
+> +		push(&job->kc->complete_jobs, job);
+> +	} else {
+> +		push(&job->kc->pages_jobs, job);
+> +		r = 0;
+> +	}
+> +
+> +	return r;
+> +}
+> +
+>  static int run_pages_job(struct kcopyd_job *job)
+>  {
+>  	int r;
+> @@ -659,6 +698,7 @@ static void do_work(struct work_struct *work)
+>  	spin_unlock_irq(&kc->job_lock);
+>  
+>  	blk_start_plug(&plug);
+> +	process_jobs(&kc->copy_jobs, kc, run_copy_job);
+>  	process_jobs(&kc->complete_jobs, kc, run_complete_job);
+>  	process_jobs(&kc->pages_jobs, kc, run_pages_job);
+>  	process_jobs(&kc->io_jobs, kc, run_io_job);
+> @@ -676,6 +716,8 @@ static void dispatch_job(struct kcopyd_job *job)
+>  	atomic_inc(&kc->nr_jobs);
+>  	if (unlikely(!job->source.count))
+>  		push(&kc->callback_jobs, job);
+> +	else if (job->source.bdev->bd_disk == job->dests[0].bdev->bd_disk)
+> +		push(&kc->copy_jobs, job);
+>  	else if (job->pages == &zero_page_list)
+>  		push(&kc->io_jobs, job);
+>  	else
+> @@ -916,6 +958,7 @@ struct dm_kcopyd_client *dm_kcopyd_client_create(struct dm_kcopyd_throttle *thro
+>  	spin_lock_init(&kc->job_lock);
+>  	INIT_LIST_HEAD(&kc->callback_jobs);
+>  	INIT_LIST_HEAD(&kc->complete_jobs);
+> +	INIT_LIST_HEAD(&kc->copy_jobs);
+>  	INIT_LIST_HEAD(&kc->io_jobs);
+>  	INIT_LIST_HEAD(&kc->pages_jobs);
+>  	kc->throttle = throttle;
+> @@ -971,6 +1014,7 @@ void dm_kcopyd_client_destroy(struct dm_kcopyd_client *kc)
+>  
+>  	BUG_ON(!list_empty(&kc->callback_jobs));
+>  	BUG_ON(!list_empty(&kc->complete_jobs));
+> +	WARN_ON(!list_empty(&kc->copy_jobs));
+>  	BUG_ON(!list_empty(&kc->io_jobs));
+>  	BUG_ON(!list_empty(&kc->pages_jobs));
+>  	destroy_workqueue(kc->kcopyd_wq);
+> -- 
+> 2.25.1
+> 
+> 
+> --
+> dm-devel mailing list
+> dm-devel@redhat.com
+> https://listman.redhat.com/mailman/listinfo/dm-devel
+> 
+
