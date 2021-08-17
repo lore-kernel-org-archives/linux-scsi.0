@@ -2,117 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.0 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BA0C4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 20:41:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D22FAC4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 21:24:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 074A36023E
-	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 20:41:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BA1F86102A
+	for <linux-scsi@archiver.kernel.org>; Tue, 17 Aug 2021 21:24:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234261AbhHQUmY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 16:42:24 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:38171 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233610AbhHQUmX (ORCPT
+        id S235035AbhHQVYx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 17:24:53 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:13322 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235082AbhHQVYr (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Aug 2021 16:42:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629232909;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wcl4Dsri643WTYT2ZVvqT65s7dgjheTTZlEE7QZJGi0=;
-        b=cNtDwZv4I4gzlWlDkcuA9A8LcgnZ4nw7NmBcLOF6+OpgDv2ZO6OSlF8ZxXpuRNPNW729wm
-        NZ+/1UVLUp0NF37JD2i31SjDARtkfuLT0GtjFQeMWfqwd0EVJvlTXnWDq3bqn9NFAZAPVV
-        x1iL3DKXFcCXS3maVooTmvdX5SrfWSI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-240-OibFsp8zNtK8OL7wOrtR7Q-1; Tue, 17 Aug 2021 16:41:46 -0400
-X-MC-Unique: OibFsp8zNtK8OL7wOrtR7Q-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D08F51082925;
-        Tue, 17 Aug 2021 20:41:43 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (file01.intranet.prod.int.rdu2.redhat.com [10.11.5.7])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3995E60BF4;
-        Tue, 17 Aug 2021 20:41:36 +0000 (UTC)
-Received: from file01.intranet.prod.int.rdu2.redhat.com (localhost [127.0.0.1])
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4) with ESMTP id 17HKfZQS031822;
-        Tue, 17 Aug 2021 16:41:35 -0400
-Received: from localhost (mpatocka@localhost)
-        by file01.intranet.prod.int.rdu2.redhat.com (8.14.4/8.14.4/Submit) with ESMTP id 17HKfZrZ031818;
-        Tue, 17 Aug 2021 16:41:35 -0400
-X-Authentication-Warning: file01.intranet.prod.int.rdu2.redhat.com: mpatocka owned process doing -bs
-Date:   Tue, 17 Aug 2021 16:41:35 -0400 (EDT)
-From:   Mikulas Patocka <mpatocka@redhat.com>
-X-X-Sender: mpatocka@file01.intranet.prod.int.rdu2.redhat.com
-To:     Bart Van Assche <bvanassche@acm.org>
-cc:     SelvaKumar S <selvakuma.s1@samsung.com>,
-        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
-        kbusch@kernel.org, axboe@kernel.dk, damien.lemoal@wdc.com,
-        asml.silence@gmail.com, johannes.thumshirn@wdc.com, hch@lst.de,
-        willy@infradead.org, kch@kernel.org,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        djwong@kernel.org, Mike Snitzer <snitzer@redhat.com>,
-        agk@redhat.com, selvajove@gmail.com, joshiiitr@gmail.com,
-        nj.shetty@samsung.com, nitheshshetty@gmail.com,
-        joshi.k@samsung.com, javier.gonz@samsung.com,
-        Mike Snitzer <snitzer@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/7] block: copy offload support infrastructure
-In-Reply-To: <ad3561b9-775d-dd4d-0d92-6343440b1f8f@acm.org>
-Message-ID: <alpine.LRH.2.02.2108171630120.30363@file01.intranet.prod.int.rdu2.redhat.com>
-References: <20210817101423.12367-1-selvakuma.s1@samsung.com> <CGME20210817101758epcas5p1ec353b3838d64654e69488229256d9eb@epcas5p1.samsung.com> <20210817101423.12367-4-selvakuma.s1@samsung.com> <ad3561b9-775d-dd4d-0d92-6343440b1f8f@acm.org>
-User-Agent: Alpine 2.02 (LRH 1266 2009-07-14)
-MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+        Tue, 17 Aug 2021 17:24:47 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 17HL3TM6103570
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Aug 2021 17:24:14 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id; s=pp1;
+ bh=yA0c2xcDdgJqczjpJbyEpXf7+X8Pw2KSkfLTexqbUA8=;
+ b=Zrd46VTEGeTqAp1d4XsegXBqYEFNmfK2IKgW4s7zAJoxgzBvzyGGv3PLhtqZb6vakRiU
+ OHqW7yWtoAXxYwpFMTzDCmRYHZEMMMUo1inIEdNJ8a6RinETCWNA5ZSeoiM6L+jPT2s+
+ i/SabSgKHBFEq51jdgahNvvlsMJWbNut33CBYrrSxetOAJP60nYYLU0xOzrLzipSGxzb
+ VnRRYx70Ox7eUstHmRvAbg0xXSuXA4f+SMES9TlploL6x3nduwKu051iGikvlFklZATc
+ OQH2fTTRVGExysd30pyiuj/FYFhiV20Tflh+sDy/cDc8iMYwPweDn56DaiHHVM09jQnm Ag== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3agcww8fnh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Aug 2021 17:24:13 -0400
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 17HL98eT017554
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Aug 2021 21:24:13 GMT
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+        by ppma04wdc.us.ibm.com with ESMTP id 3ae5fcp4uv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Aug 2021 21:24:13 +0000
+Received: from b03ledav003.gho.boulder.ibm.com (b03ledav003.gho.boulder.ibm.com [9.17.130.234])
+        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 17HLOBtx42729792
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 17 Aug 2021 21:24:11 GMT
+Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 523926A063;
+        Tue, 17 Aug 2021 21:24:11 +0000 (GMT)
+Received: from b03ledav003.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 08B8B6A057;
+        Tue, 17 Aug 2021 21:24:10 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.40.195.89])
+        by b03ledav003.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Tue, 17 Aug 2021 21:24:10 +0000 (GMT)
+From:   wenxiong@linux.vnet.ibm.com
+To:     jejb@linux.ibm.com
+Cc:     linux-scsi@vger.kernel.org, brking1@linux.vnet.ibm.com,
+        wenxiong@us.ibm.com, Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] scsi/ses: Saw "Failed to get diagnostic page 0x1" during
+Date:   Tue, 17 Aug 2021 14:57:35 -0500
+Message-Id: <1629230255-11616-1-git-send-email-wenxiong@linux.vnet.ibm.com>
+X-Mailer: git-send-email 1.6.0.2
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: fsIcYIxGZdVxPJgfK3Plz_FkmXi4LWLh
+X-Proofpoint-ORIG-GUID: fsIcYIxGZdVxPJgfK3Plz_FkmXi4LWLh
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
+ definitions=2021-08-17_08:2021-08-17,2021-08-17 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
+ priorityscore=1501 lowpriorityscore=0 mlxscore=0 suspectscore=0
+ phishscore=0 clxscore=1015 malwarescore=0 spamscore=0 impostorscore=0
+ bulkscore=0 mlxlogscore=999 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.12.0-2107140000 definitions=main-2108170132
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
 
+We saw two errors with Slider drawer:
+- Failed to get diagnostic page 0x1 during booting up
+- /sys/class/enclosure are empty with ipr adapter + Slider drawer
 
-On Tue, 17 Aug 2021, Bart Van Assche wrote:
+From scsi logging level with error=3, looks ses_recv_diag not try on a UA.
+Added scsi_test_unit_ready() which retried with UA. The patch fixes
+both of above errors.
 
-> On 8/17/21 3:14 AM, SelvaKumar S wrote:
-> > Introduce REQ_OP_COPY, a no-merge copy offload operation. Create
-> > bio with control information as payload and submit to the device.
-> > Larger copy operation may be divided if necessary by looking at device
-> > limits. REQ_OP_COPY(19) is a write op and takes zone_write_lock when
-> > submitted to zoned device.
-> > Native copy offload is not supported for stacked devices.
-> 
-> Using a single operation for copy-offloading instead of separate operations
-> for reading and writing is fundamentally incompatible with the device mapper.
-> I think we need a copy-offloading implementation that is compatible with the
-> device mapper.
+Signed-Off-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Reviewed-by: Brian King <brking@linux.vnet.ibm.com>
+---
+ drivers/scsi/ses.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-I once wrote a copy offload implementation that is compatible with device 
-mapper. The copy operation creates two bios (one for reading and one for 
-writing), passes them independently through device mapper and pairs them 
-at the physical device driver.
-
-It's here: http://people.redhat.com/~mpatocka/patches/kernel/xcopy/current
-
-I verified that it works with iSCSI. Would you be interested in continuing 
-this work?
-
-Mikulas
-
-> Storing the parameters of the copy operation in the bio payload is
-> incompatible with the current implementation of bio_split().
-> 
-> In other words, I think there are fundamental problems with this patch series.
-> 
-> Bart.
-> 
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index c2afba2a5414..5811639a0747 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -633,6 +633,8 @@ static int ses_intf_add(struct device *cdev,
+ 	int num_enclosures;
+ 	struct enclosure_device *edev;
+ 	struct ses_component *scomp = NULL;
++	struct scsi_sense_hdr sshdr;
++	int ret;
+ 
+ 	if (!scsi_device_enclosure(sdev)) {
+ 		/* not an enclosure, but might be in one */
+@@ -654,6 +656,10 @@ static int ses_intf_add(struct device *cdev,
+ 	if (!hdr_buf || !ses_dev)
+ 		goto err_init_free;
+ 
++	ret = scsi_test_unit_ready(sdev, SES_TIMEOUT, SES_RETRIES, &sshdr);
++	if (!scsi_status_is_good(ret))
++		goto err_init_free;
++
+ 	page = 1;
+ 	result = ses_recv_diag(sdev, page, hdr_buf, INIT_ALLOC_SIZE);
+ 	if (result)
+-- 
+2.27.0
 
