@@ -4,43 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90DDAC4338F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 00:44:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C6DCC4338F
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 00:54:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B4CD60524
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 00:44:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61D6D61056
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 00:54:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234600AbhHRAod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 20:44:33 -0400
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:55167 "EHLO
+        id S237071AbhHRAyq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 20:54:46 -0400
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:45833 "EHLO
         out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232410AbhHRAoc (ORCPT
+        by vger.kernel.org with ESMTP id S235604AbhHRAyp (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Aug 2021 20:44:32 -0400
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-        by mailout.nyi.internal (Postfix) with ESMTP id 1DD195C0195;
-        Tue, 17 Aug 2021 20:43:58 -0400 (EDT)
+        Tue, 17 Aug 2021 20:54:45 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.nyi.internal (Postfix) with ESMTP id AA9665C0178;
+        Tue, 17 Aug 2021 20:54:11 -0400 (EDT)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute3.internal (MEProxy); Tue, 17 Aug 2021 20:43:58 -0400
+  by compute4.internal (MEProxy); Tue, 17 Aug 2021 20:54:11 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-type:date:from:in-reply-to
         :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=+9vzpR
-        oyZYdbcdERhUDRnK1qYWVHC5w+FAXnup9Ypkc=; b=DpoUnowHtiSnva0s2nILJQ
-        AyU2gjFUCUieyxiXcCljsnzv4Qqtv3RTZwhAkXZv2xTYZz6nXucvhFLN8IAqculR
-        f+seuG7BkkYXqJjs43mUvjkleYW99uTtSTwAB30jdkSDkWJdKVWyTHITyGLQP3VL
-        ieSCqRcBTxT8Mw74gP6Yj2j/cQBb7lDEkSOp0UoiyX2m4dTRImXayz17vvDK1tkO
-        US2mNnY8/LplaxORWPh0/vZDth2LReWGoFq8/YLV8wYfV4elXOouzUtthabQMK7M
-        t+HUBgZD7WHAz3cC4jqx+oqYSdfflacwK7R0IN6lG3FyYQFiarljrzKcP8ZzJyww
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=Zz+2Cl
+        8Uy7Fh+ejBShZ+UblbJYguC8B5HiE28CeGbhs=; b=Ov5ucLyuSWx9/V7SgvPj2S
+        teM9PIItYKVZFzRtMVZ4TqJRDKVSJAm/7oCzvcLV8nhtybayC6WGm+fHWzvdw4aK
+        +66i7T1Aq8gGLtCf3szmh1qK3zHW2vJ5R0oSs92w1vQ2Jk5/pn9QqwYWrclkERvY
+        NXhdJUnn9XWq0EOh+YZ+FpDiDVHKsOEO9CuhrBJOqaaDwQQHbAeTpvBr4s/ncHkl
+        wx/rCW2E7Ilx+N5z03jWLslhX+r+/9UO4S7vS709C85O61vfPv7k5eHSFZuX31gB
+        gT3k6CEVs/UXHz9aqTTDKo/T3pyCPD6HhoIOouwYZqR5qul7P/b5XRL+gba1SAbg
         ==
-X-ME-Sender: <xms:zFccYQ-1lzNhuENknEM59rCEyWy0EUZWWTa-kpE_HGMu9O2u7A3ZEQ>
-    <xme:zFccYYutDXg75thovb2eZjAac8hcWmvqkkN6DxwOk2UxCV1UsmuIlyMg6KSWrsMBa
-    Yu_Zb_3l9prIqiw4yk>
-X-ME-Received: <xmr:zFccYWAeQuXkA_aK0Ujigra2L1ojI3lx3emjnKwCQ6ArWEflEjeXGhMLSuhSRdwxH4I6dj-TrZ87LmLoFRz2jTTuG37HJG03_IPdew>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrleeggdefiecutefuodetggdotefrodftvf
+X-ME-Sender: <xms:MlocYfKaaAUsMCNVFDRBtoRVPsWJ8Xaasf_96byai6Vb41MHindPiQ>
+    <xme:MlocYTKBzUNcf_NMrBBH_kxjZaQklzLcFd2tntZ9kRWsNNTem3gbLfKn41qccmWzz
+    TzrIL8FFWEcFbv7sUQ>
+X-ME-Received: <xmr:MlocYXtGC-6uxQvovZpaqmL8Gklzs3faBzI7OEsjI0OUthfUhFRKJWZg1srzI0wt4EtkOfyIzm033DSiERqZw-xGeeaJOnY4dPGyHA>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrleeggdefkecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
     fjughrpeffhffvufgjkfhfgggtsehttdertddttddvnecuhfhrohhmpefhihhnnhcuvfhh
@@ -48,100 +48,86 @@ X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrleeggdefiecutefuodetggdote
     gvrhhnpeffudfhgeefvdeitedugfelueegheekkeefveffhfeiveetledvhfdtveffteeu
     udenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpehfth
     hhrghinheslhhinhhugidqmheikehkrdhorhhg
-X-ME-Proxy: <xmx:zFccYQeb1Il66PSTCezjjh49mYdMcD6HVNZpZnvEjZaQi3V3k4EXXg>
-    <xmx:zFccYVMQhuttP6jRm_btyIpVrGwLgifMu9LY9jJk7e6iaMI0E-E3hw>
-    <xmx:zFccYakhKkLRfWsCHMIyEBpguocnRcimsfddy2jkLMTiRIlETSbVNg>
-    <xmx:zlccYWqza2xzN1T7FxfQy0gYRECfNAiYN5_yd82mfLXTQJcpaQTeag>
+X-ME-Proxy: <xmx:MlocYYbwZmSZDWItsWow3fqV22Az3B3y8kII2odtPcP43eyIFO9ucA>
+    <xmx:MlocYWaRuGdaMt-YF2sdWsgei4GuQzvg3uBOOzD7l9j7RLsWp6zmBA>
+    <xmx:MlocYcAoJvvZMzDNQ9CyCuexFloG5cQjegdXY7VIF0_xbN4R04gLYQ>
+    <xmx:M1ocYbOg2tGoOQXd03i6EM3LvTdiwltL4pJt6RvVkm--oyEnpnBvAw>
 Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 17 Aug 2021 20:43:53 -0400 (EDT)
-Date:   Wed, 18 Aug 2021 10:43:48 +1000 (AEST)
+ 17 Aug 2021 20:54:08 -0400 (EDT)
+Date:   Wed, 18 Aug 2021 10:54:06 +1000 (AEST)
 From:   Finn Thain <fthain@linux-m68k.org>
-To:     Hannes Reinecke <hare@suse.de>
-cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 37/51] aha152x: look for stuck command when resetting
- device
-In-Reply-To: <20210817091456.73342-38-hare@suse.de>
-Message-ID: <3170bee-8c89-973a-e2fc-a076af228585@linux-m68k.org>
-References: <20210817091456.73342-1-hare@suse.de> <20210817091456.73342-38-hare@suse.de>
+To:     Nathan Chancellor <nathan@kernel.org>
+cc:     =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Nick Desaulniers <ndesaulniers@google.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        clang-built-linux@googlegroups.com
+Subject: Re: [PATCH] scsi: st: Add missing break in switch statement in
+ st_ioctl()
+In-Reply-To: <20210817235531.172995-1-nathan@kernel.org>
+Message-ID: <7843ce6b-92ae-7b6c-1fc-acb0ffe2bbc0@linux-m68k.org>
+References: <20210817235531.172995-1-nathan@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 17 Aug 2021, Hannes Reinecke wrote:
+On Tue, 17 Aug 2021, Nathan Chancellor wrote:
 
-> From: Hannes Reinecke <hare@suse.com>
+> Clang + -Wimplicit-fallthrough warns:
 > 
-> The LLDD needs a command to send the reset with, so look at the
-> list of outstanding commands to get one.
+> drivers/scsi/st.c:3831:2: warning: unannotated fall-through between
+> switch labels [-Wimplicit-fallthrough]
+>         default:
+>         ^
+> drivers/scsi/st.c:3831:2: note: insert 'break;' to avoid fall-through
+>         default:
+>         ^
+>         break;
+> 1 warning generated.
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Clang's -Wimplicit-fallthrough is a little bit more pedantic than GCC's,
+> requiring every case block to end in break, return, or fallthrough,
+> rather than allowing implicit fallthroughs to cases that just contain
+> break or return. Add a break so that there is no more warning, as has
+> been done all over the tree already.
+> 
+> Fixes: 2e27f576abc6 ("scsi: scsi_ioctl: Call scsi_cmd_ioctl() from scsi_ioctl()")
+> Signed-off-by: Nathan Chancellor <nathan@kernel.org>
 > ---
->  drivers/scsi/aha152x.c | 26 +++++++++++++++-----------
->  1 file changed, 15 insertions(+), 11 deletions(-)
+>  drivers/scsi/st.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-> index 6fbdb6f3c996..3f96b38b7b56 100644
-> --- a/drivers/scsi/aha152x.c
-> +++ b/drivers/scsi/aha152x.c
-> @@ -1045,24 +1045,28 @@ static int aha152x_abort(struct scsi_cmnd *SCpnt)
->   */
->  static int aha152x_device_reset(struct scsi_cmnd * SCpnt)
->  {
-> -	struct Scsi_Host *shpnt = SCpnt->device->host;
-> +	struct scsi_device *sdev = SCpnt->device;
-> +	struct Scsi_Host *shpnt = sdev->host;
->  	DECLARE_COMPLETION(done);
->  	int ret, issued, disconnected;
-> -	unsigned char old_cmd_len = SCpnt->cmd_len;
-> +	unsigned char old_cmd_len;
->  	unsigned long flags;
->  	unsigned long timeleft;
->  
-> -	if(CURRENT_SC==SCpnt) {
-> -		scmd_printk(KERN_ERR, SCpnt, "cannot reset current device\n");
-> -		return FAILED;
-> -	}
-> -
->  	DO_LOCK(flags);
-> -	issued       = remove_SC(&ISSUE_SC, SCpnt) == NULL;
-> -	disconnected = issued && remove_SC(&DISCONNECTED_SC, SCpnt);
-> +	/* Look for the stuck command */
-> +	SCpnt = remove_lun_SC(&ISSUE_SC, sdev->id, sdev->lun);
-> +	if (SCpnt)
-> +		issued = 1;
-> +	else
-> +		SCpnt = remove_lun_SC(&DISCONNECTED_SC, sdev->id, sdev->lun);
-> +	if (!issued && SCpnt)
-> +		disconnected = 1;
-
-It looks like 'issued' is left uninitialized in the !SCpnt case. Similar 
-problem for 'disconnected'. Personally, I prefer the original style for 
-being more readable i.e. unconditional assignments.
-
-Also, it looks like you've added some logic bugs. The values of 
-'disconnected' and 'issued' have been changed here such that commands 
-never issued will now end up on the DISCONNECTED_SC list, and commands 
-that were issued already will now end up on the ISSUE_SC list.
-
->  	DO_UNLOCK(flags);
-> -
-> -	SCpnt->cmd_len         = 0;
-> +	if (!SCpnt)
-> +		return FAILED;
-
-If a command was removed from a list, it used to get re-added in the 
-FAILED case (later on). If you 'return' here, that won't happen and EH 
-escallation won't lead to free_hard_reset_SCs(). That looks like a memory 
-leak.
-
-> +	old_cmd_len = SCpnt->cmd_len;
-> +	SCpnt->cmd_len = 0;
->  
->  	aha152x_internal_queue(SCpnt, &done, resetting, reset_done);
->  
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index 2d1b0594af69..0e36a36ed24d 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+> @@ -3828,6 +3828,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+>  	case CDROM_SEND_PACKET:
+>  		if (!capable(CAP_SYS_RAWIO))
+>  			return -EPERM;
+> +		break;
+>  	default:
+>  		break;
+>  	}
 > 
+> base-commit: 58dd8f6e1cf8c47e81fbec9f47099772ab75278b
+> 
+
+Well, that sure is ugly.
+
+Do you think the following change would cause any static checkers to spit 
+their dummys and throw their toys out of the pram?
+
+@@ -3828,6 +3828,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 	case CDROM_SEND_PACKET:
+ 		if (!capable(CAP_SYS_RAWIO))
+ 			return -EPERM;
++		break;
+-	default:
+-		break;
+ 	}
+ 	
