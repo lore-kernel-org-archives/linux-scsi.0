@@ -2,83 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E158C432BE
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 03:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52AF8C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 03:50:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0080260EE0
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 03:07:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26E8E61058
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 03:50:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235556AbhHRDHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 17 Aug 2021 23:07:45 -0400
-Received: from mail-pf1-f175.google.com ([209.85.210.175]:44791 "EHLO
-        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234435AbhHRDHo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Aug 2021 23:07:44 -0400
-Received: by mail-pf1-f175.google.com with SMTP id k19so716562pfc.11;
-        Tue, 17 Aug 2021 20:07:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=nsTSyR9juQiQWSPeB70442fXZVLJAuiODqtYkB2eTKA=;
-        b=QfOmTIwBLsOzgHhaty9AjFsUEhsjiM/28bZOJkLYWnIzEt/DHucUUP5ek0mUnP2ftS
-         KmNVmAqmUCLhQHQANjU84c1aqIZe/dJsQDWrHs83ZnQR+m5hkCPUcEta1UbCI+UjD+IK
-         j0HKnPXWfwYaF/+n4gDd3r6nJkG1bvTMgyEFJnOSWAIlekBD67vifJID48tudlNteevm
-         6l0isO8O7i+fX+uYbWhw4v8Rzr5iupubjDaovD4g6uWzB84qSztd/cMk4seM6tPl7ZHj
-         F4F/lUrI3UQLqoXzM5pmB2B3NziLXzulOJxCm6IU3ndQsXoqHVeNFjcy2eAS/yM1hcXd
-         5oMA==
-X-Gm-Message-State: AOAM5316kn5pWXMJs2yqt9uymkA5iw58f2Pqdrg4CG0+wLSxqhwLcx20
-        VEkQ5LzhHp6knTFRLh/RUZP5SF9Z2KE=
-X-Google-Smtp-Source: ABdhPJxsYiy2gFssugohJAyH4OQTsP+X103w0bL1Kz/q30MxFTb0VTKhDyu9YHzx2IFs2lfXZ5OHow==
-X-Received: by 2002:a05:6a00:24c2:b0:3e2:878d:7e44 with SMTP id d2-20020a056a0024c200b003e2878d7e44mr6086139pfv.22.1629256029468;
-        Tue, 17 Aug 2021 20:07:09 -0700 (PDT)
-Received: from ?IPv6:2601:647:4000:d7:a2e:bdc6:d31c:3f87? ([2601:647:4000:d7:a2e:bdc6:d31c:3f87])
-        by smtp.gmail.com with ESMTPSA id b7sm3702229pfl.195.2021.08.17.20.07.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 17 Aug 2021 20:07:08 -0700 (PDT)
-Subject: Re: linux-next: build failure after merge of the scsi-mkp tree
-To:     John Garry <john.garry@huawei.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20210817194710.1cb707ba@canb.auug.org.au>
- <c27c2909-1701-b972-dd7c-98bdc53ab8f9@huawei.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <41d95ecd-5657-8f32-cf1a-a6d249f91cd6@acm.org>
-Date:   Tue, 17 Aug 2021 20:07:07 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S236664AbhHRDum (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 17 Aug 2021 23:50:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:25454 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236287AbhHRDul (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Aug 2021 23:50:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1629258607;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=crpAJBvumCuaEt8C+B+Kra3+47n/05Aja6kzedcOsJc=;
+        b=LX7EDcoHYBG7Vf5D0ZeMAKgS2EqJ407fvIcYEouGkHaHtoc4muTyIM40gY5xSi9aJ5P3Rp
+        uJAtf/nA5CAGlFPHy9KZwfn4KH3JjkXlxrO0FRkxKwk2qz1M16g8lK+gaf02zA3ySdzoM8
+        5RluDOl4szFDR4uHH54eGv18j7Kk/BI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-238-DAgbj7X2OAeNJl632j7qSA-1; Tue, 17 Aug 2021 23:50:03 -0400
+X-MC-Unique: DAgbj7X2OAeNJl632j7qSA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BF2688042DB;
+        Wed, 18 Aug 2021 03:50:01 +0000 (UTC)
+Received: from T590 (ovpn-8-28.pek2.redhat.com [10.72.8.28])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3083810429FC;
+        Wed, 18 Aug 2021 03:49:52 +0000 (UTC)
+Date:   Wed, 18 Aug 2021 11:49:47 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
+        hare@suse.de
+Subject: Re: [PATCH v2 03/11] blk-mq: Relocate shared sbitmap resize in
+ blk_mq_update_nr_requests()
+Message-ID: <YRyDWxgxOJSYhpDy@T590>
+References: <1628519378-211232-1-git-send-email-john.garry@huawei.com>
+ <1628519378-211232-4-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <c27c2909-1701-b972-dd7c-98bdc53ab8f9@huawei.com>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1628519378-211232-4-git-send-email-john.garry@huawei.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/17/21 2:51 AM, John Garry wrote:
-> sorry... I only built x86 and arm64 allmodconfig. Let me check this.
+On Mon, Aug 09, 2021 at 10:29:30PM +0800, John Garry wrote:
+> For shared sbitmap, if the call to blk_mq_tag_update_depth() was
+> successful for any hctx when hctx->sched_tags is not set, then it would be
+> successful for all (due to nature in which blk_mq_tag_update_depth()
+> fails).
+> 
+> As such, there is no need to call blk_mq_tag_resize_shared_sbitmap() for
+> each hctx. So relocate the call until after the hctx iteration under the
+> !q->elevator check, which is equivalent (to !hctx->sched_tags).
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
 
-Build testing for tree-wide changes is tricky. You may want to use a
-build bot for such testing. From
-https://01.org/lkp/documentation/0-day-test-service:
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
-Q: Which git tree and which mailing list will be tested? How can I
-opt-in or opt-out from it?
+-- 
+Ming
 
-A: 0-Day monitors hundreds of git trees and tens of mailing lists. You
-can obtain detailed tree and mailing list information from the source
-code under the lkp-tests/repo directory. If you want to add or remove
-your tree from the 0-Day test system, send an email to the LKML,
-specifying your git tree URL.
-
-Bart.
