@@ -2,135 +2,219 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-12.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 252F2C4338F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 15:26:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A75FCC432BE
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 15:38:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 094E260EBD
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 15:26:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 855B561076
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 15:38:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238219AbhHRP04 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 11:26:56 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3667 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237532AbhHRP0x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 11:26:53 -0400
-Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GqWtX2pKlz6BCxZ;
-        Wed, 18 Aug 2021 23:25:24 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.8; Wed, 18 Aug 2021 17:26:16 +0200
-Received: from [10.202.227.179] (10.202.227.179) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Wed, 18 Aug 2021 16:26:15 +0100
-Subject: Re: [PATCH 2/2] scsi: qla1280: Fix DEBUG_QLA1280 compilation issues
-To:     <jejb@linux.ibm.com>, <mdr@sgi.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <bvanassche@acm.org>
-References: <1629294801-32102-1-git-send-email-john.garry@huawei.com>
- <1629294801-32102-3-git-send-email-john.garry@huawei.com>
- <996f1de7010aa3ebfd334fb09562944550f894c3.camel@linux.ibm.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <d89827e2-a221-e11a-d376-708492da40c8@huawei.com>
-Date:   Wed, 18 Aug 2021 16:26:14 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S239808AbhHRPip (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 11:38:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38454 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230360AbhHRPio (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 11:38:44 -0400
+Received: from mail-lj1-x236.google.com (mail-lj1-x236.google.com [IPv6:2a00:1450:4864:20::236])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 244B8C061764;
+        Wed, 18 Aug 2021 08:38:09 -0700 (PDT)
+Received: by mail-lj1-x236.google.com with SMTP id d16so5879371ljq.4;
+        Wed, 18 Aug 2021 08:38:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=w3ll9rEluHSDama/Ed30duPlqRRIZoR05Nb3hLVOtx8=;
+        b=SZVyg6lcsl/zo5CQqmnYbxPEke1lmc5Wz/0/h3x/snSVKlDBfFRhOlIulTvCvq3CmL
+         2AyUcVNoWh6fT8Y2mzqhstEN0tBtfFcE/FmFdS2YeoYgZP2b9jP6bLJqHtTqeK7LjYth
+         pRLrydLxUCJwpDery90ZnH7XK18jSm3UmpaULXrq8FN1Q9fA2ppL0RbXETVAC4qX+HDX
+         ZCmhAqQ1sxilJpxz1gjjW/rx7y41x5IBLvJ1cZXL5mBrMFbis7YA4Y65Om1Vd47DRa+L
+         25KZv4FSH7L7dHotSmtqSHaWg64HeTwEl2H+LAKT55KNTpgshS/Y8Upz7gDN6yFevoJr
+         2vCA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=w3ll9rEluHSDama/Ed30duPlqRRIZoR05Nb3hLVOtx8=;
+        b=bTDiSFknckwblYYvm9OG0QEsXgXWWrIMDuG/1rtM3kUvMpdryJ8nbHW3b2yNnOUVNb
+         ypsPn3gn2ruRZZIcEPySEnx3UvTVczmA2/ViyKYGZW1pDcfUhMooGmCET3+MFXTJrU59
+         EbA7F2x20J2L28t4YHaCbleklKOXjNJ+yj/HP041KI0ly+fxKVweUApk6popAyOn9u2V
+         2QsPBoxe8AdAFr3qTwD4ZKcuJjGtVQXsuYch9maVg9QmyRXkxRYZp12tVe/WvuHgFqR6
+         UegCXOC6pJnKCl2JU7bPYv3pb8ReyLwwfewVoNe2Q5DaSa/rUrubcNv4S2aTKSbl8nfm
+         MoRA==
+X-Gm-Message-State: AOAM532v2zGXBMQcBzkQg8duCcpfTC5cQ1Aczmgt367WYKi7n/osiE4c
+        lm6lvwvZVDQkHW8rANzJpR1x59uZwS+Ca3C+78Y=
+X-Google-Smtp-Source: ABdhPJyHlvwEZDvtVg7ECPybOIfKBF9lejw9ydLmJNwCaSnodUkhQwT38M17ag35N8pXpz0/br0Ro2/VbLkmdjAWlpM=
+X-Received: by 2002:a2e:a37a:: with SMTP id i26mr3352203ljn.466.1629301087484;
+ Wed, 18 Aug 2021 08:38:07 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <996f1de7010aa3ebfd334fb09562944550f894c3.camel@linux.ibm.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.179]
-X-ClientProxiedBy: lhreml748-chm.china.huawei.com (10.201.108.198) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+References: <20210817101423.12367-1-selvakuma.s1@samsung.com>
+ <CGME20210817101803epcas5p10cda1d52f8a8f1172e34b1f9cf8eef3b@epcas5p1.samsung.com>
+ <20210817101423.12367-5-selvakuma.s1@samsung.com> <20210817233613.GA12597@magnolia>
+In-Reply-To: <20210817233613.GA12597@magnolia>
+From:   Nitesh Shetty <nitheshshetty@gmail.com>
+Date:   Wed, 18 Aug 2021 21:07:54 +0530
+Message-ID: <CAOSviJ2+deUdDXTWbWXaSxNX2t6cnhPg7KCDA4C2qm74KD9vdQ@mail.gmail.com>
+Subject: Re: [PATCH 4/7] block: Introduce a new ioctl for simple copy
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     SelvaKumar S <selvakuma.s1@samsung.com>,
+        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
+        kbusch@kernel.org, axboe@kernel.dk, damien.lemoal@wdc.com,
+        asml.silence@gmail.com, johannes.thumshirn@wdc.com, hch@lst.de,
+        willy@infradead.org, kch@kernel.org, martin.petersen@oracle.com,
+        mpatocka@redhat.com, bvanassche@acm.org, snitzer@redhat.com,
+        agk@redhat.com, selvajove@gmail.com, joshiiitr@gmail.com,
+        nj.shetty@samsung.com, joshi.k@samsung.com, javier.gonz@samsung.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 18/08/2021 15:27, James Bottomley wrote:
-> On Wed, 2021-08-18 at 21:53 +0800, John Garry wrote:
->> The driver does not compile under DEBUG_QLA1280 flag, so fix up with
->> as
->> little fuss as possible some debug statements.
->>
->> Also delete ql1280_dump_device(), which looks to have never been
->> referenced.
->>
->> Signed-off-by: John Garry<john.garry@huawei.com>
->> ---
->>   drivers/scsi/qla1280.c | 39 ++++++++-------------------------------
->>   1 file changed, 8 insertions(+), 31 deletions(-)
->>
->> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
->> index b4f7d8d7a01c..27b16ec399cd 100644
->> --- a/drivers/scsi/qla1280.c
->> +++ b/drivers/scsi/qla1280.c
->> @@ -2807,7 +2807,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host
->> *ha, struct srb * sp)
->>   
->>   	dprintk(2, "start: cmd=%p sp=%p CDB=%xm, handle %lx\n", cmd,
->> sp,
->>   		cmd->cmnd[0], (long)CMD_HANDLE(sp->cmd));
->> -	dprintk(2, "             bus %i, target %i, lun %i\n",
->> +	dprintk(2, "             bus %i, target %i, lun %lld\n",
->>   		SCSI_BUS_32(cmd), SCSI_TCN_32(cmd), SCSI_LUN_32(cmd));
->>   	qla1280_dump_buffer(2, cmd->cmnd, MAX_COMMAND_SIZE);
->>   
->> @@ -2879,7 +2879,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host
->> *ha, struct srb * sp)
->>   			remseg--;
->>   		}
->>   		dprintk(5, "qla1280_64bit_start_scsi: Scatter/gather "
->> -			"command packet data - b %i, t %i, l %i \n",
->> +			"command packet data - b %i, t %i, l %lld \n",
->>   			SCSI_BUS_32(cmd), SCSI_TCN_32(cmd),
->>   			SCSI_LUN_32(cmd));
+On Wed, Aug 18, 2021 at 5:06 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> On Tue, Aug 17, 2021 at 03:44:20PM +0530, SelvaKumar S wrote:
+> > From: Nitesh Shetty <nj.shetty@samsung.com>
+> >
+> > Add new BLKCOPY ioctl that offloads copying of one or more sources ranges
+> > to a destination in the device. COPY ioctl accepts a 'copy_range'
+> > structure that contains destination (in sectors), no of sources and
+> > pointer to the array of source ranges. Each source range is represented by
+> > 'range_entry' that contains start and length of source ranges (in sectors)
+> >
+> > MAX_COPY_NR_RANGE, limits the number of entries for the IOCTL and
+> > MAX_COPY_TOTAL_LENGTH limits the total copy length, IOCTL can handle.
+> >
+> > Example code, to issue BLKCOPY:
+> > /* Sample example to copy three source-ranges [0, 8] [16, 8] [32,8] to
+> >  * [64,24], on the same device */
+> >
+> > int main(void)
+> > {
+> >       int ret, fd;
+> >       struct range_entry source_range[] = {{.src = 0, .len = 8},
+> >               {.src = 16, .len = 8}, {.src = 32, .len = 8},};
+> >       struct copy_range cr;
+> >
+> >       cr.dest = 64;
+> >       cr.nr_range = 3;
+> >       cr.range_list = (__u64)&source_range;
+> >
+> >       fd = open("/dev/nvme0n1", O_RDWR);
+> >       if (fd < 0) return 1;
+> >
+> >       ret = ioctl(fd, BLKCOPY, &cr);
+> >       if (ret < 0) printf("copy failure\n");
+> >
+> >       close(fd);
+> >
+> >       return ret;
+> > }
+> >
+> > Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
+> > Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
+> > Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> > ---
+> >  block/ioctl.c           | 33 +++++++++++++++++++++++++++++++++
+> >  include/uapi/linux/fs.h |  8 ++++++++
+> >  2 files changed, 41 insertions(+)
+> >
+> > diff --git a/block/ioctl.c b/block/ioctl.c
+> > index eb0491e90b9a..2af56d01e9fe 100644
+> > --- a/block/ioctl.c
+> > +++ b/block/ioctl.c
+> > @@ -143,6 +143,37 @@ static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,
+> >                                   GFP_KERNEL, flags);
+> >  }
+> >
+> > +static int blk_ioctl_copy(struct block_device *bdev, fmode_t mode,
+> > +             unsigned long arg)
+> > +{
+> > +     struct copy_range crange;
+> > +     struct range_entry *rlist;
+> > +     int ret;
+> > +
+> > +     if (!(mode & FMODE_WRITE))
+> > +             return -EBADF;
+> > +
+> > +     if (copy_from_user(&crange, (void __user *)arg, sizeof(crange)))
+> > +             return -EFAULT;
+> > +
+> > +     rlist = kmalloc_array(crange.nr_range, sizeof(*rlist),
+> > +                     GFP_KERNEL);
+> > +     if (!rlist)
+> > +             return -ENOMEM;
+> > +
+> > +     if (copy_from_user(rlist, (void __user *)crange.range_list,
+> > +                             sizeof(*rlist) * crange.nr_range)) {
+> > +             ret = -EFAULT;
+> > +             goto out;
+> > +     }
+> > +
+> > +     ret = blkdev_issue_copy(bdev, crange.nr_range, rlist, bdev, crange.dest,
+> > +                     GFP_KERNEL, 0);
+> > +out:
+> > +     kfree(rlist);
+> > +     return ret;
+> > +}
+> > +
+> >  static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
+> >               unsigned long arg)
+> >  {
+> > @@ -468,6 +499,8 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
+> >       case BLKSECDISCARD:
+> >               return blk_ioctl_discard(bdev, mode, arg,
+> >                               BLKDEV_DISCARD_SECURE);
+> > +     case BLKCOPY:
+> > +             return blk_ioctl_copy(bdev, mode, arg);
+> >       case BLKZEROOUT:
+> >               return blk_ioctl_zeroout(bdev, mode, arg);
+> >       case BLKGETDISKSEQ:
+> > diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+> > index 7a97b588d892..4183688ff398 100644
+> > --- a/include/uapi/linux/fs.h
+> > +++ b/include/uapi/linux/fs.h
+> > @@ -76,6 +76,13 @@ struct range_entry {
+> >       __u64 len;
+> >  };
+> >
+> > +struct copy_range {
+> > +     __u64 dest;
+> > +     __u64 nr_range;
+>
+> If the maximum number of elements in the range list is 1<<12, there's no
+> need for this to be larger than a u16, right?
+>
+> > +     __u64 range_list;
+>
+> Pointers embedded in a structure are /not/ a good idea, because this
+> will create a lot of compatibility headaches for 32-bit binaries running
+> on 64-bit kernels.  Please just make the size of this header structure
+> a multiple of 8 bytes and put the range_entry list immediately after it.
+>
+> struct copy_range {
+>         __s64 dest_offset;
+>         __u32 nr_range_entries;
+>         __u32 flags;
+>         __u64 reserved[2];
+> };
+>
+> struct __user range_entry *re = ((struct range_entry *)(copyhead + 1));
+>
+> copy_from_user(&urk, re...);
+>
+> --D
+>
+Thanks, this is better. 'Reserved' field was there to be used for
+future extension of the interface.
+Now that you mentioned 'flags', it seems we can do away with
+'reserved' fields altogether?
 
-Hi James,
-
-> These are the wrong fixes, I think.  The qla1280 can only cope with 32
-> bits, which is why all the macros have an _32.
-
-Looking structures like struct cmd_entry, mrk_entry, ecmd_entry, lun 
-member is an 8-bit value. There is also this definition:
-#define MAX_LUNS	8	/* 32 */
-#define MAX_L_BITS	3	/* 5 */
-
-But not sure on where 32/5 comes from - I suppose it's the size the 
-driver uses to hold the lun. Or the 32 bits you mention.
-
->  Over the years we've
-> expanded the values in the SCSI command to be 64 bit but by and large,
-> the truncation in this driver is silent.  However, the correct fix
-> should be to make the truncation explicit in the macro, so
-> 
-> #define SCSI_LUN_32(Cmnd)	((int)Cmnd->device->lun)
-
-SCSI_LUN_32 is used outside the masked debug code, so I didn't want to 
-mess with that.
-
-> 
-> And the same for all the other _32 macros.  This avoids the unexpected
-> outcome that the _32 macros are actually returning 64 bits and cause me
-> to do a WTF at your %lld change.
-
-If a relevant scsi_device member really hold values > 32b in size for 
-this driver then it's in trouble, as chopping off the top bits by 
-casting won't help.
-
-And if we only ever expect the bottom 32b to be used, using %lld as 
-opposed to casting to an int and using %i should not really make a 
-difference.
-
-Anyway, I can change as you suggest. But I would rather do it only in 
-SCSI_LUN_32().
-
-Thanks!
+Regards,
+Nitesh Shetty
