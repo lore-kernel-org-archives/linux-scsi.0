@@ -2,223 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E527C4320A
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 16:17:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ABE5C432BE
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 16:35:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B5B5610A3
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 16:17:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 055B1610E8
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 16:35:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231247AbhHRQSZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 12:18:25 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43382 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229517AbhHRQSZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Aug 2021 12:18:25 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 8EDA6610A5;
-        Wed, 18 Aug 2021 16:17:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1629303470;
-        bh=KPxieBci0vXg8rmYUy2so8SGtGACKhwfHUnpqQywB2U=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=YuZGxSb/qbJrnZ105zWsST1nzc3m5MixjmBIDb4Cqpf+Tw8XhntQlWVGRMwhIoXA7
-         PTtnTQEfAVvrGpcExRjt1ERSU8HOof1WS87z7lpzbE0XvNK4dmam1hUQ3Cb5tmEtl4
-         LQdsyFAHM06VRTXPscO6q5RGPRNYJ/p7auy1fidt0ulyrYV7J2rObWzPJh2wayByhW
-         dD+K4DCpaPYtgRQUC0W7yQJz5RhyNsOdzq4PlthfwTFNMccSyBzUQf5XqVN5Xpf+0R
-         eu2xlTZQILiBAamLWqT4orjL/dDPccR6l4KllQOYQis8vh+mMut2C5ziIwpIkHE3eK
-         usfw3LYHare6w==
-Date:   Wed, 18 Aug 2021 09:17:50 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Nitesh Shetty <nitheshshetty@gmail.com>
-Cc:     SelvaKumar S <selvakuma.s1@samsung.com>,
-        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
-        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
-        kbusch@kernel.org, axboe@kernel.dk, damien.lemoal@wdc.com,
-        asml.silence@gmail.com, johannes.thumshirn@wdc.com, hch@lst.de,
-        willy@infradead.org, kch@kernel.org, martin.petersen@oracle.com,
-        mpatocka@redhat.com, bvanassche@acm.org, snitzer@redhat.com,
-        agk@redhat.com, selvajove@gmail.com, joshiiitr@gmail.com,
-        nj.shetty@samsung.com, joshi.k@samsung.com, javier.gonz@samsung.com
-Subject: Re: [PATCH 4/7] block: Introduce a new ioctl for simple copy
-Message-ID: <20210818161750.GF12664@magnolia>
-References: <20210817101423.12367-1-selvakuma.s1@samsung.com>
- <CGME20210817101803epcas5p10cda1d52f8a8f1172e34b1f9cf8eef3b@epcas5p1.samsung.com>
- <20210817101423.12367-5-selvakuma.s1@samsung.com>
- <20210817233613.GA12597@magnolia>
- <CAOSviJ2+deUdDXTWbWXaSxNX2t6cnhPg7KCDA4C2qm74KD9vdQ@mail.gmail.com>
+        id S231938AbhHRQgX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 12:36:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51976 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231901AbhHRQgX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 12:36:23 -0400
+Received: from mail-pg1-x533.google.com (mail-pg1-x533.google.com [IPv6:2607:f8b0:4864:20::533])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 941D3C061764
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 09:35:48 -0700 (PDT)
+Received: by mail-pg1-x533.google.com with SMTP id k24so2818242pgh.8
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 09:35:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=MZZzoB1L/BtZLzFAG1c2efe9Ft5/CHxuX1QDZvvvooQ=;
+        b=M9kGW9L1950x1GNodQPHWAXNEdw/3NFXDnVnUQef6uwcAUQmGIZJT2sD9mHQ1LrDRG
+         Fqydzm//MW7FWQRS0mPjPXqIa2Ti1T/vXI/SkX9LSet0/WhdSDNNSB9ml8yChmEJk2cH
+         /miWBgGgpHYraYxVfIIa3xg1xOEvjHNT7fBf+JQTJw5qupB56HO+241ZihRCkl32qUf6
+         6cwaKo/Qh/Rk0laJwgjSQ9Z0RmNx/VhdP9JzWnuBv/kZojnyoPi1E4OThWIE5pLgV7wE
+         JFI+boM9muLpURoke2X6zipejpvedHds8ZcW0z3kUT4uWTZ8YpbyUi0w4kMcJBcMVGE8
+         Jp1w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=MZZzoB1L/BtZLzFAG1c2efe9Ft5/CHxuX1QDZvvvooQ=;
+        b=FSjO1FHUNJTDCx64Db0mhMgrSudbd4bQeZ1Bv8bWec1Fy/xJhDu3aHMl1VPGsEOrqW
+         biYIBBUJqYbTR2ZHCOH+UlanvBSCXuMK9TmSBszX9fejvuR1y7HSD4oMcjEP19RcnB9l
+         gobhzlwqP3uJiD9Z4gHHmJddR3CGLXdq+EzW9Nx9PTrZ5ieNznscEMVUc3ZTPgHps5r1
+         OnCm94dBJdI1wnLPrCs41aOUGPDCM7PgnpYn4cLu0G+a9xPVQPGMoi15OD0oCfI1i4fd
+         zeJSCdXWLsv5FTbVul+VNG7KOg0qyIPMUb9EvuKyew8bNxvH6Ct5vnwbeWeJeF3Vnlzg
+         MhQA==
+X-Gm-Message-State: AOAM532GBl10N54iZ9jny+y66TR0lbM0bqwMY3Srr8DARy0ikGt/llV6
+        ohp8kxZkVqss+ja27oJ2yU0=
+X-Google-Smtp-Source: ABdhPJzye5RT+QGhqca5pASvHiiqV6FnZwnKWjZXl6sUwvZ1UYUx6cLJ3VZKcpoBNPi3rt5b0DDMiQ==
+X-Received: by 2002:a63:5604:: with SMTP id k4mr9807679pgb.363.1629304548185;
+        Wed, 18 Aug 2021 09:35:48 -0700 (PDT)
+Received: from [10.69.44.239] ([192.19.223.252])
+        by smtp.gmail.com with ESMTPSA id t19sm241140pfg.216.2021.08.18.09.35.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 18 Aug 2021 09:35:47 -0700 (PDT)
+Subject: Re: [PATCH 25/51] lpfc: use fc_block_rport()
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>
+References: <20210817091456.73342-1-hare@suse.de>
+ <20210817091456.73342-26-hare@suse.de>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <bae85322-9422-af29-305d-31aa69e04530@gmail.com>
+Date:   Wed, 18 Aug 2021 09:35:43 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAOSviJ2+deUdDXTWbWXaSxNX2t6cnhPg7KCDA4C2qm74KD9vdQ@mail.gmail.com>
+In-Reply-To: <20210817091456.73342-26-hare@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Aug 18, 2021 at 09:07:54PM +0530, Nitesh Shetty wrote:
-> On Wed, Aug 18, 2021 at 5:06 AM Darrick J. Wong <djwong@kernel.org> wrote:
-> >
-> > On Tue, Aug 17, 2021 at 03:44:20PM +0530, SelvaKumar S wrote:
-> > > From: Nitesh Shetty <nj.shetty@samsung.com>
-> > >
-> > > Add new BLKCOPY ioctl that offloads copying of one or more sources ranges
-> > > to a destination in the device. COPY ioctl accepts a 'copy_range'
-> > > structure that contains destination (in sectors), no of sources and
-> > > pointer to the array of source ranges. Each source range is represented by
-> > > 'range_entry' that contains start and length of source ranges (in sectors)
-> > >
-> > > MAX_COPY_NR_RANGE, limits the number of entries for the IOCTL and
-> > > MAX_COPY_TOTAL_LENGTH limits the total copy length, IOCTL can handle.
-> > >
-> > > Example code, to issue BLKCOPY:
-> > > /* Sample example to copy three source-ranges [0, 8] [16, 8] [32,8] to
-> > >  * [64,24], on the same device */
-> > >
-> > > int main(void)
-> > > {
-> > >       int ret, fd;
-> > >       struct range_entry source_range[] = {{.src = 0, .len = 8},
-> > >               {.src = 16, .len = 8}, {.src = 32, .len = 8},};
-> > >       struct copy_range cr;
-> > >
-> > >       cr.dest = 64;
-> > >       cr.nr_range = 3;
-> > >       cr.range_list = (__u64)&source_range;
-> > >
-> > >       fd = open("/dev/nvme0n1", O_RDWR);
-> > >       if (fd < 0) return 1;
-> > >
-> > >       ret = ioctl(fd, BLKCOPY, &cr);
-> > >       if (ret < 0) printf("copy failure\n");
-> > >
-> > >       close(fd);
-> > >
-> > >       return ret;
-> > > }
-> > >
-> > > Signed-off-by: Nitesh Shetty <nj.shetty@samsung.com>
-> > > Signed-off-by: SelvaKumar S <selvakuma.s1@samsung.com>
-> > > Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
-> > > ---
-> > >  block/ioctl.c           | 33 +++++++++++++++++++++++++++++++++
-> > >  include/uapi/linux/fs.h |  8 ++++++++
-> > >  2 files changed, 41 insertions(+)
-> > >
-> > > diff --git a/block/ioctl.c b/block/ioctl.c
-> > > index eb0491e90b9a..2af56d01e9fe 100644
-> > > --- a/block/ioctl.c
-> > > +++ b/block/ioctl.c
-> > > @@ -143,6 +143,37 @@ static int blk_ioctl_discard(struct block_device *bdev, fmode_t mode,
-> > >                                   GFP_KERNEL, flags);
-> > >  }
-> > >
-> > > +static int blk_ioctl_copy(struct block_device *bdev, fmode_t mode,
-> > > +             unsigned long arg)
-> > > +{
-> > > +     struct copy_range crange;
-> > > +     struct range_entry *rlist;
-> > > +     int ret;
-> > > +
-> > > +     if (!(mode & FMODE_WRITE))
-> > > +             return -EBADF;
-> > > +
-> > > +     if (copy_from_user(&crange, (void __user *)arg, sizeof(crange)))
-> > > +             return -EFAULT;
-> > > +
-> > > +     rlist = kmalloc_array(crange.nr_range, sizeof(*rlist),
-> > > +                     GFP_KERNEL);
-> > > +     if (!rlist)
-> > > +             return -ENOMEM;
-> > > +
-> > > +     if (copy_from_user(rlist, (void __user *)crange.range_list,
-> > > +                             sizeof(*rlist) * crange.nr_range)) {
-> > > +             ret = -EFAULT;
-> > > +             goto out;
-> > > +     }
-> > > +
-> > > +     ret = blkdev_issue_copy(bdev, crange.nr_range, rlist, bdev, crange.dest,
-> > > +                     GFP_KERNEL, 0);
-> > > +out:
-> > > +     kfree(rlist);
-> > > +     return ret;
-> > > +}
-> > > +
-> > >  static int blk_ioctl_zeroout(struct block_device *bdev, fmode_t mode,
-> > >               unsigned long arg)
-> > >  {
-> > > @@ -468,6 +499,8 @@ static int blkdev_common_ioctl(struct block_device *bdev, fmode_t mode,
-> > >       case BLKSECDISCARD:
-> > >               return blk_ioctl_discard(bdev, mode, arg,
-> > >                               BLKDEV_DISCARD_SECURE);
-> > > +     case BLKCOPY:
-> > > +             return blk_ioctl_copy(bdev, mode, arg);
-> > >       case BLKZEROOUT:
-> > >               return blk_ioctl_zeroout(bdev, mode, arg);
-> > >       case BLKGETDISKSEQ:
-> > > diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-> > > index 7a97b588d892..4183688ff398 100644
-> > > --- a/include/uapi/linux/fs.h
-> > > +++ b/include/uapi/linux/fs.h
-> > > @@ -76,6 +76,13 @@ struct range_entry {
-> > >       __u64 len;
-> > >  };
-> > >
-> > > +struct copy_range {
-> > > +     __u64 dest;
-> > > +     __u64 nr_range;
-> >
-> > If the maximum number of elements in the range list is 1<<12, there's no
-> > need for this to be larger than a u16, right?
-> >
-> > > +     __u64 range_list;
-> >
-> > Pointers embedded in a structure are /not/ a good idea, because this
-> > will create a lot of compatibility headaches for 32-bit binaries running
-> > on 64-bit kernels.  Please just make the size of this header structure
-> > a multiple of 8 bytes and put the range_entry list immediately after it.
-> >
-> > struct copy_range {
-> >         __s64 dest_offset;
-> >         __u32 nr_range_entries;
-> >         __u32 flags;
-> >         __u64 reserved[2];
-> > };
-> >
-> > struct __user range_entry *re = ((struct range_entry *)(copyhead + 1));
-> >
-> > copy_from_user(&urk, re...);
-> >
-> > --D
-> >
-> Thanks, this is better. 'Reserved' field was there to be used for
-> future extension of the interface.
-> Now that you mentioned 'flags', it seems we can do away with
-> 'reserved' fields altogether?
-
-We still want the reserved-must-be-zero fields so that adding the first
-field or two doesn't require changes to the pointer arithmetic.
-
-Also, I suppose you could make the relationship between copy_range and
-range_entry more explicit:
-
-struct copy_range {
-        __s64 dest_offset;
-        __u32 nr_range_entries;
-        __u32 flags;
-        __u64 reserved[2];
-
-	/* must come last */
-	struct range_entry entries[];
-};
-
-struct __user range_entry *re = &copyhead->entries[0];
-
---D
-
+On 8/17/2021 2:14 AM, Hannes Reinecke wrote:
+> Use fc_block_rport() instead of fc_block_scsi_eh() as the SCSI command
+> will be removed as argument for SCSI EH functions.
 > 
-> Regards,
-> Nitesh Shetty
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> Cc: James Smart <james.smart@broadcom.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_scsi.c | 13 ++++++++-----
+>   1 file changed, 8 insertions(+), 5 deletions(-)
+> 
+
+looks good
+
+Reviewed-by: James Smart <jsmart2021@gmail.com>
+
+-- james
+
