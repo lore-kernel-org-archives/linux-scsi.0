@@ -2,431 +2,439 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
+	MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29D4EC43216
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:11:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7557C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:15:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 139AB6108E
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:11:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A29A61029
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:15:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240428AbhHRIMG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 04:12:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45684 "EHLO
+        id S239559AbhHRIQK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 04:16:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240312AbhHRIMC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 04:12:02 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C2B3DC0612A4
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:11:23 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id nt11so2135106pjb.2
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:11:23 -0700 (PDT)
+        with ESMTP id S239611AbhHRIQK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 04:16:10 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E156DC061764
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:15:35 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id o10so1380187plg.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:15:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references
-         :mime-version:content-transfer-encoding;
-        bh=GpF0E/FgRi6qGX/LhpbMUwPUICr1VhVyZ7DJ8GUlvVk=;
-        b=WvNev3Oy64pO1VSwJ5tg1EH5fDsgG5exsqM7TIsClrkbN4NJq0UxJBeVt6CBoBXmNE
-         fdSHSypHujJ+KyDwq4QIBIkVE4ohdvyKTklOAT49I0mmqB5Fp6AqHcGioFE9Ks2KGsGr
-         LIYBqO3DsdO5DFjJDd2pcSj/qzz/3rKq6YRQo=
+        d=broadcom.com; s=google;
+        h=from:to:cc:subject:date:message-id;
+        bh=khl3Hrvk8rq8fxGD/fhIeUFy4ojme4kY63Qx46EjELU=;
+        b=d80tYEU1W04CKKWdsos6rhGg4osi/QPYftRywlSNu4khkBz/5WXRNf8l5Vd3iWF+Gv
+         Uxds6jE9tkZYBFRGBLiokEzZdTR17lHAhn+CFSGz55nV8CJWwncU71LMZglT6wmh6xn5
+         IudyS8oIraWJgI0pp1iRknlrZTvnvaGYq3oDU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=GpF0E/FgRi6qGX/LhpbMUwPUICr1VhVyZ7DJ8GUlvVk=;
-        b=A/m/WVIYohvtjtn6UcC4Fkj2qAK+EZ1Gd+nsyYJzdRWiCTzjYwAuWA9GlrVVvxSNT1
-         UwtmLnA/a0y8PUKIVrU0a1aGqJwHKzvoWDeu5Jpqb6b5/6Mt4Km0f8VGCipGYxuK8fgU
-         mFl6mgygyURhdjXIeueFpaNcqr+iIa7Dh1FnNtPrLY8LlNR4WpKEM3U7juGhdpT5Duzo
-         O0RYpY5MLfksE5Gn2UuQXqZIWlEfym5nyf2JI6PrxZmqq2nzFDNw2e/cCWuBpPxqY2Cs
-         ruMpHg1aew2qyd0NYXkf+r4CmpW6fKaVN31H3CBfG8wIPJi+X13iXofP7bbFjELa7r9n
-         XgoA==
-X-Gm-Message-State: AOAM532++an2qcVTZZpjz+FHNTy98yPrhMHCjcfc2qwdutxYZATb4M+V
-        BFAdSOCiJFZS/JEXOBGj8v+mtw==
-X-Google-Smtp-Source: ABdhPJzA57q+7lV/BgTR8zE9bfaFWDujbp+9gxoVmizaVZbAfhx73JbpI6XIc+bce+b65qnBgrBFDQ==
-X-Received: by 2002:a17:902:d114:b029:12d:4202:655a with SMTP id w20-20020a170902d114b029012d4202655amr6377479plw.0.1629274283306;
-        Wed, 18 Aug 2021 01:11:23 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id c133sm5360276pfb.39.2021.08.18.01.11.20
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=khl3Hrvk8rq8fxGD/fhIeUFy4ojme4kY63Qx46EjELU=;
+        b=J0S+1Mg7SGfAmNSbFO1j9HDD6ws4Czz3GM9azwoCKh9y0louFPukkt1+8cJjWhzO6f
+         pAvvr7ErGKpw8U1lt5y/jDuuS6dbdDLbLlev/CA/X3O6unVsvT+52jit3C09jwvFZ1Me
+         Mp6Puv0PQ2WPFfA7Jol7+HnqR6Kw2cfWFBnLccRq9gS2gKVYkBbCaO+bHlQ5UKiSkGoB
+         EkNFqBXbzn69oL3ch+RUilPg0Ypx0e4OznyM8YElGWSnh1h8xO8p/iESjWc6UwLJXhEQ
+         n8smfpf4UKgZ53RP2v9cjQ+9aNf7Ahjrl0NQsq/+a6jm2viz9G0OxB+w35Okf7NXQ01j
+         mu9A==
+X-Gm-Message-State: AOAM531dIzMNru/WUcSzNVmuYbowSR5lNh+zCgH7JMktUF29JPbBfsyf
+        mZ/9pHBSew9ATKVzB+7MmGS63REFs3lhE5D4k3yF58c8Eag2HHkGYbCa1i/srF2JuDuwPuz+ONv
+        kiiOy7CMohk9fnzM2bzzM1TwxMArwIfsp6UJkFoEOiLk6A8Ga+mtJZZIHyoqrF9J8lTTLxH4QvZ
+        qeEWEkG2Oj
+X-Google-Smtp-Source: ABdhPJxHUw9o4P3kqRavll7Xts/xAiVXraS21MupFu3lwYae8HX4ufPOXtnA9eACS3wlOIG6YiqWIQ==
+X-Received: by 2002:a17:90a:5d12:: with SMTP id s18mr5514787pji.35.1629274535002;
+        Wed, 18 Aug 2021 01:15:35 -0700 (PDT)
+Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id p34sm5100773pfh.172.2021.08.18.01.15.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Aug 2021 01:11:21 -0700 (PDT)
-From:   Kees Cook <keescook@chromium.org>
-To:     linux-kernel@vger.kernel.org
-Cc:     Kees Cook <keescook@chromium.org>,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ayush Sawal <ayush.sawal@chelsio.com>,
-        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
-        Rohit Maheshwari <rohitm@chelsio.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Andrii Nakryiko <andrii@kernel.org>,
-        Martin KaFai Lau <kafai@fb.com>,
-        Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>,
-        John Fastabend <john.fastabend@gmail.com>,
-        KP Singh <kpsingh@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Marc Kleine-Budde <mkl@pengutronix.de>,
-        Arunachalam Santhanam <arunachalam.santhanam@in.bosch.com>,
-        Vincent Mailhol <mailhol.vincent@wanadoo.fr>,
-        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-        linux-crypto@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-can@vger.kernel.org,
-        bpf@vger.kernel.org, clang-built-linux@googlegroups.com,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH 2/5] treewide: Replace open-coded flex arrays in unions
-Date:   Wed, 18 Aug 2021 01:11:15 -0700
-Message-Id: <20210818081118.1667663-3-keescook@chromium.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210818081118.1667663-1-keescook@chromium.org>
-References: <20210818081118.1667663-1-keescook@chromium.org>
-MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=12062; h=from:subject; bh=0CCkznI664JYVvRMoE3qzwUtrImx1HNe0LKH8ibyfWs=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHMCkRUrXEgtkRNrsSMCJSduhfGiaBzyFF1NfkOz5 1sgSW+CJAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRzApAAKCRCJcvTf3G3AJjS0D/ 0b1LwVuUqze95mS2bSnJ7AH4aPgzU1OO2ZMuzSJFdp54NANtgs8l78GnvlaKS2+1Ucg+9SQedab8yy euPrypenPhGxTSyPMT/BKLX4a7OIafCIZRczkVbcnJs512dcNHXVnwxS+53StYdCJ/utKT9M+ljmPc zSzT3rZfunCmfYjnj0CAZ89VQD43HOQwB7OXXxnsX/Aap/kJkCVs+2vZJEsuXVMD9q2tE/xxXAMpjQ YQY2aKPlJ22s20dcW5jeOlG2uK/ReD6K1+++LZVuzl4L6nd5RKa0BuxfPwr3eGMd4nrVQ5hZzaIOCy H4hhv6MgoNJlTIWKFx8fpsBFYgvzf5xLdi8AoGExlkbYlF4wux4PBJP5NHYYQx1+npbK4+8R42Au1I Q4tBLdisBCZYCoQC9/28MjZOEjQJIKes+scxMlO7PjqQez4p+Bc4zriVjRY6jabxsVBLZnCTcojjVN OzyO87Y9aOvuJf8omcP/8KGnNDzJ7acs5VKkD+fCrj+UEim0wgCof8IdtNtt/dBWEFCOPkCIwAzClV rPM9sLwD1J7Pkck/Q4oBpil6tAoTL2OJ28j4JrFP4tF6IWHCds9bLtt1tgzp+o8uyDjFVR3NvvRNpx ZQsS9C9S0z3P7LvltwiuKbf3UzDoltBxV4HvPDQRGG0MEziUOwhNtB7FxYPQ==
-X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
-Content-Transfer-Encoding: 8bit
+        Wed, 18 Aug 2021 01:15:34 -0700 (PDT)
+From:   Kashyap Desai <kashyap.desai@broadcom.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
+        mpi3mr-linuxdrv.pdl@broadcom.com,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        sathya.prakash@broadcom.com, thenzl@redhat.com
+Subject: [PATCH] mpi3mr: setup irqs in resume path
+Date:   Wed, 18 Aug 2021 13:46:19 +0530
+Message-Id: <20210818081619.1274384-1-kashyap.desai@broadcom.com>
+X-Mailer: git-send-email 2.18.1
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000ee2a9505c9d10960"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In support of enabling -Warray-bounds and -Wzero-length-bounds and
-correctly handling run-time memcpy() bounds checking, replace all
-open-coded flexible arrays (i.e. 0-element arrays) in unions with the
-flex_array() helper macro.
+--000000000000ee2a9505c9d10960
 
-This fixes warnings such as:
+Issue description - Driver is not setting up irqs in resume path.
+Eventually, hibernation path is broken and controller will not be
+operational after system is resumed from hibernation.
 
-fs/hpfs/anode.c: In function 'hpfs_add_sector_to_btree':
-fs/hpfs/anode.c:209:27: warning: array subscript 0 is outside the bounds of an interior zero-length array 'struct bplus_internal_node[0]' [-Wzero-length-bounds]
-  209 |    anode->btree.u.internal[0].down = cpu_to_le32(a);
-      |    ~~~~~~~~~~~~~~~~~~~~~~~^~~
-In file included from fs/hpfs/hpfs_fn.h:26,
-                 from fs/hpfs/anode.c:10:
-fs/hpfs/hpfs.h:412:32: note: while referencing 'internal'
-  412 |     struct bplus_internal_node internal[0]; /* (internal) 2-word entries giving
-      |                                ^~~~~~~~
+Fix - Driver should setup irqs in case of probe and hibernation.
 
-drivers/net/can/usb/etas_es58x/es58x_fd.c: In function 'es58x_fd_tx_can_msg':
-drivers/net/can/usb/etas_es58x/es58x_fd.c:360:35: warning: array subscript 65535 is outside the bounds of an interior zero-length array 'u8[0]' {aka 'unsigned char[]'} [-Wzero-length-bounds]
-  360 |  tx_can_msg = (typeof(tx_can_msg))&es58x_fd_urb_cmd->raw_msg[msg_len];
-      |                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-In file included from drivers/net/can/usb/etas_es58x/es58x_core.h:22,
-                 from drivers/net/can/usb/etas_es58x/es58x_fd.c:17:
-drivers/net/can/usb/etas_es58x/es58x_fd.h:231:6: note: while referencing 'raw_msg'
-  231 |   u8 raw_msg[0];
-      |      ^~~~~~~
+Cc: sathya.prakash@broadcom.com
+Cc: thenzl@redhat.com
+Reported-by: Marco Patalano <mpatalan@redhat.com>
+Tested-by: Marco Patalano <mpatalan@redhat.com>
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 
-Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Ayush Sawal <ayush.sawal@chelsio.com>
-Cc: Vinay Kumar Yadav <vinay.yadav@chelsio.com>
-Cc: Rohit Maheshwari <rohitm@chelsio.com>
-Cc: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: "David S. Miller" <davem@davemloft.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Cc: Jakub Kicinski <kuba@kernel.org>
-Cc: Stanislaw Gruszka <stf_xl@wp.pl>
-Cc: Luca Coelho <luciano.coelho@intel.com>
-Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alexei Starovoitov <ast@kernel.org>
-Cc: Daniel Borkmann <daniel@iogearbox.net>
-Cc: Andrii Nakryiko <andrii@kernel.org>
-Cc: Martin KaFai Lau <kafai@fb.com>
-Cc: Song Liu <songliubraving@fb.com>
-Cc: Yonghong Song <yhs@fb.com>
-Cc: John Fastabend <john.fastabend@gmail.com>
-Cc: KP Singh <kpsingh@kernel.org>
-Cc: Johannes Berg <johannes.berg@intel.com>
-Cc: Mordechay Goodstein <mordechay.goodstein@intel.com>
-Cc: Lee Jones <lee.jones@linaro.org>
-Cc: Wolfgang Grandegger <wg@grandegger.com>
-Cc: Marc Kleine-Budde <mkl@pengutronix.de>
-Cc: Arunachalam Santhanam <arunachalam.santhanam@in.bosch.com>
-Cc: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
-Cc: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-Cc: linux-crypto@vger.kernel.org
-Cc: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-can@vger.kernel.org
-Cc: bpf@vger.kernel.org
-Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/crypto/chelsio/chcr_crypto.h              | 14 +++++++++-----
- drivers/net/can/usb/etas_es58x/es581_4.h          |  2 +-
- drivers/net/can/usb/etas_es58x/es58x_fd.h         |  2 +-
- drivers/net/wireless/ath/ath10k/htt.h             |  7 +++++--
- drivers/net/wireless/intel/iwlegacy/commands.h    |  6 ++++--
- drivers/net/wireless/intel/iwlwifi/dvm/commands.h |  6 ++++--
- drivers/net/wireless/intel/iwlwifi/fw/api/tx.h    |  6 ++++--
- drivers/scsi/aic94xx/aic94xx_sds.c                |  6 ++++--
- fs/hpfs/hpfs.h                                    |  8 ++++----
- include/linux/filter.h                            |  6 ++++--
- include/scsi/sas.h                                | 12 ++++++++----
- include/uapi/rdma/rdma_user_rxe.h                 |  6 ++++--
- include/uapi/sound/asoc.h                         |  6 ++++--
- 13 files changed, 56 insertions(+), 31 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    | 21 ++++++++++++++++---
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 37 ++++++++++++++++++---------------
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 13 ++++++------
+ 3 files changed, 45 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/crypto/chelsio/chcr_crypto.h b/drivers/crypto/chelsio/chcr_crypto.h
-index e89f9e0094b4..1cadc231c6b0 100644
---- a/drivers/crypto/chelsio/chcr_crypto.h
-+++ b/drivers/crypto/chelsio/chcr_crypto.h
-@@ -222,8 +222,10 @@ struct chcr_authenc_ctx {
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 6f5dc9e78553..3958841108aa 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -52,7 +52,7 @@ extern spinlock_t mrioc_list_lock;
+ extern struct list_head mrioc_list;
+ extern int prot_mask;
+ 
+-#define MPI3MR_DRIVER_VERSION	"00.255.45.01"
++#define MPI3MR_DRIVER_VERSION	"00.255.45.01-Dev01"
+ #define MPI3MR_DRIVER_RELDATE	"12-December-2020"
+ 
+ #define MPI3MR_DRIVER_NAME	"mpi3mr"
+@@ -183,6 +183,20 @@ enum mpi3mr_iocstate {
+ 	MRIOC_STATE_UNRECOVERABLE,
  };
  
- struct __aead_ctx {
--	struct chcr_gcm_ctx gcm[0];
--	struct chcr_authenc_ctx authenc[];
-+	union {
-+		flex_array(struct chcr_gcm_ctx gcm[]);
-+		flex_array(struct chcr_authenc_ctx authenc[]);
-+	};
- };
++/* Init type definitions */
++enum mpi3mr_init_type {
++	MPI3MR_IT_INIT = 0,
++	MPI3MR_IT_RESET,
++	MPI3MR_IT_RESUME,
++};
++
++/* Cleanup reason definitions */
++enum mpi3mr_cleanup_reason {
++	MPI3MR_COMPLETE_CLEANUP = 0,
++	MPI3MR_REINIT_FAILURE,
++	MPI3MR_SUSPEND,
++};
++
+ /* Reset reason code definitions*/
+ enum mpi3mr_reset_reason {
+ 	MPI3MR_RESET_FROM_BRINGUP = 1,
+@@ -855,8 +869,8 @@ struct delayed_dev_rmhs_node {
  
- struct chcr_aead_ctx {
-@@ -245,9 +247,11 @@ struct hmac_ctx {
- };
+ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_cleanup_resources(struct mpi3mr_ioc *mrioc);
+-int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init);
+-void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init);
++int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type);
++void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 reason);
+ int mpi3mr_issue_port_enable(struct mpi3mr_ioc *mrioc, u8 async);
+ int mpi3mr_admin_request_post(struct mpi3mr_ioc *mrioc, void *admin_req,
+ u16 admin_req_sz, u8 ignore_reset);
+@@ -872,6 +886,7 @@ void *mpi3mr_get_reply_virt_addr(struct mpi3mr_ioc *mrioc,
+ void mpi3mr_repost_sense_buf(struct mpi3mr_ioc *mrioc,
+ 				     u64 sense_buf_dma);
  
- struct __crypto_ctx {
--	struct hmac_ctx hmacctx[0];
--	struct ablk_ctx ablkctx[0];
--	struct chcr_aead_ctx aeadctx[];
-+	union {
-+		flex_array(struct hmac_ctx hmacctx[]);
-+		flex_array(struct ablk_ctx ablkctx[]);
-+		flex_array(struct chcr_aead_ctx aeadctx[]);
-+	};
- };
- 
- struct chcr_context {
-diff --git a/drivers/net/can/usb/etas_es58x/es581_4.h b/drivers/net/can/usb/etas_es58x/es581_4.h
-index 4bc60a6df697..8657145dc2a9 100644
---- a/drivers/net/can/usb/etas_es58x/es581_4.h
-+++ b/drivers/net/can/usb/etas_es58x/es581_4.h
-@@ -192,7 +192,7 @@ struct es581_4_urb_cmd {
- 		struct es581_4_rx_cmd_ret rx_cmd_ret;
- 		__le64 timestamp;
- 		u8 rx_cmd_ret_u8;
--		u8 raw_msg[0];
-+		flex_array(u8 raw_msg);
- 	} __packed;
- 
- 	__le16 reserved_for_crc16_do_not_use;
-diff --git a/drivers/net/can/usb/etas_es58x/es58x_fd.h b/drivers/net/can/usb/etas_es58x/es58x_fd.h
-index ee18a87e40c0..3053e0958132 100644
---- a/drivers/net/can/usb/etas_es58x/es58x_fd.h
-+++ b/drivers/net/can/usb/etas_es58x/es58x_fd.h
-@@ -228,7 +228,7 @@ struct es58x_fd_urb_cmd {
- 		struct es58x_fd_tx_ack_msg tx_ack_msg;
- 		__le64 timestamp;
- 		__le32 rx_cmd_ret_le32;
--		u8 raw_msg[0];
-+		flex_array(u8 raw_msg[]);
- 	} __packed;
- 
- 	__le16 reserved_for_crc16_do_not_use;
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index ec689e3ce48a..c0729f882556 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1674,8 +1674,11 @@ struct htt_tx_fetch_ind {
- 	__le32 token;
- 	__le16 num_resp_ids;
- 	__le16 num_records;
--	__le32 resp_ids[0]; /* ath10k_htt_get_tx_fetch_ind_resp_ids() */
--	struct htt_tx_fetch_record records[];
-+	union {
-+		/* ath10k_htt_get_tx_fetch_ind_resp_ids() */
-+		flex_array(__le32 resp_ids[]);
-+		flex_array(struct htt_tx_fetch_record records[]);
-+	};
- } __packed;
- 
- static inline void *
-diff --git a/drivers/net/wireless/intel/iwlegacy/commands.h b/drivers/net/wireless/intel/iwlegacy/commands.h
-index 89c6671b32bc..ec0bc534c503 100644
---- a/drivers/net/wireless/intel/iwlegacy/commands.h
-+++ b/drivers/net/wireless/intel/iwlegacy/commands.h
-@@ -1408,8 +1408,10 @@ struct il3945_tx_cmd {
- 	 * MAC header goes here, followed by 2 bytes padding if MAC header
- 	 * length is 26 or 30 bytes, followed by payload data
- 	 */
--	u8 payload[0];
--	struct ieee80211_hdr hdr[];
-+	union {
-+		flex_array(u8 payload[]);
-+		flex_array(struct ieee80211_hdr hdr[]);
-+	};
- } __packed;
- 
- /*
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-index 235c7a2e3483..efe205929a21 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/commands.h
-@@ -1251,8 +1251,10 @@ struct iwl_tx_cmd {
- 	 * MAC header goes here, followed by 2 bytes padding if MAC header
- 	 * length is 26 or 30 bytes, followed by payload data
- 	 */
--	u8 payload[0];
--	struct ieee80211_hdr hdr[];
-+	union {
-+		flex_array(u8 payload[]);
-+		flex_array(struct ieee80211_hdr hdr[]);
-+	};
- } __packed;
- 
- /*
-diff --git a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-index 24e4a82a55da..d183f4856220 100644
---- a/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/fw/api/tx.h
-@@ -713,8 +713,10 @@ struct iwl_mvm_compressed_ba_notif {
- 	__le32 tx_rate;
- 	__le16 tfd_cnt;
- 	__le16 ra_tid_cnt;
--	struct iwl_mvm_compressed_ba_ratid ra_tid[0];
--	struct iwl_mvm_compressed_ba_tfd tfd[];
-+	union {
-+		flex_array(struct iwl_mvm_compressed_ba_ratid ra_tid[]);
-+		flex_array(struct iwl_mvm_compressed_ba_tfd tfd[]);
-+	};
- } __packed; /* COMPRESSED_BA_RES_API_S_VER_4 */
- 
++void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc);
+ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 			     struct mpi3_event_notification_reply *event_reply);
+ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 9eceafca59bc..551edeac1040 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -3206,7 +3206,7 @@ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc)
  /**
-diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
-index 46815e65f7a4..ae20b855d449 100644
---- a/drivers/scsi/aic94xx/aic94xx_sds.c
-+++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-@@ -517,8 +517,10 @@ struct asd_ms_conn_map {
- 	u8    num_nodes;
- 	u8    usage_model_id;
- 	u32   _resvd;
--	struct asd_ms_conn_desc conn_desc[0];
--	struct asd_ms_node_desc node_desc[];
-+	union {
-+		flex_array(struct asd_ms_conn_desc conn_desc[]);
-+		flex_array(struct asd_ms_node_desc node_desc[]);
-+	};
- } __attribute__ ((packed));
+  * mpi3mr_init_ioc - Initialize the controller
+  * @mrioc: Adapter instance reference
+- * @re_init: Flag to indicate is this fresh init or re-init
++ * @init_type: Flag to indicate is the init_type
+  *
+  * This the controller initialization routine, executed either
+  * after soft reset or from pci probe callback.
+@@ -3219,7 +3219,7 @@ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc)
+  *
+  * Return: 0 on success and non-zero on failure.
+  */
+-int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
++int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type)
+ {
+ 	int retval = 0;
+ 	enum mpi3mr_iocstate ioc_state;
+@@ -3230,7 +3230,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
  
- struct asd_ctrla_phy_entry {
-diff --git a/fs/hpfs/hpfs.h b/fs/hpfs/hpfs.h
-index d92c4af3e1b4..ee26c85d57a7 100644
---- a/fs/hpfs/hpfs.h
-+++ b/fs/hpfs/hpfs.h
-@@ -409,10 +409,10 @@ struct bplus_header
-   __le16 first_free;			/* offset from start of header to
- 					   first free node in array */
-   union {
--    struct bplus_internal_node internal[0]; /* (internal) 2-word entries giving
--					       subtree pointers */
--    struct bplus_leaf_node external[0];	    /* (external) 3-word entries giving
--					       sector runs */
-+	/* (internal) 2-word entries giving subtree pointers */
-+	flex_array(struct bplus_internal_node internal[]);
-+	/* (external) 3-word entries giving sector runs */
-+	flex_array(struct bplus_leaf_node external[]);
-   } u;
- };
+ 	mrioc->irqpoll_sleep = MPI3MR_IRQ_POLL_SLEEP;
+ 	mrioc->change_count = 0;
+-	if (!re_init) {
++	if (init_type == MPI3MR_IT_INIT) {
+ 		mrioc->cpu_count = num_online_cpus();
+ 		retval = mpi3mr_setup_resources(mrioc);
+ 		if (retval) {
+@@ -3315,7 +3315,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 		goto out_failed;
+ 	}
  
-diff --git a/include/linux/filter.h b/include/linux/filter.h
-index 1797e8506929..6c41c03b791c 100644
---- a/include/linux/filter.h
-+++ b/include/linux/filter.h
-@@ -588,8 +588,10 @@ struct bpf_prog {
- 	struct bpf_prog_aux	*aux;		/* Auxiliary fields */
- 	struct sock_fprog_kern	*orig_prog;	/* Original BPF program */
- 	/* Instructions for interpreter */
--	struct sock_filter	insns[0];
--	struct bpf_insn		insnsi[];
-+	union {
-+		flex_array(struct sock_filter	insns[]);
-+		flex_array(struct bpf_insn	insnsi[]);
-+	};
- };
+-	if (!re_init) {
++	if (init_type != MPI3MR_IT_RESET) {
+ 		retval = mpi3mr_setup_isr(mrioc, 1);
+ 		if (retval) {
+ 			ioc_err(mrioc, "Failed to setup ISR error %d\n",
+@@ -3333,7 +3333,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 	}
  
- struct sk_filter {
-diff --git a/include/scsi/sas.h b/include/scsi/sas.h
-index 4726c1bbec65..67c63a87602f 100644
---- a/include/scsi/sas.h
-+++ b/include/scsi/sas.h
-@@ -323,8 +323,10 @@ struct ssp_response_iu {
- 	__be32 sense_data_len;
- 	__be32 response_data_len;
+ 	mpi3mr_process_factsdata(mrioc, &facts_data);
+-	if (!re_init) {
++	if (init_type == MPI3MR_IT_INIT) {
+ 		retval = mpi3mr_check_reset_dma_mask(mrioc);
+ 		if (retval) {
+ 			ioc_err(mrioc, "Resetting dma mask failed %d\n",
+@@ -3352,7 +3352,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 		goto out_failed;
+ 	}
  
--	u8     resp_data[0];
--	u8     sense_data[];
-+	union {
-+		flex_array(u8     resp_data[]);
-+		flex_array(u8     sense_data[]);
-+	};
- } __attribute__ ((packed));
+-	if (!re_init) {
++	if (init_type == MPI3MR_IT_INIT) {
+ 		retval = mpi3mr_alloc_chain_bufs(mrioc);
+ 		if (retval) {
+ 			ioc_err(mrioc, "Failed to allocated chain buffers %d\n",
+@@ -3375,7 +3375,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 	writel(mrioc->sbq_host_index,
+ 	    &mrioc->sysif_regs->sense_buffer_free_host_index);
  
- struct ssp_command_iu {
-@@ -554,8 +556,10 @@ struct ssp_response_iu {
- 	__be32 sense_data_len;
- 	__be32 response_data_len;
+-	if (!re_init)  {
++	if (init_type != MPI3MR_IT_RESET) {
+ 		retval = mpi3mr_setup_isr(mrioc, 0);
+ 		if (retval) {
+ 			ioc_err(mrioc, "Failed to re-setup ISR, error %d\n",
+@@ -3391,7 +3391,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 		goto out_failed;
+ 	}
  
--	u8     resp_data[0];
--	u8     sense_data[];
-+	union {
-+		flex_array(u8     resp_data[]);
-+		flex_array(u8     sense_data[]);
-+	};
- } __attribute__ ((packed));
+-	if (re_init &&
++	if ((init_type != MPI3MR_IT_INIT) &&
+ 	    (mrioc->shost->nr_hw_queues > mrioc->num_op_reply_q)) {
+ 		retval = -1;
+ 		ioc_err(mrioc,
+@@ -3423,7 +3423,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 		goto out_failed;
+ 	}
  
- struct ssp_command_iu {
-diff --git a/include/uapi/rdma/rdma_user_rxe.h b/include/uapi/rdma/rdma_user_rxe.h
-index e283c2220aba..fb63de88423b 100644
---- a/include/uapi/rdma/rdma_user_rxe.h
-+++ b/include/uapi/rdma/rdma_user_rxe.h
-@@ -141,8 +141,10 @@ struct rxe_dma_info {
- 	__u32			sge_offset;
- 	__u32			reserved;
- 	union {
--		__u8		inline_data[0];
--		struct rxe_sge	sge[0];
-+		__flex_array(__fa1,
-+			     __u8 inline_data[]);
-+		__flex_array(__fa2,
-+			     struct rxe_sge sge[]);
- 	};
- };
+-	if (re_init) {
++	if (init_type != MPI3MR_IT_INIT) {
+ 		ioc_info(mrioc, "Issuing Port Enable\n");
+ 		retval = mpi3mr_issue_port_enable(mrioc, 0);
+ 		if (retval) {
+@@ -3435,7 +3435,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 	return retval;
  
-diff --git a/include/uapi/sound/asoc.h b/include/uapi/sound/asoc.h
-index da61398b1f8f..aa4e9dd94d29 100644
---- a/include/uapi/sound/asoc.h
-+++ b/include/uapi/sound/asoc.h
-@@ -240,8 +240,10 @@ struct snd_soc_tplg_vendor_array {
- struct snd_soc_tplg_private {
- 	__le32 size;	/* in bytes of private data */
- 	union {
--		char data[0];
--		struct snd_soc_tplg_vendor_array array[0];
-+		__flex_array(__fa1,
-+			     char data[]);
-+		__flex_array(__fa2,
-+			     struct snd_soc_tplg_vendor_array array[]);
- 	};
- } __attribute__((packed));
+ out_failed:
+-	mpi3mr_cleanup_ioc(mrioc, re_init);
++	if (init_type == MPI3MR_IT_INIT)
++		mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
++	else
++		mpi3mr_cleanup_ioc(mrioc, MPI3MR_REINIT_FAILURE);
+ out_nocleanup:
+ 	return retval;
+ }
+@@ -3496,7 +3499,7 @@ static void mpi3mr_memset_op_req_q_buffers(struct mpi3mr_ioc *mrioc, u16 qidx)
+  *
+  * Return: Nothing.
+  */
+-static void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
++void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
+ {
+ 	u16 i;
+ 
+@@ -3711,7 +3714,7 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
+ /**
+  * mpi3mr_cleanup_ioc - Cleanup controller
+  * @mrioc: Adapter instance reference
+- * @re_init: Cleanup due to a reinit or not
++ * @reason: Cleanup reason
+  *
+  * controller cleanup handler, Message unit reset or soft reset
+  * and shutdown notification is issued to the controller and the
+@@ -3719,11 +3722,11 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
+  *
+  * Return: Nothing.
+  */
+-void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
++void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 reason)
+ {
+ 	enum mpi3mr_iocstate ioc_state;
+ 
+-	if (!re_init)
++	if (reason == MPI3MR_COMPLETE_CLEANUP)
+ 		mpi3mr_stop_watchdog(mrioc);
+ 
+ 	mpi3mr_ioc_disable_intr(mrioc);
+@@ -3738,11 +3741,11 @@ void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
+ 			    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET,
+ 			    MPI3MR_RESET_FROM_MUR_FAILURE);
+ 
+-		if (!re_init)
++		if (reason != MPI3MR_REINIT_FAILURE)
+ 			mpi3mr_issue_ioc_shutdown(mrioc);
+ 	}
+ 
+-	if (!re_init) {
++	if (reason == MPI3MR_COMPLETE_CLEANUP) {
+ 		mpi3mr_free_mem(mrioc);
+ 		mpi3mr_cleanup_resources(mrioc);
+ 	}
+@@ -3924,7 +3927,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
+ 	mpi3mr_flush_host_io(mrioc);
+ 	mpi3mr_invalidate_devhandles(mrioc);
+ 	mpi3mr_memset_buffers(mrioc);
+-	retval = mpi3mr_init_ioc(mrioc, 1);
++	retval = mpi3mr_init_ioc(mrioc, MPI3MR_IT_RESET);
+ 	if (retval) {
+ 		pr_err(IOCNAME "reinit after soft reset failed: reason %d\n",
+ 		    mrioc->name, reset_reason);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 24ac7ddec749..b092fc52d884 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -3795,7 +3795,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 
+ 	mrioc->is_driver_loading = 1;
+-	if (mpi3mr_init_ioc(mrioc, 0)) {
++	if (mpi3mr_init_ioc(mrioc, MPI3MR_IT_INIT)) {
+ 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
+ 		    __FILE__, __LINE__, __func__);
+ 		retval = -ENODEV;
+@@ -3818,7 +3818,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	return retval;
+ 
+ addhost_failed:
+-	mpi3mr_cleanup_ioc(mrioc, 0);
++	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
+ out_iocinit_failed:
+ 	destroy_workqueue(mrioc->fwevt_worker_thread);
+ out_fwevtthread_failed:
+@@ -3870,7 +3870,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
+ 		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
+ 		mpi3mr_tgtdev_put(tgtdev);
+ 	}
+-	mpi3mr_cleanup_ioc(mrioc, 0);
++	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
+ 
+ 	spin_lock(&mrioc_list_lock);
+ 	list_del(&mrioc->list);
+@@ -3910,7 +3910,7 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
+ 	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
+ 	if (wq)
+ 		destroy_workqueue(wq);
+-	mpi3mr_cleanup_ioc(mrioc, 0);
++	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
+ }
+ 
+ #ifdef CONFIG_PM
+@@ -3940,7 +3940,7 @@ static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
+ 	mpi3mr_cleanup_fwevt_list(mrioc);
+ 	scsi_block_requests(shost);
+ 	mpi3mr_stop_watchdog(mrioc);
+-	mpi3mr_cleanup_ioc(mrioc, 1);
++	mpi3mr_cleanup_ioc(mrioc, MPI3MR_SUSPEND);
+ 
+ 	device_state = pci_choose_state(pdev, state);
+ 	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
+@@ -3988,7 +3988,8 @@ static int mpi3mr_resume(struct pci_dev *pdev)
+ 	}
+ 
+ 	mrioc->stop_drv_processing = 0;
+-	mpi3mr_init_ioc(mrioc, 1);
++	mpi3mr_memset_buffers(mrioc);
++	mpi3mr_init_ioc(mrioc, MPI3MR_IT_RESUME);
+ 	scsi_unblock_requests(shost);
+ 	mpi3mr_start_watchdog(mrioc);
  
 -- 
-2.30.2
+2.18.1
 
+
+--000000000000ee2a9505c9d10960
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
+4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
+BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
+YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
+BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
+YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
+Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
+HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
+BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
+OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
+gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
+GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
+vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
+MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
+MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
+VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOt08qNMHiwPVl5EoPH/jO92NQWk
+rcI+FX3ESKI0YXL+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDgxODA4MTUzNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
+AwQCATANBgkqhkiG9w0BAQEFAASCAQBynB2kHKnLNJ+9ZDxRjUrcDOO13G5R6FoLHceW0AhQKPLz
+xGmMrzYtemQVDqxMfiBNryYSrhIgV94EQBQMIyg/nEEcjNyMIWSrr7weV/J2fkX8QtVhDWyqr1NR
+K2558YKCef8S0DKyeI2LDsHV+yr45Hbh4NAJPn5qP7uZ3criWMnX4ek53N/4/j5bbldR19pteJRE
+4XgzSuQ1WvjocSRaImG/Wzh4DPxfZSKKQOk0Vqv+Wtnwfh7yG9F8KigfJunKLA2W50qGektqwcIF
+w2GuSYLXaeISkKYOrgDKjerYoXdBGQAAMjqleMuC4YV+CvY/J8QjLPYzVJRoc3bfXBho
+--000000000000ee2a9505c9d10960--
