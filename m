@@ -2,353 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
-	MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C50BC4338F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:17:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47406C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:19:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 83D1360295
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:17:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 216B86102A
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:19:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239643AbhHRISB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 04:18:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47202 "EHLO
+        id S239424AbhHRITm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 04:19:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47502 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240279AbhHRISA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 04:18:00 -0400
-Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D3C61C061764
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:17:25 -0700 (PDT)
-Received: by mail-pg1-x532.google.com with SMTP id q2so1466016pgt.6
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:17:25 -0700 (PDT)
+        with ESMTP id S239753AbhHRITR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 04:19:17 -0400
+Received: from mail-qk1-x72e.google.com (mail-qk1-x72e.google.com [IPv6:2607:f8b0:4864:20::72e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F40CC061764
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:18:43 -0700 (PDT)
+Received: by mail-qk1-x72e.google.com with SMTP id t66so2148005qkb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:18:43 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=MZJCmJK0IBB/67cEkzv6t+QUv3jCCpNkFqYRXwQE5Ms=;
-        b=cwd9Tj5uI42a2Up467O+UfKoNn4WkLA66ucOgSnjUvbQMLUB+sRQi7k5j+92sJFzCN
-         Anoqsi6wESpzEb6jLTtiiv6JOBBVDn8H4xnBBSMcFez2d3uVlQwncmDu4Nhu77eOxH9W
-         kwRGz7VNewi4uxfQWExqN9GvjLq3w2iRWliGQ=
+        h=from:references:in-reply-to:mime-version:thread-index:date
+         :message-id:subject:to:cc;
+        bh=NJyMU9rmGAwS9L9MXlJmiQbJbqYlAXRIcEMx0H38+XI=;
+        b=ROO20ydUqVDdH/pkN/GHzVB0HYH0zDneiCeO865WI+o7MDgcCosThdAvL31t2oFUgD
+         bS1gARdcU2ZaTAAoxNezo9BzEJ8oB6XRcmYVE2nRbPkVdfBI8yEDa5yO22DVCy73TtTd
+         l2VJxjHqPKYH1B8LsWyQLxZujbZ9zyOj+Y6X8=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=MZJCmJK0IBB/67cEkzv6t+QUv3jCCpNkFqYRXwQE5Ms=;
-        b=LWKHJkAo9dOaecvSp5bCdwEfoDnWoGLQIqQOqj39YSXSbIJ+eZ0FIpIfUt4d0kxgh6
-         kzSR2z+UQQxmjUI7RfzC/Yb4cCqUUIwvyfklLxwADwGL/CO9NiQCwvRX3zCX8Wip8s23
-         c4nMY+TXObMnKHrFsariSl9/+gNKao00luowQi9tM0a6Nm3fJKtEnu9I1JPhjQa/lT4q
-         g8wLY4EExVmqTn043X6BIJpqtyvtU78SwIFyCAgFCb16L4RJHWiFqRWPWJP5aExsmzh1
-         XSk6bpIFPWb2411FozKPiUrY/r4nkNbVvTH355AfadZkjdviWk1qJQQZjYvPMrI0JsVK
-         rm4w==
-X-Gm-Message-State: AOAM533+Ei1aYDmB2NW0DJbWeGEq+uomzrIglnKTVEIfq1SqYqenmMIB
-        35DK96SPDsfyFHf2HAXHwxf8/dKpjr6D+pT09ABf3pCFzTvZ/fwuGae8NwraUHxGSc1t6AdLCGL
-        jpw4vzBoYPCQwsbr50i6m8M8ST+QYcZr4s43Gsqj5Exk9IUm2xqyV3ehrXpgZoZR7RBhjfwzX5X
-        lUWDBSNyIt
-X-Google-Smtp-Source: ABdhPJyT+3XOtoDi1qahw/XYv2AqdWfHBjNRia5Skd/ZFFPVvIc/hsW0F0HrYCH9EDBVunHEm8qysg==
-X-Received: by 2002:a62:b60d:0:b029:3cb:1cb2:f856 with SMTP id j13-20020a62b60d0000b02903cb1cb2f856mr8184530pff.19.1629274644833;
-        Wed, 18 Aug 2021 01:17:24 -0700 (PDT)
-Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p17sm4295259pjg.54.2021.08.18.01.17.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Aug 2021 01:17:24 -0700 (PDT)
+        h=x-gm-message-state:from:references:in-reply-to:mime-version
+         :thread-index:date:message-id:subject:to:cc;
+        bh=NJyMU9rmGAwS9L9MXlJmiQbJbqYlAXRIcEMx0H38+XI=;
+        b=gXUunTDUTKTW9ktvj7euX72Kerd6WbvQ8GEXP+NzqpJxgnQ9GZ8YQRR/7pkU8Zt4j2
+         KgnInXCODBgqMuLyoJVPA1yngMtZ4SJzPsZGByIt5B9sU5WfoEAOJuRmqE5Z7lHyQdVx
+         GlRWjGiH0fDMaV65qASA5NhcGJIluD8V8+DNcZFsiAIyRv1qDiMHK6hqRLTs03xSe0Dw
+         mP+HmO0sy67rL8AYEH2ms/9NQDbtb26AF6YDlH8ygRKzR/XTj2BX3UGuzxTTsX1nKquj
+         A4nQ6kQoaQjHtQ5tPlP7aslRAVjZw3JjOX598sQubKyTbjzkPE0Yrtah2/HdAFQpumF6
+         yHUQ==
+X-Gm-Message-State: AOAM530uz7Nxsbc39HQR6v/ESO5lqtHkT+d3MSfcANvkwKbuUuWK3aeV
+        q7+rXVv9FqYuIqzHwAsiMR7Ig1EFUwELqkXS67zzjIayaTdjAA==
+X-Google-Smtp-Source: ABdhPJwRV5fLrXLNmqNkADvxfTOEHd87XL7bfFqkxM/x0bboxwep3MFL5JncOYQkGEQ+UC+9Qtt8atSdTHaRl2kuodA=
+X-Received: by 2002:a05:620a:15e8:: with SMTP id p8mr8132813qkm.27.1629274721809;
+ Wed, 18 Aug 2021 01:18:41 -0700 (PDT)
 From:   Kashyap Desai <kashyap.desai@broadcom.com>
+References: <20210818081619.1274384-1-kashyap.desai@broadcom.com>
+In-Reply-To: <20210818081619.1274384-1-kashyap.desai@broadcom.com>
+MIME-Version: 1.0
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQLVfXA4kRL7VFuj7m9NLFiL9Oyiyql9GBfg
+Date:   Wed, 18 Aug 2021 13:48:40 +0530
+Message-ID: <776b7babbc361265fe13ee59c7a9531d@mail.gmail.com>
+Subject: RE: [PATCH] mpi3mr: setup irqs in resume path
 To:     linux-scsi@vger.kernel.org
 Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        sathya.prakash@broadcom.com, thenzl@redhat.com
-Subject: [PATCH RESEND] mpi3mr: setup irqs in resume path
-Date:   Wed, 18 Aug 2021 13:47:55 +0530
-Message-Id: <20210818081755.1274470-1-kashyap.desai@broadcom.com>
-X-Mailer: git-send-email 2.18.1
+        mpi3mr-drvr-developers <mpi3mr-linuxdrv.pdl@broadcom.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        thenzl@redhat.com
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000078f5c405c9d110f6"
+        boundary="00000000000013e89805c9d115dd"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000078f5c405c9d110f6
+--00000000000013e89805c9d115dd
+Content-Type: text/plain; charset="UTF-8"
 
-Issue description - Driver is not setting up irqs in resume path.
-Eventually, hibernation path is broken and controller will not be
-operational after system is resumed from hibernation.
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index
+> 6f5dc9e78553..3958841108aa 100644
+> --- a/drivers/scsi/mpi3mr/mpi3mr.h
+> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
+> @@ -52,7 +52,7 @@ extern spinlock_t mrioc_list_lock;  extern struct
+list_head
+> mrioc_list;  extern int prot_mask;
+>
+> -#define MPI3MR_DRIVER_VERSION	"00.255.45.01"
+> +#define MPI3MR_DRIVER_VERSION	"00.255.45.01-Dev01"
+>  #define MPI3MR_DRIVER_RELDATE	"12-December-2020"
 
-Fix - Driver should setup irqs in case of probe and hibernation.
+I have resend the patch. This patch has unwanted Version upgrade. Sorry
+for this.
 
-Cc: sathya.prakash@broadcom.com
-Cc: thenzl@redhat.com
-Reported-by: Marco Patalano <mpatalan@redhat.com>
-Tested-by: Marco Patalano <mpatalan@redhat.com>
-Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Kashyap
 
----
- drivers/scsi/mpi3mr/mpi3mr.h    | 21 ++++++++++++++++---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 37 ++++++++++++++++++---------------
- drivers/scsi/mpi3mr/mpi3mr_os.c | 13 ++++++------
- 3 files changed, 45 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 6f5dc9e78553..3958841108aa 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -183,6 +183,20 @@ enum mpi3mr_iocstate {
- 	MRIOC_STATE_UNRECOVERABLE,
- };
- 
-+/* Init type definitions */
-+enum mpi3mr_init_type {
-+	MPI3MR_IT_INIT = 0,
-+	MPI3MR_IT_RESET,
-+	MPI3MR_IT_RESUME,
-+};
-+
-+/* Cleanup reason definitions */
-+enum mpi3mr_cleanup_reason {
-+	MPI3MR_COMPLETE_CLEANUP = 0,
-+	MPI3MR_REINIT_FAILURE,
-+	MPI3MR_SUSPEND,
-+};
-+
- /* Reset reason code definitions*/
- enum mpi3mr_reset_reason {
- 	MPI3MR_RESET_FROM_BRINGUP = 1,
-@@ -855,8 +869,8 @@ struct delayed_dev_rmhs_node {
- 
- int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc);
- void mpi3mr_cleanup_resources(struct mpi3mr_ioc *mrioc);
--int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init);
--void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init);
-+int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type);
-+void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 reason);
- int mpi3mr_issue_port_enable(struct mpi3mr_ioc *mrioc, u8 async);
- int mpi3mr_admin_request_post(struct mpi3mr_ioc *mrioc, void *admin_req,
- u16 admin_req_sz, u8 ignore_reset);
-@@ -872,6 +886,7 @@ void *mpi3mr_get_reply_virt_addr(struct mpi3mr_ioc *mrioc,
- void mpi3mr_repost_sense_buf(struct mpi3mr_ioc *mrioc,
- 				     u64 sense_buf_dma);
- 
-+void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc);
- void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 			     struct mpi3_event_notification_reply *event_reply);
- void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 9eceafca59bc..551edeac1040 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -3206,7 +3206,7 @@ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc)
- /**
-  * mpi3mr_init_ioc - Initialize the controller
-  * @mrioc: Adapter instance reference
-- * @re_init: Flag to indicate is this fresh init or re-init
-+ * @init_type: Flag to indicate is the init_type
-  *
-  * This the controller initialization routine, executed either
-  * after soft reset or from pci probe callback.
-@@ -3219,7 +3219,7 @@ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc)
-  *
-  * Return: 0 on success and non-zero on failure.
-  */
--int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
-+int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type)
- {
- 	int retval = 0;
- 	enum mpi3mr_iocstate ioc_state;
-@@ -3230,7 +3230,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 
- 	mrioc->irqpoll_sleep = MPI3MR_IRQ_POLL_SLEEP;
- 	mrioc->change_count = 0;
--	if (!re_init) {
-+	if (init_type == MPI3MR_IT_INIT) {
- 		mrioc->cpu_count = num_online_cpus();
- 		retval = mpi3mr_setup_resources(mrioc);
- 		if (retval) {
-@@ -3315,7 +3315,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		goto out_failed;
- 	}
- 
--	if (!re_init) {
-+	if (init_type != MPI3MR_IT_RESET) {
- 		retval = mpi3mr_setup_isr(mrioc, 1);
- 		if (retval) {
- 			ioc_err(mrioc, "Failed to setup ISR error %d\n",
-@@ -3333,7 +3333,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 	}
- 
- 	mpi3mr_process_factsdata(mrioc, &facts_data);
--	if (!re_init) {
-+	if (init_type == MPI3MR_IT_INIT) {
- 		retval = mpi3mr_check_reset_dma_mask(mrioc);
- 		if (retval) {
- 			ioc_err(mrioc, "Resetting dma mask failed %d\n",
-@@ -3352,7 +3352,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		goto out_failed;
- 	}
- 
--	if (!re_init) {
-+	if (init_type == MPI3MR_IT_INIT) {
- 		retval = mpi3mr_alloc_chain_bufs(mrioc);
- 		if (retval) {
- 			ioc_err(mrioc, "Failed to allocated chain buffers %d\n",
-@@ -3375,7 +3375,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 	writel(mrioc->sbq_host_index,
- 	    &mrioc->sysif_regs->sense_buffer_free_host_index);
- 
--	if (!re_init)  {
-+	if (init_type != MPI3MR_IT_RESET) {
- 		retval = mpi3mr_setup_isr(mrioc, 0);
- 		if (retval) {
- 			ioc_err(mrioc, "Failed to re-setup ISR, error %d\n",
-@@ -3391,7 +3391,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		goto out_failed;
- 	}
- 
--	if (re_init &&
-+	if ((init_type != MPI3MR_IT_INIT) &&
- 	    (mrioc->shost->nr_hw_queues > mrioc->num_op_reply_q)) {
- 		retval = -1;
- 		ioc_err(mrioc,
-@@ -3423,7 +3423,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		goto out_failed;
- 	}
- 
--	if (re_init) {
-+	if (init_type != MPI3MR_IT_INIT) {
- 		ioc_info(mrioc, "Issuing Port Enable\n");
- 		retval = mpi3mr_issue_port_enable(mrioc, 0);
- 		if (retval) {
-@@ -3435,7 +3435,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 	return retval;
- 
- out_failed:
--	mpi3mr_cleanup_ioc(mrioc, re_init);
-+	if (init_type == MPI3MR_IT_INIT)
-+		mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
-+	else
-+		mpi3mr_cleanup_ioc(mrioc, MPI3MR_REINIT_FAILURE);
- out_nocleanup:
- 	return retval;
- }
-@@ -3496,7 +3499,7 @@ static void mpi3mr_memset_op_req_q_buffers(struct mpi3mr_ioc *mrioc, u16 qidx)
-  *
-  * Return: Nothing.
-  */
--static void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
-+void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- {
- 	u16 i;
- 
-@@ -3711,7 +3714,7 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
- /**
-  * mpi3mr_cleanup_ioc - Cleanup controller
-  * @mrioc: Adapter instance reference
-- * @re_init: Cleanup due to a reinit or not
-+ * @reason: Cleanup reason
-  *
-  * controller cleanup handler, Message unit reset or soft reset
-  * and shutdown notification is issued to the controller and the
-@@ -3719,11 +3722,11 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
-  *
-  * Return: Nothing.
-  */
--void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
-+void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 reason)
- {
- 	enum mpi3mr_iocstate ioc_state;
- 
--	if (!re_init)
-+	if (reason == MPI3MR_COMPLETE_CLEANUP)
- 		mpi3mr_stop_watchdog(mrioc);
- 
- 	mpi3mr_ioc_disable_intr(mrioc);
-@@ -3738,11 +3741,11 @@ void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 			    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET,
- 			    MPI3MR_RESET_FROM_MUR_FAILURE);
- 
--		if (!re_init)
-+		if (reason != MPI3MR_REINIT_FAILURE)
- 			mpi3mr_issue_ioc_shutdown(mrioc);
- 	}
- 
--	if (!re_init) {
-+	if (reason == MPI3MR_COMPLETE_CLEANUP) {
- 		mpi3mr_free_mem(mrioc);
- 		mpi3mr_cleanup_resources(mrioc);
- 	}
-@@ -3924,7 +3927,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	mpi3mr_flush_host_io(mrioc);
- 	mpi3mr_invalidate_devhandles(mrioc);
- 	mpi3mr_memset_buffers(mrioc);
--	retval = mpi3mr_init_ioc(mrioc, 1);
-+	retval = mpi3mr_init_ioc(mrioc, MPI3MR_IT_RESET);
- 	if (retval) {
- 		pr_err(IOCNAME "reinit after soft reset failed: reason %d\n",
- 		    mrioc->name, reset_reason);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 24ac7ddec749..b092fc52d884 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3795,7 +3795,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 
- 	mrioc->is_driver_loading = 1;
--	if (mpi3mr_init_ioc(mrioc, 0)) {
-+	if (mpi3mr_init_ioc(mrioc, MPI3MR_IT_INIT)) {
- 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
- 		    __FILE__, __LINE__, __func__);
- 		retval = -ENODEV;
-@@ -3818,7 +3818,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return retval;
- 
- addhost_failed:
--	mpi3mr_cleanup_ioc(mrioc, 0);
-+	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
- out_iocinit_failed:
- 	destroy_workqueue(mrioc->fwevt_worker_thread);
- out_fwevtthread_failed:
-@@ -3870,7 +3870,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
- 		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
- 		mpi3mr_tgtdev_put(tgtdev);
- 	}
--	mpi3mr_cleanup_ioc(mrioc, 0);
-+	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
- 
- 	spin_lock(&mrioc_list_lock);
- 	list_del(&mrioc->list);
-@@ -3910,7 +3910,7 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
- 	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
- 	if (wq)
- 		destroy_workqueue(wq);
--	mpi3mr_cleanup_ioc(mrioc, 0);
-+	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
- }
- 
- #ifdef CONFIG_PM
-@@ -3940,7 +3940,7 @@ static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
- 	mpi3mr_cleanup_fwevt_list(mrioc);
- 	scsi_block_requests(shost);
- 	mpi3mr_stop_watchdog(mrioc);
--	mpi3mr_cleanup_ioc(mrioc, 1);
-+	mpi3mr_cleanup_ioc(mrioc, MPI3MR_SUSPEND);
- 
- 	device_state = pci_choose_state(pdev, state);
- 	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
-@@ -3988,7 +3988,8 @@ static int mpi3mr_resume(struct pci_dev *pdev)
- 	}
- 
- 	mrioc->stop_drv_processing = 0;
--	mpi3mr_init_ioc(mrioc, 1);
-+	mpi3mr_memset_buffers(mrioc);
-+	mpi3mr_init_ioc(mrioc, MPI3MR_IT_RESUME);
- 	scsi_unblock_requests(shost);
- 	mpi3mr_start_watchdog(mrioc);
- 
--- 
-2.18.1
-
-
---00000000000078f5c405c9d110f6
+--00000000000013e89805c9d115dd
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -419,13 +160,13 @@ vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
 MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
 MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
 VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIK+zxqMUz/V7Fjr3lChUtdPKt7eG
-Yfe9hNnxyeE34bM4MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDgxODA4MTcyNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
+4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIHQ024Eaj64G3lIxKZD6s4AOpdq7
+r/8/7e8gJjBP1Mu9MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
+MDgxODA4MTg0MlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
 CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQCxtO967Fi/pphcgtt6D1SzpWBi+9no6kd7Qtelg/bEzehk
-aPolDZ6tskz+Plbr/81/UA9qObjizArKK1sUD4iqK8yeB/J+DbkRfwQKul+f5+KA1PrrCW833HA+
-1fChLUCVVdCFhGgGlY+8ZivTfrxBAbUSiwk/2UdrYp6A6DS7nJ5Q8QTZfvAiG35tmaESNL8hLVlm
-O0CUGOKpyPCkBMg2Fy4LfEf/kLQL/TIU3KtKd4oigA3uIx3/s5jq6ZNHaznm30jgpOYd399isal8
-szKXoI+u8feMYJx2yctpoDnyDU/KsrGb1SA+mCuzbRCY0ZuvK/Wg/eTwupBh69xKL2/r
---00000000000078f5c405c9d110f6--
+AwQCATANBgkqhkiG9w0BAQEFAASCAQAXEjsaOxafPIfEfjIc6CiDljKBYyBI2Mpl3a2kBfzfIiJ3
+Rw7jrGC8mgM7kCeepZai1C8VCm4SXqfgyrNE5eTfS+LGpmgTvxkIXFXD4bji2Pi77cevFfvExrTu
+DkupPcbw9DghwmcSt1UOp/QEjaA1KITxgcve0cioO+tUd9yw+SXNIWXQrH9Fibfp7P52iLeiz6vi
+G0iEKDYaSMlQJFOZyfHaO4kIhJYWKqSUx3bgYY4RcnHc2QHk9lcT6uLFJnJKxqsZ0XvSswH6y0Xl
+Wm5pf2g6slKecwHIewSYZy2uxMYJEjTgcMZMp2l+JW4tKX0sZEME3j1OYwahrgrNk0lr
+--00000000000013e89805c9d115dd--
