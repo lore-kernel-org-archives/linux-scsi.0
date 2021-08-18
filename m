@@ -2,368 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B85CC4320A
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 14:20:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DEF7C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 14:28:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 530F660560
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 14:20:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6041E60EFF
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 14:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239221AbhHROVc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 10:21:32 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3666 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240449AbhHROTh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 10:19:37 -0400
-Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GqVNp380qz6D9Mx;
-        Wed, 18 Aug 2021 22:18:02 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Wed, 18 Aug 2021 16:19:01 +0200
-Received: from [10.202.227.179] (10.202.227.179) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Wed, 18 Aug 2021 15:19:00 +0100
-Subject: Re: [PATCH v2 10/11] blk-mq: Use shared tags for shared sbitmap
- support
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>,
-        "hare@suse.de" <hare@suse.de>
-References: <1628519378-211232-1-git-send-email-john.garry@huawei.com>
- <1628519378-211232-11-git-send-email-john.garry@huawei.com>
- <YRzB+aCVVSP+OmE4@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <e8fdad10-f162-78be-c24a-417d7aee45df@huawei.com>
-Date:   Wed, 18 Aug 2021 15:18:59 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S238652AbhHRO2e (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 10:28:34 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:24292 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233320AbhHRO2e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Aug 2021 10:28:34 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.43/8.16.0.43) with SMTP id 17IE2baf040681;
+        Wed, 18 Aug 2021 10:27:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=N2l28f+ljzrAMnDjhtcOJfqTQipoZl0SCKF7Bazm2ac=;
+ b=dbG/3YG+LaiJMcGpUOSatk3xjpneWwYLQTIgQf/4uq2h9bu00voinLqBsRlX1BOSe7rL
+ yyMVqhghqbRUbmKgZIRpA0OO1iaWc+o7Xiip20+cYVPx6smCdK4FCyVBr4tteHIjLnCk
+ QdM8R5gdEaIZgo+MbBZP9r/ZARW/aFMxn8LfA84CqjkMvDXVXduhNG6gz35Zw3CdPioL
+ CghaqJtEBzzH5GvF6AfMhoHR+KoF3BY0T8U75tbClIpImyB8rcEv75pnoE/h4+O1VnCA
+ G7J6w3L3/2mEP6piJLOc0vx8beim/LyvVllZJ1V2w4gcuA67e/JW+D1x9NIRAHOIT8+U Rg== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3agkvmsgut-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 18 Aug 2021 10:27:07 -0400
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 17IEDEq0007436;
+        Wed, 18 Aug 2021 14:27:06 GMT
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+        by ppma04wdc.us.ibm.com with ESMTP id 3ae5fdgpst-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 18 Aug 2021 14:27:06 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 17IER5OM39059770
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 18 Aug 2021 14:27:05 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 39CD978069;
+        Wed, 18 Aug 2021 14:27:05 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9848178072;
+        Wed, 18 Aug 2021 14:27:03 +0000 (GMT)
+Received: from jarvis.lan (unknown [9.160.128.138])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Wed, 18 Aug 2021 14:27:03 +0000 (GMT)
+Message-ID: <996f1de7010aa3ebfd334fb09562944550f894c3.camel@linux.ibm.com>
+Subject: Re: [PATCH 2/2] scsi: qla1280: Fix DEBUG_QLA1280 compilation issues
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     John Garry <john.garry@huawei.com>, mdr@sgi.com,
+        martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org
+Date:   Wed, 18 Aug 2021 10:27:01 -0400
+In-Reply-To: <1629294801-32102-3-git-send-email-john.garry@huawei.com>
+References: <1629294801-32102-1-git-send-email-john.garry@huawei.com>
+         <1629294801-32102-3-git-send-email-john.garry@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-In-Reply-To: <YRzB+aCVVSP+OmE4@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.179]
-X-ClientProxiedBy: lhreml748-chm.china.huawei.com (10.201.108.198) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: x7yJxCsDC_9vq3pnR3W_bIvlEHTzkc-P
+X-Proofpoint-GUID: x7yJxCsDC_9vq3pnR3W_bIvlEHTzkc-P
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.391,18.0.790
+ definitions=2021-08-18_04:2021-08-17,2021-08-18 signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 clxscore=1011
+ priorityscore=1501 malwarescore=0 impostorscore=0 mlxscore=0 phishscore=0
+ spamscore=0 bulkscore=0 lowpriorityscore=0 suspectscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2107140000
+ definitions=main-2108180089
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 18/08/2021 09:16, Ming Lei wrote:
-> On Mon, Aug 09, 2021 at 10:29:37PM +0800, John Garry wrote:
->> Currently we use separate sbitmap pairs and active_queues atomic_t for
->> shared sbitmap support.
->>
->> However a full set of static requests are used per HW queue, which is
->> quite wasteful, considering that the total number of requests usable at
->> any given time across all HW queues is limited by the shared sbitmap depth.
->>
->> As such, it is considerably more memory efficient in the case of shared
->> sbitmap to allocate a set of static rqs per tag set or request queue, and
->> not per HW queue.
->>
->> So replace the sbitmap pairs and active_queues atomic_t with a shared
->> tags per tagset and request queue.
+On Wed, 2021-08-18 at 21:53 +0800, John Garry wrote:
+> The driver does not compile under DEBUG_QLA1280 flag, so fix up with
+> as
+> little fuss as possible some debug statements.
 > 
-> This idea looks good and the current implementation is simplified a bit
-> too.
-
-Good, but you did hint at it :)
-
+> Also delete ql1280_dump_device(), which looks to have never been
+> referenced.
 > 
->>
->> Continue to use term "shared sbitmap" for now, as the meaning is known.
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/scsi/qla1280.c | 39 ++++++++-------------------------------
+>  1 file changed, 8 insertions(+), 31 deletions(-)
 > 
-> I guess shared tags is better.
+> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+> index b4f7d8d7a01c..27b16ec399cd 100644
+> --- a/drivers/scsi/qla1280.c
+> +++ b/drivers/scsi/qla1280.c
+> @@ -2807,7 +2807,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host
+> *ha, struct srb * sp)
+>  
+>  	dprintk(2, "start: cmd=%p sp=%p CDB=%xm, handle %lx\n", cmd,
+> sp,
+>  		cmd->cmnd[0], (long)CMD_HANDLE(sp->cmd));
+> -	dprintk(2, "             bus %i, target %i, lun %i\n",
+> +	dprintk(2, "             bus %i, target %i, lun %lld\n",
+>  		SCSI_BUS_32(cmd), SCSI_TCN_32(cmd), SCSI_LUN_32(cmd));
+>  	qla1280_dump_buffer(2, cmd->cmnd, MAX_COMMAND_SIZE);
+>  
+> @@ -2879,7 +2879,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host
+> *ha, struct srb * sp)
+>  			remseg--;
+>  		}
+>  		dprintk(5, "qla1280_64bit_start_scsi: Scatter/gather "
+> -			"command packet data - b %i, t %i, l %i \n",
+> +			"command packet data - b %i, t %i, l %lld \n",
+>  			SCSI_BUS_32(cmd), SCSI_TCN_32(cmd),
+>  			SCSI_LUN_32(cmd));
 
-Yeah, agreed. My preference would be to change later, once things settle 
-down.
+These are the wrong fixes, I think.  The qla1280 can only cope with 32
+bits, which is why all the macros have an _32.  Over the years we've
+expanded the values in the SCSI command to be 64 bit but by and large,
+the truncation in this driver is silent.  However, the correct fix
+should be to make the truncation explicit in the macro, so
 
-As I see, the only thing close to an ABI is the debugfs "flags" code, 
-but that's debugfs, so not stable.
+#define SCSI_LUN_32(Cmnd)	((int)Cmnd->device->lun)
 
-> 
->>
->> Signed-off-by: John Garry <john.garry@huawei.com>
->> ---
->>   block/blk-mq-sched.c   | 77 ++++++++++++++++++++-----------------
->>   block/blk-mq-tag.c     | 65 ++++++++++++-------------------
->>   block/blk-mq-tag.h     |  4 +-
->>   block/blk-mq.c         | 86 +++++++++++++++++++++++++-----------------
->>   block/blk-mq.h         |  8 ++--
->>   include/linux/blk-mq.h | 13 +++----
->>   include/linux/blkdev.h |  3 +-
->>   7 files changed, 131 insertions(+), 125 deletions(-)
->>
->> diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+And the same for all the other _32 macros.  This avoids the unexpected
+outcome that the _32 macros are actually returning 64 bits and cause me
+to do a WTF at your %lld change.
 
-...
-
->> +
->>   static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
->>   {
->>   	struct blk_mq_tag_set *set = queue->tag_set;
->> -	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags);
->> -	struct blk_mq_hw_ctx *hctx;
->> -	int ret, i;
->> +	struct blk_mq_tags *tags;
->> +	int ret;
->>   
->>   	/*
->>   	 * Set initial depth at max so that we don't need to reallocate for
->>   	 * updating nr_requests.
->>   	 */
->> -	ret = blk_mq_init_bitmaps(&queue->sched_bitmap_tags,
->> -				  &queue->sched_breserved_tags,
->> -				  MAX_SCHED_RQ, set->reserved_tags,
->> -				  set->numa_node, alloc_policy);
->> -	if (ret)
->> -		return ret;
->> +	tags = queue->shared_sbitmap_tags = blk_mq_alloc_rq_map(set, 0,
->> +					  set->queue_depth,
->> +					  set->reserved_tags);
->> +	if (!queue->shared_sbitmap_tags)
->> +		return -ENOMEM;
->>   
->> -	queue_for_each_hw_ctx(queue, hctx, i) {
->> -		hctx->sched_tags->bitmap_tags =
->> -					&queue->sched_bitmap_tags;
->> -		hctx->sched_tags->breserved_tags =
->> -					&queue->sched_breserved_tags;
->> +	ret = blk_mq_alloc_rqs(set, tags, 0, set->queue_depth);
->> +	if (ret) {
->> +		blk_mq_exit_sched_shared_sbitmap(queue);
->> +		return ret;
-> 
-> There are two such patterns for allocate rq map and request pool
-> together, please put them into one helper(such as blk_mq_alloc_map_and_rqs)
-> which can return the allocated tags and handle failure inline. Also we may
-> convert current users into this helper.
-
-I'll have a look, but I will mention about "free" helper below
-
-> 
->>   	}
->>   
->>   	blk_mq_tag_update_sched_shared_sbitmap(queue);
->> @@ -580,12 +589,6 @@ static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
->>   	return 0;
->>   }
->>   
->> -static void blk_mq_exit_sched_shared_sbitmap(struct request_queue *queue)
->> -{
->> -	sbitmap_queue_free(&queue->sched_bitmap_tags);
->> -	sbitmap_queue_free(&queue->sched_breserved_tags);
->> -}
->> -
-
-...
-
->>   
->> -void blk_mq_free_tags(struct blk_mq_tags *tags, unsigned int flags)
->> +void blk_mq_free_tags(struct blk_mq_tags *tags)
->>   {
->> -	if (!blk_mq_is_sbitmap_shared(flags)) {
->> -		sbitmap_queue_free(tags->bitmap_tags);
->> -		sbitmap_queue_free(tags->breserved_tags);
->> -	}
->> +	sbitmap_queue_free(tags->bitmap_tags);
->> +	sbitmap_queue_free(tags->breserved_tags);
->>   	kfree(tags);
->>   }
->>   
->> @@ -604,18 +580,25 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
->>   		if (tdepth > MAX_SCHED_RQ)
->>   			return -EINVAL;
->>   
->> +		if (blk_mq_is_sbitmap_shared(set->flags)) {
->> +			/* No point in allowing this to happen */
->> +			if (tdepth > set->queue_depth)
->> +				return -EINVAL;
->> +			return 0;
->> +		}
-> 
-> The above looks wrong, it isn't unusual to see small queue depth
-> hardware meantime we often have scheduler queue depth of 2 * set->queue_depth.
-
-ok, I suppose you're right.
-
-> 
->> +
->>   		new = blk_mq_alloc_rq_map(set, hctx->queue_num, tdepth,
->> -				tags->nr_reserved_tags, set->flags);
->> +				tags->nr_reserved_tags);
->>   		if (!new)
->>   			return -ENOMEM;
->>   		ret = blk_mq_alloc_rqs(set, new, hctx->queue_num, tdepth);
->>   		if (ret) {
->> -			blk_mq_free_rq_map(new, set->flags);
->> +			blk_mq_free_rq_map(new);
->>   			return -ENOMEM;
->>   		}
->>   
->>   		blk_mq_free_rqs(set, *tagsptr, hctx->queue_num);
->> -		blk_mq_free_rq_map(*tagsptr, set->flags);
->> +		blk_mq_free_rq_map(*tagsptr);
->>   		*tagsptr = new;
->>   	} else {
->>   		/*
->> @@ -631,12 +614,14 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
->>   
->>   void blk_mq_tag_resize_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int size)
->>   {
->> -	sbitmap_queue_resize(&set->__bitmap_tags, size - set->reserved_tags);
->> +	struct blk_mq_tags *tags = set->shared_sbitmap_tags;
->> +
->> +	sbitmap_queue_resize(&tags->__bitmap_tags, size - set->reserved_tags);
->>   }
->>   
->>   void blk_mq_tag_update_sched_shared_sbitmap(struct request_queue *q)
->>   {
->> -	sbitmap_queue_resize(&q->sched_bitmap_tags,
->> +	sbitmap_queue_resize(q->shared_sbitmap_tags->bitmap_tags,
->>   			     q->nr_requests - q->tag_set->reserved_tags);
->>   }
->>   
->> diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
->> index 88f3c6485543..c9fc52ee07c4 100644
->> --- a/block/blk-mq-tag.h
->> +++ b/block/blk-mq-tag.h
->> @@ -30,8 +30,8 @@ struct blk_mq_tags {
->>   
->>   extern struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
->>   					unsigned int reserved_tags,
->> -					int node, unsigned int flags);
->> -extern void blk_mq_free_tags(struct blk_mq_tags *tags, unsigned int flags);
->> +					int node, int alloc_policy);
->> +extern void blk_mq_free_tags(struct blk_mq_tags *tags);
->>   extern int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
->>   			       struct sbitmap_queue *breserved_tags,
->>   			       unsigned int queue_depth,
->> diff --git a/block/blk-mq.c b/block/blk-mq.c
->> index 4d6723cfa582..d3dd5fab3426 100644
->> --- a/block/blk-mq.c
->> +++ b/block/blk-mq.c
->> @@ -2348,6 +2348,9 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
->>   	struct blk_mq_tags *drv_tags;
->>   	struct page *page;
->>   
->> +	if (blk_mq_is_sbitmap_shared(set->flags))
->> +		drv_tags = set->shared_sbitmap_tags;
->> +	else
->>   		drv_tags = set->tags[hctx_idx];
-> 
-> Here I guess you need to avoid to double ->exit_request()?
-
-I'll check that doesn't occur, but I didn't think it did.
-
-> 
->>   
->>   	if (tags->static_rqs && set->ops->exit_request) {
->> @@ -2377,21 +2380,20 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
->>   	}
->>   }
->>   
->> -void blk_mq_free_rq_map(struct blk_mq_tags *tags, unsigned int flags)
->> +void blk_mq_free_rq_map(struct blk_mq_tags *tags)
->>   {
->>   	kfree(tags->rqs);
->>   	tags->rqs = NULL;
->>   	kfree(tags->static_rqs);
->>   	tags->static_rqs = NULL;
->>   
->> -	blk_mq_free_tags(tags, flags);
->> +	blk_mq_free_tags(tags);
->>   }
->>   
-
-...
-
->>   }
->> @@ -2877,11 +2886,11 @@ static bool __blk_mq_alloc_map_and_request(struct blk_mq_tag_set *set,
->>   static void blk_mq_free_map_and_requests(struct blk_mq_tag_set *set,
->>   					 unsigned int hctx_idx)
->>   {
->> -	unsigned int flags = set->flags;
->> -
->>   	if (set->tags && set->tags[hctx_idx]) {
->> -		blk_mq_free_rqs(set, set->tags[hctx_idx], hctx_idx);
->> -		blk_mq_free_rq_map(set->tags[hctx_idx], flags);
->> +		if (!blk_mq_is_sbitmap_shared(set->flags)) {
-> 
-> I remember you hate negative check, :-)
-
-Not always, but sometimes I think the code harder to read with them.
-
-> 
->> +			blk_mq_free_rqs(set, set->tags[hctx_idx], hctx_idx);
->> +			blk_mq_free_rq_map(set->tags[hctx_idx]);
-> 
-> We can add one helper of blk_mq_free_map_and_rqs(), and there seems
-> several such pattern.
-
-ok, I can check, but I don't think it's useful in the blk-mq sched code 
-as the tags and rqs are freed separately there, so not sure on how much 
-we gain.
-
-> 
->> +		}
->>   		set->tags[hctx_idx] = NULL;
->>   	}
->>   }
->> @@ -3348,6 +3357,21 @@ static int __blk_mq_alloc_rq_maps(struct blk_mq_tag_set *set)
->>   {
->>   	int i;
->>   
->> +	if (blk_mq_is_sbitmap_shared(set->flags)) {
->> +		int ret;
->> +
->> +		set->shared_sbitmap_tags = blk_mq_alloc_rq_map(set, 0,
->> +						  set->queue_depth,
->> +						  set->reserved_tags);
->> +		if (!set->shared_sbitmap_tags)
->> +			return -ENOMEM;
->> +
->> +		ret = blk_mq_alloc_rqs(set, set->shared_sbitmap_tags, 0,
->> +				       set->queue_depth);
->> +		if (ret)
->> +			goto out_free_sbitmap_tags;
->> +	}
->> +
->>   	for (i = 0; i < set->nr_hw_queues; i++) {
->>   		if (!__blk_mq_alloc_map_and_request(set, i))
->>   			goto out_unwind;
->> @@ -3359,6 +3383,11 @@ static int __blk_mq_alloc_rq_maps(struct blk_mq_tag_set *set)
->>   out_unwind:
->>   	while (--i >= 0)
->>   		blk_mq_free_map_and_requests(set, i);
->> +	if (blk_mq_is_sbitmap_shared(set->flags))
->> +		blk_mq_free_rqs(set, set->shared_sbitmap_tags, 0);
->> +out_free_sbitmap_tags:
->> +	if (blk_mq_is_sbitmap_shared(set->flags))
->> +		blk_mq_exit_shared_sbitmap(set);
-> 
-> Once a helper of blk_mq_alloc_map_and_rqs() is added, the above failure
-> handling can be simplified too.
-> 
-> 
-
-OK
-
-Thanks a lot,
-John
+James
 
 
