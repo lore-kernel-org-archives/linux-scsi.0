@@ -2,439 +2,580 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.3 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,MIME_HEADER_CTYPE_ONLY,
-	MIME_NO_TEXT,SPF_HELO_NONE,SPF_PASS,T_TVD_MIME_NO_HEADERS,URIBL_BLOCKED,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7557C4338F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:15:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59F34C4338F
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:17:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9A29A61029
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:15:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30CD26102A
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:17:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239559AbhHRIQK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 04:16:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46732 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239611AbhHRIQK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 04:16:10 -0400
-Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E156DC061764
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:15:35 -0700 (PDT)
-Received: by mail-pl1-x635.google.com with SMTP id o10so1380187plg.0
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:15:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=khl3Hrvk8rq8fxGD/fhIeUFy4ojme4kY63Qx46EjELU=;
-        b=d80tYEU1W04CKKWdsos6rhGg4osi/QPYftRywlSNu4khkBz/5WXRNf8l5Vd3iWF+Gv
-         Uxds6jE9tkZYBFRGBLiokEzZdTR17lHAhn+CFSGz55nV8CJWwncU71LMZglT6wmh6xn5
-         IudyS8oIraWJgI0pp1iRknlrZTvnvaGYq3oDU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=khl3Hrvk8rq8fxGD/fhIeUFy4ojme4kY63Qx46EjELU=;
-        b=J0S+1Mg7SGfAmNSbFO1j9HDD6ws4Czz3GM9azwoCKh9y0louFPukkt1+8cJjWhzO6f
-         pAvvr7ErGKpw8U1lt5y/jDuuS6dbdDLbLlev/CA/X3O6unVsvT+52jit3C09jwvFZ1Me
-         Mp6Puv0PQ2WPFfA7Jol7+HnqR6Kw2cfWFBnLccRq9gS2gKVYkBbCaO+bHlQ5UKiSkGoB
-         EkNFqBXbzn69oL3ch+RUilPg0Ypx0e4OznyM8YElGWSnh1h8xO8p/iESjWc6UwLJXhEQ
-         n8smfpf4UKgZ53RP2v9cjQ+9aNf7Ahjrl0NQsq/+a6jm2viz9G0OxB+w35Okf7NXQ01j
-         mu9A==
-X-Gm-Message-State: AOAM531dIzMNru/WUcSzNVmuYbowSR5lNh+zCgH7JMktUF29JPbBfsyf
-        mZ/9pHBSew9ATKVzB+7MmGS63REFs3lhE5D4k3yF58c8Eag2HHkGYbCa1i/srF2JuDuwPuz+ONv
-        kiiOy7CMohk9fnzM2bzzM1TwxMArwIfsp6UJkFoEOiLk6A8Ga+mtJZZIHyoqrF9J8lTTLxH4QvZ
-        qeEWEkG2Oj
-X-Google-Smtp-Source: ABdhPJxHUw9o4P3kqRavll7Xts/xAiVXraS21MupFu3lwYae8HX4ufPOXtnA9eACS3wlOIG6YiqWIQ==
-X-Received: by 2002:a17:90a:5d12:: with SMTP id s18mr5514787pji.35.1629274535002;
-        Wed, 18 Aug 2021 01:15:35 -0700 (PDT)
-Received: from drv-bst-rhel8.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id p34sm5100773pfh.172.2021.08.18.01.15.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Aug 2021 01:15:34 -0700 (PDT)
-From:   Kashyap Desai <kashyap.desai@broadcom.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        mpi3mr-linuxdrv.pdl@broadcom.com,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        sathya.prakash@broadcom.com, thenzl@redhat.com
-Subject: [PATCH] mpi3mr: setup irqs in resume path
-Date:   Wed, 18 Aug 2021 13:46:19 +0530
-Message-Id: <20210818081619.1274384-1-kashyap.desai@broadcom.com>
-X-Mailer: git-send-email 2.18.1
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ee2a9505c9d10960"
+        id S239728AbhHRIRv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 04:17:51 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:57645 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239745AbhHRIRu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Aug 2021 04:17:50 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1629274636;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=tVO2lZFNLdS73H60VcqwVbfOYv/lcIXIIWFCxSmK+q0=;
+        b=gWoKFgCIOgT0acYNZuNzTobF2mZ+V4s11Mh50BBWiAPNPPsd90w9ZrkSfSb95RTNa07mqm
+        iJG1wqPOvLMkWjuW/Zx82488JhFomdvqjn7yunR0VuF09yQnj3pR7ng9Mf3968WjTdFgwG
+        oheXtPtFSWUv0n/2ZV95YP+xBUR5l1Y=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-207-MRvv2tYVPXyWH_F6sWfRHw-1; Wed, 18 Aug 2021 04:17:14 -0400
+X-MC-Unique: MRvv2tYVPXyWH_F6sWfRHw-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 11A0F10CE7A8;
+        Wed, 18 Aug 2021 08:17:13 +0000 (UTC)
+Received: from T590 (ovpn-8-40.pek2.redhat.com [10.72.8.40])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 54ED860C17;
+        Wed, 18 Aug 2021 08:17:02 +0000 (UTC)
+Date:   Wed, 18 Aug 2021 16:16:57 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
+        hare@suse.de
+Subject: Re: [PATCH v2 10/11] blk-mq: Use shared tags for shared sbitmap
+ support
+Message-ID: <YRzB+aCVVSP+OmE4@T590>
+References: <1628519378-211232-1-git-send-email-john.garry@huawei.com>
+ <1628519378-211232-11-git-send-email-john.garry@huawei.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1628519378-211232-11-git-send-email-john.garry@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ee2a9505c9d10960
+On Mon, Aug 09, 2021 at 10:29:37PM +0800, John Garry wrote:
+> Currently we use separate sbitmap pairs and active_queues atomic_t for
+> shared sbitmap support.
+> 
+> However a full set of static requests are used per HW queue, which is
+> quite wasteful, considering that the total number of requests usable at
+> any given time across all HW queues is limited by the shared sbitmap depth.
+> 
+> As such, it is considerably more memory efficient in the case of shared
+> sbitmap to allocate a set of static rqs per tag set or request queue, and
+> not per HW queue.
+> 
+> So replace the sbitmap pairs and active_queues atomic_t with a shared
+> tags per tagset and request queue.
 
-Issue description - Driver is not setting up irqs in resume path.
-Eventually, hibernation path is broken and controller will not be
-operational after system is resumed from hibernation.
+This idea looks good and the current implementation is simplified a bit
+too.
 
-Fix - Driver should setup irqs in case of probe and hibernation.
+> 
+> Continue to use term "shared sbitmap" for now, as the meaning is known.
 
-Cc: sathya.prakash@broadcom.com
-Cc: thenzl@redhat.com
-Reported-by: Marco Patalano <mpatalan@redhat.com>
-Tested-by: Marco Patalano <mpatalan@redhat.com>
-Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+I guess shared tags is better.
 
----
- drivers/scsi/mpi3mr/mpi3mr.h    | 21 ++++++++++++++++---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 37 ++++++++++++++++++---------------
- drivers/scsi/mpi3mr/mpi3mr_os.c | 13 ++++++------
- 3 files changed, 45 insertions(+), 26 deletions(-)
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  block/blk-mq-sched.c   | 77 ++++++++++++++++++++-----------------
+>  block/blk-mq-tag.c     | 65 ++++++++++++-------------------
+>  block/blk-mq-tag.h     |  4 +-
+>  block/blk-mq.c         | 86 +++++++++++++++++++++++++-----------------
+>  block/blk-mq.h         |  8 ++--
+>  include/linux/blk-mq.h | 13 +++----
+>  include/linux/blkdev.h |  3 +-
+>  7 files changed, 131 insertions(+), 125 deletions(-)
+> 
+> diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+> index ac0408ebcd47..1101a2e4da9a 100644
+> --- a/block/blk-mq-sched.c
+> +++ b/block/blk-mq-sched.c
+> @@ -522,14 +522,19 @@ static int blk_mq_sched_alloc_map_and_request(struct request_queue *q,
+>  	struct blk_mq_tag_set *set = q->tag_set;
+>  	int ret;
+>  
+> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
+> +		hctx->sched_tags = q->shared_sbitmap_tags;
+> +		return 0;
+> +	}
+> +
+>  	hctx->sched_tags = blk_mq_alloc_rq_map(set, hctx_idx, q->nr_requests,
+> -					       set->reserved_tags, set->flags);
+> +					       set->reserved_tags);
+>  	if (!hctx->sched_tags)
+>  		return -ENOMEM;
+>  
+>  	ret = blk_mq_alloc_rqs(set, hctx->sched_tags, hctx_idx, q->nr_requests);
+>  	if (ret) {
+> -		blk_mq_free_rq_map(hctx->sched_tags, set->flags);
+> +		blk_mq_free_rq_map(hctx->sched_tags);
+>  		hctx->sched_tags = NULL;
+>  	}
+>  
+> @@ -544,35 +549,39 @@ static void blk_mq_sched_tags_teardown(struct request_queue *q)
+>  
+>  	queue_for_each_hw_ctx(q, hctx, i) {
+>  		if (hctx->sched_tags) {
+> -			blk_mq_free_rq_map(hctx->sched_tags, hctx->flags);
+> +			if (!blk_mq_is_sbitmap_shared(q->tag_set->flags))
+> +				blk_mq_free_rq_map(hctx->sched_tags);
+>  			hctx->sched_tags = NULL;
+>  		}
+>  	}
+>  }
+>  
+> +static void blk_mq_exit_sched_shared_sbitmap(struct request_queue *queue)
+> +{
+> +	blk_mq_free_rq_map(queue->shared_sbitmap_tags);
+> +	queue->shared_sbitmap_tags = NULL;
+> +}
+> +
+>  static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
+>  {
+>  	struct blk_mq_tag_set *set = queue->tag_set;
+> -	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags);
+> -	struct blk_mq_hw_ctx *hctx;
+> -	int ret, i;
+> +	struct blk_mq_tags *tags;
+> +	int ret;
+>  
+>  	/*
+>  	 * Set initial depth at max so that we don't need to reallocate for
+>  	 * updating nr_requests.
+>  	 */
+> -	ret = blk_mq_init_bitmaps(&queue->sched_bitmap_tags,
+> -				  &queue->sched_breserved_tags,
+> -				  MAX_SCHED_RQ, set->reserved_tags,
+> -				  set->numa_node, alloc_policy);
+> -	if (ret)
+> -		return ret;
+> +	tags = queue->shared_sbitmap_tags = blk_mq_alloc_rq_map(set, 0,
+> +					  set->queue_depth,
+> +					  set->reserved_tags);
+> +	if (!queue->shared_sbitmap_tags)
+> +		return -ENOMEM;
+>  
+> -	queue_for_each_hw_ctx(queue, hctx, i) {
+> -		hctx->sched_tags->bitmap_tags =
+> -					&queue->sched_bitmap_tags;
+> -		hctx->sched_tags->breserved_tags =
+> -					&queue->sched_breserved_tags;
+> +	ret = blk_mq_alloc_rqs(set, tags, 0, set->queue_depth);
+> +	if (ret) {
+> +		blk_mq_exit_sched_shared_sbitmap(queue);
+> +		return ret;
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 6f5dc9e78553..3958841108aa 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -52,7 +52,7 @@ extern spinlock_t mrioc_list_lock;
- extern struct list_head mrioc_list;
- extern int prot_mask;
- 
--#define MPI3MR_DRIVER_VERSION	"00.255.45.01"
-+#define MPI3MR_DRIVER_VERSION	"00.255.45.01-Dev01"
- #define MPI3MR_DRIVER_RELDATE	"12-December-2020"
- 
- #define MPI3MR_DRIVER_NAME	"mpi3mr"
-@@ -183,6 +183,20 @@ enum mpi3mr_iocstate {
- 	MRIOC_STATE_UNRECOVERABLE,
- };
- 
-+/* Init type definitions */
-+enum mpi3mr_init_type {
-+	MPI3MR_IT_INIT = 0,
-+	MPI3MR_IT_RESET,
-+	MPI3MR_IT_RESUME,
-+};
-+
-+/* Cleanup reason definitions */
-+enum mpi3mr_cleanup_reason {
-+	MPI3MR_COMPLETE_CLEANUP = 0,
-+	MPI3MR_REINIT_FAILURE,
-+	MPI3MR_SUSPEND,
-+};
-+
- /* Reset reason code definitions*/
- enum mpi3mr_reset_reason {
- 	MPI3MR_RESET_FROM_BRINGUP = 1,
-@@ -855,8 +869,8 @@ struct delayed_dev_rmhs_node {
- 
- int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc);
- void mpi3mr_cleanup_resources(struct mpi3mr_ioc *mrioc);
--int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init);
--void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init);
-+int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type);
-+void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 reason);
- int mpi3mr_issue_port_enable(struct mpi3mr_ioc *mrioc, u8 async);
- int mpi3mr_admin_request_post(struct mpi3mr_ioc *mrioc, void *admin_req,
- u16 admin_req_sz, u8 ignore_reset);
-@@ -872,6 +886,7 @@ void *mpi3mr_get_reply_virt_addr(struct mpi3mr_ioc *mrioc,
- void mpi3mr_repost_sense_buf(struct mpi3mr_ioc *mrioc,
- 				     u64 sense_buf_dma);
- 
-+void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc);
- void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
- 			     struct mpi3_event_notification_reply *event_reply);
- void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 9eceafca59bc..551edeac1040 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -3206,7 +3206,7 @@ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc)
- /**
-  * mpi3mr_init_ioc - Initialize the controller
-  * @mrioc: Adapter instance reference
-- * @re_init: Flag to indicate is this fresh init or re-init
-+ * @init_type: Flag to indicate is the init_type
-  *
-  * This the controller initialization routine, executed either
-  * after soft reset or from pci probe callback.
-@@ -3219,7 +3219,7 @@ int mpi3mr_setup_resources(struct mpi3mr_ioc *mrioc)
-  *
-  * Return: 0 on success and non-zero on failure.
-  */
--int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
-+int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 init_type)
- {
- 	int retval = 0;
- 	enum mpi3mr_iocstate ioc_state;
-@@ -3230,7 +3230,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 
- 	mrioc->irqpoll_sleep = MPI3MR_IRQ_POLL_SLEEP;
- 	mrioc->change_count = 0;
--	if (!re_init) {
-+	if (init_type == MPI3MR_IT_INIT) {
- 		mrioc->cpu_count = num_online_cpus();
- 		retval = mpi3mr_setup_resources(mrioc);
- 		if (retval) {
-@@ -3315,7 +3315,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		goto out_failed;
- 	}
- 
--	if (!re_init) {
-+	if (init_type != MPI3MR_IT_RESET) {
- 		retval = mpi3mr_setup_isr(mrioc, 1);
- 		if (retval) {
- 			ioc_err(mrioc, "Failed to setup ISR error %d\n",
-@@ -3333,7 +3333,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 	}
- 
- 	mpi3mr_process_factsdata(mrioc, &facts_data);
--	if (!re_init) {
-+	if (init_type == MPI3MR_IT_INIT) {
- 		retval = mpi3mr_check_reset_dma_mask(mrioc);
- 		if (retval) {
- 			ioc_err(mrioc, "Resetting dma mask failed %d\n",
-@@ -3352,7 +3352,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		goto out_failed;
- 	}
- 
--	if (!re_init) {
-+	if (init_type == MPI3MR_IT_INIT) {
- 		retval = mpi3mr_alloc_chain_bufs(mrioc);
- 		if (retval) {
- 			ioc_err(mrioc, "Failed to allocated chain buffers %d\n",
-@@ -3375,7 +3375,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 	writel(mrioc->sbq_host_index,
- 	    &mrioc->sysif_regs->sense_buffer_free_host_index);
- 
--	if (!re_init)  {
-+	if (init_type != MPI3MR_IT_RESET) {
- 		retval = mpi3mr_setup_isr(mrioc, 0);
- 		if (retval) {
- 			ioc_err(mrioc, "Failed to re-setup ISR, error %d\n",
-@@ -3391,7 +3391,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		goto out_failed;
- 	}
- 
--	if (re_init &&
-+	if ((init_type != MPI3MR_IT_INIT) &&
- 	    (mrioc->shost->nr_hw_queues > mrioc->num_op_reply_q)) {
- 		retval = -1;
- 		ioc_err(mrioc,
-@@ -3423,7 +3423,7 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 		goto out_failed;
- 	}
- 
--	if (re_init) {
-+	if (init_type != MPI3MR_IT_INIT) {
- 		ioc_info(mrioc, "Issuing Port Enable\n");
- 		retval = mpi3mr_issue_port_enable(mrioc, 0);
- 		if (retval) {
-@@ -3435,7 +3435,10 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 	return retval;
- 
- out_failed:
--	mpi3mr_cleanup_ioc(mrioc, re_init);
-+	if (init_type == MPI3MR_IT_INIT)
-+		mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
-+	else
-+		mpi3mr_cleanup_ioc(mrioc, MPI3MR_REINIT_FAILURE);
- out_nocleanup:
- 	return retval;
- }
-@@ -3496,7 +3499,7 @@ static void mpi3mr_memset_op_req_q_buffers(struct mpi3mr_ioc *mrioc, u16 qidx)
-  *
-  * Return: Nothing.
-  */
--static void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
-+void mpi3mr_memset_buffers(struct mpi3mr_ioc *mrioc)
- {
- 	u16 i;
- 
-@@ -3711,7 +3714,7 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
- /**
-  * mpi3mr_cleanup_ioc - Cleanup controller
-  * @mrioc: Adapter instance reference
-- * @re_init: Cleanup due to a reinit or not
-+ * @reason: Cleanup reason
-  *
-  * controller cleanup handler, Message unit reset or soft reset
-  * and shutdown notification is issued to the controller and the
-@@ -3719,11 +3722,11 @@ static void mpi3mr_issue_ioc_shutdown(struct mpi3mr_ioc *mrioc)
-  *
-  * Return: Nothing.
-  */
--void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
-+void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 reason)
- {
- 	enum mpi3mr_iocstate ioc_state;
- 
--	if (!re_init)
-+	if (reason == MPI3MR_COMPLETE_CLEANUP)
- 		mpi3mr_stop_watchdog(mrioc);
- 
- 	mpi3mr_ioc_disable_intr(mrioc);
-@@ -3738,11 +3741,11 @@ void mpi3mr_cleanup_ioc(struct mpi3mr_ioc *mrioc, u8 re_init)
- 			    MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET,
- 			    MPI3MR_RESET_FROM_MUR_FAILURE);
- 
--		if (!re_init)
-+		if (reason != MPI3MR_REINIT_FAILURE)
- 			mpi3mr_issue_ioc_shutdown(mrioc);
- 	}
- 
--	if (!re_init) {
-+	if (reason == MPI3MR_COMPLETE_CLEANUP) {
- 		mpi3mr_free_mem(mrioc);
- 		mpi3mr_cleanup_resources(mrioc);
- 	}
-@@ -3924,7 +3927,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	mpi3mr_flush_host_io(mrioc);
- 	mpi3mr_invalidate_devhandles(mrioc);
- 	mpi3mr_memset_buffers(mrioc);
--	retval = mpi3mr_init_ioc(mrioc, 1);
-+	retval = mpi3mr_init_ioc(mrioc, MPI3MR_IT_RESET);
- 	if (retval) {
- 		pr_err(IOCNAME "reinit after soft reset failed: reason %d\n",
- 		    mrioc->name, reset_reason);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 24ac7ddec749..b092fc52d884 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3795,7 +3795,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	}
- 
- 	mrioc->is_driver_loading = 1;
--	if (mpi3mr_init_ioc(mrioc, 0)) {
-+	if (mpi3mr_init_ioc(mrioc, MPI3MR_IT_INIT)) {
- 		ioc_err(mrioc, "failure at %s:%d/%s()!\n",
- 		    __FILE__, __LINE__, __func__);
- 		retval = -ENODEV;
-@@ -3818,7 +3818,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	return retval;
- 
- addhost_failed:
--	mpi3mr_cleanup_ioc(mrioc, 0);
-+	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
- out_iocinit_failed:
- 	destroy_workqueue(mrioc->fwevt_worker_thread);
- out_fwevtthread_failed:
-@@ -3870,7 +3870,7 @@ static void mpi3mr_remove(struct pci_dev *pdev)
- 		mpi3mr_tgtdev_del_from_list(mrioc, tgtdev);
- 		mpi3mr_tgtdev_put(tgtdev);
- 	}
--	mpi3mr_cleanup_ioc(mrioc, 0);
-+	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
- 
- 	spin_lock(&mrioc_list_lock);
- 	list_del(&mrioc->list);
-@@ -3910,7 +3910,7 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
- 	spin_unlock_irqrestore(&mrioc->fwevt_lock, flags);
- 	if (wq)
- 		destroy_workqueue(wq);
--	mpi3mr_cleanup_ioc(mrioc, 0);
-+	mpi3mr_cleanup_ioc(mrioc, MPI3MR_COMPLETE_CLEANUP);
- }
- 
- #ifdef CONFIG_PM
-@@ -3940,7 +3940,7 @@ static int mpi3mr_suspend(struct pci_dev *pdev, pm_message_t state)
- 	mpi3mr_cleanup_fwevt_list(mrioc);
- 	scsi_block_requests(shost);
- 	mpi3mr_stop_watchdog(mrioc);
--	mpi3mr_cleanup_ioc(mrioc, 1);
-+	mpi3mr_cleanup_ioc(mrioc, MPI3MR_SUSPEND);
- 
- 	device_state = pci_choose_state(pdev, state);
- 	ioc_info(mrioc, "pdev=0x%p, slot=%s, entering operating state [D%d]\n",
-@@ -3988,7 +3988,8 @@ static int mpi3mr_resume(struct pci_dev *pdev)
- 	}
- 
- 	mrioc->stop_drv_processing = 0;
--	mpi3mr_init_ioc(mrioc, 1);
-+	mpi3mr_memset_buffers(mrioc);
-+	mpi3mr_init_ioc(mrioc, MPI3MR_IT_RESUME);
- 	scsi_unblock_requests(shost);
- 	mpi3mr_start_watchdog(mrioc);
- 
+There are two such patterns for allocate rq map and request pool
+together, please put them into one helper(such as blk_mq_alloc_map_and_rqs)
+which can return the allocated tags and handle failure inline. Also we may
+convert current users into this helper.
+
+>  	}
+>  
+>  	blk_mq_tag_update_sched_shared_sbitmap(queue);
+> @@ -580,12 +589,6 @@ static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
+>  	return 0;
+>  }
+>  
+> -static void blk_mq_exit_sched_shared_sbitmap(struct request_queue *queue)
+> -{
+> -	sbitmap_queue_free(&queue->sched_bitmap_tags);
+> -	sbitmap_queue_free(&queue->sched_breserved_tags);
+> -}
+> -
+>  int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>  {
+>  	struct blk_mq_hw_ctx *hctx;
+> @@ -607,21 +610,21 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>  	q->nr_requests = 2 * min_t(unsigned int, q->tag_set->queue_depth,
+>  				   BLKDEV_DEFAULT_RQ);
+>  
+> -	queue_for_each_hw_ctx(q, hctx, i) {
+> -		ret = blk_mq_sched_alloc_map_and_request(q, hctx, i);
+> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
+> +		ret = blk_mq_init_sched_shared_sbitmap(q);
+>  		if (ret)
+> -			goto err_free_map_and_request;
+> +			return ret;
+>  	}
+>  
+> -	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
+> -		ret = blk_mq_init_sched_shared_sbitmap(q);
+> +	queue_for_each_hw_ctx(q, hctx, i) {
+> +		ret = blk_mq_sched_alloc_map_and_request(q, hctx, i);
+>  		if (ret)
+>  			goto err_free_map_and_request;
+>  	}
+>  
+>  	ret = e->ops.init_sched(q, e);
+>  	if (ret)
+> -		goto err_free_sbitmap;
+> +		goto err_free_map_and_request;
+>  
+>  	blk_mq_debugfs_register_sched(q);
+>  
+> @@ -641,12 +644,12 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+>  
+>  	return 0;
+>  
+> -err_free_sbitmap:
+> -	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
+> -		blk_mq_exit_sched_shared_sbitmap(q);
+>  err_free_map_and_request:
+>  	blk_mq_sched_free_requests(q);
+>  	blk_mq_sched_tags_teardown(q);
+> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
+> +		blk_mq_exit_sched_shared_sbitmap(q);
+> +
+>  	q->elevator = NULL;
+>  	return ret;
+>  }
+> @@ -660,9 +663,13 @@ void blk_mq_sched_free_requests(struct request_queue *q)
+>  	struct blk_mq_hw_ctx *hctx;
+>  	int i;
+>  
+> -	queue_for_each_hw_ctx(q, hctx, i) {
+> -		if (hctx->sched_tags)
+> -			blk_mq_free_rqs(q->tag_set, hctx->sched_tags, i);
+> +	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
+> +		blk_mq_free_rqs(q->tag_set, q->shared_sbitmap_tags, 0);
+> +	} else {
+> +		queue_for_each_hw_ctx(q, hctx, i) {
+> +			if (hctx->sched_tags)
+> +				blk_mq_free_rqs(q->tag_set, hctx->sched_tags, i);
+> +		}
+>  	}
+>  }
+>  
+> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+> index 5f06ad6efc8f..e97bbf477b96 100644
+> --- a/block/blk-mq-tag.c
+> +++ b/block/blk-mq-tag.c
+> @@ -27,10 +27,11 @@ bool __blk_mq_tag_busy(struct blk_mq_hw_ctx *hctx)
+>  	if (blk_mq_is_sbitmap_shared(hctx->flags)) {
+>  		struct request_queue *q = hctx->queue;
+>  		struct blk_mq_tag_set *set = q->tag_set;
+> +		struct blk_mq_tags *tags = set->shared_sbitmap_tags;
+>  
+>  		if (!test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags) &&
+>  		    !test_and_set_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
+> -			atomic_inc(&set->active_queues_shared_sbitmap);
+> +			atomic_inc(&tags->active_queues);
+>  	} else {
+>  		if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state) &&
+>  		    !test_and_set_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
+> @@ -61,10 +62,12 @@ void __blk_mq_tag_idle(struct blk_mq_hw_ctx *hctx)
+>  	struct blk_mq_tag_set *set = q->tag_set;
+>  
+>  	if (blk_mq_is_sbitmap_shared(hctx->flags)) {
+> +		struct blk_mq_tags *tags = set->shared_sbitmap_tags;
+> +
+>  		if (!test_and_clear_bit(QUEUE_FLAG_HCTX_ACTIVE,
+>  					&q->queue_flags))
+>  			return;
+> -		atomic_dec(&set->active_queues_shared_sbitmap);
+> +		atomic_dec(&tags->active_queues);
+>  	} else {
+>  		if (!test_and_clear_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
+>  			return;
+> @@ -510,38 +513,16 @@ static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
+>  	return 0;
+>  }
+>  
+> -int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set)
+> -{
+> -	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags);
+> -	int i, ret;
+> -
+> -	ret = blk_mq_init_bitmaps(&set->__bitmap_tags, &set->__breserved_tags,
+> -				  set->queue_depth, set->reserved_tags,
+> -				  set->numa_node, alloc_policy);
+> -	if (ret)
+> -		return ret;
+> -
+> -	for (i = 0; i < set->nr_hw_queues; i++) {
+> -		struct blk_mq_tags *tags = set->tags[i];
+> -
+> -		tags->bitmap_tags = &set->__bitmap_tags;
+> -		tags->breserved_tags = &set->__breserved_tags;
+> -	}
+> -
+> -	return 0;
+> -}
+> -
+>  void blk_mq_exit_shared_sbitmap(struct blk_mq_tag_set *set)
+>  {
+> -	sbitmap_queue_free(&set->__bitmap_tags);
+> -	sbitmap_queue_free(&set->__breserved_tags);
+> +	blk_mq_free_rq_map(set->shared_sbitmap_tags);
+> +	set->shared_sbitmap_tags = NULL;
+>  }
+>  
+>  struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
+>  				     unsigned int reserved_tags,
+> -				     int node, unsigned int flags)
+> +				     int node, int alloc_policy)
+>  {
+> -	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(flags);
+>  	struct blk_mq_tags *tags;
+>  
+>  	if (total_tags > BLK_MQ_TAG_MAX) {
+> @@ -557,9 +538,6 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
+>  	tags->nr_reserved_tags = reserved_tags;
+>  	spin_lock_init(&tags->lock);
+>  
+> -	if (blk_mq_is_sbitmap_shared(flags))
+> -		return tags;
+> -
+>  	if (blk_mq_init_bitmap_tags(tags, node, alloc_policy) < 0) {
+>  		kfree(tags);
+>  		return NULL;
+> @@ -567,12 +545,10 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
+>  	return tags;
+>  }
+>  
+> -void blk_mq_free_tags(struct blk_mq_tags *tags, unsigned int flags)
+> +void blk_mq_free_tags(struct blk_mq_tags *tags)
+>  {
+> -	if (!blk_mq_is_sbitmap_shared(flags)) {
+> -		sbitmap_queue_free(tags->bitmap_tags);
+> -		sbitmap_queue_free(tags->breserved_tags);
+> -	}
+> +	sbitmap_queue_free(tags->bitmap_tags);
+> +	sbitmap_queue_free(tags->breserved_tags);
+>  	kfree(tags);
+>  }
+>  
+> @@ -604,18 +580,25 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
+>  		if (tdepth > MAX_SCHED_RQ)
+>  			return -EINVAL;
+>  
+> +		if (blk_mq_is_sbitmap_shared(set->flags)) {
+> +			/* No point in allowing this to happen */
+> +			if (tdepth > set->queue_depth)
+> +				return -EINVAL;
+> +			return 0;
+> +		}
+
+The above looks wrong, it isn't unusual to see small queue depth
+hardware meantime we often have scheduler queue depth of 2 * set->queue_depth.
+
+> +
+>  		new = blk_mq_alloc_rq_map(set, hctx->queue_num, tdepth,
+> -				tags->nr_reserved_tags, set->flags);
+> +				tags->nr_reserved_tags);
+>  		if (!new)
+>  			return -ENOMEM;
+>  		ret = blk_mq_alloc_rqs(set, new, hctx->queue_num, tdepth);
+>  		if (ret) {
+> -			blk_mq_free_rq_map(new, set->flags);
+> +			blk_mq_free_rq_map(new);
+>  			return -ENOMEM;
+>  		}
+>  
+>  		blk_mq_free_rqs(set, *tagsptr, hctx->queue_num);
+> -		blk_mq_free_rq_map(*tagsptr, set->flags);
+> +		blk_mq_free_rq_map(*tagsptr);
+>  		*tagsptr = new;
+>  	} else {
+>  		/*
+> @@ -631,12 +614,14 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
+>  
+>  void blk_mq_tag_resize_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int size)
+>  {
+> -	sbitmap_queue_resize(&set->__bitmap_tags, size - set->reserved_tags);
+> +	struct blk_mq_tags *tags = set->shared_sbitmap_tags;
+> +
+> +	sbitmap_queue_resize(&tags->__bitmap_tags, size - set->reserved_tags);
+>  }
+>  
+>  void blk_mq_tag_update_sched_shared_sbitmap(struct request_queue *q)
+>  {
+> -	sbitmap_queue_resize(&q->sched_bitmap_tags,
+> +	sbitmap_queue_resize(q->shared_sbitmap_tags->bitmap_tags,
+>  			     q->nr_requests - q->tag_set->reserved_tags);
+>  }
+>  
+> diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
+> index 88f3c6485543..c9fc52ee07c4 100644
+> --- a/block/blk-mq-tag.h
+> +++ b/block/blk-mq-tag.h
+> @@ -30,8 +30,8 @@ struct blk_mq_tags {
+>  
+>  extern struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
+>  					unsigned int reserved_tags,
+> -					int node, unsigned int flags);
+> -extern void blk_mq_free_tags(struct blk_mq_tags *tags, unsigned int flags);
+> +					int node, int alloc_policy);
+> +extern void blk_mq_free_tags(struct blk_mq_tags *tags);
+>  extern int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
+>  			       struct sbitmap_queue *breserved_tags,
+>  			       unsigned int queue_depth,
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 4d6723cfa582..d3dd5fab3426 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -2348,6 +2348,9 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+>  	struct blk_mq_tags *drv_tags;
+>  	struct page *page;
+>  
+> +	if (blk_mq_is_sbitmap_shared(set->flags))
+> +		drv_tags = set->shared_sbitmap_tags;
+> +	else
+>  		drv_tags = set->tags[hctx_idx];
+
+Here I guess you need to avoid to double ->exit_request()?
+
+>  
+>  	if (tags->static_rqs && set->ops->exit_request) {
+> @@ -2377,21 +2380,20 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+>  	}
+>  }
+>  
+> -void blk_mq_free_rq_map(struct blk_mq_tags *tags, unsigned int flags)
+> +void blk_mq_free_rq_map(struct blk_mq_tags *tags)
+>  {
+>  	kfree(tags->rqs);
+>  	tags->rqs = NULL;
+>  	kfree(tags->static_rqs);
+>  	tags->static_rqs = NULL;
+>  
+> -	blk_mq_free_tags(tags, flags);
+> +	blk_mq_free_tags(tags);
+>  }
+>  
+>  struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
+>  					unsigned int hctx_idx,
+>  					unsigned int nr_tags,
+> -					unsigned int reserved_tags,
+> -					unsigned int flags)
+> +					unsigned int reserved_tags)
+>  {
+>  	struct blk_mq_tags *tags;
+>  	int node;
+> @@ -2400,7 +2402,8 @@ struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
+>  	if (node == NUMA_NO_NODE)
+>  		node = set->numa_node;
+>  
+> -	tags = blk_mq_init_tags(nr_tags, reserved_tags, node, flags);
+> +	tags = blk_mq_init_tags(nr_tags, reserved_tags, node,
+> +				BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags));
+>  	if (!tags)
+>  		return NULL;
+>  
+> @@ -2408,7 +2411,7 @@ struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
+>  				 GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
+>  				 node);
+>  	if (!tags->rqs) {
+> -		blk_mq_free_tags(tags, flags);
+> +		blk_mq_free_tags(tags);
+>  		return NULL;
+>  	}
+>  
+> @@ -2417,7 +2420,7 @@ struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
+>  					node);
+>  	if (!tags->static_rqs) {
+>  		kfree(tags->rqs);
+> -		blk_mq_free_tags(tags, flags);
+> +		blk_mq_free_tags(tags);
+>  		return NULL;
+>  	}
+>  
+> @@ -2859,8 +2862,14 @@ static bool __blk_mq_alloc_map_and_request(struct blk_mq_tag_set *set,
+>  	unsigned int flags = set->flags;
+>  	int ret = 0;
+>  
+> +	if (blk_mq_is_sbitmap_shared(flags)) {
+> +		set->tags[hctx_idx] = set->shared_sbitmap_tags;
+> +
+> +		return true;
+> +	}
+> +
+>  	set->tags[hctx_idx] = blk_mq_alloc_rq_map(set, hctx_idx,
+> -					set->queue_depth, set->reserved_tags, flags);
+> +					set->queue_depth, set->reserved_tags);
+>  	if (!set->tags[hctx_idx])
+>  		return false;
+>  
+> @@ -2869,7 +2878,7 @@ static bool __blk_mq_alloc_map_and_request(struct blk_mq_tag_set *set,
+>  	if (!ret)
+>  		return true;
+>  
+> -	blk_mq_free_rq_map(set->tags[hctx_idx], flags);
+> +	blk_mq_free_rq_map(set->tags[hctx_idx]);
+>  	set->tags[hctx_idx] = NULL;
+>  	return false;
+>  }
+> @@ -2877,11 +2886,11 @@ static bool __blk_mq_alloc_map_and_request(struct blk_mq_tag_set *set,
+>  static void blk_mq_free_map_and_requests(struct blk_mq_tag_set *set,
+>  					 unsigned int hctx_idx)
+>  {
+> -	unsigned int flags = set->flags;
+> -
+>  	if (set->tags && set->tags[hctx_idx]) {
+> -		blk_mq_free_rqs(set, set->tags[hctx_idx], hctx_idx);
+> -		blk_mq_free_rq_map(set->tags[hctx_idx], flags);
+> +		if (!blk_mq_is_sbitmap_shared(set->flags)) {
+
+I remember you hate negative check, :-)
+
+> +			blk_mq_free_rqs(set, set->tags[hctx_idx], hctx_idx);
+> +			blk_mq_free_rq_map(set->tags[hctx_idx]);
+
+We can add one helper of blk_mq_free_map_and_rqs(), and there seems
+several such pattern.
+
+> +		}
+>  		set->tags[hctx_idx] = NULL;
+>  	}
+>  }
+> @@ -3348,6 +3357,21 @@ static int __blk_mq_alloc_rq_maps(struct blk_mq_tag_set *set)
+>  {
+>  	int i;
+>  
+> +	if (blk_mq_is_sbitmap_shared(set->flags)) {
+> +		int ret;
+> +
+> +		set->shared_sbitmap_tags = blk_mq_alloc_rq_map(set, 0,
+> +						  set->queue_depth,
+> +						  set->reserved_tags);
+> +		if (!set->shared_sbitmap_tags)
+> +			return -ENOMEM;
+> +
+> +		ret = blk_mq_alloc_rqs(set, set->shared_sbitmap_tags, 0,
+> +				       set->queue_depth);
+> +		if (ret)
+> +			goto out_free_sbitmap_tags;
+> +	}
+> +
+>  	for (i = 0; i < set->nr_hw_queues; i++) {
+>  		if (!__blk_mq_alloc_map_and_request(set, i))
+>  			goto out_unwind;
+> @@ -3359,6 +3383,11 @@ static int __blk_mq_alloc_rq_maps(struct blk_mq_tag_set *set)
+>  out_unwind:
+>  	while (--i >= 0)
+>  		blk_mq_free_map_and_requests(set, i);
+> +	if (blk_mq_is_sbitmap_shared(set->flags))
+> +		blk_mq_free_rqs(set, set->shared_sbitmap_tags, 0);
+> +out_free_sbitmap_tags:
+> +	if (blk_mq_is_sbitmap_shared(set->flags))
+> +		blk_mq_exit_shared_sbitmap(set);
+
+Once a helper of blk_mq_alloc_map_and_rqs() is added, the above failure
+handling can be simplified too.
+
+
 -- 
-2.18.1
+Ming
 
-
---000000000000ee2a9505c9d10960
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
-
-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
-P3lSxcw4Cg90iKHqfpwLnGNc9AGXHMxUCukpnAHRlivljilKHMx1ymb180BLmtF+ZLm6KrFLQWzB
-4KeiUOMtKM13wJrQubqTeZgB1XA+89jeLYlxagVsMyksdwIDAQABo4IB2zCCAdcwDgYDVR0PAQH/
-BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3VyZS5nbG9i
-YWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEGCCsGAQUF
-BzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
-MDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93d3cuZ2xv
-YmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6hjhodHRw
-Oi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNybDAlBgNV
-HREEHjAcgRprYXNoeWFwLmRlc2FpQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAf
-BgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUkTOZp9jXE3yPj4ieKeDT
-OiNyCtswDQYJKoZIhvcNAQELBQADggEBABG1KCh7cLjStywh4S37nKE1eE8KPyAxDzQCkhxYLBVj
-gnnhaLmEOayEucPAsM1hCRAm/vR3RQ27lMXBGveCHaq9RZkzTjGSbzr8adOGK3CluPrasNf5StX3
-GSk4HwCapA39BDUrhnc/qG5vHwLrgA1jwAvSy8e/vn4F4h+KPrPoFNd1OnCafedbuiEXTqTkn5Rk
-vZ2AOTcSbxvmyKBMb/iu1vn7AAoui0d8GYCPoz8shf2iWMSUXVYJAMrtRHVJr47J5jlopF5F2ghC
-MzNfx6QsmJhYiRByd8L9sUOjp/DMgkC6H93PyYpYMiBGapgNf6UMsLg/1kx5DATNwhPAJbkxggJt
-MIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYD
-VQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxwO04DXOeYbZtr
-4mAwDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOt08qNMHiwPVl5EoPH/jO92NQWk
-rcI+FX3ESKI0YXL+MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIx
-MDgxODA4MTUzNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsG
-CWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFl
-AwQCATANBgkqhkiG9w0BAQEFAASCAQBynB2kHKnLNJ+9ZDxRjUrcDOO13G5R6FoLHceW0AhQKPLz
-xGmMrzYtemQVDqxMfiBNryYSrhIgV94EQBQMIyg/nEEcjNyMIWSrr7weV/J2fkX8QtVhDWyqr1NR
-K2558YKCef8S0DKyeI2LDsHV+yr45Hbh4NAJPn5qP7uZ3criWMnX4ek53N/4/j5bbldR19pteJRE
-4XgzSuQ1WvjocSRaImG/Wzh4DPxfZSKKQOk0Vqv+Wtnwfh7yG9F8KigfJunKLA2W50qGektqwcIF
-w2GuSYLXaeISkKYOrgDKjerYoXdBGQAAMjqleMuC4YV+CvY/J8QjLPYzVJRoc3bfXBho
---000000000000ee2a9505c9d10960--
