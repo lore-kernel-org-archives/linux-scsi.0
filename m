@@ -2,106 +2,429 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0A74C4338F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 07:39:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ABDBC432BE
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:11:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D1D62606A5
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 07:39:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3555D6108E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 08:11:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239056AbhHRHjp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 03:39:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:40612 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239060AbhHRHjo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Aug 2021 03:39:44 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629272350;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LCsUAX7qCf8kQi+TyECU3+D4leV6a/JZLtzwwZWNnR0=;
-        b=At5iLHL3H69PTLlGYHqjTO01qpOhaDTzY8iH8Msq4C6ljDhLZBfQzEbr1IfXgUL7GToDay
-        QJ1rRwYopDrzZrFXKZMFNhENhQEt2q4H3UsjLV3QTw4LEJgLdippotYLmzvgnmWdRAdPAt
-        WtLqWuA563Vbwal39sHDbtysJtdVML8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-560-BTz8WkvsMZG-DzqPP69k4w-1; Wed, 18 Aug 2021 03:39:06 -0400
-X-MC-Unique: BTz8WkvsMZG-DzqPP69k4w-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1A2DA108BC7B;
-        Wed, 18 Aug 2021 07:39:05 +0000 (UTC)
-Received: from T590 (ovpn-8-40.pek2.redhat.com [10.72.8.40])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8CB3A5D9C6;
-        Wed, 18 Aug 2021 07:38:56 +0000 (UTC)
-Date:   Wed, 18 Aug 2021 15:38:51 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
-        hare@suse.de
-Subject: Re: [PATCH v2 08/11] blk-mq: Add blk_mq_ops.init_request_no_hctx()
-Message-ID: <YRy5C1s0HetZCHQ1@T590>
-References: <1628519378-211232-1-git-send-email-john.garry@huawei.com>
- <1628519378-211232-9-git-send-email-john.garry@huawei.com>
+        id S240375AbhHRIMD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 04:12:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45686 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S240028AbhHRIMB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 04:12:01 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BA3D7C0617AF
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:11:22 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id 28-20020a17090a031cb0290178dcd8a4d1so4803168pje.0
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 01:11:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=uKeBKUwE3LB2nCKXyKZoeLxITXnz1RP0s5Q/fll2nTo=;
+        b=Ud6o0IAPA7dYQt34AcmxuyISOXFvgs9qpRK6B9PeskadeGwtK6xcXGOUYvN7tBoLLn
+         c4s5qUZw1rPPummP4+YUYLufW+tVVTMzocUi5WwVTAc+JqsbPMtyqvkRbRJTUP/lwZbf
+         Wz/2Skr8LxfHmXbtK3gLSdNq9SRz8QC4VeeO8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=uKeBKUwE3LB2nCKXyKZoeLxITXnz1RP0s5Q/fll2nTo=;
+        b=TMoIq9X0j6nWnBj6hzan6+vPC9ipSm1PbeB/BIQ7nKLs/gzbrsmmmn4Q1KuNwYMCtI
+         e8djnXc1EoSS7d12ACf0c+g4QzREIjzLY9uocLHJqKHU9noHKt3ET3UC5/fXMMWp0P41
+         zwBAcQDkwqJfZRdAc1KQMHucD5jx32sVGJ+wUAb82SMgyrm3dS4AQIn9vzzoBW+8ttP0
+         DJMvWATXeaqaTLqyEB2ltgBS8Fi8U8XModVZ5V379KNDw2ITgubJFVrVAZC6rBZB09U5
+         PZ7WCXlDJDTXSVyQoL07PLhNqsblff1E5PhPitRcuCFSiLFX+DZ0693epy1YXUSWak8e
+         Y3Ug==
+X-Gm-Message-State: AOAM530RmJAB/t96l5r3lHDzzO4gtwjRAZul1rAJy/iqAGwpKvC3Xs8M
+        JKntIJ8AQ1ajQcTRKkEHweZT0w==
+X-Google-Smtp-Source: ABdhPJy6FYQc+6tJoX65EdY5eXrQDH5atPjJc2WIJdLF+T75mSr6aYZdYVEmN6MNWkli7PvjMOw21g==
+X-Received: by 2002:a17:90b:4504:: with SMTP id iu4mr8271766pjb.209.1629274282283;
+        Wed, 18 Aug 2021 01:11:22 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id 136sm6743988pge.77.2021.08.18.01.11.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 18 Aug 2021 01:11:21 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Fabio Aiuto <fabioaiuto83@gmail.com>,
+        Ross Schmidt <ross.schm.dev@gmail.com>,
+        Marco Cesati <marcocesati@gmail.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-staging@lists.linux.dev, clang-built-linux@googlegroups.com,
+        linux-hardening@vger.kernel.org
+Subject: [PATCH 3/5] treewide: Replace 0-element memcpy() destinations with flexible arrays
+Date:   Wed, 18 Aug 2021 01:11:16 -0700
+Message-Id: <20210818081118.1667663-4-keescook@chromium.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210818081118.1667663-1-keescook@chromium.org>
+References: <20210818081118.1667663-1-keescook@chromium.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1628519378-211232-9-git-send-email-john.garry@huawei.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9667; h=from:subject; bh=pWyGi50I3DoGigMPxMXfi4rXyJiQ6nw3FErUCMEg720=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhHMClyDZBWRqepCcCaaLFSu6A+jHJa/aMEBC9Xr26 EKKR8y2JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYRzApQAKCRCJcvTf3G3AJgFwD/ sFEBeEkAmPeaI817B7jt5/HbQSKJ9EuH/1R/X46YYmKKK2PDo76+cRm5w0hKBD8aQ+KxtqszuQy//2 tSbnMXP/DOnwelANH5FB4/toadqqQGw5socCzFtbQ/KEMOcwnfV7N/VKJMkwk0XsYHAJSFtS/CehL0 9xlNgi+L7QFaiWFtgWw57FWO2cJT877pYQrzp60hL6jS52Bl4hbsAnQuzMl56e1qY5cwCYufqeoky2 nXpo9Zl+FeMUKfJA/6tr5dKitWgFl46DIAiC8kjnStRSaTJwmdPOE+pqvf1ENr7o2gYUOsKU1CMSvI uPGUn7yyFh9CfgeqNWCIH1AuBBCYB8LDMsoGVBIy1fGVCKtwmuIvnrB5yIj98IL7dOCT2pty+319T5 Bns5x91HX+ruQKp0ZC9QzDCG+nA99CgAJMwa2pO69f8AFt1pfEilhpFItoBs1tsQVsU1PXQoOEPrLk /vPh0ZItZgXPNbd/eoe/jlVS1fKnjKJuLs3HFlh1SXDkauYUcnpo6+/mOKQP1JoSMGez07paP7RIWq TwlHslAUB5qHzHBATyyzbRcTN/IniFnAzxWTAgwhlYnvmnDFuTp58Sq2g9zHvmrezQgKtCetFnxBKj RbJbt8WLOaQZ4IbzgLYtTVO9Dw55Q3NhutRjAn+nrmJdyHLI6yEigrwwS8NQ==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 09, 2021 at 10:29:35PM +0800, John Garry wrote:
-> Add a variant of the init_request function which does not pass a hctx_idx
-> arg.
-> 
-> This is important for shared sbitmap support, as it needs to be ensured for
-> introducing shared static rqs that the LLDD cannot think that requests
-> are associated with a specific HW queue.
-> 
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> ---
->  block/blk-mq.c         | 15 ++++++++++-----
->  include/linux/blk-mq.h |  7 +++++++
->  2 files changed, 17 insertions(+), 5 deletions(-)
-> 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index f14cc2705f9b..4d6723cfa582 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -2427,13 +2427,15 @@ struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
->  static int blk_mq_init_request(struct blk_mq_tag_set *set, struct request *rq,
->  			       unsigned int hctx_idx, int node)
->  {
-> -	int ret;
-> +	int ret = 0;
->  
-> -	if (set->ops->init_request) {
-> +	if (set->ops->init_request)
->  		ret = set->ops->init_request(set, rq, hctx_idx, node);
-> -		if (ret)
-> -			return ret;
-> -	}
-> +	else if (set->ops->init_request_no_hctx)
-> +		ret = set->ops->init_request_no_hctx(set, rq, node);
+The 0-element arrays that are used as memcpy() destinations are actually
+flexible arrays. Adjust their structures accordingly so that memcpy()
+can better reason able their destination size (i.e. they need to be seen
+as "unknown" length rather than "zero").
 
-The only shared sbitmap user of SCSI does not use passed hctx_idx, not
-sure we need such new callback.
+In some cases, use of the flex_array() helper is needed when a flexible
+array is part of a union.
 
-If you really want to do this, just wondering why not pass '-1' as
-hctx_idx in case of shared sbitmap?
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Manish Rangankar <mrangankar@marvell.com>
+Cc: GR-QLogic-Storage-Upstream@marvell.com
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Phillip Potter <phil@philpotter.co.uk>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Florian Schilhabel <florian.c.schilhabel@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: Fabio Aiuto <fabioaiuto83@gmail.com>
+Cc: Ross Schmidt <ross.schm.dev@gmail.com>
+Cc: Marco Cesati <marcocesati@gmail.com>
+Cc: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-staging@lists.linux.dev
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/bmi.h         | 12 +++----
+ drivers/scsi/qla4xxx/ql4_def.h                |  4 +--
+ drivers/staging/r8188eu/include/ieee80211.h   |  6 ++--
+ drivers/staging/rtl8712/ieee80211.h           |  4 +--
+ drivers/staging/rtl8723bs/include/ieee80211.h |  6 ++--
+ include/linux/ieee80211.h                     | 34 +++++++++----------
+ include/uapi/linux/dlm_device.h               |  4 +--
+ 7 files changed, 33 insertions(+), 37 deletions(-)
 
-
-Thanks,
-Ming
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
+index f6fadcbdd86e..7a9bb97d45c1 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.h
++++ b/drivers/net/wireless/ath/ath10k/bmi.h
+@@ -109,7 +109,7 @@ struct bmi_cmd {
+ 		struct {
+ 			__le32 addr;
+ 			__le32 len;
+-			u8 payload[0];
++			u8 payload[];
+ 		} write_mem;
+ 		struct {
+ 			__le32 addr;
+@@ -138,18 +138,18 @@ struct bmi_cmd {
+ 		} rompatch_uninstall;
+ 		struct {
+ 			__le32 count;
+-			__le32 patch_ids[0]; /* length of @count */
++			__le32 patch_ids[]; /* length of @count */
+ 		} rompatch_activate;
+ 		struct {
+ 			__le32 count;
+-			__le32 patch_ids[0]; /* length of @count */
++			__le32 patch_ids[]; /* length of @count */
+ 		} rompatch_deactivate;
+ 		struct {
+ 			__le32 addr;
+ 		} lz_start;
+ 		struct {
+ 			__le32 len; /* max BMI_MAX_DATA_SIZE */
+-			u8 payload[0]; /* length of @len */
++			u8 payload[]; /* length of @len */
+ 		} lz_data;
+ 		struct {
+ 			u8 name[BMI_NVRAM_SEG_NAME_SZ];
+@@ -159,9 +159,7 @@ struct bmi_cmd {
+ } __packed;
+ 
+ union bmi_resp {
+-	struct {
+-		u8 payload[0];
+-	} read_mem;
++	flex_array(u8 payload[]) read_mem;
+ 	struct {
+ 		__le32 result;
+ 	} execute;
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 031569c496e5..69a590546bf9 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -366,13 +366,13 @@ struct qla4_work_evt {
+ 		struct {
+ 			enum iscsi_host_event_code code;
+ 			uint32_t data_size;
+-			uint8_t data[0];
++			uint8_t data[];
+ 		} aen;
+ 		struct {
+ 			uint32_t status;
+ 			uint32_t pid;
+ 			uint32_t data_size;
+-			uint8_t data[0];
++			uint8_t data[];
+ 		} ping;
+ 	} u;
+ };
+diff --git a/drivers/staging/r8188eu/include/ieee80211.h b/drivers/staging/r8188eu/include/ieee80211.h
+index bc5b030e9c40..9204dd42f319 100644
+--- a/drivers/staging/r8188eu/include/ieee80211.h
++++ b/drivers/staging/r8188eu/include/ieee80211.h
+@@ -185,7 +185,7 @@ struct ieee_param {
+ 		struct {
+ 			u32 len;
+ 			u8 reserved[32];
+-			u8 data[0];
++			u8 data[];
+ 		} wpa_ie;
+ 		struct {
+ 			int command;
+@@ -198,7 +198,7 @@ struct ieee_param {
+ 			u8 idx;
+ 			u8 seq[8]; /* sequence counter (set: RX, get: TX) */
+ 			u16 key_len;
+-			u8 key[0];
++			u8 key[];
+ 		} crypt;
+ #ifdef CONFIG_88EU_AP_MODE
+ 		struct {
+@@ -210,7 +210,7 @@ struct ieee_param {
+ 		} add_sta;
+ 		struct {
+ 			u8	reserved[2];/* for set max_num_sta */
+-			u8	buf[0];
++			u8	buf[];
+ 		} bcn_ie;
+ #endif
+ 
+diff --git a/drivers/staging/rtl8712/ieee80211.h b/drivers/staging/rtl8712/ieee80211.h
+index 61eff7c5746b..65ceaca9b51e 100644
+--- a/drivers/staging/rtl8712/ieee80211.h
++++ b/drivers/staging/rtl8712/ieee80211.h
+@@ -78,7 +78,7 @@ struct ieee_param {
+ 		struct {
+ 			u32 len;
+ 			u8 reserved[32];
+-			u8 data[0];
++			u8 data[];
+ 		} wpa_ie;
+ 		struct {
+ 			int command;
+@@ -91,7 +91,7 @@ struct ieee_param {
+ 			u8 idx;
+ 			u8 seq[8]; /* sequence counter (set: RX, get: TX) */
+ 			u16 key_len;
+-			u8 key[0];
++			u8 key[];
+ 		} crypt;
+ 	} u;
+ };
+diff --git a/drivers/staging/rtl8723bs/include/ieee80211.h b/drivers/staging/rtl8723bs/include/ieee80211.h
+index d6236f5b069d..c11d7e2d2347 100644
+--- a/drivers/staging/rtl8723bs/include/ieee80211.h
++++ b/drivers/staging/rtl8723bs/include/ieee80211.h
+@@ -172,7 +172,7 @@ struct ieee_param {
+ 		struct {
+ 			u32 len;
+ 			u8 reserved[32];
+-			u8 data[0];
++			u8 data[];
+ 		} wpa_ie;
+ 	        struct{
+ 			int command;
+@@ -185,7 +185,7 @@ struct ieee_param {
+ 			u8 idx;
+ 			u8 seq[8]; /* sequence counter (set: RX, get: TX) */
+ 			u16 key_len;
+-			u8 key[0];
++			u8 key[];
+ 		} crypt;
+ 		struct {
+ 			u16 aid;
+@@ -196,7 +196,7 @@ struct ieee_param {
+ 		} add_sta;
+ 		struct {
+ 			u8 reserved[2];/* for set max_num_sta */
+-			u8 buf[0];
++			u8 buf[];
+ 		} bcn_ie;
+ 	} u;
+ };
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index a6730072d13a..195084289078 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1101,7 +1101,7 @@ struct ieee80211_mgmt {
+ 			__le16 auth_transaction;
+ 			__le16 status_code;
+ 			/* possibly followed by Challenge text */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed auth;
+ 		struct {
+ 			__le16 reason_code;
+@@ -1110,26 +1110,26 @@ struct ieee80211_mgmt {
+ 			__le16 capab_info;
+ 			__le16 listen_interval;
+ 			/* followed by SSID and Supported rates */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed assoc_req;
+ 		struct {
+ 			__le16 capab_info;
+ 			__le16 status_code;
+ 			__le16 aid;
+ 			/* followed by Supported rates */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed assoc_resp, reassoc_resp;
+ 		struct {
+ 			__le16 capab_info;
+ 			__le16 status_code;
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed s1g_assoc_resp, s1g_reassoc_resp;
+ 		struct {
+ 			__le16 capab_info;
+ 			__le16 listen_interval;
+ 			u8 current_ap[ETH_ALEN];
+ 			/* followed by SSID and Supported rates */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed reassoc_req;
+ 		struct {
+ 			__le16 reason_code;
+@@ -1140,19 +1140,17 @@ struct ieee80211_mgmt {
+ 			__le16 capab_info;
+ 			/* followed by some of SSID, Supported rates,
+ 			 * FH Params, DS Params, CF Params, IBSS Params, TIM */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed beacon;
+-		struct {
+-			/* only variable items: SSID, Supported rates */
+-			u8 variable[0];
+-		} __packed probe_req;
++		/* only variable items: SSID, Supported rates */
++		flex_array(u8 variable[]) __packed probe_req;
+ 		struct {
+ 			__le64 timestamp;
+ 			__le16 beacon_int;
+ 			__le16 capab_info;
+ 			/* followed by some of SSID, Supported rates,
+ 			 * FH Params, DS Params, CF Params, IBSS Params */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed probe_resp;
+ 		struct {
+ 			u8 category;
+@@ -1161,16 +1159,16 @@ struct ieee80211_mgmt {
+ 					u8 action_code;
+ 					u8 dialog_token;
+ 					u8 status_code;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed wme_action;
+ 				struct{
+ 					u8 action_code;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed chan_switch;
+ 				struct{
+ 					u8 action_code;
+ 					struct ieee80211_ext_chansw_ie data;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed ext_chan_switch;
+ 				struct{
+ 					u8 action_code;
+@@ -1186,7 +1184,7 @@ struct ieee80211_mgmt {
+ 					__le16 timeout;
+ 					__le16 start_seq_num;
+ 					/* followed by BA Extension */
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed addba_req;
+ 				struct{
+ 					u8 action_code;
+@@ -1202,11 +1200,11 @@ struct ieee80211_mgmt {
+ 				} __packed delba;
+ 				struct {
+ 					u8 action_code;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed self_prot;
+ 				struct{
+ 					u8 action_code;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed mesh_action;
+ 				struct {
+ 					u8 action;
+@@ -1250,7 +1248,7 @@ struct ieee80211_mgmt {
+ 					u8 toa[6];
+ 					__le16 tod_error;
+ 					__le16 toa_error;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed ftm;
+ 			} u;
+ 		} __packed action;
+diff --git a/include/uapi/linux/dlm_device.h b/include/uapi/linux/dlm_device.h
+index f880d2831160..e83954c69fff 100644
+--- a/include/uapi/linux/dlm_device.h
++++ b/include/uapi/linux/dlm_device.h
+@@ -45,13 +45,13 @@ struct dlm_lock_params {
+ 	void __user *bastaddr;
+ 	struct dlm_lksb __user *lksb;
+ 	char lvb[DLM_USER_LVB_LEN];
+-	char name[0];
++	char name[];
+ };
+ 
+ struct dlm_lspace_params {
+ 	__u32 flags;
+ 	__u32 minor;
+-	char name[0];
++	char name[];
+ };
+ 
+ struct dlm_purge_params {
+-- 
+2.30.2
 
