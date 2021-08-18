@@ -2,152 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 648FBC432BE
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 09:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05342C432BE
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 10:33:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C8E861051
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 09:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E11CD6108E
+	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 10:33:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233350AbhHRJ60 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 05:58:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42962 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233134AbhHRJ6S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 05:58:18 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45EE4C06179A
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 02:57:44 -0700 (PDT)
-Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=bjornoya.blackshift.org)
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <mkl@pengutronix.de>)
-        id 1mGIJV-0003Ak-CF; Wed, 18 Aug 2021 11:56:49 +0200
-Received: from pengutronix.de (unknown [IPv6:2a02:810a:8940:aa0:ed04:8488:5061:54d4])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        (Authenticated sender: mkl-all@blackshift.org)
-        by smtp.blackshift.org (Postfix) with ESMTPSA id 08E5E669A16;
-        Wed, 18 Aug 2021 09:56:36 +0000 (UTC)
-Date:   Wed, 18 Aug 2021 11:56:35 +0200
-From:   Marc Kleine-Budde <mkl@pengutronix.de>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ayush Sawal <ayush.sawal@chelsio.com>,
-        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
-        Rohit Maheshwari <rohitm@chelsio.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Andrii Nakryiko <andrii@kernel.org>,
-        Martin KaFai Lau <kafai@fb.com>,
-        Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>,
-        John Fastabend <john.fastabend@gmail.com>,
-        KP Singh <kpsingh@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Arunachalam Santhanam <arunachalam.santhanam@in.bosch.com>,
-        Vincent Mailhol <mailhol.vincent@wanadoo.fr>,
-        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-        linux-crypto@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-can@vger.kernel.org,
-        bpf@vger.kernel.org, clang-built-linux@googlegroups.com,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 2/5] treewide: Replace open-coded flex arrays in unions
-Message-ID: <20210818095635.tm42ctkm6aydjr6g@pengutronix.de>
-References: <20210818081118.1667663-1-keescook@chromium.org>
- <20210818081118.1667663-3-keescook@chromium.org>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="h4irlmrxob7c5btq"
-Content-Disposition: inline
-In-Reply-To: <20210818081118.1667663-3-keescook@chromium.org>
-X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
-X-SA-Exim-Mail-From: mkl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+        id S234896AbhHRKeD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 06:34:03 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:41058 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234949AbhHRKdr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 06:33:47 -0400
+Received: from epcas3p4.samsung.com (unknown [182.195.41.22])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210818103302epoutp032fd8a407ac804a1593c2fe9b0b24e2d5~cYA7ddg1s0083800838epoutp03x
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 10:33:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210818103302epoutp032fd8a407ac804a1593c2fe9b0b24e2d5~cYA7ddg1s0083800838epoutp03x
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1629282782;
+        bh=4aiXT+GEVaX3PC1jXQ85xbsODWb/XUmXvvq3QVjF7xA=;
+        h=Subject:Reply-To:From:To:Date:References:From;
+        b=L6bCuWXx5RAwA4vnbprKmVB4brIVsVX07OInhHb6eE4/WqoIxoCa/xIPIMm3v/v8P
+         i/aMrNHyujgAGX0w5Chp7NeFv8cIzZLrpd0d+AUy1o2k/Qk25I/tjR7pZ50zQbqHTl
+         XxQ75AdaNRp+JUylkytcj2XGE+aI1HFyzZ8qUGyE=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+        epcas3p3.samsung.com (KnoxPortal) with ESMTP id
+        20210818103301epcas3p3f00d398e34733791bbfd889d14f774cc~cYA7BEwr80952209522epcas3p3Q;
+        Wed, 18 Aug 2021 10:33:01 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
+        (Postfix) with ESMTP id 4GqPP94dXTz4x9QB; Wed, 18 Aug 2021 10:33:01 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: [PATCH] scsi: ufs: ufshpb: Fix typo in comments
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     ALIM AKHTAR <alim.akhtar@samsung.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "cang@codeaurora.org" <cang@codeaurora.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01629282781634.JavaMail.epsvc@epcpadp4>
+Date:   Wed, 18 Aug 2021 18:41:39 +0900
+X-CMS-MailID: 20210818094139epcms2p745d70390a0e328f3ecc3b266f092c9f7
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20210818094139epcms2p745d70390a0e328f3ecc3b266f092c9f7
+References: <CGME20210818094139epcms2p745d70390a0e328f3ecc3b266f092c9f7@epcms2p7>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Change "allcation" to "allocation"
 
---h4irlmrxob7c5btq
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Keoseong Park <keosung.park@samsung.com>
+---
+ drivers/scsi/ufs/ufshpb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On 18.08.2021 01:11:15, Kees Cook wrote:
-> diff --git a/drivers/net/can/usb/etas_es58x/es581_4.h b/drivers/net/can/u=
-sb/etas_es58x/es581_4.h
-> index 4bc60a6df697..8657145dc2a9 100644
-> --- a/drivers/net/can/usb/etas_es58x/es581_4.h
-> +++ b/drivers/net/can/usb/etas_es58x/es581_4.h
-> @@ -192,7 +192,7 @@ struct es581_4_urb_cmd {
->  		struct es581_4_rx_cmd_ret rx_cmd_ret;
->  		__le64 timestamp;
->  		u8 rx_cmd_ret_u8;
-> -		u8 raw_msg[0];
-> +		flex_array(u8 raw_msg);
->  	} __packed;
-> =20
->  	__le16 reserved_for_crc16_do_not_use;
-> diff --git a/drivers/net/can/usb/etas_es58x/es58x_fd.h b/drivers/net/can/=
-usb/etas_es58x/es58x_fd.h
-> index ee18a87e40c0..3053e0958132 100644
-> --- a/drivers/net/can/usb/etas_es58x/es58x_fd.h
-> +++ b/drivers/net/can/usb/etas_es58x/es58x_fd.h
-> @@ -228,7 +228,7 @@ struct es58x_fd_urb_cmd {
->  		struct es58x_fd_tx_ack_msg tx_ack_msg;
->  		__le64 timestamp;
->  		__le32 rx_cmd_ret_le32;
-> -		u8 raw_msg[0];
-> +		flex_array(u8 raw_msg[]);
->  	} __packed;
+diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+index 9acce92a356b..bae98e197711 100644
+--- a/drivers/scsi/ufs/ufshpb.c
++++ b/drivers/scsi/ufs/ufshpb.c
+@@ -255,7 +255,7 @@ static bool ufshpb_test_ppn_dirty(struct ufshpb_lu *hpb, int rgn_idx,
+ 	/*
+ 	 * If the region state is active, mctx must be allocated.
+ 	 * In this case, check whether the region is evicted or
+-	 * mctx allcation fail.
++	 * mctx allocation fail.
+ 	 */
+ 	if (unlikely(!srgn->mctx)) {
+ 		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+-- 
+2.17.1
 
-This doesn't look consistent, what's preferred?
-
-u8 raw_msg[0];  -> flex_array(u8 raw_msg);
- - or-
-                -> flex_array(u8 raw_msg[]);
-
-regards,
-Marc
-
---=20
-Pengutronix e.K.                 | Marc Kleine-Budde           |
-Embedded Linux                   | https://www.pengutronix.de  |
-Vertretung West/Dortmund         | Phone: +49-231-2826-924     |
-Amtsgericht Hildesheim, HRA 2686 | Fax:   +49-5121-206917-5555 |
-
---h4irlmrxob7c5btq
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEK3kIWJt9yTYMP3ehqclaivrt76kFAmEc2VEACgkQqclaivrt
-76kXUQf/cn+R4mRgon+iBBoNOjSG6Xpa5C1kWsnyfyJAQq9geHgAtcyoTTot+9QH
-bjo6l3vIxXSY85B6NbV+TQFuedtSpFYkRQJgWzMG/eIuwHZ7Buuf8uK5C5MESqwm
-PJDEl2lZpKA7MtM2gMtvmhElNsv1Nr4FqMEOmCHs5LeQQ8ddsbJ0Ab7X7ffQ4SRu
-UgMoqqUUFxReCmF+pmoxDC5uHBbovnw/hYPulDH6AN7jj8ml9/lPLuJKfBnyYGI5
-jYTHTlc4+VnN6a7NJ7V9DhTCncLaFjXVFFxoQBWYgpetIV/eWwu2WwrrYhyrvEK0
-cORmz7LG97TWWd3NSNNy9j7XKs0y+Q==
-=UYoj
------END PGP SIGNATURE-----
-
---h4irlmrxob7c5btq--
