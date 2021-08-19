@@ -2,178 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCB54C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:50:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D7D3C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 08:40:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A4AA9610A0
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:50:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01B1C6109E
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 08:40:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236818AbhHSHva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 03:51:30 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:36932 "EHLO
+        id S237185AbhHSIku (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 04:40:50 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:58178 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229927AbhHSHv3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 03:51:29 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 6EE14200A8;
-        Thu, 19 Aug 2021 07:50:52 +0000 (UTC)
+        with ESMTP id S231494AbhHSIkt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 04:40:49 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id D48101F782;
+        Thu, 19 Aug 2021 08:40:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1629359452; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        t=1629362412; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=zIA9A/zxCVMHASlEh9mYGogdumKuTccj78EbfSVp160=;
-        b=HIdPU4FqwzI7bTu26eBgTc0hLAMRR81pIbXdPKBoniCP5NTE+u1yONCqo+PKygYm9PDQRM
-        +aFdIn1IqvH1ZcqA/39RAmMurfVtX/wBjyNrFtCchf0kgpzOgrfmPbpVqGVwLkfgxQ0xe9
-        01arOehRtOUDWZKrvXx1X7uNHZLChIs=
+        bh=7UkffNLqE4A6uragP9kl/8Eq7y8tkgLqc9mh0wmOjUM=;
+        b=wcf/L9LFe4DJlbagcngkzw/Tsiozujh6P6SkNrRgribVJU7ZWXD47ZvdNSvzDMtkkh7eKj
+        cOQ4uJxu3hLxWmtxXpEVH65tIIH4Z07nOIZirls1he26mi3ipAV16VxJzlxFMeJpEKI5R4
+        Zk6iPwIJnzZpV4jKHBhqS/19yAsQG1Y=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1629359452;
+        s=susede2_ed25519; t=1629362412;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+         mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=zIA9A/zxCVMHASlEh9mYGogdumKuTccj78EbfSVp160=;
-        b=IFT+/4lW0oM8Ch4LVuY8QhuzUdiZA8mwsZUoyl7MayIbNE8apMjIPav64zxK1RpcTXwL5U
-        +896sEjGGblNifBQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 3ED2413756;
-        Thu, 19 Aug 2021 07:50:52 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id ixKGDlwNHmEGDgAAGKfGzw
-        (envelope-from <hare@suse.de>); Thu, 19 Aug 2021 07:50:52 +0000
-Subject: Re: [PATCH 0/3] Remove scsi_cmnd.tag
-To:     John Garry <john.garry@huawei.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, hch@lst.de
-References: <1628862553-179450-1-git-send-email-john.garry@huawei.com>
- <yq14kbppa42.fsf@ca-mkp.ca.oracle.com>
- <176ce4f2-42c9-bba6-c8f9-70a08faa21b8@huawei.com>
- <e0d7ba32-2999-794e-2ccb-fdba2c847eb1@acm.org>
- <038ec0c6-92c9-0f2a-7d81-afb91b8343af@suse.de>
- <c9d9891b-780b-4641-2b60-6319d525e17c@huawei.com>
+        bh=7UkffNLqE4A6uragP9kl/8Eq7y8tkgLqc9mh0wmOjUM=;
+        b=Zcoj/IdvTzqa7/iIISpsr4iHEs1Mdnj07itnqDYnPX0FJ3DnGKpT0wjgqwWmUM94oLvhng
+        cpYB3+fZQPUFAtCg==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id 2B74AA3B9E;
+        Thu, 19 Aug 2021 08:40:07 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id 6C643518D261; Thu, 19 Aug 2021 10:40:12 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <6090371d-9688-11ae-8219-ba9929a96526@suse.de>
-Date:   Thu, 19 Aug 2021 09:50:21 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org,
+        Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 2/4] fas216: kill scmd->tag
+Date:   Thu, 19 Aug 2021 10:40:05 +0200
+Message-Id: <20210819084007.79233-3-hare@suse.de>
+X-Mailer: git-send-email 2.29.2
+In-Reply-To: <20210819084007.79233-1-hare@suse.de>
+References: <20210819084007.79233-1-hare@suse.de>
 MIME-Version: 1.0
-In-Reply-To: <c9d9891b-780b-4641-2b60-6319d525e17c@huawei.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/19/21 9:27 AM, John Garry wrote:
-> On 19/08/2021 08:15, Hannes Reinecke wrote:
->> Hey Bart,
->>
->> Thanks for this!
->> Really helpful.
->>
->> Just a tiny wee snag:
->>
->> On 8/19/21 4:41 AM, Bart Van Assche wrote:
->>> On 8/18/21 11:08 AM, John Garry wrote:
->>>> Or maybe you or Bart have a better idea?
->>>
->>> This is how I test compilation of SCSI drivers on a SUSE system (only
->>> the cross-compilation prefix is distro specific):
->>>
->>>      # Acorn RiscPC
->>>      make ARCH=arm xconfig
->>>      # Select the RiscPC architecture (ARCH_RPC)
->>>      make -j9 ARCH=arm CROSS_COMPILE=arm-suse-linux-gnueabi- </dev/null
->>>
->>
->> Acorn RiscPC is ARMv3, which sadly isn't supported anymore with gcc9.
->> So for compilation I had to modify Kconfig to select ARMv4:
->>
-> 
-> Yeah, that is what I was tackling this very moment.
-> 
->> diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
->> index 8355c3895894..22ec9e275335 100644
->> --- a/arch/arm/mm/Kconfig
->> +++ b/arch/arm/mm/Kconfig
->> @@ -278,7 +278,7 @@ config CPU_ARM1026
->>   # SA110
->>   config CPU_SA110
->>          bool
->> -       select CPU_32v3 if ARCH_RPC
->> +       select CPU_32v4 if ARCH_RPC
-> 
-> Does that build fully for xconfig or any others which you tried?
-> 
+The driver is attempting to allocated a tag internally, which is
+is no-go with blk-mq. Switch the driver to use the request tag and
+kill usage of scmd->tag and scmd->device->current_tag.
 
-Yep, xconfig and full build works.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/arm/fas216.c | 31 ++++++++-----------------------
+ 1 file changed, 8 insertions(+), 23 deletions(-)
 
-Well.
-
-Would've worked if you hadn't messed up tag handling for acornscsi :-)
-
-Besides: tag handling in acornscsi (and fas216, for that matter) seems 
-to be completely broken.
-
-Consider this beauty:
-
-#ifdef CONFIG_SCSI_ACORNSCSI_TAGGED_QUEUE
-        /*
-         * tagged queueing - allocate a new tag to this command
-         */
-        if (SCpnt->device->simple_tags) {
-            SCpnt->device->current_tag += 1;
-            if (SCpnt->device->current_tag == 0)
-                SCpnt->device->current_tag = 1;
-            SCpnt->tag = SCpnt->device->current_tag;
-        } else
-#endif
-
-which is broken on _soo many_ counts.
-Not only does it try to allocate its own tags, the code also assumes 
-that a tag value of '0' indicates that tagged queueing is not active:
-
-static
-void acornscsi_abortcmd(AS_Host *host, unsigned char tag)
-{
-     host->scsi.phase = PHASE_ABORTED;
-     sbic_arm_write(host, SBIC_CMND, CMND_ASSERTATN);
-
-     msgqueue_flush(&host->scsi.msgs);
-#ifdef CONFIG_SCSI_ACORNSCSI_TAGGED_QUEUE
-     if (tag)
-         msgqueue_addmsg(&host->scsi.msgs, 2, ABORT_TAG, tag);
-     else
-#endif
-         msgqueue_addmsg(&host->scsi.msgs, 1, ABORT);
-}
-
-And, of course, there's the usual confusion about when to check for
-sdev->tagged_supported and sdev->simple_tags.
-
-Drop me a note if I can give a hand.
-
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 6baa9b36367d..1752a29fdb3c 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -77,7 +77,6 @@
+  *  I was thinking that this was a good chip until I found this restriction ;(
+  */
+ #define SCSI2_SYNC
+-#undef  SCSI2_TAG
+ 
+ #undef DEBUG_CONNECT
+ #undef DEBUG_MESSAGES
+@@ -990,7 +989,7 @@ fas216_reselected_intr(FAS216_Info *info)
+ 		info->scsi.disconnectable = 0;
+ 		if (info->SCpnt->device->id  == target &&
+ 		    info->SCpnt->device->lun == lun &&
+-		    info->SCpnt->tag         == tag) {
++		    scsi_cmd_to_tag(info->SCpnt) == tag) {
+ 			fas216_log(info, LOG_CONNECT, "reconnected previously executing command");
+ 		} else {
+ 			queue_add_cmd_tail(&info->queues.disconnected, info->SCpnt);
+@@ -1790,8 +1789,9 @@ static void fas216_start_command(FAS216_Info *info, struct scsi_cmnd *SCpnt)
+ 	/*
+ 	 * add tag message if required
+ 	 */
+-	if (SCpnt->tag)
+-		msgqueue_addmsg(&info->scsi.msgs, 2, SIMPLE_QUEUE_TAG, SCpnt->tag);
++	if (SCpnt->device->simple_tags)
++		msgqueue_addmsg(&info->scsi.msgs, 2, SIMPLE_QUEUE_TAG,
++				scsi_cmd_to_tag(SCpnt));
+ 
+ 	do {
+ #ifdef SCSI2_SYNC
+@@ -1814,20 +1814,8 @@ static void fas216_start_command(FAS216_Info *info, struct scsi_cmnd *SCpnt)
+ 
+ static void fas216_allocate_tag(FAS216_Info *info, struct scsi_cmnd *SCpnt)
+ {
+-#ifdef SCSI2_TAG
+-	/*
+-	 * tagged queuing - allocate a new tag to this command
+-	 */
+-	if (SCpnt->device->simple_tags && SCpnt->cmnd[0] != REQUEST_SENSE &&
+-	    SCpnt->cmnd[0] != INQUIRY) {
+-	    SCpnt->device->current_tag += 1;
+-		if (SCpnt->device->current_tag == 0)
+-		    SCpnt->device->current_tag = 1;
+-			SCpnt->tag = SCpnt->device->current_tag;
+-	} else
+-#endif
+-		set_bit(SCpnt->device->id * 8 +
+-			(u8)(SCpnt->device->lun & 0x7), info->busyluns);
++	set_bit(SCpnt->device->id * 8 +
++		(u8)(SCpnt->device->lun & 0x7), info->busyluns);
+ 
+ 	info->stats.removes += 1;
+ 	switch (SCpnt->cmnd[0]) {
+@@ -2116,7 +2104,6 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
+ 	init_SCp(SCpnt);
+ 	SCpnt->SCp.Message = 0;
+ 	SCpnt->SCp.Status = 0;
+-	SCpnt->tag = 0;
+ 	SCpnt->host_scribble = (void *)fas216_rq_sns_done;
+ 
+ 	/*
+@@ -2222,7 +2209,6 @@ static int fas216_queue_command_lck(struct scsi_cmnd *SCpnt,
+ 	init_SCp(SCpnt);
+ 
+ 	info->stats.queues += 1;
+-	SCpnt->tag = 0;
+ 
+ 	spin_lock(&info->host_lock);
+ 
+@@ -3002,9 +2988,8 @@ void fas216_print_devices(FAS216_Info *info, struct seq_file *m)
+ 		dev = &info->device[scd->id];
+ 		seq_printf(m, "     %d/%llu   ", scd->id, scd->lun);
+ 		if (scd->tagged_supported)
+-			seq_printf(m, "%3sabled(%3d) ",
+-				     scd->simple_tags ? "en" : "dis",
+-				     scd->current_tag);
++			seq_printf(m, "%3sabled ",
++				     scd->simple_tags ? "en" : "dis");
+ 		else
+ 			seq_puts(m, "unsupported   ");
+ 
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.29.2
+
