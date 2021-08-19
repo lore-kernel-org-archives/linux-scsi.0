@@ -4,143 +4,104 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
-	autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 677CFC4338F
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 21:51:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2211EC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 00:39:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4869A600D4
-	for <linux-scsi@archiver.kernel.org>; Wed, 18 Aug 2021 21:51:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04874610CB
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 00:39:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234336AbhHRVvo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 17:51:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40452 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234106AbhHRVvn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 17:51:43 -0400
-Received: from mail-pl1-x634.google.com (mail-pl1-x634.google.com [IPv6:2607:f8b0:4864:20::634])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC110C061764
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 14:51:08 -0700 (PDT)
-Received: by mail-pl1-x634.google.com with SMTP id w6so2680962plg.9
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Aug 2021 14:51:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=7vHz7lx5HT3o9dUfiJevKg/RCUhyC9oP+KAo7KKSobE=;
-        b=a0gIT1PbsUrzpiMxHFJQf3jDySrUQ8Ww2Lki+TjewXrAJP5UxO7103vV2RR/V3ANRN
-         1nLuL/Iv5GOFWegVwgew6XfBqxD/P2xI/kCXdGtAH6LbMiGNGZJvf9jRwo8l9cGtJXp/
-         NJhI01VKo66AWmiNMy8NublWXQfmYUotQ1JOg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=7vHz7lx5HT3o9dUfiJevKg/RCUhyC9oP+KAo7KKSobE=;
-        b=IXUvdhivVB2PPaJ/SRSsxC0/d64Og7lObd/go6M5WImiissJTZtyL3/57B3DU/aeX7
-         msb0SXJ6eBmht6biMJZsG/jx1Lwi5SNDzpVkgrIgRF9PLc5iyloFYDrMTR/Q8UfrGxCz
-         Jag66FwgVz4gSVIgY3reDWZdrE1FzomoPXEQa3tdyk8vbj9+Ab8wOI3rpct9RseAQkO6
-         jMgQCWGLFfJvRfGAr4Ir+hCT0T+H5eLqIaRzcCLNUq6ibJrERGXC5hJnOs/jDp/sq62L
-         7gv/J8qqYLEZplTLcRHccqA1ODe8ViCgg1uXyywndkpEgTMtvvEYWxb4nro8lxIunMHg
-         glMA==
-X-Gm-Message-State: AOAM530pW9FeQyOG2IqVFql7zxB3+p4iq0R5IhKPqlIl3dAjOySEjA4R
-        mo+AWG83/72ZSbyoMqOscru2sQ==
-X-Google-Smtp-Source: ABdhPJyzlA1BSNScs1NpCi0WnbTUY9sHZCG50/IaKrR4dcNnW411OdaQOYqLBK5zGkg4QWgJ9r2Cng==
-X-Received: by 2002:a17:902:b601:b029:12b:d9a:894f with SMTP id b1-20020a170902b601b029012b0d9a894fmr9050350pls.63.1629323468448;
-        Wed, 18 Aug 2021 14:51:08 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id b190sm808833pgc.91.2021.08.18.14.51.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Aug 2021 14:51:07 -0700 (PDT)
-Date:   Wed, 18 Aug 2021 14:51:06 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Marc Kleine-Budde <mkl@pengutronix.de>
-Cc:     linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ayush Sawal <ayush.sawal@chelsio.com>,
-        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
-        Rohit Maheshwari <rohitm@chelsio.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Andrii Nakryiko <andrii@kernel.org>,
-        Martin KaFai Lau <kafai@fb.com>,
-        Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>,
-        John Fastabend <john.fastabend@gmail.com>,
-        KP Singh <kpsingh@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Arunachalam Santhanam <arunachalam.santhanam@in.bosch.com>,
-        Vincent Mailhol <mailhol.vincent@wanadoo.fr>,
-        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-        linux-crypto@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-can@vger.kernel.org,
-        bpf@vger.kernel.org, clang-built-linux@googlegroups.com,
-        linux-hardening@vger.kernel.org
-Subject: Re: [PATCH 2/5] treewide: Replace open-coded flex arrays in unions
-Message-ID: <202108181448.9C13CE9@keescook>
-References: <20210818081118.1667663-1-keescook@chromium.org>
- <20210818081118.1667663-3-keescook@chromium.org>
- <20210818095635.tm42ctkm6aydjr6g@pengutronix.de>
+        id S235041AbhHSAkU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 20:40:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:25222 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S235017AbhHSAkS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Aug 2021 20:40:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1629333582;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=t7HjgcfyIm369W11HV7x4h2DtrAmkaaUtdzcfD19c1U=;
+        b=grmPgSvmuJbRD7ESFIKPlX+vTuVvvDWzFrC/jomwjYarz6lJRF/y9b6TC0ECKcP2oBiigp
+        FaHoZsMpv3147OJwmffknfNOT8N0XVUdHdabnx3ovp5ei0nuZvPNpoU09HLtOyEaqKeN5X
+        7W8Jsqimht9A3bxbPbL4OLLUcqZO+jI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-292-oU9l-s0jOB2qcEgggaEdcg-1; Wed, 18 Aug 2021 20:39:39 -0400
+X-MC-Unique: oU9l-s0jOB2qcEgggaEdcg-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1246E107ACF5;
+        Thu, 19 Aug 2021 00:39:38 +0000 (UTC)
+Received: from T590 (ovpn-8-23.pek2.redhat.com [10.72.8.23])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A58F119D9D;
+        Thu, 19 Aug 2021 00:39:27 +0000 (UTC)
+Date:   Thu, 19 Aug 2021 08:39:23 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     John Garry <john.garry@huawei.com>
+Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
+        hare@suse.de
+Subject: Re: [PATCH v2 06/11] blk-mq: Pass driver tags to
+ blk_mq_clear_rq_mapping()
+Message-ID: <YR2oO8hhtDx1Wd+P@T590>
+References: <1628519378-211232-1-git-send-email-john.garry@huawei.com>
+ <1628519378-211232-7-git-send-email-john.garry@huawei.com>
+ <YRyGb/Ay3lvUZs/V@T590>
+ <23448833-593c-139f-6051-9b8e7d3deade@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210818095635.tm42ctkm6aydjr6g@pengutronix.de>
+In-Reply-To: <23448833-593c-139f-6051-9b8e7d3deade@huawei.com>
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Aug 18, 2021 at 11:56:35AM +0200, Marc Kleine-Budde wrote:
-> On 18.08.2021 01:11:15, Kees Cook wrote:
-> > diff --git a/drivers/net/can/usb/etas_es58x/es581_4.h b/drivers/net/can/usb/etas_es58x/es581_4.h
-> > index 4bc60a6df697..8657145dc2a9 100644
-> > --- a/drivers/net/can/usb/etas_es58x/es581_4.h
-> > +++ b/drivers/net/can/usb/etas_es58x/es581_4.h
-> > @@ -192,7 +192,7 @@ struct es581_4_urb_cmd {
-> >  		struct es581_4_rx_cmd_ret rx_cmd_ret;
-> >  		__le64 timestamp;
-> >  		u8 rx_cmd_ret_u8;
-> > -		u8 raw_msg[0];
-> > +		flex_array(u8 raw_msg);
-> >  	} __packed;
-> >  
-> >  	__le16 reserved_for_crc16_do_not_use;
-> > diff --git a/drivers/net/can/usb/etas_es58x/es58x_fd.h b/drivers/net/can/usb/etas_es58x/es58x_fd.h
-> > index ee18a87e40c0..3053e0958132 100644
-> > --- a/drivers/net/can/usb/etas_es58x/es58x_fd.h
-> > +++ b/drivers/net/can/usb/etas_es58x/es58x_fd.h
-> > @@ -228,7 +228,7 @@ struct es58x_fd_urb_cmd {
-> >  		struct es58x_fd_tx_ack_msg tx_ack_msg;
-> >  		__le64 timestamp;
-> >  		__le32 rx_cmd_ret_le32;
-> > -		u8 raw_msg[0];
-> > +		flex_array(u8 raw_msg[]);
-> >  	} __packed;
+On Wed, Aug 18, 2021 at 01:00:13PM +0100, John Garry wrote:
+> > > @@ -2346,8 +2345,11 @@ static void blk_mq_clear_rq_mapping(struct blk_mq_tag_set *set,
+> > >   void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+> > >   		     unsigned int hctx_idx)
+> > >   {
+> > > +	struct blk_mq_tags *drv_tags;
+> > >   	struct page *page;
+> > > +		drv_tags = set->tags[hctx_idx];
+> > 
 > 
-> This doesn't look consistent, what's preferred?
+> Hi Ming,
 > 
-> u8 raw_msg[0];  -> flex_array(u8 raw_msg);
->  - or-
->                 -> flex_array(u8 raw_msg[]);
+> > Indent.
+> 
+> That's intentional, as we have from later patch:
+> 
+> void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
+> unsigned int hctx_idx)
+> {
+> 	struct blk_mq_tags *drv_tags;
+> 	struct page *page;
+> 
+> +	if (blk_mq_is_sbitmap_shared(set->flags))
+> +		drv_tags = set->shared_sbitmap_tags;
+> +	else
+> 		drv_tags = set->tags[hctx_idx];
+> 
+> 	...
+> 
+> 	blk_mq_clear_rq_mapping(drv_tags, tags);
+> 
+> }
+> 
+> And it's just nice to not re-indent later.
 
-Eek, thanks for catching that. And this helps me realize that having
-"flex_array" and "[]" is redundant, and the above typo would have been
-caught. I will fix this for v2.
-
-Thanks!
-
--Kees
+But this way is weird, and I don't think checkpatch.pl is happy with
+it.
 
 -- 
-Kees Cook
+Ming
+
