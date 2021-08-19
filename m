@@ -2,100 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A04EFC4338F
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:32:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7C6CC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:37:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7717661100
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:32:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 839FD6112D
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:37:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234640AbhHSHdC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 03:33:02 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3670 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229501AbhHSHdB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 03:33:01 -0400
-Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GqxK65Qvsz6FGMl;
-        Thu, 19 Aug 2021 15:31:22 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Thu, 19 Aug 2021 09:32:22 +0200
-Received: from [10.47.81.140] (10.47.81.140) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Thu, 19 Aug
- 2021 08:32:21 +0100
-Subject: Re: [PATCH v2 06/11] blk-mq: Pass driver tags to
- blk_mq_clear_rq_mapping()
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     <axboe@kernel.dk>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <kashyap.desai@broadcom.com>, <hare@suse.de>
-References: <1628519378-211232-1-git-send-email-john.garry@huawei.com>
- <1628519378-211232-7-git-send-email-john.garry@huawei.com>
- <YRyGb/Ay3lvUZs/V@T590> <23448833-593c-139f-6051-9b8e7d3deade@huawei.com>
- <YR2oO8hhtDx1Wd+P@T590>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <c957c544-4040-e462-47f6-3514ab3da617@huawei.com>
-Date:   Thu, 19 Aug 2021 08:32:20 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S234882AbhHSHi2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 03:38:28 -0400
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:65406 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233379AbhHSHi2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 03:38:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1629358672; x=1660894672;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=+OYJapIpYr9yOVnqBgzkwtKZzGmKfbn8et9B/HUyo9M=;
+  b=FR9SZbzcQQnLZHjuGXibpbiRtqW0weOD9tGvNOwQoThpJuX7iEK57Won
+   ecCZWFHqhZ0zdE/VSDt0YLdihcVfnn8/qoQtSNesKfqeKbhxBW/00y7tn
+   cVJb2LFa3Q3JSHeHEM4RKdf0UoprYrITzQjSADVvDnDILGd2D7c5xquy7
+   oG+f1bGo/L2haoBwb5c1MuiTi9wo4ryvCwzVZvJh4r6jXWJ8AdPTDY/kn
+   PyssQ4ezmiJjTBCX/ZqSFxakoHDpWw5fGHQK7JAA6K3JwGlEdN+kI5gg+
+   3U72wVSjJ/j75+UiJ69vezSBqMw3J6UwL1TX++gf5qw7zX5Y9WRKCWCPa
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.84,334,1620662400"; 
+   d="scan'208";a="281559229"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 19 Aug 2021 15:37:51 +0800
+IronPort-SDR: MNCiUbYq0CZCFLqSEO180fslMmSMhfjw5a3/UrZ4DNeEIE3/NHi68WR2RSOnJuSrHrgX7uxhdH
+ VtrVB/xI4N10eQvsxlH2v/bgvcxaygCtq5XkKnD2lAoo/hb02ueGX1uAYsIRr7IHTMKNCKRNHl
+ kvBJ/LhiplDWvhMlgt8ASizzyhZY1yjm7vP4RjKNKCOkaLjuTxXCkVvXNcW0pyWElMd7/SbQ6u
+ 8QKpNf8+ntiURsGOx/Rv6ojDYWymxcr0mWuy0pMSi0BHjtpY9H2AkEEKs7jlWBU//9scmu0DQT
+ qDnmB+6R+99w5jQ7ApXZkuDi
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2021 00:13:13 -0700
+IronPort-SDR: 2F0bIJpA3OVfvpKQykGpjsgQ8p1fQm1STcIcy623HJXIddZfA2qA/fMy1C9Mt8nqDzyAoJhfiw
+ oJZWz0AHLzJ+SRMKRfzD16iVOMm4FTaCjvHH8XuwnyoWpB7OhlJbT0iX18xCAzNa7RZ6NqxZO6
+ jxoEvsa7+ge+jMhy71//o27yXpiC8JS6EqKKdbZdTBFEQTFIrM2Xhc7t4jRim3VXvpWbALcajR
+ QdEBHOSCl4zQfVlJS/OFz8QwbrGA28p/42SKLjx+/sLKV7jkjGIYvFuSXcnjOAL3NEaCBPmom7
+ zDM=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip02.wdc.com with ESMTP; 19 Aug 2021 00:37:51 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: fix scsi_mode_sense()
+Date:   Thu, 19 Aug 2021 16:37:50 +0900
+Message-Id: <20210819073750.132601-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <YR2oO8hhtDx1Wd+P@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.81.140]
-X-ClientProxiedBy: lhreml712-chm.china.huawei.com (10.201.108.63) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/08/2021 01:39, Ming Lei wrote:
->> That's intentional, as we have from later patch:
->>
->> void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
->> unsigned int hctx_idx)
->> {
->> 	struct blk_mq_tags *drv_tags;
->> 	struct page *page;
->>
->> +	if (blk_mq_is_sbitmap_shared(set->flags))
->> +		drv_tags = set->shared_sbitmap_tags;
->> +	else
->> 		drv_tags = set->tags[hctx_idx];
->>
->> 	...
->>
->> 	blk_mq_clear_rq_mapping(drv_tags, tags);
->>
->> }
->>
->> And it's just nice to not re-indent later.
-> But this way is weird, and I don't think checkpatch.pl is happy with
-> it.
+The allocation length field of the MODE SENSE 10 command is 16-bits,
+occupying bytes 7 and 8 of the CDB. With this command, access to mode
+pages larger than 255 bytes is thus possible. Make sure that
+scsi_mode_sense() code reflects this by initializing the allocation
+length field using put_unaligned_be16() instead of directly setting
+only byte 8 of the CDB with the buffer length.
 
-There is the idea to try to not remove/change code earlier in a series - 
-I am taking it to an extreme! I can stop.
+While at it, also fix the folowing:
+* use get_unaligned_be16() to retrieve the mode data length and block
+  descriptor length fields of the mode sense reply header instead of
+  using an open coded calculation.
+* Fix the kdoc dbd argument explanation: the DBD bit stands for
+  Disable Block Descriptor, which is the opposite of what the dbd
+  argument description was.
 
-On another related topic, how about this change also:
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/scsi/scsi_lib.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
----8<---
-void blk_mq_clear_rq_mapping(struct blk_mq_tags *drv_tags,
-			     struct blk_mq_tags *tags)
-  {
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 7456a26aef51..92db00d81733 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2070,7 +2070,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
+ /**
+  *	scsi_mode_sense - issue a mode sense, falling back from 10 to six bytes if necessary.
+  *	@sdev:	SCSI device to be queried
+- *	@dbd:	set if mode sense will allow block descriptors to be returned
++ *	@dbd:	set to prevent mode sense from returning block descriptors
+  *	@modepage: mode page being requested
+  *	@buffer: request buffer (may not be smaller than eight bytes)
+  *	@len:	length of request buffer.
+@@ -2112,7 +2112,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 			len = 8;
+ 
+ 		cmd[0] = MODE_SENSE_10;
+-		cmd[8] = len;
++		put_unaligned_be16(len, &cmd[7]);
+ 		header_length = 8;
+ 	} else {
+ 		if (len < 4)
+@@ -2166,12 +2166,11 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+ 		data->longlba = 0;
+ 		data->block_descriptor_length = 0;
+ 	} else if (use_10_for_ms) {
+-		data->length = buffer[0]*256 + buffer[1] + 2;
++		data->length = get_unaligned_be16(&buffer[0]) + 2;
+ 		data->medium_type = buffer[2];
+ 		data->device_specific = buffer[3];
+ 		data->longlba = buffer[4] & 0x01;
+-		data->block_descriptor_length = buffer[6]*256
+-			+ buffer[7];
++		data->block_descriptor_length = get_unaligned_be16(&buffer[6]);
+ 	} else {
+ 		data->length = buffer[0] + 1;
+ 		data->medium_type = buffer[1];
+-- 
+2.31.1
 
-+	/* There is no need to clear a driver tags own mapping */
-+	if (drv_tags == tags)
-+		return;
---->8---
-
-Thanks,
-John
