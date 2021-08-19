@@ -2,127 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ACB66C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:07:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A9DFC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:09:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92B3F6113C
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:07:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6462B6113C
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:09:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234640AbhHSJIT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 05:08:19 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:60248 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236661AbhHSJIF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 05:08:05 -0400
-Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out1.suse.de (Postfix) with ESMTP id EC5FC220BD;
-        Thu, 19 Aug 2021 09:07:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1629364048; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZFUnIWTuLS7lVSUfq5t4Rg4TGq+Tdn43GGf7cSylo24=;
-        b=xaOYxFPTfcKvFk9DJKcXtgPV9LzPtarZ9IOXyoZk/HJiSQWfVWWKQ5FkE/jT098KCLGmw2
-        7GZGNIcauE9CZFvuoVPw9pk8AJIB9W5jF3Nq1IZ5PKN0xu2ARPuaGaAwhasa9BbMzPrvDs
-        5fe7rUs+hKkUc5ieKC+LN/b4BPsib5M=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1629364048;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZFUnIWTuLS7lVSUfq5t4Rg4TGq+Tdn43GGf7cSylo24=;
-        b=mwQV43pvZYKtbC/moZ0ld+IGIvH3IlQ1wgN4WJyafCNCFSJY6d/0vWaR3mlwivr6vc2098
-        CCSIezsoWa6LTlCA==
-Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 25C9EA3BAA;
-        Thu, 19 Aug 2021 09:07:19 +0000 (UTC)
-Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id CFD15518D279; Thu, 19 Aug 2021 11:07:28 +0200 (CEST)
-From:   Hannes Reinecke <hare@suse.de>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/4] sym53c8xx_2: split off bus reset from sym_eh_handler()
-Date:   Thu, 19 Aug 2021 11:07:15 +0200
-Message-Id: <20210819090716.94049-4-hare@suse.de>
-X-Mailer: git-send-email 2.29.2
-In-Reply-To: <20210819090716.94049-1-hare@suse.de>
-References: <20210819090716.94049-1-hare@suse.de>
+        id S236873AbhHSJKJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 05:10:09 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3671 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229804AbhHSJKI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 05:10:08 -0400
+Received: from fraeml715-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4GqzTG6WSDz6BGCj;
+        Thu, 19 Aug 2021 17:08:34 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml715-chm.china.huawei.com (10.206.15.34) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Thu, 19 Aug 2021 11:09:29 +0200
+Received: from [10.202.227.179] (10.202.227.179) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Thu, 19 Aug 2021 10:09:28 +0100
+Subject: Re: [PATCH 0/3] Remove scsi_cmnd.tag
+To:     Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     <satishkh@cisco.com>, <sebaddel@cisco.com>, <kartilak@cisco.com>,
+        <jejb@linux.ibm.com>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <hch@lst.de>
+References: <1628862553-179450-1-git-send-email-john.garry@huawei.com>
+ <yq14kbppa42.fsf@ca-mkp.ca.oracle.com>
+ <176ce4f2-42c9-bba6-c8f9-70a08faa21b8@huawei.com>
+ <e0d7ba32-2999-794e-2ccb-fdba2c847eb1@acm.org>
+ <038ec0c6-92c9-0f2a-7d81-afb91b8343af@suse.de>
+ <c9d9891b-780b-4641-2b60-6319d525e17c@huawei.com>
+ <6090371d-9688-11ae-8219-ba9929a96526@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <6c83bd7f-9fd2-1b43-627f-615467fa55d4@huawei.com>
+Date:   Thu, 19 Aug 2021 10:09:27 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
+In-Reply-To: <6090371d-9688-11ae-8219-ba9929a96526@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Originating-IP: [10.202.227.179]
+X-ClientProxiedBy: lhreml710-chm.china.huawei.com (10.201.108.61) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Bus reset is similar to host reset, and we also need to wait for
-all commands to complete. So split off bus reset from sym_eh_handler()
-and wait for all commands to complete after resetting the SCSI bus.
+On 19/08/2021 08:50, Hannes Reinecke wrote:
+>>>    select CPU_32v4 if ARCH_RPC
+>>
+>> Does that build fully for xconfig or any others which you tried?
+>>
+>  > Yep, xconfig and full build works.
+> 
+> Well.
+> 
+> Would've worked if you hadn't messed up tag handling for acornscsi :-)
+>  > Besides: tag handling in acornscsi (and fas216, for that matter) seems
+> to be completely broken.
+> 
+> Consider this beauty:
+> 
+> #ifdef CONFIG_SCSI_ACORNSCSI_TAGGED_QUEUE
+>         /*
+>          * tagged queueing - allocate a new tag to this command
+>          */
+>         if (SCpnt->device->simple_tags) {
+>             SCpnt->device->current_tag += 1;
+>             if (SCpnt->device->current_tag == 0)
+>                 SCpnt->device->current_tag = 1;
+>             SCpnt->tag = SCpnt->device->current_tag;
+>         } else
+> #endif
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- drivers/scsi/sym53c8xx_2/sym_glue.c | 23 +++++++++++++++++------
- 1 file changed, 17 insertions(+), 6 deletions(-)
+So isn't this just using the scsi_cmnd.tag as it own scribble?
 
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index 86cba915b62d..817b2584b4aa 100644
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -562,7 +562,6 @@ static void sym53c8xx_timer(struct timer_list *t)
-  */
- #define SYM_EH_ABORT		0
- #define SYM_EH_DEVICE_RESET	1
--#define SYM_EH_BUS_RESET	2
- 
- static int sym_eh_wait_for_commands(struct Scsi_Host *shost)
- {
-@@ -621,10 +620,6 @@ static int sym_eh_handler(struct Scsi_Host *shost, int op,
- 	case SYM_EH_DEVICE_RESET:
- 		sts = sym_reset_scsi_target(np, cmd->device->id);
- 		break;
--	case SYM_EH_BUS_RESET:
--		sym_reset_scsi_bus(np, 1);
--		sts = 0;
--		break;
- 	default:
- 		break;
- 	}
-@@ -681,10 +676,26 @@ static int sym53c8xx_eh_bus_reset_handler(struct scsi_cmnd *cmd)
- 	struct Scsi_Host *shost = cmd->device->host;
- 	struct sym_data *sym_data = shost_priv(shost);
- 	struct pci_dev *pdev = sym_data->pdev;
-+	struct sym_hcb *np = sym_data->ncb;
-+	int rval = SUCCESS;
- 
- 	if (pci_channel_offline(pdev))
- 		return FAILED;
--	return sym_eh_handler(shost, SYM_EH_BUS_RESET, "BUS RESET", cmd);
-+
-+	shost_printk(KERN_WARNING, shost, "BUS RESET operation started\n");
-+
-+	spin_lock_irq(shost->host_lock);
-+	if (sym_reset_scsi_bus(np, 1))
-+		rval = FAILED;
-+	spin_unlock_irq(shost->host_lock);
-+
-+	if (rval == SUCCESS)
-+		rval = sym_eh_wait_for_commands(shost);
-+
-+	shost_printk(KERN_WARNING, shost, "BUS RESET operation %s.\n",
-+			rval == SUCCESS ? "complete" : "failed");
-+
-+	return rval;
- }
- 
- static int sym53c8xx_eh_host_reset_handler(struct scsi_cmnd *cmd)
--- 
-2.29.2
+> 
+> which is broken on _soo many_ counts.
+> Not only does it try to allocate its own tags, the code also assumes 
+> that a tag value of '0' indicates that tagged queueing is not active:
+> 
 
+In case you missed it, Arnd B tried to clear out some old platforms 
+earlier this year. With respect to rpc, Russell King apparently still 
+uses it and has some SCSI patches:
+
+https://lore.kernel.org/lkml/20210109174357.GB1551@shell.armlinux.org.uk/
+
+I wonder what they are and maybe we can check. Anyway... I'd run any 
+changes by him...
+
+> static
+> void acornscsi_abortcmd(AS_Host *host, unsigned char tag)
+> {
+>      host->scsi.phase = PHASE_ABORTED;
+>      sbic_arm_write(host, SBIC_CMND, CMND_ASSERTATN);
+> 
+>      msgqueue_flush(&host->scsi.msgs);
+> #ifdef CONFIG_SCSI_ACORNSCSI_TAGGED_QUEUE
+>      if (tag)
+>          msgqueue_addmsg(&host->scsi.msgs, 2, ABORT_TAG, tag);
+>      else
+> #endif
+>          msgqueue_addmsg(&host->scsi.msgs, 1, ABORT);
+> }
+> 
+> And, of course, there's the usual confusion about when to check for
+> sdev->tagged_supported and sdev->simple_tags.
+> 
+> Drop me a note if I can give a hand.
+
+Thanks! Let's see what happens to the series which you just sent.
