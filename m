@@ -2,98 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-14.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCEEEC4320A
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:09:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 34D70C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:16:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8C0A4610A7
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:09:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1F2FB60C3E
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 07:16:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232012AbhHSHKE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 03:10:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53306 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231426AbhHSHKD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 03:10:03 -0400
-Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CB82BC061575
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Aug 2021 00:09:27 -0700 (PDT)
-Received: by mail-pg1-x529.google.com with SMTP id w8so5004180pgf.5
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Aug 2021 00:09:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=mijRCYJWhiNYKUcggEieBjK/IJfHCFKEgd0FRoEC7LM=;
-        b=cqgCRQ1U6V4JJ4tcDdUV6PMZNDJO6XuUV6fP/t3dh/cJalqPpz+xCy/06fBvpomlAl
-         UZF6lSZHstctDQGwsKhCOgxp7IHejOGO/QJVoL1C8pDygvtuMGpPKEFlULUpR3/sY9Ms
-         oz4aGL1Mw1EONt2nEtsSg0dAWr9nqJfC0EEAI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=mijRCYJWhiNYKUcggEieBjK/IJfHCFKEgd0FRoEC7LM=;
-        b=lga20J6g2BnmHXuzcm/RH7Pr7l2uR2tbsLvDpUPzODlRHjAlZzNDO40GiBeWDlxdUu
-         W0qla4v/Vq7aGz+IWbWYN2oe59z19nTnO6UxnhvfFc35oDaZ4qinbqO2yBVsNdidoMuZ
-         k3QZOAkzjf4ykUGM8jELl2YkC3NrlVGiPfFaWirP4QgoahXsuf7oLyDSvYpxMXA05GCt
-         8epRFEw/ScYRckbdV97Ikrh3Mnkax5GcjoqCSmQdDoRN3dT2g9T1elXY9IDkskLtw14z
-         0vXmm5om8tPwGFF8muY7UV2OgJMTQJ5MTY3fkaq1D2VxFn6PdQnHSLfocQLYie16jhuS
-         1lVQ==
-X-Gm-Message-State: AOAM530cnRory7Ml6O2JB5gn+nGgJC5fneFt/+J7avlXBkuwfDG4kKtI
-        Fug8wnkWHrZoVZ/iYh5bUKoZOw==
-X-Google-Smtp-Source: ABdhPJxImLZctpQIjKmcj34VRkZg/VYmBXTz1xVTM1Ta1cbYQsomWRTwQxx74j2ybW2hZ502i4sO3g==
-X-Received: by 2002:a05:6a00:10cf:b0:3e1:d742:ad81 with SMTP id d15-20020a056a0010cf00b003e1d742ad81mr13283518pfu.29.1629356967408;
-        Thu, 19 Aug 2021 00:09:27 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id e12sm1987947pfc.214.2021.08.19.00.09.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Aug 2021 00:09:26 -0700 (PDT)
-Date:   Thu, 19 Aug 2021 00:09:25 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc:     linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Kevin Mitchell <kevmitch@arista.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Akinobu Mita <akinobu.mita@gmail.com>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] lkdtm: update block layer crashpoints
-Message-ID: <202108190008.2BBB6B68F@keescook>
-References: <20210819022940.561875-1-kevmitch@arista.com>
+        id S236698AbhHSHQf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 03:16:35 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:34248 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236796AbhHSHQS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 03:16:18 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id BE0FD200A2;
+        Thu, 19 Aug 2021 07:15:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1629357339; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5Iz4lmVJsmpO15/jUHpIZ+2CMi2qJPu473/e7qC0rLs=;
+        b=GbTGGorH/o+/SAOCKk3zwImIbEnicKR/PapPVmj5KUsr0tl3oYUQq3JSWu1gG2cKQu8B8A
+        3yA73gfDgbZ6Pz9g1eIK1D5WLiNh7wFLQXonZmSiGG7bwooGMrgUH43tOrIe2RbMEEiKL+
+        T1NSCWJYhwxqd7Gd9V8mZw4Q7Vcni9Y=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1629357339;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=5Iz4lmVJsmpO15/jUHpIZ+2CMi2qJPu473/e7qC0rLs=;
+        b=SOHSLHy0Xp64AsaepK9I+vh8p2Djc9frDJkjABR/p2jxaGWXY/Q3HIDFgvbl+jsxyRev5H
+        6dcW5RNzzS/+L2DQ==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 78B8A136B1;
+        Thu, 19 Aug 2021 07:15:39 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id HBmyGxsFHmHyKQAAGKfGzw
+        (envelope-from <hare@suse.de>); Thu, 19 Aug 2021 07:15:39 +0000
+Subject: Re: [PATCH 0/3] Remove scsi_cmnd.tag
+To:     Bart Van Assche <bvanassche@acm.org>,
+        John Garry <john.garry@huawei.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, hch@lst.de
+References: <1628862553-179450-1-git-send-email-john.garry@huawei.com>
+ <yq14kbppa42.fsf@ca-mkp.ca.oracle.com>
+ <176ce4f2-42c9-bba6-c8f9-70a08faa21b8@huawei.com>
+ <e0d7ba32-2999-794e-2ccb-fdba2c847eb1@acm.org>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <038ec0c6-92c9-0f2a-7d81-afb91b8343af@suse.de>
+Date:   Thu, 19 Aug 2021 09:15:38 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210819022940.561875-1-kevmitch@arista.com>
+In-Reply-To: <e0d7ba32-2999-794e-2ccb-fdba2c847eb1@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Greg,
+Hey Bart,
 
-You weren't explicitly in the To: for this series (only Cc), but are
-you able to pick these up as well? I can resend them as a pull request
-if you need.
+Thanks for this!
+Really helpful.
 
-Thanks!
+Just a tiny wee snag:
 
--Kees
-
-On Wed, Aug 18, 2021 at 07:29:38PM -0700, Kevin Mitchell wrote:
-> This is v2 of https://lkml.org/lkml/2021/8/16/1497.
+On 8/19/21 4:41 AM, Bart Van Assche wrote:
+> On 8/18/21 11:08 AM, John Garry wrote:
+>> Or maybe you or Bart have a better idea?
 > 
-> These patches update the lkdtm crashpoints in the block layer that have been
-> moved or removed.  In response to feedback, I've renamed the SCSI_DISPATCH_CMD
-> crashpoint to SCSI_QUEUE_RQ to correspond to the new function that it hooks
-> into. I have also added a commit to remove IDE_CORE_CP.
+> This is how I test compilation of SCSI drivers on a SUSE system (only
+> the cross-compilation prefix is distro specific):
 > 
+>      # Acorn RiscPC
+>      make ARCH=arm xconfig
+>      # Select the RiscPC architecture (ARCH_RPC)
+>      make -j9 ARCH=arm CROSS_COMPILE=arm-suse-linux-gnueabi- </dev/null
 > 
 
+Acorn RiscPC is ARMv3, which sadly isn't supported anymore with gcc9.
+So for compilation I had to modify Kconfig to select ARMv4:
+
+diff --git a/arch/arm/mm/Kconfig b/arch/arm/mm/Kconfig
+index 8355c3895894..22ec9e275335 100644
+--- a/arch/arm/mm/Kconfig
++++ b/arch/arm/mm/Kconfig
+@@ -278,7 +278,7 @@ config CPU_ARM1026
+  # SA110
+  config CPU_SA110
+         bool
+-       select CPU_32v3 if ARCH_RPC
++       select CPU_32v4 if ARCH_RPC
+         select CPU_32v4 if !ARCH_RPC
+         select CPU_ABRT_EV4
+         select CPU_CACHE_V4WB
+
+Cheers,
+
+Hannes
 -- 
-Kees Cook
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
