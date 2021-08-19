@@ -2,106 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2211EC4338F
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 00:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 500CDC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 01:33:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 04874610CB
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 00:39:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 346D660F35
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 01:33:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235041AbhHSAkU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 18 Aug 2021 20:40:20 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:25222 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235017AbhHSAkS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Aug 2021 20:40:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629333582;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=t7HjgcfyIm369W11HV7x4h2DtrAmkaaUtdzcfD19c1U=;
-        b=grmPgSvmuJbRD7ESFIKPlX+vTuVvvDWzFrC/jomwjYarz6lJRF/y9b6TC0ECKcP2oBiigp
-        FaHoZsMpv3147OJwmffknfNOT8N0XVUdHdabnx3ovp5ei0nuZvPNpoU09HLtOyEaqKeN5X
-        7W8Jsqimht9A3bxbPbL4OLLUcqZO+jI=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-292-oU9l-s0jOB2qcEgggaEdcg-1; Wed, 18 Aug 2021 20:39:39 -0400
-X-MC-Unique: oU9l-s0jOB2qcEgggaEdcg-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1246E107ACF5;
-        Thu, 19 Aug 2021 00:39:38 +0000 (UTC)
-Received: from T590 (ovpn-8-23.pek2.redhat.com [10.72.8.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id A58F119D9D;
-        Thu, 19 Aug 2021 00:39:27 +0000 (UTC)
-Date:   Thu, 19 Aug 2021 08:39:23 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
-        hare@suse.de
-Subject: Re: [PATCH v2 06/11] blk-mq: Pass driver tags to
- blk_mq_clear_rq_mapping()
-Message-ID: <YR2oO8hhtDx1Wd+P@T590>
-References: <1628519378-211232-1-git-send-email-john.garry@huawei.com>
- <1628519378-211232-7-git-send-email-john.garry@huawei.com>
- <YRyGb/Ay3lvUZs/V@T590>
- <23448833-593c-139f-6051-9b8e7d3deade@huawei.com>
+        id S235191AbhHSBdv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 18 Aug 2021 21:33:51 -0400
+Received: from condef-01.nifty.com ([202.248.20.66]:51337 "EHLO
+        condef-01.nifty.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234194AbhHSBdu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Aug 2021 21:33:50 -0400
+X-Greylist: delayed 421 seconds by postgrey-1.27 at vger.kernel.org; Wed, 18 Aug 2021 21:33:50 EDT
+Received: from conuserg-11.nifty.com ([10.126.8.74])by condef-01.nifty.com with ESMTP id 17J1OFgS027628
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Aug 2021 10:24:15 +0900
+Received: from localhost.localdomain (133-32-232-101.west.xps.vectant.ne.jp [133.32.232.101]) (authenticated)
+        by conuserg-11.nifty.com with ESMTP id 17J1Nf9E029141;
+        Thu, 19 Aug 2021 10:23:42 +0900
+DKIM-Filter: OpenDKIM Filter v2.10.3 conuserg-11.nifty.com 17J1Nf9E029141
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nifty.com;
+        s=dec2015msa; t=1629336222;
+        bh=u7VXmFiubP5hKc4oyVUhxWbfNwjGL985+TRSCNYe6p0=;
+        h=From:To:Cc:Subject:Date:From;
+        b=QQnLhu8PTwS9XiIauW92ombkvknDXdVXmOWWaYZn2S5AzOkb9Eo2rN/lUepFQTT4h
+         P99Qq0phOMiWMI1Nzq2hg3Xv5DQBqxJGK6+cYYfObKE+wf1ZeK4zZoCa9n6PkIdbT5
+         gMatfFxiNEAECpBfW0GhEYhYdYg//bhqfv5d+Q+/QeLxF7jfZ59NPw2JtD0feAUFCz
+         geSpIU9KD30x22XY0d0W+rwgPx4MATI+5PQWBxxN34+zA8dzDSY3GKOAuQOk+xO/yV
+         LKGA+kXWqf+TEqXGhGjZ3ySSZoCZExTIl5QUFidjWyR4AfOG4yh37Hae5HFFeHUGdA
+         KL/xItwBQ2P0A==
+X-Nifty-SrcIP: [133.32.232.101]
+From:   Masahiro Yamada <masahiroy@kernel.org>
+To:     linux-scsi@vger.kernel.org
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: fix missing FORCE for scsi_devinfo_tbl.c build rule
+Date:   Thu, 19 Aug 2021 10:23:39 +0900
+Message-Id: <20210819012339.709409-1-masahiroy@kernel.org>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <23448833-593c-139f-6051-9b8e7d3deade@huawei.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Aug 18, 2021 at 01:00:13PM +0100, John Garry wrote:
-> > > @@ -2346,8 +2345,11 @@ static void blk_mq_clear_rq_mapping(struct blk_mq_tag_set *set,
-> > >   void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
-> > >   		     unsigned int hctx_idx)
-> > >   {
-> > > +	struct blk_mq_tags *drv_tags;
-> > >   	struct page *page;
-> > > +		drv_tags = set->tags[hctx_idx];
-> > 
-> 
-> Hi Ming,
-> 
-> > Indent.
-> 
-> That's intentional, as we have from later patch:
-> 
-> void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
-> unsigned int hctx_idx)
-> {
-> 	struct blk_mq_tags *drv_tags;
-> 	struct page *page;
-> 
-> +	if (blk_mq_is_sbitmap_shared(set->flags))
-> +		drv_tags = set->shared_sbitmap_tags;
-> +	else
-> 		drv_tags = set->tags[hctx_idx];
-> 
-> 	...
-> 
-> 	blk_mq_clear_rq_mapping(drv_tags, tags);
-> 
-> }
-> 
-> And it's just nice to not re-indent later.
+Add FORCE so that if_changed can detect the command line change.
+scsi_devinfo_tbl.c must be added to 'targets' too.
 
-But this way is weird, and I don't think checkpatch.pl is happy with
-it.
+Signed-off-by: Masahiro Yamada <masahiroy@kernel.org>
+---
 
+ drivers/scsi/Makefile | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 1748d1ec1338..77812ba3c4aa 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -183,7 +183,7 @@ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
+ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ 
+ # Files generated that shall be removed upon make clean
+-clean-files :=	53c700_d.h 53c700_u.h scsi_devinfo_tbl.c
++clean-files :=	53c700_d.h 53c700_u.h
+ 
+ $(obj)/53c700.o: $(obj)/53c700_d.h
+ 
+@@ -192,9 +192,11 @@ $(obj)/scsi_sysfs.o: $(obj)/scsi_devinfo_tbl.c
+ quiet_cmd_bflags = GEN     $@
+ 	cmd_bflags = sed -n 's/.*define *BLIST_\([A-Z0-9_]*\) *.*/BLIST_FLAG_NAME(\1),/p' $< > $@
+ 
+-$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h
++$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h FORCE
+ 	$(call if_changed,bflags)
+ 
++targets +=  scsi_devinfo_tbl.c
++
+ # If you want to play with the firmware, uncomment
+ # GENERATE_FIRMWARE := 1
+ 
 -- 
-Ming
+2.30.2
 
