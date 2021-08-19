@@ -2,121 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C66AEC432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:37:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C7E3C432BE
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:59:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A40E061139
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:37:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F3C461100
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:59:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237721AbhHSJh7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 05:37:59 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3674 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237404AbhHSJh5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 05:37:57 -0400
-Received: from fraeml712-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Gr05H3v7hz6D9CX;
-        Thu, 19 Aug 2021 17:36:19 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml712-chm.china.huawei.com (10.206.15.61) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Thu, 19 Aug 2021 11:37:20 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Thu, 19 Aug 2021 10:37:18 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <mdr@sgi.com>, <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <bvanassche@acm.org>, <hare@suse.de>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 2/2] scsi: qla1280: Fix DEBUG_QLA1280 compilation issues
-Date:   Thu, 19 Aug 2021 17:32:29 +0800
-Message-ID: <1629365549-190391-3-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
-In-Reply-To: <1629365549-190391-1-git-send-email-john.garry@huawei.com>
-References: <1629365549-190391-1-git-send-email-john.garry@huawei.com>
+        id S237919AbhHSJ7y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 05:59:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36408 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237746AbhHSJ7x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 05:59:53 -0400
+Received: from mail-pl1-x631.google.com (mail-pl1-x631.google.com [IPv6:2607:f8b0:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B44C8C061575;
+        Thu, 19 Aug 2021 02:59:17 -0700 (PDT)
+Received: by mail-pl1-x631.google.com with SMTP id n12so3620106plf.4;
+        Thu, 19 Aug 2021 02:59:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=DtRnMoZnz8ASe+6YEYHxKI9ebqeYiuiGyG8rZ+bU7W8=;
+        b=e343ePw9FQBl3OmT4CjV4LRITbC1d6hYo+qRgo8O4g8DDiM0SXgUjKDzINrKBOdPuD
+         16no3rFQBxZjEOjFpmVKbvGS3ZfHA34iGMzVP0GUuGwXxQcavGar4tq9NUO4BYQKL/fr
+         +IcuileX2Ofw9lJAzZQDVNiSgg1ae4c7il80Ygl7Z/hArsq9NmfC57xbUCxKi+8x3zUf
+         +2HPq01a+R9VEwnfGBnJGrLBlpiAjunOOPLv4ZoA/DAFfCnCqMOcoGxM88wGuVAJptCS
+         RhIs91rvHPz+nEa9mRAXOsXqj+K3ODhUvtqP1kKQfDBVLC2qUMGw6g7AIb4+VxGalL4b
+         xg/g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=DtRnMoZnz8ASe+6YEYHxKI9ebqeYiuiGyG8rZ+bU7W8=;
+        b=SatljJgsdmCMGHqnD0kbdJ40xMIiEmXfAe61u2lLGgcSz/WTCTpgO5yBzrwylf+5wa
+         1zh3FtC1OdayG4c5lDlh8ZifoAp/ponhzGoT7VDrZJQhmy5INgKd/EBSBDtS3TKHw2WR
+         1CulKe8OMYW1peC8Ou1f0vRaBD8f8cV/o+RVFYV4GIWMrPavGeY0tveQiz9KzB+Qhg9H
+         LKtQ0VvsbHQeYTfPaEhoxvirtAg2WGFmHV34AfJ3uTfkL59m1PiOZDfahTNJl7BMq0ov
+         B2DmO5bLcf/N9HM37lnx/XNMvy3YWtcTXlRNiA5u3UPCmFiJlT9Nf3M742GgIpjInUwg
+         amsg==
+X-Gm-Message-State: AOAM532opGNusdX4SzcgoPD8SRftWlMyRHWmW/gPoNl8LMWCkusoYImd
+        LfKzanPUj8M/M8VIHtsuuUc=
+X-Google-Smtp-Source: ABdhPJxqSXdosZ9pc3k976d6RTkMk29F0RsgVn3Hn0/Mju7aILj/ApNHDMVBQRT0TOZLXDLJbYbMUw==
+X-Received: by 2002:a17:90a:8905:: with SMTP id u5mr13892030pjn.95.1629367157291;
+        Thu, 19 Aug 2021 02:59:17 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:18:efec::50b])
+        by smtp.gmail.com with ESMTPSA id p24sm2697989pff.161.2021.08.19.02.59.03
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 19 Aug 2021 02:59:16 -0700 (PDT)
+Subject: Re: [PATCH V3 10/13] x86/Swiotlb: Add Swiotlb bounce buffer remap
+ function for HV IVM
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
+        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
+        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
+        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
+        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
+        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
+        m.szyprowski@samsung.com, robin.murphy@arm.com,
+        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
+        Tianyu.Lan@microsoft.com, pgonda@google.com,
+        martin.b.radev@gmail.com, akpm@linux-foundation.org,
+        kirill.shutemov@linux.intel.com, rppt@kernel.org,
+        sfr@canb.auug.org.au, saravanand@fb.com,
+        krish.sadhukhan@oracle.com, aneesh.kumar@linux.ibm.com,
+        xen-devel@lists.xenproject.org, rientjes@google.com,
+        hannes@cmpxchg.org, tj@kernel.org, michael.h.kelley@microsoft.com,
+        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
+        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
+        vkuznets@redhat.com, parri.andrea@gmail.com, dave.hansen@intel.com
+References: <20210809175620.720923-1-ltykernel@gmail.com>
+ <20210809175620.720923-11-ltykernel@gmail.com>
+ <20210812122741.GC19050@lst.de>
+ <d18ae061-6fc2-e69e-fc2c-2e1a1114c4b4@gmail.com>
+ <890e5e21-714a-2db6-f68a-6211a69bebb9@gmail.com>
+ <20210819084951.GA10461@lst.de>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <1c5ae861-2c35-2ef5-e764-db45bbcb88a9@gmail.com>
+Date:   Thu, 19 Aug 2021 17:59:02 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+In-Reply-To: <20210819084951.GA10461@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver does not compile under DEBUG_QLA1280 flag:
-- Debug statements expect an integer for printing a SCSI lun value, but
-  its size is 64b. So change SCSI_LUN_32() to cast to an int, as would be
-  expected from a "_32" function.
-- lower_32_bits() expects %x, as opposed to %lx, so fix that.
 
-Also delete ql1280_dump_device(), which looks to have never been
-referenced.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/qla1280.c | 27 ++-------------------------
- 1 file changed, 2 insertions(+), 25 deletions(-)
+On 8/19/2021 4:49 PM, Christoph Hellwig wrote:
+> On Mon, Aug 16, 2021 at 10:50:26PM +0800, Tianyu Lan wrote:
+>> Hi Christoph:
+>>        Sorry to bother you.Please double check with these two patches
+>> " [PATCH V3 10/13] x86/Swiotlb: Add Swiotlb bounce buffer remap function
+>> for HV IVM" and "[PATCH V3 09/13] DMA: Add dma_map_decrypted/dma_
+>> unmap_encrypted() function".
+> 
+> Do you have a git tree somewhere to look at the whole tree?
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index b4f7d8d7a01c..9a7e84b49d41 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -494,7 +494,7 @@ __setup("qla1280=", qla1280_setup);
- #define CMD_HOST(Cmnd)		Cmnd->device->host
- #define SCSI_BUS_32(Cmnd)	Cmnd->device->channel
- #define SCSI_TCN_32(Cmnd)	Cmnd->device->id
--#define SCSI_LUN_32(Cmnd)	Cmnd->device->lun
-+#define SCSI_LUN_32(Cmnd)	((int)Cmnd->device->lun)
- 
- 
- /*****************************************/
-@@ -3126,7 +3126,7 @@ qla1280_32bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 			*dword_ptr++ =
- 				cpu_to_le32(lower_32_bits(sg_dma_address(s)));
- 			*dword_ptr++ = cpu_to_le32(sg_dma_len(s));
--			dprintk(3, "S/G Segment phys_addr=0x%lx, len=0x%x\n",
-+			dprintk(3, "S/G Segment phys_addr=0x%x, len=0x%x\n",
- 				(lower_32_bits(sg_dma_address(s))),
- 				(sg_dma_len(s)));
- 			remseg--;
-@@ -3985,29 +3985,6 @@ __qla1280_print_scsi_cmd(struct scsi_cmnd *cmd)
- 	printk(" underflow size = 0x%x, direction=0x%x\n",
- 	       cmd->underflow, cmd->sc_data_direction);
- }
--
--/**************************************************************************
-- *   ql1280_dump_device
-- *
-- **************************************************************************/
--static void
--ql1280_dump_device(struct scsi_qla_host *ha)
--{
--
--	struct scsi_cmnd *cp;
--	struct srb *sp;
--	int i;
--
--	printk(KERN_DEBUG "Outstanding Commands on controller:\n");
--
--	for (i = 0; i < MAX_OUTSTANDING_COMMANDS; i++) {
--		if ((sp = ha->outstanding_cmds[i]) == NULL)
--			continue;
--		if ((cp = sp->cmd) == NULL)
--			continue;
--		qla1280_print_scsi_cmd(1, cp);
--	}
--}
- #endif
- 
- 
--- 
-2.17.1
+Yes, here is my github link for these two patches.
+
+https://github.com/lantianyu/linux/commit/462f7e4e44644fe7e182f7a5fb043a75acb90ee5
+
+https://github.com/lantianyu/linux/commit/c8de236bf4366d39e8b98e5a091c39df29b03e0b
+
+> 
+>>        The swiotlb bounce buffer in the isolation VM are allocated in the
+>> low end memory and these memory has struct page backing. All dma address
+>> returned by swiotlb/DMA API are low end memory and this is as same as what
+>> happen in the traditional VM.
+> 
+> Indeed.
+> 
+>>        The API dma_map_decrypted() introduced in the patch 9 is to map the
+>> bounce buffer in the extra space and these memory in the low end space are
+>> used as DMA memory in the driver. Do you prefer these APIs
+>> still in the set_memory.c? I move the API to dma/mapping.c due to the
+>> suggested name arch_dma_map_decrypted() in the previous mail
+>> (https://lore.kernel.org/netdev/20210720135437.GA13554@lst.de/).
+> 
+> Well, what would help is a clear description of the semantics.
+> 
+
+Yes, I will improve description.
 
