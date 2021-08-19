@@ -2,60 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0EA1C4338F
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 16:59:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7C2C43216
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 17:04:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 984BD61029
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 16:59:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B196D6103A
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 17:04:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231909AbhHSRAO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 13:00:14 -0400
-Received: from mail-pf1-f180.google.com ([209.85.210.180]:45029 "EHLO
-        mail-pf1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232078AbhHSRAJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 13:00:09 -0400
-Received: by mail-pf1-f180.google.com with SMTP id k19so6076316pfc.11
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Aug 2021 09:59:32 -0700 (PDT)
+        id S233719AbhHSRFK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 13:05:10 -0400
+Received: from mail-pg1-f178.google.com ([209.85.215.178]:45713 "EHLO
+        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233336AbhHSRFJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 13:05:09 -0400
+Received: by mail-pg1-f178.google.com with SMTP id n18so6488226pgm.12
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Aug 2021 10:04:32 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+        h=x-gm-message-state:subject:to:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=WBzcmc8uUNU4adTJV2ySRYVXZA14RE80e+8NUrKeHdU=;
-        b=XmPSaD6k9va/wA36b38S5mDD/yC23JAMvVzjl/6aVpD89I00V3s4+hhL2h/UeoBggZ
-         MIStsN4HeqWAfVaBXDKYDGjf0aDzuZYmbto1NacUhUUwHgKmDy53L3Kk3GEP62Bin5Iq
-         zFg+7TTAQEk36EGp/xm21VXjmXm0Guie7XBUAqosWm2aQqJusPCMUp8ulXEOx3X7VRKV
-         hZzzYAf4wsd87+p5hgMLczOOZJvoaTQH32Q6uxisKCtbGFFznAQY7RbxWK2dNfIP9X4Q
-         OLLjtn1WqUzEEL4c/CHoC+kakHmQhmZUMUwL+xHStE52ejZLNZGmVY+kscRQLwxs41mS
-         jFiA==
-X-Gm-Message-State: AOAM533gNeJwBraU+P8RvqEtv2zW7pZqNioBDbZuUJV97DqUzlipG+Xp
-        BkoAMC0mvy7m1iFW8fJiNIvxtWwnn/0=
-X-Google-Smtp-Source: ABdhPJzF6OLDdGLsAnsmaNGSLH+VVgCGrXxURQsjTCcYX8yu7QxoNnWfni9nZJob/HlotlEq3gpeTA==
-X-Received: by 2002:a62:1616:0:b029:3e0:3447:59dd with SMTP id 22-20020a6216160000b02903e0344759ddmr15355364pfw.26.1629392371859;
-        Thu, 19 Aug 2021 09:59:31 -0700 (PDT)
+        bh=j4SJo8yzWwXXSkPMFCCRhHgVZYEdfE/ZuGu4frPe/Uw=;
+        b=HMp8XkP0KhDuKK3nZDvA6oEn917DY7ie9t0UXlDhHQwkd+qE/3bwcdMNBNnSYwRzPE
+         Um5DPyX3E3FKMamZlYdeIuN5NtPm4le9KWPLRX2aAAYUxAlfJymMl7UuiebQs5aDV2hd
+         rJnTmW3PwI1Wv0EPs/YfIMnJbzTucGfjqjWlNYDyFMWaWlJfqWUMBXOGlokwoZ0GfTNz
+         +K3QjQogn3SZvpOkvSbEZOsN/6voQE03f8erIDK/L4aj+Rp8UIuCeBpETW2M1403FRBa
+         igNnpUok+rqdPPT4O3EsC8t5NxVAOnNRcAaq7TiJJ+N64Nhk/ViRY80Mg1Da4UJfwne/
+         G4qA==
+X-Gm-Message-State: AOAM531xWbS2cU3M9aNXuNtiaKWY83c3va2Sfp83Ajd8PRhd4fB3Z0dd
+        DqKoyK5IT3lqKFJgc/el/h0=
+X-Google-Smtp-Source: ABdhPJyPMYSWGAZnrNb3Qs8VYfIjiwMGeDrwo/ZKcxgqS59Rli05wpKitB/Q7zp9JUk9Nir43HihXg==
+X-Received: by 2002:a05:6a00:aca:b029:392:9c79:3a39 with SMTP id c10-20020a056a000acab02903929c793a39mr15381341pfl.57.1629392672363;
+        Thu, 19 Aug 2021 10:04:32 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:8b47:c5d7:9562:9d96])
-        by smtp.gmail.com with ESMTPSA id q18sm4175981pfj.178.2021.08.19.09.59.30
+        by smtp.gmail.com with ESMTPSA id y12sm3961049pfa.25.2021.08.19.10.04.31
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Aug 2021 09:59:31 -0700 (PDT)
-Subject: Re: [PATCH 1/4] scsi: Introduct scsi_cmd_to_tag()
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org
-References: <20210819084007.79233-1-hare@suse.de>
- <20210819084007.79233-2-hare@suse.de>
+        Thu, 19 Aug 2021 10:04:31 -0700 (PDT)
+Subject: Re: [PATCH] scsi: fix scsi_mode_sense()
+To:     Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <20210819073750.132601-1-damien.lemoal@wdc.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <dffab055-b9ad-cfc7-1d8e-bffdcb18d3c1@acm.org>
-Date:   Thu, 19 Aug 2021 09:59:29 -0700
+Message-ID: <54cc6af0-67c2-5427-9952-230a7fbf4a76@acm.org>
+Date:   Thu, 19 Aug 2021 10:04:30 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210819084007.79233-2-hare@suse.de>
+In-Reply-To: <20210819073750.132601-1-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -63,19 +60,68 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/19/21 1:40 AM, Hannes Reinecke wrote:
-> +static inline u32 scsi_cmd_to_tag(struct scsi_cmnd *cmd)
-> +{
-> +	struct request *rq = scsi_cmd_to_rq(cmd);
-> +
-> +	return rq->tag;
-> +}
+On 8/19/21 12:37 AM, Damien Le Moal wrote:
+> The allocation length field of the MODE SENSE 10 command is 16-bits,
+> occupying bytes 7 and 8 of the CDB. With this command, access to mode
+> pages larger than 255 bytes is thus possible. Make sure that
+> scsi_mode_sense() code reflects this by initializing the allocation
+> length field using put_unaligned_be16() instead of directly setting
+> only byte 8 of the CDB with the buffer length.
+> 
+> While at it, also fix the folowing:
+> * use get_unaligned_be16() to retrieve the mode data length and block
+>    descriptor length fields of the mode sense reply header instead of
+>    using an open coded calculation.
+> * Fix the kdoc dbd argument explanation: the DBD bit stands for
+>    Disable Block Descriptor, which is the opposite of what the dbd
+>    argument description was.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>   drivers/scsi/scsi_lib.c | 9 ++++-----
+>   1 file changed, 4 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 7456a26aef51..92db00d81733 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -2070,7 +2070,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
+>   /**
+>    *	scsi_mode_sense - issue a mode sense, falling back from 10 to six bytes if necessary.
+>    *	@sdev:	SCSI device to be queried
+> - *	@dbd:	set if mode sense will allow block descriptors to be returned
+> + *	@dbd:	set to prevent mode sense from returning block descriptors
+>    *	@modepage: mode page being requested
+>    *	@buffer: request buffer (may not be smaller than eight bytes)
+>    *	@len:	length of request buffer.
+> @@ -2112,7 +2112,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+>   			len = 8;
+>   
+>   		cmd[0] = MODE_SENSE_10;
+> -		cmd[8] = len;
+> +		put_unaligned_be16(len, &cmd[7]);
+>   		header_length = 8;
+>   	} else {
+>   		if (len < 4)
+> @@ -2166,12 +2166,11 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
+>   		data->longlba = 0;
+>   		data->block_descriptor_length = 0;
+>   	} else if (use_10_for_ms) {
+> -		data->length = buffer[0]*256 + buffer[1] + 2;
+> +		data->length = get_unaligned_be16(&buffer[0]) + 2;
+>   		data->medium_type = buffer[2];
+>   		data->device_specific = buffer[3];
+>   		data->longlba = buffer[4] & 0x01;
+> -		data->block_descriptor_length = buffer[6]*256
+> -			+ buffer[7];
+> +		data->block_descriptor_length = get_unaligned_be16(&buffer[6]);
+>   	} else {
+>   		data->length = buffer[0] + 1;
+>   		data->medium_type = buffer[1];
 
-Do we really need this function? If so, please change "Introduct" in the 
-subject into "Introduce". Additionally, how about renaming this function 
-into scsi_cmd_tag()? How about changing the function body into "return 
-scsi_cmd_to_rq(cmd)->tag"?
+If the type of the scsi_mode_sense() 'len' argument is changed from 
+'int' into 'uint16_t', feel free to add:
 
-Thanks,
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Bart.
+
