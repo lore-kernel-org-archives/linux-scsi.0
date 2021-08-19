@@ -2,83 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D011C4338F
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 08:50:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3C17C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:07:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7A07261131
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 08:50:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D24B61100
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:07:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234365AbhHSIue (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 04:50:34 -0400
-Received: from verein.lst.de ([213.95.11.211]:36611 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229649AbhHSIud (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Aug 2021 04:50:33 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 9B4F767357; Thu, 19 Aug 2021 10:49:51 +0200 (CEST)
-Date:   Thu, 19 Aug 2021 10:49:51 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Tianyu Lan <ltykernel@gmail.com>
-Cc:     Christoph Hellwig <hch@lst.de>, kys@microsoft.com,
-        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
-        decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com,
-        bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
-        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
-        m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
-        Tianyu.Lan@microsoft.com, pgonda@google.com,
-        martin.b.radev@gmail.com, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        sfr@canb.auug.org.au, saravanand@fb.com,
-        krish.sadhukhan@oracle.com, aneesh.kumar@linux.ibm.com,
-        xen-devel@lists.xenproject.org, rientjes@google.com,
-        hannes@cmpxchg.org, tj@kernel.org, michael.h.kelley@microsoft.com,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, parri.andrea@gmail.com, dave.hansen@intel.com
-Subject: Re: [PATCH V3 10/13] x86/Swiotlb: Add Swiotlb bounce buffer remap
- function for HV IVM
-Message-ID: <20210819084951.GA10461@lst.de>
-References: <20210809175620.720923-1-ltykernel@gmail.com> <20210809175620.720923-11-ltykernel@gmail.com> <20210812122741.GC19050@lst.de> <d18ae061-6fc2-e69e-fc2c-2e1a1114c4b4@gmail.com> <890e5e21-714a-2db6-f68a-6211a69bebb9@gmail.com>
+        id S237354AbhHSJIG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 05:08:06 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:36562 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230146AbhHSJIF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 05:08:05 -0400
+Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
+        by smtp-out2.suse.de (Postfix) with ESMTP id D7D5D1FD7C;
+        Thu, 19 Aug 2021 09:07:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1629364048; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=fvRPsVD2t4tDq1wGoJ6klcoAbNEUea0FL8iiGqHnM1E=;
+        b=uUxzN18gtt7ADaleE8YwlNq9Ry9gp2Pf3/4T738NVQRYw452DWtvHGedyvHWEDdh9jysRa
+        QuzGZw+8ud1mOfztuSmqWHQxjG+f8OCXj3osIEuSlq+sK+dLs1MBRxR93jgWZoigDU4Q91
+        QoLKhNpvAXWnB7aPNRMEnQ5BiglCpz0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1629364048;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+        bh=fvRPsVD2t4tDq1wGoJ6klcoAbNEUea0FL8iiGqHnM1E=;
+        b=wGHwNK21lruG0Xl7ejBE2wGQHc0lJXIbsnuJB0avVZgpEAH6i08E3XqI7zHFsRXCOou1bk
+        MHKGhdzq5z4qNUCw==
+Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
+        by relay2.suse.de (Postfix) with ESMTP id 1A449A3BA6;
+        Thu, 19 Aug 2021 09:07:19 +0000 (UTC)
+Received: by adalid.arch.suse.de (Postfix, from userid 16045)
+        id C1F46518D273; Thu, 19 Aug 2021 11:07:28 +0200 (CEST)
+From:   Hannes Reinecke <hare@suse.de>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/4] sym53c8xx_2: Fixes for SCSI EH rework
+Date:   Thu, 19 Aug 2021 11:07:12 +0200
+Message-Id: <20210819090716.94049-1-hare@suse.de>
+X-Mailer: git-send-email 2.29.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <890e5e21-714a-2db6-f68a-6211a69bebb9@gmail.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 16, 2021 at 10:50:26PM +0800, Tianyu Lan wrote:
-> Hi Christoph:
->       Sorry to bother you.Please double check with these two patches
-> " [PATCH V3 10/13] x86/Swiotlb: Add Swiotlb bounce buffer remap function 
-> for HV IVM" and "[PATCH V3 09/13] DMA: Add dma_map_decrypted/dma_
-> unmap_encrypted() function".
+Hi all,
 
-Do you have a git tree somewhere to look at the whole tree?
+with the SCSI EH rework the scsi_cmnd argument for the SCSI EH
+callbacks is going away, so we need to fixup the drivers to work
+without it.
 
->       The swiotlb bounce buffer in the isolation VM are allocated in the
-> low end memory and these memory has struct page backing. All dma address
-> returned by swiotlb/DMA API are low end memory and this is as same as what 
-> happen in the traditional VM.
+This patchset modifies the sym53c8xx_2 driver to split off the
+combined SCSI EH routine into the individual EH callbacks and to
+not rely on a specific command for those.
 
-Indeed.
+As usual, comments and reviews are welcome.
 
->       The API dma_map_decrypted() introduced in the patch 9 is to map the 
-> bounce buffer in the extra space and these memory in the low end space are 
-> used as DMA memory in the driver. Do you prefer these APIs
-> still in the set_memory.c? I move the API to dma/mapping.c due to the
-> suggested name arch_dma_map_decrypted() in the previous mail
-> (https://lore.kernel.org/netdev/20210720135437.GA13554@lst.de/).
+Hannes Reinecke (4):
+  sym53c8xx_2: move PCI EEH handling to host reset
+  sym53c8xx_2: split off host reset from sym_eh_handler()
+  sym53c8xx_2: split off bus reset from sym_eh_handler()
+  sym53c8xx_2: rework reset handling
 
-Well, what would help is a clear description of the semantics.
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 220 +++++++++++++++++++---------
+ 1 file changed, 147 insertions(+), 73 deletions(-)
+
+-- 
+2.29.2
+
