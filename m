@@ -2,58 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-16.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNWANTED_LANGUAGE_BODY,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A1DC432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:12:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B41BC4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:12:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD7A661131
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:12:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F55461131
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 09:12:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237023AbhHSJNJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 05:13:09 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:36782 "EHLO
+        id S237121AbhHSJNK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 05:13:10 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:36788 "EHLO
         smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234569AbhHSJNF (ORCPT
+        with ESMTP id S236796AbhHSJNF (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 05:13:05 -0400
 Received: from relay2.suse.de (relay2.suse.de [149.44.160.134])
-        by smtp-out2.suse.de (Postfix) with ESMTP id EB5AA200AF;
+        by smtp-out2.suse.de (Postfix) with ESMTP id F1255200B2;
         Thu, 19 Aug 2021 09:12:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
         t=1629364348; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Lz2/ar2mBUsC6LhoKQvJV0v1jhYsZtGmKMpp6CS77Fo=;
-        b=GKR8fDUVnKCwAWitYiFcBQKZD5wtDF12fez/haSRK8KtsjxB1njD0e4HWOE3lf2y0+0Iq8
-        qeVecPQLAadOKVQfR0zK3IPd2m5L94YOImiKdot63A4FmpzQyVDwdWAsobE//kUwIxNQtF
-        jHaRv/qRvnesqv9Ks+b6Viszt+iJBag=
+        bh=SvHHCO3ABVhXx+JEEtSFpIoRZzDWNqCCVJgHVfhcsNg=;
+        b=jNQagX7wOGWTXh40uHbDtNRXw9goxkX5Xstk55akdR9zvgeBF5DzDtLqdx66geTh+Y5Qyn
+        YgDlXCAakdc8gH3fw8Rwkg+/5f0Tjo2vsuLGNokyWeNwExQRhS31PoWpNJBt0vM6K+e5oe
+        7BPoo75voL2XUCpcAs5gkHb8AVAmDrc=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
         s=susede2_ed25519; t=1629364348;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=Lz2/ar2mBUsC6LhoKQvJV0v1jhYsZtGmKMpp6CS77Fo=;
-        b=g1GAi29FIaSLZfEm5BQ4HDht6dFkR/xMY8zwnh/3dE8f8WF3+sP5lQJn2OUANsXpT+Uk8I
-        btITf4UltBOn6tDw==
+        bh=SvHHCO3ABVhXx+JEEtSFpIoRZzDWNqCCVJgHVfhcsNg=;
+        b=cdJcnsLeWIrqGGtlhk1KLi5DAxfFw4XtzsZcMIDH/eycevX2aHwkSrLeiIq/o6sU1/G7AF
+        IAP+ptUQEXmBm9Ag==
 Received: from adalid.arch.suse.de (adalid.arch.suse.de [10.161.8.13])
-        by relay2.suse.de (Postfix) with ESMTP id 30B33A3B9F;
+        by relay2.suse.de (Postfix) with ESMTP id 345E3A3BA2;
         Thu, 19 Aug 2021 09:12:19 +0000 (UTC)
 Received: by adalid.arch.suse.de (Postfix, from userid 16045)
-        id D1BAC518D288; Thu, 19 Aug 2021 11:12:28 +0200 (CEST)
+        id DDDE8518D28C; Thu, 19 Aug 2021 11:12:28 +0200 (CEST)
 From:   Hannes Reinecke <hare@suse.de>
 To:     "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
         James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
-        Hannes Reinecke <hare@suse.com>
-Subject: [PATCH 1/3] snic: reserve tag for TMF
-Date:   Thu, 19 Aug 2021 11:12:22 +0200
-Message-Id: <20210819091224.94213-2-hare@suse.de>
+        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 3/3] snic: Use scsi_host_busy_iter() to traverse commands
+Date:   Thu, 19 Aug 2021 11:12:24 +0200
+Message-Id: <20210819091224.94213-4-hare@suse.de>
 X-Mailer: git-send-email 2.29.2
 In-Reply-To: <20210819091224.94213-1-hare@suse.de>
 References: <20210819091224.94213-1-hare@suse.de>
@@ -63,172 +63,302 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Rather than re-using the failed command the snic driver should
-reserve one command for TMFs.
+Use scsi_host_busy_iter() to traverse commands instead of hand-crafted
+routines walking the command list.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/snic/snic.h      |  3 ++-
- drivers/scsi/snic/snic_main.c |  3 +++
- drivers/scsi/snic/snic_scsi.c | 51 +++++++++++++++--------------------
- 3 files changed, 26 insertions(+), 31 deletions(-)
+ drivers/scsi/snic/snic_scsi.c | 207 ++++++++++++++++------------------
+ 1 file changed, 100 insertions(+), 107 deletions(-)
 
-diff --git a/drivers/scsi/snic/snic.h b/drivers/scsi/snic/snic.h
-index f4c666285bba..f88ecf73f708 100644
---- a/drivers/scsi/snic/snic.h
-+++ b/drivers/scsi/snic/snic.h
-@@ -310,6 +310,7 @@ struct snic {
- 	struct list_head spl_cmd_list;
- 
- 	unsigned int max_tag_id;
-+	unsigned int tmf_tag_id;
- 	atomic_t ios_inflight;		/* io in flight counter */
- 
- 	struct vnic_snic_config config;
-@@ -380,7 +381,7 @@ int snic_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
- int snic_abort_cmd(struct scsi_cmnd *);
- int snic_device_reset(struct scsi_cmnd *);
- int snic_host_reset(struct scsi_cmnd *);
--int snic_reset(struct Scsi_Host *, struct scsi_cmnd *);
-+int snic_reset(struct Scsi_Host *);
- void snic_shutdown_scsi_cleanup(struct snic *);
- 
- 
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index 14f4ce665e58..65f50057c66e 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -512,6 +512,9 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 					 max_t(u32, SNIC_MIN_IO_REQ, max_ios));
- 
- 	snic->max_tag_id = shost->can_queue;
-+	/* Reserve one reset command */
-+	shost->can_queue--;
-+	snic->tmf_tag_id = shost->can_queue;
- 
- 	shost->max_lun = snic->config.luns_per_tgt;
- 	shost->max_id = SNIC_MAX_TARGET;
 diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
-index 6dd0ff188bb4..1e59d59130d6 100644
+index 3cffac9f23c8..db99ea103baa 100644
 --- a/drivers/scsi/snic/snic_scsi.c
 +++ b/drivers/scsi/snic/snic_scsi.c
-@@ -1021,17 +1021,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 		      "reset_cmpl: type = %x, hdr_stat = %x, cmnd_id = %x, hid = %x, ctx = %lx\n",
- 		      typ, hdr_stat, cmnd_id, hid, ctx);
+@@ -77,7 +77,7 @@ static const char * const snic_io_status_str[] = {
+ 	[SNIC_STAT_FATAL_ERROR]	= "SNIC_STAT_FATAL_ERROR",
+ };
  
--	/* spl case, host reset issued through ioctl */
--	if (cmnd_id == SCSI_NO_TAG) {
--		rqi = (struct snic_req_info *) ctx;
--		SNIC_HOST_INFO(snic->shost,
--			       "reset_cmpl:Tag %d ctx %lx cmpl stat %s\n",
--			       cmnd_id, ctx, snic_io_status_to_str(hdr_stat));
--		sc = rqi->sc;
--
--		goto ioctl_hba_rst;
--	}
--
- 	if (cmnd_id >= snic->max_tag_id) {
- 		SNIC_HOST_ERR(snic->shost,
- 			      "reset_cmpl: Tag 0x%x out of Range,HdrStat %s\n",
-@@ -1042,7 +1031,6 @@ snic_hba_reset_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
- 	}
+-static void snic_scsi_cleanup(struct snic *, int);
++static void snic_scsi_cleanup(struct snic *);
  
- 	sc = scsi_host_find_tag(snic->shost, cmnd_id);
--ioctl_hba_rst:
- 	if (!sc) {
- 		atomic64_inc(&snic->s_stats.io.sc_null);
- 		SNIC_HOST_ERR(snic->shost,
-@@ -1728,7 +1716,7 @@ snic_dr_clean_single_req(struct snic *snic,
+ const char *
+ snic_state_to_str(unsigned int state)
+@@ -980,7 +980,7 @@ snic_hba_reset_scsi_cleanup(struct snic *snic, struct scsi_cmnd *sc)
+ 	long act_ios = 0, act_fwreqs = 0;
+ 
+ 	SNIC_SCSI_DBG(snic->shost, "HBA Reset scsi cleanup.\n");
+-	snic_scsi_cleanup(snic, snic_cmd_tag(sc));
++	snic_scsi_cleanup(snic);
+ 
+ 	/* Update stats on pending IOs */
+ 	act_ios = atomic64_read(&st->io.active);
+@@ -2415,87 +2415,82 @@ snic_cmpl_pending_tmreq(struct snic *snic, struct scsi_cmnd *sc)
+ 		complete(rqi->abts_done);
+ }
+ 
+-/*
+- * snic_scsi_cleanup: Walks through tag map and releases the reqs
+- */
+-static void
+-snic_scsi_cleanup(struct snic *snic, int ex_tag)
++static bool snic_scsi_cleanup_iter(struct scsi_cmnd *sc, void *data,
++				   bool reserved)
  {
- 	struct snic_req_info *rqi = NULL;
- 	struct snic_tgt *tgt = NULL;
+-	struct snic_req_info *rqi = NULL;
 -	struct scsi_cmnd *sc = NULL;
-+	struct scsi_cmnd *sc;
++	struct snic *snic = data;
++	u32 tag = sc->request->tag;
  	spinlock_t *io_lock = NULL;
- 	u32 sv_state = 0, tmf = 0;
- 	DECLARE_COMPLETION_ONSTACK(tm_done);
-@@ -2241,13 +2229,6 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- 		goto hba_rst_end;
- 	}
+-	unsigned long flags;
+-	int tag;
++	struct snic_req_info *rqi = NULL;
+ 	u64 st_time = 0;
++	unsigned long flags;
  
--	if (snic_cmd_tag(sc) == SCSI_NO_TAG) {
--		memset(scsi_cmd_priv(sc), 0,
--			sizeof(struct snic_internal_io_state));
--		SNIC_HOST_INFO(snic->shost, "issu_hr:Host reset thru ioctl.\n");
--		rqi->sc = sc;
--	}
+-	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup.\n");
 -
- 	req = rqi_to_req(rqi);
+-	for (tag = 0; tag < snic->max_tag_id; tag++) {
+-		/* Skip ex_tag */
+-		if (tag == ex_tag)
+-			continue;
+-
+-		io_lock = snic_io_lock_tag(snic, tag);
+-		spin_lock_irqsave(io_lock, flags);
+-		sc = scsi_host_find_tag(snic->shost, tag);
+-		if (!sc) {
+-			spin_unlock_irqrestore(io_lock, flags);
+-
+-			continue;
+-		}
+-
+-		if (unlikely(snic_tmreq_pending(sc))) {
+-			/*
+-			 * When FW Completes reset w/o sending completions
+-			 * for outstanding ios.
+-			 */
+-			snic_cmpl_pending_tmreq(snic, sc);
+-			spin_unlock_irqrestore(io_lock, flags);
++	io_lock = snic_io_lock_tag(snic, tag);
++	spin_lock_irqsave(io_lock, flags);
++	if (unlikely(snic_tmreq_pending(sc))) {
++		/*
++		 * When FW Completes reset w/o sending completions
++		 * for outstanding ios.
++		 */
++		snic_cmpl_pending_tmreq(snic, sc);
++		spin_unlock_irqrestore(io_lock, flags);
  
- 	io_lock = snic_io_lock_hash(snic, sc);
-@@ -2322,11 +2303,13 @@ snic_issue_hba_reset(struct snic *snic, struct scsi_cmnd *sc)
- } /* end of snic_issue_hba_reset */
- 
- int
--snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
-+snic_reset(struct Scsi_Host *shost)
- {
- 	struct snic *snic = shost_priv(shost);
-+	struct scsi_cmnd *sc = NULL;
- 	enum snic_state sv_state;
- 	unsigned long flags;
-+	u32 start_time  = jiffies;
- 	int ret = FAILED;
- 
- 	/* Set snic state as SNIC_FWRESET*/
-@@ -2351,6 +2334,18 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
- 	while (atomic_read(&snic->ios_inflight))
- 		schedule_timeout(msecs_to_jiffies(1));
- 
-+	sc = scsi_host_find_tag(shost, snic->tmf_tag_id);
-+	if (!sc) {
-+		SNIC_HOST_ERR(shost,
-+			      "reset:Host Reset Failed to allocate sc.\n");
-+		spin_lock_irqsave(&snic->snic_lock, flags);
-+		snic_set_state(snic, sv_state);
-+		spin_unlock_irqrestore(&snic->snic_lock, flags);
-+		atomic64_inc(&snic->s_stats.reset.hba_reset_fail);
-+		ret = FAILED;
-+
-+		goto reset_end;
+-			continue;
+-		}
++		return true;
 +	}
- 	ret = snic_issue_hba_reset(snic, sc);
- 	if (ret) {
- 		SNIC_HOST_ERR(shost,
-@@ -2368,6 +2363,10 @@ snic_reset(struct Scsi_Host *shost, struct scsi_cmnd *sc)
- 	ret = SUCCESS;
  
- reset_end:
-+	SNIC_TRC(shost->host_no, sc ? snic_cmd_tag(sc) : SCSI_NO_TAG,
-+		 (ulong) sc, jiffies_to_msecs(jiffies - start_time),
-+		 0, 0, 0);
+-		rqi = (struct snic_req_info *) CMD_SP(sc);
+-		if (!rqi) {
+-			spin_unlock_irqrestore(io_lock, flags);
++	rqi = (struct snic_req_info *) CMD_SP(sc);
++	if (!rqi) {
++		spin_unlock_irqrestore(io_lock, flags);
+ 
+-			goto cleanup;
+-		}
++		goto cleanup;
++	}
+ 
+-		SNIC_SCSI_DBG(snic->shost,
+-			      "sc_clean: sc %p, rqi %p, tag %d flags 0x%llx\n",
+-			      sc, rqi, tag, CMD_FLAGS(sc));
++	SNIC_SCSI_DBG(snic->shost,
++		      "sc_clean: sc %p, rqi %p, tag %d flags 0x%llx\n",
++		      sc, rqi, tag, CMD_FLAGS(sc));
+ 
+-		CMD_SP(sc) = NULL;
+-		CMD_FLAGS(sc) |= SNIC_SCSI_CLEANUP;
+-		spin_unlock_irqrestore(io_lock, flags);
+-		st_time = rqi->start_time;
++	CMD_SP(sc) = NULL;
++	CMD_FLAGS(sc) |= SNIC_SCSI_CLEANUP;
++	spin_unlock_irqrestore(io_lock, flags);
++	st_time = rqi->start_time;
+ 
+-		SNIC_HOST_INFO(snic->shost,
+-			       "sc_clean: Releasing rqi %p : flags 0x%llx\n",
+-			       rqi, CMD_FLAGS(sc));
++	SNIC_HOST_INFO(snic->shost,
++		       "sc_clean: Releasing rqi %p : flags 0x%llx\n",
++		       rqi, CMD_FLAGS(sc));
+ 
+-		snic_release_req_buf(snic, rqi, sc);
++	snic_release_req_buf(snic, rqi, sc);
+ 
+ cleanup:
+-		sc->result = DID_TRANSPORT_DISRUPTED << 16;
+-		SNIC_HOST_INFO(snic->shost,
+-			       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, Tag %d flags 0x%llx rqi %p duration %u msecs\n",
+-			       sc, sc->request->tag, CMD_FLAGS(sc), rqi,
+-			       jiffies_to_msecs(jiffies - st_time));
++	sc->result = DID_TRANSPORT_DISRUPTED << 16;
++	SNIC_HOST_INFO(snic->shost,
++		       "sc_clean: DID_TRANSPORT_DISRUPTED for sc %p, "
++		       "Tag %d flags 0x%llx rqi %p duration %u msecs\n",
++		       sc, sc->request->tag, CMD_FLAGS(sc), rqi,
++		       jiffies_to_msecs(jiffies - st_time));
+ 
+-		/* Update IO stats */
+-		snic_stats_update_io_cmpl(&snic->s_stats);
++	/* Update IO stats */
++	snic_stats_update_io_cmpl(&snic->s_stats);
+ 
+-		if (sc->scsi_done) {
+-			SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
+-				 jiffies_to_msecs(jiffies - st_time), 0,
+-				 SNIC_TRC_CMD(sc),
+-				 SNIC_TRC_CMD_STATE_FLAGS(sc));
++	if (sc->scsi_done) {
++		SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
++			 jiffies_to_msecs(jiffies - st_time), 0,
++			 SNIC_TRC_CMD(sc),
++			 SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+-			sc->scsi_done(sc);
+-		}
++		sc->scsi_done(sc);
+ 	}
++	return true;
++}
 +
- 	return ret;
- } /* end of snic_reset */
++/*
++ * snic_scsi_cleanup: Walks through tag map and releases the reqs
++ */
++static void
++snic_scsi_cleanup(struct snic *snic)
++{
++	SNIC_SCSI_DBG(snic->shost, "sc_clean: scsi cleanup.\n");
++
++	scsi_host_busy_iter(snic->shost, snic_scsi_cleanup_iter, snic);
+ } /* end of snic_scsi_cleanup */
  
-@@ -2382,21 +2381,13 @@ int
- snic_host_reset(struct scsi_cmnd *sc)
+ void
+@@ -2503,7 +2498,7 @@ snic_shutdown_scsi_cleanup(struct snic *snic)
  {
- 	struct Scsi_Host *shost = sc->device->host;
--	u32 start_time  = jiffies;
--	int ret = FAILED;
+ 	SNIC_HOST_INFO(snic->shost, "Shutdown time SCSI Cleanup.\n");
  
- 	SNIC_SCSI_DBG(shost,
- 		      "host reset:sc %p sc_cmd 0x%x req %p tag %d flags 0x%llx\n",
- 		      sc, sc->cmnd[0], sc->request,
- 		      snic_cmd_tag(sc), CMD_FLAGS(sc));
- 
--	ret = snic_reset(shost, sc);
--
--	SNIC_TRC(shost->host_no, snic_cmd_tag(sc), (ulong) sc,
--		 jiffies_to_msecs(jiffies - start_time),
--		 0, SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
--
--	return ret;
-+	return snic_reset(shost);
- } /* end of snic_host_reset */
+-	snic_scsi_cleanup(snic, SCSI_NO_TAG);
++	snic_scsi_cleanup(snic);
+ } /* end of snic_shutdown_scsi_cleanup */
  
  /*
+@@ -2517,7 +2512,7 @@ snic_internal_abort_io(struct snic *snic, struct scsi_cmnd *sc, int tmf)
+ 	spinlock_t *io_lock = NULL;
+ 	unsigned long flags;
+ 	u32 sv_state = 0;
+-	int ret = 0;
++	int ret = FAILED;
+ 
+ 	io_lock = snic_io_lock_hash(snic, sc);
+ 	spin_lock_irqsave(io_lock, flags);
+@@ -2592,6 +2587,35 @@ snic_internal_abort_io(struct snic *snic, struct scsi_cmnd *sc, int tmf)
+ 	return ret;
+ } /* end of snic_internal_abort_io */
+ 
++struct snic_tgt_scsi_abort_io_data {
++	struct snic *snic;
++	struct snic_tgt *tgt;
++	int tmf;
++	int abt_cnt;
++};
++
++static bool snic_tgt_scsi_abort_io_iter(struct scsi_cmnd *sc, void *data,
++					bool reserved)
++{
++	struct snic_tgt_scsi_abort_io_data *iter_data = data;
++	struct snic *snic = iter_data->snic;
++	struct snic_tgt *sc_tgt;
++	int ret;
++
++	sc_tgt = starget_to_tgt(scsi_target(sc->device));
++	if (sc_tgt != iter_data->tgt)
++		return true;
++
++	ret = snic_internal_abort_io(snic, sc, iter_data->tmf);
++	if (ret == SUCCESS)
++		iter_data->abt_cnt++;
++	else
++		SNIC_HOST_ERR(snic->shost,
++			      "tgt_abt_io: Tag %x, Failed w err = %d\n",
++			      sc->request->tag, ret);
++	return true;
++}
++
+ /*
+  * snic_tgt_scsi_abort_io : called by snic_tgt_del
+  */
+@@ -2599,11 +2623,9 @@ int
+ snic_tgt_scsi_abort_io(struct snic_tgt *tgt)
+ {
+ 	struct snic *snic = NULL;
+-	struct scsi_cmnd *sc = NULL;
+-	struct snic_tgt *sc_tgt = NULL;
+-	spinlock_t *io_lock = NULL;
+-	unsigned long flags;
+-	int ret = 0, tag, abt_cnt = 0, tmf = 0;
++	struct snic_tgt_scsi_abort_io_data data = {
++		.abt_cnt = 0,
++	};
+ 
+ 	if (!tgt)
+ 		return -1;
+@@ -2611,44 +2633,15 @@ snic_tgt_scsi_abort_io(struct snic_tgt *tgt)
+ 	snic = shost_priv(snic_tgt_to_shost(tgt));
+ 	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: Cleaning Pending IOs.\n");
+ 
++	data.snic = snic;
+ 	if (tgt->tdata.typ == SNIC_TGT_DAS)
+-		tmf = SNIC_ITMF_ABTS_TASK;
++		data.tmf = SNIC_ITMF_ABTS_TASK;
+ 	else
+-		tmf = SNIC_ITMF_ABTS_TASK_TERM;
+-
+-	for (tag = 0; tag < snic->max_tag_id; tag++) {
+-		io_lock = snic_io_lock_tag(snic, tag);
+-
+-		spin_lock_irqsave(io_lock, flags);
+-		sc = scsi_host_find_tag(snic->shost, tag);
+-		if (!sc) {
+-			spin_unlock_irqrestore(io_lock, flags);
+-
+-			continue;
+-		}
+-
+-		sc_tgt = starget_to_tgt(scsi_target(sc->device));
+-		if (sc_tgt != tgt) {
+-			spin_unlock_irqrestore(io_lock, flags);
++		data.tmf = SNIC_ITMF_ABTS_TASK_TERM;
+ 
+-			continue;
+-		}
+-		spin_unlock_irqrestore(io_lock, flags);
+-
+-		ret = snic_internal_abort_io(snic, sc, tmf);
+-		if (ret < 0) {
+-			SNIC_HOST_ERR(snic->shost,
+-				      "tgt_abt_io: Tag %x, Failed w err = %d\n",
+-				      tag, ret);
+-
+-			continue;
+-		}
+-
+-		if (ret == SUCCESS)
+-			abt_cnt++;
+-	}
++	scsi_host_busy_iter(snic->shost, snic_tgt_scsi_abort_io_iter, &data);
+ 
+-	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: abt_cnt = %d\n", abt_cnt);
++	SNIC_SCSI_DBG(snic->shost, "tgt_abt_io: abt_cnt = %d\n", data.abt_cnt);
+ 
+ 	return 0;
+ } /* end of snic_tgt_scsi_abort_io */
 -- 
 2.29.2
 
