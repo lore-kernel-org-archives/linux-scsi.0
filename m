@@ -7,52 +7,56 @@ X-Spam-Status: No, score=-17.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB7C2C43216
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 17:04:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B49B9C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 18:07:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B196D6103A
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 17:04:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 918656109F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 18:07:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233719AbhHSRFK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 13:05:10 -0400
-Received: from mail-pg1-f178.google.com ([209.85.215.178]:45713 "EHLO
-        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233336AbhHSRFJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 13:05:09 -0400
-Received: by mail-pg1-f178.google.com with SMTP id n18so6488226pgm.12
-        for <linux-scsi@vger.kernel.org>; Thu, 19 Aug 2021 10:04:32 -0700 (PDT)
+        id S233379AbhHSSIc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 14:08:32 -0400
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:33425 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229465AbhHSSIb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 14:08:31 -0400
+Received: by mail-pj1-f54.google.com with SMTP id 28-20020a17090a031cb0290178dcd8a4d1so7727219pje.0;
+        Thu, 19 Aug 2021 11:07:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=j4SJo8yzWwXXSkPMFCCRhHgVZYEdfE/ZuGu4frPe/Uw=;
-        b=HMp8XkP0KhDuKK3nZDvA6oEn917DY7ie9t0UXlDhHQwkd+qE/3bwcdMNBNnSYwRzPE
-         Um5DPyX3E3FKMamZlYdeIuN5NtPm4le9KWPLRX2aAAYUxAlfJymMl7UuiebQs5aDV2hd
-         rJnTmW3PwI1Wv0EPs/YfIMnJbzTucGfjqjWlNYDyFMWaWlJfqWUMBXOGlokwoZ0GfTNz
-         +K3QjQogn3SZvpOkvSbEZOsN/6voQE03f8erIDK/L4aj+Rp8UIuCeBpETW2M1403FRBa
-         igNnpUok+rqdPPT4O3EsC8t5NxVAOnNRcAaq7TiJJ+N64Nhk/ViRY80Mg1Da4UJfwne/
-         G4qA==
-X-Gm-Message-State: AOAM531xWbS2cU3M9aNXuNtiaKWY83c3va2Sfp83Ajd8PRhd4fB3Z0dd
-        DqKoyK5IT3lqKFJgc/el/h0=
-X-Google-Smtp-Source: ABdhPJyPMYSWGAZnrNb3Qs8VYfIjiwMGeDrwo/ZKcxgqS59Rli05wpKitB/Q7zp9JUk9Nir43HihXg==
-X-Received: by 2002:a05:6a00:aca:b029:392:9c79:3a39 with SMTP id c10-20020a056a000acab02903929c793a39mr15381341pfl.57.1629392672363;
-        Thu, 19 Aug 2021 10:04:32 -0700 (PDT)
+        bh=AfYnBat8HLe89HP83zngEKr4D0S4PvQLlUEhGzKv+jE=;
+        b=QLen/kIWgHdhYD92FuKXRInVsraXjSoLl4lmbpaQX0FzCmj/6NOKGVMegw/Ao7cjBP
+         6QgNUtkjrmNdls+3cvt3T4zqTGfDjhldLKt/k2ozzFbHvXfqIkZQWDA9mwZHBwPJjhTW
+         tstYn7QzUnj9hA8kI513v4Y7uA8SEgLt2Xl1+s9zufnpU8bnfrUTomp/Fas9XsNWzp3k
+         yqaA7KjhRffFokMKqKfcBx0DcxRrH2KGSsDjl44CLXt8h2yR871oYVrSTAb8nsWz1EON
+         dZEZ1W9H34RFbv42aB161Y3IKqOBRjJsx2SDe443iLTc1DU7gjvrfDK2BNQIBq3CPxp+
+         24bA==
+X-Gm-Message-State: AOAM53277N9uAiAHWS4AdT7Uebpo92ADTZYlhz2hr+3UsNJ4WLuiGlm9
+        BaxJGA7rjb1mVpRqEzrdU8I=
+X-Google-Smtp-Source: ABdhPJw9jzaPLTBC8qVfvVirNvlSIA1Jq9phxj9SttW3sNqLuE7L7AEqtQcvtYwtddM+sUb8/CfPXQ==
+X-Received: by 2002:a17:90b:4504:: with SMTP id iu4mr16573217pjb.209.1629396474907;
+        Thu, 19 Aug 2021 11:07:54 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:8b47:c5d7:9562:9d96])
-        by smtp.gmail.com with ESMTPSA id y12sm3961049pfa.25.2021.08.19.10.04.31
+        by smtp.gmail.com with ESMTPSA id q3sm5001758pgl.23.2021.08.19.11.07.53
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Aug 2021 10:04:31 -0700 (PDT)
-Subject: Re: [PATCH] scsi: fix scsi_mode_sense()
-To:     Damien Le Moal <damien.lemoal@wdc.com>, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20210819073750.132601-1-damien.lemoal@wdc.com>
+        Thu, 19 Aug 2021 11:07:54 -0700 (PDT)
+Subject: Re: [PATCH v2 2/2] scsi: qla1280: Fix DEBUG_QLA1280 compilation
+ issues
+To:     John Garry <john.garry@huawei.com>, mdr@sgi.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        hare@suse.de
+References: <1629365549-190391-1-git-send-email-john.garry@huawei.com>
+ <1629365549-190391-3-git-send-email-john.garry@huawei.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <54cc6af0-67c2-5427-9952-230a7fbf4a76@acm.org>
-Date:   Thu, 19 Aug 2021 10:04:30 -0700
+Message-ID: <7107778e-8e20-22ab-bf94-d26aca09bd93@acm.org>
+Date:   Thu, 19 Aug 2021 11:07:53 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210819073750.132601-1-damien.lemoal@wdc.com>
+In-Reply-To: <1629365549-190391-3-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -60,68 +64,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/19/21 12:37 AM, Damien Le Moal wrote:
-> The allocation length field of the MODE SENSE 10 command is 16-bits,
-> occupying bytes 7 and 8 of the CDB. With this command, access to mode
-> pages larger than 255 bytes is thus possible. Make sure that
-> scsi_mode_sense() code reflects this by initializing the allocation
-> length field using put_unaligned_be16() instead of directly setting
-> only byte 8 of the CDB with the buffer length.
+On 8/19/21 2:32 AM, John Garry wrote:
+> The driver does not compile under DEBUG_QLA1280 flag:
+> - Debug statements expect an integer for printing a SCSI lun value, but
+>    its size is 64b. So change SCSI_LUN_32() to cast to an int, as would be
+>    expected from a "_32" function.
+> - lower_32_bits() expects %x, as opposed to %lx, so fix that.
 > 
-> While at it, also fix the folowing:
-> * use get_unaligned_be16() to retrieve the mode data length and block
->    descriptor length fields of the mode sense reply header instead of
->    using an open coded calculation.
-> * Fix the kdoc dbd argument explanation: the DBD bit stands for
->    Disable Block Descriptor, which is the opposite of what the dbd
->    argument description was.
+> Also delete ql1280_dump_device(), which looks to have never been
+> referenced.
 > 
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->   drivers/scsi/scsi_lib.c | 9 ++++-----
->   1 file changed, 4 insertions(+), 5 deletions(-)
+>   drivers/scsi/qla1280.c | 27 ++-------------------------
+>   1 file changed, 2 insertions(+), 25 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 7456a26aef51..92db00d81733 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2070,7 +2070,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
->   /**
->    *	scsi_mode_sense - issue a mode sense, falling back from 10 to six bytes if necessary.
->    *	@sdev:	SCSI device to be queried
-> - *	@dbd:	set if mode sense will allow block descriptors to be returned
-> + *	@dbd:	set to prevent mode sense from returning block descriptors
->    *	@modepage: mode page being requested
->    *	@buffer: request buffer (may not be smaller than eight bytes)
->    *	@len:	length of request buffer.
-> @@ -2112,7 +2112,7 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
->   			len = 8;
->   
->   		cmd[0] = MODE_SENSE_10;
-> -		cmd[8] = len;
-> +		put_unaligned_be16(len, &cmd[7]);
->   		header_length = 8;
->   	} else {
->   		if (len < 4)
-> @@ -2166,12 +2166,11 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
->   		data->longlba = 0;
->   		data->block_descriptor_length = 0;
->   	} else if (use_10_for_ms) {
-> -		data->length = buffer[0]*256 + buffer[1] + 2;
-> +		data->length = get_unaligned_be16(&buffer[0]) + 2;
->   		data->medium_type = buffer[2];
->   		data->device_specific = buffer[3];
->   		data->longlba = buffer[4] & 0x01;
-> -		data->block_descriptor_length = buffer[6]*256
-> -			+ buffer[7];
-> +		data->block_descriptor_length = get_unaligned_be16(&buffer[6]);
->   	} else {
->   		data->length = buffer[0] + 1;
->   		data->medium_type = buffer[1];
+> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+> index b4f7d8d7a01c..9a7e84b49d41 100644
+> --- a/drivers/scsi/qla1280.c
+> +++ b/drivers/scsi/qla1280.c
+> @@ -494,7 +494,7 @@ __setup("qla1280=", qla1280_setup);
+>   #define CMD_HOST(Cmnd)		Cmnd->device->host
+>   #define SCSI_BUS_32(Cmnd)	Cmnd->device->channel
+>   #define SCSI_TCN_32(Cmnd)	Cmnd->device->id
+> -#define SCSI_LUN_32(Cmnd)	Cmnd->device->lun
+> +#define SCSI_LUN_32(Cmnd)	((int)Cmnd->device->lun)
 
-If the type of the scsi_mode_sense() 'len' argument is changed from 
-'int' into 'uint16_t', feel free to add:
+How about using 'unsigned int' instead of 'int' since LUN numbers are 
+positive integers?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Thanks,
 
-
+Bart.
