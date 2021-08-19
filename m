@@ -2,128 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA21FC4320E
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 10:03:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 136D3C4338F
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 10:38:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D097361156
-	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 10:03:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E4B5961152
+	for <linux-scsi@archiver.kernel.org>; Thu, 19 Aug 2021 10:38:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238110AbhHSKD4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 06:03:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37452 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232750AbhHSKDz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 06:03:55 -0400
-Received: from mail-pl1-x62a.google.com (mail-pl1-x62a.google.com [IPv6:2607:f8b0:4864:20::62a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 65928C061575;
-        Thu, 19 Aug 2021 03:03:19 -0700 (PDT)
-Received: by mail-pl1-x62a.google.com with SMTP id n12so3625687plf.4;
-        Thu, 19 Aug 2021 03:03:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=0Z5bZ3ATC9rIbWdXJn4JmmnZhJaPoQBdkWHt9cjrKG8=;
-        b=IT2Usca3A4sKF8ubQedNM5SaMd/P+GOOPAsVwIijlGErP0fzExJmYSY+A4eUcUkpXJ
-         rlIgf13cji4zTPlulH73wgPhlbbzcXLto1AWAY23pc05ugnHQG+lyNsgg/hndXCJDvOZ
-         akViMH02DTRkHylRGYPHa/SdGfpAhtYNgDzsjZBFu8ziREk5Ir52t81sOV2jRIjUiWu/
-         9kVTMEdyW5UV9EJv7Rbge0li4OczD1s3+x4R5IGStjZTrxrYWtpg+4kGHyRYWdS60W/5
-         Am1K2wsgWrjeJ9fH+MvIMoJfBnS3nAhxZjbc45vuLQjaMveZqMq4x3zvuPukeR63TOml
-         jWXQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=0Z5bZ3ATC9rIbWdXJn4JmmnZhJaPoQBdkWHt9cjrKG8=;
-        b=Y5MN8Zbm5dAwNafJHeGb7lBqAbEiJDCsM4jvqABc1KRLuq2uDqoSoDags/zUgzDZEA
-         GM7puysXgSiDJikiagz/HT0+kSS5NNXQBw4lXT7DfLMVSpmIyPNoi3gBQU/V7jdCBiA5
-         Ol2z6pQAyfvdbGx1enQ0w4mDFL9NWoSEfE7tWYhaKvtGo0+BBKl3HS13c/6gpefHjZ6m
-         f476g5pZFahcm4EA5u45TV53h5E/s/18lx1ZqZioWVRHaHsWZYxaznECBHRIo27s2G7p
-         hryHHsbC6Gl29U6SqByVmC3iCw9tDRJY0lrflXzVhCjURILVur8luwYrSSzbGPl+B89u
-         xfHQ==
-X-Gm-Message-State: AOAM530q1SDPu7lmm0WX5ovbkZ8ugMDwU9jgu7WflcNzdhGUuX0coFXY
-        wpnIEeUR/YaBopwqK3dVMWY=
-X-Google-Smtp-Source: ABdhPJzfJPRP2BLYCvwXpllkEgoVoCQWlDbtUrPyndvtVP/tYRGu2BCJLYGTmAw6sGYSn2DMVJ/QVQ==
-X-Received: by 2002:a17:902:bc4b:b029:12d:77e8:2c26 with SMTP id t11-20020a170902bc4bb029012d77e82c26mr10961353plz.67.1629367398962;
-        Thu, 19 Aug 2021 03:03:18 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:18:efec::50b])
-        by smtp.gmail.com with ESMTPSA id l11sm2847556pfd.187.2021.08.19.03.03.05
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 19 Aug 2021 03:03:18 -0700 (PDT)
-Subject: Re: [PATCH V3 10/13] x86/Swiotlb: Add Swiotlb bounce buffer remap
- function for HV IVM
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com,
-        wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
-        mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-        dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-        konrad.wilk@oracle.com, boris.ostrovsky@oracle.com,
-        jgross@suse.com, sstabellini@kernel.org, joro@8bytes.org,
-        will@kernel.org, davem@davemloft.net, kuba@kernel.org,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, arnd@arndb.de,
-        m.szyprowski@samsung.com, robin.murphy@arm.com,
-        thomas.lendacky@amd.com, brijesh.singh@amd.com, ardb@kernel.org,
-        Tianyu.Lan@microsoft.com, pgonda@google.com,
-        martin.b.radev@gmail.com, akpm@linux-foundation.org,
-        kirill.shutemov@linux.intel.com, rppt@kernel.org,
-        sfr@canb.auug.org.au, saravanand@fb.com,
-        krish.sadhukhan@oracle.com, aneesh.kumar@linux.ibm.com,
-        xen-devel@lists.xenproject.org, rientjes@google.com,
-        hannes@cmpxchg.org, tj@kernel.org, michael.h.kelley@microsoft.com,
-        iommu@lists.linux-foundation.org, linux-arch@vger.kernel.org,
-        linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        vkuznets@redhat.com, parri.andrea@gmail.com, dave.hansen@intel.com
-References: <20210809175620.720923-1-ltykernel@gmail.com>
- <20210809175620.720923-11-ltykernel@gmail.com>
- <20210812122741.GC19050@lst.de>
- <d18ae061-6fc2-e69e-fc2c-2e1a1114c4b4@gmail.com>
- <890e5e21-714a-2db6-f68a-6211a69bebb9@gmail.com>
- <20210819084951.GA10461@lst.de>
- <1c5ae861-2c35-2ef5-e764-db45bbcb88a9@gmail.com>
- <20210819100200.GA16908@lst.de>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <8bcadc06-ce4c-8be9-c1ac-44c544e02960@gmail.com>
-Date:   Thu, 19 Aug 2021 18:03:04 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        id S238230AbhHSKjQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 06:39:16 -0400
+Received: from smtp-out2.suse.de ([195.135.220.29]:45662 "EHLO
+        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237863AbhHSKjP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 06:39:15 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out2.suse.de (Postfix) with ESMTPS id CF4EA1FD85;
+        Thu, 19 Aug 2021 10:38:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1629369518; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DQ314Q+QCL12ETPydoLFWdP+05FNyqvEHiwnzBEk8Vw=;
+        b=J1e8XzvNxKOaapM/HajZ5PLkxkYPYFiCPb5mWlTmLUHQj5pdCtcZ8Xfj63xqb3Kob6KlSc
+        WUPDQCL4aO63iY8ltB/0GdRLC42ent99pix8IpDO21VtmBd9ZNZt+kKkUY8bgK6ggnWdPl
+        RjYYKzRiZG1zsr5tUmimRKaUrd1oDww=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1629369518;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=DQ314Q+QCL12ETPydoLFWdP+05FNyqvEHiwnzBEk8Vw=;
+        b=6rlv+ijVWkV8pTKURhN8KJkgK+i3Fwxc86cR1s6tg6oiGhuamTUPyw7vqXmoTTxXuRVUoI
+        WNnOfKkpRvnU8JAA==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id C4623139BA;
+        Thu, 19 Aug 2021 10:38:36 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id RyOHLqw0HmGgQgAAGKfGzw
+        (envelope-from <hare@suse.de>); Thu, 19 Aug 2021 10:38:36 +0000
+Subject: Re: [PATCH v2 1/2] scsi: qla1280: Stop using scsi_cmnd.tag
+To:     John Garry <john.garry@huawei.com>, mdr@sgi.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        bvanassche@acm.org
+References: <1629365549-190391-1-git-send-email-john.garry@huawei.com>
+ <1629365549-190391-2-git-send-email-john.garry@huawei.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <c94d7311-f127-d8c0-6f4d-ba1b14f7e0bf@suse.de>
+Date:   Thu, 19 Aug 2021 12:38:35 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210819100200.GA16908@lst.de>
+In-Reply-To: <1629365549-190391-2-git-send-email-john.garry@huawei.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/19/2021 6:02 PM, Christoph Hellwig wrote:
-> On Thu, Aug 19, 2021 at 05:59:02PM +0800, Tianyu Lan wrote:
->>
->>
->> On 8/19/2021 4:49 PM, Christoph Hellwig wrote:
->>> On Mon, Aug 16, 2021 at 10:50:26PM +0800, Tianyu Lan wrote:
->>>> Hi Christoph:
->>>>         Sorry to bother you.Please double check with these two patches
->>>> " [PATCH V3 10/13] x86/Swiotlb: Add Swiotlb bounce buffer remap function
->>>> for HV IVM" and "[PATCH V3 09/13] DMA: Add dma_map_decrypted/dma_
->>>> unmap_encrypted() function".
->>>
->>> Do you have a git tree somewhere to look at the whole tree?
->>
->> Yes, here is my github link for these two patches.
->>
->> https://github.com/lantianyu/linux/commit/462f7e4e44644fe7e182f7a5fb043a75acb90ee5
->>
->> https://github.com/lantianyu/linux/commit/c8de236bf4366d39e8b98e5a091c39df29b03e0b
+On 8/19/21 11:32 AM, John Garry wrote:
+> Use scsi_cmd_to_rq(cmd)->tag instead of scsi_cmnd.tag as preference.
 > 
-> Which branch is this?
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>   drivers/scsi/qla1280.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
 > 
+> diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+> index aec92471c5f2..b4f7d8d7a01c 100644
+> --- a/drivers/scsi/qla1280.c
+> +++ b/drivers/scsi/qla1280.c
+> @@ -3980,7 +3980,7 @@ __qla1280_print_scsi_cmd(struct scsi_cmnd *cmd)
+>   	   qla1280_dump_buffer(1, (char *)sg, (cmd->use_sg*sizeof(struct scatterlist)));
+>   	   } */
+>   	printk("  tag=%d, transfersize=0x%x \n",
+> -	       cmd->tag, cmd->transfersize);
+> +	       scsi_cmd_to_rq(cmd)->tag, cmd->transfersize);
+>   	printk("  SP=0x%p\n", CMD_SP(cmd));
+>   	printk(" underflow size = 0x%x, direction=0x%x\n",
+>   	       cmd->underflow, cmd->sc_data_direction);
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-https://github.com/lantianyu/linux/tree/isolationv3
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
