@@ -8,68 +8,64 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B65C4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:08:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9144C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:12:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5BE7E6108B
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:08:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B887B600D1
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:12:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237993AbhHTDIu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 23:08:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48516 "EHLO
+        id S237843AbhHTDNZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 23:13:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237843AbhHTDIu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 23:08:50 -0400
-Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFFBAC061575;
-        Thu, 19 Aug 2021 20:08:12 -0700 (PDT)
-Received: by mail-qt1-x82c.google.com with SMTP id e3so217064qth.9;
-        Thu, 19 Aug 2021 20:08:12 -0700 (PDT)
+        with ESMTP id S234797AbhHTDNY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 23:13:24 -0400
+Received: from mail-qk1-x731.google.com (mail-qk1-x731.google.com [IPv6:2607:f8b0:4864:20::731])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CE2FC061575;
+        Thu, 19 Aug 2021 20:12:47 -0700 (PDT)
+Received: by mail-qk1-x731.google.com with SMTP id m21so9464602qkm.13;
+        Thu, 19 Aug 2021 20:12:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=+JsfzGWsf8V+ktqlcUdosLl0jyg72rZ/bLzBNSn/CbY=;
-        b=CSi3aZn+1xEQ187JGQXcvYJfOUOAZe8KY6AoUqHz0JK6jBOMDPe+I0xu4Gen0wIESD
-         QFWRaof6exnZDB4m616JzDftuRMnUWe2pYx4BdPg/zmJG1A/yMJXIBKBK4hB7kzvAQEf
-         bRXLYAzy1cr9xB8ZXqHumy4/h7U2dWelbZR21tjrKcwogKOAG3fNfznXkRqDNY6dCM5I
-         TRZNtQC6OJlSV7k8Bcsf0gNFaw33/Gu+QbCacQkhN0vdP5GdC0spwk2bnLy00zuMKIOp
-         kcDRBfRanAn5mNIYQWttpA+B2Y9G/PcTsKkk/wsYjqvAtGephUdo0HfZY6RlwFh+9J6a
-         em6w==
+        bh=akZ47LkIwJza3NQSjT7KsUOp7i2Wia4p8p52WL3MA+U=;
+        b=CGBrFBV1rf31iSSYo4dsKmXUBY5wv+gI8d8hOHMuxSdqqTc35xM1BExNLqgpz0ktSL
+         1SeBZWIfjcLPyLDVCol8sUS+ofj99pZsXC5EcS+w/gw+osD4SBLLLM9A8rHbUW+I9k0a
+         vxLP45CozETKeuVE/TGvrtXWJpxbgvi2bTHRyZnmBV0IuAZ67VvipCWeR2cEQCj2otab
+         TuwbgObZ4FMQIznzrknQlWXvfPntwfdby5bkY0GqKeMU2Nk66ql/CRfhgfyfDwzGMvyG
+         rA/Pl578Q9v6RD72EPM4GdIgzLRsKi0QZqhVY8rpjagvojkkyVaY39W/5F1ZQJvqwIJb
+         d+8Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=+JsfzGWsf8V+ktqlcUdosLl0jyg72rZ/bLzBNSn/CbY=;
-        b=qpvG12oxQtECJJid7uq+0gVKWnCmFJJrsis6DkNUTzbp1ywCsJ384mosYoU6ZHBW4y
-         k0LY0Mz6KQ7UFAjIjT6O3d2getPqSANuLd30EPWQgum7RRbGp9tgD71JbdKTQvIMVUMV
-         9ZsgSaz1s5ZPuYpyRBb9UoUl4pghKp6r6LVvvmzJc2XCttKKWXcorB8rQKMbBoA0gACe
-         H39ZYepZb1WTZaLvvrbrAQWT7TV1VM/c1TWTpVJQ3m7uU9WxtParGCNVhXxjxzrLoY0h
-         NdtGkIfuWjMDqtxF0xlcAbtjUPIC0QccdmjtBJM9aDjJeeHG8hl4CAIdXP+6bErOOIkt
-         OsPg==
-X-Gm-Message-State: AOAM53267p2B+b+vHCQicejeMlds7CG/Qps8nOwSqhDolomE5fhJQ3bw
-        OE/9EVJjNlMOmvM40JxrTOw=
-X-Google-Smtp-Source: ABdhPJwRse5SxrdsSOPBCsvyCeEp9n7dbnY4O4JoOjyzFrOaIEUP1l+2lmMuUGH61ox/Y+OORfzQlw==
-X-Received: by 2002:ac8:1106:: with SMTP id c6mr15974365qtj.20.1629428892242;
-        Thu, 19 Aug 2021 20:08:12 -0700 (PDT)
+        bh=akZ47LkIwJza3NQSjT7KsUOp7i2Wia4p8p52WL3MA+U=;
+        b=DMpxo/9jsfzWVB2rcRiLt2sbluWTVjQL5Ek074IaBjy+U/96Lc/4nApOOf9zDo5Kka
+         u6nBoHfXTtycM4B6i61c8N3/L+pnjEU8sl5SabI9M14Zaqz4dsanK8Wlz6hIMCJsx1lg
+         EVH5m7yld57FKfBUf4i7OMfbnbavYNCqvsFO3ZiSy89XIbfqUs6JIk1URiRGiHOTm9v0
+         SnXQBjYpkAaLYNcIQYo7cfhsrylIMZ0QPJr/WhHb45ZyayJqxmwEJ+CNhWvJ0WJPxTjH
+         qhJ5MKXYgRsHdc23tjI0crW1OQ2jiNjNg0iqJKamzOEgWDJL6qmN+cL2FK0aZvMYYT0W
+         d5IA==
+X-Gm-Message-State: AOAM531hY8F+nvpaqlp7sFJ6vSoxy4nU7GGALlyW7aPI3NUSSCxITzn0
+        G1OpT9t2IUMTdZqsiE1H6mQ=
+X-Google-Smtp-Source: ABdhPJw+KatUs12uZ3pwyM3LT4m2Jraj+KssxFGkMPnVratIdCrKKV/cBSD+LmOcyDkpmXFTNqd3Lw==
+X-Received: by 2002:a05:620a:4495:: with SMTP id x21mr6633680qkp.378.1629429166399;
+        Thu, 19 Aug 2021 20:12:46 -0700 (PDT)
 Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id u6sm2551729qkp.49.2021.08.19.20.08.09
+        by smtp.gmail.com with ESMTPSA id g131sm2664735qke.122.2021.08.19.20.12.44
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Aug 2021 20:08:11 -0700 (PDT)
+        Thu, 19 Aug 2021 20:12:45 -0700 (PDT)
 From:   CGEL <cgel.zte@gmail.com>
 X-Google-Original-From: CGEL <jing.yangyang@zte.com.cn>
-To:     Kashyap Desai <kashyap.desai@broadcom.com>
-Cc:     Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
+To:     "James E . J . Bottomley" <jejb@linux.ibm.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         jing yangyang <jing.yangyang@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH linux-next] scsi: megaraid: fix Coccinelle warnings
-Date:   Thu, 19 Aug 2021 20:08:05 -0700
-Message-Id: <20210820030805.12383-1-jing.yangyang@zte.com.cn>
+Subject: [PATCH linux-next] scsi/ncr53c8xx: Use bitwise instead of arithmetic operator for flags 
+Date:   Thu, 19 Aug 2021 20:12:35 -0700
+Message-Id: <20210820031235.12535-1-jing.yangyang@zte.com.cn>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -79,30 +75,29 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: jing yangyang <jing.yangyang@zte.com.cn>
 
-WARNING !A || A && B is equivalent to !A || B
+This silences the following coccinelle warning:
 
-This issue was detected with the help of Coccinelle.
+"WARNING: sum of probable bitmasks, consider |"
 
 Reported-by: Zeal Robot <zealci@zte.com.cn>
 Signed-off-by: jing yangyang <jing.yangyang@zte.com.cn>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/ncr53c8xx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e4298bf..17c87ac 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -8773,8 +8773,7 @@ int megasas_update_device_list(struct megasas_instance *instance,
- 
- 		if (event_type & SCAN_VD_CHANNEL) {
- 			if (!instance->requestorId ||
--			    (instance->requestorId &&
--			     megasas_get_ld_vf_affiliation(instance, 0))) {
-+			megasas_get_ld_vf_affiliation(instance, 0)) {
- 				dcmd_ret = megasas_ld_list_query(instance,
- 						MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
- 				if (dcmd_ret != DCMD_SUCCESS)
+diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
+index 09958f7..5c27afb 100644
+--- a/drivers/scsi/ncr53c8xx.c
++++ b/drivers/scsi/ncr53c8xx.c
+@@ -7910,7 +7910,7 @@ static void __init ncr_getclock (struct ncb *np, int mult)
+ 	/*
+ 	**	True with 875 or 895 with clock multiplier selected
+ 	*/
+-	if (mult > 1 && (stest1 & (DBLEN+DBLSEL)) == DBLEN+DBLSEL) {
++	if (mult > 1 && (stest1 & (DBLEN | DBLSEL)) == DBLEN | DBLSEL) {
+ 		if (bootverbose >= 2)
+ 			printk ("%s: clock multiplier found\n", ncr_name(np));
+ 		np->multiplier = mult;
 -- 
 1.8.3.1
 
