@@ -2,111 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EC64C4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 10:12:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E43AEC4320A
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 10:39:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87F716103A
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 10:12:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD7C4610FA
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 10:39:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238967AbhHTKMk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Aug 2021 06:12:40 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:41246 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238956AbhHTKMj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Aug 2021 06:12:39 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id C31371FDF2;
-        Fri, 20 Aug 2021 10:12:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1629454320; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZYye7fEMFRbpcKRaaFcYcZGgOGspYhTjWJ3Vf7Ycj6A=;
-        b=ZPgEngl5XV1YSFpiBZiVVKRKJKJJTyKhG+SLYJ/fAb8+SZOsn4yfLD98xN2R74j1hk0imX
-        tjH6Adfmea1uMWJPOWzOyJnGNFoqqPBt2+xRC57bOMNmdlavZ3tALAFZHOObbGz6fS8i7a
-        cC+GFWOgVUCYaUE1sGeK4YyUZj5iOnY=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1629454320;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=ZYye7fEMFRbpcKRaaFcYcZGgOGspYhTjWJ3Vf7Ycj6A=;
-        b=FALmO+Y0TQZHKkMgsU7+X+jHUx+1T1r/xoSIKeMfB/QNDc/MpmBGVv7+vSkGRfAfHN8Lyv
-        hrGZ2XGGxSQitFAQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 9715613ABD;
-        Fri, 20 Aug 2021 10:12:00 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id BAs2JPB/H2FaZQAAGKfGzw
-        (envelope-from <hare@suse.de>); Fri, 20 Aug 2021 10:12:00 +0000
-Subject: Re: [PATCH 1/3] snic: reserve tag for TMF
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
-References: <20210819091224.94213-1-hare@suse.de>
- <20210819091224.94213-2-hare@suse.de> <20210820100047.GA9872@lst.de>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <de4a7479-3dbf-0842-f8f7-5d82b8bd6ea6@suse.de>
-Date:   Fri, 20 Aug 2021 12:12:00 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S237713AbhHTKkV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Aug 2021 06:40:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38138 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235321AbhHTKkT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Aug 2021 06:40:19 -0400
+Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1137CC061575;
+        Fri, 20 Aug 2021 03:39:42 -0700 (PDT)
+Received: by mail-wm1-x32c.google.com with SMTP id u1so5677007wmm.0;
+        Fri, 20 Aug 2021 03:39:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=2l4f87jQ5BCVnW/LtVQs/ujfdv1Edqo9vK1XTZNmj64=;
+        b=ZKKKORCLDq/VeWLjAhd2HF4b6J9R+CkAnEfTsRsXC2JpHBz3EFmWxVCXTcZRliZzQR
+         6csaOtqJCaGtnor4OR+v0r3M9n4Hqwku+6mczvhp/kb7Xq81d62hdrqDppClM0C9fJW7
+         jedZswfJPGrcD+k+k/useJ/R6zKptTamgma6736L4OuPpV3mmKK461sGuAteKDuHTs1F
+         oBTxGt12BAtPC208K4MrtaKBOwhQ/Eo3OiQIKcjO5+99rzhSGMfoi7ElNn/+p39I/l+u
+         uqNc8v1njX0kTwoFUmaRK2oZYXUT4RlZ44L3WYVQ+XTo0puEMXes5atR/VHN8zs0yxtt
+         jzBQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=2l4f87jQ5BCVnW/LtVQs/ujfdv1Edqo9vK1XTZNmj64=;
+        b=rXgLe5OMb+jF5G+ra73356QdYTLZKEIWqasfounb5qPhrP/FWaBlpj8RxVev9WILjq
+         uU16DiaZrWedua/BAkJfmQ3JdA3zAV7ggaMihW//o0Qfz/lADlcnXOivwMNkaNDO7WDz
+         j0dacV7Asc7l5EQdCQxvWfgk/v3T+SQ641lmo00QpJyfXt/mDeEk4v/qz44GOTAP00vB
+         iXb06lfviytconnqw7ilrfjJqVm8N5eegy2QgLwMyJouPseQdjyiQEO6hBhZcmxDjfoP
+         2pp4svZAE4cUWaGbSckwUfjPdt3FXAIrYOUwKf7+5Iz2oOqa20w7oRTdI5TEuhg9E19Q
+         52EA==
+X-Gm-Message-State: AOAM532ApVCGYR0oL6HPqQV9ECJn+5MDNqKfDWcGHF5AasAYW/IBc0pm
+        2NZMZHPcruCqlEYxrNR6JUUq/VYvpSu2LZLwXNI=
+X-Google-Smtp-Source: ABdhPJwvvbvC7oT0EDMBScqPKbmq4ABDQwLkxNDJHv+ZwVgPws6KmaaRL0F7/tnmz8XSY+QaosFzbLsSI9/h7hXg+gc=
+X-Received: by 2002:a05:600c:1c08:: with SMTP id j8mr3147766wms.138.1629455980524;
+ Fri, 20 Aug 2021 03:39:40 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20210820100047.GA9872@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20210817101423.12367-1-selvakuma.s1@samsung.com>
+ <CGME20210817101758epcas5p1ec353b3838d64654e69488229256d9eb@epcas5p1.samsung.com>
+ <20210817101423.12367-4-selvakuma.s1@samsung.com> <ad3561b9-775d-dd4d-0d92-6343440b1f8f@acm.org>
+In-Reply-To: <ad3561b9-775d-dd4d-0d92-6343440b1f8f@acm.org>
+From:   Kanchan Joshi <joshiiitr@gmail.com>
+Date:   Fri, 20 Aug 2021 16:09:14 +0530
+Message-ID: <CA+1E3rK2ULVajQRkNTZJdwKoqBeGvkfoVYNF=WyK6Net85YkhA@mail.gmail.com>
+Subject: Re: [PATCH 3/7] block: copy offload support infrastructure
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     SelvaKumar S <selvakuma.s1@samsung.com>,
+        linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+        linux-api@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, dm-devel@redhat.com,
+        Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+        Damien Le Moal <damien.lemoal@wdc.com>,
+        Pavel Begunkov <asml.silence@gmail.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Christoph Hellwig <hch@lst.de>,
+        Matthew Wilcox <willy@infradead.org>, kch@kernel.org,
+        mpatocka@redhat.com, djwong@kernel.org, agk@redhat.com,
+        Selva Jove <selvajove@gmail.com>,
+        Nitesh Shetty <nj.shetty@samsung.com>, nitheshshetty@gmail.com,
+        KANCHAN JOSHI <joshi.k@samsung.com>,
+        Javier Gonzalez <javier.gonz@samsung.com>,
+        Mike Snitzer <snitzer@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/20/21 12:00 PM, Christoph Hellwig wrote:
-> On Thu, Aug 19, 2021 at 11:12:22AM +0200, Hannes Reinecke wrote:
->>   
->> diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
->> index 14f4ce665e58..65f50057c66e 100644
->> --- a/drivers/scsi/snic/snic_main.c
->> +++ b/drivers/scsi/snic/snic_main.c
->> @@ -512,6 +512,9 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->>   					 max_t(u32, SNIC_MIN_IO_REQ, max_ios));
->>   
->>   	snic->max_tag_id = shost->can_queue;
->> +	/* Reserve one reset command */
->> +	shost->can_queue--;
->> +	snic->tmf_tag_id = shost->can_queue;
-> 
-> This is decrementing can_queue before scsi_add_host, which allocates
-> the requests ..
-> 
->> +	sc = scsi_host_find_tag(shost, snic->tmf_tag_id);
->> +	if (!sc) {
-> 
-> ... but this is expecting a scsi_cmnd / struct request for that tag
-> value.
-> 
-> How is that supposed to work?
-> 
-Ah, right. Will be fixing it.
+Bart, Mikulas
 
-Cheers,
+On Tue, Aug 17, 2021 at 10:44 PM Bart Van Assche <bvanassche@acm.org> wrote:
+>
+> On 8/17/21 3:14 AM, SelvaKumar S wrote:
+> > Introduce REQ_OP_COPY, a no-merge copy offload operation. Create
+> > bio with control information as payload and submit to the device.
+> > Larger copy operation may be divided if necessary by looking at device
+> > limits. REQ_OP_COPY(19) is a write op and takes zone_write_lock when
+> > submitted to zoned device.
+> > Native copy offload is not supported for stacked devices.
+>
+> Using a single operation for copy-offloading instead of separate
+> operations for reading and writing is fundamentally incompatible with
+> the device mapper. I think we need a copy-offloading implementation that
+> is compatible with the device mapper.
+>
 
-Hannes
+While each read/write command is for a single contiguous range of
+device, with simple-copy we get to operate on multiple discontiguous
+ranges, with a single command.
+That seemed like a good opportunity to reduce control-plane traffic
+(compared to read/write operations) as well.
+
+With a separate read-and-write bio approach, each source-range will
+spawn at least one read, one write and eventually one SCC command. And
+it only gets worse as there could be many such discontiguous ranges (for
+GC use-case at least) coming from user-space in a single payload.
+Overall sequence will be
+- Receive a payload from user-space
+- Disassemble into many read-write pair bios at block-layer
+- Assemble those (somehow) in NVMe to reduce simple-copy commands
+- Send commands to device
+
+We thought payload could be a good way to reduce the
+disassembly/assembly work and traffic between block-layer to nvme.
+How do you see this tradeoff?  What seems necessary for device-mapper
+usecase, appears to be a cost when device-mapper isn't used.
+Especially for SCC (since copy is within single ns), device-mappers
+may not be too compelling anyway.
+
+Must device-mapper support be a requirement for the initial support atop SCC?
+Or do you think it will still be a progress if we finalize the
+user-space interface to cover all that is foreseeable.And for
+device-mapper compatible transport between block-layer and NVMe - we
+do it in the later stage when NVMe too comes up with better copy
+capabilities?
+
+
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+Joshi
