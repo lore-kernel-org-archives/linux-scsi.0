@@ -2,91 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0DEEC4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 05:36:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB965C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 07:04:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 864E861042
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 05:36:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D704610A1
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 07:04:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231949AbhHTFh1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Aug 2021 01:37:27 -0400
-Received: from mga05.intel.com ([192.55.52.43]:33886 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233004AbhHTFh1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Aug 2021 01:37:27 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10081"; a="302303737"
-X-IronPort-AV: E=Sophos;i="5.84,336,1620716400"; 
-   d="scan'208";a="302303737"
-Received: from fmsmga006.fm.intel.com ([10.253.24.20])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2021 22:36:49 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,336,1620716400"; 
-   d="scan'208";a="679855740"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
-  by fmsmga006.fm.intel.com with ESMTP; 19 Aug 2021 22:36:47 -0700
-Subject: Re: [PATCH] scsi: ufs: Fix ufshcd_request_sense_async() for Samsung
- KLUFG8RHDA-B2D1
-To:     Bart Van Assche <bvanassche@acm.org>,
+        id S238654AbhHTHFd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Aug 2021 03:05:33 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:20629 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238658AbhHTHFY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Aug 2021 03:05:24 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1629443085; x=1660979085;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=n6gFA+7y+TftSYEl9+KGO/2iFsFKcWn30Vtzn6Mgqjk=;
+  b=neE0uUryPn4oetxnML4NYpF1ac3JJn8pDLHTAh+c6mbElQDsn5DbqkfU
+   aS3I2RGr0izTS7C9aSKjhTdAwEjYiqnPscGO3ZPBp5N7fZbxdfAmhMIZU
+   jSPQl9woifGBvICWKpo0EN9R/ZNtg2xsPFMw2mpTiDeXc/brQtIAkSvrg
+   L1Mkuqhj4v7JvnBSdD+/mfWanUHMKtHorjHnPUzilcWY0uHDarz8v7A4y
+   Ez1SnUyKEPSdr6EnrQRmrOBE6a7geBHS9Ktvi1XvgaaWV714HtzAvBSnD
+   Q0m7JBzRkozwLwkvqaDNxaWz6kQmYVnHBvXpv6eq0ixZPM/S/diLxjTW+
+   g==;
+X-IronPort-AV: E=Sophos;i="5.84,336,1620662400"; 
+   d="scan'208";a="182663594"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Aug 2021 15:04:35 +0800
+IronPort-SDR: mt0dwWuaYG1v4zRm80RpFV4JBanMX3riZ5gdCNxy9TH52lrUDCnlWqZG/M19LVVzh/O0A7UvE3
+ 6o514LieFr6do4rYyL5wjljtRs3pKD7kS4oe/xoTO1l0CWbanGga+VozPywOwXTEjF4RUnmZ3S
+ oz9VooAVAS5nJWOhADZHYygbk2/dMtXygrgWjEMuSvQyqTBo1iFM99Q2UfXtW7z/oL3kOc90GJ
+ y1k3Cu3HAXxokGdTSRDdUcNPrhnGfbFEwbDAYZokorI4ZfysVUqYJI1x7Resm7VWFkx0m09X64
+ CO/R0H7IVwdmCDX/AykQB0Xm
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2021 23:39:56 -0700
+IronPort-SDR: 97zK79OMlqglODkhXkL9GhBcYame8W2b39AAy/wv3Ec7TYO7tMnC+vgC46Qq+j0AU/xqrNxCxj
+ csYZ7Qc/a6zurB/Aenw6jYpwwnHp7oHvM9/b3yxMNvOu5wNrj8YkmrDTc0onEpERrYsj9JgGDE
+ Kec2ukHK45+Wt65TyMapO9j0TraW2xObPs8vTHTilL4urrjUJIn0DqbnOJzQF8g9n8+NAfJQJB
+ 7tz33UGDAKyS13jkDdWgn6kFsdX08QvmiY5TAe1frhUsrIT91CiqO1FQ3UEvPfS9XbfmC884fd
+ HcE=
+WDCIronportException: Internal
+Received: from washi.fujisawa.hgst.com ([10.149.53.254])
+  by uls-op-cesaip02.wdc.com with ESMTP; 20 Aug 2021 00:04:36 -0700
+From:   Damien Le Moal <damien.lemoal@wdc.com>
+To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        linux-scsi@vger.kernel.org
-References: <20210819093534.17507-1-adrian.hunter@intel.com>
- <e495acd6-ab2c-dc07-5515-08316ac8a22d@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <80969e85-40e9-7cff-02fc-304774f3061b@intel.com>
-Date:   Fri, 20 Aug 2021 08:37:22 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+Subject: [PATCH v3 0/3] Fixes for scsi_mode_sense/select()
+Date:   Fri, 20 Aug 2021 16:02:52 +0900
+Message-Id: <20210820070255.682775-1-damien.lemoal@wdc.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <e495acd6-ab2c-dc07-5515-08316ac8a22d@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 19/08/21 9:14 pm, Bart Van Assche wrote:
-> On 8/19/21 2:35 AM, Adrian Hunter wrote:
->>        * From SPC-6: the REQUEST SENSE command with any allocation length
->> -     * clears the sense data.
->> +     * clears the sense data, but not all UFS devices behave that way.
->>        */
-> 
-> How about removing the comment entirely? Comprehending the above comment is not possible without reviewing the git history so I think it's better to remove it.
+The first patch in this series is the formet standalone patch titled
+"scsi: fix scsi_mode_sense()". Patch 2 fixes similar buffer length
+handling problems found in scsi_mode_select().
+Patch 3 fixes the use of scsi_mode_sense() in sd.c to ensure that calls
+are issued with a sensible buffer size for devices that explicitly
+requested the use of MODE SENSE 10 (e.g. SATA drives on AHCI).
 
-Perhaps a comment might stop someone tempted to remove the sense size in the future.  What about:
+Changes from v2:
+* Added patch 3
 
-	/*
-	 * Some UFS devices clear unit attention condition only if the sense
-	 * size used (UFS_SENSE_SIZE in this case) is non-zero.
-	 */
+Changes from v1:
+* Patch 1:
+  - Added check on the buffer length not being larger than 65535 bytes
+    for the MODE SENSE 10 case.
+  - Automatically try MODE SENSE 10 for large requests even if the
+    device does not have use_10_for_ms set
+* Added patch 2
 
-> 
->> -    static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, 0, 0};
->> +    static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, UFS_SENSE_SIZE, 0};
->>       struct scsi_request *rq;
->>       struct request *req;
->> +    char *buffer;
->> +    int ret;
->> +
->> +    buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
->> +    if (!buffer)
->> +        return -ENOMEM;
->>   -    req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, /*flags=*/0);
->> +    req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN,
->> +                  /*flags=*/BLK_MQ_REQ_PM);
-> 
-> Why has the flags argument been changed from 0 into BLK_MQ_REQ_PM? MODE SENSE is not a power management command.
+Damien Le Moal (3):
+  scsi: fix scsi_mode_sense() buffer length handling
+  scsi: fix scsi_mode_select() buffer length handling
+  scsi: sd: fix sd_do_mode_sense() buffer length handling
 
-It is used in a PM path, it is consistent with RQF_PM also used by ufshcd_request_sense_async(), it is what __scsi_execute() does with RQF_PM, so it is what was used before "scsi: ufs: Request sense data asynchronously".
+ drivers/scsi/scsi_lib.c | 46 +++++++++++++++++++++++++----------------
+ drivers/scsi/sd.c       |  7 +++++++
+ 2 files changed, 35 insertions(+), 18 deletions(-)
+
+-- 
+2.31.1
 
