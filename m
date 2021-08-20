@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BF16C4320A
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAE5FC432BE
 	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:30:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6469A610F9
+	by mail.kernel.org (Postfix) with ESMTP id CFAB1610FE
 	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:30:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238342AbhHTDam (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 23:30:42 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:4898 "EHLO
+        id S238257AbhHTDan (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 23:30:43 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:4894 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238210AbhHTDal (ORCPT
+        with ESMTP id S237933AbhHTDal (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 23:30:41 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1629430202; x=1660966202;
+  t=1629430203; x=1660966203;
   h=from:to:subject:date:message-id:in-reply-to:references:
    mime-version:content-transfer-encoding;
-  bh=1TkJ3vB1HtpkRnuxbMMe1MIpNKIlZkwUFRryFfPqUdA=;
-  b=aCHlKt3usPvjS033+66h8UWDy2vNHu1U5idxOMr3dI4mrZAuTDjomsPC
-   Pd9+mgWB91a2WMzpuqN5a8K4ezP0Z1aU+A78iGE7EMBVxGZrEAihnvdVf
-   EGV+a92nZvAtzgRGI26BeUY9enJddpYovmNWhDfWWE4B+3/gfYVV3NCA+
-   Ht7Xz7H98jWS/GgRkqKBOiTDf2PVz/VxKw75u00Rr9rjDmpisVU+n2O1c
-   qLQb4ZWYgXxGqJkEagkGPUkQ9QbaYVVX24jBW+ug5xO2FwjXS/HPDeq9L
-   OIY09eq7DUNdPpADIPLJw2vFoclX2nlagSMYWVUUvv15R0Cy5PEZTKBY7
+  bh=+m6b8j3RINuUe0RFKMpYV8vJ6kViZNE1w9rd61chdFY=;
+  b=GBy7B+v5y8O1yvsZrJkGHRQCo1cuP6aeKdk2/7boraG4fo2DnXqbvk0q
+   c8h+AOZnwL9O0ExciEFRuPPJPmvWREQKVNiUr8W7nrF5TWaQgPwHsB/zj
+   CZc9sTgl4c7Y4jK8ZMs+CVZN0dVLSdUZ60RgbUHNcYYFjskrs22BTiY74
+   po71VyiUyFOdRecHkID05MNej2z4G8UW+CpP7y56+A94gt3K075xbLsem
+   bJmk/jq6tZkwyYt2BW2/vvMyywoq0DGe6pFyRy3e5DWNJ+t3I+iEYHIAT
+   FPYiM5Nwl13v3QDRngHK4h4hD4cb7nntISSM78UryDE/SyMOvGXs1yDdM
    w==;
 X-IronPort-AV: E=Sophos;i="5.84,336,1620662400"; 
-   d="scan'208";a="182646445"
+   d="scan'208";a="182646446"
 Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Aug 2021 11:30:01 +0800
-IronPort-SDR: GpnjGQ/NQXkCwtvyocQ7MJCikbqV47qpa5GCeIEJUkkt4I2ZXK/ENIUUQnvnYX0K40HkBeDrJK
- 1nvHdHY2yDOkdT4ZZX8je8AytmqOhSIQkds7235iTc5QPtsMKyKZ53agPVKDa1z3C5LX7h6aRc
- jJSfpmiAB/+pF4pbGIa1z/sN5t4u5FzG/4nzf+GUlaie1gcYOqo8ytf7Wc8aJm7ZaDKyNLXP2j
- A6HuaT1xxu0mdCmX9UwSLRK6ZNyt9TSaO/N8InO/L0zac4snwdqIIfx1YqNW3/YCkWryThptR4
- 3NcK2rOPYMNU8i71ppxA5sEn
+  by ob1.hgst.iphmx.com with ESMTP; 20 Aug 2021 11:30:02 +0800
+IronPort-SDR: jrQg5TxWjpvqufP6yf3v922wgjZdHvbkUSCDcRzqf4SHGFktWvFCSrey5DNf8+ukVeIdxQrys/
+ gu8VomHDa1x1yvYdhalDRSXpZSIN/aXozTxGy1PIe5gBFenZGyLCeIf6gy7HYPgs5/mASBc0fY
+ mH8w2h8Xrb4OUiLLJYc1tNdGNgH9Z5chWr/VQMVFswRmilx8EX0Jb15iDWxiiepZe/FRNemYpL
+ CKfIXSYmaJivQZlIpMM3Xw1UW5am2WWxB212XY6YrsndeA5Rju1e1d+wx6JfC18seDntS3bk0w
+ jSdsOsAMcbcn+AyA9CUoHYjG
 Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2021 20:05:23 -0700
-IronPort-SDR: W7KegB0CKiaZ92/5JDOsTKfvJ7KW32Qce4+i2lR4zcdjNvTaSv2iV6T0XXgdyuOZQekoSBYLi2
- bLYlzSTlRXP7CSEbMaXfkVqq6d9Z6m57xFTKTJWappjKrdzbFvOPGn2CRb1W4gIsskqg/CVH6Y
- X+w92GTFCUyNIliSG4UeNAOoJI3r0trcGyzVOOTtNrXQfF9dHG1ais+su7SufXZnqUYD5Fhr2I
- 3DqXnUhfyWEDVOnEs+j20snvE6PnzFhp9KA4XVJzA3n+ZqnFrokUmyZfHNbvrXIjto08DBlAAY
- VNQ=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2021 20:05:24 -0700
+IronPort-SDR: g7MFX9HHMbbYnX9GgQSjM+QaPVWKobqh+72RsFAoiSCMf2zqEbgVJCZuyX+y16xqmpQyM8Tahm
+ 7YBfjpRWQqb0wjkCT2R3tguzuOhcGjWfocJIpwbB2fFexXZkOCVH1+1rk/nMT6TiOnZDn4CIkl
+ MqI1Hou18Xib3KMLs0vxYv0dXJYaugm53dhmpH0GSx3cIiEe+Sd22y45dN58o3xkbSrwGeZ/Wc
+ 10TeCtTsF3aL+aWV3mXThzqgOz2Aln29OJaHqfDZjDAW+162yS7LYhYZVSg9Mmn+STMX8evwC3
+ MRo=
 WDCIronportException: Internal
 Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 19 Aug 2021 20:30:02 -0700
+  by uls-op-cesaip02.wdc.com with ESMTP; 19 Aug 2021 20:30:03 -0700
 From:   Damien Le Moal <damien.lemoal@wdc.com>
 To:     linux-scsi@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v2 1/2] scsi: fix scsi_mode_sense() buffer length handling
-Date:   Fri, 20 Aug 2021 12:28:12 +0900
-Message-Id: <20210820032813.575032-2-damien.lemoal@wdc.com>
+Subject: [PATCH v2 2/2] scsi: fix scsi_mode_select() buffer length handling
+Date:   Fri, 20 Aug 2021 12:28:13 +0900
+Message-Id: <20210820032813.575032-3-damien.lemoal@wdc.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210820032813.575032-1-damien.lemoal@wdc.com>
 References: <20210820032813.575032-1-damien.lemoal@wdc.com>
@@ -66,111 +66,65 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Several problems exist with scsi_mode_sense() buffer length handling:
-1) The allocation length field of the MODE SENSE 10 command is 16-bits,
-   occupying bytes 7 and 8 of the CDB. With this command, access to mode
-   pages larger than 255 bytes is thus possible. However, the CDB
-   allocation length field is set by assigning len to byte 8 only, thus
-   truncating buffer length larger than 255.
-2) If scsi_mode_sense() is called with len smaller than 8 with
-   sdev->use_10_for_ms set, or smaller than 4 otherwise, the buffer
-   length is increased to 8 and 4 respectively, and the buffer is zero
-   filled with these increased values, thus corrupting the memory
-   following the buffer.
+The MODE SELECT (6) command allows handling mode page buffers that are
+up to 255 bytes, including the 4 byte header needed in front of the page
+buffer. For requests larger than this limit, automatically use the
+MODE SENSE 10 command.
 
-Fix these 2 problems by using put_unaligned_be16() to set the allocation
-length field of MODE SENSE 10 CDB and by returning an error when len is
-too small.
+In both cases, since scsi_mode_select() adds the mode select page
+header, checks on the buffer length value must include this header size
+to avoid overflows of the command CDB allocatione length field.
 
-Furthermore, if len is larger than 255B, always try MODE SENSE 10 first,
-even if the device driver did not set sdev->use_10_for_ms. In case of
-invalid opcode error for MODE SENSE 10, access to mode pages larger
-than 255 bytes are not retried using MODE SENSE (6). To avoid buffer
-length overflows for the MODE_SENSE 10 case, check that len is smaller
-than 65535 bytes
-
-While at it, also fix the folowing:
-* use get_unaligned_be16() to retrieve the mode data length and block
-  descriptor length fields of the mode sense reply header instead of
-  using an open coded calculation.
-* Fix the kdoc dbd argument explanation: the DBD bit stands for
-  Disable Block Descriptor, which is the opposite of what the dbd
-  argument description was.
+While at it, use put_unaligned_be16() for setting the header block
+descriptor length and CDB allocation length when using MODE SELECT 10.
 
 Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 ---
- drivers/scsi/scsi_lib.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+ drivers/scsi/scsi_lib.c | 21 +++++++++++++--------
+ 1 file changed, 13 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 572673873ddf..327ea74a5e31 100644
+index 327ea74a5e31..c9a825f583d6 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -2075,7 +2075,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
- /**
-  *	scsi_mode_sense - issue a mode sense, falling back from 10 to six bytes if necessary.
-  *	@sdev:	SCSI device to be queried
-- *	@dbd:	set if mode sense will allow block descriptors to be returned
-+ *	@dbd:	set to prevent mode sense from returning block descriptors
-  *	@modepage: mode page being requested
-  *	@buffer: request buffer (may not be smaller than eight bytes)
-  *	@len:	length of request buffer.
-@@ -2110,18 +2110,18 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 		sshdr = &my_sshdr;
+@@ -2026,8 +2026,15 @@ scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
+ 	memset(cmd, 0, sizeof(cmd));
+ 	cmd[1] = (pf ? 0x10 : 0) | (sp ? 0x01 : 0);
  
-  retry:
--	use_10_for_ms = sdev->use_10_for_ms;
-+	use_10_for_ms = sdev->use_10_for_ms || len > 255;
+-	if (sdev->use_10_for_ms) {
+-		if (len > 65535)
++	/*
++	 * Use MODE SENSE 10 if the device asked for it or if the mode page
++	 * and the mode select header cannot fit within the maximumm 255B of
++	 * the MODE SELECT (6) command.
++	 */
++	if (sdev->use_10_for_ms ||
++	    len + 4 > 255 ||
++	    data->block_descriptor_length > 255) {
++		if (len > 65535 - 8)
+ 			return -EINVAL;
+ 		real_buffer = kmalloc(8 + len, GFP_KERNEL);
+ 		if (!real_buffer)
+@@ -2040,15 +2047,13 @@ scsi_mode_select(struct scsi_device *sdev, int pf, int sp, int modepage,
+ 		real_buffer[3] = data->device_specific;
+ 		real_buffer[4] = data->longlba ? 0x01 : 0;
+ 		real_buffer[5] = 0;
+-		real_buffer[6] = data->block_descriptor_length >> 8;
+-		real_buffer[7] = data->block_descriptor_length;
++		put_unaligned_be16(data->block_descriptor_length,
++				   &real_buffer[6]);
  
- 	if (use_10_for_ms) {
--		if (len < 8)
--			len = 8;
-+		if (len < 8 || len > 65535)
-+			return -EINVAL;
- 
- 		cmd[0] = MODE_SENSE_10;
+ 		cmd[0] = MODE_SELECT_10;
+-		cmd[7] = len >> 8;
 -		cmd[8] = len;
 +		put_unaligned_be16(len, &cmd[7]);
- 		header_length = 8;
  	} else {
- 		if (len < 4)
--			len = 4;
-+			return -EINVAL;
+-		if (len > 255 || data->block_descriptor_length > 255 ||
+-		    data->longlba)
++		if (data->longlba)
+ 			return -EINVAL;
  
- 		cmd[0] = MODE_SENSE;
- 		cmd[4] = len;
-@@ -2145,9 +2145,15 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 			if ((sshdr->sense_key == ILLEGAL_REQUEST) &&
- 			    (sshdr->asc == 0x20) && (sshdr->ascq == 0)) {
- 				/*
--				 * Invalid command operation code
-+				 * Invalid command operation code: retry using
-+				 * MODE SENSE (6) if this was a MODE SENSE 10
-+				 * request, except if the request mode page is
-+				 * too large for MODE SENSE single byte
-+				 * allocation length field.
- 				 */
- 				if (use_10_for_ms) {
-+					if (len > 255)
-+						return -EIO;
- 					sdev->use_10_for_ms = 0;
- 					goto retry;
- 				}
-@@ -2171,12 +2177,11 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 		data->longlba = 0;
- 		data->block_descriptor_length = 0;
- 	} else if (use_10_for_ms) {
--		data->length = buffer[0]*256 + buffer[1] + 2;
-+		data->length = get_unaligned_be16(&buffer[0]) + 2;
- 		data->medium_type = buffer[2];
- 		data->device_specific = buffer[3];
- 		data->longlba = buffer[4] & 0x01;
--		data->block_descriptor_length = buffer[6]*256
--			+ buffer[7];
-+		data->block_descriptor_length = get_unaligned_be16(&buffer[6]);
- 	} else {
- 		data->length = buffer[0] + 1;
- 		data->medium_type = buffer[1];
+ 		real_buffer = kmalloc(4 + len, GFP_KERNEL);
 -- 
 2.31.1
 
