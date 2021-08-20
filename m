@@ -8,67 +8,68 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A5E1C4338F
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:05:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85B65C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EDC0560EFE
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:05:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BE7E6108B
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 03:08:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237794AbhHTDFj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 19 Aug 2021 23:05:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47742 "EHLO
+        id S237993AbhHTDIu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 19 Aug 2021 23:08:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48516 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234853AbhHTDFi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 23:05:38 -0400
-Received: from mail-qt1-x829.google.com (mail-qt1-x829.google.com [IPv6:2607:f8b0:4864:20::829])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6DB2CC061575;
-        Thu, 19 Aug 2021 20:05:01 -0700 (PDT)
-Received: by mail-qt1-x829.google.com with SMTP id e15so6429862qtx.1;
-        Thu, 19 Aug 2021 20:05:01 -0700 (PDT)
+        with ESMTP id S237843AbhHTDIu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Aug 2021 23:08:50 -0400
+Received: from mail-qt1-x82c.google.com (mail-qt1-x82c.google.com [IPv6:2607:f8b0:4864:20::82c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFFBAC061575;
+        Thu, 19 Aug 2021 20:08:12 -0700 (PDT)
+Received: by mail-qt1-x82c.google.com with SMTP id e3so217064qth.9;
+        Thu, 19 Aug 2021 20:08:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=2m9YrpUpbG665Kce7B5iRqtDD9fG0mGaBNdNqOrZoO0=;
-        b=k8r3Rgu5ciYf9vekI0OhngK/c7DIucjwDyetJ1Ke2zIz5tf0fFH0naWx76Yau+gI/J
-         1XXToUM0JHSTn5biSjhLovYDRBsZIx2GGi7qACrF5iOCcjnNxTJ4UCcfbR3QcLydJkry
-         gJLPh3fMA/A9QT+VQukGTSv3d3hF7VgdbxAitWzYiVAf4hqtaoEulhmi2FmszUFd7A+y
-         S/lai4eYWLRYQ8Xs7OhSqVlAvXWFlZ9yMNI2HZst7Lc8MGXk4GNjxLlmpgTQzJyy+ayx
-         S88CmlM3pLoeRnkh5A/f7625QbfTQyhx42jTwpvrmaw4avAFuJpcSQWG0F0dEuojHv4l
-         9sNg==
+        bh=+JsfzGWsf8V+ktqlcUdosLl0jyg72rZ/bLzBNSn/CbY=;
+        b=CSi3aZn+1xEQ187JGQXcvYJfOUOAZe8KY6AoUqHz0JK6jBOMDPe+I0xu4Gen0wIESD
+         QFWRaof6exnZDB4m616JzDftuRMnUWe2pYx4BdPg/zmJG1A/yMJXIBKBK4hB7kzvAQEf
+         bRXLYAzy1cr9xB8ZXqHumy4/h7U2dWelbZR21tjrKcwogKOAG3fNfznXkRqDNY6dCM5I
+         TRZNtQC6OJlSV7k8Bcsf0gNFaw33/Gu+QbCacQkhN0vdP5GdC0spwk2bnLy00zuMKIOp
+         kcDRBfRanAn5mNIYQWttpA+B2Y9G/PcTsKkk/wsYjqvAtGephUdo0HfZY6RlwFh+9J6a
+         em6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=2m9YrpUpbG665Kce7B5iRqtDD9fG0mGaBNdNqOrZoO0=;
-        b=uIU1DSLmcDILqyNqCSOvIvwJ3//fOwxRsfE67FDQgblcjn3hFhWOFYjRBZ9H1gs1tH
-         SmUu6MVskECbkb4L69gGXhzDOneQkmUsuaysoe6uGMyFygrqvHtCp78FZ4xlAc0UNH4i
-         bi3nZuM5d4DRbBAj1XyZ2RYoWaGWpZun/bpEHTWE/UWvO9iV+cEUP7/4IItMoq/Al1WO
-         1dY3+fygnBYwHPK6cT9lMbmLgxFhF5toZr2JrCaeplg0Hyum7nK7IX1Bz43iN5hwM9fe
-         C26DsTsGCQQOWHz/XT5l/akEjkaoZdsGtdz7CycDA+C3sAtVQoMkWFHSilX1i5s0KIBE
-         Inag==
-X-Gm-Message-State: AOAM5301NGBgEPDcqAn6uTQlnwH3QRfyofZRXV+rnpLYKl0N1ov+BbJp
-        g7c+6Ttxx7c2xV67I/FUD5Y=
-X-Google-Smtp-Source: ABdhPJx1JmDT349WoeGN9WEAKRn8L/PgL7UjV1e5Dkz4YQ5/tPwuA/DSw4hhuvfj1KCT7fLizIqkCQ==
-X-Received: by 2002:aed:304c:: with SMTP id 70mr16030157qte.2.1629428700532;
-        Thu, 19 Aug 2021 20:05:00 -0700 (PDT)
+        bh=+JsfzGWsf8V+ktqlcUdosLl0jyg72rZ/bLzBNSn/CbY=;
+        b=qpvG12oxQtECJJid7uq+0gVKWnCmFJJrsis6DkNUTzbp1ywCsJ384mosYoU6ZHBW4y
+         k0LY0Mz6KQ7UFAjIjT6O3d2getPqSANuLd30EPWQgum7RRbGp9tgD71JbdKTQvIMVUMV
+         9ZsgSaz1s5ZPuYpyRBb9UoUl4pghKp6r6LVvvmzJc2XCttKKWXcorB8rQKMbBoA0gACe
+         H39ZYepZb1WTZaLvvrbrAQWT7TV1VM/c1TWTpVJQ3m7uU9WxtParGCNVhXxjxzrLoY0h
+         NdtGkIfuWjMDqtxF0xlcAbtjUPIC0QccdmjtBJM9aDjJeeHG8hl4CAIdXP+6bErOOIkt
+         OsPg==
+X-Gm-Message-State: AOAM53267p2B+b+vHCQicejeMlds7CG/Qps8nOwSqhDolomE5fhJQ3bw
+        OE/9EVJjNlMOmvM40JxrTOw=
+X-Google-Smtp-Source: ABdhPJwRse5SxrdsSOPBCsvyCeEp9n7dbnY4O4JoOjyzFrOaIEUP1l+2lmMuUGH61ox/Y+OORfzQlw==
+X-Received: by 2002:ac8:1106:: with SMTP id c6mr15974365qtj.20.1629428892242;
+        Thu, 19 Aug 2021 20:08:12 -0700 (PDT)
 Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id x3sm2502097qkx.62.2021.08.19.20.04.57
+        by smtp.gmail.com with ESMTPSA id u6sm2551729qkp.49.2021.08.19.20.08.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 19 Aug 2021 20:05:00 -0700 (PDT)
+        Thu, 19 Aug 2021 20:08:11 -0700 (PDT)
 From:   CGEL <cgel.zte@gmail.com>
 X-Google-Original-From: CGEL <jing.yangyang@zte.com.cn>
-To:     Oliver Neukum <oliver@neukum.org>
-Cc:     Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>,
+To:     Kashyap Desai <kashyap.desai@broadcom.com>
+Cc:     Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        dc395x@twibble.org, linux-scsi@vger.kernel.org,
+        megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         jing yangyang <jing.yangyang@zte.com.cn>,
         Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH linux-next] scsi/dc395x: Use bitwise instead of arithmetic operator for flags
-Date:   Thu, 19 Aug 2021 20:04:07 -0700
-Message-Id: <20210820030407.12313-1-jing.yangyang@zte.com.cn>
+Subject: [PATCH linux-next] scsi: megaraid: fix Coccinelle warnings
+Date:   Thu, 19 Aug 2021 20:08:05 -0700
+Message-Id: <20210820030805.12383-1-jing.yangyang@zte.com.cn>
 X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -78,65 +79,30 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: jing yangyang <jing.yangyang@zte.com.cn>
 
-This silences the following coccinelle warning:
+WARNING !A || A && B is equivalent to !A || B
 
-"WARNING: sum of probable bitmasks, consider |"
+This issue was detected with the help of Coccinelle.
 
 Reported-by: Zeal Robot <zealci@zte.com.cn>
 Signed-off-by: jing yangyang <jing.yangyang@zte.com.cn>
 ---
- drivers/scsi/dc395x.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 24c7cef..fbac95b 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -761,7 +761,7 @@ static void waiting_process_next(struct AdapterCtlBlk *acb)
- 	struct list_head *dcb_list_head = &acb->dcb_list;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index e4298bf..17c87ac 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -8773,8 +8773,7 @@ int megasas_update_device_list(struct megasas_instance *instance,
  
- 	if (acb->active_dcb
--	    || (acb->acb_flag & (RESET_DETECT + RESET_DONE + RESET_DEV)))
-+	    || (acb->acb_flag & (RESET_DETECT | RESET_DONE | RESET_DEV)))
- 		return;
- 
- 	if (timer_pending(&acb->waiting_timer))
-@@ -844,7 +844,7 @@ static void send_srb(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb)
- 
- 	if (dcb->max_command <= list_size(&dcb->srb_going_list) ||
- 	    acb->active_dcb ||
--	    (acb->acb_flag & (RESET_DETECT + RESET_DONE + RESET_DEV))) {
-+	    (acb->acb_flag & (RESET_DETECT | RESET_DONE | RESET_DEV))) {
- 		list_add_tail(&srb->list, &dcb->srb_waiting_list);
- 		waiting_process_next(acb);
- 		return;
-@@ -1127,7 +1127,7 @@ static void reset_dev_param(struct AdapterCtlBlk *acb)
- 	list_for_each_entry(dcb, &acb->dcb_list, list) {
- 		u8 period_index;
- 
--		dcb->sync_mode &= ~(SYNC_NEGO_DONE + WIDE_NEGO_DONE);
-+		dcb->sync_mode &= ~(SYNC_NEGO_DONE | WIDE_NEGO_DONE);
- 		dcb->sync_period = 0;
- 		dcb->sync_offset = 0;
- 
-@@ -1685,7 +1685,7 @@ static void msgout_phase0(struct AdapterCtlBlk *acb, struct ScsiReqBlk *srb,
- 		u16 *pscsi_status)
- {
- 	dprintkdbg(DBG_0, "msgout_phase0: (0x%p)\n", srb->cmd);
--	if (srb->state & (SRB_UNEXPECT_RESEL + SRB_ABORT_SENT))
-+	if (srb->state & (SRB_UNEXPECT_RESEL | SRB_ABORT_SENT))
- 		*pscsi_status = PH_BUS_FREE;	/*.. initial phase */
- 
- 	DC395x_write16(acb, TRM_S1040_SCSI_CONTROL, DO_DATALATCH);	/* it's important for atn stop */
-@@ -2901,7 +2901,7 @@ static void disconnect(struct AdapterCtlBlk *acb)
- 		doing_srb_done(acb, DID_ABORT, srb->cmd, 1);
- 		waiting_process_next(acb);
- 	} else {
--		if ((srb->state & (SRB_START_ + SRB_MSGOUT))
-+		if ((srb->state & (SRB_START_ | SRB_MSGOUT))
- 		    || !(srb->
- 			 state & (SRB_DISCONNECT | SRB_COMPLETED))) {
- 			/*
+ 		if (event_type & SCAN_VD_CHANNEL) {
+ 			if (!instance->requestorId ||
+-			    (instance->requestorId &&
+-			     megasas_get_ld_vf_affiliation(instance, 0))) {
++			megasas_get_ld_vf_affiliation(instance, 0)) {
+ 				dcmd_ret = megasas_ld_list_query(instance,
+ 						MR_LD_QUERY_TYPE_EXPOSED_TO_HOST);
+ 				if (dcmd_ret != DCMD_SUCCESS)
 -- 
 1.8.3.1
 
