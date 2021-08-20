@@ -2,97 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+X-Spam-Status: No, score=-11.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E654C432BE
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 07:05:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3B47C4338F
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 08:17:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7664B61056
-	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 07:05:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BCDDD61053
+	for <linux-scsi@archiver.kernel.org>; Fri, 20 Aug 2021 08:17:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238727AbhHTHFh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 20 Aug 2021 03:05:37 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:20637 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238664AbhHTHFd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Aug 2021 03:05:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1629443095; x=1660979095;
-  h=from:to:subject:date:message-id:in-reply-to:references:
-   mime-version:content-transfer-encoding;
-  bh=zrL1s5kuho6QHoYQ3XfWT692XbkgjvR+pif0sZOqHuM=;
-  b=QygrumweuVmIyj0o7yHMX8q1DTRiOFJSLT3ltzGaiRxw32sLZzf7Q73p
-   JdAO5mglfEgpxf5epkDkkL//jIVtxUwfQShf7wy/jHrtx4cSgH4hRwmX/
-   uKhcnd0nY9IA2I8yrvEilnSUuSPiL3UCisbh000vxbh6gXBTM1PN7qEQ6
-   JhgwoDXQRczee9ERQkTKBdyRoIRGFXp7rpG5thalDopfUUixHI28bXoYl
-   C3JSMZM8LUMIlBrtmbsTWW5v0/W0W+wFlRvVGPntSt793pnpUyuVWZZPN
-   Cjee6Fu0M+TsZVZjFW8t8NoNOL0svnLgZ8LVX6mlsLEpJ4qXvrjg3E9/l
-   w==;
-X-IronPort-AV: E=Sophos;i="5.84,336,1620662400"; 
-   d="scan'208";a="182663597"
-Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Aug 2021 15:04:38 +0800
-IronPort-SDR: uGbQSPanZJY9RaIJSXTWU0vYW4I0luzAI6A1i9dlRLMLWNLe+rS7ALQ5qPGLP4MBISIVj6hs7L
- XLW+bItVpmqXNaCaTVrD+YuQ8PGwcz/7oSAe8wxfu40C9C+A0NA2J8SyDHeEQBh2bgXfuz3NJH
- z1p/xmGx9k/VCQl/cZwyP3DgxtaZ70a2idMM8zrViD02+ygxlXZ91r7Ut9115hg/wgI6QQP/+p
- KhOY7GiwKqsJXThMx7MgZNFn81vIWPiKLniYKy7IFh4DvvmpCLl+51STbfKbp+Jz9ckcsvpHTt
- TvcMdt6ye6+zatRI24hJ0sED
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Aug 2021 23:39:58 -0700
-IronPort-SDR: F5IPH4TP7v+DVwL7mh4fIsQCQOUWjpkpB8jrTx7ZVusOdvSQZuvjdYUs7q2w4+Qi1TYnt8VeVn
- QSXQP1W6VlcFhsdpaq6XLAIPMy9mIu6JOMjRMVr7xkJMtgY6Xl3cqwq9mtkrarKetg3x1pfwJG
- X2VBkbM1+CpaOSDBPxon+9Myoge2vOZ4u1GwDng8mPM3RMbIx9weM981IZYD8ExJX6YZR2xO70
- JTX8KbNBp1tcIyot5A3cEAGLf5z3BJWNZOrbXHVl7DYw/Lq6p9k4xfpUgmnzbGHLDFpu30kXxp
- yPw=
-WDCIronportException: Internal
-Received: from washi.fujisawa.hgst.com ([10.149.53.254])
-  by uls-op-cesaip02.wdc.com with ESMTP; 20 Aug 2021 00:04:39 -0700
-From:   Damien Le Moal <damien.lemoal@wdc.com>
-To:     linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v3 3/3] scsi: sd: fix sd_do_mode_sense() buffer length handling
-Date:   Fri, 20 Aug 2021 16:02:55 +0900
-Message-Id: <20210820070255.682775-4-damien.lemoal@wdc.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20210820070255.682775-1-damien.lemoal@wdc.com>
-References: <20210820070255.682775-1-damien.lemoal@wdc.com>
+        id S231672AbhHTIRj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 20 Aug 2021 04:17:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33350 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231241AbhHTIRi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Aug 2021 04:17:38 -0400
+Received: from mail-pg1-x532.google.com (mail-pg1-x532.google.com [IPv6:2607:f8b0:4864:20::532])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7DA24C061756
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2021 01:17:01 -0700 (PDT)
+Received: by mail-pg1-x532.google.com with SMTP id y23so8394591pgi.7
+        for <linux-scsi@vger.kernel.org>; Fri, 20 Aug 2021 01:17:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Qdtxzzeky0nSJt5dF96rx25rIymA66jKuRFTgAzhzVc=;
+        b=ReA4Ub2zxyJmk7FM1+hDLKl3yhadEVsOMH6Mv2imFjScbd1G3ie+DnrG54dCgdJ24x
+         MPrEbYXj6EFQKGfjC0D7H7RhDq4Fw+oGHVxK/AnlBQ9Tri8tX9VAPYlj80yoSOSC648v
+         G3z+kE+h3MGS3OlYTxr9Uw6y+iiw1iIT377TI=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Qdtxzzeky0nSJt5dF96rx25rIymA66jKuRFTgAzhzVc=;
+        b=LynmwROzJvDLKys4BQBg2SVwGHjD4Xf/ZUZJp0+obQEnsmASv0/LkiuOPZiQnmM3fk
+         9DrQe3h609QWocXF2IBZG5zA1IYDq0TWuCEOpbNen8ictSu3jdexktIDE5axskNbloHd
+         HSVQQuipREeCkIaYmkdsy7gQ9YJ/BZxA57DTbpVqltBppGszWqUF6Oa9XlZ8I4+VkyU9
+         10mPGPTziaVZqJchomkw5aMUrOvjzcaZoHTJeNsfz9HiH0Pu+S/AeZ4s4AJUBjdYDX5l
+         T4QFSlaSte4X+2FRHkpBeiwnMkvgxqHNWlnVlvG23uSWAK4n7bsUJvI9E+Lnd0TanC4+
+         RzDg==
+X-Gm-Message-State: AOAM531DoLiyW27fpdtIyiGKLAm9amcgwErmE/BV/OTLhGv1S6C7lmXH
+        Ykzja/yd0HuJLdWBidutS7KuwCmDilLyh5+IrLbSyg==
+X-Google-Smtp-Source: ABdhPJx4GM3KwrFyxr+U0DsDj352kxtjr+OB2hExtho01goAnaCN+A8x9JNQsS8DDweSlmu8+vuL0GJjX02DhtHC7xQ=
+X-Received: by 2002:a65:6708:: with SMTP id u8mr17766307pgf.334.1629447420711;
+ Fri, 20 Aug 2021 01:17:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20210820030805.12383-1-jing.yangyang@zte.com.cn>
+In-Reply-To: <20210820030805.12383-1-jing.yangyang@zte.com.cn>
+From:   Sumit Saxena <sumit.saxena@broadcom.com>
+Date:   Fri, 20 Aug 2021 13:46:34 +0530
+Message-ID: <CAL2rwxp8msYZLqC93WgQy_vEMH1X0UE+upE4g+PkDKG4hiQg9A@mail.gmail.com>
+Subject: Re: [PATCH linux-next] scsi: megaraid: fix Coccinelle warnings
+To:     CGEL <cgel.zte@gmail.com>
+Cc:     Kashyap Desai <kashyap.desai@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>,
+        Linux SCSI List <linux-scsi@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        jing yangyang <jing.yangyang@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+        boundary="000000000000b9cdc505c9f94adf"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For devices that explicitly asked for MODE SENSE 10 use, make sure that
-scsi_mode_sense() is called with a buffer of at least 8B so that mode
-sense header fits.
+--000000000000b9cdc505c9f94adf
+Content-Type: text/plain; charset="UTF-8"
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
----
- drivers/scsi/sd.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+On Fri, Aug 20, 2021 at 8:38 AM CGEL <cgel.zte@gmail.com> wrote:
+>
+> From: jing yangyang <jing.yangyang@zte.com.cn>
+>
+> WARNING !A || A && B is equivalent to !A || B
+>
+> This issue was detected with the help of Coccinelle.
+>
+> Reported-by: Zeal Robot <zealci@zte.com.cn>
+> Signed-off-by: jing yangyang <jing.yangyang@zte.com.cn>
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 920df3a04a7b..34faff96e165 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2603,6 +2603,13 @@ sd_do_mode_sense(struct scsi_disk *sdkp, int dbd, int modepage,
- 		 unsigned char *buffer, int len, struct scsi_mode_data *data,
- 		 struct scsi_sense_hdr *sshdr)
- {
-+	/*
-+	 * If we must use MODE SENSE 10, make sure that the buffer length
-+	 * is at least 8B so that the mode sense header fits.
-+	 */
-+	if (sdkp->device->use_10_for_ms && len < 8)
-+		len = 8;
-+
- 	return scsi_mode_sense(sdkp->device, dbd, modepage, buffer, len,
- 			       SD_TIMEOUT, sdkp->max_retries, data,
- 			       sshdr);
--- 
-2.31.1
+--000000000000b9cdc505c9f94adf
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
+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
+GmgWG68YahkDuVSTTt2beZdyMeDwq/KifJFo18EkhcL3e7rmDAh8SniUI/0o3HX6hrgdmUI1wSdz
+uIVL/m6Ok9mIl2U5kvguitOSC0bVaQPfNzlj+7PCKBECAwEAAaOCAdowggHWMA4GA1UdDwEB/wQE
+AwIFoDCBowYIKwYBBQUHAQEEgZYwgZMwTgYIKwYBBQUHMAKGQmh0dHA6Ly9zZWN1cmUuZ2xvYmFs
+c2lnbi5jb20vY2FjZXJ0L2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNydDBBBggrBgEFBQcw
+AYY1aHR0cDovL29jc3AuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAw
+TQYDVR0gBEYwRDBCBgorBgEEAaAyASgKMDQwMgYIKwYBBQUHAgEWJmh0dHBzOi8vd3d3Lmdsb2Jh
+bHNpZ24uY29tL3JlcG9zaXRvcnkvMAkGA1UdEwQCMAAwSQYDVR0fBEIwQDA+oDygOoY4aHR0cDov
+L2NybC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAyMC5jcmwwJAYDVR0R
+BB0wG4EZc3VtaXQuc2F4ZW5hQGJyb2FkY29tLmNvbTATBgNVHSUEDDAKBggrBgEFBQcDBDAfBgNV
+HSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQUNz+JSIXEXl2uQ4Utcnx7FnFi
+hhowDQYJKoZIhvcNAQELBQADggEBAL0HLbxgPSW4BFbbIMN3A/ifBg4Lzaph8ARJOnZpGQivo9jG
+kQOd95knQi9Lm95JlBAJZCqXXj7QS+dnE71tsFeHWcHNNxHrTSwn4Xi5EqaRjLC6g4IEPyZHWDrD
+zzJidgfwQvfZONkf4IXnnrIEFle+26/gPs2kOjCeLMo6XGkNC4HNla1ol1htToQaNN8974pCqwIC
+rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
+3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
+aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
+EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIFUWHy/+YeJRKxtcudaokDWeizuY/lhc
+QldrwQRhK7OrMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDgy
+MDA4MTcwMVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
+ATANBgkqhkiG9w0BAQEFAASCAQCbiLLCTxmovpOTWfYiW/P24uuMSgqbS2z7vCLCb+lptY1u9zTE
+xjnT+/cezVcoXWpsEGos1jykNGjioGodoEchMIqBxTryRU8R9e/eXyCsTsrFqs3UEB1CpBqkslom
+Tkpjc3Ow7Iy6XKQbRnkpT80bd6jV64EWHX149S8j7taYi6PTWYmNf2S61rV3gMeyUnCgl9EKlDp5
+cNWMY1WU4400LxlXTDQxgAi2cQlqYZWYdZy/lI8FTWWuWiN93C+ijuI/b2WpLhbJRZzpSx7jHNKU
+vOtFKJ/3MGgP5QtEB18umstrvI7Wo7qKHBkkNd9/07fdOj1FwNtkTOIENbAd604I
+--000000000000b9cdc505c9f94adf--
