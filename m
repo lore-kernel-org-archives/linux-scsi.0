@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 498A8C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 07:28:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22EE9C432BE
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 07:28:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 162A760F92
+	by mail.kernel.org (Postfix) with ESMTP id F3BB46126A
 	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 07:28:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235076AbhHWH30 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Aug 2021 03:29:26 -0400
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:9105 "EHLO
+        id S235082AbhHWH31 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Aug 2021 03:29:27 -0400
+Received: from esa.microchip.iphmx.com ([68.232.154.123]:54379 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234993AbhHWH3Y (ORCPT
+        with ESMTP id S235006AbhHWH3Y (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2021 03:29:24 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1629703722; x=1661239722;
+  t=1629703721; x=1661239721;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=BDWpPTiMgVnLmdLcw+Clhv4Q4lMPvakgDLNWza6F1oc=;
-  b=cLMQs4JftLsbh10v2kvvLdWAyF7nag87kldEI9aW2dkVj5RM7VIaH6rO
-   8vo1XWuZFHMRfmWcG7vLFdhBRCZDxX3rAWBnukcdsudxC4at9HLnq4Epb
-   RLtaO2MC8ryKilt8zG3I1Luv/L1RzSdSTYzQZ9Jlyajej5QlWwlW6PSKz
-   O3ZBhj4MFx+Z09k83LYMZ9Rwv6vtLPrVQ2uPquiTHTIOP/YeO5T7d6AnH
-   +ydhdc4qiScYQzuD63s4zUsFqtVLrQ5zCJB3nvBl+WmHgZT8gR4fVTujy
-   J9tWeDXfv662IHP2G7gji+a1yKqfJu95llnU3hGDH276T31On9yqv0Vfa
-   g==;
-IronPort-SDR: Q2SbYcdgyf1cjO5Xui+8XuzeK6QLJVrRcAND66HhrTu95aFsAD76dFAgYPMVHrK4YP2BvddIYi
- t2pVP1hNOl85BgX/IseiwM4Z248CcBM9m0JBP8V3qu5Mva9JExpxvTtOBwMUY6R1qUbECCfOUH
- m0DgWkg/8+0y6NM9SjL5LkcKZ5xTeyN8y7uHzFs+N4As+7xwx9nHjgWhyL931y8+6exBi8pha3
- zqo73iER9fvKVspd2c8SqtX0noZrZnITJ3fjJJCV/bafFVSYgjgqyC8aIP6jLNn4b0r2mIGaW7
- l5h4+oOi6KMz5VQty9WpmDEY
+  bh=060Dhv7IuOizRGJJO8tDLdaMuNZhQYqgfS6ul2ndlOg=;
+  b=10QQ9ykHwqcpY1aILIZXK5jKrEHde0ITixung8vBgVftNQoZzl2c21UQ
+   kwK9uX519fJnCby3aEaK1JGluUD37cjavkQ6XRAMzau8yfpDtPyQkUvcn
+   9I2D6ZEchUUXRUi/dB8NGmUXGkEiC3c3zINuk0+S47yoP45uJV97001ex
+   7eOO2Jp4siWx1iAMyMpc1GKSKStTZH2qO2H0MbUVV9AA2x5lSYDWs+v3Q
+   0sdGrlx7yHB5fjDFBa218ssTH119JO5aPU1qO1t6Sr6TX8QWfn3BEYxZN
+   nPSBphbFKHyduj/YeDcfUP5jBsiHGOAp3jTG4x0Py3630MiClq2I+oxDb
+   A==;
+IronPort-SDR: Wjur5/VO900WlRviWPbi3RYYnJhBxEXBT/JaciRUU5mYNaqd0FljjnusG3P3vrgYq9LPYNgW2F
+ bQigf6VqKwVFmOi9t07Z2KdEQhpWee2P4uE25A9oEkOvopFxtVjvn6zbM0gm1A/vBRHS+iaGS5
+ QcpnGUXoRP/vFCk+9WeRttY4E3u1tou9KVgveREt3Uv8GQrxRhb+NJ3eVlyj1FacjEeqgCN1/i
+ fkMACWc4kV9qeSPEY+YcJG1UcGAorW2mvUu1sD9MVHuTA4MQs5XsU+cNwKmh03tBQtAo2Jx9SH
+ QkZK1cWmqbbUj+V59BlY1ylm
 X-IronPort-AV: E=Sophos;i="5.84,343,1620716400"; 
-   d="scan'208";a="66749187"
+   d="scan'208";a="126720700"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa6.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 23 Aug 2021 00:28:41 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.85.144) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
+  by esa4.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 23 Aug 2021 00:28:39 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Mon, 23 Aug 2021 00:28:41 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
- Transport; Mon, 23 Aug 2021 00:28:41 -0700
+ 15.1.2176.14; Mon, 23 Aug 2021 00:28:39 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
+ Transport; Mon, 23 Aug 2021 00:28:39 -0700
 From:   Ajish Koshy <Ajish.Koshy@microchip.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <Viswas.G@microchip.com>, <Ruksar.devadi@microchip.com>,
         <Ashokkumar.N@microchip.com>,
         Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH 4/4] scsi: pm80xx: fix memory leak during rmmod
-Date:   Mon, 23 Aug 2021 13:53:38 +0530
-Message-ID: <20210823082338.67309-5-Ajish.Koshy@microchip.com>
+Subject: [PATCH 3/4] scsi: pm80xx: Corrected Inbound and Outbound queue logging
+Date:   Mon, 23 Aug 2021 13:53:37 +0530
+Message-ID: <20210823082338.67309-4-Ajish.Koshy@microchip.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210823082338.67309-1-Ajish.Koshy@microchip.com>
 References: <20210823082338.67309-1-Ajish.Koshy@microchip.com>
@@ -67,57 +67,55 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Driver fails to release memory allocated. This will lead
-to memory leak during driver removal.
+From: Viswas G <Viswas.G@microchip.com>
 
-Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
+Corrected inbound queue and outbound queue size in 'ib_log'
+and 'ob_log' sysfs entries.
+
 Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
 ---
- drivers/scsi/pm8001/pm8001_init.c | 11 +++++++++++
- drivers/scsi/pm8001/pm8001_sas.h  |  1 +
- 2 files changed, 12 insertions(+)
+ drivers/scsi/pm8001/pm8001_ctl.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 613455a3e686..7082fecf7ce8 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1199,6 +1199,7 @@ pm8001_init_ccb_tag(struct pm8001_hba_info *pm8001_ha, struct Scsi_Host *shost,
- 		goto err_out;
+diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
+index ec05c42e8ee6..b25e447aa3bd 100644
+--- a/drivers/scsi/pm8001/pm8001_ctl.c
++++ b/drivers/scsi/pm8001/pm8001_ctl.c
+@@ -409,6 +409,7 @@ static ssize_t pm8001_ctl_ib_queue_log_show(struct device *cdev,
+ 	char *str = buf;
+ 	int start = 0;
+ 	u32 ib_offset = pm8001_ha->ib_offset;
++	u32 queue_size = pm8001_ha->max_q_num * PM8001_MPI_QUEUE * 128;
+ #define IB_MEMMAP(c)	\
+ 		(*(u32 *)((u8 *)pm8001_ha->	\
+ 		memoryMap.region[ib_offset].virt_ptr +	\
+@@ -419,7 +420,7 @@ static ssize_t pm8001_ctl_ib_queue_log_show(struct device *cdev,
+ 		start = start + 4;
+ 	}
+ 	pm8001_ha->evtlog_ib_offset += SYSFS_OFFSET;
+-	if (((pm8001_ha->evtlog_ib_offset) % (PM80XX_IB_OB_QUEUE_SIZE)) == 0)
++	if (((pm8001_ha->evtlog_ib_offset) % queue_size) == 0)
+ 		pm8001_ha->evtlog_ib_offset = 0;
  
- 	/* Memory region for ccb_info*/
-+	pm8001_ha->ccb_count = ccb_count;
- 	pm8001_ha->ccb_info =
- 		kcalloc(ccb_count, sizeof(struct pm8001_ccb_info), GFP_KERNEL);
- 	if (!pm8001_ha->ccb_info) {
-@@ -1260,6 +1261,16 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
- 			tasklet_kill(&pm8001_ha->tasklet[j]);
- #endif
- 	scsi_host_put(pm8001_ha->shost);
-+
-+	for (i = 0; i < pm8001_ha->ccb_count; i++) {
-+		dma_free_coherent(&pm8001_ha->pdev->dev,
-+			sizeof(struct pm8001_prd) * PM8001_MAX_DMA_SG,
-+			pm8001_ha->ccb_info[i].buf_prd,
-+			pm8001_ha->ccb_info[i].ccb_dma_handle);
-+	}
-+	kfree(pm8001_ha->ccb_info);
-+	kfree(pm8001_ha->devices);
-+
- 	pm8001_free(pm8001_ha);
- 	kfree(sha->sas_phy);
- 	kfree(sha->sas_port);
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 3274d88a9ccc..7e999768bfd2 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -518,6 +518,7 @@ struct pm8001_hba_info {
- 	u32			iomb_size; /* SPC and SPCV IOMB size */
- 	struct pm8001_device	*devices;
- 	struct pm8001_ccb_info	*ccb_info;
-+	u32			ccb_count;
- #ifdef PM8001_USE_MSIX
- 	int			number_of_intr;/*will be used in remove()*/
- 	char			intr_drvname[PM8001_MAX_MSIX_VEC]
+ 	return str - buf;
+@@ -445,6 +446,7 @@ static ssize_t pm8001_ctl_ob_queue_log_show(struct device *cdev,
+ 	char *str = buf;
+ 	int start = 0;
+ 	u32 ob_offset = pm8001_ha->ob_offset;
++	u32 queue_size = pm8001_ha->max_q_num * PM8001_MPI_QUEUE * 128;
+ #define OB_MEMMAP(c)	\
+ 		(*(u32 *)((u8 *)pm8001_ha->	\
+ 		memoryMap.region[ob_offset].virt_ptr +	\
+@@ -455,7 +457,7 @@ static ssize_t pm8001_ctl_ob_queue_log_show(struct device *cdev,
+ 		start = start + 4;
+ 	}
+ 	pm8001_ha->evtlog_ob_offset += SYSFS_OFFSET;
+-	if (((pm8001_ha->evtlog_ob_offset) % (PM80XX_IB_OB_QUEUE_SIZE)) == 0)
++	if (((pm8001_ha->evtlog_ob_offset) % queue_size) == 0)
+ 		pm8001_ha->evtlog_ob_offset = 0;
+ 
+ 	return str - buf;
 -- 
 2.27.0
 
