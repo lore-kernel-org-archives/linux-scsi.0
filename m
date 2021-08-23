@@ -2,115 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBB78C4338F
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 02:59:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 174D9C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 05:00:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD6E861360
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 02:59:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E513961284
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 05:00:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230474AbhHWDAc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 22 Aug 2021 23:00:32 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:26356 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229850AbhHWDAc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 22 Aug 2021 23:00:32 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1629687589;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=axjxrGHttzw0tQcSYIKKPfSOM5He+S2z2F7X2I25OOA=;
-        b=KzW8QaCeuHF911KcWMzfEXWb111SItXfdZogtN0w9aucQHePJDw1JVqOyCtbvYS3YUCrJd
-        x69AS09qlYPndYyJAkX8ZA1x88ztA4WJXCGjdmaGivyyg2f0CQYPD9vQj9+p1k/WlVR29r
-        rjznFStnyBno06yPT6+c3I3UZq89WL8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-588-zyrgTxl_Mv-ZrqTWbp5LFA-1; Sun, 22 Aug 2021 22:59:48 -0400
-X-MC-Unique: zyrgTxl_Mv-ZrqTWbp5LFA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 98884802922;
-        Mon, 23 Aug 2021 02:59:46 +0000 (UTC)
-Received: from T590 (ovpn-8-24.pek2.redhat.com [10.72.8.24])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3967560861;
-        Mon, 23 Aug 2021 02:59:33 +0000 (UTC)
-Date:   Mon, 23 Aug 2021 10:59:28 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
-        hare@suse.de
-Subject: Re: [PATCH v2 06/11] blk-mq: Pass driver tags to
- blk_mq_clear_rq_mapping()
-Message-ID: <YSMPEGmHP8YljCnV@T590>
-References: <1628519378-211232-1-git-send-email-john.garry@huawei.com>
- <1628519378-211232-7-git-send-email-john.garry@huawei.com>
- <YRyGb/Ay3lvUZs/V@T590>
- <23448833-593c-139f-6051-9b8e7d3deade@huawei.com>
- <YR2oO8hhtDx1Wd+P@T590>
- <c957c544-4040-e462-47f6-3514ab3da617@huawei.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c957c544-4040-e462-47f6-3514ab3da617@huawei.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+        id S232222AbhHWFB3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Aug 2021 01:01:29 -0400
+Received: from mga12.intel.com ([192.55.52.136]:14910 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231724AbhHWFB2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 23 Aug 2021 01:01:28 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10084"; a="196608531"
+X-IronPort-AV: E=Sophos;i="5.84,343,1620716400"; 
+   d="scan'208";a="196608531"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2021 22:00:46 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,343,1620716400"; 
+   d="scan'208";a="463960340"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.174])
+  by orsmga007.jf.intel.com with ESMTP; 22 Aug 2021 22:00:43 -0700
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH V2] scsi: ufs: Fix ufshcd_request_sense_async() for Samsung KLUFG8RHDA-B2D1
+Date:   Mon, 23 Aug 2021 08:01:17 +0300
+Message-Id: <20210823050117.11608-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.17.1
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 19, 2021 at 08:32:20AM +0100, John Garry wrote:
-> On 19/08/2021 01:39, Ming Lei wrote:
-> > > That's intentional, as we have from later patch:
-> > > 
-> > > void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
-> > > unsigned int hctx_idx)
-> > > {
-> > > 	struct blk_mq_tags *drv_tags;
-> > > 	struct page *page;
-> > > 
-> > > +	if (blk_mq_is_sbitmap_shared(set->flags))
-> > > +		drv_tags = set->shared_sbitmap_tags;
-> > > +	else
-> > > 		drv_tags = set->tags[hctx_idx];
-> > > 
-> > > 	...
-> > > 
-> > > 	blk_mq_clear_rq_mapping(drv_tags, tags);
-> > > 
-> > > }
-> > > 
-> > > And it's just nice to not re-indent later.
-> > But this way is weird, and I don't think checkpatch.pl is happy with
-> > it.
-> 
-> There is the idea to try to not remove/change code earlier in a series - I
-> am taking it to an extreme! I can stop.
-> 
-> On another related topic, how about this change also:
-> 
-> ---8<---
-> void blk_mq_clear_rq_mapping(struct blk_mq_tags *drv_tags,
-> 			     struct blk_mq_tags *tags)
->  {
-> 
-> +	/* There is no need to clear a driver tags own mapping */
-> +	if (drv_tags == tags)
-> +		return;
-> --->8---
+From: Adrian Hunter <ajhmls@gmail.com>
 
-The change itself is correct, and no need to clear driver tags
-->rq[] since all request queues have been cleaned up when freeing
-tagset.
+Samsung KLUFG8RHDA-B2D1 does not clear the unit attention condition if the
+length is zero. So go back to requesting all the sense data, as it was
+before patch "scsi: ufs: Request sense data asynchronously". That is
+simpler than creating and maintaining a quirk for affected devices.
+
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
 
 
-Thanks,
-Ming
+Changes in V2
+
+	Alter comment to note the need for non-zero sense size.
+
+
+ drivers/scsi/ufs/ufshcd.c | 27 ++++++++++++++++++++++-----
+ 1 file changed, 22 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index a3b419848f0a..9d6207f7cf6d 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7937,7 +7937,8 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
+ {
+ 	if (error != BLK_STS_OK)
+-		pr_err("%s: REQUEST SENSE failed (%d)", __func__, error);
++		pr_err("%s: REQUEST SENSE failed (%d)\n", __func__, error);
++	kfree(rq->end_io_data);
+ 	blk_put_request(rq);
+ }
+ 
+@@ -7945,23 +7946,39 @@ static int
+ ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
+ {
+ 	/*
+-	 * From SPC-6: the REQUEST SENSE command with any allocation length
+-	 * clears the sense data.
++	 * Some UFS devices clear unit attention condition only if the sense
++	 * size used (UFS_SENSE_SIZE in this case) is non-zero.
+ 	 */
+-	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, 0, 0};
++	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, UFS_SENSE_SIZE, 0};
+ 	struct scsi_request *rq;
+ 	struct request *req;
++	char *buffer;
++	int ret;
++
++	buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
++	if (!buffer)
++		return -ENOMEM;
+ 
+-	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, /*flags=*/0);
++	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN,
++			      /*flags=*/BLK_MQ_REQ_PM);
+ 	if (IS_ERR(req))
+ 		return PTR_ERR(req);
+ 
++	ret = blk_rq_map_kern(sdev->request_queue, req,
++			      buffer, UFS_SENSE_SIZE, GFP_NOIO);
++	if (ret) {
++		blk_put_request(req);
++		kfree(buffer);
++		return ret;
++	}
++
+ 	rq = scsi_req(req);
+ 	rq->cmd_len = ARRAY_SIZE(cmd);
+ 	memcpy(rq->cmd, cmd, rq->cmd_len);
+ 	rq->retries = 3;
+ 	req->timeout = 1 * HZ;
+ 	req->rq_flags |= RQF_PM | RQF_QUIET;
++	req->end_io_data = buffer;
+ 
+ 	blk_execute_rq_nowait(/*bd_disk=*/NULL, req, /*at_head=*/true,
+ 			      ufshcd_request_sense_done);
+-- 
+2.17.1
 
