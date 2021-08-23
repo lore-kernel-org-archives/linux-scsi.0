@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2582CC4338F
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A5C1C4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E9E26103A
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55165613A6
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232767AbhHWUbF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Aug 2021 16:31:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57398 "EHLO
+        id S232803AbhHWUbG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Aug 2021 16:31:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57400 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232647AbhHWUay (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2021 16:30:54 -0400
+        with ESMTP id S232664AbhHWUaz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2021 16:30:55 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F270FC061575;
-        Mon, 23 Aug 2021 13:30:11 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9D136C06175F;
+        Mon, 23 Aug 2021 13:30:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=PfrtPFCUd+vz1Tgg1hQkj8zJ7tYmGxUAcqUzPySlWYA=; b=yD4BOzsjmHnK5qg88RUylmmo4x
-        LuD3Z1YAXTY3+2DEjNWJP8B8YDsBytZ5Ws7NCdyXH6+IszaNyI7RcYTgogrS1cStxeAm/VJNjQznF
-        VNszelhZ8qUPHoYETHBXKOmV5TuUwNk6uZ5D9IsTnfKwo/d/rSMOb1805A8RyTFYRI9Im0zm4RzsM
-        s9seiCCpfZI4ntuSYeM/w875HulOk2W/qDUW4yeGjFTVCPEOyXRPN8n2zBUoArUD5lfU3Ur41llbM
-        6j0unwzhFa84ekYFn58NNKW1yh7Re9B4iQQEfF8V1LfkgZOMWAxgpkMaBgejMHJmuttbRdBR+3Myq
-        w3rQB8FA==;
+        bh=FypvegGWnnERKpPFbzVBwYTOoDfKrjdj29vUEVZP6fM=; b=dXL5wz6Yf1z+ahQ9qQ4ttU+dvq
+        DjGgq+pvaxdWUTKvohT9ASHu6tku5/rYy1EnPNgldrCFk3yD39TJVlfJquyRKLsHqIiJzFCCf9zEE
+        pm5SGGJ9nDC2hZkbGVkLPM0JZ5eJrWMVm0fcjDrep10c3KefYRbJqoDJd5BS8uFm7nWFDfvwLHsBx
+        pApfvgyB8P7yC2UUhuaOTb6nFwji1X7GiFAftJNsz19Qf0MbHX8jkKZOz8dZaYQnUc8PigRGJ7gFg
+        MUNL9wHLjR9wr4OQpbU8crnqSh1l8kz9FMqTtRNZ1OYfFbNkqVgxJN2qG6FevH6gC9dTORyE+o81W
+        fr2CZAQw==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mIGZa-000ZjK-02; Mon, 23 Aug 2021 20:29:34 +0000
+        id 1mIGZa-000ZjO-4g; Mon, 23 Aug 2021 20:29:34 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, martin.petersen@oracle.com, jejb@linux.ibm.com,
         kbusch@kernel.org, sagi@grimberg.me, adrian.hunter@intel.com,
@@ -46,9 +46,9 @@ Cc:     hch@infradead.org, hare@suse.de, bvanassche@acm.org,
         dm-devel@redhat.com, nbd@other.debian.org,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 01/10] scsi/sd: use blk_cleanup_queue() insted of put_disk()
-Date:   Mon, 23 Aug 2021 13:29:21 -0700
-Message-Id: <20210823202930.137278-2-mcgrof@kernel.org>
+Subject: [PATCH 03/10] scsi/sr: use blk_cleanup_disk() instead of put_disk()
+Date:   Mon, 23 Aug 2021 13:29:23 -0700
+Message-Id: <20210823202930.137278-4-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210823202930.137278-1-mcgrof@kernel.org>
 References: <20210823202930.137278-1-mcgrof@kernel.org>
@@ -66,22 +66,22 @@ cleanup the queue and put the disk.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/scsi/sd.c | 2 +-
+ drivers/scsi/sr.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 610ebba0d66e..7d5217905374 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3508,7 +3508,7 @@ static int sd_probe(struct device *dev)
-  out_free_index:
- 	ida_free(&sd_index_ida, index);
-  out_put:
--	put_disk(gd);
-+	blk_cleanup_disk(gd);
-  out_free:
- 	sd_zbc_release_disk(sdkp);
- 	kfree(sdkp);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index a0df27db4d61..dc78ad96e6f9 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -792,7 +792,7 @@ static int sr_probe(struct device *dev)
+ 	clear_bit(minor, sr_index_bits);
+ 	spin_unlock(&sr_index_lock);
+ fail_put:
+-	put_disk(disk);
++	blk_cleanup_disk(disk);
+ 	mutex_destroy(&cd->lock);
+ fail_free:
+ 	kfree(cd);
 -- 
 2.30.2
 
