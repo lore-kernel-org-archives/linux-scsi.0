@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3895CC432BE
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72545C4320E
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24F9560E97
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E2EA60E97
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232684AbhHWUa4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Aug 2021 16:30:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57362 "EHLO
+        id S232701AbhHWUbB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Aug 2021 16:31:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57370 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232577AbhHWUas (ORCPT
+        with ESMTP id S232404AbhHWUas (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2021 16:30:48 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 199ABC061757;
-        Mon, 23 Aug 2021 13:30:05 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0387FC06175F;
+        Mon, 23 Aug 2021 13:30:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=tBgxszXJVE3wD+DPKaKiBalHK54CRKsYwj1PqeCiYBI=; b=X51iNcfbrjsh9zw8hQIvkBv0+h
-        sjY5R1ERbqKv55YUOBYlpIhDxy8ZjM1qU+bDsC6pIVw4BHJZs6gHKGJfHyh0Qps+80/KALHr/SY0g
-        BDDRFL45dDYI8t+/x6ysYf1JyT7VCdLot+PGhA4dc+mlTzbp3NzI34LEgXHVzArHgMjbkUb8b3x/F
-        oUqYB+YYH5UA79OXmIgx1KoPPNh2XUja5D+5dtwW7OIu/T560+Rq7HgLcMVNTz0Gd3aYGbuBLICEB
-        /EOrd10yViJZGkM50qd+4XUcQhtNdWlFwL5V3RoOk9uRR10HcVcQjMHu1REx9J5c5VYJEkKFj0c1S
-        zG+NnczA==;
+        bh=vcZytCs+3aE+pJZnIfeJteJaLaeBUv3H5n6Ya972Mjw=; b=aYu6mhnbiyATjp4QiEfJEQBVbf
+        OPaaXkqiH9H7Ag7hYKlVfy/SfXLFAo1BzUouJ1s4mWbb4rq7EeHKiBhpuX2mEDBG4bgJ+nP6KMsI7
+        I0U91+7njxj4QNr/sb6TGWGS/DEGCDcxRb983z2ovIXySVexXWGiVRlSV9hFXRaBKeGBo4OYpnf3u
+        zcKhdWCflmlIlZki5Pm1OPCvGe7/aSrrycL4c9juLZp8L3EC5ZEG2PnZWTJ33biaDkTyFqCtmHloC
+        r9Cu93H5ttvttqe8KIscjnkDWRtxjRf02QD6fjQchxzWOEjnKPsDe6jFpiJfD3Gt2sTIE3ss2+87T
+        pxfzrfMQ==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mIGZa-000Zja-EG; Mon, 23 Aug 2021 20:29:34 +0000
+        id 1mIGZa-000ZjM-2N; Mon, 23 Aug 2021 20:29:34 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, martin.petersen@oracle.com, jejb@linux.ibm.com,
         kbusch@kernel.org, sagi@grimberg.me, adrian.hunter@intel.com,
@@ -45,11 +45,10 @@ Cc:     hch@infradead.org, hare@suse.de, bvanassche@acm.org,
         linux-nvme@lists.infradead.org, linux-mmc@vger.kernel.org,
         dm-devel@redhat.com, nbd@other.debian.org,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/10] loop: add error handling support for add_disk()
-Date:   Mon, 23 Aug 2021 13:29:29 -0700
-Message-Id: <20210823202930.137278-10-mcgrof@kernel.org>
+        Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH 02/10] scsi/sd: add error handling support for add_disk()
+Date:   Mon, 23 Aug 2021 13:29:22 -0700
+Message-Id: <20210823202930.137278-3-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210823202930.137278-1-mcgrof@kernel.org>
 References: <20210823202930.137278-1-mcgrof@kernel.org>
@@ -65,34 +64,27 @@ returned void. Now that this is fixed, use the shiny new
 error handling.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/loop.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/scsi/sd.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index fa1c298a8cfb..b8b9e2349e77 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -2393,10 +2393,17 @@ static int loop_add(int i)
- 	disk->events		= DISK_EVENT_MEDIA_CHANGE;
- 	disk->event_flags	= DISK_EVENT_FLAG_UEVENT;
- 	sprintf(disk->disk_name, "loop%d", i);
--	add_disk(disk);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 7d5217905374..7df6f20f28ec 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3487,7 +3487,11 @@ static int sd_probe(struct device *dev)
+ 		pm_runtime_set_autosuspend_delay(dev,
+ 			sdp->host->hostt->rpm_autosuspend_delay);
+ 	}
+-	device_add_disk(dev, gd, NULL);
 +
-+	err = add_disk(disk);
-+	if (err)
-+		goto out_cleanup_disk;
++	error = device_add_disk(dev, gd, NULL);
++	if (error)
++		goto out_free_index;
 +
- 	mutex_unlock(&loop_ctl_mutex);
-+
- 	return i;
+ 	if (sdkp->capacity)
+ 		sd_dif_config_host(sdkp);
  
-+out_cleanup_disk:
-+	blk_cleanup_disk(disk);
- out_cleanup_tags:
- 	blk_mq_free_tag_set(&lo->tag_set);
- out_free_idr:
 -- 
 2.30.2
 
