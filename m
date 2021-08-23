@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08325C19F33
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5FC7C4320E
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8B6C613A6
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCDD760E97
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232682AbhHWUbU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Aug 2021 16:31:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57422 "EHLO
+        id S233002AbhHWUbV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Aug 2021 16:31:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57420 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232568AbhHWUa7 (ORCPT
+        with ESMTP id S232627AbhHWUa7 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2021 16:30:59 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C22DC06175F;
-        Mon, 23 Aug 2021 13:30:16 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 38582C061757;
+        Mon, 23 Aug 2021 13:30:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=OfWwvKvXHF7mAR0YH9EVQI1Ai4xHJmlcz1fm4t+WkvQ=; b=c1NoizZM+bXC/4X0Kr/yu9qM/4
-        vogWc0nrHBCi45AdGqOBAij28BuUscFaMAFHbJ2yXQCp5OH9DacSlocg057cgyhEzAbp+eqUj9Zfh
-        6gWNmHJ2C2e/7/pq/RB+53totPFBi3AUR0PxzJLMVHEgo7uT0Z7UvGZdbbilsChDr2RBszTvYlsOb
-        PELdLD+eJ6LkLyE4ocLD45dCwrtv3J3wf3TA8HC95Ydw3sT4gdo5pNlkSoYEw8a45/pSmg3NFnBWI
-        GWZR46Bma5vyjALSf1nrc1KO1TqKtNpD5kmRJlERTgeNeRb6CWNyzFxwURUSlXc8oNnuujcl9QiQD
-        if8hBZZA==;
+        bh=FjHYiJcoMRUSOg8mXjovmoG4YYRib0Dd4tpy9VAVPrM=; b=hkHkWpB6ezJIMqnl+yvYHudFX0
+        KnNgmD/FTenq3X7xrHQXRsABnQKwgg/eDx7kD3RFpSZWUmTtlc+Fdufz8qgOhQQcoL15xaZ7MJieu
+        SUBv8DGDhp/kNOBDFMAUo+LEreTcbXrt5Z9ZqoBuxshCH1XAW1HHsTCrX598/J17imHBONknSSmEJ
+        1WtF9exW246DnTlPbNeHGfRpLBRxHS2H7I2rF9HvM8Zs+ioSxRu3EvDTNC+U5YEDSxQbNxt9zuelk
+        9PGFI2bGRt8zRan8ZuxrL3qSKPrvXiKUbSvCURZRp50A59RcYQabNse/nc9hPEFYLAtESKYmx/4mu
+        rwG28cww==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mIGZa-000ZjW-BM; Mon, 23 Aug 2021 20:29:34 +0000
+        id 1mIGZa-000Zjc-Fg; Mon, 23 Aug 2021 20:29:34 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, martin.petersen@oracle.com, jejb@linux.ibm.com,
         kbusch@kernel.org, sagi@grimberg.me, adrian.hunter@intel.com,
@@ -45,10 +45,11 @@ Cc:     hch@infradead.org, hare@suse.de, bvanassche@acm.org,
         linux-nvme@lists.infradead.org, linux-mmc@vger.kernel.org,
         dm-devel@redhat.com, nbd@other.debian.org,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 07/10] md: add error handling support for add_disk()
-Date:   Mon, 23 Aug 2021 13:29:27 -0700
-Message-Id: <20210823202930.137278-8-mcgrof@kernel.org>
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 10/10] nbd: add error handling support for add_disk()
+Date:   Mon, 23 Aug 2021 13:29:30 -0700
+Message-Id: <20210823202930.137278-11-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210823202930.137278-1-mcgrof@kernel.org>
 References: <20210823202930.137278-1-mcgrof@kernel.org>
@@ -63,39 +64,32 @@ We never checked for errors on add_disk() as this function
 returned void. Now that this is fixed, use the shiny new
 error handling.
 
-We just do the unwinding of what was not done before, and are
-sure to unlock prior to bailing.
-
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/md/md.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/block/nbd.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/md.c b/drivers/md/md.c
-index ae8fe54ea358..5c0d3536d7c7 100644
---- a/drivers/md/md.c
-+++ b/drivers/md/md.c
-@@ -5704,7 +5704,11 @@ static int md_alloc(dev_t dev, char *name)
- 	 * through to md_open, so make sure it doesn't get too far
- 	 */
- 	mutex_lock(&mddev->open_mutex);
+diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
+index c38317979f74..95f84c9b31f2 100644
+--- a/drivers/block/nbd.c
++++ b/drivers/block/nbd.c
+@@ -1730,10 +1730,14 @@ static int nbd_dev_add(int index)
+ 	disk->fops = &nbd_fops;
+ 	disk->private_data = nbd;
+ 	sprintf(disk->disk_name, "nbd%d", index);
 -	add_disk(disk);
-+	error = add_disk(disk);
-+	if (error) {
-+		blk_cleanup_disk(disk);
-+		goto abort_unlock;
-+	}
++	err = add_disk(disk);
++	if (err)
++		goto out_err_disk;
+ 	nbd_total_devices++;
+ 	return index;
  
- 	error = kobject_add(&mddev->kobj, &disk_to_dev(disk)->kobj, "%s", "md");
- 	if (error) {
-@@ -5718,6 +5722,7 @@ static int md_alloc(dev_t dev, char *name)
- 	if (mddev->kobj.sd &&
- 	    sysfs_create_group(&mddev->kobj, &md_bitmap_group))
- 		pr_debug("pointless warning\n");
-+ abort_unlock:
- 	mutex_unlock(&mddev->open_mutex);
-  abort:
- 	mutex_unlock(&disks_mutex);
++out_err_disk:
++	blk_cleanup_disk(disk);
+ out_free_idr:
+ 	idr_remove(&nbd_index_idr, index);
+ out_free_tags:
 -- 
 2.30.2
 
