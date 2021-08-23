@@ -7,33 +7,33 @@ X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4738DC4338F
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A72EC4338F
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 30FF360E97
-	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6668B613D5
+	for <linux-scsi@archiver.kernel.org>; Mon, 23 Aug 2021 20:30:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232710AbhHWUbJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 23 Aug 2021 16:31:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57392 "EHLO
+        id S232760AbhHWUbM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 23 Aug 2021 16:31:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57398 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232635AbhHWUaz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2021 16:30:55 -0400
+        with ESMTP id S232683AbhHWUa4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Aug 2021 16:30:56 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 46E2FC061757;
-        Mon, 23 Aug 2021 13:30:12 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C6B4C061575;
+        Mon, 23 Aug 2021 13:30:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=k5sSl0vYONsVC6k5VQFocYf3UMVF7iXDLEuoRb4cPTo=; b=ytFd4wxWicN567iPDaQzopBkVb
-        JEyVQhLcVbjxFEKZmQ7+C9EZhZzxiVUSTFuO/z4gnGAnXuDbcZcpAvJMz1ga6UMI9IdifaxeWK3+h
-        XskXFUN+TYORj+pU/KKuAKqjZMYm2Y5SMZvnBpJ+11VvVHW9nweZLpVLJyez2gZGD5ACl5WZaqed2
-        GP43jjy3zwcb09a9pAqe7/u9Hj6rXJMDeI4AEU1+fv9az905SqIVvvF2mrGGMbbOU0g8BHbj3Uics
-        276Gt+vykqsXpBeIdrJhIRgigovtHjEdKSiXWU+TBHwwbwbj4bq+yz48vbxLGXSQ0wKNFh9P0SVNj
-        WJK6EXfQ==;
+        bh=ZwxyFXcOiGq8qChS2d1Notj23dWo1Us0XnbUDLeBwX8=; b=gwLOjM3XIyBov1gksucnFV6ooL
+        M14P6xtIFkqJWDvnJ+/ICsQQuOeHg3bNCCgwD6eLd1QGFRv9hRZPIwrwVVrc4GRJ2n6pYIZ5XmSrw
+        rcx7adfg7jhXfbkhk5O7HByT/5+LX1pVl9RViZEXYV9+8xJ3lT8eOaknnO+IUd6QKllMR3/xq5hgf
+        N/goUQWSvkvYz8acad20DJCfe0uNYcHhGoEl2FNlkDkG744ujAzQBIJJRxGvJnJbLar1t7aga4T7o
+        AhjcvHCAtsXTrVTXcoPwJ/DRxC2CyMVvuuTQ1zXJ5xHiLfHnsJzmkEfKV0hbmwsmiMIBYmw4pns41
+        bG+HsJfw==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mIGZa-000ZjS-8P; Mon, 23 Aug 2021 20:29:34 +0000
+        id 1mIGZa-000ZjY-Cl; Mon, 23 Aug 2021 20:29:34 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, martin.petersen@oracle.com, jejb@linux.ibm.com,
         kbusch@kernel.org, sagi@grimberg.me, adrian.hunter@intel.com,
@@ -46,9 +46,9 @@ Cc:     hch@infradead.org, hare@suse.de, bvanassche@acm.org,
         dm-devel@redhat.com, nbd@other.debian.org,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 05/10] nvme: add error handling support for add_disk()
-Date:   Mon, 23 Aug 2021 13:29:25 -0700
-Message-Id: <20210823202930.137278-6-mcgrof@kernel.org>
+Subject: [PATCH 08/10] dm: add add_disk() error handling
+Date:   Mon, 23 Aug 2021 13:29:28 -0700
+Message-Id: <20210823202930.137278-9-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20210823202930.137278-1-mcgrof@kernel.org>
 References: <20210823202930.137278-1-mcgrof@kernel.org>
@@ -65,44 +65,40 @@ error handling.
 
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/nvme/host/core.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+ drivers/md/dm.c | 16 +++++++++++-----
+ 1 file changed, 11 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 68acd33c3856..fe02e95173d8 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -3720,6 +3720,7 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
- 	struct gendisk *disk;
- 	struct nvme_id_ns *id;
- 	int node = ctrl->numa_node;
-+	int rc;
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index 7981b7287628..cd26fde4ab56 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -2077,15 +2077,21 @@ int dm_setup_md_queue(struct mapped_device *md, struct dm_table *t)
+ 	if (r)
+ 		return r;
  
- 	if (nvme_identify_ns(ctrl, nsid, ids, &id))
- 		return;
-@@ -3775,7 +3776,10 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
+-	add_disk(md->disk);
++	r = add_disk(md->disk);
++	if (r)
++		goto out_cleanup_disk;
  
- 	nvme_get_ctrl(ctrl);
- 
--	device_add_disk(ctrl->device, ns->disk, nvme_ns_id_attr_groups);
-+	rc = device_add_disk(ctrl->device, ns->disk, nvme_ns_id_attr_groups);
-+	if (rc)
-+		goto out_cleanup_ns_from_list;
+ 	r = dm_sysfs_init(md);
+-	if (r) {
+-		del_gendisk(md->disk);
+-		return r;
+-	}
++	if (r)
++		goto out_del_gendisk;
+ 	md->type = type;
+ 	return 0;
 +
- 	if (!nvme_ns_head_multipath(ns->head))
- 		nvme_add_ns_cdev(ns);
++out_cleanup_disk:
++	blk_cleanup_disk(md->disk);
++out_del_gendisk:
++	del_gendisk(md->disk);
++	return r;
+ }
  
-@@ -3785,6 +3789,10 @@ static void nvme_alloc_ns(struct nvme_ctrl *ctrl, unsigned nsid,
- 
- 	return;
- 
-+ out_cleanup_ns_from_list:
-+	down_write(&ctrl->namespaces_rwsem);
-+	list_del_init(&ns->list);
-+	up_write(&ctrl->namespaces_rwsem);
-  out_unlink_ns:
- 	mutex_lock(&ctrl->subsys->lock);
- 	list_del_rcu(&ns->siblings);
+ struct mapped_device *dm_get_md(dev_t dev)
 -- 
 2.30.2
 
