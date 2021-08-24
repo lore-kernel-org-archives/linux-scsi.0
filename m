@@ -2,143 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-15.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F6AAC4338F
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Aug 2021 11:41:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07F2DC4338F
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Aug 2021 15:11:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ECD05613AB
-	for <linux-scsi@archiver.kernel.org>; Tue, 24 Aug 2021 11:41:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5CA3610E8
+	for <linux-scsi@archiver.kernel.org>; Tue, 24 Aug 2021 15:11:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236820AbhHXLmS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 24 Aug 2021 07:42:18 -0400
-Received: from mga11.intel.com ([192.55.52.93]:41495 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236786AbhHXLmQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Aug 2021 07:42:16 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10085"; a="214168347"
-X-IronPort-AV: E=Sophos;i="5.84,347,1620716400"; 
-   d="scan'208";a="214168347"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Aug 2021 04:41:20 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,347,1620716400"; 
-   d="scan'208";a="515378524"
-Received: from ahunter-desktop.fi.intel.com ([10.237.72.174])
-  by fmsmga004.fm.intel.com with ESMTP; 24 Aug 2021 04:41:16 -0700
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <huobean@gmail.com>, Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
+        id S238120AbhHXPL5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 24 Aug 2021 11:11:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59500 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238059AbhHXPLz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Aug 2021 11:11:55 -0400
+Received: from mail-pl1-x636.google.com (mail-pl1-x636.google.com [IPv6:2607:f8b0:4864:20::636])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15EC1C061757
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Aug 2021 08:11:11 -0700 (PDT)
+Received: by mail-pl1-x636.google.com with SMTP id e15so12416014plh.8
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Aug 2021 08:11:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=F67ac31IUqZfO988GqI94wpoikStxk7CmlqdiJwLIAs=;
+        b=LddFsKapeOUBXEI1HvtXGJp8kaROz4fXNEcZXZ1iKR9b4FtRHbSzVSX2DdBwY9Fyuc
+         IFfvWuQrFGUfMyHxOGEPStVWbd5dOEUbtUHQhcP/+VidJ2BiDLgTMG9xyAN3oMMySfAu
+         f+C+Jv3OGfkJ/mb2JWu577cI10dQcvWeI19cW1e4t5WBzb199/TXdaDmrBxKXXfAQis4
+         Oxi6d1Ad6o66eR4+ny4zngiWBYjPtKK/6I9OWK4QeKoZKz1gBCoztMD4jGBPekcv+NkE
+         b2FlonlWsw/dmzMZO5HQswHWRTIM9XvIme5Obmt/LLt2aXbskIRiIKaDLbrecqF3hXqA
+         kLlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=F67ac31IUqZfO988GqI94wpoikStxk7CmlqdiJwLIAs=;
+        b=NaKlRQweTVPcF5MqQ6pnvw1FHVPFuAa2J7GQCOykSu+bOkEiU0rUyUpT3qKgKHmbZE
+         /fMC/CUfDc/i817QTYILUYxNPlwqie0cp/ehk2+Stq9EYj0AwdFL9pm/ML/RKtvLy9kx
+         qakJo+p/QMoC/Ts1I960UUIt63OoFt/YJSxGBuZENixmaYgVjvkNX1ULHUOQfZR4W/KU
+         Ja5AcmX4uFPle7JQNppWlBYW7sE7y2jw2zVqzaYWJPOT9uydB8cxs7yUdilZl0/feZ7Y
+         ePqIAMGKi/r3yoUXoUYII5Fk9Y5u6nMHcnW9tlccps4emyT24SFsQg23H0CVsuyu4Iq8
+         UOFQ==
+X-Gm-Message-State: AOAM531e3kDmU3rL8v1ldlS89wbD4AxG2NjnHm0BVwgehOzNDub8E28c
+        lrXMnc5xAZBdkiIFvhfKpMc=
+X-Google-Smtp-Source: ABdhPJwzUKCmxyhM94XZud6vEEjHziGaFUAdGPBevT4Je/R9qdPelfrzfDPzpQ9zzFyfeXyvjQl2eg==
+X-Received: by 2002:a17:902:e2d4:b0:134:17c2:14da with SMTP id l20-20020a170902e2d400b0013417c214damr10500700plc.52.1629817870547;
+        Tue, 24 Aug 2021 08:11:10 -0700 (PDT)
+Received: from [192.168.1.40] (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id f71sm20643273pfa.176.2021.08.24.08.11.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 24 Aug 2021 08:11:10 -0700 (PDT)
+Subject: Re: [PATCH v2 5/5] scsi: lpfc: Use the proper SCSI midlayer
+ interfaces for PI
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
-Subject: [PATCH V3] scsi: ufs: Fix ufshcd_request_sense_async() for Samsung KLUFG8RHDA-B2D1
-Date:   Tue, 24 Aug 2021 14:41:50 +0300
-Message-Id: <20210824114150.2105-1-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <d5f5552d-257a-62ee-f0a3-55c00959e63b@intel.com>
-References: <d5f5552d-257a-62ee-f0a3-55c00959e63b@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Cc:     James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>
+References: <20210806040023.5355-1-martin.petersen@oracle.com>
+ <20210806040023.5355-6-martin.petersen@oracle.com>
+From:   James Smart <jsmart2021@gmail.com>
+Message-ID: <0312fe17-1536-3b57-a1e9-2b551652de07@gmail.com>
+Date:   Tue, 24 Aug 2021 08:11:09 -0700
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
+MIME-Version: 1.0
+In-Reply-To: <20210806040023.5355-6-martin.petersen@oracle.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Samsung KLUFG8RHDA-B2D1 does not clear the unit attention condition if the
-length is zero. So go back to requesting all the sense data, as it was
-before patch "scsi: ufs: Request sense data asynchronously". That is
-simpler than creating and maintaining a quirk for affected devices.
+On 8/5/2021 9:00 PM, Martin K. Petersen wrote:
+> Use the SCSI midlayer interfaces to query protection interval, reference
+> tag, per-command DIX flags, and logical block count.
+> 
+> CC: James Smart <james.smart@broadcom.com>
+> CC: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_scsi.c | 116 ++++++++++++++--------------------
+>   1 file changed, 46 insertions(+), 70 deletions(-)
+> 
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
----
+Looks good.
 
+Reviewed-by: James Smart <jsmart2021@gmail.com>
 
-Changes in V3:
-
-	Fix missing buffer free.
-	Correct "From" email address
-
-Changes in V2:
-
-	Alter comment to note the need for non-zero sense size.
-
-
- drivers/scsi/ufs/ufshcd.c | 36 +++++++++++++++++++++++++++++-------
- 1 file changed, 29 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a3b419848f0a..3841ab49f556 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7937,7 +7937,8 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
- {
- 	if (error != BLK_STS_OK)
--		pr_err("%s: REQUEST SENSE failed (%d)", __func__, error);
-+		pr_err("%s: REQUEST SENSE failed (%d)\n", __func__, error);
-+	kfree(rq->end_io_data);
- 	blk_put_request(rq);
- }
- 
-@@ -7945,16 +7946,30 @@ static int
- ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
- {
- 	/*
--	 * From SPC-6: the REQUEST SENSE command with any allocation length
--	 * clears the sense data.
-+	 * Some UFS devices clear unit attention condition only if the sense
-+	 * size used (UFS_SENSE_SIZE in this case) is non-zero.
- 	 */
--	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, 0, 0};
-+	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, UFS_SENSE_SIZE, 0};
- 	struct scsi_request *rq;
- 	struct request *req;
-+	char *buffer;
-+	int ret;
- 
--	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, /*flags=*/0);
--	if (IS_ERR(req))
--		return PTR_ERR(req);
-+	buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
-+	if (!buffer)
-+		return -ENOMEM;
-+
-+	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN,
-+			      /*flags=*/BLK_MQ_REQ_PM);
-+	if (IS_ERR(req)) {
-+		ret = PTR_ERR(req);
-+		goto out_free;
-+	}
-+
-+	ret = blk_rq_map_kern(sdev->request_queue, req,
-+			      buffer, UFS_SENSE_SIZE, GFP_NOIO);
-+	if (ret)
-+		goto out_put;
- 
- 	rq = scsi_req(req);
- 	rq->cmd_len = ARRAY_SIZE(cmd);
-@@ -7962,10 +7977,17 @@ ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
- 	rq->retries = 3;
- 	req->timeout = 1 * HZ;
- 	req->rq_flags |= RQF_PM | RQF_QUIET;
-+	req->end_io_data = buffer;
- 
- 	blk_execute_rq_nowait(/*bd_disk=*/NULL, req, /*at_head=*/true,
- 			      ufshcd_request_sense_done);
- 	return 0;
-+
-+out_put:
-+	blk_put_request(req);
-+out_free:
-+	kfree(buffer);
-+	return ret;
- }
- 
- static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
--- 
-2.17.1
-
+-- james
