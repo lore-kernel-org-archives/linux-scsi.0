@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B4E1C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 18:49:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 170DCC432BE
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 18:51:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F40076103A
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 18:49:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2FA660E08
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 18:51:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243261AbhHZStr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Aug 2021 14:49:47 -0400
-Received: from smtprelay0015.hostedemail.com ([216.40.44.15]:44394 "EHLO
+        id S243330AbhHZSvy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Aug 2021 14:51:54 -0400
+Received: from smtprelay0025.hostedemail.com ([216.40.44.25]:32848 "EHLO
         smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S243338AbhHZStq (ORCPT
+        by vger.kernel.org with ESMTP id S231453AbhHZSvy (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Aug 2021 14:49:46 -0400
-X-Greylist: delayed 346 seconds by postgrey-1.27 at vger.kernel.org; Thu, 26 Aug 2021 14:49:46 EDT
+        Thu, 26 Aug 2021 14:51:54 -0400
 Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
-        by smtpgrave05.hostedemail.com (Postfix) with ESMTP id 85A8A1829490A;
-        Thu, 26 Aug 2021 18:43:15 +0000 (UTC)
+        by smtpgrave02.hostedemail.com (Postfix) with ESMTP id 525D6181424B6
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Aug 2021 18:43:19 +0000 (UTC)
 Received: from omf02.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay04.hostedemail.com (Postfix) with ESMTP id 7064C181468F4;
-        Thu, 26 Aug 2021 18:43:14 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf02.hostedemail.com (Postfix) with ESMTPA id 97FBF1D42F8;
-        Thu, 26 Aug 2021 18:43:13 +0000 (UTC)
+        by smtprelay03.hostedemail.com (Postfix) with ESMTP id 008ED837F27E;
+        Thu, 26 Aug 2021 18:43:17 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf02.hostedemail.com (Postfix) with ESMTPA id 054AB1D42F7;
+        Thu, 26 Aug 2021 18:43:16 +0000 (UTC)
 From:   Joe Perches <joe@perches.com>
-To:     Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+To:     Don Brace <don.brace@microchip.com>
 Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/5] scsi: aacraid: Use vsprintf %phNX extension
-Date:   Thu, 26 Aug 2021 11:43:02 -0700
-Message-Id: <e628558ecaea44a8f1a99dc19213346fb1ee3b18.1630003183.git.joe@perches.com>
+        storagedev@microchip.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 4/5] scsi: smartpqi: Use vsprintf %phNX extension
+Date:   Thu, 26 Aug 2021 11:43:04 -0700
+Message-Id: <31db4db01d24e5178188f48adc5acba6c8047316.1630003183.git.joe@perches.com>
 X-Mailer: git-send-email 2.30.0
 In-Reply-To: <cover.1630003183.git.joe@perches.com>
 References: <cover.1630003183.git.joe@perches.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Stat-Signature: oyxkoapxkjdpmjcoqxkpq41u6qwjrke1
+X-Stat-Signature: dkghw7fcxo96pwthgsbw3xud47jefwut
 X-Rspamd-Server: rspamout05
-X-Rspamd-Queue-Id: 97FBF1D42F8
+X-Rspamd-Queue-Id: 054AB1D42F7
 X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX19m7FpLVB/46wwfXSmzF/vXd2/a2uAtK1Q=
-X-HE-Tag: 1630003393-2335
+X-Session-ID: U2FsdGVkX18aJ2uDYrib1nqIWyemTIPTjkSl3+EHeeo=
+X-HE-Tag: 1630003396-209518
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -55,36 +55,37 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 Reduce object size by using the %phNX extension to format a sysfs output
 buffer with identical output.
 
-compiled x86-64 defconfig w/ aacraid and gcc 10.3.0
+compiled x86-64 defconfig w/ smartpqi and gcc 10.3.0
 
-$ size drivers/scsi/aacraid/linit.o*
+$ size drivers/scsi/smartpqi/smartpqi_init.o*
    text	   data	    bss	    dec	    hex	filename
-  18616	   4056	      0	  22672	   5890	drivers/scsi/aacraid/linit.o.new
-  18951	   4056	      0	  23007	   59df	drivers/scsi/aacraid/linit.o.old
+  69791	   2205	     48	  72044	  1196c	drivers/scsi/smartpqi/smartpqi_init.o.new
+  69950	   2205	     48	  72203	  11a0b	drivers/scsi/smartpqi/smartpqi_init.o.old
 
 Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/scsi/aacraid/linit.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 3168915adaa75..165e6e10f07b9 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -587,12 +587,7 @@ static ssize_t aac_show_unique_id(struct device *dev,
- 	if (sdev_channel(sdev) == CONTAINER_CHANNEL)
- 		memcpy(sn, aac->fsa_dev[sdev_id(sdev)].identifier, sizeof(sn));
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index ecb2af3f43ca3..eb39490b196cc 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6674,13 +6674,7 @@ static ssize_t pqi_unique_id_show(struct device *dev,
  
--	return snprintf(buf, 16 * 2 + 2,
--		"%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X\n",
--		sn[0], sn[1], sn[2], sn[3],
--		sn[4], sn[5], sn[6], sn[7],
--		sn[8], sn[9], sn[10], sn[11],
--		sn[12], sn[13], sn[14], sn[15]);
-+	return snprintf(buf, 16 * 2 + 2, "%16phNX\n", sn);
+ 	spin_unlock_irqrestore(&ctrl_info->scsi_device_list_lock, flags);
+ 
+-	return scnprintf(buffer, PAGE_SIZE,
+-		"%02X%02X%02X%02X%02X%02X%02X%02X"
+-		"%02X%02X%02X%02X%02X%02X%02X%02X\n",
+-		unique_id[0], unique_id[1], unique_id[2], unique_id[3],
+-		unique_id[4], unique_id[5], unique_id[6], unique_id[7],
+-		unique_id[8], unique_id[9], unique_id[10], unique_id[11],
+-		unique_id[12], unique_id[13], unique_id[14], unique_id[15]);
++	return scnprintf(buffer, PAGE_SIZE, "%16phNX\n", unique_id);
  }
  
- static struct device_attribute aac_unique_id_attr = {
+ static ssize_t pqi_lunid_show(struct device *dev,
 -- 
 2.30.0
 
