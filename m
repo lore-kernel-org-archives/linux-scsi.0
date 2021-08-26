@@ -2,137 +2,186 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39338C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 06:28:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BD35C43214
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 07:30:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2149C610CA
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 06:28:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8842610CB
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 07:30:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239471AbhHZG3C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Aug 2021 02:29:02 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:58832 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239046AbhHZG3B (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Aug 2021 02:29:01 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id BB0062227C;
-        Thu, 26 Aug 2021 06:28:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1629959293; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
+        id S239913AbhHZHay (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Aug 2021 03:30:54 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:44813 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239566AbhHZHax (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Aug 2021 03:30:53 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1629963005;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=NjhNcE0QifWJfhwQEFw3GJMJ4rcFngyEH2Cz2sMzg0k=;
-        b=nyU+3joCDobMWjkCYx3gTPX2JYvWJqtNhJ6NKpOiBdhnHaCPfadJYgh6fDXiuEOH2bODss
-        IM8UrFYd/zgEIDtk326pp+baYfU/lxc/AMeEzZokwLWJx4/YEsB3OpHO5/xIxQ2fZ+H/2j
-        ukW2LwORsax/iiUMTHFyR8ihfV3zHUI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1629959293;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=NjhNcE0QifWJfhwQEFw3GJMJ4rcFngyEH2Cz2sMzg0k=;
-        b=9utDs0eTJ+yKLxQWs7vCzd54rQXJ5Mitax4B0YQNUwu0qCFXC7jERDNr/IlE8lZXJ4tZbR
-        l45/vH2cooENS7AQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        bh=1Hs25L22wqwohthHMmK/ym33HqLah/+TOh4T1tfSx+o=;
+        b=bJgcO442fE1vjwTTdWUBEMd4fxFnIKhj6y7hMYhCn9BmkDKhKtPeBJXZY2XY1vpqHM7qMm
+        q04Kc9qkJgwI08RvUaxqimdRuYOB2tf5PtuN/tTrav43BISupDtD+vRT2BdPtJt3ucUWDs
+        iwu8e9vcilK+oT2O/a6bvkE/UWpXqjY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-329-slYhu2xuMMux7mEUNOHc8A-1; Thu, 26 Aug 2021 03:30:01 -0400
+X-MC-Unique: slYhu2xuMMux7mEUNOHc8A-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 56695136A6;
-        Thu, 26 Aug 2021 06:28:13 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id Jr5cEH00J2HvbwAAGKfGzw
-        (envelope-from <hare@suse.de>); Thu, 26 Aug 2021 06:28:13 +0000
-Subject: Re: [PATCH v5 0/5] Initial support for multi-actuator HDDs
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20210812075015.1090959-1-damien.lemoal@wdc.com>
- <DM6PR04MB7081E6B85744B1F86AC5E7CBE7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
- <yq1tujd9bwg.fsf@ca-mkp.ca.oracle.com>
- <DM6PR04MB70818AEAA6539E3834519E9AE7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
- <yq1ilzsannu.fsf@ca-mkp.ca.oracle.com>
- <DM6PR04MB7081B82BD60E0C96F31C84E7E7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <edd09056-c272-1ad3-a665-850680dcf00e@suse.de>
-Date:   Thu, 26 Aug 2021 08:28:12 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 4D4E38015C7;
+        Thu, 26 Aug 2021 07:30:00 +0000 (UTC)
+Received: from T590 (ovpn-8-40.pek2.redhat.com [10.72.8.40])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 87121179BB;
+        Thu, 26 Aug 2021 07:29:51 +0000 (UTC)
+Date:   Thu, 26 Aug 2021 15:29:45 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     luojiaxing <luojiaxing@huawei.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        john.garry@huawei.com
+Subject: Re: rq pointer in tags->rqs[] is not cleared in time and make SCSI
+ error handle can not be triggered
+Message-ID: <YSdCfSeEv9s9OUMX@T590>
+References: <fe5cf6c4-ce5e-4a0f-f4ab-5c10539492cb@huawei.com>
 MIME-Version: 1.0
-In-Reply-To: <DM6PR04MB7081B82BD60E0C96F31C84E7E7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <fe5cf6c4-ce5e-4a0f-f4ab-5c10539492cb@huawei.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/26/21 5:50 AM, Damien Le Moal wrote:
-> On 2021/08/26 12:43, Martin K. Petersen wrote:
->>
->> Damien,
->>
->>> I am not super happy with the name either. I used this one as the
->>> least worst of possibilities I thought of.  seek_range/srange ? ->
->>> that is very HDD centric and as we can reuse this for things like
->>> dm-linear on top of SSDs, that does not really work.  I would prefer
->>> something that convey the idea of "parallel command execution", since
->>> this is the main point of the interface. prange ? cdm_range ?
->>> req_range ?
->>
->> How about independent_access_range? That doesn't imply head positioning
->> and can also be used to describe a fault domain. And it is less
->> disk-centric than concurrent_positioning_range.
+On Thu, Aug 26, 2021 at 11:00:34AM +0800, luojiaxing wrote:
+> Dear all:
 > 
-> I like it, but a bit long-ish. Do you think shortening to access_range would be
-> acceptable ?
 > 
-> we would have:
+> I meet some problem when test hisi_sas driver(under SCSI) based on 5.14-rc4
+> kernel, it's found that error handle can not be triggered after
 > 
-> /sys/block/XYZ/queue/access_ranges/...
+> abnormal IO occur in some test with a low probability. For example,
+> circularly run disk hardreset or disable all local phy of expander when
+> running fio.
 > 
-> and
 > 
-> struct blk_access_range {
-> 	...
-> 	sector_t sector;
-> 	sector_t nr_sectors;
-> }
+> We add some tracepoint and print to see what happen, and we got the
+> following information:
 > 
-> struct blk_access_range *arange;
+> (1).print rq and rq_state at bt_tags_iter() to confirm how many IOs is
+> running now.
 > 
-> Adding independent does make everything even more obvious, but names become
-> rather long. Not an issue for the sysfs directory I think, but
+> <4>[  897.431182] bt_tags_iter: rqs[2808]: 0xffff202007bd3000; rq_state: 1
+> <4>[  897.437514] bt_tags_iter: rqs[3185]: 0xffff0020c5261e00; rq_state: 1
+> <4>[  897.443841] bt_tags_iter: rqs[3612]: 0xffff00212f242a00; rq_state: 1
+> <4>[  897.450167] bt_tags_iter: rqs[2808]: 0xffff00211d208100; rq_state: 1
+> <4>[  897.456492] bt_tags_iter: rqs[2921]: 0xffff00211d208100; rq_state: 1
+> <4>[  897.462818] bt_tags_iter: rqs[1214]: 0xffff002151d21b00; rq_state: 1
+> <4>[  897.469143] bt_tags_iter: rqs[2648]: 0xffff0020c4bfa200; rq_state: 1
 > 
-> struct blk_independent_access_range {
-> 	...
-> 	sector_t sector;
-> 	sector_t nr_sectors;
-> }
+> The preceding information show that rq with tag[2808] is found in different
+> hctx by bt_tags_iter() and with different pointer saved in tags->rqs[].
 > 
-> is rather a long struct name. Shortening independent to "ind" could very easily
-> be confused with "indirection", so that is not an option. And "iaccess" is
-> obscure...
-> 
-I'd vote for access_range.
+> And tag[2808] own the same pointer value saved in rqs[] with tag[2921]. It's
+> wrong because our driver share tag between all hctx, so it's not possible
 
-Cheers,
+What is your io scheduler? I guess it is deadline, and can you observe
+such issue by switching to none?
 
-Hannes
--- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 NÃ¼rnberg
-HRB 36809 (AG NÃ¼rnberg), GeschÃ¤ftsfÃ¼hrer: Felix ImendÃ¶rffer
+The tricky thing is that one request dumped may be re-allocated to other tag
+after returning from bt_tags_iter().
+
+> 
+> to allocate one tag to different rq.
+> 
+> 
+> (2).check tracepoints(temporarily add) in blk_mq_get_driver_tag() and
+> blk_mq_put_tag() to see where this tag is come from.
+> 
+>     Line 1322969:            <...>-20189   [013] .... 893.427707:
+> blk_mq_get_driver_tag: rqs[2808]: 0xffff00211d208100
+>     Line 1322997:  irq/1161-hisi_s-7602    [012] d..1 893.427814:
+> blk_mq_put_tag_in_free_request: rqs[2808]: 0xffff00211d208100
+>     Line 1331257:            <...>-20189   [013] .... 893.462663:
+> blk_mq_get_driver_tag: rqs[2860]: 0xffff00211d208100
+>     Line 1331289:  irq/1161-hisi_s-7602    [012] d..1 893.462785:
+> blk_mq_put_tag_in_free_request: rqs[2860]: 0xffff00211d208100
+>     Line 1338493:            <...>-20189   [013] .... 893.493519:
+> blk_mq_get_driver_tag: rqs[2921]: 0xffff00211d208100
+> 
+> As we can see this rq is allocated to tag[2808] once, and finially come to
+> tag[2921], but rqs[2808] still save the pointer.
+
+Yeah, we know this kind of handling, but not see it as issue.
+
+> 
+> There will be no problem until we encounter a rare situation.
+> 
+> For example, tag[2808] is reassigned to another hctx for execution, then
+> some IO meet some error.
+
+I guess the race is triggered when 2808 is just assigned, meantime
+->rqs[] isn't updated.
+
+> 
+> Before waking up the error handle thread, SCSI compares the values of
+> scsi_host_busy() and shost->host_failed.
+> 
+> If the values are different, SCSI waits for the completion of some I/Os.
+> According to the print provided by (1), the return value of scsi_host_busy()
+> should be 7 for tag [2808] is calculated twice,
+> 
+> and the value of shost->host_failed is 6. As a result, this two values are
+> never equal, and error handle cannot be triggered.
+> 
+> 
+> A temporary workaround is provided and can solve the problem as:
+> 
+> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+> index 2a37731..e3dc773 100644
+> --- a/block/blk-mq-tag.c
+> +++ b/block/blk-mq-tag.c
+> @@ -190,6 +190,7 @@ void blk_mq_put_tag(struct blk_mq_tags *tags, struct
+> blk_mq_ctx *ctx,
+>                 BUG_ON(tag >= tags->nr_reserved_tags);
+>                 sbitmap_queue_clear(tags->breserved_tags, tag, ctx->cpu);
+>         }
+> +       tags->rqs[tag] = NULL;
+>  }
+> 
+> 
+> Since we did not encounter this problem in some previous kernel versions, we
+> wondered if the community already knew about the problem or could provide
+> some solutions.
+
+Can you try the following patch?
+
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 86f87346232a..97557ba0737f 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -301,7 +301,7 @@ static bool bt_tags_iter(struct sbitmap *bitmap, unsigned int bitnr, void *data)
+ 		return true;
+ 
+ 	if (!(iter_data->flags & BT_TAG_ITER_STARTED) ||
+-	    blk_mq_request_started(rq))
++	    (blk_mq_request_started(rq) && rq->tag == bitnr))
+ 		ret = iter_data->fn(rq, iter_data->data, reserved);
+ 	if (!iter_static_rqs)
+ 		blk_mq_put_rq_ref(rq);
+
+
+
+Thanks,
+Ming
+
