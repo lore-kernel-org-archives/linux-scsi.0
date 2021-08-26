@@ -2,209 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.3 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2AC0C4320E
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 06:26:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 39338C432BE
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 06:28:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8494B610A7
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 06:26:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2149C610CA
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 06:28:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239492AbhHZG1T (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 26 Aug 2021 02:27:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60924 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239331AbhHZG1S (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Aug 2021 02:27:18 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2B39C0613C1
-        for <linux-scsi@vger.kernel.org>; Wed, 25 Aug 2021 23:26:31 -0700 (PDT)
-Received: from gallifrey.ext.pengutronix.de ([2001:67c:670:201:5054:ff:fe8d:eefb] helo=bjornoya.blackshift.org)
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <mkl@pengutronix.de>)
-        id 1mJ8pO-0006Yt-6y; Thu, 26 Aug 2021 08:25:30 +0200
-Received: from pengutronix.de (2a03-f580-87bc-d400-b2ee-1fdd-6b26-f446.ip6.dokom21.de [IPv6:2a03:f580:87bc:d400:b2ee:1fdd:6b26:f446])
+        id S239471AbhHZG3C (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Aug 2021 02:29:02 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:58832 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S239046AbhHZG3B (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Aug 2021 02:29:01 -0400
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange ECDHE (P-384) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-        (Client did not present a certificate)
-        (Authenticated sender: mkl-all@blackshift.org)
-        by smtp.blackshift.org (Postfix) with ESMTPSA id AB6A066FE3E;
-        Thu, 26 Aug 2021 06:24:53 +0000 (UTC)
-Date:   Thu, 26 Aug 2021 08:24:52 +0200
-From:   Marc Kleine-Budde <mkl@pengutronix.de>
-To:     Kees Cook <keescook@chromium.org>
-Cc:     linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ayush Sawal <ayush.sawal@chelsio.com>,
-        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
-        Rohit Maheshwari <rohitm@chelsio.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Andrii Nakryiko <andrii@kernel.org>,
-        Martin KaFai Lau <kafai@fb.com>,
-        Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>,
-        John Fastabend <john.fastabend@gmail.com>,
-        KP Singh <kpsingh@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Arunachalam Santhanam <arunachalam.santhanam@in.bosch.com>,
-        Vincent Mailhol <mailhol.vincent@wanadoo.fr>,
-        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-        linux-crypto@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-can@vger.kernel.org,
-        bpf@vger.kernel.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        Keith Packard <keithp@keithp.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        clang-built-linux@googlegroups.com, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] treewide: Replace open-coded flex arrays in unions
-Message-ID: <20210826062452.jekmoo43f4xu5jxk@pengutronix.de>
-References: <20210826050458.1540622-1-keescook@chromium.org>
- <20210826050458.1540622-3-keescook@chromium.org>
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id BB0062227C;
+        Thu, 26 Aug 2021 06:28:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+        t=1629959293; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=NjhNcE0QifWJfhwQEFw3GJMJ4rcFngyEH2Cz2sMzg0k=;
+        b=nyU+3joCDobMWjkCYx3gTPX2JYvWJqtNhJ6NKpOiBdhnHaCPfadJYgh6fDXiuEOH2bODss
+        IM8UrFYd/zgEIDtk326pp+baYfU/lxc/AMeEzZokwLWJx4/YEsB3OpHO5/xIxQ2fZ+H/2j
+        ukW2LwORsax/iiUMTHFyR8ihfV3zHUI=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+        s=susede2_ed25519; t=1629959293;
+        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+         mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=NjhNcE0QifWJfhwQEFw3GJMJ4rcFngyEH2Cz2sMzg0k=;
+        b=9utDs0eTJ+yKLxQWs7vCzd54rQXJ5Mitax4B0YQNUwu0qCFXC7jERDNr/IlE8lZXJ4tZbR
+        l45/vH2cooENS7AQ==
+Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        (No client certificate requested)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 56695136A6;
+        Thu, 26 Aug 2021 06:28:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([192.168.254.65])
+        by imap1.suse-dmz.suse.de with ESMTPSA
+        id Jr5cEH00J2HvbwAAGKfGzw
+        (envelope-from <hare@suse.de>); Thu, 26 Aug 2021 06:28:13 +0000
+Subject: Re: [PATCH v5 0/5] Initial support for multi-actuator HDDs
+To:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20210812075015.1090959-1-damien.lemoal@wdc.com>
+ <DM6PR04MB7081E6B85744B1F86AC5E7CBE7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
+ <yq1tujd9bwg.fsf@ca-mkp.ca.oracle.com>
+ <DM6PR04MB70818AEAA6539E3834519E9AE7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
+ <yq1ilzsannu.fsf@ca-mkp.ca.oracle.com>
+ <DM6PR04MB7081B82BD60E0C96F31C84E7E7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
+From:   Hannes Reinecke <hare@suse.de>
+Message-ID: <edd09056-c272-1ad3-a665-850680dcf00e@suse.de>
+Date:   Thu, 26 Aug 2021 08:28:12 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-        protocol="application/pgp-signature"; boundary="mnmsc5sxlpdvk3xn"
-Content-Disposition: inline
-In-Reply-To: <20210826050458.1540622-3-keescook@chromium.org>
-X-SA-Exim-Connect-IP: 2001:67c:670:201:5054:ff:fe8d:eefb
-X-SA-Exim-Mail-From: mkl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+In-Reply-To: <DM6PR04MB7081B82BD60E0C96F31C84E7E7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 8/26/21 5:50 AM, Damien Le Moal wrote:
+> On 2021/08/26 12:43, Martin K. Petersen wrote:
+>>
+>> Damien,
+>>
+>>> I am not super happy with the name either. I used this one as the
+>>> least worst of possibilities I thought of.  seek_range/srange ? ->
+>>> that is very HDD centric and as we can reuse this for things like
+>>> dm-linear on top of SSDs, that does not really work.  I would prefer
+>>> something that convey the idea of "parallel command execution", since
+>>> this is the main point of the interface. prange ? cdm_range ?
+>>> req_range ?
+>>
+>> How about independent_access_range? That doesn't imply head positioning
+>> and can also be used to describe a fault domain. And it is less
+>> disk-centric than concurrent_positioning_range.
+> 
+> I like it, but a bit long-ish. Do you think shortening to access_range would be
+> acceptable ?
+> 
+> we would have:
+> 
+> /sys/block/XYZ/queue/access_ranges/...
+> 
+> and
+> 
+> struct blk_access_range {
+> 	...
+> 	sector_t sector;
+> 	sector_t nr_sectors;
+> }
+> 
+> struct blk_access_range *arange;
+> 
+> Adding independent does make everything even more obvious, but names become
+> rather long. Not an issue for the sysfs directory I think, but
+> 
+> struct blk_independent_access_range {
+> 	...
+> 	sector_t sector;
+> 	sector_t nr_sectors;
+> }
+> 
+> is rather a long struct name. Shortening independent to "ind" could very easily
+> be confused with "indirection", so that is not an option. And "iaccess" is
+> obscure...
+> 
+I'd vote for access_range.
 
---mnmsc5sxlpdvk3xn
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cheers,
 
-On 25.08.2021 22:04:55, Kees Cook wrote:
-> In support of enabling -Warray-bounds and -Wzero-length-bounds and
-> correctly handling run-time memcpy() bounds checking, replace all
-> open-coded flexible arrays (i.e. 0-element arrays) in unions with the
-> flex_array() helper macro.
->=20
-> This fixes warnings such as:
->=20
-> fs/hpfs/anode.c: In function 'hpfs_add_sector_to_btree':
-> fs/hpfs/anode.c:209:27: warning: array subscript 0 is outside the bounds =
-of an interior zero-length array 'struct bplus_internal_node[0]' [-Wzero-le=
-ngth-bounds]
->   209 |    anode->btree.u.internal[0].down =3D cpu_to_le32(a);
->       |    ~~~~~~~~~~~~~~~~~~~~~~~^~~
-> In file included from fs/hpfs/hpfs_fn.h:26,
->                  from fs/hpfs/anode.c:10:
-> fs/hpfs/hpfs.h:412:32: note: while referencing 'internal'
->   412 |     struct bplus_internal_node internal[0]; /* (internal) 2-word =
-entries giving
->       |                                ^~~~~~~~
->=20
-> drivers/net/can/usb/etas_es58x/es58x_fd.c: In function 'es58x_fd_tx_can_m=
-sg':
-> drivers/net/can/usb/etas_es58x/es58x_fd.c:360:35: warning: array subscrip=
-t 65535 is outside the bounds of an interior zero-length array 'u8[0]' {aka=
- 'unsigned char[]'} [-Wzero-length-bounds]
->   360 |  tx_can_msg =3D (typeof(tx_can_msg))&es58x_fd_urb_cmd->raw_msg[ms=
-g_len];
->       |                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~=
-~~~~
-> In file included from drivers/net/can/usb/etas_es58x/es58x_core.h:22,
->                  from drivers/net/can/usb/etas_es58x/es58x_fd.c:17:
-> drivers/net/can/usb/etas_es58x/es58x_fd.h:231:6: note: while referencing =
-'raw_msg'
->   231 |   u8 raw_msg[0];
->       |      ^~~~~~~
->=20
-> Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-> Cc: Arnd Bergmann <arnd@arndb.de>
-> Cc: Ayush Sawal <ayush.sawal@chelsio.com>
-> Cc: Vinay Kumar Yadav <vinay.yadav@chelsio.com>
-> Cc: Rohit Maheshwari <rohitm@chelsio.com>
-> Cc: Herbert Xu <herbert@gondor.apana.org.au>
-> Cc: "David S. Miller" <davem@davemloft.net>
-> Cc: Kalle Valo <kvalo@codeaurora.org>
-> Cc: Jakub Kicinski <kuba@kernel.org>
-> Cc: Stanislaw Gruszka <stf_xl@wp.pl>
-> Cc: Luca Coelho <luciano.coelho@intel.com>
-> Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: Alexei Starovoitov <ast@kernel.org>
-> Cc: Daniel Borkmann <daniel@iogearbox.net>
-> Cc: Andrii Nakryiko <andrii@kernel.org>
-> Cc: Martin KaFai Lau <kafai@fb.com>
-> Cc: Song Liu <songliubraving@fb.com>
-> Cc: Yonghong Song <yhs@fb.com>
-> Cc: John Fastabend <john.fastabend@gmail.com>
-> Cc: KP Singh <kpsingh@kernel.org>
-> Cc: Johannes Berg <johannes.berg@intel.com>
-> Cc: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> Cc: Lee Jones <lee.jones@linaro.org>
-> Cc: Wolfgang Grandegger <wg@grandegger.com>
-> Cc: Marc Kleine-Budde <mkl@pengutronix.de>
-> Cc: Arunachalam Santhanam <arunachalam.santhanam@in.bosch.com>
-> Cc: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
-> Cc: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-> Cc: linux-crypto@vger.kernel.org
-> Cc: ath10k@lists.infradead.org
-> Cc: linux-wireless@vger.kernel.org
-> Cc: netdev@vger.kernel.org
-> Cc: linux-scsi@vger.kernel.org
-> Cc: linux-can@vger.kernel.org
-> Cc: bpf@vger.kernel.org
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  drivers/net/can/usb/etas_es58x/es581_4.h          |  2 +-
->  drivers/net/can/usb/etas_es58x/es58x_fd.h         |  2 +-
-
-For the can drivers:
-
-Acked-by: Marc Kleine-Budde <mkl@pengutronix.de>
-
-BTW: Is there opportunity for conversion, too?
-
-| drivers/net/can/peak_canfd/peak_pciefd_main.c:146:32: warning: array of f=
-lexible structures
-
-regards,
-Marc
-
---=20
-Pengutronix e.K.                 | Marc Kleine-Budde           |
-Embedded Linux                   | https://www.pengutronix.de  |
-Vertretung West/Dortmund         | Phone: +49-231-2826-924     |
-Amtsgericht Hildesheim, HRA 2686 | Fax:   +49-5121-206917-5555 |
-
---mnmsc5sxlpdvk3xn
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAABCgAdFiEEK3kIWJt9yTYMP3ehqclaivrt76kFAmEnM7EACgkQqclaivrt
-76kN7Af/X372HVlb+QqkjppsRpwpNYqhBsuZx17Ly+If1NlY7bxjdbRsOVskRV0a
-zEmr21eyBZFMHhrQ4+CPzjkv8AMTA9dfjFViAemjlC9mP6NR63oty7R+Ae0a/pbe
-T0EDxGooHMTU7H702xrzo8CzTCJM01TTmriW+YM3pZC4DfhNfqYFVx6hgGrah9U5
-HWD8HH3NTi9GLBk8caCqNlZVNv7lJbM7ygt5hxm2EdEy+aJGezlpS4LMpZScF9c9
-p7YOev4usm+X08379kFnX7T8IympuH51b4uhaUIbsekkjACT5rJtj3cKbupp0i2X
-X8w2WKQ8P+u+4VA9+tgBqpt731LPIA==
-=1VPl
------END PGP SIGNATURE-----
-
---mnmsc5sxlpdvk3xn--
+Hannes
+-- 
+Dr. Hannes Reinecke                Kernel Storage Architect
+hare@suse.de                              +49 911 74053 688
+SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
+HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
