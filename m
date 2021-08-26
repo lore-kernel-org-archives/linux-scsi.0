@@ -2,201 +2,431 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-19.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1FC7C432BE
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 03:50:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3621C4320A
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 05:05:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF0C7610CD
-	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 03:50:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D7F3E60FD7
+	for <linux-scsi@archiver.kernel.org>; Thu, 26 Aug 2021 05:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237872AbhHZDvE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 25 Aug 2021 23:51:04 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:34636 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229898AbhHZDvD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Aug 2021 23:51:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1629949817; x=1661485817;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=zBJGn4hGhPwJ9Tgx45UyaLNVQIJ/H70uu9YT53Uj2y8=;
-  b=Mx3bDsCRl5N/XzTmUqI/QfsObZXQX1S0SVOJRiKu1ueacF6a4EcQ/qoW
-   O0v6GrNwg5uhAyf0Prt2NZOCZYTkuAVpgW8v2xaXMtVJ+C6PXIVOVwtGS
-   er/OShMuS94gZwVJk8mu8K/MsQuF9VPlCkqsA5x77vWh+Ude9+5m4+pVY
-   MhwYCEhiW2XC3gqAd+JWqMmDWq08hRoZgB99NH/1GnAFb+oS2HHxADY2j
-   zz2TEiPWZaTjV23UgqJWeZ74VHGjxB55B9ZjXG5nxvPFGLzYSx3HxLKXu
-   LXwPeFtMv/rHhoZVubnTH3T3z3h/6wCVBbjVZm5VNMv8LMFuRmkN6stnF
-   A==;
-X-IronPort-AV: E=Sophos;i="5.84,352,1620662400"; 
-   d="scan'208";a="290028371"
-Received: from mail-bn8nam11lp2177.outbound.protection.outlook.com (HELO NAM11-BN8-obe.outbound.protection.outlook.com) ([104.47.58.177])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Aug 2021 11:50:16 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=akZB1ztDvCcIeyCH7ZROnZcx5I9aZtOnnm5nL06U5TrRVObQVTA3CvLe14J+MfVkFTgk/FEGCkwWSvFZqPCdHPH/+J5Q921STXNA0HPJmOvuyEhQZmgcQh4mPjGnFjZlPwHfDlZXJDNcOIlg9atw8PFyFYqBrkpMfcd2SsY5uCgZabnGRZ5taB0hvTG9ZAhRcaN69OZPmHzUNXXFoXqlInErZC2DceRrmhaIDH/2VFVQtrk55PfxNpaVG3JMAQGVBjFsCEOuzWlokdwWWzrDB63YK9HPDHjtTEvb4O1iH2xoTnzsU6V6M3PKmhPCMpDPVOl5jM097yCcXy8ge93Bfw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v5T20neaxCD7c37+xabow6NjH6D3WXDsY9+crG8bZ6Q=;
- b=FGLL5n1y4iB5WLLNcMeTEsyghO4SKljz1BmYVSL3vDOamVrUOZPfeq8PnIPmOpTJXADHQ/6u6AoYC1A+u2Qf51JY8k9RUME1t00RwVFdwlsCOkV4hB6EPlk7hzmiPFcqXcPK7VKLoUx5Bf1CdML6OxTSjHKN2gaBLggyUF62VSkFuI9Y48z8yPQP7Vwn2k85/feZ224aMNLpECeHlKDZ2PZcCu4xKLSYCHZNRzN0oHc56+ree5msSAzKx0x75eoEXUqn7OoHdTGekj1gCVc71KW9x9RgidFZ9S4Q2jfcP44VdVlOJQckN/PB5MAArCEu+ZSNX1pxmlIv9mH6sEYbKg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S238786AbhHZFFx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 26 Aug 2021 01:05:53 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42836 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238353AbhHZFFu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Aug 2021 01:05:50 -0400
+Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 908FDC061796
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Aug 2021 22:05:03 -0700 (PDT)
+Received: by mail-pj1-x102d.google.com with SMTP id u11-20020a17090adb4b00b00181668a56d6so1506197pjx.5
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Aug 2021 22:05:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v5T20neaxCD7c37+xabow6NjH6D3WXDsY9+crG8bZ6Q=;
- b=x5BQflg/GwoeTZjuesrWfHPRtGedWo/MyH/uj5s9ZBQXtTLplQrtWihZd+MMh0VjxOJcFucxXi18uTEoipFgeKlFkNa1qSWMO6fLRF/L+ko91sn+Ivfm+Q+5HTrVBWq/28uqmU/uNzhi29gS+vsS+CEX6sCSJ5wirBEmKQ4Geu8=
-Received: from DM6PR04MB7081.namprd04.prod.outlook.com (2603:10b6:5:244::21)
- by DM5PR04MB0443.namprd04.prod.outlook.com (2603:10b6:3:a6::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4436.22; Thu, 26 Aug
- 2021 03:50:15 +0000
-Received: from DM6PR04MB7081.namprd04.prod.outlook.com
- ([fe80::e521:352:1d70:31c]) by DM6PR04MB7081.namprd04.prod.outlook.com
- ([fe80::e521:352:1d70:31c%9]) with mapi id 15.20.4436.027; Thu, 26 Aug 2021
- 03:50:15 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Jens Axboe <axboe@kernel.dk>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 0/5] Initial support for multi-actuator HDDs
-Thread-Topic: [PATCH v5 0/5] Initial support for multi-actuator HDDs
-Thread-Index: AQHXj060+x8p8fG9EkmgObG6vBUOOw==
-Date:   Thu, 26 Aug 2021 03:50:15 +0000
-Message-ID: <DM6PR04MB7081B82BD60E0C96F31C84E7E7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
-References: <20210812075015.1090959-1-damien.lemoal@wdc.com>
- <DM6PR04MB7081E6B85744B1F86AC5E7CBE7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
- <yq1tujd9bwg.fsf@ca-mkp.ca.oracle.com>
- <DM6PR04MB70818AEAA6539E3834519E9AE7C79@DM6PR04MB7081.namprd04.prod.outlook.com>
- <yq1ilzsannu.fsf@ca-mkp.ca.oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: oracle.com; dkim=none (message not signed)
- header.d=none;oracle.com; dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 9e410375-895a-444f-6fab-08d968449d1d
-x-ms-traffictypediagnostic: DM5PR04MB0443:
-x-microsoft-antispam-prvs: <DM5PR04MB044313D5A62A2A4C78B2F3D8E7C79@DM5PR04MB0443.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ZdPfJnfds7BW3zLY6LdQrB/FGi+oVWvqnlI6JDdRzDDQpTkj8okDfs+mMT2uIBJfqvv3G05aVmcwaSywhxVZOcWPalKKRfmz0eukCNnXxS2dTp8KsmPr3Biakx/odyG5paQ9mP8RECmRIC21qhBClQWXbFfhty9N0fhV0oudQyMHuBBlk74vo/JbzPl1NM5lgkOE8KMl3OgWRt/3XFizyln6l59etJoVAYKKMn6dDxrxqO8Op+F9Mm0kQPexxNJw0j3ndwX7tNJ+n1drr51RL09q1LyP1gwmWhR25nAkr8OQH1jqE/JSk3R5DoOqI0VlHpC6RTCDMm1Zd1/JftbtpMoUpT2JCqFt83S6iTfTtgIMdCuRoMlZgB9H5qOtzSvgm/ISGJVBF03/Kys/cbFqeK9hKm5PlEybPXWk8laqNcoBju9mzzl9gb4IJ61GEzbefLt+oAIdmnl26VCinJbmMugf0XyofkC++cWmC8hWEwNrKXwSGvzuQgfSXtiqiaJE7tKaDyQ6LHkbmwQzCEjBegW0MCj5z35T3PrT/VQc6+cPS19w9ltaHz6UR7XNCI8b+do0NUmtZQ1OnIYXY1GH5t8bCaTFrQoz4IJK/FnhCiTVUetvW+Ao+2pL4J6/HDOophjaH+D/FSoJ+QqO5MduiimMh27V6A35wDOV/eGE4TYX8n6nDFuHUuEyTs5s4IgmqecXZl9S3VwtEjtpNm0bvQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB7081.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(396003)(39860400002)(366004)(346002)(376002)(136003)(66476007)(66556008)(64756008)(76116006)(38070700005)(186003)(55016002)(91956017)(66946007)(7696005)(66446008)(6916009)(122000001)(316002)(4326008)(8676002)(5660300002)(9686003)(54906003)(52536014)(53546011)(6506007)(38100700002)(33656002)(86362001)(71200400001)(8936002)(2906002)(83380400001)(478600001);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?CZvsUmFc2hgLY8RbW5TiQvBeaEso0PSB5P5mRWULZ+fEwxEmOnqKbW3Gbp0s?=
- =?us-ascii?Q?jV+zBlf83+9kdBB3mF5hTpQyvakHLxxU/PoPn1ljL4DesJsuukVW5dZwE+FC?=
- =?us-ascii?Q?zp9WhhWCl4qMKaqtmKlhvXRGkejrphn2M4tbBm6eN+lONq3d14J+jdFRKGh/?=
- =?us-ascii?Q?w5u3y2GykTTTOYUlWvJowZZY0/bmAvta76LS5ZB7Q2TTzPZUtzy0M5M3MeRV?=
- =?us-ascii?Q?VtYmPso6+UmiqFGdhZZhZIh9zyxmFTkCVuliT6/jmwaIBs3JBwPYUa0eIBp0?=
- =?us-ascii?Q?cdJ3bFkHFn1TNL75fP8C7uBMWmVtcsHaZWWrJbiE4BK1fn/lBVS7qtxGUMYv?=
- =?us-ascii?Q?+FiAGM6yOTPxwj+yjBnY5FQURLkFf+Nu0uw6CEjCt/UL3gqZN5tT2yX0ml8W?=
- =?us-ascii?Q?L1+Wfpu9OWvU9ULiT7VUKiaNytHhN0nxcReU21Eb272W6Px1/7yj/jDasOpw?=
- =?us-ascii?Q?7FUK0Ru0Fwm8KEyK7DZQ0adlgtEpZ/2UJXSwhlXj3+RXSW12aT289zs8/BrF?=
- =?us-ascii?Q?XsQkE5/mI+bGAltF9wi1hd/9U5kMt88RwZ+CUFDdDMl4MYxW2+ytlhaB46nU?=
- =?us-ascii?Q?VJm+//3rc3lDn4XUhq7538Q1fiLt1G3lMcpvxevfRG8LexCJkIXddLOhpWL8?=
- =?us-ascii?Q?ebwxnUPIia+38fYCIujARAi+97wUHlD4QepJVEJYEiWF3mkJFsQp9unrP011?=
- =?us-ascii?Q?6AJkfgI58DFy6LTvU4dtJkNjSfKgyf4l7R0+VTvaKGFrElzU2m3ZzRGyjI3O?=
- =?us-ascii?Q?U+Lewy4XyA33GCPOf8diU05pWoVQb47w0FjxAGDKGMP0wpcTO68q3OAYLlEM?=
- =?us-ascii?Q?h0FG060rQwZ/ryhMFpptVmTpOTm1aBKt5DYrmNKtaBA8Fk44reDm+XW+09Eg?=
- =?us-ascii?Q?UgI09vTKxDRL1HunyKEyaFNS3VO5oeIf7HPLg4hmA//Id68fKAQmw/aby0Dy?=
- =?us-ascii?Q?pioqLuLhAHmyQFnQu6i6Od2l5WRMkq061PmAA+oXgT0fbcBV8dYLVY7rXXqR?=
- =?us-ascii?Q?hLh1qATWURNdVsno/6KPWkWucNLKpeZUqSJ5mbDWpfJTZkDsT8QTDPbrVXev?=
- =?us-ascii?Q?OUsKQ3P6iPI2YyMoFv3CPhAiDomrtNN0fXR117yfBMwU4m4tcIkj5F7CxBrI?=
- =?us-ascii?Q?vyICP1YJ4M2uCYOLxmN0EWU1LtrQ2dG2a3S8cvQfd5hIoqogp454+9+FUcmM?=
- =?us-ascii?Q?vLd1AM0mRjlI2rQiRru/aj9vahGDP08DaJpit2yaP1LDfpETxXo+pyOCZhLQ?=
- =?us-ascii?Q?c2eUKNztmeBONbe2yk+xy/t+lNvCaNAyM8bp6OBk3IJ9uN08M6yZhQiK3vUY?=
- =?us-ascii?Q?cQRqkTxwIK//ASkA1t6czfzvXx+NBTgfMpoCs3v1y+qlneHy8VoxfluMwjBA?=
- =?us-ascii?Q?Pe/izE4RePaJ53wecCcTVyRaeJIgHVgnZbLkukZsy3CQWDFPiw=3D=3D?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=chromium.org; s=google;
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=fQOw84Q+0nXTS439fkG942FAnjDvqnWfwdQqvALTohQ=;
+        b=mBIJf6cF++on2w7AujWCveBhy0CESIqRracrI4E+ReA9rzTkRtqNOIlcy6OoyMY9rA
+         fVp6vRqdfABOysoWaBwtNlxCGcEfJc+LWjjt7Ug4t+rHu1C9f9TTZFqRONpkHBJ9c3gp
+         TKzREeVw5QxC8MUXXm70TDsfZJAYCuA2pO3mA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=fQOw84Q+0nXTS439fkG942FAnjDvqnWfwdQqvALTohQ=;
+        b=uT8mMouynOcq8Ty9X5S7nEBdxSIHJZapmJYS/26grlUb1sId8FkYzRChDjxMIxX5Hf
+         Q9jQCSNet5I71PRGmlaBtkB7kwvr6aGDcY4cKX38xutAuyqXtculZbCsH1efyCSET4U3
+         OBkafpt8UGn6yhHpRNT/xD6fCag48Sc08jMhh7qbi9bvayEkTiJYIw4QcABUs87Nta9I
+         BqDhpGZD5bgjTY9pY5zrajW9gj2kHb4MFf5KnideuW2csoPCKhV4oeBe9lO8YjfIteiJ
+         IRG6p0TNV4TyftMyOOQQXK7reHPA/lJlWyNSId18VGibWeH5SUDCcxUTkIVr288Q/6aW
+         jatA==
+X-Gm-Message-State: AOAM5312LuN1Gzhmp5pY3wsfcNZFvd8hywWLH3K81vq5v7icRhim0oPj
+        Yt6RPQuJMxMCNyRUNV0eJDtwtw==
+X-Google-Smtp-Source: ABdhPJwo6VGS8sgKUC/lXBcJ3A2OczgUkjeK4pZ7P3TBrDAjZPBQPQLeVWGiqnBaLDF+/uFr4CyJyQ==
+X-Received: by 2002:a17:90b:4d91:: with SMTP id oj17mr14662366pjb.209.1629954303060;
+        Wed, 25 Aug 2021 22:05:03 -0700 (PDT)
+Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
+        by smtp.gmail.com with ESMTPSA id t13sm1119130pjg.25.2021.08.25.22.05.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 25 Aug 2021 22:05:00 -0700 (PDT)
+From:   Kees Cook <keescook@chromium.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Kees Cook <keescook@chromium.org>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        "David S. Miller" <davem@davemloft.net>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Larry Finger <Larry.Finger@lwfinger.net>,
+        Phillip Potter <phil@philpotter.co.uk>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Florian Schilhabel <florian.c.schilhabel@googlemail.com>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+        Fabio Aiuto <fabioaiuto83@gmail.com>,
+        Ross Schmidt <ross.schm.dev@gmail.com>,
+        Marco Cesati <marcocesati@gmail.com>,
+        ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+        netdev@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-staging@lists.linux.dev,
+        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        Keith Packard <keithp@keithp.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Daniel Vetter <daniel.vetter@ffwll.ch>,
+        clang-built-linux@googlegroups.com, linux-hardening@vger.kernel.org
+Subject: [PATCH v2 3/5] treewide: Replace 0-element memcpy() destinations with flexible arrays
+Date:   Wed, 25 Aug 2021 22:04:56 -0700
+Message-Id: <20210826050458.1540622-4-keescook@chromium.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210826050458.1540622-1-keescook@chromium.org>
+References: <20210826050458.1540622-1-keescook@chromium.org>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB7081.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9e410375-895a-444f-6fab-08d968449d1d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Aug 2021 03:50:15.1696
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: vZmzSacmNf4E1M26HUpUza1qyEPYE5AKpNl2E9jWS2CzybGqYdI7OHPX2AACtXy7NBXyD3e82+6glrPd1R9LVg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB0443
+X-Developer-Signature: v=1; a=openpgp-sha256; l=9605; h=from:subject; bh=tuToPGIO1fwcT/OaQE7CJFyWXS25t8uKJXExyhn0DhY=; b=owEBbQKS/ZANAwAKAYly9N/cbcAmAcsmYgBhJyD5WMohc3p5GetuWgfUYA3hlc3eWWWJdl37Tmzk tsRDR+6JAjMEAAEKAB0WIQSlw/aPIp3WD3I+bhOJcvTf3G3AJgUCYScg+QAKCRCJcvTf3G3AJjLxD/ 0WbSS7m0+jhuZ0yEDDmx1f3f3Fd4ylc4n8eEvJqyWQTOEBeC52HalM7Wv0GoqDZsr409+b70Kj9En7 2n3jS2Nmosga/L9RN7YC9u8qi0OdqGXVUmPmOeeAy6vMY3nf32TfdIzBf0OFgzOF693Uri3lQdQkGt X1n7jN2/ma2qJETdJEoWZeFuLUJzQFnFmLtffWGvJelOhGoZJVCtEqyChndE2RRsiGw9sxkJrtip/M wVQhx9fXljN7jgmfAnkuyY8cPPfzM8tFAZk5QNk1DwKxkTY6kSjPMt3wQIP2PWVeJxve8cxG6tBEBy 9QcRSQin4AKCk5e1K9dRUpr2rBZ2pxTpu9+h1fQLeq9crY4tlIWA1N9IE+CYenSB5QS/ElgexfKNWg QRC7FAybRvx09RpC7bmtInRliESEbFkmAyXw51g8m6wzhInC4+FQEU3btvs3iAdymFag/3LI+VDOqN 5i89pzAUXDMY+BMrDEHQd5bsBN4FxGIZeLO0x4J0nF3WZCfnqplq/MCuM8U9cVBQWVBkao42uT4M03 Yy3Q3ELveBean30nqem7NAzic3v+h/HJEV+FbLPiM77rxRQPDLqVPu8NjkMJdVAcDTZpjIfLbI/bt/ ZPL1usCDRxrpqI9YR6ZS/0XI6opvoGU0RxLd5AQLk0ekgfIvkKpQ5pCyGAaQ==
+X-Developer-Key: i=keescook@chromium.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/08/26 12:43, Martin K. Petersen wrote:=0A=
-> =0A=
-> Damien,=0A=
-> =0A=
->> I am not super happy with the name either. I used this one as the=0A=
->> least worst of possibilities I thought of.  seek_range/srange ? ->=0A=
->> that is very HDD centric and as we can reuse this for things like=0A=
->> dm-linear on top of SSDs, that does not really work.  I would prefer=0A=
->> something that convey the idea of "parallel command execution", since=0A=
->> this is the main point of the interface. prange ? cdm_range ?=0A=
->> req_range ?=0A=
-> =0A=
-> How about independent_access_range? That doesn't imply head positioning=
-=0A=
-> and can also be used to describe a fault domain. And it is less=0A=
-> disk-centric than concurrent_positioning_range.=0A=
-=0A=
-I like it, but a bit long-ish. Do you think shortening to access_range woul=
-d be=0A=
-acceptable ?=0A=
-=0A=
-we would have:=0A=
-=0A=
-/sys/block/XYZ/queue/access_ranges/...=0A=
-=0A=
-and=0A=
-=0A=
-struct blk_access_range {=0A=
-	...=0A=
-	sector_t sector;=0A=
-	sector_t nr_sectors;=0A=
-}=0A=
-=0A=
-struct blk_access_range *arange;=0A=
-=0A=
-Adding independent does make everything even more obvious, but names become=
-=0A=
-rather long. Not an issue for the sysfs directory I think, but=0A=
-=0A=
-struct blk_independent_access_range {=0A=
-	...=0A=
-	sector_t sector;=0A=
-	sector_t nr_sectors;=0A=
-}=0A=
-=0A=
-is rather a long struct name. Shortening independent to "ind" could very ea=
-sily=0A=
-be confused with "indirection", so that is not an option. And "iaccess" is=
-=0A=
-obscure...=0A=
-=0A=
-> =0A=
-> I concur that those names are a bit unwieldy but at least they are=0A=
-> somewhat descriptive.=0A=
-> =0A=
-> I consulted the thesaurus and didn't really like the other options=0A=
-> (discrete, disjoint, separate, etc.). I think 'independent' is more=0A=
-> accurate for this and better than 'concurrent' and 'parallel'.=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+The 0-element arrays that are used as memcpy() destinations are actually
+flexible arrays. Adjust their structures accordingly so that memcpy()
+can better reason able their destination size (i.e. they need to be seen
+as "unknown" length rather than "zero").
+
+In some cases, use of the flex_array() helper is needed when a flexible
+array is part of a union.
+
+Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Arnd Bergmann <arnd@arndb.de>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: Nilesh Javali <njavali@marvell.com>
+Cc: Manish Rangankar <mrangankar@marvell.com>
+Cc: GR-QLogic-Storage-Upstream@marvell.com
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Phillip Potter <phil@philpotter.co.uk>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Florian Schilhabel <florian.c.schilhabel@googlemail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Cc: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: Fabio Aiuto <fabioaiuto83@gmail.com>
+Cc: Ross Schmidt <ross.schm.dev@gmail.com>
+Cc: Marco Cesati <marcocesati@gmail.com>
+Cc: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-staging@lists.linux.dev
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ drivers/net/wireless/ath/ath10k/bmi.h         | 10 +++----
+ drivers/scsi/qla4xxx/ql4_def.h                |  4 +--
+ drivers/staging/rtl8188eu/include/ieee80211.h |  6 ++--
+ drivers/staging/rtl8712/ieee80211.h           |  4 +--
+ drivers/staging/rtl8723bs/include/ieee80211.h |  6 ++--
+ include/linux/ieee80211.h                     | 30 +++++++++----------
+ include/uapi/linux/dlm_device.h               |  4 +--
+ 7 files changed, 32 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/bmi.h b/drivers/net/wireless/ath/ath10k/bmi.h
+index f6fadcbdd86e..0685c0d2d4ea 100644
+--- a/drivers/net/wireless/ath/ath10k/bmi.h
++++ b/drivers/net/wireless/ath/ath10k/bmi.h
+@@ -109,7 +109,7 @@ struct bmi_cmd {
+ 		struct {
+ 			__le32 addr;
+ 			__le32 len;
+-			u8 payload[0];
++			u8 payload[];
+ 		} write_mem;
+ 		struct {
+ 			__le32 addr;
+@@ -138,18 +138,18 @@ struct bmi_cmd {
+ 		} rompatch_uninstall;
+ 		struct {
+ 			__le32 count;
+-			__le32 patch_ids[0]; /* length of @count */
++			__le32 patch_ids[]; /* length of @count */
+ 		} rompatch_activate;
+ 		struct {
+ 			__le32 count;
+-			__le32 patch_ids[0]; /* length of @count */
++			__le32 patch_ids[]; /* length of @count */
+ 		} rompatch_deactivate;
+ 		struct {
+ 			__le32 addr;
+ 		} lz_start;
+ 		struct {
+ 			__le32 len; /* max BMI_MAX_DATA_SIZE */
+-			u8 payload[0]; /* length of @len */
++			u8 payload[]; /* length of @len */
+ 		} lz_data;
+ 		struct {
+ 			u8 name[BMI_NVRAM_SEG_NAME_SZ];
+@@ -160,7 +160,7 @@ struct bmi_cmd {
+ 
+ union bmi_resp {
+ 	struct {
+-		u8 payload[0];
++		DECLARE_FLEX_ARRAY(u8, payload);
+ 	} read_mem;
+ 	struct {
+ 		__le32 result;
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index 031569c496e5..69a590546bf9 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -366,13 +366,13 @@ struct qla4_work_evt {
+ 		struct {
+ 			enum iscsi_host_event_code code;
+ 			uint32_t data_size;
+-			uint8_t data[0];
++			uint8_t data[];
+ 		} aen;
+ 		struct {
+ 			uint32_t status;
+ 			uint32_t pid;
+ 			uint32_t data_size;
+-			uint8_t data[0];
++			uint8_t data[];
+ 		} ping;
+ 	} u;
+ };
+diff --git a/drivers/staging/rtl8188eu/include/ieee80211.h b/drivers/staging/rtl8188eu/include/ieee80211.h
+index da6245a77d5d..aa5c1a513495 100644
+--- a/drivers/staging/rtl8188eu/include/ieee80211.h
++++ b/drivers/staging/rtl8188eu/include/ieee80211.h
+@@ -199,7 +199,7 @@ struct ieee_param {
+ 		struct {
+ 			u32 len;
+ 			u8 reserved[32];
+-			u8 data[0];
++			u8 data[];
+ 		} wpa_ie;
+ 		struct {
+ 			int command;
+@@ -212,7 +212,7 @@ struct ieee_param {
+ 			u8 idx;
+ 			u8 seq[8]; /* sequence counter (set: RX, get: TX) */
+ 			u16 key_len;
+-			u8 key[0];
++			u8 key[];
+ 		} crypt;
+ #ifdef CONFIG_88EU_AP_MODE
+ 		struct {
+@@ -224,7 +224,7 @@ struct ieee_param {
+ 		} add_sta;
+ 		struct {
+ 			u8	reserved[2];/* for set max_num_sta */
+-			u8	buf[0];
++			u8	buf[];
+ 		} bcn_ie;
+ #endif
+ 
+diff --git a/drivers/staging/rtl8712/ieee80211.h b/drivers/staging/rtl8712/ieee80211.h
+index 61eff7c5746b..65ceaca9b51e 100644
+--- a/drivers/staging/rtl8712/ieee80211.h
++++ b/drivers/staging/rtl8712/ieee80211.h
+@@ -78,7 +78,7 @@ struct ieee_param {
+ 		struct {
+ 			u32 len;
+ 			u8 reserved[32];
+-			u8 data[0];
++			u8 data[];
+ 		} wpa_ie;
+ 		struct {
+ 			int command;
+@@ -91,7 +91,7 @@ struct ieee_param {
+ 			u8 idx;
+ 			u8 seq[8]; /* sequence counter (set: RX, get: TX) */
+ 			u16 key_len;
+-			u8 key[0];
++			u8 key[];
+ 		} crypt;
+ 	} u;
+ };
+diff --git a/drivers/staging/rtl8723bs/include/ieee80211.h b/drivers/staging/rtl8723bs/include/ieee80211.h
+index 378c21595e05..89c311cd20a6 100644
+--- a/drivers/staging/rtl8723bs/include/ieee80211.h
++++ b/drivers/staging/rtl8723bs/include/ieee80211.h
+@@ -180,7 +180,7 @@ struct ieee_param {
+ 		struct {
+ 			u32 len;
+ 			u8 reserved[32];
+-			u8 data[0];
++			u8 data[];
+ 		} wpa_ie;
+ 	        struct{
+ 			int command;
+@@ -193,7 +193,7 @@ struct ieee_param {
+ 			u8 idx;
+ 			u8 seq[8]; /* sequence counter (set: RX, get: TX) */
+ 			u16 key_len;
+-			u8 key[0];
++			u8 key[];
+ 		} crypt;
+ 		struct {
+ 			u16 aid;
+@@ -204,7 +204,7 @@ struct ieee_param {
+ 		} add_sta;
+ 		struct {
+ 			u8 reserved[2];/* for set max_num_sta */
+-			u8 buf[0];
++			u8 buf[];
+ 		} bcn_ie;
+ 	} u;
+ };
+diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
+index a6730072d13a..445597c03cd1 100644
+--- a/include/linux/ieee80211.h
++++ b/include/linux/ieee80211.h
+@@ -1101,7 +1101,7 @@ struct ieee80211_mgmt {
+ 			__le16 auth_transaction;
+ 			__le16 status_code;
+ 			/* possibly followed by Challenge text */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed auth;
+ 		struct {
+ 			__le16 reason_code;
+@@ -1110,26 +1110,26 @@ struct ieee80211_mgmt {
+ 			__le16 capab_info;
+ 			__le16 listen_interval;
+ 			/* followed by SSID and Supported rates */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed assoc_req;
+ 		struct {
+ 			__le16 capab_info;
+ 			__le16 status_code;
+ 			__le16 aid;
+ 			/* followed by Supported rates */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed assoc_resp, reassoc_resp;
+ 		struct {
+ 			__le16 capab_info;
+ 			__le16 status_code;
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed s1g_assoc_resp, s1g_reassoc_resp;
+ 		struct {
+ 			__le16 capab_info;
+ 			__le16 listen_interval;
+ 			u8 current_ap[ETH_ALEN];
+ 			/* followed by SSID and Supported rates */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed reassoc_req;
+ 		struct {
+ 			__le16 reason_code;
+@@ -1140,11 +1140,11 @@ struct ieee80211_mgmt {
+ 			__le16 capab_info;
+ 			/* followed by some of SSID, Supported rates,
+ 			 * FH Params, DS Params, CF Params, IBSS Params, TIM */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed beacon;
+ 		struct {
+ 			/* only variable items: SSID, Supported rates */
+-			u8 variable[0];
++			DECLARE_FLEX_ARRAY(u8, variable);
+ 		} __packed probe_req;
+ 		struct {
+ 			__le64 timestamp;
+@@ -1152,7 +1152,7 @@ struct ieee80211_mgmt {
+ 			__le16 capab_info;
+ 			/* followed by some of SSID, Supported rates,
+ 			 * FH Params, DS Params, CF Params, IBSS Params */
+-			u8 variable[0];
++			u8 variable[];
+ 		} __packed probe_resp;
+ 		struct {
+ 			u8 category;
+@@ -1161,16 +1161,16 @@ struct ieee80211_mgmt {
+ 					u8 action_code;
+ 					u8 dialog_token;
+ 					u8 status_code;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed wme_action;
+ 				struct{
+ 					u8 action_code;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed chan_switch;
+ 				struct{
+ 					u8 action_code;
+ 					struct ieee80211_ext_chansw_ie data;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed ext_chan_switch;
+ 				struct{
+ 					u8 action_code;
+@@ -1186,7 +1186,7 @@ struct ieee80211_mgmt {
+ 					__le16 timeout;
+ 					__le16 start_seq_num;
+ 					/* followed by BA Extension */
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed addba_req;
+ 				struct{
+ 					u8 action_code;
+@@ -1202,11 +1202,11 @@ struct ieee80211_mgmt {
+ 				} __packed delba;
+ 				struct {
+ 					u8 action_code;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed self_prot;
+ 				struct{
+ 					u8 action_code;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed mesh_action;
+ 				struct {
+ 					u8 action;
+@@ -1250,7 +1250,7 @@ struct ieee80211_mgmt {
+ 					u8 toa[6];
+ 					__le16 tod_error;
+ 					__le16 toa_error;
+-					u8 variable[0];
++					u8 variable[];
+ 				} __packed ftm;
+ 			} u;
+ 		} __packed action;
+diff --git a/include/uapi/linux/dlm_device.h b/include/uapi/linux/dlm_device.h
+index f880d2831160..e83954c69fff 100644
+--- a/include/uapi/linux/dlm_device.h
++++ b/include/uapi/linux/dlm_device.h
+@@ -45,13 +45,13 @@ struct dlm_lock_params {
+ 	void __user *bastaddr;
+ 	struct dlm_lksb __user *lksb;
+ 	char lvb[DLM_USER_LVB_LEN];
+-	char name[0];
++	char name[];
+ };
+ 
+ struct dlm_lspace_params {
+ 	__u32 flags;
+ 	__u32 minor;
+-	char name[0];
++	char name[];
+ };
+ 
+ struct dlm_purge_params {
+-- 
+2.30.2
+
