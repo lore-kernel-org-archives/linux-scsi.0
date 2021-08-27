@@ -3,68 +3,78 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77DABC4320A
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 08:10:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0903AC4320A
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 08:46:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5F4DF60FD8
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 08:10:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E479C60187
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 08:46:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232512AbhH0ILg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Aug 2021 04:11:36 -0400
-Received: from smtprelay0089.hostedemail.com ([216.40.44.89]:48492 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S231818AbhH0ILf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Aug 2021 04:11:35 -0400
-Received: from omf07.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay03.hostedemail.com (Postfix) with ESMTP id 1FAC38384364;
-        Fri, 27 Aug 2021 08:10:44 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf07.hostedemail.com (Postfix) with ESMTPA id 07829315D7C;
-        Fri, 27 Aug 2021 08:10:42 +0000 (UTC)
-Message-ID: <4b8e2987c1ff384bac497a20fcd75f9051990cff.camel@perches.com>
-Subject: Re: [PATCH 0/5] vsprintf and uses: Add upper case output to %*ph
- extension
-From:   Joe Perches <joe@perches.com>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+        id S244617AbhH0IrT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Aug 2021 04:47:19 -0400
+Received: from mga06.intel.com ([134.134.136.31]:23139 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S244548AbhH0IrS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Aug 2021 04:47:18 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10088"; a="278936755"
+X-IronPort-AV: E=Sophos;i="5.84,356,1620716400"; 
+   d="scan'208";a="278936755"
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2021 01:46:28 -0700
+X-IronPort-AV: E=Sophos;i="5.84,356,1620716400"; 
+   d="scan'208";a="599107092"
+Received: from smile.fi.intel.com (HELO smile) ([10.237.68.40])
+  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Aug 2021 01:46:26 -0700
+Received: from andy by smile with local (Exim 4.94.2)
+        (envelope-from <andriy.shevchenko@linux.intel.com>)
+        id 1mJXVE-00EGyS-UN; Fri, 27 Aug 2021 11:46:20 +0300
+Date:   Fri, 27 Aug 2021 11:46:20 +0300
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Joe Perches <joe@perches.com>
 Cc:     Rasmus Villemoes <linux@rasmusvillemoes.dk>,
         linux-scsi@vger.kernel.org, storagedev@microchip.com,
         linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-staging@lists.linux.dev
-Date:   Fri, 27 Aug 2021 01:10:41 -0700
-In-Reply-To: <YSiZlyQzgW8umsjj@smile.fi.intel.com>
+Subject: Re: [PATCH 0/5] vsprintf and uses: Add upper case output to %*ph
+ extension
+Message-ID: <YSimXPUVcy9zhpYG@smile.fi.intel.com>
 References: <cover.1630003183.git.joe@perches.com>
-         <YSiZlyQzgW8umsjj@smile.fi.intel.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.40.0-1 
+ <YSiZlyQzgW8umsjj@smile.fi.intel.com>
+ <4b8e2987c1ff384bac497a20fcd75f9051990cff.camel@perches.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Stat-Signature: szskg1krzie8bc9fwr5cdpm3hhrjpf6c
-X-Rspamd-Server: rspamout02
-X-Rspamd-Queue-Id: 07829315D7C
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX19RlAkoJotf8b5Ato6PNKec4d2UgR/Nn0E=
-X-HE-Tag: 1630051842-479260
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4b8e2987c1ff384bac497a20fcd75f9051990cff.camel@perches.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2021-08-27 at 10:51 +0300, Andy Shevchenko wrote:
-> On Thu, Aug 26, 2021 at 11:43:00AM -0700, Joe Perches wrote:
-> > Several sysfs uses that could use %*ph are upper case hex output.
-> > Add a flag to the short hex formatting routine in vsprintf to support them.
-> > Add documentation too.
+On Fri, Aug 27, 2021 at 01:10:41AM -0700, Joe Perches wrote:
+> On Fri, 2021-08-27 at 10:51 +0300, Andy Shevchenko wrote:
+> > On Thu, Aug 26, 2021 at 11:43:00AM -0700, Joe Perches wrote:
+> > > Several sysfs uses that could use %*ph are upper case hex output.
+> > > Add a flag to the short hex formatting routine in vsprintf to support them.
+> > > Add documentation too.
+> >
+> > Thanks!
+> >
+> > Unfortunately I have got only first patch and this cover letter. Can you,
+> > please, Cc entire series?
 > 
-> Thanks!
+> It's on lore.
 > 
-> Unfortunately I have got only first patch and this cover letter. Can you,
-> please, Cc entire series?
+> https://lore.kernel.org/lkml/cover.1630003183.git.joe@perches.com/T/#u
 
-It's on lore.
+Thanks. So, you won't me to review them in a regular way :-)
 
-https://lore.kernel.org/lkml/cover.1630003183.git.joe@perches.com/T/#u
- 
+TBH, I think those examples may pretty much be safe to use small
+letters always.
+
+-- 
+With Best Regards,
+Andy Shevchenko
 
 
