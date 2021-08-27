@@ -3,37 +3,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-17.0 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,INCLUDES_PATCH,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	DKIM_VALID,INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF016C43216
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 19:05:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28256C43216
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 19:05:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B58A560FD9
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 19:05:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1280060FF2
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 19:05:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230371AbhH0TGV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Aug 2021 15:06:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56496 "EHLO
+        id S231151AbhH0TGZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Aug 2021 15:06:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56512 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230115AbhH0TGT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Aug 2021 15:06:19 -0400
+        with ESMTP id S230412AbhH0TGW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Aug 2021 15:06:22 -0400
 Received: from bombadil.infradead.org (unknown [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D34A4C061757;
-        Fri, 27 Aug 2021 12:05:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3450CC0613D9;
+        Fri, 27 Aug 2021 12:05:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:Content-Type:
-        Content-ID:Content-Description:In-Reply-To:References;
-        bh=IsF55LCy7ysAV+Rm80KZ9tErQbHcawqg3Q3yNeHfxbs=; b=RPMz9UlSK4TyPH48FRjNV8+6ps
-        kdN6hJk1/NLnYNL1MnfzIbcSmJDiKy36yuwoXW3jrB40rqNOfNa2hizF2+HHyGoIs8UiVtrPWdyMG
-        V+l5R1xTeDS5NEldObc/4vAK6D2yzcRDR3pvRKso6faA5p7ncx5uRwM7tntiUXlvEvZO4hdhUC7WY
-        aoIZnqlZGx7nAPK0PoBCAhmqUvxtOrf2aXeDJZf4e//pFCoqf3VFmlFmVvS0ur0V+Qf9zUOKm5MeQ
-        hq2JxtvhBnxvqkJNFTWlK/mCXDO7AJRgyoiqohbHriiumjaRCO3QxO04M9UUPrfBzE2JgXW0ConAs
-        JgIeDpMw==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=hc6+PdzrnVmkCNkRHjEi79cwLRliAERVgct1KBgFYaI=; b=AGM+3D6pQGdnQDd1fVV8o+xkzx
+        Ugk395FVFpk8GTUU4a3wxe9T22zXvlOxjgwH7jyB1cuptuRlJrzE1Ppmwk1Rps3mbiYaGY2fPGJCc
+        /jtLgzcx825WzuOq+kHxUo9U7ra49uysnB9bFRQ+DznLH0tzqpPuM1SvEDTjg6b0x3Mmt6j/dQYoa
+        Ad6gGe5p1Dw9MphESPh4fDUzmRkToas5UI9/jdNEI2OiK1WcUkhSIzCG30hIPsKCDgft9SsPzBs7S
+        /W8++Qg60Tn63L+irONkdHRRtntkRpdl4eweUO49pK+o2zImO//qPIrBN1bxROLQlE8Viry8HehcJ
+        KNiuZJgw==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mJhA1-00D1Kz-4A; Fri, 27 Aug 2021 19:05:05 +0000
+        id 1mJhA1-00D1L9-Fu; Fri, 27 Aug 2021 19:05:05 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, martin.petersen@oracle.com, jejb@linux.ibm.com,
         kbusch@kernel.org, sagi@grimberg.me, adrian.hunter@intel.com,
@@ -45,11 +45,14 @@ Cc:     hch@infradead.org, hare@suse.de, bvanassche@acm.org,
         linux-nvme@lists.infradead.org, linux-mmc@vger.kernel.org,
         dm-devel@redhat.com, nbd@other.debian.org,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH v2 0/6] block: first batch of add_disk() error handling conversions
-Date:   Fri, 27 Aug 2021 12:04:58 -0700
-Message-Id: <20210827190504.3103362-1-mcgrof@kernel.org>
+        Luis Chamberlain <mcgrof@kernel.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v2 5/6] loop: add error handling support for add_disk()
+Date:   Fri, 27 Aug 2021 12:05:03 -0700
+Message-Id: <20210827190504.3103362-6-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20210827190504.3103362-1-mcgrof@kernel.org>
+References: <20210827190504.3103362-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: Luis Chamberlain <mcgrof@infradead.org>
@@ -57,36 +60,39 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This v2 drops two of the scsi patches which  Christoph pointed out were
-not needed. It also fixes the nvme driver change to account for the
-missing put of the ctrl. It also just appends the commits with the
-respective reviewed tags. I've also dropped the mmc and dm patches
-from this series as that is still pending discussion. I'll roll that
-into the my next series after discussion is done.
+We never checked for errors on add_disk() as this function
+returned void. Now that this is fixed, use the shiny new
+error handling.
 
-The only patch which goes without a review tag is the nvme driver change.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ drivers/block/loop.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-These changes go rebased on Jen's latest axboe/for-next. The respective
-full queue of my changes can be found on my git branch [0].
-
-[0] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-next.git/log/?h=20210827-for-axboe-add-disk-error-handling-next
-
-Luis Chamberlain (6):
-  scsi/sd: add error handling support for add_disk()
-  scsi/sr: add error handling support for add_disk()
-  nvme: add error handling support for add_disk()
-  md: add error handling support for add_disk()
-  loop: add error handling support for add_disk()
-  nbd: add error handling support for add_disk()
-
- drivers/block/loop.c     | 9 ++++++++-
- drivers/block/nbd.c      | 6 +++++-
- drivers/md/md.c          | 7 ++++++-
- drivers/nvme/host/core.c | 9 ++++++++-
- drivers/scsi/sd.c        | 6 +++++-
- drivers/scsi/sr.c        | 5 ++++-
- 6 files changed, 36 insertions(+), 6 deletions(-)
-
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index fa1c298a8cfb..b8b9e2349e77 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -2393,10 +2393,17 @@ static int loop_add(int i)
+ 	disk->events		= DISK_EVENT_MEDIA_CHANGE;
+ 	disk->event_flags	= DISK_EVENT_FLAG_UEVENT;
+ 	sprintf(disk->disk_name, "loop%d", i);
+-	add_disk(disk);
++
++	err = add_disk(disk);
++	if (err)
++		goto out_cleanup_disk;
++
+ 	mutex_unlock(&loop_ctl_mutex);
++
+ 	return i;
+ 
++out_cleanup_disk:
++	blk_cleanup_disk(disk);
+ out_cleanup_tags:
+ 	blk_mq_free_tag_set(&lo->tag_set);
+ out_free_idr:
 -- 
 2.30.2
 
