@@ -2,80 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDD1BC4320E
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 10:23:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55085C432BE
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 12:06:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B21C261004
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 10:23:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EB4560FE7
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 12:06:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245066AbhH0KYn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Aug 2021 06:24:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44268 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S244724AbhH0KYm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Aug 2021 06:24:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 45B8C60FE6;
-        Fri, 27 Aug 2021 10:23:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1630059834;
-        bh=GlcuY2UtDqbSR3JyfcQrDkWEl5GGT63iUq4fz3sDAjM=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=aB6OORNEDyR0kVgoykJhdsLhGROyL2TNixGBFr/ZA4Y9FRbrusoJEkVwNrI4Gus9s
-         gxCP7x9sjTPjb5VYaLKlURuKWr5dR3McK5XOFr91zt88ukMTiqjjwZHYu0dFM9Wshd
-         asSw/3gkb9i3lPm8hapCKlx8MoFSRXmTtJJj3MvU=
-Date:   Fri, 27 Aug 2021 12:23:50 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc:     Joe Perches <joe@perches.com>,
-        Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        linux-scsi@vger.kernel.org, storagedev@microchip.com,
-        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-staging@lists.linux.dev
-Subject: Re: [PATCH 0/5] vsprintf and uses: Add upper case output to %*ph
- extension
-Message-ID: <YSi9NufNS18rRpmE@kroah.com>
-References: <cover.1630003183.git.joe@perches.com>
- <YSiZlyQzgW8umsjj@smile.fi.intel.com>
- <4b8e2987c1ff384bac497a20fcd75f9051990cff.camel@perches.com>
- <YSimXPUVcy9zhpYG@smile.fi.intel.com>
+        id S245089AbhH0MHk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Aug 2021 08:07:40 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3695 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231191AbhH0MHj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Aug 2021 08:07:39 -0400
+Received: from fraeml702-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Gwz1l2PBKz67dBP;
+        Fri, 27 Aug 2021 20:05:31 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml702-chm.china.huawei.com (10.206.15.51) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.8; Fri, 27 Aug 2021 14:06:48 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Fri, 27 Aug 2021 13:06:46 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v3 00/13] blk-mq: Reduce static requests memory footprint for shared sbitmap
+Date:   Fri, 27 Aug 2021 20:01:51 +0800
+Message-ID: <1630065724-69146-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YSimXPUVcy9zhpYG@smile.fi.intel.com>
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Aug 27, 2021 at 11:46:20AM +0300, Andy Shevchenko wrote:
-> On Fri, Aug 27, 2021 at 01:10:41AM -0700, Joe Perches wrote:
-> > On Fri, 2021-08-27 at 10:51 +0300, Andy Shevchenko wrote:
-> > > On Thu, Aug 26, 2021 at 11:43:00AM -0700, Joe Perches wrote:
-> > > > Several sysfs uses that could use %*ph are upper case hex output.
-> > > > Add a flag to the short hex formatting routine in vsprintf to support them.
-> > > > Add documentation too.
-> > >
-> > > Thanks!
-> > >
-> > > Unfortunately I have got only first patch and this cover letter. Can you,
-> > > please, Cc entire series?
-> > 
-> > It's on lore.
-> > 
-> > https://lore.kernel.org/lkml/cover.1630003183.git.joe@perches.com/T/#u
-> 
-> Thanks. So, you won't me to review them in a regular way :-)
-> 
-> TBH, I think those examples may pretty much be safe to use small
-> letters always.
+Currently a full set of static requests are allocated per hw queue per
+tagset when shared sbitmap is used.
 
-I agree, let's just fix the users here to use small letters instead of
-adding another modifier to the kernel.
+However, only tagset->queue_depth number of requests may be active at
+any given time. As such, only tagset->queue_depth number of static
+requests are required.
 
-thanks,
+The same goes for using an IO scheduler, which allocates a full set of
+static requests per hw queue per request queue.
 
-greg k-h
+This series changes shared sbitmap support by using a shared tags per
+tagset and request queue. Ming suggested something along those lines in
+v1 review. But we'll keep name "shared sbitmap" name as it is familiar. In
+using a shared tags, the static rqs also become shared, reducing the
+number of sets of static rqs, reducing memory usage.
+
+Patch "blk-mq: Use shared tags for shared sbitmap support" is a bit big,
+and could potentially be broken down. But then maintaining ability to
+bisect becomes harder and each sub-patch would get more convoluted.
+
+For megaraid sas driver on my 128-CPU arm64 system with 1x SATA disk, we
+save approx. 300MB(!) [370MB -> 60MB]
+
+Baseline is 1d1cf156dc17 (block/for-5.15/block) sg: pass the device...
+
+Changes since v2:
+- Make blk_mq_clear_rq_mapping() static again
+- Various function renaming for conciseness and consistency
+- Add/refactor alloc/free map and rqs function
+- Drop the new blk_mq_ops init_request method in favour of passing an
+  invalid HW queue index for shared sbitmap
+- Add patch to not clear rq mapping for driver tags
+- Remove blk_mq_init_bitmap_tags()
+- Add some more RB tags (thanks!)
+
+Changes since v1:
+- Switch to use blk_mq_tags for shared sbitmap
+- Add new blk_mq_ops init request callback
+- Add some RB tags (thanks!)
+
+John Garry (13):
+  blk-mq: Change rqs check in blk_mq_free_rqs()
+  block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ
+  blk-mq: Relocate shared sbitmap resize in blk_mq_update_nr_requests()
+  blk-mq: Invert check in blk_mq_update_nr_requests()
+  blk-mq-sched: Rename blk_mq_sched_alloc_{tags -> map_and_rqs}()
+  blk-mq-sched: Rename blk_mq_sched_free_{requests -> rqs}()
+  blk-mq: Pass driver tags to blk_mq_clear_rq_mapping()
+  blk-mq: Don't clear driver tags own mapping
+  blk-mq: Add blk_mq_tag_update_sched_shared_sbitmap()
+  blk-mq: Add blk_mq_alloc_map_and_rqs()
+  blk-mq: Refactor and rename blk_mq_free_map_and_{requests->rqs}()
+  blk-mq: Use shared tags for shared sbitmap support
+  blk-mq: Stop using pointers for blk_mq_tags bitmap tags
+
+ block/bfq-iosched.c      |   4 +-
+ block/blk-core.c         |   4 +-
+ block/blk-mq-debugfs.c   |   8 +-
+ block/blk-mq-sched.c     | 116 ++++++++++------------
+ block/blk-mq-sched.h     |   4 +-
+ block/blk-mq-tag.c       | 125 ++++++++---------------
+ block/blk-mq-tag.h       |  14 +--
+ block/blk-mq.c           | 209 +++++++++++++++++++++++----------------
+ block/blk-mq.h           |  18 ++--
+ block/blk.h              |   2 +-
+ block/kyber-iosched.c    |   4 +-
+ block/mq-deadline-main.c |   2 +-
+ drivers/block/rbd.c      |   2 +-
+ include/linux/blk-mq.h   |  15 ++-
+ include/linux/blkdev.h   |   5 +-
+ 15 files changed, 256 insertions(+), 276 deletions(-)
+
+-- 
+2.26.2
+
