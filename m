@@ -2,206 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E708BC43216
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 16:08:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F1B5C432BE
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 16:09:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBB8960F92
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 16:08:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFEA960F92
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 16:09:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245488AbhH0QJN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Aug 2021 12:09:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43238 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245451AbhH0QJM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Aug 2021 12:09:12 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49D35C06179A
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Aug 2021 09:08:23 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id j1so4847491pjv.3
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Aug 2021 09:08:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=3BOREjcUGdekjt/HzJv8JPNZZV+WRxv1ga5r5CaLfMg=;
-        b=LgSMkv8yRY6NcFjGg/J63Y2GpE2F2TGefzma4o9g5HEhtSAND6DhVddNHYYks45NsN
-         vl/76kMWgkZPlkAHgvJTPVgljvSFRJ7Ui/2QED3sjgSLOAoCwiEAsmgZNMGT/LdlCbMz
-         6XWQqYT5qF5nKBsTivPFzvO7iyOTn/hubgj2U=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=3BOREjcUGdekjt/HzJv8JPNZZV+WRxv1ga5r5CaLfMg=;
-        b=WRLihGl9kPMP4VcI2vke7H5FzyYL9FrdDfS0aZtj8ZQlHZrIDNPIvu+0zm5mvLUkbn
-         7GiBhPnr8MgH3rbO0Y3hysNksC8LoaxQyy7eZ6b0a7yTawGYYRFLtdWe6fWguYKKT7M0
-         FG++kknSc9You1eGiXL/H54Nd8clpEFxC8E9uYqTSs5rAypeFBzdFHcqSv7qI19RUjsx
-         8LJ2Ql+/WerB0wAGo5cNKnig8Mwf+x2Z94DNsqDErEVYpak7omQF2vCpe/pmfRKfNPYf
-         nOBbLuq0QQEtXnYgNN1xrYYpik7/pGuf6RQp8IEE+BN01vEGOz7ZIAx0UNA9QIA0H8W4
-         G4nw==
-X-Gm-Message-State: AOAM530ILK8Fg5EXVXth59a6Biw72CQRubVrmm7qdR/s+UAMJ29/R/HR
-        9//iFUtKVnTP8K8bdzb6Vvw8pA==
-X-Google-Smtp-Source: ABdhPJz9b21uTH+fuc32V76US0q/VM+qkB83+nJU8q4xHvgfI8nk8UEzE23GCJMggnW3rTr9tTvrxA==
-X-Received: by 2002:a17:90b:357:: with SMTP id fh23mr8796487pjb.140.1630080502650;
-        Fri, 27 Aug 2021 09:08:22 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id h9sm13930821pjg.9.2021.08.27.09.08.21
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Aug 2021 09:08:21 -0700 (PDT)
-Date:   Fri, 27 Aug 2021 09:08:19 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Marc Kleine-Budde <mkl@pengutronix.de>
-Cc:     linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ayush Sawal <ayush.sawal@chelsio.com>,
-        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
-        Rohit Maheshwari <rohitm@chelsio.com>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Kalle Valo <kvalo@codeaurora.org>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Stanislaw Gruszka <stf_xl@wp.pl>,
-        Luca Coelho <luciano.coelho@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Alexei Starovoitov <ast@kernel.org>,
-        Daniel Borkmann <daniel@iogearbox.net>,
-        Andrii Nakryiko <andrii@kernel.org>,
-        Martin KaFai Lau <kafai@fb.com>,
-        Song Liu <songliubraving@fb.com>, Yonghong Song <yhs@fb.com>,
-        John Fastabend <john.fastabend@gmail.com>,
-        KP Singh <kpsingh@kernel.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Mordechay Goodstein <mordechay.goodstein@intel.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Wolfgang Grandegger <wg@grandegger.com>,
-        Arunachalam Santhanam <arunachalam.santhanam@in.bosch.com>,
-        Vincent Mailhol <mailhol.vincent@wanadoo.fr>,
-        Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>,
-        linux-crypto@vger.kernel.org, ath10k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-can@vger.kernel.org,
-        bpf@vger.kernel.org, Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        Keith Packard <keithp@keithp.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Daniel Vetter <daniel.vetter@ffwll.ch>,
-        clang-built-linux@googlegroups.com, linux-hardening@vger.kernel.org
-Subject: Re: [PATCH v2 2/5] treewide: Replace open-coded flex arrays in unions
-Message-ID: <202108270906.7C85982525@keescook>
-References: <20210826050458.1540622-1-keescook@chromium.org>
- <20210826050458.1540622-3-keescook@chromium.org>
- <20210826062452.jekmoo43f4xu5jxk@pengutronix.de>
+        id S245344AbhH0QK3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Aug 2021 12:10:29 -0400
+Received: from smtprelay0209.hostedemail.com ([216.40.44.209]:46702 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S245348AbhH0QK1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Aug 2021 12:10:27 -0400
+Received: from omf08.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay08.hostedemail.com (Postfix) with ESMTP id 3381E182CF665;
+        Fri, 27 Aug 2021 16:09:35 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf08.hostedemail.com (Postfix) with ESMTPA id D46641A29F9;
+        Fri, 27 Aug 2021 16:09:33 +0000 (UTC)
+Message-ID: <628285fc7757f020159503d4d3b45790e73f0133.camel@perches.com>
+Subject: Re: [PATCH 0/5] vsprintf and uses: Add upper case output to %*ph
+ extension
+From:   Joe Perches <joe@perches.com>
+To:     Greg KH <gregkh@linuxfoundation.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc:     Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+        linux-scsi@vger.kernel.org, storagedev@microchip.com,
+        linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-staging@lists.linux.dev
+Date:   Fri, 27 Aug 2021 09:09:32 -0700
+In-Reply-To: <YSi9NufNS18rRpmE@kroah.com>
+References: <cover.1630003183.git.joe@perches.com>
+         <YSiZlyQzgW8umsjj@smile.fi.intel.com>
+         <4b8e2987c1ff384bac497a20fcd75f9051990cff.camel@perches.com>
+         <YSimXPUVcy9zhpYG@smile.fi.intel.com> <YSi9NufNS18rRpmE@kroah.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.40.0-1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210826062452.jekmoo43f4xu5jxk@pengutronix.de>
+Content-Transfer-Encoding: 7bit
+X-Stat-Signature: aby4s94qy84u5x9x6aqguca3q11mh8d3
+X-Rspamd-Server: rspamout05
+X-Rspamd-Queue-Id: D46641A29F9
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX18E1EtdtIkXuy4sqiURYIDYh0DNlDpJ/ag=
+X-HE-Tag: 1630080573-979598
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Aug 26, 2021 at 08:24:52AM +0200, Marc Kleine-Budde wrote:
-> On 25.08.2021 22:04:55, Kees Cook wrote:
-> > In support of enabling -Warray-bounds and -Wzero-length-bounds and
-> > correctly handling run-time memcpy() bounds checking, replace all
-> > open-coded flexible arrays (i.e. 0-element arrays) in unions with the
-> > flex_array() helper macro.
+On Fri, 2021-08-27 at 12:23 +0200, Greg KH wrote:
+> On Fri, Aug 27, 2021 at 11:46:20AM +0300, Andy Shevchenko wrote:
+> > On Fri, Aug 27, 2021 at 01:10:41AM -0700, Joe Perches wrote:
+> > > On Fri, 2021-08-27 at 10:51 +0300, Andy Shevchenko wrote:
+> > > > On Thu, Aug 26, 2021 at 11:43:00AM -0700, Joe Perches wrote:
+> > > > > Several sysfs uses that could use %*ph are upper case hex output.
+> > > > > Add a flag to the short hex formatting routine in vsprintf to support them.
+> > > > > Add documentation too.
+> > > > 
+> > > > Thanks!
+> > > > 
+> > > > Unfortunately I have got only first patch and this cover letter. Can you,
+> > > > please, Cc entire series?
+> > > 
+> > > It's on lore.
+> > > 
+> > > https://lore.kernel.org/lkml/cover.1630003183.git.joe@perches.com/T/#u
 > > 
-> > This fixes warnings such as:
+> > Thanks. So, you won't me to review them in a regular way :-)
 > > 
-> > fs/hpfs/anode.c: In function 'hpfs_add_sector_to_btree':
-> > fs/hpfs/anode.c:209:27: warning: array subscript 0 is outside the bounds of an interior zero-length array 'struct bplus_internal_node[0]' [-Wzero-length-bounds]
-> >   209 |    anode->btree.u.internal[0].down = cpu_to_le32(a);
-> >       |    ~~~~~~~~~~~~~~~~~~~~~~~^~~
-> > In file included from fs/hpfs/hpfs_fn.h:26,
-> >                  from fs/hpfs/anode.c:10:
-> > fs/hpfs/hpfs.h:412:32: note: while referencing 'internal'
-> >   412 |     struct bplus_internal_node internal[0]; /* (internal) 2-word entries giving
-> >       |                                ^~~~~~~~
-> > 
-> > drivers/net/can/usb/etas_es58x/es58x_fd.c: In function 'es58x_fd_tx_can_msg':
-> > drivers/net/can/usb/etas_es58x/es58x_fd.c:360:35: warning: array subscript 65535 is outside the bounds of an interior zero-length array 'u8[0]' {aka 'unsigned char[]'} [-Wzero-length-bounds]
-> >   360 |  tx_can_msg = (typeof(tx_can_msg))&es58x_fd_urb_cmd->raw_msg[msg_len];
-> >       |                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> > In file included from drivers/net/can/usb/etas_es58x/es58x_core.h:22,
-> >                  from drivers/net/can/usb/etas_es58x/es58x_fd.c:17:
-> > drivers/net/can/usb/etas_es58x/es58x_fd.h:231:6: note: while referencing 'raw_msg'
-> >   231 |   u8 raw_msg[0];
-> >       |      ^~~~~~~
-> > 
-> > Cc: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-> > Cc: Arnd Bergmann <arnd@arndb.de>
-> > Cc: Ayush Sawal <ayush.sawal@chelsio.com>
-> > Cc: Vinay Kumar Yadav <vinay.yadav@chelsio.com>
-> > Cc: Rohit Maheshwari <rohitm@chelsio.com>
-> > Cc: Herbert Xu <herbert@gondor.apana.org.au>
-> > Cc: "David S. Miller" <davem@davemloft.net>
-> > Cc: Kalle Valo <kvalo@codeaurora.org>
-> > Cc: Jakub Kicinski <kuba@kernel.org>
-> > Cc: Stanislaw Gruszka <stf_xl@wp.pl>
-> > Cc: Luca Coelho <luciano.coelho@intel.com>
-> > Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
-> > Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> > Cc: Alexei Starovoitov <ast@kernel.org>
-> > Cc: Daniel Borkmann <daniel@iogearbox.net>
-> > Cc: Andrii Nakryiko <andrii@kernel.org>
-> > Cc: Martin KaFai Lau <kafai@fb.com>
-> > Cc: Song Liu <songliubraving@fb.com>
-> > Cc: Yonghong Song <yhs@fb.com>
-> > Cc: John Fastabend <john.fastabend@gmail.com>
-> > Cc: KP Singh <kpsingh@kernel.org>
-> > Cc: Johannes Berg <johannes.berg@intel.com>
-> > Cc: Mordechay Goodstein <mordechay.goodstein@intel.com>
-> > Cc: Lee Jones <lee.jones@linaro.org>
-> > Cc: Wolfgang Grandegger <wg@grandegger.com>
-> > Cc: Marc Kleine-Budde <mkl@pengutronix.de>
-> > Cc: Arunachalam Santhanam <arunachalam.santhanam@in.bosch.com>
-> > Cc: Vincent Mailhol <mailhol.vincent@wanadoo.fr>
-> > Cc: Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>
-> > Cc: linux-crypto@vger.kernel.org
-> > Cc: ath10k@lists.infradead.org
-> > Cc: linux-wireless@vger.kernel.org
-> > Cc: netdev@vger.kernel.org
-> > Cc: linux-scsi@vger.kernel.org
-> > Cc: linux-can@vger.kernel.org
-> > Cc: bpf@vger.kernel.org
-> > Signed-off-by: Kees Cook <keescook@chromium.org>
-> > ---
-> >  drivers/net/can/usb/etas_es58x/es581_4.h          |  2 +-
-> >  drivers/net/can/usb/etas_es58x/es58x_fd.h         |  2 +-
+> > TBH, I think those examples may pretty much be safe to use small
+> > letters always.
 > 
-> For the can drivers:
-> 
-> Acked-by: Marc Kleine-Budde <mkl@pengutronix.de>
+> I agree, let's just fix the users here to use small letters instead of
+> adding another modifier to the kernel.
 
-Thanks!
+ABI _should_ mean stability for random parsers.
 
-> BTW: Is there opportunity for conversion, too?
-> 
-> | drivers/net/can/peak_canfd/peak_pciefd_main.c:146:32: warning: array of flexible structures
+I don't use these so I don't care that much.
 
-Oh, hrmpf. This isn't a sane use of flex arrays:
-
-
-struct __packed pucan_rx_msg {
-	...
-	__le32	can_id;
-	u8	d[];
-};
-
-struct pciefd_rx_dma {
-        __le32 irq_status;
-        __le32 sys_time_low;
-        __le32 sys_time_high;
-        struct pucan_rx_msg msg[];
-} __packed __aligned(4);
-
-I think that needs to be handled separately. How are you building to get
-that warning, by the way? I haven't seen that in my builds...
-
--- 
-Kees Cook
