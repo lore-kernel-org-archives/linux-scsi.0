@@ -7,37 +7,37 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1523AC4320E
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 12:06:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01ADEC43214
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 12:06:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01CF761029
-	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 12:06:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DE1C161038
+	for <linux-scsi@archiver.kernel.org>; Fri, 27 Aug 2021 12:06:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245108AbhH0MHo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 27 Aug 2021 08:07:44 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3697 "EHLO
+        id S245124AbhH0MHq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 27 Aug 2021 08:07:46 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3698 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245112AbhH0MHn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Aug 2021 08:07:43 -0400
-Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Gwz1q26Rvz67YT1;
-        Fri, 27 Aug 2021 20:05:35 +0800 (CST)
+        with ESMTP id S245111AbhH0MHp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Aug 2021 08:07:45 -0400
+Received: from fraeml744-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Gwz1j3qhbz67snn;
+        Fri, 27 Aug 2021 20:05:29 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ fraeml744-chm.china.huawei.com (10.206.15.225) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Fri, 27 Aug 2021 14:06:52 +0200
+ 15.1.2308.8; Fri, 27 Aug 2021 14:06:54 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Fri, 27 Aug 2021 13:06:50 +0100
+ 15.1.2308.8; Fri, 27 Aug 2021 13:06:52 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>
 CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH v3 02/13] block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ
-Date:   Fri, 27 Aug 2021 20:01:53 +0800
-Message-ID: <1630065724-69146-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v3 03/13] blk-mq: Relocate shared sbitmap resize in blk_mq_update_nr_requests()
+Date:   Fri, 27 Aug 2021 20:01:54 +0800
+Message-ID: <1630065724-69146-4-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1630065724-69146-1-git-send-email-john.garry@huawei.com>
 References: <1630065724-69146-1-git-send-email-john.garry@huawei.com>
@@ -51,88 +51,51 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It is a bit confusing that there is BLKDEV_MAX_RQ and MAX_SCHED_RQ, as
-the name BLKDEV_MAX_RQ would imply the max requests always, which it is
-not.
+For shared sbitmap, if the call to blk_mq_tag_update_depth() was
+successful for any hctx when hctx->sched_tags is not set, then it would be
+successful for all (due to nature in which blk_mq_tag_update_depth()
+fails).
 
-Rename to BLKDEV_MAX_RQ to BLKDEV_DEFAULT_RQ, matching its usage - that being
-the default number of requests assigned when allocating a request queue.
+As such, there is no need to call blk_mq_tag_resize_shared_sbitmap() for
+each hctx. So relocate the call until after the hctx iteration under the
+!q->elevator check, which is equivalent (to !hctx->sched_tags).
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Reviewed-by: Ming Lei <ming.lei@redhat.com>
 ---
- block/blk-core.c       | 2 +-
- block/blk-mq-sched.c   | 2 +-
- block/blk-mq-sched.h   | 2 +-
- drivers/block/rbd.c    | 2 +-
- include/linux/blkdev.h | 2 +-
- 5 files changed, 5 insertions(+), 5 deletions(-)
+ block/blk-mq.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 0874bc2fcdb4..93b585593ebd 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -569,7 +569,7 @@ struct request_queue *blk_alloc_queue(int node_id)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 7927e62d6395..2cc5b2952ceb 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -3624,8 +3624,6 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+ 		if (!hctx->sched_tags) {
+ 			ret = blk_mq_tag_update_depth(hctx, &hctx->tags, nr,
+ 							false);
+-			if (!ret && blk_mq_is_sbitmap_shared(set->flags))
+-				blk_mq_tag_resize_shared_sbitmap(set, nr);
+ 		} else {
+ 			ret = blk_mq_tag_update_depth(hctx, &hctx->sched_tags,
+ 							nr, true);
+@@ -3643,9 +3641,13 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
+ 	}
+ 	if (!ret) {
+ 		q->nr_requests = nr;
+-		if (q->elevator && blk_mq_is_sbitmap_shared(set->flags))
+-			sbitmap_queue_resize(&q->sched_bitmap_tags,
+-					     nr - set->reserved_tags);
++		if (blk_mq_is_sbitmap_shared(set->flags)) {
++			if (q->elevator)
++				sbitmap_queue_resize(&q->sched_bitmap_tags,
++						     nr - set->reserved_tags);
++			else
++				blk_mq_tag_resize_shared_sbitmap(set, nr);
++		}
+ 	}
  
- 	blk_queue_dma_alignment(q, 511);
- 	blk_set_default_limits(&q->limits);
--	q->nr_requests = BLKDEV_MAX_RQ;
-+	q->nr_requests = BLKDEV_DEFAULT_RQ;
- 
- 	return q;
- 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 0f006cabfd91..2231fb0d4c35 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -606,7 +606,7 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
- 	 * Additionally, this is a per-hw queue depth.
- 	 */
- 	q->nr_requests = 2 * min_t(unsigned int, q->tag_set->queue_depth,
--				   BLKDEV_MAX_RQ);
-+				   BLKDEV_DEFAULT_RQ);
- 
- 	queue_for_each_hw_ctx(q, hctx, i) {
- 		ret = blk_mq_sched_alloc_tags(q, hctx, i);
-diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
-index 5246ae040704..1e46be6c5178 100644
---- a/block/blk-mq-sched.h
-+++ b/block/blk-mq-sched.h
-@@ -5,7 +5,7 @@
- #include "blk-mq.h"
- #include "blk-mq-tag.h"
- 
--#define MAX_SCHED_RQ (16 * BLKDEV_MAX_RQ)
-+#define MAX_SCHED_RQ (16 * BLKDEV_DEFAULT_RQ)
- 
- void blk_mq_sched_assign_ioc(struct request *rq);
- 
-diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
-index e65c9d706f6f..bf60aebd0cfb 100644
---- a/drivers/block/rbd.c
-+++ b/drivers/block/rbd.c
-@@ -836,7 +836,7 @@ struct rbd_options {
- 	u32 alloc_hint_flags;  /* CEPH_OSD_OP_ALLOC_HINT_FLAG_* */
- };
- 
--#define RBD_QUEUE_DEPTH_DEFAULT	BLKDEV_MAX_RQ
-+#define RBD_QUEUE_DEPTH_DEFAULT	BLKDEV_DEFAULT_RQ
- #define RBD_ALLOC_SIZE_DEFAULT	(64 * 1024)
- #define RBD_LOCK_TIMEOUT_DEFAULT 0  /* no timeout */
- #define RBD_READ_ONLY_DEFAULT	false
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c9cb12483e12..fc3987eda2c1 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -44,7 +44,7 @@ struct blk_stat_callback;
- struct blk_keyslot_manager;
- 
- #define BLKDEV_MIN_RQ	4
--#define BLKDEV_MAX_RQ	128	/* Default maximum */
-+#define BLKDEV_DEFAULT_RQ	128
- 
- /* Must be consistent with blk_mq_poll_stats_bkt() */
- #define BLK_MQ_POLL_STATS_BKTS 16
+ 	blk_mq_unquiesce_queue(q);
 -- 
 2.26.2
 
