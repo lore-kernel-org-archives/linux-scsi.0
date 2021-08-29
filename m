@@ -7,32 +7,32 @@ X-Spam-Status: No, score=-10.3 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD969C432BE
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Aug 2021 02:56:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89547C4320A
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Aug 2021 03:45:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C4AC60E97
-	for <linux-scsi@archiver.kernel.org>; Sun, 29 Aug 2021 02:56:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55C22604AC
+	for <linux-scsi@archiver.kernel.org>; Sun, 29 Aug 2021 03:45:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232718AbhH2C5p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 28 Aug 2021 22:57:45 -0400
-Received: from mga01.intel.com ([192.55.52.88]:26829 "EHLO mga01.intel.com"
+        id S233641AbhH2Dqs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 28 Aug 2021 23:46:48 -0400
+Received: from mga09.intel.com ([134.134.136.24]:39709 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230334AbhH2C5m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 28 Aug 2021 22:57:42 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10090"; a="240361938"
+        id S233430AbhH2Dqq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 28 Aug 2021 23:46:46 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10090"; a="218140652"
 X-IronPort-AV: E=Sophos;i="5.84,360,1620716400"; 
-   d="gz'50?scan'50,208,50";a="240361938"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2021 19:56:50 -0700
+   d="gz'50?scan'50,208,50";a="218140652"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Aug 2021 20:45:55 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.84,360,1620716400"; 
-   d="gz'50?scan'50,208,50";a="529419955"
+   d="gz'50?scan'50,208,50";a="688441577"
 Received: from lkp-server01.sh.intel.com (HELO 4fbc2b3ce5aa) ([10.239.97.150])
-  by FMSMGA003.fm.intel.com with ESMTP; 28 Aug 2021 19:56:46 -0700
+  by fmsmga005.fm.intel.com with ESMTP; 28 Aug 2021 20:45:51 -0700
 Received: from kbuild by 4fbc2b3ce5aa with local (Exim 4.92)
         (envelope-from <lkp@intel.com>)
-        id 1mKB02-0003xy-8j; Sun, 29 Aug 2021 02:56:46 +0000
-Date:   Sun, 29 Aug 2021 10:56:05 +0800
+        id 1mKBlW-0003zd-Rl; Sun, 29 Aug 2021 03:45:50 +0000
+Date:   Sun, 29 Aug 2021 11:45:08 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     Quinn Tran <qutran@marvell.com>
 Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
@@ -44,12 +44,12 @@ Cc:     llvm@lists.linux.dev, kbuild-all@lists.01.org,
         Duane Grigsby <duane.grigsby@marvell.com>,
         Rick Hicksted Jr <rhicksted@marvell.com>,
         Nilesh Javali <njavali@marvell.com>
-Subject: [scsi:misc 61/294] drivers/scsi/qla2xxx/qla_edif.c:1105:44: warning:
- taking address of packed member 'port_id' of class or structure
- 'qla_sa_update_frame' may result in an unaligned pointer value
-Message-ID: <202108291001.ZHc5UT7o-lkp@intel.com>
+Subject: [scsi:misc 62/294] drivers/scsi/qla2xxx/qla_edif.c:713:45: warning:
+ taking address of packed member 'u' of class or structure
+ 'auth_complete_cmd' may result in an unaligned pointer value
+Message-ID: <202108291103.471vatmD-lkp@intel.com>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="envbJBWh7q8WU6mo"
+Content-Type: multipart/mixed; boundary="oyUTqETQ0mS9luUI"
 Content-Disposition: inline
 User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
@@ -57,7 +57,7 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---envbJBWh7q8WU6mo
+--oyUTqETQ0mS9luUI
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -67,16 +67,16 @@ FYI, the error/warning still remains.
 
 tree:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git misc
 head:   9b5ac8ab4e8bf5636d1d425aee68ddf45af12057
-commit: dd30706e73b70d67e88fdaca688db7a3374fd5de [61/294] scsi: qla2xxx: edif: Add key update
+commit: 8a4bb2c1dd623b5a71609de5b04ef3b5086b0a3e [62/294] scsi: qla2xxx: edif: Add authentication pass + fail bsgs
 config: i386-randconfig-a002-20210829 (attached as .config)
 compiler: clang version 14.0.0 (https://github.com/llvm/llvm-project 4e1a164d7bd53653f79decc121afe784d2fde0a7)
 reproduce (this is a W=1 build):
         wget https://raw.githubusercontent.com/intel/lkp-tests/master/sbin/make.cross -O ~/bin/make.cross
         chmod +x ~/bin/make.cross
-        # https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/commit/?id=dd30706e73b70d67e88fdaca688db7a3374fd5de
+        # https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git/commit/?id=8a4bb2c1dd623b5a71609de5b04ef3b5086b0a3e
         git remote add scsi https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git
         git fetch --no-tags scsi misc
-        git checkout dd30706e73b70d67e88fdaca688db7a3374fd5de
+        git checkout 8a4bb2c1dd623b5a71609de5b04ef3b5086b0a3e
         # save the attached .config to linux build tree
         COMPILER_INSTALL_PATH=$HOME/0day COMPILER=clang make.cross ARCH=i386 
 
@@ -108,294 +108,139 @@ All warnings (new ones prefixed by >>):
    void qla2x00_release_all_sadb(struct scsi_qla_host *vha, struct fc_port *fcport)
    ^
    static 
->> drivers/scsi/qla2xxx/qla_edif.c:1105:44: warning: taking address of packed member 'port_id' of class or structure 'qla_sa_update_frame' may result in an unaligned pointer value [-Waddress-of-packed-member]
+>> drivers/scsi/qla2xxx/qla_edif.c:713:45: warning: taking address of packed member 'u' of class or structure 'auth_complete_cmd' may result in an unaligned pointer value [-Waddress-of-packed-member]
+                   fcport = qla2x00_find_fcport_by_pid(vha, &appplogiok.u.d_id);
+                                                             ^~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_edif.c:822:45: warning: taking address of packed member 'u' of class or structure 'auth_complete_cmd' may result in an unaligned pointer value [-Waddress-of-packed-member]
+                   fcport = qla2x00_find_fcport_by_pid(vha, &appplogifail.u.d_id);
+                                                             ^~~~~~~~~~~~~~~~~~~
+   drivers/scsi/qla2xxx/qla_edif.c:1306:44: warning: taking address of packed member 'port_id' of class or structure 'qla_sa_update_frame' may result in an unaligned pointer value [-Waddress-of-packed-member]
            fcport = qla2x00_find_fcport_by_pid(vha, &sa_frame.port_id);
                                                      ^~~~~~~~~~~~~~~~
-   4 warnings generated.
+   6 warnings generated.
 
 
-vim +1105 drivers/scsi/qla2xxx/qla_edif.c
+vim +713 drivers/scsi/qla2xxx/qla_edif.c
 
-  1067	
-  1068	int
-  1069	qla24xx_sadb_update(struct bsg_job *bsg_job)
-  1070	{
-  1071		struct	fc_bsg_reply	*bsg_reply = bsg_job->reply;
-  1072		struct Scsi_Host *host = fc_bsg_to_shost(bsg_job);
-  1073		scsi_qla_host_t *vha = shost_priv(host);
-  1074		fc_port_t		*fcport = NULL;
-  1075		srb_t			*sp = NULL;
-  1076		struct edif_list_entry *edif_entry = NULL;
-  1077		int			found = 0;
-  1078		int			rval = 0;
-  1079		int result = 0;
-  1080		struct qla_sa_update_frame sa_frame;
-  1081		struct srb_iocb *iocb_cmd;
-  1082	
-  1083		ql_dbg(ql_dbg_edif + ql_dbg_verbose, vha, 0x911d,
-  1084		    "%s entered, vha: 0x%p\n", __func__, vha);
-  1085	
-  1086		sg_copy_to_buffer(bsg_job->request_payload.sg_list,
-  1087		    bsg_job->request_payload.sg_cnt, &sa_frame,
-  1088		    sizeof(struct qla_sa_update_frame));
-  1089	
-  1090		/* Check if host is online */
-  1091		if (!vha->flags.online) {
-  1092			ql_log(ql_log_warn, vha, 0x70a1, "Host is not online\n");
-  1093			rval = -EIO;
-  1094			SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-  1095			goto done;
-  1096		}
-  1097	
-  1098		if (vha->e_dbell.db_flags != EDB_ACTIVE) {
-  1099			ql_log(ql_log_warn, vha, 0x70a1, "App not started\n");
-  1100			rval = -EIO;
-  1101			SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-  1102			goto done;
-  1103		}
-  1104	
-> 1105		fcport = qla2x00_find_fcport_by_pid(vha, &sa_frame.port_id);
-  1106		if (fcport) {
-  1107			found = 1;
-  1108			if (sa_frame.flags == QLA_SA_UPDATE_FLAGS_TX_KEY)
-  1109				fcport->edif.tx_bytes = 0;
-  1110			if (sa_frame.flags == QLA_SA_UPDATE_FLAGS_RX_KEY)
-  1111				fcport->edif.rx_bytes = 0;
-  1112		}
-  1113	
-  1114		if (!found) {
-  1115			ql_dbg(ql_dbg_edif, vha, 0x70a3, "Failed to find port= %06x\n",
-  1116			    sa_frame.port_id.b24);
-  1117			rval = -EINVAL;
-  1118			SET_DID_STATUS(bsg_reply->result, DID_TARGET_FAILURE);
-  1119			goto done;
-  1120		}
-  1121	
-  1122		/* make sure the nport_handle is valid */
-  1123		if (fcport->loop_id == FC_NO_LOOP_ID) {
-  1124			ql_dbg(ql_dbg_edif, vha, 0x70e1,
-  1125			    "%s: %8phN lid=FC_NO_LOOP_ID, spi: 0x%x, DS %d, returning NO_CONNECT\n",
-  1126			    __func__, fcport->port_name, sa_frame.spi,
-  1127			    fcport->disc_state);
-  1128			rval = -EINVAL;
-  1129			SET_DID_STATUS(bsg_reply->result, DID_NO_CONNECT);
-  1130			goto done;
-  1131		}
-  1132	
-  1133		/* allocate and queue an sa_ctl */
-  1134		result = qla24xx_check_sadb_avail_slot(bsg_job, fcport, &sa_frame);
-  1135	
-  1136		/* failure of bsg */
-  1137		if (result == INVALID_EDIF_SA_INDEX) {
-  1138			ql_dbg(ql_dbg_edif, vha, 0x70e1,
-  1139			    "%s: %8phN, skipping update.\n",
-  1140			    __func__, fcport->port_name);
-  1141			rval = -EINVAL;
-  1142			SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-  1143			goto done;
-  1144	
-  1145		/* rx delete failure */
-  1146		} else if (result == RX_DELETE_NO_EDIF_SA_INDEX) {
-  1147			ql_dbg(ql_dbg_edif, vha, 0x70e1,
-  1148			    "%s: %8phN, skipping rx delete.\n",
-  1149			    __func__, fcport->port_name);
-  1150			SET_DID_STATUS(bsg_reply->result, DID_OK);
-  1151			goto done;
-  1152		}
-  1153	
-  1154		ql_dbg(ql_dbg_edif, vha, 0x70e1,
-  1155		    "%s: %8phN, sa_index in sa_frame: %d flags %xh\n",
-  1156		    __func__, fcport->port_name, sa_frame.fast_sa_index,
-  1157		    sa_frame.flags);
-  1158	
-  1159		/* looking for rx index and delete */
-  1160		if (((sa_frame.flags & SAU_FLG_TX) == 0) &&
-  1161		    (sa_frame.flags & SAU_FLG_INV)) {
-  1162			uint16_t nport_handle = fcport->loop_id;
-  1163			uint16_t sa_index = sa_frame.fast_sa_index;
-  1164	
-  1165			/*
-  1166			 * make sure we have an existing rx key, otherwise just process
-  1167			 * this as a straight delete just like TX
-  1168			 * This is NOT a normal case, it indicates an error recovery or key cleanup
-  1169			 * by the ipsec code above us.
-  1170			 */
-  1171			edif_entry = qla_edif_list_find_sa_index(fcport, fcport->loop_id);
-  1172			if (!edif_entry) {
-  1173				ql_dbg(ql_dbg_edif, vha, 0x911d,
-  1174				    "%s: WARNING: no active sa_index for nport_handle 0x%x, forcing delete for sa_index 0x%x\n",
-  1175				    __func__, fcport->loop_id, sa_index);
-  1176				goto force_rx_delete;
-  1177			}
-  1178	
-  1179			/*
-  1180			 * if we have a forced delete for rx, remove the sa_index from the edif list
-  1181			 * and proceed with normal delete.  The rx delay timer should not be running
-  1182			 */
-  1183			if ((sa_frame.flags & SAU_FLG_FORCE_DELETE) == SAU_FLG_FORCE_DELETE) {
-  1184				qla_edif_list_delete_sa_index(fcport, edif_entry);
-  1185				ql_dbg(ql_dbg_edif, vha, 0x911d,
-  1186				    "%s: FORCE DELETE flag found for nport_handle 0x%x, sa_index 0x%x, forcing DELETE\n",
-  1187				    __func__, fcport->loop_id, sa_index);
-  1188				kfree(edif_entry);
-  1189				goto force_rx_delete;
-  1190			}
-  1191	
-  1192			/*
-  1193			 * delayed rx delete
-  1194			 *
-  1195			 * if delete_sa_index is not invalid then there is already
-  1196			 * a delayed index in progress, return bsg bad status
-  1197			 */
-  1198			if (edif_entry->delete_sa_index != INVALID_EDIF_SA_INDEX) {
-  1199				struct edif_sa_ctl *sa_ctl;
-  1200	
-  1201				ql_dbg(ql_dbg_edif, vha, 0x911d,
-  1202				    "%s: delete for lid 0x%x, delete_sa_index %d is pending\n",
-  1203				    __func__, edif_entry->handle, edif_entry->delete_sa_index);
-  1204	
-  1205				/* free up the sa_ctl that was allocated with the sa_index */
-  1206				sa_ctl = qla_edif_find_sa_ctl_by_index(fcport, sa_index,
-  1207				    (sa_frame.flags & SAU_FLG_TX));
-  1208				if (sa_ctl) {
-  1209					ql_dbg(ql_dbg_edif, vha, 0x3063,
-  1210					    "%s: freeing sa_ctl for index %d\n",
-  1211					    __func__, sa_ctl->index);
-  1212					qla_edif_free_sa_ctl(fcport, sa_ctl, sa_ctl->index);
-  1213				}
-  1214	
-  1215				/* release the sa_index */
-  1216				ql_dbg(ql_dbg_edif, vha, 0x3063,
-  1217				    "%s: freeing sa_index %d, nph: 0x%x\n",
-  1218				    __func__, sa_index, nport_handle);
-  1219				qla_edif_sadb_delete_sa_index(fcport, nport_handle, sa_index);
-  1220	
-  1221				rval = -EINVAL;
-  1222				SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-  1223				goto done;
-  1224			}
-  1225	
-  1226			fcport->edif.rekey_cnt++;
-  1227	
-  1228			/* configure and start the rx delay timer */
-  1229			edif_entry->fcport = fcport;
-  1230			edif_entry->timer.expires = jiffies + RX_DELAY_DELETE_TIMEOUT * HZ;
-  1231	
-  1232			ql_dbg(ql_dbg_edif, vha, 0x911d,
-  1233			    "%s: adding timer, entry: %p, delete sa_index %d, lid 0x%x to edif_list\n",
-  1234			    __func__, edif_entry, sa_index, nport_handle);
-  1235	
-  1236			/*
-  1237			 * Start the timer when we queue the delayed rx delete.
-  1238			 * This is an activity timer that goes off if we have not
-  1239			 * received packets with the new sa_index
-  1240			 */
-  1241			add_timer(&edif_entry->timer);
-  1242	
-  1243			/*
-  1244			 * sa_delete for rx key with an active rx key including this one
-  1245			 * add the delete rx sa index to the hash so we can look for it
-  1246			 * in the rsp queue.  Do this after making any changes to the
-  1247			 * edif_entry as part of the rx delete.
-  1248			 */
-  1249	
-  1250			ql_dbg(ql_dbg_edif, vha, 0x911d,
-  1251			    "%s: delete sa_index %d, lid 0x%x to edif_list. bsg done ptr %p\n",
-  1252			    __func__, sa_index, nport_handle, bsg_job);
-  1253	
-  1254			edif_entry->delete_sa_index = sa_index;
-  1255	
-  1256			bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-  1257			bsg_reply->result = DID_OK << 16;
-  1258	
-  1259			goto done;
-  1260	
-  1261		/*
-  1262		 * rx index and update
-  1263		 * add the index to the list and continue with normal update
-  1264		 */
-  1265		} else if (((sa_frame.flags & SAU_FLG_TX) == 0) &&
-  1266		    ((sa_frame.flags & SAU_FLG_INV) == 0)) {
-  1267			/* sa_update for rx key */
-  1268			uint32_t nport_handle = fcport->loop_id;
-  1269			uint16_t sa_index = sa_frame.fast_sa_index;
-  1270			int result;
-  1271	
-  1272			/*
-  1273			 * add the update rx sa index to the hash so we can look for it
-  1274			 * in the rsp queue and continue normally
-  1275			 */
-  1276	
-  1277			ql_dbg(ql_dbg_edif, vha, 0x911d,
-  1278			    "%s:  adding update sa_index %d, lid 0x%x to edif_list\n",
-  1279			    __func__, sa_index, nport_handle);
-  1280	
-  1281			result = qla_edif_list_add_sa_update_index(fcport, sa_index,
-  1282			    nport_handle);
-  1283			if (result) {
-  1284				ql_dbg(ql_dbg_edif, vha, 0x911d,
-  1285				    "%s: SA_UPDATE failed to add new sa index %d to list for lid 0x%x\n",
-  1286				    __func__, sa_index, nport_handle);
-  1287			}
-  1288		}
-  1289		if (sa_frame.flags & SAU_FLG_GMAC_MODE)
-  1290			fcport->edif.aes_gmac = 1;
-  1291		else
-  1292			fcport->edif.aes_gmac = 0;
-  1293	
-  1294	force_rx_delete:
-  1295		/*
-  1296		 * sa_update for both rx and tx keys, sa_delete for tx key
-  1297		 * immediately process the request
-  1298		 */
-  1299		sp = qla2x00_get_sp(vha, fcport, GFP_KERNEL);
-  1300		if (!sp) {
-  1301			rval = -ENOMEM;
-  1302			SET_DID_STATUS(bsg_reply->result, DID_IMM_RETRY);
-  1303			goto done;
-  1304		}
-  1305	
-  1306		sp->type = SRB_SA_UPDATE;
-  1307		sp->name = "bsg_sa_update";
-  1308		sp->u.bsg_job = bsg_job;
-  1309		/* sp->free = qla2x00_bsg_sp_free; */
-  1310		sp->free = qla2x00_rel_sp;
-  1311		sp->done = qla2x00_bsg_job_done;
-  1312		iocb_cmd = &sp->u.iocb_cmd;
-  1313		iocb_cmd->u.sa_update.sa_frame  = sa_frame;
-  1314	
-  1315		rval = qla2x00_start_sp(sp);
-  1316		if (rval != QLA_SUCCESS) {
-  1317			ql_log(ql_dbg_edif, vha, 0x70e3,
-  1318			    "qla2x00_start_sp failed=%d.\n", rval);
-  1319	
-  1320			qla2x00_rel_sp(sp);
-  1321			rval = -EIO;
-  1322			SET_DID_STATUS(bsg_reply->result, DID_IMM_RETRY);
-  1323			goto done;
-  1324		}
-  1325	
-  1326		ql_dbg(ql_dbg_edif, vha, 0x911d,
-  1327		    "%s:  %s sent, hdl=%x, portid=%06x.\n",
-  1328		    __func__, sp->name, sp->handle, fcport->d_id.b24);
-  1329	
-  1330		fcport->edif.rekey_cnt++;
-  1331		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-  1332		SET_DID_STATUS(bsg_reply->result, DID_OK);
-  1333	
-  1334		return 0;
-  1335	
+   682	
+   683	/**
+   684	 * qla_edif_app_authok - authentication by app succeeded.  Driver can proceed
+   685	 *   with prli
+   686	 * @vha: host adapter pointer
+   687	 * @bsg_job: user request
+   688	 */
+   689	static int
+   690	qla_edif_app_authok(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
+   691	{
+   692		int32_t			rval = 0;
+   693		struct auth_complete_cmd appplogiok;
+   694		struct app_plogi_reply	appplogireply = {0};
+   695		struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
+   696		fc_port_t		*fcport = NULL;
+   697		port_id_t		portid = {0};
+   698	
+   699		sg_copy_to_buffer(bsg_job->request_payload.sg_list,
+   700		    bsg_job->request_payload.sg_cnt, &appplogiok,
+   701		    sizeof(struct auth_complete_cmd));
+   702	
+   703		switch (appplogiok.type) {
+   704		case PL_TYPE_WWPN:
+   705			fcport = qla2x00_find_fcport_by_wwpn(vha,
+   706			    appplogiok.u.wwpn, 0);
+   707			if (!fcport)
+   708				ql_dbg(ql_dbg_edif, vha, 0x911d,
+   709				    "%s wwpn lookup failed: %8phC\n",
+   710				    __func__, appplogiok.u.wwpn);
+   711			break;
+   712		case PL_TYPE_DID:
+ > 713			fcport = qla2x00_find_fcport_by_pid(vha, &appplogiok.u.d_id);
+   714			if (!fcport)
+   715				ql_dbg(ql_dbg_edif, vha, 0x911d,
+   716				    "%s d_id lookup failed: %x\n", __func__,
+   717				    portid.b24);
+   718			break;
+   719		default:
+   720			ql_dbg(ql_dbg_edif, vha, 0x911d,
+   721			    "%s undefined type: %x\n", __func__,
+   722			    appplogiok.type);
+   723			break;
+   724		}
+   725	
+   726		if (!fcport) {
+   727			SET_DID_STATUS(bsg_reply->result, DID_ERROR);
+   728			goto errstate_exit;
+   729		}
+   730	
+   731		/*
+   732		 * if port is online then this is a REKEY operation
+   733		 * Only do sa update checking
+   734		 */
+   735		if (atomic_read(&fcport->state) == FCS_ONLINE) {
+   736			ql_dbg(ql_dbg_edif, vha, 0x911d,
+   737			    "%s Skipping PRLI complete based on rekey\n", __func__);
+   738			appplogireply.prli_status = 1;
+   739			SET_DID_STATUS(bsg_reply->result, DID_OK);
+   740			qla_edif_app_chk_sa_update(vha, fcport, &appplogireply);
+   741			goto errstate_exit;
+   742		}
+   743	
+   744		/* make sure in AUTH_PENDING or else reject */
+   745		if (fcport->disc_state != DSC_LOGIN_AUTH_PEND) {
+   746			ql_dbg(ql_dbg_edif, vha, 0x911e,
+   747			    "%s wwpn %8phC is not in auth pending state (%x)\n",
+   748			    __func__, fcport->port_name, fcport->disc_state);
+   749			SET_DID_STATUS(bsg_reply->result, DID_OK);
+   750			appplogireply.prli_status = 0;
+   751			goto errstate_exit;
+   752		}
+   753	
+   754		SET_DID_STATUS(bsg_reply->result, DID_OK);
+   755		appplogireply.prli_status = 1;
+   756		if (!(fcport->edif.rx_sa_set && fcport->edif.tx_sa_set)) {
+   757			ql_dbg(ql_dbg_edif, vha, 0x911e,
+   758			    "%s: wwpn %8phC Both SA indexes has not been SET TX %d, RX %d.\n",
+   759			    __func__, fcport->port_name, fcport->edif.tx_sa_set,
+   760			    fcport->edif.rx_sa_set);
+   761			SET_DID_STATUS(bsg_reply->result, DID_OK);
+   762			appplogireply.prli_status = 0;
+   763			goto errstate_exit;
+   764	
+   765		} else {
+   766			ql_dbg(ql_dbg_edif, vha, 0x911e,
+   767			    "%s wwpn %8phC Both SA(s) updated.\n", __func__,
+   768			    fcport->port_name);
+   769			fcport->edif.rx_sa_set = fcport->edif.tx_sa_set = 0;
+   770			fcport->edif.rx_sa_pending = fcport->edif.tx_sa_pending = 0;
+   771		}
+   772	
+   773		if (qla_ini_mode_enabled(vha)) {
+   774			ql_dbg(ql_dbg_edif, vha, 0x911e,
+   775			    "%s AUTH complete - RESUME with prli for wwpn %8phC\n",
+   776			    __func__, fcport->port_name);
+   777			qla_edif_reset_auth_wait(fcport, DSC_LOGIN_PEND, 1);
+   778			qla24xx_post_prli_work(vha, fcport);
+   779		}
+   780	
+   781	errstate_exit:
+   782		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
+   783		sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
+   784		    bsg_job->reply_payload.sg_cnt, &appplogireply,
+   785		    sizeof(struct app_plogi_reply));
+   786	
+   787		return rval;
+   788	}
+   789	
 
 ---
 0-DAY CI Kernel Test Service, Intel Corporation
 https://lists.01.org/hyperkitty/list/kbuild-all@lists.01.org
 
---envbJBWh7q8WU6mo
+--oyUTqETQ0mS9luUI
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICJrxKmEAAy5jb25maWcAlDxddxynku/3V8xxXnIfEmskS3F2jx4Ymu4h0910gB6N9MKR
+H4sICMz/KmEAAy5jb25maWcAlDxddxynku/3V8xxXnIfEmskS3F2jx4Ymu4h0910gB6N9MKR
 5ZGjvbLkHUm51/9+q6A/gKYnWT/YHqqAAuqbon/4xw8L8vb6/PX29eHu9vHx++LL/ml/uH3d
 f17cPzzu/3uRiUUt9IJlXP8MyOXD09t/3j+cfbxYnP+8/PDzyU+Hu9PFZn942j8u6PPT/cOX
 N+j+8Pz0jx/+QUWd88JQarZMKi5qo9lOX767e7x9+rL4c394AbwFjvLzyeLHLw+v//X+Pfz9
@@ -1197,4 +1042,4 @@ jT7YnUMF42u9x3lmKYWV2plv+xrVVWUJQe+iqpleWbDUnoImmiiqTMo48fLsJpW8w62MpCPZ
 6PXnH/QNTAsiL4hR+hh2PdpBuJRalDLwyqi+2LaEQinsN/5QahDZxMUGxPZLUzpp+9vLBkHC
 E+U+9/9J7NL8N60CAA==
 
---envbJBWh7q8WU6mo--
+--oyUTqETQ0mS9luUI--
