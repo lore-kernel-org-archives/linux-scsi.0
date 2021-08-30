@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E476C432BE
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Aug 2021 08:24:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18040C432BE
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Aug 2021 08:25:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3531B61008
-	for <linux-scsi@archiver.kernel.org>; Mon, 30 Aug 2021 08:24:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 04039604D7
+	for <linux-scsi@archiver.kernel.org>; Mon, 30 Aug 2021 08:25:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234225AbhH3IYx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 30 Aug 2021 04:24:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48150 "EHLO
+        id S234822AbhH3I0J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 30 Aug 2021 04:26:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48440 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230216AbhH3IYx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Aug 2021 04:24:53 -0400
-Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F361BC061575
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2021 01:23:59 -0700 (PDT)
-Received: by mail-ed1-x52f.google.com with SMTP id g22so20361865edy.12
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2021 01:23:59 -0700 (PDT)
+        with ESMTP id S234341AbhH3I0I (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Aug 2021 04:26:08 -0400
+Received: from mail-ej1-x631.google.com (mail-ej1-x631.google.com [IPv6:2a00:1450:4864:20::631])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BDC7C061575
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2021 01:25:15 -0700 (PDT)
+Received: by mail-ej1-x631.google.com with SMTP id t19so29373342ejr.8
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Aug 2021 01:25:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=ionos.com; s=google;
         h=mime-version:references:in-reply-to:from:date:message-id:subject:to
          :cc;
-        bh=INq3PeJNk21IiyrDQ4wUcFpDlKyp0QG9dCi7jJsj6FE=;
-        b=M7upBBhibwjuaB6hNhLcTftdYYNTuBOmWe5OSHUKMSh2f7qIG6l02koMLXebRutdlC
-         dQh3lJ6w102wgrz08uV2TACHns2NFou+1tsWbmlJqoZ5xJfprM0dHYjA7PZ3jHSboY2T
-         Zj1vZw7R/Q4yWM8mFh2OauzVehysFwvM47fnZkgC5stRlbabuuuz1UddIvbHwcbKypkn
-         4TO5Dgt8+T2nVh9wPIzvRIv90T8EHHBsin8NNuwKIDUqisL3ev2bG1qKuNOJbD3Cnmu5
-         zs1o07lCDvkjbrTPWJ36vcYyfUX0BmCuWnRIZQdv0sMygwtlhdum1A8QfovUEHnKKFZJ
-         fSdA==
+        bh=KEK4WBNfpkjXSiV75GvcVvTk4n69HkWVWswXmeCALrU=;
+        b=hZbN4XRtnLCMSQQUqTWcRTIw9Ux7I33tmP/tszbuFWis6EQyoVf3lF2WC1lLfZST/L
+         8tReRuuQAYQsDlGoyRbYaHNZJznDUlnNRHqDuO3+q3ifvmQ4LSDZKqWthgw0ClsY1r4d
+         k/LHoR+7tyZw2wLcJYJCNmJXyKTZRXRfSBDxQKlofwxFqErmIDAXF/KySRUXxeWITBku
+         ItpoccOfjmmSxSL3pfhZOIlo1FSKeTdk2b6iHtEl/FxElbzZpNGZXrzYEPMusdVrUJp2
+         rpYgOXsRAQye7DK8fsiX3gVgNhHL5s2TgwlG1m6kqSdcgVa//rn2nLJ1kkypsX9SqKgH
+         O6SA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:mime-version:references:in-reply-to:from:date
          :message-id:subject:to:cc;
-        bh=INq3PeJNk21IiyrDQ4wUcFpDlKyp0QG9dCi7jJsj6FE=;
-        b=jVtuL0lrAsnWM2ciSQ1HD9JTAC5sbez15WKggZoC0cvLGfNxsO9TXFF/p3ePVpmCsa
-         KyzKA2dqXgJ0HkKyOwoV3Djo1dlUg+g7U8WVwxA5lLMlo32u/HPoCz10dfgzjFO0rFCU
-         K1iIlPyNaoH/hBJUhbVd47if0JsoE9z28LxvGndjUgDw0QR65U57iIhSugQciiZ9NdJd
-         HDFrDUNZMQKMfL9djSkepXl9DQIVWIIkpvkd0ZxSXeLBHkyn/l5RRn6yTuzUT+L4Hw7z
-         w49U7su8NFMmbcsKkgy28l8QH+UCZRkj0MP/eMN8d6i0GMmIlWrkqJ68yDGLlYImv8Vw
-         DGfg==
-X-Gm-Message-State: AOAM531fpdJSWzf5AtFLCemCOEICGYpzdcI1vOvjQ4OWGp6jN7ZgzbI+
-        a5I91fvn29/jxvjDV70L91JOhX+hACGj7um94t6fhA==
-X-Google-Smtp-Source: ABdhPJxJHonTj7UGy89F+hL9fWJkxyGFH01rBUrgxz5U/LlnC4yN/WoyH7DikGxN1wBm1LqmjQx/bqB/FMp5T8bnsbo=
-X-Received: by 2002:aa7:dd4e:: with SMTP id o14mr5096169edw.104.1630311838449;
- Mon, 30 Aug 2021 01:23:58 -0700 (PDT)
+        bh=KEK4WBNfpkjXSiV75GvcVvTk4n69HkWVWswXmeCALrU=;
+        b=cs2ec81UUn9t76pQxJyihPiArPkL4hmiJVXBEqlyBHq/eFu0mpBo//zIlx0akgCH8D
+         zR2rI4cQiq4BzTIhsG4iqID9AdqJNGKBXuNzilvhNdey6PO+Igjsh4lqh9q3MgbXcnl0
+         CU2AEMcyNwTQt7GMjtyEEPxcgWrai7PFodX/Oc9Vo86HV8vSkH0AaVJwOiPUFlGPQOAO
+         sls7dPVXTT6Wj0XMPtPEGkoyEGkEK7MJizJOpgBf+jtQ72ZUWcUh0aTvtMFD2FEemZde
+         0t2HBCvAyJR60Sc4WsKMgbZ52G6OyEtpZYtKCdcwpHEqwdXCypiRPE/HBwi5+n96wzkO
+         v6Pw==
+X-Gm-Message-State: AOAM533mvRnsv34mderYTap3mwrC/fm9j+KN1b2m9DPnFWjm5bji1UtN
+        2nUAHI87NUELrei9uGBcjN+oBle3j4VJDSQr8eQ5yA==
+X-Google-Smtp-Source: ABdhPJzFgl0Cs8ftoQw0yx+Zc3nNedXSuOT0bdSDh+Nqra4SgakqDboBAimwVpuFtu4Fa70oXwaWOZl2IN/kUOKvanY=
+X-Received: by 2002:a17:907:384:: with SMTP id ss4mr23636236ejb.478.1630311914138;
+ Mon, 30 Aug 2021 01:25:14 -0700 (PDT)
 MIME-Version: 1.0
-References: <20210823082338.67309-1-Ajish.Koshy@microchip.com> <20210823082338.67309-4-Ajish.Koshy@microchip.com>
-In-Reply-To: <20210823082338.67309-4-Ajish.Koshy@microchip.com>
+References: <20210823082338.67309-1-Ajish.Koshy@microchip.com> <20210823082338.67309-5-Ajish.Koshy@microchip.com>
+In-Reply-To: <20210823082338.67309-5-Ajish.Koshy@microchip.com>
 From:   Jinpu Wang <jinpu.wang@ionos.com>
-Date:   Mon, 30 Aug 2021 10:23:47 +0200
-Message-ID: <CAMGffEmt7QEd4L_d0hSyXy31GTkMcGM2ei7dD3JNF=F+Wjhuqw@mail.gmail.com>
-Subject: Re: [PATCH 3/4] scsi: pm80xx: Corrected Inbound and Outbound queue logging
+Date:   Mon, 30 Aug 2021 10:25:03 +0200
+Message-ID: <CAMGffEmzYfp9BjDpjfckPwjGwreAtD9sz7u5fr+h7XJYpbkJRg@mail.gmail.com>
+Subject: Re: [PATCH 4/4] scsi: pm80xx: fix memory leak during rmmod
 To:     Ajish Koshy <Ajish.Koshy@microchip.com>
 Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
         Vasanthalakshmi.Tharmarajan@microchip.com,
@@ -72,57 +72,59 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 On Mon, Aug 23, 2021 at 9:28 AM Ajish Koshy <Ajish.Koshy@microchip.com> wrote:
 >
-> From: Viswas G <Viswas.G@microchip.com>
+> Driver fails to release memory allocated. This will lead
+> to memory leak during driver removal.
 >
-> Corrected inbound queue and outbound queue size in 'ib_log'
-> and 'ob_log' sysfs entries.
->
-> Signed-off-by: Viswas G <Viswas.G@microchip.com>
 > Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+looks ok.
 Acked-by: Jack Wang <jinpu.wang@ionos.com>
-Thanks
 > ---
->  drivers/scsi/pm8001/pm8001_ctl.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  drivers/scsi/pm8001/pm8001_init.c | 11 +++++++++++
+>  drivers/scsi/pm8001/pm8001_sas.h  |  1 +
+>  2 files changed, 12 insertions(+)
 >
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-> index ec05c42e8ee6..b25e447aa3bd 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -409,6 +409,7 @@ static ssize_t pm8001_ctl_ib_queue_log_show(struct device *cdev,
->         char *str = buf;
->         int start = 0;
->         u32 ib_offset = pm8001_ha->ib_offset;
-> +       u32 queue_size = pm8001_ha->max_q_num * PM8001_MPI_QUEUE * 128;
->  #define IB_MEMMAP(c)   \
->                 (*(u32 *)((u8 *)pm8001_ha->     \
->                 memoryMap.region[ib_offset].virt_ptr +  \
-> @@ -419,7 +420,7 @@ static ssize_t pm8001_ctl_ib_queue_log_show(struct device *cdev,
->                 start = start + 4;
->         }
->         pm8001_ha->evtlog_ib_offset += SYSFS_OFFSET;
-> -       if (((pm8001_ha->evtlog_ib_offset) % (PM80XX_IB_OB_QUEUE_SIZE)) == 0)
-> +       if (((pm8001_ha->evtlog_ib_offset) % queue_size) == 0)
->                 pm8001_ha->evtlog_ib_offset = 0;
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 613455a3e686..7082fecf7ce8 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -1199,6 +1199,7 @@ pm8001_init_ccb_tag(struct pm8001_hba_info *pm8001_ha, struct Scsi_Host *shost,
+>                 goto err_out;
 >
->         return str - buf;
-> @@ -445,6 +446,7 @@ static ssize_t pm8001_ctl_ob_queue_log_show(struct device *cdev,
->         char *str = buf;
->         int start = 0;
->         u32 ob_offset = pm8001_ha->ob_offset;
-> +       u32 queue_size = pm8001_ha->max_q_num * PM8001_MPI_QUEUE * 128;
->  #define OB_MEMMAP(c)   \
->                 (*(u32 *)((u8 *)pm8001_ha->     \
->                 memoryMap.region[ob_offset].virt_ptr +  \
-> @@ -455,7 +457,7 @@ static ssize_t pm8001_ctl_ob_queue_log_show(struct device *cdev,
->                 start = start + 4;
->         }
->         pm8001_ha->evtlog_ob_offset += SYSFS_OFFSET;
-> -       if (((pm8001_ha->evtlog_ob_offset) % (PM80XX_IB_OB_QUEUE_SIZE)) == 0)
-> +       if (((pm8001_ha->evtlog_ob_offset) % queue_size) == 0)
->                 pm8001_ha->evtlog_ob_offset = 0;
->
->         return str - buf;
+>         /* Memory region for ccb_info*/
+> +       pm8001_ha->ccb_count = ccb_count;
+>         pm8001_ha->ccb_info =
+>                 kcalloc(ccb_count, sizeof(struct pm8001_ccb_info), GFP_KERNEL);
+>         if (!pm8001_ha->ccb_info) {
+> @@ -1260,6 +1261,16 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
+>                         tasklet_kill(&pm8001_ha->tasklet[j]);
+>  #endif
+>         scsi_host_put(pm8001_ha->shost);
+> +
+> +       for (i = 0; i < pm8001_ha->ccb_count; i++) {
+> +               dma_free_coherent(&pm8001_ha->pdev->dev,
+> +                       sizeof(struct pm8001_prd) * PM8001_MAX_DMA_SG,
+> +                       pm8001_ha->ccb_info[i].buf_prd,
+> +                       pm8001_ha->ccb_info[i].ccb_dma_handle);
+> +       }
+> +       kfree(pm8001_ha->ccb_info);
+> +       kfree(pm8001_ha->devices);
+> +
+>         pm8001_free(pm8001_ha);
+>         kfree(sha->sas_phy);
+>         kfree(sha->sas_port);
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index 3274d88a9ccc..7e999768bfd2 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -518,6 +518,7 @@ struct pm8001_hba_info {
+>         u32                     iomb_size; /* SPC and SPCV IOMB size */
+>         struct pm8001_device    *devices;
+>         struct pm8001_ccb_info  *ccb_info;
+> +       u32                     ccb_count;
+>  #ifdef PM8001_USE_MSIX
+>         int                     number_of_intr;/*will be used in remove()*/
+>         char                    intr_drvname[PM8001_MAX_MSIX_VEC]
 > --
 > 2.27.0
 >
