@@ -2,145 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 469F9C432BE
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Aug 2021 10:04:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 907E1C4320A
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Aug 2021 11:41:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2FF8C60FF2
-	for <linux-scsi@archiver.kernel.org>; Tue, 31 Aug 2021 10:04:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 789326103E
+	for <linux-scsi@archiver.kernel.org>; Tue, 31 Aug 2021 11:41:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240876AbhHaKFF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 31 Aug 2021 06:05:05 -0400
-Received: from mga01.intel.com ([192.55.52.88]:18901 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229818AbhHaKFE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 31 Aug 2021 06:05:04 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10092"; a="240694617"
-X-IronPort-AV: E=Sophos;i="5.84,366,1620716400"; 
-   d="scan'208";a="240694617"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Aug 2021 03:04:09 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,366,1620716400"; 
-   d="scan'208";a="531036905"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
-  by FMSMGA003.fm.intel.com with ESMTP; 31 Aug 2021 03:04:06 -0700
-Subject: Re: [PATCH v3 16/18] scsi: ufs: Synchronize SCSI and UFS error
- handling
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Keoseong Park <keosung.park@samsung.com>
-References: <20210722033439.26550-1-bvanassche@acm.org>
- <20210722033439.26550-17-bvanassche@acm.org>
- <88e0dc4c-34ff-6d87-fa9f-2fc924f50369@intel.com>
- <020bd6be-0944-8e25-c9fd-972cab5e6746@acm.org>
- <69fb9f57-54b6-072c-9f53-5da8b8e3202d@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <537451c3-ab13-1312-5530-b154d510c312@intel.com>
-Date:   Tue, 31 Aug 2021 13:04:37 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S241553AbhHaLmD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 31 Aug 2021 07:42:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53542 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241550AbhHaLmC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Aug 2021 07:42:02 -0400
+Received: from mail-pg1-x531.google.com (mail-pg1-x531.google.com [IPv6:2607:f8b0:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 68A49C061575;
+        Tue, 31 Aug 2021 04:41:07 -0700 (PDT)
+Received: by mail-pg1-x531.google.com with SMTP id k24so16361698pgh.8;
+        Tue, 31 Aug 2021 04:41:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=pNvtjmtuCuwntapmsQE+swG67c7/x654S6z2sqahAYA=;
+        b=PHVdWeKNgwNPLB8DS+dRnPhhb/4A0z4Q2dtaagSbnUeWMLP+hDgWE2ux+/oQ0iXvGA
+         3enMElRG3YS7nnFqVEcQoerol7Zr5Oq0AdxCf9EyH60cFh+GLdo5r23lErUv4HcDynE0
+         auTNy0XEZAto2KiRG7B2+llVhsPnuGaDX+8Io67iCMbo8zni81dcfsfodFxyCNV1LwEe
+         XhwIcoldwYQrZ48jbGuOYXwp6amHgW8mIghxo7L/5hdnbClDXRWKDPZMAL1F5zl7MAxc
+         KEZ4Nq8Nc0fpm2dV7lYqx4+XE1CJIqsIG2td0A8GEV/gju/ObD19zIWU5X9bQNvBUMWV
+         wGJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=pNvtjmtuCuwntapmsQE+swG67c7/x654S6z2sqahAYA=;
+        b=DjHBxp3WcTdS69napfMRQsnDzZ1Um91v/+Udek8bmkBnRK2i7D+ijYAclp8UA1BcSb
+         nVkuOQQ9gAzMVX3/Mz2+8kmE+RNGVrkLy7Q98tpAhaTMJYUDvzY3ihTmptTfBd4oii+C
+         hvty6Ve5AxLWOfeV405RwHQKsVZsXwsrtEEfVk31EzLBqS3vCw725JFKMOY6qjGs6UM1
+         oKEzPIhsir3j4OSSCvsSBXmBebdV7YvJCdLfHNLp07g9OBtaW4exGpFMeFImUWpT1Uy7
+         1mgspsL9i3UAzTdLxDQa7LQ60NHJUXNK4b3vvrrHZYsdVeHveHa781jd5zt01q/InTCD
+         S6WA==
+X-Gm-Message-State: AOAM531iducjxMriF3Jtbx3ikpmGNc/RR4n8PznJrkOFb2CBUrzfxUaS
+        nnC6XWxLkOHkTVkTCvWoh08=
+X-Google-Smtp-Source: ABdhPJyA4VPBuldXgzSK3uuoFFnua8wsqpm+i46UtGqtLqLCqqv5w2mMrbHphi+TSDHpuGFtOpHMnw==
+X-Received: by 2002:aa7:8116:0:b029:346:8678:ce26 with SMTP id b22-20020aa781160000b02903468678ce26mr28217223pfi.15.1630410066981;
+        Tue, 31 Aug 2021 04:41:06 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id j9sm20974895pgl.1.2021.08.31.04.41.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 31 Aug 2021 04:41:06 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: lv.ruyi@zte.com.cn
+To:     james.smart@broadcom.com
+Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Chi Minghao <chi.minghao@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cm>
+Subject: [PATCH] scsi: lpfc: remove unneeded variable
+Date:   Tue, 31 Aug 2021 04:40:58 -0700
+Message-Id: <20210831114058.17817-1-lv.ruyi@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <69fb9f57-54b6-072c-9f53-5da8b8e3202d@intel.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 31/08/21 10:24 am, Adrian Hunter wrote:
-> On 30/08/21 1:18 am, Bart Van Assche wrote:
->> On 8/28/21 02:47, Adrian Hunter wrote:
->>> There is a deadlock that seems to be related to this patch, because now
->>> requests are blocked while the error handler waits on the host_sem.
->>
->> Hi Adrian,
->>
->> Some but not all of the issues mentioned below have been introduced by patch 16/18. Anyway, thank you for having shared your concerns.
->>
->>> Example:
->>>
->>> ufshcd_err_handler() races with ufshcd_wl_suspend() for host_sem.
->>> ufshcd_wl_suspend() wins the race but now PM requests deadlock:
->>>
->>> because:
->>>   scsi_queue_rq() -> scsi_host_queue_ready() -> scsi_host_in_recovery() is FALSE
->>>
->>> because:
->>>   scsi_schedule_eh() has done:
->>>         scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
->>>         scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0)
->>>
->>>
->>> Some questions for thought:
->>>
->>> Won't any holder of host_sem deadlock if it tries to do SCSI requests
->>> and the error handler is waiting on host_sem?
->>>
->>> Won't runtime resume deadlock if it is initiated by the error handler?
->>
->> My understanding is that host_sem is used for the following purposes:
->> - To prevent that sysfs attributes are read or written after shutdown
->>   has started (hba->shutting_down).
->> - To serialize sysfs attribute access, clock scaling, error handling,
->>   the ufshcd_probe_hba() call from ufshcd_async_scan() and hibernation.
->>
->> I propose to make the following changes:
->> - Instead of checking the value of hba->shutting_down from inside sysfs
->>   attribute callbacks, remove sysfs attributes before starting shutdown.
->>   That will remove the need to check hba->shutting_down from inside
->>   sysfs attribute callbacks.
->> - Leave out the host_sem down() and up() calls from ufshcd_wl_suspend()
->>   and ufshcd_wl_resume(). Serializing hibernation against e.g. sysfs
->>   attribute access is not the responsibility of a SCSI LLD - this is the
->>   responsibility of the power management core.
->> - Split host_sem. I don't see how else to address the potential deadlock
->>   between the error handler and runtime resume.
->>
->> Do you agree with the above?
-> 
-> Looking some more:
-> 
-> sysfs and debugfs use direct access, so there is probably not a problem
-> there.
+From: Chi Minghao <chi.minghao@zte.com.cn>
 
-Except with runtime pm, but might be OK if ufshcd_rpm_get_sync() is moved
-before down(&hba->host_sem).
+Fix the following coccicheck REVIEW:
+./drivers/scsi/lpfc/lpfc_scsi.c:1498:9-12 REVIEW Unneeded variable
 
-> 
-> bsg also uses direct access but doesn't appear to have synchronization
-> so there is maybe a gap there.  That is an existing problem.
-> 
-> As an aside, the current synchronization for direct access doesn't make
-> complete sense because the lock (host_sem) remains held across retries
-> (e.g. ufshcd_query_descriptor_retry) preventing error handling between
-> retries.  That is an existing problem.
-> 
-> ufshcd_wl_suspend() and ufshcd_wl_shutdown() could wait for error handling
-> and then disable it somehow. ufshcd_wl_resume() would have to enable it.
-> 
-> That leaves runtime PM.  Since the error handler can block runtime resume,
-> it cannot wait for runtime resume, it must exit.  Another complication is
-> that the PM workqueue (pm_wq) gets frozen early during system suspend, so
-> requesting an asynchronous runtime resume won't necessarily make any
-> progress.
-> 
-> How does splitting the host_sem address the potential deadlock
-> between the error handler and runtime resume?
-> 
+Reported-by: Zeal Robot <zealci@zte.com.cm>
+Signed-off-by: Chi Minghao <chi.minghao@zte.com.cn>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 0fde1e874c7a..08a6ad79ceef 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -1495,7 +1495,6 @@ static int
+ lpfc_bg_err_opcodes(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		uint8_t *txop, uint8_t *rxop)
+ {
+-	uint8_t ret = 0;
+ 
+ 	if (sc->prot_flags & SCSI_PROT_IP_CHECKSUM) {
+ 		switch (scsi_get_prot_op(sc)) {
+@@ -1548,7 +1547,7 @@ lpfc_bg_err_opcodes(struct lpfc_hba *phba, struct scsi_cmnd *sc,
+ 		}
+ 	}
+ 
+-	return ret;
++	return 0;
+ }
+ #endif
+ 
+-- 
+2.25.1
 
