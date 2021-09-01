@@ -2,242 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09CBBC432BE
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Sep 2021 07:08:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B1EA8C432BE
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Sep 2021 07:35:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF6F261057
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Sep 2021 07:08:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8888960F92
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Sep 2021 07:35:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242507AbhIAHJG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Sep 2021 03:09:06 -0400
-Received: from szxga03-in.huawei.com ([45.249.212.189]:15280 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242516AbhIAHJF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2021 03:09:05 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.57])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Gzw9q0Vj1z8D9T;
-        Wed,  1 Sep 2021 15:07:43 +0800 (CST)
-Received: from dggemi759-chm.china.huawei.com (10.1.198.145) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2176.2; Wed, 1 Sep 2021 15:07:58 +0800
-Received: from [127.0.0.1] (10.40.192.131) by dggemi759-chm.china.huawei.com
- (10.1.198.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.8; Wed, 1 Sep
- 2021 15:07:57 +0800
-Subject: Re: rq pointer in tags->rqs[] is not cleared in time and make SCSI
- error handle can not be triggered
-To:     Ming Lei <ming.lei@redhat.com>
-CC:     <linux-block@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <john.garry@huawei.com>
-References: <fe5cf6c4-ce5e-4a0f-f4ab-5c10539492cb@huawei.com>
- <YSdCfSeEv9s9OUMX@T590> <ebda23e8-0fa2-e96c-ee09-e0b2e783c40e@huawei.com>
- <YS3qUR3xM4AZAtGe@T590>
-From:   luojiaxing <luojiaxing@huawei.com>
-Message-ID: <63133625-ad88-24ce-14e6-fee088a83da2@huawei.com>
-Date:   Wed, 1 Sep 2021 15:07:57 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+        id S242576AbhIAHgm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Sep 2021 03:36:42 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:52128 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S242638AbhIAHgl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2021 03:36:41 -0400
+X-UUID: b624188a04864701957f7d6c70a97b13-20210901
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=o6ns4U4/1zzA99dpSeJgDbZn7Wu8lIGt2S+8XyglD4k=;
+        b=dqdwF/0SCip3LoYzV8Tb8d11xrI9QDKGnk5RQ8Nxpm47zuimZTafcKSzIU8QxGQW3EhPNAwEm4UgiPg0VXKUJ0jHtCQPEBdtPJMhdmwoyZoX1BJ9knqsfz8hBC2WtYG/9i5lc8nnkAmF3ZCHU7//eLMSpzqok2bbtKby2PmQPJ4=;
+X-UUID: b624188a04864701957f7d6c70a97b13-20210901
+Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        (envelope-from <stanley.chu@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 15359391; Wed, 01 Sep 2021 15:35:42 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Wed, 1 Sep 2021 15:35:41 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Wed, 1 Sep 2021 15:35:41 +0800
+Message-ID: <942c222b226a5851df90bbc46bb98f1da16ac07a.camel@mediatek.com>
+Subject: Re: [PATCH v3] scsi: ufs: ufs-mediatek: Change dbg select by check
+ hw version
+From:   Stanley Chu <stanley.chu@mediatek.com>
+To:     <peter.wang@mediatek.com>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
+        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
+        <jonathan.hsu@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>
+Date:   Wed, 1 Sep 2021 15:35:40 +0800
+In-Reply-To: <1630476252-2031-1-git-send-email-peter.wang@mediatek.com>
+References: <1630476252-2031-1-git-send-email-peter.wang@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
-In-Reply-To: <YS3qUR3xM4AZAtGe@T590>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
-X-Originating-IP: [10.40.192.131]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggemi759-chm.china.huawei.com (10.1.198.145)
-X-CFilter-Loop: Reflected
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-
-On 2021/8/31 16:37, Ming Lei wrote:
-> On Tue, Aug 31, 2021 at 10:27:28AM +0800, luojiaxing wrote:
->> Hi, Ming
->>
->>
->> Sorry to reply so late, This issue occur in low probability,
->>
->> so it take some time to confirm.
->>
->>
->> On 2021/8/26 15:29, Ming Lei wrote:
->>> On Thu, Aug 26, 2021 at 11:00:34AM +0800, luojiaxing wrote:
->>>> Dear all:
->>>>
->>>>
->>>> I meet some problem when test hisi_sas driver(under SCSI) based on 5.14-rc4
->>>> kernel, it's found that error handle can not be triggered after
->>>>
->>>> abnormal IO occur in some test with a low probability. For example,
->>>> circularly run disk hardreset or disable all local phy of expander when
->>>> running fio.
->>>>
->>>>
->>>> We add some tracepoint and print to see what happen, and we got the
->>>> following information:
->>>>
->>>> (1).print rq and rq_state at bt_tags_iter() to confirm how many IOs is
->>>> running now.
->>>>
->>>> <4>[  897.431182] bt_tags_iter: rqs[2808]: 0xffff202007bd3000; rq_state: 1
->>>> <4>[  897.437514] bt_tags_iter: rqs[3185]: 0xffff0020c5261e00; rq_state: 1
->>>> <4>[  897.443841] bt_tags_iter: rqs[3612]: 0xffff00212f242a00; rq_state: 1
->>>> <4>[  897.450167] bt_tags_iter: rqs[2808]: 0xffff00211d208100; rq_state: 1
->>>> <4>[  897.456492] bt_tags_iter: rqs[2921]: 0xffff00211d208100; rq_state: 1
->>>> <4>[  897.462818] bt_tags_iter: rqs[1214]: 0xffff002151d21b00; rq_state: 1
->>>> <4>[  897.469143] bt_tags_iter: rqs[2648]: 0xffff0020c4bfa200; rq_state: 1
->>>>
->>>> The preceding information show that rq with tag[2808] is found in different
->>>> hctx by bt_tags_iter() and with different pointer saved in tags->rqs[].
->>>>
->>>> And tag[2808] own the same pointer value saved in rqs[] with tag[2921]. It's
->>>> wrong because our driver share tag between all hctx, so it's not possible
->>> What is your io scheduler? I guess it is deadline,
->>
->> yes
->>
->>
->>>    and can you observe
->>> such issue by switching to none?
->>
->> Yes, it happen when switched to none
->>
->>
->>> The tricky thing is that one request dumped may be re-allocated to other tag
->>> after returning from bt_tags_iter().
->>>
->>>> to allocate one tag to different rq.
->>>>
->>>>
->>>> (2).check tracepoints(temporarily add) in blk_mq_get_driver_tag() and
->>>> blk_mq_put_tag() to see where this tag is come from.
->>>>
->>>>       Line 1322969:            <...>-20189   [013] .... 893.427707:
->>>> blk_mq_get_driver_tag: rqs[2808]: 0xffff00211d208100
->>>>       Line 1322997:  irq/1161-hisi_s-7602    [012] d..1 893.427814:
->>>> blk_mq_put_tag_in_free_request: rqs[2808]: 0xffff00211d208100
->>>>       Line 1331257:            <...>-20189   [013] .... 893.462663:
->>>> blk_mq_get_driver_tag: rqs[2860]: 0xffff00211d208100
->>>>       Line 1331289:  irq/1161-hisi_s-7602    [012] d..1 893.462785:
->>>> blk_mq_put_tag_in_free_request: rqs[2860]: 0xffff00211d208100
->>>>       Line 1338493:            <...>-20189   [013] .... 893.493519:
->>>> blk_mq_get_driver_tag: rqs[2921]: 0xffff00211d208100
->>>>
->>>> As we can see this rq is allocated to tag[2808] once, and finially come to
->>>> tag[2921], but rqs[2808] still save the pointer.
->>> Yeah, we know this kind of handling, but not see it as issue.
->>>
->>>> There will be no problem until we encounter a rare situation.
->>>>
->>>> For example, tag[2808] is reassigned to another hctx for execution, then
->>>> some IO meet some error.
->>> I guess the race is triggered when 2808 is just assigned, meantime
->>> ->rqs[] isn't updated.
->>
->> As we shared tag between hctx, so if 2808 was assinged to other hctx.
->>
->> So previous hctx's rqs will not updated。
-> request->state is updated before releasing the tag, and we always grab
-> request refcount which prevents the tag from being re-used.
->
-> scsi_host_busy() counts the transient host state, and it is fine to see
-> same request reused from different tags, but when ->fn() is calling, the
-> request's state is started, as you observed in the log 1.
->
->>
->>>> Before waking up the error handle thread, SCSI compares the values of
->>>> scsi_host_busy() and shost->host_failed.
->>>>
->>>> If the values are different, SCSI waits for the completion of some I/Os.
->>>> According to the print provided by (1), the return value of scsi_host_busy()
->>>> should be 7 for tag [2808] is calculated twice,
->>>>
->>>> and the value of shost->host_failed is 6. As a result, this two values are
->>>> never equal, and error handle cannot be triggered.
->>>>
->>>>
->>>> A temporary workaround is provided and can solve the problem as:
->>>>
->>>> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
->>>> index 2a37731..e3dc773 100644
->>>> --- a/block/blk-mq-tag.c
->>>> +++ b/block/blk-mq-tag.c
->>>> @@ -190,6 +190,7 @@ void blk_mq_put_tag(struct blk_mq_tags *tags, struct
->>>> blk_mq_ctx *ctx,
->>>>                   BUG_ON(tag >= tags->nr_reserved_tags);
->>>>                   sbitmap_queue_clear(tags->breserved_tags, tag, ctx->cpu);
->>>>           }
->>>> +       tags->rqs[tag] = NULL;
->>>>    }
->>>>
->>>>
->>>> Since we did not encounter this problem in some previous kernel versions, we
->>>> wondered if the community already knew about the problem or could provide
->>>> some solutions.
->>> Can you try the following patch?
->>
->> I tested it. it can fix the bug.
->>
->>
->> However, if there is still a problem in the following scenario? For example,
->> driver tag 0 is assigned
->>
->> to rq0 in hctx0, and reclaimed after rq completed. Next time driver tag 0 is
->> still assigned to rq0 but
->>
->> in hctx1. So at this time,  bt_tags_iter will still got two rqs.
-> Looks I missed that you were talking about shared sbitmap, maybe you
-> need the following change? Otherwise you may get duplicated counting
-> since all tags points to single same&shared tags.
-
-
-I test the following change, it can not fix the issue.
-
-BTW, even if my HW queue shared sbitmap, but each queue didn't shared 
-blk_mq_tags. so the following change look strange.
-
-
-I wonder why not clear the rq pointer saved in tags->rqs[], I don't see 
-any benefit to keep these pointer after tag is put.
-
-
-Thanks
-
-Jiaxing
-
-
->
-> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-> index 86f87346232a..36fc696e83d9 100644
-> --- a/block/blk-mq-tag.c
-> +++ b/block/blk-mq-tag.c
-> @@ -380,8 +380,10 @@ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
->   		busy_tag_iter_fn *fn, void *priv)
->   {
->   	int i;
-> +	int queues = blk_mq_is_sbitmap_shared(tagset->flags) ? 1:
-> +		tagset->nr_hw_queues;
->   
-> -	for (i = 0; i < tagset->nr_hw_queues; i++) {
-> +	for (i = 0; i < queues; i++) {
->   		if (tagset->tags && tagset->tags[i])
->   			__blk_mq_all_tag_iter(tagset->tags[i], fn, priv,
->   					      BT_TAG_ITER_STARTED);
->
->
-> Thanks,
-> Ming
->
->
-> .
->
+SGkgUGV0ZXIsDQoNCk9uIFdlZCwgMjAyMS0wOS0wMSBhdCAxNDowNCArMDgwMCwgcGV0ZXIud2Fu
+Z0BtZWRpYXRlay5jb20gd3JvdGU6DQo+IEZyb206IFBldGVyIFdhbmcgPHBldGVyLndhbmdAbWVk
+aWF0ZWsuY29tPg0KPiANCj4gTWVkaWF0ZWsgVUZTIGRiZyBzZWxlY3Qgc2V0dGluZyBpcyBjaGFu
+Z2VkIGluIG5ldyBIVyB2ZXJzaW9uLg0KPiBUaGlzIHBhdGNoIGNoZWNrIHRoZSBIVyB2ZXJzaW9u
+IGJlZm9yZSBzZXQgZGJnIHNlbGVjdC4NCk5pdHM6IFRoaXMgcGF0Y2ggY2hlY2tzIHRoZSBIVyB2
+ZXJzaW9uIGJlZm9yZSBzZXR0aW5nIGRiZyBzZWxlY3QuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBQ
+ZXRlciBXYW5nIDxwZXRlci53YW5nQG1lZGlhdGVrLmNvbT4NCj4gLS0tDQo+ICBkcml2ZXJzL3Nj
+c2kvdWZzL3Vmcy1tZWRpYXRlay5jIHwgICAyMyArKysrKysrKysrKysrKysrKysrKystLQ0KPiAg
+ZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaCB8ICAgIDUgKysrKysNCj4gIDIgZmlsZXMg
+Y2hhbmdlZCwgMjYgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4gDQo+IGRpZmYgLS1n
+aXQgYS9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5jIGIvZHJpdmVycy9zY3NpL3Vmcy91
+ZnMtDQo+IG1lZGlhdGVrLmMNCj4gaW5kZXggZDJjMjUxNi4uMDA1MGUwMSAxMDA2NDQNCj4gLS0t
+IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kv
+dWZzL3Vmcy1tZWRpYXRlay5jDQo+IEBAIC0yOTYsNiArMjk2LDI1IEBAIHN0YXRpYyB2b2lkIHVm
+c19tdGtfc2V0dXBfcmVmX2Nsa193YWl0X3VzKHN0cnVjdA0KPiB1ZnNfaGJhICpoYmEsDQo+ICAJ
+aG9zdC0+cmVmX2Nsa191bmdhdGluZ193YWl0X3VzID0gdW5nYXRpbmdfdXM7DQo+ICB9DQo+ICAN
+Cj4gK19fbm9fa2NzYW4NCg0KVGhpcyBpcyByYXJlbHkgdXNlZCBpbiBtYWluc3RyZWFtIGtlcm5l
+bC4gQWNjb3JkaW5nIHRvIG15IGdyZXAgcmVzdWx0cywNCl9fbm9fa2NzYW4gaXMgb25seSB1c2Vk
+IGJ5IGtjc2FuLXRlc3QgaXRzZWxmLg0KDQpCZXNpZGVzLCBkYmcgc2VsZWN0IGNvbmZpZ3VyYXRp
+b24gbWF5IG5vdCBiZSBuZWNlc3NhcnkgaWYgdGhlIG1vZGUgaXMNCmFscmVhZHkgY29uZmlndXJl
+ZCBiZWZvcmU/IEkganVzdCB3b25kZXIgdGhhdCBjYW4gd2UgYXZvaWQgc2V0dGluZw0KdGhlc2Ug
+cmVnaXN0ZXJzIGV2ZXJ5IHF1ZXJ5Pw0KDQo+ICtzdGF0aWMgdm9pZCB1ZnNfbXRrX2RiZ19zZWwo
+c3RydWN0IHVmc19oYmEgKmhiYSkNCj4gK3sNCj4gKwlzdGF0aWMgdTMyIGh3X3ZlcjsNCj4gKw0K
+PiArCWlmICghaHdfdmVyKQ0KPiArCQlod192ZXIgPSB1ZnNoY2RfcmVhZGwoaGJhLCBSRUdfVUZT
+X01US19IV19WRVIpOw0KDQpQZXJoYXBzIHlvdSBjYW4ga2VlcCB0aGlzIHZlcnNpb24gaW4gc3Ry
+dWN0IGhvc3QtPmh3X3Zlcj8gTWF5YmUgeW91DQpuZWVkIHRvIGFkZCBhIG5ldyBtZW1iZXIgaW4g
+dGhhdCBzdHJ1Y3QsIGZvciBleGFtcGxlLCBpcF92ZXIuDQoNCj4gKw0KPiArCWlmICgoKGh3X3Zl
+ciA+PiAxNikgJiAweEZGKSA+PSAweDM2KSB7DQo+ICsJCXVmc2hjZF93cml0ZWwoaGJhLCAweDgy
+MDgyMCwgUkVHX1VGU19ERUJVR19TRUwpOw0KPiArCQl1ZnNoY2Rfd3JpdGVsKGhiYSwgMHgwLCBS
+RUdfVUZTX0RFQlVHX1NFTF9CMCk7DQo+ICsJCXVmc2hjZF93cml0ZWwoaGJhLCAweDU1NTU1NTU1
+LCBSRUdfVUZTX0RFQlVHX1NFTF9CMSk7DQo+ICsJCXVmc2hjZF93cml0ZWwoaGJhLCAweGFhYWFh
+YWFhLCBSRUdfVUZTX0RFQlVHX1NFTF9CMik7DQo+ICsJCXVmc2hjZF93cml0ZWwoaGJhLCAweGZm
+ZmZmZmZmLCBSRUdfVUZTX0RFQlVHX1NFTF9CMyk7DQo+ICsJfSBlbHNlIHsNCj4gKwkJdWZzaGNk
+X3dyaXRlbChoYmEsIDB4MjAsIFJFR19VRlNfREVCVUdfU0VMKTsNCj4gKwl9DQo+ICt9DQo+ICsN
+Cj4gIHN0YXRpYyBpbnQgdWZzX210a193YWl0X2xpbmtfc3RhdGUoc3RydWN0IHVmc19oYmEgKmhi
+YSwgdTMyIHN0YXRlLA0KPiAgCQkJCSAgIHVuc2lnbmVkIGxvbmcgbWF4X3dhaXRfbXMpDQo+ICB7
+DQo+IEBAIC0zMDUsNyArMzI0LDcgQEAgc3RhdGljIGludCB1ZnNfbXRrX3dhaXRfbGlua19zdGF0
+ZShzdHJ1Y3QgdWZzX2hiYQ0KPiAqaGJhLCB1MzIgc3RhdGUsDQo+ICAJdGltZW91dCA9IGt0aW1l
+X2FkZF9tcyhrdGltZV9nZXQoKSwgbWF4X3dhaXRfbXMpOw0KPiAgCWRvIHsNCj4gIAkJdGltZV9j
+aGVja2VkID0ga3RpbWVfZ2V0KCk7DQo+IC0JCXVmc2hjZF93cml0ZWwoaGJhLCAweDIwLCBSRUdf
+VUZTX0RFQlVHX1NFTCk7DQo+ICsJCXVmc19tdGtfZGJnX3NlbChoYmEpOw0KPiAgCQl2YWwgPSB1
+ZnNoY2RfcmVhZGwoaGJhLCBSRUdfVUZTX1BST0JFKTsNCj4gIAkJdmFsID0gdmFsID4+IDI4Ow0K
+PiAgDQo+IEBAIC0xMDAxLDcgKzEwMjAsNyBAQCBzdGF0aWMgdm9pZCB1ZnNfbXRrX2RiZ19yZWdp
+c3Rlcl9kdW1wKHN0cnVjdA0KPiB1ZnNfaGJhICpoYmEpDQo+ICAJCQkgIk1QSFkgQ3RybCAiKTsN
+Cj4gIA0KPiAgCS8qIERpcmVjdCBkZWJ1Z2dpbmcgaW5mb3JtYXRpb24gdG8gUkVHX01US19QUk9C
+RSAqLw0KPiAtCXVmc2hjZF93cml0ZWwoaGJhLCAweDIwLCBSRUdfVUZTX0RFQlVHX1NFTCk7DQo+
+ICsJdWZzX210a19kYmdfc2VsKGhiYSk7DQo+ICAJdWZzaGNkX2R1bXBfcmVncyhoYmEsIFJFR19V
+RlNfUFJPQkUsIDB4NCwgIkRlYnVnIFByb2JlICIpOw0KPiAgfQ0KPiAgDQo+IGRpZmYgLS1naXQg
+YS9kcml2ZXJzL3Njc2kvdWZzL3Vmcy1tZWRpYXRlay5oIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMt
+DQo+IG1lZGlhdGVrLmgNCj4gaW5kZXggM2YwZDNiYi4uZmM0MGMwNSAxMDA2NDQNCj4gLS0tIGEv
+ZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaA0KPiArKysgYi9kcml2ZXJzL3Njc2kvdWZz
+L3Vmcy1tZWRpYXRlay5oDQo+IEBAIC0xNSw5ICsxNSwxNCBAQA0KPiAgI2RlZmluZSBSRUdfVUZT
+X1JFRkNMS19DVFJMICAgICAgICAgMHgxNDQNCj4gICNkZWZpbmUgUkVHX1VGU19FWFRSRUcgICAg
+ICAgICAgICAgIDB4MjEwMA0KPiAgI2RlZmluZSBSRUdfVUZTX01QSFlDVFJMICAgICAgICAgICAg
+MHgyMjAwDQo+ICsjZGVmaW5lIFJFR19VRlNfTVRLX0hXX1ZFUiAgICAgICAgICAweDIyNDANCg0K
+SFdfVkVSIGlzIHNvbWVob3cgYW1iaWd1b3VzLCBmb3IgZXhhbXBsZSwgaG93IGFib3V0IFJFR19V
+RlNfTVRLX0lQX1ZFUj8NCg0KPiAgI2RlZmluZSBSRUdfVUZTX1JFSkVDVF9NT04gICAgICAgICAg
+MHgyMkFDDQo+ICAjZGVmaW5lIFJFR19VRlNfREVCVUdfU0VMICAgICAgICAgICAweDIyQzANCj4g
+ICNkZWZpbmUgUkVHX1VGU19QUk9CRSAgICAgICAgICAgICAgIDB4MjJDOA0KPiArI2RlZmluZSBS
+RUdfVUZTX0RFQlVHX1NFTF9CMCAgICAgICAgMHgyMkQwDQo+ICsjZGVmaW5lIFJFR19VRlNfREVC
+VUdfU0VMX0IxICAgICAgICAweDIyRDQNCj4gKyNkZWZpbmUgUkVHX1VGU19ERUJVR19TRUxfQjIg
+ICAgICAgIDB4MjJEOA0KPiArI2RlZmluZSBSRUdfVUZTX0RFQlVHX1NFTF9CMyAgICAgICAgMHgy
+MkRDDQoNClBlcmhhcHMgdGhlIGRlYnVnIHNlbGVjdCBkZXNpZ24gY291bGQgYmUgc2ltcGxpZmll
+ZCBpbiB0aGUgZnV0dXJlLCBmb3INCmV4YW1wbGUsIGRyaXZlciBjYW4gcXVlcnkgd2hhdCBpdCB3
+YW50cyBieSByZWFkaW5nIG9ubHkgb25lIHJlZ2lzdGVyDQp3aXRob3V0IGNvbmZpZ3VyaW5nIGFu
+eXRoaW5nIGZpcnN0PyBBbHRob3VnaCB0aGlzIGlzIGJleW9uZCB0aGUgc2NvcGUNCm9mIHRoaXMg
+cGF0Y2guDQoNClRoYW5rcywNClN0YW5sZXkgQ2h1DQoNCj4gIA0KPiAgLyoNCj4gICAqIFJlZi1j
+bGsgY29udHJvbA0K
 
