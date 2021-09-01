@@ -7,50 +7,50 @@ X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B92EC43214
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Sep 2021 12:39:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC0AAC4320A
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Sep 2021 12:40:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0514F610A8
-	for <linux-scsi@archiver.kernel.org>; Wed,  1 Sep 2021 12:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B36F36115C
+	for <linux-scsi@archiver.kernel.org>; Wed,  1 Sep 2021 12:40:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245708AbhIAMks (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Sep 2021 08:40:48 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:3623 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344469AbhIAMjc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2021 08:39:32 -0400
+        id S1344023AbhIAMkz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Sep 2021 08:40:55 -0400
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:63997 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344573AbhIAMjk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2021 08:39:40 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1630499915; x=1662035915;
+  t=1630499924; x=1662035924;
   h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=Z4f0KBppamc7YzQ6iFCvHVormwCOOsz5gA+FUtoxpDM=;
-  b=DtCItnp6NZg0G+WeGnKyarBiLebbFeZt+7oZYcTMcE3/UioDKpWGlKf7
-   BQGK0ihGecc16NU1rPfo2d9gGOMPiRZvj0OSU2Y2nhmILgj1Wflk1jV2j
-   l68hn7haVOr8O5oS756IECHM4gVuOgUz4cazV9jAeU8zgWZZxYtQTXDQm
-   nPI9J6pWGqX6G++Tl7SZV1qLB7I83pktbDUEnsLY8IVI0R06NEWU4COWb
-   Ffnsyd5oPldFrgyyiZV/bnjxk+CO9Xp/aooKfe6B++wVDTaQbUz6+6zyF
-   p+NtYAiDYDApHS0MUs4aI6qGTh7FVoH4z6f8ASCrIR+obDKpuOl57zt4Z
-   A==;
+   references;
+  bh=Ovy15cfCLOVD1iYA9PGNZtmHCKvlbWrMM4AuvWkgx/c=;
+  b=O9s2v7e5HpyRAS/Wo9+hO+OJ0yH9zi2dRg9c9/u/3EQLorbxeA1I6fMw
+   WsJqnN5XCL4XS48cuvc0gfGb34ARusjPu22HH56dY4ongjP0uy4gP7x79
+   7wDonc9dnAK2kTf5R9wR8mbZWTbunNzEQuXJnFU8UECk/weeDpjb6yZDG
+   j2Zz5TPSlEsxFkeIGxNhr3jHYXzhVuWGqpFaVykazNlcgq5rlnUri4fOJ
+   MQBt5LIJdDhqmXFUzUW6s2DpfeIuPKeFOfeoca2IM1gTKmtQgDSEDzJPs
+   In2CpfBt5PKYNXAaUYTkIDBrKnWbaaMZibofbdCQrYP0I3x5nguJJ/AsQ
+   w==;
 X-IronPort-AV: E=Sophos;i="5.84,369,1620662400"; 
-   d="scan'208";a="178051534"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2021 20:38:35 +0800
-IronPort-SDR: IZDtnJvywupG5w5BNUZS+uqR0u6uLwwpWcZMWj/WS294Z/11/0EJ0xEpmo1ujt4b+Kc9H9vxSM
- ciWa9Rrlo0aEJX0jsS6Q2JzifhXPFlBUbYv0e+3mYF3KLK1y05Lg6e4bjbjAjA+hsH4AiFeMDr
- sh7BJBDNEKB+R0c0RXNrOVq+vjmjYPuo/lfUgAv9OMtEhdOd7trbWMk4diw3xh8dtztVHDGvRw
- dFdQOPRzviH5MOUlZGvNQt1h1JjW4Pj+EBKhc7nP+0WJARDPOqHyjuTpmNN+464WqOB6BVKz+y
- lv/ylARScUiGK7TLM3YVfUpJ
+   d="scan'208";a="290548644"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 01 Sep 2021 20:38:44 +0800
+IronPort-SDR: t6RfBioPj4CIb1HB2SeaJKItjHkVv267/HPNk9OKIiaCEETjCnWL0IZMKPRMiuZl7uqSP+nZ9Z
+ 00Wj2EFbWgt5lfWFLLrWZvvxwnXeWSQ2mSzjUQP0Ayua148yIR68vKmZkPEsH2gugwd2+w76oR
+ 7lHBRE1FfUC5cCwvynQjA+XmFA+vJIorbPqQHr5Pb7f6Jc+B1DayvGpDEZHpFEeHzFO3M6cU53
+ NKEgpTRZCpOOTJtV8eqKMeZSCkaKT9LfqNNk+amzisjEPzA0YxLLU5ZyKHj6mZhizEggKB7ykS
+ Kd7I7TJPq8b1VkwFxLubtZvj
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2021 05:15:22 -0700
-IronPort-SDR: Sgv82zTy2RwjoCfH5xIwkCOS+9u/H8w/rgah4zqh1NTay4yZJjl31l2U0RWzsjAwwchdwcpWuP
- DuSUqsQedCt9JS+/gXdJlB+sYZ4oynDHwkaLoCKZJf4xwltvxEN0PneOAOxU6X+fqj8z+lVGNI
- pCG/VfO0KSdcplphbGjae/uIzzSbnlUzJsF6kVYTRjNOC9tfm/nhd3tvKtKhfjq7zkKYnt4IhH
- 78l+lkj6Of6CSqXUxhKfQY7Fa5Jqmep6YgMWJZK4M4Pgz0F1s0fxwkBIpimIAdNTTAHVyfaBMA
- aX4=
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2021 05:13:49 -0700
+IronPort-SDR: F2H452xKyaSNYsJ95UYRnySX6LfS+T/RQaeM81OwQywVrE/LHXTg/GzRQ4YHVU8IwDrJTXgccu
+ p0NUZzkBDP8dpQSY0Lo5cyAuvVYPdcEnXG8aosl2tR+uYJqFUDY5KmtL+nhvgzd75CqKAeOWJq
+ 8v9M7PXM0x/fBAigQ5lpZnr4tkeXRYvxB/+LY6fjPTWJMSCbY8877p79h4/waF8I8W9TnpSM+4
+ ydu4VaK95JGzDAPCVOWsQtWWjCimDGObNFzx2bqkOm9L61bsOhOPbKJ8Ofnm5AA6olwxcdEdu9
+ S84=
 WDCIronportException: Internal
 Received: from bxygm33.sdcorp.global.sandisk.com (HELO BXYGM33.ad.shared) ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 01 Sep 2021 05:38:33 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 01 Sep 2021 05:38:41 -0700
 From:   Avri Altman <avri.altman@wdc.com>
 To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -59,123 +59,199 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Adrian Hunter <adrian.hunter@intel.com>,
         Bean Huo <beanhuo@micron.com>,
         Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH 2/3] scsi: ufs: Add temperature notification exception handling
-Date:   Wed,  1 Sep 2021 15:37:06 +0300
-Message-Id: <20210901123707.5014-3-avri.altman@wdc.com>
+Subject: [PATCH 3/3] scsi: ufs-sysfs: Add sysfs entries for temperature notification
+Date:   Wed,  1 Sep 2021 15:37:07 +0300
+Message-Id: <20210901123707.5014-4-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20210901123707.5014-1-avri.altman@wdc.com>
 References: <20210901123707.5014-1-avri.altman@wdc.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The device may notify the host of an extreme temperature by using the
-exception event mechanism. The exception can be raised when the device’s
-Tcase temperature is either too high or too low.
-
-It is essentially up to the platform to decide what further actions need
-to be taken. So add a designated vop for that.  Each chipset vendor can
-decide if it wants to use the thermal subsystem, hw monitor, or some
-Privet implementation.
+The temperature readings are in degrees Celsius, and to allow negative
+temperature, need to subtract 80 from the reported value. Make sure to
+enforce the legal range of those values, and properly document it as
+well.
 
 Signed-off-by: Avri Altman <avri.altman@wdc.com>
 ---
- drivers/scsi/ufs/ufs.h    |  2 ++
- drivers/scsi/ufs/ufshcd.c | 18 ++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h |  7 +++++++
- 3 files changed, 27 insertions(+)
+ Documentation/ABI/testing/sysfs-driver-ufs | 38 ++++++++++
+ drivers/scsi/ufs/ufs-sysfs.c               | 86 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufs.h                     |  3 +
+ 3 files changed, 127 insertions(+)
 
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index ec3a7149ced5..ff2294971e44 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -1534,3 +1534,41 @@ Contact:	Avri Altman <avri.altman@wdc.com>
+ Description:	In host control mode the host is the originator of map requests.
+ 		To avoid flooding the device with map requests, use a simple throttling
+ 		mechanism that limits the number of inflight map requests.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/attributes/case_rough_temp
++Date:		September 2021
++Contact:	Avri Altman <avri.altman@wdc.com>
++Description:	The device case rough temperature (bDeviceCaseRoughTemperature
++		attribute). It is termed "rough" due to the inherent inaccuracy
++		of the temperature sensor inside a semiconductor device,
++		e.g. +- 10 degrees centigrade error range.
++		allowable range is [-79..170].
++		The temperature readings are in decimal degrees Celsius.
++
++		Please note that the Tcase validity depends on the state of the
++		wExceptionEventControl attribute: it is up to the user to
++		verify that the applicable mask (TOO_HIGH_TEMP_EN, and / or
++		TOO_LOW_TEMP_EN) is set for the exception handling control.
++		This can be either done by ufs-bsg or ufs-debugfs.
++
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/attributes/high_temp_bound
++Date:		September 2021
++Contact:	Avri Altman <avri.altman@wdc.com>
++Description:	The high temperature (bDeviceTooHighTempBoundary attribute)
++		from which TOO_HIGH_TEMP in wExceptionEventStatus is turned on.
++		The temperature readings are in decimal degrees Celsius.
++		allowable range is [20..170].
++
++		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/attributes/low_temp_bound
++Date:		September 2021
++Contact:	Avri Altman <avri.altman@wdc.com>
++Description:	The low temperature (bDeviceTooLowTempBoundary attribute)
++		from which TOO_LOW_TEMP in wExceptionEventStatus is turned on.
++		The temperature readings are in decimal degrees Celsius.
++		allowable range is [-79..0].
++
++		The file is read only.
+diff --git a/drivers/scsi/ufs/ufs-sysfs.c b/drivers/scsi/ufs/ufs-sysfs.c
+index 5c405ff7b6ea..a9abe33c40e4 100644
+--- a/drivers/scsi/ufs/ufs-sysfs.c
++++ b/drivers/scsi/ufs/ufs-sysfs.c
+@@ -1047,6 +1047,86 @@ static inline bool ufshcd_is_wb_attrs(enum attr_idn idn)
+ 		idn <= QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE;
+ }
+ 
++static inline bool ufshcd_is_temp_attrs(enum attr_idn idn)
++{
++	return idn >= QUERY_ATTR_IDN_CASE_ROUGH_TEMP &&
++	       idn <= QUERY_ATTR_IDN_LOW_TEMP_BOUND;
++}
++
++static bool ufshcd_case_temp_legal(struct ufs_hba *hba)
++{
++	u32 ee_mask;
++	int ret;
++
++	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++				QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &ee_mask);
++	ufshcd_rpm_put_sync(hba);
++	if (ret)
++		return false;
++
++	return (ufshcd_is_high_temp_notif_allowed(hba) &&
++		(ee_mask & MASK_EE_TOO_HIGH_TEMP)) ||
++	       (ufshcd_is_low_temp_notif_allowed(hba) &&
++		(ee_mask & MASK_EE_TOO_HIGH_TEMP));
++}
++
++static bool ufshcd_temp_legal(struct ufs_hba *hba, enum attr_idn idn,
++			      u32 value)
++{
++	return (idn == QUERY_ATTR_IDN_CASE_ROUGH_TEMP && value >= 1 &&
++		value <= 250 && ufshcd_case_temp_legal(hba)) ||
++	       (idn == QUERY_ATTR_IDN_HIGH_TEMP_BOUND && value >= 100 &&
++		value <= 250) ||
++	       (idn == QUERY_ATTR_IDN_LOW_TEMP_BOUND && value >= 1 &&
++		value <= 80);
++}
++
++#define UFS_ATTRIBUTE_DEC(_name, _uname)				\
++static ssize_t _name##_show(struct device *dev,				\
++	struct device_attribute *attr, char *buf)			\
++{									\
++	struct ufs_hba *hba = dev_get_drvdata(dev);			\
++	u32 value;							\
++	int dec_value;							\
++	int ret;							\
++	u8 index = 0;							\
++									\
++	down(&hba->host_sem);						\
++	if (!ufshcd_is_user_access_allowed(hba)) {			\
++		up(&hba->host_sem);					\
++		return -EBUSY;						\
++	}								\
++	if (ufshcd_is_temp_attrs(QUERY_ATTR_IDN##_uname)) {		\
++		if (!ufshcd_is_temp_notif_allowed(hba)) {		\
++			up(&hba->host_sem);				\
++			return -EOPNOTSUPP;				\
++		}							\
++	}								\
++	ufshcd_rpm_get_sync(hba);					\
++	ret = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,	\
++		QUERY_ATTR_IDN##_uname, index, 0, &value);		\
++	ufshcd_rpm_put_sync(hba);					\
++	if (ret) {							\
++		ret = -EINVAL;						\
++		goto out;						\
++	}								\
++	dec_value = value;						\
++	if (ufshcd_is_temp_attrs(QUERY_ATTR_IDN##_uname)) {		\
++		if (!ufshcd_temp_legal(hba, QUERY_ATTR_IDN##_uname,	\
++				       value)) {			\
++			ret = -EINVAL;					\
++			goto out;					\
++		}							\
++		dec_value -= 80;					\
++	}								\
++	ret = sysfs_emit(buf, "%d\n", dec_value);			\
++out:									\
++	up(&hba->host_sem);						\
++	return ret;							\
++}									\
++static DEVICE_ATTR_RO(_name)
++
+ #define UFS_ATTRIBUTE(_name, _uname)					\
+ static ssize_t _name##_show(struct device *dev,				\
+ 	struct device_attribute *attr, char *buf)			\
+@@ -1100,6 +1180,9 @@ UFS_ATTRIBUTE(wb_avail_buf, _AVAIL_WB_BUFF_SIZE);
+ UFS_ATTRIBUTE(wb_life_time_est, _WB_BUFF_LIFE_TIME_EST);
+ UFS_ATTRIBUTE(wb_cur_buf, _CURR_WB_BUFF_SIZE);
+ 
++UFS_ATTRIBUTE_DEC(case_rough_temp, _CASE_ROUGH_TEMP);
++UFS_ATTRIBUTE_DEC(high_temp_bound, _HIGH_TEMP_BOUND);
++UFS_ATTRIBUTE_DEC(low_temp_bound, _LOW_TEMP_BOUND);
+ 
+ static struct attribute *ufs_sysfs_attributes[] = {
+ 	&dev_attr_boot_lun_enabled.attr,
+@@ -1119,6 +1202,9 @@ static struct attribute *ufs_sysfs_attributes[] = {
+ 	&dev_attr_ffu_status.attr,
+ 	&dev_attr_psa_state.attr,
+ 	&dev_attr_psa_data_size.attr,
++	&dev_attr_case_rough_temp.attr,
++	&dev_attr_high_temp_bound.attr,
++	&dev_attr_low_temp_bound.attr,
+ 	&dev_attr_wb_flush_status.attr,
+ 	&dev_attr_wb_avail_buf.attr,
+ 	&dev_attr_wb_life_time_est.attr,
 diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index dee897ef9631..4f2a2fe0c84a 100644
+index 4f2a2fe0c84a..03d08fc1bd68 100644
 --- a/drivers/scsi/ufs/ufs.h
 +++ b/drivers/scsi/ufs/ufs.h
-@@ -374,6 +374,8 @@ enum {
- 	MASK_EE_PERFORMANCE_THROTTLING	= BIT(6),
- };
- 
-+#define MASK_EE_URGENT_TEMP (MASK_EE_TOO_HIGH_TEMP | MASK_EE_TOO_LOW_TEMP)
-+
- /* Background operation status */
- enum bkops_status {
- 	BKOPS_STATUS_NO_OP               = 0x0,
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 6ad51ae764c5..5f1fce21b655 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5642,6 +5642,11 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
- 				__func__, err);
- }
- 
-+static void ufshcd_temp_exception_event_handler(struct ufs_hba *hba, u16 status)
-+{
-+	ufshcd_vops_temp_notify(hba, status);
-+}
-+
- static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
- {
- 	u8 index;
-@@ -5821,6 +5826,9 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
- 	if (status & hba->ee_drv_mask & MASK_EE_URGENT_BKOPS)
- 		ufshcd_bkops_exception_event_handler(hba);
- 
-+	if (status & hba->ee_drv_mask & MASK_EE_URGENT_TEMP)
-+		ufshcd_temp_exception_event_handler(hba, status);
-+
- 	ufs_debugfs_exception_event(hba, status);
- out:
- 	ufshcd_scsi_unblock_requests(hba);
-@@ -7473,6 +7481,7 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
- {
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	u32 ext_ufs_feature;
-+	u16 mask = 0;
- 
- 	if (!(hba->caps & UFSHCD_CAP_TEMP_NOTIF) ||
- 	    dev_info->wspecversion < 0x300)
-@@ -7483,6 +7492,15 @@ static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
- 
- 	dev_info->low_temp_notif = ext_ufs_feature & UFS_DEV_LOW_TEMP_NOTIF;
- 	dev_info->high_temp_notif = ext_ufs_feature & UFS_DEV_HIGH_TEMP_NOTIF;
-+
-+	if (dev_info->low_temp_notif)
-+		mask |= MASK_EE_TOO_LOW_TEMP;
-+
-+	if (dev_info->high_temp_notif)
-+		mask |= MASK_EE_TOO_HIGH_TEMP;
-+
-+	if (mask)
-+		ufshcd_enable_ee(hba, mask);
- }
- 
- void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups)
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 467affbaec80..98ac7e7c8ec3 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -356,6 +356,7 @@ struct ufs_hba_variant_ops {
- 			       const union ufs_crypto_cfg_entry *cfg, int slot);
- 	void	(*event_notify)(struct ufs_hba *hba,
- 				enum ufs_event_type evt, void *data);
-+	void	(*temp_notify)(struct ufs_hba *hba, u16 status);
- };
- 
- /* clock gating state  */
-@@ -1355,6 +1356,12 @@ static inline void ufshcd_vops_config_scaling_param(struct ufs_hba *hba,
- 		hba->vops->config_scaling_param(hba, profile, data);
- }
- 
-+static inline void ufshcd_vops_temp_notify(struct ufs_hba *hba, u16 status)
-+{
-+	if (hba->vops && hba->vops->temp_notify)
-+		hba->vops->temp_notify(hba, status);
-+}
-+
- extern struct ufs_pm_lvl_states ufs_pm_lvl_states[];
- 
- /*
+@@ -152,6 +152,9 @@ enum attr_idn {
+ 	QUERY_ATTR_IDN_PSA_STATE		= 0x15,
+ 	QUERY_ATTR_IDN_PSA_DATA_SIZE		= 0x16,
+ 	QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME	= 0x17,
++	QUERY_ATTR_IDN_CASE_ROUGH_TEMP		= 0x18,
++	QUERY_ATTR_IDN_HIGH_TEMP_BOUND		= 0x19,
++	QUERY_ATTR_IDN_LOW_TEMP_BOUND		= 0x1A,
+ 	QUERY_ATTR_IDN_WB_FLUSH_STATUS	        = 0x1C,
+ 	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
+ 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
 -- 
 2.17.1
 
