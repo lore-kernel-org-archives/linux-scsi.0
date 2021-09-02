@@ -2,169 +2,191 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA880C4320E
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 13:36:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CAECC4320E
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 14:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E9B660525
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 13:36:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3EBA7610E6
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 14:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345038AbhIBNhD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Sep 2021 09:37:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36092 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234350AbhIBNhC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Sep 2021 09:37:02 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01BABC061575;
-        Thu,  2 Sep 2021 06:36:04 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id fs6so1362537pjb.4;
-        Thu, 02 Sep 2021 06:36:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=3ii/guKHn4LpF03RfgLBF/j9oSVP4qa5E4ECxRbe8hE=;
-        b=SQm9Nj4ysgjXU+46HOkYd8Q+/51pgR0klYtCW81HunVSPpNqA+7K6ET2S66TXtFo5V
-         dUkSrrWmLdz9TgWh/ywwICTIxatEgDnyhnQs5/AiLJGp5rcv9KvBnwyhADMsOmMIBDEE
-         nzezmmPn+wpRYYcADoD+nWE8McbCwOsGC+BH28wlQdSj65Vv6aiEEaIhoTM3yHym8m8M
-         uJ7pUAhfdy9O2NQ1ZT90Jct19BmiUoi4Lm8Un1aHkNzAhPQO1ioDu9bRjpEUheed7PwG
-         NaFORAtAC9wGX5zQ/JUlDZFdP09/92z+FxuN3oVRGo0d4SLQnwGPjmGI7zp0OcLmFhww
-         rJ3A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=3ii/guKHn4LpF03RfgLBF/j9oSVP4qa5E4ECxRbe8hE=;
-        b=S8iLwBaKjMJjvFqHVrJiTu1Te2YUqo61fFy2qrYxfDZkS/iz8tu70RLW8T/5zPTT3d
-         qX9Z5+Jo31JeSaZTX4Uj+/7++yFUF0u7BwflXP/QrWfRwO5TAI+ZP8o+JzY0c39/rGSh
-         c7KOubGwRMZMToAksbE8J97uVC/97DYZlXcqW0x1GbD18v/BhNBlbIYDq47tCnBllV9T
-         IlRVkIVK7GSOLRK/iGX2eolA6nv0OKaKPo3wjjo8O7OdyDya4k1GvkayveXeMBE6W766
-         EMTO761rqeMeFyiVcHyQtxUtGtz0cSvYFieXiaMlSibxUkc7AtbuyeiOi+sw7TlgFK3n
-         bl9g==
-X-Gm-Message-State: AOAM532Mceaf2+M9los7Y0ABX9H996UP0buL98G6fRDNpL0ARvdv2Nq/
-        06VcDWZeO/b1wgexJvMxZRk=
-X-Google-Smtp-Source: ABdhPJxb2ycIjPIdhzbaYk0Qkm84LE40W+f5tgz7hUwm6cNYqkebQcMmosgs/I437B2b32yx0P3oCw==
-X-Received: by 2002:a17:902:c408:b0:138:e3df:e999 with SMTP id k8-20020a170902c40800b00138e3dfe999mr2981076plk.30.1630589763493;
-        Thu, 02 Sep 2021 06:36:03 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:1a:efea::50b])
-        by smtp.gmail.com with ESMTPSA id a10sm2447079pja.14.2021.09.02.06.35.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 02 Sep 2021 06:36:03 -0700 (PDT)
-Subject: Re: [PATCH V4 08/13] hyperv/vmbus: Initialize VMbus ring buffer for
- Isolation VM
-To:     Michael Kelley <mikelley@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will@kernel.org" <will@kernel.org>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "pgonda@google.com" <pgonda@google.com>,
-        "martin.b.radev@gmail.com" <martin.b.radev@gmail.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "hannes@cmpxchg.org" <hannes@cmpxchg.org>,
-        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
-        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
-        "saravanand@fb.com" <saravanand@fb.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "rientjes@google.com" <rientjes@google.com>,
-        "ardb@kernel.org" <ardb@kernel.org>
-Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        id S1345278AbhIBOIt convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Sep 2021 10:08:49 -0400
+Received: from mail3.swissbit.com ([176.95.1.57]:33060 "EHLO
+        mail3.swissbit.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234346AbhIBOIr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Sep 2021 10:08:47 -0400
+X-Greylist: delayed 631 seconds by postgrey-1.27 at vger.kernel.org; Thu, 02 Sep 2021 10:08:44 EDT
+Received: from mail3.swissbit.com (localhost [127.0.0.1])
+        by DDEI (Postfix) with ESMTP id A7F66462086;
+        Thu,  2 Sep 2021 15:57:14 +0200 (CEST)
+Received: from mail3.swissbit.com (localhost [127.0.0.1])
+        by DDEI (Postfix) with ESMTP id 8CDE446207D;
+        Thu,  2 Sep 2021 15:57:14 +0200 (CEST)
+X-TM-AS-ERS: 10.149.2.84-127.5.254.253
+X-TM-AS-SMTP: 1.0 ZXguc3dpc3NiaXQuY29t Y2xvZWhsZUBoeXBlcnN0b25lLmNvbQ==
+X-DDEI-TLS-USAGE: Used
+Received: from ex.swissbit.com (SBDEEX02.sbitdom.lan [10.149.2.84])
+        by mail3.swissbit.com (Postfix) with ESMTPS;
+        Thu,  2 Sep 2021 15:57:14 +0200 (CEST)
+Received: from sbdeex02.sbitdom.lan (10.149.2.84) by sbdeex02.sbitdom.lan
+ (10.149.2.84) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.15; Thu, 2 Sep 2021
+ 15:57:14 +0200
+Received: from sbdeex02.sbitdom.lan ([fe80::e0eb:ade8:2d90:1f74]) by
+ sbdeex02.sbitdom.lan ([fe80::e0eb:ade8:2d90:1f74%8]) with mapi id
+ 15.02.0792.015; Thu, 2 Sep 2021 15:57:14 +0200
+From:   =?iso-8859-1?Q?Christian_L=F6hle?= <CLoehle@hyperstone.com>
+To:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-References: <20210827172114.414281-1-ltykernel@gmail.com>
- <20210827172114.414281-9-ltykernel@gmail.com>
- <MWHPR21MB1593B416ED91CD454FC036E5D7CE9@MWHPR21MB1593.namprd21.prod.outlook.com>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <e864b95d-ecb7-074b-ff0b-85cc451bad52@gmail.com>
-Date:   Thu, 2 Sep 2021 21:35:48 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        =?iso-8859-1?Q?Christian_L=F6hle?= <CLoehle@hyperstone.com>
+CC:     "stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: [PATCH] sd: sd_open: prevent device removal during sd_open
+Thread-Topic: [PATCH] sd: sd_open: prevent device removal during sd_open
+Thread-Index: AQHXoAHu4he04cmBqECW8DEEUakoBQ==
+Date:   Thu, 2 Sep 2021 13:57:13 +0000
+Message-ID: <98bfca4cbaa24462994bcb533d365414@hyperstone.com>
+Accept-Language: de-DE, en-US
+Content-Language: de-DE
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.154.1.4]
+Content-Type: text/plain;
+        charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-In-Reply-To: <MWHPR21MB1593B416ED91CD454FC036E5D7CE9@MWHPR21MB1593.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-TMASE-Version: DDEI-5.1-8.6.1018-26384.000
+X-TMASE-Result: 10--4.691400-10.000000
+X-TMASE-MatchedRID: cnNFLnOjrwrzbOda9N/p0UrM69p7lDSsDnVIBRSEqxRUjspoiX02F28C
+        jsQp3NpgMB50Ujmy9YkE3B5BW/vdfS+tTtTc2agD3y8BXzybnzxPnKxAOPp4Wb59Yrw3aQCHe6v
+        nb9bFMdTZSKc4fEk4dRvYV6pkN/jgUKJZlzyOIwgjCTunWqnclldGlNgipoNlC5L2Og8SQUXlOf
+        oLq1j6+Dfttz3MdQ5uFFNUKojE5RNkJbwDA0WnIjiEPRj9j9rvUNr9nJzA3WSExk6c4qzx8s2fh
+        /Vuh6xFn27o0Xx1QhZVTvUUakA/KWwxXIAB2+stqJSK+HSPY+/r3E41VlKsfVVkJxysad/ImGTQ
+        iVbjdyUCF2h7WO+mNY6C2RetAFWQ6sEU5+BT/F3hPQQVFw3HFIyFtOxfKxTfXs4sv9ryyGM7Q++
+        QVT1rUuLzNWBegCW2W+UQGzEy1nULbigRnpKlKWxlRJiH43974nTXLosPHY5slYS54CHCsJNeL6
+        cPFMRMBOWNLnOLKpoezy6VHlp0/g==
+X-TMASE-SNAP-Result: 1.821001.0001-0-1-12:0,22:0,33:0,34:0-0
+X-TMASE-INERTIA: 0-0;;;;
+X-TMASE-XGENCLOUD: 91f1d342-9e76-4ce0-bebf-27fafb0c1b18-0-0-200-0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/2/2021 8:23 AM, Michael Kelley wrote:
->> +	} else {
->> +		pages_wraparound = kcalloc(page_cnt * 2 - 1,
->> +					   sizeof(struct page *),
->> +					   GFP_KERNEL);
->> +
->> +		pages_wraparound[0] = pages;
->> +		for (i = 0; i < 2 * (page_cnt - 1); i++)
->> +			pages_wraparound[i + 1] =
->> +				&pages[i % (page_cnt - 1) + 1];
->> +
->> +		ring_info->ring_buffer = (struct hv_ring_buffer *)
->> +			vmap(pages_wraparound, page_cnt * 2 - 1, VM_MAP,
->> +				PAGE_KERNEL);
->> +
->> +		kfree(pages_wraparound);
->> +		if (!ring_info->ring_buffer)
->> +			return -ENOMEM;
->> +	}
-> With this patch, the code is a big "if" statement with two halves -- one
-> when SNP isolation is in effect, and the other when not.  The SNP isolation
-> case does the work using PFNs with the shared_gpa_boundary added,
-> while the other case does the same work but using struct page.  Perhaps
-> I'm missing something, but can both halves be combined and always
-> do the work using PFNs?  The only difference is whether to add the
-> shared_gpa_boundary, and whether to zero the memory when done.
-> So get the starting PFN, then have an "if" statement for whether to
-> add the shared_gpa_boundary.  Then everything else is the same.
-> At the end, use an "if" statement to decide whether to zero the
-> memory.  It would really be better to have the logic in this algorithm
-> coded only once.
-> 
+sd and parent devices must not be removed as sd_open checks for events
 
-Hi Michael:
-	I have tried this before. But vmap_pfn() only works for those pfns out 
-of normal memory. Please see vmap_pfn_apply() for detail and
-return error when the PFN is valid.
+sd_need_revalidate and sd_revalidate_disk traverse the device path
+to check for event changes. If during this, e.g. the scsi host is being
+removed and its resources freed, this traversal crashes.
+Locking with scan_mutex for just a scsi disk open may seem blunt, but there
+does not seem to be a more granular option. Also opening /dev/sdX directly
+happens rarely enough that this shouldn't cause any issues.
 
+The issue occurred on an older kernel with the following trace:
+stack segment: 0000 [#1] PREEMPT SMP PTI
+CPU: 1 PID: 121457 Comm: python3 Not tainted 4.14.238hyLinux #1
+Hardware name: ASUS All Series/H81M-D, BIOS 0601 02/20/2014
+task: ffff888213dbb700 task.stack: ffffc90008c14000
+RIP: 0010:kobject_get_path+0x2a/0xe0
+...
+Call Trace:
+kobject_uevent_env+0xe6/0x550
+disk_check_events+0x101/0x160
+disk_clear_events+0x75/0x100
+check_disk_change+0x22/0x60
+sd_open+0x70/0x170 [sd_mod]
+__blkdev_get+0x3fd/0x4b0
+? get_empty_filp+0x57/0x1b0
+blkdev_get+0x11b/0x330
+? bd_acquire+0xc0/0xc0
+do_dentry_open+0x1ef/0x320
+? __inode_permission+0x85/0xc0
+path_openat+0x5cb/0x1500
+? terminate_walk+0xeb/0x100
+do_filp_open+0x9b/0x110
+? __check_object_size+0xb4/0x190
+? do_sys_open+0x1bd/0x250
+do_sys_open+0x1bd/0x250
+do_syscall_64+0x67/0x120
+entry_SYSCALL_64_after_hwframe+0x41/0xa6
+
+and this commit fixed that issue, as there has been no other such
+synchronization in place since then, the issue should still be present in
+recent kernels.
+
+Signed-off-by: Christian Loehle <cloehle@hyperstone.com>
+---
+ drivers/scsi/sd.c | 20 +++++++++++++++++---
+ 1 file changed, 17 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 610ebba0d66e..ad4da985a473 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1436,6 +1436,16 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 	if (!scsi_block_when_processing_errors(sdev))
+ 		goto error_out;
+ 
++	/*
++	 * Checking for changes to the device must not race with the device
++	 * or its parent host being removed, so lock until sd_open returns.
++	 */
++	mutex_lock(&sdev->host->scan_mutex);
++	if (sdev->sdev_state != SDEV_RUNNING) {
++		retval = -ERESTARTSYS;
++		goto unlock_scan_error_out;
++	}
++
+ 	if (sd_need_revalidate(bdev, sdkp))
+ 		sd_revalidate_disk(bdev->bd_disk);
+ 
+@@ -1444,7 +1454,7 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 	 */
+ 	retval = -ENOMEDIUM;
+ 	if (sdev->removable && !sdkp->media_present && !(mode & FMODE_NDELAY))
+-		goto error_out;
++		goto unlock_scan_error_out;
+ 
+ 	/*
+ 	 * If the device has the write protect tab set, have the open fail
+@@ -1452,7 +1462,7 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 	 */
+ 	retval = -EROFS;
+ 	if (sdkp->write_prot && (mode & FMODE_WRITE))
+-		goto error_out;
++		goto unlock_scan_error_out;
+ 
+ 	/*
+ 	 * It is possible that the disk changing stuff resulted in
+@@ -1462,15 +1472,19 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
+ 	 */
+ 	retval = -ENXIO;
+ 	if (!scsi_device_online(sdev))
+-		goto error_out;
++		goto unlock_scan_error_out;
+ 
+ 	if ((atomic_inc_return(&sdkp->openers) == 1) && sdev->removable) {
+ 		if (scsi_block_when_processing_errors(sdev))
+ 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
+ 	}
+ 
++	mutex_unlock(&sdev->host->scan_mutex);
+ 	return 0;
+ 
++unlock_scan_error_out:
++	mutex_unlock(&sdev->host->scan_mutex);
++
+ error_out:
+ 	scsi_disk_put(sdkp);
+ 	return retval;	
+-- 
+2.32.0=
+Hyperstone GmbH | Line-Eid-Strasse 3 | 78467 Konstanz
+Managing Directors: Dr. Jan Peter Berns.
+Commercial register of local courts: Freiburg HRB381782
 
