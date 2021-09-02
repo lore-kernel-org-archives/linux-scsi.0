@@ -2,148 +2,70 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F092FC4320A
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 07:59:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31FF4C4320E
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 10:18:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D47D9610CC
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 07:59:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18F1F610A1
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 10:18:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233451AbhIBIAr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Sep 2021 04:00:47 -0400
-Received: from verein.lst.de ([213.95.11.211]:50414 "EHLO verein.lst.de"
+        id S242697AbhIBKTA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Sep 2021 06:19:00 -0400
+Received: from mga06.intel.com ([134.134.136.31]:50178 "EHLO mga06.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233362AbhIBIAo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 2 Sep 2021 04:00:44 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 4E9586736F; Thu,  2 Sep 2021 09:59:39 +0200 (CEST)
-Date:   Thu, 2 Sep 2021 09:59:39 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     Christoph Hellwig <hch@lst.de>, Tianyu Lan <ltykernel@gmail.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will@kernel.org" <will@kernel.org>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "pgonda@google.com" <pgonda@google.com>,
-        "martin.b.radev@gmail.com" <martin.b.radev@gmail.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "hannes@cmpxchg.org" <hannes@cmpxchg.org>,
-        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
-        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
-        "saravanand@fb.com" <saravanand@fb.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "rientjes@google.com" <rientjes@google.com>,
-        "ardb@kernel.org" <ardb@kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-Subject: Re: [PATCH V4 00/13] x86/Hyper-V: Add Hyper-V Isolation VM support
-Message-ID: <20210902075939.GB14986@lst.de>
-References: <20210827172114.414281-1-ltykernel@gmail.com> <20210830120036.GA22005@lst.de> <MWHPR21MB15933503E7C324167CB4132CD7CC9@MWHPR21MB1593.namprd21.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <MWHPR21MB15933503E7C324167CB4132CD7CC9@MWHPR21MB1593.namprd21.prod.outlook.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+        id S233818AbhIBKS7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 2 Sep 2021 06:18:59 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10094"; a="280072777"
+X-IronPort-AV: E=Sophos;i="5.84,372,1620716400"; 
+   d="scan'208";a="280072777"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2021 03:17:50 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.84,372,1620716400"; 
+   d="scan'208";a="542572507"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.174])
+  by fmsmga002.fm.intel.com with ESMTP; 02 Sep 2021 03:17:48 -0700
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH 0/3] scsi: ufs: Let devices remain runtime suspended during system suspend
+Date:   Thu,  2 Sep 2021 13:18:15 +0300
+Message-Id: <20210902101818.4132-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <d5f5552d-257a-62ee-f0a3-55c00959e63b@intel.com>
+References: <d5f5552d-257a-62ee-f0a3-55c00959e63b@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Aug 31, 2021 at 05:16:19PM +0000, Michael Kelley wrote:
-> As a quick overview, I think there are four places where the
-> shared_gpa_boundary must be applied to adjust the guest physical
-> address that is used.  Each requires mapping a corresponding
-> virtual address range.  Here are the four places:
-> 
-> 1)  The so-called "monitor pages" that are a core communication
-> mechanism between the guest and Hyper-V.  These are two single
-> pages, and the mapping is handled by calling memremap() for
-> each of the two pages.  See Patch 7 of Tianyu's series.
+Hi
 
-Ah, interesting.
+UFS devices can remain runtime suspended at system suspend time,
+if the conditions are right.  Add support for that, first fixing
+the impediments.
 
-> 3)  The network driver send and receive buffers.  vmap_phys_range()
-> should work here.
 
-Actually it won't.  The problem with these buffers is that they are
-physically non-contiguous allocations.  We really have two sensible
-options:
+Adrian Hunter (3):
+      scsi: ufs: Fix error handler clear ua deadlock
+      scsi: ufs: Fix runtime PM dependencies getting broken
+      scsi: ufs: Let devices remain runtime suspended during system suspend
 
- 1) use vmap_pfn as in the current series.  But in that case I think
-    we should get rid of the other mapping created by vmalloc.  I
-    though a bit about finding a way to apply the offset in vmalloc
-    itself, but I think it would be too invasive to the normal fast
-    path.  So the other sub-option would be to allocate the pages
-    manually (maybe even using high order allocations to reduce TLB
-    pressure) and then remap them
- 2) do away with the contiguous kernel mapping entirely.  This means
-    the simple memcpy calls become loops over kmap_local_pfn.  As
-    I just found out for the send side that would be pretty easy,
-    but the receive side would be more work.  We'd also need to check
-    the performance implications.
+ drivers/scsi/scsi_pm.c     | 16 +++++++---
+ drivers/scsi/ufs/ufshcd.c  | 79 +++++++++++++++++++++++++++++++---------------
+ drivers/scsi/ufs/ufshcd.h  | 11 ++++++-
+ include/scsi/scsi_device.h |  1 +
+ 4 files changed, 75 insertions(+), 32 deletions(-)
 
-> 4) The swiotlb memory used for bounce buffers.  vmap_phys_range()
-> should work here as well.
 
-Or memremap if it works for 1.
-
-> Case #2 above does unusual mapping.  The ring buffer consists of a ring
-> buffer header page, followed by one or more pages that are the actual
-> ring buffer.  The pages making up the actual ring buffer are mapped
-> twice in succession.  For example, if the ring buffer has 4 pages
-> (one header page and three ring buffer pages), the contiguous
-> virtual mapping must cover these seven pages:  0, 1, 2, 3, 1, 2, 3.
-> The duplicate contiguous mapping allows the code that is reading
-> or writing the actual ring buffer to not be concerned about wrap-around
-> because writing off the end of the ring buffer is automatically
-> wrapped-around by the mapping.  The amount of data read or
-> written in one batch never exceeds the size of the ring buffer, and
-> after a batch is read or written, the read or write indices are adjusted
-> to put them back into the range of the first mapping of the actual
-> ring buffer pages.  So there's method to the madness, and the
-> technique works pretty well.  But this kind of mapping is not
-> amenable to using vmap_phys_range().
-
-Hmm.  Can you point me to where this is mapped?  Especially for the
-classic non-isolated case where no vmap/vmalloc mapping is involved
-at all?
+Regards
+Adrian
