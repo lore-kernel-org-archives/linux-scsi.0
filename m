@@ -2,134 +2,248 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1F0FC4320A
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 10:18:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 75142C4320A
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 11:21:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AC5E61090
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 10:18:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5EA2B610E6
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 11:21:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242730AbhIBKTA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 2 Sep 2021 06:19:00 -0400
-Received: from mga06.intel.com ([134.134.136.31]:50182 "EHLO mga06.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242547AbhIBKS7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 2 Sep 2021 06:18:59 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10094"; a="280072785"
-X-IronPort-AV: E=Sophos;i="5.84,372,1620716400"; 
-   d="scan'208";a="280072785"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2021 03:17:57 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.84,372,1620716400"; 
-   d="scan'208";a="542572538"
-Received: from ahunter-desktop.fi.intel.com ([10.237.72.174])
-  by fmsmga002.fm.intel.com with ESMTP; 02 Sep 2021 03:17:53 -0700
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH 2/3] scsi: ufs: Fix runtime PM dependencies getting broken
-Date:   Thu,  2 Sep 2021 13:18:17 +0300
-Message-Id: <20210902101818.4132-3-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20210902101818.4132-1-adrian.hunter@intel.com>
-References: <d5f5552d-257a-62ee-f0a3-55c00959e63b@intel.com>
- <20210902101818.4132-1-adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+        id S245183AbhIBLWc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 2 Sep 2021 07:22:32 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33306 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244843AbhIBLWb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Sep 2021 07:22:31 -0400
+Received: from mail-pg1-x529.google.com (mail-pg1-x529.google.com [IPv6:2607:f8b0:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3D540C061757;
+        Thu,  2 Sep 2021 04:21:33 -0700 (PDT)
+Received: by mail-pg1-x529.google.com with SMTP id 8so1555916pga.7;
+        Thu, 02 Sep 2021 04:21:33 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=uvXbklsYzxIxtTfrV32ffa9Nuwizcf2v49dwd36P0II=;
+        b=l3pHshNaH16SxCRdn9z7Xh25o4zr254bVE4gj2gcLe03eGaxqkakkGTJFxJqfTpw1V
+         mgl7jhuQxVjIwW/UeX7ktsAfn4KtTM1QiXhueAKmpi1umldFhOhm/opbthWUVENXfmXz
+         sByuEIse1tA9cQPTkGsfIdaE+UkFVQTBoS0K+F+XP4S1/PfM9AjDF1PXXeVM/2D0/+Wg
+         GFVcsUwXqGqAsvdSyylORw5dpuBcJnKleE7Htyj6/Iy7J3TtLZUSPSx2JgomTUK9XCbK
+         tkwtRAK0M+aqYoU4ijzQ2mRPYIgBubcVFek78cQ2L31j1R5JU4P5nO/87EvlyqPdofPx
+         bNug==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=uvXbklsYzxIxtTfrV32ffa9Nuwizcf2v49dwd36P0II=;
+        b=WZbksE7b07f64CHLut5tSDP3DDRjRp+pMquyfQy+UYrd7OqldYY4IKA7ylQp618A6d
+         3IveHo6rrEFSl91VTl4v3UioEiInylDC3TWCgEh+2BdJRz/0or7754Wo5G7w9ac147ZB
+         X3sXpuVE5yym8MBYauOLmVpogSyivldv0PoEtrDyMPPdydpajvbu1XOou/mFQZw0NJS0
+         kW+6UO4sBMx6gNhiOT+ZSbFZJ5bIPqos12M1jRCs6o5/1wdD6qdBVIN69syBwaKMmlVq
+         6xQNTAIcRreM4BsGjllzMZFo9/TTiF6M7vZo3/qLiRksMsN61ioXh1aDLKC2LDkqGP+p
+         Gi8A==
+X-Gm-Message-State: AOAM533zE6OWbbn50yKRn0cL5IOQ601LbTCNmXE28ze4pFw0kpYCeLpF
+        MNij6O0DmWafLbPZY+XPc+8=
+X-Google-Smtp-Source: ABdhPJxldFu1U8M2V5yK1yTHMDs9K9anELSSV02bNY0qtLdwF/4+Etf8R4JVmeL3O1gUAcLcNnmdKQ==
+X-Received: by 2002:a63:5b08:: with SMTP id p8mr2815838pgb.28.1630581692705;
+        Thu, 02 Sep 2021 04:21:32 -0700 (PDT)
+Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:1a:efea::50b])
+        by smtp.gmail.com with ESMTPSA id j6sm2394666pgq.0.2021.09.02.04.21.19
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 02 Sep 2021 04:21:32 -0700 (PDT)
+Subject: Re: [PATCH V4 00/13] x86/Hyper-V: Add Hyper-V Isolation VM support
+To:     Christoph Hellwig <hch@lst.de>,
+        Michael Kelley <mikelley@microsoft.com>
+Cc:     KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        "wei.liu@kernel.org" <wei.liu@kernel.org>,
+        Dexuan Cui <decui@microsoft.com>,
+        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
+        "will@kernel.org" <will@kernel.org>,
+        "tglx@linutronix.de" <tglx@linutronix.de>,
+        "mingo@redhat.com" <mingo@redhat.com>,
+        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
+        "hpa@zytor.com" <hpa@zytor.com>,
+        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+        "luto@kernel.org" <luto@kernel.org>,
+        "peterz@infradead.org" <peterz@infradead.org>,
+        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
+        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
+        "jgross@suse.com" <jgross@suse.com>,
+        "sstabellini@kernel.org" <sstabellini@kernel.org>,
+        "joro@8bytes.org" <joro@8bytes.org>,
+        "davem@davemloft.net" <davem@davemloft.net>,
+        "kuba@kernel.org" <kuba@kernel.org>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        "arnd@arndb.de" <arnd@arndb.de>,
+        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
+        "robin.murphy@arm.com" <robin.murphy@arm.com>,
+        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
+        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        "pgonda@google.com" <pgonda@google.com>,
+        "martin.b.radev@gmail.com" <martin.b.radev@gmail.com>,
+        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
+        "rppt@kernel.org" <rppt@kernel.org>,
+        "hannes@cmpxchg.org" <hannes@cmpxchg.org>,
+        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
+        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
+        "saravanand@fb.com" <saravanand@fb.com>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
+        "rientjes@google.com" <rientjes@google.com>,
+        "ardb@kernel.org" <ardb@kernel.org>,
+        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
+        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        vkuznets <vkuznets@redhat.com>,
+        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
+        "dave.hansen@intel.com" <dave.hansen@intel.com>
+References: <20210827172114.414281-1-ltykernel@gmail.com>
+ <20210830120036.GA22005@lst.de>
+ <MWHPR21MB15933503E7C324167CB4132CD7CC9@MWHPR21MB1593.namprd21.prod.outlook.com>
+ <20210902075939.GB14986@lst.de>
+From:   Tianyu Lan <ltykernel@gmail.com>
+Message-ID: <dc124c3d-a316-d36e-3ae4-21674280f55d@gmail.com>
+Date:   Thu, 2 Sep 2021 19:21:18 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <20210902075939.GB14986@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS SCSI devices make use of device links to establish PM dependencies.
-However, SCSI PM will force devices' runtime PM state to be active during
-system resume. That can break runtime PM dependencies for UFS devices.
-Fix by adding a flag 'preserve_rpm' to let UFS SCSI devices opt-out of
-the unwanted behaviour.
 
-Fixes: b294ff3e34490f ("scsi: ufs: core: Enable power management for wlun")
-Cc: stable@vger.kernel.org
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
----
- drivers/scsi/scsi_pm.c     | 16 +++++++++++-----
- drivers/scsi/ufs/ufshcd.c  |  1 +
- include/scsi/scsi_device.h |  1 +
- 3 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 3717eea37ecb..0557c1ad304d 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -73,13 +73,22 @@ static int scsi_dev_type_resume(struct device *dev,
- 		int (*cb)(struct device *, const struct dev_pm_ops *))
- {
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	struct scsi_device *sdev = NULL;
-+	bool preserve_rpm = false;
- 	int err = 0;
- 
-+	if (scsi_is_sdev_device(dev)) {
-+		sdev = to_scsi_device(dev);
-+		preserve_rpm = sdev->preserve_rpm;
-+		if (preserve_rpm && pm_runtime_suspended(dev))
-+			return 0;
-+	}
-+
- 	err = cb(dev, pm);
- 	scsi_device_resume(to_scsi_device(dev));
- 	dev_dbg(dev, "scsi resume: %d\n", err);
- 
--	if (err == 0) {
-+	if (err == 0 && !preserve_rpm) {
- 		pm_runtime_disable(dev);
- 		err = pm_runtime_set_active(dev);
- 		pm_runtime_enable(dev);
-@@ -91,11 +100,8 @@ static int scsi_dev_type_resume(struct device *dev,
- 		 *
- 		 * The resume hook will correct runtime PM status of the disk.
- 		 */
--		if (!err && scsi_is_sdev_device(dev)) {
--			struct scsi_device *sdev = to_scsi_device(dev);
--
-+		if (!err && sdev)
- 			blk_set_runtime_active(sdev->request_queue);
--		}
- 	}
- 
- 	return err;
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 52fb059efa77..57ed4b93b949 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5016,6 +5016,7 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
- 		pm_runtime_get_noresume(&sdev->sdev_gendev);
- 	else if (ufshcd_is_rpm_autosuspend_allowed(hba))
- 		sdev->rpm_autosuspend = 1;
-+	sdev->preserve_rpm = 1;
- 
- 	ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
- 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 09a17f6e93a7..47eb30a6b7b2 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -197,6 +197,7 @@ struct scsi_device {
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
- 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
-+	unsigned preserve_rpm:1;	/* Preserve runtime PM */
- 	unsigned security_supported:1;	/* Supports Security Protocols */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
--- 
-2.17.1
+On 9/2/2021 3:59 PM, Christoph Hellwig wrote:
+> On Tue, Aug 31, 2021 at 05:16:19PM +0000, Michael Kelley wrote:
+>> As a quick overview, I think there are four places where the
+>> shared_gpa_boundary must be applied to adjust the guest physical
+>> address that is used.  Each requires mapping a corresponding
+>> virtual address range.  Here are the four places:
+>>
+>> 1)  The so-called "monitor pages" that are a core communication
+>> mechanism between the guest and Hyper-V.  These are two single
+>> pages, and the mapping is handled by calling memremap() for
+>> each of the two pages.  See Patch 7 of Tianyu's series.
+> 
+> Ah, interesting.
+> 
+>> 3)  The network driver send and receive buffers.  vmap_phys_range()
+>> should work here.
+> 
+> Actually it won't.  The problem with these buffers is that they are
+> physically non-contiguous allocations.  We really have two sensible
+> options:
+> 
+>   1) use vmap_pfn as in the current series.  But in that case I think
+>      we should get rid of the other mapping created by vmalloc.  I
+>      though a bit about finding a way to apply the offset in vmalloc
+>      itself, but I think it would be too invasive to the normal fast
+>      path.  So the other sub-option would be to allocate the pages
+>      manually (maybe even using high order allocations to reduce TLB
+>      pressure) and then remap them
+
+Agree. In such case, the map for memory below shared_gpa_boundary is not 
+necessary. allocate_pages() is limited by MAX_ORDER and needs to be 
+called repeatedly to get enough memory.
+
+>   2) do away with the contiguous kernel mapping entirely.  This means
+>      the simple memcpy calls become loops over kmap_local_pfn.  As
+>      I just found out for the send side that would be pretty easy,
+>      but the receive side would be more work.  We'd also need to check
+>      the performance implications.
+
+kmap_local_pfn() requires pfn with backing struct page and this doesn't 
+work pfn above shared_gpa_boundary.
+> 
+>> 4) The swiotlb memory used for bounce buffers.  vmap_phys_range()
+>> should work here as well.
+> 
+> Or memremap if it works for 1.
+
+Now use vmap_pfn() and the hv map function is reused in the netvsc driver.
+
+> 
+>> Case #2 above does unusual mapping.  The ring buffer consists of a ring
+>> buffer header page, followed by one or more pages that are the actual
+>> ring buffer.  The pages making up the actual ring buffer are mapped
+>> twice in succession.  For example, if the ring buffer has 4 pages
+>> (one header page and three ring buffer pages), the contiguous
+>> virtual mapping must cover these seven pages:  0, 1, 2, 3, 1, 2, 3.
+>> The duplicate contiguous mapping allows the code that is reading
+>> or writing the actual ring buffer to not be concerned about wrap-around
+>> because writing off the end of the ring buffer is automatically
+>> wrapped-around by the mapping.  The amount of data read or
+>> written in one batch never exceeds the size of the ring buffer, and
+>> after a batch is read or written, the read or write indices are adjusted
+>> to put them back into the range of the first mapping of the actual
+>> ring buffer pages.  So there's method to the madness, and the
+>> technique works pretty well.  But this kind of mapping is not
+>> amenable to using vmap_phys_range().
+> 
+> Hmm.  Can you point me to where this is mapped?  Especially for the
+> classic non-isolated case where no vmap/vmalloc mapping is involved
+> at all?
+> 
+
+This is done via vmap() in the hv_ringbuffer_init()
+
+182/* Initialize the ring buffer. */
+183int hv_ringbuffer_init(struct hv_ring_buffer_info *ring_info,
+184                       struct page *pages, u32 page_cnt, u32 
+max_pkt_size)
+185{
+186        int i;
+187        struct page **pages_wraparound;
+188
+189        BUILD_BUG_ON((sizeof(struct hv_ring_buffer) != PAGE_SIZE));
+190
+191        /*
+192         * First page holds struct hv_ring_buffer, do wraparound 
+mapping for
+193         * the rest.
+194         */
+195        pages_wraparound = kcalloc(page_cnt * 2 - 1, sizeof(struct 
+page *),
+196                                   GFP_KERNEL);
+197        if (!pages_wraparound)
+198                return -ENOMEM;
+199
+/* prepare to wrap page array */
+200        pages_wraparound[0] = pages;
+201        for (i = 0; i < 2 * (page_cnt - 1); i++)
+202                pages_wraparound[i + 1] = &pages[i % (page_cnt - 1) + 1];
+203
+/* map */
+204        ring_info->ring_buffer = (struct hv_ring_buffer *)
+205                vmap(pages_wraparound, page_cnt * 2 - 1, VM_MAP, 
+PAGE_KERNEL);
+206
+207        kfree(pages_wraparound);
+208
+209
+210        if (!ring_info->ring_buffer)
+211                return -ENOMEM;
+212
+213        ring_info->ring_buffer->read_index =
+214                ring_info->ring_buffer->write_index = 0;
+
 
