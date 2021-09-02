@@ -2,355 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_2 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0AE0C43214
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 02:08:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E27CC432BE
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 02:12:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CB1360FD7
-	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 02:08:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28835610C8
+	for <linux-scsi@archiver.kernel.org>; Thu,  2 Sep 2021 02:12:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233003AbhIBCJl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 1 Sep 2021 22:09:41 -0400
-Received: from mail-oln040093003004.outbound.protection.outlook.com ([40.93.3.4]:39453
-        "EHLO outbound.mail.eo.outlook.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S232517AbhIBCJk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2021 22:09:40 -0400
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=IUpSChkKBWMqyiukbEC8IxJNip992xfSXG5TmpQZhkTvCM/aDZMzscsPteLJxO9Z+5nnAwfCHVRJ2W0YK/xFtjDjwHurm+0Uoqtr6zVSPfMdiMi6cSkgOZkktBCMP8rEmFLNUaWJ2Dhp7THgrZYlneAqfo9iUKClaU0aHvP1AmlX3TXvz93tpYlHU/qOF6/hlZFIwPYBV7ek4LskPSoO3CPFQvILuX9vbB3Zbp+hxpChe0+AufmBZ5o6B+FBxq9NEGICdotV83xIIWBC64c6PrUYihGmPpQEwMmJhcJtqBnnwvbmXJY6CGbXFBAY1rdoHC5K+nZ+RhLtZij0t2NT7Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=m8Z4zZgDo/ng30TsOukCORL2mWs0iQjFTdzvLSYEXk8=;
- b=j3uJ/vgN2Svy1/0rRfkdPjkX3676/Ve/pCQkW24hZX2cQlqfjygR2sWm6x9pTpyd/XcmeLGdWLTF+9XdRWXSrHmrmRKXNRiIpyX8sH81E5g2zkeOIQqEanzEwbrslp+dKshg/BmJ/bhCENBW4Vz9E1KcigFSaLX90cGresqjzboZ4X1nTRmGBYJQnQDEfcQbAdE6tGxM1l7KMRhs43sQkkktASolHwV/KUNZ4JC07adFBSl020syB2TBtyEkp/uLGjdjYd5Ds9bgq9aDxTDkXVrAReL86MfBx9lPiT8heE/mPlRzU24k276JY4geouUHknOK91hgN4/lTs/Zk4rzWw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=m8Z4zZgDo/ng30TsOukCORL2mWs0iQjFTdzvLSYEXk8=;
- b=bd/JOGRzT95HRhvOUNcHOfelq5cct9xFQv9lwJCNx7oSiw34v9MsYGLbyVgS39nixvvJ8lcvmPh920F5WnTGKtg3zCvRIW/DKiesmXiXZ80gITl9JyjYcJHTfA5qIhgnqZS859ZT4dw1V+ArSVbyybPU+uOdhKiAKbZdBI1rOf8=
-Received: from MWHPR21MB1593.namprd21.prod.outlook.com (2603:10b6:301:7c::11)
- by CO2PR21MB3009.namprd21.prod.outlook.com (2603:10b6:102:18::25) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4500.4; Thu, 2 Sep
- 2021 02:08:38 +0000
-Received: from MWHPR21MB1593.namprd21.prod.outlook.com
- ([fe80::3c8b:6387:cd5:7d86]) by MWHPR21MB1593.namprd21.prod.outlook.com
- ([fe80::3c8b:6387:cd5:7d86%8]) with mapi id 15.20.4478.014; Thu, 2 Sep 2021
- 02:08:38 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     Tianyu Lan <ltykernel@gmail.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will@kernel.org" <will@kernel.org>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "pgonda@google.com" <pgonda@google.com>,
-        "martin.b.radev@gmail.com" <martin.b.radev@gmail.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "hannes@cmpxchg.org" <hannes@cmpxchg.org>,
-        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
-        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
-        "saravanand@fb.com" <saravanand@fb.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "rientjes@google.com" <rientjes@google.com>,
-        "ardb@kernel.org" <ardb@kernel.org>
-CC:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-Subject: RE: [PATCH V4 13/13] hv_storvsc: Add Isolation VM support for storvsc
- driver
-Thread-Topic: [PATCH V4 13/13] hv_storvsc: Add Isolation VM support for
- storvsc driver
-Thread-Index: AQHXm2gLgD2LnlrK1Ui6MWEQREt+OKuIA2QQ
-Date:   Thu, 2 Sep 2021 02:08:38 +0000
-Message-ID: <MWHPR21MB1593CB6AD9521190CA0AB0DED7CE9@MWHPR21MB1593.namprd21.prod.outlook.com>
-References: <20210827172114.414281-1-ltykernel@gmail.com>
- <20210827172114.414281-14-ltykernel@gmail.com>
-In-Reply-To: <20210827172114.414281-14-ltykernel@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=f3fb0eb4-3fe0-4fc3-9520-c93e315d7a42;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-08-27T23:41:48Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6ea2dd65-3c0f-43cb-0521-08d96db693fe
-x-ms-traffictypediagnostic: CO2PR21MB3009:
-x-ms-exchange-transport-forked: True
-x-ld-processed: 72f988bf-86f1-41af-91ab-2d7cd011db47,ExtAddr
-x-microsoft-antispam-prvs: <CO2PR21MB30092A47D1401DE9FFD4B0BDD7CE9@CO2PR21MB3009.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:2449;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: ndTLqZdHuCSzY96whS6o3zQp5pWBl/+LPOxouGx7MvdNaYKuKvaFNQwUMEMZfwmHr4jOi6oWBYiz3uNN1AIyg7MhnWomwEL0ihAtK7DvmJFI1pwN23oEItvoA9pfELcTzjHqzto7bCclgTX/tL8m2FVSWS9DznLZ6SL5bED36RZkXCgWoZ61O2xsYrmNK2BYGQJZqTbGKL8JnYl6a1VckOlhVdTcP0kloEzheeMPbCao6ltZge2w3RTnxLv22Ap1BXZKd5XelSzST1sQ2afXyEbqeK+gHzbQeItQFBGpcdjBoy4bU1Ou2Bzw2Ywm9ZmzAgYWhsQCsjwaUgtTmad6fEEO8kOVFKE3mNsXM/zB9yvCObJ1w3dqn7fesYfaweLGMdsWkx80wNt87AjQS+VuaML7txbgbnsj9Sh1pTWE8BQru7dwe3i+e4HyJQSi9RzvoqBvVNbd+n2Wn64j2hrkR7K0QiRW25kzFfeWGwxqIrxhyQ00KRYF8fVPVWDn1zrJUc2GjpQdJuUvR6pQ0ibrmPBeMJgLnb2KDAC0KCTMtEsB1uXDSF1BfkvUnPbYlQv3iq1KsDsPYIHFz7oKMnTKE2KvuGVD8tYcxf/YQdJAN3jNDLQWWp1ORhABKivtbremVstJAU2ihezQYo77y3CPHdlF81y59pgSoKUtaskzqrOzL8EWJtkpNf0UmCBSDzCuYTmwjdSI/nxE35dzdARuaGYoiP+gfuPjhNpq6jMqsI8=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(82950400001)(82960400001)(4326008)(186003)(76116006)(316002)(8990500004)(110136005)(66476007)(83380400001)(7406005)(7416002)(7366002)(66946007)(66556008)(64756008)(66446008)(54906003)(6506007)(9686003)(55016002)(122000001)(26005)(2906002)(52536014)(921005)(86362001)(71200400001)(5660300002)(38070700005)(7696005)(8676002)(8936002)(38100700002)(508600001)(33656002)(10290500003);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?DolnhatuDAmIAaAz1/YX4Nu77VLxLJi5Z5u3+A6UHOQkEZWqwmLzr6hkf5h6?=
- =?us-ascii?Q?mVAM7sfILM0sb62t/FIdI2R41We7PR+TF1q7yPx6JbgXnRJQjOGD7e6VAlL0?=
- =?us-ascii?Q?VYlx3oYPMhMWiZoMNmNhSz2nfZTsTT/s8eRHAg5yZtQHCyQJGnBRXvLo2ZT0?=
- =?us-ascii?Q?zllaDQdkxQxV7ukn+Bt6fJgbkj8n2gr1b/uO4SQXC7NISFP1EyxCgQ6JQ7Fc?=
- =?us-ascii?Q?jV4VmCJP8+JQNgbqAyardqPmpig/GBcw/1UqOeybTfbfoSVxOsatsZERTnP5?=
- =?us-ascii?Q?UxSKKL6MuvTM5sTNREAIy2bYLBDu4U0OhiPvTlUJpnYMfyXYNKH267zIFzCM?=
- =?us-ascii?Q?PldhdohAzJfsYI0h6w2kOSo7q8IBiuWm+zf+aaRpA9PB7MlLaixaNGZcU4lE?=
- =?us-ascii?Q?gjYWnJJoud5x0cHcwyYxq8sUexK1uweGy3v6UEKjsTVj/m4FyZ2vXqirFf4H?=
- =?us-ascii?Q?JkbMuFrXswddWR1K8OpAK1204L0MPy5x9yuzN7+maWBfL+enrzX3W+tzdxs4?=
- =?us-ascii?Q?f/1SdBIJEDEM3OYuR9P/7zhpNhHDIL++WxG8hrWBN7w3IkOCRGlCO0rUW/hX?=
- =?us-ascii?Q?E1kEuquD99AvKjJK+AGHbABnEfuVNY3viHqFns4Yx0N3O29ES8uVUvwVSY/q?=
- =?us-ascii?Q?+l3hpQlfW1lBAVS/zySdayy9k4GLK6ubKQfh9vHhnx7ccUqzzuw5w18Pgs3W?=
- =?us-ascii?Q?VRTWWM2CMj5YA1zbaCKGqvuXdOyY0XYRog8BcGfUdaczLPsyPQCLGNqwQGU2?=
- =?us-ascii?Q?AqEnxtXliDQDWBFJSrNj/c1k911nSNH4BGyPKYlT4zHgcDL+97I4sJ2OoBp9?=
- =?us-ascii?Q?KyBj4U1Du4CbFvWCafngd6ltxm1/GKtYyAEZrP7Qya5gxRfabpq2pmyMcAmf?=
- =?us-ascii?Q?lbXmuOj9wMIO2kVGMbHqdvd2octK5nt3V+7yNs2wI876Xq7lDMRF2Gee7USb?=
- =?us-ascii?Q?ZpRrKueEWAIPyLJKQ26Kj/f8msXqtX6JMPvdt0iunoCn5X0YJwFET5D9eDn8?=
- =?us-ascii?Q?GWtR1tpnTxey2vk4daEsB2DBReKe8Hj20zwcaezjVCEwUo7/evMJ4lxdeSv2?=
- =?us-ascii?Q?9pmAy+NcK9mp0y78xdFmLKyXxk82K2vRtiOA7SxTlAFsleQE4DHwPMte4tfC?=
- =?us-ascii?Q?kN+9LxsXMpZ8Z1qM7k5Pf/nedS/xTbiRCsjqmXAwwMjgPtQKTgPVY3xLtLjT?=
- =?us-ascii?Q?bybW5G1aOMa+Vf7yWoRXHxa/Ha4Sans5gAcg2zsEFAIyoTy4qGFChbOT0mGz?=
- =?us-ascii?Q?CiPjKJ3SsfvxpRmVUTLDus/nOnN6kdsW79nDuLhkSL3No277Wu/5FMMUS18+?=
- =?us-ascii?Q?+15h35tJ4UXVtGV1HnHg+BNj?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S232671AbhIBCN2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 1 Sep 2021 22:13:28 -0400
+Received: from mailgw02.mediatek.com ([210.61.82.184]:35876 "EHLO
+        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232517AbhIBCN0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Sep 2021 22:13:26 -0400
+X-UUID: 74e7a58be99a4d23858af4bcf287c4fd-20210902
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+        h=Content-Transfer-Encoding:MIME-Version:Content-Type:References:In-Reply-To:Date:CC:To:From:Subject:Message-ID; bh=MxPi2Z7fLFbleO5SNvI1Jw/FtsBVdHsC7at62XOVEts=;
+        b=NSTeo069d3sHNYj70549uJbA/Pzv6lExOjjs6O1NzPDG+bybe30J9KZK9E6gz/gzayQ44p/Kszx3dKtmLYSRkdSq24iPDmq8eCoYv5vtIfYlZVM66kdIFv6ZIzkdhiD2VJgiZPdPxFsxkRtJNaatGdcijE3n34DR3F3JLtEc/bE=;
+X-UUID: 74e7a58be99a4d23858af4bcf287c4fd-20210902
+Received: from mtkcas11.mediatek.inc [(172.21.101.40)] by mailgw02.mediatek.com
+        (envelope-from <peter.wang@mediatek.com>)
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
+        with ESMTP id 666623955; Thu, 02 Sep 2021 10:12:27 +0800
+Received: from mtkcas11.mediatek.inc (172.21.101.40) by
+ mtkmbs06n2.mediatek.inc (172.21.101.130) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.2; Thu, 2 Sep 2021 10:12:26 +0800
+Received: from mtksdccf07 (172.21.84.99) by mtkcas11.mediatek.inc
+ (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
+ Transport; Thu, 2 Sep 2021 10:12:26 +0800
+Message-ID: <538eacb7818d011d707e742187a6a96868c5d474.camel@mediatek.com>
+Subject: Re: [PATCH v3] scsi: ufs: ufs-mediatek: Change dbg select by check
+ hw version
+From:   Peter Wang <peter.wang@mediatek.com>
+To:     Stanley Chu <stanley.chu@mediatek.com>,
+        <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
+        <avri.altman@wdc.com>, <alim.akhtar@samsung.com>,
+        <jejb@linux.ibm.com>
+CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+        <chun-hung.wu@mediatek.com>, <alice.chao@mediatek.com>,
+        <cc.chou@mediatek.com>, <chaotian.jing@mediatek.com>,
+        <jiajie.hao@mediatek.com>, <powen.kao@mediatek.com>,
+        <jonathan.hsu@mediatek.com>, <qilin.tan@mediatek.com>,
+        <lin.gui@mediatek.com>
+Date:   Thu, 2 Sep 2021 10:12:26 +0800
+In-Reply-To: <942c222b226a5851df90bbc46bb98f1da16ac07a.camel@mediatek.com>
+References: <1630476252-2031-1-git-send-email-peter.wang@mediatek.com>
+         <942c222b226a5851df90bbc46bb98f1da16ac07a.camel@mediatek.com>
+Content-Type: text/plain; charset="UTF-8"
+X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6ea2dd65-3c0f-43cb-0521-08d96db693fe
-X-MS-Exchange-CrossTenant-originalarrivaltime: 02 Sep 2021 02:08:38.0541
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: tXT0bjcyirvjVG/opzOIdPJBrRMiRaNV9Y9VlcCS+iP2p9aRelS7uwRI97sbYAJCtJayrUXtfu+t7qPz3kutGOq/HYyGfA8POko7JlWeOqw=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO2PR21MB3009
+X-MTK:  N
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tianyu Lan <ltykernel@gmail.com> Sent: Friday, August 27, 2021 10:21 =
-AM
->=20
-
-Per previous comment, the Subject line tag should be "scsi: storvsc: "
-
-> In Isolation VM, all shared memory with host needs to mark visible
-> to host via hvcall. vmbus_establish_gpadl() has already done it for
-> storvsc rx/tx ring buffer. The page buffer used by vmbus_sendpacket_
-> mpb_desc() still needs to be handled. Use DMA API(dma_map_sg) to map
-> these memory during sending/receiving packet and return swiotlb bounce
-> buffer dma address. In Isolation VM, swiotlb  bounce buffer is marked
-> to be visible to host and the swiotlb force mode is enabled.
->=20
-> Set device's dma min align mask to HV_HYP_PAGE_SIZE - 1 in order to
-> keep the original data offset in the bounce buffer.
->=20
-> Signed-off-by: Tianyu Lan <Tianyu.Lan@microsoft.com>
-> ---
-> Change since v3:
-> 	* Rplace dma_map_page with dma_map_sg()
-> 	* Use for_each_sg() to populate payload->range.pfn_array.
-> 	* Remove storvsc_dma_map macro
-> ---
->  drivers/hv/vmbus_drv.c     |  1 +
->  drivers/scsi/storvsc_drv.c | 41 +++++++++++++++-----------------------
->  include/linux/hyperv.h     |  1 +
->  3 files changed, 18 insertions(+), 25 deletions(-)
->=20
-> diff --git a/drivers/hv/vmbus_drv.c b/drivers/hv/vmbus_drv.c
-> index f068e22a5636..270d526fd9de 100644
-> --- a/drivers/hv/vmbus_drv.c
-> +++ b/drivers/hv/vmbus_drv.c
-> @@ -2124,6 +2124,7 @@ int vmbus_device_register(struct hv_device *child_d=
-evice_obj)
->  	hv_debug_add_dev_dir(child_device_obj);
->=20
->  	child_device_obj->device.dma_mask =3D &vmbus_dma_mask;
-> +	child_device_obj->device.dma_parms =3D &child_device_obj->dma_parms;
->  	return 0;
->=20
->  err_kset_unregister:
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 328bb961c281..4f1793be1fdc 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -21,6 +21,8 @@
->  #include <linux/device.h>
->  #include <linux/hyperv.h>
->  #include <linux/blkdev.h>
-> +#include <linux/dma-mapping.h>
-> +
->  #include <scsi/scsi.h>
->  #include <scsi/scsi_cmnd.h>
->  #include <scsi/scsi_host.h>
-> @@ -1312,6 +1314,9 @@ static void storvsc_on_channel_callback(void *conte=
-xt)
->  					continue;
->  				}
->  				request =3D (struct storvsc_cmd_request *)scsi_cmd_priv(scmnd);
-> +				if (scsi_sg_count(scmnd))
-> +					dma_unmap_sg(&device->device, scsi_sglist(scmnd),
-> +						     scsi_sg_count(scmnd), scmnd->sc_data_direction);
-
-Use scsi_dma_unmap(), which does exactly what you have written
-above. :-)
-
->  			}
->=20
->  			storvsc_on_receive(stor_device, packet, request);
-> @@ -1725,7 +1730,6 @@ static int storvsc_queuecommand(struct Scsi_Host *h=
-ost, struct scsi_cmnd *scmnd)
->  	struct hv_host_device *host_dev =3D shost_priv(host);
->  	struct hv_device *dev =3D host_dev->dev;
->  	struct storvsc_cmd_request *cmd_request =3D scsi_cmd_priv(scmnd);
-> -	int i;
->  	struct scatterlist *sgl;
->  	unsigned int sg_count;
->  	struct vmscsi_request *vm_srb;
-> @@ -1807,10 +1811,11 @@ static int storvsc_queuecommand(struct Scsi_Host =
-*host, struct scsi_cmnd *scmnd)
->  	payload_sz =3D sizeof(cmd_request->mpb);
->=20
->  	if (sg_count) {
-> -		unsigned int hvpgoff, hvpfns_to_add;
->  		unsigned long offset_in_hvpg =3D offset_in_hvpage(sgl->offset);
->  		unsigned int hvpg_count =3D HVPFN_UP(offset_in_hvpg + length);
-> -		u64 hvpfn;
-> +		struct scatterlist *sg;
-> +		unsigned long hvpfn, hvpfns_to_add;
-> +		int j, i =3D 0;
->=20
->  		if (hvpg_count > MAX_PAGE_BUFFER_COUNT) {
->=20
-> @@ -1824,31 +1829,16 @@ static int storvsc_queuecommand(struct Scsi_Host =
-*host, struct scsi_cmnd *scmnd)
->  		payload->range.len =3D length;
->  		payload->range.offset =3D offset_in_hvpg;
->=20
-> +		if (dma_map_sg(&dev->device, sgl, sg_count,
-> +		    scmnd->sc_data_direction) =3D=3D 0)
-> +			return SCSI_MLQUEUE_DEVICE_BUSY;
->=20
-> -		for (i =3D 0; sgl !=3D NULL; sgl =3D sg_next(sgl)) {
-> -			/*
-> -			 * Init values for the current sgl entry. hvpgoff
-> -			 * and hvpfns_to_add are in units of Hyper-V size
-> -			 * pages. Handling the PAGE_SIZE !=3D HV_HYP_PAGE_SIZE
-> -			 * case also handles values of sgl->offset that are
-> -			 * larger than PAGE_SIZE. Such offsets are handled
-> -			 * even on other than the first sgl entry, provided
-> -			 * they are a multiple of PAGE_SIZE.
-> -			 */
-
-Any reason not to keep this comment?  It's still correct and
-mentions important cases that must be handled.
-
-> -			hvpgoff =3D HVPFN_DOWN(sgl->offset);
-> -			hvpfn =3D page_to_hvpfn(sg_page(sgl)) + hvpgoff;
-> -			hvpfns_to_add =3D	HVPFN_UP(sgl->offset + sgl->length) -
-> -						hvpgoff;
-> +		for_each_sg(sgl, sg, sg_count, j) {
-
-There's a subtle issue here in that the number of entries in the
-mapped sgl might not be the same as the number of entries prior
-to the mapping.  A change in the count probably never happens for
-the direct DMA mapping being done here, but let's code to be
-correct in the general case.  Either need to refetch the value of
-sg_count, or arrange to use something like for_each_sgtable_dma_sg().
-
-> +			hvpfns_to_add =3D HVPFN_UP(sg_dma_len(sg));
-
-This simplification in calculating hvpnfs_to_add is not correct.  Consider
-the case of one sgl entry specifying a buffer of 3 Kbytes that starts at a
-2K offset in the first page and runs over into the second page.  This case
-can happen when the physical memory for the two pages is contiguous
-due to random happenstance, due to huge pages, or due to being on an
-architecture like ARM64 where the guest page size may be larger than
-the Hyper-V page size.
-
-In this case, we need two Hyper-V PFNs because the buffer crosses a
-Hyper-V page boundary.   But the above will calculate only one PFN.
-The original algorithm handles this case correctly.
-
-> +			hvpfn =3D HVPFN_DOWN(sg_dma_address(sg));
->=20
-> -			/*
-> -			 * Fill the next portion of the PFN array with
-> -			 * sequential Hyper-V PFNs for the continguous physical
-> -			 * memory described by the sgl entry. The end of the
-> -			 * last sgl should be reached at the same time that
-> -			 * the PFN array is filled.
-> -			 */
-
-Any reason not to keep this comment?  It's still correct.
-
->  			while (hvpfns_to_add--)
-> -				payload->range.pfn_array[i++] =3D	hvpfn++;
-> +				payload->range.pfn_array[i++] =3D hvpfn++;
->  		}
->  	}
->=20
-> @@ -1992,6 +1982,7 @@ static int storvsc_probe(struct hv_device *device,
->  	stor_device->vmscsi_size_delta =3D sizeof(struct vmscsi_win8_extension)=
-;
->  	spin_lock_init(&stor_device->lock);
->  	hv_set_drvdata(device, stor_device);
-> +	dma_set_min_align_mask(&device->device, HV_HYP_PAGE_SIZE - 1);
->=20
->  	stor_device->port_number =3D host->host_no;
->  	ret =3D storvsc_connect_to_vsp(device, storvsc_ringbuffer_size, is_fc);
-> diff --git a/include/linux/hyperv.h b/include/linux/hyperv.h
-> index 139a43ad65a1..8f39893f8ccf 100644
-> --- a/include/linux/hyperv.h
-> +++ b/include/linux/hyperv.h
-> @@ -1274,6 +1274,7 @@ struct hv_device {
->=20
->  	struct vmbus_channel *channel;
->  	struct kset	     *channels_kset;
-> +	struct device_dma_parameters dma_parms;
->=20
->  	/* place holder to keep track of the dir for hv device in debugfs */
->  	struct dentry *debug_dir;
-> --
-> 2.25.1
+T24gV2VkLCAyMDIxLTA5LTAxIGF0IDE1OjM1ICswODAwLCBTdGFubGV5IENodSB3cm90ZToNCj4g
+SGkgUGV0ZXIsDQo+IA0KPiBPbiBXZWQsIDIwMjEtMDktMDEgYXQgMTQ6MDQgKzA4MDAsIHBldGVy
+LndhbmdAbWVkaWF0ZWsuY29tIHdyb3RlOg0KPiA+IEZyb206IFBldGVyIFdhbmcgPHBldGVyLndh
+bmdAbWVkaWF0ZWsuY29tPg0KPiA+IA0KPiA+IE1lZGlhdGVrIFVGUyBkYmcgc2VsZWN0IHNldHRp
+bmcgaXMgY2hhbmdlZCBpbiBuZXcgSFcgdmVyc2lvbi4NCj4gPiBUaGlzIHBhdGNoIGNoZWNrIHRo
+ZSBIVyB2ZXJzaW9uIGJlZm9yZSBzZXQgZGJnIHNlbGVjdC4NCj4gDQo+IE5pdHM6IFRoaXMgcGF0
+Y2ggY2hlY2tzIHRoZSBIVyB2ZXJzaW9uIGJlZm9yZSBzZXR0aW5nIGRiZyBzZWxlY3QuDQo+ID4g
+DQo+ID4gU2lnbmVkLW9mZi1ieTogUGV0ZXIgV2FuZyA8cGV0ZXIud2FuZ0BtZWRpYXRlay5jb20+
+DQo+ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMgfCAgIDIzICsr
+KysrKysrKysrKysrKysrKysrKy0tDQo+ID4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVr
+LmggfCAgICA1ICsrKysrDQo+ID4gIDIgZmlsZXMgY2hhbmdlZCwgMjYgaW5zZXJ0aW9ucygrKSwg
+MiBkZWxldGlvbnMoLSkNCj4gPiANCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91
+ZnMtbWVkaWF0ZWsuYw0KPiA+IGIvZHJpdmVycy9zY3NpL3Vmcy91ZnMtDQo+ID4gbWVkaWF0ZWsu
+Yw0KPiA+IGluZGV4IGQyYzI1MTYuLjAwNTBlMDEgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9z
+Y3NpL3Vmcy91ZnMtbWVkaWF0ZWsuYw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1l
+ZGlhdGVrLmMNCj4gPiBAQCAtMjk2LDYgKzI5NiwyNSBAQCBzdGF0aWMgdm9pZA0KPiA+IHVmc19t
+dGtfc2V0dXBfcmVmX2Nsa193YWl0X3VzKHN0cnVjdA0KPiA+IHVmc19oYmEgKmhiYSwNCj4gPiAg
+CWhvc3QtPnJlZl9jbGtfdW5nYXRpbmdfd2FpdF91cyA9IHVuZ2F0aW5nX3VzOw0KPiA+ICB9DQo+
+ID4gIA0KPiA+ICtfX25vX2tjc2FuDQo+IA0KPiBUaGlzIGlzIHJhcmVseSB1c2VkIGluIG1haW5z
+dHJlYW0ga2VybmVsLiBBY2NvcmRpbmcgdG8gbXkgZ3JlcA0KPiByZXN1bHRzLA0KPiBfX25vX2tj
+c2FuIGlzIG9ubHkgdXNlZCBieSBrY3Nhbi10ZXN0IGl0c2VsZi4NCj4gDQo+IEJlc2lkZXMsIGRi
+ZyBzZWxlY3QgY29uZmlndXJhdGlvbiBtYXkgbm90IGJlIG5lY2Vzc2FyeSBpZiB0aGUgbW9kZSBp
+cw0KPiBhbHJlYWR5IGNvbmZpZ3VyZWQgYmVmb3JlPyBJIGp1c3Qgd29uZGVyIHRoYXQgY2FuIHdl
+IGF2b2lkIHNldHRpbmcNCj4gdGhlc2UgcmVnaXN0ZXJzIGV2ZXJ5IHF1ZXJ5Pw0KPiANCg0KWWVz
+LCB3aWxsIHJlbW92ZSBfX25vX2tjc2FuIGFuZCBhZGQgYSBpcF92ZXIgaW4gbWVkaWF0ZWsgaG9z
+dCBzdHJ1Y3QNCnRvIGF2b2lkIEtDU0FOIHdhcm5pbmcuDQpEYmcgc2VsZWN0IHZhbHVlIHdpbGwg
+Y2xlYXIgYnkgaGNpIHJlc2V0LiBNYXliZSB3ZSBjYW5kIGFkZCBhIHZhcmlhYmxlDQppbiBtZWRp
+YXRlayBob3N0IHNydWN0IHRvIHJlY29yZCBpZiBuZWVkIHNldCBkYmcgc2VsZWN0Lg0KDQo+ID4g
+K3N0YXRpYyB2b2lkIHVmc19tdGtfZGJnX3NlbChzdHJ1Y3QgdWZzX2hiYSAqaGJhKQ0KPiA+ICt7
+DQo+ID4gKwlzdGF0aWMgdTMyIGh3X3ZlcjsNCj4gPiArDQo+ID4gKwlpZiAoIWh3X3ZlcikNCj4g
+PiArCQlod192ZXIgPSB1ZnNoY2RfcmVhZGwoaGJhLCBSRUdfVUZTX01US19IV19WRVIpOw0KPiAN
+Cj4gUGVyaGFwcyB5b3UgY2FuIGtlZXAgdGhpcyB2ZXJzaW9uIGluIHN0cnVjdCBob3N0LT5od192
+ZXI/IE1heWJlIHlvdQ0KPiBuZWVkIHRvIGFkZCBhIG5ldyBtZW1iZXIgaW4gdGhhdCBzdHJ1Y3Qs
+IGZvciBleGFtcGxlLCBpcF92ZXIuDQo+IA0KPiA+ICsNCj4gPiArCWlmICgoKGh3X3ZlciA+PiAx
+NikgJiAweEZGKSA+PSAweDM2KSB7DQo+ID4gKwkJdWZzaGNkX3dyaXRlbChoYmEsIDB4ODIwODIw
+LCBSRUdfVUZTX0RFQlVHX1NFTCk7DQo+ID4gKwkJdWZzaGNkX3dyaXRlbChoYmEsIDB4MCwgUkVH
+X1VGU19ERUJVR19TRUxfQjApOw0KPiA+ICsJCXVmc2hjZF93cml0ZWwoaGJhLCAweDU1NTU1NTU1
+LCBSRUdfVUZTX0RFQlVHX1NFTF9CMSk7DQo+ID4gKwkJdWZzaGNkX3dyaXRlbChoYmEsIDB4YWFh
+YWFhYWEsIFJFR19VRlNfREVCVUdfU0VMX0IyKTsNCj4gPiArCQl1ZnNoY2Rfd3JpdGVsKGhiYSwg
+MHhmZmZmZmZmZiwgUkVHX1VGU19ERUJVR19TRUxfQjMpOw0KPiA+ICsJfSBlbHNlIHsNCj4gPiAr
+CQl1ZnNoY2Rfd3JpdGVsKGhiYSwgMHgyMCwgUkVHX1VGU19ERUJVR19TRUwpOw0KPiA+ICsJfQ0K
+PiA+ICt9DQo+ID4gKw0KPiA+ICBzdGF0aWMgaW50IHVmc19tdGtfd2FpdF9saW5rX3N0YXRlKHN0
+cnVjdCB1ZnNfaGJhICpoYmEsIHUzMiBzdGF0ZSwNCj4gPiAgCQkJCSAgIHVuc2lnbmVkIGxvbmcg
+bWF4X3dhaXRfbXMpDQo+ID4gIHsNCj4gPiBAQCAtMzA1LDcgKzMyNCw3IEBAIHN0YXRpYyBpbnQg
+dWZzX210a193YWl0X2xpbmtfc3RhdGUoc3RydWN0DQo+ID4gdWZzX2hiYQ0KPiA+ICpoYmEsIHUz
+MiBzdGF0ZSwNCj4gPiAgCXRpbWVvdXQgPSBrdGltZV9hZGRfbXMoa3RpbWVfZ2V0KCksIG1heF93
+YWl0X21zKTsNCj4gPiAgCWRvIHsNCj4gPiAgCQl0aW1lX2NoZWNrZWQgPSBrdGltZV9nZXQoKTsN
+Cj4gPiAtCQl1ZnNoY2Rfd3JpdGVsKGhiYSwgMHgyMCwgUkVHX1VGU19ERUJVR19TRUwpOw0KPiA+
+ICsJCXVmc19tdGtfZGJnX3NlbChoYmEpOw0KPiA+ICAJCXZhbCA9IHVmc2hjZF9yZWFkbChoYmEs
+IFJFR19VRlNfUFJPQkUpOw0KPiA+ICAJCXZhbCA9IHZhbCA+PiAyODsNCj4gPiAgDQo+ID4gQEAg
+LTEwMDEsNyArMTAyMCw3IEBAIHN0YXRpYyB2b2lkIHVmc19tdGtfZGJnX3JlZ2lzdGVyX2R1bXAo
+c3RydWN0DQo+ID4gdWZzX2hiYSAqaGJhKQ0KPiA+ICAJCQkgIk1QSFkgQ3RybCAiKTsNCj4gPiAg
+DQo+ID4gIAkvKiBEaXJlY3QgZGVidWdnaW5nIGluZm9ybWF0aW9uIHRvIFJFR19NVEtfUFJPQkUg
+Ki8NCj4gPiAtCXVmc2hjZF93cml0ZWwoaGJhLCAweDIwLCBSRUdfVUZTX0RFQlVHX1NFTCk7DQo+
+ID4gKwl1ZnNfbXRrX2RiZ19zZWwoaGJhKTsNCj4gPiAgCXVmc2hjZF9kdW1wX3JlZ3MoaGJhLCBS
+RUdfVUZTX1BST0JFLCAweDQsICJEZWJ1ZyBQcm9iZSAiKTsNCj4gPiAgfQ0KPiA+ICANCj4gPiBk
+aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaA0KPiA+IGIvZHJpdmVy
+cy9zY3NpL3Vmcy91ZnMtDQo+ID4gbWVkaWF0ZWsuaA0KPiA+IGluZGV4IDNmMGQzYmIuLmZjNDBj
+MDUgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9zY3NpL3Vmcy91ZnMtbWVkaWF0ZWsuaA0KPiA+
+ICsrKyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmgNCj4gPiBAQCAtMTUsOSArMTUs
+MTQgQEANCj4gPiAgI2RlZmluZSBSRUdfVUZTX1JFRkNMS19DVFJMICAgICAgICAgMHgxNDQNCj4g
+PiAgI2RlZmluZSBSRUdfVUZTX0VYVFJFRyAgICAgICAgICAgICAgMHgyMTAwDQo+ID4gICNkZWZp
+bmUgUkVHX1VGU19NUEhZQ1RSTCAgICAgICAgICAgIDB4MjIwMA0KPiA+ICsjZGVmaW5lIFJFR19V
+RlNfTVRLX0hXX1ZFUiAgICAgICAgICAweDIyNDANCj4gDQo+IEhXX1ZFUiBpcyBzb21laG93IGFt
+YmlndW91cywgZm9yIGV4YW1wbGUsIGhvdyBhYm91dA0KPiBSRUdfVUZTX01US19JUF9WRVI/DQo+
+IA0KDQpTdXJlLCBjb3VsZCBjaGFuZ2UgbmFtaW5nIGZvciBlYXN5IHVuZGVyc3RhbmQuDQoNCj4g
+PiAgI2RlZmluZSBSRUdfVUZTX1JFSkVDVF9NT04gICAgICAgICAgMHgyMkFDDQo+ID4gICNkZWZp
+bmUgUkVHX1VGU19ERUJVR19TRUwgICAgICAgICAgIDB4MjJDMA0KPiA+ICAjZGVmaW5lIFJFR19V
+RlNfUFJPQkUgICAgICAgICAgICAgICAweDIyQzgNCj4gPiArI2RlZmluZSBSRUdfVUZTX0RFQlVH
+X1NFTF9CMCAgICAgICAgMHgyMkQwDQo+ID4gKyNkZWZpbmUgUkVHX1VGU19ERUJVR19TRUxfQjEg
+ICAgICAgIDB4MjJENA0KPiA+ICsjZGVmaW5lIFJFR19VRlNfREVCVUdfU0VMX0IyICAgICAgICAw
+eDIyRDgNCj4gPiArI2RlZmluZSBSRUdfVUZTX0RFQlVHX1NFTF9CMyAgICAgICAgMHgyMkRDDQo+
+IA0KPiBQZXJoYXBzIHRoZSBkZWJ1ZyBzZWxlY3QgZGVzaWduIGNvdWxkIGJlIHNpbXBsaWZpZWQg
+aW4gdGhlIGZ1dHVyZSwNCj4gZm9yDQo+IGV4YW1wbGUsIGRyaXZlciBjYW4gcXVlcnkgd2hhdCBp
+dCB3YW50cyBieSByZWFkaW5nIG9ubHkgb25lIHJlZ2lzdGVyDQo+IHdpdGhvdXQgY29uZmlndXJp
+bmcgYW55dGhpbmcgZmlyc3Q/IEFsdGhvdWdoIHRoaXMgaXMgYmV5b25kIHRoZSBzY29wZQ0KPiBv
+ZiB0aGlzIHBhdGNoLg0KPiANCj4gVGhhbmtzLA0KPiBTdGFubGV5IENodQ0KPiANCj4gPiAgDQo+
+ID4gIC8qDQo+ID4gICAqIFJlZi1jbGsgY29udHJvbA0KPiANCj4gDQo=
 
