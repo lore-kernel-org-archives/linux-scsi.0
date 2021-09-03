@@ -2,72 +2,69 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-15.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDFDEC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 14:09:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38134C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 14:11:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C45B6610CF
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 14:09:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1340D610A2
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 14:11:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349248AbhICOK2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Sep 2021 10:10:28 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33796 "EHLO
+        id S232812AbhICOMl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Sep 2021 10:12:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34358 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349205AbhICOK0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2021 10:10:26 -0400
-Received: from mail-il1-x12a.google.com (mail-il1-x12a.google.com [IPv6:2607:f8b0:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6DF6C061757
-        for <linux-scsi@vger.kernel.org>; Fri,  3 Sep 2021 07:09:26 -0700 (PDT)
-Received: by mail-il1-x12a.google.com with SMTP id l10so5314845ilh.8
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Sep 2021 07:09:26 -0700 (PDT)
+        with ESMTP id S231164AbhICOMk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2021 10:12:40 -0400
+Received: from mail-io1-xd34.google.com (mail-io1-xd34.google.com [IPv6:2607:f8b0:4864:20::d34])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8BEBC061575
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Sep 2021 07:11:40 -0700 (PDT)
+Received: by mail-io1-xd34.google.com with SMTP id q3so6877817iot.3
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Sep 2021 07:11:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=EQm9RAyywsVzGwf0kUxWQhr1Th2A95c0kLcLDX50iWI=;
-        b=hQgFoq/6s+zpvk/nvts1YvPI+jgUAbagVJiJ9wrT4D1sO5SyYHrZYlf7T6qIHTuB0W
-         NkOFzoF0hq7zosK9Va52OwAWvr1jG2rLiyJAnGcFKWwgR54mnX/YmFb0l1bHRVfK8y4R
-         wGDFq18cl+H6wlr17CWbOvbiLHxydkOjqe/hZqpfH8kM7Vlw6IMYScy1MI2K+2xb5sYd
-         1SW0CVqeAUqFpKSXo9QN9JSyZzbcCFms/1dE1TueqbjMvzFxTY70D3B5mp/RFLEgRmcx
-         xMGb1Wf93E9xEXu4dIzSsdVtaw7/wrAOb0npHt5gQ/N7UH1QCppT49q4puXP9r7+YwRE
-         0x9A==
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=sFLevf6p4HjurMaryx5OsTscTs68zB9kNma2BMpqvo8=;
+        b=XW4ew0B786SJO1juipCJntR8kFnk+Ci8hOrVEHLEkSlhWdzByT9R6sPZOCjZnU5/Ip
+         IPPDS+5L/u8sOghZiuNzJl+/63mSTXjxbzC64ygzUeWjD6QAUiCVf+XzMg/3+4oRfNA/
+         Dpjw3C/uYjC3n3MI2fMJL8gMXE9ijWuTokKaQ/YQnRmahshZy1AxKvTXBHEV3uw/rjlI
+         yORrUTVb5xdg0WE26YrwrLRA24KgkPBU5FI+BmEdTTNd3WA8NjnVVO7n3U3YCdUk3Rt9
+         06xn0IzxSPSyCzEmYRpFU41HGMH/HjwtBYfo+u9368UNvVniVYm+knEUvwuF7pIWX25J
+         uL8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=EQm9RAyywsVzGwf0kUxWQhr1Th2A95c0kLcLDX50iWI=;
-        b=n0/6Yi1DCyrncWT1wyDy3PLKSVO4JihuCDEd534sdQ/heaJmBy4ane0TVW1f92pdlg
-         lqFPvCSDQeu7qbbNhNZHl6EQAxy1VOFMJAKRLITmmIsyJVoO9ur4gKjxxQC9zA4hVdS4
-         +NuJJFfS0AVMFPmQkI6f/tnwr7utuNOirgb0Y/ttRj/VoQxk3O2Q7xnh59TXIYQId8m3
-         nOrsd45mjx6wQkLDcgbFf5LoeKu06D3N/8WZm1UuxcVW7AMoCGt+lHWhaYv8loyiIxfb
-         o3fMET4lMSuU8G/jRo46v8L6eCLq5f0XlmG9soP685eSnOCKDTrn1/oKOTbYeEsdO3Rz
-         3Kmg==
-X-Gm-Message-State: AOAM532Nx4TixpMq8lkBO71KPg+R7GKy0/e1ms1OxL7cL25fZ7rCM0ed
-        ZCbz5jtuzbGuWWZRGW3pw+uU3IDEHxOFIQ==
-X-Google-Smtp-Source: ABdhPJwOIDYWjgzl+UWUuBzuByBjDqG3hSUWKXQYCkR8lTd/vCa6M/hBErD1tq/w3Az8XnlYJ2xmHQ==
-X-Received: by 2002:a92:cf0d:: with SMTP id c13mr2674374ilo.49.1630678166112;
-        Fri, 03 Sep 2021 07:09:26 -0700 (PDT)
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=sFLevf6p4HjurMaryx5OsTscTs68zB9kNma2BMpqvo8=;
+        b=iB3Sw1fE0OXhDUpRoSwuPwRTLLDLv7B5xwc+nzexHOMIjIVnkjTqwfxANp+GA4DlG7
+         jo81Ab8Obz8QHE1Xfm4qfBTcVlvGUxVsqbxLyy+ejqU8rAT4jxmXRX7affQMq2X7gpbK
+         3blwJMeGzjIjzhTfm4X1JWjft5Ms2ODjl5lJzQcIZnBb0K2vVdhkl5QkGWbC27TKRwhi
+         Yjc9vHY37Dq1duhEANr0DmEr6i1QdiKqZ0Rc37s6uo2mfn9HbyQLTp5D7JLcffMLRYPc
+         yk01Rt1u3u5+BziD0tLpVr3NiDSl9L9TZ2trexWGFni7inLysf2aniK7zS8NR6eSCQqX
+         mrcg==
+X-Gm-Message-State: AOAM530HxM2VXZ2qJMhGC0C/L1C1Y1C4SdGry65P62ccKfdUROChnB0u
+        Lum9Z9+g6aYEMSPALFiEQ+u6aOr2IQWWuQ==
+X-Google-Smtp-Source: ABdhPJyTdhRbhf78uaFIfnKo36dzlnEL3GPirqjIWQbjegGnDBlf1rAvDzDtHRntr+34Wb0phqHrow==
+X-Received: by 2002:a02:ab87:: with SMTP id t7mr2792998jan.127.1630678300227;
+        Fri, 03 Sep 2021 07:11:40 -0700 (PDT)
 Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id x12sm2589061ill.6.2021.09.03.07.09.25
+        by smtp.gmail.com with ESMTPSA id x1sm2717088ilg.33.2021.09.03.07.11.39
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 03 Sep 2021 07:09:25 -0700 (PDT)
-Subject: Re: Wanted: CDROM maintainer
-To:     Phillip Potter <phil@philpotter.co.uk>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <22d59432-1b8e-0125-96e9-51b041fe3536@kernel.dk>
- <20210827235623.1344-1-phil@philpotter.co.uk>
+        Fri, 03 Sep 2021 07:11:39 -0700 (PDT)
+To:     linux-scsi <linux-scsi@vger.kernel.org>
+Cc:     "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
 From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <89679d81-7e9e-7cae-c335-b97d53fa68ab@kernel.dk>
-Date:   Fri, 3 Sep 2021 08:09:25 -0600
+Subject: [PATCH] scsi: remove SCSI CDROM MAINTAINERS entry
+Message-ID: <c5e12bd1-10de-634c-d6b3-dac79ed01af5@kernel.dk>
+Date:   Fri, 3 Sep 2021 08:11:39 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
-In-Reply-To: <20210827235623.1344-1-phil@philpotter.co.uk>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -75,25 +72,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/27/21 5:56 PM, Phillip Potter wrote:
-> Dear Jens,
-> 
-> Thought I'd reply publicly given the spirit of the mailing lists, hope this
-> is OK.
-> 
-> Whilst I haven't worked on this area of the kernel, I would certainly like
-> to register my interest. Many thanks.
+There's little point in keeping this one separately maintained these
+days, so just remove the entry and it'll fall under the SCSI subsystem
+where it belongs.
 
-Why don't we give it a try, then? Here's what I propose:
+Signed-off-by: Jens Axboe <axboe@kernel.dk>
 
-1) Send a patch that updates MAINTAINERS for the uniform cdrom driver to
-   yourself
+---
 
-2) Just send pull requests for changes through me, so I can keep an eye
-   on it at least initially
+Please queue this one for 5.15, thanks.
 
-I'll send in a patch to update the SCSI cdrom to just fall under SCSI,
-probably just removing that entry as that should then happen by default.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fb1c48c34009..8c3aec73c4b1 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -16616,13 +16616,6 @@ M:	Lubomir Rintel <lkundrak@v3.sk>
+ S:	Supported
+ F:	drivers/char/pcmcia/scr24x_cs.c
+ 
+-SCSI CDROM DRIVER
+-M:	Jens Axboe <axboe@kernel.dk>
+-L:	linux-scsi@vger.kernel.org
+-S:	Maintained
+-W:	http://www.kernel.dk
+-F:	drivers/scsi/sr*
+-
+ SCSI RDMA PROTOCOL (SRP) INITIATOR
+ M:	Bart Van Assche <bvanassche@acm.org>
+ L:	linux-rdma@vger.kernel.org
 
 -- 
 Jens Axboe
