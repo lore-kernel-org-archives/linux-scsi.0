@@ -2,135 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA36CC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 15:26:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0AFDCC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 18:38:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B0D6761056
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 15:26:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D158A61051
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 18:38:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349930AbhICP1p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Sep 2021 11:27:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50976 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1349907AbhICP1f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2021 11:27:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1630682794;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tEPNOxkaSwVynI5bC9ITnmbjNbhpuULp2AY9Cx1gq1w=;
-        b=YBviGS280fgksjac80ID9aM0xJw3pnrWMH9g+o66vewY1/svx+qf0d/toAANGEwG5FoTxn
-        W27ftYNpW4Vp/UPmTqfx0J2g+2p3mgthXjVrMxNPvTA3Ulf9PQBPuZHZlzzB4vKXAcKOTe
-        aLgUvQPHPDhWnMx32EzCUUJsu9wE6lU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-435-zok3IZI4OUubFL4NfRx2ng-1; Fri, 03 Sep 2021 11:26:34 -0400
-X-MC-Unique: zok3IZI4OUubFL4NfRx2ng-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 2C75F1854E20;
-        Fri,  3 Sep 2021 15:26:32 +0000 (UTC)
-Received: from virtlab512.virt.lab.eng.bos.redhat.com (virtlab512.virt.lab.eng.bos.redhat.com [10.19.152.206])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 540656F7EA;
-        Fri,  3 Sep 2021 15:26:27 +0000 (UTC)
-From:   Nitesh Narayan Lal <nitesh@redhat.com>
-To:     linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        davem@davemloft.net, ajit.khaparde@broadcom.com,
-        sriharsha.basavapatna@broadcom.com, somnath.kotur@broadcom.com,
-        huangguangbin2@huawei.com, huangdaode@huawei.com,
-        mtosatti@redhat.com, juri.lelli@redhat.com, frederic@kernel.org,
-        abelits@marvell.com, bhelgaas@google.com, rostedt@goodmis.org,
-        peterz@infradead.org
-Cc:     nilal@redhat.com, jesse.brandeburg@intel.com, robin.murphy@arm.com,
-        mingo@kernel.org, jbrandeb@kernel.org, akpm@linuxfoundation.org,
-        sfr@canb.auug.org.au, stephen@networkplumber.org,
-        rppt@linux.vnet.ibm.com, chris.friesen@windriver.com,
-        maz@kernel.org, nhorman@tuxdriver.com, pjwaskiewicz@gmail.com,
-        sassmann@redhat.com, thenzl@redhat.com, james.smart@broadcom.com,
-        dick.kennedy@broadcom.com, jkc@redhat.com, faisal.latif@intel.com,
-        shiraz.saleem@intel.com, tariqt@nvidia.com, ahleihel@redhat.com,
-        kheib@redhat.com, borisp@nvidia.com, saeedm@nvidia.com,
-        tatyana.e.nikolova@intel.com, mustafa.ismail@intel.com,
-        ahs3@redhat.com, leonro@nvidia.com,
-        chandrakanth.patil@broadcom.com, bjorn.andersson@linaro.org,
-        chunkuang.hu@kernel.org, yongqiang.niu@mediatek.com,
-        baolin.wang7@gmail.com, poros@redhat.com, minlei@redhat.com,
-        emilne@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        kabel@kernel.org, viresh.kumar@linaro.org, kuba@kernel.org,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com,
-        suganath-prabu.subramani@broadcom.com, tglx@linutronix.de,
-        ley.foon.tan@intel.com, jbrunet@baylibre.com,
-        johannes@sipsolutions.net, snelson@pensando.io,
-        lewis.hanly@microchip.com, benve@cisco.com, _govind@gmx.com,
-        jassisinghbrar@gmail.com
-Subject: [PATCH v6 14/14] net/mlx4: Use irq_update_affinity_hint
-Date:   Fri,  3 Sep 2021 11:24:30 -0400
-Message-Id: <20210903152430.244937-15-nitesh@redhat.com>
-In-Reply-To: <20210903152430.244937-1-nitesh@redhat.com>
-References: <20210903152430.244937-1-nitesh@redhat.com>
+        id S235931AbhICSjG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Sep 2021 14:39:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39858 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233502AbhICSjF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2021 14:39:05 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45EF7C061757
+        for <linux-scsi@vger.kernel.org>; Fri,  3 Sep 2021 11:38:04 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id i13so146727pjv.5
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Sep 2021 11:38:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=philpotter-co-uk.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=AwMjWECVF5DouWRg4DDCdzuDm8b1FUkL2lfLjigAdrw=;
+        b=yPp78YefA5OulhXKpgoj7VOFdGIMV4/hkTb7A7cYDExX5sMe0SIb9JkbU5kkQGNFqM
+         Mg6TWDXyH0psAuuj9rC/blDlean6r4rAZvJFcVsg2vNblmUQ7B6FcN6+CmJvcBXbD6hR
+         jQuMs6DQVKqMQoZ7R8b68PnqpPfWTimC9XLCS3XjH1aAFuGRghcl3XLNA/ox+qCk/OH8
+         GDMml/nqQyANCVkw1+3m0IfZ4opjWUp7GampTB4girBWalOk3FiBI4A9wLbxy96eoEjT
+         UCbxYj/7QdzJeTxBuCpebgB0CjRKtvIQEZkztGLX5zWqcyTuv+63lXWzU6UVt30o9BkG
+         ++dg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=AwMjWECVF5DouWRg4DDCdzuDm8b1FUkL2lfLjigAdrw=;
+        b=hU04t+5k7rJwLYzyT7M2pXJcrrydN4lSu2FMkMDT/NVJABWyxxHECYnG3tCQrPgrCM
+         HA+gRIPauKEoPIi8+c0H71OiAnFegq4PmWbk/IaxE9NSGVy1KH+bEiod26JMd7IRGiw3
+         I1fdYJ/m6RMFbXX+xOyacCj4lBsBo8X824TDxw7Rsahq21e2wN+ruUH6BwR5EcBooXQo
+         dwyRaD0s2B9O/rjGyohOtHswqGYXoG6EtwJkFT9w4Te84r7xk+XRTZ51v4xsarfvJ4p/
+         057/xJofZUcuTW6vXvVVKe013iPcKWt+qm9HR7VZIxVA/qBNEj/Ktg6MW0XGnpkKYgWO
+         ulYw==
+X-Gm-Message-State: AOAM532jQvKm7TvkCdToJPP6zmpVf8+wd6Jt4ytgVa3qaHHS1wawNSAF
+        wsx1DkGO9coPq/AJ6yH6hVpucyZh+Os6QG/FK/liXEXHj20=
+X-Google-Smtp-Source: ABdhPJyyj+KbMk2/1Jcy/3c5IkjNcQX5t+5qP+Gn0/3iNoyJbLgEOdEywfmmlMNyqFCeuS7aVFZovgcz/HSC0ZGSCsA=
+X-Received: by 2002:a17:90a:414c:: with SMTP id m12mr342815pjg.100.1630694284100;
+ Fri, 03 Sep 2021 11:38:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+References: <22d59432-1b8e-0125-96e9-51b041fe3536@kernel.dk>
+ <20210827235623.1344-1-phil@philpotter.co.uk> <89679d81-7e9e-7cae-c335-b97d53fa68ab@kernel.dk>
+In-Reply-To: <89679d81-7e9e-7cae-c335-b97d53fa68ab@kernel.dk>
+From:   Phillip Potter <phil@philpotter.co.uk>
+Date:   Fri, 3 Sep 2021 19:37:53 +0100
+Message-ID: <CAA=Fs0kVfjn7vDSq-v=aQcUuZwoST0ucYRir90GEC5cU=K9Hrw@mail.gmail.com>
+Subject: Re: Wanted: CDROM maintainer
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver uses irq_set_affinity_hint() to update the affinity_hint mask
-that is consumed by the userspace to distribute the interrupts. However,
-under the hood irq_set_affinity_hint() also applies the provided cpumask
-(if not NULL) as the affinity for the given interrupt which is an
-undocumented side effect.
+On Fri, 3 Sept 2021 at 15:09, Jens Axboe <axboe@kernel.dk> wrote:
+>
+> On 8/27/21 5:56 PM, Phillip Potter wrote:
+> > Dear Jens,
+> >
+> > Thought I'd reply publicly given the spirit of the mailing lists, hope this
+> > is OK.
+> >
+> > Whilst I haven't worked on this area of the kernel, I would certainly like
+> > to register my interest. Many thanks.
+>
+> Why don't we give it a try, then? Here's what I propose:
+>
+> 1) Send a patch that updates MAINTAINERS for the uniform cdrom driver to
+>    yourself
+>
+> 2) Just send pull requests for changes through me, so I can keep an eye
+>    on it at least initially
+>
+> I'll send in a patch to update the SCSI cdrom to just fall under SCSI,
+> probably just removing that entry as that should then happen by default.
+>
+> --
+> Jens Axboe
+>
 
-To remove this side effect irq_set_affinity_hint() has been marked
-as deprecated and new interfaces have been introduced. Hence, replace the
-irq_set_affinity_hint() with the new interface irq_update_affinity_hint()
-that only updates the affinity_hint pointer.
+Dear Jens,
 
-Signed-off-by: Nitesh Narayan Lal <nitesh@redhat.com>
-Reviewed-by: Leon Romanovsky <leonro@nvidia.com>
-Reviewed-by: Tariq Toukan <tariqt@nvidia.com>
----
- drivers/net/ethernet/mellanox/mlx4/eq.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+Many thanks, sounds great - I'll send through a patch this evening as suggested.
 
-diff --git a/drivers/net/ethernet/mellanox/mlx4/eq.c b/drivers/net/ethernet/mellanox/mlx4/eq.c
-index 9e48509ed3b2..414e390e6b48 100644
---- a/drivers/net/ethernet/mellanox/mlx4/eq.c
-+++ b/drivers/net/ethernet/mellanox/mlx4/eq.c
-@@ -244,9 +244,9 @@ static void mlx4_set_eq_affinity_hint(struct mlx4_priv *priv, int vec)
- 	    cpumask_empty(eq->affinity_mask))
- 		return;
- 
--	hint_err = irq_set_affinity_hint(eq->irq, eq->affinity_mask);
-+	hint_err = irq_update_affinity_hint(eq->irq, eq->affinity_mask);
- 	if (hint_err)
--		mlx4_warn(dev, "irq_set_affinity_hint failed, err %d\n", hint_err);
-+		mlx4_warn(dev, "irq_update_affinity_hint failed, err %d\n", hint_err);
- }
- #endif
- 
-@@ -1123,9 +1123,7 @@ static void mlx4_free_irqs(struct mlx4_dev *dev)
- 	for (i = 0; i < dev->caps.num_comp_vectors + 1; ++i)
- 		if (eq_table->eq[i].have_irq) {
- 			free_cpumask_var(eq_table->eq[i].affinity_mask);
--#if defined(CONFIG_SMP)
--			irq_set_affinity_hint(eq_table->eq[i].irq, NULL);
--#endif
-+			irq_update_affinity_hint(eq_table->eq[i].irq, NULL);
- 			free_irq(eq_table->eq[i].irq, eq_table->eq + i);
- 			eq_table->eq[i].have_irq = 0;
- 		}
--- 
-2.27.0
-
+Regards,
+Phil
