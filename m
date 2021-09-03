@@ -2,203 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B393BC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 10:32:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0997CC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 12:48:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D9E5610E6
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 10:32:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E2317610CC
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 12:48:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349113AbhICKd3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Sep 2021 06:33:29 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3725 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1349004AbhICKd3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2021 06:33:29 -0400
-Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4H1Db40xLXz67W7D;
-        Fri,  3 Sep 2021 18:30:40 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.8; Fri, 3 Sep 2021 12:32:16 +0200
-Received: from localhost.localdomain (10.69.192.58) by
- lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Fri, 3 Sep 2021 11:32:14 +0100
-From:   John Garry <john.garry@huawei.com>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <yanaijie@huawei.com>,
-        John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: libsas: co-locate exports with symbols
-Date:   Fri, 3 Sep 2021 18:27:32 +0800
-Message-ID: <1630664852-225115-1-git-send-email-john.garry@huawei.com>
-X-Mailer: git-send-email 2.8.1
+        id S1348926AbhICMtU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Sep 2021 08:49:20 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:44104 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S244232AbhICMtH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2021 08:49:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1630673287;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=44qV1t1dNjoY+ogDzQhPAlZXPZTbBgSbSE3UNWUYIN0=;
+        b=F2OmnPnu3JiTlHNYv8Bx339TLpRmWsQuj+mORZsosMQ6H3BevHKsC0zG/cik0hGcvc+NUP
+        skIsXm6QTL/sh0IZM6IgMvftpjUZfDrXVKTDCbEb/CIVB6Vv0tH0L2AGk+A/R2sZKup8Q5
+        44Jj/dxByksqOsYMOr2FAkp8r0dyfCI=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-486-XcyneTKqPHSfKk1ieHJX0g-1; Fri, 03 Sep 2021 08:48:04 -0400
+X-MC-Unique: XcyneTKqPHSfKk1ieHJX0g-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1DC18801AC3;
+        Fri,  3 Sep 2021 12:48:03 +0000 (UTC)
+Received: from raketa.redhat.com (unknown [10.40.193.171])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C6A4C6B543;
+        Fri,  3 Sep 2021 12:48:01 +0000 (UTC)
+From:   Maurizio Lombardi <mlombard@redhat.com>
+To:     martin.petersen@oracle.com
+Cc:     bostroesser@gmail.com, michael.christie@oracle.com,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: [PATCH] target: fix the pgr/alua_support_store functions
+Date:   Fri,  3 Sep 2021 14:48:00 +0200
+Message-Id: <20210903124800.30525-1-mlombard@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.69.192.58]
-X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-It is standard practice to co-locate export declarations with the symbol
-which is being exported. Or at least in the same file - see
-sas_phy_reset().
+Commit 356ba2a8bc8d ("scsi: target: tcmu: Make pgr_support and
+alua_support attributes writable")
+introduced support for changeable alua_support and pgr_support
+target attributes. They can only be changed
+if the backstore is user-backed, otherwise the kernel returns -EINVAL.
 
-Modify libsas to follow this practice consistently.
+This caused a regression in targetcli/rtslib because now a warning
+is triggered when performing a target restore that includes
+non-userbacked backstores, even if rtslib is not trying to change
+the attributes' values:
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+$ targetctl restore
+Storage Object block/storage1: Cannot set attribute alua_support:
+[Errno 22] Invalid argument, skipped
+Storage Object block/storage1: Cannot set attribute pgr_support:
+[Errno 22] Invalid argument, skipped
 
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index b4b0633f3904..63e987fec937 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -147,6 +147,7 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
- 
- 	return error;
- }
-+EXPORT_SYMBOL_GPL(sas_register_ha);
- 
- static void sas_disable_events(struct sas_ha_struct *sas_ha)
+Fix this warning by returning an error only if we are really
+going to flip the PGR/ALUA bit in the transport_flags field,
+otherwise we'll do nothing and return success.
+
+Return EOPNOTSUPP instead of EINVAL if the pgr/alua attributes
+can't be changed, this way it'll be possible for userspace to understand
+if the operation failed because an invalid value has been passed
+to strtobool() or because the attributes are fixed.
+
+Fixes: 356ba2a8bc8d ("scsi: target: tcmu: Make pgr_support and alua_support attributes writable")
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/target/target_core_configfs.c | 32 +++++++++++++++++----------
+ 1 file changed, 20 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
+index 102ec644bc8a..72d750f753bf 100644
+--- a/drivers/target/target_core_configfs.c
++++ b/drivers/target/target_core_configfs.c
+@@ -1110,20 +1110,24 @@ static ssize_t alua_support_store(struct config_item *item,
  {
-@@ -176,6 +177,7 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
+ 	struct se_dev_attrib *da = to_attrib(item);
+ 	struct se_device *dev = da->da_dev;
+-	bool flag;
++	bool flag, oldflag;
+ 	int ret;
  
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(sas_unregister_ha);
- 
- static int sas_get_linkerrors(struct sas_phy *phy)
- {
-@@ -313,6 +315,7 @@ int sas_phy_reset(struct sas_phy *phy, int hard_reset)
++	ret = strtobool(page, &flag);
++	if (ret < 0)
++		return ret;
++
++	oldflag = !(dev->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_ALUA);
++	if (flag == oldflag)
++		return count;
++
+ 	if (!(dev->transport->transport_flags_changeable &
+ 	      TRANSPORT_FLAG_PASSTHROUGH_ALUA)) {
+ 		pr_err("dev[%p]: Unable to change SE Device alua_support:"
+ 			" alua_support has fixed value\n", dev);
+-		return -EINVAL;
++		return -EOPNOTSUPP;
  	}
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(sas_phy_reset);
  
- int sas_set_phy_speed(struct sas_phy *phy,
- 		      struct sas_phy_linkrates *rates)
-@@ -701,5 +704,3 @@ MODULE_LICENSE("GPL v2");
- module_init(sas_class_init);
- module_exit(sas_class_exit);
- 
--EXPORT_SYMBOL_GPL(sas_register_ha);
--EXPORT_SYMBOL_GPL(sas_unregister_ha);
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index ee44a0d7730b..44961cbf1060 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -201,6 +201,7 @@ int sas_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	cmd->scsi_done(cmd);
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(sas_queuecommand);
- 
- static void sas_eh_finish_cmd(struct scsi_cmnd *cmd)
- {
-@@ -511,6 +512,7 @@ int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
- 
- 	return FAILED;
- }
-+EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
- 
- int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
- {
-@@ -532,6 +534,7 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
- 
- 	return FAILED;
- }
-+EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
- 
- /* Try to reset a device */
- static int try_to_reset_cmd_device(struct scsi_cmnd *cmd)
-@@ -790,6 +793,7 @@ int sas_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
- 
- 	return -EINVAL;
- }
-+EXPORT_SYMBOL_GPL(sas_ioctl);
- 
- struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy)
- {
-@@ -832,6 +836,7 @@ int sas_target_alloc(struct scsi_target *starget)
- 	starget->hostdata = found_dev;
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(sas_target_alloc);
- 
- #define SAS_DEF_QD 256
- 
-@@ -860,6 +865,7 @@ int sas_slave_configure(struct scsi_device *scsi_dev)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(sas_slave_configure);
- 
- int sas_change_queue_depth(struct scsi_device *sdev, int depth)
- {
-@@ -872,6 +878,7 @@ int sas_change_queue_depth(struct scsi_device *sdev, int depth)
- 		depth = 1;
- 	return scsi_change_queue_depth(sdev, depth);
- }
-+EXPORT_SYMBOL_GPL(sas_change_queue_depth);
- 
- int sas_bios_param(struct scsi_device *scsi_dev,
- 			  struct block_device *bdev,
-@@ -884,6 +891,7 @@ int sas_bios_param(struct scsi_device *scsi_dev,
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(sas_bios_param);
- 
- /*
-  * Tell an upper layer that it needs to initiate an abort for a given task.
-@@ -910,6 +918,7 @@ void sas_task_abort(struct sas_task *task)
+-	ret = strtobool(page, &flag);
+-	if (ret < 0)
+-		return ret;
+-
+ 	if (flag)
+ 		dev->transport_flags &= ~TRANSPORT_FLAG_PASSTHROUGH_ALUA;
  	else
- 		blk_abort_request(sc->request);
- }
-+EXPORT_SYMBOL_GPL(sas_task_abort);
- 
- int sas_slave_alloc(struct scsi_device *sdev)
+@@ -1145,20 +1149,24 @@ static ssize_t pgr_support_store(struct config_item *item,
  {
-@@ -918,6 +927,7 @@ int sas_slave_alloc(struct scsi_device *sdev)
+ 	struct se_dev_attrib *da = to_attrib(item);
+ 	struct se_device *dev = da->da_dev;
+-	bool flag;
++	bool flag, oldflag;
+ 	int ret;
  
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(sas_slave_alloc);
++	ret = strtobool(page, &flag);
++	if (ret < 0)
++		return ret;
++
++	oldflag = !(dev->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR);
++	if (flag == oldflag)
++		return count;
++
+ 	if (!(dev->transport->transport_flags_changeable &
+ 	      TRANSPORT_FLAG_PASSTHROUGH_PGR)) {
+ 		pr_err("dev[%p]: Unable to change SE Device pgr_support:"
+ 			" pgr_support has fixed value\n", dev);
+-		return -EINVAL;
++		return -EOPNOTSUPP;
+ 	}
  
- void sas_target_destroy(struct scsi_target *starget)
- {
-@@ -929,6 +939,7 @@ void sas_target_destroy(struct scsi_target *starget)
- 	starget->hostdata = NULL;
- 	sas_put_device(found_dev);
- }
-+EXPORT_SYMBOL_GPL(sas_target_destroy);
- 
- #define SAS_STRING_ADDR_SIZE	16
- 
-@@ -956,15 +967,3 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
- }
- EXPORT_SYMBOL_GPL(sas_request_addr);
- 
--EXPORT_SYMBOL_GPL(sas_queuecommand);
--EXPORT_SYMBOL_GPL(sas_target_alloc);
--EXPORT_SYMBOL_GPL(sas_slave_configure);
--EXPORT_SYMBOL_GPL(sas_change_queue_depth);
--EXPORT_SYMBOL_GPL(sas_bios_param);
--EXPORT_SYMBOL_GPL(sas_task_abort);
--EXPORT_SYMBOL_GPL(sas_phy_reset);
--EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
--EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
--EXPORT_SYMBOL_GPL(sas_slave_alloc);
--EXPORT_SYMBOL_GPL(sas_target_destroy);
--EXPORT_SYMBOL_GPL(sas_ioctl);
+-	ret = strtobool(page, &flag);
+-	if (ret < 0)
+-		return ret;
+-
+ 	if (flag)
+ 		dev->transport_flags &= ~TRANSPORT_FLAG_PASSTHROUGH_PGR;
+ 	else
 -- 
-2.26.2
+2.27.0
 
