@@ -2,106 +2,203 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A8B82C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 10:09:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B393BC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 10:32:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9170D610A2
-	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 10:09:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D9E5610E6
+	for <linux-scsi@archiver.kernel.org>; Fri,  3 Sep 2021 10:32:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349029AbhICKKV convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 3 Sep 2021 06:10:21 -0400
-Received: from mail3.swissbit.com ([176.95.1.57]:34742 "EHLO
-        mail3.swissbit.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348987AbhICKKU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2021 06:10:20 -0400
-Received: from mail3.swissbit.com (localhost [127.0.0.1])
-        by DDEI (Postfix) with ESMTP id 8EA27462120;
-        Fri,  3 Sep 2021 12:09:19 +0200 (CEST)
-Received: from mail3.swissbit.com (localhost [127.0.0.1])
-        by DDEI (Postfix) with ESMTP id 7E0A446211D;
-        Fri,  3 Sep 2021 12:09:19 +0200 (CEST)
-X-TM-AS-ERS: 10.149.2.84-127.5.254.253
-X-TM-AS-SMTP: 1.0 ZXguc3dpc3NiaXQuY29t Y2xvZWhsZUBoeXBlcnN0b25lLmNvbQ==
-X-DDEI-TLS-USAGE: Used
-Received: from ex.swissbit.com (SBDEEX02.sbitdom.lan [10.149.2.84])
-        by mail3.swissbit.com (Postfix) with ESMTPS;
-        Fri,  3 Sep 2021 12:09:19 +0200 (CEST)
-Received: from sbdeex02.sbitdom.lan (10.149.2.84) by sbdeex02.sbitdom.lan
- (10.149.2.84) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.792.15; Fri, 3 Sep 2021
- 12:09:19 +0200
-Received: from sbdeex02.sbitdom.lan ([fe80::e0eb:ade8:2d90:1f74]) by
- sbdeex02.sbitdom.lan ([fe80::e0eb:ade8:2d90:1f74%8]) with mapi id
- 15.02.0792.015; Fri, 3 Sep 2021 12:09:19 +0200
-From:   =?iso-8859-1?Q?Christian_L=F6hle?= <CLoehle@hyperstone.com>
-To:     Christoph Hellwig <hch@infradead.org>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>
-Subject: AW: [PATCH] sd: sd_open: prevent device removal during sd_open
-Thread-Topic: [PATCH] sd: sd_open: prevent device removal during sd_open
-Thread-Index: AQHXoAHu4he04cmBqECW8DEEUakoBauRmZAAgAB7+j8=
-Date:   Fri, 3 Sep 2021 10:09:18 +0000
-Message-ID: <771b391322c142baa6c15db458b81e8d@hyperstone.com>
-References: <98bfca4cbaa24462994bcb533d365414@hyperstone.com>,<YTGmyp0kzhVsuk5K@infradead.org>
-In-Reply-To: <YTGmyp0kzhVsuk5K@infradead.org>
-Accept-Language: de-DE, en-US
-Content-Language: de-DE
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.154.1.4]
-Content-Type: text/plain;
-        charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+        id S1349113AbhICKd3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 3 Sep 2021 06:33:29 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3725 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349004AbhICKd3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Sep 2021 06:33:29 -0400
+Received: from fraeml704-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4H1Db40xLXz67W7D;
+        Fri,  3 Sep 2021 18:30:40 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml704-chm.china.huawei.com (10.206.15.53) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.8; Fri, 3 Sep 2021 12:32:16 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Fri, 3 Sep 2021 11:32:14 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linuxarm@huawei.com>, <yanaijie@huawei.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH] scsi: libsas: co-locate exports with symbols
+Date:   Fri, 3 Sep 2021 18:27:32 +0800
+Message-ID: <1630664852-225115-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-X-TMASE-Version: DDEI-5.1-8.6.1018-26384.007
-X-TMASE-Result: 10--5.980700-10.000000
-X-TMASE-MatchedRID: TMsvcu6/L5dbRbA/K/rHzPZvT2zYoYOwMDmYaN/e0lZgDDNFig+GrOVJ
-        pKzRFX/CiqKFBc8lvzajhXQGpGiFkXrSP9RtGZYo0wmR34xRQc/5qGeseGYAlIsYz77JTJ+IUAr
-        JnwHoG3R+keJMZ3NCNpBi242iWIRSePs/Cx1DJd15zXLXCu83xRfJTYLG2XFvK+euk6MYlDZvIa
-        Mtw0Pio4psmNGAE/yp1y6ttzFWrvdMi6dAAjypotMfKJ+BrWfHTJDl9FKHbrkrhioeAJKilQ6UK
-        9Ft+LyUNFHfw012zdN/JgN7Aw6tALVQu1GNZ+sisjvNV98mpPM03E8a2eQGboPHZ0sZfvcz0cm+
-        1kT6rGJlSUEmQtntakEkNtY/j9YoftwZ3X11IV0=
-X-TMASE-SNAP-Result: 1.821001.0001-0-1-12:0,22:0,33:0,34:0-0
-X-TMASE-INERTIA: 0-0;;;;
-X-TMASE-XGENCLOUD: e8dfb5c0-1be9-4ce3-b84b-f46cbe580018-0-0-200-0
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->On Thu, Sep 02, 2021 at 01:57:13PM +0000, Christian L?hle wrote:
->> sd and parent devices must not be removed as sd_open checks for events
->> 
->> sd_need_revalidate and sd_revalidate_disk traverse the device path
->> to check for event changes. If during this, e.g. the scsi host is being
->> removed and its resources freed, this traversal crashes.
->> Locking with scan_mutex for just a scsi disk open may seem blunt, but there
->> does not seem to be a more granular option. Also opening /dev/sdX directly
->> happens rarely enough that this shouldn't cause any issues.
->
-> Can you please root cause how the device could not be valid, as that
-> should not happen?
+It is standard practice to co-locate export declarations with the symbol
+which is being exported. Or at least in the same file - see
+sas_phy_reset().
 
-The device is being removed physically, the driver e.g. uas calls
-scsi_remove_host while user-space opens the /dev/sdX.
+Modify libsas to follow this practice consistently.
 
->>
->> The issue occurred on an older kernel with the following trace:
->> stack segment: 0000 [#1] PREEMPT SMP PTI
->> CPU: 1 PID: 121457 Comm: python3 Not tainted 4.14.238hyLinux #1
->
-> .. preferably with a current mainline kernel as things changed a lot
-> in this area.
+Signed-off-by: John Garry <john.garry@huawei.com>
 
-I will, but might take a while to get a setup to reproduce the issue.
-(The setup where this occurred actually powerfails the usb device repreatedly.)=
-Hyperstone GmbH | Line-Eid-Strasse 3 | 78467 Konstanz
-Managing Directors: Dr. Jan Peter Berns.
-Commercial register of local courts: Freiburg HRB381782
+diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
+index b4b0633f3904..63e987fec937 100644
+--- a/drivers/scsi/libsas/sas_init.c
++++ b/drivers/scsi/libsas/sas_init.c
+@@ -147,6 +147,7 @@ int sas_register_ha(struct sas_ha_struct *sas_ha)
+ 
+ 	return error;
+ }
++EXPORT_SYMBOL_GPL(sas_register_ha);
+ 
+ static void sas_disable_events(struct sas_ha_struct *sas_ha)
+ {
+@@ -176,6 +177,7 @@ int sas_unregister_ha(struct sas_ha_struct *sas_ha)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(sas_unregister_ha);
+ 
+ static int sas_get_linkerrors(struct sas_phy *phy)
+ {
+@@ -313,6 +315,7 @@ int sas_phy_reset(struct sas_phy *phy, int hard_reset)
+ 	}
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(sas_phy_reset);
+ 
+ int sas_set_phy_speed(struct sas_phy *phy,
+ 		      struct sas_phy_linkrates *rates)
+@@ -701,5 +704,3 @@ MODULE_LICENSE("GPL v2");
+ module_init(sas_class_init);
+ module_exit(sas_class_exit);
+ 
+-EXPORT_SYMBOL_GPL(sas_register_ha);
+-EXPORT_SYMBOL_GPL(sas_unregister_ha);
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index ee44a0d7730b..44961cbf1060 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -201,6 +201,7 @@ int sas_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	cmd->scsi_done(cmd);
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(sas_queuecommand);
+ 
+ static void sas_eh_finish_cmd(struct scsi_cmnd *cmd)
+ {
+@@ -511,6 +512,7 @@ int sas_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ 
+ 	return FAILED;
+ }
++EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
+ 
+ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
+ {
+@@ -532,6 +534,7 @@ int sas_eh_target_reset_handler(struct scsi_cmnd *cmd)
+ 
+ 	return FAILED;
+ }
++EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
+ 
+ /* Try to reset a device */
+ static int try_to_reset_cmd_device(struct scsi_cmnd *cmd)
+@@ -790,6 +793,7 @@ int sas_ioctl(struct scsi_device *sdev, unsigned int cmd, void __user *arg)
+ 
+ 	return -EINVAL;
+ }
++EXPORT_SYMBOL_GPL(sas_ioctl);
+ 
+ struct domain_device *sas_find_dev_by_rphy(struct sas_rphy *rphy)
+ {
+@@ -832,6 +836,7 @@ int sas_target_alloc(struct scsi_target *starget)
+ 	starget->hostdata = found_dev;
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(sas_target_alloc);
+ 
+ #define SAS_DEF_QD 256
+ 
+@@ -860,6 +865,7 @@ int sas_slave_configure(struct scsi_device *scsi_dev)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(sas_slave_configure);
+ 
+ int sas_change_queue_depth(struct scsi_device *sdev, int depth)
+ {
+@@ -872,6 +878,7 @@ int sas_change_queue_depth(struct scsi_device *sdev, int depth)
+ 		depth = 1;
+ 	return scsi_change_queue_depth(sdev, depth);
+ }
++EXPORT_SYMBOL_GPL(sas_change_queue_depth);
+ 
+ int sas_bios_param(struct scsi_device *scsi_dev,
+ 			  struct block_device *bdev,
+@@ -884,6 +891,7 @@ int sas_bios_param(struct scsi_device *scsi_dev,
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(sas_bios_param);
+ 
+ /*
+  * Tell an upper layer that it needs to initiate an abort for a given task.
+@@ -910,6 +918,7 @@ void sas_task_abort(struct sas_task *task)
+ 	else
+ 		blk_abort_request(sc->request);
+ }
++EXPORT_SYMBOL_GPL(sas_task_abort);
+ 
+ int sas_slave_alloc(struct scsi_device *sdev)
+ {
+@@ -918,6 +927,7 @@ int sas_slave_alloc(struct scsi_device *sdev)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(sas_slave_alloc);
+ 
+ void sas_target_destroy(struct scsi_target *starget)
+ {
+@@ -929,6 +939,7 @@ void sas_target_destroy(struct scsi_target *starget)
+ 	starget->hostdata = NULL;
+ 	sas_put_device(found_dev);
+ }
++EXPORT_SYMBOL_GPL(sas_target_destroy);
+ 
+ #define SAS_STRING_ADDR_SIZE	16
+ 
+@@ -956,15 +967,3 @@ int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
+ }
+ EXPORT_SYMBOL_GPL(sas_request_addr);
+ 
+-EXPORT_SYMBOL_GPL(sas_queuecommand);
+-EXPORT_SYMBOL_GPL(sas_target_alloc);
+-EXPORT_SYMBOL_GPL(sas_slave_configure);
+-EXPORT_SYMBOL_GPL(sas_change_queue_depth);
+-EXPORT_SYMBOL_GPL(sas_bios_param);
+-EXPORT_SYMBOL_GPL(sas_task_abort);
+-EXPORT_SYMBOL_GPL(sas_phy_reset);
+-EXPORT_SYMBOL_GPL(sas_eh_device_reset_handler);
+-EXPORT_SYMBOL_GPL(sas_eh_target_reset_handler);
+-EXPORT_SYMBOL_GPL(sas_slave_alloc);
+-EXPORT_SYMBOL_GPL(sas_target_destroy);
+-EXPORT_SYMBOL_GPL(sas_ioctl);
+-- 
+2.26.2
 
