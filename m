@@ -2,123 +2,128 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84F80C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 16:09:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 99C6EC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 17:10:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6BA3460F9E
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 16:09:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 80D1160F70
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 17:10:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243830AbhIFQKM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Sep 2021 12:10:12 -0400
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:28185 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243365AbhIFQKM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 12:10:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1630944547; x=1662480547;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=QuMv62qGete1Ir6XfymEroOfmpoVY7HpWofR3YoSteI=;
-  b=NXoVSSGWCUSZ36ozVHLYwV4cwIhRgzQu83c/jy+3N0ooN6SsRhoJVFwb
-   1jXs7yjMBkJ8Aa6eQkwO2uFOpqBR1CH3Q1kLZ4daAoldQY/Z3EU+G38KV
-   gd/gCI6OdoppvFNwIwRMIQ+p3osus7Y6pS/tNr/cNbfzI5zsNrFETZuL+
-   d2K0aUIdFrnJcAo7AB/EQtYwpI+blG+EPLbt3Q5VEpz5xeCMlRc7Xgtso
-   zzAr6xA6sZUO3iGxger/rCSIFQzSE4KbnxO+EMKuNSavrEHwMekxusAxg
-   8BCwShKy4PohK9UUWdZS1U1p1j0rivSS3ZpSZXsP0+V3Y+tsmLj+yfLuy
-   g==;
-IronPort-SDR: 5bv6QqgZAKLVCKDbE4artys/diPmxu52sr7PecXYVXbPA1OSS7ACPbZPKwEnGFg2F/T+pWaC0x
- PsRS4RuC49mjXgPMmaz2+Rfer99ICfrVd3YtB7P2xdvkwzBSTRspCvYEK/ayd60HZXsCR4JQXb
- 9qTIRABjh8UjVRJAOKPR9isxoIrOC7Qyb1KYIa9E3KDG0U2NFNgjKWimI4VY0Pw3Ow2YaPxE2v
- M09NlWnWUsalPMm4rOcSltLGBcSI0Vyrl6KN+ovmVCqJK0TI/1lV8KbQIOcT61XkPEymClLgF/
- B1qHpSclA5/2RNe5/E+VPt8i
-X-IronPort-AV: E=Sophos;i="5.85,272,1624345200"; 
-   d="scan'208";a="130876427"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 06 Sep 2021 09:09:07 -0700
-Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
- chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Mon, 6 Sep 2021 09:09:06 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex04.mchp-main.com
- (10.10.85.152) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
- Transport; Mon, 6 Sep 2021 09:09:06 -0700
-From:   Ajish Koshy <Ajish.Koshy@microchip.com>
-To:     <linux-scsi@vger.kernel.org>
-CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
-        <Viswas.G@microchip.com>, <Ruksar.devadi@microchip.com>,
-        <Ashokkumar.N@microchip.com>,
-        Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH v2 4/4] scsi: pm80xx: fix memory leak during rmmod
-Date:   Mon, 6 Sep 2021 22:34:04 +0530
-Message-ID: <20210906170404.5682-5-Ajish.Koshy@microchip.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20210906170404.5682-1-Ajish.Koshy@microchip.com>
-References: <20210906170404.5682-1-Ajish.Koshy@microchip.com>
+        id S243972AbhIFRLz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Sep 2021 13:11:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41362 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243986AbhIFRLx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 13:11:53 -0400
+Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C185AC0613C1
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Sep 2021 10:10:48 -0700 (PDT)
+Received: by mail-lj1-x233.google.com with SMTP id h1so12308930ljl.9
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Sep 2021 10:10:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=eBV6xJO0OJaH8jzRZsLqKsR9gePhFCKXaYbJlTL1SK0=;
+        b=LFms5S3j0LvWEYimyPf3cb4Aisdn+Fk0RcpOrMN+ZdxUItBFt03MZgAJyCUWWC62gA
+         xL6pVj/R4056hMSTJXWaAAW0XJxWY95ANL2inlfc7gjmf6BFW8UdEkjBN6OfL9igtewV
+         2JgY9QMy4BbUAgVA1jm1THz+5T5uS585jDOW2nVtjNTStboUZCsKHDlx3pvPga5s2Aea
+         dvtTuh0M4AIM0YiFHE2rv2jMoWzeXBDMGduAbcmjYKzTNfr7wM1AzhSBU6ieiQ9XTDvy
+         XQyK9QeN2IRddAghms+zRMV1up63wzN38bLJRWblvnD5e2vOcie3vnIumG6eir16lfbi
+         jm5g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=eBV6xJO0OJaH8jzRZsLqKsR9gePhFCKXaYbJlTL1SK0=;
+        b=E5dHn6yBjz3d+1S3CfN6YkzL+9ZFWRR0Rf9hMoXEW9LN44I78gwiMDkRK/8QeNf/Ui
+         zH0JV1Lc4nqAl7KtZGyA0KFN17U3OXdNIQRRL8fgI6xdYC6+wWsLr1od0x2xL+pUHJWp
+         8poZBL4zA7z4O8W+9vS/mTumn3t0767op7Ila72xGGiAfIYgzALGYaDKNPh89eIuaRu9
+         pX1dcdDeMdP/RWm7bkaO7T1mjXxlQOt1/O9RKNGWFsgkWVsQGNpXBgTXOqJJcGZk0OA3
+         PwCNxvURIXKnh4fy49O0jzVKVyszz7GzcFm6YgMRTGeze7+fJ1P5noHggJt51aVRjvu0
+         DQMw==
+X-Gm-Message-State: AOAM531VniyiyHsR1QQsVbvZaQ9xXQsyAZBud4zTC0gO1GqPbZUEZeUK
+        Upbhng22UJ+vk480NsUSfd4EQzTBuvPeVIBBDOGiIg==
+X-Google-Smtp-Source: ABdhPJxhSEFI8wMN4u5XHazx2hzbbCQEPxdsCfALNn+wlwsdQueMDsoHtriqduJghpS67u2M98pG6gst9sXWJqwHE5o=
+X-Received: by 2002:a05:651c:1b3:: with SMTP id c19mr11757010ljn.16.1630948247165;
+ Mon, 06 Sep 2021 10:10:47 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+References: <20210830212538.148729-1-mcgrof@kernel.org> <20210830212538.148729-5-mcgrof@kernel.org>
+In-Reply-To: <20210830212538.148729-5-mcgrof@kernel.org>
+From:   Ulf Hansson <ulf.hansson@linaro.org>
+Date:   Mon, 6 Sep 2021 19:10:10 +0200
+Message-ID: <CAPDyKFp9HTjQ_6c2tHuPhhixfcnFa8XQBrPO2PqoB113BszLJw@mail.gmail.com>
+Subject: Re: [PATCH v3 4/8] mmc/core/block: add error handling support for add_disk()
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>, kbusch@kernel.org,
+        sagi@grimberg.me, Adrian Hunter <adrian.hunter@intel.com>,
+        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Stephen Boyd <swboyd@chromium.org>, agk@redhat.com,
+        Mike Snitzer <snitzer@redhat.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Hannes Reinecke <hare@suse.de>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-nvme@lists.infradead.org,
+        linux-mmc <linux-mmc@vger.kernel.org>, dm-devel@redhat.com,
+        nbd@other.debian.org, linux-block <linux-block@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Driver fails to release memory allocated. This will lead
-to memory leak during driver removal.
+On Mon, 30 Aug 2021 at 23:26, Luis Chamberlain <mcgrof@kernel.org> wrote:
+>
+> We never checked for errors on add_disk() as this function
+> returned void. Now that this is fixed, use the shiny new
+> error handling.
+>
+> The caller only cleanups the disk if we pass on an allocated md
+> but on error we return return ERR_PTR(ret), and so we must do all
+> the unwinding ourselves.
+>
+> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 
-Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
-Signed-off-by: Viswas G <Viswas.G@microchip.com>
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
----
- drivers/scsi/pm8001/pm8001_init.c | 11 +++++++++++
- drivers/scsi/pm8001/pm8001_sas.h  |  1 +
- 2 files changed, 12 insertions(+)
+Queued for v5.16 on the temporary devel branch, thanks!
 
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 613455a3e686..7082fecf7ce8 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -1199,6 +1199,7 @@ pm8001_init_ccb_tag(struct pm8001_hba_info *pm8001_ha, struct Scsi_Host *shost,
- 		goto err_out;
- 
- 	/* Memory region for ccb_info*/
-+	pm8001_ha->ccb_count = ccb_count;
- 	pm8001_ha->ccb_info =
- 		kcalloc(ccb_count, sizeof(struct pm8001_ccb_info), GFP_KERNEL);
- 	if (!pm8001_ha->ccb_info) {
-@@ -1260,6 +1261,16 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
- 			tasklet_kill(&pm8001_ha->tasklet[j]);
- #endif
- 	scsi_host_put(pm8001_ha->shost);
-+
-+	for (i = 0; i < pm8001_ha->ccb_count; i++) {
-+		dma_free_coherent(&pm8001_ha->pdev->dev,
-+			sizeof(struct pm8001_prd) * PM8001_MAX_DMA_SG,
-+			pm8001_ha->ccb_info[i].buf_prd,
-+			pm8001_ha->ccb_info[i].ccb_dma_handle);
-+	}
-+	kfree(pm8001_ha->ccb_info);
-+	kfree(pm8001_ha->devices);
-+
- 	pm8001_free(pm8001_ha);
- 	kfree(sha->sas_phy);
- 	kfree(sha->sas_port);
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 3274d88a9ccc..7e999768bfd2 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -518,6 +518,7 @@ struct pm8001_hba_info {
- 	u32			iomb_size; /* SPC and SPCV IOMB size */
- 	struct pm8001_device	*devices;
- 	struct pm8001_ccb_info	*ccb_info;
-+	u32			ccb_count;
- #ifdef PM8001_USE_MSIX
- 	int			number_of_intr;/*will be used in remove()*/
- 	char			intr_drvname[PM8001_MAX_MSIX_VEC]
--- 
-2.27.0
+Kind regards
+Uffe
 
+
+> ---
+>  drivers/mmc/core/block.c | 7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/mmc/core/block.c b/drivers/mmc/core/block.c
+> index 6a15fdf6e5f2..9b2856aa6231 100644
+> --- a/drivers/mmc/core/block.c
+> +++ b/drivers/mmc/core/block.c
+> @@ -2453,9 +2453,14 @@ static struct mmc_blk_data *mmc_blk_alloc_req(struct mmc_card *card,
+>         /* used in ->open, must be set before add_disk: */
+>         if (area_type == MMC_BLK_DATA_AREA_MAIN)
+>                 dev_set_drvdata(&card->dev, md);
+> -       device_add_disk(md->parent, md->disk, mmc_disk_attr_groups);
+> +       ret = device_add_disk(md->parent, md->disk, mmc_disk_attr_groups);
+> +       if (ret)
+> +               goto err_cleanup_queue;
+>         return md;
+>
+> + err_cleanup_queue:
+> +       blk_cleanup_queue(md->disk->queue);
+> +       blk_mq_free_tag_set(&md->queue.tag_set);
+>   err_kfree:
+>         kfree(md);
+>   out:
+> --
+> 2.30.2
+>
