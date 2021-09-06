@@ -2,102 +2,99 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B983C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 06:20:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 409A7C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 06:50:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4803260F92
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 06:20:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 28493604AC
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 06:50:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239522AbhIFGVI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Sep 2021 02:21:08 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:52496 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231271AbhIFGVH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 02:21:07 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
+        id S239824AbhIFGva (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Sep 2021 02:51:30 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:23845 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239829AbhIFGvR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 02:51:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1630911013;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=qnzDfejYmhnz+7BovVT3U6Ivvhyjw+CAVfiG7DYXSTE=;
+        b=Hy9snunJqfKLYCVelGwysN6uaD2y+p3a0YC52t5leVlPC0Ud30P1iUj8FfwXi9SM5GVSQN
+        3Jfad5Lga1ORH3rQ8d1vkwVdicJ2dGEdZ0wIiofkRmdp1b/Hhuqd/KJW83swkMHk1yZ2YN
+        KRLLf2leK7l8yGTNc5kJyQabxPlFKKk=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-63-iwgMxG35OTOHjCT1sahnyQ-1; Mon, 06 Sep 2021 02:50:12 -0400
+X-MC-Unique: iwgMxG35OTOHjCT1sahnyQ-1
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id E9D1220081;
-        Mon,  6 Sep 2021 06:20:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1630909201; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WnsfEm24FiY97oUuBVkQpzIL/MgLM8SuyHc8JYLAsNY=;
-        b=G6amEv4Aay3hAY1inpj2Md8h3+uttQfDibLAnOOGzrFy7lJFDkhx0sztzAGTNR4GVkCW3K
-        F+pHfwSAtaz0uYFnubD+DSFHs9IZ0gkxYd+inQcBdPn4wIAycTdrdrccikfoGrKbpQwYZZ
-        LJHWr1hWGeoIjmdFG8aMhkRuEhvPVkA=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1630909201;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=WnsfEm24FiY97oUuBVkQpzIL/MgLM8SuyHc8JYLAsNY=;
-        b=oO5/PbjMxF/qs8tYulSXPGwu3sVi3uFKYQ3zil56qMsvk3vDb3FfUXHhz6Js3n0SXvqvlr
-        rHuRJBcLLrpd09Ag==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 1A4BB13299;
-        Mon,  6 Sep 2021 06:20:01 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id u9eHAxGzNWHKTwAAGKfGzw
-        (envelope-from <hare@suse.de>); Mon, 06 Sep 2021 06:20:01 +0000
-Subject: Re: [PATCH v3 8/8] nbd: add error handling support for add_disk()
-To:     Luis Chamberlain <mcgrof@kernel.org>, axboe@kernel.dk,
-        martin.petersen@oracle.com, jejb@linux.ibm.com, kbusch@kernel.org,
-        sagi@grimberg.me, adrian.hunter@intel.com, beanhuo@micron.com,
-        ulf.hansson@linaro.org, avri.altman@wdc.com, swboyd@chromium.org,
-        agk@redhat.com, snitzer@redhat.com, josef@toxicpanda.com
-Cc:     hch@infradead.org, bvanassche@acm.org, ming.lei@redhat.com,
-        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org,
-        linux-mmc@vger.kernel.org, dm-devel@redhat.com,
-        nbd@other.debian.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-References: <20210830212538.148729-1-mcgrof@kernel.org>
- <20210830212538.148729-9-mcgrof@kernel.org>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <bd2ed860-89c5-36d8-3bf6-29c677d70c40@suse.de>
-Date:   Mon, 6 Sep 2021 08:20:05 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id EDD5480006E;
+        Mon,  6 Sep 2021 06:50:10 +0000 (UTC)
+Received: from localhost (ovpn-8-35.pek2.redhat.com [10.72.8.35])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 10D751970F;
+        Mon,  6 Sep 2021 06:50:06 +0000 (UTC)
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
+        linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        luojiaxing <luojiaxing@huawei.com>
+Subject: [PATCH] blk-mq: avoid to iterate over stale request
+Date:   Mon,  6 Sep 2021 14:50:03 +0800
+Message-Id: <20210906065003.439019-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20210830212538.148729-9-mcgrof@kernel.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/30/21 11:25 PM, Luis Chamberlain wrote:
-> We never checked for errors on add_disk() as this function
-> returned void. Now that this is fixed, use the shiny new
-> error handling.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---
->   drivers/block/nbd.c | 6 +++++-
->   1 file changed, 5 insertions(+), 1 deletion(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+blk-mq can't run allocating driver tag and updating ->rqs[tag]
+atomically, meantime blk-mq doesn't clear ->rqs[tag] after the driver
+tag is released.
 
-Cheers,
+So there is chance to iterating over one stale request just after the
+tag is allocated and before updating ->rqs[tag].
 
-Hannes
+scsi_host_busy_iter() calls scsi_host_check_in_flight() to count scsi
+in-flight requests after scsi host is blocked, so no new scsi command can
+be marked as SCMD_STATE_INFLIGHT. However, driver tag allocation still can
+be run by blk-mq core. One request is marked as SCMD_STATE_INFLIGHT,
+but this request may have been kept in another slot of ->rqs[], meantime
+the slot can be allocated out but ->rqs[] isn't updated yet. Then this
+in-flight request is counted twice as SCMD_STATE_INFLIGHT. This way causes
+trouble in handling scsi error.
+
+Fixes the issue by not iterating over stale request.
+
+Cc: linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Reported-by: luojiaxing <luojiaxing@huawei.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-mq-tag.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index 86f87346232a..ff5caeb82542 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -208,7 +208,7 @@ static struct request *blk_mq_find_and_get_req(struct blk_mq_tags *tags,
+ 
+ 	spin_lock_irqsave(&tags->lock, flags);
+ 	rq = tags->rqs[bitnr];
+-	if (!rq || !refcount_inc_not_zero(&rq->ref))
++	if (!rq || rq->tag != bitnr || !refcount_inc_not_zero(&rq->ref))
+ 		rq = NULL;
+ 	spin_unlock_irqrestore(&tags->lock, flags);
+ 	return rq;
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.31.1
+
