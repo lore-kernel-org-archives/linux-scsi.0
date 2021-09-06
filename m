@@ -2,61 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_INVALID,
 	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D8AAC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 16:09:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8587C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 16:09:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80D6F60F43
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 16:09:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8F9560F43
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 16:09:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243794AbhIFQKG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Sep 2021 12:10:06 -0400
-Received: from esa.microchip.iphmx.com ([68.232.154.123]:28175 "EHLO
+        id S243804AbhIFQKI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Sep 2021 12:10:08 -0400
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:27690 "EHLO
         esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243365AbhIFQKG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 12:10:06 -0400
+        with ESMTP id S243365AbhIFQKH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 12:10:07 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1630944541; x=1662480541;
+  t=1630944543; x=1662480543;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=NABKVHcyZbEZOsbrj1qIfaJNuMd97f9HWTcZaW3P3fo=;
-  b=he59UP47I8MN64W7DYhOj242SK9TxJFbAPTss47bTeW3fhWt/8r9hxjH
-   lSTFRFS9zZ7dik3tq6PPoruGiihsgjGc6bMEtmAw2thFJMtNco1iBtSgI
-   96kJJ0Am9vwxsz9HsQdF3ZNNLkX4GxcVR9Miv3nDOzJPNcTl/Cicm1M6h
-   7REfiryIzOE8/gZUS6vujX3HRCSRJtOAo1p8DA8oU/W0WSyrU9eO9AIO+
-   om1RKrYVHcBjQfV8DQeqdtw9Dyit0wKL3nASpGkCTXddCrU0wNBL04S7a
-   JB9nUcjIcZPArfO1mAuoZVd2HbSTS7BMRd2sAq8Rssv8WdnUx+OOfteJU
-   Q==;
-IronPort-SDR: v1sDC/6uqOqLUcb23Gar4gvhuoAcSj0D7/3AdkP3/Z9eyttSS+X+2AZ89OMxNLD82rHhoYYJQm
- ORTvL8NTnT/W/z+AxhcotPN40/a1IEhl7CsX1ScdGz4RTvD1UOdZn4Xawg7mYvN6U7taOu22D5
- bFXbnnojH1quunZCUtCrhQVLshTKKuAxUqOWcaM8LfIOuxjj5QeHLDB0iL5YqJvWEuU2iBj2/8
- TOE5CsgekJq6i8ymirUY/H9hSPYOO5OU1mRRnycopwo00fjVjndOSS/pz6gXUp1xBqYi4XSOSE
- 1htRox+TJqKyDiFqbichvWcA
+  bh=6NEAT1nZwDQPnkCDy8nmOoLRXDb9wwISArTFJOfMvWI=;
+  b=UOfW2LBpnAnLT+wfPDbNFCx9f2YUh/8DaXm73EdCa5vFIDoUTIRL/kB0
+   M1KqWJgNq3RPDNnQxCebNvzlH/afDxGmXWHdjCxIcMb6wS2FG0VUJgtSL
+   4ko0taBPhmEkJUKbkc+Z5fQoceFY2/PZdGDj/z5Ieme1hMmpza8CDhOmn
+   nk49R6Ai6RaFw8qmw8mT1nN2DJloatyDuIT7Osbt107mwl11TVuH8grRk
+   IpxcxLajShMUuUf1EcPXDZ4BidJslTaYFDTFdungWDwUXKWss+U6aylna
+   uSrelgbZ8mRxQzajDq+4iQsh8kAzImYsrU3YbnAYj/EQIsWeUQ7pHlexk
+   g==;
+IronPort-SDR: JC5NBDH5GBVXroTt8ag85tqyCWmAmHjfpcRsAsMgIxMeP4kS1Hstk7W/q/j2Ly1uh5Vk6wmzaZ
+ GgvqIE6LmEJfY45+dfD/YWi8n2MDUtLES+FkeYMT8FojIAnlV2tub0NpzBzOGfQj3MqEl/bBx0
+ oPkiuPvjVtFIG1CLcyOtm5ATUV6vHZM8zgNf09Kd4by9x0pKAdE9YY1Qkn3WDd0MFO4RNMf9fp
+ nu3y76aNfoL96hhnjRIFPc6pzpMf9lbc6Imzx6npoT0162mVse8XW8t/z+yVPMl8cUi+2L4+65
+ fMuq2YoGpRi5FR0AOo7L9bP3
 X-IronPort-AV: E=Sophos;i="5.85,272,1624345200"; 
-   d="scan'208";a="130876411"
+   d="scan'208";a="135000274"
 Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa2.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 06 Sep 2021 09:09:01 -0700
-Received: from chn-vm-ex02.mchp-main.com (10.10.87.72) by
- chn-vm-ex02.mchp-main.com (10.10.87.72) with Microsoft SMTP Server
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 06 Sep 2021 09:09:03 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Mon, 6 Sep 2021 09:09:00 -0700
-Received: from localhost (10.10.115.15) by chn-vm-ex02.mchp-main.com
- (10.10.85.144) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
- Transport; Mon, 6 Sep 2021 09:09:00 -0700
+ 15.1.2176.14; Mon, 6 Sep 2021 09:09:02 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
+ Transport; Mon, 6 Sep 2021 09:09:02 -0700
 From:   Ajish Koshy <Ajish.Koshy@microchip.com>
 To:     <linux-scsi@vger.kernel.org>
 CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
         <Viswas.G@microchip.com>, <Ruksar.devadi@microchip.com>,
         <Ashokkumar.N@microchip.com>,
         Jinpu Wang <jinpu.wang@cloud.ionos.com>
-Subject: [PATCH v2 1/4] scsi: pm80xx: fix incorrect port value when registering a device
-Date:   Mon, 6 Sep 2021 22:34:01 +0530
-Message-ID: <20210906170404.5682-2-Ajish.Koshy@microchip.com>
+Subject: [PATCH v2 2/4] scsi: pm80xx: fix lockup due to commit <1f02beff224e>
+Date:   Mon, 6 Sep 2021 22:34:02 +0530
+Message-ID: <20210906170404.5682-3-Ajish.Koshy@microchip.com>
 X-Mailer: git-send-email 2.27.0
 In-Reply-To: <20210906170404.5682-1-Ajish.Koshy@microchip.com>
 References: <20210906170404.5682-1-Ajish.Koshy@microchip.com>
@@ -67,160 +67,234 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-During phyup event, firmware gives the phy_id and port_id
-and driver is supposed to use the same during device handle
-registration. Earlier, driver was using port id value from
-libsas during device handle registration and at times, it is
-different from firmware assigned port id. This will lead to
-wrong device registration and eventually we would not see
-those drives.
+Commit 1f02beff224e ("scsi: pm80xx: Remove global lock from
+outbound queue processing") introduced a lock per outbound
+queue, where the driver before that was using a global lock
+for all outbound queues. While processing the IO responses
+and events, driver takes the outbound queue spinlock and
+later it is supposed to release the same spin lock in
+pm8001_ccb_task_free_done() before calling command done().
+Since the older code was using a global lock,
+pm8001_ccb_task_free_done() was also releasing the global
+spin lock. With the commit <1f02beff224e>,
+pm8001_ccb_task_free_done() remains the same and it was
+still using the global lock.
 
-Fix is to use firmware assigned portid during device
-registration.
+So when driver completes a SATA command,the global spinlock
+will be in a locked state.
+mpi_sata_completion()->spin_lock(&pm8001_ha->lock);
 
+Later when driver gets a scsi command for SATA drive,
+pm8001_task_exec() tries to acquire the global lock and leads
+to lockup crash.
+
+Fixes: 1f02beff224e ("scsi: pm80xx: Remove global lock from outbound queue processing")
 Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
 Signed-off-by: Viswas G <Viswas.G@microchip.com>
 ---
- drivers/scsi/pm8001/pm8001_hwi.c  |  7 ++++++-
- drivers/scsi/pm8001/pm8001_init.c |  1 +
- drivers/scsi/pm8001/pm8001_sas.c  | 15 +++++++++++++++
- drivers/scsi/pm8001/pm8001_sas.h  |  2 ++
- drivers/scsi/pm8001/pm80xx_hwi.c  |  7 ++++++-
- 5 files changed, 30 insertions(+), 2 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.h |  3 +-
+ drivers/scsi/pm8001/pm80xx_hwi.c | 53 ++++++++++++++++++++++++++------
+ 2 files changed, 45 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 63690508313b..c9ecddd0d719 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -3358,6 +3358,8 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	struct pm8001_phy *phy = &pm8001_ha->phy[phy_id];
- 	unsigned long flags;
- 	u8 deviceType = pPayload->sas_identify.dev_type;
-+	phy->port = port;
-+	port->port_id = port_id;
- 	port->port_state =  portstate;
- 	phy->phy_state = PHY_STATE_LINK_UP_SPC;
- 	pm8001_dbg(pm8001_ha, MSG,
-@@ -3434,6 +3436,8 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	unsigned long flags;
- 	pm8001_dbg(pm8001_ha, DEVIO, "HW_EVENT_SATA_PHY_UP port id = %d, phy id = %d\n",
- 		   port_id, phy_id);
-+	phy->port = port;
-+	port->port_id = port_id;
- 	port->port_state =  portstate;
- 	phy->phy_state = PHY_STATE_LINK_UP_SPC;
- 	port->port_attached = 1;
-@@ -4460,6 +4464,7 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 	u16 ITNT = 2000;
- 	struct domain_device *dev = pm8001_dev->sas_device;
- 	struct domain_device *parent_dev = dev->parent;
-+	struct pm8001_port *port = dev->port->lldd_port;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
- 
- 	memset(&payload, 0, sizeof(payload));
-@@ -4488,7 +4493,7 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 	linkrate = (pm8001_dev->sas_device->linkrate < dev->port->linkrate) ?
- 			pm8001_dev->sas_device->linkrate : dev->port->linkrate;
- 	payload.phyid_portid =
--		cpu_to_le32(((pm8001_dev->sas_device->port->id) & 0x0F) |
-+		cpu_to_le32(((port->port_id) & 0x0F) |
- 		((phy_id & 0x0F) << 4));
- 	payload.dtype_dlr_retry = cpu_to_le32((retryFlag & 0x01) |
- 		((linkrate & 0x0F) * 0x1000000) |
-diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
-index 47db7e0beae6..613455a3e686 100644
---- a/drivers/scsi/pm8001/pm8001_init.c
-+++ b/drivers/scsi/pm8001/pm8001_init.c
-@@ -128,6 +128,7 @@ static struct sas_domain_function_template pm8001_transport_ops = {
- 	.lldd_I_T_nexus_reset   = pm8001_I_T_nexus_reset,
- 	.lldd_lu_reset		= pm8001_lu_reset,
- 	.lldd_query_task	= pm8001_query_task,
-+	.lldd_port_formed	= pm8001_port_formed,
- };
- 
- /**
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 32e60f0c3b14..83e73009db5c 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -1355,3 +1355,18 @@ int pm8001_clear_task_set(struct domain_device *dev, u8 *lun)
- 	tmf_task.tmf = TMF_CLEAR_TASK_SET;
- 	return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
- }
-+
-+void pm8001_port_formed(struct asd_sas_phy *sas_phy)
-+{
-+	struct sas_ha_struct *sas_ha = sas_phy->ha;
-+	struct pm8001_hba_info *pm8001_ha = sas_ha->lldd_ha;
-+	struct pm8001_phy *phy = sas_phy->lldd_phy;
-+	struct asd_sas_port *sas_port = sas_phy->port;
-+	struct pm8001_port *port = phy->port;
-+
-+	if (!sas_port) {
-+		pm8001_dbg(pm8001_ha, FAIL, "Received null port\n");
-+		return;
-+	}
-+	sas_port->lldd_port = port;
-+}
 diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 62d08b535a4b..1a016a421280 100644
+index 1a016a421280..3274d88a9ccc 100644
 --- a/drivers/scsi/pm8001/pm8001_sas.h
 +++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -230,6 +230,7 @@ struct pm8001_port {
- 	u8			port_attached;
- 	u16			wide_port_phymap;
- 	u8			port_state;
-+	u8			port_id;
- 	struct list_head	list;
+@@ -458,6 +458,7 @@ struct outbound_queue_table {
+ 	__le32			producer_index;
+ 	u32			consumer_idx;
+ 	spinlock_t		oq_lock;
++	unsigned long		lock_flags;
  };
+ struct pm8001_hba_memspace {
+ 	void __iomem  		*memvirtaddr;
+@@ -740,9 +741,7 @@ pm8001_ccb_task_free_done(struct pm8001_hba_info *pm8001_ha,
+ {
+ 	pm8001_ccb_task_free(pm8001_ha, task, ccb, ccb_idx);
+ 	smp_mb(); /*in order to force CPU ordering*/
+-	spin_unlock(&pm8001_ha->lock);
+ 	task->task_done(task);
+-	spin_lock(&pm8001_ha->lock);
+ }
  
-@@ -651,6 +652,7 @@ int pm8001_lu_reset(struct domain_device *dev, u8 *lun);
- int pm8001_I_T_nexus_reset(struct domain_device *dev);
- int pm8001_I_T_nexus_event_handler(struct domain_device *dev);
- int pm8001_query_task(struct sas_task *task);
-+void pm8001_port_formed(struct asd_sas_phy *sas_phy);
- void pm8001_open_reject_retry(
- 	struct pm8001_hba_info *pm8001_ha,
- 	struct sas_task *task_to_close,
+ #endif
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 6ffe17b849ae..cec932f830b8 100644
+index cec932f830b8..1ae2f5c6042c 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -3299,6 +3299,8 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 	struct pm8001_phy *phy = &pm8001_ha->phy[phy_id];
- 	unsigned long flags;
- 	u8 deviceType = pPayload->sas_identify.dev_type;
-+	phy->port = port;
-+	port->port_id = port_id;
- 	port->port_state = portstate;
- 	port->wide_port_phymap |= (1U << phy_id);
- 	phy->phy_state = PHY_STATE_LINK_UP_SPCV;
-@@ -3380,6 +3382,8 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
- 		   "port id %d, phy id %d link_rate %d portstate 0x%x\n",
- 		   port_id, phy_id, link_rate, portstate);
+@@ -2379,7 +2379,8 @@ static void mpi_ssp_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
  
-+	phy->port = port;
-+	port->port_id = port_id;
- 	port->port_state = portstate;
- 	phy->phy_state = PHY_STATE_LINK_UP_SPCV;
- 	port->port_attached = 1;
-@@ -4808,6 +4812,7 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 	u16 ITNT = 2000;
- 	struct domain_device *dev = pm8001_dev->sas_device;
- 	struct domain_device *parent_dev = dev->parent;
-+	struct pm8001_port *port = dev->port->lldd_port;
- 	circularQ = &pm8001_ha->inbnd_q_tbl[0];
+ /*See the comments for mpi_ssp_completion */
+ static void
+-mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
++mpi_sata_completion(struct pm8001_hba_info *pm8001_ha,
++		struct outbound_queue_table *circularQ, void *piomb)
+ {
+ 	struct sas_task *t;
+ 	struct pm8001_ccb_info *ccb;
+@@ -2616,7 +2617,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
+ 			ts->resp = SAS_TASK_UNDELIVERED;
+ 			ts->stat = SAS_QUEUE_FULL;
++			spin_unlock_irqrestore(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
++			spin_lock_irqsave(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			return;
+ 		}
+ 		break;
+@@ -2632,7 +2637,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
+ 			ts->resp = SAS_TASK_UNDELIVERED;
+ 			ts->stat = SAS_QUEUE_FULL;
++			spin_unlock_irqrestore(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
++			spin_lock_irqsave(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			return;
+ 		}
+ 		break;
+@@ -2656,7 +2665,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 				IO_OPEN_CNX_ERROR_STP_RESOURCES_BUSY);
+ 			ts->resp = SAS_TASK_UNDELIVERED;
+ 			ts->stat = SAS_QUEUE_FULL;
++			spin_unlock_irqrestore(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
++			spin_lock_irqsave(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			return;
+ 		}
+ 		break;
+@@ -2727,7 +2740,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 					IO_DS_NON_OPERATIONAL);
+ 			ts->resp = SAS_TASK_UNDELIVERED;
+ 			ts->stat = SAS_QUEUE_FULL;
++			spin_unlock_irqrestore(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
++			spin_lock_irqsave(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			return;
+ 		}
+ 		break;
+@@ -2747,7 +2764,11 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 					IO_DS_IN_ERROR);
+ 			ts->resp = SAS_TASK_UNDELIVERED;
+ 			ts->stat = SAS_QUEUE_FULL;
++			spin_unlock_irqrestore(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
++			spin_lock_irqsave(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			return;
+ 		}
+ 		break;
+@@ -2785,12 +2806,17 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 	} else {
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);
++		spin_unlock_irqrestore(&circularQ->oq_lock,
++				circularQ->lock_flags);
+ 		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
++		spin_lock_irqsave(&circularQ->oq_lock,
++				circularQ->lock_flags);
+ 	}
+ }
  
- 	memset(&payload, 0, sizeof(payload));
-@@ -4840,7 +4845,7 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
- 			pm8001_dev->sas_device->linkrate : dev->port->linkrate;
+ /*See the comments for mpi_ssp_completion */
+-static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
++static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha,
++		struct outbound_queue_table *circularQ, void *piomb)
+ {
+ 	struct sas_task *t;
+ 	struct task_status_struct *ts;
+@@ -2890,7 +2916,11 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 				IO_OPEN_CNX_ERROR_IT_NEXUS_LOSS);
+ 			ts->resp = SAS_TASK_COMPLETE;
+ 			ts->stat = SAS_QUEUE_FULL;
++			spin_unlock_irqrestore(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
++			spin_lock_irqsave(&circularQ->oq_lock,
++					circularQ->lock_flags);
+ 			return;
+ 		}
+ 		break;
+@@ -3002,7 +3032,11 @@ static void mpi_sata_event(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		pm8001_ccb_task_free(pm8001_ha, t, ccb, tag);
+ 	} else {
+ 		spin_unlock_irqrestore(&t->task_state_lock, flags);
++		spin_unlock_irqrestore(&circularQ->oq_lock,
++				circularQ->lock_flags);
+ 		pm8001_ccb_task_free_done(pm8001_ha, t, ccb, tag);
++		spin_lock_irqsave(&circularQ->oq_lock,
++				circularQ->lock_flags);
+ 	}
+ }
  
- 	payload.phyid_portid =
--		cpu_to_le32(((pm8001_dev->sas_device->port->id) & 0xFF) |
-+		cpu_to_le32(((port->port_id) & 0xFF) |
- 		((phy_id & 0xFF) << 8));
+@@ -3906,7 +3940,8 @@ static int ssp_coalesced_comp_resp(struct pm8001_hba_info *pm8001_ha,
+  * @pm8001_ha: our hba card information
+  * @piomb: IO message buffer
+  */
+-static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void *piomb)
++static void process_one_iomb(struct pm8001_hba_info *pm8001_ha,
++		struct outbound_queue_table *circularQ, void *piomb)
+ {
+ 	__le32 pHeader = *(__le32 *)piomb;
+ 	u32 opc = (u32)((le32_to_cpu(pHeader)) & 0xFFF);
+@@ -3948,11 +3983,11 @@ static void process_one_iomb(struct pm8001_hba_info *pm8001_ha, void *piomb)
+ 		break;
+ 	case OPC_OUB_SATA_COMP:
+ 		pm8001_dbg(pm8001_ha, MSG, "OPC_OUB_SATA_COMP\n");
+-		mpi_sata_completion(pm8001_ha, piomb);
++		mpi_sata_completion(pm8001_ha, circularQ, piomb);
+ 		break;
+ 	case OPC_OUB_SATA_EVENT:
+ 		pm8001_dbg(pm8001_ha, MSG, "OPC_OUB_SATA_EVENT\n");
+-		mpi_sata_event(pm8001_ha, piomb);
++		mpi_sata_event(pm8001_ha, circularQ, piomb);
+ 		break;
+ 	case OPC_OUB_SSP_EVENT:
+ 		pm8001_dbg(pm8001_ha, MSG, "OPC_OUB_SSP_EVENT\n");
+@@ -4121,7 +4156,6 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
+ 	void *pMsg1 = NULL;
+ 	u8 bc;
+ 	u32 ret = MPI_IO_STATUS_FAIL;
+-	unsigned long flags;
+ 	u32 regval;
  
- 	payload.dtype_dlr_mcn_ir_retry = cpu_to_le32((retryFlag & 0x01) |
+ 	if (vec == (pm8001_ha->max_q_num - 1)) {
+@@ -4138,7 +4172,7 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
+ 		}
+ 	}
+ 	circularQ = &pm8001_ha->outbnd_q_tbl[vec];
+-	spin_lock_irqsave(&circularQ->oq_lock, flags);
++	spin_lock_irqsave(&circularQ->oq_lock, circularQ->lock_flags);
+ 	do {
+ 		/* spurious interrupt during setup if kexec-ing and
+ 		 * driver doing a doorbell access w/ the pre-kexec oq
+@@ -4149,7 +4183,8 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
+ 		ret = pm8001_mpi_msg_consume(pm8001_ha, circularQ, &pMsg1, &bc);
+ 		if (MPI_IO_STATUS_SUCCESS == ret) {
+ 			/* process the outbound message */
+-			process_one_iomb(pm8001_ha, (void *)(pMsg1 - 4));
++			process_one_iomb(pm8001_ha, circularQ,
++						(void *)(pMsg1 - 4));
+ 			/* free the message from the outbound circular buffer */
+ 			pm8001_mpi_msg_free_set(pm8001_ha, pMsg1,
+ 							circularQ, bc);
+@@ -4164,7 +4199,7 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
+ 				break;
+ 		}
+ 	} while (1);
+-	spin_unlock_irqrestore(&circularQ->oq_lock, flags);
++	spin_unlock_irqrestore(&circularQ->oq_lock, circularQ->lock_flags);
+ 	return ret;
+ }
+ 
 -- 
 2.27.0
 
