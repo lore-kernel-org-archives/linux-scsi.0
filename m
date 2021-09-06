@@ -2,157 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
+	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5EFFC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 15:18:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8D97C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 15:44:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96ABB60F6E
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 15:18:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2C2F60F13
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 15:44:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243494AbhIFPTZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Sep 2021 11:19:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:46266 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S243120AbhIFPTT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 11:19:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1630941494;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=CZleRDKrUpzSsDU4fREJDddYFjBD7XjhXgtX80VA+J8=;
-        b=DTCohil2LvstnmTehw1eKfJkozmkWE2fcAiah0JeStlCNegTLHB4RKIuxIzXDp24PPRK02
-        5glUYT8jXXGP34H/+km9o/gkkZ2pLjtEY1ZG15ZDm9PPQyk7BCVhP2nvtHqFOJ+bN4QOjo
-        sTUBz1YevysIifdBqJKoly7JoGPQMiQ=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-589-URvw4wVQM3ey6klIHN6SIg-1; Mon, 06 Sep 2021 11:18:12 -0400
-X-MC-Unique: URvw4wVQM3ey6klIHN6SIg-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A6CA7107ACE3;
-        Mon,  6 Sep 2021 15:18:11 +0000 (UTC)
-Received: from raketa.redhat.com (unknown [10.40.193.35])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 346766A902;
-        Mon,  6 Sep 2021 15:18:10 +0000 (UTC)
-From:   Maurizio Lombardi <mlombard@redhat.com>
-To:     martin.petersen@oracle.com
-Cc:     bostroesser@gmail.com, michael.christie@oracle.com,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: [PATCH V2] target: fix the pgr/alua_support_store functions
-Date:   Mon,  6 Sep 2021 17:18:09 +0200
-Message-Id: <20210906151809.52811-1-mlombard@redhat.com>
+        id S231359AbhIFPpo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Sep 2021 11:45:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49698 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231390AbhIFPpn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 11:45:43 -0400
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7A7CC061575;
+        Mon,  6 Sep 2021 08:44:38 -0700 (PDT)
+Received: by mail-ed1-x531.google.com with SMTP id s25so10102255edw.0;
+        Mon, 06 Sep 2021 08:44:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=CP/L6trNtJt+zRzY7oBdWtRfg7ANZZU7xhOLZ2L8JmY=;
+        b=gUQBCzDQ97o56gLhNc6jwxfhKc5bkrEd4u3/Y/yZLiELUy++Em9ldHLXhlh2veqTwO
+         aKchPqZpcQrTRaD1LVQXAkrAH6cdTbaPuHOFR7afWx6gSxqYbuWkb5hd8RnpBx1lBcN0
+         kSKlW0EpTbicAybupq0RPwcXQHryOPe8JE1jOEtBMEjttWkly1OFksBJSJ3Gi0+8h81l
+         siLvuZDpP0UnZVhphU28d0GQv7SnGWjAXW+5sRc1QpBK5I1eY3V9b4g1ISVUvttQdHIZ
+         L9rjbRuqw7R+Ke5xQoDf8UF2Zk8CVH8u2Pyg7FlQtmgj2aTwGvtHOcRX26D8vEHA+U9Y
+         ZCgw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=CP/L6trNtJt+zRzY7oBdWtRfg7ANZZU7xhOLZ2L8JmY=;
+        b=flQLFgrD65fk4jdTo3jmWtCJ+I3X3bgRHXFuQ61bYk2jmmf4bU2LOGjwEtDsv/gYoR
+         KXl1Vw2LI/eWVaGd5heJJtaoipf4JbrXnbeq7Z3j5VpGqs40Cum6KhiIRiX11z5rtR+N
+         cLmp9qa7nLHvR/VtYU9Ww67cDz+atEhumb+d6S2P4e0mXB9YUihLC3CTmTE923/Jy0eh
+         qmQyDwnF2iepb9+YwAM2siCZBUfVnVIQri7PDDGkQL21z4sOwSZxHR4O6kp/kcGHLafo
+         wLgUeSTZyBF+RvJqZEvET1UKTYiG4ldPFW/s51ujvob5RV2YCAhiF90cOUtnjmaoBZSy
+         TnZQ==
+X-Gm-Message-State: AOAM53063hI6LJDkpZk6vUVuWFHZNJeDHEaHsDDINOwtChwTv7Vk2+et
+        4xDrEqDJr9O+7sxBVW31OA2ksMRu4DY=
+X-Google-Smtp-Source: ABdhPJw3Ii0S5QxMcuNImn6egZB0qYvqvWBqe9rBgUFdJz2b3DgbWxm5tfeJWNW4tDknH1UQsICNCg==
+X-Received: by 2002:a05:6402:1249:: with SMTP id l9mr14273738edw.177.1630943077297;
+        Mon, 06 Sep 2021 08:44:37 -0700 (PDT)
+Received: from [192.168.178.40] (ipbcc061e7.dynamic.kabel-deutschland.de. [188.192.97.231])
+        by smtp.gmail.com with ESMTPSA id qq16sm4109255ejb.120.2021.09.06.08.44.36
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 06 Sep 2021 08:44:37 -0700 (PDT)
+Subject: Re: [PATCH V2] target: fix the pgr/alua_support_store functions
+To:     Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com
+Cc:     michael.christie@oracle.com, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+References: <20210906151809.52811-1-mlombard@redhat.com>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <b1a05684-92a5-f209-a81f-96a1cfc4ea49@gmail.com>
+Date:   Mon, 6 Sep 2021 17:44:36 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+In-Reply-To: <20210906151809.52811-1-mlombard@redhat.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 356ba2a8bc8d ("scsi: target: tcmu: Make pgr_support and
-alua_support attributes writable")
-introduced support for changeable alua_support and pgr_support
-target attributes. They can only be changed
-if the backstore is user-backed, otherwise the kernel returns -EINVAL.
+On 06.09.21 17:18, Maurizio Lombardi wrote:
+> Commit 356ba2a8bc8d ("scsi: target: tcmu: Make pgr_support and
+> alua_support attributes writable")
+> introduced support for changeable alua_support and pgr_support
+> target attributes. They can only be changed
+> if the backstore is user-backed, otherwise the kernel returns -EINVAL.
+> 
+> This triggers a warning in the targetcli/rtslib code when performing
+> a target restore that includes non-userbacked backstores:
+> 
+> #targetctl restore
+> Storage Object block/storage1: Cannot set attribute alua_support:
+> [Errno 22] Invalid argument, skipped
+> Storage Object block/storage1: Cannot set attribute pgr_support:
+> [Errno 22] Invalid argument, skipped
+> 
+> Fix this warning by returning an error code only if we are really
+> going to flip the PGR/ALUA bit in the transport_flags field,
+> otherwise we'll do nothing and return success.
+> 
+> Return ENOSYS instead of EINVAL if the pgr/alua attributes
+> can't be changed, this way it'll be possible for userspace to understand
+> if the operation failed because an invalid value has been passed
+> to strtobool() or because the attributes are fixed.
+> 
+> Fixes: 356ba2a8bc8d ("scsi: target: tcmu: Make pgr_support and alua_support attributes writable")
+> 
+> v2: replace EOPNOTSUPP with ENOSYS
+> 
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
 
-This triggers a warning in the targetcli/rtslib code when performing
-a target restore that includes non-userbacked backstores:
-
-#targetctl restore
-Storage Object block/storage1: Cannot set attribute alua_support:
-[Errno 22] Invalid argument, skipped
-Storage Object block/storage1: Cannot set attribute pgr_support:
-[Errno 22] Invalid argument, skipped
-
-Fix this warning by returning an error code only if we are really
-going to flip the PGR/ALUA bit in the transport_flags field,
-otherwise we'll do nothing and return success.
-
-Return ENOSYS instead of EINVAL if the pgr/alua attributes
-can't be changed, this way it'll be possible for userspace to understand
-if the operation failed because an invalid value has been passed
-to strtobool() or because the attributes are fixed.
-
-Fixes: 356ba2a8bc8d ("scsi: target: tcmu: Make pgr_support and alua_support attributes writable")
-
-v2: replace EOPNOTSUPP with ENOSYS
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/target/target_core_configfs.c | 32 +++++++++++++++++----------
- 1 file changed, 20 insertions(+), 12 deletions(-)
-
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/target_core_configfs.c
-index 102ec644bc8a..023bd4516a68 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -1110,20 +1110,24 @@ static ssize_t alua_support_store(struct config_item *item,
- {
- 	struct se_dev_attrib *da = to_attrib(item);
- 	struct se_device *dev = da->da_dev;
--	bool flag;
-+	bool flag, oldflag;
- 	int ret;
- 
-+	ret = strtobool(page, &flag);
-+	if (ret < 0)
-+		return ret;
-+
-+	oldflag = !(dev->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_ALUA);
-+	if (flag == oldflag)
-+		return count;
-+
- 	if (!(dev->transport->transport_flags_changeable &
- 	      TRANSPORT_FLAG_PASSTHROUGH_ALUA)) {
- 		pr_err("dev[%p]: Unable to change SE Device alua_support:"
- 			" alua_support has fixed value\n", dev);
--		return -EINVAL;
-+		return -ENOSYS;
- 	}
- 
--	ret = strtobool(page, &flag);
--	if (ret < 0)
--		return ret;
--
- 	if (flag)
- 		dev->transport_flags &= ~TRANSPORT_FLAG_PASSTHROUGH_ALUA;
- 	else
-@@ -1145,20 +1149,24 @@ static ssize_t pgr_support_store(struct config_item *item,
- {
- 	struct se_dev_attrib *da = to_attrib(item);
- 	struct se_device *dev = da->da_dev;
--	bool flag;
-+	bool flag, oldflag;
- 	int ret;
- 
-+	ret = strtobool(page, &flag);
-+	if (ret < 0)
-+		return ret;
-+
-+	oldflag = !(dev->transport_flags & TRANSPORT_FLAG_PASSTHROUGH_PGR);
-+	if (flag == oldflag)
-+		return count;
-+
- 	if (!(dev->transport->transport_flags_changeable &
- 	      TRANSPORT_FLAG_PASSTHROUGH_PGR)) {
- 		pr_err("dev[%p]: Unable to change SE Device pgr_support:"
- 			" pgr_support has fixed value\n", dev);
--		return -EINVAL;
-+		return -ENOSYS;
- 	}
- 
--	ret = strtobool(page, &flag);
--	if (ret < 0)
--		return ret;
--
- 	if (flag)
- 		dev->transport_flags &= ~TRANSPORT_FLAG_PASSTHROUGH_PGR;
- 	else
--- 
-2.27.0
-
+Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
