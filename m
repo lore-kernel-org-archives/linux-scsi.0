@@ -2,110 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8D97C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 15:44:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E19C5C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 16:09:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2C2F60F13
-	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 15:44:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C1B9A60F6B
+	for <linux-scsi@archiver.kernel.org>; Mon,  6 Sep 2021 16:09:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231359AbhIFPpo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Sep 2021 11:45:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49698 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231390AbhIFPpn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 11:45:43 -0400
-Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B7A7CC061575;
-        Mon,  6 Sep 2021 08:44:38 -0700 (PDT)
-Received: by mail-ed1-x531.google.com with SMTP id s25so10102255edw.0;
-        Mon, 06 Sep 2021 08:44:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=CP/L6trNtJt+zRzY7oBdWtRfg7ANZZU7xhOLZ2L8JmY=;
-        b=gUQBCzDQ97o56gLhNc6jwxfhKc5bkrEd4u3/Y/yZLiELUy++Em9ldHLXhlh2veqTwO
-         aKchPqZpcQrTRaD1LVQXAkrAH6cdTbaPuHOFR7afWx6gSxqYbuWkb5hd8RnpBx1lBcN0
-         kSKlW0EpTbicAybupq0RPwcXQHryOPe8JE1jOEtBMEjttWkly1OFksBJSJ3Gi0+8h81l
-         siLvuZDpP0UnZVhphU28d0GQv7SnGWjAXW+5sRc1QpBK5I1eY3V9b4g1ISVUvttQdHIZ
-         L9rjbRuqw7R+Ke5xQoDf8UF2Zk8CVH8u2Pyg7FlQtmgj2aTwGvtHOcRX26D8vEHA+U9Y
-         ZCgw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=CP/L6trNtJt+zRzY7oBdWtRfg7ANZZU7xhOLZ2L8JmY=;
-        b=flQLFgrD65fk4jdTo3jmWtCJ+I3X3bgRHXFuQ61bYk2jmmf4bU2LOGjwEtDsv/gYoR
-         KXl1Vw2LI/eWVaGd5heJJtaoipf4JbrXnbeq7Z3j5VpGqs40Cum6KhiIRiX11z5rtR+N
-         cLmp9qa7nLHvR/VtYU9Ww67cDz+atEhumb+d6S2P4e0mXB9YUihLC3CTmTE923/Jy0eh
-         qmQyDwnF2iepb9+YwAM2siCZBUfVnVIQri7PDDGkQL21z4sOwSZxHR4O6kp/kcGHLafo
-         wLgUeSTZyBF+RvJqZEvET1UKTYiG4ldPFW/s51ujvob5RV2YCAhiF90cOUtnjmaoBZSy
-         TnZQ==
-X-Gm-Message-State: AOAM53063hI6LJDkpZk6vUVuWFHZNJeDHEaHsDDINOwtChwTv7Vk2+et
-        4xDrEqDJr9O+7sxBVW31OA2ksMRu4DY=
-X-Google-Smtp-Source: ABdhPJw3Ii0S5QxMcuNImn6egZB0qYvqvWBqe9rBgUFdJz2b3DgbWxm5tfeJWNW4tDknH1UQsICNCg==
-X-Received: by 2002:a05:6402:1249:: with SMTP id l9mr14273738edw.177.1630943077297;
-        Mon, 06 Sep 2021 08:44:37 -0700 (PDT)
-Received: from [192.168.178.40] (ipbcc061e7.dynamic.kabel-deutschland.de. [188.192.97.231])
-        by smtp.gmail.com with ESMTPSA id qq16sm4109255ejb.120.2021.09.06.08.44.36
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 06 Sep 2021 08:44:37 -0700 (PDT)
-Subject: Re: [PATCH V2] target: fix the pgr/alua_support_store functions
-To:     Maurizio Lombardi <mlombard@redhat.com>, martin.petersen@oracle.com
-Cc:     michael.christie@oracle.com, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20210906151809.52811-1-mlombard@redhat.com>
-From:   Bodo Stroesser <bostroesser@gmail.com>
-Message-ID: <b1a05684-92a5-f209-a81f-96a1cfc4ea49@gmail.com>
-Date:   Mon, 6 Sep 2021 17:44:36 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        id S243779AbhIFQKE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 6 Sep 2021 12:10:04 -0400
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:47951 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243365AbhIFQKE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 12:10:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1630944539; x=1662480539;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=jwq9HvJWA0jP5gqhGPFKhyWRAm0g0Oi4HG0o+ZGIPiU=;
+  b=mO+/cPsR2Ls48gaubxFdzMrdGbZYeRBcSpFYFpPVMAgpTmfNNBi/PZH/
+   JDRGOExNNJdf9dON0eCzuBy+HOr65h0ZLC4XLSv+pQL7oLNGbPfFa0Cp3
+   gJmz7StDOeSI4qiUN35+RBjV9mZom7DZg4Px5DwgV+8cPdfJZQ/39Cbje
+   LLbzfF/vaAita9fplbZbbYo2LJEww9htAZTBiRl/cTFwuwb2Rj8jQL49z
+   P6bsZwjTezCwd9fd/yIR9nNRNEeGacLtsTR5yGr1EwgK+CQrUEjWCnE3o
+   0D8R5LMwTrbOd8Yg9QUd3VTTvYpeqAl6Y/g1p8/RoAqahUDRS8x2dFySt
+   A==;
+IronPort-SDR: L3cFlyBfDQs8jF7Stje5+dn9pLBWX5V4DFYGgNxxBeGzmnVWItdcijHf1OQ2u5c+wempc5XHdi
+ L5arHPHw6hlODugcMtL1hysA2cfo3LwUPI0B3zBeqst0FQKaFbxBSLKbmP3HeFxGN+enSymcYY
+ DVgGoW8w1OdNCKgsCT5g8yI3QTinIgFEv8upa8HEtrgYuGK2/z/8Hkm649TWznZYv2G+kwOHov
+ +VBwKfoUcye4wegDAILMz7/1tUb2RNCwtziNWQP1O85HQ6bA12L7oWUBQ1CSqxtPu8Ox7I2+1k
+ +Bfg8X+K2q6s5V4MvDeEl+EA
+X-IronPort-AV: E=Sophos;i="5.85,272,1624345200"; 
+   d="scan'208";a="143033425"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa1.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 06 Sep 2021 09:08:58 -0700
+Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
+ chn-vm-ex03.mchp-main.com (10.10.85.151) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.14; Mon, 6 Sep 2021 09:08:58 -0700
+Received: from localhost (10.10.115.15) by chn-vm-ex01.mchp-main.com
+ (10.10.85.143) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
+ Transport; Mon, 6 Sep 2021 09:08:58 -0700
+From:   Ajish Koshy <Ajish.Koshy@microchip.com>
+To:     <linux-scsi@vger.kernel.org>
+CC:     <Vasanthalakshmi.Tharmarajan@microchip.com>,
+        <Viswas.G@microchip.com>, <Ruksar.devadi@microchip.com>,
+        <Ashokkumar.N@microchip.com>,
+        Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Subject: [PATCH v2 0/4] pm80xx updates
+Date:   Mon, 6 Sep 2021 22:34:00 +0530
+Message-ID: <20210906170404.5682-1-Ajish.Koshy@microchip.com>
+X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
-In-Reply-To: <20210906151809.52811-1-mlombard@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 06.09.21 17:18, Maurizio Lombardi wrote:
-> Commit 356ba2a8bc8d ("scsi: target: tcmu: Make pgr_support and
-> alua_support attributes writable")
-> introduced support for changeable alua_support and pgr_support
-> target attributes. They can only be changed
-> if the backstore is user-backed, otherwise the kernel returns -EINVAL.
-> 
-> This triggers a warning in the targetcli/rtslib code when performing
-> a target restore that includes non-userbacked backstores:
-> 
-> #targetctl restore
-> Storage Object block/storage1: Cannot set attribute alua_support:
-> [Errno 22] Invalid argument, skipped
-> Storage Object block/storage1: Cannot set attribute pgr_support:
-> [Errno 22] Invalid argument, skipped
-> 
-> Fix this warning by returning an error code only if we are really
-> going to flip the PGR/ALUA bit in the transport_flags field,
-> otherwise we'll do nothing and return success.
-> 
-> Return ENOSYS instead of EINVAL if the pgr/alua attributes
-> can't be changed, this way it'll be possible for userspace to understand
-> if the operation failed because an invalid value has been passed
-> to strtobool() or because the attributes are fixed.
-> 
-> Fixes: 356ba2a8bc8d ("scsi: target: tcmu: Make pgr_support and alua_support attributes writable")
-> 
-> v2: replace EOPNOTSUPP with ENOSYS
-> 
-> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
-> ---
+This patchset includes bugfixes for pm80xx driver
 
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
+Changes from v1 to v2:
+	- For fix incorrect port value patch
+		- More detailed commit message now
+		  mentioning problem and fix.
+	- For fix lockup due to commit patch
+		- Commit message includes little detail
+		  of previous commit.
+		- Added 'Fixes' tag.
+		  
+
+Ajish Koshy (3):
+  scsi: pm80xx: fix incorrect port value when registering a device
+  scsi: pm80xx: fix lockup due to commit <1f02beff224e>
+  scsi: pm80xx: fix memory leak during rmmod
+
+Viswas G (1):
+  scsi: pm80xx: Corrected Inbound and Outbound queue logging
+
+ drivers/scsi/pm8001/pm8001_ctl.c  |  6 ++--
+ drivers/scsi/pm8001/pm8001_hwi.c  |  7 +++-
+ drivers/scsi/pm8001/pm8001_init.c | 12 +++++++
+ drivers/scsi/pm8001/pm8001_sas.c  | 15 ++++++++
+ drivers/scsi/pm8001/pm8001_sas.h  |  6 ++--
+ drivers/scsi/pm8001/pm80xx_hwi.c  | 60 +++++++++++++++++++++++++------
+ 6 files changed, 91 insertions(+), 15 deletions(-)
+
+-- 
+2.27.0
+
