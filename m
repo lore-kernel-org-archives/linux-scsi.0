@@ -2,99 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2BC9C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 01:37:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C904C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 04:07:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D08A06108D
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 01:37:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D89D610A3
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 04:07:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237866AbhIGBim (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 6 Sep 2021 21:38:42 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:52231 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232492AbhIGBih (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Sep 2021 21:38:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1630978651;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LD4HmvA+6ng2SFaOBQkrpmMcYGijXFYTWjOibY469rU=;
-        b=ISTAn5P9n39d7GuCDuOY4asIMwFWPgLAz4ZrINnaCg1IlPBAPlUueKOLgTi+LRwwlrNAhh
-        yapk5fak0VtdRpE4mM70FVHc0i2XI668Q4UpkiPXICbvbDiIO0nKucKdW7o3SKHGQfhgCX
-        GHkhcKRBkUvMv+BrBAuKEr/kZ9ilnDs=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-420-jemrBUYpPzmuqg88LXk5sw-1; Mon, 06 Sep 2021 21:37:30 -0400
-X-MC-Unique: jemrBUYpPzmuqg88LXk5sw-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CFBFF10054F6;
-        Tue,  7 Sep 2021 01:37:27 +0000 (UTC)
-Received: from T590 (ovpn-8-23.pek2.redhat.com [10.72.8.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8619927097;
-        Tue,  7 Sep 2021 01:37:04 +0000 (UTC)
-Date:   Tue, 7 Sep 2021 09:37:05 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-Cc:     axboe@kernel.dk, martin.petersen@oracle.com, jejb@linux.ibm.com,
-        kbusch@kernel.org, sagi@grimberg.me, adrian.hunter@intel.com,
-        beanhuo@micron.com, ulf.hansson@linaro.org, avri.altman@wdc.com,
-        swboyd@chromium.org, agk@redhat.com, snitzer@redhat.com,
-        josef@toxicpanda.com, hch@infradead.org, hare@suse.de,
-        bvanassche@acm.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-mmc@vger.kernel.org,
-        dm-devel@redhat.com, nbd@other.debian.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 2/8] scsi/sr: add error handling support for add_disk()
-Message-ID: <YTbCQdieHG07Bz8W@T590>
-References: <20210830212538.148729-1-mcgrof@kernel.org>
- <20210830212538.148729-3-mcgrof@kernel.org>
+        id S229783AbhIGEIP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Sep 2021 00:08:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43446 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229491AbhIGEIO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2021 00:08:14 -0400
+Received: from mail-pj1-x1031.google.com (mail-pj1-x1031.google.com [IPv6:2607:f8b0:4864:20::1031])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF95AC061575;
+        Mon,  6 Sep 2021 21:07:08 -0700 (PDT)
+Received: by mail-pj1-x1031.google.com with SMTP id f11-20020a17090aa78b00b0018e98a7cddaso1181723pjq.4;
+        Mon, 06 Sep 2021 21:07:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=eoAtwz/HI/43X/dImzE2MSr2lE2uK0vvPjZTO/+eO94=;
+        b=nkBZzaoGaVDLDtJbh82aWdYllxxJ0jwYm7q+0OQTUS6OJFNBhtDnSmC75Hiuk2T87y
+         6KHWCQCC9IA6ZnnCNER/D32f9M7QiINiDjQvAazh2KvJbX+ytN0bqr0/R4VQ4Ot3LwMs
+         SWbJMgIGGIa690jvX8/zACeO3qw3Ak16LK0fU1nDB0AJWfZq5XajX6MHMvrSl1tPvhFf
+         /sH8z5lgk11mFljz/q3yNPxTJcvHQd8qAZs27cQMgV61CfqMeQHNvINKdpg0VZRzUiWj
+         NE+uTj64sPJCWUQ8USGSgfj/JGsbM6nfoJm9BykLkZpkAWg1u5P+yACXXiLi1I2nZqNw
+         hvlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=eoAtwz/HI/43X/dImzE2MSr2lE2uK0vvPjZTO/+eO94=;
+        b=YXrFBX7fIFA4KUFFsTOPjzHd7j7vGrAUyhswDk8ZzNkYxRcxVTHOG3uIKLmwkBKBBm
+         LJqhb9FWV7V0kDl8w6xwA8ugmXzsfhfQ5krggI95BK6raohAXauOBu5HgX/MIhUM57UO
+         oaHqWAeQYTQ6nxBgLWFHatzF3TpCTL2XM90MIubqYdMiNqUNUtNvJrDlASn1jNLOMKrt
+         pngiFSMoxI75yDJe3CFjOFHPFqbw15WrZs3udq20ci9UKDg/deVhzP+kVyRYLXXNIgdg
+         CgjWoNgzVQNIzAPZFy23l+dEbx+p0NlmhEJJj5oNtijyNljf+vO0a2nGqpZYULHZ38Hl
+         W9AQ==
+X-Gm-Message-State: AOAM532ggaY0PWp5cS5Y7Gfq11geupejyJrJw+1UQ45VSJuGC8tuqbZj
+        z0917BelCR5uasFAhzYflDE=
+X-Google-Smtp-Source: ABdhPJyNXtUK0r5C3DcP4PQzsZ1BeRfL99Edo04uZhTP+/8ItWPRQ8jsT4QqI0YFb621wNZSj+L1Hg==
+X-Received: by 2002:a17:90a:d98f:: with SMTP id d15mr2445084pjv.81.1630987628198;
+        Mon, 06 Sep 2021 21:07:08 -0700 (PDT)
+Received: from tong-desktop.local (99-105-211-126.lightspeed.sntcca.sbcglobal.net. [99.105.211.126])
+        by smtp.googlemail.com with ESMTPSA id b7sm8894873pfl.195.2021.09.06.21.07.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Sep 2021 21:07:07 -0700 (PDT)
+From:   Tong Zhang <ztong0001@gmail.com>
+To:     Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dc395x@twibble.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Tong Zhang <ztong0001@gmail.com>
+Subject: [PATCH v1] scsi: dc395: fix error case unwinding
+Date:   Mon,  6 Sep 2021 21:07:02 -0700
+Message-Id: <20210907040702.1846409-1-ztong0001@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210830212538.148729-3-mcgrof@kernel.org>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Aug 30, 2021 at 02:25:32PM -0700, Luis Chamberlain wrote:
-> We never checked for errors on add_disk() as this function
-> returned void. Now that this is fixed, use the shiny new
-> error handling.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
-> ---
->  drivers/scsi/sr.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-> index 2942a4ec9bdd..72fd21844367 100644
-> --- a/drivers/scsi/sr.c
-> +++ b/drivers/scsi/sr.c
-> @@ -779,7 +779,10 @@ static int sr_probe(struct device *dev)
->  	dev_set_drvdata(dev, cd);
->  	disk->flags |= GENHD_FL_REMOVABLE;
->  	sr_revalidate_disk(cd);
-> -	device_add_disk(&sdev->sdev_gendev, disk, NULL);
-> +
-> +	error = device_add_disk(&sdev->sdev_gendev, disk, NULL);
-> +	if (error)
-> +		goto fail_minor;
+dc395x_init_one()->adapter_init() might fail. In this case, the acb
+is already clean up by adapter_init(), no need to do that in
+adapter_uninit(acb) again.
 
-You don't undo register_cdrom(), maybe you can use kref_put(&cd->kref, sr_kref_release);
-to simplify the error handling.
+[    1.252251] dc395x: adapter init failed
+[    1.254900] RIP: 0010:adapter_uninit+0x94/0x170 [dc395x]
+[    1.260307] Call Trace:
+[    1.260442]  dc395x_init_one.cold+0x72a/0x9bb [dc395x]
 
+Signed-off-by: Tong Zhang <ztong0001@gmail.com>
+---
+ drivers/scsi/dc395x.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Ming
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 24c7cefb0b78..1c79e6c27163 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -4618,6 +4618,7 @@ static int dc395x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+ 	/* initialise the adapter and everything we need */
+  	if (adapter_init(acb, io_port_base, io_port_len, irq)) {
+ 		dprintkl(KERN_INFO, "adapter init failed\n");
++		acb = NULL;
+ 		goto fail;
+ 	}
+ 
+-- 
+2.25.1
 
