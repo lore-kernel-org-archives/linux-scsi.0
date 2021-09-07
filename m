@@ -2,104 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.6 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0935C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 16:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDDC4C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 16:56:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94023610A3
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 16:55:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1F0E60EBA
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 16:56:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345277AbhIGQ41 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Sep 2021 12:56:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49032 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234571AbhIGQ41 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2021 12:56:27 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3E1CC061575;
-        Tue,  7 Sep 2021 09:55:20 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id j16so8646709pfc.2;
-        Tue, 07 Sep 2021 09:55:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=fo01n+oht3lwEJyeQrCoe6KGpWuXH6sm5NGKluVcVIg=;
-        b=LFIdP+U7Iy++SMozkDbn1A+ei8rDjByZWsek36sc+DPewZshw3o11baFsUXh8NxHD2
-         1SCt+C6R1JVqpf+i0FwudI+7/TxKXjMfNIOOxvVXjtGz5F4x7jsC5VLaNV69fi8oFuZv
-         cbn1mZz4bNPQEjz/rOldefzEBxFq2TyX7GKuT6B5qNiXHyMeY515Prcz77pQrPs/oKaw
-         UsH9r6D4ptR1fpeS0MCTOy+0yqyLQjDc/zwTK4+tZgjVCKNTFLyeRa2K6udHvq1vE5m9
-         yl3L2Lfs8PLKc8tO7pdhHYp9qkuNAtRzZpqerJP2zNFKhzghKl7eN07W2c9VYdAwq/+L
-         mxqg==
+        id S234571AbhIGQ55 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Sep 2021 12:57:57 -0400
+Received: from mail-pg1-f174.google.com ([209.85.215.174]:41494 "EHLO
+        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345333AbhIGQ5z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2021 12:57:55 -0400
+Received: by mail-pg1-f174.google.com with SMTP id k24so10629353pgh.8
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Sep 2021 09:56:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=fo01n+oht3lwEJyeQrCoe6KGpWuXH6sm5NGKluVcVIg=;
-        b=Nsb4pTsDLD0VQXkg8KrqWpob0enCXR9sbjlv3oAJWsPsh3nieLcxl9sBjINbu6zktb
-         PTgtVwdJjrNKUDKciSFEqPO9YF0LFf0rN3iqmXOtBIc9unzNps+G2kqB5qjnua91lmC6
-         wQSuv3/LwRlwMDfthL1TpwnSQtzghuwVVWJ4DDs9zgkusED8efNJoqgZAvgEjaQCaZ2G
-         nBCwadl/WchtCBRwdSr3OZ8ypPdzL4XYR6pDB3eeR5Lyg/lr27bSCA4TsKN9o+cVQrcl
-         Dgz3zYHbDA8Bx390cqvMf3sR3GUIeBSUUK2tdBfSJIRPDAhtG8vrOfeUd2Lq28hoUMWq
-         cKPg==
-X-Gm-Message-State: AOAM532nMF8ezxryhfEOupe8jHE1u22aCjEWp596C1q444gBcIf7bhgv
-        CY55AT2iX5iR29uHyuMeJbs=
-X-Google-Smtp-Source: ABdhPJyA7g73nobmCRmNnC9ZtQDCq9alkwEM3kPNXBGC/NCYT3AXahvI7A8NdPr/2dFr9GzsFtVfWA==
-X-Received: by 2002:a63:704f:: with SMTP id a15mr18037290pgn.120.1631033720601;
-        Tue, 07 Sep 2021 09:55:20 -0700 (PDT)
-Received: from [10.69.44.239] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id gw21sm2865041pjb.36.2021.09.07.09.55.19
+        bh=bbjW+hUwr2cAe6zlj0babvulXm4qaAiDKwbBMEUWYC8=;
+        b=Oy4dWDCUgBOUtKWiTBmL04xvsNHvC3bkNjw8fNrCM82qqfaJSmkfMvfpQZxeP/xfUb
+         tTbgW75mM19f2MxCN+Bc+hRQ3AAVN/4Zmkfa5s2qh8yjolC5Pgzr1kXumHaNqi/2J9IP
+         cortZH//qqaXMPOTERl52pm2tj50yB0xXnlCo2VIH7rBSI9upXaxPULwnfBGsSZw5Tt6
+         HL+/nNzmneyipJDY6WXWt0JezdoN9Pvto9/R2om2q+4TqP8BN2JK2usg1V1pfZOmb9H+
+         y+jjELRTiJjnlLqeSyDoNyFw0PiPidDP80caj7AJXuXdPH2ZM4DAf+IkgnYzMhaIGM39
+         vB5g==
+X-Gm-Message-State: AOAM530ITp5t+ukv1ul95Kmxci3Gne0CMCnXk+lCX/Z0q/QCcPcjgnqU
+        Qnea3M45tdW65dr5xpIFIKURQ6lWOAc=
+X-Google-Smtp-Source: ABdhPJxNFeFx6XAP4VaWlui8PuSqaBo2ZDJMQj28dMVIwYEb8ubpV92vzmCWvM3gzls6Qb4kHjQT1g==
+X-Received: by 2002:a63:5413:: with SMTP id i19mr17856315pgb.297.1631033808783;
+        Tue, 07 Sep 2021 09:56:48 -0700 (PDT)
+Received: from [192.168.50.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id t15sm14277668pgi.80.2021.09.07.09.56.47
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Sep 2021 09:55:20 -0700 (PDT)
-Message-ID: <8edb44da-87e3-7e81-c9a8-54b27dde2fc1@gmail.com>
-Date:   Tue, 7 Sep 2021 09:55:19 -0700
+        Tue, 07 Sep 2021 09:56:48 -0700 (PDT)
+Subject: Re: [PATCH V3 1/3] scsi: ufs: Fix error handler clear ua deadlock
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
+References: <20210905095153.6217-1-adrian.hunter@intel.com>
+ <20210905095153.6217-2-adrian.hunter@intel.com>
+ <a12d88b3-8402-34bb-fe97-90b7aa2c2c39@acm.org>
+ <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
+Date:   Tue, 7 Sep 2021 09:56:46 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-Subject: Re: [PATCH] scsi: elx: libefc: Prefer kcalloc over open coded
- arithmetic
+In-Reply-To: <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-To:     Len Baker <len.baker@gmx.com>,
-        James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Kees Cook <keescook@chromium.org>, Hannes Reinecke <hare@suse.de>,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-hardening@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210905062448.6587-1-len.baker@gmx.com>
-From:   James Smart <jsmart2021@gmail.com>
-In-Reply-To: <20210905062448.6587-1-len.baker@gmx.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/4/2021 11:24 PM, Len Baker wrote:
-> As noted in the "Deprecated Interfaces, Language Features, Attributes,
-> and Conventions" documentation [1], size calculations (especially
-> multiplication) should not be performed in memory allocator (or similar)
-> function arguments due to the risk of them overflowing. This could lead
-> to values wrapping around and a smaller allocation being made than the
-> caller was expecting. Using those allocations could lead to linear
-> overflows of heap memory and other misbehaviors.
-> 
-> So, use the purpose specific kcalloc() function instead of the argument
-> count * size in the kzalloc() function.
-> 
-> [1] https://www.kernel.org/doc/html/v5.14/process/deprecated.html#open-coded-arithmetic-in-allocator-arguments
-> 
-> Signed-off-by: Len Baker <len.baker@gmx.com>
+On 9/7/21 8:43 AM, Adrian Hunter wrote:
+> No.  Requests cannot make progress when ufshcd_state is
+> UFSHCD_STATE_EH_SCHEDULED_FATAL, and only the error handler can change that,
+> so if the error handler is waiting to enter the queue and blk_mq_freeze_queue()
+> is waiting for outstanding requests, they will deadlock.
 
-Looks good.  Thanks
+How about adding the above text as a comment above ufshcd_clear_ua_wluns() such
+that this information becomes available to those who have not followed this
+conversation?
 
-Reviewed-by: James Smart <jsmart2021@gmail.com>
+Thanks,
 
--- james
+Bart.
