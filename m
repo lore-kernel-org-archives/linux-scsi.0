@@ -2,185 +2,233 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4323DC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 05:43:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2DC2C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 05:59:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 13A2361101
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 05:43:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 760FA6108E
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 05:59:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237734AbhIGFoh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Sep 2021 01:44:37 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:56987 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238377AbhIGFog (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2021 01:44:36 -0400
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210907054328epoutp042140b98f5ace8501a1f0e6f7a6843711~ic90pQpSn1056410564epoutp04L
-        for <linux-scsi@vger.kernel.org>; Tue,  7 Sep 2021 05:43:28 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210907054328epoutp042140b98f5ace8501a1f0e6f7a6843711~ic90pQpSn1056410564epoutp04L
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1630993408;
-        bh=HTyqdQEDL7epIX9hTmn7Uw23uKGLryIvgU5mRk3lILA=;
-        h=From:To:Cc:Subject:Date:References:From;
-        b=ussoj/eYcPVabdWjnwwZ92+eIpGulPHXNnWGLEA/ycQ3LLkUdHLS18XcZj8LwQDvO
-         +WlTwx6Dr7Wk1xciKlWZjrfJ2vDGe/U/10Ohj2FCVQevPYRB7iGvWmPoD98qktKNl3
-         pgJKkslm4KnuCO2HEXVCUChZsJddOeZrACGSdAHs=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas1p2.samsung.com (KnoxPortal) with ESMTP id
-        20210907054327epcas1p209680e5cce58071affe65077b9eca1af~ic9zVL4fY2973829738epcas1p2Y;
-        Tue,  7 Sep 2021 05:43:27 +0000 (GMT)
-Received: from epsmges1p1.samsung.com (unknown [182.195.38.249]) by
-        epsnrtp2.localdomain (Postfix) with ESMTP id 4H3Z1m72sTz4x9Pt; Tue,  7 Sep
-        2021 05:43:24 +0000 (GMT)
-Received: from epcas1p2.samsung.com ( [182.195.41.46]) by
-        epsmges1p1.samsung.com (Symantec Messaging Gateway) with SMTP id
-        26.BB.09910.CFBF6316; Tue,  7 Sep 2021 14:43:24 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
-        20210907054323epcas1p4eba3cc7c0c7c25dba22c404852069fea~ic9v3ESgf0824108241epcas1p4E;
-        Tue,  7 Sep 2021 05:43:23 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20210907054323epsmtrp1cff2aee56db03243995316ba7cb2b02b~ic9v2PQFX1548215482epsmtrp1e;
-        Tue,  7 Sep 2021 05:43:23 +0000 (GMT)
-X-AuditID: b6c32a35-c45ff700000026b6-8f-6136fbfc8f40
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        C9.E9.08750.BFBF6316; Tue,  7 Sep 2021 14:43:23 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.253.100.232]) by
-        epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-        20210907054323epsmtip18b52eb91623cc0460c3af1da0e3f3d7c~ic9vobI-i0662506625epsmtip1D;
-        Tue,  7 Sep 2021 05:43:23 +0000 (GMT)
-From:   Chanwoo Lee <cw9316.lee@samsung.com>
-To:     agross@kernel.org, bjorn.andersson@linaro.org,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     grant.jung@samsung.com, jt77.jang@samsung.com,
-        dh0421.hwang@samsung.com, sh043.lee@samsung.com,
-        ChanWoo Lee <cw9316.lee@samsung.com>
-Subject: [PATCH] scsi: ufs-qcom: Remove unneeded code
-Date:   Tue,  7 Sep 2021 14:35:54 +0900
-Message-Id: <20210907053554.1005-1-cw9316.lee@samsung.com>
-X-Mailer: git-send-email 2.29.0
+        id S232203AbhIGGAf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Sep 2021 02:00:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39434 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231153AbhIGGAb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2021 02:00:31 -0400
+Received: from mail-ed1-x531.google.com (mail-ed1-x531.google.com [IPv6:2a00:1450:4864:20::531])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43921C061575
+        for <linux-scsi@vger.kernel.org>; Mon,  6 Sep 2021 22:59:23 -0700 (PDT)
+Received: by mail-ed1-x531.google.com with SMTP id i6so12323020edu.1
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Sep 2021 22:59:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=bZok/NYeJIVmnNlBtG5I/CW8J8qrthWmqhcf1RDr96w=;
+        b=I/nZjbRJE13bf78OsHvR+X7axuKltUDn7YL8vZwcfQujVrN1xZ3V5RUZyg30CK7pX3
+         iVh9mjEc1lnpOTlGLUQwaJFmP4i+M24Yi2+Blee9EtDADvuvzHIvNcXyQPYU70L3Reyn
+         dq2/f+nS1/tzG1ZHw7Y1NwJD2l6vGpTfeLxXqxXos7mzDuU5fSBlz0Va7MFBJGYoSUhj
+         3RjSPgwGs0p2BLzU4OACHe+yPkFyhxl51xi9wvrV+wq3CO+lgTarM3s3mLnahLR+TDUZ
+         nAcvKia3+J28DO2drNcujMvOZ1zHDEYdZEzs0+SzeZJ+46UUBKIZZ6YApL4Z30tVe9SI
+         +pBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=bZok/NYeJIVmnNlBtG5I/CW8J8qrthWmqhcf1RDr96w=;
+        b=NK8lwa7VqXeM9u5B//IwfGkHyAfZuwnSO/f9haIuIbr3i5RP4Ukbc9It2uBdp3ykAm
+         2BHFz+9onrxC4NKTOD0ax+jUxQPVelXahxLAXqeWVq6F+eq2IA4AAHZT67joZ+cehZp4
+         21qC5nwEITahy4GOOXBBWBd3JHai8SwHQOsGxlEVLgzhcn4D7nmOqPRGOfzEV7Wx5taw
+         RJ59tN2okacN0leT4i46xxiTZr9GNllJOLh571oxw12laBPVydDmJiysF5s0HQK5Nclz
+         QQ4IOOQCJiCsFFvSG9LjOC+szB0g4EJ6db1EXHhUtpYhJvdpRuqw3qpJqjhB3bFI4QH6
+         TRBQ==
+X-Gm-Message-State: AOAM530KmQNzIsWWNOHRsEAEpW1lsnZq/9smo0Pcd3esY53HghKH9fc2
+        YobmCIzEQxv6nY0WV5HWd4W3Kz4Tr+F3JckhSmHZ4A==
+X-Google-Smtp-Source: ABdhPJwp3Izi+9x7b6aWUpeJPiVkgvvt54yPMo70zVlfhW2NhIDSLmDF4TtsG1dZTrlxGyDzQJNhcW4htx+zBojmJtM=
+X-Received: by 2002:aa7:c952:: with SMTP id h18mr16854145edt.18.1630994361766;
+ Mon, 06 Sep 2021 22:59:21 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrHJsWRmVeSWpSXmKPExsWy7bCmnu6f32aJBgv/Klmce/ybxeLBvG1s
-        Fi9/XmWzOL3/HYvFjFNtrBb7rp1kt/j1dz27xaIb25gsdjw/w24xcf9ZdovLu+awWXRf38Fm
-        sfz4PyaLpj/7WBz4PDat6mTzuHNtD5vHhEUHGD0+Pr3F4tG3ZRWjx+dNch7tB7qZAtijsm0y
-        UhNTUosUUvOS81My89JtlbyD453jTc0MDHUNLS3MlRTyEnNTbZVcfAJ03TJzgG5WUihLzCkF
-        CgUkFhcr6dvZFOWXlqQqZOQXl9gqpRak5BSYFegVJ+YWl+al6+WlllgZGhgYmQIVJmRnLFm7
-        hq3gH3/F2d+3mBsYl/J2MXJySAiYSJzb9Jmti5GLQ0hgB6PE7WWb2EASQgKfGCUurGaESHwG
-        SqyezQTTcfvWTEaIol2MEm1/RSGKvjBKfLt/kr2LkYODTUBL4vYxb5C4iMA7RolVvc/AVjAL
-        dDFK/DrYxQLSLSxgKvF/eQc7iM0ioCqxvO8l2GpeASuJ1g/LGSG2yUv8ud/DDBEXlDg58wlY
-        LzNQvHnrbGaQoRICUzkkWk/8ZINocJG4/f0JM4QtLPHq+BZ2CFtK4mV/GztEQzOjxKnZ56Cc
-        FkaJ11duQFUZS3z6/JkR5AdmAU2J9bv0IcKKEjt/z2WE2Mwn8e5rDytIiYQAr0RHmxBEiYrE
-        nK5zbDC7Pt54zAphe0isXnSKHRJcsRKrnzxgm8AoPwvJP7OQ/DMLYfECRuZVjGKpBcW56anF
-        hgWG8GhNzs/dxAhOuFqmOxgnvv2gd4iRiYPxEKMEB7OSCO9fc7NEId6UxMqq1KL8+KLSnNTi
-        Q4ymwBCeyCwlmpwPTPl5JfGGJpYGJmZGJhbGlsZmSuK8jK9kEoUE0hNLUrNTUwtSi2D6mDg4
-        pRqYDAPcnm7e9yh++cYVNy+qXz+z2/nWlv/uS3p+J/4I3hS23cRZVkAiU21PubQvS7Z72k9B
-        XpPXgoWdaQLz39Y6n5o0gVG644CeyIqXHAfclI7ry7k0sKp+9DLaUd9Z7Pp8qvuUgCUsL3/d
-        YUyPr1syk0PJ+q7BUoPrtSVC19YF/GNRlJ57RGexyrHZWx9H/Tu/kSMvNLjZuKfApuYfF/ek
-        dzbZjwWORc1d4OC+w/7R21WlmWLsZfWsWrK9hxqm+r/uUfbbeucGd3/kMpOQmRN+KTDZieRP
-        XKjQrtb215lztwpn87sTcblaRq+deattewS8Ap8eeCi820gz2UtS/kJtyu0JPzpu/upWrt9r
-        JaXEUpyRaKjFXFScCACwqdjvQQQAAA==
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrDLMWRmVeSWpSXmKPExsWy7bCSnO7v32aJBt0/NC3OPf7NYvFg3jY2
-        i5c/r7JZnN7/jsVixqk2Vot9106yW/z6u57dYtGNbUwWO56fYbeYuP8su8XlXXPYLLqv72Cz
-        WH78H5NF0599LA58HptWdbJ53Lm2h81jwqIDjB4fn95i8ejbsorR4/MmOY/2A91MAexRXDYp
-        qTmZZalF+nYJXBlL1q5hK/jHX3H29y3mBsalvF2MnBwSAiYSt2/NZOxi5OIQEtjBKNF3+iAr
-        REJKYvf+82xdjBxAtrDE4cPFEDWfGCX6b5xhBomzCWhJ3D7mDRIXEfjBKPHi0RewQcwCExgl
-        Fl95ywwySFjAVOL/8g52EJtFQFVied9LNhCbV8BKovXDckaIZfISf+73MEPEBSVOznzCAmIz
-        A8Wbt85mnsDINwtJahaS1AJGplWMkqkFxbnpucWGBUZ5qeV6xYm5xaV56XrJ+bmbGMERoKW1
-        g3HPqg96hxiZOBgPMUpwMCuJ8P41N0sU4k1JrKxKLcqPLyrNSS0+xCjNwaIkznuh62S8kEB6
-        YklqdmpqQWoRTJaJg1OqgUmY/SKX/q6vNjYznZ+lPPoztd7mwDVlUVPvA6v4py36XThdb7aP
-        /CfJ772Jj8Vnzgs4mvfa5ItLSM6PMpUmmb2CR1tDNwqVa73YypXFqsK+SjKqVl+q81y1/Of7
-        ev+Kurw5JVT/JE3LeSQ9o9bD+9G/74Vuyc7zmTXS9OSWbpYXf/53YQ23DIvM5t/FZk/U3nU/
-        Ld/FuN+1NvOP3v8bvBXL5UOD+Xn3mDmr3qznei11fEmtmPuKdTf5WrQPruaLkbgwhcdo7U7P
-        C9cOuYouML9ftf9N+MYz/5/tedgY0sGwX+E7T+YyPk8R9kSdfSnlkZcPq9yOXRp2aU16s9v5
-        nXEGvLKSpy/0bv4z6cCOT0osxRmJhlrMRcWJAP7ycGHvAgAA
-X-CMS-MailID: 20210907054323epcas1p4eba3cc7c0c7c25dba22c404852069fea
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: SVC_REQ_APPROVE
-CMS-TYPE: 101P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20210907054323epcas1p4eba3cc7c0c7c25dba22c404852069fea
-References: <CGME20210907054323epcas1p4eba3cc7c0c7c25dba22c404852069fea@epcas1p4.samsung.com>
+References: <20210906170404.5682-1-Ajish.Koshy@microchip.com> <20210906170404.5682-2-Ajish.Koshy@microchip.com>
+In-Reply-To: <20210906170404.5682-2-Ajish.Koshy@microchip.com>
+From:   Jinpu Wang <jinpu.wang@ionos.com>
+Date:   Tue, 7 Sep 2021 07:59:11 +0200
+Message-ID: <CAMGffE=6kh=q5eZFvh06p4kXezjAzs5Skv4kuEf4ORTFvEb1fQ@mail.gmail.com>
+Subject: Re: [PATCH v2 1/4] scsi: pm80xx: fix incorrect port value when
+ registering a device
+To:     Ajish Koshy <Ajish.Koshy@microchip.com>
+Cc:     Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>,
+        Vasanthalakshmi.Tharmarajan@microchip.com,
+        Viswas G <Viswas.G@microchip.com>,
+        Ruksar Devadi <Ruksar.devadi@microchip.com>,
+        Ashokkumar N <Ashokkumar.N@microchip.com>,
+        Jinpu Wang <jinpu.wang@cloud.ionos.com>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: ChanWoo Lee <cw9316.lee@samsung.com>
-
-Checks information about tx_lanes, but is not used.
-
-Since the commit below is applied, tx_lanes is deprecated.
- -[2/3] scsi/ufs: qcom: Remove ufs_qcom_phy_*() calls from host
- -Message ID	20180904101719.18049-3-vivek.gautam@codeaurora.org
-
-As a result, link_startup_notify->POST_CHANGE action does nothing.
-No need to read tx_lanes.
-If it is not going to be updated, it looks like it can be removed.
-
-Signed-off-by: ChanWoo Lee <cw9316.lee@samsung.com>
----
- drivers/scsi/ufs/ufs-qcom.c | 23 -----------------------
- 1 file changed, 23 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 9d9770f1db4f..124557525b5c 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -54,19 +54,6 @@ static void ufs_qcom_dump_regs_wrapper(struct ufs_hba *hba, int offset, int len,
- 	ufshcd_dump_regs(hba, offset, len * 4, prefix);
- }
- 
--static int ufs_qcom_get_connected_tx_lanes(struct ufs_hba *hba, u32 *tx_lanes)
--{
--	int err = 0;
--
--	err = ufshcd_dme_get(hba,
--			UIC_ARG_MIB(PA_CONNECTEDTXDATALANES), tx_lanes);
--	if (err)
--		dev_err(hba->dev, "%s: couldn't read PA_CONNECTEDTXDATALANES %d\n",
--				__func__, err);
--
--	return err;
--}
--
- static int ufs_qcom_host_clk_get(struct device *dev,
- 		const char *name, struct clk **clk_out, bool optional)
- {
-@@ -190,13 +177,6 @@ static int ufs_qcom_init_lane_clks(struct ufs_qcom_host *host)
- 	return err;
- }
- 
--static int ufs_qcom_link_startup_post_change(struct ufs_hba *hba)
--{
--	u32 tx_lanes;
--
--	return ufs_qcom_get_connected_tx_lanes(hba, &tx_lanes);
--}
--
- static int ufs_qcom_check_hibern8(struct ufs_hba *hba)
- {
- 	int err;
-@@ -566,9 +546,6 @@ static int ufs_qcom_link_startup_notify(struct ufs_hba *hba,
- 		if (ufshcd_get_local_unipro_ver(hba) != UFS_UNIPRO_VER_1_41)
- 			err = ufshcd_disable_host_tx_lcc(hba);
- 
--		break;
--	case POST_CHANGE:
--		ufs_qcom_link_startup_post_change(hba);
- 		break;
- 	default:
- 		break;
--- 
-2.29.0
-
+On Mon, Sep 6, 2021 at 6:09 PM Ajish Koshy <Ajish.Koshy@microchip.com> wrote:
+>
+> During phyup event, firmware gives the phy_id and port_id
+> and driver is supposed to use the same during device handle
+> registration. Earlier, driver was using port id value from
+> libsas during device handle registration and at times, it is
+> different from firmware assigned port id. This will lead to
+> wrong device registration and eventually we would not see
+> those drives.
+>
+> Fix is to use firmware assigned portid during device
+> registration.
+>
+> Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
+> Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Thanks for the update.
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+> ---
+>  drivers/scsi/pm8001/pm8001_hwi.c  |  7 ++++++-
+>  drivers/scsi/pm8001/pm8001_init.c |  1 +
+>  drivers/scsi/pm8001/pm8001_sas.c  | 15 +++++++++++++++
+>  drivers/scsi/pm8001/pm8001_sas.h  |  2 ++
+>  drivers/scsi/pm8001/pm80xx_hwi.c  |  7 ++++++-
+>  5 files changed, 30 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
+> index 63690508313b..c9ecddd0d719 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -3358,6 +3358,8 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>         struct pm8001_phy *phy = &pm8001_ha->phy[phy_id];
+>         unsigned long flags;
+>         u8 deviceType = pPayload->sas_identify.dev_type;
+> +       phy->port = port;
+> +       port->port_id = port_id;
+>         port->port_state =  portstate;
+>         phy->phy_state = PHY_STATE_LINK_UP_SPC;
+>         pm8001_dbg(pm8001_ha, MSG,
+> @@ -3434,6 +3436,8 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>         unsigned long flags;
+>         pm8001_dbg(pm8001_ha, DEVIO, "HW_EVENT_SATA_PHY_UP port id = %d, phy id = %d\n",
+>                    port_id, phy_id);
+> +       phy->port = port;
+> +       port->port_id = port_id;
+>         port->port_state =  portstate;
+>         phy->phy_state = PHY_STATE_LINK_UP_SPC;
+>         port->port_attached = 1;
+> @@ -4460,6 +4464,7 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+>         u16 ITNT = 2000;
+>         struct domain_device *dev = pm8001_dev->sas_device;
+>         struct domain_device *parent_dev = dev->parent;
+> +       struct pm8001_port *port = dev->port->lldd_port;
+>         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>
+>         memset(&payload, 0, sizeof(payload));
+> @@ -4488,7 +4493,7 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+>         linkrate = (pm8001_dev->sas_device->linkrate < dev->port->linkrate) ?
+>                         pm8001_dev->sas_device->linkrate : dev->port->linkrate;
+>         payload.phyid_portid =
+> -               cpu_to_le32(((pm8001_dev->sas_device->port->id) & 0x0F) |
+> +               cpu_to_le32(((port->port_id) & 0x0F) |
+>                 ((phy_id & 0x0F) << 4));
+>         payload.dtype_dlr_retry = cpu_to_le32((retryFlag & 0x01) |
+>                 ((linkrate & 0x0F) * 0x1000000) |
+> diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+> index 47db7e0beae6..613455a3e686 100644
+> --- a/drivers/scsi/pm8001/pm8001_init.c
+> +++ b/drivers/scsi/pm8001/pm8001_init.c
+> @@ -128,6 +128,7 @@ static struct sas_domain_function_template pm8001_transport_ops = {
+>         .lldd_I_T_nexus_reset   = pm8001_I_T_nexus_reset,
+>         .lldd_lu_reset          = pm8001_lu_reset,
+>         .lldd_query_task        = pm8001_query_task,
+> +       .lldd_port_formed       = pm8001_port_formed,
+>  };
+>
+>  /**
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index 32e60f0c3b14..83e73009db5c 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -1355,3 +1355,18 @@ int pm8001_clear_task_set(struct domain_device *dev, u8 *lun)
+>         tmf_task.tmf = TMF_CLEAR_TASK_SET;
+>         return pm8001_issue_ssp_tmf(dev, lun, &tmf_task);
+>  }
+> +
+> +void pm8001_port_formed(struct asd_sas_phy *sas_phy)
+> +{
+> +       struct sas_ha_struct *sas_ha = sas_phy->ha;
+> +       struct pm8001_hba_info *pm8001_ha = sas_ha->lldd_ha;
+> +       struct pm8001_phy *phy = sas_phy->lldd_phy;
+> +       struct asd_sas_port *sas_port = sas_phy->port;
+> +       struct pm8001_port *port = phy->port;
+> +
+> +       if (!sas_port) {
+> +               pm8001_dbg(pm8001_ha, FAIL, "Received null port\n");
+> +               return;
+> +       }
+> +       sas_port->lldd_port = port;
+> +}
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+> index 62d08b535a4b..1a016a421280 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.h
+> +++ b/drivers/scsi/pm8001/pm8001_sas.h
+> @@ -230,6 +230,7 @@ struct pm8001_port {
+>         u8                      port_attached;
+>         u16                     wide_port_phymap;
+>         u8                      port_state;
+> +       u8                      port_id;
+>         struct list_head        list;
+>  };
+>
+> @@ -651,6 +652,7 @@ int pm8001_lu_reset(struct domain_device *dev, u8 *lun);
+>  int pm8001_I_T_nexus_reset(struct domain_device *dev);
+>  int pm8001_I_T_nexus_event_handler(struct domain_device *dev);
+>  int pm8001_query_task(struct sas_task *task);
+> +void pm8001_port_formed(struct asd_sas_phy *sas_phy);
+>  void pm8001_open_reject_retry(
+>         struct pm8001_hba_info *pm8001_ha,
+>         struct sas_task *task_to_close,
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+> index 6ffe17b849ae..cec932f830b8 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -3299,6 +3299,8 @@ hw_event_sas_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>         struct pm8001_phy *phy = &pm8001_ha->phy[phy_id];
+>         unsigned long flags;
+>         u8 deviceType = pPayload->sas_identify.dev_type;
+> +       phy->port = port;
+> +       port->port_id = port_id;
+>         port->port_state = portstate;
+>         port->wide_port_phymap |= (1U << phy_id);
+>         phy->phy_state = PHY_STATE_LINK_UP_SPCV;
+> @@ -3380,6 +3382,8 @@ hw_event_sata_phy_up(struct pm8001_hba_info *pm8001_ha, void *piomb)
+>                    "port id %d, phy id %d link_rate %d portstate 0x%x\n",
+>                    port_id, phy_id, link_rate, portstate);
+>
+> +       phy->port = port;
+> +       port->port_id = port_id;
+>         port->port_state = portstate;
+>         phy->phy_state = PHY_STATE_LINK_UP_SPCV;
+>         port->port_attached = 1;
+> @@ -4808,6 +4812,7 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+>         u16 ITNT = 2000;
+>         struct domain_device *dev = pm8001_dev->sas_device;
+>         struct domain_device *parent_dev = dev->parent;
+> +       struct pm8001_port *port = dev->port->lldd_port;
+>         circularQ = &pm8001_ha->inbnd_q_tbl[0];
+>
+>         memset(&payload, 0, sizeof(payload));
+> @@ -4840,7 +4845,7 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hba_info *pm8001_ha,
+>                         pm8001_dev->sas_device->linkrate : dev->port->linkrate;
+>
+>         payload.phyid_portid =
+> -               cpu_to_le32(((pm8001_dev->sas_device->port->id) & 0xFF) |
+> +               cpu_to_le32(((port->port_id) & 0xFF) |
+>                 ((phy_id & 0xFF) << 8));
+>
+>         payload.dtype_dlr_mcn_ir_retry = cpu_to_le32((retryFlag & 0x01) |
+> --
+> 2.27.0
+>
