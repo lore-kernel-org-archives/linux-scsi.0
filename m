@@ -2,62 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70C7CC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 06:54:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 346DCC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 06:54:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4E06E610FF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 06:54:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C9AF61100
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 06:54:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234815AbhIGGzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Sep 2021 02:55:42 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51790 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234472AbhIGGzl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2021 02:55:41 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D22A9C061575
-        for <linux-scsi@vger.kernel.org>; Mon,  6 Sep 2021 23:54:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
-        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=e4H5jvWAL27xpniZcurZrz9ZJJT1dHQB8ot2bLbD3P4=; b=LW0Uet4e5Mr+2x3RYVnDpBfEO4
-        jU8wvYL54jPFNa7BLq7n5SvpwpvP/1mYRoD7uSXiHlOzknrR5sMt1pjs00viRlqiC315OfupifbZ6
-        2MYAvKDSC/zCPOKzoyySLeGVmy1lfRcQtW5Sp099L4yjQdHJRdAtjGz8MtrVxOyBIQv55UPWKd7xu
-        le6Mq2FYnxeQlSSe//qiKE1QAXCbvCNV0u0EW8VIGodeJhqdJ/mhk7rAo450rj9aCQr3OwCg+caXl
-        ZS4Fd47cSvmvmyPOnB2Y7Suz9Pwaca3fCxncg1FB5RLVhRyBkNkv7VLEem2KIoZLuo8fEFTIxS7VF
-        843pKheA==;
-Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mNUz7-007bqi-3x; Tue, 07 Sep 2021 06:53:59 +0000
-Date:   Tue, 7 Sep 2021 07:53:33 +0100
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: sd: free 'scsi_disk' device via put_device
-Message-ID: <YTcMbapVQX4dGqne@infradead.org>
-References: <20210906090112.531442-1-ming.lei@redhat.com>
+        id S235351AbhIGGzt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Sep 2021 02:55:49 -0400
+Received: from verein.lst.de ([213.95.11.211]:34797 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234472AbhIGGzr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Sep 2021 02:55:47 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 5CB5867373; Tue,  7 Sep 2021 08:54:39 +0200 (CEST)
+Date:   Tue, 7 Sep 2021 08:54:38 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Laibin Qiu <qiulaibin@huawei.com>, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hare@suse.de,
+        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH -next] [SCSI] Fix NULL pointer dereference in handling
+ for passthrough commands
+Message-ID: <20210907065438.GA29528@lst.de>
+References: <20210904064534.1919476-1-qiulaibin@huawei.com> <1b056b0b-fd96-03db-b19a-8bff6c40f8f0@acm.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210906090112.531442-1-ming.lei@redhat.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <1b056b0b-fd96-03db-b19a-8bff6c40f8f0@acm.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 06, 2021 at 05:01:12PM +0800, Ming Lei wrote:
-> Once the device is initialized via device_initialize(), it should be
-> freed via put_device, so fix it. Meantime get the parent before adding
-> device, the release handler can work as expected always.
-> 
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+On Mon, Sep 06, 2021 at 05:40:35PM -0700, Bart Van Assche wrote:
+> On 9/3/21 23:45, Laibin Qiu wrote:
+>>   	cmd->cmd_len = scsi_req(req)->cmd_len;
+>> +	cmd->cmnd = scsi_req(req)->cmd;
+>>   	if (cmd->cmd_len == 0)
+>>   		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+>> -	cmd->cmnd = scsi_req(req)->cmd;
+>>   	cmd->transfersize = blk_rq_bytes(req);
+>
+> Thinking further about this: is there any code left that depends on 
+> scsi_setup_scsi_cmnd() setting cmd->cmd_len? Can the cmd->cmd_len 
+> assignment be removed from scsi_setup_scsi_cmnd()?
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+cmd_len should never be 0 now, so I think we can remove it.
