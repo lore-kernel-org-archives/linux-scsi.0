@@ -2,139 +2,151 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38C8BC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 22:36:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 234BEC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 23:06:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1723E6103D
-	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 22:36:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F37D861102
+	for <linux-scsi@archiver.kernel.org>; Tue,  7 Sep 2021 23:06:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346790AbhIGWh0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 7 Sep 2021 18:37:26 -0400
-Received: from mail-pg1-f169.google.com ([209.85.215.169]:37503 "EHLO
-        mail-pg1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231684AbhIGWhW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Sep 2021 18:37:22 -0400
-Received: by mail-pg1-f169.google.com with SMTP id 17so387946pgp.4
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Sep 2021 15:36:15 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:subject:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=tH4uLiBwjWFT/CMWRtQO2giF6cX3aITMqdtL+QrcFVU=;
-        b=APXPTjcTpLzh8+0nFUVBUHU0tdIAh1gjefygfuS6Jh6IqQVAsICGWgv3wgnfDI3Hvf
-         ni3B5vj3ANKpqOGOywnl7MgV7EQdq6T0lf4pwUUcsBoB9NqHYV/boZjL489IS6J505eq
-         GPiFWUptgVsNW4M1skUFt60jSov125EnPK6XzJcKvUQpxSXqeFnWcBdlpYgbxzV1D3Zx
-         nv9eQYVAdtF5WVRQEH3r42ovvi1BHLnOhxZF988cbnJzPTcuPmcGzaGkFXA27OpiE265
-         QMNCcBACPb4MeqZosKnmlV5B2vnPSuQht2MJcSEqxZWcbbEQeloeEoVZ9V84DkLjZBJd
-         5dfg==
-X-Gm-Message-State: AOAM532pE7HZ2t0ddniUoyS5DgjKP99NcZzDGqB5EnuN/OAZ9FOoh00T
-        vYIQ8KKHAK24tiTnz6YidB+iZwIlOsQ=
-X-Google-Smtp-Source: ABdhPJyKedqgc8qjGXjjGS57qolptCo6vdc2/2sLf8OyJ+LaxUNL+s/6kezGo+HwDCH00k5kfoUDag==
-X-Received: by 2002:a65:664f:: with SMTP id z15mr589214pgv.252.1631054174944;
-        Tue, 07 Sep 2021 15:36:14 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:afb7:8aef:79df:4ec5])
-        by smtp.gmail.com with ESMTPSA id ml5sm103808pjb.4.2021.09.07.15.36.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Sep 2021 15:36:13 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH V3 1/3] scsi: ufs: Fix error handler clear ua deadlock
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
-References: <20210905095153.6217-1-adrian.hunter@intel.com>
- <20210905095153.6217-2-adrian.hunter@intel.com>
- <a12d88b3-8402-34bb-fe97-90b7aa2c2c39@acm.org>
- <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
- <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
-Message-ID: <e5307bbe-1cda-fdd2-a666-ae57cd90de07@acm.org>
-Date:   Tue, 7 Sep 2021 15:36:11 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S1347374AbhIGXIE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 7 Sep 2021 19:08:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:50384 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S240690AbhIGXID (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Sep 2021 19:08:03 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E4D5B600CC;
+        Tue,  7 Sep 2021 23:06:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631056016;
+        bh=uvOEYG7Cxdn5PBm8989tVCmAZebPsV0/5lTj1WjFrQ0=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=LgsioUshjBXReK+5nU3T0YC+efeTTL38q/XV4KVbXW30/wh7MbKwGW8emeVLulKo+
+         4FTjK6vnNK0qRuH3RSqeJXQz4sH0hqi08JOFCrrJEMbWG+bcXZI2OkOPbhsd3y4iwE
+         x4MX/YruAznpvNQ4Ssh0pRSPJTifV3u0XRR0WX99TseK0jy6920qgPMp52LBvpiUL8
+         /9WC6ALRyPXbJ35/GXCPz9l6bvMidTaYn78opxgPjT/Uj9gm7Oz/c3fYyOToFtS7EM
+         mdC/zCgI4ic16ZFx+BCNfpuHAXaO4vuP6Bv7FURPA7yHzq0yybzqoBKLZscLjw1oIV
+         vLEv4VHnaJCnA==
+Date:   Tue, 7 Sep 2021 16:06:52 -0700
+From:   Nathan Chancellor <nathan@kernel.org>
+To:     James Smart <jsmart2021@gmail.com>
+Cc:     linux-scsi@vger.kernel.org, Justin Tee <justin.tee@broadcom.com>
+Subject: Re: [PATCH] lpfc: Fix compilation errors on kernels with no
+ CONFIG_DEBUG_FS
+Message-ID: <YTfwjGOHqKY55cwQ@MSI.localdomain>
+References: <20210830231305.6334-1-jsmart2021@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210830231305.6334-1-jsmart2021@gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/7/21 9:56 AM, Bart Van Assche wrote:
-> On 9/7/21 8:43 AM, Adrian Hunter wrote:
->> No.  Requests cannot make progress when ufshcd_state is
->> UFSHCD_STATE_EH_SCHEDULED_FATAL, and only the error handler can change 
->> that,
->> so if the error handler is waiting to enter the queue and 
->> blk_mq_freeze_queue()
->> is waiting for outstanding requests, they will deadlock.
+On Mon, Aug 30, 2021 at 04:13:05PM -0700, James Smart wrote:
+> The Kernel test robot flagged the following warning:
+> ".../lpfc_init.c:7788:35: error: 'struct lpfc_sli4_hba' has no member
+> named 'c_stat'"
 > 
-> How about adding the above text as a comment above 
-> ufshcd_clear_ua_wluns() such
-> that this information becomes available to those who have not followed this
-> conversation?
+> Reviewing this issue highlighted that one of the recent patches caused
+> the driver to no longer compile cleanly if CONFIG_DEBUG_FS is not set.
+> 
+> Correct the different areas that are failing to compile.
+> 
+> Fixes: 02243836ad6f ("scsi: lpfc: Add support for the CM framework")
+> Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+> Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+> Signed-off-by: James Smart <jsmart2021@gmail.com>
 
-After having given patch 1/3 some further thought: an unfortunate
-effect of this patch is that unit attention clearing is skipped for
-the states UFSHCD_STATE_EH_SCHEDULED_FATAL and UFSHCD_STATE_RESET.
-How about replacing patch 1/3 with the untested patch below since that
-patch does not have the disadvantage of sometimes skipping clearing UA?
+I got bit by this in certain configurations, it would be helpful to get
+this into mainline sooner rather than later.
 
-Thanks,
+Reviewed-by: Nathan Chancellor <nathan@kernel.org>
 
-Bart.
+Couple of comments below.
 
-[PATCH] scsi: ufs: Fix a recently introduced deadlock
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 12 ++++++++----
+>  drivers/scsi/lpfc/lpfc_nvme.c |  2 --
+>  drivers/scsi/lpfc/lpfc_scsi.c |  4 ----
+>  3 files changed, 8 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index d3f1fa38269f..a6127a51b4fe 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -8254,7 +8254,11 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+>  		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
+>  				"3331 Failed allocating per cpu cgn stats\n");
+>  		rc = -ENOMEM;
+> -		goto out_free_hba_hdwq_info;
+> +#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+> +		goto out_free_hba_hdwq_stat;
+> +#else
+> +		goto out_free_hba_idle_stat;
+> +#endif
+>  	}
+>  
+>  	/*
+> @@ -8276,12 +8280,12 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+>  
+>  	return 0;
+>  
+> -out_free_hba_hdwq_info:
 
-Completing pending commands with DID_IMM_RETRY triggers the following
-code paths:
+Wouldn't it be simpler to just move the ifdef up one line and the endif
+down one line to avoid the ifdef in the first hunk?
 
-   scsi_complete()
-   -> scsi_queue_insert()
-     -> __scsi_queue_insert()
-       -> scsi_device_unbusy()
-         -> scsi_dec_host_busy()
-	  -> scsi_eh_wakeup()
-       -> blk_mq_requeue_request()
+> -	free_percpu(phba->sli4_hba.c_stat);
+>  #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+> +out_free_hba_hdwq_stat:
+> +	free_percpu(phba->sli4_hba.c_stat);
+> +#endif
+>  out_free_hba_idle_stat:
+>  	kfree(phba->sli4_hba.idle_stat);
+> -#endif
+>  out_free_hba_eq_info:
+>  	free_percpu(phba->sli4_hba.eq_info);
+>  out_free_hba_cpu_map:
+> diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+> index 73a3568ff17e..479b3eed6208 100644
+> --- a/drivers/scsi/lpfc/lpfc_nvme.c
+> +++ b/drivers/scsi/lpfc/lpfc_nvme.c
+> @@ -1489,9 +1489,7 @@ lpfc_nvme_fcp_io_submit(struct nvme_fc_local_port *pnvme_lport,
+>  	struct lpfc_nvme_qhandle *lpfc_queue_info;
+>  	struct lpfc_nvme_fcpreq_priv *freqpriv;
+>  	struct nvme_common_command *sqe;
+> -#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+>  	uint64_t start = 0;
+> -#endif
+>  
+>  	/* Validate pointers. LLDD fault handling with transport does
+>  	 * have timing races.
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> index 0fde1e874c7a..dae5cc03e8c2 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -5578,12 +5578,8 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+>  	struct fc_rport *rport = starget_to_rport(scsi_target(cmnd->device));
+>  	int err, idx;
+>  	u8 *uuid = NULL;
+> -#ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+>  	uint64_t start = 0L;
+>  
+> -	if (phba->ktime_on)
+> -		start = ktime_get_ns();
+> -#endif
+>  	start = ktime_get_ns();
 
-   scsi_queue_rq()
-   -> scsi_host_queue_ready()
-     -> scsi_host_in_recovery()
+Someone is probably going to come along and complain that the 0L is a
+dead store. I would remove the assignment at the least but it might be
+worth combining the two lines.
 
-Fixes: a113eaaf8637 ("scsi: ufs: Synchronize SCSI and UFS error handling")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
-  drivers/scsi/ufs/ufshcd.c | 8 ++++++++
-  1 file changed, 8 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index c2c614da1fb8..9560f34f3d27 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2707,6 +2707,14 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-  		}
-  		fallthrough;
-  	case UFSHCD_STATE_RESET:
-+		/*
-+		 * The SCSI error handler only starts after all pending commands
-+		 * have failed or timed out. Complete commands with
-+		 * DID_IMM_RETRY to allow the error handler to start
-+		 * if it has been scheduled.
-+		 */
-+		set_host_byte(cmd, DID_IMM_RETRY);
-+		cmd->scsi_done(cmd);
-  		err = SCSI_MLQUEUE_HOST_BUSY;
-  		goto out;
-  	case UFSHCD_STATE_ERROR:
+>  	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
+>  
+> -- 
+> 2.26.2
