@@ -2,125 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C74E7C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Sep 2021 06:12:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61B34C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Sep 2021 07:29:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A386A61166
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Sep 2021 06:12:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4941361051
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Sep 2021 07:29:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347594AbhIHGNi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Sep 2021 02:13:38 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:55392 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232146AbhIHGNh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2021 02:13:37 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id A300622206;
-        Wed,  8 Sep 2021 06:12:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631081549; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=sHFKf5f0Jl1/9ndxWFeoXyar6g9fimm8yfiHzl2Jhqo=;
-        b=qsl/dliJsSyryhmD+4wu+5a7fLz3c9cerw1jkcMpv0aUl55bSsv5IsYjL3nnSCynmXy1X0
-        E5XcB5WzwT5kINKBEo2C6fyG6BpJmUCw2IEuT0Kde6hRlAHLAIgD//Fvt/f+EVQkxlU8wJ
-        KLSQhBywJlBIFCMg0XCk4End0BLSy8c=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631081549;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=sHFKf5f0Jl1/9ndxWFeoXyar6g9fimm8yfiHzl2Jhqo=;
-        b=C4vY2XPlVysignmcepjduj3sAuUCzotlQASCI9604Kz4t56IZdITW7v6sDvPiABfEHcics
-        W7Y/UhIG8PttP3Dg==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id 782ED13A56;
-        Wed,  8 Sep 2021 06:12:29 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id o5/8G01UOGHqNAAAGKfGzw
-        (envelope-from <hare@suse.de>); Wed, 08 Sep 2021 06:12:29 +0000
-Subject: Re: [PATCH] I/O errors for ALUA state transitions
-To:     michael.christie@oracle.com,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        linux-scsi@vger.kernel.org, Rajashekhar M A <rajs@netapp.com>
-References: <20210907071605.48968-1-hare@suse.de>
- <0bc96e82-fdda-4187-148d-5b34f81d4942@oracle.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <783a72db-93c7-92ad-81b4-bc7fee3ce2c1@suse.de>
-Date:   Wed, 8 Sep 2021 08:12:28 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S1350066AbhIHHaz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Sep 2021 03:30:55 -0400
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43886 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1349909AbhIHHat (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2021 03:30:49 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1883X1Dk016086;
+        Wed, 8 Sep 2021 00:29:35 -0700
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0a-0016f401.pphosted.com with ESMTP id 3axcm7tfn1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Wed, 08 Sep 2021 00:29:35 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 8 Sep
+ 2021 00:29:33 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Wed, 8 Sep 2021 00:29:33 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 6B7453F705B;
+        Wed,  8 Sep 2021 00:29:33 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 1887TGGO010054;
+        Wed, 8 Sep 2021 00:29:23 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 1887Skq8010045;
+        Wed, 8 Sep 2021 00:28:46 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>, <linux-nvme@lists.infradead.org>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <djeffery@redhat.com>,
+        <loberman@redhat.com>
+Subject: [PATCH 00/10] qla2xxx driver bug fixes
+Date:   Wed, 8 Sep 2021 00:28:36 -0700
+Message-ID: <20210908072846.10011-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-In-Reply-To: <0bc96e82-fdda-4187-148d-5b34f81d4942@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: O0YscV4UVZUvvc1hYN514ZBo-1FVM7fs
+X-Proofpoint-ORIG-GUID: O0YscV4UVZUvvc1hYN514ZBo-1FVM7fs
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
+ definitions=2021-09-08_02,2021-09-07_02,2020-04-07_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/7/21 5:59 PM, michael.christie@oracle.com wrote:
-> On 9/7/21 2:16 AM, Hannes Reinecke wrote:
->> From: Rajashekhar M A <rajs@netapp.com>
->>
->> When a host is configured with a few LUNs and IO is running,
->> injecting FC faults repeatedly leads to path recovery problems.
->> The LUNs have 4 paths each and 3 of them come back active after
->> say an FC fault which makes two of the paths go down, instead of
->> all 4. This happens after several iterations of continuous FC faults.
->>
->> Reason here is that we're returning an I/O error whenever we're
->> encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE,
->> ASYMMETRIC ACCESS STATE TRANSITION) instead of retrying.
->>> Signed-off-by: Hannes Reinecke <hare@suse.de>
->> ---
->>   drivers/scsi/scsi_error.c | 7 ++++---
->>   1 file changed, 4 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
->> index 03a2ff547b22..1185083105ae 100644
->> --- a/drivers/scsi/scsi_error.c
->> +++ b/drivers/scsi/scsi_error.c
->> @@ -594,10 +594,11 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
->>   		    sshdr.asc == 0x3f && sshdr.ascq == 0x0e)
->>   			return NEEDS_RETRY;
->>   		/*
->> -		 * if the device is in the process of becoming ready, we
->> -		 * should retry.
->> +		 * if the device is in the process of becoming ready, or
->> +		 * transitions between ALUA states, we should retry.
->>   		 */
->> -		if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
->> +		if ((sshdr.asc == 0x04) &&
->> +		    (sshdr.ascq == 0x01 || sshdr.ascq == 0x0a))
->>   			return NEEDS_RETRY;
-> 
-> Why put this here instead of in alua_check_sense with the other ALUA
-> state transition check?
-> 
-Good point. Will be updating the patch.
+Martin,
 
-Cheers,
+Please apply the qla2xxx driver bug fixes to the scsi tree at your
+earliest convenience.
 
-Hannes
+Thanks,
+Nilesh
+
+Arun Easi (2):
+  qla2xxx: Fix crash in NVME abort path
+  qla2xxx: Fix kernel crash when accessing port_speed sysfs file
+
+Bikash Hazarika (1):
+  qla2xxx: Add support for mailbox passthru
+
+Manish Rangankar (1):
+  qla2xxx: Move heart beat handling from dpc thread to workqueue
+
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.07.100-k
+
+Quinn Tran (2):
+  qla2xxx: edif: Use link event to wake up app
+  qla2xxx: Fix use after free in eh_abort path
+
+Saurav Kashyap (2):
+  qla2xxx: Display 16G only as supported speeds for 3830c card
+  qla2xxx: Check for firmware capability before creating QPair
+
+Shreyas Deodhar (1):
+  qla2xxx: Call process_response_queue() in Tx path
+
+ drivers/scsi/qla2xxx/qla_attr.c    | 24 ++++++++-
+ drivers/scsi/qla2xxx/qla_bsg.c     | 48 +++++++++++++++++
+ drivers/scsi/qla2xxx/qla_bsg.h     |  7 +++
+ drivers/scsi/qla2xxx/qla_def.h     |  4 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |  4 ++
+ drivers/scsi/qla2xxx/qla_gs.c      |  3 +-
+ drivers/scsi/qla2xxx/qla_init.c    | 17 +++---
+ drivers/scsi/qla2xxx/qla_mbx.c     | 33 ++++++++++++
+ drivers/scsi/qla2xxx/qla_nvme.c    | 20 ++++++-
+ drivers/scsi/qla2xxx/qla_os.c      | 86 +++++++++++++++---------------
+ drivers/scsi/qla2xxx/qla_version.h |  6 +--
+ 11 files changed, 191 insertions(+), 61 deletions(-)
+
+
+base-commit: 9b5ac8ab4e8bf5636d1d425aee68ddf45af12057
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.19.0.rc0
+
