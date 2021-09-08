@@ -2,75 +2,139 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C600C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Sep 2021 18:28:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 59A77C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Sep 2021 21:31:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2366D6113D
-	for <linux-scsi@archiver.kernel.org>; Wed,  8 Sep 2021 18:28:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DD41610E9
+	for <linux-scsi@archiver.kernel.org>; Wed,  8 Sep 2021 21:31:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1349790AbhIHS37 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Sep 2021 14:29:59 -0400
-Received: from mail-pj1-f50.google.com ([209.85.216.50]:45824 "EHLO
-        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350369AbhIHS3a (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2021 14:29:30 -0400
-Received: by mail-pj1-f50.google.com with SMTP id f11-20020a17090aa78b00b0018e98a7cddaso2153970pjq.4
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Sep 2021 11:28:22 -0700 (PDT)
+        id S232784AbhIHVcQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Sep 2021 17:32:16 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:57834 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229885AbhIHVcQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2021 17:32:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1631136667;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=nFygGt25Yx6er8i6SUB64BbFK1q4/2tx9D5E6LiShJ0=;
+        b=jSogCI1pD1d4OvnbmMU8Wxvij6zSmeSAU6W2NkFo76A36j64Iliwbo0GTmakEQg/imv8CW
+        kcKD/klmsGJA9YQv5B0uKgzMhu2CvXt8AiVc0wwj3JCx06a0QBFKGoB9mPB6NgONcfex/v
+        q3T1zbMRP+8ZtHx98XOw8TUV/54BfeI=
+Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
+ [209.85.218.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-321-WpIm0CG5MXyxa3mOxFGifA-1; Wed, 08 Sep 2021 17:31:06 -0400
+X-MC-Unique: WpIm0CG5MXyxa3mOxFGifA-1
+Received: by mail-ej1-f69.google.com with SMTP id cf17-20020a170906b2d100b005d42490f86bso1654400ejb.3
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Sep 2021 14:31:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=VD7CgH6LmzPGFepmYwj/XJvv5e8RaOhEdaE4SiHDyRU=;
-        b=bP/YX4jEHUDfkTnVk/UXHbvCDO1F0IXg/7H2BCdxSxJkHzpagSgss4jKResB5ZtGtR
-         G8jPPmtnJfSwiRNy+eSXhYe1fdkyStV0XLRtzpWa/WI0I8ziipxHAsb3grALJwJkB+Zs
-         UQ+jq8Gvod1jI+yoXEYuTR1YR3dS1HrBTMM9Eex891IK+H3FZQJVGuthwK+vIIl1al+T
-         YmoGZ2O9ub9z3GesE/trQ1NxbdlkyPAzxhbiEv2rASKP6e/r1fZwY/qhWhwz3PiYoRiw
-         Ds/qjUqEt+bi/es5gnNPvREW9EYyqkTgpqMf+3DuWdRGwpg6jNwRWsO2w5agyowCAdfX
-         qHsg==
-X-Gm-Message-State: AOAM531L8pLwRJ0Zp+Mcv/VwqrdN5zl/3NrWOxjnncJWcBFAyiWjwPCa
-        bfxG7rjIlvidNYQWKGOdrgA=
-X-Google-Smtp-Source: ABdhPJylWRgbJYJc848q6vjWv3mMkAkdpB/B6gtLvmD/rpt/qfJmocLB+FGe8v3MUqSZYC8ANbZpqw==
-X-Received: by 2002:a17:90a:1a4c:: with SMTP id 12mr5655857pjl.195.1631125699297;
-        Wed, 08 Sep 2021 11:28:19 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:c0ea:8a04:6095:f44a])
-        by smtp.gmail.com with ESMTPSA id x10sm3273257pfj.174.2021.09.08.11.28.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 08 Sep 2021 11:28:18 -0700 (PDT)
-Subject: Re: [PATCH v2 01/10] qla2xxx: Add support for mailbox passthru
-To:     Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
-        djeffery@redhat.com, loberman@redhat.com
-References: <20210908164622.19240-1-njavali@marvell.com>
- <20210908164622.19240-2-njavali@marvell.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <96a11a9b-fc55-0826-1970-b37b738c3c97@acm.org>
-Date:   Wed, 8 Sep 2021 11:28:16 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc:content-transfer-encoding;
+        bh=nFygGt25Yx6er8i6SUB64BbFK1q4/2tx9D5E6LiShJ0=;
+        b=djH48PCcHEHV72PH1dM9tGdX+ZKZ9ihlR/rj8gaypJbvca890u2tk3JpkdaFF3vKDS
+         qY8+MR8JbTax87HNse7wgWjF2n2ojXTur2WrjpD1N5BcWKG2yGNO2xvlX6ABgF+QUHv+
+         Z02WVFRjHpRURcHJvfyBmADbdtTMC8TcfmYT6I8O3o87+IZyPL/SReqAvGEGfVLm5bPu
+         fb6QDJvtwXSSNIQJthIlq+yRfRr5x8qDR3VsD/LUTmu963xlY1aI+6CnmxqTvd5Pw2gx
+         4/Ysizonf4jJ+NJRVs4X/hbvDj1+q78FyokwVyi3vZHyUdOWmmeGxjL+yiDioPA/d2AE
+         2p3Q==
+X-Gm-Message-State: AOAM530nchA2LAGEdzCBmN/9PVSwmXVd5YxZ2WtFdxlBMW9RXJ+VVdiq
+        7lU0LWjFJLniDcN48TOBRwSVH2+vJ/ncuM1W/NcP3xydOlFasnQWq0l1rQGucPUad++TWuz2skW
+        09bdi2aYsVfulQuE5pBczD+evRdf+oRhHDR4bjQ==
+X-Received: by 2002:a17:906:bcd7:: with SMTP id lw23mr164802ejb.141.1631136664357;
+        Wed, 08 Sep 2021 14:31:04 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJz3s+Tzl10KtE4lWa2zru3+DQhnyWuGcJjmsNYkELW/MBoDLZeC+KfnJyxZ0GU5JSDw7k83mgBvizmmX/Nvweo=
+X-Received: by 2002:a17:906:bcd7:: with SMTP id lw23mr164773ejb.141.1631136664121;
+ Wed, 08 Sep 2021 14:31:04 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20210908164622.19240-2-njavali@marvell.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20210907071605.48968-1-hare@suse.de> <0bc96e82-fdda-4187-148d-5b34f81d4942@oracle.com>
+ <783a72db-93c7-92ad-81b4-bc7fee3ce2c1@suse.de>
+In-Reply-To: <783a72db-93c7-92ad-81b4-bc7fee3ce2c1@suse.de>
+From:   Ewan Milne <emilne@redhat.com>
+Date:   Wed, 8 Sep 2021 17:30:53 -0400
+Message-ID: <CAGtn9r=kicnTDE2o7Gt5Y=yoidHYD7tG8XdMHEBJTBraVEoOCw@mail.gmail.com>
+Subject: Re: [PATCH] I/O errors for ALUA state transitions
+To:     Hannes Reinecke <hare@suse.de>
+Cc:     michael.christie@oracle.com,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        linux-scsi@vger.kernel.org, Rajashekhar M A <rajs@netapp.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/8/21 9:46 AM, Nilesh Javali wrote:
-> +struct qla_mbx_passthru {
-> +	uint16_t reserved1[2];
-> +	uint16_t mbx_in[32];
-> +	uint16_t mbx_out[32];
-> +	uint32_t reserved2[16];
-> +} __packed;
+alua_check_sense() checks for NOT READY / 04h 0Ah but not
+UNIT ATTENTION with the same ASC/ASCQ.
 
-Why does this data structure start with 4 reserved bytes?
+Careful about updating pg->state in this case though because that
+may cause subsequent I/O in the probe to fail, we didn't do this before
+and we *may* only get the UA once.
 
-Thanks,
+-Ewan
 
-Bart.
+On Wed, Sep 8, 2021 at 2:12 AM Hannes Reinecke <hare@suse.de> wrote:
+>
+> On 9/7/21 5:59 PM, michael.christie@oracle.com wrote:
+> > On 9/7/21 2:16 AM, Hannes Reinecke wrote:
+> >> From: Rajashekhar M A <rajs@netapp.com>
+> >>
+> >> When a host is configured with a few LUNs and IO is running,
+> >> injecting FC faults repeatedly leads to path recovery problems.
+> >> The LUNs have 4 paths each and 3 of them come back active after
+> >> say an FC fault which makes two of the paths go down, instead of
+> >> all 4. This happens after several iterations of continuous FC faults.
+> >>
+> >> Reason here is that we're returning an I/O error whenever we're
+> >> encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE,
+> >> ASYMMETRIC ACCESS STATE TRANSITION) instead of retrying.
+> >>> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> >> ---
+> >>   drivers/scsi/scsi_error.c | 7 ++++---
+> >>   1 file changed, 4 insertions(+), 3 deletions(-)
+> >>
+> >> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> >> index 03a2ff547b22..1185083105ae 100644
+> >> --- a/drivers/scsi/scsi_error.c
+> >> +++ b/drivers/scsi/scsi_error.c
+> >> @@ -594,10 +594,11 @@ enum scsi_disposition scsi_check_sense(struct sc=
+si_cmnd *scmd)
+> >>                  sshdr.asc =3D=3D 0x3f && sshdr.ascq =3D=3D 0x0e)
+> >>                      return NEEDS_RETRY;
+> >>              /*
+> >> -             * if the device is in the process of becoming ready, we
+> >> -             * should retry.
+> >> +             * if the device is in the process of becoming ready, or
+> >> +             * transitions between ALUA states, we should retry.
+> >>               */
+> >> -            if ((sshdr.asc =3D=3D 0x04) && (sshdr.ascq =3D=3D 0x01))
+> >> +            if ((sshdr.asc =3D=3D 0x04) &&
+> >> +                (sshdr.ascq =3D=3D 0x01 || sshdr.ascq =3D=3D 0x0a))
+> >>                      return NEEDS_RETRY;
+> >
+> > Why put this here instead of in alua_check_sense with the other ALUA
+> > state transition check?
+> >
+> Good point. Will be updating the patch.
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                Kernel Storage Architect
+> hare@suse.de                              +49 911 74053 688
+> SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> HRB 36809 (AG N=C3=BCrnberg), Gesch=C3=A4ftsf=C3=BChrer: Felix Imend=C3=
+=B6rffer
+>
+
