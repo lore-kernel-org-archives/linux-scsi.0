@@ -2,153 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0B73C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 16:54:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D9CC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 20:40:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8CAB66023D
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 16:54:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 987646054F
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 20:40:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238789AbhIIQzo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 12:55:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49964 "EHLO
+        id S1345906AbhIIUlj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 16:41:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45364 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231316AbhIIQzn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2021 12:55:43 -0400
-Received: from mail-oo1-xc2e.google.com (mail-oo1-xc2e.google.com [IPv6:2607:f8b0:4864:20::c2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2DB7BC061574;
-        Thu,  9 Sep 2021 09:54:34 -0700 (PDT)
-Received: by mail-oo1-xc2e.google.com with SMTP id q26-20020a4adc5a000000b002918a69c8eeso747186oov.13;
-        Thu, 09 Sep 2021 09:54:34 -0700 (PDT)
+        with ESMTP id S1345878AbhIIUli (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2021 16:41:38 -0400
+Received: from mail-io1-xd33.google.com (mail-io1-xd33.google.com [IPv6:2607:f8b0:4864:20::d33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 819D3C061756
+        for <linux-scsi@vger.kernel.org>; Thu,  9 Sep 2021 13:40:28 -0700 (PDT)
+Received: by mail-io1-xd33.google.com with SMTP id a22so4040181iok.12
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Sep 2021 13:40:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=koo56xDEDJfNlkz6/wICLDEQvftY5giDkHhB/R6R2jk=;
-        b=U61AkWk+xSU8f6zbscu3oIlqmTpD/yfgNsdYMpS+23LKGfOQ3pEXfWs94f0Ia6NqY1
-         eWia1nIi1IDPxfSVpfjmfrRRLN1aqFaxkd3/mPMnarLkH7pfGWx3UbhyvP89it5tQv7S
-         7udXbhqZC+u+ToEzEtUMn5Bu8i/59myyK1LWM6OhLcba82Jbv+CESSZmlTCX+eo269H4
-         8pD9fomrDm9Em7OogC5FUYMZoqQCipJCEQ5Ztohf5rYWojsuLpCtJJg6dCigb6zgXJoT
-         Z38WwZ4gZwEQlcd8rtiwmquJnYQuza3HhD8PcHMBuVjRyYIEnSZ7kYVi6VsvXUY8TWoo
-         3OJg==
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=K661PKSm8ynNfd3M9m5f/SuYoVkqWyuufk1lZufUBHI=;
+        b=Kk49WXxGI4Lm6oaick7648IphOhBS9iGNDV1xXGwJbd0rdMIB47VoA8nMiXOWl9UQs
+         bYhSg05tYWKWNgcVoGBdRV+cmajWLDQssFcmP69L3jTYM304T4ZfMJs9RqPc2cuj+MCM
+         JwPJnHtWzemcF2VZRhb/VuDZ6tpCzw0r1iZgNZBT30seCXRpSiPziFCzFP9K69dakV5p
+         HEABxn5yQcYRvplLjvrop7knvZZjPRkI9MbLYxq89liyYA83YdzBZgtuq7n6Iy0ZJknq
+         KARnvP+RUFC4rxW0I//8DUpmcBvvLA8IN/662fSWOXzBRDqj+VBM65Z6FwyY7MKZi3yw
+         Au9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
-         :references:mime-version:content-disposition
-         :content-transfer-encoding:in-reply-to;
-        bh=koo56xDEDJfNlkz6/wICLDEQvftY5giDkHhB/R6R2jk=;
-        b=nN1byXNF/+XTuhBq5ziC9A3lnSSZpTrPGo3+0tRiNaAzDtPsB9rrjOhMobq01MPucM
-         SD0YOLkkuCmJBykEoRydHFoHurFg38KzByO83JGrQexE5CN+Vaw3VnM0jq4QhkDZQeQv
-         GBGmTKz1RjBrcQZV7/tCfUN5HVz9OitXAPil2nJZzBSEXicZttKVDoPrHFgbgYiQ6qJ5
-         bgPc4gKdTlmWoFGbqa7A2VWFMEt0RLayRKf2myQUYUW7oG6fULvvZ7gx4FrbBlxI14RW
-         NQoGwmHJbNqKbcFpAcIff+Xuu6yQEnevaGGYkCuatvBjxvJsZ7ZnO2/ywC24GyGqeOyE
-         xJfg==
-X-Gm-Message-State: AOAM532Lgrxks5Xi/2Ydx0j/Uj7hBRma+20LAPxBoBxTi1Xlo6Zl0/bc
-        jvkkwfGPRXdh8w3zw8ntBTY=
-X-Google-Smtp-Source: ABdhPJzzwDrlhiSYvL1PGW+EwbIuIHwyD1RqcvBgT45XUCxbV4sFkpqNfgffUR2swqnAWR0qS+E9uQ==
-X-Received: by 2002:a4a:bd17:: with SMTP id n23mr682036oop.54.1631206473539;
-        Thu, 09 Sep 2021 09:54:33 -0700 (PDT)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id n73sm569093oig.9.2021.09.09.09.54.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 09 Sep 2021 09:54:33 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Date:   Thu, 9 Sep 2021 09:54:31 -0700
-From:   Guenter Roeck <linux@roeck-us.net>
-To:     Avri Altman <avri.altman@wdc.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bean Huo <beanhuo@micron.com>
-Subject: Re: [PATCH v2 2/2] scsi: ufs: Add temperature notification exception
- handling
-Message-ID: <20210909165431.GB3973437@roeck-us.net>
-References: <20210909063444.22407-1-avri.altman@wdc.com>
- <20210909063444.22407-3-avri.altman@wdc.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=K661PKSm8ynNfd3M9m5f/SuYoVkqWyuufk1lZufUBHI=;
+        b=y/iKu544cyPMmqauYZdaMWNvuWZORfopO0qo6LJ7dUPfsIrmt0MQ3BSmiBrEWJyd6f
+         67yhVMN6i2rDArZw8cMtTAkeSqIlgD7RK5XdEWJKDoxdR4QGywBiGlgLHnuVKTwWrXMi
+         j7tyfSsjYWfpxtQAiY6VZVGr+ZOsGUNmX87WVzRMww1M/hmKZLOOp2esEzj19rSfWBlY
+         Sn2yJJSn8hkF+wv2ChnINRT88pQYTaRqL9giawWWM4ZR/LJp37i2Mk0ZTD01Q1RnwNli
+         nObZEg4ZiHgKQceMrCMxMTJeAW6XQOw7u5lejFjosPWwuK4SmTucgLL1Vie/rtiqYHKo
+         vFIw==
+X-Gm-Message-State: AOAM531nuQ2vTwK/wILAGrrwHYt1KwjqvHzKStKbXj3U7kmpQFUlgAOL
+        qVygOy5msXir2BxHMuRCvKf4xQ==
+X-Google-Smtp-Source: ABdhPJyZrfEvanEj4R5uDT0596howBbcNyxuQ3962MrXM6rhaRXofB110KBrxiJbUlwOOkSa8+BpmQ==
+X-Received: by 2002:a05:6602:2ac7:: with SMTP id m7mr4226626iov.66.1631220027881;
+        Thu, 09 Sep 2021 13:40:27 -0700 (PDT)
+Received: from [192.168.1.30] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id t11sm1387116ilf.16.2021.09.09.13.40.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 09 Sep 2021 13:40:27 -0700 (PDT)
+Subject: Re: [PATCH] scsi: bsg: Fix device unregistration
+To:     Zenghui Yu <yuzenghui@huawei.com>, linux-scsi@vger.kernel.org,
+        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     fujita.tomonori@lab.ntt.co.jp, martin.petersen@oracle.com,
+        hch@lst.de, gregkh@linuxfoundation.org, wanghaibin.wang@huawei.com
+References: <20210909034608.1435-1-yuzenghui@huawei.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <78c3c08b-ebba-8d46-7eae-f82d0b1c50fe@kernel.dk>
+Date:   Thu, 9 Sep 2021 14:40:26 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <20210909034608.1435-1-yuzenghui@huawei.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20210909063444.22407-3-avri.altman@wdc.com>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 09, 2021 at 09:34:44AM +0300, Avri Altman wrote:
-> The device may notify the host of an extreme temperature by using the
-> exception event mechanism. The exception can be raised when the device’s
-> Tcase temperature is either too high or too low.
+On 9/8/21 9:46 PM, Zenghui Yu wrote:
+> We use device_initialize() to take refcount for the device but forget to
+> put_device() on device teardown, which ends up leaking private data of the
+> driver core, dev_name(), etc. This is reported by kmemleak at boot time if
+> we compile kernel with DEBUG_TEST_DRIVER_REMOVE.
 > 
-> It is essentially up to the platform to decide what further actions need
-> to be taken. leave a placeholder for a designated vop for that.
+> Note that adding the missing put_device() is _not_ sufficient to fix device
+> unregistration. As we don't provide the .release() method for device, which
+> turned out to be typically wrong and will be complained loudly by the
+> driver core.
 > 
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-> ---
->  drivers/scsi/ufs/ufs.h    |  2 ++
->  drivers/scsi/ufs/ufshcd.c | 19 +++++++++++++++++++
->  2 files changed, 21 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-> index 171b27be7b1d..d9bc048c2a71 100644
-> --- a/drivers/scsi/ufs/ufs.h
-> +++ b/drivers/scsi/ufs/ufs.h
-> @@ -377,6 +377,8 @@ enum {
->  	MASK_EE_PERFORMANCE_THROTTLING	= BIT(6),
->  };
->  
-> +#define MASK_EE_URGENT_TEMP (MASK_EE_TOO_HIGH_TEMP | MASK_EE_TOO_LOW_TEMP)
-> +
->  /* Background operation status */
->  enum bkops_status {
->  	BKOPS_STATUS_NO_OP               = 0x0,
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index fc995bf1f296..1f61e8090220 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5642,6 +5642,22 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
->  				__func__, err);
->  }
->  
-> +static void ufshcd_temp_exception_event_handler(struct ufs_hba *hba, u16 status)
-> +{
-> +	u32 value;
-> +
-> +	if (ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-> +			      QUERY_ATTR_IDN_CASE_ROUGH_TEMP, 0, 0, &value))
-> +		return;
-> +
-> +	dev_info(hba->dev, "exception Tcase %d\n", value - 80);
-> +
+> Fix both of them.
 
-It would probably make sense to call hwmon_notify_event() here.
+Applied, thanks.
 
-Guenter
+-- 
+Jens Axboe
 
-> +	/*
-> +	 * A placeholder for the platform vendors to add whatever additional
-> +	 * steps required
-> +	 */
-> +}
-> +
->  static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
->  {
->  	u8 index;
-> @@ -5821,6 +5837,9 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
->  	if (status & hba->ee_drv_mask & MASK_EE_URGENT_BKOPS)
->  		ufshcd_bkops_exception_event_handler(hba);
->  
-> +	if (status & hba->ee_drv_mask & MASK_EE_URGENT_TEMP)
-> +		ufshcd_temp_exception_event_handler(hba, status);
-> +
->  	ufs_debugfs_exception_event(hba, status);
->  out:
->  	ufshcd_scsi_unblock_requests(hba);
-> -- 
-> 2.17.1
-> 
