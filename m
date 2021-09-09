@@ -2,109 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E04C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 06:00:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40FECC28B27
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 06:52:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B87361186
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 06:00:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22CA861101
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 06:52:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350987AbhIIGB3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 02:01:29 -0400
-Received: from smtp-out1.suse.de ([195.135.220.28]:57332 "EHLO
-        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1350955AbhIIGB2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2021 02:01:28 -0400
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out1.suse.de (Postfix) with ESMTPS id E6FDE21D77;
-        Thu,  9 Sep 2021 06:00:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631167218; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=z9QpcSoWNbfBgZAsVg1wXH4mwz6iiOGa/E6IWp3n3FY=;
-        b=VF1UQ1nTWPCZvi+tuR/palL+9UJEzynxXXXcNIrmDI0/f8onbbhsxI96yTWHaGl6NV6DVj
-        /kqsRCvbBQc462mHGDjMeg/Vy5cJo6DtF8VTyw8ZbrIbvnA/EIiBzzwtMEg3aFHJsXnf57
-        h6576FbTXIPXAZdywrkuMd/nwNGDxws=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631167218;
-        h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
-         mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=z9QpcSoWNbfBgZAsVg1wXH4mwz6iiOGa/E6IWp3n3FY=;
-        b=Vw4dR57QZQiapMPsBSa8KvrUWmaPIp7xOcPkF82qlFqTB6JNQ/1IvldLKsxCujqalY2jn1
-        qZIuqanhnKJnmaBQ==
-Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id BF4D113A61;
-        Thu,  9 Sep 2021 06:00:18 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap1.suse-dmz.suse.de with ESMTPSA
-        id mEx6LfKiOWHLVwAAGKfGzw
-        (envelope-from <hare@suse.de>); Thu, 09 Sep 2021 06:00:18 +0000
-Subject: Re: [PATCH v8 2/5] scsi: sd: add concurrent positioning ranges
- support
-To:     Damien Le Moal <damien.lemoal@wdc.com>,
-        Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        linux-ide@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-References: <20210909023545.1101672-1-damien.lemoal@wdc.com>
- <20210909023545.1101672-3-damien.lemoal@wdc.com>
-From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <e6fb552e-69f7-56ca-24d6-28ebcd2537c6@suse.de>
-Date:   Thu, 9 Sep 2021 08:00:16 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
+        id S1352554AbhIIGgS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 02:36:18 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:25535 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1352517AbhIIGgS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2021 02:36:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1631169309; x=1662705309;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=6Szz45xnYb/E2zF+G7svDhiYLqm5PULqroK9cBEAk4g=;
+  b=V8zngHYF2emnnKckI2QY42sHltcacMuwxTKyl01koi9Snjma6JtDuFTT
+   /OMpvFXwXEIebU6OlRnBIBBPWv3hQ+YJSnvjgiIa9Bll8IDEAPmcW+Hiu
+   g5HQVkDPkpiRRDK1HabSFCvtiLvbPDx1dfEFR19Vjn0Iif8SatyRnIHsG
+   9Slte4l94tciglFbWakNi/EpL8P2tC+d5Vw19CBPLTRPZYCsY4eqHuZ01
+   M/+xktysHfGOrfBTLLRhdrP9idOmdi3PAe/5O+U+/s6B077YZPpOTWGwJ
+   bMHQbu4BpAzQhkNQsCDBr1DvhOkh7BMTTUVRgd/R6/NbGA14PbuzH8w21
+   w==;
+X-IronPort-AV: E=Sophos;i="5.85,279,1624291200"; 
+   d="scan'208";a="179551093"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 09 Sep 2021 14:35:07 +0800
+IronPort-SDR: 4U6oN3BLV1OfBLZaIQheGHFHkv15ilcjViaZeSqrrFQo7TiihfQt/Z4tRUszSx5GIAIcor9ZEF
+ Zl8mziT6v2jr6+pIL4drUscUeF2Yl7HQYKyxgBxfQL5l2oE90etRxZKzqbDQ6WxJQ+0v9CHVc+
+ Tk2n3WO9nIC3KuJA/fd6UCRDF/dkkw9ekMU4DP4AiDJj5evpOdjfQbqkZOWlYicNqR9s7j1U0v
+ c38k8GuTKQOygbsoWCsDSF00bzFBNz7OI77QzZiaIKjT2nVoFfGKVLVRliw4XANfqYvyI2Jh2G
+ b8WVvgyDAc7Bd+qf5JKTPOf9
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Sep 2021 23:11:43 -0700
+IronPort-SDR: TxjQRD4kOHIMHWI+jbQmptf1qaZZilWCwiv54Waw2WZ+5hH6CFDl4j4PWQtzVAKnu60temN9Rb
+ Vk3ShzcvXAzqwcL3oD+ME2xkXxrxATU3W+cLO1Y5g0twoddaPZn2/RJ7Rv9TlYtPaBr3kn4+kR
+ 2uZBwRc5Wq2fYUiERJKvgVAFQu8OFRCHMBQ14gsjA+SYTa3X5WjZWvaDx4uI4jh+1qNYh/rcLg
+ DjhZN9AXx7KS+ED7k7t+TIJkn9/t+yBCXw73xuCt0E5mJdRSWKec6ZykG+3Viesyd2rhzOYBG6
+ k0o=
+WDCIronportException: Internal
+Received: from bxygm33.sdcorp.global.sandisk.com (HELO BXYGM33.ad.shared) ([10.0.231.247])
+  by uls-op-cesaip02.wdc.com with ESMTP; 08 Sep 2021 23:35:04 -0700
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v2 0/2] Add temperature notification support
+Date:   Thu,  9 Sep 2021 09:34:42 +0300
+Message-Id: <20210909063444.22407-1-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-In-Reply-To: <20210909023545.1101672-3-damien.lemoal@wdc.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/9/21 4:35 AM, Damien Le Moal wrote:
-> Add the sd_read_cpr() function to the sd scsi disk driver to discover
-> if a device has multiple concurrent positioning ranges (i.e. multiple
-> actuators on an HDD). The existence of VPD page B9h indicates if a
-> device has multiple concurrent positioning ranges. The page content
-> describes each range supported by the device.
-> 
-> sd_read_cpr() is called from sd_revalidate_disk() and uses the block
-> layer functions disk_alloc_independent_access_ranges() and
-> disk_set_independent_access_ranges() to represent the set of actuators
-> of the device as independent access ranges.
-> 
-> The format of the Concurrent Positioning Ranges VPD page B9h is defined
-> in section 6.6.6 of SBC-5.
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-> ---
->   drivers/scsi/sd.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++
->   drivers/scsi/sd.h |  1 +
->   2 files changed, 82 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+v1 -> v2:
+ - Add a hw monitor device if both the platform & the device support it
+ - Remove the sysfs patch: no need to duplicate /sys/class/hwmon
 
-Cheers,
+UFS3.0 allows using the ufs device as a temperature sensor. The purpose
+of this optional feature is to provide notification to the host of the
+UFS device case temperature. It allows reading of a rough estimate
+(+-10 degrees centigrade) of the current case temperature, and setting a
+lower and upper temperature bounds, in which the device will trigger an
+applicable exception event.
 
-Hannes
+A previous attempt [1] tried a comprehensive approach.  Still, it was
+unsuccessful. Here is a more modest approach that introduces just the
+bare minimum to support temperature notification.
+
+Thanks,
+Avri
+
+[1] https://lore.kernel.org/lkml/1582450522-13256-1-git-send-email-avi.shchislowski@wdc.com/
+
+Avri Altman (2):
+  scsi: ufs: Probe for temperature notification support
+  scsi: ufs: Add temperature notification exception handling
+
+ drivers/scsi/ufs/Kconfig     |  10 ++
+ drivers/scsi/ufs/Makefile    |   1 +
+ drivers/scsi/ufs/ufs-hwmon.c | 180 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs.h       |   8 ++
+ drivers/scsi/ufs/ufshcd.c    |  46 +++++++++
+ drivers/scsi/ufs/ufshcd.h    |  18 ++++
+ 6 files changed, 263 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufs-hwmon.c
+
 -- 
-Dr. Hannes Reinecke                Kernel Storage Architect
-hare@suse.de                              +49 911 74053 688
-SUSE Software Solutions GmbH, Maxfeldstr. 5, 90409 Nürnberg
-HRB 36809 (AG Nürnberg), Geschäftsführer: Felix Imendörffer
+2.17.1
+
