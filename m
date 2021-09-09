@@ -2,117 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FFADC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 03:46:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8CEB0C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 03:47:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F66561178
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 03:46:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62D6F61184
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 03:47:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234314AbhIIDsA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 8 Sep 2021 23:48:00 -0400
-Received: from szxga03-in.huawei.com ([45.249.212.189]:15311 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230153AbhIIDr7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2021 23:47:59 -0400
-Received: from dggemv711-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4H4lKk1ZSnz8t02;
-        Thu,  9 Sep 2021 11:46:18 +0800 (CST)
-Received: from dggema764-chm.china.huawei.com (10.1.198.206) by
- dggemv711-chm.china.huawei.com (10.1.198.66) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2308.8; Thu, 9 Sep 2021 11:46:48 +0800
-Received: from DESKTOP-8RFUVS3.china.huawei.com (10.174.185.179) by
- dggema764-chm.china.huawei.com (10.1.198.206) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.8; Thu, 9 Sep 2021 11:46:47 +0800
-From:   Zenghui Yu <yuzenghui@huawei.com>
-To:     <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-CC:     <fujita.tomonori@lab.ntt.co.jp>, <axboe@kernel.dk>,
-        <martin.petersen@oracle.com>, <hch@lst.de>,
-        <gregkh@linuxfoundation.org>, <wanghaibin.wang@huawei.com>,
-        Zenghui Yu <yuzenghui@huawei.com>
-Subject: [PATCH] scsi: bsg: Fix device unregistration
-Date:   Thu, 9 Sep 2021 11:46:08 +0800
-Message-ID: <20210909034608.1435-1-yuzenghui@huawei.com>
-X-Mailer: git-send-email 2.23.0.windows.1
+        id S237161AbhIIDsd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 8 Sep 2021 23:48:33 -0400
+Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:57967 "EHLO
+        wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230153AbhIIDsc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Sep 2021 23:48:32 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.west.internal (Postfix) with ESMTP id 66DCE320025E;
+        Wed,  8 Sep 2021 23:47:23 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Wed, 08 Sep 2021 23:47:23 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=iBT825
+        z+NyUW7N7rDllP1vENTbXXnYYWdNX40tkfrqM=; b=ZzxB0ie4DZAwQo4qTXTzz4
+        /cincDRVzMkm0iJ0FQ5nE/IGsgzJDJAdHD+hqtNRngdUeDdIf+zkTsQ76YpeaeAQ
+        qeBxNFua+36/zJzxd/5ZWfbyd0cBhtkbPlb3syujTWxQ4JXUq1ld2nuvxltFmaVw
+        bm+tZa2qQrRYRestoHzzxSOTqiWV/VJfRqUCmfB4rnhmSJVblO7ggBCVdTBBBWDL
+        aevVhjOKsWzU4WbcljLa/bA69BJj8wPJ6kGYTvbGQH6yaDk4Ak7upnTwKh0ZzMDg
+        85rBaWzcQM6Vg/A2Ssa4hq6Kf/5REQseXXXBvV7Ow3nJqxDdxvNsskBvRnQn4YFg
+        ==
+X-ME-Sender: <xms:yoM5YdVCS3n6YSIMU5qRmotZj7l2KcUEw4rq5ku4u2enbXeo8KEZOQ>
+    <xme:yoM5YdnuaN0bZZE4rF2SiGWiCX_nfLq3aMarFAHtz0KZ5WA6I-1FQHrjv3u-AEE4l
+    Gy_OY5HthayWRiNr-g>
+X-ME-Received: <xmr:yoM5YZYAseHxyGIB2-mu-oak0aUXRyBxDdQKhoJaVdasrwGKU7Jhg737dk9ZZ93x2ISuN6yvyDyi1q8EXHgX8sV8DmdvcXN_RyAFsw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrudefkedgjeehucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
+    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
+    htvghrnhepieeuffduudejueehteefgfevgeejtddvveekvdehfefgvefhteehudekhffg
+    fedtnecuffhomhgrihhnpehtfihisggslhgvrdhorhhgnecuvehluhhsthgvrhfuihiivg
+    eptdenucfrrghrrghmpehmrghilhhfrhhomhepfhhthhgrihhnsehlihhnuhigqdhmieek
+    khdrohhrgh
+X-ME-Proxy: <xmx:yoM5YQVwDwJD2lTGh-rX1mjTTtbgFn5k1mv2lLY_Hce6npRlCA-0YQ>
+    <xmx:yoM5YXn0FpYo5v0NDp1CoeTma23dw2WqGwn058t6rOrsaKcqGeX15Q>
+    <xmx:yoM5Yddp3VWUfeRQthHC0XMla75YTAomidUY0PUflYFAHBz3r7vUkw>
+    <xmx:y4M5YQBsLczEsaI7Ounl5pcb4wP-_JD-gLqhG5IlTr1k3Fb6ZPE22Q>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 8 Sep 2021 23:47:20 -0400 (EDT)
+Date:   Thu, 9 Sep 2021 13:47:12 +1000 (AEST)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     Oliver Neukum <oneukum@suse.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>
+cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] MAINTAINERS: Remove obsolete e-mail addresses
+In-Reply-To: <c9168d8e5595bdaa3a18d596f781b55e052af3fc.1631158421.git.fthain@linux-m68k.org>
+Message-ID: <b270d7a-10d4-810-3027-eeb824e646c8@linux-m68k.org>
+References: <c9168d8e5595bdaa3a18d596f781b55e052af3fc.1631158421.git.fthain@linux-m68k.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.174.185.179]
-X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
- dggema764-chm.china.huawei.com (10.1.198.206)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We use device_initialize() to take refcount for the device but forget to
-put_device() on device teardown, which ends up leaking private data of the
-driver core, dev_name(), etc. This is reported by kmemleak at boot time if
-we compile kernel with DEBUG_TEST_DRIVER_REMOVE.
 
-Note that adding the missing put_device() is _not_ sufficient to fix device
-unregistration. As we don't provide the .release() method for device, which
-turned out to be typically wrong and will be complained loudly by the
-driver core.
+[I just found Oliver Neukum <oneukum@suse.com> in 'git log'. I've now 
+added that address to recipients.]
 
-Fix both of them.
+On Thu, 9 Sep 2021, Finn Thain wrote:
 
-Fixes: ead09dd3aed5 ("scsi: bsg: Simplify device registration")
-Signed-off-by: Zenghui Yu <yuzenghui@huawei.com>
----
- block/bsg.c | 13 +++++++++++--
- 1 file changed, 11 insertions(+), 2 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index 351095193788..c3bb92b9af7e 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -165,13 +165,20 @@ static const struct file_operations bsg_fops = {
- 	.llseek		=	default_llseek,
- };
- 
-+static void bsg_device_release(struct device *dev)
-+{
-+	struct bsg_device *bd = container_of(dev, struct bsg_device, device);
-+
-+	ida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));
-+	kfree(bd);
-+}
-+
- void bsg_unregister_queue(struct bsg_device *bd)
- {
- 	if (bd->queue->kobj.sd)
- 		sysfs_remove_link(&bd->queue->kobj, "bsg");
- 	cdev_device_del(&bd->cdev, &bd->device);
--	ida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));
--	kfree(bd);
-+	put_device(&bd->device);
- }
- EXPORT_SYMBOL_GPL(bsg_unregister_queue);
- 
-@@ -198,6 +205,7 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
- 	bd->device.devt = MKDEV(bsg_major, ret);
- 	bd->device.class = bsg_class;
- 	bd->device.parent = parent;
-+	bd->device.release = bsg_device_release;
- 	dev_set_name(&bd->device, "%s", name);
- 	device_initialize(&bd->device);
- 
-@@ -218,6 +226,7 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
- out_device_del:
- 	cdev_device_del(&bd->cdev, &bd->device);
- out_ida_remove:
-+	put_device(&bd->device);
- 	ida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));
- out_kfree:
- 	kfree(bd);
--- 
-2.19.1
-
+> These e-mail addresses bounced.
+> 
+> Signed-off-by: Finn Thain <fthain@linux-m68k.org>
+> ---
+>  MAINTAINERS | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index d7b4f32875a9..690539b2705c 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -5138,10 +5138,8 @@ S:	Maintained
+>  F:	drivers/scsi/am53c974.c
+>  
+>  DC395x SCSI driver
+> -M:	Oliver Neukum <oliver@neukum.org>
+>  M:	Ali Akcaagac <aliakc@web.de>
+>  M:	Jamie Lenehan <lenehan@twibble.org>
+> -L:	dc395x@twibble.org
+>  S:	Maintained
+>  W:	http://twibble.org/dist/dc395x/
+>  W:	http://lists.twibble.org/mailman/listinfo/dc395x/
+>  
+> 
