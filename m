@@ -8,67 +8,68 @@ X-Spam-Status: No, score=-19.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87DF0C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 05:59:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86E04C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 06:00:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 721E961167
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 05:59:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B87361186
+	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 06:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350954AbhIIGBA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 02:01:00 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:37596 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244990AbhIIGBA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2021 02:01:00 -0400
+        id S1350987AbhIIGB3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 02:01:29 -0400
+Received: from smtp-out1.suse.de ([195.135.220.28]:57332 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1350955AbhIIGB2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2021 02:01:28 -0400
 Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 225CD1FDD4;
-        Thu,  9 Sep 2021 05:59:50 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id E6FDE21D77;
+        Thu,  9 Sep 2021 06:00:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1631167190; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+        t=1631167218; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=IlkJBr+7WVZFmgT9pPY949rtwb3yBycp/VGsCqFWLIk=;
-        b=qy1YK9vgU2x6y660tulXSQomlBZxI/4Dr17f+4DR1RtCOdrp5KbJcx9vsPteFoxmycD+38
-        5fEz3TufhFWFE1lLiR3PA3mW9IdDrGjNxsyuekMI2Lr+vzoHBeXpgBxkJyXzqfUKiwpYAI
-        avMXCkRhdDYK8kmb6kD1M2yC1QzomZw=
+        bh=z9QpcSoWNbfBgZAsVg1wXH4mwz6iiOGa/E6IWp3n3FY=;
+        b=VF1UQ1nTWPCZvi+tuR/palL+9UJEzynxXXXcNIrmDI0/f8onbbhsxI96yTWHaGl6NV6DVj
+        /kqsRCvbBQc462mHGDjMeg/Vy5cJo6DtF8VTyw8ZbrIbvnA/EIiBzzwtMEg3aFHJsXnf57
+        h6576FbTXIPXAZdywrkuMd/nwNGDxws=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1631167190;
+        s=susede2_ed25519; t=1631167218;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=IlkJBr+7WVZFmgT9pPY949rtwb3yBycp/VGsCqFWLIk=;
-        b=eObPCfEXPMNMzfPq1JemfVF/xnCupBhx0Rmw4B2t6AGba2qM6+bQp4HGg0uy3+uzYc5Smq
-        lj0fL1rJwPReFECg==
+        bh=z9QpcSoWNbfBgZAsVg1wXH4mwz6iiOGa/E6IWp3n3FY=;
+        b=Vw4dR57QZQiapMPsBSa8KvrUWmaPIp7xOcPkF82qlFqTB6JNQ/1IvldLKsxCujqalY2jn1
+        qZIuqanhnKJnmaBQ==
 Received: from imap1.suse-dmz.suse.de (imap1.suse-dmz.suse.de [192.168.254.73])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id E824913A61;
-        Thu,  9 Sep 2021 05:59:49 +0000 (UTC)
+        by imap1.suse-dmz.suse.de (Postfix) with ESMTPS id BF4D113A61;
+        Thu,  9 Sep 2021 06:00:18 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap1.suse-dmz.suse.de with ESMTPSA
-        id llrHNNWiOWGNVwAAGKfGzw
-        (envelope-from <hare@suse.de>); Thu, 09 Sep 2021 05:59:49 +0000
-Subject: Re: [PATCH v8 1/5] block: Add independent access ranges support
+        id mEx6LfKiOWHLVwAAGKfGzw
+        (envelope-from <hare@suse.de>); Thu, 09 Sep 2021 06:00:18 +0000
+Subject: Re: [PATCH v8 2/5] scsi: sd: add concurrent positioning ranges
+ support
 To:     Damien Le Moal <damien.lemoal@wdc.com>,
         Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
         linux-ide@vger.kernel.org,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org
 References: <20210909023545.1101672-1-damien.lemoal@wdc.com>
- <20210909023545.1101672-2-damien.lemoal@wdc.com>
+ <20210909023545.1101672-3-damien.lemoal@wdc.com>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <d708e1a9-f8ad-e8f9-4d21-c2fca8cb4de7@suse.de>
-Date:   Thu, 9 Sep 2021 07:59:48 +0200
+Message-ID: <e6fb552e-69f7-56ca-24d6-28ebcd2537c6@suse.de>
+Date:   Thu, 9 Sep 2021 08:00:16 +0200
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <20210909023545.1101672-2-damien.lemoal@wdc.com>
+In-Reply-To: <20210909023545.1101672-3-damien.lemoal@wdc.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -77,81 +78,27 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 On 9/9/21 4:35 AM, Damien Le Moal wrote:
-> The Concurrent Positioning Ranges VPD page (for SCSI) and data log page
-> (for ATA) contain parameters describing the set of contiguous LBAs that
-> can be served independently by a single LUN multi-actuator hard-disk.
-> Similarly, a logically defined block device composed of multiple disks
-> can in some cases execute requests directed at different sector ranges
-> in parallel. A dm-linear device aggregating 2 block devices together is
-> an example.
+> Add the sd_read_cpr() function to the sd scsi disk driver to discover
+> if a device has multiple concurrent positioning ranges (i.e. multiple
+> actuators on an HDD). The existence of VPD page B9h indicates if a
+> device has multiple concurrent positioning ranges. The page content
+> describes each range supported by the device.
 > 
-> This patch implements support for exposing a block device independent
-> access ranges to the user through sysfs to allow optimizing device
-> accesses to increase performance.
+> sd_read_cpr() is called from sd_revalidate_disk() and uses the block
+> layer functions disk_alloc_independent_access_ranges() and
+> disk_set_independent_access_ranges() to represent the set of actuators
+> of the device as independent access ranges.
 > 
-> To describe the set of independent sector ranges of a device (actuators
-> of a multi-actuator HDDs or table entries of a dm-linear device),
-> The type struct blk_independent_access_ranges is introduced. This
-> structure describes the sector ranges using an array of
-> struct blk_independent_access_range structures. This range structure
-> defines the start sector and number of sectors of the access range.
-> The ranges in the array cannot overlap and must contain all sectors
-> within the device capacity.
-> 
-> The function disk_set_independent_access_ranges() allows a device
-> driver to signal to the block layer that a device has multiple
-> independent access ranges.  In this case, a struct
-> blk_independent_access_ranges is attached to the device request queue
-> by the function disk_set_independent_access_ranges(). The function
-> disk_alloc_independent_access_ranges() is provided for drivers to
-> allocate this structure.
-> 
-> struct blk_independent_access_ranges contains kobjects (struct kobject)
-> to expose to the user through sysfs the set of independent access ranges
-> supported by a device. When the device is initialized, sysfs
-> registration of the ranges information is done from blk_register_queue()
-> using the block layer internal function
-> disk_register_independent_access_ranges(). If a driver calls
-> disk_set_independent_access_ranges() for a registered queue, e.g. when a
-> device is revalidated, disk_set_independent_access_ranges() will execute
-> disk_register_independent_access_ranges() to update the sysfs attribute
-> files.  The sysfs file structure created starts from the
-> independent_access_ranges sub-directory and contains the start sector
-> and number of sectors of each range, with the information for each range
-> grouped in numbered sub-directories.
-> 
-> E.g. for a dual actuator HDD, the user sees:
-> 
-> $ tree /sys/block/sdk/queue/independent_access_ranges/
-> /sys/block/sdk/queue/independent_access_ranges/
-> |-- 0
-> |   |-- nr_sectors
-> |   `-- sector
-> `-- 1
->      |-- nr_sectors
->      `-- sector
-> 
-> For a regular device with a single access range, the
-> independent_access_ranges sysfs directory does not exist.
-> 
-> Device revalidation may lead to changes to this structure and to the
-> attribute values. When manipulated, the queue sysfs_lock and
-> sysfs_dir_lock mutexes are held for atomicity, similarly to how the
-> blk-mq and elevator sysfs queue sub-directories are protected.
-> 
-> The code related to the management of independent access ranges is
-> added in the new file block/blk-ia-ranges.c.
+> The format of the Concurrent Positioning Ranges VPD page B9h is defined
+> in section 6.6.6 of SBC-5.
 > 
 > Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->   block/Makefile         |   2 +-
->   block/blk-ia-ranges.c  | 348 +++++++++++++++++++++++++++++++++++++++++
->   block/blk-sysfs.c      |  26 ++-
->   block/blk.h            |   4 +
->   include/linux/blkdev.h |  39 +++++
->   5 files changed, 410 insertions(+), 9 deletions(-)
->   create mode 100644 block/blk-ia-ranges.c
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+>   drivers/scsi/sd.c | 81 +++++++++++++++++++++++++++++++++++++++++++++++
+>   drivers/scsi/sd.h |  1 +
+>   2 files changed, 82 insertions(+)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
 
