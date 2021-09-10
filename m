@@ -7,39 +7,43 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04B69C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EEC0FC433FE
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E49B960C40
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D926A60C40
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240860AbhIJAnY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:43:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47500 "EHLO mail.kernel.org"
+        id S241005AbhIJAnZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:43:25 -0400
+Received: from mail.kernel.org ([198.145.29.99]:47550 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233806AbhIJAVn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:21:43 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CB709611AF;
-        Fri, 10 Sep 2021 00:20:32 +0000 (UTC)
+        id S233670AbhIJAVr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:21:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 5CA8561167;
+        Fri, 10 Sep 2021 00:20:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233233;
-        bh=1LUZstzBU6lnrvq0z0vjZ3RlSGsKHummG+10tM0IJL4=;
+        s=k20201202; t=1631233236;
+        bh=0wd6VW1FHoDQCTCP7Ipnexg/Q5HQrr0fWXzdXUc42DE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=rk3hnWZh7rLK58h67I3mZjRSBIw2lQ1uLJWtppfJpzh8dJKCYXbb5kKZkFE+qppEo
-         nNOckkGPE+rpQy2ZYOHumDWE/rsNpY9XaonB5+lPxZyiKfA5p1lRXOc1N40WnUk/Og
-         E+0/YeGTVTIeqF0Kc+12S6U+Q2lTeRJrfvf55K1TVQO9Bjmzn3jJ/0YvUbDUQCWwlf
-         9AXmYwCrxeDp+bvI4LPunXjlgqBaGE9LTwyjK/6dy/KnSRAbRWTkAyi0ec9GjF42zY
-         u65oIBN+qb+8PA+Bgw8pqzug9EhatTVzgDWr+AySqq+RTgbmrS4I14bTp0bmxkMF8G
-         F/20cA2R+or/g==
+        b=BysapOG9lBIthLFuMDQBsO759uZnrnxHwwxLdQ0gYPcxBrT771VxzDztlT251jTyo
+         5ayR3qlrflDpx9iW0IibZ7f2nq0vmrCI6JuYZHTbDT5dEGYL5XjZRLV9X1F2g00E6m
+         LAKg7WjsZ45xYJABjVVVLAcYupgIxS5wMLw0ZKkJz/eSfEYHNB/LKsiwlACGdS07t7
+         k22zVc3LamKjpMqYqLlsfvLVo/0jy5WP4BNo1X9m0wBOqz3XPcxWJ355tAKySFiYnn
+         Cv0sTLy4MlSEvOWrAiiN3sFd1seEoEaOhOnYPnwHNbExDSg9SfnFMBu2wBH3/dUdXG
+         cy5y7Q0Ha8xFw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Mike McGowen <mike.mcgowen@microchip.com>,
+        Kevin Barnett <kevin.barnett@microchip.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 03/53] scsi: lpfc: Fix NVMe support reporting in log message
-Date:   Thu,  9 Sep 2021 20:19:38 -0400
-Message-Id: <20210910002028.175174-3-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, storagedev@microchip.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 05/53] scsi: smartpqi: Fix ISR accessing uninitialized data
+Date:   Thu,  9 Sep 2021 20:19:40 -0400
+Message-Id: <20210910002028.175174-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910002028.175174-1-sashal@kernel.org>
 References: <20210910002028.175174-1-sashal@kernel.org>
@@ -51,60 +55,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Mike McGowen <mike.mcgowen@microchip.com>
 
-[ Upstream commit ae463b60235e7a5decffbb0bd7209952ccda78eb ]
+[ Upstream commit 0777a3fb98f0ea546561d04db4fd325248c39961 ]
 
-The NVMe support indicator in log message 6422 is displaying a field that
-was initialized but never set to indicate NVMe support.  Remove obsolete
-nvme_support element from the lpfc_hba structure and change log message to
-display NVMe support status as reported in SLI4 Config Parameters mailbox
-command.
+Correct driver's ISR accessing a data structure member that has not been
+fully initialized during driver initialization.
 
-Link: https://lore.kernel.org/r/20210707184351.67872-2-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+The pqi queue groups can have uninitialized members when an interrupt
+fires. This has not resulted in any driver crashes. This was found during
+our own internal testing. No bugs were ever filed.
+
+Link: https://lore.kernel.org/r/20210714182847.50360-9-don.brace@microchip.com
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc.h      | 1 -
- drivers/scsi/lpfc/lpfc_init.c | 3 +--
- 2 files changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 93e507677bdc..86996c72f213 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -819,7 +819,6 @@ struct lpfc_hba {
- 	uint8_t  wwpn[8];
- 	uint32_t RandomData[7];
- 	uint8_t  fcp_embed_io;
--	uint8_t  nvme_support;	/* Firmware supports NVME */
- 	uint8_t  nvmet_support;	/* driver supports NVMET */
- #define LPFC_NVMET_MAX_PORTS	32
- 	uint8_t  mds_diags_support;
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 37612299a34a..003648661f3b 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -12126,7 +12126,6 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 					bf_get(cfg_xib, mbx_sli4_parameters),
- 					phba->cfg_enable_fc4_type);
- fcponly:
--			phba->nvme_support = 0;
- 			phba->nvmet_support = 0;
- 			phba->cfg_nvmet_mrq = 0;
- 			phba->cfg_nvme_seg_cnt = 0;
-@@ -12184,7 +12183,7 @@ lpfc_get_sli4_parameters(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 			"6422 XIB %d PBDE %d: FCP %d NVME %d %d %d\n",
- 			bf_get(cfg_xib, mbx_sli4_parameters),
- 			phba->cfg_enable_pbde,
--			phba->fcp_embed_io, phba->nvme_support,
-+			phba->fcp_embed_io, sli4_params->nvme,
- 			phba->cfg_nvme_embed_cmd, phba->cfg_suppress_rsp);
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 5083e5d2b467..8d6c26e6251b 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -7284,11 +7284,11 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
  
- 	if ((bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) ==
+ 	pqi_init_operational_queues(ctrl_info);
+ 
+-	rc = pqi_request_irqs(ctrl_info);
++	rc = pqi_create_queues(ctrl_info);
+ 	if (rc)
+ 		return rc;
+ 
+-	rc = pqi_create_queues(ctrl_info);
++	rc = pqi_request_irqs(ctrl_info);
+ 	if (rc)
+ 		return rc;
+ 
 -- 
 2.30.2
 
