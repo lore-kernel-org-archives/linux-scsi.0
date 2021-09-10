@@ -4,50 +4,43 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AE7FC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20C0EC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A1F661108
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03B4C61108
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240255AbhIJAmT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:19 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44128 "EHLO mail.kernel.org"
+        id S240334AbhIJAm1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:42:27 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45080 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230100AbhIJARt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:17:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E1AB661179;
-        Fri, 10 Sep 2021 00:16:37 +0000 (UTC)
+        id S231989AbhIJASg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:18:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 7A4E9611CB;
+        Fri, 10 Sep 2021 00:17:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631232999;
-        bh=gaowrTG5YQ7Ndwz4Yc9Da2CvCdGkQ6/IUJYzqtYSiw0=;
+        s=k20201202; t=1631233021;
+        bh=Wo1K2tNsnfaZPUZR0kB9UhXR6EgakdoPxE+HH/j31IY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VlbgsHYLSLtPi1oo9eHEKohd2IMOqIXHcIruz3T0WdtMraTsGVkrK9t7TZ+0MXDGC
-         hn0kHfM3LTqZ4w/AeiJcs/gQdPadAIjsVTRE6h+lRuIDnBIrU9VV57MpWtXxUZc/N5
-         Pep5Yqzyqr+ybF8CAJX5chED4gOTB/S+I19BAFxhu/BZfM6bD7Npk/Wzw+cK66vZka
-         /kEYcBs9yQqeF3S+J9Tx6VV2fI5isTX1qT26AFNkdNEIdiuwxGgyQ8dphjwcAenyvD
-         ta/SkVuvF2i55mfeLxhRnMogEdfkw4vuqbTEH5Bazm6MjbLclKR7e8bDiN4EjWPivG
-         h8DJqn8ZP7DzA==
+        b=kZTRRlC3d8nHjNlbx8CBFIauVleEBKOXZHnvyuz/GCSVEJA89AtRi3D03cDMiLxlJ
+         B9PyUijehBd8y+xf6ItUMgFVPO/u7a3EyDCp1NC+PzMe34KOaa6wIig1jnB/uJUb5v
+         mNpVio0rleSxuHEZ7l8owd7exGGKkdpVEmUZO90NIaq2H4aYQnYBurm2PtOhV47TGN
+         /EcG42T0tEDUt5Yo+rJwrcHj71qzt2NWPYfkT4X+7+I6M2SEGfmBIjim6Fu43Ufue1
+         qg6BeeQ0vMDJZHLTvr6XtxF80TIuLnS+Eis8XgJxBiVKd5CGxZL/0jzMyLCnnj+OSK
+         xFOU0+/hxfwDg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.14 29/99] scsi: ufs: Verify UIC locking requirements at runtime
-Date:   Thu,  9 Sep 2021 20:14:48 -0400
-Message-Id: <20210910001558.173296-29-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.14 45/99] scsi: qla2xxx: Fix NPIV create erroneous error
+Date:   Thu,  9 Sep 2021 20:15:04 -0400
+Message-Id: <20210910001558.173296-45-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001558.173296-1-sashal@kernel.org>
 References: <20210910001558.173296-1-sashal@kernel.org>
@@ -59,106 +52,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit 35c7d874f5993db04ce3aa310ae088f14b801eda ]
+[ Upstream commit a57214443f0f85639a0d9bbb8bd658d82dbf0927 ]
 
-Instead of documenting the locking requirements of the UIC code as
-comments, use lockdep_assert_held() such that lockdep verifies the lockdep
-requirements at runtime if lockdep is enabled.
+When user creates multiple NPIVs, the switch capabilities field is checked
+before a vport is allowed to be created. This field is being toggled if a
+switch scan is in progress. This creates erroneous reject of vport create.
 
-Link: https://lore.kernel.org/r/20210722033439.26550-8-bvanassche@acm.org
-Cc: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Can Guo <cang@codeaurora.org>
-Cc: Asutosh Das <asutoshd@codeaurora.org>
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Daejun Park <daejun7.park@samsung.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://lore.kernel.org/r/20210810043720.1137-10-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 16 +++++++++-------
- drivers/scsi/ufs/ufshcd.h |  2 +-
- 2 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 708b3b62fc4d..3350b0cff9ef 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2247,15 +2247,15 @@ static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
- }
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index f40e233c8ce5..27d10524ec3e 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -4531,11 +4531,11 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 	/* initialize */
+ 	ha->min_external_loopid = SNS_FIRST_LOOP_ID;
+ 	ha->operating_mode = LOOP;
+-	ha->switch_cap = 0;
  
- /**
-- * ufshcd_dispatch_uic_cmd - Dispatch UIC commands to unipro layers
-+ * ufshcd_dispatch_uic_cmd - Dispatch an UIC command to the Unipro layer
-  * @hba: per adapter instance
-  * @uic_cmd: UIC command
-- *
-- * Mutex must be held.
-  */
- static inline void
- ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
- {
-+	lockdep_assert_held(&hba->uic_cmd_mutex);
-+
- 	WARN_ON(hba->active_uic_cmd);
+ 	switch (topo) {
+ 	case 0:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200b, "HBA in NL topology.\n");
++		ha->switch_cap = 0;
+ 		ha->current_topology = ISP_CFG_NL;
+ 		strcpy(connect_type, "(Loop)");
+ 		break;
+@@ -4549,6 +4549,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
  
- 	hba->active_uic_cmd = uic_cmd;
-@@ -2273,11 +2273,10 @@ ufshcd_dispatch_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
- }
- 
- /**
-- * ufshcd_wait_for_uic_cmd - Wait complectioin of UIC command
-+ * ufshcd_wait_for_uic_cmd - Wait for completion of an UIC command
-  * @hba: per adapter instance
-  * @uic_cmd: UIC command
-  *
-- * Must be called with mutex held.
-  * Returns 0 only if success.
-  */
- static int
-@@ -2286,6 +2285,8 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
- 	int ret;
- 	unsigned long flags;
- 
-+	lockdep_assert_held(&hba->uic_cmd_mutex);
-+
- 	if (wait_for_completion_timeout(&uic_cmd->done,
- 					msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
- 		ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
-@@ -2315,14 +2316,15 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
-  * @uic_cmd: UIC command
-  * @completion: initialize the completion only if this is set to true
-  *
-- * Identical to ufshcd_send_uic_cmd() expect mutex. Must be called
-- * with mutex held and host_lock locked.
-  * Returns 0 only if success.
-  */
- static int
- __ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd,
- 		      bool completion)
- {
-+	lockdep_assert_held(&hba->uic_cmd_mutex);
-+	lockdep_assert_held(hba->host->host_lock);
-+
- 	if (!ufshcd_ready_for_uic_cmd(hba)) {
- 		dev_err(hba->dev,
- 			"Controller not ready to accept UIC commands\n");
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 194755c9ddfe..2718f73aa755 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -683,7 +683,7 @@ struct ufs_hba_monitor {
-  * @priv: pointer to variant specific private data
-  * @irq: Irq number of the controller
-  * @active_uic_cmd: handle of active UIC command
-- * @uic_cmd_mutex: mutex for uic command
-+ * @uic_cmd_mutex: mutex for UIC command
-  * @tmf_tag_set: TMF tag set.
-  * @tmf_queue: Used to allocate TMF tags.
-  * @pwr_done: completion for power mode change
+ 	case 2:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200d, "HBA in N P2P topology.\n");
++		ha->switch_cap = 0;
+ 		ha->operating_mode = P2P;
+ 		ha->current_topology = ISP_CFG_N;
+ 		strcpy(connect_type, "(N_Port-to-N_Port)");
+@@ -4565,6 +4566,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 	default:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200f,
+ 		    "HBA in unknown topology %x, using NL.\n", topo);
++		ha->switch_cap = 0;
+ 		ha->current_topology = ISP_CFG_NL;
+ 		strcpy(connect_type, "(Loop)");
+ 		break;
 -- 
 2.30.2
 
