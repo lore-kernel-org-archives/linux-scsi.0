@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 037D5C4321E
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 08:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A793FC43217
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 08:41:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E0870611BF
+	by mail.kernel.org (Postfix) with ESMTP id 94D1A60FC0
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 08:41:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231851AbhIJInD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Sep 2021 04:43:03 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:53672 "EHLO mta-01.yadro.com"
+        id S231751AbhIJInC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Sep 2021 04:43:02 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:53658 "EHLO mta-01.yadro.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231805AbhIJIm6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S231797AbhIJIm6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 10 Sep 2021 04:42:58 -0400
 Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id EF2C24CF63;
+        by mta-01.yadro.com (Postfix) with ESMTP id A4BA14CF65;
         Fri, 10 Sep 2021 08:41:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
         content-type:content-type:content-transfer-encoding:mime-version
         :references:in-reply-to:x-mailer:message-id:date:date:subject
         :subject:from:from:received:received:received; s=mta-01; t=
-        1631263305; x=1633077706; bh=oPrc9jMomARfKg5fWy5iQmRvVXJv++4/c/x
-        8ZJtlZeM=; b=dPUkjBQM21hHIiYlDhi8gbsw9Uz7GnMh1xI7chQ5UT3eMZTtOao
-        G8YiHnUrYLdq4Lx1xIXU4aydFT+hpjHe6BVXnN61nry51XZ5tljG0CRQ3jc99JkW
-        BfN7gh6TCWEpAtVw+CZmax865wWIFWM3oQrKjDgKdNhgJmrqPMloiqjY=
+        1631263305; x=1633077706; bh=TYNuQ7nxf7K7Nj/aaSvj7ASXSLW5AFW3yGG
+        OBewTCPA=; b=LJUaWW4w6mDV6DQyTxRyHpTWU7tK94Df0rVlNXneP4ehlmX+UKM
+        8gCMHhzm1Qxbwo7XU+eFuDsDJ5sQLyCK6jIVY7OnBHOv7NSpwzls/XHcAJ0xk4V6
+        6z+TfEuXHSXDlVoRRXqrAsJqcnAgcyEHNbSNRy/zqlmU7JqsaLNkiK2Y=
 X-Virus-Scanned: amavisd-new at yadro.com
 Received: from mta-01.yadro.com ([127.0.0.1])
         by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 6QUN3Q235Cf1; Fri, 10 Sep 2021 11:41:45 +0300 (MSK)
+        with ESMTP id NHUlKl7XUdyw; Fri, 10 Sep 2021 11:41:45 +0300 (MSK)
 Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id 711574CF64;
-        Fri, 10 Sep 2021 11:41:44 +0300 (MSK)
+        by mta-01.yadro.com (Postfix) with ESMTPS id EBFF14CF63;
+        Fri, 10 Sep 2021 11:41:43 +0300 (MSK)
 Received: from NB-591.corp.yadro.com (10.199.0.141) by
  T-EXCH-04.corp.yadro.com (172.17.100.104) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
@@ -54,9 +54,9 @@ CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
         Felipe Balbi <balbi@kernel.org>,
         Dmitriy Bogdanov <d.bogdanov@yadro.com>,
         Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH v5 7/7] target: usb: replace enable attr to ops.enable
-Date:   Fri, 10 Sep 2021 11:41:33 +0300
-Message-ID: <20210910084133.17956-8-d.bogdanov@yadro.com>
+Subject: [PATCH v5 6/7] target: ibm_vscsi: replace enable attr to ops.enable
+Date:   Fri, 10 Sep 2021 11:41:32 +0300
+Message-ID: <20210910084133.17956-7-d.bogdanov@yadro.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210910084133.17956-1-d.bogdanov@yadro.com>
 References: <20210910084133.17956-1-d.bogdanov@yadro.com>
@@ -76,81 +76,88 @@ Add fabric ops enable_tpg implementation instead.
 Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
 Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/usb/gadget/function/f_tcm.c | 31 ++++++-----------------------
- 1 file changed, 6 insertions(+), 25 deletions(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 42 +++---------------------
+ 1 file changed, 4 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/usb/gadget/function/f_tcm.c b/drivers/usb/gadget/function/f_tcm.c
-index de161ee0b1f9..8e17ac831be0 100644
---- a/drivers/usb/gadget/function/f_tcm.c
-+++ b/drivers/usb/gadget/function/f_tcm.c
-@@ -1495,42 +1495,24 @@ static struct configfs_attribute *usbg_wwn_attrs[] = {
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 10b6c6daaacd..61f06f6885a5 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -3948,41 +3948,16 @@ static struct configfs_attribute *ibmvscsis_wwn_attrs[] = {
  	NULL,
  };
  
--static ssize_t tcm_usbg_tpg_enable_show(struct config_item *item, char *page)
+-static ssize_t ibmvscsis_tpg_enable_show(struct config_item *item,
+-					 char *page)
 -{
 -	struct se_portal_group *se_tpg = to_tpg(item);
--	struct usbg_tpg  *tpg = container_of(se_tpg, struct usbg_tpg, se_tpg);
--
--	return snprintf(page, PAGE_SIZE, "%u\n", tpg->gadget_connect);
+-	struct ibmvscsis_tport *tport = container_of(se_tpg,
+-						     struct ibmvscsis_tport,
+-						     se_tpg);
+ 
+-	return snprintf(page, PAGE_SIZE, "%d\n", (tport->enabled) ? 1 : 0);
 -}
 -
- static int usbg_attach(struct usbg_tpg *);
- static void usbg_detach(struct usbg_tpg *);
- 
--static ssize_t tcm_usbg_tpg_enable_store(struct config_item *item,
--		const char *page, size_t count)
-+static int usbg_enable_tpg(struct se_portal_group *se_tpg, bool enable)
+-static ssize_t ibmvscsis_tpg_enable_store(struct config_item *item,
+-					  const char *page, size_t count)
++static int ibmvscsis_enable_tpg(struct se_portal_group *se_tpg, bool enable)
  {
 -	struct se_portal_group *se_tpg = to_tpg(item);
- 	struct usbg_tpg  *tpg = container_of(se_tpg, struct usbg_tpg, se_tpg);
--	bool op;
--	ssize_t ret;
--
--	ret = strtobool(page, &op);
--	if (ret)
--		return ret;
--
--	if ((op && tpg->gadget_connect) || (!op && !tpg->gadget_connect))
+ 	struct ibmvscsis_tport *tport = container_of(se_tpg,
+ 						     struct ibmvscsis_tport,
+ 						     se_tpg);
+ 	struct scsi_info *vscsi = container_of(tport, struct scsi_info, tport);
+-	unsigned long tmp;
+-	int rc;
+ 	long lrc;
+ 
+-	rc = kstrtoul(page, 0, &tmp);
+-	if (rc < 0) {
+-		dev_err(&vscsi->dev, "Unable to extract srpt_tpg_store_enable\n");
 -		return -EINVAL;
-+	int ret = 0;
+-	}
+-
+-	if ((tmp != 0) && (tmp != 1)) {
+-		dev_err(&vscsi->dev, "Illegal value for srpt_tpg_store_enable\n");
+-		return -EINVAL;
+-	}
+-
+-	if (tmp) {
++	if (enable) {
+ 		spin_lock_bh(&vscsi->intr_lock);
+ 		tport->enabled = true;
+ 		lrc = ibmvscsis_enable_change_state(vscsi);
+@@ -3998,17 +3973,8 @@ static ssize_t ibmvscsis_tpg_enable_store(struct config_item *item,
+ 		spin_unlock_bh(&vscsi->intr_lock);
+ 	}
  
--	if (op)
-+	if (enable)
- 		ret = usbg_attach(tpg);
- 	else
- 		usbg_detach(tpg);
- 	if (ret)
- 		return ret;
- 
--	tpg->gadget_connect = op;
-+	tpg->gadget_connect = enable;
- 
+-	dev_dbg(&vscsi->dev, "tpg_enable_store, tmp %ld, state %d\n", tmp,
+-		vscsi->state);
+-
 -	return count;
 +	return 0;
  }
+-CONFIGFS_ATTR(ibmvscsis_tpg_, enable);
+-
+-static struct configfs_attribute *ibmvscsis_tpg_attrs[] = {
+-	&ibmvscsis_tpg_attr_enable,
+-	NULL,
+-};
  
- static ssize_t tcm_usbg_tpg_nexus_show(struct config_item *item, char *page)
-@@ -1673,11 +1655,9 @@ static ssize_t tcm_usbg_tpg_nexus_store(struct config_item *item,
- 	return count;
- }
+ static const struct target_core_fabric_ops ibmvscsis_ops = {
+ 	.module				= THIS_MODULE,
+@@ -4038,10 +4004,10 @@ static const struct target_core_fabric_ops ibmvscsis_ops = {
+ 	.fabric_make_wwn		= ibmvscsis_make_tport,
+ 	.fabric_drop_wwn		= ibmvscsis_drop_tport,
+ 	.fabric_make_tpg		= ibmvscsis_make_tpg,
++	.fabric_enable_tpg		= ibmvscsis_enable_tpg,
+ 	.fabric_drop_tpg		= ibmvscsis_drop_tpg,
  
--CONFIGFS_ATTR(tcm_usbg_tpg_, enable);
- CONFIGFS_ATTR(tcm_usbg_tpg_, nexus);
- 
- static struct configfs_attribute *usbg_base_attrs[] = {
--	&tcm_usbg_tpg_attr_enable,
- 	&tcm_usbg_tpg_attr_nexus,
- 	NULL,
+ 	.tfc_wwn_attrs			= ibmvscsis_wwn_attrs,
+-	.tfc_tpg_base_attrs		= ibmvscsis_tpg_attrs,
  };
-@@ -1730,6 +1710,7 @@ static const struct target_core_fabric_ops usbg_ops = {
- 	.fabric_make_wwn		= usbg_make_tport,
- 	.fabric_drop_wwn		= usbg_drop_tport,
- 	.fabric_make_tpg		= usbg_make_tpg,
-+	.fabric_enable_tpg		= usbg_enable_tpg,
- 	.fabric_drop_tpg		= usbg_drop_tpg,
- 	.fabric_post_link		= usbg_port_link,
- 	.fabric_pre_unlink		= usbg_port_unlink,
+ 
+ static void ibmvscsis_dev_release(struct device *dev) {};
 -- 
 2.25.1
 
