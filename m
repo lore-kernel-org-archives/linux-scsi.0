@@ -7,40 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27E18C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74DCAC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 177AE611C4
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 604B460C40
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241458AbhIJAoU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:44:20 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49680 "EHLO mail.kernel.org"
+        id S241420AbhIJAoS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:44:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49594 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234833AbhIJAYb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:24:31 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7F33160FC0;
-        Fri, 10 Sep 2021 00:23:20 +0000 (UTC)
+        id S234801AbhIJAYY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:24:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id CB4E6611BF;
+        Fri, 10 Sep 2021 00:23:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233401;
-        bh=WqKsVPD1H4v9xBoSaVW/3Cbb/9wwPAXrmMk5hSda1ZA=;
+        s=k20201202; t=1631233394;
+        bh=OBYyVxljuh1485Y61d5Ahsr0FpEmvyPJJxC3ymkQJZo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bCDHWrgXna+yAVX9RZ7FpN/f37RX8XbzjtpLk2V4dkbCKOaVG9nOFtISjbiAZUc1E
-         N3CieoF4itaeZ39IrFCcpXxCVJSEwP/pQEz1SDu0ZZHYX9URi9RsZ4G3O06O/hWdB5
-         QXonJIykPQ/rs05vWAw+x9mTTb6i+nb1N4uSAOGHkmxytiH63qo3XNTce4XOA3gMEZ
-         T+6xFbhIocDYEpZVVRCqaw4cdw271KcDDQQFdNn5b+T+XyUqvA0hQRPU7AvnUmad+V
-         xOLEB9xlboJorUT5Ksd5Rrn954M9EtCLr14FnSbfS3T19mVn+Qz14aunQl3fC1FtpY
-         +um4ghF8GG4DA==
+        b=VDeigyA9hMojcGk4uY4jfege5vzrVj6lEjaSS5pkPwzA9J5eUFqhSDj4UxtzQDihL
+         VHamdXUPuS7yqE6Y07hOaSltUgkDTDogH2tHmHSMeXUl1MXjeAIKJiwV2gofUfvp5P
+         Nt5edXqV0VFl6FU6hxCWyxS1cIbONMbMlusSKePPNBkHn1L3+3z3Br1jp3KAPnLWaW
+         BOqS1ItidBnD0/xlWGWfo5AplKR+qk/y/JhqdSsqwFc09VIZKTVsqOqrXrgZog/OvM
+         e3lHcx1sRE234l1ofZSSFuyEo/Bv3r2MQDALcX10/Dpc3/kjOCesxvJcRvXW2aLoCE
+         vx+Pna7LsiUeg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>,
-        Bodo Stroesser <bostroesser@gmail.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 08/19] scsi: target: pscsi: Fix possible null-pointer dereference in pscsi_complete_cmd()
-Date:   Thu,  9 Sep 2021 20:22:58 -0400
-Message-Id: <20210910002309.176412-8-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 03/19] scsi: lpfc: Fix cq_id truncation in rq create
+Date:   Thu,  9 Sep 2021 20:22:53 -0400
+Message-Id: <20210910002309.176412-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910002309.176412-1-sashal@kernel.org>
 References: <20210910002309.176412-1-sashal@kernel.org>
@@ -52,71 +51,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tuo Li <islituo@gmail.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 0f99792c01d1d6d35b86e850e9ccadd98d6f3e0c ]
+[ Upstream commit df3d78c3eb4eba13b3ef9740a8c664508ee644ae ]
 
-The return value of transport_kmap_data_sg() is assigned to the variable
-buf:
+On the newer hardware, CQ_ID values can be larger than seen on previous
+generations. This exposed an issue in the driver where its definition of
+cq_id in the RQ Create mailbox cmd was too small, thus the cq_id was
+truncated, causing the command to fail.
 
-  buf = transport_kmap_data_sg(cmd);
+Revise the RQ_CREATE CQ_ID field to its proper size (16 bits).
 
-And then it is checked:
-
-  if (!buf) {
-
-This indicates that buf can be NULL. However, it is dereferenced in the
-following statements:
-
-  if (!(buf[3] & 0x80))
-    buf[3] |= 0x80;
-  if (!(buf[2] & 0x80))
-    buf[2] |= 0x80;
-
-To fix these possible null-pointer dereferences, dereference buf and call
-transport_kunmap_data_sg() only when buf is not NULL.
-
-Link: https://lore.kernel.org/r/20210810040414.248167-1-islituo@gmail.com
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
-Signed-off-by: Tuo Li <islituo@gmail.com>
+Link: https://lore.kernel.org/r/20210722221721.74388-3-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_pscsi.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index a127608a4809..c84d732769d7 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -635,17 +635,17 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
- 			buf = transport_kmap_data_sg(cmd);
- 			if (!buf) {
- 				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
--			}
--
--			if (cdb[0] == MODE_SENSE_10) {
--				if (!(buf[3] & 0x80))
--					buf[3] |= 0x80;
- 			} else {
--				if (!(buf[2] & 0x80))
--					buf[2] |= 0x80;
--			}
-+				if (cdb[0] == MODE_SENSE_10) {
-+					if (!(buf[3] & 0x80))
-+						buf[3] |= 0x80;
-+				} else {
-+					if (!(buf[2] & 0x80))
-+						buf[2] |= 0x80;
-+				}
- 
--			transport_kunmap_data_sg(cmd);
-+				transport_kunmap_data_sg(cmd);
-+			}
- 		}
- 	}
- after_mode_sense:
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index f44cdc0153a5..9ea0fffe61a0 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -1401,7 +1401,7 @@ struct rq_context {
+ #define lpfc_rq_context_hdr_size_WORD	word1
+ 	uint32_t word2;
+ #define lpfc_rq_context_cq_id_SHIFT	16
+-#define lpfc_rq_context_cq_id_MASK	0x000003FF
++#define lpfc_rq_context_cq_id_MASK	0x0000FFFF
+ #define lpfc_rq_context_cq_id_WORD	word2
+ #define lpfc_rq_context_buf_size_SHIFT	0
+ #define lpfc_rq_context_buf_size_MASK	0x0000FFFF
 -- 
 2.30.2
 
