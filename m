@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01931C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 23:32:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D097C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 23:32:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D9B2C61206
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 23:32:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24776611B0
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 23:32:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234874AbhIJXdY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Sep 2021 19:33:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38536 "EHLO
+        id S234890AbhIJXd2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Sep 2021 19:33:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38538 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234859AbhIJXdV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Sep 2021 19:33:21 -0400
-Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 60C4DC061574
+        with ESMTP id S234854AbhIJXdW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Sep 2021 19:33:22 -0400
+Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E4BB9C061756
         for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2021 16:32:10 -0700 (PDT)
-Received: by mail-pl1-x62f.google.com with SMTP id bg1so2110067plb.13
+Received: by mail-pf1-x429.google.com with SMTP id j16so3259202pfc.2
         for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2021 16:32:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=uEVsuIX/m/sL25A3lEyvCf2DS8cjQrVPW94B/QPsGw8=;
-        b=TcXSeEizhUwBrV/v/MyqUWkN3uLoH2O6ksyxa8wc+3ZL0sFWY7YAglBsrVwv9Wevpo
-         U+P1/RrrzhagYVk1ageIPoYqRzwIesD5mORuO4+XRoxHviMkQPbfeWfDDXx1IJ7n2E1o
-         rVp5TsVtUE0tTz0UsfIbUwXJRh2u0UOGKZci3+VKJsBHORkbUW79l4reyWsNM5RA+ISY
-         1D4ocqV++XtGpawCLyqLx3qJpHLfADf7uDKVsINwCFigyhxoGFAFcQuWOx4xtHZQtFZE
-         cjGQ+YqULwyro06vrCY/WcjpCzbkjdgbsrwmRDlvNhNZ4Mkwjcdfs0Aigm6itc4pIxQ9
-         8WIA==
+        bh=TB6O2EeP1WftlXbEahfA7Ed8vQ5inRUvqVbgSRnWOvI=;
+        b=VfyvuaXOzyshUFbqny33HO/SMj0KJbP5bC66BzQb57U4m4pE0W0Nv0NU+GlCC3aIti
+         HzNJft5hiy3/DhsC+qF5wteKrrgrPgU+lEZOJLeX3mYRdj0a90gY3BZokTZPzli/7QM7
+         Q2NVcakRy/+5h7QWarI8N4lBZUOkstDg8rMhlKYfYCXqphhVhZMAl7lpawTc+poWhPyU
+         JNj3c3teyB5A4AU9N7ylSYJ1iCNdXDKsnkjzmMdbfKiLXY8QDI9E64NSFklMLsDdXobK
+         Cjt+mLkbEi8EHOo1s7YViC7m/UvXaWnNY4HTBZmLBEf62QRN61dyyaP62clMLveK8n93
+         mAmA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=uEVsuIX/m/sL25A3lEyvCf2DS8cjQrVPW94B/QPsGw8=;
-        b=a/uS511lIndsH9kfIdhX+tazguvzqQf3pWbdVDTfWYbWVaBhNalxieQC/RAsdXlYxg
-         0KddjRqzDSF3FKyvHH6ugFqwKsbE09yprt/qlXowo7uG11/FsJZf6Uy2xVmtgT2hf3ea
-         c/NikAaJ+1Jk8wjvU+5dFdtkV5k/4mWU+dRUqpa03l1/ZQUpCJRPzXJq0eY9q+KD4utO
-         vGBvUPLzmWPaZ3Hl3xHKeCc27Bu6MejidoFcx4lr9jpK6bS8cTD23QrjAARXohOccgQj
-         fBHwdRn4UTQS5F8FQHMuRKYCBHHlfMhGyT+8wpiAK+/21bXQv+p9CuU6Z7o62b0M5K9n
-         UnDQ==
-X-Gm-Message-State: AOAM531JLhUwYtQ+FjwfVtjt+BNHSplHev841eHRVvChxIPlwBHoOErE
-        4ZtqMpaG17ahIdFFvbpD4XT8NpUQlFUYIqtM
-X-Google-Smtp-Source: ABdhPJzwo70Ts39NKgnRy9thg+0Y1hj3jtQz3s+7tBqgOT2l2PIboqXhd6r8XdHQKrNTHtTc6gHzFw==
-X-Received: by 2002:a17:90a:990b:: with SMTP id b11mr83375pjp.182.1631316729700;
-        Fri, 10 Sep 2021 16:32:09 -0700 (PDT)
+        bh=TB6O2EeP1WftlXbEahfA7Ed8vQ5inRUvqVbgSRnWOvI=;
+        b=RHRsgBJjDVxxc9BIlgk09rz4/ON1IX+pa3uxzCZuP3tG8FBGqj6WXCaMkMdC3jkzi+
+         UopD5x5z5PmXRwk7u3zOO2tDfsHFIRWuSU+FGzsCFuNWkFWdaxzuDfeKQ4JI3K8IrL0d
+         BzkeBkWRBfr9DfvZgUGh5+AJOhUYweOd3kC4iY32DYuQpz88csnArb3kJUMmlBv8hMMC
+         rsYC4W0cAxZU1IhFIvPxkpuaUw/0ZXFuKELnWDjXi7uh0aHygNMAU3STQcbGMvLt1oAA
+         6L3YKN5isO5NbizHQfta/XtIuaaQm9kDYyWNNG1n4edSp0d4Jv+yxDcuP4VBlm35Yi2L
+         vpkw==
+X-Gm-Message-State: AOAM530SClK4d8hgdSFzB6F5VSGHXZKTJKea8G5maeAJi3E7yMCk/a37
+        DWVKuie/ClI0wgyHKG7RXFKlRlh7UrA2IWCx
+X-Google-Smtp-Source: ABdhPJwjzQj+bYG2hDCSIyiqdH9DtYP/b+XYm0thRf++XXG3S0hN3Oa86yEC/xCEmYyBKc3BryoK4w==
+X-Received: by 2002:a63:da0a:: with SMTP id c10mr151954pgh.255.1631316730380;
+        Fri, 10 Sep 2021 16:32:10 -0700 (PDT)
 Received: from mail-ash-it-01.broadcom.com ([192.19.223.252])
         by smtp.gmail.com with ESMTPSA id o15sm11325pfk.143.2021.09.10.16.32.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Sep 2021 16:32:09 -0700 (PDT)
+        Fri, 10 Sep 2021 16:32:10 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 03/14] lpfc: Fix premature rpi release for unsolicited TPLS and LS_RJT
-Date:   Fri, 10 Sep 2021 16:31:48 -0700
-Message-Id: <20210910233159.115896-4-jsmart2021@gmail.com>
+Subject: [PATCH 04/14] lpfc: Fix hang on unload due to stuck fport node
+Date:   Fri, 10 Sep 2021 16:31:49 -0700
+Message-Id: <20210910233159.115896-5-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210910233159.115896-1-jsmart2021@gmail.com>
 References: <20210910233159.115896-1-jsmart2021@gmail.com>
@@ -72,54 +72,97 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A test scenario has a target issuing a TPLS after accepting the
-driver's PRLI.  TPLS is not supported by the driver so it rejects
-the ELS.  However, the reject was only happening on the primary N_Port.
-If the TPLS was to a NPIV vport, not only would it reject the ELS, but
-it would act on the TPLS, starting devloss, then unregister from the
-SCSI transport and release the node. When devloss expired, it would
-access the node again and cause a page faul.
+A test scenario encountered an unload hang while an FLOGI ELS was in
+flight when a link down condition occurred.  The driver fails unload
+as it never releases the fport node.
 
-Fix by altering the NPIV code to recognize that a correctly registered
-node can reject unsolicited ELS IO and to not unregister with the SCSI
-transport and tear the node down.  Add a check of the fc4_xpt_flags so
-that only a zero value allows the unreg and teardown.
+For most nodes, when the link drops, devloss tmo is started and the
+timeout will cause the final node release. For the Fport, as it has
+not yet registered with the SCSI transport, there is no devloss timer
+to be started, so there is no final release.  Additionally, the link
+down sequence causes ABORTS to be issued for pending ELS's. The
+completions from the ABORTS perform the release of node references.
+However, as the adapter is being reset to be unloaded, those
+completions will never occur.
+
+Fix by the following:
+- In the els cleanup, recognize when unloading and place the els's
+  on a different list that immediately cleansup/completes the els's.
+  It's recognized that this condition primarily affects only the
+  fport, with other ports having normal clean up logic that handles
+  things.
+- Resolve the devloss issue by, when cleaning up nodes on after link
+  down, recognizing when the fabric node does not have a completed
+  state (its state is UNUSED) and removing a reference so the node
+  can delete after the els reference is released.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c     | 14 ++++++++++++++
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 14 +++++++++++++-
+ 2 files changed, 27 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index df5fc223ddb2..262101e172ad 100644
+index 262101e172ad..6c9cb87ef174 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -5295,6 +5295,7 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	 */
- 	if (phba->sli_rev == LPFC_SLI_REV4 &&
- 	    (vport && vport->port_type == LPFC_NPIV_PORT) &&
-+	    !(ndlp->fc4_xpt_flags & SCSI_XPT_REGD) &&
- 	    ndlp->nlp_flag & NLP_RELEASE_RPI) {
- 		lpfc_sli4_free_rpi(phba, ndlp->nlp_rpi);
- 		spin_lock_irq(&ndlp->lock);
-@@ -5598,11 +5599,12 @@ lpfc_els_rsp_reject(struct lpfc_vport *vport, uint32_t rejectError,
- 	}
+@@ -11386,6 +11386,7 @@ lpfc_sli4_vport_delete_els_xri_aborted(struct lpfc_vport *vport)
+ {
+ 	struct lpfc_hba *phba = vport->phba;
+ 	struct lpfc_sglq *sglq_entry = NULL, *sglq_next = NULL;
++	struct lpfc_nodelist *ndlp = NULL;
+ 	unsigned long iflag = 0;
  
- 	/* The NPIV instance is rejecting this unsolicited ELS. Make sure the
--	 * node's assigned RPI needs to be released as this node will get
--	 * freed.
-+	 * node's assigned RPI gets released provided this node is not already
-+	 * registered with the transport.
- 	 */
- 	if (phba->sli_rev == LPFC_SLI_REV4 &&
--	    vport->port_type == LPFC_NPIV_PORT) {
-+	    vport->port_type == LPFC_NPIV_PORT &&
-+	    !(ndlp->fc4_xpt_flags & SCSI_XPT_REGD)) {
- 		spin_lock_irq(&ndlp->lock);
- 		ndlp->nlp_flag |= NLP_RELEASE_RPI;
- 		spin_unlock_irq(&ndlp->lock);
+ 	spin_lock_irqsave(&phba->sli4_hba.sgl_list_lock, iflag);
+@@ -11393,7 +11394,20 @@ lpfc_sli4_vport_delete_els_xri_aborted(struct lpfc_vport *vport)
+ 			&phba->sli4_hba.lpfc_abts_els_sgl_list, list) {
+ 		if (sglq_entry->ndlp && sglq_entry->ndlp->vport == vport) {
+ 			lpfc_nlp_put(sglq_entry->ndlp);
++			ndlp = sglq_entry->ndlp;
+ 			sglq_entry->ndlp = NULL;
++
++			/* If the xri on the abts_els_sgl list is for the Fport
++			 * node and the vport is unloading, the xri aborted wcqe
++			 * likely isn't coming back.  Just release the sgl.
++			 */
++			if ((vport->load_flag & FC_UNLOADING) &&
++			    ndlp->nlp_DID == Fabric_DID) {
++				list_del(&sglq_entry->list);
++				sglq_entry->state = SGL_FREED;
++				list_add_tail(&sglq_entry->list,
++					&phba->sli4_hba.lpfc_els_sgl_list);
++			}
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&phba->sli4_hba.sgl_list_lock, iflag);
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 6f2e07c30f98..4ff93aef3295 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -966,8 +966,20 @@ lpfc_cleanup_rpis(struct lpfc_vport *vport, int remove)
+ 	struct lpfc_nodelist *ndlp, *next_ndlp;
+ 
+ 	list_for_each_entry_safe(ndlp, next_ndlp, &vport->fc_nodes, nlp_listp) {
+-		if (ndlp->nlp_state == NLP_STE_UNUSED_NODE)
++		if (ndlp->nlp_state == NLP_STE_UNUSED_NODE) {
++			/* It's possible the FLOGI to the fabric node never
++			 * successfully completed and never registered with the
++			 * transport.  In this case there is no way to clean up
++			 * the node.
++			 */
++			if (ndlp->nlp_DID == Fabric_DID) {
++				if (ndlp->nlp_prev_state ==
++				    NLP_STE_UNUSED_NODE &&
++				    !ndlp->fc4_xpt_flags)
++					lpfc_nlp_put(ndlp);
++			}
+ 			continue;
++		}
+ 
+ 		if ((phba->sli3_options & LPFC_SLI3_VPORT_TEARDOWN) ||
+ 		    ((vport->port_type == LPFC_NPIV_PORT) &&
 -- 
 2.26.2
 
