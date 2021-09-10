@@ -7,43 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7282CC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA65C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 594B1611C1
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A9B260C40
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231475AbhIJAm7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:59 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46072 "EHLO mail.kernel.org"
+        id S240724AbhIJAm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:42:58 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46018 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233401AbhIJATv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:19:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id CB147610E9;
-        Fri, 10 Sep 2021 00:18:39 +0000 (UTC)
+        id S231327AbhIJATs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:19:48 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4FEEC610E9;
+        Fri, 10 Sep 2021 00:18:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233120;
-        bh=CaIja6IPejWfnxudbYGFoxFgiIuaZH/AxSaHWzrCUn8=;
+        s=k20201202; t=1631233118;
+        bh=sm+FccchJKCIPtXH/Cfkp2MrxS4Sdo7Q7eJEc9pffsU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DQMarhAK6YGqzLACpFMXJr+a6JKORScyHEVGMX7m5ToMsAUw01OOtkg3pXUdaH9Xz
-         9POqpnFPJd36iGefX2NQxU6IO5G1GXE4drY6iVvI/r4XZfZICTnKM2agab+ryIo7nY
-         1nxNpMfwORUCncuSdnHv3JKqg8OWcqkASpi4shj3ZEOcKJCKufrs3fjbSHS4actAAZ
-         iUgClEppe3hQWm06oa34b3/H7TMdmIuapVswTTMRJUoOOkPYF3vvDTT0SwHe8N1u8P
-         3UXggzjb2fa5HmBiorcF5UZpmf/gRQeOZdSHaoRvwMoW02kYu3M9xXVKO8R9kHmlnL
-         1AtTOS59RZ6AA==
+        b=OoxzU6exj7cOD32taKsE1V/WKfWkSS39VMeBQQmaLBAml7kNzEa5q3eqGKzUp8xRd
+         MtTyEpGvwwufDseGWrHOOZMJpLqp6uWjXmZbvPsHKJoopArGJC4AoEo2nOsoytFENk
+         N1EZIcL5KI2kFgv/HTpuhq3WgSPEIi69ZmvXnNCgPc7Sa7R31+slfrLvjSiOieSWG9
+         H/maSEDhKpck3UzO9qtwpuvHTgBI3hXr0orUW4xOXcbfbHTvSEB/2mz0AsQvXsvBqj
+         QJLUnIH7TTIPv3i1VZHs5J8h2MHRZYurptPQ6WF5QbokfALHii8pi3AaHC2uYLewaX
+         W+QTkyqtR5FfA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike McGowen <mike.mcgowen@microchip.com>,
-        Kevin Barnett <kevin.barnett@microchip.com>,
-        Scott Benesh <scott.benesh@microchip.com>,
-        Scott Teel <scott.teel@microchip.com>,
-        Don Brace <don.brace@microchip.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, storagedev@microchip.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 14/88] scsi: smartpqi: Fix ISR accessing uninitialized data
-Date:   Thu,  9 Sep 2021 20:17:06 -0400
-Message-Id: <20210910001820.174272-14-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 12/88] scsi: lpfc: Skip issuing ADISC when node is in NPR state
+Date:   Thu,  9 Sep 2021 20:17:04 -0400
+Message-Id: <20210910001820.174272-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
 References: <20210910001820.174272-1-sashal@kernel.org>
@@ -55,47 +51,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike McGowen <mike.mcgowen@microchip.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 0777a3fb98f0ea546561d04db4fd325248c39961 ]
+[ Upstream commit ab803860882514ddbf97713b143b861b524e8476 ]
 
-Correct driver's ISR accessing a data structure member that has not been
-fully initialized during driver initialization.
+When a node moves to NPR state due to a device recovery event, the
+nlp_fc4_types in the node are cleared. An ADISC received for a node in the
+NPR state triggers an ADISC. Without fc4 types being known, the calls to
+register with the transport are no-op'd, thus no additional references are
+placed on the node by transport re-registrations. A subsequent RSCN could
+trigger another unregister request, which will decrement the reference
+counts, leading to the ref count hitting zero and the node being freed
+while futher discovery on the node is being attempted by the RSCN event
+handling.
 
-The pqi queue groups can have uninitialized members when an interrupt
-fires. This has not resulted in any driver crashes. This was found during
-our own internal testing. No bugs were ever filed.
+Fix by skipping the trigger of an ADISC when in NPR state. The normal ADISC
+process will kick off in the regular discovery path after receiving a
+response from name server.
 
-Link: https://lore.kernel.org/r/20210714182847.50360-9-don.brace@microchip.com
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/r/20210707184351.67872-19-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_nportdisc.c | 34 +++++++++++++++++-------------
+ 1 file changed, 19 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 5db16509b6e1..051f3da288d4 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -7759,11 +7759,11 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
+index 3dac116c405b..b3da39abc90f 100644
+--- a/drivers/scsi/lpfc/lpfc_nportdisc.c
++++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
+@@ -732,9 +732,13 @@ lpfc_rcv_padisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 		 * is already in MAPPED or UNMAPPED state.  Catch this
+ 		 * condition and don't set the nlp_state again because
+ 		 * it causes an unnecessary transport unregister/register.
++		 *
++		 * Nodes marked for ADISC will move MAPPED or UNMAPPED state
++		 * after issuing ADISC
+ 		 */
+ 		if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET)) {
+-			if (ndlp->nlp_state != NLP_STE_MAPPED_NODE)
++			if ((ndlp->nlp_state != NLP_STE_MAPPED_NODE) &&
++			    !(ndlp->nlp_flag & NLP_NPR_ADISC))
+ 				lpfc_nlp_set_state(vport, ndlp,
+ 						   NLP_STE_MAPPED_NODE);
+ 		}
+@@ -2630,14 +2634,13 @@ lpfc_rcv_prli_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb, ndlp, NULL);
  
- 	pqi_init_operational_queues(ctrl_info);
- 
--	rc = pqi_request_irqs(ctrl_info);
-+	rc = pqi_create_queues(ctrl_info);
- 	if (rc)
- 		return rc;
- 
--	rc = pqi_create_queues(ctrl_info);
-+	rc = pqi_request_irqs(ctrl_info);
- 	if (rc)
- 		return rc;
- 
+ 	if (!(ndlp->nlp_flag & NLP_DELAY_TMO)) {
+-		if (ndlp->nlp_flag & NLP_NPR_ADISC) {
+-			spin_lock_irq(&ndlp->lock);
+-			ndlp->nlp_flag &= ~NLP_NPR_ADISC;
+-			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
+-			spin_unlock_irq(&ndlp->lock);
+-			lpfc_nlp_set_state(vport, ndlp, NLP_STE_ADISC_ISSUE);
+-			lpfc_issue_els_adisc(vport, ndlp, 0);
+-		} else {
++		/*
++		 * ADISC nodes will be handled in regular discovery path after
++		 * receiving response from NS.
++		 *
++		 * For other nodes, Send PLOGI to trigger an implicit LOGO.
++		 */
++		if (!(ndlp->nlp_flag & NLP_NPR_ADISC)) {
+ 			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
+ 			lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
+@@ -2670,12 +2673,13 @@ lpfc_rcv_padisc_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
+ 	 */
+ 	if (!(ndlp->nlp_flag & NLP_DELAY_TMO) &&
+ 	    !(ndlp->nlp_flag & NLP_NPR_2B_DISC)) {
+-		if (ndlp->nlp_flag & NLP_NPR_ADISC) {
+-			ndlp->nlp_flag &= ~NLP_NPR_ADISC;
+-			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
+-			lpfc_nlp_set_state(vport, ndlp, NLP_STE_ADISC_ISSUE);
+-			lpfc_issue_els_adisc(vport, ndlp, 0);
+-		} else {
++		/*
++		 * ADISC nodes will be handled in regular discovery path after
++		 * receiving response from NS.
++		 *
++		 * For other nodes, Send PLOGI to trigger an implicit LOGO.
++		 */
++		if (!(ndlp->nlp_flag & NLP_NPR_ADISC)) {
+ 			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
+ 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
+ 			lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
 -- 
 2.30.2
 
