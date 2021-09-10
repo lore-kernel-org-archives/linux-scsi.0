@@ -7,38 +7,38 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86898C4321E
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 119DCC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FC8A60C40
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F284D60C40
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240883AbhIJAnN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:43:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46834 "EHLO mail.kernel.org"
+        id S232262AbhIJAnV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:43:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46924 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233713AbhIJAUq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:20:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4AE3661167;
-        Fri, 10 Sep 2021 00:19:35 +0000 (UTC)
+        id S230405AbhIJAUy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:20:54 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6E8E9610E9;
+        Fri, 10 Sep 2021 00:19:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233176;
-        bh=2qQNOgnNyxzf0vkIICdlP+LKDnOnLdrCGNML7DqDb7I=;
+        s=k20201202; t=1631233184;
+        bh=XyH2l67V36Il5T/GuHJW1uKzhlCEXhp/Ee6URnRKdz4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GjuQZJRgwRnBIT6HDvIquAS62sQ9wMEL7B1+sIRBl01dNjyhzwUNdeejfDpziojm7
-         wKuesAAY8LwCz9FCNB4jT9Y+MZPbfjjzFLGkKSQ06pD2s5zVvyk1cHnsHieW+7FLpz
-         UfSJ06Sr8Hn9Bb084WfSCh0W/yTvfBp3g3qt3vYJ/74aB0g/F2V8zP9C6v+ztX4KqY
-         HtLvn8BRyFYH7lq4wWeiK6VSH3jpY93EHa9WC2ON7Qv2QpwZgBUKNv5C6Wh/syGbE8
-         ZTbAfrbQ31DJQait2pGSxypVT8UanjKqfsALsnJ5k7c4SnMDkmYeh7UaAGSeW6GDP2
-         1wlUKTLmOXc1g==
+        b=hMrcpC087kudkf1OtJ7IoJhrdKk9cBVVF4zSQW3kG6/7I+zjPlMOd8bQ/EBTUAoQT
+         5QA/dJ/eExfxjsH2MLxg33PvbBlzvthV8ToL2YIFYzKNBCVjwP4PXeaNcNXgxhWNeD
+         PUBN6gIEtIGvCzfP6qNx8yHBACc4U+3mcJwP3axwjswgDnXOPSMf+y1LCLA8TrW0oG
+         8i6QMoagR1OAq7BVx3NDzxqLy7UccpXtmoaycEYc+m4/qEtau5L2pMtWXc30vJTI3Y
+         Xi3sSNZXTm8t4AfQJLG0l0o11USQDhXar6L5dW/qNs0LJGYxhkSXPWt0SDHWT1ZDnz
+         bpPXwwL0/hGUw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Arun Easi <aeasi@marvell.com>, Nilesh Javali <njavali@marvell.com>,
+Cc:     Adrian Hunter <adrian.hunter@intel.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 53/88] scsi: qla2xxx: Fix hang during NVMe session tear down
-Date:   Thu,  9 Sep 2021 20:17:45 -0400
-Message-Id: <20210910001820.174272-53-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 59/88] scsi: ufs: Fix ufshcd_request_sense_async() for Samsung KLUFG8RHDA-B2D1
+Date:   Thu,  9 Sep 2021 20:17:51 -0400
+Message-Id: <20210910001820.174272-59-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
 References: <20210910001820.174272-1-sashal@kernel.org>
@@ -50,60 +50,92 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Arun Easi <aeasi@marvell.com>
+From: Adrian Hunter <adrian.hunter@intel.com>
 
-[ Upstream commit 310e69edfbd57995868a428eeddea09a7b5d2749 ]
+[ Upstream commit 9b5ac8ab4e8bf5636d1d425aee68ddf45af12057 ]
 
-The following hung task call trace was seen:
+Samsung KLUFG8RHDA-B2D1 does not clear the unit attention condition if the
+length is zero. So go back to requesting all the sense data, as it was
+before patch "scsi: ufs: Request sense data asynchronously". That is
+simpler than creating and maintaining a quirk for affected devices.
 
-    [ 1230.183294] INFO: task qla2xxx_wq:523 blocked for more than 120 seconds.
-    [ 1230.197749] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-    [ 1230.205585] qla2xxx_wq      D    0   523      2 0x80004000
-    [ 1230.205636] Workqueue: qla2xxx_wq qlt_free_session_done [qla2xxx]
-    [ 1230.205639] Call Trace:
-    [ 1230.208100]  __schedule+0x2c4/0x700
-    [ 1230.211607]  schedule+0x38/0xa0
-    [ 1230.214769]  schedule_timeout+0x246/0x2f0
-    [ 1230.222651]  wait_for_completion+0x97/0x100
-    [ 1230.226921]  qlt_free_session_done+0x6a0/0x6f0 [qla2xxx]
-    [ 1230.232254]  process_one_work+0x1a7/0x360
-
-...when device side port resets were done.
-
-Abort threads were getting out without processing due to the "deleted"
-flag check. The delete thread, meanwhile, could not proceed with a
-logout (that would have cleared out pending requests) as the logout IOCB
-work was not progressing. It appears like the hung qlt_free_session_done()
-thread is causing the ha->wq works on hold. The qlt_free_session_done()
-was hung waiting for nvme_fc_unregister_remoteport() + localport_delete cb
-to be complete, which would only happen when all I/Os are released.
-
-Fix this by allowing abort to progress until device delete is completely
-done. This should make the qlt_free_session_done() proceed without hang and
-thus clear up the deadlock.
-
-Link: https://lore.kernel.org/r/20210817051315.2477-5-njavali@marvell.com
-Signed-off-by: Arun Easi <aeasi@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Link: https://lore.kernel.org/r/20210824114150.2105-1-adrian.hunter@intel.com
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 36 +++++++++++++++++++++++++++++-------
+ 1 file changed, 29 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 0cacb667a88b..955af14e948a 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -227,7 +227,7 @@ static void qla_nvme_abort_work(struct work_struct *work)
- 	       "%s called for sp=%p, hndl=%x on fcport=%p deleted=%d\n",
- 	       __func__, sp, sp->handle, fcport, fcport->deleted);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 1f0980a70e3f..dcd1eeb2b0e0 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7787,7 +7787,8 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
+ {
+ 	if (error != BLK_STS_OK)
+-		pr_err("%s: REQUEST SENSE failed (%d)", __func__, error);
++		pr_err("%s: REQUEST SENSE failed (%d)\n", __func__, error);
++	kfree(rq->end_io_data);
+ 	blk_put_request(rq);
+ }
  
--	if (!ha->flags.fw_started || fcport->deleted)
-+	if (!ha->flags.fw_started || fcport->deleted == QLA_SESS_DELETED)
- 		goto out;
+@@ -7795,16 +7796,30 @@ static int
+ ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
+ {
+ 	/*
+-	 * From SPC-6: the REQUEST SENSE command with any allocation length
+-	 * clears the sense data.
++	 * Some UFS devices clear unit attention condition only if the sense
++	 * size used (UFS_SENSE_SIZE in this case) is non-zero.
+ 	 */
+-	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, 0, 0};
++	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, UFS_SENSE_SIZE, 0};
+ 	struct scsi_request *rq;
+ 	struct request *req;
++	char *buffer;
++	int ret;
  
- 	if (ha->flags.host_shutting_down) {
+-	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, /*flags=*/0);
+-	if (IS_ERR(req))
+-		return PTR_ERR(req);
++	buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
++	if (!buffer)
++		return -ENOMEM;
++
++	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN,
++			      /*flags=*/BLK_MQ_REQ_PM);
++	if (IS_ERR(req)) {
++		ret = PTR_ERR(req);
++		goto out_free;
++	}
++
++	ret = blk_rq_map_kern(sdev->request_queue, req,
++			      buffer, UFS_SENSE_SIZE, GFP_NOIO);
++	if (ret)
++		goto out_put;
+ 
+ 	rq = scsi_req(req);
+ 	rq->cmd_len = ARRAY_SIZE(cmd);
+@@ -7812,10 +7827,17 @@ ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
+ 	rq->retries = 3;
+ 	req->timeout = 1 * HZ;
+ 	req->rq_flags |= RQF_PM | RQF_QUIET;
++	req->end_io_data = buffer;
+ 
+ 	blk_execute_rq_nowait(/*bd_disk=*/NULL, req, /*at_head=*/true,
+ 			      ufshcd_request_sense_done);
+ 	return 0;
++
++out_put:
++	blk_put_request(req);
++out_free:
++	kfree(buffer);
++	return ret;
+ }
+ 
+ static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
 -- 
 2.30.2
 
