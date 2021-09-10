@@ -7,40 +7,38 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EEFCC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF567C4332F
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB92B61108
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A856261108
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231321AbhIJAmf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44128 "EHLO mail.kernel.org"
+        id S240389AbhIJAmi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:42:38 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44882 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232043AbhIJASi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:18:38 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DAA946121D;
-        Fri, 10 Sep 2021 00:17:05 +0000 (UTC)
+        id S232334AbhIJASu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:18:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 32DC3611C8;
+        Fri, 10 Sep 2021 00:17:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233026;
-        bh=56RUgujUVufBGg+c6j3FtmA/V9osVxZpbQhZCYUp5oI=;
+        s=k20201202; t=1631233042;
+        bh=h+Uzma+hZONJfq10oK9MrXnsnU4yu+HCaFhcGa/r6sw=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WCJHLNd9Zr6XOm+A9CpqklvIxzfAWczl6zeM8ez7YvRdzxd0Sf7tm4Aunj3H9X8bV
-         3enMGeFVR2W17fH17tjUKvunfG9MB9cvMdKPqQCV9uwqZkmzwcKzuN+QZoZb3X16xQ
-         gw7+PFtcdiIlCkK5xAKhSRjuOvccaq3AuVYrKGK137ufbVFSXXPENxOpgnuxnf8ekA
-         8iJDeQNF2OaCRwv5yifNXnHX49qKSQqqB/H9xDIZmmxf2bP2yUgwKFa0pjwBvhVBVx
-         YV7Um3bkY0DPPCCSaDpXgUdyTceuByBp/12yel4Y7KipwoOrYiEhFDv+Hgj5vbfEPN
-         oLOR6mHDzgtGQ==
+        b=qEGjLiZxKKKt8rb42vJpYYM7gANMVty0twYm0DAhFP2t8M2VQK23xD9tghCY04arU
+         vMKIu4jHg5cyn47kFgNa6G5kkh68gdcbWmrnwxHMPWilCr4/DzN9/P+Mk1IkMTF3cM
+         gyT690otYCKZlSvq6XQxsrVnSE9UZ42Cm0BNOWxdYSUdr7PxkEwuZLmuOX5XT1Jc3p
+         JKcniSwYvdR77W+/oEUVuqHdtHFK59EhNsl73VfjnRrzBk6D6td5g3iDS2IRJ670Tr
+         Ma/4IHzhg6Tlz0n6XDArtdRvtz0TbN+gQO0vC2Xf2BjR0OVyM3l8KuH39Z4pLt7n4F
+         zi+NWJRbxhFlg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>,
-        Bodo Stroesser <bostroesser@gmail.com>,
+Cc:     Arun Easi <aeasi@marvell.com>, Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 49/99] scsi: target: pscsi: Fix possible null-pointer dereference in pscsi_complete_cmd()
-Date:   Thu,  9 Sep 2021 20:15:08 -0400
-Message-Id: <20210910001558.173296-49-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.14 60/99] scsi: qla2xxx: Fix hang during NVMe session tear down
+Date:   Thu,  9 Sep 2021 20:15:19 -0400
+Message-Id: <20210910001558.173296-60-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001558.173296-1-sashal@kernel.org>
 References: <20210910001558.173296-1-sashal@kernel.org>
@@ -52,71 +50,60 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tuo Li <islituo@gmail.com>
+From: Arun Easi <aeasi@marvell.com>
 
-[ Upstream commit 0f99792c01d1d6d35b86e850e9ccadd98d6f3e0c ]
+[ Upstream commit 310e69edfbd57995868a428eeddea09a7b5d2749 ]
 
-The return value of transport_kmap_data_sg() is assigned to the variable
-buf:
+The following hung task call trace was seen:
 
-  buf = transport_kmap_data_sg(cmd);
+    [ 1230.183294] INFO: task qla2xxx_wq:523 blocked for more than 120 seconds.
+    [ 1230.197749] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+    [ 1230.205585] qla2xxx_wq      D    0   523      2 0x80004000
+    [ 1230.205636] Workqueue: qla2xxx_wq qlt_free_session_done [qla2xxx]
+    [ 1230.205639] Call Trace:
+    [ 1230.208100]  __schedule+0x2c4/0x700
+    [ 1230.211607]  schedule+0x38/0xa0
+    [ 1230.214769]  schedule_timeout+0x246/0x2f0
+    [ 1230.222651]  wait_for_completion+0x97/0x100
+    [ 1230.226921]  qlt_free_session_done+0x6a0/0x6f0 [qla2xxx]
+    [ 1230.232254]  process_one_work+0x1a7/0x360
 
-And then it is checked:
+...when device side port resets were done.
 
-  if (!buf) {
+Abort threads were getting out without processing due to the "deleted"
+flag check. The delete thread, meanwhile, could not proceed with a
+logout (that would have cleared out pending requests) as the logout IOCB
+work was not progressing. It appears like the hung qlt_free_session_done()
+thread is causing the ha->wq works on hold. The qlt_free_session_done()
+was hung waiting for nvme_fc_unregister_remoteport() + localport_delete cb
+to be complete, which would only happen when all I/Os are released.
 
-This indicates that buf can be NULL. However, it is dereferenced in the
-following statements:
+Fix this by allowing abort to progress until device delete is completely
+done. This should make the qlt_free_session_done() proceed without hang and
+thus clear up the deadlock.
 
-  if (!(buf[3] & 0x80))
-    buf[3] |= 0x80;
-  if (!(buf[2] & 0x80))
-    buf[2] |= 0x80;
-
-To fix these possible null-pointer dereferences, dereference buf and call
-transport_kunmap_data_sg() only when buf is not NULL.
-
-Link: https://lore.kernel.org/r/20210810040414.248167-1-islituo@gmail.com
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
-Signed-off-by: Tuo Li <islituo@gmail.com>
+Link: https://lore.kernel.org/r/20210817051315.2477-5-njavali@marvell.com
+Signed-off-by: Arun Easi <aeasi@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_pscsi.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 2629d2ef3970..75ef52f008ff 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -620,17 +620,17 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
- 			buf = transport_kmap_data_sg(cmd);
- 			if (!buf) {
- 				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
--			}
--
--			if (cdb[0] == MODE_SENSE_10) {
--				if (!(buf[3] & 0x80))
--					buf[3] |= 0x80;
- 			} else {
--				if (!(buf[2] & 0x80))
--					buf[2] |= 0x80;
--			}
-+				if (cdb[0] == MODE_SENSE_10) {
-+					if (!(buf[3] & 0x80))
-+						buf[3] |= 0x80;
-+				} else {
-+					if (!(buf[2] & 0x80))
-+						buf[2] |= 0x80;
-+				}
+diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+index 3e5c70a1d969..6e1abfc1be41 100644
+--- a/drivers/scsi/qla2xxx/qla_nvme.c
++++ b/drivers/scsi/qla2xxx/qla_nvme.c
+@@ -227,7 +227,7 @@ static void qla_nvme_abort_work(struct work_struct *work)
+ 	       "%s called for sp=%p, hndl=%x on fcport=%p deleted=%d\n",
+ 	       __func__, sp, sp->handle, fcport, fcport->deleted);
  
--			transport_kunmap_data_sg(cmd);
-+				transport_kunmap_data_sg(cmd);
-+			}
- 		}
- 	}
- after_mode_sense:
+-	if (!ha->flags.fw_started || fcport->deleted)
++	if (!ha->flags.fw_started || fcport->deleted == QLA_SESS_DELETED)
+ 		goto out;
+ 
+ 	if (ha->flags.host_shutting_down) {
 -- 
 2.30.2
 
