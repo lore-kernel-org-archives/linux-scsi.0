@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0FD3C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9A2EC433EF
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC4FC6115A
+	by mail.kernel.org (Postfix) with ESMTP id C652E611C3
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233375AbhIJAoW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:44:22 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49910 "EHLO mail.kernel.org"
+        id S233492AbhIJAoX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:44:23 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49986 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234855AbhIJAYv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:24:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 01104611C8;
-        Fri, 10 Sep 2021 00:23:40 +0000 (UTC)
+        id S234872AbhIJAY5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:24:57 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3874C610A3;
+        Fri, 10 Sep 2021 00:23:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233421;
-        bh=Jk3jxPtXXATLlN6feUIH6VcTx1NIGrREZ3/qSdYUvO0=;
+        s=k20201202; t=1631233427;
+        bh=koUlsSVLEmNPMjvawleObiSL+L6M9LpiRi93P3MUWzE=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=lA3tXlRLyUxpt/mx+sTsSk8euQPvf/7qeaJ8md6fgKJ31VKJnt/S0NxjIRcCGfZE5
-         TwZSpfTiRnxfu1iV3j2nf2vewholBytuFNq8ugQdDfo2NOJliXbm+LPSgvKGW46BsD
-         zkylnB59P3zSXl7t5GLT06zVjDQg9PSSFJotpEJ6DN0Rte4nat+EssXxy/zrdPOSwO
-         bSM6BpqW0KXuoKkFdCz3tZmzhx+1CrHHnnLXKrAnIR0qq6ro6rdm2UoMH+DE1f2NpP
-         NSILw/pAhEzlYRxWt/oz2FWJ9JLL79xmSttJ6RtF8Fx00xle8XnHN3CSuMCI5HXXSl
-         SV7n496/9g8yg==
+        b=ZtxUoR082m2qg79xJyR4RY7kfXPn3X8Mu2uZJjRpBqmp8sfQYVRU9xg9ysSI9+hOk
+         BoMXBDv5+LlHNGwp8IjSSb0J8X/Jt6Qwq0er/i2zn5sBixUJjShUx85znRbr8nrfQl
+         ONICDZne9uTuD/so21xkemDlW2XXZ/uts9egXkFvVCs1WVz+VF46+WWAnSjSPVrCDk
+         JYBbcIEtz+rsxsK7RbvyW0jmyXxfGh5j+VYJS1fsX/xeOk0wCFRVyblYYXKGmH/V9T
+         wvel3WebYXErbHrsJPSO6SZp47u9MK0EoHyYObAaxEs7Mn4Aq6VbgxDGBQ6w0E28//
+         rwPVaLKv+g+eA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 02/17] scsi: lpfc: Fix cq_id truncation in rq create
-Date:   Thu,  9 Sep 2021 20:23:23 -0400
-Message-Id: <20210910002338.176677-2-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 06/17] scsi: qla2xxx: Fix NPIV create erroneous error
+Date:   Thu,  9 Sep 2021 20:23:27 -0400
+Message-Id: <20210910002338.176677-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910002338.176677-1-sashal@kernel.org>
 References: <20210910002338.176677-1-sashal@kernel.org>
@@ -51,40 +52,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit df3d78c3eb4eba13b3ef9740a8c664508ee644ae ]
+[ Upstream commit a57214443f0f85639a0d9bbb8bd658d82dbf0927 ]
 
-On the newer hardware, CQ_ID values can be larger than seen on previous
-generations. This exposed an issue in the driver where its definition of
-cq_id in the RQ Create mailbox cmd was too small, thus the cq_id was
-truncated, causing the command to fail.
+When user creates multiple NPIVs, the switch capabilities field is checked
+before a vport is allowed to be created. This field is being toggled if a
+switch scan is in progress. This creates erroneous reject of vport create.
 
-Revise the RQ_CREATE CQ_ID field to its proper size (16 bits).
-
-Link: https://lore.kernel.org/r/20210722221721.74388-3-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20210810043720.1137-10-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_init.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 2a436dff1589..f2a6f145d66d 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -1261,7 +1261,7 @@ struct rq_context {
- 	uint32_t reserved1;
- 	uint32_t word2;
- #define lpfc_rq_context_cq_id_SHIFT	16
--#define lpfc_rq_context_cq_id_MASK	0x000003FF
-+#define lpfc_rq_context_cq_id_MASK	0x0000FFFF
- #define lpfc_rq_context_cq_id_WORD	word2
- #define lpfc_rq_context_buf_size_SHIFT	0
- #define lpfc_rq_context_buf_size_MASK	0x0000FFFF
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 2e3a70a6b300..46e6cdddad6b 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -2507,11 +2507,11 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 	/* initialize */
+ 	ha->min_external_loopid = SNS_FIRST_LOOP_ID;
+ 	ha->operating_mode = LOOP;
+-	ha->switch_cap = 0;
+ 
+ 	switch (topo) {
+ 	case 0:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200b, "HBA in NL topology.\n");
++		ha->switch_cap = 0;
+ 		ha->current_topology = ISP_CFG_NL;
+ 		strcpy(connect_type, "(Loop)");
+ 		break;
+@@ -2525,6 +2525,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 
+ 	case 2:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200d, "HBA in N P2P topology.\n");
++		ha->switch_cap = 0;
+ 		ha->operating_mode = P2P;
+ 		ha->current_topology = ISP_CFG_N;
+ 		strcpy(connect_type, "(N_Port-to-N_Port)");
+@@ -2541,6 +2542,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 	default:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200f,
+ 		    "HBA in unknown topology %x, using NL.\n", topo);
++		ha->switch_cap = 0;
+ 		ha->current_topology = ISP_CFG_NL;
+ 		strcpy(connect_type, "(Loop)");
+ 		break;
 -- 
 2.30.2
 
