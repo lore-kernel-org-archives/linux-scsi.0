@@ -7,43 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E36DCC28B21
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3D26C4321E
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BCEA361179
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B70E0611EE
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233299AbhIJAoR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:44:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49578 "EHLO mail.kernel.org"
+        id S241438AbhIJAoT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:44:19 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49660 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234799AbhIJAYY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:24:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 364F8604DC;
-        Fri, 10 Sep 2021 00:23:12 +0000 (UTC)
+        id S234831AbhIJAYa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:24:30 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 1B55E610A3;
+        Fri, 10 Sep 2021 00:23:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233393;
-        bh=CDjcuYBsv/7WluQ8K/Q+t8LWlfPmHZKeC6pERcY8H3Q=;
+        s=k20201202; t=1631233400;
+        bh=LNAbMN8XEXrCvYuRLaNDKTnY/9TwojNZNS7IbteKA54=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=silQ4MXD7K57SJeJwxGrHQfireD4TpOtSIS083NyHq+yt4QUkrZQJuW8b72jbawBw
-         iiSYfA+l56duu41rF9aiOuxSetKDrxmMdSPAd4YI7M0m3LdqAmffaqkWnOtSskVFNp
-         Yso7D/yYhO5Fy7s8WDSYpnL7qJuDBv+WLXIPMUuPa+I+OjaHOFNWKxkjb8z0jtyVtf
-         izPFex3ATgLLUTJvfez19kEW0K0qnHxE0SatvlYH/ecAhd8fIEdpTvvF19qfu4vl/5
-         fLEorMpdJwTxeYumODpSH0i3rYlho3n5ygHwfRSNEBm0MWROeaLsYuxV/6YVbdAL6H
-         6wjIBo029wRSQ==
+        b=EESWHuWk4Hp9dKUOqt3W+ZSEU44bLSnx6PLR9LZONoENvEqDmVN9zJUqfoQJSG1SV
+         FnmvdHubzL97RetfCFpSgkZw6HAZj5JbKABeWDwV+WPrmSyBWozZBJKAh0e4tabOCH
+         SJUDDjPNWzpqXpcwtiIP8H/nPC/zch3/eDXEu6/CNc4/WJ/PooqVXMj0mL8VyCCyjo
+         7uE3HV3Avy0DcTjjQaLydw5v2AfsSjB6p/zuiJpBOFtX2s+maBnzWESv7Nyc4R6LME
+         SQ6+0Jptlb3b0K8SJfAORXwHmhSQpiRh39Ldc7q7KikqrTlwIPSowoYSxXXTu6VmxH
+         0AFTgmuc+pWIQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike McGowen <mike.mcgowen@microchip.com>,
-        Kevin Barnett <kevin.barnett@microchip.com>,
-        Scott Benesh <scott.benesh@microchip.com>,
-        Scott Teel <scott.teel@microchip.com>,
-        Don Brace <don.brace@microchip.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, storagedev@microchip.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 02/19] scsi: smartpqi: Fix ISR accessing uninitialized data
-Date:   Thu,  9 Sep 2021 20:22:52 -0400
-Message-Id: <20210910002309.176412-2-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 07/19] scsi: qla2xxx: Fix NPIV create erroneous error
+Date:   Thu,  9 Sep 2021 20:22:57 -0400
+Message-Id: <20210910002309.176412-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910002309.176412-1-sashal@kernel.org>
 References: <20210910002309.176412-1-sashal@kernel.org>
@@ -55,47 +52,57 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike McGowen <mike.mcgowen@microchip.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit 0777a3fb98f0ea546561d04db4fd325248c39961 ]
+[ Upstream commit a57214443f0f85639a0d9bbb8bd658d82dbf0927 ]
 
-Correct driver's ISR accessing a data structure member that has not been
-fully initialized during driver initialization.
+When user creates multiple NPIVs, the switch capabilities field is checked
+before a vport is allowed to be created. This field is being toggled if a
+switch scan is in progress. This creates erroneous reject of vport create.
 
-The pqi queue groups can have uninitialized members when an interrupt
-fires. This has not resulted in any driver crashes. This was found during
-our own internal testing. No bugs were ever filed.
-
-Link: https://lore.kernel.org/r/20210714182847.50360-9-don.brace@microchip.com
-Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/r/20210810043720.1137-10-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_init.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 4055753b495a..cf76f389943d 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6218,11 +6218,11 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index a66f7cec797c..e4bd889a9f72 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3744,11 +3744,11 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 	/* initialize */
+ 	ha->min_external_loopid = SNS_FIRST_LOOP_ID;
+ 	ha->operating_mode = LOOP;
+-	ha->switch_cap = 0;
  
- 	pqi_init_operational_queues(ctrl_info);
+ 	switch (topo) {
+ 	case 0:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200b, "HBA in NL topology.\n");
++		ha->switch_cap = 0;
+ 		ha->current_topology = ISP_CFG_NL;
+ 		strcpy(connect_type, "(Loop)");
+ 		break;
+@@ -3762,6 +3762,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
  
--	rc = pqi_request_irqs(ctrl_info);
-+	rc = pqi_create_queues(ctrl_info);
- 	if (rc)
- 		return rc;
- 
--	rc = pqi_create_queues(ctrl_info);
-+	rc = pqi_request_irqs(ctrl_info);
- 	if (rc)
- 		return rc;
- 
+ 	case 2:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200d, "HBA in N P2P topology.\n");
++		ha->switch_cap = 0;
+ 		ha->operating_mode = P2P;
+ 		ha->current_topology = ISP_CFG_N;
+ 		strcpy(connect_type, "(N_Port-to-N_Port)");
+@@ -3778,6 +3779,7 @@ qla2x00_configure_hba(scsi_qla_host_t *vha)
+ 	default:
+ 		ql_dbg(ql_dbg_disc, vha, 0x200f,
+ 		    "HBA in unknown topology %x, using NL.\n", topo);
++		ha->switch_cap = 0;
+ 		ha->current_topology = ISP_CFG_NL;
+ 		strcpy(connect_type, "(Loop)");
+ 		break;
 -- 
 2.30.2
 
