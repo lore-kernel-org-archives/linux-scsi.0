@@ -2,111 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB633C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:52:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A85E2C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 01:12:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB8DE6113A
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:52:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8411660F45
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 01:12:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240224AbhIJAmS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:18 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43688 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230486AbhIJARm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:17:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id F1B22610E9;
-        Fri, 10 Sep 2021 00:16:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631232992;
-        bh=TGw4njp5IaZc78R/uUB/LijXLUHq5fkfuYINOfxXf0g=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mwRD27Oe3vInMWnMAGDEn9zFdli1V2UEPsYcxD2Sj7YBRoKsk/SUxHgJXtcOz1s/5
-         lN9D6lGt0hRXQ4dSDeiCEoU8hLbOGXbWeFi/Tt0PQfbX3zLOXul3NCZ8tAfy+ooFEh
-         d05PaQrv8Z7yj0Sk0TTb9f/8nTZmI8bqyKdjWo787ZOz23hOh6RVXLOihw0wMz4w3R
-         xVlxcHdlGQFUOjk9YvOkru7NlKDvHmDn+b9bbjeDrUMQvYBsclJdCN31IIqTmLxMhd
-         /BPtxfVQ2ToMHonWgskuxpxCKJsh+3lGmhwCeKano2ONbb8jB8rgNDVXPnYs77IwVM
-         Iu2jUs6ssWyTQ==
-From:   Sasha Levin <sashal@kernel.org>
-To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 25/99] scsi: lpfc: Fix possible ABBA deadlock in nvmet_xri_aborted()
-Date:   Thu,  9 Sep 2021 20:14:44 -0400
-Message-Id: <20210910001558.173296-25-sashal@kernel.org>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210910001558.173296-1-sashal@kernel.org>
-References: <20210910001558.173296-1-sashal@kernel.org>
-MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-Content-Transfer-Encoding: 8bit
+        id S236612AbhIJBN3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 21:13:29 -0400
+Received: from mail-m17642.qiye.163.com ([59.111.176.42]:15868 "EHLO
+        mail-m17642.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234721AbhIJBM6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2021 21:12:58 -0400
+X-Greylist: delayed 526 seconds by postgrey-1.27 at vger.kernel.org; Thu, 09 Sep 2021 21:12:58 EDT
+Received: from localhost.localdomain (unknown [113.116.176.115])
+        by mail-m17642.qiye.163.com (Hmail) with ESMTPA id 9205B2200DF;
+        Fri, 10 Sep 2021 09:02:59 +0800 (CST)
+From:   Ding Hui <dinghui@sangfor.com.cn>
+To:     lduncan@suse.com, cleech@redhat.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, michael.christie@oracle.com,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Ding Hui <dinghui@sangfor.com.cn>
+Subject: [PATCH 1/3] scsi: libiscsi: move init ehwait to iscsi_session_setup()
+Date:   Fri, 10 Sep 2021 09:02:18 +0800
+Message-Id: <20210910010220.24073-2-dinghui@sangfor.com.cn>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210910010220.24073-1-dinghui@sangfor.com.cn>
+References: <20210910010220.24073-1-dinghui@sangfor.com.cn>
+X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgPGg8OCBgUHx5ZQUlOS1dZCBgUCR5ZQVlLVUtZV1
+        kWDxoPAgseWUFZKDYvK1lXWShZQUhPN1dZLVlBSVdZDwkaFQgSH1lBWRpCQk5WT09JSh0ZSEJOHk
+        xJVRMBExYaEhckFA4PWVdZFhoPEhUdFFlBWVVLWQY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Ky46IQw6FD4PLB40LSMaSANC
+        MzUKCkNVSlVKTUhKSUhOTENLSU1DVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
+        QVlKSkhVSkpNVUpMTVVKSk5ZV1kIAVlBSU5JTTcG
+X-HM-Tid: 0a7bcd3aacfed998kuws9205b2200df
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+commit ec29d0ac29be ("scsi: iscsi: Fix conn use after free during
+resets") move member ehwait from conn to session, but left init ehwait
+in iscsi_conn_setup().
 
-[ Upstream commit 7740b615b6665e47f162e261d805f1bbbac15876 ]
+Due to one session can be binded by multi conns, the conn after the
+first will reinit the session->ehwait, move init ehwait to
+iscsi_session_setup() to fix it.
 
-The lpfc_sli4_nvmet_xri_aborted() routine takes out the abts_buf_list_lock
-and traverses the buffer contexts to match the xri. Upon match, it then
-takes the context lock before potentially removing the context from the
-associated buffer list. This violates the lock hierarchy used elsewhere in
-the driver of locking context, then the abts_buf_list_lock - thus a
-possible deadlock.
-
-Resolve by: after matching, release the abts_buf_list_lock, then take the
-context lock, and if to be deleted from the list, retake the
-abts_buf_list_lock, maintaining lock hierarchy. This matches same list lock
-hierarchy as elsewhere in the driver
-
-Link: https://lore.kernel.org/r/20210730163309.25809-1-jsmart2021@gmail.com
-Reported-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Fixes: ec29d0ac29be ("scsi: iscsi: Fix conn use after free during resets")
+Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/libiscsi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index f2d9a3580887..6e3dd0b9bcfa 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1797,19 +1797,22 @@ lpfc_sli4_nvmet_xri_aborted(struct lpfc_hba *phba,
- 		if (ctxp->ctxbuf->sglq->sli4_xritag != xri)
- 			continue;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 4683c183e9d4..712a45368385 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2947,6 +2947,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit, struct Scsi_Host *shost,
+ 	session->tmf_state = TMF_INITIAL;
+ 	timer_setup(&session->tmf_timer, iscsi_tmf_timedout, 0);
+ 	mutex_init(&session->eh_mutex);
++	init_waitqueue_head(&session->ehwait);
  
--		spin_lock(&ctxp->ctxlock);
-+		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
-+				       iflag);
-+
-+		spin_lock_irqsave(&ctxp->ctxlock, iflag);
- 		/* Check if we already received a free context call
- 		 * and we have completed processing an abort situation.
- 		 */
- 		if (ctxp->flag & LPFC_NVME_CTX_RLS &&
- 		    !(ctxp->flag & LPFC_NVME_ABORT_OP)) {
-+			spin_lock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
- 			list_del_init(&ctxp->list);
-+			spin_unlock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
- 			released = true;
- 		}
- 		ctxp->flag &= ~LPFC_NVME_XBUSY;
--		spin_unlock(&ctxp->ctxlock);
--		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
--				       iflag);
-+		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
+ 	spin_lock_init(&session->frwd_lock);
+ 	spin_lock_init(&session->back_lock);
+@@ -3074,8 +3075,6 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+ 		goto login_task_data_alloc_fail;
+ 	conn->login_task->data = conn->data = data;
  
- 		rrq_empty = list_empty(&phba->active_rrq_list);
- 		ndlp = lpfc_findnode_did(phba->pport, ctxp->sid);
+-	init_waitqueue_head(&session->ehwait);
+-
+ 	return cls_conn;
+ 
+ login_task_data_alloc_fail:
 -- 
-2.30.2
+2.17.1
 
