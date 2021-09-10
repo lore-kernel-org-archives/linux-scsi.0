@@ -4,49 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA8B0C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 949EAC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AAF6360296
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83B1561179
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231769AbhIJAnC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:43:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46468 "EHLO mail.kernel.org"
+        id S240673AbhIJAmz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:42:55 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45980 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233536AbhIJAUS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:20:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 92469611BD;
-        Fri, 10 Sep 2021 00:18:57 +0000 (UTC)
+        id S233290AbhIJATp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:19:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AFA13610E9;
+        Fri, 10 Sep 2021 00:18:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233139;
-        bh=NS44uFGRA29WqPoF5FZLcPOiN6tldwDQo+OPx4WmLws=;
+        s=k20201202; t=1631233115;
+        bh=AkhXQCr1tOdUV1wIeySqtaTkH3/hComf8EdDtD03P0A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=pTnmPIxypprPG9eCuPvdaZT/MbGnpWz/0HEFY6rVeGRVEbvHLIRP0g0N/+HN4hI6+
-         1DrOzGnWk7SwkNCTaxixU8XgU2Cu5qkGcP0Q9Ga+MSjG9tnYnkw6zwSUk/TfhhHoSZ
-         P4AwdmLMdwR6QYgfJPSb1/JEIWn408rCsgvIGKURBcCBenToSS4qZEjyYW32rHFoAy
-         dtgxi+YgwGvS5AxWwq51ACAf/4nI30ueCDMoiPHWlveZfYxei9vALkZpenT3ohPihH
-         NiBTQOwCooD60eTbbOrZoFiYb41HnTNbQS4aNkAKe5Ajs7djNlV/tT1jK9e4+DDzZs
-         L8s5ek/VI00XQ==
+        b=NBCtiUl7of562HfGESmz7rRoqY/O7oRrcvSwJ8SbsbxKIdF66NGInaep8hUQMq6hB
+         yzRnVfHgcHt2YTvzKhMjav6rciMPeb6dqZfPIlwxMGrLizICEkHeT1NZNxFKl1+feK
+         Qp4wl0uwx/13Xil2XfFpwbzEvWHS2FiyEt4BSA+Pn4C86zFqsQkwdnQiI99KMVvHgJ
+         P4AZQcnZs71vrMWuRD5Ij3d1ILVODd+yxSkpZ6yHj6qMpJIiEDWMf7Xq2CUYeQDz5S
+         zHOQKgq3MQ8EmTRlRl638/0yil4MlHSPMLKkC4UcX+eW1IQIn6h7Vwm400b+8oe6d4
+         NyFq2fYjorUFg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bean Huo <beanhuo@micron.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org,
-        linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 5.13 26/88] scsi: ufs: Request sense data asynchronously
-Date:   Thu,  9 Sep 2021 20:17:18 -0400
-Message-Id: <20210910001820.174272-26-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 10/88] scsi: lpfc: Fix KASAN slab-out-of-bounds in lpfc_unreg_rpi() routine
+Date:   Thu,  9 Sep 2021 20:17:02 -0400
+Message-Id: <20210910001820.174272-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
 References: <20210910001820.174272-1-sashal@kernel.org>
@@ -58,131 +51,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit ac1bc2ba060f9609972fb486073ebd9eab1ef3b6 ]
+[ Upstream commit affbe24429410fddf4e50ca456c090ed6d8e05bf ]
 
-Clearing a unit attention synchronously from inside the UFS error handler
-may trigger the following deadlock:
+In lpfc_offline_prep() an RPI is freed and nlp_rpi set to 0xFFFF before
+calling lpfc_unreg_rpi().  Unfortunately, lpfc_unreg_rpi() uses nlp_rpi to
+index the sli4_hba.rpi_ids[] array.
 
- - ufshcd_err_handler() calls ufshcd_err_handling_unprepare() and the
-   latter function calls ufshcd_clear_ua_wluns().
+In lpfc_offline_prep(), unreg rpi before freeing the rpi.
 
- - ufshcd_clear_ua_wluns() submits a REQUEST SENSE command and that command
-   activates the SCSI error handler.
-
- - The SCSI error handler calls ufshcd_host_reset_and_restore().
-
- - ufshcd_host_reset_and_restore() executes the following code:
-   ufshcd_schedule_eh_work(hba); flush_work(&hba->eh_work);
-
-This sequence results in a deadlock (circular wait). Fix this by requesting
-sense data asynchronously.
-
-Link: https://lore.kernel.org/r/20210722033439.26550-16-bvanassche@acm.org
-Cc: Adrian Hunter <adrian.hunter@intel.com>
-Cc: Stanley Chu <stanley.chu@mediatek.com>
-Cc: Can Guo <cang@codeaurora.org>
-Cc: Asutosh Das <asutoshd@codeaurora.org>
-Cc: Avri Altman <avri.altman@wdc.com>
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Link: https://lore.kernel.org/r/20210707184351.67872-12-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 64 ++++++++++++++++++++-------------------
- 1 file changed, 33 insertions(+), 31 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 469a7be270d6..1f0980a70e3f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7784,8 +7784,39 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- 	return ret;
- }
- 
-+static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
-+{
-+	if (error != BLK_STS_OK)
-+		pr_err("%s: REQUEST SENSE failed (%d)", __func__, error);
-+	blk_put_request(rq);
-+}
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index b661e95a8a36..5a51dcdee1c6 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3536,6 +3536,8 @@ lpfc_offline_prep(struct lpfc_hba *phba, int mbx_action)
+ 				spin_lock_irq(&ndlp->lock);
+ 				ndlp->nlp_flag &= ~NLP_NPR_ADISC;
+ 				spin_unlock_irq(&ndlp->lock);
 +
- static int
--ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp);
-+ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
-+{
-+	/*
-+	 * From SPC-6: the REQUEST SENSE command with any allocation length
-+	 * clears the sense data.
-+	 */
-+	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, 0, 0};
-+	struct scsi_request *rq;
-+	struct request *req;
-+
-+	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, /*flags=*/0);
-+	if (IS_ERR(req))
-+		return PTR_ERR(req);
-+
-+	rq = scsi_req(req);
-+	rq->cmd_len = ARRAY_SIZE(cmd);
-+	memcpy(rq->cmd, cmd, rq->cmd_len);
-+	rq->retries = 3;
-+	req->timeout = 1 * HZ;
-+	req->rq_flags |= RQF_PM | RQF_QUIET;
-+
-+	blk_execute_rq_nowait(/*bd_disk=*/NULL, req, /*at_head=*/true,
-+			      ufshcd_request_sense_done);
-+	return 0;
-+}
++				lpfc_unreg_rpi(vports[i], ndlp);
+ 				/*
+ 				 * Whenever an SLI4 port goes offline, free the
+ 				 * RPI. Get a new RPI when the adapter port
+@@ -3551,7 +3553,6 @@ lpfc_offline_prep(struct lpfc_hba *phba, int mbx_action)
+ 					lpfc_sli4_free_rpi(phba, ndlp->nlp_rpi);
+ 					ndlp->nlp_rpi = LPFC_RPI_ALLOC_ERROR;
+ 				}
+-				lpfc_unreg_rpi(vports[i], ndlp);
  
- static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
- {
-@@ -7813,7 +7844,7 @@ static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
- 	if (ret)
- 		goto out_err;
- 
--	ret = ufshcd_send_request_sense(hba, sdp);
-+	ret = ufshcd_request_sense_async(hba, sdp);
- 	scsi_device_put(sdp);
- out_err:
- 	if (ret)
-@@ -8407,35 +8438,6 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
- 	}
- }
- 
--static int
--ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
--{
--	unsigned char cmd[6] = {REQUEST_SENSE,
--				0,
--				0,
--				0,
--				UFS_SENSE_SIZE,
--				0};
--	char *buffer;
--	int ret;
--
--	buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
--	if (!buffer) {
--		ret = -ENOMEM;
--		goto out;
--	}
--
--	ret = scsi_execute(sdp, cmd, DMA_FROM_DEVICE, buffer,
--			UFS_SENSE_SIZE, NULL, NULL,
--			msecs_to_jiffies(1000), 3, 0, RQF_PM, NULL);
--	if (ret)
--		pr_err("%s: failed with err %d\n", __func__, ret);
--
--	kfree(buffer);
--out:
--	return ret;
--}
--
- /**
-  * ufshcd_set_dev_pwr_mode - sends START STOP UNIT command to set device
-  *			     power mode
+ 				if (ndlp->nlp_type & NLP_FABRIC) {
+ 					lpfc_disc_state_machine(vports[i], ndlp,
 -- 
 2.30.2
 
