@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 492FDC4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4927AC433FE
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2BDF1611F0
+	by mail.kernel.org (Postfix) with ESMTP id 365CD611F2
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231880AbhIJAmy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:54 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45964 "EHLO mail.kernel.org"
+        id S240690AbhIJAm5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:42:57 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45996 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233285AbhIJATo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:19:44 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 63F62610A3;
-        Fri, 10 Sep 2021 00:18:33 +0000 (UTC)
+        id S233302AbhIJATq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:19:46 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 081EA6023D;
+        Fri, 10 Sep 2021 00:18:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233114;
-        bh=jrYfTcMRemDgUOMZ625TC1DiMS2P/XHo05XSHtljRuY=;
+        s=k20201202; t=1631233116;
+        bh=8H9KWYC9VIrmgRxtaT04INm3HqNKDifGn5pttolLtM0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=uG/lXR7EJJuFXBV6+ncEO2mff/dgZ7kKf2bcF2rNwfplrJ4gxFZNL0sm+WVFyRLw4
-         e1tRInmyFqM4+ThbAUGYY/gDwSqAukUR81Flk9QwRlSioy0S/7pIep+m3duNzpRsSw
-         vY8nENkYMUIMAGdfI/Fyc/bn/05QYTrenm/K4ZAg+5Bx5EG9QIWYs/Okj0vncaqh6l
-         +0EOUq9zXqRC5NpM+lwmqfpLzfRmZfwxjvbm4veewgN9AMSrA1kQMxWpTRmo2PigJe
-         jnmS525QmhkGNwuBj5rHIAeuxUKepOL95004y3PAXhQmcXTEXdOeyOclE3uwT07wXd
-         VkIKyPzhvGVnQ==
+        b=DbFZzEoeNW1s9S8mQwIPeSCL7WWS6cMCus6DDA3sfKFmkqk6WXKMpl/SDOs0z5bm6
+         rx28v1wo5bYGGeROIhJaePXP0wBrQT+tLPsD8ye2DMzb7TGAhregevuIbI1pPJYFx8
+         TTGb2ap3Pb/PiDVDGbbJfB8H9MzUvutWF7C4/QKcYK1yTUE5WV3+pFhBciC7BA98ey
+         1LE05D8dz2WJud8rcBC8Kz4tzSOnijkMOORFq+YT2HGxRSuXoUTVbaoExHtZU2ibk4
+         96/be6J8lwVMRgEHUPsRoUINaptQz6g6LxdufdniWg6zvC2OpN0Wqyss0u3J7HgUqb
+         AT+Y1IG7nafQg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 09/88] scsi: lpfc: Fix NULL ptr dereference with NPIV ports for RDF handling
-Date:   Thu,  9 Sep 2021 20:17:01 -0400
-Message-Id: <20210910001820.174272-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 11/88] scsi: lpfc: Clear outstanding active mailbox during PCI function reset
+Date:   Thu,  9 Sep 2021 20:17:03 -0400
+Message-Id: <20210910001820.174272-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
 References: <20210910001820.174272-1-sashal@kernel.org>
@@ -53,50 +53,118 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 2d338eb55b14ab9d245e8b1d982adecca8c4c613 ]
+[ Upstream commit a9978e3978406ef5e35870b10e677cf75a2620b6 ]
 
-RDF ELS handling for NPIV ports may result in an incorrect NDLP reference
-count.  In the event of a persistent link down, this may lead to premature
-release of an NDLP structure and subsequent NULL ptr dereference panic.
+Mailbox commands sent via ioctl/bsg from user applications may be
+interrupted from processing by a concurrently triggered PCI function
+reset. The command will not generate a completion due to the reset.  This
+results in a user application hang waiting for the mailbox command to
+complete.
 
-Remove extraneous lpfc_nlp_put() call in NPIV port RDF processing.
+Resolve by changing the function reset handler to detect that there was an
+outstanding mailbox command and simulate a mailbox completion.  Add some
+additional debug when a mailbox command times out.
 
-Link: https://lore.kernel.org/r/20210707184351.67872-9-jsmart2021@gmail.com
+Link: https://lore.kernel.org/r/20210707184351.67872-13-jsmart2021@gmail.com
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 11 ++++++++++-
+ drivers/scsi/lpfc/lpfc_sli.c  | 32 ++++++++++++++++++++++++++++++--
+ 2 files changed, 40 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 933927f738c7..6e7b81184db3 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -3267,7 +3267,6 @@ lpfc_issue_els_scr(struct lpfc_vport *vport, uint8_t retry)
- 		return 1;
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 5a51dcdee1c6..fb37157b8994 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -1851,6 +1851,7 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
+ {
+ 	int rc;
+ 	uint32_t intr_mode;
++	LPFC_MBOXQ_t *mboxq;
+ 
+ 	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) >=
+ 	    LPFC_SLI_INTF_IF_TYPE_2) {
+@@ -1870,11 +1871,19 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
+ 				"Recovery...\n");
+ 
+ 	/* If we are no wait, the HBA has been reset and is not
+-	 * functional, thus we should clear LPFC_SLI_ACTIVE flag.
++	 * functional, thus we should clear
++	 * (LPFC_SLI_ACTIVE | LPFC_SLI_MBOX_ACTIVE) flags.
+ 	 */
+ 	if (mbx_action == LPFC_MBX_NO_WAIT) {
+ 		spin_lock_irq(&phba->hbalock);
+ 		phba->sli.sli_flag &= ~LPFC_SLI_ACTIVE;
++		if (phba->sli.mbox_active) {
++			mboxq = phba->sli.mbox_active;
++			mboxq->u.mb.mbxStatus = MBX_NOT_FINISHED;
++			__lpfc_mbox_cmpl_put(phba, mboxq);
++			phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
++			phba->sli.mbox_active = NULL;
++		}
+ 		spin_unlock_irq(&phba->hbalock);
  	}
  
--	/* Keep the ndlp just in case RDF is being sent */
- 	return 0;
- }
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 9ed826fd53e8..8fa09d3d0211 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -8776,8 +8776,11 @@ static int
+ lpfc_sli4_async_mbox_block(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_sli *psli = &phba->sli;
++	LPFC_MBOXQ_t *mboxq;
+ 	int rc = 0;
+ 	unsigned long timeout = 0;
++	u32 sli_flag;
++	u8 cmd, subsys, opcode;
  
-@@ -3511,11 +3510,9 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
- 		lpfc_enqueue_node(vport, ndlp);
- 	}
+ 	/* Mark the asynchronous mailbox command posting as blocked */
+ 	spin_lock_irq(&phba->hbalock);
+@@ -8795,12 +8798,37 @@ lpfc_sli4_async_mbox_block(struct lpfc_hba *phba)
+ 	if (timeout)
+ 		lpfc_sli4_process_missed_mbox_completions(phba);
  
--	/* RDF ELS is not required on an NPIV VN_Port.  */
--	if (vport->port_type == LPFC_NPIV_PORT) {
--		lpfc_nlp_put(ndlp);
-+	/* RDF ELS is not required on an NPIV VN_Port. */
-+	if (vport->port_type == LPFC_NPIV_PORT)
- 		return -EACCES;
--	}
- 
- 	elsiocb = lpfc_prep_els_iocb(vport, 1, cmdsize, retry, ndlp,
- 				     ndlp->nlp_DID, ELS_CMD_RDF);
+-	/* Wait for the outstnading mailbox command to complete */
++	/* Wait for the outstanding mailbox command to complete */
+ 	while (phba->sli.mbox_active) {
+ 		/* Check active mailbox complete status every 2ms */
+ 		msleep(2);
+ 		if (time_after(jiffies, timeout)) {
+-			/* Timeout, marked the outstanding cmd not complete */
++			/* Timeout, mark the outstanding cmd not complete */
++
++			/* Sanity check sli.mbox_active has not completed or
++			 * cancelled from another context during last 2ms sleep,
++			 * so take hbalock to be sure before logging.
++			 */
++			spin_lock_irq(&phba->hbalock);
++			if (phba->sli.mbox_active) {
++				mboxq = phba->sli.mbox_active;
++				cmd = mboxq->u.mb.mbxCommand;
++				subsys = lpfc_sli_config_mbox_subsys_get(phba,
++									 mboxq);
++				opcode = lpfc_sli_config_mbox_opcode_get(phba,
++									 mboxq);
++				sli_flag = psli->sli_flag;
++				spin_unlock_irq(&phba->hbalock);
++				lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
++						"2352 Mailbox command x%x "
++						"(x%x/x%x) sli_flag x%x could "
++						"not complete\n",
++						cmd, subsys, opcode,
++						sli_flag);
++			} else {
++				spin_unlock_irq(&phba->hbalock);
++			}
++
+ 			rc = 1;
+ 			break;
+ 		}
 -- 
 2.30.2
 
