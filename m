@@ -7,39 +7,38 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DAEC4167D
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17856C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C27536115A
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0245F60C40
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231786AbhIJAmk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:40 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43958 "EHLO mail.kernel.org"
+        id S240464AbhIJAmm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:42:42 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44942 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232346AbhIJASv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:18:51 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7D339611CA;
-        Fri, 10 Sep 2021 00:17:22 +0000 (UTC)
+        id S232359AbhIJASw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:18:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9EBBF61206;
+        Fri, 10 Sep 2021 00:17:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233043;
-        bh=KzNSmRUDHn1eyvqWYziJGLtZWFO5T8EyW/Y/wKOe2DU=;
+        s=k20201202; t=1631233047;
+        bh=lyV1drbcabKhcUzz4eIB6I9TGQVmAT9UL6gRXdE0Rrg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ida2SO6Ia6IEbezh5Bux6M+QdLtVB9t5qFNA9b0kDWp5hgelgVRZeeNLiYMDuX1aP
-         QFHBBdMF2e0NrHKHP+uL5UTXiDZEmLWnKwJqiYmw2pBr2phrNNMasFu00V5MDBX54I
-         szloAuOJ1CUY6NndHyAzTftfqBpnXah+UZkT/40Lrd3WpAR+13ShG2FCxC9bILBG8l
-         caUUdG2+ck2Wr64kbpxems/U0PvH4GtKeuy2GHYNYwIyw2ywTE618hQFzCMKI8pQ7Z
-         cJcEfresol647oDEElawG0XNZ7/kYoBcBTLq45mN7dxODjpx+g0W9mXU6u64uYNz7S
-         TzGIi7NZVi1Ug==
+        b=ULKd6D3hSxzc5Yn0EBm/7W4Q6nlI/5YsMKyjhCoQ0hi2CIXSJMrcbgkiCy+UtvZ8r
+         oXgw1MBLrtiLuTD+aLUe9EAmQlS0MYZwHSPfYnGxEq07DKzl/IeO316TmxNqnSgMHm
+         ZG5fj/SklEwcOMhLTKXm2AEcPsb+FB7pYDJYmYYV48mNpGVTvdifhDCk5aUILr3uZz
+         SC4WPLCuaQvkQDr39qwy8aT/WnM5aDFZ8k1R7QvMGEjHGfxQFjLzu85vlXRDX/8xBv
+         /jag4UPOBusceDEFHZjOK/2uwBwON6TiGCIU/RzZzUV1NS1rodZ8CObUQeag404nk3
+         BOdnjmtRAjL8A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Quinn Tran <qutran@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 61/99] scsi: qla2xxx: Fix NVMe | FCP personality change
-Date:   Thu,  9 Sep 2021 20:15:20 -0400
-Message-Id: <20210910001558.173296-61-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.14 64/99] scsi: core: Fix missing FORCE for scsi_devinfo_tbl.c build rule
+Date:   Thu,  9 Sep 2021 20:15:23 -0400
+Message-Id: <20210910001558.173296-64-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001558.173296-1-sashal@kernel.org>
 References: <20210910001558.173296-1-sashal@kernel.org>
@@ -51,55 +50,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+From: Masahiro Yamada <masahiroy@kernel.org>
 
-[ Upstream commit f6e327fc09e48271c103efb3b69fc4ccda3f408b ]
+[ Upstream commit 98079418c53fff5f9e2d4087f08eaff2a9ce7714 ]
 
-Currently driver saves the personality type (FCP|NVMe) at the start of
-first discovery of the remote device. If the remote device personality do
-change over time, then qla driver needs to present that to user to decide.
+Add FORCE so that if_changed can detect the command line change.
+scsi_devinfo_tbl.c must be added to 'targets' too.
 
-Link: https://lore.kernel.org/r/20210817051315.2477-8-njavali@marvell.com
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Link: https://lore.kernel.org/r/20210819012339.709409-1-masahiroy@kernel.org
+Signed-off-by: Masahiro Yamada <masahiroy@kernel.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qla2xxx/qla_gs.c   | 1 +
- drivers/scsi/qla2xxx/qla_init.c | 5 +++--
- 2 files changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/Makefile | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 5b6e04a91a18..f6ed1d62e16b 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3498,6 +3498,7 @@ void qla24xx_async_gnnft_done(scsi_qla_host_t *vha, srb_t *sp)
- 				continue;
- 			fcport->scan_state = QLA_FCPORT_FOUND;
- 			fcport->last_rscn_gen = fcport->rscn_gen;
-+			fcport->fc4_type = rp->fc4type;
- 			found = true;
- 			/*
- 			 * If device was not a fabric device before.
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 27d10524ec3e..3ddc198b5c5c 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -1538,11 +1538,12 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	u16 sec;
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 1748d1ec1338..77812ba3c4aa 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -183,7 +183,7 @@ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
+ zalon7xx-objs	:= zalon.o ncr53c8xx.o
  
- 	ql_dbg(ql_dbg_disc, vha, 0x20d8,
--	    "%s %8phC DS %d LS %d P %d fl %x confl %p rscn %d|%d login %d lid %d scan %d\n",
-+	    "%s %8phC DS %d LS %d P %d fl %x confl %p rscn %d|%d login %d lid %d scan %d fc4type %x\n",
- 	    __func__, fcport->port_name, fcport->disc_state,
- 	    fcport->fw_login_state, fcport->login_pause, fcport->flags,
- 	    fcport->conflict, fcport->last_rscn_gen, fcport->rscn_gen,
--	    fcport->login_gen, fcport->loop_id, fcport->scan_state);
-+	    fcport->login_gen, fcport->loop_id, fcport->scan_state,
-+	    fcport->fc4_type);
+ # Files generated that shall be removed upon make clean
+-clean-files :=	53c700_d.h 53c700_u.h scsi_devinfo_tbl.c
++clean-files :=	53c700_d.h 53c700_u.h
  
- 	if (fcport->scan_state != QLA_FCPORT_FOUND)
- 		return 0;
+ $(obj)/53c700.o: $(obj)/53c700_d.h
+ 
+@@ -192,9 +192,11 @@ $(obj)/scsi_sysfs.o: $(obj)/scsi_devinfo_tbl.c
+ quiet_cmd_bflags = GEN     $@
+ 	cmd_bflags = sed -n 's/.*define *BLIST_\([A-Z0-9_]*\) *.*/BLIST_FLAG_NAME(\1),/p' $< > $@
+ 
+-$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h
++$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h FORCE
+ 	$(call if_changed,bflags)
+ 
++targets +=  scsi_devinfo_tbl.c
++
+ # If you want to play with the firmware, uncomment
+ # GENERATE_FIRMWARE := 1
+ 
 -- 
 2.30.2
 
