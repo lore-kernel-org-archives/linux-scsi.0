@@ -4,45 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A08BC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:52:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB633C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:52:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2318660F13
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:52:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AB8DE6113A
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:52:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240603AbhIJAmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:52 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45932 "EHLO mail.kernel.org"
+        id S240224AbhIJAmS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:42:18 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43688 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233270AbhIJATl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:19:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B09BC61101;
-        Fri, 10 Sep 2021 00:18:30 +0000 (UTC)
+        id S230486AbhIJARm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:17:42 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id F1B22610E9;
+        Fri, 10 Sep 2021 00:16:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233111;
-        bh=TqxRoQY4H+bmtHuvNl4l6K+q0/XtycakI1puKpf8+0Y=;
+        s=k20201202; t=1631232992;
+        bh=TGw4njp5IaZc78R/uUB/LijXLUHq5fkfuYINOfxXf0g=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Zla9QOUH7K2xIJ1thUY7xEeYBTHZ4WSw6+3bdiyn2DQwUi/XTr87RkCmp54PViQHz
-         kD2gZrc4fhZ4jZKutBf7wFPFTa6ZB2tiWoczKUzTvgBbppY4shkb9jz/VL75pBx0lj
-         ueJYaVaFb5+Q3fm6VjFMOM1npckoczi3G+rC9S0QquCIpd67sHqomdyxp8TAtYJj3X
-         GvDZ05rfnNSzpJSHS9DvspaSCsORIHXUiUoaargx8LdZOQIzTuWAs2UdP48Gk7hYig
-         PXXY4JEl/4FK/Qhi24D1zi93YyuzMD7e8CADZcHTKNw1z5Ym2K0DKkTX90R+bh7rA4
-         ypFrPPftD3+jg==
+        b=mwRD27Oe3vInMWnMAGDEn9zFdli1V2UEPsYcxD2Sj7YBRoKsk/SUxHgJXtcOz1s/5
+         lN9D6lGt0hRXQ4dSDeiCEoU8hLbOGXbWeFi/Tt0PQfbX3zLOXul3NCZ8tAfy+ooFEh
+         d05PaQrv8Z7yj0Sk0TTb9f/8nTZmI8bqyKdjWo787ZOz23hOh6RVXLOihw0wMz4w3R
+         xVlxcHdlGQFUOjk9YvOkru7NlKDvHmDn+b9bbjeDrUMQvYBsclJdCN31IIqTmLxMhd
+         /BPtxfVQ2ToMHonWgskuxpxCKJsh+3lGmhwCeKano2ONbb8jB8rgNDVXPnYs77IwVM
+         Iu2jUs6ssWyTQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+        Jia-Ju Bai <baijiaju1990@gmail.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 07/88] scsi: lpfc: Remove use of kmalloc() in trace event logging
-Date:   Thu,  9 Sep 2021 20:16:59 -0400
-Message-Id: <20210910001820.174272-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.14 25/99] scsi: lpfc: Fix possible ABBA deadlock in nvmet_xri_aborted()
+Date:   Thu,  9 Sep 2021 20:14:44 -0400
+Message-Id: <20210910001558.173296-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
-References: <20210910001820.174272-1-sashal@kernel.org>
+In-Reply-To: <20210910001558.173296-1-sashal@kernel.org>
+References: <20210910001558.173296-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -53,72 +53,60 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit e8613084053d406c22914385a488e8b85072100c ]
+[ Upstream commit 7740b615b6665e47f162e261d805f1bbbac15876 ]
 
-There are instances when trace event logs are triggered from an interrupt
-context. The trace event log may attempt to alloc memory causing scheduling
-while atomic bug call traces.
+The lpfc_sli4_nvmet_xri_aborted() routine takes out the abts_buf_list_lock
+and traverses the buffer contexts to match the xri. Upon match, it then
+takes the context lock before potentially removing the context from the
+associated buffer list. This violates the lock hierarchy used elsewhere in
+the driver of locking context, then the abts_buf_list_lock - thus a
+possible deadlock.
 
-Remove the need for the kmalloc'ed vport array when checking the
-log_verbose flag, which eliminates the need for any allocation.
+Resolve by: after matching, release the abts_buf_list_lock, then take the
+context lock, and if to be deleted from the list, retake the
+abts_buf_list_lock, maintaining lock hierarchy. This matches same list lock
+hierarchy as elsewhere in the driver
 
-Link: https://lore.kernel.org/r/20210707184351.67872-3-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20210730163309.25809-1-jsmart2021@gmail.com
+Reported-by: Jia-Ju Bai <baijiaju1990@gmail.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 25 +++++++++++++++++--------
- 1 file changed, 17 insertions(+), 8 deletions(-)
+ drivers/scsi/lpfc/lpfc_nvmet.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 697053aa2771..b661e95a8a36 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -14061,8 +14061,9 @@ void lpfc_dmp_dbg(struct lpfc_hba *phba)
- 	unsigned int temp_idx;
- 	int i;
- 	int j = 0;
--	unsigned long rem_nsec;
--	struct lpfc_vport **vports;
-+	unsigned long rem_nsec, iflags;
-+	bool log_verbose = false;
-+	struct lpfc_vport *port_iterator;
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index f2d9a3580887..6e3dd0b9bcfa 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1797,19 +1797,22 @@ lpfc_sli4_nvmet_xri_aborted(struct lpfc_hba *phba,
+ 		if (ctxp->ctxbuf->sglq->sli4_xritag != xri)
+ 			continue;
  
- 	/* Don't dump messages if we explicitly set log_verbose for the
- 	 * physical port or any vport.
-@@ -14070,16 +14071,24 @@ void lpfc_dmp_dbg(struct lpfc_hba *phba)
- 	if (phba->cfg_log_verbose)
- 		return;
- 
--	vports = lpfc_create_vport_work_array(phba);
--	if (vports != NULL) {
--		for (i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
--			if (vports[i]->cfg_log_verbose) {
--				lpfc_destroy_vport_work_array(phba, vports);
-+	spin_lock_irqsave(&phba->port_list_lock, iflags);
-+	list_for_each_entry(port_iterator, &phba->port_list, listentry) {
-+		if (port_iterator->load_flag & FC_UNLOADING)
-+			continue;
-+		if (scsi_host_get(lpfc_shost_from_vport(port_iterator))) {
-+			if (port_iterator->cfg_log_verbose)
-+				log_verbose = true;
+-		spin_lock(&ctxp->ctxlock);
++		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
++				       iflag);
 +
-+			scsi_host_put(lpfc_shost_from_vport(port_iterator));
-+
-+			if (log_verbose) {
-+				spin_unlock_irqrestore(&phba->port_list_lock,
-+						       iflags);
- 				return;
- 			}
++		spin_lock_irqsave(&ctxp->ctxlock, iflag);
+ 		/* Check if we already received a free context call
+ 		 * and we have completed processing an abort situation.
+ 		 */
+ 		if (ctxp->flag & LPFC_NVME_CTX_RLS &&
+ 		    !(ctxp->flag & LPFC_NVME_ABORT_OP)) {
++			spin_lock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
+ 			list_del_init(&ctxp->list);
++			spin_unlock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
+ 			released = true;
  		}
- 	}
--	lpfc_destroy_vport_work_array(phba, vports);
-+	spin_unlock_irqrestore(&phba->port_list_lock, iflags);
+ 		ctxp->flag &= ~LPFC_NVME_XBUSY;
+-		spin_unlock(&ctxp->ctxlock);
+-		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
+-				       iflag);
++		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
  
- 	if (atomic_cmpxchg(&phba->dbg_log_dmping, 0, 1) != 0)
- 		return;
+ 		rrq_empty = list_empty(&phba->active_rrq_list);
+ 		ndlp = lpfc_findnode_did(phba->pport, ctxp->sid);
 -- 
 2.30.2
 
