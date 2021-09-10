@@ -2,100 +2,263 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C426C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 20:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98863C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 520886113E
-	for <linux-scsi@archiver.kernel.org>; Thu,  9 Sep 2021 20:42:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8413161167
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345508AbhIIUnW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 16:43:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45756 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245624AbhIIUnV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Sep 2021 16:43:21 -0400
-Received: from mail-io1-xd2f.google.com (mail-io1-xd2f.google.com [IPv6:2607:f8b0:4864:20::d2f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FF2BC061574
-        for <linux-scsi@vger.kernel.org>; Thu,  9 Sep 2021 13:42:12 -0700 (PDT)
-Received: by mail-io1-xd2f.google.com with SMTP id b7so4074842iob.4
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Sep 2021 13:42:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
-        h=subject:from:to:cc:references:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=VMwlM4GyMZLXj8Fib8keX4XRi0UDBn+ujtEneqseAMU=;
-        b=jDwT6b38OSIO6dlAh50hbay4fjrqkM8GLiVdhZTZXBBlD7OdbOkbGoLZo0uUvA463U
-         7N1kBmkmWqrazTDs9egtgdslGoFE+huJQCrJ/MIe9VQfm1jWhLplnQ8xzUXbvoB8RKWm
-         doKi9I2kCw0tCx+7g2+JZitd5Akx+ZWofu8RJMti8mc0H+v/d6AXK00/TIwSPJKvvtHg
-         J8nTf7SG/xOvND0trDnMzMvgWsVnFuPpfnbrXXDDwYrQHr6S+cRPxdwIO3L9d93Y8N5q
-         okBjG3D/4ZUiPNCO6cQRG7g2GdxEWJ36Yzpdy5N7d4BT6ipCrrO5pIywyf4A/L/KgOz2
-         nW6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=VMwlM4GyMZLXj8Fib8keX4XRi0UDBn+ujtEneqseAMU=;
-        b=L7J6OnKPHUUlgYp41FdwQuqahr8yGDudZFssyLzIeNQztEMQChNTYgyk0ea3ElS6YY
-         5ag7IMBKa6p+0VBC1y/j66QXGTWa+rF2ei5+MYDHrZCiTmXmk1IxUC9hNFGSx/0505S2
-         8Xg40urcV71IBbsd/nDoBvalVjbtkWJ4ZAOXbDtM+zAg7iHvPaseV8wOYlQw81obSnke
-         o5KCUwanW0ux9ubSXpQE15pSHrnCBMfNVtOJQINXtrDX5aHXspSpRI4+9u5Go6W5PJOu
-         0nf6a1Qz+eo7EkbG9/hwwEHYrQ89LylLzn56IX9IkUY1NYa15Lvc9cA1XeqA8+gsxDTE
-         hZ6A==
-X-Gm-Message-State: AOAM5330+815Rwt7gLHJcuOFGHnmH2wvuAUUw8u3LP+aYS59cOOrEElQ
-        Dz2f9he++mCRTZE5Tf+pn+d7Vw==
-X-Google-Smtp-Source: ABdhPJx5/GznvKhLT6rvGZ+4I8MGwh86gDp/0GuBtqVrWW7mCTLsptR8tMOZ/TBavfaj2qmNZbCtgg==
-X-Received: by 2002:a05:6638:d11:: with SMTP id q17mr1496935jaj.63.1631220131553;
-        Thu, 09 Sep 2021 13:42:11 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id f3sm1339667ilu.85.2021.09.09.13.42.10
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Sep 2021 13:42:11 -0700 (PDT)
-Subject: Re: [PATCH] scsi: bsg: Fix device unregistration
-From:   Jens Axboe <axboe@kernel.dk>
-To:     Zenghui Yu <yuzenghui@huawei.com>, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc:     fujita.tomonori@lab.ntt.co.jp, martin.petersen@oracle.com,
-        hch@lst.de, gregkh@linuxfoundation.org, wanghaibin.wang@huawei.com
-References: <20210909034608.1435-1-yuzenghui@huawei.com>
- <78c3c08b-ebba-8d46-7eae-f82d0b1c50fe@kernel.dk>
-Message-ID: <ac61cf8b-061e-dd96-1730-edec5a886c62@kernel.dk>
-Date:   Thu, 9 Sep 2021 14:42:10 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S229716AbhIJARR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:17:17 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43230 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229698AbhIJARQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:17:16 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 895386023D;
+        Fri, 10 Sep 2021 00:16:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1631232966;
+        bh=vsoXdWXo2+FQ7z/eNUr1ymDIYbf3jrLPla7HAzELjvE=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=pdmDQ1KUpEG3UCTX4/gTBTbyOzi9oRLMPz9PAtykzzNtW5W2WUoJLyJnFbvzT9DD2
+         jn2Xa2BS5asBM3pSKzqmiCAwxxiMO4wlV1Z9BM/VrgT13joDH4OmgPWqKLmRiPKbDm
+         3czsGWt1sU0vFYgr6RbgQeZkZXiC9eGq+6XLKtCPBQfZeYO4vtV+MkcAsUhtdRlgGa
+         ceCRyfGCRIsQVwaviDiLJ+ECgjRxCI0MoS/vMPUBYmrA/oCApsnEpVVkU9stM+cw7n
+         wQKPuqdvM0TlffJr5gUKx2Zp5xCHPaCJBxZR10bHkhcJT0f8gW86lttkgRyHlJIK0T
+         WeFhJ4NChk2LA==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Mike Christie <michael.christie@oracle.com>,
+        Lv Yunlong <lyl2019@mail.ustc.edu.cn>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.14 05/99] scsi: be2iscsi: Fix use-after-free during IP updates
+Date:   Thu,  9 Sep 2021 20:14:24 -0400
+Message-Id: <20210910001558.173296-5-sashal@kernel.org>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20210910001558.173296-1-sashal@kernel.org>
+References: <20210910001558.173296-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <78c3c08b-ebba-8d46-7eae-f82d0b1c50fe@kernel.dk>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/9/21 2:40 PM, Jens Axboe wrote:
-> On 9/8/21 9:46 PM, Zenghui Yu wrote:
->> We use device_initialize() to take refcount for the device but forget to
->> put_device() on device teardown, which ends up leaking private data of the
->> driver core, dev_name(), etc. This is reported by kmemleak at boot time if
->> we compile kernel with DEBUG_TEST_DRIVER_REMOVE.
->>
->> Note that adding the missing put_device() is _not_ sufficient to fix device
->> unregistration. As we don't provide the .release() method for device, which
->> turned out to be typically wrong and will be complained loudly by the
->> driver core.
->>
->> Fix both of them.
-> 
-> Applied, thanks.
+From: Mike Christie <michael.christie@oracle.com>
 
-Actually, let's move this through the SCSI tree, as the offending patch
-went that way (and my branches are behind that point).
+[ Upstream commit 7b0ddc1346089b62b45e688e350c9e1c3f7a3ab2 ]
 
+This fixes a bug found by Lv Yunlong where, because beiscsi_exec_nemb_cmd()
+frees memory for the be_dma_mem cmd(), we can access freed memory when
+beiscsi_if_clr_ip()/beiscsi_if_set_ip()'s call to beiscsi_exec_nemb_cmd()
+fails and we access the freed req. This fixes the issue by having the
+caller free the cmd's memory.
+
+Link: https://lore.kernel.org/r/20210701190840.175120-1-michael.christie@oracle.com
+Reported-by: Lv Yunlong <lyl2019@mail.ustc.edu.cn>
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/be2iscsi/be_mgmt.c | 84 ++++++++++++++++++---------------
+ 1 file changed, 45 insertions(+), 39 deletions(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 462717bbb5b7..4e899ec1477d 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -235,8 +235,7 @@ static int beiscsi_exec_nemb_cmd(struct beiscsi_hba *phba,
+ 	wrb = alloc_mcc_wrb(phba, &tag);
+ 	if (!wrb) {
+ 		mutex_unlock(&ctrl->mbox_lock);
+-		rc = -ENOMEM;
+-		goto free_cmd;
++		return -ENOMEM;
+ 	}
+ 
+ 	sge = nonembedded_sgl(wrb);
+@@ -269,24 +268,6 @@ static int beiscsi_exec_nemb_cmd(struct beiscsi_hba *phba,
+ 	/* copy the response, if any */
+ 	if (resp_buf)
+ 		memcpy(resp_buf, nonemb_cmd->va, resp_buf_len);
+-	/**
+-	 * This is special case of NTWK_GET_IF_INFO where the size of
+-	 * response is not known. beiscsi_if_get_info checks the return
+-	 * value to free DMA buffer.
+-	 */
+-	if (rc == -EAGAIN)
+-		return rc;
+-
+-	/**
+-	 * If FW is busy that is driver timed out, DMA buffer is saved with
+-	 * the tag, only when the cmd completes this buffer is freed.
+-	 */
+-	if (rc == -EBUSY)
+-		return rc;
+-
+-free_cmd:
+-	dma_free_coherent(&ctrl->pdev->dev, nonemb_cmd->size,
+-			    nonemb_cmd->va, nonemb_cmd->dma);
+ 	return rc;
+ }
+ 
+@@ -309,6 +290,19 @@ static int beiscsi_prep_nemb_cmd(struct beiscsi_hba *phba,
+ 	return 0;
+ }
+ 
++static void beiscsi_free_nemb_cmd(struct beiscsi_hba *phba,
++				  struct be_dma_mem *cmd, int rc)
++{
++	/*
++	 * If FW is busy the DMA buffer is saved with the tag. When the cmd
++	 * completes this buffer is freed.
++	 */
++	if (rc == -EBUSY)
++		return;
++
++	dma_free_coherent(&phba->ctrl.pdev->dev, cmd->size, cmd->va, cmd->dma);
++}
++
+ static void __beiscsi_eq_delay_compl(struct beiscsi_hba *phba, unsigned int tag)
+ {
+ 	struct be_dma_mem *tag_mem;
+@@ -344,8 +338,16 @@ int beiscsi_modify_eq_delay(struct beiscsi_hba *phba,
+ 				cpu_to_le32(set_eqd[i].delay_multiplier);
+ 	}
+ 
+-	return beiscsi_exec_nemb_cmd(phba, &nonemb_cmd,
+-				     __beiscsi_eq_delay_compl, NULL, 0);
++	rc = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, __beiscsi_eq_delay_compl,
++				   NULL, 0);
++	if (rc) {
++		/*
++		 * Only free on failure. Async cmds are handled like -EBUSY
++		 * where it's handled for us.
++		 */
++		beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
++	}
++	return rc;
+ }
+ 
+ /**
+@@ -372,6 +374,7 @@ int beiscsi_get_initiator_name(struct beiscsi_hba *phba, char *name, bool cfg)
+ 		req->hdr.version = 1;
+ 	rc = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL,
+ 				   &resp, sizeof(resp));
++	beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
+ 	if (rc) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+@@ -449,7 +452,9 @@ static int beiscsi_if_mod_gw(struct beiscsi_hba *phba,
+ 	req->ip_addr.ip_type = ip_type;
+ 	memcpy(req->ip_addr.addr, gw,
+ 	       (ip_type < BEISCSI_IP_TYPE_V6) ? IP_V4_LEN : IP_V6_LEN);
+-	return beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL, NULL, 0);
++	rt_val = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL, NULL, 0);
++	beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rt_val);
++	return rt_val;
+ }
+ 
+ int beiscsi_if_set_gw(struct beiscsi_hba *phba, u32 ip_type, u8 *gw)
+@@ -499,8 +504,10 @@ int beiscsi_if_get_gw(struct beiscsi_hba *phba, u32 ip_type,
+ 	req = nonemb_cmd.va;
+ 	req->ip_type = ip_type;
+ 
+-	return beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL,
+-				     resp, sizeof(*resp));
++	rc = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL, resp,
++				   sizeof(*resp));
++	beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
++	return rc;
+ }
+ 
+ static int
+@@ -537,6 +544,7 @@ beiscsi_if_clr_ip(struct beiscsi_hba *phba,
+ 			    "BG_%d : failed to clear IP: rc %d status %d\n",
+ 			    rc, req->ip_params.ip_record.status);
+ 	}
++	beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
+ 	return rc;
+ }
+ 
+@@ -581,6 +589,7 @@ beiscsi_if_set_ip(struct beiscsi_hba *phba, u8 *ip,
+ 		if (req->ip_params.ip_record.status)
+ 			rc = -EINVAL;
+ 	}
++	beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
+ 	return rc;
+ }
+ 
+@@ -608,6 +617,7 @@ int beiscsi_if_en_static(struct beiscsi_hba *phba, u32 ip_type,
+ 		reldhcp->interface_hndl = phba->interface_handle;
+ 		reldhcp->ip_type = ip_type;
+ 		rc = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL, NULL, 0);
++		beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
+ 		if (rc < 0) {
+ 			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+ 				    "BG_%d : failed to release existing DHCP: %d\n",
+@@ -689,7 +699,7 @@ int beiscsi_if_en_dhcp(struct beiscsi_hba *phba, u32 ip_type)
+ 	dhcpreq->interface_hndl = phba->interface_handle;
+ 	dhcpreq->ip_type = ip_type;
+ 	rc = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL, NULL, 0);
+-
++	beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
+ exit:
+ 	kfree(if_info);
+ 	return rc;
+@@ -762,11 +772,8 @@ int beiscsi_if_get_info(struct beiscsi_hba *phba, int ip_type,
+ 				    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+ 				    "BG_%d : Memory Allocation Failure\n");
+ 
+-				/* Free the DMA memory for the IOCTL issuing */
+-				dma_free_coherent(&phba->ctrl.pdev->dev,
+-						    nonemb_cmd.size,
+-						    nonemb_cmd.va,
+-						    nonemb_cmd.dma);
++				beiscsi_free_nemb_cmd(phba, &nonemb_cmd,
++						      -ENOMEM);
+ 				return -ENOMEM;
+ 		}
+ 
+@@ -781,15 +788,13 @@ int beiscsi_if_get_info(struct beiscsi_hba *phba, int ip_type,
+ 				      nonemb_cmd.va)->actual_resp_len;
+ 			ioctl_size += sizeof(struct be_cmd_req_hdr);
+ 
+-			/* Free the previous allocated DMA memory */
+-			dma_free_coherent(&phba->ctrl.pdev->dev, nonemb_cmd.size,
+-					    nonemb_cmd.va,
+-					    nonemb_cmd.dma);
+-
++			beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
+ 			/* Free the virtual memory */
+ 			kfree(*if_info);
+-		} else
++		} else {
++			beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
+ 			break;
++		}
+ 	} while (true);
+ 	return rc;
+ }
+@@ -806,8 +811,9 @@ int mgmt_get_nic_conf(struct beiscsi_hba *phba,
+ 	if (rc)
+ 		return rc;
+ 
+-	return beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL,
+-				     nic, sizeof(*nic));
++	rc = beiscsi_exec_nemb_cmd(phba, &nonemb_cmd, NULL, nic, sizeof(*nic));
++	beiscsi_free_nemb_cmd(phba, &nonemb_cmd, rc);
++	return rc;
+ }
+ 
+ static void beiscsi_boot_process_compl(struct beiscsi_hba *phba,
 -- 
-Jens Axboe
+2.30.2
 
