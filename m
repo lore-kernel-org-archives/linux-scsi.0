@@ -7,38 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 119DCC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0505EC4332F
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F284D60C40
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E36EE61108
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232262AbhIJAnV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:43:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46924 "EHLO mail.kernel.org"
+        id S240899AbhIJAnQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:43:16 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46888 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230405AbhIJAUy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:20:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 6E8E9610E9;
-        Fri, 10 Sep 2021 00:19:43 +0000 (UTC)
+        id S233721AbhIJAUu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:20:50 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 99644610E9;
+        Fri, 10 Sep 2021 00:19:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233184;
-        bh=XyH2l67V36Il5T/GuHJW1uKzhlCEXhp/Ee6URnRKdz4=;
+        s=k20201202; t=1631233180;
+        bh=oA7f8RO069GkXYQ2aoqymN1yRCbYd5GBUbCg7vF3x1A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=hMrcpC087kudkf1OtJ7IoJhrdKk9cBVVF4zSQW3kG6/7I+zjPlMOd8bQ/EBTUAoQT
-         5QA/dJ/eExfxjsH2MLxg33PvbBlzvthV8ToL2YIFYzKNBCVjwP4PXeaNcNXgxhWNeD
-         PUBN6gIEtIGvCzfP6qNx8yHBACc4U+3mcJwP3axwjswgDnXOPSMf+y1LCLA8TrW0oG
-         8i6QMoagR1OAq7BVx3NDzxqLy7UccpXtmoaycEYc+m4/qEtau5L2pMtWXc30vJTI3Y
-         Xi3sSNZXTm8t4AfQJLG0l0o11USQDhXar6L5dW/qNs0LJGYxhkSXPWt0SDHWT1ZDnz
-         bpPXwwL0/hGUw==
+        b=so7KmD/7kAZ6SiVyEqKd0EyGX4Nkk6TRh1ZETiPdGlRaPhOw2zWhQkr1b/OoXUvgJ
+         8aoa/THYDc+y8rUO/Ohr2M/uLB50/joty55WdMUVcWYLAzd7p/4rqly7Kgz+sacKKC
+         5jYr8k2ul8kKtvnQETMQr3B8sBbmxAuvtUNdnAkOhdsO3PBARly8ltU11ZeT2IiHiL
+         HtEDTvta+iuITVEs4AoIP3vAlcfWl43h9dKnYtSRNMUYD/P8pCym86Ut+BA1GD9LHm
+         rse6fiKwei52XIo7l88sLCpzUAOMltdZI+ufqsT79kRrA8G/4aWfXwWrDp0M4NtoTL
+         LVvmIAhb7Ul+w==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Adrian Hunter <adrian.hunter@intel.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 59/88] scsi: ufs: Fix ufshcd_request_sense_async() for Samsung KLUFG8RHDA-B2D1
-Date:   Thu,  9 Sep 2021 20:17:51 -0400
-Message-Id: <20210910001820.174272-59-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 56/88] scsi: qla2xxx: Fix NVMe session down detection
+Date:   Thu,  9 Sep 2021 20:17:48 -0400
+Message-Id: <20210910001820.174272-56-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
 References: <20210910001820.174272-1-sashal@kernel.org>
@@ -50,92 +51,97 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Adrian Hunter <adrian.hunter@intel.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit 9b5ac8ab4e8bf5636d1d425aee68ddf45af12057 ]
+[ Upstream commit 7a8ff7d9854a1727435557184c8255bbbca60920 ]
 
-Samsung KLUFG8RHDA-B2D1 does not clear the unit attention condition if the
-length is zero. So go back to requesting all the sense data, as it was
-before patch "scsi: ufs: Request sense data asynchronously". That is
-simpler than creating and maintaining a quirk for affected devices.
+When Target port transitions personality from one to another (NVMe <-->
+FCP), there could be some overlap of the two where one layer is going down
+while the other layer is coming up. This overlap can cause temporary I/O
+error. Detect those errors/transitions and recover from them. Triggers
+session tear down and allow relogin to re-drive the connection under the
+following conditions:
 
-Link: https://lore.kernel.org/r/20210824114150.2105-1-adrian.hunter@intel.com
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+ - NVMe command error
+
+ - On PRLO + N2N (rida format 2)
+
+Link: https://lore.kernel.org/r/20210817051315.2477-11-njavali@marvell.com
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 36 +++++++++++++++++++++++++++++-------
- 1 file changed, 29 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c | 12 +++++++-----
+ drivers/scsi/qla2xxx/qla_isr.c  |  9 +++++++++
+ drivers/scsi/qla2xxx/qla_mbx.c  | 10 ++++++++++
+ 3 files changed, 26 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 1f0980a70e3f..dcd1eeb2b0e0 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -7787,7 +7787,8 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
- {
- 	if (error != BLK_STS_OK)
--		pr_err("%s: REQUEST SENSE failed (%d)", __func__, error);
-+		pr_err("%s: REQUEST SENSE failed (%d)\n", __func__, error);
-+	kfree(rq->end_io_data);
- 	blk_put_request(rq);
- }
- 
-@@ -7795,16 +7796,30 @@ static int
- ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
- {
- 	/*
--	 * From SPC-6: the REQUEST SENSE command with any allocation length
--	 * clears the sense data.
-+	 * Some UFS devices clear unit attention condition only if the sense
-+	 * size used (UFS_SENSE_SIZE in this case) is non-zero.
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 3aa9869f6fae..0708dbdfa2cc 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2706,12 +2706,14 @@ qla2x00_terminate_rport_io(struct fc_rport *rport)
+ 	 * final cleanup of firmware resources (PCBs and XCBs).
  	 */
--	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, 0, 0};
-+	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, UFS_SENSE_SIZE, 0};
- 	struct scsi_request *rq;
- 	struct request *req;
-+	char *buffer;
-+	int ret;
- 
--	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, /*flags=*/0);
--	if (IS_ERR(req))
--		return PTR_ERR(req);
-+	buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
-+	if (!buffer)
-+		return -ENOMEM;
+ 	if (fcport->loop_id != FC_NO_LOOP_ID) {
+-		if (IS_FWI2_CAPABLE(fcport->vha->hw))
+-			fcport->vha->hw->isp_ops->fabric_logout(fcport->vha,
+-			    fcport->loop_id, fcport->d_id.b.domain,
+-			    fcport->d_id.b.area, fcport->d_id.b.al_pa);
+-		else
++		if (IS_FWI2_CAPABLE(fcport->vha->hw)) {
++			if (fcport->loop_id != FC_NO_LOOP_ID)
++				fcport->logout_on_delete = 1;
 +
-+	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN,
-+			      /*flags=*/BLK_MQ_REQ_PM);
-+	if (IS_ERR(req)) {
-+		ret = PTR_ERR(req);
-+		goto out_free;
-+	}
-+
-+	ret = blk_rq_map_kern(sdev->request_queue, req,
-+			      buffer, UFS_SENSE_SIZE, GFP_NOIO);
-+	if (ret)
-+		goto out_put;
- 
- 	rq = scsi_req(req);
- 	rq->cmd_len = ARRAY_SIZE(cmd);
-@@ -7812,10 +7827,17 @@ ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
- 	rq->retries = 3;
- 	req->timeout = 1 * HZ;
- 	req->rq_flags |= RQF_PM | RQF_QUIET;
-+	req->end_io_data = buffer;
- 
- 	blk_execute_rq_nowait(/*bd_disk=*/NULL, req, /*at_head=*/true,
- 			      ufshcd_request_sense_done);
- 	return 0;
-+
-+out_put:
-+	blk_put_request(req);
-+out_free:
-+	kfree(buffer);
-+	return ret;
++			qlt_schedule_sess_for_deletion(fcport);
++		} else {
+ 			qla2x00_port_logout(fcport->vha, fcport);
++		}
+ 	}
  }
  
- static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 6e8f737a4af3..16ab9a77a5e8 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2415,6 +2415,15 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	case CS_PORT_UNAVAILABLE:
+ 	case CS_PORT_LOGGED_OUT:
+ 		fcport->nvme_flag |= NVME_FLAG_RESETTING;
++		if (atomic_read(&fcport->state) == FCS_ONLINE) {
++			ql_dbg(ql_dbg_disc, fcport->vha, 0x3021,
++			       "Port to be marked lost on fcport=%06x, current "
++			       "port state= %s comp_status %x.\n",
++			       fcport->d_id.b24, port_state_str[FCS_ONLINE],
++			       comp_status);
++
++			qlt_schedule_sess_for_deletion(fcport);
++		}
+ 		fallthrough;
+ 	case CS_ABORTED:
+ 	case CS_PORT_BUSY:
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 423864b08e10..cda78bfd29ab 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -4172,6 +4172,16 @@ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 				rptid_entry->u.f2.remote_nport_id[1];
+ 			fcport->d_id.b.al_pa =
+ 				rptid_entry->u.f2.remote_nport_id[0];
++
++			/*
++			 * For the case where remote port sending PRLO, FW
++			 * sends up RIDA Format 2 as an indication of session
++			 * loss. In other word, FW state change from PRLI
++			 * complete back to PLOGI complete. Delete the
++			 * session and let relogin drive the reconnect.
++			 */
++			if (atomic_read(&fcport->state) == FCS_ONLINE)
++				qlt_schedule_sess_for_deletion(fcport);
+ 		}
+ 	}
+ }
 -- 
 2.30.2
 
