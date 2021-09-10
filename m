@@ -7,41 +7,46 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 656BCC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 06FE6C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4F60F61108
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBBB3611CC
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232976AbhIJAoH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:44:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:48866 "EHLO mail.kernel.org"
+        id S240289AbhIJAoK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:44:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49150 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234467AbhIJAXY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:23:24 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7B9C4611BD;
-        Fri, 10 Sep 2021 00:22:13 +0000 (UTC)
+        id S229838AbhIJAXr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:23:47 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 90CA3610A3;
+        Fri, 10 Sep 2021 00:22:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233334;
-        bh=m0SkfDEe4BupFPCc5cdIPFGZzcGkPqPOX8g2AK0Xpi0=;
+        s=k20201202; t=1631233357;
+        bh=SksZUmVrjSdh2lNYtvcFmh+M2JhEgVzuphON/3kt4xA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I+uBH3sfOSHc5NHjc6cOCBn6XrTDz2PVh6g4aHfdwX93pEp7R1oq/5O/mByvhh2vn
-         KTuD40XD7u2ifXJmm6jJDxDfrmgVPJKo3D+PnPm4i0bxtiwcHhomOHuVA9B/YQol/7
-         QNznh6PC+G2LQJpKPHl6vr3YRktPHmxLhi2bRfB9k1CoCarxjb6eids5UKM5J5CBjm
-         P3eMNRJXXiDM0k/+NhHJS/dkYT2FHoBvjfaDva55vZ9GtH6cgXTYevx99vcmdQ5aYm
-         hjCjyPks6DHjmnFgL3x9SgGjlvkwkSC5pbiqqKV5BjUgVyhqo6oFbhqTZhHsXDo5FN
-         0JG0Wfoa8UV1g==
+        b=OwjUq2icvW9mEng4B1Xk1Ur1P7E7XwDxGr4RnIV+PF36pe5wzWqBRWPVw03R7YEPC
+         a3x7GRnubTvcUUhv0fdFdxfMzga0H1NpmA9olYs06ehCGX9+JUh4wf7s1NkEekPURz
+         aVtprqaZiOZRNnOlgdNPk2QffXI9r4A+faisP2LDMTfmhBUZsyVYVQpB0YdHMYgg1W
+         lMnPgyruRWXJvXkJb2KkV4HZBtqr/mNFEDFQhx9Gdd5qyGwf0BVu4rt5zmcOrNu+FR
+         4D8U3qcdq6dJuTOlkHQSbdusIO+LDZpT/gQnddtH+9ohIS+pT4VlwYenc8IOZvt6kv
+         4UZjrp6uwJ3lA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Masahiro Yamada <masahiroy@kernel.org>,
+Cc:     Mike McGowen <mike.mcgowen@microchip.com>,
+        Kevin Barnett <kevin.barnett@microchip.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 23/37] scsi: core: Fix missing FORCE for scsi_devinfo_tbl.c build rule
-Date:   Thu,  9 Sep 2021 20:21:28 -0400
-Message-Id: <20210910002143.175731-23-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, storagedev@microchip.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 02/25] scsi: smartpqi: Fix ISR accessing uninitialized data
+Date:   Thu,  9 Sep 2021 20:22:10 -0400
+Message-Id: <20210910002234.176125-2-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210910002143.175731-1-sashal@kernel.org>
-References: <20210910002143.175731-1-sashal@kernel.org>
+In-Reply-To: <20210910002234.176125-1-sashal@kernel.org>
+References: <20210910002234.176125-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,46 +55,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Masahiro Yamada <masahiroy@kernel.org>
+From: Mike McGowen <mike.mcgowen@microchip.com>
 
-[ Upstream commit 98079418c53fff5f9e2d4087f08eaff2a9ce7714 ]
+[ Upstream commit 0777a3fb98f0ea546561d04db4fd325248c39961 ]
 
-Add FORCE so that if_changed can detect the command line change.
-scsi_devinfo_tbl.c must be added to 'targets' too.
+Correct driver's ISR accessing a data structure member that has not been
+fully initialized during driver initialization.
 
-Link: https://lore.kernel.org/r/20210819012339.709409-1-masahiroy@kernel.org
-Signed-off-by: Masahiro Yamada <masahiroy@kernel.org>
+The pqi queue groups can have uninitialized members when an interrupt
+fires. This has not resulted in any driver crashes. This was found during
+our own internal testing. No bugs were ever filed.
+
+Link: https://lore.kernel.org/r/20210714182847.50360-9-don.brace@microchip.com
+Reviewed-by: Kevin Barnett <kevin.barnett@microchip.com>
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Signed-off-by: Mike McGowen <mike.mcgowen@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/Makefile | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index c00e3dd57990..7ac42eaa6250 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -183,7 +183,7 @@ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
- zalon7xx-objs	:= zalon.o ncr53c8xx.o
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 98f2d076f938..65cf4c6f9fa7 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6204,11 +6204,11 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
  
- # Files generated that shall be removed upon make clean
--clean-files :=	53c700_d.h 53c700_u.h scsi_devinfo_tbl.c
-+clean-files :=	53c700_d.h 53c700_u.h
+ 	pqi_init_operational_queues(ctrl_info);
  
- $(obj)/53c700.o: $(obj)/53c700_d.h
+-	rc = pqi_request_irqs(ctrl_info);
++	rc = pqi_create_queues(ctrl_info);
+ 	if (rc)
+ 		return rc;
  
-@@ -192,9 +192,11 @@ $(obj)/scsi_sysfs.o: $(obj)/scsi_devinfo_tbl.c
- quiet_cmd_bflags = GEN     $@
- 	cmd_bflags = sed -n 's/.*define *BLIST_\([A-Z0-9_]*\) *.*/BLIST_FLAG_NAME(\1),/p' $< > $@
- 
--$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h
-+$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h FORCE
- 	$(call if_changed,bflags)
- 
-+targets +=  scsi_devinfo_tbl.c
-+
- # If you want to play with the firmware, uncomment
- # GENERATE_FIRMWARE := 1
+-	rc = pqi_create_queues(ctrl_info);
++	rc = pqi_request_irqs(ctrl_info);
+ 	if (rc)
+ 		return rc;
  
 -- 
 2.30.2
