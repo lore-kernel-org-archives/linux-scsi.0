@@ -4,46 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBAC4C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A08BC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:52:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A544A6115A
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:43:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2318660F13
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:52:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233191AbhIJAoQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:44:16 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49290 "EHLO mail.kernel.org"
+        id S240603AbhIJAmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:42:52 -0400
+Received: from mail.kernel.org ([198.145.29.99]:45932 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230281AbhIJAX7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:23:59 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4662E611BF;
-        Fri, 10 Sep 2021 00:22:48 +0000 (UTC)
+        id S233270AbhIJATl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:19:41 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B09BC61101;
+        Fri, 10 Sep 2021 00:18:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233369;
-        bh=iyiWDqkGT+mpmIOdYTzF8FXnSBTE57Zj9vaOfTGcxV8=;
+        s=k20201202; t=1631233111;
+        bh=TqxRoQY4H+bmtHuvNl4l6K+q0/XtycakI1puKpf8+0Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=GWcJm664OAH1l+jR5fuEgde8miWDeq1xM3tKEClr48GJMC0JB2WLCmvVxNWLn+RAh
-         kkUH8lB8AUKCNFhmqlZ0hlYoa7kvAxPR3dczPR8iWkFZYBW4PSvsk2716YKkfaERmy
-         U3J3nVo/6inRjsAwNnVKC1NNv6eI4NUGCxpG6Yhg3cjNuvNkuRrfbRqFMrwb+vX83B
-         l2hjbZwdX3U7RwEoRGfgch9XqOY8VkTszrYrM+WsQN3OYN4DXeULKHTnpVnP78mxfe
-         UqOsUXt9t8YtkLRfR2PixlBskbyvohbiOTBGbJ00pe6BMOoZ6/Sd1nvn5JYOf7gQVa
-         zltCgHFGjd6dQ==
+        b=Zla9QOUH7K2xIJ1thUY7xEeYBTHZ4WSw6+3bdiyn2DQwUi/XTr87RkCmp54PViQHz
+         kD2gZrc4fhZ4jZKutBf7wFPFTa6ZB2tiWoczKUzTvgBbppY4shkb9jz/VL75pBx0lj
+         ueJYaVaFb5+Q3fm6VjFMOM1npckoczi3G+rC9S0QquCIpd67sHqomdyxp8TAtYJj3X
+         GvDZ05rfnNSzpJSHS9DvspaSCsORIHXUiUoaargx8LdZOQIzTuWAs2UdP48Gk7hYig
+         PXXY4JEl/4FK/Qhi24D1zi93YyuzMD7e8CADZcHTKNw1z5Ym2K0DKkTX90R+bh7rA4
+         ypFrPPftD3+jg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Tuo Li <islituo@gmail.com>, TOTE Robot <oslab@tsinghua.edu.cn>,
-        Bodo Stroesser <bostroesser@gmail.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 11/25] scsi: target: pscsi: Fix possible null-pointer dereference in pscsi_complete_cmd()
-Date:   Thu,  9 Sep 2021 20:22:19 -0400
-Message-Id: <20210910002234.176125-11-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.13 07/88] scsi: lpfc: Remove use of kmalloc() in trace event logging
+Date:   Thu,  9 Sep 2021 20:16:59 -0400
+Message-Id: <20210910001820.174272-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210910002234.176125-1-sashal@kernel.org>
-References: <20210910002234.176125-1-sashal@kernel.org>
+In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
+References: <20210910001820.174272-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -52,71 +51,74 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Tuo Li <islituo@gmail.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 0f99792c01d1d6d35b86e850e9ccadd98d6f3e0c ]
+[ Upstream commit e8613084053d406c22914385a488e8b85072100c ]
 
-The return value of transport_kmap_data_sg() is assigned to the variable
-buf:
+There are instances when trace event logs are triggered from an interrupt
+context. The trace event log may attempt to alloc memory causing scheduling
+while atomic bug call traces.
 
-  buf = transport_kmap_data_sg(cmd);
+Remove the need for the kmalloc'ed vport array when checking the
+log_verbose flag, which eliminates the need for any allocation.
 
-And then it is checked:
-
-  if (!buf) {
-
-This indicates that buf can be NULL. However, it is dereferenced in the
-following statements:
-
-  if (!(buf[3] & 0x80))
-    buf[3] |= 0x80;
-  if (!(buf[2] & 0x80))
-    buf[2] |= 0x80;
-
-To fix these possible null-pointer dereferences, dereference buf and call
-transport_kunmap_data_sg() only when buf is not NULL.
-
-Link: https://lore.kernel.org/r/20210810040414.248167-1-islituo@gmail.com
-Reported-by: TOTE Robot <oslab@tsinghua.edu.cn>
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
-Signed-off-by: Tuo Li <islituo@gmail.com>
+Link: https://lore.kernel.org/r/20210707184351.67872-3-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_pscsi.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 25 +++++++++++++++++--------
+ 1 file changed, 17 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 1b52cd4d793f..a3617829107d 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -635,17 +635,17 @@ static void pscsi_complete_cmd(struct se_cmd *cmd, u8 scsi_status,
- 			buf = transport_kmap_data_sg(cmd);
- 			if (!buf) {
- 				; /* XXX: TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE */
--			}
--
--			if (cdb[0] == MODE_SENSE_10) {
--				if (!(buf[3] & 0x80))
--					buf[3] |= 0x80;
- 			} else {
--				if (!(buf[2] & 0x80))
--					buf[2] |= 0x80;
--			}
-+				if (cdb[0] == MODE_SENSE_10) {
-+					if (!(buf[3] & 0x80))
-+						buf[3] |= 0x80;
-+				} else {
-+					if (!(buf[2] & 0x80))
-+						buf[2] |= 0x80;
-+				}
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 697053aa2771..b661e95a8a36 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -14061,8 +14061,9 @@ void lpfc_dmp_dbg(struct lpfc_hba *phba)
+ 	unsigned int temp_idx;
+ 	int i;
+ 	int j = 0;
+-	unsigned long rem_nsec;
+-	struct lpfc_vport **vports;
++	unsigned long rem_nsec, iflags;
++	bool log_verbose = false;
++	struct lpfc_vport *port_iterator;
  
--			transport_kunmap_data_sg(cmd);
-+				transport_kunmap_data_sg(cmd);
-+			}
+ 	/* Don't dump messages if we explicitly set log_verbose for the
+ 	 * physical port or any vport.
+@@ -14070,16 +14071,24 @@ void lpfc_dmp_dbg(struct lpfc_hba *phba)
+ 	if (phba->cfg_log_verbose)
+ 		return;
+ 
+-	vports = lpfc_create_vport_work_array(phba);
+-	if (vports != NULL) {
+-		for (i = 0; i <= phba->max_vpi && vports[i] != NULL; i++) {
+-			if (vports[i]->cfg_log_verbose) {
+-				lpfc_destroy_vport_work_array(phba, vports);
++	spin_lock_irqsave(&phba->port_list_lock, iflags);
++	list_for_each_entry(port_iterator, &phba->port_list, listentry) {
++		if (port_iterator->load_flag & FC_UNLOADING)
++			continue;
++		if (scsi_host_get(lpfc_shost_from_vport(port_iterator))) {
++			if (port_iterator->cfg_log_verbose)
++				log_verbose = true;
++
++			scsi_host_put(lpfc_shost_from_vport(port_iterator));
++
++			if (log_verbose) {
++				spin_unlock_irqrestore(&phba->port_list_lock,
++						       iflags);
+ 				return;
+ 			}
  		}
  	}
- after_mode_sense:
+-	lpfc_destroy_vport_work_array(phba, vports);
++	spin_unlock_irqrestore(&phba->port_list_lock, iflags);
+ 
+ 	if (atomic_cmpxchg(&phba->dbg_log_dmping, 0, 1) != 0)
+ 		return;
 -- 
 2.30.2
 
