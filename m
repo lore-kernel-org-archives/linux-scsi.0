@@ -7,42 +7,41 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9485BC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 30FE1C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8020A60C40
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B75161186
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:42:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241024AbhIJAn0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:43:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:47584 "EHLO mail.kernel.org"
+        id S232700AbhIJAnU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:43:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46898 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233652AbhIJAVt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:21:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 3AE3F611C1;
-        Fri, 10 Sep 2021 00:20:38 +0000 (UTC)
+        id S233722AbhIJAUv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:20:51 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E810361101;
+        Fri, 10 Sep 2021 00:19:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233239;
-        bh=7jxqIkAz0ZSlWHFH7T+QNT6tIP+640ZtnhB3TOBEp9U=;
+        s=k20201202; t=1631233181;
+        bh=A/AnbNddid2vyzWeQFxcra6w65DjLrWw8xgpgBE+bpM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=C+qnLrvE1eixNmWIPCG9RgPFncOAY4KRTkm3ws/xkRqt1G/MFYSEaQpyL2flTCX2E
-         IK258b/edyjyh9P6P4Bl626URZqYDg8n0n2LmKzY1Kk1dz1SKuRBdgj8wZNTaTE3ti
-         prXki/WmZBkgRga7uo2OALpehLzfBfslqTnU9DCchQ3HTSHtT/ET9uK9Jk4EwMZSXR
-         40/BmnoBs2rztuHXHka8Y2KjavYsEr7618AV3tbcG274F+tcOZMXv/6YDjLuqttdtc
-         5UK9TlRq8eECIsnSmN9ksxaEXqHClcgiMaXhpZ8ECUgHEGIT7HtJM+iOx+KPQMT7V1
-         V8/T/XX3PliNg==
+        b=ldB1m3hRucxOB2EhuHsXEYeQOfHlgG+DYcUNeP3s1wmx4gQkF9PVH15pTSdZ2E84+
+         khKS/Ybk1C6UQj5pg9inK3QLVvYxKYji14t8K+k6CX8q/Y1523vA8YDZWYQ+irgx9V
+         xzLBWKfFd45KvsMDely+nxF3UGdpdmmwzTeL/ZvFFu0TZR1JgOgF9q5eOv+cx46ZFA
+         yOq8xSNe9g1PU3JaSP82SIO9M0j1TfKvpxOrVYDZSqoTmBPaGDbcOmWa7BMc1oX5+f
+         aZuYuenwNfglR78AVmP+mJCVE8pHOlXuOY2XgIf01tPAcNc06Z8WBUTWpuqPR/ilnr
+         1+LjxzuJJuQZQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Masahiro Yamada <masahiroy@kernel.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 07/53] scsi: lpfc: Fix cq_id truncation in rq create
-Date:   Thu,  9 Sep 2021 20:19:42 -0400
-Message-Id: <20210910002028.175174-7-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 57/88] scsi: core: Fix missing FORCE for scsi_devinfo_tbl.c build rule
+Date:   Thu,  9 Sep 2021 20:17:49 -0400
+Message-Id: <20210910001820.174272-57-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210910002028.175174-1-sashal@kernel.org>
-References: <20210910002028.175174-1-sashal@kernel.org>
+In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
+References: <20210910001820.174272-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -51,40 +50,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Masahiro Yamada <masahiroy@kernel.org>
 
-[ Upstream commit df3d78c3eb4eba13b3ef9740a8c664508ee644ae ]
+[ Upstream commit 98079418c53fff5f9e2d4087f08eaff2a9ce7714 ]
 
-On the newer hardware, CQ_ID values can be larger than seen on previous
-generations. This exposed an issue in the driver where its definition of
-cq_id in the RQ Create mailbox cmd was too small, thus the cq_id was
-truncated, causing the command to fail.
+Add FORCE so that if_changed can detect the command line change.
+scsi_devinfo_tbl.c must be added to 'targets' too.
 
-Revise the RQ_CREATE CQ_ID field to its proper size (16 bits).
-
-Link: https://lore.kernel.org/r/20210722221721.74388-3-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20210819012339.709409-1-masahiroy@kernel.org
+Signed-off-by: Masahiro Yamada <masahiroy@kernel.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/Makefile | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index 47e832b7f2c2..5197111c04b5 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -1552,7 +1552,7 @@ struct rq_context {
- #define lpfc_rq_context_hdr_size_WORD	word1
- 	uint32_t word2;
- #define lpfc_rq_context_cq_id_SHIFT	16
--#define lpfc_rq_context_cq_id_MASK	0x000003FF
-+#define lpfc_rq_context_cq_id_MASK	0x0000FFFF
- #define lpfc_rq_context_cq_id_WORD	word2
- #define lpfc_rq_context_buf_size_SHIFT	0
- #define lpfc_rq_context_buf_size_MASK	0x0000FFFF
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index bc3882f5cc69..b4ef1779713d 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -181,7 +181,7 @@ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
+ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ 
+ # Files generated that shall be removed upon make clean
+-clean-files :=	53c700_d.h 53c700_u.h scsi_devinfo_tbl.c
++clean-files :=	53c700_d.h 53c700_u.h
+ 
+ $(obj)/53c700.o: $(obj)/53c700_d.h
+ 
+@@ -190,9 +190,11 @@ $(obj)/scsi_sysfs.o: $(obj)/scsi_devinfo_tbl.c
+ quiet_cmd_bflags = GEN     $@
+ 	cmd_bflags = sed -n 's/.*define *BLIST_\([A-Z0-9_]*\) *.*/BLIST_FLAG_NAME(\1),/p' $< > $@
+ 
+-$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h
++$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h FORCE
+ 	$(call if_changed,bflags)
+ 
++targets +=  scsi_devinfo_tbl.c
++
+ # If you want to play with the firmware, uncomment
+ # GENERATE_FIRMWARE := 1
+ 
 -- 
 2.30.2
 
