@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4927AC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F214C28B21
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 365CD611F2
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6995A60296
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240690AbhIJAm5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:45996 "EHLO mail.kernel.org"
+        id S232079AbhIJAnA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:43:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46124 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233302AbhIJATq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:19:46 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 081EA6023D;
-        Fri, 10 Sep 2021 00:18:35 +0000 (UTC)
+        id S232810AbhIJATz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:19:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2B597611BD;
+        Fri, 10 Sep 2021 00:18:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233116;
-        bh=8H9KWYC9VIrmgRxtaT04INm3HqNKDifGn5pttolLtM0=;
+        s=k20201202; t=1631233125;
+        bh=llGQfHUJf9wbBAkwnSjGXKp3Gz0mt66NEPEa/XyLQ+w=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DbFZzEoeNW1s9S8mQwIPeSCL7WWS6cMCus6DDA3sfKFmkqk6WXKMpl/SDOs0z5bm6
-         rx28v1wo5bYGGeROIhJaePXP0wBrQT+tLPsD8ye2DMzb7TGAhregevuIbI1pPJYFx8
-         TTGb2ap3Pb/PiDVDGbbJfB8H9MzUvutWF7C4/QKcYK1yTUE5WV3+pFhBciC7BA98ey
-         1LE05D8dz2WJud8rcBC8Kz4tzSOnijkMOORFq+YT2HGxRSuXoUTVbaoExHtZU2ibk4
-         96/be6J8lwVMRgEHUPsRoUINaptQz6g6LxdufdniWg6zvC2OpN0Wqyss0u3J7HgUqb
-         AT+Y1IG7nafQg==
+        b=obRpcoPK6/exJJqYAh0xWiMlsXF9SLfaTRo7y4w15h8CLbgbfVo8KUttj2+76U8rV
+         lDDLumzsIzvmgnMjB/kkhgCoqU9R3EkQnZ1Q/+df69+MDq/cWcV5dDYrLSNxJAlzut
+         4tyOjRZpNq6El7SajmInrTo77dOUsI+vDgUakcK2vx9V48CtBpWNIsTnHXfkIFQSUI
+         nknwSMu8tRu2yBc7gm/Q9EIbXBX/RqEmD2Ofk9i78W3SfZS8qMgjRLfpzk5Ugvk/WY
+         staOyYS9soHWtvr2zEo9UL/HtTYan3d7mHweP9Kzzrk2Kl/m9kzwYy987jKg3myC8r
+         8Sd14TSLACVKA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 11/88] scsi: lpfc: Clear outstanding active mailbox during PCI function reset
-Date:   Thu,  9 Sep 2021 20:17:03 -0400
-Message-Id: <20210910001820.174272-11-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 17/88] scsi: lpfc: Fix cq_id truncation in rq create
+Date:   Thu,  9 Sep 2021 20:17:09 -0400
+Message-Id: <20210910001820.174272-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
 References: <20210910001820.174272-1-sashal@kernel.org>
@@ -53,118 +53,38 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit a9978e3978406ef5e35870b10e677cf75a2620b6 ]
+[ Upstream commit df3d78c3eb4eba13b3ef9740a8c664508ee644ae ]
 
-Mailbox commands sent via ioctl/bsg from user applications may be
-interrupted from processing by a concurrently triggered PCI function
-reset. The command will not generate a completion due to the reset.  This
-results in a user application hang waiting for the mailbox command to
-complete.
+On the newer hardware, CQ_ID values can be larger than seen on previous
+generations. This exposed an issue in the driver where its definition of
+cq_id in the RQ Create mailbox cmd was too small, thus the cq_id was
+truncated, causing the command to fail.
 
-Resolve by changing the function reset handler to detect that there was an
-outstanding mailbox command and simulate a mailbox completion.  Add some
-additional debug when a mailbox command times out.
+Revise the RQ_CREATE CQ_ID field to its proper size (16 bits).
 
-Link: https://lore.kernel.org/r/20210707184351.67872-13-jsmart2021@gmail.com
+Link: https://lore.kernel.org/r/20210722221721.74388-3-jsmart2021@gmail.com
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 11 ++++++++++-
- drivers/scsi/lpfc/lpfc_sli.c  | 32 ++++++++++++++++++++++++++++++--
- 2 files changed, 40 insertions(+), 3 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw4.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 5a51dcdee1c6..fb37157b8994 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -1851,6 +1851,7 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
- {
- 	int rc;
- 	uint32_t intr_mode;
-+	LPFC_MBOXQ_t *mboxq;
- 
- 	if (bf_get(lpfc_sli_intf_if_type, &phba->sli4_hba.sli_intf) >=
- 	    LPFC_SLI_INTF_IF_TYPE_2) {
-@@ -1870,11 +1871,19 @@ lpfc_sli4_port_sta_fn_reset(struct lpfc_hba *phba, int mbx_action,
- 				"Recovery...\n");
- 
- 	/* If we are no wait, the HBA has been reset and is not
--	 * functional, thus we should clear LPFC_SLI_ACTIVE flag.
-+	 * functional, thus we should clear
-+	 * (LPFC_SLI_ACTIVE | LPFC_SLI_MBOX_ACTIVE) flags.
- 	 */
- 	if (mbx_action == LPFC_MBX_NO_WAIT) {
- 		spin_lock_irq(&phba->hbalock);
- 		phba->sli.sli_flag &= ~LPFC_SLI_ACTIVE;
-+		if (phba->sli.mbox_active) {
-+			mboxq = phba->sli.mbox_active;
-+			mboxq->u.mb.mbxStatus = MBX_NOT_FINISHED;
-+			__lpfc_mbox_cmpl_put(phba, mboxq);
-+			phba->sli.sli_flag &= ~LPFC_SLI_MBOX_ACTIVE;
-+			phba->sli.mbox_active = NULL;
-+		}
- 		spin_unlock_irq(&phba->hbalock);
- 	}
- 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 9ed826fd53e8..8fa09d3d0211 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -8776,8 +8776,11 @@ static int
- lpfc_sli4_async_mbox_block(struct lpfc_hba *phba)
- {
- 	struct lpfc_sli *psli = &phba->sli;
-+	LPFC_MBOXQ_t *mboxq;
- 	int rc = 0;
- 	unsigned long timeout = 0;
-+	u32 sli_flag;
-+	u8 cmd, subsys, opcode;
- 
- 	/* Mark the asynchronous mailbox command posting as blocked */
- 	spin_lock_irq(&phba->hbalock);
-@@ -8795,12 +8798,37 @@ lpfc_sli4_async_mbox_block(struct lpfc_hba *phba)
- 	if (timeout)
- 		lpfc_sli4_process_missed_mbox_completions(phba);
- 
--	/* Wait for the outstnading mailbox command to complete */
-+	/* Wait for the outstanding mailbox command to complete */
- 	while (phba->sli.mbox_active) {
- 		/* Check active mailbox complete status every 2ms */
- 		msleep(2);
- 		if (time_after(jiffies, timeout)) {
--			/* Timeout, marked the outstanding cmd not complete */
-+			/* Timeout, mark the outstanding cmd not complete */
-+
-+			/* Sanity check sli.mbox_active has not completed or
-+			 * cancelled from another context during last 2ms sleep,
-+			 * so take hbalock to be sure before logging.
-+			 */
-+			spin_lock_irq(&phba->hbalock);
-+			if (phba->sli.mbox_active) {
-+				mboxq = phba->sli.mbox_active;
-+				cmd = mboxq->u.mb.mbxCommand;
-+				subsys = lpfc_sli_config_mbox_subsys_get(phba,
-+									 mboxq);
-+				opcode = lpfc_sli_config_mbox_opcode_get(phba,
-+									 mboxq);
-+				sli_flag = psli->sli_flag;
-+				spin_unlock_irq(&phba->hbalock);
-+				lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
-+						"2352 Mailbox command x%x "
-+						"(x%x/x%x) sli_flag x%x could "
-+						"not complete\n",
-+						cmd, subsys, opcode,
-+						sli_flag);
-+			} else {
-+				spin_unlock_irq(&phba->hbalock);
-+			}
-+
- 			rc = 1;
- 			break;
- 		}
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index f77e71e6dbbd..3be78d22d9c3 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -1552,7 +1552,7 @@ struct rq_context {
+ #define lpfc_rq_context_hdr_size_WORD	word1
+ 	uint32_t word2;
+ #define lpfc_rq_context_cq_id_SHIFT	16
+-#define lpfc_rq_context_cq_id_MASK	0x000003FF
++#define lpfc_rq_context_cq_id_MASK	0x0000FFFF
+ #define lpfc_rq_context_cq_id_WORD	word2
+ #define lpfc_rq_context_buf_size_SHIFT	0
+ #define lpfc_rq_context_buf_size_MASK	0x0000FFFF
 -- 
 2.30.2
 
