@@ -4,42 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10B43C4332F
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11423C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9DB561167
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F25D1611EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229939AbhIJAR0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:17:26 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43282 "EHLO mail.kernel.org"
+        id S230035AbhIJARa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:17:30 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43494 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229827AbhIJARU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:17:20 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 870016023D;
-        Fri, 10 Sep 2021 00:16:09 +0000 (UTC)
+        id S229909AbhIJARZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:17:25 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9D1A8611AD;
+        Fri, 10 Sep 2021 00:16:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631232970;
-        bh=LOtFhs2IDua0kYqMBG/6uymeNy/m6t0oV/gclux8KNA=;
+        s=k20201202; t=1631232975;
+        bh=FD4ZGUYqAuTB2rsXK4lM19ioZ6WUKgfizpwaHDfNEbQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=N5O+Ex/htH+rl/kDGvBa2uIBABiIdPODHpsb8iOdDXP60CLkJOe5V/bC6EN8RQuyd
-         z4LQ0AAdgaGoOQKYsn7TDMhHIywCayJ3uLjIWpQ1VNO0GNEOPZG6HR/+VRoJosarxm
-         PejgdguJkdsB/wYXmwDIddrMldqC+21B/47aAeiUflhb9XYE28bNhyAXPIggP+aWnw
-         afgpqQU7RPhupsz07lxvfzjzRvDVH1sF5pqZM0kwErtGW7K6jzeJO30KKH6hDFRZgq
-         V/NjT2Kxo66j8GzyRKDmep6niTUb1tag8WdCb+nEs6f4L6kY70fEWvtvbWAxT3R+9i
-         jBvtptgSiirCw==
+        b=I9fIZ57Mo12uSb9VzB7tMRoge2oeiKeWRqIhl97sokO2U446eckepgKkSo8FS2rkE
+         tFroswDlBb+Qi4W/EGeSojv1KOj952e1K6RrE8kmr/WQ2ipsbou6m8GvazCznZ1r3S
+         vsrHMo+egsbDBKZ1tP4N0oacu+GSP8ebkfF+Z1f6Ai7Pgz6NFUzUlLmnp+WV7YjZXS
+         VZa7iXJd5TN85haKfXLTxXQqHNJwctwlryF58JzNqf1LpeEmG3sg3Lb9FNye1o0qsK
+         TqFx4c5GmnZwXWz47WSqTp0xgB6ExY9PHxW6vqqEeBVIf0q0SapjtdDdJmGF1JyIxg
+         h57rBv1yn27+Q==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 08/99] scsi: lpfc: Fix function description comments for vmid routines
-Date:   Thu,  9 Sep 2021 20:14:27 -0400
-Message-Id: <20210910001558.173296-8-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.14 12/99] scsi: lpfc: Fix memory leaks in error paths while issuing ELS RDF/SCR request
+Date:   Thu,  9 Sep 2021 20:14:31 -0400
+Message-Id: <20210910001558.173296-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001558.173296-1-sashal@kernel.org>
 References: <20210910001558.173296-1-sashal@kernel.org>
@@ -53,50 +53,44 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 50baa1595d30412177da3b22625bffc1ce4f65d5 ]
+[ Upstream commit cd6047e92c6a5b0a44479cf98f76aac56ddfe108 ]
 
-Update comment headers for functions lpfc_vmid_cmd and lpfc_vmid_poll.
+The ELS job request structure, that is allocated while issuing ELS RDF/SCR
+request path, is not being released in an error path causing a memory leak
+message on driver unload.
 
-Link: https://lore.kernel.org/r/20210707184351.67872-5-jsmart2021@gmail.com
+Free the ELS job structure in the error paths.
+
+Link: https://lore.kernel.org/r/20210707184351.67872-10-jsmart2021@gmail.com
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_ct.c   | 5 ++---
- drivers/scsi/lpfc/lpfc_init.c | 2 +-
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 610b6dabb3b5..1acb8820a08e 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -3884,9 +3884,8 @@ lpfc_cmpl_ct_cmd_vmid(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- /**
-  * lpfc_vmid_cmd - Build and send a FDMI cmd to the specified NPort
-  * @vport: pointer to a host virtual N_Port data structure.
-- * @ndlp: ndlp to send FDMI cmd to (if NULL use FDMI_DID)
-- * cmdcode: FDMI command to send
-- * mask: Mask of HBA or PORT Attributes to send
-+ * @cmdcode: application server command code to send
-+ * @vmid: pointer to vmid info structure
-  *
-  * Builds and sends a FDMI command using the CT subsystem.
-  */
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index cb7773a9167d..9a84a0b06ee0 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -4845,7 +4845,7 @@ lpfc_sli4_fcf_redisc_wait_tmo(struct timer_list *t)
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index b1ca6f8e5970..3381912bf982 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3375,6 +3375,7 @@ lpfc_issue_els_scr(struct lpfc_vport *vport, uint8_t retry)
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+ 		rc = lpfc_reg_fab_ctrl_node(vport, ndlp);
+ 		if (rc) {
++			lpfc_els_free_iocb(phba, elsiocb);
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE,
+ 					 "0937 %s: Failed to reg fc node, rc %d\n",
+ 					 __func__, rc);
+@@ -3667,6 +3668,7 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
  
- /**
-  * lpfc_vmid_poll - VMID timeout detection
-- * @ptr: Map to lpfc_hba data structure pointer.
-+ * @t: Timer context used to obtain the pointer to lpfc hba data structure.
-  *
-  * This routine is invoked when there is no I/O on by a VM for the specified
-  * amount of time. When this situation is detected, the VMID has to be
+ 	if (phba->sli_rev == LPFC_SLI_REV4 &&
+ 	    !(ndlp->nlp_flag & NLP_RPI_REGISTERED)) {
++		lpfc_els_free_iocb(phba, elsiocb);
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE,
+ 				 "0939 %s: FC_NODE x%x RPI x%x flag x%x "
+ 				 "ste x%x type x%x Not registered\n",
 -- 
 2.30.2
 
