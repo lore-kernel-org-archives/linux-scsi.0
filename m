@@ -7,39 +7,40 @@ X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 850C8C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E746FC43217
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6A3E761108
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D37E761206
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240795AbhIJAnF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:43:05 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46208 "EHLO mail.kernel.org"
+        id S232280AbhIJAnH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:43:07 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46554 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233493AbhIJAUS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:20:18 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 0AF23610E9;
-        Fri, 10 Sep 2021 00:18:49 +0000 (UTC)
+        id S233589AbhIJAUX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:20:23 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id D8E5C61101;
+        Fri, 10 Sep 2021 00:19:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233130;
-        bh=TGw4njp5IaZc78R/uUB/LijXLUHq5fkfuYINOfxXf0g=;
+        s=k20201202; t=1631233153;
+        bh=RbpI+L4ARcnT+0jWMh0/xtaUcmedBI1wx8lu169hb1Y=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=je9ABs+d34/+nTU+2qmEXsRDwpNyB2fBpZ7d/drnUFMeBWHvmCBzOlGQ20m7OoOko
-         PtwuuodxCzT4hgUIumgrjehaM1+FVPkrNT5e6ZqjErMRfvKDwkvZ51cqfPwPNKfoL0
-         xDBb8+f0gHUKIM1y1bFAwuhNbPo41MyLTQ0I/fypUGDWxWcYKiVlflAnJExs/RRGE0
-         o3NVPfvWWdFW2wxGWxC/9WNTtuEd94HUEXG1SSSE2q/A0HXykRW4ujh/HpGUBRq+mi
-         TcC9PIfz1X09ES1uiVX41roCKL3lBKTxOFhWRhXDiqzay0da0xUqhbDiVe1jUFPm5O
-         s3oC8kvaJxRHg==
+        b=pMa0QhpTV3iUL2KYvmYuKhEUseudUpkkjQ6ykx+UOREnVFOl3k48M3PcoYxbtGK8S
+         sCQ4L4UCiOkg5tCIPYi/e3HkoHaYt08CIdnol1pGosPh0TA0NfaPFNl4y7GZ2JKzqP
+         UNhNJBG7FOqb13xsb2NYF88hsPVOrVVDTrXteMHPfMnGIhbXdOQT3QxwnPyU12vyEU
+         HF4Orj5aH3Q31Y2HfANp93xAi+lnxaQmWgE1a19uGxxFaoStdp9oY3dvr2oFLciTpe
+         iewT6+BXeBo8zRXqOveX6ietT5jswaHcSHsGHVvs9ObgCPqQxgz+mCXFBIcfSw7gaX
+         Xcgy/rlS+OAuQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Jia-Ju Bai <baijiaju1990@gmail.com>,
+Cc:     Quinn Tran <qutran@marvell.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 21/88] scsi: lpfc: Fix possible ABBA deadlock in nvmet_xri_aborted()
-Date:   Thu,  9 Sep 2021 20:17:13 -0400
-Message-Id: <20210910001820.174272-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.13 37/88] scsi: qla2xxx: Fix port type info
+Date:   Thu,  9 Sep 2021 20:17:29 -0400
+Message-Id: <20210910001820.174272-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
 References: <20210910001820.174272-1-sashal@kernel.org>
@@ -51,62 +52,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Quinn Tran <qutran@marvell.com>
 
-[ Upstream commit 7740b615b6665e47f162e261d805f1bbbac15876 ]
+[ Upstream commit 01c97f2dd8fb4d2188c779a975031c0fe1ec061d ]
 
-The lpfc_sli4_nvmet_xri_aborted() routine takes out the abts_buf_list_lock
-and traverses the buffer contexts to match the xri. Upon match, it then
-takes the context lock before potentially removing the context from the
-associated buffer list. This violates the lock hierarchy used elsewhere in
-the driver of locking context, then the abts_buf_list_lock - thus a
-possible deadlock.
+Over time, fcport->port_type became a flag field. The flags within this
+field were not defined properly. This caused external tools to read wrong
+info.
 
-Resolve by: after matching, release the abts_buf_list_lock, then take the
-context lock, and if to be deleted from the list, retake the
-abts_buf_list_lock, maintaining lock hierarchy. This matches same list lock
-hierarchy as elsewhere in the driver
-
-Link: https://lore.kernel.org/r/20210730163309.25809-1-jsmart2021@gmail.com
-Reported-by: Jia-Ju Bai <baijiaju1990@gmail.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20210810043720.1137-8-njavali@marvell.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Quinn Tran <qutran@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_nvmet.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index f2d9a3580887..6e3dd0b9bcfa 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1797,19 +1797,22 @@ lpfc_sli4_nvmet_xri_aborted(struct lpfc_hba *phba,
- 		if (ctxp->ctxbuf->sglq->sli4_xritag != xri)
- 			continue;
- 
--		spin_lock(&ctxp->ctxlock);
-+		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
-+				       iflag);
-+
-+		spin_lock_irqsave(&ctxp->ctxlock, iflag);
- 		/* Check if we already received a free context call
- 		 * and we have completed processing an abort situation.
- 		 */
- 		if (ctxp->flag & LPFC_NVME_CTX_RLS &&
- 		    !(ctxp->flag & LPFC_NVME_ABORT_OP)) {
-+			spin_lock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
- 			list_del_init(&ctxp->list);
-+			spin_unlock(&phba->sli4_hba.abts_nvmet_buf_list_lock);
- 			released = true;
- 		}
- 		ctxp->flag &= ~LPFC_NVME_XBUSY;
--		spin_unlock(&ctxp->ctxlock);
--		spin_unlock_irqrestore(&phba->sli4_hba.abts_nvmet_buf_list_lock,
--				       iflag);
-+		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
- 
- 		rrq_empty = list_empty(&phba->active_rrq_list);
- 		ndlp = lpfc_findnode_did(phba->pport, ctxp->sid);
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index def4d99f80e9..0cd1f820b111 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2377,11 +2377,9 @@ struct mbx_24xx_entry {
+  */
+ typedef enum {
+ 	FCT_UNKNOWN,
+-	FCT_RSCN,
+-	FCT_SWITCH,
+-	FCT_BROADCAST,
+-	FCT_INITIATOR,
+-	FCT_TARGET,
++	FCT_BROADCAST = 0x01,
++	FCT_INITIATOR = 0x02,
++	FCT_TARGET    = 0x04,
+ 	FCT_NVME_INITIATOR = 0x10,
+ 	FCT_NVME_TARGET = 0x20,
+ 	FCT_NVME_DISCOVERY = 0x40,
 -- 
 2.30.2
 
