@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEDBEC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 23:32:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2094FC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 23:32:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9717161206
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 23:32:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B77C61206
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 23:32:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234894AbhIJXdt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Sep 2021 19:33:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38612 "EHLO
+        id S234893AbhIJXdu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Sep 2021 19:33:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234873AbhIJXdf (ORCPT
+        with ESMTP id S234908AbhIJXdf (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Sep 2021 19:33:35 -0400
-Received: from mail-pg1-x52b.google.com (mail-pg1-x52b.google.com [IPv6:2607:f8b0:4864:20::52b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 953E8C061768
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2021 16:32:18 -0700 (PDT)
-Received: by mail-pg1-x52b.google.com with SMTP id k24so3212799pgh.8
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2021 16:32:18 -0700 (PDT)
+Received: from mail-pl1-x62f.google.com (mail-pl1-x62f.google.com [IPv6:2607:f8b0:4864:20::62f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8EE79C0613C1
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2021 16:32:20 -0700 (PDT)
+Received: by mail-pl1-x62f.google.com with SMTP id n4so2119927plh.9
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2021 16:32:20 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=6RaOTeQITjjS5RD7oWNsJ4O3kzDKzTz3KbH8dZABJIY=;
-        b=Ik8AgBIACuEKCe7WnQ9yKdGUhKWYrUwtYTs5NYRpWTMrM4Jz6o9ZUTViwMRgDiWQRX
-         Tcejy36I2tJytddvDvA8mTc8BazZOcvqNt+wZPJZaMmB4HRypIxW6zIRFd5zMJXFpqMr
-         ME9acUvMFyqkL4WgD5+hbaagzNsxstq2msgEYX1QOr5e8GvgSF4dd5US6BTeqC3dJvbn
-         P4B2jgdqqTmyeexvykXVdnCe8BMSn8myB7IxdULmVf6oUA7yiyjNFgsEKKbuH/hyZ8Qt
-         ZvRMKxOXyaA5dDDT69Nf5Ad41rF1RRfHpBMQrciLtcvDuBEopQ8/R7+KSxfcq2exoUS4
-         VEtQ==
+        bh=9hYHMJHZFH8ost3B+sxBQxA5bDUW1toQYgOsMCew8+Y=;
+        b=Iw9J4Llqsf1SWzl4Tfjz++4NKSmO23J2WIsItbjuVGrL3REWp4tGIXDiVeeMrXhSua
+         E7I1ScoOQJw6I/RhT7l8v1MNkeZDwzUgwjzSJyOwqjhctrh/7SRPA/uII7aQQF0eMQWw
+         +YCRRS8U5S+5ZP+fdSAUJ0d6z3ugese0KVW/eejVGmC9BIOy/zz4MYtlKKr0VghWFqfD
+         Eu9QESacZwu+bjvmWKoPfybVj+Fk5mIzfpY53pgoJDOy1aO2TI+JUJibba25lNzjXWaK
+         bBwmNA0xXac2y/4xK04bqikWHLj74BjnxgZRT6svZS9DSU6v9bwyqY6G6O9ytUMNIZIu
+         KP9w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=6RaOTeQITjjS5RD7oWNsJ4O3kzDKzTz3KbH8dZABJIY=;
-        b=2ssoDPOgzmPkUt7S/zyacPClWWf6Zuy4pA7zSTaC90qZmut24S7beaNHvrVA8GeHzM
-         NoIqz1oij/gcgxF5N9ebdnMW7bUniZI8vM4E/mlNvCm0wkIS0xeYMUnO+aPT9U0L4+0n
-         P9Jz+imrX+EsolpKerXRknSD8Fd2QVKG+3G3Yv5llWzlXGvZp32RYviG9PhyUpv0+ZxI
-         agq3agEZrXVqdNj5GbXQhIsE9efDuHAvLuqvxguB+6xWPPAv6xPtLU5Bx3H9SHiKQoKT
-         tBU5i/IUC3iIX6a9Su6+6seReveNrvv1rU+cSaj6xXCM+7B//VUxq6qcpXUoKTn1F/xt
-         hrDw==
-X-Gm-Message-State: AOAM531dr4fypTXpxEYcZ4nvPbV77TeG+oyQL6BzaDQy6bwM6cvtsgM+
-        wOATlGyTalQIEgYti6QfTz8///XZSQ75gqoN
-X-Google-Smtp-Source: ABdhPJwh+fFThjBM4ijfHv7/95ZDGCrCldyyhqTjMZIUKE5P/Acu+ipbxzaIvCxCgzYZyQmIMKuXDg==
-X-Received: by 2002:aa7:9570:0:b0:437:3bea:4366 with SMTP id x16-20020aa79570000000b004373bea4366mr84747pfq.16.1631316737927;
-        Fri, 10 Sep 2021 16:32:17 -0700 (PDT)
+        bh=9hYHMJHZFH8ost3B+sxBQxA5bDUW1toQYgOsMCew8+Y=;
+        b=Sf8ro/CVjTYOuU4l93VNln1Y1XkvVmzklgv4Bzjqtl1Op4uHhtLwp1SLe1S5c7Hnfr
+         k+4J8nhNrdzjq2g/NVAed3MBdo5ppXD4bmacfCfD5S9pkbYBtt9vVJP+fhh0WlXupG7y
+         M8YmVOn2i1oNb8mvXvWP8n/++LwMAFkUqokrreCOmJe3ScXMkqyxCgPCCNaQNnTyXmdX
+         qjcPxRgN5m8AN17mnmFU90SBlTAFn32QLGWF+WHxQDp2sucxRwVI9bep2lOy/vEVEj4N
+         dW5RHda6aLUFGA2SL3lCnT0ST0LIBtXu0vy+/J0TQGV1hb5H5UN0etRPWphssfQb7Cvf
+         6XhQ==
+X-Gm-Message-State: AOAM533E7GmKrYSPZe4W0uS9Gtm3gw/fyp/+saw4JRaV+1MkjU8NoW4X
+        QVflBDkVi8lvcsHlzEySKGVb187cpqZpUTC1
+X-Google-Smtp-Source: ABdhPJyVpuYacdUihedggnrH4DJWRc4HgmSWw2DI19r4EkBDdgqysDzyfeTmKcRML2Vax0c4G/o+CA==
+X-Received: by 2002:a17:90a:ae18:: with SMTP id t24mr94695pjq.92.1631316740040;
+        Fri, 10 Sep 2021 16:32:20 -0700 (PDT)
 Received: from mail-ash-it-01.broadcom.com ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id o15sm11325pfk.143.2021.09.10.16.32.17
+        by smtp.gmail.com with ESMTPSA id o15sm11325pfk.143.2021.09.10.16.32.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Sep 2021 16:32:17 -0700 (PDT)
+        Fri, 10 Sep 2021 16:32:19 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 10/14] lpfc: Adjust bytes received vales during cmf timer interval
-Date:   Fri, 10 Sep 2021 16:31:55 -0700
-Message-Id: <20210910233159.115896-11-jsmart2021@gmail.com>
+Subject: [PATCH 12/14] lpfc: Zero CGN stats only during initial driver load and stat reset
+Date:   Fri, 10 Sep 2021 16:31:57 -0700
+Message-Id: <20210910233159.115896-13-jsmart2021@gmail.com>
 X-Mailer: git-send-email 2.26.2
 In-Reply-To: <20210910233159.115896-1-jsmart2021@gmail.com>
 References: <20210910233159.115896-1-jsmart2021@gmail.com>
@@ -72,54 +72,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The newly added congestion mgmt framework is seeing unexpected
-congestion FPINs and signals.  In analysis, time values given to
-the adapter are not at hard time intervals. Thus the drift vs the
-transfer count seen is affecting how the framework manages things.
+Currently congestion management framework results are cleared whenever
+the framework settings changed (such as it being turned off then back
+on). This unfortunately means prior stats, rolled up to higher time
+windows lose meaning.
 
-Adjust counters to cover the drift.
+Change such that stats are not cleared. Thus they pause and resume with
+prior values still being considered.
 
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 2 --
+ drivers/scsi/lpfc/lpfc_sli.c  | 6 ++++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index ea57151221cd..4637531f3b02 100644
+index 4637531f3b02..d0e64233d273 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -5876,7 +5876,7 @@ lpfc_cmf_timer(struct hrtimer *timer)
- 	uint32_t io_cnt;
- 	uint32_t head, tail;
- 	uint32_t busy, max_read;
--	uint64_t total, rcv, lat, mbpi;
-+	uint64_t total, rcv, lat, mbpi, extra;
- 	int timer_interval = LPFC_CMF_INTERVAL;
- 	uint32_t ms;
- 	struct lpfc_cgn_stat *cgs;
-@@ -5943,7 +5943,19 @@ lpfc_cmf_timer(struct hrtimer *timer)
- 	    phba->hba_flag & HBA_SETUP) {
- 		mbpi = phba->cmf_last_sync_bw;
- 		phba->cmf_last_sync_bw = 0;
--		lpfc_issue_cmf_sync_wqe(phba, LPFC_CMF_INTERVAL, total);
-+		extra = 0;
+@@ -13394,8 +13394,6 @@ lpfc_init_congestion_buf(struct lpfc_hba *phba)
+ 	atomic_set(&phba->cgn_sync_alarm_cnt, 0);
+ 	atomic_set(&phba->cgn_sync_warn_cnt, 0);
+ 
+-	atomic64_set(&phba->cgn_acqe_stat.alarm, 0);
+-	atomic64_set(&phba->cgn_acqe_stat.warn, 0);
+ 	atomic_set(&phba->cgn_driver_evt_cnt, 0);
+ 	atomic_set(&phba->cgn_latency_evt_cnt, 0);
+ 	atomic64_set(&phba->cgn_latency_evt, 0);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 651e6ee64e88..34cf2bfcce07 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -7764,8 +7764,6 @@ lpfc_mbx_cmpl_cgn_set_ftrs(struct lpfc_hba *phba, LPFC_MBOXQ_t *pmb)
+ 
+ 	/* Zero out Congestion Signal ACQE counter */
+ 	phba->cgn_acqe_cnt = 0;
+-	atomic64_set(&phba->cgn_acqe_stat.warn, 0);
+-	atomic64_set(&phba->cgn_acqe_stat.alarm, 0);
+ 
+ 	acqe = bf_get(lpfc_mbx_set_feature_CGN_acqe_freq,
+ 		      &pmb->u.mqe.un.set_feature);
+@@ -8017,6 +8015,10 @@ lpfc_cmf_setup(struct lpfc_hba *phba)
+ 			/* initialize congestion buffer info */
+ 			lpfc_init_congestion_buf(phba);
+ 			lpfc_init_congestion_stat(phba);
 +
-+		/* Calculate any extra bytes needed to account for the
-+		 * timer accuracy. If we are less than LPFC_CMF_INTERVAL
-+		 * add an extra 3% slop factor, equal to LPFC_CMF_INTERVAL
-+		 * add an extra 2%. The goal is to equalize total with a
-+		 * time > LPFC_CMF_INTERVAL or <= LPFC_CMF_INTERVAL + 1
-+		 */
-+		if (ms == LPFC_CMF_INTERVAL)
-+			extra = div_u64(total, 50);
-+		else if (ms < LPFC_CMF_INTERVAL)
-+			extra = div_u64(total, 33);
-+		lpfc_issue_cmf_sync_wqe(phba, LPFC_CMF_INTERVAL, total + extra);
- 	} else {
- 		/* For Monitor mode or link down we want mbpi
- 		 * to be the full link speed
++			/* Zero out Congestion Signal counters */
++			atomic64_set(&phba->cgn_acqe_stat.alarm, 0);
++			atomic64_set(&phba->cgn_acqe_stat.warn, 0);
+ 		}
+ 
+ 		rc = lpfc_sli4_cgn_params_read(phba);
 -- 
 2.26.2
 
