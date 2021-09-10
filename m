@@ -4,42 +4,49 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FA65C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA8B0C433FE
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3A9B260C40
+	by mail.kernel.org (Postfix) with ESMTP id AAF6360296
 	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:41:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240724AbhIJAm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:42:58 -0400
-Received: from mail.kernel.org ([198.145.29.99]:46018 "EHLO mail.kernel.org"
+        id S231769AbhIJAnC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:43:02 -0400
+Received: from mail.kernel.org ([198.145.29.99]:46468 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231327AbhIJATs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:19:48 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4FEEC610E9;
-        Fri, 10 Sep 2021 00:18:37 +0000 (UTC)
+        id S233536AbhIJAUS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:20:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 92469611BD;
+        Fri, 10 Sep 2021 00:18:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631233118;
-        bh=sm+FccchJKCIPtXH/Cfkp2MrxS4Sdo7Q7eJEc9pffsU=;
+        s=k20201202; t=1631233139;
+        bh=NS44uFGRA29WqPoF5FZLcPOiN6tldwDQo+OPx4WmLws=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=OoxzU6exj7cOD32taKsE1V/WKfWkSS39VMeBQQmaLBAml7kNzEa5q3eqGKzUp8xRd
-         MtTyEpGvwwufDseGWrHOOZMJpLqp6uWjXmZbvPsHKJoopArGJC4AoEo2nOsoytFENk
-         N1EZIcL5KI2kFgv/HTpuhq3WgSPEIi69ZmvXnNCgPc7Sa7R31+slfrLvjSiOieSWG9
-         H/maSEDhKpck3UzO9qtwpuvHTgBI3hXr0orUW4xOXcbfbHTvSEB/2mz0AsQvXsvBqj
-         QJLUnIH7TTIPv3i1VZHs5J8h2MHRZYurptPQ6WF5QbokfALHii8pi3AaHC2uYLewaX
-         W+QTkyqtR5FfA==
+        b=pTnmPIxypprPG9eCuPvdaZT/MbGnpWz/0HEFY6rVeGRVEbvHLIRP0g0N/+HN4hI6+
+         1DrOzGnWk7SwkNCTaxixU8XgU2Cu5qkGcP0Q9Ga+MSjG9tnYnkw6zwSUk/TfhhHoSZ
+         P4AwdmLMdwR6QYgfJPSb1/JEIWn408rCsgvIGKURBcCBenToSS4qZEjyYW32rHFoAy
+         dtgxi+YgwGvS5AxWwq51ACAf/4nI30ueCDMoiPHWlveZfYxei9vALkZpenT3ohPihH
+         NiBTQOwCooD60eTbbOrZoFiYb41HnTNbQS4aNkAKe5Ajs7djNlV/tT1jK9e4+DDzZs
+         L8s5ek/VI00XQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bean Huo <beanhuo@micron.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.13 12/88] scsi: lpfc: Skip issuing ADISC when node is in NPR state
-Date:   Thu,  9 Sep 2021 20:17:04 -0400
-Message-Id: <20210910001820.174272-12-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org
+Subject: [PATCH AUTOSEL 5.13 26/88] scsi: ufs: Request sense data asynchronously
+Date:   Thu,  9 Sep 2021 20:17:18 -0400
+Message-Id: <20210910001820.174272-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001820.174272-1-sashal@kernel.org>
 References: <20210910001820.174272-1-sashal@kernel.org>
@@ -51,95 +58,131 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Bart Van Assche <bvanassche@acm.org>
 
-[ Upstream commit ab803860882514ddbf97713b143b861b524e8476 ]
+[ Upstream commit ac1bc2ba060f9609972fb486073ebd9eab1ef3b6 ]
 
-When a node moves to NPR state due to a device recovery event, the
-nlp_fc4_types in the node are cleared. An ADISC received for a node in the
-NPR state triggers an ADISC. Without fc4 types being known, the calls to
-register with the transport are no-op'd, thus no additional references are
-placed on the node by transport re-registrations. A subsequent RSCN could
-trigger another unregister request, which will decrement the reference
-counts, leading to the ref count hitting zero and the node being freed
-while futher discovery on the node is being attempted by the RSCN event
-handling.
+Clearing a unit attention synchronously from inside the UFS error handler
+may trigger the following deadlock:
 
-Fix by skipping the trigger of an ADISC when in NPR state. The normal ADISC
-process will kick off in the regular discovery path after receiving a
-response from name server.
+ - ufshcd_err_handler() calls ufshcd_err_handling_unprepare() and the
+   latter function calls ufshcd_clear_ua_wluns().
 
-Link: https://lore.kernel.org/r/20210707184351.67872-19-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+ - ufshcd_clear_ua_wluns() submits a REQUEST SENSE command and that command
+   activates the SCSI error handler.
+
+ - The SCSI error handler calls ufshcd_host_reset_and_restore().
+
+ - ufshcd_host_reset_and_restore() executes the following code:
+   ufshcd_schedule_eh_work(hba); flush_work(&hba->eh_work);
+
+This sequence results in a deadlock (circular wait). Fix this by requesting
+sense data asynchronously.
+
+Link: https://lore.kernel.org/r/20210722033439.26550-16-bvanassche@acm.org
+Cc: Adrian Hunter <adrian.hunter@intel.com>
+Cc: Stanley Chu <stanley.chu@mediatek.com>
+Cc: Can Guo <cang@codeaurora.org>
+Cc: Asutosh Das <asutoshd@codeaurora.org>
+Cc: Avri Altman <avri.altman@wdc.com>
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 34 +++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 15 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 64 ++++++++++++++++++++-------------------
+ 1 file changed, 33 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index 3dac116c405b..b3da39abc90f 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -732,9 +732,13 @@ lpfc_rcv_padisc(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 		 * is already in MAPPED or UNMAPPED state.  Catch this
- 		 * condition and don't set the nlp_state again because
- 		 * it causes an unnecessary transport unregister/register.
-+		 *
-+		 * Nodes marked for ADISC will move MAPPED or UNMAPPED state
-+		 * after issuing ADISC
- 		 */
- 		if (ndlp->nlp_type & (NLP_FCP_TARGET | NLP_NVME_TARGET)) {
--			if (ndlp->nlp_state != NLP_STE_MAPPED_NODE)
-+			if ((ndlp->nlp_state != NLP_STE_MAPPED_NODE) &&
-+			    !(ndlp->nlp_flag & NLP_NPR_ADISC))
- 				lpfc_nlp_set_state(vport, ndlp,
- 						   NLP_STE_MAPPED_NODE);
- 		}
-@@ -2630,14 +2634,13 @@ lpfc_rcv_prli_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	lpfc_els_rsp_reject(vport, stat.un.lsRjtError, cmdiocb, ndlp, NULL);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 469a7be270d6..1f0980a70e3f 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7784,8 +7784,39 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ 	return ret;
+ }
  
- 	if (!(ndlp->nlp_flag & NLP_DELAY_TMO)) {
--		if (ndlp->nlp_flag & NLP_NPR_ADISC) {
--			spin_lock_irq(&ndlp->lock);
--			ndlp->nlp_flag &= ~NLP_NPR_ADISC;
--			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
--			spin_unlock_irq(&ndlp->lock);
--			lpfc_nlp_set_state(vport, ndlp, NLP_STE_ADISC_ISSUE);
--			lpfc_issue_els_adisc(vport, ndlp, 0);
--		} else {
-+		/*
-+		 * ADISC nodes will be handled in regular discovery path after
-+		 * receiving response from NS.
-+		 *
-+		 * For other nodes, Send PLOGI to trigger an implicit LOGO.
-+		 */
-+		if (!(ndlp->nlp_flag & NLP_NPR_ADISC)) {
- 			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
- 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
- 			lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
-@@ -2670,12 +2673,13 @@ lpfc_rcv_padisc_npr_node(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 	 */
- 	if (!(ndlp->nlp_flag & NLP_DELAY_TMO) &&
- 	    !(ndlp->nlp_flag & NLP_NPR_2B_DISC)) {
--		if (ndlp->nlp_flag & NLP_NPR_ADISC) {
--			ndlp->nlp_flag &= ~NLP_NPR_ADISC;
--			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
--			lpfc_nlp_set_state(vport, ndlp, NLP_STE_ADISC_ISSUE);
--			lpfc_issue_els_adisc(vport, ndlp, 0);
--		} else {
-+		/*
-+		 * ADISC nodes will be handled in regular discovery path after
-+		 * receiving response from NS.
-+		 *
-+		 * For other nodes, Send PLOGI to trigger an implicit LOGO.
-+		 */
-+		if (!(ndlp->nlp_flag & NLP_NPR_ADISC)) {
- 			ndlp->nlp_prev_state = NLP_STE_NPR_NODE;
- 			lpfc_nlp_set_state(vport, ndlp, NLP_STE_PLOGI_ISSUE);
- 			lpfc_issue_els_plogi(vport, ndlp->nlp_DID, 0);
++static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
++{
++	if (error != BLK_STS_OK)
++		pr_err("%s: REQUEST SENSE failed (%d)", __func__, error);
++	blk_put_request(rq);
++}
++
+ static int
+-ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp);
++ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
++{
++	/*
++	 * From SPC-6: the REQUEST SENSE command with any allocation length
++	 * clears the sense data.
++	 */
++	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, 0, 0};
++	struct scsi_request *rq;
++	struct request *req;
++
++	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN, /*flags=*/0);
++	if (IS_ERR(req))
++		return PTR_ERR(req);
++
++	rq = scsi_req(req);
++	rq->cmd_len = ARRAY_SIZE(cmd);
++	memcpy(rq->cmd, cmd, rq->cmd_len);
++	rq->retries = 3;
++	req->timeout = 1 * HZ;
++	req->rq_flags |= RQF_PM | RQF_QUIET;
++
++	blk_execute_rq_nowait(/*bd_disk=*/NULL, req, /*at_head=*/true,
++			      ufshcd_request_sense_done);
++	return 0;
++}
+ 
+ static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
+ {
+@@ -7813,7 +7844,7 @@ static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
+ 	if (ret)
+ 		goto out_err;
+ 
+-	ret = ufshcd_send_request_sense(hba, sdp);
++	ret = ufshcd_request_sense_async(hba, sdp);
+ 	scsi_device_put(sdp);
+ out_err:
+ 	if (ret)
+@@ -8407,35 +8438,6 @@ static void ufshcd_hba_exit(struct ufs_hba *hba)
+ 	}
+ }
+ 
+-static int
+-ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
+-{
+-	unsigned char cmd[6] = {REQUEST_SENSE,
+-				0,
+-				0,
+-				0,
+-				UFS_SENSE_SIZE,
+-				0};
+-	char *buffer;
+-	int ret;
+-
+-	buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
+-	if (!buffer) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	ret = scsi_execute(sdp, cmd, DMA_FROM_DEVICE, buffer,
+-			UFS_SENSE_SIZE, NULL, NULL,
+-			msecs_to_jiffies(1000), 3, 0, RQF_PM, NULL);
+-	if (ret)
+-		pr_err("%s: failed with err %d\n", __func__, ret);
+-
+-	kfree(buffer);
+-out:
+-	return ret;
+-}
+-
+ /**
+  * ufshcd_set_dev_pwr_mode - sends START STOP UNIT command to set device
+  *			     power mode
 -- 
 2.30.2
 
