@@ -7,157 +7,77 @@ X-Spam-Status: No, score=-18.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A793FC43217
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 08:41:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1EA0C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 11:46:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94D1A60FC0
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 08:41:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D108F61153
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 11:46:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231751AbhIJInC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Sep 2021 04:43:02 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:53658 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231797AbhIJIm6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 10 Sep 2021 04:42:58 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id A4BA14CF65;
-        Fri, 10 Sep 2021 08:41:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :references:in-reply-to:x-mailer:message-id:date:date:subject
-        :subject:from:from:received:received:received; s=mta-01; t=
-        1631263305; x=1633077706; bh=TYNuQ7nxf7K7Nj/aaSvj7ASXSLW5AFW3yGG
-        OBewTCPA=; b=LJUaWW4w6mDV6DQyTxRyHpTWU7tK94Df0rVlNXneP4ehlmX+UKM
-        8gCMHhzm1Qxbwo7XU+eFuDsDJ5sQLyCK6jIVY7OnBHOv7NSpwzls/XHcAJ0xk4V6
-        6z+TfEuXHSXDlVoRRXqrAsJqcnAgcyEHNbSNRy/zqlmU7JqsaLNkiK2Y=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id NHUlKl7XUdyw; Fri, 10 Sep 2021 11:41:45 +0300 (MSK)
-Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        id S232873AbhIJLrY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Sep 2021 07:47:24 -0400
+Received: from smtp-relay-canonical-0.canonical.com ([185.125.188.120]:60796
+        "EHLO smtp-relay-canonical-0.canonical.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232613AbhIJLrY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 10 Sep 2021 07:47:24 -0400
+Received: from localhost (1.general.cking.uk.vpn [10.172.193.212])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id EBFF14CF63;
-        Fri, 10 Sep 2021 11:41:43 +0300 (MSK)
-Received: from NB-591.corp.yadro.com (10.199.0.141) by
- T-EXCH-04.corp.yadro.com (172.17.100.104) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Fri, 10 Sep 2021 11:41:43 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Chris Boot <bootc@bootc.net>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Michael Cyr <mikecyr@linux.ibm.com>,
-        Felipe Balbi <balbi@kernel.org>,
-        Dmitriy Bogdanov <d.bogdanov@yadro.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-Subject: [PATCH v5 6/7] target: ibm_vscsi: replace enable attr to ops.enable
-Date:   Fri, 10 Sep 2021 11:41:32 +0300
-Message-ID: <20210910084133.17956-7-d.bogdanov@yadro.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210910084133.17956-1-d.bogdanov@yadro.com>
-References: <20210910084133.17956-1-d.bogdanov@yadro.com>
+        by smtp-relay-canonical-0.canonical.com (Postfix) with ESMTPSA id F290A3F10B;
+        Fri, 10 Sep 2021 11:46:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1631274372;
+        bh=+9/bpq7jclrEor7OSrcOzfI9neZF2mtMH+2UvxXLpiM=;
+        h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type;
+        b=GORjGQeaVrw9ROI9XY+JBKdNJ1IlkqgXQvbFRgEBpS2Smd5bNFm3G1+k72DPh5a48
+         cOJXbg/UWK1H9CjI+brYbC1UyF6OV3Xhs3YpiZ4wiLtECRmEaLTmeycv4ZxMup3cHq
+         VNSVkoE/K8JLSk0n3VR7oo+BLkMqIE2emRYUTK2+yOD5sR3vRVNqvMpJPWpliEG/ev
+         ZKo3Qo5CV5Yn95/bqRTPFonqBJSg9tQ8o1jVEpggGqUJD/oCw11F/TY5xmsv7gaQSS
+         Pd3N+HLNSjgoLpHNu/8t+DQmFfGWphoGRB5VOiqW73l65N0s76L43PNILpDAelKuMY
+         62xQRN59kzPng==
+From:   Colin King <colin.king@canonical.com>
+To:     Nilesh Javali <njavali@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Cc:     kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: Remove redundant initialization of pointer req
+Date:   Fri, 10 Sep 2021 12:46:10 +0100
+Message-Id: <20210910114610.44752-1-colin.king@canonical.com>
+X-Mailer: git-send-email 2.32.0
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.199.0.141]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-04.corp.yadro.com (172.17.100.104)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Remove tpg/enable attribute.
-Add fabric ops enable_tpg implementation instead.
+From: Colin Ian King <colin.king@canonical.com>
 
-Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+The pointer req is being initialized with a value that is never read, it
+is being updated later on. The assignment is redundant and can be removed.
+
+Addresses-Coverity: ("Unused value")
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 42 +++---------------------
- 1 file changed, 4 insertions(+), 38 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 10b6c6daaacd..61f06f6885a5 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3948,41 +3948,16 @@ static struct configfs_attribute *ibmvscsis_wwn_attrs[] = {
- 	NULL,
- };
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 7811c4952035..b5e21fad9551 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -3236,7 +3236,7 @@ qla24xx_abort_command(srb_t *sp)
+ 	fc_port_t	*fcport = sp->fcport;
+ 	struct scsi_qla_host *vha = fcport->vha;
+ 	struct qla_hw_data *ha = vha->hw;
+-	struct req_que *req = vha->req;
++	struct req_que *req;
+ 	struct qla_qpair *qpair = sp->qpair;
  
--static ssize_t ibmvscsis_tpg_enable_show(struct config_item *item,
--					 char *page)
--{
--	struct se_portal_group *se_tpg = to_tpg(item);
--	struct ibmvscsis_tport *tport = container_of(se_tpg,
--						     struct ibmvscsis_tport,
--						     se_tpg);
- 
--	return snprintf(page, PAGE_SIZE, "%d\n", (tport->enabled) ? 1 : 0);
--}
--
--static ssize_t ibmvscsis_tpg_enable_store(struct config_item *item,
--					  const char *page, size_t count)
-+static int ibmvscsis_enable_tpg(struct se_portal_group *se_tpg, bool enable)
- {
--	struct se_portal_group *se_tpg = to_tpg(item);
- 	struct ibmvscsis_tport *tport = container_of(se_tpg,
- 						     struct ibmvscsis_tport,
- 						     se_tpg);
- 	struct scsi_info *vscsi = container_of(tport, struct scsi_info, tport);
--	unsigned long tmp;
--	int rc;
- 	long lrc;
- 
--	rc = kstrtoul(page, 0, &tmp);
--	if (rc < 0) {
--		dev_err(&vscsi->dev, "Unable to extract srpt_tpg_store_enable\n");
--		return -EINVAL;
--	}
--
--	if ((tmp != 0) && (tmp != 1)) {
--		dev_err(&vscsi->dev, "Illegal value for srpt_tpg_store_enable\n");
--		return -EINVAL;
--	}
--
--	if (tmp) {
-+	if (enable) {
- 		spin_lock_bh(&vscsi->intr_lock);
- 		tport->enabled = true;
- 		lrc = ibmvscsis_enable_change_state(vscsi);
-@@ -3998,17 +3973,8 @@ static ssize_t ibmvscsis_tpg_enable_store(struct config_item *item,
- 		spin_unlock_bh(&vscsi->intr_lock);
- 	}
- 
--	dev_dbg(&vscsi->dev, "tpg_enable_store, tmp %ld, state %d\n", tmp,
--		vscsi->state);
--
--	return count;
-+	return 0;
- }
--CONFIGFS_ATTR(ibmvscsis_tpg_, enable);
--
--static struct configfs_attribute *ibmvscsis_tpg_attrs[] = {
--	&ibmvscsis_tpg_attr_enable,
--	NULL,
--};
- 
- static const struct target_core_fabric_ops ibmvscsis_ops = {
- 	.module				= THIS_MODULE,
-@@ -4038,10 +4004,10 @@ static const struct target_core_fabric_ops ibmvscsis_ops = {
- 	.fabric_make_wwn		= ibmvscsis_make_tport,
- 	.fabric_drop_wwn		= ibmvscsis_drop_tport,
- 	.fabric_make_tpg		= ibmvscsis_make_tpg,
-+	.fabric_enable_tpg		= ibmvscsis_enable_tpg,
- 	.fabric_drop_tpg		= ibmvscsis_drop_tpg,
- 
- 	.tfc_wwn_attrs			= ibmvscsis_wwn_attrs,
--	.tfc_tpg_base_attrs		= ibmvscsis_tpg_attrs,
- };
- 
- static void ibmvscsis_dev_release(struct device *dev) {};
+ 	ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x108c,
 -- 
-2.25.1
+2.32.0
 
