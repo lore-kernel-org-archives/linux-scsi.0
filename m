@@ -4,42 +4,42 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-19.4 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A32FDC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 72423C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E43461101
-	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 601FF61179
+	for <linux-scsi@archiver.kernel.org>; Fri, 10 Sep 2021 00:16:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229926AbhIJARb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 9 Sep 2021 20:17:31 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43496 "EHLO mail.kernel.org"
+        id S230204AbhIJARf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 9 Sep 2021 20:17:35 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43470 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229964AbhIJAR0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Sep 2021 20:17:26 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id D941A61179;
-        Fri, 10 Sep 2021 00:16:15 +0000 (UTC)
+        id S229871AbhIJARY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Sep 2021 20:17:24 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 61AB1610A3;
+        Fri, 10 Sep 2021 00:16:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1631232976;
-        bh=mhTzWIjNFHq9WQ8Uq09RIMs5tzXeTdefEArQb3VjoLw=;
+        s=k20201202; t=1631232974;
+        bh=5wT4zBVukEMyX/IIdNppK+WSIKXrt8fuOa2dbxjJr4k=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=jMUiZtFeGHgjI2qTfu/hG0dGTAGCRicXMk/zBjGK1/abysukGM9w/lQOnSRt6cp6w
-         OEHu9soJ5oAGKxDQWElz8MWmVpeKusag38zSKvvl/FO6ndI3Q0xBV1U2H8uvswj5+K
-         E/FmS8UTYzUQZKrPLE2yI1zWnVyggJ9/Ym3//gtfJsozQPWf2nT/TkuEtGOLGEYLU4
-         Sw/58KTj+ZHtk/t7Lp/q481zG1Ucm81YUsoUO36UU3itmRZ886Xoj4o9ry83LK1F4j
-         S63Qpdk4/UhARwFv9bI5rL2NqNCzKqwj0XP2UEAxAPQTsEgIUGmhMklU47zvY7jksx
-         3txCgybXIAxlg==
+        b=Ima3GrRgp/Et42UZawLVzzXgS9f7/WCM0ywrl3cHCZx6wTyJBSG49bKuKrYyJ8T0D
+         gaHcRZrWdZsdf87/xS0C+cYjcnVEzklccXMBUdIa5P89zLr6WX6l8jI+20wXABVFHw
+         f9psbDFFSxkQFFKadfNTnFCZhqCVuD6YbtviQxfhRuKseNVFgrcz74SPHQSdOL8XkT
+         fen6tF7aOkyJ6W1z5BsqingFcu2BioLhNKbGvXe4j4v6epnO0sYyZz65d4FZJ8Miu4
+         JzBotT2gvcAnNYvUiRQzGTNqiijL2FQTcRDfNhDRRx89k3732A2BCDXNW5/CNwEVXD
+         xh52kKcg0rZTA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
         Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 13/99] scsi: lpfc: Fix KASAN slab-out-of-bounds in lpfc_unreg_rpi() routine
-Date:   Thu,  9 Sep 2021 20:14:32 -0400
-Message-Id: <20210910001558.173296-13-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.14 11/99] scsi: lpfc: Fix NULL ptr dereference with NPIV ports for RDF handling
+Date:   Thu,  9 Sep 2021 20:14:30 -0400
+Message-Id: <20210910001558.173296-11-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20210910001558.173296-1-sashal@kernel.org>
 References: <20210910001558.173296-1-sashal@kernel.org>
@@ -53,45 +53,50 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit affbe24429410fddf4e50ca456c090ed6d8e05bf ]
+[ Upstream commit 2d338eb55b14ab9d245e8b1d982adecca8c4c613 ]
 
-In lpfc_offline_prep() an RPI is freed and nlp_rpi set to 0xFFFF before
-calling lpfc_unreg_rpi().  Unfortunately, lpfc_unreg_rpi() uses nlp_rpi to
-index the sli4_hba.rpi_ids[] array.
+RDF ELS handling for NPIV ports may result in an incorrect NDLP reference
+count.  In the event of a persistent link down, this may lead to premature
+release of an NDLP structure and subsequent NULL ptr dereference panic.
 
-In lpfc_offline_prep(), unreg rpi before freeing the rpi.
+Remove extraneous lpfc_nlp_put() call in NPIV port RDF processing.
 
-Link: https://lore.kernel.org/r/20210707184351.67872-12-jsmart2021@gmail.com
+Link: https://lore.kernel.org/r/20210707184351.67872-9-jsmart2021@gmail.com
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_els.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 9a84a0b06ee0..c4235699a123 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3541,6 +3541,8 @@ lpfc_offline_prep(struct lpfc_hba *phba, int mbx_action)
- 				spin_lock_irq(&ndlp->lock);
- 				ndlp->nlp_flag &= ~NLP_NPR_ADISC;
- 				spin_unlock_irq(&ndlp->lock);
-+
-+				lpfc_unreg_rpi(vports[i], ndlp);
- 				/*
- 				 * Whenever an SLI4 port goes offline, free the
- 				 * RPI. Get a new RPI when the adapter port
-@@ -3556,7 +3558,6 @@ lpfc_offline_prep(struct lpfc_hba *phba, int mbx_action)
- 					lpfc_sli4_free_rpi(phba, ndlp->nlp_rpi);
- 					ndlp->nlp_rpi = LPFC_RPI_ALLOC_ERROR;
- 				}
--				lpfc_unreg_rpi(vports[i], ndlp);
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index b0c443a0cf92..b1ca6f8e5970 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3413,7 +3413,6 @@ lpfc_issue_els_scr(struct lpfc_vport *vport, uint8_t retry)
+ 		return 1;
+ 	}
  
- 				if (ndlp->nlp_type & NLP_FABRIC) {
- 					lpfc_disc_state_machine(vports[i], ndlp,
+-	/* Keep the ndlp just in case RDF is being sent */
+ 	return 0;
+ }
+ 
+@@ -3657,11 +3656,9 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
+ 		lpfc_enqueue_node(vport, ndlp);
+ 	}
+ 
+-	/* RDF ELS is not required on an NPIV VN_Port.  */
+-	if (vport->port_type == LPFC_NPIV_PORT) {
+-		lpfc_nlp_put(ndlp);
++	/* RDF ELS is not required on an NPIV VN_Port. */
++	if (vport->port_type == LPFC_NPIV_PORT)
+ 		return -EACCES;
+-	}
+ 
+ 	elsiocb = lpfc_prep_els_iocb(vport, 1, cmdsize, retry, ndlp,
+ 				     ndlp->nlp_DID, ELS_CMD_RDF);
 -- 
 2.30.2
 
