@@ -2,107 +2,145 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70D8CC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 09:52:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E8CAAC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 10:53:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3ED7360F24
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 09:52:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C288D61206
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 10:53:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235488AbhIKJxR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Sep 2021 05:53:17 -0400
-Received: from mail-m17642.qiye.163.com ([59.111.176.42]:34804 "EHLO
-        mail-m17642.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235443AbhIKJxQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Sep 2021 05:53:16 -0400
-Received: from 2CD-RMPB.local (unknown [113.116.176.115])
-        by mail-m17642.qiye.163.com (Hmail) with ESMTPA id 1370B22012B;
-        Sat, 11 Sep 2021 17:52:02 +0800 (CST)
-Subject: Re: [PATCH 2/3] scsi: libiscsi: fix invalid pointer dereference in
- iscsi_eh_session_reset
-To:     Mike Christie <michael.christie@oracle.com>, lduncan@suse.com,
-        cleech@redhat.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20210910010220.24073-1-dinghui@sangfor.com.cn>
- <20210910010220.24073-3-dinghui@sangfor.com.cn>
- <302af74d-5b72-5b2f-050a-33f0978e321f@oracle.com>
-From:   Ding Hui <dinghui@sangfor.com.cn>
-Message-ID: <2863c857-7121-1e96-0c28-d7f697b99ef7@sangfor.com.cn>
-Date:   Sat, 11 Sep 2021 17:52:01 +0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:78.0)
- Gecko/20100101 Thunderbird/78.11.0
+        id S235593AbhIKKyZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Sep 2021 06:54:25 -0400
+Received: from szxga01-in.huawei.com ([45.249.212.187]:19030 "EHLO
+        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230131AbhIKKyY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Sep 2021 06:54:24 -0400
+Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4H68cg2k6kzblqB;
+        Sat, 11 Sep 2021 18:49:07 +0800 (CST)
+Received: from dggema764-chm.china.huawei.com (10.1.198.206) by
+ dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
+ 15.1.2308.8; Sat, 11 Sep 2021 18:53:10 +0800
+Received: from DESKTOP-8RFUVS3.china.huawei.com (10.174.185.179) by
+ dggema764-chm.china.huawei.com (10.1.198.206) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.8; Sat, 11 Sep 2021 18:53:09 +0800
+From:   Zenghui Yu <yuzenghui@huawei.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC:     <fujita.tomonori@lab.ntt.co.jp>, <axboe@kernel.dk>,
+        <martin.petersen@oracle.com>, <hch@lst.de>,
+        <gregkh@linuxfoundation.org>, <johan@kernel.org>,
+        <wanghaibin.wang@huawei.com>, Zenghui Yu <yuzenghui@huawei.com>
+Subject: [PATCH v2] scsi: bsg: Fix device unregistration
+Date:   Sat, 11 Sep 2021 18:53:06 +0800
+Message-ID: <20210911105306.1511-1-yuzenghui@huawei.com>
+X-Mailer: git-send-email 2.23.0.windows.1
 MIME-Version: 1.0
-In-Reply-To: <302af74d-5b72-5b2f-050a-33f0978e321f@oracle.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUtXWQgPGg8OCBgUHx5ZQUlOS1dZCBgUCR5ZQVlLVUtZV1
-        kWDxoPAgseWUFZKDYvK1lXWShZQUhPN1dZLVlBSVdZDwkaFQgSH1lBWRpMTUNWQ00ZGkJPHR0dTU
-        8ZVRMBExYaEhckFA4PWVdZFhoPEhUdFFlBWU9LSFVKSktISkNVS1kG
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6PT46Qzo5DD4LAhxCGD48Ikg6
-        I0owFClVSlVKTUhKSE5IQklJTU1PVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
-        QVlKSkhVSkpNVUpMTVVKSk5ZV1kIAVlBSE1DTDcG
-X-HM-Tid: 0a7bd4456332d998kuws1370b22012b
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.174.185.179]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ dggema764-chm.china.huawei.com (10.1.198.206)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/9/11 12:38 上午, Mike Christie wrote:
-> On 9/9/21 8:02 PM, Ding Hui wrote:
->> like commit 5db6dd14b313 ("scsi: libiscsi: Fix NULL pointer dereference in
->> iscsi_eh_session_reset"), access conn->persistent_address here is not safe
->> too.
->>
->> The persistent_address is independent of conn refcount, so maybe
->> already freed by iscsi_conn_teardown(), also we put the refcount of conn
->> above, the conn pointer may be invalid.
-> 
-> This shouldn't happen like you describe above, because when we wake up
-> we will see the session->state is ISCSI_STATE_TERMINATE. We will then
-> not reference the conn in that code below.
-> 
-> However, it looks like we could hit an issue where if a user was resetting
-> the persistent_address or targetname via iscsi_set_param -> iscsi_switch_str_param
-> then we could be accessing freed memory. I think we need the frwd_lock when swapping
-> the strings in iscsi_switch_str_param.
-> 
+We use device_initialize() to take refcount for the device but forget to
+put_device() on device teardown, which ends up leaking private data of the
+driver core, dev_name(), etc. This is reported by kmemleak at boot time if
+we compile kernel with DEBUG_TEST_DRIVER_REMOVE.
 
-Thanks for your detailed explanation, I'll drop 2/3 and 3/3 in v2 patch.
-I expect that the persistent_address issue be fixed in your future patchset.
+Note that adding the missing put_device() is _not_ sufficient to fix device
+unregistration. As we don't provide the .release() method for device, which
+turned out to be typically wrong and will be complained loudly by the
+driver core.
 
-Sorry for my ignorance.
+Fix both of them.
 
-> 
->>
->> Signed-off-by: Ding Hui <dinghui@sangfor.com.cn>
->> ---
->>   drivers/scsi/libiscsi.c | 4 ++--
->>   1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
->> index 712a45368385..69b3b2148328 100644
->> --- a/drivers/scsi/libiscsi.c
->> +++ b/drivers/scsi/libiscsi.c
->> @@ -2531,8 +2531,8 @@ int iscsi_eh_session_reset(struct scsi_cmnd *sc)
->>   	spin_lock_bh(&session->frwd_lock);
->>   	if (session->state == ISCSI_STATE_LOGGED_IN) {
->>   		ISCSI_DBG_EH(session,
->> -			     "session reset succeeded for %s,%s\n",
->> -			     session->targetname, conn->persistent_address);
->> +			     "session reset succeeded for %s\n",
->> +			     session->targetname);
->>   	} else
->>   		goto failed;
->>   	spin_unlock_bh(&session->frwd_lock);
->>
-> 
+Fixes: ead09dd3aed5 ("scsi: bsg: Simplify device registration")
+Signed-off-by: Zenghui Yu <yuzenghui@huawei.com>
+---
+* From v1 [1]:
+  - As pointed out by Johan, fix UAF and double-free on error path ...
+  - ... so I didn't collect Christoph and Greg's R-b tags (but thanks
+    for reviewing)
 
+[1] https://lore.kernel.org/r/20210909034608.1435-1-yuzenghui@huawei.com
 
+ block/bsg.c | 23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index 351095193788..882f56bff14f 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -165,13 +165,20 @@ static const struct file_operations bsg_fops = {
+ 	.llseek		=	default_llseek,
+ };
+ 
++static void bsg_device_release(struct device *dev)
++{
++	struct bsg_device *bd = container_of(dev, struct bsg_device, device);
++
++	ida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));
++	kfree(bd);
++}
++
+ void bsg_unregister_queue(struct bsg_device *bd)
+ {
+ 	if (bd->queue->kobj.sd)
+ 		sysfs_remove_link(&bd->queue->kobj, "bsg");
+ 	cdev_device_del(&bd->cdev, &bd->device);
+-	ida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));
+-	kfree(bd);
++	put_device(&bd->device);
+ }
+ EXPORT_SYMBOL_GPL(bsg_unregister_queue);
+ 
+@@ -193,11 +200,13 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
+ 	if (ret < 0) {
+ 		if (ret == -ENOSPC)
+ 			dev_err(parent, "bsg: too many bsg devices\n");
+-		goto out_kfree;
++		kfree(bd);
++		return ERR_PTR(ret);
+ 	}
+ 	bd->device.devt = MKDEV(bsg_major, ret);
+ 	bd->device.class = bsg_class;
+ 	bd->device.parent = parent;
++	bd->device.release = bsg_device_release;
+ 	dev_set_name(&bd->device, "%s", name);
+ 	device_initialize(&bd->device);
+ 
+@@ -205,7 +214,7 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
+ 	bd->cdev.owner = THIS_MODULE;
+ 	ret = cdev_device_add(&bd->cdev, &bd->device);
+ 	if (ret)
+-		goto out_ida_remove;
++		goto out_put_device;
+ 
+ 	if (q->kobj.sd) {
+ 		ret = sysfs_create_link(&q->kobj, &bd->device.kobj, "bsg");
+@@ -217,10 +226,8 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
+ 
+ out_device_del:
+ 	cdev_device_del(&bd->cdev, &bd->device);
+-out_ida_remove:
+-	ida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));
+-out_kfree:
+-	kfree(bd);
++out_put_device:
++	put_device(&bd->device);
+ 	return ERR_PTR(ret);
+ }
+ EXPORT_SYMBOL_GPL(bsg_register_queue);
 -- 
-Thanks,
--dinghui
+2.19.1
+
