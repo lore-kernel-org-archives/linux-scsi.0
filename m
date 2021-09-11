@@ -2,146 +2,125 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82FACC433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 16:47:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48C36C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 18:56:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A91D61212
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 16:47:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A536611BF
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 18:56:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230513AbhIKQs1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 11 Sep 2021 12:48:27 -0400
-Received: from mga17.intel.com ([192.55.52.151]:2829 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230281AbhIKQs1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 11 Sep 2021 12:48:27 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10104"; a="201501164"
-X-IronPort-AV: E=Sophos;i="5.85,285,1624345200"; 
-   d="scan'208";a="201501164"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2021 09:47:14 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,285,1624345200"; 
-   d="scan'208";a="431970270"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
-  by orsmga006.jf.intel.com with ESMTP; 11 Sep 2021 09:47:11 -0700
-Subject: Re: [PATCH V3 1/3] scsi: ufs: Fix error handler clear ua deadlock
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
-References: <20210905095153.6217-1-adrian.hunter@intel.com>
- <20210905095153.6217-2-adrian.hunter@intel.com>
- <a12d88b3-8402-34bb-fe97-90b7aa2c2c39@acm.org>
- <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
- <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
- <e5307bbe-1cda-fdd2-a666-ae57cd90de07@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <36245674-b179-d25e-84c3-417ef2d85620@intel.com>
-Date:   Sat, 11 Sep 2021 19:47:36 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S233412AbhIKS5h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 11 Sep 2021 14:57:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37404 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233408AbhIKS5g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Sep 2021 14:57:36 -0400
+Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AE7C6C061574
+        for <linux-scsi@vger.kernel.org>; Sat, 11 Sep 2021 11:56:23 -0700 (PDT)
+Received: by mail-wr1-x42e.google.com with SMTP id q11so7768720wrr.9
+        for <linux-scsi@vger.kernel.org>; Sat, 11 Sep 2021 11:56:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=g+zIxgfpPibCBsj7QoVGO97rOlTT59CN4lyb+inr3Hk=;
+        b=lzMxI9iJbiIwrWZBV7cPjtyT+skgcCRDrW73c9bgw2zOK43O8HqtqjQR9vTSxKIvER
+         j4A8RPFV9umnFJs1ylIGzR2TKW+G24J7HbTqLQnVjwSJkqyM47fKzO7+ketszz/lhLQf
+         IWx8AG0TJDUgAtnW1M3I2tNSw8hhM5O7/gNK5C7Gbzyhz5L75rJathP1FKbcilDKQoda
+         1kRfYneE4iqB5xJ69qa5wE0Jf5aj/krk74xwLTEJujrzDEAuMTjoOLsCEZcrUWJwK0Xh
+         RyDxDtkTd4vGXEVgo5xMxpCRR0v8u8z5kyHGPMNNHqPK+4+i+uEn2iSBb0KQ09tCgHCY
+         V8GQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=g+zIxgfpPibCBsj7QoVGO97rOlTT59CN4lyb+inr3Hk=;
+        b=12iZTCa70v3sRH0tUYZEnIld7Ww+tN9jEaH6OIUs6uGpfFvhKeZH1rb13nw4SaZGXC
+         QHT+AB+7XIyyuW+lITRL1famuWjGWD9FaInLlkMvUr/zZtVXN0l79boJ/drN+tbZmVmQ
+         t8QB263yLlxs/3JCgCdAlOm3D4o0mwmA8H15eWiSwI6uZ2TvSerJyIt1m94H9p8q9XIq
+         HVfrdCo9WA6gL4qofNrAGJPJ1FDHpY35Val6mR15PqNQT4m9hvk8ZO1UYXFJgICXVIKf
+         TWavyRmUphAInc0xkpechxHp3RFAnF1NhpE5XMGSnYf08eBmiI9+i9DkGUQ7had/LQfn
+         Aafg==
+X-Gm-Message-State: AOAM5314g1jUCaq7Rl84kbUGZr2hzyQ5DHx1cprDcRLhcbUSXaDbgoza
+        nXhoH+zZbj3jqffg29w1XXA=
+X-Google-Smtp-Source: ABdhPJxzAhHRpbQJqm3R565c/qgP9m8RsCRfMZH2uBOalb9oInGSvX86CVTAEOPOlP5HOrJ72ca7Qg==
+X-Received: by 2002:a05:6000:1627:: with SMTP id v7mr4203636wrb.195.1631386582237;
+        Sat, 11 Sep 2021 11:56:22 -0700 (PDT)
+Received: from eldamar (80-218-24-251.dclient.hispeed.ch. [80.218.24.251])
+        by smtp.gmail.com with ESMTPSA id j14sm2415769wrp.21.2021.09.11.11.56.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 11 Sep 2021 11:56:21 -0700 (PDT)
+Sender: Salvatore Bonaccorso <salvatore.bonaccorso@gmail.com>
+Date:   Sat, 11 Sep 2021 20:56:20 +0200
+From:   Salvatore Bonaccorso <carnil@debian.org>
+To:     bugzilla-daemon@bugzilla.kernel.org
+Cc:     linux-scsi@vger.kernel.org, kashyap.desai@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com, sumit.saxena@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        megaraidlinux.pdl@broadcom.com
+Subject: Re: [Bug 214311] New: megaraid_sas - no disks detected
+Message-ID: <YTz71EKv/+970GSC@eldamar.lan>
+References: <bug-214311-11613@https.bugzilla.kernel.org/>
 MIME-Version: 1.0
-In-Reply-To: <e5307bbe-1cda-fdd2-a666-ae57cd90de07@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bug-214311-11613@https.bugzilla.kernel.org/>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 8/09/21 1:36 am, Bart Van Assche wrote:
-> On 9/7/21 9:56 AM, Bart Van Assche wrote:
->> On 9/7/21 8:43 AM, Adrian Hunter wrote:
->>> No.  Requests cannot make progress when ufshcd_state is
->>> UFSHCD_STATE_EH_SCHEDULED_FATAL, and only the error handler can change that,
->>> so if the error handler is waiting to enter the queue and blk_mq_freeze_queue()
->>> is waiting for outstanding requests, they will deadlock.
->>
->> How about adding the above text as a comment above ufshcd_clear_ua_wluns() such
->> that this information becomes available to those who have not followed this
->> conversation?
-> 
-> After having given patch 1/3 some further thought: an unfortunate
-> effect of this patch is that unit attention clearing is skipped for
-> the states UFSHCD_STATE_EH_SCHEDULED_FATAL and UFSHCD_STATE_RESET.
+Hi,
 
-Only if the error handler is racing with blk_mq_freeze_queue(), but it
-is not ideal.
-
-> How about replacing patch 1/3 with the untested patch below since that
-> patch does not have the disadvantage of sometimes skipping clearing UA?
-
-I presume you mean without reverting "scsi: ufs: Synchronize SCSI
-and UFS error handling" but in that case the deadlock happens because:
-
-error handler is waiting on blk_queue_enter()
-blk_queue_enter() is waiting on blk_mq_freeze_queue()
-blk_mq_freeze_queue() is waiting on outstanding requests
-outstanding requests are blocked by the SCSI error handler shost_state == SHOST_RECOVERY set by scsi_schedule_eh()
-
+On Sat, Sep 04, 2021 at 11:23:59AM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+> https://bugzilla.kernel.org/show_bug.cgi?id=214311
 > 
-> Thanks,
+>             Bug ID: 214311
+>            Summary: megaraid_sas - no disks detected
+>            Product: IO/Storage
+>            Version: 2.5
+>     Kernel Version: 5.10.0
+>           Hardware: Intel
+>                 OS: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: blocking
+>           Priority: P1
+>          Component: SCSI
+>           Assignee: linux-scsi@vger.kernel.org
+>           Reporter: jarek@poczta.srv.pl
+>         Regression: No
 > 
-> Bart.
+> Dell R340 with PERC H330 - disks not detected.
 > 
-> [PATCH] scsi: ufs: Fix a recently introduced deadlock
+> lspci:
 > 
-> Completing pending commands with DID_IMM_RETRY triggers the following
-> code paths:
+> 02:00.0 RAID bus controller: LSI Logic / Symbios Logic MegaRAID SAS-3 3008
+> [Fury] (rev 02)
 > 
->   scsi_complete()
->   -> scsi_queue_insert()
->     -> __scsi_queue_insert()
->       -> scsi_device_unbusy()
->         -> scsi_dec_host_busy()
->       -> scsi_eh_wakeup()
->       -> blk_mq_requeue_request()
+> dmesg:
 > 
->   scsi_queue_rq()
->   -> scsi_host_queue_ready()
->     -> scsi_host_in_recovery()
+> megaraid_sas 0000:02:00.0: Performance mode :Latency
+> megaraid_sas 0000:02:00.0: FW supports sync cache: No
+> megaraid_sas 0000:02:00.0: megasas_disable_intr_fusion is called
+> outband_intr_mask:0x40000009
+> megaraid_sas 0000:02:00.0: Ignore DCMD timeout: megasas_get_ctrl_info 5274
+> megaraid_sas 0000:02:00.0: Could not get controller info. Fail from
+> megasas_init_adapter_fusion 1865
+> megaraid_sas 0000:02:00.0: Failed from megasas_init_fw 6406
 > 
-> Fixes: a113eaaf8637 ("scsi: ufs: Synchronize SCSI and UFS error handling")
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c2c614da1fb8..9560f34f3d27 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2707,6 +2707,14 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
->          }
->          fallthrough;
->      case UFSHCD_STATE_RESET:
-> +        /*
-> +         * The SCSI error handler only starts after all pending commands
-> +         * have failed or timed out. Complete commands with
-> +         * DID_IMM_RETRY to allow the error handler to start
-> +         * if it has been scheduled.
-> +         */
-> +        set_host_byte(cmd, DID_IMM_RETRY);
-> +        cmd->scsi_done(cmd);
+> This machine works OK with kernel 4.19.0. Debian 11, Clonezilla 2.7.3-19 does
+> not detect disks.
 
-Setting non-zero return value, in this case "err = SCSI_MLQUEUE_HOST_BUSY"
-will anyway cause scsi_dec_host_busy(), so does this make any difference?
+This sounds very similar to one bug report which was reported
+downstream in Debian at https://bugs.debian.org/992304
 
+Followup to the bugzilla bug 214311
+(https://bugzilla.kernel.org/show_bug.cgi?id=214311) suggests that it
+works when booting with BIOS, not with UEFI boot.
 
->          err = SCSI_MLQUEUE_HOST_BUSY;
->          goto out;
->      case UFSHCD_STATE_ERROR:
-
+Regards,
+Salvatore
