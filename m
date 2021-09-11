@@ -7,111 +7,80 @@ X-Spam-Status: No, score=-12.6 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 330C3C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 01:41:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 48B28C433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 02:38:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03E91611AD
-	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 01:41:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2503A61211
+	for <linux-scsi@archiver.kernel.org>; Sat, 11 Sep 2021 02:38:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235097AbhIKBmY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 10 Sep 2021 21:42:24 -0400
-Received: from szxga01-in.huawei.com ([45.249.212.187]:9028 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231864AbhIKBmU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Sep 2021 21:42:20 -0400
-Received: from dggemv703-chm.china.huawei.com (unknown [172.30.72.54])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4H5wRH077jzVmty;
-        Sat, 11 Sep 2021 09:40:11 +0800 (CST)
-Received: from dggema764-chm.china.huawei.com (10.1.198.206) by
- dggemv703-chm.china.huawei.com (10.3.19.46) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id
- 15.1.2308.8; Sat, 11 Sep 2021 09:41:06 +0800
-Received: from [10.174.185.179] (10.174.185.179) by
- dggema764-chm.china.huawei.com (10.1.198.206) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.8; Sat, 11 Sep 2021 09:41:04 +0800
-Subject: Re: [PATCH] scsi: bsg: Fix device unregistration
-To:     Johan Hovold <johan@kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux-block@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <fujita.tomonori@lab.ntt.co.jp>,
-        <axboe@kernel.dk>, <martin.petersen@oracle.com>, <hch@lst.de>,
-        <gregkh@linuxfoundation.org>, <wanghaibin.wang@huawei.com>
-References: <20210909034608.1435-1-yuzenghui@huawei.com>
- <YTtTU4+DZEb4WRkR@hovoldconsulting.com>
-From:   Zenghui Yu <yuzenghui@huawei.com>
-Message-ID: <0506e034-e186-a73b-3046-6b0e1f397756@huawei.com>
-Date:   Sat, 11 Sep 2021 09:41:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.9.0
+        id S235178AbhIKCjQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 10 Sep 2021 22:39:16 -0400
+Received: from mail-pg1-f179.google.com ([209.85.215.179]:40565 "EHLO
+        mail-pg1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235173AbhIKCjP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Sep 2021 22:39:15 -0400
+Received: by mail-pg1-f179.google.com with SMTP id h3so3548750pgb.7
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Sep 2021 19:38:03 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=q4lLRz2hNGXvUEsoCTdIDTwoDQbJDNU6KINVCtAoATI=;
+        b=hHGZb43u6dMrQzo1HrNRnJSo8kMvqV17WDsx5hPFL5giYGIcIccXYpQrBLg1SCDhXY
+         SW3rZsif/KOsc1peko9g61lZcWDH5B1+a3/XDVzAdjnN3YUR0piWQegaAP+4kpd0Co9/
+         vJ/BV2qx1xjFYQhPkXCOzhKuzDDiZRcSb0yUMHQY9U/p6GAeVSEHRml2xTn5FTBxqqb2
+         +BE7L8CE8JNNFBuS5f+XKEXEbunSxYpSDONHVRyMpRViCcyuo2DR1JUNGoBNpgfN7sSz
+         L5g2zyweHvCKqXQTqy+kQIaRw/NBQnhQrncHU4LGGcNyGoH17fnqMCDReSUf92IrO2CQ
+         Angw==
+X-Gm-Message-State: AOAM532RtfRcRzWN+vQT6/IzaOfmdTw40XbkK7KrBONExLCx9t+DMQLo
+        bjSiMPM7d/8qj49hLJpQ8JWhXAPqQsk=
+X-Google-Smtp-Source: ABdhPJxIfjQb7od5jqc1NkhMxtLcLIWEo6daomDyc9RAG2/g6xx2KWOBT9aN0piOxkJAfrEH1jsQ9w==
+X-Received: by 2002:a63:e74b:: with SMTP id j11mr698322pgk.322.1631327883145;
+        Fri, 10 Sep 2021 19:38:03 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:2c24:10db:f5a3:3a53? ([2601:647:4000:d7:2c24:10db:f5a3:3a53])
+        by smtp.gmail.com with UTF8SMTPSA id l13sm259610pji.3.2021.09.10.19.38.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 10 Sep 2021 19:38:02 -0700 (PDT)
+Message-ID: <c5c5d45d-6422-8577-8e2e-c75898668a0b@acm.org>
+Date:   Fri, 10 Sep 2021 19:37:59 -0700
 MIME-Version: 1.0
-In-Reply-To: <YTtTU4+DZEb4WRkR@hovoldconsulting.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.0.1
+Subject: Re: sd_spinup_disk() now is a little noisy
 Content-Language: en-US
+To:     Heiner Kallweit <hkallweit1@gmail.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Christian Loehle <cloehle@hyperstone.com>
+Cc:     SCSI development list <linux-scsi@vger.kernel.org>
+References: <485ac2f7-e83a-6fcd-b849-c20608e26810@gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <485ac2f7-e83a-6fcd-b849-c20608e26810@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.185.179]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- dggema764-chm.china.huawei.com (10.1.198.206)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/9/10 20:45, Johan Hovold wrote:
-> On Thu, Sep 09, 2021 at 11:46:08AM +0800, Zenghui Yu wrote:
+On 9/10/21 15:59, Heiner Kallweit wrote:
+>   		do {
+> +			u8 media_was_present = sdkp->media_present;
 
->> @@ -218,6 +226,7 @@ struct bsg_device *bsg_register_queue(struct request_queue *q,
->>  out_device_del:
->>  	cdev_device_del(&bd->cdev, &bd->device);
->>  out_ida_remove:
->> +	put_device(&bd->device);
->>  	ida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));
->>  out_kfree:
->>  	kfree(bd);
-> 
-> Ehh, what about the blatant use-after-free and double-free you just
-> added here?
+How about using 'bool' instead of 'u8'?
 
-Yeah, whoops. That's definitely wrong. I'm squash the following fix
-in this patch.
+>   			cmd[0] = TEST_UNIT_READY;
+>   			memset((void *) &cmd[1], 0, 9);
+>   
+> @@ -2138,7 +2140,8 @@ sd_spinup_disk(struct scsi_disk *sdkp)
+>   			 * with any more polling.
+>   			 */
+>   			if (media_not_present(sdkp, &sshdr)) {
+> -				sd_printk(KERN_NOTICE, sdkp, "Media removed, stopped polling\n");
+> +				if (media_was_present)
+> +					sd_printk(KERN_NOTICE, sdkp, "Media removed, stopped polling\n");
+>   				return;
+>   			}
 
-Thanks for the heads up!
+Thanks,
 
-|diff --git a/block/bsg.c b/block/bsg.c
-|index c3bb92b9af7e..882f56bff14f 100644
-|--- a/block/bsg.c
-|+++ b/block/bsg.c
-|@@ -200,7 +200,8 @@ struct bsg_device *bsg_register_queue(struct 
-request_queue *q,
-|        if (ret < 0) {
-|                if (ret == -ENOSPC)
-|                        dev_err(parent, "bsg: too many bsg devices\n");
-|-               goto out_kfree;
-|+               kfree(bd);
-|+               return ERR_PTR(ret);
-|        }
-|        bd->device.devt = MKDEV(bsg_major, ret);
-|        bd->device.class = bsg_class;
-|@@ -213,7 +214,7 @@ struct bsg_device *bsg_register_queue(struct 
-request_queue *q,
-|        bd->cdev.owner = THIS_MODULE;
-|        ret = cdev_device_add(&bd->cdev, &bd->device);
-|        if (ret)
-|-               goto out_ida_remove;
-|+               goto out_put_device;
-|
-|        if (q->kobj.sd) {
-|                ret = sysfs_create_link(&q->kobj, &bd->device.kobj, "bsg");
-|@@ -225,11 +226,8 @@ struct bsg_device *bsg_register_queue(struct 
-request_queue *q,
-|
-| out_device_del:
-|        cdev_device_del(&bd->cdev, &bd->device);
-|-out_ida_remove:
-|+out_put_device:
-|        put_device(&bd->device);
-|-       ida_simple_remove(&bsg_minor_ida, MINOR(bd->device.devt));
-|-out_kfree:
-|-       kfree(bd);
-|        return ERR_PTR(ret);
-| }
-| EXPORT_SYMBOL_GPL(bsg_register_queue);
+Bart.
