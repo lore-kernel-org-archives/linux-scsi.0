@@ -2,42 +2,45 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34641C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 15:17:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3BFDC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 15:17:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1893660FF2
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 15:17:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D8B060FE6
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 15:17:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345295AbhIMPSr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Sep 2021 11:18:47 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3772 "EHLO
+        id S1345587AbhIMPSw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Sep 2021 11:18:52 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3774 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345577AbhIMPSm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 11:18:42 -0400
-Received: from fraeml745-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4H7VQt12R9z67yyT;
-        Mon, 13 Sep 2021 23:15:18 +0800 (CST)
+        with ESMTP id S1345634AbhIMPSn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 11:18:43 -0400
+Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4H7VQw26n7z684Jd;
+        Mon, 13 Sep 2021 23:15:20 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml745-chm.china.huawei.com (10.206.15.226) with Microsoft SMTP Server
+ fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Mon, 13 Sep 2021 17:17:22 +0200
+ 15.1.2308.8; Mon, 13 Sep 2021 17:17:26 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Mon, 13 Sep 2021 16:17:20 +0100
+ 15.1.2308.8; Mon, 13 Sep 2021 16:17:24 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>
 CC:     <linux-kernel@vger.kernel.org>, <linux-block@vger.kernel.org>,
         <ming.lei@redhat.com>, <linux-scsi@vger.kernel.org>,
         John Garry <john.garry@huawei.com>
-Subject: [PATCH RESEND v3 00/13] blk-mq: Reduce static requests memory footprint for shared sbitmap
-Date:   Mon, 13 Sep 2021 23:12:17 +0800
-Message-ID: <1631545950-56586-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH RESEND v3 02/13] block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ
+Date:   Mon, 13 Sep 2021 23:12:19 +0800
+Message-ID: <1631545950-56586-3-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
+In-Reply-To: <1631545950-56586-1-git-send-email-john.garry@huawei.com>
+References: <1631545950-56586-1-git-send-email-john.garry@huawei.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.69.192.58]
@@ -48,80 +51,88 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently a full set of static requests are allocated per hw queue per
-tagset when shared sbitmap is used.
+It is a bit confusing that there is BLKDEV_MAX_RQ and MAX_SCHED_RQ, as
+the name BLKDEV_MAX_RQ would imply the max requests always, which it is
+not.
 
-However, only tagset->queue_depth number of requests may be active at
-any given time. As such, only tagset->queue_depth number of static
-requests are required.
+Rename to BLKDEV_MAX_RQ to BLKDEV_DEFAULT_RQ, matching it's usage - that being
+the default number of requests assigned when allocating a request queue.
 
-The same goes for using an IO scheduler, which allocates a full set of
-static requests per hw queue per request queue.
+Signed-off-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/blk-core.c       | 2 +-
+ block/blk-mq-sched.c   | 2 +-
+ block/blk-mq-sched.h   | 2 +-
+ drivers/block/rbd.c    | 2 +-
+ include/linux/blkdev.h | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-This series changes shared sbitmap support by using a shared tags per
-tagset and request queue. Ming suggested something along those lines in
-v1 review. But we'll keep name "shared sbitmap" name as it is familiar. In
-using a shared tags, the static rqs also become shared, reducing the
-number of sets of static rqs, reducing memory usage.
-
-Patch "blk-mq: Use shared tags for shared sbitmap support" is a bit big,
-and could potentially be broken down. But then maintaining ability to
-bisect becomes harder and each sub-patch would get more convoluted.
-
-For megaraid sas driver on my 128-CPU arm64 system with 1x SATA disk, we
-save approx. 300MB(!) [370MB -> 60MB]
-
-Baseline is v5.15-rc1
-
-This resend is just a rebase, which applied cleanly.
-
-Changes since v2:
-- Make blk_mq_clear_rq_mapping() static again
-- Various function renaming for conciseness and consistency
-- Add/refactor alloc/free map and rqs function
-- Drop the new blk_mq_ops init_request method in favour of passing an
-  invalid HW queue index for shared sbitmap
-- Add patch to not clear rq mapping for driver tags
-- Remove blk_mq_init_bitmap_tags()
-- Add some more RB tags (thanks!)
-
-Changes since v1:
-- Switch to use blk_mq_tags for shared sbitmap
-- Add new blk_mq_ops init request callback
-- Add some RB tags (thanks!)
-
-John Garry (13):
-  blk-mq: Change rqs check in blk_mq_free_rqs()
-  block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ
-  blk-mq: Relocate shared sbitmap resize in blk_mq_update_nr_requests()
-  blk-mq: Invert check in blk_mq_update_nr_requests()
-  blk-mq-sched: Rename blk_mq_sched_alloc_{tags -> map_and_rqs}()
-  blk-mq-sched: Rename blk_mq_sched_free_{requests -> rqs}()
-  blk-mq: Pass driver tags to blk_mq_clear_rq_mapping()
-  blk-mq: Don't clear driver tags own mapping
-  blk-mq: Add blk_mq_tag_update_sched_shared_sbitmap()
-  blk-mq: Add blk_mq_alloc_map_and_rqs()
-  blk-mq: Refactor and rename blk_mq_free_map_and_{requests->rqs}()
-  blk-mq: Use shared tags for shared sbitmap support
-  blk-mq: Stop using pointers for blk_mq_tags bitmap tags
-
- block/bfq-iosched.c    |   4 +-
- block/blk-core.c       |   4 +-
- block/blk-mq-debugfs.c |   8 +-
- block/blk-mq-sched.c   | 116 +++++++++++------------
- block/blk-mq-sched.h   |   4 +-
- block/blk-mq-tag.c     | 125 +++++++++---------------
- block/blk-mq-tag.h     |  14 +--
- block/blk-mq.c         | 209 ++++++++++++++++++++++++-----------------
- block/blk-mq.h         |  18 ++--
- block/blk.h            |   2 +-
- block/kyber-iosched.c  |   4 +-
- block/mq-deadline.c    |   2 +-
- drivers/block/rbd.c    |   2 +-
- include/linux/blk-mq.h |  15 ++-
- include/linux/blkdev.h |   5 +-
- 15 files changed, 256 insertions(+), 276 deletions(-)
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 5454db2fa263..5d7137bec48e 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -568,7 +568,7 @@ struct request_queue *blk_alloc_queue(int node_id)
+ 
+ 	blk_queue_dma_alignment(q, 511);
+ 	blk_set_default_limits(&q->limits);
+-	q->nr_requests = BLKDEV_MAX_RQ;
++	q->nr_requests = BLKDEV_DEFAULT_RQ;
+ 
+ 	return q;
+ 
+diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
+index 0f006cabfd91..2231fb0d4c35 100644
+--- a/block/blk-mq-sched.c
++++ b/block/blk-mq-sched.c
+@@ -606,7 +606,7 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
+ 	 * Additionally, this is a per-hw queue depth.
+ 	 */
+ 	q->nr_requests = 2 * min_t(unsigned int, q->tag_set->queue_depth,
+-				   BLKDEV_MAX_RQ);
++				   BLKDEV_DEFAULT_RQ);
+ 
+ 	queue_for_each_hw_ctx(q, hctx, i) {
+ 		ret = blk_mq_sched_alloc_tags(q, hctx, i);
+diff --git a/block/blk-mq-sched.h b/block/blk-mq-sched.h
+index 5246ae040704..1e46be6c5178 100644
+--- a/block/blk-mq-sched.h
++++ b/block/blk-mq-sched.h
+@@ -5,7 +5,7 @@
+ #include "blk-mq.h"
+ #include "blk-mq-tag.h"
+ 
+-#define MAX_SCHED_RQ (16 * BLKDEV_MAX_RQ)
++#define MAX_SCHED_RQ (16 * BLKDEV_DEFAULT_RQ)
+ 
+ void blk_mq_sched_assign_ioc(struct request *rq);
+ 
+diff --git a/drivers/block/rbd.c b/drivers/block/rbd.c
+index e65c9d706f6f..bf60aebd0cfb 100644
+--- a/drivers/block/rbd.c
++++ b/drivers/block/rbd.c
+@@ -836,7 +836,7 @@ struct rbd_options {
+ 	u32 alloc_hint_flags;  /* CEPH_OSD_OP_ALLOC_HINT_FLAG_* */
+ };
+ 
+-#define RBD_QUEUE_DEPTH_DEFAULT	BLKDEV_MAX_RQ
++#define RBD_QUEUE_DEPTH_DEFAULT	BLKDEV_DEFAULT_RQ
+ #define RBD_ALLOC_SIZE_DEFAULT	(64 * 1024)
+ #define RBD_LOCK_TIMEOUT_DEFAULT 0  /* no timeout */
+ #define RBD_READ_ONLY_DEFAULT	false
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 12b9dbcc980e..4baf9435232d 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -40,7 +40,7 @@ struct blk_stat_callback;
+ struct blk_keyslot_manager;
+ 
+ #define BLKDEV_MIN_RQ	4
+-#define BLKDEV_MAX_RQ	128	/* Default maximum */
++#define BLKDEV_DEFAULT_RQ	128
+ 
+ /* Must be consistent with blk_mq_poll_stats_bkt() */
+ #define BLK_MQ_POLL_STATS_BKTS 16
 -- 
 2.26.2
 
