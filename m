@@ -2,100 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B9917C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 09:21:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D89B2C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 10:19:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9892860FBF
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 09:21:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B812E6108B
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 10:19:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238506AbhIMJXF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Sep 2021 05:23:05 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3769 "EHLO
+        id S238986AbhIMKUc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Sep 2021 06:20:32 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3770 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238493AbhIMJXE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 05:23:04 -0400
-Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.200])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4H7LXK2lQtz6FCpR;
-        Mon, 13 Sep 2021 17:19:29 +0800 (CST)
+        with ESMTP id S238977AbhIMKU2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 06:20:28 -0400
+Received: from fraeml743-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4H7MpV6kygz67Wrl;
+        Mon, 13 Sep 2021 18:16:50 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
+ fraeml743-chm.china.huawei.com (10.206.15.224) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Mon, 13 Sep 2021 11:21:47 +0200
-Received: from [10.47.80.114] (10.47.80.114) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Mon, 13 Sep
- 2021 10:21:46 +0100
-Subject: Re: [PATCH 0/4] scsi: remove last references to scsi_cmnd.tag
-To:     Hannes Reinecke <hare@suse.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Christoph Hellwig <hch@lst.de>,
-        James Bottomley <james.bottomley@hansenpartnership.com>,
-        <linux-scsi@vger.kernel.org>,
-        "Russell King (Oracle)" <linux@armlinux.org.uk>
-References: <20210819084007.79233-1-hare@suse.de>
+ 15.1.2308.8; Mon, 13 Sep 2021 12:19:08 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Mon, 13 Sep 2021 11:19:06 +0100
 From:   John Garry <john.garry@huawei.com>
-Message-ID: <ef629eef-fe55-2c8b-2825-67c43e4f4cd8@huawei.com>
-Date:   Mon, 13 Sep 2021 10:25:27 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <bvanassche@acm.org>, <hare@suse.de>, <hch@lst.de>,
+        <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+Subject: [PATCH v2] scsi: Delete scsi_{get,free}_host_dev()
+Date:   Mon, 13 Sep 2021 18:14:07 +0800
+Message-ID: <1631528047-30150-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-In-Reply-To: <20210819084007.79233-1-hare@suse.de>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.80.114]
-X-ClientProxiedBy: lhreml754-chm.china.huawei.com (10.201.108.204) To
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
  lhreml724-chm.china.huawei.com (10.201.108.75)
 X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-+ Russell
+Since commit 0653c358d2dc ("scsi: Drop gdth driver"), functions
+scsi_{get,free}_host_dev() no longer have any in-tree users, so delete
+them.
 
-On 19/08/2021 09:40, Hannes Reinecke wrote:
+Signed-off-by: John Garry <john.garry@huawei.com>
+Nacked-by: Hannes Reinecke <hare@suse.de>
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+---
+An alt agenda of this patch is to get clarification on whether this API
+should be used for Hannes' reserved commands series.
 
-The arm rpc_defconfig build is now broken on mainline.
+Originally the recommendation was to use it, but now it seems to be to
+not use it:
+https://lore.kernel.org/linux-scsi/55918d68-7385-0153-0bd9-d822d3ce4c21@suse.de/
 
-I suggest resending this series, please.
+Changes since v1:
+- Add more tags
 
-Thanks
-
-> Hi all,
-> 
-> with commit 4c7b6ea336c1 ("scsi: core: Remove scsi_cmnd.tag") drivers
-> cannot reference the SCSI command tag anymore.
-> Arguably these drivers would have stopped working since 2010 with
-> the switch to block layer tags in SCSI anyway, so chances are no-one
-> had been using tagging in these drivers.
-> 
-> This patchset fixes up these usage; for fas216 we're just switching
-> to use the appropriate wrapper.
-> For acornscsi the tagged queue handling is removed altogether as it
-> was broken in the first place, and no-one since the switch to git
-> could be bothered to fix it.
-> And the patchset has the nice side-effect that we can remove the
-> scsi_device.current_tag field.
-> 
-> As usual, comments and reviews are welcome.
-> 
-> Hannes Reinecke (4):
->    scsi: Introduct scsi_cmd_to_tag()
->    fas216: kill scmd->tag
->    acornscsi: remove tagged queuing vestiges
->    scsi: remove 'current_tag'
-> 
->   drivers/scsi/arm/Kconfig     |  11 ----
->   drivers/scsi/arm/acornscsi.c | 103 ++++++++---------------------------
->   drivers/scsi/arm/fas216.c    |  31 +++--------
->   drivers/scsi/arm/queue.c     |   2 +-
->   include/scsi/scsi_cmnd.h     |   7 +++
->   include/scsi/scsi_device.h   |   1 -
->   6 files changed, 38 insertions(+), 117 deletions(-)
-> 
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index fe22191522a3..0d0381df25f7 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1902,60 +1902,3 @@ void scsi_forget_host(struct Scsi_Host *shost)
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ }
+ 
+-/**
+- * scsi_get_host_dev - Create a scsi_device that points to the host adapter itself
+- * @shost: Host that needs a scsi_device
+- *
+- * Lock status: None assumed.
+- *
+- * Returns:     The scsi_device or NULL
+- *
+- * Notes:
+- *	Attach a single scsi_device to the Scsi_Host - this should
+- *	be made to look like a "pseudo-device" that points to the
+- *	HA itself.
+- *
+- *	Note - this device is not accessible from any high-level
+- *	drivers (including generics), which is probably not
+- *	optimal.  We can add hooks later to attach.
+- */
+-struct scsi_device *scsi_get_host_dev(struct Scsi_Host *shost)
+-{
+-	struct scsi_device *sdev = NULL;
+-	struct scsi_target *starget;
+-
+-	mutex_lock(&shost->scan_mutex);
+-	if (!scsi_host_scan_allowed(shost))
+-		goto out;
+-	starget = scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
+-	if (!starget)
+-		goto out;
+-
+-	sdev = scsi_alloc_sdev(starget, 0, NULL);
+-	if (sdev)
+-		sdev->borken = 0;
+-	else
+-		scsi_target_reap(starget);
+-	put_device(&starget->dev);
+- out:
+-	mutex_unlock(&shost->scan_mutex);
+-	return sdev;
+-}
+-EXPORT_SYMBOL(scsi_get_host_dev);
+-
+-/**
+- * scsi_free_host_dev - Free a scsi_device that points to the host adapter itself
+- * @sdev: Host device to be freed
+- *
+- * Lock status: None assumed.
+- *
+- * Returns:     Nothing
+- */
+-void scsi_free_host_dev(struct scsi_device *sdev)
+-{
+-	BUG_ON(sdev->id != sdev->host->this_id);
+-
+-	__scsi_remove_device(sdev);
+-}
+-EXPORT_SYMBOL(scsi_free_host_dev);
+-
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 75363707b73f..bc9c45ced145 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -797,16 +797,6 @@ void scsi_host_busy_iter(struct Scsi_Host *,
+ 
+ struct class_container;
+ 
+-/*
+- * These two functions are used to allocate and free a pseudo device
+- * which will connect to the host adapter itself rather than any
+- * physical device.  You must deallocate when you are done with the
+- * thing.  This physical pseudo-device isn't real and won't be available
+- * from any high-level drivers.
+- */
+-extern void scsi_free_host_dev(struct scsi_device *);
+-extern struct scsi_device *scsi_get_host_dev(struct Scsi_Host *);
+-
+ /*
+  * DIF defines the exchange of protection information between
+  * initiator and SBC block device.
+-- 
+2.26.2
 
