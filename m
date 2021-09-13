@@ -6,59 +6,68 @@ X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1638DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 16:23:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D404C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 16:33:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF26C60184
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 16:23:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12DC9604E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 16:33:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237098AbhIMQYc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Sep 2021 12:24:32 -0400
-Received: from mail-pg1-f176.google.com ([209.85.215.176]:41957 "EHLO
-        mail-pg1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237568AbhIMQY0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 12:24:26 -0400
-Received: by mail-pg1-f176.google.com with SMTP id k24so9930074pgh.8;
-        Mon, 13 Sep 2021 09:23:10 -0700 (PDT)
+        id S237602AbhIMQe2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Sep 2021 12:34:28 -0400
+Received: from mail-pj1-f41.google.com ([209.85.216.41]:40775 "EHLO
+        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237290AbhIMQe1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 12:34:27 -0400
+Received: by mail-pj1-f41.google.com with SMTP id n13-20020a17090a4e0d00b0017946980d8dso6987503pjh.5
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Sep 2021 09:33:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:references:from:message-id:date
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=VyKSUuGuAhaAEJAAqdwsNaH9f4jcl2f+j/dwqt4uh+Y=;
-        b=48x3i+jeL0B421Y1pbitg/mfdF+0jz3cqzehGbmJmVWoSgvh/Jt0IBgZB6DGCFVuyH
-         WL+9mDRWkiOLigfLp64VPnHIvuDpeIx1iwoDrOncQT57gM0zkZbcGUt9NWwdlPJpXv3u
-         8RFOOtnUxyaYdCRjpdtu2K670KB5Ap4HE5QFaEDLLViMTA6jxTdBrinS7hv7uFwKUYqj
-         ZLQZKWi/fIzBXzob6/ReWGm/IvkfzMjlEcejpYEKFgeSLVIwVISQ27Vv5FrEl30n3WC2
-         0a3NzZfomTU0Tc3POrRkQQcAit0TomTfFsKFbc1xpPCBXJbPODooVkAu548kWEy/Uvsp
-         pz9w==
-X-Gm-Message-State: AOAM533cdzmuryDBpu0a6pYLMwZqevPss8OhLCZp72B1yzXns7GtsJPK
-        mtZNIoIZvDKTtmgv11zgtws=
-X-Google-Smtp-Source: ABdhPJx+xtnUOS/GKE+9xgTfNQZgTm5KSMdRDY+q2GX+O2hihbxxUn3l2ARDDG3gDVQeEaynkmlJ9g==
-X-Received: by 2002:a63:561a:: with SMTP id k26mr11854841pgb.144.1631550189638;
-        Mon, 13 Sep 2021 09:23:09 -0700 (PDT)
+        bh=ZD/a/8zpZhTenq7GOlaeKggfZpe5vew+CAKplQvNfew=;
+        b=uLaV1jhmAG6zx+EeD+Y9lemedOv0WwruuntTQM1zXvqsEkHZpao6z9KarzCYTvvzSH
+         6r5A0zKQEqnMPe+PmTRat5j5pQ1MXdmtky+VuJSgiTFwBuCWgJxqkST2mEiMzLdlhPSy
+         QrJBrjU9ANSQs8KugBRKMCZ+H+Qrk8TOup9fQ0gTQJ5EX/wPdPSd1hBDI13Xay9dD1gv
+         YFSraGxdBA5+rIhziBjvf9lQWQmKFi+OfhYNVv+gzSkjsYg/2SiV1TMviNsmtevtl8qy
+         1XiNwbUhpqWPedism1KdejOK7aK3giAPt+nIbfNkxPJVHUC14eIPW9tUqsMo+wbr3jKw
+         aIqA==
+X-Gm-Message-State: AOAM532WIyOkrgxI14ZnJeGlEW7HNKQPgI6hcx3BO6sClomgfujWNWV5
+        9DDAHCcOgcGKr/zjk0tHhwRnxWbpsVU=
+X-Google-Smtp-Source: ABdhPJwSy1af1RsUjsFb/KBq1dxiy5eJUdaihDPNGb8vLTkTVw5DE4lluHn+63LJOMNdJ/fbOIVHgA==
+X-Received: by 2002:a17:90a:eac4:: with SMTP id ev4mr360789pjb.244.1631550790588;
+        Mon, 13 Sep 2021 09:33:10 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:6765:113f:d2d7:def9])
-        by smtp.gmail.com with ESMTPSA id t9sm7681143pfq.185.2021.09.13.09.23.07
+        by smtp.gmail.com with ESMTPSA id b20sm2960674pfp.26.2021.09.13.09.33.09
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Sep 2021 09:23:08 -0700 (PDT)
-Subject: Re: [PATCH v2 3/3] scsi: ufs: ufs-exynos: implement exynos isr
-To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        cang@codeaurora.org, adrian.hunter@intel.com, sc.suh@samsung.com,
-        hy50.seo@samsung.com, sh425.lee@samsung.com,
-        bhoon95.kim@samsung.com
-References: <cover.1631519695.git.kwmad.kim@samsung.com>
- <CGME20210913081152epcas2p2eac4a8dbef33164a150dccf2e282dcce@epcas2p2.samsung.com>
- <746e059782953fca6c21945297151d2bb73d3370.1631519695.git.kwmad.kim@samsung.com>
+        Mon, 13 Sep 2021 09:33:09 -0700 (PDT)
+Subject: Re: [PATCH V3 1/3] scsi: ufs: Fix error handler clear ua deadlock
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
+References: <20210905095153.6217-1-adrian.hunter@intel.com>
+ <20210905095153.6217-2-adrian.hunter@intel.com>
+ <a12d88b3-8402-34bb-fe97-90b7aa2c2c39@acm.org>
+ <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
+ <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
+ <e5307bbe-1cda-fdd2-a666-ae57cd90de07@acm.org>
+ <36245674-b179-d25e-84c3-417ef2d85620@intel.com>
+ <9220f68e-dc5e-9520-6e55-2a4d86809b44@acm.org>
+ <fae15188-2c1d-b953-f6e4-6e5ac1902b24@intel.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <baf17040-70e8-d850-30cd-74944e41285d@acm.org>
-Date:   Mon, 13 Sep 2021 09:23:07 -0700
+Message-ID: <2997f7f9-d136-4bad-6490-5e19abccba00@acm.org>
+Date:   Mon, 13 Sep 2021 09:33:08 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <746e059782953fca6c21945297151d2bb73d3370.1631519695.git.kwmad.kim@samsung.com>
+In-Reply-To: <fae15188-2c1d-b953-f6e4-6e5ac1902b24@intel.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -66,63 +75,52 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/13/21 12:55 AM, Kiwoong Kim wrote:
-> This patch is to raise recovery in some abnormal
-> conditions using an vendor specific interrupt
-> for some cases, such as a situation that some
-> contexts of a pending request in the host isn't
-> the same with those of its corresponding UPIUs
-> if they should have been the same exactly.
+On 9/13/21 1:53 AM, Adrian Hunter wrote:
+> scsi_dec_host_busy() is called for any non-zero return value like
+> SCSI_MLQUEUE_HOST_BUSY:
 > 
-> The representative case is shown like below.
-> In the case, a broken UTRD entry, for internal
-> coherent problem or whatever, that had smaller value
-> of PRDT length than expected was transferred to the host.
-> So, the host raised an interrupt of transfer complete
-> even if device didn't finish its data transfer because
-> the host sees a fetched version of UTRD to determine
-> if data tranfer is over or not. Then the application level
-> seemed to recogize this as a sort of corruption and this
-> symptom led to boot failure.
+> i.e.
+> 	reason = scsi_dispatch_cmd(cmd);
+> 	if (reason) {
+> 		scsi_set_blocked(cmd, reason);
+> 		ret = BLK_STS_RESOURCE;
+> 		goto out_dec_host_busy;
+> 	}
+> 
+> 	return BLK_STS_OK;
+> 
+> out_dec_host_busy:
+> 	scsi_dec_host_busy(shost, cmd);
+> 
+> And that will wake the error handler:
+> 
+> static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+> {
+> 	unsigned long flags;
+> 
+> 	rcu_read_lock();
+> 	__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+> 	if (unlikely(scsi_host_in_recovery(shost))) {
+> 		spin_lock_irqsave(shost->host_lock, flags);
+> 		if (shost->host_failed || shost->host_eh_scheduled)
+> 			scsi_eh_wakeup(shost);
+> 		spin_unlock_irqrestore(shost->host_lock, flags);
+> 	}
+> 	rcu_read_unlock();
+> }
 
-How can a UTRD entry be broken? Does that perhaps indicate memory
-corruption at the host side? Working around host-side memory
-corruption in a driver seems wrong to me. I think the root cause
-of the memory corruption should be fixed.
+Returning SCSI_MLQUEUE_HOST_BUSY is not sufficient to wake up the SCSI
+error handler because of the following test in scsi_error_handler():
 
-> +static irqreturn_t exynos_ufs_isr(struct ufs_hba *hba)
-> +{
-> +	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
-> +	u32 status;
-> +	unsigned long flags;
-> +
-> +	if (!hba->priv) return IRQ_HANDLED;
+	shost->host_failed != scsi_host_busy(shost)
 
-Please verify patches with checkpatch before posting these on the
-linux-scsi mailing list. The above if-statement does not follow the
-Linux kernel coding style.
-
-> +	if (status & RX_UPIU_HIT_ERROR) {
-> +		pr_err("%s: status: 0x%08x\n", __func__, status);
-> +		hba->force_reset = true;
-> +		hba->force_requeue = true;
-> +		scsi_schedule_eh(hba->host);
-> +		spin_unlock_irqrestore(hba->host->host_lock, flags);
-> +		return IRQ_HANDLED;
-> +	}
-> +	return IRQ_NONE;
-> +}
-
-So the above code unlocks the host_lock depending on whether or not
-status & RX_UPIU_HIT_ERROR is true? Yikes ...
-
-Additionally, in the above code I found the following pattern:
-
-	unsigned long flags;
-	[ ... ]
-	spin_unlock_irqrestore(hba->host->host_lock, flags);
-
-Such code is ALWAYS wrong. The value of the 'flags' argument passed to
-spin_unlock_irqrestore() must come from spin_lock_irqsave().
+As I mentioned in a previous email, all pending commands must have failed
+or timed out before the error handler is woken up. Returning
+SCSI_MLQUEUE_HOST_BUSY from ufshcd_queuecommand() does not fail a command
+and prevents it from timing out. Hence my suggestion to change
+"return SCSI_MLQUEUE_HOST_BUSY" into set_host_byte(cmd, DID_IMM_RETRY)
+followed by cmd->scsi_done(cmd). A possible alternative is to move the
+blk_mq_start_request() call in the SCSI core such that the block layer
+request timer is not reset if a SCSI LLD returns SCSI_MLQUEUE_HOST_BUSY.
 
 Bart.
