@@ -7,150 +7,95 @@ X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2218DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 08:53:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9917C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 09:21:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0232D60F6D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 08:53:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9892860FBF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 09:21:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238079AbhIMIyU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Sep 2021 04:54:20 -0400
-Received: from mga05.intel.com ([192.55.52.43]:64327 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238310AbhIMIyT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Sep 2021 04:54:19 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10105"; a="307164359"
-X-IronPort-AV: E=Sophos;i="5.85,288,1624345200"; 
-   d="scan'208";a="307164359"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2021 01:53:00 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,288,1624345200"; 
-   d="scan'208";a="543069217"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
-  by FMSMGA003.fm.intel.com with ESMTP; 13 Sep 2021 01:52:56 -0700
-Subject: Re: [PATCH V3 1/3] scsi: ufs: Fix error handler clear ua deadlock
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
-References: <20210905095153.6217-1-adrian.hunter@intel.com>
- <20210905095153.6217-2-adrian.hunter@intel.com>
- <a12d88b3-8402-34bb-fe97-90b7aa2c2c39@acm.org>
- <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
- <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
- <e5307bbe-1cda-fdd2-a666-ae57cd90de07@acm.org>
- <36245674-b179-d25e-84c3-417ef2d85620@intel.com>
- <9220f68e-dc5e-9520-6e55-2a4d86809b44@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <fae15188-2c1d-b953-f6e4-6e5ac1902b24@intel.com>
-Date:   Mon, 13 Sep 2021 11:53:21 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S238506AbhIMJXF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Sep 2021 05:23:05 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3769 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238493AbhIMJXE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 05:23:04 -0400
+Received: from fraeml714-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4H7LXK2lQtz6FCpR;
+        Mon, 13 Sep 2021 17:19:29 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml714-chm.china.huawei.com (10.206.15.33) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Mon, 13 Sep 2021 11:21:47 +0200
+Received: from [10.47.80.114] (10.47.80.114) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Mon, 13 Sep
+ 2021 10:21:46 +0100
+Subject: Re: [PATCH 0/4] scsi: remove last references to scsi_cmnd.tag
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+CC:     Christoph Hellwig <hch@lst.de>,
+        James Bottomley <james.bottomley@hansenpartnership.com>,
+        <linux-scsi@vger.kernel.org>,
+        "Russell King (Oracle)" <linux@armlinux.org.uk>
+References: <20210819084007.79233-1-hare@suse.de>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <ef629eef-fe55-2c8b-2825-67c43e4f4cd8@huawei.com>
+Date:   Mon, 13 Sep 2021 10:25:27 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-In-Reply-To: <9220f68e-dc5e-9520-6e55-2a4d86809b44@acm.org>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20210819084007.79233-1-hare@suse.de>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.80.114]
+X-ClientProxiedBy: lhreml754-chm.china.huawei.com (10.201.108.204) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 13/09/21 6:17 am, Bart Van Assche wrote:
-> On 9/11/21 09:47, Adrian Hunter wrote:
->> On 8/09/21 1:36 am, Bart Van Assche wrote:
->>> --- a/drivers/scsi/ufs/ufshcd.c +++ b/drivers/scsi/ufs/ufshcd.c 
->>> @@ -2707,6 +2707,14 @@ static int ufshcd_queuecommand(struct
->>> Scsi_Host *host, struct scsi_cmnd *cmd) } fallthrough; case
->>> UFSHCD_STATE_RESET: +        /* +         * The SCSI error
->>> handler only starts after all pending commands +         * have
->>> failed or timed out. Complete commands with +         *
->>> DID_IMM_RETRY to allow the error handler to start +         * if
->>> it has been scheduled. +         */ +        set_host_byte(cmd,
->>> DID_IMM_RETRY); +        cmd->scsi_done(cmd);
->> 
->> Setting non-zero return value, in this case "err =
->> SCSI_MLQUEUE_HOST_BUSY" will anyway cause scsi_dec_host_busy(), so
->> does this make any difference?
++ Russell
+
+On 19/08/2021 09:40, Hannes Reinecke wrote:
+
+The arm rpc_defconfig build is now broken on mainline.
+
+I suggest resending this series, please.
+
+Thanks
+
+> Hi all,
 > 
-> The return value should be changed into 0 since returning
-> SCSI_MLQUEUE_HOST_BUSY is only allowed if cmd->scsi_done(cmd) has not
-> yet been called.
+> with commit 4c7b6ea336c1 ("scsi: core: Remove scsi_cmnd.tag") drivers
+> cannot reference the SCSI command tag anymore.
+> Arguably these drivers would have stopped working since 2010 with
+> the switch to block layer tags in SCSI anyway, so chances are no-one
+> had been using tagging in these drivers.
 > 
-> I expect that setting the host byte to DID_IMM_RETRY and calling
-> scsi_done will make a difference, otherwise I wouldn't have suggested
-> this. As explained in my previous email doing that triggers the SCSI> command completion and resubmission paths. Resubmission only happens
-> if the SCSI error handler has not yet been scheduled. The SCSI error
-> handler is scheduled after for all pending commands scsi_done() has
-> been called or a timeout occurred. In other words, setting the host
-> byte to DID_IMM_RETRY and calling scsi_done() makes it possible for
-> the error handler to be scheduled, something that won't happen if
-> ufshcd_queuecommand() systematically returns SCSI_MLQUEUE_HOST_BUSY.
-
-Not getting it, sorry. :-(
-
-The error handler sets UFSHCD_STATE_RESET and never leaves the state
-as UFSHCD_STATE_RESET, so that case does not need to start the error
-handler because it is already running.
-
-The error handler is always scheduled after setting 
-UFSHCD_STATE_EH_SCHEDULED_FATAL.
-
-scsi_dec_host_busy() is called for any non-zero return value like
-SCSI_MLQUEUE_HOST_BUSY:
-
-i.e.
-	reason = scsi_dispatch_cmd(cmd);
-	if (reason) {
-		scsi_set_blocked(cmd, reason);
-		ret = BLK_STS_RESOURCE;
-		goto out_dec_host_busy;
-	}
-
-	return BLK_STS_OK;
-
-out_dec_host_busy:
-	scsi_dec_host_busy(shost, cmd);
-
-And that will wake the error handler:
-
-static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
-{
-	unsigned long flags;
-
-	rcu_read_lock();
-	__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
-	if (unlikely(scsi_host_in_recovery(shost))) {
-		spin_lock_irqsave(shost->host_lock, flags);
-		if (shost->host_failed || shost->host_eh_scheduled)
-			scsi_eh_wakeup(shost);
-		spin_unlock_irqrestore(shost->host_lock, flags);
-	}
-	rcu_read_unlock();
-}
-
-Note that scsi_host_queue_ready() won't let any requests through
-when scsi_host_in_recovery(), so the potential problem is with
-requests that have already been successfully submitted to the
-UFS driver but have not completed. The change you suggest
-does not help with that.
-
-That seems like another problem with the patch 
-"scsi: ufs: Synchronize SCSI and UFS error handling".
-
-
-> In the latter case the block layer timer is reset over and over
-> again. See also the blk_mq_start_request() in scsi_queue_rq(). One
-> could wonder whether this is really what the SCSI core should do if a
-> SCSI LLD keeps returning the SCSI_MLQUEUE_HOST_BUSY status code ...
+> This patchset fixes up these usage; for fas216 we're just switching
+> to use the appropriate wrapper.
+> For acornscsi the tagged queue handling is removed altogether as it
+> was broken in the first place, and no-one since the switch to git
+> could be bothered to fix it.
+> And the patchset has the nice side-effect that we can remove the
+> scsi_device.current_tag field.
 > 
-> Bart.
+> As usual, comments and reviews are welcome.
+> 
+> Hannes Reinecke (4):
+>    scsi: Introduct scsi_cmd_to_tag()
+>    fas216: kill scmd->tag
+>    acornscsi: remove tagged queuing vestiges
+>    scsi: remove 'current_tag'
+> 
+>   drivers/scsi/arm/Kconfig     |  11 ----
+>   drivers/scsi/arm/acornscsi.c | 103 ++++++++---------------------------
+>   drivers/scsi/arm/fas216.c    |  31 +++--------
+>   drivers/scsi/arm/queue.c     |   2 +-
+>   include/scsi/scsi_cmnd.h     |   7 +++
+>   include/scsi/scsi_device.h   |   1 -
+>   6 files changed, 38 insertions(+), 117 deletions(-)
+> 
 
