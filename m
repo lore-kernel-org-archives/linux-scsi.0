@@ -2,123 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C08E8C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 17:27:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46648C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 20:11:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A5EDD6044F
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 17:27:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A7036108B
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 20:11:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239464AbhIMR2n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Sep 2021 13:28:43 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59116 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233121AbhIMR2n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 13:28:43 -0400
-Received: from mail-il1-x12c.google.com (mail-il1-x12c.google.com [IPv6:2607:f8b0:4864:20::12c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3C569C061574;
-        Mon, 13 Sep 2021 10:27:27 -0700 (PDT)
-Received: by mail-il1-x12c.google.com with SMTP id l10so10894090ilh.8;
-        Mon, 13 Sep 2021 10:27:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=xSARZJQ5YAoGeRg4cb1w9teZ8eBbMh7jYvTDIyUb0K8=;
-        b=WuuOMMfotN2bgRawb+bw9VOL/sMzldC/ko1wvu1pD0dlms6lKUll54OnTwrgNQkdgY
-         XMhcvugn5Sbz5cD0t2w8RfOb5j3teeU4A8GBpHJ9NeZm6co3baMNsEUeRjDCQgwhIfdW
-         Ezm7MqMBCxdGtLS+5Zp1ct1HRQVj8GTl4CjXzwTVLQg1nQhaE+igxr/Doe/fx/TXVHTK
-         AXtWPy6s53pQ7kQ+tVeNJYgch3BDPAl/AJOb5ZtosFWViMReP/cBa8bs/H9Qy/jZ2D8R
-         i+aMdKAsSu4yCL4vi6Ge+uEUXgL9l5tmRwUj8zuk8IVuL/gzkcgWfQf0H7SnIhtycfrP
-         Xt9A==
+        id S242829AbhIMUM5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Sep 2021 16:12:57 -0400
+Received: from mail-pg1-f172.google.com ([209.85.215.172]:44867 "EHLO
+        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236133AbhIMUM4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 16:12:56 -0400
+Received: by mail-pg1-f172.google.com with SMTP id s11so10484074pgr.11
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Sep 2021 13:11:40 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=xSARZJQ5YAoGeRg4cb1w9teZ8eBbMh7jYvTDIyUb0K8=;
-        b=nxuBlz9diFaIuHHHs8R3lIiBalw83L5F0YT2/dmJfWIyaDLFVEymg7dpzLqdFwrhvv
-         PiElDOlvpeNgVOc/7Dtsu3yGPKVGCBAwLQEpfTb7jqSBpf51qCO6NNZLXUr9DM17++a8
-         7dNbHbHoVMRIHafrHxERf/3VH7nLX4Y0UhA8lx6TdmvIHjyO11OT/+uMzRf1CGWWY4Xj
-         WtIDCrYHuYM6r3NNzfuS9UxSMbOGGelfIIs0Z2bZQTgCX0P9QUdycN/RayPKa/IAVBtU
-         qXGu8ZOv0+RPtTSgo72+NLPWg+MReiTJYDn3UbK3KLaFAqurpz0XwH8Z4JkwSdeZbDLX
-         SnpQ==
-X-Gm-Message-State: AOAM5328ZQ6bXRoJKsuSzgf0hOLxVEIpKcC0NNZiIdC1c8HRThiO7ujN
-        BygMjseUFwCQwvNws1wDZ9n48sX4hpzno4CZE1U=
-X-Google-Smtp-Source: ABdhPJzku6ajJWNIuWGq4QNw2jHxveT8x1HGe9xc/beOqXsm+SHLo5hlaSEUieXfWziememH5sRW6x3kxrgBCxzSpmQ=
-X-Received: by 2002:a92:3012:: with SMTP id x18mr9192859ile.249.1631554045994;
- Mon, 13 Sep 2021 10:27:25 -0700 (PDT)
-MIME-Version: 1.0
-References: <CGME20210913081148epcas2p21c23ca6a745f40083ee7d6e7da4d7c00@epcas2p2.samsung.com>
- <cover.1631519695.git.kwmad.kim@samsung.com> <fbdd02bc-01ab-c5b3-9355-3ebe04601b04@acm.org>
-In-Reply-To: <fbdd02bc-01ab-c5b3-9355-3ebe04601b04@acm.org>
-From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Mon, 13 Sep 2021 22:56:48 +0530
-Message-ID: <CAGOxZ51X-ThsqV35PiTh-awRvAkQ=Fjf9m+KRd1HLZ+pDNi=Xg@mail.gmail.com>
-Subject: Re: [PATCH v2 0/3] scsi: ufs: introduce vendor isr
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
-        open list <linux-kernel@vger.kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=a/tDI3p0kw7mfaWCLDqmsc+iw42KOmO2CcWEJs4JPpo=;
+        b=1B12bHhotadqOaizrcigW6PSBOE+FA/rJ/HFU4mVJmBwEiT6h5abjGhPGXl139dYRY
+         7jX7lhqa6FUtg1QwWdboCyk0XaJPvuwYCTaqpaWY4ZUgqWWM3Mq5xij5ubqXMPnZrOed
+         A0w8wZYLw53Ny7df2MIfI1Uaa+IiBJgyU/8oGfwk/zdAKuFoyguyWQHYZDPmfTY1FjRH
+         dgx7juSWWLfHkhWOES1imMHfRo39O1EAoqkSbLEDJEPxhDGFR28hG87guyDZW63gP2hC
+         5XaGCmzEvPzsmuaVnxWsVblcA4l/8UR9r8K8XwshwL086YP+eQjz5v8vn+QFMHwMo4eW
+         JsHg==
+X-Gm-Message-State: AOAM532OQW8Lm47WnUYZ41uo5WkudZCYWdx7UuKigzdqizJIdXmY7/K+
+        Fhln9LBOHGuyP2qow1Jw1oVB9NNwgPU=
+X-Google-Smtp-Source: ABdhPJz1Y/2mSla3J07pjf6blcS9E/4dqu1+t65VBeYd9mqOW2c+eW7rDfZfQdhGWioBZXnbZtxJjw==
+X-Received: by 2002:a63:b218:: with SMTP id x24mr12498053pge.335.1631563899737;
+        Mon, 13 Sep 2021 13:11:39 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:6765:113f:d2d7:def9])
+        by smtp.gmail.com with ESMTPSA id j5sm7582598pjv.56.2021.09.13.13.11.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 13 Sep 2021 13:11:39 -0700 (PDT)
+Subject: Re: [PATCH V3 1/3] scsi: ufs: Fix error handler clear ua deadlock
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
         Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Bean Huo (beanhuo)" <beanhuo@micron.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
         Can Guo <cang@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>, sc.suh@samsung.com,
-        hy50.seo@samsung.com, sh425.lee@samsung.com,
-        bhoon95.kim@samsung.com
-Content-Type: text/plain; charset="UTF-8"
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
+References: <20210905095153.6217-1-adrian.hunter@intel.com>
+ <20210905095153.6217-2-adrian.hunter@intel.com>
+ <a12d88b3-8402-34bb-fe97-90b7aa2c2c39@acm.org>
+ <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
+ <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
+ <e5307bbe-1cda-fdd2-a666-ae57cd90de07@acm.org>
+ <36245674-b179-d25e-84c3-417ef2d85620@intel.com>
+ <9220f68e-dc5e-9520-6e55-2a4d86809b44@acm.org>
+ <fae15188-2c1d-b953-f6e4-6e5ac1902b24@intel.com>
+ <2997f7f9-d136-4bad-6490-5e19abccba00@acm.org>
+ <cad73161-f124-e764-964f-3c205aaca2d9@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <2a43c750-ec15-2ac9-b899-00ed911addd8@acm.org>
+Date:   Mon, 13 Sep 2021 13:11:37 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <cad73161-f124-e764-964f-3c205aaca2d9@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
+On 9/13/21 10:13 AM, Adrian Hunter wrote:
+> SCSI_MLQUEUE_HOST_BUSY causes scsi_host_busy() to decrement by calling
+> scsi_dec_host_busy() as described above, so the request is not being
+> counted in that condition anymore.
 
-On Mon, Sep 13, 2021 at 9:42 PM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> On 9/13/21 12:55 AM, Kiwoong Kim wrote:
-> > This patch is to activate some interrupt sources
-> > that aren't defined in UFSHCI specifications. Those
-> > purpose could be error handling, workaround or whatever.
-> >
-> > Kiwoong Kim (3):
-> >    scsi: ufs: introduce vendor isr
-> >    scsi: ufs: introduce force requeue
-> >    scsi: ufs: ufs-exynos: implement exynos isr
-> >
-> >   drivers/scsi/ufs/ufs-exynos.c | 84 ++++++++++++++++++++++++++++++++++++-------
-> >   drivers/scsi/ufs/ufshcd.c     | 22 ++++++++++--
-> >   drivers/scsi/ufs/ufshcd.h     |  2 ++
-> >   3 files changed, 93 insertions(+), 15 deletions(-)
->
-> The UFS protocol is standardized. Your employer has a representative in the
-> UFS standardization committee. Please work with that representative to
-> standardize this feature instead of adding non-standard extensions to the UFS
-> driver.
->
-Thanks for your input. Completely agree with you, in fact your suggestions
-make sense to me. As a driver developer, surely we can take these concerns
-to the IP designers and see how far we can get in terms of standardization.
-That, however, is not something that can be accomplished overnight. My main
-concern is, what about millions of devices which are already in the market?
-UFS subsystem does support _vops_ to handle vendor specific hooks/modifications.
-I am not saying we should always follow this path, but surely until
-these deviations
-are either fixed or become part of UFS standard itself, IMO.
+Let's take a step back. My understanding is that the deadlock is caused by
+the combination of:
+* SCSI command processing being blocked because of the state
+   UFSHCD_STATE_EH_SCHEDULED_FATAL.
+* The sdev_ufs_device and/or sdev_rpmb request queues are frozen
+   (blk_mq_freeze_queue() has started).
+* A REQUEST SENSE command being scheduled from inside the error handler
+   (ufshcd_clear_ua_wlun()).
 
-Thanks!
+Is this a theoretical concern or something that has been observed on a test
+setup?
 
-> Thanks,
->
-> Bart.
->
->
+If this has been observed on a test setup, was the error handler scheduled
+(ufshcd_err_handler())?
 
+I don't see how SCSI command processing could get stuck indefinitely since
+it is guaranteed that the UFS error handler will get scheduled and also that
+the UFS error handler will change ufshcd_state from
+UFSHCD_STATE_EH_SCHEDULED_FATAL into another state?
 
--- 
-Regards,
-Alim
+What am I missing?
+
+Thanks,
+
+Bart.
