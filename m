@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-11.6 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7568C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 13:35:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2420C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 13:35:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D5AE8619F9
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 13:35:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7C4761A02
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 13:35:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242562AbhIMNgu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Sep 2021 09:36:50 -0400
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:47565 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242988AbhIMNeo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 09:34:44 -0400
+        id S242416AbhIMNhA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Sep 2021 09:37:00 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:31738 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243118AbhIMNe6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 09:34:58 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1631540008; x=1663076008;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=pGp6s8OXSV13dUq3hfMuAIW/HNTvZVlyt23W1OpT7yo=;
-  b=NUetyUEx0JUtBW5EqoJkH0BFFVHksDn49NflRlaPy41byL40uovyZ5Td
-   jkklnxncPEIOsOADZaefNv62etEAz92rG48y+S+1qoiWKMHaBkQiMuBHY
-   ih7rxwGvZpx150IUa47WwBHLg4ZCaqMdETDHUts7VvV9adJFwFDqLzW+g
-   T3YDziIVOk4X4dhExpOlARhuUU2ROUEsm9cXZDNJ4n7ES7f/yN2i747Eh
-   5HMTiIZuqndqIS3XvFpt+CZUekn42begDrqOXll91kStp8wc6maTOzOim
-   ZmTiyFzqkN9E3C9w9w5+FHCsfWXlRIvPplo67+CYuPLfIg1Qf6Y5pmWsH
-   w==;
-X-IronPort-AV: E=Sophos;i="5.85,290,1624291200"; 
-   d="scan'208";a="291474599"
-Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
-  by ob1.hgst.iphmx.com with ESMTP; 13 Sep 2021 21:33:25 +0800
-IronPort-SDR: UgFTwvG7eCnjZZi2UvMbOvFgL1UUNfGyi5lHekcA5Onmzjq+jMDdFw7FJhO0W0R6fSDEeb/s55
- wB8fXRyBo+EdIZKPqoLyc+iDjLOHfFFYWmr92n/54OY5GbVehh1vHcycehEmMVMWeg72mBe/X3
- DU6FnZpltkPPcTfcd6Lb8ibk+xQRpGy89L91lkCOOnOrFpOWM29PteQGrxLzsyIIctZzA+eKXp
- 6VYl2rFs4zb+PWlGI/jiDP7rzp4RQdtthABcMMvgzwFPUmqF64yKl2kjtoFzdil2eEI2zTyp3G
- zayqnLJFhgoCkfbGjmlJTVYC
+  t=1631540021; x=1663076021;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=I+mbTA+03+CBI4ATMHCqjrQ510CBb/AiF9vYJKHKDoQ=;
+  b=ZIzO5mPiLkuG8PaOvjIwOh9edaWSwoRyWvNWMaOTHJl3JoA5EZeyxrkZ
+   RPWG3E/9lO2fl7qZCwN9LOY8Mawxuc+UodO4INKLXJYmYIUj31r9Z0ht4
+   UnJT/k2i0ZhurNvR2PakD63yP/g7BPrHMvmkxjdm73J82FAXkDTnOuq8n
+   UW5ceCb5QNN3l6y/yQxKBt5WNiglbtLnm83qyNjnucSmwGMt+vRRCQRS+
+   bGIhz/5nJRhoQf33VI55TVMC/mZldaMO1urCqdgpFidTZw7qX4IifmBpa
+   UjAR9VJ3F0XpNnR0vEyCIGPkKPZ1OepPJfWCU/eaVP+kup6/4kiP9f1gD
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.85,288,1624291200"; 
+   d="scan'208";a="179856628"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 13 Sep 2021 21:33:41 +0800
+IronPort-SDR: ygBL6sAAvZmOwfxINZIZ4p4q4tzSjki6WlObJgyfOdnYqXyhwYozlnFg5Px5qSCEpEm5RUnWE0
+ NX02XFNHrfI5m2k2oReD57frQaebGAslEvOA35dpC2ZMk9vS6ukRKmBu+0Wp5TcqkbHcSob9Al
+ BSBm94Q9wqFZFJ9JDRP8zUU6GWfAjSmtkd3PqQaxNVWUjRwwMSELhOMjk2IqRRglBYQA79BLfP
+ /w8M8Fii3FSnDhMGNKphC6f18/qFjk0RqBUg1gB7nM8V616tdFUzmXcsPwkq6hUCA7Tg2SrvkV
+ 8yraaRtrIKSoW9/UyskW7Ias
 Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
-  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2021 06:08:16 -0700
-IronPort-SDR: J9P/tHWteB5xzEXTLb4/izfiWw7nZKWqyy7qJA9Ku2ZTYM5pJriYCU0O92k2ZgSfU8OsI9Gorv
- VqQ+kdZsQ+z8CUtt/XdPC8FxxwMEPSA1A9bgbckiitxjP3i09jcsy7YgfY8iYrge7RrIC41Xwe
- N+OlbJY6JuPsPyDTrd0+wEFl0s1L3Ewzsq5rUSNnH+d4abZ7NufiqXgQDDEteZqOkSObbOkn7V
- wzQBm5Hn2lfPpG2DuQBediOaUGt7hVcRF4rb97G2hfGm0/+kvtEGMt09/s3ZGOOkje7xYrznRt
- cdc=
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2021 06:10:07 -0700
+IronPort-SDR: 8NsLXAoR9SUGC+xAWtOIOs+cflEltCQAn3ygfA3P9Z9UznjU47sGgqRHWznC7NOM9ncL3WTzKL
+ HVD9BpnF2L6M0SEfEhvKjnIGyzsU0zK/l3Tvi5Q1tk5eoCSV/2Er7Ed43GCJUiwg4UtQkaFTCX
+ qVgKRRXJCSxeYFeVKS7EM7f92VcEk6xAjRFVofev8xCsdM5pyfaX7R0UknuA6GaN/SONbL+uTA
+ rDkAuTHHQ3cOJ0ryigMngF6C5+4O1nwcfw+hY1krJ+4p6qY3/kn04jK5U62VB9VlvAstNM2PUT
+ VWc=
 WDCIronportException: Internal
 Received: from bxygm33.sdcorp.global.sandisk.com (HELO BXYGM33.ad.shared) ([10.0.231.247])
-  by uls-op-cesaip01.wdc.com with ESMTP; 13 Sep 2021 06:33:23 -0700
+  by uls-op-cesaip01.wdc.com with ESMTP; 13 Sep 2021 06:33:39 -0700
 From:   Avri Altman <avri.altman@wdc.com>
 To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
@@ -60,10 +60,12 @@ Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bean Huo <beanhuo@micron.com>,
         Guenter Roeck <linux@roeck-us.net>,
         Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v4 0/2] Add temperature notification support
-Date:   Mon, 13 Sep 2021 16:33:01 +0300
-Message-Id: <20210913133303.10154-1-avri.altman@wdc.com>
+Subject: [PATCH v4 2/2] scsi: ufs: Add temperature notification exception handling
+Date:   Mon, 13 Sep 2021 16:33:03 +0300
+Message-Id: <20210913133303.10154-3-avri.altman@wdc.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210913133303.10154-1-avri.altman@wdc.com>
+References: <20210913133303.10154-1-avri.altman@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -71,45 +73,95 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-v3 -> v4:
- - Attend Guenter's comments
+The device may notify the host of an extreme temperature by using the
+exception event mechanism. The exception can be raised when the device’s
+Tcase temperature is either too high or too low.
 
-v2 -> v3:
- - Attend Bart's & Guenter's comments
+It is essentially up to the platform to decide what further actions need
+to be taken. leave a placeholder for a designated vop for that.
 
-v1 -> v2:
- - Add a hw monitor device if both the platform & the device support it
- - Remove the sysfs patch: no need to duplicate /sys/class/hwmon
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/scsi/ufs/ufs-hwmon.c | 12 ++++++++++++
+ drivers/scsi/ufs/ufshcd.c    | 21 +++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h    |  2 ++
+ 3 files changed, 35 insertions(+)
 
-UFS3.0 allows using the ufs device as a temperature sensor. The purpose
-of this optional feature is to provide notification to the host of the
-UFS device case temperature. It allows reading of a rough estimate
-(+-10 degrees centigrade) of the current case temperature, and setting a
-lower and upper temperature bounds, in which the device will trigger an
-applicable exception event.
-
-A previous attempt [1] tried a comprehensive approach.  Still, it was
-unsuccessful. Here is a more modest approach that introduces just the
-bare minimum to support temperature notification.
-
-Thanks,
-Avri
-
-[1] https://lore.kernel.org/lkml/1582450522-13256-1-git-send-email-avi.shchislowski@wdc.com/
-
-Avri Altman (2):
-  scsi: ufs: Probe for temperature notification support
-  scsi: ufs: Add temperature notification exception handling
-
- drivers/scsi/ufs/Kconfig     |   9 ++
- drivers/scsi/ufs/Makefile    |   1 +
- drivers/scsi/ufs/ufs-hwmon.c | 206 +++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufs.h       |   7 ++
- drivers/scsi/ufs/ufshcd.c    |  47 ++++++++
- drivers/scsi/ufs/ufshcd.h    |  20 ++++
- 6 files changed, 290 insertions(+)
- create mode 100644 drivers/scsi/ufs/ufs-hwmon.c
-
+diff --git a/drivers/scsi/ufs/ufs-hwmon.c b/drivers/scsi/ufs/ufs-hwmon.c
+index 390748a9d547..2fd100e92f81 100644
+--- a/drivers/scsi/ufs/ufs-hwmon.c
++++ b/drivers/scsi/ufs/ufs-hwmon.c
+@@ -192,3 +192,15 @@ void ufs_hwmon_remove(struct ufs_hba *hba)
+ 	hba->hwmon_device = NULL;
+ 	kfree(data);
+ }
++
++void ufs_hwmon_notify_event(struct ufs_hba *hba, u8 ee_mask)
++{
++	if (!hba->hwmon_device)
++		return;
++
++	if (ee_mask & MASK_EE_TOO_HIGH_TEMP)
++		hwmon_notify_event(hba->hwmon_device, hwmon_temp, hwmon_temp_max_alarm, 0);
++
++	if (ee_mask & MASK_EE_TOO_LOW_TEMP)
++		hwmon_notify_event(hba->hwmon_device, hwmon_temp, hwmon_temp_min_alarm, 0);
++}
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index cb20720c5deb..3f9b56800e5b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5642,6 +5642,24 @@ static void ufshcd_bkops_exception_event_handler(struct ufs_hba *hba)
+ 				__func__, err);
+ }
+ 
++static void ufshcd_temp_exception_event_handler(struct ufs_hba *hba, u16 status)
++{
++	u32 value;
++
++	if (ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++				QUERY_ATTR_IDN_CASE_ROUGH_TEMP, 0, 0, &value))
++		return;
++
++	dev_info(hba->dev, "exception Tcase %d\n", value - 80);
++
++	ufs_hwmon_notify_event(hba, status & MASK_EE_URGENT_TEMP);
++
++	/*
++	 * A placeholder for the platform vendors to add whatever additional
++	 * steps required
++	 */
++}
++
+ static int __ufshcd_wb_toggle(struct ufs_hba *hba, bool set, enum flag_idn idn)
+ {
+ 	u8 index;
+@@ -5821,6 +5839,9 @@ static void ufshcd_exception_event_handler(struct work_struct *work)
+ 	if (status & hba->ee_drv_mask & MASK_EE_URGENT_BKOPS)
+ 		ufshcd_bkops_exception_event_handler(hba);
+ 
++	if (status & hba->ee_drv_mask & MASK_EE_URGENT_TEMP)
++		ufshcd_temp_exception_event_handler(hba, status);
++
+ 	ufs_debugfs_exception_event(hba, status);
+ out:
+ 	ufshcd_scsi_unblock_requests(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 798a408d71e5..d811fe079e04 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1063,9 +1063,11 @@ static inline u8 ufshcd_wb_get_query_index(struct ufs_hba *hba)
+ #ifdef CONFIG_SCSI_UFS_HWMON
+ void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask);
+ void ufs_hwmon_remove(struct ufs_hba *hba);
++void ufs_hwmon_notify_event(struct ufs_hba *hba, u8 ee_mask);
+ #else
+ static inline void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask) {}
+ static inline void ufs_hwmon_remove(struct ufs_hba *hba) {}
++static inline void ufs_hwmon_notify_event(struct ufs_hba *hba, u8 ee_mask) {}
+ #endif
+ 
+ #ifdef CONFIG_PM
 -- 
 2.17.1
 
