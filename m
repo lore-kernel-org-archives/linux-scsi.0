@@ -2,344 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 376A3C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 07:41:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 679A8C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 07:49:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19FEA60F6D
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 07:41:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D68E60F9F
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 07:49:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237710AbhIMHmW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Sep 2021 03:42:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36124 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237653AbhIMHmV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 03:42:21 -0400
-Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 63F49C061574;
-        Mon, 13 Sep 2021 00:41:06 -0700 (PDT)
-Received: by mail-ot1-x331.google.com with SMTP id i8-20020a056830402800b0051afc3e373aso12136648ots.5;
-        Mon, 13 Sep 2021 00:41:06 -0700 (PDT)
+        id S237729AbhIMHu4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Sep 2021 03:50:56 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:32323 "EHLO
+        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237648AbhIMHuz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Sep 2021 03:50:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1631519379; x=1663055379;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=VIO3bUe2Lb4JMol7G2aqRTnriEpPqAfRROxEE1KtRDY=;
+  b=cctav1zIvwN2m31/RPlAnFeFJ89REraSloHkDMpGHiSeyio7jMb0uf0R
+   8dUvvo+tpDrlkx9eUA6xe1ePCOni8NvIMDAdx8mHCI2pVQTQ2fazNi46R
+   q2KoO9wkfYiwmPoj0PHmXoI59JEBPM+2URWnLH9NXvirn+AZYo8x+Eq4m
+   9bsBVV1hphPNkMEBkiuYi/NjFx/wLT7+9MyuR8NKQOP/NxE4nn6VUApw1
+   xvD/XtXmX+6Z2GxD1elHFXz5ucuR2qjl8pAFshSTRgUv0qOzStrL7IpQU
+   K7etCQMsZUdf/lgpkMZ3NRAVXuycmfbi5gfIO0op9xcCWa+C+pnXmmbzJ
+   A==;
+X-IronPort-AV: E=Sophos;i="5.85,288,1624291200"; 
+   d="scan'208";a="184623708"
+Received: from mail-dm6nam11lp2175.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([104.47.57.175])
+  by ob1.hgst.iphmx.com with ESMTP; 13 Sep 2021 15:49:38 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Nib2kZBJiLaouEmIxvm/tABIHdHAkKdrMv0CmtpA1A4+NaNSVkTMoJYXDyswx41mhYMmlxuyGw1kllOmYSr2bCgD0km1A+barsGFtt+60bUwnfSjditOCFuaUBQdGl6UEG/WKTDESjziQ4arJpxtb8r80/iZW0zys4Mrk2th0ibBOoOxQ2HOAdmtPj821BUgUtikE33WD01vP+VkQU+bP+L69s8IJ3ADtH5nwemD9ZHjLghqi10CR44eCZSWektJvWzRD9aFC4OS5kxCThJS2JFGw8Oaq7vv+Ee12XWNyAkjQwivGGsPro++C9EmKTcMkDu6PAJ1+/PoQVp/S49Xcw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
+ bh=VIO3bUe2Lb4JMol7G2aqRTnriEpPqAfRROxEE1KtRDY=;
+ b=TIR3ExP5yu9wnwRqpmWl9pfyyYOBdt9MVUTPoebkYFgIkAZB8h4u/kKoaCOKe4NKw5LD8pg6vFa2w84ucBGrjVcy4xJXfqTM/uArM5S2b12LwCXvcwgVGu5phEj2PyXU5Vfod1ScqsYvhuAov5nGgmnzIVY1gQEjWMyzRuMYFxCiURDMFt7UljQP29jXwMuCzlLpbZOJuxcb+C5gA9e9rf8JnHxAMGohrC8yppKu8hajGU0eEB/3JlDqYzl//Ikna407QdbCUx9C9AkCppxYpodhWQHJt193ewSb70IHR3GjCysybOUGBSE6SlVRiecpCcLhmM5dKmem05AJHvz63g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=KNclMVzCG2iKwN+Z4VI8hQxdQzboyYW+jRIl7iwDZ5M=;
-        b=iLTr2RZflXI6AC+DOcfdNcWEhKcP4As9CcOQ8N7puf/ZRKTDV3AcA5/Tn4xlGOBKAG
-         Ta79uBB+e+YvgYDO9J2ZgUSLL+sbTG9m8ctBxl8dkn5bi/0T8lt+DfJI+PkTUtxYWTDI
-         2SamGWU15gyURPXhcIdPDarmt1jY0uQ4C09SBp0hYtmq1yK7prDxlJDg1/NmHoHnG5rQ
-         HVK77GP2nq7l/Lr+WYlO9xWvjjkfk6SDABvynQcvE5o/fVilWl3gb/xvN4a3UUOYcLYT
-         9wc1hukLq+aTziV+lcC5vem4lYK8R5kDcBT4r2OeDLAN+zjV0Ch29M9mYPIDA0WrkBNu
-         kI7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:subject:to:cc:references:from:message-id
-         :date:user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=KNclMVzCG2iKwN+Z4VI8hQxdQzboyYW+jRIl7iwDZ5M=;
-        b=lbNtU2hcI/K3GOdu6EOIjAf4jE3t4Q1/jxHvhnmmPbMnoEKwspU7FbYpQV07y1JhsU
-         1/Q/bFNLxNdKVcIxYoU6fItbNKXCQDQQWshYq8x+MyHjMVVoTYI80ib63eqXlFTmUDuT
-         Ic28274bbNzWac158WmtHuKOj9gYPlUtpTI/rwLfuCCJSDVGaL6/Yok4zlltuWCq+fX8
-         w0Z4DhCAMHhw/GvSuHngQaBDeFpcZ53krwPJoSDAKOAcAm6XwnvgNn0FRAXl1hIEUhB3
-         U6vp7h6xOb9roZ/NLAayYLIpGLS42HYOWT1L3u9PGJkusnJ2jNx+93NXKlTEItjne5Rn
-         lTMg==
-X-Gm-Message-State: AOAM533Jl6T5ekn+uB1EkKmGG2Q6qcHr2k0xskrIh8wyLzORY5Mrvt+u
-        79JqraoBtJfNf+WPZjr2mNY=
-X-Google-Smtp-Source: ABdhPJy2Heu3s/aKxkFVCZX8U2jvvo76ztlqD6zvWhvFX4P15WNMTsfti/P4mZ88paHtueCSxOgNog==
-X-Received: by 2002:a9d:6945:: with SMTP id p5mr8630084oto.301.1631518865704;
-        Mon, 13 Sep 2021 00:41:05 -0700 (PDT)
-Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
-        by smtp.gmail.com with ESMTPSA id f5sm1533943oij.6.2021.09.13.00.41.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 13 Sep 2021 00:41:04 -0700 (PDT)
-Sender: Guenter Roeck <groeck7@gmail.com>
-Subject: Re: [PATCH v3 1/2] scsi: ufs: Probe for temperature notification
- support
-To:     Avri Altman <Avri.Altman@wdc.com>,
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=VIO3bUe2Lb4JMol7G2aqRTnriEpPqAfRROxEE1KtRDY=;
+ b=L0r9YCSW5pzPpmBRjavOGCwiAUcTg4xN6r4KaZLRaPTL/hoDutoUdOJUmsOrxLYmTok7oiX6u9tFCkkj6NRHz4QvyeJ8iNuz8eRT/LZIrC2Eal2zwVtIl7R0nDKETPFRcPCS3tlT9+D3AMjh+ck3A8LFmsxoQ9Vmats2xmuEkh0=
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
+ DM5PR04MB1259.namprd04.prod.outlook.com (2603:10b6:4:3d::23) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.4500.14; Mon, 13 Sep 2021 07:49:38 +0000
+Received: from DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::edbe:4c5:6ee8:fc59]) by DM6PR04MB6575.namprd04.prod.outlook.com
+ ([fe80::edbe:4c5:6ee8:fc59%3]) with mapi id 15.20.4500.019; Mon, 13 Sep 2021
+ 07:49:38 +0000
+From:   Avri Altman <Avri.Altman@wdc.com>
+To:     Guenter Roeck <linux@roeck-us.net>,
         "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
         Bart Van Assche <bvanassche@acm.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
         Bean Huo <beanhuo@micron.com>
+Subject: RE: [PATCH v3 1/2] scsi: ufs: Probe for temperature notification
+ support
+Thread-Topic: [PATCH v3 1/2] scsi: ufs: Probe for temperature notification
+ support
+Thread-Index: AQHXp9jYZSTBrQbeXkKrPDOKOpfYl6ughOOAgAD4afCAABhpAIAAAWpA
+Date:   Mon, 13 Sep 2021 07:49:38 +0000
+Message-ID: <DM6PR04MB657565612A342272B2160A72FCD99@DM6PR04MB6575.namprd04.prod.outlook.com>
 References: <20210912131919.12962-1-avri.altman@wdc.com>
  <20210912131919.12962-2-avri.altman@wdc.com>
  <8abe6364-9240-bcaf-c17f-1703243170cb@roeck-us.net>
  <DM6PR04MB65754D1CF6B4769E6CECDB5DFCD99@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Guenter Roeck <linux@roeck-us.net>
-Message-ID: <d28e37db-44bb-75f8-d479-dcb106fe146d@roeck-us.net>
-Date:   Mon, 13 Sep 2021 00:41:02 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
-MIME-Version: 1.0
-In-Reply-To: <DM6PR04MB65754D1CF6B4769E6CECDB5DFCD99@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+ <d28e37db-44bb-75f8-d479-dcb106fe146d@roeck-us.net>
+In-Reply-To: <d28e37db-44bb-75f8-d479-dcb106fe146d@roeck-us.net>
+Accept-Language: en-US
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: roeck-us.net; dkim=none (message not signed)
+ header.d=none;roeck-us.net; dmarc=none action=none header.from=wdc.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: d294255f-a861-45e7-f462-08d9768b09e2
+x-ms-traffictypediagnostic: DM5PR04MB1259:
+x-microsoft-antispam-prvs: <DM5PR04MB12599C30C4251BFDCEF1D86EFCD99@DM5PR04MB1259.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:5516;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: TZ4Le2pjjE5+cbsaGqT0XE9DrmgzvKBnJXBlVxMm/WfTIUdqjBbLDY1JlmYbUFGUDaLo5NNy81vAbSF68DZotmE5TxI+emOXaPjPCGId1Q+W43xLC41MrJUyrQueSit9ixOd7nHc6h/nBz5y5VfXjaCQQFqjSWByL9ozQq5Hx6gfgTaDUxAc36UoeTe12gTwWFhd3RTYuoZmCglT8Y42NbXoHlaJ4Du/1c67vW2cidnNhN8buigG+WyHRo/ZehUGteHcHFbJ6+zx9/FAP0wNT6NZZtFhcZAU2NQzkwpkyj/hEHl+wco1TcRjFlnKlCL2h8JIo3jTVeldPnV0wBzYp/dMjUJbbhFxmhwE0ZSOm60HA0GDHzZczQbA4sFL+tASnJNpXPhlXEG5Y9wYKsDxR7EHbMB3AaDMloqV7uhRFMYIQwimHb0NCLZN1HEiNpirjTdeQGlGtD78B/B/Z5lhKMiY/XJK6zZJZKy318xegDPAxDN0/tCNcyZM1GQkV+wB7FTkcFJdcHfJ+L7BrMzLLkl5cqh/veRQRXQ/VvzaxyIQnEqg1JRlKgfIdtU6uEic/WugmAbepwUmQDHsWidP+d35Tc1EW7gHubAVTVP5wFqddBjYjSd2aQwio8oxrOEfUlQwcwojeDfZZCl7I4p2Hy5nOH5tLHRo+vElJu/LCnILuOrwINEXlF8nsrOIVFK/eBSNQkPzgCuFVfbTndinGA==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(346002)(396003)(39860400002)(366004)(136003)(26005)(186003)(7696005)(52536014)(478600001)(66446008)(66556008)(6506007)(71200400001)(66476007)(8676002)(83380400001)(38070700005)(86362001)(2906002)(64756008)(38100700002)(8936002)(76116006)(122000001)(316002)(110136005)(55016002)(9686003)(5660300002)(4744005)(66946007)(4326008)(33656002)(54906003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?VzYrYWQ0NkRBTHlnalJBL0Q4WXZQU3cycmNNaWo0dG1XOWtSbFdDMEdldTdR?=
+ =?utf-8?B?SzJLVWwrQk5zSEdVVHQ0cVpqdTZQVy9kTlJGUXAzL1hkejY2bTA0cTUzb3ZU?=
+ =?utf-8?B?WTlyWHQ0TGhkVWFRczY1ekp4OUJsOU1LK29OTjFYejVReERzdDRvWFVNM2k2?=
+ =?utf-8?B?SGY4L3ZtM0VIRWNsRWlFZ1d6bEVNMU5NV21CMVNoNklES2FxR1lMQkt4RDNa?=
+ =?utf-8?B?V3Y5MCtsYms2Nk9LUitaSlpIc0ZMRjhXTk1WelBDcVZhVTE3NHlMSzRTS2hx?=
+ =?utf-8?B?UUZEY3cvcVdWb2xWTTNRYWl1Rk8xRnlMcTgyLzNBbEVWdzhxcUEzSXJuUnQr?=
+ =?utf-8?B?dkdRbU1PWlNZNHBEbERYRnE4MWYxYTZEVlVzc1lIdVJzdHJYQjI2OEFPYWRa?=
+ =?utf-8?B?QkZyZGtVZUpJbG5yVE5vU3hMNDZmRVNQUmJNejF2alNRaEtTTDdoMUJoV3lL?=
+ =?utf-8?B?R0lSc0ZLd09jd3FDOU9PY01aalgyVis3VUNubUcxbUdmN1h3akNqTy8wVVcx?=
+ =?utf-8?B?U0dZUkhyWndGRU9OU1BxeXRWUFR6N05pMmJUU3FTWm4vRUF1WWFFMCtKTG9r?=
+ =?utf-8?B?YUxqejVHZWZBYUhKTTk2RmI3SzVoYWIxMGtucEdkY2JvMzZUOStheFNUZ2Ra?=
+ =?utf-8?B?Y2dQU1p4TDdxc0hTM2RhRG5tWXdjRDI4YXpYOGF5a0hpbGRBWkNKbGFvQzJt?=
+ =?utf-8?B?TEZJWXk4blZxYjkyTDd2dTYyWTZzbEpGc2dIZnBxVWd5TUxwQnA4dUtuZjNO?=
+ =?utf-8?B?TmRNN1REVDFKYU9DWjVoY0thYzhFTkphSmZIckt4QlBVTEtKTS9id3lTVzRn?=
+ =?utf-8?B?NXF5NXVlcEVqZUhkbmZtUXI1anppQmVoZlpkZFJDMHVVb3JRRjIvVjEwa0hX?=
+ =?utf-8?B?TEY3QUtLYnloaEJyZVVoRUhsNHFnNUVVUzIxU1lYaFZLZ080V0E5dkJJYVNY?=
+ =?utf-8?B?dUx4cCs3aGFmVXZpWkhmL01pMFdnTUlNc1VJVTdxNjhiNHNHQW4zKzdCd1E0?=
+ =?utf-8?B?TDRGcjZHNTVkNGV3ZERQcHNXREl0ZTZveXZKaUhtMmx0M2hzZmZnbk0rUUNV?=
+ =?utf-8?B?V3ppdVd5N2VHM1RNS3dWZEp5Y3ozcWVhY1FaYXVzdW9ZRmFPdnp6QWJOandE?=
+ =?utf-8?B?aC9EZkE1dE5CaVR2blhXZm50L3owVlZFTVozMDB2U2E0K3dmNDhZRmpXSVda?=
+ =?utf-8?B?RTRHakhQOHhaQ0twanZZc1ZLVXJZQTJHRTNhdEJ3WDFtYmNsRXZWWi9Ib1pQ?=
+ =?utf-8?B?dUNwZEFUMy8za0ExVHR5S1RqcDM0VVhoZlQ0MFJ1TDh2QVB1YmtHN2hGTE1X?=
+ =?utf-8?B?bmsyZkM5MGw0SXV1N3A4aUtMdEd4YW9YdkZaRW9ITG12NXBkM0E1NHJJeEN3?=
+ =?utf-8?B?cFZaODFPZDRjM1FKbXA3MjJ2N3llSlVvem9nMzRwU2VacnRIRkhSK0RyWkcx?=
+ =?utf-8?B?RFJKemx5RnJOcmVBN2k4djdyTk50clZ2amdkbXlHaGNrV2pqUE5MZHVPY3dK?=
+ =?utf-8?B?d09OWitmZmJCSHFvQkZEcHFNdjcxZXpOeW5EYXBOaTNUbzZGT0lZVjdjRTVS?=
+ =?utf-8?B?Mmp1aWhsQ0NFcFJxWm1hREIyc3V6M2ZWS3NVVnlkemV6eEkxZVpmODRyb2RI?=
+ =?utf-8?B?emZoQ2d2OHc1MGJQdGN2MDlrckdEdVdKU0RVYmFCNXNLMVQwcVJndVBXQlkv?=
+ =?utf-8?B?N3dCWDVJQjBvM2RzYW92QXZ6WEtnRm03R2tNcjNkbXlhZUljZmJlUmtUR3JZ?=
+ =?utf-8?Q?MEXvTW0mDHo6++bnvsChyBg7Ir/XeY06ZF9XoI/?=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d294255f-a861-45e7-f462-08d9768b09e2
+X-MS-Exchange-CrossTenant-originalarrivaltime: 13 Sep 2021 07:49:38.6801
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: hzvnG3LtPcmk3Yg/fnKOrcj8zKeErBZlgcsHERrAjW73p8kzQ1R1HgBrZgehtAd6BVQQMfsW2fuFbCZqQApONw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR04MB1259
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/13/21 12:06 AM, Avri Altman wrote:
->>> +config SCSI_UFS_HWMON
->>> +     bool "UFS  Temperature Notification"
->>> +     depends on SCSI_UFSHCD && HWMON
->>> +     help
->>> +       This provides support for UFS hardware monitoring. If enabled,
->>> +       a hardware monitoring device will be created for the UFS device.
->>> +
->>> +       If unsure, say N.
->>> +
->>
->> git complains about blank line at EOF.
-> Done.
-> 
->>
->>> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
->>> index c407da9b5171..966048875b50 100644
->>> --- a/drivers/scsi/ufs/Makefile
->>> +++ b/drivers/scsi/ufs/Makefile
->>> @@ -10,6 +10,7 @@ ufshcd-core-$(CONFIG_SCSI_UFS_BSG)  += ufs_bsg.o
->>>    ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)       += ufshcd-crypto.o
->>>    ufshcd-core-$(CONFIG_SCSI_UFS_HPB)  += ufshpb.o
->>>    ufshcd-core-$(CONFIG_SCSI_UFS_FAULT_INJECTION) +=
->>> ufs-fault-injection.o
->>> +ufshcd-core-$(CONFIG_SCSI_UFS_HWMON) += ufs-hwmon.o
->>>
->>>    obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o
->> tc-dwc-g210.o
->>>    obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o
->>> ufshcd-dwc.o tc-dwc-g210.o diff --git a/drivers/scsi/ufs/ufs-hwmon.c
->>> b/drivers/scsi/ufs/ufs-hwmon.c new file mode 100644 index
->>> 000000000000..a50e83f645f4
->>> --- /dev/null
->>> +++ b/drivers/scsi/ufs/ufs-hwmon.c
->>> @@ -0,0 +1,179 @@
->>> +// SPDX-License-Identifier: GPL-2.0
->>> +/*
->>> + * UFS hardware monitoring support
->>> + * Copyright (c) 2021, Western Digital Corporation  */
->>> +
->>> +#include <linux/hwmon.h>
->>> +
->>> +#include "ufshcd.h"
->>> +
->>> +struct ufs_hwmon_data {
->>> +     struct ufs_hba *hba;
->>> +     u8 mask;
->>> +};
->>> +
->>> +static bool ufs_temp_enabled(struct ufs_hba *hba, u8 mask) {
->>> +     u32 ee_mask;
->>> +
->>> +     if (ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
->>> +                           QUERY_ATTR_IDN_EE_CONTROL, 0, 0, &ee_mask))
->>> +             return false;
->>> +
->>> +     return (mask & ee_mask & MASK_EE_TOO_HIGH_TEMP) ||
->>> +             (mask & ee_mask & MASK_EE_TOO_LOW_TEMP); }
->>> +
->>> +static bool ufs_temp_valid(struct ufs_hba *hba, u8 mask,
->>> +                        enum attr_idn idn, u32 value) {
->>> +     return (idn == QUERY_ATTR_IDN_CASE_ROUGH_TEMP && value >= 1
->> &&
->>> +             value <= 250 && ufs_temp_enabled(hba, mask)) ||
->>> +           (idn == QUERY_ATTR_IDN_HIGH_TEMP_BOUND && value >= 100 &&
->>> +            value <= 250) ||
->>> +           (idn == QUERY_ATTR_IDN_LOW_TEMP_BOUND && value >= 1 &&
->>> +            value <= 80);
->>> +}
->>> +
->> The value ranges checed above suggest that the temperature is reported in
->> degrees C (or maybe degrees C with an offset).
-> Yes.  No offset.
-> 
->> The hwmon API expects
->> temperatures to be reported in milli-degrees C, and I don't see a conversion in
->> the actual read functions. What does the "sensors" command report ?
-> I missed that (Although it is well documented) - sorry about that.
-> I wasn't aware of the sensors command.  I don't have it in my arm64 android platform image (galaxy s21).
-> Will try to get it.
-> I was reading the temperature using hwmon sysfs entries, which indicate the correct temperature.
-> e.g
-> t2s:/ # ls -la /sys/class/hwmon/
-> total 0
-> drwxr-xr-x   2 root root 0 2020-12-20 10:16 .
-> drwxr-xr-x 104 root root 0 2020-12-19 19:05 ..
-> lrwxrwxrwx   1 root root 0 2020-12-20 10:16 hwmon0 -> ../../devices/platform/13100000.ufs/hwmon/hwmon0
-> .....
-> 
-> t2s:/ # cat /sys/class/hwmon/hwmon0/temp1_input
-> 25
-> 
-> Will fix it.  Thanks.
-> 
->>
->>> +static int ufs_get_temp(struct ufs_hba *hba, u8 mask, enum attr_idn
->>> +idn) {
->>> +     u32 value;
->>> +
->>> +     if (ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR, idn, 0, 0,
->>> +         &value))
->>
->> checkpatch states that alignment is off, and I am quite sure this fits into one
->> line anyway (with the 100-column limit). There are more instances with bad
->> alignment according to checkpatch.
-> I wasn't aware that the Linux Kernel deprecates the 80 Character Line Coding Style.
-> Will try to make it full 100-characters lines.
-> I didn't get any alignment complaints from checkpatch.
-> 
->>
->> Also, ufshcd_query_attr() returns a valid Linux error code. That should be
->> returned to the caller and not be replaced. More on that below.
->>
->>> +             return 0;
->>> +
->>> +     if (ufs_temp_valid(hba, mask, idn, value))
->>> +             return value - 80;
->>> +
->>
->> This again suggests that the temperature is not milli-degrees C.
->>
->> Is there reason to believe that this validation is necessary ?
->> Note that this reports an "error" if the returned temperature value happens to
->> have a value of 80. Again, more on that below.
-> Data->mask holds the temperature related bits in the ufs features register: TOO_LOW_TEMPERATURE and TOO_HIGH_TEMPERATURE.
-> This is set for the device by the flash vendor and can't be changed by the OEMs.
-> If the device doesn't support any of that, then hwmon_probe is not even called, see ufshcd_temp_notif_probe.
-> So data->mask is not 0, and never changes.
-> 
-> When the device returns a 0 temperature value, it means that it is not valid.
-> The spec say about the Device’s rough package case surface temperature:
-> "
-> This value shall be valid when (TOO_HIGH_TEMPERATURE is supported and TOO_HIGH_TEMP_EN is enabled) or
-> ( TOO_LOW_TEMPERATURE is supported and TOO_LOW_TEMP_EN is enabled ).
-> 0 : Unknown Temperature , 1~250 : ( this value – 80 ) degrees in Celsius. ( i.e., -79 ºC ~ 170 ºC )
-> Others: Reserved
-> "
-> data->mask is not 0, but the temperature exception bits: TOO_HIGH_TEMP_EN and TOO_LOW_TEMP_EN are of type read/volatile,
-> Meaning it can be written many times, e.g. by debugfs or ufs-utils.
-> 
-> To sum up:
->   - yes, checking the temperature against the spec boundaries is useless.
->     The device will return 0 if it is not valid.
->     ufs_temp_valid() can be removed, and just need to check that the temperature is not 0.
-> 
->   - The return value of querry_attr is of less interest.
->      if it failed or temp == 0, then the temperature is invalid and the proper return value should be -EINVAL.
-> 
->>
->>> +     return 0;
->>> +}
->>> +
->>> +static int ufs_hwmon_read(struct device *dev, enum hwmon_sensor_types
->> type,
->>> +                        u32 attr, int channel, long *val) {
->>> +     struct ufs_hwmon_data *data = dev_get_drvdata(dev);
->>> +     struct ufs_hba *hba = data->hba;
->>> +     u8 mask = data->mask;
->>> +     int err = 0;
->>> +     bool get_temp = true;
->>> +
->>> +     if (type != hwmon_temp)
->>> +             return 0;
->>> +
->>> +     down(&hba->host_sem);
->>> +
->>> +     if (!ufshcd_is_user_access_allowed(hba)) {
->>> +             up(&hba->host_sem);
->>> +             return -EBUSY;
->>> +     }
->>> +
->>> +     ufshcd_rpm_get_sync(hba);
->>> +
->>> +     switch (attr) {
->>> +     case hwmon_temp_enable:
->>> +             *val = ufs_temp_enabled(hba, mask);
->>> +             get_temp = false;
->>> +
->>
->> This seems to be read-only, and the mask only affects the limit registers as far
->> as I con see. If so, this is wrong: The mask should be used to enable or hide the
->> limit attributes as needed. If the mask is 0, and if this means that the current
->> temperature is not reported either, the driver should not instantiate at all.
->>
->> The "enable" attribute only makes sense if it can be used to actually enable or
->> disable a specific sensor, and is not tied to limit attributes but to the actual
->> sensor values.
-> See explanation above.
->   Will make it writable as well.
-> 
-
-That only makes sense if the information is passed to the chip. What is going
-to happen if the user writes 0 into the attribute ?
-
-Guenter
-
->>
->>> +             break;
->>> +     case hwmon_temp_max_alarm:
->>> +             *val = ufs_get_temp(hba, mask,
->>> + QUERY_ATTR_IDN_HIGH_TEMP_BOUND);
->>> +
->>> +             break;
->>> +     case hwmon_temp_min_alarm:
->>> +             *val = ufs_get_temp(hba, mask,
->>> + QUERY_ATTR_IDN_LOW_TEMP_BOUND);
->>> +
->>> +             break;
->>> +     case hwmon_temp_input:
->>> +             *val = ufs_get_temp(hba, mask,
->>> + QUERY_ATTR_IDN_CASE_ROUGH_TEMP);
->>> +
->> If an enable attribute exists and is 0 (disabled), this should return -ENODATA.
->> In this case, that would imply that the driver should not be instantiated in the
->> first place since it has nothing to report.
-> See explanation above.
-> Will fix it so the error value will make more sense.
-> 
->>
->>> +             break;
->>> +     default:
->>> +             err = -EOPNOTSUPP;
->>> +
->>> +             break;
->>> +     }
->>> +
->>> +     ufshcd_rpm_put_sync(hba);
->>> +
->>> +     up(&hba->host_sem);
->>> +
->>> +     if (get_temp && !err && *val == 0)
->>> +             err = -EINVAL;
->>> +
->> That is an odd way of detection errors. If it was in the hwmon subsystem, I'd ask
->> for the error handling to be moved into the case statements. On top of that,
->> interpreting a return value of "0" as error seems wrong.
->> ufs_get_temp() returns 0 if the measured temperature or the reported limit
->> happens to have a value of 80, and that is perfectly valid. If ufs_get_temp()
->> reports an error, it should report that as error.
->>
->> Also, EINVAL is "invalid argument", which I am quite sure does not apply here.
-> Ditto.
-> EINVAL implies that the temperature is invalid.
-> 
->>>
->>> +static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8
->>> +*desc_buf) {
->>> +     struct ufs_dev_info *dev_info = &hba->dev_info;
->>> +     u32 ext_ufs_feature;
->>> +     u8 mask = 0;
->>> +
->>> +     if (!(hba->caps & UFSHCD_CAP_TEMP_NOTIF) ||
->>> +         dev_info->wspecversion < 0x300)
->>
->> I am quite sure this fits a single line.
-> Done.
-> 
-
+PiA+PiBUaGUgImVuYWJsZSIgYXR0cmlidXRlIG9ubHkgbWFrZXMgc2Vuc2UgaWYgaXQgY2FuIGJl
+IHVzZWQgdG8gYWN0dWFsbHkNCj4gPj4gZW5hYmxlIG9yIGRpc2FibGUgYSBzcGVjaWZpYyBzZW5z
+b3IsIGFuZCBpcyBub3QgdGllZCB0byBsaW1pdA0KPiA+PiBhdHRyaWJ1dGVzIGJ1dCB0byB0aGUg
+YWN0dWFsIHNlbnNvciB2YWx1ZXMuDQo+ID4gU2VlIGV4cGxhbmF0aW9uIGFib3ZlLg0KPiA+ICAg
+V2lsbCBtYWtlIGl0IHdyaXRhYmxlIGFzIHdlbGwuDQo+ID4NCj4gDQo+IFRoYXQgb25seSBtYWtl
+cyBzZW5zZSBpZiB0aGUgaW5mb3JtYXRpb24gaXMgcGFzc2VkIHRvIHRoZSBjaGlwLiBXaGF0IGlz
+IGdvaW5nIHRvDQo+IGhhcHBlbiBpZiB0aGUgdXNlciB3cml0ZXMgMCBpbnRvIHRoZSBhdHRyaWJ1
+dGUgPw0KV2lsbCB0dXJuIG9mZiB0aGUgdGVtcGVyYXR1cmUgZXhjZXB0aW9uIGJpdHMsIHNvIHRo
+YXQgVGNhc2UgaXMgbm8gbG9uZ2VyIHZhbGlkLA0KYW5kIHRoZSBkZXZpY2Ugd2lsbCBhbHdheXMg
+cmV0dXJuIFRjYXNlID0gMC4NCg0KPiBHdWVudGVyDQo=
