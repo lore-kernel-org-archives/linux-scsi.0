@@ -2,96 +2,155 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.6 required=3.0 tests=BAYES_00,DATE_IN_PAST_06_12,
-	DKIMWL_WL_HIGH,DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7AB4DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 08:50:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2218DC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 08:53:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D38E6101A
-	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 08:50:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0232D60F6D
+	for <linux-scsi@archiver.kernel.org>; Mon, 13 Sep 2021 08:53:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238170AbhIMIvt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 13 Sep 2021 04:51:49 -0400
-Received: from relay.smtp-ext.broadcom.com ([192.19.11.229]:34182 "EHLO
-        relay.smtp-ext.broadcom.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236022AbhIMIvp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Sep 2021 04:51:45 -0400
-Received: from localhost.localdomain (unknown [10.157.2.20])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by relay.smtp-ext.broadcom.com (Postfix) with ESMTPS id ADA627DA5;
-        Mon, 13 Sep 2021 01:50:24 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com ADA627DA5
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-        s=dkimrelay; t=1631523026;
-        bh=buapfx1eymPAhUW14Z0XHqwJRFRPjH5VD9zcu6wh33I=;
-        h=From:To:Cc:Subject:Date:From;
-        b=G8MJ9VTPSz5kAgAYPMxHRiBR6T5twdPFHylQzP5CvLSak2bpZsepjBqxMt+Ww1/vV
-         Fb9nNypcLIHMOikRUaZ07OA8vpb+xtiPEqPZ79KYsP9AlJUy03BFoxYblZF7IXbn+C
-         VNXBGv2hYa+KVqj3umnGjlmA1f9CH40G3aSCiCP4=
-From:   Muneendra Kumar <muneendra.kumar@broadcom.com>
-To:     linux-scsi@vger.kernel.org, hare@suse.de
-Cc:     jsmart2021@gmail.com, emilne@redhat.com, mkumar@redhat.com,
-        Muneendra <muneendra.kumar@broadcom.com>
-Subject: [PATCH scsi:fc] Update documentation of sysfs nodes for appid
-Date:   Sun, 12 Sep 2021 18:58:53 -0700
-Message-Id: <20210913015853.2086512-1-muneendra.kumar@broadcom.com>
-X-Mailer: git-send-email 2.27.0
+        id S238079AbhIMIyU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 13 Sep 2021 04:54:20 -0400
+Received: from mga05.intel.com ([192.55.52.43]:64327 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238310AbhIMIyT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Sep 2021 04:54:19 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10105"; a="307164359"
+X-IronPort-AV: E=Sophos;i="5.85,288,1624345200"; 
+   d="scan'208";a="307164359"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Sep 2021 01:53:00 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,288,1624345200"; 
+   d="scan'208";a="543069217"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.174]) ([10.237.72.174])
+  by FMSMGA003.fm.intel.com with ESMTP; 13 Sep 2021 01:52:56 -0700
+Subject: Re: [PATCH V3 1/3] scsi: ufs: Fix error handler clear ua deadlock
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
+References: <20210905095153.6217-1-adrian.hunter@intel.com>
+ <20210905095153.6217-2-adrian.hunter@intel.com>
+ <a12d88b3-8402-34bb-fe97-90b7aa2c2c39@acm.org>
+ <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
+ <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
+ <e5307bbe-1cda-fdd2-a666-ae57cd90de07@acm.org>
+ <36245674-b179-d25e-84c3-417ef2d85620@intel.com>
+ <9220f68e-dc5e-9520-6e55-2a4d86809b44@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <fae15188-2c1d-b953-f6e4-6e5ac1902b24@intel.com>
+Date:   Mon, 13 Sep 2021 11:53:21 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <9220f68e-dc5e-9520-6e55-2a4d86809b44@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Muneendra <muneendra.kumar@broadcom.com>
+On 13/09/21 6:17 am, Bart Van Assche wrote:
+> On 9/11/21 09:47, Adrian Hunter wrote:
+>> On 8/09/21 1:36 am, Bart Van Assche wrote:
+>>> --- a/drivers/scsi/ufs/ufshcd.c +++ b/drivers/scsi/ufs/ufshcd.c 
+>>> @@ -2707,6 +2707,14 @@ static int ufshcd_queuecommand(struct
+>>> Scsi_Host *host, struct scsi_cmnd *cmd) } fallthrough; case
+>>> UFSHCD_STATE_RESET: +        /* +         * The SCSI error
+>>> handler only starts after all pending commands +         * have
+>>> failed or timed out. Complete commands with +         *
+>>> DID_IMM_RETRY to allow the error handler to start +         * if
+>>> it has been scheduled. +         */ +        set_host_byte(cmd,
+>>> DID_IMM_RETRY); +        cmd->scsi_done(cmd);
+>> 
+>> Setting non-zero return value, in this case "err =
+>> SCSI_MLQUEUE_HOST_BUSY" will anyway cause scsi_dec_host_busy(), so
+>> does this make any difference?
+> 
+> The return value should be changed into 0 since returning
+> SCSI_MLQUEUE_HOST_BUSY is only allowed if cmd->scsi_done(cmd) has not
+> yet been called.
+> 
+> I expect that setting the host byte to DID_IMM_RETRY and calling
+> scsi_done will make a difference, otherwise I wouldn't have suggested
+> this. As explained in my previous email doing that triggers the SCSI> command completion and resubmission paths. Resubmission only happens
+> if the SCSI error handler has not yet been scheduled. The SCSI error
+> handler is scheduled after for all pending commands scsi_done() has
+> been called or a timeout occurred. In other words, setting the host
+> byte to DID_IMM_RETRY and calling scsi_done() makes it possible for
+> the error handler to be scheduled, something that won't happen if
+> ufshcd_queuecommand() systematically returns SCSI_MLQUEUE_HOST_BUSY.
 
-Update documentation for sysfs node within
-/sys/class/fc/fc_udev_device/
+Not getting it, sorry. :-(
 
-Signed-off-by: Muneendra <muneendra.kumar@broadcom.com>
----
- Documentation/ABI/testing/sysfs-class-fc | 27 ++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
- create mode 100644 Documentation/ABI/testing/sysfs-class-fc
+The error handler sets UFSHCD_STATE_RESET and never leaves the state
+as UFSHCD_STATE_RESET, so that case does not need to start the error
+handler because it is already running.
 
-diff --git a/Documentation/ABI/testing/sysfs-class-fc b/Documentation/ABI/testing/sysfs-class-fc
-new file mode 100644
-index 000000000000..3057a6d3b8cf
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-class-fc
-@@ -0,0 +1,27 @@
-+What:		/sys/class/fc/fc_udev_device/appid_store
-+Date:		Aug 2021
-+Contact:	Muneendra Kumar <muneendra.kumar@broadconm.com>
-+Description:
-+		This interface allows an admin to set an FC application
-+		identifier in the blkcg associated with a cgroup id. The
-+		identifier is typically a UUID that is associated with
-+		an application or logical entity such as a virtual
-+		machine or container group. The application or logical
-+		entity utilizes a block device via the cgroup id.
-+		FC adapter drivers may query the identifier and tag FC
-+		traffic based on the identifier. FC host and FC fabric
-+		entities can utilize the application id and FC traffic
-+		tag to identify traffic sources.
-+
-+		The interface expects a string "<cgroupid>:<appid>" where:
-+		<cgroupid> is inode of the cgroup in hexadecimal
-+		<appid> is user provided string upto 128 characters
-+		in length.
-+
-+		If an appid_store is done for a cgroup id that already
-+		has an appid set, the new value will override the
-+		previous value.
-+
-+		If an admin wants to remove an FC application identifier
-+		from a cgroup, an appid_store should be done with the
-+		following string: "<cgroupid>:"
--- 
-2.26.2
+The error handler is always scheduled after setting 
+UFSHCD_STATE_EH_SCHEDULED_FATAL.
+
+scsi_dec_host_busy() is called for any non-zero return value like
+SCSI_MLQUEUE_HOST_BUSY:
+
+i.e.
+	reason = scsi_dispatch_cmd(cmd);
+	if (reason) {
+		scsi_set_blocked(cmd, reason);
+		ret = BLK_STS_RESOURCE;
+		goto out_dec_host_busy;
+	}
+
+	return BLK_STS_OK;
+
+out_dec_host_busy:
+	scsi_dec_host_busy(shost, cmd);
+
+And that will wake the error handler:
+
+static void scsi_dec_host_busy(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+{
+	unsigned long flags;
+
+	rcu_read_lock();
+	__clear_bit(SCMD_STATE_INFLIGHT, &cmd->state);
+	if (unlikely(scsi_host_in_recovery(shost))) {
+		spin_lock_irqsave(shost->host_lock, flags);
+		if (shost->host_failed || shost->host_eh_scheduled)
+			scsi_eh_wakeup(shost);
+		spin_unlock_irqrestore(shost->host_lock, flags);
+	}
+	rcu_read_unlock();
+}
+
+Note that scsi_host_queue_ready() won't let any requests through
+when scsi_host_in_recovery(), so the potential problem is with
+requests that have already been successfully submitted to the
+UFS driver but have not completed. The change you suggest
+does not help with that.
+
+That seems like another problem with the patch 
+"scsi: ufs: Synchronize SCSI and UFS error handling".
+
+
+> In the latter case the block layer timer is reset over and over
+> again. See also the blk_mq_start_request() in scsi_queue_rq(). One
+> could wonder whether this is really what the SCSI core should do if a
+> SCSI LLD keeps returning the SCSI_MLQUEUE_HOST_BUSY status code ...
+> 
+> Bart.
 
