@@ -2,242 +2,469 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5875CC4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Sep 2021 14:47:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B009C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Sep 2021 14:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C635603E8
-	for <linux-scsi@archiver.kernel.org>; Tue, 14 Sep 2021 14:47:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56C2B603E8
+	for <linux-scsi@archiver.kernel.org>; Tue, 14 Sep 2021 14:48:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234775AbhINOs0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 14 Sep 2021 10:48:26 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41668 "EHLO
+        id S235171AbhINOuE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 14 Sep 2021 10:50:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234821AbhINOsL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Sep 2021 10:48:11 -0400
-Received: from mail-pf1-x42b.google.com (mail-pf1-x42b.google.com [IPv6:2607:f8b0:4864:20::42b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE82C0617AF;
-        Tue, 14 Sep 2021 07:41:48 -0700 (PDT)
-Received: by mail-pf1-x42b.google.com with SMTP id j6so12125877pfa.4;
-        Tue, 14 Sep 2021 07:41:48 -0700 (PDT)
+        with ESMTP id S234870AbhINOt7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Sep 2021 10:49:59 -0400
+Received: from mail-ot1-x331.google.com (mail-ot1-x331.google.com [IPv6:2607:f8b0:4864:20::331])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 09115C061767;
+        Tue, 14 Sep 2021 07:47:09 -0700 (PDT)
+Received: by mail-ot1-x331.google.com with SMTP id c8-20020a9d6c88000000b00517cd06302dso18727061otr.13;
+        Tue, 14 Sep 2021 07:47:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=0tFcS0bgrni7T/UyH5tgM3kB2fvxQVZyvDvr4x9Nn0E=;
-        b=UcCCLIQhvZq8Ncnr+BAJoJFu9Ixa/D+XUjmhbU7HIvc+hRj87USaT6BE1yy+iBq9Dg
-         QGiVMbGMV+1FXGsEkdF095w1rXTPmXSBy/GzNBUQxpd9dOzN44hTusQVw+uvgN3pUog6
-         vEZMdKSx10jM/eMjPmLE/1HA0l7wWv8mmMdUGuhqsKvWo5d9FFKvEl6dUqe0Cmi7wFvc
-         IqUUL7XX9h+4FMxeygEw4BAnE8Jjme2tf0Xn3pAOyegWOofflTw3yvlM5BEDZhc2M9rn
-         c1s9RDJ0MDor9d8Ut53EaH5xQoqBopBFHh0ewA7REHTL2u6atXEGxwqc8AvAaeBreZaC
-         OxUA==
+        h=sender:date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=GhQGU3ekRm4j7CzPEpJtVJmuDRBmMMIkLT2CMwHpL+Q=;
+        b=qP4kZ8P4+qGuepBGKSjbeRLpKH6fe98cWK12AjvziKwHSq5J2xVzQXzHU2utb8qvhc
+         m2LQOdhiZVe85mJbswmSgR8nd5VBFRiQnFJEq7+9gKucEiBnAVat0/E572zShnUg5/IR
+         RyQ2XTCYS4/8WDRvmr7b96HdUtSrDpNruLPbAOrL8apNRshGbKyZ6VMZ2lZAxMqmVCHC
+         gFOxj27BKjqlCbw7gvDQ0Ontzzq/0uT82vFr4kjT6ui9Xt7SkVvmLFLD5fzkyj+nn4v5
+         1nzOaWRLl8i+iQMwIAIgQul0lSk5ZWrWh57+P0MYB+zIGitN7Ni9hjlQ9IifFDcf4Kzc
+         ci4g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=0tFcS0bgrni7T/UyH5tgM3kB2fvxQVZyvDvr4x9Nn0E=;
-        b=dk0aWCkWJGls+hgfjIyRpkPssTz9IiGcMaEbhXCn43OWeTnEvDYj81W9KkqjqaqfT0
-         qBjUd2ok+ZTQo6uV/h5JeeeQJStbrNhHXqR/y35yLJDMdqXlyH7rIoEMowPATPCRQfDr
-         jUmYs7zi90Uz+Eo962iYg/jjvCi4G/lL7kvCe5pf8QEX8ofG9nypMdwheBy14+fvH+xg
-         e9bB52duH++xzBC2zM4rzII9WUd6VhVpOHpHv7QWppo3vg++XZdF3XoxmY7qtdHW2Crq
-         k1CWoPXpIuLKU3vrcB1qA8l2FUT3k7NeZoEOLKXXKBrD8aAuds9oGAYxiRNdV0x7cYcQ
-         +GFA==
-X-Gm-Message-State: AOAM532GajL0hw1dPuBIbktcYmh5BwwW+Cz0YrtP3FNnR1ul+RsWJT+C
-        a7apNiW539x4uNzF/8Dh/AA=
-X-Google-Smtp-Source: ABdhPJylfNPyIQEAHW7Jn9/cFbcvLCTICR8qzXoHOEsrI/lcIc/0eSlT+n5cpDvBA5GlFRMw2tbP5w==
-X-Received: by 2002:a05:6a00:2405:b0:3e1:9f65:9703 with SMTP id z5-20020a056a00240500b003e19f659703mr5132461pfh.6.1631630507544;
-        Tue, 14 Sep 2021 07:41:47 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:1a:efea::50b])
-        by smtp.gmail.com with ESMTPSA id w5sm10372503pfu.160.2021.09.14.07.41.33
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 14 Sep 2021 07:41:47 -0700 (PDT)
-Subject: Re: [PATCH V4 00/13] x86/Hyper-V: Add Hyper-V Isolation VM support
-To:     Michael Kelley <mikelley@microsoft.com>,
-        Christoph Hellwig <hch@lst.de>
-Cc:     KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "catalin.marinas@arm.com" <catalin.marinas@arm.com>,
-        "will@kernel.org" <will@kernel.org>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "arnd@arndb.de" <arnd@arndb.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "pgonda@google.com" <pgonda@google.com>,
-        "martin.b.radev@gmail.com" <martin.b.radev@gmail.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "hannes@cmpxchg.org" <hannes@cmpxchg.org>,
-        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
-        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
-        "saravanand@fb.com" <saravanand@fb.com>,
-        "linux-arm-kernel@lists.infradead.org" 
-        <linux-arm-kernel@lists.infradead.org>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "rientjes@google.com" <rientjes@google.com>,
-        "ardb@kernel.org" <ardb@kernel.org>,
-        "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-References: <20210827172114.414281-1-ltykernel@gmail.com>
- <20210830120036.GA22005@lst.de>
- <MWHPR21MB15933503E7C324167CB4132CD7CC9@MWHPR21MB1593.namprd21.prod.outlook.com>
- <20210902075939.GB14986@lst.de>
- <MWHPR21MB1593060DCFD854FDA14604D3D7CE9@MWHPR21MB1593.namprd21.prod.outlook.com>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <9b2f6372-3173-cc5c-81d2-365c8f09ef6f@gmail.com>
-Date:   Tue, 14 Sep 2021 22:41:32 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        h=x-gm-message-state:sender:date:from:to:cc:subject:message-id
+         :references:mime-version:content-disposition:in-reply-to;
+        bh=GhQGU3ekRm4j7CzPEpJtVJmuDRBmMMIkLT2CMwHpL+Q=;
+        b=RblYoubJSSpkYXF5YtWVNtK9EJ84JIGwLG0hIiFVqnYtKKaPMMWBheRZOXZXcgxoDE
+         z8KsQUJvdiN7QLTQ1LXqSAu1aFX/SmKhS3FNS9HOM4ASP6a2hNChsLpTUhx0xm+zI0EZ
+         yhjCOEV0vG6hW/cRKHh+7UgfrFY+DKgrqlGMEYzDoONOSeOUrUX3HuP2HTKMOqdfLYw5
+         s3MWsL851hmGeqPooXUGspnHU5AFvjx702r5odkSaUrNX6MdlAXkQnm3GCiz8/AtS0u8
+         J/YXz6p97Z1LK4rbM60FWpJ/5E7KQdQLMMwuGzgYpyZknqJ1QUclC6u0qle8qlC4hQWj
+         V5hg==
+X-Gm-Message-State: AOAM532lTs2ZXcBK3RqlRMEU1DN+jpRWyYPJvXurAvy3QOPm6wN+HTzQ
+        rmG7mQVP+ukKo1s3yBFORcA=
+X-Google-Smtp-Source: ABdhPJxIE2ZN9nvWPtYNTlsLSaTa74K06xZ2/5oIFSIa3XF9ym7nPRv5MjBM1NCQgFxqjyO9jmh8Ig==
+X-Received: by 2002:a05:6830:278b:: with SMTP id x11mr14862596otu.326.1631630828332;
+        Tue, 14 Sep 2021 07:47:08 -0700 (PDT)
+Received: from server.roeck-us.net ([2600:1700:e321:62f0:329c:23ff:fee3:9d7c])
+        by smtp.gmail.com with ESMTPSA id c37sm2615183otu.60.2021.09.14.07.47.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Sep 2021 07:47:07 -0700 (PDT)
+Sender: Guenter Roeck <groeck7@gmail.com>
+Date:   Tue, 14 Sep 2021 07:47:06 -0700
+From:   Guenter Roeck <linux@roeck-us.net>
+To:     Avri Altman <avri.altman@wdc.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bean Huo <beanhuo@micron.com>
+Subject: Re: [PATCH v5 1/2] scsi: ufs: Probe for temperature notification
+ support
+Message-ID: <20210914144706.GA3457579@roeck-us.net>
+References: <20210914065320.8554-1-avri.altman@wdc.com>
+ <20210914065320.8554-2-avri.altman@wdc.com>
 MIME-Version: 1.0
-In-Reply-To: <MWHPR21MB1593060DCFD854FDA14604D3D7CE9@MWHPR21MB1593.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210914065320.8554-2-avri.altman@wdc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Michael and Christoph:
-       I just sent out V5 patchset. I use alloc_pages() to allocate rx/tx
-ring buffer in Isolation VM and use vmap() to map rx/tx buffer first
-because the vmbus_establish_gpadl() still needs to va of low end memory
-to initialize gpadl buffer. After calling vmbus_establish_gpadl(), the
-va returned by vmap will be unmapped to release virtual address space 
-which will not be used in the following code and then map these pages in 
-the extra address space above shared_gpa_boundary via vmap_pfn(). Please
-have a look.
+On Tue, Sep 14, 2021 at 09:53:19AM +0300, Avri Altman wrote:
+> Probe the dExtendedUFSFeaturesSupport register for the device's
+> temperature notification support, and if supported, add a hw monitor
+> device.
+> 
+> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+> ---
+>  drivers/scsi/ufs/Kconfig     |   9 ++
+>  drivers/scsi/ufs/Makefile    |   1 +
+>  drivers/scsi/ufs/ufs-hwmon.c | 201 +++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufs.h       |   7 ++
+>  drivers/scsi/ufs/ufshcd.c    |  26 +++++
+>  drivers/scsi/ufs/ufshcd.h    |  18 ++++
+>  6 files changed, 262 insertions(+)
+>  create mode 100644 drivers/scsi/ufs/ufs-hwmon.c
+> 
+> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> index 432df76e6318..565e8aa6319d 100644
+> --- a/drivers/scsi/ufs/Kconfig
+> +++ b/drivers/scsi/ufs/Kconfig
+> @@ -199,3 +199,12 @@ config SCSI_UFS_FAULT_INJECTION
+>  	help
+>  	  Enable fault injection support in the UFS driver. This makes it easier
+>  	  to test the UFS error handler and abort handler.
+> +
+> +config SCSI_UFS_HWMON
+> +	bool "UFS  Temperature Notification"
+> +	depends on SCSI_UFSHCD && HWMON
+> +	help
+> +	  This provides support for UFS hardware monitoring. If enabled,
+> +	  a hardware monitoring device will be created for the UFS device.
+> +
+> +	  If unsure, say N.
+> diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+> index c407da9b5171..966048875b50 100644
+> --- a/drivers/scsi/ufs/Makefile
+> +++ b/drivers/scsi/ufs/Makefile
+> @@ -10,6 +10,7 @@ ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+>  ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
+>  ufshcd-core-$(CONFIG_SCSI_UFS_HPB)	+= ufshpb.o
+>  ufshcd-core-$(CONFIG_SCSI_UFS_FAULT_INJECTION) += ufs-fault-injection.o
+> +ufshcd-core-$(CONFIG_SCSI_UFS_HWMON) += ufs-hwmon.o
+>  
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.o
+>  obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
+> diff --git a/drivers/scsi/ufs/ufs-hwmon.c b/drivers/scsi/ufs/ufs-hwmon.c
+> new file mode 100644
+> index 000000000000..be7e60fb1a98
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/ufs-hwmon.c
+> @@ -0,0 +1,201 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * UFS hardware monitoring support
+> + * Copyright (c) 2021, Western Digital Corporation
+> + */
+> +
+> +#include <linux/hwmon.h>
+> +#include <linux/units.h>
+> +
+> +#include "ufshcd.h"
+> +
+> +struct ufs_hwmon_data {
+> +	struct ufs_hba *hba;
+> +	u8 mask;
+> +};
+> +
+> +static int ufs_read_temp_enable(struct ufs_hba *hba, u8 mask, long *val)
+> +{
+> +	u32 ee_mask;
+> +	int err = 0;
 
-https://lkml.org/lkml/2021/9/14/672
+Unnecessary initialization
 
-Thanks.
+> +
+> +	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR, QUERY_ATTR_IDN_EE_CONTROL, 0, 0,
+> +				&ee_mask);
+> +	if (err)
+> +		return err;
+> +
+> +	*val = (mask & ee_mask & MASK_EE_TOO_HIGH_TEMP) || (mask & ee_mask & MASK_EE_TOO_LOW_TEMP);
+> +
+> +	return 0;
+> +}
+> +
+> +static int ufs_get_temp(struct ufs_hba *hba, enum attr_idn idn, long *val)
+> +{
+> +	u32 value;
+> +	int err = 0;
+> +
+> +	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR, idn, 0, 0, &value);
+> +	if (err)
+> +		return err;
+> +
+> +	if (value == 0)
+> +		return -ENODATA;
+> +
+> +	*val = ((long)value - 80) * MILLIDEGREE_PER_DEGREE;
+> +
+> +	return 0;
+> +}
+> +
+> +static int ufs_hwmon_read(struct device *dev, enum hwmon_sensor_types type, u32 attr, int channel,
+> +			  long *val)
+> +{
+> +	struct ufs_hwmon_data *data = dev_get_drvdata(dev);
+> +	struct ufs_hba *hba = data->hba;
+> +	int err = 0;
 
-On 9/2/2021 11:57 PM, Michael Kelley wrote:
-> From: Christoph Hellwig <hch@lst.de> Sent: Thursday, September 2, 2021 1:00 AM
->>
->> On Tue, Aug 31, 2021 at 05:16:19PM +0000, Michael Kelley wrote:
->>> As a quick overview, I think there are four places where the
->>> shared_gpa_boundary must be applied to adjust the guest physical
->>> address that is used.  Each requires mapping a corresponding
->>> virtual address range.  Here are the four places:
->>>
->>> 1)  The so-called "monitor pages" that are a core communication
->>> mechanism between the guest and Hyper-V.  These are two single
->>> pages, and the mapping is handled by calling memremap() for
->>> each of the two pages.  See Patch 7 of Tianyu's series.
->>
->> Ah, interesting.
->>
->>> 3)  The network driver send and receive buffers.  vmap_phys_range()
->>> should work here.
->>
->> Actually it won't.  The problem with these buffers is that they are
->> physically non-contiguous allocations.
-> 
-> Indeed you are right.  These buffers are allocated with vzalloc().
-> 
->> We really have two sensible options:
->>
->>   1) use vmap_pfn as in the current series.  But in that case I think
->>      we should get rid of the other mapping created by vmalloc.  I
->>      though a bit about finding a way to apply the offset in vmalloc
->>      itself, but I think it would be too invasive to the normal fast
->>      path.  So the other sub-option would be to allocate the pages
->>      manually (maybe even using high order allocations to reduce TLB
->>      pressure) and then remap them
-> 
-> What's the benefit of getting rid of the other mapping created by
-> vmalloc if it isn't referenced?  Just page table space?  The default sizes
-> are a 16 Meg receive buffer and a 1 Meg send buffer for each VMbus
-> channel used by netvsc, and usually the max number of channels
-> is 8.  So there's 128 Meg of virtual space to be saved on the receive
-> buffers,  which could be worth it.
-> 
-> Allocating the pages manually is also an option, but we have to
-> be careful about high order allocations.  While typically these buffers
-> are allocated during system boot, these synthetic NICs can be hot
-> added and removed while the VM is running.   The channel count
-> can also be changed while the VM is running.  So multiple 16 Meg
-> receive buffer allocations may need to be done after the system has
-> been running a long time.
-> 
->>   2) do away with the contiguous kernel mapping entirely.  This means
->>      the simple memcpy calls become loops over kmap_local_pfn.  As
->>      I just found out for the send side that would be pretty easy,
->>      but the receive side would be more work.  We'd also need to check
->>      the performance implications.
-> 
-> Doing away with the contiguous kernel mapping entirely seems like
-> it would result in fairly messy code to access the buffer.  What's the
-> benefit of doing away with the mapping?  I'm not an expert on the
-> netvsc driver, but decoding the incoming packets is already fraught
-> with complexities because of the nature of the protocol with Hyper-V.
-> The contiguous kernel mapping at least keeps the basics sane.
-> 
->>
->>> 4) The swiotlb memory used for bounce buffers.  vmap_phys_range()
->>> should work here as well.
->>
->> Or memremap if it works for 1.
->>
->>> Case #2 above does unusual mapping.  The ring buffer consists of a ring
->>> buffer header page, followed by one or more pages that are the actual
->>> ring buffer.  The pages making up the actual ring buffer are mapped
->>> twice in succession.  For example, if the ring buffer has 4 pages
->>> (one header page and three ring buffer pages), the contiguous
->>> virtual mapping must cover these seven pages:  0, 1, 2, 3, 1, 2, 3.
->>> The duplicate contiguous mapping allows the code that is reading
->>> or writing the actual ring buffer to not be concerned about wrap-around
->>> because writing off the end of the ring buffer is automatically
->>> wrapped-around by the mapping.  The amount of data read or
->>> written in one batch never exceeds the size of the ring buffer, and
->>> after a batch is read or written, the read or write indices are adjusted
->>> to put them back into the range of the first mapping of the actual
->>> ring buffer pages.  So there's method to the madness, and the
->>> technique works pretty well.  But this kind of mapping is not
->>> amenable to using vmap_phys_range().
->>
->> Hmm.  Can you point me to where this is mapped?  Especially for the
->> classic non-isolated case where no vmap/vmalloc mapping is involved
->> at all?
-> 
-> The existing code is in hv_ringbuffer_init() in drivers/hv/ring_buffer.c.
-> The code hasn't changed in a while, so any recent upstream code tree
-> is valid to look at.  The memory pages are typically allocated
-> in vmbus_alloc_ring() in drivers/hv/channel.c.
-> 
-> Michael
+Unnecesaary initialization
+
+> +
+> +	if (type != hwmon_temp)
+> +		return 0;
+> +
+> +	down(&hba->host_sem);
+> +
+> +	if (!ufshcd_is_user_access_allowed(hba)) {
+> +		up(&hba->host_sem);
+> +		return -EBUSY;
+> +	}
+> +
+> +	ufshcd_rpm_get_sync(hba);
+> +
+> +	switch (attr) {
+> +	case hwmon_temp_enable:
+> +		 err = ufs_read_temp_enable(hba, data->mask, val);
+
+extra space before 'err ='
+
+> +
+> +		break;
+> +	case hwmon_temp_crit:
+> +		err = ufs_get_temp(hba, QUERY_ATTR_IDN_HIGH_TEMP_BOUND, val);
+> +
+> +		break;
+> +	case hwmon_temp_lcrit:
+> +		err = ufs_get_temp(hba, QUERY_ATTR_IDN_LOW_TEMP_BOUND, val);
+> +
+> +		break;
+> +	case hwmon_temp_input:
+> +		err = ufs_get_temp(hba, QUERY_ATTR_IDN_CASE_ROUGH_TEMP, val);
+> +
+> +		break;
+> +	default:
+> +		err = -EOPNOTSUPP;
+> +
+> +		break;
+> +	}
+> +
+> +	ufshcd_rpm_put_sync(hba);
+> +
+> +	up(&hba->host_sem);
+> +
+> +	return err;
+> +}
+> +
+> +static int ufs_hwmon_write(struct device *dev, enum hwmon_sensor_types type, u32 attr, int channel,
+> +			   long val)
+> +{
+> +	struct ufs_hwmon_data *data = dev_get_drvdata(dev);
+> +	struct ufs_hba *hba = data->hba;
+> +	int err = 0;
+> +
+> +	if (attr != hwmon_temp_enable)
+> +		return -EINVAL;
+> +
+> +	if (val != 0 && val != 1)
+> +		return -EINVAL;
+> +
+> +	down(&hba->host_sem);
+> +
+> +	if (!ufshcd_is_user_access_allowed(hba)) {
+> +		up(&hba->host_sem);
+> +		return -EBUSY;
+> +	}
+> +
+> +	ufshcd_rpm_get_sync(hba);
+> +
+> +	if (val == 1)
+> +		err = ufshcd_update_ee_usr_mask(hba, MASK_EE_URGENT_TEMP, 0);
+> +	else
+> +		err = ufshcd_update_ee_usr_mask(hba, 0, MASK_EE_URGENT_TEMP);
+> +
+> +	ufshcd_rpm_put_sync(hba);
+> +
+> +	up(&hba->host_sem);
+> +
+> +	return err;
+> +}
+> +
+> +static umode_t ufs_hwmon_is_visible(const void *_data, enum hwmon_sensor_types type, u32 attr,
+> +				    int channel)
+> +{
+> +	if (type != hwmon_temp)
+> +		return 0;
+> +
+> +	switch (attr) {
+> +	case hwmon_temp_enable:
+> +		return 0644;
+> +	case hwmon_temp_crit:
+> +	case hwmon_temp_lcrit:
+> +	case hwmon_temp_input:
+> +		return 0444;
+> +	default:
+> +		break;
+> +	}
+> +	return 0;
+> +}
+> +
+> +static const struct hwmon_channel_info *ufs_hwmon_info[] = {
+> +	HWMON_CHANNEL_INFO(temp, HWMON_T_ENABLE | HWMON_T_INPUT | HWMON_T_CRIT | HWMON_T_LCRIT),
+> +	NULL
+> +};
+> +
+> +static const struct hwmon_ops ufs_hwmon_ops = {
+> +	.is_visible	= ufs_hwmon_is_visible,
+> +	.read		= ufs_hwmon_read,
+> +	.write		= ufs_hwmon_write,
+> +};
+> +
+> +static const struct hwmon_chip_info ufs_hwmon_hba_info = {
+> +	.ops	= &ufs_hwmon_ops,
+> +	.info	= ufs_hwmon_info,
+> +};
+> +
+> +void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask)
+> +{
+> +	struct device *dev = hba->dev;
+> +	struct ufs_hwmon_data *data;
+> +	struct device *hwmon;
+> +
+> +	data = kzalloc(sizeof(*data), GFP_KERNEL);
+> +	if (!data)
+> +		return;
+> +
+> +	data->hba = hba;
+> +	data->mask = mask;
+> +
+> +	hwmon = hwmon_device_register_with_info(dev, "ufs", data, &ufs_hwmon_hba_info, NULL);
+> +	if (IS_ERR(hwmon)) {
+> +		dev_warn(dev, "Failed to instantiate hwmon device\n");
+> +		kfree(data);
+> +		return;
+> +	}
+> +
+> +	hba->hwmon_device = hwmon;
+> +}
+> +
+> +void ufs_hwmon_remove(struct ufs_hba *hba)
+> +{
+> +	struct ufs_hwmon_data *data;
+> +
+> +	if (!hba->hwmon_device)
+> +		return;
+> +
+> +	data = dev_get_drvdata(hba->hwmon_device);
+> +	hwmon_device_unregister(hba->hwmon_device);
+> +	hba->hwmon_device = NULL;
+> +	kfree(data);
+> +}
+> diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+> index 8c6b38b1b142..0bfdca3e648e 100644
+> --- a/drivers/scsi/ufs/ufs.h
+> +++ b/drivers/scsi/ufs/ufs.h
+> @@ -152,6 +152,9 @@ enum attr_idn {
+>  	QUERY_ATTR_IDN_PSA_STATE		= 0x15,
+>  	QUERY_ATTR_IDN_PSA_DATA_SIZE		= 0x16,
+>  	QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME	= 0x17,
+> +	QUERY_ATTR_IDN_CASE_ROUGH_TEMP          = 0x18,
+> +	QUERY_ATTR_IDN_HIGH_TEMP_BOUND          = 0x19,
+> +	QUERY_ATTR_IDN_LOW_TEMP_BOUND           = 0x1A,
+>  	QUERY_ATTR_IDN_WB_FLUSH_STATUS	        = 0x1C,
+>  	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
+>  	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+> @@ -338,6 +341,9 @@ enum {
+>  
+>  /* Possible values for dExtendedUFSFeaturesSupport */
+>  enum {
+> +	UFS_DEV_LOW_TEMP_NOTIF		= BIT(4),
+> +	UFS_DEV_HIGH_TEMP_NOTIF		= BIT(5),
+> +	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
+>  	UFS_DEV_HPB_SUPPORT		= BIT(7),
+>  	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+>  };
+> @@ -370,6 +376,7 @@ enum {
+>  	MASK_EE_WRITEBOOSTER_EVENT	= BIT(5),
+>  	MASK_EE_PERFORMANCE_THROTTLING	= BIT(6),
+>  };
+> +#define MASK_EE_URGENT_TEMP (MASK_EE_TOO_HIGH_TEMP | MASK_EE_TOO_LOW_TEMP)
+>  
+>  /* Background operation status */
+>  enum bkops_status {
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 3841ab49f556..ce22340024ce 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7469,6 +7469,29 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+>  	hba->caps &= ~UFSHCD_CAP_WB_EN;
+>  }
+>  
+> +static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
+> +{
+> +	struct ufs_dev_info *dev_info = &hba->dev_info;
+> +	u32 ext_ufs_feature;
+> +	u8 mask = 0;
+> +
+> +	if (!(hba->caps & UFSHCD_CAP_TEMP_NOTIF) || dev_info->wspecversion < 0x300)
+> +		return;
+> +
+> +	ext_ufs_feature = get_unaligned_be32(desc_buf + DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
+> +
+> +	if (ext_ufs_feature & UFS_DEV_LOW_TEMP_NOTIF)
+> +		mask |= MASK_EE_TOO_LOW_TEMP;
+> +
+> +	if (ext_ufs_feature & UFS_DEV_HIGH_TEMP_NOTIF)
+> +		mask |= MASK_EE_TOO_HIGH_TEMP;
+> +
+> +	if (mask) {
+> +		ufshcd_enable_ee(hba, mask);
+> +		ufs_hwmon_probe(hba, mask);
+> +	}
+> +}
+> +
+>  void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups)
+>  {
+>  	struct ufs_dev_fix *f;
+> @@ -7564,6 +7587,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+>  
+>  	ufshcd_wb_probe(hba, desc_buf);
+>  
+> +	ufshcd_temp_notif_probe(hba, desc_buf);
+> +
+>  	/*
+>  	 * ufshcd_read_string_desc returns size of the string
+>  	 * reset the error value
+> @@ -9408,6 +9433,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+>  {
+>  	if (hba->sdev_ufs_device)
+>  		ufshcd_rpm_get_sync(hba);
+> +	ufs_hwmon_remove(hba);
+>  	ufs_bsg_remove(hba);
+>  	ufshpb_remove(hba);
+>  	ufs_sysfs_remove_nodes(hba->dev);
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 52ea6f350b18..021c858955af 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -653,6 +653,12 @@ enum ufshcd_caps {
+>  	 * in order to exit DeepSleep state.
+>  	 */
+>  	UFSHCD_CAP_DEEPSLEEP				= 1 << 10,
+> +
+> +	/*
+> +	 * This capability allows the host controller driver to use temperature
+> +	 * notification if it is supported by the UFS device.
+> +	 */
+> +	UFSHCD_CAP_TEMP_NOTIF				= 1 << 11,
+>  };
+>  
+>  struct ufs_hba_variant_params {
+> @@ -789,6 +795,10 @@ struct ufs_hba {
+>  	struct scsi_device *sdev_ufs_device;
+>  	struct scsi_device *sdev_rpmb;
+>  
+> +#ifdef CONFIG_SCSI_UFS_HWMON
+> +	struct device *hwmon_device;
+> +#endif
+> +
+>  	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
+>  	enum uic_link_state uic_link_state;
+>  	/* Desired UFS power management level during runtime PM */
+> @@ -1049,6 +1059,14 @@ static inline u8 ufshcd_wb_get_query_index(struct ufs_hba *hba)
+>  	return 0;
+>  }
+>  
+> +#ifdef CONFIG_SCSI_UFS_HWMON
+> +void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask);
+> +void ufs_hwmon_remove(struct ufs_hba *hba);
+> +#else
+> +static inline void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask) {}
+> +static inline void ufs_hwmon_remove(struct ufs_hba *hba) {}
+> +#endif
+> +
+>  #ifdef CONFIG_PM
+>  extern int ufshcd_runtime_suspend(struct device *dev);
+>  extern int ufshcd_runtime_resume(struct device *dev);
+> -- 
+> 2.17.1
 > 
