@@ -2,41 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-13.9 required=3.0 tests=BAYES_00,
+X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNWANTED_LANGUAGE_BODY,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 61CDDC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:42:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05705C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:42:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 455A760EB4
+	by mail.kernel.org (Postfix) with ESMTP id DBD1560FED
 	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:42:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233277AbhIOWnf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S232951AbhIOWnf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Wed, 15 Sep 2021 18:43:35 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:36525 "EHLO smtp.infotech.no"
+Received: from smtp.infotech.no ([82.134.31.41]:36534 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S233259AbhIOWmu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Sep 2021 18:42:50 -0400
+        id S233262AbhIOWmv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Sep 2021 18:42:51 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 78BE1204245;
-        Thu, 16 Sep 2021 00:33:20 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 549DB20425A;
+        Thu, 16 Sep 2021 00:33:31 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id x2z-X0QPnQir; Thu, 16 Sep 2021 00:33:17 +0200 (CEST)
+        with ESMTP id oDh0tNt2Wjiw; Thu, 16 Sep 2021 00:33:29 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-78-207-107.dyn.295.ca [45.78.207.107])
-        by smtp.infotech.no (Postfix) with ESMTPA id 5E6C82041AC;
-        Thu, 16 Sep 2021 00:33:12 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 26AE3204201;
+        Thu, 16 Sep 2021 00:33:24 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        Damien.LeMoal@wdc.com, kernel test robot <lkp@intel.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH v20 12/46] sg: ioctl handling
-Date:   Wed, 15 Sep 2021 18:32:31 -0400
-Message-Id: <20210915223305.256429-13-dgilbert@interlog.com>
+        Damien.LeMoal@wdc.com
+Subject: [PATCH v20 22/46] sg: printk change %p to %pK
+Date:   Wed, 15 Sep 2021 18:32:41 -0400
+Message-Id: <20210915223305.256429-23-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210915223305.256429-1-dgilbert@interlog.com>
 References: <20210915223305.256429-1-dgilbert@interlog.com>
@@ -46,460 +45,156 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Shorten sg_ioctl() by adding some helper functions. sg_ioctl()
-is the main entry point for ioctls used on this driver's
-devices.
+This driver does a lot of buffer juggling in an attempt to
+take some of that chore away from its users. When debugging
+problems associated with that buffer juggling getting
+sensible pointer values is a major aid. So change %p
+to %pK. The system administrator can choose to obfuscate
+%pK pointers. The "pK" is also easier to search for in the
+code if further changes are required.
 
-Treat short copy to user space in sg_ctl_req_tbl() as -EFAULT
-after report from test robot. This makes it consistent with
-handling of all other copy_to_user/copy_from_user functions
-in the driver.
-
-Reported-by: kernel test robot <lkp@intel.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c | 325 ++++++++++++++++++++++++++++------------------
- 1 file changed, 197 insertions(+), 128 deletions(-)
+ drivers/scsi/sg.c | 30 +++++++++++++++---------------
+ 1 file changed, 15 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 3619d6bf970f..0fbe20ef21ad 100644
+index a5ad7db00bbc..4d80d5eb393e 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -1021,6 +1021,56 @@ sg_fill_request_table(struct sg_fd *sfp, struct sg_req_info *rinfo)
+@@ -909,7 +909,7 @@ sg_receive_v3(struct sg_fd *sfp, struct sg_request *srp, size_t count,
+ 		err = -EINVAL;
+ 		goto err_out;
  	}
- }
+-	SG_LOG(3, sfp, "%s: srp=0x%p\n", __func__, srp);
++	SG_LOG(3, sfp, "%s: srp=0x%pK\n", __func__, srp);
+ 	err = sg_rec_state_v3(sfp, srp);
+ 	if (hp->masked_status || hp->host_status || hp->driver_status)
+ 		hp->info |= SG_INFO_CHECK;
+@@ -1672,7 +1672,7 @@ sg_mmap(struct file *filp, struct vm_area_struct *vma)
+ 		return -ENXIO;
+ 	}
+ 	req_sz = vma->vm_end - vma->vm_start;
+-	SG_LOG(3, sfp, "%s: vm_start=%p, len=%d\n", __func__,
++	SG_LOG(3, sfp, "%s: vm_start=%pK, len=%d\n", __func__,
+ 	       (void *)vma->vm_start, (int)req_sz);
+ 	if (vma->vm_pgoff)
+ 		return -EINVAL; /* only an offset of 0 accepted */
+@@ -1720,7 +1720,7 @@ sg_rq_end_io_usercontext(struct work_struct *work)
+ 		WARN_ONCE(1, "%s: sfp unexpectedly NULL\n", __func__);
+ 		return;
+ 	}
+-	SG_LOG(3, sfp, "%s: srp=0x%p\n", __func__, srp);
++	SG_LOG(3, sfp, "%s: srp=0x%pK\n", __func__, srp);
+ 	sg_finish_scsi_blk_rq(srp);
+ 	sg_deact_request(sfp, srp);
+ 	kref_put(&sfp->f_ref, sg_remove_sfp);
+@@ -1891,7 +1891,7 @@ sg_add_device_helper(struct scsi_device *scsidp)
+ 	k = error;
  
-+/*
-+ * Handles ioctl(SG_IO) for blocking (sync) usage of v3 or v4 interface.
-+ * Returns 0 on success else a negated errno.
-+ */
-+static int
-+sg_ctl_sg_io(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
-+	     void __user *p)
-+{
-+	bool read_only = O_RDWR != (filp->f_flags & O_ACCMODE);
-+	int res;
-+	struct sg_request *srp;
-+
-+	res = sg_allow_if_err_recovery(sdp, false);
-+	if (res)
-+		return res;
-+	res = sg_submit(sfp, filp, p, SZ_SG_IO_HDR, true, read_only,
-+			true, &srp);
-+	if (res < 0)
-+		return res;
-+	res = wait_event_interruptible
-+		(sfp->read_wait, (srp_done(sfp, srp) || SG_IS_DETACHING(sdp)));
-+	if (SG_IS_DETACHING(sdp))
-+		return -ENODEV;
-+	spin_lock_irq(&sfp->rq_list_lock);
-+	if (srp->done) {
-+		srp->done = 2;
-+		spin_unlock_irq(&sfp->rq_list_lock);
-+		res = sg_new_read(sfp, p, SZ_SG_IO_HDR, srp);
-+		return (res < 0) ? res : 0;
-+	}
-+	srp->orphan = 1;
-+	spin_unlock_irq(&sfp->rq_list_lock);
-+	return res;	/* -ERESTARTSYS because signal hit process */
-+}
-+
-+static int
-+sg_set_reserved_sz(struct sg_fd *sfp, int want_rsv_sz)
-+{
-+	if (want_rsv_sz != sfp->reserve.buflen) {
-+		if (sfp->mmap_called ||
-+		    sfp->res_in_use) {
-+			return -EBUSY;
-+		}
-+
-+		sg_remove_scat(sfp, &sfp->reserve);
-+		sg_build_reserve(sfp, want_rsv_sz);
-+	}
-+	return 0;
-+}
-+
- #ifdef CONFIG_COMPAT
- struct compat_sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
- 	char req_state;
-@@ -1048,148 +1098,180 @@ static int put_compat_request_table(struct compat_sg_req_info __user *o,
- }
- #endif
+ 	SCSI_LOG_TIMEOUT(3, sdev_printk(KERN_INFO, scsidp,
+-			"%s: dev=%d, sdp=0x%p ++\n", __func__, k, sdp));
++			"%s: dev=%d, sdp=0x%pK ++\n", __func__, k, sdp));
+ 	sprintf(sdp->name, "sg%d", k);
+ 	sdp->device = scsidp;
+ 	mutex_init(&sdp->open_rel_lock);
+@@ -1990,7 +1990,7 @@ sg_device_destroy(struct kref *kref)
+ 	struct sg_device *sdp = container_of(kref, struct sg_device, d_ref);
+ 	unsigned long flags;
  
-+static int
-+sg_ctl_req_tbl(struct sg_fd *sfp, void __user *p)
-+{
-+	int result;
-+	unsigned long iflags;
-+	sg_req_info_t *rinfo;
-+
-+	rinfo = kcalloc(SG_MAX_QUEUE, SZ_SG_REQ_INFO,
-+			GFP_KERNEL);
-+	if (!rinfo)
-+		return -ENOMEM;
-+	spin_lock_irqsave(&sfp->rq_list_lock, iflags);
-+	sg_fill_request_table(sfp, rinfo);
-+	spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
-+#ifdef CONFIG_COMPAT
-+	if (in_compat_syscall())
-+		result = put_compat_request_table(p, rinfo);
-+	else
-+		result = copy_to_user(p, rinfo,
-+				      SZ_SG_REQ_INFO * SG_MAX_QUEUE);
-+#else
-+	result = copy_to_user(p, rinfo,
-+			      SZ_SG_REQ_INFO * SG_MAX_QUEUE);
-+#endif
-+	kfree(rinfo);
-+	return result > 0 ? -EFAULT : result;	/* treat short copy as error */
-+}
-+
-+static int
-+sg_ctl_scsi_id(struct scsi_device *sdev, struct sg_fd *sfp, void __user *p)
-+{
-+	struct sg_scsi_id ss_id;
-+
-+	SG_LOG(3, sfp, "%s:    SG_GET_SCSI_ID\n", __func__);
-+	ss_id.host_no = sdev->host->host_no;
-+	ss_id.channel = sdev->channel;
-+	ss_id.scsi_id = sdev->id;
-+	ss_id.lun = sdev->lun;
-+	ss_id.scsi_type = sdev->type;
-+	ss_id.h_cmd_per_lun = sdev->host->cmd_per_lun;
-+	ss_id.d_queue_depth = sdev->queue_depth;
-+	ss_id.unused[0] = 0;
-+	ss_id.unused[1] = 0;
-+	if (copy_to_user(p, &ss_id, sizeof(struct sg_scsi_id)))
-+		return -EFAULT;
-+	return 0;
-+}
-+
- static long
- sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 		unsigned int cmd_in, void __user *p)
- {
-+	bool read_only = O_RDWR != (filp->f_flags & O_ACCMODE);
-+	int val;
-+	int result = 0;
- 	int __user *ip = p;
--	int result, val, read_only;
- 	struct sg_request *srp;
-+	struct scsi_device *sdev;
- 	unsigned long iflags;
-+	__maybe_unused const char *pmlp = ", pass to mid-level";
+-	SCSI_LOG_TIMEOUT(1, pr_info("[tid=%d] %s: sdp idx=%d, sdp=0x%p --\n",
++	SCSI_LOG_TIMEOUT(1, pr_info("[tid=%d] %s: sdp idx=%d, sdp=0x%pK --\n",
+ 				    (current ? current->pid : -1), __func__,
+ 				    sdp->index, sdp));
+ 	/*
+@@ -2021,7 +2021,7 @@ sg_remove_device(struct device *cl_dev, struct class_interface *cl_intf)
+ 		return; /* only want to do following once per device */
  
- 	SG_LOG(6, sfp, "%s: cmd=0x%x, O_NONBLOCK=%d\n", __func__, cmd_in,
- 	       !!(filp->f_flags & O_NONBLOCK));
--	read_only = (O_RDWR != (filp->f_flags & O_ACCMODE));
-+	if (unlikely(SG_IS_DETACHING(sdp)))
-+		return -ENODEV;
-+	sdev = sdp->device;
+ 	SCSI_LOG_TIMEOUT(3, sdev_printk(KERN_INFO, sdp->device,
+-					"%s: 0x%p\n", __func__, sdp));
++					"%s: 0x%pK\n", __func__, sdp));
  
- 	switch (cmd_in) {
- 	case SG_IO:
--		result = sg_allow_if_err_recovery(sdp, false);
--		if (result)
--			return result;
--		result = sg_submit(sfp, filp, p, SZ_SG_IO_HDR, true, read_only,
--				   true, &srp);
--		if (result < 0)
--			return result;
--		result = wait_event_interruptible(sfp->read_wait,
--			(srp_done(sfp, srp) || SG_IS_DETACHING(sdp)));
--		if (SG_IS_DETACHING(sdp))
--			return -ENODEV;
--		spin_lock_irq(&sfp->rq_list_lock);
--		if (srp->done) {
--			srp->done = 2;
--			spin_unlock_irq(&sfp->rq_list_lock);
--			result = sg_new_read(sfp, p, SZ_SG_IO_HDR, srp);
--			return (result < 0) ? result : 0;
--		}
--		srp->orphan = 1;
--		spin_unlock_irq(&sfp->rq_list_lock);
--		return result;	/* -ERESTARTSYS because signal hit process */
--	case SG_SET_TIMEOUT:
--		result = get_user(val, ip);
--		if (result)
--			return result;
--		if (val < 0)
--			return -EIO;
--		if (val >= mult_frac((s64)INT_MAX, USER_HZ, HZ))
--			val = min_t(s64, mult_frac((s64)INT_MAX, USER_HZ, HZ),
--				    INT_MAX);
--		sfp->timeout_user = val;
--		sfp->timeout = mult_frac(val, HZ, USER_HZ);
--
--		return 0;
--	case SG_GET_TIMEOUT:	/* N.B. User receives timeout as return value */
--				/* strange ..., for backward compatibility */
--		return sfp->timeout_user;
--	case SG_SET_FORCE_LOW_DMA:
--		/*
--		 * N.B. This ioctl never worked properly, but failed to
--		 * return an error value. So returning '0' to keep compability
--		 * with legacy applications.
--		 */
--		return 0;
--	case SG_GET_LOW_DMA:
--		return put_user(0, ip);
-+		return sg_ctl_sg_io(filp, sdp, sfp, p);
- 	case SG_GET_SCSI_ID:
--		{
--			sg_scsi_id_t v;
--
--			if (SG_IS_DETACHING(sdp))
--				return -ENODEV;
--			memset(&v, 0, sizeof(v));
--			v.host_no = sdp->device->host->host_no;
--			v.channel = sdp->device->channel;
--			v.scsi_id = sdp->device->id;
--			v.lun = sdp->device->lun;
--			v.scsi_type = sdp->device->type;
--			v.h_cmd_per_lun = sdp->device->host->cmd_per_lun;
--			v.d_queue_depth = sdp->device->queue_depth;
--			if (copy_to_user(p, &v, sizeof(sg_scsi_id_t)))
--				return -EFAULT;
--			return 0;
--		}
-+		return sg_ctl_scsi_id(sdev, sfp, p);
- 	case SG_SET_FORCE_PACK_ID:
-+		SG_LOG(3, sfp, "%s:    SG_SET_FORCE_PACK_ID\n", __func__);
- 		result = get_user(val, ip);
- 		if (result)
- 			return result;
- 		sfp->force_packid = val ? 1 : 0;
- 		return 0;
- 	case SG_GET_PACK_ID:
-+		val = -1;
- 		spin_lock_irqsave(&sfp->rq_list_lock, iflags);
- 		list_for_each_entry(srp, &sfp->rq_list, entry) {
- 			if ((1 == srp->done) && (!srp->sg_io_owned)) {
--				spin_unlock_irqrestore(&sfp->rq_list_lock,
--						       iflags);
--				return put_user(srp->header.pack_id, ip);
-+				val = srp->header.pack_id;
-+				break;
- 			}
- 		}
- 		spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
--		return put_user(-1, ip);
-+		SG_LOG(3, sfp, "%s:    SG_GET_PACK_ID=%d\n", __func__, val);
-+		return put_user(val, ip);
- 	case SG_GET_NUM_WAITING:
- 		return put_user(atomic_read(&sfp->waiting), ip);
- 	case SG_GET_SG_TABLESIZE:
-+		SG_LOG(3, sfp, "%s:    SG_GET_SG_TABLESIZE=%d\n", __func__,
-+		       sdp->max_sgat_sz);
- 		return put_user(sdp->max_sgat_sz, ip);
- 	case SG_SET_RESERVED_SIZE:
--		result = get_user(val, ip);
--		if (result)
--			return result;
--                if (val < 0)
--                        return -EINVAL;
--		val = min_t(int, val,
--			    max_sectors_bytes(sdp->device->request_queue));
- 		mutex_lock(&sfp->f_mutex);
--		if (val != sfp->reserve.buflen) {
--			if (sfp->mmap_called ||
--			    sfp->res_in_use) {
--				mutex_unlock(&sfp->f_mutex);
--				return -EBUSY;
-+		result = get_user(val, ip);
-+		if (!result) {
-+			if (val >= 0 && val <= (1024 * 1024 * 1024)) {
-+				result = sg_set_reserved_sz(sfp, val);
-+			} else {
-+				SG_LOG(3, sfp, "%s: invalid size\n", __func__);
-+				result = -EINVAL;
- 			}
--
--			sg_remove_scat(sfp, &sfp->reserve);
--			sg_build_reserve(sfp, val);
- 		}
- 		mutex_unlock(&sfp->f_mutex);
--		return 0;
-+		return result;
- 	case SG_GET_RESERVED_SIZE:
- 		val = min_t(int, sfp->reserve.buflen,
--			    max_sectors_bytes(sdp->device->request_queue));
-+			    max_sectors_bytes(sdev->request_queue));
-+		SG_LOG(3, sfp, "%s:    SG_GET_RESERVED_SIZE=%d\n",
-+		       __func__, val);
- 		return put_user(val, ip);
- 	case SG_SET_COMMAND_Q:
-+		SG_LOG(3, sfp, "%s:    SG_SET_COMMAND_Q\n", __func__);
- 		result = get_user(val, ip);
- 		if (result)
- 			return result;
- 		sfp->cmd_q = val ? 1 : 0;
- 		return 0;
- 	case SG_GET_COMMAND_Q:
-+		SG_LOG(3, sfp, "%s:    SG_GET_COMMAND_Q\n", __func__);
- 		return put_user((int) sfp->cmd_q, ip);
- 	case SG_SET_KEEP_ORPHAN:
-+		SG_LOG(3, sfp, "%s:    SG_SET_KEEP_ORPHAN\n", __func__);
- 		result = get_user(val, ip);
- 		if (result)
- 			return result;
- 		sfp->keep_orphan = val;
- 		return 0;
- 	case SG_GET_KEEP_ORPHAN:
-+		SG_LOG(3, sfp, "%s:    SG_GET_KEEP_ORPHAN\n", __func__);
- 		return put_user((int) sfp->keep_orphan, ip);
-+	case SG_GET_VERSION_NUM:
-+		SG_LOG(3, sfp, "%s:    SG_GET_VERSION_NUM\n", __func__);
-+		return put_user(sg_version_num, ip);
-+	case SG_GET_REQUEST_TABLE:
-+		return sg_ctl_req_tbl(sfp, p);
-+	case SG_SCSI_RESET:
-+		SG_LOG(3, sfp, "%s:    SG_SCSI_RESET\n", __func__);
-+		break;
-+	case SG_SET_TIMEOUT:
-+		SG_LOG(3, sfp, "%s:    SG_SET_TIMEOUT\n", __func__);
-+		result = get_user(val, ip);
-+		if (result)
-+			return result;
-+		if (val < 0)
-+			return -EIO;
-+		if (val >= mult_frac((s64)INT_MAX, USER_HZ, HZ))
-+			val = min_t(s64, mult_frac((s64)INT_MAX, USER_HZ, HZ),
-+				    INT_MAX);
-+		sfp->timeout_user = val;
-+		sfp->timeout = mult_frac(val, HZ, USER_HZ);
-+		return 0;
-+	case SG_GET_TIMEOUT:    /* N.B. User receives timeout as return value */
-+				/* strange ..., for backward compatibility */
-+		SG_LOG(3, sfp, "%s:    SG_GET_TIMEOUT\n", __func__);
-+		return sfp->timeout_user;
-+	case SG_SET_FORCE_LOW_DMA:
-+		/*
-+		 * N.B. This ioctl never worked properly, but failed to
-+		 * return an error value. So returning '0' to keep
-+		 * compatibility with legacy applications.
-+		 */
-+		SG_LOG(3, sfp, "%s:    SG_SET_FORCE_LOW_DMA\n", __func__);
-+		return 0;
-+	case SG_GET_LOW_DMA:
-+		SG_LOG(3, sfp, "%s:    SG_GET_LOW_DMA\n", __func__);
-+		return put_user(0, ip);
- 	case SG_NEXT_CMD_LEN:
-+		SG_LOG(3, sfp, "%s:    SG_NEXT_CMD_LEN\n", __func__);
- 		result = get_user(val, ip);
- 		if (result)
- 			return result;
-@@ -1197,79 +1279,66 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 	read_lock_irqsave(&sdp->sfd_lock, iflags);
+ 	list_for_each_entry(sfp, &sdp->sfds, sfd_entry) {
+@@ -2149,7 +2149,7 @@ sg_start_req(struct sg_request *srp, u8 *cmd)
+ 		long_cmdp = kzalloc(hp->cmd_len, GFP_KERNEL);
+ 		if (!long_cmdp)
  			return -ENOMEM;
- 		sfp->next_cmd_len = (val > 0) ? val : 0;
- 		return 0;
--	case SG_GET_VERSION_NUM:
--		return put_user(sg_version_num, ip);
- 	case SG_GET_ACCESS_COUNT:
-+		SG_LOG(3, sfp, "%s:    SG_GET_ACCESS_COUNT\n", __func__);
- 		/* faked - we don't have a real access count anymore */
--		val = (sdp->device ? 1 : 0);
-+		val = (sdev ? 1 : 0);
- 		return put_user(val, ip);
--	case SG_GET_REQUEST_TABLE:
--		{
--			sg_req_info_t *rinfo;
--
--			rinfo = kcalloc(SG_MAX_QUEUE, SZ_SG_REQ_INFO,
--					GFP_KERNEL);
--			if (!rinfo)
--				return -ENOMEM;
--			spin_lock_irqsave(&sfp->rq_list_lock, iflags);
--			sg_fill_request_table(sfp, rinfo);
--			spin_unlock_irqrestore(&sfp->rq_list_lock, iflags);
--	#ifdef CONFIG_COMPAT
--			if (in_compat_syscall())
--				result = put_compat_request_table(p, rinfo);
--			else
--	#endif
--				result = copy_to_user(p, rinfo,
--						      SZ_SG_REQ_INFO * SG_MAX_QUEUE);
--			result = result ? -EFAULT : 0;
--			kfree(rinfo);
--			return result;
--		}
- 	case SG_EMULATED_HOST:
--		if (SG_IS_DETACHING(sdp))
--			return -ENODEV;
--		return put_user(sdp->device->host->hostt->emulated, ip);
-+		SG_LOG(3, sfp, "%s:    SG_EMULATED_HOST\n", __func__);
-+		return put_user(sdev->host->hostt->emulated, ip);
- 	case SCSI_IOCTL_SEND_COMMAND:
--		if (SG_IS_DETACHING(sdp))
--			return -ENODEV;
-+		SG_LOG(3, sfp, "%s:    SCSI_IOCTL_SEND_COMMAND\n", __func__);
- 		return scsi_ioctl(sdp->device, NULL, filp->f_mode, cmd_in, p);
- 	case SG_SET_DEBUG:
-+		SG_LOG(3, sfp, "%s:    SG_SET_DEBUG\n", __func__);
- 		result = get_user(val, ip);
- 		if (result)
- 			return result;
- 		assign_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm, val);
- 		return 0;
- 	case BLKSECTGET:
--		return put_user(max_sectors_bytes(sdp->device->request_queue),
--				ip);
-+		SG_LOG(3, sfp, "%s:    BLKSECTGET\n", __func__);
-+		return put_user(max_sectors_bytes(sdev->request_queue), ip);
- 	case BLKTRACESETUP:
--		return blk_trace_setup(sdp->device->request_queue, sdp->name,
-+		SG_LOG(3, sfp, "%s:    BLKTRACESETUP\n", __func__);
-+		return blk_trace_setup(sdev->request_queue, sdp->name,
- 				       MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
- 				       NULL, p);
- 	case BLKTRACESTART:
--		return blk_trace_startstop(sdp->device->request_queue, 1);
-+		SG_LOG(3, sfp, "%s:    BLKTRACESTART\n", __func__);
-+		return blk_trace_startstop(sdev->request_queue, 1);
- 	case BLKTRACESTOP:
--		return blk_trace_startstop(sdp->device->request_queue, 0);
-+		SG_LOG(3, sfp, "%s:    BLKTRACESTOP\n", __func__);
-+		return blk_trace_startstop(sdev->request_queue, 0);
- 	case BLKTRACETEARDOWN:
--		return blk_trace_remove(sdp->device->request_queue);
-+		SG_LOG(3, sfp, "%s:    BLKTRACETEARDOWN\n", __func__);
-+		return blk_trace_remove(sdev->request_queue);
- 	case SCSI_IOCTL_GET_IDLUN:
-+		SG_LOG(3, sfp, "%s:    SCSI_IOCTL_GET_IDLUN %s\n", __func__,
-+		       pmlp);
-+		break;
- 	case SCSI_IOCTL_GET_BUS_NUMBER:
-+		SG_LOG(3, sfp, "%s:    SCSI_IOCTL_GET_BUS_NUMBER%s\n",
-+		       __func__, pmlp);
-+		break;
- 	case SCSI_IOCTL_PROBE_HOST:
-+		SG_LOG(3, sfp, "%s:    SCSI_IOCTL_PROBE_HOST%s",
-+		       __func__, pmlp);
-+		break;
- 	case SG_GET_TRANSFORM:
--	case SG_SCSI_RESET:
--		if (SG_IS_DETACHING(sdp))
--			return -ENODEV;
-+		SG_LOG(3, sfp, "%s:    SG_GET_TRANSFORM%s\n", __func__, pmlp);
- 		break;
- 	default:
-+		SG_LOG(3, sfp, "%s:    unrecognized ioctl [0x%x]%s\n",
-+		       __func__, cmd_in, pmlp);
- 		if (read_only)
--			return -EPERM;	/* don't know so take safe approach */
-+			return -EPERM;	/* don't know, so take safer approach */
- 		break;
+-		SG_LOG(5, sfp, "%s: long_cmdp=0x%p ++\n", __func__, long_cmdp);
++		SG_LOG(5, sfp, "%s: long_cmdp=0x%pK ++\n", __func__, long_cmdp);
  	}
--
- 	result = sg_allow_if_err_recovery(sdp, filp->f_flags & O_NDELAY);
- 	if (result)
- 		return result;
--
- 	return -ENOIOCTLCMD;
+ 	SG_LOG(4, sfp, "%s: dxfer_len=%d, data-%s\n", __func__, dxfer_len,
+ 	       (r0w ? "OUT" : "IN"));
+@@ -2256,7 +2256,7 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
+ 	struct sg_fd *sfp = srp->parentfp;
+ 	struct sg_scatter_hold *req_schp = &srp->data;
+ 
+-	SG_LOG(4, sfp, "%s: srp=0x%p%s\n", __func__, srp,
++	SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
+ 	       (srp->res_used) ? " rsv" : "");
+ 	if (!srp->sg_io_owned) {
+ 		atomic_dec(&sfp->submitted);
+@@ -2300,7 +2300,7 @@ sg_mk_sgat(struct sg_scatter_hold *schp, struct sg_fd *sfp, int minlen)
+ 	align_sz = ALIGN(minlen, SG_DEF_SECTOR_SZ);
+ 
+ 	schp->pages = kcalloc(mx_sgat_elems, ptr_sz, mask_kz);
+-	SG_LOG(4, sfp, "%s: minlen=%d, align_sz=%d [sz=%zu, 0x%p ++]\n",
++	SG_LOG(4, sfp, "%s: minlen=%d, align_sz=%d [sz=%zu, 0x%pK ++]\n",
+ 	       __func__, minlen, align_sz, mx_sgat_elems * ptr_sz,
+ 	       schp->pages);
+ 	if (unlikely(!schp->pages))
+@@ -2315,7 +2315,7 @@ sg_mk_sgat(struct sg_scatter_hold *schp, struct sg_fd *sfp, int minlen)
+ 		schp->pages[k] = alloc_pages(mask_ap, order);
+ 		if (!schp->pages[k])
+ 			goto err_out;
+-		SG_LOG(5, sfp, "%s: k=%d, order=%d [0x%p ++]\n", __func__, k,
++		SG_LOG(5, sfp, "%s: k=%d, order=%d [0x%pK ++]\n", __func__, k,
+ 		       order, schp->pages[k]);
+ 	}
+ 	schp->page_order = order;
+@@ -2351,12 +2351,12 @@ sg_remove_sgat_helper(struct sg_fd *sfp, struct sg_scatter_hold *schp)
+ 		return;
+ 	for (k = 0; k < schp->num_sgat; ++k) {
+ 		p = schp->pages[k];
+-		SG_LOG(5, sfp, "%s: pg[%d]=0x%p --\n", __func__, k, p);
++		SG_LOG(5, sfp, "%s: pg[%d]=0x%pK --\n", __func__, k, p);
+ 		if (unlikely(!p))
+ 			continue;
+ 		__free_pages(p, schp->page_order);
+ 	}
+-	SG_LOG(5, sfp, "%s: pg_order=%u, free pgs=0x%p --\n", __func__,
++	SG_LOG(5, sfp, "%s: pg_order=%u, free pgs=0x%pK --\n", __func__,
+ 	       schp->page_order, schp->pages);
+ 	kfree(schp->pages);
+ }
+@@ -2593,7 +2593,7 @@ sg_add_sfp(struct sg_device *sdp)
+ 	}
+ 	list_add_tail(&sfp->sfd_entry, &sdp->sfds);
+ 	write_unlock_irqrestore(&sdp->sfd_lock, iflags);
+-	SG_LOG(3, sfp, "%s: sfp=0x%p\n", __func__, sfp);
++	SG_LOG(3, sfp, "%s: sfp=0x%pK\n", __func__, sfp);
+ 	if (unlikely(sg_big_buff != def_reserved_size))
+ 		sg_big_buff = def_reserved_size;
+ 
+@@ -2603,7 +2603,7 @@ sg_add_sfp(struct sg_device *sdp)
+ 
+ 	kref_get(&sdp->d_ref);
+ 	__module_get(THIS_MODULE);
+-	SG_LOG(3, sfp, "%s: success, sfp=0x%p ++\n", __func__, sfp);
++	SG_LOG(3, sfp, "%s: success, sfp=0x%pK ++\n", __func__, sfp);
+ 	return sfp;
  }
  
+@@ -2646,7 +2646,7 @@ sg_remove_sfp_usercontext(struct work_struct *work)
+ 		sg_remove_sgat(sfp, &sfp->reserve);
+ 	}
+ 
+-	SG_LOG(6, sfp, "%s: sfp=0x%p\n", __func__, sfp);
++	SG_LOG(6, sfp, "%s: sfp=0x%pK\n", __func__, sfp);
+ 	kfree(sfp);
+ 
+ 	scsi_device_put(sdp->device);
 -- 
 2.25.1
 
