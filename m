@@ -2,102 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46240C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 09:05:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A50DBC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 09:12:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E74C61214
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 09:05:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78B4461242
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 09:12:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237090AbhIOJGk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Sep 2021 05:06:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41524 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233048AbhIOJGj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2021 05:06:39 -0400
-Received: from mail-ej1-x632.google.com (mail-ej1-x632.google.com [IPv6:2a00:1450:4864:20::632])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91E21C061574;
-        Wed, 15 Sep 2021 02:05:20 -0700 (PDT)
-Received: by mail-ej1-x632.google.com with SMTP id h9so4626814ejs.4;
-        Wed, 15 Sep 2021 02:05:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=message-id:subject:from:to:cc:date:in-reply-to:references
-         :user-agent:mime-version:content-transfer-encoding;
-        bh=Iis3hUZBleMeHSyqqQwPSDaCQ/5tJDwKa10qnLYQLTY=;
-        b=gQw4Pym82UXI2oxT1ys3emMSBqZsKAh4qnEqygjl914G3qc+SIQm9+PMqTK5QbhrWi
-         hnruBdSmK6u/JoRG8iIeUDfPJIpDNFh0rpAPwrR13MG+YtuhVol5XgMdOaCQCCZYrgJz
-         N2Kk7bEnPczRNCOZezcC6EO1fSlyefSvJvIx0N1tdXAl0qGNq0A0p/FJyl8Brb3+S1vX
-         FFyGjkw9baMIxF6wwn22euwr1MP7YrmaW1qQS2ed/i9Z9s5Im+26HYAcN5MtaHJ4Fuf8
-         DAY7GIdAUbUr9NN49IHA6x2zmbaj1A23jInCgXXhwhlXilvIPIlmSzuiCTHmTBahsTXK
-         kKiA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=Iis3hUZBleMeHSyqqQwPSDaCQ/5tJDwKa10qnLYQLTY=;
-        b=zqAtzki8sDRZFi74vI9Wl7qCthGpM3ibR0ookkj89YNoRAdsRhHiVpdkvqvIvzw0lz
-         c4JTjLPeOD8UwEW6xYml5dJGHwjNJ/h09OXNA0nDsduREiR4XWzCC1wjcDsqJPqBDUj4
-         x9DPBx7/CS4vy/yboPmBxAxBJVrKghPr2JGq5G0rV5KAAb4FU6b8yHQZWNW2g0fXhtM1
-         uKHW38R08ImJLN7gngAivtBbgxSnkpUtnF1ayQz3nIaht7yof4dJ+eD6YA0NcVOm0umx
-         7uOX69VjFL8/p+DA8FzSv+sxyXk4WOjNI1yGS4V7dPQveTaotAABPj7Lsun3DcIgr3Vz
-         pSsw==
-X-Gm-Message-State: AOAM532MOnsq/0QHry+MXjj/duJFFbBxS9GQ7z2VRhlqljxiwKUfUz9/
-        DyiTgMMi4GRFxPPBGUxNXaGTp592bC4=
-X-Google-Smtp-Source: ABdhPJxe2nx60/GV6MnkGMZj/bVriRYC3KXrUoiiLfeeA3ZNvElfFf+Mfs+SynCGIXAVac1SUxtQsQ==
-X-Received: by 2002:a17:906:1319:: with SMTP id w25mr24503538ejb.552.1631696719208;
-        Wed, 15 Sep 2021 02:05:19 -0700 (PDT)
-Received: from ubuntu-laptop ([165.225.203.49])
-        by smtp.googlemail.com with ESMTPSA id w3sm6529702edc.42.2021.09.15.02.05.18
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 15 Sep 2021 02:05:18 -0700 (PDT)
-Message-ID: <7455519e5772c8a5c6e09d055a8fdbd138aef588.camel@gmail.com>
-Subject: Re: [PATCH v7 2/2] scsi: ufs: Add temperature notification
- exception handling
-From:   Bean Huo <huobean@gmail.com>
-To:     Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Guenter Roeck <linux@roeck-us.net>
-Date:   Wed, 15 Sep 2021 11:05:17 +0200
-In-Reply-To: <20210915060407.40-3-avri.altman@wdc.com>
-References: <20210915060407.40-1-avri.altman@wdc.com>
-         <20210915060407.40-3-avri.altman@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.36.5-0ubuntu1 
+        id S237319AbhIOJNi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Sep 2021 05:13:38 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3810 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237170AbhIOJNe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2021 05:13:34 -0400
+Received: from fraeml711-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4H8ZDD3L38z6H7hQ;
+        Wed, 15 Sep 2021 17:09:48 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml711-chm.china.huawei.com (10.206.15.60) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Wed, 15 Sep 2021 11:12:12 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Wed, 15 Sep 2021 10:12:10 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <linux@armlinux.org.uk>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <hare@suse.de>
+CC:     <linux-arm-kernel@lists.infradead.org>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 0/3] scsi: remove last references to scsi_cmnd.tag
+Date:   Wed, 15 Sep 2021 17:07:12 +0800
+Message-ID: <1631696835-136198-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems704-chm.china.huawei.com (10.3.19.181) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-09-15 at 09:04 +0300, Avri Altman wrote:
-> The device may notify the host of an extreme temperature by using the
-> 
-> exception event mechanism. The exception can be raised when the
-> device’s
-> 
-> Tcase temperature is either too high or too low.
-> 
-> 
-> 
-> It is essentially up to the platform to decide what further actions
-> need
-> 
-> to be taken. leave a placeholder for a designated vop for that.
-> 
-> 
-> 
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
+This is v2 of Hannes' series to fix the build errors from removing
+scsi_cmnd.tag. Here is the original cover letter:
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+"with commit 4c7b6ea336c1 ("scsi: core: Remove scsi_cmnd.tag") drivers
+cannot reference the SCSI command tag anymore.
+Arguably these drivers would have stopped working since 2010 with
+the switch to block layer tags in SCSI anyway, so chances are no-one
+had been using tagging in these drivers.
+
+This patchset fixes up these usage; for fas216 we're just switching
+to use the appropriate wrapper.
+For acornscsi the tagged queue handling is removed altogether as it
+was broken in the first place, and no-one since the switch to git
+could be bothered to fix it.
+And the patchset has the nice side-effect that we can remove the
+scsi_device.current_tag field."
+
+AFAIK, only the arm rpc_defconfig build was broken.
+
+I dropped the scsi_cmd_to_tag() patch as it was not strictly necessary here
+and there was some doubt on its need.
+
+The "scsi: remove 'current_tag'" patch is not needed as a fix.
+
+Baseline is v5.15-rc1
+
+Hannes Reinecke (3):
+  fas216: kill scmd->tag
+  acornscsi: remove tagged queuing vestiges
+  scsi: remove 'current_tag'
+
+ drivers/scsi/arm/Kconfig     |  11 ----
+ drivers/scsi/arm/acornscsi.c | 103 ++++++++---------------------------
+ drivers/scsi/arm/fas216.c    |  31 +++--------
+ drivers/scsi/arm/queue.c     |   2 +-
+ include/scsi/scsi_device.h   |   1 -
+ 5 files changed, 31 insertions(+), 117 deletions(-)
+
+-- 
+2.26.2
 
