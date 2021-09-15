@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D565C433FE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2ED9C4332F
 	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 096F660F23
+	by mail.kernel.org (Postfix) with ESMTP id 8896E60F23
 	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233444AbhIOWnL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Sep 2021 18:43:11 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:36531 "EHLO smtp.infotech.no"
+        id S233144AbhIOWnM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Sep 2021 18:43:12 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:36542 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232907AbhIOWmi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Sep 2021 18:42:38 -0400
+        id S232918AbhIOWmj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Sep 2021 18:42:39 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 1F0542041E3;
-        Thu, 16 Sep 2021 00:33:56 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id 15A012041DC;
+        Thu, 16 Sep 2021 00:33:11 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id Vr3+SdG71GxY; Thu, 16 Sep 2021 00:33:53 +0200 (CEST)
+        with ESMTP id tFV4oP3BdyEJ; Thu, 16 Sep 2021 00:33:08 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-78-207-107.dyn.295.ca [45.78.207.107])
-        by smtp.infotech.no (Postfix) with ESMTPA id 4BF9B204297;
-        Thu, 16 Sep 2021 00:33:49 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id EEC1C2041CB;
+        Thu, 16 Sep 2021 00:33:03 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        Damien.LeMoal@wdc.com
-Subject: [PATCH v20 44/46] sg: add blk_poll support
-Date:   Wed, 15 Sep 2021 18:33:03 -0400
-Message-Id: <20210915223305.256429-45-dgilbert@interlog.com>
+        Damien.LeMoal@wdc.com, Hannes Reinecke <hare@suse.com>
+Subject: [PATCH v20 05/46] sg: bitops in sg_device
+Date:   Wed, 15 Sep 2021 18:32:24 -0400
+Message-Id: <20210915223305.256429-6-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210915223305.256429-1-dgilbert@interlog.com>
 References: <20210915223305.256429-1-dgilbert@interlog.com>
@@ -45,264 +45,355 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The support is added via the new SGV4_FLAG_HIPRI command flag which
-causes REQ_HIPRI to be set on the request. Before waiting on an
-inflight request, it is checked to see if it has SGV4_FLAG_HIPRI,
-and if so blk_poll() is called instead of the wait. In situations
-where only the file descriptor is known (e.g. sg_poll() and
-ioctl(SG_GET_NUM_WAITING)) all inflight requests associated with
-the file descriptor that have SGV4_FLAG_HIPRI set, have blk_poll()
-called on them.
+Introduce bitops in sg_device to replace an atomic, a bool and a
+char. That char (sgdebug) had been reduced to only two states.
+Add some associated macros to make the code a little clearer.
 
-It is important to know blk_execute_rq_nowait() has finished before
-sending blk_poll() on that request. The SG_RS_INFLIGHT state is set
-just before blk_execute_rq_nowait() is called so a new bit setting
-SG_FRQ_ISSUED has been added that is set just after that calls
-returns.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Note that the implementation of blk_poll() calls mq_poll() in the
-LLD associated with the request. Then for any request found to be
-ready, blk_poll() invokes the scsi_done() callback. When blk_poll()
-returns > 0 , sg_rq_end_io() may have been called on the given
-request. If so the given request will be in await_rcv state.
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c      | 111 ++++++++++++++++++++++++++++++++++++++---
- include/uapi/scsi/sg.h |   1 +
- 2 files changed, 106 insertions(+), 6 deletions(-)
+ drivers/scsi/sg.c | 104 +++++++++++++++++++++++-----------------------
+ 1 file changed, 53 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 6207546066e9..3b3af2e6a195 100644
+index 63c37ec98d6a..85552c4107ba 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -116,12 +116,14 @@ enum sg_rq_state {	/* N.B. sg_rq_state_arr assumes SG_RS_AWAIT_RCV==2 */
- #define SG_FRQ_RECEIVING	7	/* guard against multiple receivers */
- #define SG_FRQ_FOR_MMAP		8	/* request needs PAGE_SIZE elements */
- #define SG_FRQ_COUNT_ACTIVE	9	/* sfp->submitted + waiting active */
-+#define SG_FRQ_ISSUED		10	/* blk_execute_rq_nowait() finished */
+@@ -74,6 +74,11 @@ static char *sg_version_date = "20190606";
  
- /* Bit positions (flags) for sg_fd::ffd_bm bitmask follow */
- #define SG_FFD_FORCE_PACKID	0	/* receive only given pack_id/tag */
- #define SG_FFD_CMD_Q		1	/* clear: only 1 active req per fd */
- #define SG_FFD_KEEP_ORPHAN	2	/* policy for this fd */
--#define SG_FFD_Q_AT_TAIL	3	/* set: queue reqs at tail of blk q */
-+#define SG_FFD_HIPRI_SEEN	3	/* could have HIPRI requests active */
-+#define SG_FFD_Q_AT_TAIL	4	/* set: queue reqs at tail of blk q */
+ #define SG_DEFAULT_TIMEOUT mult_frac(SG_DEFAULT_TIMEOUT_USER, HZ, USER_HZ)
  
- /* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
- #define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
-@@ -210,6 +212,7 @@ struct sg_request {	/* active SCSI command or inactive request */
- 	int sense_len;		/* actual sense buffer length (data-in) */
- 	atomic_t rq_st;		/* request state, holds a enum sg_rq_state */
- 	u8 cmd_opcode;		/* first byte of SCSI cdb */
-+	blk_qc_t cookie;	/* ids 1 or more queues for blk_poll() */
- 	u64 start_ns;		/* starting point of command duration calc */
- 	unsigned long frq_bm[1];	/* see SG_FRQ_* defines above */
- 	u8 *sense_bp;		/* mempool alloc-ed sense buffer, as needed */
-@@ -300,6 +303,9 @@ static struct sg_device *sg_get_dev(int min_dev);
- static void sg_device_destroy(struct kref *kref);
- static struct sg_request *sg_mk_srp_sgat(struct sg_fd *sfp, bool first,
- 					 int db_len);
-+static int sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count);
-+static int sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q,
-+			     int loop_count);
- #if IS_ENABLED(CONFIG_SCSI_LOGGING) && IS_ENABLED(SG_DEBUG)
- static const char *sg_rq_st_str(enum sg_rq_state rq_st, bool long_str);
- #endif
-@@ -1008,6 +1014,7 @@ static void
- sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
- {
- 	bool at_head, is_v4h, sync;
-+	struct request *rqq = READ_ONCE(srp->rqq);
- 
- 	is_v4h = test_bit(SG_FRQ_IS_V4I, srp->frq_bm);
- 	sync = test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm);
-@@ -1031,7 +1038,18 @@ sg_execute_cmd(struct sg_fd *sfp, struct sg_request *srp)
- 		atomic_inc(&sfp->submitted);
- 		set_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm);
- 	}
--	blk_execute_rq_nowait(NULL, READ_ONCE(srp->rqq), (int)at_head, sg_rq_end_io);
-+	if (srp->rq_flags & SGV4_FLAG_HIPRI) {
-+		if (test_bit(QUEUE_FLAG_POLL, &rqq->q->queue_flags)) {
-+			set_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
-+			rqq->cmd_flags |= REQ_HIPRI;
-+			srp->cookie = request_to_qc_t(rqq->mq_hctx, rqq);
-+		} else {
-+			clear_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
-+			srp->rq_flags &= ~SGV4_FLAG_HIPRI;
-+		}
-+	}
-+	blk_execute_rq_nowait(NULL, rqq, (int)at_head, sg_rq_end_io);
-+	set_bit(SG_FRQ_ISSUED, srp->frq_bm);
- }
- 
- /*
-@@ -1693,6 +1711,13 @@ sg_wait_event_srp(struct file *filp, struct sg_fd *sfp, void __user *p,
- 
- 	if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
- 		goto skip_wait;		/* and skip _acquire() */
-+	if (srp->rq_flags & SGV4_FLAG_HIPRI) {
-+		/* call blk_poll(), spinning till found */
-+		res = sg_srp_q_blk_poll(srp, sdp->device->request_queue, -1);
-+		if (res != -ENODATA && unlikely(res < 0))
-+			return res;
-+		goto skip_wait;
-+	}
- 	SG_LOG(3, sfp, "%s: about to wait_event...()\n", __func__);
- 	/* usually will be woken up by sg_rq_end_io() callback */
- 	res = wait_event_interruptible(sfp->read_wait,
-@@ -1972,6 +1997,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
- 		SG_LOG(3, sfp, "%s:    SG_GET_PACK_ID=%d\n", __func__, val);
- 		return put_user(val, ip);
- 	case SG_GET_NUM_WAITING:
-+		if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
-+			sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready */
- 		val = atomic_read(&sfp->waiting);
- 		if (val)
- 			return put_user(val, ip);
-@@ -2156,6 +2183,70 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 	return scsi_ioctl(sdp->device, NULL, filp->f_mode, cmd_in, p);
- }
- 
-+/*
-+ * If the sg_request object is not inflight, return -ENODATA. This function
-+ * returns 1 if the given object was in inflight state and is in await_rcv
-+ * state after blk_poll() returns 1 or more. If blk_poll() fails, then that
-+ * (negative) value is returned. Otherwise returns 0. Note that blk_poll()
-+ * may complete unrelated requests that share the same q and cookie.
-+ */
-+static int
-+sg_srp_q_blk_poll(struct sg_request *srp, struct request_queue *q, int loop_count)
-+{
-+	int k, n, num;
++/* Bit positions (flags) for sg_device::fdev_bm bitmask follow */
++#define SG_FDEV_EXCLUDE		0	/* have fd open with O_EXCL */
++#define SG_FDEV_DETACHING	1	/* may be unexpected device removal */
++#define SG_FDEV_LOG_SENSE	2	/* set by ioctl(SG_SET_DEBUG) */
 +
-+	num = (loop_count < 1) ? 1 : loop_count;
-+	for (k = 0; k < num; ++k) {
-+		if (atomic_read(&srp->rq_st) != SG_RS_INFLIGHT)
-+			return -ENODATA;
-+		n = blk_poll(q, srp->cookie, loop_count < 0 /* spin if negative */);
-+		if (n > 0)
-+			return atomic_read(&srp->rq_st) == SG_RS_AWAIT_RCV;
-+		if (n < 0)
-+			return n;
-+	}
-+	return 0;
-+}
-+
-+/*
-+ * Check all requests on this sfp that are both inflight and HIPRI. That check involves calling
-+ * blk_poll(spin<-false) loop_count times. If loop_count is 0 then call blk_poll once.
-+ * If loop_count is negative then call blk_poll(spin <- true)) once for each request.
-+ * Returns number found (could be 0) or a negated errno value.
-+ */
-+static int
-+sg_sfp_blk_poll(struct sg_fd *sfp, int loop_count)
-+{
-+	int res = 0;
-+	int n;
-+	unsigned long idx, iflags;
-+	struct sg_request *srp;
-+	struct scsi_device *sdev = sfp->parentdp->device;
-+	struct request_queue *q = sdev ? sdev->request_queue : NULL;
-+	struct xarray *xafp = &sfp->srp_arr;
-+
-+	if (!q)
-+		return -EINVAL;
-+	xa_lock_irqsave(xafp, iflags);
-+	xa_for_each(xafp, idx, srp) {
-+		if ((srp->rq_flags & SGV4_FLAG_HIPRI) &&
-+		    !test_bit(SG_FRQ_SYNC_INVOC, srp->frq_bm) &&
-+		    atomic_read(&srp->rq_st) == SG_RS_INFLIGHT &&
-+		    test_bit(SG_FRQ_ISSUED, srp->frq_bm)) {
-+			xa_unlock_irqrestore(xafp, iflags);
-+			n = sg_srp_q_blk_poll(srp, q, loop_count);
-+			if (n == -ENODATA)
-+				n = 0;
-+			if (unlikely(n < 0))
-+				return n;
-+			xa_lock_irqsave(xafp, iflags);
-+			res += n;
-+		}
-+	}
-+	xa_unlock_irqrestore(xafp, iflags);
-+	return res;
-+}
+ int sg_big_buff = SG_DEF_RESERVED_SIZE;
+ /* N.B. This variable is readable and writeable via
+    /proc/scsi/sg/def_reserved_size . Each time sg_open() is called a buffer
+@@ -155,14 +160,12 @@ struct sg_device { /* holds the state of each scsi generic device */
+ 	struct scsi_device *device;
+ 	wait_queue_head_t open_wait;    /* queue open() when O_EXCL present */
+ 	struct mutex open_rel_lock;     /* held when in open() or release() */
+-	int sg_tablesize;	/* adapter's max scatter-gather table size */
+-	u32 index;		/* device index number */
+ 	struct list_head sfds;
+ 	rwlock_t sfd_lock;      /* protect access to sfd list */
+-	atomic_t detaching;     /* 0->device usable, 1->device detaching */
+-	bool exclude;		/* 1->open(O_EXCL) succeeded and is active */
++	int sg_tablesize;	/* adapter's max scatter-gather table size */
++	u32 index;		/* device index number */
+ 	int open_cnt;		/* count of opens (perhaps < num(sfds) ) */
+-	char sgdebug;		/* 0->off, 1->sense, 9->dump dev, 10-> all devs */
++	unsigned long fdev_bm[1];	/* see SG_FDEV_* defines above */
+ 	char name[DISK_NAME_LEN];
+ 	struct cdev *cdev;
+ 	struct kref d_ref;
+@@ -200,6 +203,9 @@ static void sg_device_destroy(struct kref *kref);
+ #define SZ_SG_IO_HDR ((int)sizeof(struct sg_io_hdr))	/* v3 header */
+ #define SZ_SG_REQ_INFO ((int)sizeof(struct sg_req_info))
+ 
++#define SG_IS_DETACHING(sdp) test_bit(SG_FDEV_DETACHING, (sdp)->fdev_bm)
++#define SG_HAVE_EXCLUDE(sdp) test_bit(SG_FDEV_EXCLUDE, (sdp)->fdev_bm)
 +
  /*
-  * Implements the poll(2) system call for this driver. Returns various EPOLL*
-  * flags OR-ed together.
-@@ -2167,6 +2258,8 @@ sg_poll(struct file *filp, poll_table * wait)
- 	__poll_t p_res = 0;
- 	struct sg_fd *sfp = filp->private_data;
+  * Kernel needs to be built with CONFIG_SCSI_LOGGING to see log messages.
+  * 'depth' is a number between 1 (most severe) and 7 (most noisy, most
+@@ -273,26 +279,26 @@ sg_wait_open_event(struct sg_device *sdp, bool o_excl)
+ 		while (sdp->open_cnt > 0) {
+ 			mutex_unlock(&sdp->open_rel_lock);
+ 			retval = wait_event_interruptible(sdp->open_wait,
+-					(atomic_read(&sdp->detaching) ||
++					(SG_IS_DETACHING(sdp) ||
+ 					 !sdp->open_cnt));
+ 			mutex_lock(&sdp->open_rel_lock);
  
-+	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
-+		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
- 	num = atomic_read(&sfp->waiting);
- 	if (num < 1) {
- 		poll_wait(filp, &sfp->read_wait, wait);
-@@ -2451,6 +2544,7 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
+ 			if (retval) /* -ERESTARTSYS */
+ 				return retval;
+-			if (atomic_read(&sdp->detaching))
++			if (SG_IS_DETACHING(sdp))
+ 				return -ENODEV;
+ 		}
+ 	} else {
+-		while (sdp->exclude) {
++		while (SG_HAVE_EXCLUDE(sdp)) {
+ 			mutex_unlock(&sdp->open_rel_lock);
+ 			retval = wait_event_interruptible(sdp->open_wait,
+-					(atomic_read(&sdp->detaching) ||
+-					 !sdp->exclude));
++					(SG_IS_DETACHING(sdp) ||
++					 !SG_HAVE_EXCLUDE(sdp)));
+ 			mutex_lock(&sdp->open_rel_lock);
+ 
+ 			if (retval) /* -ERESTARTSYS */
+ 				return retval;
+-			if (atomic_read(&sdp->detaching))
++			if (SG_IS_DETACHING(sdp))
+ 				return -ENODEV;
  		}
  	}
- 	xa_lock_irqsave(&sfp->srp_arr, iflags);
-+	__set_bit(SG_FRQ_ISSUED, srp->frq_bm);
- 	sg_rq_chg_state_force_ulck(srp, rqq_state);
- 	WRITE_ONCE(srp->rqq, NULL);
- 	if (test_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
-@@ -2476,7 +2570,8 @@ sg_rq_end_io(struct request *rqq, blk_status_t status)
+@@ -354,7 +360,7 @@ sg_open(struct inode *inode, struct file *filp)
+ 				goto error_mutex_locked;
+ 			}
+ 		} else {
+-			if (sdp->exclude) {
++			if (SG_HAVE_EXCLUDE(sdp)) {
+ 				retval = -EBUSY;
+ 				goto error_mutex_locked;
+ 			}
+@@ -367,10 +373,10 @@ sg_open(struct inode *inode, struct file *filp)
  
- 	if (likely(rqq_state == SG_RS_AWAIT_RCV)) {
- 		/* Wake any sg_read()/ioctl(SG_IORECEIVE) awaiting this req */
--		wake_up_interruptible(&sfp->read_wait);
-+		if (!(srp->rq_flags & SGV4_FLAG_HIPRI))
-+			wake_up_interruptible(&sfp->read_wait);
- 		kill_fasync(&sfp->async_qp, SIGPOLL, POLL_IN);
- 		kref_put(&sfp->f_ref, sg_remove_sfp);
- 	} else {        /* clean up orphaned request that aren't being kept */
-@@ -3012,7 +3107,8 @@ sg_finish_scsi_blk_rq(struct sg_request *srp)
- 	SG_LOG(4, sfp, "%s: srp=0x%pK%s\n", __func__, srp,
- 	       (srp->parentfp->rsv_srp == srp) ? " rsv" : "");
- 	if (test_and_clear_bit(SG_FRQ_COUNT_ACTIVE, srp->frq_bm)) {
--		atomic_dec(&sfp->submitted);
-+		if (atomic_dec_and_test(&sfp->submitted))
-+			clear_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm);
- 		atomic_dec(&sfp->waiting);
+ 	/* N.B. at this point we are holding the open_rel_lock */
+ 	if (o_excl)
+-		sdp->exclude = true;
++		set_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm);
+ 
+ 	if (sdp->open_cnt < 1) {  /* no existing opens */
+-		sdp->sgdebug = 0;
++		clear_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm);
+ 		q = sdp->device->request_queue;
+ 		sdp->sg_tablesize = queue_max_segments(q);
  	}
+@@ -393,8 +399,8 @@ sg_open(struct inode *inode, struct file *filp)
+ 	return retval;
  
-@@ -3204,6 +3300,8 @@ sg_find_srp_by_id(struct sg_fd *sfp, int pack_id)
- 	struct sg_request *srp = NULL;
- 	struct xarray *xafp = &sfp->srp_arr;
+ out_undo:
+-	if (o_excl) {
+-		sdp->exclude = false;   /* undo if error */
++	if (o_excl) {		/* undo if error */
++		clear_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm);
+ 		wake_up_interruptible(&sdp->open_wait);
+ 	}
+ error_mutex_locked:
+@@ -428,12 +434,10 @@ sg_release(struct inode *inode, struct file *filp)
  
-+	if (test_bit(SG_FFD_HIPRI_SEEN, sfp->ffd_bm))
-+		sg_sfp_blk_poll(sfp, 0);	/* LLD may have some ready to push up */
- 	if (num_waiting < 1) {
- 		num_waiting = atomic_read_acquire(&sfp->waiting);
- 		if (num_waiting < 1)
-@@ -4012,8 +4110,9 @@ sg_proc_debug_sreq(struct sg_request *srp, int to, char *obp, int len)
- 	else if (dur < U32_MAX)	/* in-flight or busy (so ongoing) */
- 		n += scnprintf(obp + n, len - n, " t_o/elap=%us/%ums",
- 			       to / 1000, dur);
--	n += scnprintf(obp + n, len - n, " sgat=%d op=0x%02x\n",
--		       srp->sgat_h.num_sgat, srp->cmd_opcode);
-+	cp = (srp->rq_flags & SGV4_FLAG_HIPRI) ? "hipri " : "";
-+	n += scnprintf(obp + n, len - n, " sgat=%d %sop=0x%02x\n",
-+		       srp->sgat_h.num_sgat, cp, srp->cmd_opcode);
- 	return n;
+ 	/* possibly many open()s waiting on exclude clearing, start many;
+ 	 * only open(O_EXCL)s wait on 0==open_cnt so only start one */
+-	if (sdp->exclude) {
+-		sdp->exclude = false;
++	if (test_and_clear_bit(SG_FDEV_EXCLUDE, sdp->fdev_bm))
+ 		wake_up_interruptible_all(&sdp->open_wait);
+-	} else if (0 == sdp->open_cnt) {
++	else if (sdp->open_cnt == 0)
+ 		wake_up_interruptible(&sdp->open_wait);
+-	}
+ 	mutex_unlock(&sdp->open_rel_lock);
+ 	return 0;
  }
+@@ -461,7 +465,7 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	SG_LOG(3, sfp, "%s: write(3rd arg) count=%d\n", __func__, (int)count);
+ 	if (!sdp)
+ 		return -ENXIO;
+-	if (atomic_read(&sdp->detaching))
++	if (SG_IS_DETACHING(sdp))
+ 		return -ENODEV;
+ 	if (!((filp->f_flags & O_NONBLOCK) ||
+ 	      scsi_block_when_processing_errors(sdp->device)))
+@@ -658,7 +662,7 @@ sg_common_write(struct sg_fd *sfp, struct sg_request *srp,
+ 		sg_remove_request(sfp, srp);
+ 		return k;	/* probably out of space --> ENOMEM */
+ 	}
+-	if (atomic_read(&sdp->detaching)) {
++	if (SG_IS_DETACHING(sdp)) {
+ 		if (srp->bio) {
+ 			scsi_req_free_cmd(scsi_req(srp->rq));
+ 			blk_put_request(srp->rq);
+@@ -825,7 +829,7 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ 	}
+ 	srp = sg_get_rq_mark(sfp, req_pack_id);
+ 	if (!srp) {		/* now wait on packet to arrive */
+-		if (atomic_read(&sdp->detaching)) {
++		if (SG_IS_DETACHING(sdp)) {
+ 			retval = -ENODEV;
+ 			goto free_old_hdr;
+ 		}
+@@ -835,9 +839,9 @@ sg_read(struct file *filp, char __user *buf, size_t count, loff_t *ppos)
+ 		}
+ 		retval = wait_event_interruptible
+ 				(sfp->read_wait,
+-				 (atomic_read(&sdp->detaching) ||
++				 (SG_IS_DETACHING(sdp) ||
+ 				  (srp = sg_get_rq_mark(sfp, req_pack_id))));
+-		if (atomic_read(&sdp->detaching)) {
++		if (SG_IS_DETACHING(sdp)) {
+ 			retval = -ENODEV;
+ 			goto free_old_hdr;
+ 		}
+@@ -1016,7 +1020,7 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
  
-diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index 06181c591539..f0e3d274fade 100644
---- a/include/uapi/scsi/sg.h
-+++ b/include/uapi/scsi/sg.h
-@@ -110,6 +110,7 @@ typedef struct sg_io_hdr {
- #define SGV4_FLAG_Q_AT_TAIL SG_FLAG_Q_AT_TAIL
- #define SGV4_FLAG_Q_AT_HEAD SG_FLAG_Q_AT_HEAD
- #define SGV4_FLAG_IMMED 0x400 /* for polling with SG_IOR, ignored in SG_IOS */
-+#define SGV4_FLAG_HIPRI 0x800 /* request will use blk_poll to complete */
+ 	switch (cmd_in) {
+ 	case SG_IO:
+-		if (atomic_read(&sdp->detaching))
++		if (SG_IS_DETACHING(sdp))
+ 			return -ENODEV;
+ 		if (!scsi_block_when_processing_errors(sdp->device))
+ 			return -ENXIO;
+@@ -1025,8 +1029,8 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 		if (result < 0)
+ 			return result;
+ 		result = wait_event_interruptible(sfp->read_wait,
+-			(srp_done(sfp, srp) || atomic_read(&sdp->detaching)));
+-		if (atomic_read(&sdp->detaching))
++			(srp_done(sfp, srp) || SG_IS_DETACHING(sdp)));
++		if (SG_IS_DETACHING(sdp))
+ 			return -ENODEV;
+ 		write_lock_irq(&sfp->rq_list_lock);
+ 		if (srp->done) {
+@@ -1067,7 +1071,7 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 		{
+ 			sg_scsi_id_t v;
  
- /* Output (potentially OR-ed together) in v3::info or v4::info field */
- #define SG_INFO_OK_MASK 0x1
+-			if (atomic_read(&sdp->detaching))
++			if (SG_IS_DETACHING(sdp))
+ 				return -ENODEV;
+ 			memset(&v, 0, sizeof(v));
+ 			v.host_no = sdp->device->host->host_no;
+@@ -1187,18 +1191,18 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 			return result;
+ 		}
+ 	case SG_EMULATED_HOST:
+-		if (atomic_read(&sdp->detaching))
++		if (SG_IS_DETACHING(sdp))
+ 			return -ENODEV;
+ 		return put_user(sdp->device->host->hostt->emulated, ip);
+ 	case SCSI_IOCTL_SEND_COMMAND:
+-		if (atomic_read(&sdp->detaching))
++		if (SG_IS_DETACHING(sdp))
+ 			return -ENODEV;
+ 		return scsi_ioctl(sdp->device, NULL, filp->f_mode, cmd_in, p);
+ 	case SG_SET_DEBUG:
+ 		result = get_user(val, ip);
+ 		if (result)
+ 			return result;
+-		sdp->sgdebug = (char) val;
++		assign_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm, val);
+ 		return 0;
+ 	case BLKSECTGET:
+ 		return put_user(max_sectors_bytes(sdp->device->request_queue),
+@@ -1218,7 +1222,7 @@ sg_ioctl_common(struct file *filp, struct sg_device *sdp, struct sg_fd *sfp,
+ 	case SCSI_IOCTL_PROBE_HOST:
+ 	case SG_GET_TRANSFORM:
+ 	case SG_SCSI_RESET:
+-		if (atomic_read(&sdp->detaching))
++		if (SG_IS_DETACHING(sdp))
+ 			return -ENODEV;
+ 		break;
+ 	default:
+@@ -1275,7 +1279,7 @@ sg_poll(struct file *filp, poll_table * wait)
+ 	}
+ 	read_unlock_irqrestore(&sfp->rq_list_lock, iflags);
+ 
+-	if (sfp->parentdp && atomic_read(&sfp->parentdp->detaching)) {
++	if (sfp->parentdp && SG_IS_DETACHING(sfp->parentdp)) {
+ 		p_res |= EPOLLHUP;
+ 	} else if (!sfp->cmd_q) {
+ 		if (count == 0)
+@@ -1423,7 +1427,7 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 		return;
+ 
+ 	sdp = sfp->parentdp;
+-	if (unlikely(atomic_read(&sdp->detaching)))
++	if (unlikely(SG_IS_DETACHING(sdp)))
+ 		pr_info("%s: device detaching\n", __func__);
+ 
+ 	sense = req->sense;
+@@ -1444,9 +1448,9 @@ sg_rq_end_io(struct request *rq, blk_status_t status)
+ 		srp->header.msg_status = COMMAND_COMPLETE;
+ 		srp->header.host_status = host_byte(result);
+ 		srp->header.driver_status = driver_byte(result);
+-		if ((sdp->sgdebug > 0) &&
+-		    ((CHECK_CONDITION == srp->header.masked_status) ||
+-		     (COMMAND_TERMINATED == srp->header.masked_status)))
++		if (test_bit(SG_FDEV_LOG_SENSE, sdp->fdev_bm) &&
++		    (srp->header.masked_status == CHECK_CONDITION ||
++		     srp->header.masked_status == COMMAND_TERMINATED))
+ 			__scsi_print_sense(sdp->device, __func__, sense,
+ 					   SCSI_SENSE_BUFFERSIZE);
+ 
+@@ -1557,7 +1561,7 @@ sg_alloc(struct scsi_device *scsidp)
+ 	mutex_init(&sdp->open_rel_lock);
+ 	INIT_LIST_HEAD(&sdp->sfds);
+ 	init_waitqueue_head(&sdp->open_wait);
+-	atomic_set(&sdp->detaching, 0);
++	clear_bit(SG_FDEV_DETACHING, sdp->fdev_bm);
+ 	rwlock_init(&sdp->sfd_lock);
+ 	sdp->sg_tablesize = queue_max_segments(q);
+ 	sdp->index = k;
+@@ -1673,13 +1677,11 @@ sg_remove_device(struct device *cl_dev, struct class_interface *cl_intf)
+ 	struct sg_device *sdp = dev_get_drvdata(cl_dev);
+ 	unsigned long iflags;
+ 	struct sg_fd *sfp;
+-	int val;
+ 
+ 	if (!sdp)
+ 		return;
+-	/* want sdp->detaching non-zero as soon as possible */
+-	val = atomic_inc_return(&sdp->detaching);
+-	if (val > 1)
++	/* set this flag as soon as possible as it could be a surprise */
++	if (test_and_set_bit(SG_FDEV_DETACHING, sdp->fdev_bm))
+ 		return; /* only want to do following once per device */
+ 
+ 	SCSI_LOG_TIMEOUT(3, sdev_printk(KERN_INFO, sdp->device,
+@@ -2205,7 +2207,7 @@ sg_add_sfp(struct sg_device *sdp)
+ 	sfp->keep_orphan = SG_DEF_KEEP_ORPHAN;
+ 	sfp->parentdp = sdp;
+ 	write_lock_irqsave(&sdp->sfd_lock, iflags);
+-	if (atomic_read(&sdp->detaching)) {
++	if (SG_IS_DETACHING(sdp)) {
+ 		write_unlock_irqrestore(&sdp->sfd_lock, iflags);
+ 		kfree(sfp);
+ 		return ERR_PTR(-ENODEV);
+@@ -2302,8 +2304,8 @@ sg_get_dev(int dev)
+ 	sdp = sg_lookup_dev(dev);
+ 	if (!sdp)
+ 		sdp = ERR_PTR(-ENXIO);
+-	else if (atomic_read(&sdp->detaching)) {
+-		/* If sdp->detaching, then the refcount may already be 0, in
++	else if (SG_IS_DETACHING(sdp)) {
++		/* If detaching, then the refcount may already be 0, in
+ 		 * which case it would be a bug to do kref_get().
+ 		 */
+ 		sdp = ERR_PTR(-ENODEV);
+@@ -2515,8 +2517,7 @@ sg_proc_seq_show_dev(struct seq_file *s, void *v)
+ 
+ 	read_lock_irqsave(&sg_index_lock, iflags);
+ 	sdp = it ? sg_lookup_dev(it->index) : NULL;
+-	if ((NULL == sdp) || (NULL == sdp->device) ||
+-	    (atomic_read(&sdp->detaching)))
++	if (!sdp || !sdp->device || SG_IS_DETACHING(sdp))
+ 		seq_puts(s, "-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\t-1\n");
+ 	else {
+ 		scsidp = sdp->device;
+@@ -2543,7 +2544,7 @@ sg_proc_seq_show_devstrs(struct seq_file *s, void *v)
+ 	read_lock_irqsave(&sg_index_lock, iflags);
+ 	sdp = it ? sg_lookup_dev(it->index) : NULL;
+ 	scsidp = sdp ? sdp->device : NULL;
+-	if (sdp && scsidp && (!atomic_read(&sdp->detaching)))
++	if (sdp && scsidp && !SG_IS_DETACHING(sdp))
+ 		seq_printf(s, "%8.8s\t%16.16s\t%4.4s\n",
+ 			   scsidp->vendor, scsidp->model, scsidp->rev);
+ 	else
+@@ -2634,7 +2635,7 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
+ 	read_lock(&sdp->sfd_lock);
+ 	if (!list_empty(&sdp->sfds)) {
+ 		seq_printf(s, " >>> device=%s ", sdp->name);
+-		if (atomic_read(&sdp->detaching))
++		if (SG_IS_DETACHING(sdp))
+ 			seq_puts(s, "detaching pending close ");
+ 		else if (sdp->device) {
+ 			struct scsi_device *scsidp = sdp->device;
+@@ -2646,7 +2647,8 @@ sg_proc_seq_show_debug(struct seq_file *s, void *v)
+ 				   scsidp->host->hostt->emulated);
+ 		}
+ 		seq_printf(s, " sg_tablesize=%d excl=%d open_cnt=%d\n",
+-			   sdp->sg_tablesize, sdp->exclude, sdp->open_cnt);
++			   sdp->sg_tablesize, SG_HAVE_EXCLUDE(sdp),
++			   sdp->open_cnt);
+ 		sg_proc_debug_helper(s, sdp);
+ 	}
+ 	read_unlock(&sdp->sfd_lock);
 -- 
 2.25.1
 
