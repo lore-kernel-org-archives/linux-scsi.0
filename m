@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 09B55C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB183C433FE
 	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC0ED60F70
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92F386023D
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232897AbhIOWm3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Sep 2021 18:42:29 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:36519 "EHLO smtp.infotech.no"
+        id S232921AbhIOWma (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Sep 2021 18:42:30 -0400
+Received: from smtp.infotech.no ([82.134.31.41]:36515 "EHLO smtp.infotech.no"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232477AbhIOWm2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S232650AbhIOWm2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Wed, 15 Sep 2021 18:42:28 -0400
 Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 25558204270;
-        Thu, 16 Sep 2021 00:33:39 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTP id AFF92204274;
+        Thu, 16 Sep 2021 00:33:57 +0200 (CEST)
 X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
 Received: from smtp.infotech.no ([127.0.0.1])
         by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id gLDxKdY4sRoH; Thu, 16 Sep 2021 00:33:37 +0200 (CEST)
+        with ESMTP id Tt+8jUMIe+7N; Thu, 16 Sep 2021 00:33:56 +0200 (CEST)
 Received: from xtwo70.bingwo.ca (host-45-78-207-107.dyn.295.ca [45.78.207.107])
-        by smtp.infotech.no (Postfix) with ESMTPA id 4333020425B;
-        Thu, 16 Sep 2021 00:33:32 +0200 (CEST)
+        by smtp.infotech.no (Postfix) with ESMTPA id 8585D204254;
+        Thu, 16 Sep 2021 00:33:51 +0200 (CEST)
 From:   Douglas Gilbert <dgilbert@interlog.com>
 To:     linux-scsi@vger.kernel.org
 Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        Damien.LeMoal@wdc.com, Hannes Reinecke <hare@suse.com>
-Subject: [PATCH v20 29/46] sg: add 8 byte SCSI LUN to sg_scsi_id
-Date:   Wed, 15 Sep 2021 18:32:48 -0400
-Message-Id: <20210915223305.256429-30-dgilbert@interlog.com>
+        Damien.LeMoal@wdc.com
+Subject: [PATCH v20 46/46] sg: bump version to 4.0.12
+Date:   Wed, 15 Sep 2021 18:33:05 -0400
+Message-Id: <20210915223305.256429-47-dgilbert@interlog.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210915223305.256429-1-dgilbert@interlog.com>
 References: <20210915223305.256429-1-dgilbert@interlog.com>
@@ -45,76 +45,70 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The existing ioctl(SG_GET_SCSI_ID) fills a object of type
-struct sg_scsi_id whose last field is int unused[2]. Add
-an anonymous union with u8 scsi_lun[8] sharing those last
-8 bytes. This patch will place the current device's full
-LUN in the scsi_lun array using T10's preferred LUN
-format (i.e. an array of 8 bytes) when
-ioctl(SG_GET_SCSI_ID) is called.
+Now that the sg version 4 interface is supported:
+  - with ioctl(SG_IO) for synchronous/blocking use
+  - with ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE) for
+    async/non-blocking use
+Plus new ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3)
+potentially replace write() and read() for the sg
+version 3 interface. Bump major driver version number
+from 3 to 4.
 
-Note that structure already contains a 'lun' field but that
-is a 32 bit integer. Users of this upgrade should choose
-the scsi_lun array field henceforth but existing code
-can remain as it is and will get the same 'lun' value with
-the version 3 or version 4 driver.
+The main new feature is the removal of the fixed 16 element
+array of requests per file descriptor. It is replaced by
+a xarray (eXtensible array) in their parent which is a
+sg_fd object (i.e. a file descriptor). The sg_request
+objects are not freed until the owning file descriptor is
+closed; instead these objects are re-used when multiple
+commands are sent to the same file descriptor.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
 ---
- drivers/scsi/sg.c      | 8 +++++---
- include/uapi/scsi/sg.h | 5 ++++-
- 2 files changed, 9 insertions(+), 4 deletions(-)
+ drivers/scsi/sg.c      | 11 ++++++-----
+ include/uapi/scsi/sg.h |  4 ++--
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 70799911e051..e83d24891ca4 100644
+index 0b72f7f8a71e..dc0f3c7f04d8 100644
 --- a/drivers/scsi/sg.c
 +++ b/drivers/scsi/sg.c
-@@ -1214,7 +1214,7 @@ sg_receive_v4(struct sg_fd *sfp, struct sg_request *srp, void __user *p,
- 	h4p->din_resid = srp->in_resid;
- 	h4p->dout_resid = srp->s_hdr4.out_resid;
- 	h4p->usr_ptr = srp->s_hdr4.usr_ptr;
--	h4p->response = (u64)srp->s_hdr4.sbp;
-+	h4p->response = (uintptr_t)srp->s_hdr4.sbp;
- 	h4p->request_extra = srp->pack_id;
- 	if (p) {
- 		if (copy_to_user(p, h4p, SZ_SG_IO_V4))
-@@ -1779,6 +1779,7 @@ static int
- sg_ctl_scsi_id(struct scsi_device *sdev, struct sg_fd *sfp, void __user *p)
- {
- 	struct sg_scsi_id ss_id;
-+	struct scsi_lun lun8b;
+@@ -7,13 +7,14 @@
+  *
+  * Original driver (sg.c):
+  *        Copyright (C) 1992 Lawrence Foard
+- * Version 2 and 3 extensions to driver:
+- *        Copyright (C) 1998 - 2019 Douglas Gilbert
++ * Version 2, 3 and 4 extensions to driver:
++ *        Copyright (C) 1998 - 2021 Douglas Gilbert
++ *
+  */
  
- 	SG_LOG(3, sfp, "%s:    SG_GET_SCSI_ID\n", __func__);
- 	ss_id.host_no = sdev->host->host_no;
-@@ -1788,8 +1789,9 @@ sg_ctl_scsi_id(struct scsi_device *sdev, struct sg_fd *sfp, void __user *p)
- 	ss_id.scsi_type = sdev->type;
- 	ss_id.h_cmd_per_lun = sdev->host->cmd_per_lun;
- 	ss_id.d_queue_depth = sdev->queue_depth;
--	ss_id.unused[0] = 0;
--	ss_id.unused[1] = 0;
-+	int_to_scsilun(sdev->lun, &lun8b);
-+	/* ss_id.scsi_lun is in an anonymous union with 'int unused[2]' */
-+	memcpy(ss_id.scsi_lun, lun8b.scsi_lun, 8);
- 	if (copy_to_user(p, &ss_id, sizeof(struct sg_scsi_id)))
- 		return -EFAULT;
- 	return 0;
+-static int sg_version_num = 30901;  /* [x]xyyzz where [x] empty when x=0 */
+-#define SG_VERSION_STR "3.9.01"		/* [x]x.[y]y.zz */
+-static char *sg_version_date = "20190606";
++static int sg_version_num = 40012;  /* [x]xyyzz where [x] empty when x=0 */
++#define SG_VERSION_STR "4.0.12"		/* [x]x.[y]y.zz */
++static char *sg_version_date = "20210913";
+ 
+ #include <linux/module.h>
+ 
 diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index 489f8f7dfca5..ca2c1da0691d 100644
+index f0e3d274fade..c9b7d6dd57a7 100644
 --- a/include/uapi/scsi/sg.h
 +++ b/include/uapi/scsi/sg.h
-@@ -170,7 +170,10 @@ typedef struct sg_scsi_id {
- 	int scsi_type;	/* TYPE_... defined in scsi/scsi.h */
- 	short h_cmd_per_lun;/* host (adapter) maximum commands per lun */
- 	short d_queue_depth;/* device (or adapter) maximum queue length */
--	int unused[2];
-+	union {
-+		int unused[2];  /* as per version 3 driver */
-+		__u8 scsi_lun[8];  /* full 8 byte SCSI LUN [in v4 driver] */
-+	};
- } sg_scsi_id_t;
- 
- /* For backward compatibility v4 driver yields at most SG_MAX_QUEUE of these */
+@@ -12,9 +12,9 @@
+  *   Copyright (C) 1992 Lawrence Foard
+  *
+  * Later extensions (versions 2, 3 and 4) to driver:
+- *   Copyright (C) 1998 - 2018 Douglas Gilbert
++ *   Copyright (C) 1998 - 2021 Douglas Gilbert
+  *
+- * Version 4.0.11 (20190502)
++ * Version 4.0.12 (20210111)
+  *  This version is for Linux 4 and 5 series kernels.
+  *
+  * Documentation
 -- 
 2.25.1
 
