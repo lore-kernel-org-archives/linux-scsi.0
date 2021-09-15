@@ -2,123 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-18.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86075C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 14:44:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AB6FC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 15:32:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 68007611CA
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 14:44:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 200316103E
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 15:32:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237929AbhIOOpS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Sep 2021 10:45:18 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:25320 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S233745AbhIOOpR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Sep 2021 10:45:17 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.0.43) with SMTP id 18FE5HbC004203;
-        Wed, 15 Sep 2021 10:43:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=l+meP3L7Ql8c7cvN0ZfGxY0u5WK20CC0RpmhP7EEcKg=;
- b=VDOoq8tA3RPP0GvXh1SpOYq2DBmu5CvHtD2FAW86QQ0Xg+z22Rb88ZJWQl9hk8/EJI4X
- 5bikarRpemDfV+WUShgznvoNX9hzerI0CO9gBR0GIXw9pD3KzFrfXnzyCb2mUGOV3zab
- zEpMssHF6vtu9I5tRx8+EuyuIkwr8CxoFN0KutHq0Q5I7W2YN4IAzVMMdrKFitbfw1SW
- bnLNlnG1eHXSrtQFoXfurIXwJEUvIKrI2iGXU1GBBTm50jRZjc/uuHEWplg1r1Lkx4U7
- 2Rlc6kOv3axSBFI3O+egbXnq4q7v+FFya191KNOd0rlIF5TaCjTufa5SMMtMSof59OAm nA== 
-Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3b3j9p1706-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 15 Sep 2021 10:43:56 -0400
-Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18FEXnLW013088;
-        Wed, 15 Sep 2021 14:43:55 GMT
-Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
-        by ppma03dal.us.ibm.com with ESMTP id 3b0m3c01f0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 15 Sep 2021 14:43:55 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08028.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18FEhsja40698316
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 15 Sep 2021 14:43:54 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 70D937806E;
-        Wed, 15 Sep 2021 14:43:54 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B44527805F;
-        Wed, 15 Sep 2021 14:43:53 +0000 (GMT)
-Received: from jarvis.lan (unknown [9.211.54.195])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Wed, 15 Sep 2021 14:43:53 +0000 (GMT)
-Message-ID: <0912982133a254770a27b780cd2c5771739ced3b.camel@linux.ibm.com>
-Subject: Re: [PATCH V3 1/1] scsi/ses: Saw "Failed to get diagnostic page 0x1"
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     wenxiong@linux.vnet.ibm.com
-Cc:     linux-scsi@vger.kernel.org, brking1@linux.vnet.ibm.com,
-        martin.petersen@oracle.com, wenxiong@us.ibm.com
-Date:   Wed, 15 Sep 2021 10:43:52 -0400
-In-Reply-To: <1631711048-6177-1-git-send-email-wenxiong@linux.vnet.ibm.com>
-References: <1631711048-6177-1-git-send-email-wenxiong@linux.vnet.ibm.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S234188AbhIOPdu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Sep 2021 11:33:50 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:58890 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S234154AbhIOPdt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Sep 2021 11:33:49 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 62ABF42C8D;
+        Wed, 15 Sep 2021 15:32:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        content-type:content-type:content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:date:subject:subject:from:from
+        :received:received:received; s=mta-01; t=1631719948; x=
+        1633534349; bh=SPDSUZyQ+LkQQv0yTHGMYMcsB0vdKmmmorWkm9qTSjI=; b=N
+        fXhlqKb3wnt0+Wu5/mkUXo9SXYmI3Ao3ey5Cje1fw2W6Qe09hOIM94hMMvpW7LBz
+        KDQRk5fVAyOfW3vNgHDBLhV/2XY2G7cf+NMaOAQwHD/c6Klc/Pyi7G5gmcrNjaD+
+        bzeOWQ9D3Dqxyzohe4pc5uWUOcmnPJchPLlofdJXX4=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id U1UtWeg3igBu; Wed, 15 Sep 2021 18:32:28 +0300 (MSK)
+Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 73E8E42C89;
+        Wed, 15 Sep 2021 18:32:27 +0300 (MSK)
+Received: from NB-591.corp.yadro.com (10.199.0.185) by
+ T-EXCH-04.corp.yadro.com (172.17.100.104) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Wed, 15 Sep 2021 18:32:26 +0300
+From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
+To:     Martin Petersen <martin.petersen@oracle.com>,
+        <target-devel@vger.kernel.org>
+CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        <GR-QLogic-Storage-Upstream@marvell.com>,
+        Dmitry Bogdanov <d.bogdanov@yadro.com>
+Subject: [PATCH] scsi: qla2xxx: fix unmap already freed sgl
+Date:   Wed, 15 Sep 2021 18:32:19 +0300
+Message-ID: <20210915153219.7971-1-d.bogdanov@yadro.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: P4c8GCf1shIcklWC6Oz-K4EdfeHHREP-
-X-Proofpoint-ORIG-GUID: P4c8GCf1shIcklWC6Oz-K4EdfeHHREP-
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.687,Hydra:6.0.235,FMLib:17.0.607.475
- definitions=2020-10-13_15,2020-10-13_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- suspectscore=0 malwarescore=0 bulkscore=0 mlxlogscore=999 spamscore=0
- adultscore=0 impostorscore=0 clxscore=1015 priorityscore=1501 mlxscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109030001 definitions=main-2109150087
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.199.0.185]
+X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
+ T-EXCH-04.corp.yadro.com (172.17.100.104)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-09-15 at 08:04 -0500, wenxiong@linux.vnet.ibm.com wrote:
-> From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
-> 
-> Setting scsi logging level with error=3, we saw some errors from
-> enclosues:
-> 
-> [108017.360833] ses 0:0:9:0: tag#641 Done: NEEDS_RETRY Result:
-> hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
-> [108017.360838] ses 0:0:9:0: tag#641 CDB: Receive Diagnostic 1c 01 01
-> 00 20 00
-> [108017.427778] ses 0:0:9:0: Power-on or device reset occurred
-> [108017.427784] ses 0:0:9:0: tag#641 Done: SUCCESS Result:
-> hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=0s
-> [108017.427788] ses 0:0:9:0: tag#641 CDB: Receive Diagnostic 1c 01 01
-> 00 20 00
-> [108017.427791] ses 0:0:9:0: tag#641 Sense Key : Unit Attention
-> [current]
-> [108017.427793] ses 0:0:9:0: tag#641 Add. Sense: Bus device reset
-> function occurred
-> [108017.427801] ses 0:0:9:0: Failed to get diagnostic page 0x1
-> [108017.427804] ses 0:0:9:0: Failed to bind enclosure -19
-> [108017.427895] ses 0:0:10:0: Attached Enclosure device
-> [108017.427942] ses 0:0:10:0: Attached scsi generic sg18 type 13
-> 
-> As Martin's suggestion, the patch checks to retry on NOT_READY as
-> well as
-> UNIT_ATTENTION with ASC 0x29.
+sgl is freed in the target stack in target_release_cmd_kref before
+calling qlt_free_cmd, but there is an unmap of sgl in qlt_free_cmd that
+causes such a panic if sgl is not yet DMA unmapped:
 
-This looks fine to me.  I think the reason expecting_cc_ua doesn't work
-for you is that you're getting > 1 reset per command.  expecting_cc_ua
-automatically resets after eating the first unit attention.
+NIP dma_direct_unmap_sg+0xdc/0x180
+LR  dma_direct_unmap_sg+0xc8/0x180
+Call Trace:
+ ql_dbg_prefix+0x68/0xc0 [qla2xxx] (unreliable)
+ dma_unmap_sg_attrs+0x54/0xf0
+ qlt_unmap_sg.part.19+0x54/0x1c0 [qla2xxx]
+ qlt_free_cmd+0x124/0x1d0 [qla2xxx]
+ tcm_qla2xxx_release_cmd+0x4c/0xa0 [tcm_qla2xxx]
+ target_put_sess_cmd+0x198/0x370 [target_core_mod]
+ transport_generic_free_cmd+0x6c/0x1b0 [target_core_mod]
+ tcm_qla2xxx_complete_free+0x6c/0x90 [tcm_qla2xxx]
 
-Reviewed-by: James Bottomley <jejb@linux.ibm.com>
+SGL may be left unmapped in error cases of response sending.
+For instance, qlt_rdy_to_xfer maps sgl and exits when sesssion is being
+deleted keeping sgl mapped.
 
-James
+This patch removes use-after-free of sgl, and ensures that sgl is
+unmapped for the cmd that was not send to FW.
 
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+---
+This patchset is intended for scsi-fix.
+---
+ drivers/scsi/qla2xxx/qla_target.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index b3478ed9b12e..7d8242c120fc 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -3319,8 +3319,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+ 			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
+ 			vha->flags.online, qla2x00_reset_active(vha),
+ 			cmd->reset_count, qpair->chip_reset);
+-		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+-		return 0;
++		goto out_unmap_unlock;
+ 	}
+ 
+ 	/* Does F/W have an IOCBs for this request */
+@@ -3445,10 +3444,6 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 	prm.sg = NULL;
+ 	prm.req_cnt = 1;
+ 
+-	/* Calculate number of entries and segments required */
+-	if (qlt_pci_map_calc_cnt(&prm) != 0)
+-		return -EAGAIN;
+-
+ 	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
+ 	    (cmd->sess && cmd->sess->deleted)) {
+ 		/*
+@@ -3466,6 +3461,10 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 		return 0;
+ 	}
+ 
++	/* Calculate number of entries and segments required */
++	if (qlt_pci_map_calc_cnt(&prm) != 0)
++		return -EAGAIN;
++
+ 	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
+ 	/* Does F/W have an IOCBs for this request */
+ 	res = qlt_check_reserve_free_req(qpair, prm.req_cnt);
+@@ -3870,9 +3869,6 @@ void qlt_free_cmd(struct qla_tgt_cmd *cmd)
+ 
+ 	BUG_ON(cmd->cmd_in_wq);
+ 
+-	if (cmd->sg_mapped)
+-		qlt_unmap_sg(cmd->vha, cmd);
+-
+ 	if (!cmd->q_full)
+ 		qlt_decr_num_pend_cmds(cmd->vha);
+ 
+-- 
+2.25.1
 
