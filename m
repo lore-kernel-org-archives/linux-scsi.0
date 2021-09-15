@@ -2,162 +2,448 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-16.5 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCD9EC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 05:52:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5E6BC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 06:04:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96E8561178
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 05:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAFC561209
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 06:04:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236283AbhIOFxh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Sep 2021 01:53:37 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:27454 "EHLO
+        id S236358AbhIOGFr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Sep 2021 02:05:47 -0400
+Received: from esa3.hgst.iphmx.com ([216.71.153.141]:28435 "EHLO
         esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230377AbhIOFxh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2021 01:53:37 -0400
+        with ESMTP id S235107AbhIOGFn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2021 02:05:43 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1631685138; x=1663221138;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=5WV5fi6Y0K0XHGOsFlbm2TQjdIgdCSe2rk2nlX64fH0=;
-  b=MoAk/6fo45T+mLjU5zd5o3L4n7fyqFXcNzto0qX4P3OVg4IiZ4BoDaR0
-   xGnjTC+HHRFPVkQkZz97zW0wQW0QYRLq+VyxTHk5P/Zfn5wpvVq9V1Eqp
-   dYsk5KUGnAGlk9fpM8GXA2T1LUBH72/o+/93lGm/Y+88HkQLiLJBa0goI
-   qk8ewiphGxl0KUQmzuegJKaUZmvts+q1sH47A/bI9skmW6BZGlEXT7P6l
-   cc5Si+kL9RitL/ObJyod/6kXvdG0zCH36QTwcb9rJGXYUrvY6X3sQdFEb
-   vuEFJ2IzoCEX+faqEtLyix34tI02W4m5E9wglhni4KXUTJKPrcwjAog8x
-   Q==;
+  t=1631685864; x=1663221864;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references;
+  bh=PTt2g+6bwR7W0xTW7+SwWmllv1wZBTFg0NzhlKEaTJA=;
+  b=jq7+8fhJSioH58gZVUhQfdkUyI/l+12yHfbf9PsUg4c3siAfy6g/ccs6
+   ZPFkFo8pk6fopi+ugSq73Ed84IoVRO9KNnj7cm8UhiuLAI+kYjJ6lChKx
+   +BbGBcoTnXAgaOK+QWAVL3mZo4Ky1lcEG7YyVNn6ZrnlKZ1z7gUWuj44q
+   GXIoezshB9S+I8jsmjmJ1I1z29uoo7SlAAOsEhXHyNfpT3PqTG6M+ENF9
+   HCW7xMXDq45SPmm2duxaIGLKX/pO9BFhur9kb7pCJWWvpVnHDko1tV8nL
+   6U+uOuFrUCkzpCEc2xYpsugYauMQhOv9k4WMnPdEVCuZ63O8AHffVpzu+
+   g==;
 X-IronPort-AV: E=Sophos;i="5.85,294,1624291200"; 
-   d="scan'208";a="184828147"
-Received: from mail-dm6nam10lp2101.outbound.protection.outlook.com (HELO NAM10-DM6-obe.outbound.protection.outlook.com) ([104.47.58.101])
-  by ob1.hgst.iphmx.com with ESMTP; 15 Sep 2021 13:52:17 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YlNS3tIMcD42CYItnpCUQhPjasoggNscZr+nSCGCWooiF7UnG35ib/Ik91gw7xHeTcxzUXJbYjM50xHSBH6iNd4mduz7GOJd/x9MSCaym67XddcCczXT7oda0jDnlMHlPbo57c2+oYD4dPVhA24E2SUoegBHmBxJydKIx/EI91aIcIIk6E6QAzVSOqT9kK/mtSjTnAWIIsVgrQGMcE4HdPI+nk0QmB5rpiI7geBTgd9wOTr0EJTWwhRtDZCvg2BGXS/l79jr1g1ff/VxqQK/AmP++Z3w5ob7qT7aPSqaA04iL04lOwDDonKKOAdlxOduwy5Lt4nncd2rZ6MRVR6mow==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901; h=From:Date:Subject:Message-ID:Content-Type:MIME-Version;
- bh=5WV5fi6Y0K0XHGOsFlbm2TQjdIgdCSe2rk2nlX64fH0=;
- b=VJTiYqO6rlpV7WQzd0U+G+IlhYXhBDWYDj38ckKRdLQmoL0vF1G74T7/iMiiV6vQ9wyxYSQm/hPtC2FlTz0jRTNvP3086LXqHQQzxt1FPOwBQa2FIY4I70OzQ4Tj0CStBSN2KqlaSeo5180oS5ytvtj9+mmY//T7XCrRtz73pbQOwsENdSSXrwTi1Cakm1d0B4QJNAsMAcjJZtPJ9CFNBASf8cMFSZs86YVafIleiALAsxQGXpJUmaK8oh+cYlKNSsJhWyXSHuIw5coqd2ioejEnYC4p5wAO01ub6ggS4wL6P19d6VH8kG+u9VYPYvWa8Q0AKg4A6HUGuBhlCcKvWw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=5WV5fi6Y0K0XHGOsFlbm2TQjdIgdCSe2rk2nlX64fH0=;
- b=ygMyFdCV0P4YvjU0YX2y9+u/5Uf6cB6t02tH4wDgeePg7OeEATHsdQaN0qkEvrHli/VBO8RNRvsLy7gswbRADBuVYD6DPDC+FAZWNCw7JvlPDLXkojY6bseskmg+PjqaKvL0kYln/6cmBp5aTW6MxPLUsAeLFgeeYjqzgsAhIww=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB5628.namprd04.prod.outlook.com (2603:10b6:5:163::17) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4523.14; Wed, 15 Sep 2021 05:52:17 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::edbe:4c5:6ee8:fc59]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::edbe:4c5:6ee8:fc59%3]) with mapi id 15.20.4523.014; Wed, 15 Sep 2021
- 05:52:16 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Guenter Roeck <linux@roeck-us.net>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+   d="scan'208";a="184828924"
+Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Sep 2021 14:04:24 +0800
+IronPort-SDR: D9TRcBjdLlUqDJwNfO9hbgl45k0ph0qJcE80e6ySZMhMn0LSLxqRBRoI7eRt2qLHQIjky+2i+u
+ cifHM0boM/VJslNZZhIE2F4Ga7FcXDoHu+lTTL894pT5SNt6fcZWZk00PEnC9OBEQ8RDRs6FJG
+ b6YbE5gFg2tr6jtyAJL8WpPQR4ougdLSby4lwj2V1O5/NqO6uQmtbE5wFOq+Ro4HjW0AjaoLBB
+ g0cyHzVk5U41qHnMrtdoVJRVMNzfNVCOLXQuzW2BHIRsIReGK5BpoY4hEbTlY0lubL/G/KkNps
+ qCGs7TX2vsjO9n9OJpGktt0P
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Sep 2021 22:40:47 -0700
+IronPort-SDR: VbJfUXnk7+Iy6QGZedejOlL76lQjfU9fYysqPuXUfV1Blp2K0iZ25hjRn+iGa9i3GBf2kfi051
+ 4neT3LiABYppAakq+Nk278FJ+WnjDchUeaaApXvOaOAkyvDnNKeVJu9CAGkSpU5b9fKCRPvW02
+ Fc3tOpS6XTa6+VHMOFKxRSTtsTgX9E5EDajWwFx321A2aE6wSBDNDZwXjWTFBe/n3z7l62+g7z
+ jvlY2IdGAoGlCWwbFm2aeE40ne2c9bPG5DVBGybUXEIdCTjcpp8B3uO/nKLaQUHw+q1Z4Fa3zH
+ 1iw=
+WDCIronportException: Internal
+Received: from bxygm33.ad.shared ([10.225.32.116])
+  by uls-op-cesaip02.wdc.com with ESMTP; 14 Sep 2021 23:04:22 -0700
+From:   Avri Altman <avri.altman@wdc.com>
+To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bart Van Assche <bvanassche@acm.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        Bean Huo <beanhuo@micron.com>
-Subject: RE: [PATCH v6 1/2] scsi: ufs: Probe for temperature notification
- support
-Thread-Topic: [PATCH v6 1/2] scsi: ufs: Probe for temperature notification
- support
-Thread-Index: AQHXqacHZNIKcVZeE0uU8+EwfkSWnqukAhGAgACVcIA=
-Date:   Wed, 15 Sep 2021 05:52:16 +0000
-Message-ID: <DM6PR04MB6575D4234BAE8E0537F5E400FCDB9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20210914202731.5242-1-avri.altman@wdc.com>
- <20210914202731.5242-2-avri.altman@wdc.com>
- <9b294067-a671-ba43-4c49-cbe130ef0190@roeck-us.net>
-In-Reply-To: <9b294067-a671-ba43-4c49-cbe130ef0190@roeck-us.net>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: roeck-us.net; dkim=none (message not signed)
- header.d=none;roeck-us.net; dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: adf5aec3-b9b0-4447-4dee-08d9780cf96b
-x-ms-traffictypediagnostic: DM6PR04MB5628:
-x-microsoft-antispam-prvs: <DM6PR04MB5628C2DA3A897ED95291C1A3FCDB9@DM6PR04MB5628.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:7219;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: 14K15ji7cKV1kUc4CQ3HIGBsm8lkx51W7kwNRHidGvdUrEhLwBZXdFYXDbEpVLL5GF/AMYhjFaCof1JutRoHQ3QPypVvV0z8+a41DatsgnTsTJsMZOVAC27VMNtFzzJSmSJuu7W6bwMC9mel3TLl24X94mKw1OLKjWBhn1kKYTjcLuues8i/IAHNlCoTimnB2A5TnTG+f0W0aBREduOTS67W+MqoVAwv7A+EihBrPe3y1RWVQFdhZpoRWh4gNqNKSXGt8j4qvkAT8H23vndBji1LpvquEpYU8vvVU2u2juIoTX8wT6zSkyfmZ0tEi/Crpi+qg9yfXYaVAJXx13RQtQOEepB0zhvTxjiBwX8oE2lU5rELacG75pIQvCrSqSpmDXO64P5Az5JhuJiaW3lq/PTaoqVb3gXKsvZaiqlPPhhv1o1Ldaj2hEpFofUi5CZuBRMKRGfQbj8tH2w51JyHWzeGYEKxerWunM9JcPdZSEdVbxYUgGmhkq5Hx3U3gKRT6OHB3KnFNdmn5tjRj4IAXb7ooDzgiYTIKaR3uZXvj/uHaInz+AyVu1Jy/GYjDc+4hqg0NxZb1a/H9V6kfFp+oPKMvIY0IeiR5DtcFWav6Ccxm5zr4TfW7ZnIR05mT4XrQmbgx88bcCvzlP7GvlbTar2Qb94iF5DCVQfVSzynq7GTNFPZN19BPICGmiBXMOuwBik5LYtdcpmTXmDdiMGXAQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(376002)(39860400002)(396003)(346002)(366004)(136003)(478600001)(86362001)(4326008)(15650500001)(316002)(54906003)(110136005)(52536014)(8676002)(5660300002)(55016002)(76116006)(9686003)(66946007)(66446008)(6506007)(66476007)(64756008)(66556008)(83380400001)(7696005)(8936002)(71200400001)(2906002)(4744005)(186003)(26005)(122000001)(38070700005)(38100700002)(33656002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?UkdyWEhablh2ZlM1WDlMeDFGRldyREV0SDVjV2V5NzU4WUxMclBmYW9LRlJv?=
- =?utf-8?B?aDNYcng5NGZzc281TDBMQ2JjdURnUDVYOVdZUi9zcjJaYm5ieVYzSmF2N3Rk?=
- =?utf-8?B?T3FERTYvWWczWlFxQVk0d2Y3alFjamVDZC9mVGh3NGUyODZ1YmJuYnVhVlAz?=
- =?utf-8?B?Z0l1TG8yOEpGVFhTeHdRamhyTExZMXNUeWJTUzNXaExEbzMvRE9wbzRFbGtS?=
- =?utf-8?B?dkpaSE5XQ3NISVVIRGcwUklYSlpIbmI5b00rWG5ad0YwaEQxLzYrZ3VnQ1ox?=
- =?utf-8?B?UjNIVjlQZnpzSitDdlBWcEppZkFjNTN5UGVBZ0pXMjd4OXZMZmIrMnI4bERR?=
- =?utf-8?B?YUE3RENjd2NqOERZWVE1aGdNdW5sQk1acmVxakVnVlFRS1pLUVFBNTN6c2RG?=
- =?utf-8?B?Tk9XMW8rQ0t4N2xWaWlJRCtvb3Z6WUlkODduQ3B1ODNmWE5Jb3ZHNjk2NmNN?=
- =?utf-8?B?MTRvcm1jdW1aTUpBd2Rva2VzbVRMZzVEZ3NhWE9WOExxWHFCa21LT1k2d21x?=
- =?utf-8?B?N3ZWRlhjOFJqbzhrd0g4aDBJVEd3VzdWbE9id2RTQjZZOUs4T0dOM3JPenVt?=
- =?utf-8?B?citMWlRsdlpBdmVBQndLdERMTkNUaUdCQU1IaUNFL3VNZGJwcFZwekxldVkv?=
- =?utf-8?B?NVpyanpEdTg5SEFpR2lMUkRFSXJZSHV1ZFh0dm1NamEyOGdEVnRCeGlSTDRr?=
- =?utf-8?B?Zm1aaFpscWkvbjRsd2Zmc3FIQ2FZeVlULzJuK0J6Q2hLdndTSzJ5dW5GMVFh?=
- =?utf-8?B?eGFpa1NGSkJCSjM5cHBaOHdpdzVpYVQ1d2NZRkd4eDFaTVRuall2N3VnNG43?=
- =?utf-8?B?SEVjYTZaWWQ0dW5tRGwvREtJWGtweVc2aUJESWdQV25MWmw5VThFOCtjQU1L?=
- =?utf-8?B?WU1URUF6Z1Q4S1pRVnVac0dnY3kzeDJaUXd0Y3BwZjA0RHd0WGw3eit2eXFJ?=
- =?utf-8?B?c2VaVU11RUNMOFJFd2toc0hRTWhwd2lEb2Q2VGNnV2NnNFZPakVyOVdmeDR3?=
- =?utf-8?B?SVhpV3pVSXZ6cHl1LzZsc2J2QlhRSU5jSDFMaDhWRGZoR0RmRVdlQWZEc3dW?=
- =?utf-8?B?c1JzSDFOYlJQRVMxQTh3bXdGVVBpdGlna1pDV3FRcHdCZWJEaFNYSUMwQ0Vv?=
- =?utf-8?B?NUxRU0hnRlZuanYwZjQ3NU44bmJIaG50NTRMNG5rN3R2U1l4dmFEbTlmbG5M?=
- =?utf-8?B?MmVVMUozNTBmeEpTNjJBMVduOFZQa1M3R3c4a3c1RldRSnNQaXJFR01YVGt1?=
- =?utf-8?B?OHZVUkpiYUFFK0oxcGxkc29SSTJjWFBrNnhQNkVmOTczcU1lUkIzRXZtN0RL?=
- =?utf-8?B?UHdXUDNQeWNpeGtyMEhId1p4RFBPMDlFZnZXTXdNbHhOZjJkZkh2akpKWm5t?=
- =?utf-8?B?djRNMk5vNFZ6aTNYeTMwMTBNbDdKb3kyNHR2d2ErMHBwM0RpdEFMS1cyTWFr?=
- =?utf-8?B?ZEs1a0V4T3JWQTdBMnVVRWFnV3RRRlZTMUQrbDE3dHAwdXg4TllNWGhxMHY4?=
- =?utf-8?B?N0lQTnIrS04zejQwNDRzZDZjK1hnaDFRUjVrMHQxcjQzWStuaUtZUUVDYnF2?=
- =?utf-8?B?OHlpN1QwcDNUNjEwTTQ3TC9VQk50S0lvTDdVZXhhTTZMOE5yNFR0MVIvTXNC?=
- =?utf-8?B?cUFoZEtIZXVJZldaalNodHFERmpBM2hNVTJRZnBlelV1VTlTaVJ6UGltaGZ4?=
- =?utf-8?B?b1VmZGV1MWJ6b1hCcGd4RnQwVU41dnFSak1kZWFmbmZrNTZtdFNZRkhvOGtH?=
- =?utf-8?Q?O11pI5mGRy5Duo+aEUTdu/g6TwDVYMyPnmnxz00?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: adf5aec3-b9b0-4447-4dee-08d9780cf96b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 15 Sep 2021 05:52:16.7522
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: uL7pJ+JfY+TOnMcEUp0tTj3XrG1+OvMi40g8dClzO1Sd/0qA5rsL4c8IX18zR39CDsUx8zm3c8XftHvHKDaTqQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB5628
+        Bean Huo <beanhuo@micron.com>,
+        Guenter Roeck <linux@roeck-us.net>,
+        Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v7 1/2] scsi: ufs: Probe for temperature notification support
+Date:   Wed, 15 Sep 2021 09:04:06 +0300
+Message-Id: <20210915060407.40-2-avri.altman@wdc.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20210915060407.40-1-avri.altman@wdc.com>
+References: <20210915060407.40-1-avri.altman@wdc.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-PiA+ICtzdGF0aWMgaW50IHVmc19od21vbl9yZWFkKHN0cnVjdCBkZXZpY2UgKmRldiwgZW51bQ0K
-PiBod21vbl9zZW5zb3JfdHlwZXMgdHlwZSwgdTMyIGF0dHIsIGludCBjaGFubmVsLA0KPiA+ICsg
-ICAgICAgICAgICAgICAgICAgICAgIGxvbmcgKnZhbCkNCj4gPiArew0KPiA+ICsgICAgIHN0cnVj
-dCB1ZnNfaHdtb25fZGF0YSAqZGF0YSA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOw0KPiA+ICsgICAg
-IHN0cnVjdCB1ZnNfaGJhICpoYmEgPSBkYXRhLT5oYmE7DQo+ID4gKyAgICAgaW50IGVycjsNCj4g
-PiArDQo+ID4gKyAgICAgaWYgKHR5cGUgIT0gaHdtb25fdGVtcCkNCj4gPiArICAgICAgICAgICAg
-IHJldHVybiAwOw0KPiA+ICsNCj4gDQo+IFdhcyB0aGF0IHRoZXJlIGJlZm9yZSA/IERvcnJ5LCBJ
-IGRpZG4ndCBub3RpY2UuDQo+IEZpcnN0IG9mIGFsbCwgc3RyaWN0bHkgc3BlYWtpbmcgaXQgaXMg
-dW5uZWNlc3NhcnksIGJ1dCBpZiBpdCBpcyB0aGVyZQ0KPiBpdCBzaG91bGQgcmV0dXJuIGFuIGVy
-cm9yLiBQbHVzLCBjaGVja2luZyB0aGUgdHlwZSBoZXJlIGJ1dCBub3QgaW4NCj4gdGhlIHdyaXRl
-IGZ1bmN0aW9uIGlzIGEgYml0IGluY29uc2lzdGVudC4NCldpbGwgcmVtb3ZlLiAgRG9uZS4NCg0K
-PiA+ICtzdGF0aWMgaW50IHVmc19od21vbl93cml0ZShzdHJ1Y3QgZGV2aWNlICpkZXYsIGVudW0N
-Cj4gaHdtb25fc2Vuc29yX3R5cGVzIHR5cGUsIHUzMiBhdHRyLCBpbnQgY2hhbm5lbCwNCj4gPiAr
-ICAgICAgICAgICAgICAgICAgICAgICAgbG9uZyB2YWwpDQo+ID4gK3sNCj4gPiArICAgICBzdHJ1
-Y3QgdWZzX2h3bW9uX2RhdGEgKmRhdGEgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsNCj4gPiArICAg
-ICBzdHJ1Y3QgdWZzX2hiYSAqaGJhID0gZGF0YS0+aGJhOw0KPiA+ICsgICAgIGludCBlcnIgPSAw
-Ow0KPiANCj4gU3RpbGwgdW5uZWNlc3NhcnkuDQpEb25lLg0KDQo=
+Probe the dExtendedUFSFeaturesSupport register for the device's
+temperature notification support, and if supported, add a hw monitor
+device.
+
+Signed-off-by: Avri Altman <avri.altman@wdc.com>
+---
+ drivers/scsi/ufs/Kconfig     |   9 ++
+ drivers/scsi/ufs/Makefile    |   1 +
+ drivers/scsi/ufs/ufs-hwmon.c | 198 +++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufs.h       |   7 ++
+ drivers/scsi/ufs/ufshcd.c    |  26 +++++
+ drivers/scsi/ufs/ufshcd.h    |  18 ++++
+ 6 files changed, 259 insertions(+)
+ create mode 100644 drivers/scsi/ufs/ufs-hwmon.c
+
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index 432df76e6318..565e8aa6319d 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -199,3 +199,12 @@ config SCSI_UFS_FAULT_INJECTION
+ 	help
+ 	  Enable fault injection support in the UFS driver. This makes it easier
+ 	  to test the UFS error handler and abort handler.
++
++config SCSI_UFS_HWMON
++	bool "UFS  Temperature Notification"
++	depends on SCSI_UFSHCD && HWMON
++	help
++	  This provides support for UFS hardware monitoring. If enabled,
++	  a hardware monitoring device will be created for the UFS device.
++
++	  If unsure, say N.
+diff --git a/drivers/scsi/ufs/Makefile b/drivers/scsi/ufs/Makefile
+index c407da9b5171..966048875b50 100644
+--- a/drivers/scsi/ufs/Makefile
++++ b/drivers/scsi/ufs/Makefile
+@@ -10,6 +10,7 @@ ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
+ ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
+ ufshcd-core-$(CONFIG_SCSI_UFS_HPB)	+= ufshpb.o
+ ufshcd-core-$(CONFIG_SCSI_UFS_FAULT_INJECTION) += ufs-fault-injection.o
++ufshcd-core-$(CONFIG_SCSI_UFS_HWMON) += ufs-hwmon.o
+ 
+ obj-$(CONFIG_SCSI_UFS_DWC_TC_PCI) += tc-dwc-g210-pci.o ufshcd-dwc.o tc-dwc-g210.o
+ obj-$(CONFIG_SCSI_UFS_DWC_TC_PLATFORM) += tc-dwc-g210-pltfrm.o ufshcd-dwc.o tc-dwc-g210.o
+diff --git a/drivers/scsi/ufs/ufs-hwmon.c b/drivers/scsi/ufs/ufs-hwmon.c
+new file mode 100644
+index 000000000000..33b66736aaa4
+--- /dev/null
++++ b/drivers/scsi/ufs/ufs-hwmon.c
+@@ -0,0 +1,198 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * UFS hardware monitoring support
++ * Copyright (c) 2021, Western Digital Corporation
++ */
++
++#include <linux/hwmon.h>
++#include <linux/units.h>
++
++#include "ufshcd.h"
++
++struct ufs_hwmon_data {
++	struct ufs_hba *hba;
++	u8 mask;
++};
++
++static int ufs_read_temp_enable(struct ufs_hba *hba, u8 mask, long *val)
++{
++	u32 ee_mask;
++	int err;
++
++	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR, QUERY_ATTR_IDN_EE_CONTROL, 0, 0,
++				&ee_mask);
++	if (err)
++		return err;
++
++	*val = (mask & ee_mask & MASK_EE_TOO_HIGH_TEMP) || (mask & ee_mask & MASK_EE_TOO_LOW_TEMP);
++
++	return 0;
++}
++
++static int ufs_get_temp(struct ufs_hba *hba, enum attr_idn idn, long *val)
++{
++	u32 value;
++	int err;
++
++	err = ufshcd_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR, idn, 0, 0, &value);
++	if (err)
++		return err;
++
++	if (value == 0)
++		return -ENODATA;
++
++	*val = ((long)value - 80) * MILLIDEGREE_PER_DEGREE;
++
++	return 0;
++}
++
++static int ufs_hwmon_read(struct device *dev, enum hwmon_sensor_types type, u32 attr, int channel,
++			  long *val)
++{
++	struct ufs_hwmon_data *data = dev_get_drvdata(dev);
++	struct ufs_hba *hba = data->hba;
++	int err;
++
++	down(&hba->host_sem);
++
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		up(&hba->host_sem);
++		return -EBUSY;
++	}
++
++	ufshcd_rpm_get_sync(hba);
++
++	switch (attr) {
++	case hwmon_temp_enable:
++		err = ufs_read_temp_enable(hba, data->mask, val);
++
++		break;
++	case hwmon_temp_crit:
++		err = ufs_get_temp(hba, QUERY_ATTR_IDN_HIGH_TEMP_BOUND, val);
++
++		break;
++	case hwmon_temp_lcrit:
++		err = ufs_get_temp(hba, QUERY_ATTR_IDN_LOW_TEMP_BOUND, val);
++
++		break;
++	case hwmon_temp_input:
++		err = ufs_get_temp(hba, QUERY_ATTR_IDN_CASE_ROUGH_TEMP, val);
++
++		break;
++	default:
++		err = -EOPNOTSUPP;
++
++		break;
++	}
++
++	ufshcd_rpm_put_sync(hba);
++
++	up(&hba->host_sem);
++
++	return err;
++}
++
++static int ufs_hwmon_write(struct device *dev, enum hwmon_sensor_types type, u32 attr, int channel,
++			   long val)
++{
++	struct ufs_hwmon_data *data = dev_get_drvdata(dev);
++	struct ufs_hba *hba = data->hba;
++	int err;
++
++	if (attr != hwmon_temp_enable)
++		return -EINVAL;
++
++	if (val != 0 && val != 1)
++		return -EINVAL;
++
++	down(&hba->host_sem);
++
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		up(&hba->host_sem);
++		return -EBUSY;
++	}
++
++	ufshcd_rpm_get_sync(hba);
++
++	if (val == 1)
++		err = ufshcd_update_ee_usr_mask(hba, MASK_EE_URGENT_TEMP, 0);
++	else
++		err = ufshcd_update_ee_usr_mask(hba, 0, MASK_EE_URGENT_TEMP);
++
++	ufshcd_rpm_put_sync(hba);
++
++	up(&hba->host_sem);
++
++	return err;
++}
++
++static umode_t ufs_hwmon_is_visible(const void *_data, enum hwmon_sensor_types type, u32 attr,
++				    int channel)
++{
++	if (type != hwmon_temp)
++		return 0;
++
++	switch (attr) {
++	case hwmon_temp_enable:
++		return 0644;
++	case hwmon_temp_crit:
++	case hwmon_temp_lcrit:
++	case hwmon_temp_input:
++		return 0444;
++	default:
++		break;
++	}
++	return 0;
++}
++
++static const struct hwmon_channel_info *ufs_hwmon_info[] = {
++	HWMON_CHANNEL_INFO(temp, HWMON_T_ENABLE | HWMON_T_INPUT | HWMON_T_CRIT | HWMON_T_LCRIT),
++	NULL
++};
++
++static const struct hwmon_ops ufs_hwmon_ops = {
++	.is_visible	= ufs_hwmon_is_visible,
++	.read		= ufs_hwmon_read,
++	.write		= ufs_hwmon_write,
++};
++
++static const struct hwmon_chip_info ufs_hwmon_hba_info = {
++	.ops	= &ufs_hwmon_ops,
++	.info	= ufs_hwmon_info,
++};
++
++void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask)
++{
++	struct device *dev = hba->dev;
++	struct ufs_hwmon_data *data;
++	struct device *hwmon;
++
++	data = kzalloc(sizeof(*data), GFP_KERNEL);
++	if (!data)
++		return;
++
++	data->hba = hba;
++	data->mask = mask;
++
++	hwmon = hwmon_device_register_with_info(dev, "ufs", data, &ufs_hwmon_hba_info, NULL);
++	if (IS_ERR(hwmon)) {
++		dev_warn(dev, "Failed to instantiate hwmon device\n");
++		kfree(data);
++		return;
++	}
++
++	hba->hwmon_device = hwmon;
++}
++
++void ufs_hwmon_remove(struct ufs_hba *hba)
++{
++	struct ufs_hwmon_data *data;
++
++	if (!hba->hwmon_device)
++		return;
++
++	data = dev_get_drvdata(hba->hwmon_device);
++	hwmon_device_unregister(hba->hwmon_device);
++	hba->hwmon_device = NULL;
++	kfree(data);
++}
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 8c6b38b1b142..0bfdca3e648e 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -152,6 +152,9 @@ enum attr_idn {
+ 	QUERY_ATTR_IDN_PSA_STATE		= 0x15,
+ 	QUERY_ATTR_IDN_PSA_DATA_SIZE		= 0x16,
+ 	QUERY_ATTR_IDN_REF_CLK_GATING_WAIT_TIME	= 0x17,
++	QUERY_ATTR_IDN_CASE_ROUGH_TEMP          = 0x18,
++	QUERY_ATTR_IDN_HIGH_TEMP_BOUND          = 0x19,
++	QUERY_ATTR_IDN_LOW_TEMP_BOUND           = 0x1A,
+ 	QUERY_ATTR_IDN_WB_FLUSH_STATUS	        = 0x1C,
+ 	QUERY_ATTR_IDN_AVAIL_WB_BUFF_SIZE       = 0x1D,
+ 	QUERY_ATTR_IDN_WB_BUFF_LIFE_TIME_EST    = 0x1E,
+@@ -338,6 +341,9 @@ enum {
+ 
+ /* Possible values for dExtendedUFSFeaturesSupport */
+ enum {
++	UFS_DEV_LOW_TEMP_NOTIF		= BIT(4),
++	UFS_DEV_HIGH_TEMP_NOTIF		= BIT(5),
++	UFS_DEV_EXT_TEMP_NOTIF		= BIT(6),
+ 	UFS_DEV_HPB_SUPPORT		= BIT(7),
+ 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+ };
+@@ -370,6 +376,7 @@ enum {
+ 	MASK_EE_WRITEBOOSTER_EVENT	= BIT(5),
+ 	MASK_EE_PERFORMANCE_THROTTLING	= BIT(6),
+ };
++#define MASK_EE_URGENT_TEMP (MASK_EE_TOO_HIGH_TEMP | MASK_EE_TOO_LOW_TEMP)
+ 
+ /* Background operation status */
+ enum bkops_status {
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 3841ab49f556..ce22340024ce 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -7469,6 +7469,29 @@ static void ufshcd_wb_probe(struct ufs_hba *hba, u8 *desc_buf)
+ 	hba->caps &= ~UFSHCD_CAP_WB_EN;
+ }
+ 
++static void ufshcd_temp_notif_probe(struct ufs_hba *hba, u8 *desc_buf)
++{
++	struct ufs_dev_info *dev_info = &hba->dev_info;
++	u32 ext_ufs_feature;
++	u8 mask = 0;
++
++	if (!(hba->caps & UFSHCD_CAP_TEMP_NOTIF) || dev_info->wspecversion < 0x300)
++		return;
++
++	ext_ufs_feature = get_unaligned_be32(desc_buf + DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP);
++
++	if (ext_ufs_feature & UFS_DEV_LOW_TEMP_NOTIF)
++		mask |= MASK_EE_TOO_LOW_TEMP;
++
++	if (ext_ufs_feature & UFS_DEV_HIGH_TEMP_NOTIF)
++		mask |= MASK_EE_TOO_HIGH_TEMP;
++
++	if (mask) {
++		ufshcd_enable_ee(hba, mask);
++		ufs_hwmon_probe(hba, mask);
++	}
++}
++
+ void ufshcd_fixup_dev_quirks(struct ufs_hba *hba, struct ufs_dev_fix *fixups)
+ {
+ 	struct ufs_dev_fix *f;
+@@ -7564,6 +7587,8 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 
+ 	ufshcd_wb_probe(hba, desc_buf);
+ 
++	ufshcd_temp_notif_probe(hba, desc_buf);
++
+ 	/*
+ 	 * ufshcd_read_string_desc returns size of the string
+ 	 * reset the error value
+@@ -9408,6 +9433,7 @@ void ufshcd_remove(struct ufs_hba *hba)
+ {
+ 	if (hba->sdev_ufs_device)
+ 		ufshcd_rpm_get_sync(hba);
++	ufs_hwmon_remove(hba);
+ 	ufs_bsg_remove(hba);
+ 	ufshpb_remove(hba);
+ 	ufs_sysfs_remove_nodes(hba->dev);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 52ea6f350b18..021c858955af 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -653,6 +653,12 @@ enum ufshcd_caps {
+ 	 * in order to exit DeepSleep state.
+ 	 */
+ 	UFSHCD_CAP_DEEPSLEEP				= 1 << 10,
++
++	/*
++	 * This capability allows the host controller driver to use temperature
++	 * notification if it is supported by the UFS device.
++	 */
++	UFSHCD_CAP_TEMP_NOTIF				= 1 << 11,
+ };
+ 
+ struct ufs_hba_variant_params {
+@@ -789,6 +795,10 @@ struct ufs_hba {
+ 	struct scsi_device *sdev_ufs_device;
+ 	struct scsi_device *sdev_rpmb;
+ 
++#ifdef CONFIG_SCSI_UFS_HWMON
++	struct device *hwmon_device;
++#endif
++
+ 	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
+ 	enum uic_link_state uic_link_state;
+ 	/* Desired UFS power management level during runtime PM */
+@@ -1049,6 +1059,14 @@ static inline u8 ufshcd_wb_get_query_index(struct ufs_hba *hba)
+ 	return 0;
+ }
+ 
++#ifdef CONFIG_SCSI_UFS_HWMON
++void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask);
++void ufs_hwmon_remove(struct ufs_hba *hba);
++#else
++static inline void ufs_hwmon_probe(struct ufs_hba *hba, u8 mask) {}
++static inline void ufs_hwmon_remove(struct ufs_hba *hba) {}
++#endif
++
+ #ifdef CONFIG_PM
+ extern int ufshcd_runtime_suspend(struct device *dev);
+ extern int ufshcd_runtime_resume(struct device *dev);
+-- 
+2.17.1
+
