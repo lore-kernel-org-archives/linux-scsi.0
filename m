@@ -2,135 +2,107 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.7 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D69CC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81A67C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56A7960C51
-	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B92960F23
+	for <linux-scsi@archiver.kernel.org>; Wed, 15 Sep 2021 22:41:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233056AbhIOWmw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Sep 2021 18:42:52 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:36528 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232852AbhIOWme (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Sep 2021 18:42:34 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 09235204257;
-        Thu, 16 Sep 2021 00:33:55 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id VN70dgSjvhks; Thu, 16 Sep 2021 00:33:53 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (host-45-78-207-107.dyn.295.ca [45.78.207.107])
-        by smtp.infotech.no (Postfix) with ESMTPA id 30DFC2041E3;
-        Thu, 16 Sep 2021 00:33:48 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        Damien.LeMoal@wdc.com
-Subject: [PATCH v20 43/46] sg: no_dxfer: move to/from kernel buffers
-Date:   Wed, 15 Sep 2021 18:33:02 -0400
-Message-Id: <20210915223305.256429-44-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20210915223305.256429-1-dgilbert@interlog.com>
-References: <20210915223305.256429-1-dgilbert@interlog.com>
+        id S233348AbhIOWm5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Sep 2021 18:42:57 -0400
+Received: from mail-pf1-f171.google.com ([209.85.210.171]:43963 "EHLO
+        mail-pf1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233048AbhIOWmf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2021 18:42:35 -0400
+Received: by mail-pf1-f171.google.com with SMTP id c1so1164699pfp.10
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Sep 2021 15:41:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=yWWZQAKmuqWhTS9nTXLEopZQnO6deMVZ/0GGv4hfFNs=;
+        b=EJD/ZlUnwXkAKDUhrqJrBOAsUeGvdTrV05/Ye2N2nXRavYE+UH9wG4mzZt0nrzcNhj
+         xYxeLlEDjM66fBB407NXAR6LfIY0LKdHWsUmUbkSx1gRLOA98fSWywTs+xlidJ8MMaQy
+         ZczlmJwWRPm/b9XHcpSVztcXrXqJ/kM8x+z89nUfUvod/+FINjD7IRb+hqEkTQa/Tb3I
+         vrw1fCJ9svsiRcvjjQ+TP4uym7u29Spzw3QvWLMGpMk8POEJea8idmwC4uiJSRaLvKbi
+         7nIlxIlv60NC4bksrjG/WEoDdx6ZbRTXMlSS0d9xp/ggTnf7+gHjTWoDmprmbMoQaXki
+         iPgQ==
+X-Gm-Message-State: AOAM532OS7gxD+AibQi0rQI8bkz1nm5oXsbKxxfhg4K1aRRQGwOER4l+
+        gyJQGDJSXQgfn0dkOIYW0Xr4zCsZY4g=
+X-Google-Smtp-Source: ABdhPJwJnrdSPL7UyHKKriaRLLK2w0DBc9CNTbKFlxfh5aUZNd2Ycmzo3RjYgabcxlgVAkthpFLc3A==
+X-Received: by 2002:a63:1656:: with SMTP id 22mr1979649pgw.20.1631745674450;
+        Wed, 15 Sep 2021 15:41:14 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:913a:44b:dd59:c30])
+        by smtp.gmail.com with ESMTPSA id a26sm891447pgm.87.2021.09.15.15.41.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 15 Sep 2021 15:41:13 -0700 (PDT)
+Subject: Re: [PATCH V3 1/3] scsi: ufs: Fix error handler clear ua deadlock
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
+References: <20210905095153.6217-1-adrian.hunter@intel.com>
+ <20210905095153.6217-2-adrian.hunter@intel.com>
+ <a12d88b3-8402-34bb-fe97-90b7aa2c2c39@acm.org>
+ <835c5eab-5a7b-269d-7483-227978b80cd7@intel.com>
+ <d9656961-4abb-aff0-e34d-d8082a1f4eaa@acm.org>
+ <e5307bbe-1cda-fdd2-a666-ae57cd90de07@acm.org>
+ <36245674-b179-d25e-84c3-417ef2d85620@intel.com>
+ <9220f68e-dc5e-9520-6e55-2a4d86809b44@acm.org>
+ <fae15188-2c1d-b953-f6e4-6e5ac1902b24@intel.com>
+ <2997f7f9-d136-4bad-6490-5e19abccba00@acm.org>
+ <cad73161-f124-e764-964f-3c205aaca2d9@intel.com>
+ <2a43c750-ec15-2ac9-b899-00ed911addd8@acm.org>
+ <8b3f4f40-4959-17ee-577e-ab9473e4882b@intel.com>
+ <75bf671f-6dad-906f-3e32-ceeaf3a6a1bd@acm.org>
+ <1072b4e3-8e18-bb6f-f63e-ec07b1404b50@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <c33f0d4f-d7d4-3a8b-1999-d6bc2d9a5c07@acm.org>
+Date:   Wed, 15 Sep 2021 15:41:11 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <1072b4e3-8e18-bb6f-f63e-ec07b1404b50@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the NO_DXFER flag is use on a command/request, the data-in
-and data-out buffers (if present) should not be ignored. Add
-sg_rq_map_kern() function to handle this. Uses a single bio with
-multiple bvec_s usually each holding multiple pages, if necessary.
-The driver default element size is 32 KiB so if PAGE_SIZE is 4096
-then get_order()==3 .
+On 9/15/21 8:35 AM, Adrian Hunter wrote:
+> Thanks for the idea.  Unfortunately it does not work for pass-through
+> requests, refer scsi_noretry_cmd().  sdev_ufs_device and sdev_rpmb are
+> used with pass-through requests.
 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/sg.c | 55 +++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 55 insertions(+)
+How about allocating and submitting the REQUEST SENSE command from the context
+of a workqueue, or in other words, switching back to scsi_execute()? Although
+that approach doesn't guarantee that the unit attention condition is cleared
+before the first SCSI command is received from outside the UFS driver, I don't
+see any other solution since my understanding is that the deadlock between
+blk_mq_freeze_queue() and blk_get_request() from inside ufshcd_err_handler()
+can also happen without "ufs: Synchronize SCSI and UFS error handling".
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ab4662867d0f..6207546066e9 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -2764,6 +2764,59 @@ exit_sg(void)
- 	idr_destroy(&sg_index_idr);
- }
- 
-+static struct bio *
-+sg_mk_kern_bio(int bvec_cnt)
-+{
-+	struct bio *biop;
-+
-+	if (bvec_cnt > BIO_MAX_VECS)
-+		return NULL;
-+	biop = bio_alloc(GFP_ATOMIC, bvec_cnt);
-+	if (!biop)
-+		return NULL;
-+	biop->bi_end_io = bio_put;
-+	return biop;
-+}
-+
-+/*
-+ * Setup to move data between kernel buffers managed by this driver and a SCSI device. Note that
-+ * there is no corresponding 'unmap' call as is required by blk_rq_map_user() . Uses a single
-+ * bio with an expanded appended bvec if necessary.
-+ */
-+static int
-+sg_rq_map_kern(struct sg_request *srp, struct request_queue *q, struct request *rqq, int rw_ind)
-+{
-+	struct sg_scatter_hold *schp = &srp->sgat_h;
-+	struct bio *bio;
-+	int k, ln;
-+	int op_flags = 0;
-+	int num_sgat = schp->num_sgat;
-+	int dlen = schp->dlen;
-+	int pg_sz = 1 << (PAGE_SHIFT + schp->page_order);
-+
-+	SG_LOG(4, srp->parentfp, "%s: dlen=%d, pg_sz=%d\n", __func__, dlen, pg_sz);
-+	if (num_sgat <= 0)
-+		return 0;
-+	if (rw_ind == WRITE)
-+		op_flags = REQ_SYNC | REQ_IDLE;
-+	bio = sg_mk_kern_bio(num_sgat);
-+	if (!bio)
-+		return -ENOMEM;
-+	bio->bi_opf = req_op(rqq) | op_flags;
-+
-+	for (k = 0; k < num_sgat && dlen > 0; ++k, dlen -= ln) {
-+		ln = min_t(int, dlen, pg_sz);
-+		if (bio_add_pc_page(q, bio, schp->pages[k], ln, 0) < ln) {
-+			bio_put(bio);
-+			return -EINVAL;
-+		}
-+	}
-+	/* used blk_rq_append_bio() before but this is simpler */
-+	blk_rq_bio_prep(rqq, bio, num_sgat);
-+	rqq->nr_phys_segments = (1 << schp->page_order) * num_sgat;
-+	return 0;
-+}
-+
- static inline void
- sg_set_map_data(const struct sg_scatter_hold *schp, bool up_valid,
- 		struct rq_map_data *mdp)
-@@ -2924,6 +2977,8 @@ sg_start_req(struct sg_request *srp, struct sg_comm_wr_t *cwrp, int dxfer_dir)
- 		if (IS_ENABLED(CONFIG_SCSI_PROC_FS) && res)
- 			SG_LOG(1, sfp, "%s: blk_rq_map_user() res=%d\n",
- 			       __func__, res);
-+	} else {	/* transfer data to/from kernel buffers */
-+		res = sg_rq_map_kern(srp, q, rqq, r0w);
- 	}
- fini:
- 	if (unlikely(res)) {		/* failure, free up resources */
--- 
-2.25.1
+The only code I know of that relies on the UFS driver clearing unit attentions
+is this code:
+https://android.googlesource.com/platform/system/core/+/master/trusty/storage/proxy/rpmb.c
+The code that submits a REQUEST SENSE was added in the UFS driver as the result
+of a request from the team that maintains the Trusty code. Earlier today I have
+been promised that unit attention handling support will be added in Trusty but I
+do not when this will be realized.
+
+Bart.
+
 
