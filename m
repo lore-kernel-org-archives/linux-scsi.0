@@ -2,150 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F8D3C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 13:56:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAAC6C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 14:20:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3312E61241
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 13:56:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D1B6260EE3
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 14:20:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235816AbhIPN5r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Sep 2021 09:57:47 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40706 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232753AbhIPN5q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Sep 2021 09:57:46 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4B1FDC061574;
-        Thu, 16 Sep 2021 06:56:26 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id w19so5901448pfn.12;
-        Thu, 16 Sep 2021 06:56:26 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=VQdB0cmtRyC2OUQYF1nmKrbKRoOhkmjS2WdWxiwvfV0=;
-        b=CIfTuZFoNILRqkZ8DcW/GNbMyGgDnxBr4dVf4uWbZjU8pjj4lrHMRtQVPwcdxklAuQ
-         JZziDYokWmjzVIErChST09t12g0u5Q0uRpqfgz1HLLBW1rjGMPZLz0kZ+aU/1VtdGCBf
-         ScvmIZdC/KAH9/s5zwFCH/t+wJJgREk4jkxOEav0yNRvD2PeR9Mt0gXD43CEjS0rWa6X
-         1ojan6I2m/RB70FhK0zBN0wx5wwjfaYXFG9iPhqmYChnfbWqL1/mqLAFucMtI4L4kMUT
-         mDpT/XbuXdWRn1Ki+KD46f09IzCVvENPhyPuOqItQNeOtC2mXKgNu7d+59tp7LLGPGIj
-         mQdg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=VQdB0cmtRyC2OUQYF1nmKrbKRoOhkmjS2WdWxiwvfV0=;
-        b=mm5Jcb5NdRlsCB9HoB33b4242Pg9E5CzZMYcqy6K7oYa1DJeI1IqXGA1ZRf3M2SJWa
-         6oHTB0ocx6YfeIWNuFcQVDioCgkAqjUQMewqv4qc3xpGmfWKT+10DcSYH47a4wmkYHPc
-         5sw0qGPXEFV6z/6kyNzgUVfRVpGVaIcFTT+tiKL0/MsGJBDbiSQt3iQMPfuEnDsVe64J
-         2cuBNc9YBqpaIAI22nbL/F1ETrDe/bbYuHnM91EyG3UAvWTvdDqXOaZXRbz2ZfT1kq0X
-         FgXANfhbGNlMIpLEYUd+PNoCgO3uWG5ePZzY4DwBMyZDfO5W8N+sME3oPaecytu6AWGJ
-         njhw==
-X-Gm-Message-State: AOAM530j0P7VuTmTbz2RCtNDAOYAJvlhMlraO19PDO9J1oFDfi4NC9a6
-        1FvNBhBWL8uADKHh/CgNKKY=
-X-Google-Smtp-Source: ABdhPJwil566vQyG+FPIeqOpCAnK+VdYspH+w8JoanT8EwRLxY95XCPpJH9ls0yqVjdetF6RlrGZEg==
-X-Received: by 2002:a65:44c4:: with SMTP id g4mr5187939pgs.254.1631800585774;
-        Thu, 16 Sep 2021 06:56:25 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:18:efec::50b])
-        by smtp.gmail.com with ESMTPSA id w11sm3376724pfj.65.2021.09.16.06.56.12
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Sep 2021 06:56:25 -0700 (PDT)
-Subject: Re: [PATCH V5 12/12] net: netvsc: Add Isolation VM support for netvsc
- driver
-To:     Haiyang Zhang <haiyangz@microsoft.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "will@kernel.org" <will@kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "pgonda@google.com" <pgonda@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
-        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
-        "saravanand@fb.com" <saravanand@fb.com>,
-        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "rientjes@google.com" <rientjes@google.com>
-Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-References: <20210914133916.1440931-1-ltykernel@gmail.com>
- <20210914133916.1440931-13-ltykernel@gmail.com>
- <MWHPR21MB15939A5D74CA1DF25EE816ADD7DB9@MWHPR21MB1593.namprd21.prod.outlook.com>
- <MN2PR21MB12959F10240EC1BB2270B345CADB9@MN2PR21MB1295.namprd21.prod.outlook.com>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <31da994f-a032-dd40-a90e-bfdaf313d45d@gmail.com>
-Date:   Thu, 16 Sep 2021 21:56:11 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S237408AbhIPOVe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Sep 2021 10:21:34 -0400
+Received: from verein.lst.de ([213.95.11.211]:40384 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235934AbhIPOVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Sep 2021 10:21:34 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 7FB8167373; Thu, 16 Sep 2021 16:20:10 +0200 (CEST)
+Date:   Thu, 16 Sep 2021 16:20:09 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Sven Schnelle <svens@linux.ibm.com>
+Subject: Re: [PATCH] scsi: core: cleanup request queue before releasing
+ gendisk
+Message-ID: <20210916142009.GA12603@lst.de>
+References: <20210915092547.990285-1-ming.lei@redhat.com> <20210915134008.GA13933@lst.de> <YUKfl9Qqsluh+5FX@T590> <20210916101451.GA26782@lst.de> <YUM6uFHqfjWMM5BH@T590>
 MIME-Version: 1.0
-In-Reply-To: <MN2PR21MB12959F10240EC1BB2270B345CADB9@MN2PR21MB1295.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YUM6uFHqfjWMM5BH@T590>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/16/2021 12:46 AM, Haiyang Zhang wrote:
->>> +				memset(vmap_pages, 0,
->>> +				       sizeof(*vmap_pages) * vmap_page_index);
->>> +				vmap_page_index = 0;
->>> +
->>> +				for (j = 0; j < i; j++)
->>> +					__free_pages(pages[j], alloc_unit);
->>> +
->>> +				kfree(pages);
->>> +				alloc_unit = 1;
->> This is the case where a large enough contiguous physical memory chunk
->> could not be found.  But rather than dropping all the way down to single
->> pages, would it make sense to try something smaller, but not 1?  For
->> example, cut the alloc_unit in half and try again.  But I'm not sure of
->> all the implications.
-> I had the same question. But probably gradually decrementing uses too much
-> time?
+On Thu, Sep 16, 2021 at 08:38:16PM +0800, Ming Lei wrote:
+> > > and it may cause other trouble at least for scsi disk since sd_shutdown()
+> > > follows del_gendisk() and has to be called before blk_cleanup_queue().
+> > 
+> > Yes.  So we need to move the bits of blk_cleanup_queue that deal with
+> > the file system I/O state to del_gendisk, and keep blk_cleanup_queue
+> > for anything actually needed for the low-level queue.
 > 
+> Can you explain what the bits are in blk_cleanup_queue() for dealing with FS
+> I/O state? blk_cleanup_queue() drains and shutdown the queue basically,
+> all shouldn't be related with gendisk, and it is fine to implement one
+> queue without gendisk involved, such as nvme admin, connect queue or
+> sort of stuff.
+> 
+> Wrt. this reported issue, rq_qos_exit() needs to run before releasing
+> gendisk, but queue has to put into freezing before calling
+> rq_qos_exit(),
 
-This version is to propose the solution. We may optimize this to try
-smaller size until to single page if this is right direction.
+I was curious what you hit, but yes rq_qos_exit is obvious.
+blk_flush_integrity also is very much about fs I/O state.
 
 
+
+> so looks you suggest to move the following code into
+> del_gendisk()?
+
+something like that.  I think we need to split the dying flag into
+one for the gendisk and one for the queue first, and make sure the
+queue freeze in del_gendisk is released again so that passthrough
+still works after.
+
+> If we move the above into del_gendisk(), some corner cases have to be
+> taken care of, such as request queue without disk involved.
+
+Yes.
