@@ -2,116 +2,140 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ADEA7C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 12:14:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB316C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 12:38:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8DDF660F4A
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 12:14:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DB8560F6D
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 12:38:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239291AbhIPMP1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Sep 2021 08:15:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44616 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239269AbhIPMP0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Sep 2021 08:15:26 -0400
-Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75B49C061574
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2021 05:14:06 -0700 (PDT)
-Received: by mail-il1-x131.google.com with SMTP id d11so2466132ilc.8
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2021 05:14:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:from:date:message-id:subject:to:cc;
-        bh=apF5IJt+I+Tw4TG/Nb56W2gi7ydtbsqj8B5oBJp6qKI=;
-        b=FskSbegYNW5xozQe986i4ol+w1laiykgrKUa61ItxCa35Qvn6IpuRzvZ5BEuQANMNH
-         5baT28ii1O2jTA6QKDDAF54cMFwqkTw+i2TUWYjdPEDpD3mI4j4EyUy08YrPK9BFuRGe
-         WCQW/MCIRA0WX5UevIFkN/wzipFoqdeb5OYGGaT4zLXXGLLdhdCj6DjUGuFWEnc4Dpdu
-         RDHa4/w0zvEVQ1v7G7texjhyEGXNTO98avbBS0F3qYuWGmwLVg59OXwe0lhEbNQSsni2
-         FlBBiTSfXx6oPRiw8PSIxd7yij1IWncoAKOhVLtTBZnaEfCtP/EWjrXQIeGJiywWkQc3
-         fcgQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
-        bh=apF5IJt+I+Tw4TG/Nb56W2gi7ydtbsqj8B5oBJp6qKI=;
-        b=H0idJUh62yz/uDNs349jJVzR68ouQI+SkVRp33/aMIQ4B8q9/EGlRJhAxgBPBK/J1C
-         Z5RoCAY1ccVd4csXYQ3v4P+fXFcnFKaBk6IeLj0kCwPlHFe9CwKDj9TdV9kFSt+KQ0n0
-         wXGgUPWtjrXsr6QoBwjipYUc2rRNf/nAPPgBP4ng8W9i71cYwZY/wvvGjqoiNIk36Ksz
-         sJ+rFAPM4zJ8jigAEqRAlViR4Dj9GDRZsJKZUTuzewJTfEWdQpdgSocHpp4WSxkoHZn8
-         RoPtZd93CNzE23sp12ZiWbPUf3Wsp2Qanz/zC6tjw+s3IB3WvDwqLJmb5Bi3/ctpukFi
-         ZGSA==
-X-Gm-Message-State: AOAM533dUEz7H3i7+EBop4SiWq1igG5mQj/Xv3Op8jyvhX4gA4GmXTT8
-        zTaR4LBQE1snq1UmoKRromne30v2XVwE9gz5Sw==
-X-Google-Smtp-Source: ABdhPJw+IW3H2tGue7kRepUKti9+zTpEFdg4OegUw6Vzcxi8vvFrcAgfBUaafChsMgf3IOqI4hW3lSffdqENSy7qTEg=
-X-Received: by 2002:a92:c64a:: with SMTP id 10mr3700323ill.102.1631794445818;
- Thu, 16 Sep 2021 05:14:05 -0700 (PDT)
+        id S239569AbhIPMji (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Sep 2021 08:39:38 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43798 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239574AbhIPMjh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Sep 2021 08:39:37 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1631795897;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=yBKLYsV0N6z9rzcEtJE1EU2x2DGbJENSdnpMiAD5pkg=;
+        b=gJgWgeG+DRFSlNzab4SmgujUxfpPOw1IuM+MNj7KjiAn8XzK/xgSK4hC7L+znbShmubhXg
+        Pi008Q+oYSIkxRM1B736HzdMCJVC9Y8EAdKNLXkqdVTXbFrB+NvzgGDt/m706IOhFMmWhC
+        Q60Rvb7U/Qr2qCil0A3GzdHtR2H6+BM=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-483-wKpmBBD1MfGr6Weps-WZfA-1; Thu, 16 Sep 2021 08:38:14 -0400
+X-MC-Unique: wKpmBBD1MfGr6Weps-WZfA-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B1F7713E0;
+        Thu, 16 Sep 2021 12:38:12 +0000 (UTC)
+Received: from T590 (ovpn-12-89.pek2.redhat.com [10.72.12.89])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E701A6A912;
+        Thu, 16 Sep 2021 12:38:05 +0000 (UTC)
+Date:   Thu, 16 Sep 2021 20:38:16 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Sven Schnelle <svens@linux.ibm.com>
+Subject: Re: [PATCH] scsi: core: cleanup request queue before releasing
+ gendisk
+Message-ID: <YUM6uFHqfjWMM5BH@T590>
+References: <20210915092547.990285-1-ming.lei@redhat.com>
+ <20210915134008.GA13933@lst.de>
+ <YUKfl9Qqsluh+5FX@T590>
+ <20210916101451.GA26782@lst.de>
 MIME-Version: 1.0
-From:   Jinmeng Zhou <jjjinmeng.zhou@gmail.com>
-Date:   Thu, 16 Sep 2021 20:13:54 +0800
-Message-ID: <CAA-qYXhs-ZBc2hWoC2faT+4jRGsLd=uLAv=UqbtiuH3vZBBicg@mail.gmail.com>
-Subject: sg_ioctl_common() lacks a security check before calling sg_scsi_ioctl()
-To:     dgilbert@interlog.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     shenwenbosmile@gmail.com, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210916101451.GA26782@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Dear maintainers,
+On Thu, Sep 16, 2021 at 12:14:51PM +0200, Christoph Hellwig wrote:
+> On Thu, Sep 16, 2021 at 09:36:23AM +0800, Ming Lei wrote:
+> > >From correctness viewpoint, we need to call blk_cleanup_queue
+> > before releasing gendisk and after del_gendisk(). Now you have invented
+> > blk_cleanup_disk(), do you plan to do the three in one helper? :-)
+> 
+> No.  In retrospective blk_cleanup_disk wan't the best idea for a few
+> reasons.  But at least it consolidated some of the code.
+> 
+> > We don't have to put del_gendisk & blk_cleanup_queue together,
+> 
+> I don't want all of it together.  The important thing is that we have
+> two different concepts:
+> 
+>  - the gendisk is required to do file system style I/O
+>  - a standalone request_queue can be used for passthrough I/O.
 
-hi, our team has found a missing check bug on Linux kernel v5.10.7
-using static analysis.
-Th function sg_ioctl_common() lacks a security check before calling
-sg_scsi_ioctl().
+request_queue is also abstract in block I/O's implementation, which
+can be thought as one lower level concept of gendisk too, IMO.
 
-Specifically, the checking example, scsi_ioctl_common() checks CAP_SYS_ADMIN
-or CAP_SYS_RAWIO at line 6 before calling sg_scsi_ioctl() .
+> 
+> > and it may cause other trouble at least for scsi disk since sd_shutdown()
+> > follows del_gendisk() and has to be called before blk_cleanup_queue().
+> 
+> Yes.  So we need to move the bits of blk_cleanup_queue that deal with
+> the file system I/O state to del_gendisk, and keep blk_cleanup_queue
+> for anything actually needed for the low-level queue.
 
-1.
-2. static int scsi_ioctl_common(struct scsi_device *sdev, int cmd,
-void __user *arg)
-3. {
-4. ...
-5.   case SCSI_IOCTL_SEND_COMMAND:
-6.     if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-7.       return -EACCES;
-8.     return sg_scsi_ioctl(sdev->request_queue, NULL, 0, arg);
-9. ...
-10. }
+Can you explain what the bits are in blk_cleanup_queue() for dealing with FS
+I/O state? blk_cleanup_queue() drains and shutdown the queue basically,
+all shouldn't be related with gendisk, and it is fine to implement one
+queue without gendisk involved, such as nvme admin, connect queue or
+sort of stuff.
 
-
-In no-check function sg_ioctl_common(), sg_scsi_ioctl() is called at
-line 9 without checking
-CAP_SYS_ADMIN or CAP_SYS_RAWIO capability.
-1.
-2. static long sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
-3. unsigned int cmd_in, void __user *p)
-4. {
-5. ...
-6.   case SCSI_IOCTL_SEND_COMMAND:
-7.     if (atomic_read(&sdp->detaching))
-8.       return -ENODEV;
-9.     return sg_scsi_ioctl(sdp->device->request_queue, NULL, filp->f_mode, p);
-10. ...
-11. }
+Wrt. this reported issue, rq_qos_exit() needs to run before releasing
+gendisk, but queue has to put into freezing before calling
+rq_qos_exit(), so looks you suggest to move the following code into
+del_gendisk()?
 
 
-sg_ioctl() calls above functions that firstly calls no-check function
-sg_ioctl_common()
-and then calls checking function scsi_ioctl() => scsi_ioctl_common().
-However, the delayed check may cause a problem.
+        WARN_ON_ONCE(blk_queue_registered(q));
 
-1. static long sg_ioctl(struct file *filp, unsigned int cmd_in,
-unsigned long arg)
-2. {
-3. ...
-4.   ret = sg_ioctl_common(filp, sdp, sfp, cmd_in, p);
-5.   if (ret != -ENOIOCTLCMD)
-6.     return ret;
-7.   return scsi_ioctl(sdp->device, cmd_in, p);
-8. }
+        /* mark @q DYING, no new request or merges will be allowed afterwards */
+        blk_set_queue_dying(q);
+
+        blk_queue_flag_set(QUEUE_FLAG_NOMERGES, q);
+        blk_queue_flag_set(QUEUE_FLAG_NOXMERGES, q);
+
+        /*
+         * Drain all requests queued before DYING marking. Set DEAD flag to
+         * prevent that blk_mq_run_hw_queues() accesses the hardware queues
+         * after draining finished.
+         */
+        blk_freeze_queue(q);
+
+        rq_qos_exit(q);
+
+If we move the above into del_gendisk(), some corner cases have to be
+taken care of, such as request queue without disk involved.
+
+> 
+> To take SCSI as the example.  We can unload the sd/sr drivers and the
+> queue needs to still be around and work for use with the sg driver.
+> 
+> > BTW, you asked the reproducer of the issue, I just observed the issue
+> > one or two time when running blktests block/009, but my scsi lifetime
+> > bpftrace script does show that gendisk is released before blk_cleanup_queue().
+> 
+> Interesting.  What were the symptoms in this case?
+
+It is same with recent report of 'general protection fault in wb_timer_fn'.
+
+
+Thanks,
+Ming
+
