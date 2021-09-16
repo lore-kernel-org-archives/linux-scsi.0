@@ -2,140 +2,149 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB316C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 12:38:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 111B7C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 13:01:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DB8560F6D
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 12:38:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7B896105A
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 13:01:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239569AbhIPMji (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Sep 2021 08:39:38 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:43798 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239574AbhIPMjh (ORCPT
+        id S239831AbhIPNDC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Sep 2021 09:03:02 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:9620 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239574AbhIPNDB (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Sep 2021 08:39:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1631795897;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=yBKLYsV0N6z9rzcEtJE1EU2x2DGbJENSdnpMiAD5pkg=;
-        b=gJgWgeG+DRFSlNzab4SmgujUxfpPOw1IuM+MNj7KjiAn8XzK/xgSK4hC7L+znbShmubhXg
-        Pi008Q+oYSIkxRM1B736HzdMCJVC9Y8EAdKNLXkqdVTXbFrB+NvzgGDt/m706IOhFMmWhC
-        Q60Rvb7U/Qr2qCil0A3GzdHtR2H6+BM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-483-wKpmBBD1MfGr6Weps-WZfA-1; Thu, 16 Sep 2021 08:38:14 -0400
-X-MC-Unique: wKpmBBD1MfGr6Weps-WZfA-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B1F7713E0;
-        Thu, 16 Sep 2021 12:38:12 +0000 (UTC)
-Received: from T590 (ovpn-12-89.pek2.redhat.com [10.72.12.89])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E701A6A912;
-        Thu, 16 Sep 2021 12:38:05 +0000 (UTC)
-Date:   Thu, 16 Sep 2021 20:38:16 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Sven Schnelle <svens@linux.ibm.com>
-Subject: Re: [PATCH] scsi: core: cleanup request queue before releasing
- gendisk
-Message-ID: <YUM6uFHqfjWMM5BH@T590>
-References: <20210915092547.990285-1-ming.lei@redhat.com>
- <20210915134008.GA13933@lst.de>
- <YUKfl9Qqsluh+5FX@T590>
- <20210916101451.GA26782@lst.de>
+        Thu, 16 Sep 2021 09:03:01 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.0.43) with SMTP id 18GCUJvl027919;
+        Thu, 16 Sep 2021 09:01:29 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
+ from : reply-to : to : cc : date : in-reply-to : references : content-type
+ : mime-version : content-transfer-encoding; s=pp1;
+ bh=Xc0IFJsm4c5Joa75hpTgGyIX90u/Wq9tzQLT/BG1NCM=;
+ b=okqljXf3JaawZRLejkkufix1ltktyYyHs7+nOzC4Sx3utI5WvI2xyG6AB+DwT/L0deq+
+ /Sw2ZEIl27b61waOIgae5S0wsTAnZSEgx/+fVEJ9hLtpoVfhYv9MNsuQOh/Q5SBa9vZz
+ HjmAp59B/XGPbtDniIOfr/rzfBrMpQ4OfxE6EeP7J2ve45gWbQqyVRcEIc6sPUqtIfyB
+ HxdidFHsFpjvmPfzVcUq+C1oNvUTmJKbeGyJHumYyhBk5uZbqv9ncHxlSHmFrET9kegJ
+ 1eFmiF6Npd1TkRB3elAxbBBTHfX6YUh9eaUD4yknu7rfdc+/guzy5PMkm1ea2EsG/kia iA== 
+Received: from ppma01wdc.us.ibm.com (fd.55.37a9.ip4.static.sl-reverse.com [169.55.85.253])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3b4605gp0f-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 16 Sep 2021 09:01:29 -0400
+Received: from pps.filterd (ppma01wdc.us.ibm.com [127.0.0.1])
+        by ppma01wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18GCqpdU030160;
+        Thu, 16 Sep 2021 13:01:27 GMT
+Received: from b03cxnp07029.gho.boulder.ibm.com (b03cxnp07029.gho.boulder.ibm.com [9.17.130.16])
+        by ppma01wdc.us.ibm.com with ESMTP id 3b0m3b20x2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 16 Sep 2021 13:01:27 +0000
+Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
+        by b03cxnp07029.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18GD1Q1h43843926
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 16 Sep 2021 13:01:26 GMT
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 50F75780AE;
+        Thu, 16 Sep 2021 13:01:26 +0000 (GMT)
+Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 3DC7178082;
+        Thu, 16 Sep 2021 13:01:25 +0000 (GMT)
+Received: from jarvis.lan (unknown [9.211.54.195])
+        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Thu, 16 Sep 2021 13:01:25 +0000 (GMT)
+Message-ID: <b89cf2d046e4817fbc7978069ce22683b6ad0bcd.camel@linux.ibm.com>
+Subject: Re: [PATCH V3 1/1] scsi/ses: Saw "Failed to get diagnostic page 0x1"
+From:   James Bottomley <jejb@linux.ibm.com>
+Reply-To: jejb@linux.ibm.com
+To:     dgilbert@interlog.com, wenxiong@linux.vnet.ibm.com
+Cc:     linux-scsi@vger.kernel.org, brking1@linux.vnet.ibm.com,
+        martin.petersen@oracle.com, wenxiong@us.ibm.com
+Date:   Thu, 16 Sep 2021 09:01:23 -0400
+In-Reply-To: <1365506b-c31e-250e-e120-8fe54c94a068@interlog.com>
+References: <1631711048-6177-1-git-send-email-wenxiong@linux.vnet.ibm.com>
+         <0912982133a254770a27b780cd2c5771739ced3b.camel@linux.ibm.com>
+         <1365506b-c31e-250e-e120-8fe54c94a068@interlog.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210916101451.GA26782@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: _-9fb7vvuZZ8g4cBi6O-tFBIR8JpBn4q
+X-Proofpoint-ORIG-GUID: _-9fb7vvuZZ8g4cBi6O-tFBIR8JpBn4q
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.687,Hydra:6.0.235,FMLib:17.0.607.475
+ definitions=2020-10-13_15,2020-10-13_02,2020-04-07_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 bulkscore=0
+ mlxlogscore=999 priorityscore=1501 mlxscore=0 lowpriorityscore=0
+ spamscore=0 adultscore=0 clxscore=1011 phishscore=0 suspectscore=0
+ impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109030001 definitions=main-2109160072
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 16, 2021 at 12:14:51PM +0200, Christoph Hellwig wrote:
-> On Thu, Sep 16, 2021 at 09:36:23AM +0800, Ming Lei wrote:
-> > >From correctness viewpoint, we need to call blk_cleanup_queue
-> > before releasing gendisk and after del_gendisk(). Now you have invented
-> > blk_cleanup_disk(), do you plan to do the three in one helper? :-)
+On Wed, 2021-09-15 at 13:55 -0400, Douglas Gilbert wrote:
+> On 2021-09-15 10:43 a.m., James Bottomley wrote:
+> > On Wed, 2021-09-15 at 08:04 -0500, wenxiong@linux.vnet.ibm.com
+> > wrote:
+> > > From: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+> > > 
+> > > Setting scsi logging level with error=3, we saw some errors from
+> > > enclosues:
+> > > 
+> > > [108017.360833] ses 0:0:9:0: tag#641 Done: NEEDS_RETRY Result:
+> > > hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
+> > > [108017.360838] ses 0:0:9:0: tag#641 CDB: Receive Diagnostic 1c
+> > > 01 01
+> > > 00 20 00
+> > > [108017.427778] ses 0:0:9:0: Power-on or device reset occurred
+> > > [108017.427784] ses 0:0:9:0: tag#641 Done: SUCCESS Result:
+> > > hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=0s
+> > > [108017.427788] ses 0:0:9:0: tag#641 CDB: Receive Diagnostic 1c
+> > > 01 01
+> > > 00 20 00
+> > > [108017.427791] ses 0:0:9:0: tag#641 Sense Key : Unit Attention
+> > > [current]
+> > > [108017.427793] ses 0:0:9:0: tag#641 Add. Sense: Bus device reset
+> > > function occurred
+> > > [108017.427801] ses 0:0:9:0: Failed to get diagnostic page 0x1
+> > > [108017.427804] ses 0:0:9:0: Failed to bind enclosure -19
+> > > [108017.427895] ses 0:0:10:0: Attached Enclosure device
+> > > [108017.427942] ses 0:0:10:0: Attached scsi generic sg18 type 13
+> > > 
+> > > As Martin's suggestion, the patch checks to retry on NOT_READY as
+> > > well as UNIT_ATTENTION with ASC 0x29.
+> > 
+> > This looks fine to me.  I think the reason expecting_cc_ua doesn't
+> > work for you is that you're getting > 1 reset per
+> > command.  expecting_cc_ua automatically resets after eating the
+> > first unit attention.
 > 
-> No.  In retrospective blk_cleanup_disk wan't the best idea for a few
-> reasons.  But at least it consolidated some of the code.
-> 
-> > We don't have to put del_gendisk & blk_cleanup_queue together,
-> 
-> I don't want all of it together.  The important thing is that we have
-> two different concepts:
-> 
->  - the gendisk is required to do file system style I/O
->  - a standalone request_queue can be used for passthrough I/O.
+> Rather that simply consuming UAs, what do you think of a fixed length
+> FIFO, say 8 entries, that holds the asc,ascq of the last 8 UAs
+> together with a timestamp of when it was received (with a boot time
+> epoch).  Then allow the user space to see that FIFO via sysfs (e.g.
+> under /sys/class/scsi_device/<hctl>). Remembering the previous UA may
+> also be useful for the mid-level UA processing. For example after a
+> firmware upgrade, there may be UAs for both INQUIRY data change and
+> device reset.
 
-request_queue is also abstract in block I/O's implementation, which
-can be thought as one lower level concept of gendisk too, IMO.
+I don't really see how it would be useful.  On the available debugging
+information (which is a bit scant) it looks like a single device
+problem (as usual) ... possibly not clearing the condition after the
+REQUEST_SENSE because I can't believe another reset went over the bus
+immediately after the first UA/CC was received.
 
-> 
-> > and it may cause other trouble at least for scsi disk since sd_shutdown()
-> > follows del_gendisk() and has to be called before blk_cleanup_queue().
-> 
-> Yes.  So we need to move the bits of blk_cleanup_queue that deal with
-> the file system I/O state to del_gendisk, and keep blk_cleanup_queue
-> for anything actually needed for the low-level queue.
+> Also the first device reset after a reboot (power cycle) is expected,
+> having one later, for example when part of a disk is mounted, is a
+> bit more suspicious.
 
-Can you explain what the bits are in blk_cleanup_queue() for dealing with FS
-I/O state? blk_cleanup_queue() drains and shutdown the queue basically,
-all shouldn't be related with gendisk, and it is fine to implement one
-queue without gendisk involved, such as nvme admin, connect queue or
-sort of stuff.
+It's definitely hugely suspicious, but tying it to ASC/ASQC 0x29/0x00
+should limit the fallout considerably.
 
-Wrt. this reported issue, rq_qos_exit() needs to run before releasing
-gendisk, but queue has to put into freezing before calling
-rq_qos_exit(), so looks you suggest to move the following code into
-del_gendisk()?
+James
 
-
-        WARN_ON_ONCE(blk_queue_registered(q));
-
-        /* mark @q DYING, no new request or merges will be allowed afterwards */
-        blk_set_queue_dying(q);
-
-        blk_queue_flag_set(QUEUE_FLAG_NOMERGES, q);
-        blk_queue_flag_set(QUEUE_FLAG_NOXMERGES, q);
-
-        /*
-         * Drain all requests queued before DYING marking. Set DEAD flag to
-         * prevent that blk_mq_run_hw_queues() accesses the hardware queues
-         * after draining finished.
-         */
-        blk_freeze_queue(q);
-
-        rq_qos_exit(q);
-
-If we move the above into del_gendisk(), some corner cases have to be
-taken care of, such as request queue without disk involved.
-
-> 
-> To take SCSI as the example.  We can unload the sd/sr drivers and the
-> queue needs to still be around and work for use with the sg driver.
-> 
-> > BTW, you asked the reproducer of the issue, I just observed the issue
-> > one or two time when running blktests block/009, but my scsi lifetime
-> > bpftrace script does show that gendisk is released before blk_cleanup_queue().
-> 
-> Interesting.  What were the symptoms in this case?
-
-It is same with recent report of 'general protection fault in wb_timer_fn'.
-
-
-Thanks,
-Ming
 
