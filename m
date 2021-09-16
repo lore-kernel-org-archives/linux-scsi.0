@@ -2,96 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
+X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABCD5C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 01:36:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB405C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 02:33:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E1ED61164
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 01:36:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95D5A611CB
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 02:33:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232068AbhIPBhm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Sep 2021 21:37:42 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:57334 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229816AbhIPBhl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Sep 2021 21:37:41 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1631756180;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=uyUrL1cWGAPfM3Qq6PAJKxGx/9G1qMQnrrqjWkVJBcc=;
-        b=fqDu4bJRDMQmVVNJLpcsUW/GRorF0Xo829gLCz8+GX08bOE65fAlW2iBuUNFpsfwDCwdu5
-        pLES6nqljhA3wvSEbb6vrPRK943E2Fqb1JmdeqfsdCUkOGbCcrR682z8XbkVXXD4lnMQvS
-        7trzther3QMCNmKYqqEMNLFasR4Goh4=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-476-CgrpFrYhMWanHQ9OtjgEpQ-1; Wed, 15 Sep 2021 21:36:19 -0400
-X-MC-Unique: CgrpFrYhMWanHQ9OtjgEpQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 644BF9126D;
-        Thu, 16 Sep 2021 01:36:18 +0000 (UTC)
-Received: from T590 (ovpn-12-163.pek2.redhat.com [10.72.12.163])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4DA2F5453A;
-        Thu, 16 Sep 2021 01:36:11 +0000 (UTC)
-Date:   Thu, 16 Sep 2021 09:36:23 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Sven Schnelle <svens@linux.ibm.com>
-Subject: Re: [PATCH] scsi: core: cleanup request queue before releasing
- gendisk
-Message-ID: <YUKfl9Qqsluh+5FX@T590>
-References: <20210915092547.990285-1-ming.lei@redhat.com>
- <20210915134008.GA13933@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210915134008.GA13933@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+        id S233816AbhIPCeZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Sep 2021 22:34:25 -0400
+Received: from mailout3.samsung.com ([203.254.224.33]:19062 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231724AbhIPCeY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2021 22:34:24 -0400
+Received: from epcas3p1.samsung.com (unknown [182.195.41.19])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210916023303epoutp0352b3e58b9e04d0d9449846dc93091a46~lLLIjnGc-1707417074epoutp03m
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2021 02:33:03 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210916023303epoutp0352b3e58b9e04d0d9449846dc93091a46~lLLIjnGc-1707417074epoutp03m
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1631759583;
+        bh=ljGSippabUdmaUmpB0srgCUxBu6tUejORTZv7oYqZsU=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=khOqZ/Xutmt4a2Pwh699ITchjDNRJJoyvWWJDdwhCmGfeIrhcx1xBkWv3ds9crYFV
+         RUGihpkodryjim8z8cLbS+F0F4z/uajknRRUTdjN7VLHCovqf8jHkki90c+vuFBdWS
+         gzh92ZfcjUR9dDEpz5O9Mo6d5UEkZBq2Ay0/NSOY=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
+        20210916023303epcas3p1bf119ddce1332e3418b47406a0d113b5~lLLIIBUBG3166531665epcas3p1Y;
+        Thu, 16 Sep 2021 02:33:03 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp2.localdomain
+        (Postfix) with ESMTP id 4H91Mz0gNpz4x9Q3; Thu, 16 Sep 2021 02:33:03 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: RE: [PATCH v7 1/2] scsi: ufs: Probe for temperature notification
+ support
+Reply-To: daejun7.park@samsung.com
+Sender: Daejun Park <daejun7.park@samsung.com>
+From:   Daejun Park <daejun7.park@samsung.com>
+To:     Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Guenter Roeck <linux@roeck-us.net>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20210915060407.40-2-avri.altman@wdc.com>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01631759583079.JavaMail.epsvc@epcpadp4>
+Date:   Thu, 16 Sep 2021 11:30:11 +0900
+X-CMS-MailID: 20210916023011epcms2p3f3dba820d03b315d0e0198394c8cb1ae
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20210915060437epcas2p1f8bcdda5911050391b82be6c9831e4c2
+References: <20210915060407.40-2-avri.altman@wdc.com>
+        <20210915060407.40-1-avri.altman@wdc.com>
+        <CGME20210915060437epcas2p1f8bcdda5911050391b82be6c9831e4c2@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 15, 2021 at 03:40:08PM +0200, Christoph Hellwig wrote:
-> On Wed, Sep 15, 2021 at 05:25:47PM +0800, Ming Lei wrote:
-> > gendisk instance has to be released after request queue is cleaned up
-> > because bdi is referred from gendisk since commit edb0872f44ec ("block:
-> > move the bdi from the request_queue to the gendisk").
-> > 
-> > For sd and sr, gendisk can be removed in the release handler(sd_remove/
-> > sr_remove) of sdev->sdev_gendev, which is triggered in device_del(sdev->sdev_gendev)
-> > in __scsi_remove_device(), when the request queue isn't cleaned up yet.
-> > 
-> > So kernel oops could be triggered when referring bdi via gendisk.
-> > 
-> > Fix the issue by moving blk_cleanup_queue() into sd_remove() and
-> > sr_remove().
-> 
-> This looks like a bit of a bandaid to me.  I think the proper fix
-> is to move the parts of blk_cleanup_queue that need a disk or bdi
-> to del_gendisk.
+Hi Avri,
 
-From correctness viewpoint, we need to call blk_cleanup_queue
-before releasing gendisk and after del_gendisk(). Now you have invented
-blk_cleanup_disk(), do you plan to do the three in one helper? :-)
+>+config SCSI_UFS_HWMON
+>+        bool "UFS  Temperature Notification"
+It has double space.
 
-We don't have to put del_gendisk & blk_cleanup_queue together,
-and it may cause other trouble at least for scsi disk since sd_shutdown()
-follows del_gendisk() and has to be called before blk_cleanup_queue().
+>+        depends on SCSI_UFSHCD && HWMON
+>+        help
+>+          This provides support for UFS hardware monitoring. If enabled,
+>+          a hardware monitoring device will be created for the UFS device.
+>+
+>+          If unsure, say N.
 
-BTW, you asked the reproducer of the issue, I just observed the issue
-one or two time when running blktests block/009, but my scsi lifetime
-bpftrace script does show that gendisk is released before blk_cleanup_queue().
+Anyway,
+Reviewed-by: Daejun Park <daejun7.park@samsung.com>
 
 Thanks,
-Ming
-
+Daejun
