@@ -2,173 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,NICE_REPLY_A,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02E45C4332F
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 10:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADEA7C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 12:14:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DA80D61283
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 10:57:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DDF660F4A
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 12:14:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237442AbhIPK64 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Sep 2021 06:58:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55076 "EHLO
+        id S239291AbhIPMP1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 16 Sep 2021 08:15:27 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44616 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236506AbhIPK6z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Sep 2021 06:58:55 -0400
-Received: from mail-pg1-x536.google.com (mail-pg1-x536.google.com [IPv6:2607:f8b0:4864:20::536])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 03D45C061766;
-        Thu, 16 Sep 2021 03:57:35 -0700 (PDT)
-Received: by mail-pg1-x536.google.com with SMTP id g184so5780569pgc.6;
-        Thu, 16 Sep 2021 03:57:34 -0700 (PDT)
+        with ESMTP id S239269AbhIPMP0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Sep 2021 08:15:26 -0400
+Received: from mail-il1-x131.google.com (mail-il1-x131.google.com [IPv6:2607:f8b0:4864:20::131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 75B49C061574
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2021 05:14:06 -0700 (PDT)
+Received: by mail-il1-x131.google.com with SMTP id d11so2466132ilc.8
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2021 05:14:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=zetJ5G0LMyibhhBY6/35VWLw2vAGWh3kCNdD5BxkSZI=;
-        b=Iq+3mvGj2jY0H1hK5L2+2LJkiT3nS6liFloV8Frq8+FJ3Y0LxB2A38VNCla7awjuhj
-         Q3Cl5qmmvoV1YWOZQweI486bIgofq+t3jwjAQ3GGQ1BTx00wXTwDzZt3wO26vvMZXlEU
-         Srw78VlxUG3ClRIenDB9DS9KklBz8Gy2Kt0AIAheRW83PteD9N403WMbpA39HXJuq8IF
-         JiYUmg4zDGjeRBVLjEF25+aPcjKe8oOTUL3KuuMaaLo1G4aP3SLUOfZT+6b94AvHMe5Q
-         tcf8/9xlWcz7WQzaFSNkMRaXjJszFIpx0K2ojEu+E4bzhBM/xSgQmOnlb5Oz/8Q8cN9d
-         Qp1A==
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=apF5IJt+I+Tw4TG/Nb56W2gi7ydtbsqj8B5oBJp6qKI=;
+        b=FskSbegYNW5xozQe986i4ol+w1laiykgrKUa61ItxCa35Qvn6IpuRzvZ5BEuQANMNH
+         5baT28ii1O2jTA6QKDDAF54cMFwqkTw+i2TUWYjdPEDpD3mI4j4EyUy08YrPK9BFuRGe
+         WCQW/MCIRA0WX5UevIFkN/wzipFoqdeb5OYGGaT4zLXXGLLdhdCj6DjUGuFWEnc4Dpdu
+         RDHa4/w0zvEVQ1v7G7texjhyEGXNTO98avbBS0F3qYuWGmwLVg59OXwe0lhEbNQSsni2
+         FlBBiTSfXx6oPRiw8PSIxd7yij1IWncoAKOhVLtTBZnaEfCtP/EWjrXQIeGJiywWkQc3
+         fcgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=zetJ5G0LMyibhhBY6/35VWLw2vAGWh3kCNdD5BxkSZI=;
-        b=br+0t4HTIaRXvbi/MyqqC1WP2c9YNEHk7+0kVyBddZW5IY4kVPvnRykS2XchYZFTow
-         qpJAcHbbY2mjgE1kNSxkkyUsvyzXI2p2o7zMItlHSV6fjaEixx78O/fDlw5qIYg3IV3a
-         Z8lGsY0KAL8b+46f70EiSW/s7nT8V2IkamszMzmFKAyrdLia8h+GEXqx9mmB5DwrZYdz
-         wcWdaK3t0WGwQFMWnvXRq0KPOJZvWNkBu/FmFt+We/eiNFjVdtzpLTKksrA3YHNkBj1W
-         KC0K+ztkHx8GVwAuGjwm+J7cW0+/WXSPKa0Qg4pLvCOESOy/P9PNynmUkr5ydIz9+9Qm
-         MmvA==
-X-Gm-Message-State: AOAM531g+Z5KNhWe+8bef32XQ6LZ/HAE9LelXkeroLV8YO/i4K7fuMIG
-        m7+xHB72+j1ya69qE6fDwLA=
-X-Google-Smtp-Source: ABdhPJyJnHqPNf+opjGA7LpPgHFY6nzsERWLwilu6XCHi7kaSPNw+MpELyJKztS12zzhPWoDpdap2Q==
-X-Received: by 2002:aa7:959a:0:b0:43b:adeb:ef58 with SMTP id z26-20020aa7959a000000b0043badebef58mr4426857pfj.19.1631789854486;
-        Thu, 16 Sep 2021 03:57:34 -0700 (PDT)
-Received: from ?IPv6:2404:f801:0:5:8000::50b? ([2404:f801:9000:1a:efea::50b])
-        by smtp.gmail.com with ESMTPSA id n141sm2856237pfd.90.2021.09.16.03.57.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 16 Sep 2021 03:57:34 -0700 (PDT)
-Subject: Re: [PATCH V5 09/12] x86/Swiotlb: Add Swiotlb bounce buffer remap
- function for HV IVM
-To:     Michael Kelley <mikelley@microsoft.com>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        "wei.liu@kernel.org" <wei.liu@kernel.org>,
-        Dexuan Cui <decui@microsoft.com>,
-        "tglx@linutronix.de" <tglx@linutronix.de>,
-        "mingo@redhat.com" <mingo@redhat.com>,
-        "bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
-        "hpa@zytor.com" <hpa@zytor.com>,
-        "dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
-        "luto@kernel.org" <luto@kernel.org>,
-        "peterz@infradead.org" <peterz@infradead.org>,
-        "konrad.wilk@oracle.com" <konrad.wilk@oracle.com>,
-        "boris.ostrovsky@oracle.com" <boris.ostrovsky@oracle.com>,
-        "jgross@suse.com" <jgross@suse.com>,
-        "sstabellini@kernel.org" <sstabellini@kernel.org>,
-        "joro@8bytes.org" <joro@8bytes.org>,
-        "will@kernel.org" <will@kernel.org>,
-        "davem@davemloft.net" <davem@davemloft.net>,
-        "kuba@kernel.org" <kuba@kernel.org>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "arnd@arndb.de" <arnd@arndb.de>, "hch@lst.de" <hch@lst.de>,
-        "m.szyprowski@samsung.com" <m.szyprowski@samsung.com>,
-        "robin.murphy@arm.com" <robin.murphy@arm.com>,
-        "brijesh.singh@amd.com" <brijesh.singh@amd.com>,
-        Tianyu Lan <Tianyu.Lan@microsoft.com>,
-        "thomas.lendacky@amd.com" <thomas.lendacky@amd.com>,
-        "pgonda@google.com" <pgonda@google.com>,
-        "akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-        "kirill.shutemov@linux.intel.com" <kirill.shutemov@linux.intel.com>,
-        "rppt@kernel.org" <rppt@kernel.org>,
-        "sfr@canb.auug.org.au" <sfr@canb.auug.org.au>,
-        "aneesh.kumar@linux.ibm.com" <aneesh.kumar@linux.ibm.com>,
-        "saravanand@fb.com" <saravanand@fb.com>,
-        "krish.sadhukhan@oracle.com" <krish.sadhukhan@oracle.com>,
-        "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>,
-        "tj@kernel.org" <tj@kernel.org>,
-        "rientjes@google.com" <rientjes@google.com>
-Cc:     "iommu@lists.linux-foundation.org" <iommu@lists.linux-foundation.org>,
-        "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        vkuznets <vkuznets@redhat.com>,
-        "parri.andrea@gmail.com" <parri.andrea@gmail.com>,
-        "dave.hansen@intel.com" <dave.hansen@intel.com>
-References: <20210914133916.1440931-1-ltykernel@gmail.com>
- <20210914133916.1440931-10-ltykernel@gmail.com>
- <MWHPR21MB159349234C15D0F04F87845CD7DB9@MWHPR21MB1593.namprd21.prod.outlook.com>
-From:   Tianyu Lan <ltykernel@gmail.com>
-Message-ID: <3f6a6407-b8fd-803b-e4fe-ea9a873a5840@gmail.com>
-Date:   Thu, 16 Sep 2021 18:57:20 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=apF5IJt+I+Tw4TG/Nb56W2gi7ydtbsqj8B5oBJp6qKI=;
+        b=H0idJUh62yz/uDNs349jJVzR68ouQI+SkVRp33/aMIQ4B8q9/EGlRJhAxgBPBK/J1C
+         Z5RoCAY1ccVd4csXYQ3v4P+fXFcnFKaBk6IeLj0kCwPlHFe9CwKDj9TdV9kFSt+KQ0n0
+         wXGgUPWtjrXsr6QoBwjipYUc2rRNf/nAPPgBP4ng8W9i71cYwZY/wvvGjqoiNIk36Ksz
+         sJ+rFAPM4zJ8jigAEqRAlViR4Dj9GDRZsJKZUTuzewJTfEWdQpdgSocHpp4WSxkoHZn8
+         RoPtZd93CNzE23sp12ZiWbPUf3Wsp2Qanz/zC6tjw+s3IB3WvDwqLJmb5Bi3/ctpukFi
+         ZGSA==
+X-Gm-Message-State: AOAM533dUEz7H3i7+EBop4SiWq1igG5mQj/Xv3Op8jyvhX4gA4GmXTT8
+        zTaR4LBQE1snq1UmoKRromne30v2XVwE9gz5Sw==
+X-Google-Smtp-Source: ABdhPJw+IW3H2tGue7kRepUKti9+zTpEFdg4OegUw6Vzcxi8vvFrcAgfBUaafChsMgf3IOqI4hW3lSffdqENSy7qTEg=
+X-Received: by 2002:a92:c64a:: with SMTP id 10mr3700323ill.102.1631794445818;
+ Thu, 16 Sep 2021 05:14:05 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <MWHPR21MB159349234C15D0F04F87845CD7DB9@MWHPR21MB1593.namprd21.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+From:   Jinmeng Zhou <jjjinmeng.zhou@gmail.com>
+Date:   Thu, 16 Sep 2021 20:13:54 +0800
+Message-ID: <CAA-qYXhs-ZBc2hWoC2faT+4jRGsLd=uLAv=UqbtiuH3vZBBicg@mail.gmail.com>
+Subject: sg_ioctl_common() lacks a security check before calling sg_scsi_ioctl()
+To:     dgilbert@interlog.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     shenwenbosmile@gmail.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/15/2021 11:42 PM, Michael Kelley wrote:
->> @@ -196,13 +199,34 @@ static void swiotlb_init_io_tlb_mem(struct io_tlb_mem *mem, phys_addr_t start,
->>   		mem->slots[i].orig_addr = INVALID_PHYS_ADDR;
->>   		mem->slots[i].alloc_size = 0;
->>   	}
->> +
->> +	if (set_memory_decrypted((unsigned long)vaddr, bytes >> PAGE_SHIFT))
->> +		return -EFAULT;
->> +
->> +	/*
->> +	 * Map memory in the unencrypted physical address space when requested
->> +	 * (e.g. for Hyper-V AMD SEV-SNP Isolation VMs).
->> +	 */
->> +	if (swiotlb_unencrypted_base) {
->> +		phys_addr_t paddr = __pa(vaddr) + swiotlb_unencrypted_base;
-> Nit:  Use "start" instead of "__pa(vaddr)" since "start" is already the needed
-> physical address.
+Dear maintainers,
+
+hi, our team has found a missing check bug on Linux kernel v5.10.7
+using static analysis.
+Th function sg_ioctl_common() lacks a security check before calling
+sg_scsi_ioctl().
+
+Specifically, the checking example, scsi_ioctl_common() checks CAP_SYS_ADMIN
+or CAP_SYS_RAWIO at line 6 before calling sg_scsi_ioctl() .
+
+1.
+2. static int scsi_ioctl_common(struct scsi_device *sdev, int cmd,
+void __user *arg)
+3. {
+4. ...
+5.   case SCSI_IOCTL_SEND_COMMAND:
+6.     if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+7.       return -EACCES;
+8.     return sg_scsi_ioctl(sdev->request_queue, NULL, 0, arg);
+9. ...
+10. }
 
 
-Yes, "start" should be used here.
+In no-check function sg_ioctl_common(), sg_scsi_ioctl() is called at
+line 9 without checking
+CAP_SYS_ADMIN or CAP_SYS_RAWIO capability.
+1.
+2. static long sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
+3. unsigned int cmd_in, void __user *p)
+4. {
+5. ...
+6.   case SCSI_IOCTL_SEND_COMMAND:
+7.     if (atomic_read(&sdp->detaching))
+8.       return -ENODEV;
+9.     return sg_scsi_ioctl(sdp->device->request_queue, NULL, filp->f_mode, p);
+10. ...
+11. }
 
-> 
->> @@ -304,7 +332,7 @@ int
->>   swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
->>   {
->>   	struct io_tlb_mem *mem = &io_tlb_default_mem;
->> -	unsigned long bytes = nslabs << IO_TLB_SHIFT;
->> +	int ret;
->>
->>   	if (swiotlb_force == SWIOTLB_NO_FORCE)
->>   		return 0;
->> @@ -318,8 +346,9 @@ swiotlb_late_init_with_tbl(char *tlb, unsigned long nslabs)
->>   	if (!mem->slots)
->>   		return -ENOMEM;
->>
->> -	set_memory_decrypted((unsigned long)tlb, bytes >> PAGE_SHIFT);
->> -	swiotlb_init_io_tlb_mem(mem, virt_to_phys(tlb), nslabs, true);
->> +	ret = swiotlb_init_io_tlb_mem(mem, virt_to_phys(tlb), nslabs, true);
->> +	if (ret)
-> Before returning the error, free the pages obtained from the earlier call
-> to __get_free_pages()?
-> 
 
-Yes, will fix.
+sg_ioctl() calls above functions that firstly calls no-check function
+sg_ioctl_common()
+and then calls checking function scsi_ioctl() => scsi_ioctl_common().
+However, the delayed check may cause a problem.
 
-Thanks.
+1. static long sg_ioctl(struct file *filp, unsigned int cmd_in,
+unsigned long arg)
+2. {
+3. ...
+4.   ret = sg_ioctl_common(filp, sdp, sfp, cmd_in, p);
+5.   if (ret != -ENOIOCTLCMD)
+6.     return ret;
+7.   return scsi_ioctl(sdp->device, cmd_in, p);
+8. }
