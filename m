@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-11.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	INCLUDES_CR_TRAILER,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB405C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 02:33:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D238CC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 02:33:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 95D5A611CB
-	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 02:33:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B8069611CE
+	for <linux-scsi@archiver.kernel.org>; Thu, 16 Sep 2021 02:33:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233816AbhIPCeZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 15 Sep 2021 22:34:25 -0400
-Received: from mailout3.samsung.com ([203.254.224.33]:19062 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231724AbhIPCeY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2021 22:34:24 -0400
-Received: from epcas3p1.samsung.com (unknown [182.195.41.19])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20210916023303epoutp0352b3e58b9e04d0d9449846dc93091a46~lLLIjnGc-1707417074epoutp03m
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2021 02:33:03 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20210916023303epoutp0352b3e58b9e04d0d9449846dc93091a46~lLLIjnGc-1707417074epoutp03m
+        id S233903AbhIPCe0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 15 Sep 2021 22:34:26 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:59760 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233648AbhIPCeZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Sep 2021 22:34:25 -0400
+Received: from epcas3p2.samsung.com (unknown [182.195.41.20])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20210916023304epoutp041abe8f75fc5a02613a2a7763f39e5c17~lLLJIYblv0827008270epoutp04h
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Sep 2021 02:33:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20210916023304epoutp041abe8f75fc5a02613a2a7763f39e5c17~lLLJIYblv0827008270epoutp04h
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1631759583;
-        bh=ljGSippabUdmaUmpB0srgCUxBu6tUejORTZv7oYqZsU=;
+        s=mail20170921; t=1631759584;
+        bh=jCN5a4cEt/+80CdNBFg0IKWnkC6hHe+XrSi7ZI8RTDw=;
         h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=khOqZ/Xutmt4a2Pwh699ITchjDNRJJoyvWWJDdwhCmGfeIrhcx1xBkWv3ds9crYFV
-         RUGihpkodryjim8z8cLbS+F0F4z/uajknRRUTdjN7VLHCovqf8jHkki90c+vuFBdWS
-         gzh92ZfcjUR9dDEpz5O9Mo6d5UEkZBq2Ay0/NSOY=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        b=jc60G35jsA/3AHOls/bTNbNL9roBWRI//ChjuBOEJVvTzzCvxz7MkOWbsLCFU40Qe
+         D45veEIHDGjba9W6nn2jOMrK0tVDrnShBJKdiIphoUS0hhn2buy23GLUMFlWnC2NGR
+         VQVvNRl1HFGU/bRaSRq8xltErhVLhC9ULr57AOIY=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
         epcas3p1.samsung.com (KnoxPortal) with ESMTP id
-        20210916023303epcas3p1bf119ddce1332e3418b47406a0d113b5~lLLIIBUBG3166531665epcas3p1Y;
+        20210916023303epcas3p175841196653ecc38e2727269387273af~lLLImkK443077630776epcas3p1g;
         Thu, 16 Sep 2021 02:33:03 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp2.localdomain
-        (Postfix) with ESMTP id 4H91Mz0gNpz4x9Q3; Thu, 16 Sep 2021 02:33:03 +0000
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp4.localdomain
+        (Postfix) with ESMTP id 4H91Mz4Pccz4x9Q2; Thu, 16 Sep 2021 02:33:03 +0000
         (GMT)
 Mime-Version: 1.0
-Subject: RE: [PATCH v7 1/2] scsi: ufs: Probe for temperature notification
- support
+Subject: RE: [PATCH v7 2/2] scsi: ufs: Add temperature notification
+ exception handling
 Reply-To: daejun7.park@samsung.com
 Sender: Daejun Park <daejun7.park@samsung.com>
 From:   Daejun Park <daejun7.park@samsung.com>
@@ -54,44 +54,39 @@ CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
         Guenter Roeck <linux@roeck-us.net>
 X-Priority: 3
 X-Content-Kind-Code: NORMAL
-In-Reply-To: <20210915060407.40-2-avri.altman@wdc.com>
+In-Reply-To: <20210915060407.40-3-avri.altman@wdc.com>
 X-CPGS-Detection: blocking_info_exchange
 X-Drm-Type: N,general
 X-Msg-Generator: Mail
 X-Msg-Type: PERSONAL
 X-Reply-Demand: N
-Message-ID: <1891546521.01631759583079.JavaMail.epsvc@epcpadp4>
-Date:   Thu, 16 Sep 2021 11:30:11 +0900
-X-CMS-MailID: 20210916023011epcms2p3f3dba820d03b315d0e0198394c8cb1ae
-Content-Transfer-Encoding: 7bit
+Message-ID: <513700442.21631759583614.JavaMail.epsvc@epcpadp4>
+Date:   Thu, 16 Sep 2021 11:31:25 +0900
+X-CMS-MailID: 20210916023125epcms2p3066f4ba490e7677c63c7f8f4c11ce6cc
+Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 X-CPGSPASS: Y
 X-CPGSPASS: Y
 X-Hop-Count: 3
-X-CMS-RootMailID: 20210915060437epcas2p1f8bcdda5911050391b82be6c9831e4c2
-References: <20210915060407.40-2-avri.altman@wdc.com>
+X-CMS-RootMailID: 20210915060436epcas2p326d8663ed23430529a5b4f9407eca8c9
+References: <20210915060407.40-3-avri.altman@wdc.com>
         <20210915060407.40-1-avri.altman@wdc.com>
-        <CGME20210915060437epcas2p1f8bcdda5911050391b82be6c9831e4c2@epcms2p3>
+        <CGME20210915060436epcas2p326d8663ed23430529a5b4f9407eca8c9@epcms2p3>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Hi Avri,
 
->+config SCSI_UFS_HWMON
->+        bool "UFS  Temperature Notification"
-It has double space.
+>The device may notify the host of an extreme temperature by using the
+>exception event mechanism. The exception can be raised when the device=E2=
+=80=99s
+>Tcase temperature is either too high or too low.
+>=20
+>It is essentially up to the platform to decide what further actions need
+>to be taken. leave a placeholder for a designated vop for that.
+>=20
+>Signed-off-by: Avri Altman <avri.altman@wdc.com>
 
->+        depends on SCSI_UFSHCD && HWMON
->+        help
->+          This provides support for UFS hardware monitoring. If enabled,
->+          a hardware monitoring device will be created for the UFS device.
->+
->+          If unsure, say N.
-
-Anyway,
 Reviewed-by: Daejun Park <daejun7.park@samsung.com>
-
-Thanks,
-Daejun
