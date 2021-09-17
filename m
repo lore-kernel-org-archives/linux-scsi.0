@@ -6,83 +6,72 @@ X-Spam-Status: No, score=-6.7 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
 	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50105C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Sep 2021 17:27:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AFCEC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Sep 2021 17:38:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 273C860F21
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Sep 2021 17:27:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3F6AD60F21
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Sep 2021 17:38:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343813AbhIQR2x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 13:28:53 -0400
-Received: from mail-pf1-f175.google.com ([209.85.210.175]:46897 "EHLO
-        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240938AbhIQR2w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 13:28:52 -0400
-Received: by mail-pf1-f175.google.com with SMTP id 203so1975454pfy.13;
-        Fri, 17 Sep 2021 10:27:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=ZuvAu+FzGmydWNHlU3zYaItV7zmXiqpK74jzvaLSh14=;
-        b=IIxl29Rmb2tXN7R1dWP/XyCLRFEXmi+Fswf71RNIUFFUKDIb2K21rQyZeWx6TZ4odx
-         S/vYUBUKNIrdW+Ssr2piAQpTCIes7dv612oxGF+XyWOBs//2/fNr4UQ4rZS85gAAXW8A
-         Ik/YP+ld8fyDUIGKvYG60/HE4ghh5j/axj9QExEaGYtiu13RQ4+j2ycYjtvEeT0BlgPJ
-         koTliDFq7ZwejcHh+0LnWmZBYPiOcHc/tnMnNNbmXdk4/1D2JOwdqerPgOdK9x3QITgy
-         4gr2LdaRK7wQ+h90cUxFFOvdz9/VwnDWJo6xNlszLHrydQrKOvZLnafplLg5pn3E1WIu
-         a2UA==
-X-Gm-Message-State: AOAM532i9V6FzM/YwafpHGV7GHC8M4/LQvlNM6sc0WgmJJj3L6InniE5
-        p5pe4psn47Xwbd+Bo5tb6geRzk3qeCg=
-X-Google-Smtp-Source: ABdhPJzzUBDvNqV18d0bYDVokxUqC5xPvgR89wuHgSWBDQaCVKT4AgIAVVsFFPqh3J6CVkcXgbr06g==
-X-Received: by 2002:a62:ae13:0:b0:440:385c:2ee9 with SMTP id q19-20020a62ae13000000b00440385c2ee9mr12153114pff.39.1631899649799;
-        Fri, 17 Sep 2021 10:27:29 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:aa45:4fa2:923f:21d1])
-        by smtp.gmail.com with ESMTPSA id i10sm6775587pfk.151.2021.09.17.10.27.27
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 17 Sep 2021 10:27:28 -0700 (PDT)
-Subject: Re: [PATCH] scsi: ufs: Fix a possible dead lock in clock scaling
-To:     Can Guo <cang@codeaurora.org>, asutoshd@codeaurora.org,
-        nguyenb@codeaurora.org, hongwus@codeaurora.org,
-        ziqichen@codeaurora.org, linux-scsi@vger.kernel.org,
-        kernel-team@android.com
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        id S240689AbhIQRjw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 13:39:52 -0400
+Received: from mga09.intel.com ([134.134.136.24]:34263 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237238AbhIQRjw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Sep 2021 13:39:52 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10110"; a="222881344"
+X-IronPort-AV: E=Sophos;i="5.85,302,1624345200"; 
+   d="scan'208";a="222881344"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Sep 2021 10:38:30 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,302,1624345200"; 
+   d="scan'208";a="473192468"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.84]) ([10.237.72.84])
+  by orsmga007.jf.intel.com with ESMTP; 17 Sep 2021 10:38:27 -0700
+Subject: Re: [PATCH V4 1/3] scsi: ufs: Fix error handler clear ua deadlock
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
         Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1631843521-2863-1-git-send-email-cang@codeaurora.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <cc9cb9e7-68bd-3bfa-9310-5fbf99a86544@acm.org>
-Date:   Fri, 17 Sep 2021 10:27:27 -0700
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
+References: <20210916170211.8564-1-adrian.hunter@intel.com>
+ <20210916170211.8564-2-adrian.hunter@intel.com>
+ <8a3ab601-81c4-8386-b7c8-5bea2ed99002@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <3a8b5325-0bef-b18e-8961-3bfc465096a0@intel.com>
+Date:   Fri, 17 Sep 2021 20:39:09 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+ Firefox/78.0 Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <1631843521-2863-1-git-send-email-cang@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <8a3ab601-81c4-8386-b7c8-5bea2ed99002@acm.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/16/21 6:51 PM, Can Guo wrote:
-> Assume a scenario where task A and B call ufshcd_devfreq_scale()
-> simultaneously. After task B calls downgrade_write() [1], but before it
-> calls down_read() [3], if task A calls down_write() [2], when task B calls
-> down_read() [3], it will lead to dead lock.
+On 17/09/21 7:09 pm, Bart Van Assche wrote:
+> On 9/16/21 10:02 AM, Adrian Hunter wrote:
+>> -static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
+>> +static int ufshcd_request_sense_direct(struct ufs_hba *hba, u8 wlun)
+>>   {
+> [ ... ]
+>> +    /* The command queue cannot be frozen */
+>> +    req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
+> 
+> hba->cmd_queue shares a tag set with the request queues associated with SCSI
+> LUNs. Since this blk_get_request() call happens from the context of the error
+> handler before SCSI requests are unblocked, it will hang if all tags are
+> in use for SCSI requests before the error handler starts.
 
-Something is wrong with the above description. The downgrade_write() call is
-not followed by down_read() but by up_read(). Additionally, I don't see how
-concurrent calls of ufshcd_devfreq_scale() could lead to a deadlock. If one
-thread calls downgrade_write() and another thread calls down_write() immediately,
-that down_write() call will block until the other thread has called up_read()
-without triggering a deadlock.
+All the commands sent by ufshcd_probe_hba() take the same approach, so no
+difference there.
 
-Thanks,
-
-Bart.
