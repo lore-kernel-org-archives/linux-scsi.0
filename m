@@ -2,111 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3AE6C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Sep 2021 03:39:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87D4DC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Sep 2021 04:48:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AA9A56108F
-	for <linux-scsi@archiver.kernel.org>; Fri, 17 Sep 2021 03:39:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61D7260F93
+	for <linux-scsi@archiver.kernel.org>; Fri, 17 Sep 2021 04:48:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244045AbhIQDlE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 16 Sep 2021 23:41:04 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:36870 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S242037AbhIQDlD (ORCPT
+        id S244704AbhIQEtV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 00:49:21 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:32522 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S244700AbhIQEtI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Sep 2021 23:41:03 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1631849981;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=B9r/+Zs88h2CfccJTBLTJgNfdwtNFfPY6UfBjfQU3/E=;
-        b=Mp6aMp3JL7vVe0h3GQLlol+G61AaZvCg+ejCg3QgLgNEs1nzQy030r9d9KIq/qXY3mN9MH
-        egzYBJwzbKFABstOMzpLttoBaJw+81aB4PsMl8zzL5oa8tOQdkVmPJoUmNgXsjRZ1xGDcs
-        eb6WMJ3g/IdKbeUB0iTTs3G+fYF5k6U=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-429-S64eqPBnPpae_FmZr_hRmw-1; Thu, 16 Sep 2021 23:39:40 -0400
-X-MC-Unique: S64eqPBnPpae_FmZr_hRmw-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8CB0D8145E6;
-        Fri, 17 Sep 2021 03:39:39 +0000 (UTC)
-Received: from T590.Home (ovpn-12-120.pek2.redhat.com [10.72.12.120])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1F64D5D9D3;
-        Fri, 17 Sep 2021 03:39:35 +0000 (UTC)
-Date:   Fri, 17 Sep 2021 11:39:48 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Sven Schnelle <svens@linux.ibm.com>
-Subject: Re: [PATCH] scsi: core: cleanup request queue before releasing
- gendisk
-Message-ID: <YUQOBKa67R9pEunr@T590.Home>
-References: <20210915092547.990285-1-ming.lei@redhat.com>
- <20210915134008.GA13933@lst.de>
- <YUKfl9Qqsluh+5FX@T590>
- <20210916101451.GA26782@lst.de>
- <YUM6uFHqfjWMM5BH@T590>
- <20210916142009.GA12603@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210916142009.GA12603@lst.de>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+        Fri, 17 Sep 2021 00:49:08 -0400
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18H4RUnl028706;
+        Fri, 17 Sep 2021 00:47:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
+ : date : message-id; s=pp1;
+ bh=YDdDWuS4gEUmYH95pLfp7IAuAzXZHyH1/s7htloovyI=;
+ b=tVVPJ+7zW4XUDvIlvDIZNvkC5DxCCRsoU/X7wtJR6JIgMjt7xX3Q9VXP8bCVIG91X7xn
+ igbPITlP5FuIQOXd/6ls5RwW6qLvPxqaev7/oGEe1HcP6TkqGHPVeFVua/Ls+eozy3iz
+ FmoEDg0hAeGkHpXJ8ryZsSkubq6uUmDc/u8ipnMU5qZaxUN8AEXfrh5jjV1W3iqW8uw1
+ KnjHkH7JP8apJQVQafa2vfdq+zdwL04SNNcEBdM7MVmJDOtX4Zl8lj7gpDsQJFDcVcZa
+ FawHJZMNlRJ0DBK8G7EO46xId6L5A8gvpBg6s9lHVFYUAyuXmFbF/nRx9eEz1yp0Ulj7 iQ== 
+Received: from ppma04wdc.us.ibm.com (1a.90.2fa9.ip4.static.sl-reverse.com [169.47.144.26])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 3b4g673txc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Sep 2021 00:47:44 -0400
+Received: from pps.filterd (ppma04wdc.us.ibm.com [127.0.0.1])
+        by ppma04wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 18H4l29w012416;
+        Fri, 17 Sep 2021 04:47:44 GMT
+Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
+        by ppma04wdc.us.ibm.com with ESMTP id 3b0m3d264g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Fri, 17 Sep 2021 04:47:44 +0000
+Received: from b01ledav005.gho.pok.ibm.com (b01ledav005.gho.pok.ibm.com [9.57.199.110])
+        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 18H4lgdQ44958084
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 17 Sep 2021 04:47:43 GMT
+Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id DB33AAE063;
+        Fri, 17 Sep 2021 04:47:42 +0000 (GMT)
+Received: from b01ledav005.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 64782AE05F;
+        Fri, 17 Sep 2021 04:47:42 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.40.195.89])
+        by b01ledav005.gho.pok.ibm.com (Postfix) with ESMTP;
+        Fri, 17 Sep 2021 04:47:42 +0000 (GMT)
+From:   wenxiong@linux.ibm.com
+To:     jejb@linux.ibm.com
+Cc:     linux-scsi@vger.kernel.org, brking@linux.ibm.com,
+        martin.petersen@oracle.com, wenxiong@us.ibm.com,
+        Wen Xiong <wenxiong@linux.ibm.com>
+Subject: [V4 PATCH 0/1] Saw "Failed to get diagnostic page 0x1"
+Date:   Thu, 16 Sep 2021 22:20:05 -0500
+Message-Id: <1631848806-10184-1-git-send-email-wenxiong@linux.ibm.com>
+X-Mailer: git-send-email 1.6.0.2
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: pePiXPBERCpmFf_kKr0xgwO1wnu1YiHi
+X-Proofpoint-GUID: pePiXPBERCpmFf_kKr0xgwO1wnu1YiHi
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
+ definitions=2021-09-17_02,2021-09-16_01,2020-04-07_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 malwarescore=0
+ spamscore=0 lowpriorityscore=0 phishscore=0 impostorscore=0
+ priorityscore=1501 bulkscore=0 mlxscore=0 mlxlogscore=822 clxscore=1011
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109030001 definitions=main-2109170028
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 16, 2021 at 04:20:09PM +0200, Christoph Hellwig wrote:
-> On Thu, Sep 16, 2021 at 08:38:16PM +0800, Ming Lei wrote:
-> > > > and it may cause other trouble at least for scsi disk since sd_shutdown()
-> > > > follows del_gendisk() and has to be called before blk_cleanup_queue().
-> > > 
-> > > Yes.  So we need to move the bits of blk_cleanup_queue that deal with
-> > > the file system I/O state to del_gendisk, and keep blk_cleanup_queue
-> > > for anything actually needed for the low-level queue.
-> > 
-> > Can you explain what the bits are in blk_cleanup_queue() for dealing with FS
-> > I/O state? blk_cleanup_queue() drains and shutdown the queue basically,
-> > all shouldn't be related with gendisk, and it is fine to implement one
-> > queue without gendisk involved, such as nvme admin, connect queue or
-> > sort of stuff.
-> > 
-> > Wrt. this reported issue, rq_qos_exit() needs to run before releasing
-> > gendisk, but queue has to put into freezing before calling
-> > rq_qos_exit(),
-> 
-> I was curious what you hit, but yes rq_qos_exit is obvious.
-> blk_flush_integrity also is very much about fs I/O state.
-> 
-> 
-> 
-> > so looks you suggest to move the following code into
-> > del_gendisk()?
-> 
-> something like that.  I think we need to split the dying flag into
-> one for the gendisk and one for the queue first, and make sure the
-> queue freeze in del_gendisk is released again so that passthrough
-> still works after.
+From: Wen Xiong <wenxiong@linux.ibm.com>
 
-If we do that, q->disk is really unnecessary, so looks the fix of
-'d152c682f03c block: add an explicit ->disk backpointer to the request_queue'
-isn't good. The original issue added in 'edb0872f44ec block: move the
-bdi from the request_queue to the gendisk' can be fixed simply by moving
-the two lines code in blk_unregister_queue() to blk_cleanup_queue():
+v4:
+Add checking return value before calling scsi_sense_valid()
+v3:
+checked to retry on NOT_READY and UNIT_ATTENTION
+v2:
+checked to retry on UNIT_ATTENTION in ses_recv_diag();
+v1:
+called scsi_test_unit_ready() to eat UA in ses_recv_diag()
 
-        kobject_uevent(&q->kobj, KOBJ_REMOVE);
-        kobject_del(&q->kobj);
+Wen Xiong (1):
+  scsi/ses: Saw "Failed to get diagnostic page 0x1"
 
+ drivers/scsi/ses.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-Thanks,
-Ming
+-- 
+2.27.0
 
