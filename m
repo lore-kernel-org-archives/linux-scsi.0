@@ -7,50 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79455C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BC6C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 693F0610C7
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 482EA60F48
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344904AbhIRAJH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:09:07 -0400
-Received: from mail-pl1-f170.google.com ([209.85.214.170]:41760 "EHLO
-        mail-pl1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345015AbhIRAI7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:59 -0400
-Received: by mail-pl1-f170.google.com with SMTP id v2so7217410plp.8
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:36 -0700 (PDT)
+        id S1344955AbhIRAJI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:09:08 -0400
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:44864 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345012AbhIRAI4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:56 -0400
+Received: by mail-pj1-f44.google.com with SMTP id nn5-20020a17090b38c500b0019af1c4b31fso8526135pjb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=n9QG+j7dRNE8WJqkjlsAAnEoru4B7O9u01zPYrvqEKg=;
-        b=qV6BfmMluOoCwLpluGRJLd6ThjIls3BbTIuDXmL7XVX3DgPiuVKn53j1eTxEFLjvH1
-         bE1pix8VruhzflMZp75v/uYsM/63muDSbRZxzi0CB5E49WAKILJWzkLaq5xbh4EgdtY7
-         oTlHkuxnxRh0/KHwspqoGqSyB+tEZx1FFDL+sCXZ/y2/B58T9Jb/NnYc+Ok2IHNkayeF
-         lsGN9eBm+5ohcUo3swXiFzbUzIZD3AWaNhQ0eQV32M4e1WVfRqH6QfLMRZ7ZlFB0byNp
-         40kG994venss9sy6dtlRjf/ZI4lUaLI5HwsCJmZQ+MV7kpYizhiLOitXKkt1pXv9CN87
-         WJxw==
-X-Gm-Message-State: AOAM532YJAedhGhp0sE1WnxeIp1Pxaqgxq1/295+5YxkeD/Mo/e99tx8
-        c8X9HMrtgK1efxj3HgPTW3pU7WA2ec4BUA==
-X-Google-Smtp-Source: ABdhPJyCLesqtcnDfx/jRwrzZ2IIgyjR9y2tIKXFsP0ErBDfca17uGxKL0FXStEJgxJknaWhj7l/iA==
-X-Received: by 2002:a17:90b:1bd1:: with SMTP id oa17mr24315393pjb.82.1631923656249;
-        Fri, 17 Sep 2021 17:07:36 -0700 (PDT)
+        bh=ZB60LWHAfkiS/kmf0g0evgkoAU3LFMVjB0yLlO/psCo=;
+        b=KtZ9YjDmsHT67x2s2lrwSXzewLY9lDwuLlRXPChf7ktiFXDpYBZtvO0x9LgrkNfVg2
+         PeQBgeOxftLuPzc+ZrX9EpWPlfn/ilu8fLcf06T5SerWJofLQrmIBM7N5z5OSKEHXEzH
+         p19syr7HD0Ixct8lRhXXKJzKOQ4KTSWmcD3n3XAxZgY1EbTPMHwHjiVF4x89IrHkIQOY
+         imy3GlpVv+dnGNgW2c7TmG3UUzktjpO9J9Pt+ptV/caa/lr5uKTWWGsgdlO8AKKv4wNb
+         4U69oUAdPdolBKzReWLYQ2YMuvSV5MLidXEI2ijA85dWJ+tvezPNnCp4L8g71P+UgLX3
+         H9PA==
+X-Gm-Message-State: AOAM533AuTS0XD9z4K5ji8KISn8qW618SudayOSLdmAj25bZ+VbtEUN0
+        Ljb4OZaI183p8GLdX3rWNg0=
+X-Google-Smtp-Source: ABdhPJzJB/Assmo3hkrDViZQl8oE5XzG0DLCkl4EJUjgZxMz2SXLrgW3UfDinxP9pTKZWFMRGcs+AA==
+X-Received: by 2002:a17:90b:1c09:: with SMTP id oc9mr8799049pjb.128.1631923653169;
+        Fri, 17 Sep 2021 17:07:33 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.35
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.32
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:35 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:32 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 48/84] megaraid: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:31 -0700
-Message-Id: <20210918000607.450448-49-bvanassche@acm.org>
+Subject: [PATCH 46/84] lpfc: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:29 -0700
+Message-Id: <20210918000607.450448-47-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -65,163 +64,46 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/megaraid/megaraid_mbox.c       |  9 ++++-----
- drivers/scsi/megaraid/megaraid_sas_base.c   | 16 ++++++++--------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  6 +++---
- 3 files changed, 15 insertions(+), 16 deletions(-)
+ drivers/scsi/lpfc/lpfc_scsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index d20c2e4ee793..705c5027ba91 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -1440,7 +1440,6 @@ megaraid_queue_command_lck(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd
- 	int		if_busy;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 078fbea3f436..ca604ae166c6 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -564,7 +564,7 @@ lpfc_sli4_io_xri_aborted(struct lpfc_hba *phba,
+ 				 * scsi_done upcall.
+ 				 */
+ 				if (cmd)
+-					cmd->scsi_done(cmd);
++					scsi_done(cmd);
  
- 	adapter		= SCP2ADAPTER(scp);
--	scp->scsi_done	= done;
- 	scp->result	= 0;
+ 				/*
+ 				 * We expect there is an abort thread waiting
+@@ -4502,7 +4502,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+ 		goto out;
+ 
+ 	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
+-	cmd->scsi_done(cmd);
++	scsi_done(cmd);
  
  	/*
-@@ -2358,7 +2357,7 @@ megaraid_mbox_dpc(unsigned long devp)
- 		megaraid_dealloc_scb(adapter, scb);
+ 	 * If there is an abort thread waiting for command completion
+@@ -4771,7 +4771,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ #endif
  
- 		// send the scsi packet back to kernel
--		scp->scsi_done(scp);
-+		scsi_done(scp);
- 	}
+ 	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
+-	cmd->scsi_done(cmd);
++	scsi_done(cmd);
  
- 	return;
-@@ -2416,7 +2415,7 @@ megaraid_abort_handler(struct scsi_cmnd *scp)
- 				scb->sno, scb->dev_channel, scb->dev_target));
+ 	/*
+ 	 * If there is an abort thread waiting for command completion
+@@ -5847,7 +5847,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
+ 			     shost);
  
- 			scp->result = (DID_ABORT << 16);
--			scp->scsi_done(scp);
-+			scsi_done(scp);
- 
- 			megaraid_dealloc_scb(adapter, scb);
- 
-@@ -2446,7 +2445,7 @@ megaraid_abort_handler(struct scsi_cmnd *scp)
- 				scb->dev_channel, scb->dev_target));
- 
- 			scp->result = (DID_ABORT << 16);
--			scp->scsi_done(scp);
-+			scsi_done(scp);
- 
- 			megaraid_dealloc_scb(adapter, scb);
- 
-@@ -2566,7 +2565,7 @@ megaraid_reset_handler(struct scsi_cmnd *scp)
- 			}
- 
- 			scb->scp->result = (DID_RESET << 16);
--			scb->scp->scsi_done(scb->scp);
-+			scsi_done(scb->scp);
- 
- 			megaraid_dealloc_scb(adapter, scb);
- 		}
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index e4298bf4a482..4ae585a5b1a5 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1794,7 +1794,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 
- 	if (instance->unload == 1) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return 0;
- 	}
- 
-@@ -1809,7 +1809,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 			return SCSI_MLQUEUE_HOST_BUSY;
- 		} else {
- 			scmd->result = DID_NO_CONNECT << 16;
--			scmd->scsi_done(scmd);
-+			scsi_done(scmd);
- 			return 0;
- 		}
- 	}
-@@ -1818,7 +1818,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 	if (!mr_device_priv_data ||
- 	    (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return 0;
- 	}
- 
-@@ -1826,7 +1826,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 		ld_tgt_id = MEGASAS_TARGET_ID(scmd->device);
- 		if (instance->ld_tgtid_status[ld_tgt_id] == LD_TARGET_ID_DELETED) {
- 			scmd->result = DID_NO_CONNECT << 16;
--			scmd->scsi_done(scmd);
-+			scsi_done(scmd);
- 			return 0;
- 		}
- 	}
-@@ -1857,7 +1857,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 	return instance->instancet->build_and_issue_cmd(instance, scmd);
- 
-  out_done:
--	scmd->scsi_done(scmd);
-+	scsi_done(scmd);
+  out_fail_command:
+-	cmnd->scsi_done(cmnd);
++	scsi_done(cmnd);
  	return 0;
  }
- 
-@@ -2783,7 +2783,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
- 					reset_index, reset_cmd,
- 					reset_cmd->scmd->cmnd[0]);
- 
--				reset_cmd->scmd->scsi_done(reset_cmd->scmd);
-+				scsi_done(reset_cmd->scmd);
- 				megasas_return_cmd(instance, reset_cmd);
- 			} else if (reset_cmd->sync_cmd) {
- 				dev_notice(&instance->pdev->dev, "%p synch cmds"
-@@ -3640,7 +3640,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 			atomic_dec(&instance->fw_outstanding);
- 
- 			scsi_dma_unmap(cmd->scmd);
--			cmd->scmd->scsi_done(cmd->scmd);
-+			scsi_done(cmd->scmd);
- 			megasas_return_cmd(instance, cmd);
- 
- 			break;
-@@ -3686,7 +3686,7 @@ megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 		atomic_dec(&instance->fw_outstanding);
- 
- 		scsi_dma_unmap(cmd->scmd);
--		cmd->scmd->scsi_done(cmd->scmd);
-+		scsi_done(cmd->scmd);
- 		megasas_return_cmd(instance, cmd);
- 
- 		break;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 26d0cf9353dd..478af0260718 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3493,7 +3493,7 @@ megasas_complete_r1_command(struct megasas_instance *instance,
- 		megasas_return_cmd_fusion(instance, cmd);
- 		scsi_dma_unmap(scmd_local);
- 		megasas_sdev_busy_dec(instance, scmd_local);
--		scmd_local->scsi_done(scmd_local);
-+		scsi_done(scmd_local);
- 	}
- }
- 
-@@ -3597,7 +3597,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 				megasas_return_cmd_fusion(instance, cmd_fusion);
- 				scsi_dma_unmap(scmd_local);
- 				megasas_sdev_busy_dec(instance, scmd_local);
--				scmd_local->scsi_done(scmd_local);
-+				scsi_done(scmd_local);
- 			} else	/* Optimal VD - R1 FP command completion. */
- 				megasas_complete_r1_command(instance, cmd_fusion);
- 			break;
-@@ -4977,7 +4977,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
- 					atomic_dec(&instance->ldio_outstanding);
- 				megasas_return_cmd_fusion(instance, cmd_fusion);
- 				scsi_dma_unmap(scmd_local);
--				scmd_local->scsi_done(scmd_local);
-+				scsi_done(scmd_local);
- 			}
- 		}
  
