@@ -7,49 +7,48 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8DD5C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:08:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BEDE5C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:08:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D59C2610C7
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:08:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A8D3261164
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:08:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344969AbhIRAJW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:09:22 -0400
-Received: from mail-pf1-f174.google.com ([209.85.210.174]:36470 "EHLO
-        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345015AbhIRAJL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:11 -0400
-Received: by mail-pf1-f174.google.com with SMTP id m26so10677047pff.3
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:49 -0700 (PDT)
+        id S1344975AbhIRAJX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:09:23 -0400
+Received: from mail-pg1-f171.google.com ([209.85.215.171]:34563 "EHLO
+        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344221AbhIRAJQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:16 -0400
+Received: by mail-pg1-f171.google.com with SMTP id f129so11149416pgc.1
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=jT07YcNAYpM/yjLcB8hRpPTWU3XSM5z6Yr+Nf87OGNE=;
-        b=GC8WsFJJsI/9AE38fXkpZSeDXr3HPBuXxKC9h8VTzHfNbaizocmFah74h14nSAZOZB
-         kZEkSQM8rihYp3VFbUZ78CqcpqUzxxm2fkWfPEWuxknY5ElGw4rAOAXxpGYBltuD+OIk
-         Hi7v2QKX+bYVb6IqKJl08uUfCn1TDy0K2ahJgwU2mmZvzZgPlyaxrJolBcEqIZ8aLiRL
-         llXX6v4v6JRxFjM6e5VA6T0zLL+1KZ9Xsp25U3qlrY84DV3ujKvWJTOaH1vtkyrpqofq
-         4o8hZTwKweSlhowIwbc+0UQiHmZEnEopAJQXnOBPsKOqBeyc1kFetTk888tkupSy7At6
-         96bA==
-X-Gm-Message-State: AOAM530sNwBwgePkrRMyO8dgbQrbtBvKcVYrHeED0OazfojpERo0jVF0
-        xK2XV5UoSiVG4QjAzza/8hE=
-X-Google-Smtp-Source: ABdhPJyPCewwkbV7062nKZcfxXemvHKzYpM6iSfr61TK6eyC3NbyP5hNHhDaDsdULWqGryZgr9LCBA==
-X-Received: by 2002:aa7:9ac2:0:b0:443:a477:6684 with SMTP id x2-20020aa79ac2000000b00443a4776684mr9623731pfp.25.1631923668969;
-        Fri, 17 Sep 2021 17:07:48 -0700 (PDT)
+        bh=RgGlM8P/QQlRdlbgU8H0YeA1POp4/CiTfwOXkTtPbSg=;
+        b=TJG74ZyiATR+igQnq6S6a5oaaO/6oGfDkwIsiDnclr0vL5JeKals9fleDb+QzY7N1j
+         3qJhD2C1yW80w5CHEFVtiHLPA7UzKl5W/TpBD4CKNzd/hia04Nz16ONYsAkd66SZUpJ9
+         MLTHJ+SvUardXa+K4FJ/a2qDMkLQyZy+eguVJXpdFJenP+QYfTPkQ6WP8noFTWxmsoTQ
+         g3q5NK6Oo+n2326i+hK0+fKyt0ag2+SO2NR7Ky7sBxJDakGP19xcYf01D8ll74igJcWF
+         +vdkab8iEjtBYebWvLNW5YC4gujuTjzOc8TzargoIKfZ99qB1tQ5lhThFyZKiKAdCKEF
+         srbA==
+X-Gm-Message-State: AOAM532/dRz5gbwwzqHw3lba+VbuwMyS1ytHjwT7UmUT3+Nyfg45qa1C
+        yr1UiqSi1SVsWGDkXQOk7WY=
+X-Google-Smtp-Source: ABdhPJyk2aHeUEBNrtHF62rnZ2ZyZNXd4K6yMUVFnMwzjCAxyFQu/G1qlmJo9ekoSZDC5l4lO4c2SA==
+X-Received: by 2002:a63:f80a:: with SMTP id n10mr12075347pgh.303.1631923673620;
+        Fri, 17 Sep 2021 17:07:53 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.47
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:48 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:53 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        GOTO Masanori <gotom@debian.or.jp>,
         YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 57/84] nsp32: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:40 -0700
-Message-Id: <20210918000607.450448-58-bvanassche@acm.org>
+Subject: [PATCH 58/84] pcmcia: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:41 -0700
+Message-Id: <20210918000607.450448-59-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -64,27 +63,50 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/nsp32.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/pcmcia/nsp_cs.c       | 4 +---
+ drivers/scsi/pcmcia/sym53c500_cs.c | 3 +--
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index bc9d29e5fdba..1057b6fd7569 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -945,7 +945,6 @@ static int nsp32_queuecommand_lck(struct scsi_cmnd *SCpnt,
+diff --git a/drivers/scsi/pcmcia/nsp_cs.c b/drivers/scsi/pcmcia/nsp_cs.c
+index 7c0f931e55e8..0271d534133a 100644
+--- a/drivers/scsi/pcmcia/nsp_cs.c
++++ b/drivers/scsi/pcmcia/nsp_cs.c
+@@ -178,7 +178,7 @@ static void nsp_scsi_done(struct scsi_cmnd *SCpnt)
  
- 	show_command(SCpnt);
+ 	data->CurrentSC = NULL;
  
--	SCpnt->scsi_done     = done;
- 	data->CurrentSC      = SCpnt;
- 	SCpnt->SCp.Status    = SAM_STAT_CHECK_CONDITION;
- 	scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
-@@ -1546,7 +1545,7 @@ static void nsp32_scsi_done(struct scsi_cmnd *SCpnt)
- 	/*
- 	 * call scsi_done
- 	 */
--	(*SCpnt->scsi_done)(SCpnt);
+-	SCpnt->scsi_done(SCpnt);
 +	scsi_done(SCpnt);
+ }
  
- 	/*
- 	 * reset parameters
+ static int nsp_queuecommand_lck(struct scsi_cmnd *SCpnt,
+@@ -197,8 +197,6 @@ static int nsp_queuecommand_lck(struct scsi_cmnd *SCpnt,
+ 		scsi_bufflen(SCpnt), scsi_sg_count(SCpnt));
+ 	//nsp_dbg(NSP_DEBUG_QUEUECOMMAND, "before CurrentSC=0x%p", data->CurrentSC);
+ 
+-	SCpnt->scsi_done	= done;
+-
+ 	if (data->CurrentSC != NULL) {
+ 		nsp_msg(KERN_DEBUG, "CurrentSC!=NULL this can't be happen");
+ 		SCpnt->result   = DID_BAD_TARGET << 16;
+diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
+index a366ff1a3959..d2adda815d7b 100644
+--- a/drivers/scsi/pcmcia/sym53c500_cs.c
++++ b/drivers/scsi/pcmcia/sym53c500_cs.c
+@@ -492,7 +492,7 @@ SYM53C500_intr(int irq, void *dev_id)
+ 
+ idle_out:
+ 	curSC->SCp.phase = idle;
+-	curSC->scsi_done(curSC);
++	scsi_done(curSC);
+ 	goto out;
+ }
+ 
+@@ -556,7 +556,6 @@ SYM53C500_queue_lck(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
+ 	VDEB(printk("\n"));
+ 
+ 	data->current_SC = SCpnt;
+-	data->current_SC->scsi_done = done;
+ 	data->current_SC->SCp.phase = command_ph;
+ 	data->current_SC->SCp.Status = 0;
+ 	data->current_SC->SCp.Message = 0;
