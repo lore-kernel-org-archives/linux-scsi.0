@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BEC1FC433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 315F4C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A075160F51
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 133CD61179
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234042AbhIRAHp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:07:45 -0400
-Received: from mail-pl1-f170.google.com ([209.85.214.170]:34523 "EHLO
-        mail-pl1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242674AbhIRAHl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:07:41 -0400
-Received: by mail-pl1-f170.google.com with SMTP id o8so7245826pll.1
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:06:19 -0700 (PDT)
+        id S242674AbhIRAHq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:07:46 -0400
+Received: from mail-pl1-f173.google.com ([209.85.214.173]:46049 "EHLO
+        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242714AbhIRAHm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:07:42 -0400
+Received: by mail-pl1-f173.google.com with SMTP id n2so4623455plk.12
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:06:20 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=okOSEzV0+A8+l9hebYc7xfpaQb9LGG/FcDSWfdCsvKs=;
-        b=seFvNh/bFats50Ytj23aZl4jLNDYb7gsEgILrdCmD/s7L85NI/m3nXu28LhBDkioqX
-         Van7ZZ0XZZzeiaifRhbZk7CHNLG8p6/Vt2YMu2PHONYCrwrQQrisDXqw6eOPqMpjCpgv
-         mjUcV+lNO/DOQ0S0ssJwV561q7sNBrOuaGoqI5n/G3EozKlXCEOChs0T7c0HAnIQZe9a
-         lvaZtrrItz3ufIufv2kpnzXKZ3xJd3kpXbQPyvuyo9/r0Yl8r1aHTjoR0e9+FBuNMCc9
-         7W/5tLvuAEt4IZoLClOBIOpHQnVy05GmcAZ0WSpGEmdd/V04kNpJMS479hKbOYbDH2d8
-         ag6A==
-X-Gm-Message-State: AOAM5334Ty2Brk5tf9RU+Q1XzxVHAfNmrTzhz76uBXcD53pA9nH2JRO3
-        6Y4mBMXG4y9i/lJfJOhufnA=
-X-Google-Smtp-Source: ABdhPJxG++ZvDshISuIgRIdYFz2SsJJ1mkVeOiquv/yfAfufDf19y70Epd9zilbZ09mYACisEy4kvw==
-X-Received: by 2002:a17:90a:301:: with SMTP id 1mr15482033pje.65.1631923578606;
-        Fri, 17 Sep 2021 17:06:18 -0700 (PDT)
+        bh=Q2o/qCP+ag+0iC0yoeHP6317MUAx976w1oda90cAhHw=;
+        b=hersbHMeG7zcYuImFna6hKe/c1MLbMvPP6zmgq03jAQLXl/YMWvFv03FWrKhILM0TL
+         Xw8PnCmGirI/5MHIaI9Adkt1sG5HSh1z666vwgY5KTH2RZ7zvOQQUH1NlxS7272Yu8Ka
+         cLo78BuTHq8ktxa4yT+FDjKslNZ7SW1KinpiuZspws07A8z/nQEMiaT35BW4IvfYk56T
+         gwJAifbTYhHu1rSi1rhpEU6C2/hkEUUJyjVoiIcxcM+mfeHrHG1b2/rLYb0UMDr2fJ5w
+         6p6glMlme+iTjmEg3U6oib4lMfpissiZfWcuUaz6R/lrbO9HFsWVqAYr9yCw9pYRyUA0
+         4ftA==
+X-Gm-Message-State: AOAM530mv8B+peZwWq2D9aC9dQbJwZkg0uSxq9fj1vvrlom/EU0b1xhm
+        Xj4FMldETJTwFmoRjvVYPwM=
+X-Google-Smtp-Source: ABdhPJxKHSEiU3xGR6s2Teh+SY5TzWhLU3ll5Em7cfXpXOCua21KIccNGP464uEWWWcO13hy8EKWgw==
+X-Received: by 2002:a17:90a:e547:: with SMTP id ei7mr15801351pjb.177.1631923579977;
+        Fri, 17 Sep 2021 17:06:19 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.06.17
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.06.18
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:06:18 -0700 (PDT)
+        Fri, 17 Sep 2021 17:06:19 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 03/84] scsi: core: Call scsi_done directly
-Date:   Fri, 17 Sep 2021 17:04:46 -0700
-Message-Id: <20210918000607.450448-4-bvanassche@acm.org>
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: [PATCH 04/84] ata: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:04:47 -0700
+Message-Id: <20210918000607.450448-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -62,33 +62,86 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/hosts.c     | 2 +-
- include/scsi/scsi_host.h | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/ata/libata-sata.c |  2 +-
+ drivers/ata/libata-scsi.c | 14 +++++++-------
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 3f6f14f0cafb..de5f5949a7a9 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -666,7 +666,7 @@ static bool complete_all_cmds_iter(struct request *rq, void *data, bool rsvd)
- 	scsi_dma_unmap(scmd);
- 	scmd->result = 0;
- 	set_host_byte(scmd, status);
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 8f3ff830ab0c..60418d872c12 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -1258,7 +1258,7 @@ int ata_sas_queuecmd(struct scsi_cmnd *cmd, struct ata_port *ap)
+ 		rc = __ata_scsi_queuecmd(cmd, ap->link.device);
+ 	else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+-		cmd->scsi_done(cmd);
++		scsi_done(cmd);
+ 	}
+ 	return rc;
+ }
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 1fb4611f7eeb..4afe1abc4709 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -634,7 +634,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ 	qc = ata_qc_new_init(dev, scsi_cmd_to_rq(cmd)->tag);
+ 	if (qc) {
+ 		qc->scsicmd = cmd;
+-		qc->scsidone = cmd->scsi_done;
++		qc->scsidone = scsi_done;
+ 
+ 		qc->sg = scsi_sglist(cmd);
+ 		qc->n_elem = scsi_sg_count(cmd);
+@@ -643,7 +643,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ 			qc->flags |= ATA_QCFLAG_QUIET;
+ 	} else {
+ 		cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
+-		cmd->scsi_done(cmd);
++		scsi_done(cmd);
+ 	}
+ 
+ 	return qc;
+@@ -1738,14 +1738,14 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 
+ early_finish:
+ 	ata_qc_free(qc);
+-	cmd->scsi_done(cmd);
++	scsi_done(cmd);
+ 	DPRINTK("EXIT - early finish (good or error)\n");
+ 	return 0;
+ 
+ err_did:
+ 	ata_qc_free(qc);
+ 	cmd->result = (DID_ERROR << 16);
+-	cmd->scsi_done(cmd);
++	scsi_done(cmd);
+ err_mem:
+ 	DPRINTK("EXIT - internal\n");
+ 	return 0;
+@@ -4018,7 +4018,7 @@ int __ata_scsi_queuecmd(struct scsi_cmnd *scmd, struct ata_device *dev)
+ 	DPRINTK("bad CDB len=%u, scsi_op=0x%02x, max=%u\n",
+ 		scmd->cmd_len, scsi_op, dev->cdb_len);
+ 	scmd->result = DID_ERROR << 16;
 -	scmd->scsi_done(scmd);
 +	scsi_done(scmd);
- 	return true;
+ 	return 0;
  }
  
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 75363707b73f..3329dde02a2c 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -516,7 +516,7 @@ struct scsi_host_template {
- 		unsigned long irq_flags;				\
- 		int rc;							\
- 		spin_lock_irqsave(shost->host_lock, irq_flags);		\
--		rc = func_name##_lck (cmd, cmd->scsi_done);			\
-+		rc = func_name##_lck (cmd, scsi_done);			\
- 		spin_unlock_irqrestore(shost->host_lock, irq_flags);	\
- 		return rc;						\
+@@ -4060,7 +4060,7 @@ int ata_scsi_queuecmd(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ 		rc = __ata_scsi_queuecmd(cmd, dev);
+ 	else {
+ 		cmd->result = (DID_BAD_TARGET << 16);
+-		cmd->scsi_done(cmd);
++		scsi_done(cmd);
  	}
+ 
+ 	spin_unlock_irqrestore(ap->lock, irq_flags);
+@@ -4188,7 +4188,7 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd)
+ 		break;
+ 	}
+ 
+-	cmd->scsi_done(cmd);
++	scsi_done(cmd);
+ }
+ 
+ int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
