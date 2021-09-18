@@ -7,51 +7,47 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C20FDC433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74CBAC4332F
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AE62F60F51
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CDBB61164
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344462AbhIRAJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:09:15 -0400
-Received: from mail-pl1-f169.google.com ([209.85.214.169]:33407 "EHLO
-        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344539AbhIRAJF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:05 -0400
-Received: by mail-pl1-f169.google.com with SMTP id t4so7275466plo.0
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:42 -0700 (PDT)
+        id S1344936AbhIRAJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:09:16 -0400
+Received: from mail-pj1-f41.google.com ([209.85.216.41]:41565 "EHLO
+        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345038AbhIRAJB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:01 -0400
+Received: by mail-pj1-f41.google.com with SMTP id m21-20020a17090a859500b00197688449c4so8581630pjn.0
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=202mhrDsFbNknUxGfyMQxHiXtLoD17AkVH2wvE+4AJE=;
-        b=5qfhEqnIqZBQjh2Rin/ONVvKEGRTHLsItMbNq/FRXe722G/1V9Y2iJDAqsUHOlPWF0
-         Pzz7bBUXS7BruhKX7Tu8mmWJcIZMv+kBixP7tvPW64Nzb+Fmsm9CoFtIDLSY2zchHZ3F
-         c7zaY+v3hFRJEXfG87owQKrk9Vvn5pJqi+7ulUl7QQ1Llv6y8AGIVP2hvFaO3dvGk8NG
-         gSocNfx9VN0ghBwpbpa6yZIXdJ2RevYiqQRdP/xUGOrCHMjK1WOA+08/9dJhO8k0MNH+
-         HwZvfDMHAVb9CNx+wYjYVfKkNlq/r50h1mZqV0vjNdKIyQXRHV/2hlIMM3VygNVgPGD6
-         q4Iw==
-X-Gm-Message-State: AOAM531EgNqRvtcLwF8L1JMlaiAqsPG+fN77epGfuJa8QP5lW+Rwz0KS
-        Mq2Yiw6D4/waYKI+vO+y/Es=
-X-Google-Smtp-Source: ABdhPJxd1eiciGveT0Ecgq8reKEcWz4EyKodg+rullm9/medIo7OMTJ3oH/KFvCWOo09X+KEPT3gyg==
-X-Received: by 2002:a17:90a:bc8d:: with SMTP id x13mr15231244pjr.9.1631923662064;
-        Fri, 17 Sep 2021 17:07:42 -0700 (PDT)
+        bh=4yIYwB2eiU/LfZfyzZZ6+4fmT9tDEj4nMNDV+tci8nQ=;
+        b=n1z0lP0FufowMZ4vp7Qt/OKPKwPezrOOAN8tl9ZDNUbCqiV2xQx4lkgu8lgfH/++/V
+         kJ8Ta9SPPJc7UWXXpQYQp3xjXTxXRWjNtTs+lvm/FCcGRvnq+pI+U3p7wsllj0Yw0C0G
+         vDp9EUpT383UqPhwbWWGL/Md0uLYNUF/1A7G70ShHAt6sK2pow30UV2JmFO/gXki6aUk
+         Kj8Egqy0LfIb5S06f1amltahaMF0zplRPIZHEMJ9TjTAMp6hlzkYvVCmxMP8na+y+NUE
+         Y1VzHThWre87xWyQl7HeKl52KSTYwhUP9Y7afbAqGQMQmbuK0JvP4yAF/0wZdEkui3ry
+         +Mlw==
+X-Gm-Message-State: AOAM532itv8PyiWT7VyjNDTsX6GaXFDBr+YqP1C23927BIcfLjf+bVpN
+        shYAByG/0pzyH+Q7CT0Dug0=
+X-Google-Smtp-Source: ABdhPJzool6OP5xY3f1V5+KyWtJ6QBuW9p4+/2By0aCKf21WVs2+37SZ+VValnD9qgHoGGm6mD1nFQ==
+X-Received: by 2002:a17:90a:de0b:: with SMTP id m11mr24293952pjv.39.1631923659075;
+        Fri, 17 Sep 2021 17:07:39 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.40
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:41 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:38 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 52/84] mpt3sas: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:35 -0700
-Message-Id: <20210918000607.450448-53-bvanassche@acm.org>
+Subject: [PATCH 50/84] mesh: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:33 -0700
+Message-Id: <20210918000607.450448-51-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -66,89 +62,61 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/scsi/mesh.c | 16 +++-------------
+ 1 file changed, 3 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 2f82b1e629af..ca4e91f09fca 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3314,7 +3314,7 @@ scsih_abort(struct scsi_cmnd *scmd)
- 		sdev_printk(KERN_INFO, scmd->device,
- 		    "device been deleted! scmd(0x%p)\n", scmd);
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		r = SUCCESS;
- 		goto out;
- 	}
-@@ -3390,7 +3390,7 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
- 		sdev_printk(KERN_INFO, scmd->device,
- 		    "device been deleted! scmd(0x%p)\n", scmd);
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		r = SUCCESS;
- 		goto out;
- 	}
-@@ -3470,7 +3470,7 @@ scsih_target_reset(struct scsi_cmnd *scmd)
- 		starget_printk(KERN_INFO, starget,
- 		    "target been deleted! scmd(0x%p)\n", scmd);
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		r = SUCCESS;
- 		goto out;
- 	}
-@@ -5030,7 +5030,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
- 			scmd->result = DID_NO_CONNECT << 16;
- 		else
- 			scmd->result = DID_RESET << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 	}
- 	dtmprintk(ioc, ioc_info(ioc, "completing %d cmds\n", count));
- }
-@@ -5139,13 +5139,13 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return 0;
- 	}
- 
- 	if (!(_scsih_allow_scmd_to_device(ioc, scmd))) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return 0;
- 	}
- 
-@@ -5155,7 +5155,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 	handle = sas_target_priv_data->handle;
- 	if (handle == MPT3SAS_INVALID_DEVICE_HANDLE) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return 0;
- 	}
- 
-@@ -5166,7 +5166,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 	} else if (sas_target_priv_data->deleted) {
- 		/* device has been deleted */
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return 0;
- 	} else if (sas_target_priv_data->tm_busy ||
- 		   sas_device_priv_data->block) {
-@@ -5909,7 +5909,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 
- 	scsi_dma_unmap(scmd);
- 	mpt3sas_base_free_smid(ioc, smid);
--	scmd->scsi_done(scmd);
-+	scsi_done(scmd);
- 	return 0;
+diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
+index 78b72bcf58fe..73a3e85802ad 100644
+--- a/drivers/scsi/mesh.c
++++ b/drivers/scsi/mesh.c
+@@ -342,15 +342,6 @@ static inline void mesh_flush_io(volatile struct mesh_regs __iomem *mr)
  }
  
+ 
+-/*
+- * Complete a SCSI command
+- */
+-static void mesh_completed(struct mesh_state *ms, struct scsi_cmnd *cmd)
+-{
+-	(*cmd->scsi_done)(cmd);
+-}
+-
+-
+ /* Called with  meshinterrupt disabled, initialize the chipset
+  * and eventually do the initial bus reset. The lock must not be
+  * held since we can schedule.
+@@ -613,7 +604,7 @@ static void mesh_done(struct mesh_state *ms, int start_next)
+ #endif
+ 		}
+ 		cmd->SCp.this_residual -= ms->data_ptr;
+-		mesh_completed(ms, cmd);
++		scsi_done(cmd);
+ 	}
+ 	if (start_next) {
+ 		out_8(&ms->mesh->sequence, SEQ_ENBRESEL);
+@@ -996,7 +987,7 @@ static void handle_reset(struct mesh_state *ms)
+ 		if ((cmd = tp->current_req) != NULL) {
+ 			set_host_byte(cmd, DID_RESET);
+ 			tp->current_req = NULL;
+-			mesh_completed(ms, cmd);
++			scsi_done(cmd);
+ 		}
+ 		ms->tgts[tgt].sdtr_state = do_sdtr;
+ 		ms->tgts[tgt].sync_params = ASYNC_PARAMS;
+@@ -1005,7 +996,7 @@ static void handle_reset(struct mesh_state *ms)
+ 	while ((cmd = ms->request_q) != NULL) {
+ 		ms->request_q = (struct scsi_cmnd *) cmd->host_scribble;
+ 		set_host_byte(cmd, DID_RESET);
+-		mesh_completed(ms, cmd);
++		scsi_done(cmd);
+ 	}
+ 	ms->phase = idle;
+ 	ms->msgphase = msg_none;
+@@ -1634,7 +1625,6 @@ static int mesh_queue_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *
+ {
+ 	struct mesh_state *ms;
+ 
+-	cmd->scsi_done = done;
+ 	cmd->host_scribble = NULL;
+ 
+ 	ms = (struct mesh_state *) cmd->device->host->hostdata;
