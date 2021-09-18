@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74CBAC4332F
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E9E6C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CDBB61164
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0861361164
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344936AbhIRAJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S1344951AbhIRAJQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 17 Sep 2021 20:09:16 -0400
-Received: from mail-pj1-f41.google.com ([209.85.216.41]:41565 "EHLO
-        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345038AbhIRAJB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:01 -0400
-Received: by mail-pj1-f41.google.com with SMTP id m21-20020a17090a859500b00197688449c4so8581630pjn.0
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:39 -0700 (PDT)
+Received: from mail-pl1-f171.google.com ([209.85.214.171]:45595 "EHLO
+        mail-pl1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344626AbhIRAJG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:06 -0400
+Received: by mail-pl1-f171.google.com with SMTP id n2so4625036plk.12
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:43 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=4yIYwB2eiU/LfZfyzZZ6+4fmT9tDEj4nMNDV+tci8nQ=;
-        b=n1z0lP0FufowMZ4vp7Qt/OKPKwPezrOOAN8tl9ZDNUbCqiV2xQx4lkgu8lgfH/++/V
-         kJ8Ta9SPPJc7UWXXpQYQp3xjXTxXRWjNtTs+lvm/FCcGRvnq+pI+U3p7wsllj0Yw0C0G
-         vDp9EUpT383UqPhwbWWGL/Md0uLYNUF/1A7G70ShHAt6sK2pow30UV2JmFO/gXki6aUk
-         Kj8Egqy0LfIb5S06f1amltahaMF0zplRPIZHEMJ9TjTAMp6hlzkYvVCmxMP8na+y+NUE
-         Y1VzHThWre87xWyQl7HeKl52KSTYwhUP9Y7afbAqGQMQmbuK0JvP4yAF/0wZdEkui3ry
-         +Mlw==
-X-Gm-Message-State: AOAM532itv8PyiWT7VyjNDTsX6GaXFDBr+YqP1C23927BIcfLjf+bVpN
-        shYAByG/0pzyH+Q7CT0Dug0=
-X-Google-Smtp-Source: ABdhPJzool6OP5xY3f1V5+KyWtJ6QBuW9p4+/2By0aCKf21WVs2+37SZ+VValnD9qgHoGGm6mD1nFQ==
-X-Received: by 2002:a17:90a:de0b:: with SMTP id m11mr24293952pjv.39.1631923659075;
-        Fri, 17 Sep 2021 17:07:39 -0700 (PDT)
+        bh=raghMrXmrq+nxI9vNhRRAV3vPKh2ubpRSJoXmk7pkFQ=;
+        b=8B0w0oSfRiuld1Rt7OI8Yb1D707eBYuzzI1jrL1yFasmmUSQF59OA64D2Tdug007ri
+         f2iQTlVlbShaI5rHd0tkxUGS8Oz1plCceNMfii9ulzezxc3FHkTGo9fj25KYbv6Q12OJ
+         Obq6Us8DfWqI0wZlM4SKIrMl3Ygs6RWDg2Fw2FNEJzLnnnURkMwxfefF9XML3aoJZy5e
+         fWf/sdkE/cPYZBGFj7Cj5wcb6oMv5GlzzyUHhNjVtztKO2GplvX2UbOG/2t+8kO493iy
+         rDXcvEMMQHeKn6H0QHhf0BoK3VZwAIPjYImF90yUGjqBrUcTJ8UdaqTsnZfuudzW0dvx
+         bpDA==
+X-Gm-Message-State: AOAM533YAAkYVx0BnbwySejZ8fqfBoTBh3gc0F3cr2FnRgXYFCeAOJyn
+        JpcOzDSx2dTUorD8way6qzBv0zoMkoZqiQ==
+X-Google-Smtp-Source: ABdhPJzlU9bruVwGOIOPZJ1ajMxe2E9Iz4cX4D++rNHzcQTv6BOzgcHfFOi06Vnvt3iTpN835O5Pew==
+X-Received: by 2002:a17:902:7b98:b0:138:c171:c1af with SMTP id w24-20020a1709027b9800b00138c171c1afmr12035749pll.70.1631923663424;
+        Fri, 17 Sep 2021 17:07:43 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.38
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:38 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:42 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 50/84] mesh: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:33 -0700
-Message-Id: <20210918000607.450448-51-bvanassche@acm.org>
+Subject: [PATCH 53/84] mvumi: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:36 -0700
+Message-Id: <20210918000607.450448-54-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -62,61 +62,28 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/mesh.c | 16 +++-------------
- 1 file changed, 3 insertions(+), 13 deletions(-)
+ drivers/scsi/mvumi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
-index 78b72bcf58fe..73a3e85802ad 100644
---- a/drivers/scsi/mesh.c
-+++ b/drivers/scsi/mesh.c
-@@ -342,15 +342,6 @@ static inline void mesh_flush_io(volatile struct mesh_regs __iomem *mr)
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index 4d251bf630a3..904de62c974c 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -1328,7 +1328,7 @@ static void mvumi_complete_cmd(struct mvumi_hba *mhba, struct mvumi_cmd *cmd,
+ 		dma_unmap_sg(&mhba->pdev->dev, scsi_sglist(scmd),
+ 			     scsi_sg_count(scmd),
+ 			     scmd->sc_data_direction);
+-	cmd->scmd->scsi_done(scmd);
++	scsi_done(scmd);
+ 	mvumi_return_cmd(mhba, cmd);
  }
  
+@@ -2104,7 +2104,7 @@ static int mvumi_queue_command(struct Scsi_Host *shost,
  
--/*
-- * Complete a SCSI command
-- */
--static void mesh_completed(struct mesh_state *ms, struct scsi_cmnd *cmd)
--{
--	(*cmd->scsi_done)(cmd);
--}
--
--
- /* Called with  meshinterrupt disabled, initialize the chipset
-  * and eventually do the initial bus reset. The lock must not be
-  * held since we can schedule.
-@@ -613,7 +604,7 @@ static void mesh_done(struct mesh_state *ms, int start_next)
- #endif
- 		}
- 		cmd->SCp.this_residual -= ms->data_ptr;
--		mesh_completed(ms, cmd);
-+		scsi_done(cmd);
- 	}
- 	if (start_next) {
- 		out_8(&ms->mesh->sequence, SEQ_ENBRESEL);
-@@ -996,7 +987,7 @@ static void handle_reset(struct mesh_state *ms)
- 		if ((cmd = tp->current_req) != NULL) {
- 			set_host_byte(cmd, DID_RESET);
- 			tp->current_req = NULL;
--			mesh_completed(ms, cmd);
-+			scsi_done(cmd);
- 		}
- 		ms->tgts[tgt].sdtr_state = do_sdtr;
- 		ms->tgts[tgt].sync_params = ASYNC_PARAMS;
-@@ -1005,7 +996,7 @@ static void handle_reset(struct mesh_state *ms)
- 	while ((cmd = ms->request_q) != NULL) {
- 		ms->request_q = (struct scsi_cmnd *) cmd->host_scribble;
- 		set_host_byte(cmd, DID_RESET);
--		mesh_completed(ms, cmd);
-+		scsi_done(cmd);
- 	}
- 	ms->phase = idle;
- 	ms->msgphase = msg_none;
-@@ -1634,7 +1625,6 @@ static int mesh_queue_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *
- {
- 	struct mesh_state *ms;
- 
--	cmd->scsi_done = done;
- 	cmd->host_scribble = NULL;
- 
- 	ms = (struct mesh_state *) cmd->device->host->hostdata;
+ out_return_cmd:
+ 	mvumi_return_cmd(mhba, cmd);
+-	scmd->scsi_done(scmd);
++	scsi_done(scmd);
+ 	spin_unlock_irqrestore(shost->host_lock, irq_flags);
+ 	return 0;
+ }
