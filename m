@@ -7,50 +7,48 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 076E9C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FC94C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E55E860F23
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3900761164
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245742AbhIRAIV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:08:21 -0400
-Received: from mail-pg1-f181.google.com ([209.85.215.181]:46671 "EHLO
-        mail-pg1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245674AbhIRAIU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:20 -0400
-Received: by mail-pg1-f181.google.com with SMTP id m21so1914725pgu.13
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:06:58 -0700 (PDT)
+        id S1344026AbhIRAI0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:08:26 -0400
+Received: from mail-pj1-f46.google.com ([209.85.216.46]:53952 "EHLO
+        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1343701AbhIRAIZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:25 -0400
+Received: by mail-pj1-f46.google.com with SMTP id j1so7997079pjv.3
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:02 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Xovr5aSMt2uSUC20pA1RBp5MP6CUZICgGZJSyXaXwcI=;
-        b=5fpyMKM72D9cBqUb4mbMbVBHvzUOMM7rQna74aUquo/MJpXPXb1sDxSedkrEYqAnPW
-         p/EE0RwuuMiDFeBrnZ6Tnu6ihJ4M5iRK81YSc+0j/JX+2Os3cOFIwDv8g+W+/t+n+tvq
-         a0L2c8Ley2hLLkvdlzXLvt7GMgPnch6x3IfXAiAmNqGHA3ONcGOuOaQSQLJ3RxdA43JD
-         7gDkD2ndU3fQ4JRP9ZqpsVtND3G4MqOv06DdEMIVL9nFdx9Ack4xxhWdgFFbPI39D4uT
-         6F7ZUEt04W9+fYYFRH6LPcfXlxCzGuCGMV3Mh7SSIkh4/+s4NPcd+ZsyBeNg8Y49WBTo
-         +uCA==
-X-Gm-Message-State: AOAM533UY3omzo9rTMJmKlJXRExb+i+zns1tIBUP2i6PKcx1KmORFTwt
-        kF07XuJ8HfebNwiQEiO30D8=
-X-Google-Smtp-Source: ABdhPJwWxalsAxArGwV+fHxNRJCmvC2qUrlV6ZF3P2SN4PpjtFTHaDT8FuxFyK+i7vegyEeN9ds/zA==
-X-Received: by 2002:a63:b204:: with SMTP id x4mr11835875pge.212.1631923617603;
-        Fri, 17 Sep 2021 17:06:57 -0700 (PDT)
+        bh=0xrYKlXXqZ43nTFeMXbGnx2HnZXNL43Vi79i7MYS3Ns=;
+        b=1h77ERLH+TEM5n8r60PB0G1uLczAUBnbqbSDH6nujMSJavf9nTgggvigTmtT955QKZ
+         ggdbCy3H2Kcry8QuB1X/GD1dVKEUoxwxFU/dqvl9qOiFJlAcd2rFxzgt6j4uZyCd6EBT
+         3TukhmR5d6T1yByN1n3ORqD6XnmoZyUMOb4MmRyRQZLj2/6HJQnaMsbRWv1tnKTpzOq1
+         +kpg2ay1md7LVgwf4ry2IhnaUAKBNmMoIGMt3HJ2gACJhtCXqaYeOq1q/l1DPEfuMhNr
+         y/PEWGJQwq0x6XccoUvMxBPa6vR+WEAsgkgPxXzowSm5MKS38xzmS/nSOVkwrTWNG3ay
+         M9Sw==
+X-Gm-Message-State: AOAM531YirVRGEp4as/dChIgt1BFuuZ0sMnnMQZ4diQw5dCN/M0m/NC7
+        b9yQdSPM4mBCn0Ea028/S2g=
+X-Google-Smtp-Source: ABdhPJwx+VFyXT0Hkhw/K0qdrqtRYti/9dv8D3B3pz7Noyc5u4tGk82fULHMiHco269zPZTT5LWpxA==
+X-Received: by 2002:a17:90a:4498:: with SMTP id t24mr15131345pjg.235.1631923622271;
+        Fri, 17 Sep 2021 17:07:02 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.06.56
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:06:57 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:01 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 26/84] bnx2fc: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:09 -0700
-Message-Id: <20210918000607.450448-27-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Subject: [PATCH 27/84] csiostor: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:10 -0700
+Message-Id: <20210918000607.450448-28-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -65,46 +63,46 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/bnx2fc/bnx2fc_io.c | 8 ++++----
+ drivers/scsi/csiostor/csio_scsi.c | 8 ++++----
  1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_io.c b/drivers/scsi/bnx2fc/bnx2fc_io.c
-index f2996a9b2f63..b9114113ee73 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_io.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_io.c
-@@ -205,7 +205,7 @@ static void bnx2fc_scsi_done(struct bnx2fc_cmd *io_req, int err_code)
- 		sc_cmd->allowed);
- 	scsi_set_resid(sc_cmd, scsi_bufflen(sc_cmd));
- 	sc_cmd->SCp.ptr = NULL;
--	sc_cmd->scsi_done(sc_cmd);
-+	scsi_done(sc_cmd);
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 3b2eb6ce1fcf..3978c3d7eed5 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -1720,7 +1720,7 @@ csio_scsi_err_handler(struct csio_hw *hw, struct csio_ioreq *req)
+ 	}
+ 
+ 	cmnd->result = (((host_status) << 16) | scsi_status);
+-	cmnd->scsi_done(cmnd);
++	scsi_done(cmnd);
+ 
+ 	/* Wake up waiting threads */
+ 	csio_scsi_cmnd(req) = NULL;
+@@ -1748,7 +1748,7 @@ csio_scsi_cbfn(struct csio_hw *hw, struct csio_ioreq *req)
+ 		}
+ 
+ 		cmnd->result = (((host_status) << 16) | scsi_status);
+-		cmnd->scsi_done(cmnd);
++		scsi_done(cmnd);
+ 		csio_scsi_cmnd(req) = NULL;
+ 		CSIO_INC_STATS(csio_hw_to_scsim(hw), n_tot_success);
+ 	} else {
+@@ -1876,7 +1876,7 @@ csio_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmnd)
+ 	return rv;
+ 
+ err_done:
+-	cmnd->scsi_done(cmnd);
++	scsi_done(cmnd);
+ 	return 0;
  }
  
- struct bnx2fc_cmd_mgr *bnx2fc_cmd_mgr_alloc(struct bnx2fc_hba *hba)
-@@ -1610,7 +1610,7 @@ void bnx2fc_process_tm_compl(struct bnx2fc_cmd *io_req,
+@@ -1979,7 +1979,7 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
+ 		spin_unlock_irq(&hw->lock);
+ 
+ 		cmnd->result = (DID_ERROR << 16);
+-		cmnd->scsi_done(cmnd);
++		scsi_done(cmnd);
+ 
+ 		return FAILED;
  	}
- 
- 	sc_cmd->SCp.ptr = NULL;
--	sc_cmd->scsi_done(sc_cmd);
-+	scsi_done(sc_cmd);
- 
- 	kref_put(&io_req->refcount, bnx2fc_cmd_release);
- 	if (io_req->wait_for_abts_comp) {
-@@ -1853,7 +1853,7 @@ int bnx2fc_queuecommand(struct Scsi_Host *host,
- 	rval = fc_remote_port_chkready(rport);
- 	if (rval) {
- 		sc_cmd->result = rval;
--		sc_cmd->scsi_done(sc_cmd);
-+		scsi_done(sc_cmd);
- 		return 0;
- 	}
- 
-@@ -2019,7 +2019,7 @@ void bnx2fc_process_scsi_cmd_compl(struct bnx2fc_cmd *io_req,
- 		break;
- 	}
- 	sc_cmd->SCp.ptr = NULL;
--	sc_cmd->scsi_done(sc_cmd);
-+	scsi_done(sc_cmd);
- 	kref_put(&io_req->refcount, bnx2fc_cmd_release);
- }
- 
