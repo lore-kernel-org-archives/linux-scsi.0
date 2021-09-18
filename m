@@ -7,52 +7,47 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AC86C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C054C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 121DF60F48
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 44BA260F51
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S245045AbhIRAIR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:08:17 -0400
-Received: from mail-pf1-f173.google.com ([209.85.210.173]:37836 "EHLO
-        mail-pf1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245505AbhIRAIQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:16 -0400
-Received: by mail-pf1-f173.google.com with SMTP id j6so10671588pfa.4
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:06:53 -0700 (PDT)
+        id S244132AbhIRAIS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:08:18 -0400
+Received: from mail-pg1-f170.google.com ([209.85.215.170]:37696 "EHLO
+        mail-pg1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245505AbhIRAIR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:17 -0400
+Received: by mail-pg1-f170.google.com with SMTP id 17so11120846pgp.4
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:06:55 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=feBz4Y8C2Gs8Lf7Y5c7I+eadq9g2yg8K1qm0BqDiVj4=;
-        b=UPWP3nWXOveYpKa8t85muoXq2p1piAJUlFrMeUhKjbV9Yk9tc9w7Hgza+8skskhxEu
-         8sfZUUWpxPjb34Jsnb5ReN1/8BjVccvefoZYfDDYhQDdzo2eZn6yQlACOoT7mWBA8vmU
-         hA35L3L5esQa7V3rWyJva0GL9gxzj5YkPklL7Kmk0yhlRG+okxtHD3GEqR6Xt8CVMeDb
-         ZDtiV4DeaoyTDYO1gbQie2PBlvoTtHP1NAgIaPSv0NsATQEmAtlc8vAUu1iuZVadgGzd
-         6aaoxG55pjWk4QohA0U6cEtip0yA+nuqhG3pglamQxWEhxdH1CqppDr7aElu83MYYflh
-         lCPg==
-X-Gm-Message-State: AOAM5301YysrrPsu0b/bO0ZyDLMD+ZXUXzc7JzVOFPtwWDQwiWKNgPmc
-        7EpBlRn1ZhV2b2PnanPzw/IVPvkqk8s=
-X-Google-Smtp-Source: ABdhPJxd/3FnMqiOXVDf8GfidstS/lexfu4C/T6Ksl0kr7MHtEoKbjtLxpbviZf4kE8QJxvQl5Ukzw==
-X-Received: by 2002:a63:ac43:: with SMTP id z3mr3287811pgn.14.1631923613317;
-        Fri, 17 Sep 2021 17:06:53 -0700 (PDT)
+        bh=NKTtUUthk/ESWzz61sGzL9IS7u3Z/gvAJoKvqL5bxCw=;
+        b=V75yQjdTyQ4xwbpE/owMCxpJ97+rz+xxpzuZVOPEr5QPaF4I/XZaDFkWoCa6EuNnXN
+         A/bj7761mbt9BFx7PV0S0vUj/Uqg4/P9rQ+zPafK3jOaV42UtNOJ1LfCsRpnKLPJgUHm
+         GQDesFpP/dLDSZDKYrQ0mT517s1Kl0TfXRQwSzhhusvfbSABB9GJZVjhzBkNCaHFsNtq
+         SX+NIRn9T6q9biM2btvx5twKipJcZqwQWYBxCnZ7MeMBIpU3natTqAydYVyjgx4kS0pe
+         YgTkAdHbfxQvv+ymM9GUFTdlp+7N6uRn1+oUBMvi4O8HknZG/CPDZAqSz96FLkMWOyXW
+         A6bQ==
+X-Gm-Message-State: AOAM5302lhb8bAQ0b8Rj2+ABp6BZc+8PU+44YdMRRdsSAVLvURFivcpy
+        D+E5hZbV0po9hYprT2ew+UYuq3jjZDo=
+X-Google-Smtp-Source: ABdhPJx3wKlndUM/P+qnHvyvprRKY0YbS+M54wzCWMWuVZK9FMSSB8QWauVHhVWP7/x6kWkUQ4ZIYQ==
+X-Received: by 2002:a05:6a00:d4b:b0:444:9854:2ee6 with SMTP id n11-20020a056a000d4b00b0044498542ee6mr6710106pfv.13.1631923614603;
+        Fri, 17 Sep 2021 17:06:54 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.06.52
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.06.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:06:52 -0700 (PDT)
+        Fri, 17 Sep 2021 17:06:54 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        ching Huang <ching2048@areca.com.tw>,
-        Hannes Reinecke <hare@suse.de>,
-        Vaibhav Gupta <vaibhavgupta40@gmail.com>,
-        Lee Jones <lee.jones@linaro.org>,
-        Kees Cook <keescook@chromium.org>
-Subject: [PATCH 23/84] arcmsr: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:06 -0700
-Message-Id: <20210918000607.450448-24-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH 24/84] atp870u: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:07 -0700
+Message-Id: <20210918000607.450448-25-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -67,80 +62,37 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/arcmsr/arcmsr_hba.c | 17 ++++++++---------
- 1 file changed, 8 insertions(+), 9 deletions(-)
+ drivers/scsi/atp870u.c | 13 +------------
+ 1 file changed, 1 insertion(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index ec1a834c922d..e2692ca87a6e 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1318,7 +1318,7 @@ static void arcmsr_ccb_complete(struct CommandControlBlock *ccb)
- 	spin_lock_irqsave(&acb->ccblist_lock, flags);
- 	list_add_tail(&ccb->list, &acb->ccb_free_list);
- 	spin_unlock_irqrestore(&acb->ccblist_lock, flags);
--	pcmd->scsi_done(pcmd);
-+	scsi_done(pcmd);
- }
+diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
+index 9d179cd15bb8..6e1595b32bc0 100644
+--- a/drivers/scsi/atp870u.c
++++ b/drivers/scsi/atp870u.c
+@@ -512,7 +512,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
+ 			scsi_dma_unmap(workreq);
  
- static void arcmsr_report_sense_info(struct CommandControlBlock *ccb)
-@@ -1598,7 +1598,7 @@ static void arcmsr_remove_scsi_devices(struct AdapterControlBlock *acb)
- 		if (ccb->startdone == ARCMSR_CCB_START) {
- 			ccb->pcmd->result = DID_NO_CONNECT << 16;
- 			arcmsr_pci_unmap_dma(ccb);
--			ccb->pcmd->scsi_done(ccb->pcmd);
-+			scsi_done(ccb->pcmd);
- 		}
- 	}
- 	for (target = 0; target < ARCMSR_MAX_TARGETID; target++) {
-@@ -3192,7 +3192,7 @@ static void arcmsr_handle_virtual_command(struct AdapterControlBlock *acb,
- 
- 		if (cmd->device->lun) {
- 			cmd->result = (DID_TIME_OUT << 16);
--			cmd->scsi_done(cmd);
-+			scsi_done(cmd);
- 			return;
- 		}
- 		inqdata[0] = TYPE_PROCESSOR;
-@@ -3216,18 +3216,18 @@ static void arcmsr_handle_virtual_command(struct AdapterControlBlock *acb,
- 		sg = scsi_sglist(cmd);
- 		kunmap_atomic(buffer - sg->offset);
- 
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 	}
- 	break;
- 	case WRITE_BUFFER:
- 	case READ_BUFFER: {
- 		if (arcmsr_iop_message_xfer(acb, cmd))
- 			cmd->result = (DID_ERROR << 16);
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 	}
- 	break;
- 	default:
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 	}
- }
- 
-@@ -3241,10 +3241,9 @@ static int arcmsr_queue_command_lck(struct scsi_cmnd *cmd,
- 
- 	if (acb->acb_flags & ACB_F_ADAPTER_REMOVED) {
- 		cmd->result = (DID_NO_CONNECT << 16);
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
+ 			spin_lock_irqsave(dev->host->host_lock, flags);
+-			(*workreq->scsi_done) (workreq);
++			scsi_done(workreq);
+ #ifdef ED_DBGP
+ 			   printk("workreq->scsi_done\n");
+ #endif
+@@ -654,17 +654,6 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
  		return 0;
  	}
--	cmd->scsi_done = done;
- 	cmd->host_scribble = NULL;
- 	cmd->result = 0;
- 	if (target == 16) {
-@@ -3257,7 +3256,7 @@ static int arcmsr_queue_command_lck(struct scsi_cmnd *cmd,
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	if (arcmsr_build_ccb( acb, ccb, cmd ) == FAILED) {
- 		cmd->result = (DID_ERROR << 16) | SAM_STAT_RESERVATION_CONFLICT;
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 		return 0;
- 	}
- 	arcmsr_post_ccb(acb, ccb);
+ 
+-	if (done) {
+-		req_p->scsi_done = done;
+-	} else {
+-#ifdef ED_DBGP
+-		printk( "atp870u_queuecommand: done can't be NULL\n");
+-#endif
+-		req_p->result = 0;
+-		done(req_p);
+-		return 0;
+-	}
+-
+ 	/*
+ 	 *	Count new command
+ 	 */
