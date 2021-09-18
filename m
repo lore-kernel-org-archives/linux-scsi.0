@@ -7,48 +7,48 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31B09C433FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1BC8C4332F
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1BC9560F51
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AA6EA60F48
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344434AbhIRAJE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:09:04 -0400
-Received: from mail-pf1-f170.google.com ([209.85.210.170]:34321 "EHLO
-        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344702AbhIRAIt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:49 -0400
-Received: by mail-pf1-f170.google.com with SMTP id g14so10707314pfm.1
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:27 -0700 (PDT)
+        id S1344061AbhIRAJD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:09:03 -0400
+Received: from mail-pf1-f181.google.com ([209.85.210.181]:47009 "EHLO
+        mail-pf1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344612AbhIRAIs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:48 -0400
+Received: by mail-pf1-f181.google.com with SMTP id 203so2789123pfy.13
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=NjMfgEcFNlpNu3FLkgOkp94QH6H36cNQ1YC8D7Rlhbw=;
-        b=7KvWQ+OIPQGm6Y3hlw2NmJYt/0HhsH8ZdFFk9/glEy+i6W3TJSCb/3MfRPIXiuj3Zi
-         kuvGop/MY7wXT8KZEc+AWiTAJCmb123yb1nlvm2tK0t3PtN0CT5a5Tn3yxij9EyzZdp8
-         IdiHVy9pgPs4e9AdaAMOFceviDuSJJqR3SJCtXb0WmHeZ52QVvX5IDE2R2spHaZWUG4e
-         DpYyj4o+E3JLo4GXc//8gjBP2RDPjlsKj+gu1OrwGY88Ah1dC91IBIuHickTebCzd3kY
-         s+6ykEeh5PPcCN46QWFWxGKa3MoBPd4Sh6svYDUDaCiUwBgvIhbcEFl9vm7x/itICl3n
-         6PdA==
-X-Gm-Message-State: AOAM530ApB2/JwEyNkLfDPWk4xhwcQ1d34ie849zPfI65SrTIhdvaMCi
-        +W6p8PF+hThvXcxhFY/q77w=
-X-Google-Smtp-Source: ABdhPJy1qt57KmmnuMxLikQySfmGa0MFMt0nEeXMuChOPw8L++MVU6qz0izhLPTcXdRT/VROHY0GDw==
-X-Received: by 2002:a62:403:0:b0:433:9582:d449 with SMTP id 3-20020a620403000000b004339582d449mr13111933pfe.15.1631923646711;
-        Fri, 17 Sep 2021 17:07:26 -0700 (PDT)
+        bh=p2HaRX5pPHaZGfEsseY/SfrdWg8TP+livibGzd6jccs=;
+        b=MvqdlGRxO30ZHZ3nmEGEPi5hM418rq4cm9JCVWxXW4WXkHyi1bfy9O+0m6ti50lWRl
+         PJI35UIxkriFLqSM6+ut1TexHnPt577rq0ToPc3gcGlH1IBwKOf8dXGExMbKdxDyMPS6
+         9jSCOaDGYlMzmBYfM17budmI34+cDzGyEgA2wRc5CsaORGgmfYkkDg31sdPrYuGIl5/j
+         l+bZfy/7+qc85iAtToE52sitoKLa9D9p5KfHH6DDdvQN/pFhv3nLy95+Ug6nnoeZmeFJ
+         UbdmK+fnJiJB9SkxHSqnVAJYSny16hycHip5coxj49JliLXNLoUoBHxoRhkE/2AFXYTe
+         l1lw==
+X-Gm-Message-State: AOAM530CQi2ekM0UUzDPEvLsf+OEs67+ypYoAz1vTr/8kD4VGWKxtcYP
+        eKdRkySzinxVHUKalOM7lQ1kRBWnULYtwA==
+X-Google-Smtp-Source: ABdhPJyju/TJw5PLx63W1rG9iTYDyc9fowTDl2EcAiG6PrNoQDQE649Lglf9/tRuHVA0zlpyncuJcQ==
+X-Received: by 2002:a05:6a00:1c52:b0:443:41c3:1e51 with SMTP id s18-20020a056a001c5200b0044341c31e51mr9970646pfw.32.1631923645287;
+        Fri, 17 Sep 2021 17:07:25 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.25
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:26 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:24 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 44/84] libiscsi: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:27 -0700
-Message-Id: <20210918000607.450448-45-bvanassche@acm.org>
+Subject: [PATCH 43/84] libfc: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:26 -0700
+Message-Id: <20210918000607.450448-44-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -63,28 +63,37 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/libiscsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 712a45368385..7beedc59d0c6 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -468,7 +468,7 @@ static void iscsi_free_task(struct iscsi_task *task)
- 		 * it will decide how to return sc to scsi-ml.
- 		 */
- 		if (oldstate != ISCSI_TASK_REQUEUE_SCSIQ)
--			sc->scsi_done(sc);
-+			scsi_done(sc);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 509eacd7893d..871b11edb586 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1870,7 +1870,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+ 	rval = fc_remote_port_chkready(rport);
+ 	if (rval) {
+ 		sc_cmd->result = rval;
+-		sc_cmd->scsi_done(sc_cmd);
++		scsi_done(sc_cmd);
+ 		return 0;
  	}
- }
  
-@@ -1807,7 +1807,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 	ISCSI_DBG_SESSION(session, "iscsi: cmd 0x%x is not queued (%d)\n",
- 			  sc->cmnd[0], reason);
- 	scsi_set_resid(sc, scsi_bufflen(sc));
--	sc->scsi_done(sc);
-+	scsi_done(sc);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(iscsi_queuecommand);
+@@ -1880,7 +1880,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+ 		 * online
+ 		 */
+ 		sc_cmd->result = DID_IMM_RETRY << 16;
+-		sc_cmd->scsi_done(sc_cmd);
++		scsi_done(sc_cmd);
+ 		goto out;
+ 	}
+ 
+@@ -2087,7 +2087,7 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 	list_del(&fsp->list);
+ 	sc_cmd->SCp.ptr = NULL;
+ 	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+-	sc_cmd->scsi_done(sc_cmd);
++	scsi_done(sc_cmd);
+ 
+ 	/* release ref from initial allocation in queue command */
+ 	fc_fcp_pkt_release(fsp);
