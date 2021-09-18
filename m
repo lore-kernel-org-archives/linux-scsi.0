@@ -7,49 +7,50 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CE8CC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF930C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA64E60F48
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD80A60F51
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344207AbhIRAI3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:08:29 -0400
-Received: from mail-pl1-f182.google.com ([209.85.214.182]:39425 "EHLO
-        mail-pl1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344048AbhIRAI0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:26 -0400
-Received: by mail-pl1-f182.google.com with SMTP id c4so7223328pls.6
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:04 -0700 (PDT)
+        id S1344244AbhIRAIb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:08:31 -0400
+Received: from mail-pj1-f52.google.com ([209.85.216.52]:45765 "EHLO
+        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344119AbhIRAI2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:28 -0400
+Received: by mail-pj1-f52.google.com with SMTP id mv7-20020a17090b198700b0019c843e7233so4799272pjb.4
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=df/ZAk1SJ9QNwYW5YEHMi+oUFwgkNLfClQdX/ies+ks=;
-        b=HmvR6d9kkn+XqCh7q7okfrzkhqz0OkgIIuU0RowwGsl4l7jVl+FEVIor8v0RBW5GfW
-         /ombJMAobAm1cyZGTkskqQLPrs0oAV1NtgxLRztV3tMNzA3k9A92mOibd3/bPV0G/HgD
-         qffDCQrXHlsagPEeaHl1J6V+eeABpL/Gdxx6OuNfG8Y+GjcbqkQw8DihyWdKFhQrhFaw
-         t7qcGMpPKG3q2K1/upV3VieFm3b39yHeKjyV3W3Z3c+I4RpNVrxZrBOtQ3IObhiaoteH
-         QC44yU3rNdQX5GASz7VrM3SqKBSveQibC1qKNeTf3/ipIsGu1P3DCb9Wnn++c+azcua1
-         YCfQ==
-X-Gm-Message-State: AOAM530kUiibIcbY8K2m8Ou8lTXWKZbfyAKsuVGLCEjg+ltuiY1HF9Et
-        xPjl08bfHz7q6e9cplI9p+E=
-X-Google-Smtp-Source: ABdhPJx3hCtaAwPHSnHHrL1Veae+c/PU9ZceaILyZBZqnHS5IJ410aLU4ySMXY6512jy5OtVoijU8w==
-X-Received: by 2002:a17:90b:46cd:: with SMTP id jx13mr15291470pjb.122.1631923623862;
-        Fri, 17 Sep 2021 17:07:03 -0700 (PDT)
+        bh=kJSUw2lvJufU1ix23vmc2iRNis/6Dw+0Z7wNZu0jRmo=;
+        b=hVY1Ul8IAg9SPDCNvmBmE6xwtZPnE9ISCMaYNiFU294ziAPRrnVEw9f7v1Vd6MWRtA
+         JMp1O8BOUsh9m+xjOMSffkUKLpXEr9SsdZRSU1KC6jWN9xNqnASvjQDVIg0DkOw8bEK8
+         ecET4hPV9ExwpOqpoxaL0HeCRE7YRJAQbhrTth/msHBbEcpOjyRzghYMuqja42JD2EoA
+         QNivUFbe3fAgOzE+hUEsSxVymttVf49Cn8aRaItcbCqKI50R+RTfmA2zPw5u1aiIrvl4
+         ZGnlG7sw6G9GClYtbd5iB4HvhMqOCj3bj5auPiblWLibG0x1Gz8EgjUS6AEUoJxWdEAJ
+         PU9g==
+X-Gm-Message-State: AOAM533HtwNoKCj9QFAu2o6Xdku8NobJxNnQ2IpgyqBraLfxiZMqRGBo
+        HuJQPQMjrc1GZW3AZJD2EFk=
+X-Google-Smtp-Source: ABdhPJzUhGpXdJNvl1R876uldS9MCX2reWzuaMcZMFjsYv3DEVKGoeBeliR355O8VQqJXfJwHNSuIQ==
+X-Received: by 2002:a17:90a:bb0b:: with SMTP id u11mr23703482pjr.18.1631923625333;
+        Fri, 17 Sep 2021 17:07:05 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.02
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:03 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:04 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
+        Oliver Neukum <oliver@neukum.org>,
+        Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 28/84] cxlflash: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:11 -0700
-Message-Id: <20210918000607.450448-29-bvanassche@acm.org>
+Subject: [PATCH 29/84] dc395x: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:12 -0700
+Message-Id: <20210918000607.450448-30-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -64,37 +65,46 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/cxlflash/main.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/dc395x.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index b2730e859df8..2943cdd83614 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -171,7 +171,7 @@ static void cmd_complete(struct afu_cmd *cmd)
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 24c7cefb0b78..7d6f2b3c7fd5 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -995,8 +995,6 @@ static int dc395x_queue_command_lck(struct scsi_cmnd *cmd, void (*done)(struct s
+ 		goto complete;
+ 	}
  
- 		dev_dbg_ratelimited(dev, "%s:scp=%p result=%08x ioasc=%08x\n",
- 				    __func__, scp, scp->result, cmd->sa.ioasc);
--		scp->scsi_done(scp);
-+		scsi_done(scp);
- 	} else if (cmd->cmd_tmf) {
- 		spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
- 		cfg->tmf_active = false;
-@@ -205,7 +205,7 @@ static void flush_pending_cmds(struct hwq *hwq)
- 		if (cmd->scp) {
- 			scp = cmd->scp;
- 			scp->result = (DID_IMM_RETRY << 16);
--			scp->scsi_done(scp);
-+			scsi_done(scp);
- 		} else {
- 			cmd->cmd_aborted = true;
+-	/* set callback and clear result in the command */
+-	cmd->scsi_done = done;
+ 	set_host_byte(cmd, DID_OK);
+ 	set_status_byte(cmd, SAM_STAT_GOOD);
  
-@@ -601,7 +601,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 	case STATE_FAILTERM:
- 		dev_dbg_ratelimited(dev, "%s: device has failed\n", __func__);
- 		scp->result = (DID_NO_CONNECT << 16);
--		scp->scsi_done(scp);
-+		scsi_done(scp);
- 		rc = 0;
- 		goto out;
- 	default:
+@@ -3336,7 +3334,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
+ 		dprintkl(KERN_ERR, "srb_done: ERROR! Completed cmd with tmp_srb\n");
+ 	}
+ 
+-	cmd->scsi_done(cmd);
++	scsi_done(cmd);
+ 	waiting_process_next(acb);
+ }
+ 
+@@ -3367,7 +3365,7 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
+ 			if (force) {
+ 				/* For new EH, we normally don't need to give commands back,
+ 				 * as they all complete or all time out */
+-				p->scsi_done(p);
++				scsi_done(p);
+ 			}
+ 		}
+ 		if (!list_empty(&dcb->srb_going_list))
+@@ -3394,7 +3392,7 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
+ 			if (force) {
+ 				/* For new EH, we normally don't need to give commands back,
+ 				 * as they all complete or all time out */
+-				cmd->scsi_done(cmd);
++				scsi_done(cmd);
+ 			}
+ 		}
+ 		if (!list_empty(&dcb->srb_waiting_list))
