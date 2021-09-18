@@ -7,49 +7,51 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62BC6C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 670EFC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 482EA60F48
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 513CE60F48
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344955AbhIRAJI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:09:08 -0400
-Received: from mail-pj1-f44.google.com ([209.85.216.44]:44864 "EHLO
-        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345012AbhIRAI4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:56 -0400
-Received: by mail-pj1-f44.google.com with SMTP id nn5-20020a17090b38c500b0019af1c4b31fso8526135pjb.3
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:33 -0700 (PDT)
+        id S1344360AbhIRAJO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:09:14 -0400
+Received: from mail-pj1-f41.google.com ([209.85.216.41]:38728 "EHLO
+        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344221AbhIRAJD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:03 -0400
+Received: by mail-pj1-f41.google.com with SMTP id g13-20020a17090a3c8d00b00196286963b9so11129842pjc.3
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ZB60LWHAfkiS/kmf0g0evgkoAU3LFMVjB0yLlO/psCo=;
-        b=KtZ9YjDmsHT67x2s2lrwSXzewLY9lDwuLlRXPChf7ktiFXDpYBZtvO0x9LgrkNfVg2
-         PeQBgeOxftLuPzc+ZrX9EpWPlfn/ilu8fLcf06T5SerWJofLQrmIBM7N5z5OSKEHXEzH
-         p19syr7HD0Ixct8lRhXXKJzKOQ4KTSWmcD3n3XAxZgY1EbTPMHwHjiVF4x89IrHkIQOY
-         imy3GlpVv+dnGNgW2c7TmG3UUzktjpO9J9Pt+ptV/caa/lr5uKTWWGsgdlO8AKKv4wNb
-         4U69oUAdPdolBKzReWLYQ2YMuvSV5MLidXEI2ijA85dWJ+tvezPNnCp4L8g71P+UgLX3
-         H9PA==
-X-Gm-Message-State: AOAM533AuTS0XD9z4K5ji8KISn8qW618SudayOSLdmAj25bZ+VbtEUN0
-        Ljb4OZaI183p8GLdX3rWNg0=
-X-Google-Smtp-Source: ABdhPJzJB/Assmo3hkrDViZQl8oE5XzG0DLCkl4EJUjgZxMz2SXLrgW3UfDinxP9pTKZWFMRGcs+AA==
-X-Received: by 2002:a17:90b:1c09:: with SMTP id oc9mr8799049pjb.128.1631923653169;
-        Fri, 17 Sep 2021 17:07:33 -0700 (PDT)
+        bh=zzph1uDkPcIcdUP5G5gS+ivy3IN7W172PeUiXwtTCtg=;
+        b=7L/Ilrg/QvTe1gO/0pBXutuWrJBLgcq/PfZRyhx4Z2XYMJiDvdtrUhue6TM3ZHA4kb
+         ab6kqMjS2uvA2awYQPf47yvHSaXihrI8i17upfHLUVYTTVr3+DF0CPvhceyuGbYkdUT2
+         XCCcL3S6fjtqZGhzlI82hbbcnaGadVzMcUXubd4qeWXuAqGLSbOCixMr9AP00GSMGpR2
+         VN18G/zlsAbI5pyG1etCYLOei8RQicxOLJbJQ1b+hBBRv0fqFdwxBXGTpGaUeEgw9inA
+         cvwPV8UGV1Y9upts49zBr66++bhnBG2hmZBu8Nwr4ESxHosDXfEvS7Um0Xy7lOiRj5QV
+         U/MQ==
+X-Gm-Message-State: AOAM530ERBi//6gkWUbap3A5TL6/pFPsF6I9LqTZkIhjGfNGG7y/LiU6
+        L4L3aIP53koBK40rjNDDXl0=
+X-Google-Smtp-Source: ABdhPJx/jtKal5Xk+XFW0IwTR9H58pdhlp+jbC9OsV9pdg20T1gLysS/DEqRvDzJfOz7vhMIrEYVWQ==
+X-Received: by 2002:a17:90a:6b01:: with SMTP id v1mr20200247pjj.6.1631923660585;
+        Fri, 17 Sep 2021 17:07:40 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.32
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:32 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:40 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 46/84] lpfc: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:29 -0700
-Message-Id: <20210918000607.450448-47-bvanassche@acm.org>
+Subject: [PATCH 51/84] mpi3mr: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:34 -0700
+Message-Id: <20210918000607.450448-52-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -64,46 +66,122 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_os.c | 26 +++++++++++++-------------
+ 1 file changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 078fbea3f436..ca604ae166c6 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -564,7 +564,7 @@ lpfc_sli4_io_xri_aborted(struct lpfc_hba *phba,
- 				 * scsi_done upcall.
- 				 */
- 				if (cmd)
--					cmd->scsi_done(cmd);
-+					scsi_done(cmd);
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index 2197988333fe..6373a877f439 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -409,7 +409,7 @@ static bool mpi3mr_flush_scmd(struct request *rq,
+ 		scsi_dma_unmap(scmd);
+ 		scmd->result = DID_RESET << 16;
+ 		scsi_print_command(scmd);
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		mrioc->flush_io_count++;
+ 	}
  
- 				/*
- 				 * We expect there is an abort thread waiting
-@@ -4502,7 +4502,7 @@ lpfc_fcp_io_cmd_wqe_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pwqeIn,
+@@ -2312,7 +2312,7 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 	}
+ 	mpi3mr_clear_scmd_priv(mrioc, scmd);
+ 	scsi_dma_unmap(scmd);
+-	scmd->scsi_done(scmd);
++	scsi_done(scmd);
+ out:
+ 	if (sense_buf)
+ 		mpi3mr_repost_sense_buf(mrioc,
+@@ -3322,7 +3322,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 		    __func__);
+ 		scsi_print_command(scmd);
+ 		scmd->result = DID_OK << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		return true;
+ 	}
+ 
+@@ -3334,7 +3334,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 		scmd->result = SAM_STAT_CHECK_CONDITION;
+ 		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+ 		    0x1A, 0);
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		return true;
+ 	}
+ 	if (param_len != scsi_bufflen(scmd)) {
+@@ -3345,7 +3345,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 		scmd->result = SAM_STAT_CHECK_CONDITION;
+ 		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+ 		    0x1A, 0);
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		return true;
+ 	}
+ 	buf = kzalloc(scsi_bufflen(scmd), GFP_ATOMIC);
+@@ -3354,7 +3354,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 		scmd->result = SAM_STAT_CHECK_CONDITION;
+ 		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+ 		    0x55, 0x03);
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		return true;
+ 	}
+ 	scsi_sg_copy_to_buffer(scmd, buf, scsi_bufflen(scmd));
+@@ -3368,7 +3368,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
+ 		scmd->result = SAM_STAT_CHECK_CONDITION;
+ 		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
+ 		    0x26, 0);
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		kfree(buf);
+ 		return true;
+ 	}
+@@ -3438,14 +3438,14 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 	sdev_priv_data = scmd->device->hostdata;
+ 	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
  		goto out;
+ 	}
  
- 	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
--	cmd->scsi_done(cmd);
-+	scsi_done(cmd);
+ 	if (mrioc->stop_drv_processing &&
+ 	    !(mpi3mr_allow_scmd_to_fw(scmd))) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		goto out;
+ 	}
  
- 	/*
- 	 * If there is an abort thread waiting for command completion
-@@ -4771,7 +4771,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
- #endif
+@@ -3459,19 +3459,19 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 	dev_handle = stgt_priv_data->dev_handle;
+ 	if (dev_handle == MPI3MR_INVALID_DEV_HANDLE) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		goto out;
+ 	}
+ 	if (stgt_priv_data->dev_removed) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		goto out;
+ 	}
  
- 	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
--	cmd->scsi_done(cmd);
-+	scsi_done(cmd);
- 
- 	/*
- 	 * If there is an abort thread waiting for command completion
-@@ -5847,7 +5847,7 @@ lpfc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *cmnd)
- 			     shost);
- 
-  out_fail_command:
--	cmnd->scsi_done(cmnd);
-+	scsi_done(cmnd);
- 	return 0;
- }
+ 	if (atomic_read(&stgt_priv_data->block_io)) {
+ 		if (mrioc->stop_drv_processing) {
+ 			scmd->result = DID_NO_CONNECT << 16;
+-			scmd->scsi_done(scmd);
++			scsi_done(scmd);
+ 			goto out;
+ 		}
+ 		retval = SCSI_MLQUEUE_DEVICE_BUSY;
+@@ -3486,7 +3486,7 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
+ 	host_tag = mpi3mr_host_tag_for_scmd(mrioc, scmd);
+ 	if (host_tag == MPI3MR_HOSTTAG_INVALID) {
+ 		scmd->result = DID_ERROR << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		goto out;
+ 	}
  
