@@ -7,47 +7,49 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C054C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CF9EC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 44BA260F51
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86EF960F48
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:06:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244132AbhIRAIS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:08:18 -0400
-Received: from mail-pg1-f170.google.com ([209.85.215.170]:37696 "EHLO
-        mail-pg1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S245505AbhIRAIR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:17 -0400
-Received: by mail-pg1-f170.google.com with SMTP id 17so11120846pgp.4
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:06:55 -0700 (PDT)
+        id S245505AbhIRAIV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:08:21 -0400
+Received: from mail-pg1-f182.google.com ([209.85.215.182]:43760 "EHLO
+        mail-pg1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S245368AbhIRAIT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:19 -0400
+Received: by mail-pg1-f182.google.com with SMTP id r2so11112113pgl.10
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:06:56 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=NKTtUUthk/ESWzz61sGzL9IS7u3Z/gvAJoKvqL5bxCw=;
-        b=V75yQjdTyQ4xwbpE/owMCxpJ97+rz+xxpzuZVOPEr5QPaF4I/XZaDFkWoCa6EuNnXN
-         A/bj7761mbt9BFx7PV0S0vUj/Uqg4/P9rQ+zPafK3jOaV42UtNOJ1LfCsRpnKLPJgUHm
-         GQDesFpP/dLDSZDKYrQ0mT517s1Kl0TfXRQwSzhhusvfbSABB9GJZVjhzBkNCaHFsNtq
-         SX+NIRn9T6q9biM2btvx5twKipJcZqwQWYBxCnZ7MeMBIpU3natTqAydYVyjgx4kS0pe
-         YgTkAdHbfxQvv+ymM9GUFTdlp+7N6uRn1+oUBMvi4O8HknZG/CPDZAqSz96FLkMWOyXW
-         A6bQ==
-X-Gm-Message-State: AOAM5302lhb8bAQ0b8Rj2+ABp6BZc+8PU+44YdMRRdsSAVLvURFivcpy
-        D+E5hZbV0po9hYprT2ew+UYuq3jjZDo=
-X-Google-Smtp-Source: ABdhPJx3wKlndUM/P+qnHvyvprRKY0YbS+M54wzCWMWuVZK9FMSSB8QWauVHhVWP7/x6kWkUQ4ZIYQ==
-X-Received: by 2002:a05:6a00:d4b:b0:444:9854:2ee6 with SMTP id n11-20020a056a000d4b00b0044498542ee6mr6710106pfv.13.1631923614603;
-        Fri, 17 Sep 2021 17:06:54 -0700 (PDT)
+        bh=L2vgCtIwUH3Q7lKuS5Kt433H8Cece+k89C286riuvhI=;
+        b=3xPRuY+4n8ej0QrbC+7XtJV309yGGJ1xSUHG39sZCr1mvXjvtb4R+nFQf9KZxz5L0X
+         HNE+IL7ORX8CHQMPK04l8AeVhXYI7PucMh4dSR3vRSOwE4m8lLxqHk8q80UUkzMSxqH8
+         Dg4mF1OzEHRjcxjHNVX0IkScPnJ+tfjfTIE7aSXEhaU6Z5CKyAnlR+WKdPsZXqEmsynb
+         VqcqrRWCfD0pqvGpt8lCKsYlAVMwuwxTNyI9nxA5X+zCvY/Dn6bXZlMZUWExAX+wpz2w
+         NT7ezCfmM8uoypS59aZWScDQVe7h+x0LN8QEWaKbWuj+gT/jd85Khcl0Y71zuQWhYJii
+         qUwg==
+X-Gm-Message-State: AOAM53192vsCQZaGLQlp712yFmigQIICmGjq+ncHc42p3+YPxq4XNzGt
+        tTwoqnFag9nEK12+ErRY3JoJieNkVbo=
+X-Google-Smtp-Source: ABdhPJyBmkTM6HacLSPNoTgXV99+VS6FQ4QeCMZ35NcF163yMyuhgPPhoG7scha5xN6HXG1c0nQ67A==
+X-Received: by 2002:a63:ed03:: with SMTP id d3mr12214983pgi.24.1631923616116;
+        Fri, 17 Sep 2021 17:06:56 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.06.53
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.06.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:06:54 -0700 (PDT)
+        Fri, 17 Sep 2021 17:06:55 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+        Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 24/84] atp870u: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:07 -0700
-Message-Id: <20210918000607.450448-25-bvanassche@acm.org>
+Subject: [PATCH 25/84] bfa: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:08 -0700
+Message-Id: <20210918000607.450448-26-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -62,37 +64,46 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/atp870u.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+ drivers/scsi/bfa/bfad_im.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index 9d179cd15bb8..6e1595b32bc0 100644
---- a/drivers/scsi/atp870u.c
-+++ b/drivers/scsi/atp870u.c
-@@ -512,7 +512,7 @@ static irqreturn_t atp870u_intr_handle(int irq, void *dev_id)
- 			scsi_dma_unmap(workreq);
- 
- 			spin_lock_irqsave(dev->host->host_lock, flags);
--			(*workreq->scsi_done) (workreq);
-+			scsi_done(workreq);
- #ifdef ED_DBGP
- 			   printk("workreq->scsi_done\n");
- #endif
-@@ -654,17 +654,6 @@ static int atp870u_queuecommand_lck(struct scsi_cmnd *req_p,
- 		return 0;
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 6b5841b1c06e..e12ae60efd33 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -96,7 +96,7 @@ bfa_cb_ioim_done(void *drv, struct bfad_ioim_s *dio,
+ 		}
  	}
  
--	if (done) {
--		req_p->scsi_done = done;
--	} else {
--#ifdef ED_DBGP
--		printk( "atp870u_queuecommand: done can't be NULL\n");
--#endif
--		req_p->result = 0;
--		done(req_p);
--		return 0;
--	}
+-	cmnd->scsi_done(cmnd);
++	scsi_done(cmnd);
+ }
+ 
+ void
+@@ -124,7 +124,7 @@ bfa_cb_ioim_good_comp(void *drv, struct bfad_ioim_s *dio)
+ 		}
+ 	}
+ 
+-	cmnd->scsi_done(cmnd);
++	scsi_done(cmnd);
+ }
+ 
+ void
+@@ -226,7 +226,7 @@ bfad_im_abort_handler(struct scsi_cmnd *cmnd)
+ 			timeout *= 2;
+ 	}
+ 
+-	cmnd->scsi_done(cmnd);
++	scsi_done(cmnd);
+ 	bfa_trc(bfad, hal_io->iotag);
+ 	BFA_LOG(KERN_INFO, bfad, bfa_log_level,
+ 		"scsi%d: complete abort 0x%p iotag 0x%x\n",
+@@ -1233,8 +1233,6 @@ bfad_im_queuecommand_lck(struct scsi_cmnd *cmnd, void (*done) (struct scsi_cmnd
+ 	if (sg_cnt < 0)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 
+-	cmnd->scsi_done = done;
 -
- 	/*
- 	 *	Count new command
- 	 */
+ 	spin_lock_irqsave(&bfad->bfad_lock, flags);
+ 	if (!(bfad->bfad_flags & BFAD_HAL_START_DONE)) {
+ 		printk(KERN_WARNING
