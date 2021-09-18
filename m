@@ -7,51 +7,51 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 670EFC433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C20FDC433FE
 	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 513CE60F48
+	by mail.kernel.org (Postfix) with ESMTP id AE62F60F51
 	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344360AbhIRAJO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:09:14 -0400
-Received: from mail-pj1-f41.google.com ([209.85.216.41]:38728 "EHLO
-        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344221AbhIRAJD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:03 -0400
-Received: by mail-pj1-f41.google.com with SMTP id g13-20020a17090a3c8d00b00196286963b9so11129842pjc.3
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:41 -0700 (PDT)
+        id S1344462AbhIRAJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:09:15 -0400
+Received: from mail-pl1-f169.google.com ([209.85.214.169]:33407 "EHLO
+        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344539AbhIRAJF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:09:05 -0400
+Received: by mail-pl1-f169.google.com with SMTP id t4so7275466plo.0
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zzph1uDkPcIcdUP5G5gS+ivy3IN7W172PeUiXwtTCtg=;
-        b=7L/Ilrg/QvTe1gO/0pBXutuWrJBLgcq/PfZRyhx4Z2XYMJiDvdtrUhue6TM3ZHA4kb
-         ab6kqMjS2uvA2awYQPf47yvHSaXihrI8i17upfHLUVYTTVr3+DF0CPvhceyuGbYkdUT2
-         XCCcL3S6fjtqZGhzlI82hbbcnaGadVzMcUXubd4qeWXuAqGLSbOCixMr9AP00GSMGpR2
-         VN18G/zlsAbI5pyG1etCYLOei8RQicxOLJbJQ1b+hBBRv0fqFdwxBXGTpGaUeEgw9inA
-         cvwPV8UGV1Y9upts49zBr66++bhnBG2hmZBu8Nwr4ESxHosDXfEvS7Um0Xy7lOiRj5QV
-         U/MQ==
-X-Gm-Message-State: AOAM530ERBi//6gkWUbap3A5TL6/pFPsF6I9LqTZkIhjGfNGG7y/LiU6
-        L4L3aIP53koBK40rjNDDXl0=
-X-Google-Smtp-Source: ABdhPJx/jtKal5Xk+XFW0IwTR9H58pdhlp+jbC9OsV9pdg20T1gLysS/DEqRvDzJfOz7vhMIrEYVWQ==
-X-Received: by 2002:a17:90a:6b01:: with SMTP id v1mr20200247pjj.6.1631923660585;
-        Fri, 17 Sep 2021 17:07:40 -0700 (PDT)
+        bh=202mhrDsFbNknUxGfyMQxHiXtLoD17AkVH2wvE+4AJE=;
+        b=5qfhEqnIqZBQjh2Rin/ONVvKEGRTHLsItMbNq/FRXe722G/1V9Y2iJDAqsUHOlPWF0
+         Pzz7bBUXS7BruhKX7Tu8mmWJcIZMv+kBixP7tvPW64Nzb+Fmsm9CoFtIDLSY2zchHZ3F
+         c7zaY+v3hFRJEXfG87owQKrk9Vvn5pJqi+7ulUl7QQ1Llv6y8AGIVP2hvFaO3dvGk8NG
+         gSocNfx9VN0ghBwpbpa6yZIXdJ2RevYiqQRdP/xUGOrCHMjK1WOA+08/9dJhO8k0MNH+
+         HwZvfDMHAVb9CNx+wYjYVfKkNlq/r50h1mZqV0vjNdKIyQXRHV/2hlIMM3VygNVgPGD6
+         q4Iw==
+X-Gm-Message-State: AOAM531EgNqRvtcLwF8L1JMlaiAqsPG+fN77epGfuJa8QP5lW+Rwz0KS
+        Mq2Yiw6D4/waYKI+vO+y/Es=
+X-Google-Smtp-Source: ABdhPJxd1eiciGveT0Ecgq8reKEcWz4EyKodg+rullm9/medIo7OMTJ3oH/KFvCWOo09X+KEPT3gyg==
+X-Received: by 2002:a17:90a:bc8d:: with SMTP id x13mr15231244pjr.9.1631923662064;
+        Fri, 17 Sep 2021 17:07:42 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.39
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:40 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:41 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 51/84] mpi3mr: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:34 -0700
-Message-Id: <20210918000607.450448-52-bvanassche@acm.org>
+Subject: [PATCH 52/84] mpt3sas: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:35 -0700
+Message-Id: <20210918000607.450448-53-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -66,122 +66,89 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c | 26 +++++++++++++-------------
- 1 file changed, 13 insertions(+), 13 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 2197988333fe..6373a877f439 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -409,7 +409,7 @@ static bool mpi3mr_flush_scmd(struct request *rq,
- 		scsi_dma_unmap(scmd);
- 		scmd->result = DID_RESET << 16;
- 		scsi_print_command(scmd);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 2f82b1e629af..ca4e91f09fca 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3314,7 +3314,7 @@ scsih_abort(struct scsi_cmnd *scmd)
+ 		sdev_printk(KERN_INFO, scmd->device,
+ 		    "device been deleted! scmd(0x%p)\n", scmd);
+ 		scmd->result = DID_NO_CONNECT << 16;
 -		scmd->scsi_done(scmd);
 +		scsi_done(scmd);
- 		mrioc->flush_io_count++;
+ 		r = SUCCESS;
+ 		goto out;
+ 	}
+@@ -3390,7 +3390,7 @@ scsih_dev_reset(struct scsi_cmnd *scmd)
+ 		sdev_printk(KERN_INFO, scmd->device,
+ 		    "device been deleted! scmd(0x%p)\n", scmd);
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		r = SUCCESS;
+ 		goto out;
+ 	}
+@@ -3470,7 +3470,7 @@ scsih_target_reset(struct scsi_cmnd *scmd)
+ 		starget_printk(KERN_INFO, starget,
+ 		    "target been deleted! scmd(0x%p)\n", scmd);
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		r = SUCCESS;
+ 		goto out;
+ 	}
+@@ -5030,7 +5030,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
+ 			scmd->result = DID_NO_CONNECT << 16;
+ 		else
+ 			scmd->result = DID_RESET << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 	}
+ 	dtmprintk(ioc, ioc_info(ioc, "completing %d cmds\n", count));
+ }
+@@ -5139,13 +5139,13 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	sas_device_priv_data = scmd->device->hostdata;
+ 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		return 0;
  	}
  
-@@ -2312,7 +2312,7 @@ void mpi3mr_process_op_reply_desc(struct mpi3mr_ioc *mrioc,
+ 	if (!(_scsih_allow_scmd_to_device(ioc, scmd))) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		return 0;
  	}
- 	mpi3mr_clear_scmd_priv(mrioc, scmd);
+ 
+@@ -5155,7 +5155,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	handle = sas_target_priv_data->handle;
+ 	if (handle == MPT3SAS_INVALID_DEVICE_HANDLE) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		return 0;
+ 	}
+ 
+@@ -5166,7 +5166,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	} else if (sas_target_priv_data->deleted) {
+ 		/* device has been deleted */
+ 		scmd->result = DID_NO_CONNECT << 16;
+-		scmd->scsi_done(scmd);
++		scsi_done(scmd);
+ 		return 0;
+ 	} else if (sas_target_priv_data->tm_busy ||
+ 		   sas_device_priv_data->block) {
+@@ -5909,7 +5909,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 
  	scsi_dma_unmap(scmd);
+ 	mpt3sas_base_free_smid(ioc, smid);
 -	scmd->scsi_done(scmd);
 +	scsi_done(scmd);
- out:
- 	if (sense_buf)
- 		mpi3mr_repost_sense_buf(mrioc,
-@@ -3322,7 +3322,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
- 		    __func__);
- 		scsi_print_command(scmd);
- 		scmd->result = DID_OK << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return true;
- 	}
- 
-@@ -3334,7 +3334,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
- 		scmd->result = SAM_STAT_CHECK_CONDITION;
- 		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
- 		    0x1A, 0);
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return true;
- 	}
- 	if (param_len != scsi_bufflen(scmd)) {
-@@ -3345,7 +3345,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
- 		scmd->result = SAM_STAT_CHECK_CONDITION;
- 		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
- 		    0x1A, 0);
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return true;
- 	}
- 	buf = kzalloc(scsi_bufflen(scmd), GFP_ATOMIC);
-@@ -3354,7 +3354,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
- 		scmd->result = SAM_STAT_CHECK_CONDITION;
- 		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
- 		    0x55, 0x03);
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		return true;
- 	}
- 	scsi_sg_copy_to_buffer(scmd, buf, scsi_bufflen(scmd));
-@@ -3368,7 +3368,7 @@ static bool mpi3mr_check_return_unmap(struct mpi3mr_ioc *mrioc,
- 		scmd->result = SAM_STAT_CHECK_CONDITION;
- 		scsi_build_sense_buffer(0, scmd->sense_buffer, ILLEGAL_REQUEST,
- 		    0x26, 0);
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		kfree(buf);
- 		return true;
- 	}
-@@ -3438,14 +3438,14 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 	sdev_priv_data = scmd->device->hostdata;
- 	if (!sdev_priv_data || !sdev_priv_data->tgt_priv_data) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		goto out;
- 	}
- 
- 	if (mrioc->stop_drv_processing &&
- 	    !(mpi3mr_allow_scmd_to_fw(scmd))) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		goto out;
- 	}
- 
-@@ -3459,19 +3459,19 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 	dev_handle = stgt_priv_data->dev_handle;
- 	if (dev_handle == MPI3MR_INVALID_DEV_HANDLE) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		goto out;
- 	}
- 	if (stgt_priv_data->dev_removed) {
- 		scmd->result = DID_NO_CONNECT << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		goto out;
- 	}
- 
- 	if (atomic_read(&stgt_priv_data->block_io)) {
- 		if (mrioc->stop_drv_processing) {
- 			scmd->result = DID_NO_CONNECT << 16;
--			scmd->scsi_done(scmd);
-+			scsi_done(scmd);
- 			goto out;
- 		}
- 		retval = SCSI_MLQUEUE_DEVICE_BUSY;
-@@ -3486,7 +3486,7 @@ static int mpi3mr_qcmd(struct Scsi_Host *shost,
- 	host_tag = mpi3mr_host_tag_for_scmd(mrioc, scmd);
- 	if (host_tag == MPI3MR_HOSTTAG_INVALID) {
- 		scmd->result = DID_ERROR << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 		goto out;
- 	}
+ 	return 0;
+ }
  
