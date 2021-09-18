@@ -7,47 +7,48 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06542C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F17CC433EF
 	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DB01860F51
-	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E7D760F48
+	for <linux-scsi@archiver.kernel.org>; Sat, 18 Sep 2021 00:07:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344004AbhIRAIf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 17 Sep 2021 20:08:35 -0400
-Received: from mail-pf1-f173.google.com ([209.85.210.173]:43772 "EHLO
-        mail-pf1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236753AbhIRAIc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:32 -0400
-Received: by mail-pf1-f173.google.com with SMTP id c1so7728296pfp.10
-        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:09 -0700 (PDT)
+        id S241360AbhIRAIg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 17 Sep 2021 20:08:36 -0400
+Received: from mail-pj1-f42.google.com ([209.85.216.42]:39473 "EHLO
+        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1344119AbhIRAId (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Sep 2021 20:08:33 -0400
+Received: by mail-pj1-f42.google.com with SMTP id c13-20020a17090a558d00b00198e6497a4fso11125534pji.4
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Sep 2021 17:07:11 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Gf/FCAlG1Su8RpHpomw7brVDwwgZ3/XgilRVi9Fgunc=;
-        b=dlY5B2Wz8+LQIkmkps6/K8BPdNJTRs7BAgjbpvImR+TzhZ3YKiBQWP+wj/RFWWHmHc
-         Ued+iP6MXZop1f5O77WNGDkVL3ZYxBUr/biw19KII2vvOdIEMwD2jqnkpsfW7qc2+z6L
-         Id3vC5GT5frELA73srFBa3eIjrit6MwyP5Fv+uty0sgI0rO4wqB2s6jA2vaDSzKCUFqD
-         5V9/jeQE1heUm3lZhXMkoKZv3ZYbIIZgrU2HrZ2JlHO5TvTDsTmE3gi5v9umJhTrr3H/
-         H+6beNc49bRT1HP+enQUGodYRg3xuAP1jswi4zgDCXcKYXDDQuuVhLgNGjaTBYaqRNuq
-         ByeA==
-X-Gm-Message-State: AOAM533LWf9OibfyBTVO/c9nG/HhjGdSvsoCukvmajdtYISIpgthjwlk
-        Ia7+mu1vlNAkrcsMOC89R6AhD5Vp/jI=
-X-Google-Smtp-Source: ABdhPJzcp229+/wchp7QzVYbo6YIKO8DDolIU3JECH1odS7N2RSb7IspnbcIi7CLnpUehcK5w9jPbg==
-X-Received: by 2002:a63:2b03:: with SMTP id r3mr4548225pgr.188.1631923629507;
-        Fri, 17 Sep 2021 17:07:09 -0700 (PDT)
+        bh=8sXeHFJRxXdzWki0mpWTS9mlx4GmBzLM1LoZGQUiDCM=;
+        b=bZoiaCAuhbb+c6yVH5IxtwEoTRHT7aUQRDE0WzdspQaVVQiylA46YZOX78thkGCQaA
+         T2Ccew2T1kdTpJ+sR6nUf+NIvoDNY+/2QbsAMDON+8Ya8onCEWpNpKDJ8yaJRF/j5CDL
+         3l/ukoslSDNE83D1oBjhwjYBVymwqvQ712c5+OmX7JDpF9Tr8NEhV07po1A31xCHbTsr
+         iAUmVzqd+DX52jEEimZTAlBvLa4LQ9Ag+p3u9Joly2rUWxAlLGwSkLeBd5jHfaAyWeR0
+         D9y/wNdauyUojg/FaAJ6uBjOwazY7J6/V9pzo1UbCTwAxMcCNgDPkfb4judaHExi4lnk
+         ikkA==
+X-Gm-Message-State: AOAM531rISojlWTQQDFZdmuGiRV70ncQWts929xVVDHBhRbDS+R+oVf2
+        zpvQqsqyOAwOl1gASdG8Uy0=
+X-Google-Smtp-Source: ABdhPJzPa3cIZFloKwuZF9ayX78MdZOhuJrC0vtLptsizma1CKZJHjK7pYHV+1vKPFJsDo+uutkjAg==
+X-Received: by 2002:a17:90a:16:: with SMTP id 22mr24463441pja.25.1631923630850;
+        Fri, 17 Sep 2021 17:07:10 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4c45:d635:d2d2:93])
-        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.08
+        by smtp.gmail.com with ESMTPSA id bv16sm6403129pjb.12.2021.09.17.17.07.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 17 Sep 2021 17:07:08 -0700 (PDT)
+        Fri, 17 Sep 2021 17:07:10 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Russell King <linux@armlinux.org.uk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 32/84] esp_scsi: Call scsi_done() directly
-Date:   Fri, 17 Sep 2021 17:05:15 -0700
-Message-Id: <20210918000607.450448-33-bvanassche@acm.org>
+Subject: [PATCH 33/84] fas216: Call scsi_done() directly
+Date:   Fri, 17 Sep 2021 17:05:16 -0700
+Message-Id: <20210918000607.450448-34-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -62,55 +63,44 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/esp_scsi.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/scsi/arm/fas216.c | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 9a8c037a2f21..f7c2d64f1cef 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -936,7 +936,7 @@ static void esp_cmd_is_done(struct esp *esp, struct esp_cmd_entry *ent,
- 		}
- 	}
- 
--	cmd->scsi_done(cmd);
-+	scsi_done(cmd);
- 
- 	list_del(&ent->list);
- 	esp_put_ent(esp, ent);
-@@ -965,8 +965,6 @@ static int esp_queuecommand_lck(struct scsi_cmnd *cmd, void (*done)(struct scsi_
- 
- 	ent->cmd = cmd;
- 
--	cmd->scsi_done = done;
--
- 	spriv = ESP_CMD_PRIV(cmd);
- 	spriv->num_sg = 0;
- 
-@@ -2038,7 +2036,7 @@ static void esp_reset_cleanup_one(struct esp *esp, struct esp_cmd_entry *ent)
- 	if (ent->flags & ESP_CMD_FLAG_AUTOSENSE)
- 		esp_unmap_sense(esp, ent);
- 
--	cmd->scsi_done(cmd);
-+	scsi_done(cmd);
- 	list_del(&ent->list);
- 	esp_put_ent(esp, ent);
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index 9c4458a99025..170ec40a3ce7 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -2027,7 +2027,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
+ 	 * correctly by fas216_std_done.
+ 	 */
+ 	scsi_eh_restore_cmnd(SCpnt, &info->ses);
+-	SCpnt->scsi_done(SCpnt);
++	scsi_done(SCpnt);
  }
-@@ -2061,7 +2059,7 @@ static void esp_reset_cleanup(struct esp *esp)
  
- 		list_del(&ent->list);
- 		cmd->result = DID_RESET << 16;
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 		esp_put_ent(esp, ent);
+ /**
+@@ -2098,14 +2098,8 @@ fas216_std_done(FAS216_Info *info, struct scsi_cmnd *SCpnt, unsigned int result)
  	}
  
-@@ -2535,7 +2533,7 @@ static int esp_eh_abort_handler(struct scsi_cmnd *cmd)
- 		list_del(&ent->list);
+ done:
+-	if (SCpnt->scsi_done) {
+-		SCpnt->scsi_done(SCpnt);
+-		return;
+-	}
+-
+-	panic("scsi%d.H: null scsi_done function in fas216_done",
+-		info->host->host_no);
+-
++	scsi_done(SCpnt);
++	return;
  
- 		cmd->result = DID_ABORT << 16;
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
+ request_sense:
+ 	if (SCpnt->cmnd[0] == REQUEST_SENSE)
+@@ -2216,7 +2210,6 @@ static int fas216_queue_command_lck(struct scsi_cmnd *SCpnt,
+ 	fas216_log_command(info, LOG_CONNECT, SCpnt,
+ 			   "received command (%p)", SCpnt);
  
- 		esp_put_ent(esp, ent);
+-	SCpnt->scsi_done = done;
+ 	SCpnt->host_scribble = (void *)fas216_std_done;
+ 	SCpnt->result = 0;
  
