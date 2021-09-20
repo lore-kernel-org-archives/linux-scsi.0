@@ -2,130 +2,167 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
-	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
+	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3712CC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 21:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 036F8C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 23:55:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10EA960F50
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 21:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B6B8560F6E
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 23:55:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237077AbhITVLn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Sep 2021 17:11:43 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:27515 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238082AbhITVJn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Sep 2021 17:09:43 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1632172096; h=References: In-Reply-To: References:
- In-Reply-To: Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=NP2O11SZCezPDg44dTxhtmzhv4PHkwiFesMZaATy/Tc=; b=TdnQFlkjn8hwpZ9CgsZHsVlijgCx2X6K0oH3yPe5UcaFTlg2tWuYzUmL+bZd37h1P+aEKKNG
- HR2QOMDx6wVG2Jw6b4gDVRvMcUthnaozxOLbyRwhlaDovVU5C01CFSXGK9LflzMF2sR+AAFT
- P5g85vS+Z8rs5wSQ89COyDFn0ak=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
- 6148f83ebd6681d8ed484d69 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 20 Sep 2021 21:08:14
- GMT
-Sender: nguyenb=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 4DDDDC4338F; Mon, 20 Sep 2021 21:08:13 +0000 (UTC)
-Received: from stor-berry.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6E381C4338F;
-        Mon, 20 Sep 2021 21:08:11 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 6E381C4338F
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
-To:     cang@codeaurora.org, asutoshd@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc:     linux-arm-msm@vger.kernel.org,
-        "Bao D . Nguyen" <nguyenb@codeaurora.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S237112AbhITX4x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Sep 2021 19:56:53 -0400
+Received: from gateway24.websitewelcome.com ([192.185.51.196]:29840 "EHLO
+        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239850AbhITXyx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Sep 2021 19:54:53 -0400
+Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
+        by gateway24.websitewelcome.com (Postfix) with ESMTP id 3A7B718D1
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Sep 2021 18:53:24 -0500 (CDT)
+Received: from gator4166.hostgator.com ([108.167.133.22])
+        by cmsmtp with SMTP
+        id ST6Cmz27mHlR1ST6CmQLko; Mon, 20 Sep 2021 18:53:24 -0500
+X-Authority-Reason: nr=8
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=9dKrNFiIoQV/+gE4BwQR5jmTOuHAiTPni8wW5D6aAnw=; b=cdVSmnaDElW698bbPVn0JtIKyf
+        gE92q9CxgK48XjHTjzj0tT4urlocEEFLNJCrL/p+SrAu5yLIuWpZkRd1aXGaXkDCv/lr4j8mo0Kar
+        edZhkIfGJ45lpzKJTJ4sjCKgi//nuVY9PhVs7Pm8kiJZPvCWE3I9oB/Ml3bWp906I2ei9X+r6104M
+        cGD4fEBPxky90cZrwmarkSfsqM65AZkt2Qj6G8ykeCq0J76mQzLds0h9FOH83UMFcOXXBhDEzEu9U
+        ef0aEemZKD+J+lZb0i5JsvW8ETSq1aOyxxLsY8Zv5SD+cCjbfJcyV67Pci6QeSd0GKcj1w1cV9AHI
+        pHQjx/Og==;
+Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:33600 helo=[192.168.15.9])
+        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+        (Exim 4.94.2)
+        (envelope-from <gustavo@embeddedor.com>)
+        id 1mST6B-000NEv-NP; Mon, 20 Sep 2021 18:53:23 -0500
+Subject: Re: [PATCH] scsi: advansys: Prefer struct_size over open coded
+ arithmetic
+To:     Len Baker <len.baker@gmx.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Hannes Reinecke <hare@suse.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Keoseong Park <keosung.park@samsung.com>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 1/2] scsi: ufs: export hibern8 entry and exit
-Date:   Mon, 20 Sep 2021 14:07:49 -0700
-Message-Id: <70c5376129f902b6b3e9940ea3b10f147bf18a10.1632171047.git.nguyenb@codeaurora.org>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <cover.1632171047.git.nguyenb@codeaurora.org>
-References: <cover.1632171047.git.nguyenb@codeaurora.org>
-In-Reply-To: <cover.1632171047.git.nguyenb@codeaurora.org>
-References: <cover.1632171047.git.nguyenb@codeaurora.org>
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        Kees Cook <keescook@chromium.org>,
+        linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20210918111805.15471-1-len.baker@gmx.com>
+From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Message-ID: <422fbbe3-6f22-b16d-7af2-23efeb6dd125@embeddedor.com>
+Date:   Mon, 20 Sep 2021 18:57:06 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <20210918111805.15471-1-len.baker@gmx.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 187.162.31.110
+X-Source-L: No
+X-Exim-ID: 1mST6B-000NEv-NP
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.9]) [187.162.31.110]:33600
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 9
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Asutosh Das <asutoshd@codeaurora.org>
 
-Qualcomm controllers need to be in hibern8 before scaling up
-or down the clocks. Hence, export the hibern8 entry and exit
-functions.
 
-Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
-Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 4 ++--
- drivers/scsi/ufs/ufshcd.h | 2 ++
- 2 files changed, 4 insertions(+), 2 deletions(-)
+On 9/18/21 06:18, Len Baker wrote:
+> As noted in the "Deprecated Interfaces, Language Features, Attributes,
+> and Conventions" documentation [1], size calculations (especially
+> multiplication) should not be performed in memory allocator (or similar)
+> function arguments due to the risk of them overflowing. This could lead
+> to values wrapping around and a smaller allocation being made than the
+> caller was expecting. Using those allocations could lead to linear
+> overflows of heap memory and other misbehaviors.
+> 
+> So, refactor the code a bit to use the struct_size() helper instead of
+> the argument "size + count * size" in the kzalloc() function.
+> 
+> [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#open-coded-arithmetic-in-allocator-arguments
+> 
+> Signed-off-by: Len Baker <len.baker@gmx.com>
+> ---
+>  drivers/scsi/advansys.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+> index ffb391967573..fe882502e7bf 100644
+> --- a/drivers/scsi/advansys.c
+> +++ b/drivers/scsi/advansys.c
+> @@ -7465,6 +7465,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+>  		return ASC_BUSY;
+>  	} else if (use_sg > 0) {
+>  		int sgcnt;
+> +		size_t size;
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3841ab49..f3aad32 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -227,7 +227,6 @@ static void ufshcd_hba_exit(struct ufs_hba *hba);
- static int ufshcd_clear_ua_wluns(struct ufs_hba *hba);
- static int ufshcd_probe_hba(struct ufs_hba *hba, bool async);
- static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
--static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
- static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
- static void ufshcd_resume_clkscaling(struct ufs_hba *hba);
-@@ -4116,7 +4115,7 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
- }
- EXPORT_SYMBOL_GPL(ufshcd_link_recovery);
- 
--static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
-+int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- {
- 	int ret;
- 	struct uic_command uic_cmd = {0};
-@@ -4138,6 +4137,7 @@ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- 
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_enter);
- 
- int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- {
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 52ea6f3..0cc55a2 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1397,4 +1397,6 @@ static inline int ufshcd_rpmb_rpm_put(struct ufs_hba *hba)
- 	return pm_runtime_put(&hba->sdev_rpmb->sdev_gendev);
- }
- 
-+int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
-+int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
- #endif /* End of Header */
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+I don't think a new variable is needed.
 
+>  		struct scatterlist *slp;
+>  		struct asc_sg_head *asc_sg_head;
+> 
+> @@ -7477,8 +7478,8 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+>  			return ASC_ERROR;
+>  		}
+> 
+> -		asc_sg_head = kzalloc(sizeof(asc_scsi_q->sg_head) +
+> -			use_sg * sizeof(struct asc_sg_list), GFP_ATOMIC);
+> +		size = struct_size(asc_scsi_q->sg_head, sg_list, use_sg);
+> +		asc_sg_head = kzalloc(size, GFP_ATOMIC);
+
+You can go with this:
+
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index ffb391967573..e341b3372482 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -7477,8 +7477,8 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+                        return ASC_ERROR;
+                }
+
+-               asc_sg_head = kzalloc(sizeof(asc_scsi_q->sg_head) +
+-                       use_sg * sizeof(struct asc_sg_list), GFP_ATOMIC);
++               asc_sg_head = kzalloc(struct_size(asc_sg_head, sg_list, use_sg),
++                                     GFP_ATOMIC);
+                if (!asc_sg_head) {
+                        scsi_dma_unmap(scp);
+                        set_host_byte(scp, DID_SOFT_ERROR);
+
+It perfectly fits withing the 80 columns, which by the way is deprecated
+but still good-to-have.
+
+Also, if you are finding these instances with the help of Coccinelle, it'd be nice
+if you mention that in the changelog text. :)
+
+Thanks!
+--
+Gustavo
+
+>  		if (!asc_sg_head) {
+>  			scsi_dma_unmap(scp);
+>  			set_host_byte(scp, DID_SOFT_ERROR);
+> --
+> 2.25.1
+> 
