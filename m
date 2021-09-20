@@ -2,89 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-15.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2AA5AC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 14:52:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A0D3C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 16:28:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BCD060F46
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 14:52:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62F7260FA0
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 16:28:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235629AbhITOyC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Sep 2021 10:54:02 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57340 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233370AbhITOyB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Sep 2021 10:54:01 -0400
-Received: from xavier.telenet-ops.be (xavier.telenet-ops.be [IPv6:2a02:1800:120:4::f00:14])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 58B12C061760
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Sep 2021 07:52:34 -0700 (PDT)
-Received: from ramsan.of.borg ([84.195.186.194])
-        by xavier.telenet-ops.be with bizsmtp
-        id wEsX2500R4C55Sk01EsXsB; Mon, 20 Sep 2021 16:52:31 +0200
-Received: from geert (helo=localhost)
-        by ramsan.of.borg with local-esmtp (Exim 4.93)
-        (envelope-from <geert@linux-m68k.org>)
-        id 1mSKel-007FCD-72; Mon, 20 Sep 2021 16:52:31 +0200
-Date:   Mon, 20 Sep 2021 16:52:31 +0200 (CEST)
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-X-X-Sender: geert@ramsan.of.borg
-To:     linux-kernel@vger.kernel.org
-cc:     linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org
-Subject: Re: Build regressions/improvements in v5.15-rc2
-In-Reply-To: <20210920115603.3455841-1-geert@linux-m68k.org>
-Message-ID: <alpine.DEB.2.22.394.2109201639480.1726079@ramsan.of.borg>
-References: <20210920115603.3455841-1-geert@linux-m68k.org>
-User-Agent: Alpine 2.22 (DEB 394 2020-01-19)
+        id S235575AbhITQaD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Sep 2021 12:30:03 -0400
+Received: from mail-pf1-f175.google.com ([209.85.210.175]:46765 "EHLO
+        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234801AbhITQaD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Sep 2021 12:30:03 -0400
+Received: by mail-pf1-f175.google.com with SMTP id 203so8878885pfy.13
+        for <linux-scsi@vger.kernel.org>; Mon, 20 Sep 2021 09:28:36 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=dQSnoR5n1Tc0MWGmZrzsZpf1vMLJzLUdexYBEO+FVmM=;
+        b=l4FgdqDZ8SKiuUNSeu6V6Z+akZvl2/bPTn5RN6zfjaPLhwTLSV3uD1hN2INX4jYERM
+         l2da3ZJcM8oMTNsQOZbBISk0d9eTp4h/2sL5QNFkz0JnzllPGrFNS0RTmIRZ5Y8dedTp
+         hJSsYm7RUicnKh4dZeXcv1hSGorCp8v/AC5r8WOrQK6HxQzPSt7GNCBVIpJXGejL5ZWu
+         oLRUdJ6zXsD4OC/mYbOJOotq3rpFOzakLqirZJ/QVuKpHAjaE1GDtzi2EPFdZK5E1kgu
+         inK3gR+JvR8yumZhsHuNu4l15CMet4DKiG8CvBIGPkjvmi2Z/EHfqT/olmPFNETLYTc3
+         eaLw==
+X-Gm-Message-State: AOAM531qZZCEA0jfVay2DggiI8N0Cixz0dOuoKLCvSLjva/ssF2+EX8V
+        2dOenQrRnb9Bl71PIz45PUk=
+X-Google-Smtp-Source: ABdhPJxpOHRYLqteN+ijGl4PGKcKOdMdNDue0zM21NY6Xp5LyKaD3dh8HNXtcZ3q3p62He83LjOThQ==
+X-Received: by 2002:a65:428b:: with SMTP id j11mr23977863pgp.301.1632155315860;
+        Mon, 20 Sep 2021 09:28:35 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:6e2a:d64:7d9d:bd4a])
+        by smtp.gmail.com with ESMTPSA id b129sm13227539pfg.157.2021.09.20.09.28.34
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 20 Sep 2021 09:28:34 -0700 (PDT)
+Subject: Re: [PATCH 02/84] scsi: core: Rename scsi_mq_done() into scsi_done()
+ and export it
+To:     John Garry <john.garry@huawei.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20210918000607.450448-1-bvanassche@acm.org>
+ <20210918000607.450448-3-bvanassche@acm.org>
+ <ee1a1197-1fd1-e9d9-6b45-79108d56830b@huawei.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <36171806-8c85-654d-1f7d-3d19fc7227c9@acm.org>
+Date:   Mon, 20 Sep 2021 09:28:33 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+In-Reply-To: <ee1a1197-1fd1-e9d9-6b45-79108d56830b@huawei.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 20 Sep 2021, Geert Uytterhoeven wrote:
-> JFYI, when comparing v5.15-rc2[1] to v5.15-rc1[3], the summaries are:
->  - build errors: +9/-49
+On 9/20/21 2:42 AM, John Garry wrote:
+> On 18/09/2021 01:04, Bart Van Assche wrote:
+>> @@ -1692,7 +1693,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+>>       scsi_set_resid(cmd, 0);
+>>       memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+>> -    cmd->scsi_done = scsi_mq_done;
+>> +    cmd->scsi_done = scsi_done;
+> 
+> I have gone to the end of the series, and we still set scsi_cmnd.scsi_done. So some drivers still rely on it. I thought that the idea was that we don't need this callback pointer any longer.
 
-   + /kisskb/src/arch/sparc/lib/iomap.c: error: redefinition of 'pci_iounmap':  => 22:6
+It seems like the email service I used to send out the patches (gmail)
+dropped patches 79/84..84/84. The entire patch series is available here:
+https://github.com/bvanassche/linux/tree/scsi-remove-done-callback
 
-sparc64/sparc64-allnoconfig
+Patch 84/84 includes the following change:
 
-   + /kisskb/src/drivers/iio/test/iio-test-format.c: error: the frame size of 2128 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]:  => 98:1
+  @@ -1693,7 +1693,6 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
 
-powerpc-gcc{5,9,11}/powerpc-allyesconfig
+  	scsi_set_resid(cmd, 0);
+  	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+-	cmd->scsi_done = scsi_done;
 
-   + /kisskb/src/drivers/scsi/lpfc/lpfc_init.c: error: 'struct lpfc_sli4_hba' has no member named 'c_stat':  => 8280:28
-   + /kisskb/src/drivers/scsi/lpfc/lpfc_scsi.c: error: 'start' undeclared (first use in this function):  => 5587:2
+  	blk_mq_start_request(req);
+  	reason = scsi_dispatch_cmd(cmd);
 
-powerpc-gcc5/skiroot_defconfig
+> As an aside, this is the current declaration of scsi_cmnd.scsi_done:
+> 
+> /* Low-level done function - can be used by low-level driver to point
+> *        to completion function.  Not used by mid/upper level code. */
+>      void (*scsi_done) (struct scsi_cmnd *);
+> 
+> That does not sound right, as scsi_done is set by the mid-layer.
 
-   + /kisskb/src/drivers/thunderbolt/test.c: error: the frame size of 3104 bytes is larger than 2048 bytes [-Werror=frame-larger-than=]:  => 2207:1
+"Not used" probably should have been "not called". Anyway, patch 84/84
+removes that function pointer and also the comment above that function
+pointer.
 
-powerpc-gcc5/powerpc-allyesconfig
+Thanks,
 
-   + /kisskb/src/drivers/tty/serial/cpm_uart/cpm_uart_core.c: error: 'udbg_cpm_getc' defined but not used [-Werror=unused-function]:  => 1109:12
-   + /kisskb/src/drivers/tty/serial/cpm_uart/cpm_uart_core.c: error: 'udbg_cpm_putc' defined but not used [-Werror=unused-function]:  => 1095:13
-
-powerpc-gcc5/ppc32_allmodconfig
-
-   + /kisskb/src/drivers/usb/gadget/udc/fsl_qe_udc.c: error: cast from pointer to integer of different size [-Werror=pointer-to-int-cast]: 1496:12, 970:13, 842:13 => 842:13, 970:13, 1496:33, 1496:12, 970:41, 842:41
-   + /kisskb/src/drivers/usb/gadget/udc/fsl_qe_udc.c: error: cast to pointer from integer of different size [-Werror=int-to-pointer-cast]: 1497:27, 843:28, 971:28 => 971:28, 843:56, 971:56, 843:28, 1497:27, 1497:48
-
-powerpc-gcc{5,9,11}/ppc64_book3e_allmodconfig
-
-> [1] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/e4e737bb5c170df6135a127739a9e6148ee3da82/ (90 out of 182 configs)
-> [3] http://kisskb.ellerman.id.au/kisskb/branch/linus/head/6880fa6c56601bb8ed59df6c30fd390cc5f6dd8f/ (all 182 configs)
-
-Gr{oetje,eeting}s,
-
- 						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
- 							    -- Linus Torvalds
+Bart.
