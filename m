@@ -2,167 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-15.1 required=3.0 tests=BAYES_00,DKIM_INVALID,
-	DKIM_SIGNED,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 036F8C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 23:55:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8863FC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 23:58:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B6B8560F6E
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 23:55:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6ECD761107
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 23:58:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237112AbhITX4x (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Sep 2021 19:56:53 -0400
-Received: from gateway24.websitewelcome.com ([192.185.51.196]:29840 "EHLO
-        gateway24.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S239850AbhITXyx (ORCPT
+        id S242952AbhIUAAL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Sep 2021 20:00:11 -0400
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:33229 "EHLO
+        out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S239514AbhITX6J (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Sep 2021 19:54:53 -0400
-Received: from cm10.websitewelcome.com (cm10.websitewelcome.com [100.42.49.4])
-        by gateway24.websitewelcome.com (Postfix) with ESMTP id 3A7B718D1
-        for <linux-scsi@vger.kernel.org>; Mon, 20 Sep 2021 18:53:24 -0500 (CDT)
-Received: from gator4166.hostgator.com ([108.167.133.22])
-        by cmsmtp with SMTP
-        id ST6Cmz27mHlR1ST6CmQLko; Mon, 20 Sep 2021 18:53:24 -0500
-X-Authority-Reason: nr=8
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-        In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
-        :Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=9dKrNFiIoQV/+gE4BwQR5jmTOuHAiTPni8wW5D6aAnw=; b=cdVSmnaDElW698bbPVn0JtIKyf
-        gE92q9CxgK48XjHTjzj0tT4urlocEEFLNJCrL/p+SrAu5yLIuWpZkRd1aXGaXkDCv/lr4j8mo0Kar
-        edZhkIfGJ45lpzKJTJ4sjCKgi//nuVY9PhVs7Pm8kiJZPvCWE3I9oB/Ml3bWp906I2ei9X+r6104M
-        cGD4fEBPxky90cZrwmarkSfsqM65AZkt2Qj6G8ykeCq0J76mQzLds0h9FOH83UMFcOXXBhDEzEu9U
-        ef0aEemZKD+J+lZb0i5JsvW8ETSq1aOyxxLsY8Zv5SD+cCjbfJcyV67Pci6QeSd0GKcj1w1cV9AHI
-        pHQjx/Og==;
-Received: from 187-162-31-110.static.axtel.net ([187.162.31.110]:33600 helo=[192.168.15.9])
-        by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <gustavo@embeddedor.com>)
-        id 1mST6B-000NEv-NP; Mon, 20 Sep 2021 18:53:23 -0500
-Subject: Re: [PATCH] scsi: advansys: Prefer struct_size over open coded
- arithmetic
-To:     Len Baker <len.baker@gmx.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Hannes Reinecke <hare@suse.com>,
+        Mon, 20 Sep 2021 19:58:09 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+        by mailout.nyi.internal (Postfix) with ESMTP id 939B25C00DF;
+        Mon, 20 Sep 2021 19:56:40 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute4.internal (MEProxy); Mon, 20 Sep 2021 19:56:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=kEcYYW
+        e7Fo4F3ypOF0RisLR7B9ji3PdFfB/b9jqi6Xg=; b=B5AzkoiJg/YgLkdds0E0RT
+        jxD+1aLa8nBSN8d2vtwjlYlebFb7SYzGfHyDpuPinKAPHRF2E5bvawpTes/e5p4Q
+        TDTxfz95FNJ14Mirg8NaB/0K+Vhe7dV7uKZ54uY7pi4WAI1oMA5fxy/WGBZc42uS
+        jjIprygfFk3yBe81qlX0LJ7U5wPqMjsSryhaO6S/GUxXHDoWJd7R0SaX/dP0TbkM
+        e2VNvn0Sxu7nqVJwAcF2APLHkLK2L1x9YW28KyDjiW8M5PWooci8Gm6YZVhQbu41
+        Ju4lYzrdUZCo5HC7ccmAVsi+m2IqG05ujpiUuTqHNBTbq9w+tAFYdEVfjpymKfiQ
+        ==
+X-ME-Sender: <xms:th9JYVG3a7SjmU06wBsE1ucbszwuJglwQlh475joJELPjllKcADz0w>
+    <xme:th9JYaXvMR2axcz5CBP4Ixd5mjT8Dfmuxn6U4WCfWxPRYClTHRMh3KQ0IY0M2tQXN
+    pRW9IHD8I3QyJkemoM>
+X-ME-Received: <xmr:th9JYXKfDUWaZuVV2kXKwPtegxBUCGZWavbZyCBdjN6VaD2KE1xaB3ELxIAUK8rO21OZWzLGI8CKAMtisk4XVmSv6Wn9loY9apXhkw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrudeifedgvdekucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
+    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
+    htvghrnhepffduhfegfedvieetudfgleeugeehkeekfeevfffhieevteelvdfhtdevffet
+    uedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfh
+    hthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgh
+X-ME-Proxy: <xmx:th9JYbG7CMIIdEQLoX8y_Nrjn9VDiZn4wQJyp8OHNCPSWU4e_1gh4Q>
+    <xmx:th9JYbW0yDeTaAkc3w-v7rxRUP4KTpUCqRGh9YBnpWwpg5omhKw7lQ>
+    <xmx:th9JYWMrkiAzhKHHBJByPem2p5VJL490E79yH1Nn2ektg6wdtFKRBw>
+    <xmx:uB9JYdKS6cJTI8rjy22Rq8q2-Zim6Cq0vqLc4lz0Y9DWE2zfPfTVLw>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Mon,
+ 20 Sep 2021 19:56:36 -0400 (EDT)
+Date:   Tue, 21 Sep 2021 09:56:29 +1000 (AEST)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     Tong Zhang <ztong0001@gmail.com>
+cc:     Oliver Neukum <oliver@neukum.org>, Ali Akcaagac <aliakc@web.de>,
+        Jamie Lenehan <lenehan@twibble.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Kees Cook <keescook@chromium.org>,
-        linux-hardening@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        dc395x@twibble.org, linux-scsi@vger.kernel.org,
         linux-kernel@vger.kernel.org
-References: <20210918111805.15471-1-len.baker@gmx.com>
-From:   "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Message-ID: <422fbbe3-6f22-b16d-7af2-23efeb6dd125@embeddedor.com>
-Date:   Mon, 20 Sep 2021 18:57:06 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+Subject: Re: [PATCH v1] scsi: dc395: fix error case unwinding
+In-Reply-To: <20210907040702.1846409-1-ztong0001@gmail.com>
+Message-ID: <a68837f4-1ff7-76d5-7a68-80d2c0dbd95e@linux-m68k.org>
+References: <20210907040702.1846409-1-ztong0001@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20210918111805.15471-1-len.baker@gmx.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 187.162.31.110
-X-Source-L: No
-X-Exim-ID: 1mST6B-000NEv-NP
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: 187-162-31-110.static.axtel.net ([192.168.15.9]) [187.162.31.110]:33600
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 9
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
+On Mon, 6 Sep 2021, Tong Zhang wrote:
 
-On 9/18/21 06:18, Len Baker wrote:
-> As noted in the "Deprecated Interfaces, Language Features, Attributes,
-> and Conventions" documentation [1], size calculations (especially
-> multiplication) should not be performed in memory allocator (or similar)
-> function arguments due to the risk of them overflowing. This could lead
-> to values wrapping around and a smaller allocation being made than the
-> caller was expecting. Using those allocations could lead to linear
-> overflows of heap memory and other misbehaviors.
+> dc395x_init_one()->adapter_init() might fail. In this case, the acb
+> is already clean up by adapter_init(), no need to do that in
+> adapter_uninit(acb) again.
 > 
-> So, refactor the code a bit to use the struct_size() helper instead of
-> the argument "size + count * size" in the kzalloc() function.
+> [    1.252251] dc395x: adapter init failed
+> [    1.254900] RIP: 0010:adapter_uninit+0x94/0x170 [dc395x]
+> [    1.260307] Call Trace:
+> [    1.260442]  dc395x_init_one.cold+0x72a/0x9bb [dc395x]
 > 
-> [1] https://www.kernel.org/doc/html/latest/process/deprecated.html#open-coded-arithmetic-in-allocator-arguments
-> 
-> Signed-off-by: Len Baker <len.baker@gmx.com>
+> Signed-off-by: Tong Zhang <ztong0001@gmail.com>
+
+Reviewed-by: Finn Thain <fthain@linux-m68k.org>
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+
 > ---
->  drivers/scsi/advansys.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+>  drivers/scsi/dc395x.c | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-> index ffb391967573..fe882502e7bf 100644
-> --- a/drivers/scsi/advansys.c
-> +++ b/drivers/scsi/advansys.c
-> @@ -7465,6 +7465,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
->  		return ASC_BUSY;
->  	} else if (use_sg > 0) {
->  		int sgcnt;
-> +		size_t size;
-
-I don't think a new variable is needed.
-
->  		struct scatterlist *slp;
->  		struct asc_sg_head *asc_sg_head;
-> 
-> @@ -7477,8 +7478,8 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
->  			return ASC_ERROR;
->  		}
-> 
-> -		asc_sg_head = kzalloc(sizeof(asc_scsi_q->sg_head) +
-> -			use_sg * sizeof(struct asc_sg_list), GFP_ATOMIC);
-> +		size = struct_size(asc_scsi_q->sg_head, sg_list, use_sg);
-> +		asc_sg_head = kzalloc(size, GFP_ATOMIC);
-
-You can go with this:
-
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index ffb391967573..e341b3372482 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -7477,8 +7477,8 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
-                        return ASC_ERROR;
-                }
-
--               asc_sg_head = kzalloc(sizeof(asc_scsi_q->sg_head) +
--                       use_sg * sizeof(struct asc_sg_list), GFP_ATOMIC);
-+               asc_sg_head = kzalloc(struct_size(asc_sg_head, sg_list, use_sg),
-+                                     GFP_ATOMIC);
-                if (!asc_sg_head) {
-                        scsi_dma_unmap(scp);
-                        set_host_byte(scp, DID_SOFT_ERROR);
-
-It perfectly fits withing the 80 columns, which by the way is deprecated
-but still good-to-have.
-
-Also, if you are finding these instances with the help of Coccinelle, it'd be nice
-if you mention that in the changelog text. :)
-
-Thanks!
---
-Gustavo
-
->  		if (!asc_sg_head) {
->  			scsi_dma_unmap(scp);
->  			set_host_byte(scp, DID_SOFT_ERROR);
-> --
-> 2.25.1
+> diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+> index 24c7cefb0b78..1c79e6c27163 100644
+> --- a/drivers/scsi/dc395x.c
+> +++ b/drivers/scsi/dc395x.c
+> @@ -4618,6 +4618,7 @@ static int dc395x_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+>  	/* initialise the adapter and everything we need */
+>   	if (adapter_init(acb, io_port_base, io_port_len, irq)) {
+>  		dprintkl(KERN_INFO, "adapter init failed\n");
+> +		acb = NULL;
+>  		goto fail;
+>  	}
+>  
 > 
