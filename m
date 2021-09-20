@@ -4,45 +4,45 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4140EC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 21:10:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3712CC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 21:10:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 21D1360F50
-	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 21:10:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10EA960F50
+	for <linux-scsi@archiver.kernel.org>; Mon, 20 Sep 2021 21:10:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233853AbhITVLm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Sep 2021 17:11:42 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:31170 "EHLO m43-7.mailgun.net"
+        id S237077AbhITVLn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 20 Sep 2021 17:11:43 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:27515 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237725AbhITVJm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 20 Sep 2021 17:09:42 -0400
+        id S238082AbhITVJn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 20 Sep 2021 17:09:43 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1632172095; h=References: In-Reply-To: References:
+ s=smtp; t=1632172096; h=References: In-Reply-To: References:
  In-Reply-To: Message-Id: Date: Subject: Cc: To: From: Sender;
- bh=LC1CDaf9KsUSVcMN5EyFnJjnyIeffZTnWvVRfkHFxgA=; b=wqeKABePpg2Ol9Q63u/w1D738LGuGx2ZVf73kuwx5inZp6HyQkU3vTKgvOwqn2R3wB3VlfT3
- 9wfxc//CVHiXawdJP0csAHsME+yXyQmVcO9OJgMLPDWqxBwzHal17SkLWT74+gXrAAGUtYGB
- jfuLOOE1neCLQ9XK0Nv8ewlaW88=
+ bh=NP2O11SZCezPDg44dTxhtmzhv4PHkwiFesMZaATy/Tc=; b=TdnQFlkjn8hwpZ9CgsZHsVlijgCx2X6K0oH3yPe5UcaFTlg2tWuYzUmL+bZd37h1P+aEKKNG
+ HR2QOMDx6wVG2Jw6b4gDVRvMcUthnaozxOLbyRwhlaDovVU5C01CFSXGK9LflzMF2sR+AAFT
+ P5g85vS+Z8rs5wSQ89COyDFn0ak=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n05.prod.us-east-1.postgun.com with SMTP id
- 6148f83eec62f57c9a7a48aa (version=TLS1.2,
+ smtp-out-n02.prod.us-east-1.postgun.com with SMTP id
+ 6148f83ebd6681d8ed484d69 (version=TLS1.2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Mon, 20 Sep 2021 21:08:14
  GMT
 Sender: nguyenb=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id A4819C4360C; Mon, 20 Sep 2021 21:08:13 +0000 (UTC)
+        id 4DDDDC4338F; Mon, 20 Sep 2021 21:08:13 +0000 (UTC)
 Received: from stor-berry.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
         (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id AAF9AC43617;
-        Mon, 20 Sep 2021 21:08:12 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org AAF9AC43617
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6E381C4338F;
+        Mon, 20 Sep 2021 21:08:11 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 6E381C4338F
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
 From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
@@ -50,15 +50,19 @@ To:     cang@codeaurora.org, asutoshd@codeaurora.org,
         martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc:     linux-arm-msm@vger.kernel.org,
         "Bao D . Nguyen" <nguyenb@codeaurora.org>,
-        Andy Gross <agross@kernel.org>,
-        Bjorn Andersson <bjorn.andersson@linaro.org>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Keoseong Park <keosung.park@samsung.com>,
         linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 2/2] scsi: ufs-qcom: enter and exit hibern8 during clock scaling
-Date:   Mon, 20 Sep 2021 14:07:50 -0700
-Message-Id: <94cda1143d3332c3284a09b88139e358eab5a233.1632171047.git.nguyenb@codeaurora.org>
+Subject: [PATCH v1 1/2] scsi: ufs: export hibern8 entry and exit
+Date:   Mon, 20 Sep 2021 14:07:49 -0700
+Message-Id: <70c5376129f902b6b3e9940ea3b10f147bf18a10.1632171047.git.nguyenb@codeaurora.org>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1632171047.git.nguyenb@codeaurora.org>
 References: <cover.1632171047.git.nguyenb@codeaurora.org>
@@ -70,56 +74,57 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Asutosh Das <asutoshd@codeaurora.org>
 
-Qualcomm controller needs to be in hibern8 before scaling clocks.
-This change puts the controller in hibern8 state before scaling
-and brings it out after scaling of clocks.
+Qualcomm controllers need to be in hibern8 before scaling up
+or down the clocks. Hence, export the hibern8 entry and exit
+functions.
 
 Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
 Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
 ---
- drivers/scsi/ufs/ufs-qcom.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 4 ++--
+ drivers/scsi/ufs/ufshcd.h | 2 ++
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 92d4c61..92f5bb4 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1212,24 +1212,34 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba,
- 	int err = 0;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 3841ab49..f3aad32 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -227,7 +227,6 @@ static void ufshcd_hba_exit(struct ufs_hba *hba);
+ static int ufshcd_clear_ua_wluns(struct ufs_hba *hba);
+ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+-static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
+ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
+ static void ufshcd_resume_clkscaling(struct ufs_hba *hba);
+@@ -4116,7 +4115,7 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_link_recovery);
  
- 	if (status == PRE_CHANGE) {
-+		err = ufshcd_uic_hibern8_enter(hba);
-+		if (err)
-+			return err;
- 		if (scale_up)
- 			err = ufs_qcom_clk_scale_up_pre_change(hba);
- 		else
- 			err = ufs_qcom_clk_scale_down_pre_change(hba);
-+		if (err)
-+			ufshcd_uic_hibern8_exit(hba);
-+
- 	} else {
- 		if (scale_up)
- 			err = ufs_qcom_clk_scale_up_post_change(hba);
- 		else
- 			err = ufs_qcom_clk_scale_down_post_change(hba);
+-static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
++int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
+ {
+ 	int ret;
+ 	struct uic_command uic_cmd = {0};
+@@ -4138,6 +4137,7 @@ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
  
--		if (err || !dev_req_params)
-+
-+		if (err || !dev_req_params) {
-+			ufshcd_uic_hibern8_exit(hba);
- 			goto out;
-+		}
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_enter);
  
- 		ufs_qcom_cfg_timers(hba,
- 				    dev_req_params->gear_rx,
- 				    dev_req_params->pwr_rx,
- 				    dev_req_params->hs_rate,
- 				    false);
-+		ufshcd_uic_hibern8_exit(hba);
- 	}
+ int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
+ {
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 52ea6f3..0cc55a2 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1397,4 +1397,6 @@ static inline int ufshcd_rpmb_rpm_put(struct ufs_hba *hba)
+ 	return pm_runtime_put(&hba->sdev_rpmb->sdev_gendev);
+ }
  
- out:
++int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
++int ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
+ #endif /* End of Header */
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
