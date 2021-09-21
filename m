@@ -2,110 +2,142 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.2 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+X-Spam-Status: No, score=-15.7 required=3.0 tests=BAYES_00,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C4DEC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Sep 2021 02:55:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04AB4C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Sep 2021 14:30:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7DFCE60F48
-	for <linux-scsi@archiver.kernel.org>; Tue, 21 Sep 2021 02:55:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D628461178
+	for <linux-scsi@archiver.kernel.org>; Tue, 21 Sep 2021 14:30:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233210AbhIUC5V (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 20 Sep 2021 22:57:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40810 "EHLO
+        id S233569AbhIUObr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 21 Sep 2021 10:31:47 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237680AbhIUCXc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Sep 2021 22:23:32 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 914EAC1DDC6B;
-        Mon, 20 Sep 2021 11:50:00 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id h3-20020a17090a580300b0019ce70f8243so124131pji.4;
-        Mon, 20 Sep 2021 11:50:00 -0700 (PDT)
+        with ESMTP id S233519AbhIUObp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Sep 2021 10:31:45 -0400
+Received: from mail-pj1-x1035.google.com (mail-pj1-x1035.google.com [IPv6:2607:f8b0:4864:20::1035])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D66BEC061574
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2021 07:30:16 -0700 (PDT)
+Received: by mail-pj1-x1035.google.com with SMTP id on12-20020a17090b1d0c00b001997c60aa29so2029985pjb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Sep 2021 07:30:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=message-id:date:mime-version:user-agent:subject:content-language:to
-         :cc:references:from:in-reply-to:content-transfer-encoding;
-        bh=AEf79rWn/9hTeD9zwPcYIx29i0uIYHTFx/+Rb5okHyA=;
-        b=aUNnRE2bPwUnM530gy1QMPLkyf+ddc/uzBEVJqypT0HenlLa66c+jST32dpWaTo2As
-         uEFu30EtvlSpI5a9YXGEKaCeUJQIOIBA3uobm1n/C5RgdO8HSb03NF62mK1oxX7S6MLC
-         vcYYIH2VlZV9ym4bVe7VpmR/0/M1tQWnQ6isG+jpCHuuIQ6XPhOGpe8kyYG/F+j991yc
-         aAiJ1emuz0ce5OERRV0xHXQ9mpNeI4jXT+hLROrQeti0kZWUY2H+tKqYx6KRW++kKSma
-         Mwfwu7RN7+9uJ6qMzDx0pGZOdeOQ4X84I0l1MY2SEgarjsgTVat83o6+1agECW+Iyuu/
-         c7Pg==
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=jIaPbLgyhPhHpZ+oXGN1txCITfY2rCSJERJhFTy0SME=;
+        b=GzYMn6wPOuwJCoeB1x0ROwJzCRmXav7JAZMkPGJ0R/Kc8Ivs0zOg13v0lJGuCqqJ3n
+         ySNgceRRMXlfLwKS5EWv1suJBQ+ZGPQzNphoJQ6p2GidxJuyfvmUiK0t6KMTTRKWdhAm
+         lMQbl30/kdXv053CSny8v2OLFLOgkzzMiGIsdFkf0oiOZWN5OA4lKq4z6/Oxthk6Nt0L
+         hFt2vUoP+afwzlmBn3v/0sMYLbm7ZmjZYVRHsi8iQMKZQnjbIYAEruUCcsBhzdV6NBck
+         FXnozgFxjNSXKt8TGmADaN34bzXf+9c11T1ote7yOwBniQM0N+v7dcBVtBad1BaoQP3L
+         bScw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=AEf79rWn/9hTeD9zwPcYIx29i0uIYHTFx/+Rb5okHyA=;
-        b=LkekmXPmz4/9D+6DOIe2LuTm1wQXIQ9yn+123zDJYA1HRZtcZbX6fctW9aNkxGUaKl
-         v8GhlgVrLf0uKJTMnEAHZEWSp5BrV+qZNMC6GM10j6xztPPTltBlo+1RCyfJ0IsNo6L0
-         v/CzXUPBKf9hh9otMHNSduvyj2rrJyEiSDBmndRbpWD7yZzWm1lQKn5TL8Bo/GJutNhj
-         ulGkIuXY25nt3DwAiZwiGTWEQjjgMIj49vrjQR/pURpmJmuUJ/awUERdH6lKjPSmM2gr
-         o77CJHygVx3AA0o7uweAoo+MQrXkv+ym2W1dIlN5/6KTYu4AKh7+phEZB9xqaIcKkwBv
-         EOgg==
-X-Gm-Message-State: AOAM533BrN3GCr6oqChJmW6o6yzhl8x+JqyhTTTDHbBM/F6UlOi1r26b
-        n6e9ScSDF/ZWxNmtBC8r25A=
-X-Google-Smtp-Source: ABdhPJwyRtjipL3juujjlnSSZ7iaf9xGw/l+MgfBA1qbjWuI79wP+PUEyOKmCYlq7okQqpUaNhcyrQ==
-X-Received: by 2002:a17:90b:4d8a:: with SMTP id oj10mr494845pjb.233.1632163800115;
-        Mon, 20 Sep 2021 11:50:00 -0700 (PDT)
-Received: from [10.69.44.239] ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id z17sm5450158pfa.148.2021.09.20.11.49.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 20 Sep 2021 11:49:59 -0700 (PDT)
-Message-ID: <a4c0a2fd-8b33-8b30-ed74-e033136d496a@gmail.com>
-Date:   Mon, 20 Sep 2021 11:49:58 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.0.3
-Subject: Re: [PATCH] scsi: lpfc: Fix gcc -Wstringop-overread warning, again
-Content-Language: en-US
-To:     Arnd Bergmann <arnd@kernel.org>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Justin Tee <justin.tee@broadcom.com>
-Cc:     Lee Jones <lee.jones@linaro.org>,
-        Gaurav Srivastava <gaurav.srivastava@broadcom.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20210920095628.1191676-1-arnd@kernel.org>
+        bh=jIaPbLgyhPhHpZ+oXGN1txCITfY2rCSJERJhFTy0SME=;
+        b=Dr9spEj89oaJ7/s4v0r/9viKZlDRixZfIf9/KKPpsZfhjZPWSwYIIivUSoEKoKtXJp
+         BWzfMLGQbtQ5y1fYAsZHj3eBx/XU3YKPzZCpD3AgRKMHQsli/1LhO7m8FvZl5XOh+dJT
+         rFkfrfiRQqjE2RN085ndKlyWECV2Qp12vSy5lehYeEv1vGmOkcxSGl/b3eKPIWWLPGfk
+         uZdWfBvx58/FZamZgWWiojfHUp7BDwSsq8uD+Xl46JQY1TGPqlt3yvnIARvFxC/khtKM
+         2y1IzCn9WljpE8s1pWi91cW3jWz+EnAN8aQLarK1bx0jr4rSqr0cHvc3izpyxFxT5rYM
+         JUkQ==
+X-Gm-Message-State: AOAM530jygEvkdcoKHOWQwMP7WbierH/urw+BkN8H+3ZEECmRJocSesT
+        q2ZXPS6eco7YLdntIs6fR6ds5fe3qf6MHQ==
+X-Google-Smtp-Source: ABdhPJxzSfxzAcCKtf/ZfObLkxDbZxONl0LlXUq3fzssnDZogOa0OONx5VXxGB+85U7VHf60U1+qeQ==
+X-Received: by 2002:a17:903:32c6:b0:13b:9cd4:908d with SMTP id i6-20020a17090332c600b0013b9cd4908dmr28012971plr.20.1632234615321;
+        Tue, 21 Sep 2021 07:30:15 -0700 (PDT)
+Received: from mail-ash-it-01.broadcom.com (ip174-67-196-173.oc.oc.cox.net. [174.67.196.173])
+        by smtp.gmail.com with ESMTPSA id 75sm13886285pfx.134.2021.09.21.07.30.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 21 Sep 2021 07:30:15 -0700 (PDT)
 From:   James Smart <jsmart2021@gmail.com>
-In-Reply-To: <20210920095628.1191676-1-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+To:     linux-scsi@vger.kernel.org
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Nigel Kirkland <nkirkland2304@gmail.com>
+Subject: [PATCH] lpfc: Fix mailbox command failure during driver initialization
+Date:   Tue, 21 Sep 2021 07:30:08 -0700
+Message-Id: <20210921143008.64212-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.26.2
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/20/2021 2:56 AM, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> I fixed a stringop-overread warning earlier this year, now a
-> second copy of the original code was added and the warning came
-> back:
-> 
-> drivers/scsi/lpfc/lpfc_attr.c: In function 'lpfc_cmf_info_show':
-> drivers/scsi/lpfc/lpfc_attr.c:289:25: error: 'strnlen' specified bound 4095 exceeds source size 24 [-Werror=stringop-overread]
->    289 |                         strnlen(LPFC_INFO_MORE_STR, PAGE_SIZE - 1),
->        |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> Fix it the same way as the other copy.
-> 
-> Fixes: ada48ba70f6b ("scsi: lpfc: Fix gcc -Wstringop-overread warning")
-> Fixes: 74a7baa2a3ee ("scsi: lpfc: Add cmf_info sysfs entry")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->   drivers/scsi/lpfc/lpfc_attr.c | 7 ++-----
+Contention for the mailbox interface may occur during driver
+initialization (immediately after a function reset), between mailbox
+commands initiated via ioctl (bsg) and those driver requested by the
+driver.
 
+After setting SLI_ACTIVE flag for a port, there is a window in which
+the driver will allow an ioctl to be initiated while the adapter is
+initializing and issuing mailbox commands via polling. The polling
+logic then gets confused.
 
-Thank You Arnd. Looks good.
+Correct by having thread setting SLI_ACTIVE spot an active mailbox
+command and allow it complete before proceeding.
 
-Reviewed-by: James Smart <jsmart2021@gmail.com>
+Co-developed-by: Nigel Kirkland <nkirkland2304@gmail.com>
+Signed-off-by: Nigel Kirkland <nkirkland2304@gmail.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 15 +++++++++++++--
+ 1 file changed, 13 insertions(+), 2 deletions(-)
 
--- james
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 34cf2bfcce07..3f911cb48cf2 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -8158,6 +8158,7 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 	struct lpfc_vport *vport = phba->pport;
+ 	struct lpfc_dmabuf *mp;
+ 	struct lpfc_rqb *rqbp;
++	u32 flg;
+ 
+ 	/* Perform a PCI function reset to start from clean */
+ 	rc = lpfc_pci_function_reset(phba);
+@@ -8171,7 +8172,17 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 	else {
+ 		spin_lock_irq(&phba->hbalock);
+ 		phba->sli.sli_flag |= LPFC_SLI_ACTIVE;
++		flg = phba->sli.sli_flag;
+ 		spin_unlock_irq(&phba->hbalock);
++		/* Allow a little time after setting SLI_ACTIVE for any polled
++		 * MBX commands to complete via BSG.
++		 */
++		for (i = 0; i < 50 && (flg & LPFC_SLI_MBOX_ACTIVE); i++) {
++			msleep(20);
++			spin_lock_irq(&phba->hbalock);
++			flg = phba->sli.sli_flag;
++			spin_unlock_irq(&phba->hbalock);
++		}
+ 	}
+ 
+ 	lpfc_sli4_dip(phba);
+@@ -9755,7 +9766,7 @@ lpfc_sli_issue_mbox_s4(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
+ 					"(%d):2541 Mailbox command x%x "
+ 					"(x%x/x%x) failure: "
+ 					"mqe_sta: x%x mcqe_sta: x%x/x%x "
+-					"Data: x%x x%x\n,",
++					"Data: x%x x%x\n",
+ 					mboxq->vport ? mboxq->vport->vpi : 0,
+ 					mboxq->u.mb.mbxCommand,
+ 					lpfc_sli_config_mbox_subsys_get(phba,
+@@ -9789,7 +9800,7 @@ lpfc_sli_issue_mbox_s4(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq,
+ 					"(%d):2597 Sync Mailbox command "
+ 					"x%x (x%x/x%x) failure: "
+ 					"mqe_sta: x%x mcqe_sta: x%x/x%x "
+-					"Data: x%x x%x\n,",
++					"Data: x%x x%x\n",
+ 					mboxq->vport ? mboxq->vport->vpi : 0,
+ 					mboxq->u.mb.mbxCommand,
+ 					lpfc_sli_config_mbox_subsys_get(phba,
+-- 
+2.26.2
+
