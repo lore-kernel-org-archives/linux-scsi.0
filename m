@@ -2,89 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-14.0 required=3.0 tests=BAYES_00,INCLUDES_CR_TRAILER,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F432C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 19:58:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E58DCC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 20:48:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08488611B0
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 19:58:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF82F6112F
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 20:48:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237286AbhIVT7f (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Sep 2021 15:59:35 -0400
-Received: from mail-ot1-f45.google.com ([209.85.210.45]:45616 "EHLO
-        mail-ot1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230384AbhIVT7e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2021 15:59:34 -0400
-Received: by mail-ot1-f45.google.com with SMTP id l7-20020a0568302b0700b0051c0181deebso5127096otv.12;
-        Wed, 22 Sep 2021 12:58:04 -0700 (PDT)
+        id S237684AbhIVUth (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Sep 2021 16:49:37 -0400
+Received: from mail-pj1-f41.google.com ([209.85.216.41]:37818 "EHLO
+        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237592AbhIVUtg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2021 16:49:36 -0400
+Received: by mail-pj1-f41.google.com with SMTP id me5-20020a17090b17c500b0019af76b7bb4so5399568pjb.2
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Sep 2021 13:48:06 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=iaPd+QHHmiMvOvCvDzF4J+PjNGw7QzM9uEOdU0ijBx0=;
-        b=lmSUzZwKLoJbi3rV8b14ueTzvSARIS4af4soLPNuuJhDc27EYAF4AQCEwxM9qG4Ldh
-         SNblY3E+Ti5x5q51TdLKUvqQI0QJJm2QI5dEG3h6sLV1pRn1FfIBfmH1dQnExZkjNaWy
-         EyK1kNhtZk8C3U3APKnabrQCrmpQBaD7IXZOVfnLZwUJtwjktLZPVCZGIRqn06lJ9jw0
-         ZRYKwZgjFp0JKPUHctXJldMcUq65m/H4988xC2qM5PjKqTwrMci6CKtIl53xUltQ6iki
-         c9xd1xgB1hIgaKTw4/4rx0dj1YHIIRI/XzN3Uxq42D42uZwLk6t9THC87ZttVLIL55J3
-         moxw==
-X-Gm-Message-State: AOAM530WnV3Nb1xYiEUoSZc0iRzm3zsRmEi/QfJOsLdjYfhWCKyev3cM
-        AJaDvQSv73T9JUfsmQWRVQ==
-X-Google-Smtp-Source: ABdhPJxYtpvzhIoY0PLePCkbi+/RqQbnPjHxc6x38GmKt2lT/UdKaSb/wKAdy90Adwnkh1e3vG2yCw==
-X-Received: by 2002:a9d:6092:: with SMTP id m18mr817222otj.215.1632340684146;
-        Wed, 22 Sep 2021 12:58:04 -0700 (PDT)
-Received: from robh.at.kernel.org (66-90-148-213.dyn.grandenetworks.net. [66.90.148.213])
-        by smtp.gmail.com with ESMTPSA id q133sm244494oia.55.2021.09.22.12.58.02
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Sep 2021 12:58:03 -0700 (PDT)
-Received: (nullmailer pid 1191863 invoked by uid 1000);
-        Wed, 22 Sep 2021 19:58:02 -0000
-Date:   Wed, 22 Sep 2021 14:58:02 -0500
-From:   Rob Herring <robh@kernel.org>
-To:     Chanho Park <chanho61.park@samsung.com>
-Cc:     devicetree@vger.kernel.org, Bean Huo <beanhuo@micron.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Gyunghoon Kwon <goodjob.kwon@samsung.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-scsi@vger.kernel.org, Can Guo <cang@codeaurora.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        linux-samsung-soc@vger.kernel.org,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=3AFQqXZmo4K+7iWw+BjmjwCMVEBuW2c+N//wcEqcQOA=;
+        b=pumEp/EgcJa+qBC2yo01Sd0onMwLxTSQZXuVvgECBoy7BbML+VHBOpEnZHFvO29hG6
+         SWjX0ug7tqOUrnng/gbDGP6AXWosWUqMsd8kUyD4ZjNw6U1DSwGEWtoENqG20YLTUEGo
+         a61bF1O+5ZUGIK4ruSy8g/l4lyGMAymfLEZSDDoIAAzC1jSlQ2flJSPsVlt9BLu/FN+j
+         NrlI26U/Z42b89kTHYjksbMBjLMHQSKgD+qSarjmdhAX/vs9FoklTfk4G6wqbxpIP83o
+         /nNofqcXse2VRmFNWV95eLghNyqMq9qXsudAAT6Wz8eFcDdkdkt2UALsqsQtt1MQD0pm
+         WZzQ==
+X-Gm-Message-State: AOAM532igN/0U1K8noEbYPio44BHbiHDCgkhq8yHDEtZcHB7fMLPzm2F
+        NX6Ki0f4EpQAelgniGXldQqovtwEGkQ=
+X-Google-Smtp-Source: ABdhPJy6tnpnpkINl+teTV4KHuxO7+fUlmZK+YUg7WEhiJS4zeYI2/3ytTrYRrxPWUr4d+ShakK/Iw==
+X-Received: by 2002:a17:90a:cb8e:: with SMTP id a14mr13558594pju.227.1632343685151;
+        Wed, 22 Sep 2021 13:48:05 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f3b9:da7d:f0c0:c71c])
+        by smtp.gmail.com with ESMTPSA id e7sm3274974pfc.114.2021.09.22.13.48.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 22 Sep 2021 13:48:04 -0700 (PDT)
+Subject: Re: [PATCH] scsi: ufs: Fix task management completion
+To:     Adrian Hunter <adrian.hunter@intel.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v3 17/17] dt-bindings: ufs: exynos-ufs: add exynosautov9
- compatible
-Message-ID: <YUuKysgLBtB5jQv1@robh.at.kernel.org>
-References: <20210917065436.145629-1-chanho61.park@samsung.com>
- <CGME20210917065524epcas2p455b2900227b6a20994bec4816248f2bf@epcas2p4.samsung.com>
- <20210917065436.145629-18-chanho61.park@samsung.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org
+References: <20210922091059.4040-1-adrian.hunter@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <88b64fec-4034-3e0d-d15e-46dcfaad5863@acm.org>
+Date:   Wed, 22 Sep 2021 13:48:02 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210917065436.145629-18-chanho61.park@samsung.com>
+In-Reply-To: <20210922091059.4040-1-adrian.hunter@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 17 Sep 2021 15:54:36 +0900, Chanho Park wrote:
-> Below two compatibles can be used for exynosautov9 SoC UFS controller.
+On 9/22/21 2:10 AM, Adrian Hunter wrote:
+> The UFS driver uses blk_mq_tagset_busy_iter() when identifying task
+> management requests to complete, however blk_mq_tagset_busy_iter()
+> doesn't work.
 > 
-> - samsung,exynosautov9-ufs: ExynosAutov9 UFS Physical Host
-> - samsung,exynosautov9-ufs-vh: ExynosAutov9 UFS Virtual Host
+> blk_mq_tagset_busy_iter() only iterates requests dispatched by the block
+> layer. That appears as if it might have started since commit 37f4a24c2469a1
+> ("blk-mq: centralise related handling into blk_mq_get_driver_tag") which
+> removed 'data->hctx->tags->rqs[rq->tag] = rq' from blk_mq_rq_ctx_init()
+> which gets called:
 > 
-> Cc: Rob Herring <robh+dt@kernel.org>
-> Cc: devicetree@vger.kernel.org
-> Signed-off-by: Chanho Park <chanho61.park@samsung.com>
-> ---
->  Documentation/devicetree/bindings/ufs/samsung,exynos-ufs.yaml | 2 ++
->  1 file changed, 2 insertions(+)
+> 	blk_get_request
+> 		blk_mq_alloc_request
+> 			__blk_mq_alloc_request
+> 				blk_mq_rq_ctx_init
 > 
+> Since UFS task management requests are not dispatched by the block
+> layer, hctx->tags->rqs[rq->tag] remains NULL,  and since
+> blk_mq_tagset_busy_iter() relies on finding requests using
+> hctx->tags->rqs[rq->tag], UFS task management requests are never found by
+> blk_mq_tagset_busy_iter().
+> 
+> By using blk_mq_tagset_busy_iter(), the UFS driver was relying on internal
+> details of the block layer, which was fragile and subsequently got
+> broken. Fix by removing the use of blk_mq_tagset_busy_iter() and having
+> the driver keep track of task management requests.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Thanks for the detailed analysis. I agree that using blk_mq_tagset_busy_iter()
+no longer works due to recent changes in the block layer. Has it been
+considered to export blk_mq_all_tag_iter() and to use that function instead of
+blk_mq_tagset_busy_iter()?
+
+Thanks,
+
+Bart.
+
+
