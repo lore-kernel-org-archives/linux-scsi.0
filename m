@@ -7,54 +7,56 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F6D6C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:26:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13421C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:26:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3CFD660F9D
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:26:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E862E60F9D
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:26:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236612AbhIVQ1u (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Sep 2021 12:27:50 -0400
-Received: from mail-pf1-f182.google.com ([209.85.210.182]:39742 "EHLO
-        mail-pf1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236601AbhIVQ1u (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2021 12:27:50 -0400
-Received: by mail-pf1-f182.google.com with SMTP id e16so3178236pfc.6
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Sep 2021 09:26:20 -0700 (PDT)
+        id S236614AbhIVQ1z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Sep 2021 12:27:55 -0400
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:33431 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232357AbhIVQ1y (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2021 12:27:54 -0400
+Received: by mail-pj1-f54.google.com with SMTP id il14-20020a17090b164e00b0019c7a7c362dso4160770pjb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Sep 2021 09:26:25 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=yOUtkVE8E9bWE+12UwZCS9uclaO/RQ1oZVDSnS5TBJ0=;
-        b=6PCtR7PY54De8BYWqW3He6L2GioKKlMKq/S6lKoGYw9IqJsxBoYiVEsCF1dm+7gDgg
-         gmPczCYtTaxNyfwoGVwFktGSzkLjqapMLFcL8JrQxsWddJrhPo3/DO8WSoOBOoYHHzin
-         5otpJlqMfEr1Cfi3WAuJv5cuol0YKnSmXy7TY4lEwPCdhMi0DW9tNeFQMOIZj7d8h5+d
-         EJQWYK0G6m9xsB4fP73w5GQABN03x5x1MBLJLfrZdN1OitLPkZHqZwhsOZ/qKh5plxgv
-         F4W49mWY8S8BEJAZwA4/BupNSbKwoC7tbwmw6QF/6WJGV4chh//DEzdKwJI+V6fodaSv
-         ri2g==
-X-Gm-Message-State: AOAM530TOclBe2zhN0cFuT5G0/Lzm5u87Ghz9TV1GBhPjZ/JKU3QYF6Q
-        qGdTeFn/5QUqqfcjR/li7N8xG8Jke1c=
-X-Google-Smtp-Source: ABdhPJzr/xbn1HkD7SeNqt6yKalUWiGDSm5I6W5UozyyC8sw/unfXgrA63XI3ZEfDOEW8wSNghmnug==
-X-Received: by 2002:a63:555c:: with SMTP id f28mr478713pgm.316.1632327979585;
-        Wed, 22 Sep 2021 09:26:19 -0700 (PDT)
+        bh=+v5ujaNJjXmcRXqt0UqZBXyj/iRiPSi6W3kLWeZdqW4=;
+        b=m3daWNS4kWagYM/3sHyDdQbKnoZYyc/QU/mIy7Y1SMYwsRSzjwOfbrquEW5D6vqowu
+         ZTT/VTGztCqFUDBxRg7Usq5oO4A52hZZknrsVyYSjvy3RjZ4I7dGcDbKsiX6r4PsfgFl
+         84cVO4Fi4Nr3IgwjLQZw+J51BqsdeofTDHcR2HuDYU1M+TyLKcw0ETwwBWcSCsRBnJO1
+         tcIazt0PPWinwd53BWKbe38615X33CupIhnIHsGGCIszdmemRixgGbIBIVmy6W4OzQwn
+         hsOgVojbNsaCWp3r5UVknPZLV1nL+lAc7lYGSiFli5JXHBLzuJuigoQT3bVfIuER6RxQ
+         NnOg==
+X-Gm-Message-State: AOAM532nDL6rgz7kXGDAgtsOZtNEf/heQGxuolqeAlU2Z2BtWBncmBKZ
+        8vT6T+rM2au+6wddBl50CAQ=
+X-Google-Smtp-Source: ABdhPJygvtGKs64llk6xK+7c/Sora3cx93DulcFqqZwwh99eIDyPVnr5Er/yQEw4uAOry1M/46AJTQ==
+X-Received: by 2002:a17:903:4041:b0:13d:b90e:162e with SMTP id n1-20020a170903404100b0013db90e162emr48581pla.34.1632327984656;
+        Wed, 22 Sep 2021 09:26:24 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f3b9:da7d:f0c0:c71c])
-        by smtp.gmail.com with ESMTPSA id p26sm2311697pfw.137.2021.09.22.09.26.18
+        by smtp.gmail.com with ESMTPSA id p26sm2311697pfw.137.2021.09.22.09.26.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Sep 2021 09:26:19 -0700 (PDT)
+        Wed, 22 Sep 2021 09:26:24 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Boris Ostrovsky <boris.ostrovsky@oracle.com>,
         Juergen Gross <jgross@suse.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        David Kershner <david.kershner@unisys.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Song Chen <chensong_2000@189.cn>,
-        "Fabio M. De Francesco" <fmdefrancesco@gmail.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH 81/84] staging: unisys: visorhba: Call scsi_done() directly
-Date:   Wed, 22 Sep 2021 09:25:59 -0700
-Message-Id: <20210922162603.476745-3-bvanassche@acm.org>
+        Mike Christie <michael.christie@oracle.com>,
+        William Breathitt Gray <vilhelm.gray@gmail.com>,
+        "Russell King (Oracle)" <rmk+kernel@armlinux.org.uk>,
+        Dan Williams <dan.j.williams@intel.com>,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>, Hannes Reinecke <hare@suse.de>,
+        Colin Ian King <colin.king@canonical.com>
+Subject: [PATCH 82/84] target/tcm_loop: Call scsi_done() directly
+Date:   Wed, 22 Sep 2021 09:26:00 -0700
+Message-Id: <20210922162603.476745-4-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
 In-Reply-To: <20210922162603.476745-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
@@ -70,66 +72,28 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/staging/unisys/visorhba/visorhba_main.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+ drivers/target/loopback/tcm_loop.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/unisys/visorhba/visorhba_main.c b/drivers/staging/unisys/visorhba/visorhba_main.c
-index 41f8a72a2a95..6a8fa0587280 100644
---- a/drivers/staging/unisys/visorhba/visorhba_main.c
-+++ b/drivers/staging/unisys/visorhba/visorhba_main.c
-@@ -327,7 +327,7 @@ static int visorhba_abort_handler(struct scsi_cmnd *scsicmd)
- 	rtn = forward_taskmgmt_command(TASK_MGMT_ABORT_TASK, scsidev);
- 	if (rtn == SUCCESS) {
- 		scsicmd->result = DID_ABORT << 16;
--		scsicmd->scsi_done(scsicmd);
-+		scsi_done(scsicmd);
- 	}
- 	return rtn;
- }
-@@ -354,7 +354,7 @@ static int visorhba_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	rtn = forward_taskmgmt_command(TASK_MGMT_LUN_RESET, scsidev);
- 	if (rtn == SUCCESS) {
- 		scsicmd->result = DID_RESET << 16;
--		scsicmd->scsi_done(scsicmd);
-+		scsi_done(scsicmd);
- 	}
- 	return rtn;
- }
-@@ -383,7 +383,7 @@ static int visorhba_bus_reset_handler(struct scsi_cmnd *scsicmd)
- 	rtn = forward_taskmgmt_command(TASK_MGMT_BUS_RESET, scsidev);
- 	if (rtn == SUCCESS) {
- 		scsicmd->result = DID_RESET << 16;
--		scsicmd->scsi_done(scsicmd);
-+		scsi_done(scsicmd);
- 	}
- 	return rtn;
- }
-@@ -476,8 +476,7 @@ static int visorhba_queue_command_lck(struct scsi_cmnd *scsicmd,
- 	 */
- 	cmdrsp->scsi.handle = insert_location;
- 
--	/* save done function that we have call when cmd is complete */
--	scsicmd->scsi_done = visorhba_cmnd_done;
-+	WARN_ON_ONCE(visorhba_cmnd_done != scsi_done);
- 	/* save destination */
- 	cmdrsp->scsi.vdest.channel = scsidev->channel;
- 	cmdrsp->scsi.vdest.id = scsidev->id;
-@@ -686,8 +685,7 @@ static void visorhba_serverdown_complete(struct visorhba_devdata *devdata)
- 		case CMD_SCSI_TYPE:
- 			scsicmd = pendingdel->sent;
- 			scsicmd->result = DID_RESET << 16;
--			if (scsicmd->scsi_done)
--				scsicmd->scsi_done(scsicmd);
-+			scsi_done(scsicmd);
- 			break;
- 		case CMD_SCSITASKMGMT_TYPE:
- 			cmdrsp = pendingdel->sent;
-@@ -853,7 +851,7 @@ static void complete_scsi_command(struct uiscmdrsp *cmdrsp,
+diff --git a/drivers/target/loopback/tcm_loop.c b/drivers/target/loopback/tcm_loop.c
+index 52db28d868d5..4407b56aa6d1 100644
+--- a/drivers/target/loopback/tcm_loop.c
++++ b/drivers/target/loopback/tcm_loop.c
+@@ -71,7 +71,7 @@ static void tcm_loop_release_cmd(struct se_cmd *se_cmd)
+ 	if (se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB)
+ 		kmem_cache_free(tcm_loop_cmd_cache, tl_cmd);
  	else
- 		do_scsi_nolinuxstat(cmdrsp, scsicmd);
+-		sc->scsi_done(sc);
++		scsi_done(sc);
+ }
  
--	scsicmd->scsi_done(scsicmd);
-+	scsi_done(scsicmd);
+ static int tcm_loop_show_info(struct seq_file *m, struct Scsi_Host *host)
+@@ -165,7 +165,7 @@ static void tcm_loop_target_queue_cmd(struct tcm_loop_cmd *tl_cmd)
+ 	return;
+ 
+ out_done:
+-	sc->scsi_done(sc);
++	scsi_done(sc);
  }
  
  /*
