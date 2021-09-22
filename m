@@ -2,87 +2,95 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=BAYES_00,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,NICE_REPLY_A,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=BAYES_00,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F32D3C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:31:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 465ECC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:44:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D4E13611B0
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:31:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26879611F2
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:44:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236568AbhIVQct (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Sep 2021 12:32:49 -0400
-Received: from mail-pf1-f175.google.com ([209.85.210.175]:46970 "EHLO
-        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229671AbhIVQct (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2021 12:32:49 -0400
-Received: by mail-pf1-f175.google.com with SMTP id 203so3131047pfy.13
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Sep 2021 09:31:19 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=Nw8TE4ZnhetIn/KqB2kFfjx4GgteLJRkp2owQt22a6g=;
-        b=RhKon3bjDsfLwKXHmzIe+oAdbTH7RFYJSYuMkT8OsNd97KMy6W8kiLCOF76r2s+TDT
-         oOAbecSCfHMDf73gV4tyVzZYeTI5KCzSCosqU1GN79wTSi8yE4XDkzFzm/HgDVdoCZx9
-         I/hvwNGUD8B9JEFd9+6q1gdL1KBYx1gOrmNFM5qVmuFWfA47YS9pqytuQa9gpfVPkdCJ
-         PAiAPO9c6XTImrtgS4xH4GuN1U/6FRoBb23TisyeW+qszKk4qREekQ88HRogKIBxdLZJ
-         yIJvzjGHS3es11XV/VRK8+3q6I10nN3z3xs69MnTqMcbQ4Avo4IdF5L9zQmCT+Hfnq3j
-         lcTQ==
-X-Gm-Message-State: AOAM531+9T9mH1dTMux38/ybzrhAk3s8dVkAB3W+ELXbtikei+3aGIxH
-        0/rH4IrLqKa7ZFKw63U9pkM=
-X-Google-Smtp-Source: ABdhPJz8lCSxlpU2gTWtsb95Af8efpQtmsR2tHhV+IQube6i5js9MAmxEavCcn5UYksnXaHwSu/1Lg==
-X-Received: by 2002:a62:19d4:0:b0:43d:1bb7:13ae with SMTP id 203-20020a6219d4000000b0043d1bb713aemr463450pfz.63.1632328278499;
-        Wed, 22 Sep 2021 09:31:18 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f3b9:da7d:f0c0:c71c])
-        by smtp.gmail.com with ESMTPSA id g3sm3604098pgf.1.2021.09.22.09.31.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 22 Sep 2021 09:31:17 -0700 (PDT)
-Subject: Re: [PATCH 80/84] staging: rts5208: Call scsi_done() directly
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        20210918000607.450448-1-bvanassche@acm.org
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Juergen Gross <jgross@suse.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20210921173436.3533078-1-bvanassche@acm.org>
- <20210921173436.3533078-2-bvanassche@acm.org> <YUrNok3NhgRygKbn@kroah.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <42ee3c28-6d6f-828f-2ab3-693ac6cedfae@acm.org>
-Date:   Wed, 22 Sep 2021 09:31:16 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        id S236654AbhIVQpa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Sep 2021 12:45:30 -0400
+Received: from mta-02.yadro.com ([89.207.88.252]:58464 "EHLO mta-01.yadro.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S231925AbhIVQp3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Sep 2021 12:45:29 -0400
+Received: from localhost (unknown [127.0.0.1])
+        by mta-01.yadro.com (Postfix) with ESMTP id 780B943EDB;
+        Wed, 22 Sep 2021 16:43:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
+        mime-version:content-transfer-encoding:content-type:content-type
+        :content-language:accept-language:in-reply-to:references
+        :message-id:date:date:subject:subject:from:from:received
+        :received:received:received; s=mta-01; t=1632329033; x=
+        1634143434; bh=jEcF9jrFFknizQXVio793eWQQQtI0Q3SBQaN/X5YYig=; b=Y
+        1Tqz+bzeGPnqWKjIqv/gTg8FxcGL8MxEUQn20KrUANqQ3n9EAxtQ+HUteYA9HdBe
+        mwzlIXE9LYBfK/Oxv5Pjxf1cHY8QscELnaDLFOPf25Hmdj2IbVxU8EsJ583ev94h
+        dUXbuinsvRCJLmMjQD32Js+SJ8o2VJcyfP1PSNLbkQ=
+X-Virus-Scanned: amavisd-new at yadro.com
+Received: from mta-01.yadro.com ([127.0.0.1])
+        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id gwaOAUDTVQMw; Wed, 22 Sep 2021 19:43:53 +0300 (MSK)
+Received: from T-EXCH-03.corp.yadro.com (t-exch-03.corp.yadro.com [172.17.100.103])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mta-01.yadro.com (Postfix) with ESMTPS id 45C6043EB8;
+        Wed, 22 Sep 2021 19:43:52 +0300 (MSK)
+Received: from T-EXCH-04.corp.yadro.com (172.17.100.104) by
+ T-EXCH-03.corp.yadro.com (172.17.100.103) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
+ 15.1.669.32; Wed, 22 Sep 2021 19:43:52 +0300
+Received: from T-EXCH-04.corp.yadro.com ([fe80::d8c5:6f0a:3d48:18df]) by
+ T-EXCH-04.corp.yadro.com ([fe80::d8c5:6f0a:3d48:18df%15]) with mapi id
+ 15.01.0669.032; Wed, 22 Sep 2021 19:43:52 +0300
+From:   Dmitriy Bogdanov <d.bogdanov@yadro.com>
+To:     Mike Christie <michael.christie@oracle.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux@yadro.com" <linux@yadro.com>,
+        Konstantin Shelekhin <k.shelekhin@yadro.com>,
+        Roman Bolshakov <r.bolshakov@yadro.com>
+Subject: RE: [PATCH v3] target: core: remove from tmr_list at lun unlink
+Thread-Topic: [PATCH v3] target: core: remove from tmr_list at lun unlink
+Thread-Index: AQHXqjxsRxjpgHbtYEm89uYUDNcxt6uoQ5KAgATA8DCAAwqxgIAAOdSg
+Date:   Wed, 22 Sep 2021 16:43:51 +0000
+Message-ID: <b56124c7c8b94531bdbd7b8d2fe00633@yadro.com>
+References: <20210915141719.1484-1-d.bogdanov@yadro.com>
+ <40b321b4-76bd-8eb4-84bd-c7378ad2bbc7@oracle.com>
+ <8f81906545014a768a7f775d1dcf51cf@yadro.com>
+ <9ca9ec9f-bc6b-9aea-3b5a-43ce5fd09b5c@oracle.com>
+In-Reply-To: <9ca9ec9f-bc6b-9aea-3b5a-43ce5fd09b5c@oracle.com>
+Accept-Language: ru-RU, en-US
+Content-Language: ru-RU
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-originating-ip: [10.199.0.54]
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-In-Reply-To: <YUrNok3NhgRygKbn@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/21/21 11:30 PM, Greg Kroah-Hartman wrote:
-> I do not see the whole thread of this series on any mailing list (or
-> lore.kernel.org), so I do not know if you are wanting these to go
-> through the individual subsystem trees, or if they have to go through
-> the scsi tree as one large series due to dependancies.
-
-Hi Greg,
-
-Apparently the email service I'm using (gmail) does not support patch series
-with more than 78 patches. These six patches are my (failed) attempt to amend
-the remaining patches to the original patch series. Anyway, the entire patch
-series is available here:
-
-https://lore.kernel.org/linux-scsi/20210918000607.450448-1-bvanassche@acm.org/
-
-Patch 84/84 depends on the previous patches in that series. Hence my request
-for Martin to queue this series via the SCSI tree.
-
-Thanks,
-
-Bart.
+SGkgTWlrZSwNCg0KPiBZZWFoLCBJIHRoaW5rIGl0J3Mgbm90IG5lZWRlZC4gSXQgY2FtZSBpbiB3
+aXRoOg0KPg0KPiBjb21taXQgMmM5ZmE0OWUxMDBmOTYyYWY5ODhmMWMwNTI5MjMxYmYxNDkwNWNk
+YQ0KPiBBdXRob3I6IEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPg0KPiBEYXRl
+OiAgIFR1ZSBOb3YgMjcgMTU6NTI6MDMgMjAxOCAtMDgwMA0KPg0KPiAgICAgc2NzaTogdGFyZ2V0
+L2NvcmU6IE1ha2UgQUJPUlQgYW5kIExVTiBSRVNFVCBoYW5kbGluZyBzeW5jaHJvbm91cw0KPiBn
+cmVlLiBJdCBsb29rcyBsaWtlIGl0IHdhcyBhZGRlZCBpbjoNCj4NCj4gYW5kIGluIHRoYXQgcGF0
+Y2ggSSBjYW4ndCBzZWUgaXQgZXZlciBoYXBwZW5pbmcuIFdlIGhhdmUgMiB3YXlzIHRvIHN1Ym1p
+dA0KPiBhbiBhYm9ydCB0bXI6DQo+DQo+IDEuIHRhcmdldF9zdWJtaXRfdG1yIC0gQ2FsbHMgdHJh
+bnNwb3J0X2xvb2t1cF90bXJfbHVuIHRoZW4NCj4gdHJhbnNwb3J0X2dlbmVyaWNfaGFuZGxlX3Rt
+ci4NCj4NCj4gMi4gaXNjc2l0X2hhbmRsZV90YXNrX21ndF9jbWQgLSBXaWxsIGNhbGwgdHJhbnNw
+b3J0X2xvb2t1cF90bXJfbHVuDQo+IGZvciBldmVyeSB0bXIgZXhjZXB0IHRoZSBpc2NzaSBzcGVj
+aWZpYyBUQVNLIFJFQVNTSUdOLiBUQVNLIFJFQVNTSU5HDQo+IGlzIG5vdCBwYXNzZWQgdG8gdHJh
+bnNwb3J0X2dlbmVyaWNfaGFuZGxlX3Rtci4NCj4NCj4gSSBkb24ndCBzZWUgYW55IHBsYWNlcyB3
+aGVyZSB0bXJfZGV2IGlzIE5VTEwgYWZ0ZXIgdHJhbnNwb3J0X2xvb2t1cF90bXJfbHVuDQo+IGhh
+cyBzZXQgaXQgYW5kIGFkZGVkIGl0IHRvIHRoZSBsaXN0Lg0KPg0KPiBTbyBJIHRoaW5rIHlvdSBj
+YW4ganVzdCBraWxsIGl0Lg0KDQpPaywgdGhlbiBpbiB0aGUgbmV4dCByZXZpc2lvbiBvZiB0aGUg
+cGF0Y2ggSSB3aWxsIGp1c3QgcmVtb3ZlIHRoYXQgdHJhbnNwb3J0X2xvb2t1cF90bXJfbHVuIHdp
+dGggV0FSTl9PTi4NCg0KQlIsDQogRG1pdHJ5DQo=
