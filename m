@@ -7,52 +7,54 @@ X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2E68C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:26:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 451FEC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:26:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A2C18611EE
-	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:26:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 29D45611EE
+	for <linux-scsi@archiver.kernel.org>; Wed, 22 Sep 2021 16:26:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236601AbhIVQ1l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Sep 2021 12:27:41 -0400
-Received: from mail-pg1-f178.google.com ([209.85.215.178]:33707 "EHLO
-        mail-pg1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233094AbhIVQ1k (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2021 12:27:40 -0400
-Received: by mail-pg1-f178.google.com with SMTP id u18so3305413pgf.0
-        for <linux-scsi@vger.kernel.org>; Wed, 22 Sep 2021 09:26:10 -0700 (PDT)
+        id S232357AbhIVQ1p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Sep 2021 12:27:45 -0400
+Received: from mail-pf1-f176.google.com ([209.85.210.176]:45905 "EHLO
+        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236612AbhIVQ1p (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Sep 2021 12:27:45 -0400
+Received: by mail-pf1-f176.google.com with SMTP id w19so3126047pfn.12
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Sep 2021 09:26:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=w1iEouq48AVpn75b5A9apKQ3RgVM9gjJRAkhFFydADE=;
-        b=l0ujfMOmZOHR7GxYt6m240wx1P+ptbZ/T6llaKDlQbZiQTCIyq679EMEdjp5VH5XgB
-         0dixQke87Zckq+S4Uu6g+FQbI/XSZhIOCQo4O0TuoNaV3B6sWe+2ehGZRogbYhSwX6FA
-         4+LXV51NfJNAAvEofpjSYSRGk5lz07Nk9Qy2Yz9CV1ab624HS/63KLdNnnoI1IJj22W4
-         F5qi7udNHnvllPSlM9G5caDjrDdTf/Oe9KI9UlQiRiC0ZqBUPLardA5mUVNlR7ot9mOF
-         Rs9sxaBYQVe+uaJu62T2MQFlchLzHmcFExEmS1Xoh/VRpBwItRp4C1oF6pXPY3aMV66x
-         GDWQ==
-X-Gm-Message-State: AOAM532wYsdWkAn0FnToQLpnQuhpAscATK9kW6EJberfb2lvvQ3WVl3r
-        +9xa04O7+fzzAGFAHdwxQfA=
-X-Google-Smtp-Source: ABdhPJzggST1nvbrfHLzzf6uhD4rV6WgvT1vX2oYIX4dfgZyHHIkxbG+v1mxCIihadPgBnZb/PRbZg==
-X-Received: by 2002:aa7:9739:0:b0:449:56c4:4268 with SMTP id k25-20020aa79739000000b0044956c44268mr268654pfg.43.1632327970101;
-        Wed, 22 Sep 2021 09:26:10 -0700 (PDT)
+        bh=27GFIeefWPZHjxBpQo7Oio5U/8onCBpvEAOm6fcyxA8=;
+        b=Cq3gyi2yrav4kvtN8o4+abpJwSYgkAaAbmjTPW0HOQtU7KbI02FB25lsP6FeFiIwcF
+         H181OsV8BDr2MAQS/VtXg3VG7rX2O4ipMPcwcbcRfy67VbwMJHk96/oiF2u8ms+R2Kkh
+         Yye54fLJyT5WStezOLFiH6CYzZZrWmlEXonjcuxGU/jntz1B5JgvqQS6nRVwNp1kcrU4
+         W/gbhE6m40x0YsRGhN9y3MixSRdCmkQAO79dWZpVI6OXhxCZQr9kjrLulbg8xzYRlT0w
+         FJjW52ZEx3rlzEsFF21xEqEUKGahEzpALao9cdw9I95Ops8mtaWyim/7Lgth+4Ir3SG6
+         rmJw==
+X-Gm-Message-State: AOAM532G16f9D8RE2tu3W8mTqPRLGoslYVshdHYQ7F/kSsKIgk2Pr7el
+        7PA/DwqVG65Jrw0nOCTz1vbbdijWcI0=
+X-Google-Smtp-Source: ABdhPJwS2lhpa/GMA66jS1rMhtpvRG5yOS9kaDh3XlseWKL85av1e70v/LvIc4NdydDAcdNmBX883w==
+X-Received: by 2002:a62:51c6:0:b0:43d:e849:c69d with SMTP id f189-20020a6251c6000000b0043de849c69dmr274073pfb.31.1632327974742;
+        Wed, 22 Sep 2021 09:26:14 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f3b9:da7d:f0c0:c71c])
-        by smtp.gmail.com with ESMTPSA id p26sm2311697pfw.137.2021.09.22.09.26.08
+        by smtp.gmail.com with ESMTPSA id p26sm2311697pfw.137.2021.09.22.09.26.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 22 Sep 2021 09:26:09 -0700 (PDT)
+        Wed, 22 Sep 2021 09:26:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Boris Ostrovsky <boris.ostrovsky@oracle.com>,
         Juergen Gross <jgross@suse.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH 79/84] xen-scsifront: Call scsi_done() directly
-Date:   Wed, 22 Sep 2021 09:25:57 -0700
-Message-Id: <20210922162603.476745-1-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH 80/84] staging: rts5208: Call scsi_done() directly
+Date:   Wed, 22 Sep 2021 09:25:58 -0700
+Message-Id: <20210922162603.476745-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.464.g1972c5931b-goog
-In-Reply-To: <20210918000607.450448-1-bvanassche@acm.org>
+In-Reply-To: <20210922162603.476745-1-bvanassche@acm.org>
 References: <20210918000607.450448-1-bvanassche@acm.org>
+ <20210922162603.476745-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
@@ -64,28 +66,36 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/xen-scsifront.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/rts5208/rtsx.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index 0204e314b482..12c10a5e3d93 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -276,7 +276,7 @@ static void scsifront_cdb_cmd_done(struct vscsifrnt_info *info,
- 	if (sense_len)
- 		memcpy(sc->sense_buffer, ring_rsp->sense_buffer, sense_len);
- 
--	sc->scsi_done(sc);
-+	scsi_done(sc);
- }
- 
- static void scsifront_sync_cmd_done(struct vscsifrnt_info *info,
-@@ -558,7 +558,7 @@ static int scsifront_queuecommand(struct Scsi_Host *shost,
- 		if (err == -ENOMEM)
- 			return SCSI_MLQUEUE_HOST_BUSY;
- 		sc->result = DID_ERROR << 16;
--		sc->scsi_done(sc);
-+		scsi_done(sc);
- 		return 0;
+diff --git a/drivers/staging/rts5208/rtsx.c b/drivers/staging/rts5208/rtsx.c
+index 898add4d1fc8..f1136f6bcee2 100644
+--- a/drivers/staging/rts5208/rtsx.c
++++ b/drivers/staging/rts5208/rtsx.c
+@@ -140,7 +140,6 @@ static int queuecommand_lck(struct scsi_cmnd *srb,
  	}
  
+ 	/* enqueue the command and wake up the control thread */
+-	srb->scsi_done = done;
+ 	chip->srb = srb;
+ 	complete(&dev->cmnd_ready);
+ 
+@@ -423,7 +422,7 @@ static int rtsx_control_thread(void *__dev)
+ 
+ 		/* indicate that the command is done */
+ 		else if (chip->srb->result != DID_ABORT << 16) {
+-			chip->srb->scsi_done(chip->srb);
++			scsi_done(chip->srb);
+ 		} else {
+ skip_for_abort:
+ 			dev_err(&dev->pci->dev, "scsi command aborted\n");
+@@ -635,7 +634,7 @@ static void quiesce_and_remove_host(struct rtsx_dev *dev)
+ 	if (chip->srb) {
+ 		chip->srb->result = DID_NO_CONNECT << 16;
+ 		scsi_lock(host);
+-		chip->srb->scsi_done(dev->chip->srb);
++		scsi_done(dev->chip->srb);
+ 		chip->srb = NULL;
+ 		scsi_unlock(host);
+ 	}
