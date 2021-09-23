@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E23FCC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:13:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E83BC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:13:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C8B2B61250
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:13:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83C2C6124D
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:13:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242739AbhIWSOg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Sep 2021 14:14:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39012 "EHLO mail.kernel.org"
+        id S242766AbhIWSOj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Sep 2021 14:14:39 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39104 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242689AbhIWSOe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Sep 2021 14:14:34 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7F3C6610C8;
-        Thu, 23 Sep 2021 18:13:01 +0000 (UTC)
+        id S242753AbhIWSOh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Sep 2021 14:14:37 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 0F42560F43;
+        Thu, 23 Sep 2021 18:13:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632420782;
-        bh=JszZEhzKH2ZrJM1/H0dQz59yU6fi6F4Uu7Kc5qdwk7g=;
+        s=k20201202; t=1632420786;
+        bh=phlvYwzg+z96wp12+/KCpD7kPCOOA7sQ3Vr1eIwh1oc=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ff5SllCWr49nkhlXvN/aQF7WHB3ftLia70sKOmrhq+JYaRWuVZ6uczQsgjBp1sSXI
-         BJfeIp0x6OIE+Av8JKwPc52Matuj5OU4x4LkRDM9/FyE0ZnhgqkVq4PluCFYpIwZfo
-         GoInaFxJWicEzbDIHRdC+I/RpJrDI+lI9VM+kvEFC2oh9+TJUdMgJaiP/YiPB2RWZk
-         6gvRcXrSELrxdI2U84K1fDVXnyMFppq82SSwZ+rPqQlBQ9rVN0f8Q0WDJm1RYwWRlE
-         0ijCq3hNSZLYYKpGAeqrrYjMJhIuYnIDPQYycgV9f4pXoFddFdyd5DscPDOqfNVEur
-         qtCVJKcajsE7A==
+        b=kVixVQifNuQ+a1vwDe8CUju46ubqxFK9G/N3i038TJuLbTFXwfkWZU9MzYSc1UXfW
+         UUGyUl9Fz33m9ndbOhB3cWY/Um0S++D5G0hqvNapVd7RrB4ul0zwC6qF8YjBu9EXrE
+         a4fZq8PrL+GaTILBAGIwhIIqMVjZqAmpOmxHrKwxZsxJQNS/UKABewn/yAOR63WoHW
+         8eocJUMMBzjQlY68HiQJ0L2IUHaFJTqXyerV+kJwCxlv4Z/N0+2ezMLuRYFGkNaU6O
+         UDqe6y2vM9HVtvVY5ibNOMzozUxplH8IJLkkuOWvWCXjIk5aPuK9BBiBcbkjrClxDr
+         3HgUmQlDH44JA==
 From:   Leon Romanovsky <leon@kernel.org>
 To:     "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
@@ -55,9 +55,9 @@ Cc:     Leon Romanovsky <leonro@nvidia.com>,
         Saurav Kashyap <skashyap@marvell.com>,
         Tony Nguyen <anthony.l.nguyen@intel.com>,
         Vasundhara Volam <vasundhara-v.volam@broadcom.com>
-Subject: [PATCH net-next 1/6] bnxt_en: Check devlink allocation and registration status
-Date:   Thu, 23 Sep 2021 21:12:48 +0300
-Message-Id: <e7708737fadf4fe6f152afc76145c728c201adad.1632420430.git.leonro@nvidia.com>
+Subject: [PATCH net-next 3/6] devlink: Delete not used port parameters APIs
+Date:   Thu, 23 Sep 2021 21:12:50 +0300
+Message-Id: <b4350cf5e246da8587a636857724fababa820dea.1632420431.git.leonro@nvidia.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1632420430.git.leonro@nvidia.com>
 References: <cover.1632420430.git.leonro@nvidia.com>
@@ -69,127 +69,85 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-devlink is a software interface that doesn't depend on any hardware
-capabilities. The failure in SW means memory issues, wrong parameters,
-programmer error e.t.c.
+There is no in-kernel users for the devlink port parameters API,
+so let's remove it.
 
-Like any other such interface in the kernel, the returned status of
-devlink APIs should be checked and propagated further and not ignored.
-
-Fixes: 4ab0c6a8ffd7 ("bnxt_en: add support to enable VF-representors")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- drivers/net/ethernet/broadcom/bnxt/bnxt.c         |  5 ++++-
- drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c | 13 ++++++-------
- drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.h | 13 -------------
- 3 files changed, 10 insertions(+), 21 deletions(-)
+ include/net/devlink.h |  6 ------
+ net/core/devlink.c    | 42 ------------------------------------------
+ 2 files changed, 48 deletions(-)
 
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt.c b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-index 037767b370d5..4c483fd91dbe 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt.c
-@@ -13370,7 +13370,9 @@ static int bnxt_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	}
- 
- 	bnxt_inv_fw_health_reg(bp);
--	bnxt_dl_register(bp);
-+	rc = bnxt_dl_register(bp);
-+	if (rc)
-+		goto init_err_dl;
- 
- 	rc = register_netdev(dev);
- 	if (rc)
-@@ -13390,6 +13392,7 @@ static int bnxt_init_one(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- init_err_cleanup:
- 	bnxt_dl_unregister(bp);
-+init_err_dl:
- 	bnxt_shutdown_tc(bp);
- 	bnxt_clear_int_mode(bp);
- 
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c b/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c
-index bf7d3c17049b..dc0851f709f5 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c
-@@ -134,7 +134,7 @@ void bnxt_dl_fw_reporters_create(struct bnxt *bp)
- {
- 	struct bnxt_fw_health *health = bp->fw_health;
- 
--	if (!bp->dl || !health)
-+	if (!health)
- 		return;
- 
- 	if (!(bp->fw_cap & BNXT_FW_CAP_HOT_RESET) || health->fw_reset_reporter)
-@@ -188,7 +188,7 @@ void bnxt_dl_fw_reporters_destroy(struct bnxt *bp, bool all)
- {
- 	struct bnxt_fw_health *health = bp->fw_health;
- 
--	if (!bp->dl || !health)
-+	if (!health)
- 		return;
- 
- 	if ((all || !(bp->fw_cap & BNXT_FW_CAP_HOT_RESET)) &&
-@@ -781,6 +781,7 @@ int bnxt_dl_register(struct bnxt *bp)
- {
- 	const struct devlink_ops *devlink_ops;
- 	struct devlink_port_attrs attrs = {};
-+	struct bnxt_dl *bp_dl;
- 	struct devlink *dl;
- 	int rc;
- 
-@@ -795,7 +796,9 @@ int bnxt_dl_register(struct bnxt *bp)
- 		return -ENOMEM;
- 	}
- 
--	bnxt_link_bp_to_dl(bp, dl);
-+	bp->dl = dl;
-+	bp_dl = devlink_priv(dl);
-+	bp_dl->bp = bp;
- 
- 	/* Add switchdev eswitch mode setting, if SRIOV supported */
- 	if (pci_find_ext_capability(bp->pdev, PCI_EXT_CAP_ID_SRIOV) &&
-@@ -826,7 +829,6 @@ int bnxt_dl_register(struct bnxt *bp)
- err_dl_port_unreg:
- 	devlink_port_unregister(&bp->dl_port);
- err_dl_free:
--	bnxt_link_bp_to_dl(bp, NULL);
- 	devlink_free(dl);
- 	return rc;
+diff --git a/include/net/devlink.h b/include/net/devlink.h
+index c902e8e5f012..a7852a257bf6 100644
+--- a/include/net/devlink.h
++++ b/include/net/devlink.h
+@@ -1653,12 +1653,6 @@ void devlink_param_unregister(struct devlink *devlink,
+ 			      const struct devlink_param *param);
+ void devlink_params_publish(struct devlink *devlink);
+ void devlink_params_unpublish(struct devlink *devlink);
+-int devlink_port_params_register(struct devlink_port *devlink_port,
+-				 const struct devlink_param *params,
+-				 size_t params_count);
+-void devlink_port_params_unregister(struct devlink_port *devlink_port,
+-				    const struct devlink_param *params,
+-				    size_t params_count);
+ int devlink_param_driverinit_value_get(struct devlink *devlink, u32 param_id,
+ 				       union devlink_param_value *init_val);
+ int devlink_param_driverinit_value_set(struct devlink *devlink, u32 param_id,
+diff --git a/net/core/devlink.c b/net/core/devlink.c
+index 7d975057c2a9..9c071f4e609f 100644
+--- a/net/core/devlink.c
++++ b/net/core/devlink.c
+@@ -10117,48 +10117,6 @@ void devlink_params_unpublish(struct devlink *devlink)
  }
-@@ -835,9 +837,6 @@ void bnxt_dl_unregister(struct bnxt *bp)
- {
- 	struct devlink *dl = bp->dl;
+ EXPORT_SYMBOL_GPL(devlink_params_unpublish);
  
--	if (!dl)
--		return;
--
- 	if (BNXT_PF(bp)) {
- 		bnxt_dl_params_unregister(bp);
- 		devlink_port_unregister(&bp->dl_port);
-diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.h b/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.h
-index d889f240da2b..406dc655a5fc 100644
---- a/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.h
-+++ b/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.h
-@@ -20,19 +20,6 @@ static inline struct bnxt *bnxt_get_bp_from_dl(struct devlink *dl)
- 	return ((struct bnxt_dl *)devlink_priv(dl))->bp;
- }
- 
--/* To clear devlink pointer from bp, pass NULL dl */
--static inline void bnxt_link_bp_to_dl(struct bnxt *bp, struct devlink *dl)
+-/**
+- *	devlink_port_params_register - register port configuration parameters
+- *
+- *	@devlink_port: devlink port
+- *	@params: configuration parameters array
+- *	@params_count: number of parameters provided
+- *
+- *	Register the configuration parameters supported by the port.
+- */
+-int devlink_port_params_register(struct devlink_port *devlink_port,
+-				 const struct devlink_param *params,
+-				 size_t params_count)
 -{
--	bp->dl = dl;
--
--	/* add a back pointer in dl to bp */
--	if (dl) {
--		struct bnxt_dl *bp_dl = devlink_priv(dl);
--
--		bp_dl->bp = bp;
--	}
+-	return __devlink_params_register(devlink_port->devlink,
+-					 devlink_port->index,
+-					 &devlink_port->param_list, params,
+-					 params_count,
+-					 DEVLINK_CMD_PORT_PARAM_NEW,
+-					 DEVLINK_CMD_PORT_PARAM_DEL);
 -}
+-EXPORT_SYMBOL_GPL(devlink_port_params_register);
 -
- #define NVM_OFF_MSIX_VEC_PER_PF_MAX	108
- #define NVM_OFF_MSIX_VEC_PER_PF_MIN	114
- #define NVM_OFF_IGNORE_ARI		164
+-/**
+- *	devlink_port_params_unregister - unregister port configuration
+- *	parameters
+- *
+- *	@devlink_port: devlink port
+- *	@params: configuration parameters array
+- *	@params_count: number of parameters provided
+- */
+-void devlink_port_params_unregister(struct devlink_port *devlink_port,
+-				    const struct devlink_param *params,
+-				    size_t params_count)
+-{
+-	return __devlink_params_unregister(devlink_port->devlink,
+-					   devlink_port->index,
+-					   &devlink_port->param_list,
+-					   params, params_count,
+-					   DEVLINK_CMD_PORT_PARAM_DEL);
+-}
+-EXPORT_SYMBOL_GPL(devlink_port_params_unregister);
+-
+ static int
+ __devlink_param_driverinit_value_get(struct list_head *param_list, u32 param_id,
+ 				     union devlink_param_value *init_val)
 -- 
 2.31.1
 
