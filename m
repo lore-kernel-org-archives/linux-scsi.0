@@ -7,42 +7,42 @@ X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 64902C43219
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 03:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BED9FC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 03:39:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C2696113E
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 03:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A917161241
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 03:39:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239275AbhIWDk1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 22 Sep 2021 23:40:27 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40550 "EHLO mail.kernel.org"
+        id S239349AbhIWDkh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 22 Sep 2021 23:40:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41096 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239071AbhIWDkD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 22 Sep 2021 23:40:03 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 62B3C610A1;
-        Thu, 23 Sep 2021 03:38:30 +0000 (UTC)
+        id S239208AbhIWDkS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 22 Sep 2021 23:40:18 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 2E28361278;
+        Thu, 23 Sep 2021 03:38:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632368311;
-        bh=L6blX4ytRWLsQcA3c2TsdxkGaOJvCsSpkaUHP2vCsrI=;
+        s=k20201202; t=1632368328;
+        bh=kwltjd6Xp+NqrQ8Oqpy7rVtLByFXYR+mtU/nQ8sibgY=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KYjVjeRfX7FPzsgLYwm0sd27wA3pqQkLQfZBaxEkQeY3AYhCymBIBKWRA81j2mEGp
-         Luis72T7oVDWgcUQxT+YTfOPfO2VWa1uaqJLfgFSznCZAD0klU2doHffrZ2l0mIcza
-         byP9n2A8kbAZsDuzxLp67sGpQQEUPAbza1vxgk8nKP30xM1MchgdkIrxQwqLcCBNvh
-         Z3JxqKm5vLLwoiYFOzoIBk27iHih5PjqACbf9+ZPUSElYtZvxXYNGtqHfgO9wSY/OO
-         /jWmdkOGKeBIEfG1O0DwJwLYfdIpJGad53QeBsQ3jnqCXLDYk7DrkIGedF7rork0RI
-         Uyho51J8FntfA==
+        b=UdB66p4/3QmUFtIY/LracH6IqZ5m6EN0XUJntMsDH21CvHhDA/TzRBo6mQdqR8JZf
+         Z5GJdH7jyvxqK9ghUwnogkxnSayH494GpPxvKeWDCJY0eSISdeudmg7uQ/XrGA1US8
+         EEkqABeiXwmRwUTBV/w77G2xv5Td46JME7Jjg7brxER0xyGRoJh+QcfXvpm+RePNTm
+         9O2M288nxw6S+w++RdpD34XP4BbSOiJm0uRvjd59JfIfoEkXOzewiktHRpOza7DYCq
+         i4fW4bEH1+yw7LyrFZz6CJC39Xgl1jiSKvcTMYJpyIcZ1nSbNj//nBVS56ZIlN2IFN
+         rT1gWewzGKzkg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ming Lei <ming.lei@redhat.com>, linux-scsi@vger.kernel.org,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
         luojiaxing <luojiaxing@huawei.com>, Jens Axboe <axboe@kernel.dk>,
         Sasha Levin <sashal@kernel.org>, linux-block@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 05/34] blk-mq: avoid to iterate over stale request
-Date:   Wed, 22 Sep 2021 23:37:53 -0400
-Message-Id: <20210923033823.1420814-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 05/26] blk-mq: avoid to iterate over stale request
+Date:   Wed, 22 Sep 2021 23:38:18 -0400
+Message-Id: <20210923033839.1421034-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210923033823.1420814-1-sashal@kernel.org>
-References: <20210923033823.1420814-1-sashal@kernel.org>
+In-Reply-To: <20210923033839.1421034-1-sashal@kernel.org>
+References: <20210923033839.1421034-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -85,10 +85,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index 86f87346232a..ff5caeb82542 100644
+index c4f2f6c123ae..16ad9e656610 100644
 --- a/block/blk-mq-tag.c
 +++ b/block/blk-mq-tag.c
-@@ -208,7 +208,7 @@ static struct request *blk_mq_find_and_get_req(struct blk_mq_tags *tags,
+@@ -207,7 +207,7 @@ static struct request *blk_mq_find_and_get_req(struct blk_mq_tags *tags,
  
  	spin_lock_irqsave(&tags->lock, flags);
  	rq = tags->rqs[bitnr];
