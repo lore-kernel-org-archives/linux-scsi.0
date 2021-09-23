@@ -7,39 +7,39 @@ X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E12CC4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49796C4321E
 	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:56:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1453661038
+	by mail.kernel.org (Postfix) with ESMTP id 352A661038
 	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:56:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242770AbhIWS6X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S242788AbhIWS6X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 23 Sep 2021 14:58:23 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35732 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.99]:35750 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232331AbhIWS6W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S237134AbhIWS6W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 23 Sep 2021 14:58:22 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 11C71610C8;
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 58C4C610C9;
         Thu, 23 Sep 2021 18:56:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1632423410;
-        bh=JtAKSE6+7kMHHinuBvmO5cbXmVnXoymoU+wAOyUXE+k=;
+        bh=Bpm/CYP/lEq3++No1r2sOE1RToMYXDAriwUUWxEhi9I=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=mGlklspJTYrbnfj/qDRLBCvAZp5W98mUwbNlyv+BaxVAOjWtic49naHj1ofdMZVQ9
-         Vqg5AYzmfPTz9uUy8wktP7MhMJo6hKpFhlbb7mQDNnndt6NlfIIW1A0g1JRAB1tblh
-         K6FubKtlM8fzHw3sQ6KRtfACakQvv66eeichvn4HwIJhieMrTu7v0+xczcYD93grxX
-         lTcn3X5sWlqsTrpH14NK1iTPQtu7p99c89/LlIktbX6CDr708EWMPdyg2nN02Zdzhm
-         tSRL0kA7KDvFVbBX2eeOhMfXOZ+3ikfPSXOuLB0fVmYM80ittcTjNK+ShkRgyEomxJ
-         r2uwhUM/gNE4w==
+        b=KWN5Dx5u3r85rW1kjnyfJrFWFargaAh7EifXlrH9I1CLuxhvr4SxjEOyYa8gDLR1k
+         NGb1EKIU8JHhon8qXP2W8yggoHU8m2WymAsqStO3vRrf5fGtMvyc4Y4uyUD0px269J
+         AZKxhVeT5Po/yoW2zzWJJptUt9IakwXlDYswozr+nYKHMnQ3f0t1Uzi8dvSG88DgoW
+         wvxdnndu/A4se6rT189yqOTPj7AjPqBFTDYYP9BhxMS/cb3yoDl1Q7Csw7RevFkTiA
+         biJ2qiHNmpYUNWsFnJCKz27jff3P9wsaY55469ne5lre1T36sDSqu9jLFOcPtj8fSv
+         2LBxHp9m/vecA==
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 Cc:     Satya Tangirala <satyaprateek2357@gmail.com>, dm-devel@redhat.com,
         linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [PATCH v3 1/4] blk-crypto-fallback: properly prefix function and struct names
-Date:   Thu, 23 Sep 2021 11:56:26 -0700
-Message-Id: <20210923185629.54823-2-ebiggers@kernel.org>
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v3 2/4] blk-crypto: rename keyslot-manager files to blk-crypto-profile
+Date:   Thu, 23 Sep 2021 11:56:27 -0700
+Message-Id: <20210923185629.54823-3-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20210923185629.54823-1-ebiggers@kernel.org>
 References: <20210923185629.54823-1-ebiggers@kernel.org>
@@ -51,199 +51,155 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-For clarity, avoid using just the "blk_crypto_" prefix for functions and
-structs that are specific to blk-crypto-fallback.  Instead, use
-"blk_crypto_fallback_".  Some places already did this, but others
-didn't.
+In preparation for renaming struct blk_keyslot_manager to struct
+blk_crypto_profile, rename the keyslot-manager.h and keyslot-manager.c
+source files.  Renaming these files separately before making a lot of
+changes to their contents makes it easier for git to understand that
+they were renamed.
 
-This is also a prerequisite for using "struct blk_crypto_keyslot" to
-mean a generic blk-crypto keyslot (which is what it sounds like).
-Rename the fallback one to "struct blk_crypto_fallback_keyslot".
-
-No change in behavior.
-
+Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- block/blk-crypto-fallback.c | 59 +++++++++++++++++++------------------
- 1 file changed, 30 insertions(+), 29 deletions(-)
+ block/Makefile                                            | 2 +-
+ block/blk-crypto-fallback.c                               | 2 +-
+ block/{keyslot-manager.c => blk-crypto-profile.c}         | 2 +-
+ block/blk-crypto.c                                        | 2 +-
+ drivers/md/dm-core.h                                      | 2 +-
+ drivers/md/dm.c                                           | 2 +-
+ drivers/mmc/host/cqhci-crypto.c                           | 2 +-
+ drivers/scsi/ufs/ufshcd.h                                 | 2 +-
+ include/linux/{keyslot-manager.h => blk-crypto-profile.h} | 0
+ include/linux/mmc/host.h                                  | 2 +-
+ 10 files changed, 9 insertions(+), 9 deletions(-)
+ rename block/{keyslot-manager.c => blk-crypto-profile.c} (99%)
+ rename include/linux/{keyslot-manager.h => blk-crypto-profile.h} (100%)
 
+diff --git a/block/Makefile b/block/Makefile
+index 41aa1ba69c900..c245e05b67453 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -36,6 +36,6 @@ obj-$(CONFIG_BLK_DEBUG_FS)	+= blk-mq-debugfs.o
+ obj-$(CONFIG_BLK_DEBUG_FS_ZONED)+= blk-mq-debugfs-zoned.o
+ obj-$(CONFIG_BLK_SED_OPAL)	+= sed-opal.o
+ obj-$(CONFIG_BLK_PM)		+= blk-pm.o
+-obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= keyslot-manager.o blk-crypto.o
++obj-$(CONFIG_BLK_INLINE_ENCRYPTION)	+= blk-crypto.o blk-crypto-profile.o
+ obj-$(CONFIG_BLK_INLINE_ENCRYPTION_FALLBACK)	+= blk-crypto-fallback.o
+ obj-$(CONFIG_BLOCK_HOLDER_DEPRECATED)	+= holder.o
 diff --git a/block/blk-crypto-fallback.c b/block/blk-crypto-fallback.c
-index c322176a1e099..82b302597b474 100644
+index 82b302597b474..b3920e8efd075 100644
 --- a/block/blk-crypto-fallback.c
 +++ b/block/blk-crypto-fallback.c
-@@ -72,7 +72,7 @@ static mempool_t *bio_fallback_crypt_ctx_pool;
- static DEFINE_MUTEX(tfms_init_lock);
- static bool tfms_inited[BLK_ENCRYPTION_MODE_MAX];
+@@ -12,9 +12,9 @@
+ #include <crypto/skcipher.h>
+ #include <linux/blk-cgroup.h>
+ #include <linux/blk-crypto.h>
++#include <linux/blk-crypto-profile.h>
+ #include <linux/blkdev.h>
+ #include <linux/crypto.h>
+-#include <linux/keyslot-manager.h>
+ #include <linux/mempool.h>
+ #include <linux/module.h>
+ #include <linux/random.h>
+diff --git a/block/keyslot-manager.c b/block/blk-crypto-profile.c
+similarity index 99%
+rename from block/keyslot-manager.c
+rename to block/blk-crypto-profile.c
+index 2c4a55bea6ca1..a58daf93c9ba6 100644
+--- a/block/keyslot-manager.c
++++ b/block/blk-crypto-profile.c
+@@ -28,7 +28,7 @@
  
--static struct blk_crypto_keyslot {
-+static struct blk_crypto_fallback_keyslot {
- 	enum blk_crypto_mode_num crypto_mode;
- 	struct crypto_skcipher *tfms[BLK_ENCRYPTION_MODE_MAX];
- } *blk_crypto_keyslots;
-@@ -88,9 +88,9 @@ static struct bio_set crypto_bio_split;
+ #define pr_fmt(fmt) "blk-crypto: " fmt
+ 
+-#include <linux/keyslot-manager.h>
++#include <linux/blk-crypto-profile.h>
+ #include <linux/device.h>
+ #include <linux/atomic.h>
+ #include <linux/mutex.h>
+diff --git a/block/blk-crypto.c b/block/blk-crypto.c
+index 103c2e2d50d67..9102803d36232 100644
+--- a/block/blk-crypto.c
++++ b/block/blk-crypto.c
+@@ -11,7 +11,7 @@
+ 
+ #include <linux/bio.h>
+ #include <linux/blkdev.h>
+-#include <linux/keyslot-manager.h>
++#include <linux/blk-crypto-profile.h>
+ #include <linux/module.h>
+ #include <linux/slab.h>
+ 
+diff --git a/drivers/md/dm-core.h b/drivers/md/dm-core.h
+index 55dccdfbcb22e..841ed87999e79 100644
+--- a/drivers/md/dm-core.h
++++ b/drivers/md/dm-core.h
+@@ -13,7 +13,7 @@
+ #include <linux/ktime.h>
+ #include <linux/genhd.h>
+ #include <linux/blk-mq.h>
+-#include <linux/keyslot-manager.h>
++#include <linux/blk-crypto-profile.h>
+ 
+ #include <trace/events/block.h>
+ 
+diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+index a011d09cb0fac..249223e20d3d0 100644
+--- a/drivers/md/dm.c
++++ b/drivers/md/dm.c
+@@ -29,7 +29,7 @@
+ #include <linux/refcount.h>
+ #include <linux/part_stat.h>
+ #include <linux/blk-crypto.h>
+-#include <linux/keyslot-manager.h>
++#include <linux/blk-crypto-profile.h>
+ 
+ #define DM_MSG_PREFIX "core"
+ 
+diff --git a/drivers/mmc/host/cqhci-crypto.c b/drivers/mmc/host/cqhci-crypto.c
+index 6419cfbb4ab78..628bbfaf83124 100644
+--- a/drivers/mmc/host/cqhci-crypto.c
++++ b/drivers/mmc/host/cqhci-crypto.c
+@@ -6,7 +6,7 @@
   */
- static u8 blank_key[BLK_CRYPTO_MAX_KEY_SIZE];
  
--static void blk_crypto_evict_keyslot(unsigned int slot)
-+static void blk_crypto_fallback_evict_keyslot(unsigned int slot)
- {
--	struct blk_crypto_keyslot *slotp = &blk_crypto_keyslots[slot];
-+	struct blk_crypto_fallback_keyslot *slotp = &blk_crypto_keyslots[slot];
- 	enum blk_crypto_mode_num crypto_mode = slotp->crypto_mode;
- 	int err;
+ #include <linux/blk-crypto.h>
+-#include <linux/keyslot-manager.h>
++#include <linux/blk-crypto-profile.h>
+ #include <linux/mmc/host.h>
  
-@@ -103,34 +103,34 @@ static void blk_crypto_evict_keyslot(unsigned int slot)
- 	slotp->crypto_mode = BLK_ENCRYPTION_MODE_INVALID;
- }
+ #include "cqhci-crypto.h"
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 52ea6f350b181..0f9cbe74642fe 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -32,7 +32,7 @@
+ #include <linux/regulator/consumer.h>
+ #include <linux/bitfield.h>
+ #include <linux/devfreq.h>
+-#include <linux/keyslot-manager.h>
++#include <linux/blk-crypto-profile.h>
+ #include "unipro.h"
  
--static int blk_crypto_keyslot_program(struct blk_keyslot_manager *ksm,
--				      const struct blk_crypto_key *key,
--				      unsigned int slot)
-+static int blk_crypto_fallback_keyslot_program(struct blk_keyslot_manager *ksm,
-+					       const struct blk_crypto_key *key,
-+					       unsigned int slot)
- {
--	struct blk_crypto_keyslot *slotp = &blk_crypto_keyslots[slot];
-+	struct blk_crypto_fallback_keyslot *slotp = &blk_crypto_keyslots[slot];
- 	const enum blk_crypto_mode_num crypto_mode =
- 						key->crypto_cfg.crypto_mode;
- 	int err;
+ #include <asm/irq.h>
+diff --git a/include/linux/keyslot-manager.h b/include/linux/blk-crypto-profile.h
+similarity index 100%
+rename from include/linux/keyslot-manager.h
+rename to include/linux/blk-crypto-profile.h
+diff --git a/include/linux/mmc/host.h b/include/linux/mmc/host.h
+index 0c0c9a0fdf578..725b1de417673 100644
+--- a/include/linux/mmc/host.h
++++ b/include/linux/mmc/host.h
+@@ -15,7 +15,7 @@
+ #include <linux/mmc/card.h>
+ #include <linux/mmc/pm.h>
+ #include <linux/dma-direction.h>
+-#include <linux/keyslot-manager.h>
++#include <linux/blk-crypto-profile.h>
  
- 	if (crypto_mode != slotp->crypto_mode &&
- 	    slotp->crypto_mode != BLK_ENCRYPTION_MODE_INVALID)
--		blk_crypto_evict_keyslot(slot);
-+		blk_crypto_fallback_evict_keyslot(slot);
- 
- 	slotp->crypto_mode = crypto_mode;
- 	err = crypto_skcipher_setkey(slotp->tfms[crypto_mode], key->raw,
- 				     key->size);
- 	if (err) {
--		blk_crypto_evict_keyslot(slot);
-+		blk_crypto_fallback_evict_keyslot(slot);
- 		return err;
- 	}
- 	return 0;
- }
- 
--static int blk_crypto_keyslot_evict(struct blk_keyslot_manager *ksm,
--				    const struct blk_crypto_key *key,
--				    unsigned int slot)
-+static int blk_crypto_fallback_keyslot_evict(struct blk_keyslot_manager *ksm,
-+					     const struct blk_crypto_key *key,
-+					     unsigned int slot)
- {
--	blk_crypto_evict_keyslot(slot);
-+	blk_crypto_fallback_evict_keyslot(slot);
- 	return 0;
- }
- 
-@@ -140,8 +140,8 @@ static int blk_crypto_keyslot_evict(struct blk_keyslot_manager *ksm,
-  * hardware.
-  */
- static const struct blk_ksm_ll_ops blk_crypto_ksm_ll_ops = {
--	.keyslot_program	= blk_crypto_keyslot_program,
--	.keyslot_evict		= blk_crypto_keyslot_evict,
-+	.keyslot_program	= blk_crypto_fallback_keyslot_program,
-+	.keyslot_evict		= blk_crypto_fallback_keyslot_evict,
- };
- 
- static void blk_crypto_fallback_encrypt_endio(struct bio *enc_bio)
-@@ -159,7 +159,7 @@ static void blk_crypto_fallback_encrypt_endio(struct bio *enc_bio)
- 	bio_endio(src_bio);
- }
- 
--static struct bio *blk_crypto_clone_bio(struct bio *bio_src)
-+static struct bio *blk_crypto_fallback_clone_bio(struct bio *bio_src)
- {
- 	struct bvec_iter iter;
- 	struct bio_vec bv;
-@@ -186,12 +186,13 @@ static struct bio *blk_crypto_clone_bio(struct bio *bio_src)
- 	return bio;
- }
- 
--static bool blk_crypto_alloc_cipher_req(struct blk_ksm_keyslot *slot,
--					struct skcipher_request **ciph_req_ret,
--					struct crypto_wait *wait)
-+static bool
-+blk_crypto_fallback_alloc_cipher_req(struct blk_ksm_keyslot *slot,
-+				     struct skcipher_request **ciph_req_ret,
-+				     struct crypto_wait *wait)
- {
- 	struct skcipher_request *ciph_req;
--	const struct blk_crypto_keyslot *slotp;
-+	const struct blk_crypto_fallback_keyslot *slotp;
- 	int keyslot_idx = blk_ksm_get_slot_idx(slot);
- 
- 	slotp = &blk_crypto_keyslots[keyslot_idx];
-@@ -209,7 +210,7 @@ static bool blk_crypto_alloc_cipher_req(struct blk_ksm_keyslot *slot,
- 	return true;
- }
- 
--static bool blk_crypto_split_bio_if_needed(struct bio **bio_ptr)
-+static bool blk_crypto_fallback_split_bio_if_needed(struct bio **bio_ptr)
- {
- 	struct bio *bio = *bio_ptr;
- 	unsigned int i = 0;
-@@ -276,7 +277,7 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
- 	blk_status_t blk_st;
- 
- 	/* Split the bio if it's too big for single page bvec */
--	if (!blk_crypto_split_bio_if_needed(bio_ptr))
-+	if (!blk_crypto_fallback_split_bio_if_needed(bio_ptr))
- 		return false;
- 
- 	src_bio = *bio_ptr;
-@@ -284,7 +285,7 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
- 	data_unit_size = bc->bc_key->crypto_cfg.data_unit_size;
- 
- 	/* Allocate bounce bio for encryption */
--	enc_bio = blk_crypto_clone_bio(src_bio);
-+	enc_bio = blk_crypto_fallback_clone_bio(src_bio);
- 	if (!enc_bio) {
- 		src_bio->bi_status = BLK_STS_RESOURCE;
- 		return false;
-@@ -301,7 +302,7 @@ static bool blk_crypto_fallback_encrypt_bio(struct bio **bio_ptr)
- 	}
- 
- 	/* and then allocate an skcipher_request for it */
--	if (!blk_crypto_alloc_cipher_req(slot, &ciph_req, &wait)) {
-+	if (!blk_crypto_fallback_alloc_cipher_req(slot, &ciph_req, &wait)) {
- 		src_bio->bi_status = BLK_STS_RESOURCE;
- 		goto out_release_keyslot;
- 	}
-@@ -403,7 +404,7 @@ static void blk_crypto_fallback_decrypt_bio(struct work_struct *work)
- 	}
- 
- 	/* and then allocate an skcipher_request for it */
--	if (!blk_crypto_alloc_cipher_req(slot, &ciph_req, &wait)) {
-+	if (!blk_crypto_fallback_alloc_cipher_req(slot, &ciph_req, &wait)) {
- 		bio->bi_status = BLK_STS_RESOURCE;
- 		goto out;
- 	}
-@@ -473,9 +474,9 @@ static void blk_crypto_fallback_decrypt_endio(struct bio *bio)
-  * @bio_ptr: pointer to the bio to prepare
-  *
-  * If bio is doing a WRITE operation, this splits the bio into two parts if it's
-- * too big (see blk_crypto_split_bio_if_needed). It then allocates a bounce bio
-- * for the first part, encrypts it, and update bio_ptr to point to the bounce
-- * bio.
-+ * too big (see blk_crypto_fallback_split_bio_if_needed()). It then allocates a
-+ * bounce bio for the first part, encrypts it, and updates bio_ptr to point to
-+ * the bounce bio.
-  *
-  * For a READ operation, we mark the bio for decryption by using bi_private and
-  * bi_end_io.
-@@ -610,7 +611,7 @@ static int blk_crypto_fallback_init(void)
- int blk_crypto_fallback_start_using_mode(enum blk_crypto_mode_num mode_num)
- {
- 	const char *cipher_str = blk_crypto_modes[mode_num].cipher_str;
--	struct blk_crypto_keyslot *slotp;
-+	struct blk_crypto_fallback_keyslot *slotp;
- 	unsigned int i;
- 	int err = 0;
- 
+ struct mmc_ios {
+ 	unsigned int	clock;			/* clock rate */
 -- 
 2.33.0
 
