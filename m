@@ -7,30 +7,30 @@ X-Spam-Status: No, score=-20.5 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A26AC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4160FC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:13:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6B42861242
-	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:13:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26317610C8
+	for <linux-scsi@archiver.kernel.org>; Thu, 23 Sep 2021 18:13:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242758AbhIWSOn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 23 Sep 2021 14:14:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39212 "EHLO mail.kernel.org"
+        id S242785AbhIWSO7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 23 Sep 2021 14:14:59 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39312 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242752AbhIWSOk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 23 Sep 2021 14:14:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 7D4FE61241;
-        Thu, 23 Sep 2021 18:13:08 +0000 (UTC)
+        id S242769AbhIWSOo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 23 Sep 2021 14:14:44 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id A79D36121F;
+        Thu, 23 Sep 2021 18:13:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632420789;
-        bh=hhGo+2kBrCwffbr0G/1kKyCktxsPkO5rYb4FUUgdUp4=;
+        s=k20201202; t=1632420792;
+        bh=CXcKjL0dNyoXlfgnPpjkJAtY8Lv7U9Iqs9KkD96mUaA=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oy1rxmMV33ee4OBVTxYvez+g0iyaEVjoxxgkMYmqShbH1Yg6AJbh+rpPJ4tsG7xSm
-         VaV/c7vi19v4xaesDvpYOtdstlr5lLncmKD2qLVsEFhrVQ862TN5jgKG+XAhjCsOPX
-         Z8hj4I9DNjbqYIcU1P/vscwF+5aav4RoieYN/kQrSqXOE45i8d8xObnS2MrS54H0K3
-         i3UCA9ztlOsDXACvak1skahIGft6DaeKxcQpGWt67uNZmO8wB3RqRfpk/IZ064zPqa
-         9O6p9BjEfVa5+AqV+JVKJXgnYVUYUmHCZeWiMyhXXC4A03FRNGTzGyCl5K4qlDI2AL
-         POAzrYuGIqQwg==
+        b=DTwFfgMBKWSHaGqPCWbFbYIFXdy5EQqdpon77mGF6ctb4h0+miOD3b1ZezH5DMFli
+         L8PiWaZP/uGWafApMmK/PBUcuE7nHYz7XNzFyHsxzcZNJ+RAfRzWbvQl+DuhQSMHfL
+         7YeBu/KcmpgJvwsRme+URggvA5+1tBzfz2D3iquFBNCpqkFmv0zq3l85Mw+KiCR26g
+         O6373kMum8XjY8foU5ATBcjov7HLPGqWxO6tibzw85AZaxXbD4Cx0ZIvY479d1jyCb
+         Nzi1n3qycbVKlamTVhMogKar4sPcrVMoKdEbjVyivyRKu1WUnwZDqSxrCpWuyuVW00
+         KN6bnRQLU8PNA==
 From:   Leon Romanovsky <leon@kernel.org>
 To:     "David S . Miller" <davem@davemloft.net>,
         Jakub Kicinski <kuba@kernel.org>
@@ -55,9 +55,9 @@ Cc:     Leon Romanovsky <leonro@nvidia.com>,
         Saurav Kashyap <skashyap@marvell.com>,
         Tony Nguyen <anthony.l.nguyen@intel.com>,
         Vasundhara Volam <vasundhara-v.volam@broadcom.com>
-Subject: [PATCH net-next 4/6] devlink: Remove single line function obfuscations
-Date:   Thu, 23 Sep 2021 21:12:51 +0300
-Message-Id: <a56f5eece50f146ea170571a9dde24079522937f.1632420431.git.leonro@nvidia.com>
+Subject: [PATCH net-next 2/6] bnxt_en: Properly remove port parameter support
+Date:   Thu, 23 Sep 2021 21:12:49 +0300
+Message-Id: <7b85ce0d2a5056af2c7e14dbd16c55d86aac659c.1632420431.git.leonro@nvidia.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <cover.1632420430.git.leonro@nvidia.com>
 References: <cover.1632420430.git.leonro@nvidia.com>
@@ -69,137 +69,54 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Leon Romanovsky <leonro@nvidia.com>
 
-There is no need in extra one line functions to call relevant
-functions only once.
+This driver doesn't have any port parameters and registers
+devlink port parameters with empty table. Remove the useless
+calls to devlink_port_params_register and _unregister.
 
+Fixes: da203dfa89ce ("Revert "devlink: Add a generic wake_on_lan port parameter"")
 Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- net/core/devlink.c | 89 ++++++++++++++++++----------------------------
- 1 file changed, 34 insertions(+), 55 deletions(-)
+ drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c | 13 -------------
+ 1 file changed, 13 deletions(-)
 
-diff --git a/net/core/devlink.c b/net/core/devlink.c
-index 9c071f4e609f..3ea33c689790 100644
---- a/net/core/devlink.c
-+++ b/net/core/devlink.c
-@@ -10117,13 +10117,26 @@ void devlink_params_unpublish(struct devlink *devlink)
- }
- EXPORT_SYMBOL_GPL(devlink_params_unpublish);
+diff --git a/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c b/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c
+index dc0851f709f5..ed95e28d60ef 100644
+--- a/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c
++++ b/drivers/net/ethernet/broadcom/bnxt/bnxt_devlink.c
+@@ -736,9 +736,6 @@ static const struct devlink_param bnxt_dl_params[] = {
+ 			     NULL),
+ };
  
--static int
--__devlink_param_driverinit_value_get(struct list_head *param_list, u32 param_id,
--				     union devlink_param_value *init_val)
-+/**
-+ *	devlink_param_driverinit_value_get - get configuration parameter
-+ *					     value for driver initializing
-+ *
-+ *	@devlink: devlink
-+ *	@param_id: parameter ID
-+ *	@init_val: value of parameter in driverinit configuration mode
-+ *
-+ *	This function should be used by the driver to get driverinit
-+ *	configuration for initialization after reload command.
-+ */
-+int devlink_param_driverinit_value_get(struct devlink *devlink, u32 param_id,
-+				       union devlink_param_value *init_val)
+-static const struct devlink_param bnxt_dl_port_params[] = {
+-};
+-
+ static int bnxt_dl_params_register(struct bnxt *bp)
  {
- 	struct devlink_param_item *param_item;
- 
--	param_item = devlink_param_find_by_id(param_list, param_id);
-+	if (!devlink_reload_supported(devlink->ops))
-+		return -EOPNOTSUPP;
-+
-+	param_item = devlink_param_find_by_id(&devlink->param_list, param_id);
- 	if (!param_item)
- 		return -EINVAL;
- 
-@@ -10139,17 +10152,26 @@ __devlink_param_driverinit_value_get(struct list_head *param_list, u32 param_id,
+ 	int rc;
+@@ -753,14 +750,6 @@ static int bnxt_dl_params_register(struct bnxt *bp)
+ 			    rc);
+ 		return rc;
+ 	}
+-	rc = devlink_port_params_register(&bp->dl_port, bnxt_dl_port_params,
+-					  ARRAY_SIZE(bnxt_dl_port_params));
+-	if (rc) {
+-		netdev_err(bp->dev, "devlink_port_params_register failed\n");
+-		devlink_params_unregister(bp->dl, bnxt_dl_params,
+-					  ARRAY_SIZE(bnxt_dl_params));
+-		return rc;
+-	}
+ 	devlink_params_publish(bp->dl);
  
  	return 0;
+@@ -773,8 +762,6 @@ static void bnxt_dl_params_unregister(struct bnxt *bp)
+ 
+ 	devlink_params_unregister(bp->dl, bnxt_dl_params,
+ 				  ARRAY_SIZE(bnxt_dl_params));
+-	devlink_port_params_unregister(&bp->dl_port, bnxt_dl_port_params,
+-				       ARRAY_SIZE(bnxt_dl_port_params));
  }
-+EXPORT_SYMBOL_GPL(devlink_param_driverinit_value_get);
  
--static int
--__devlink_param_driverinit_value_set(struct devlink *devlink,
--				     unsigned int port_index,
--				     struct list_head *param_list, u32 param_id,
--				     union devlink_param_value init_val,
--				     enum devlink_command cmd)
-+/**
-+ *	devlink_param_driverinit_value_set - set value of configuration
-+ *					     parameter for driverinit
-+ *					     configuration mode
-+ *
-+ *	@devlink: devlink
-+ *	@param_id: parameter ID
-+ *	@init_val: value of parameter to set for driverinit configuration mode
-+ *
-+ *	This function should be used by the driver to set driverinit
-+ *	configuration mode default value.
-+ */
-+int devlink_param_driverinit_value_set(struct devlink *devlink, u32 param_id,
-+				       union devlink_param_value init_val)
- {
- 	struct devlink_param_item *param_item;
- 
--	param_item = devlink_param_find_by_id(param_list, param_id);
-+	param_item = devlink_param_find_by_id(&devlink->param_list, param_id);
- 	if (!param_item)
- 		return -EINVAL;
- 
-@@ -10163,52 +10185,9 @@ __devlink_param_driverinit_value_set(struct devlink *devlink,
- 		param_item->driverinit_value = init_val;
- 	param_item->driverinit_value_valid = true;
- 
--	devlink_param_notify(devlink, port_index, param_item, cmd);
-+	devlink_param_notify(devlink, 0, param_item, DEVLINK_CMD_PARAM_NEW);
- 	return 0;
- }
--
--/**
-- *	devlink_param_driverinit_value_get - get configuration parameter
-- *					     value for driver initializing
-- *
-- *	@devlink: devlink
-- *	@param_id: parameter ID
-- *	@init_val: value of parameter in driverinit configuration mode
-- *
-- *	This function should be used by the driver to get driverinit
-- *	configuration for initialization after reload command.
-- */
--int devlink_param_driverinit_value_get(struct devlink *devlink, u32 param_id,
--				       union devlink_param_value *init_val)
--{
--	if (!devlink_reload_supported(devlink->ops))
--		return -EOPNOTSUPP;
--
--	return __devlink_param_driverinit_value_get(&devlink->param_list,
--						    param_id, init_val);
--}
--EXPORT_SYMBOL_GPL(devlink_param_driverinit_value_get);
--
--/**
-- *	devlink_param_driverinit_value_set - set value of configuration
-- *					     parameter for driverinit
-- *					     configuration mode
-- *
-- *	@devlink: devlink
-- *	@param_id: parameter ID
-- *	@init_val: value of parameter to set for driverinit configuration mode
-- *
-- *	This function should be used by the driver to set driverinit
-- *	configuration mode default value.
-- */
--int devlink_param_driverinit_value_set(struct devlink *devlink, u32 param_id,
--				       union devlink_param_value init_val)
--{
--	return __devlink_param_driverinit_value_set(devlink, 0,
--						    &devlink->param_list,
--						    param_id, init_val,
--						    DEVLINK_CMD_PARAM_NEW);
--}
- EXPORT_SYMBOL_GPL(devlink_param_driverinit_value_set);
- 
- /**
+ int bnxt_dl_register(struct bnxt *bp)
 -- 
 2.31.1
 
