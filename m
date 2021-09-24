@@ -4,40 +4,40 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-16.8 required=3.0 tests=BAYES_00,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_CR_TRAILER,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT
-	autolearn=unavailable autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B513C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Sep 2021 08:34:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DD4B5C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Sep 2021 08:34:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 553636125F
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Sep 2021 08:34:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C614460F41
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Sep 2021 08:34:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244904AbhIXIf6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Sep 2021 04:35:58 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3866 "EHLO
+        id S244821AbhIXIgB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Sep 2021 04:36:01 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3867 "EHLO
         frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244905AbhIXIfa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Sep 2021 04:35:30 -0400
-Received: from fraeml708-chm.china.huawei.com (unknown [172.18.147.226])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HG4xh0yNdz67mB7;
-        Fri, 24 Sep 2021 16:31:20 +0800 (CST)
+        with ESMTP id S244892AbhIXIfc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Sep 2021 04:35:32 -0400
+Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HG4xQ21N9z67xS9;
+        Fri, 24 Sep 2021 16:31:06 +0800 (CST)
 Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml708-chm.china.huawei.com (10.206.15.36) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Fri, 24 Sep 2021 10:33:56 +0200
+ fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.8; Fri, 24 Sep 2021 10:33:57 +0200
 Received: from localhost.localdomain (10.69.192.58) by
  lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Fri, 24 Sep 2021 09:33:53 +0100
+ 15.1.2308.8; Fri, 24 Sep 2021 09:33:55 +0100
 From:   John Garry <john.garry@huawei.com>
 To:     <axboe@kernel.dk>
 CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-scsi@vger.kernel.org>, <ming.lei@redhat.com>,
         <hare@suse.de>, "John Garry" <john.garry@huawei.com>
-Subject: [PATCH v4 12/13] blk-mq: Use shared tags for shared sbitmap support
-Date:   Fri, 24 Sep 2021 16:28:29 +0800
-Message-ID: <1632472110-244938-13-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v4 13/13] blk-mq: Stop using pointers for blk_mq_tags bitmap tags
+Date:   Fri, 24 Sep 2021 16:28:30 +0800
+Message-ID: <1632472110-244938-14-git-send-email-john.garry@huawei.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1632472110-244938-1-git-send-email-john.garry@huawei.com>
 References: <1632472110-244938-1-git-send-email-john.garry@huawei.com>
@@ -51,676 +51,315 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Currently we use separate sbitmap pairs and active_queues atomic_t for
-shared sbitmap support.
+Now that we use shared tags for shared sbitmap support, we don't require
+the tags sbitmap pointers, so drop them.
 
-However a full sets of static requests are used per HW queue, which is
-quite wasteful, considering that the total number of requests usable at
-any given time across all HW queues is limited by the shared sbitmap depth.
+This essentially reverts commit 222a5ae03cdd ("blk-mq: Use pointers for
+blk_mq_tags bitmap tags").
 
-As such, it is considerably more memory efficient in the case of shared
-sbitmap to allocate a set of static rqs per tag set or request queue, and
-not per HW queue.
+Function blk_mq_init_bitmap_tags() is removed also, since it would be only
+a wrappper for blk_mq_init_bitmaps().
 
-So replace the sbitmap pairs and active_queues atomic_t with a shared
-tags per tagset and request queue, which will hold a set of shared static
-rqs.
-
-Since there is now no valid HW queue index to be passed to the blk_mq_ops
-.init and .exit_request callbacks, pass an invalid index token. This
-changes the semantics of the APIs, such that the callback would need to
-validate the HW queue index before using it. Currently no user of shared
-sbitmap actually uses the HW queue index (as would be expected).
-
-Continue to use term "shared sbitmap" for now, as the meaning is known.
-
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- block/blk-mq-sched.c   | 82 ++++++++++++++++++-------------------
- block/blk-mq-tag.c     | 61 ++++++++++------------------
- block/blk-mq-tag.h     |  6 +--
- block/blk-mq.c         | 91 +++++++++++++++++++++++-------------------
- block/blk-mq.h         |  5 ++-
- include/linux/blk-mq.h | 15 ++++---
- include/linux/blkdev.h |  3 +-
- 7 files changed, 125 insertions(+), 138 deletions(-)
+ block/bfq-iosched.c    |  4 +--
+ block/blk-mq-debugfs.c |  8 +++---
+ block/blk-mq-tag.c     | 56 +++++++++++++++---------------------------
+ block/blk-mq-tag.h     |  7 ++----
+ block/blk-mq.c         |  8 +++---
+ block/kyber-iosched.c  |  4 +--
+ block/mq-deadline.c    |  2 +-
+ 7 files changed, 35 insertions(+), 54 deletions(-)
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index d1b56bb9ac64..428da4949d80 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -519,6 +519,11 @@ static int blk_mq_sched_alloc_map_and_rqs(struct request_queue *q,
- 					  struct blk_mq_hw_ctx *hctx,
- 					  unsigned int hctx_idx)
- {
-+	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
-+		hctx->sched_tags = q->shared_sbitmap_tags;
-+		return 0;
-+	}
-+
- 	hctx->sched_tags = blk_mq_alloc_map_and_rqs(q->tag_set, hctx_idx,
- 						    q->nr_requests);
+diff --git a/block/bfq-iosched.c b/block/bfq-iosched.c
+index dd13c2bbc29c..4674f85d7df0 100644
+--- a/block/bfq-iosched.c
++++ b/block/bfq-iosched.c
+@@ -6894,8 +6894,8 @@ static void bfq_depth_updated(struct blk_mq_hw_ctx *hctx)
+ 	struct blk_mq_tags *tags = hctx->sched_tags;
+ 	unsigned int min_shallow;
  
-@@ -527,61 +532,54 @@ static int blk_mq_sched_alloc_map_and_rqs(struct request_queue *q,
- 	return 0;
+-	min_shallow = bfq_update_depths(bfqd, tags->bitmap_tags);
+-	sbitmap_queue_min_shallow_depth(tags->bitmap_tags, min_shallow);
++	min_shallow = bfq_update_depths(bfqd, &tags->bitmap_tags);
++	sbitmap_queue_min_shallow_depth(&tags->bitmap_tags, min_shallow);
  }
  
-+static void blk_mq_exit_sched_shared_sbitmap(struct request_queue *queue)
-+{
-+	blk_mq_free_rq_map(queue->shared_sbitmap_tags);
-+	queue->shared_sbitmap_tags = NULL;
-+}
-+
- /* called in queue's release handler, tagset has gone away */
--static void blk_mq_sched_tags_teardown(struct request_queue *q)
-+static void blk_mq_sched_tags_teardown(struct request_queue *q, unsigned int flags)
- {
- 	struct blk_mq_hw_ctx *hctx;
- 	int i;
+ static int bfq_init_hctx(struct blk_mq_hw_ctx *hctx, unsigned int index)
+diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
+index 4b66d2776eda..4000376330c9 100644
+--- a/block/blk-mq-debugfs.c
++++ b/block/blk-mq-debugfs.c
+@@ -452,11 +452,11 @@ static void blk_mq_debugfs_tags_show(struct seq_file *m,
+ 		   atomic_read(&tags->active_queues));
  
- 	queue_for_each_hw_ctx(q, hctx, i) {
- 		if (hctx->sched_tags) {
--			blk_mq_free_rq_map(hctx->sched_tags, hctx->flags);
-+			if (!blk_mq_is_sbitmap_shared(q->tag_set->flags))
-+				blk_mq_free_rq_map(hctx->sched_tags);
- 			hctx->sched_tags = NULL;
- 		}
- 	}
-+
-+	if (blk_mq_is_sbitmap_shared(flags))
-+		blk_mq_exit_sched_shared_sbitmap(q);
- }
+ 	seq_puts(m, "\nbitmap_tags:\n");
+-	sbitmap_queue_show(tags->bitmap_tags, m);
++	sbitmap_queue_show(&tags->bitmap_tags, m);
  
- static int blk_mq_init_sched_shared_sbitmap(struct request_queue *queue)
- {
- 	struct blk_mq_tag_set *set = queue->tag_set;
--	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags);
--	struct blk_mq_hw_ctx *hctx;
--	int ret, i;
- 
- 	/*
- 	 * Set initial depth at max so that we don't need to reallocate for
- 	 * updating nr_requests.
- 	 */
--	ret = blk_mq_init_bitmaps(&queue->sched_bitmap_tags,
--				  &queue->sched_breserved_tags,
--				  MAX_SCHED_RQ, set->reserved_tags,
--				  set->numa_node, alloc_policy);
--	if (ret)
--		return ret;
--
--	queue_for_each_hw_ctx(queue, hctx, i) {
--		hctx->sched_tags->bitmap_tags =
--					&queue->sched_bitmap_tags;
--		hctx->sched_tags->breserved_tags =
--					&queue->sched_breserved_tags;
--	}
-+	queue->shared_sbitmap_tags = blk_mq_alloc_map_and_rqs(set,
-+						BLK_MQ_NO_HCTX_IDX,
-+						MAX_SCHED_RQ);
-+	if (!queue->shared_sbitmap_tags)
-+		return -ENOMEM;
- 
- 	blk_mq_tag_update_sched_shared_sbitmap(queue);
- 
- 	return 0;
- }
- 
--static void blk_mq_exit_sched_shared_sbitmap(struct request_queue *queue)
--{
--	sbitmap_queue_free(&queue->sched_bitmap_tags);
--	sbitmap_queue_free(&queue->sched_breserved_tags);
--}
--
- int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
- {
-+	unsigned int i, flags = q->tag_set->flags;
- 	struct blk_mq_hw_ctx *hctx;
- 	struct elevator_queue *eq;
--	unsigned int i;
- 	int ret;
- 
- 	if (!e) {
-@@ -598,21 +596,21 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
- 	q->nr_requests = 2 * min_t(unsigned int, q->tag_set->queue_depth,
- 				   BLKDEV_DEFAULT_RQ);
- 
--	queue_for_each_hw_ctx(q, hctx, i) {
--		ret = blk_mq_sched_alloc_map_and_rqs(q, hctx, i);
-+	if (blk_mq_is_sbitmap_shared(flags)) {
-+		ret = blk_mq_init_sched_shared_sbitmap(q);
- 		if (ret)
--			goto err_free_map_and_rqs;
-+			return ret;
- 	}
- 
--	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
--		ret = blk_mq_init_sched_shared_sbitmap(q);
-+	queue_for_each_hw_ctx(q, hctx, i) {
-+		ret = blk_mq_sched_alloc_map_and_rqs(q, hctx, i);
- 		if (ret)
- 			goto err_free_map_and_rqs;
- 	}
- 
- 	ret = e->ops.init_sched(q, e);
- 	if (ret)
--		goto err_free_sbitmap;
-+		goto err_free_map_and_rqs;
- 
- 	blk_mq_debugfs_register_sched(q);
- 
-@@ -632,12 +630,10 @@ int blk_mq_init_sched(struct request_queue *q, struct elevator_type *e)
- 
- 	return 0;
- 
--err_free_sbitmap:
--	if (blk_mq_is_sbitmap_shared(q->tag_set->flags))
--		blk_mq_exit_sched_shared_sbitmap(q);
- err_free_map_and_rqs:
- 	blk_mq_sched_free_rqs(q);
--	blk_mq_sched_tags_teardown(q);
-+	blk_mq_sched_tags_teardown(q, flags);
-+
- 	q->elevator = NULL;
- 	return ret;
- }
-@@ -651,9 +647,15 @@ void blk_mq_sched_free_rqs(struct request_queue *q)
- 	struct blk_mq_hw_ctx *hctx;
- 	int i;
- 
--	queue_for_each_hw_ctx(q, hctx, i) {
--		if (hctx->sched_tags)
--			blk_mq_free_rqs(q->tag_set, hctx->sched_tags, i);
-+	if (blk_mq_is_sbitmap_shared(q->tag_set->flags)) {
-+		blk_mq_free_rqs(q->tag_set, q->shared_sbitmap_tags,
-+				BLK_MQ_NO_HCTX_IDX);
-+	} else {
-+		queue_for_each_hw_ctx(q, hctx, i) {
-+			if (hctx->sched_tags)
-+				blk_mq_free_rqs(q->tag_set,
-+						hctx->sched_tags, i);
-+		}
+ 	if (tags->nr_reserved_tags) {
+ 		seq_puts(m, "\nbreserved_tags:\n");
+-		sbitmap_queue_show(tags->breserved_tags, m);
++		sbitmap_queue_show(&tags->breserved_tags, m);
  	}
  }
  
-@@ -674,8 +676,6 @@ void blk_mq_exit_sched(struct request_queue *q, struct elevator_queue *e)
- 	blk_mq_debugfs_unregister_sched(q);
- 	if (e->type->ops.exit_sched)
- 		e->type->ops.exit_sched(e);
--	blk_mq_sched_tags_teardown(q);
--	if (blk_mq_is_sbitmap_shared(flags))
--		blk_mq_exit_sched_shared_sbitmap(q);
-+	blk_mq_sched_tags_teardown(q, flags);
- 	q->elevator = NULL;
- }
+@@ -487,7 +487,7 @@ static int hctx_tags_bitmap_show(void *data, struct seq_file *m)
+ 	if (res)
+ 		goto out;
+ 	if (hctx->tags)
+-		sbitmap_bitmap_show(&hctx->tags->bitmap_tags->sb, m);
++		sbitmap_bitmap_show(&hctx->tags->bitmap_tags.sb, m);
+ 	mutex_unlock(&q->sysfs_lock);
+ 
+ out:
+@@ -521,7 +521,7 @@ static int hctx_sched_tags_bitmap_show(void *data, struct seq_file *m)
+ 	if (res)
+ 		goto out;
+ 	if (hctx->sched_tags)
+-		sbitmap_bitmap_show(&hctx->sched_tags->bitmap_tags->sb, m);
++		sbitmap_bitmap_show(&hctx->sched_tags->bitmap_tags.sb, m);
+ 	mutex_unlock(&q->sysfs_lock);
+ 
+ out:
 diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index a0ecc6d88f84..4e71ce6b37ea 100644
+index 4e71ce6b37ea..4cf0f74f4fa9 100644
 --- a/block/blk-mq-tag.c
 +++ b/block/blk-mq-tag.c
-@@ -27,10 +27,11 @@ bool __blk_mq_tag_busy(struct blk_mq_hw_ctx *hctx)
- 	if (blk_mq_is_sbitmap_shared(hctx->flags)) {
- 		struct request_queue *q = hctx->queue;
- 		struct blk_mq_tag_set *set = q->tag_set;
-+		struct blk_mq_tags *tags = set->shared_sbitmap_tags;
- 
- 		if (!test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags) &&
- 		    !test_and_set_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
--			atomic_inc(&set->active_queues_shared_sbitmap);
-+			atomic_inc(&tags->active_queues);
- 	} else {
- 		if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state) &&
- 		    !test_and_set_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
-@@ -61,10 +62,12 @@ void __blk_mq_tag_idle(struct blk_mq_hw_ctx *hctx)
- 	struct blk_mq_tag_set *set = q->tag_set;
- 
- 	if (blk_mq_is_sbitmap_shared(hctx->flags)) {
-+		struct blk_mq_tags *tags = set->shared_sbitmap_tags;
-+
- 		if (!test_and_clear_bit(QUEUE_FLAG_HCTX_ACTIVE,
- 					&q->queue_flags))
- 			return;
--		atomic_dec(&set->active_queues_shared_sbitmap);
-+		atomic_dec(&tags->active_queues);
- 	} else {
- 		if (!test_and_clear_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
- 			return;
-@@ -510,38 +513,10 @@ static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
- 	return 0;
+@@ -46,9 +46,9 @@ bool __blk_mq_tag_busy(struct blk_mq_hw_ctx *hctx)
+  */
+ void blk_mq_tag_wakeup_all(struct blk_mq_tags *tags, bool include_reserve)
+ {
+-	sbitmap_queue_wake_all(tags->bitmap_tags);
++	sbitmap_queue_wake_all(&tags->bitmap_tags);
+ 	if (include_reserve)
+-		sbitmap_queue_wake_all(tags->breserved_tags);
++		sbitmap_queue_wake_all(&tags->breserved_tags);
  }
  
--int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set)
+ /*
+@@ -104,10 +104,10 @@ unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data)
+ 			WARN_ON_ONCE(1);
+ 			return BLK_MQ_NO_TAG;
+ 		}
+-		bt = tags->breserved_tags;
++		bt = &tags->breserved_tags;
+ 		tag_offset = 0;
+ 	} else {
+-		bt = tags->bitmap_tags;
++		bt = &tags->bitmap_tags;
+ 		tag_offset = tags->nr_reserved_tags;
+ 	}
+ 
+@@ -153,9 +153,9 @@ unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data)
+ 						data->ctx);
+ 		tags = blk_mq_tags_from_data(data);
+ 		if (data->flags & BLK_MQ_REQ_RESERVED)
+-			bt = tags->breserved_tags;
++			bt = &tags->breserved_tags;
+ 		else
+-			bt = tags->bitmap_tags;
++			bt = &tags->bitmap_tags;
+ 
+ 		/*
+ 		 * If destination hw queue is changed, fake wake up on
+@@ -189,10 +189,10 @@ void blk_mq_put_tag(struct blk_mq_tags *tags, struct blk_mq_ctx *ctx,
+ 		const int real_tag = tag - tags->nr_reserved_tags;
+ 
+ 		BUG_ON(real_tag >= tags->nr_tags);
+-		sbitmap_queue_clear(tags->bitmap_tags, real_tag, ctx->cpu);
++		sbitmap_queue_clear(&tags->bitmap_tags, real_tag, ctx->cpu);
+ 	} else {
+ 		BUG_ON(tag >= tags->nr_reserved_tags);
+-		sbitmap_queue_clear(tags->breserved_tags, tag, ctx->cpu);
++		sbitmap_queue_clear(&tags->breserved_tags, tag, ctx->cpu);
+ 	}
+ }
+ 
+@@ -343,9 +343,9 @@ static void __blk_mq_all_tag_iter(struct blk_mq_tags *tags,
+ 	WARN_ON_ONCE(flags & BT_TAG_ITER_RESERVED);
+ 
+ 	if (tags->nr_reserved_tags)
+-		bt_tags_for_each(tags, tags->breserved_tags, fn, priv,
++		bt_tags_for_each(tags, &tags->breserved_tags, fn, priv,
+ 				 flags | BT_TAG_ITER_RESERVED);
+-	bt_tags_for_each(tags, tags->bitmap_tags, fn, priv, flags);
++	bt_tags_for_each(tags, &tags->bitmap_tags, fn, priv, flags);
+ }
+ 
+ /**
+@@ -462,8 +462,8 @@ void blk_mq_queue_tag_busy_iter(struct request_queue *q, busy_iter_fn *fn,
+ 			continue;
+ 
+ 		if (tags->nr_reserved_tags)
+-			bt_for_each(hctx, tags->breserved_tags, fn, priv, true);
+-		bt_for_each(hctx, tags->bitmap_tags, fn, priv, false);
++			bt_for_each(hctx, &tags->breserved_tags, fn, priv, true);
++		bt_for_each(hctx, &tags->bitmap_tags, fn, priv, false);
+ 	}
+ 	blk_queue_exit(q);
+ }
+@@ -495,24 +495,6 @@ int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
+ 	return -ENOMEM;
+ }
+ 
+-static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
+-				   int node, int alloc_policy)
 -{
--	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags);
--	int i, ret;
+-	int ret;
 -
--	ret = blk_mq_init_bitmaps(&set->__bitmap_tags, &set->__breserved_tags,
--				  set->queue_depth, set->reserved_tags,
--				  set->numa_node, alloc_policy);
+-	ret = blk_mq_init_bitmaps(&tags->__bitmap_tags,
+-				  &tags->__breserved_tags,
+-				  tags->nr_tags, tags->nr_reserved_tags,
+-				  node, alloc_policy);
 -	if (ret)
 -		return ret;
 -
--	for (i = 0; i < set->nr_hw_queues; i++) {
--		struct blk_mq_tags *tags = set->tags[i];
--
--		tags->bitmap_tags = &set->__bitmap_tags;
--		tags->breserved_tags = &set->__breserved_tags;
--	}
+-	tags->bitmap_tags = &tags->__bitmap_tags;
+-	tags->breserved_tags = &tags->__breserved_tags;
 -
 -	return 0;
 -}
 -
--void blk_mq_exit_shared_sbitmap(struct blk_mq_tag_set *set)
--{
--	sbitmap_queue_free(&set->__bitmap_tags);
--	sbitmap_queue_free(&set->__breserved_tags);
--}
--
  struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
  				     unsigned int reserved_tags,
--				     int node, unsigned int flags)
-+				     int node, int alloc_policy)
- {
--	int alloc_policy = BLK_MQ_FLAG_TO_ALLOC_POLICY(flags);
- 	struct blk_mq_tags *tags;
- 
- 	if (total_tags > BLK_MQ_TAG_MAX) {
-@@ -557,9 +532,6 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
+ 				     int node, int alloc_policy)
+@@ -532,7 +514,9 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
  	tags->nr_reserved_tags = reserved_tags;
  	spin_lock_init(&tags->lock);
  
--	if (blk_mq_is_sbitmap_shared(flags))
--		return tags;
--
- 	if (blk_mq_init_bitmap_tags(tags, node, alloc_policy) < 0) {
+-	if (blk_mq_init_bitmap_tags(tags, node, alloc_policy) < 0) {
++	if (blk_mq_init_bitmaps(&tags->bitmap_tags, &tags->breserved_tags,
++				total_tags, reserved_tags, node,
++				alloc_policy) < 0) {
  		kfree(tags);
  		return NULL;
-@@ -567,12 +539,10 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
- 	return tags;
- }
+ 	}
+@@ -541,8 +525,8 @@ struct blk_mq_tags *blk_mq_init_tags(unsigned int total_tags,
  
--void blk_mq_free_tags(struct blk_mq_tags *tags, unsigned int flags)
-+void blk_mq_free_tags(struct blk_mq_tags *tags)
+ void blk_mq_free_tags(struct blk_mq_tags *tags)
  {
--	if (!blk_mq_is_sbitmap_shared(flags)) {
--		sbitmap_queue_free(tags->bitmap_tags);
--		sbitmap_queue_free(tags->breserved_tags);
--	}
-+	sbitmap_queue_free(tags->bitmap_tags);
-+	sbitmap_queue_free(tags->breserved_tags);
+-	sbitmap_queue_free(tags->bitmap_tags);
+-	sbitmap_queue_free(tags->breserved_tags);
++	sbitmap_queue_free(&tags->bitmap_tags);
++	sbitmap_queue_free(&tags->breserved_tags);
  	kfree(tags);
  }
  
-@@ -603,6 +573,13 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
- 		if (tdepth > MAX_SCHED_RQ)
- 			return -EINVAL;
+@@ -591,7 +575,7 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
+ 		 * Don't need (or can't) update reserved tags here, they
+ 		 * remain static and should never need resizing.
+ 		 */
+-		sbitmap_queue_resize(tags->bitmap_tags,
++		sbitmap_queue_resize(&tags->bitmap_tags,
+ 				tdepth - tags->nr_reserved_tags);
+ 	}
  
-+		/*
-+		 * Only the sbitmap needs resizing since we allocated the max
-+		 * initially.
-+		 */
-+		if (blk_mq_is_sbitmap_shared(set->flags))
-+			return 0;
-+
- 		new = blk_mq_alloc_map_and_rqs(set, hctx->queue_num, tdepth);
- 		if (!new)
- 			return -ENOMEM;
-@@ -623,12 +600,14 @@ int blk_mq_tag_update_depth(struct blk_mq_hw_ctx *hctx,
- 
- void blk_mq_tag_resize_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int size)
+@@ -602,12 +586,12 @@ void blk_mq_tag_resize_shared_sbitmap(struct blk_mq_tag_set *set, unsigned int s
  {
--	sbitmap_queue_resize(&set->__bitmap_tags, size - set->reserved_tags);
-+	struct blk_mq_tags *tags = set->shared_sbitmap_tags;
-+
-+	sbitmap_queue_resize(&tags->__bitmap_tags, size - set->reserved_tags);
+ 	struct blk_mq_tags *tags = set->shared_sbitmap_tags;
+ 
+-	sbitmap_queue_resize(&tags->__bitmap_tags, size - set->reserved_tags);
++	sbitmap_queue_resize(&tags->bitmap_tags, size - set->reserved_tags);
  }
  
  void blk_mq_tag_update_sched_shared_sbitmap(struct request_queue *q)
  {
--	sbitmap_queue_resize(&q->sched_bitmap_tags,
-+	sbitmap_queue_resize(q->shared_sbitmap_tags->bitmap_tags,
+-	sbitmap_queue_resize(q->shared_sbitmap_tags->bitmap_tags,
++	sbitmap_queue_resize(&q->shared_sbitmap_tags->bitmap_tags,
  			     q->nr_requests - q->tag_set->reserved_tags);
  }
  
 diff --git a/block/blk-mq-tag.h b/block/blk-mq-tag.h
-index 88f3c6485543..e433e39a9cfa 100644
+index e433e39a9cfa..23747ea2bb53 100644
 --- a/block/blk-mq-tag.h
 +++ b/block/blk-mq-tag.h
-@@ -30,16 +30,14 @@ struct blk_mq_tags {
+@@ -11,11 +11,8 @@ struct blk_mq_tags {
  
- extern struct blk_mq_tags *blk_mq_init_tags(unsigned int nr_tags,
- 					unsigned int reserved_tags,
--					int node, unsigned int flags);
--extern void blk_mq_free_tags(struct blk_mq_tags *tags, unsigned int flags);
-+					int node, int alloc_policy);
-+extern void blk_mq_free_tags(struct blk_mq_tags *tags);
- extern int blk_mq_init_bitmaps(struct sbitmap_queue *bitmap_tags,
- 			       struct sbitmap_queue *breserved_tags,
- 			       unsigned int queue_depth,
- 			       unsigned int reserved,
- 			       int node, int alloc_policy);
+ 	atomic_t active_queues;
  
--extern int blk_mq_init_shared_sbitmap(struct blk_mq_tag_set *set);
--extern void blk_mq_exit_shared_sbitmap(struct blk_mq_tag_set *set);
- extern unsigned int blk_mq_get_tag(struct blk_mq_alloc_data *data);
- extern void blk_mq_put_tag(struct blk_mq_tags *tags, struct blk_mq_ctx *ctx,
- 			   unsigned int tag);
+-	struct sbitmap_queue *bitmap_tags;
+-	struct sbitmap_queue *breserved_tags;
+-
+-	struct sbitmap_queue __bitmap_tags;
+-	struct sbitmap_queue __breserved_tags;
++	struct sbitmap_queue bitmap_tags;
++	struct sbitmap_queue breserved_tags;
+ 
+ 	struct request **rqs;
+ 	struct request **static_rqs;
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 464ea20b9bcb..ece43855bcdf 100644
+index ece43855bcdf..5baa35cae8a0 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -2344,7 +2344,10 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
- 	struct blk_mq_tags *drv_tags;
- 	struct page *page;
+@@ -1062,14 +1062,14 @@ static inline unsigned int queued_to_index(unsigned int queued)
  
--	drv_tags = set->tags[hctx_idx];
-+	if (blk_mq_is_sbitmap_shared(set->flags))
-+		drv_tags = set->shared_sbitmap_tags;
-+	else
-+		drv_tags = set->tags[hctx_idx];
- 
- 	if (tags->static_rqs && set->ops->exit_request) {
- 		int i;
-@@ -2373,21 +2376,20 @@ void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
- 	}
- }
- 
--void blk_mq_free_rq_map(struct blk_mq_tags *tags, unsigned int flags)
-+void blk_mq_free_rq_map(struct blk_mq_tags *tags)
+ static bool __blk_mq_get_driver_tag(struct request *rq)
  {
- 	kfree(tags->rqs);
- 	tags->rqs = NULL;
- 	kfree(tags->static_rqs);
- 	tags->static_rqs = NULL;
+-	struct sbitmap_queue *bt = rq->mq_hctx->tags->bitmap_tags;
++	struct sbitmap_queue *bt = &rq->mq_hctx->tags->bitmap_tags;
+ 	unsigned int tag_offset = rq->mq_hctx->tags->nr_reserved_tags;
+ 	int tag;
  
--	blk_mq_free_tags(tags, flags);
-+	blk_mq_free_tags(tags);
- }
+ 	blk_mq_tag_busy(rq->mq_hctx);
  
- static struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
- 					       unsigned int hctx_idx,
- 					       unsigned int nr_tags,
--					       unsigned int reserved_tags,
--					       unsigned int flags)
-+					       unsigned int reserved_tags)
- {
- 	struct blk_mq_tags *tags;
- 	int node;
-@@ -2396,7 +2398,8 @@ static struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
- 	if (node == NUMA_NO_NODE)
- 		node = set->numa_node;
- 
--	tags = blk_mq_init_tags(nr_tags, reserved_tags, node, flags);
-+	tags = blk_mq_init_tags(nr_tags, reserved_tags, node,
-+				BLK_MQ_FLAG_TO_ALLOC_POLICY(set->flags));
- 	if (!tags)
- 		return NULL;
- 
-@@ -2404,7 +2407,7 @@ static struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
- 				 GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
- 				 node);
- 	if (!tags->rqs) {
--		blk_mq_free_tags(tags, flags);
-+		blk_mq_free_tags(tags);
- 		return NULL;
- 	}
- 
-@@ -2413,7 +2416,7 @@ static struct blk_mq_tags *blk_mq_alloc_rq_map(struct blk_mq_tag_set *set,
- 					node);
- 	if (!tags->static_rqs) {
- 		kfree(tags->rqs);
--		blk_mq_free_tags(tags, flags);
-+		blk_mq_free_tags(tags);
- 		return NULL;
- 	}
- 
-@@ -2855,14 +2858,13 @@ struct blk_mq_tags *blk_mq_alloc_map_and_rqs(struct blk_mq_tag_set *set,
- 	struct blk_mq_tags *tags;
- 	int ret;
- 
--	tags = blk_mq_alloc_rq_map(set, hctx_idx, depth, set->reserved_tags,
--				   set->flags);
-+	tags = blk_mq_alloc_rq_map(set, hctx_idx, depth, set->reserved_tags);
- 	if (!tags)
- 		return NULL;
- 
- 	ret = blk_mq_alloc_rqs(set, tags, hctx_idx, depth);
- 	if (ret) {
--		blk_mq_free_rq_map(tags, set->flags);
-+		blk_mq_free_rq_map(tags);
- 		return NULL;
- 	}
- 
-@@ -2872,6 +2874,12 @@ struct blk_mq_tags *blk_mq_alloc_map_and_rqs(struct blk_mq_tag_set *set,
- static bool __blk_mq_alloc_map_and_rqs(struct blk_mq_tag_set *set,
- 				       int hctx_idx)
- {
-+	if (blk_mq_is_sbitmap_shared(set->flags)) {
-+		set->tags[hctx_idx] = set->shared_sbitmap_tags;
-+
-+		return true;
-+	}
-+
- 	set->tags[hctx_idx] = blk_mq_alloc_map_and_rqs(set, hctx_idx,
- 						       set->queue_depth);
- 
-@@ -2882,14 +2890,22 @@ void blk_mq_free_map_and_rqs(struct blk_mq_tag_set *set,
- 			     struct blk_mq_tags *tags,
- 			     unsigned int hctx_idx)
- {
--	unsigned int flags = set->flags;
--
- 	if (tags) {
- 		blk_mq_free_rqs(set, tags, hctx_idx);
--		blk_mq_free_rq_map(tags, flags);
-+		blk_mq_free_rq_map(tags);
- 	}
- }
- 
-+static void __blk_mq_free_map_and_rqs(struct blk_mq_tag_set *set,
-+				      struct blk_mq_tags *tags,
-+				      unsigned int hctx_idx)
-+{
-+	if (blk_mq_is_sbitmap_shared(set->flags))
-+		return;
-+
-+	blk_mq_free_map_and_rqs(set, tags, hctx_idx);
-+}
-+
- static void blk_mq_map_swqueue(struct request_queue *q)
- {
- 	unsigned int i, j, hctx_idx;
-@@ -2968,7 +2984,7 @@ static void blk_mq_map_swqueue(struct request_queue *q)
- 			 * allocation
- 			 */
- 			if (i && set->tags[i]) {
--				blk_mq_free_map_and_rqs(set, set->tags[i], i);
-+				__blk_mq_free_map_and_rqs(set, set->tags[i], i);
- 				set->tags[i] = NULL;
- 			}
- 
-@@ -3266,7 +3282,7 @@ static void blk_mq_realloc_hw_ctxs(struct blk_mq_tag_set *set,
- 		struct blk_mq_hw_ctx *hctx = hctxs[j];
- 
- 		if (hctx) {
--			blk_mq_free_map_and_rqs(set, set->tags[j], j);
-+			__blk_mq_free_map_and_rqs(set, set->tags[j], j);
- 			set->tags[j] = NULL;
- 			blk_mq_exit_hctx(q, set, hctx, j);
- 			hctxs[j] = NULL;
-@@ -3354,6 +3370,14 @@ static int __blk_mq_alloc_rq_maps(struct blk_mq_tag_set *set)
- {
- 	int i;
- 
-+	if (blk_mq_is_sbitmap_shared(set->flags)) {
-+		set->shared_sbitmap_tags = blk_mq_alloc_map_and_rqs(set,
-+						BLK_MQ_NO_HCTX_IDX,
-+						set->queue_depth);
-+		if (!set->shared_sbitmap_tags)
-+			return -ENOMEM;
-+	}
-+
- 	for (i = 0; i < set->nr_hw_queues; i++) {
- 		if (!__blk_mq_alloc_map_and_rqs(set, i))
- 			goto out_unwind;
-@@ -3364,10 +3388,15 @@ static int __blk_mq_alloc_rq_maps(struct blk_mq_tag_set *set)
- 
- out_unwind:
- 	while (--i >= 0) {
--		blk_mq_free_map_and_rqs(set, set->tags[i], i);
-+		__blk_mq_free_map_and_rqs(set, set->tags[i], i);
- 		set->tags[i] = NULL;
- 	}
- 
-+	if (blk_mq_is_sbitmap_shared(set->flags)) {
-+		blk_mq_free_map_and_rqs(set, set->shared_sbitmap_tags,
-+					BLK_MQ_NO_HCTX_IDX);
-+	}
-+
- 	return -ENOMEM;
- }
- 
-@@ -3546,25 +3575,11 @@ int blk_mq_alloc_tag_set(struct blk_mq_tag_set *set)
- 	if (ret)
- 		goto out_free_mq_map;
- 
--	if (blk_mq_is_sbitmap_shared(set->flags)) {
--		atomic_set(&set->active_queues_shared_sbitmap, 0);
--
--		if (blk_mq_init_shared_sbitmap(set)) {
--			ret = -ENOMEM;
--			goto out_free_mq_rq_maps;
--		}
--	}
--
- 	mutex_init(&set->tag_list_lock);
- 	INIT_LIST_HEAD(&set->tag_list);
- 
- 	return 0;
- 
--out_free_mq_rq_maps:
--	for (i = 0; i < set->nr_hw_queues; i++) {
--		blk_mq_free_map_and_rqs(set, set->tags[i], i);
--		set->tags[i] = NULL;
--	}
- out_free_mq_map:
- 	for (i = 0; i < set->nr_maps; i++) {
- 		kfree(set->map[i].mq_map);
-@@ -3597,12 +3612,14 @@ void blk_mq_free_tag_set(struct blk_mq_tag_set *set)
- 	int i, j;
- 
- 	for (i = 0; i < set->nr_hw_queues; i++) {
--		blk_mq_free_map_and_rqs(set, set->tags[i], i);
-+		__blk_mq_free_map_and_rqs(set, set->tags[i], i);
- 		set->tags[i] = NULL;
- 	}
- 
--	if (blk_mq_is_sbitmap_shared(set->flags))
--		blk_mq_exit_shared_sbitmap(set);
-+	if (blk_mq_is_sbitmap_shared(set->flags)) {
-+		blk_mq_free_map_and_rqs(set, set->shared_sbitmap_tags,
-+					BLK_MQ_NO_HCTX_IDX);
-+	}
- 
- 	for (j = 0; j < set->nr_maps; j++) {
- 		kfree(set->map[j].mq_map);
-@@ -3640,12 +3657,6 @@ int blk_mq_update_nr_requests(struct request_queue *q, unsigned int nr)
- 		if (hctx->sched_tags) {
- 			ret = blk_mq_tag_update_depth(hctx, &hctx->sched_tags,
- 						      nr, true);
--			if (blk_mq_is_sbitmap_shared(set->flags)) {
--				hctx->sched_tags->bitmap_tags =
--					&q->sched_bitmap_tags;
--				hctx->sched_tags->breserved_tags =
--					&q->sched_breserved_tags;
--			}
- 		} else {
- 			ret = blk_mq_tag_update_depth(hctx, &hctx->tags, nr,
- 						      false);
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index bcb0ca89d37a..b34385211e0a 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -54,7 +54,7 @@ void blk_mq_put_rq_ref(struct request *rq);
-  */
- void blk_mq_free_rqs(struct blk_mq_tag_set *set, struct blk_mq_tags *tags,
- 		     unsigned int hctx_idx);
--void blk_mq_free_rq_map(struct blk_mq_tags *tags, unsigned int flags);
-+void blk_mq_free_rq_map(struct blk_mq_tags *tags);
- struct blk_mq_tags *blk_mq_alloc_map_and_rqs(struct blk_mq_tag_set *set,
- 				unsigned int hctx_idx, unsigned int depth);
- void blk_mq_free_map_and_rqs(struct blk_mq_tag_set *set,
-@@ -331,10 +331,11 @@ static inline bool hctx_may_queue(struct blk_mq_hw_ctx *hctx,
- 	if (blk_mq_is_sbitmap_shared(hctx->flags)) {
- 		struct request_queue *q = hctx->queue;
- 		struct blk_mq_tag_set *set = q->tag_set;
-+		struct blk_mq_tags *tags = set->shared_sbitmap_tags;
- 
- 		if (!test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
- 			return true;
--		users = atomic_read(&set->active_queues_shared_sbitmap);
-+		users = atomic_read(&tags->active_queues);
+ 	if (blk_mq_tag_is_reserved(rq->mq_hctx->sched_tags, rq->internal_tag)) {
+-		bt = rq->mq_hctx->tags->breserved_tags;
++		bt = &rq->mq_hctx->tags->breserved_tags;
+ 		tag_offset = 0;
  	} else {
- 		if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
- 			return true;
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 13ba1861e688..808854a8ebc4 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -232,13 +232,11 @@ enum hctx_type {
-  * @flags:	   Zero or more BLK_MQ_F_* flags.
-  * @driver_data:   Pointer to data owned by the block driver that created this
-  *		   tag set.
-- * @active_queues_shared_sbitmap:
-- * 		   number of active request queues per tag set.
-- * @__bitmap_tags: A shared tags sbitmap, used over all hctx's
-- * @__breserved_tags:
-- *		   A shared reserved tags sbitmap, used over all hctx's
-  * @tags:	   Tag sets. One tag set per hardware queue. Has @nr_hw_queues
-  *		   elements.
-+ * @shared_sbitmap_tags:
-+ *		   Shared sbitmap set of tags. Has @nr_hw_queues elements. If
-+ *		   set, shared by all @tags.
-  * @tag_list_lock: Serializes tag_list accesses.
-  * @tag_list:	   List of the request queues that use this tag set. See also
-  *		   request_queue.tag_set_list.
-@@ -255,12 +253,11 @@ struct blk_mq_tag_set {
- 	unsigned int		timeout;
- 	unsigned int		flags;
- 	void			*driver_data;
--	atomic_t		active_queues_shared_sbitmap;
+ 		if (!hctx_may_queue(rq->mq_hctx, bt))
+@@ -1112,7 +1112,7 @@ static int blk_mq_dispatch_wake(wait_queue_entry_t *wait, unsigned mode,
+ 		struct sbitmap_queue *sbq;
  
--	struct sbitmap_queue	__bitmap_tags;
--	struct sbitmap_queue	__breserved_tags;
- 	struct blk_mq_tags	**tags;
+ 		list_del_init(&wait->entry);
+-		sbq = hctx->tags->bitmap_tags;
++		sbq = &hctx->tags->bitmap_tags;
+ 		atomic_dec(&sbq->ws_active);
+ 	}
+ 	spin_unlock(&hctx->dispatch_wait_lock);
+@@ -1130,7 +1130,7 @@ static int blk_mq_dispatch_wake(wait_queue_entry_t *wait, unsigned mode,
+ static bool blk_mq_mark_tag_wait(struct blk_mq_hw_ctx *hctx,
+ 				 struct request *rq)
+ {
+-	struct sbitmap_queue *sbq = hctx->tags->bitmap_tags;
++	struct sbitmap_queue *sbq = &hctx->tags->bitmap_tags;
+ 	struct wait_queue_head *wq;
+ 	wait_queue_entry_t *wait;
+ 	bool ret;
+diff --git a/block/kyber-iosched.c b/block/kyber-iosched.c
+index 15a8be57203d..9fb735bf1134 100644
+--- a/block/kyber-iosched.c
++++ b/block/kyber-iosched.c
+@@ -451,11 +451,11 @@ static void kyber_depth_updated(struct blk_mq_hw_ctx *hctx)
+ {
+ 	struct kyber_queue_data *kqd = hctx->queue->elevator->elevator_data;
+ 	struct blk_mq_tags *tags = hctx->sched_tags;
+-	unsigned int shift = tags->bitmap_tags->sb.shift;
++	unsigned int shift = tags->bitmap_tags.sb.shift;
  
-+	struct blk_mq_tags	*shared_sbitmap_tags;
-+
- 	struct mutex		tag_list_lock;
- 	struct list_head	tag_list;
- };
-@@ -432,6 +429,8 @@ enum {
- 	((policy & ((1 << BLK_MQ_F_ALLOC_POLICY_BITS) - 1)) \
- 		<< BLK_MQ_F_ALLOC_POLICY_START_BIT)
+ 	kqd->async_depth = (1U << shift) * KYBER_ASYNC_PERCENT / 100U;
  
-+#define BLK_MQ_NO_HCTX_IDX	(-1U)
-+
- struct gendisk *__blk_mq_alloc_disk(struct blk_mq_tag_set *set, void *queuedata,
- 		struct lock_class_key *lkclass);
- #define blk_mq_alloc_disk(set, queuedata)				\
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 4baf9435232d..17e50e5ef47b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -459,8 +459,7 @@ struct request_queue {
+-	sbitmap_queue_min_shallow_depth(tags->bitmap_tags, kqd->async_depth);
++	sbitmap_queue_min_shallow_depth(&tags->bitmap_tags, kqd->async_depth);
+ }
  
- 	atomic_t		nr_active_requests_shared_sbitmap;
+ static int kyber_init_hctx(struct blk_mq_hw_ctx *hctx, unsigned int hctx_idx)
+diff --git a/block/mq-deadline.c b/block/mq-deadline.c
+index 7f3c3932b723..7fd07d00838e 100644
+--- a/block/mq-deadline.c
++++ b/block/mq-deadline.c
+@@ -519,7 +519,7 @@ static void dd_depth_updated(struct blk_mq_hw_ctx *hctx)
  
--	struct sbitmap_queue	sched_bitmap_tags;
--	struct sbitmap_queue	sched_breserved_tags;
-+	struct blk_mq_tags	*shared_sbitmap_tags;
+ 	dd->async_depth = max(1UL, 3 * q->nr_requests / 4);
  
- 	struct list_head	icq_list;
- #ifdef CONFIG_BLK_CGROUP
+-	sbitmap_queue_min_shallow_depth(tags->bitmap_tags, dd->async_depth);
++	sbitmap_queue_min_shallow_depth(&tags->bitmap_tags, dd->async_depth);
+ }
+ 
+ /* Called by blk_mq_init_hctx() and blk_mq_init_sched(). */
 -- 
 2.26.2
 
