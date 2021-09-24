@@ -2,77 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-17.2 required=3.0 tests=BAYES_00,DKIMWL_WL_HIGH,
-	DKIM_SIGNED,DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_CR_TRAILER,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-11.8 required=3.0 tests=BAYES_00,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51737C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Sep 2021 07:53:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C337C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Sep 2021 08:33:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 255C461090
-	for <linux-scsi@archiver.kernel.org>; Fri, 24 Sep 2021 07:53:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 30E4060F41
+	for <linux-scsi@archiver.kernel.org>; Fri, 24 Sep 2021 08:33:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S244488AbhIXHzV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Sep 2021 03:55:21 -0400
-Received: from mail.kernel.org ([198.145.29.99]:41540 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237965AbhIXHzT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 24 Sep 2021 03:55:19 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C556D60E08;
-        Fri, 24 Sep 2021 07:53:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1632470026;
-        bh=8fYqoGbv6rGS8iVOoENK8YwHUh1U+eyzXgXgigADj5c=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Mmqy6hd5halkLt+zBUSO+MlyGLfLh4NSclOuLs/00RG06D8yZ8xKdMmdgzTpjfbgL
-         vxsmptE+CcKnwyohx0YR2UgAD6StsJ3w3PWDKkcAGkFHxiY8Rwa8b9qLftraC9FlnJ
-         du0xBqRGTkBvVTTdpEuUFAATJASgb9kzlaNUFtCA=
-Date:   Fri, 24 Sep 2021 09:53:44 +0200
-From:   Greg KH <gregkh@linuxfoundation.org>
-To:     Jonathan Hsu <jonathan.hsu@mediatek.com>
-Cc:     stanley.chu@mediatek.com, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, avri.altman@wdc.com,
-        alim.akhtar@samsung.com, jejb@linux.ibm.com,
-        stable@vger.kernel.org, peter.wang@mediatek.com,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        powen.kao@mediatek.com, cc.chou@mediatek.com,
-        chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
-        wsd_upstream@mediatek.com
-Subject: Re: [PATCH v1 1/1] scsi: ufs: Fix illegal address reading in upiu
- event trace
-Message-ID: <YU2ECLeyfbe7gjFA@kroah.com>
-References: <20210924073309.6656-1-jonathan.hsu@mediatek.com>
+        id S244722AbhIXIfG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Sep 2021 04:35:06 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3854 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S244633AbhIXIfF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Sep 2021 04:35:05 -0400
+Received: from fraeml738-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HG4xM1Vtsz67lqG;
+        Fri, 24 Sep 2021 16:31:03 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml738-chm.china.huawei.com (10.206.15.219) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Fri, 24 Sep 2021 10:33:30 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Fri, 24 Sep 2021 09:33:28 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <ming.lei@redhat.com>,
+        <hare@suse.de>, "John Garry" <john.garry@huawei.com>
+Subject: [PATCH v4 00/13] blk-mq: Reduce static requests memory footprint for shared sbitmap
+Date:   Fri, 24 Sep 2021 16:28:17 +0800
+Message-ID: <1632472110-244938-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210924073309.6656-1-jonathan.hsu@mediatek.com>
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems705-chm.china.huawei.com (10.3.19.182) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Sep 24, 2021 at 03:33:09PM +0800, Jonathan Hsu wrote:
-> Fix incorrect index for UTMRD reference in ufshcd_add_tm_upiu_trace().
-> 
-> Fixes: 4b42d557a8ad ("scsi: ufs: core: Fix wrong Task Tag used in task management request UPIUs")
-> Signed-off-by: Jonathan Hsu <jonathan.hsu@mediatek.com>
-> Change-Id: I9acab6f3223f96d864948bb5670759d58cf92ad6
-> ---
->  drivers/scsi/ufs/ufshcd.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
+Currently a full set of static requests are allocated per hw queue per
+tagset when shared sbitmap is used.
 
-<formletter>
+However, only tagset->queue_depth number of requests may be active at
+any given time. As such, only tagset->queue_depth number of static
+requests are required.
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read:
-    https://www.kernel.org/doc/html/latest/process/stable-kernel-rules.html
-for how to do this properly.
+The same goes for using an IO scheduler, which allocates a full set of
+static requests per hw queue per request queue.
 
-</formletter>
+This series changes shared sbitmap support by using a shared tags per
+tagset and request queue. Ming suggested something along those lines in
+v1 review. But we'll keep name "shared sbitmap" name as it is familiar. In
+using a shared tags, the static rqs also become shared, reducing the
+number of sets of static rqs, reducing memory usage.
 
-Also, always run checkpatch.pl on your patches, it will show you that
-the "Change-Id" field is not valid here.
+Patch "blk-mq: Use shared tags for shared sbitmap support" is a bit big,
+and could potentially be broken down. But then maintaining ability to
+bisect becomes harder and each sub-patch would get more convoluted.
 
-thanks,
+For megaraid sas driver on my 128-CPU arm64 system with 1x SATA disk, we
+save approx. 300MB(!) [370MB -> 60MB]
 
-greg k-h
+Baseline is v5.15-rc2
+
+Changes since v3:
+- Fix transient error handling issue in  05/13
+- Add Hannes RB tags (thanks!)
+
+Changes since v2:
+- Make blk_mq_clear_rq_mapping() static again
+- Various function renaming for conciseness and consistency
+- Add/refactor alloc/free map and rqs function
+- Drop the new blk_mq_ops init_request method in favour of passing an
+  invalid HW queue index for shared sbitmap
+- Add patch to not clear rq mapping for driver tags
+- Remove blk_mq_init_bitmap_tags()
+- Add some more RB tags (thanks!)
+
+Changes since v1:
+- Switch to use blk_mq_tags for shared sbitmap
+- Add new blk_mq_ops init request callback
+- Add some RB tags (thanks!)
+
+
+John Garry (13):
+  blk-mq: Change rqs check in blk_mq_free_rqs()
+  block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ
+  blk-mq: Relocate shared sbitmap resize in blk_mq_update_nr_requests()
+  blk-mq: Invert check in blk_mq_update_nr_requests()
+  blk-mq-sched: Rename blk_mq_sched_alloc_{tags -> map_and_rqs}()
+  blk-mq-sched: Rename blk_mq_sched_free_{requests -> rqs}()
+  blk-mq: Pass driver tags to blk_mq_clear_rq_mapping()
+  blk-mq: Don't clear driver tags own mapping
+  blk-mq: Add blk_mq_tag_update_sched_shared_sbitmap()
+  blk-mq: Add blk_mq_alloc_map_and_rqs()
+  blk-mq: Refactor and rename blk_mq_free_map_and_{requests->rqs}()
+  blk-mq: Use shared tags for shared sbitmap support
+  blk-mq: Stop using pointers for blk_mq_tags bitmap tags
+
+ block/bfq-iosched.c    |   4 +-
+ block/blk-core.c       |   4 +-
+ block/blk-mq-debugfs.c |   8 +-
+ block/blk-mq-sched.c   | 116 +++++++++++------------
+ block/blk-mq-sched.h   |   4 +-
+ block/blk-mq-tag.c     | 125 +++++++++----------------
+ block/blk-mq-tag.h     |  14 +--
+ block/blk-mq.c         | 208 ++++++++++++++++++++++++-----------------
+ block/blk-mq.h         |  18 ++--
+ block/blk.h            |   2 +-
+ block/kyber-iosched.c  |   4 +-
+ block/mq-deadline.c    |   2 +-
+ drivers/block/rbd.c    |   2 +-
+ include/linux/blk-mq.h |  15 ++-
+ include/linux/blkdev.h |   5 +-
+ 15 files changed, 255 insertions(+), 276 deletions(-)
+
+-- 
+2.26.2
+
