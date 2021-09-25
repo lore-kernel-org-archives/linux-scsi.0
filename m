@@ -2,93 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD9DC433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Sep 2021 09:03:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73DAEC433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Sep 2021 10:01:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0F7C36124B
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Sep 2021 09:03:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4559F61076
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Sep 2021 10:01:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235512AbhIYJFC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 25 Sep 2021 05:05:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:36148 "EHLO mail.kernel.org"
+        id S242199AbhIYKDJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 25 Sep 2021 06:03:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:32862 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232623AbhIYJEx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 25 Sep 2021 05:04:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id DF5C96124B;
-        Sat, 25 Sep 2021 09:03:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1632560598;
-        bh=Cg6arZRbGL0FCGNZD0FsEpdAEOdHyfn2UwUqgNFLOdE=;
+        id S234958AbhIYKDH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 25 Sep 2021 06:03:07 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 8A581610C7;
+        Sat, 25 Sep 2021 10:01:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1632564093;
+        bh=vUQvWAePLzdLRZc+ChBxFiJ4phqK0Y1Dzy6kDhpJQjQ=;
         h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=MXHbtPRQugmyB/j9sxCLX6CJX3ZjLGTZ22MS7cGJ19ylHgSdDoo8f1GjGvvnElgXd
-         OGZ4WXUPqmmt3gnZOJ8cteEnAL6P3eSUY0gm9LPGRnA4vv8Ks4LBH6dXAonK554hp7
-         FxIy3EfitSrFZE+z2DtYXoVxCcXe5xyQonU8ywvc=
-Date:   Sat, 25 Sep 2021 11:03:15 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        b=D0RfZDMUicf0Nrzi/I154oj+a7L6krXbMFxL6f7OAeo8Z04aUeN1Hx0PsYmQj/rhd
+         JU4tYtwi9tTNK7v4dxzx0tns/ms73lEwQhhWWb8TPCMXPSjXjl3RE+6mheH6ORhiIY
+         exH7Mhs4jo2IWpb2FgIbU9j5E0vf6zlwGKSJarVLrxpJ5jpuQhQeCKoFstG1MrxkWy
+         wuvhA56lJq/ntXQfDpjKsrb1LcA52GxnQGFmFLSHAoIiCSCUkhMLD3675/Av/t+N2q
+         5UFJR6wtk3Q+HYEssMyA1zsvkPZW3eS2KBqQp+rE7h0mhFCeMlD7obG50wFu5gsBBh
+         FuSDkIKvRepsg==
+Date:   Sat, 25 Sep 2021 13:01:29 +0300
+From:   Leon Romanovsky <leon@kernel.org>
+To:     Edwin Peer <edwin.peer@broadcom.com>
+Cc:     Jakub Kicinski <kuba@kernel.org>,
+        "David S . Miller" <davem@davemloft.net>,
+        Alexander Lobakin <alobakin@pm.me>,
+        Anirudh Venkataramanan <anirudh.venkataramanan@intel.com>,
+        Ariel Elior <aelior@marvell.com>,
+        GR-everest-linux-l2@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com,
+        Igor Russkikh <irusskikh@marvell.com>,
+        intel-wired-lan@lists.osuosl.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Don Brace <don.brace@microchip.com>,
-        Brian King <brking@us.ibm.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Hannes Reinecke <hare@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: Re: [PATCH 2/2] scsi: Register SCSI device sysfs attributes earlier
-Message-ID: <YU7l02I/eT3+8410@kroah.com>
-References: <20210924232635.1637763-1-bvanassche@acm.org>
- <20210924232635.1637763-3-bvanassche@acm.org>
+        Javed Hasan <jhasan@marvell.com>,
+        Jeff Kirsher <jeffrey.t.kirsher@intel.com>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Jiri Pirko <jiri@nvidia.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-scsi@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Michael Chan <michael.chan@broadcom.com>,
+        Michal Kalderon <michal.kalderon@marvell.com>,
+        netdev <netdev@vger.kernel.org>,
+        Sathya Perla <sathya.perla@broadcom.com>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Tony Nguyen <anthony.l.nguyen@intel.com>,
+        Vasundhara Volam <vasundhara-v.volam@broadcom.com>
+Subject: Re: [PATCH net-next 1/6] bnxt_en: Check devlink allocation and
+ registration status
+Message-ID: <YU7zeca8AsJwQTsD@unreal>
+References: <cover.1632420430.git.leonro@nvidia.com>
+ <e7708737fadf4fe6f152afc76145c728c201adad.1632420430.git.leonro@nvidia.com>
+ <CAKOOJTz4A2ER8MQE1dW27Spocds09SYafjeuLcFDJ0nL6mKyOw@mail.gmail.com>
+ <YU0JlzFOa7kpKgnd@unreal>
+ <20210923183956.506bfde2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
+ <CAKOOJTwh6TnNM4uSM2rbaij=xO92UzF2hs11pgOFUniOb3HAkA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210924232635.1637763-3-bvanassche@acm.org>
+In-Reply-To: <CAKOOJTwh6TnNM4uSM2rbaij=xO92UzF2hs11pgOFUniOb3HAkA@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Sep 24, 2021 at 04:26:35PM -0700, Bart Van Assche wrote:
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -226,6 +226,8 @@ struct scsi_device {
->  
->  	struct device		sdev_gendev,
->  				sdev_dev;
-> +	struct attribute_group  gendev_first_attr_group;
-> +	const struct attribute_group *gendev_attr_groups[6];
+On Fri, Sep 24, 2021 at 10:20:32AM -0700, Edwin Peer wrote:
+> On Thu, Sep 23, 2021 at 6:39 PM Jakub Kicinski <kuba@kernel.org> wrote:
+> 
+> > On Fri, 24 Sep 2021 02:11:19 +0300 Leon Romanovsky wrote:
+> > > > minor nit: There's obviously nothing incorrect about doing this (and
+> > > > adding the additional error label in the cleanup code above), but bnxt
+> > > > has generally adopted a style of having cleanup functions being
+> > > > idempotent. It generally makes error handling simpler and less error
+> > > > prone.
+> > >
+> > > I would argue that opposite is true. Such "impossible" checks hide unwind
+> > > flow errors, missing releases e.t.c.
+> >
+> > +1, fwiw
+> 
+> I appreciate that being more explicit can improve visibility, but it
+> does not make error handling inherently less error prone, nor is it
+> simpler (ie. the opposite isn't true). Idempotency is orthogonal to
+> unwind flow or the presence or not of a particular unwind handler (one
+> can still enforce either in review). But, if release handlers are
+> independent (most in bnxt are), then permitting other orderings can be
+> perfectly valid and places less burden on achieving the canonical form
+> for correctness (ie. usage is simpler and less error prone). That's
+> not to say we should throw caution to the wind and allow arbitrary
+> unwind flows, but it does mean certain mistakes don't result in actual
+> bugs. There are other flexibility benefits too. A single, unwind
+> everything, handler can be reused in more than one context.
 
-Where does 6 come from?
+And this is where the fun begins. Different context means different
+lifetime expectations, maybe need of locking and unpredictable flows
+from reader perspective.
 
->  	struct execute_work	ew; /* used to get process context on put */
->  	struct work_struct	requeue_work;
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 5afdc094a445..aa1207ab9d2e 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -481,7 +481,7 @@ struct scsi_host_template {
->  	/*
->  	 * Pointer to the SCSI device properties for this host, NULL terminated.
->  	 */
-> -	struct device_attribute **sdev_attrs;
-> +	struct attribute **sdev_attrs;
+For example, in this devlink case, it took me time to check all driver
+to see that pf can't be null. 
 
-Same here, "const struct attribute_group **groups;" ?
+The idea that adding code that maybe will be used can be seen as
+anti-pattern.
 
-thanks,
-
-greg k-h
+Thanks
