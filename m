@@ -2,122 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3795FC433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Sep 2021 03:38:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87514C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Sep 2021 03:52:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0817961029
-	for <linux-scsi@archiver.kernel.org>; Sat, 25 Sep 2021 03:38:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4F4CE6103D
+	for <linux-scsi@archiver.kernel.org>; Sat, 25 Sep 2021 03:52:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234425AbhIYDkT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 24 Sep 2021 23:40:19 -0400
-Received: from mail-pj1-f46.google.com ([209.85.216.46]:38483 "EHLO
-        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233807AbhIYDkT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 24 Sep 2021 23:40:19 -0400
-Received: by mail-pj1-f46.google.com with SMTP id g13-20020a17090a3c8d00b00196286963b9so11078561pjc.3
-        for <linux-scsi@vger.kernel.org>; Fri, 24 Sep 2021 20:38:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=A4Si9HU0kr80JnSxGN1ZCbKADjCQ0SrSZSvjCswyRgs=;
-        b=ZEr+cRmi8V56eJRupOlsRFtN8iiO0tqyH+xiKdQMrwqg7h+jMPCAVGRMSm2dEBtjGd
-         HczEkvOoGMuFXGOmKl/Is+8yZOJGkYdvqbufX/WuebALyVhRSw3Tlej4/XQyWvU+KCH7
-         FYdqOqi8yBPDt7I+37EK2eg/5cDS3YQgZId8ZraKyr0f5LCfpwL2AsbQKHai3H1hTjrh
-         DBb0lyU7N0bgDNg18NdBfdj65jXPhaxZDKgAQDUQvdAJECT0M/pOdfl+oNZr3FKVLcF8
-         5cgSpAJwIZ9iTPv6yhhu7AHgOijSUdqJubTXrMSM/LpLYrisHIUEYxaz7kFpuwmj+6Zt
-         wOSA==
-X-Gm-Message-State: AOAM532G5Qf1m/NcVah1clODN6sfDWXox093Fb8yTL4EA426POrZDnUD
-        RnswLNRZdIBr9qxhHNmmkCc=
-X-Google-Smtp-Source: ABdhPJyiAFV1S7jyE2h9ujqgkz435GTFWx+gqgvUbrEQq9myoFG4eKBFdc80jb47DHFeGmm4j25zGQ==
-X-Received: by 2002:a17:90b:8ca:: with SMTP id ds10mr6240901pjb.68.1632541124699;
-        Fri, 24 Sep 2021 20:38:44 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:92db:e1f6:6924:bfce? ([2601:647:4000:d7:92db:e1f6:6924:bfce])
-        by smtp.gmail.com with ESMTPSA id g22sm10032786pfb.191.2021.09.24.20.38.43
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 24 Sep 2021 20:38:44 -0700 (PDT)
-Message-ID: <4bc6bf9c-a6bd-13c7-988b-9756bb5dd480@acm.org>
-Date:   Fri, 24 Sep 2021 20:38:42 -0700
+        id S235007AbhIYDyL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 24 Sep 2021 23:54:11 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51280 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233807AbhIYDyK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 24 Sep 2021 23:54:10 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 18OFaWr0011076;
+        Fri, 24 Sep 2021 20:52:34 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=QNQ2ZVjJZvEhKaYscnXDq2vQUNwVRMcaUykGOJr4xBk=;
+ b=LckmN5+M0TZAa/1RG30cIK/q+BvoZISiGY/NxFFT95gvQ5A65hv6ha+sI67o/Urq5Alk
+ 2hboq5vVC5ikkYryVQ76oiyHVrLIR03uKFyjHbuGFSYJ8v1RhjFT614J7zqLcYf/W+So
+ kuOr4A97UdQhmjsgDBUmmlYp07hKWGlAJq72sxP7UbuVoZP/6TdoHaA+OA4U7jmMDEZ6
+ 8N5bbdBp7Xqg09CEkQuGXUVlzFUVcNLRQQT68sYwD5wub1hTp0XTnuEWyvcQNUSC87TD
+ Y5YOs6EQDtiEaUHgpmu1qvWoaHVUOl7bEjQc76s7jA49uqkNSm1X5WfJMI8hu+Te7jdW fA== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 3b9hf51tpc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 24 Sep 2021 20:52:34 -0700
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Fri, 24 Sep
+ 2021 20:52:32 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Fri, 24 Sep 2021 20:52:32 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 6790C3F708A;
+        Fri, 24 Sep 2021 20:52:32 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 18P3qJgr029859;
+        Fri, 24 Sep 2021 20:52:22 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 18P3ps1h029850;
+        Fri, 24 Sep 2021 20:51:54 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>, <emilne@redhat.com>
+Subject: [PATCH] qla2xxx: Fix excessive messages during device logout
+Date:   Fri, 24 Sep 2021 20:51:54 -0700
+Message-ID: <20210925035154.29815-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.1.0
-Subject: Re: [PATCH 01/84] scsi: core: Use a member variable to track the SCSI
- command submitter
-Content-Language: en-US
-To:     Benjamin Block <bblock@linux.ibm.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
-        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20210918000607.450448-1-bvanassche@acm.org>
- <20210918000607.450448-2-bvanassche@acm.org>
- <YU2cN5H7CqVFOzTQ@t480-pf1aa2c2.linux.ibm.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <YU2cN5H7CqVFOzTQ@t480-pf1aa2c2.linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Proofpoint-GUID: x0Mt_rfxSPyr6BHSOanI9gyxeSGk4EJb
+X-Proofpoint-ORIG-GUID: x0Mt_rfxSPyr6BHSOanI9gyxeSGk4EJb
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
+ definitions=2021-09-24_05,2021-09-24_02,2020-04-07_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/24/21 02:36, Benjamin Block wrote:
-> On Fri, Sep 17, 2021 at 05:04:44PM -0700, Bart Van Assche wrote:
->> Conditional statements are faster than indirect calls. Use a member variable
->> to track the SCSI command submitter such that later patches can call
->> scsi_done(scmd) instead of scmd->scsi_done(scmd).
->>
->> The asymmetric behavior that scsi_send_eh_cmnd() sets the submission
->> context to the SCSI error handler and that it does not restore the
->> submission context to the SCSI core is retained.
->>
->> Cc: Hannes Reinecke <hare@suse.com>
->> Cc: Ming Lei <ming.lei@redhat.com>
->> Cc: Christoph Hellwig <hch@lst.de>
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> ---
->>   drivers/scsi/scsi_error.c | 18 +++++++-----------
->>   drivers/scsi/scsi_lib.c   |  9 +++++++++
->>   drivers/scsi/scsi_priv.h  |  1 +
->>   include/scsi/scsi_cmnd.h  |  7 +++++++
->>   4 files changed, 24 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
->> index 572673873ddf..ba6d748a0246 100644
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -1577,6 +1577,15 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
->>   
->>   static void scsi_mq_done(struct scsi_cmnd *cmd)
->>   {
->> +	switch (cmd->submitter) {
->> +	case BLOCK_LAYER:
->> +		break;
->> +	case SCSI_ERROR_HANDLER:
->> +		return scsi_eh_done(cmd);
->> +	case SCSI_RESET_IOCTL:
->> +		return;
->> +	}
->> +
-> 
-> Hmm, I'm confused, you replace one kind of branch with different one. Why
-> would that increase IOPS by 5%?
-> 
-> Maybe its because the new `submitter` field in `struct scsi_cmnd` is now
-> on a hot cache line, whereas `*scsi_done` is not?
+From: Arun Easi <aeasi@marvell.com>
 
-Hi Benjamin,
+Disable default logging of some IO path messages which can be
+turned back on by setting ql2xextended_error_logging.
 
-To be honest, the 5% improvement is more than I had expected. This is what I
-know about indirect function calls vs. branches:
-- The target of an indirect branch is predicted by the indirect branch
-   predictor. For direct branches the Branch Target Buffer (BTB) is used.
-- The performance of indirect calls is negatively affected by security
-   mitigations (CONFIG_RETPOLINE) but not the performance of direct branches
-   My measurement was run with CONFIG_RETPOLINE off. I expect a larger
-   difference with CONFIG_RETPOLINE enabled.
+Signed-off-by: Arun Easi <aeasi@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+---
+ drivers/scsi/qla2xxx/qla_isr.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Maybe I triggered inefficient behavior of the indirect branch predictor with
-the workload I ran.
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index ece60267b971..b26f2699adb2 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2634,7 +2634,7 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	}
+ 
+ 	if (unlikely(logit))
+-		ql_log(ql_log_warn, fcport->vha, 0x5060,
++		ql_log(ql_dbg_io, fcport->vha, 0x5060,
+ 		   "NVME-%s ERR Handling - hdl=%x status(%x) tr_len:%x resid=%x  ox_id=%x\n",
+ 		   sp->name, sp->handle, comp_status,
+ 		   fd->transferred_length, le32_to_cpu(sts->residual_len),
+@@ -3491,7 +3491,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 
+ out:
+ 	if (logit)
+-		ql_log(ql_log_warn, fcport->vha, 0x3022,
++		ql_log(ql_dbg_io, fcport->vha, 0x3022,
+ 		       "FCP command status: 0x%x-0x%x (0x%x) nexus=%ld:%d:%llu portid=%02x%02x%02x oxid=0x%x cdb=%10phN len=0x%x rsp_info=0x%x resid=0x%x fw_resid=0x%x sp=%p cp=%p.\n",
+ 		       comp_status, scsi_status, res, vha->host_no,
+ 		       cp->device->id, cp->device->lun, fcport->d_id.b.domain,
+-- 
+2.19.0.rc0
 
-Bart.
