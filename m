@@ -2,27 +2,27 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABF78C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 17:13:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B99FBC43217
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 17:28:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 99FD2611F0
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 17:13:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A590B60240
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 17:28:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235915AbhI0ROl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Sep 2021 13:14:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56622 "EHLO mail.kernel.org"
+        id S237320AbhI0RaA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Sep 2021 13:30:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43622 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237097AbhI0RNy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Sep 2021 13:13:54 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 251E461359;
-        Mon, 27 Sep 2021 17:09:36 +0000 (UTC)
+        id S238105AbhI0R0E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 27 Sep 2021 13:26:04 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 32D19611C7;
+        Mon, 27 Sep 2021 17:16:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1632762577;
-        bh=90F7pgzjpGfA4Ynkzh6hB7JZRZI6X9FSvMKkP8xolWg=;
+        s=korg; t=1632762976;
+        bh=YwW3Vl+aWLWc/1UTMI7y3brIlWl/0Pf8DMSaAiBM3ns=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=r9u6wGdllJ66FxdBv8xuJyEIKYhXa9clXT4T4fctrRZE5TvYAjUxYDuVwj1jkiqRw
-         xTHL09Mv5QGL3YG2asv1rhR2d37ulUDksf/cZFftm0RK7n2snX3DRqTOZBRABelPct
-         CAiir+jyJ7lTKMykCYn2CbFIal7LR3Cpk3qn4zoM=
+        b=fcUqNdN5pm3YrdI1K7m+jj0Lla3h1Z2n/aTc3N6Lr0BR/TyFLYe8cMAG/zpG3U+T6
+         dC5KcSVuf/BWmBFhKzn8sLswrMgiqCBBK9aIPS56hBbBEaebaUxG2/qwsbIWTxgson
+         FuORMh3HW7pNH1gDVpMolPrl2imG4D+0eTstvN6Q=
 From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 To:     linux-kernel@vger.kernel.org
 Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -31,12 +31,12 @@ Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
         luojiaxing <luojiaxing@huawei.com>,
         Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
         Sasha Levin <sashal@kernel.org>
-Subject: [PATCH 5.10 076/103] blk-mq: avoid to iterate over stale request
-Date:   Mon, 27 Sep 2021 19:02:48 +0200
-Message-Id: <20210927170228.399680974@linuxfoundation.org>
+Subject: [PATCH 5.14 120/162] blk-mq: avoid to iterate over stale request
+Date:   Mon, 27 Sep 2021 19:02:46 +0200
+Message-Id: <20210927170237.603016788@linuxfoundation.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20210927170225.702078779@linuxfoundation.org>
-References: <20210927170225.702078779@linuxfoundation.org>
+In-Reply-To: <20210927170233.453060397@linuxfoundation.org>
+References: <20210927170233.453060397@linuxfoundation.org>
 User-Agent: quilt/0.66
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -79,10 +79,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index c4f2f6c123ae..16ad9e656610 100644
+index 86f87346232a..ff5caeb82542 100644
 --- a/block/blk-mq-tag.c
 +++ b/block/blk-mq-tag.c
-@@ -207,7 +207,7 @@ static struct request *blk_mq_find_and_get_req(struct blk_mq_tags *tags,
+@@ -208,7 +208,7 @@ static struct request *blk_mq_find_and_get_req(struct blk_mq_tags *tags,
  
  	spin_lock_irqsave(&tags->lock, flags);
  	rq = tags->rqs[bitnr];
