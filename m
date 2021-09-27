@@ -2,55 +2,97 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FCF6C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 20:44:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2D20C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 20:45:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B674610FC
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 20:44:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9792F60EFD
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 20:45:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236849AbhI0Upi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Sep 2021 16:45:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32928 "EHLO
+        id S237002AbhI0Uqo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Sep 2021 16:46:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33230 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236848AbhI0Upi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2021 16:45:38 -0400
+        with ESMTP id S236955AbhI0Uqm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2021 16:46:42 -0400
 Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 016FDC061575
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Sep 2021 13:44:00 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A7CAC061769
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Sep 2021 13:45:04 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mUxTd-0001kZ-7H; Mon, 27 Sep 2021 22:43:53 +0200
+        id 1mUxTe-0001jl-FQ; Mon, 27 Sep 2021 22:43:54 +0200
 Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mUxTb-0001Z3-P3; Mon, 27 Sep 2021 22:43:51 +0200
+        id 1mUxTX-0001YL-VH; Mon, 27 Sep 2021 22:43:47 +0200
 Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1mUxTY-0001Nu-Mj; Mon, 27 Sep 2021 22:43:48 +0200
+        id 1mUxTX-0001Li-Pk; Mon, 27 Sep 2021 22:43:47 +0200
 From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <uwe@kleine-koenig.org>
 To:     Bjorn Helgaas <helgaas@kernel.org>
 Cc:     =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>, linux-pci@vger.kernel.org,
-        kernel@pengutronix.de,
+        kernel@pengutronix.de, Alexander Duyck <alexanderduyck@fb.com>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Arnaldo Carvalho de Melo <acme@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Fiona Trahe <fiona.trahe@intel.com>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "H. Peter Anvin" <hpa@zytor.com>, Ido Schimmel <idosch@nvidia.com>,
+        Ingo Molnar <mingo@redhat.com>, Jack Xu <jack.xu@intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Jiri Olsa <jolsa@redhat.com>, Jiri Pirko <jiri@nvidia.com>,
+        Juergen Gross <jgross@suse.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Marco Chiappero <marco.chiappero@intel.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Michael Buesch <m@bues.ch>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Namhyung Kim <namhyung@kernel.org>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
+        Russell Currey <ruscur@russell.cc>,
+        Salil Mehta <salil.mehta@huawei.com>,
         Sathya Prakash <sathya.prakash@broadcom.com>,
+        Simon Horman <simon.horman@corigine.com>,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
         Suganath Prabu Subramani 
         <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v4 5/8] scsi: message: fusion: Remove unused parameter of mpt_pci driver's probe()
-Date:   Mon, 27 Sep 2021 22:43:23 +0200
-Message-Id: <20210927204326.612555-6-uwe@kleine-koenig.org>
+        Taras Chornyi <tchornyi@marvell.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Tomaszx Kowalik <tomaszx.kowalik@intel.com>,
+        Vadym Kochan <vkochan@marvell.com>,
+        Wojciech Ziemba <wojciech.ziemba@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-perf-users@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        linux-wireless@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
+        netdev@vger.kernel.org, oss-drivers@corigine.com,
+        qat-linux@intel.com, x86@kernel.org, xen-devel@lists.xenproject.org
+Subject: [PATCH v4 0/8] PCI: Drop duplicated tracking of a pci_dev's bound driver
+Date:   Mon, 27 Sep 2021 22:43:18 +0200
+Message-Id: <20210927204326.612555-1-uwe@kleine-koenig.org>
 X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210927204326.612555-1-uwe@kleine-koenig.org>
-References: <20210927204326.612555-1-uwe@kleine-koenig.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Patch-Hashes: v=1; h=sha256; i=Qw3P/Tfw3H2aE9nuVn1p4NHDqaHGErEmfJmO6L2HF80=; m=oP54miBWrkCU6D5dir8+ZifQgR+cn/3uLfRD8ejXKkU=; p=swgwO0gHobGOw9bvcebWnvhUeGHl0wdD920V7Jm9gyE=; g=2a2dbd5e6a461e2ef057dc0c5df0fe68c3d03bd6
-X-Patch-Sig: m=pgp; i=uwe@kleine-koenig.org; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmFSLNUACgkQwfwUeK3K7Ak9gggAlmh x0ZI+y4oDyvpknmu90BmzKlx7CYDQnqFlkQ1O+zfDYXKNsyDi59zYmabo7YPXn9r0XzXbALWvnW51 9xAyxnzXZTkMfjkGOjYh6GX+zeTA41RKTtgngj/D5tRg0NH89t7OjDWOIjpJIQYb5pRo/gFddzzob UQ37YQmvzIDutN3v25vyEDOmM1nGmpJTNQw2iMiaLqIOIS77IIraaHZ07W2pTjpTws5c7VWab5bPn Yo9ILjN+g5iEGMBGDQ3Q4yIcGkEAaDDaYesznF7sJ92rZ+0+chxd4rx2PzUIFUITYzGg/qExzloSL 8oDNl+qxr6Q2My/G6G3UlhDY+SMrfUQ==
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
 X-SA-Exim-Mail-From: ukl@pengutronix.de
@@ -62,102 +104,68 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
 
-The only two drivers don't make use of the id parameter, so drop it.
+Hello,
 
-This removes a usage of struct pci_dev::driver which is planned to be
-removed as it tracks duplicate data.
+this is v4 of the quest to drop the "driver" member from struct pci_dev
+which tracks the same data (apart from a constant offset) as dev.driver.
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
----
- drivers/message/fusion/mptbase.c | 7 ++-----
- drivers/message/fusion/mptbase.h | 2 +-
- drivers/message/fusion/mptctl.c  | 4 ++--
- drivers/message/fusion/mptlan.c  | 2 +-
- 4 files changed, 6 insertions(+), 9 deletions(-)
+Changes since v3:
+ - Add some Reviewed-by and Acked-by tags
+ - Rebase to v5.15-rc3 (no conflicts)
+ - Changes in patch #4 addressing review comments by Christoph Hellwig
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 7f7abc9069f7..b94d5e4fdc23 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -829,7 +829,6 @@ int
- mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
- {
- 	MPT_ADAPTER	*ioc;
--	const struct pci_device_id *id;
- 
- 	if (!cb_idx || cb_idx >= MPT_MAX_PROTOCOL_DRIVERS)
- 		return -EINVAL;
-@@ -838,10 +837,8 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
- 
- 	/* call per pci device probe entry point */
- 	list_for_each_entry(ioc, &ioc_list, list) {
--		id = ioc->pcidev->driver ?
--		    ioc->pcidev->driver->id_table : NULL;
- 		if (dd_cbfunc->probe)
--			dd_cbfunc->probe(ioc->pcidev, id);
-+			dd_cbfunc->probe(ioc->pcidev);
- 	 }
- 
- 	return 0;
-@@ -2032,7 +2029,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 	for(cb_idx = 0; cb_idx < MPT_MAX_PROTOCOL_DRIVERS; cb_idx++) {
- 		if(MptDeviceDriverHandlers[cb_idx] &&
- 		  MptDeviceDriverHandlers[cb_idx]->probe) {
--			MptDeviceDriverHandlers[cb_idx]->probe(pdev,id);
-+			MptDeviceDriverHandlers[cb_idx]->probe(pdev);
- 		}
- 	}
- 
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index b9e0376be723..4bd0682c65d3 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -257,7 +257,7 @@ typedef enum {
- } MPT_DRIVER_CLASS;
- 
- struct mpt_pci_driver{
--	int  (*probe) (struct pci_dev *dev, const struct pci_device_id *id);
-+	int  (*probe) (struct pci_dev *dev);
- 	void (*remove) (struct pci_dev *dev);
- };
- 
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index 72025996cd70..ae433c150b37 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -114,7 +114,7 @@ static int mptctl_do_reset(MPT_ADAPTER *iocp, unsigned long arg);
- static int mptctl_hp_hostinfo(MPT_ADAPTER *iocp, unsigned long arg, unsigned int cmd);
- static int mptctl_hp_targetinfo(MPT_ADAPTER *iocp, unsigned long arg);
- 
--static int  mptctl_probe(struct pci_dev *, const struct pci_device_id *);
-+static int  mptctl_probe(struct pci_dev *);
- static void mptctl_remove(struct pci_dev *);
- 
- #ifdef CONFIG_COMPAT
-@@ -2838,7 +2838,7 @@ static long compat_mpctl_ioctl(struct file *f, unsigned int cmd, unsigned long a
-  */
- 
- static int
--mptctl_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-+mptctl_probe(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
- 
-diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
-index 3261cac762de..7c1af5e6eb0b 100644
---- a/drivers/message/fusion/mptlan.c
-+++ b/drivers/message/fusion/mptlan.c
-@@ -1377,7 +1377,7 @@ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
- }
- 
- static int
--mptlan_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-+mptlan_probe(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
- 	struct net_device	*dev;
+I didn't do extensive build tests, so I might have missed a build
+problem. I have some builds running, but want to get some feedback on
+the changes suggested by Christoph.
+
+Best regards
+Uwe
+
+Uwe Kleine-König (8):
+  PCI: Simplify pci_device_remove()
+  PCI: Drop useless check from pci_device_probe()
+  xen/pci: Drop some checks that are always true
+  PCI: replace pci_dev::driver usage that gets the driver name
+  scsi: message: fusion: Remove unused parameter of mpt_pci driver's
+    probe()
+  crypto: qat - simplify adf_enable_aer()
+  PCI: Replace pci_dev::driver usage by pci_dev::dev.driver
+  PCI: Drop duplicated tracking of a pci_dev's bound driver
+
+ arch/powerpc/include/asm/ppc-pci.h            |  9 ++-
+ arch/powerpc/kernel/eeh_driver.c              | 10 +--
+ arch/x86/events/intel/uncore.c                |  2 +-
+ arch/x86/kernel/probe_roms.c                  |  2 +-
+ drivers/bcma/host_pci.c                       |  7 ++-
+ drivers/crypto/hisilicon/qm.c                 |  2 +-
+ drivers/crypto/qat/qat_4xxx/adf_drv.c         |  7 +--
+ drivers/crypto/qat/qat_c3xxx/adf_drv.c        |  7 +--
+ drivers/crypto/qat/qat_c62x/adf_drv.c         |  7 +--
+ drivers/crypto/qat/qat_common/adf_aer.c       | 10 +--
+ .../crypto/qat/qat_common/adf_common_drv.h    |  2 +-
+ drivers/crypto/qat/qat_dh895xcc/adf_drv.c     |  7 +--
+ drivers/message/fusion/mptbase.c              |  7 +--
+ drivers/message/fusion/mptbase.h              |  2 +-
+ drivers/message/fusion/mptctl.c               |  4 +-
+ drivers/message/fusion/mptlan.c               |  2 +-
+ drivers/misc/cxl/guest.c                      | 24 ++++---
+ drivers/misc/cxl/pci.c                        | 30 +++++----
+ .../ethernet/hisilicon/hns3/hns3_ethtool.c    |  2 +-
+ .../ethernet/marvell/prestera/prestera_pci.c  |  2 +-
+ drivers/net/ethernet/mellanox/mlxsw/pci.c     |  2 +-
+ .../ethernet/netronome/nfp/nfp_net_ethtool.c  |  2 +-
+ drivers/pci/iov.c                             | 25 +++++---
+ drivers/pci/pci-driver.c                      | 45 ++++++-------
+ drivers/pci/pci.c                             |  4 +-
+ drivers/pci/pcie/err.c                        | 36 ++++++-----
+ drivers/pci/xen-pcifront.c                    | 63 +++++++++----------
+ drivers/ssb/pcihost_wrapper.c                 |  8 ++-
+ drivers/usb/host/xhci-pci.c                   |  2 +-
+ include/linux/pci.h                           |  1 -
+ 30 files changed, 166 insertions(+), 167 deletions(-)
+
+
+base-commit: 5816b3e6577eaa676ceb00a848f0fd65fe2adc29
 -- 
 2.30.2
 
