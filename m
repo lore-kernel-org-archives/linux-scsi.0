@@ -2,140 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D5A07C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 09:26:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A94AC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 09:37:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B873561157
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 09:26:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49C4D60F70
+	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 09:37:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233657AbhI0J2W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Sep 2021 05:28:22 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:50837 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233663AbhI0J2U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Sep 2021 05:28:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1632734803;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=o8jThrmo0nFh3G8H1yEp6CaUd2Is+ZV2Wqa41t50MPk=;
-        b=biWmBryBoJm7jaUc9Gr9oapWA0k1n31EBL28oQktUr4EIYUns6s/kWpuL8ywQVajhsLhxA
-        J+hTvyg0nC4VVCVbbCVTxtYwiDSZ3rLB8SdILYk7h5zcrtPe7zFNOPiOU1PqFfpbmDTPT/
-        Aax3GkK8899zZZMIQ6ImDLKvi12bxuU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-343-lOCmrL1JMCCkKwpSynLsFA-1; Mon, 27 Sep 2021 05:26:41 -0400
-X-MC-Unique: lOCmrL1JMCCkKwpSynLsFA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 775B01023F4D;
-        Mon, 27 Sep 2021 09:26:39 +0000 (UTC)
-Received: from T590 (ovpn-8-37.pek2.redhat.com [10.72.8.37])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 30A2D19724;
-        Mon, 27 Sep 2021 09:26:35 +0000 (UTC)
-Date:   Mon, 27 Sep 2021 17:26:30 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     John Garry <john.garry@huawei.com>
-Cc:     axboe@kernel.dk, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        hare@suse.de
-Subject: Re: [PATCH v4 12/13] blk-mq: Use shared tags for shared sbitmap
- support
-Message-ID: <YVGORkQuf2FQmxwN@T590>
+        id S233709AbhI0JjH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Sep 2021 05:39:07 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3878 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233587AbhI0JjG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2021 05:39:06 -0400
+Received: from fraeml707-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HHyCf6wCdz67VF8;
+        Mon, 27 Sep 2021 17:34:54 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml707-chm.china.huawei.com (10.206.15.35) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Mon, 27 Sep 2021 11:37:26 +0200
+Received: from [10.47.85.67] (10.47.85.67) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Mon, 27 Sep
+ 2021 10:37:25 +0100
+Subject: Re: [PATCH v4 11/13] blk-mq: Refactor and rename
+ blk_mq_free_map_and_{requests->rqs}()
+To:     Ming Lei <ming.lei@redhat.com>
+CC:     "axboe@kernel.dk" <axboe@kernel.dk>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "hare@suse.de" <hare@suse.de>
 References: <1632472110-244938-1-git-send-email-john.garry@huawei.com>
- <1632472110-244938-13-git-send-email-john.garry@huawei.com>
- <YU/oIu2uQ420ol8F@T590>
- <6f52adfd-6904-6efb-adfc-f5f20eb5c1cf@huawei.com>
+ <1632472110-244938-12-git-send-email-john.garry@huawei.com>
+ <YU/Va9T+zcRNExUF@T590> <45c0c587-59a2-1761-e175-3920669d0bfb@huawei.com>
+ <YVGMvlU5T8zaoEnM@T590>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <cf6452cd-b148-553c-781d-5c888537ac28@huawei.com>
+Date:   Mon, 27 Sep 2021 10:40:28 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6f52adfd-6904-6efb-adfc-f5f20eb5c1cf@huawei.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <YVGMvlU5T8zaoEnM@T590>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.85.67]
+X-ClientProxiedBy: lhreml717-chm.china.huawei.com (10.201.108.68) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 27, 2021 at 10:13:29AM +0100, John Garry wrote:
-> On 26/09/2021 04:25, Ming Lei wrote:
-> > > c
-> > > @@ -27,10 +27,11 @@ bool __blk_mq_tag_busy(struct blk_mq_hw_ctx *hctx)
-> > >   	if (blk_mq_is_sbitmap_shared(hctx->flags)) {
-> > >   		struct request_queue *q = hctx->queue;
-> > >   		struct blk_mq_tag_set *set = q->tag_set;
-> > > +		struct blk_mq_tags *tags = set->shared_sbitmap_tags;
-> > The local variable of 'set' can be removed and just retrieve 'tags' from
-> > hctx->tags.
-> > 
-> > >   		if (!test_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags) &&
-> > >   		    !test_and_set_bit(QUEUE_FLAG_HCTX_ACTIVE, &q->queue_flags))
-> > > -			atomic_inc(&set->active_queues_shared_sbitmap);
-> > > +			atomic_inc(&tags->active_queues);
-> > >   	} else {
-> > >   		if (!test_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state) &&
-> > >   		    !test_and_set_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
-> > > @@ -61,10 +62,12 @@ void __blk_mq_tag_idle(struct blk_mq_hw_ctx *hctx)
-> > >   	struct blk_mq_tag_set *set = q->tag_set;
-> > >   	if (blk_mq_is_sbitmap_shared(hctx->flags)) {
-> > > +		struct blk_mq_tags *tags = set->shared_sbitmap_tags;
-> > > +
-> > Same with above.
+On 27/09/2021 10:19, Ming Lei wrote:
+>> However, apart from this, I can change __blk_mq_free_map_and_rqs() to
+>> NULLify set->tags[i], as it is always passed set->tags[i].
+>>
+>> Do you have a preference?
+> I meant there are 5 following uses in your patch:
 > 
-> ok
+> +                               blk_mq_free_map_and_rqs(set, set->tags[i], i);
+> +                               set->tags[i] = NULL;
 > 
-> > 
-> > >   		if (!test_and_clear_bit(QUEUE_FLAG_HCTX_ACTIVE,
-> > >   					&q->queue_flags))
-> > >   			return;
-> > > -		atomic_dec(&set->active_queues_shared_sbitmap);
-> > > +		atomic_dec(&tags->active_queues);
-> > >   	} else {
-> > >   		if (!test_and_clear_bit(BLK_MQ_S_TAG_ACTIVE, &hctx->state))
-> > >   			return;
-> > > @@ -510,38 +513,10 @@ static int blk_mq_init_bitmap_tags(struct blk_mq_tags *tags,
-> > >   	return 0;
-> > >   }
-> 
-> ...
-> 
-> > > -	struct sbitmap_queue	__bitmap_tags;
-> > > -	struct sbitmap_queue	__breserved_tags;
-> > >   	struct blk_mq_tags	**tags;
-> > > +	struct blk_mq_tags	*shared_sbitmap_tags;
-> > > +
-> > >   	struct mutex		tag_list_lock;
-> > >   	struct list_head	tag_list;
-> > >   };
-> > > @@ -432,6 +429,8 @@ enum {
-> > >   	((policy & ((1 << BLK_MQ_F_ALLOC_POLICY_BITS) - 1)) \
-> > >   		<< BLK_MQ_F_ALLOC_POLICY_START_BIT)
-> > > +#define BLK_MQ_NO_HCTX_IDX	(-1U)
-> > > +
-> > >   struct gendisk *__blk_mq_alloc_disk(struct blk_mq_tag_set *set, void *queuedata,
-> > >   		struct lock_class_key *lkclass);
-> > >   #define blk_mq_alloc_disk(set, queuedata)				\
-> > > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> > > index 4baf9435232d..17e50e5ef47b 100644
-> > > --- a/include/linux/blkdev.h
-> > > +++ b/include/linux/blkdev.h
-> > > @@ -459,8 +459,7 @@ struct request_queue {
-> > >   	atomic_t		nr_active_requests_shared_sbitmap;
-> > > -	struct sbitmap_queue	sched_bitmap_tags;
-> > > -	struct sbitmap_queue	sched_breserved_tags;
-> > > +	struct blk_mq_tags	*shared_sbitmap_tags;
-> > Maybe better with shared_sched_sbitmap_tags or sched_sbitmap_tags?
-> 
-> Yeah, I suppose I should add "sched" to the name, as before.
-> 
-> BTW, Do you think that I should just change shared_sbitmap -> shared_tags
-> naming now globally? I'm thinking now that I should...
+> and one new helper(blk_mq_free_set_map_and_rqs(set, i)?) can be added for just
+> doing that,
 
-Yeah, I think so, but seems you preferred to the name of shared sbitmap, so I
-did't mention that, :-)
-
+Ah, ok, but in the next patch we replace these blk_mq_free_map_and_rqs() 
+calls with __blk_mq_free_map_and_rqs(), and __blk_mq_free_map_and_rqs() 
+is always passed set->tags[i], so we do as you request there, i.e. 
+NULLify set->tags[i] in __blk_mq_free_map_and_rqs().
 
 Thanks,
-Ming
-
+John
