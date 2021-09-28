@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F49AC4167B
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 06:01:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2091BC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 06:02:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5D85860E9B
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 06:01:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DFF06108F
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 06:02:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239896AbhI1GCx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Sep 2021 02:02:53 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49570 "EHLO mail.kernel.org"
+        id S239251AbhI1GDh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Sep 2021 02:03:37 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49936 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239081AbhI1GAz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Sep 2021 02:00:55 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E03EE611CE;
-        Tue, 28 Sep 2021 05:57:19 +0000 (UTC)
+        id S239445AbhI1GBw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Sep 2021 02:01:52 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9DB656139F;
+        Tue, 28 Sep 2021 05:57:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632808640;
-        bh=Gucow2pjyFXeIJbqCibqgTUgQxTxHPZvihH566WhnNU=;
+        s=k20201202; t=1632808650;
+        bh=/00Lf3urktfw45fyj76HWnSij/aE1/Aq36a6JKc3F5M=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=KaMwxmOGOa0utD13Vtx+tzI6vCfmC/6a/RF9FiQtpOGZwhUoyui/r96lnU7xy8TN9
-         Ok05bKCV7QU5sM5qrEdcvxfx8WnIJ23adZgaggn9GVKAeMgYyhRoJmWwomOA8yrDIP
-         sFhEHu3vOZP3vjxwjj3BzEfIHW4F9gDbRDsjDy7y+zyXhvDbx91a1hHaJQ8rQUe+ub
-         uEzLUmJlW1KXSLzy4BxWLB3lT8BFjNXd6YBaX/kgyqo57BaF8lwzLe2z3WUqxdCQFU
-         WLecoQN3mtsn73c4t5m37Ccom+1VnqrKQenshmI1rOevkD62DLoW9tNKKCZLC4cZG/
-         KD7F/y5BqEWLQ==
+        b=gT7URA3tXp8MTSJSeutWqQmiFxFlwA+nIrRz9e+MLX598tXjuijN7pqpfbUiTIEvU
+         uDV2ZBdlnl5dS1HSLqsCmjnjOIP6gr2L0+fOr2OxGB7bAWCCP3mLhW4iR51R8NP49b
+         jdxorunlA9bs7NHl9BcxIQ9/tKGm5fjR9rdaJkbm38A+izYJgIsMSZiK9ga8HPOTYp
+         7frzisc3Nf5kftpUhPBx6EBYkAgHra33dVeM/BfKF/fl/h3DF2u/5NJNkK3D1nJBKF
+         3yFe98zmNjysX1VCqE9UAqZeZCTzZhmRBuLV0hPdZg8WaiqZk5W4xHMXP4KJ1wbq5n
+         aul9nk/dpZ2Mg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ming Lei <ming.lei@redhat.com>,
@@ -34,12 +34,12 @@ Cc:     Ming Lei <ming.lei@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 05/10] scsi: sd: Free scsi_disk device via put_device()
-Date:   Tue, 28 Sep 2021 01:57:11 -0400
-Message-Id: <20210928055716.172951-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.14 5/8] scsi: sd: Free scsi_disk device via put_device()
+Date:   Tue, 28 Sep 2021 01:57:23 -0400
+Message-Id: <20210928055727.173078-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20210928055716.172951-1-sashal@kernel.org>
-References: <20210928055716.172951-1-sashal@kernel.org>
+In-Reply-To: <20210928055727.173078-1-sashal@kernel.org>
+References: <20210928055727.173078-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -66,10 +66,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 342352d8e7bf..ed3702dadd30 100644
+index 49d0720a0b7d..e490cbdaad9b 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -3444,15 +3444,16 @@ static int sd_probe(struct device *dev)
+@@ -3454,15 +3454,16 @@ static int sd_probe(struct device *dev)
  	}
  
  	device_initialize(&sdkp->dev);
