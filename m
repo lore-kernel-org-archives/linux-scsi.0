@@ -2,288 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F181C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:26:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A352DC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:32:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2688611EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:26:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 743EA61159
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:32:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234951AbhI1F14 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Sep 2021 01:27:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37950 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234177AbhI1F1z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2021 01:27:55 -0400
-Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B436C061575;
-        Mon, 27 Sep 2021 22:26:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
-        References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
-        Content-Type:Content-ID:Content-Description;
-        bh=Fg9zkzzu4KVvRbLOFkk4nmQGWrPy6n9KxyhFjSduIWY=; b=fdueShyo+EmYyRylOi6R6VikiD
-        +00FDuBSjiY54of57E4tnerAEtJ9eIEOTUol+0RmkbEE9vJ5eDDTlYKBPsxTc+9AbLAjrnQ6vZzI9
-        HHJGVHmJG97IMmu8qX+4DQMxTX1pOVuZP8Z3YeSpvUn3WiRMiORwt5pzDrVxE/uOGZJdhgu5Bt0Tm
-        yX6Q7E8b3wyfrDulCzfs06YvRAR1di9AvnC+NSpJEJyYIIMD8esd3n1tLRIAdif1gIWkxM1Ls+nZp
-        ylPWCf3NT64wuwhNLT1W6ISb/pmGujN2qs/hZXT9EG2k5ctDPNE7gi4DTNAKqVD3KuSpWCTcYumTR
-        p2JItAkw==;
-Received: from p4fdb05cb.dip0.t-ipconnect.de ([79.219.5.203] helo=localhost)
-        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mV5bl-00AWDX-HD; Tue, 28 Sep 2021 05:24:57 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Miquel Raynal <miquel.raynal@bootlin.com>,
-        Richard Weinberger <richard@nod.at>,
-        Vignesh Raghavendra <vigneshr@ti.com>,
-        linux-block@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH 5/5] scsi: remove the gendisk argument to scsi_ioctl
-Date:   Tue, 28 Sep 2021 07:22:11 +0200
-Message-Id: <20210928052211.112801-6-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20210928052211.112801-1-hch@lst.de>
-References: <20210928052211.112801-1-hch@lst.de>
+        id S234213AbhI1Fd7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Sep 2021 01:33:59 -0400
+Received: from mailout2.samsung.com ([203.254.224.25]:13469 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234133AbhI1Fdz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2021 01:33:55 -0400
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20210928053213epoutp02e4867be2c4a3b233368564a4d1bec261~o5W-fWAm02595425954epoutp02S
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Sep 2021 05:32:13 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20210928053213epoutp02e4867be2c4a3b233368564a4d1bec261~o5W-fWAm02595425954epoutp02S
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1632807133;
+        bh=XmdGgp7KH9yYpPtS/tI7O5dME0ZWilg3xqrVmIQiwug=;
+        h=From:To:In-Reply-To:Subject:Date:References:From;
+        b=JFcXODDwXF20OL+xKhU8r6X+rDrgat9w5a1qRd9QU7lOa53yxuOJsdvWQcS7iMpYM
+         CDDskwikb+br7CDicHOmvRyc7PAppFG1r2gsenRgueSuVJzzKTHenDQLWOUk0C1vcT
+         pu1XUmpiKrbe0IoCvTY64h/FylyaXdpk0OjwygHs=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTP id
+        20210928053210epcas2p3c4b75648fa94b3eaa4cf5dac738ca620~o5W8Pho9G1786517865epcas2p3-;
+        Tue, 28 Sep 2021 05:32:10 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.40.185]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4HJSn32jmxz4x9QY; Tue, 28 Sep
+        2021 05:32:07 +0000 (GMT)
+Received: from epcas2p3.samsung.com ( [182.195.41.55]) by
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        95.07.09717.5D8A2516; Tue, 28 Sep 2021 14:32:05 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20210928053200epcas2p44b46bed60b7af86933170c2eda37fbc2~o5WzlFokL3276332763epcas2p4A;
+        Tue, 28 Sep 2021 05:32:00 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+        20210928053200epsmtrp26b92d68f1920b7a2ad766f37ad2d8e1e~o5WzkHurU1201212012epsmtrp2d;
+        Tue, 28 Sep 2021 05:32:00 +0000 (GMT)
+X-AuditID: b6c32a45-4c1ff700000025f5-2a-6152a8d5885c
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        FB.2C.09091.0D8A2516; Tue, 28 Sep 2021 14:32:00 +0900 (KST)
+Received: from KORCO011456 (unknown [12.36.185.54]) by epsmtip2.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20210928053200epsmtip251fc8dad2d81dfe69b93b3d6d70c70ff~o5WzWzmnu1362513625epsmtip2r;
+        Tue, 28 Sep 2021 05:32:00 +0000 (GMT)
+From:   "Kiwoong Kim" <kwmad.kim@samsung.com>
+To:     "'Bart Van Assche'" <bvanassche@acm.org>,
+        <linux-scsi@vger.kernel.org>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
+        <martin.petersen@oracle.com>, <beanhuo@micron.com>,
+        <cang@codeaurora.org>, <adrian.hunter@intel.com>,
+        <sc.suh@samsung.com>, <hy50.seo@samsung.com>,
+        <sh425.lee@samsung.com>, <bhoon95.kim@samsung.com>
+In-Reply-To: <28332c27-c5d0-b309-db15-b83bf57b3dfd@acm.org>
+Subject: RE: About ufshcd_err_handling_unprepare
+Date:   Tue, 28 Sep 2021 14:32:00 +0900
+Message-ID: <000401d7b42a$294e9180$7bebb480$@samsung.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQDq2eFSTch8Rz73ZfoMyE4bCF7IGwKn0swMAlHCqtOtatOvQA==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrCJsWRmVeSWpSXmKPExsWy7bCmue7VFUGJBru7RSxOPlnDZvFg3jY2
+        i5c/r7JZHHzYyWLxdekzVotpH34yW3xav4zVYvXiBywWi25sY7Lovr6DzWL58X9MFl13bzBa
+        LP33lsWB1+PyFW+Py329TB6L97xk8piw6ACjx/f1HWweH5/eYvHo27KK0ePzJjmP9gPdTAGc
+        UTk2GamJKalFCql5yfkpmXnptkrewfHO8aZmBoa6hpYW5koKeYm5qbZKLj4Bum6ZOUB3KymU
+        JeaUAoUCEouLlfTtbIryS0tSFTLyi0tslVILUnIKDA0L9IoTc4tL89L1kvNzrQwNDIxMgSoT
+        cjIeLfcrWMJUserXd+YGxheMXYycHBICJhJ3Hk5i62Lk4hAS2MEosfHzPVaQhJDAJ0aJjguc
+        EIlvjBKn9q8A6uAA6zi7uRAivpdR4svE7cwQzgtGibmbb7OBdLMJaEtMe7ibFSQhIvCISeJw
+        1yZ2kG5OAWuJ27MkQWqEBQwkrv9ZzQwSZhFQldj0NR8kzCtgKXHp4FEmCFtQ4uTMJywgNrOA
+        vMT2t3OYIa5WkPj5dBkrSKuIgJPEpgclECUiErM728DOkRC4wCExZdENNoh6F4kj655D2cIS
+        r45vYYewpSQ+v9sLFa+X2De1gRWiuYdR4um+f9AgMpaY9awd7HlmAU2J9bv0IeGgLHHkFtRp
+        fBIdh/+yQ4R5JTrahCAalSV+TZoMNURSYubNO1AlHhInPstOYFScheTHWUh+nIXkmVkIaxcw
+        sqxiFEstKM5NTy02KjBEjudNjODkrOW6g3Hy2w96hxiZOBgPMUpwMCuJ8Aaz+CcK8aYkVlal
+        FuXHF5XmpBYfYjQFBvpEZinR5HxgfsgriTc0NTIzM7A0tTA1M7JQEued+88pUUggPbEkNTs1
+        tSC1CKaPiYNTqoFJ4WT1tkXFe+4Lzd7Iuk/99CkL7k+F/rrnzq7IPjyNcU5xtl9K61/P1Vcu
+        6+Q/q3u3huXoClb/4/OyVNoaen5HRZiUP6hhVdjUcOP7O4VSI75dV5b+vdpj2hXFwbvccGa3
+        UuzEG4Eny2dOnlW8o2+6xJvY/OaYBEMRzuD4jFo/G8bblsH9V6tfTlB+z7bydTmDtzW3c19r
+        qPreNRa6ZxKV7lhPLz53Y/vCqoMLdv+Yq/tPnO9v6iZPjytZx++axp/+ubN9grTgwWkLudZu
+        uZ+sbNcaebJo6leTr0diQhc3a+Qekw9e+a1jz1Z7Dp833ycmzt4282Tgvecvt2jdTDu5OF7U
+        5FPKW//tSywvF8nuUGIpzkg01GIuKk4EAAJz9JdXBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKIsWRmVeSWpSXmKPExsWy7bCSvO6FFUGJBrea1S1OPlnDZvFg3jY2
+        i5c/r7JZHHzYyWLxdekzVotpH34yW3xav4zVYvXiBywWi25sY7Lovr6DzWL58X9MFl13bzBa
+        LP33lsWB1+PyFW+Py329TB6L97xk8piw6ACjx/f1HWweH5/eYvHo27KK0ePzJjmP9gPdTAGc
+        UVw2Kak5mWWpRfp2CVwZj5b7FSxhqlj16ztzA+MLxi5GDg4JAROJs5sLuxi5OIQEdjNKTN34
+        nK2LkRMoLilxYudzRghbWOJ+yxFWiKJnjBInL3ezgyTYBLQlpj3cDZYQEfjEJPF24z6oql2M
+        EhfeNDGDrOAUsJa4PUsSpEFYwEDi+p/VYGEWAVWJTV/zQcK8ApYSlw4eZYKwBSVOznzCAmIz
+        A83vfdjKCGHLS2x/O4cZ4iAFiZ9Pl7GCjBERcJLY9KAEokREYnZnG/MERqFZSCbNQjJpFpJJ
+        s5C0LGBkWcUomVpQnJueW2xYYJiXWq5XnJhbXJqXrpecn7uJERyTWpo7GLev+qB3iJGJg/EQ
+        owQHs5IIbzCLf6IQb0piZVVqUX58UWlOavEhRmkOFiVx3gtdJ+OFBNITS1KzU1MLUotgskwc
+        nFINTMyMucGH6tN0L/KtEfi36qZh/UV52y0pk8RdfnffqWeaNPPFjJr4H7dUPsa2fdFfu6/K
+        WnPBrw1nhNbvX+DC0Ldr86W31+uksnPe7T/+tpj53MMO0QlnzzzLnjxxjnbS435lMdOtmQ8U
+        EhzZxPy5M3InfvGvlon4faLd6prHxq1PNhZdeqr4b0tU75GoLJ412YHFDVpNdRtEtFOvmnT0
+        6sVxW30TMYmwu1NZveL5JOaOiW6vzQU8rXed1mz849nUfuL7FN5Pt1xlnhuol7zX+RZ7QW7b
+        48JN83pdu3w3tx/WVTLuvLvVqeWQgNjEx29z5Jf7vHytpvS5Z/0E0f9vTtt9yEpRW3P/3fRJ
+        57jT3JVYijMSDbWYi4oTAWKC0Tg4AwAA
+X-CMS-MailID: 20210928053200epcas2p44b46bed60b7af86933170c2eda37fbc2
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20210927073953epcas2p26eeb9e4fbb86bb54d7dd73acc5beb28a
+References: <CGME20210927073953epcas2p26eeb9e4fbb86bb54d7dd73acc5beb28a@epcas2p2.samsung.com>
+        <005701d7b372$dc01ad20$94050760$@samsung.com>
+        <28332c27-c5d0-b309-db15-b83bf57b3dfd@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that blk_execute_rq does not take a gendisk argument there is no need
-to pass it through the scsi_ioctl callchain either.
+> Hi Kiwoong,
+> 
+> Please help with reviewing this patch series since this series should
+> resolve the issue described above:
+> 
+> https://lore.kernel.org/linux-scsi/20210922093842.18025-1-
+> adrian.hunter@intel.com/
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/ch.c         |  2 +-
- drivers/scsi/scsi_ioctl.c | 39 +++++++++++++++------------------------
- drivers/scsi/sd.c         |  2 +-
- drivers/scsi/sg.c         |  4 ++--
- drivers/scsi/sr.c         |  5 ++---
- drivers/scsi/st.c         |  2 +-
- include/scsi/scsi_ioctl.h |  4 ++--
- 7 files changed, 24 insertions(+), 34 deletions(-)
+That's what I'm finding. Thanks.
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 27012908b5861..6fa300daa31ea 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -877,7 +877,7 @@ static long ch_ioctl(struct file *file,
- 	}
- 
- 	default:
--		return scsi_ioctl(ch->device, NULL, file->f_mode, cmd, argp);
-+		return scsi_ioctl(ch->device, file->f_mode, cmd, argp);
- 
- 	}
- }
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index 4a93f2c1d1afb..77201af00f670 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -406,8 +406,7 @@ static int scsi_complete_sghdr_rq(struct request *rq, struct sg_io_hdr *hdr,
- 	return ret;
- }
- 
--static int sg_io(struct scsi_device *sdev, struct gendisk *disk,
--		struct sg_io_hdr *hdr, fmode_t mode)
-+static int sg_io(struct scsi_device *sdev, struct sg_io_hdr *hdr, fmode_t mode)
- {
- 	unsigned long start_time;
- 	ssize_t ret = 0;
-@@ -497,19 +496,12 @@ static int sg_io(struct scsi_device *sdev, struct gendisk *disk,
- /**
-  * sg_scsi_ioctl  --  handle deprecated SCSI_IOCTL_SEND_COMMAND ioctl
-  * @q:		request queue to send scsi commands down
-- * @disk:	gendisk to operate on (option)
-  * @mode:	mode used to open the file through which the ioctl has been
-  *		submitted
-  * @sic:	userspace structure describing the command to perform
-  *
-  * Send down the scsi command described by @sic to the device below
-- * the request queue @q.  If @file is non-NULL it's used to perform
-- * fine-grained permission checks that allow users to send down
-- * non-destructive SCSI commands.  If the caller has a struct gendisk
-- * available it should be passed in as @disk to allow the low level
-- * driver to use the information contained in it.  A non-NULL @disk
-- * is only allowed if the caller knows that the low level driver doesn't
-- * need it (e.g. in the scsi subsystem).
-+ * the request queue @q.
-  *
-  * Notes:
-  *   -  This interface is deprecated - users should use the SG_IO
-@@ -528,8 +520,8 @@ static int sg_io(struct scsi_device *sdev, struct gendisk *disk,
-  *      Positive numbers returned are the compacted SCSI error codes (4
-  *      bytes in one int) where the lowest byte is the SCSI status.
-  */
--static int sg_scsi_ioctl(struct request_queue *q, struct gendisk *disk,
--		fmode_t mode, struct scsi_ioctl_command __user *sic)
-+static int sg_scsi_ioctl(struct request_queue *q, fmode_t mode,
-+		struct scsi_ioctl_command __user *sic)
- {
- 	enum { OMAX_SB_LEN = 16 };	/* For backward compatibility */
- 	struct request *rq;
-@@ -804,8 +796,8 @@ static int scsi_put_cdrom_generic_arg(const struct cdrom_generic_command *cgc,
- 	return 0;
- }
- 
--static int scsi_cdrom_send_packet(struct scsi_device *sdev, struct gendisk *disk,
--		fmode_t mode, void __user *arg)
-+static int scsi_cdrom_send_packet(struct scsi_device *sdev, fmode_t mode,
-+		void __user *arg)
- {
- 	struct cdrom_generic_command cgc;
- 	struct sg_io_hdr hdr;
-@@ -845,7 +837,7 @@ static int scsi_cdrom_send_packet(struct scsi_device *sdev, struct gendisk *disk
- 	hdr.cmdp = ((struct cdrom_generic_command __user *) arg)->cmd;
- 	hdr.cmd_len = sizeof(cgc.cmd);
- 
--	err = sg_io(sdev, disk, &hdr, mode);
-+	err = sg_io(sdev, &hdr, mode);
- 	if (err == -EFAULT)
- 		return -EFAULT;
- 
-@@ -860,8 +852,8 @@ static int scsi_cdrom_send_packet(struct scsi_device *sdev, struct gendisk *disk
- 	return err;
- }
- 
--static int scsi_ioctl_sg_io(struct scsi_device *sdev, struct gendisk *disk,
--		fmode_t mode, void __user *argp)
-+static int scsi_ioctl_sg_io(struct scsi_device *sdev, fmode_t mode,
-+		void __user *argp)
- {
- 	struct sg_io_hdr hdr;
- 	int error;
-@@ -869,7 +861,7 @@ static int scsi_ioctl_sg_io(struct scsi_device *sdev, struct gendisk *disk,
- 	error = get_sg_io_hdr(&hdr, argp);
- 	if (error)
- 		return error;
--	error = sg_io(sdev, disk, &hdr, mode);
-+	error = sg_io(sdev, &hdr, mode);
- 	if (error == -EFAULT)
- 		return error;
- 	if (put_sg_io_hdr(&hdr, argp))
-@@ -880,7 +872,6 @@ static int scsi_ioctl_sg_io(struct scsi_device *sdev, struct gendisk *disk,
- /**
-  * scsi_ioctl - Dispatch ioctl to scsi device
-  * @sdev: scsi device receiving ioctl
-- * @disk: disk receiving the ioctl
-  * @mode: mode the block/char device is opened with
-  * @cmd: which ioctl is it
-  * @arg: data associated with ioctl
-@@ -889,8 +880,8 @@ static int scsi_ioctl_sg_io(struct scsi_device *sdev, struct gendisk *disk,
-  * does not take a major/minor number as the dev field.  Rather, it takes
-  * a pointer to a &struct scsi_device.
-  */
--int scsi_ioctl(struct scsi_device *sdev, struct gendisk *disk, fmode_t mode,
--		int cmd, void __user *arg)
-+int scsi_ioctl(struct scsi_device *sdev, fmode_t mode, int cmd,
-+		void __user *arg)
- {
- 	struct request_queue *q = sdev->request_queue;
- 	struct scsi_sense_hdr sense_hdr;
-@@ -925,11 +916,11 @@ int scsi_ioctl(struct scsi_device *sdev, struct gendisk *disk, fmode_t mode,
- 	case SG_EMULATED_HOST:
- 		return sg_emulated_host(q, arg);
- 	case SG_IO:
--		return scsi_ioctl_sg_io(sdev, disk, mode, arg);
-+		return scsi_ioctl_sg_io(sdev, mode, arg);
- 	case SCSI_IOCTL_SEND_COMMAND:
--		return sg_scsi_ioctl(q, disk, mode, arg);
-+		return sg_scsi_ioctl(q, mode, arg);
- 	case CDROM_SEND_PACKET:
--		return scsi_cdrom_send_packet(sdev, disk, mode, arg);
-+		return scsi_cdrom_send_packet(sdev, mode, arg);
- 	case CDROMCLOSETRAY:
- 		return scsi_send_start_stop(sdev, 3);
- 	case CDROMEJECT:
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b6846e1fc97fd..171e098f3816e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1574,7 +1574,7 @@ static int sd_ioctl(struct block_device *bdev, fmode_t mode,
- 
- 	if (is_sed_ioctl(cmd))
- 		return sed_ioctl(sdkp->opal_dev, cmd, p);
--	return scsi_ioctl(sdp, disk, mode, cmd, p);
-+	return scsi_ioctl(sdp, mode, cmd, p);
- }
- 
- static void set_media_not_present(struct scsi_disk *sdkp)
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 24196ea7e0d76..d2c9035443d9f 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1109,7 +1109,7 @@ sg_ioctl_common(struct file *filp, Sg_device *sdp, Sg_fd *sfp,
- 	case SCSI_IOCTL_SEND_COMMAND:
- 		if (atomic_read(&sdp->detaching))
- 			return -ENODEV;
--		return scsi_ioctl(sdp->device, NULL, filp->f_mode, cmd_in, p);
-+		return scsi_ioctl(sdp->device, filp->f_mode, cmd_in, p);
- 	case SG_SET_DEBUG:
- 		result = get_user(val, ip);
- 		if (result)
-@@ -1165,7 +1165,7 @@ sg_ioctl(struct file *filp, unsigned int cmd_in, unsigned long arg)
- 	ret = sg_ioctl_common(filp, sdp, sfp, cmd_in, p);
- 	if (ret != -ENOIOCTLCMD)
- 		return ret;
--	return scsi_ioctl(sdp->device, NULL, filp->f_mode, cmd_in, p);
-+	return scsi_ioctl(sdp->device, filp->f_mode, cmd_in, p);
- }
- 
- static __poll_t
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index eddb153a536d7..73ac5ad368234 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -561,8 +561,7 @@ static void sr_block_release(struct gendisk *disk, fmode_t mode)
- static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 			  unsigned long arg)
- {
--	struct gendisk *disk = bdev->bd_disk;
--	struct scsi_cd *cd = scsi_cd(disk);
-+	struct scsi_cd *cd = scsi_cd(bdev->bd_disk);
- 	struct scsi_device *sdev = cd->device;
- 	void __user *argp = (void __user *)arg;
- 	int ret;
-@@ -584,7 +583,7 @@ static int sr_block_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 		if (ret != -ENOSYS)
- 			goto put;
- 	}
--	ret = scsi_ioctl(sdev, disk, mode, cmd, argp);
-+	ret = scsi_ioctl(sdev, mode, cmd, argp);
- 
- put:
- 	scsi_autopm_put_device(sdev);
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 1d2855fe5faf8..8c87cb9395699 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3829,7 +3829,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 		break;
- 	}
- 
--	retval = scsi_ioctl(STp->device, NULL, file->f_mode, cmd_in, p);
-+	retval = scsi_ioctl(STp->device, file->f_mode, cmd_in, p);
- 	if (!retval && cmd_in == SCSI_IOCTL_STOP_UNIT) {
- 		/* unload */
- 		STp->rew_at_close = 0;
-diff --git a/include/scsi/scsi_ioctl.h b/include/scsi/scsi_ioctl.h
-index d2cb9aeaf1f16..beac64e38b874 100644
---- a/include/scsi/scsi_ioctl.h
-+++ b/include/scsi/scsi_ioctl.h
-@@ -45,8 +45,8 @@ typedef struct scsi_fctargaddress {
- 
- int scsi_ioctl_block_when_processing_errors(struct scsi_device *sdev,
- 		int cmd, bool ndelay);
--int scsi_ioctl(struct scsi_device *sdev, struct gendisk *disk, fmode_t mode,
--		int cmd, void __user *arg);
-+int scsi_ioctl(struct scsi_device *sdev, fmode_t mode, int cmd,
-+		void __user *arg);
- int get_sg_io_hdr(struct sg_io_hdr *hdr, const void __user *argp);
- int put_sg_io_hdr(const struct sg_io_hdr *hdr, void __user *argp);
- bool scsi_cmd_allowed(unsigned char *cmd, fmode_t mode);
--- 
-2.30.2
+> 
+> Thanks,
+> 
+> Bart.
 
