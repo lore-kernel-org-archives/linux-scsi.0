@@ -2,79 +2,188 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9212DC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 22:39:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB598C4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 00:20:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 74DD8610FC
-	for <linux-scsi@archiver.kernel.org>; Mon, 27 Sep 2021 22:39:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87F6361181
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 00:20:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237759AbhI0WlY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 27 Sep 2021 18:41:24 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55644 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237501AbhI0WlX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 27 Sep 2021 18:41:23 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EDB006103B;
-        Mon, 27 Sep 2021 22:39:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632782384;
-        bh=jQsMfUi7sijCHy0O5BfSM8V3P+BdbGszL5QX7pxZXXY=;
-        h=Date:From:To:Cc:Subject:From;
-        b=DYKF/8qpc/4F6ifKfma2hGmYUvK8dtjn5mwyLzcvwOY72cajp0EDGXKyRFkUgldQr
-         8ANrq+f8cWJd3YEkqpS9MlwC0y4a6/z3jFa/igq+ITLSRbeueg0JHjbFxWDyhBbT2h
-         zTlM3r5DGSxbZuUmgMIJhZxyKWId0vFPmhYMzANwUWHhwYSGqcMgLe194FSkRxoKFp
-         7vACCxL1P1ReQqesKH0ivhPiYkApZ+XVqW/vetmg7AzBY0U3rCuxRSkbnh82slAJiW
-         Ran+iHz+qbxFEGLSgCeaO8FryeDJJKI/puwy1vOLQ9g8RJDedASXs8+tXGwAdS01Fn
-         30Qfyq2tfRP7A==
-Date:   Mon, 27 Sep 2021 17:43:44 -0500
-From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To:     Bodo Stroesser <bostroesser@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        linux-hardening@vger.kernel.org
-Subject: [PATCH][next] scsi: target: tcmu: Use struct_size() helper in
- kmalloc()
-Message-ID: <20210927224344.GA190701@embeddedor>
+        id S238308AbhI1AWV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 27 Sep 2021 20:22:21 -0400
+Received: from www262.sakura.ne.jp ([202.181.97.72]:59028 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238277AbhI1AWV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Sep 2021 20:22:21 -0400
+Received: from fsav411.sakura.ne.jp (fsav411.sakura.ne.jp [133.242.250.110])
+        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTP id 18S0Jl6P039939;
+        Tue, 28 Sep 2021 09:19:47 +0900 (JST)
+        (envelope-from penguin-kernel@i-love.sakura.ne.jp)
+Received: from www262.sakura.ne.jp (202.181.97.72)
+ by fsav411.sakura.ne.jp (F-Secure/fsigk_smtp/550/fsav411.sakura.ne.jp);
+ Tue, 28 Sep 2021 09:19:47 +0900 (JST)
+X-Virus-Status: clean(F-Secure/fsigk_smtp/550/fsav411.sakura.ne.jp)
+Received: from [192.168.1.9] (M106072142033.v4.enabler.ne.jp [106.72.142.33])
+        (authenticated bits=0)
+        by www262.sakura.ne.jp (8.15.2/8.15.2) with ESMTPSA id 18S0JlmW039936
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NO);
+        Tue, 28 Sep 2021 09:19:47 +0900 (JST)
+        (envelope-from penguin-kernel@i-love.sakura.ne.jp)
+Subject: Re: [PATCH v2 1/2] block: make __register_blkdev() return an error
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, axboe@kernel.dk, hch@lst.de,
+        efremov@linux.com, song@kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, hare@suse.de,
+        jack@suse.cz, ming.lei@redhat.com, tj@kernel.org
+References: <20210927220332.1074647-1-mcgrof@kernel.org>
+ <20210927220332.1074647-2-mcgrof@kernel.org>
+From:   Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Message-ID: <11a884b0-53f2-5174-fcb2-6247cece7104@i-love.sakura.ne.jp>
+Date:   Tue, 28 Sep 2021 09:19:47 +0900
+User-Agent: Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20210927220332.1074647-2-mcgrof@kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Make use of the struct_size() helper instead of an open-coded version,
-in order to avoid any potential type mistakes or integer overflows
-that, in the worst scenario, could lead to heap overflows.
+On 2021/09/28 7:03, Luis Chamberlain wrote:
+> diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
+> index 5dc9b3d32415..be0627345b21 100644
+> --- a/drivers/block/ataflop.c
+> +++ b/drivers/block/ataflop.c
+> @@ -1989,24 +1989,34 @@ static int ataflop_alloc_disk(unsigned int drive, unsigned int type)
+>  
+>  static DEFINE_MUTEX(ataflop_probe_lock);
+>  
+> -static void ataflop_probe(dev_t dev)
+> +static int ataflop_probe(dev_t dev)
+>  {
+>  	int drive = MINOR(dev) & 3;
+>  	int type  = MINOR(dev) >> 2;
+> +	int err = 0;
+>  
+>  	if (type)
+>  		type--;
+>  
+> -	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS)
+> -		return;
+> +	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS) {
+> +		err = -EINVAL;
+> +		goto out;
+> +	}
+> +
+>  	mutex_lock(&ataflop_probe_lock);
+>  	if (!unit[drive].disk[type]) {
+> -		if (ataflop_alloc_disk(drive, type) == 0) {
+> -			add_disk(unit[drive].disk[type]);
+> +		err = ataflop_alloc_disk(drive, type);
+> +		if (err == 0) {
+> +			err = add_disk(unit[drive].disk[type]);
+> +			if (err)
+> +				blk_cleanup_disk(unit[drive].disk[type]);
+>  			unit[drive].registered[type] = true;
 
-Link: https://github.com/KSPP/linux/issues/160
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
----
- drivers/target/target_core_user.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Why setting registered to true despite add_disk() failed?
+del_gendisk() without successful add_disk() sounds wrong.
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index 9f552f48084c..dc220fad06fa 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -1255,7 +1255,6 @@ tcmu_tmr_notify(struct se_device *se_dev, enum tcm_tmreq_table tmf,
- {
- 	int i = 0, cmd_cnt = 0;
- 	bool unqueued = false;
--	uint16_t *cmd_ids = NULL;
- 	struct tcmu_cmd *cmd;
- 	struct se_cmd *se_cmd;
- 	struct tcmu_tmr *tmr;
-@@ -1292,7 +1291,7 @@ tcmu_tmr_notify(struct se_device *se_dev, enum tcm_tmreq_table tmf,
- 	pr_debug("TMR event %d on dev %s, aborted cmds %d, afflicted cmd_ids %d\n",
- 		 tcmu_tmr_type(tmf), udev->name, i, cmd_cnt);
- 
--	tmr = kmalloc(sizeof(*tmr) + cmd_cnt * sizeof(*cmd_ids), GFP_NOIO);
-+	tmr = kmalloc(struct_size(tmr, tmr_cmd_ids, cmd_cnt), GFP_NOIO);
- 	if (!tmr)
- 		goto unlock;
- 
--- 
-2.27.0
+Don't we need to undo ataflop_alloc_disk() because it sets
+unit[drive].disk[type] to non-NULL ?
+
+>  		}
+>  	}
+>  	mutex_unlock(&ataflop_probe_lock);
+> +
+> +out:
+> +	return err;
+>  }
+>  
+>  static void atari_cleanup_floppy_disk(struct atari_floppy_struct *fs)
+
+
+
+> diff --git a/drivers/block/brd.c b/drivers/block/brd.c
+> index c2bf4946f4e3..82a93044de95 100644
+> --- a/drivers/block/brd.c
+> +++ b/drivers/block/brd.c
+> @@ -426,10 +426,11 @@ static int brd_alloc(int i)
+>  	return err;
+>  }
+>  
+> -static void brd_probe(dev_t dev)
+> +static int brd_probe(dev_t dev)
+>  {
+>  	int i = MINOR(dev) / max_part;
+>  	struct brd_device *brd;
+> +	int err = 0;
+>  
+>  	mutex_lock(&brd_devices_mutex);
+>  	list_for_each_entry(brd, &brd_devices, brd_list) {
+> @@ -437,9 +438,11 @@ static void brd_probe(dev_t dev)
+>  			goto out_unlock;
+>  	}
+>  
+> -	brd_alloc(i);
+> +	err = brd_alloc(i);
+>  out_unlock:
+>  	mutex_unlock(&brd_devices_mutex);
+> +
+> +	return err;
+>  }
+>  
+>  static void brd_del_one(struct brd_device *brd)
+
+https://lkml.kernel.org/r/e205f13d-18ff-a49c-0988-7de6ea5ff823@i-love.sakura.ne.jp
+will require this part to be updated.
+
+
+> diff --git a/drivers/block/floppy.c b/drivers/block/floppy.c
+> index 0434f28742e7..95a1c8ef62f7 100644
+> --- a/drivers/block/floppy.c
+> +++ b/drivers/block/floppy.c
+> @@ -4517,21 +4517,27 @@ static int floppy_alloc_disk(unsigned int drive, unsigned int type)
+>  
+>  static DEFINE_MUTEX(floppy_probe_lock);
+>  
+> -static void floppy_probe(dev_t dev)
+> +static int floppy_probe(dev_t dev)
+>  {
+>  	unsigned int drive = (MINOR(dev) & 3) | ((MINOR(dev) & 0x80) >> 5);
+>  	unsigned int type = (MINOR(dev) >> 2) & 0x1f;
+> +	int err = 0;
+>  
+>  	if (drive >= N_DRIVE || !floppy_available(drive) ||
+>  	    type >= ARRAY_SIZE(floppy_type))
+> -		return;
+> +		return -EINVAL;
+>  
+>  	mutex_lock(&floppy_probe_lock);
+>  	if (!disks[drive][type]) {
+> -		if (floppy_alloc_disk(drive, type) == 0)
+> -			add_disk(disks[drive][type]);
+> +		if (floppy_alloc_disk(drive, type) == 0) {
+> +			err = add_disk(disks[drive][type]);
+> +			if (err)
+> +				blk_cleanup_disk(disks[drive][type]);
+
+This makes future floppy_probe() no-op once add_disk() failed (or maybe a bad
+thing happens somewhere else), for disks[drive][type] was set to non-NULL by
+floppy_alloc_disk() but blk_cleanup_disk() does not reset it to NULL.
+
+According to floppy_module_exit() which tries to cleanup it, implementing
+undo might be complicated...
+
+> +		}
+>  	}
+>  	mutex_unlock(&floppy_probe_lock);
+> +
+> +	return err;
+>  }
+>  
+>  static int __init do_floppy_init(void)
 
