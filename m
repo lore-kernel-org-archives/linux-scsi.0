@@ -2,168 +2,64 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C7D0C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 17:30:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74D28C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 18:44:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1117060EB6
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 17:30:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49C4861246
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 18:44:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242102AbhI1RcO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Sep 2021 13:32:14 -0400
-Received: from m43-7.mailgun.net ([69.72.43.7]:57047 "EHLO m43-7.mailgun.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S242082AbhI1RcL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Sep 2021 13:32:11 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1632850232; h=Message-ID: References: In-Reply-To: Subject:
- Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
- MIME-Version: Sender; bh=Lu/WTpMvwg4jnja38XQYqTJ4WyLbF7FcUTVzra8gO/Q=;
- b=p+Qc8ZPgBkuDQ7Jed0Tantb/jTD6rvp8n8K5rhReq3n/vTc1iwlW5qrV2DPEqD6O2yZRPCW+
- 62445yittxYdPIKfuaUJEeSay5kvWswd3JArChwoTzgPUzMPCbalB1oyavNqiCu09i/RAQzj
- 2GdMpMuxtlp8OUp+AiIryW0xIFM=
-X-Mailgun-Sending-Ip: 69.72.43.7
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n02.prod.us-west-2.postgun.com with SMTP id
- 61535120a5a9bab6e8d1cd72 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 28 Sep 2021 17:30:08
- GMT
-Sender: nguyenb=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 348D6C4361A; Tue, 28 Sep 2021 17:30:08 +0000 (UTC)
-Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
-        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        (Authenticated sender: nguyenb)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 3380FC4360C;
-        Tue, 28 Sep 2021 17:30:06 +0000 (UTC)
+        id S237334AbhI1SqS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Sep 2021 14:46:18 -0400
+Received: from esa.microchip.iphmx.com ([68.232.153.233]:35632 "EHLO
+        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230109AbhI1SqR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2021 14:46:17 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
+  t=1632854678; x=1664390678;
+  h=subject:from:to:cc:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=frcCV1k9oG9oKj3dpUqdJg1PxRT2RSN/XKdLCPjaYaY=;
+  b=VTN6X72CJbfkZhFY3rcEtNV65+axl3oRsQ5lcLdnPfomcscYan5i9LGx
+   zk6Yy+mpxL3B8NFeXD3vMiVRk/T7sKTtRCq0EbAVuDCDaqSjyqCG/NS/R
+   wBuIqpHDWqhnf1D+SbQAPXuNlVt4zMTJWZDkMSCyxWD3bkMnmDHAMRmkA
+   wDF+j7hkrwwOAiTLwSwe+IM+6NUlbr9Q8w+6LRtl94bHgCyTHvhCwQytP
+   NQCd+UsB53mLbcPuHCfjoBgx7t10mmvqzN9RSPQYQ3Qt/PhMeDi+D3uUA
+   q45t9KKtwmUwc2ikBnyz9IbMfMSKcS51DoYRaamMRoee2451VyTHF7cXj
+   g==;
+IronPort-SDR: p3Kf2qpANPlrgAv8FIkeFOOJzTWoSmB47Y993Q4sxQYcrBkveMH46iiu0ZsziW3ZC2x2F/v5Km
+ 4peMe1sB+zYxR74ViPXf9wO1QWkpPBPSUuJsYwhhkQRTQp981Ya5TKrwPiMG77frV8epv1cGuG
+ bEJxWGYq8ZGPhnvy5kDgz1oi9n2iPt442v36yKp8+omo2QOq2e6ilvhXBLfnbv8eDNJKKuWvPV
+ IaCY3QZrRDewVKcpYq865yEE/xEAF+YjqXFAO0XUATKjdN6ClKNiNqrKBJjRD0pqphZtXU/PyU
+ mi12OJrzzqlrQ7w5TTx7kb75
+X-IronPort-AV: E=Sophos;i="5.85,330,1624345200"; 
+   d="scan'208";a="137712436"
+Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
+  by esa5.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 28 Sep 2021 11:44:35 -0700
+Received: from chn-vm-ex04.mchp-main.com (10.10.85.152) by
+ chn-vm-ex02.mchp-main.com (10.10.85.144) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2176.14; Tue, 28 Sep 2021 11:44:34 -0700
+Received: from brunhilda.pdev.net (10.10.115.15) by chn-vm-ex04.mchp-main.com
+ (10.10.85.152) with Microsoft SMTP Server id 15.1.2176.14 via Frontend
+ Transport; Tue, 28 Sep 2021 11:44:34 -0700
+Subject: [PATCH 00/11] smartpqi updates
+From:   Don Brace <don.brace@microchip.com>
+To:     <Kevin.Barnett@microchip.com>, <scott.teel@microchip.com>,
+        <Justin.Lindley@microchip.com>, <scott.benesh@microchip.com>,
+        <gerry.morong@microchip.com>, <mahesh.rajashekhara@microchip.com>,
+        <mike.mcgowen@microchip.com>, <murthy.bhat@microchip.com>,
+        <hch@infradead.org>, <jejb@linux.vnet.ibm.com>,
+        <joseph.szczypek@hpe.com>, <POSWALD@suse.com>
+CC:     <linux-scsi@vger.kernel.org>
+Date:   Tue, 28 Sep 2021 13:44:34 -0500
+Message-ID: <163285461769.194893.178408874562704189.stgit@brunhilda.pdev.net>
+User-Agent: StGit/1.1+40.g1b20.dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Date:   Tue, 28 Sep 2021 10:30:06 -0700
-From:   nguyenb@codeaurora.org
-To:     Alim Akhtar <alim.akhtar@samsung.com>
-Cc:     cang@codeaurora.org, asutoshd@codeaurora.org,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, 'Avri Altman' <avri.altman@wdc.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        'Bean Huo' <beanhuo@micron.com>,
-        'Stanley Chu' <stanley.chu@mediatek.com>,
-        'Bart Van Assche' <bvanassche@acm.org>,
-        'Jaegeuk Kim' <jaegeuk@kernel.org>,
-        'Adrian Hunter' <adrian.hunter@intel.com>,
-        'Keoseong Park' <keosung.park@samsung.com>,
-        'open list' <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH v1 1/2] scsi: ufs: export hibern8 entry and exit
-In-Reply-To: <000701d7b42b$3cc69680$b653c380$@samsung.com>
-References: <cover.1632171047.git.nguyenb@codeaurora.org>
- <CGME20210920210820epcas5p3255a53f0d25000310e401305795017e8@epcas5p3.samsung.com>
- <70c5376129f902b6b3e9940ea3b10f147bf18a10.1632171047.git.nguyenb@codeaurora.org>
- <000701d7b42b$3cc69680$b653c380$@samsung.com>
-Message-ID: <16df2ef1db49e3afc3235878fb13c3da@codeaurora.org>
-X-Sender: nguyenb@codeaurora.org
-User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-09-27 22:39, Alim Akhtar wrote:
-> Hi Bao
-> 
->> -----Original Message-----
->> From: nguyenb=codeaurora.org@mg.codeaurora.org
->> [mailto:nguyenb=codeaurora.org@mg.codeaurora.org] On Behalf Of Bao D.
->> Nguyen
->> Sent: Tuesday, September 21, 2021 2:38 AM
->> To: cang@codeaurora.org; asutoshd@codeaurora.org;
->> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
->> Cc: linux-arm-msm@vger.kernel.org; Bao D . Nguyen
->> <nguyenb@codeaurora.org>; Alim Akhtar <alim.akhtar@samsung.com>; Avri
->> Altman <avri.altman@wdc.com>; James E.J. Bottomley 
->> <jejb@linux.ibm.com>;
->> Bean Huo <beanhuo@micron.com>; Stanley Chu <stanley.chu@mediatek.com>;
->> Bart Van Assche <bvanassche@acm.org>; Jaegeuk Kim 
->> <jaegeuk@kernel.org>;
->> Adrian Hunter <adrian.hunter@intel.com>; Keoseong Park
->> <keosung.park@samsung.com>; open list <linux-kernel@vger.kernel.org>
->> Subject: [PATCH v1 1/2] scsi: ufs: export hibern8 entry and exit
->> 
->> From: Asutosh Das <asutoshd@codeaurora.org>
->> 
->> Qualcomm controllers need to be in hibern8 before scaling up or down 
->> the
->> clocks. Hence, export the hibern8 entry and exit functions.
->> 
->> Signed-off-by: Asutosh Das <asutoshd@codeaurora.org>
->> Signed-off-by: Bao D. Nguyen <nguyenb@codeaurora.org>
->> ---
->> drivers/scsi/ufs/ufshcd.c | 4 ++--
->> drivers/scsi/ufs/ufshcd.h | 2 ++
->> 2 files changed, 4 insertions(+), 2 deletions(-)
->> 
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c 
->> index
->> 3841ab49..f3aad32 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -227,7 +227,6 @@ static void ufshcd_hba_exit(struct ufs_hba *hba);
-> static
->> int ufshcd_clear_ua_wluns(struct ufs_hba *hba);  static int
->> ufshcd_probe_hba(struct ufs_hba *hba, bool async);  static int
->> ufshcd_setup_clocks(struct ufs_hba *hba, bool on); -static int
->> ufshcd_uic_hibern8_enter(struct ufs_hba *hba);  static inline void
->> ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);  static int
->> ufshcd_host_reset_and_restore(struct ufs_hba *hba);  static void
->> ufshcd_resume_clkscaling(struct ufs_hba *hba); @@ -4116,7 +4115,7 @@ 
->> int
->> ufshcd_link_recovery(struct ufs_hba *hba)  }
->> EXPORT_SYMBOL_GPL(ufshcd_link_recovery);
->> 
->> -static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
->> +int ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
->> {
->> 	int ret;
->> 	struct uic_command uic_cmd = {0};
->> @@ -4138,6 +4137,7 @@ static int ufshcd_uic_hibern8_enter(struct 
->> ufs_hba
->> *hba)
->> 
->> 	return ret;
->> }
->> +EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_enter);
->> 
->> int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)  { diff --git
->> a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
-> 52ea6f3..0cc55a2
->> 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -1397,4 +1397,6 @@ static inline int ufshcd_rpmb_rpm_put(struct 
->> ufs_hba
->> *hba)
->> 	return pm_runtime_put(&hba->sdev_rpmb->sdev_gendev);
->> }
->> 
->> +int ufshcd_uic_hibern8_enter(struct ufs_hba *hba); int
->> +ufshcd_uic_hibern8_exit(struct ufs_hba *hba);
-> 
-> This will add ufshcd_uic_hibern8_exit() twice, it is already add by
-> commit: 9d19bf7ad168a8: scsi: ufs: export some functions for vendor 
-> usage
-Thank you, Alim. I have corrected this in Patch V2.
 
-> 
-> Also move ufshcd_uic_hibern8_enter() before _earlier_
-> ufshcd_uic_hibern8_exit() declaration.
-Yes, I have addressed this in the Patch V2. Please review.
-Thank you.
-
-> 
->> #endif /* End of Header */
->> --
->> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora 
->> Forum,
-> a
->> Linux Foundation Collaborative Project
