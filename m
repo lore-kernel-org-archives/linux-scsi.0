@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 613A8C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 21:37:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23975C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 21:37:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 476D561361
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 21:37:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EACAF61360
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 21:37:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242906AbhI1Vj3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Sep 2021 17:39:29 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39416 "EHLO
+        id S242909AbhI1Vja (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Sep 2021 17:39:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39430 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242974AbhI1Vj2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2021 17:39:28 -0400
-Received: from mail-wr1-x432.google.com (mail-wr1-x432.google.com [IPv6:2a00:1450:4864:20::432])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 51248C06161C;
-        Tue, 28 Sep 2021 14:37:48 -0700 (PDT)
-Received: by mail-wr1-x432.google.com with SMTP id d21so677200wra.12;
-        Tue, 28 Sep 2021 14:37:48 -0700 (PDT)
+        with ESMTP id S242989AbhI1Vj3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2021 17:39:29 -0400
+Received: from mail-wr1-x42c.google.com (mail-wr1-x42c.google.com [IPv6:2a00:1450:4864:20::42c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4475CC061753;
+        Tue, 28 Sep 2021 14:37:49 -0700 (PDT)
+Received: by mail-wr1-x42c.google.com with SMTP id w29so710262wra.8;
+        Tue, 28 Sep 2021 14:37:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :mime-version:content-transfer-encoding;
-        bh=62o8qvDbaebUTEL6gImiSJov6SHsQsiLfGIVSMMiXeg=;
-        b=cQkWff+x4nQZu5EJveWO2qKWQkphTBwCvH+wHxhJN7yGSANVLsQa8BEQDyu2AlbqXf
-         YK9kRSS9YmbTSa8G5doAGvjg7Yu86wez2JzV5UYnrZKefU8kjToB+gYOtFLQBHaKL+OU
-         BJ84JbrpBC00U7qGnbXiKPvAuNuRJL02Yy/45a0kENf2Twop0TB6xoa6n1TzhRO0qjYS
-         Iylw2k7418P7aYrRq8cwqoLzvEVEjqvpHQ1FuOTK5dxi7twTvAQmzmkZKRZ/Tpad4Qnw
-         kjElwX8iM3Zo7xbwQvx3suxwUzQpVEhUxfvWNnHTpEW7BIP4bGNTY9a5JGsahSX4L2J7
-         c2AA==
+        bh=yZ9KGhrhLcywAqK/S5yjVM8wp4L0WP/cHm0W4+6MMRU=;
+        b=TynBkh91NcxXO88rLVoNIYl+kzTlgXbo7O/uyYD0z6YVak9ltPT+0NoXD6pSqc9yt3
+         l5q+RoyEOikkafNVgbaskV7595iX3+f5wQWw3HbcnocCd6RPhTPP5hIT0bMQ9pUPFoN9
+         EVM48DULIC4y/FMf5xrxc1hxaBVMZ3G73hkkLZI2q+DyBBWhAX96wNwPI5LYaNy1pkrK
+         XIgGDJnh7GslR+E8ID/ZYzJkqg11jREmjps4qcrWUQlJE37J6sFNdG/0hjQmNUghMI7y
+         zS71+KmKMAYgpXQ+93z5n+eAKhztcRpvWn8gfwABqzzUBHZkkxfvdGibr98p3xWVioIG
+         LFvg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=62o8qvDbaebUTEL6gImiSJov6SHsQsiLfGIVSMMiXeg=;
-        b=MPPK6mwtFqgWVXszTW6fjdLrKOCWADpds30/3uLRvyimnjY/RCNBhus+6VpYMi7cxM
-         melvSu2acjBLKOcZ+KJwMbQh+jpiMNF4S6DsFMSPyLHrB+UYgAbbNxNq0ek90KQlDs6g
-         fN0CnkiRkRIsudoTX1DH/Y6oh3yxI32Lp/tWlJ3jvJg79rXRVXi6EeWQnvsMElfHlycu
-         DbHo5C8Sv/YePCqEXzFWrzlUYqr4WdHmFJdf18aeiM40mgpEjeNLpwi6sBeEczqHmIIP
-         MK+9iP9PhYgMyIzsUcXQncuB4Qj4mvkbu6cjMY/H+5wk7gEXqxc3N1mZ/vnh2tTqiuZu
-         gP5Q==
-X-Gm-Message-State: AOAM533JK6fv3KG0oxPSMs0Ll7FKtq+PqoiSwYGl7KwdX+znSNcyn0V3
-        T0Xd3yUJEgmIYpURHKqkPKQ=
-X-Google-Smtp-Source: ABdhPJw9xkl2gYIzouvFl+fZcy6oP3fHtMUpxbQLmCEu1jCXbGHhKN+zAUu+CtVBISA8oIERvUtlKw==
-X-Received: by 2002:a05:6000:11c6:: with SMTP id i6mr2702896wrx.177.1632865066953;
-        Tue, 28 Sep 2021 14:37:46 -0700 (PDT)
+        bh=yZ9KGhrhLcywAqK/S5yjVM8wp4L0WP/cHm0W4+6MMRU=;
+        b=Xy9qmnpXWJ3TPz91f405wP4meneAZAEKueDMabR1nU89H2GjVnQx+U657mjb+WMT/y
+         F9D8UXxyIDPYN3KXh8+xJ+YS7jf8v8MEfYEznImckYx5CUKNj/PU+IVmvdXo+CE91Z+g
+         o3Pvs2EQSrz9UEt9pEQpwyoZWeIZtp6+P51MZUWm6f6hBriKcO8cv9OnjDiIxy5a22mX
+         G35L0hkIIuQcQ9nKk4vSSGdtflIYfCLruPOPLpP9JY+VhklTFr/OSxTe/Y307Ew6K7n+
+         5P1ZGeMBEWnS2+dVAqtR1iLVdImIIYnIjacHACzG0CND3G+Re/l1Zgf6SHq1Cl0PXwS+
+         XXRA==
+X-Gm-Message-State: AOAM5339NGRurB7iUq71dvya/FH0ryROibwhzDKefRD0ETgkRRHe7sqf
+        LzQnSpnPF42zdaG/VNuhKUo=
+X-Google-Smtp-Source: ABdhPJzup5O2OZbLG7zI8IX28sGXrasrAkRYdV83Z8/v0hckVAuYwrxqLMkOkD3+9Qw6MMTtnL7Ylg==
+X-Received: by 2002:a5d:5104:: with SMTP id s4mr2822839wrt.16.1632865067954;
+        Tue, 28 Sep 2021 14:37:47 -0700 (PDT)
 Received: from ubuntu-laptop.speedport.ip (p200300e94717cfe07139628ae9da1147.dip0.t-ipconnect.de. [2003:e9:4717:cfe0:7139:628a:e9da:1147])
-        by smtp.gmail.com with ESMTPSA id l18sm270461wrp.56.2021.09.28.14.37.46
+        by smtp.gmail.com with ESMTPSA id l18sm270461wrp.56.2021.09.28.14.37.47
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Sep 2021 14:37:46 -0700 (PDT)
+        Tue, 28 Sep 2021 14:37:47 -0700 (PDT)
 From:   Bean Huo <huobean@gmail.com>
 To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         asutoshd@codeaurora.org, jejb@linux.ibm.com,
@@ -57,9 +57,9 @@ To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
         beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
         cang@codeaurora.org, daejun7.park@samsung.com
 Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v1 1/2] scsi: ufs: ufshpb: Fix NULL pointer dereference
-Date:   Tue, 28 Sep 2021 23:37:33 +0200
-Message-Id: <20210928213734.778908-2-huobean@gmail.com>
+Subject: [PATCH v1 2/2] scsi: ufs: core: Fix a non-constant function argument name
+Date:   Tue, 28 Sep 2021 23:37:34 +0200
+Message-Id: <20210928213734.778908-3-huobean@gmail.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20210928213734.778908-1-huobean@gmail.com>
 References: <20210928213734.778908-1-huobean@gmail.com>
@@ -71,97 +71,29 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Bean Huo <beanhuo@micron.com>
 
-Before ufshcd_scsi_add_wlus() is executed, call ufshcd_rpm_{get/put}_sync(),
-"Null pointer dereference" issue will be triggered. Because hba->sdev_ufs_device
-is initialized in ufshcd_scsi_add_wlus() later.
+Since commit 568dd9959611 ("scsi: ufs: Rename the second
+ufshcd_probe_hba() argument"), the second ufshcd_probe_hba()
+argument has been changed to init_dev_params.
 
-Unable to handle kernel NULL pointer dereference at virtual address
-0000000000000348
-Mem abort info:
-  ESR = 0x96000004
-  EC = 0x25: DABT (current EL), IL = 32 bits
-  SET = 0, FnV = 0
-  EA = 0, S1PTW = 0
-  FSC = 0x04: level 0 translation fault
-Data abort info:
-  ISV = 0, ISS = 0x00000004
-  CM = 0, WnR = 0
-[0000000000000348] user address but active_mm is swapper
-Internal error: Oops: 96000004 [#1] PREEMPT SMP
-Modules linked in:
-CPU: 0 PID: 91 Comm: kworker/u16:1 Not tainted 5.15.0-rc1-beanhuo-linaro-1423
-Hardware name: MicronRB (DT)
-Workqueue: events_unbound async_run_entry_fn
-pstate: 20000005 (nzCv daif -PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-pc : pm_runtime_drop_link+0x128/0x338
-lr : ufshpb_get_dev_info+0x8c/0x148
-sp : ffff800012573c10
-x29: ffff800012573c10 x28: 0000000000000000 x27: 0000000000000003
-x26: ffff000001d21298 x25: 000000005abcea60 x24: ffff800011d89000
-x23: 0000000000000001 x22: ffff000001d21880 x21: ffff000001ec9300
-x20: 0000000000000004 x19: 0000000000000198 x18: ffffffffffffffff
-x17: 0000000000000000 x16: 0000000000000000 x15: 0000000000041400
-x14: 5eee00201100200a x13: 000000000000bb03 x12: 0000000000000000
-x11: 0000000000000100 x10: 0200000000000000 x9 : bb0000021a162c01
-x8 : 0302010021021003 x7 : 0000000000000000 x6 : ffff800012573af0
-x5 : 0000000000000001 x4 : 0000000000000001 x3 : 0000000000000200
-x2 : 0000000000000348 x1 : 0000000000000348 x0 : ffff80001095308c
-Call trace:
- pm_runtime_drop_link+0x128/0x338
- ufshpb_get_dev_info+0x8c/0x148
- ufshcd_probe_hba+0xda0/0x11b8
- ufshcd_async_scan+0x34/0x330
- async_run_entry_fn+0x38/0x180
- process_one_work+0x1f4/0x498
- worker_thread+0x48/0x480
- kthread+0x140/0x158
- ret_from_fork+0x10/0x20
-Code: 88027c01 35ffffa2 17fff6c4 f9800051 (885f7c40)
----[ end trace 2ba541335f595c95 ]
-
-Since ufshpb_get_dev_info() is only called in asynchronous execution
-ufshcd_async_scan(), and before ufshpb_get_dev_info(), pm_runtime_get_sync()
-has been called:
-
-...
-/* Hold auto suspend until async scan completes */
-pm_runtime_get_sync(dev);
-atomic_set(&hba->scsi_block_reqs_cnt, 0);
-...
-ufshcd_async_scan()
-{
- ufshcd_probe_hba(hba, true);
- ufshcd_device_params_init(hba);
- ufshpb_get_dev_info();
- ...
- pm_runtime_put_sync(hba->dev);
-}
-
-Remove ufshcd_rpmb_rpm_{get/put}_sync() from ufshpb_get_dev_info(), fix
-this issue.
-
-Fixes: 351b3a849ac7 ("scsi: ufs: ufshpb: Use proper power management API")
+Fixes: 568dd9959611 ("scsi: ufs: Rename the second ufshcd_probe_hba() argument")
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/scsi/ufs/ufshpb.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 9ea639bf6a59..33a38c06a296 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -2877,11 +2877,8 @@ void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf)
- 	if (version == HPB_SUPPORT_LEGACY_VERSION)
- 		hpb_dev_info->is_legacy = true;
- 
--	ufshcd_rpm_get_sync(hba);
- 	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
- 		QUERY_ATTR_IDN_MAX_HPB_SINGLE_CMD, 0, 0, &max_hpb_single_cmd);
--	ufshcd_rpm_put_sync(hba);
--
- 	if (ret)
- 		dev_err(hba->dev, "%s: idn: read max size of single hpb cmd query request failed",
- 			__func__);
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index debef631c89a..081092418e2d 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -225,7 +225,7 @@ static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
+ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
+ static void ufshcd_hba_exit(struct ufs_hba *hba);
+ static int ufshcd_clear_ua_wluns(struct ufs_hba *hba);
+-static int ufshcd_probe_hba(struct ufs_hba *hba, bool async);
++static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params);
+ static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+ static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
 -- 
 2.25.1
 
