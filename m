@@ -2,88 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DD3CC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 04:49:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F348C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:23:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4BAB7611C0
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 04:49:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65F1B60FC2
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:23:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232038AbhI1Eul (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Sep 2021 00:50:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51354 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229493AbhI1Eul (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Sep 2021 00:50:41 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 84E9D61157;
-        Tue, 28 Sep 2021 04:49:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1632804542;
-        bh=2guL14SYPuBM25kGgtAgYfd4Hm7/RYzcvsfudok0grw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Ih77VrdE4NO0PKhAWN/U3YouWCUzgSLaL+ahKbU+pzACC6/pzv8ghAOS4db3PmalW
-         ylRfADPTmzb8yfHK1LjQLQvdsCuJ1UYKYhKTCKl4yMJoLjIySI5Xc6EJeZ5Y8mxNeh
-         f0ZJmphq82doJbeD+IePATAedVoyUw/5Ym3zpmto=
-Date:   Tue, 28 Sep 2021 06:48:58 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-        Hannes Reinecke <hare@suse.com>,
-        Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        Stefan Richter <stefanr@s5r6.in-berlin.de>,
-        Steffen Maier <maier@linux.ibm.com>,
-        Benjamin Block <bblock@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>,
-        Vasily Gorbik <gor@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@de.ibm.com>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Don Brace <don.brace@microchip.com>,
-        Brian King <brking@us.ibm.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Hannes Reinecke <hare@kernel.org>,
-        Alan Stern <stern@rowland.harvard.edu>,
-        Stanislav Nijnikov <stanislav.nijnikov@wdc.com>
-Subject: Re: [PATCH 2/2] scsi: Register SCSI device sysfs attributes earlier
-Message-ID: <YVKeuvq7Yl4ofikC@kroah.com>
-References: <20210924232635.1637763-1-bvanassche@acm.org>
- <20210924232635.1637763-3-bvanassche@acm.org>
- <YU7l02I/eT3+8410@kroah.com>
- <7e38336a-cb2d-61fc-b1b8-babb99d74cd3@acm.org>
+        id S234120AbhI1FYy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Sep 2021 01:24:54 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37226 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233290AbhI1FYx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 28 Sep 2021 01:24:53 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1392EC061575;
+        Mon, 27 Sep 2021 22:23:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=A04dM+Vo9/Fetf7krH0dGPC++Y24iPZldsb1IcuSrY8=; b=aRY4V1sGCTesXudqb9o16TDrY4
+        So7uD86nqB92AiLd9otKv6X6MfWgkOAeId/QuKEULs9GPk8juifoFzT1FcrlwMsQ7ZRhUI8kmCE+c
+        Yli36oAEOytrjPeUgbZNvzCjU2EzP9rba/ZlJ006Z+tuNmvc9v3TUlHcc8qJ/K2P6yp3IY1ADaqjS
+        J4NXRo7VuTMbjV8iDjYIIul09I5WL+RdhOTGjuJBq9NS8v9mf0g6z3H5Tny0BOZ/4hSyNzwEawg9e
+        5eekUuS6ByryxDk1zzvY4nLWDB3xOU1vOs8rgt5f3Z8GKkntaFhrkCAQwL1iiiMTbmdpmGkBYAAPD
+        vjp2zNNg==;
+Received: from p4fdb05cb.dip0.t-ipconnect.de ([79.219.5.203] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mV5ZG-00AW6O-LM; Tue, 28 Sep 2021 05:22:21 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-block@vger.kernel.org, linux-mtd@lists.infradead.org,
+        linux-scsi@vger.kernel.org
+Subject: remove ->rq_disk
+Date:   Tue, 28 Sep 2021 07:22:06 +0200
+Message-Id: <20210928052211.112801-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7e38336a-cb2d-61fc-b1b8-babb99d74cd3@acm.org>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 27, 2021 at 10:37:03AM -0700, Bart Van Assche wrote:
-> On 9/25/21 2:03 AM, Greg Kroah-Hartman wrote:
-> > On Fri, Sep 24, 2021 at 04:26:35PM -0700, Bart Van Assche wrote:
-> > > --- a/include/scsi/scsi_device.h
-> > > +++ b/include/scsi/scsi_device.h
-> > > @@ -226,6 +226,8 @@ struct scsi_device {
-> > >   	struct device		sdev_gendev,
-> > >   				sdev_dev;
-> > > +	struct attribute_group  gendev_first_attr_group;
-> > > +	const struct attribute_group *gendev_attr_groups[6];
-> > 
-> > Where does 6 come from?
-> 
-> 1 + 4 + 1: one array entry for the SCSI core sysfs attributes, four for the
-> device driver attributes (this is the current limit) and one entry for the NULL
-> terminating entry.
+Hi Jens,
 
-Please document this somewhere, otherwise it really looks like a random
-number :)
+this series removes the rq_disk field in struct request, which isn't
+needed now that we can get the disk from the request_queue.
 
-thanks,
-
-greg k-h
+Diffstat:
+ block/blk-core.c                   |   10 ++++----
+ block/blk-exec.c                   |   10 ++------
+ block/blk-flush.c                  |    3 --
+ block/blk-merge.c                  |    7 ------
+ block/blk-mq.c                     |    1 
+ block/blk.h                        |    2 -
+ block/bsg-lib.c                    |    2 -
+ drivers/block/amiflop.c            |    2 -
+ drivers/block/ataflop.c            |    6 ++---
+ drivers/block/floppy.c             |    6 ++---
+ drivers/block/mtip32xx/mtip32xx.c  |    2 -
+ drivers/block/null_blk/trace.h     |    2 -
+ drivers/block/paride/pcd.c         |    2 -
+ drivers/block/paride/pd.c          |    6 ++---
+ drivers/block/paride/pf.c          |    4 +--
+ drivers/block/pktcdvd.c            |    2 -
+ drivers/block/rnbd/rnbd-clt.c      |    4 +--
+ drivers/block/sunvdc.c             |    2 -
+ drivers/block/sx8.c                |    4 +--
+ drivers/block/virtio_blk.c         |    2 -
+ drivers/md/dm-mpath.c              |    1 
+ drivers/mmc/core/block.c           |   12 +++++-----
+ drivers/mtd/mtd_blkdevs.c          |   10 +-------
+ drivers/nvme/host/core.c           |    4 +--
+ drivers/nvme/host/fault_inject.c   |    2 -
+ drivers/nvme/host/pci.c            |    7 ++----
+ drivers/nvme/host/trace.h          |    6 ++---
+ drivers/nvme/target/passthru.c     |    3 --
+ drivers/scsi/ch.c                  |    2 -
+ drivers/scsi/scsi_bsg.c            |    2 -
+ drivers/scsi/scsi_error.c          |    2 -
+ drivers/scsi/scsi_ioctl.c          |   43 ++++++++++++++-----------------------
+ drivers/scsi/scsi_lib.c            |    5 ++--
+ drivers/scsi/scsi_logging.c        |    4 ++-
+ drivers/scsi/sd.c                  |   26 +++++++++++-----------
+ drivers/scsi/sd_zbc.c              |    8 +++---
+ drivers/scsi/sg.c                  |    6 ++---
+ drivers/scsi/sr.c                  |   11 ++++-----
+ drivers/scsi/st.c                  |    4 +--
+ drivers/scsi/ufs/ufshcd.c          |    3 --
+ drivers/scsi/ufs/ufshpb.c          |    5 +---
+ drivers/scsi/virtio_scsi.c         |    2 -
+ drivers/target/target_core_pscsi.c |    2 -
+ drivers/usb/storage/transport.c    |    2 -
+ fs/nfsd/blocklayout.c              |    2 -
+ include/linux/blk-mq.h             |   11 ++-------
+ include/scsi/scsi_cmnd.h           |    2 -
+ include/scsi/scsi_device.h         |    4 +--
+ include/scsi/scsi_ioctl.h          |    4 +--
+ include/trace/events/block.h       |    8 +++---
+ kernel/trace/blktrace.c            |    2 -
+ 51 files changed, 125 insertions(+), 159 deletions(-)
