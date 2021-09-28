@@ -2,118 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9005C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 09:04:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3614AC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 09:06:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BE66B6113E
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 09:04:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C6386113E
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 09:06:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239868AbhI1JGW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Sep 2021 05:06:22 -0400
+        id S239774AbhI1JIC (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Sep 2021 05:08:02 -0400
 Received: from m43-7.mailgun.net ([69.72.43.7]:34680 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239863AbhI1JGU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Sep 2021 05:06:20 -0400
+        id S239674AbhI1JIC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Sep 2021 05:08:02 -0400
 DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1632819882; h=Date: Message-Id: Cc: To: References:
- In-Reply-To: From: Subject: Content-Transfer-Encoding: MIME-Version:
- Content-Type: Sender; bh=09C7+Iq0CKL2hGEdanYSFMJLK30HPDjpfQExa8Wp094=;
- b=iSnc86eYLBJ9vq3c4oOYYxoUO4DLNmHoEjGIoQwurfnvhBP9/DqDYFPHVX45BVyYopFXpC5U
- vFSCHBdPqZZFvdO4D7kUkUGqDmR1Z+K4DcSQKC7sGuORND43wPcp23WeBH8jdifKAAjJZuXM
- nRCpz2GgT6/zGTZQOu461yyWmHI=
+ s=smtp; t=1632819982; h=Message-Id: Date: Subject: Cc: To: From:
+ Sender; bh=utekfrmQSteIxS/+pMgDvuoB47HyInX9NBcN8+iyXNo=; b=uL2pYz3b8zl59PK2I6nYf67KCr+Eqal9nJ4CDXyo+jHvqVG0FhENWWyrfOfojoWvZHWoLfpr
+ A/kTnKRM/UzQy+8kbJCWnHtF622ZVeCPcEsQJd33Tv/gvpmTEIHBYJDHgxoJp3pEl/V8RmX+
+ YJZxcXPGHY1jcIIZsJw+DUkbWRM=
 X-Mailgun-Sending-Ip: 69.72.43.7
 X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
 Received: from smtp.codeaurora.org
  (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
- 6152da83713d5d6f968b2814 (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 28 Sep 2021 09:04:03
+ smtp-out-n03.prod.us-east-1.postgun.com with SMTP id
+ 6152db0e8578ef11ed376e5b (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Tue, 28 Sep 2021 09:06:22
  GMT
-Sender: kvalo=codeaurora.org@mg.codeaurora.org
+Sender: nguyenb=codeaurora.org@mg.codeaurora.org
 Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 42913C43638; Tue, 28 Sep 2021 09:04:02 +0000 (UTC)
-Received: from tykki.adurom.net (tynnyri.adurom.net [51.15.11.48])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id B0B88C4360C; Tue, 28 Sep 2021 09:06:21 +0000 (UTC)
+Received: from stor-berry.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-SHA256 (128/128 bits))
         (No client certificate requested)
-        (Authenticated sender: kvalo)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id 6E798C4338F;
-        Tue, 28 Sep 2021 09:03:53 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 6E798C4338F
+        (Authenticated sender: nguyenb)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 18472C43460;
+        Tue, 28 Sep 2021 09:06:20 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org 18472C43460
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
 Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Subject: Re: [PATCH 04/11] ath11: Wstringop-overread warning
-From:   Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20210322160253.4032422-5-arnd@kernel.org>
-References: <20210322160253.4032422-5-arnd@kernel.org>
-To:     Arnd Bergmann <arnd@kernel.org>
-Cc:     linux-kernel@vger.kernel.org, Martin Sebor <msebor@gcc.gnu.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>, x86@kernel.org,
-        Ning Sun <ning.sun@intel.com>,
-        Jani Nikula <jani.nikula@linux.intel.com>,
-        Simon Kelley <simon@thekelleys.org.uk>,
-        James Smart <james.smart@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Anders Larsen <al@alarsen.net>, Tejun Heo <tj@kernel.org>,
-        Serge Hallyn <serge@hallyn.com>,
-        Imre Deak <imre.deak@intel.com>,
-        linux-arm-kernel@lists.infradead.org,
-        tboot-devel@lists.sourceforge.net, intel-gfx@lists.freedesktop.org,
-        dri-devel@lists.freedesktop.org, ath11k@lists.infradead.org,
-        linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-        linux-scsi@vger.kernel.org, cgroups@vger.kernel.org,
-        linux-security-module@vger.kernel.org,
-        Carl Huang <cjhuang@codeaurora.org>,
-        Maharaja Kennadyrajan <mkenna@codeaurora.org>,
-        Pradeep Kumar Chitrapu <pradeepc@codeaurora.org>,
-        Johannes Berg <johannes.berg@intel.com>,
-        Ritesh Singh <ritesi@codeaurora.org>,
-        Rajkumar Manoharan <rmanohar@codeaurora.org>,
-        Aloka Dixit <alokad@codeaurora.org>,
-        Felix Fietkau <nbd@nbd.name>
-User-Agent: pwcli/0.1.0-git (https://github.com/kvalo/pwcli/) Python/3.7.3
-Message-Id: <20210928090402.42913C43638@smtp.codeaurora.org>
-Date:   Tue, 28 Sep 2021 09:04:02 +0000 (UTC)
+From:   "Bao D. Nguyen" <nguyenb@codeaurora.org>
+To:     cang@codeaurora.org, asutoshd@codeaurora.org,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc:     "Bao D. Nguyen" <nguyenb@codeaurora.org>,
+        linux-arm-msm@vger.kernel.org
+Subject: [PATCH v2 0/2] Put Qualcomm's ufs controller to hibern8 during clock scaling
+Date:   Tue, 28 Sep 2021 02:06:11 -0700
+Message-Id: <cover.1632818942.git.nguyenb@codeaurora.org>
+X-Mailer: git-send-email 2.7.4
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Arnd Bergmann <arnd@kernel.org> wrote:
+Asutosh Das tried to upstream this change about a year ago.
+We would like to resume his work because Qualcomm's ufs controller
+needs to be in hibern8 before scaling up/down the clocks.
+Just like ufshcd_uic_hibern8_exit() is already being exported,
+we would like to export ufshcd_uic_hibern8_enter() so that
+Qualcomm's ufs controller can be put in hibern8 state.
 
-> gcc-11 with the kernel address sanitizer prints a warning for this
-> driver:
-> 
-> In function 'ath11k_peer_assoc_h_vht',
->     inlined from 'ath11k_peer_assoc_prepare' at drivers/net/wireless/ath/ath11k/mac.c:1632:2:
-> drivers/net/wireless/ath/ath11k/mac.c:1164:13: error: 'ath11k_peer_assoc_h_vht_masked' reading 16 bytes from a region of size 4 [-Werror=stringop-overread]
->  1164 |         if (ath11k_peer_assoc_h_vht_masked(vht_mcs_mask))
->       |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/net/wireless/ath/ath11k/mac.c: In function 'ath11k_peer_assoc_prepare':
-> drivers/net/wireless/ath/ath11k/mac.c:1164:13: note: referencing argument 1 of type 'const u16 *' {aka 'const short unsigned int *'}
-> drivers/net/wireless/ath/ath11k/mac.c:969:1: note: in a call to function 'ath11k_peer_assoc_h_vht_masked'
->   969 | ath11k_peer_assoc_h_vht_masked(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
->       | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> According to analysis from gcc developers, this is a glitch in the
-> way gcc tracks the size of struct members. This should really get
-> fixed in gcc, but it's also easy to work around this instance
-> by changing the function prototype to no include the length of
-> the array.
-> 
-> Link: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99673
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Kalle Valo <kvalo@codeaurora.org>
+Changes from v1:
+- Removed the extra ufshcd_uic_hibern8_exit().
+- Moved the ufshcd_uic_hibern8_enter() above the current ufshcd_uic_hibern8_exit().
 
-Patch applied to ath-next branch of ath.git, thanks.
+Asutosh Das (2):
+  scsi: ufs: export hibern8 entry and exit
+  scsi: ufs-qcom: enter and exit hibern8 during clock scaling
 
-eb19efed836a ath11k: Wstringop-overread warning
+ drivers/scsi/ufs/ufs-qcom.c | 12 +++++++++++-
+ drivers/scsi/ufs/ufshcd.c   |  4 ++--
+ drivers/scsi/ufs/ufshcd.h   |  1 +
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
 -- 
-https://patchwork.kernel.org/project/linux-wireless/patch/20210322160253.4032422-5-arnd@kernel.org/
-
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
 
