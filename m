@@ -2,41 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D6E2C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:58:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BDABC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:59:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0326B61159
-	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:58:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E5F96124B
+	for <linux-scsi@archiver.kernel.org>; Tue, 28 Sep 2021 05:59:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239307AbhI1GAB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 28 Sep 2021 02:00:01 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49944 "EHLO mail.kernel.org"
+        id S239685AbhI1GBI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 28 Sep 2021 02:01:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:48784 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239016AbhI1F6x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 28 Sep 2021 01:58:53 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id AD18061354;
-        Tue, 28 Sep 2021 05:56:51 +0000 (UTC)
+        id S239421AbhI1F7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 28 Sep 2021 01:59:33 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id B8DC461372;
+        Tue, 28 Sep 2021 05:57:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1632808611;
-        bh=UIb1mYOgGz8ep8P24ertFqEu/OqqtLKGBD+OfVrEhUE=;
+        s=k20201202; t=1632808620;
+        bh=Qlnfsy33Fa5GLT82aBUq02M+g7d+tQhUIXd/wlt7r+0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=EIllAar93OPyUS0DnTcJK9aotl6xGWmq3BgBj3fgwGg4dbt/1YPn3IvXZU8B5nGCJ
-         o2oCzln3Hjso5934CC5LMzHpn9EJvsuqnIcrz2z7zbNUqnfZ4wha4HrOKiI51hfOce
-         3le2e6HGm4RKz1mTK9K8F6s6Ezof/lybxvtiZsRhFZSkJMT+CRKl7R/SComUMTtM3v
-         FkfCaTArYmTe+EfdM9p2maPKsf7/t2HT6d6YscAkW4KjhoBsn+AfiV1tbyWtBZMdup
-         yfDxPKzp6LqklnsWQSdJlGRlt7IfrMYTvxgHyuEQoAkCGMWoLFd80FDZOD3FEJpyko
-         0YAS5Zou6pq9g==
+        b=tnC+I3Tdiy/sjxw50ZSa4vrmstG+2goT1dujLJ+C6hQNoMAV07dwyrxSSVK6Z3Vcm
+         orVZR83eq5pTcie/x4mFZ8HBBYlV/XpuypVJnYySRQV6wb3TYFv8iZ++xhv6BrQ/p/
+         MpVaO/EwRPDQZV2ECWAtcH5VPs+PB1kc5IDoLEbuhh8BmPQLHoi6l7v5EzSh4UK8hB
+         cJxjBrpoouXPS250EMPlgKTgO2nO99nmtv53hBfyt3iZLKvVKfv4Xo6H9KoL4KHtLp
+         +47idKMWFCYepgfwzGjxrPrjV+mX2+zhTapUqdtfroYTwPNzIhIg7GjLbRO8DqhEil
+         Q+7xt0DCAA3nQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>,
+Cc:     Wen Xiong <wenxiong@linux.ibm.com>,
+        Brian King <brking@linux.ibm.com>,
+        James Bottomley <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 11/23] scsi: sd: Free scsi_disk device via put_device()
-Date:   Tue, 28 Sep 2021 01:56:32 -0400
-Message-Id: <20210928055645.172544-11-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 20/23] scsi: ses: Retry failed Send/Receive Diagnostic commands
+Date:   Tue, 28 Sep 2021 01:56:41 -0400
+Message-Id: <20210928055645.172544-20-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20210928055645.172544-1-sashal@kernel.org>
 References: <20210928055645.172544-1-sashal@kernel.org>
@@ -48,48 +47,79 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+From: Wen Xiong <wenxiong@linux.ibm.com>
 
-[ Upstream commit 265dfe8ebbabae7959060bd1c3f75c2473b697ed ]
+[ Upstream commit fbdac19e642899455b4e64c63aafe2325df7aafa ]
 
-After a device is initialized via device_initialize() it should be freed
-via put_device(). sd_probe() currently gets this wrong, fix it up.
+Setting SCSI logging level with error=3, we saw some errors from enclosues:
 
-Link: https://lore.kernel.org/r/20210906090112.531442-1-ming.lei@redhat.com
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+[108017.360833] ses 0:0:9:0: tag#641 Done: NEEDS_RETRY Result: hostbyte=DID_ERROR driverbyte=DRIVER_OK cmd_age=0s
+[108017.360838] ses 0:0:9:0: tag#641 CDB: Receive Diagnostic 1c 01 01 00 20 00
+[108017.427778] ses 0:0:9:0: Power-on or device reset occurred
+[108017.427784] ses 0:0:9:0: tag#641 Done: SUCCESS Result: hostbyte=DID_OK driverbyte=DRIVER_OK cmd_age=0s
+[108017.427788] ses 0:0:9:0: tag#641 CDB: Receive Diagnostic 1c 01 01 00 20 00
+[108017.427791] ses 0:0:9:0: tag#641 Sense Key : Unit Attention [current]
+[108017.427793] ses 0:0:9:0: tag#641 Add. Sense: Bus device reset function occurred
+[108017.427801] ses 0:0:9:0: Failed to get diagnostic page 0x1
+[108017.427804] ses 0:0:9:0: Failed to bind enclosure -19
+[108017.427895] ses 0:0:10:0: Attached Enclosure device
+[108017.427942] ses 0:0:10:0: Attached scsi generic sg18 type 13
+
+Retry if the Send/Receive Diagnostic commands complete with a transient
+error status (NOT_READY or UNIT_ATTENTION with ASC 0x29).
+
+Link: https://lore.kernel.org/r/1631849061-10210-2-git-send-email-wenxiong@linux.ibm.com
+Reviewed-by: Brian King <brking@linux.ibm.com>
+Reviewed-by: James Bottomley <jejb@linux.ibm.com>
+Signed-off-by: Wen Xiong <wenxiong@linux.ibm.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/sd.c | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/ses.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f0c0935d7909..56e291708587 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3443,15 +3443,16 @@ static int sd_probe(struct device *dev)
- 	}
+diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+index c2afba2a5414..43e682297fd5 100644
+--- a/drivers/scsi/ses.c
++++ b/drivers/scsi/ses.c
+@@ -87,9 +87,16 @@ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 		0
+ 	};
+ 	unsigned char recv_page_code;
++	unsigned int retries = SES_RETRIES;
++	struct scsi_sense_hdr sshdr;
++
++	do {
++		ret = scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
++				       &sshdr, SES_TIMEOUT, 1, NULL);
++	} while (ret > 0 && --retries && scsi_sense_valid(&sshdr) &&
++		 (sshdr.sense_key == NOT_READY ||
++		  (sshdr.sense_key == UNIT_ATTENTION && sshdr.asc == 0x29)));
  
- 	device_initialize(&sdkp->dev);
--	sdkp->dev.parent = dev;
-+	sdkp->dev.parent = get_device(dev);
- 	sdkp->dev.class = &sd_disk_class;
- 	dev_set_name(&sdkp->dev, "%s", dev_name(dev));
+-	ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
+-				NULL, SES_TIMEOUT, SES_RETRIES, NULL);
+ 	if (unlikely(ret))
+ 		return ret;
  
- 	error = device_add(&sdkp->dev);
--	if (error)
--		goto out_free_index;
-+	if (error) {
-+		put_device(&sdkp->dev);
-+		goto out;
-+	}
+@@ -121,9 +128,16 @@ static int ses_send_diag(struct scsi_device *sdev, int page_code,
+ 		bufflen & 0xff,
+ 		0
+ 	};
++	struct scsi_sense_hdr sshdr;
++	unsigned int retries = SES_RETRIES;
++
++	do {
++		result = scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, buf, bufflen,
++					  &sshdr, SES_TIMEOUT, 1, NULL);
++	} while (result > 0 && --retries && scsi_sense_valid(&sshdr) &&
++		 (sshdr.sense_key == NOT_READY ||
++		  (sshdr.sense_key == UNIT_ATTENTION && sshdr.asc == 0x29)));
  
--	get_device(dev);
- 	dev_set_drvdata(dev, sdkp);
- 
- 	gd->major = sd_major((index & 0xf0) >> 4);
+-	result = scsi_execute_req(sdev, cmd, DMA_TO_DEVICE, buf, bufflen,
+-				  NULL, SES_TIMEOUT, SES_RETRIES, NULL);
+ 	if (result)
+ 		sdev_printk(KERN_ERR, sdev, "SEND DIAGNOSTIC result: %8x\n",
+ 			    result);
 -- 
 2.33.0
 
