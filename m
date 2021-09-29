@@ -2,125 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 788D8C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 18:15:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E61BC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 18:23:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C23461465
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 18:15:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D69ED61465
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 18:23:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344266AbhI2SRD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 14:17:03 -0400
-Received: from mail-pg1-f173.google.com ([209.85.215.173]:40659 "EHLO
-        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232318AbhI2SRC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 14:17:02 -0400
-Received: by mail-pg1-f173.google.com with SMTP id h3so3573642pgb.7;
-        Wed, 29 Sep 2021 11:15:21 -0700 (PDT)
+        id S1346055AbhI2SZM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 14:25:12 -0400
+Received: from mail-pf1-f175.google.com ([209.85.210.175]:33323 "EHLO
+        mail-pf1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1345440AbhI2SZI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 14:25:08 -0400
+Received: by mail-pf1-f175.google.com with SMTP id s16so2730654pfk.0
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 11:23:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=qHhbFlZc6GWNDrVsz7/iKe9Me4ufngLpqsND1YltOzM=;
-        b=UOPXV9/LYeO2n1N73OwWkI4bEVGuHx+/FuiyURBc1ycXQzMedrq43KWny7AAj+/5Cx
-         SZFTaRx5dihaXUz7dTM0FIbDWfEWWpYGc7LD/69H8LRSi4D6tmKu5L1nl14Uekh5aC8E
-         fpYS4kablVM3V2DHNxU1ziM5yzUeQ/br0sQUWleoH5Wi+VxJV7B6OLii41tFLd5RwBgP
-         HL7kOZrQYAovgTbas5Qw2hlRdSV78RCxLdy4cyN1TBb9IVllAFHFS7ZhJJa82qcNJXD0
-         /9CXtpcbPMtk2VxoWYKRRuo/V7gkELw/sbGHJlMoGwLjMUNoloAZAaqQ+8rp2Qo46RYX
-         PB0w==
-X-Gm-Message-State: AOAM532KqrgNC1sRcsV5MGmIDak7vA3m49WwkxQGhXzYGJXFCG1PjXL3
-        oplwpYDFyWmTdgCK7rNN/oVucrRYvBM=
-X-Google-Smtp-Source: ABdhPJyLyLHa6wGVqdVcHF8Eo7FMzmROjehCaN44Z2qGkC/h/n95Yl5YWtDj4Oayg3mlJANLcy91IA==
-X-Received: by 2002:a63:f356:: with SMTP id t22mr1160846pgj.18.1632939320446;
-        Wed, 29 Sep 2021 11:15:20 -0700 (PDT)
+        bh=Pq4Xve0qA+tCFA6eu2Au+Jh835nfS9pbHgTbNXcm76Q=;
+        b=2JJnDyp3OSfzp3p0ZqBFh572thIVu049+ePxY2vuKjW+ta3FEGgyCOi7Ca2YL2monL
+         YX07EnhMl8dPAcBLEZPidNhVevMccDiTFkl5A1Y1wOiMA7Rw6aWXEBOCZiho5Q33h7F+
+         yd5a5eBexvRmuiFlmtIV3co/5SvJL9pxpv49kxCc0YfzmpO1OeTXoFDNo+uS2pja7XlH
+         wGbuE1iBIwu9SYBm3AKaQX118K4D2yPuejdhX3AZldsQk0XS/Rf5StOtMuftU5wbgKn6
+         hUcdfJTW0nH0bnGzPrjn/U0cUWkrEd0yVXumZFcEsrWkGlZ/6vILPnXnRZ9xR1HrshSP
+         gW8w==
+X-Gm-Message-State: AOAM532ztGYpXOwQGuUlfGJdaIFQGRU42ntxHlcfXTUm6BzxcHqr0jfh
+        923ZB4IZFwRjwAr1qCRUx54=
+X-Google-Smtp-Source: ABdhPJw6PcVZFAME4WxgkgkRjnf1JyraGnCp5N5vmbMReJk4M/TBrko37J+xJkrN6W+P1p9MhyuL+w==
+X-Received: by 2002:a63:684a:: with SMTP id d71mr1154408pgc.175.1632939806482;
+        Wed, 29 Sep 2021 11:23:26 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f36:4e58:55a1:b506])
-        by smtp.gmail.com with ESMTPSA id n26sm491703pfo.19.2021.09.29.11.15.18
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Sep 2021 11:15:19 -0700 (PDT)
-Subject: Re: [PATCH] scsi: ufs: Fix a possible dead lock in clock scaling
-To:     Can Guo <cang@codeaurora.org>
-Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
-        hongwus@codeaurora.org, ziqichen@codeaurora.org,
-        linux-scsi@vger.kernel.org, kernel-team@android.com,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        open list <linux-kernel@vger.kernel.org>
-References: <1631843521-2863-1-git-send-email-cang@codeaurora.org>
- <cc9cb9e7-68bd-3bfa-9310-5fbf99a86544@acm.org>
- <fbc4d03a07f03fe4fbe697813111471f@codeaurora.org>
+        by smtp.gmail.com with ESMTPSA id qe17sm372408pjb.39.2021.09.29.11.23.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Sep 2021 11:23:25 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <644dcd92-25ae-e951-d9f3-607306a02370@acm.org>
-Date:   Wed, 29 Sep 2021 11:15:18 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: core: Fix spelling in a source code comment
+Date:   Wed, 29 Sep 2021 11:23:18 -0700
+Message-Id: <20210929182318.2060489-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.33.0.685.g46640cef36-goog
 MIME-Version: 1.0
-In-Reply-To: <fbc4d03a07f03fe4fbe697813111471f@codeaurora.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/28/21 8:31 PM, Can Guo wrote:
-> On 2021-09-18 01:27, Bart Van Assche wrote:
->> On 9/16/21 6:51 PM, Can Guo wrote:
->>> Assume a scenario where task A and B call ufshcd_devfreq_scale()
->>> simultaneously. After task B calls downgrade_write() [1], but before it
->>> calls down_read() [3], if task A calls down_write() [2], when task B calls
->>> down_read() [3], it will lead to dead lock.
->>
->> Something is wrong with the above description. The downgrade_write() call is
->> not followed by down_read() but by up_read(). Additionally, I don't see how
->> concurrent calls of ufshcd_devfreq_scale() could lead to a deadlock.
-> 
-> As mentioned in the commit msg, the down_read() [3] is from ufshcd_wb_ctrl().
-> 
-> Task A -
-> down_write [2]
-> ufshcd_clock_scaling_prepare
-> ufshcd_devfreq_scale
-> ufshcd_clkscale_enable_store
-> 
-> Task B -
-> down_read [3]
-> ufshcd_exec_dev_cmd
-> ufshcd_query_flag
-> ufshcd_wb_ctrl
-> downgrade_write [1]
-> ufshcd_devfreq_scale
-> ufshcd_devfreq_target
-> devfreq_set_target
-> update_devfreq
-> devfreq_performance_handler
-> governor_store
-> 
-> 
->> If one thread calls downgrade_write() and another thread calls down_write()
->> immediately, that down_write() call will block until the other thread has called up_read()
->> without triggering a deadlock.
-> 
-> Since the down_write() caller is blocked, the down_read() caller, which comes after
-> down_write(), is blocked too, no? downgrade_write() keeps lock owner as it is, but
-> it does not change the fact that readers and writers can be blocked by each other.
+The typo in this source code comment makes the comment confusing. Clear up
+the confusion by fixing the typo.
 
-Please use the upstream function names when posting upstream patches. I think that
-ufshcd_wb_ctrl() has been renamed into ufshcd_wb_toggle().
+Cc: Christoph Hellwig <hch@lst.de>
+Fixes: bc85dc500f9d ("scsi: remove scsi_end_request")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-So the deadlock is caused by nested locking - one task holding a reader lock, another
-task calling down_write() and next the first task grabbing the reader lock recursively?
-I prefer one of the following two solutions above the patch that has been posted since
-I expect that both alternatives will result in easier to maintain UFS code:
-- Fix the down_read() implementation. Making down_read() wait in case of nested locking
-   seems wrong to me.
-- Modify the UFS driver such that it does not lock hba->clk_scaling_lock recursively.
-
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 572673873ddf..660ca6226f16 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -949,7 +949,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 
+ 	/*
+ 	 * If there had been no error, but we have leftover bytes in the
+-	 * requeues just queue the command up again.
++	 * request just queue the command up again.
+ 	 */
+ 	if (likely(result == 0))
+ 		scsi_io_completion_reprep(cmd, q);
