@@ -2,86 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CBCFC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:40:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8964C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3C9D3613D1
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:40:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6AB761406
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343855AbhI2Mmj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 08:42:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46430 "EHLO
+        id S1343874AbhI2Mm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 08:42:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46496 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343839AbhI2Mmi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 08:42:38 -0400
-Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1AE47C06161C
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:40:58 -0700 (PDT)
-Received: by mail-pj1-x102f.google.com with SMTP id d4-20020a17090ad98400b0019ece228690so4106329pjv.5
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:40:58 -0700 (PDT)
+        with ESMTP id S1343839AbhI2Mm5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 08:42:57 -0400
+Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8A0FC06161C
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:16 -0700 (PDT)
+Received: by mail-pg1-x541.google.com with SMTP id n18so2539572pgm.12
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
-        h=from:to:cc:subject:date:message-id;
-        bh=Z4VZtI7P2PLpH+efToyjZtmnzDwgRhX8pkKOnr6TN7o=;
-        b=YYMUeRo2fOvULcsI6isjdkw+BFjr+0uiWwI4+54oEiaDZ2cYoZZeN81i5bVmwXPUY6
-         UNxUEiJDqnEKiTyCku3SMVLSBc84n4ZE3qW6WvmLP5FaD2KpcZ6KnfmZHy93L97OZgsK
-         /wudcKEG7b2NLygurEPMC2cQhZA1UsaimCTmg=
+        h=from:to:cc:subject:date:message-id:in-reply-to:references;
+        bh=5AxNibumVQwdFWj4YbAxjEyvCaj9DuKN4ka6CCBZ+yY=;
+        b=Uj5ByApOxjJ50YqYxams2yYm2iwHwSlskFLHf/jb5lOcY4bDY+2qakRhjEnyGn77BI
+         5g4ZjbK36PwY6T4E9VjPOGovf+W+EDM+e+dlVmuQdDC8rob1+V05QQEAmCw2k3M+mzfg
+         K4cEEChgYXX+gq7xrqwimLzsUOeo6MBTzdwcM=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=Z4VZtI7P2PLpH+efToyjZtmnzDwgRhX8pkKOnr6TN7o=;
-        b=ILP40ObEkmooP2hZpHOh8cKQxvpeavfpcx7NLns+X1NnJ9DCJ2RlDZ0KmTe8/20XZ5
-         eHo1lYLEQr6bSxMEuFYEJbKfb5+gztxhrdZqTXgp3Oiu1dMyxvMESBz68HEBCbVi1k2J
-         VBPFqBjx50gJKTTQBa24l5scftusr+oyiQoh+viEst6HbKsvVVyLSLiWx/GXNbWAEYxN
-         nJCp6FYdCjfCrq1ZBXFcCMrWy5VwyMQy4CQChiOv0Kd2d6WXtO8U7CaJlTl4cHyuTbpM
-         Wx3flCNt7oEYnGOlEKx4MMLtpAsTlSnUJCaLrk7mK/R3KAMy745TM0evgQkYTdp0TrJS
-         epQg==
-X-Gm-Message-State: AOAM532FZCZHRch1uKdvbmNs4D+UJBR6Ea/FhZ2llYqf2IeEwjVIbdOU
-        8bhzj0SPQduTWiqePdoexGjv4lYynuZFwiZPsFy3GC5g277RFX1vazSdKydEjJAXSMcW7CpCJo8
-        wP1qn/JtzP9PjJl7ZC9aWawM8qbO08LFXVL1KF7iO8tuK5oYJBwJKBH1EXWZnzcD0YGCiOIx0Qx
-        7TYGQ1jwk=
-X-Google-Smtp-Source: ABdhPJw+NxLfzdkgYAyVZQlFUENmgFGU7VBmW+LAaHzvTnKgkRftyvIcSZnL95vSjEcqgPJqRGW6iA==
-X-Received: by 2002:a17:90a:1a4c:: with SMTP id 12mr6147973pjl.175.1632919257142;
-        Wed, 29 Sep 2021 05:40:57 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references;
+        bh=5AxNibumVQwdFWj4YbAxjEyvCaj9DuKN4ka6CCBZ+yY=;
+        b=YBslGuQ2ba2eg8cQHXSt7+pqaENDRo/Kp2X+4jjyAeH+LjOZ2fEwoGV6s1mHyNhdVT
+         bphZI3qvMpZdJkRnwAUWSZyM9ZL4b/EwaQ99lgbMYsZLmPumeFLS0Y6gkTgw5koyf+06
+         MSQJvzIQAzaLBx/i2kq0n9ZnNmoQgHVlj+22gqUMhxrAGtHrkZnaMUjsNHrcSt7nghI0
+         esxHn9k/mNBJOQ19pfSQfifYK0+nv8HbcxHvP2rIEyWh7A1C9c7BLtUqefzFjsc5r/Ud
+         vdMB7dumZFjPkkjLR7sf8uusa9Ks6WSF0amVIykENVeZdwvePnUnazuCZDEU4YXV+rs+
+         6GDA==
+X-Gm-Message-State: AOAM5336e9Iz5TBY2WHu5ImE9ABhxkE86lwq+eFs8NGTAxV+tDLGFTRI
+        g8EwwSmn3you8d8VkwwMWZksTKs8m9Oofbvfo0mupApEqP2RdsGky97FqhPQNVrOk/tgQk2K1yC
+        lGZcTWMa44fMaOmwLgEDpTvkiXfFx6FUDVQcn6qXTB1HA+KUuCtfBgVSVnvZci6px8toZyixXX3
+        IvJlIyFCY=
+X-Google-Smtp-Source: ABdhPJy6wo03r5Gf23A9Aat/Wgoelf05/7QtAsjBhPtU7txRSJ+8AfB2LMWOn+QER3n816BkBAUQsw==
+X-Received: by 2002:a63:d351:: with SMTP id u17mr9315667pgi.174.1632919275583;
+        Wed, 29 Sep 2021 05:41:15 -0700 (PDT)
 Received: from dhcp-10-123-20-83.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id g9sm2528080pfh.13.2021.09.29.05.40.54
+        by smtp.gmail.com with ESMTPSA id g9sm2528080pfh.13.2021.09.29.05.41.12
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 05:40:56 -0700 (PDT)
+        Wed, 29 Sep 2021 05:41:15 -0700 (PDT)
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         jejb@linux.vnet.ibm.com
 Cc:     chandrakanth.patil@broadcom.com, kashyap.desai@broadcom.com,
         Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 0/3] megaraid_sas: Driver version update to 07.719.03.00-rc1
-Date:   Wed, 29 Sep 2021 18:10:19 +0530
-Message-Id: <20210929124022.24605-1-sumit.saxena@broadcom.com>
+Subject: [PATCH 1/3] megaraid_sas: fix concurrent access to ISR between IRQ polling and real interrupt
+Date:   Wed, 29 Sep 2021 18:10:20 +0530
+Message-Id: <20210929124022.24605-2-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.18.1
+In-Reply-To: <20210929124022.24605-1-sumit.saxena@broadcom.com>
+References: <20210929124022.24605-1-sumit.saxena@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000004cc4bd05cd21a4d6"
+        boundary="000000000000684ce005cd21a59c"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000004cc4bd05cd21a4d6
+--000000000000684ce005cd21a59c
 
-This patchset has a critical fix and added helper functions
-to improve code readbility in ISR.
+IRQ polling thread calls ISR after enable_irq() to handle any missed IO
+completion. atomic flag "in_used" was added to have the synchronization
+between the IRQ polling thread and the interrupt context.
+There is a bug around it leading to a race condition.
 
-Sumit Saxena (3):
-  megaraid_sas: fix concurrent access to ISR between IRQ polling and
-    real interrupt
-  megaraid_sas: Add helper functions- {access/release}_irq_context
-  megaraid_sas: Driver version update to 07.719.03.00-rc1
+Below is the sequence:
+-IRQ polling thread accesses ISR, fetches the reply descriptor.
+-Real interrupt arrives and pre-empts polling thread(see enable_irq()
+ is already called).
+-Interrupt context picks the same reply descriptor as fetched by polling
+ thread, processes it, and exits.
+-Polling thread resumes and processes the descriptor which is already
+ processed by interrupt thread leads to kernel crash.
 
- drivers/scsi/megaraid/megaraid_sas.h        |  4 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 50 ++++++++++++++++++---
- 2 files changed, 45 insertions(+), 9 deletions(-)
+Setting the "in_used" flag before fetching the reply descriptor ensures
+synchronized access to ISR.
 
+Link: https://www.spinics.net/lists/linux-scsi/msg159440.html
+Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Fixes: 9bedd36e9146 (scsi: megaraid_sas: Handle missing interrupts while re-enabling IRQs)
+---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 26d0cf9353dd..eb5ceb75a15e 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3530,6 +3530,9 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
+ 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
+ 		return IRQ_HANDLED;
+ 
++	if (irq_context && !atomic_add_unless(&irq_context->in_used, 1, 1))
++		return 0;
++
+ 	desc = fusion->reply_frames_desc[MSIxIndex] +
+ 				fusion->last_reply_idx[MSIxIndex];
+ 
+@@ -3540,11 +3543,11 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
+ 	reply_descript_type = reply_desc->ReplyFlags &
+ 		MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
+ 
+-	if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
++	if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED) {
++		if (irq_context)
++			atomic_dec(&irq_context->in_used);
+ 		return IRQ_NONE;
+-
+-	if (irq_context && !atomic_add_unless(&irq_context->in_used, 1, 1))
+-		return 0;
++	}
+ 
+ 	num_completed = 0;
+ 
 -- 
 2.18.1
 
 
---0000000000004cc4bd05cd21a4d6
+--000000000000684ce005cd21a59c
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -152,13 +196,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIJtVsQvMGuHLXWlYF2kZWLu/e+C/7SDT
-KOK1P+a/N0pjMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDky
-OTEyNDA1N1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEAgJlWax7IBLIut92D13SI6YSwHYGDo
+r7Tgl/+bMX2dMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDky
+OTEyNDExNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQBVYAKbbWq42jzoiNbGrEDhppJM8z97zFjY/bMchZrK/NwYLwQv
-wBinvXpyc5Dj2jza2mvzR92/B+HoRI1xgZlia1spVcHeUAnuwQQwGUe/kzlvZHb1riWo44DP8cBN
-0LhSTmfWIS61nKxjYBkp7lsIVsEObZShA6DBrVq/Hv3mHnkLfOtztBbSnI1choNATk1whsk2NoEs
-udAYGJrGRkYtH0Z75H/SxIgogQogvMFOnh9i3SQG2Xep7UMQ7tQfWVS6TAh44hDwIcmnBlr11Ahv
-oTjKxyJHKKFD/tsFvV0fOnhZDIJDu/kRVTkIS6BnrZjVs5UiGkCHRTSCb30wWk5Q
---0000000000004cc4bd05cd21a4d6--
+ATANBgkqhkiG9w0BAQEFAASCAQCLq1V36mWsbYsMcH9UagPBYnszR+id+ACTdvz4TAIudyk5BA18
+c4CP/ZpudJrJk3sB9OsAUjSDnvx+97GniTVUczFNHn/+XxU+sOankh2bYjlmcKNFibexEdVY7dV5
+IZrQav8kKZX79g3LnCwf8XMDc3WJ+Esplm8SLEXUJlRAKx7fHSpQj5f+coTHzjPF4y2m303W2twX
+tsiiqS499rnj0i6mtvl+VymxRoiieYPgxwVHWxlhAectidicUVG6KSz7K/uL0C10280qIQ8oDgu4
+6ZFGmqsNljKtJb5haqTFDBQR7CKEceIT0qq9e2k9DyedE8udnbPvBDYxC0xvuxJs
+--000000000000684ce005cd21a59c--
