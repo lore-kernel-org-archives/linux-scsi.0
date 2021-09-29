@@ -2,50 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FF6DC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73158C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F02CE60FC2
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5ACA461406
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347106AbhI2WIq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 18:08:46 -0400
-Received: from mail-pl1-f177.google.com ([209.85.214.177]:36574 "EHLO
-        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347037AbhI2WIp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:08:45 -0400
-Received: by mail-pl1-f177.google.com with SMTP id y5so2535549pll.3
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:07:04 -0700 (PDT)
+        id S1347125AbhI2WIu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 18:08:50 -0400
+Received: from mail-pl1-f181.google.com ([209.85.214.181]:34682 "EHLO
+        mail-pl1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347037AbhI2WIq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:08:46 -0400
+Received: by mail-pl1-f181.google.com with SMTP id b22so2540264pls.1
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:07:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=tXItPhYygfbXZfUW5oSUliK3HsJ0ISKB+b2fBzDUh7M=;
-        b=MX9/sYjP5I3cSAJGxnsnnfBhRt9fUoIMkTTvCSRBRkRgzRHA/SZa/85g1A1+pgubKJ
-         sSJnBml/f4Y5aDjlaG/2MJ1k9tBLjM1Vtqw8vGqR8mUici8gUjBzaJrWsTbNE/qL1eN9
-         uGPppSW1cb3+YV4a8Yck2lHuGt5fFsi+F/rq7KeSXGjohLG+g2wuccAuIOuIzxSmRr3D
-         E50za7kkcib73vNSLAWQrHvIVA3zoulafX240J2JGTBN3kP7HkELfZ4wSO4Vh9C0zY5U
-         UmxDiUPbu+WDTN7htkiMavwJZMhgW5K1eVYMVesNBYhnBL5iVXoHFa1Tn87lZjyTaPM9
-         RpFA==
-X-Gm-Message-State: AOAM530AvJ816hmhK+OW05C0Fids3tD0YhlTtVI9ktHubSpG3BUt1o6V
-        Zr62Di67ZezRqqgq0Le493U=
-X-Google-Smtp-Source: ABdhPJxfqKTrBjw4Oa51RJzbmpUGHdE4cXNzLOxJ+6L2M85cwVORGU+05Fw1mpZ+uAZozf1amunXiA==
-X-Received: by 2002:a17:90b:381:: with SMTP id ga1mr2370425pjb.5.1632953223860;
-        Wed, 29 Sep 2021 15:07:03 -0700 (PDT)
+        bh=ovQNV5qhptRxXIfbyuBvRP4QwlTK0iTUTJpC6mbpyM4=;
+        b=wEtIO7vb3LBqZBOu4rS4kjeLvr9RdubZGE+p7QPeIBcNvYdVnWvRyipY0FXJ1tL2uf
+         OGkeOc/MnFvh7vIZgHi79VJWQdGL/Zr/HddW6MkikuspMMNafNca5KxY2ELDoSX7xOZ2
+         t+qkAe/QSFku3d8e7fd0+XUepd1kHOOq426yIzaTIexdSGdeEdd4jEQexWjJDfYIZlvc
+         GhuXzirUkZ1luasIyuOE3CGvpJ/49JPKzBw1O+o8sJwR08jEfAaP4STnSMXaGiNzP4ru
+         426Fqk+V41IJxtuvXbE3j2PCHsLUETN8Mcv5J4bRTBWD5+SKi5RtyVnwDQbzVyzfT74O
+         P4Zg==
+X-Gm-Message-State: AOAM532xLYAvsT/ClU/ocZ4Svbd0MTO9Zq34DM82Ncv4P7IjsobS2jrD
+        k+XAamWkgv2X29zbwE4uOzfWIJxaTdI=
+X-Google-Smtp-Source: ABdhPJyu4DDb1YBUQyiDNp5Cvb+INWy4fSIzw1sQrVJMuHyX7d3cKyB9i65ZXc/V0pyzoKIhL4oDow==
+X-Received: by 2002:a17:90a:1d8:: with SMTP id 24mr8959674pjd.69.1632953225135;
+        Wed, 29 Sep 2021 15:07:05 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5c11:c4f:db56:119])
-        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.02
+        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 15:07:03 -0700 (PDT)
+        Wed, 29 Sep 2021 15:07:04 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Oliver Neukum <oliver@neukum.org>,
-        Ali Akcaagac <aliakc@web.de>,
-        Jamie Lenehan <lenehan@twibble.org>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 28/84] dc395x: Call scsi_done() directly
-Date:   Wed, 29 Sep 2021 15:05:04 -0700
-Message-Id: <20210929220600.3509089-29-bvanassche@acm.org>
+Subject: [PATCH v2 29/84] dpt_i2o: Call scsi_done() directly
+Date:   Wed, 29 Sep 2021 15:05:05 -0700
+Message-Id: <20210929220600.3509089-30-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.685.g46640cef36-goog
 In-Reply-To: <20210929220600.3509089-1-bvanassche@acm.org>
 References: <20210929220600.3509089-1-bvanassche@acm.org>
@@ -60,46 +58,56 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/dc395x.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/scsi/dpt_i2o.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 1c79e6c27163..5adbc7f61c19 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -995,8 +995,6 @@ static int dc395x_queue_command_lck(struct scsi_cmnd *cmd, void (*done)(struct s
- 		goto complete;
- 	}
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 7af96d14c9bc..1f00afcfe440 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -421,7 +421,6 @@ static int adpt_queue_lck(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd
+ 	adpt_hba* pHba = NULL;
+ 	struct adpt_device* pDev = NULL;	/* dpt per device information */
  
--	/* set callback and clear result in the command */
 -	cmd->scsi_done = done;
- 	set_host_byte(cmd, DID_OK);
- 	set_status_byte(cmd, SAM_STAT_GOOD);
+ 	/*
+ 	 * SCSI REQUEST_SENSE commands will be executed automatically by the 
+ 	 * Host Adapter for any errors, so they should not be executed 
+@@ -431,7 +430,7 @@ static int adpt_queue_lck(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd
  
-@@ -3336,7 +3334,7 @@ static void srb_done(struct AdapterCtlBlk *acb, struct DeviceCtlBlk *dcb,
- 		dprintkl(KERN_ERR, "srb_done: ERROR! Completed cmd with tmp_srb\n");
+ 	if ((cmd->cmnd[0] == REQUEST_SENSE) && (cmd->sense_buffer[0] != 0)) {
+ 		cmd->result = (DID_OK << 16);
+-		cmd->scsi_done(cmd);
++		scsi_done(cmd);
+ 		return 0;
  	}
  
--	cmd->scsi_done(cmd);
+@@ -456,7 +455,7 @@ static int adpt_queue_lck(struct scsi_cmnd * cmd, void (*done) (struct scsi_cmnd
+ 			// TODO: if any luns are at this bus, scsi id then fake a TEST_UNIT_READY and INQUIRY response 
+ 			// with type 7F (for all luns less than the max for this bus,id) so the lun scan will continue.
+ 			cmd->result = (DID_NO_CONNECT << 16);
+-			cmd->scsi_done(cmd);
++			scsi_done(cmd);
+ 			return 0;
+ 		}
+ 		cmd->device->hostdata = pDev;
+@@ -2227,7 +2226,7 @@ static s32 adpt_scsi_to_i2o(adpt_hba* pHba, struct scsi_cmnd* cmd, struct adpt_d
+ 			printk(KERN_WARNING"%s: scsi opcode 0x%x not supported.\n",
+ 			     pHba->name, cmd->cmnd[0]);
+ 			cmd->result = (DID_ERROR <<16);
+-			cmd->scsi_done(cmd);
++			scsi_done(cmd);
+ 			return 	0;
+ 		}
+ 	}
+@@ -2451,9 +2450,7 @@ static void adpt_i2o_scsi_complete(void __iomem *reply, struct scsi_cmnd *cmd)
+ 
+ 	cmd->result |= (dev_status);
+ 
+-	if(cmd->scsi_done != NULL){
+-		cmd->scsi_done(cmd);
+-	} 
 +	scsi_done(cmd);
- 	waiting_process_next(acb);
  }
  
-@@ -3367,7 +3365,7 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
- 			if (force) {
- 				/* For new EH, we normally don't need to give commands back,
- 				 * as they all complete or all time out */
--				p->scsi_done(p);
-+				scsi_done(p);
- 			}
- 		}
- 		if (!list_empty(&dcb->srb_going_list))
-@@ -3394,7 +3392,7 @@ static void doing_srb_done(struct AdapterCtlBlk *acb, u8 did_flag,
- 			if (force) {
- 				/* For new EH, we normally don't need to give commands back,
- 				 * as they all complete or all time out */
--				cmd->scsi_done(cmd);
-+				scsi_done(cmd);
- 			}
- 		}
- 		if (!list_empty(&dcb->srb_waiting_list))
+ 
