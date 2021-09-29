@@ -2,168 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 93607C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33E6AC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C9BD613D1
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18611613D3
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343880AbhI2MnG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 08:43:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46530 "EHLO
+        id S1343883AbhI2MnV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 08:43:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46580 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343839AbhI2MnG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 08:43:06 -0400
-Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73F03C06161C
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:25 -0700 (PDT)
-Received: by mail-pf1-x436.google.com with SMTP id s16so1893384pfk.0
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:25 -0700 (PDT)
+        with ESMTP id S1343839AbhI2MnU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 08:43:20 -0400
+Received: from mail-pl1-x635.google.com (mail-pl1-x635.google.com [IPv6:2607:f8b0:4864:20::635])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED145C06161C
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:39 -0700 (PDT)
+Received: by mail-pl1-x635.google.com with SMTP id j14so1426731plx.4
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=w9Yxno8c8gn3xl2N8/8Ixm88LaQVWYiq59oo9nElJ3s=;
-        b=Rq/Vg8C2o/ZpJFKpECO29wC8sxwJqwueBQuceNBhLo11pxJNO0udIMLRk6taKuNQDQ
-         VyU/8R2wHHBN/kyF8dnnhEZJIdwfxLD9bhAUOKs+6rm8Zvc2KdtvePUw3H/ThYDE0om1
-         kw0lH7N+nIWkp5BZH9ISRZGdQpEPbG5n7uong=
+        bh=mQ4UYYOsfqwBJrW8iCKt4AU2d51AgPy2K+z+UC9XvIw=;
+        b=FHpyzXFDiK7zVe0uwQ/LzwF3MtJFYisJ1q06izRernNA1cYXszneobZ6NnmDnUZN5U
+         geQPauKgOLEJ6LTmxxm8tdApwRn0tYmWt6IlM60ObnKxNBa65vHAsF2xdvvgPtPUX052
+         3cNUD/yv8E1qKC8z7/69AN4Y47Oww22oLR0Kg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=w9Yxno8c8gn3xl2N8/8Ixm88LaQVWYiq59oo9nElJ3s=;
-        b=LQEpxiN5lc1I+/7q02hriQuIh5yu3tN8vGRrUWXxSuKtgEnQ197Luklq7s1J/w5nZY
-         pomGuy4nywui8IIz4RO+kP5S31Y3WzUTgdcdNwUU8f2oFp6Oop39C3vrJCvrbMbt/zNT
-         B/lqixe7rjcVvkQxdlSEPh89469b1LGioP+WMQcr5OAmiiyT+A1nMb8NY5YLUvn3PsrF
-         gTHDTZvy8lmpIdfqaDhkzX+c2g4kplO6VdiL7StXcYCbGCf8lkEQVrL+OVr7RmFhCDEW
-         KXS9t9ce8BBl3KS7/Zkg5VMuoqnUXWQOCz77stQrGmSxeGRwsC1RfuArfGteq/qE0ODe
-         4rXw==
-X-Gm-Message-State: AOAM532NENOcDbvqF5h3wlfcWzOjfQhGmQkvopFlxDf+HeOMe3NSMCba
-        6BxclrOKfNVm1UisSiUKFcanYsbJaFEa0bWMXpUUqbFbvQkweRVOxLQ2hehd6MNuWZtCcJyQAuX
-        cb78fhS2XJXct3XV/5jGtVqyYXGJpVKsw3/aYKI+ynbRSUYVjIO/vUxCCCGbYHRckfOJ0mBWKfN
-        E/e0RTLHs=
-X-Google-Smtp-Source: ABdhPJxXeVkJ6V/Ptt25PJOgWJq9HoF373csyjUJskd6xzfQIzVDli6iESGZPdt5foxm8Us2q77chQ==
-X-Received: by 2002:a05:6a00:1481:b0:43d:275b:7ba4 with SMTP id v1-20020a056a00148100b0043d275b7ba4mr10998854pfu.63.1632919284484;
-        Wed, 29 Sep 2021 05:41:24 -0700 (PDT)
+        bh=mQ4UYYOsfqwBJrW8iCKt4AU2d51AgPy2K+z+UC9XvIw=;
+        b=IT9HHrGKkLwTvs55LVuUJqSoNWv9YZ8AG24U+gTe5hV4xY8x5JFRzCe9YmVqyuO0Px
+         W7swFmb45hmeUKflgIi6Zi3c1u7dB0eW2RT2pmeKFKMCUhtqS98587RhkzTITciL7dSP
+         +IdBMiIS9jVHAoMbfJwyzvt2vLcMId5rDY7gIohlzpLqNolJQ36diE1xzhCkHG1Eccug
+         tTyjBwqed8HDb+eTofSOwvU+IWOx068WsM5IVmxOH7wg0CEBz4otrcaL5K95lBOmipTo
+         xVCZp3ddJZWdTXUsRMrTXDsHFa82vWl9RtXWy2ZHCaY9Xg7OnFty4ZrLfbT8dJ7FCQK4
+         MeOQ==
+X-Gm-Message-State: AOAM533OtUjW2ZhPAEAdTogAoZWOtn5PHN+ETvQj2nMi3QnHwESqNh/O
+        eJyph4EBPuXJi9hWs4w5biUf1s2DpQruQjmVTcAdCNGCkrOLIS7iDkMDPzoFRExWlOJsLxRwR73
+        uwBDveymjqqHr4NBOJlG2XLEiAMdhtGweF3uqiZwKzX1ze1H7ecWOupUir3xCedxxipASCZ0idp
+        OZL3PaAVE=
+X-Google-Smtp-Source: ABdhPJwJ5AVlpdxjgC0XX6kYnv3b1PVleaIHcQtGnvo+6uyDAx/4n1475LC9+jBcdoNFsiwiTB+/YQ==
+X-Received: by 2002:a17:90a:4e43:: with SMTP id t3mr6244817pjl.163.1632919299015;
+        Wed, 29 Sep 2021 05:41:39 -0700 (PDT)
 Received: from dhcp-10-123-20-83.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id g9sm2528080pfh.13.2021.09.29.05.41.22
+        by smtp.gmail.com with ESMTPSA id g9sm2528080pfh.13.2021.09.29.05.41.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 05:41:24 -0700 (PDT)
+        Wed, 29 Sep 2021 05:41:38 -0700 (PDT)
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         jejb@linux.vnet.ibm.com
 Cc:     chandrakanth.patil@broadcom.com, kashyap.desai@broadcom.com,
         Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 2/3] megaraid_sas: Add helper functions- {access/release}_irq_context
-Date:   Wed, 29 Sep 2021 18:10:21 +0530
-Message-Id: <20210929124022.24605-3-sumit.saxena@broadcom.com>
+Subject: [PATCH 3/3] megaraid_sas: Driver version update to 07.719.03.00-rc1
+Date:   Wed, 29 Sep 2021 18:10:22 +0530
+Message-Id: <20210929124022.24605-4-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210929124022.24605-1-sumit.saxena@broadcom.com>
 References: <20210929124022.24605-1-sumit.saxena@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000ee560e05cd21a514"
+        boundary="000000000000cb4f4c05cd21a6d9"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000ee560e05cd21a514
-
-Adding helper functions for ISR access and release to improve
-the readability.
+--000000000000cb4f4c05cd21a6d9
 
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 45 ++++++++++++++++++---
- 1 file changed, 39 insertions(+), 6 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index eb5ceb75a15e..109782e3ec44 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3497,6 +3497,41 @@ megasas_complete_r1_command(struct megasas_instance *instance,
- 	}
- }
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 7af2c23652b0..2c9d1b796475 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -21,8 +21,8 @@
+ /*
+  * MegaRAID SAS Driver meta data
+  */
+-#define MEGASAS_VERSION				"07.717.02.00-rc1"
+-#define MEGASAS_RELDATE				"May 19, 2021"
++#define MEGASAS_VERSION				"07.719.03.00-rc1"
++#define MEGASAS_RELDATE				"Sep 29, 2021"
  
-+/**
-+ * access_irq_context:		Access to reply processing
-+ * @irq_context:		IRQ context
-+ *
-+ * Synchronize access to reply processing.
-+ *
-+ * Return:  true on success, false on failure.
-+ */
-+static inline
-+bool access_irq_context(struct megasas_irq_context  *irq_context)
-+{
-+	if (!irq_context)
-+		return true;
-+
-+	if (atomic_add_unless(&irq_context->in_used, 1, 1))
-+		return true;
-+
-+	return false;
-+}
-+
-+/**
-+ * release_irq_context:		Release reply processing
-+ * @irq_context:		IRQ context
-+ *
-+ * Release access of reply processing.
-+ *
-+ * Return: Nothing.
-+ */
-+static inline
-+void release_irq_context(struct megasas_irq_context  *irq_context)
-+{
-+	if (irq_context)
-+		atomic_dec(&irq_context->in_used);
-+}
-+
- /**
-  * complete_cmd_fusion -	Completes command
-  * @instance:			Adapter soft state
-@@ -3530,7 +3565,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
- 		return IRQ_HANDLED;
+ #define MEGASAS_MSIX_NAME_LEN			32
  
--	if (irq_context && !atomic_add_unless(&irq_context->in_used, 1, 1))
-+	if (!access_irq_context(irq_context))
- 		return 0;
- 
- 	desc = fusion->reply_frames_desc[MSIxIndex] +
-@@ -3544,8 +3579,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 		MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
- 
- 	if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED) {
--		if (irq_context)
--			atomic_dec(&irq_context->in_used);
-+		release_irq_context(irq_context);
- 		return IRQ_NONE;
- 	}
- 
-@@ -3663,7 +3697,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 					irq_context->irq_line_enable = true;
- 					irq_poll_sched(&irq_context->irqpoll);
- 				}
--				atomic_dec(&irq_context->in_used);
-+				release_irq_context(irq_context);
- 				return num_completed;
- 			}
- 		}
-@@ -3682,8 +3716,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 		megasas_check_and_restore_queue_depth(instance);
- 	}
- 
--	if (irq_context)
--		atomic_dec(&irq_context->in_used);
-+	release_irq_context(irq_context);
- 
- 	return num_completed;
- }
 -- 
 2.18.1
 
 
---000000000000ee560e05cd21a514
+--000000000000cb4f4c05cd21a6d9
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -234,13 +162,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIImCArpg+UfW4BR74MylvhSyQiq0vGy4
-FF9zG3mZKlD3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDky
-OTEyNDEyNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIIY83gMftQpUG4cU3FzdXWuv2q1/UUAY
+cxysOokTp+ApMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDky
+OTEyNDEzOVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCTo9ZT8efMzZRPSc2KLqLNGFMyDrTBzaCT7fq4gMVP23yMwLsa
-PKgfXGMi7TFErswWk9Rjp+Ojwy0nm2der5V6qWiAnmrz7LnbAGEC22owpPH068je1yr9YIWUmD6J
-t030MqY8jIP/iRayDpm6U1WHqZ3WSdVO+DCoufgw2NxzqEX4VT7A9CUeE998wYPt3vrjcBuW2+vq
-OL6M/zUsIY4sq5eKIWnfEL5GJpUVmt5Unr8jdZKdSVhXUb30csOzZP8EbzxpIghOhQ4pJfIbNo11
-hfleA++d1Kr8JMZHEh7P7YnkgetDvD6NWLmWlOKZhA2GcgbthZtuV52ZEgz8pNlY
---000000000000ee560e05cd21a514--
+ATANBgkqhkiG9w0BAQEFAASCAQAO2AKFZX2RClUD3m0uVJxCAuJ4l4URFNQkk2DTNeXGU8Chkbbe
+wzSaugwRs30o0el93fGPviAYhEGeWre4/9+NgLYyxW0XiNyyJ7e9wmsSC0lQYv7TiUeCFXnh4RE/
+jSVuG+QDkNCNLL4IlAcMARTD99msgrltqjiWKY8UhPk652D+kHgDxnh60AwIWdHVDlfF3iZSh0+W
+yyr893CTo47s3Uaegq2VuZDXTnaP8brfTnGXlp71eP8ItNhwBot6DE6LSRgT8fR5RGrf++VYfrwP
+UfQ98tkEh7PJ3F3ZLkZc0S/pqs2j63FoElBCA9YwlhfmgX5Jen0Zi1qEzoTxnBIO
+--000000000000cb4f4c05cd21a6d9--
