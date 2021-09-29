@@ -2,47 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3969C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB6D6C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD75061423
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9D9E61406
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347129AbhI2WJK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 18:09:10 -0400
-Received: from mail-pg1-f169.google.com ([209.85.215.169]:43794 "EHLO
-        mail-pg1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346209AbhI2WJB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:01 -0400
-Received: by mail-pg1-f169.google.com with SMTP id r2so4127927pgl.10
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:07:20 -0700 (PDT)
+        id S1347141AbhI2WJM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 18:09:12 -0400
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:45569 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347146AbhI2WJE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:04 -0400
+Received: by mail-pj1-f54.google.com with SMTP id om12-20020a17090b3a8c00b0019eff43daf5so3130659pjb.4
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:07:23 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ZKOwJEfK2W3RLsiewHHTr3TAHecYRQgSmAIibHOLf7o=;
-        b=tFXY5T4yJTfyz/KFzS7yZnQKh6RYsyBzhT484K5cn5u+nbO1HPpkEEvrdNa2VCkrSZ
-         NSOatwCDUtFct42Ec9CpGZlj8HADdEuFtSoiauyj2oUWtINKjxUEKMD3hNZwPb4opIlA
-         M05MX0W6x0YRYFyCDkVLusjQJOH5jDk1pCrRt46k7R8ni4ZepCZ+Fs75AlnhsLENnFGa
-         ViNbsd6k3tHzFNcQYrRnRsYwpjcV6q3bxDgQmVoExum+47/Ddktz+md7oTjwzTJEDH/D
-         Ps3p3tZN52Rcx9zNinITPluqTfg6W1FtvSXtAWh8lwNz8QlPXyIh45p+fTGdPOOFmgbQ
-         AXaQ==
-X-Gm-Message-State: AOAM53141Q2UWfo2VQToECDSmPrvvfQs5Eks97YCwKwVmrHvaAnE2Q15
-        klizpZ+NSLgrk36uDYCxIgnjMm3SDWc=
-X-Google-Smtp-Source: ABdhPJxf2Hcz80U+qqJkGDU76Y8XYlwmJXx1EkVK5tW2lEvFXJZ2yLNqiiu4cSx5Y/fzuGyrZOWtKw==
-X-Received: by 2002:a62:60c2:0:b0:448:7376:20c4 with SMTP id u185-20020a6260c2000000b00448737620c4mr959364pfb.11.1632953240133;
-        Wed, 29 Sep 2021 15:07:20 -0700 (PDT)
+        bh=voPB9MyaX+yuJZJpJFu6Wk8N5p4rk7uB2b08YZfpq04=;
+        b=zoxYSigtBTUqESXWnCe54OEUsO+Xjuk+alC+VJfFzun/080c6Oh5kVwcjuqaswqphr
+         3CVod49/lBmBmU/REVKdU+PG1a9cePZAFe01hLQvTyh1tJmLVw5lo+/xZtiyCf3RJI2t
+         hAsoS+tepNDjaH+LqWdMzlhQVNifVPtq2qLTTsqWi3xMM2pzV665od0hgp6r3DXMPUCZ
+         izI4oTRNW5M2/tqNHOX1+IhqhITvtcUtE6BBtPKwiyINGGdRwNLR9OKbuUe61PRQu43f
+         0ClWulDGSGkLyeqGdP2vBaJPdu0c08EVsXrLGlhUXuA4Jl34j7G8akD4rI6TV/hSjTrB
+         iHwQ==
+X-Gm-Message-State: AOAM5316KgdtLE+VMWBgZhOoSPKZ/aXRyrYx+rw2oS7Z5cZC+RrK9VkC
+        neGkF88DwJ2Iu9SPVMdyxmSEUNE9xzE=
+X-Google-Smtp-Source: ABdhPJwyebh9Ryd64YPj/VzI5+T5zKSUPZxsQy1T5saTmsF8CwP5YDLZCdQCeMrQQIWWagVMccYzHA==
+X-Received: by 2002:a17:90a:428e:: with SMTP id p14mr9109259pjg.229.1632953242818;
+        Wed, 29 Sep 2021 15:07:22 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5c11:c4f:db56:119])
-        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.19
+        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 15:07:19 -0700 (PDT)
+        Wed, 29 Sep 2021 15:07:22 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 40/84] initio: Call scsi_done() directly
-Date:   Wed, 29 Sep 2021 15:05:16 -0700
-Message-Id: <20210929220600.3509089-41-bvanassche@acm.org>
+Subject: [PATCH v2 42/84] ips: Call scsi_done() directly
+Date:   Wed, 29 Sep 2021 15:05:18 -0700
+Message-Id: <20210929220600.3509089-43-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.685.g46640cef36-goog
 In-Reply-To: <20210929220600.3509089-1-bvanassche@acm.org>
 References: <20210929220600.3509089-1-bvanassche@acm.org>
@@ -57,28 +58,136 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/initio.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/scsi/ips.c | 28 +++++++++++++---------------
+ 1 file changed, 13 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 9b75e19a9bab..183f95758636 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -2615,8 +2615,6 @@ static int i91u_queuecommand_lck(struct scsi_cmnd *cmd,
- 	struct initio_host *host = (struct initio_host *) cmd->device->host->hostdata;
- 	struct scsi_ctrl_blk *cmnd;
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index cdd94fb2aab7..0c93ec359e9b 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -936,7 +936,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
  
--	cmd->scsi_done = done;
+ 		while ((scb = ips_removeq_scb_head(&ha->scb_activelist))) {
+ 			scb->scsi_cmd->result = DID_ERROR << 16;
+-			scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++			scsi_done(scb->scsi_cmd);
+ 			ips_freescb(ha, scb);
+ 		}
+ 
+@@ -946,7 +946,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 
+ 		while ((scsi_cmd = ips_removeq_wait_head(&ha->scb_waitlist))) {
+ 			scsi_cmd->result = DID_ERROR;
+-			scsi_cmd->scsi_done(scsi_cmd);
++			scsi_done(scsi_cmd);
+ 		}
+ 
+ 		ha->active = FALSE;
+@@ -965,7 +965,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 
+ 		while ((scb = ips_removeq_scb_head(&ha->scb_activelist))) {
+ 			scb->scsi_cmd->result = DID_ERROR << 16;
+-			scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++			scsi_done(scb->scsi_cmd);
+ 			ips_freescb(ha, scb);
+ 		}
+ 
+@@ -975,7 +975,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 
+ 		while ((scsi_cmd = ips_removeq_wait_head(&ha->scb_waitlist))) {
+ 			scsi_cmd->result = DID_ERROR << 16;
+-			scsi_cmd->scsi_done(scsi_cmd);
++			scsi_done(scsi_cmd);
+ 		}
+ 
+ 		ha->active = FALSE;
+@@ -994,7 +994,7 @@ static int __ips_eh_reset(struct scsi_cmnd *SC)
+ 
+ 	while ((scb = ips_removeq_scb_head(&ha->scb_activelist))) {
+ 		scb->scsi_cmd->result = DID_RESET << 16;
+-		scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++		scsi_done(scb->scsi_cmd);
+ 		ips_freescb(ha, scb);
+ 	}
+ 
+@@ -1064,8 +1064,6 @@ static int ips_queue_lck(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *)
+ 		return (0);
+ 	}
+ 
+-	SC->scsi_done = done;
 -
- 	cmnd = initio_alloc_scb(host);
- 	if (!cmnd)
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -2788,7 +2786,7 @@ static void i91uSCBPost(u8 * host_mem, u8 * cblk_mem)
+ 	DEBUG_VAR(2, "(%s%d): ips_queue: cmd 0x%X (%d %d %d)",
+ 		  ips_name,
+ 		  ha->host_num,
+@@ -1099,7 +1097,7 @@ static int ips_queue_lck(struct scsi_cmnd *SC, void (*done) (struct scsi_cmnd *)
+ 			ha->ioctl_reset = 1;	/* This reset request is from an IOCTL */
+ 			__ips_eh_reset(SC);
+ 			SC->result = DID_OK << 16;
+-			SC->scsi_done(SC);
++			scsi_done(SC);
+ 			return (0);
+ 		}
  
- 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
- 	i91u_unmap_scb(host->pci_dev, cmnd);
--	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
-+	scsi_done(cmnd);	/* Notify system DONE           */
- 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
+@@ -2579,7 +2577,7 @@ ips_next(ips_ha_t * ha, int intr)
+ 		case IPS_FAILURE:
+ 			if (scb->scsi_cmd) {
+ 				scb->scsi_cmd->result = DID_ERROR << 16;
+-				scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++				scsi_done(scb->scsi_cmd);
+ 			}
+ 
+ 			ips_freescb(ha, scb);
+@@ -2587,7 +2585,7 @@ ips_next(ips_ha_t * ha, int intr)
+ 		case IPS_SUCCESS_IMM:
+ 			if (scb->scsi_cmd) {
+ 				scb->scsi_cmd->result = DID_OK << 16;
+-				scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++				scsi_done(scb->scsi_cmd);
+ 			}
+ 
+ 			ips_freescb(ha, scb);
+@@ -2712,7 +2710,7 @@ ips_next(ips_ha_t * ha, int intr)
+ 		case IPS_FAILURE:
+ 			if (scb->scsi_cmd) {
+ 				scb->scsi_cmd->result = DID_ERROR << 16;
+-				scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++				scsi_done(scb->scsi_cmd);
+ 			}
+ 
+ 			if (scb->bus)
+@@ -2723,7 +2721,7 @@ ips_next(ips_ha_t * ha, int intr)
+ 			break;
+ 		case IPS_SUCCESS_IMM:
+ 			if (scb->scsi_cmd)
+-				scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++				scsi_done(scb->scsi_cmd);
+ 
+ 			if (scb->bus)
+ 				ha->dcdb_active[scb->bus - 1] &=
+@@ -3206,7 +3204,7 @@ ips_done(ips_ha_t * ha, ips_scb_t * scb)
+ 			case IPS_FAILURE:
+ 				if (scb->scsi_cmd) {
+ 					scb->scsi_cmd->result = DID_ERROR << 16;
+-					scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++					scsi_done(scb->scsi_cmd);
+ 				}
+ 
+ 				ips_freescb(ha, scb);
+@@ -3214,7 +3212,7 @@ ips_done(ips_ha_t * ha, ips_scb_t * scb)
+ 			case IPS_SUCCESS_IMM:
+ 				if (scb->scsi_cmd) {
+ 					scb->scsi_cmd->result = DID_ERROR << 16;
+-					scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++					scsi_done(scb->scsi_cmd);
+ 				}
+ 
+ 				ips_freescb(ha, scb);
+@@ -3231,7 +3229,7 @@ ips_done(ips_ha_t * ha, ips_scb_t * scb)
+ 		ha->dcdb_active[scb->bus - 1] &= ~(1 << scb->target_id);
+ 	}
+ 
+-	scb->scsi_cmd->scsi_done(scb->scsi_cmd);
++	scsi_done(scb->scsi_cmd);
+ 
+ 	ips_freescb(ha, scb);
  }
- 
