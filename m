@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEDC2C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E6AC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B92F66140F
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9ECF260FC2
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347144AbhI2WJN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 18:09:13 -0400
-Received: from mail-pj1-f42.google.com ([209.85.216.42]:46635 "EHLO
-        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347152AbhI2WJI (ORCPT
+        id S1347149AbhI2WJO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 18:09:14 -0400
+Received: from mail-pj1-f53.google.com ([209.85.216.53]:45570 "EHLO
+        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347151AbhI2WJI (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:08 -0400
-Received: by mail-pj1-f42.google.com with SMTP id me3-20020a17090b17c300b0019f44d2e401so1053021pjb.5
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:07:26 -0700 (PDT)
+Received: by mail-pj1-f53.google.com with SMTP id om12-20020a17090b3a8c00b0019eff43daf5so3130708pjb.4
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:07:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=kLaNG9rt/zFe/pIkr9pS0qXJyuLLR5D+UhSMUNrkTkg=;
-        b=4hO6ZCZkZCMixpfVUFgX15fWq81ZAXjxmxSMfLhue10Tyho9R+JLd9l1eYRaILbChU
-         QD1/9VRlb8DkumLuldWeFgLcVrvmpo+xy7X7bLAT2VI+dnfF+rB1hofF6d7arvXqrVg9
-         JejvAFCEfzOlbIAk39FnS1Op0HzagGSN1HdUcqNFZxr9sCY+n81EyY3piSC2LGyWP5rt
-         JrSa0fP+IHw2bJwRfAeXNJd/fRWQXXZgacdc8tQR8dotKCRhWnIl2+n08SSfJ9gG0vYd
-         HmTy/K6aHrfVNn6j4vVUKeyoI5b+kEhmNbQRY1x7NS5d/SC85heTYO/TYBycGzw8dExu
-         Ca1Q==
-X-Gm-Message-State: AOAM531MS0VtowXiVs5MKFbXg5LDj9U0U4brGeNINnc8suXMF0V7BQJB
-        UUgAzrxkzeSIXfDonw0a654=
-X-Google-Smtp-Source: ABdhPJyEFiLJfFDT2kztLdom4OV2p6IS76CQqnS+0dXaaTPz1yp+tTMAIBI/biXRG3oPa6J8HuKnCw==
-X-Received: by 2002:a17:90a:9285:: with SMTP id n5mr2352019pjo.29.1632953245544;
-        Wed, 29 Sep 2021 15:07:25 -0700 (PDT)
+        bh=p2HaRX5pPHaZGfEsseY/SfrdWg8TP+livibGzd6jccs=;
+        b=hMKvk+DlMjJQogZmZWfl+9IREFopjeYjXxQ59NCZ8YMdgQ+6nkvMwtABRIl3k9Oo85
+         UynNmszrNmsyi6zf7Sapw9PklexlExgheOHeyyfpF8HEiuKSw7CApheanT0YfIzw+lAt
+         wloRm45t8SFihBp9uG1wqQI5l4hkZFD6yt/idNcVcu5LLlgQB5Aca6TpsJmeeZaHK5Id
+         Ll96E9Ue+LRAHm3Kq2PfSInsbtvGEmRdYR0INur+6Dag48/q2k8IqwvG1Gtfy37X+DKw
+         GJb58JV/Lb3MSkiuGZxC/jarz8FbEy18SY94kyMLsGIZAtApZE8bPa991aR9ewGdZPdL
+         u6vA==
+X-Gm-Message-State: AOAM530RG2PAN/s6C4Xj+J2OoZRWmcNIYBNWOFUeQ6S0o2VWJ0KdvA0c
+        X+w3DrxsE0Mv8YScAjwUW/A=
+X-Google-Smtp-Source: ABdhPJyPnGnDB2SVRAUbUP8AI6v3FTMoyg/dbeTtnA7GUVQ3WhXE76g24ZtVZRA6e5nENNfczKxBUQ==
+X-Received: by 2002:a17:90a:ba12:: with SMTP id s18mr8951264pjr.60.1632953244123;
+        Wed, 29 Sep 2021 15:07:24 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5c11:c4f:db56:119])
-        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.24
+        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.23
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 15:07:25 -0700 (PDT)
+        Wed, 29 Sep 2021 15:07:23 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        John Garry <john.garry@huawei.com>,
-        Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        Hannes Reinecke <hare@suse.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 44/84] libiscsi: Call scsi_done() directly
-Date:   Wed, 29 Sep 2021 15:05:20 -0700
-Message-Id: <20210929220600.3509089-45-bvanassche@acm.org>
+Subject: [PATCH v2 43/84] libfc: Call scsi_done() directly
+Date:   Wed, 29 Sep 2021 15:05:19 -0700
+Message-Id: <20210929220600.3509089-44-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.685.g46640cef36-goog
 In-Reply-To: <20210929220600.3509089-1-bvanassche@acm.org>
 References: <20210929220600.3509089-1-bvanassche@acm.org>
@@ -57,31 +56,39 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 Conditional statements are faster than indirect calls. Hence call
 scsi_done() directly.
 
-Reviewed-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/libiscsi.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 712a45368385..7beedc59d0c6 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -468,7 +468,7 @@ static void iscsi_free_task(struct iscsi_task *task)
- 		 * it will decide how to return sc to scsi-ml.
- 		 */
- 		if (oldstate != ISCSI_TASK_REQUEUE_SCSIQ)
--			sc->scsi_done(sc);
-+			scsi_done(sc);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 509eacd7893d..871b11edb586 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1870,7 +1870,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+ 	rval = fc_remote_port_chkready(rport);
+ 	if (rval) {
+ 		sc_cmd->result = rval;
+-		sc_cmd->scsi_done(sc_cmd);
++		scsi_done(sc_cmd);
+ 		return 0;
  	}
- }
  
-@@ -1807,7 +1807,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 	ISCSI_DBG_SESSION(session, "iscsi: cmd 0x%x is not queued (%d)\n",
- 			  sc->cmnd[0], reason);
- 	scsi_set_resid(sc, scsi_bufflen(sc));
--	sc->scsi_done(sc);
-+	scsi_done(sc);
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(iscsi_queuecommand);
+@@ -1880,7 +1880,7 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
+ 		 * online
+ 		 */
+ 		sc_cmd->result = DID_IMM_RETRY << 16;
+-		sc_cmd->scsi_done(sc_cmd);
++		scsi_done(sc_cmd);
+ 		goto out;
+ 	}
+ 
+@@ -2087,7 +2087,7 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 	list_del(&fsp->list);
+ 	sc_cmd->SCp.ptr = NULL;
+ 	spin_unlock_irqrestore(&si->scsi_queue_lock, flags);
+-	sc_cmd->scsi_done(sc_cmd);
++	scsi_done(sc_cmd);
+ 
+ 	/* release ref from initial allocation in queue command */
+ 	fc_fcp_pkt_release(fsp);
