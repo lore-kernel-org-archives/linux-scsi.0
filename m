@@ -2,50 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB684C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11F81C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD4E96142A
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F168A61425
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347186AbhI2WJn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 18:09:43 -0400
-Received: from mail-pj1-f41.google.com ([209.85.216.41]:39884 "EHLO
-        mail-pj1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347191AbhI2WJm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:42 -0400
-Received: by mail-pj1-f41.google.com with SMTP id ce20-20020a17090aff1400b0019f13f6a749so4951234pjb.4
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:08:00 -0700 (PDT)
+        id S1347159AbhI2WJo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 18:09:44 -0400
+Received: from mail-pf1-f177.google.com ([209.85.210.177]:37872 "EHLO
+        mail-pf1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347188AbhI2WJn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:43 -0400
+Received: by mail-pf1-f177.google.com with SMTP id s55so2088540pfw.4
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:08:02 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=DyB+fddyW5gcgcAEXD5s3JCSHTBobhm9JdLXpErbHD4=;
-        b=IbSmchEEv0ZKdPSJt/FlsPXDwzwdZPTbQlg7y0HL1Wv0ghV7htdwC3lYj2X0QXRIAG
-         xHngLpTBRxGMmlx97XzJ+s+snNaRnTenJcW+AFP8MzgqEhNDvoWhaxU6FIxk3NVeQyGS
-         pnsawXP3xKnoBhmM/MHY9sD/yGjmB63/+ulI6hYYQ+kKieou1sPOa/0hS4DkHNYsn5zE
-         y+qgy47R3I4Dlt5ZRQ+gFPO6+tcvWNWhiREO7trd1bpm/f0aV/PbZ+/Kd1HMq1l+Yk3s
-         H5ogh2Tx4ZT4SwVCItGd2Swg4cfKHtxNgfmHZ6hHzpZHZdufERJGYCZJBw23O0uaBJCF
-         kvtA==
-X-Gm-Message-State: AOAM533pKTTjPsXBl7BXNOkEZFQdEFQanT6rXwsJgAifvAiWYXO2wRBX
-        QkJei8J9NzXIlNf29Lezbpc=
-X-Google-Smtp-Source: ABdhPJwxnV6N7icJdVLjPaMDP2OzYZ+nAHY2dwvtWz/m6Nb/+cLtVgkTuawy6ICm1qAjJj9zKXbBIA==
-X-Received: by 2002:a17:903:124f:b0:13e:25e6:f733 with SMTP id u15-20020a170903124f00b0013e25e6f733mr2078318plh.42.1632953280364;
-        Wed, 29 Sep 2021 15:08:00 -0700 (PDT)
+        bh=EogJeHd60KWPM8Bgj6GzNq3078KvLLq17w1D0M4dPnU=;
+        b=wFPtU7qg7D/afI4jHyRi7X8njld7ia+4HHNeKb0fQgUAZLOF/CekuS0buAk/a4bX9w
+         7Vb8OnZpiSVLBkjsj/Cz7L/oYb85w37DxIExrdm5EjK+G0C93yufvErGJMLFkD645y+r
+         aVc7hvkxnjdRWJD1uDgLDa9/767nK/kbYSO92jKBQaoyH+aQflxHtZyBu/mOLDT/lLxw
+         atP+veHZKX4rJp/IdRh+bu4g3paSeX+I6R2L8m0ImQG3YcaSZ0bOsFKDKBx42GJOs1CH
+         batNmgcBTeYMewUWAJBTJsvfrg2HK/JLxgLPw/qzLD4EaqMuLiQ5+wYIL7pV4ow+6jDn
+         /sHQ==
+X-Gm-Message-State: AOAM531zQdECk4QqTRoHLIPlqzZqxd40JLS9kPO4Ur2oEvzfwU2Zc3tP
+        4dWpcM0Qgjs26tYq8qcu0Z0=
+X-Google-Smtp-Source: ABdhPJz/sRZzQ/maQrbfujSykub54CTzcnBx7l6X9JYgZEkqOMP9u9I03EXdnLihuEG8lc0E1w7N2g==
+X-Received: by 2002:a63:d709:: with SMTP id d9mr1876990pgg.377.1632953281659;
+        Wed, 29 Sep 2021 15:08:01 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5c11:c4f:db56:119])
-        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.59
+        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.08.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 15:07:59 -0700 (PDT)
+        Wed, 29 Sep 2021 15:08:01 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 65/84] qla4xxx: Call scsi_done() directly
-Date:   Wed, 29 Sep 2021 15:05:41 -0700
-Message-Id: <20210929220600.3509089-66-bvanassche@acm.org>
+Subject: [PATCH v2 66/84] qlogicfas408: Call scsi_done() directly
+Date:   Wed, 29 Sep 2021 15:05:42 -0700
+Message-Id: <20210929220600.3509089-67-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.685.g46640cef36-goog
 In-Reply-To: <20210929220600.3509089-1-bvanassche@acm.org>
 References: <20210929220600.3509089-1-bvanassche@acm.org>
@@ -60,28 +57,27 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla4xxx/ql4_os.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qlogicfas408.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index f1ea65c6e5f5..76d0b59a9982 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -4080,7 +4080,7 @@ void qla4xxx_srb_compl(struct kref *ref)
- 
- 	mempool_free(srb, ha->srb_mempool);
- 
--	cmd->scsi_done(cmd);
-+	scsi_done(cmd);
+diff --git a/drivers/scsi/qlogicfas408.c b/drivers/scsi/qlogicfas408.c
+index 3bbe0b5545d9..5471c046a4b7 100644
+--- a/drivers/scsi/qlogicfas408.c
++++ b/drivers/scsi/qlogicfas408.c
+@@ -442,7 +442,7 @@ static void ql_ihandl(void *dev_id)
+ 	 *	If result is CHECK CONDITION done calls qcommand to request
+ 	 *	sense
+ 	 */
+-	(icmd->scsi_done) (icmd);
++	scsi_done(icmd);
  }
  
- /**
-@@ -4154,7 +4154,7 @@ static int qla4xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	return SCSI_MLQUEUE_HOST_BUSY;
+ irqreturn_t qlogicfas408_ihandl(int irq, void *dev_id)
+@@ -473,7 +473,6 @@ static int qlogicfas408_queuecommand_lck(struct scsi_cmnd *cmd,
+ 		return 0;
+ 	}
  
- qc_fail_command:
--	cmd->scsi_done(cmd);
-+	scsi_done(cmd);
- 
- 	return 0;
- }
+-	cmd->scsi_done = done;
+ 	/* wait for the last command's interrupt to finish */
+ 	while (priv->qlcmd != NULL) {
+ 		barrier();
