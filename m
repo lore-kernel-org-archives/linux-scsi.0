@@ -2,48 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91E4AC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EE59C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7CBAF60FC2
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6944660FC2
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347217AbhI2WJx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 18:09:53 -0400
-Received: from mail-pg1-f171.google.com ([209.85.215.171]:44651 "EHLO
-        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347189AbhI2WJr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:47 -0400
-Received: by mail-pg1-f171.google.com with SMTP id s11so4132166pgr.11
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:08:06 -0700 (PDT)
+        id S1347190AbhI2WJz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 18:09:55 -0400
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:51035 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347201AbhI2WJs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:48 -0400
+Received: by mail-pj1-f54.google.com with SMTP id k23so2732002pji.0
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:08:07 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ZRN510xAfnfRclbm5nziWyGL7z/As9i4hiIKN73Fjx0=;
-        b=EFoXBgCztl7oyLtCipah9H7zfmvYxIPiJ/oqS0EbE1kQADnc7T7VPF2mDTyY2hI1vT
-         vlWOHr7+EwDx4e72xafeZE6jUetCzMiqQ6WmexEdgteRI26OVzP8p8SMgJ7YUxQMG4pu
-         3+mR/EQKJSG3YoCd1bXjCrriY9xneBMlaxR0Gwq5UDV9U/SRNEJ40/+XNWoPnwoiNuSU
-         r//O403lFV6oTv0sVZWhDyV+RnAe2GjrC8OhNZ0HY69TOK/vz8NKxlIjBO6bogzm+Kq6
-         HP+YWj6K9dkbgEjGbCPdmdIQbntFJsUZtdPVufnrbTmUEK3QBLOkNiUKZFl7krjHo3uB
-         qd+g==
-X-Gm-Message-State: AOAM533lmqYvwLWqKJ3ItT+A2fRoj5o/IQDP1kQLpCO70EJQeLHr6LxF
-        9B1bgqvc3QomlOndAQSU1Vo=
-X-Google-Smtp-Source: ABdhPJzODyZYBOaGTF2zgxzci3eS8juoQXLPxZLeCcXI/jI9LJduRzrK7ECQlnTCguJg9cWZaroPkw==
-X-Received: by 2002:a63:5608:: with SMTP id k8mr1886929pgb.287.1632953285786;
-        Wed, 29 Sep 2021 15:08:05 -0700 (PDT)
+        bh=+QNDak6Eq2QG1TY+hA2ADBZaobdNMgXfezwsWoaJVv4=;
+        b=s7hEXXr4hGhEoAvcdOBtsdGph43LodtTRpofSqzwXk5RkPL/qptILKEhJUWETYR6yr
+         oGcM9blfUDmTqwd0Tzy08uh4hW4UkpRACT8WITVVRc8sdRGVCgTPTObSFB7vVXJSt1bN
+         moKNwcHzyrYx+m8sqm/GPeMPOPbXwohMkY+/WJ/Tfmy9veN/+PzXoQSKjWF5Z247Bwbq
+         lDHJaEasTFtR4DMMRENOBWpMOFy7XazolTnlWdu59HiJm7JREoLgBC6rVP7foy6o9cZe
+         XflEgrXitSKgogbvCrI4WY2Xe8x16K5mct9dlnouufuWqJcF91MKsqtsoJg8nC2A8res
+         h4aw==
+X-Gm-Message-State: AOAM533AAV1nLNpaNvCXYwGRhp/DBr6254f+KWkDiWebZ/WBWYb/pA12
+        V5GSB8HRv18qHvvRRICDCYE=
+X-Google-Smtp-Source: ABdhPJxSjvJRR9iYk86f3ioNMQsZpIsLAmSN2CplNnG4yH0YkSsrAo+Rvbs1whQWRhjRX2wyKk4ybA==
+X-Received: by 2002:a17:902:8509:b0:13d:cef8:2735 with SMTP id bj9-20020a170902850900b0013dcef82735mr941860plb.22.1632953287217;
+        Wed, 29 Sep 2021 15:08:07 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5c11:c4f:db56:119])
-        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.08.04
+        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.08.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 15:08:05 -0700 (PDT)
+        Wed, 29 Sep 2021 15:08:06 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 69/84] smartpqi: Call scsi_done() directly
-Date:   Wed, 29 Sep 2021 15:05:45 -0700
-Message-Id: <20210929220600.3509089-70-bvanassche@acm.org>
+Subject: [PATCH v2 70/84] snic: Call scsi_done() directly
+Date:   Wed, 29 Sep 2021 15:05:46 -0700
+Message-Id: <20210929220600.3509089-71-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.685.g46640cef36-goog
 In-Reply-To: <20210929220600.3509089-1-bvanassche@acm.org>
 References: <20210929220600.3509089-1-bvanassche@acm.org>
@@ -58,19 +59,87 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/snic/snic_scsi.c | 33 ++++++++++++++-------------------
+ 1 file changed, 14 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index ecb2af3f43ca..3b5601c0c537 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -194,7 +194,7 @@ static char *pqi_raid_level_to_string(u8 raid_level)
- static inline void pqi_scsi_done(struct scsi_cmnd *scmd)
- {
- 	pqi_prep_for_scsi_done(scmd);
--	scmd->scsi_done(scmd);
-+	scsi_done(scmd);
- }
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index 43a950185e24..5f17666f3e1d 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -342,7 +342,7 @@ snic_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc)
+ 		SNIC_HOST_ERR(shost, "Tgt %p id %d Not Ready.\n", tgt, tgt->id);
+ 		atomic64_inc(&snic->s_stats.misc.tgt_not_rdy);
+ 		sc->result = ret;
+-		sc->scsi_done(sc);
++		scsi_done(sc);
  
- static inline void pqi_disable_write_same(struct scsi_device *sdev)
+ 		return 0;
+ 	}
+@@ -676,8 +676,7 @@ snic_icmnd_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 		 SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+ 
+-	if (sc->scsi_done)
+-		sc->scsi_done(sc);
++	scsi_done(sc);
+ 
+ 	snic_stats_update_io_cmpl(&snic->s_stats);
+ } /* end of snic_icmnd_cmpl_handler */
+@@ -855,14 +854,12 @@ snic_process_itmf_cmpl(struct snic *snic,
+ 
+ 		snic_release_req_buf(snic, rqi, sc);
+ 
+-		if (sc->scsi_done) {
+-			SNIC_TRC(snic->shost->host_no, cmnd_id, (ulong) sc,
+-				 jiffies_to_msecs(jiffies - start_time),
+-				 (ulong) fwreq, SNIC_TRC_CMD(sc),
+-				 SNIC_TRC_CMD_STATE_FLAGS(sc));
++		SNIC_TRC(snic->shost->host_no, cmnd_id, (ulong) sc,
++			 jiffies_to_msecs(jiffies - start_time),
++			 (ulong) fwreq, SNIC_TRC_CMD(sc),
++			 SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+-			sc->scsi_done(sc);
+-		}
++		scsi_done(sc);
+ 
+ 		break;
+ 
+@@ -1475,7 +1472,7 @@ snic_abort_finish(struct snic *snic, struct scsi_cmnd *sc)
+ 		 * Call scsi_done to complete the IO.
+ 		 */
+ 		sc->result = (DID_ERROR << 16);
+-		sc->scsi_done(sc);
++		scsi_done(sc);
+ 		break;
+ 
+ 	default:
+@@ -1855,7 +1852,7 @@ snic_dr_clean_single_req(struct snic *snic,
+ 	snic_release_req_buf(snic, rqi, sc);
+ 
+ 	sc->result = (DID_ERROR << 16);
+-	sc->scsi_done(sc);
++	scsi_done(sc);
+ 
+ 	ret = 0;
+ 
+@@ -2500,14 +2497,12 @@ snic_scsi_cleanup(struct snic *snic, int ex_tag)
+ 		/* Update IO stats */
+ 		snic_stats_update_io_cmpl(&snic->s_stats);
+ 
+-		if (sc->scsi_done) {
+-			SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
+-				 jiffies_to_msecs(jiffies - st_time), 0,
+-				 SNIC_TRC_CMD(sc),
+-				 SNIC_TRC_CMD_STATE_FLAGS(sc));
++		SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
++			 jiffies_to_msecs(jiffies - st_time), 0,
++			 SNIC_TRC_CMD(sc),
++			 SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+-			sc->scsi_done(sc);
+-		}
++		scsi_done(sc);
+ 	}
+ } /* end of snic_scsi_cleanup */
+ 
