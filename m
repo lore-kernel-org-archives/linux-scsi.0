@@ -2,130 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8964C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93607C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6AB761406
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7C9BD613D1
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 12:41:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343874AbhI2Mm6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 08:42:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46496 "EHLO
+        id S1343880AbhI2MnG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 08:43:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46530 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343839AbhI2Mm5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 08:42:57 -0400
-Received: from mail-pg1-x541.google.com (mail-pg1-x541.google.com [IPv6:2607:f8b0:4864:20::541])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8A0FC06161C
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:16 -0700 (PDT)
-Received: by mail-pg1-x541.google.com with SMTP id n18so2539572pgm.12
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:16 -0700 (PDT)
+        with ESMTP id S1343839AbhI2MnG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 08:43:06 -0400
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 73F03C06161C
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:25 -0700 (PDT)
+Received: by mail-pf1-x436.google.com with SMTP id s16so1893384pfk.0
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 05:41:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=5AxNibumVQwdFWj4YbAxjEyvCaj9DuKN4ka6CCBZ+yY=;
-        b=Uj5ByApOxjJ50YqYxams2yYm2iwHwSlskFLHf/jb5lOcY4bDY+2qakRhjEnyGn77BI
-         5g4ZjbK36PwY6T4E9VjPOGovf+W+EDM+e+dlVmuQdDC8rob1+V05QQEAmCw2k3M+mzfg
-         K4cEEChgYXX+gq7xrqwimLzsUOeo6MBTzdwcM=
+        bh=w9Yxno8c8gn3xl2N8/8Ixm88LaQVWYiq59oo9nElJ3s=;
+        b=Rq/Vg8C2o/ZpJFKpECO29wC8sxwJqwueBQuceNBhLo11pxJNO0udIMLRk6taKuNQDQ
+         VyU/8R2wHHBN/kyF8dnnhEZJIdwfxLD9bhAUOKs+6rm8Zvc2KdtvePUw3H/ThYDE0om1
+         kw0lH7N+nIWkp5BZH9ISRZGdQpEPbG5n7uong=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references;
-        bh=5AxNibumVQwdFWj4YbAxjEyvCaj9DuKN4ka6CCBZ+yY=;
-        b=YBslGuQ2ba2eg8cQHXSt7+pqaENDRo/Kp2X+4jjyAeH+LjOZ2fEwoGV6s1mHyNhdVT
-         bphZI3qvMpZdJkRnwAUWSZyM9ZL4b/EwaQ99lgbMYsZLmPumeFLS0Y6gkTgw5koyf+06
-         MSQJvzIQAzaLBx/i2kq0n9ZnNmoQgHVlj+22gqUMhxrAGtHrkZnaMUjsNHrcSt7nghI0
-         esxHn9k/mNBJOQ19pfSQfifYK0+nv8HbcxHvP2rIEyWh7A1C9c7BLtUqefzFjsc5r/Ud
-         vdMB7dumZFjPkkjLR7sf8uusa9Ks6WSF0amVIykENVeZdwvePnUnazuCZDEU4YXV+rs+
-         6GDA==
-X-Gm-Message-State: AOAM5336e9Iz5TBY2WHu5ImE9ABhxkE86lwq+eFs8NGTAxV+tDLGFTRI
-        g8EwwSmn3you8d8VkwwMWZksTKs8m9Oofbvfo0mupApEqP2RdsGky97FqhPQNVrOk/tgQk2K1yC
-        lGZcTWMa44fMaOmwLgEDpTvkiXfFx6FUDVQcn6qXTB1HA+KUuCtfBgVSVnvZci6px8toZyixXX3
-        IvJlIyFCY=
-X-Google-Smtp-Source: ABdhPJy6wo03r5Gf23A9Aat/Wgoelf05/7QtAsjBhPtU7txRSJ+8AfB2LMWOn+QER3n816BkBAUQsw==
-X-Received: by 2002:a63:d351:: with SMTP id u17mr9315667pgi.174.1632919275583;
-        Wed, 29 Sep 2021 05:41:15 -0700 (PDT)
+        bh=w9Yxno8c8gn3xl2N8/8Ixm88LaQVWYiq59oo9nElJ3s=;
+        b=LQEpxiN5lc1I+/7q02hriQuIh5yu3tN8vGRrUWXxSuKtgEnQ197Luklq7s1J/w5nZY
+         pomGuy4nywui8IIz4RO+kP5S31Y3WzUTgdcdNwUU8f2oFp6Oop39C3vrJCvrbMbt/zNT
+         B/lqixe7rjcVvkQxdlSEPh89469b1LGioP+WMQcr5OAmiiyT+A1nMb8NY5YLUvn3PsrF
+         gTHDTZvy8lmpIdfqaDhkzX+c2g4kplO6VdiL7StXcYCbGCf8lkEQVrL+OVr7RmFhCDEW
+         KXS9t9ce8BBl3KS7/Zkg5VMuoqnUXWQOCz77stQrGmSxeGRwsC1RfuArfGteq/qE0ODe
+         4rXw==
+X-Gm-Message-State: AOAM532NENOcDbvqF5h3wlfcWzOjfQhGmQkvopFlxDf+HeOMe3NSMCba
+        6BxclrOKfNVm1UisSiUKFcanYsbJaFEa0bWMXpUUqbFbvQkweRVOxLQ2hehd6MNuWZtCcJyQAuX
+        cb78fhS2XJXct3XV/5jGtVqyYXGJpVKsw3/aYKI+ynbRSUYVjIO/vUxCCCGbYHRckfOJ0mBWKfN
+        E/e0RTLHs=
+X-Google-Smtp-Source: ABdhPJxXeVkJ6V/Ptt25PJOgWJq9HoF373csyjUJskd6xzfQIzVDli6iESGZPdt5foxm8Us2q77chQ==
+X-Received: by 2002:a05:6a00:1481:b0:43d:275b:7ba4 with SMTP id v1-20020a056a00148100b0043d275b7ba4mr10998854pfu.63.1632919284484;
+        Wed, 29 Sep 2021 05:41:24 -0700 (PDT)
 Received: from dhcp-10-123-20-83.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id g9sm2528080pfh.13.2021.09.29.05.41.12
+        by smtp.gmail.com with ESMTPSA id g9sm2528080pfh.13.2021.09.29.05.41.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 05:41:15 -0700 (PDT)
+        Wed, 29 Sep 2021 05:41:24 -0700 (PDT)
 From:   Sumit Saxena <sumit.saxena@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
         jejb@linux.vnet.ibm.com
 Cc:     chandrakanth.patil@broadcom.com, kashyap.desai@broadcom.com,
         Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: [PATCH 1/3] megaraid_sas: fix concurrent access to ISR between IRQ polling and real interrupt
-Date:   Wed, 29 Sep 2021 18:10:20 +0530
-Message-Id: <20210929124022.24605-2-sumit.saxena@broadcom.com>
+Subject: [PATCH 2/3] megaraid_sas: Add helper functions- {access/release}_irq_context
+Date:   Wed, 29 Sep 2021 18:10:21 +0530
+Message-Id: <20210929124022.24605-3-sumit.saxena@broadcom.com>
 X-Mailer: git-send-email 2.18.1
 In-Reply-To: <20210929124022.24605-1-sumit.saxena@broadcom.com>
 References: <20210929124022.24605-1-sumit.saxena@broadcom.com>
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="000000000000684ce005cd21a59c"
+        boundary="000000000000ee560e05cd21a514"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---000000000000684ce005cd21a59c
+--000000000000ee560e05cd21a514
 
-IRQ polling thread calls ISR after enable_irq() to handle any missed IO
-completion. atomic flag "in_used" was added to have the synchronization
-between the IRQ polling thread and the interrupt context.
-There is a bug around it leading to a race condition.
+Adding helper functions for ISR access and release to improve
+the readability.
 
-Below is the sequence:
--IRQ polling thread accesses ISR, fetches the reply descriptor.
--Real interrupt arrives and pre-empts polling thread(see enable_irq()
- is already called).
--Interrupt context picks the same reply descriptor as fetched by polling
- thread, processes it, and exits.
--Polling thread resumes and processes the descriptor which is already
- processed by interrupt thread leads to kernel crash.
-
-Setting the "in_used" flag before fetching the reply descriptor ensures
-synchronized access to ISR.
-
-Link: https://www.spinics.net/lists/linux-scsi/msg159440.html
 Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
-Fixes: 9bedd36e9146 (scsi: megaraid_sas: Handle missing interrupts while re-enabling IRQs)
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 11 +++++++----
- 1 file changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 45 ++++++++++++++++++---
+ 1 file changed, 39 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 26d0cf9353dd..eb5ceb75a15e 100644
+index eb5ceb75a15e..109782e3ec44 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3530,6 +3530,9 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
+@@ -3497,6 +3497,41 @@ megasas_complete_r1_command(struct megasas_instance *instance,
+ 	}
+ }
+ 
++/**
++ * access_irq_context:		Access to reply processing
++ * @irq_context:		IRQ context
++ *
++ * Synchronize access to reply processing.
++ *
++ * Return:  true on success, false on failure.
++ */
++static inline
++bool access_irq_context(struct megasas_irq_context  *irq_context)
++{
++	if (!irq_context)
++		return true;
++
++	if (atomic_add_unless(&irq_context->in_used, 1, 1))
++		return true;
++
++	return false;
++}
++
++/**
++ * release_irq_context:		Release reply processing
++ * @irq_context:		IRQ context
++ *
++ * Release access of reply processing.
++ *
++ * Return: Nothing.
++ */
++static inline
++void release_irq_context(struct megasas_irq_context  *irq_context)
++{
++	if (irq_context)
++		atomic_dec(&irq_context->in_used);
++}
++
+ /**
+  * complete_cmd_fusion -	Completes command
+  * @instance:			Adapter soft state
+@@ -3530,7 +3565,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
  	if (atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
  		return IRQ_HANDLED;
  
-+	if (irq_context && !atomic_add_unless(&irq_context->in_used, 1, 1))
-+		return 0;
-+
- 	desc = fusion->reply_frames_desc[MSIxIndex] +
- 				fusion->last_reply_idx[MSIxIndex];
+-	if (irq_context && !atomic_add_unless(&irq_context->in_used, 1, 1))
++	if (!access_irq_context(irq_context))
+ 		return 0;
  
-@@ -3540,11 +3543,11 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
- 	reply_descript_type = reply_desc->ReplyFlags &
+ 	desc = fusion->reply_frames_desc[MSIxIndex] +
+@@ -3544,8 +3579,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
  		MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
  
--	if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
-+	if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED) {
-+		if (irq_context)
-+			atomic_dec(&irq_context->in_used);
+ 	if (reply_descript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED) {
+-		if (irq_context)
+-			atomic_dec(&irq_context->in_used);
++		release_irq_context(irq_context);
  		return IRQ_NONE;
--
--	if (irq_context && !atomic_add_unless(&irq_context->in_used, 1, 1))
--		return 0;
-+	}
+ 	}
  
- 	num_completed = 0;
+@@ -3663,7 +3697,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
+ 					irq_context->irq_line_enable = true;
+ 					irq_poll_sched(&irq_context->irqpoll);
+ 				}
+-				atomic_dec(&irq_context->in_used);
++				release_irq_context(irq_context);
+ 				return num_completed;
+ 			}
+ 		}
+@@ -3682,8 +3716,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex,
+ 		megasas_check_and_restore_queue_depth(instance);
+ 	}
  
+-	if (irq_context)
+-		atomic_dec(&irq_context->in_used);
++	release_irq_context(irq_context);
+ 
+ 	return num_completed;
+ }
 -- 
 2.18.1
 
 
---000000000000684ce005cd21a59c
+--000000000000ee560e05cd21a514
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -196,13 +234,13 @@ rTXcWqD03VkqSOo+oPP/NAgFAZVfpeuBoK2Xv8zYlrF49Q4hxgFpWhaiDsZUSdWIS7vg1ak1n+6L
 3aHRY/lheSkOn/uJWXsqsTDp613hVtOTEDsHSQK32yTGr8jN/oRQgJASuUqQFdD4VzAxggJtMIIC
 aQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNhMTEwLwYDVQQD
 EyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgwoQTpBmhDxj9JoN1ow
-DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIEAgJlWax7IBLIut92D13SI6YSwHYGDo
-r7Tgl/+bMX2dMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDky
-OTEyNDExNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
+DQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIImCArpg+UfW4BR74MylvhSyQiq0vGy4
+FF9zG3mZKlD3MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTIxMDky
+OTEyNDEyNVowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUDBAEWMAsGCWCG
 SAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsGCWCGSAFlAwQC
-ATANBgkqhkiG9w0BAQEFAASCAQCLq1V36mWsbYsMcH9UagPBYnszR+id+ACTdvz4TAIudyk5BA18
-c4CP/ZpudJrJk3sB9OsAUjSDnvx+97GniTVUczFNHn/+XxU+sOankh2bYjlmcKNFibexEdVY7dV5
-IZrQav8kKZX79g3LnCwf8XMDc3WJ+Esplm8SLEXUJlRAKx7fHSpQj5f+coTHzjPF4y2m303W2twX
-tsiiqS499rnj0i6mtvl+VymxRoiieYPgxwVHWxlhAectidicUVG6KSz7K/uL0C10280qIQ8oDgu4
-6ZFGmqsNljKtJb5haqTFDBQR7CKEceIT0qq9e2k9DyedE8udnbPvBDYxC0xvuxJs
---000000000000684ce005cd21a59c--
+ATANBgkqhkiG9w0BAQEFAASCAQCTo9ZT8efMzZRPSc2KLqLNGFMyDrTBzaCT7fq4gMVP23yMwLsa
+PKgfXGMi7TFErswWk9Rjp+Ojwy0nm2der5V6qWiAnmrz7LnbAGEC22owpPH068je1yr9YIWUmD6J
+t030MqY8jIP/iRayDpm6U1WHqZ3WSdVO+DCoufgw2NxzqEX4VT7A9CUeE998wYPt3vrjcBuW2+vq
+OL6M/zUsIY4sq5eKIWnfEL5GJpUVmt5Unr8jdZKdSVhXUb30csOzZP8EbzxpIghOhQ4pJfIbNo11
+hfleA++d1Kr8JMZHEh7P7YnkgetDvD6NWLmWlOKZhA2GcgbthZtuV52ZEgz8pNlY
+--000000000000ee560e05cd21a514--
