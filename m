@@ -2,69 +2,65 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22781C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 17:35:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 788D8C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 18:15:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 014FB61440
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 17:35:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C23461465
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 18:15:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344662AbhI2Rgw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 13:36:52 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58888 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S244721AbhI2Rgv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 13:36:51 -0400
-Received: from mail-wm1-x329.google.com (mail-wm1-x329.google.com [IPv6:2a00:1450:4864:20::329])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 69B20C06161C;
-        Wed, 29 Sep 2021 10:35:10 -0700 (PDT)
-Received: by mail-wm1-x329.google.com with SMTP id j27so2487068wms.0;
-        Wed, 29 Sep 2021 10:35:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=n8HsfV7RFQWoa5/TFlxFufaedtFCNha3XC2H4rDNQEw=;
-        b=dTMB3JlFoZDI53nuVwIENnq/dXA5ultZwJbnG/iLS1y3AHpEsc82O4yU1r4gKIQ3tg
-         Lur+dstLEbIcEeBTv7Hvj78kVY1OO7KnWrhDqwZCNbpVg265sGX8K6cgEAe6lP+QEjnB
-         ftY1I6YclRwDcbRuiL1vD4BZa3QWUgYapW8EsawKzdndVOavplv78DVU6rnTG63tqrVt
-         fRPMd7cqJO6fuVp5UpwLGfvJtmuib68fBTHA6r0iWEj4crfz6eEOvuqH31B8xbwamUiu
-         l6sDMMr0lDCqp6cRYxacKYaaWyBxt67plFSGZEHW73rzT0EHPrtO+YSVo/syngnV56uj
-         yqwQ==
+        id S1344266AbhI2SRD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 14:17:03 -0400
+Received: from mail-pg1-f173.google.com ([209.85.215.173]:40659 "EHLO
+        mail-pg1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232318AbhI2SRC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 14:17:02 -0400
+Received: by mail-pg1-f173.google.com with SMTP id h3so3573642pgb.7;
+        Wed, 29 Sep 2021 11:15:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=n8HsfV7RFQWoa5/TFlxFufaedtFCNha3XC2H4rDNQEw=;
-        b=Gy5xwbyGRkURPSbiok6us1at+sblxA+hxR3JcYSWDfqi4lyZFJbcVTGHRWjfxsvRBb
-         9FQ0EY0/aaXTgXdsRdTJL8tq2JwmziYMwBD+iHvtmdBSPQVLjE5ruWPISb1JI03tmp3N
-         2MuG9rZ4mvrqk1hJIWcznDLvN9fBACq3kgM/4K1jJ9CqcPshNZTw07ScVOhF5ReW4BB/
-         43qbe3dxFGHjpuABp1wOo8DK5lqRHCSMjP1dcgrFYbPgBRzPuKAiGs43i1cMyv+iJ9Pf
-         +hCUzVxSQVaS4188o0Wmm4uiAim8YrRMbigROMyVDnBwrb7FqV0sjM2yPmvPN5YEEjz8
-         Ehnw==
-X-Gm-Message-State: AOAM531hw2W2RDXzNRTLvnPPOzy+q8nHebrReVq6wSLSoQmqboixx8v6
-        IuPe7SsYt2vRJVqjks1GYNtz0CMEMa4=
-X-Google-Smtp-Source: ABdhPJyATJPwbEg/doeTmrol2GqI/583Jn1pVMHc8sQzIjAK5xGXGIUUIjklCtqxz6mUCv6ObbLl9w==
-X-Received: by 2002:a1c:a94a:: with SMTP id s71mr11527424wme.32.1632936908571;
-        Wed, 29 Sep 2021 10:35:08 -0700 (PDT)
-Received: from [192.168.178.40] (ipbcc061e7.dynamic.kabel-deutschland.de. [188.192.97.231])
-        by smtp.gmail.com with ESMTPSA id u2sm512802wrr.35.2021.09.29.10.35.08
+        bh=qHhbFlZc6GWNDrVsz7/iKe9Me4ufngLpqsND1YltOzM=;
+        b=UOPXV9/LYeO2n1N73OwWkI4bEVGuHx+/FuiyURBc1ycXQzMedrq43KWny7AAj+/5Cx
+         SZFTaRx5dihaXUz7dTM0FIbDWfEWWpYGc7LD/69H8LRSi4D6tmKu5L1nl14Uekh5aC8E
+         fpYS4kablVM3V2DHNxU1ziM5yzUeQ/br0sQUWleoH5Wi+VxJV7B6OLii41tFLd5RwBgP
+         HL7kOZrQYAovgTbas5Qw2hlRdSV78RCxLdy4cyN1TBb9IVllAFHFS7ZhJJa82qcNJXD0
+         /9CXtpcbPMtk2VxoWYKRRuo/V7gkELw/sbGHJlMoGwLjMUNoloAZAaqQ+8rp2Qo46RYX
+         PB0w==
+X-Gm-Message-State: AOAM532KqrgNC1sRcsV5MGmIDak7vA3m49WwkxQGhXzYGJXFCG1PjXL3
+        oplwpYDFyWmTdgCK7rNN/oVucrRYvBM=
+X-Google-Smtp-Source: ABdhPJyLyLHa6wGVqdVcHF8Eo7FMzmROjehCaN44Z2qGkC/h/n95Yl5YWtDj4Oayg3mlJANLcy91IA==
+X-Received: by 2002:a63:f356:: with SMTP id t22mr1160846pgj.18.1632939320446;
+        Wed, 29 Sep 2021 11:15:20 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f36:4e58:55a1:b506])
+        by smtp.gmail.com with ESMTPSA id n26sm491703pfo.19.2021.09.29.11.15.18
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Sep 2021 10:35:08 -0700 (PDT)
-Subject: Re: [PATCH][next] scsi: target: tcmu: Use struct_size() helper in
- kmalloc()
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-References: <20210927224344.GA190701@embeddedor>
-From:   Bodo Stroesser <bostroesser@gmail.com>
-Message-ID: <289a7052-7062-ce88-7cbd-dd29f23b4c60@gmail.com>
-Date:   Wed, 29 Sep 2021 19:35:07 +0200
+        Wed, 29 Sep 2021 11:15:19 -0700 (PDT)
+Subject: Re: [PATCH] scsi: ufs: Fix a possible dead lock in clock scaling
+To:     Can Guo <cang@codeaurora.org>
+Cc:     asutoshd@codeaurora.org, nguyenb@codeaurora.org,
+        hongwus@codeaurora.org, ziqichen@codeaurora.org,
+        linux-scsi@vger.kernel.org, kernel-team@android.com,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        open list <linux-kernel@vger.kernel.org>
+References: <1631843521-2863-1-git-send-email-cang@codeaurora.org>
+ <cc9cb9e7-68bd-3bfa-9310-5fbf99a86544@acm.org>
+ <fbc4d03a07f03fe4fbe697813111471f@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <644dcd92-25ae-e951-d9f3-607306a02370@acm.org>
+Date:   Wed, 29 Sep 2021 11:15:18 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <20210927224344.GA190701@embeddedor>
+In-Reply-To: <fbc4d03a07f03fe4fbe697813111471f@codeaurora.org>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -72,40 +68,59 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 28.09.21 00:43, Gustavo A. R. Silva wrote:
-> Make use of the struct_size() helper instead of an open-coded version,
-> in order to avoid any potential type mistakes or integer overflows
-> that, in the worst scenario, could lead to heap overflows.
+On 9/28/21 8:31 PM, Can Guo wrote:
+> On 2021-09-18 01:27, Bart Van Assche wrote:
+>> On 9/16/21 6:51 PM, Can Guo wrote:
+>>> Assume a scenario where task A and B call ufshcd_devfreq_scale()
+>>> simultaneously. After task B calls downgrade_write() [1], but before it
+>>> calls down_read() [3], if task A calls down_write() [2], when task B calls
+>>> down_read() [3], it will lead to dead lock.
+>>
+>> Something is wrong with the above description. The downgrade_write() call is
+>> not followed by down_read() but by up_read(). Additionally, I don't see how
+>> concurrent calls of ufshcd_devfreq_scale() could lead to a deadlock.
 > 
-> Link: https://github.com/KSPP/linux/issues/160
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> ---
->   drivers/target/target_core_user.c | 3 +--
->   1 file changed, 1 insertion(+), 2 deletions(-)
+> As mentioned in the commit msg, the down_read() [3] is from ufshcd_wb_ctrl().
 > 
-> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-> index 9f552f48084c..dc220fad06fa 100644
-> --- a/drivers/target/target_core_user.c
-> +++ b/drivers/target/target_core_user.c
-> @@ -1255,7 +1255,6 @@ tcmu_tmr_notify(struct se_device *se_dev, enum tcm_tmreq_table tmf,
->   {
->   	int i = 0, cmd_cnt = 0;
->   	bool unqueued = false;
-> -	uint16_t *cmd_ids = NULL;
->   	struct tcmu_cmd *cmd;
->   	struct se_cmd *se_cmd;
->   	struct tcmu_tmr *tmr;
-> @@ -1292,7 +1291,7 @@ tcmu_tmr_notify(struct se_device *se_dev, enum tcm_tmreq_table tmf,
->   	pr_debug("TMR event %d on dev %s, aborted cmds %d, afflicted cmd_ids %d\n",
->   		 tcmu_tmr_type(tmf), udev->name, i, cmd_cnt);
->   
-> -	tmr = kmalloc(sizeof(*tmr) + cmd_cnt * sizeof(*cmd_ids), GFP_NOIO);
-> +	tmr = kmalloc(struct_size(tmr, tmr_cmd_ids, cmd_cnt), GFP_NOIO);
->   	if (!tmr)
->   		goto unlock;
->   
+> Task A -
+> down_write [2]
+> ufshcd_clock_scaling_prepare
+> ufshcd_devfreq_scale
+> ufshcd_clkscale_enable_store
 > 
+> Task B -
+> down_read [3]
+> ufshcd_exec_dev_cmd
+> ufshcd_query_flag
+> ufshcd_wb_ctrl
+> downgrade_write [1]
+> ufshcd_devfreq_scale
+> ufshcd_devfreq_target
+> devfreq_set_target
+> update_devfreq
+> devfreq_performance_handler
+> governor_store
+> 
+> 
+>> If one thread calls downgrade_write() and another thread calls down_write()
+>> immediately, that down_write() call will block until the other thread has called up_read()
+>> without triggering a deadlock.
+> 
+> Since the down_write() caller is blocked, the down_read() caller, which comes after
+> down_write(), is blocked too, no? downgrade_write() keeps lock owner as it is, but
+> it does not change the fact that readers and writers can be blocked by each other.
 
-Looks good. Thank you.
+Please use the upstream function names when posting upstream patches. I think that
+ufshcd_wb_ctrl() has been renamed into ufshcd_wb_toggle().
 
-Reviewed-by: Bodo Stroesser <bostroesser@gmail.com>
+So the deadlock is caused by nested locking - one task holding a reader lock, another
+task calling down_write() and next the first task grabbing the reader lock recursively?
+I prefer one of the following two solutions above the patch that has been posted since
+I expect that both alternatives will result in easier to maintain UFS code:
+- Fix the down_read() implementation. Making down_read() wait in case of nested locking
+   seems wrong to me.
+- Modify the UFS driver such that it does not lock hba->clk_scaling_lock recursively.
+
+Thanks,
+
+Bart.
