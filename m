@@ -2,50 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08B26C4332F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC0A5C433FE
 	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EA96161423
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:07:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B857C61423
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:08:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347183AbhI2WJk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 18:09:40 -0400
-Received: from mail-pl1-f170.google.com ([209.85.214.170]:44809 "EHLO
-        mail-pl1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347172AbhI2WJi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:38 -0400
-Received: by mail-pl1-f170.google.com with SMTP id t11so2515637plq.11
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:07:56 -0700 (PDT)
+        id S1347174AbhI2WJl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 18:09:41 -0400
+Received: from mail-pl1-f178.google.com ([209.85.214.178]:43941 "EHLO
+        mail-pl1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347159AbhI2WJj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:09:39 -0400
+Received: by mail-pl1-f178.google.com with SMTP id y1so2514566plk.10
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:07:57 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=btA8sPcTcQz7vlvxHeXFnK/OlZyN5Komai/m/9bbg4o=;
-        b=Mfs9sZpE7YrZ+JXi+1RqYDPrsZ8QfJMjR2onQu0zr5B9TphRDh52sJ/jnyX81iJTiQ
-         AzNj5XShTDHTK3d3EtYyak27A3Z+squivVXZuoW8JogGnUeiriZkqXESc5e4BcLvZfBy
-         g1vzME9iFRL6gN4FLZ1SDVVzKpCHHaZzWkp8Fpp5vyWkuAqrJfvSdnY4Cu/GiG+lSfwr
-         tDvGhq5kHVXNQmxnS+0k/lacNWHyJRvM2DpIP4EXfHuqfDcAJJyumKDw6nJygiQZ0QDt
-         9VXxM4S9F5Pr/ZZAY5VXbZqrEf7+p7QAITzF3Myx5rkD0hHye1vF43HCIXRC8NN81unf
-         K5Mw==
-X-Gm-Message-State: AOAM533tQHXKPOIbD3YR75PDIFScPRJx6MArZKGlFHsgtgua0rXoM9qB
-        7Sgat41h0P/LEnZ1vjKi4Q/wDrHfhR0=
-X-Google-Smtp-Source: ABdhPJyhceb7c0YMFpX+udBYy7Btr7snjzr+rfD6xhqM2ybS5UeLlT/FRA6F1OpaeXDBriAIOy5KmA==
-X-Received: by 2002:a17:903:2c2:b029:101:9c88:d928 with SMTP id s2-20020a17090302c2b02901019c88d928mr783926plk.62.1632953276248;
-        Wed, 29 Sep 2021 15:07:56 -0700 (PDT)
+        bh=Vg4NuUFfPmND0Da/NnD2LD1i3OChRlEDjF3gHZeSqH4=;
+        b=tm2D394bfqcM0HuVyR1yttsblf+YFURd+ZvMEqH9aOfzLjulO+giYZ/k/e+HqP8i+f
+         S8lCbld5cnQ0DFCPHqVOgmkb3wF8ZSkgSfp8yoJ/087N80hqx0+wMq2HaHtlQDYfRltl
+         o7bEjh/GgLUB6Cq8gXnTfe7EIIv9qT7G/fBxRDG84Dtd0K4PrQdE2TgaCOIWOWl2UbpJ
+         KbScCrOuzbJO3cjiR0NIS8UZH78ZNX5zw8RzM4U4c2GJ/ysM2mPwrFmdwcPSA6UvOChl
+         7tmK4ShKzlv9MuJHRiwUM4H1WUZqIz0xpfETXZKT2O3e/DnfkPa2n7hyH1Go9b+Jw86S
+         grgQ==
+X-Gm-Message-State: AOAM530F6x15tIKdmKWJ7sAM5BQ91JPtEnNUI4/xqLj7N+FYZ7h4MRv5
+        gJExkkwgVcAlk1UnnjiePo+Jou71Tuo=
+X-Google-Smtp-Source: ABdhPJxUctBIa97pVqxcEYg+JTw5TDY25xXw4CCHn7e46wWd9tvcBCnCqzL574T1G/NNH5mscZTD4Q==
+X-Received: by 2002:a17:902:a613:b0:13d:d95c:c892 with SMTP id u19-20020a170902a61300b0013dd95cc892mr757197plq.35.1632953277592;
+        Wed, 29 Sep 2021 15:07:57 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5c11:c4f:db56:119])
-        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.55
+        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.07.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 15:07:55 -0700 (PDT)
+        Wed, 29 Sep 2021 15:07:57 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
+        Michael Reed <mdr@sgi.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 62/84] qedf: Call scsi_done() directly
-Date:   Wed, 29 Sep 2021 15:05:38 -0700
-Message-Id: <20210929220600.3509089-63-bvanassche@acm.org>
+Subject: [PATCH v2 63/84] qla1280: Call scsi_done() directly
+Date:   Wed, 29 Sep 2021 15:05:39 -0700
+Message-Id: <20210929220600.3509089-64-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.685.g46640cef36-goog
 In-Reply-To: <20210929220600.3509089-1-bvanassche@acm.org>
 References: <20210929220600.3509089-1-bvanassche@acm.org>
@@ -60,78 +58,36 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qedf/qedf_io.c | 19 ++++++-------------
- 1 file changed, 6 insertions(+), 13 deletions(-)
+ drivers/scsi/qla1280.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
-index 3404782988d5..14aa544b0bc3 100644
---- a/drivers/scsi/qedf/qedf_io.c
-+++ b/drivers/scsi/qedf/qedf_io.c
-@@ -947,7 +947,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
- 			 "Number of SG elements %d exceeds what hardware limitation of %d.\n",
- 			 num_sgs, QEDF_MAX_BDS_PER_CMD);
- 		sc_cmd->result = DID_ERROR;
--		sc_cmd->scsi_done(sc_cmd);
-+		scsi_done(sc_cmd);
- 		return 0;
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index d0b4e063bfe1..c508a6e20519 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -697,7 +697,6 @@ qla1280_queuecommand_lck(struct scsi_cmnd *cmd, void (*fn)(struct scsi_cmnd *))
+ 	struct srb *sp = (struct srb *)CMD_SP(cmd);
+ 	int status;
+ 
+-	cmd->scsi_done = fn;
+ 	sp->cmd = cmd;
+ 	sp->flags = 0;
+ 	sp->wait = NULL;
+@@ -755,7 +754,7 @@ _qla1280_wait_for_single_command(struct scsi_qla_host *ha, struct srb *sp,
+ 	sp->wait = NULL;
+ 	if(CMD_HANDLE(cmd) == COMPLETED_HANDLE) {
+ 		status = SUCCESS;
+-		(*cmd->scsi_done)(cmd);
++		scsi_done(cmd);
  	}
- 
-@@ -957,7 +957,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
- 			  "Returning DNC as unloading or stop io, flags 0x%lx.\n",
- 			  qedf->flags);
- 		sc_cmd->result = DID_NO_CONNECT << 16;
--		sc_cmd->scsi_done(sc_cmd);
-+		scsi_done(sc_cmd);
- 		return 0;
- 	}
- 
-@@ -966,7 +966,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
- 		    "Completing sc_cmd=%p DID_NO_CONNECT as MSI-X is not enabled.\n",
- 		    sc_cmd);
- 		sc_cmd->result = DID_NO_CONNECT << 16;
--		sc_cmd->scsi_done(sc_cmd);
-+		scsi_done(sc_cmd);
- 		return 0;
- 	}
- 
-@@ -976,7 +976,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
- 			  "fc_remote_port_chkready failed=0x%x for port_id=0x%06x.\n",
- 			  rval, rport->port_id);
- 		sc_cmd->result = rval;
--		sc_cmd->scsi_done(sc_cmd);
-+		scsi_done(sc_cmd);
- 		return 0;
- 	}
- 
-@@ -1313,7 +1313,7 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- 
- 	io_req->sc_cmd = NULL;
- 	sc_cmd->SCp.ptr =  NULL;
--	sc_cmd->scsi_done(sc_cmd);
-+	scsi_done(sc_cmd);
- 	kref_put(&io_req->refcount, qedf_release_cmd);
+ 	return status;
  }
+@@ -1277,7 +1276,7 @@ qla1280_done(struct scsi_qla_host *ha)
+ 		ha->actthreads--;
  
-@@ -1386,13 +1386,6 @@ void qedf_scsi_done(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
- 		goto bad_scsi_ptr;
+ 		if (sp->wait == NULL)
+-			(*(cmd)->scsi_done)(cmd);
++			scsi_done(cmd);
+ 		else
+ 			complete(sp->wait);
  	}
- 
--	if (!sc_cmd->scsi_done) {
--		QEDF_ERR(&qedf->dbg_ctx,
--			 "sc_cmd->scsi_done for sc_cmd %p is NULL.\n",
--			 sc_cmd);
--		goto bad_scsi_ptr;
--	}
--
- 	qedf_unmap_sg_list(qedf, io_req);
- 
- 	sc_cmd->result = result << 16;
-@@ -1417,7 +1410,7 @@ void qedf_scsi_done(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
- 
- 	io_req->sc_cmd = NULL;
- 	sc_cmd->SCp.ptr = NULL;
--	sc_cmd->scsi_done(sc_cmd);
-+	scsi_done(sc_cmd);
- 	kref_put(&io_req->refcount, qedf_release_cmd);
- 	return;
- 
