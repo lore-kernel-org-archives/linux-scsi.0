@@ -2,48 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5D3FC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:06:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F00C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:06:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEF316138F
-	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:06:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3475F613CE
+	for <linux-scsi@archiver.kernel.org>; Wed, 29 Sep 2021 22:06:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347075AbhI2WIc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 29 Sep 2021 18:08:32 -0400
-Received: from mail-pg1-f177.google.com ([209.85.215.177]:41509 "EHLO
-        mail-pg1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1347074AbhI2WIZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:08:25 -0400
-Received: by mail-pg1-f177.google.com with SMTP id k24so4142308pgh.8
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:06:43 -0700 (PDT)
+        id S1347094AbhI2WId (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 29 Sep 2021 18:08:33 -0400
+Received: from mail-pg1-f176.google.com ([209.85.215.176]:45877 "EHLO
+        mail-pg1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1347078AbhI2WI0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Sep 2021 18:08:26 -0400
+Received: by mail-pg1-f176.google.com with SMTP id n18so4110575pgm.12
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 15:06:44 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=joWq+h12Lo/Sq7sVe1znK3TxxZQ/DHIjL3ukW1V1mF8=;
-        b=5AZoK9wiAtfhYf/zVJid0hNrk6dR6YCPl3Rf99fHwmel6GxW5tvoFItGaMD9cKFmeO
-         cZGM7gxeRFLSvPwInoqe3ot9FpJQ43oDAjx/CIkEOEKF/auuc0DKZINeUsKfQ6XyXelb
-         RZqaRwjf9eM0Xl+SrgiuNdCgyStw1ce5mtEfn5nuJTeVkZEzlNjUmZwwxZxGha0/14DS
-         tvpFC2ymTZ+82U0LSf0z+BgVTcPwhyerJU4AqpvwBv8XAtloBx3vwKSDREzWMXi0P34a
-         yjvk5qOsh5J7ZFAy0qlf+0R8WdP3EIdKEPSSTUA6PUNVaeBBx0xeOKGCIovClwiqHXiC
-         Myzg==
-X-Gm-Message-State: AOAM530WbKzBqzNf5kDGuc4kmGEqnTceG6+XFbG5p0MPSyjS5/UcMYuR
-        iGn1h0l2GCZiTKjpDxljAGU=
-X-Google-Smtp-Source: ABdhPJyJtqzTC7Qhxm5E9n9Y3+3dwn5+rkJx3A82btJgtmLRJpUkZn+CYY5ChR5IH6R+x8AaumueGQ==
-X-Received: by 2002:a63:9d4c:: with SMTP id i73mr1903144pgd.216.1632953203130;
-        Wed, 29 Sep 2021 15:06:43 -0700 (PDT)
+        bh=wte0rr/12tr1I1LwzqWVoRGtH/EjJ9NDxokW1M+2JS4=;
+        b=4mcSeFApBtF+D9FdXwFCBVd3p/AKBAdtpDixt8Y/fP+FAy6U35XBAtXz3i9lh85FNZ
+         C5tPjSPxqdexqt7hY0AqZtSWMG+YL1SgINbR9+duX0Nr7YZ6Tc0ybRaXZzzrw/F4Wj1p
+         lN9Ru9Y1z53Lr2ykYT9EEDdd1KZ3QXNzERiqsP6c8zhHgVhsniyAaFkYmr3lmfp4XtTo
+         O8MK8LvhgnAmtIqP2VPdkQuAIIhE6bucP0brVPgCKrDWEaBiBEIXilFxz1P6BdUSoxzx
+         cu9udhWqHj1FAN0Dbq/Uec19gIRSviL18DpbFH3AsdvArGAMg5fffuU09fPBa/i1AjQs
+         wONg==
+X-Gm-Message-State: AOAM531JsNH7k4mm2xHZOi20uq7v2YfXBBWNc2Rlj70ipQgGLvObCt44
+        wsjrJbRlDWyjKTNP8PNV/tU=
+X-Google-Smtp-Source: ABdhPJz+/GAC0Ygzl2rzmUjA4zjNKgrMX3tUaG/9xY/72H4xu7WwQIOyNc944lt2TvV4STehh2bMKA==
+X-Received: by 2002:a63:d709:: with SMTP id d9mr1872532pgg.377.1632953204575;
+        Wed, 29 Sep 2021 15:06:44 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:5c11:c4f:db56:119])
-        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.06.42
+        by smtp.gmail.com with ESMTPSA id gk14sm2785585pjb.35.2021.09.29.15.06.43
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 29 Sep 2021 15:06:42 -0700 (PDT)
+        Wed, 29 Sep 2021 15:06:43 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        "Juergen E. Fischer" <fischer@norbit.de>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 19/84] aha152x: Call scsi_done() directly
-Date:   Wed, 29 Sep 2021 15:04:55 -0700
-Message-Id: <20210929220600.3509089-20-bvanassche@acm.org>
+Subject: [PATCH v2 20/84] aha1542: Call scsi_done() directly
+Date:   Wed, 29 Sep 2021 15:04:56 -0700
+Message-Id: <20210929220600.3509089-21-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.685.g46640cef36-goog
 In-Reply-To: <20210929220600.3509089-1-bvanassche@acm.org>
 References: <20210929220600.3509089-1-bvanassche@acm.org>
@@ -54,109 +53,65 @@ List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 Conditional statements are faster than indirect calls. Hence call
-scsi_done() and reset_done() directly. The changes in this patch are as
-follows:
-- Remove the 'done' argument from aha152x_internal_queue().
-- Change ptr->scsi_done(ptr) into aha152x_scsi_done(ptr).
-- Inside aha152x_scsi_done(), check the 'resetting' flag of SCp.phase
-  since aha152x_internal_queue() specifies the 'reset_done' function
-  pointer if and only if the third argument has the value 'resetting'.
+scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/aha152x.c | 27 +++++++++++++++++----------
- 1 file changed, 17 insertions(+), 10 deletions(-)
+ drivers/scsi/aha1542.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index b13b5c85f3de..f07de9912790 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -905,13 +905,11 @@ static int setup_expected_interrupts(struct Scsi_Host *shpnt)
-  *  Queue a command and setup interrupts for a free bus.
-  */
- static int aha152x_internal_queue(struct scsi_cmnd *SCpnt,
--				  struct completion *complete,
--				  int phase, void (*done)(struct scsi_cmnd *))
-+				  struct completion *complete, int phase)
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 584a59522038..8697f4720946 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -281,7 +281,6 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
  {
- 	struct Scsi_Host *shpnt = SCpnt->device->host;
+ 	struct Scsi_Host *sh = dev_id;
+ 	struct aha1542_hostdata *aha1542 = shost_priv(sh);
+-	void (*my_done)(struct scsi_cmnd *) = NULL;
+ 	int errstatus, mbi, mbo, mbistatus;
+ 	int number_serviced;
  	unsigned long flags;
+@@ -369,14 +368,13 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
  
--	SCpnt->scsi_done	= done;
- 	SCpnt->SCp.phase	= not_issued | phase;
- 	SCpnt->SCp.Status	= 0x1; /* Ilegal status by SCSI standard */
- 	SCpnt->SCp.Message	= 0;
-@@ -980,7 +978,8 @@ static int aha152x_internal_queue(struct scsi_cmnd *SCpnt,
- static int aha152x_queue_lck(struct scsi_cmnd *SCpnt,
- 			     void (*done)(struct scsi_cmnd *))
- {
--	return aha152x_internal_queue(SCpnt, NULL, 0, done);
-+	WARN_ON_ONCE(done != scsi_done);
-+	return aha152x_internal_queue(SCpnt, NULL, 0);
+ 		tmp_cmd = aha1542->int_cmds[mbo];
+ 
+-		if (!tmp_cmd || !tmp_cmd->scsi_done) {
++		if (!tmp_cmd) {
+ 			spin_unlock_irqrestore(sh->host_lock, flags);
+ 			shost_printk(KERN_WARNING, sh, "Unexpected interrupt\n");
+ 			shost_printk(KERN_WARNING, sh, "tarstat=%x, hastat=%x idlun=%x ccb#=%d\n", ccb[mbo].tarstat,
+ 			       ccb[mbo].hastat, ccb[mbo].idlun, mbo);
+ 			return IRQ_HANDLED;
+ 		}
+-		my_done = tmp_cmd->scsi_done;
+ 		aha1542_free_cmd(tmp_cmd);
+ 		/*
+ 		 * Fetch the sense data, and tuck it away, in the required slot.  The
+@@ -410,7 +408,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+ 		aha1542->int_cmds[mbo] = NULL;	/* This effectively frees up the mailbox slot, as
+ 						 * far as queuecommand is concerned
+ 						 */
+-		my_done(tmp_cmd);
++		scsi_done(tmp_cmd);
+ 		number_serviced++;
+ 	};
  }
- 
- static DEF_SCSI_QCMD(aha152x_queue)
-@@ -998,6 +997,14 @@ static void reset_done(struct scsi_cmnd *SCpnt)
+@@ -431,7 +429,7 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	if (*cmd->cmnd == REQUEST_SENSE) {
+ 		/* Don't do the command - we have the sense data already */
+ 		cmd->result = 0;
+-		cmd->scsi_done(cmd);
++		scsi_done(cmd);
+ 		return 0;
  	}
- }
+ #ifdef DEBUG
+@@ -488,7 +486,7 @@ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	aha1542->aha1542_last_mbo_used = mbo;
  
-+static void aha152x_scsi_done(struct scsi_cmnd *SCpnt)
-+{
-+	if (SCpnt->SCp.phase & resetting)
-+		reset_done(SCpnt);
-+	else
-+		scsi_done(SCpnt);
-+}
-+
- /*
-  *  Abort a command
-  *
-@@ -1064,7 +1071,7 @@ static int aha152x_device_reset(struct scsi_cmnd * SCpnt)
+ #ifdef DEBUG
+-	shost_printk(KERN_DEBUG, sh, "Sending command (%d %p)...", mbo, cmd->scsi_done);
++	shost_printk(KERN_DEBUG, sh, "Sending command (%d)...", mbo);
+ #endif
  
- 	SCpnt->cmd_len         = 0;
- 
--	aha152x_internal_queue(SCpnt, &done, resetting, reset_done);
-+	aha152x_internal_queue(SCpnt, &done, resetting);
- 
- 	timeleft = wait_for_completion_timeout(&done, 100*HZ);
- 	if (!timeleft) {
-@@ -1439,12 +1446,12 @@ static void busfree_run(struct Scsi_Host *shpnt)
- 				scsi_eh_prep_cmnd(ptr, &sc->ses, NULL, 0, ~0);
- 
- 				DO_UNLOCK(flags);
--				aha152x_internal_queue(ptr, NULL, check_condition, ptr->scsi_done);
-+				aha152x_internal_queue(ptr, NULL, check_condition);
- 				DO_LOCK(flags);
- 			}
- 		}
- 
--		if(DONE_SC && DONE_SC->scsi_done) {
-+		if (DONE_SC) {
- 			struct scsi_cmnd *ptr = DONE_SC;
- 			DONE_SC=NULL;
- 
-@@ -1453,13 +1460,13 @@ static void busfree_run(struct Scsi_Host *shpnt)
- 			if (!HOSTDATA(shpnt)->commands)
- 				SETPORT(PORTA, 0);	/* turn led off */
- 
--			if(ptr->scsi_done != reset_done) {
-+			if (!(ptr->SCp.phase & resetting)) {
- 				kfree(ptr->host_scribble);
- 				ptr->host_scribble=NULL;
- 			}
- 
- 			DO_UNLOCK(flags);
--			ptr->scsi_done(ptr);
-+			aha152x_scsi_done(ptr);
- 			DO_LOCK(flags);
- 		}
- 
-@@ -2258,7 +2265,7 @@ static void rsti_run(struct Scsi_Host *shpnt)
- 			ptr->host_scribble=NULL;
- 
- 			set_host_byte(ptr, DID_RESET);
--			ptr->scsi_done(ptr);
-+			aha152x_scsi_done(ptr);
- 		}
- 
- 		ptr = next;
+ 	/* This gets trashed for some reason */
