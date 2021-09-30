@@ -2,113 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD8DC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 16:08:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACDFAC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 16:20:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32098613A9
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 16:08:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 920B56141B
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 16:20:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348570AbhI3QJs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Sep 2021 12:09:48 -0400
-Received: from mail-pg1-f172.google.com ([209.85.215.172]:35495 "EHLO
-        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348015AbhI3QJm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Sep 2021 12:09:42 -0400
-Received: by mail-pg1-f172.google.com with SMTP id e7so6772331pgk.2
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Sep 2021 09:08:00 -0700 (PDT)
+        id S1349805AbhI3QVw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Sep 2021 12:21:52 -0400
+Received: from mail-pl1-f171.google.com ([209.85.214.171]:41907 "EHLO
+        mail-pl1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1349579AbhI3QVv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Sep 2021 12:21:51 -0400
+Received: by mail-pl1-f171.google.com with SMTP id x8so4394907plv.8;
+        Thu, 30 Sep 2021 09:20:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=QDDSlauu4Jq+r8ksS85tXNJBOdlHrkC4HdMh5Ut4w9s=;
-        b=2WOFX4NuQ5YWagbS6dluaGKFZ8X5DRnn3ykvUDAruKyFW6hD891TFGVUfaLBj0rtBF
-         whTRgSJ6gviD5RQ/JbEPimK6OCp3wk05jxqx/ATNLD1Mnbrv3blXxCh8wb4o5yuGER1O
-         8CJDyMmYuwlrDNXsSwZZ831XA+e2/bi+Y/YNQviEhvUouMIoCQ+ykyBD6fzM3lmhjHGY
-         pD3+do71Gwpb0JQGWLDhD5a/n9m0lb3vE4LuQ4C1O1t1o6fABueRmFSTDTVODs3DeEBE
-         HJMR8eRxHtIcwGRxlZT/AhO8NX9K6gobkP51pq+Fo1t3h70mai5DMwSBCYf9haCfOlUl
-         rzMQ==
-X-Gm-Message-State: AOAM530ObpginQRiesDt/4rCAqfc/RSel/YvJxmcmyJeLYAEZVptZGtw
-        jc0PMD1FDXNExpelnbVVPMqkojuhHB8=
-X-Google-Smtp-Source: ABdhPJy++uH9Fbhk4sYEDCG6e8nn0kmpiTK6CoSY8lubhHjbv4ra5qpFfHE7lxTNALxbi/zapVKajg==
-X-Received: by 2002:aa7:95a1:0:b0:43d:dbc5:c0af with SMTP id a1-20020aa795a1000000b0043ddbc5c0afmr5191510pfk.37.1633018078932;
-        Thu, 30 Sep 2021 09:07:58 -0700 (PDT)
+        bh=yG1/o+/DnMH77sK/4dZhI1SBFsLkmeMylzKyExyvyVo=;
+        b=VMOMxXrk3WipEBkwtyRKsqEK/+hGcd6Xyv2//4vlFXzFr4kYcDxEG8qPMfLnEJCU46
+         L7lGjp3A0jTO7A2w8Nu9vj/3qfEVpzcHp31SFcuzf94+yQmtPAh9QBCO9Y3Jnmutz2xw
+         MW6bzrww9mCCWv3YOkSvSuLEczumDBQJ90fmE/1PAdpbxWqCsNk8VgYGoV5dw1vL18hT
+         H11wBYoQlxdKpldScRPa3o3ayID3taRq+xPtIPuGhyMcH8kdQlFOyVpF688PGFKjum+8
+         LnyIqX5W5cgx7EUQDNi1C7LTqesPp3ShBYA1LoOaNYByN+Xxo+D51IMNoDFDWmGKUkwr
+         gfJw==
+X-Gm-Message-State: AOAM530cKxHipAVZYvrPwObMt6VEtaijjkgs3l4IOMchU6wlXElRJ/Ft
+        Z6HvhDfPKGLUXEd1CrQLx1g=
+X-Google-Smtp-Source: ABdhPJzaCOnFZETcMKaHwCPxzFz713M2S082LglpsjtX0j5t65Ek+coBFDcqzxklnkgshMeKu30lrQ==
+X-Received: by 2002:a17:90b:104d:: with SMTP id gq13mr14201836pjb.101.1633018808562;
+        Thu, 30 Sep 2021 09:20:08 -0700 (PDT)
 Received: from [10.254.204.66] (50-242-106-94-static.hfc.comcastbusiness.net. [50.242.106.94])
-        by smtp.gmail.com with ESMTPSA id f24sm3529795pfk.198.2021.09.30.09.07.58
+        by smtp.gmail.com with ESMTPSA id t15sm3663221pgi.80.2021.09.30.09.20.05
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 30 Sep 2021 09:07:58 -0700 (PDT)
-Subject: Re: [PATCH v2 00/84] Call scsi_done() directly
-To:     Bean Huo <huobean@gmail.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-References: <20210929220600.3509089-1-bvanassche@acm.org>
- <44a3eccd2210d752ecb83195f001530f0c4e29b2.camel@gmail.com>
+        Thu, 30 Sep 2021 09:20:07 -0700 (PDT)
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+To:     =?UTF-8?Q?Javier_Gonz=c3=a1lez?= <javier.gonz@samsung.com>,
+        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>
+Cc:     Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "msnitzer@redhat.com" <msnitzer@redhat.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "roland@purestorage.com" <roland@purestorage.com>,
+        "mpatocka@redhat.com" <mpatocka@redhat.com>,
+        "hare@suse.de" <hare@suse.de>,
+        "kbusch@kernel.org" <kbusch@kernel.org>,
+        "rwheeler@redhat.com" <rwheeler@redhat.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
+        "zach.brown@ni.com" <zach.brown@ni.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        SelvaKumar S <selvakuma.s1@samsung.com>,
+        Nitesh Shetty <nj.shetty@samsung.com>,
+        Kanchan Joshi <joshi.k@samsung.com>,
+        Vincent Fu <vincent.fu@samsung.com>
+References: <BYAPR04MB49652C4B75E38F3716F3C06386539@BYAPR04MB4965.namprd04.prod.outlook.com>
+ <PH0PR04MB74161CD0BD15882BBD8838AB9B529@PH0PR04MB7416.namprd04.prod.outlook.com>
+ <CGME20210928191342eucas1p23448dcd51b23495fa67cdc017e77435c@eucas1p2.samsung.com>
+ <20210928191340.dcoj7qrclpudtjbo@mpHalley.domain_not_set.invalid>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <f293d333-3fd0-b62e-58d2-6ed388efa1de@acm.org>
-Date:   Thu, 30 Sep 2021 09:07:57 -0700
+Message-ID: <c2d0dff9-ad6d-c32b-f439-00b7ee955d69@acm.org>
+Date:   Thu, 30 Sep 2021 09:20:04 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <44a3eccd2210d752ecb83195f001530f0c4e29b2.camel@gmail.com>
+In-Reply-To: <20210928191340.dcoj7qrclpudtjbo@mpHalley.domain_not_set.invalid>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/30/21 12:25 AM, Bean Huo wrote:
-> On Wed, 2021-09-29 at 15:04 -0700, Bart Van Assche wrote:
->> This patch series increases IOPS by 5% on my test setup in a single-
->> threaded
->> test with queue depth 1 on top of the scsi_debug driver.
+On 9/28/21 12:13 PM, Javier González wrote:
+> Since we are not going to be able to talk about this at LSF/MM, a few of
+> us thought about holding a dedicated virtual discussion about Copy
+> Offload. I believe we can use Chaitanya's thread as a start. Given the
+> current state of the current patches, I would propose that we focus on
+> the next step to get the minimal patchset that can go upstream so that
+> we can build from there.
 > 
-> Here you mentioned queue depth 1. Does this mean SW queue depth?
+> Before we try to find a date and a time that fits most of us, who would
+> be interested in participating?
 
-Hi Bean,
+Given the technical complexity of this topic and also that the people who are
+interested live in multiple time zones, I prefer email to discuss the technical
+aspects of this work. My attempt to summarize how to implement copy offloading
+is available here: https://github.com/bvanassche/linux-kernel-copy-offload.
+Feedback on this text is welcome.
 
-Yes, what I wrote refers to the queue depth of the submitter. The script that I used
-to measure performance with and without this patch series is as follows:
+Thanks,
 
-#!/bin/bash
-
-iodepth=${1:-1}
-runtime=30
-blocksize=512
-numcpus=$(nproc)
-
-modprobe -r scsi_debug
-modprobe scsi_debug max_queue=128 submit_queues="$numcpus" delay=0 &&
-     udevadm settle
-
-DEVICE=$(find /sys/bus/pseudo/drivers/scsi_debug/adapter*/host*/target*/*/block/ -maxdepth 1 -type d | grep -v 'block/$' | head -1 | xargs basename) || exit $?
-[ -n "$DEVICE" ] || exit $?
-
-args=()
-if [ "$iodepth" = 1 ]; then
-	args+=(--ioengine=psync)
-else
-	args+=(--ioengine=io_uring --iodepth_batch=$((iodepth/2)))
-fi
-args+=(
-     --bs="${blocksize}"
-     --direct=1
-     --filename=/dev/"$DEVICE"
-     --group_reporting=1
-     --gtod_reduce=1
-     --invalidate=1
-     --iodepth="$iodepth"
-     --ioscheduler=none
-     --loops=$((1<<20))
-     --name=scsi_debug
-     --numjobs=1
-     --runtime="$runtime"
-     --rw=read
-     --thread
-       )
-set -x
-if numactl -m 0 -N 0 echo >&/dev/null; then
-	numactl -m 0 -N 0 -- fio "${args[@]}"
-else
-	fio "${args[@]}"
-fi
+Bart.
