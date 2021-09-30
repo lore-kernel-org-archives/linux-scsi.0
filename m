@@ -2,55 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 31919C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 07:51:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9B00C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 08:07:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1908361875
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 07:51:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A8BF615E0
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 08:07:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348899AbhI3Hwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Sep 2021 03:52:50 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:32330 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1348945AbhI3Hwn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Sep 2021 03:52:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1632988261;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=/0kMV5NHViQC1s+jSR/2KlMo8Q4JFLx8qT0rabuW1S0=;
-        b=ee7wjggITwTkNcali4DtIdO6w00KH23skQrY5G8U6w8gsHSS+17mXSGdjSK7fAkEkMPWNI
-        XTe+bO6woAWh0bJwjvSl6oiBtEj0lrm6XRapMR+jJtKo6X4kblGL79T3zv3DlEYaP/SuRd
-        /+Tjc4zflLb6S61mi/nFykMX780G72s=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-587-KEqCKbmxMUaQlpF0FuNmVg-1; Thu, 30 Sep 2021 03:50:59 -0400
-X-MC-Unique: KEqCKbmxMUaQlpF0FuNmVg-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id BB9ACDF8A3;
-        Thu, 30 Sep 2021 07:50:58 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 65FDB60854;
-        Thu, 30 Sep 2021 07:50:54 +0000 (UTC)
-Date:   Thu, 30 Sep 2021 15:50:49 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org
-Cc:     Changhui Zhong <czhong@redhat.com>, Yi Zhang <yi.zhang@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+        id S1349028AbhI3IJg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Sep 2021 04:09:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34912 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1348885AbhI3IJ3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Sep 2021 04:09:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 06A70615E0;
+        Thu, 30 Sep 2021 08:07:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1632989267;
+        bh=WFjd+VMQ0w8W4XQGSGG6EaiEb5Pch8uG40+sKi0/fGA=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=MQCn/U8L681vOjTpGIlM85mYw+D0g8tXJdcHcoqNGltr1ktSQ592y3WMSpy7msZ2U
+         PGDkSVvsIux9RERvLLKkVQhV+kKN/Dkgfy4/c8a7CBQl3CIr7XRy62i2s2iGro+0Uq
+         7Vd6qQwu5kwlPodiJl0TIfRIxQA6dwPmEolzVVe8=
+Date:   Thu, 30 Sep 2021 10:07:44 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Changhui Zhong <czhong@redhat.com>,
+        Yi Zhang <yi.zhang@redhat.com>
 Subject: Re: [PATCH V2] scsi: core: put LLD module refcnt after SCSI device
  is released
-Message-ID: <YVVsWbX3Fqfq0wAS@T590>
+Message-ID: <YVVwUCKbXHAbzguG@kroah.com>
 References: <20210930074026.1011114-1-ming.lei@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 In-Reply-To: <20210930074026.1011114-1-ming.lei@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -89,16 +75,23 @@ On Thu, Sep 30, 2021 at 03:40:26PM +0800, Ming Lei wrote:
 > +	struct module *mod = sdev->host->hostt->module;
 > +
 > +	atomic_inc(&sdev->put_dev_cnt);
+
+Ick, no!  Why are you making a new lock and reference count for no
+reason?
+
 > +
 >  	put_device(&sdev->sdev_gendev);
 > +
 > +	if (atomic_dec_if_positive(&sdev->put_dev_cnt) >= 0)
 > +		module_put(mod);
 
-oops, sdev can be freed now, so this approach isn't good too, :-(
+How do you know if your module pointer is still valid here?
 
-Will think further about the solution.
+Why do you care?
+
+What problem are you trying to solve and why is it unique to scsi
+devices?
 
 thanks,
-Ming
 
+greg k-h
