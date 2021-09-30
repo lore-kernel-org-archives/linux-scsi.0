@@ -2,144 +2,118 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 213BBC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 05:22:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2C0EC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 05:36:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F3C40613A7
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 05:22:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C723C617E4
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 05:36:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348070AbhI3FXp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Sep 2021 01:23:45 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:25026 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1348045AbhI3FXp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 30 Sep 2021 01:23:45 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1632979322;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=0sKvzl1S1AnFk1PwGWAsvKYt90LSgZ57DclyOTi7Ok8=;
-        b=V5YqOeGQiLk0eV8rgET4k8CbSYEJd7KrSs7fd6FbIJFWFSD0duq1lACBOR9HadH19NDrUH
-        jnWL+Bet2NQgOx4cLyAPq5gV9YZLv/x4rDHrOnw64rci8Kn4Mf+R44qeLTsB+OG/E3SSVH
-        BQwE9rU1fGJ6tQOiywvkvcKEi4Jvrvw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-265-xzaAO0vhOEmyVZuVg3F9cA-1; Thu, 30 Sep 2021 01:22:01 -0400
-X-MC-Unique: xzaAO0vhOEmyVZuVg3F9cA-1
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 195E283DB29;
-        Thu, 30 Sep 2021 05:22:00 +0000 (UTC)
-Received: from localhost (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 8676C19733;
-        Thu, 30 Sep 2021 05:21:34 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Changhui Zhong <czhong@redhat.com>, Yi Zhang <yi.zhang@redhat.com>,
-        Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 2/2] scsi: core: put LLD module refcnt after SCSI device is released
-Date:   Thu, 30 Sep 2021 13:20:28 +0800
-Message-Id: <20210930052028.934747-3-ming.lei@redhat.com>
-In-Reply-To: <20210930052028.934747-1-ming.lei@redhat.com>
-References: <20210930052028.934747-1-ming.lei@redhat.com>
+        id S1348111AbhI3Fh7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Sep 2021 01:37:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52464 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1348087AbhI3Fh6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Sep 2021 01:37:58 -0400
+Received: from bombadil.infradead.org (unknown [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2DC4C06161C
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Sep 2021 22:36:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
+        Subject:Sender:Reply-To:Content-ID:Content-Description;
+        bh=2TG9PbdXpjSo/4p82HGobgsp7HaziTdmUWb/aeGHLhg=; b=Mzl2Gc09j+77GIevC1Q8+KI0Cj
+        PIHQ+eeZ2qYodKktOz4bYw4vSKK2QLJFJq+eL1fU95LYDTftRKNbTXDsE5XJFdvovqpMVRMJb8n3T
+        3xoeknM04znCXfYnumnhotbMX6Of/IG+bkBAFAaV3zeeVsKKOZ7s++sVHu/gKx1NmJ8eHMfS9XjdZ
+        lKwV7hqdGLIb/CrEZcJM2aQT9HcqX/ZRY5IhYLd05e3+OKsbg7DBPinG2dvlTPP8R3EUf7wBjx8q4
+        6WmBE/PDV5tNbWeXIB3yAyKvBtnxnpJ6X9Tak+9vh3+j7UJ0ynveefrTh/tSF8iuLmO8J8na19WDV
+        4UksvbFA==;
+Received: from [2601:1c0:6280:3f0::aa0b]
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mVojv-00D1xt-AT; Thu, 30 Sep 2021 05:36:15 +0000
+Subject: Re: [PATCH] spraid: initial commit of Ramaxel spraid driver
+To:     Yanling Song <songyl@ramaxel.com>, martin.petersen@oracle.com
+Cc:     linux-scsi@vger.kernel.org
+References: <20210930034752.248781-1-songyl@ramaxel.com>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <481d8f10-f755-29f0-58f3-9838890b0dc6@infradead.org>
+Date:   Wed, 29 Sep 2021 22:36:14 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+In-Reply-To: <20210930034752.248781-1-songyl@ramaxel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SCSI host release is triggered when SCSI device is released, and we have to
-make sure that LLD module won't be unloaded before SCSI host instance is
-released.
+Hi,
 
-So put LLD module refcnt after SCSI device is released.
+On 9/29/21 8:47 PM, Yanling Song wrote:
+> This initial commit contains Ramaxel's spraid module.
+> 
 
-SCSI device release may be moved into workqueue context if scsi_device_put
-is called in interrupt context, and handle this case by piggybacking
-putting LLD module refcnt into SCSI device release handler.
+Does "spraid" mean anything?  <something>  RAID ?
 
-Reported-by: Changhui Zhong <czhong@redhat.com>
-Reported-by: Yi Zhang <yi.zhang@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- drivers/scsi/scsi.c        | 14 ++++++++++++--
- drivers/scsi/scsi_sysfs.c  |  8 ++++++++
- include/scsi/scsi_device.h |  1 +
- 3 files changed, 21 insertions(+), 2 deletions(-)
+> Signed-off-by: Yanling Song <songyl@ramaxel.com>
+> ---
+>   Documentation/scsi/spraid.rst                 |   28 +
+>   .../userspace-api/ioctl/ioctl-number.rst      |    2 +
+>   MAINTAINERS                                   |    7 +
+>   drivers/scsi/Kconfig                          |    1 +
+>   drivers/scsi/Makefile                         |    1 +
+>   drivers/scsi/spraid/Kconfig                   |   11 +
+>   drivers/scsi/spraid/Makefile                  |    7 +
+>   drivers/scsi/spraid/spraid.h                  |  656 +++
+>   drivers/scsi/spraid/spraid_main.c             | 3617 +++++++++++++++++
+>   9 files changed, 4330 insertions(+)
+>   create mode 100644 Documentation/scsi/spraid.rst
+>   create mode 100644 drivers/scsi/spraid/Kconfig
+>   create mode 100644 drivers/scsi/spraid/Makefile
+>   create mode 100644 drivers/scsi/spraid/spraid.h
+>   create mode 100644 drivers/scsi/spraid/spraid_main.c
+> 
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index b241f9e3885c..7cad256ba895 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -553,8 +553,18 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--	module_put(sdev->host->hostt->module);
--	put_device(&sdev->sdev_gendev);
-+	struct module *mod = sdev->host->hostt->module;
-+	/*
-+	 * sdev->sdev_gendev's real release handler will be scheduled into
-+	 * user context if we are in interrupt context, and we have to put
-+	 * LLD module refcnt after the device is really released.
-+	 */
-+	preempt_disable();
-+	if (put_device(&sdev->sdev_gendev) && in_interrupt())
-+		sdev->put_lld_mod_refcnt = 1;
-+	else
-+		module_put(mod);
-+	preempt_enable();
- }
- EXPORT_SYMBOL(scsi_device_put);
- 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 86793259e541..dc056ba5a656 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -449,9 +449,14 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
- 	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
- 	unsigned long flags;
-+	struct module *lld_mod;
-+	bool put_lld_mod_refcnt;
- 
- 	sdev = container_of(work, struct scsi_device, ew.work);
- 
-+	lld_mod = sdev->host->hostt->module;
-+	put_lld_mod_refcnt = sdev->put_lld_mod_refcnt;
-+
- 	scsi_dh_release_device(sdev);
- 
- 	parent = sdev->sdev_gendev.parent;
-@@ -502,6 +507,9 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 
- 	if (parent)
- 		put_device(parent);
-+
-+	if (put_lld_mod_refcnt)
-+		module_put(lld_mod);
- }
- 
- static void scsi_device_dev_release(struct device *dev)
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 430b73bd02ac..9d3fcb9cfd01 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -206,6 +206,7 @@ struct scsi_device {
- 	unsigned rpm_autosuspend:1;	/* Enable runtime autosuspend at device
- 					 * creation time */
- 	unsigned ignore_media_change:1; /* Ignore MEDIA CHANGE on resume */
-+	unsigned put_lld_mod_refcnt:1;  /* Put LLD mod refcnt */
- 
- 	bool offline_already;		/* Device offline message logged */
- 
+> diff --git a/Documentation/userspace-api/ioctl/ioctl-number.rst b/Documentation/userspace-api/ioctl/ioctl-number.rst
+> index 2e8134059c87..d93dbb680b16 100644
+> --- a/Documentation/userspace-api/ioctl/ioctl-number.rst
+> +++ b/Documentation/userspace-api/ioctl/ioctl-number.rst
+> @@ -169,6 +169,8 @@ Code  Seq#    Include File                                           Comments
+>   'M'   00-0F  drivers/video/fsl-diu-fb.h                              conflict!
+>   'N'   00-1F  drivers/usb/scanner.h
+>   'N'   40-7F  drivers/block/nvme.c
+> +'N'   41-42  drivers/scsi/spraid_main.c								 conflict!
+> +'N'   80     drivers/scsi/spraid_main.c
+>   'O'   00-06  mtd/ubi-user.h                                          UBI
+>   'P'   all    linux/soundcard.h                                       conflict!
+>   'P'   60-6F  sound/sscape_ioctl.h                                    conflict!
+
+It looks like the above won't apply cleanly: the surrounding lines should not
+be indented any.
+
+> diff --git a/drivers/scsi/spraid/Kconfig b/drivers/scsi/spraid/Kconfig
+> new file mode 100644
+> index 000000000000..83962efaab07
+> --- /dev/null
+> +++ b/drivers/scsi/spraid/Kconfig
+> @@ -0,0 +1,11 @@
+> +#
+> +# Ramaxel driver configuration
+> +#
+> +
+> +config RAMAXEL_SPRAID
+> +	tristate "Ramaxel spraid Adapter"
+> +	depends on PCI && SCSI
+> +	depends on ARM64 || X86_64
+> +	default m
+
+Not "default m" unless it is needed to boot a system.
+
+> +	help
+> +	  This driver supports Ramaxel spraid driver.
+
+
+thanks.
 -- 
-2.31.1
-
+~Randy
