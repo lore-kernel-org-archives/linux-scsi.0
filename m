@@ -2,114 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5ED8CC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 08:15:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 33A7AC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 08:21:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 326C9615A7
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 08:15:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13E0D6162E
+	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 08:21:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1348977AbhI3IQo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Sep 2021 04:16:44 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3893 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1348991AbhI3IQn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Sep 2021 04:16:43 -0400
-Received: from fraeml703-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HKmDN6K3Vz6F95B;
-        Thu, 30 Sep 2021 16:11:48 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml703-chm.china.huawei.com (10.206.15.52) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.8; Thu, 30 Sep 2021 10:14:59 +0200
-Received: from [10.47.26.77] (10.47.26.77) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Thu, 30 Sep
- 2021 09:14:58 +0100
-Subject: Re: [PATCH v2 2/3] acornscsi: remove tagged queuing vestiges
-To:     Arnd Bergmann <arnd@kernel.org>
-CC:     Russell King - ARM Linux <linux@armlinux.org.uk>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <1631696835-136198-1-git-send-email-john.garry@huawei.com>
- <1631696835-136198-3-git-send-email-john.garry@huawei.com>
- <CAK8P3a3U+yaRe+P68DMQy_37jog=9gz7-dkHT10Vev3FrvMYyg@mail.gmail.com>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <327ae6c3-a64a-66b4-a2ec-ce66d5a39eeb@huawei.com>
-Date:   Thu, 30 Sep 2021 09:17:52 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S1348948AbhI3IW7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Sep 2021 04:22:59 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:46938 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1348945AbhI3IWz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 30 Sep 2021 04:22:55 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1632990072;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=uxfPaknpe2KxTzyJEaURzSmdUt5gx45sGtlxMXU3sTg=;
+        b=Mn98RHP55ICzanU3yukcaaTF/hreiPgxZTP2+3aYX4hgB49Ga4oCCdNOod996qdqrqpuNM
+        6n4no5yaRktVHGj4pvCnDVxMj2kL8Q51gmASpEfOFgwO5GdjEpACG6YAgpweJGDl9+DM0j
+        A8PNmBd3OVyLSo1/64d+foEBs2Wdkz8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-29-gWiLXD95PryQbz8XY-wHbg-1; Thu, 30 Sep 2021 04:21:10 -0400
+X-MC-Unique: gWiLXD95PryQbz8XY-wHbg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id F1252802E3F;
+        Thu, 30 Sep 2021 08:20:23 +0000 (UTC)
+Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id BAC0560CD1;
+        Thu, 30 Sep 2021 08:20:18 +0000 (UTC)
+Date:   Thu, 30 Sep 2021 16:20:11 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Changhui Zhong <czhong@redhat.com>,
+        Yi Zhang <yi.zhang@redhat.com>
+Subject: Re: [PATCH V2] scsi: core: put LLD module refcnt after SCSI device
+ is released
+Message-ID: <YVVzOzW/JFpVss+r@T590>
+References: <20210930074026.1011114-1-ming.lei@redhat.com>
+ <YVVwUCKbXHAbzguG@kroah.com>
 MIME-Version: 1.0
-In-Reply-To: <CAK8P3a3U+yaRe+P68DMQy_37jog=9gz7-dkHT10Vev3FrvMYyg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.26.77]
-X-ClientProxiedBy: lhreml714-chm.china.huawei.com (10.201.108.65) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YVVwUCKbXHAbzguG@kroah.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 30/09/2021 08:21, Arnd Bergmann wrote:
-> On Wed, Sep 15, 2021 at 11:16 AM John Garry<john.garry@huawei.com>  wrote:
->> From: Hannes Reinecke<hare@suse.de>
->>
->> The acornscsi driver has a config option to enable tagged queuing,
->> but this option gets disabled in the driver itself with the comment
->> 'needs to be debugged'.
->> As this is a_really_  old driver I doubt anyone will be wanting to
->> invest time here, so remove the tagged queue vestiges and make
->> our live easier.
->>
->> Signed-off-by: Hannes Reinecke<hare@suse.de>
->> jpg: Use scsi_cmd_to_rq()
->> Signed-off-by: John Garry<john.garry@huawei.com>
-> A few thousand randconfig builds later, I actually came across
-> building this driver.
+On Thu, Sep 30, 2021 at 10:07:44AM +0200, Greg Kroah-Hartman wrote:
+> On Thu, Sep 30, 2021 at 03:40:26PM +0800, Ming Lei wrote:
+> > SCSI host release is triggered when SCSI device is freed, and we have to
+> > make sure that LLD module won't be unloaded before SCSI host instance is
+> > released because shost->hostt is required in host release handler.
+> > 
+> > So put LLD module refcnt after SCSI device is released.
+> > 
+> > The real release handler can be run from wq context in case of
+> > in_interrupt(), so add one atomic counter for serializing putting
+> > module via current and wq context. This way is fine since we don't
+> > call scsi_device_put() in fast IO path.
+> > 
+> > Reported-by: Changhui Zhong <czhong@redhat.com>
+> > Reported-by: Yi Zhang <yi.zhang@redhat.com>
+> > Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> > ---
+> >  drivers/scsi/scsi.c        |  8 +++++++-
+> >  drivers/scsi/scsi_sysfs.c  | 10 ++++++++++
+> >  include/scsi/scsi_device.h |  2 ++
+> >  3 files changed, 19 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> > index b241f9e3885c..b6612161587f 100644
+> > --- a/drivers/scsi/scsi.c
+> > +++ b/drivers/scsi/scsi.c
+> > @@ -553,8 +553,14 @@ EXPORT_SYMBOL(scsi_device_get);
+> >   */
+> >  void scsi_device_put(struct scsi_device *sdev)
+> >  {
+> > -	module_put(sdev->host->hostt->module);
+> > +	struct module *mod = sdev->host->hostt->module;
+> > +
+> > +	atomic_inc(&sdev->put_dev_cnt);
 > 
->> @@ -1821,7 +1776,7 @@ int acornscsi_reconnect_finish(AS_Host *host)
->>          host->scsi.disconnectable = 0;
->>          if (host->SCpnt->device->id  == host->scsi.reconnected.target &&
->>              host->SCpnt->device->lun == host->scsi.reconnected.lun &&
->> -           host->SCpnt->tag         == host->scsi.reconnected.tag) {
->> +           scsi_cmd_to_tag(host->SCpnt) == host->scsi.reconnected.tag) {
->>   #if (DEBUG & (DEBUG_QUEUES|DEBUG_DISCON))
->>              DBG(host->SCpnt, printk("scsi%d.%c: reconnected",
->>                      host->host->host_no, acornscsi_target(host)));
-> drivers/scsi/arm/acornscsi.c: In function 'acornscsi_reconnect_finish':
-> drivers/scsi/arm/acornscsi.c:1779:6: error: implicit declaration of
-> function 'scsi_cmd_to_tag'; did you mean 'scsi_cmd_to_rq'?
-> [-Werror=implicit-function-declaration]
->        scsi_cmd_to_tag(host->SCpnt) == host->scsi.reconnected.tag) {
->        ^~~~~~~~~~~~~~~
->        scsi_cmd_to_rq
+> Ick, no!  Why are you making a new lock and reference count for no
+> reason?
+
+The reason is to make sure that the LLD module is only put from either
+scsi_device_put() and scsi_device_dev_release_usercontext().
+
 > 
-> I have no idea what this is meant to do instead, but scsi_cmd_to_tag()
-> does not appear to be defined in any kernel I can find.
+> > +
+> >  	put_device(&sdev->sdev_gendev);
+> > +
+> > +	if (atomic_dec_if_positive(&sdev->put_dev_cnt) >= 0)
+> > +		module_put(mod);
+> 
+> How do you know if your module pointer is still valid here?
 
-Hannes added new function scsi_cmd_to_tag() in v1 series, but I removed 
-it when I reposted the v2 series. But then missed this reference.
+module refcnt is grabbed in scsi_device_get(), so it is valid.
 
-I think the build fix should be as follows:
+> 
+> Why do you care?
+> 
+> What problem are you trying to solve and why is it unique to scsi
+> devices?
 
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -1776,7 +1776,7 @@ int acornscsi_reconnect_finish(AS_Host *host)
-        host->scsi.disconnectable = 0;
-        if (host->SCpnt->device->id  == host->scsi.reconnected.target &&
-            host->SCpnt->device->lun == host->scsi.reconnected.lun &&
--           scsi_cmd_to_tag(host->SCpnt) == host->scsi.reconnected.tag) {
-+           scsi_cmd_to_rq(host->SCpnt)->tag == 
-host->scsi.reconnected.tag) {
+See it from the commit log:
 
-Let me know if you want us to post a patch for this.
+	SCSI host release is triggered when SCSI device is freed, and we have to
+	make sure that LLD module won't be unloaded before SCSI host instance is
+	released because shost->hostt is required in host release handler.
+	
+	So put LLD module refcnt after SCSI device is released.
+
+and the upstream report on the issue:
+
+https://lore.kernel.org/linux-block/CAHj4cs8XNtkzbbiLnFmVu82wYeQpLkVp6_wCtrnbhODay+OP9w@mail.gmail.com/
+
 
 Thanks,
-John
-
+Ming
 
