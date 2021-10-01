@@ -2,92 +2,365 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D165C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 06:41:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E36A7C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 06:53:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2474C61A71
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 06:41:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBF4461A05
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 06:53:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352260AbhJAGm7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Oct 2021 02:42:59 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58210 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231165AbhJAGm6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2021 02:42:58 -0400
-Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D18EC06176A;
-        Thu, 30 Sep 2021 23:41:14 -0700 (PDT)
-Date:   Fri, 1 Oct 2021 08:41:10 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1633070472;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xK00ctqiWFiU5nGteYW9PbRD7IJFRMc23+AFIc4vmQc=;
-        b=uDNKSqqgL2ktUiJ3xLdIFIBN0zoNRk7sEhoRMIvg1Ovaswt+6mphiYsXLyvHCMey472SFj
-        RAAie+/TScs+MgAHk/nGGzaO2NYr+PXCZ5elb15FW2w3FH4trs8EPZv++NxUjyH4Mv7KmR
-        ajbH0Xu48F1mCVuP9Gqu3qzWGrhyn/mXq237PVZzbF2EB6kGxniNXaZN9WY7qj1BPChGgG
-        n5Abh2vKaIEbOrRqfyQJyWUZ6TG42mSH0/2nvK/Wg68djx8S7NPiqzmj1SX/Y9S/WitpW2
-        Be0zzAX/wgfJqrxcKRqGlz9MljrKlPsum+/9HI/TgGdsZqtcsKXKuIorEYgpCA==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1633070472;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=xK00ctqiWFiU5nGteYW9PbRD7IJFRMc23+AFIc4vmQc=;
-        b=eo3244AX3puJEk21YgXyAHizLRxD1mKqWpdZkNJmfPUa2SOyBj4MkGqqqxTl+LkEm1xiaG
-        KjoMMmh+QlP6XiAw==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Doug Ledford <dledford@redhat.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org,
-        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
-        Ketan Mukadam <ketan.mukadam@broadcom.com>,
-        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "Manoj N. Kumar" <manoj@linux.ibm.com>,
-        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
-        Uma Krishnan <ukrishn@linux.ibm.com>,
-        Brian King <brking@us.ibm.com>,
-        James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Sumit Saxena <sumit.saxena@broadcom.com>,
-        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-        megaraidlinux.pdl@broadcom.com,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com
-Subject: Re: [RFC] Is lib/irq_poll still considered useful?
-Message-ID: <20211001064110.anckzkd5ymnxvczc@linutronix.de>
-References: <20210930103754.2128949-1-bigeasy@linutronix.de>
- <20210930105605.ofyayf3uwk75u25s@linutronix.de>
- <YVaNkVXYUt6tIYvS@infradead.org>
+        id S1352333AbhJAGyw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Oct 2021 02:54:52 -0400
+Received: from mga12.intel.com ([192.55.52.136]:60111 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231134AbhJAGyw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 1 Oct 2021 02:54:52 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10123"; a="204844280"
+X-IronPort-AV: E=Sophos;i="5.85,337,1624345200"; 
+   d="scan'208";a="204844280"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Sep 2021 23:53:08 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,337,1624345200"; 
+   d="scan'208";a="556157624"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by FMSMGA003.fm.intel.com with ESMTP; 30 Sep 2021 23:53:06 -0700
+Subject: Re: [PATCH 2/2] scsi: ufs: Stop clearing unit attentions
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        bvanassche@acm.org
+Cc:     Bart Van Assche <bvanassche@google.com>
+References: <20210930195237.1521436-1-jaegeuk@kernel.org>
+ <20210930195237.1521436-2-jaegeuk@kernel.org>
+ <12ba3462-ac6b-ef35-4b5e-e0de6086ab51@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <f2436720-16d5-58da-abcc-20fa1ed01fb9@intel.com>
+Date:   Fri, 1 Oct 2021 09:52:53 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
+In-Reply-To: <12ba3462-ac6b-ef35-4b5e-e0de6086ab51@intel.com>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <YVaNkVXYUt6tIYvS@infradead.org>
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-10-01 05:24:49 [+0100], Christoph Hellwig wrote:
-> On Thu, Sep 30, 2021 at 12:56:05PM +0200, Sebastian Andrzej Siewior wrote:
-> > Is there a reason for the remaining user of irq_poll to keep using it?
+On 01/10/2021 07:58, Adrian Hunter wrote:
+> On 30/09/2021 22:52, Jaegeuk Kim wrote:
+>> From: Bart Van Assche <bvanassche@google.com>
+>>
+>> Commit aa53f580e67b ("scsi: ufs: Minor adjustments to error handling")
+>> introduced a ufshcd_clear_ua_wluns() call in
+>> ufshcd_err_handling_unprepare(). As explained in detail by Adrian Hunter,
+>> this can trigger a deadlock. Avoid that deadlock by removing the code that
+>> clears the unit attention. This is safe because the only software that
+>> relies on clearing unit attentions is the Android Trusty software and
 > 
-> At least for RDMA there are workloads where the latency difference
-> matters.  That's why we added both the irq_poll and workqueue mode
-> to thew new CQ API a few years ago.
+> Did you test this? Because AFAIK it won't work for the UFS device WLUN.
+> 
+> UAC must also be cleared for the UFS device WLUN otherwise there will
+> be an error in ufshcd_set_dev_pwr_mode().
 
-Would it work for them to move to threaded interrupts or is the NAPI
-like behaviour (delay after a while to the next jiffy) the killer
-feature?
+Ok, I see now you took care of that in patch 1.  That's cool, but you
+you didn't cc me on patch 1.  I think people have raised the issue
+before of being cc'ed on only a part of a patchset - don't know what
+the conclusion was, but in this case it was not ideal.
 
-Sebastian
+I would also suggest cc'ing more UFS driver contributors.
+
+In any case, I suggest amending the commit message of patch 1 to say
+why the change is being made, and also in this patch, add to the
+commit message that it depends on the "retry START_STOP on UNIT_ATTENTION"
+patch.
+
+Finally, there is another thing to change.  The reason
+ufshcd_suspend_prepare() does a runtime resume of sdev_rpmb is because the
+UAC clear would wait for an async runtime resume, which will never happen
+during system suspend because the PM workqueue gets frozen.  So with the
+removal of UAC clear, ufshcd_suspend_prepare() and ufshcd_resume_complete()
+should be updated also, to leave rpmb alone.
+
+
+> 
+>> because support for handling unit attentions has been added in the Trusty software.
+>>
+>> See also https://lore.kernel.org/linux-scsi/20210930124224.114031-2-adrian.hunter@intel.com/
+>>
+>> Cc: Adrian Hunter <adrian.hunter@intel.com>
+>> Fixes: aa53f580e67b ("scsi: ufs: Minor adjustments to error handling")
+>> Signed-off-by: Bart Van Assche <bvanassche@google.com>
+>> Signed-off-by: Jaegeuk Kim <jaegeuk@kernel.org>
+>> ---
+>>  drivers/scsi/ufs/ufshcd.c | 176 +-------------------------------------
+>>  drivers/scsi/ufs/ufshcd.h |   3 -
+>>  2 files changed, 1 insertion(+), 178 deletions(-)
+>>
+>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> index 1f21d371e231..4add5e990de9 100644
+>> --- a/drivers/scsi/ufs/ufshcd.c
+>> +++ b/drivers/scsi/ufs/ufshcd.c
+>> @@ -224,7 +224,6 @@ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
+>>  static int ufshcd_eh_host_reset_handler(struct scsi_cmnd *cmd);
+>>  static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag);
+>>  static void ufshcd_hba_exit(struct ufs_hba *hba);
+>> -static int ufshcd_clear_ua_wluns(struct ufs_hba *hba);
+>>  static int ufshcd_probe_hba(struct ufs_hba *hba, bool async);
+>>  static int ufshcd_setup_clocks(struct ufs_hba *hba, bool on);
+>>  static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
+>> @@ -4109,8 +4108,6 @@ int ufshcd_link_recovery(struct ufs_hba *hba)
+>>  	if (ret)
+>>  		dev_err(hba->dev, "%s: link recovery failed, err %d",
+>>  			__func__, ret);
+>> -	else
+>> -		ufshcd_clear_ua_wluns(hba);
+>>  
+>>  	return ret;
+>>  }
+>> @@ -5974,7 +5971,6 @@ static void ufshcd_err_handling_unprepare(struct ufs_hba *hba)
+>>  	ufshcd_release(hba);
+>>  	if (ufshcd_is_clkscaling_supported(hba))
+>>  		ufshcd_clk_scaling_suspend(hba, false);
+>> -	ufshcd_clear_ua_wluns(hba);
+>>  	ufshcd_rpm_put(hba);
+>>  }
+>>  
+>> @@ -7907,8 +7903,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+>>  	if (ret)
+>>  		goto out;
+>>  
+>> -	ufshcd_clear_ua_wluns(hba);
+>> -
+>>  	/* Initialize devfreq after UFS device is detected */
+>>  	if (ufshcd_is_clkscaling_supported(hba)) {
+>>  		memcpy(&hba->clk_scaling.saved_pwr_info.info,
+>> @@ -7934,116 +7928,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+>>  	return ret;
+>>  }
+>>  
+>> -static void ufshcd_request_sense_done(struct request *rq, blk_status_t error)
+>> -{
+>> -	if (error != BLK_STS_OK)
+>> -		pr_err("%s: REQUEST SENSE failed (%d)\n", __func__, error);
+>> -	kfree(rq->end_io_data);
+>> -	blk_put_request(rq);
+>> -}
+>> -
+>> -static int
+>> -ufshcd_request_sense_async(struct ufs_hba *hba, struct scsi_device *sdev)
+>> -{
+>> -	/*
+>> -	 * Some UFS devices clear unit attention condition only if the sense
+>> -	 * size used (UFS_SENSE_SIZE in this case) is non-zero.
+>> -	 */
+>> -	static const u8 cmd[6] = {REQUEST_SENSE, 0, 0, 0, UFS_SENSE_SIZE, 0};
+>> -	struct scsi_request *rq;
+>> -	struct request *req;
+>> -	char *buffer;
+>> -	int ret;
+>> -
+>> -	buffer = kzalloc(UFS_SENSE_SIZE, GFP_KERNEL);
+>> -	if (!buffer)
+>> -		return -ENOMEM;
+>> -
+>> -	req = blk_get_request(sdev->request_queue, REQ_OP_DRV_IN,
+>> -			      /*flags=*/BLK_MQ_REQ_PM);
+>> -	if (IS_ERR(req)) {
+>> -		ret = PTR_ERR(req);
+>> -		goto out_free;
+>> -	}
+>> -
+>> -	ret = blk_rq_map_kern(sdev->request_queue, req,
+>> -			      buffer, UFS_SENSE_SIZE, GFP_NOIO);
+>> -	if (ret)
+>> -		goto out_put;
+>> -
+>> -	rq = scsi_req(req);
+>> -	rq->cmd_len = ARRAY_SIZE(cmd);
+>> -	memcpy(rq->cmd, cmd, rq->cmd_len);
+>> -	rq->retries = 3;
+>> -	req->timeout = 1 * HZ;
+>> -	req->rq_flags |= RQF_PM | RQF_QUIET;
+>> -	req->end_io_data = buffer;
+>> -
+>> -	blk_execute_rq_nowait(/*bd_disk=*/NULL, req, /*at_head=*/true,
+>> -			      ufshcd_request_sense_done);
+>> -	return 0;
+>> -
+>> -out_put:
+>> -	blk_put_request(req);
+>> -out_free:
+>> -	kfree(buffer);
+>> -	return ret;
+>> -}
+>> -
+>> -static int ufshcd_clear_ua_wlun(struct ufs_hba *hba, u8 wlun)
+>> -{
+>> -	struct scsi_device *sdp;
+>> -	unsigned long flags;
+>> -	int ret = 0;
+>> -
+>> -	spin_lock_irqsave(hba->host->host_lock, flags);
+>> -	if (wlun == UFS_UPIU_UFS_DEVICE_WLUN)
+>> -		sdp = hba->sdev_ufs_device;
+>> -	else if (wlun == UFS_UPIU_RPMB_WLUN)
+>> -		sdp = hba->sdev_rpmb;
+>> -	else
+>> -		BUG();
+>> -	if (sdp) {
+>> -		ret = scsi_device_get(sdp);
+>> -		if (!ret && !scsi_device_online(sdp)) {
+>> -			ret = -ENODEV;
+>> -			scsi_device_put(sdp);
+>> -		}
+>> -	} else {
+>> -		ret = -ENODEV;
+>> -	}
+>> -	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> -	if (ret)
+>> -		goto out_err;
+>> -
+>> -	ret = ufshcd_request_sense_async(hba, sdp);
+>> -	scsi_device_put(sdp);
+>> -out_err:
+>> -	if (ret)
+>> -		dev_err(hba->dev, "%s: UAC clear LU=%x ret = %d\n",
+>> -				__func__, wlun, ret);
+>> -	return ret;
+>> -}
+>> -
+>> -static int ufshcd_clear_ua_wluns(struct ufs_hba *hba)
+>> -{
+>> -	int ret = 0;
+>> -
+>> -	if (!hba->wlun_dev_clr_ua)
+>> -		goto out;
+>> -
+>> -	ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_UFS_DEVICE_WLUN);
+>> -	if (!ret)
+>> -		ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_RPMB_WLUN);
+>> -	if (!ret)
+>> -		hba->wlun_dev_clr_ua = false;
+>> -out:
+>> -	if (ret)
+>> -		dev_err(hba->dev, "%s: Failed to clear UAC WLUNS ret = %d\n",
+>> -				__func__, ret);
+>> -	return ret;
+>> -}
+>> -
+>>  /**
+>>   * ufshcd_probe_hba - probe hba to detect device and initialize it
+>>   * @hba: per-adapter instance
+>> @@ -8094,8 +7978,6 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
+>>  	/* UFS device is also active now */
+>>  	ufshcd_set_ufs_dev_active(hba);
+>>  	ufshcd_force_reset_auto_bkops(hba);
+>> -	hba->wlun_dev_clr_ua = true;
+>> -	hba->wlun_rpmb_clr_ua = true;
+>>  
+>>  	/* Gear up to HS gear if supported */
+>>  	if (hba->max_pwr_info.is_valid) {
+>> @@ -8655,8 +8537,6 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+>>  	 * handling context.
+>>  	 */
+>>  	hba->host->eh_noresume = 1;
+>> -	if (hba->wlun_dev_clr_ua)
+>> -		ufshcd_clear_ua_wlun(hba, UFS_UPIU_UFS_DEVICE_WLUN);
+>>  
+>>  	cmd[4] = pwr_mode << 4;
+>>  
+>> @@ -9819,49 +9699,6 @@ static struct scsi_driver ufs_dev_wlun_template = {
+>>  	},
+>>  };
+>>  
+>> -static int ufshcd_rpmb_probe(struct device *dev)
+>> -{
+>> -	return is_rpmb_wlun(to_scsi_device(dev)) ? 0 : -ENODEV;
+>> -}
+>> -
+>> -static inline int ufshcd_clear_rpmb_uac(struct ufs_hba *hba)
+>> -{
+>> -	int ret = 0;
+>> -
+>> -	if (!hba->wlun_rpmb_clr_ua)
+>> -		return 0;
+>> -	ret = ufshcd_clear_ua_wlun(hba, UFS_UPIU_RPMB_WLUN);
+>> -	if (!ret)
+>> -		hba->wlun_rpmb_clr_ua = 0;
+>> -	return ret;
+>> -}
+>> -
+>> -#ifdef CONFIG_PM
+>> -static int ufshcd_rpmb_resume(struct device *dev)
+>> -{
+>> -	struct ufs_hba *hba = wlun_dev_to_hba(dev);
+>> -
+>> -	if (hba->sdev_rpmb)
+>> -		ufshcd_clear_rpmb_uac(hba);
+>> -	return 0;
+>> -}
+>> -#endif
+>> -
+>> -static const struct dev_pm_ops ufs_rpmb_pm_ops = {
+>> -	SET_RUNTIME_PM_OPS(NULL, ufshcd_rpmb_resume, NULL)
+>> -	SET_SYSTEM_SLEEP_PM_OPS(NULL, ufshcd_rpmb_resume)
+>> -};
+>> -
+>> -/* ufs_rpmb_wlun_template - Describes UFS RPMB WLUN. Used only to send UAC. */
+>> -static struct scsi_driver ufs_rpmb_wlun_template = {
+>> -	.gendrv = {
+>> -		.name = "ufs_rpmb_wlun",
+>> -		.owner = THIS_MODULE,
+>> -		.probe = ufshcd_rpmb_probe,
+>> -		.pm = &ufs_rpmb_pm_ops,
+>> -	},
+>> -};
+>> -
+>>  static int __init ufshcd_core_init(void)
+>>  {
+>>  	int ret;
+>> @@ -9870,24 +9707,13 @@ static int __init ufshcd_core_init(void)
+>>  
+>>  	ret = scsi_register_driver(&ufs_dev_wlun_template.gendrv);
+>>  	if (ret)
+>> -		goto debugfs_exit;
+>> -
+>> -	ret = scsi_register_driver(&ufs_rpmb_wlun_template.gendrv);
+>> -	if (ret)
+>> -		goto unregister;
+>> -
+>> -	return ret;
+>> -unregister:
+>> -	scsi_unregister_driver(&ufs_dev_wlun_template.gendrv);
+>> -debugfs_exit:
+>> -	ufs_debugfs_exit();
+>> +		ufs_debugfs_exit();
+>>  	return ret;
+>>  }
+>>  
+>>  static void __exit ufshcd_core_exit(void)
+>>  {
+>>  	ufs_debugfs_exit();
+>> -	scsi_unregister_driver(&ufs_rpmb_wlun_template.gendrv);
+>>  	scsi_unregister_driver(&ufs_dev_wlun_template.gendrv);
+>>  }
+>>  
+>> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> index 52ea6f350b18..b414491a8240 100644
+>> --- a/drivers/scsi/ufs/ufshcd.h
+>> +++ b/drivers/scsi/ufs/ufshcd.h
+>> @@ -865,9 +865,6 @@ struct ufs_hba {
+>>  	struct ufs_vreg_info vreg_info;
+>>  	struct list_head clk_list_head;
+>>  
+>> -	bool wlun_dev_clr_ua;
+>> -	bool wlun_rpmb_clr_ua;
+>> -
+>>  	/* Number of requests aborts */
+>>  	int req_abort_count;
+>>  
+>>
+> 
+
