@@ -2,63 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85BC4C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 06:16:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D165C433EF
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 06:41:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6886D61507
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 06:16:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2474C61A71
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 06:41:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1351884AbhJAGSR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Oct 2021 02:18:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49110 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1351989AbhJAGSQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 1 Oct 2021 02:18:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1B6D961A56;
-        Fri,  1 Oct 2021 06:16:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633068992;
-        bh=uRhCoCH0T2pPwyMMrtCZpwXpGhC5/Pvxf2swNMGuqvo=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=CYo15rKP/+eEA9jDu7WeXeiIRW5WRaUdNgnWj7oceXI3jaALMK+lth8vJ/mSNyfGo
-         EGqbj98H++YaQ2dwPPsyNJqM9rnpHKfF9sYUekJ8YCLeQQuuMUV6RhyLOe4oghx65e
-         w0AFDsfGWKeo/UrAUfBLJ2otGgTP5eed1KLXmWSgGRf/ZFIsme0CjNculOe4YtgPeK
-         yMFWxV4jlmqq1E6lb5rEbYVO8dxliZwovX+vyqg8CpRyEc/gCFtk77XACPpDcrHufg
-         2yxMzLRJpiJgEc+qX8iA+rXSuQ1PdTTx697QvkLnSTTp9qR77FzpYypr95PqdRPzsC
-         kGOu6BSAPgUBA==
-Date:   Fri, 1 Oct 2021 11:46:28 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-Cc:     Kishon Vijay Abraham I <kishon@ti.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
+        id S1352260AbhJAGm7 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Oct 2021 02:42:59 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58210 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231165AbhJAGm6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2021 02:42:58 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D18EC06176A;
+        Thu, 30 Sep 2021 23:41:14 -0700 (PDT)
+Date:   Fri, 1 Oct 2021 08:41:10 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1633070472;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=xK00ctqiWFiU5nGteYW9PbRD7IJFRMc23+AFIc4vmQc=;
+        b=uDNKSqqgL2ktUiJ3xLdIFIBN0zoNRk7sEhoRMIvg1Ovaswt+6mphiYsXLyvHCMey472SFj
+        RAAie+/TScs+MgAHk/nGGzaO2NYr+PXCZ5elb15FW2w3FH4trs8EPZv++NxUjyH4Mv7KmR
+        ajbH0Xu48F1mCVuP9Gqu3qzWGrhyn/mXq237PVZzbF2EB6kGxniNXaZN9WY7qj1BPChGgG
+        n5Abh2vKaIEbOrRqfyQJyWUZ6TG42mSH0/2nvK/Wg68djx8S7NPiqzmj1SX/Y9S/WitpW2
+        Be0zzAX/wgfJqrxcKRqGlz9MljrKlPsum+/9HI/TgGdsZqtcsKXKuIorEYgpCA==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1633070472;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=xK00ctqiWFiU5nGteYW9PbRD7IJFRMc23+AFIc4vmQc=;
+        b=eo3244AX3puJEk21YgXyAHizLRxD1mKqWpdZkNJmfPUa2SOyBj4MkGqqqxTl+LkEm1xiaG
+        KjoMMmh+QlP6XiAw==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Peter Zijlstra <peterz@infradead.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Doug Ledford <dledford@redhat.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org,
+        Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
+        Ketan Mukadam <ketan.mukadam@broadcom.com>,
+        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org,
-        Chanho Park <chanho61.park@samsung.com>,
-        linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org
-Subject: Re: [PATCH 1/2] phy: samsung: unify naming and describe driver in
- KConfig
-Message-ID: <YVanvDPnpCpYjPgL@matsya>
-References: <20210924132658.109814-1-krzysztof.kozlowski@canonical.com>
+        "Manoj N. Kumar" <manoj@linux.ibm.com>,
+        "Matthew R. Ochs" <mrochs@linux.ibm.com>,
+        Uma Krishnan <ukrishn@linux.ibm.com>,
+        Brian King <brking@us.ibm.com>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        Kashyap Desai <kashyap.desai@broadcom.com>,
+        Sumit Saxena <sumit.saxena@broadcom.com>,
+        Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+        megaraidlinux.pdl@broadcom.com,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com
+Subject: Re: [RFC] Is lib/irq_poll still considered useful?
+Message-ID: <20211001064110.anckzkd5ymnxvczc@linutronix.de>
+References: <20210930103754.2128949-1-bigeasy@linutronix.de>
+ <20210930105605.ofyayf3uwk75u25s@linutronix.de>
+ <YVaNkVXYUt6tIYvS@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210924132658.109814-1-krzysztof.kozlowski@canonical.com>
+In-Reply-To: <YVaNkVXYUt6tIYvS@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 24-09-21, 15:26, Krzysztof Kozlowski wrote:
-> We use everywhere "Samsung" and "Exynos", not the uppercase versions.
-> Describe better which driver applies to which SoC, to make configuring
-> kernel for Samsung SoC easier.
+On 2021-10-01 05:24:49 [+0100], Christoph Hellwig wrote:
+> On Thu, Sep 30, 2021 at 12:56:05PM +0200, Sebastian Andrzej Siewior wrote:
+> > Is there a reason for the remaining user of irq_poll to keep using it?
+> 
+> At least for RDMA there are workloads where the latency difference
+> matters.  That's why we added both the irq_poll and workqueue mode
+> to thew new CQ API a few years ago.
 
-Applied, thanks
+Would it work for them to move to threaded interrupts or is the NAPI
+like behaviour (delay after a while to the next jiffy) the killer
+feature?
 
--- 
-~Vinod
+Sebastian
