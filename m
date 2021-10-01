@@ -2,128 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DBAEC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 15:57:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BE055C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 16:19:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4C3E561ACD
-	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 15:57:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 98649611C8
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 16:19:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1354173AbhJAP7g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 1 Oct 2021 11:59:36 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:54358 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231768AbhJAP7g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2021 11:59:36 -0400
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 191FmC2e021023;
-        Fri, 1 Oct 2021 11:57:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : references : content-type : in-reply-to : sender :
- content-transfer-encoding : mime-version; s=pp1;
- bh=6SuAMrM04un2y1zV0UhHi9U3qSP3NwAXN/aRMAvxK4E=;
- b=FYWHI7UNMQhy7KypAO0ErsOfje/WRk4aHujPSPZtwY21A+Gt8DB4b4tOF5Ut1j957s40
- L9tNLXMamarudRBBVeS1r23NbAfkZmaHE/JvoxsTi1p1NCiwncUdDKSvMkjCaqhRuj/o
- vTHdldJUVu0Y/EDIRHt3/WVKgNROSZoHQG7q9mhVUVe3lzpzQfkcmVZ8gCodxntG5MET
- ydtoHRrmImpnlQq1mdbEFb/qONnePuXFrZt8ack31KKP3E9h7NIP/XrNtyQvfoJc7LY+
- JVOO3ZBlLpTEsjfqHjlZ9M1BAgHM0I3+9TvCiJqqKsDivDuTdlf19w6MbpQH3SXjaZHB pg== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3be59j04ud-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 01 Oct 2021 11:57:38 -0400
-Received: from m0098409.ppops.net (m0098409.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 191FsbCl010262;
-        Fri, 1 Oct 2021 11:57:37 -0400
-Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3be59j04tq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 01 Oct 2021 11:57:37 -0400
-Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
-        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 191Fqcvl021386;
-        Fri, 1 Oct 2021 15:57:35 GMT
-Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
-        by ppma04ams.nl.ibm.com with ESMTP id 3b9udar2xf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 01 Oct 2021 15:57:34 +0000
-Received: from d06av24.portsmouth.uk.ibm.com (d06av24.portsmouth.uk.ibm.com [9.149.105.60])
-        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 191FvVUi5767758
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 1 Oct 2021 15:57:31 GMT
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7A62B42041;
-        Fri,  1 Oct 2021 15:57:31 +0000 (GMT)
-Received: from d06av24.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 665A34203F;
-        Fri,  1 Oct 2021 15:57:31 +0000 (GMT)
-Received: from t480-pf1aa2c2 (unknown [9.145.62.191])
-        by d06av24.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
-        Fri,  1 Oct 2021 15:57:31 +0000 (GMT)
-Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94.2)
-        (envelope-from <bblock@linux.ibm.com>)
-        id 1mWKug-001Aol-Qb; Fri, 01 Oct 2021 17:57:30 +0200
-Date:   Fri, 1 Oct 2021 17:57:30 +0200
-From:   Benjamin Block <bblock@linux.ibm.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
-        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: Re: [PATCH v2 01/84] scsi: core: Use a member variable to track the
- SCSI command submitter
-Message-ID: <YVcv6vRhSHoaLD+z@t480-pf1aa2c2.linux.ibm.com>
-References: <20210929220600.3509089-1-bvanassche@acm.org>
- <20210929220600.3509089-2-bvanassche@acm.org>
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-In-Reply-To: <20210929220600.3509089-2-bvanassche@acm.org>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: pjuyiMDdUY1zmQfuT__PdksjdIP0cBBn
-X-Proofpoint-ORIG-GUID: qeJ8KrdqQxA6zHwgFDASBEfgmx-ck20q
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        id S232156AbhJAQV0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 1 Oct 2021 12:21:26 -0400
+Received: from mail-pj1-f42.google.com ([209.85.216.42]:52158 "EHLO
+        mail-pj1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231572AbhJAQVY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Oct 2021 12:21:24 -0400
+Received: by mail-pj1-f42.google.com with SMTP id oj16so3612925pjb.1;
+        Fri, 01 Oct 2021 09:19:39 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=vDagLVV0uf1V8Wt0ysVp3buB5AYx5/ItIRJCqG7qMBM=;
+        b=IvqWdpT1SVB4lr4Rnnzxq4CR0frtmlPERGcFV4nwtx039p1eSNgN3XR0Ep1yQ4ipg7
+         xjgkwOC4JLiqetBb8HpxMUQy/QI76hD7o1hfxxdpiBD5DLbVJhjAuUsM1RmaMxCEijH8
+         T5y66oCLoUnGYFfToOU7RAtAV8u0irJjmhMAuuXuU4sKaqhSwp/PG74tstFw8rRVSr/5
+         oBT6lmoM8mpLoir0OJth0j/ev3R58wk+kYnYlXG1ufGbdZYcjeDN1DpKUkJvCWFyEcgr
+         mqfVYh1G6p0SZtMA8GGtZLTnaxczKmVliCwcP01oZAU++oVPDOpq5og528rLzBnsipI1
+         vtQw==
+X-Gm-Message-State: AOAM533ClzMXta9ukDicA67YeCFPgH1liTN6syoZLe66DYlFGjkmB0B5
+        8azXFhHDU8fae0fnaekMATI=
+X-Google-Smtp-Source: ABdhPJyE08Ssiatmu0EqQ4+2ucHOF7X2hPS+mxLGZrjw1YOTJWz/HJs68C6HTu5c+EKvlCzfN3YB2g==
+X-Received: by 2002:a17:902:e80f:b0:13b:721d:f750 with SMTP id u15-20020a170902e80f00b0013b721df750mr10482685plg.18.1633105179309;
+        Fri, 01 Oct 2021 09:19:39 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:82b7:f0a2:c63d:c44e])
+        by smtp.gmail.com with ESMTPSA id q2sm8303614pjo.27.2021.10.01.09.19.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 01 Oct 2021 09:19:38 -0700 (PDT)
+Subject: Re: [PATCH 2/2] scsi: ufs: Stop clearing unit attentions
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Cc:     Bart Van Assche <bvanassche@google.com>
+References: <20210930195237.1521436-1-jaegeuk@kernel.org>
+ <20210930195237.1521436-2-jaegeuk@kernel.org>
+ <12ba3462-ac6b-ef35-4b5e-e0de6086ab51@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <e60a9acc-f53e-83b4-8add-b7a53cfd6492@acm.org>
+Date:   Fri, 1 Oct 2021 09:19:37 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
- definitions=2021-10-01_03,2021-10-01_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- phishscore=0 malwarescore=0 clxscore=1015 bulkscore=0 mlxscore=0
- priorityscore=1501 suspectscore=0 adultscore=0 impostorscore=0 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2110010108
+In-Reply-To: <12ba3462-ac6b-ef35-4b5e-e0de6086ab51@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hey Bart,
-
-On Wed, Sep 29, 2021 at 03:04:37PM -0700, Bart Van Assche wrote:
-> Conditional statements are faster than indirect calls. Use a member variable
-> to track the SCSI command submitter such that later patches can call
-> scsi_done(scmd) instead of scmd->scsi_done(scmd).
+On 9/30/21 9:58 PM, Adrian Hunter wrote:
+> On 30/09/2021 22:52, Jaegeuk Kim wrote:
+>> From: Bart Van Assche <bvanassche@google.com>
+>>
+>> Commit aa53f580e67b ("scsi: ufs: Minor adjustments to error handling")
+>> introduced a ufshcd_clear_ua_wluns() call in
+>> ufshcd_err_handling_unprepare(). As explained in detail by Adrian Hunter,
+>> this can trigger a deadlock. Avoid that deadlock by removing the code that
+>> clears the unit attention. This is safe because the only software that
+>> relies on clearing unit attentions is the Android Trusty software and
 > 
-> The asymmetric behavior that scsi_send_eh_cmnd() sets the submission
-> context to the SCSI error handler and that it does not restore the
-> submission context to the SCSI core is retained.
-> 
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/scsi_error.c | 18 +++++++-----------
->  drivers/scsi/scsi_lib.c   | 10 ++++++++++
->  drivers/scsi/scsi_priv.h  |  1 +
->  include/scsi/scsi_cmnd.h  |  7 +++++++
->  4 files changed, 25 insertions(+), 11 deletions(-)
-> 
+> Did you test this?
 
-I think its good!
+This patch series has been tested on an Android phone running the latest Trusty
+software but with runtime power management disabled.
 
-Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
-
-
--- 
-Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
-IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
-Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
-Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
+Bart.
