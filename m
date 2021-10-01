@@ -2,96 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67D87C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 22:10:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8ECC5C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 01:04:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42C4F61390
-	for <linux-scsi@archiver.kernel.org>; Thu, 30 Sep 2021 22:10:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53EF761994
+	for <linux-scsi@archiver.kernel.org>; Fri,  1 Oct 2021 01:04:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344384AbhI3WLx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 30 Sep 2021 18:11:53 -0400
-Received: from mail-pg1-f171.google.com ([209.85.215.171]:39634 "EHLO
-        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230093AbhI3WLx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Sep 2021 18:11:53 -0400
-Received: by mail-pg1-f171.google.com with SMTP id g184so7608682pgc.6
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Sep 2021 15:10:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=lPlU6kky2n0HxrX6mr8iuU24AHsH1p7eqRHVEikZDfQ=;
-        b=bA0OBUlRyDyND3yrD2N8Nu9gSphzed1IQmkdKg05Px5ZVgut2ukGwqyk+WYyF3RWBf
-         CrZZRAQI9l9aNBU5aI82hgCfRDPzxMMbQKhqY68rIoTMRpYrG0RiYTTKhJPJwbNqqRVz
-         FAtq+BSNTveNL1tjjikdStxgHfLoVfovHUy2eA+KMGSCLBfKx51bYLmiNI26rUH20MRU
-         zG7TOpz3w72V7BMe1y2PuYtSfiXeq/TSZzm6nUNIsEqMrmNIbUz+GU4mw8FJBM+oJtol
-         h7AlZnwJ/+ejPpNOHA1GOB10CFuxE6vr8IC16YZRjjOlGt2mwT4Z2G5Jv+9KZDQe13iC
-         Gvyg==
-X-Gm-Message-State: AOAM530YfQGtNMcE+cKeY/pueGGO5lsJWv4vz+0RtdctlTLSAAAyBpxW
-        RIUONkAe/oRwoS+zuEAZF0k=
-X-Google-Smtp-Source: ABdhPJzXNT8oaAYW5Kmw33A9/scqFf78v/m86MWbj3rWZfUSviddU3YMnJJvwveX5Q+Pfc9SfPQyIA==
-X-Received: by 2002:a63:1d58:: with SMTP id d24mr6958625pgm.316.1633039809716;
-        Thu, 30 Sep 2021 15:10:09 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:82b7:f0a2:c63d:c44e])
-        by smtp.gmail.com with ESMTPSA id x9sm4123975pfo.172.2021.09.30.15.10.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 30 Sep 2021 15:10:09 -0700 (PDT)
-Subject: Re: [PATCH V6 1/3] scsi: ufs: Fix error handler clear ua deadlock
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-References: <20210930124224.114031-1-adrian.hunter@intel.com>
- <20210930124224.114031-2-adrian.hunter@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <9e8ecb60-dc1b-2fd7-3ae4-bfa720f98769@acm.org>
-Date:   Thu, 30 Sep 2021 15:10:07 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S1351003AbhJABF6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 30 Sep 2021 21:05:58 -0400
+Received: from email.unionmem.com ([221.4.138.186]:54972 "EHLO
+        VLXDG1SPAM1.ramaxel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1350887AbhJABF6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Sep 2021 21:05:58 -0400
+Received: from V12DG1MBS03.ramaxel.local (v12dg1mbs03.ramaxel.local [172.26.18.33])
+        by VLXDG1SPAM1.ramaxel.com with ESMTPS id 19113lKR072180
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 1 Oct 2021 09:03:47 +0800 (GMT-8)
+        (envelope-from songyl@ramaxel.com)
+Received: from songyl (10.64.10.54) by V12DG1MBS03.ramaxel.local
+ (172.26.18.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.1531.3; Fri, 1 Oct
+ 2021 09:03:46 +0800
+Date:   Fri, 1 Oct 2021 01:03:46 +0000
+From:   Yanling Song <songyl@ramaxel.com>
+To:     Randy Dunlap <rdunlap@infradead.org>
+CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH] spraid: initial commit of Ramaxel spraid driver
+Message-ID: <20211001010346.2478a8af@songyl>
+In-Reply-To: <481d8f10-f755-29f0-58f3-9838890b0dc6@infradead.org>
+References: <20210930034752.248781-1-songyl@ramaxel.com>
+ <481d8f10-f755-29f0-58f3-9838890b0dc6@infradead.org>
+X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-In-Reply-To: <20210930124224.114031-2-adrian.hunter@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.64.10.54]
+X-ClientProxiedBy: V12DG1MBS03.ramaxel.local (172.26.18.33) To
+ V12DG1MBS03.ramaxel.local (172.26.18.33)
+X-DNSRBL: 
+X-MAIL: VLXDG1SPAM1.ramaxel.com 19113lKR072180
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/30/21 5:42 AM, Adrian Hunter wrote:
-> There is no guarantee to be able to enter the queue if requests are
-> blocked. That is because freezing the queue will block entry to the
-> queue, but freezing also waits for outstanding requests which can make
-> no progress while the queue is blocked.
+
+Hi Randy,
+Thanks for your comments. 
+It is National Holiday since today and I'm on a 7-day vacation. My
+response may be delayed, Sorry.
+ 
+
+
+On Wed, 29 Sep 2021 22:36:14 -0700
+Randy Dunlap <rdunlap@infradead.org> wrote:
+> Hi,
 > 
-> That situation can happen when the error handler issues requests to
-> clear unit attention condition. Requests are blocked if the ufshcd_state is
-> UFSHCD_STATE_EH_SCHEDULED_FATAL, which can happen as a result of
-> prior error handler activity. Requests cannot make progress when
-> ufshcd_state is UFSHCD_STATE_EH_SCHEDULED_FATAL, and only the error
-> handler can change that, so if the error handler is waiting to enter
-> the queue and blk_mq_freeze_queue() is waiting for outstanding requests,
-> they will deadlock.
+> On 9/29/21 8:47 PM, Yanling Song wrote:
+> > This initial commit contains Ramaxel's spraid module.
+> >   
 > 
-> Fix by issuing REQUEST_SENSE directly avoiding the SCSI queues, in
-> a similar fashion as other device commands.
+> Does "spraid" mean anything?  <something>  RAID ?
 
-Hi Adrian,
+yes, it means Super RAID.
 
-Although I appreciate all the work that you have done on this patch, there
-is at least one application (the Android Trusty software) that needs the
-RPMB unit attention information to work correctly. Hence my request to drop
-this patch and to integrate the following patch series in the upstream kernel:
-https://lore.kernel.org/linux-scsi/aacbec00-34e8-f082-51a5-15391bf99710@acm.org/T/#t
+> 
+> > Signed-off-by: Yanling Song <songyl@ramaxel.com>
+> > ---
+> >   Documentation/scsi/spraid.rst                 |   28 +
+> >   .../userspace-api/ioctl/ioctl-number.rst      |    2 +
+> >   MAINTAINERS                                   |    7 +
+> >   drivers/scsi/Kconfig                          |    1 +
+> >   drivers/scsi/Makefile                         |    1 +
+> >   drivers/scsi/spraid/Kconfig                   |   11 +
+> >   drivers/scsi/spraid/Makefile                  |    7 +
+> >   drivers/scsi/spraid/spraid.h                  |  656 +++
+> >   drivers/scsi/spraid/spraid_main.c             | 3617
+> > +++++++++++++++++ 9 files changed, 4330 insertions(+)
+> >   create mode 100644 Documentation/scsi/spraid.rst
+> >   create mode 100644 drivers/scsi/spraid/Kconfig
+> >   create mode 100644 drivers/scsi/spraid/Makefile
+> >   create mode 100644 drivers/scsi/spraid/spraid.h
+> >   create mode 100644 drivers/scsi/spraid/spraid_main.c
+> >   
+> 
+> > diff --git a/Documentation/userspace-api/ioctl/ioctl-number.rst
+> > b/Documentation/userspace-api/ioctl/ioctl-number.rst index
+> > 2e8134059c87..d93dbb680b16 100644 ---
+> > a/Documentation/userspace-api/ioctl/ioctl-number.rst +++
+> > b/Documentation/userspace-api/ioctl/ioctl-number.rst @@ -169,6
+> > +169,8 @@ Code  Seq#    Include
+> > File                                           Comments 'M'
+> > 00-0F  drivers/video/fsl-diu-fb.h
+> > conflict! 'N'   00-1F  drivers/usb/scanner.h 'N'   40-7F
+> > drivers/block/nvme.c +'N'   41-42
+> > drivers/scsi/spraid_main.c
+> > conflict! +'N'   80     drivers/scsi/spraid_main.c 'O'   00-06
+> > mtd/ubi-user.h                                          UBI 'P'
+> > all    linux/soundcard.h
+> > conflict! 'P'   60-6F
+> > sound/sscape_ioctl.h                                    conflict!  
+> 
+> It looks like the above won't apply cleanly: the surrounding lines
+> should not be indented any.
 
-Thanks,
+Will be fixed in the next version. 
 
-Bart.
+> 
+> > diff --git a/drivers/scsi/spraid/Kconfig
+> > b/drivers/scsi/spraid/Kconfig new file mode 100644
+> > index 000000000000..83962efaab07
+> > --- /dev/null
+> > +++ b/drivers/scsi/spraid/Kconfig
+> > @@ -0,0 +1,11 @@
+> > +#
+> > +# Ramaxel driver configuration
+> > +#
+> > +
+> > +config RAMAXEL_SPRAID
+> > +	tristate "Ramaxel spraid Adapter"
+> > +	depends on PCI && SCSI
+> > +	depends on ARM64 || X86_64
+> > +	default m  
+> 
+> Not "default m" unless it is needed to boot a system.
+
+This line will be deleted in next version.
+
+> 
+> > +	help
+> > +	  This driver supports Ramaxel spraid driver.  
+> 
+> 
+> thanks.
+
