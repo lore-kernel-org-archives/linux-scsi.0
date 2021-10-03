@@ -2,108 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBFA0C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Oct 2021 16:38:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF9E2C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Oct 2021 21:08:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD9FF61A0C
-	for <linux-scsi@archiver.kernel.org>; Sun,  3 Oct 2021 16:38:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B69461351
+	for <linux-scsi@archiver.kernel.org>; Sun,  3 Oct 2021 21:08:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231268AbhJCQk0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 3 Oct 2021 12:40:26 -0400
-Received: from smtp.infotech.no ([82.134.31.41]:55410 "EHLO smtp.infotech.no"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231342AbhJCQkF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 3 Oct 2021 12:40:05 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by smtp.infotech.no (Postfix) with ESMTP id 598E22041B2;
-        Sun,  3 Oct 2021 18:38:17 +0200 (CEST)
-X-Virus-Scanned: by amavisd-new-2.6.6 (20110518) (Debian) at infotech.no
-Received: from smtp.infotech.no ([127.0.0.1])
-        by localhost (smtp.infotech.no [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id ygzUebRrBBwl; Sun,  3 Oct 2021 18:38:15 +0200 (CEST)
-Received: from xtwo70.bingwo.ca (host-23-91-187-47.dyn.295.ca [23.91.187.47])
-        by smtp.infotech.no (Postfix) with ESMTPA id 562AD20423A;
-        Sun,  3 Oct 2021 18:37:56 +0200 (CEST)
-From:   Douglas Gilbert <dgilbert@interlog.com>
-To:     linux-scsi@vger.kernel.org
-Cc:     martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, hare@suse.de,
-        Damien.LeMoal@wdc.com
-Subject: [PATCH v21 46/46] sg: bump version to 4.0.12
-Date:   Sun,  3 Oct 2021 12:31:51 -0400
-Message-Id: <20211003163151.585349-47-dgilbert@interlog.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211003163151.585349-1-dgilbert@interlog.com>
-References: <20211003163151.585349-1-dgilbert@interlog.com>
+        id S231484AbhJCVKp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 3 Oct 2021 17:10:45 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42296 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231440AbhJCVKo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Oct 2021 17:10:44 -0400
+Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6C2B2C0613EC
+        for <linux-scsi@vger.kernel.org>; Sun,  3 Oct 2021 14:08:56 -0700 (PDT)
+Received: by mail-wm1-x32d.google.com with SMTP id g193-20020a1c20ca000000b0030d55f1d984so6139702wmg.3
+        for <linux-scsi@vger.kernel.org>; Sun, 03 Oct 2021 14:08:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=message-id:subject:from:to:cc:date:in-reply-to:references
+         :user-agent:mime-version:content-transfer-encoding;
+        bh=Zkct+sr5JjKjQY2htWpPc55s6StQEw5cLhC+v87JVcM=;
+        b=ZbYFgMdfQ/gGBbeW+ooj6AwG4q3y5w/i5PJdPmL1XC062AX1WLLqMDAVr0Cmlitygf
+         QSh0TtPFFnWn/gR+fDwTjOV4gYKpB7mAZm8RPU1KjnyvRwSJuNoujflAPDufaOi22mYk
+         6c2fvxbjHZ+YHdOHgaL7dcIMOdp10HoysAU+tX9oe3PKznUqdkZLE4vj3YzueDcfSDPo
+         YecNElUBgPJfejqG52ygJk1BkTOIim16hpuw20Ir+KckF12ur+phkb6SE/Vl6AwMy2AB
+         XDxOKvDzTwwyoTxYvbt8y2zBl9Nl1cuwtUTZHvSlCHvJK+IN3p4WEjt+3w+Ut3gvfT/o
+         n8ag==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=Zkct+sr5JjKjQY2htWpPc55s6StQEw5cLhC+v87JVcM=;
+        b=FdgbR+sxz5/RuuKkIYzh2N5TTcSxznm3um7V8qe6ly1WgaCuuCn+qIr0frOE0Nzt1a
+         uhO9J1eOUhIPaUZd1q9FTRUQg8F0cgUSX9tjQBNwDH/77is3ELQ8XAOkYEyv9L6qLSiK
+         pfx77UwY3nOEAWTHZTS7T27y1yPZR8Fuip22S7Tz91+9eId0hgrwv78tr9TIqRH8VGcR
+         Z6M7w50vaKz0KX08PF8Q6S2pNKYbo/lM6HlyLjZ6//b+m770esD8ZZw2En7u7F56s9ey
+         cDez0SliAtF9VPPGMrF5UHsgSxPbK8fLcslp1A1nAPKMBqYbGcuxPTeaRht/BBr2XRTo
+         seMw==
+X-Gm-Message-State: AOAM530mpr6zDOx8/9/kDZn1TIhhMlCU6bzFay/eWpxjJ2DtjRni8NiJ
+        ofEXII3AnLU+WTGLH3jzY+o=
+X-Google-Smtp-Source: ABdhPJzaG0sAxPaIT2vIOwRvACf6xv3/TozgF6poymAXPPfk6PPXUOx+cthWg0PcqzdAuXmCjfXTQw==
+X-Received: by 2002:a7b:c5d8:: with SMTP id n24mr15598365wmk.51.1633295335070;
+        Sun, 03 Oct 2021 14:08:55 -0700 (PDT)
+Received: from p200300e94717cf648712b27b14e4a39f.dip0.t-ipconnect.de (p200300e94717cf648712b27b14e4a39f.dip0.t-ipconnect.de. [2003:e9:4717:cf64:8712:b27b:14e4:a39f])
+        by smtp.googlemail.com with ESMTPSA id w5sm12324252wrq.86.2021.10.03.14.08.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 03 Oct 2021 14:08:54 -0700 (PDT)
+Message-ID: <d77f45c3f6cee99e71debc8297de4f0242268a61.camel@gmail.com>
+Subject: Re: [PATCH v2 01/84] scsi: core: Use a member variable to track the
+ SCSI command submitter
+From:   Bean Huo <huobean@gmail.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>,
+        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Date:   Sun, 03 Oct 2021 23:08:53 +0200
+In-Reply-To: <20210929220600.3509089-2-bvanassche@acm.org>
+References: <20210929220600.3509089-1-bvanassche@acm.org>
+         <20210929220600.3509089-2-bvanassche@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that the sg version 4 interface is supported:
-  - with ioctl(SG_IO) for synchronous/blocking use
-  - with ioctl(SG_IOSUBMIT) and ioctl(SG_IORECEIVE) for
-    async/non-blocking use
-Plus new ioctl(SG_IOSUBMIT_V3) and ioctl(SG_IORECEIVE_V3)
-potentially replace write() and read() for the sg
-version 3 interface. Bump major driver version number
-from 3 to 4.
+On Wed, 2021-09-29 at 15:04 -0700, Bart Van Assche wrote:
+> Conditional statements are faster than indirect calls. Use a member
+> variable
+> 
+> to track the SCSI command submitter such that later patches can call
+> 
+> scsi_done(scmd) instead of scmd->scsi_done(scmd).
+> 
+> 
+> 
+> The asymmetric behavior that scsi_send_eh_cmnd() sets the submission
+> 
+> context to the SCSI error handler and that it does not restore the
+> 
+> submission context to the SCSI core is retained.
+> 
+> 
+> 
+> Cc: Hannes Reinecke <hare@suse.com>
+> 
+> Cc: Ming Lei <ming.lei@redhat.com>
+> 
+> Cc: Christoph Hellwig <hch@lst.de>
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-The main new feature is the removal of the fixed 16 element
-array of requests per file descriptor. It is replaced by
-a xarray (eXtensible array) in their parent which is a
-sg_fd object (i.e. a file descriptor). The sg_request
-objects are not freed until the owning file descriptor is
-closed; instead these objects are re-used when multiple
-commands are sent to the same file descriptor.
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Douglas Gilbert <dgilbert@interlog.com>
----
- drivers/scsi/sg.c      | 11 ++++++-----
- include/uapi/scsi/sg.h |  4 ++--
- 2 files changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index c5f0c11e2c71..cee6d72f489c 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -7,13 +7,14 @@
-  *
-  * Original driver (sg.c):
-  *        Copyright (C) 1992 Lawrence Foard
-- * Version 2 and 3 extensions to driver:
-- *        Copyright (C) 1998 - 2019 Douglas Gilbert
-+ * Version 2, 3 and 4 extensions to driver:
-+ *        Copyright (C) 1998 - 2021 Douglas Gilbert
-+ *
-  */
- 
--static int sg_version_num = 30901;  /* [x]xyyzz where [x] empty when x=0 */
--#define SG_VERSION_STR "3.9.01"		/* [x]x.[y]y.zz */
--static char *sg_version_date = "20190606";
-+static int sg_version_num = 40012;  /* [x]xyyzz where [x] empty when x=0 */
-+#define SG_VERSION_STR "4.0.12"		/* [x]x.[y]y.zz */
-+static char *sg_version_date = "20210930";
- 
- #include <linux/module.h>
- 
-diff --git a/include/uapi/scsi/sg.h b/include/uapi/scsi/sg.h
-index f0e3d274fade..c9b7d6dd57a7 100644
---- a/include/uapi/scsi/sg.h
-+++ b/include/uapi/scsi/sg.h
-@@ -12,9 +12,9 @@
-  *   Copyright (C) 1992 Lawrence Foard
-  *
-  * Later extensions (versions 2, 3 and 4) to driver:
-- *   Copyright (C) 1998 - 2018 Douglas Gilbert
-+ *   Copyright (C) 1998 - 2021 Douglas Gilbert
-  *
-- * Version 4.0.11 (20190502)
-+ * Version 4.0.12 (20210111)
-  *  This version is for Linux 4 and 5 series kernels.
-  *
-  * Documentation
--- 
-2.25.1
+Reviewed-by: Bean Huo <beanhuo@micron.com>
 
