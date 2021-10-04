@@ -2,149 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0BD7C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 12:42:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A47EDC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 13:37:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8AB686124C
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 12:42:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 838CB610E6
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 13:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233253AbhJDMof (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Oct 2021 08:44:35 -0400
-Received: from esa4.hgst.iphmx.com ([216.71.154.42]:45740 "EHLO
-        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231965AbhJDMof (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2021 08:44:35 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1633351366; x=1664887366;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=v3IzaXtdoDNJHxMDwuQ5MCAt45ZQ4fcxs0GHkurERXo=;
-  b=Of2xDaXnHeRMIPUiGwRc6zO546BwTgNwfzhjfnwDB55e4YCKCK+byjz+
-   2Hm2JXCdD7fR8vp/iSS0mad2miENIs07uvCFqYd9JFVk0phMUrexIyE8h
-   NOrF/j2tayWFC0+31ff1J71sJ770sMWMvaHHMZQBW29gggo9GVOO2fw+G
-   P42oqOaWvyRVZjUk9k0FDAtqe3GExkWmX2nBkQuRSg6eCCSzQ4oRoCCfS
-   rdcbP1cH3F4/B+RTF3rH7q1DG642798UL9jtgeGbJhq6YYul+JdjhsJuz
-   Od602kFRemf3HBc/m9XkigUFcLw+dPk4bxtmqQLukXZTyS73jN2rENva5
-   g==;
-X-IronPort-AV: E=Sophos;i="5.85,345,1624291200"; 
-   d="scan'208";a="180826544"
-Received: from mail-bn8nam12lp2170.outbound.protection.outlook.com (HELO NAM12-BN8-obe.outbound.protection.outlook.com) ([104.47.55.170])
-  by ob1.hgst.iphmx.com with ESMTP; 04 Oct 2021 20:42:44 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FT2/6mZ8yXT366cFcyk7vFPICJfpQxRhazbqJhDg+wsRHNo2YAdXTjZ2AU3xr4H/6LdeD9vjzLMP3nZZW0QkiAcfpcf7jruW4Ynu2vUT/sVG3qq+D99284RnvZALLEYDqbhzIYObkzVFQmegbtDgIXqlkp3wIar6GeUuUVNDa5MCWM58tuPq96D5fWjh4cDm/gpl45lAK5+bRq67Y4+pTbdtdMHbAIgxFtwBohLuG8m1VSJMNg4jH3OK44xO7Zrzy7fBsd3if9nziGpcblLZYdHkzVChL34H9S1YwiYPNdUR/aexwGlUJuvu2pRq5LAA0VyTivUQ/uKRW0Cpof+FAQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=v3IzaXtdoDNJHxMDwuQ5MCAt45ZQ4fcxs0GHkurERXo=;
- b=JUizX+XRJ8+4gcP2O+PBrr7MKHM1EIb+FT8FMhg93S+8bM26bGdTPtawJIxaXR2OCRufTslEpFBbRlHLD73wOT3uQd/1gUD3ZLUn/NsB/xxPWW1yvnlC0OdtYVq8k535wXufwzP/pmpRuITATenCAHWcQ29IKK+jBWu+1vCfiQiOWs1XhdLEfdoOb+xIBa465bhnJJt3xFlrAW+yD/gBC+lzLQjuy80CppcJshI9VFp/5gfjEpaYpSGPCjJsoCALlwMCd0NZZHT58/B6+1idn+oD/Erx0wYif+LVFjuvtdyrGlIonZTEW6VcWkMVZ+ZZ+T29T/cxe3p9/W89PR2yqA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=v3IzaXtdoDNJHxMDwuQ5MCAt45ZQ4fcxs0GHkurERXo=;
- b=g7sV4UXPO8rQPjDFvZXlCpLZe4I6xeh6eSrxf+uXKPoe2XD8oTnW+T1FLVWaAC6wyj/bbHjNzfFuV6+4pzIEqZIMVPbeV7bVZntO/F88OG81Jyw396g4+hxJ1BMCp/PVVZg4FqS7c0vqWefG3YCy06sQBIw68007wRNk1fokvng=
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com (2603:10b6:5:1b7::7) by
- DM6PR04MB7004.namprd04.prod.outlook.com (2603:10b6:5:245::24) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4566.15; Mon, 4 Oct 2021 12:42:41 +0000
-Received: from DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::edbe:4c5:6ee8:fc59]) by DM6PR04MB6575.namprd04.prod.outlook.com
- ([fe80::edbe:4c5:6ee8:fc59%3]) with mapi id 15.20.4566.022; Mon, 4 Oct 2021
- 12:42:41 +0000
-From:   Avri Altman <Avri.Altman@wdc.com>
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Subject: RE: [PATCH RFC 0/6] scsi: ufs: Start to make driver synchronization
- easier to understand
-Thread-Topic: [PATCH RFC 0/6] scsi: ufs: Start to make driver synchronization
- easier to understand
-Thread-Index: AQHXuRhrakVUUbjAJk2JE/Po9HRjw6vCx6mA
-Date:   Mon, 4 Oct 2021 12:42:41 +0000
-Message-ID: <DM6PR04MB6575172F68B25EA1E4A258F1FCAE9@DM6PR04MB6575.namprd04.prod.outlook.com>
-References: <20211004120650.153218-1-adrian.hunter@intel.com>
-In-Reply-To: <20211004120650.153218-1-adrian.hunter@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: intel.com; dkim=none (message not signed)
- header.d=none;intel.com; dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 6344eece-e47b-4f05-c9c3-08d9873474c9
-x-ms-traffictypediagnostic: DM6PR04MB7004:
-x-microsoft-antispam-prvs: <DM6PR04MB700477A1E1E0C6B62DBD25A5FCAE9@DM6PR04MB7004.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: HBVxOKg9AUW7jpSHWaJ8YCEyLllWhnqCDWlv6IF2e5jzFXe21w8ar/xNxCqTmeAmBKbC3oX+uN9XuC66Wm6bzoxHL9zMeJxrnMRO9FDiDQWNpKMzb6VKtyF1dBALzHvJVAguquzMcImfyZfDJOLRS2TIJ/hsgLO3rJsUoyqda0nBO9+jwWFsxTZyQst2Y8jhbbpvF/2L25VPFR4labIilfDkxTdGGgLqrqbqq/QbPHjD9GC5VwrWRf96QEOxSVxgpC4lPbbi9d0lR8sVGUetmfr6llpD6ZzuJog78pHlULkqIzbGVjoaNrixFaupKdAJBbSqy8ozY0IuzaJAYH+jubBM4WIeSVqF2S2ltidFEUKXGJOPWZ7FT1Z88zyZPqK9beMKI/DaUhjk/Ye4WIJEDgCSfClw/RSjxFdS4EQQrY/G0Pv/8DOvb2MqxiPjfo1TOsKsuTpkpnCIYleGcUza/8SHnabQo2A8lhhh1UynB07+I7v0DNSYLW4RTj1J/3+KRQ6/7pNE+xxccUctRSFXQQeIMe8tm0dPKgiEG60V7RhY4iVWMGlwb7M4wrMifHF80m+E/ODt+VxlxX+ObPFpB/W9uXRfehtlD0jdv4RzDcgBipx+tqtO+Dv5FFGEdHQWoO/uB+Jpx9Xkee/0AMdYRK7zVwqlgh3z4F9aL72mL25jA2+oUie+hwn5YAM3AJJCA3IFNyJzljLJGaOkm5/PvQ==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR04MB6575.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(55016002)(33656002)(38070700005)(38100700002)(86362001)(508600001)(9686003)(122000001)(2906002)(76116006)(4744005)(4326008)(8676002)(8936002)(6506007)(5660300002)(7696005)(71200400001)(186003)(26005)(52536014)(54906003)(316002)(83380400001)(66946007)(110136005)(66476007)(66556008)(66446008)(64756008);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?pKFXqvuBsrGQuqikoVSutdjE4lAZ7rqDYOPtQ4uzXGset4sVJRsdMXrU7gVt?=
- =?us-ascii?Q?aalPF/sLR3TN7XEI5VO1PyATXovebnUr0WfymWyOq4xqwluhfs2N3PKxeLzP?=
- =?us-ascii?Q?mLCOzOhRjXl3zEPdpDXlc+GuPpYqvSKEJNzP7206EVrFcm2SWbMexnqcXrmS?=
- =?us-ascii?Q?b67eJgTfpZmbV37Lnd7jVavQ5Af7iUuedMvO2rkBnmNEtEnG32uiQckczwGv?=
- =?us-ascii?Q?M1iXSrXIivF3p7GxXO7ZobzTz6S596E0vr+olag3eSkMw+tlBGVrjPlbx74U?=
- =?us-ascii?Q?Hd/F+h8Tpihz3eKn6fLR5TT1/yQl9hksCWueAc0D8RjRv2i66g31Ghj4/MwK?=
- =?us-ascii?Q?zXrYl75N8COwxbu4GX8W3Xa1+skD+dFISZ99Zb7mdA6YaV9vXfMLxrtGZ7a4?=
- =?us-ascii?Q?88G/8CH4avYSDgSsacCn2WHA5szVR9IVQva1ghA8hDoeg7hsTF2a7Ipu+pEE?=
- =?us-ascii?Q?yZlI5h63smtMSLhMelEVw6GOtXbC05nkAcf959JYQ3iw3B/CUmMOWvGZ2eIz?=
- =?us-ascii?Q?UpJ6njdIH4F+wGSJqpV9hfKhetAJuhljYdicDj2Sdar+s8jB0jD9L1Ush63D?=
- =?us-ascii?Q?zD5Fra8zDaViP3GyOyUFAeKp7UAIai5gCrfpicB9yzSffhPAc15hdhJhl5r5?=
- =?us-ascii?Q?UWp9qTerv3fPtEWhkbYXbNA3k6JqNDRVRPpHrVYCwLn1u4yXRQxIZcluKQfI?=
- =?us-ascii?Q?vcIa5bsbe6q7U9syk66CG81NJPRR0JQCi31nrJiNvzWSg3CMhQSKRk8XrIcK?=
- =?us-ascii?Q?DDKIrJSmOAJFiclnr/qmIRzAAwEsOCiw9nYCF/ADW7s7uD88YCaLNuuxCeT6?=
- =?us-ascii?Q?eUi/zfVNvJv1pXRKuWWKTHDFDbzTN0q3To2JAGCtCHSwasApAEPDuc4QWzTl?=
- =?us-ascii?Q?xct20z/ppbDcVXmTYC/r1UUlSZXa+sLk4gobllEkYReIRmAc0k99oe4hGc1N?=
- =?us-ascii?Q?6U5p2T/N67NlBAXJhIOjZK9ZhkXam0PVlgsTDFLdIJkAEp2/uU+oJlk3NYGd?=
- =?us-ascii?Q?KwbjIIFgSSrkVzH0UFJQt8wlljVpKOr92+CMkm8cna7uLkBXV0MUXU48elfU?=
- =?us-ascii?Q?ey5iDhee//yyoGSm2+On66AMwFHSscCUCpUQZlzPU18q2oPA/lzdxBhsyuWK?=
- =?us-ascii?Q?Vxt2G46E8e9heViuKF36Q4a2lLConrzjYL0H7EZijBSVJelDjXDWjCuTMuzG?=
- =?us-ascii?Q?3e3QrIbv/6P2z+V7tCUi2QrpJcG26xONwNH3n2rH99ZigV2SeEVyyT+gDeLI?=
- =?us-ascii?Q?cxsVgyv7YSGkwm+iydLQfwSQibfc1aPHW3C0SKLvnLozd3Suj8QGjdTR48FF?=
- =?us-ascii?Q?81YzAaQ+yOp9bD0HM0pdfAuz?=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        id S238270AbhJDNiJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Oct 2021 09:38:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35770 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238079AbhJDNgI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2021 09:36:08 -0400
+Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E180C02B76E
+        for <linux-scsi@vger.kernel.org>; Mon,  4 Oct 2021 05:59:54 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mXNZO-0005Kb-Nf; Mon, 04 Oct 2021 14:59:50 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mXNZN-0000Mn-KM; Mon, 04 Oct 2021 14:59:49 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1mXNZG-0000cx-FR; Mon, 04 Oct 2021 14:59:42 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     linux-pci@vger.kernel.org, kernel@pengutronix.de,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Christoph Hellwig <hch@lst.de>
+Subject: [PATCH v6 08/11] scsi: message: fusion: Remove unused parameter of mpt_pci driver's probe()
+Date:   Mon,  4 Oct 2021 14:59:32 +0200
+Message-Id: <20211004125935.2300113-9-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de>
+References: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR04MB6575.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6344eece-e47b-4f05-c9c3-08d9873474c9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 04 Oct 2021 12:42:41.6409
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: xXDd815BOcXburJE/HD56ZUNHUxJcbkr2dTh+fZWyvTVwm3DTyfyEBHqgfst7GSATgue11IuHN2XEUA0Vtdp9Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR04MB7004
+Content-Type: text/plain; charset=UTF-8
+X-Patch-Hashes: v=1; h=sha256; i=Qw3P/Tfw3H2aE9nuVn1p4NHDqaHGErEmfJmO6L2HF80=; m=oP54miBWrkCU6D5dir8+ZifQgR+cn/3uLfRD8ejXKkU=; p=swgwO0gHobGOw9bvcebWnvhUeGHl0wdD920V7Jm9gyE=; g=2a2dbd5e6a461e2ef057dc0c5df0fe68c3d03bd6
+X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmFa+qIACgkQwfwUeK3K7AlgIQgAkSE 2UVcsvbX+K9t/SIp3vxn8+uHdWW4NOTduI3SOuDeFxA/CtD1BeFDUhquMKungE0lYQNeg0ZW+FXiX D/x8kXK1iK22apWyzZGBJxnVfeujKytUEmZzlPARZr0v737TEvvWJFE9vojHpWFYmsHnw83J+G522 GBtgWRHJ+NcphlXAQj/YOpNqZObuuUFT1uHnYjJMvsk1HxIZmayM6gpz3e8l2xA6XHgNyxqHan0fI 2G14+wH1E0KtcgAqyTKesQ3oZ2UUkFO7p7IPgQrO6wbcOhyEjLVzPZ4Z1PzBdXN7WCTymDQ+CT3nD 79rrvaUTlRqVSuz39kuSjVzh7DntGrw==
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-=20
-> Driver synchronization would be easier to understand if we used the
-> clk_scaling_lock as the only lock to provide either shared (down/up_read)
-> or exclusive (down/up_write) access to the host.
->=20
-> These patches make changes with that in mind, finally resulting in being
-> able to hold the down_write() lock for the entire error handler duration.
->=20
-> If this approach is acceptable, it could be extended to simplify the
-> the synchronization of PM vs error handler and Shutdown vs sysfs.
-Given that UFSHCD_CAP_CLK_SCALING is only set for ufs-qcom:
-If extending its use, wouldn't that become a source of contention for them?
+The only two drivers don't make use of the id parameter, so drop it.
 
-Thanks,
-Avri
+This removes a usage of struct pci_dev::driver which is planned to be
+removed as it tracks duplicate data.
+
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/message/fusion/mptbase.c | 7 ++-----
+ drivers/message/fusion/mptbase.h | 2 +-
+ drivers/message/fusion/mptctl.c  | 4 ++--
+ drivers/message/fusion/mptlan.c  | 2 +-
+ 4 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 7f7abc9069f7..b94d5e4fdc23 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -829,7 +829,6 @@ int
+ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ {
+ 	MPT_ADAPTER	*ioc;
+-	const struct pci_device_id *id;
+ 
+ 	if (!cb_idx || cb_idx >= MPT_MAX_PROTOCOL_DRIVERS)
+ 		return -EINVAL;
+@@ -838,10 +837,8 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ 
+ 	/* call per pci device probe entry point */
+ 	list_for_each_entry(ioc, &ioc_list, list) {
+-		id = ioc->pcidev->driver ?
+-		    ioc->pcidev->driver->id_table : NULL;
+ 		if (dd_cbfunc->probe)
+-			dd_cbfunc->probe(ioc->pcidev, id);
++			dd_cbfunc->probe(ioc->pcidev);
+ 	 }
+ 
+ 	return 0;
+@@ -2032,7 +2029,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	for(cb_idx = 0; cb_idx < MPT_MAX_PROTOCOL_DRIVERS; cb_idx++) {
+ 		if(MptDeviceDriverHandlers[cb_idx] &&
+ 		  MptDeviceDriverHandlers[cb_idx]->probe) {
+-			MptDeviceDriverHandlers[cb_idx]->probe(pdev,id);
++			MptDeviceDriverHandlers[cb_idx]->probe(pdev);
+ 		}
+ 	}
+ 
+diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+index b9e0376be723..4bd0682c65d3 100644
+--- a/drivers/message/fusion/mptbase.h
++++ b/drivers/message/fusion/mptbase.h
+@@ -257,7 +257,7 @@ typedef enum {
+ } MPT_DRIVER_CLASS;
+ 
+ struct mpt_pci_driver{
+-	int  (*probe) (struct pci_dev *dev, const struct pci_device_id *id);
++	int  (*probe) (struct pci_dev *dev);
+ 	void (*remove) (struct pci_dev *dev);
+ };
+ 
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 72025996cd70..ae433c150b37 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -114,7 +114,7 @@ static int mptctl_do_reset(MPT_ADAPTER *iocp, unsigned long arg);
+ static int mptctl_hp_hostinfo(MPT_ADAPTER *iocp, unsigned long arg, unsigned int cmd);
+ static int mptctl_hp_targetinfo(MPT_ADAPTER *iocp, unsigned long arg);
+ 
+-static int  mptctl_probe(struct pci_dev *, const struct pci_device_id *);
++static int  mptctl_probe(struct pci_dev *);
+ static void mptctl_remove(struct pci_dev *);
+ 
+ #ifdef CONFIG_COMPAT
+@@ -2838,7 +2838,7 @@ static long compat_mpctl_ioctl(struct file *f, unsigned int cmd, unsigned long a
+  */
+ 
+ static int
+-mptctl_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++mptctl_probe(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+ 
+diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
+index 3261cac762de..7c1af5e6eb0b 100644
+--- a/drivers/message/fusion/mptlan.c
++++ b/drivers/message/fusion/mptlan.c
+@@ -1377,7 +1377,7 @@ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
+ }
+ 
+ static int
+-mptlan_probe(struct pci_dev *pdev, const struct pci_device_id *id)
++mptlan_probe(struct pci_dev *pdev)
+ {
+ 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
+ 	struct net_device	*dev;
+-- 
+2.30.2
+
