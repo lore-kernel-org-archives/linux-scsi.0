@@ -2,159 +2,71 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A47EDC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 13:37:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DE26C4332F
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 13:40:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 838CB610E6
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 13:37:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A94361213
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 13:40:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238270AbhJDNiJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Oct 2021 09:38:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35770 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238079AbhJDNgI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2021 09:36:08 -0400
-Received: from metis.ext.pengutronix.de (metis.ext.pengutronix.de [IPv6:2001:67c:670:201:290:27ff:fe1d:cc33])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7E180C02B76E
-        for <linux-scsi@vger.kernel.org>; Mon,  4 Oct 2021 05:59:54 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.ext.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1mXNZO-0005Kb-Nf; Mon, 04 Oct 2021 14:59:50 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtp (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1mXNZN-0000Mn-KM; Mon, 04 Oct 2021 14:59:49 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1mXNZG-0000cx-FR; Mon, 04 Oct 2021 14:59:42 +0200
-From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org, kernel@pengutronix.de,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Christoph Hellwig <hch@lst.de>
-Subject: [PATCH v6 08/11] scsi: message: fusion: Remove unused parameter of mpt_pci driver's probe()
-Date:   Mon,  4 Oct 2021 14:59:32 +0200
-Message-Id: <20211004125935.2300113-9-u.kleine-koenig@pengutronix.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de>
-References: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de>
+        id S238726AbhJDNmR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Oct 2021 09:42:17 -0400
+Received: from mga17.intel.com ([192.55.52.151]:6485 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S238494AbhJDNke (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 4 Oct 2021 09:40:34 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10126"; a="206236058"
+X-IronPort-AV: E=Sophos;i="5.85,345,1624345200"; 
+   d="scan'208";a="206236058"
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2021 06:27:54 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,345,1624345200"; 
+   d="scan'208";a="711216451"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by fmsmga006.fm.intel.com with ESMTP; 04 Oct 2021 06:27:51 -0700
+Subject: Re: [PATCH RFC 0/6] scsi: ufs: Start to make driver synchronization
+ easier to understand
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+References: <20211004120650.153218-1-adrian.hunter@intel.com>
+ <DM6PR04MB6575172F68B25EA1E4A258F1FCAE9@DM6PR04MB6575.namprd04.prod.outlook.com>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <6a352069-d4bc-9dac-1830-3a1217f6dce9@intel.com>
+Date:   Mon, 4 Oct 2021 16:27:40 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Patch-Hashes: v=1; h=sha256; i=Qw3P/Tfw3H2aE9nuVn1p4NHDqaHGErEmfJmO6L2HF80=; m=oP54miBWrkCU6D5dir8+ZifQgR+cn/3uLfRD8ejXKkU=; p=swgwO0gHobGOw9bvcebWnvhUeGHl0wdD920V7Jm9gyE=; g=2a2dbd5e6a461e2ef057dc0c5df0fe68c3d03bd6
-X-Patch-Sig: m=pgp; i=u.kleine-koenig@pengutronix.de; s=0x0D2511F322BFAB1C1580266BE2DCDD9132669BD6; b=iQEzBAABCgAdFiEEfnIqFpAYrP8+dKQLwfwUeK3K7AkFAmFa+qIACgkQwfwUeK3K7AlgIQgAkSE 2UVcsvbX+K9t/SIp3vxn8+uHdWW4NOTduI3SOuDeFxA/CtD1BeFDUhquMKungE0lYQNeg0ZW+FXiX D/x8kXK1iK22apWyzZGBJxnVfeujKytUEmZzlPARZr0v737TEvvWJFE9vojHpWFYmsHnw83J+G522 GBtgWRHJ+NcphlXAQj/YOpNqZObuuUFT1uHnYjJMvsk1HxIZmayM6gpz3e8l2xA6XHgNyxqHan0fI 2G14+wH1E0KtcgAqyTKesQ3oZ2UUkFO7p7IPgQrO6wbcOhyEjLVzPZ4Z1PzBdXN7WCTymDQ+CT3nD 79rrvaUTlRqVSuz39kuSjVzh7DntGrw==
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.ext.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+In-Reply-To: <DM6PR04MB6575172F68B25EA1E4A258F1FCAE9@DM6PR04MB6575.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The only two drivers don't make use of the id parameter, so drop it.
+On 04/10/2021 15:42, Avri Altman wrote:
+>  
+>> Driver synchronization would be easier to understand if we used the
+>> clk_scaling_lock as the only lock to provide either shared (down/up_read)
+>> or exclusive (down/up_write) access to the host.
+>>
+>> These patches make changes with that in mind, finally resulting in being
+>> able to hold the down_write() lock for the entire error handler duration.
+>>
+>> If this approach is acceptable, it could be extended to simplify the
+>> the synchronization of PM vs error handler and Shutdown vs sysfs.
+> Given that UFSHCD_CAP_CLK_SCALING is only set for ufs-qcom:
+> If extending its use, wouldn't that become a source of contention for them?
 
-This removes a usage of struct pci_dev::driver which is planned to be
-removed as it tracks duplicate data.
-
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
----
- drivers/message/fusion/mptbase.c | 7 ++-----
- drivers/message/fusion/mptbase.h | 2 +-
- drivers/message/fusion/mptctl.c  | 4 ++--
- drivers/message/fusion/mptlan.c  | 2 +-
- 4 files changed, 6 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 7f7abc9069f7..b94d5e4fdc23 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -829,7 +829,6 @@ int
- mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
- {
- 	MPT_ADAPTER	*ioc;
--	const struct pci_device_id *id;
- 
- 	if (!cb_idx || cb_idx >= MPT_MAX_PROTOCOL_DRIVERS)
- 		return -EINVAL;
-@@ -838,10 +837,8 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
- 
- 	/* call per pci device probe entry point */
- 	list_for_each_entry(ioc, &ioc_list, list) {
--		id = ioc->pcidev->driver ?
--		    ioc->pcidev->driver->id_table : NULL;
- 		if (dd_cbfunc->probe)
--			dd_cbfunc->probe(ioc->pcidev, id);
-+			dd_cbfunc->probe(ioc->pcidev);
- 	 }
- 
- 	return 0;
-@@ -2032,7 +2029,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
- 	for(cb_idx = 0; cb_idx < MPT_MAX_PROTOCOL_DRIVERS; cb_idx++) {
- 		if(MptDeviceDriverHandlers[cb_idx] &&
- 		  MptDeviceDriverHandlers[cb_idx]->probe) {
--			MptDeviceDriverHandlers[cb_idx]->probe(pdev,id);
-+			MptDeviceDriverHandlers[cb_idx]->probe(pdev);
- 		}
- 	}
- 
-diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
-index b9e0376be723..4bd0682c65d3 100644
---- a/drivers/message/fusion/mptbase.h
-+++ b/drivers/message/fusion/mptbase.h
-@@ -257,7 +257,7 @@ typedef enum {
- } MPT_DRIVER_CLASS;
- 
- struct mpt_pci_driver{
--	int  (*probe) (struct pci_dev *dev, const struct pci_device_id *id);
-+	int  (*probe) (struct pci_dev *dev);
- 	void (*remove) (struct pci_dev *dev);
- };
- 
-diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
-index 72025996cd70..ae433c150b37 100644
---- a/drivers/message/fusion/mptctl.c
-+++ b/drivers/message/fusion/mptctl.c
-@@ -114,7 +114,7 @@ static int mptctl_do_reset(MPT_ADAPTER *iocp, unsigned long arg);
- static int mptctl_hp_hostinfo(MPT_ADAPTER *iocp, unsigned long arg, unsigned int cmd);
- static int mptctl_hp_targetinfo(MPT_ADAPTER *iocp, unsigned long arg);
- 
--static int  mptctl_probe(struct pci_dev *, const struct pci_device_id *);
-+static int  mptctl_probe(struct pci_dev *);
- static void mptctl_remove(struct pci_dev *);
- 
- #ifdef CONFIG_COMPAT
-@@ -2838,7 +2838,7 @@ static long compat_mpctl_ioctl(struct file *f, unsigned int cmd, unsigned long a
-  */
- 
- static int
--mptctl_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-+mptctl_probe(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
- 
-diff --git a/drivers/message/fusion/mptlan.c b/drivers/message/fusion/mptlan.c
-index 3261cac762de..7c1af5e6eb0b 100644
---- a/drivers/message/fusion/mptlan.c
-+++ b/drivers/message/fusion/mptlan.c
-@@ -1377,7 +1377,7 @@ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
- }
- 
- static int
--mptlan_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-+mptlan_probe(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
- 	struct net_device	*dev;
--- 
-2.30.2
-
+It is a good question. The error handler already seems to stop clock scaling.
+PM / Shutdown seem to suspend / resume clock scaling. So it doesn't *look*
+like it should make much difference.
