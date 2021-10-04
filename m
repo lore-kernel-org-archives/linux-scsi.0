@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5E97C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 06:59:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF05BC433FE
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 07:00:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F2FE561154
-	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 06:59:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A24F6139D
+	for <linux-scsi@archiver.kernel.org>; Mon,  4 Oct 2021 07:00:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232983AbhJDHBY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 4 Oct 2021 03:01:24 -0400
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:47286 "EHLO
+        id S232957AbhJDHCd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 4 Oct 2021 03:02:33 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:54818 "EHLO
         mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232978AbhJDHBJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2021 03:01:09 -0400
+        by vger.kernel.org with ESMTP id S233065AbhJDHBj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Oct 2021 03:01:39 -0400
 Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 193MVINR029991;
-        Sun, 3 Oct 2021 23:59:16 -0700
+        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 193Msasu002324;
+        Sun, 3 Oct 2021 23:59:46 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=ytRGoR4U9FGBVR7Y4nAkC+MpQEQDSpDrFQCiYqT0vDU=;
- b=O26kep0qff0Wn2Z0EV2XUkLr59KVs+QVWfSL/pMLg5fUsbxg8Jh/5Y1wZ5m9p9q1qnvP
- 27wtmfuNCF+0UGlz2WD8LKFcV7IF9la40sguEOpp5//dWXGoJKbBiA7NCCTkY/DVSaAj
- isTc+PGRva4dH7KbAHGTCBgfvCOVP+v8rl1s5E78L0TG9TldEJ1g1+gqu6NCs+TaUNoK
- mbElfbTJi7PlNJM9beDHbOAfRiZUPZwYzBzGeY+TiEqJNAReFG2AVLbrvIQT/EniAAYd
- NU/xFtNsBjDf4J5Dnd76xoQllIWn5bY3/X4inXKjbRxgm2Sw5/CrB1GUC5O13lP1LlhQ oA== 
+ content-type; s=pfpt0220; bh=aj7jdRA/yjGsvMjAYTi8z5vskMuvDgaJETdTJ5bLnAA=;
+ b=bYdrxQKgQI8B4lmaBidUlzw56vAUfl1qnp3PPXLSqa03L4XOyI/mWTDlvM0P+6fgxL3G
+ E9XqNApQHdeF8r+p3t0AkMNBS2KuEq3aIxpdt9MpEaLcko1qO2rcG6AD/1S0tUAQuVAB
+ cNMYOR3ovQG6T+PEKQ/MI67drVQPlkkGDQSTxPwiyJUVrixXGshSO6dYXUibPkqcOnci
+ vNM+T7aDTKJ6xnKIf5ukTHgw/Fabn4qG0EUVNOMH7QauZEi+MR8hXSBV9KtJuAd9qU3B
+ ZblrzhJkDc6Z+o/6USnMMPSwRU0AYhsPszzWacfKrsir/kMAHKYuqlG7QxAKRXvojxui Ig== 
 Received: from dc5-exch01.marvell.com ([199.233.59.181])
-        by mx0b-0016f401.pphosted.com with ESMTP id 3bfc9y9uj5-1
+        by mx0b-0016f401.pphosted.com with ESMTP id 3bfc9y9umw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
-        Sun, 03 Oct 2021 23:59:14 -0700
+        Sun, 03 Oct 2021 23:59:45 -0700
 Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
  (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Sun, 3 Oct
- 2021 23:59:11 -0700
+ 2021 23:59:41 -0700
 Received: from lbtlvb-pcie154.il.qlogic.org (10.69.176.80) by
  DC5-EXCH02.marvell.com (10.69.176.39) with Microsoft SMTP Server id
- 15.0.1497.18 via Frontend Transport; Sun, 3 Oct 2021 23:59:08 -0700
+ 15.0.1497.18 via Frontend Transport; Sun, 3 Oct 2021 23:59:39 -0700
 From:   Prabhakar Kushwaha <pkushwaha@marvell.com>
 To:     <netdev@vger.kernel.org>, <davem@davemloft.net>, <kuba@kernel.org>
 CC:     <linux-rdma@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
@@ -43,16 +43,16 @@ CC:     <linux-rdma@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
         <mrangankar@marvell.com>, <pkushwaha@marvell.com>,
         <prabhakar.pkin@gmail.com>, <malin1024@gmail.com>,
         Omkar Kulkarni <okulkarni@marvell.com>
-Subject: [PATCH v2 03/13] qed: Split huge qed_hsi.h header file
-Date:   Mon, 4 Oct 2021 09:58:41 +0300
-Message-ID: <20211004065851.1903-4-pkushwaha@marvell.com>
+Subject: [PATCH v2 10/13] qed: Update debug related changes
+Date:   Mon, 4 Oct 2021 09:58:48 +0300
+Message-ID: <20211004065851.1903-11-pkushwaha@marvell.com>
 X-Mailer: git-send-email 2.16.6
 In-Reply-To: <20211004065851.1903-1-pkushwaha@marvell.com>
 References: <20211004065851.1903-1-pkushwaha@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
-X-Proofpoint-GUID: 4sJzlSiHojbhZ9OqXu_OrumnyszesZKa
-X-Proofpoint-ORIG-GUID: 4sJzlSiHojbhZ9OqXu_OrumnyszesZKa
+X-Proofpoint-GUID: l7WtNmD4bOuMCdbP7hhIdUhlw5D7MbO8
+X-Proofpoint-ORIG-GUID: l7WtNmD4bOuMCdbP7hhIdUhlw5D7MbO8
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
  definitions=2021-10-04_02,2021-10-01_02,2020-04-07_01
@@ -60,7948 +60,2716 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Omkar Kulkarni <okulkarni@marvell.com>
+qed_debug features are updated to support FW version 8.59.1.0 along
+with few enhancements.
+  - Removal of _BB_K2 from register defines.
+  - Add new condition cond14.
+  - Add dump of new area sw-platform, epoch, iscsi_task_pages,
+    fcoe_task_pages, roce_task_pages and eth_task_pages.
+  - Introduced new functions qed_dbg_phy_size().
+  - Update in qed_mcp_nvm_rd_cmd() declaration.
+  - Allow QED to control init/exit at pf level.
+  - Dump partial "ILT-dump" if buffer size is not sufficient.
 
-The qed_hsi.h is a huge header file containing HSI (Hardware Software
-Interface) definitions of storm memory access, debug related, general
-and management firmware specific. In order to have a better
-code-organization HSI definition, this patch split the code across
-multiple files, i.e.
-- storm memory access HSI : qed_iro_hsi.h
-- debug related HSI       : qed_dbg_hsi.h
-- Management firmware HSI : qed_mfg_hsi.h
-- General HSI             : qed_hsi.h
-
-In addition, this patch also fixes existing checkpatch warnings and
-few important checks.
+This patch also fixes the existing checkpatch warnings and few important
+checks.
 
 Signed-off-by: Ariel Elior <aelior@marvell.com>
 Signed-off-by: Shai Malin <smalin@marvell.com>
 Signed-off-by: Omkar Kulkarni <okulkarni@marvell.com>
 Signed-off-by: Prabhakar Kushwaha <pkushwaha@marvell.com>
 ---
- drivers/net/ethernet/qlogic/qed/qed.h         |    2 +
- drivers/net/ethernet/qlogic/qed/qed_dbg_hsi.h | 1491 +++++++
- drivers/net/ethernet/qlogic/qed/qed_dcbx.h    |   11 +-
- drivers/net/ethernet/qlogic/qed/qed_debug.c   |    1 +
- drivers/net/ethernet/qlogic/qed/qed_dev.c     |    1 +
- drivers/net/ethernet/qlogic/qed/qed_dev_api.h |    2 -
- drivers/net/ethernet/qlogic/qed/qed_fcoe.c    |    1 +
- drivers/net/ethernet/qlogic/qed/qed_hsi.h     | 3723 -----------------
- .../ethernet/qlogic/qed/qed_init_fw_funcs.c   |    1 +
- drivers/net/ethernet/qlogic/qed/qed_iro_hsi.h |  339 ++
- drivers/net/ethernet/qlogic/qed/qed_iscsi.c   |    1 +
- drivers/net/ethernet/qlogic/qed/qed_l2.c      |    1 +
- drivers/net/ethernet/qlogic/qed/qed_ll2.c     |    7 +-
- drivers/net/ethernet/qlogic/qed/qed_ll2.h     |    1 -
- drivers/net/ethernet/qlogic/qed/qed_mcp.c     |    1 +
- drivers/net/ethernet/qlogic/qed/qed_mfw_hsi.h | 1928 +++++++++
- drivers/net/ethernet/qlogic/qed/qed_rdma.c    |    3 +-
- drivers/net/ethernet/qlogic/qed/qed_rdma.h    |    7 +-
- drivers/net/ethernet/qlogic/qed/qed_roce.c    |    1 -
- drivers/net/ethernet/qlogic/qed/qed_spq.c     |    1 +
- drivers/net/ethernet/qlogic/qed/qed_sriov.c   |    1 +
- drivers/net/ethernet/qlogic/qed/qed_vf.c      |   11 +-
- drivers/net/ethernet/qlogic/qed/qed_vf.h      |    6 +-
- 23 files changed, 3794 insertions(+), 3747 deletions(-)
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_dbg_hsi.h
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iro_hsi.h
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_mfw_hsi.h
+ drivers/net/ethernet/qlogic/qed/qed.h         |    1 +
+ drivers/net/ethernet/qlogic/qed/qed_cxt.h     |    5 +-
+ drivers/net/ethernet/qlogic/qed/qed_debug.c   | 1385 +++++++++++------
+ drivers/net/ethernet/qlogic/qed/qed_debug.h   |    7 +-
+ drivers/net/ethernet/qlogic/qed/qed_main.c    |    5 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c     |   48 +-
+ drivers/net/ethernet/qlogic/qed/qed_mcp.h     |    4 +-
+ .../net/ethernet/qlogic/qed/qed_reg_addr.h    |   81 +-
+ 8 files changed, 1031 insertions(+), 505 deletions(-)
 
 diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
-index cd1537bf5392..344039125b8e 100644
+index a883e7899430..d613095b78e0 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed.h
 +++ b/drivers/net/ethernet/qlogic/qed/qed.h
-@@ -23,6 +23,8 @@
- #include <linux/qed/qed_if.h>
- #include "qed_debug.h"
- #include "qed_hsi.h"
-+#include "qed_dbg_hsi.h"
-+#include "qed_mfw_hsi.h"
+@@ -1003,4 +1003,5 @@ int qed_llh_add_dst_tcp_port_filter(struct qed_dev *cdev, u16 dest_port);
+ void qed_llh_remove_src_tcp_port_filter(struct qed_dev *cdev, u16 src_port);
+ void qed_llh_remove_dst_tcp_port_filter(struct qed_dev *cdev, u16 src_port);
+ void qed_llh_clear_all_filters(struct qed_dev *cdev);
++unsigned long qed_get_epoch_time(void);
+ #endif /* _QED_H */
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_cxt.h b/drivers/net/ethernet/qlogic/qed/qed_cxt.h
+index d31196db7bdd..168ce2c50385 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_cxt.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_cxt.h
+@@ -346,7 +346,10 @@ struct qed_cxt_mngr {
+ 	/* Maximal number of L2 steering filters */
+ 	u32 arfs_count;
  
- extern const struct qed_common_ops qed_common_ops_pass;
- 
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_dbg_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_dbg_hsi.h
-new file mode 100644
-index 000000000000..9d5a0c9e1ca0
---- /dev/null
-+++ b/drivers/net/ethernet/qlogic/qed/qed_dbg_hsi.h
-@@ -0,0 +1,1491 @@
-+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause) */
-+/* QLogic qed NIC Driver
-+ * Copyright (c) 2019-2021 Marvell International Ltd.
-+ */
-+#ifndef _QED_DBG_HSI_H
-+#define _QED_DBG_HSI_H
-+
-+#include <linux/types.h>
-+#include <linux/io.h>
-+#include <linux/bitops.h>
-+#include <linux/delay.h>
-+#include <linux/kernel.h>
-+#include <linux/list.h>
-+#include <linux/slab.h>
-+
-+/****************************************/
-+/* Debug Tools HSI constants and macros */
-+/****************************************/
-+
-+enum block_id {
-+	BLOCK_GRC,
-+	BLOCK_MISCS,
-+	BLOCK_MISC,
-+	BLOCK_DBU,
-+	BLOCK_PGLUE_B,
-+	BLOCK_CNIG,
-+	BLOCK_CPMU,
-+	BLOCK_NCSI,
-+	BLOCK_OPTE,
-+	BLOCK_BMB,
-+	BLOCK_PCIE,
-+	BLOCK_MCP,
-+	BLOCK_MCP2,
-+	BLOCK_PSWHST,
-+	BLOCK_PSWHST2,
-+	BLOCK_PSWRD,
-+	BLOCK_PSWRD2,
-+	BLOCK_PSWWR,
-+	BLOCK_PSWWR2,
-+	BLOCK_PSWRQ,
-+	BLOCK_PSWRQ2,
-+	BLOCK_PGLCS,
-+	BLOCK_DMAE,
-+	BLOCK_PTU,
-+	BLOCK_TCM,
-+	BLOCK_MCM,
-+	BLOCK_UCM,
-+	BLOCK_XCM,
-+	BLOCK_YCM,
-+	BLOCK_PCM,
-+	BLOCK_QM,
-+	BLOCK_TM,
-+	BLOCK_DORQ,
-+	BLOCK_BRB,
-+	BLOCK_SRC,
-+	BLOCK_PRS,
-+	BLOCK_TSDM,
-+	BLOCK_MSDM,
-+	BLOCK_USDM,
-+	BLOCK_XSDM,
-+	BLOCK_YSDM,
-+	BLOCK_PSDM,
-+	BLOCK_TSEM,
-+	BLOCK_MSEM,
-+	BLOCK_USEM,
-+	BLOCK_XSEM,
-+	BLOCK_YSEM,
-+	BLOCK_PSEM,
-+	BLOCK_RSS,
-+	BLOCK_TMLD,
-+	BLOCK_MULD,
-+	BLOCK_YULD,
-+	BLOCK_XYLD,
-+	BLOCK_PRM,
-+	BLOCK_PBF_PB1,
-+	BLOCK_PBF_PB2,
-+	BLOCK_RPB,
-+	BLOCK_BTB,
-+	BLOCK_PBF,
-+	BLOCK_RDIF,
-+	BLOCK_TDIF,
-+	BLOCK_CDU,
-+	BLOCK_CCFC,
-+	BLOCK_TCFC,
-+	BLOCK_IGU,
-+	BLOCK_CAU,
-+	BLOCK_UMAC,
-+	BLOCK_XMAC,
-+	BLOCK_MSTAT,
-+	BLOCK_DBG,
-+	BLOCK_NIG,
-+	BLOCK_WOL,
-+	BLOCK_BMBN,
-+	BLOCK_IPC,
-+	BLOCK_NWM,
-+	BLOCK_NWS,
-+	BLOCK_MS,
-+	BLOCK_PHY_PCIE,
-+	BLOCK_LED,
-+	BLOCK_AVS_WRAP,
-+	BLOCK_PXPREQBUS,
-+	BLOCK_BAR0_MAP,
-+	BLOCK_MCP_FIO,
-+	BLOCK_LAST_INIT,
-+	BLOCK_PRS_FC,
-+	BLOCK_PBF_FC,
-+	BLOCK_NIG_LB_FC,
-+	BLOCK_NIG_LB_FC_PLLH,
-+	BLOCK_NIG_TX_FC_PLLH,
-+	BLOCK_NIG_TX_FC,
-+	BLOCK_NIG_RX_FC_PLLH,
-+	BLOCK_NIG_RX_FC,
-+	MAX_BLOCK_ID
-+};
-+
-+/* binary debug buffer types */
-+enum bin_dbg_buffer_type {
-+	BIN_BUF_DBG_MODE_TREE,
-+	BIN_BUF_DBG_DUMP_REG,
-+	BIN_BUF_DBG_DUMP_MEM,
-+	BIN_BUF_DBG_IDLE_CHK_REGS,
-+	BIN_BUF_DBG_IDLE_CHK_IMMS,
-+	BIN_BUF_DBG_IDLE_CHK_RULES,
-+	BIN_BUF_DBG_IDLE_CHK_PARSING_DATA,
-+	BIN_BUF_DBG_ATTN_BLOCKS,
-+	BIN_BUF_DBG_ATTN_REGS,
-+	BIN_BUF_DBG_ATTN_INDEXES,
-+	BIN_BUF_DBG_ATTN_NAME_OFFSETS,
-+	BIN_BUF_DBG_BLOCKS,
-+	BIN_BUF_DBG_BLOCKS_CHIP_DATA,
-+	BIN_BUF_DBG_BUS_LINES,
-+	BIN_BUF_DBG_BLOCKS_USER_DATA,
-+	BIN_BUF_DBG_BLOCKS_CHIP_USER_DATA,
-+	BIN_BUF_DBG_BUS_LINE_NAME_OFFSETS,
-+	BIN_BUF_DBG_RESET_REGS,
-+	BIN_BUF_DBG_PARSING_STRINGS,
-+	MAX_BIN_DBG_BUFFER_TYPE
-+};
-+
-+/* Attention bit mapping */
-+struct dbg_attn_bit_mapping {
-+	u16 data;
-+#define DBG_ATTN_BIT_MAPPING_VAL_MASK			0x7FFF
-+#define DBG_ATTN_BIT_MAPPING_VAL_SHIFT			0
-+#define DBG_ATTN_BIT_MAPPING_IS_UNUSED_BIT_CNT_MASK	0x1
-+#define DBG_ATTN_BIT_MAPPING_IS_UNUSED_BIT_CNT_SHIFT	15
-+};
-+
-+/* Attention block per-type data */
-+struct dbg_attn_block_type_data {
-+	u16 names_offset;
-+	u16 reserved1;
-+	u8 num_regs;
-+	u8 reserved2;
-+	u16 regs_offset;
-+
-+};
-+
-+/* Block attentions */
-+struct dbg_attn_block {
-+	struct dbg_attn_block_type_data per_type_data[2];
-+};
-+
-+/* Attention register result */
-+struct dbg_attn_reg_result {
-+	u32 data;
-+#define DBG_ATTN_REG_RESULT_STS_ADDRESS_MASK	0xFFFFFF
-+#define DBG_ATTN_REG_RESULT_STS_ADDRESS_SHIFT	0
-+#define DBG_ATTN_REG_RESULT_NUM_REG_ATTN_MASK	0xFF
-+#define DBG_ATTN_REG_RESULT_NUM_REG_ATTN_SHIFT	24
-+	u16 block_attn_offset;
-+	u16 reserved;
-+	u32 sts_val;
-+	u32 mask_val;
-+};
-+
-+/* Attention block result */
-+struct dbg_attn_block_result {
-+	u8 block_id;
-+	u8 data;
-+#define DBG_ATTN_BLOCK_RESULT_ATTN_TYPE_MASK	0x3
-+#define DBG_ATTN_BLOCK_RESULT_ATTN_TYPE_SHIFT	0
-+#define DBG_ATTN_BLOCK_RESULT_NUM_REGS_MASK	0x3F
-+#define DBG_ATTN_BLOCK_RESULT_NUM_REGS_SHIFT	2
-+	u16 names_offset;
-+	struct dbg_attn_reg_result reg_results[15];
-+};
-+
-+/* Mode header */
-+struct dbg_mode_hdr {
-+	u16 data;
-+#define DBG_MODE_HDR_EVAL_MODE_MASK		0x1
-+#define DBG_MODE_HDR_EVAL_MODE_SHIFT		0
-+#define DBG_MODE_HDR_MODES_BUF_OFFSET_MASK	0x7FFF
-+#define DBG_MODE_HDR_MODES_BUF_OFFSET_SHIFT	1
-+};
-+
-+/* Attention register */
-+struct dbg_attn_reg {
-+	struct dbg_mode_hdr mode;
-+	u16 block_attn_offset;
-+	u32 data;
-+#define DBG_ATTN_REG_STS_ADDRESS_MASK	0xFFFFFF
-+#define DBG_ATTN_REG_STS_ADDRESS_SHIFT	0
-+#define DBG_ATTN_REG_NUM_REG_ATTN_MASK	0xFF
-+#define DBG_ATTN_REG_NUM_REG_ATTN_SHIFT 24
-+	u32 sts_clr_address;
-+	u32 mask_address;
-+};
-+
-+/* Attention types */
-+enum dbg_attn_type {
-+	ATTN_TYPE_INTERRUPT,
-+	ATTN_TYPE_PARITY,
-+	MAX_DBG_ATTN_TYPE
-+};
-+
-+/* Block debug data */
-+struct dbg_block {
-+	u8 name[15];
-+	u8 associated_storm_letter;
-+};
-+
-+/* Chip-specific block debug data */
-+struct dbg_block_chip {
-+	u8 flags;
-+#define DBG_BLOCK_CHIP_IS_REMOVED_MASK		 0x1
-+#define DBG_BLOCK_CHIP_IS_REMOVED_SHIFT		 0
-+#define DBG_BLOCK_CHIP_HAS_RESET_REG_MASK	 0x1
-+#define DBG_BLOCK_CHIP_HAS_RESET_REG_SHIFT	 1
-+#define DBG_BLOCK_CHIP_UNRESET_BEFORE_DUMP_MASK  0x1
-+#define DBG_BLOCK_CHIP_UNRESET_BEFORE_DUMP_SHIFT 2
-+#define DBG_BLOCK_CHIP_HAS_DBG_BUS_MASK		 0x1
-+#define DBG_BLOCK_CHIP_HAS_DBG_BUS_SHIFT	 3
-+#define DBG_BLOCK_CHIP_HAS_LATENCY_EVENTS_MASK	 0x1
-+#define DBG_BLOCK_CHIP_HAS_LATENCY_EVENTS_SHIFT  4
-+#define DBG_BLOCK_CHIP_RESERVED0_MASK		 0x7
-+#define DBG_BLOCK_CHIP_RESERVED0_SHIFT		 5
-+	u8 dbg_client_id;
-+	u8 reset_reg_id;
-+	u8 reset_reg_bit_offset;
-+	struct dbg_mode_hdr dbg_bus_mode;
-+	u16 reserved1;
-+	u8 reserved2;
-+	u8 num_of_dbg_bus_lines;
-+	u16 dbg_bus_lines_offset;
-+	u32 dbg_select_reg_addr;
-+	u32 dbg_dword_enable_reg_addr;
-+	u32 dbg_shift_reg_addr;
-+	u32 dbg_force_valid_reg_addr;
-+	u32 dbg_force_frame_reg_addr;
-+};
-+
-+/* Chip-specific block user debug data */
-+struct dbg_block_chip_user {
-+	u8 num_of_dbg_bus_lines;
-+	u8 has_latency_events;
-+	u16 names_offset;
-+};
-+
-+/* Block user debug data */
-+struct dbg_block_user {
-+	u8 name[16];
-+};
-+
-+/* Block Debug line data */
-+struct dbg_bus_line {
-+	u8 data;
-+#define DBG_BUS_LINE_NUM_OF_GROUPS_MASK		0xF
-+#define DBG_BUS_LINE_NUM_OF_GROUPS_SHIFT	0
-+#define DBG_BUS_LINE_IS_256B_MASK		0x1
-+#define DBG_BUS_LINE_IS_256B_SHIFT		4
-+#define DBG_BUS_LINE_RESERVED_MASK		0x7
-+#define DBG_BUS_LINE_RESERVED_SHIFT		5
-+	u8 group_sizes;
-+};
-+
-+/* Condition header for registers dump */
-+struct dbg_dump_cond_hdr {
-+	struct dbg_mode_hdr mode; /* Mode header */
-+	u8 block_id; /* block ID */
-+	u8 data_size; /* size in dwords of the data following this header */
-+};
-+
-+/* Memory data for registers dump */
-+struct dbg_dump_mem {
-+	u32 dword0;
-+#define DBG_DUMP_MEM_ADDRESS_MASK	0xFFFFFF
-+#define DBG_DUMP_MEM_ADDRESS_SHIFT	0
-+#define DBG_DUMP_MEM_MEM_GROUP_ID_MASK	0xFF
-+#define DBG_DUMP_MEM_MEM_GROUP_ID_SHIFT	24
-+	u32 dword1;
-+#define DBG_DUMP_MEM_LENGTH_MASK	0xFFFFFF
-+#define DBG_DUMP_MEM_LENGTH_SHIFT	0
-+#define DBG_DUMP_MEM_WIDE_BUS_MASK	0x1
-+#define DBG_DUMP_MEM_WIDE_BUS_SHIFT	24
-+#define DBG_DUMP_MEM_RESERVED_MASK	0x7F
-+#define DBG_DUMP_MEM_RESERVED_SHIFT	25
-+};
-+
-+/* Register data for registers dump */
-+struct dbg_dump_reg {
-+	u32 data;
-+#define DBG_DUMP_REG_ADDRESS_MASK	0x7FFFFF
-+#define DBG_DUMP_REG_ADDRESS_SHIFT	0
-+#define DBG_DUMP_REG_WIDE_BUS_MASK	0x1
-+#define DBG_DUMP_REG_WIDE_BUS_SHIFT	23
-+#define DBG_DUMP_REG_LENGTH_MASK	0xFF
-+#define DBG_DUMP_REG_LENGTH_SHIFT	24
-+};
-+
-+/* Split header for registers dump */
-+struct dbg_dump_split_hdr {
-+	u32 hdr;
-+#define DBG_DUMP_SPLIT_HDR_DATA_SIZE_MASK	0xFFFFFF
-+#define DBG_DUMP_SPLIT_HDR_DATA_SIZE_SHIFT	0
-+#define DBG_DUMP_SPLIT_HDR_SPLIT_TYPE_ID_MASK	0xFF
-+#define DBG_DUMP_SPLIT_HDR_SPLIT_TYPE_ID_SHIFT	24
-+};
-+
-+/* Condition header for idle check */
-+struct dbg_idle_chk_cond_hdr {
-+	struct dbg_mode_hdr mode; /* Mode header */
-+	u16 data_size; /* size in dwords of the data following this header */
-+};
-+
-+/* Idle Check condition register */
-+struct dbg_idle_chk_cond_reg {
-+	u32 data;
-+#define DBG_IDLE_CHK_COND_REG_ADDRESS_MASK	0x7FFFFF
-+#define DBG_IDLE_CHK_COND_REG_ADDRESS_SHIFT	0
-+#define DBG_IDLE_CHK_COND_REG_WIDE_BUS_MASK	0x1
-+#define DBG_IDLE_CHK_COND_REG_WIDE_BUS_SHIFT	23
-+#define DBG_IDLE_CHK_COND_REG_BLOCK_ID_MASK	0xFF
-+#define DBG_IDLE_CHK_COND_REG_BLOCK_ID_SHIFT	24
-+	u16 num_entries;
-+	u8 entry_size;
-+	u8 start_entry;
-+};
-+
-+/* Idle Check info register */
-+struct dbg_idle_chk_info_reg {
-+	u32 data;
-+#define DBG_IDLE_CHK_INFO_REG_ADDRESS_MASK	0x7FFFFF
-+#define DBG_IDLE_CHK_INFO_REG_ADDRESS_SHIFT	0
-+#define DBG_IDLE_CHK_INFO_REG_WIDE_BUS_MASK	0x1
-+#define DBG_IDLE_CHK_INFO_REG_WIDE_BUS_SHIFT	23
-+#define DBG_IDLE_CHK_INFO_REG_BLOCK_ID_MASK	0xFF
-+#define DBG_IDLE_CHK_INFO_REG_BLOCK_ID_SHIFT	24
-+	u16 size; /* register size in dwords */
-+	struct dbg_mode_hdr mode; /* Mode header */
-+};
-+
-+/* Idle Check register */
-+union dbg_idle_chk_reg {
-+	struct dbg_idle_chk_cond_reg cond_reg; /* condition register */
-+	struct dbg_idle_chk_info_reg info_reg; /* info register */
-+};
-+
-+/* Idle Check result header */
-+struct dbg_idle_chk_result_hdr {
-+	u16 rule_id; /* Failing rule index */
-+	u16 mem_entry_id; /* Failing memory entry index */
-+	u8 num_dumped_cond_regs; /* number of dumped condition registers */
-+	u8 num_dumped_info_regs; /* number of dumped condition registers */
-+	u8 severity; /* from dbg_idle_chk_severity_types enum */
-+	u8 reserved;
-+};
-+
-+/* Idle Check result register header */
-+struct dbg_idle_chk_result_reg_hdr {
-+	u8 data;
-+#define DBG_IDLE_CHK_RESULT_REG_HDR_IS_MEM_MASK  0x1
-+#define DBG_IDLE_CHK_RESULT_REG_HDR_IS_MEM_SHIFT 0
-+#define DBG_IDLE_CHK_RESULT_REG_HDR_REG_ID_MASK  0x7F
-+#define DBG_IDLE_CHK_RESULT_REG_HDR_REG_ID_SHIFT 1
-+	u8 start_entry; /* index of the first checked entry */
-+	u16 size; /* register size in dwords */
-+};
-+
-+/* Idle Check rule */
-+struct dbg_idle_chk_rule {
-+	u16 rule_id; /* Idle Check rule ID */
-+	u8 severity; /* value from dbg_idle_chk_severity_types enum */
-+	u8 cond_id; /* Condition ID */
-+	u8 num_cond_regs; /* number of condition registers */
-+	u8 num_info_regs; /* number of info registers */
-+	u8 num_imms; /* number of immediates in the condition */
-+	u8 reserved1;
-+	u16 reg_offset; /* offset of this rules registers in the idle check
-+			 * register array (in dbg_idle_chk_reg units).
-+			 */
-+	u16 imm_offset; /* offset of this rules immediate values in the
-+			 * immediate values array (in dwords).
-+			 */
-+};
-+
-+/* Idle Check rule parsing data */
-+struct dbg_idle_chk_rule_parsing_data {
-+	u32 data;
-+#define DBG_IDLE_CHK_RULE_PARSING_DATA_HAS_FW_MSG_MASK	0x1
-+#define DBG_IDLE_CHK_RULE_PARSING_DATA_HAS_FW_MSG_SHIFT	0
-+#define DBG_IDLE_CHK_RULE_PARSING_DATA_STR_OFFSET_MASK	0x7FFFFFFF
-+#define DBG_IDLE_CHK_RULE_PARSING_DATA_STR_OFFSET_SHIFT	1
-+};
-+
-+/* Idle check severity types */
-+enum dbg_idle_chk_severity_types {
-+	/* idle check failure should cause an error */
-+	IDLE_CHK_SEVERITY_ERROR,
-+	/* idle check failure should cause an error only if theres no traffic */
-+	IDLE_CHK_SEVERITY_ERROR_NO_TRAFFIC,
-+	/* idle check failure should cause a warning */
-+	IDLE_CHK_SEVERITY_WARNING,
-+	MAX_DBG_IDLE_CHK_SEVERITY_TYPES
-+};
-+
-+/* Reset register */
-+struct dbg_reset_reg {
-+	u32 data;
-+#define DBG_RESET_REG_ADDR_MASK        0xFFFFFF
-+#define DBG_RESET_REG_ADDR_SHIFT       0
-+#define DBG_RESET_REG_IS_REMOVED_MASK  0x1
-+#define DBG_RESET_REG_IS_REMOVED_SHIFT 24
-+#define DBG_RESET_REG_RESERVED_MASK    0x7F
-+#define DBG_RESET_REG_RESERVED_SHIFT   25
-+};
-+
-+/* Debug Bus block data */
-+struct dbg_bus_block_data {
-+	u8 enable_mask;
-+	u8 right_shift;
-+	u8 force_valid_mask;
-+	u8 force_frame_mask;
-+	u8 dword_mask;
-+	u8 line_num;
-+	u8 hw_id;
-+	u8 flags;
-+#define DBG_BUS_BLOCK_DATA_IS_256B_LINE_MASK  0x1
-+#define DBG_BUS_BLOCK_DATA_IS_256B_LINE_SHIFT 0
-+#define DBG_BUS_BLOCK_DATA_RESERVED_MASK      0x7F
-+#define DBG_BUS_BLOCK_DATA_RESERVED_SHIFT     1
-+};
-+
-+enum dbg_bus_clients {
-+	DBG_BUS_CLIENT_RBCN,
-+	DBG_BUS_CLIENT_RBCP,
-+	DBG_BUS_CLIENT_RBCR,
-+	DBG_BUS_CLIENT_RBCT,
-+	DBG_BUS_CLIENT_RBCU,
-+	DBG_BUS_CLIENT_RBCF,
-+	DBG_BUS_CLIENT_RBCX,
-+	DBG_BUS_CLIENT_RBCS,
-+	DBG_BUS_CLIENT_RBCH,
-+	DBG_BUS_CLIENT_RBCZ,
-+	DBG_BUS_CLIENT_OTHER_ENGINE,
-+	DBG_BUS_CLIENT_TIMESTAMP,
-+	DBG_BUS_CLIENT_CPU,
-+	DBG_BUS_CLIENT_RBCY,
-+	DBG_BUS_CLIENT_RBCQ,
-+	DBG_BUS_CLIENT_RBCM,
-+	DBG_BUS_CLIENT_RBCB,
-+	DBG_BUS_CLIENT_RBCW,
-+	DBG_BUS_CLIENT_RBCV,
-+	MAX_DBG_BUS_CLIENTS
-+};
-+
-+/* Debug Bus constraint operation types */
-+enum dbg_bus_constraint_ops {
-+	DBG_BUS_CONSTRAINT_OP_EQ,
-+	DBG_BUS_CONSTRAINT_OP_NE,
-+	DBG_BUS_CONSTRAINT_OP_LT,
-+	DBG_BUS_CONSTRAINT_OP_LTC,
-+	DBG_BUS_CONSTRAINT_OP_LE,
-+	DBG_BUS_CONSTRAINT_OP_LEC,
-+	DBG_BUS_CONSTRAINT_OP_GT,
-+	DBG_BUS_CONSTRAINT_OP_GTC,
-+	DBG_BUS_CONSTRAINT_OP_GE,
-+	DBG_BUS_CONSTRAINT_OP_GEC,
-+	MAX_DBG_BUS_CONSTRAINT_OPS
-+};
-+
-+/* Debug Bus trigger state data */
-+struct dbg_bus_trigger_state_data {
-+	u8 msg_len;
-+	u8 constraint_dword_mask;
-+	u8 storm_id;
-+	u8 reserved;
-+};
-+
-+/* Debug Bus memory address */
-+struct dbg_bus_mem_addr {
-+	u32 lo;
-+	u32 hi;
-+};
-+
-+/* Debug Bus PCI buffer data */
-+struct dbg_bus_pci_buf_data {
-+	struct dbg_bus_mem_addr phys_addr; /* PCI buffer physical address */
-+	struct dbg_bus_mem_addr virt_addr; /* PCI buffer virtual address */
-+	u32 size; /* PCI buffer size in bytes */
-+};
-+
-+/* Debug Bus Storm EID range filter params */
-+struct dbg_bus_storm_eid_range_params {
-+	u8 min; /* Minimal event ID to filter on */
-+	u8 max; /* Maximal event ID to filter on */
-+};
-+
-+/* Debug Bus Storm EID mask filter params */
-+struct dbg_bus_storm_eid_mask_params {
-+	u8 val; /* Event ID value */
-+	u8 mask; /* Event ID mask. 1s in the mask = dont care bits. */
-+};
-+
-+/* Debug Bus Storm EID filter params */
-+union dbg_bus_storm_eid_params {
-+	struct dbg_bus_storm_eid_range_params range;
-+	struct dbg_bus_storm_eid_mask_params mask;
-+};
-+
-+/* Debug Bus Storm data */
-+struct dbg_bus_storm_data {
-+	u8 enabled;
-+	u8 mode;
-+	u8 hw_id;
-+	u8 eid_filter_en;
-+	u8 eid_range_not_mask;
-+	u8 cid_filter_en;
-+	union dbg_bus_storm_eid_params eid_filter_params;
-+	u32 cid;
-+};
-+
-+/* Debug Bus data */
-+struct dbg_bus_data {
-+	u32 app_version;
-+	u8 state;
-+	u8 mode_256b_en;
-+	u8 num_enabled_blocks;
-+	u8 num_enabled_storms;
-+	u8 target;
-+	u8 one_shot_en;
-+	u8 grc_input_en;
-+	u8 timestamp_input_en;
-+	u8 filter_en;
-+	u8 adding_filter;
-+	u8 filter_pre_trigger;
-+	u8 filter_post_trigger;
-+	u8 trigger_en;
-+	u8 filter_constraint_dword_mask;
-+	u8 next_trigger_state;
-+	u8 next_constraint_id;
-+	struct dbg_bus_trigger_state_data trigger_states[3];
-+	u8 filter_msg_len;
-+	u8 rcv_from_other_engine;
-+	u8 blocks_dword_mask;
-+	u8 blocks_dword_overlap;
-+	u32 hw_id_mask;
-+	struct dbg_bus_pci_buf_data pci_buf;
-+	struct dbg_bus_block_data blocks[132];
-+	struct dbg_bus_storm_data storms[6];
-+};
-+
-+/* Debug bus states */
-+enum dbg_bus_states {
-+	DBG_BUS_STATE_IDLE,
-+	DBG_BUS_STATE_READY,
-+	DBG_BUS_STATE_RECORDING,
-+	DBG_BUS_STATE_STOPPED,
-+	MAX_DBG_BUS_STATES
-+};
-+
-+/* Debug Bus Storm modes */
-+enum dbg_bus_storm_modes {
-+	DBG_BUS_STORM_MODE_PRINTF,
-+	DBG_BUS_STORM_MODE_PRAM_ADDR,
-+	DBG_BUS_STORM_MODE_DRA_RW,
-+	DBG_BUS_STORM_MODE_DRA_W,
-+	DBG_BUS_STORM_MODE_LD_ST_ADDR,
-+	DBG_BUS_STORM_MODE_DRA_FSM,
-+	DBG_BUS_STORM_MODE_FAST_DBGMUX,
-+	DBG_BUS_STORM_MODE_RH,
-+	DBG_BUS_STORM_MODE_RH_WITH_STORE,
-+	DBG_BUS_STORM_MODE_FOC,
-+	DBG_BUS_STORM_MODE_EXT_STORE,
-+	MAX_DBG_BUS_STORM_MODES
-+};
-+
-+/* Debug bus target IDs */
-+enum dbg_bus_targets {
-+	DBG_BUS_TARGET_ID_INT_BUF,
-+	DBG_BUS_TARGET_ID_NIG,
-+	DBG_BUS_TARGET_ID_PCI,
-+	MAX_DBG_BUS_TARGETS
-+};
-+
-+/* GRC Dump data */
-+struct dbg_grc_data {
-+	u8 params_initialized;
-+	u8 reserved1;
-+	u16 reserved2;
-+	u32 param_val[48];
-+};
-+
-+/* Debug GRC params */
-+enum dbg_grc_params {
-+	DBG_GRC_PARAM_DUMP_TSTORM,
-+	DBG_GRC_PARAM_DUMP_MSTORM,
-+	DBG_GRC_PARAM_DUMP_USTORM,
-+	DBG_GRC_PARAM_DUMP_XSTORM,
-+	DBG_GRC_PARAM_DUMP_YSTORM,
-+	DBG_GRC_PARAM_DUMP_PSTORM,
-+	DBG_GRC_PARAM_DUMP_REGS,
-+	DBG_GRC_PARAM_DUMP_RAM,
-+	DBG_GRC_PARAM_DUMP_PBUF,
-+	DBG_GRC_PARAM_DUMP_IOR,
-+	DBG_GRC_PARAM_DUMP_VFC,
-+	DBG_GRC_PARAM_DUMP_CM_CTX,
-+	DBG_GRC_PARAM_DUMP_PXP,
-+	DBG_GRC_PARAM_DUMP_RSS,
-+	DBG_GRC_PARAM_DUMP_CAU,
-+	DBG_GRC_PARAM_DUMP_QM,
-+	DBG_GRC_PARAM_DUMP_MCP,
-+	DBG_GRC_PARAM_DUMP_DORQ,
-+	DBG_GRC_PARAM_DUMP_CFC,
-+	DBG_GRC_PARAM_DUMP_IGU,
-+	DBG_GRC_PARAM_DUMP_BRB,
-+	DBG_GRC_PARAM_DUMP_BTB,
-+	DBG_GRC_PARAM_DUMP_BMB,
-+	DBG_GRC_PARAM_RESERVD1,
-+	DBG_GRC_PARAM_DUMP_MULD,
-+	DBG_GRC_PARAM_DUMP_PRS,
-+	DBG_GRC_PARAM_DUMP_DMAE,
-+	DBG_GRC_PARAM_DUMP_TM,
-+	DBG_GRC_PARAM_DUMP_SDM,
-+	DBG_GRC_PARAM_DUMP_DIF,
-+	DBG_GRC_PARAM_DUMP_STATIC,
-+	DBG_GRC_PARAM_UNSTALL,
-+	DBG_GRC_PARAM_RESERVED2,
-+	DBG_GRC_PARAM_MCP_TRACE_META_SIZE,
-+	DBG_GRC_PARAM_EXCLUDE_ALL,
-+	DBG_GRC_PARAM_CRASH,
-+	DBG_GRC_PARAM_PARITY_SAFE,
-+	DBG_GRC_PARAM_DUMP_CM,
-+	DBG_GRC_PARAM_DUMP_PHY,
-+	DBG_GRC_PARAM_NO_MCP,
-+	DBG_GRC_PARAM_NO_FW_VER,
-+	DBG_GRC_PARAM_RESERVED3,
-+	DBG_GRC_PARAM_DUMP_MCP_HW_DUMP,
-+	DBG_GRC_PARAM_DUMP_ILT_CDUC,
-+	DBG_GRC_PARAM_DUMP_ILT_CDUT,
-+	DBG_GRC_PARAM_DUMP_CAU_EXT,
-+	MAX_DBG_GRC_PARAMS
-+};
-+
-+/* Debug status codes */
-+enum dbg_status {
-+	DBG_STATUS_OK,
-+	DBG_STATUS_APP_VERSION_NOT_SET,
-+	DBG_STATUS_UNSUPPORTED_APP_VERSION,
-+	DBG_STATUS_DBG_BLOCK_NOT_RESET,
-+	DBG_STATUS_INVALID_ARGS,
-+	DBG_STATUS_OUTPUT_ALREADY_SET,
-+	DBG_STATUS_INVALID_PCI_BUF_SIZE,
-+	DBG_STATUS_PCI_BUF_ALLOC_FAILED,
-+	DBG_STATUS_PCI_BUF_NOT_ALLOCATED,
-+	DBG_STATUS_INVALID_FILTER_TRIGGER_DWORDS,
-+	DBG_STATUS_NO_MATCHING_FRAMING_MODE,
-+	DBG_STATUS_VFC_READ_ERROR,
-+	DBG_STATUS_STORM_ALREADY_ENABLED,
-+	DBG_STATUS_STORM_NOT_ENABLED,
-+	DBG_STATUS_BLOCK_ALREADY_ENABLED,
-+	DBG_STATUS_BLOCK_NOT_ENABLED,
-+	DBG_STATUS_NO_INPUT_ENABLED,
-+	DBG_STATUS_NO_FILTER_TRIGGER_256B,
-+	DBG_STATUS_FILTER_ALREADY_ENABLED,
-+	DBG_STATUS_TRIGGER_ALREADY_ENABLED,
-+	DBG_STATUS_TRIGGER_NOT_ENABLED,
-+	DBG_STATUS_CANT_ADD_CONSTRAINT,
-+	DBG_STATUS_TOO_MANY_TRIGGER_STATES,
-+	DBG_STATUS_TOO_MANY_CONSTRAINTS,
-+	DBG_STATUS_RECORDING_NOT_STARTED,
-+	DBG_STATUS_DATA_DIDNT_TRIGGER,
-+	DBG_STATUS_NO_DATA_RECORDED,
-+	DBG_STATUS_DUMP_BUF_TOO_SMALL,
-+	DBG_STATUS_DUMP_NOT_CHUNK_ALIGNED,
-+	DBG_STATUS_UNKNOWN_CHIP,
-+	DBG_STATUS_VIRT_MEM_ALLOC_FAILED,
-+	DBG_STATUS_BLOCK_IN_RESET,
-+	DBG_STATUS_INVALID_TRACE_SIGNATURE,
-+	DBG_STATUS_INVALID_NVRAM_BUNDLE,
-+	DBG_STATUS_NVRAM_GET_IMAGE_FAILED,
-+	DBG_STATUS_NON_ALIGNED_NVRAM_IMAGE,
-+	DBG_STATUS_NVRAM_READ_FAILED,
-+	DBG_STATUS_IDLE_CHK_PARSE_FAILED,
-+	DBG_STATUS_MCP_TRACE_BAD_DATA,
-+	DBG_STATUS_MCP_TRACE_NO_META,
-+	DBG_STATUS_MCP_COULD_NOT_HALT,
-+	DBG_STATUS_MCP_COULD_NOT_RESUME,
-+	DBG_STATUS_RESERVED0,
-+	DBG_STATUS_SEMI_FIFO_NOT_EMPTY,
-+	DBG_STATUS_IGU_FIFO_BAD_DATA,
-+	DBG_STATUS_MCP_COULD_NOT_MASK_PRTY,
-+	DBG_STATUS_FW_ASSERTS_PARSE_FAILED,
-+	DBG_STATUS_REG_FIFO_BAD_DATA,
-+	DBG_STATUS_PROTECTION_OVERRIDE_BAD_DATA,
-+	DBG_STATUS_DBG_ARRAY_NOT_SET,
-+	DBG_STATUS_RESERVED1,
-+	DBG_STATUS_NON_MATCHING_LINES,
-+	DBG_STATUS_INSUFFICIENT_HW_IDS,
-+	DBG_STATUS_DBG_BUS_IN_USE,
-+	DBG_STATUS_INVALID_STORM_DBG_MODE,
-+	DBG_STATUS_OTHER_ENGINE_BB_ONLY,
-+	DBG_STATUS_FILTER_SINGLE_HW_ID,
-+	DBG_STATUS_TRIGGER_SINGLE_HW_ID,
-+	DBG_STATUS_MISSING_TRIGGER_STATE_STORM,
-+	MAX_DBG_STATUS
-+};
-+
-+/* Debug Storms IDs */
-+enum dbg_storms {
-+	DBG_TSTORM_ID,
-+	DBG_MSTORM_ID,
-+	DBG_USTORM_ID,
-+	DBG_XSTORM_ID,
-+	DBG_YSTORM_ID,
-+	DBG_PSTORM_ID,
-+	MAX_DBG_STORMS
-+};
-+
-+/* Idle Check data */
-+struct idle_chk_data {
-+	u32 buf_size;
-+	u8 buf_size_set;
-+	u8 reserved1;
-+	u16 reserved2;
-+};
-+
-+struct pretend_params {
-+	u8 split_type;
-+	u8 reserved;
-+	u16 split_id;
-+};
-+
-+/* Debug Tools data (per HW function)
-+ */
-+struct dbg_tools_data {
-+	struct dbg_grc_data grc;
-+	struct dbg_bus_data bus;
-+	struct idle_chk_data idle_chk;
-+	u8 mode_enable[40];
-+	u8 block_in_reset[132];
-+	u8 chip_id;
-+	u8 hw_type;
-+	u8 num_ports;
-+	u8 num_pfs_per_port;
-+	u8 num_vfs;
-+	u8 initialized;
-+	u8 use_dmae;
-+	u8 reserved;
-+	struct pretend_params pretend;
-+	u32 num_regs_read;
-+};
-+
-+/* ILT Clients */
-+enum ilt_clients {
-+	ILT_CLI_CDUC,
-+	ILT_CLI_CDUT,
-+	ILT_CLI_QM,
-+	ILT_CLI_TM,
-+	ILT_CLI_SRC,
-+	ILT_CLI_TSDM,
-+	ILT_CLI_RGFS,
-+	ILT_CLI_TGFS,
-+	MAX_ILT_CLIENTS
-+};
-+
-+/***************************** Public Functions *******************************/
-+
-+/**
-+ * qed_dbg_set_bin_ptr(): Sets a pointer to the binary data with debug
-+ *                        arrays.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @bin_ptr: A pointer to the binary data with debug arrays.
-+ *
-+ * Return: enum dbg status.
-+ */
-+enum dbg_status qed_dbg_set_bin_ptr(struct qed_hwfn *p_hwfn,
-+				    const u8 * const bin_ptr);
-+
-+/**
-+ * qed_read_regs(): Reads registers into a buffer (using GRC).
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @buf: Destination buffer.
-+ * @addr: Source GRC address in dwords.
-+ * @len: Number of registers to read.
-+ *
-+ * Return: Void.
-+ */
-+void qed_read_regs(struct qed_hwfn *p_hwfn,
-+		   struct qed_ptt *p_ptt, u32 *buf, u32 addr, u32 len);
-+
-+/**
-+ * qed_read_fw_info(): Reads FW info from the chip.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @fw_info: (Out) a pointer to write the FW info into.
-+ *
-+ * Return: True if the FW info was read successfully from one of the Storms,
-+ * or false if all Storms are in reset.
-+ *
-+ * The FW info contains FW-related information, such as the FW version,
-+ * FW image (main/L2B/kuku), FW timestamp, etc.
-+ * The FW info is read from the internal RAM of the first Storm that is not in
-+ * reset.
-+ */
-+bool qed_read_fw_info(struct qed_hwfn *p_hwfn,
-+		      struct qed_ptt *p_ptt, struct fw_info *fw_info);
-+/**
-+ * qed_dbg_grc_config(): Sets the value of a GRC parameter.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @grc_param: GRC parameter.
-+ * @val: Value to set.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set.
-+ *         - Grc_param is invalid.
-+ *         - Val is outside the allowed boundaries.
-+ */
-+enum dbg_status qed_dbg_grc_config(struct qed_hwfn *p_hwfn,
-+				   enum dbg_grc_params grc_param, u32 val);
-+
-+/**
-+ * qed_dbg_grc_set_params_default(): Reverts all GRC parameters to their
-+ *                                   default value.
-+ *
-+ * @p_hwfn: HW device data.
-+ *
-+ * Return: Void.
-+ */
-+void qed_dbg_grc_set_params_default(struct qed_hwfn *p_hwfn);
-+/**
-+ * qed_dbg_grc_get_dump_buf_size(): Returns the required buffer size for
-+ *                                  GRC Dump.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @buf_size: (OUT) required buffer size (in dwords) for the GRC Dump
-+ *             data.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_grc_get_dump_buf_size(struct qed_hwfn *p_hwfn,
-+					      struct qed_ptt *p_ptt,
-+					      u32 *buf_size);
-+
-+/**
-+ * qed_dbg_grc_dump(): Dumps GRC data into the specified buffer.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @dump_buf: Pointer to write the collected GRC data into.
-+ * @buf_size_in_dwords:Size of the specified buffer in dwords.
-+ * @num_dumped_dwords: (OUT) number of dumped dwords.
-+ *
-+ * Return: Error if one of the following holds:
-+ *        - The version wasn't set.
-+ *        - The specified dump buffer is too small.
-+ *          Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_grc_dump(struct qed_hwfn *p_hwfn,
-+				 struct qed_ptt *p_ptt,
-+				 u32 *dump_buf,
-+				 u32 buf_size_in_dwords,
-+				 u32 *num_dumped_dwords);
-+
-+/**
-+ * qed_dbg_idle_chk_get_dump_buf_size(): Returns the required buffer size
-+ *                                       for idle check results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @buf_size: (OUT) required buffer size (in dwords) for the idle check
-+ *             data.
-+ *
-+ * return: Error if one of the following holds:
-+ *        - The version wasn't set.
-+ *          Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_idle_chk_get_dump_buf_size(struct qed_hwfn *p_hwfn,
-+						   struct qed_ptt *p_ptt,
-+						   u32 *buf_size);
-+
-+/**
-+ * qed_dbg_idle_chk_dump: Performs idle check and writes the results
-+ *                        into the specified buffer.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @dump_buf: Pointer to write the idle check data into.
-+ * @buf_size_in_dwords: Size of the specified buffer in dwords.
-+ * @num_dumped_dwords: (OUT) number of dumped dwords.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set.
-+ *         - The specified buffer is too small.
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_idle_chk_dump(struct qed_hwfn *p_hwfn,
-+				      struct qed_ptt *p_ptt,
-+				      u32 *dump_buf,
-+				      u32 buf_size_in_dwords,
-+				      u32 *num_dumped_dwords);
-+
-+/**
-+ * qed_dbg_mcp_trace_get_dump_buf_size(): Returns the required buffer size
-+ *                                        for mcp trace results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @buf_size: (OUT) Required buffer size (in dwords) for mcp trace data.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set.
-+ *         - The trace data in MCP scratchpad contain an invalid signature.
-+ *         - The bundle ID in NVRAM is invalid.
-+ *         - The trace meta data cannot be found (in NVRAM or image file).
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_mcp_trace_get_dump_buf_size(struct qed_hwfn *p_hwfn,
-+						    struct qed_ptt *p_ptt,
-+						    u32 *buf_size);
-+
-+/**
-+ * qed_dbg_mcp_trace_dump(): Performs mcp trace and writes the results
-+ *                           into the specified buffer.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @dump_buf: Pointer to write the mcp trace data into.
-+ * @buf_size_in_dwords: Size of the specified buffer in dwords.
-+ * @num_dumped_dwords: (OUT) number of dumped dwords.
-+ *
-+ * Return: Error if one of the following holds:
-+ *        - The version wasn't set.
-+ *        - The specified buffer is too small.
-+ *        - The trace data in MCP scratchpad contain an invalid signature.
-+ *        - The bundle ID in NVRAM is invalid.
-+ *        - The trace meta data cannot be found (in NVRAM or image file).
-+ *        - The trace meta data cannot be read (from NVRAM or image file).
-+ *          Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_mcp_trace_dump(struct qed_hwfn *p_hwfn,
-+				       struct qed_ptt *p_ptt,
-+				       u32 *dump_buf,
-+				       u32 buf_size_in_dwords,
-+				       u32 *num_dumped_dwords);
-+
-+/**
-+ * qed_dbg_reg_fifo_get_dump_buf_size(): Returns the required buffer size
-+ *                                       for grc trace fifo results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @buf_size: (OUT) Required buffer size (in dwords) for reg fifo data.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_reg_fifo_get_dump_buf_size(struct qed_hwfn *p_hwfn,
-+						   struct qed_ptt *p_ptt,
-+						   u32 *buf_size);
-+
-+/**
-+ * qed_dbg_reg_fifo_dump(): Reads the reg fifo and writes the results into
-+ *                          the specified buffer.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @dump_buf: Pointer to write the reg fifo data into.
-+ * @buf_size_in_dwords: Size of the specified buffer in dwords.
-+ * @num_dumped_dwords: (OUT) number of dumped dwords.
-+ *
-+ * Return: Error if one of the following holds:
-+ *        - The version wasn't set.
-+ *        - The specified buffer is too small.
-+ *        - DMAE transaction failed.
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_reg_fifo_dump(struct qed_hwfn *p_hwfn,
-+				      struct qed_ptt *p_ptt,
-+				      u32 *dump_buf,
-+				      u32 buf_size_in_dwords,
-+				      u32 *num_dumped_dwords);
-+
-+/**
-+ * qed_dbg_igu_fifo_get_dump_buf_size(): Returns the required buffer size
-+ *                                       for the IGU fifo results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @buf_size: (OUT) Required buffer size (in dwords) for the IGU fifo
-+ *            data.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set.
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_igu_fifo_get_dump_buf_size(struct qed_hwfn *p_hwfn,
-+						   struct qed_ptt *p_ptt,
-+						   u32 *buf_size);
-+
-+/**
-+ * qed_dbg_igu_fifo_dump(): Reads the IGU fifo and writes the results into
-+ *                          the specified buffer.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @dump_buf: Pointer to write the IGU fifo data into.
-+ * @buf_size_in_dwords: Size of the specified buffer in dwords.
-+ * @num_dumped_dwords: (OUT) number of dumped dwords.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set
-+ *         - The specified buffer is too small
-+ *         - DMAE transaction failed
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_igu_fifo_dump(struct qed_hwfn *p_hwfn,
-+				      struct qed_ptt *p_ptt,
-+				      u32 *dump_buf,
-+				      u32 buf_size_in_dwords,
-+				      u32 *num_dumped_dwords);
-+
-+/**
-+ * qed_dbg_protection_override_get_dump_buf_size(): Returns the required
-+ *        buffer size for protection override window results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @buf_size: (OUT) Required buffer size (in dwords) for protection
-+ *             override data.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status
-+qed_dbg_protection_override_get_dump_buf_size(struct qed_hwfn *p_hwfn,
-+					      struct qed_ptt *p_ptt,
-+					      u32 *buf_size);
-+/**
-+ * qed_dbg_protection_override_dump(): Reads protection override window
-+ *       entries and writes the results into the specified buffer.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @dump_buf: Pointer to write the protection override data into.
-+ * @buf_size_in_dwords: Size of the specified buffer in dwords.
-+ * @num_dumped_dwords: (OUT) number of dumped dwords.
-+ *
-+ * @return: Error if one of the following holds:
-+ *          - The version wasn't set.
-+ *          - The specified buffer is too small.
-+ *          - DMAE transaction failed.
-+ *             Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_protection_override_dump(struct qed_hwfn *p_hwfn,
-+						 struct qed_ptt *p_ptt,
-+						 u32 *dump_buf,
-+						 u32 buf_size_in_dwords,
-+						 u32 *num_dumped_dwords);
-+/**
-+ * qed_dbg_fw_asserts_get_dump_buf_size(): Returns the required buffer
-+ *                                         size for FW Asserts results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @buf_size: (OUT) Required buffer size (in dwords) for FW Asserts data.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set.
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_fw_asserts_get_dump_buf_size(struct qed_hwfn *p_hwfn,
-+						     struct qed_ptt *p_ptt,
-+						     u32 *buf_size);
-+/**
-+ * qed_dbg_fw_asserts_dump(): Reads the FW Asserts and writes the results
-+ *                            into the specified buffer.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @dump_buf: Pointer to write the FW Asserts data into.
-+ * @buf_size_in_dwords: Size of the specified buffer in dwords.
-+ * @num_dumped_dwords: (OUT) number of dumped dwords.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set.
-+ *         - The specified buffer is too small.
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_fw_asserts_dump(struct qed_hwfn *p_hwfn,
-+					struct qed_ptt *p_ptt,
-+					u32 *dump_buf,
-+					u32 buf_size_in_dwords,
-+					u32 *num_dumped_dwords);
-+
-+/**
-+ * qed_dbg_read_attn(): Reads the attention registers of the specified
-+ * block and type, and writes the results into the specified buffer.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @p_ptt: Ptt window used for writing the registers.
-+ * @block: Block ID.
-+ * @attn_type: Attention type.
-+ * @clear_status: Indicates if the attention status should be cleared.
-+ * @results:  (OUT) Pointer to write the read results into.
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set
-+ *          Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_read_attn(struct qed_hwfn *p_hwfn,
-+				  struct qed_ptt *p_ptt,
-+				  enum block_id block,
-+				  enum dbg_attn_type attn_type,
-+				  bool clear_status,
-+				  struct dbg_attn_block_result *results);
-+
-+/**
-+ * qed_dbg_print_attn(): Prints attention registers values in the
-+ *                       specified results struct.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @results: Pointer to the attention read results
-+ *
-+ * Return: Error if one of the following holds:
-+ *        - The version wasn't set
-+ *          Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_print_attn(struct qed_hwfn *p_hwfn,
-+				   struct dbg_attn_block_result *results);
-+
-+/******************************* Data Types **********************************/
-+
-+struct mcp_trace_format {
-+	u32 data;
-+#define MCP_TRACE_FORMAT_MODULE_MASK	0x0000ffff
-+#define MCP_TRACE_FORMAT_MODULE_OFFSET	0
-+#define MCP_TRACE_FORMAT_LEVEL_MASK	0x00030000
-+#define MCP_TRACE_FORMAT_LEVEL_OFFSET	16
-+#define MCP_TRACE_FORMAT_P1_SIZE_MASK	0x000c0000
-+#define MCP_TRACE_FORMAT_P1_SIZE_OFFSET 18
-+#define MCP_TRACE_FORMAT_P2_SIZE_MASK	0x00300000
-+#define MCP_TRACE_FORMAT_P2_SIZE_OFFSET 20
-+#define MCP_TRACE_FORMAT_P3_SIZE_MASK	0x00c00000
-+#define MCP_TRACE_FORMAT_P3_SIZE_OFFSET 22
-+#define MCP_TRACE_FORMAT_LEN_MASK	0xff000000
-+#define MCP_TRACE_FORMAT_LEN_OFFSET	24
-+
-+	char *format_str;
-+};
-+
-+/* MCP Trace Meta data structure */
-+struct mcp_trace_meta {
-+	u32 modules_num;
-+	char **modules;
-+	u32 formats_num;
-+	struct mcp_trace_format *formats;
-+	bool is_allocated;
-+};
-+
-+/* Debug Tools user data */
-+struct dbg_tools_user_data {
-+	struct mcp_trace_meta mcp_trace_meta;
-+	const u32 *mcp_trace_user_meta_buf;
-+};
-+
-+/******************************** Constants **********************************/
-+
-+#define MAX_NAME_LEN	16
-+
-+/***************************** Public Functions *******************************/
-+
-+/**
-+ * qed_dbg_user_set_bin_ptr(): Sets a pointer to the binary data with
-+ *                             debug arrays.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @bin_ptr: a pointer to the binary data with debug arrays.
-+ *
-+ * Return: dbg_status.
-+ */
-+enum dbg_status qed_dbg_user_set_bin_ptr(struct qed_hwfn *p_hwfn,
-+					 const u8 * const bin_ptr);
-+
-+/**
-+ * qed_dbg_alloc_user_data(): Allocates user debug data.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @user_data_ptr: (OUT) a pointer to the allocated memory.
-+ *
-+ * Return: dbg_status.
-+ */
-+enum dbg_status qed_dbg_alloc_user_data(struct qed_hwfn *p_hwfn,
-+					void **user_data_ptr);
-+
-+/**
-+ * qed_dbg_get_status_str(): Returns a string for the specified status.
-+ *
-+ * @status: A debug status code.
-+ *
-+ * Return: A string for the specified status.
-+ */
-+const char *qed_dbg_get_status_str(enum dbg_status status);
-+
-+/**
-+ * qed_get_idle_chk_results_buf_size(): Returns the required buffer size
-+ *                                      for idle check results (in bytes).
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: idle check dump buffer.
-+ * @num_dumped_dwords: number of dwords that were dumped.
-+ * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-+ *                    results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_get_idle_chk_results_buf_size(struct qed_hwfn *p_hwfn,
-+						  u32 *dump_buf,
-+						  u32  num_dumped_dwords,
-+						  u32 *results_buf_size);
-+/**
-+ * qed_print_idle_chk_results(): Prints idle check results
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: idle check dump buffer.
-+ * @num_dumped_dwords: number of dwords that were dumped.
-+ * @results_buf: buffer for printing the idle check results.
-+ * @num_errors: (OUT) number of errors found in idle check.
-+ * @num_warnings: (OUT) number of warnings found in idle check.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_print_idle_chk_results(struct qed_hwfn *p_hwfn,
-+					   u32 *dump_buf,
-+					   u32 num_dumped_dwords,
-+					   char *results_buf,
-+					   u32 *num_errors,
-+					   u32 *num_warnings);
-+
-+/**
-+ * qed_dbg_mcp_trace_set_meta_data(): Sets the MCP Trace meta data.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @meta_buf: Meta buffer.
-+ *
-+ * Return: Void.
-+ *
-+ * Needed in case the MCP Trace dump doesn't contain the meta data (e.g. due to
-+ * no NVRAM access).
-+ */
-+void qed_dbg_mcp_trace_set_meta_data(struct qed_hwfn *p_hwfn,
-+				     const u32 *meta_buf);
-+
-+/**
-+ * qed_get_mcp_trace_results_buf_size(): Returns the required buffer size
-+ *                                       for MCP Trace results (in bytes).
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: MCP Trace dump buffer.
-+ * @num_dumped_dwords: number of dwords that were dumped.
-+ * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-+ *                    results.
-+ *
-+ * Return: Rrror if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_get_mcp_trace_results_buf_size(struct qed_hwfn *p_hwfn,
-+						   u32 *dump_buf,
-+						   u32 num_dumped_dwords,
-+						   u32 *results_buf_size);
-+
-+/**
-+ * qed_print_mcp_trace_results(): Prints MCP Trace results
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: MCP trace dump buffer, starting from the header.
-+ * @num_dumped_dwords: Member of dwords that were dumped.
-+ * @results_buf: Buffer for printing the mcp trace results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_print_mcp_trace_results(struct qed_hwfn *p_hwfn,
-+					    u32 *dump_buf,
-+					    u32 num_dumped_dwords,
-+					    char *results_buf);
-+
-+/**
-+ * qed_print_mcp_trace_results_cont(): Prints MCP Trace results, and
-+ * keeps the MCP trace meta data allocated, to support continuous MCP Trace
-+ * parsing. After the continuous parsing ends, mcp_trace_free_meta_data should
-+ * be called to free the meta data.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: MVP trace dump buffer, starting from the header.
-+ * @results_buf: Buffer for printing the mcp trace results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_print_mcp_trace_results_cont(struct qed_hwfn *p_hwfn,
-+						 u32 *dump_buf,
-+						 char *results_buf);
-+
-+/**
-+ * qed_print_mcp_trace_line(): Prints MCP Trace results for a single line
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: MCP trace dump buffer, starting from the header.
-+ * @num_dumped_bytes: Number of bytes that were dumped.
-+ * @results_buf: Buffer for printing the mcp trace results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_print_mcp_trace_line(struct qed_hwfn *p_hwfn,
-+					 u8 *dump_buf,
-+					 u32 num_dumped_bytes,
-+					 char *results_buf);
-+
-+/**
-+ * qed_mcp_trace_free_meta_data(): Frees the MCP Trace meta data.
-+ * Should be called after continuous MCP Trace parsing.
-+ *
-+ * @p_hwfn: HW device data.
-+ *
-+ * Return: Void.
-+ */
-+void qed_mcp_trace_free_meta_data(struct qed_hwfn *p_hwfn);
-+
-+/**
-+ * qed_get_reg_fifo_results_buf_size(): Returns the required buffer size
-+ *                                      for reg_fifo results (in bytes).
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: Reg fifo dump buffer.
-+ * @num_dumped_dwords: Number of dwords that were dumped.
-+ * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-+ *                     results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_get_reg_fifo_results_buf_size(struct qed_hwfn *p_hwfn,
-+						  u32 *dump_buf,
-+						  u32 num_dumped_dwords,
-+						  u32 *results_buf_size);
-+
-+/**
-+ * qed_print_reg_fifo_results(): Prints reg fifo results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: Reg fifo dump buffer, starting from the header.
-+ * @num_dumped_dwords: Number of dwords that were dumped.
-+ * @results_buf: Buffer for printing the reg fifo results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_print_reg_fifo_results(struct qed_hwfn *p_hwfn,
-+					   u32 *dump_buf,
-+					   u32 num_dumped_dwords,
-+					   char *results_buf);
-+
-+/**
-+ * qed_get_igu_fifo_results_buf_size(): Returns the required buffer size
-+ *                                      for igu_fifo results (in bytes).
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: IGU fifo dump buffer.
-+ * @num_dumped_dwords: number of dwords that were dumped.
-+ * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-+ *                    results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_get_igu_fifo_results_buf_size(struct qed_hwfn *p_hwfn,
-+						  u32 *dump_buf,
-+						  u32 num_dumped_dwords,
-+						  u32 *results_buf_size);
-+
-+/**
-+ * qed_print_igu_fifo_results(): Prints IGU fifo results
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: IGU fifo dump buffer, starting from the header.
-+ * @num_dumped_dwords: Number of dwords that were dumped.
-+ * @results_buf: Buffer for printing the IGU fifo results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_print_igu_fifo_results(struct qed_hwfn *p_hwfn,
-+					   u32 *dump_buf,
-+					   u32 num_dumped_dwords,
-+					   char *results_buf);
-+
-+/**
-+ * qed_get_protection_override_results_buf_size(): Returns the required
-+ *         buffer size for protection override results (in bytes).
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: Protection override dump buffer.
-+ * @num_dumped_dwords: Number of dwords that were dumped.
-+ * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-+ *                    results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status
-+qed_get_protection_override_results_buf_size(struct qed_hwfn *p_hwfn,
-+					     u32 *dump_buf,
-+					     u32 num_dumped_dwords,
-+					     u32 *results_buf_size);
-+
-+/**
-+ * qed_print_protection_override_results(): Prints protection override
-+ *                                          results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: Protection override dump buffer, starting from the header.
-+ * @num_dumped_dwords: Number of dwords that were dumped.
-+ * @results_buf: Buffer for printing the reg fifo results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_print_protection_override_results(struct qed_hwfn *p_hwfn,
-+						      u32 *dump_buf,
-+						      u32 num_dumped_dwords,
-+						      char *results_buf);
-+
-+/**
-+ * qed_get_fw_asserts_results_buf_size(): Returns the required buffer size
-+ *                                        for FW Asserts results (in bytes).
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: FW Asserts dump buffer.
-+ * @num_dumped_dwords: number of dwords that were dumped.
-+ * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-+ *                    results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_get_fw_asserts_results_buf_size(struct qed_hwfn *p_hwfn,
-+						    u32 *dump_buf,
-+						    u32 num_dumped_dwords,
-+						    u32 *results_buf_size);
-+
-+/**
-+ * qed_print_fw_asserts_results(): Prints FW Asserts results.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @dump_buf: FW Asserts dump buffer, starting from the header.
-+ * @num_dumped_dwords: number of dwords that were dumped.
-+ * @results_buf: buffer for printing the FW Asserts results.
-+ *
-+ * Return: Error if the parsing fails, ok otherwise.
-+ */
-+enum dbg_status qed_print_fw_asserts_results(struct qed_hwfn *p_hwfn,
-+					     u32 *dump_buf,
-+					     u32 num_dumped_dwords,
-+					     char *results_buf);
-+
-+/**
-+ * qed_dbg_parse_attn(): Parses and prints attention registers values in
-+ *                      the specified results struct.
-+ *
-+ * @p_hwfn: HW device data.
-+ * @results: Pointer to the attention read results
-+ *
-+ * Return: Error if one of the following holds:
-+ *         - The version wasn't set.
-+ *           Otherwise, returns ok.
-+ */
-+enum dbg_status qed_dbg_parse_attn(struct qed_hwfn *p_hwfn,
-+				   struct dbg_attn_block_result *results);
-+#endif
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_dcbx.h b/drivers/net/ethernet/qlogic/qed/qed_dcbx.h
-index e1798925b444..ea839e605577 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_dcbx.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_dcbx.h
-@@ -84,16 +84,17 @@ struct qed_dcbx_mib_meta_data {
- extern const struct qed_eth_dcbnl_ops qed_dcbnl_ops_pass;
- 
- #ifdef CONFIG_DCB
--int qed_dcbx_get_config_params(struct qed_hwfn *, struct qed_dcbx_set *);
-+int qed_dcbx_get_config_params(struct qed_hwfn *p_hwfn,
-+			       struct qed_dcbx_set *params);
- 
--int qed_dcbx_config_params(struct qed_hwfn *,
--			   struct qed_ptt *, struct qed_dcbx_set *, bool);
-+int qed_dcbx_config_params(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
-+			   struct qed_dcbx_set *params, bool hw_commit);
- #endif
- 
- /* QED local interface routines */
- int
--qed_dcbx_mib_update_event(struct qed_hwfn *,
--			  struct qed_ptt *, enum qed_mib_read_type);
-+qed_dcbx_mib_update_event(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
-+			  enum qed_mib_read_type type);
- 
- int qed_dcbx_info_alloc(struct qed_hwfn *p_hwfn);
- void qed_dcbx_info_free(struct qed_hwfn *p_hwfn);
+-	u8 task_type_id;
++	u16 iscsi_task_pages;
++	u16 fcoe_task_pages;
++	u16 roce_task_pages;
++	u16 eth_task_pages;
+ 	u16 task_ctx_size;
+ 	u16 conn_ctx_size;
+ };
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_debug.c b/drivers/net/ethernet/qlogic/qed/qed_debug.c
-index 380cf4963cbb..e6e5c7721701 100644
+index e6e5c7721701..6d693ee380f1 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_debug.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_debug.c
-@@ -10,6 +10,7 @@
- #include "qed.h"
- #include "qed_cxt.h"
- #include "qed_hsi.h"
-+#include "qed_dbg_hsi.h"
- #include "qed_hw.h"
- #include "qed_mcp.h"
- #include "qed_reg_addr.h"
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev.c b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-index 0410c3604abd..3db1a5512b9b 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_dev.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_dev.c
-@@ -25,6 +25,7 @@
- #include "qed_dev_api.h"
- #include "qed_fcoe.h"
- #include "qed_hsi.h"
-+#include "qed_iro_hsi.h"
- #include "qed_hw.h"
- #include "qed_init_ops.h"
- #include "qed_int.h"
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_dev_api.h b/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
-index f0a825b985a4..6582bfc1b4a9 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_dev_api.h
-@@ -161,7 +161,6 @@ int qed_hw_stop_fastpath(struct qed_dev *cdev);
-  */
- int qed_hw_start_fastpath(struct qed_hwfn *p_hwfn);
- 
--
- /**
-  * qed_hw_prepare(): Prepare Qed hardware.
-  *
-@@ -510,6 +509,5 @@ int qed_db_recovery_add(struct qed_dev *cdev,
- int qed_db_recovery_del(struct qed_dev *cdev,
- 			void __iomem *db_addr, void *db_data);
- 
--
- const char *qed_hw_get_resc_name(enum qed_resources res_id);
- #endif
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_fcoe.c b/drivers/net/ethernet/qlogic/qed/qed_fcoe.c
-index ba246d90344a..c46d809040bd 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_fcoe.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_fcoe.c
-@@ -30,6 +30,7 @@
- #include "qed_hsi.h"
- #include "qed_hw.h"
- #include "qed_int.h"
-+#include "qed_iro_hsi.h"
- #include "qed_ll2.h"
- #include "qed_mcp.h"
- #include "qed_reg_addr.h"
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-index a17baa98baa4..987b086811b7 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_hsi.h
-@@ -1831,769 +1831,6 @@ struct virt_mem_desc {
- 	u32 size;		/* In bytes */
- };
- 
--/****************************************/
--/* Debug Tools HSI constants and macros */
--/****************************************/
--
--enum block_id {
--	BLOCK_GRC,
--	BLOCK_MISCS,
--	BLOCK_MISC,
--	BLOCK_DBU,
--	BLOCK_PGLUE_B,
--	BLOCK_CNIG,
--	BLOCK_CPMU,
--	BLOCK_NCSI,
--	BLOCK_OPTE,
--	BLOCK_BMB,
--	BLOCK_PCIE,
--	BLOCK_MCP,
--	BLOCK_MCP2,
--	BLOCK_PSWHST,
--	BLOCK_PSWHST2,
--	BLOCK_PSWRD,
--	BLOCK_PSWRD2,
--	BLOCK_PSWWR,
--	BLOCK_PSWWR2,
--	BLOCK_PSWRQ,
--	BLOCK_PSWRQ2,
--	BLOCK_PGLCS,
--	BLOCK_DMAE,
--	BLOCK_PTU,
--	BLOCK_TCM,
--	BLOCK_MCM,
--	BLOCK_UCM,
--	BLOCK_XCM,
--	BLOCK_YCM,
--	BLOCK_PCM,
--	BLOCK_QM,
--	BLOCK_TM,
--	BLOCK_DORQ,
--	BLOCK_BRB,
--	BLOCK_SRC,
--	BLOCK_PRS,
--	BLOCK_TSDM,
--	BLOCK_MSDM,
--	BLOCK_USDM,
--	BLOCK_XSDM,
--	BLOCK_YSDM,
--	BLOCK_PSDM,
--	BLOCK_TSEM,
--	BLOCK_MSEM,
--	BLOCK_USEM,
--	BLOCK_XSEM,
--	BLOCK_YSEM,
--	BLOCK_PSEM,
--	BLOCK_RSS,
--	BLOCK_TMLD,
--	BLOCK_MULD,
--	BLOCK_YULD,
--	BLOCK_XYLD,
--	BLOCK_PRM,
--	BLOCK_PBF_PB1,
--	BLOCK_PBF_PB2,
--	BLOCK_RPB,
--	BLOCK_BTB,
--	BLOCK_PBF,
--	BLOCK_RDIF,
--	BLOCK_TDIF,
--	BLOCK_CDU,
--	BLOCK_CCFC,
--	BLOCK_TCFC,
--	BLOCK_IGU,
--	BLOCK_CAU,
--	BLOCK_UMAC,
--	BLOCK_XMAC,
--	BLOCK_MSTAT,
--	BLOCK_DBG,
--	BLOCK_NIG,
--	BLOCK_WOL,
--	BLOCK_BMBN,
--	BLOCK_IPC,
--	BLOCK_NWM,
--	BLOCK_NWS,
--	BLOCK_MS,
--	BLOCK_PHY_PCIE,
--	BLOCK_LED,
--	BLOCK_AVS_WRAP,
--	BLOCK_PXPREQBUS,
--	BLOCK_BAR0_MAP,
--	BLOCK_MCP_FIO,
--	BLOCK_LAST_INIT,
--	BLOCK_PRS_FC,
--	BLOCK_PBF_FC,
--	BLOCK_NIG_LB_FC,
--	BLOCK_NIG_LB_FC_PLLH,
--	BLOCK_NIG_TX_FC_PLLH,
--	BLOCK_NIG_TX_FC,
--	BLOCK_NIG_RX_FC_PLLH,
--	BLOCK_NIG_RX_FC,
--	MAX_BLOCK_ID
--};
--
--/* binary debug buffer types */
--enum bin_dbg_buffer_type {
--	BIN_BUF_DBG_MODE_TREE,
--	BIN_BUF_DBG_DUMP_REG,
--	BIN_BUF_DBG_DUMP_MEM,
--	BIN_BUF_DBG_IDLE_CHK_REGS,
--	BIN_BUF_DBG_IDLE_CHK_IMMS,
--	BIN_BUF_DBG_IDLE_CHK_RULES,
--	BIN_BUF_DBG_IDLE_CHK_PARSING_DATA,
--	BIN_BUF_DBG_ATTN_BLOCKS,
--	BIN_BUF_DBG_ATTN_REGS,
--	BIN_BUF_DBG_ATTN_INDEXES,
--	BIN_BUF_DBG_ATTN_NAME_OFFSETS,
--	BIN_BUF_DBG_BLOCKS,
--	BIN_BUF_DBG_BLOCKS_CHIP_DATA,
--	BIN_BUF_DBG_BUS_LINES,
--	BIN_BUF_DBG_BLOCKS_USER_DATA,
--	BIN_BUF_DBG_BLOCKS_CHIP_USER_DATA,
--	BIN_BUF_DBG_BUS_LINE_NAME_OFFSETS,
--	BIN_BUF_DBG_RESET_REGS,
--	BIN_BUF_DBG_PARSING_STRINGS,
--	MAX_BIN_DBG_BUFFER_TYPE
--};
--
--
--/* Attention bit mapping */
--struct dbg_attn_bit_mapping {
--	u16 data;
--#define DBG_ATTN_BIT_MAPPING_VAL_MASK			0x7FFF
--#define DBG_ATTN_BIT_MAPPING_VAL_SHIFT			0
--#define DBG_ATTN_BIT_MAPPING_IS_UNUSED_BIT_CNT_MASK	0x1
--#define DBG_ATTN_BIT_MAPPING_IS_UNUSED_BIT_CNT_SHIFT	15
--};
--
--/* Attention block per-type data */
--struct dbg_attn_block_type_data {
--	u16 names_offset;
--	u16 reserved1;
--	u8 num_regs;
--	u8 reserved2;
--	u16 regs_offset;
--
--};
--
--/* Block attentions */
--struct dbg_attn_block {
--	struct dbg_attn_block_type_data per_type_data[2];
--};
--
--/* Attention register result */
--struct dbg_attn_reg_result {
--	u32 data;
--#define DBG_ATTN_REG_RESULT_STS_ADDRESS_MASK	0xFFFFFF
--#define DBG_ATTN_REG_RESULT_STS_ADDRESS_SHIFT	0
--#define DBG_ATTN_REG_RESULT_NUM_REG_ATTN_MASK	0xFF
--#define DBG_ATTN_REG_RESULT_NUM_REG_ATTN_SHIFT	24
--	u16 block_attn_offset;
--	u16 reserved;
--	u32 sts_val;
--	u32 mask_val;
--};
--
--/* Attention block result */
--struct dbg_attn_block_result {
--	u8 block_id;
--	u8 data;
--#define DBG_ATTN_BLOCK_RESULT_ATTN_TYPE_MASK	0x3
--#define DBG_ATTN_BLOCK_RESULT_ATTN_TYPE_SHIFT	0
--#define DBG_ATTN_BLOCK_RESULT_NUM_REGS_MASK	0x3F
--#define DBG_ATTN_BLOCK_RESULT_NUM_REGS_SHIFT	2
--	u16 names_offset;
--	struct dbg_attn_reg_result reg_results[15];
--};
--
--/* Mode header */
--struct dbg_mode_hdr {
--	u16 data;
--#define DBG_MODE_HDR_EVAL_MODE_MASK		0x1
--#define DBG_MODE_HDR_EVAL_MODE_SHIFT		0
--#define DBG_MODE_HDR_MODES_BUF_OFFSET_MASK	0x7FFF
--#define DBG_MODE_HDR_MODES_BUF_OFFSET_SHIFT	1
--};
--
--/* Attention register */
--struct dbg_attn_reg {
--	struct dbg_mode_hdr mode;
--	u16 block_attn_offset;
--	u32 data;
--#define DBG_ATTN_REG_STS_ADDRESS_MASK	0xFFFFFF
--#define DBG_ATTN_REG_STS_ADDRESS_SHIFT	0
--#define DBG_ATTN_REG_NUM_REG_ATTN_MASK	0xFF
--#define DBG_ATTN_REG_NUM_REG_ATTN_SHIFT 24
--	u32 sts_clr_address;
--	u32 mask_address;
--};
--
--/* Attention types */
--enum dbg_attn_type {
--	ATTN_TYPE_INTERRUPT,
--	ATTN_TYPE_PARITY,
--	MAX_DBG_ATTN_TYPE
--};
--
--/* Block debug data */
--struct dbg_block {
--	u8 name[15];
--	u8 associated_storm_letter;
--};
--
--/* Chip-specific block debug data */
--struct dbg_block_chip {
--	u8 flags;
--#define DBG_BLOCK_CHIP_IS_REMOVED_MASK		 0x1
--#define DBG_BLOCK_CHIP_IS_REMOVED_SHIFT		 0
--#define DBG_BLOCK_CHIP_HAS_RESET_REG_MASK	 0x1
--#define DBG_BLOCK_CHIP_HAS_RESET_REG_SHIFT	 1
--#define DBG_BLOCK_CHIP_UNRESET_BEFORE_DUMP_MASK  0x1
--#define DBG_BLOCK_CHIP_UNRESET_BEFORE_DUMP_SHIFT 2
--#define DBG_BLOCK_CHIP_HAS_DBG_BUS_MASK		 0x1
--#define DBG_BLOCK_CHIP_HAS_DBG_BUS_SHIFT	 3
--#define DBG_BLOCK_CHIP_HAS_LATENCY_EVENTS_MASK	 0x1
--#define DBG_BLOCK_CHIP_HAS_LATENCY_EVENTS_SHIFT  4
--#define DBG_BLOCK_CHIP_RESERVED0_MASK		 0x7
--#define DBG_BLOCK_CHIP_RESERVED0_SHIFT		 5
--	u8 dbg_client_id;
--	u8 reset_reg_id;
--	u8 reset_reg_bit_offset;
--	struct dbg_mode_hdr dbg_bus_mode;
--	u16 reserved1;
--	u8 reserved2;
--	u8 num_of_dbg_bus_lines;
--	u16 dbg_bus_lines_offset;
--	u32 dbg_select_reg_addr;
--	u32 dbg_dword_enable_reg_addr;
--	u32 dbg_shift_reg_addr;
--	u32 dbg_force_valid_reg_addr;
--	u32 dbg_force_frame_reg_addr;
--};
--
--/* Chip-specific block user debug data */
--struct dbg_block_chip_user {
--	u8 num_of_dbg_bus_lines;
--	u8 has_latency_events;
--	u16 names_offset;
--};
--
--/* Block user debug data */
--struct dbg_block_user {
--	u8 name[16];
--};
--
--/* Block Debug line data */
--struct dbg_bus_line {
--	u8 data;
--#define DBG_BUS_LINE_NUM_OF_GROUPS_MASK		0xF
--#define DBG_BUS_LINE_NUM_OF_GROUPS_SHIFT	0
--#define DBG_BUS_LINE_IS_256B_MASK		0x1
--#define DBG_BUS_LINE_IS_256B_SHIFT		4
--#define DBG_BUS_LINE_RESERVED_MASK		0x7
--#define DBG_BUS_LINE_RESERVED_SHIFT		5
--	u8 group_sizes;
--};
--
--/* Condition header for registers dump */
--struct dbg_dump_cond_hdr {
--	struct dbg_mode_hdr mode; /* Mode header */
--	u8 block_id; /* block ID */
--	u8 data_size; /* size in dwords of the data following this header */
--};
--
--/* Memory data for registers dump */
--struct dbg_dump_mem {
--	u32 dword0;
--#define DBG_DUMP_MEM_ADDRESS_MASK	0xFFFFFF
--#define DBG_DUMP_MEM_ADDRESS_SHIFT	0
--#define DBG_DUMP_MEM_MEM_GROUP_ID_MASK	0xFF
--#define DBG_DUMP_MEM_MEM_GROUP_ID_SHIFT	24
--	u32 dword1;
--#define DBG_DUMP_MEM_LENGTH_MASK	0xFFFFFF
--#define DBG_DUMP_MEM_LENGTH_SHIFT	0
--#define DBG_DUMP_MEM_WIDE_BUS_MASK	0x1
--#define DBG_DUMP_MEM_WIDE_BUS_SHIFT	24
--#define DBG_DUMP_MEM_RESERVED_MASK	0x7F
--#define DBG_DUMP_MEM_RESERVED_SHIFT	25
--};
--
--/* Register data for registers dump */
--struct dbg_dump_reg {
--	u32 data;
--#define DBG_DUMP_REG_ADDRESS_MASK	0x7FFFFF
--#define DBG_DUMP_REG_ADDRESS_SHIFT	0
--#define DBG_DUMP_REG_WIDE_BUS_MASK	0x1
--#define DBG_DUMP_REG_WIDE_BUS_SHIFT	23
--#define DBG_DUMP_REG_LENGTH_MASK	0xFF
--#define DBG_DUMP_REG_LENGTH_SHIFT	24
--};
--
--/* Split header for registers dump */
--struct dbg_dump_split_hdr {
--	u32 hdr;
--#define DBG_DUMP_SPLIT_HDR_DATA_SIZE_MASK	0xFFFFFF
--#define DBG_DUMP_SPLIT_HDR_DATA_SIZE_SHIFT	0
--#define DBG_DUMP_SPLIT_HDR_SPLIT_TYPE_ID_MASK	0xFF
--#define DBG_DUMP_SPLIT_HDR_SPLIT_TYPE_ID_SHIFT	24
--};
--
--/* Condition header for idle check */
--struct dbg_idle_chk_cond_hdr {
--	struct dbg_mode_hdr mode; /* Mode header */
--	u16 data_size; /* size in dwords of the data following this header */
--};
--
--/* Idle Check condition register */
--struct dbg_idle_chk_cond_reg {
--	u32 data;
--#define DBG_IDLE_CHK_COND_REG_ADDRESS_MASK	0x7FFFFF
--#define DBG_IDLE_CHK_COND_REG_ADDRESS_SHIFT	0
--#define DBG_IDLE_CHK_COND_REG_WIDE_BUS_MASK	0x1
--#define DBG_IDLE_CHK_COND_REG_WIDE_BUS_SHIFT	23
--#define DBG_IDLE_CHK_COND_REG_BLOCK_ID_MASK	0xFF
--#define DBG_IDLE_CHK_COND_REG_BLOCK_ID_SHIFT	24
--	u16 num_entries;
--	u8 entry_size;
--	u8 start_entry;
--};
--
--/* Idle Check info register */
--struct dbg_idle_chk_info_reg {
--	u32 data;
--#define DBG_IDLE_CHK_INFO_REG_ADDRESS_MASK	0x7FFFFF
--#define DBG_IDLE_CHK_INFO_REG_ADDRESS_SHIFT	0
--#define DBG_IDLE_CHK_INFO_REG_WIDE_BUS_MASK	0x1
--#define DBG_IDLE_CHK_INFO_REG_WIDE_BUS_SHIFT	23
--#define DBG_IDLE_CHK_INFO_REG_BLOCK_ID_MASK	0xFF
--#define DBG_IDLE_CHK_INFO_REG_BLOCK_ID_SHIFT	24
--	u16 size; /* register size in dwords */
--	struct dbg_mode_hdr mode; /* Mode header */
--};
--
--/* Idle Check register */
--union dbg_idle_chk_reg {
--	struct dbg_idle_chk_cond_reg cond_reg; /* condition register */
--	struct dbg_idle_chk_info_reg info_reg; /* info register */
--};
--
--/* Idle Check result header */
--struct dbg_idle_chk_result_hdr {
--	u16 rule_id; /* Failing rule index */
--	u16 mem_entry_id; /* Failing memory entry index */
--	u8 num_dumped_cond_regs; /* number of dumped condition registers */
--	u8 num_dumped_info_regs; /* number of dumped condition registers */
--	u8 severity; /* from dbg_idle_chk_severity_types enum */
--	u8 reserved;
--};
--
--/* Idle Check result register header */
--struct dbg_idle_chk_result_reg_hdr {
--	u8 data;
--#define DBG_IDLE_CHK_RESULT_REG_HDR_IS_MEM_MASK  0x1
--#define DBG_IDLE_CHK_RESULT_REG_HDR_IS_MEM_SHIFT 0
--#define DBG_IDLE_CHK_RESULT_REG_HDR_REG_ID_MASK  0x7F
--#define DBG_IDLE_CHK_RESULT_REG_HDR_REG_ID_SHIFT 1
--	u8 start_entry; /* index of the first checked entry */
--	u16 size; /* register size in dwords */
--};
--
--/* Idle Check rule */
--struct dbg_idle_chk_rule {
--	u16 rule_id; /* Idle Check rule ID */
--	u8 severity; /* value from dbg_idle_chk_severity_types enum */
--	u8 cond_id; /* Condition ID */
--	u8 num_cond_regs; /* number of condition registers */
--	u8 num_info_regs; /* number of info registers */
--	u8 num_imms; /* number of immediates in the condition */
--	u8 reserved1;
--	u16 reg_offset; /* offset of this rules registers in the idle check
--			 * register array (in dbg_idle_chk_reg units).
--			 */
--	u16 imm_offset; /* offset of this rules immediate values in the
--			 * immediate values array (in dwords).
--			 */
--};
--
--/* Idle Check rule parsing data */
--struct dbg_idle_chk_rule_parsing_data {
--	u32 data;
--#define DBG_IDLE_CHK_RULE_PARSING_DATA_HAS_FW_MSG_MASK	0x1
--#define DBG_IDLE_CHK_RULE_PARSING_DATA_HAS_FW_MSG_SHIFT	0
--#define DBG_IDLE_CHK_RULE_PARSING_DATA_STR_OFFSET_MASK	0x7FFFFFFF
--#define DBG_IDLE_CHK_RULE_PARSING_DATA_STR_OFFSET_SHIFT	1
--};
--
--/* Idle check severity types */
--enum dbg_idle_chk_severity_types {
--	/* idle check failure should cause an error */
--	IDLE_CHK_SEVERITY_ERROR,
--	/* idle check failure should cause an error only if theres no traffic */
--	IDLE_CHK_SEVERITY_ERROR_NO_TRAFFIC,
--	/* idle check failure should cause a warning */
--	IDLE_CHK_SEVERITY_WARNING,
--	MAX_DBG_IDLE_CHK_SEVERITY_TYPES
--};
--
--/* Reset register */
--struct dbg_reset_reg {
--	u32 data;
--#define DBG_RESET_REG_ADDR_MASK        0xFFFFFF
--#define DBG_RESET_REG_ADDR_SHIFT       0
--#define DBG_RESET_REG_IS_REMOVED_MASK  0x1
--#define DBG_RESET_REG_IS_REMOVED_SHIFT 24
--#define DBG_RESET_REG_RESERVED_MASK    0x7F
--#define DBG_RESET_REG_RESERVED_SHIFT   25
--};
--
--/* Debug Bus block data */
--struct dbg_bus_block_data {
--	u8 enable_mask;
--	u8 right_shift;
--	u8 force_valid_mask;
--	u8 force_frame_mask;
--	u8 dword_mask;
--	u8 line_num;
--	u8 hw_id;
--	u8 flags;
--#define DBG_BUS_BLOCK_DATA_IS_256B_LINE_MASK  0x1
--#define DBG_BUS_BLOCK_DATA_IS_256B_LINE_SHIFT 0
--#define DBG_BUS_BLOCK_DATA_RESERVED_MASK      0x7F
--#define DBG_BUS_BLOCK_DATA_RESERVED_SHIFT     1
--};
--
--enum dbg_bus_clients {
--	DBG_BUS_CLIENT_RBCN,
--	DBG_BUS_CLIENT_RBCP,
--	DBG_BUS_CLIENT_RBCR,
--	DBG_BUS_CLIENT_RBCT,
--	DBG_BUS_CLIENT_RBCU,
--	DBG_BUS_CLIENT_RBCF,
--	DBG_BUS_CLIENT_RBCX,
--	DBG_BUS_CLIENT_RBCS,
--	DBG_BUS_CLIENT_RBCH,
--	DBG_BUS_CLIENT_RBCZ,
--	DBG_BUS_CLIENT_OTHER_ENGINE,
--	DBG_BUS_CLIENT_TIMESTAMP,
--	DBG_BUS_CLIENT_CPU,
--	DBG_BUS_CLIENT_RBCY,
--	DBG_BUS_CLIENT_RBCQ,
--	DBG_BUS_CLIENT_RBCM,
--	DBG_BUS_CLIENT_RBCB,
--	DBG_BUS_CLIENT_RBCW,
--	DBG_BUS_CLIENT_RBCV,
--	MAX_DBG_BUS_CLIENTS
--};
--
--/* Debug Bus constraint operation types */
--enum dbg_bus_constraint_ops {
--	DBG_BUS_CONSTRAINT_OP_EQ,
--	DBG_BUS_CONSTRAINT_OP_NE,
--	DBG_BUS_CONSTRAINT_OP_LT,
--	DBG_BUS_CONSTRAINT_OP_LTC,
--	DBG_BUS_CONSTRAINT_OP_LE,
--	DBG_BUS_CONSTRAINT_OP_LEC,
--	DBG_BUS_CONSTRAINT_OP_GT,
--	DBG_BUS_CONSTRAINT_OP_GTC,
--	DBG_BUS_CONSTRAINT_OP_GE,
--	DBG_BUS_CONSTRAINT_OP_GEC,
--	MAX_DBG_BUS_CONSTRAINT_OPS
--};
--
--/* Debug Bus trigger state data */
--struct dbg_bus_trigger_state_data {
--	u8 msg_len;
--	u8 constraint_dword_mask;
--	u8 storm_id;
--	u8 reserved;
--};
--
--/* Debug Bus memory address */
--struct dbg_bus_mem_addr {
--	u32 lo;
--	u32 hi;
--};
--
--/* Debug Bus PCI buffer data */
--struct dbg_bus_pci_buf_data {
--	struct dbg_bus_mem_addr phys_addr; /* PCI buffer physical address */
--	struct dbg_bus_mem_addr virt_addr; /* PCI buffer virtual address */
--	u32 size; /* PCI buffer size in bytes */
--};
--
--/* Debug Bus Storm EID range filter params */
--struct dbg_bus_storm_eid_range_params {
--	u8 min; /* Minimal event ID to filter on */
--	u8 max; /* Maximal event ID to filter on */
--};
--
--/* Debug Bus Storm EID mask filter params */
--struct dbg_bus_storm_eid_mask_params {
--	u8 val; /* Event ID value */
--	u8 mask; /* Event ID mask. 1s in the mask = dont care bits. */
--};
--
--/* Debug Bus Storm EID filter params */
--union dbg_bus_storm_eid_params {
--	struct dbg_bus_storm_eid_range_params range;
--	struct dbg_bus_storm_eid_mask_params mask;
--};
--
--/* Debug Bus Storm data */
--struct dbg_bus_storm_data {
--	u8 enabled;
--	u8 mode;
--	u8 hw_id;
--	u8 eid_filter_en;
--	u8 eid_range_not_mask;
--	u8 cid_filter_en;
--	union dbg_bus_storm_eid_params eid_filter_params;
--	u32 cid;
--};
--
--/* Debug Bus data */
--struct dbg_bus_data {
--	u32 app_version;
--	u8 state;
--	u8 mode_256b_en;
--	u8 num_enabled_blocks;
--	u8 num_enabled_storms;
--	u8 target;
--	u8 one_shot_en;
--	u8 grc_input_en;
--	u8 timestamp_input_en;
--	u8 filter_en;
--	u8 adding_filter;
--	u8 filter_pre_trigger;
--	u8 filter_post_trigger;
--	u8 trigger_en;
--	u8 filter_constraint_dword_mask;
--	u8 next_trigger_state;
--	u8 next_constraint_id;
--	struct dbg_bus_trigger_state_data trigger_states[3];
--	u8 filter_msg_len;
--	u8 rcv_from_other_engine;
--	u8 blocks_dword_mask;
--	u8 blocks_dword_overlap;
--	u32 hw_id_mask;
--	struct dbg_bus_pci_buf_data pci_buf;
--	struct dbg_bus_block_data blocks[132];
--	struct dbg_bus_storm_data storms[6];
--};
--
--/* Debug bus states */
--enum dbg_bus_states {
--	DBG_BUS_STATE_IDLE,
--	DBG_BUS_STATE_READY,
--	DBG_BUS_STATE_RECORDING,
--	DBG_BUS_STATE_STOPPED,
--	MAX_DBG_BUS_STATES
--};
--
--/* Debug Bus Storm modes */
--enum dbg_bus_storm_modes {
--	DBG_BUS_STORM_MODE_PRINTF,
--	DBG_BUS_STORM_MODE_PRAM_ADDR,
--	DBG_BUS_STORM_MODE_DRA_RW,
--	DBG_BUS_STORM_MODE_DRA_W,
--	DBG_BUS_STORM_MODE_LD_ST_ADDR,
--	DBG_BUS_STORM_MODE_DRA_FSM,
--	DBG_BUS_STORM_MODE_FAST_DBGMUX,
--	DBG_BUS_STORM_MODE_RH,
--	DBG_BUS_STORM_MODE_RH_WITH_STORE,
--	DBG_BUS_STORM_MODE_FOC,
--	DBG_BUS_STORM_MODE_EXT_STORE,
--	MAX_DBG_BUS_STORM_MODES
--};
--
--/* Debug bus target IDs */
--enum dbg_bus_targets {
--	DBG_BUS_TARGET_ID_INT_BUF,
--	DBG_BUS_TARGET_ID_NIG,
--	DBG_BUS_TARGET_ID_PCI,
--	MAX_DBG_BUS_TARGETS
--};
--
--/* GRC Dump data */
--struct dbg_grc_data {
--	u8 params_initialized;
--	u8 reserved1;
--	u16 reserved2;
--	u32 param_val[48];
--};
--
--/* Debug GRC params */
--enum dbg_grc_params {
--	DBG_GRC_PARAM_DUMP_TSTORM,
--	DBG_GRC_PARAM_DUMP_MSTORM,
--	DBG_GRC_PARAM_DUMP_USTORM,
--	DBG_GRC_PARAM_DUMP_XSTORM,
--	DBG_GRC_PARAM_DUMP_YSTORM,
--	DBG_GRC_PARAM_DUMP_PSTORM,
--	DBG_GRC_PARAM_DUMP_REGS,
--	DBG_GRC_PARAM_DUMP_RAM,
--	DBG_GRC_PARAM_DUMP_PBUF,
--	DBG_GRC_PARAM_DUMP_IOR,
--	DBG_GRC_PARAM_DUMP_VFC,
--	DBG_GRC_PARAM_DUMP_CM_CTX,
--	DBG_GRC_PARAM_DUMP_PXP,
--	DBG_GRC_PARAM_DUMP_RSS,
--	DBG_GRC_PARAM_DUMP_CAU,
--	DBG_GRC_PARAM_DUMP_QM,
--	DBG_GRC_PARAM_DUMP_MCP,
--	DBG_GRC_PARAM_DUMP_DORQ,
--	DBG_GRC_PARAM_DUMP_CFC,
--	DBG_GRC_PARAM_DUMP_IGU,
--	DBG_GRC_PARAM_DUMP_BRB,
--	DBG_GRC_PARAM_DUMP_BTB,
--	DBG_GRC_PARAM_DUMP_BMB,
--	DBG_GRC_PARAM_RESERVD1,
--	DBG_GRC_PARAM_DUMP_MULD,
--	DBG_GRC_PARAM_DUMP_PRS,
--	DBG_GRC_PARAM_DUMP_DMAE,
--	DBG_GRC_PARAM_DUMP_TM,
--	DBG_GRC_PARAM_DUMP_SDM,
--	DBG_GRC_PARAM_DUMP_DIF,
--	DBG_GRC_PARAM_DUMP_STATIC,
--	DBG_GRC_PARAM_UNSTALL,
--	DBG_GRC_PARAM_RESERVED2,
--	DBG_GRC_PARAM_MCP_TRACE_META_SIZE,
--	DBG_GRC_PARAM_EXCLUDE_ALL,
--	DBG_GRC_PARAM_CRASH,
--	DBG_GRC_PARAM_PARITY_SAFE,
--	DBG_GRC_PARAM_DUMP_CM,
--	DBG_GRC_PARAM_DUMP_PHY,
--	DBG_GRC_PARAM_NO_MCP,
--	DBG_GRC_PARAM_NO_FW_VER,
--	DBG_GRC_PARAM_RESERVED3,
--	DBG_GRC_PARAM_DUMP_MCP_HW_DUMP,
--	DBG_GRC_PARAM_DUMP_ILT_CDUC,
--	DBG_GRC_PARAM_DUMP_ILT_CDUT,
--	DBG_GRC_PARAM_DUMP_CAU_EXT,
--	MAX_DBG_GRC_PARAMS
--};
--
--/* Debug status codes */
--enum dbg_status {
--	DBG_STATUS_OK,
--	DBG_STATUS_APP_VERSION_NOT_SET,
--	DBG_STATUS_UNSUPPORTED_APP_VERSION,
--	DBG_STATUS_DBG_BLOCK_NOT_RESET,
--	DBG_STATUS_INVALID_ARGS,
--	DBG_STATUS_OUTPUT_ALREADY_SET,
--	DBG_STATUS_INVALID_PCI_BUF_SIZE,
--	DBG_STATUS_PCI_BUF_ALLOC_FAILED,
--	DBG_STATUS_PCI_BUF_NOT_ALLOCATED,
--	DBG_STATUS_INVALID_FILTER_TRIGGER_DWORDS,
--	DBG_STATUS_NO_MATCHING_FRAMING_MODE,
--	DBG_STATUS_VFC_READ_ERROR,
--	DBG_STATUS_STORM_ALREADY_ENABLED,
--	DBG_STATUS_STORM_NOT_ENABLED,
--	DBG_STATUS_BLOCK_ALREADY_ENABLED,
--	DBG_STATUS_BLOCK_NOT_ENABLED,
--	DBG_STATUS_NO_INPUT_ENABLED,
--	DBG_STATUS_NO_FILTER_TRIGGER_256B,
--	DBG_STATUS_FILTER_ALREADY_ENABLED,
--	DBG_STATUS_TRIGGER_ALREADY_ENABLED,
--	DBG_STATUS_TRIGGER_NOT_ENABLED,
--	DBG_STATUS_CANT_ADD_CONSTRAINT,
--	DBG_STATUS_TOO_MANY_TRIGGER_STATES,
--	DBG_STATUS_TOO_MANY_CONSTRAINTS,
--	DBG_STATUS_RECORDING_NOT_STARTED,
--	DBG_STATUS_DATA_DIDNT_TRIGGER,
--	DBG_STATUS_NO_DATA_RECORDED,
--	DBG_STATUS_DUMP_BUF_TOO_SMALL,
--	DBG_STATUS_DUMP_NOT_CHUNK_ALIGNED,
--	DBG_STATUS_UNKNOWN_CHIP,
--	DBG_STATUS_VIRT_MEM_ALLOC_FAILED,
--	DBG_STATUS_BLOCK_IN_RESET,
--	DBG_STATUS_INVALID_TRACE_SIGNATURE,
--	DBG_STATUS_INVALID_NVRAM_BUNDLE,
--	DBG_STATUS_NVRAM_GET_IMAGE_FAILED,
--	DBG_STATUS_NON_ALIGNED_NVRAM_IMAGE,
--	DBG_STATUS_NVRAM_READ_FAILED,
--	DBG_STATUS_IDLE_CHK_PARSE_FAILED,
--	DBG_STATUS_MCP_TRACE_BAD_DATA,
--	DBG_STATUS_MCP_TRACE_NO_META,
--	DBG_STATUS_MCP_COULD_NOT_HALT,
--	DBG_STATUS_MCP_COULD_NOT_RESUME,
--	DBG_STATUS_RESERVED0,
--	DBG_STATUS_SEMI_FIFO_NOT_EMPTY,
--	DBG_STATUS_IGU_FIFO_BAD_DATA,
--	DBG_STATUS_MCP_COULD_NOT_MASK_PRTY,
--	DBG_STATUS_FW_ASSERTS_PARSE_FAILED,
--	DBG_STATUS_REG_FIFO_BAD_DATA,
--	DBG_STATUS_PROTECTION_OVERRIDE_BAD_DATA,
--	DBG_STATUS_DBG_ARRAY_NOT_SET,
--	DBG_STATUS_RESERVED1,
--	DBG_STATUS_NON_MATCHING_LINES,
--	DBG_STATUS_INSUFFICIENT_HW_IDS,
--	DBG_STATUS_DBG_BUS_IN_USE,
--	DBG_STATUS_INVALID_STORM_DBG_MODE,
--	DBG_STATUS_OTHER_ENGINE_BB_ONLY,
--	DBG_STATUS_FILTER_SINGLE_HW_ID,
--	DBG_STATUS_TRIGGER_SINGLE_HW_ID,
--	DBG_STATUS_MISSING_TRIGGER_STATE_STORM,
--	MAX_DBG_STATUS
--};
--
--/* Debug Storms IDs */
--enum dbg_storms {
--	DBG_TSTORM_ID,
--	DBG_MSTORM_ID,
--	DBG_USTORM_ID,
--	DBG_XSTORM_ID,
--	DBG_YSTORM_ID,
--	DBG_PSTORM_ID,
--	MAX_DBG_STORMS
--};
--
--/* Idle Check data */
--struct idle_chk_data {
--	u32 buf_size;
--	u8 buf_size_set;
--	u8 reserved1;
--	u16 reserved2;
--};
--
--struct pretend_params {
--	u8 split_type;
--	u8 reserved;
--	u16 split_id;
--};
--
--/* Debug Tools data (per HW function)
-- */
--struct dbg_tools_data {
--	struct dbg_grc_data grc;
--	struct dbg_bus_data bus;
--	struct idle_chk_data idle_chk;
--	u8 mode_enable[40];
--	u8 block_in_reset[132];
--	u8 chip_id;
--	u8 hw_type;
--	u8 num_ports;
--	u8 num_pfs_per_port;
--	u8 num_vfs;
--	u8 initialized;
--	u8 use_dmae;
--	u8 reserved;
--	struct pretend_params pretend;
--	u32 num_regs_read;
--};
--
--/* ILT Clients */
--enum ilt_clients {
--	ILT_CLI_CDUC,
--	ILT_CLI_CDUT,
--	ILT_CLI_QM,
--	ILT_CLI_TM,
--	ILT_CLI_SRC,
--	ILT_CLI_TSDM,
--	ILT_CLI_RGFS,
--	ILT_CLI_TGFS,
--	MAX_ILT_CLIENTS
--};
--
- /********************************/
- /* HSI Init Functions constants */
- /********************************/
-@@ -3009,720 +2246,6 @@ struct iro {
- 	u16 size;
- };
- 
--/***************************** Public Functions *******************************/
--
--/**
-- * qed_dbg_set_bin_ptr(): Sets a pointer to the binary data with debug
-- *                        arrays.
-- *
-- * @p_hwfn: HW device data.
-- * @bin_ptr: A pointer to the binary data with debug arrays.
-- *
-- * Return: enum dbg status.
-- */
--enum dbg_status qed_dbg_set_bin_ptr(struct qed_hwfn *p_hwfn,
--				    const u8 * const bin_ptr);
--
--/**
-- * qed_read_regs(): Reads registers into a buffer (using GRC).
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @buf: Destination buffer.
-- * @addr: Source GRC address in dwords.
-- * @len: Number of registers to read.
-- *
-- * Return: Void.
-- */
--void qed_read_regs(struct qed_hwfn *p_hwfn,
--		   struct qed_ptt *p_ptt, u32 *buf, u32 addr, u32 len);
--
--/**
-- * qed_read_fw_info(): Reads FW info from the chip.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @fw_info: (Out) a pointer to write the FW info into.
-- *
-- * Return: True if the FW info was read successfully from one of the Storms,
-- * or false if all Storms are in reset.
-- *
-- * The FW info contains FW-related information, such as the FW version,
-- * FW image (main/L2B/kuku), FW timestamp, etc.
-- * The FW info is read from the internal RAM of the first Storm that is not in
-- * reset.
-- */
--bool qed_read_fw_info(struct qed_hwfn *p_hwfn,
--		      struct qed_ptt *p_ptt, struct fw_info *fw_info);
--/**
-- * qed_dbg_grc_config(): Sets the value of a GRC parameter.
-- *
-- * @p_hwfn: HW device data.
-- * @grc_param: GRC parameter.
-- * @val: Value to set.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set.
-- *         - Grc_param is invalid.
-- *         - Val is outside the allowed boundaries.
-- */
--enum dbg_status qed_dbg_grc_config(struct qed_hwfn *p_hwfn,
--				   enum dbg_grc_params grc_param, u32 val);
--
--/**
-- * qed_dbg_grc_set_params_default(): Reverts all GRC parameters to their
-- *                                   default value.
-- *
-- * @p_hwfn: HW device data.
-- *
-- * Return: Void.
-- */
--void qed_dbg_grc_set_params_default(struct qed_hwfn *p_hwfn);
--/**
-- * qed_dbg_grc_get_dump_buf_size(): Returns the required buffer size for
-- *                                  GRC Dump.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @buf_size: (OUT) required buffer size (in dwords) for the GRC Dump
-- *             data.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_grc_get_dump_buf_size(struct qed_hwfn *p_hwfn,
--					      struct qed_ptt *p_ptt,
--					      u32 *buf_size);
--
--/**
-- * qed_dbg_grc_dump(): Dumps GRC data into the specified buffer.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @dump_buf: Pointer to write the collected GRC data into.
-- * @buf_size_in_dwords:Size of the specified buffer in dwords.
-- * @num_dumped_dwords: (OUT) number of dumped dwords.
-- *
-- * Return: Error if one of the following holds:
-- *        - The version wasn't set.
-- *        - The specified dump buffer is too small.
-- *          Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_grc_dump(struct qed_hwfn *p_hwfn,
--				 struct qed_ptt *p_ptt,
--				 u32 *dump_buf,
--				 u32 buf_size_in_dwords,
--				 u32 *num_dumped_dwords);
--
--/**
-- * qed_dbg_idle_chk_get_dump_buf_size(): Returns the required buffer size
-- *                                       for idle check results.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @buf_size: (OUT) required buffer size (in dwords) for the idle check
-- *             data.
-- *
-- * return: Error if one of the following holds:
-- *        - The version wasn't set.
-- *          Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_idle_chk_get_dump_buf_size(struct qed_hwfn *p_hwfn,
--						   struct qed_ptt *p_ptt,
--						   u32 *buf_size);
--
--/**
-- * qed_dbg_idle_chk_dump: Performs idle check and writes the results
-- *                        into the specified buffer.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @dump_buf: Pointer to write the idle check data into.
-- * @buf_size_in_dwords: Size of the specified buffer in dwords.
-- * @num_dumped_dwords: (OUT) number of dumped dwords.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set.
-- *         - The specified buffer is too small.
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_idle_chk_dump(struct qed_hwfn *p_hwfn,
--				      struct qed_ptt *p_ptt,
--				      u32 *dump_buf,
--				      u32 buf_size_in_dwords,
--				      u32 *num_dumped_dwords);
--
--/**
-- * qed_dbg_mcp_trace_get_dump_buf_size(): Returns the required buffer size
-- *                                        for mcp trace results.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @buf_size: (OUT) Required buffer size (in dwords) for mcp trace data.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set.
-- *         - The trace data in MCP scratchpad contain an invalid signature.
-- *         - The bundle ID in NVRAM is invalid.
-- *         - The trace meta data cannot be found (in NVRAM or image file).
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_mcp_trace_get_dump_buf_size(struct qed_hwfn *p_hwfn,
--						    struct qed_ptt *p_ptt,
--						    u32 *buf_size);
--
--/**
-- * qed_dbg_mcp_trace_dump(): Performs mcp trace and writes the results
-- *                           into the specified buffer.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @dump_buf: Pointer to write the mcp trace data into.
-- * @buf_size_in_dwords: Size of the specified buffer in dwords.
-- * @num_dumped_dwords: (OUT) number of dumped dwords.
-- *
-- * Return: Error if one of the following holds:
-- *        - The version wasn't set.
-- *        - The specified buffer is too small.
-- *        - The trace data in MCP scratchpad contain an invalid signature.
-- *        - The bundle ID in NVRAM is invalid.
-- *        - The trace meta data cannot be found (in NVRAM or image file).
-- *        - The trace meta data cannot be read (from NVRAM or image file).
-- *          Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_mcp_trace_dump(struct qed_hwfn *p_hwfn,
--				       struct qed_ptt *p_ptt,
--				       u32 *dump_buf,
--				       u32 buf_size_in_dwords,
--				       u32 *num_dumped_dwords);
--
--/**
-- * qed_dbg_reg_fifo_get_dump_buf_size(): Returns the required buffer size
-- *                                       for grc trace fifo results.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @buf_size: (OUT) Required buffer size (in dwords) for reg fifo data.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_reg_fifo_get_dump_buf_size(struct qed_hwfn *p_hwfn,
--						   struct qed_ptt *p_ptt,
--						   u32 *buf_size);
--
--/**
-- * qed_dbg_reg_fifo_dump(): Reads the reg fifo and writes the results into
-- *                          the specified buffer.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @dump_buf: Pointer to write the reg fifo data into.
-- * @buf_size_in_dwords: Size of the specified buffer in dwords.
-- * @num_dumped_dwords: (OUT) number of dumped dwords.
-- *
-- * Return: Error if one of the following holds:
-- *        - The version wasn't set.
-- *        - The specified buffer is too small.
-- *        - DMAE transaction failed.
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_reg_fifo_dump(struct qed_hwfn *p_hwfn,
--				      struct qed_ptt *p_ptt,
--				      u32 *dump_buf,
--				      u32 buf_size_in_dwords,
--				      u32 *num_dumped_dwords);
--
--/**
-- * qed_dbg_igu_fifo_get_dump_buf_size(): Returns the required buffer size
-- *                                       for the IGU fifo results.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @buf_size: (OUT) Required buffer size (in dwords) for the IGU fifo
-- *            data.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set.
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_igu_fifo_get_dump_buf_size(struct qed_hwfn *p_hwfn,
--						   struct qed_ptt *p_ptt,
--						   u32 *buf_size);
--
--/**
-- * qed_dbg_igu_fifo_dump(): Reads the IGU fifo and writes the results into
-- *                          the specified buffer.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @dump_buf: Pointer to write the IGU fifo data into.
-- * @buf_size_in_dwords: Size of the specified buffer in dwords.
-- * @num_dumped_dwords: (OUT) number of dumped dwords.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set
-- *         - The specified buffer is too small
-- *         - DMAE transaction failed
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_igu_fifo_dump(struct qed_hwfn *p_hwfn,
--				      struct qed_ptt *p_ptt,
--				      u32 *dump_buf,
--				      u32 buf_size_in_dwords,
--				      u32 *num_dumped_dwords);
--
--/**
-- * qed_dbg_protection_override_get_dump_buf_size(): Returns the required
-- *        buffer size for protection override window results.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @buf_size: (OUT) Required buffer size (in dwords) for protection
-- *             override data.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set
-- *           Otherwise, returns ok.
-- */
--enum dbg_status
--qed_dbg_protection_override_get_dump_buf_size(struct qed_hwfn *p_hwfn,
--					      struct qed_ptt *p_ptt,
--					      u32 *buf_size);
--/**
-- * qed_dbg_protection_override_dump(): Reads protection override window
-- *       entries and writes the results into the specified buffer.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @dump_buf: Pointer to write the protection override data into.
-- * @buf_size_in_dwords: Size of the specified buffer in dwords.
-- * @num_dumped_dwords: (OUT) number of dumped dwords.
-- *
-- * @return: Error if one of the following holds:
-- *          - The version wasn't set.
-- *          - The specified buffer is too small.
-- *          - DMAE transaction failed.
-- *             Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_protection_override_dump(struct qed_hwfn *p_hwfn,
--						 struct qed_ptt *p_ptt,
--						 u32 *dump_buf,
--						 u32 buf_size_in_dwords,
--						 u32 *num_dumped_dwords);
--/**
-- * qed_dbg_fw_asserts_get_dump_buf_size(): Returns the required buffer
-- *                                         size for FW Asserts results.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @buf_size: (OUT) Required buffer size (in dwords) for FW Asserts data.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set.
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_fw_asserts_get_dump_buf_size(struct qed_hwfn *p_hwfn,
--						     struct qed_ptt *p_ptt,
--						     u32 *buf_size);
--/**
-- * qed_dbg_fw_asserts_dump(): Reads the FW Asserts and writes the results
-- *                            into the specified buffer.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @dump_buf: Pointer to write the FW Asserts data into.
-- * @buf_size_in_dwords: Size of the specified buffer in dwords.
-- * @num_dumped_dwords: (OUT) number of dumped dwords.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set.
-- *         - The specified buffer is too small.
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_fw_asserts_dump(struct qed_hwfn *p_hwfn,
--					struct qed_ptt *p_ptt,
--					u32 *dump_buf,
--					u32 buf_size_in_dwords,
--					u32 *num_dumped_dwords);
--
--/**
-- * qed_dbg_read_attn(): Reads the attention registers of the specified
-- * block and type, and writes the results into the specified buffer.
-- *
-- * @p_hwfn: HW device data.
-- * @p_ptt: Ptt window used for writing the registers.
-- * @block: Block ID.
-- * @attn_type: Attention type.
-- * @clear_status: Indicates if the attention status should be cleared.
-- * @results:  (OUT) Pointer to write the read results into.
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set
-- *          Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_read_attn(struct qed_hwfn *p_hwfn,
--				  struct qed_ptt *p_ptt,
--				  enum block_id block,
--				  enum dbg_attn_type attn_type,
--				  bool clear_status,
--				  struct dbg_attn_block_result *results);
--
--/**
-- * qed_dbg_print_attn(): Prints attention registers values in the
-- *                       specified results struct.
-- *
-- * @p_hwfn: HW device data.
-- * @results: Pointer to the attention read results
-- *
-- * Return: Error if one of the following holds:
-- *        - The version wasn't set
-- *          Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_print_attn(struct qed_hwfn *p_hwfn,
--				   struct dbg_attn_block_result *results);
--
--/******************************* Data Types **********************************/
--
--struct mcp_trace_format {
--	u32 data;
--#define MCP_TRACE_FORMAT_MODULE_MASK	0x0000ffff
--#define MCP_TRACE_FORMAT_MODULE_OFFSET	0
--#define MCP_TRACE_FORMAT_LEVEL_MASK	0x00030000
--#define MCP_TRACE_FORMAT_LEVEL_OFFSET	16
--#define MCP_TRACE_FORMAT_P1_SIZE_MASK	0x000c0000
--#define MCP_TRACE_FORMAT_P1_SIZE_OFFSET 18
--#define MCP_TRACE_FORMAT_P2_SIZE_MASK	0x00300000
--#define MCP_TRACE_FORMAT_P2_SIZE_OFFSET 20
--#define MCP_TRACE_FORMAT_P3_SIZE_MASK	0x00c00000
--#define MCP_TRACE_FORMAT_P3_SIZE_OFFSET 22
--#define MCP_TRACE_FORMAT_LEN_MASK	0xff000000
--#define MCP_TRACE_FORMAT_LEN_OFFSET	24
--
--	char *format_str;
--};
--
--/* MCP Trace Meta data structure */
--struct mcp_trace_meta {
--	u32 modules_num;
--	char **modules;
--	u32 formats_num;
--	struct mcp_trace_format *formats;
--	bool is_allocated;
--};
--
--/* Debug Tools user data */
--struct dbg_tools_user_data {
--	struct mcp_trace_meta mcp_trace_meta;
--	const u32 *mcp_trace_user_meta_buf;
--};
--
--/******************************** Constants **********************************/
--
--#define MAX_NAME_LEN	16
--
--/***************************** Public Functions *******************************/
--
--/**
-- * qed_dbg_user_set_bin_ptr(): Sets a pointer to the binary data with
-- *                             debug arrays.
-- *
-- * @p_hwfn: HW device data.
-- * @bin_ptr: a pointer to the binary data with debug arrays.
-- *
-- * Return: dbg_status.
-- */
--enum dbg_status qed_dbg_user_set_bin_ptr(struct qed_hwfn *p_hwfn,
--					 const u8 * const bin_ptr);
--
--/**
-- * qed_dbg_alloc_user_data(): Allocates user debug data.
-- *
-- * @p_hwfn: HW device data.
-- * @user_data_ptr: (OUT) a pointer to the allocated memory.
-- *
-- * Return: dbg_status.
-- */
--enum dbg_status qed_dbg_alloc_user_data(struct qed_hwfn *p_hwfn,
--					void **user_data_ptr);
--
--/**
-- * qed_dbg_get_status_str(): Returns a string for the specified status.
-- *
-- * @status: A debug status code.
-- *
-- * Return: A string for the specified status.
-- */
--const char *qed_dbg_get_status_str(enum dbg_status status);
--
--/**
-- * qed_get_idle_chk_results_buf_size(): Returns the required buffer size
-- *                                      for idle check results (in bytes).
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: idle check dump buffer.
-- * @num_dumped_dwords: number of dwords that were dumped.
-- * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-- *                    results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_get_idle_chk_results_buf_size(struct qed_hwfn *p_hwfn,
--						  u32 *dump_buf,
--						  u32  num_dumped_dwords,
--						  u32 *results_buf_size);
--/**
-- * qed_print_idle_chk_results(): Prints idle check results
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: idle check dump buffer.
-- * @num_dumped_dwords: number of dwords that were dumped.
-- * @results_buf: buffer for printing the idle check results.
-- * @num_errors: (OUT) number of errors found in idle check.
-- * @num_warnings: (OUT) number of warnings found in idle check.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_print_idle_chk_results(struct qed_hwfn *p_hwfn,
--					   u32 *dump_buf,
--					   u32 num_dumped_dwords,
--					   char *results_buf,
--					   u32 *num_errors,
--					   u32 *num_warnings);
--
--/**
-- * qed_dbg_mcp_trace_set_meta_data(): Sets the MCP Trace meta data.
-- *
-- * @p_hwfn: HW device data.
-- * @meta_buf: Meta buffer.
-- *
-- * Return: Void.
-- *
-- * Needed in case the MCP Trace dump doesn't contain the meta data (e.g. due to
-- * no NVRAM access).
-- */
--void qed_dbg_mcp_trace_set_meta_data(struct qed_hwfn *p_hwfn,
--				     const u32 *meta_buf);
--
--/**
-- * qed_get_mcp_trace_results_buf_size(): Returns the required buffer size
-- *                                       for MCP Trace results (in bytes).
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: MCP Trace dump buffer.
-- * @num_dumped_dwords: number of dwords that were dumped.
-- * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-- *                    results.
-- *
-- * Return: Rrror if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_get_mcp_trace_results_buf_size(struct qed_hwfn *p_hwfn,
--						   u32 *dump_buf,
--						   u32 num_dumped_dwords,
--						   u32 *results_buf_size);
--
--/**
-- * qed_print_mcp_trace_results(): Prints MCP Trace results
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: MCP trace dump buffer, starting from the header.
-- * @num_dumped_dwords: Member of dwords that were dumped.
-- * @results_buf: Buffer for printing the mcp trace results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_print_mcp_trace_results(struct qed_hwfn *p_hwfn,
--					    u32 *dump_buf,
--					    u32 num_dumped_dwords,
--					    char *results_buf);
--
--/**
-- * qed_print_mcp_trace_results_cont(): Prints MCP Trace results, and
-- * keeps the MCP trace meta data allocated, to support continuous MCP Trace
-- * parsing. After the continuous parsing ends, mcp_trace_free_meta_data should
-- * be called to free the meta data.
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: MVP trace dump buffer, starting from the header.
-- * @results_buf: Buffer for printing the mcp trace results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_print_mcp_trace_results_cont(struct qed_hwfn *p_hwfn,
--						 u32 *dump_buf,
--						 char *results_buf);
--
--/**
-- * qed_print_mcp_trace_line(): Prints MCP Trace results for a single line
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: MCP trace dump buffer, starting from the header.
-- * @num_dumped_bytes: Number of bytes that were dumped.
-- * @results_buf: Buffer for printing the mcp trace results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_print_mcp_trace_line(struct qed_hwfn *p_hwfn,
--					 u8 *dump_buf,
--					 u32 num_dumped_bytes,
--					 char *results_buf);
--
--/**
-- * qed_mcp_trace_free_meta_data(): Frees the MCP Trace meta data.
-- * Should be called after continuous MCP Trace parsing.
-- *
-- * @p_hwfn: HW device data.
-- *
-- * Return: Void.
-- */
--void qed_mcp_trace_free_meta_data(struct qed_hwfn *p_hwfn);
--
--/**
-- * qed_get_reg_fifo_results_buf_size(): Returns the required buffer size
-- *                                      for reg_fifo results (in bytes).
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: Reg fifo dump buffer.
-- * @num_dumped_dwords: Number of dwords that were dumped.
-- * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-- *                     results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_get_reg_fifo_results_buf_size(struct qed_hwfn *p_hwfn,
--						  u32 *dump_buf,
--						  u32 num_dumped_dwords,
--						  u32 *results_buf_size);
--
--/**
-- * qed_print_reg_fifo_results(): Prints reg fifo results.
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: Reg fifo dump buffer, starting from the header.
-- * @num_dumped_dwords: Number of dwords that were dumped.
-- * @results_buf: Buffer for printing the reg fifo results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_print_reg_fifo_results(struct qed_hwfn *p_hwfn,
--					   u32 *dump_buf,
--					   u32 num_dumped_dwords,
--					   char *results_buf);
--
--/**
-- * qed_get_igu_fifo_results_buf_size(): Returns the required buffer size
-- *                                      for igu_fifo results (in bytes).
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: IGU fifo dump buffer.
-- * @num_dumped_dwords: number of dwords that were dumped.
-- * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-- *                    results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_get_igu_fifo_results_buf_size(struct qed_hwfn *p_hwfn,
--						  u32 *dump_buf,
--						  u32 num_dumped_dwords,
--						  u32 *results_buf_size);
--
--/**
-- * qed_print_igu_fifo_results(): Prints IGU fifo results
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: IGU fifo dump buffer, starting from the header.
-- * @num_dumped_dwords: Number of dwords that were dumped.
-- * @results_buf: Buffer for printing the IGU fifo results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_print_igu_fifo_results(struct qed_hwfn *p_hwfn,
--					   u32 *dump_buf,
--					   u32 num_dumped_dwords,
--					   char *results_buf);
--
--/**
-- * qed_get_protection_override_results_buf_size(): Returns the required
-- *         buffer size for protection override results (in bytes).
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: Protection override dump buffer.
-- * @num_dumped_dwords: Number of dwords that were dumped.
-- * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-- *                    results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status
--qed_get_protection_override_results_buf_size(struct qed_hwfn *p_hwfn,
--					     u32 *dump_buf,
--					     u32 num_dumped_dwords,
--					     u32 *results_buf_size);
--
--/**
-- * qed_print_protection_override_results(): Prints protection override
-- *                                          results.
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: Protection override dump buffer, starting from the header.
-- * @num_dumped_dwords: Number of dwords that were dumped.
-- * @results_buf: Buffer for printing the reg fifo results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_print_protection_override_results(struct qed_hwfn *p_hwfn,
--						      u32 *dump_buf,
--						      u32 num_dumped_dwords,
--						      char *results_buf);
--
--/**
-- * qed_get_fw_asserts_results_buf_size(): Returns the required buffer size
-- *                                        for FW Asserts results (in bytes).
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: FW Asserts dump buffer.
-- * @num_dumped_dwords: number of dwords that were dumped.
-- * @results_buf_size: (OUT) required buffer size (in bytes) for the parsed
-- *                    results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_get_fw_asserts_results_buf_size(struct qed_hwfn *p_hwfn,
--						    u32 *dump_buf,
--						    u32 num_dumped_dwords,
--						    u32 *results_buf_size);
--
--/**
-- * qed_print_fw_asserts_results(): Prints FW Asserts results.
-- *
-- * @p_hwfn: HW device data.
-- * @dump_buf: FW Asserts dump buffer, starting from the header.
-- * @num_dumped_dwords: number of dwords that were dumped.
-- * @results_buf: buffer for printing the FW Asserts results.
-- *
-- * Return: Error if the parsing fails, ok otherwise.
-- */
--enum dbg_status qed_print_fw_asserts_results(struct qed_hwfn *p_hwfn,
--					     u32 *dump_buf,
--					     u32 num_dumped_dwords,
--					     char *results_buf);
--
--/**
-- * qed_dbg_parse_attn(): Parses and prints attention registers values in
-- *                      the specified results struct.
-- *
-- * @p_hwfn: HW device data.
-- * @results: Pointer to the attention read results
-- *
-- * Return: Error if one of the following holds:
-- *         - The version wasn't set.
-- *           Otherwise, returns ok.
-- */
--enum dbg_status qed_dbg_parse_attn(struct qed_hwfn *p_hwfn,
--				   struct dbg_attn_block_result *results);
--
- /* Win 2 */
- #define GTT_BAR0_MAP_REG_IGU_CMD	0x00f000UL
- 
-@@ -4106,334 +2629,6 @@ void qed_fw_overlay_init_ram(struct qed_hwfn *p_hwfn,
- void qed_fw_overlay_mem_free(struct qed_hwfn *p_hwfn,
- 			     struct phys_mem_desc *fw_overlay_mem);
- 
--/* Ystorm flow control mode. Use enum fw_flow_ctrl_mode */
--#define YSTORM_FLOW_CONTROL_MODE_OFFSET			(IRO[0].base)
--#define YSTORM_FLOW_CONTROL_MODE_SIZE			(IRO[0].size)
--
--/* Tstorm port statistics */
--#define TSTORM_PORT_STAT_OFFSET(port_id) \
--	(IRO[1].base + ((port_id) * IRO[1].m1))
--#define TSTORM_PORT_STAT_SIZE				(IRO[1].size)
--
--/* Tstorm ll2 port statistics */
--#define TSTORM_LL2_PORT_STAT_OFFSET(port_id) \
--	(IRO[2].base + ((port_id) * IRO[2].m1))
--#define TSTORM_LL2_PORT_STAT_SIZE			(IRO[2].size)
--
--/* Ustorm VF-PF Channel ready flag */
--#define USTORM_VF_PF_CHANNEL_READY_OFFSET(vf_id) \
--	(IRO[3].base + ((vf_id) * IRO[3].m1))
--#define USTORM_VF_PF_CHANNEL_READY_SIZE			(IRO[3].size)
--
--/* Ustorm Final flr cleanup ack */
--#define USTORM_FLR_FINAL_ACK_OFFSET(pf_id) \
--	(IRO[4].base + ((pf_id) * IRO[4].m1))
--#define USTORM_FLR_FINAL_ACK_SIZE			(IRO[4].size)
--
--/* Ustorm Event ring consumer */
--#define USTORM_EQE_CONS_OFFSET(pf_id) \
--	(IRO[5].base + ((pf_id) * IRO[5].m1))
--#define USTORM_EQE_CONS_SIZE				(IRO[5].size)
--
--/* Ustorm eth queue zone */
--#define USTORM_ETH_QUEUE_ZONE_OFFSET(queue_zone_id) \
--	(IRO[6].base + ((queue_zone_id) * IRO[6].m1))
--#define USTORM_ETH_QUEUE_ZONE_SIZE			(IRO[6].size)
--
--/* Ustorm Common Queue ring consumer */
--#define USTORM_COMMON_QUEUE_CONS_OFFSET(queue_zone_id) \
--	(IRO[7].base + ((queue_zone_id) * IRO[7].m1))
--#define USTORM_COMMON_QUEUE_CONS_SIZE			(IRO[7].size)
--
--/* Xstorm common PQ info */
--#define XSTORM_PQ_INFO_OFFSET(pq_id) \
--	(IRO[8].base + ((pq_id) * IRO[8].m1))
--#define XSTORM_PQ_INFO_SIZE				(IRO[8].size)
--
--/* Xstorm Integration Test Data */
--#define XSTORM_INTEG_TEST_DATA_OFFSET			(IRO[9].base)
--#define XSTORM_INTEG_TEST_DATA_SIZE			(IRO[9].size)
--
--/* Ystorm Integration Test Data */
--#define YSTORM_INTEG_TEST_DATA_OFFSET			(IRO[10].base)
--#define YSTORM_INTEG_TEST_DATA_SIZE			(IRO[10].size)
--
--/* Pstorm Integration Test Data */
--#define PSTORM_INTEG_TEST_DATA_OFFSET			(IRO[11].base)
--#define PSTORM_INTEG_TEST_DATA_SIZE			(IRO[11].size)
--
--/* Tstorm Integration Test Data */
--#define TSTORM_INTEG_TEST_DATA_OFFSET			(IRO[12].base)
--#define TSTORM_INTEG_TEST_DATA_SIZE			(IRO[12].size)
--
--/* Mstorm Integration Test Data */
--#define MSTORM_INTEG_TEST_DATA_OFFSET			(IRO[13].base)
--#define MSTORM_INTEG_TEST_DATA_SIZE			(IRO[13].size)
--
--/* Ustorm Integration Test Data */
--#define USTORM_INTEG_TEST_DATA_OFFSET			(IRO[14].base)
--#define USTORM_INTEG_TEST_DATA_SIZE			(IRO[14].size)
--
--/* Xstorm overlay buffer host address */
--#define XSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[15].base)
--#define XSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[15].size)
--
--/* Ystorm overlay buffer host address */
--#define YSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[16].base)
--#define YSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[16].size)
--
--/* Pstorm overlay buffer host address */
--#define PSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[17].base)
--#define PSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[17].size)
--
--/* Tstorm overlay buffer host address */
--#define TSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[18].base)
--#define TSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[18].size)
--
--/* Mstorm overlay buffer host address */
--#define MSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[19].base)
--#define MSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[19].size)
--
--/* Ustorm overlay buffer host address */
--#define USTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[20].base)
--#define USTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[20].size)
--
--/* Tstorm producers */
--#define TSTORM_LL2_RX_PRODS_OFFSET(core_rx_queue_id) \
--	(IRO[21].base + ((core_rx_queue_id) * IRO[21].m1))
--#define TSTORM_LL2_RX_PRODS_SIZE			(IRO[21].size)
--
--/* Tstorm LightL2 queue statistics */
--#define CORE_LL2_TSTORM_PER_QUEUE_STAT_OFFSET(core_rx_queue_id) \
--	(IRO[22].base + ((core_rx_queue_id) * IRO[22].m1))
--#define CORE_LL2_TSTORM_PER_QUEUE_STAT_SIZE		(IRO[22].size)
--
--/* Ustorm LiteL2 queue statistics */
--#define CORE_LL2_USTORM_PER_QUEUE_STAT_OFFSET(core_rx_queue_id) \
--	(IRO[23].base + ((core_rx_queue_id) * IRO[23].m1))
--#define CORE_LL2_USTORM_PER_QUEUE_STAT_SIZE		(IRO[23].size)
--
--/* Pstorm LiteL2 queue statistics */
--#define CORE_LL2_PSTORM_PER_QUEUE_STAT_OFFSET(core_tx_stats_id) \
--	(IRO[24].base + ((core_tx_stats_id) * IRO[24].m1))
--#define CORE_LL2_PSTORM_PER_QUEUE_STAT_SIZE		(IRO[24].size)
--
--/* Mstorm queue statistics */
--#define MSTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
--	(IRO[25].base + ((stat_counter_id) * IRO[25].m1))
--#define MSTORM_QUEUE_STAT_SIZE				(IRO[25].size)
--
--/* TPA agregation timeout in us resolution (on ASIC) */
--#define MSTORM_TPA_TIMEOUT_US_OFFSET			(IRO[26].base)
--#define MSTORM_TPA_TIMEOUT_US_SIZE			(IRO[26].size)
--
--/* Mstorm ETH VF queues producers offset in RAM. Used in default VF zone size
-- * mode
-- */
--#define MSTORM_ETH_VF_PRODS_OFFSET(vf_id, vf_queue_id) \
--	(IRO[27].base + ((vf_id) * IRO[27].m1) + ((vf_queue_id) * IRO[27].m2))
--#define MSTORM_ETH_VF_PRODS_SIZE			(IRO[27].size)
--
--/* Mstorm ETH PF queues producers */
--#define MSTORM_ETH_PF_PRODS_OFFSET(queue_id) \
--	(IRO[28].base + ((queue_id) * IRO[28].m1))
--#define MSTORM_ETH_PF_PRODS_SIZE			(IRO[28].size)
--
--/* Mstorm pf statistics */
--#define MSTORM_ETH_PF_STAT_OFFSET(pf_id) \
--	(IRO[29].base + ((pf_id) * IRO[29].m1))
--#define MSTORM_ETH_PF_STAT_SIZE				(IRO[29].size)
--
--/* Ustorm queue statistics */
--#define USTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
--	(IRO[30].base + ((stat_counter_id) * IRO[30].m1))
--#define USTORM_QUEUE_STAT_SIZE				(IRO[30].size)
--
--/* Ustorm pf statistics */
--#define USTORM_ETH_PF_STAT_OFFSET(pf_id) \
--	(IRO[31].base + ((pf_id) * IRO[31].m1))
--#define USTORM_ETH_PF_STAT_SIZE				(IRO[31].size)
--
--/* Pstorm queue statistics */
--#define PSTORM_QUEUE_STAT_OFFSET(stat_counter_id)	\
--	(IRO[32].base + ((stat_counter_id) * IRO[32].m1))
--#define PSTORM_QUEUE_STAT_SIZE				(IRO[32].size)
--
--/* Pstorm pf statistics */
--#define PSTORM_ETH_PF_STAT_OFFSET(pf_id) \
--	(IRO[33].base + ((pf_id) * IRO[33].m1))
--#define PSTORM_ETH_PF_STAT_SIZE				(IRO[33].size)
--
--/* Control frame's EthType configuration for TX control frame security */
--#define PSTORM_CTL_FRAME_ETHTYPE_OFFSET(eth_type_id)	\
--	(IRO[34].base + ((eth_type_id) * IRO[34].m1))
--#define PSTORM_CTL_FRAME_ETHTYPE_SIZE			(IRO[34].size)
--
--/* Tstorm last parser message */
--#define TSTORM_ETH_PRS_INPUT_OFFSET			(IRO[35].base)
--#define TSTORM_ETH_PRS_INPUT_SIZE			(IRO[35].size)
--
--/* Tstorm Eth limit Rx rate */
--#define ETH_RX_RATE_LIMIT_OFFSET(pf_id)	\
--	(IRO[36].base + ((pf_id) * IRO[36].m1))
--#define ETH_RX_RATE_LIMIT_SIZE				(IRO[36].size)
--
--/* RSS indirection table entry update command per PF offset in TSTORM PF BAR0.
-- * Use eth_tstorm_rss_update_data for update
-- */
--#define TSTORM_ETH_RSS_UPDATE_OFFSET(pf_id) \
--	(IRO[37].base + ((pf_id) * IRO[37].m1))
--#define TSTORM_ETH_RSS_UPDATE_SIZE			(IRO[37].size)
--
--/* Xstorm queue zone */
--#define XSTORM_ETH_QUEUE_ZONE_OFFSET(queue_id) \
--	(IRO[38].base + ((queue_id) * IRO[38].m1))
--#define XSTORM_ETH_QUEUE_ZONE_SIZE			(IRO[38].size)
--
--/* Ystorm cqe producer */
--#define YSTORM_TOE_CQ_PROD_OFFSET(rss_id) \
--	(IRO[39].base + ((rss_id) * IRO[39].m1))
--#define YSTORM_TOE_CQ_PROD_SIZE				(IRO[39].size)
--
--/* Ustorm cqe producer */
--#define USTORM_TOE_CQ_PROD_OFFSET(rss_id) \
--	(IRO[40].base + ((rss_id) * IRO[40].m1))
--#define USTORM_TOE_CQ_PROD_SIZE				(IRO[40].size)
--
--/* Ustorm grq producer */
--#define USTORM_TOE_GRQ_PROD_OFFSET(pf_id) \
--	(IRO[41].base + ((pf_id) * IRO[41].m1))
--#define USTORM_TOE_GRQ_PROD_SIZE			(IRO[41].size)
--
--/* Tstorm cmdq-cons of given command queue-id */
--#define TSTORM_SCSI_CMDQ_CONS_OFFSET(cmdq_queue_id) \
--	(IRO[42].base + ((cmdq_queue_id) * IRO[42].m1))
--#define TSTORM_SCSI_CMDQ_CONS_SIZE			(IRO[42].size)
--
--/* Tstorm (reflects M-Storm) bdq-external-producer of given function ID,
-- * BDqueue-id
-- */
--#define TSTORM_SCSI_BDQ_EXT_PROD_OFFSET(storage_func_id, bdq_id) \
--	(IRO[43].base + ((storage_func_id) * IRO[43].m1) + \
--	 ((bdq_id) * IRO[43].m2))
--#define TSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[43].size)
--
--/* Mstorm bdq-external-producer of given BDQ resource ID, BDqueue-id */
--#define MSTORM_SCSI_BDQ_EXT_PROD_OFFSET(storage_func_id, bdq_id) \
--	(IRO[44].base + ((storage_func_id) * IRO[44].m1) + \
--	 ((bdq_id) * IRO[44].m2))
--#define MSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[44].size)
--
--/* Tstorm iSCSI RX stats */
--#define TSTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
--	(IRO[45].base + ((storage_func_id) * IRO[45].m1))
--#define TSTORM_ISCSI_RX_STATS_SIZE			(IRO[45].size)
--
--/* Mstorm iSCSI RX stats */
--#define MSTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
--	(IRO[46].base + ((storage_func_id) * IRO[46].m1))
--#define MSTORM_ISCSI_RX_STATS_SIZE			(IRO[46].size)
--
--/* Ustorm iSCSI RX stats */
--#define USTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
--	(IRO[47].base + ((storage_func_id) * IRO[47].m1))
--#define USTORM_ISCSI_RX_STATS_SIZE			(IRO[47].size)
--
--/* Xstorm iSCSI TX stats */
--#define XSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
--	(IRO[48].base + ((storage_func_id) * IRO[48].m1))
--#define XSTORM_ISCSI_TX_STATS_SIZE			(IRO[48].size)
--
--/* Ystorm iSCSI TX stats */
--#define YSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
--	(IRO[49].base + ((storage_func_id) * IRO[49].m1))
--#define YSTORM_ISCSI_TX_STATS_SIZE			(IRO[49].size)
--
--/* Pstorm iSCSI TX stats */
--#define PSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
--	(IRO[50].base + ((storage_func_id) * IRO[50].m1))
--#define PSTORM_ISCSI_TX_STATS_SIZE			(IRO[50].size)
--
--/* Tstorm FCoE RX stats */
--#define TSTORM_FCOE_RX_STATS_OFFSET(pf_id) \
--	(IRO[51].base + ((pf_id) * IRO[51].m1))
--#define TSTORM_FCOE_RX_STATS_SIZE			(IRO[51].size)
--
--/* Pstorm FCoE TX stats */
--#define PSTORM_FCOE_TX_STATS_OFFSET(pf_id) \
--	(IRO[52].base + ((pf_id) * IRO[52].m1))
--#define PSTORM_FCOE_TX_STATS_SIZE			(IRO[52].size)
--
--/* Pstorm RDMA queue statistics */
--#define PSTORM_RDMA_QUEUE_STAT_OFFSET(rdma_stat_counter_id) \
--	(IRO[53].base + ((rdma_stat_counter_id) * IRO[53].m1))
--#define PSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[53].size)
--
--/* Tstorm RDMA queue statistics */
--#define TSTORM_RDMA_QUEUE_STAT_OFFSET(rdma_stat_counter_id) \
--	(IRO[54].base + ((rdma_stat_counter_id) * IRO[54].m1))
--#define TSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[54].size)
--
--/* Xstorm error level for assert */
--#define XSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[55].base + ((pf_id) * IRO[55].m1))
--#define XSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[55].size)
--
--/* Ystorm error level for assert */
--#define YSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[56].base + ((pf_id) * IRO[56].m1))
--#define YSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[56].size)
--
--/* Pstorm error level for assert */
--#define PSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[57].base + ((pf_id) * IRO[57].m1))
--#define PSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[57].size)
--
--/* Tstorm error level for assert */
--#define TSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[58].base + ((pf_id) * IRO[58].m1))
--#define TSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[58].size)
--
--/* Mstorm error level for assert */
--#define MSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[59].base + ((pf_id) * IRO[59].m1))
--#define MSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[59].size)
--
--/* Ustorm error level for assert */
--#define USTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
--	(IRO[60].base + ((pf_id) * IRO[60].m1))
--#define USTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[60].size)
--
--/* Xstorm iWARP rxmit stats */
--#define XSTORM_IWARP_RXMIT_STATS_OFFSET(pf_id) \
--	(IRO[61].base + ((pf_id) * IRO[61].m1))
--#define XSTORM_IWARP_RXMIT_STATS_SIZE			(IRO[61].size)
--
--/* Tstorm RoCE Event Statistics */
--#define TSTORM_ROCE_EVENTS_STAT_OFFSET(roce_pf_id)	\
--	(IRO[62].base + ((roce_pf_id) * IRO[62].m1))
--#define TSTORM_ROCE_EVENTS_STAT_SIZE			(IRO[62].size)
--
--/* DCQCN Received Statistics */
--#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_OFFSET(roce_pf_id)\
--	(IRO[63].base + ((roce_pf_id) * IRO[63].m1))
--#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_SIZE		(IRO[63].size)
--
--/* RoCE Error Statistics */
--#define YSTORM_ROCE_ERROR_STATS_OFFSET(roce_pf_id)	\
--	(IRO[64].base + ((roce_pf_id) * IRO[64].m1))
--#define YSTORM_ROCE_ERROR_STATS_SIZE			(IRO[64].size)
--
--/* DCQCN Sent Statistics */
--#define PSTORM_ROCE_DCQCN_SENT_STATS_OFFSET(roce_pf_id)	\
--	(IRO[65].base + ((roce_pf_id) * IRO[65].m1))
--#define PSTORM_ROCE_DCQCN_SENT_STATS_SIZE		(IRO[65].size)
--
--/* RoCE CQEs Statistics */
--#define USTORM_ROCE_CQE_STATS_OFFSET(roce_pf_id)	\
--	(IRO[66].base + ((roce_pf_id) * IRO[66].m1))
--#define USTORM_ROCE_CQE_STATS_SIZE			(IRO[66].size)
--
- /* Runtime array offsets */
- #define DORQ_REG_PF_MAX_ICID_0_RT_OFFSET				0
- #define DORQ_REG_PF_MAX_ICID_1_RT_OFFSET				1
-@@ -11519,1922 +9714,4 @@ struct ystorm_iscsi_conn_ag_ctx {
- 	__le32 reg3;
- };
- 
--#define MFW_TRACE_SIGNATURE     0x25071946
--
--/* The trace in the buffer */
--#define MFW_TRACE_EVENTID_MASK          0x00ffff
--#define MFW_TRACE_PRM_SIZE_MASK         0x0f0000
--#define MFW_TRACE_PRM_SIZE_OFFSET	16
--#define MFW_TRACE_ENTRY_SIZE            3
--
--struct mcp_trace {
--	u32 signature;		/* Help to identify that the trace is valid */
--	u32 size;		/* the size of the trace buffer in bytes */
--	u32 curr_level;		/* 2 - all will be written to the buffer
--				 * 1 - debug trace will not be written
--				 * 0 - just errors will be written to the buffer
--				 */
--	u32 modules_mask[2];	/* a bit per module, 1 means write it, 0 means
--				 * mask it.
--				 */
--
--	/* Warning: the following pointers are assumed to be 32bits as they are
--	 * used only in the MFW.
--	 */
--	u32 trace_prod; /* The next trace will be written to this offset */
--	u32 trace_oldest; /* The oldest valid trace starts at this offset
--			   * (usually very close after the current producer).
--			   */
--};
--
--#define VF_MAX_STATIC 192
--
--#define MCP_GLOB_PATH_MAX	2
--#define MCP_PORT_MAX		2
--#define MCP_GLOB_PORT_MAX	4
--#define MCP_GLOB_FUNC_MAX	16
--
--typedef u32 offsize_t;		/* In DWORDS !!! */
--/* Offset from the beginning of the MCP scratchpad */
--#define OFFSIZE_OFFSET_SHIFT	0
--#define OFFSIZE_OFFSET_MASK	0x0000ffff
--/* Size of specific element (not the whole array if any) */
--#define OFFSIZE_SIZE_SHIFT	16
--#define OFFSIZE_SIZE_MASK	0xffff0000
--
--#define SECTION_OFFSET(_offsize) ((((_offsize &			\
--				     OFFSIZE_OFFSET_MASK) >>	\
--				    OFFSIZE_OFFSET_SHIFT) << 2))
--
--#define QED_SECTION_SIZE(_offsize) (((_offsize &		\
--				      OFFSIZE_SIZE_MASK) >>	\
--				     OFFSIZE_SIZE_SHIFT) << 2)
--
--#define SECTION_ADDR(_offsize, idx) (MCP_REG_SCRATCH +			\
--				     SECTION_OFFSET(_offsize) +		\
--				     (QED_SECTION_SIZE(_offsize) * idx))
--
--#define SECTION_OFFSIZE_ADDR(_pub_base, _section)	\
--	(_pub_base + offsetof(struct mcp_public_data, sections[_section]))
--
--/* PHY configuration */
--struct eth_phy_cfg {
--	u32					speed;
--#define ETH_SPEED_AUTONEG			0x0
--#define ETH_SPEED_SMARTLINQ			0x8
--
--	u32					pause;
--#define ETH_PAUSE_NONE				0x0
--#define ETH_PAUSE_AUTONEG			0x1
--#define ETH_PAUSE_RX				0x2
--#define ETH_PAUSE_TX				0x4
--
--	u32					adv_speed;
--
--	u32					loopback_mode;
--#define ETH_LOOPBACK_NONE			0x0
--#define ETH_LOOPBACK_INT_PHY			0x1
--#define ETH_LOOPBACK_EXT_PHY			0x2
--#define ETH_LOOPBACK_EXT			0x3
--#define ETH_LOOPBACK_MAC			0x4
--#define ETH_LOOPBACK_CNIG_AH_ONLY_0123		0x5
--#define ETH_LOOPBACK_CNIG_AH_ONLY_2301		0x6
--#define ETH_LOOPBACK_PCS_AH_ONLY		0x7
--#define ETH_LOOPBACK_REVERSE_MAC_AH_ONLY	0x8
--#define ETH_LOOPBACK_INT_PHY_FEA_AH_ONLY	0x9
--
--	u32					eee_cfg;
--#define EEE_CFG_EEE_ENABLED			BIT(0)
--#define EEE_CFG_TX_LPI				BIT(1)
--#define EEE_CFG_ADV_SPEED_1G			BIT(2)
--#define EEE_CFG_ADV_SPEED_10G			BIT(3)
--#define EEE_TX_TIMER_USEC_MASK			0xfffffff0
--#define EEE_TX_TIMER_USEC_OFFSET		4
--#define EEE_TX_TIMER_USEC_BALANCED_TIME		0xa00
--#define EEE_TX_TIMER_USEC_AGGRESSIVE_TIME	0x100
--#define EEE_TX_TIMER_USEC_LATENCY_TIME		0x6000
--
--	u32					deprecated;
--
--	u32					fec_mode;
--#define FEC_FORCE_MODE_MASK			0x000000ff
--#define FEC_FORCE_MODE_OFFSET			0
--#define FEC_FORCE_MODE_NONE			0x00
--#define FEC_FORCE_MODE_FIRECODE			0x01
--#define FEC_FORCE_MODE_RS			0x02
--#define FEC_FORCE_MODE_AUTO			0x07
--#define FEC_EXTENDED_MODE_MASK			0xffffff00
--#define FEC_EXTENDED_MODE_OFFSET		8
--#define ETH_EXT_FEC_NONE			0x00000100
--#define ETH_EXT_FEC_10G_NONE			0x00000200
--#define ETH_EXT_FEC_10G_BASE_R			0x00000400
--#define ETH_EXT_FEC_20G_NONE			0x00000800
--#define ETH_EXT_FEC_20G_BASE_R			0x00001000
--#define ETH_EXT_FEC_25G_NONE			0x00002000
--#define ETH_EXT_FEC_25G_BASE_R			0x00004000
--#define ETH_EXT_FEC_25G_RS528			0x00008000
--#define ETH_EXT_FEC_40G_NONE			0x00010000
--#define ETH_EXT_FEC_40G_BASE_R			0x00020000
--#define ETH_EXT_FEC_50G_NONE			0x00040000
--#define ETH_EXT_FEC_50G_BASE_R			0x00080000
--#define ETH_EXT_FEC_50G_RS528			0x00100000
--#define ETH_EXT_FEC_50G_RS544			0x00200000
--#define ETH_EXT_FEC_100G_NONE			0x00400000
--#define ETH_EXT_FEC_100G_BASE_R			0x00800000
--#define ETH_EXT_FEC_100G_RS528			0x01000000
--#define ETH_EXT_FEC_100G_RS544			0x02000000
--
--	u32					extended_speed;
--#define ETH_EXT_SPEED_MASK			0x0000ffff
--#define ETH_EXT_SPEED_OFFSET			0
--#define ETH_EXT_SPEED_AN			0x00000001
--#define ETH_EXT_SPEED_1G			0x00000002
--#define ETH_EXT_SPEED_10G			0x00000004
--#define ETH_EXT_SPEED_20G			0x00000008
--#define ETH_EXT_SPEED_25G			0x00000010
--#define ETH_EXT_SPEED_40G			0x00000020
--#define ETH_EXT_SPEED_50G_BASE_R		0x00000040
--#define ETH_EXT_SPEED_50G_BASE_R2		0x00000080
--#define ETH_EXT_SPEED_100G_BASE_R2		0x00000100
--#define ETH_EXT_SPEED_100G_BASE_R4		0x00000200
--#define ETH_EXT_SPEED_100G_BASE_P4		0x00000400
--#define ETH_EXT_ADV_SPEED_MASK			0xffff0000
--#define ETH_EXT_ADV_SPEED_OFFSET		16
--#define ETH_EXT_ADV_SPEED_RESERVED		0x00010000
--#define ETH_EXT_ADV_SPEED_1G			0x00020000
--#define ETH_EXT_ADV_SPEED_10G			0x00040000
--#define ETH_EXT_ADV_SPEED_20G			0x00080000
--#define ETH_EXT_ADV_SPEED_25G			0x00100000
--#define ETH_EXT_ADV_SPEED_40G			0x00200000
--#define ETH_EXT_ADV_SPEED_50G_BASE_R		0x00400000
--#define ETH_EXT_ADV_SPEED_50G_BASE_R2		0x00800000
--#define ETH_EXT_ADV_SPEED_100G_BASE_R2		0x01000000
--#define ETH_EXT_ADV_SPEED_100G_BASE_R4		0x02000000
--#define ETH_EXT_ADV_SPEED_100G_BASE_P4		0x04000000
--};
--
--struct port_mf_cfg {
--	u32 dynamic_cfg;
--#define PORT_MF_CFG_OV_TAG_MASK		0x0000ffff
--#define PORT_MF_CFG_OV_TAG_SHIFT	0
--#define PORT_MF_CFG_OV_TAG_DEFAULT	PORT_MF_CFG_OV_TAG_MASK
--
--	u32 reserved[1];
--};
--
--struct eth_stats {
--	u64 r64;
--	u64 r127;
--	u64 r255;
--	u64 r511;
--	u64 r1023;
--	u64 r1518;
--
--	union {
--		struct {
--			u64 r1522;
--			u64 r2047;
--			u64 r4095;
--			u64 r9216;
--			u64 r16383;
--		} bb0;
--		struct {
--			u64 unused1;
--			u64 r1519_to_max;
--			u64 unused2;
--			u64 unused3;
--			u64 unused4;
--		} ah0;
--	} u0;
--
--	u64 rfcs;
--	u64 rxcf;
--	u64 rxpf;
--	u64 rxpp;
--	u64 raln;
--	u64 rfcr;
--	u64 rovr;
--	u64 rjbr;
--	u64 rund;
--	u64 rfrg;
--	u64 t64;
--	u64 t127;
--	u64 t255;
--	u64 t511;
--	u64 t1023;
--	u64 t1518;
--
--	union {
--		struct {
--			u64 t2047;
--			u64 t4095;
--			u64 t9216;
--			u64 t16383;
--		} bb1;
--		struct {
--			u64 t1519_to_max;
--			u64 unused6;
--			u64 unused7;
--			u64 unused8;
--		} ah1;
--	} u1;
--
--	u64 txpf;
--	u64 txpp;
--
--	union {
--		struct {
--			u64 tlpiec;
--			u64 tncl;
--		} bb2;
--		struct {
--			u64 unused9;
--			u64 unused10;
--		} ah2;
--	} u2;
--
--	u64 rbyte;
--	u64 rxuca;
--	u64 rxmca;
--	u64 rxbca;
--	u64 rxpok;
--	u64 tbyte;
--	u64 txuca;
--	u64 txmca;
--	u64 txbca;
--	u64 txcf;
--};
--
--struct brb_stats {
--	u64 brb_truncate[8];
--	u64 brb_discard[8];
--};
--
--struct port_stats {
--	struct brb_stats brb;
--	struct eth_stats eth;
--};
--
--struct couple_mode_teaming {
--	u8 port_cmt[MCP_GLOB_PORT_MAX];
--#define PORT_CMT_IN_TEAM	(1 << 0)
--
--#define PORT_CMT_PORT_ROLE	(1 << 1)
--#define PORT_CMT_PORT_INACTIVE	(0 << 1)
--#define PORT_CMT_PORT_ACTIVE	(1 << 1)
--
--#define PORT_CMT_TEAM_MASK	(1 << 2)
--#define PORT_CMT_TEAM0		(0 << 2)
--#define PORT_CMT_TEAM1		(1 << 2)
--};
--
--#define LLDP_CHASSIS_ID_STAT_LEN	4
--#define LLDP_PORT_ID_STAT_LEN		4
--#define DCBX_MAX_APP_PROTOCOL		32
--#define MAX_SYSTEM_LLDP_TLV_DATA	32
--
--enum _lldp_agent {
--	LLDP_NEAREST_BRIDGE = 0,
--	LLDP_NEAREST_NON_TPMR_BRIDGE,
--	LLDP_NEAREST_CUSTOMER_BRIDGE,
--	LLDP_MAX_LLDP_AGENTS
--};
--
--struct lldp_config_params_s {
--	u32 config;
--#define LLDP_CONFIG_TX_INTERVAL_MASK	0x000000ff
--#define LLDP_CONFIG_TX_INTERVAL_SHIFT	0
--#define LLDP_CONFIG_HOLD_MASK		0x00000f00
--#define LLDP_CONFIG_HOLD_SHIFT		8
--#define LLDP_CONFIG_MAX_CREDIT_MASK	0x0000f000
--#define LLDP_CONFIG_MAX_CREDIT_SHIFT	12
--#define LLDP_CONFIG_ENABLE_RX_MASK	0x40000000
--#define LLDP_CONFIG_ENABLE_RX_SHIFT	30
--#define LLDP_CONFIG_ENABLE_TX_MASK	0x80000000
--#define LLDP_CONFIG_ENABLE_TX_SHIFT	31
--	u32 local_chassis_id[LLDP_CHASSIS_ID_STAT_LEN];
--	u32 local_port_id[LLDP_PORT_ID_STAT_LEN];
--};
--
--struct lldp_status_params_s {
--	u32 prefix_seq_num;
--	u32 status;
--	u32 peer_chassis_id[LLDP_CHASSIS_ID_STAT_LEN];
--	u32 peer_port_id[LLDP_PORT_ID_STAT_LEN];
--	u32 suffix_seq_num;
--};
--
--struct dcbx_ets_feature {
--	u32 flags;
--#define DCBX_ETS_ENABLED_MASK	0x00000001
--#define DCBX_ETS_ENABLED_SHIFT	0
--#define DCBX_ETS_WILLING_MASK	0x00000002
--#define DCBX_ETS_WILLING_SHIFT	1
--#define DCBX_ETS_ERROR_MASK	0x00000004
--#define DCBX_ETS_ERROR_SHIFT	2
--#define DCBX_ETS_CBS_MASK	0x00000008
--#define DCBX_ETS_CBS_SHIFT	3
--#define DCBX_ETS_MAX_TCS_MASK	0x000000f0
--#define DCBX_ETS_MAX_TCS_SHIFT	4
--#define DCBX_OOO_TC_MASK	0x00000f00
--#define DCBX_OOO_TC_SHIFT	8
--	u32 pri_tc_tbl[1];
--#define DCBX_TCP_OOO_TC		(4)
--
--#define NIG_ETS_ISCSI_OOO_CLIENT_OFFSET	(DCBX_TCP_OOO_TC + 1)
--#define DCBX_CEE_STRICT_PRIORITY	0xf
--	u32 tc_bw_tbl[2];
--	u32 tc_tsa_tbl[2];
--#define DCBX_ETS_TSA_STRICT	0
--#define DCBX_ETS_TSA_CBS	1
--#define DCBX_ETS_TSA_ETS	2
--};
--
--#define DCBX_TCP_OOO_TC			(4)
--#define DCBX_TCP_OOO_K2_4PORT_TC	(3)
--
--struct dcbx_app_priority_entry {
--	u32 entry;
--#define DCBX_APP_PRI_MAP_MASK		0x000000ff
--#define DCBX_APP_PRI_MAP_SHIFT		0
--#define DCBX_APP_PRI_0			0x01
--#define DCBX_APP_PRI_1			0x02
--#define DCBX_APP_PRI_2			0x04
--#define DCBX_APP_PRI_3			0x08
--#define DCBX_APP_PRI_4			0x10
--#define DCBX_APP_PRI_5			0x20
--#define DCBX_APP_PRI_6			0x40
--#define DCBX_APP_PRI_7			0x80
--#define DCBX_APP_SF_MASK		0x00000300
--#define DCBX_APP_SF_SHIFT		8
--#define DCBX_APP_SF_ETHTYPE		0
--#define DCBX_APP_SF_PORT		1
--#define DCBX_APP_SF_IEEE_MASK		0x0000f000
--#define DCBX_APP_SF_IEEE_SHIFT		12
--#define DCBX_APP_SF_IEEE_RESERVED	0
--#define DCBX_APP_SF_IEEE_ETHTYPE	1
--#define DCBX_APP_SF_IEEE_TCP_PORT	2
--#define DCBX_APP_SF_IEEE_UDP_PORT	3
--#define DCBX_APP_SF_IEEE_TCP_UDP_PORT	4
--
--#define DCBX_APP_PROTOCOL_ID_MASK	0xffff0000
--#define DCBX_APP_PROTOCOL_ID_SHIFT	16
--};
--
--struct dcbx_app_priority_feature {
--	u32 flags;
--#define DCBX_APP_ENABLED_MASK		0x00000001
--#define DCBX_APP_ENABLED_SHIFT		0
--#define DCBX_APP_WILLING_MASK		0x00000002
--#define DCBX_APP_WILLING_SHIFT		1
--#define DCBX_APP_ERROR_MASK		0x00000004
--#define DCBX_APP_ERROR_SHIFT		2
--#define DCBX_APP_MAX_TCS_MASK		0x0000f000
--#define DCBX_APP_MAX_TCS_SHIFT		12
--#define DCBX_APP_NUM_ENTRIES_MASK	0x00ff0000
--#define DCBX_APP_NUM_ENTRIES_SHIFT	16
--	struct dcbx_app_priority_entry app_pri_tbl[DCBX_MAX_APP_PROTOCOL];
--};
--
--struct dcbx_features {
--	struct dcbx_ets_feature ets;
--	u32 pfc;
--#define DCBX_PFC_PRI_EN_BITMAP_MASK	0x000000ff
--#define DCBX_PFC_PRI_EN_BITMAP_SHIFT	0
--#define DCBX_PFC_PRI_EN_BITMAP_PRI_0	0x01
--#define DCBX_PFC_PRI_EN_BITMAP_PRI_1	0x02
--#define DCBX_PFC_PRI_EN_BITMAP_PRI_2	0x04
--#define DCBX_PFC_PRI_EN_BITMAP_PRI_3	0x08
--#define DCBX_PFC_PRI_EN_BITMAP_PRI_4	0x10
--#define DCBX_PFC_PRI_EN_BITMAP_PRI_5	0x20
--#define DCBX_PFC_PRI_EN_BITMAP_PRI_6	0x40
--#define DCBX_PFC_PRI_EN_BITMAP_PRI_7	0x80
--
--#define DCBX_PFC_FLAGS_MASK		0x0000ff00
--#define DCBX_PFC_FLAGS_SHIFT		8
--#define DCBX_PFC_CAPS_MASK		0x00000f00
--#define DCBX_PFC_CAPS_SHIFT		8
--#define DCBX_PFC_MBC_MASK		0x00004000
--#define DCBX_PFC_MBC_SHIFT		14
--#define DCBX_PFC_WILLING_MASK		0x00008000
--#define DCBX_PFC_WILLING_SHIFT		15
--#define DCBX_PFC_ENABLED_MASK		0x00010000
--#define DCBX_PFC_ENABLED_SHIFT		16
--#define DCBX_PFC_ERROR_MASK		0x00020000
--#define DCBX_PFC_ERROR_SHIFT		17
--
--	struct dcbx_app_priority_feature app;
--};
--
--struct dcbx_local_params {
--	u32 config;
--#define DCBX_CONFIG_VERSION_MASK	0x00000007
--#define DCBX_CONFIG_VERSION_SHIFT	0
--#define DCBX_CONFIG_VERSION_DISABLED	0
--#define DCBX_CONFIG_VERSION_IEEE	1
--#define DCBX_CONFIG_VERSION_CEE		2
--#define DCBX_CONFIG_VERSION_STATIC	4
--
--	u32 flags;
--	struct dcbx_features features;
--};
--
--struct dcbx_mib {
--	u32 prefix_seq_num;
--	u32 flags;
--	struct dcbx_features features;
--	u32 suffix_seq_num;
--};
--
--struct lldp_system_tlvs_buffer_s {
--	u16 valid;
--	u16 length;
--	u32 data[MAX_SYSTEM_LLDP_TLV_DATA];
--};
--
--struct dcb_dscp_map {
--	u32 flags;
--#define DCB_DSCP_ENABLE_MASK	0x1
--#define DCB_DSCP_ENABLE_SHIFT	0
--#define DCB_DSCP_ENABLE	1
--	u32 dscp_pri_map[8];
--};
--
--struct public_global {
--	u32 max_path;
--	u32 max_ports;
--#define MODE_1P 1
--#define MODE_2P 2
--#define MODE_3P 3
--#define MODE_4P 4
--	u32 debug_mb_offset;
--	u32 phymod_dbg_mb_offset;
--	struct couple_mode_teaming cmt;
--	s32 internal_temperature;
--	u32 mfw_ver;
--	u32 running_bundle_id;
--	s32 external_temperature;
--	u32 mdump_reason;
--	u64 reserved;
--	u32 data_ptr;
--	u32 data_size;
--};
--
--struct fw_flr_mb {
--	u32 aggint;
--	u32 opgen_addr;
--	u32 accum_ack;
--};
--
--struct public_path {
--	struct fw_flr_mb flr_mb;
--	u32 mcp_vf_disabled[VF_MAX_STATIC / 32];
--
--	u32 process_kill;
--#define PROCESS_KILL_COUNTER_MASK	0x0000ffff
--#define PROCESS_KILL_COUNTER_SHIFT	0
--#define PROCESS_KILL_GLOB_AEU_BIT_MASK	0xffff0000
--#define PROCESS_KILL_GLOB_AEU_BIT_SHIFT	16
--#define GLOBAL_AEU_BIT(aeu_reg_id, aeu_bit) (aeu_reg_id * 32 + aeu_bit)
--};
--
--struct public_port {
--	u32						validity_map;
--
--	u32						link_status;
--#define LINK_STATUS_LINK_UP				0x00000001
--#define LINK_STATUS_SPEED_AND_DUPLEX_MASK		0x0000001e
--#define LINK_STATUS_SPEED_AND_DUPLEX_1000THD		(1 << 1)
--#define LINK_STATUS_SPEED_AND_DUPLEX_1000TFD		(2 << 1)
--#define LINK_STATUS_SPEED_AND_DUPLEX_10G		(3 << 1)
--#define LINK_STATUS_SPEED_AND_DUPLEX_20G		(4 << 1)
--#define LINK_STATUS_SPEED_AND_DUPLEX_40G		(5 << 1)
--#define LINK_STATUS_SPEED_AND_DUPLEX_50G		(6 << 1)
--#define LINK_STATUS_SPEED_AND_DUPLEX_100G		(7 << 1)
--#define LINK_STATUS_SPEED_AND_DUPLEX_25G		(8 << 1)
--#define LINK_STATUS_AUTO_NEGOTIATE_ENABLED		0x00000020
--#define LINK_STATUS_AUTO_NEGOTIATE_COMPLETE		0x00000040
--#define LINK_STATUS_PARALLEL_DETECTION_USED		0x00000080
--#define LINK_STATUS_PFC_ENABLED				0x00000100
--#define LINK_STATUS_LINK_PARTNER_1000TFD_CAPABLE	0x00000200
--#define LINK_STATUS_LINK_PARTNER_1000THD_CAPABLE	0x00000400
--#define LINK_STATUS_LINK_PARTNER_10G_CAPABLE		0x00000800
--#define LINK_STATUS_LINK_PARTNER_20G_CAPABLE		0x00001000
--#define LINK_STATUS_LINK_PARTNER_40G_CAPABLE		0x00002000
--#define LINK_STATUS_LINK_PARTNER_50G_CAPABLE		0x00004000
--#define LINK_STATUS_LINK_PARTNER_100G_CAPABLE		0x00008000
--#define LINK_STATUS_LINK_PARTNER_25G_CAPABLE		0x00010000
--#define LINK_STATUS_LINK_PARTNER_FLOW_CONTROL_MASK	0x000c0000
--#define LINK_STATUS_LINK_PARTNER_NOT_PAUSE_CAPABLE	(0 << 18)
--#define LINK_STATUS_LINK_PARTNER_SYMMETRIC_PAUSE	(1 << 18)
--#define LINK_STATUS_LINK_PARTNER_ASYMMETRIC_PAUSE	(2 << 18)
--#define LINK_STATUS_LINK_PARTNER_BOTH_PAUSE		(3 << 18)
--#define LINK_STATUS_SFP_TX_FAULT			0x00100000
--#define LINK_STATUS_TX_FLOW_CONTROL_ENABLED		0x00200000
--#define LINK_STATUS_RX_FLOW_CONTROL_ENABLED		0x00400000
--#define LINK_STATUS_RX_SIGNAL_PRESENT			0x00800000
--#define LINK_STATUS_MAC_LOCAL_FAULT			0x01000000
--#define LINK_STATUS_MAC_REMOTE_FAULT			0x02000000
--#define LINK_STATUS_UNSUPPORTED_SPD_REQ			0x04000000
--
--#define LINK_STATUS_FEC_MODE_MASK			0x38000000
--#define LINK_STATUS_FEC_MODE_NONE			(0 << 27)
--#define LINK_STATUS_FEC_MODE_FIRECODE_CL74		(1 << 27)
--#define LINK_STATUS_FEC_MODE_RS_CL91			(2 << 27)
--
--	u32 link_status1;
--	u32 ext_phy_fw_version;
--	u32 drv_phy_cfg_addr;
--
--	u32 port_stx;
--
--	u32 stat_nig_timer;
--
--	struct port_mf_cfg port_mf_config;
--	struct port_stats stats;
--
--	u32 media_type;
--#define MEDIA_UNSPECIFIED	0x0
--#define MEDIA_SFPP_10G_FIBER	0x1
--#define MEDIA_XFP_FIBER		0x2
--#define MEDIA_DA_TWINAX		0x3
--#define MEDIA_BASE_T		0x4
--#define MEDIA_SFP_1G_FIBER	0x5
--#define MEDIA_MODULE_FIBER	0x6
--#define MEDIA_KR		0xf0
--#define MEDIA_NOT_PRESENT	0xff
--
--	u32 lfa_status;
--	u32 link_change_count;
--
--	struct lldp_config_params_s lldp_config_params[LLDP_MAX_LLDP_AGENTS];
--	struct lldp_status_params_s lldp_status_params[LLDP_MAX_LLDP_AGENTS];
--	struct lldp_system_tlvs_buffer_s system_lldp_tlvs_buf;
--
--	/* DCBX related MIB */
--	struct dcbx_local_params local_admin_dcbx_mib;
--	struct dcbx_mib remote_dcbx_mib;
--	struct dcbx_mib operational_dcbx_mib;
--
--	u32 reserved[2];
--
--	u32						transceiver_data;
--#define ETH_TRANSCEIVER_STATE_MASK			0x000000ff
--#define ETH_TRANSCEIVER_STATE_SHIFT			0x00000000
--#define ETH_TRANSCEIVER_STATE_OFFSET			0x00000000
--#define ETH_TRANSCEIVER_STATE_UNPLUGGED			0x00000000
--#define ETH_TRANSCEIVER_STATE_PRESENT			0x00000001
--#define ETH_TRANSCEIVER_STATE_VALID			0x00000003
--#define ETH_TRANSCEIVER_STATE_UPDATING			0x00000008
--#define ETH_TRANSCEIVER_TYPE_MASK			0x0000ff00
--#define ETH_TRANSCEIVER_TYPE_OFFSET			0x8
--#define ETH_TRANSCEIVER_TYPE_NONE			0x00
--#define ETH_TRANSCEIVER_TYPE_UNKNOWN			0xff
--#define ETH_TRANSCEIVER_TYPE_1G_PCC			0x01
--#define ETH_TRANSCEIVER_TYPE_1G_ACC			0x02
--#define ETH_TRANSCEIVER_TYPE_1G_LX			0x03
--#define ETH_TRANSCEIVER_TYPE_1G_SX			0x04
--#define ETH_TRANSCEIVER_TYPE_10G_SR			0x05
--#define ETH_TRANSCEIVER_TYPE_10G_LR			0x06
--#define ETH_TRANSCEIVER_TYPE_10G_LRM			0x07
--#define ETH_TRANSCEIVER_TYPE_10G_ER			0x08
--#define ETH_TRANSCEIVER_TYPE_10G_PCC			0x09
--#define ETH_TRANSCEIVER_TYPE_10G_ACC			0x0a
--#define ETH_TRANSCEIVER_TYPE_XLPPI			0x0b
--#define ETH_TRANSCEIVER_TYPE_40G_LR4			0x0c
--#define ETH_TRANSCEIVER_TYPE_40G_SR4			0x0d
--#define ETH_TRANSCEIVER_TYPE_40G_CR4			0x0e
--#define ETH_TRANSCEIVER_TYPE_100G_AOC			0x0f
--#define ETH_TRANSCEIVER_TYPE_100G_SR4			0x10
--#define ETH_TRANSCEIVER_TYPE_100G_LR4			0x11
--#define ETH_TRANSCEIVER_TYPE_100G_ER4			0x12
--#define ETH_TRANSCEIVER_TYPE_100G_ACC			0x13
--#define ETH_TRANSCEIVER_TYPE_100G_CR4			0x14
--#define ETH_TRANSCEIVER_TYPE_4x10G_SR			0x15
--#define ETH_TRANSCEIVER_TYPE_25G_CA_N			0x16
--#define ETH_TRANSCEIVER_TYPE_25G_ACC_S			0x17
--#define ETH_TRANSCEIVER_TYPE_25G_CA_S			0x18
--#define ETH_TRANSCEIVER_TYPE_25G_ACC_M			0x19
--#define ETH_TRANSCEIVER_TYPE_25G_CA_L			0x1a
--#define ETH_TRANSCEIVER_TYPE_25G_ACC_L			0x1b
--#define ETH_TRANSCEIVER_TYPE_25G_SR			0x1c
--#define ETH_TRANSCEIVER_TYPE_25G_LR			0x1d
--#define ETH_TRANSCEIVER_TYPE_25G_AOC			0x1e
--#define ETH_TRANSCEIVER_TYPE_4x10G			0x1f
--#define ETH_TRANSCEIVER_TYPE_4x25G_CR			0x20
--#define ETH_TRANSCEIVER_TYPE_1000BASET			0x21
--#define ETH_TRANSCEIVER_TYPE_10G_BASET			0x22
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_SR	0x30
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_CR	0x31
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_LR	0x32
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_SR	0x33
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_CR	0x34
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_LR	0x35
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_AOC	0x36
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_SR	0x37
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_LR	0x38
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_SR	0x39
--#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_LR	0x3a
--
--	u32 wol_info;
--	u32 wol_pkt_len;
--	u32 wol_pkt_details;
--	struct dcb_dscp_map dcb_dscp_map;
--
--	u32 eee_status;
--#define EEE_ACTIVE_BIT			BIT(0)
--#define EEE_LD_ADV_STATUS_MASK		0x000000f0
--#define EEE_LD_ADV_STATUS_OFFSET	4
--#define EEE_1G_ADV			BIT(1)
--#define EEE_10G_ADV			BIT(2)
--#define EEE_LP_ADV_STATUS_MASK		0x00000f00
--#define EEE_LP_ADV_STATUS_OFFSET	8
--#define EEE_SUPPORTED_SPEED_MASK	0x0000f000
--#define EEE_SUPPORTED_SPEED_OFFSET	12
--#define EEE_1G_SUPPORTED		BIT(1)
--#define EEE_10G_SUPPORTED		BIT(2)
--
--	u32 eee_remote;
--#define EEE_REMOTE_TW_TX_MASK   0x0000ffff
--#define EEE_REMOTE_TW_TX_OFFSET 0
--#define EEE_REMOTE_TW_RX_MASK   0xffff0000
--#define EEE_REMOTE_TW_RX_OFFSET 16
--
--	u32 reserved1;
--	u32 oem_cfg_port;
--#define OEM_CFG_CHANNEL_TYPE_MASK                       0x00000003
--#define OEM_CFG_CHANNEL_TYPE_OFFSET                     0
--#define OEM_CFG_CHANNEL_TYPE_VLAN_PARTITION             0x1
--#define OEM_CFG_CHANNEL_TYPE_STAGGED                    0x2
--#define OEM_CFG_SCHED_TYPE_MASK                         0x0000000C
--#define OEM_CFG_SCHED_TYPE_OFFSET                       2
--#define OEM_CFG_SCHED_TYPE_ETS                          0x1
--#define OEM_CFG_SCHED_TYPE_VNIC_BW                      0x2
--};
--
--struct public_func {
--	u32 reserved0[2];
--
--	u32 mtu_size;
--
--	u32 reserved[7];
--
--	u32 config;
--#define FUNC_MF_CFG_FUNC_HIDE			0x00000001
--#define FUNC_MF_CFG_PAUSE_ON_HOST_RING		0x00000002
--#define FUNC_MF_CFG_PAUSE_ON_HOST_RING_SHIFT	0x00000001
--
--#define FUNC_MF_CFG_PROTOCOL_MASK	0x000000f0
--#define FUNC_MF_CFG_PROTOCOL_SHIFT	4
--#define FUNC_MF_CFG_PROTOCOL_ETHERNET	0x00000000
--#define FUNC_MF_CFG_PROTOCOL_ISCSI              0x00000010
--#define FUNC_MF_CFG_PROTOCOL_FCOE               0x00000020
--#define FUNC_MF_CFG_PROTOCOL_ROCE               0x00000030
--#define FUNC_MF_CFG_PROTOCOL_NVMETCP    0x00000040
--#define FUNC_MF_CFG_PROTOCOL_MAX	0x00000040
--
--#define FUNC_MF_CFG_MIN_BW_MASK		0x0000ff00
--#define FUNC_MF_CFG_MIN_BW_SHIFT	8
--#define FUNC_MF_CFG_MIN_BW_DEFAULT	0x00000000
--#define FUNC_MF_CFG_MAX_BW_MASK		0x00ff0000
--#define FUNC_MF_CFG_MAX_BW_SHIFT	16
--#define FUNC_MF_CFG_MAX_BW_DEFAULT	0x00640000
--
--	u32 status;
--#define FUNC_STATUS_VIRTUAL_LINK_UP	0x00000001
--
--	u32 mac_upper;
--#define FUNC_MF_CFG_UPPERMAC_MASK	0x0000ffff
--#define FUNC_MF_CFG_UPPERMAC_SHIFT	0
--#define FUNC_MF_CFG_UPPERMAC_DEFAULT	FUNC_MF_CFG_UPPERMAC_MASK
--	u32 mac_lower;
--#define FUNC_MF_CFG_LOWERMAC_DEFAULT	0xffffffff
--
--	u32 fcoe_wwn_port_name_upper;
--	u32 fcoe_wwn_port_name_lower;
--
--	u32 fcoe_wwn_node_name_upper;
--	u32 fcoe_wwn_node_name_lower;
--
--	u32 ovlan_stag;
--#define FUNC_MF_CFG_OV_STAG_MASK	0x0000ffff
--#define FUNC_MF_CFG_OV_STAG_SHIFT	0
--#define FUNC_MF_CFG_OV_STAG_DEFAULT	FUNC_MF_CFG_OV_STAG_MASK
--
--	u32 pf_allocation;
--
--	u32 preserve_data;
--
--	u32 driver_last_activity_ts;
--
--	u32 drv_ack_vf_disabled[VF_MAX_STATIC / 32];
--
--	u32 drv_id;
--#define DRV_ID_PDA_COMP_VER_MASK	0x0000ffff
--#define DRV_ID_PDA_COMP_VER_SHIFT	0
--
--#define LOAD_REQ_HSI_VERSION		2
--#define DRV_ID_MCP_HSI_VER_MASK		0x00ff0000
--#define DRV_ID_MCP_HSI_VER_SHIFT	16
--#define DRV_ID_MCP_HSI_VER_CURRENT	(LOAD_REQ_HSI_VERSION << \
--					 DRV_ID_MCP_HSI_VER_SHIFT)
--
--#define DRV_ID_DRV_TYPE_MASK		0x7f000000
--#define DRV_ID_DRV_TYPE_SHIFT		24
--#define DRV_ID_DRV_TYPE_UNKNOWN		(0 << DRV_ID_DRV_TYPE_SHIFT)
--#define DRV_ID_DRV_TYPE_LINUX		(1 << DRV_ID_DRV_TYPE_SHIFT)
--
--#define DRV_ID_DRV_INIT_HW_MASK		0x80000000
--#define DRV_ID_DRV_INIT_HW_SHIFT	31
--#define DRV_ID_DRV_INIT_HW_FLAG		(1 << DRV_ID_DRV_INIT_HW_SHIFT)
--
--	u32 oem_cfg_func;
--#define OEM_CFG_FUNC_TC_MASK                    0x0000000F
--#define OEM_CFG_FUNC_TC_OFFSET                  0
--#define OEM_CFG_FUNC_TC_0                       0x0
--#define OEM_CFG_FUNC_TC_1                       0x1
--#define OEM_CFG_FUNC_TC_2                       0x2
--#define OEM_CFG_FUNC_TC_3                       0x3
--#define OEM_CFG_FUNC_TC_4                       0x4
--#define OEM_CFG_FUNC_TC_5                       0x5
--#define OEM_CFG_FUNC_TC_6                       0x6
--#define OEM_CFG_FUNC_TC_7                       0x7
--
--#define OEM_CFG_FUNC_HOST_PRI_CTRL_MASK         0x00000030
--#define OEM_CFG_FUNC_HOST_PRI_CTRL_OFFSET       4
--#define OEM_CFG_FUNC_HOST_PRI_CTRL_VNIC         0x1
--#define OEM_CFG_FUNC_HOST_PRI_CTRL_OS           0x2
--};
--
--struct mcp_mac {
--	u32 mac_upper;
--	u32 mac_lower;
--};
--
--struct mcp_val64 {
--	u32 lo;
--	u32 hi;
--};
--
--struct mcp_file_att {
--	u32 nvm_start_addr;
--	u32 len;
--};
--
--struct bist_nvm_image_att {
--	u32 return_code;
--	u32 image_type;
--	u32 nvm_start_addr;
--	u32 len;
--};
--
--#define MCP_DRV_VER_STR_SIZE 16
--#define MCP_DRV_VER_STR_SIZE_DWORD (MCP_DRV_VER_STR_SIZE / sizeof(u32))
--#define MCP_DRV_NVM_BUF_LEN 32
--struct drv_version_stc {
--	u32 version;
--	u8 name[MCP_DRV_VER_STR_SIZE - 4];
--};
--
--struct lan_stats_stc {
--	u64 ucast_rx_pkts;
--	u64 ucast_tx_pkts;
--	u32 fcs_err;
--	u32 rserved;
--};
--
--struct fcoe_stats_stc {
--	u64 rx_pkts;
--	u64 tx_pkts;
--	u32 fcs_err;
--	u32 login_failure;
--};
--
--struct ocbb_data_stc {
--	u32 ocbb_host_addr;
--	u32 ocsd_host_addr;
--	u32 ocsd_req_update_interval;
--};
--
--#define MAX_NUM_OF_SENSORS 7
--struct temperature_status_stc {
--	u32 num_of_sensors;
--	u32 sensor[MAX_NUM_OF_SENSORS];
--};
--
--/* crash dump configuration header */
--struct mdump_config_stc {
--	u32 version;
--	u32 config;
--	u32 epoc;
--	u32 num_of_logs;
--	u32 valid_logs;
--};
--
--enum resource_id_enum {
--	RESOURCE_NUM_SB_E = 0,
--	RESOURCE_NUM_L2_QUEUE_E = 1,
--	RESOURCE_NUM_VPORT_E = 2,
--	RESOURCE_NUM_VMQ_E = 3,
--	RESOURCE_FACTOR_NUM_RSS_PF_E = 4,
--	RESOURCE_FACTOR_RSS_PER_VF_E = 5,
--	RESOURCE_NUM_RL_E = 6,
--	RESOURCE_NUM_PQ_E = 7,
--	RESOURCE_NUM_VF_E = 8,
--	RESOURCE_VFC_FILTER_E = 9,
--	RESOURCE_ILT_E = 10,
--	RESOURCE_CQS_E = 11,
--	RESOURCE_GFT_PROFILES_E = 12,
--	RESOURCE_NUM_TC_E = 13,
--	RESOURCE_NUM_RSS_ENGINES_E = 14,
--	RESOURCE_LL2_QUEUE_E = 15,
--	RESOURCE_RDMA_STATS_QUEUE_E = 16,
--	RESOURCE_BDQ_E = 17,
--	RESOURCE_QCN_E = 18,
--	RESOURCE_LLH_FILTER_E = 19,
--	RESOURCE_VF_MAC_ADDR = 20,
--	RESOURCE_LL2_CQS_E = 21,
--	RESOURCE_VF_CNQS = 22,
--	RESOURCE_MAX_NUM,
--	RESOURCE_NUM_INVALID = 0xFFFFFFFF
--};
--
--/* Resource ID is to be filled by the driver in the MB request
-- * Size, offset & flags to be filled by the MFW in the MB response
-- */
--struct resource_info {
--	enum resource_id_enum res_id;
--	u32 size;		/* number of allocated resources */
--	u32 offset;		/* Offset of the 1st resource */
--	u32 vf_size;
--	u32 vf_offset;
--	u32 flags;
--#define RESOURCE_ELEMENT_STRICT (1 << 0)
--};
--
--#define DRV_ROLE_NONE           0
--#define DRV_ROLE_PREBOOT        1
--#define DRV_ROLE_OS             2
--#define DRV_ROLE_KDUMP          3
--
--struct load_req_stc {
--	u32 drv_ver_0;
--	u32 drv_ver_1;
--	u32 fw_ver;
--	u32 misc0;
--#define LOAD_REQ_ROLE_MASK              0x000000FF
--#define LOAD_REQ_ROLE_SHIFT             0
--#define LOAD_REQ_LOCK_TO_MASK           0x0000FF00
--#define LOAD_REQ_LOCK_TO_SHIFT          8
--#define LOAD_REQ_LOCK_TO_DEFAULT        0
--#define LOAD_REQ_LOCK_TO_NONE           255
--#define LOAD_REQ_FORCE_MASK             0x000F0000
--#define LOAD_REQ_FORCE_SHIFT            16
--#define LOAD_REQ_FORCE_NONE             0
--#define LOAD_REQ_FORCE_PF               1
--#define LOAD_REQ_FORCE_ALL              2
--#define LOAD_REQ_FLAGS0_MASK            0x00F00000
--#define LOAD_REQ_FLAGS0_SHIFT           20
--#define LOAD_REQ_FLAGS0_AVOID_RESET     (0x1 << 0)
--};
--
--struct load_rsp_stc {
--	u32 drv_ver_0;
--	u32 drv_ver_1;
--	u32 fw_ver;
--	u32 misc0;
--#define LOAD_RSP_ROLE_MASK              0x000000FF
--#define LOAD_RSP_ROLE_SHIFT             0
--#define LOAD_RSP_HSI_MASK               0x0000FF00
--#define LOAD_RSP_HSI_SHIFT              8
--#define LOAD_RSP_FLAGS0_MASK            0x000F0000
--#define LOAD_RSP_FLAGS0_SHIFT           16
--#define LOAD_RSP_FLAGS0_DRV_EXISTS      (0x1 << 0)
--};
--
--struct mdump_retain_data_stc {
--	u32 valid;
--	u32 epoch;
--	u32 pf;
--	u32 status;
--};
--
--union drv_union_data {
--	u32 ver_str[MCP_DRV_VER_STR_SIZE_DWORD];
--	struct mcp_mac wol_mac;
--
--	struct eth_phy_cfg drv_phy_cfg;
--
--	struct mcp_val64 val64;
--
--	u8 raw_data[MCP_DRV_NVM_BUF_LEN];
--
--	struct mcp_file_att file_att;
--
--	u32 ack_vf_disabled[VF_MAX_STATIC / 32];
--
--	struct drv_version_stc drv_version;
--
--	struct lan_stats_stc lan_stats;
--	struct fcoe_stats_stc fcoe_stats;
--	struct ocbb_data_stc ocbb_info;
--	struct temperature_status_stc temp_info;
--	struct resource_info resource;
--	struct bist_nvm_image_att nvm_image_att;
--	struct mdump_config_stc mdump_config;
--};
--
--struct public_drv_mb {
--	u32 drv_mb_header;
--#define DRV_MSG_CODE_MASK			0xffff0000
--#define DRV_MSG_CODE_LOAD_REQ			0x10000000
--#define DRV_MSG_CODE_LOAD_DONE			0x11000000
--#define DRV_MSG_CODE_INIT_HW			0x12000000
--#define DRV_MSG_CODE_CANCEL_LOAD_REQ            0x13000000
--#define DRV_MSG_CODE_UNLOAD_REQ			0x20000000
--#define DRV_MSG_CODE_UNLOAD_DONE		0x21000000
--#define DRV_MSG_CODE_INIT_PHY			0x22000000
--#define DRV_MSG_CODE_LINK_RESET			0x23000000
--#define DRV_MSG_CODE_SET_DCBX			0x25000000
--#define DRV_MSG_CODE_OV_UPDATE_CURR_CFG         0x26000000
--#define DRV_MSG_CODE_OV_UPDATE_BUS_NUM          0x27000000
--#define DRV_MSG_CODE_OV_UPDATE_BOOT_PROGRESS    0x28000000
--#define DRV_MSG_CODE_OV_UPDATE_STORM_FW_VER     0x29000000
--#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE     0x31000000
--#define DRV_MSG_CODE_BW_UPDATE_ACK              0x32000000
--#define DRV_MSG_CODE_OV_UPDATE_MTU              0x33000000
--#define DRV_MSG_GET_RESOURCE_ALLOC_MSG		0x34000000
--#define DRV_MSG_SET_RESOURCE_VALUE_MSG		0x35000000
--#define DRV_MSG_CODE_OV_UPDATE_WOL              0x38000000
--#define DRV_MSG_CODE_OV_UPDATE_ESWITCH_MODE     0x39000000
--#define DRV_MSG_CODE_GET_OEM_UPDATES            0x41000000
--
--#define DRV_MSG_CODE_BW_UPDATE_ACK		0x32000000
--#define DRV_MSG_CODE_NIG_DRAIN			0x30000000
--#define DRV_MSG_CODE_S_TAG_UPDATE_ACK		0x3b000000
--#define DRV_MSG_CODE_GET_NVM_CFG_OPTION		0x003e0000
--#define DRV_MSG_CODE_SET_NVM_CFG_OPTION		0x003f0000
--#define DRV_MSG_CODE_INITIATE_PF_FLR            0x02010000
--#define DRV_MSG_CODE_VF_DISABLED_DONE		0xc0000000
--#define DRV_MSG_CODE_CFG_VF_MSIX		0xc0010000
--#define DRV_MSG_CODE_CFG_PF_VFS_MSIX		0xc0020000
--#define DRV_MSG_CODE_NVM_PUT_FILE_BEGIN		0x00010000
--#define DRV_MSG_CODE_NVM_PUT_FILE_DATA		0x00020000
--#define DRV_MSG_CODE_NVM_GET_FILE_ATT		0x00030000
--#define DRV_MSG_CODE_NVM_READ_NVRAM		0x00050000
--#define DRV_MSG_CODE_NVM_WRITE_NVRAM		0x00060000
--#define DRV_MSG_CODE_MCP_RESET			0x00090000
--#define DRV_MSG_CODE_SET_VERSION		0x000f0000
--#define DRV_MSG_CODE_MCP_HALT                   0x00100000
--#define DRV_MSG_CODE_SET_VMAC                   0x00110000
--#define DRV_MSG_CODE_GET_VMAC                   0x00120000
--#define DRV_MSG_CODE_VMAC_TYPE_SHIFT            4
--#define DRV_MSG_CODE_VMAC_TYPE_MASK             0x30
--#define DRV_MSG_CODE_VMAC_TYPE_MAC              1
--#define DRV_MSG_CODE_VMAC_TYPE_WWNN             2
--#define DRV_MSG_CODE_VMAC_TYPE_WWPN             3
--
--#define DRV_MSG_CODE_GET_STATS                  0x00130000
--#define DRV_MSG_CODE_STATS_TYPE_LAN             1
--#define DRV_MSG_CODE_STATS_TYPE_FCOE            2
--#define DRV_MSG_CODE_STATS_TYPE_ISCSI           3
--#define DRV_MSG_CODE_STATS_TYPE_RDMA            4
--
--#define DRV_MSG_CODE_TRANSCEIVER_READ           0x00160000
--
--#define DRV_MSG_CODE_MASK_PARITIES              0x001a0000
--
--#define DRV_MSG_CODE_BIST_TEST			0x001e0000
--#define DRV_MSG_CODE_SET_LED_MODE		0x00200000
--#define DRV_MSG_CODE_RESOURCE_CMD		0x00230000
--/* Send crash dump commands with param[3:0] - opcode */
--#define DRV_MSG_CODE_MDUMP_CMD			0x00250000
--#define DRV_MSG_CODE_GET_TLV_DONE		0x002f0000
--#define DRV_MSG_CODE_GET_ENGINE_CONFIG		0x00370000
--#define DRV_MSG_CODE_GET_PPFID_BITMAP		0x43000000
--
--#define DRV_MSG_CODE_DEBUG_DATA_SEND		0xc0040000
--
--#define RESOURCE_CMD_REQ_RESC_MASK		0x0000001F
--#define RESOURCE_CMD_REQ_RESC_SHIFT		0
--#define RESOURCE_CMD_REQ_OPCODE_MASK		0x000000E0
--#define RESOURCE_CMD_REQ_OPCODE_SHIFT		5
--#define RESOURCE_OPCODE_REQ			1
--#define RESOURCE_OPCODE_REQ_WO_AGING		2
--#define RESOURCE_OPCODE_REQ_W_AGING		3
--#define RESOURCE_OPCODE_RELEASE			4
--#define RESOURCE_OPCODE_FORCE_RELEASE		5
--#define RESOURCE_CMD_REQ_AGE_MASK		0x0000FF00
--#define RESOURCE_CMD_REQ_AGE_SHIFT		8
--
--#define RESOURCE_CMD_RSP_OWNER_MASK		0x000000FF
--#define RESOURCE_CMD_RSP_OWNER_SHIFT		0
--#define RESOURCE_CMD_RSP_OPCODE_MASK		0x00000700
--#define RESOURCE_CMD_RSP_OPCODE_SHIFT		8
--#define RESOURCE_OPCODE_GNT			1
--#define RESOURCE_OPCODE_BUSY			2
--#define RESOURCE_OPCODE_RELEASED		3
--#define RESOURCE_OPCODE_RELEASED_PREVIOUS	4
--#define RESOURCE_OPCODE_WRONG_OWNER		5
--#define RESOURCE_OPCODE_UNKNOWN_CMD		255
--
--#define RESOURCE_DUMP				0
--
--/* DRV_MSG_CODE_MDUMP_CMD parameters */
--#define MDUMP_DRV_PARAM_OPCODE_MASK             0x0000000f
--#define DRV_MSG_CODE_MDUMP_ACK                  0x01
--#define DRV_MSG_CODE_MDUMP_SET_VALUES           0x02
--#define DRV_MSG_CODE_MDUMP_TRIGGER              0x03
--#define DRV_MSG_CODE_MDUMP_GET_CONFIG           0x04
--#define DRV_MSG_CODE_MDUMP_SET_ENABLE           0x05
--#define DRV_MSG_CODE_MDUMP_CLEAR_LOGS           0x06
--#define DRV_MSG_CODE_MDUMP_GET_RETAIN           0x07
--#define DRV_MSG_CODE_MDUMP_CLR_RETAIN           0x08
--
--#define DRV_MSG_CODE_HW_DUMP_TRIGGER            0x0a
--#define DRV_MSG_CODE_MDUMP_GEN_MDUMP2           0x0b
--#define DRV_MSG_CODE_MDUMP_FREE_MDUMP2          0x0c
--
--#define DRV_MSG_CODE_GET_PF_RDMA_PROTOCOL	0x002b0000
--#define DRV_MSG_CODE_OS_WOL			0x002e0000
--
--#define DRV_MSG_CODE_FEATURE_SUPPORT		0x00300000
--#define DRV_MSG_CODE_GET_MFW_FEATURE_SUPPORT	0x00310000
--#define DRV_MSG_SEQ_NUMBER_MASK			0x0000ffff
--
--	u32 drv_mb_param;
--#define DRV_MB_PARAM_UNLOAD_WOL_UNKNOWN         0x00000000
--#define DRV_MB_PARAM_UNLOAD_WOL_MCP             0x00000001
--#define DRV_MB_PARAM_UNLOAD_WOL_DISABLED        0x00000002
--#define DRV_MB_PARAM_UNLOAD_WOL_ENABLED         0x00000003
--#define DRV_MB_PARAM_DCBX_NOTIFY_MASK		0x000000FF
--#define DRV_MB_PARAM_DCBX_NOTIFY_SHIFT		3
--
--#define DRV_MB_PARAM_NVM_PUT_FILE_BEGIN_MBI     0x3
--#define DRV_MB_PARAM_NVM_OFFSET_OFFSET          0
--#define DRV_MB_PARAM_NVM_OFFSET_MASK            0x00FFFFFF
--#define DRV_MB_PARAM_NVM_LEN_OFFSET		24
--#define DRV_MB_PARAM_NVM_LEN_MASK               0xFF000000
--
--#define DRV_MB_PARAM_CFG_VF_MSIX_VF_ID_SHIFT	0
--#define DRV_MB_PARAM_CFG_VF_MSIX_VF_ID_MASK	0x000000FF
--#define DRV_MB_PARAM_CFG_VF_MSIX_SB_NUM_SHIFT	8
--#define DRV_MB_PARAM_CFG_VF_MSIX_SB_NUM_MASK	0x0000FF00
--#define DRV_MB_PARAM_LLDP_SEND_MASK		0x00000001
--#define DRV_MB_PARAM_LLDP_SEND_SHIFT		0
--
--#define DRV_MB_PARAM_OV_CURR_CFG_SHIFT		0
--#define DRV_MB_PARAM_OV_CURR_CFG_MASK		0x0000000F
--#define DRV_MB_PARAM_OV_CURR_CFG_NONE		0
--#define DRV_MB_PARAM_OV_CURR_CFG_OS		1
--#define DRV_MB_PARAM_OV_CURR_CFG_VENDOR_SPEC	2
--#define DRV_MB_PARAM_OV_CURR_CFG_OTHER		3
--
--#define DRV_MB_PARAM_OV_STORM_FW_VER_SHIFT	0
--#define DRV_MB_PARAM_OV_STORM_FW_VER_MASK	0xFFFFFFFF
--#define DRV_MB_PARAM_OV_STORM_FW_VER_MAJOR_MASK	0xFF000000
--#define DRV_MB_PARAM_OV_STORM_FW_VER_MINOR_MASK	0x00FF0000
--#define DRV_MB_PARAM_OV_STORM_FW_VER_BUILD_MASK	0x0000FF00
--#define DRV_MB_PARAM_OV_STORM_FW_VER_DROP_MASK	0x000000FF
--
--#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_SHIFT	0
--#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_MASK	0xF
--#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_UNKNOWN	0x1
--#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_NOT_LOADED	0x2
--#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_LOADING	0x3
--#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_DISABLED	0x4
--#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_ACTIVE	0x5
--
--#define DRV_MB_PARAM_OV_MTU_SIZE_SHIFT	0
--#define DRV_MB_PARAM_OV_MTU_SIZE_MASK	0xFFFFFFFF
--
--#define DRV_MB_PARAM_WOL_MASK	(DRV_MB_PARAM_WOL_DEFAULT | \
--				 DRV_MB_PARAM_WOL_DISABLED | \
--				 DRV_MB_PARAM_WOL_ENABLED)
--#define DRV_MB_PARAM_WOL_DEFAULT	DRV_MB_PARAM_UNLOAD_WOL_MCP
--#define DRV_MB_PARAM_WOL_DISABLED	DRV_MB_PARAM_UNLOAD_WOL_DISABLED
--#define DRV_MB_PARAM_WOL_ENABLED	DRV_MB_PARAM_UNLOAD_WOL_ENABLED
--
--#define DRV_MB_PARAM_ESWITCH_MODE_MASK	(DRV_MB_PARAM_ESWITCH_MODE_NONE | \
--					 DRV_MB_PARAM_ESWITCH_MODE_VEB | \
--					 DRV_MB_PARAM_ESWITCH_MODE_VEPA)
--#define DRV_MB_PARAM_ESWITCH_MODE_NONE	0x0
--#define DRV_MB_PARAM_ESWITCH_MODE_VEB	0x1
--#define DRV_MB_PARAM_ESWITCH_MODE_VEPA	0x2
--
--#define DRV_MB_PARAM_DUMMY_OEM_UPDATES_MASK	0x1
--#define DRV_MB_PARAM_DUMMY_OEM_UPDATES_OFFSET	0
--
--#define DRV_MB_PARAM_SET_LED_MODE_OPER		0x0
--#define DRV_MB_PARAM_SET_LED_MODE_ON		0x1
--#define DRV_MB_PARAM_SET_LED_MODE_OFF		0x2
--
--#define DRV_MB_PARAM_TRANSCEIVER_PORT_OFFSET			0
--#define DRV_MB_PARAM_TRANSCEIVER_PORT_MASK			0x00000003
--#define DRV_MB_PARAM_TRANSCEIVER_SIZE_OFFSET			2
--#define DRV_MB_PARAM_TRANSCEIVER_SIZE_MASK			0x000000fc
--#define DRV_MB_PARAM_TRANSCEIVER_I2C_ADDRESS_OFFSET		8
--#define DRV_MB_PARAM_TRANSCEIVER_I2C_ADDRESS_MASK		0x0000ff00
--#define DRV_MB_PARAM_TRANSCEIVER_OFFSET_OFFSET			16
--#define DRV_MB_PARAM_TRANSCEIVER_OFFSET_MASK			0xffff0000
--
--	/* Resource Allocation params - Driver version support */
--#define DRV_MB_PARAM_RESOURCE_ALLOC_VERSION_MAJOR_MASK		0xffff0000
--#define DRV_MB_PARAM_RESOURCE_ALLOC_VERSION_MAJOR_SHIFT		16
--#define DRV_MB_PARAM_RESOURCE_ALLOC_VERSION_MINOR_MASK		0x0000ffff
--#define DRV_MB_PARAM_RESOURCE_ALLOC_VERSION_MINOR_SHIFT		0
--
--#define DRV_MB_PARAM_BIST_REGISTER_TEST				1
--#define DRV_MB_PARAM_BIST_CLOCK_TEST				2
--#define DRV_MB_PARAM_BIST_NVM_TEST_NUM_IMAGES			3
--#define DRV_MB_PARAM_BIST_NVM_TEST_IMAGE_BY_INDEX		4
--
--#define DRV_MB_PARAM_BIST_RC_UNKNOWN				0
--#define DRV_MB_PARAM_BIST_RC_PASSED				1
--#define DRV_MB_PARAM_BIST_RC_FAILED				2
--#define DRV_MB_PARAM_BIST_RC_INVALID_PARAMETER			3
--
--#define DRV_MB_PARAM_BIST_TEST_INDEX_SHIFT			0
--#define DRV_MB_PARAM_BIST_TEST_INDEX_MASK			0x000000ff
--#define DRV_MB_PARAM_BIST_TEST_IMAGE_INDEX_SHIFT		8
--#define DRV_MB_PARAM_BIST_TEST_IMAGE_INDEX_MASK			0x0000ff00
--
--#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_MASK			0x0000ffff
--#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_OFFSET		0
--#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_EEE			0x00000002
--#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_FEC_CONTROL		0x00000004
--#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_EXT_SPEED_FEC_CONTROL	0x00000008
--#define DRV_MB_PARAM_FEATURE_SUPPORT_FUNC_VLINK			0x00010000
--
--/* DRV_MSG_CODE_DEBUG_DATA_SEND parameters */
--#define DRV_MSG_CODE_DEBUG_DATA_SEND_SIZE_OFFSET		0
--#define DRV_MSG_CODE_DEBUG_DATA_SEND_SIZE_MASK			0xff
--
--/* Driver attributes params */
--#define DRV_MB_PARAM_ATTRIBUTE_KEY_OFFSET			0
--#define DRV_MB_PARAM_ATTRIBUTE_KEY_MASK				0x00ffffff
--#define DRV_MB_PARAM_ATTRIBUTE_CMD_OFFSET			24
--#define DRV_MB_PARAM_ATTRIBUTE_CMD_MASK				0xff000000
--
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ID_OFFSET			0
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ID_SHIFT			0
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ID_MASK			0x0000ffff
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ALL_SHIFT			16
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ALL_MASK			0x00010000
--#define DRV_MB_PARAM_NVM_CFG_OPTION_INIT_SHIFT			17
--#define DRV_MB_PARAM_NVM_CFG_OPTION_INIT_MASK			0x00020000
--#define DRV_MB_PARAM_NVM_CFG_OPTION_COMMIT_SHIFT		18
--#define DRV_MB_PARAM_NVM_CFG_OPTION_COMMIT_MASK			0x00040000
--#define DRV_MB_PARAM_NVM_CFG_OPTION_FREE_SHIFT			19
--#define DRV_MB_PARAM_NVM_CFG_OPTION_FREE_MASK			0x00080000
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ENTITY_SEL_SHIFT		20
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ENTITY_SEL_MASK		0x00100000
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ENTITY_ID_SHIFT		24
--#define DRV_MB_PARAM_NVM_CFG_OPTION_ENTITY_ID_MASK		0x0f000000
--
--	u32 fw_mb_header;
--#define FW_MSG_CODE_MASK			0xffff0000
--#define FW_MSG_CODE_UNSUPPORTED                 0x00000000
--#define FW_MSG_CODE_DRV_LOAD_ENGINE		0x10100000
--#define FW_MSG_CODE_DRV_LOAD_PORT		0x10110000
--#define FW_MSG_CODE_DRV_LOAD_FUNCTION		0x10120000
--#define FW_MSG_CODE_DRV_LOAD_REFUSED_PDA	0x10200000
--#define FW_MSG_CODE_DRV_LOAD_REFUSED_HSI_1	0x10210000
--#define FW_MSG_CODE_DRV_LOAD_REFUSED_DIAG	0x10220000
--#define FW_MSG_CODE_DRV_LOAD_REFUSED_HSI        0x10230000
--#define FW_MSG_CODE_DRV_LOAD_REFUSED_REQUIRES_FORCE 0x10300000
--#define FW_MSG_CODE_DRV_LOAD_REFUSED_REJECT     0x10310000
--#define FW_MSG_CODE_DRV_LOAD_DONE		0x11100000
--#define FW_MSG_CODE_DRV_UNLOAD_ENGINE		0x20110000
--#define FW_MSG_CODE_DRV_UNLOAD_PORT		0x20120000
--#define FW_MSG_CODE_DRV_UNLOAD_FUNCTION		0x20130000
--#define FW_MSG_CODE_DRV_UNLOAD_DONE		0x21100000
--#define FW_MSG_CODE_RESOURCE_ALLOC_OK           0x34000000
--#define FW_MSG_CODE_RESOURCE_ALLOC_UNKNOWN      0x35000000
--#define FW_MSG_CODE_RESOURCE_ALLOC_DEPRECATED   0x36000000
--#define FW_MSG_CODE_S_TAG_UPDATE_ACK_DONE	0x3b000000
--#define FW_MSG_CODE_DRV_CFG_VF_MSIX_DONE	0xb0010000
--
--#define FW_MSG_CODE_NVM_OK			0x00010000
--#define FW_MSG_CODE_NVM_PUT_FILE_FINISH_OK	0x00400000
--#define FW_MSG_CODE_PHY_OK			0x00110000
--#define FW_MSG_CODE_OK				0x00160000
--#define FW_MSG_CODE_ERROR			0x00170000
--#define FW_MSG_CODE_TRANSCEIVER_DIAG_OK		0x00160000
--#define FW_MSG_CODE_TRANSCEIVER_DIAG_ERROR	0x00170000
--#define FW_MSG_CODE_TRANSCEIVER_NOT_PRESENT	0x00020000
--
--#define FW_MSG_CODE_OS_WOL_SUPPORTED            0x00800000
--#define FW_MSG_CODE_OS_WOL_NOT_SUPPORTED        0x00810000
--#define FW_MSG_CODE_DRV_CFG_PF_VFS_MSIX_DONE	0x00870000
--#define FW_MSG_SEQ_NUMBER_MASK			0x0000ffff
--
--#define FW_MSG_CODE_DEBUG_DATA_SEND_INV_ARG	0xb0070000
--#define FW_MSG_CODE_DEBUG_DATA_SEND_BUF_FULL	0xb0080000
--#define FW_MSG_CODE_DEBUG_DATA_SEND_NO_BUF	0xb0090000
--#define FW_MSG_CODE_DEBUG_NOT_ENABLED		0xb00a0000
--#define FW_MSG_CODE_DEBUG_DATA_SEND_OK		0xb00b0000
--
--#define FW_MSG_CODE_MDUMP_INVALID_CMD		0x00030000
--
--	u32							fw_mb_param;
--#define FW_MB_PARAM_RESOURCE_ALLOC_VERSION_MAJOR_MASK		0xffff0000
--#define FW_MB_PARAM_RESOURCE_ALLOC_VERSION_MAJOR_SHIFT		16
--#define FW_MB_PARAM_RESOURCE_ALLOC_VERSION_MINOR_MASK		0x0000ffff
--#define FW_MB_PARAM_RESOURCE_ALLOC_VERSION_MINOR_SHIFT		0
--
--	/* Get PF RDMA protocol command response */
--#define FW_MB_PARAM_GET_PF_RDMA_NONE				0x0
--#define FW_MB_PARAM_GET_PF_RDMA_ROCE				0x1
--#define FW_MB_PARAM_GET_PF_RDMA_IWARP				0x2
--#define FW_MB_PARAM_GET_PF_RDMA_BOTH				0x3
--
--	/* Get MFW feature support response */
--#define FW_MB_PARAM_FEATURE_SUPPORT_SMARTLINQ			BIT(0)
--#define FW_MB_PARAM_FEATURE_SUPPORT_EEE				BIT(1)
--#define FW_MB_PARAM_FEATURE_SUPPORT_FEC_CONTROL			BIT(5)
--#define FW_MB_PARAM_FEATURE_SUPPORT_EXT_SPEED_FEC_CONTROL	BIT(6)
--#define FW_MB_PARAM_FEATURE_SUPPORT_VLINK			BIT(16)
--
--#define FW_MB_PARAM_LOAD_DONE_DID_EFUSE_ERROR			BIT(0)
--
--#define FW_MB_PARAM_ENG_CFG_FIR_AFFIN_VALID_MASK		0x00000001
--#define FW_MB_PARAM_ENG_CFG_FIR_AFFIN_VALID_SHIFT		0
--#define FW_MB_PARAM_ENG_CFG_FIR_AFFIN_VALUE_MASK		0x00000002
--#define FW_MB_PARAM_ENG_CFG_FIR_AFFIN_VALUE_SHIFT		1
--#define FW_MB_PARAM_ENG_CFG_L2_AFFIN_VALID_MASK			0x00000004
--#define FW_MB_PARAM_ENG_CFG_L2_AFFIN_VALID_SHIFT		2
--#define FW_MB_PARAM_ENG_CFG_L2_AFFIN_VALUE_MASK			0x00000008
--#define FW_MB_PARAM_ENG_CFG_L2_AFFIN_VALUE_SHIFT		3
--
--#define FW_MB_PARAM_PPFID_BITMAP_MASK				0xff
--#define FW_MB_PARAM_PPFID_BITMAP_SHIFT				0
--
--	u32							drv_pulse_mb;
--#define DRV_PULSE_SEQ_MASK					0x00007fff
--#define DRV_PULSE_SYSTEM_TIME_MASK				0xffff0000
--#define DRV_PULSE_ALWAYS_ALIVE					0x00008000
--
--	u32							mcp_pulse_mb;
--#define MCP_PULSE_SEQ_MASK					0x00007fff
--#define MCP_PULSE_ALWAYS_ALIVE					0x00008000
--#define MCP_EVENT_MASK						0xffff0000
--#define MCP_EVENT_OTHER_DRIVER_RESET_REQ			0x00010000
--
--	union drv_union_data					union_data;
--};
--
--#define FW_MB_PARAM_NVM_PUT_FILE_REQ_OFFSET_MASK		0x00ffffff
--#define FW_MB_PARAM_NVM_PUT_FILE_REQ_OFFSET_SHIFT		0
--#define FW_MB_PARAM_NVM_PUT_FILE_REQ_SIZE_MASK			0xff000000
--#define FW_MB_PARAM_NVM_PUT_FILE_REQ_SIZE_SHIFT			24
--
--enum MFW_DRV_MSG_TYPE {
--	MFW_DRV_MSG_LINK_CHANGE,
--	MFW_DRV_MSG_FLR_FW_ACK_FAILED,
--	MFW_DRV_MSG_VF_DISABLED,
--	MFW_DRV_MSG_LLDP_DATA_UPDATED,
--	MFW_DRV_MSG_DCBX_REMOTE_MIB_UPDATED,
--	MFW_DRV_MSG_DCBX_OPERATIONAL_MIB_UPDATED,
--	MFW_DRV_MSG_ERROR_RECOVERY,
--	MFW_DRV_MSG_BW_UPDATE,
--	MFW_DRV_MSG_S_TAG_UPDATE,
--	MFW_DRV_MSG_GET_LAN_STATS,
--	MFW_DRV_MSG_GET_FCOE_STATS,
--	MFW_DRV_MSG_GET_ISCSI_STATS,
--	MFW_DRV_MSG_GET_RDMA_STATS,
--	MFW_DRV_MSG_FAILURE_DETECTED,
--	MFW_DRV_MSG_TRANSCEIVER_STATE_CHANGE,
--	MFW_DRV_MSG_CRITICAL_ERROR_OCCURRED,
--	MFW_DRV_MSG_RESERVED,
--	MFW_DRV_MSG_GET_TLV_REQ,
--	MFW_DRV_MSG_OEM_CFG_UPDATE,
--	MFW_DRV_MSG_MAX
--};
--
--#define MFW_DRV_MSG_MAX_DWORDS(msgs)	(((msgs - 1) >> 2) + 1)
--#define MFW_DRV_MSG_DWORD(msg_id)	(msg_id >> 2)
--#define MFW_DRV_MSG_OFFSET(msg_id)	((msg_id & 0x3) << 3)
--#define MFW_DRV_MSG_MASK(msg_id)	(0xff << MFW_DRV_MSG_OFFSET(msg_id))
--
--struct public_mfw_mb {
--	u32 sup_msgs;
--	u32 msg[MFW_DRV_MSG_MAX_DWORDS(MFW_DRV_MSG_MAX)];
--	u32 ack[MFW_DRV_MSG_MAX_DWORDS(MFW_DRV_MSG_MAX)];
--};
--
--enum public_sections {
--	PUBLIC_DRV_MB,
--	PUBLIC_MFW_MB,
--	PUBLIC_GLOBAL,
--	PUBLIC_PATH,
--	PUBLIC_PORT,
--	PUBLIC_FUNC,
--	PUBLIC_MAX_SECTIONS
--};
--
--struct mcp_public_data {
--	u32 num_sections;
--	u32 sections[PUBLIC_MAX_SECTIONS];
--	struct public_drv_mb drv_mb[MCP_GLOB_FUNC_MAX];
--	struct public_mfw_mb mfw_mb[MCP_GLOB_FUNC_MAX];
--	struct public_global global;
--	struct public_path path[MCP_GLOB_PATH_MAX];
--	struct public_port port[MCP_GLOB_PORT_MAX];
--	struct public_func func[MCP_GLOB_FUNC_MAX];
--};
--
--#define MAX_I2C_TRANSACTION_SIZE	16
--
--/* OCBB definitions */
--enum tlvs {
--	/* Category 1: Device Properties */
--	DRV_TLV_CLP_STR,
--	DRV_TLV_CLP_STR_CTD,
--	/* Category 6: Device Configuration */
--	DRV_TLV_SCSI_TO,
--	DRV_TLV_R_T_TOV,
--	DRV_TLV_R_A_TOV,
--	DRV_TLV_E_D_TOV,
--	DRV_TLV_CR_TOV,
--	DRV_TLV_BOOT_TYPE,
--	/* Category 8: Port Configuration */
--	DRV_TLV_NPIV_ENABLED,
--	/* Category 10: Function Configuration */
--	DRV_TLV_FEATURE_FLAGS,
--	DRV_TLV_LOCAL_ADMIN_ADDR,
--	DRV_TLV_ADDITIONAL_MAC_ADDR_1,
--	DRV_TLV_ADDITIONAL_MAC_ADDR_2,
--	DRV_TLV_LSO_MAX_OFFLOAD_SIZE,
--	DRV_TLV_LSO_MIN_SEGMENT_COUNT,
--	DRV_TLV_PROMISCUOUS_MODE,
--	DRV_TLV_TX_DESCRIPTORS_QUEUE_SIZE,
--	DRV_TLV_RX_DESCRIPTORS_QUEUE_SIZE,
--	DRV_TLV_NUM_OF_NET_QUEUE_VMQ_CFG,
--	DRV_TLV_FLEX_NIC_OUTER_VLAN_ID,
--	DRV_TLV_OS_DRIVER_STATES,
--	DRV_TLV_PXE_BOOT_PROGRESS,
--	/* Category 12: FC/FCoE Configuration */
--	DRV_TLV_NPIV_STATE,
--	DRV_TLV_NUM_OF_NPIV_IDS,
--	DRV_TLV_SWITCH_NAME,
--	DRV_TLV_SWITCH_PORT_NUM,
--	DRV_TLV_SWITCH_PORT_ID,
--	DRV_TLV_VENDOR_NAME,
--	DRV_TLV_SWITCH_MODEL,
--	DRV_TLV_SWITCH_FW_VER,
--	DRV_TLV_QOS_PRIORITY_PER_802_1P,
--	DRV_TLV_PORT_ALIAS,
--	DRV_TLV_PORT_STATE,
--	DRV_TLV_FIP_TX_DESCRIPTORS_QUEUE_SIZE,
--	DRV_TLV_FCOE_RX_DESCRIPTORS_QUEUE_SIZE,
--	DRV_TLV_LINK_FAILURE_COUNT,
--	DRV_TLV_FCOE_BOOT_PROGRESS,
--	/* Category 13: iSCSI Configuration */
--	DRV_TLV_TARGET_LLMNR_ENABLED,
--	DRV_TLV_HEADER_DIGEST_FLAG_ENABLED,
--	DRV_TLV_DATA_DIGEST_FLAG_ENABLED,
--	DRV_TLV_AUTHENTICATION_METHOD,
--	DRV_TLV_ISCSI_BOOT_TARGET_PORTAL,
--	DRV_TLV_MAX_FRAME_SIZE,
--	DRV_TLV_PDU_TX_DESCRIPTORS_QUEUE_SIZE,
--	DRV_TLV_PDU_RX_DESCRIPTORS_QUEUE_SIZE,
--	DRV_TLV_ISCSI_BOOT_PROGRESS,
--	/* Category 20: Device Data */
--	DRV_TLV_PCIE_BUS_RX_UTILIZATION,
--	DRV_TLV_PCIE_BUS_TX_UTILIZATION,
--	DRV_TLV_DEVICE_CPU_CORES_UTILIZATION,
--	DRV_TLV_LAST_VALID_DCC_TLV_RECEIVED,
--	DRV_TLV_NCSI_RX_BYTES_RECEIVED,
--	DRV_TLV_NCSI_TX_BYTES_SENT,
--	/* Category 22: Base Port Data */
--	DRV_TLV_RX_DISCARDS,
--	DRV_TLV_RX_ERRORS,
--	DRV_TLV_TX_ERRORS,
--	DRV_TLV_TX_DISCARDS,
--	DRV_TLV_RX_FRAMES_RECEIVED,
--	DRV_TLV_TX_FRAMES_SENT,
--	/* Category 23: FC/FCoE Port Data */
--	DRV_TLV_RX_BROADCAST_PACKETS,
--	DRV_TLV_TX_BROADCAST_PACKETS,
--	/* Category 28: Base Function Data */
--	DRV_TLV_NUM_OFFLOADED_CONNECTIONS_TCP_IPV4,
--	DRV_TLV_NUM_OFFLOADED_CONNECTIONS_TCP_IPV6,
--	DRV_TLV_TX_DESCRIPTOR_QUEUE_AVG_DEPTH,
--	DRV_TLV_RX_DESCRIPTORS_QUEUE_AVG_DEPTH,
--	DRV_TLV_PF_RX_FRAMES_RECEIVED,
--	DRV_TLV_RX_BYTES_RECEIVED,
--	DRV_TLV_PF_TX_FRAMES_SENT,
--	DRV_TLV_TX_BYTES_SENT,
--	DRV_TLV_IOV_OFFLOAD,
--	DRV_TLV_PCI_ERRORS_CAP_ID,
--	DRV_TLV_UNCORRECTABLE_ERROR_STATUS,
--	DRV_TLV_UNCORRECTABLE_ERROR_MASK,
--	DRV_TLV_CORRECTABLE_ERROR_STATUS,
--	DRV_TLV_CORRECTABLE_ERROR_MASK,
--	DRV_TLV_PCI_ERRORS_AECC_REGISTER,
--	DRV_TLV_TX_QUEUES_EMPTY,
--	DRV_TLV_RX_QUEUES_EMPTY,
--	DRV_TLV_TX_QUEUES_FULL,
--	DRV_TLV_RX_QUEUES_FULL,
--	/* Category 29: FC/FCoE Function Data */
--	DRV_TLV_FCOE_TX_DESCRIPTOR_QUEUE_AVG_DEPTH,
--	DRV_TLV_FCOE_RX_DESCRIPTORS_QUEUE_AVG_DEPTH,
--	DRV_TLV_FCOE_RX_FRAMES_RECEIVED,
--	DRV_TLV_FCOE_RX_BYTES_RECEIVED,
--	DRV_TLV_FCOE_TX_FRAMES_SENT,
--	DRV_TLV_FCOE_TX_BYTES_SENT,
--	DRV_TLV_CRC_ERROR_COUNT,
--	DRV_TLV_CRC_ERROR_1_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_CRC_ERROR_1_TIMESTAMP,
--	DRV_TLV_CRC_ERROR_2_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_CRC_ERROR_2_TIMESTAMP,
--	DRV_TLV_CRC_ERROR_3_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_CRC_ERROR_3_TIMESTAMP,
--	DRV_TLV_CRC_ERROR_4_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_CRC_ERROR_4_TIMESTAMP,
--	DRV_TLV_CRC_ERROR_5_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_CRC_ERROR_5_TIMESTAMP,
--	DRV_TLV_LOSS_OF_SYNC_ERROR_COUNT,
--	DRV_TLV_LOSS_OF_SIGNAL_ERRORS,
--	DRV_TLV_PRIMITIVE_SEQUENCE_PROTOCOL_ERROR_COUNT,
--	DRV_TLV_DISPARITY_ERROR_COUNT,
--	DRV_TLV_CODE_VIOLATION_ERROR_COUNT,
--	DRV_TLV_LAST_FLOGI_ISSUED_COMMON_PARAMETERS_WORD_1,
--	DRV_TLV_LAST_FLOGI_ISSUED_COMMON_PARAMETERS_WORD_2,
--	DRV_TLV_LAST_FLOGI_ISSUED_COMMON_PARAMETERS_WORD_3,
--	DRV_TLV_LAST_FLOGI_ISSUED_COMMON_PARAMETERS_WORD_4,
--	DRV_TLV_LAST_FLOGI_TIMESTAMP,
--	DRV_TLV_LAST_FLOGI_ACC_COMMON_PARAMETERS_WORD_1,
--	DRV_TLV_LAST_FLOGI_ACC_COMMON_PARAMETERS_WORD_2,
--	DRV_TLV_LAST_FLOGI_ACC_COMMON_PARAMETERS_WORD_3,
--	DRV_TLV_LAST_FLOGI_ACC_COMMON_PARAMETERS_WORD_4,
--	DRV_TLV_LAST_FLOGI_ACC_TIMESTAMP,
--	DRV_TLV_LAST_FLOGI_RJT,
--	DRV_TLV_LAST_FLOGI_RJT_TIMESTAMP,
--	DRV_TLV_FDISCS_SENT_COUNT,
--	DRV_TLV_FDISC_ACCS_RECEIVED,
--	DRV_TLV_FDISC_RJTS_RECEIVED,
--	DRV_TLV_PLOGI_SENT_COUNT,
--	DRV_TLV_PLOGI_ACCS_RECEIVED,
--	DRV_TLV_PLOGI_RJTS_RECEIVED,
--	DRV_TLV_PLOGI_1_SENT_DESTINATION_FC_ID,
--	DRV_TLV_PLOGI_1_TIMESTAMP,
--	DRV_TLV_PLOGI_2_SENT_DESTINATION_FC_ID,
--	DRV_TLV_PLOGI_2_TIMESTAMP,
--	DRV_TLV_PLOGI_3_SENT_DESTINATION_FC_ID,
--	DRV_TLV_PLOGI_3_TIMESTAMP,
--	DRV_TLV_PLOGI_4_SENT_DESTINATION_FC_ID,
--	DRV_TLV_PLOGI_4_TIMESTAMP,
--	DRV_TLV_PLOGI_5_SENT_DESTINATION_FC_ID,
--	DRV_TLV_PLOGI_5_TIMESTAMP,
--	DRV_TLV_PLOGI_1_ACC_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_PLOGI_1_ACC_TIMESTAMP,
--	DRV_TLV_PLOGI_2_ACC_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_PLOGI_2_ACC_TIMESTAMP,
--	DRV_TLV_PLOGI_3_ACC_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_PLOGI_3_ACC_TIMESTAMP,
--	DRV_TLV_PLOGI_4_ACC_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_PLOGI_4_ACC_TIMESTAMP,
--	DRV_TLV_PLOGI_5_ACC_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_PLOGI_5_ACC_TIMESTAMP,
--	DRV_TLV_LOGOS_ISSUED,
--	DRV_TLV_LOGO_ACCS_RECEIVED,
--	DRV_TLV_LOGO_RJTS_RECEIVED,
--	DRV_TLV_LOGO_1_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_LOGO_1_TIMESTAMP,
--	DRV_TLV_LOGO_2_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_LOGO_2_TIMESTAMP,
--	DRV_TLV_LOGO_3_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_LOGO_3_TIMESTAMP,
--	DRV_TLV_LOGO_4_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_LOGO_4_TIMESTAMP,
--	DRV_TLV_LOGO_5_RECEIVED_SOURCE_FC_ID,
--	DRV_TLV_LOGO_5_TIMESTAMP,
--	DRV_TLV_LOGOS_RECEIVED,
--	DRV_TLV_ACCS_ISSUED,
--	DRV_TLV_PRLIS_ISSUED,
--	DRV_TLV_ACCS_RECEIVED,
--	DRV_TLV_ABTS_SENT_COUNT,
--	DRV_TLV_ABTS_ACCS_RECEIVED,
--	DRV_TLV_ABTS_RJTS_RECEIVED,
--	DRV_TLV_ABTS_1_SENT_DESTINATION_FC_ID,
--	DRV_TLV_ABTS_1_TIMESTAMP,
--	DRV_TLV_ABTS_2_SENT_DESTINATION_FC_ID,
--	DRV_TLV_ABTS_2_TIMESTAMP,
--	DRV_TLV_ABTS_3_SENT_DESTINATION_FC_ID,
--	DRV_TLV_ABTS_3_TIMESTAMP,
--	DRV_TLV_ABTS_4_SENT_DESTINATION_FC_ID,
--	DRV_TLV_ABTS_4_TIMESTAMP,
--	DRV_TLV_ABTS_5_SENT_DESTINATION_FC_ID,
--	DRV_TLV_ABTS_5_TIMESTAMP,
--	DRV_TLV_RSCNS_RECEIVED,
--	DRV_TLV_LAST_RSCN_RECEIVED_N_PORT_1,
--	DRV_TLV_LAST_RSCN_RECEIVED_N_PORT_2,
--	DRV_TLV_LAST_RSCN_RECEIVED_N_PORT_3,
--	DRV_TLV_LAST_RSCN_RECEIVED_N_PORT_4,
--	DRV_TLV_LUN_RESETS_ISSUED,
--	DRV_TLV_ABORT_TASK_SETS_ISSUED,
--	DRV_TLV_TPRLOS_SENT,
--	DRV_TLV_NOS_SENT_COUNT,
--	DRV_TLV_NOS_RECEIVED_COUNT,
--	DRV_TLV_OLS_COUNT,
--	DRV_TLV_LR_COUNT,
--	DRV_TLV_LRR_COUNT,
--	DRV_TLV_LIP_SENT_COUNT,
--	DRV_TLV_LIP_RECEIVED_COUNT,
--	DRV_TLV_EOFA_COUNT,
--	DRV_TLV_EOFNI_COUNT,
--	DRV_TLV_SCSI_STATUS_CHECK_CONDITION_COUNT,
--	DRV_TLV_SCSI_STATUS_CONDITION_MET_COUNT,
--	DRV_TLV_SCSI_STATUS_BUSY_COUNT,
--	DRV_TLV_SCSI_STATUS_INTERMEDIATE_COUNT,
--	DRV_TLV_SCSI_STATUS_INTERMEDIATE_CONDITION_MET_COUNT,
--	DRV_TLV_SCSI_STATUS_RESERVATION_CONFLICT_COUNT,
--	DRV_TLV_SCSI_STATUS_TASK_SET_FULL_COUNT,
--	DRV_TLV_SCSI_STATUS_ACA_ACTIVE_COUNT,
--	DRV_TLV_SCSI_STATUS_TASK_ABORTED_COUNT,
--	DRV_TLV_SCSI_CHECK_CONDITION_1_RECEIVED_SK_ASC_ASCQ,
--	DRV_TLV_SCSI_CHECK_1_TIMESTAMP,
--	DRV_TLV_SCSI_CHECK_CONDITION_2_RECEIVED_SK_ASC_ASCQ,
--	DRV_TLV_SCSI_CHECK_2_TIMESTAMP,
--	DRV_TLV_SCSI_CHECK_CONDITION_3_RECEIVED_SK_ASC_ASCQ,
--	DRV_TLV_SCSI_CHECK_3_TIMESTAMP,
--	DRV_TLV_SCSI_CHECK_CONDITION_4_RECEIVED_SK_ASC_ASCQ,
--	DRV_TLV_SCSI_CHECK_4_TIMESTAMP,
--	DRV_TLV_SCSI_CHECK_CONDITION_5_RECEIVED_SK_ASC_ASCQ,
--	DRV_TLV_SCSI_CHECK_5_TIMESTAMP,
--	/* Category 30: iSCSI Function Data */
--	DRV_TLV_PDU_TX_DESCRIPTOR_QUEUE_AVG_DEPTH,
--	DRV_TLV_PDU_RX_DESCRIPTORS_QUEUE_AVG_DEPTH,
--	DRV_TLV_ISCSI_PDU_RX_FRAMES_RECEIVED,
--	DRV_TLV_ISCSI_PDU_RX_BYTES_RECEIVED,
--	DRV_TLV_ISCSI_PDU_TX_FRAMES_SENT,
--	DRV_TLV_ISCSI_PDU_TX_BYTES_SENT
--};
--
--struct nvm_cfg_mac_address {
--	u32							mac_addr_hi;
--#define NVM_CFG_MAC_ADDRESS_HI_MASK				0x0000ffff
--#define NVM_CFG_MAC_ADDRESS_HI_OFFSET				0
--
--	u32							mac_addr_lo;
--};
--
--struct nvm_cfg1_glob {
--	u32							generic_cont0;
--#define NVM_CFG1_GLOB_MF_MODE_MASK				0x00000ff0
--#define NVM_CFG1_GLOB_MF_MODE_OFFSET				4
--#define NVM_CFG1_GLOB_MF_MODE_MF_ALLOWED			0x0
--#define NVM_CFG1_GLOB_MF_MODE_DEFAULT				0x1
--#define NVM_CFG1_GLOB_MF_MODE_SPIO4				0x2
--#define NVM_CFG1_GLOB_MF_MODE_NPAR1_0				0x3
--#define NVM_CFG1_GLOB_MF_MODE_NPAR1_5				0x4
--#define NVM_CFG1_GLOB_MF_MODE_NPAR2_0				0x5
--#define NVM_CFG1_GLOB_MF_MODE_BD				0x6
--#define NVM_CFG1_GLOB_MF_MODE_UFP				0x7
--
--	u32							engineering_change[3];
--	u32							manufacturing_id;
--	u32							serial_number[4];
--	u32							pcie_cfg;
--	u32							mgmt_traffic;
--
--	u32							core_cfg;
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_MASK			0x000000ff
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_OFFSET			0
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_BB_2X40G		0x0
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_2X50G			0x1
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_BB_1X100G		0x2
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_4X10G_F			0x3
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_BB_4X10G_E		0x4
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_BB_4X20G		0x5
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_1X40G			0xb
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_2X25G			0xc
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_1X25G			0xd
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_4X25G			0xe
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_2X10G			0xf
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X50G_R1		0x11
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_4X50G_R1		0x12
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R2		0x13
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X100G_R2		0x14
--#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R4		0x15
--
--	u32							e_lane_cfg1;
--	u32							e_lane_cfg2;
--	u32							f_lane_cfg1;
--	u32							f_lane_cfg2;
--	u32							mps10_preemphasis;
--	u32							mps10_driver_current;
--	u32							mps25_preemphasis;
--	u32							mps25_driver_current;
--	u32							pci_id;
--	u32							pci_subsys_id;
--	u32							bar;
--	u32							mps10_txfir_main;
--	u32							mps10_txfir_post;
--	u32							mps25_txfir_main;
--	u32							mps25_txfir_post;
--	u32							manufacture_ver;
--	u32							manufacture_time;
--	u32							led_global_settings;
--	u32							generic_cont1;
--
--	u32							mbi_version;
--#define NVM_CFG1_GLOB_MBI_VERSION_0_MASK			0x000000ff
--#define NVM_CFG1_GLOB_MBI_VERSION_0_OFFSET			0
--#define NVM_CFG1_GLOB_MBI_VERSION_1_MASK			0x0000ff00
--#define NVM_CFG1_GLOB_MBI_VERSION_1_OFFSET			8
--#define NVM_CFG1_GLOB_MBI_VERSION_2_MASK			0x00ff0000
--#define NVM_CFG1_GLOB_MBI_VERSION_2_OFFSET			16
--
--	u32							mbi_date;
--	u32							misc_sig;
--
--	u32							device_capabilities;
--#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_ETHERNET		0x1
--#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_FCOE			0x2
--#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_ISCSI			0x4
--#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_ROCE			0x8
--
--	u32							power_dissipated;
--	u32							power_consumed;
--	u32							efi_version;
--	u32							multi_net_modes_cap;
--	u32							reserved[41];
--};
--
--struct nvm_cfg1_path {
--	u32							reserved[30];
--};
--
--struct nvm_cfg1_port {
--	u32							rel_to_opt123;
--	u32							rel_to_opt124;
--
--	u32							generic_cont0;
--#define NVM_CFG1_PORT_DCBX_MODE_MASK				0x000f0000
--#define NVM_CFG1_PORT_DCBX_MODE_OFFSET				16
--#define NVM_CFG1_PORT_DCBX_MODE_DISABLED			0x0
--#define NVM_CFG1_PORT_DCBX_MODE_IEEE				0x1
--#define NVM_CFG1_PORT_DCBX_MODE_CEE				0x2
--#define NVM_CFG1_PORT_DCBX_MODE_DYNAMIC				0x3
--#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_MASK		0x00f00000
--#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_OFFSET		20
--#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_ETHERNET	0x1
--#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_FCOE		0x2
--#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_ISCSI		0x4
--
--	u32							pcie_cfg;
--	u32							features;
--
--	u32							speed_cap_mask;
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_MASK		0x0000ffff
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_OFFSET		0
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G		0x1
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G		0x2
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G		0x4
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G		0x8
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G		0x10
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G		0x20
--#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G		0x40
--
--	u32							link_settings;
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_MASK			0x0000000f
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_OFFSET			0
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_AUTONEG			0x0
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_1G				0x1
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_10G			0x2
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_20G			0x3
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_25G			0x4
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_40G			0x5
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_50G			0x6
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_BB_100G			0x7
--#define NVM_CFG1_PORT_DRV_LINK_SPEED_SMARTLINQ			0x8
--#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_MASK			0x00000070
--#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_OFFSET			4
--#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_AUTONEG			0x1
--#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_RX			0x2
--#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_TX			0x4
--#define NVM_CFG1_PORT_FEC_FORCE_MODE_MASK			0x000e0000
--#define NVM_CFG1_PORT_FEC_FORCE_MODE_OFFSET			17
--#define NVM_CFG1_PORT_FEC_FORCE_MODE_NONE			0x0
--#define NVM_CFG1_PORT_FEC_FORCE_MODE_FIRECODE			0x1
--#define NVM_CFG1_PORT_FEC_FORCE_MODE_RS				0x2
--#define NVM_CFG1_PORT_FEC_FORCE_MODE_AUTO			0x7
--
--	u32							phy_cfg;
--	u32							mgmt_traffic;
--
--	u32							ext_phy;
--	/* EEE power saving mode */
--#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_MASK		0x00ff0000
--#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_OFFSET		16
--#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_DISABLED		0x0
--#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_BALANCED		0x1
--#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_AGGRESSIVE		0x2
--#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_LOW_LATENCY		0x3
--
--	u32							mba_cfg1;
--	u32							mba_cfg2;
--	u32							vf_cfg;
--	struct nvm_cfg_mac_address				lldp_mac_address;
--	u32							led_port_settings;
--	u32							transceiver_00;
--	u32							device_ids;
--
--	u32							board_cfg;
--#define NVM_CFG1_PORT_PORT_TYPE_MASK				0x000000ff
--#define NVM_CFG1_PORT_PORT_TYPE_OFFSET				0
--#define NVM_CFG1_PORT_PORT_TYPE_UNDEFINED			0x0
--#define NVM_CFG1_PORT_PORT_TYPE_MODULE				0x1
--#define NVM_CFG1_PORT_PORT_TYPE_BACKPLANE			0x2
--#define NVM_CFG1_PORT_PORT_TYPE_EXT_PHY				0x3
--#define NVM_CFG1_PORT_PORT_TYPE_MODULE_SLAVE			0x4
--
--	u32							mnm_10g_cap;
--	u32							mnm_10g_ctrl;
--	u32							mnm_10g_misc;
--	u32							mnm_25g_cap;
--	u32							mnm_25g_ctrl;
--	u32							mnm_25g_misc;
--	u32							mnm_40g_cap;
--	u32							mnm_40g_ctrl;
--	u32							mnm_40g_misc;
--	u32							mnm_50g_cap;
--	u32							mnm_50g_ctrl;
--	u32							mnm_50g_misc;
--	u32							mnm_100g_cap;
--	u32							mnm_100g_ctrl;
--	u32							mnm_100g_misc;
--
--	u32							temperature;
--	u32							ext_phy_cfg1;
--
--	u32							extended_speed;
--#define NVM_CFG1_PORT_EXTENDED_SPEED_MASK			0x0000ffff
--#define NVM_CFG1_PORT_EXTENDED_SPEED_OFFSET			0
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_AN		0x1
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_1G		0x2
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_10G		0x4
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_20G		0x8
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_25G		0x10
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_40G		0x20
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_50G_R		0x40
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_50G_R2		0x80
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_100G_R2		0x100
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_100G_R4		0x200
--#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_100G_P4		0x400
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_MASK			0xffff0000
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_OFFSET			16
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_RESERVED	0x1
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_1G		0x2
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_10G		0x4
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_20G		0x8
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_25G		0x10
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_40G		0x20
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_50G_R	0x40
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_50G_R2	0x80
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_100G_R2	0x100
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_100G_R4	0x200
--#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_100G_P4	0x400
--
--	u32							extended_fec_mode;
--
--	u32							reserved[112];
--};
--
--struct nvm_cfg1_func {
--	struct nvm_cfg_mac_address mac_address;
--	u32 rsrv1;
--	u32 rsrv2;
--	u32 device_id;
--	u32 cmn_cfg;
--	u32 pci_cfg;
--	struct nvm_cfg_mac_address fcoe_node_wwn_mac_addr;
--	struct nvm_cfg_mac_address fcoe_port_wwn_mac_addr;
--	u32 preboot_generic_cfg;
--	u32 reserved[8];
--};
--
--struct nvm_cfg1 {
--	struct nvm_cfg1_glob glob;
--	struct nvm_cfg1_path path[MCP_GLOB_PATH_MAX];
--	struct nvm_cfg1_port port[MCP_GLOB_PORT_MAX];
--	struct nvm_cfg1_func func[MCP_GLOB_FUNC_MAX];
--};
--
--enum spad_sections {
--	SPAD_SECTION_TRACE,
--	SPAD_SECTION_NVM_CFG,
--	SPAD_SECTION_PUBLIC,
--	SPAD_SECTION_PRIVATE,
--	SPAD_SECTION_MAX
--};
--
--#define MCP_TRACE_SIZE          2048	/* 2kb */
--
--/* This section is located at a fixed location in the beginning of the
-- * scratchpad, to ensure that the MCP trace is not run over during MFW upgrade.
-- * All the rest of data has a floating location which differs from version to
-- * version, and is pointed by the mcp_meta_data below.
-- * Moreover, the spad_layout section is part of the MFW firmware, and is loaded
-- * with it from nvram in order to clear this portion.
-- */
--struct static_init {
--	u32 num_sections;
--	offsize_t sections[SPAD_SECTION_MAX];
--#define SECTION(_sec_) (*((offsize_t *)(STRUCT_OFFSET(sections[_sec_]))))
--
--	struct mcp_trace trace;
--#define MCP_TRACE_P ((struct mcp_trace *)(STRUCT_OFFSET(trace)))
--	u8 trace_buffer[MCP_TRACE_SIZE];
--#define MCP_TRACE_BUF ((u8 *)(STRUCT_OFFSET(trace_buffer)))
--	/* running_mfw has the same definition as in nvm_map.h.
--	 * This bit indicate both the running dir, and the running bundle.
--	 * It is set once when the LIM is loaded.
--	 */
--	u32 running_mfw;
--#define RUNNING_MFW (*((u32 *)(STRUCT_OFFSET(running_mfw))))
--	u32 build_time;
--#define MFW_BUILD_TIME (*((u32 *)(STRUCT_OFFSET(build_time))))
--	u32 reset_type;
--#define RESET_TYPE (*((u32 *)(STRUCT_OFFSET(reset_type))))
--	u32 mfw_secure_mode;
--#define MFW_SECURE_MODE (*((u32 *)(STRUCT_OFFSET(mfw_secure_mode))))
--	u16 pme_status_pf_bitmap;
--#define PME_STATUS_PF_BITMAP (*((u16 *)(STRUCT_OFFSET(pme_status_pf_bitmap))))
--	u16 pme_enable_pf_bitmap;
--#define PME_ENABLE_PF_BITMAP (*((u16 *)(STRUCT_OFFSET(pme_enable_pf_bitmap))))
--	u32 mim_nvm_addr;
--	u32 mim_start_addr;
--	u32 ah_pcie_link_params;
--#define AH_PCIE_LINK_PARAMS_LINK_SPEED_MASK     (0x000000ff)
--#define AH_PCIE_LINK_PARAMS_LINK_SPEED_SHIFT    (0)
--#define AH_PCIE_LINK_PARAMS_LINK_WIDTH_MASK     (0x0000ff00)
--#define AH_PCIE_LINK_PARAMS_LINK_WIDTH_SHIFT    (8)
--#define AH_PCIE_LINK_PARAMS_ASPM_MODE_MASK      (0x00ff0000)
--#define AH_PCIE_LINK_PARAMS_ASPM_MODE_SHIFT     (16)
--#define AH_PCIE_LINK_PARAMS_ASPM_CAP_MASK       (0xff000000)
--#define AH_PCIE_LINK_PARAMS_ASPM_CAP_SHIFT      (24)
--#define AH_PCIE_LINK_PARAMS (*((u32 *)(STRUCT_OFFSET(ah_pcie_link_params))))
--
--	u32 rsrv_persist[5];	/* Persist reserved for MFW upgrades */
--};
--
--#define NVM_MAGIC_VALUE		0x669955aa
--
--enum nvm_image_type {
--	NVM_TYPE_TIM1 = 0x01,
--	NVM_TYPE_TIM2 = 0x02,
--	NVM_TYPE_MIM1 = 0x03,
--	NVM_TYPE_MIM2 = 0x04,
--	NVM_TYPE_MBA = 0x05,
--	NVM_TYPE_MODULES_PN = 0x06,
--	NVM_TYPE_VPD = 0x07,
--	NVM_TYPE_MFW_TRACE1 = 0x08,
--	NVM_TYPE_MFW_TRACE2 = 0x09,
--	NVM_TYPE_NVM_CFG1 = 0x0a,
--	NVM_TYPE_L2B = 0x0b,
--	NVM_TYPE_DIR1 = 0x0c,
--	NVM_TYPE_EAGLE_FW1 = 0x0d,
--	NVM_TYPE_FALCON_FW1 = 0x0e,
--	NVM_TYPE_PCIE_FW1 = 0x0f,
--	NVM_TYPE_HW_SET = 0x10,
--	NVM_TYPE_LIM = 0x11,
--	NVM_TYPE_AVS_FW1 = 0x12,
--	NVM_TYPE_DIR2 = 0x13,
--	NVM_TYPE_CCM = 0x14,
--	NVM_TYPE_EAGLE_FW2 = 0x15,
--	NVM_TYPE_FALCON_FW2 = 0x16,
--	NVM_TYPE_PCIE_FW2 = 0x17,
--	NVM_TYPE_AVS_FW2 = 0x18,
--	NVM_TYPE_INIT_HW = 0x19,
--	NVM_TYPE_DEFAULT_CFG = 0x1a,
--	NVM_TYPE_MDUMP = 0x1b,
--	NVM_TYPE_META = 0x1c,
--	NVM_TYPE_ISCSI_CFG = 0x1d,
--	NVM_TYPE_FCOE_CFG = 0x1f,
--	NVM_TYPE_ETH_PHY_FW1 = 0x20,
--	NVM_TYPE_ETH_PHY_FW2 = 0x21,
--	NVM_TYPE_BDN = 0x22,
--	NVM_TYPE_8485X_PHY_FW = 0x23,
--	NVM_TYPE_PUB_KEY = 0x24,
--	NVM_TYPE_RECOVERY = 0x25,
--	NVM_TYPE_PLDM = 0x26,
--	NVM_TYPE_UPK1 = 0x27,
--	NVM_TYPE_UPK2 = 0x28,
--	NVM_TYPE_MASTER_KC = 0x29,
--	NVM_TYPE_BACKUP_KC = 0x2a,
--	NVM_TYPE_HW_DUMP = 0x2b,
--	NVM_TYPE_HW_DUMP_OUT = 0x2c,
--	NVM_TYPE_BIN_NVM_META = 0x30,
--	NVM_TYPE_ROM_TEST = 0xf0,
--	NVM_TYPE_88X33X0_PHY_FW = 0x31,
--	NVM_TYPE_88X33X0_PHY_SLAVE_FW = 0x32,
--	NVM_TYPE_MAX,
--};
--
--#define DIR_ID_1    (0)
--
- #endif
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
-index 30c0b5502670..7dad91049cc0 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_init_fw_funcs.c
-@@ -13,6 +13,7 @@
- #include "qed_hsi.h"
- #include "qed_hw.h"
- #include "qed_init_ops.h"
-+#include "qed_iro_hsi.h"
- #include "qed_reg_addr.h"
- 
- #define CDU_VALIDATION_DEFAULT_CFG	61
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_iro_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_iro_hsi.h
-new file mode 100644
-index 000000000000..4999d524930f
---- /dev/null
-+++ b/drivers/net/ethernet/qlogic/qed/qed_iro_hsi.h
-@@ -0,0 +1,339 @@
-+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause) */
-+/* QLogic qed NIC Driver
+@@ -1,7 +1,7 @@
+ // SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause)
+ /* QLogic qed NIC Driver
+  * Copyright (c) 2015 QLogic Corporation
+- * Copyright (c) 2019-2020 Marvell International Ltd.
 + * Copyright (c) 2019-2021 Marvell International Ltd.
-+ */
-+
-+#ifndef _QED_IRO_HSI_H
-+#define _QED_IRO_HSI_H
-+
-+#include <linux/types.h>
-+
-+/* Ystorm flow control mode. Use enum fw_flow_ctrl_mode */
-+#define YSTORM_FLOW_CONTROL_MODE_OFFSET			(IRO[0].base)
-+#define YSTORM_FLOW_CONTROL_MODE_SIZE			(IRO[0].size)
-+
-+/* Tstorm port statistics */
-+#define TSTORM_PORT_STAT_OFFSET(port_id) \
-+	(IRO[1].base + ((port_id) * IRO[1].m1))
-+#define TSTORM_PORT_STAT_SIZE				(IRO[1].size)
-+
-+/* Tstorm ll2 port statistics */
-+#define TSTORM_LL2_PORT_STAT_OFFSET(port_id) \
-+	(IRO[2].base + ((port_id) * IRO[2].m1))
-+#define TSTORM_LL2_PORT_STAT_SIZE			(IRO[2].size)
-+
-+/* Ustorm VF-PF Channel ready flag */
-+#define USTORM_VF_PF_CHANNEL_READY_OFFSET(vf_id) \
-+	(IRO[3].base + ((vf_id) * IRO[3].m1))
-+#define USTORM_VF_PF_CHANNEL_READY_SIZE			(IRO[3].size)
-+
-+/* Ustorm Final flr cleanup ack */
-+#define USTORM_FLR_FINAL_ACK_OFFSET(pf_id) \
-+	(IRO[4].base + ((pf_id) * IRO[4].m1))
-+#define USTORM_FLR_FINAL_ACK_SIZE			(IRO[4].size)
-+
-+/* Ustorm Event ring consumer */
-+#define USTORM_EQE_CONS_OFFSET(pf_id) \
-+	(IRO[5].base + ((pf_id) * IRO[5].m1))
-+#define USTORM_EQE_CONS_SIZE				(IRO[5].size)
-+
-+/* Ustorm eth queue zone */
-+#define USTORM_ETH_QUEUE_ZONE_OFFSET(queue_zone_id) \
-+	(IRO[6].base + ((queue_zone_id) * IRO[6].m1))
-+#define USTORM_ETH_QUEUE_ZONE_SIZE			(IRO[6].size)
-+
-+/* Ustorm Common Queue ring consumer */
-+#define USTORM_COMMON_QUEUE_CONS_OFFSET(queue_zone_id) \
-+	(IRO[7].base + ((queue_zone_id) * IRO[7].m1))
-+#define USTORM_COMMON_QUEUE_CONS_SIZE			(IRO[7].size)
-+
-+/* Xstorm common PQ info */
-+#define XSTORM_PQ_INFO_OFFSET(pq_id) \
-+	(IRO[8].base + ((pq_id) * IRO[8].m1))
-+#define XSTORM_PQ_INFO_SIZE				(IRO[8].size)
-+
-+/* Xstorm Integration Test Data */
-+#define XSTORM_INTEG_TEST_DATA_OFFSET			(IRO[9].base)
-+#define XSTORM_INTEG_TEST_DATA_SIZE			(IRO[9].size)
-+
-+/* Ystorm Integration Test Data */
-+#define YSTORM_INTEG_TEST_DATA_OFFSET			(IRO[10].base)
-+#define YSTORM_INTEG_TEST_DATA_SIZE			(IRO[10].size)
-+
-+/* Pstorm Integration Test Data */
-+#define PSTORM_INTEG_TEST_DATA_OFFSET			(IRO[11].base)
-+#define PSTORM_INTEG_TEST_DATA_SIZE			(IRO[11].size)
-+
-+/* Tstorm Integration Test Data */
-+#define TSTORM_INTEG_TEST_DATA_OFFSET			(IRO[12].base)
-+#define TSTORM_INTEG_TEST_DATA_SIZE			(IRO[12].size)
-+
-+/* Mstorm Integration Test Data */
-+#define MSTORM_INTEG_TEST_DATA_OFFSET			(IRO[13].base)
-+#define MSTORM_INTEG_TEST_DATA_SIZE			(IRO[13].size)
-+
-+/* Ustorm Integration Test Data */
-+#define USTORM_INTEG_TEST_DATA_OFFSET			(IRO[14].base)
-+#define USTORM_INTEG_TEST_DATA_SIZE			(IRO[14].size)
-+
-+/* Xstorm overlay buffer host address */
-+#define XSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[15].base)
-+#define XSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[15].size)
-+
-+/* Ystorm overlay buffer host address */
-+#define YSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[16].base)
-+#define YSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[16].size)
-+
-+/* Pstorm overlay buffer host address */
-+#define PSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[17].base)
-+#define PSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[17].size)
-+
-+/* Tstorm overlay buffer host address */
-+#define TSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[18].base)
-+#define TSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[18].size)
-+
-+/* Mstorm overlay buffer host address */
-+#define MSTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[19].base)
-+#define MSTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[19].size)
-+
-+/* Ustorm overlay buffer host address */
-+#define USTORM_OVERLAY_BUF_ADDR_OFFSET			(IRO[20].base)
-+#define USTORM_OVERLAY_BUF_ADDR_SIZE			(IRO[20].size)
-+
-+/* Tstorm producers */
-+#define TSTORM_LL2_RX_PRODS_OFFSET(core_rx_queue_id) \
-+	(IRO[21].base + ((core_rx_queue_id) * IRO[21].m1))
-+#define TSTORM_LL2_RX_PRODS_SIZE			(IRO[21].size)
-+
-+/* Tstorm LightL2 queue statistics */
-+#define CORE_LL2_TSTORM_PER_QUEUE_STAT_OFFSET(core_rx_queue_id) \
-+	(IRO[22].base + ((core_rx_queue_id) * IRO[22].m1))
-+#define CORE_LL2_TSTORM_PER_QUEUE_STAT_SIZE		(IRO[22].size)
-+
-+/* Ustorm LiteL2 queue statistics */
-+#define CORE_LL2_USTORM_PER_QUEUE_STAT_OFFSET(core_rx_queue_id) \
-+	(IRO[23].base + ((core_rx_queue_id) * IRO[23].m1))
-+#define CORE_LL2_USTORM_PER_QUEUE_STAT_SIZE		(IRO[23].size)
-+
-+/* Pstorm LiteL2 queue statistics */
-+#define CORE_LL2_PSTORM_PER_QUEUE_STAT_OFFSET(core_tx_stats_id) \
-+	(IRO[24].base + ((core_tx_stats_id) * IRO[24].m1))
-+#define CORE_LL2_PSTORM_PER_QUEUE_STAT_SIZE		(IRO[24].size)
-+
-+/* Mstorm queue statistics */
-+#define MSTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
-+	(IRO[25].base + ((stat_counter_id) * IRO[25].m1))
-+#define MSTORM_QUEUE_STAT_SIZE				(IRO[25].size)
-+
-+/* TPA agregation timeout in us resolution (on ASIC) */
-+#define MSTORM_TPA_TIMEOUT_US_OFFSET			(IRO[26].base)
-+#define MSTORM_TPA_TIMEOUT_US_SIZE			(IRO[26].size)
-+
-+/* Mstorm ETH VF queues producers offset in RAM. Used in default VF zone size
-+ * mode
-+ */
-+#define MSTORM_ETH_VF_PRODS_OFFSET(vf_id, vf_queue_id) \
-+	(IRO[27].base + ((vf_id) * IRO[27].m1) + ((vf_queue_id) * IRO[27].m2))
-+#define MSTORM_ETH_VF_PRODS_SIZE			(IRO[27].size)
-+
-+/* Mstorm ETH PF queues producers */
-+#define MSTORM_ETH_PF_PRODS_OFFSET(queue_id) \
-+	(IRO[28].base + ((queue_id) * IRO[28].m1))
-+#define MSTORM_ETH_PF_PRODS_SIZE			(IRO[28].size)
-+
-+/* Mstorm pf statistics */
-+#define MSTORM_ETH_PF_STAT_OFFSET(pf_id) \
-+	(IRO[29].base + ((pf_id) * IRO[29].m1))
-+#define MSTORM_ETH_PF_STAT_SIZE				(IRO[29].size)
-+
-+/* Ustorm queue statistics */
-+#define USTORM_QUEUE_STAT_OFFSET(stat_counter_id) \
-+	(IRO[30].base + ((stat_counter_id) * IRO[30].m1))
-+#define USTORM_QUEUE_STAT_SIZE				(IRO[30].size)
-+
-+/* Ustorm pf statistics */
-+#define USTORM_ETH_PF_STAT_OFFSET(pf_id) \
-+	(IRO[31].base + ((pf_id) * IRO[31].m1))
-+#define USTORM_ETH_PF_STAT_SIZE				(IRO[31].size)
-+
-+/* Pstorm queue statistics */
-+#define PSTORM_QUEUE_STAT_OFFSET(stat_counter_id)	\
-+	(IRO[32].base + ((stat_counter_id) * IRO[32].m1))
-+#define PSTORM_QUEUE_STAT_SIZE				(IRO[32].size)
-+
-+/* Pstorm pf statistics */
-+#define PSTORM_ETH_PF_STAT_OFFSET(pf_id) \
-+	(IRO[33].base + ((pf_id) * IRO[33].m1))
-+#define PSTORM_ETH_PF_STAT_SIZE				(IRO[33].size)
-+
-+/* Control frame's EthType configuration for TX control frame security */
-+#define PSTORM_CTL_FRAME_ETHTYPE_OFFSET(eth_type_id)	\
-+	(IRO[34].base + ((eth_type_id) * IRO[34].m1))
-+#define PSTORM_CTL_FRAME_ETHTYPE_SIZE			(IRO[34].size)
-+
-+/* Tstorm last parser message */
-+#define TSTORM_ETH_PRS_INPUT_OFFSET			(IRO[35].base)
-+#define TSTORM_ETH_PRS_INPUT_SIZE			(IRO[35].size)
-+
-+/* Tstorm Eth limit Rx rate */
-+#define ETH_RX_RATE_LIMIT_OFFSET(pf_id)	\
-+	(IRO[36].base + ((pf_id) * IRO[36].m1))
-+#define ETH_RX_RATE_LIMIT_SIZE				(IRO[36].size)
-+
-+/* RSS indirection table entry update command per PF offset in TSTORM PF BAR0.
-+ * Use eth_tstorm_rss_update_data for update
-+ */
-+#define TSTORM_ETH_RSS_UPDATE_OFFSET(pf_id) \
-+	(IRO[37].base + ((pf_id) * IRO[37].m1))
-+#define TSTORM_ETH_RSS_UPDATE_SIZE			(IRO[37].size)
-+
-+/* Xstorm queue zone */
-+#define XSTORM_ETH_QUEUE_ZONE_OFFSET(queue_id) \
-+	(IRO[38].base + ((queue_id) * IRO[38].m1))
-+#define XSTORM_ETH_QUEUE_ZONE_SIZE			(IRO[38].size)
-+
-+/* Ystorm cqe producer */
-+#define YSTORM_TOE_CQ_PROD_OFFSET(rss_id) \
-+	(IRO[39].base + ((rss_id) * IRO[39].m1))
-+#define YSTORM_TOE_CQ_PROD_SIZE				(IRO[39].size)
-+
-+/* Ustorm cqe producer */
-+#define USTORM_TOE_CQ_PROD_OFFSET(rss_id) \
-+	(IRO[40].base + ((rss_id) * IRO[40].m1))
-+#define USTORM_TOE_CQ_PROD_SIZE				(IRO[40].size)
-+
-+/* Ustorm grq producer */
-+#define USTORM_TOE_GRQ_PROD_OFFSET(pf_id) \
-+	(IRO[41].base + ((pf_id) * IRO[41].m1))
-+#define USTORM_TOE_GRQ_PROD_SIZE			(IRO[41].size)
-+
-+/* Tstorm cmdq-cons of given command queue-id */
-+#define TSTORM_SCSI_CMDQ_CONS_OFFSET(cmdq_queue_id) \
-+	(IRO[42].base + ((cmdq_queue_id) * IRO[42].m1))
-+#define TSTORM_SCSI_CMDQ_CONS_SIZE			(IRO[42].size)
-+
-+/* Tstorm (reflects M-Storm) bdq-external-producer of given function ID,
-+ * BDqueue-id
-+ */
-+#define TSTORM_SCSI_BDQ_EXT_PROD_OFFSET(storage_func_id, bdq_id) \
-+	(IRO[43].base + ((storage_func_id) * IRO[43].m1) + \
-+	 ((bdq_id) * IRO[43].m2))
-+#define TSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[43].size)
-+
-+/* Mstorm bdq-external-producer of given BDQ resource ID, BDqueue-id */
-+#define MSTORM_SCSI_BDQ_EXT_PROD_OFFSET(storage_func_id, bdq_id) \
-+	(IRO[44].base + ((storage_func_id) * IRO[44].m1) + \
-+	 ((bdq_id) * IRO[44].m2))
-+#define MSTORM_SCSI_BDQ_EXT_PROD_SIZE			(IRO[44].size)
-+
-+/* Tstorm iSCSI RX stats */
-+#define TSTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
-+	(IRO[45].base + ((storage_func_id) * IRO[45].m1))
-+#define TSTORM_ISCSI_RX_STATS_SIZE			(IRO[45].size)
-+
-+/* Mstorm iSCSI RX stats */
-+#define MSTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
-+	(IRO[46].base + ((storage_func_id) * IRO[46].m1))
-+#define MSTORM_ISCSI_RX_STATS_SIZE			(IRO[46].size)
-+
-+/* Ustorm iSCSI RX stats */
-+#define USTORM_ISCSI_RX_STATS_OFFSET(storage_func_id) \
-+	(IRO[47].base + ((storage_func_id) * IRO[47].m1))
-+#define USTORM_ISCSI_RX_STATS_SIZE			(IRO[47].size)
-+
-+/* Xstorm iSCSI TX stats */
-+#define XSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
-+	(IRO[48].base + ((storage_func_id) * IRO[48].m1))
-+#define XSTORM_ISCSI_TX_STATS_SIZE			(IRO[48].size)
-+
-+/* Ystorm iSCSI TX stats */
-+#define YSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
-+	(IRO[49].base + ((storage_func_id) * IRO[49].m1))
-+#define YSTORM_ISCSI_TX_STATS_SIZE			(IRO[49].size)
-+
-+/* Pstorm iSCSI TX stats */
-+#define PSTORM_ISCSI_TX_STATS_OFFSET(storage_func_id) \
-+	(IRO[50].base + ((storage_func_id) * IRO[50].m1))
-+#define PSTORM_ISCSI_TX_STATS_SIZE			(IRO[50].size)
-+
-+/* Tstorm FCoE RX stats */
-+#define TSTORM_FCOE_RX_STATS_OFFSET(pf_id) \
-+	(IRO[51].base + ((pf_id) * IRO[51].m1))
-+#define TSTORM_FCOE_RX_STATS_SIZE			(IRO[51].size)
-+
-+/* Pstorm FCoE TX stats */
-+#define PSTORM_FCOE_TX_STATS_OFFSET(pf_id) \
-+	(IRO[52].base + ((pf_id) * IRO[52].m1))
-+#define PSTORM_FCOE_TX_STATS_SIZE			(IRO[52].size)
-+
-+/* Pstorm RDMA queue statistics */
-+#define PSTORM_RDMA_QUEUE_STAT_OFFSET(rdma_stat_counter_id) \
-+	(IRO[53].base + ((rdma_stat_counter_id) * IRO[53].m1))
-+#define PSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[53].size)
-+
-+/* Tstorm RDMA queue statistics */
-+#define TSTORM_RDMA_QUEUE_STAT_OFFSET(rdma_stat_counter_id) \
-+	(IRO[54].base + ((rdma_stat_counter_id) * IRO[54].m1))
-+#define TSTORM_RDMA_QUEUE_STAT_SIZE			(IRO[54].size)
-+
-+/* Xstorm error level for assert */
-+#define XSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
-+	(IRO[55].base + ((pf_id) * IRO[55].m1))
-+#define XSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[55].size)
-+
-+/* Ystorm error level for assert */
-+#define YSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
-+	(IRO[56].base + ((pf_id) * IRO[56].m1))
-+#define YSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[56].size)
-+
-+/* Pstorm error level for assert */
-+#define PSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
-+	(IRO[57].base + ((pf_id) * IRO[57].m1))
-+#define PSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[57].size)
-+
-+/* Tstorm error level for assert */
-+#define TSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
-+	(IRO[58].base + ((pf_id) * IRO[58].m1))
-+#define TSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[58].size)
-+
-+/* Mstorm error level for assert */
-+#define MSTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
-+	(IRO[59].base + ((pf_id) * IRO[59].m1))
-+#define MSTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[59].size)
-+
-+/* Ustorm error level for assert */
-+#define USTORM_RDMA_ASSERT_LEVEL_OFFSET(pf_id) \
-+	(IRO[60].base + ((pf_id) * IRO[60].m1))
-+#define USTORM_RDMA_ASSERT_LEVEL_SIZE			(IRO[60].size)
-+
-+/* Xstorm iWARP rxmit stats */
-+#define XSTORM_IWARP_RXMIT_STATS_OFFSET(pf_id) \
-+	(IRO[61].base + ((pf_id) * IRO[61].m1))
-+#define XSTORM_IWARP_RXMIT_STATS_SIZE			(IRO[61].size)
-+
-+/* Tstorm RoCE Event Statistics */
-+#define TSTORM_ROCE_EVENTS_STAT_OFFSET(roce_pf_id)	\
-+	(IRO[62].base + ((roce_pf_id) * IRO[62].m1))
-+#define TSTORM_ROCE_EVENTS_STAT_SIZE			(IRO[62].size)
-+
-+/* DCQCN Received Statistics */
-+#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_OFFSET(roce_pf_id)\
-+	(IRO[63].base + ((roce_pf_id) * IRO[63].m1))
-+#define YSTORM_ROCE_DCQCN_RECEIVED_STATS_SIZE		(IRO[63].size)
-+
-+/* RoCE Error Statistics */
-+#define YSTORM_ROCE_ERROR_STATS_OFFSET(roce_pf_id)	\
-+	(IRO[64].base + ((roce_pf_id) * IRO[64].m1))
-+#define YSTORM_ROCE_ERROR_STATS_SIZE			(IRO[64].size)
-+
-+/* DCQCN Sent Statistics */
-+#define PSTORM_ROCE_DCQCN_SENT_STATS_OFFSET(roce_pf_id)	\
-+	(IRO[65].base + ((roce_pf_id) * IRO[65].m1))
-+#define PSTORM_ROCE_DCQCN_SENT_STATS_SIZE		(IRO[65].size)
-+
-+/* RoCE CQEs Statistics */
-+#define USTORM_ROCE_CQE_STATS_OFFSET(roce_pf_id)	\
-+	(IRO[66].base + ((roce_pf_id) * IRO[66].m1))
-+#define USTORM_ROCE_CQE_STATS_SIZE			(IRO[66].size)
-+
-+#endif
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_iscsi.c b/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-index db926d8b3033..b116b3183939 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
-@@ -29,6 +29,7 @@
- #include "qed_hsi.h"
- #include "qed_hw.h"
- #include "qed_int.h"
-+#include "qed_iro_hsi.h"
- #include "qed_iscsi.h"
- #include "qed_ll2.h"
- #include "qed_mcp.h"
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_l2.c b/drivers/net/ethernet/qlogic/qed/qed_l2.c
-index ba8c7a31cce1..991bf4313da6 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_l2.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_l2.c
-@@ -28,6 +28,7 @@
- #include "qed_dev_api.h"
- #include <linux/qed/qed_eth_if.h>
- #include "qed_hsi.h"
-+#include "qed_iro_hsi.h"
- #include "qed_hw.h"
- #include "qed_int.h"
- #include "qed_l2.h"
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_ll2.c b/drivers/net/ethernet/qlogic/qed/qed_ll2.c
-index bf48a66704bd..5e586a1cf4aa 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_ll2.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_ll2.c
-@@ -28,6 +28,7 @@
- #include "qed_cxt.h"
- #include "qed_dev_api.h"
- #include "qed_hsi.h"
-+#include "qed_iro_hsi.h"
- #include "qed_hw.h"
- #include "qed_int.h"
- #include "qed_ll2.h"
-@@ -106,7 +107,7 @@ static int qed_ll2_alloc_buffer(struct qed_dev *cdev,
+  */
+ 
+ #include <linux/module.h>
+@@ -122,6 +122,11 @@ static u32 cond0(const u32 *r, const u32 *imm)
+ 	return (r[0] & ~r[1]) != imm[0];
  }
  
- static int qed_ll2_dealloc_buffer(struct qed_dev *cdev,
--				 struct qed_ll2_buffer *buffer)
-+				  struct qed_ll2_buffer *buffer)
- {
- 	spin_lock_bh(&cdev->ll2->lock);
- 
-@@ -1124,6 +1125,7 @@ static int qed_sp_ll2_tx_queue_stop(struct qed_hwfn *p_hwfn,
- 	struct qed_spq_entry *p_ent = NULL;
- 	struct qed_sp_init_data init_data;
- 	int rc = -EINVAL;
++static u32 cond14(const u32 *r, const u32 *imm)
++{
++	return (r[0] | imm[0]) != imm[1];
++}
 +
- 	qed_db_recovery_del(p_hwfn->cdev, p_tx->doorbell_addr, &p_tx->db_msg);
+ static u32 cond1(const u32 *r, const u32 *imm)
+ {
+ 	return r[0] != imm[0];
+@@ -173,6 +178,7 @@ static u32(*cond_arr[]) (const u32 *r, const u32 *imm) = {
+ 	cond11,
+ 	cond12,
+ 	cond13,
++	cond14,
+ };
  
- 	/* Get SPQ entry */
-@@ -1762,7 +1764,7 @@ int qed_ll2_post_rx_buffer(void *cxt,
+ #define NUM_PHYS_BLOCKS 84
+@@ -209,10 +215,61 @@ enum dbg_bus_frame_modes {
+ 	DBG_BUS_NUM_FRAME_MODES
+ };
+ 
++/* Debug bus SEMI frame modes */
++enum dbg_bus_semi_frame_modes {
++	DBG_BUS_SEMI_FRAME_MODE_4FAST = 0,	/* 4 fast dw */
++	DBG_BUS_SEMI_FRAME_MODE_2FAST_2SLOW = 1, /* 2 fast dw, 2 slow dw */
++	DBG_BUS_SEMI_FRAME_MODE_1FAST_3SLOW = 2, /* 1 fast dw,3 slow dw */
++	DBG_BUS_SEMI_FRAME_MODE_4SLOW = 3,	/* 4 slow dw */
++	DBG_BUS_SEMI_NUM_FRAME_MODES
++};
++
++/* Debug bus filter types */
++enum dbg_bus_filter_types {
++	DBG_BUS_FILTER_TYPE_OFF,	/* Filter always off */
++	DBG_BUS_FILTER_TYPE_PRE,	/* Filter before trigger only */
++	DBG_BUS_FILTER_TYPE_POST,	/* Filter after trigger only */
++	DBG_BUS_FILTER_TYPE_ON	/* Filter always on */
++};
++
++/* Debug bus pre-trigger recording types */
++enum dbg_bus_pre_trigger_types {
++	DBG_BUS_PRE_TRIGGER_FROM_ZERO,	/* Record from time 0 */
++	DBG_BUS_PRE_TRIGGER_NUM_CHUNKS,	/* Record some chunks before trigger */
++	DBG_BUS_PRE_TRIGGER_DROP	/* Drop data before trigger */
++};
++
++/* Debug bus post-trigger recording types */
++enum dbg_bus_post_trigger_types {
++	DBG_BUS_POST_TRIGGER_RECORD,	/* Start recording after trigger */
++	DBG_BUS_POST_TRIGGER_DROP	/* Drop data after trigger */
++};
++
++/* Debug bus other engine mode */
++enum dbg_bus_other_engine_modes {
++	DBG_BUS_OTHER_ENGINE_MODE_NONE,
++	DBG_BUS_OTHER_ENGINE_MODE_DOUBLE_BW_TX,
++	DBG_BUS_OTHER_ENGINE_MODE_DOUBLE_BW_RX,
++	DBG_BUS_OTHER_ENGINE_MODE_CROSS_ENGINE_TX,
++	DBG_BUS_OTHER_ENGINE_MODE_CROSS_ENGINE_RX
++};
++
++/* DBG block Framing mode definitions */
++struct framing_mode_defs {
++	u8 id;
++	u8 blocks_dword_mask;
++	u8 storms_dword_mask;
++	u8 semi_framing_mode_id;
++	u8 full_buf_thr;
++};
++
+ /* Chip constant definitions */
+ struct chip_defs {
+ 	const char *name;
++	u8 dwords_per_cycle;
++	u8 num_framing_modes;
+ 	u32 num_ilt_pages;
++	struct framing_mode_defs *framing_modes;
+ };
+ 
+ /* HW type constant definitions */
+@@ -335,7 +392,7 @@ struct split_type_defs {
+ #define FIELD_BIT_OFFSET(type, field)	type ## _ ## field ## _ ## OFFSET
+ #define FIELD_BIT_SIZE(type, field)	type ## _ ## field ## _ ## SIZE
+ #define FIELD_DWORD_OFFSET(type, field) \
+-	 (int)(FIELD_BIT_OFFSET(type, field) / 32)
++	 ((int)(FIELD_BIT_OFFSET(type, field) / 32))
+ #define FIELD_DWORD_SHIFT(type, field)	(FIELD_BIT_OFFSET(type, field) % 32)
+ #define FIELD_BIT_MASK(type, field) \
+ 	(((1 << FIELD_BIT_SIZE(type, field)) - 1) << \
+@@ -432,11 +489,13 @@ struct split_type_defs {
+ 
+ #define STATIC_DEBUG_LINE_DWORDS	9
+ 
+-#define NUM_COMMON_GLOBAL_PARAMS	9
++#define NUM_COMMON_GLOBAL_PARAMS	11
+ 
+ #define MAX_RECURSION_DEPTH		10
+ 
++#define FW_IMG_KUKU                     0
+ #define FW_IMG_MAIN			1
++#define FW_IMG_L2B                      2
+ 
+ #define REG_FIFO_ELEMENT_DWORDS		2
+ #define REG_FIFO_DEPTH_ELEMENTS		32
+@@ -465,10 +524,25 @@ struct split_type_defs {
+ 
+ /***************************** Constant Arrays *******************************/
+ 
++/* DBG block framing mode definitions, in descending preference order */
++static struct framing_mode_defs s_framing_mode_defs[4] = {
++	{DBG_BUS_FRAME_MODE_4ST, 0x0, 0xf,
++	 DBG_BUS_SEMI_FRAME_MODE_4FAST,
++	 10},
++	{DBG_BUS_FRAME_MODE_4HW, 0xf, 0x0, DBG_BUS_SEMI_FRAME_MODE_4SLOW,
++	 10},
++	{DBG_BUS_FRAME_MODE_2ST_2HW, 0x3, 0xc,
++	 DBG_BUS_SEMI_FRAME_MODE_2FAST_2SLOW, 10},
++	{DBG_BUS_FRAME_MODE_1ST_3HW, 0x7, 0x8,
++	 DBG_BUS_SEMI_FRAME_MODE_1FAST_3SLOW, 10}
++};
++
+ /* Chip constant definitions array */
+ static struct chip_defs s_chip_defs[MAX_CHIP_IDS] = {
+-	{"bb", PSWRQ2_REG_ILT_MEMORY_SIZE_BB / 2},
+-	{"ah", PSWRQ2_REG_ILT_MEMORY_SIZE_K2 / 2}
++	{"bb", 4, DBG_BUS_NUM_FRAME_MODES, PSWRQ2_REG_ILT_MEMORY_SIZE_BB / 2,
++	 s_framing_mode_defs},
++	{"ah", 4, DBG_BUS_NUM_FRAME_MODES, PSWRQ2_REG_ILT_MEMORY_SIZE_K2 / 2,
++	 s_framing_mode_defs}
+ };
+ 
+ /* Storm constant definitions array */
+@@ -478,8 +552,8 @@ static struct storm_defs s_storm_defs[] = {
+ 		{DBG_BUS_CLIENT_RBCT, DBG_BUS_CLIENT_RBCT},
+ 		true,
+ 		TSEM_REG_FAST_MEMORY,
+-		TSEM_REG_DBG_FRAME_MODE_BB_K2, TSEM_REG_SLOW_DBG_ACTIVE_BB_K2,
+-		TSEM_REG_SLOW_DBG_MODE_BB_K2, TSEM_REG_DBG_MODE1_CFG_BB_K2,
++		TSEM_REG_DBG_FRAME_MODE, TSEM_REG_SLOW_DBG_ACTIVE,
++		TSEM_REG_SLOW_DBG_MODE, TSEM_REG_DBG_MODE1_CFG,
+ 		TSEM_REG_SYNC_DBG_EMPTY, TSEM_REG_DBG_GPRE_VECT,
+ 		TCM_REG_CTX_RBC_ACCS,
+ 		{TCM_REG_AGG_CON_CTX, TCM_REG_SM_CON_CTX, TCM_REG_AGG_TASK_CTX,
+@@ -492,10 +566,10 @@ static struct storm_defs s_storm_defs[] = {
+ 		{DBG_BUS_CLIENT_RBCT, DBG_BUS_CLIENT_RBCM},
+ 		false,
+ 		MSEM_REG_FAST_MEMORY,
+-		MSEM_REG_DBG_FRAME_MODE_BB_K2,
+-		MSEM_REG_SLOW_DBG_ACTIVE_BB_K2,
+-		MSEM_REG_SLOW_DBG_MODE_BB_K2,
+-		MSEM_REG_DBG_MODE1_CFG_BB_K2,
++		MSEM_REG_DBG_FRAME_MODE,
++		MSEM_REG_SLOW_DBG_ACTIVE,
++		MSEM_REG_SLOW_DBG_MODE,
++		MSEM_REG_DBG_MODE1_CFG,
+ 		MSEM_REG_SYNC_DBG_EMPTY,
+ 		MSEM_REG_DBG_GPRE_VECT,
+ 		MCM_REG_CTX_RBC_ACCS,
+@@ -509,10 +583,10 @@ static struct storm_defs s_storm_defs[] = {
+ 		{DBG_BUS_CLIENT_RBCU, DBG_BUS_CLIENT_RBCU},
+ 		false,
+ 		USEM_REG_FAST_MEMORY,
+-		USEM_REG_DBG_FRAME_MODE_BB_K2,
+-		USEM_REG_SLOW_DBG_ACTIVE_BB_K2,
+-		USEM_REG_SLOW_DBG_MODE_BB_K2,
+-		USEM_REG_DBG_MODE1_CFG_BB_K2,
++		USEM_REG_DBG_FRAME_MODE,
++		USEM_REG_SLOW_DBG_ACTIVE,
++		USEM_REG_SLOW_DBG_MODE,
++		USEM_REG_DBG_MODE1_CFG,
+ 		USEM_REG_SYNC_DBG_EMPTY,
+ 		USEM_REG_DBG_GPRE_VECT,
+ 		UCM_REG_CTX_RBC_ACCS,
+@@ -526,10 +600,10 @@ static struct storm_defs s_storm_defs[] = {
+ 		{DBG_BUS_CLIENT_RBCX, DBG_BUS_CLIENT_RBCX},
+ 		false,
+ 		XSEM_REG_FAST_MEMORY,
+-		XSEM_REG_DBG_FRAME_MODE_BB_K2,
+-		XSEM_REG_SLOW_DBG_ACTIVE_BB_K2,
+-		XSEM_REG_SLOW_DBG_MODE_BB_K2,
+-		XSEM_REG_DBG_MODE1_CFG_BB_K2,
++		XSEM_REG_DBG_FRAME_MODE,
++		XSEM_REG_SLOW_DBG_ACTIVE,
++		XSEM_REG_SLOW_DBG_MODE,
++		XSEM_REG_DBG_MODE1_CFG,
+ 		XSEM_REG_SYNC_DBG_EMPTY,
+ 		XSEM_REG_DBG_GPRE_VECT,
+ 		XCM_REG_CTX_RBC_ACCS,
+@@ -542,10 +616,10 @@ static struct storm_defs s_storm_defs[] = {
+ 		{DBG_BUS_CLIENT_RBCX, DBG_BUS_CLIENT_RBCY},
+ 		false,
+ 		YSEM_REG_FAST_MEMORY,
+-		YSEM_REG_DBG_FRAME_MODE_BB_K2,
+-		YSEM_REG_SLOW_DBG_ACTIVE_BB_K2,
+-		YSEM_REG_SLOW_DBG_MODE_BB_K2,
+-		YSEM_REG_DBG_MODE1_CFG_BB_K2,
++		YSEM_REG_DBG_FRAME_MODE,
++		YSEM_REG_SLOW_DBG_ACTIVE,
++		YSEM_REG_SLOW_DBG_MODE,
++		YSEM_REG_DBG_MODE1_CFG,
+ 		YSEM_REG_SYNC_DBG_EMPTY,
+ 		YSEM_REG_DBG_GPRE_VECT,
+ 		YCM_REG_CTX_RBC_ACCS,
+@@ -559,10 +633,10 @@ static struct storm_defs s_storm_defs[] = {
+ 		{DBG_BUS_CLIENT_RBCS, DBG_BUS_CLIENT_RBCS},
+ 		true,
+ 		PSEM_REG_FAST_MEMORY,
+-		PSEM_REG_DBG_FRAME_MODE_BB_K2,
+-		PSEM_REG_SLOW_DBG_ACTIVE_BB_K2,
+-		PSEM_REG_SLOW_DBG_MODE_BB_K2,
+-		PSEM_REG_DBG_MODE1_CFG_BB_K2,
++		PSEM_REG_DBG_FRAME_MODE,
++		PSEM_REG_SLOW_DBG_ACTIVE,
++		PSEM_REG_SLOW_DBG_MODE,
++		PSEM_REG_DBG_MODE1_CFG,
+ 		PSEM_REG_SYNC_DBG_EMPTY,
+ 		PSEM_REG_DBG_GPRE_VECT,
+ 		PCM_REG_CTX_RBC_ACCS,
+@@ -576,7 +650,8 @@ static struct hw_type_defs s_hw_type_defs[] = {
+ 	{"asic", 1, 256, 32768},
+ 	{"reserved", 0, 0, 0},
+ 	{"reserved2", 0, 0, 0},
+-	{"reserved3", 0, 0, 0}
++	{"reserved3", 0, 0, 0},
++	{"reserved4", 0, 0, 0}
+ };
+ 
+ static struct grc_param_defs s_grc_param_defs[] = {
+@@ -773,25 +848,25 @@ static struct rbc_reset_defs s_rbc_reset_defs[] = {
+ 
+ static struct phy_defs s_phy_defs[] = {
+ 	{"nw_phy", NWS_REG_NWS_CMU_K2,
+-	 PHY_NW_IP_REG_PHY0_TOP_TBUS_ADDR_7_0_K2_E5,
+-	 PHY_NW_IP_REG_PHY0_TOP_TBUS_ADDR_15_8_K2_E5,
+-	 PHY_NW_IP_REG_PHY0_TOP_TBUS_DATA_7_0_K2_E5,
+-	 PHY_NW_IP_REG_PHY0_TOP_TBUS_DATA_11_8_K2_E5},
+-	{"sgmii_phy", MS_REG_MS_CMU_K2_E5,
+-	 PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X132_K2_E5,
+-	 PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X133_K2_E5,
+-	 PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X130_K2_E5,
+-	 PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X131_K2_E5},
+-	{"pcie_phy0", PHY_PCIE_REG_PHY0_K2_E5,
+-	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X132_K2_E5,
+-	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X133_K2_E5,
+-	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X130_K2_E5,
+-	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X131_K2_E5},
+-	{"pcie_phy1", PHY_PCIE_REG_PHY1_K2_E5,
+-	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X132_K2_E5,
+-	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X133_K2_E5,
+-	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X130_K2_E5,
+-	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X131_K2_E5},
++	 PHY_NW_IP_REG_PHY0_TOP_TBUS_ADDR_7_0_K2,
++	 PHY_NW_IP_REG_PHY0_TOP_TBUS_ADDR_15_8_K2,
++	 PHY_NW_IP_REG_PHY0_TOP_TBUS_DATA_7_0_K2,
++	 PHY_NW_IP_REG_PHY0_TOP_TBUS_DATA_11_8_K2},
++	{"sgmii_phy", MS_REG_MS_CMU_K2,
++	 PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X132_K2,
++	 PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X133_K2,
++	 PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X130_K2,
++	 PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X131_K2},
++	{"pcie_phy0", PHY_PCIE_REG_PHY0_K2,
++	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X132_K2,
++	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X133_K2,
++	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X130_K2,
++	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X131_K2},
++	{"pcie_phy1", PHY_PCIE_REG_PHY1_K2,
++	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X132_K2,
++	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X133_K2,
++	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X130_K2,
++	 PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X131_K2},
+ };
+ 
+ static struct split_type_defs s_split_type_defs[] = {
+@@ -811,8 +886,17 @@ static struct split_type_defs s_split_type_defs[] = {
+ 	{"vf"}
+ };
+ 
++/******************************** Variables **********************************/
++
++/* The version of the calling app */
++static u32 s_app_ver;
++
+ /**************************** Private Functions ******************************/
+ 
++static void qed_static_asserts(void)
++{
++}
++
+ /* Reads and returns a single dword from the specified unaligned buffer */
+ static u32 qed_read_unaligned_dword(u8 *buf)
+ {
+@@ -871,6 +955,9 @@ static enum dbg_status qed_dbg_dev_init(struct qed_hwfn *p_hwfn)
+ 	if (dev_data->initialized)
+ 		return DBG_STATUS_OK;
+ 
++	if (!s_app_ver)
++		return DBG_STATUS_APP_VERSION_NOT_SET;
++
+ 	/* Set chip */
+ 	if (QED_IS_K2(p_hwfn->cdev)) {
+ 		dev_data->chip_id = CHIP_K2;
+@@ -991,11 +1078,6 @@ static void qed_read_storm_fw_info(struct qed_hwfn *p_hwfn,
+ 	for (i = 0; i < size; i++, addr += BYTES_IN_DWORD)
+ 		dest[i] = qed_rd(p_hwfn, p_ptt, addr);
+ 
+-	/* qed_rq() fetches data in CPU byteorder. Swap it back to
+-	 * the device's to get right structure layout.
+-	 */
+-	cpu_to_le32_array(dest, size);
+-
+ 	/* Read FW version info from Storm RAM */
+ 	size = le32_to_cpu(fw_info_location.size);
+ 	if (!size || size > sizeof(*fw_info))
+@@ -1007,8 +1089,6 @@ static void qed_read_storm_fw_info(struct qed_hwfn *p_hwfn,
+ 
+ 	for (i = 0; i < size; i++, addr += BYTES_IN_DWORD)
+ 		dest[i] = qed_rd(p_hwfn, p_ptt, addr);
+-
+-	cpu_to_le32_array(dest, size);
+ }
+ 
+ /* Dumps the specified string to the specified buffer.
+@@ -1118,9 +1198,15 @@ static u32 qed_dump_fw_ver_param(struct qed_hwfn *p_hwfn,
+ 			DP_NOTICE(p_hwfn,
+ 				  "Unexpected debug error: invalid FW version string\n");
+ 		switch (fw_info.ver.image_id) {
++		case FW_IMG_KUKU:
++			strcpy(fw_img_str, "kuku");
++			break;
+ 		case FW_IMG_MAIN:
+ 			strcpy(fw_img_str, "main");
+ 			break;
++		case FW_IMG_L2B:
++			strcpy(fw_img_str, "l2b");
++			break;
+ 		default:
+ 			strcpy(fw_img_str, "unknown");
+ 			break;
+@@ -1229,6 +1315,7 @@ static u32 qed_dump_common_global_params(struct qed_hwfn *p_hwfn,
+ 					 u8 num_specific_global_params)
+ {
+ 	struct dbg_tools_data *dev_data = &p_hwfn->dbg_info;
++	char sw_platform_str[MAX_SW_PLTAFORM_STR_SIZE];
+ 	u32 offset = 0;
+ 	u8 num_params;
+ 
+@@ -1254,8 +1341,12 @@ static u32 qed_dump_common_global_params(struct qed_hwfn *p_hwfn,
+ 				     dump,
+ 				     "platform",
+ 				     s_hw_type_defs[dev_data->hw_type].name);
++	offset += qed_dump_str_param(dump_buf + offset,
++				     dump, "sw-platform", sw_platform_str);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump, "pci-func", p_hwfn->abs_pf_id);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump, "epoch", qed_get_epoch_time());
+ 	if (dev_data->chip_id == CHIP_BB)
+ 		offset += qed_dump_num_param(dump_buf + offset,
+ 					     dump, "path", QED_PATH_ID(p_hwfn));
+@@ -1591,7 +1682,7 @@ static void qed_grc_stall_storms(struct qed_hwfn *p_hwfn,
+ 			continue;
+ 
+ 		reg_addr = s_storm_defs[storm_id].sem_fast_mem_addr +
+-		    SEM_FAST_REG_STALL_0_BB_K2;
++		    SEM_FAST_REG_STALL_0;
+ 		qed_wr(p_hwfn, p_ptt, reg_addr, stall ? 1 : 0);
+ 	}
+ 
+@@ -1704,8 +1795,8 @@ static void qed_grc_clear_all_prty(struct qed_hwfn *p_hwfn,
+ {
+ 	struct dbg_tools_data *dev_data = &p_hwfn->dbg_info;
+ 	const struct dbg_attn_reg *attn_reg_arr;
++	u32 block_id, sts_clr_address;
+ 	u8 reg_idx, num_attn_regs;
+-	u32 block_id;
+ 
+ 	for (block_id = 0; block_id < NUM_PHYS_BLOCKS; block_id++) {
+ 		if (dev_data->block_in_reset[block_id])
+@@ -1729,16 +1820,103 @@ static void qed_grc_clear_all_prty(struct qed_hwfn *p_hwfn,
+ 				GET_FIELD(reg_data->mode.data,
+ 					  DBG_MODE_HDR_MODES_BUF_OFFSET);
+ 
++			sts_clr_address = reg_data->sts_clr_address;
+ 			/* If Mode match: clear parity status */
+ 			if (!eval_mode ||
+ 			    qed_is_mode_match(p_hwfn, &modes_buf_offset))
+ 				qed_rd(p_hwfn, p_ptt,
+-				       DWORDS_TO_BYTES(reg_data->
+-						       sts_clr_address));
++				       DWORDS_TO_BYTES(sts_clr_address));
+ 		}
+ 	}
+ }
+ 
++/* Finds the meta data image in NVRAM */
++static enum dbg_status qed_find_nvram_image(struct qed_hwfn *p_hwfn,
++					    struct qed_ptt *p_ptt,
++					    u32 image_type,
++					    u32 *nvram_offset_bytes,
++					    u32 *nvram_size_bytes)
++{
++	u32 ret_mcp_resp, ret_mcp_param, ret_txn_size;
++	struct mcp_file_att file_att;
++	int nvm_result;
++
++	/* Call NVRAM get file command */
++	nvm_result = qed_mcp_nvm_rd_cmd(p_hwfn,
++					p_ptt,
++					DRV_MSG_CODE_NVM_GET_FILE_ATT,
++					image_type,
++					&ret_mcp_resp,
++					&ret_mcp_param,
++					&ret_txn_size,
++					(u32 *)&file_att, false);
++
++	/* Check response */
++	if (nvm_result || (ret_mcp_resp & FW_MSG_CODE_MASK) !=
++	    FW_MSG_CODE_NVM_OK)
++		return DBG_STATUS_NVRAM_GET_IMAGE_FAILED;
++
++	/* Update return values */
++	*nvram_offset_bytes = file_att.nvm_start_addr;
++	*nvram_size_bytes = file_att.len;
++
++	DP_VERBOSE(p_hwfn,
++		   QED_MSG_DEBUG,
++		   "find_nvram_image: found NVRAM image of type %d in NVRAM offset %d bytes with size %d bytes\n",
++		   image_type, *nvram_offset_bytes, *nvram_size_bytes);
++
++	/* Check alignment */
++	if (*nvram_size_bytes & 0x3)
++		return DBG_STATUS_NON_ALIGNED_NVRAM_IMAGE;
++
++	return DBG_STATUS_OK;
++}
++
++/* Reads data from NVRAM */
++static enum dbg_status qed_nvram_read(struct qed_hwfn *p_hwfn,
++				      struct qed_ptt *p_ptt,
++				      u32 nvram_offset_bytes,
++				      u32 nvram_size_bytes, u32 *ret_buf)
++{
++	u32 ret_mcp_resp, ret_mcp_param, ret_read_size, bytes_to_copy;
++	s32 bytes_left = nvram_size_bytes;
++	u32 read_offset = 0, param = 0;
++
++	DP_VERBOSE(p_hwfn,
++		   QED_MSG_DEBUG,
++		   "nvram_read: reading image of size %d bytes from NVRAM\n",
++		   nvram_size_bytes);
++
++	do {
++		bytes_to_copy =
++		    (bytes_left >
++		     MCP_DRV_NVM_BUF_LEN) ? MCP_DRV_NVM_BUF_LEN : bytes_left;
++
++		/* Call NVRAM read command */
++		SET_MFW_FIELD(param,
++			      DRV_MB_PARAM_NVM_OFFSET,
++			      nvram_offset_bytes + read_offset);
++		SET_MFW_FIELD(param, DRV_MB_PARAM_NVM_LEN, bytes_to_copy);
++		if (qed_mcp_nvm_rd_cmd(p_hwfn, p_ptt,
++				       DRV_MSG_CODE_NVM_READ_NVRAM, param,
++				       &ret_mcp_resp,
++				       &ret_mcp_param, &ret_read_size,
++				       (u32 *)((u8 *)ret_buf + read_offset),
++				       false))
++			return DBG_STATUS_NVRAM_READ_FAILED;
++
++		/* Check response */
++		if ((ret_mcp_resp & FW_MSG_CODE_MASK) != FW_MSG_CODE_NVM_OK)
++			return DBG_STATUS_NVRAM_READ_FAILED;
++
++		/* Update read offset */
++		read_offset += ret_read_size;
++		bytes_left -= ret_read_size;
++	} while (bytes_left > 0);
++
++	return DBG_STATUS_OK;
++}
++
+ /* Dumps GRC registers section header. Returns the dumped size in dwords.
+  * the following parameters are dumped:
+  * - count: no. of dumped entries
+@@ -3190,17 +3368,6 @@ static u32 qed_grc_dump_phy(struct qed_hwfn *p_hwfn,
+ 	return offset;
+ }
+ 
+-static enum dbg_status qed_find_nvram_image(struct qed_hwfn *p_hwfn,
+-					    struct qed_ptt *p_ptt,
+-					    u32 image_type,
+-					    u32 *nvram_offset_bytes,
+-					    u32 *nvram_size_bytes);
+-
+-static enum dbg_status qed_nvram_read(struct qed_hwfn *p_hwfn,
+-				      struct qed_ptt *p_ptt,
+-				      u32 nvram_offset_bytes,
+-				      u32 nvram_size_bytes, u32 *ret_buf);
+-
+ /* Dumps the MCP HW dump from NVRAM. Returns the dumped size in dwords. */
+ static u32 qed_grc_dump_mcp_hw_dump(struct qed_hwfn *p_hwfn,
+ 				    struct qed_ptt *p_ptt,
+@@ -3284,10 +3451,6 @@ static u32 qed_grc_dump_static_debug(struct qed_hwfn *p_hwfn,
+ 		has_dbg_bus = GET_FIELD(block_per_chip->flags,
+ 					DBG_BLOCK_CHIP_HAS_DBG_BUS);
+ 
+-		/* read+clear for NWS parity is not working, skip NWS block */
+-		if (block_id == BLOCK_NWS)
+-			continue;
+-
+ 		if (!is_removed && has_dbg_bus &&
+ 		    GET_FIELD(block_per_chip->dbg_bus_mode.data,
+ 			      DBG_MODE_HDR_EVAL_MODE) > 0) {
+@@ -3376,8 +3539,8 @@ static enum dbg_status qed_grc_dump(struct qed_hwfn *p_hwfn,
+ 				    bool dump, u32 *num_dumped_dwords)
+ {
+ 	struct dbg_tools_data *dev_data = &p_hwfn->dbg_info;
+-	u32 dwords_read, offset = 0;
+ 	bool parities_masked = false;
++	u32 dwords_read, offset = 0;
+ 	u8 i;
+ 
+ 	*num_dumped_dwords = 0;
+@@ -3546,8 +3709,7 @@ static enum dbg_status qed_grc_dump(struct qed_hwfn *p_hwfn,
+  */
+ static u32 qed_idle_chk_dump_failure(struct qed_hwfn *p_hwfn,
+ 				     struct qed_ptt *p_ptt,
+-				     u32 *
+-				     dump_buf,
++				     u32 *dump_buf,
+ 				     bool dump,
+ 				     u16 rule_id,
+ 				     const struct dbg_idle_chk_rule *rule,
+@@ -3895,91 +4057,6 @@ static u32 qed_idle_chk_dump(struct qed_hwfn *p_hwfn,
+ 	return offset;
+ }
+ 
+-/* Finds the meta data image in NVRAM */
+-static enum dbg_status qed_find_nvram_image(struct qed_hwfn *p_hwfn,
+-					    struct qed_ptt *p_ptt,
+-					    u32 image_type,
+-					    u32 *nvram_offset_bytes,
+-					    u32 *nvram_size_bytes)
+-{
+-	u32 ret_mcp_resp, ret_mcp_param, ret_txn_size;
+-	struct mcp_file_att file_att;
+-	int nvm_result;
+-
+-	/* Call NVRAM get file command */
+-	nvm_result = qed_mcp_nvm_rd_cmd(p_hwfn,
+-					p_ptt,
+-					DRV_MSG_CODE_NVM_GET_FILE_ATT,
+-					image_type,
+-					&ret_mcp_resp,
+-					&ret_mcp_param,
+-					&ret_txn_size, (u32 *)&file_att);
+-
+-	/* Check response */
+-	if (nvm_result ||
+-	    (ret_mcp_resp & FW_MSG_CODE_MASK) != FW_MSG_CODE_NVM_OK)
+-		return DBG_STATUS_NVRAM_GET_IMAGE_FAILED;
+-
+-	/* Update return values */
+-	*nvram_offset_bytes = file_att.nvm_start_addr;
+-	*nvram_size_bytes = file_att.len;
+-
+-	DP_VERBOSE(p_hwfn,
+-		   QED_MSG_DEBUG,
+-		   "find_nvram_image: found NVRAM image of type %d in NVRAM offset %d bytes with size %d bytes\n",
+-		   image_type, *nvram_offset_bytes, *nvram_size_bytes);
+-
+-	/* Check alignment */
+-	if (*nvram_size_bytes & 0x3)
+-		return DBG_STATUS_NON_ALIGNED_NVRAM_IMAGE;
+-
+-	return DBG_STATUS_OK;
+-}
+-
+-/* Reads data from NVRAM */
+-static enum dbg_status qed_nvram_read(struct qed_hwfn *p_hwfn,
+-				      struct qed_ptt *p_ptt,
+-				      u32 nvram_offset_bytes,
+-				      u32 nvram_size_bytes, u32 *ret_buf)
+-{
+-	u32 ret_mcp_resp, ret_mcp_param, ret_read_size, bytes_to_copy;
+-	s32 bytes_left = nvram_size_bytes;
+-	u32 read_offset = 0, param = 0;
+-
+-	DP_VERBOSE(p_hwfn,
+-		   QED_MSG_DEBUG,
+-		   "nvram_read: reading image of size %d bytes from NVRAM\n",
+-		   nvram_size_bytes);
+-
+-	do {
+-		bytes_to_copy =
+-		    (bytes_left >
+-		     MCP_DRV_NVM_BUF_LEN) ? MCP_DRV_NVM_BUF_LEN : bytes_left;
+-
+-		/* Call NVRAM read command */
+-		SET_MFW_FIELD(param,
+-			      DRV_MB_PARAM_NVM_OFFSET,
+-			      nvram_offset_bytes + read_offset);
+-		SET_MFW_FIELD(param, DRV_MB_PARAM_NVM_LEN, bytes_to_copy);
+-		if (qed_mcp_nvm_rd_cmd(p_hwfn, p_ptt,
+-				       DRV_MSG_CODE_NVM_READ_NVRAM, param,
+-				       &ret_mcp_resp,
+-				       &ret_mcp_param, &ret_read_size,
+-				       (u32 *)((u8 *)ret_buf + read_offset)))
+-			return DBG_STATUS_NVRAM_READ_FAILED;
+-
+-		/* Check response */
+-		if ((ret_mcp_resp & FW_MSG_CODE_MASK) != FW_MSG_CODE_NVM_OK)
+-			return DBG_STATUS_NVRAM_READ_FAILED;
+-
+-		/* Update read offset */
+-		read_offset += ret_read_size;
+-		bytes_left -= ret_read_size;
+-	} while (bytes_left > 0);
+-
+-	return DBG_STATUS_OK;
+-}
+-
+ /* Get info on the MCP Trace data in the scratchpad:
+  * - trace_data_grc_addr (OUT): trace data GRC address in bytes
+  * - trace_data_size (OUT): trace data size in bytes (without the header)
+@@ -4481,14 +4558,18 @@ static u32 qed_fw_asserts_dump(struct qed_hwfn *p_hwfn,
+ /* Dumps the specified ILT pages to the specified buffer.
+  * Returns the dumped size in dwords.
+  */
+-static u32 qed_ilt_dump_pages_range(u32 *dump_buf,
+-				    bool dump,
+-				    u32 start_page_id,
++static u32 qed_ilt_dump_pages_range(u32 *dump_buf, u32 *given_offset,
++				    bool *dump, u32 start_page_id,
+ 				    u32 num_pages,
+ 				    struct phys_mem_desc *ilt_pages,
+-				    bool dump_page_ids)
++				    bool dump_page_ids, u32 buf_size_in_dwords,
++				    u32 *given_actual_dump_size_in_dwords)
+ {
+-	u32 page_id, end_page_id, offset = 0;
++	u32 actual_dump_size_in_dwords = *given_actual_dump_size_in_dwords;
++	u32 page_id, end_page_id, offset = *given_offset;
++	struct phys_mem_desc *mem_desc = NULL;
++	bool continue_dump = *dump;
++	u32 partial_page_size = 0;
+ 
+ 	if (num_pages == 0)
+ 		return offset;
+@@ -4496,31 +4577,51 @@ static u32 qed_ilt_dump_pages_range(u32 *dump_buf,
+ 	end_page_id = start_page_id + num_pages - 1;
+ 
+ 	for (page_id = start_page_id; page_id <= end_page_id; page_id++) {
+-		struct phys_mem_desc *mem_desc = &ilt_pages[page_id];
+-
+-		/**
+-		 *
+-		 * if (page_id >= ->p_cxt_mngr->ilt_shadow_size)
+-		 *     break;
+-		 */
+-
++		mem_desc = &ilt_pages[page_id];
+ 		if (!ilt_pages[page_id].virt_addr)
+ 			continue;
+ 
+ 		if (dump_page_ids) {
+-			/* Copy page ID to dump buffer */
+-			if (dump)
++			/* Copy page ID to dump buffer
++			 * (if dump is needed and buffer is not full)
++			 */
++			if ((continue_dump) &&
++			    (offset + 1 > buf_size_in_dwords)) {
++				continue_dump = false;
++				actual_dump_size_in_dwords = offset;
++			}
++			if (continue_dump)
+ 				*(dump_buf + offset) = page_id;
+ 			offset++;
+ 		} else {
+ 			/* Copy page memory to dump buffer */
+-			if (dump)
++			if ((continue_dump) &&
++			    (offset + BYTES_TO_DWORDS(mem_desc->size) >
++			     buf_size_in_dwords)) {
++				if (offset + BYTES_TO_DWORDS(mem_desc->size) >
++				    buf_size_in_dwords) {
++					partial_page_size =
++					    buf_size_in_dwords - offset;
++					memcpy(dump_buf + offset,
++					       mem_desc->virt_addr,
++					       partial_page_size);
++					continue_dump = false;
++					actual_dump_size_in_dwords =
++					    offset + partial_page_size;
++				}
++			}
++
++			if (continue_dump)
+ 				memcpy(dump_buf + offset,
+ 				       mem_desc->virt_addr, mem_desc->size);
+ 			offset += BYTES_TO_DWORDS(mem_desc->size);
  		}
  	}
  
--	/* If we're lacking entires, let's try to flush buffers to FW */
-+	/* If we're lacking entries, let's try to flush buffers to FW */
- 	if (!p_curp || !p_curb) {
- 		rc = -EBUSY;
- 		p_curp = NULL;
-@@ -2609,7 +2611,6 @@ static int qed_ll2_start(struct qed_dev *cdev, struct qed_ll2_params *params)
- 			DP_NOTICE(cdev, "Failed to add an LLH filter\n");
- 			goto err3;
- 		}
--
++	*dump = continue_dump;
++	*given_offset = offset;
++	*given_actual_dump_size_in_dwords = actual_dump_size_in_dwords;
++
+ 	return offset;
+ }
+ 
+@@ -4529,21 +4630,30 @@ static u32 qed_ilt_dump_pages_range(u32 *dump_buf,
+  */
+ static u32 qed_ilt_dump_pages_section(struct qed_hwfn *p_hwfn,
+ 				      u32 *dump_buf,
+-				      bool dump,
++				      u32 *given_offset,
++				      bool *dump,
+ 				      u32 valid_conn_pf_pages,
+ 				      u32 valid_conn_vf_pages,
+ 				      struct phys_mem_desc *ilt_pages,
+-				      bool dump_page_ids)
++				      bool dump_page_ids,
++				      u32 buf_size_in_dwords,
++				      u32 *given_actual_dump_size_in_dwords)
+ {
+ 	struct qed_ilt_client_cfg *clients = p_hwfn->p_cxt_mngr->clients;
+-	u32 pf_start_line, start_page_id, offset = 0;
++	u32 pf_start_line, start_page_id, offset = *given_offset;
+ 	u32 cdut_pf_init_pages, cdut_vf_init_pages;
+ 	u32 cdut_pf_work_pages, cdut_vf_work_pages;
+ 	u32 base_data_offset, size_param_offset;
++	u32 src_pages;
++	u32 section_header_and_param_size;
+ 	u32 cdut_pf_pages, cdut_vf_pages;
++	u32 actual_dump_size_in_dwords;
++	bool continue_dump = *dump;
++	bool update_size = *dump;
+ 	const char *section_name;
+-	u8 i;
++	u32 i;
+ 
++	actual_dump_size_in_dwords = *given_actual_dump_size_in_dwords;
+ 	section_name = dump_page_ids ? "ilt_page_ids" : "ilt_page_mem";
+ 	cdut_pf_init_pages = qed_get_cdut_num_pf_init_pages(p_hwfn);
+ 	cdut_vf_init_pages = qed_get_cdut_num_vf_init_pages(p_hwfn);
+@@ -4552,13 +4662,26 @@ static u32 qed_ilt_dump_pages_section(struct qed_hwfn *p_hwfn,
+ 	cdut_pf_pages = cdut_pf_init_pages + cdut_pf_work_pages;
+ 	cdut_vf_pages = cdut_vf_init_pages + cdut_vf_work_pages;
+ 	pf_start_line = p_hwfn->p_cxt_mngr->pf_start_line;
++	section_header_and_param_size = qed_dump_section_hdr(NULL,
++							     false,
++							     section_name,
++							     1) +
++	qed_dump_num_param(NULL, false, "size", 0);
++
++	if ((continue_dump) &&
++	    (offset + section_header_and_param_size > buf_size_in_dwords)) {
++		continue_dump = false;
++		update_size = false;
++		actual_dump_size_in_dwords = offset;
++	}
+ 
+-	offset +=
+-	    qed_dump_section_hdr(dump_buf + offset, dump, section_name, 1);
++	offset += qed_dump_section_hdr(dump_buf + offset,
++				       continue_dump, section_name, 1);
+ 
+ 	/* Dump size parameter (0 for now, overwritten with real size later) */
+ 	size_param_offset = offset;
+-	offset += qed_dump_num_param(dump_buf + offset, dump, "size", 0);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     continue_dump, "size", 0);
+ 	base_data_offset = offset;
+ 
+ 	/* CDUC pages are ordered as follows:
+@@ -4571,22 +4694,22 @@ static u32 qed_ilt_dump_pages_section(struct qed_hwfn *p_hwfn,
+ 	if (qed_grc_get_param(p_hwfn, DBG_GRC_PARAM_DUMP_ILT_CDUC)) {
+ 		/* Dump connection PF pages */
+ 		start_page_id = clients[ILT_CLI_CDUC].first.val - pf_start_line;
+-		offset += qed_ilt_dump_pages_range(dump_buf + offset,
+-						   dump,
+-						   start_page_id,
+-						   valid_conn_pf_pages,
+-						   ilt_pages, dump_page_ids);
++		qed_ilt_dump_pages_range(dump_buf, &offset, &continue_dump,
++					 start_page_id, valid_conn_pf_pages,
++					 ilt_pages, dump_page_ids,
++					 buf_size_in_dwords,
++					 &actual_dump_size_in_dwords);
+ 
+ 		/* Dump connection VF pages */
+ 		start_page_id += clients[ILT_CLI_CDUC].pf_total_lines;
+ 		for (i = 0; i < p_hwfn->p_cxt_mngr->vf_count;
+ 		     i++, start_page_id += clients[ILT_CLI_CDUC].vf_total_lines)
+-			offset += qed_ilt_dump_pages_range(dump_buf + offset,
+-							   dump,
+-							   start_page_id,
+-							   valid_conn_vf_pages,
+-							   ilt_pages,
+-							   dump_page_ids);
++			qed_ilt_dump_pages_range(dump_buf, &offset,
++						 &continue_dump, start_page_id,
++						 valid_conn_vf_pages,
++						 ilt_pages, dump_page_ids,
++						 buf_size_in_dwords,
++						 &actual_dump_size_in_dwords);
  	}
  
- 	ether_addr_copy(cdev->ll2_mac_address, params->ll2_mac_address);
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_ll2.h b/drivers/net/ethernet/qlogic/qed/qed_ll2.h
-index f80f7739ff8d..0bfc375161ed 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_ll2.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_ll2.h
-@@ -32,7 +32,6 @@
- #define QED_LL2_LEGACY_CONN_BASE_PF     0
- #define QED_LL2_CTX_CONN_BASE_PF        QED_MAX_NUM_OF_LEGACY_LL2_CONNS_PF
+ 	/* CDUT pages are ordered as follows:
+@@ -4600,63 +4723,84 @@ static u32 qed_ilt_dump_pages_section(struct qed_hwfn *p_hwfn,
+ 		/* Dump task PF pages */
+ 		start_page_id = clients[ILT_CLI_CDUT].first.val +
+ 		    cdut_pf_init_pages - pf_start_line;
+-		offset += qed_ilt_dump_pages_range(dump_buf + offset,
+-						   dump,
+-						   start_page_id,
+-						   cdut_pf_work_pages,
+-						   ilt_pages, dump_page_ids);
++		qed_ilt_dump_pages_range(dump_buf, &offset, &continue_dump,
++					 start_page_id, cdut_pf_work_pages,
++					 ilt_pages, dump_page_ids,
++					 buf_size_in_dwords,
++					 &actual_dump_size_in_dwords);
  
+ 		/* Dump task VF pages */
+ 		start_page_id = clients[ILT_CLI_CDUT].first.val +
+ 		    cdut_pf_pages + cdut_vf_init_pages - pf_start_line;
+ 		for (i = 0; i < p_hwfn->p_cxt_mngr->vf_count;
+ 		     i++, start_page_id += cdut_vf_pages)
+-			offset += qed_ilt_dump_pages_range(dump_buf + offset,
+-							   dump,
+-							   start_page_id,
+-							   cdut_vf_work_pages,
+-							   ilt_pages,
+-							   dump_page_ids);
++			qed_ilt_dump_pages_range(dump_buf, &offset,
++						 &continue_dump, start_page_id,
++						 cdut_vf_work_pages, ilt_pages,
++						 dump_page_ids,
++						 buf_size_in_dwords,
++						 &actual_dump_size_in_dwords);
++	}
++
++	/*Dump Searcher pages */
++	if (clients[ILT_CLI_SRC].active) {
++		start_page_id = clients[ILT_CLI_SRC].first.val - pf_start_line;
++		src_pages = clients[ILT_CLI_SRC].last.val -
++		    clients[ILT_CLI_SRC].first.val + 1;
++		qed_ilt_dump_pages_range(dump_buf, &offset, &continue_dump,
++					 start_page_id, src_pages, ilt_pages,
++					 dump_page_ids, buf_size_in_dwords,
++					 &actual_dump_size_in_dwords);
+ 	}
+ 
+ 	/* Overwrite size param */
+-	if (dump)
+-		qed_dump_num_param(dump_buf + size_param_offset,
+-				   dump, "size", offset - base_data_offset);
++	if (update_size) {
++		u32 section_size = (*dump == continue_dump) ?
++		    offset - base_data_offset :
++		    actual_dump_size_in_dwords - base_data_offset;
++		if (section_size > 0)
++			qed_dump_num_param(dump_buf + size_param_offset,
++					   *dump, "size", section_size);
++		else if ((section_size == 0) && (*dump != continue_dump))
++			actual_dump_size_in_dwords -=
++			    section_header_and_param_size;
++	}
++
++	*dump = continue_dump;
++	*given_offset = offset;
++	*given_actual_dump_size_in_dwords = actual_dump_size_in_dwords;
+ 
+ 	return offset;
+ }
+ 
+-/* Performs ILT Dump to the specified buffer.
++/* Dumps a section containing the global parameters.
++ * Part of ilt dump process
+  * Returns the dumped size in dwords.
+  */
+-static u32 qed_ilt_dump(struct qed_hwfn *p_hwfn,
+-			struct qed_ptt *p_ptt, u32 *dump_buf, bool dump)
++static u32
++qed_ilt_dump_dump_common_global_params(struct qed_hwfn *p_hwfn,
++				       struct qed_ptt *p_ptt,
++				       u32 *dump_buf,
++				       bool dump,
++				       u32 cduc_page_size,
++				       u32 conn_ctx_size,
++				       u32 cdut_page_size,
++				       u32 *full_dump_size_param_offset,
++				       u32 *actual_dump_size_param_offset)
+ {
+ 	struct qed_ilt_client_cfg *clients = p_hwfn->p_cxt_mngr->clients;
+-	u32 valid_conn_vf_cids, valid_conn_vf_pages, offset = 0;
+-	u32 valid_conn_pf_cids, valid_conn_pf_pages, num_pages;
+-	u32 num_cids_per_page, conn_ctx_size;
+-	u32 cduc_page_size, cdut_page_size;
+-	struct phys_mem_desc *ilt_pages;
+-	u8 conn_type;
 -
- struct qed_ll2_rx_packet {
- 	struct list_head list_entry;
- 	struct core_rx_bd_with_buff_len *rxq_bd;
+-	cduc_page_size = 1 <<
+-	    (clients[ILT_CLI_CDUC].p_size.val + PXP_ILT_PAGE_SIZE_NUM_BITS_MIN);
+-	cdut_page_size = 1 <<
+-	    (clients[ILT_CLI_CDUT].p_size.val + PXP_ILT_PAGE_SIZE_NUM_BITS_MIN);
+-	conn_ctx_size = p_hwfn->p_cxt_mngr->conn_ctx_size;
+-	num_cids_per_page = (int)(cduc_page_size / conn_ctx_size);
+-	ilt_pages = p_hwfn->p_cxt_mngr->ilt_shadow;
++	u32 offset = 0;
+ 
+-	/* Dump global params - 22 must match number of params below */
+ 	offset += qed_dump_common_global_params(p_hwfn, p_ptt,
+-						dump_buf + offset, dump, 22);
++						dump_buf + offset,
++						dump, 30);
+ 	offset += qed_dump_str_param(dump_buf + offset,
+-				     dump, "dump-type", "ilt-dump");
++				     dump,
++				     "dump-type", "ilt-dump");
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+-				     "cduc-page-size", cduc_page_size);
++				     "cduc-page-size",
++				     cduc_page_size);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+ 				     "cduc-first-page-id",
+@@ -4668,20 +4812,19 @@ static u32 qed_ilt_dump(struct qed_hwfn *p_hwfn,
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+ 				     "cduc-num-pf-pages",
+-				     clients
+-				     [ILT_CLI_CDUC].pf_total_lines);
++				     clients[ILT_CLI_CDUC].pf_total_lines);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+ 				     "cduc-num-vf-pages",
+-				     clients
+-				     [ILT_CLI_CDUC].vf_total_lines);
++				     clients[ILT_CLI_CDUC].vf_total_lines);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+ 				     "max-conn-ctx-size",
+ 				     conn_ctx_size);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+-				     "cdut-page-size", cdut_page_size);
++				     "cdut-page-size",
++				     cdut_page_size);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+ 				     "cdut-first-page-id",
+@@ -4710,21 +4853,18 @@ static u32 qed_ilt_dump(struct qed_hwfn *p_hwfn,
+ 				     dump,
+ 				     "max-task-ctx-size",
+ 				     p_hwfn->p_cxt_mngr->task_ctx_size);
+-	offset += qed_dump_num_param(dump_buf + offset,
+-				     dump,
+-				     "task-type-id",
+-				     p_hwfn->p_cxt_mngr->task_type_id);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+ 				     "first-vf-id-in-pf",
+ 				     p_hwfn->p_cxt_mngr->first_vf_in_pf);
+-	offset += /* 18 */ qed_dump_num_param(dump_buf + offset,
+-					      dump,
+-					      "num-vfs-in-pf",
+-					      p_hwfn->p_cxt_mngr->vf_count);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+-				     "ptr-size-bytes", sizeof(void *));
++				     "num-vfs-in-pf",
++				     p_hwfn->p_cxt_mngr->vf_count);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump,
++				     "ptr-size-bytes",
++				     sizeof(void *));
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump,
+ 				     "pf-start-line",
+@@ -4737,58 +4877,281 @@ static u32 qed_ilt_dump(struct qed_hwfn *p_hwfn,
+ 				     dump,
+ 				     "ilt-shadow-size",
+ 				     p_hwfn->p_cxt_mngr->ilt_shadow_size);
++
++	*full_dump_size_param_offset = offset;
++
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump, "dump-size-full", 0);
++
++	*actual_dump_size_param_offset = offset;
++
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump,
++				     "dump-size-actual", 0);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump,
++				     "iscsi_task_pages",
++				     p_hwfn->p_cxt_mngr->iscsi_task_pages);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump,
++				     "fcoe_task_pages",
++				     p_hwfn->p_cxt_mngr->fcoe_task_pages);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump,
++				     "roce_task_pages",
++				     p_hwfn->p_cxt_mngr->roce_task_pages);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump,
++				     "eth_task_pages",
++				     p_hwfn->p_cxt_mngr->eth_task_pages);
++	offset += qed_dump_num_param(dump_buf + offset,
++				      dump,
++				      "src-first-page-id",
++				      clients[ILT_CLI_SRC].first.val);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump,
++				     "src-last-page-id",
++				     clients[ILT_CLI_SRC].last.val);
++	offset += qed_dump_num_param(dump_buf + offset,
++				     dump,
++				     "src-is-active",
++				     clients[ILT_CLI_SRC].active);
++
+ 	/* Additional/Less parameters require matching of number in call to
+ 	 * dump_common_global_params()
+ 	 */
+ 
+-	/* Dump section containing number of PF CIDs per connection type */
++	return offset;
++}
++
++/* Dump section containing number of PF CIDs per connection type.
++ * Part of ilt dump process.
++ * Returns the dumped size in dwords.
++ */
++static u32 qed_ilt_dump_dump_num_pf_cids(struct qed_hwfn *p_hwfn,
++					 u32 *dump_buf,
++					 bool dump, u32 *valid_conn_pf_cids)
++{
++	u32 num_pf_cids = 0;
++	u32 offset = 0;
++	u8 conn_type;
++
+ 	offset += qed_dump_section_hdr(dump_buf + offset,
+ 				       dump, "num_pf_cids_per_conn_type", 1);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump, "size", NUM_OF_CONNECTION_TYPES);
+-	for (conn_type = 0, valid_conn_pf_cids = 0;
++	for (conn_type = 0, *valid_conn_pf_cids = 0;
+ 	     conn_type < NUM_OF_CONNECTION_TYPES; conn_type++, offset++) {
+-		u32 num_pf_cids =
+-		    p_hwfn->p_cxt_mngr->conn_cfg[conn_type].cid_count;
+-
++		num_pf_cids = p_hwfn->p_cxt_mngr->conn_cfg[conn_type].cid_count;
+ 		if (dump)
+ 			*(dump_buf + offset) = num_pf_cids;
+-		valid_conn_pf_cids += num_pf_cids;
++		*valid_conn_pf_cids += num_pf_cids;
+ 	}
+ 
+-	/* Dump section containing number of VF CIDs per connection type */
+-	offset += qed_dump_section_hdr(dump_buf + offset,
+-				       dump, "num_vf_cids_per_conn_type", 1);
++	return offset;
++}
++
++/* Dump section containing number of VF CIDs per connection type
++ * Part of ilt dump process.
++ * Returns the dumped size in dwords.
++ */
++static u32 qed_ilt_dump_dump_num_vf_cids(struct qed_hwfn *p_hwfn,
++					 u32 *dump_buf,
++					 bool dump, u32 *valid_conn_vf_cids)
++{
++	u32 num_vf_cids = 0;
++	u32 offset = 0;
++	u8 conn_type;
++
++	offset += qed_dump_section_hdr(dump_buf + offset, dump,
++				       "num_vf_cids_per_conn_type", 1);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+ 				     dump, "size", NUM_OF_CONNECTION_TYPES);
+-	for (conn_type = 0, valid_conn_vf_cids = 0;
++	for (conn_type = 0, *valid_conn_vf_cids = 0;
+ 	     conn_type < NUM_OF_CONNECTION_TYPES; conn_type++, offset++) {
+-		u32 num_vf_cids =
++		num_vf_cids =
+ 		    p_hwfn->p_cxt_mngr->conn_cfg[conn_type].cids_per_vf;
+-
+ 		if (dump)
+ 			*(dump_buf + offset) = num_vf_cids;
+-		valid_conn_vf_cids += num_vf_cids;
++		*valid_conn_vf_cids += num_vf_cids;
++	}
++
++	return offset;
++}
++
++/* Performs ILT Dump to the specified buffer.
++ * buf_size_in_dwords - The dumped buffer size.
++ * Returns the dumped size in dwords.
++ */
++static u32 qed_ilt_dump(struct qed_hwfn *p_hwfn,
++			struct qed_ptt *p_ptt,
++			u32 *dump_buf, u32 buf_size_in_dwords, bool dump)
++{
++#if ((!defined VMWARE) && (!defined UEFI))
++	struct qed_ilt_client_cfg *clients = p_hwfn->p_cxt_mngr->clients;
++#endif
++	u32 valid_conn_vf_cids = 0,
++	    valid_conn_vf_pages, offset = 0, real_dumped_size = 0;
++	u32 valid_conn_pf_cids = 0, valid_conn_pf_pages, num_pages;
++	u32 num_cids_per_page, conn_ctx_size;
++	u32 cduc_page_size, cdut_page_size;
++	u32 actual_dump_size_in_dwords = 0;
++	struct phys_mem_desc *ilt_pages;
++	u32 actul_dump_off = 0;
++	u32 last_section_size;
++	u32 full_dump_off = 0;
++	u32 section_size = 0;
++	bool continue_dump;
++	u32 page_id;
++
++	last_section_size = qed_dump_last_section(NULL, 0, false);
++	cduc_page_size = 1 <<
++	    (clients[ILT_CLI_CDUC].p_size.val + PXP_ILT_PAGE_SIZE_NUM_BITS_MIN);
++	cdut_page_size = 1 <<
++	    (clients[ILT_CLI_CDUT].p_size.val + PXP_ILT_PAGE_SIZE_NUM_BITS_MIN);
++	conn_ctx_size = p_hwfn->p_cxt_mngr->conn_ctx_size;
++	num_cids_per_page = (int)(cduc_page_size / conn_ctx_size);
++	ilt_pages = p_hwfn->p_cxt_mngr->ilt_shadow;
++	continue_dump = dump;
++
++	/* if need to dump then save memory for the last section
++	 * (last section calculates CRC of dumped data)
++	 */
++	if (dump) {
++		if (buf_size_in_dwords >= last_section_size) {
++			buf_size_in_dwords -= last_section_size;
++		} else {
++			continue_dump = false;
++			actual_dump_size_in_dwords = offset;
++		}
+ 	}
+ 
+-	/* Dump section containing physical memory descs for each ILT page */
++	/* Dump global params */
++
++	/* if need to dump then first check that there is enough memory
++	 * in dumped buffer for this section calculate the size of this
++	 * section without dumping. if there is not enough memory - then
++	 * stop the dumping.
++	 */
++	if (continue_dump) {
++		section_size =
++			qed_ilt_dump_dump_common_global_params(p_hwfn,
++							       p_ptt,
++							       NULL,
++							       false,
++							       cduc_page_size,
++							       conn_ctx_size,
++							       cdut_page_size,
++							       &full_dump_off,
++							       &actul_dump_off);
++		if (offset + section_size > buf_size_in_dwords) {
++			continue_dump = false;
++			actual_dump_size_in_dwords = offset;
++		}
++	}
++
++	offset += qed_ilt_dump_dump_common_global_params(p_hwfn,
++							 p_ptt,
++							 dump_buf + offset,
++							 continue_dump,
++							 cduc_page_size,
++							 conn_ctx_size,
++							 cdut_page_size,
++							 &full_dump_off,
++							 &actul_dump_off);
++
++	/* Dump section containing number of PF CIDs per connection type
++	 * If need to dump then first check that there is enough memory in
++	 * dumped buffer for this section.
++	 */
++	if (continue_dump) {
++		section_size =
++			qed_ilt_dump_dump_num_pf_cids(p_hwfn,
++						      NULL,
++						      false,
++						      &valid_conn_pf_cids);
++		if (offset + section_size > buf_size_in_dwords) {
++			continue_dump = false;
++			actual_dump_size_in_dwords = offset;
++		}
++	}
++
++	offset += qed_ilt_dump_dump_num_pf_cids(p_hwfn,
++						dump_buf + offset,
++						continue_dump,
++						&valid_conn_pf_cids);
++
++	/* Dump section containing number of VF CIDs per connection type
++	 * If need to dump then first check that there is enough memory in
++	 * dumped buffer for this section.
++	 */
++	if (continue_dump) {
++		section_size =
++			qed_ilt_dump_dump_num_vf_cids(p_hwfn,
++						      NULL,
++						      false,
++						      &valid_conn_vf_cids);
++		if (offset + section_size > buf_size_in_dwords) {
++			continue_dump = false;
++			actual_dump_size_in_dwords = offset;
++		}
++	}
++
++	offset += qed_ilt_dump_dump_num_vf_cids(p_hwfn,
++						dump_buf + offset,
++						continue_dump,
++						&valid_conn_vf_cids);
++
++	/* Dump section containing physical memory descriptors for each
++	 * ILT page.
++	 */
+ 	num_pages = p_hwfn->p_cxt_mngr->ilt_shadow_size;
++
++	/* If need to dump then first check that there is enough memory
++	 * in dumped buffer for the section header.
++	 */
++	if (continue_dump) {
++		section_size = qed_dump_section_hdr(NULL,
++						    false,
++						    "ilt_page_desc",
++						    1) +
++		    qed_dump_num_param(NULL,
++				       false,
++				       "size",
++				       num_pages * PAGE_MEM_DESC_SIZE_DWORDS);
++		if (offset + section_size > buf_size_in_dwords) {
++			continue_dump = false;
++			actual_dump_size_in_dwords = offset;
++		}
++	}
++
+ 	offset += qed_dump_section_hdr(dump_buf + offset,
+-				       dump, "ilt_page_desc", 1);
++				       continue_dump, "ilt_page_desc", 1);
+ 	offset += qed_dump_num_param(dump_buf + offset,
+-				     dump,
++				     continue_dump,
+ 				     "size",
+ 				     num_pages * PAGE_MEM_DESC_SIZE_DWORDS);
+ 
+-	/* Copy memory descriptors to dump buffer */
+-	if (dump) {
+-		u32 page_id;
+-
++	/* Copy memory descriptors to dump buffer
++	 * If need to dump then dump till the dump buffer size
++	 */
++	if (continue_dump) {
+ 		for (page_id = 0; page_id < num_pages;
+-		     page_id++, offset += PAGE_MEM_DESC_SIZE_DWORDS)
+-			memcpy(dump_buf + offset,
+-			       &ilt_pages[page_id],
+-			       DWORDS_TO_BYTES(PAGE_MEM_DESC_SIZE_DWORDS));
++		     page_id++, offset += PAGE_MEM_DESC_SIZE_DWORDS) {
++			if (continue_dump &&
++			    (offset + PAGE_MEM_DESC_SIZE_DWORDS <=
++			     buf_size_in_dwords)) {
++				memcpy(dump_buf + offset,
++				       &ilt_pages[page_id],
++				       DWORDS_TO_BYTES
++				       (PAGE_MEM_DESC_SIZE_DWORDS));
++			} else {
++				if (continue_dump) {
++					continue_dump = false;
++					actual_dump_size_in_dwords = offset;
++				}
++			}
++		}
+ 	} else {
+ 		offset += num_pages * PAGE_MEM_DESC_SIZE_DWORDS;
+ 	}
+@@ -4799,25 +5162,31 @@ static u32 qed_ilt_dump(struct qed_hwfn *p_hwfn,
+ 					   num_cids_per_page);
+ 
+ 	/* Dump ILT pages IDs */
+-	offset += qed_ilt_dump_pages_section(p_hwfn,
+-					     dump_buf + offset,
+-					     dump,
+-					     valid_conn_pf_pages,
+-					     valid_conn_vf_pages,
+-					     ilt_pages, true);
++	qed_ilt_dump_pages_section(p_hwfn, dump_buf, &offset, &continue_dump,
++				   valid_conn_pf_pages, valid_conn_vf_pages,
++				   ilt_pages, true, buf_size_in_dwords,
++				   &actual_dump_size_in_dwords);
+ 
+ 	/* Dump ILT pages memory */
+-	offset += qed_ilt_dump_pages_section(p_hwfn,
+-					     dump_buf + offset,
+-					     dump,
+-					     valid_conn_pf_pages,
+-					     valid_conn_vf_pages,
+-					     ilt_pages, false);
++	qed_ilt_dump_pages_section(p_hwfn, dump_buf, &offset, &continue_dump,
++				   valid_conn_pf_pages, valid_conn_vf_pages,
++				   ilt_pages, false, buf_size_in_dwords,
++				   &actual_dump_size_in_dwords);
++
++	real_dumped_size =
++	    (continue_dump == dump) ? offset : actual_dump_size_in_dwords;
++	qed_dump_num_param(dump_buf + full_dump_off, dump,
++			   "full-dump-size", offset + last_section_size);
++	qed_dump_num_param(dump_buf + actul_dump_off,
++			   dump,
++			   "actual-dump-size",
++			   real_dumped_size + last_section_size);
+ 
+ 	/* Dump last section */
+-	offset += qed_dump_last_section(dump_buf, offset, dump);
++	real_dumped_size += qed_dump_last_section(dump_buf,
++						  real_dumped_size, dump);
+ 
+-	return offset;
++	return real_dumped_size;
+ }
+ 
+ /***************************** Public Functions *******************************/
+@@ -4838,6 +5207,16 @@ enum dbg_status qed_dbg_set_bin_ptr(struct qed_hwfn *p_hwfn,
+ 	return DBG_STATUS_OK;
+ }
+ 
++static enum dbg_status qed_dbg_set_app_ver(u32 ver)
++{
++	if (ver < TOOLS_VERSION)
++		return DBG_STATUS_UNSUPPORTED_APP_VERSION;
++
++	s_app_ver = ver;
++
++	return DBG_STATUS_OK;
++}
++
+ bool qed_read_fw_info(struct qed_hwfn *p_hwfn,
+ 		      struct qed_ptt *p_ptt, struct fw_info *fw_info)
+ {
+@@ -4880,7 +5259,7 @@ enum dbg_status qed_dbg_grc_config(struct qed_hwfn *p_hwfn,
+ 	 */
+ 	qed_dbg_grc_init_params(p_hwfn);
+ 
+-	if (grc_param >= MAX_DBG_GRC_PARAMS)
++	if (grc_param >= MAX_DBG_GRC_PARAMS || grc_param < 0)
+ 		return DBG_STATUS_INVALID_ARGS;
+ 	if (val < s_grc_param_defs[grc_param].min ||
+ 	    val > s_grc_param_defs[grc_param].max)
+@@ -4976,6 +5355,9 @@ enum dbg_status qed_dbg_grc_dump(struct qed_hwfn *p_hwfn,
+ 	if (buf_size_in_dwords < needed_buf_size_in_dwords)
+ 		return DBG_STATUS_DUMP_BUF_TOO_SMALL;
+ 
++	/* Doesn't do anything, needed for compile time asserts */
++	qed_static_asserts();
++
+ 	/* GRC Dump */
+ 	status = qed_grc_dump(p_hwfn, p_ptt, dump_buf, true, num_dumped_dwords);
+ 
+@@ -5297,7 +5679,7 @@ static enum dbg_status qed_dbg_ilt_get_dump_buf_size(struct qed_hwfn *p_hwfn,
+ 	if (status != DBG_STATUS_OK)
+ 		return status;
+ 
+-	*buf_size = qed_ilt_dump(p_hwfn, p_ptt, NULL, false);
++	*buf_size = qed_ilt_dump(p_hwfn, p_ptt, NULL, 0, false);
+ 
+ 	return DBG_STATUS_OK;
+ }
+@@ -5308,21 +5690,9 @@ static enum dbg_status qed_dbg_ilt_dump(struct qed_hwfn *p_hwfn,
+ 					u32 buf_size_in_dwords,
+ 					u32 *num_dumped_dwords)
+ {
+-	u32 needed_buf_size_in_dwords;
+-	enum dbg_status status;
+-
+-	*num_dumped_dwords = 0;
+-
+-	status = qed_dbg_ilt_get_dump_buf_size(p_hwfn,
+-					       p_ptt,
+-					       &needed_buf_size_in_dwords);
+-	if (status != DBG_STATUS_OK)
+-		return status;
+-
+-	if (buf_size_in_dwords < needed_buf_size_in_dwords)
+-		return DBG_STATUS_DUMP_BUF_TOO_SMALL;
+-
+-	*num_dumped_dwords = qed_ilt_dump(p_hwfn, p_ptt, dump_buf, true);
++	*num_dumped_dwords = qed_ilt_dump(p_hwfn,
++					  p_ptt,
++					  dump_buf, buf_size_in_dwords, true);
+ 
+ 	/* Reveret GRC params to their default */
+ 	qed_dbg_grc_set_params_default(p_hwfn);
+@@ -5725,7 +6095,46 @@ static const char * const s_status_str[] = {
+ 	"The configured filter mode requires that all the constraints of a single trigger state will be defined on a single Storm/block input",
+ 
+ 	/* DBG_STATUS_MISSING_TRIGGER_STATE_STORM */
+-	"When triggering on Storm data, the Storm to trigger on must be specified"
++	"When triggering on Storm data, the Storm to trigger on must be specified",
++
++	/* DBG_STATUS_MDUMP2_FAILED_TO_REQUEST_OFFSIZE */
++	"Failed to request MDUMP2 Offsize",
++
++	/* DBG_STATUS_MDUMP2_FAILED_VALIDATION_OF_DATA_CRC */
++	"Expected CRC (part of the MDUMP2 data) is different than the calculated CRC over that data",
++
++	/* DBG_STATUS_MDUMP2_INVALID_SIGNATURE */
++	"Invalid Signature found at start of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_INVALID_LOG_SIZE */
++	"Invalid Log Size of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_INVALID_LOG_HDR */
++	"Invalid Log Header of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_INVALID_LOG_DATA */
++	"Invalid Log Data of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_ERROR_EXTRACTING_NUM_PORTS */
++	"Could not extract number of ports from regval buf of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_ERROR_EXTRACTING_MFW_STATUS */
++	"Could not extract MFW (link) status from regval buf of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_ERROR_DISPLAYING_LINKDUMP */
++	"Could not display linkdump of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_ERROR_READING_PHY_CFG */
++	"Could not read PHY CFG of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_ERROR_READING_PLL_MODE */
++	"Could not read PLL Mode of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_ERROR_READING_LANE_REGS */
++	"Could not read TSCF/TSCE Lane Regs of MDUMP2",
++
++	/* DBG_STATUS_MDUMP2_ERROR_ALLOCATING_BUF */
++	"Could not allocate MDUMP2 reg-val internal buffer"
+ };
+ 
+ /* Idle check severity names array */
+@@ -5875,6 +6284,10 @@ static char s_temp_buf[MAX_MSG_LEN];
+ 
+ /**************************** Private Functions ******************************/
+ 
++static void qed_user_static_asserts(void)
++{
++}
++
+ static u32 qed_cyclic_add(u32 a, u32 b, u32 size)
+ {
+ 	return (a + b) % size;
+@@ -6154,9 +6567,8 @@ static u32 qed_parse_idle_chk_dump_rules(struct qed_hwfn *p_hwfn,
+ 			/* Skip register names until the required reg_id is
+ 			 * reached.
+ 			 */
+-			for (; reg_id > curr_reg_id;
+-			     curr_reg_id++,
+-			     parsing_str += strlen(parsing_str) + 1);
++			for (; reg_id > curr_reg_id; curr_reg_id++)
++				parsing_str += strlen(parsing_str) + 1;
+ 
+ 			results_offset +=
+ 			    sprintf(qed_get_buf_ptr(results_buf,
+@@ -6209,9 +6621,9 @@ static enum dbg_status qed_parse_idle_chk_dump(struct qed_hwfn *p_hwfn,
+ 					       u32 *num_errors,
+ 					       u32 *num_warnings)
+ {
++	u32 num_section_params = 0, num_rules, num_rules_not_dumped;
+ 	const char *section_name, *param_name, *param_str_val;
+ 	u32 *dump_buf_end = dump_buf + num_dumped_dwords;
+-	u32 num_section_params = 0, num_rules;
+ 
+ 	/* Offset in results_buf in bytes */
+ 	u32 results_offset = 0;
+@@ -6235,15 +6647,31 @@ static enum dbg_status qed_parse_idle_chk_dump(struct qed_hwfn *p_hwfn,
+ 					     num_section_params,
+ 					     results_buf, &results_offset);
+ 
+-	/* Read idle_chk section */
++	/* Read idle_chk section
++	 * There may be 1 or 2 idle_chk section parameters:
++	 * - 1st is "num_rules"
++	 * - 2nd is "num_rules_not_dumped" (optional)
++	 */
++
+ 	dump_buf += qed_read_section_hdr(dump_buf,
+ 					 &section_name, &num_section_params);
+-	if (strcmp(section_name, "idle_chk") || num_section_params != 1)
++	if (strcmp(section_name, "idle_chk") ||
++	    (num_section_params != 2 && num_section_params != 1))
+ 		return DBG_STATUS_IDLE_CHK_PARSE_FAILED;
+ 	dump_buf += qed_read_param(dump_buf,
+ 				   &param_name, &param_str_val, &num_rules);
+ 	if (strcmp(param_name, "num_rules"))
+ 		return DBG_STATUS_IDLE_CHK_PARSE_FAILED;
++	if (num_section_params > 1) {
++		dump_buf += qed_read_param(dump_buf,
++					   &param_name,
++					   &param_str_val,
++					   &num_rules_not_dumped);
++		if (strcmp(param_name, "num_rules_not_dumped"))
++			return DBG_STATUS_IDLE_CHK_PARSE_FAILED;
++	} else {
++		num_rules_not_dumped = 0;
++	}
+ 
+ 	if (num_rules) {
+ 		u32 rules_print_size;
+@@ -6310,6 +6738,13 @@ static enum dbg_status qed_parse_idle_chk_dump(struct qed_hwfn *p_hwfn,
+ 					    results_offset),
+ 			    "\nIdle Check completed successfully\n");
+ 
++	if (num_rules_not_dumped)
++		results_offset +=
++		    sprintf(qed_get_buf_ptr(results_buf,
++					    results_offset),
++			    "\nIdle Check Partially dumped : num_rules_not_dumped = %d\n",
++			    num_rules_not_dumped);
++
+ 	/* Add 1 for string NULL termination */
+ 	*parsed_results_bytes = results_offset + 1;
+ 
+@@ -7161,6 +7596,9 @@ enum dbg_status qed_print_mcp_trace_results(struct qed_hwfn *p_hwfn,
+ {
+ 	u32 parsed_buf_size;
+ 
++	/* Doesn't do anything, needed for compile time asserts */
++	qed_user_static_asserts();
++
+ 	return qed_parse_mcp_trace_dump(p_hwfn,
+ 					dump_buf,
+ 					results_buf, &parsed_buf_size, true);
+@@ -7337,7 +7775,7 @@ enum dbg_status qed_dbg_parse_attn(struct qed_hwfn *p_hwfn,
+ 		    reg_result->block_attn_offset;
+ 
+ 		/* Go over attention status bits */
+-		for (j = 0; j < num_reg_attn; j++, bit_idx++) {
++		for (j = 0; j < num_reg_attn; j++) {
+ 			u16 attn_idx_val = GET_FIELD(bit_mapping[j].data,
+ 						     DBG_ATTN_BIT_MAPPING_VAL);
+ 			const char *attn_name, *attn_type_str, *masked_str;
+@@ -7354,35 +7792,36 @@ enum dbg_status qed_dbg_parse_attn(struct qed_hwfn *p_hwfn,
+ 			}
+ 
+ 			/* Check current bit index */
+-			if (!(reg_result->sts_val & BIT(bit_idx)))
+-				continue;
++			if (reg_result->sts_val & BIT(bit_idx)) {
++				/* An attention bit with value=1 was found
++				 * Find attention name
++				 */
++				attn_name_offset =
++					block_attn_name_offsets[attn_idx_val];
++				attn_name = attn_name_base + attn_name_offset;
++				attn_type_str =
++					(attn_type ==
++					 ATTN_TYPE_INTERRUPT ? "Interrupt" :
++					 "Parity");
++				masked_str = reg_result->mask_val &
++					     BIT(bit_idx) ?
++					     " [masked]" : "";
++				sts_addr =
++				GET_FIELD(reg_result->data,
++					  DBG_ATTN_REG_RESULT_STS_ADDRESS);
++				DP_NOTICE(p_hwfn,
++					  "%s (%s) : %s [address 0x%08x, bit %d]%s\n",
++					  block_name, attn_type_str, attn_name,
++					  sts_addr * 4, bit_idx, masked_str);
++			}
+ 
+-			/* An attention bit with value=1 was found
+-			 * Find attention name
+-			 */
+-			attn_name_offset =
+-				block_attn_name_offsets[attn_idx_val];
+-			attn_name = attn_name_base + attn_name_offset;
+-			attn_type_str =
+-				(attn_type ==
+-				 ATTN_TYPE_INTERRUPT ? "Interrupt" :
+-				 "Parity");
+-			masked_str = reg_result->mask_val & BIT(bit_idx) ?
+-				     " [masked]" : "";
+-			sts_addr = GET_FIELD(reg_result->data,
+-					     DBG_ATTN_REG_RESULT_STS_ADDRESS);
+-			DP_NOTICE(p_hwfn,
+-				  "%s (%s) : %s [address 0x%08x, bit %d]%s\n",
+-				  block_name, attn_type_str, attn_name,
+-				  sts_addr * 4, bit_idx, masked_str);
++			bit_idx++;
+ 		}
+ 	}
+ 
+ 	return DBG_STATUS_OK;
+ }
+ 
+-static DEFINE_MUTEX(qed_dbg_lock);
+-
+ /* Wrapper for unifying the idle_chk and mcp_trace api */
+ static enum dbg_status
+ qed_print_idle_chk_results_wrapper(struct qed_hwfn *p_hwfn,
+@@ -7397,9 +7836,26 @@ qed_print_idle_chk_results_wrapper(struct qed_hwfn *p_hwfn,
+ 					  &num_warnnings);
+ }
+ 
++static DEFINE_MUTEX(qed_dbg_lock);
++
++#define MAX_PHY_RESULT_BUFFER 9000
++
++/******************************** Feature Meta data section ******************/
++
++#define GRC_NUM_STR_FUNCS 2
++#define IDLE_CHK_NUM_STR_FUNCS 1
++#define MCP_TRACE_NUM_STR_FUNCS 1
++#define REG_FIFO_NUM_STR_FUNCS 1
++#define IGU_FIFO_NUM_STR_FUNCS 1
++#define PROTECTION_OVERRIDE_NUM_STR_FUNCS 1
++#define FW_ASSERTS_NUM_STR_FUNCS 1
++#define ILT_NUM_STR_FUNCS 1
++#define PHY_NUM_STR_FUNCS 20
++
+ /* Feature meta data lookup table */
+ static struct {
+ 	char *name;
++	u32 num_funcs;
+ 	enum dbg_status (*get_size)(struct qed_hwfn *p_hwfn,
+ 				    struct qed_ptt *p_ptt, u32 *size);
+ 	enum dbg_status (*perform_dump)(struct qed_hwfn *p_hwfn,
+@@ -7412,40 +7868,46 @@ static struct {
+ 					    u32 *dump_buf,
+ 					    u32 num_dumped_dwords,
+ 					    u32 *results_buf_size);
++	const struct qed_func_lookup *hsi_func_lookup;
+ } qed_features_lookup[] = {
+ 	{
+-	"grc", qed_dbg_grc_get_dump_buf_size,
+-		    qed_dbg_grc_dump, NULL, NULL}, {
+-	"idle_chk",
++	"grc", GRC_NUM_STR_FUNCS, qed_dbg_grc_get_dump_buf_size,
++		    qed_dbg_grc_dump, NULL, NULL, NULL}, {
++	"idle_chk", IDLE_CHK_NUM_STR_FUNCS,
+ 		    qed_dbg_idle_chk_get_dump_buf_size,
+ 		    qed_dbg_idle_chk_dump,
+ 		    qed_print_idle_chk_results_wrapper,
+-		    qed_get_idle_chk_results_buf_size}, {
+-	"mcp_trace",
++		    qed_get_idle_chk_results_buf_size,
++		    NULL}, {
++	"mcp_trace", MCP_TRACE_NUM_STR_FUNCS,
+ 		    qed_dbg_mcp_trace_get_dump_buf_size,
+ 		    qed_dbg_mcp_trace_dump, qed_print_mcp_trace_results,
+-		    qed_get_mcp_trace_results_buf_size}, {
+-	"reg_fifo",
++		    qed_get_mcp_trace_results_buf_size,
++		    NULL}, {
++	"reg_fifo", REG_FIFO_NUM_STR_FUNCS,
+ 		    qed_dbg_reg_fifo_get_dump_buf_size,
+ 		    qed_dbg_reg_fifo_dump, qed_print_reg_fifo_results,
+-		    qed_get_reg_fifo_results_buf_size}, {
+-	"igu_fifo",
++		    qed_get_reg_fifo_results_buf_size,
++		    NULL}, {
++	"igu_fifo", IGU_FIFO_NUM_STR_FUNCS,
+ 		    qed_dbg_igu_fifo_get_dump_buf_size,
+ 		    qed_dbg_igu_fifo_dump, qed_print_igu_fifo_results,
+-		    qed_get_igu_fifo_results_buf_size}, {
+-	"protection_override",
++		    qed_get_igu_fifo_results_buf_size,
++		    NULL}, {
++	"protection_override", PROTECTION_OVERRIDE_NUM_STR_FUNCS,
+ 		    qed_dbg_protection_override_get_dump_buf_size,
+ 		    qed_dbg_protection_override_dump,
+ 		    qed_print_protection_override_results,
+-		    qed_get_protection_override_results_buf_size}, {
+-	"fw_asserts",
++		    qed_get_protection_override_results_buf_size,
++		    NULL}, {
++	"fw_asserts", FW_ASSERTS_NUM_STR_FUNCS,
+ 		    qed_dbg_fw_asserts_get_dump_buf_size,
+ 		    qed_dbg_fw_asserts_dump,
+ 		    qed_print_fw_asserts_results,
+-		    qed_get_fw_asserts_results_buf_size}, {
+-	"ilt",
+-		    qed_dbg_ilt_get_dump_buf_size,
+-		    qed_dbg_ilt_dump, NULL, NULL},};
++		    qed_get_fw_asserts_results_buf_size,
++		    NULL}, {
++	"ilt", ILT_NUM_STR_FUNCS, qed_dbg_ilt_get_dump_buf_size,
++		    qed_dbg_ilt_dump, NULL, NULL, NULL},};
+ 
+ static void qed_dbg_print_feature(u8 *p_text_buf, u32 text_size)
+ {
+@@ -7467,7 +7929,8 @@ static enum dbg_status format_feature(struct qed_hwfn *p_hwfn,
+ {
+ 	struct qed_dbg_feature *feature =
+ 	    &p_hwfn->cdev->dbg_features[feature_idx];
+-	u32 text_size_bytes, null_char_pos, i;
++	u32 txt_size_bytes, null_char_pos, i;
++	u32 *dbuf, dwords;
+ 	enum dbg_status rc;
+ 	char *text_buf;
+ 
+@@ -7475,33 +7938,43 @@ static enum dbg_status format_feature(struct qed_hwfn *p_hwfn,
+ 	if (!qed_features_lookup[feature_idx].results_buf_size)
+ 		return DBG_STATUS_OK;
+ 
++	dbuf = (u32 *)feature->dump_buf;
++	dwords = feature->dumped_dwords;
++
+ 	/* Obtain size of formatted output */
+-	rc = qed_features_lookup[feature_idx].
+-		results_buf_size(p_hwfn, (u32 *)feature->dump_buf,
+-				 feature->dumped_dwords, &text_size_bytes);
++	rc = qed_features_lookup[feature_idx].results_buf_size(p_hwfn,
++							       dbuf,
++							       dwords,
++							       &txt_size_bytes);
+ 	if (rc != DBG_STATUS_OK)
+ 		return rc;
+ 
+-	/* Make sure that the allocated size is a multiple of dword (4 bytes) */
+-	null_char_pos = text_size_bytes - 1;
+-	text_size_bytes = (text_size_bytes + 3) & ~0x3;
++	/* Make sure that the allocated size is a multiple of dword
++	 * (4 bytes).
++	 */
++	null_char_pos = txt_size_bytes - 1;
++	txt_size_bytes = (txt_size_bytes + 3) & ~0x3;
+ 
+-	if (text_size_bytes < QED_RESULTS_BUF_MIN_SIZE) {
++	if (txt_size_bytes < QED_RESULTS_BUF_MIN_SIZE) {
+ 		DP_NOTICE(p_hwfn->cdev,
+ 			  "formatted size of feature was too small %d. Aborting\n",
+-			  text_size_bytes);
++			  txt_size_bytes);
+ 		return DBG_STATUS_INVALID_ARGS;
+ 	}
+ 
+-	/* Allocate temp text buf */
+-	text_buf = vzalloc(text_size_bytes);
+-	if (!text_buf)
++	/* allocate temp text buf */
++	text_buf = vzalloc(txt_size_bytes);
++	if (!text_buf) {
++		DP_NOTICE(p_hwfn->cdev,
++			  "failed to allocate text buffer. Aborting\n");
+ 		return DBG_STATUS_VIRT_MEM_ALLOC_FAILED;
++	}
+ 
+ 	/* Decode feature opcodes to string on temp buf */
+-	rc = qed_features_lookup[feature_idx].
+-		print_results(p_hwfn, (u32 *)feature->dump_buf,
+-			      feature->dumped_dwords, text_buf);
++	rc = qed_features_lookup[feature_idx].print_results(p_hwfn,
++							    dbuf,
++							    dwords,
++							    text_buf);
+ 	if (rc != DBG_STATUS_OK) {
+ 		vfree(text_buf);
+ 		return rc;
+@@ -7511,26 +7984,27 @@ static enum dbg_status format_feature(struct qed_hwfn *p_hwfn,
+ 	 * The bytes that were added as a result of the dword alignment are also
+ 	 * padded with '\n' characters.
+ 	 */
+-	for (i = null_char_pos; i < text_size_bytes; i++)
++	for (i = null_char_pos; i < txt_size_bytes; i++)
+ 		text_buf[i] = '\n';
+ 
+ 	/* Dump printable feature to log */
+ 	if (p_hwfn->cdev->print_dbg_data)
+-		qed_dbg_print_feature(text_buf, text_size_bytes);
++		qed_dbg_print_feature(text_buf, txt_size_bytes);
+ 
+-	/* Just return the original binary buffer if requested */
++	/* Dump binary data as is to the output file */
+ 	if (p_hwfn->cdev->dbg_bin_dump) {
+ 		vfree(text_buf);
+-		return DBG_STATUS_OK;
++		return rc;
+ 	}
+ 
+-	/* Free the old dump_buf and point the dump_buf to the newly allocagted
++	/* Free the old dump_buf and point the dump_buf to the newly allocated
+ 	 * and formatted text buffer.
+ 	 */
+ 	vfree(feature->dump_buf);
+ 	feature->dump_buf = text_buf;
+-	feature->buf_size = text_size_bytes;
+-	feature->dumped_dwords = text_size_bytes / 4;
++	feature->buf_size = txt_size_bytes;
++	feature->dumped_dwords = txt_size_bytes / 4;
++
+ 	return rc;
+ }
+ 
+@@ -7543,7 +8017,7 @@ static enum dbg_status qed_dbg_dump(struct qed_hwfn *p_hwfn,
+ {
+ 	struct qed_dbg_feature *feature =
+ 	    &p_hwfn->cdev->dbg_features[feature_idx];
+-	u32 buf_size_dwords;
++	u32 buf_size_dwords, *dbuf, *dwords;
+ 	enum dbg_status rc;
+ 
+ 	DP_NOTICE(p_hwfn->cdev, "Collecting a debug feature [\"%s\"]\n",
+@@ -7581,13 +8055,16 @@ static enum dbg_status qed_dbg_dump(struct qed_hwfn *p_hwfn,
+ 	if (!feature->dump_buf)
+ 		return DBG_STATUS_VIRT_MEM_ALLOC_FAILED;
+ 
+-	rc = qed_features_lookup[feature_idx].
+-		perform_dump(p_hwfn, p_ptt, (u32 *)feature->dump_buf,
+-			     feature->buf_size / sizeof(u32),
+-			     &feature->dumped_dwords);
++	dbuf = (u32 *)feature->dump_buf;
++	dwords = &feature->dumped_dwords;
++	rc = qed_features_lookup[feature_idx].perform_dump(p_hwfn, p_ptt,
++							   dbuf,
++							   feature->buf_size /
++							   sizeof(u32),
++							   dwords);
+ 
+ 	/* If mcp is stuck we get DBG_STATUS_NVRAM_GET_IMAGE_FAILED error.
+-	 * In this case the buffer holds valid binary data, but we wont able
++	 * In this case the buffer holds valid binary data, but we won't able
+ 	 * to parse it (since parsing relies on data in NVRAM which is only
+ 	 * accessible when MFW is responsive). skip the formatting but return
+ 	 * success so that binary data is provided.
+@@ -7778,7 +8255,8 @@ enum debug_print_features {
+ 
+ static u32 qed_calc_regdump_header(struct qed_dev *cdev,
+ 				   enum debug_print_features feature,
+-				   int engine, u32 feature_size, u8 omit_engine)
++				   int engine, u32 feature_size,
++				   u8 omit_engine, u8 dbg_bin_dump)
+ {
+ 	u32 res = 0;
+ 
+@@ -7789,7 +8267,7 @@ static u32 qed_calc_regdump_header(struct qed_dev *cdev,
+ 			  feature, feature_size);
+ 
+ 	SET_FIELD(res, REGDUMP_HEADER_FEATURE, feature);
+-	SET_FIELD(res, REGDUMP_HEADER_BIN_DUMP, 1);
++	SET_FIELD(res, REGDUMP_HEADER_BIN_DUMP, dbg_bin_dump);
+ 	SET_FIELD(res, REGDUMP_HEADER_OMIT_ENGINE, omit_engine);
+ 	SET_FIELD(res, REGDUMP_HEADER_ENGINE, engine);
+ 
+@@ -7799,12 +8277,10 @@ static u32 qed_calc_regdump_header(struct qed_dev *cdev,
+ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ {
+ 	u8 cur_engine, omit_engine = 0, org_engine;
+-	struct qed_hwfn *p_hwfn =
+-		&cdev->hwfns[cdev->engine_for_debug];
++	struct qed_hwfn *p_hwfn = &cdev->hwfns[cdev->engine_for_debug];
+ 	struct dbg_tools_data *dev_data = &p_hwfn->dbg_info;
+-	int grc_params[MAX_DBG_GRC_PARAMS], i;
++	int grc_params[MAX_DBG_GRC_PARAMS], rc, i;
+ 	u32 offset = 0, feature_size;
+-	int rc;
+ 
+ 	for (i = 0; i < MAX_DBG_GRC_PARAMS; i++)
+ 		grc_params[i] = dev_data->grc.param_val[i];
+@@ -7812,8 +8288,8 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 	if (!QED_IS_CMT(cdev))
+ 		omit_engine = 1;
+ 
++	cdev->dbg_bin_dump = 1;
+ 	mutex_lock(&qed_dbg_lock);
+-	cdev->dbg_bin_dump = true;
+ 
+ 	org_engine = qed_get_debug_engine(cdev);
+ 	for (cur_engine = 0; cur_engine < cdev->num_hwfns; cur_engine++) {
+@@ -7827,8 +8303,11 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 				      REGDUMP_HEADER_SIZE, &feature_size);
+ 		if (!rc) {
+ 			*(u32 *)((u8 *)buffer + offset) =
+-			    qed_calc_regdump_header(cdev, IDLE_CHK, cur_engine,
+-						    feature_size, omit_engine);
++			    qed_calc_regdump_header(cdev, IDLE_CHK,
++						    cur_engine,
++						    feature_size,
++						    omit_engine,
++						    cdev->dbg_bin_dump);
+ 			offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 		} else {
+ 			DP_ERR(cdev, "qed_dbg_idle_chk failed. rc = %d\n", rc);
+@@ -7839,8 +8318,11 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 				      REGDUMP_HEADER_SIZE, &feature_size);
+ 		if (!rc) {
+ 			*(u32 *)((u8 *)buffer + offset) =
+-			    qed_calc_regdump_header(cdev, IDLE_CHK, cur_engine,
+-						    feature_size, omit_engine);
++			    qed_calc_regdump_header(cdev, IDLE_CHK,
++						    cur_engine,
++						    feature_size,
++						    omit_engine,
++						    cdev->dbg_bin_dump);
+ 			offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 		} else {
+ 			DP_ERR(cdev, "qed_dbg_idle_chk failed. rc = %d\n", rc);
+@@ -7851,8 +8333,11 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 				      REGDUMP_HEADER_SIZE, &feature_size);
+ 		if (!rc) {
+ 			*(u32 *)((u8 *)buffer + offset) =
+-			    qed_calc_regdump_header(cdev, REG_FIFO, cur_engine,
+-						    feature_size, omit_engine);
++			    qed_calc_regdump_header(cdev, REG_FIFO,
++						    cur_engine,
++						    feature_size,
++						    omit_engine,
++						    cdev->dbg_bin_dump);
+ 			offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 		} else {
+ 			DP_ERR(cdev, "qed_dbg_reg_fifo failed. rc = %d\n", rc);
+@@ -7863,8 +8348,11 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 				      REGDUMP_HEADER_SIZE, &feature_size);
+ 		if (!rc) {
+ 			*(u32 *)((u8 *)buffer + offset) =
+-			    qed_calc_regdump_header(cdev, IGU_FIFO, cur_engine,
+-						    feature_size, omit_engine);
++			    qed_calc_regdump_header(cdev, IGU_FIFO,
++						    cur_engine,
++						    feature_size,
++						    omit_engine,
++						    cdev->dbg_bin_dump);
+ 			offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 		} else {
+ 			DP_ERR(cdev, "qed_dbg_igu_fifo failed. rc = %d", rc);
+@@ -7876,9 +8364,12 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 						 &feature_size);
+ 		if (!rc) {
+ 			*(u32 *)((u8 *)buffer + offset) =
+-			    qed_calc_regdump_header(cdev, PROTECTION_OVERRIDE,
++			    qed_calc_regdump_header(cdev,
++						    PROTECTION_OVERRIDE,
+ 						    cur_engine,
+-						    feature_size, omit_engine);
++						    feature_size,
++						    omit_engine,
++						    cdev->dbg_bin_dump);
+ 			offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 		} else {
+ 			DP_ERR(cdev,
+@@ -7892,8 +8383,10 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 		if (!rc) {
+ 			*(u32 *)((u8 *)buffer + offset) =
+ 			    qed_calc_regdump_header(cdev, FW_ASSERTS,
+-						    cur_engine, feature_size,
+-						    omit_engine);
++						    cur_engine,
++						    feature_size,
++						    omit_engine,
++						    cdev->dbg_bin_dump);
+ 			offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 		} else {
+ 			DP_ERR(cdev, "qed_dbg_fw_asserts failed. rc = %d\n",
+@@ -7901,8 +8394,8 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 		}
+ 
+ 		feature_size = qed_dbg_ilt_size(cdev);
+-		if (!cdev->disable_ilt_dump &&
+-		    feature_size < ILT_DUMP_MAX_SIZE) {
++		if (!cdev->disable_ilt_dump && feature_size <
++		    ILT_DUMP_MAX_SIZE) {
+ 			rc = qed_dbg_ilt(cdev, (u8 *)buffer + offset +
+ 					 REGDUMP_HEADER_SIZE, &feature_size);
+ 			if (!rc) {
+@@ -7910,15 +8403,16 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 				    qed_calc_regdump_header(cdev, ILT_DUMP,
+ 							    cur_engine,
+ 							    feature_size,
+-							    omit_engine);
+-				offset += feature_size + REGDUMP_HEADER_SIZE;
++							    omit_engine,
++							    cdev->dbg_bin_dump);
++				offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 			} else {
+ 				DP_ERR(cdev, "qed_dbg_ilt failed. rc = %d\n",
+ 				       rc);
+ 			}
+ 		}
+ 
+-		/* GRC dump - must be last because when mcp stuck it will
++		/* Grc dump - must be last because when mcp stuck it will
+ 		 * clutter idle_chk, reg_fifo, ...
+ 		 */
+ 		for (i = 0; i < MAX_DBG_GRC_PARAMS; i++)
+@@ -7930,7 +8424,9 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 			*(u32 *)((u8 *)buffer + offset) =
+ 			    qed_calc_regdump_header(cdev, GRC_DUMP,
+ 						    cur_engine,
+-						    feature_size, omit_engine);
++						    feature_size,
++						    omit_engine,
++						    cdev->dbg_bin_dump);
+ 			offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 		} else {
+ 			DP_ERR(cdev, "qed_dbg_grc failed. rc = %d", rc);
+@@ -7945,16 +8441,13 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 	if (!rc) {
+ 		*(u32 *)((u8 *)buffer + offset) =
+ 		    qed_calc_regdump_header(cdev, MCP_TRACE, cur_engine,
+-					    feature_size, omit_engine);
++					    feature_size, omit_engine,
++					    cdev->dbg_bin_dump);
+ 		offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 	} else {
+ 		DP_ERR(cdev, "qed_dbg_mcp_trace failed. rc = %d\n", rc);
+ 	}
+ 
+-	/* Re-populate nvm attribute info */
+-	qed_mcp_nvm_info_free(p_hwfn);
+-	qed_mcp_nvm_info_populate(p_hwfn);
+-
+ 	/* nvm cfg1 */
+ 	rc = qed_dbg_nvm_image(cdev,
+ 			       (u8 *)buffer + offset +
+@@ -7963,43 +8456,51 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 	if (!rc) {
+ 		*(u32 *)((u8 *)buffer + offset) =
+ 		    qed_calc_regdump_header(cdev, NVM_CFG1, cur_engine,
+-					    feature_size, omit_engine);
++					    feature_size, omit_engine,
++					    cdev->dbg_bin_dump);
+ 		offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 	} else if (rc != -ENOENT) {
+ 		DP_ERR(cdev,
+ 		       "qed_dbg_nvm_image failed for image  %d (%s), rc = %d\n",
+-		       QED_NVM_IMAGE_NVM_CFG1, "QED_NVM_IMAGE_NVM_CFG1", rc);
++		       QED_NVM_IMAGE_NVM_CFG1, "QED_NVM_IMAGE_NVM_CFG1",
++		       rc);
+ 	}
+ 
+-	/* nvm default */
++		/* nvm default */
+ 	rc = qed_dbg_nvm_image(cdev,
+-			       (u8 *)buffer + offset + REGDUMP_HEADER_SIZE,
+-			       &feature_size, QED_NVM_IMAGE_DEFAULT_CFG);
++			       (u8 *)buffer + offset +
++			       REGDUMP_HEADER_SIZE, &feature_size,
++			       QED_NVM_IMAGE_DEFAULT_CFG);
+ 	if (!rc) {
+ 		*(u32 *)((u8 *)buffer + offset) =
+-		    qed_calc_regdump_header(cdev, DEFAULT_CFG, cur_engine,
+-					    feature_size, omit_engine);
++		    qed_calc_regdump_header(cdev, DEFAULT_CFG,
++					    cur_engine, feature_size,
++					    omit_engine,
++					    cdev->dbg_bin_dump);
+ 		offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 	} else if (rc != -ENOENT) {
+ 		DP_ERR(cdev,
+ 		       "qed_dbg_nvm_image failed for image %d (%s), rc = %d\n",
+-		       QED_NVM_IMAGE_DEFAULT_CFG, "QED_NVM_IMAGE_DEFAULT_CFG",
+-		       rc);
++		       QED_NVM_IMAGE_DEFAULT_CFG,
++		       "QED_NVM_IMAGE_DEFAULT_CFG", rc);
+ 	}
+ 
+ 	/* nvm meta */
+ 	rc = qed_dbg_nvm_image(cdev,
+-			       (u8 *)buffer + offset + REGDUMP_HEADER_SIZE,
+-			       &feature_size, QED_NVM_IMAGE_NVM_META);
++			       (u8 *)buffer + offset +
++			       REGDUMP_HEADER_SIZE, &feature_size,
++			       QED_NVM_IMAGE_NVM_META);
+ 	if (!rc) {
+ 		*(u32 *)((u8 *)buffer + offset) =
+-			qed_calc_regdump_header(cdev, NVM_META, cur_engine,
+-						feature_size, omit_engine);
++		    qed_calc_regdump_header(cdev, NVM_META, cur_engine,
++					    feature_size, omit_engine,
++					    cdev->dbg_bin_dump);
+ 		offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 	} else if (rc != -ENOENT) {
+ 		DP_ERR(cdev,
+ 		       "qed_dbg_nvm_image failed for image %d (%s), rc = %d\n",
+-		       QED_NVM_IMAGE_NVM_META, "QED_NVM_IMAGE_NVM_META", rc);
++		       QED_NVM_IMAGE_NVM_META, "QED_NVM_IMAGE_NVM_META",
++		       rc);
+ 	}
+ 
+ 	/* nvm mdump */
+@@ -8008,8 +8509,9 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 			       QED_NVM_IMAGE_MDUMP);
+ 	if (!rc) {
+ 		*(u32 *)((u8 *)buffer + offset) =
+-			qed_calc_regdump_header(cdev, MDUMP, cur_engine,
+-						feature_size, omit_engine);
++		    qed_calc_regdump_header(cdev, MDUMP, cur_engine,
++					    feature_size, omit_engine,
++					    cdev->dbg_bin_dump);
+ 		offset += (feature_size + REGDUMP_HEADER_SIZE);
+ 	} else if (rc != -ENOENT) {
+ 		DP_ERR(cdev,
+@@ -8017,17 +8519,16 @@ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer)
+ 		       QED_NVM_IMAGE_MDUMP, "QED_NVM_IMAGE_MDUMP", rc);
+ 	}
+ 
+-	cdev->dbg_bin_dump = false;
+ 	mutex_unlock(&qed_dbg_lock);
++	cdev->dbg_bin_dump = 0;
+ 
+ 	return 0;
+ }
+ 
+ int qed_dbg_all_data_size(struct qed_dev *cdev)
+ {
+-	struct qed_hwfn *p_hwfn =
+-		&cdev->hwfns[cdev->engine_for_debug];
+ 	u32 regs_len = 0, image_len = 0, ilt_len = 0, total_ilt_len = 0;
++	struct qed_hwfn *p_hwfn = &cdev->hwfns[cdev->engine_for_debug];
+ 	u8 cur_engine, org_engine;
+ 
+ 	cdev->disable_ilt_dump = false;
+@@ -8038,14 +8539,13 @@ int qed_dbg_all_data_size(struct qed_dev *cdev)
+ 			   "calculating idle_chk and grcdump register length for current engine\n");
+ 		qed_set_debug_engine(cdev, cur_engine);
+ 		regs_len += REGDUMP_HEADER_SIZE + qed_dbg_idle_chk_size(cdev) +
+-			    REGDUMP_HEADER_SIZE + qed_dbg_idle_chk_size(cdev) +
+-			    REGDUMP_HEADER_SIZE + qed_dbg_grc_size(cdev) +
+-			    REGDUMP_HEADER_SIZE + qed_dbg_reg_fifo_size(cdev) +
+-			    REGDUMP_HEADER_SIZE + qed_dbg_igu_fifo_size(cdev) +
+-			    REGDUMP_HEADER_SIZE +
+-			    qed_dbg_protection_override_size(cdev) +
+-			    REGDUMP_HEADER_SIZE + qed_dbg_fw_asserts_size(cdev);
+-
++		    REGDUMP_HEADER_SIZE + qed_dbg_idle_chk_size(cdev) +
++		    REGDUMP_HEADER_SIZE + qed_dbg_grc_size(cdev) +
++		    REGDUMP_HEADER_SIZE + qed_dbg_reg_fifo_size(cdev) +
++		    REGDUMP_HEADER_SIZE + qed_dbg_igu_fifo_size(cdev) +
++		    REGDUMP_HEADER_SIZE +
++		    qed_dbg_protection_override_size(cdev) +
++		    REGDUMP_HEADER_SIZE + qed_dbg_fw_asserts_size(cdev);
+ 		ilt_len = REGDUMP_HEADER_SIZE + qed_dbg_ilt_size(cdev);
+ 		if (ilt_len < ILT_DUMP_MAX_SIZE) {
+ 			total_ilt_len += ilt_len;
+@@ -8056,7 +8556,8 @@ int qed_dbg_all_data_size(struct qed_dev *cdev)
+ 	qed_set_debug_engine(cdev, org_engine);
+ 
+ 	/* Engine common */
+-	regs_len += REGDUMP_HEADER_SIZE + qed_dbg_mcp_trace_size(cdev);
++	regs_len += REGDUMP_HEADER_SIZE + qed_dbg_mcp_trace_size(cdev) +
++	    REGDUMP_HEADER_SIZE + qed_dbg_phy_size(cdev);
+ 	qed_dbg_nvm_image_length(p_hwfn, QED_NVM_IMAGE_NVM_CFG1, &image_len);
+ 	if (image_len)
+ 		regs_len += REGDUMP_HEADER_SIZE + image_len;
+@@ -8084,10 +8585,8 @@ int qed_dbg_all_data_size(struct qed_dev *cdev)
+ int qed_dbg_feature(struct qed_dev *cdev, void *buffer,
+ 		    enum qed_dbg_features feature, u32 *num_dumped_bytes)
+ {
+-	struct qed_hwfn *p_hwfn =
+-		&cdev->hwfns[cdev->engine_for_debug];
+-	struct qed_dbg_feature *qed_feature =
+-		&cdev->dbg_features[feature];
++	struct qed_dbg_feature *qed_feature = &cdev->dbg_features[feature];
++	struct qed_hwfn *p_hwfn = &cdev->hwfns[cdev->engine_for_debug];
+ 	enum dbg_status dbg_rc;
+ 	struct qed_ptt *p_ptt;
+ 	int rc = 0;
+@@ -8120,9 +8619,8 @@ int qed_dbg_feature(struct qed_dev *cdev, void *buffer,
+ 
+ int qed_dbg_feature_size(struct qed_dev *cdev, enum qed_dbg_features feature)
+ {
+-	struct qed_hwfn *p_hwfn =
+-		&cdev->hwfns[cdev->engine_for_debug];
+ 	struct qed_dbg_feature *qed_feature = &cdev->dbg_features[feature];
++	struct qed_hwfn *p_hwfn = &cdev->hwfns[cdev->engine_for_debug];
+ 	struct qed_ptt *p_ptt = qed_ptt_acquire(p_hwfn);
+ 	u32 buf_size_dwords;
+ 	enum dbg_status rc;
+@@ -8144,6 +8642,14 @@ int qed_dbg_feature_size(struct qed_dev *cdev, enum qed_dbg_features feature)
+ 	return qed_feature->buf_size;
+ }
+ 
++int qed_dbg_phy_size(struct qed_dev *cdev)
++{
++	/* return max size of phy info and
++	 * phy mac_stat multiplied by the number of ports
++	 */
++	return MAX_PHY_RESULT_BUFFER * (1 + qed_device_num_ports(cdev));
++}
++
+ u8 qed_get_debug_engine(struct qed_dev *cdev)
+ {
+ 	return cdev->engine_for_debug;
+@@ -8161,6 +8667,9 @@ void qed_dbg_pf_init(struct qed_dev *cdev)
+ 	const u8 *dbg_values = NULL;
+ 	int i;
+ 
++	/* Sync ver with debugbus qed code */
++	qed_dbg_set_app_ver(TOOLS_VERSION);
++
+ 	/* Debug values are after init values.
+ 	 * The offset is the first dword of the file.
+ 	 */
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_debug.h b/drivers/net/ethernet/qlogic/qed/qed_debug.h
+index e71af82d3200..b0d4b937cf4a 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_debug.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_debug.h
+@@ -1,11 +1,11 @@
+ /* SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause) */
+ /* QLogic qed NIC Driver
+  * Copyright (c) 2015 QLogic Corporation
+- * Copyright (c) 2019-2020 Marvell International Ltd.
++ * Copyright (c) 2019-2021 Marvell International Ltd.
+  */
+ 
+-#ifndef _QED_DEBUGFS_H
+-#define _QED_DEBUGFS_H
++#ifndef _QED_DEBUG_H
++#define _QED_DEBUG_H
+ 
+ enum qed_dbg_features {
+ 	DBG_FEATURE_GRC,
+@@ -45,6 +45,7 @@ int qed_dbg_ilt_size(struct qed_dev *cdev);
+ int qed_dbg_mcp_trace(struct qed_dev *cdev, void *buffer,
+ 		      u32 *num_dumped_bytes);
+ int qed_dbg_mcp_trace_size(struct qed_dev *cdev);
++int qed_dbg_phy_size(struct qed_dev *cdev);
+ int qed_dbg_all_data(struct qed_dev *cdev, void *buffer);
+ int qed_dbg_all_data_size(struct qed_dev *cdev);
+ u8 qed_get_debug_engine(struct qed_dev *cdev);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_main.c b/drivers/net/ethernet/qlogic/qed/qed_main.c
+index feb23d71b53e..5e7242304ee2 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_main.c
++++ b/drivers/net/ethernet/qlogic/qed/qed_main.c
+@@ -3156,3 +3156,8 @@ int qed_mfw_fill_tlv_data(struct qed_hwfn *hwfn, enum qed_mfw_tlv_type type,
+ 
+ 	return 0;
+ }
++
++unsigned long qed_get_epoch_time(void)
++{
++	return ktime_get_real_seconds();
++}
 diff --git a/drivers/net/ethernet/qlogic/qed/qed_mcp.c b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-index 2b39fa294d32..24582977f2d4 100644
+index f1ffbfd06184..11a52a4a673b 100644
 --- a/drivers/net/ethernet/qlogic/qed/qed_mcp.c
 +++ b/drivers/net/ethernet/qlogic/qed/qed_mcp.c
-@@ -17,6 +17,7 @@
- #include "qed_cxt.h"
- #include "qed_dcbx.h"
- #include "qed_hsi.h"
-+#include "qed_mfw_hsi.h"
- #include "qed_hw.h"
- #include "qed_mcp.h"
- #include "qed_reg_addr.h"
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_mfw_hsi.h b/drivers/net/ethernet/qlogic/qed/qed_mfw_hsi.h
-new file mode 100644
-index 000000000000..e419d1577d5c
---- /dev/null
-+++ b/drivers/net/ethernet/qlogic/qed/qed_mfw_hsi.h
-@@ -0,0 +1,1928 @@
-+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-3-Clause) */
-+/* QLogic qed NIC Driver
-+ * Copyright (c) 2019-2021 Marvell International Ltd.
-+ */
-+
-+#ifndef _QED_MFW_HSI_H
-+#define _QED_MFW_HSI_H
-+
-+#define MFW_TRACE_SIGNATURE     0x25071946
-+
-+/* The trace in the buffer */
-+#define MFW_TRACE_EVENTID_MASK          0x00ffff
-+#define MFW_TRACE_PRM_SIZE_MASK         0x0f0000
-+#define MFW_TRACE_PRM_SIZE_OFFSET	16
-+#define MFW_TRACE_ENTRY_SIZE            3
-+
-+struct mcp_trace {
-+	u32 signature;		/* Help to identify that the trace is valid */
-+	u32 size;		/* the size of the trace buffer in bytes */
-+	u32 curr_level;		/* 2 - all will be written to the buffer
-+				 * 1 - debug trace will not be written
-+				 * 0 - just errors will be written to the buffer
-+				 */
-+	u32 modules_mask[2];	/* a bit per module, 1 means write it, 0 means
-+				 * mask it.
-+				 */
-+
-+	/* Warning: the following pointers are assumed to be 32bits as they are
-+	 * used only in the MFW.
-+	 */
-+	u32 trace_prod; /* The next trace will be written to this offset */
-+	u32 trace_oldest; /* The oldest valid trace starts at this offset
-+			   * (usually very close after the current producer).
-+			   */
-+};
-+
-+#define VF_MAX_STATIC 192
-+
-+#define MCP_GLOB_PATH_MAX	2
-+#define MCP_PORT_MAX		2
-+#define MCP_GLOB_PORT_MAX	4
-+#define MCP_GLOB_FUNC_MAX	16
-+
-+typedef u32 offsize_t;		/* In DWORDS !!! */
-+/* Offset from the beginning of the MCP scratchpad */
-+#define OFFSIZE_OFFSET_SHIFT	0
-+#define OFFSIZE_OFFSET_MASK	0x0000ffff
-+/* Size of specific element (not the whole array if any) */
-+#define OFFSIZE_SIZE_SHIFT	16
-+#define OFFSIZE_SIZE_MASK	0xffff0000
-+
-+#define SECTION_OFFSET(_offsize) (((((_offsize) &			\
-+				     OFFSIZE_OFFSET_MASK) >>	\
-+				    OFFSIZE_OFFSET_SHIFT) << 2))
-+
-+#define QED_SECTION_SIZE(_offsize) ((((_offsize) &		\
-+				      OFFSIZE_SIZE_MASK) >>	\
-+				     OFFSIZE_SIZE_SHIFT) << 2)
-+
-+#define SECTION_ADDR(_offsize, idx) (MCP_REG_SCRATCH +			\
-+				     SECTION_OFFSET((_offsize)) +	\
-+				     (QED_SECTION_SIZE((_offsize)) * (idx)))
-+
-+#define SECTION_OFFSIZE_ADDR(_pub_base, _section)	\
-+	((_pub_base) + offsetof(struct mcp_public_data, sections[_section]))
-+
-+/* PHY configuration */
-+struct eth_phy_cfg {
-+	u32					speed;
-+#define ETH_SPEED_AUTONEG			0x0
-+#define ETH_SPEED_SMARTLINQ			0x8
-+
-+	u32					pause;
-+#define ETH_PAUSE_NONE				0x0
-+#define ETH_PAUSE_AUTONEG			0x1
-+#define ETH_PAUSE_RX				0x2
-+#define ETH_PAUSE_TX				0x4
-+
-+	u32					adv_speed;
-+
-+	u32					loopback_mode;
-+#define ETH_LOOPBACK_NONE			0x0
-+#define ETH_LOOPBACK_INT_PHY			0x1
-+#define ETH_LOOPBACK_EXT_PHY			0x2
-+#define ETH_LOOPBACK_EXT			0x3
-+#define ETH_LOOPBACK_MAC			0x4
-+#define ETH_LOOPBACK_CNIG_AH_ONLY_0123		0x5
-+#define ETH_LOOPBACK_CNIG_AH_ONLY_2301		0x6
-+#define ETH_LOOPBACK_PCS_AH_ONLY		0x7
-+#define ETH_LOOPBACK_REVERSE_MAC_AH_ONLY	0x8
-+#define ETH_LOOPBACK_INT_PHY_FEA_AH_ONLY	0x9
-+
-+	u32					eee_cfg;
-+#define EEE_CFG_EEE_ENABLED			BIT(0)
-+#define EEE_CFG_TX_LPI				BIT(1)
-+#define EEE_CFG_ADV_SPEED_1G			BIT(2)
-+#define EEE_CFG_ADV_SPEED_10G			BIT(3)
-+#define EEE_TX_TIMER_USEC_MASK			0xfffffff0
-+#define EEE_TX_TIMER_USEC_OFFSET		4
-+#define EEE_TX_TIMER_USEC_BALANCED_TIME		0xa00
-+#define EEE_TX_TIMER_USEC_AGGRESSIVE_TIME	0x100
-+#define EEE_TX_TIMER_USEC_LATENCY_TIME		0x6000
-+
-+	u32					deprecated;
-+
-+	u32					fec_mode;
-+#define FEC_FORCE_MODE_MASK			0x000000ff
-+#define FEC_FORCE_MODE_OFFSET			0
-+#define FEC_FORCE_MODE_NONE			0x00
-+#define FEC_FORCE_MODE_FIRECODE			0x01
-+#define FEC_FORCE_MODE_RS			0x02
-+#define FEC_FORCE_MODE_AUTO			0x07
-+#define FEC_EXTENDED_MODE_MASK			0xffffff00
-+#define FEC_EXTENDED_MODE_OFFSET		8
-+#define ETH_EXT_FEC_NONE			0x00000100
-+#define ETH_EXT_FEC_10G_NONE			0x00000200
-+#define ETH_EXT_FEC_10G_BASE_R			0x00000400
-+#define ETH_EXT_FEC_20G_NONE			0x00000800
-+#define ETH_EXT_FEC_20G_BASE_R			0x00001000
-+#define ETH_EXT_FEC_25G_NONE			0x00002000
-+#define ETH_EXT_FEC_25G_BASE_R			0x00004000
-+#define ETH_EXT_FEC_25G_RS528			0x00008000
-+#define ETH_EXT_FEC_40G_NONE			0x00010000
-+#define ETH_EXT_FEC_40G_BASE_R			0x00020000
-+#define ETH_EXT_FEC_50G_NONE			0x00040000
-+#define ETH_EXT_FEC_50G_BASE_R			0x00080000
-+#define ETH_EXT_FEC_50G_RS528			0x00100000
-+#define ETH_EXT_FEC_50G_RS544			0x00200000
-+#define ETH_EXT_FEC_100G_NONE			0x00400000
-+#define ETH_EXT_FEC_100G_BASE_R			0x00800000
-+#define ETH_EXT_FEC_100G_RS528			0x01000000
-+#define ETH_EXT_FEC_100G_RS544			0x02000000
-+
-+	u32					extended_speed;
-+#define ETH_EXT_SPEED_MASK			0x0000ffff
-+#define ETH_EXT_SPEED_OFFSET			0
-+#define ETH_EXT_SPEED_AN			0x00000001
-+#define ETH_EXT_SPEED_1G			0x00000002
-+#define ETH_EXT_SPEED_10G			0x00000004
-+#define ETH_EXT_SPEED_20G			0x00000008
-+#define ETH_EXT_SPEED_25G			0x00000010
-+#define ETH_EXT_SPEED_40G			0x00000020
-+#define ETH_EXT_SPEED_50G_BASE_R		0x00000040
-+#define ETH_EXT_SPEED_50G_BASE_R2		0x00000080
-+#define ETH_EXT_SPEED_100G_BASE_R2		0x00000100
-+#define ETH_EXT_SPEED_100G_BASE_R4		0x00000200
-+#define ETH_EXT_SPEED_100G_BASE_P4		0x00000400
-+#define ETH_EXT_ADV_SPEED_MASK			0xffff0000
-+#define ETH_EXT_ADV_SPEED_OFFSET		16
-+#define ETH_EXT_ADV_SPEED_RESERVED		0x00010000
-+#define ETH_EXT_ADV_SPEED_1G			0x00020000
-+#define ETH_EXT_ADV_SPEED_10G			0x00040000
-+#define ETH_EXT_ADV_SPEED_20G			0x00080000
-+#define ETH_EXT_ADV_SPEED_25G			0x00100000
-+#define ETH_EXT_ADV_SPEED_40G			0x00200000
-+#define ETH_EXT_ADV_SPEED_50G_BASE_R		0x00400000
-+#define ETH_EXT_ADV_SPEED_50G_BASE_R2		0x00800000
-+#define ETH_EXT_ADV_SPEED_100G_BASE_R2		0x01000000
-+#define ETH_EXT_ADV_SPEED_100G_BASE_R4		0x02000000
-+#define ETH_EXT_ADV_SPEED_100G_BASE_P4		0x04000000
-+};
-+
-+struct port_mf_cfg {
-+	u32 dynamic_cfg;
-+#define PORT_MF_CFG_OV_TAG_MASK		0x0000ffff
-+#define PORT_MF_CFG_OV_TAG_SHIFT	0
-+#define PORT_MF_CFG_OV_TAG_DEFAULT	PORT_MF_CFG_OV_TAG_MASK
-+
-+	u32 reserved[1];
-+};
-+
-+struct eth_stats {
-+	u64 r64;
-+	u64 r127;
-+	u64 r255;
-+	u64 r511;
-+	u64 r1023;
-+	u64 r1518;
-+
-+	union {
-+		struct {
-+			u64 r1522;
-+			u64 r2047;
-+			u64 r4095;
-+			u64 r9216;
-+			u64 r16383;
-+		} bb0;
-+		struct {
-+			u64 unused1;
-+			u64 r1519_to_max;
-+			u64 unused2;
-+			u64 unused3;
-+			u64 unused4;
-+		} ah0;
-+	} u0;
-+
-+	u64 rfcs;
-+	u64 rxcf;
-+	u64 rxpf;
-+	u64 rxpp;
-+	u64 raln;
-+	u64 rfcr;
-+	u64 rovr;
-+	u64 rjbr;
-+	u64 rund;
-+	u64 rfrg;
-+	u64 t64;
-+	u64 t127;
-+	u64 t255;
-+	u64 t511;
-+	u64 t1023;
-+	u64 t1518;
-+
-+	union {
-+		struct {
-+			u64 t2047;
-+			u64 t4095;
-+			u64 t9216;
-+			u64 t16383;
-+		} bb1;
-+		struct {
-+			u64 t1519_to_max;
-+			u64 unused6;
-+			u64 unused7;
-+			u64 unused8;
-+		} ah1;
-+	} u1;
-+
-+	u64 txpf;
-+	u64 txpp;
-+
-+	union {
-+		struct {
-+			u64 tlpiec;
-+			u64 tncl;
-+		} bb2;
-+		struct {
-+			u64 unused9;
-+			u64 unused10;
-+		} ah2;
-+	} u2;
-+
-+	u64 rbyte;
-+	u64 rxuca;
-+	u64 rxmca;
-+	u64 rxbca;
-+	u64 rxpok;
-+	u64 tbyte;
-+	u64 txuca;
-+	u64 txmca;
-+	u64 txbca;
-+	u64 txcf;
-+};
-+
-+struct brb_stats {
-+	u64 brb_truncate[8];
-+	u64 brb_discard[8];
-+};
-+
-+struct port_stats {
-+	struct brb_stats brb;
-+	struct eth_stats eth;
-+};
-+
-+struct couple_mode_teaming {
-+	u8 port_cmt[MCP_GLOB_PORT_MAX];
-+#define PORT_CMT_IN_TEAM	BIT(0)
-+
-+#define PORT_CMT_PORT_ROLE	BIT(1)
-+#define PORT_CMT_PORT_INACTIVE	(0 << 1)
-+#define PORT_CMT_PORT_ACTIVE	BIT(1)
-+
-+#define PORT_CMT_TEAM_MASK	BIT(2)
-+#define PORT_CMT_TEAM0		(0 << 2)
-+#define PORT_CMT_TEAM1		BIT(2)
-+};
-+
-+#define LLDP_CHASSIS_ID_STAT_LEN	4
-+#define LLDP_PORT_ID_STAT_LEN		4
-+#define DCBX_MAX_APP_PROTOCOL		32
-+#define MAX_SYSTEM_LLDP_TLV_DATA	32
-+
-+enum _lldp_agent {
-+	LLDP_NEAREST_BRIDGE = 0,
-+	LLDP_NEAREST_NON_TPMR_BRIDGE,
-+	LLDP_NEAREST_CUSTOMER_BRIDGE,
-+	LLDP_MAX_LLDP_AGENTS
-+};
-+
-+struct lldp_config_params_s {
-+	u32 config;
-+#define LLDP_CONFIG_TX_INTERVAL_MASK	0x000000ff
-+#define LLDP_CONFIG_TX_INTERVAL_SHIFT	0
-+#define LLDP_CONFIG_HOLD_MASK		0x00000f00
-+#define LLDP_CONFIG_HOLD_SHIFT		8
-+#define LLDP_CONFIG_MAX_CREDIT_MASK	0x0000f000
-+#define LLDP_CONFIG_MAX_CREDIT_SHIFT	12
-+#define LLDP_CONFIG_ENABLE_RX_MASK	0x40000000
-+#define LLDP_CONFIG_ENABLE_RX_SHIFT	30
-+#define LLDP_CONFIG_ENABLE_TX_MASK	0x80000000
-+#define LLDP_CONFIG_ENABLE_TX_SHIFT	31
-+	u32 local_chassis_id[LLDP_CHASSIS_ID_STAT_LEN];
-+	u32 local_port_id[LLDP_PORT_ID_STAT_LEN];
-+};
-+
-+struct lldp_status_params_s {
-+	u32 prefix_seq_num;
-+	u32 status;
-+	u32 peer_chassis_id[LLDP_CHASSIS_ID_STAT_LEN];
-+	u32 peer_port_id[LLDP_PORT_ID_STAT_LEN];
-+	u32 suffix_seq_num;
-+};
-+
-+struct dcbx_ets_feature {
-+	u32 flags;
-+#define DCBX_ETS_ENABLED_MASK	0x00000001
-+#define DCBX_ETS_ENABLED_SHIFT	0
-+#define DCBX_ETS_WILLING_MASK	0x00000002
-+#define DCBX_ETS_WILLING_SHIFT	1
-+#define DCBX_ETS_ERROR_MASK	0x00000004
-+#define DCBX_ETS_ERROR_SHIFT	2
-+#define DCBX_ETS_CBS_MASK	0x00000008
-+#define DCBX_ETS_CBS_SHIFT	3
-+#define DCBX_ETS_MAX_TCS_MASK	0x000000f0
-+#define DCBX_ETS_MAX_TCS_SHIFT	4
-+#define DCBX_OOO_TC_MASK	0x00000f00
-+#define DCBX_OOO_TC_SHIFT	8
-+	u32 pri_tc_tbl[1];
-+#define DCBX_TCP_OOO_TC		(4)
-+
-+#define NIG_ETS_ISCSI_OOO_CLIENT_OFFSET	(DCBX_TCP_OOO_TC + 1)
-+#define DCBX_CEE_STRICT_PRIORITY	0xf
-+	u32 tc_bw_tbl[2];
-+	u32 tc_tsa_tbl[2];
-+#define DCBX_ETS_TSA_STRICT	0
-+#define DCBX_ETS_TSA_CBS	1
-+#define DCBX_ETS_TSA_ETS	2
-+};
-+
-+#define DCBX_TCP_OOO_TC			(4)
-+#define DCBX_TCP_OOO_K2_4PORT_TC	(3)
-+
-+struct dcbx_app_priority_entry {
-+	u32 entry;
-+#define DCBX_APP_PRI_MAP_MASK		0x000000ff
-+#define DCBX_APP_PRI_MAP_SHIFT		0
-+#define DCBX_APP_PRI_0			0x01
-+#define DCBX_APP_PRI_1			0x02
-+#define DCBX_APP_PRI_2			0x04
-+#define DCBX_APP_PRI_3			0x08
-+#define DCBX_APP_PRI_4			0x10
-+#define DCBX_APP_PRI_5			0x20
-+#define DCBX_APP_PRI_6			0x40
-+#define DCBX_APP_PRI_7			0x80
-+#define DCBX_APP_SF_MASK		0x00000300
-+#define DCBX_APP_SF_SHIFT		8
-+#define DCBX_APP_SF_ETHTYPE		0
-+#define DCBX_APP_SF_PORT		1
-+#define DCBX_APP_SF_IEEE_MASK		0x0000f000
-+#define DCBX_APP_SF_IEEE_SHIFT		12
-+#define DCBX_APP_SF_IEEE_RESERVED	0
-+#define DCBX_APP_SF_IEEE_ETHTYPE	1
-+#define DCBX_APP_SF_IEEE_TCP_PORT	2
-+#define DCBX_APP_SF_IEEE_UDP_PORT	3
-+#define DCBX_APP_SF_IEEE_TCP_UDP_PORT	4
-+
-+#define DCBX_APP_PROTOCOL_ID_MASK	0xffff0000
-+#define DCBX_APP_PROTOCOL_ID_SHIFT	16
-+};
-+
-+struct dcbx_app_priority_feature {
-+	u32 flags;
-+#define DCBX_APP_ENABLED_MASK		0x00000001
-+#define DCBX_APP_ENABLED_SHIFT		0
-+#define DCBX_APP_WILLING_MASK		0x00000002
-+#define DCBX_APP_WILLING_SHIFT		1
-+#define DCBX_APP_ERROR_MASK		0x00000004
-+#define DCBX_APP_ERROR_SHIFT		2
-+#define DCBX_APP_MAX_TCS_MASK		0x0000f000
-+#define DCBX_APP_MAX_TCS_SHIFT		12
-+#define DCBX_APP_NUM_ENTRIES_MASK	0x00ff0000
-+#define DCBX_APP_NUM_ENTRIES_SHIFT	16
-+	struct dcbx_app_priority_entry app_pri_tbl[DCBX_MAX_APP_PROTOCOL];
-+};
-+
-+struct dcbx_features {
-+	struct dcbx_ets_feature ets;
-+	u32 pfc;
-+#define DCBX_PFC_PRI_EN_BITMAP_MASK	0x000000ff
-+#define DCBX_PFC_PRI_EN_BITMAP_SHIFT	0
-+#define DCBX_PFC_PRI_EN_BITMAP_PRI_0	0x01
-+#define DCBX_PFC_PRI_EN_BITMAP_PRI_1	0x02
-+#define DCBX_PFC_PRI_EN_BITMAP_PRI_2	0x04
-+#define DCBX_PFC_PRI_EN_BITMAP_PRI_3	0x08
-+#define DCBX_PFC_PRI_EN_BITMAP_PRI_4	0x10
-+#define DCBX_PFC_PRI_EN_BITMAP_PRI_5	0x20
-+#define DCBX_PFC_PRI_EN_BITMAP_PRI_6	0x40
-+#define DCBX_PFC_PRI_EN_BITMAP_PRI_7	0x80
-+
-+#define DCBX_PFC_FLAGS_MASK		0x0000ff00
-+#define DCBX_PFC_FLAGS_SHIFT		8
-+#define DCBX_PFC_CAPS_MASK		0x00000f00
-+#define DCBX_PFC_CAPS_SHIFT		8
-+#define DCBX_PFC_MBC_MASK		0x00004000
-+#define DCBX_PFC_MBC_SHIFT		14
-+#define DCBX_PFC_WILLING_MASK		0x00008000
-+#define DCBX_PFC_WILLING_SHIFT		15
-+#define DCBX_PFC_ENABLED_MASK		0x00010000
-+#define DCBX_PFC_ENABLED_SHIFT		16
-+#define DCBX_PFC_ERROR_MASK		0x00020000
-+#define DCBX_PFC_ERROR_SHIFT		17
-+
-+	struct dcbx_app_priority_feature app;
-+};
-+
-+struct dcbx_local_params {
-+	u32 config;
-+#define DCBX_CONFIG_VERSION_MASK	0x00000007
-+#define DCBX_CONFIG_VERSION_SHIFT	0
-+#define DCBX_CONFIG_VERSION_DISABLED	0
-+#define DCBX_CONFIG_VERSION_IEEE	1
-+#define DCBX_CONFIG_VERSION_CEE		2
-+#define DCBX_CONFIG_VERSION_STATIC	4
-+
-+	u32 flags;
-+	struct dcbx_features features;
-+};
-+
-+struct dcbx_mib {
-+	u32 prefix_seq_num;
-+	u32 flags;
-+	struct dcbx_features features;
-+	u32 suffix_seq_num;
-+};
-+
-+struct lldp_system_tlvs_buffer_s {
-+	u16 valid;
-+	u16 length;
-+	u32 data[MAX_SYSTEM_LLDP_TLV_DATA];
-+};
-+
-+struct dcb_dscp_map {
-+	u32 flags;
-+#define DCB_DSCP_ENABLE_MASK	0x1
-+#define DCB_DSCP_ENABLE_SHIFT	0
-+#define DCB_DSCP_ENABLE	1
-+	u32 dscp_pri_map[8];
-+};
-+
-+struct public_global {
-+	u32 max_path;
-+	u32 max_ports;
-+#define MODE_1P 1
-+#define MODE_2P 2
-+#define MODE_3P 3
-+#define MODE_4P 4
-+	u32 debug_mb_offset;
-+	u32 phymod_dbg_mb_offset;
-+	struct couple_mode_teaming cmt;
-+	s32 internal_temperature;
-+	u32 mfw_ver;
-+	u32 running_bundle_id;
-+	s32 external_temperature;
-+	u32 mdump_reason;
-+	u64 reserved;
-+	u32 data_ptr;
-+	u32 data_size;
-+};
-+
-+struct fw_flr_mb {
-+	u32 aggint;
-+	u32 opgen_addr;
-+	u32 accum_ack;
-+};
-+
-+struct public_path {
-+	struct fw_flr_mb flr_mb;
-+	u32 mcp_vf_disabled[VF_MAX_STATIC / 32];
-+
-+	u32 process_kill;
-+#define PROCESS_KILL_COUNTER_MASK	0x0000ffff
-+#define PROCESS_KILL_COUNTER_SHIFT	0
-+#define PROCESS_KILL_GLOB_AEU_BIT_MASK	0xffff0000
-+#define PROCESS_KILL_GLOB_AEU_BIT_SHIFT	16
-+#define GLOBAL_AEU_BIT(aeu_reg_id, aeu_bit) ((aeu_reg_id) * 32 + (aeu_bit))
-+};
-+
-+struct public_port {
-+	u32						validity_map;
-+
-+	u32						link_status;
-+#define LINK_STATUS_LINK_UP				0x00000001
-+#define LINK_STATUS_SPEED_AND_DUPLEX_MASK		0x0000001e
-+#define LINK_STATUS_SPEED_AND_DUPLEX_1000THD		BIT(1)
-+#define LINK_STATUS_SPEED_AND_DUPLEX_1000TFD		(2 << 1)
-+#define LINK_STATUS_SPEED_AND_DUPLEX_10G		(3 << 1)
-+#define LINK_STATUS_SPEED_AND_DUPLEX_20G		(4 << 1)
-+#define LINK_STATUS_SPEED_AND_DUPLEX_40G		(5 << 1)
-+#define LINK_STATUS_SPEED_AND_DUPLEX_50G		(6 << 1)
-+#define LINK_STATUS_SPEED_AND_DUPLEX_100G		(7 << 1)
-+#define LINK_STATUS_SPEED_AND_DUPLEX_25G		(8 << 1)
-+#define LINK_STATUS_AUTO_NEGOTIATE_ENABLED		0x00000020
-+#define LINK_STATUS_AUTO_NEGOTIATE_COMPLETE		0x00000040
-+#define LINK_STATUS_PARALLEL_DETECTION_USED		0x00000080
-+#define LINK_STATUS_PFC_ENABLED				0x00000100
-+#define LINK_STATUS_LINK_PARTNER_1000TFD_CAPABLE	0x00000200
-+#define LINK_STATUS_LINK_PARTNER_1000THD_CAPABLE	0x00000400
-+#define LINK_STATUS_LINK_PARTNER_10G_CAPABLE		0x00000800
-+#define LINK_STATUS_LINK_PARTNER_20G_CAPABLE		0x00001000
-+#define LINK_STATUS_LINK_PARTNER_40G_CAPABLE		0x00002000
-+#define LINK_STATUS_LINK_PARTNER_50G_CAPABLE		0x00004000
-+#define LINK_STATUS_LINK_PARTNER_100G_CAPABLE		0x00008000
-+#define LINK_STATUS_LINK_PARTNER_25G_CAPABLE		0x00010000
-+#define LINK_STATUS_LINK_PARTNER_FLOW_CONTROL_MASK	0x000c0000
-+#define LINK_STATUS_LINK_PARTNER_NOT_PAUSE_CAPABLE	(0 << 18)
-+#define LINK_STATUS_LINK_PARTNER_SYMMETRIC_PAUSE	BIT(18)
-+#define LINK_STATUS_LINK_PARTNER_ASYMMETRIC_PAUSE	(2 << 18)
-+#define LINK_STATUS_LINK_PARTNER_BOTH_PAUSE		(3 << 18)
-+#define LINK_STATUS_SFP_TX_FAULT			0x00100000
-+#define LINK_STATUS_TX_FLOW_CONTROL_ENABLED		0x00200000
-+#define LINK_STATUS_RX_FLOW_CONTROL_ENABLED		0x00400000
-+#define LINK_STATUS_RX_SIGNAL_PRESENT			0x00800000
-+#define LINK_STATUS_MAC_LOCAL_FAULT			0x01000000
-+#define LINK_STATUS_MAC_REMOTE_FAULT			0x02000000
-+#define LINK_STATUS_UNSUPPORTED_SPD_REQ			0x04000000
-+
-+#define LINK_STATUS_FEC_MODE_MASK			0x38000000
-+#define LINK_STATUS_FEC_MODE_NONE			(0 << 27)
-+#define LINK_STATUS_FEC_MODE_FIRECODE_CL74		BIT(27)
-+#define LINK_STATUS_FEC_MODE_RS_CL91			(2 << 27)
-+
-+	u32 link_status1;
-+	u32 ext_phy_fw_version;
-+	u32 drv_phy_cfg_addr;
-+
-+	u32 port_stx;
-+
-+	u32 stat_nig_timer;
-+
-+	struct port_mf_cfg port_mf_config;
-+	struct port_stats stats;
-+
-+	u32 media_type;
-+#define MEDIA_UNSPECIFIED	0x0
-+#define MEDIA_SFPP_10G_FIBER	0x1
-+#define MEDIA_XFP_FIBER		0x2
-+#define MEDIA_DA_TWINAX		0x3
-+#define MEDIA_BASE_T		0x4
-+#define MEDIA_SFP_1G_FIBER	0x5
-+#define MEDIA_MODULE_FIBER	0x6
-+#define MEDIA_KR		0xf0
-+#define MEDIA_NOT_PRESENT	0xff
-+
-+	u32 lfa_status;
-+	u32 link_change_count;
-+
-+	struct lldp_config_params_s lldp_config_params[LLDP_MAX_LLDP_AGENTS];
-+	struct lldp_status_params_s lldp_status_params[LLDP_MAX_LLDP_AGENTS];
-+	struct lldp_system_tlvs_buffer_s system_lldp_tlvs_buf;
-+
-+	/* DCBX related MIB */
-+	struct dcbx_local_params local_admin_dcbx_mib;
-+	struct dcbx_mib remote_dcbx_mib;
-+	struct dcbx_mib operational_dcbx_mib;
-+
-+	u32 reserved[2];
-+
-+	u32						transceiver_data;
-+#define ETH_TRANSCEIVER_STATE_MASK			0x000000ff
-+#define ETH_TRANSCEIVER_STATE_SHIFT			0x00000000
-+#define ETH_TRANSCEIVER_STATE_OFFSET			0x00000000
-+#define ETH_TRANSCEIVER_STATE_UNPLUGGED			0x00000000
-+#define ETH_TRANSCEIVER_STATE_PRESENT			0x00000001
-+#define ETH_TRANSCEIVER_STATE_VALID			0x00000003
-+#define ETH_TRANSCEIVER_STATE_UPDATING			0x00000008
-+#define ETH_TRANSCEIVER_TYPE_MASK			0x0000ff00
-+#define ETH_TRANSCEIVER_TYPE_OFFSET			0x8
-+#define ETH_TRANSCEIVER_TYPE_NONE			0x00
-+#define ETH_TRANSCEIVER_TYPE_UNKNOWN			0xff
-+#define ETH_TRANSCEIVER_TYPE_1G_PCC			0x01
-+#define ETH_TRANSCEIVER_TYPE_1G_ACC			0x02
-+#define ETH_TRANSCEIVER_TYPE_1G_LX			0x03
-+#define ETH_TRANSCEIVER_TYPE_1G_SX			0x04
-+#define ETH_TRANSCEIVER_TYPE_10G_SR			0x05
-+#define ETH_TRANSCEIVER_TYPE_10G_LR			0x06
-+#define ETH_TRANSCEIVER_TYPE_10G_LRM			0x07
-+#define ETH_TRANSCEIVER_TYPE_10G_ER			0x08
-+#define ETH_TRANSCEIVER_TYPE_10G_PCC			0x09
-+#define ETH_TRANSCEIVER_TYPE_10G_ACC			0x0a
-+#define ETH_TRANSCEIVER_TYPE_XLPPI			0x0b
-+#define ETH_TRANSCEIVER_TYPE_40G_LR4			0x0c
-+#define ETH_TRANSCEIVER_TYPE_40G_SR4			0x0d
-+#define ETH_TRANSCEIVER_TYPE_40G_CR4			0x0e
-+#define ETH_TRANSCEIVER_TYPE_100G_AOC			0x0f
-+#define ETH_TRANSCEIVER_TYPE_100G_SR4			0x10
-+#define ETH_TRANSCEIVER_TYPE_100G_LR4			0x11
-+#define ETH_TRANSCEIVER_TYPE_100G_ER4			0x12
-+#define ETH_TRANSCEIVER_TYPE_100G_ACC			0x13
-+#define ETH_TRANSCEIVER_TYPE_100G_CR4			0x14
-+#define ETH_TRANSCEIVER_TYPE_4x10G_SR			0x15
-+#define ETH_TRANSCEIVER_TYPE_25G_CA_N			0x16
-+#define ETH_TRANSCEIVER_TYPE_25G_ACC_S			0x17
-+#define ETH_TRANSCEIVER_TYPE_25G_CA_S			0x18
-+#define ETH_TRANSCEIVER_TYPE_25G_ACC_M			0x19
-+#define ETH_TRANSCEIVER_TYPE_25G_CA_L			0x1a
-+#define ETH_TRANSCEIVER_TYPE_25G_ACC_L			0x1b
-+#define ETH_TRANSCEIVER_TYPE_25G_SR			0x1c
-+#define ETH_TRANSCEIVER_TYPE_25G_LR			0x1d
-+#define ETH_TRANSCEIVER_TYPE_25G_AOC			0x1e
-+#define ETH_TRANSCEIVER_TYPE_4x10G			0x1f
-+#define ETH_TRANSCEIVER_TYPE_4x25G_CR			0x20
-+#define ETH_TRANSCEIVER_TYPE_1000BASET			0x21
-+#define ETH_TRANSCEIVER_TYPE_10G_BASET			0x22
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_SR	0x30
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_CR	0x31
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_40G_LR	0x32
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_SR	0x33
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_CR	0x34
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_LR	0x35
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_40G_100G_AOC	0x36
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_SR	0x37
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_10G_25G_LR	0x38
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_SR	0x39
-+#define ETH_TRANSCEIVER_TYPE_MULTI_RATE_1G_10G_LR	0x3a
-+
-+	u32 wol_info;
-+	u32 wol_pkt_len;
-+	u32 wol_pkt_details;
-+	struct dcb_dscp_map dcb_dscp_map;
-+
-+	u32 eee_status;
-+#define EEE_ACTIVE_BIT			BIT(0)
-+#define EEE_LD_ADV_STATUS_MASK		0x000000f0
-+#define EEE_LD_ADV_STATUS_OFFSET	4
-+#define EEE_1G_ADV			BIT(1)
-+#define EEE_10G_ADV			BIT(2)
-+#define EEE_LP_ADV_STATUS_MASK		0x00000f00
-+#define EEE_LP_ADV_STATUS_OFFSET	8
-+#define EEE_SUPPORTED_SPEED_MASK	0x0000f000
-+#define EEE_SUPPORTED_SPEED_OFFSET	12
-+#define EEE_1G_SUPPORTED		BIT(1)
-+#define EEE_10G_SUPPORTED		BIT(2)
-+
-+	u32 eee_remote;
-+#define EEE_REMOTE_TW_TX_MASK   0x0000ffff
-+#define EEE_REMOTE_TW_TX_OFFSET 0
-+#define EEE_REMOTE_TW_RX_MASK   0xffff0000
-+#define EEE_REMOTE_TW_RX_OFFSET 16
-+
-+	u32 reserved1;
-+	u32 oem_cfg_port;
-+#define OEM_CFG_CHANNEL_TYPE_MASK                       0x00000003
-+#define OEM_CFG_CHANNEL_TYPE_OFFSET                     0
-+#define OEM_CFG_CHANNEL_TYPE_VLAN_PARTITION             0x1
-+#define OEM_CFG_CHANNEL_TYPE_STAGGED                    0x2
-+#define OEM_CFG_SCHED_TYPE_MASK                         0x0000000C
-+#define OEM_CFG_SCHED_TYPE_OFFSET                       2
-+#define OEM_CFG_SCHED_TYPE_ETS                          0x1
-+#define OEM_CFG_SCHED_TYPE_VNIC_BW                      0x2
-+};
-+
-+struct public_func {
-+	u32 reserved0[2];
-+
-+	u32 mtu_size;
-+
-+	u32 reserved[7];
-+
-+	u32 config;
-+#define FUNC_MF_CFG_FUNC_HIDE			0x00000001
-+#define FUNC_MF_CFG_PAUSE_ON_HOST_RING		0x00000002
-+#define FUNC_MF_CFG_PAUSE_ON_HOST_RING_SHIFT	0x00000001
-+
-+#define FUNC_MF_CFG_PROTOCOL_MASK	0x000000f0
-+#define FUNC_MF_CFG_PROTOCOL_SHIFT	4
-+#define FUNC_MF_CFG_PROTOCOL_ETHERNET	0x00000000
-+#define FUNC_MF_CFG_PROTOCOL_ISCSI              0x00000010
-+#define FUNC_MF_CFG_PROTOCOL_FCOE               0x00000020
-+#define FUNC_MF_CFG_PROTOCOL_ROCE               0x00000030
-+#define FUNC_MF_CFG_PROTOCOL_NVMETCP    0x00000040
-+#define FUNC_MF_CFG_PROTOCOL_MAX	0x00000040
-+
-+#define FUNC_MF_CFG_MIN_BW_MASK		0x0000ff00
-+#define FUNC_MF_CFG_MIN_BW_SHIFT	8
-+#define FUNC_MF_CFG_MIN_BW_DEFAULT	0x00000000
-+#define FUNC_MF_CFG_MAX_BW_MASK		0x00ff0000
-+#define FUNC_MF_CFG_MAX_BW_SHIFT	16
-+#define FUNC_MF_CFG_MAX_BW_DEFAULT	0x00640000
-+
-+	u32 status;
-+#define FUNC_STATUS_VIRTUAL_LINK_UP	0x00000001
-+
-+	u32 mac_upper;
-+#define FUNC_MF_CFG_UPPERMAC_MASK	0x0000ffff
-+#define FUNC_MF_CFG_UPPERMAC_SHIFT	0
-+#define FUNC_MF_CFG_UPPERMAC_DEFAULT	FUNC_MF_CFG_UPPERMAC_MASK
-+	u32 mac_lower;
-+#define FUNC_MF_CFG_LOWERMAC_DEFAULT	0xffffffff
-+
-+	u32 fcoe_wwn_port_name_upper;
-+	u32 fcoe_wwn_port_name_lower;
-+
-+	u32 fcoe_wwn_node_name_upper;
-+	u32 fcoe_wwn_node_name_lower;
-+
-+	u32 ovlan_stag;
-+#define FUNC_MF_CFG_OV_STAG_MASK	0x0000ffff
-+#define FUNC_MF_CFG_OV_STAG_SHIFT	0
-+#define FUNC_MF_CFG_OV_STAG_DEFAULT	FUNC_MF_CFG_OV_STAG_MASK
-+
-+	u32 pf_allocation;
-+
-+	u32 preserve_data;
-+
-+	u32 driver_last_activity_ts;
-+
-+	u32 drv_ack_vf_disabled[VF_MAX_STATIC / 32];
-+
-+	u32 drv_id;
-+#define DRV_ID_PDA_COMP_VER_MASK	0x0000ffff
-+#define DRV_ID_PDA_COMP_VER_SHIFT	0
-+
-+#define LOAD_REQ_HSI_VERSION		2
-+#define DRV_ID_MCP_HSI_VER_MASK		0x00ff0000
-+#define DRV_ID_MCP_HSI_VER_SHIFT	16
-+#define DRV_ID_MCP_HSI_VER_CURRENT	(LOAD_REQ_HSI_VERSION << \
-+					 DRV_ID_MCP_HSI_VER_SHIFT)
-+
-+#define DRV_ID_DRV_TYPE_MASK		0x7f000000
-+#define DRV_ID_DRV_TYPE_SHIFT		24
-+#define DRV_ID_DRV_TYPE_UNKNOWN		(0 << DRV_ID_DRV_TYPE_SHIFT)
-+#define DRV_ID_DRV_TYPE_LINUX		BIT(DRV_ID_DRV_TYPE_SHIFT)
-+
-+#define DRV_ID_DRV_INIT_HW_MASK		0x80000000
-+#define DRV_ID_DRV_INIT_HW_SHIFT	31
-+#define DRV_ID_DRV_INIT_HW_FLAG		BIT(DRV_ID_DRV_INIT_HW_SHIFT)
-+
-+	u32 oem_cfg_func;
-+#define OEM_CFG_FUNC_TC_MASK                    0x0000000F
-+#define OEM_CFG_FUNC_TC_OFFSET                  0
-+#define OEM_CFG_FUNC_TC_0                       0x0
-+#define OEM_CFG_FUNC_TC_1                       0x1
-+#define OEM_CFG_FUNC_TC_2                       0x2
-+#define OEM_CFG_FUNC_TC_3                       0x3
-+#define OEM_CFG_FUNC_TC_4                       0x4
-+#define OEM_CFG_FUNC_TC_5                       0x5
-+#define OEM_CFG_FUNC_TC_6                       0x6
-+#define OEM_CFG_FUNC_TC_7                       0x7
-+
-+#define OEM_CFG_FUNC_HOST_PRI_CTRL_MASK         0x00000030
-+#define OEM_CFG_FUNC_HOST_PRI_CTRL_OFFSET       4
-+#define OEM_CFG_FUNC_HOST_PRI_CTRL_VNIC         0x1
-+#define OEM_CFG_FUNC_HOST_PRI_CTRL_OS           0x2
-+};
-+
-+struct mcp_mac {
-+	u32 mac_upper;
-+	u32 mac_lower;
-+};
-+
-+struct mcp_val64 {
-+	u32 lo;
-+	u32 hi;
-+};
-+
-+struct mcp_file_att {
-+	u32 nvm_start_addr;
-+	u32 len;
-+};
-+
-+struct bist_nvm_image_att {
-+	u32 return_code;
-+	u32 image_type;
-+	u32 nvm_start_addr;
-+	u32 len;
-+};
-+
-+#define MCP_DRV_VER_STR_SIZE 16
-+#define MCP_DRV_VER_STR_SIZE_DWORD (MCP_DRV_VER_STR_SIZE / sizeof(u32))
-+#define MCP_DRV_NVM_BUF_LEN 32
-+struct drv_version_stc {
-+	u32 version;
-+	u8 name[MCP_DRV_VER_STR_SIZE - 4];
-+};
-+
-+struct lan_stats_stc {
-+	u64 ucast_rx_pkts;
-+	u64 ucast_tx_pkts;
-+	u32 fcs_err;
-+	u32 rserved;
-+};
-+
-+struct fcoe_stats_stc {
-+	u64 rx_pkts;
-+	u64 tx_pkts;
-+	u32 fcs_err;
-+	u32 login_failure;
-+};
-+
-+struct ocbb_data_stc {
-+	u32 ocbb_host_addr;
-+	u32 ocsd_host_addr;
-+	u32 ocsd_req_update_interval;
-+};
-+
-+#define MAX_NUM_OF_SENSORS 7
-+struct temperature_status_stc {
-+	u32 num_of_sensors;
-+	u32 sensor[MAX_NUM_OF_SENSORS];
-+};
-+
-+/* crash dump configuration header */
-+struct mdump_config_stc {
-+	u32 version;
-+	u32 config;
-+	u32 epoc;
-+	u32 num_of_logs;
-+	u32 valid_logs;
-+};
-+
-+enum resource_id_enum {
-+	RESOURCE_NUM_SB_E = 0,
-+	RESOURCE_NUM_L2_QUEUE_E = 1,
-+	RESOURCE_NUM_VPORT_E = 2,
-+	RESOURCE_NUM_VMQ_E = 3,
-+	RESOURCE_FACTOR_NUM_RSS_PF_E = 4,
-+	RESOURCE_FACTOR_RSS_PER_VF_E = 5,
-+	RESOURCE_NUM_RL_E = 6,
-+	RESOURCE_NUM_PQ_E = 7,
-+	RESOURCE_NUM_VF_E = 8,
-+	RESOURCE_VFC_FILTER_E = 9,
-+	RESOURCE_ILT_E = 10,
-+	RESOURCE_CQS_E = 11,
-+	RESOURCE_GFT_PROFILES_E = 12,
-+	RESOURCE_NUM_TC_E = 13,
-+	RESOURCE_NUM_RSS_ENGINES_E = 14,
-+	RESOURCE_LL2_QUEUE_E = 15,
-+	RESOURCE_RDMA_STATS_QUEUE_E = 16,
-+	RESOURCE_BDQ_E = 17,
-+	RESOURCE_QCN_E = 18,
-+	RESOURCE_LLH_FILTER_E = 19,
-+	RESOURCE_VF_MAC_ADDR = 20,
-+	RESOURCE_LL2_CQS_E = 21,
-+	RESOURCE_VF_CNQS = 22,
-+	RESOURCE_MAX_NUM,
-+	RESOURCE_NUM_INVALID = 0xFFFFFFFF
-+};
-+
-+/* Resource ID is to be filled by the driver in the MB request
-+ * Size, offset & flags to be filled by the MFW in the MB response
-+ */
-+struct resource_info {
-+	enum resource_id_enum res_id;
-+	u32 size;		/* number of allocated resources */
-+	u32 offset;		/* Offset of the 1st resource */
-+	u32 vf_size;
-+	u32 vf_offset;
-+	u32 flags;
-+#define RESOURCE_ELEMENT_STRICT BIT(0)
-+};
-+
-+#define DRV_ROLE_NONE           0
-+#define DRV_ROLE_PREBOOT        1
-+#define DRV_ROLE_OS             2
-+#define DRV_ROLE_KDUMP          3
-+
-+struct load_req_stc {
-+	u32 drv_ver_0;
-+	u32 drv_ver_1;
-+	u32 fw_ver;
-+	u32 misc0;
-+#define LOAD_REQ_ROLE_MASK              0x000000FF
-+#define LOAD_REQ_ROLE_SHIFT             0
-+#define LOAD_REQ_LOCK_TO_MASK           0x0000FF00
-+#define LOAD_REQ_LOCK_TO_SHIFT          8
-+#define LOAD_REQ_LOCK_TO_DEFAULT        0
-+#define LOAD_REQ_LOCK_TO_NONE           255
-+#define LOAD_REQ_FORCE_MASK             0x000F0000
-+#define LOAD_REQ_FORCE_SHIFT            16
-+#define LOAD_REQ_FORCE_NONE             0
-+#define LOAD_REQ_FORCE_PF               1
-+#define LOAD_REQ_FORCE_ALL              2
-+#define LOAD_REQ_FLAGS0_MASK            0x00F00000
-+#define LOAD_REQ_FLAGS0_SHIFT           20
-+#define LOAD_REQ_FLAGS0_AVOID_RESET     (0x1 << 0)
-+};
-+
-+struct load_rsp_stc {
-+	u32 drv_ver_0;
-+	u32 drv_ver_1;
-+	u32 fw_ver;
-+	u32 misc0;
-+#define LOAD_RSP_ROLE_MASK              0x000000FF
-+#define LOAD_RSP_ROLE_SHIFT             0
-+#define LOAD_RSP_HSI_MASK               0x0000FF00
-+#define LOAD_RSP_HSI_SHIFT              8
-+#define LOAD_RSP_FLAGS0_MASK            0x000F0000
-+#define LOAD_RSP_FLAGS0_SHIFT           16
-+#define LOAD_RSP_FLAGS0_DRV_EXISTS      (0x1 << 0)
-+};
-+
-+struct mdump_retain_data_stc {
-+	u32 valid;
-+	u32 epoch;
-+	u32 pf;
-+	u32 status;
-+};
-+
-+union drv_union_data {
-+	u32 ver_str[MCP_DRV_VER_STR_SIZE_DWORD];
-+	struct mcp_mac wol_mac;
-+
-+	struct eth_phy_cfg drv_phy_cfg;
-+
-+	struct mcp_val64 val64;
-+
-+	u8 raw_data[MCP_DRV_NVM_BUF_LEN];
-+
-+	struct mcp_file_att file_att;
-+
-+	u32 ack_vf_disabled[VF_MAX_STATIC / 32];
-+
-+	struct drv_version_stc drv_version;
-+
-+	struct lan_stats_stc lan_stats;
-+	struct fcoe_stats_stc fcoe_stats;
-+	struct ocbb_data_stc ocbb_info;
-+	struct temperature_status_stc temp_info;
-+	struct resource_info resource;
-+	struct bist_nvm_image_att nvm_image_att;
-+	struct mdump_config_stc mdump_config;
-+};
-+
-+struct public_drv_mb {
-+	u32 drv_mb_header;
-+#define DRV_MSG_CODE_MASK			0xffff0000
-+#define DRV_MSG_CODE_LOAD_REQ			0x10000000
-+#define DRV_MSG_CODE_LOAD_DONE			0x11000000
-+#define DRV_MSG_CODE_INIT_HW			0x12000000
-+#define DRV_MSG_CODE_CANCEL_LOAD_REQ            0x13000000
-+#define DRV_MSG_CODE_UNLOAD_REQ			0x20000000
-+#define DRV_MSG_CODE_UNLOAD_DONE		0x21000000
-+#define DRV_MSG_CODE_INIT_PHY			0x22000000
-+#define DRV_MSG_CODE_LINK_RESET			0x23000000
-+#define DRV_MSG_CODE_SET_DCBX			0x25000000
-+#define DRV_MSG_CODE_OV_UPDATE_CURR_CFG         0x26000000
-+#define DRV_MSG_CODE_OV_UPDATE_BUS_NUM          0x27000000
-+#define DRV_MSG_CODE_OV_UPDATE_BOOT_PROGRESS    0x28000000
-+#define DRV_MSG_CODE_OV_UPDATE_STORM_FW_VER     0x29000000
-+#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE     0x31000000
-+#define DRV_MSG_CODE_BW_UPDATE_ACK              0x32000000
-+#define DRV_MSG_CODE_OV_UPDATE_MTU              0x33000000
-+#define DRV_MSG_GET_RESOURCE_ALLOC_MSG		0x34000000
-+#define DRV_MSG_SET_RESOURCE_VALUE_MSG		0x35000000
-+#define DRV_MSG_CODE_OV_UPDATE_WOL              0x38000000
-+#define DRV_MSG_CODE_OV_UPDATE_ESWITCH_MODE     0x39000000
-+#define DRV_MSG_CODE_GET_OEM_UPDATES            0x41000000
-+
-+#define DRV_MSG_CODE_BW_UPDATE_ACK		0x32000000
-+#define DRV_MSG_CODE_NIG_DRAIN			0x30000000
-+#define DRV_MSG_CODE_S_TAG_UPDATE_ACK		0x3b000000
-+#define DRV_MSG_CODE_GET_NVM_CFG_OPTION		0x003e0000
-+#define DRV_MSG_CODE_SET_NVM_CFG_OPTION		0x003f0000
-+#define DRV_MSG_CODE_INITIATE_PF_FLR            0x02010000
-+#define DRV_MSG_CODE_VF_DISABLED_DONE		0xc0000000
-+#define DRV_MSG_CODE_CFG_VF_MSIX		0xc0010000
-+#define DRV_MSG_CODE_CFG_PF_VFS_MSIX		0xc0020000
-+#define DRV_MSG_CODE_NVM_PUT_FILE_BEGIN		0x00010000
-+#define DRV_MSG_CODE_NVM_PUT_FILE_DATA		0x00020000
-+#define DRV_MSG_CODE_NVM_GET_FILE_ATT		0x00030000
-+#define DRV_MSG_CODE_NVM_READ_NVRAM		0x00050000
-+#define DRV_MSG_CODE_NVM_WRITE_NVRAM		0x00060000
-+#define DRV_MSG_CODE_MCP_RESET			0x00090000
-+#define DRV_MSG_CODE_SET_VERSION		0x000f0000
-+#define DRV_MSG_CODE_MCP_HALT                   0x00100000
-+#define DRV_MSG_CODE_SET_VMAC                   0x00110000
-+#define DRV_MSG_CODE_GET_VMAC                   0x00120000
-+#define DRV_MSG_CODE_VMAC_TYPE_SHIFT            4
-+#define DRV_MSG_CODE_VMAC_TYPE_MASK             0x30
-+#define DRV_MSG_CODE_VMAC_TYPE_MAC              1
-+#define DRV_MSG_CODE_VMAC_TYPE_WWNN             2
-+#define DRV_MSG_CODE_VMAC_TYPE_WWPN             3
-+
-+#define DRV_MSG_CODE_GET_STATS                  0x00130000
-+#define DRV_MSG_CODE_STATS_TYPE_LAN             1
-+#define DRV_MSG_CODE_STATS_TYPE_FCOE            2
-+#define DRV_MSG_CODE_STATS_TYPE_ISCSI           3
-+#define DRV_MSG_CODE_STATS_TYPE_RDMA            4
-+
-+#define DRV_MSG_CODE_TRANSCEIVER_READ           0x00160000
-+
-+#define DRV_MSG_CODE_MASK_PARITIES              0x001a0000
-+
-+#define DRV_MSG_CODE_BIST_TEST			0x001e0000
-+#define DRV_MSG_CODE_SET_LED_MODE		0x00200000
-+#define DRV_MSG_CODE_RESOURCE_CMD		0x00230000
-+/* Send crash dump commands with param[3:0] - opcode */
-+#define DRV_MSG_CODE_MDUMP_CMD			0x00250000
-+#define DRV_MSG_CODE_GET_TLV_DONE		0x002f0000
-+#define DRV_MSG_CODE_GET_ENGINE_CONFIG		0x00370000
-+#define DRV_MSG_CODE_GET_PPFID_BITMAP		0x43000000
-+
-+#define DRV_MSG_CODE_DEBUG_DATA_SEND		0xc0040000
-+
-+#define RESOURCE_CMD_REQ_RESC_MASK		0x0000001F
-+#define RESOURCE_CMD_REQ_RESC_SHIFT		0
-+#define RESOURCE_CMD_REQ_OPCODE_MASK		0x000000E0
-+#define RESOURCE_CMD_REQ_OPCODE_SHIFT		5
-+#define RESOURCE_OPCODE_REQ			1
-+#define RESOURCE_OPCODE_REQ_WO_AGING		2
-+#define RESOURCE_OPCODE_REQ_W_AGING		3
-+#define RESOURCE_OPCODE_RELEASE			4
-+#define RESOURCE_OPCODE_FORCE_RELEASE		5
-+#define RESOURCE_CMD_REQ_AGE_MASK		0x0000FF00
-+#define RESOURCE_CMD_REQ_AGE_SHIFT		8
-+
-+#define RESOURCE_CMD_RSP_OWNER_MASK		0x000000FF
-+#define RESOURCE_CMD_RSP_OWNER_SHIFT		0
-+#define RESOURCE_CMD_RSP_OPCODE_MASK		0x00000700
-+#define RESOURCE_CMD_RSP_OPCODE_SHIFT		8
-+#define RESOURCE_OPCODE_GNT			1
-+#define RESOURCE_OPCODE_BUSY			2
-+#define RESOURCE_OPCODE_RELEASED		3
-+#define RESOURCE_OPCODE_RELEASED_PREVIOUS	4
-+#define RESOURCE_OPCODE_WRONG_OWNER		5
-+#define RESOURCE_OPCODE_UNKNOWN_CMD		255
-+
-+#define RESOURCE_DUMP				0
-+
-+/* DRV_MSG_CODE_MDUMP_CMD parameters */
-+#define MDUMP_DRV_PARAM_OPCODE_MASK             0x0000000f
-+#define DRV_MSG_CODE_MDUMP_ACK                  0x01
-+#define DRV_MSG_CODE_MDUMP_SET_VALUES           0x02
-+#define DRV_MSG_CODE_MDUMP_TRIGGER              0x03
-+#define DRV_MSG_CODE_MDUMP_GET_CONFIG           0x04
-+#define DRV_MSG_CODE_MDUMP_SET_ENABLE           0x05
-+#define DRV_MSG_CODE_MDUMP_CLEAR_LOGS           0x06
-+#define DRV_MSG_CODE_MDUMP_GET_RETAIN           0x07
-+#define DRV_MSG_CODE_MDUMP_CLR_RETAIN           0x08
-+
-+#define DRV_MSG_CODE_HW_DUMP_TRIGGER            0x0a
-+#define DRV_MSG_CODE_MDUMP_GEN_MDUMP2           0x0b
-+#define DRV_MSG_CODE_MDUMP_FREE_MDUMP2          0x0c
-+
-+#define DRV_MSG_CODE_GET_PF_RDMA_PROTOCOL	0x002b0000
-+#define DRV_MSG_CODE_OS_WOL			0x002e0000
-+
-+#define DRV_MSG_CODE_FEATURE_SUPPORT		0x00300000
-+#define DRV_MSG_CODE_GET_MFW_FEATURE_SUPPORT	0x00310000
-+#define DRV_MSG_SEQ_NUMBER_MASK			0x0000ffff
-+
-+	u32 drv_mb_param;
-+#define DRV_MB_PARAM_UNLOAD_WOL_UNKNOWN         0x00000000
-+#define DRV_MB_PARAM_UNLOAD_WOL_MCP             0x00000001
-+#define DRV_MB_PARAM_UNLOAD_WOL_DISABLED        0x00000002
-+#define DRV_MB_PARAM_UNLOAD_WOL_ENABLED         0x00000003
-+#define DRV_MB_PARAM_DCBX_NOTIFY_MASK		0x000000FF
-+#define DRV_MB_PARAM_DCBX_NOTIFY_SHIFT		3
-+
-+#define DRV_MB_PARAM_NVM_PUT_FILE_BEGIN_MBI     0x3
-+#define DRV_MB_PARAM_NVM_OFFSET_OFFSET          0
-+#define DRV_MB_PARAM_NVM_OFFSET_MASK            0x00FFFFFF
-+#define DRV_MB_PARAM_NVM_LEN_OFFSET		24
-+#define DRV_MB_PARAM_NVM_LEN_MASK               0xFF000000
-+
-+#define DRV_MB_PARAM_CFG_VF_MSIX_VF_ID_SHIFT	0
-+#define DRV_MB_PARAM_CFG_VF_MSIX_VF_ID_MASK	0x000000FF
-+#define DRV_MB_PARAM_CFG_VF_MSIX_SB_NUM_SHIFT	8
-+#define DRV_MB_PARAM_CFG_VF_MSIX_SB_NUM_MASK	0x0000FF00
-+#define DRV_MB_PARAM_LLDP_SEND_MASK		0x00000001
-+#define DRV_MB_PARAM_LLDP_SEND_SHIFT		0
-+
-+#define DRV_MB_PARAM_OV_CURR_CFG_SHIFT		0
-+#define DRV_MB_PARAM_OV_CURR_CFG_MASK		0x0000000F
-+#define DRV_MB_PARAM_OV_CURR_CFG_NONE		0
-+#define DRV_MB_PARAM_OV_CURR_CFG_OS		1
-+#define DRV_MB_PARAM_OV_CURR_CFG_VENDOR_SPEC	2
-+#define DRV_MB_PARAM_OV_CURR_CFG_OTHER		3
-+
-+#define DRV_MB_PARAM_OV_STORM_FW_VER_SHIFT	0
-+#define DRV_MB_PARAM_OV_STORM_FW_VER_MASK	0xFFFFFFFF
-+#define DRV_MB_PARAM_OV_STORM_FW_VER_MAJOR_MASK	0xFF000000
-+#define DRV_MB_PARAM_OV_STORM_FW_VER_MINOR_MASK	0x00FF0000
-+#define DRV_MB_PARAM_OV_STORM_FW_VER_BUILD_MASK	0x0000FF00
-+#define DRV_MB_PARAM_OV_STORM_FW_VER_DROP_MASK	0x000000FF
-+
-+#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_SHIFT	0
-+#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_MASK	0xF
-+#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_UNKNOWN	0x1
-+#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_NOT_LOADED	0x2
-+#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_LOADING	0x3
-+#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_DISABLED	0x4
-+#define DRV_MSG_CODE_OV_UPDATE_DRIVER_STATE_ACTIVE	0x5
-+
-+#define DRV_MB_PARAM_OV_MTU_SIZE_SHIFT	0
-+#define DRV_MB_PARAM_OV_MTU_SIZE_MASK	0xFFFFFFFF
-+
-+#define DRV_MB_PARAM_WOL_MASK	(DRV_MB_PARAM_WOL_DEFAULT | \
-+				 DRV_MB_PARAM_WOL_DISABLED | \
-+				 DRV_MB_PARAM_WOL_ENABLED)
-+#define DRV_MB_PARAM_WOL_DEFAULT	DRV_MB_PARAM_UNLOAD_WOL_MCP
-+#define DRV_MB_PARAM_WOL_DISABLED	DRV_MB_PARAM_UNLOAD_WOL_DISABLED
-+#define DRV_MB_PARAM_WOL_ENABLED	DRV_MB_PARAM_UNLOAD_WOL_ENABLED
-+
-+#define DRV_MB_PARAM_ESWITCH_MODE_MASK	(DRV_MB_PARAM_ESWITCH_MODE_NONE | \
-+					 DRV_MB_PARAM_ESWITCH_MODE_VEB | \
-+					 DRV_MB_PARAM_ESWITCH_MODE_VEPA)
-+#define DRV_MB_PARAM_ESWITCH_MODE_NONE	0x0
-+#define DRV_MB_PARAM_ESWITCH_MODE_VEB	0x1
-+#define DRV_MB_PARAM_ESWITCH_MODE_VEPA	0x2
-+
-+#define DRV_MB_PARAM_DUMMY_OEM_UPDATES_MASK	0x1
-+#define DRV_MB_PARAM_DUMMY_OEM_UPDATES_OFFSET	0
-+
-+#define DRV_MB_PARAM_SET_LED_MODE_OPER		0x0
-+#define DRV_MB_PARAM_SET_LED_MODE_ON		0x1
-+#define DRV_MB_PARAM_SET_LED_MODE_OFF		0x2
-+
-+#define DRV_MB_PARAM_TRANSCEIVER_PORT_OFFSET			0
-+#define DRV_MB_PARAM_TRANSCEIVER_PORT_MASK			0x00000003
-+#define DRV_MB_PARAM_TRANSCEIVER_SIZE_OFFSET			2
-+#define DRV_MB_PARAM_TRANSCEIVER_SIZE_MASK			0x000000fc
-+#define DRV_MB_PARAM_TRANSCEIVER_I2C_ADDRESS_OFFSET		8
-+#define DRV_MB_PARAM_TRANSCEIVER_I2C_ADDRESS_MASK		0x0000ff00
-+#define DRV_MB_PARAM_TRANSCEIVER_OFFSET_OFFSET			16
-+#define DRV_MB_PARAM_TRANSCEIVER_OFFSET_MASK			0xffff0000
-+
-+	/* Resource Allocation params - Driver version support */
-+#define DRV_MB_PARAM_RESOURCE_ALLOC_VERSION_MAJOR_MASK		0xffff0000
-+#define DRV_MB_PARAM_RESOURCE_ALLOC_VERSION_MAJOR_SHIFT		16
-+#define DRV_MB_PARAM_RESOURCE_ALLOC_VERSION_MINOR_MASK		0x0000ffff
-+#define DRV_MB_PARAM_RESOURCE_ALLOC_VERSION_MINOR_SHIFT		0
-+
-+#define DRV_MB_PARAM_BIST_REGISTER_TEST				1
-+#define DRV_MB_PARAM_BIST_CLOCK_TEST				2
-+#define DRV_MB_PARAM_BIST_NVM_TEST_NUM_IMAGES			3
-+#define DRV_MB_PARAM_BIST_NVM_TEST_IMAGE_BY_INDEX		4
-+
-+#define DRV_MB_PARAM_BIST_RC_UNKNOWN				0
-+#define DRV_MB_PARAM_BIST_RC_PASSED				1
-+#define DRV_MB_PARAM_BIST_RC_FAILED				2
-+#define DRV_MB_PARAM_BIST_RC_INVALID_PARAMETER			3
-+
-+#define DRV_MB_PARAM_BIST_TEST_INDEX_SHIFT			0
-+#define DRV_MB_PARAM_BIST_TEST_INDEX_MASK			0x000000ff
-+#define DRV_MB_PARAM_BIST_TEST_IMAGE_INDEX_SHIFT		8
-+#define DRV_MB_PARAM_BIST_TEST_IMAGE_INDEX_MASK			0x0000ff00
-+
-+#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_MASK			0x0000ffff
-+#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_OFFSET		0
-+#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_EEE			0x00000002
-+#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_FEC_CONTROL		0x00000004
-+#define DRV_MB_PARAM_FEATURE_SUPPORT_PORT_EXT_SPEED_FEC_CONTROL	0x00000008
-+#define DRV_MB_PARAM_FEATURE_SUPPORT_FUNC_VLINK			0x00010000
-+
-+/* DRV_MSG_CODE_DEBUG_DATA_SEND parameters */
-+#define DRV_MSG_CODE_DEBUG_DATA_SEND_SIZE_OFFSET		0
-+#define DRV_MSG_CODE_DEBUG_DATA_SEND_SIZE_MASK			0xff
-+
-+/* Driver attributes params */
-+#define DRV_MB_PARAM_ATTRIBUTE_KEY_OFFSET			0
-+#define DRV_MB_PARAM_ATTRIBUTE_KEY_MASK				0x00ffffff
-+#define DRV_MB_PARAM_ATTRIBUTE_CMD_OFFSET			24
-+#define DRV_MB_PARAM_ATTRIBUTE_CMD_MASK				0xff000000
-+
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ID_OFFSET			0
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ID_SHIFT			0
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ID_MASK			0x0000ffff
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ALL_SHIFT			16
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ALL_MASK			0x00010000
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_INIT_SHIFT			17
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_INIT_MASK			0x00020000
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_COMMIT_SHIFT		18
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_COMMIT_MASK			0x00040000
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_FREE_SHIFT			19
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_FREE_MASK			0x00080000
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ENTITY_SEL_SHIFT		20
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ENTITY_SEL_MASK		0x00100000
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ENTITY_ID_SHIFT		24
-+#define DRV_MB_PARAM_NVM_CFG_OPTION_ENTITY_ID_MASK		0x0f000000
-+
-+	u32 fw_mb_header;
-+#define FW_MSG_CODE_MASK			0xffff0000
-+#define FW_MSG_CODE_UNSUPPORTED                 0x00000000
-+#define FW_MSG_CODE_DRV_LOAD_ENGINE		0x10100000
-+#define FW_MSG_CODE_DRV_LOAD_PORT		0x10110000
-+#define FW_MSG_CODE_DRV_LOAD_FUNCTION		0x10120000
-+#define FW_MSG_CODE_DRV_LOAD_REFUSED_PDA	0x10200000
-+#define FW_MSG_CODE_DRV_LOAD_REFUSED_HSI_1	0x10210000
-+#define FW_MSG_CODE_DRV_LOAD_REFUSED_DIAG	0x10220000
-+#define FW_MSG_CODE_DRV_LOAD_REFUSED_HSI        0x10230000
-+#define FW_MSG_CODE_DRV_LOAD_REFUSED_REQUIRES_FORCE 0x10300000
-+#define FW_MSG_CODE_DRV_LOAD_REFUSED_REJECT     0x10310000
-+#define FW_MSG_CODE_DRV_LOAD_DONE		0x11100000
-+#define FW_MSG_CODE_DRV_UNLOAD_ENGINE		0x20110000
-+#define FW_MSG_CODE_DRV_UNLOAD_PORT		0x20120000
-+#define FW_MSG_CODE_DRV_UNLOAD_FUNCTION		0x20130000
-+#define FW_MSG_CODE_DRV_UNLOAD_DONE		0x21100000
-+#define FW_MSG_CODE_RESOURCE_ALLOC_OK           0x34000000
-+#define FW_MSG_CODE_RESOURCE_ALLOC_UNKNOWN      0x35000000
-+#define FW_MSG_CODE_RESOURCE_ALLOC_DEPRECATED   0x36000000
-+#define FW_MSG_CODE_S_TAG_UPDATE_ACK_DONE	0x3b000000
-+#define FW_MSG_CODE_DRV_CFG_VF_MSIX_DONE	0xb0010000
-+
-+#define FW_MSG_CODE_NVM_OK			0x00010000
-+#define FW_MSG_CODE_NVM_PUT_FILE_FINISH_OK	0x00400000
-+#define FW_MSG_CODE_PHY_OK			0x00110000
-+#define FW_MSG_CODE_OK				0x00160000
-+#define FW_MSG_CODE_ERROR			0x00170000
-+#define FW_MSG_CODE_TRANSCEIVER_DIAG_OK		0x00160000
-+#define FW_MSG_CODE_TRANSCEIVER_DIAG_ERROR	0x00170000
-+#define FW_MSG_CODE_TRANSCEIVER_NOT_PRESENT	0x00020000
-+
-+#define FW_MSG_CODE_OS_WOL_SUPPORTED            0x00800000
-+#define FW_MSG_CODE_OS_WOL_NOT_SUPPORTED        0x00810000
-+#define FW_MSG_CODE_DRV_CFG_PF_VFS_MSIX_DONE	0x00870000
-+#define FW_MSG_SEQ_NUMBER_MASK			0x0000ffff
-+
-+#define FW_MSG_CODE_DEBUG_DATA_SEND_INV_ARG	0xb0070000
-+#define FW_MSG_CODE_DEBUG_DATA_SEND_BUF_FULL	0xb0080000
-+#define FW_MSG_CODE_DEBUG_DATA_SEND_NO_BUF	0xb0090000
-+#define FW_MSG_CODE_DEBUG_NOT_ENABLED		0xb00a0000
-+#define FW_MSG_CODE_DEBUG_DATA_SEND_OK		0xb00b0000
-+
-+#define FW_MSG_CODE_MDUMP_INVALID_CMD		0x00030000
-+
-+	u32							fw_mb_param;
-+#define FW_MB_PARAM_RESOURCE_ALLOC_VERSION_MAJOR_MASK		0xffff0000
-+#define FW_MB_PARAM_RESOURCE_ALLOC_VERSION_MAJOR_SHIFT		16
-+#define FW_MB_PARAM_RESOURCE_ALLOC_VERSION_MINOR_MASK		0x0000ffff
-+#define FW_MB_PARAM_RESOURCE_ALLOC_VERSION_MINOR_SHIFT		0
-+
-+	/* Get PF RDMA protocol command response */
-+#define FW_MB_PARAM_GET_PF_RDMA_NONE				0x0
-+#define FW_MB_PARAM_GET_PF_RDMA_ROCE				0x1
-+#define FW_MB_PARAM_GET_PF_RDMA_IWARP				0x2
-+#define FW_MB_PARAM_GET_PF_RDMA_BOTH				0x3
-+
-+	/* Get MFW feature support response */
-+#define FW_MB_PARAM_FEATURE_SUPPORT_SMARTLINQ			BIT(0)
-+#define FW_MB_PARAM_FEATURE_SUPPORT_EEE				BIT(1)
-+#define FW_MB_PARAM_FEATURE_SUPPORT_FEC_CONTROL			BIT(5)
-+#define FW_MB_PARAM_FEATURE_SUPPORT_EXT_SPEED_FEC_CONTROL	BIT(6)
-+#define FW_MB_PARAM_FEATURE_SUPPORT_VLINK			BIT(16)
-+
-+#define FW_MB_PARAM_LOAD_DONE_DID_EFUSE_ERROR			BIT(0)
-+
-+#define FW_MB_PARAM_ENG_CFG_FIR_AFFIN_VALID_MASK		0x00000001
-+#define FW_MB_PARAM_ENG_CFG_FIR_AFFIN_VALID_SHIFT		0
-+#define FW_MB_PARAM_ENG_CFG_FIR_AFFIN_VALUE_MASK		0x00000002
-+#define FW_MB_PARAM_ENG_CFG_FIR_AFFIN_VALUE_SHIFT		1
-+#define FW_MB_PARAM_ENG_CFG_L2_AFFIN_VALID_MASK			0x00000004
-+#define FW_MB_PARAM_ENG_CFG_L2_AFFIN_VALID_SHIFT		2
-+#define FW_MB_PARAM_ENG_CFG_L2_AFFIN_VALUE_MASK			0x00000008
-+#define FW_MB_PARAM_ENG_CFG_L2_AFFIN_VALUE_SHIFT		3
-+
-+#define FW_MB_PARAM_PPFID_BITMAP_MASK				0xff
-+#define FW_MB_PARAM_PPFID_BITMAP_SHIFT				0
-+
-+	u32							drv_pulse_mb;
-+#define DRV_PULSE_SEQ_MASK					0x00007fff
-+#define DRV_PULSE_SYSTEM_TIME_MASK				0xffff0000
-+#define DRV_PULSE_ALWAYS_ALIVE					0x00008000
-+
-+	u32							mcp_pulse_mb;
-+#define MCP_PULSE_SEQ_MASK					0x00007fff
-+#define MCP_PULSE_ALWAYS_ALIVE					0x00008000
-+#define MCP_EVENT_MASK						0xffff0000
-+#define MCP_EVENT_OTHER_DRIVER_RESET_REQ			0x00010000
-+
-+	union drv_union_data					union_data;
-+};
-+
-+#define FW_MB_PARAM_NVM_PUT_FILE_REQ_OFFSET_MASK		0x00ffffff
-+#define FW_MB_PARAM_NVM_PUT_FILE_REQ_OFFSET_SHIFT		0
-+#define FW_MB_PARAM_NVM_PUT_FILE_REQ_SIZE_MASK			0xff000000
-+#define FW_MB_PARAM_NVM_PUT_FILE_REQ_SIZE_SHIFT			24
-+
-+enum MFW_DRV_MSG_TYPE {
-+	MFW_DRV_MSG_LINK_CHANGE,
-+	MFW_DRV_MSG_FLR_FW_ACK_FAILED,
-+	MFW_DRV_MSG_VF_DISABLED,
-+	MFW_DRV_MSG_LLDP_DATA_UPDATED,
-+	MFW_DRV_MSG_DCBX_REMOTE_MIB_UPDATED,
-+	MFW_DRV_MSG_DCBX_OPERATIONAL_MIB_UPDATED,
-+	MFW_DRV_MSG_ERROR_RECOVERY,
-+	MFW_DRV_MSG_BW_UPDATE,
-+	MFW_DRV_MSG_S_TAG_UPDATE,
-+	MFW_DRV_MSG_GET_LAN_STATS,
-+	MFW_DRV_MSG_GET_FCOE_STATS,
-+	MFW_DRV_MSG_GET_ISCSI_STATS,
-+	MFW_DRV_MSG_GET_RDMA_STATS,
-+	MFW_DRV_MSG_FAILURE_DETECTED,
-+	MFW_DRV_MSG_TRANSCEIVER_STATE_CHANGE,
-+	MFW_DRV_MSG_CRITICAL_ERROR_OCCURRED,
-+	MFW_DRV_MSG_RESERVED,
-+	MFW_DRV_MSG_GET_TLV_REQ,
-+	MFW_DRV_MSG_OEM_CFG_UPDATE,
-+	MFW_DRV_MSG_MAX
-+};
-+
-+#define MFW_DRV_MSG_MAX_DWORDS(msgs)	((((msgs) - 1) >> 2) + 1)
-+#define MFW_DRV_MSG_DWORD(msg_id)	((msg_id) >> 2)
-+#define MFW_DRV_MSG_OFFSET(msg_id)	(((msg_id) & 0x3) << 3)
-+#define MFW_DRV_MSG_MASK(msg_id)	(0xff << MFW_DRV_MSG_OFFSET(msg_id))
-+
-+struct public_mfw_mb {
-+	u32 sup_msgs;
-+	u32 msg[MFW_DRV_MSG_MAX_DWORDS(MFW_DRV_MSG_MAX)];
-+	u32 ack[MFW_DRV_MSG_MAX_DWORDS(MFW_DRV_MSG_MAX)];
-+};
-+
-+enum public_sections {
-+	PUBLIC_DRV_MB,
-+	PUBLIC_MFW_MB,
-+	PUBLIC_GLOBAL,
-+	PUBLIC_PATH,
-+	PUBLIC_PORT,
-+	PUBLIC_FUNC,
-+	PUBLIC_MAX_SECTIONS
-+};
-+
-+struct mcp_public_data {
-+	u32 num_sections;
-+	u32 sections[PUBLIC_MAX_SECTIONS];
-+	struct public_drv_mb drv_mb[MCP_GLOB_FUNC_MAX];
-+	struct public_mfw_mb mfw_mb[MCP_GLOB_FUNC_MAX];
-+	struct public_global global;
-+	struct public_path path[MCP_GLOB_PATH_MAX];
-+	struct public_port port[MCP_GLOB_PORT_MAX];
-+	struct public_func func[MCP_GLOB_FUNC_MAX];
-+};
-+
-+#define MAX_I2C_TRANSACTION_SIZE	16
-+
-+/* OCBB definitions */
-+enum tlvs {
-+	/* Category 1: Device Properties */
-+	DRV_TLV_CLP_STR,
-+	DRV_TLV_CLP_STR_CTD,
-+	/* Category 6: Device Configuration */
-+	DRV_TLV_SCSI_TO,
-+	DRV_TLV_R_T_TOV,
-+	DRV_TLV_R_A_TOV,
-+	DRV_TLV_E_D_TOV,
-+	DRV_TLV_CR_TOV,
-+	DRV_TLV_BOOT_TYPE,
-+	/* Category 8: Port Configuration */
-+	DRV_TLV_NPIV_ENABLED,
-+	/* Category 10: Function Configuration */
-+	DRV_TLV_FEATURE_FLAGS,
-+	DRV_TLV_LOCAL_ADMIN_ADDR,
-+	DRV_TLV_ADDITIONAL_MAC_ADDR_1,
-+	DRV_TLV_ADDITIONAL_MAC_ADDR_2,
-+	DRV_TLV_LSO_MAX_OFFLOAD_SIZE,
-+	DRV_TLV_LSO_MIN_SEGMENT_COUNT,
-+	DRV_TLV_PROMISCUOUS_MODE,
-+	DRV_TLV_TX_DESCRIPTORS_QUEUE_SIZE,
-+	DRV_TLV_RX_DESCRIPTORS_QUEUE_SIZE,
-+	DRV_TLV_NUM_OF_NET_QUEUE_VMQ_CFG,
-+	DRV_TLV_FLEX_NIC_OUTER_VLAN_ID,
-+	DRV_TLV_OS_DRIVER_STATES,
-+	DRV_TLV_PXE_BOOT_PROGRESS,
-+	/* Category 12: FC/FCoE Configuration */
-+	DRV_TLV_NPIV_STATE,
-+	DRV_TLV_NUM_OF_NPIV_IDS,
-+	DRV_TLV_SWITCH_NAME,
-+	DRV_TLV_SWITCH_PORT_NUM,
-+	DRV_TLV_SWITCH_PORT_ID,
-+	DRV_TLV_VENDOR_NAME,
-+	DRV_TLV_SWITCH_MODEL,
-+	DRV_TLV_SWITCH_FW_VER,
-+	DRV_TLV_QOS_PRIORITY_PER_802_1P,
-+	DRV_TLV_PORT_ALIAS,
-+	DRV_TLV_PORT_STATE,
-+	DRV_TLV_FIP_TX_DESCRIPTORS_QUEUE_SIZE,
-+	DRV_TLV_FCOE_RX_DESCRIPTORS_QUEUE_SIZE,
-+	DRV_TLV_LINK_FAILURE_COUNT,
-+	DRV_TLV_FCOE_BOOT_PROGRESS,
-+	/* Category 13: iSCSI Configuration */
-+	DRV_TLV_TARGET_LLMNR_ENABLED,
-+	DRV_TLV_HEADER_DIGEST_FLAG_ENABLED,
-+	DRV_TLV_DATA_DIGEST_FLAG_ENABLED,
-+	DRV_TLV_AUTHENTICATION_METHOD,
-+	DRV_TLV_ISCSI_BOOT_TARGET_PORTAL,
-+	DRV_TLV_MAX_FRAME_SIZE,
-+	DRV_TLV_PDU_TX_DESCRIPTORS_QUEUE_SIZE,
-+	DRV_TLV_PDU_RX_DESCRIPTORS_QUEUE_SIZE,
-+	DRV_TLV_ISCSI_BOOT_PROGRESS,
-+	/* Category 20: Device Data */
-+	DRV_TLV_PCIE_BUS_RX_UTILIZATION,
-+	DRV_TLV_PCIE_BUS_TX_UTILIZATION,
-+	DRV_TLV_DEVICE_CPU_CORES_UTILIZATION,
-+	DRV_TLV_LAST_VALID_DCC_TLV_RECEIVED,
-+	DRV_TLV_NCSI_RX_BYTES_RECEIVED,
-+	DRV_TLV_NCSI_TX_BYTES_SENT,
-+	/* Category 22: Base Port Data */
-+	DRV_TLV_RX_DISCARDS,
-+	DRV_TLV_RX_ERRORS,
-+	DRV_TLV_TX_ERRORS,
-+	DRV_TLV_TX_DISCARDS,
-+	DRV_TLV_RX_FRAMES_RECEIVED,
-+	DRV_TLV_TX_FRAMES_SENT,
-+	/* Category 23: FC/FCoE Port Data */
-+	DRV_TLV_RX_BROADCAST_PACKETS,
-+	DRV_TLV_TX_BROADCAST_PACKETS,
-+	/* Category 28: Base Function Data */
-+	DRV_TLV_NUM_OFFLOADED_CONNECTIONS_TCP_IPV4,
-+	DRV_TLV_NUM_OFFLOADED_CONNECTIONS_TCP_IPV6,
-+	DRV_TLV_TX_DESCRIPTOR_QUEUE_AVG_DEPTH,
-+	DRV_TLV_RX_DESCRIPTORS_QUEUE_AVG_DEPTH,
-+	DRV_TLV_PF_RX_FRAMES_RECEIVED,
-+	DRV_TLV_RX_BYTES_RECEIVED,
-+	DRV_TLV_PF_TX_FRAMES_SENT,
-+	DRV_TLV_TX_BYTES_SENT,
-+	DRV_TLV_IOV_OFFLOAD,
-+	DRV_TLV_PCI_ERRORS_CAP_ID,
-+	DRV_TLV_UNCORRECTABLE_ERROR_STATUS,
-+	DRV_TLV_UNCORRECTABLE_ERROR_MASK,
-+	DRV_TLV_CORRECTABLE_ERROR_STATUS,
-+	DRV_TLV_CORRECTABLE_ERROR_MASK,
-+	DRV_TLV_PCI_ERRORS_AECC_REGISTER,
-+	DRV_TLV_TX_QUEUES_EMPTY,
-+	DRV_TLV_RX_QUEUES_EMPTY,
-+	DRV_TLV_TX_QUEUES_FULL,
-+	DRV_TLV_RX_QUEUES_FULL,
-+	/* Category 29: FC/FCoE Function Data */
-+	DRV_TLV_FCOE_TX_DESCRIPTOR_QUEUE_AVG_DEPTH,
-+	DRV_TLV_FCOE_RX_DESCRIPTORS_QUEUE_AVG_DEPTH,
-+	DRV_TLV_FCOE_RX_FRAMES_RECEIVED,
-+	DRV_TLV_FCOE_RX_BYTES_RECEIVED,
-+	DRV_TLV_FCOE_TX_FRAMES_SENT,
-+	DRV_TLV_FCOE_TX_BYTES_SENT,
-+	DRV_TLV_CRC_ERROR_COUNT,
-+	DRV_TLV_CRC_ERROR_1_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_CRC_ERROR_1_TIMESTAMP,
-+	DRV_TLV_CRC_ERROR_2_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_CRC_ERROR_2_TIMESTAMP,
-+	DRV_TLV_CRC_ERROR_3_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_CRC_ERROR_3_TIMESTAMP,
-+	DRV_TLV_CRC_ERROR_4_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_CRC_ERROR_4_TIMESTAMP,
-+	DRV_TLV_CRC_ERROR_5_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_CRC_ERROR_5_TIMESTAMP,
-+	DRV_TLV_LOSS_OF_SYNC_ERROR_COUNT,
-+	DRV_TLV_LOSS_OF_SIGNAL_ERRORS,
-+	DRV_TLV_PRIMITIVE_SEQUENCE_PROTOCOL_ERROR_COUNT,
-+	DRV_TLV_DISPARITY_ERROR_COUNT,
-+	DRV_TLV_CODE_VIOLATION_ERROR_COUNT,
-+	DRV_TLV_LAST_FLOGI_ISSUED_COMMON_PARAMETERS_WORD_1,
-+	DRV_TLV_LAST_FLOGI_ISSUED_COMMON_PARAMETERS_WORD_2,
-+	DRV_TLV_LAST_FLOGI_ISSUED_COMMON_PARAMETERS_WORD_3,
-+	DRV_TLV_LAST_FLOGI_ISSUED_COMMON_PARAMETERS_WORD_4,
-+	DRV_TLV_LAST_FLOGI_TIMESTAMP,
-+	DRV_TLV_LAST_FLOGI_ACC_COMMON_PARAMETERS_WORD_1,
-+	DRV_TLV_LAST_FLOGI_ACC_COMMON_PARAMETERS_WORD_2,
-+	DRV_TLV_LAST_FLOGI_ACC_COMMON_PARAMETERS_WORD_3,
-+	DRV_TLV_LAST_FLOGI_ACC_COMMON_PARAMETERS_WORD_4,
-+	DRV_TLV_LAST_FLOGI_ACC_TIMESTAMP,
-+	DRV_TLV_LAST_FLOGI_RJT,
-+	DRV_TLV_LAST_FLOGI_RJT_TIMESTAMP,
-+	DRV_TLV_FDISCS_SENT_COUNT,
-+	DRV_TLV_FDISC_ACCS_RECEIVED,
-+	DRV_TLV_FDISC_RJTS_RECEIVED,
-+	DRV_TLV_PLOGI_SENT_COUNT,
-+	DRV_TLV_PLOGI_ACCS_RECEIVED,
-+	DRV_TLV_PLOGI_RJTS_RECEIVED,
-+	DRV_TLV_PLOGI_1_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_PLOGI_1_TIMESTAMP,
-+	DRV_TLV_PLOGI_2_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_PLOGI_2_TIMESTAMP,
-+	DRV_TLV_PLOGI_3_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_PLOGI_3_TIMESTAMP,
-+	DRV_TLV_PLOGI_4_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_PLOGI_4_TIMESTAMP,
-+	DRV_TLV_PLOGI_5_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_PLOGI_5_TIMESTAMP,
-+	DRV_TLV_PLOGI_1_ACC_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_PLOGI_1_ACC_TIMESTAMP,
-+	DRV_TLV_PLOGI_2_ACC_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_PLOGI_2_ACC_TIMESTAMP,
-+	DRV_TLV_PLOGI_3_ACC_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_PLOGI_3_ACC_TIMESTAMP,
-+	DRV_TLV_PLOGI_4_ACC_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_PLOGI_4_ACC_TIMESTAMP,
-+	DRV_TLV_PLOGI_5_ACC_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_PLOGI_5_ACC_TIMESTAMP,
-+	DRV_TLV_LOGOS_ISSUED,
-+	DRV_TLV_LOGO_ACCS_RECEIVED,
-+	DRV_TLV_LOGO_RJTS_RECEIVED,
-+	DRV_TLV_LOGO_1_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_LOGO_1_TIMESTAMP,
-+	DRV_TLV_LOGO_2_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_LOGO_2_TIMESTAMP,
-+	DRV_TLV_LOGO_3_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_LOGO_3_TIMESTAMP,
-+	DRV_TLV_LOGO_4_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_LOGO_4_TIMESTAMP,
-+	DRV_TLV_LOGO_5_RECEIVED_SOURCE_FC_ID,
-+	DRV_TLV_LOGO_5_TIMESTAMP,
-+	DRV_TLV_LOGOS_RECEIVED,
-+	DRV_TLV_ACCS_ISSUED,
-+	DRV_TLV_PRLIS_ISSUED,
-+	DRV_TLV_ACCS_RECEIVED,
-+	DRV_TLV_ABTS_SENT_COUNT,
-+	DRV_TLV_ABTS_ACCS_RECEIVED,
-+	DRV_TLV_ABTS_RJTS_RECEIVED,
-+	DRV_TLV_ABTS_1_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_ABTS_1_TIMESTAMP,
-+	DRV_TLV_ABTS_2_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_ABTS_2_TIMESTAMP,
-+	DRV_TLV_ABTS_3_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_ABTS_3_TIMESTAMP,
-+	DRV_TLV_ABTS_4_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_ABTS_4_TIMESTAMP,
-+	DRV_TLV_ABTS_5_SENT_DESTINATION_FC_ID,
-+	DRV_TLV_ABTS_5_TIMESTAMP,
-+	DRV_TLV_RSCNS_RECEIVED,
-+	DRV_TLV_LAST_RSCN_RECEIVED_N_PORT_1,
-+	DRV_TLV_LAST_RSCN_RECEIVED_N_PORT_2,
-+	DRV_TLV_LAST_RSCN_RECEIVED_N_PORT_3,
-+	DRV_TLV_LAST_RSCN_RECEIVED_N_PORT_4,
-+	DRV_TLV_LUN_RESETS_ISSUED,
-+	DRV_TLV_ABORT_TASK_SETS_ISSUED,
-+	DRV_TLV_TPRLOS_SENT,
-+	DRV_TLV_NOS_SENT_COUNT,
-+	DRV_TLV_NOS_RECEIVED_COUNT,
-+	DRV_TLV_OLS_COUNT,
-+	DRV_TLV_LR_COUNT,
-+	DRV_TLV_LRR_COUNT,
-+	DRV_TLV_LIP_SENT_COUNT,
-+	DRV_TLV_LIP_RECEIVED_COUNT,
-+	DRV_TLV_EOFA_COUNT,
-+	DRV_TLV_EOFNI_COUNT,
-+	DRV_TLV_SCSI_STATUS_CHECK_CONDITION_COUNT,
-+	DRV_TLV_SCSI_STATUS_CONDITION_MET_COUNT,
-+	DRV_TLV_SCSI_STATUS_BUSY_COUNT,
-+	DRV_TLV_SCSI_STATUS_INTERMEDIATE_COUNT,
-+	DRV_TLV_SCSI_STATUS_INTERMEDIATE_CONDITION_MET_COUNT,
-+	DRV_TLV_SCSI_STATUS_RESERVATION_CONFLICT_COUNT,
-+	DRV_TLV_SCSI_STATUS_TASK_SET_FULL_COUNT,
-+	DRV_TLV_SCSI_STATUS_ACA_ACTIVE_COUNT,
-+	DRV_TLV_SCSI_STATUS_TASK_ABORTED_COUNT,
-+	DRV_TLV_SCSI_CHECK_CONDITION_1_RECEIVED_SK_ASC_ASCQ,
-+	DRV_TLV_SCSI_CHECK_1_TIMESTAMP,
-+	DRV_TLV_SCSI_CHECK_CONDITION_2_RECEIVED_SK_ASC_ASCQ,
-+	DRV_TLV_SCSI_CHECK_2_TIMESTAMP,
-+	DRV_TLV_SCSI_CHECK_CONDITION_3_RECEIVED_SK_ASC_ASCQ,
-+	DRV_TLV_SCSI_CHECK_3_TIMESTAMP,
-+	DRV_TLV_SCSI_CHECK_CONDITION_4_RECEIVED_SK_ASC_ASCQ,
-+	DRV_TLV_SCSI_CHECK_4_TIMESTAMP,
-+	DRV_TLV_SCSI_CHECK_CONDITION_5_RECEIVED_SK_ASC_ASCQ,
-+	DRV_TLV_SCSI_CHECK_5_TIMESTAMP,
-+	/* Category 30: iSCSI Function Data */
-+	DRV_TLV_PDU_TX_DESCRIPTOR_QUEUE_AVG_DEPTH,
-+	DRV_TLV_PDU_RX_DESCRIPTORS_QUEUE_AVG_DEPTH,
-+	DRV_TLV_ISCSI_PDU_RX_FRAMES_RECEIVED,
-+	DRV_TLV_ISCSI_PDU_RX_BYTES_RECEIVED,
-+	DRV_TLV_ISCSI_PDU_TX_FRAMES_SENT,
-+	DRV_TLV_ISCSI_PDU_TX_BYTES_SENT
-+};
-+
-+struct nvm_cfg_mac_address {
-+	u32 mac_addr_hi;
-+#define NVM_CFG_MAC_ADDRESS_HI_MASK 0x0000ffff
-+#define NVM_CFG_MAC_ADDRESS_HI_OFFSET 0
-+
-+	u32 mac_addr_lo;
-+};
-+
-+struct nvm_cfg1_glob {
-+	u32 generic_cont0;
-+#define NVM_CFG1_GLOB_MF_MODE_MASK 0x00000ff0
-+#define NVM_CFG1_GLOB_MF_MODE_OFFSET 4
-+#define NVM_CFG1_GLOB_MF_MODE_MF_ALLOWED 0x0
-+#define NVM_CFG1_GLOB_MF_MODE_DEFAULT 0x1
-+#define NVM_CFG1_GLOB_MF_MODE_SPIO4 0x2
-+#define NVM_CFG1_GLOB_MF_MODE_NPAR1_0 0x3
-+#define NVM_CFG1_GLOB_MF_MODE_NPAR1_5 0x4
-+#define NVM_CFG1_GLOB_MF_MODE_NPAR2_0 0x5
-+#define NVM_CFG1_GLOB_MF_MODE_BD 0x6
-+#define NVM_CFG1_GLOB_MF_MODE_UFP 0x7
-+
-+	u32 engineering_change[3];
-+	u32 manufacturing_id;
-+	u32 serial_number[4];
-+	u32 pcie_cfg;
-+	u32 mgmt_traffic;
-+
-+	u32 core_cfg;
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_MASK 0x000000ff
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_OFFSET 0
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_BB_2X40G 0x0
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_2X50G 0x1
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_BB_1X100G 0x2
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_4X10G_F 0x3
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_BB_4X10G_E 0x4
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_BB_4X20G 0x5
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_1X40G 0xb
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_2X25G 0xc
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_1X25G 0xd
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_4X25G 0xe
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_2X10G 0xf
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X50G_R1 0x11
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_4X50G_R1 0x12
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R2 0x13
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_2X100G_R2 0x14
-+#define NVM_CFG1_GLOB_NETWORK_PORT_MODE_AHP_1X100G_R4 0x15
-+
-+	u32 e_lane_cfg1;
-+	u32 e_lane_cfg2;
-+	u32 f_lane_cfg1;
-+	u32 f_lane_cfg2;
-+	u32 mps10_preemphasis;
-+	u32 mps10_driver_current;
-+	u32 mps25_preemphasis;
-+	u32 mps25_driver_current;
-+	u32 pci_id;
-+	u32 pci_subsys_id;
-+	u32 bar;
-+	u32 mps10_txfir_main;
-+	u32 mps10_txfir_post;
-+	u32 mps25_txfir_main;
-+	u32 mps25_txfir_post;
-+	u32 manufacture_ver;
-+	u32 manufacture_time;
-+	u32 led_global_settings;
-+	u32 generic_cont1;
-+
-+	u32 mbi_version;
-+#define NVM_CFG1_GLOB_MBI_VERSION_0_MASK 0x000000ff
-+#define NVM_CFG1_GLOB_MBI_VERSION_0_OFFSET 0
-+#define NVM_CFG1_GLOB_MBI_VERSION_1_MASK 0x0000ff00
-+#define NVM_CFG1_GLOB_MBI_VERSION_1_OFFSET 8
-+#define NVM_CFG1_GLOB_MBI_VERSION_2_MASK 0x00ff0000
-+#define NVM_CFG1_GLOB_MBI_VERSION_2_OFFSET 16
-+
-+	u32 mbi_date;
-+	u32 misc_sig;
-+
-+	u32 device_capabilities;
-+#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_ETHERNET 0x1
-+#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_FCOE 0x2
-+#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_ISCSI 0x4
-+#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_ROCE 0x8
-+#define NVM_CFG1_GLOB_DEVICE_CAPABILITIES_IWARP 0x10
-+
-+	u32 power_dissipated;
-+	u32 power_consumed;
-+	u32 efi_version;
-+	u32 multi_network_modes_capability;
-+	u32 reserved[41];
-+};
-+
-+struct nvm_cfg1_path {
-+	u32 reserved[30];
-+};
-+
-+struct nvm_cfg1_port {
-+	u32 rel_to_opt123;
-+	u32 rel_to_opt124;
-+
-+	u32 generic_cont0;
-+#define NVM_CFG1_PORT_DCBX_MODE_MASK 0x000f0000
-+#define NVM_CFG1_PORT_DCBX_MODE_OFFSET 16
-+#define NVM_CFG1_PORT_DCBX_MODE_DISABLED 0x0
-+#define NVM_CFG1_PORT_DCBX_MODE_IEEE 0x1
-+#define NVM_CFG1_PORT_DCBX_MODE_CEE 0x2
-+#define NVM_CFG1_PORT_DCBX_MODE_DYNAMIC 0x3
-+#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_MASK 0x00f00000
-+#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_OFFSET 20
-+#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_ETHERNET 0x1
-+#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_FCOE 0x2
-+#define NVM_CFG1_PORT_DEFAULT_ENABLED_PROTOCOLS_ISCSI 0x4
-+
-+	u32 pcie_cfg;
-+	u32 features;
-+
-+	u32 speed_cap_mask;
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_MASK 0x0000ffff
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_OFFSET 0
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_1G 0x1
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_10G 0x2
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_20G 0x4
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_25G 0x8
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_40G 0x10
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_50G 0x20
-+#define NVM_CFG1_PORT_DRV_SPEED_CAPABILITY_MASK_BB_100G 0x40
-+
-+	u32 link_settings;
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_MASK 0x0000000f
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_OFFSET 0
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_AUTONEG 0x0
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_1G 0x1
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_10G 0x2
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_20G 0x3
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_25G 0x4
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_40G 0x5
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_50G 0x6
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_BB_100G 0x7
-+#define NVM_CFG1_PORT_DRV_LINK_SPEED_SMARTLINQ 0x8
-+#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_MASK 0x00000070
-+#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_OFFSET 4
-+#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_AUTONEG 0x1
-+#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_RX 0x2
-+#define NVM_CFG1_PORT_DRV_FLOW_CONTROL_TX 0x4
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_MASK 0x000e0000
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_OFFSET 17
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_NONE 0x0
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_FIRECODE 0x1
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_RS 0x2
-+#define NVM_CFG1_PORT_FEC_FORCE_MODE_AUTO 0x7
-+
-+	u32 phy_cfg;
-+	u32 mgmt_traffic;
-+
-+	u32 ext_phy;
-+	/* EEE power saving mode */
-+#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_MASK 0x00ff0000
-+#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_OFFSET 16
-+#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_DISABLED 0x0
-+#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_BALANCED 0x1
-+#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_AGGRESSIVE 0x2
-+#define NVM_CFG1_PORT_EEE_POWER_SAVING_MODE_LOW_LATENCY 0x3
-+
-+	u32 mba_cfg1;
-+	u32 mba_cfg2;
-+	u32							vf_cfg;
-+	struct nvm_cfg_mac_address lldp_mac_address;
-+	u32 led_port_settings;
-+	u32 transceiver_00;
-+	u32 device_ids;
-+
-+	u32 board_cfg;
-+#define NVM_CFG1_PORT_PORT_TYPE_MASK 0x000000ff
-+#define NVM_CFG1_PORT_PORT_TYPE_OFFSET 0
-+#define NVM_CFG1_PORT_PORT_TYPE_UNDEFINED 0x0
-+#define NVM_CFG1_PORT_PORT_TYPE_MODULE 0x1
-+#define NVM_CFG1_PORT_PORT_TYPE_BACKPLANE 0x2
-+#define NVM_CFG1_PORT_PORT_TYPE_EXT_PHY 0x3
-+#define NVM_CFG1_PORT_PORT_TYPE_MODULE_SLAVE 0x4
-+
-+	u32 mnm_10g_cap;
-+	u32 mnm_10g_ctrl;
-+	u32 mnm_10g_misc;
-+	u32 mnm_25g_cap;
-+	u32 mnm_25g_ctrl;
-+	u32 mnm_25g_misc;
-+	u32 mnm_40g_cap;
-+	u32 mnm_40g_ctrl;
-+	u32 mnm_40g_misc;
-+	u32 mnm_50g_cap;
-+	u32 mnm_50g_ctrl;
-+	u32 mnm_50g_misc;
-+	u32 mnm_100g_cap;
-+	u32 mnm_100g_ctrl;
-+	u32 mnm_100g_misc;
-+
-+	u32 temperature;
-+	u32 ext_phy_cfg1;
-+
-+	u32 extended_speed;
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_MASK 0x0000ffff
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_OFFSET 0
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_AN 0x1
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_1G 0x2
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_10G 0x4
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_20G 0x8
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_25G 0x10
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_40G 0x20
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_50G_R 0x40
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_50G_R2 0x80
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_100G_R2 0x100
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_100G_R4 0x200
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_EXTND_SPD_100G_P4 0x400
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_MASK 0xffff0000
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_OFFSET 16
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_RESERVED 0x1
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_1G 0x2
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_10G 0x4
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_20G 0x8
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_25G 0x10
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_40G 0x20
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_50G_R 0x40
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_50G_R2 0x80
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_100G_R2 0x100
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_100G_R4 0x200
-+#define NVM_CFG1_PORT_EXTENDED_SPEED_CAP_EXTND_SPD_100G_P4 0x400
-+
-+	u32 extended_fec_mode;
-+
-+	u32 reserved[112];
-+};
-+
-+struct nvm_cfg1_func {
-+	struct nvm_cfg_mac_address mac_address;
-+	u32 rsrv1;
-+	u32 rsrv2;
-+	u32 device_id;
-+	u32 cmn_cfg;
-+	u32 pci_cfg;
-+	struct nvm_cfg_mac_address fcoe_node_wwn_mac_addr;
-+	struct nvm_cfg_mac_address fcoe_port_wwn_mac_addr;
-+	u32 preboot_generic_cfg;
-+	u32 reserved[8];
-+};
-+
-+struct nvm_cfg1 {
-+	struct nvm_cfg1_glob glob;
-+	struct nvm_cfg1_path path[MCP_GLOB_PATH_MAX];
-+	struct nvm_cfg1_port port[MCP_GLOB_PORT_MAX];
-+	struct nvm_cfg1_func func[MCP_GLOB_FUNC_MAX];
-+};
-+
-+enum spad_sections {
-+	SPAD_SECTION_TRACE,
-+	SPAD_SECTION_NVM_CFG,
-+	SPAD_SECTION_PUBLIC,
-+	SPAD_SECTION_PRIVATE,
-+	SPAD_SECTION_MAX
-+};
-+
-+#define MCP_TRACE_SIZE          2048	/* 2kb */
-+
-+/* This section is located at a fixed location in the beginning of the
-+ * scratchpad, to ensure that the MCP trace is not run over during MFW upgrade.
-+ * All the rest of data has a floating location which differs from version to
-+ * version, and is pointed by the mcp_meta_data below.
-+ * Moreover, the spad_layout section is part of the MFW firmware, and is loaded
-+ * with it from nvram in order to clear this portion.
-+ */
-+struct static_init {
-+	u32 num_sections;
-+	offsize_t sections[SPAD_SECTION_MAX];
-+#define SECTION(_sec_) (*((offsize_t *)(STRUCT_OFFSET(sections[_sec_]))))
-+
-+	struct mcp_trace trace;
-+#define MCP_TRACE_P ((struct mcp_trace *)(STRUCT_OFFSET(trace)))
-+	u8 trace_buffer[MCP_TRACE_SIZE];
-+#define MCP_TRACE_BUF ((u8 *)(STRUCT_OFFSET(trace_buffer)))
-+	/* running_mfw has the same definition as in nvm_map.h.
-+	 * This bit indicate both the running dir, and the running bundle.
-+	 * It is set once when the LIM is loaded.
-+	 */
-+	u32 running_mfw;
-+#define RUNNING_MFW (*((u32 *)(STRUCT_OFFSET(running_mfw))))
-+	u32 build_time;
-+#define MFW_BUILD_TIME (*((u32 *)(STRUCT_OFFSET(build_time))))
-+	u32 reset_type;
-+#define RESET_TYPE (*((u32 *)(STRUCT_OFFSET(reset_type))))
-+	u32 mfw_secure_mode;
-+#define MFW_SECURE_MODE (*((u32 *)(STRUCT_OFFSET(mfw_secure_mode))))
-+	u16 pme_status_pf_bitmap;
-+#define PME_STATUS_PF_BITMAP (*((u16 *)(STRUCT_OFFSET(pme_status_pf_bitmap))))
-+	u16 pme_enable_pf_bitmap;
-+#define PME_ENABLE_PF_BITMAP (*((u16 *)(STRUCT_OFFSET(pme_enable_pf_bitmap))))
-+	u32 mim_nvm_addr;
-+	u32 mim_start_addr;
-+	u32 ah_pcie_link_params;
-+#define AH_PCIE_LINK_PARAMS_LINK_SPEED_MASK     (0x000000ff)
-+#define AH_PCIE_LINK_PARAMS_LINK_SPEED_SHIFT    (0)
-+#define AH_PCIE_LINK_PARAMS_LINK_WIDTH_MASK     (0x0000ff00)
-+#define AH_PCIE_LINK_PARAMS_LINK_WIDTH_SHIFT    (8)
-+#define AH_PCIE_LINK_PARAMS_ASPM_MODE_MASK      (0x00ff0000)
-+#define AH_PCIE_LINK_PARAMS_ASPM_MODE_SHIFT     (16)
-+#define AH_PCIE_LINK_PARAMS_ASPM_CAP_MASK       (0xff000000)
-+#define AH_PCIE_LINK_PARAMS_ASPM_CAP_SHIFT      (24)
-+#define AH_PCIE_LINK_PARAMS (*((u32 *)(STRUCT_OFFSET(ah_pcie_link_params))))
-+
-+	u32 rsrv_persist[5];	/* Persist reserved for MFW upgrades */
-+};
-+
-+#define NVM_MAGIC_VALUE		0x669955aa
-+
-+enum nvm_image_type {
-+	NVM_TYPE_TIM1 = 0x01,
-+	NVM_TYPE_TIM2 = 0x02,
-+	NVM_TYPE_MIM1 = 0x03,
-+	NVM_TYPE_MIM2 = 0x04,
-+	NVM_TYPE_MBA = 0x05,
-+	NVM_TYPE_MODULES_PN = 0x06,
-+	NVM_TYPE_VPD = 0x07,
-+	NVM_TYPE_MFW_TRACE1 = 0x08,
-+	NVM_TYPE_MFW_TRACE2 = 0x09,
-+	NVM_TYPE_NVM_CFG1 = 0x0a,
-+	NVM_TYPE_L2B = 0x0b,
-+	NVM_TYPE_DIR1 = 0x0c,
-+	NVM_TYPE_EAGLE_FW1 = 0x0d,
-+	NVM_TYPE_FALCON_FW1 = 0x0e,
-+	NVM_TYPE_PCIE_FW1 = 0x0f,
-+	NVM_TYPE_HW_SET = 0x10,
-+	NVM_TYPE_LIM = 0x11,
-+	NVM_TYPE_AVS_FW1 = 0x12,
-+	NVM_TYPE_DIR2 = 0x13,
-+	NVM_TYPE_CCM = 0x14,
-+	NVM_TYPE_EAGLE_FW2 = 0x15,
-+	NVM_TYPE_FALCON_FW2 = 0x16,
-+	NVM_TYPE_PCIE_FW2 = 0x17,
-+	NVM_TYPE_AVS_FW2 = 0x18,
-+	NVM_TYPE_INIT_HW = 0x19,
-+	NVM_TYPE_DEFAULT_CFG = 0x1a,
-+	NVM_TYPE_MDUMP = 0x1b,
-+	NVM_TYPE_META = 0x1c,
-+	NVM_TYPE_ISCSI_CFG = 0x1d,
-+	NVM_TYPE_FCOE_CFG = 0x1f,
-+	NVM_TYPE_ETH_PHY_FW1 = 0x20,
-+	NVM_TYPE_ETH_PHY_FW2 = 0x21,
-+	NVM_TYPE_BDN = 0x22,
-+	NVM_TYPE_8485X_PHY_FW = 0x23,
-+	NVM_TYPE_PUB_KEY = 0x24,
-+	NVM_TYPE_RECOVERY = 0x25,
-+	NVM_TYPE_PLDM = 0x26,
-+	NVM_TYPE_UPK1 = 0x27,
-+	NVM_TYPE_UPK2 = 0x28,
-+	NVM_TYPE_MASTER_KC = 0x29,
-+	NVM_TYPE_BACKUP_KC = 0x2a,
-+	NVM_TYPE_HW_DUMP = 0x2b,
-+	NVM_TYPE_HW_DUMP_OUT = 0x2c,
-+	NVM_TYPE_BIN_NVM_META = 0x30,
-+	NVM_TYPE_ROM_TEST = 0xf0,
-+	NVM_TYPE_88X33X0_PHY_FW = 0x31,
-+	NVM_TYPE_88X33X0_PHY_SLAVE_FW = 0x32,
-+	NVM_TYPE_MAX,
-+};
-+
-+#define DIR_ID_1    (0)
-+
-+#endif
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_rdma.c b/drivers/net/ethernet/qlogic/qed/qed_rdma.c
-index 4f4b79250a2b..05658e66a20b 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_rdma.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_rdma.c
-@@ -22,6 +22,7 @@
- #include "qed.h"
- #include "qed_cxt.h"
- #include "qed_hsi.h"
-+#include "qed_iro_hsi.h"
- #include "qed_hw.h"
- #include "qed_init_ops.h"
- #include "qed_int.h"
-@@ -33,7 +34,6 @@
- #include "qed_roce.h"
- #include "qed_sp.h"
+@@ -31,11 +31,11 @@
+ #define QED_MCP_RESET_RETRIES	(50 * 1000)	/* Account for 500 msec */
  
--
- int qed_rdma_bmap_alloc(struct qed_hwfn *p_hwfn,
- 			struct qed_bmap *bmap, u32 max_count, char *name)
+ #define DRV_INNER_WR(_p_hwfn, _p_ptt, _ptr, _offset, _val)	     \
+-	qed_wr(_p_hwfn, _p_ptt, (_p_hwfn->mcp_info->_ptr + _offset), \
++	qed_wr(_p_hwfn, _p_ptt, (_p_hwfn->mcp_info->_ptr + (_offset)), \
+ 	       _val)
+ 
+ #define DRV_INNER_RD(_p_hwfn, _p_ptt, _ptr, _offset) \
+-	qed_rd(_p_hwfn, _p_ptt, (_p_hwfn->mcp_info->_ptr + _offset))
++	qed_rd(_p_hwfn, _p_ptt, (_p_hwfn->mcp_info->_ptr + (_offset)))
+ 
+ #define DRV_MB_WR(_p_hwfn, _p_ptt, _field, _val)  \
+ 	DRV_INNER_WR(p_hwfn, _p_ptt, drv_mb_addr, \
+@@ -385,7 +385,7 @@ qed_mcp_update_pending_cmd(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
+ 	p_mb_params->mcp_param = DRV_MB_RD(p_hwfn, p_ptt, fw_mb_param);
+ 
+ 	/* Get the union data */
+-	if (p_mb_params->p_data_dst != NULL && p_mb_params->data_dst_size) {
++	if (p_mb_params->p_data_dst && p_mb_params->data_dst_size) {
+ 		u32 union_data_addr = p_hwfn->mcp_info->drv_mb_addr +
+ 				      offsetof(struct public_drv_mb,
+ 					       union_data);
+@@ -411,7 +411,7 @@ static void __qed_mcp_cmd_and_union(struct qed_hwfn *p_hwfn,
+ 	union_data_addr = p_hwfn->mcp_info->drv_mb_addr +
+ 			  offsetof(struct public_drv_mb, union_data);
+ 	memset(&union_data, 0, sizeof(union_data));
+-	if (p_mb_params->p_data_src != NULL && p_mb_params->data_src_size)
++	if (p_mb_params->p_data_src && p_mb_params->data_src_size)
+ 		memcpy(&union_data, p_mb_params->p_data_src,
+ 		       p_mb_params->data_src_size);
+ 	qed_memcpy_to(p_hwfn, p_ptt, union_data_addr, &union_data,
+@@ -672,7 +672,8 @@ int qed_mcp_nvm_rd_cmd(struct qed_hwfn *p_hwfn,
+ 		       u32 cmd,
+ 		       u32 param,
+ 		       u32 *o_mcp_resp,
+-		       u32 *o_mcp_param, u32 *o_txn_size, u32 *o_buf)
++		       u32 *o_mcp_param,
++		       u32 *o_txn_size, u32 *o_buf, bool b_can_sleep)
  {
-@@ -1903,7 +1903,6 @@ void qed_rdma_dpm_conf(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- 		   val, p_hwfn->dcbx_no_edpm, p_hwfn->db_bar_no_edpm);
- }
+ 	struct qed_mcp_mb_params mb_params;
+ 	u8 raw_data[MCP_DRV_NVM_BUF_LEN];
+@@ -685,6 +686,8 @@ int qed_mcp_nvm_rd_cmd(struct qed_hwfn *p_hwfn,
  
--
- void qed_rdma_dpm_bar(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt)
- {
- 	p_hwfn->db_bar_no_edpm = true;
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_rdma.h b/drivers/net/ethernet/qlogic/qed/qed_rdma.h
-index 6a1de3a25257..2753723011dd 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_rdma.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_rdma.h
-@@ -168,16 +168,19 @@ static inline bool qed_rdma_is_xrc_qp(struct qed_rdma_qp *qp)
+ 	/* Use the maximal value since the actual one is part of the response */
+ 	mb_params.data_dst_size = MCP_DRV_NVM_BUF_LEN;
++	if (b_can_sleep)
++		mb_params.flags = QED_MB_FLAG_CAN_SLEEP;
  
- 	return false;
- }
-+
- #if IS_ENABLED(CONFIG_QED_RDMA)
- void qed_rdma_dpm_bar(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt);
- void qed_rdma_dpm_conf(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt);
- int qed_rdma_info_alloc(struct qed_hwfn *p_hwfn);
- void qed_rdma_info_free(struct qed_hwfn *p_hwfn);
- #else
--static inline void qed_rdma_dpm_conf(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt) {}
-+static inline void qed_rdma_dpm_conf(struct qed_hwfn *p_hwfn,
-+				     struct qed_ptt *p_ptt) {}
- static inline void qed_rdma_dpm_bar(struct qed_hwfn *p_hwfn,
- 				    struct qed_ptt *p_ptt) {}
--static inline int qed_rdma_info_alloc(struct qed_hwfn *p_hwfn) {return -EINVAL;}
-+static inline int qed_rdma_info_alloc(struct qed_hwfn *p_hwfn)
-+				      {return -EINVAL; }
- static inline void qed_rdma_info_free(struct qed_hwfn *p_hwfn) {}
- #endif
- 
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_roce.c b/drivers/net/ethernet/qlogic/qed/qed_roce.c
-index cf5baa5e59bc..071b4aeaddf2 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_roce.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_roce.c
-@@ -792,7 +792,6 @@ static int qed_roce_sp_destroy_qp_requester(struct qed_hwfn *p_hwfn,
+ 	rc = qed_mcp_cmd_and_union(p_hwfn, p_ptt, &mb_params);
  	if (rc)
- 		goto err;
- 
--
- 	/* Free ORQ - only if ramrod succeeded, in case FW is still using it */
- 	dma_free_coherent(&p_hwfn->cdev->pdev->dev,
- 			  qp->orq_num_pages * RDMA_RING_PAGE_SIZE,
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_spq.c b/drivers/net/ethernet/qlogic/qed/qed_spq.c
-index fa8385178538..8bef53ca7597 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_spq.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_spq.c
-@@ -20,6 +20,7 @@
- #include "qed_cxt.h"
- #include "qed_dev_api.h"
- #include "qed_hsi.h"
-+#include "qed_iro_hsi.h"
- #include "qed_hw.h"
- #include "qed_int.h"
- #include "qed_iscsi.h"
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_sriov.c b/drivers/net/ethernet/qlogic/qed/qed_sriov.c
-index 08d92711c7a2..2a67b1308fe0 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_sriov.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_sriov.c
-@@ -11,6 +11,7 @@
- #include <linux/qed/qed_iov_if.h>
- #include "qed_cxt.h"
- #include "qed_hsi.h"
-+#include "qed_iro_hsi.h"
- #include "qed_hw.h"
- #include "qed_init_ops.h"
- #include "qed_int.h"
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_vf.c b/drivers/net/ethernet/qlogic/qed/qed_vf.c
-index 72a38d53d33f..220a95fa96e1 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_vf.c
-+++ b/drivers/net/ethernet/qlogic/qed/qed_vf.c
-@@ -27,7 +27,7 @@ static void *qed_vf_pf_prep(struct qed_hwfn *p_hwfn, u16 type, u16 length)
- 		   "preparing to send 0x%04x tlv over vf pf channel\n",
- 		   type);
- 
--	/* Reset Requst offset */
-+	/* Reset Request offset */
- 	p_iov->offset = (u8 *)p_iov->vf2pf_request;
- 
- 	/* Clear mailbox - both request and reply */
-@@ -444,7 +444,7 @@ int qed_vf_hw_prepare(struct qed_hwfn *p_hwfn)
- 	u32 reg;
- 	int rc;
- 
--	/* Set number of hwfns - might be overriden once leading hwfn learns
-+	/* Set number of hwfns - might be overridden once leading hwfn learns
- 	 * actual configuration from PF.
- 	 */
- 	if (IS_LEAD_HWFN(p_hwfn))
-@@ -504,7 +504,7 @@ int qed_vf_hw_prepare(struct qed_hwfn *p_hwfn)
- 		   QED_MSG_IOV,
- 		   "VF's Request mailbox [%p virt 0x%llx phys], Response mailbox [%p virt 0x%llx phys]\n",
- 		   p_iov->vf2pf_request,
--		   (u64) p_iov->vf2pf_request_phys,
-+		   (u64)p_iov->vf2pf_request_phys,
- 		   p_iov->pf2vf_reply, (u64)p_iov->pf2vf_reply_phys);
- 
- 	/* Allocate Bulletin board */
-@@ -561,6 +561,7 @@ int qed_vf_hw_prepare(struct qed_hwfn *p_hwfn)
- 
- 	return -ENOMEM;
- }
-+
- #define TSTORM_QZONE_START   PXP_VF_BAR0_START_SDM_ZONE_A
- #define MSTORM_QZONE_START(dev)   (TSTORM_QZONE_START +	\
- 				   (TSTORM_QZONE_SIZE * NUM_OF_L2_QUEUES(dev)))
-@@ -1285,8 +1286,8 @@ int qed_vf_pf_filter_ucast(struct qed_hwfn *p_hwfn,
- 
- 	/* clear mailbox and prep first tlv */
- 	req = qed_vf_pf_prep(p_hwfn, CHANNEL_TLV_UCAST_FILTER, sizeof(*req));
--	req->opcode = (u8) p_ucast->opcode;
--	req->type = (u8) p_ucast->type;
-+	req->opcode = (u8)p_ucast->opcode;
-+	req->type = (u8)p_ucast->type;
- 	memcpy(req->mac, p_ucast->mac, ETH_ALEN);
- 	req->vlan = p_ucast->vlan;
- 
-diff --git a/drivers/net/ethernet/qlogic/qed/qed_vf.h b/drivers/net/ethernet/qlogic/qed/qed_vf.h
-index 976201fc7d4a..8718760443be 100644
---- a/drivers/net/ethernet/qlogic/qed/qed_vf.h
-+++ b/drivers/net/ethernet/qlogic/qed/qed_vf.h
-@@ -48,7 +48,7 @@ struct channel_tlv {
- 	u16 length;
+@@ -917,7 +920,6 @@ enum qed_load_req_force {
  };
  
--/* header of first vf->pf tlv carries the offset used to calculate reponse
-+/* header of first vf->pf tlv carries the offset used to calculate response
-  * buffer address
-  */
- struct vfpf_first_tlv {
-@@ -85,8 +85,8 @@ struct vfpf_acquire_tlv {
- 	struct vfpf_first_tlv first_tlv;
+ static void qed_get_mfw_force_cmd(struct qed_hwfn *p_hwfn,
+-
+ 				  enum qed_load_req_force force_cmd,
+ 				  u8 *p_mfw_force_cmd)
+ {
+@@ -2078,7 +2080,7 @@ int qed_mcp_get_mfw_ver(struct qed_hwfn *p_hwfn,
+ 			struct qed_ptt *p_ptt,
+ 			u32 *p_mfw_ver, u32 *p_running_bundle_id)
+ {
+-	u32 global_offsize;
++	u32 global_offsize, public_base;
  
- 	struct vf_pf_vfdev_info {
--#define VFPF_ACQUIRE_CAP_PRE_FP_HSI     (1 << 0) /* VF pre-FP hsi version */
--#define VFPF_ACQUIRE_CAP_100G		(1 << 1) /* VF can support 100g */
-+#define VFPF_ACQUIRE_CAP_PRE_FP_HSI     BIT(0) /* VF pre-FP hsi version */
-+#define VFPF_ACQUIRE_CAP_100G		BIT(1) /* VF can support 100g */
- 	/* A requirement for supporting multi-Tx queues on a single queue-zone,
- 	 * VF would pass qids as additional information whenever passing queue
- 	 * references.
+ 	if (IS_VF(p_hwfn->cdev)) {
+ 		if (p_hwfn->vf_iov_info) {
+@@ -2095,16 +2097,16 @@ int qed_mcp_get_mfw_ver(struct qed_hwfn *p_hwfn,
+ 		}
+ 	}
+ 
++	public_base = p_hwfn->mcp_info->public_base;
+ 	global_offsize = qed_rd(p_hwfn, p_ptt,
+-				SECTION_OFFSIZE_ADDR(p_hwfn->
+-						     mcp_info->public_base,
++				SECTION_OFFSIZE_ADDR(public_base,
+ 						     PUBLIC_GLOBAL));
+ 	*p_mfw_ver =
+ 	    qed_rd(p_hwfn, p_ptt,
+ 		   SECTION_ADDR(global_offsize,
+ 				0) + offsetof(struct public_global, mfw_ver));
+ 
+-	if (p_running_bundle_id != NULL) {
++	if (p_running_bundle_id) {
+ 		*p_running_bundle_id = qed_rd(p_hwfn, p_ptt,
+ 					      SECTION_ADDR(global_offsize, 0) +
+ 					      offsetof(struct public_global,
+@@ -2206,6 +2208,7 @@ int qed_mcp_get_transceiver_data(struct qed_hwfn *p_hwfn,
+ 
+ 	return 0;
+ }
++
+ static bool qed_is_transceiver_ready(u32 transceiver_state,
+ 				     u32 transceiver_type)
+ {
+@@ -2375,7 +2378,7 @@ qed_mcp_get_shmem_proto_legacy(struct qed_hwfn *p_hwfn,
+ 
+ 	DP_VERBOSE(p_hwfn, NETIF_MSG_IFUP,
+ 		   "According to Legacy capabilities, L2 personality is %08x\n",
+-		   (u32) *p_proto);
++		   (u32)*p_proto);
+ }
+ 
+ static int
+@@ -2420,7 +2423,7 @@ qed_mcp_get_shmem_proto_mfw(struct qed_hwfn *p_hwfn,
+ 	DP_VERBOSE(p_hwfn,
+ 		   NETIF_MSG_IFUP,
+ 		   "According to capabilities, L2 personality is %08x [resp %08x param %08x]\n",
+-		   (u32) *p_proto, resp, param);
++		   (u32)*p_proto, resp, param);
+ 	return 0;
+ }
+ 
+@@ -3020,7 +3023,7 @@ int qed_mcp_nvm_read(struct qed_dev *cdev, u32 addr, u8 *p_buf, u32 len)
+ 					 DRV_MB_PARAM_NVM_LEN_OFFSET),
+ 					&resp, &resp_param,
+ 					&read_len,
+-					(u32 *)(p_buf + offset));
++					(u32 *)(p_buf + offset), false);
+ 
+ 		if (rc || (resp != FW_MSG_CODE_NVM_OK)) {
+ 			DP_NOTICE(cdev, "MCP command rc = %d\n", rc);
+@@ -3028,7 +3031,7 @@ int qed_mcp_nvm_read(struct qed_dev *cdev, u32 addr, u8 *p_buf, u32 len)
+ 		}
+ 
+ 		/* This can be a lengthy process, and it's possible scheduler
+-		 * isn't preemptable. Sleep a bit to prevent CPU hogging.
++		 * isn't preemptible. Sleep a bit to prevent CPU hogging.
+ 		 */
+ 		if (bytes_left % 0x1000 <
+ 		    (bytes_left - read_len) % 0x1000)
+@@ -3123,10 +3126,12 @@ int qed_mcp_nvm_write(struct qed_dev *cdev,
+ 		 * to be delivered to MFW.
+ 		 */
+ 		if (param && cmd == QED_PUT_FILE_DATA) {
+-			buf_idx = QED_MFW_GET_FIELD(param,
+-					FW_MB_PARAM_NVM_PUT_FILE_REQ_OFFSET);
+-			buf_size = QED_MFW_GET_FIELD(param,
+-					 FW_MB_PARAM_NVM_PUT_FILE_REQ_SIZE);
++			buf_idx =
++			QED_MFW_GET_FIELD(param,
++					  FW_MB_PARAM_NVM_PUT_FILE_REQ_OFFSET);
++			buf_size =
++			QED_MFW_GET_FIELD(param,
++					  FW_MB_PARAM_NVM_PUT_FILE_REQ_SIZE);
+ 		} else {
+ 			buf_idx += buf_size;
+ 			buf_size = min_t(u32, (len - buf_idx),
+@@ -3170,7 +3175,7 @@ int qed_mcp_phy_sfp_read(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
+ 		rc = qed_mcp_nvm_rd_cmd(p_hwfn, p_ptt,
+ 					DRV_MSG_CODE_TRANSCEIVER_READ,
+ 					nvm_offset, &resp, &param, &buf_size,
+-					(u32 *)(p_buf + offset));
++					(u32 *)(p_buf + offset), true);
+ 		if (rc) {
+ 			DP_NOTICE(p_hwfn,
+ 				  "Failed to send a transceiver read command to the MFW. rc = %d.\n",
+@@ -3269,7 +3274,7 @@ int qed_mcp_bist_nvm_get_image_att(struct qed_hwfn *p_hwfn,
+ 				DRV_MSG_CODE_BIST_TEST, param,
+ 				&resp, &resp_param,
+ 				&buf_size,
+-				(u32 *)p_image_att);
++				(u32 *)p_image_att, false);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -3992,7 +3997,8 @@ int qed_mcp_nvm_get_cfg(struct qed_hwfn *p_hwfn, struct qed_ptt *p_ptt,
+ 
+ 	rc = qed_mcp_nvm_rd_cmd(p_hwfn, p_ptt,
+ 				DRV_MSG_CODE_GET_NVM_CFG_OPTION,
+-				mb_param, &resp, &param, p_len, (u32 *)p_buf);
++				mb_param, &resp, &param, p_len,
++				(u32 *)p_buf, false);
+ 
+ 	return rc;
+ }
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_mcp.h b/drivers/net/ethernet/qlogic/qed/qed_mcp.h
+index 352b757183e8..9e1de1191bd4 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_mcp.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_mcp.h
+@@ -969,6 +969,7 @@ int qed_mcp_reset(struct qed_hwfn *p_hwfn,
+  * @o_mcp_param: MCP response param.
+  * @o_txn_size: Buffer size output.
+  * @o_buf: Pointer to the buffer returned by the MFW.
++ * @b_can_sleep: Can sleep.
+  *
+  * Return: 0 upon success.
+  */
+@@ -977,7 +978,8 @@ int qed_mcp_nvm_rd_cmd(struct qed_hwfn *p_hwfn,
+ 		       u32 cmd,
+ 		       u32 param,
+ 		       u32 *o_mcp_resp,
+-		       u32 *o_mcp_param, u32 *o_txn_size, u32 *o_buf);
++		       u32 *o_mcp_param,
++		       u32 *o_txn_size, u32 *o_buf, bool b_can_sleep);
+ 
+ /**
+  * qed_mcp_phy_sfp_read(): Read from sfp.
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_reg_addr.h b/drivers/net/ethernet/qlogic/qed/qed_reg_addr.h
+index 7f668ecd73fe..6f1a52e6beb2 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_reg_addr.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_reg_addr.h
+@@ -600,7 +600,6 @@
+ #define DORQ_REG_L2_EDPM_TUNNEL_NGE_IP_EN_K2		0x10092cUL
+ #define DORQ_REG_L2_EDPM_TUNNEL_NGE_ETH_EN_K2		0x100930UL
+ 
+-
+ #define NIG_REG_NGE_IP_ENABLE			0x508b28UL
+ #define NIG_REG_NGE_ETH_ENABLE			0x508b2cUL
+ #define NIG_REG_NGE_COMP_VER			0x508b30UL
+@@ -1443,29 +1442,29 @@
+ 	0x1401140UL
+ #define XSEM_REG_SYNC_DBG_EMPTY	\
+ 	0x1401160UL
+-#define XSEM_REG_SLOW_DBG_ACTIVE_BB_K2 \
++#define XSEM_REG_SLOW_DBG_ACTIVE \
+ 	0x1401400UL
+-#define XSEM_REG_SLOW_DBG_MODE_BB_K2 \
++#define XSEM_REG_SLOW_DBG_MODE \
+ 	0x1401404UL
+-#define XSEM_REG_DBG_FRAME_MODE_BB_K2	\
++#define XSEM_REG_DBG_FRAME_MODE	\
+ 	0x1401408UL
+ #define XSEM_REG_DBG_GPRE_VECT \
+ 	0x1401410UL
+-#define XSEM_REG_DBG_MODE1_CFG_BB_K2 \
++#define XSEM_REG_DBG_MODE1_CFG \
+ 	0x1401420UL
+ #define XSEM_REG_FAST_MEMORY \
+ 	0x1440000UL
+ #define YSEM_REG_SYNC_DBG_EMPTY	\
+ 	0x1501160UL
+-#define YSEM_REG_SLOW_DBG_ACTIVE_BB_K2 \
++#define YSEM_REG_SLOW_DBG_ACTIVE \
+ 	0x1501400UL
+-#define YSEM_REG_SLOW_DBG_MODE_BB_K2 \
++#define YSEM_REG_SLOW_DBG_MODE \
+ 	0x1501404UL
+-#define YSEM_REG_DBG_FRAME_MODE_BB_K2	\
++#define YSEM_REG_DBG_FRAME_MODE	\
+ 	0x1501408UL
+ #define YSEM_REG_DBG_GPRE_VECT \
+ 	0x1501410UL
+-#define YSEM_REG_DBG_MODE1_CFG_BB_K2 \
++#define YSEM_REG_DBG_MODE1_CFG \
+ 	0x1501420UL
+ #define YSEM_REG_FAST_MEMORY \
+ 	0x1540000UL
+@@ -1473,15 +1472,15 @@
+ 	0x1601140UL
+ #define PSEM_REG_SYNC_DBG_EMPTY	\
+ 	0x1601160UL
+-#define PSEM_REG_SLOW_DBG_ACTIVE_BB_K2 \
++#define PSEM_REG_SLOW_DBG_ACTIVE \
+ 	0x1601400UL
+-#define PSEM_REG_SLOW_DBG_MODE_BB_K2 \
++#define PSEM_REG_SLOW_DBG_MODE \
+ 	0x1601404UL
+-#define PSEM_REG_DBG_FRAME_MODE_BB_K2	\
++#define PSEM_REG_DBG_FRAME_MODE	\
+ 	0x1601408UL
+ #define PSEM_REG_DBG_GPRE_VECT \
+ 	0x1601410UL
+-#define PSEM_REG_DBG_MODE1_CFG_BB_K2 \
++#define PSEM_REG_DBG_MODE1_CFG \
+ 	0x1601420UL
+ #define PSEM_REG_FAST_MEMORY \
+ 	0x1640000UL
+@@ -1489,15 +1488,15 @@
+ 	0x1701140UL
+ #define TSEM_REG_SYNC_DBG_EMPTY	\
+ 	0x1701160UL
+-#define TSEM_REG_SLOW_DBG_ACTIVE_BB_K2 \
++#define TSEM_REG_SLOW_DBG_ACTIVE \
+ 	0x1701400UL
+-#define TSEM_REG_SLOW_DBG_MODE_BB_K2 \
++#define TSEM_REG_SLOW_DBG_MODE \
+ 	0x1701404UL
+-#define TSEM_REG_DBG_FRAME_MODE_BB_K2	\
++#define TSEM_REG_DBG_FRAME_MODE	\
+ 	0x1701408UL
+ #define TSEM_REG_DBG_GPRE_VECT \
+ 	0x1701410UL
+-#define TSEM_REG_DBG_MODE1_CFG_BB_K2 \
++#define TSEM_REG_DBG_MODE1_CFG \
+ 	0x1701420UL
+ #define TSEM_REG_FAST_MEMORY \
+ 	0x1740000UL
+@@ -1505,15 +1504,15 @@
+ 	0x1801140UL
+ #define MSEM_REG_SYNC_DBG_EMPTY	\
+ 	0x1801160UL
+-#define MSEM_REG_SLOW_DBG_ACTIVE_BB_K2 \
++#define MSEM_REG_SLOW_DBG_ACTIVE \
+ 	0x1801400UL
+-#define MSEM_REG_SLOW_DBG_MODE_BB_K2 \
++#define MSEM_REG_SLOW_DBG_MODE \
+ 	0x1801404UL
+-#define MSEM_REG_DBG_FRAME_MODE_BB_K2	\
++#define MSEM_REG_DBG_FRAME_MODE	\
+ 	0x1801408UL
+ #define MSEM_REG_DBG_GPRE_VECT \
+ 	0x1801410UL
+-#define MSEM_REG_DBG_MODE1_CFG_BB_K2 \
++#define MSEM_REG_DBG_MODE1_CFG \
+ 	0x1801420UL
+ #define MSEM_REG_FAST_MEMORY \
+ 	0x1840000UL
+@@ -1523,15 +1522,15 @@
+ 	20480
+ #define USEM_REG_SYNC_DBG_EMPTY	\
+ 	0x1901160UL
+-#define USEM_REG_SLOW_DBG_ACTIVE_BB_K2 \
++#define USEM_REG_SLOW_DBG_ACTIVE \
+ 	0x1901400UL
+-#define USEM_REG_SLOW_DBG_MODE_BB_K2 \
++#define USEM_REG_SLOW_DBG_MODE \
+ 	0x1901404UL
+-#define USEM_REG_DBG_FRAME_MODE_BB_K2	\
++#define USEM_REG_DBG_FRAME_MODE	\
+ 	0x1901408UL
+ #define USEM_REG_DBG_GPRE_VECT \
+ 	0x1901410UL
+-#define USEM_REG_DBG_MODE1_CFG_BB_K2 \
++#define USEM_REG_DBG_MODE1_CFG \
+ 	0x1901420UL
+ #define USEM_REG_FAST_MEMORY \
+ 	0x1940000UL
+@@ -1567,7 +1566,7 @@
+ 	0x341500UL
+ #define BRB_REG_BIG_RAM_DATA_SIZE \
+ 	64
+-#define SEM_FAST_REG_STALL_0_BB_K2 \
++#define SEM_FAST_REG_STALL_0 \
+ 	0x000488UL
+ #define SEM_FAST_REG_STALLED \
+ 	0x000494UL
+@@ -1625,35 +1624,35 @@
+ 	0x008c14UL
+ #define NWS_REG_NWS_CMU_K2	\
+ 	0x720000UL
+-#define PHY_NW_IP_REG_PHY0_TOP_TBUS_ADDR_7_0_K2_E5 \
++#define PHY_NW_IP_REG_PHY0_TOP_TBUS_ADDR_7_0_K2 \
+ 	0x000680UL
+-#define PHY_NW_IP_REG_PHY0_TOP_TBUS_ADDR_15_8_K2_E5 \
++#define PHY_NW_IP_REG_PHY0_TOP_TBUS_ADDR_15_8_K2 \
+ 	0x000684UL
+-#define PHY_NW_IP_REG_PHY0_TOP_TBUS_DATA_7_0_K2_E5 \
++#define PHY_NW_IP_REG_PHY0_TOP_TBUS_DATA_7_0_K2 \
+ 	0x0006c0UL
+-#define PHY_NW_IP_REG_PHY0_TOP_TBUS_DATA_11_8_K2_E5 \
++#define PHY_NW_IP_REG_PHY0_TOP_TBUS_DATA_11_8_K2 \
+ 	0x0006c4UL
+-#define MS_REG_MS_CMU_K2_E5 \
++#define MS_REG_MS_CMU_K2 \
+ 	0x6a4000UL
+-#define PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X130_K2_E5 \
++#define PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X130_K2 \
+ 	0x000208UL
+-#define PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X131_K2_E5 \
++#define PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X131_K2 \
+ 	0x00020cUL
+-#define PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X132_K2_E5 \
++#define PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X132_K2 \
+ 	0x000210UL
+-#define PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X133_K2_E5 \
++#define PHY_SGMII_IP_REG_AHB_CMU_CSR_0_X133_K2 \
+ 	0x000214UL
+-#define PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X130_K2_E5 \
++#define PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X130_K2 \
+ 	0x000208UL
+-#define PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X131_K2_E5 \
++#define PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X131_K2 \
+ 	0x00020cUL
+-#define PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X132_K2_E5 \
++#define PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X132_K2 \
+ 	0x000210UL
+-#define PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X133_K2_E5 \
++#define PHY_PCIE_IP_REG_AHB_CMU_CSR_0_X133_K2 \
+ 	0x000214UL
+-#define PHY_PCIE_REG_PHY0_K2_E5 \
++#define PHY_PCIE_REG_PHY0_K2 \
+ 	0x620000UL
+-#define PHY_PCIE_REG_PHY1_K2_E5 \
++#define PHY_PCIE_REG_PHY1_K2 \
+ 	0x624000UL
+ #define NIG_REG_ROCE_DUPLICATE_TO_HOST 0x5088f0UL
+ #define NIG_REG_PPF_TO_ENGINE_SEL 0x508900UL
 -- 
 2.24.1
 
