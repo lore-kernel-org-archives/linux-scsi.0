@@ -2,28 +2,28 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26C26C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 14:07:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 63151C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 14:08:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10B8F619E0
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 14:07:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 444AF6115B
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 14:08:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235679AbhJEOJZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 10:09:25 -0400
+        id S236428AbhJEOJv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 10:09:51 -0400
 Received: from mga18.intel.com ([134.134.136.126]:47680 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235906AbhJEOI4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Oct 2021 10:08:56 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10127"; a="212679107"
+        id S236504AbhJEOJS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Oct 2021 10:09:18 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10127"; a="212679117"
 X-IronPort-AV: E=Sophos;i="5.85,349,1624345200"; 
-   d="scan'208";a="212679107"
+   d="scan'208";a="212679117"
 Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2021 06:45:06 -0700
+  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2021 06:45:10 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.85,348,1624345200"; 
-   d="scan'208";a="477679503"
+   d="scan'208";a="477679536"
 Received: from ahunter-desktop.fi.intel.com ([10.237.72.76])
-  by orsmga007.jf.intel.com with ESMTP; 05 Oct 2021 06:45:01 -0700
+  by orsmga007.jf.intel.com with ESMTP; 05 Oct 2021 06:45:06 -0700
 From:   Adrian Hunter <adrian.hunter@intel.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
@@ -36,9 +36,9 @@ Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         Kiwoong Kim <kwmad.kim@samsung.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH V7 1/2] scsi: ufs: Fix runtime PM dependencies getting broken
-Date:   Tue,  5 Oct 2021 16:44:44 +0300
-Message-Id: <20211005134445.234671-2-adrian.hunter@intel.com>
+Subject: [PATCH V7 2/2] scsi: ufs: Let devices remain runtime suspended during system suspend
+Date:   Tue,  5 Oct 2021 16:44:45 +0300
+Message-Id: <20211005134445.234671-3-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211005134445.234671-1-adrian.hunter@intel.com>
 References: <20211005134445.234671-1-adrian.hunter@intel.com>
@@ -49,85 +49,151 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-UFS SCSI devices make use of device links to establish PM dependencies.
-However, SCSI PM will force devices' runtime PM state to be active during
-system resume. That can break runtime PM dependencies for UFS devices.
-Fix by adding a flag 'preserve_rpm' to let UFS SCSI devices opt-out of
-the unwanted behaviour.
+If the UFS Device WLUN is runtime suspended and is in the same power
+mode, link state and b_rpm_dev_flush_capable (BKOP or WB buffer flush etc)
+state, then it can remain runtime suspended instead of being runtime
+resumed and then system suspended.
 
-Fixes: b294ff3e34490f ("scsi: ufs: core: Enable power management for wlun")
+The following patches have cleared the way for that to happen:
+  scsi: ufs: Fix runtime PM dependencies getting broken
+  scsi: ufs: core: Stop clearing UNIT ATTENTIONS
+
+So amend the logic accordingly.
+
+Note, the ufs-hisi driver uses different RPM and SPM, but it is made
+explicit by a new parameter to suspend prepare.
+
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 ---
- drivers/scsi/scsi_pm.c     | 16 +++++++++++-----
- drivers/scsi/ufs/ufshcd.c  |  1 +
- include/scsi/scsi_device.h |  1 +
- 3 files changed, 13 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufs-hisi.c |  8 ++++++-
+ drivers/scsi/ufs/ufshcd.c   | 45 ++++++++++++++++++++++++++++++++-----
+ drivers/scsi/ufs/ufshcd.h   | 11 +++++++++
+ 3 files changed, 58 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index 3717eea37ecb..0557c1ad304d 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -73,13 +73,22 @@ static int scsi_dev_type_resume(struct device *dev,
- 		int (*cb)(struct device *, const struct dev_pm_ops *))
- {
- 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-+	struct scsi_device *sdev = NULL;
-+	bool preserve_rpm = false;
- 	int err = 0;
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 6b706de8354b..4a08fb35642c 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -396,6 +396,12 @@ static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
+ 	return ret;
+ }
  
-+	if (scsi_is_sdev_device(dev)) {
-+		sdev = to_scsi_device(dev);
-+		preserve_rpm = sdev->preserve_rpm;
-+		if (preserve_rpm && pm_runtime_suspended(dev))
-+			return 0;
-+	}
++static int ufs_hisi_suspend_prepare(struct device *dev)
++{
++	/* RPM and SPM are different. Refer ufs_hisi_suspend() */
++	return __ufshcd_suspend_prepare(dev, false);
++}
 +
- 	err = cb(dev, pm);
- 	scsi_device_resume(to_scsi_device(dev));
- 	dev_dbg(dev, "scsi resume: %d\n", err);
+ static int ufs_hisi_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ {
+ 	struct ufs_hisi_host *host = ufshcd_get_variant(hba);
+@@ -574,7 +580,7 @@ static int ufs_hisi_remove(struct platform_device *pdev)
+ static const struct dev_pm_ops ufs_hisi_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
+ 	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+-	.prepare	 = ufshcd_suspend_prepare,
++	.prepare	 = ufs_hisi_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
  
--	if (err == 0) {
-+	if (err == 0 && !preserve_rpm) {
- 		pm_runtime_disable(dev);
- 		err = pm_runtime_set_active(dev);
- 		pm_runtime_enable(dev);
-@@ -91,11 +100,8 @@ static int scsi_dev_type_resume(struct device *dev,
- 		 *
- 		 * The resume hook will correct runtime PM status of the disk.
- 		 */
--		if (!err && scsi_is_sdev_device(dev)) {
--			struct scsi_device *sdev = to_scsi_device(dev);
--
-+		if (!err && sdev)
- 			blk_set_runtime_active(sdev->request_queue);
--		}
- 	}
- 
- 	return err;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d91a405fd181..b70f566f7f8a 100644
+index b70f566f7f8a..f34227add27d 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5016,6 +5016,7 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
- 		pm_runtime_get_noresume(&sdev->sdev_gendev);
- 	else if (ufshcd_is_rpm_autosuspend_allowed(hba))
- 		sdev->rpm_autosuspend = 1;
-+	sdev->preserve_rpm = 1;
+@@ -9681,7 +9681,27 @@ void ufshcd_resume_complete(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
  
- 	ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
+-int ufshcd_suspend_prepare(struct device *dev)
++static bool ufshcd_rpm_ok_for_spm(struct ufs_hba *hba)
++{
++	struct device *dev = &hba->sdev_ufs_device->sdev_gendev;
++	enum ufs_dev_pwr_mode dev_pwr_mode;
++	enum uic_link_state link_state;
++	unsigned long flags;
++	bool res;
++
++	spin_lock_irqsave(&dev->power.lock, flags);
++	dev_pwr_mode = ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl);
++	link_state = ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl);
++	res = pm_runtime_suspended(dev) &&
++	      hba->curr_dev_pwr_mode == dev_pwr_mode &&
++	      hba->uic_link_state == link_state &&
++	      !hba->dev_info.b_rpm_dev_flush_capable;
++	spin_unlock_irqrestore(&dev->power.lock, flags);
++
++	return res;
++}
++
++int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	int ret;
+@@ -9693,15 +9713,30 @@ int ufshcd_suspend_prepare(struct device *dev)
+ 	 * Refer ufshcd_resume_complete()
+ 	 */
+ 	if (hba->sdev_ufs_device) {
+-		ret = ufshcd_rpm_get_sync(hba);
+-		if (ret < 0 && ret != -EACCES) {
+-			ufshcd_rpm_put(hba);
+-			return ret;
++		/* Prevent runtime suspend */
++		ufshcd_rpm_get_noresume(hba);
++		/*
++		 * Check if already runtime suspended in same state as system
++		 * suspend would be.
++		 */
++		if (!rpm_ok_for_spm || !ufshcd_rpm_ok_for_spm(hba)) {
++			/* RPM state is not ok for SPM, so runtime resume */
++			ret = ufshcd_rpm_resume(hba);
++			if (ret < 0 && ret != -EACCES) {
++				ufshcd_rpm_put(hba);
++				return ret;
++			}
+ 		}
+ 		hba->complete_put = true;
+ 	}
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(__ufshcd_suspend_prepare);
++
++int ufshcd_suspend_prepare(struct device *dev)
++{
++	return __ufshcd_suspend_prepare(dev, true);
++}
+ EXPORT_SYMBOL_GPL(ufshcd_suspend_prepare);
  
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 09a17f6e93a7..47eb30a6b7b2 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -197,6 +197,7 @@ struct scsi_device {
- 	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
- 	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
- 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
-+	unsigned preserve_rpm:1;	/* Preserve runtime PM */
- 	unsigned security_supported:1;	/* Supports Security Protocols */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
+ #ifdef CONFIG_PM_SLEEP
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 782bbe6d5a52..2384da8f30c0 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1191,6 +1191,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 
+ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
+ int ufshcd_suspend_prepare(struct device *dev);
++int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
+ void ufshcd_resume_complete(struct device *dev);
+ 
+ /* Wrapper functions for safely calling variant operations */
+@@ -1399,6 +1400,16 @@ static inline int ufshcd_rpm_put_sync(struct ufs_hba *hba)
+ 	return pm_runtime_put_sync(&hba->sdev_ufs_device->sdev_gendev);
+ }
+ 
++static inline void ufshcd_rpm_get_noresume(struct ufs_hba *hba)
++{
++	pm_runtime_get_noresume(&hba->sdev_ufs_device->sdev_gendev);
++}
++
++static inline int ufshcd_rpm_resume(struct ufs_hba *hba)
++{
++	return pm_runtime_resume(&hba->sdev_ufs_device->sdev_gendev);
++}
++
+ static inline int ufshcd_rpm_put(struct ufs_hba *hba)
+ {
+ 	return pm_runtime_put(&hba->sdev_ufs_device->sdev_gendev);
 -- 
 2.25.1
 
