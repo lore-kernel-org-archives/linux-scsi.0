@@ -2,128 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8777EC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:27:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C51D0C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:32:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 66F2D60FD9
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:27:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BED4613AC
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:32:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235020AbhJEN3g (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 09:29:36 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:51646 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S235005AbhJEN3e (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 09:29:34 -0400
-X-UUID: 8d02f07aa9864b86a47ccaa8c8327060-20211005
-X-UUID: 8d02f07aa9864b86a47ccaa8c8327060-20211005
-Received: from mtkcas10.mediatek.inc [(172.21.101.39)] by mailgw01.mediatek.com
-        (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 1353950003; Tue, 05 Oct 2021 21:27:41 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Tue, 5 Oct 2021 21:27:40 +0800
-Received: from mtksdccf07.mediatek.inc (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Tue, 5 Oct 2021 21:27:40 +0800
-From:   <peter.wang@mediatek.com>
-To:     <stanley.chu@mediatek.com>, <linux-scsi@vger.kernel.org>,
-        <martin.petersen@oracle.com>, <avri.altman@wdc.com>,
-        <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC:     <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-        <peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-        <alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-        <chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-        <powen.kao@mediatek.com>, <jonathan.hsu@mediatek.com>,
-        <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-        <mikebi@micron.com>
-Subject: [PATCH 1/2] scsi: ufs: support vops pre suspend
-Date:   Tue, 5 Oct 2021 21:27:37 +0800
-Message-ID: <20211005132738.14820-2-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.18.0
-In-Reply-To: <20211005132738.14820-1-peter.wang@mediatek.com>
-References: <20211005132738.14820-1-peter.wang@mediatek.com>
+        id S235093AbhJENdx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 09:33:53 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3935 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234103AbhJENdx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 09:33:53 -0400
+Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.206])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HNz2P5GFfz67bWP;
+        Tue,  5 Oct 2021 21:29:17 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Tue, 5 Oct 2021 15:32:01 +0200
+Received: from [10.47.95.252] (10.47.95.252) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.8; Tue, 5 Oct 2021
+ 14:32:00 +0100
+Subject: Re: [PATCH v5 00/14] blk-mq: Reduce static requests memory footprint
+ for shared sbitmap
+To:     Jens Axboe <axboe@kernel.dk>, <kashyap.desai@broadcom.com>
+CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <ming.lei@redhat.com>, <hare@suse.de>, <linux-scsi@vger.kernel.org>
+References: <1633429419-228500-1-git-send-email-john.garry@huawei.com>
+ <ae33dde8-96e8-2978-5f32-c7e0a6136e8e@kernel.dk>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <81d9e019-b730-221e-a8c0-f72a8422a2ec@huawei.com>
+Date:   Tue, 5 Oct 2021 14:34:39 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK:  N
+In-Reply-To: <ae33dde8-96e8-2978-5f32-c7e0a6136e8e@kernel.dk>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.95.252]
+X-ClientProxiedBy: lhreml709-chm.china.huawei.com (10.201.108.58) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Peter Wang <peter.wang@mediatek.com>
+On 05/10/2021 13:35, Jens Axboe wrote:
+>> Baseline is 1b2d1439fc25 (block/for-next) Merge branch 'for-5.16/io_uring'
+>> into for-next
+> Let's get this queued up for testing, thanks John.
 
-This patch introduce an solution to do pre suspned before SSU
-(sleep) command.
+Cheers, appreciated
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/scsi/ufs/ufshcd.c | 9 +++++++--
- drivers/scsi/ufs/ufshcd.h | 8 +++++---
- 2 files changed, 12 insertions(+), 5 deletions(-)
+@Kashyap, You mentioned that when testing you saw a performance 
+regression from v5.11 -> v5.12 - any idea on that yet? Can you describe 
+the scenario, like IO scheduler and how many disks and the type? Does 
+disabling host_tagset_enable restore performance?
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 188de6f91050..73eb626fa88f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8897,6 +8897,10 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 
- 	flush_work(&hba->eeh_work);
- 
-+	ret = ufshcd_vops_suspend(hba, pm_op, PRE_CHANGE);
-+	if (ret)
-+		goto enable_scaling;
-+
- 	if (req_dev_pwr_mode != hba->curr_dev_pwr_mode) {
- 		if (pm_op != UFS_RUNTIME_PM)
- 			/* ensure that bkops is disabled */
-@@ -8924,7 +8928,7 @@ static int __ufshcd_wl_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	 * vendor specific host controller register space call them before the
- 	 * host clocks are ON.
- 	 */
--	ret = ufshcd_vops_suspend(hba, pm_op);
-+	ret = ufshcd_vops_suspend(hba, pm_op, POST_CHANGE);
- 	if (ret)
- 		goto set_link_active;
- 	goto out;
-@@ -9052,7 +9056,8 @@ static int __ufshcd_wl_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- set_old_link_state:
- 	ufshcd_link_state_transition(hba, old_link_state, 0);
- vendor_suspend:
--	ufshcd_vops_suspend(hba, pm_op);
-+	ufshcd_vops_suspend(hba, pm_op, PRE_CHANGE);
-+	ufshcd_vops_suspend(hba, pm_op, POST_CHANGE);
- out:
- 	if (ret)
- 		ufshcd_update_evt_hist(hba, UFS_EVT_WL_RES_ERR, (u32)ret);
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index f0da5d3db1fa..e90320253d96 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -344,7 +344,8 @@ struct ufs_hba_variant_ops {
- 					enum ufs_notify_change_status);
- 	int	(*apply_dev_quirks)(struct ufs_hba *hba);
- 	void	(*fixup_dev_quirks)(struct ufs_hba *hba);
--	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
-+	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op,
-+					enum ufs_notify_change_status);
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
- 	int	(*phy_initialization)(struct ufs_hba *);
-@@ -1300,10 +1301,11 @@ static inline void ufshcd_vops_fixup_dev_quirks(struct ufs_hba *hba)
- 		hba->vops->fixup_dev_quirks(hba);
- }
- 
--static inline int ufshcd_vops_suspend(struct ufs_hba *hba, enum ufs_pm_op op)
-+static inline int ufshcd_vops_suspend(struct ufs_hba *hba, enum ufs_pm_op op,
-+				enum ufs_notify_change_status status)
- {
- 	if (hba->vops && hba->vops->suspend)
--		return hba->vops->suspend(hba, op);
-+		return hba->vops->suspend(hba, op, status);
- 
- 	return 0;
- }
--- 
-2.18.0
+ From checking differences between those kernels, I don't see anything 
+directly relevant in sbitmap support or in the megaraid sas driver.
 
+Thanks,
+John
