@@ -2,103 +2,94 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B8BC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:35:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9E70C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:52:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E2BD613AC
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:35:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 883F6604D1
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:52:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235002AbhJENhd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 09:37:33 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53932 "EHLO mail.kernel.org"
+        id S234570AbhJENyU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 09:54:20 -0400
+Received: from mail.kernel.org ([198.145.29.99]:60794 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234170AbhJENhc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Oct 2021 09:37:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C7A3461373;
-        Tue,  5 Oct 2021 13:35:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1633440942;
-        bh=rmiNW24/FYEIfXM5I6t4acvrWgnU8hlztAf4CfxGHdw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=QvX/svW3718K8DxSSqNursVFPuWYzbbpBOhvWl1fm03YrqXamEV9oI6/3q7lSf7WJ
-         lfmljhkzMWRNND5DXr3JVdPWMW0Nf+P35ScDeGdXvJTpj5/J3LMtedczUqSknj1nja
-         fFAEKrWiFFM8PrjQWvapq8cKe0Uidg0ouI8W+xp4=
-Date:   Tue, 5 Oct 2021 15:35:40 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Ming Lei <ming.lei@redhat.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Changhui Zhong <czhong@redhat.com>,
-        Yi Zhang <yi.zhang@redhat.com>
-Subject: Re: [PATCH V3] scsi: core: put LLD module refcnt after SCSI device
- is released
-Message-ID: <YVxUrIQw7ACcmSx2@kroah.com>
-References: <20210930124415.1160754-1-ming.lei@redhat.com>
+        id S235468AbhJENxV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Oct 2021 09:53:21 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 6394A619E0;
+        Tue,  5 Oct 2021 13:51:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1633441890;
+        bh=9SgO9cxeWovV1mzhMMpheRCaBIhZQ8eFKP2U2MzFVgQ=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=I7YBS9ZbVfpqkItEFe2pkr5p8fWEiwMLAX2/+4pa+88/B8hTOHAei7BJTuvQefBin
+         wgRH00XZNpQatLPJi0ztVL566u5yaINMpUND9XxPBpkGJFTLfe5OkMZ6odJjru21xN
+         jcoqTnM+C9SiJyhfx1R+KfUWqTegeMCmvvznUToG4OV3Ff5r8s14V3YoCOmAip7Q7F
+         DaGMxtKSerJjA2oQ/DBRY2/9eQI5AXe5Kpj1NdYHiXndNMBss5DGxFB4i4ZiR7yj4l
+         ATYJAnLbUkV2MOnCBb/1jBlVhCL7OtBujLZtIcVEIjHYOSYFeXgiLWbcSz3iaJ4gKK
+         qmxAXKr7W/MDQ==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Arun Easi <aeasi@marvell.com>,
+        "Ewan D . Milne" <emilne@redhat.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.14 35/40] scsi: qla2xxx: Fix excessive messages during device logout
+Date:   Tue,  5 Oct 2021 09:50:14 -0400
+Message-Id: <20211005135020.214291-35-sashal@kernel.org>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211005135020.214291-1-sashal@kernel.org>
+References: <20211005135020.214291-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210930124415.1160754-1-ming.lei@redhat.com>
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 30, 2021 at 08:44:15PM +0800, Ming Lei wrote:
-> SCSI host release is triggered when SCSI device is freed, and we have to
-> make sure that LLD module won't be unloaded before SCSI host instance is
-> released because shost->hostt is required in host release handler.
-> 
-> So make sure to put LLD module refcnt after SCSI device is released.
+From: Arun Easi <aeasi@marvell.com>
 
-What is a "LLD"?
+[ Upstream commit 8e2d81c6b5be0d7629fb50b6f678fc07a4c58fae ]
 
-> Fix one kernel panic of 'BUG: unable to handle page fault for address'
-> reported by Changhui and Yi.
-> 
-> Reported-by: Changhui Zhong <czhong@redhat.com>
-> Reported-by: Yi Zhang <yi.zhang@redhat.com>
-> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/scsi/scsi.c        |  4 +++-
->  drivers/scsi/scsi_sysfs.c  | 12 ++++++++++++
->  include/scsi/scsi_device.h |  1 +
->  3 files changed, 16 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index b241f9e3885c..291ecc33b1fe 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -553,8 +553,10 @@ EXPORT_SYMBOL(scsi_device_get);
->   */
->  void scsi_device_put(struct scsi_device *sdev)
->  {
-> -	module_put(sdev->host->hostt->module);
-> +	struct module *mod = sdev->host->hostt->module;
-> +
->  	put_device(&sdev->sdev_gendev);
-> +	module_put(mod);
->  }
->  EXPORT_SYMBOL(scsi_device_put);
->  
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index 86793259e541..9ada26814011 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -449,9 +449,16 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
->  	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
->  	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
->  	unsigned long flags;
-> +	struct module *mod;
-> +	bool put_mod = false;
->  
->  	sdev = container_of(work, struct scsi_device, ew.work);
->  
-> +	if (sdev->put_lld_mod_ref) {
+Disable default logging of some I/O path messages. If desired, the messages
+can be turned back on by setting ql2xextended_error_logging.
 
-Why do you need this flag at all?
+Link: https://lore.kernel.org/r/20210925035154.29815-1-njavali@marvell.com
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Arun Easi <aeasi@marvell.com>
+Signed-off-by: Nilesh Javali <njavali@marvell.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/qla2xxx/qla_isr.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Shouldn't you just always grab/release the module?  Why would you not
-want to?
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index d9fb093a60a1..4ae7e3174647 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2399,7 +2399,7 @@ static void qla24xx_nvme_iocb_entry(scsi_qla_host_t *vha, struct req_que *req,
+ 	}
+ 
+ 	if (unlikely(logit))
+-		ql_log(ql_log_warn, fcport->vha, 0x5060,
++		ql_log(ql_dbg_io, fcport->vha, 0x5060,
+ 		   "NVME-%s ERR Handling - hdl=%x status(%x) tr_len:%x resid=%x  ox_id=%x\n",
+ 		   sp->name, sp->handle, comp_status,
+ 		   fd->transferred_length, le32_to_cpu(sts->residual_len),
+@@ -3246,7 +3246,7 @@ qla2x00_status_entry(scsi_qla_host_t *vha, struct rsp_que *rsp, void *pkt)
+ 
+ out:
+ 	if (logit)
+-		ql_log(ql_log_warn, fcport->vha, 0x3022,
++		ql_log(ql_dbg_io, fcport->vha, 0x3022,
+ 		       "FCP command status: 0x%x-0x%x (0x%x) nexus=%ld:%d:%llu portid=%02x%02x%02x oxid=0x%x cdb=%10phN len=0x%x rsp_info=0x%x resid=0x%x fw_resid=0x%x sp=%p cp=%p.\n",
+ 		       comp_status, scsi_status, res, vha->host_no,
+ 		       cp->device->id, cp->device->lun, fcport->d_id.b.domain,
+-- 
+2.33.0
 
-thanks,
-
-greg k-h
