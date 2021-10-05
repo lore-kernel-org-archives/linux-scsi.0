@@ -2,68 +2,103 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C51D0C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:32:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B8BC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:35:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9BED4613AC
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:32:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E2BD613AC
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 13:35:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235093AbhJENdx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 09:33:53 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3935 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234103AbhJENdx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 09:33:53 -0400
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.206])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HNz2P5GFfz67bWP;
-        Tue,  5 Oct 2021 21:29:17 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Tue, 5 Oct 2021 15:32:01 +0200
-Received: from [10.47.95.252] (10.47.95.252) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.1.2308.8; Tue, 5 Oct 2021
- 14:32:00 +0100
-Subject: Re: [PATCH v5 00/14] blk-mq: Reduce static requests memory footprint
- for shared sbitmap
-To:     Jens Axboe <axboe@kernel.dk>, <kashyap.desai@broadcom.com>
-CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <ming.lei@redhat.com>, <hare@suse.de>, <linux-scsi@vger.kernel.org>
-References: <1633429419-228500-1-git-send-email-john.garry@huawei.com>
- <ae33dde8-96e8-2978-5f32-c7e0a6136e8e@kernel.dk>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <81d9e019-b730-221e-a8c0-f72a8422a2ec@huawei.com>
-Date:   Tue, 5 Oct 2021 14:34:39 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S235002AbhJENhd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 09:37:33 -0400
+Received: from mail.kernel.org ([198.145.29.99]:53932 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234170AbhJENhc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Oct 2021 09:37:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C7A3461373;
+        Tue,  5 Oct 2021 13:35:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1633440942;
+        bh=rmiNW24/FYEIfXM5I6t4acvrWgnU8hlztAf4CfxGHdw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=QvX/svW3718K8DxSSqNursVFPuWYzbbpBOhvWl1fm03YrqXamEV9oI6/3q7lSf7WJ
+         lfmljhkzMWRNND5DXr3JVdPWMW0Nf+P35ScDeGdXvJTpj5/J3LMtedczUqSknj1nja
+         fFAEKrWiFFM8PrjQWvapq8cKe0Uidg0ouI8W+xp4=
+Date:   Tue, 5 Oct 2021 15:35:40 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Changhui Zhong <czhong@redhat.com>,
+        Yi Zhang <yi.zhang@redhat.com>
+Subject: Re: [PATCH V3] scsi: core: put LLD module refcnt after SCSI device
+ is released
+Message-ID: <YVxUrIQw7ACcmSx2@kroah.com>
+References: <20210930124415.1160754-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <ae33dde8-96e8-2978-5f32-c7e0a6136e8e@kernel.dk>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.95.252]
-X-ClientProxiedBy: lhreml709-chm.china.huawei.com (10.201.108.58) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20210930124415.1160754-1-ming.lei@redhat.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 05/10/2021 13:35, Jens Axboe wrote:
->> Baseline is 1b2d1439fc25 (block/for-next) Merge branch 'for-5.16/io_uring'
->> into for-next
-> Let's get this queued up for testing, thanks John.
+On Thu, Sep 30, 2021 at 08:44:15PM +0800, Ming Lei wrote:
+> SCSI host release is triggered when SCSI device is freed, and we have to
+> make sure that LLD module won't be unloaded before SCSI host instance is
+> released because shost->hostt is required in host release handler.
+> 
+> So make sure to put LLD module refcnt after SCSI device is released.
 
-Cheers, appreciated
+What is a "LLD"?
 
-@Kashyap, You mentioned that when testing you saw a performance 
-regression from v5.11 -> v5.12 - any idea on that yet? Can you describe 
-the scenario, like IO scheduler and how many disks and the type? Does 
-disabling host_tagset_enable restore performance?
+> Fix one kernel panic of 'BUG: unable to handle page fault for address'
+> reported by Changhui and Yi.
+> 
+> Reported-by: Changhui Zhong <czhong@redhat.com>
+> Reported-by: Yi Zhang <yi.zhang@redhat.com>
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/scsi/scsi.c        |  4 +++-
+>  drivers/scsi/scsi_sysfs.c  | 12 ++++++++++++
+>  include/scsi/scsi_device.h |  1 +
+>  3 files changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index b241f9e3885c..291ecc33b1fe 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -553,8 +553,10 @@ EXPORT_SYMBOL(scsi_device_get);
+>   */
+>  void scsi_device_put(struct scsi_device *sdev)
+>  {
+> -	module_put(sdev->host->hostt->module);
+> +	struct module *mod = sdev->host->hostt->module;
+> +
+>  	put_device(&sdev->sdev_gendev);
+> +	module_put(mod);
+>  }
+>  EXPORT_SYMBOL(scsi_device_put);
+>  
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 86793259e541..9ada26814011 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -449,9 +449,16 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+>  	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
+>  	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
+>  	unsigned long flags;
+> +	struct module *mod;
+> +	bool put_mod = false;
+>  
+>  	sdev = container_of(work, struct scsi_device, ew.work);
+>  
+> +	if (sdev->put_lld_mod_ref) {
 
- From checking differences between those kernels, I don't see anything 
-directly relevant in sbitmap support or in the megaraid sas driver.
+Why do you need this flag at all?
 
-Thanks,
-John
+Shouldn't you just always grab/release the module?  Why would you not
+want to?
+
+thanks,
+
+greg k-h
