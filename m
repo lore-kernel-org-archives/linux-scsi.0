@@ -2,172 +2,147 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27FAFC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 18:02:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89444C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 18:14:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0FC966124D
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 18:02:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6C389613D3
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 18:14:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232869AbhJESEo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 14:04:44 -0400
-Received: from de-smtp-delivery-102.mimecast.com ([194.104.111.102]:38788 "EHLO
-        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229626AbhJESEn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 14:04:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
-        t=1633456971;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=Ep9cwthQ9M1+TOJtKSNBRifSVrMz8cc+Vn64Z8SBfqQ=;
-        b=Qixz4MZylstPdqfqQGHOYSUFn7X8QUajPhKb5G8WmVL/zstLeIR7szoNyLeaIrLaZyOr4y
-        XeQC+J3vGKXridYyQyOa5XdjoEKs/wGZC6vBGIbW3U59F4acswHJ9NLMOZ6i2dDYqynEd2
-        F64cNVlqG0uA5SOnHdTJzZ9cU5FRUpc=
-Received: from EUR02-VE1-obe.outbound.protection.outlook.com
- (mail-ve1eur02lp2050.outbound.protection.outlook.com [104.47.6.50]) (Using
- TLS) by relay.mimecast.com with ESMTP id
- de-mta-16-gIRF3AArOBy9s_H-iJiv7A-1; Tue, 05 Oct 2021 20:02:50 +0200
-X-MC-Unique: gIRF3AArOBy9s_H-iJiv7A-1
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=FyBCltj1dPhBXb+HjZuTNxkhpMzOZgx2Q0uUSJ52wItvnY/rCsmRqcUWr+e2yIecF3bYmTfYyHS1pZ90svuCZ1BkUVKFuzILaPA41pE+b8qK2fdcUr9q9L7wfXinr6N5d45jnY0VIEwxO31jnX2NQ7oPqQ4lscKDcAWGxnaw+4HvAYHDvWQr0R9q0y5rzkoc5+UrAc+8YkaV4tihbvdVlE8XaqIVIc2Y792yCNt3oFYc2snGejHSrrPPV9ZxiG/yaBsndo69XGAcbDP3/8q5U9rLq4RhRNltWrH70St1fUH7pVCDDOVk0BoQG9G6pz/SHAxaMZ9duMFvODwWx2iAWw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Ep9cwthQ9M1+TOJtKSNBRifSVrMz8cc+Vn64Z8SBfqQ=;
- b=X3p6ZF+y7idQkRJ2Gvkr3CQCgSP8LltmYrIDGmYZyR7RRBKDGDkaZSpnGsKt9HMnTldhHAUNcXhjPnUWBM0Q6VD4j+KOnynxV/gcplRPQcRtZultMZqRXEfRm6YqJmOzDU5PL857IA11iF8ATnFkoJem/Chsr4ESTw4x81cQ+Y13Cu37nHRClWkQ/tp/kCOZaiRu9tHkbojzzGWSKdCHD+sf5QN+12/4u1BPTAETbWFfXn0nDDGGCMrcrkq4rYbdqdj+0h5D0/KDc9zUKgAcElmm6hxawctvyinusdPOVLnv+VoRoUsZ7h5svjcnAz4SzHM0Hv6PmsCJ+a3fkGO8yQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
- dkim=pass header.d=suse.com; arc=none
-Authentication-Results: vger.kernel.org; dkim=none (message not signed)
- header.d=none;vger.kernel.org; dmarc=none action=none header.from=suse.com;
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
- by AS8PR04MB7831.eurprd04.prod.outlook.com (2603:10a6:20b:2a8::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4566.22; Tue, 5 Oct
- 2021 18:02:49 +0000
-Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::a555:3b27:dc03:8fcb]) by AM5PR04MB3089.eurprd04.prod.outlook.com
- ([fe80::a555:3b27:dc03:8fcb%6]) with mapi id 15.20.4566.022; Tue, 5 Oct 2021
- 18:02:48 +0000
-Subject: Re: [PATCH 1/5] target: fix ordered CMD_T_SENT handling
-To:     Mike Christie <michael.christie@oracle.com>,
-        martin.petersen@oracle.com, james.bottomley@hansenpartnership.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-References: <20210930020422.92578-1-michael.christie@oracle.com>
- <20210930020422.92578-2-michael.christie@oracle.com>
-From:   Lee Duncan <lduncan@suse.com>
-Message-ID: <217dc64f-79d8-42bd-2290-74ab350a2dee@suse.com>
-Date:   Tue, 5 Oct 2021 11:02:45 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.12.0
-In-Reply-To: <20210930020422.92578-2-michael.christie@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: AS8PR04CA0137.eurprd04.prod.outlook.com
- (2603:10a6:20b:127::22) To AM5PR04MB3089.eurprd04.prod.outlook.com
- (2603:10a6:206:b::28)
+        id S234477AbhJESQY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 14:16:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42352 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232861AbhJESQX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 14:16:23 -0400
+Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 159FFC061749;
+        Tue,  5 Oct 2021 11:14:32 -0700 (PDT)
+Received: by mail-ed1-x535.google.com with SMTP id p11so2139705edy.10;
+        Tue, 05 Oct 2021 11:14:31 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=qrVDa6iqwbI1N1i5Vvsk2q6J4SqfjK9r6QKza8oCivI=;
+        b=AA0eXZM6Nho5oZvo6al2SeGKlZfJensqta3LehDMmebtXUXElVigfZhvJJE3M9f+yA
+         cQQ2Z7QGwIO3ZVvRLLaWezv6d1Mnr3W3EYvfkfZEwJKZYFPBAGM1jKP3NonsiiI51srq
+         4Rsu09nvxptF67f10at7blY211KI5vSmsJwCYo2xABCS3xaZfp+xFO+82Ug301IP4/Eq
+         MZ8YGC0IUXmz/YBMZTOlGE+76tJWtcyd/bjCfkwcgWJAnxwL5lTeoFOvffKATZp+1iVc
+         weiaPXIYbqOCi4yaXitOID2JZbDZU2UvjiSWQUzLLBKSG/e4qaOTYuVyDAT0ElxmiTQM
+         yhIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=qrVDa6iqwbI1N1i5Vvsk2q6J4SqfjK9r6QKza8oCivI=;
+        b=nB3NC1DcS/gi8wvucN+YtQbY0mxH+8C2TAlKvvBlOohvWzVrddYYMYrlGYeikzavPw
+         ePBuy2btgsliME1iWB1PLhFj8rrjKHSjJuG2yrNQXJkpiuWSTafTALv+MzpRcDj7tuwf
+         EXdErrTsS3gHf5+Y9gqZ9qmmZGDX6kP8/vM/Tv5FCYnylmGmgAYQ4PTSPu7Q6vF+qOuF
+         O7TQO2yzjR3AXVbNndDlZrecugvd6RlKdjroMqqZRDXd8dDiENKiRf0ojdfdNPvIyrzR
+         APXyF2NeSY4C3U56xvxXaYmiwNtqsrQYxp0rIMFtoPa7w/FpPs5wTAnkdOPDZPwIArNX
+         tYOQ==
+X-Gm-Message-State: AOAM533AVT5zu0uSjdI7mNKn1NPsj5N/o25naO3ejT/nbt69sncpvYmu
+        fyhpRf2+7en4G43TpaV9/ek=
+X-Google-Smtp-Source: ABdhPJxnZiAFCgH3mNtRtBZf9s+olbhESF2EJDUaPjin0mTkfZiEUY4Vd94Go43dgya325nYhMt1Nw==
+X-Received: by 2002:a17:906:e011:: with SMTP id cu17mr23108770ejb.244.1633457670478;
+        Tue, 05 Oct 2021 11:14:30 -0700 (PDT)
+Received: from anparri (host-79-49-65-228.retail.telecomitalia.it. [79.49.65.228])
+        by smtp.gmail.com with ESMTPSA id e7sm7259482edv.39.2021.10.05.11.14.29
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Oct 2021 11:14:29 -0700 (PDT)
+Date:   Tue, 5 Oct 2021 20:14:21 +0200
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: Re: [PATCH] scsi: storvsc: Fix validation for unsolicited incoming
+ packets
+Message-ID: <20211005181421.GA1714@anparri>
+References: <20211005114103.3411-1-parri.andrea@gmail.com>
+ <MWHPR21MB15935C9A0C33A858AFF1A825D7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-Received: from [192.168.20.3] (73.25.22.216) by AS8PR04CA0137.eurprd04.prod.outlook.com (2603:10a6:20b:127::22) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4566.14 via Frontend Transport; Tue, 5 Oct 2021 18:02:47 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 5bd57c04-b198-44a4-031d-08d9882a5771
-X-MS-TrafficTypeDiagnostic: AS8PR04MB7831:
-X-Microsoft-Antispam-PRVS: <AS8PR04MB7831FD76EFB88B49A1591148DAAF9@AS8PR04MB7831.eurprd04.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:3513;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ykWnoFW4vu+Kv3ltndZUyghk8daCbzw58MtIA6w+Zjkdtg43qxtVj6M6SvbQnaQds5b4dsUVybV5HImLEZqsdr9RF1ZTgEWygf1zFfSjSqhb5qshHqBH08CtVeKVnt/FCEWtZ4nliskoJHlXWkfV7ewbsttqQmFTRhQAffq32h+/s8MxVVS4jKqatCjsIXNvyE9QbPl+khYUvVcM9CmRQHF4yjnq+KrgK2JazEcPSJBg4LioaR5IWoRiG15cHW8i9BNA5FbLEKntcQhprs2PqMyZYKr+BYkHPyzMyRmVY+0jkwXiJD47sB4xnqTpR6nCYePPgFvsc9xm+JFOiEWHtBpJBkgBEExmrl6dBZL4kjvPV9YdpHf2OgmgXdQ2yOyMYVkyR4t3n4nwP/lJVmwAXXj8iHCtjQagMWkeG8c2KRr0il6BriIcfFcYKch7777TXi6mjXXDmDy3kIpXbvgTDh52HEhPG66JbTvGG59QOvb6dMVaobIdzWfI25qWW/wMLID1gC9e8stziOO1p0QwGamqE0de1UHVbQzoSCe5UuZy6lg8kMN71gGqH1sBEbCHEBo0QlafFO7MDwL5fPpzSBTaW+WLfhZtbsicIZGpZkEJ5p34Dqgv+a+B8mtvTzvV4LuSqTGVA/tyWJQEAje1OXnzd1J4MlNdAiWuAkfeNvt832aXSCkyunL+l7+JHPlza2Wn0vZz8heSRNTHEgiNXqF0nhhzeVWOGNiYXxakQBY=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6486002)(186003)(26005)(31686004)(83380400001)(508600001)(5660300002)(31696002)(2616005)(8676002)(316002)(16576012)(53546011)(956004)(38100700002)(2906002)(8936002)(86362001)(66476007)(66556008)(66946007)(36756003)(43740500002)(45980500001);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?SUkwYTR2V1dzaVVKSGxYUjNnb2N2L2pjOFBkVGZBTm5kekI1QXk3amRpdVds?=
- =?utf-8?B?cUczRXRsbTFjU3FLSkFoZzRjb3BpVTZxc0hOTkpJamh4QWQxU2lXaXBIdklt?=
- =?utf-8?B?RHpFcUJPVFB6MTlRdTdEaEgwTlluOWJ2VzNlTmQ4dzN4d0E1azdNUWNGa0FR?=
- =?utf-8?B?S1p6ZDRBRnJaeE8wb09qOEdrRU0yejZsZ3F1Qk9NRmJHeDZHa0dQTUREUHZ5?=
- =?utf-8?B?d3NoenVGazlmOCtGdmlSQjkxQVRWVzhLVmdzT1VFR1lna01rWmM4bHBDQkI4?=
- =?utf-8?B?YTI4YXQyU1d0QU5qcFNRUC9peEwycXFXc2lCc0kyWnRiL294ankwbHlmdERM?=
- =?utf-8?B?VGt4clFIVWJFbzdEVG1wLytLbVg3N21OamZrK3l0TnVWNmJuUWpXajgyY052?=
- =?utf-8?B?TTFsM28xUTVVcVNJQ1N4bW4xNWswSHczYnBJenJaSC9EaWViS0gwQTFaQUd0?=
- =?utf-8?B?L0I3Z3FyaW9Wemh5UDJncXp6N01sZ2FmbnlnRmRyeVZGUi9uS2lUenJMMHVj?=
- =?utf-8?B?M1RPdSt3ZFFSZDhyZFpIemNpR3Fib04xaGwyTnZDeHNpZWtuYSt0L2FidGJH?=
- =?utf-8?B?NTFZSGZqSTd2c2F6Snl6eGZjVHJGYVc5b3E1aHlsbWFmZkhsRHJRV0N2VTNG?=
- =?utf-8?B?OEhHeEJJc1BSanZzVE9KK3k0WUZkMGhiNzFFRUhYclE3SzNucHFBN2dhalBX?=
- =?utf-8?B?eWpSOC9EZkFTOHp0YVVnMHU2RXQ5cjhRZlNqMXkxUk5DeUNXeHRVVWNWYTRn?=
- =?utf-8?B?c1lFMDBLdTBIU29xSDhBMDhjZ05tUUxpKzRoSkc0Rm85bVAxRlZKVk5SaS84?=
- =?utf-8?B?NWlSL083YnJCdHRMTFRQcjlNZ0pSQ1d6TE11UnFRMTBIc1hYTlEzRENzbWRw?=
- =?utf-8?B?YldIaTFFOFNmaWYrdHczbGUwYWNxN2s5dWkwOGFvUHcvV1Q5amYycG9FYVhm?=
- =?utf-8?B?MHVmRWhaTW9nWDIyNDNKbUgvc1AxekoyZFlKL1lleWxtR1poQVRkQlg0UGdN?=
- =?utf-8?B?aXlXVDlQa0FtaU1vR2E5akZ1NFJidytyYzNMcGJlRjRrNFFFVDhRMkZpTVdZ?=
- =?utf-8?B?cE0vaVR6aW1SblJxczNZSVJJKzdZc1dDNHphWU9qYkZEVnpiakwrekUvS0Ir?=
- =?utf-8?B?MmpzNmJQRmJ2alJDTFoxbFFESk9admhVdTNlM1gyMXE4VFlKdC9xM0dUZDJu?=
- =?utf-8?B?MHp3bVlXWngrOXNoWm4veXJsVHBnN0UzM1dzSEZKZ0E2aUppZ0krdy85WFRn?=
- =?utf-8?B?dk9oTEhYeC9rbzRYQmRUZ2lRQ3ZSZmczOTExVFdwOVF5NThYMVovaXJmS1RQ?=
- =?utf-8?B?M1FSSVA5TVZjTHNiaEtmQkpMRCtrSTZSZm0wWWIxWkY3cU00V3NDSkRxQXBT?=
- =?utf-8?B?US9FWjBlSXhPTmM5cFZlN3crb01WMXBNMnNrRTNxSkJNOEpUTFVrTlYwYXNR?=
- =?utf-8?B?K29PdzZqVFRJUmc5VzVlSE1QUjFSN1B6ZU0wbVZtZHZlY0NSLzZ2bGc3UVE0?=
- =?utf-8?B?RytBY0FJYndkTmtZOHczUGlScDN0RmdvajNMMTNjb3JSZldtdTZ3SC9jSE5H?=
- =?utf-8?B?U2N1c082Nk51QU9PQ1dpeER1TGNhNlN0NW40alRRalhKV0NVdCs4Qk0vUUJt?=
- =?utf-8?B?SkszNDZaclZVdFAwcTJ0bG5FR2o4aThQcTlmUFgzNWdUb0l4TWQrRHUxcWxh?=
- =?utf-8?B?SkZtL1hqeTkrSFVia3hyZzhPMDNzSWRnaU9wZXdYQWpGc3AvZ1lYaE9DSEhk?=
- =?utf-8?Q?0dW/9BWdgY994X0JE4D8KG2vy4e+Dp2cWqGwaqA?=
-X-OriginatorOrg: suse.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5bd57c04-b198-44a4-031d-08d9882a5771
-X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2021 18:02:48.8412
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jPrOcMlmjCBH9sIz9DSCa8gvy7XJEvxpOtlgInIQDhOrVTPGPR/lRuB3gNEM31lbgZnqybPE1bBJeGJHX9We2A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AS8PR04MB7831
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <MWHPR21MB15935C9A0C33A858AFF1A825D7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 9/29/21 7:04 PM, Mike Christie wrote:
-> We can race where target_handle_task_attr has put the cmd on the
-> delayed_cmd_list. Then target_restart_delayed_cmds has removed it and
-> set CMD_T_SENT, but then target_execute_cmd now clears that bit.
+> > @@ -292,6 +292,9 @@ struct vmstorage_protocol_version {
+> >  #define STORAGE_CHANNEL_REMOVABLE_FLAG		0x1
+> >  #define STORAGE_CHANNEL_EMULATED_IDE_FLAG	0x2
+> > 
+> > +/* Lower bound on the size of unsolicited packets with ID of 0 */
+> > +#define VSTOR_MIN_UNSOL_PKT_SIZE		48
+> > +
 > 
-> This patch moves the clearing to before we've put the cmd on the list.
+> I know you have determined experimentally that Hyper-V sends
+> unsolicited packets with the above length, so the idea is to validate
+> that the guest actually gets packets at least that big.  But I wonder if
+> we should think about this slightly differently.
 > 
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->  drivers/target/target_core_transport.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 14c6f2bb1b01..e02173a4b7bc 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -2200,6 +2200,10 @@ static bool target_handle_task_attr(struct se_cmd *cmd)
->  	if (atomic_read(&dev->dev_ordered_sync) == 0)
->  		return false;
->  
-> +	spin_lock_irq(&cmd->t_state_lock);
-> +	cmd->transport_state &= ~CMD_T_SENT;
-> +	spin_unlock_irq(&cmd->t_state_lock);
-> +
->  	spin_lock(&dev->delayed_cmd_lock);
->  	list_add_tail(&cmd->se_delayed_node, &dev->delayed_cmd_list);
->  	spin_unlock(&dev->delayed_cmd_lock);
-> @@ -2228,12 +2232,8 @@ void target_execute_cmd(struct se_cmd *cmd)
->  	if (target_write_prot_action(cmd))
->  		return;
->  
-> -	if (target_handle_task_attr(cmd)) {
-> -		spin_lock_irq(&cmd->t_state_lock);
-> -		cmd->transport_state &= ~CMD_T_SENT;
-> -		spin_unlock_irq(&cmd->t_state_lock);
-> +	if (target_handle_task_attr(cmd))
->  		return;
-> -	}
->  
->  	__target_execute_cmd(cmd, true);
->  }
-> 
+> The goal is for the storvsc driver to protect itself against bad or
+> malicious messages from Hyper-V.  For the unsolicited messages, the
+> only field that this storvsc driver needs to access is the
+> vstor_packet->operation field.
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+Eh, this is one piece of information I was looking for...  ;-)
+
+
+>So an alternate approach is to set
+> the minimum length as small as possible while ensuring that field is valid.
+
+The fact is, I'm not sure how to do it for unsolicited messages.
+Current code ensures/checks != COMPLETE_IO.  Your comment above
+and code audit suggest that we should add a check != FCHBA_DATA.
+I saw ENUMERATE_BUS messages, code only using their "operation".
+
+And, again, this is only based on current code/observations...
+
+So, maybe you mean something like this (on top of this patch)?
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 349c1071a98d4..8fedac3c7597a 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -292,9 +292,6 @@ struct vmstorage_protocol_version {
+ #define STORAGE_CHANNEL_REMOVABLE_FLAG		0x1
+ #define STORAGE_CHANNEL_EMULATED_IDE_FLAG	0x2
+ 
+-/* Lower bound on the size of unsolicited packets with ID of 0 */
+-#define VSTOR_MIN_UNSOL_PKT_SIZE		48
+-
+ struct vstor_packet {
+ 	/* Requested operation type */
+ 	enum vstor_packet_operation operation;
+@@ -1291,7 +1288,7 @@ static void storvsc_on_channel_callback(void *context)
+ 		u32 pktlen = hv_pkt_datalen(desc);
+ 		u64 rqst_id = desc->trans_id;
+ 		u32 minlen = rqst_id ? sizeof(struct vstor_packet) -
+-			stor_device->vmscsi_size_delta : VSTOR_MIN_UNSOL_PKT_SIZE;
++			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
+ 
+ 		if (pktlen < minlen) {
+ 			dev_err(&device->device,
+@@ -1315,7 +1312,8 @@ static void storvsc_on_channel_callback(void *context)
+ 				 * storvsc_on_io_completion() with a guest memory address that is
+ 				 * zero if Hyper-V were to construct and send such a bogus packet.
+ 				 */
+-				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO) {
++				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO ||
++				    packet->operation == VSTOR_OPERATION_FCHBA_DATA) {
+ 					dev_err(&device->device, "Invalid packet with ID of 0\n");
+ 					continue;
+ 				}
+
+Thanks,
+  Andrea
 
