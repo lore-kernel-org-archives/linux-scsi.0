@@ -2,222 +2,165 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C88DC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 20:36:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DAAA0C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 23:52:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E7A936142A
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 20:36:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B84BC61056
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 23:52:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232250AbhJEUh4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 16:37:56 -0400
-Received: from mail-mw2nam12on2126.outbound.protection.outlook.com ([40.107.244.126]:17888
-        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229805AbhJEUhy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Oct 2021 16:37:54 -0400
+        id S233540AbhJEXyX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 19:54:23 -0400
+Received: from de-smtp-delivery-102.mimecast.com ([194.104.111.102]:22310 "EHLO
+        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230188AbhJEXyW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 19:54:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
+        t=1633477950;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=bCExj5BJPxAGg46aZddowd3FKAXnLNzJZhmZ7EWbxN4=;
+        b=RNnu2bX0zRCUQfNYSIdYdA359I5JUSjyd8eShbiUHrtf4ygrpen5D7rKmsI7W58Jo0MghQ
+        axQZ1O6Lvv/rbjdwOXjzgBHHswqIDYu4v3+9OWFyc+FQtSMduAxZJtFW0dK3VDEQWL0cmf
+        fjQ4bUlUMkIrJH62sw+70qm6XowUAuw=
+Received: from EUR05-VI1-obe.outbound.protection.outlook.com
+ (mail-vi1eur05lp2175.outbound.protection.outlook.com [104.47.17.175])
+ (Using TLS) by relay.mimecast.com with ESMTP id
+ de-mta-18-5oFDQ8McMHSJ1fh1ccFe2Q-1; Wed, 06 Oct 2021 01:52:29 +0200
+X-MC-Unique: 5oFDQ8McMHSJ1fh1ccFe2Q-1
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=c0TSNUmQ4Yin6YrCyoguoFifqXp+gtGNIe1NZ3Gslj9GuWZb6gD/e1Upq32ZlFyyJfaHFcPdCqJaiD6v9FOY4qEwxNVH1bjY88INtnIjS0HqoXohRnXQwiQNgH/j+kQaXouX9deqY9wN5/QkCSMReJ/LK4fQvuYmApfCKQRWYzfLj+pd0eGzxA4KPqV6Mge6xdqP9g7JuZpUdvpDORsxFUCmq+kLc+4eV6IWEb1s9KIrSnTENQLNAla2NF+fu7qTkZ28Qv1GuAOMaxsMvzJ3jJET1B9Mw2tlk4yb2kHS7qajUx7Txigmg4DDGoPf7fOEtAFjV4UACp40iNr7NaP1VA==
+ b=BV/E0KkLOv5cEZ1yXQNSxvRmV9PqZ4giqHmtNhJGLXyIQDbet5dbXhFYfMh0Lz8fWr9mOCLIz/6B6AXhlziqjqawekLn59tub1nuytUqIxvXfywzk3iDceX/kfG0CnnkxPbVJO+uvRZetGAMbK+V8rcjfOLoqxMC4CEY6pg+ck6MwnC0HhW/GOXl7pcQuDntEixlAyVZco5jN4KnITIoCpqGKP885f1ej2FBg3BYWmfQPpkhK1CBXIbtT2F9Gmfaa0kBJXdgTV2MlUg9TqakZDQTT65YQoMdKl6P3sCtVN6b+TMDu4nHeGepWM0Muqmrm24w+1n3J5EEDszZWgPRVw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Xvj8iEkyieyghBscOdgrfVWGAC1iS0VLbXbFP5lVbdk=;
- b=gMUWQ1qUq/BjX0ljXeXG6QFXnWVsxpv5JggkXgRgzl1RnNhdtWw8Op3m5E7yCQ2+Ud85aM7lmFqwJNlcqUY8bKz37XueLh+f3wOe7XDY4BSswNKGTiWePzEIFKSC5NKgVJ+JLukrDdzmitZwmP9BbhL4ywUv2Cr/QeSebcpPghXcq3g8b+rBFnBR7qG8EFqxhWviwCvvNW+3Gf2h0uOe+NOr54Pf52ePrHh7dKfUHLOrGi3/SYQDQTMPnanGscOJN3pPImdcHnvEnzOJVq1WFxAtlS+68tLRHRbTOM8HMfACvOV0244jNQAGBieGjlvFAiLJgZ7aqSieWv86DCWtLg==
+ bh=bCExj5BJPxAGg46aZddowd3FKAXnLNzJZhmZ7EWbxN4=;
+ b=f5eVumjlffQKISGMLpmlrJ/xyhL1rdlP5xdJYg6yaVo+NirYcNlRJ7hjja4eL5YtneP73tbarI0sj+yeuvA62HiYqRWy9RiGYsDR5yJmLQkk6Oa1XiDy5og6Hxuuvj7m/Y2C+NLQC9kdFvVvRvy96a7jy5HQyxOd8b//PWf0DGHab+KbJ41vbE8Fiy5W5tz2gIOW6NZ8TOeSDIS7NVHKsaARn2hVBUkByt/IL3oDqP5wpiAsBbPXd2u7GTgdFV4LvmmSY0ptSTeuWe5XlaDICY5dYr2V43Ff4bLHAvn7sXPtAH07NHA5HpWpXj9NFVbIHUArkSxoXM+oqfoGUV2zSw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microsoft.com; dmarc=pass action=none
- header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Xvj8iEkyieyghBscOdgrfVWGAC1iS0VLbXbFP5lVbdk=;
- b=j159jCsnddA/Dltj/9oM2qpPIHaZCitoMPQmLSqmT26YXJDZEbB5vzTzkR+pBAwTfawATsHFrAPS3hO/Wgv8rYAvLwELLPRn/WLgl8mWFujO8aLur6g5mX2zmxffsj85m3b3otcVkeZcidgZRlwtNBnIEMxyFhGoj/C7bt5u01U=
-Received: from MWHPR21MB1593.namprd21.prod.outlook.com (2603:10b6:301:7c::11)
- by CO1PR21MB1297.namprd21.prod.outlook.com (2603:10b6:303:160::6) with
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Authentication-Results: linux.ibm.com; dkim=none (message not signed)
+ header.d=none;linux.ibm.com; dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by AM5PR04MB3266.eurprd04.prod.outlook.com (2603:10a6:206:6::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.2; Tue, 5 Oct
- 2021 20:36:01 +0000
-Received: from MWHPR21MB1593.namprd21.prod.outlook.com
- ([fe80::6129:c6f7:3f56:c899]) by MWHPR21MB1593.namprd21.prod.outlook.com
- ([fe80::6129:c6f7:3f56:c899%4]) with mapi id 15.20.4587.017; Tue, 5 Oct 2021
- 20:36:01 +0000
-From:   Michael Kelley <mikelley@microsoft.com>
-To:     Andrea Parri <parri.andrea@gmail.com>,
-        Long Li <longli@microsoft.com>
-CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Dexuan Cui <decui@microsoft.com>
-Subject: RE: [PATCH] scsi: storvsc: Fix validation for unsolicited incoming
- packets
-Thread-Topic: [PATCH] scsi: storvsc: Fix validation for unsolicited incoming
- packets
-Thread-Index: AQHXud3qUC3u++ARO0md/Bl+ITMuDavEkGRAgAAlg4CAACJ5IA==
-Date:   Tue, 5 Oct 2021 20:36:01 +0000
-Message-ID: <MWHPR21MB15933E46ABC6DC0AA5DD0A5AD7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
-References: <20211005114103.3411-1-parri.andrea@gmail.com>
- <MWHPR21MB15935C9A0C33A858AFF1A825D7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
- <20211005181421.GA1714@anparri>
-In-Reply-To: <20211005181421.GA1714@anparri>
-Accept-Language: en-US
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4544.16; Tue, 5 Oct
+ 2021 23:52:28 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::a555:3b27:dc03:8fcb]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::a555:3b27:dc03:8fcb%6]) with mapi id 15.20.4566.022; Tue, 5 Oct 2021
+ 23:52:28 +0000
+Subject: Re: [PATCH v2 44/84] libiscsi: Call scsi_done() directly
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
+        Chris Leech <cleech@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20210929220600.3509089-1-bvanassche@acm.org>
+ <20210929220600.3509089-45-bvanassche@acm.org>
+From:   Lee Duncan <lduncan@suse.com>
+Message-ID: <d53a14f6-850b-0fc2-597d-d3dcbe48a7c0@suse.com>
+Date:   Tue, 5 Oct 2021 16:52:24 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
+In-Reply-To: <20210929220600.3509089-45-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=d5ecefba-b229-439a-80c9-65f63386ab4f;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-10-05T20:17:44Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microsoft.com;
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 1dd37b21-c014-4306-92b1-08d9883fbef4
-x-ms-traffictypediagnostic: CO1PR21MB1297:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <CO1PR21MB12977EEF0F33886F8A7BB821D7AF9@CO1PR21MB1297.namprd21.prod.outlook.com>
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: OO0BZBEuRJSapZe5e9RbkB77jkLqOq4uudUtFRakkDpgH2Kg7oG8whshVoELHV8Osa6XeSskgE4z0247OYQcZlLvJVtOVpI3QUp52C6LMRrJlNwlc7b1Y+rCNsesFqh6z7YHW2og4sYxBX7MIdY9XJ5I2nyPpIbcYNxd5lZVaX8rjQE5hcBtVCdCK1+EFeE9BJtV8kxTqJyuCqsUNaRSJ/mWX2Ii/PBJywntHG3jnkPHMftyVygWzxFqEwt/JuvgB+OEOzCk7dfoosIO8TOGDoQVfMEWwraaHX3UZ7CbqWntMO19uFrjNc6+d9768ml+98+2vPCBc3inNV7olxmaFzJhxJfKhQpxDZ4QpQUhrkq2HsMRD/4m+T85nDopdMYn3r9/2bydujPfD6liFDfPEroTgvg74T8+6d4O8gUDaThXpYdzKyIzxqKV3zG0x7IWrR5mcfMAeOqPvnDGFc3Sv3O2pt6htR1UcBU1b6MluAQD+Nfdgx3LaICP48dTyJFhQZ7QE1oAMnEIh55FF8ezwhrmP6A8DfnsVHfcNcAvt1UR2C2O1BobKBAUY9y9DS0E7KhD694Icx3JyZsrd3s4rNNtuKEmVVCdiVJDIyoKIk4fHvQz5DuGdT4aeBcDo8VYDSAs7RSmlXOWrexEwvTzo3PN43T10ZeyyumZZ1ZKybLLJg/W1Ak7bInJtCEOvMc/NflnqaL0iYFkDrdlP9kaxw==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(71200400001)(66946007)(82960400001)(5660300002)(82950400001)(107886003)(26005)(38100700002)(122000001)(508600001)(55016002)(9686003)(66556008)(66446008)(186003)(64756008)(4326008)(33656002)(110136005)(83380400001)(54906003)(66476007)(6506007)(7696005)(38070700005)(316002)(8936002)(6636002)(86362001)(52536014)(8990500004)(2906002)(76116006)(10290500003)(8676002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?WStZU1/hMF7qMMeqfvgT7JwNxddeSzMtO5eAp7QAqDwaZ/DdJPOFMbQ/AHWI?=
- =?us-ascii?Q?fmbKuiNWhoCix950RT0GmcJKOmqfuveUEKSeC/g232ueOu/sHr3Oai4F5fc8?=
- =?us-ascii?Q?0E0AI9flG+jcQ+8fad1nVIMHFvpMk0Nus3w5DSoauNeJeMT9Gi171b/1mrXn?=
- =?us-ascii?Q?fMzBQyiScme6U/sFLNNly5okH6JuEtBoQ5ncFk+OSKBBk9wX04UUiNRjF1n+?=
- =?us-ascii?Q?VN23gwxgrcaFe4fz4V7S6odZnrFEMe0zNBe7TmaCAbbONw2UjPGRpQyMVhyG?=
- =?us-ascii?Q?SmJHxidnwVG1/qJgUrT84a3LZi9T4PClzZz4FJVfqt3ZxCO9dqztHkD3Jft/?=
- =?us-ascii?Q?mXVlPzjPMKUARl99gHfMkCN9Sciuliw2c5exmjIexSPoGKQt58PVNNo3kiS4?=
- =?us-ascii?Q?89CfStIqZkDIzqO9AR6BvVZn1uJHZaik9YZehmxHJscDIC1vWTetUqeDgvKy?=
- =?us-ascii?Q?yDYZV4SmGSjahtnoye9iMm5gH+nbXtXr7esW4uhcS/3ItIRp9ZRJ27TNRRSV?=
- =?us-ascii?Q?LWG6enzVdTSgR7LhZyuXNDhIPx2a0Jy4YbwGQhHvxxXD61pOWf8G8pqjr9eu?=
- =?us-ascii?Q?vaLPRAqH4ueHy1457ibi7DIH4b3crnYbA3Z/CGfpdCvHL6tad8xsA6ceq7Ef?=
- =?us-ascii?Q?1ZG9J0rUkYxbJV7rV2fh+tHTywz40317wsprumeEexldN9CYfI2vSNTGUaR1?=
- =?us-ascii?Q?fjLKGCT2RDDCkLCSytnpHHigWlTAV5fFBVTqgAlC49Ukm1AurE9SGf0xyBD/?=
- =?us-ascii?Q?0oGWu1Y3b+YOKEsVO8GYtvTmbXuk1YSlr8jLgu0SGaj/JIcterbtbFeft04t?=
- =?us-ascii?Q?5tJds7Lfp+iiSgoDjb1Bhn2rN52vUh7npf08CXEHriT+FPHpz2stny3CFm81?=
- =?us-ascii?Q?OA8JT4Jd3AwJCAjla+p64gtG8ZtDND9SYkvcznW45CeYaI7MiRK5QWFP7arc?=
- =?us-ascii?Q?Dfi5zYQjuaotZtKx4T9ARPctcAbAvqfqERYE+qhdtRlnTTO45hny8R/tfPbs?=
- =?us-ascii?Q?6qYJgZev8OOVgTbt3SQSCZe3Yg3Ly85bpQirE2TNrdiH8I0/GTl868iCQhIE?=
- =?us-ascii?Q?1SWjEY1CQU3ll66HgBelVa2dO5Pdawr0qjPcexLHzaBtddIHcNY00w5SMc1j?=
- =?us-ascii?Q?uu1J1ji+EDiaqm1nsBwnU1SOQ1x9MYHSSzJzptOWlOR3H+zBIT7AzoDp65Xu?=
- =?us-ascii?Q?lIFWd8G3GZrvoiJ8oSCBU1IcKcvOOsoE6ihMm/3VE3IBUlK+8YkJmy+kA5JW?=
- =?us-ascii?Q?L/XV9RU25P8U6fOrUNPZPZwDl6Qx2KTQOXCk9OS0h8ZOqtitGvV5EUVjR4hE?=
- =?us-ascii?Q?c8OAzU42OPU/0xvtLqMDKcMl?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AM5PR0101CA0008.eurprd01.prod.exchangelabs.com
+ (2603:10a6:206:16::21) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
 MIME-Version: 1.0
-X-OriginatorOrg: microsoft.com
+Received: from [192.168.20.3] (73.25.22.216) by AM5PR0101CA0008.eurprd01.prod.exchangelabs.com (2603:10a6:206:16::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4587.18 via Frontend Transport; Tue, 5 Oct 2021 23:52:26 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 7b9e5a98-6c5c-4b12-f55b-08d9885b300e
+X-MS-TrafficTypeDiagnostic: AM5PR04MB3266:
+X-Microsoft-Antispam-PRVS: <AM5PR04MB326674E4B7C9B6E3AAAC5FD6DAAF9@AM5PR04MB3266.eurprd04.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:425;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: GTUb0NNTBzswK9jKCDQY/zSAjp+qQPJah8LgCUuCc9kG9QlRc+XoFe6+vs9uE8f8QzhrFDDFDbnkPmrhC9ss7rCwd+7z/ONGxv0qJ/io+T86yIENiqbilLJYhhufcVU7QjeXHWeo5RG1LmEAswbDYLtEA6n9Ch9F6PK4Ve8sH9K7nOvBgwKe7MSuQmiqyIW5jCweS6L0w0YxU5B4olQGiqNgnOlnmabxcZy9QXHkk5j/+KFz0ASNh53si8aIqsl0HcqIA/PCGLE69MDbDvR+b0KCea7LzvqDlJL7WIiYYEz0KfrewP6xlqk24NUcQWtO71YlY6GqASktJvKOVj1pLm2RAQyqLM2BgV6oIYwetOg1eC1D+C4iCo1XRdu+gI0wn8YT+rO0Nh9iDixfDSV4IMLSwLMk4OkVZ39CZVjQ+lpKfVfrnSRFxgwKlasHy7uNqbEGIOFRKmuETX83BnXWKfeFYbccIcoa43b5/PZSFu8p2/VmabgIAwBpB8IUEdHrfUyaM1nRQ5cGOWpvhNaK2zasSOC9cRjKDt1MrDWZzzj+Mz4M9Eud2EgDxeq7VFzMtiR3nDprVTbT61r1NM5tK2FiKfamNJRs/SwTRj/kHqCjGr2N3oye3bqgUqP82eV+zx0uZf1hkGMWH5xtKh8v85GhO4+XHPLyQu2hIOQzNk9Al1GnK55BJtjSGBqhRucckbqoFcEMzHZPInCSsDvRYA==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(66476007)(66556008)(83380400001)(54906003)(36756003)(508600001)(6486002)(8936002)(8676002)(53546011)(26005)(16576012)(2906002)(316002)(110136005)(31696002)(66946007)(186003)(4326008)(956004)(5660300002)(86362001)(2616005)(38100700002)(31686004)(43740500002);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?TkU5RTRaTXlvZEwxNXc5ZUo2T2ZXSzRsVER1SXdrdkJqbGZxWVpNUkNuL1ZO?=
+ =?utf-8?B?L1pnQWdNN0hlUVBaYzlzUzBwNUtHREcyejVWaDFEUkd2eFd5UFFMZXFpR1Zi?=
+ =?utf-8?B?YkQ1elFSTzQxQUJ4b280d0twMmV5OHNaUGtFQnlPMU9vUHl0YWt5anFmQ2Nq?=
+ =?utf-8?B?M0tLcyt1VTgyMXRTdmcwSkJOVnlvZmsyTno4NlIzTTJiRDJOY3B3VU5IZlVB?=
+ =?utf-8?B?c2JZWlArUlVaL3FSeVB6eWtvUzRZdGlMeEJyN3FnZ3Joc3JHbUlxcDR0TldE?=
+ =?utf-8?B?RVpPVElBd3BnNUxjaCs1ZlpUNWI1MEN4TDF3MkV2ZW5Hclp3bDlSR1QzR0Vk?=
+ =?utf-8?B?bFhQV3pXUHFOYm1vRU94UkJWR1RPMmlUNzhOM1F5SDVoNFZ3SDBRcG9CZjRi?=
+ =?utf-8?B?T1ozbThlVFpvUjJWZCtCanpVR0Z6dGx1QitlUnRvNlJHZ2RCeTNDNnlKdmRO?=
+ =?utf-8?B?VnYvMWdOcUZUYUc0VnJnVUxrWS8rVjFqUk9KWEQxbkV2U0hFOFp5T2g3TkJQ?=
+ =?utf-8?B?UWwvVW9zMTcyem9wSmh0NnZlUmZMd0lxRnFSbXEzYTJpRGNndjlzWnk2aEtu?=
+ =?utf-8?B?VENVc212Mng4VExMcXE5SzlseEtRbzAxdCtMbUxzQndiNVRTU1BBMkFucmNU?=
+ =?utf-8?B?blQ1UzNXNXNnQnIrNVY4OUxTbGdYcytLOGZ1L1I1Sy94cnI2Mk5SVVNxM1ZD?=
+ =?utf-8?B?aDR1QnMxcmpsRjB1WXFLU2tYaCtFS1J3ZFYrQ2ZpR29UdlZ3Y21SWDRUMDli?=
+ =?utf-8?B?eXFTSG9NUi9hbm5Icjg0eUFNbjM0YXlkenFmQytPb0NHdm0xek5EMUhoY1hV?=
+ =?utf-8?B?ZE9udzNyckJKQWZlWG9qUjE4STYrKzJuU29samR3TEkveEwyTXdKeURSMmVH?=
+ =?utf-8?B?WUo2QjdFNEg1SlFBWDBjUC8wRDZVOGw4bm1uWjBEY3EzenE1RHVHRlVBSFlL?=
+ =?utf-8?B?RVYxS0FzSy8yYW9qOC9NTGJ5OTNBd0Zhb29ZVlQyOTVsYlQ4eXpwUHV3OXNM?=
+ =?utf-8?B?aG9XMENLcnAvWHJGeEQ0cU9PKy8wczUyT1NkeFRTMVAvTkh3OVNMbFA1bUMx?=
+ =?utf-8?B?MG1GQ0oxQjBjSFd3cjVwZFExdGlQcGhmMk81VmFzZVNVQ2xaeHp6U2Q4VmZj?=
+ =?utf-8?B?TWQyU3Z6bEFQMmtUZlRUYnllZ21wQXgwK1hHMlRwaU5Ma1hIWEZISXIwbVRh?=
+ =?utf-8?B?dkJYRGVMWHp6ejltNktwZlR2Y21sVWZ0d3l2OHV2UEZoQmRQWGdOajgxY2dp?=
+ =?utf-8?B?M0VxVHRocUREODVNckxiVmg0QTZzZHhEaGxIVVFodG5CeTVFbjNBYldJVzR6?=
+ =?utf-8?B?aDAzRG1CLzFKT09XdFltVFJCbjZVMzBXUDBPMGVyeUlKY2t0MlZRbnNHMDFW?=
+ =?utf-8?B?UFVzWVhSQmc1blU0dzlOajUreWFodjI0cnBqSE52S093SkhZbjMyMks4Z3gz?=
+ =?utf-8?B?ZS9PVmRMVjRibmJORWo4ejhaWjRBbWdiakx4QzN2SEltWkZJcWJWb1NDN053?=
+ =?utf-8?B?M093dFZmRC9qS3BvcE5IRmRnWjI0YU4rWmlDQ1FvdXA1Z0t3UVZNdG5NcDM4?=
+ =?utf-8?B?elkxL3ZRdm1GSGR4OUVkODBuV3dTaDIxLzlJWlEzc1VRKzhCekFiYWVQY0Z2?=
+ =?utf-8?B?SjdHS1Nha1JRM1hmSDJncUR4L0Jpa0VNTUR4NmFBc1hML2pOQ1BxbnQzN2lj?=
+ =?utf-8?B?QmNtblpKYTVNOWw5MjgrdmN3MW1JekI2dWduellqYWovZ2FmdldTVXFwam95?=
+ =?utf-8?Q?VU9+cgrTxb/ag63P0h7cP3GA0gWn/5a2unSILb5?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7b9e5a98-6c5c-4b12-f55b-08d9885b300e
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1dd37b21-c014-4306-92b1-08d9883fbef4
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Oct 2021 20:36:01.5943
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Oct 2021 23:52:28.1142
  (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: FyfcUvbr3My6Ok0LfpEpAfNnaoqTQYKoVNjC0nUmyorcVISyvNBby3CmzVnI7lhoqAO9NDGgeOE8qb0WHqOwQxnFpfB/9umwf8uIhtGRBdA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR21MB1297
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: lvOL6PDQIq3wAE94AoD5SNgF88MGVf+26wTDF8OekCb77B43CKDdySMHdEHhIWJDnT8gZy27flm29JKw5kXTnw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR04MB3266
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Andrea Parri <parri.andrea@gmail.com> Sent: Tuesday, October 5, 2021 =
-11:14 AM
->=20
-> > > @@ -292,6 +292,9 @@ struct vmstorage_protocol_version {
-> > >  #define STORAGE_CHANNEL_REMOVABLE_FLAG		0x1
-> > >  #define STORAGE_CHANNEL_EMULATED_IDE_FLAG	0x2
-> > >
-> > > +/* Lower bound on the size of unsolicited packets with ID of 0 */
-> > > +#define VSTOR_MIN_UNSOL_PKT_SIZE		48
-> > > +
-> >
-> > I know you have determined experimentally that Hyper-V sends
-> > unsolicited packets with the above length, so the idea is to validate
-> > that the guest actually gets packets at least that big.  But I wonder i=
-f
-> > we should think about this slightly differently.
-> >
-> > The goal is for the storvsc driver to protect itself against bad or
-> > malicious messages from Hyper-V.  For the unsolicited messages, the
-> > only field that this storvsc driver needs to access is the
-> > vstor_packet->operation field.
->=20
-> Eh, this is one piece of information I was looking for...  ;-)
+On 9/29/21 3:05 PM, Bart Van Assche wrote:
+> Conditional statements are faster than indirect calls. Hence call
+> scsi_done() directly.
+> 
+> Reviewed-by: John Garry <john.garry@huawei.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/libiscsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 712a45368385..7beedc59d0c6 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -468,7 +468,7 @@ static void iscsi_free_task(struct iscsi_task *task)
+>  		 * it will decide how to return sc to scsi-ml.
+>  		 */
+>  		if (oldstate != ISCSI_TASK_REQUEUE_SCSIQ)
+> -			sc->scsi_done(sc);
+> +			scsi_done(sc);
+>  	}
+>  }
+>  
+> @@ -1807,7 +1807,7 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+>  	ISCSI_DBG_SESSION(session, "iscsi: cmd 0x%x is not queued (%d)\n",
+>  			  sc->cmnd[0], reason);
+>  	scsi_set_resid(sc, scsi_bufflen(sc));
+> -	sc->scsi_done(sc);
+> +	scsi_done(sc);
+>  	return 0;
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_queuecommand);
+> 
 
-I'm just looking at the code in storvsc_on_receive().   storvsc_on_receive(=
-)
-itself looks at the "operation" field, but for the REMOVE_DEVICE and
-ENUMERATE_BUS operations, you can see that the rest of the vstor_packet
-is ignored and is not passed to any called functions.
-
->=20
->=20
-> >So an alternate approach is to set
-> > the minimum length as small as possible while ensuring that field is va=
-lid.
->=20
-> The fact is, I'm not sure how to do it for unsolicited messages.
-> Current code ensures/checks !=3D COMPLETE_IO.  Your comment above
-> and code audit suggest that we should add a check !=3D FCHBA_DATA.
-> I saw ENUMERATE_BUS messages, code only using their "operation".
-
-I'm not completely sure about FCHBA_DATA.  That message does not
-seem to be unsolicited, as the guest sends out a message of that type in=20
-storvsc_channel_init() using storvsc_execute_vstor_op().  So any received
-messages of that type are presumably in response to the guest request,
-and will get handled via the test for rqst_id =3D=3D VMBUS_RQST_INIT.  Long=
-=20
-Li could probably confirm.  So if Hyper-V did send a FCHBA_DATA
-packet with rqst_id of 0, it would seem to be appropriate to reject
-it.
-
->=20
-> And, again, this is only based on current code/observations...
->=20
-> So, maybe you mean something like this (on top of this patch)?
-
-Yes, with a comment to explain what's going on. :-)
-
->=20
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 349c1071a98d4..8fedac3c7597a 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -292,9 +292,6 @@ struct vmstorage_protocol_version {
->  #define STORAGE_CHANNEL_REMOVABLE_FLAG		0x1
->  #define STORAGE_CHANNEL_EMULATED_IDE_FLAG	0x2
->=20
-> -/* Lower bound on the size of unsolicited packets with ID of 0 */
-> -#define VSTOR_MIN_UNSOL_PKT_SIZE		48
-> -
->  struct vstor_packet {
->  	/* Requested operation type */
->  	enum vstor_packet_operation operation;
-> @@ -1291,7 +1288,7 @@ static void storvsc_on_channel_callback(void *conte=
-xt)
->  		u32 pktlen =3D hv_pkt_datalen(desc);
->  		u64 rqst_id =3D desc->trans_id;
->  		u32 minlen =3D rqst_id ? sizeof(struct vstor_packet) -
-> -			stor_device->vmscsi_size_delta : VSTOR_MIN_UNSOL_PKT_SIZE;
-> +			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
->=20
->  		if (pktlen < minlen) {
->  			dev_err(&device->device,
-> @@ -1315,7 +1312,8 @@ static void storvsc_on_channel_callback(void *conte=
-xt)
->  				 * storvsc_on_io_completion() with a guest memory address that is
->  				 * zero if Hyper-V were to construct and send such a bogus packet.
->  				 */
-> -				if (packet->operation =3D=3D VSTOR_OPERATION_COMPLETE_IO) {
-> +				if (packet->operation =3D=3D VSTOR_OPERATION_COMPLETE_IO ||
-> +				    packet->operation =3D=3D VSTOR_OPERATION_FCHBA_DATA) {
->  					dev_err(&device->device, "Invalid packet with ID of 0\n");
->  					continue;
->  				}
->=20
-> Thanks,
->   Andrea
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 
