@@ -2,108 +2,132 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDE71C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 05:06:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A54EEC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 10:28:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AB77960E08
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 05:06:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 861AB61381
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 10:28:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231597AbhJEFI0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 01:08:26 -0400
-Received: from mga09.intel.com ([134.134.136.24]:14709 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230493AbhJEFI0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 5 Oct 2021 01:08:26 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10127"; a="225551325"
-X-IronPort-AV: E=Sophos;i="5.85,347,1624345200"; 
-   d="scan'208";a="225551325"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Oct 2021 22:06:36 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,347,1624345200"; 
-   d="scan'208";a="487853096"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
-  by orsmga008.jf.intel.com with ESMTP; 04 Oct 2021 22:06:33 -0700
-Subject: Re: [PATCH RFC 2/6] scsi: ufs: Rename clk_scaling_lock to host_rw_sem
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        linux-scsi@vger.kernel.org
-References: <20211004120650.153218-1-adrian.hunter@intel.com>
- <20211004120650.153218-3-adrian.hunter@intel.com>
- <453b33d4-4e53-3b31-ef9a-3a63989de7a8@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <a94a44e0-ff6e-6521-7822-134b7211ddca@intel.com>
-Date:   Tue, 5 Oct 2021 08:06:22 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S233802AbhJEKah (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 06:30:37 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3917 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233077AbhJEKah (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 06:30:37 -0400
+Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.201])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HNty61Ymlz67b2s;
+        Tue,  5 Oct 2021 18:25:18 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Tue, 5 Oct 2021 12:28:44 +0200
+Received: from localhost.localdomain (10.69.192.58) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Tue, 5 Oct 2021 11:28:42 +0100
+From:   John Garry <john.garry@huawei.com>
+To:     <axboe@kernel.dk>
+CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <ming.lei@redhat.com>, <hare@suse.de>,
+        <linux-scsi@vger.kernel.org>, <kashyap.desai@broadcom.com>,
+        John Garry <john.garry@huawei.com>
+Subject: [PATCH v5 00/14] blk-mq: Reduce static requests memory footprint for shared sbitmap
+Date:   Tue, 5 Oct 2021 18:23:25 +0800
+Message-ID: <1633429419-228500-1-git-send-email-john.garry@huawei.com>
+X-Mailer: git-send-email 2.8.1
 MIME-Version: 1.0
-In-Reply-To: <453b33d4-4e53-3b31-ef9a-3a63989de7a8@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.69.192.58]
+X-ClientProxiedBy: dggems706-chm.china.huawei.com (10.3.19.183) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04/10/2021 19:52, Bart Van Assche wrote:
-> On 10/4/21 5:06 AM, Adrian Hunter wrote:
->> To fit its new purpose as a more general purpose sleeping lock for the
->> host.
->>
->> [ ... ]
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->> index 9b1ef272fb3c..495e1c0afae3 100644
->> --- a/drivers/scsi/ufs/ufshcd.h
->> +++ b/drivers/scsi/ufs/ufshcd.h
->> @@ -897,7 +897,7 @@ struct ufs_hba {
->>       enum bkops_status urgent_bkops_lvl;
->>       bool is_urgent_bkops_lvl_checked;
->>   -    struct rw_semaphore clk_scaling_lock;
->> +    struct rw_semaphore host_rw_sem;
->>       unsigned char desc_size[QUERY_DESC_IDN_MAX];
->>       atomic_t scsi_block_reqs_cnt;
-> 
-> Hi Adrian,
+Currently a full set of static requests are allocated per hw queue per
+tagset when shared sbitmap is used.
 
-Thanks for looking at this.
+However, only tagset->queue_depth number of requests may be active at
+any given time. As such, only tagset->queue_depth number of static
+requests are required.
 
-> 
-> It seems to me that this patch series goes in another direction than the
-> direction the JEDEC UFS committee is going into. The UFSHCI 4.0 specification
-> will support MCQ (Multi-Circular queue). We will benefit most from the v4.0
-> MCQ support if there is no contention between the CPUs that submit UFS commands
-> to different queues. I think the intention of this patch series is to make a
-> single synchronization object protect all submission queues.
+The same goes for using an IO scheduler, which allocates a full set of
+static requests per hw queue per request queue.
 
-The intention is to make the locking easier to understand.  We need either to
-share access to the host (e.g. ufshcd_queuecommand) or provide for exclusive
-ownership (e.g. ufshcd_err_handler, PM, Shutdown).  We should be able to do
-that with 1 rw_semaphore.
+This series changes shared sbitmap support by using a shared tags per
+tagset and request queue. Ming suggested something along those lines in
+v1 review. In using a shared tags, the static rqs also become shared,
+reducing the number of sets of static rqs, reducing memory usage.
 
-> I'm concerned that
-> this will prevent to fully benefit from multiqueue support. Has it been
+Patch "blk-mq: Use shared tags for shared sbitmap support" is a bit big,
+and could potentially be broken down. But then maintaining ability to
+bisect becomes harder and each sub-patch would get more convoluted.
 
-You are talking about contention between ufshcd_queuecommand() running
-simultaneously on 2 CPUs right?  In that case, down_read() should be practically
-atomic, so no contention unless a third process is waiting on down_write()
-which never happens under normal circumstances.
+For megaraid sas driver on my 128-CPU arm64 system with 1x SATA disk, we
+save approx. 300MB(!) [370MB -> 60MB]
 
-> Has it been
-> considered to eliminate the clk_scaling_lock and instead to use RCU to
-> serialize clock scaling against command processing? One possible approach is to
-> use blk_mq_freeze_queue() and blk_mq_unfreeze_queue() around the clock scaling
-> code. A disadvantage of using RCU is that waiting for an RCU grace period takes
-> some time - about 10 ms on my test setup. I have not yet verified what the
-> performance and time impact would be of using an expedited RCU grace period
-> instead of a regular RCU grace period.
+Baseline is 1b2d1439fc25 (block/for-next) Merge branch 'for-5.16/io_uring'
+into for-next
 
-It is probably worth measuring the performance of clk_scaling_lock first.
+Changes since v4:
+- Add Hannes' and Ming's RB tags (thanks!) - but please check 12/14 rework
+- Add patch to change "shared sbitmap" naming to "shared tags"
+- Rebase "block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ"
+
+Changes since v3:
+- Fix transient error handling issue in  05/13
+- Add Hannes RB tags (thanks!)
+
+Changes since v2:
+- Make blk_mq_clear_rq_mapping() static again
+- Various function renaming for conciseness and consistency
+- Add/refactor alloc/free map and rqs function
+- Drop the new blk_mq_ops init_request method in favour of passing an
+  invalid HW queue index for shared sbitmap
+- Add patch to not clear rq mapping for driver tags
+- Remove blk_mq_init_bitmap_tags()
+- Add some more RB tags (thanks!)
+
+Changes since v1:
+- Switch to use blk_mq_tags for shared sbitmap
+- Add new blk_mq_ops init request callback
+- Add some RB tags (thanks!)
+
+John Garry (14):
+  blk-mq: Change rqs check in blk_mq_free_rqs()
+  block: Rename BLKDEV_MAX_RQ -> BLKDEV_DEFAULT_RQ
+  blk-mq: Relocate shared sbitmap resize in blk_mq_update_nr_requests()
+  blk-mq: Invert check in blk_mq_update_nr_requests()
+  blk-mq-sched: Rename blk_mq_sched_alloc_{tags -> map_and_rqs}()
+  blk-mq-sched: Rename blk_mq_sched_free_{requests -> rqs}()
+  blk-mq: Pass driver tags to blk_mq_clear_rq_mapping()
+  blk-mq: Don't clear driver tags own mapping
+  blk-mq: Add blk_mq_tag_update_sched_shared_sbitmap()
+  blk-mq: Add blk_mq_alloc_map_and_rqs()
+  blk-mq: Refactor and rename blk_mq_free_map_and_{requests->rqs}()
+  blk-mq: Use shared tags for shared sbitmap support
+  blk-mq: Stop using pointers for blk_mq_tags bitmap tags
+  blk-mq: Change shared sbitmap naming to shared tags
+
+ block/bfq-iosched.c    |   4 +-
+ block/blk-core.c       |   6 +-
+ block/blk-mq-debugfs.c |   8 +-
+ block/blk-mq-sched.c   | 118 +++++++++++-------------
+ block/blk-mq-sched.h   |   4 +-
+ block/blk-mq-tag.c     | 135 ++++++++++------------------
+ block/blk-mq-tag.h     |  16 ++--
+ block/blk-mq.c         | 198 +++++++++++++++++++++++------------------
+ block/blk-mq.h         |  36 ++++----
+ block/blk.h            |   2 +-
+ block/elevator.c       |   2 +-
+ block/kyber-iosched.c  |   4 +-
+ block/mq-deadline.c    |   2 +-
+ drivers/block/rbd.c    |   2 +-
+ include/linux/blk-mq.h |  17 ++--
+ include/linux/blkdev.h |   5 +-
+ 16 files changed, 262 insertions(+), 297 deletions(-)
+
+-- 
+2.26.2
+
