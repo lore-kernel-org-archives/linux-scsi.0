@@ -2,201 +2,222 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A11C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 20:23:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C88DC433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 20:36:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9DE9561423
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 20:23:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E7A936142A
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 20:36:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236016AbhJEUZU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 16:25:20 -0400
-Received: from esa.microchip.iphmx.com ([68.232.153.233]:28796 "EHLO
-        esa.microchip.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231266AbhJEUZQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 16:25:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=microchip.com; i=@microchip.com; q=dns/txt; s=mchp;
-  t=1633465405; x=1665001405;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-transfer-encoding:mime-version;
-  bh=D7AjfFyqoSeuT/ZifX5/okZ1+rjRr7egLR2k8vPp4NI=;
-  b=ItyOaepqqx2K7Quoh6an3gfPsLWMRCyK5jD8uTGFrlU4FAYKK8K6dNJ/
-   yE1AlZ7LstCvb4pkcBB3yOpuzOD7miCC2GJUyphpycKEXdAIStywThXIo
-   LSNU5haFSFbvcJ/5cUucy3Fkr7v6ZWorgshoSUXHxIJNaVpyz3UF0t6K7
-   f4wSl2mgy+ufdEZFB/YPVS/cupfhTPjZdxk/ukskkApBSZHWJNUuvHSVI
-   PBSS4S30ah9v6UH97YpcZcR1sLAfwImpSLvlg4aaP5PGNN97mwH1KO0jk
-   hw4H1Nef1AQ2IZ8MV6v6frgTOWAkUwFDvtX6zzJuBP7AIdYgitK4ag2E7
-   Q==;
-IronPort-SDR: 51WFveggk/9uJB2IkzwhAHEOBLErOfChzYRrTnyJoNXChqf+eWGKyJJWR9I6w+RsMafr6IqoYN
- 0eza0DEdoZU5XXIg41Bq1IjFNMD6YLOTTJZMHFuCAKijjMIsjkOUUqOvTbBf8U5uD79pp5rP8M
- 493zdJixS6wn8O5pdx68ZMwGJZI5k429/7BOnQTB/88Mfb+MHmNeqSeBTLKN/FO46D3CjZOwuy
- PvVj2rAvZ7DNK/pvsQBI99ASiI55UD+QK3AtjXMUjiTHhMYWStYpkSUchEbPVFUIfq4bEBMQC4
- PLurSNzeiCtEi/HUCgxVMykB
-X-IronPort-AV: E=Sophos;i="5.85,349,1624345200"; 
-   d="scan'208";a="139152943"
-Received: from smtpout.microchip.com (HELO email.microchip.com) ([198.175.253.82])
-  by esa3.microchip.iphmx.com with ESMTP/TLS/AES256-SHA256; 05 Oct 2021 13:23:24 -0700
-Received: from chn-vm-ex01.mchp-main.com (10.10.85.143) by
- chn-vm-ex04.mchp-main.com (10.10.85.152) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2176.14; Tue, 5 Oct 2021 13:23:23 -0700
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (10.10.215.89) by
- email.microchip.com (10.10.87.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2176.14 via Frontend
- Transport; Tue, 5 Oct 2021 13:23:23 -0700
+        id S232250AbhJEUh4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 16:37:56 -0400
+Received: from mail-mw2nam12on2126.outbound.protection.outlook.com ([40.107.244.126]:17888
+        "EHLO NAM12-MW2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S229805AbhJEUhy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 5 Oct 2021 16:37:54 -0400
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=EQJo7xKRi1EVOOi6V+lDpxb4+jKStm12MgBfuHfBXWddWIiiAPiTy/g8ddED5V6Q01NDyvQDcwFKUqfAv9RnfSwZ6edDSVjFa27mb9DBsTc9aWX0545h8IB7ooeLpz5rLbE9JZKiMOxZMMY9VwYbzemCOjHc6zYCEXJxK/45IAlHGozfkPTzpxSqvD116MrP+0iOyGkYSk7HZhK4A3chwRJeDlMxDm5ztQmPRMbYs3mb1x9V4XIFBr8a2CgZWfv8ppZ9WX4a77yVXZzAVZTSXNWpYd34IjVIBoaxup0s/oEI1snAiP3UdUMzexzlX1pofg57ZfYKiQUH+resbilRYw==
+ b=c0TSNUmQ4Yin6YrCyoguoFifqXp+gtGNIe1NZ3Gslj9GuWZb6gD/e1Upq32ZlFyyJfaHFcPdCqJaiD6v9FOY4qEwxNVH1bjY88INtnIjS0HqoXohRnXQwiQNgH/j+kQaXouX9deqY9wN5/QkCSMReJ/LK4fQvuYmApfCKQRWYzfLj+pd0eGzxA4KPqV6Mge6xdqP9g7JuZpUdvpDORsxFUCmq+kLc+4eV6IWEb1s9KIrSnTENQLNAla2NF+fu7qTkZ28Qv1GuAOMaxsMvzJ3jJET1B9Mw2tlk4yb2kHS7qajUx7Txigmg4DDGoPf7fOEtAFjV4UACp40iNr7NaP1VA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=D7AjfFyqoSeuT/ZifX5/okZ1+rjRr7egLR2k8vPp4NI=;
- b=eweLPige+VICZr9UWDGbMrQDveDX9u61914vuahrqOZxzEQXfwyCh8BUH4p8hAizc+sjHpKL0xj3oCym4rroUZqa+B+1hPBu+CHqzDpt6sr3EIFeGMnbPw8g5yxZOOrgwOZvnJ2iMK4MQEL/E3CL5Fbc41+zG0nFMAnriNwtn35rLVWa8RvD7+dObB9piqRZIgim0IxeSDNPmPVPpB0lYgAlyjITQyU86gaNg2OJ4gxAMLohnY7rFFeyXO7WYQ7wOesO2xtgoguGdmSSAR7bALer6RIcaV1ZOoLdl+A4IgxEeOAiG1O2VJL43IyUeJeRwOWBx1Njol5QcgG/Y70+Vg==
+ bh=Xvj8iEkyieyghBscOdgrfVWGAC1iS0VLbXbFP5lVbdk=;
+ b=gMUWQ1qUq/BjX0ljXeXG6QFXnWVsxpv5JggkXgRgzl1RnNhdtWw8Op3m5E7yCQ2+Ud85aM7lmFqwJNlcqUY8bKz37XueLh+f3wOe7XDY4BSswNKGTiWePzEIFKSC5NKgVJ+JLukrDdzmitZwmP9BbhL4ywUv2Cr/QeSebcpPghXcq3g8b+rBFnBR7qG8EFqxhWviwCvvNW+3Gf2h0uOe+NOr54Pf52ePrHh7dKfUHLOrGi3/SYQDQTMPnanGscOJN3pPImdcHnvEnzOJVq1WFxAtlS+68tLRHRbTOM8HMfACvOV0244jNQAGBieGjlvFAiLJgZ7aqSieWv86DCWtLg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=microchiptechnology.onmicrosoft.com;
- s=selector2-microchiptechnology-onmicrosoft-com;
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=D7AjfFyqoSeuT/ZifX5/okZ1+rjRr7egLR2k8vPp4NI=;
- b=lvn3PiAJoWOVAOKeRESefyGIfQJ+hmsciUdxr68uhHll8SPzdcWqYyb/MZ1MQUqLbEghyIh1gBvmWP/Yhzrv894BD2fm9/WFKi/9WwW3cBsmR9+q7pFwAztn/Ksu/NruU80QwY96HtW3Tr6O57FHGnKkEqR8eT0krNw/4AY8e64=
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com (2603:10b6:805:5d::20)
- by SA2PR11MB4796.namprd11.prod.outlook.com (2603:10b6:806:117::18) with
+ bh=Xvj8iEkyieyghBscOdgrfVWGAC1iS0VLbXbFP5lVbdk=;
+ b=j159jCsnddA/Dltj/9oM2qpPIHaZCitoMPQmLSqmT26YXJDZEbB5vzTzkR+pBAwTfawATsHFrAPS3hO/Wgv8rYAvLwELLPRn/WLgl8mWFujO8aLur6g5mX2zmxffsj85m3b3otcVkeZcidgZRlwtNBnIEMxyFhGoj/C7bt5u01U=
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com (2603:10b6:301:7c::11)
+ by CO1PR21MB1297.namprd21.prod.outlook.com (2603:10b6:303:160::6) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4566.19; Tue, 5 Oct
- 2021 20:23:22 +0000
-Received: from SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::5858:b334:4b44:e7b1]) by SN6PR11MB2848.namprd11.prod.outlook.com
- ([fe80::5858:b334:4b44:e7b1%7]) with mapi id 15.20.4566.022; Tue, 5 Oct 2021
- 20:23:22 +0000
-From:   <Don.Brace@microchip.com>
-To:     <pmenzel@molgen.mpg.de>
-CC:     <Kevin.Barnett@microchip.com>, <Scott.Teel@microchip.com>,
-        <Justin.Lindley@microchip.com>, <Scott.Benesh@microchip.com>,
-        <Gerry.Morong@microchip.com>, <Mahesh.Rajashekhara@microchip.com>,
-        <Mike.McGowen@microchip.com>, <Murthy.Bhat@microchip.com>,
-        <Balsundar.P@microchip.com>, <joseph.szczypek@hpe.com>,
-        <jeff@canonical.com>, <POSWALD@suse.com>,
-        <john.p.donnelly@oracle.com>, <mwilck@suse.com>,
-        <linux-kernel@vger.kernel.org>, <hch@infradead.org>,
-        <martin.petersen@oracle.com>, <jejb@linux.vnet.ibm.com>,
-        <linux-scsi@vger.kernel.org>
-Subject: RE: [smartpqi updates PATCH V2 09/11] smartpqi: fix duplicate device
- nodes for tape changers
-Thread-Topic: [smartpqi updates PATCH V2 09/11] smartpqi: fix duplicate device
- nodes for tape changers
-Thread-Index: AQHXtMRDyP+n2ZsizkKB3YupoAAg6qu90n0AgAcPpHA=
-Date:   Tue, 5 Oct 2021 20:23:22 +0000
-Message-ID: <SN6PR11MB2848E6A6F6824C55641FB6FEE1AF9@SN6PR11MB2848.namprd11.prod.outlook.com>
-References: <20210928235442.201875-1-don.brace@microchip.com>
- <20210928235442.201875-10-don.brace@microchip.com>
- <1351a25f-5310-cae3-ae47-01c842e0a185@molgen.mpg.de>
-In-Reply-To: <1351a25f-5310-cae3-ae47-01c842e0a185@molgen.mpg.de>
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.2; Tue, 5 Oct
+ 2021 20:36:01 +0000
+Received: from MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::6129:c6f7:3f56:c899]) by MWHPR21MB1593.namprd21.prod.outlook.com
+ ([fe80::6129:c6f7:3f56:c899%4]) with mapi id 15.20.4587.017; Tue, 5 Oct 2021
+ 20:36:01 +0000
+From:   Michael Kelley <mikelley@microsoft.com>
+To:     Andrea Parri <parri.andrea@gmail.com>,
+        Long Li <longli@microsoft.com>
+CC:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: RE: [PATCH] scsi: storvsc: Fix validation for unsolicited incoming
+ packets
+Thread-Topic: [PATCH] scsi: storvsc: Fix validation for unsolicited incoming
+ packets
+Thread-Index: AQHXud3qUC3u++ARO0md/Bl+ITMuDavEkGRAgAAlg4CAACJ5IA==
+Date:   Tue, 5 Oct 2021 20:36:01 +0000
+Message-ID: <MWHPR21MB15933E46ABC6DC0AA5DD0A5AD7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
+References: <20211005114103.3411-1-parri.andrea@gmail.com>
+ <MWHPR21MB15935C9A0C33A858AFF1A825D7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
+ <20211005181421.GA1714@anparri>
+In-Reply-To: <20211005181421.GA1714@anparri>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
-authentication-results: molgen.mpg.de; dkim=none (message not signed)
- header.d=none;molgen.mpg.de; dmarc=none action=none
- header.from=microchip.com;
+msip_labels: MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=d5ecefba-b229-439a-80c9-65f63386ab4f;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2021-10-05T20:17:44Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
 x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 73682721-6c1f-40d5-87e3-08d9883dfa64
-x-ms-traffictypediagnostic: SA2PR11MB4796:
+x-ms-office365-filtering-correlation-id: 1dd37b21-c014-4306-92b1-08d9883fbef4
+x-ms-traffictypediagnostic: CO1PR21MB1297:
 x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <SA2PR11MB47964497A488C81EBDFDCD28E1AF9@SA2PR11MB4796.namprd11.prod.outlook.com>
+x-microsoft-antispam-prvs: <CO1PR21MB12977EEF0F33886F8A7BB821D7AF9@CO1PR21MB1297.namprd21.prod.outlook.com>
 x-ms-oob-tlc-oobclassifiers: OLM:9508;
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
 x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: qgTk6mzHj3hgaGrCtrHnKNsIywBzSDeFMUG+BV+dpXmuxEKdZ1ggi6eTpoK6MZmU1bzdBrUmRx0Qk8L4Ou2YCRiWIGPX6TNDCogVwizUpERK9wSAH397nxOb2e9BcMgTPdsvLEl6ridj95oqRk+OZALYVyurhTD9zPZqznRlotXNzysbufT2OO8KQEAzHnPkgF55gLj2VmYqRv6PMKDmnfJthVDuZnkcbdlNJ/ZV8vWn42/34McfIC4W+cCJ3APZtgB65k7qmtoCMwOc2TnCydlK5H96a7lavfb6Bp9tC6wJJU8eBWclAnFBzIRBRw7aGHpBQDwkkJiymPEozDqLEiGyJS3KVnZCW1SylIdRh25cY3lXbQdoc8vczrNa6e4xVcVX0QE8JGyNtWgko3vAJ6CLjEG0sthZ8uHb32YQW/gWnQO2+SmqMuKhXq5dxfQB4bTcVkEzLtyJcQQXWjRRNW0NwJfHxiqZKFRwxwawFIuDgfX4W0nuVkwVGC0GD145IY5ywLARcbaukB5DDqVDVDQPxupXyB7wlafHssiqz9TAF0vJz6KixkVaGb6XbUYsFecVNkqBFeJXRn3+s9dXY2FjAJ+JVn6fndVxZF0w2R/V3qS3XTLoDFvKS/9eLkoZpLjOaE1TCQhxM8qXMZexFj/ko1I2ZaFh1ffW5YAQkTIXVh4dYvq6pG+qxYaXz8tj8POiVG+j0RS910jYCFPQ3A==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN6PR11MB2848.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(76116006)(52536014)(83380400001)(8676002)(55016002)(33656002)(15650500001)(86362001)(38070700005)(8936002)(5660300002)(9686003)(71200400001)(66946007)(7416002)(66446008)(6916009)(508600001)(64756008)(26005)(316002)(66556008)(38100700002)(66476007)(54906003)(7696005)(2906002)(186003)(122000001)(6506007)(4326008);DIR:OUT;SFP:1101;
+x-microsoft-antispam-message-info: OO0BZBEuRJSapZe5e9RbkB77jkLqOq4uudUtFRakkDpgH2Kg7oG8whshVoELHV8Osa6XeSskgE4z0247OYQcZlLvJVtOVpI3QUp52C6LMRrJlNwlc7b1Y+rCNsesFqh6z7YHW2og4sYxBX7MIdY9XJ5I2nyPpIbcYNxd5lZVaX8rjQE5hcBtVCdCK1+EFeE9BJtV8kxTqJyuCqsUNaRSJ/mWX2Ii/PBJywntHG3jnkPHMftyVygWzxFqEwt/JuvgB+OEOzCk7dfoosIO8TOGDoQVfMEWwraaHX3UZ7CbqWntMO19uFrjNc6+d9768ml+98+2vPCBc3inNV7olxmaFzJhxJfKhQpxDZ4QpQUhrkq2HsMRD/4m+T85nDopdMYn3r9/2bydujPfD6liFDfPEroTgvg74T8+6d4O8gUDaThXpYdzKyIzxqKV3zG0x7IWrR5mcfMAeOqPvnDGFc3Sv3O2pt6htR1UcBU1b6MluAQD+Nfdgx3LaICP48dTyJFhQZ7QE1oAMnEIh55FF8ezwhrmP6A8DfnsVHfcNcAvt1UR2C2O1BobKBAUY9y9DS0E7KhD694Icx3JyZsrd3s4rNNtuKEmVVCdiVJDIyoKIk4fHvQz5DuGdT4aeBcDo8VYDSAs7RSmlXOWrexEwvTzo3PN43T10ZeyyumZZ1ZKybLLJg/W1Ak7bInJtCEOvMc/NflnqaL0iYFkDrdlP9kaxw==
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MWHPR21MB1593.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(71200400001)(66946007)(82960400001)(5660300002)(82950400001)(107886003)(26005)(38100700002)(122000001)(508600001)(55016002)(9686003)(66556008)(66446008)(186003)(64756008)(4326008)(33656002)(110136005)(83380400001)(54906003)(66476007)(6506007)(7696005)(38070700005)(316002)(8936002)(6636002)(86362001)(52536014)(8990500004)(2906002)(76116006)(10290500003)(8676002);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?cG9qT2JkWGpEQUFFNkRwRnJoTG9RUVBoTE4rMWYwZ3FoWHRENFZ3UmFYUnZK?=
- =?utf-8?B?MytsOFREQndGdGhPL3lXbHBEb21BZDBoMjZyWU5GbGNYWlcwZWt4RkV1NWJH?=
- =?utf-8?B?VjNLd0cyL0did2VkdGpsdEZ0UW9OKzdWbGUwdDlaT1ZFTzNjaVE0MHlUclZq?=
- =?utf-8?B?TVRQeFJYYWl5ditjdXVVNGR4VmRuK0tTM0s2R2xQVFZ3Zm5aY1g0UTIwMFFX?=
- =?utf-8?B?QzdIWmtwVys3YmRTWlRvMkx4VC9LY3l4N2hZeXVlSk03VGdrVkRlamU2TkV2?=
- =?utf-8?B?SEdOeGMycnIyMjRKdkxjTHZFVnZFaXlBTTZFY1dWeExrWjdYTFFtek5qWEU1?=
- =?utf-8?B?QzRwQ0tycnpnV3JhT3laaVNyRkNzWEl3Z3JyUUtXS01kdmZ0RGVGWHVRQWZU?=
- =?utf-8?B?ZHNWZlNDZUVlNXZBejBYS3ZXTmY0ejB2NFY4QVpQK2prOWNaeEVDQWtIQkNN?=
- =?utf-8?B?NEh0dk9tYzhFaDhFNVpTQ1J1Zk1vSDRVR0FzQlRDRFRaTUgzNXRvSy9Ka2Rz?=
- =?utf-8?B?OE0xZkxTeGhqTTErRkliaWtPdmtyYmxsaUlkcnppOHord0gxbWJhVHdmNmpt?=
- =?utf-8?B?VnRsRjc0M1V1T3o4cng1eTVES1FuS1lZcDc4TDJqTmlCTDNZa3V0MDFCdFI2?=
- =?utf-8?B?UmpOdzNkdWZ6ZGsvSVY3c0Z5UUxLSzJCL3FuV1lpZ0tadC85TVFwNk45R3gx?=
- =?utf-8?B?b3BIU3cxYkFZNlVPdEMxRDdzc0ZvSGZiNU1YaW02NVJUUE03OFdUbkNHV2pE?=
- =?utf-8?B?UlZ2dU4vbi9JY0p1Um9VbXlSV2FDMnNubUo4aTR0RithT3k0a25ZeDgvN2FU?=
- =?utf-8?B?VnhrdW5SaENGWXM1Tm93NU1DaDB3dEZTUU1aNjJkNUhTeHRLU0Q2MHlzVnVV?=
- =?utf-8?B?V0srMWVVR0p6NElSTzJKUzk5WTRrRVJ4QU5EclFrdkJuS1JwcDA4cEt1VUlW?=
- =?utf-8?B?N2dsZGhUYms5T0VrMXpxRTc0T1BDRDkza0MyU3R5bWJ5RTRHQ3NYVXlsbXpB?=
- =?utf-8?B?cnFZWGRxeXUrTjJOdG1YbGQ3bEdsSXhZZjArY3NLSGtyZHIvb0hXWEwzeklj?=
- =?utf-8?B?emlucUFWdyszNUdCTmZhaDNyd0FKWS9ieldlNEg3YStDZ3ROa2lGcE9vdXlk?=
- =?utf-8?B?N3pycVZ3RURvSmhwMW1Rc1RtMnI1UGl5UVF6QytiQ0Z4ZXFZb0xXQWJrQisz?=
- =?utf-8?B?aTBKMFM1cCtnaldxTllpNUVDaTluc1J2dDNka1FZeHhxQU5md2lIVXNrUWl3?=
- =?utf-8?B?UW9FQWRna3BhN3VCemZWTXU1c3RSREZnTTAxUUFVVEI5enc1czlLVWFyUFYy?=
- =?utf-8?B?NzlaOFdtSENHU0FrYVZZVFBuQ1ZZeU5WbzJ3TWp0Mm9pVnFVZE5OU3BrU3VW?=
- =?utf-8?B?T3F2cE9MMFA3dHpoczRKTmcrdzFyQ0UrYkZOVlFUY1BGYTREZTJkMVFPVVE5?=
- =?utf-8?B?Y0NDSXVmRjhYS3dNb2VCMnIrUFRUamNWTXVJckFyaHg0Z25iZ0duWlN3SEFR?=
- =?utf-8?B?VStRdjR6NzgyalNWOExTMHNRRjhweFZUSVFUZFR1ZEtvZFBNRDlmdGNEaFVw?=
- =?utf-8?B?TEc1WVlYMG15SysrZFVxdnd3UVl5eG5zU0xoaU5nYnpYbVdETjBvRkJTbFVL?=
- =?utf-8?B?ckJJY1NQZ2JJUjZyU0EyOXEzVFd1L1pVd29oYm5JWU5EVnZZeS9wbWZXZU5w?=
- =?utf-8?B?ejcyTUVQekxQV2hjSTdFVUlNOUNiYWhxZUdtdHM4dytBdWRXSHk1UERyYllB?=
- =?utf-8?Q?usXwT9LII5ttxc5+K/B3VrVHzVl/D0Z/jQ5bgHp?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?WStZU1/hMF7qMMeqfvgT7JwNxddeSzMtO5eAp7QAqDwaZ/DdJPOFMbQ/AHWI?=
+ =?us-ascii?Q?fmbKuiNWhoCix950RT0GmcJKOmqfuveUEKSeC/g232ueOu/sHr3Oai4F5fc8?=
+ =?us-ascii?Q?0E0AI9flG+jcQ+8fad1nVIMHFvpMk0Nus3w5DSoauNeJeMT9Gi171b/1mrXn?=
+ =?us-ascii?Q?fMzBQyiScme6U/sFLNNly5okH6JuEtBoQ5ncFk+OSKBBk9wX04UUiNRjF1n+?=
+ =?us-ascii?Q?VN23gwxgrcaFe4fz4V7S6odZnrFEMe0zNBe7TmaCAbbONw2UjPGRpQyMVhyG?=
+ =?us-ascii?Q?SmJHxidnwVG1/qJgUrT84a3LZi9T4PClzZz4FJVfqt3ZxCO9dqztHkD3Jft/?=
+ =?us-ascii?Q?mXVlPzjPMKUARl99gHfMkCN9Sciuliw2c5exmjIexSPoGKQt58PVNNo3kiS4?=
+ =?us-ascii?Q?89CfStIqZkDIzqO9AR6BvVZn1uJHZaik9YZehmxHJscDIC1vWTetUqeDgvKy?=
+ =?us-ascii?Q?yDYZV4SmGSjahtnoye9iMm5gH+nbXtXr7esW4uhcS/3ItIRp9ZRJ27TNRRSV?=
+ =?us-ascii?Q?LWG6enzVdTSgR7LhZyuXNDhIPx2a0Jy4YbwGQhHvxxXD61pOWf8G8pqjr9eu?=
+ =?us-ascii?Q?vaLPRAqH4ueHy1457ibi7DIH4b3crnYbA3Z/CGfpdCvHL6tad8xsA6ceq7Ef?=
+ =?us-ascii?Q?1ZG9J0rUkYxbJV7rV2fh+tHTywz40317wsprumeEexldN9CYfI2vSNTGUaR1?=
+ =?us-ascii?Q?fjLKGCT2RDDCkLCSytnpHHigWlTAV5fFBVTqgAlC49Ukm1AurE9SGf0xyBD/?=
+ =?us-ascii?Q?0oGWu1Y3b+YOKEsVO8GYtvTmbXuk1YSlr8jLgu0SGaj/JIcterbtbFeft04t?=
+ =?us-ascii?Q?5tJds7Lfp+iiSgoDjb1Bhn2rN52vUh7npf08CXEHriT+FPHpz2stny3CFm81?=
+ =?us-ascii?Q?OA8JT4Jd3AwJCAjla+p64gtG8ZtDND9SYkvcznW45CeYaI7MiRK5QWFP7arc?=
+ =?us-ascii?Q?Dfi5zYQjuaotZtKx4T9ARPctcAbAvqfqERYE+qhdtRlnTTO45hny8R/tfPbs?=
+ =?us-ascii?Q?6qYJgZev8OOVgTbt3SQSCZe3Yg3Ly85bpQirE2TNrdiH8I0/GTl868iCQhIE?=
+ =?us-ascii?Q?1SWjEY1CQU3ll66HgBelVa2dO5Pdawr0qjPcexLHzaBtddIHcNY00w5SMc1j?=
+ =?us-ascii?Q?uu1J1ji+EDiaqm1nsBwnU1SOQ1x9MYHSSzJzptOWlOR3H+zBIT7AzoDp65Xu?=
+ =?us-ascii?Q?lIFWd8G3GZrvoiJ8oSCBU1IcKcvOOsoE6ihMm/3VE3IBUlK+8YkJmy+kA5JW?=
+ =?us-ascii?Q?L/XV9RU25P8U6fOrUNPZPZwDl6Qx2KTQOXCk9OS0h8ZOqtitGvV5EUVjR4hE?=
+ =?us-ascii?Q?c8OAzU42OPU/0xvtLqMDKcMl?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
+X-OriginatorOrg: microsoft.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR11MB2848.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 73682721-6c1f-40d5-87e3-08d9883dfa64
-X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Oct 2021 20:23:22.2642
+X-MS-Exchange-CrossTenant-AuthSource: MWHPR21MB1593.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1dd37b21-c014-4306-92b1-08d9883fbef4
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Oct 2021 20:36:01.5943
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-id: 72f988bf-86f1-41af-91ab-2d7cd011db47
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: wcNlUX8QVBVWY4qiIY69HOUZy73pMGcepOgovNB+Uqo9y+2ykSyHSPutuhntpNqS6UHSwWAs8wF2201Qnxctxw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB4796
+X-MS-Exchange-CrossTenant-userprincipalname: FyfcUvbr3My6Ok0LfpEpAfNnaoqTQYKoVNjC0nUmyorcVISyvNBby3CmzVnI7lhoqAO9NDGgeOE8qb0WHqOwQxnFpfB/9umwf8uIhtGRBdA=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR21MB1297
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-RnJvbTogUGF1bCBNZW56ZWwgW21haWx0bzpwbWVuemVsQG1vbGdlbi5tcGcuZGVdIA0KDQpTdWJq
-ZWN0OiBSZTogW3NtYXJ0cHFpIHVwZGF0ZXMgUEFUQ0ggVjIgMDkvMTFdIHNtYXJ0cHFpOiBmaXgg
-ZHVwbGljYXRlIGRldmljZSBub2RlcyBmb3IgdGFwZSBjaGFuZ2Vycw0KDQpEZWFyIEtldmluLCBk
-ZWFyIERvbiwNCj4gT3VyIGNvbnRyb2xsZXIgRlcgbGlzdHMgYm90aCBMVU5zIGluIHRoZSBSUEwg
-cmVzdWx0cy4NCg0KUGxlYXNlIGRvY3VtZW50IHRoZSBmaXJtd2FyZSB2ZXJzaW9uIChhbmQgY29u
-dHJvbGxlcikgeW91IHRlc3RlZCB3aXRoIGluIHRoZSBjb21taXQgbWVzc2FnZS4NCg0KRE9OOiBE
-b25lIGluIFYzLCB0aGFua3MgZm9yIHlvdXIgcmV2aWV3Lg0KDQpTaG9ydGx5IGRlc2NyaWJpbmcg
-dGhlIGltcGxlbWVudGF0aW9uIChuZXcgc3RydWN0IG1lbWJlciBpZ25vcmVfZGV2aWNlKSB3b3Vs
-ZCBiZSBuaWNlLg0KRE9OOiBEb24gaW4gVjMsIHRoYW5rcyBmb3IgeW91ciByZXZpZXcuDQoNCj4g
-ICAgICAgdTggICAgICByZXNjYW4gOiAxOw0KPiArICAgICB1OCAgICAgIGlnbm9yZV9kZXZpY2Ug
-OiAxOw0KDQpXaHkgbm90IHR5cGUgYm9vbD8NCkRvbjogVGhleSBib3RoIHRha2UgdGhlIHNhbWUg
-YW1vdW50IG9mIG1lbW9yeSBhbmQgc2luY2UgdGhlIG90aGVyIG1lbWJlcnMgYXJlIGFsc28gdTgs
-IHRoZSBuZXcgbWVtYmVyIHdhcyBhbHNvIHU4IGZvciBjb25zaXN0ZW5jeS4NCg0KPiAtICAgICAg
-ICAgICAgICAgICAgICAgZGV2aWNlLT5sdW4gPSBzZGV2LT5sdW47DQo+IC0gICAgICAgICAgICAg
-ICAgICAgICBkZXZpY2UtPnRhcmdldF9sdW5fdmFsaWQgPSB0cnVlOw0KDQpPZmYgdG9waWMsIHdp
-dGggYHU4IHRhcmdldF9sdW5fdmFsaWQgOiAxYCwgd2h5IGlzIGB0cnVlYCB1c2VkLg0KRG9uOiBI
-YXMgdGhlIHNhbWUgYmVoYXZpb3IsIGFuZCBjYXJyaWVkIGZvcndhcmQgZnJvbSBvdGhlciBtZW1i
-ZXIgZmllbGRzLg0KDQo+ICsgICAgICAgICAgICAgICAgICAgICBpZiAoZGV2aWNlLT50YXJnZXRf
-bHVuX3ZhbGlkKSB7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRldmljZS0+aWdu
-b3JlX2RldmljZSA9IHRydWU7DQo+ICsgICAgICAgICAgICAgICAgICAgICB9IGVsc2Ugew0KPiAr
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkZXZpY2UtPnRhcmdldCA9IHNkZXZfaWQoc2Rl
-dik7DQo+ICsgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGRldmljZS0+bHVuID0gc2Rldi0+
-bHVuOw0KPiArICAgICAgICAgICAgICAgICAgICAgICAgICAgICBkZXZpY2UtPnRhcmdldF9sdW5f
-dmFsaWQgPSB0cnVlOw0KPiArICAgICAgICAgICAgICAgICAgICAgfQ0KDQpJZiB0aGUgTFVOIHNo
-b3VsZCBiZSBpZ25vcmVkLCBpcyBpdCBhY3R1YWxseSB2YWxpZD8gV2h5IG5vdCBleHRlbmQgdGFy
-Z2V0X2x1bl92YWxpZCBhbmQgYWRkIGEgdGhpcmQgb3B0aW9uIChlbnVtcz8pIHRvIGlnbm9yZSBp
-dD8NCg0KRG9uOiBUaGUgcmVhc29uIGlzIHRoYXQgaXQgdGFrZXMgYWR2YW50YWdlIG9mIHRoZSBv
-cmRlciB0aGUgZGV2aWNlcyBhcmUgYWRkZWQgYW5kIGhvdyBzbGF2ZV9hbGxvYyBhbmQgc2xhdmVf
-Y29uZmlndXJlIGZpdCBpbnRvIHRoaXMgb3JkZXIuDQoNCj4gKyAgICAgcmV0dXJuIGRldmljZS0+
-ZGV2dHlwZSA9PSBUWVBFX1RBUEUgfHwgZGV2aWNlLT5kZXZ0eXBlID09IA0KPiArVFlQRV9NRURJ
-VU1fQ0hBTkdFUjsNCg0KV2h5IGFsc28gY2hlY2sgZm9yIFRZUEVfVEFQRT8gVGhlIGZ1bmN0aW9u
-IG5hbWUgc2hvdWxkIGJlIHVwZGF0ZWQgdGhlbj8NCkRvbjogQmVjYXVzZSBvdXQgdGFwZSBjaGFu
-Z2VyIGNvbnNpc3RlZCBvZiB0aGUgY2hhbmdlciBhbmQgb25lIG9yIG1vcmUgdGFwZSB1bml0cyBh
-bmQgYm90aCB3ZXJlIGR1cGxpY2F0ZWQuDQoNCj4gICBzdGF0aWMgaW50IHBxaV9zbGF2ZV9jb25m
-aWd1cmUoc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2KQ0KPiArICAgICBpZiAocHFpX2lzX3RhcGVf
-Y2hhbmdlcl9kZXZpY2UoZGV2aWNlKSAmJiBkZXZpY2UtPmlnbm9yZV9kZXZpY2UpIHsNCj4gKyAg
-ICAgICAgICAgICByYyA9IC1FTlhJTzsNCj4gKyAgICAgICAgICAgICBkZXZpY2UtPmlnbm9yZV9k
-ZXZpY2UgPSBmYWxzZTsNCg0KSeKAmWQgYWRkIGEgYHJldHVybiAtRU5YSU9gIGhlcmUsIGFuZCBy
-ZW1vdmUgdGhlIHZhcmlhYmxlLg0KRG9uOiBUaGlzIHdvcmtzIGluIGNvbmp1bmN0aW9uIHdpdGgg
-c2xhdmVfYWxsb2MgYW5kIGlzIG5lZWRlZC4NCg0KPg0KDQpLaW5kIHJlZ2FyZHMsDQpQYXVsDQoN
-ClRoYW5rcyBmb3IgeW91ciByZXZpZXcuIEFwcHJlY2lhdGUgdGhlIGluc3BlY3Rpb24uDQpEb24g
-YW5kIEtldmluDQoNCg==
+From: Andrea Parri <parri.andrea@gmail.com> Sent: Tuesday, October 5, 2021 =
+11:14 AM
+>=20
+> > > @@ -292,6 +292,9 @@ struct vmstorage_protocol_version {
+> > >  #define STORAGE_CHANNEL_REMOVABLE_FLAG		0x1
+> > >  #define STORAGE_CHANNEL_EMULATED_IDE_FLAG	0x2
+> > >
+> > > +/* Lower bound on the size of unsolicited packets with ID of 0 */
+> > > +#define VSTOR_MIN_UNSOL_PKT_SIZE		48
+> > > +
+> >
+> > I know you have determined experimentally that Hyper-V sends
+> > unsolicited packets with the above length, so the idea is to validate
+> > that the guest actually gets packets at least that big.  But I wonder i=
+f
+> > we should think about this slightly differently.
+> >
+> > The goal is for the storvsc driver to protect itself against bad or
+> > malicious messages from Hyper-V.  For the unsolicited messages, the
+> > only field that this storvsc driver needs to access is the
+> > vstor_packet->operation field.
+>=20
+> Eh, this is one piece of information I was looking for...  ;-)
+
+I'm just looking at the code in storvsc_on_receive().   storvsc_on_receive(=
+)
+itself looks at the "operation" field, but for the REMOVE_DEVICE and
+ENUMERATE_BUS operations, you can see that the rest of the vstor_packet
+is ignored and is not passed to any called functions.
+
+>=20
+>=20
+> >So an alternate approach is to set
+> > the minimum length as small as possible while ensuring that field is va=
+lid.
+>=20
+> The fact is, I'm not sure how to do it for unsolicited messages.
+> Current code ensures/checks !=3D COMPLETE_IO.  Your comment above
+> and code audit suggest that we should add a check !=3D FCHBA_DATA.
+> I saw ENUMERATE_BUS messages, code only using their "operation".
+
+I'm not completely sure about FCHBA_DATA.  That message does not
+seem to be unsolicited, as the guest sends out a message of that type in=20
+storvsc_channel_init() using storvsc_execute_vstor_op().  So any received
+messages of that type are presumably in response to the guest request,
+and will get handled via the test for rqst_id =3D=3D VMBUS_RQST_INIT.  Long=
+=20
+Li could probably confirm.  So if Hyper-V did send a FCHBA_DATA
+packet with rqst_id of 0, it would seem to be appropriate to reject
+it.
+
+>=20
+> And, again, this is only based on current code/observations...
+>=20
+> So, maybe you mean something like this (on top of this patch)?
+
+Yes, with a comment to explain what's going on. :-)
+
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 349c1071a98d4..8fedac3c7597a 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -292,9 +292,6 @@ struct vmstorage_protocol_version {
+>  #define STORAGE_CHANNEL_REMOVABLE_FLAG		0x1
+>  #define STORAGE_CHANNEL_EMULATED_IDE_FLAG	0x2
+>=20
+> -/* Lower bound on the size of unsolicited packets with ID of 0 */
+> -#define VSTOR_MIN_UNSOL_PKT_SIZE		48
+> -
+>  struct vstor_packet {
+>  	/* Requested operation type */
+>  	enum vstor_packet_operation operation;
+> @@ -1291,7 +1288,7 @@ static void storvsc_on_channel_callback(void *conte=
+xt)
+>  		u32 pktlen =3D hv_pkt_datalen(desc);
+>  		u64 rqst_id =3D desc->trans_id;
+>  		u32 minlen =3D rqst_id ? sizeof(struct vstor_packet) -
+> -			stor_device->vmscsi_size_delta : VSTOR_MIN_UNSOL_PKT_SIZE;
+> +			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
+>=20
+>  		if (pktlen < minlen) {
+>  			dev_err(&device->device,
+> @@ -1315,7 +1312,8 @@ static void storvsc_on_channel_callback(void *conte=
+xt)
+>  				 * storvsc_on_io_completion() with a guest memory address that is
+>  				 * zero if Hyper-V were to construct and send such a bogus packet.
+>  				 */
+> -				if (packet->operation =3D=3D VSTOR_OPERATION_COMPLETE_IO) {
+> +				if (packet->operation =3D=3D VSTOR_OPERATION_COMPLETE_IO ||
+> +				    packet->operation =3D=3D VSTOR_OPERATION_FCHBA_DATA) {
+>  					dev_err(&device->device, "Invalid packet with ID of 0\n");
+>  					continue;
+>  				}
+>=20
+> Thanks,
+>   Andrea
+
