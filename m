@@ -2,147 +2,168 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89444C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 18:14:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 075F0C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 18:52:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6C389613D3
-	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 18:14:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBF016105A
+	for <linux-scsi@archiver.kernel.org>; Tue,  5 Oct 2021 18:52:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234477AbhJESQY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 5 Oct 2021 14:16:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42352 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232861AbhJESQX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 14:16:23 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 159FFC061749;
-        Tue,  5 Oct 2021 11:14:32 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id p11so2139705edy.10;
-        Tue, 05 Oct 2021 11:14:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=qrVDa6iqwbI1N1i5Vvsk2q6J4SqfjK9r6QKza8oCivI=;
-        b=AA0eXZM6Nho5oZvo6al2SeGKlZfJensqta3LehDMmebtXUXElVigfZhvJJE3M9f+yA
-         cQQ2Z7QGwIO3ZVvRLLaWezv6d1Mnr3W3EYvfkfZEwJKZYFPBAGM1jKP3NonsiiI51srq
-         4Rsu09nvxptF67f10at7blY211KI5vSmsJwCYo2xABCS3xaZfp+xFO+82Ug301IP4/Eq
-         MZ8YGC0IUXmz/YBMZTOlGE+76tJWtcyd/bjCfkwcgWJAnxwL5lTeoFOvffKATZp+1iVc
-         weiaPXIYbqOCi4yaXitOID2JZbDZU2UvjiSWQUzLLBKSG/e4qaOTYuVyDAT0ElxmiTQM
-         yhIg==
+        id S235023AbhJESyV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 5 Oct 2021 14:54:21 -0400
+Received: from mail-pl1-f179.google.com ([209.85.214.179]:38655 "EHLO
+        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229684AbhJESyU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Oct 2021 14:54:20 -0400
+Received: by mail-pl1-f179.google.com with SMTP id x4so96161pln.5
+        for <linux-scsi@vger.kernel.org>; Tue, 05 Oct 2021 11:52:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=qrVDa6iqwbI1N1i5Vvsk2q6J4SqfjK9r6QKza8oCivI=;
-        b=nB3NC1DcS/gi8wvucN+YtQbY0mxH+8C2TAlKvvBlOohvWzVrddYYMYrlGYeikzavPw
-         ePBuy2btgsliME1iWB1PLhFj8rrjKHSjJuG2yrNQXJkpiuWSTafTALv+MzpRcDj7tuwf
-         EXdErrTsS3gHf5+Y9gqZ9qmmZGDX6kP8/vM/Tv5FCYnylmGmgAYQ4PTSPu7Q6vF+qOuF
-         O7TQO2yzjR3AXVbNndDlZrecugvd6RlKdjroMqqZRDXd8dDiENKiRf0ojdfdNPvIyrzR
-         APXyF2NeSY4C3U56xvxXaYmiwNtqsrQYxp0rIMFtoPa7w/FpPs5wTAnkdOPDZPwIArNX
-         tYOQ==
-X-Gm-Message-State: AOAM533AVT5zu0uSjdI7mNKn1NPsj5N/o25naO3ejT/nbt69sncpvYmu
-        fyhpRf2+7en4G43TpaV9/ek=
-X-Google-Smtp-Source: ABdhPJxnZiAFCgH3mNtRtBZf9s+olbhESF2EJDUaPjin0mTkfZiEUY4Vd94Go43dgya325nYhMt1Nw==
-X-Received: by 2002:a17:906:e011:: with SMTP id cu17mr23108770ejb.244.1633457670478;
-        Tue, 05 Oct 2021 11:14:30 -0700 (PDT)
-Received: from anparri (host-79-49-65-228.retail.telecomitalia.it. [79.49.65.228])
-        by smtp.gmail.com with ESMTPSA id e7sm7259482edv.39.2021.10.05.11.14.29
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Oct 2021 11:14:29 -0700 (PDT)
-Date:   Tue, 5 Oct 2021 20:14:21 +0200
-From:   Andrea Parri <parri.andrea@gmail.com>
-To:     Michael Kelley <mikelley@microsoft.com>
-Cc:     "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        KY Srinivasan <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Dexuan Cui <decui@microsoft.com>
-Subject: Re: [PATCH] scsi: storvsc: Fix validation for unsolicited incoming
- packets
-Message-ID: <20211005181421.GA1714@anparri>
-References: <20211005114103.3411-1-parri.andrea@gmail.com>
- <MWHPR21MB15935C9A0C33A858AFF1A825D7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=uPwU+RA+zaY9foLTizeR7ar/M3njZdDtRQOkNDlX7g4=;
+        b=UG3MtF5l/qb601xSIMX7XjRx88n7QUQHam9IykNWMUh1Rsd7lmrmWVMbs1yT/39/J8
+         KswkESw31O52yPvQPvq2Szs2kyOt4lNRd0Fe9Dl3iZU64V+E/VPCo/0HSL+y5lVOywi5
+         irh3H4lh6M+pAaojR4Gbq2z4SKzXXhkOAPzjlfaq5hQf+QUuXJ65kdzjCn5Psm90XRB1
+         dFgl+xRvlcEznRX6p8gQQG8wLLl+AUJXYsoAZ2Qiplb8P3ezET1tkgSFJOHD7/gVsAY2
+         J9NFUrutqq5mAFKr1ihSigh7t3TaCn0puLHTE6fDuTQa86XYzok2o/7e22KFLAyrPf86
+         UyZw==
+X-Gm-Message-State: AOAM530RpGihB+6+tec0G2mv0zhRE7H5W4EOadXiBm8CUtL/L3oa2NCL
+        2eZx8m3XI/Jnhuf/6L6lKZv+yAyL3R8=
+X-Google-Smtp-Source: ABdhPJyNx88EXCzpyK1EVFFROS6bKJqfuf4zju916VRfoRUj+ZbzCX7FAQ2v5V94CHAGmkjR2gy6QA==
+X-Received: by 2002:a17:90b:b15:: with SMTP id bf21mr5865974pjb.32.1633459948822;
+        Tue, 05 Oct 2021 11:52:28 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:e8fc:af57:dd49:3964])
+        by smtp.gmail.com with ESMTPSA id t1sm17499921pgf.78.2021.10.05.11.52.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 05 Oct 2021 11:52:28 -0700 (PDT)
+Subject: Re: [PATCH V7 1/2] scsi: ufs: Fix runtime PM dependencies getting
+ broken
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
+References: <20211005134445.234671-1-adrian.hunter@intel.com>
+ <20211005134445.234671-2-adrian.hunter@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <dcb1c627-1431-8437-7a02-e5d74a3f3b70@acm.org>
+Date:   Tue, 5 Oct 2021 11:52:26 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <MWHPR21MB15935C9A0C33A858AFF1A825D7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
+In-Reply-To: <20211005134445.234671-2-adrian.hunter@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> > @@ -292,6 +292,9 @@ struct vmstorage_protocol_version {
-> >  #define STORAGE_CHANNEL_REMOVABLE_FLAG		0x1
-> >  #define STORAGE_CHANNEL_EMULATED_IDE_FLAG	0x2
-> > 
-> > +/* Lower bound on the size of unsolicited packets with ID of 0 */
-> > +#define VSTOR_MIN_UNSOL_PKT_SIZE		48
-> > +
+On 10/5/21 6:44 AM, Adrian Hunter wrote:
+> UFS SCSI devices make use of device links to establish PM dependencies.
+> However, SCSI PM will force devices' runtime PM state to be active during
+> system resume. That can break runtime PM dependencies for UFS devices.
+> Fix by adding a flag 'preserve_rpm' to let UFS SCSI devices opt-out of
+> the unwanted behaviour.
 > 
-> I know you have determined experimentally that Hyper-V sends
-> unsolicited packets with the above length, so the idea is to validate
-> that the guest actually gets packets at least that big.  But I wonder if
-> we should think about this slightly differently.
+> Fixes: b294ff3e34490f ("scsi: ufs: core: Enable power management for wlun")
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+> ---
+>   drivers/scsi/scsi_pm.c     | 16 +++++++++++-----
+>   drivers/scsi/ufs/ufshcd.c  |  1 +
+>   include/scsi/scsi_device.h |  1 +
+>   3 files changed, 13 insertions(+), 5 deletions(-)
 > 
-> The goal is for the storvsc driver to protect itself against bad or
-> malicious messages from Hyper-V.  For the unsolicited messages, the
-> only field that this storvsc driver needs to access is the
-> vstor_packet->operation field.
+> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+> index 3717eea37ecb..0557c1ad304d 100644
+> --- a/drivers/scsi/scsi_pm.c
+> +++ b/drivers/scsi/scsi_pm.c
+> @@ -73,13 +73,22 @@ static int scsi_dev_type_resume(struct device *dev,
+>   		int (*cb)(struct device *, const struct dev_pm_ops *))
+>   {
+>   	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+> +	struct scsi_device *sdev = NULL;
+> +	bool preserve_rpm = false;
+>   	int err = 0;
+>   
+> +	if (scsi_is_sdev_device(dev)) {
+> +		sdev = to_scsi_device(dev);
+> +		preserve_rpm = sdev->preserve_rpm;
+> +		if (preserve_rpm && pm_runtime_suspended(dev))
+> +			return 0;
+> +	}
+> +
+>   	err = cb(dev, pm);
+>   	scsi_device_resume(to_scsi_device(dev));
+>   	dev_dbg(dev, "scsi resume: %d\n", err);
+>   
+> -	if (err == 0) {
+> +	if (err == 0 && !preserve_rpm) {
+>   		pm_runtime_disable(dev);
+>   		err = pm_runtime_set_active(dev);
+>   		pm_runtime_enable(dev);
+> @@ -91,11 +100,8 @@ static int scsi_dev_type_resume(struct device *dev,
+>   		 *
+>   		 * The resume hook will correct runtime PM status of the disk.
+>   		 */
+> -		if (!err && scsi_is_sdev_device(dev)) {
+> -			struct scsi_device *sdev = to_scsi_device(dev);
+> -
+> +		if (!err && sdev)
+>   			blk_set_runtime_active(sdev->request_queue);
+> -		}
+>   	}
+>   
+>   	return err;
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index d91a405fd181..b70f566f7f8a 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5016,6 +5016,7 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
+>   		pm_runtime_get_noresume(&sdev->sdev_gendev);
+>   	else if (ufshcd_is_rpm_autosuspend_allowed(hba))
+>   		sdev->rpm_autosuspend = 1;
+> +	sdev->preserve_rpm = 1;
+>   
+>   	ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
+>   
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 09a17f6e93a7..47eb30a6b7b2 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -197,6 +197,7 @@ struct scsi_device {
+>   	unsigned no_read_disc_info:1;	/* Avoid READ_DISC_INFO cmds */
+>   	unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
+>   	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
+> +	unsigned preserve_rpm:1;	/* Preserve runtime PM */
+>   	unsigned security_supported:1;	/* Supports Security Protocols */
+>   	unsigned is_visible:1;	/* is the device visible in sysfs */
+>   	unsigned wce_default_on:1;	/* Cache is ON by default */
 
-Eh, this is one piece of information I was looking for...  ;-)
+So a new flag is added in struct scsi_device and that flag is only used by
+the UFS driver? I'm less than enthusiast about this patch. I think that the
+SCSI core needs to be modified such that system suspend and resume is
+separated from runtime suspend and resume. The following code:
 
+	if (err == 0) {
+		pm_runtime_disable(dev);
+		err = pm_runtime_set_active(dev);
+		pm_runtime_enable(dev);
+		[ ... ]
+	}
 
->So an alternate approach is to set
-> the minimum length as small as possible while ensuring that field is valid.
-
-The fact is, I'm not sure how to do it for unsolicited messages.
-Current code ensures/checks != COMPLETE_IO.  Your comment above
-and code audit suggest that we should add a check != FCHBA_DATA.
-I saw ENUMERATE_BUS messages, code only using their "operation".
-
-And, again, this is only based on current code/observations...
-
-So, maybe you mean something like this (on top of this patch)?
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 349c1071a98d4..8fedac3c7597a 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -292,9 +292,6 @@ struct vmstorage_protocol_version {
- #define STORAGE_CHANNEL_REMOVABLE_FLAG		0x1
- #define STORAGE_CHANNEL_EMULATED_IDE_FLAG	0x2
- 
--/* Lower bound on the size of unsolicited packets with ID of 0 */
--#define VSTOR_MIN_UNSOL_PKT_SIZE		48
--
- struct vstor_packet {
- 	/* Requested operation type */
- 	enum vstor_packet_operation operation;
-@@ -1291,7 +1288,7 @@ static void storvsc_on_channel_callback(void *context)
- 		u32 pktlen = hv_pkt_datalen(desc);
- 		u64 rqst_id = desc->trans_id;
- 		u32 minlen = rqst_id ? sizeof(struct vstor_packet) -
--			stor_device->vmscsi_size_delta : VSTOR_MIN_UNSOL_PKT_SIZE;
-+			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
- 
- 		if (pktlen < minlen) {
- 			dev_err(&device->device,
-@@ -1315,7 +1312,8 @@ static void storvsc_on_channel_callback(void *context)
- 				 * storvsc_on_io_completion() with a guest memory address that is
- 				 * zero if Hyper-V were to construct and send such a bogus packet.
- 				 */
--				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO) {
-+				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO ||
-+				    packet->operation == VSTOR_OPERATION_FCHBA_DATA) {
- 					dev_err(&device->device, "Invalid packet with ID of 0\n");
- 					continue;
- 				}
+has been introduced in scsi_dev_type_resume() by commit 3c31b52f96f7
+("scsi: async sd resume"). I'm in favor of removing that code.
 
 Thanks,
-  Andrea
+
+Bart.
+
 
