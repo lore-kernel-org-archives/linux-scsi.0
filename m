@@ -2,79 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DCFEC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 11:40:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5188BC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 12:00:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 472DF604E9
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 11:40:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31FD56115A
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 12:00:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238274AbhJFLm2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Oct 2021 07:42:28 -0400
-Received: from mga02.intel.com ([134.134.136.20]:20342 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238117AbhJFLm1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 6 Oct 2021 07:42:27 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10128"; a="213096668"
-X-IronPort-AV: E=Sophos;i="5.85,350,1624345200"; 
-   d="scan'208";a="213096668"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Oct 2021 04:40:35 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,350,1624345200"; 
-   d="scan'208";a="545246169"
-Received: from ahunter-desktop.fi.intel.com ([10.237.72.76])
-  by fmsmga004.fm.intel.com with ESMTP; 06 Oct 2021 04:40:32 -0700
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi: ufs: core: Fix synchronization between scsi_unjam_host() and ufshcd_queuecommand()
-Date:   Wed,  6 Oct 2021 14:40:31 +0300
-Message-Id: <20211006114031.245731-1-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.25.1
+        id S238149AbhJFMCP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Oct 2021 08:02:15 -0400
+Received: from mail-wr1-f52.google.com ([209.85.221.52]:43625 "EHLO
+        mail-wr1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S238117AbhJFMCP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2021 08:02:15 -0400
+Received: by mail-wr1-f52.google.com with SMTP id r7so8021745wrc.10
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Oct 2021 05:00:22 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=20aPkRckhHOA2aAVK/kSiWeKKvRSMK2cHLgirPldQ5E=;
+        b=Lbd9g8v559i05920r4RRoh6XSnuJGfQNFpCGgvblYKKO1EHpgnOuffnTAxJPgC0YTI
+         fLSYfoPRVUOSk1qEiDTXvI5QQ1uMc1u37OS0Uuyfenk3jxqd/o5T7ZY84Qnd2cJa4Z8U
+         qjQP73jHv10R4ZBUkRxOJlioYfq2CGLrdnSL7nRm4dwLdCPhdZiQqJX3uUeO3cM4dQU/
+         gKrbaSlATd7hLisgQSiqAtLm32I07qmkMCEaCwyT0mjYgxbBxmcndWBESlebi7v92R1J
+         wFwbmtSchafQcmuhVXJDepCbTVzNk9d2jN1e9bvTg5n61udDHwYnQ/QxS+l39Ke04OX5
+         fNug==
+X-Gm-Message-State: AOAM531CLUcUtriBkFrrA7GiXHDV/Uqt5axYJUsJ73J/ftuJj9QtWH9Y
+        cqP6RdmHgljNam0KVMLIdXOUhnWPPtE=
+X-Google-Smtp-Source: ABdhPJydrJgs61nY1FD8Mmch+rGqrkbTDlbYA16LgpFdizeuADFH43zcQ2YvZxCLeFgMuNH8UFCajg==
+X-Received: by 2002:adf:d1b3:: with SMTP id w19mr28384641wrc.152.1633521622314;
+        Wed, 06 Oct 2021 05:00:22 -0700 (PDT)
+Received: from liuwe-devbox-debian-v2 ([51.145.34.42])
+        by smtp.gmail.com with ESMTPSA id c25sm2028293wml.37.2021.10.06.05.00.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Oct 2021 05:00:21 -0700 (PDT)
+Date:   Wed, 6 Oct 2021 12:00:20 +0000
+From:   Wei Liu <wei.liu@kernel.org>
+To:     Haiyang Zhang <haiyangz@microsoft.com>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: Re: [PATCH v2 72/84] storvsc_drv: Call scsi_done() directly
+Message-ID: <20211006120020.dhop72wlqjanymoz@liuwe-devbox-debian-v2>
+References: <20210929220600.3509089-1-bvanassche@acm.org>
+ <20210929220600.3509089-73-bvanassche@acm.org>
+ <BN8PR21MB12841C43D1775DACB542A1A8CAAA9@BN8PR21MB1284.namprd21.prod.outlook.com>
 MIME-Version: 1.0
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <BN8PR21MB12841C43D1775DACB542A1A8CAAA9@BN8PR21MB1284.namprd21.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The SCSI error handler calls scsi_unjam_host() which can call the queue
-function ufshcd_queuecommand() indirectly. The error handler changes the
-state to UFSHCD_STATE_RESET while running, but error interrupts that
-happen while the error handler is running could change the state to
-UFSHCD_STATE_EH_SCHEDULED_NON_FATAL which would allow requests to go
-through ufshcd_queuecommand() even though the error handler is running.
-Block that hole by checking whether the error handler is in progress.
+On Thu, Sep 30, 2021 at 05:57:51PM +0000, Haiyang Zhang wrote:
+> 
+> 
+> > -----Original Message-----
+> > From: Bart Van Assche <bvanassche@acm.org>
+[...]
+> Thanks.
+> Reviewed-by: Haiyang Zhang <haiyangz@microsoft.com>
+> 
 
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
----
- drivers/scsi/ufs/ufshcd.c | 5 +++++
- 1 file changed, 5 insertions(+)
+Bart, Martin and Haiyang,
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index f34227add27d..df28e1444eff 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2688,7 +2688,12 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	switch (hba->ufshcd_state) {
- 	case UFSHCD_STATE_OPERATIONAL:
-+		break;
- 	case UFSHCD_STATE_EH_SCHEDULED_NON_FATAL:
-+		if (ufshcd_eh_in_progress(hba)) {
-+			err = SCSI_MLQUEUE_HOST_BUSY;
-+			goto out;
-+		}
- 		break;
- 	case UFSHCD_STATE_EH_SCHEDULED_FATAL:
- 		/*
--- 
-2.25.1
+Seeing this patch is part of a large patch series, I am expecting
+whoever funnels the whole series applies this patch together with other
+patches. Let me know if I should do anything else.
 
+Wei.
