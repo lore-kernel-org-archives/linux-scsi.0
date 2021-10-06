@@ -2,84 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82444C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 13:29:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25ED4C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 13:39:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5DC0B60E9C
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 13:29:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 09847610CC
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 13:39:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238701AbhJFNbJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Oct 2021 09:31:09 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:40907 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231356AbhJFNbH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2021 09:31:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1633526955;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=wzQmzBUEihVkKDDjIOOM5bJWBT7h0GK8QC/ZlgQykqs=;
-        b=i5tP3pinYcf1oGJX/YTXOhc9Qd4zocU+QtT6ShOwAvhTo8EQnHPfvgTQgbeKX3tws2AOOW
-        rUrVotiVTv7zWfiguSCZp5ExD9ruQt3egvn/64TwY0W6Yh7iFYxZ61w9zSJyHz9iRfwigq
-        0rvBU76iZ6pi/epe83A/Uhc5RVuOJ9g=
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com
- [209.85.222.197]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-451-_Y5RQFxJP2uwSkW4KGJfzA-1; Wed, 06 Oct 2021 09:29:14 -0400
-X-MC-Unique: _Y5RQFxJP2uwSkW4KGJfzA-1
-Received: by mail-qk1-f197.google.com with SMTP id h2-20020a05620a400200b0045e87af96ebso2145046qko.14
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Oct 2021 06:29:14 -0700 (PDT)
+        id S231703AbhJFNl3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Oct 2021 09:41:29 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54400 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231633AbhJFNl2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2021 09:41:28 -0400
+Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3DC66C061749;
+        Wed,  6 Oct 2021 06:39:36 -0700 (PDT)
+Received: by mail-ed1-x52e.google.com with SMTP id b8so10172167edk.2;
+        Wed, 06 Oct 2021 06:39:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=ZXUegjCUcjZM3YT3AwpKd2XzjXbHH263VlRYRLyBqyI=;
+        b=jg2ahWTWJvxDuJvvK9KKKXtaOoz55Ep8CjDvuYwSlUbrgfakL8YL0wF6hNOVT3bDcZ
+         vxg0kHknPWi/ItFdt+bDgo0FMnwv8HUI4KmHNH/9wwxMRDeIjih8qT6er8YzlPkKjzRg
+         6TcIiZGSMpH8h5QMl106xVSmPDaJBeSyydxvd9QTcxQQgIAwLhl6l/50f8AwGUWVOqE3
+         HYz5sM1GcyXBNjcYppAA7C0kmaf2DO2UJcuOaZnyBOi/SgNzO0aOvEiFBMEOUeUYaG8X
+         QkoiVm2IQkPMakJFANmeNIMMfq8BsyAe6HSZ+z+Rn3m1i8KI0u00WZqUlBBgo7+ammB3
+         ptvA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=wzQmzBUEihVkKDDjIOOM5bJWBT7h0GK8QC/ZlgQykqs=;
-        b=7KcIEtUmmTA58jtyj5zvmTuZEqedmJJ5DEzTV4yk9RI4CBQUjAFjns0MQkzqCeiOQj
-         5CNgjB/ZqqddSqqw0QyvuRy5ulsi3+I7dzNNeqPJt+pcaLUwremqu4FyOL38QzwBu+f0
-         yxnHA1nujFlnO/Q324HrPjw9OgycXOmORzWLasiZf+0c9Vm5dJXwti6TmNpo+Mrd9GHh
-         9Uk7r8XRUxbzbuLemsS0Au/UQ/k19ZJYt3POk+3NEjjHak1ZLCU0ljlYIZsKiLhkiX2C
-         zlhT3Odqkh/z2WOO9gOlwN0Kh5GV9YGKTU3slrygvu7GX7u7BtUo3itBOAmDXR4Op0eu
-         zacQ==
-X-Gm-Message-State: AOAM530RgGCOaI2t5sw8mV32hOjEL6G1oclbJaYjh1daSo3XUA9lu4oE
-        kRHIRiPislK8uXjrBnpy/ynogjygRggDhlcqotH7o4xTyir+wcgnDBJmJUzrXtY5jeBbYI3rz6/
-        Um4GDb3SEEPOfmIiA5B0X
-X-Received: by 2002:ac8:88:: with SMTP id c8mr7511084qtg.12.1633526953771;
-        Wed, 06 Oct 2021 06:29:13 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJw/8v3wqkJ1Y5E44+yD/hKM+9kQgCyFGq7beETeqK37nW1j+ndjaNNfhnHZDIHaVp6v5rSBYQ==
-X-Received: by 2002:ac8:88:: with SMTP id c8mr7511066qtg.12.1633526953614;
-        Wed, 06 Oct 2021 06:29:13 -0700 (PDT)
-Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
-        by smtp.gmail.com with ESMTPSA id z6sm950959qke.24.2021.10.06.06.29.12
+        bh=ZXUegjCUcjZM3YT3AwpKd2XzjXbHH263VlRYRLyBqyI=;
+        b=sfj5m2K7M9EA+0ziqEc6l5+9gxKo7EFGgtD4uoNAUkGJPPRjj+eI6Su1g0zeGfDz3W
+         KgYElJDA4R4uBA4fKW3ZApuImQ6d+1oRVzMhsJgNtxLmhoa4cn5GneWihWMtXV41Li6/
+         HkusAs2bWMT8CicBA2Z5O9e58E+lxz+tWBsZlzehepQ0ZDM67BRmOCJdx48PNh2YjsuW
+         DM5cPy4s3eC57grqMEnxzPvOMlfhZob9/BYj+aX8OOHrY9ZU6v/YXgSqQ/ffZwkMvdj6
+         oQkqFVgsCCN5Kcco8bRtNzQ4EOw3Q9Odgjm494jtagdRs3mmaDr5TnR+Ztp+htaCGfEh
+         sbNw==
+X-Gm-Message-State: AOAM530qlBVXvszC3AVXkDNOGzu1izr7ltw7dVs4o5H5sJB5/hYESuGr
+        AfbAXZ1nwPm36mrH48j9RaM=
+X-Google-Smtp-Source: ABdhPJylgbVU4nz7Vo+3S35MhLIotNdSRC4SKRQn4RFQNTyauUB7OrGiZbDkYEze26W83o7NUNx3zw==
+X-Received: by 2002:a50:eb9a:: with SMTP id y26mr24086544edr.186.1633527568128;
+        Wed, 06 Oct 2021 06:39:28 -0700 (PDT)
+Received: from anparri (host-79-49-65-228.retail.telecomitalia.it. [79.49.65.228])
+        by smtp.gmail.com with ESMTPSA id r6sm5173259edd.89.2021.10.06.06.39.26
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Oct 2021 06:29:13 -0700 (PDT)
-Date:   Wed, 6 Oct 2021 09:29:12 -0400
-From:   Mike Snitzer <snitzer@redhat.com>
-To:     linux-block@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
-Cc:     Satya Tangirala <satyaprateek2357@gmail.com>, dm-devel@redhat.com,
-        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v4 4/4] blk-crypto: update inline encryption documentation
-Message-ID: <YV2kqFA3y3qo8ls/@redhat.com>
-References: <20210929163600.52141-1-ebiggers@kernel.org>
- <20210929163600.52141-5-ebiggers@kernel.org>
+        Wed, 06 Oct 2021 06:39:27 -0700 (PDT)
+Date:   Wed, 6 Oct 2021 15:39:09 +0200
+From:   Andrea Parri <parri.andrea@gmail.com>
+To:     Michael Kelley <mikelley@microsoft.com>
+Cc:     Long Li <longli@microsoft.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        KY Srinivasan <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: Re: [PATCH] scsi: storvsc: Fix validation for unsolicited incoming
+ packets
+Message-ID: <20211006133909.GA22926@anparri>
+References: <20211005114103.3411-1-parri.andrea@gmail.com>
+ <MWHPR21MB15935C9A0C33A858AFF1A825D7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
+ <20211005181421.GA1714@anparri>
+ <MWHPR21MB15933E46ABC6DC0AA5DD0A5AD7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20210929163600.52141-5-ebiggers@kernel.org>
+In-Reply-To: <MWHPR21MB15933E46ABC6DC0AA5DD0A5AD7AF9@MWHPR21MB1593.namprd21.prod.outlook.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Sep 29 2021 at 12:36P -0400,
-Eric Biggers <ebiggers@kernel.org> wrote:
-
-> From: Eric Biggers <ebiggers@google.com>
+> > > I know you have determined experimentally that Hyper-V sends
+> > > unsolicited packets with the above length, so the idea is to validate
+> > > that the guest actually gets packets at least that big.  But I wonder if
+> > > we should think about this slightly differently.
+> > >
+> > > The goal is for the storvsc driver to protect itself against bad or
+> > > malicious messages from Hyper-V.  For the unsolicited messages, the
+> > > only field that this storvsc driver needs to access is the
+> > > vstor_packet->operation field.
+> > 
+> > Eh, this is one piece of information I was looking for...  ;-)
 > 
-> Rework most of inline-encryption.rst to be easier to follow, to correct
-> some information, to add some important details and remove some
-> unimportant details, and to take into account the renaming from
-> blk_keyslot_manager to blk_crypto_profile.
+> I'm just looking at the code in storvsc_on_receive().   storvsc_on_receive()
+> itself looks at the "operation" field, but for the REMOVE_DEVICE and
+> ENUMERATE_BUS operations, you can see that the rest of the vstor_packet
+> is ignored and is not passed to any called functions.
 > 
-> Signed-off-by: Eric Biggers <ebiggers@google.com>
+> > 
+> > 
+> > >So an alternate approach is to set
+> > > the minimum length as small as possible while ensuring that field is valid.
+> > 
+> > The fact is, I'm not sure how to do it for unsolicited messages.
+> > Current code ensures/checks != COMPLETE_IO.  Your comment above
+> > and code audit suggest that we should add a check != FCHBA_DATA.
+> > I saw ENUMERATE_BUS messages, code only using their "operation".
+> 
+> I'm not completely sure about FCHBA_DATA.  That message does not
+> seem to be unsolicited, as the guest sends out a message of that type in 
+> storvsc_channel_init() using storvsc_execute_vstor_op().  So any received
+> messages of that type are presumably in response to the guest request,
+> and will get handled via the test for rqst_id == VMBUS_RQST_INIT.  Long 
+> Li could probably confirm.  So if Hyper-V did send a FCHBA_DATA
+> packet with rqst_id of 0, it would seem to be appropriate to reject
+> it.
+> 
+> > 
+> > And, again, this is only based on current code/observations...
+> > 
+> > So, maybe you mean something like this (on top of this patch)?
+> 
+> Yes, with a comment to explain what's going on. :-)
 
-Reviewed-by: Mike Snitzer <snitzer@redhat.com>
+My (current) best guess is here:
 
+  https://lkml.kernel.org/r/20211006132026.4089-1-parri.andrea@gmail.com
+
+Thanks,
+  Andrea
