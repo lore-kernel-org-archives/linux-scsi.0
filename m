@@ -2,102 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 741F3C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 19:19:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA89EC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 21:55:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A3DD61186
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 19:19:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2451611C6
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 21:55:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239176AbhJFTVn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Oct 2021 15:21:43 -0400
-Received: from mail.kernel.org ([198.145.29.99]:57260 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229926AbhJFTVm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 6 Oct 2021 15:21:42 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EB8EF60E08;
-        Wed,  6 Oct 2021 19:19:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633547990;
-        bh=jtxsG2SwawdYzU6il/sfJ0ENU64MGlMKlZB80iW6roU=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=VyaoB/EI+7jjXddZ4SHcH6AV6AtIFbAae+qixWQ/hOt749shXxxaEoJabGr3+q+DT
-         etE0sPLuPKY10HhidWeRDgwi2cx31o/deCcjst00Ye/Seed7zKwydYQQmxoMWT9dik
-         kPf+5C9cRwN4bF4fp+G0WSFVWNMD3V7YLgKT4J3HlldRzG23vvRq9G4Gb5x3cZO7F+
-         gYP3hH7QxxiO4O9LRn6bcBJjYCAhwqMYsAIAJ6UK2aEfUSGkKYEtkJvtIgB//bf0ie
-         Y+cq/1c9scMiyPP5tVqRfwOO/w+Q9EmqNR3VawZiRkXmj1t/zz4OMLFYn1D0fqn1X0
-         TQWW2OGrDRQ1g==
-Date:   Wed, 6 Oct 2021 12:19:48 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org,
-        Satya Tangirala <satyaprateek2357@gmail.com>,
-        dm-devel@redhat.com, linux-mmc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Ulf Hansson <ulf.hansson@linaro.org>
-Subject: Re: [PATCH v4 3/4] blk-crypto: rename blk_keyslot_manager to
- blk_crypto_profile
-Message-ID: <YV321JFYV/u7pbsO@gmail.com>
-References: <20210929163600.52141-1-ebiggers@kernel.org>
- <20210929163600.52141-4-ebiggers@kernel.org>
- <YV2kdHeS4GTXUdpi@redhat.com>
+        id S230285AbhJFV4z (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Oct 2021 17:56:55 -0400
+Received: from mail-pg1-f175.google.com ([209.85.215.175]:34566 "EHLO
+        mail-pg1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229576AbhJFV4z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2021 17:56:55 -0400
+Received: by mail-pg1-f175.google.com with SMTP id 133so3722725pgb.1
+        for <linux-scsi@vger.kernel.org>; Wed, 06 Oct 2021 14:55:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=1VHX4F/LhjD0jCTdgMCcFCxMJkAZlgJ3yiCVI15BXH8=;
+        b=ege5v9AWRp/g1b9YjYWrLgtJ3E8d4hvH4jUTMtqjV2mYmbVuJ2fRo0MddKqwfStf9Q
+         NwtPBxWShSf3dIDDON9IEEwj5PrxsVzebRZBT95Rt+K/9eXYbwZKRWGfnn395LEmOGjg
+         XLByMUDcU8rvVV0R66SQbUN3tBLGPYZ4bvvqG5Oqcoj1wzl3nVbtwD6J7x615Wx3Pbjm
+         Zr6ICr53cTYKZFB1Ad6H6tot9lZ6R3kUJKkgWpDTfWrjODWySXVcKa+fzEtTFrl9Djry
+         MiwThsk2Oiytv7jiyqPH74NOBRd9nOA5/88sRa+8g0JXGlm/MhSAsu+4aBDZGe1i3GFS
+         kjXA==
+X-Gm-Message-State: AOAM531mOOmx4kVaT7wKnzBcA6KN95ElDD4T0H5P5g4/ldvCSlKqDxYk
+        Y60BeNR5wyN8ogeTSN4WNByxUmtT/9c=
+X-Google-Smtp-Source: ABdhPJw8wIimKYC5rCYB/YUWf82LASa0EnTsRnSlbc/j6/+IF67qHCSLRq1OW8WG5fwgDmggcEx5MQ==
+X-Received: by 2002:a63:490d:: with SMTP id w13mr349643pga.481.1633557302103;
+        Wed, 06 Oct 2021 14:55:02 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:7a81:1c54:a610:d139])
+        by smtp.gmail.com with ESMTPSA id x7sm5902586pjl.55.2021.10.06.14.55.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 06 Oct 2021 14:55:01 -0700 (PDT)
+From:   Bart Van Assche <bvanassche@acm.org>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/3] Rework SCSI runtime power management support
+Date:   Wed,  6 Oct 2021 14:54:50 -0700
+Message-Id: <20211006215453.3318929-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.33.0.800.g4c38ced690-goog
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <YV2kdHeS4GTXUdpi@redhat.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 06, 2021 at 09:28:20AM -0400, Mike Snitzer wrote:
-> On Wed, Sep 29 2021 at 12:35P -0400,
-> Eric Biggers <ebiggers@kernel.org> wrote:
-> 
-> > From: Eric Biggers <ebiggers@google.com>
-> > 
-> > blk_keyslot_manager is misnamed because it doesn't necessarily manage
-> > keyslots.  It actually does several different things:
-> > 
-> >   - Contains the crypto capabilities of the device.
-> > 
-> >   - Provides functions to control the inline encryption hardware.
-> >     Originally these were just for programming/evicting keyslots;
-> >     however, new functionality (hardware-wrapped keys) will require new
-> >     functions here which are unrelated to keyslots.  Moreover,
-> >     device-mapper devices already (ab)use "keyslot_evict" to pass key
-> >     eviction requests to their underlying devices even though
-> >     device-mapper devices don't have any keyslots themselves (so it
-> >     really should be "evict_key", not "keyslot_evict").
-> > 
-> >   - Sometimes (but not always!) it manages keyslots.  Originally it
-> >     always did, but device-mapper devices don't have keyslots
-> >     themselves, so they use a "passthrough keyslot manager" which
-> >     doesn't actually manage keyslots.  This hack works, but the
-> >     terminology is unnatural.  Also, some hardware doesn't have keyslots
-> >     and thus also uses a "passthrough keyslot manager" (support for such
-> >     hardware is yet to be upstreamed, but it will happen eventually).
-> > 
-> > Let's stop having keyslot managers which don't actually manage keyslots.
-> > Instead, rename blk_keyslot_manager to blk_crypto_profile.
-> > 
-> > This is a fairly big change, since for consistency it also has to update
-> > keyslot manager-related function names, variable names, and comments --
-> > not just the actual struct name.  However it's still a fairly
-> > straightforward change, as it doesn't change any actual functionality.
-> > 
-> > Acked-by: Ulf Hansson <ulf.hansson@linaro.org> # For MMC
-> > Signed-off-by: Eric Biggers <ebiggers@google.com>
-> 
-> Unfortunate how fiddley this change forced you to get but it looks
-> like you've done a very solid job of cleaning it all up to be
-> consistent.
-> 
-> Reviewed-by: Mike Snitzer <snitzer@redhat.com>
-> 
+Hi Martin,
 
-Thanks for the reviews!  Yes, we should have done it this way originally which
-would have saved some pain, but better late than never.
+For the UFS driver it is undesired that the SCSI power management core
+activates runtime suspended devices during system resume. This patch
+series leaves SCSI devices runtime suspended during system resume if
+these were runtime suspended before the system was suspended. Please
+consider this patch series for Linux kernel v5.16.
 
-Jens, anything else you're waiting for before applying this series?  Note that
-I'm not sure that Satya will leave any feedback, given that he's no longer
-working for Google, so any kernel work he does is in his free time.
+Thanks,
 
-- Eric
+Bart.
+
+Bart Van Assche (3):
+  scsi: pm: Rely on the device driver core for async power management
+  scsi: sd: Rename sd_resume() into sd_resume_system()
+  scsi: pm: Only runtime resume if necessary
+
+ drivers/scsi/hosts.c      |   1 +
+ drivers/scsi/scsi.c       |   8 ---
+ drivers/scsi/scsi_pm.c    | 105 +++++---------------------------------
+ drivers/scsi/scsi_priv.h  |   4 +-
+ drivers/scsi/scsi_scan.c  |  17 ++++++
+ drivers/scsi/scsi_sysfs.c |   1 +
+ drivers/scsi/sd.c         |  18 +++++--
+ 7 files changed, 46 insertions(+), 108 deletions(-)
+
