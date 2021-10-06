@@ -2,156 +2,156 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D8F2C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 06:35:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2819FC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 07:04:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 198A561248
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 06:35:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 068186112D
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 07:04:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237328AbhJFGhp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Oct 2021 02:37:45 -0400
-Received: from mga05.intel.com ([192.55.52.43]:30189 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237395AbhJFGhm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 6 Oct 2021 02:37:42 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10128"; a="312133916"
-X-IronPort-AV: E=Sophos;i="5.85,350,1624345200"; 
-   d="scan'208";a="312133916"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2021 23:35:49 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.85,350,1624345200"; 
-   d="scan'208";a="589652804"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
-  by orsmga004.jf.intel.com with ESMTP; 05 Oct 2021 23:35:45 -0700
-Subject: Re: [PATCH V7 1/2] scsi: ufs: Fix runtime PM dependencies getting
- broken
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
-References: <20211005134445.234671-1-adrian.hunter@intel.com>
- <20211005134445.234671-2-adrian.hunter@intel.com>
- <dcb1c627-1431-8437-7a02-e5d74a3f3b70@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <9ad82ef9-30ea-1f01-db65-931d6ec14693@intel.com>
-Date:   Wed, 6 Oct 2021 09:35:44 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S237292AbhJFHGc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Oct 2021 03:06:32 -0400
+Received: from mail-dm6nam12on2115.outbound.protection.outlook.com ([40.107.243.115]:34433
+        "EHLO NAM12-DM6-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S230227AbhJFHGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 6 Oct 2021 03:06:31 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=b0VXOXEX5nm1c4KF93eJNpD0B4HqW0a0qgc0OnBhDGr6y2E3nWjvRg0+kPTQt1Pv+e0KFKWIubVKyrV7VriWrli7Ph06ST2zHQ2wIduzc8IQawyi5ZOWQOM+Smzy0kgOLnTf88L/hYf9mkFSdAgFSr5dH+6TTIVdygYbvxy4jrJ6zYnImhg0RbytaxrkKVXGuBKpCiLhxv+zNNEK6uguKrHTrEGY490cpROYNm4Q/XksC9vG5D9IdzV8UFY9fg+zzOHtqUrWxs+73WsEj15+H1p9sjlpCwfp2oTP15e/jaqJZ628SLnXqst2qMKvcjyYP9svQqY+uZHHKVp+dyqCFw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=wNgkG0Owpmzxi+ZwZD16lLHp+miIjC0VpSKHOiw4HmM=;
+ b=PJwhmf3i8pBCKyRwGX0PCybz1LBjn9QQ7lc8Dc6E1nm+K6AAwu8EMBbsit6oxZ3u3kDqkohNMd0HX/Z6M+4n9NcuavRLBA+/0I4C3OBxzf37KG0Ms8LpcH7qBpvWlWO2j4Y1zdeIZQ78ICeELMrsP75RDMGP+ZBPpc0kERH9rtpqLf7f7ly0ehz4keSoWcR2bY7SFU/kEVX8s1KSET1mmGsx7WlX7M0UQ59gZFeYLUX7870xL3Pw5U/l/2ms0JFub+IzU9bRM7xSp5bahRetJQmvsjm9hi/EFJzOeXMjrB5oNbFkDoMEbeYwpTtLvT5dC691PyPHPH52Ge6v0VLeyw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microsoft.com; dmarc=pass action=none
+ header.from=microsoft.com; dkim=pass header.d=microsoft.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wNgkG0Owpmzxi+ZwZD16lLHp+miIjC0VpSKHOiw4HmM=;
+ b=DdWUBk+3hXs2x1k1k9FVf4YvANT2ngfIfCmaWrnuW7UQ48TyjQA17CxV584BRd8KnaO/o3ZOXTDYNzxzWahydclK3s1WdqnHeOcRWoXLe1yRxdp3UZvc9J28VWgwz8KDBQex2yWZn+FIQJstpM2ibPCfVqFJwuUuw3DfxcSsa+U=
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microsoft.com;
+Received: from BL0PR2101MB1092.namprd21.prod.outlook.com
+ (2603:10b6:207:37::26) by BL0PR2101MB1747.namprd21.prod.outlook.com
+ (2603:10b6:207:35::23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.2; Wed, 6 Oct
+ 2021 07:04:36 +0000
+Received: from BL0PR2101MB1092.namprd21.prod.outlook.com
+ ([fe80::a5a1:1ba3:ae97:a567]) by BL0PR2101MB1092.namprd21.prod.outlook.com
+ ([fe80::a5a1:1ba3:ae97:a567%7]) with mapi id 15.20.4608.003; Wed, 6 Oct 2021
+ 07:04:36 +0000
+From:   Dexuan Cui <decui@microsoft.com>
+To:     kys@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        haiyangz@microsoft.com, ming.lei@redhat.com, bvanassche@acm.org,
+        john.garry@huawei.com, linux-scsi@vger.kernel.org,
+        linux-hyperv@vger.kernel.org
+Cc:     linux-kernel@vger.kernel.org, Dexuan Cui <decui@microsoft.com>,
+        stable@vger.kernel.org
+Subject: [PATCH] scsi: storvsc: Cap scsi_driver.can_queue to fix a hang issue during boot
+Date:   Wed,  6 Oct 2021 00:03:45 -0700
+Message-Id: <20211006070345.51713-1-decui@microsoft.com>
+X-Mailer: git-send-email 2.17.1
+Reply-To: decui@microsoft.com
+Content-Type: text/plain
+X-ClientProxiedBy: MW4P223CA0012.NAMP223.PROD.OUTLOOK.COM
+ (2603:10b6:303:80::17) To BL0PR2101MB1092.namprd21.prod.outlook.com
+ (2603:10b6:207:37::26)
 MIME-Version: 1.0
-In-Reply-To: <dcb1c627-1431-8437-7a02-e5d74a3f3b70@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+Received: from decui-u1804.corp.microsoft.com (2001:4898:80e8:b:822b:5dff:feb8:fa01) by MW4P223CA0012.NAMP223.PROD.OUTLOOK.COM (2603:10b6:303:80::17) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4566.17 via Frontend Transport; Wed, 6 Oct 2021 07:04:34 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: d21c8a49-26fe-4e43-5c84-08d988978e29
+X-MS-TrafficTypeDiagnostic: BL0PR2101MB1747:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <BL0PR2101MB174733EC14FD4E1B11552096BFB09@BL0PR2101MB1747.namprd21.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:1060;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: sMsVgZyouo/Yt/Fru9+rLOizx3WBB52BJguwfz7+2VhYSvNDxIsymiFwyHLOPh2z8d69ga34xDVrUHWDWXhxqsdToDNrpol7jEA150ORNiBZZudfC46pfmTs5AhNs0prrYfNSoob6DzEWbqrr0/lx7b3nBqzJ4pJCLg7Vs4LqjFUGMzXH3vzU0EQNLWb6a/447GKRrQB912JDF4sRSZYYfJoPW3OHXX+REi5m0EQblZVHu+yjUdzV9vpJB6+GCJ9vNFehoQgzDHMewFVgFmDn9R+InwBVZ2gw85phGiipzCK0MSK0WXt47IvmZneHcpJrzYXX+YZ4zPsEavXcRHHB9z+HahXOQYVh0VARfb3Ko2wAfBPAb/xs7uDKRCadRzWcu9Xg6IcYtyfxwDSLj94Nc/5o3kEtv9pMPLgsdcP2K/WmvJ7n/1EfBqWtJhGjTM2FjDpP1InXHxHbHBBPRkfZ49EOpUsIlhm2777R5q6P8+hrIq3qFq9EasRWY3t0ArjDBhaByML6tgT2IcaykqE7RF7w+Dn++VN21BDwIgvn5NuXSGqknxCOeRPxA9ojWuZOP46yXo7HuVUNvyHlr1C7fRUpZyGrvgGQk94B7MxVsv6q6LLnQ1OyE/ULjIJ8GeTIPtNKeNXq5sjfHf3qfyYBok9A6tYE4FhfouGaSkHzRgGmumtdqyqqVS096Fbw3pI
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR2101MB1092.namprd21.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(5660300002)(8676002)(66556008)(10290500003)(66476007)(66946007)(3450700001)(2616005)(4326008)(316002)(1076003)(38100700002)(7416002)(6666004)(186003)(36756003)(2906002)(8936002)(508600001)(82960400001)(6486002)(52116002)(86362001)(921005)(7696005)(83380400001)(82950400001);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?iglu+84bRQT6U/V6LrxkVwhOCKthgFsWyIj59e1/zek7GjDHcXTVyUZ6MuBM?=
+ =?us-ascii?Q?5N0pqyfO4Sm5ZKAaHngpu5FWScfWG9qpqaJbJSZzMfGG05pcDcND+rQTaJtY?=
+ =?us-ascii?Q?hSP4Y5Nvw3p5t6XfcwjeSF/H0YOP+CTEIRCFMTDVdgvBiqZ3/S9cA5TluRIS?=
+ =?us-ascii?Q?KftS2Oaq3tdmjfx19eUoEU/+DtLyIQ1OQPV6uH3Qgaei/QosMnq2iidrSKTl?=
+ =?us-ascii?Q?f1dK30RZTysaSCoM8lWFg5k5pys4dQvOrjD0QxhavpCR/jTRdues5kt7GgnJ?=
+ =?us-ascii?Q?pofjcryCSyfQIW3FBTnZLGW4rP6J6gqz9f3K022dbfPwTGtbMesA77pxPct9?=
+ =?us-ascii?Q?XdpE50+BfFDz5RCD9VsEPphIqd9fNwtpwbyALkXYBUX3L3vVNlDCPDyP9CIZ?=
+ =?us-ascii?Q?1YOGyI3VX5y1tx2PoXZZBTfwHjDQBZz73GMNPIDPo7O+9zLaAiazFOEoCbpj?=
+ =?us-ascii?Q?ll6QTcNmm7SGvhduUcQx0PokrqvXi/bp/fSYa8b7NA2OCedodcWC+zhFPUav?=
+ =?us-ascii?Q?BKV5r+wlAdFWr8GbRZAoC70pbgiSpErjCYnHu6zRu6l/RPVWU7VbeJaMLyrF?=
+ =?us-ascii?Q?yy0z5xptjyZN6ImlcrhsCCvcEJpcRZxhgDUBw6NOPWR1jrMVDOXMoXjufwfe?=
+ =?us-ascii?Q?/eItT93cbXKnRuhluI2oW6v4qBp5vWrJgk/9S0uR8pTuYEYlKnnrjHFv6xhK?=
+ =?us-ascii?Q?eVJcid70F2N+iEZ8VPh5I8iJWhXLoWTEqNYGpDGXuz+4iNqH4qAY1kVXzb7x?=
+ =?us-ascii?Q?obEhz2FmFOok08JDvOWTZJmTJ0TohLhGSuDRxJadnrwpWQL6EkmHvVhgAOep?=
+ =?us-ascii?Q?fR4JgGPyoQzo2b86ovIIee0cN0kt+ULIK2/2kNVhDc2GpP2SPkMoX76hyvhc?=
+ =?us-ascii?Q?cxk+0Hht6bBd7XIj4BpAV7tjSUeztgHfO6LY9dS0td0l/biUpYV74Y0vo3+a?=
+ =?us-ascii?Q?EJyqEtsKCRiBKK5dLdDFy+aPmIPQDQgZxPtXudDyy6H+8sXjvvr+jps050Ts?=
+ =?us-ascii?Q?n4sHAJ4SS0xa2Vn465wnA+AtcKtiW4uMim+Yl/XH7BuUMw15wnsRa6XhEYBo?=
+ =?us-ascii?Q?mKKUD+3q9B/oAY5KOKvx47SkvdO3XVinwTxfoSdHeWC6kdXIi/1XuXQUJ4LM?=
+ =?us-ascii?Q?wdL1lD5kwMI9Eh7+VWLstSmqRgUh/NRLhNcwOE0ZZHfLTj8Z4O9QmIhhr2A6?=
+ =?us-ascii?Q?v6NAH3gASzUDWeJnma5lGfepVQybkFLJFhmQX0s27fbq2hkGdoVQ4aBTQjhu?=
+ =?us-ascii?Q?WMb8AHhMU6HFYQtNPYf8hDhXWGImmdx2mQkkOUDvE/cIZmobw05kXeZlp5CV?=
+ =?us-ascii?Q?HPQ66dm/CoB0EZpCoofL/23VUbBJNSsjHtessIPpH1/dhp7f+H+X+rn4W6+g?=
+ =?us-ascii?Q?xtxYgg3k25pkeGz6Sx2ihr6iF3eP?=
+X-OriginatorOrg: microsoft.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: d21c8a49-26fe-4e43-5c84-08d988978e29
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR2101MB1092.namprd21.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Oct 2021 07:04:36.2366
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 72f988bf-86f1-41af-91ab-2d7cd011db47
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: kpBuQAXiBUvIyPk+V7cRPqGiY8sy/5OGRngOvDuXTB3mG3O6yVcYd+mj1RtxmQla2b4x2Tl9v+B7wQGj6sHFeQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR2101MB1747
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 05/10/2021 21:52, Bart Van Assche wrote:
-> On 10/5/21 6:44 AM, Adrian Hunter wrote:
->> UFS SCSI devices make use of device links to establish PM dependencies.
->> However, SCSI PM will force devices' runtime PM state to be active during
->> system resume. That can break runtime PM dependencies for UFS devices.
->> Fix by adding a flag 'preserve_rpm' to let UFS SCSI devices opt-out of
->> the unwanted behaviour.
->>
->> Fixes: b294ff3e34490f ("scsi: ufs: core: Enable power management for wlun")
->> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
->> ---
->>   drivers/scsi/scsi_pm.c     | 16 +++++++++++-----
->>   drivers/scsi/ufs/ufshcd.c  |  1 +
->>   include/scsi/scsi_device.h |  1 +
->>   3 files changed, 13 insertions(+), 5 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
->> index 3717eea37ecb..0557c1ad304d 100644
->> --- a/drivers/scsi/scsi_pm.c
->> +++ b/drivers/scsi/scsi_pm.c
->> @@ -73,13 +73,22 @@ static int scsi_dev_type_resume(struct device *dev,
->>           int (*cb)(struct device *, const struct dev_pm_ops *))
->>   {
->>       const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->> +    struct scsi_device *sdev = NULL;
->> +    bool preserve_rpm = false;
->>       int err = 0;
->>   +    if (scsi_is_sdev_device(dev)) {
->> +        sdev = to_scsi_device(dev);
->> +        preserve_rpm = sdev->preserve_rpm;
->> +        if (preserve_rpm && pm_runtime_suspended(dev))
->> +            return 0;
->> +    }
->> +
->>       err = cb(dev, pm);
->>       scsi_device_resume(to_scsi_device(dev));
->>       dev_dbg(dev, "scsi resume: %d\n", err);
->>   -    if (err == 0) {
->> +    if (err == 0 && !preserve_rpm) {
->>           pm_runtime_disable(dev);
->>           err = pm_runtime_set_active(dev);
->>           pm_runtime_enable(dev);
->> @@ -91,11 +100,8 @@ static int scsi_dev_type_resume(struct device *dev,
->>            *
->>            * The resume hook will correct runtime PM status of the disk.
->>            */
->> -        if (!err && scsi_is_sdev_device(dev)) {
->> -            struct scsi_device *sdev = to_scsi_device(dev);
->> -
->> +        if (!err && sdev)
->>               blk_set_runtime_active(sdev->request_queue);
->> -        }
->>       }
->>         return err;
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index d91a405fd181..b70f566f7f8a 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -5016,6 +5016,7 @@ static int ufshcd_slave_configure(struct scsi_device *sdev)
->>           pm_runtime_get_noresume(&sdev->sdev_gendev);
->>       else if (ufshcd_is_rpm_autosuspend_allowed(hba))
->>           sdev->rpm_autosuspend = 1;
->> +    sdev->preserve_rpm = 1;
->>         ufshcd_crypto_setup_rq_keyslot_manager(hba, q);
->>   diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
->> index 09a17f6e93a7..47eb30a6b7b2 100644
->> --- a/include/scsi/scsi_device.h
->> +++ b/include/scsi/scsi_device.h
->> @@ -197,6 +197,7 @@ struct scsi_device {
->>       unsigned no_read_disc_info:1;    /* Avoid READ_DISC_INFO cmds */
->>       unsigned no_read_capacity_16:1; /* Avoid READ_CAPACITY_16 cmds */
->>       unsigned try_rc_10_first:1;    /* Try READ_CAPACACITY_10 first */
->> +    unsigned preserve_rpm:1;    /* Preserve runtime PM */
->>       unsigned security_supported:1;    /* Supports Security Protocols */
->>       unsigned is_visible:1;    /* is the device visible in sysfs */
->>       unsigned wce_default_on:1;    /* Cache is ON by default */
-> 
-> So a new flag is added in struct scsi_device and that flag is only used by
-> the UFS driver? I'm less than enthusiast about this patch. I think that the
-> SCSI core needs to be modified such that system suspend and resume is
-> separated from runtime suspend and resume.
+After commit ea2f0f77538c, a 416-CPU VM running on Hyper-V hangs during
+boot because scsi_add_host_with_dma() sets shost->cmd_per_lun to a
+negative number:
+	'max_outstanding_req_per_channel' is 352,
+	'max_sub_channels' is (416 - 1) / 4 = 103, so in storvsc_probe(),
+scsi_driver.can_queue = 352 * (103 + 1) * (100 - 10) / 100 = 32947, which
+is bigger than SHRT_MAX (i.e. 32767).
 
-That is a tidy-up, whereas this patch is a fix needed also in stable
-kernels.
+Fix the hang issue by capping scsi_driver.can_queue.
 
-> The following code:
-> 
->     if (err == 0) {
->         pm_runtime_disable(dev);
->         err = pm_runtime_set_active(dev);
->         pm_runtime_enable(dev);
->         [ ... ]
->     }
-> 
-> has been introduced in scsi_dev_type_resume() by commit 3c31b52f96f7
-> ("scsi: async sd resume"). I'm in favor of removing that code.
+Add the below Fixed tag though ea2f0f77538c itself is good.
 
-Presumably that code is necessary.  Trying to remove it really seems a
-separate issue.
+Fixes: ea2f0f77538c ("scsi: core: Cap scsi_host cmd_per_lun at can_queue")
+Cc: stable@vger.kernel.org
+Signed-off-by: Dexuan Cui <decui@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ebbbc1299c62..ba374908aec2 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1976,6 +1976,16 @@ static int storvsc_probe(struct hv_device *device,
+ 				(max_sub_channels + 1) *
+ 				(100 - ring_avail_percent_lowater) / 100;
+ 
++	/*
++	 * v5.14 (see commit ea2f0f77538c) implicitly requires that
++	 * scsi_driver.can_queue should not exceed SHRT_MAX, otherwise
++	 * scsi_add_host_with_dma() sets shost->cmd_per_lun to a negative
++	 * number (note: the type of the "cmd_per_lun" field is "short"), and
++	 * the system may hang during early boot.
++	 */
++	if (scsi_driver.can_queue > SHRT_MAX)
++		scsi_driver.can_queue = SHRT_MAX;
++
+ 	host = scsi_host_alloc(&scsi_driver,
+ 			       sizeof(struct hv_host_device));
+ 	if (!host)
+-- 
+2.17.1
+
