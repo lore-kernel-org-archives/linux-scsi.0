@@ -2,95 +2,153 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 023B8C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 13:17:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8BF67C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 13:20:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CF864610C7
-	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 13:17:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6CBB861131
+	for <linux-scsi@archiver.kernel.org>; Wed,  6 Oct 2021 13:20:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238569AbhJFNTq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 6 Oct 2021 09:19:46 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:41462 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231532AbhJFNTq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2021 09:19:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1633526273;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=+zbCfVnHe3hEOXNTzkBOuBqFXs5HnnXgmi37Lbo5cf0=;
-        b=YMqDlv12XO2LnjUUBU7lDeQni7BKIxaMyHTQqVWPWXft4KFCfOMSqL12RVnRMouNTETfmf
-        jrWOdwRjrRby3Jy0hPeDmK14VgYTF7la6A9qFIuKrtNXAXeMna7parq+IOeYWqalHw6Byz
-        QcrNR6gRllLs4ajMGeE0CkPiRWDi6sI=
-Received: from mail-qv1-f69.google.com (mail-qv1-f69.google.com
- [209.85.219.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-306-f1hxtG3lOm20wWovEt4RtA-1; Wed, 06 Oct 2021 09:17:51 -0400
-X-MC-Unique: f1hxtG3lOm20wWovEt4RtA-1
-Received: by mail-qv1-f69.google.com with SMTP id ey7-20020a0562140b6700b00382cf3eb480so2619281qvb.22
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Oct 2021 06:17:51 -0700 (PDT)
+        id S231585AbhJFNWo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 6 Oct 2021 09:22:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49734 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231384AbhJFNWn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Oct 2021 09:22:43 -0400
+Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 27624C061749;
+        Wed,  6 Oct 2021 06:20:51 -0700 (PDT)
+Received: by mail-ed1-x529.google.com with SMTP id x7so9642859edd.6;
+        Wed, 06 Oct 2021 06:20:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=vOkTBrJ8rFY8f9IVX0lA4SgMpHXgic0fky3oKRvqHqk=;
+        b=mUVLyEYqh9+b5aOkFH+/WeECuuGtmvZkHphEI2tlT6gRdiywDz1xqhzW5W7E9xEWmv
+         5NReq7Fj7EFtSeVWE0nul7Rw8VG9wHSHqthUclc6QxgWH7/c4nqnKwC6EYBfwevJm3x6
+         AKqs22eCqVb6XPalNajSXItmeTULrJhkyVuwPbTqvtXPNoIhYHQWpd1CFYz9UdVCCk2Q
+         ytp2YvK0205TSd7/vQCR+pNZDHa1JjGHE+kR6zg6HHXvoV/xCye0xPVMI+b8r8O5L6A2
+         IPvdT2aEp1yN9eOkaJkLT/ETKTvmqHncvK6ARonCHBgHCzwBe465PvemsnfNGKWAMw2f
+         O+jQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=+zbCfVnHe3hEOXNTzkBOuBqFXs5HnnXgmi37Lbo5cf0=;
-        b=aWB9geMxcg3dow5zEEaE54PjbIKRcl7ZfrfZoAkDoMMPmKpUohUCFDKTm/t7lslgdf
-         4zaUrEYUF5EPRtWNctAocLuf0LicK+Byole7s2rvwElFA/gF4i16LJU3Vogt/PxBgsRL
-         iLNI6DxJ6YE1FaqatOnli6/S9pHgIuOU7+6q1HxjlYUwHhKxyoFECqixCkzKjDlHxJdw
-         gbJ0cD57pXZhssMlLHhbaxAJPIlxtjW6guAGdN2p3LeMmX5GKI6dAiMB0P5tzWyRiF9w
-         Shcl+H/gV1BJr3uhjWdpcctYxYu28FAFdBUums+GiloJu8F0foZleoq3R8gO35BkHXAa
-         V7OA==
-X-Gm-Message-State: AOAM533LJueJq5PDNd0ZnWPuvpT+wmf1FEicHguFSFG+m7AuoHt7eLf1
-        Jhw0Skjs6eubQhyfdBSDAj5EBm2rXhYG5JTglQc/iW6J+UW67k7qPYB6ED/39amQU6z5k0SvGgo
-        Crq1Pp+yaIkpLIWRbvrFc
-X-Received: by 2002:a05:622a:180f:: with SMTP id t15mr25944886qtc.314.1633526271466;
-        Wed, 06 Oct 2021 06:17:51 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxJ/dfz8opFCb2v5qUfLE0aMcIttTRFyUR16Rj5nDfAcBalXCGeyEeOx/El3NjgM1QYp0hnaw==
-X-Received: by 2002:a05:622a:180f:: with SMTP id t15mr25944862qtc.314.1633526271274;
-        Wed, 06 Oct 2021 06:17:51 -0700 (PDT)
-Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
-        by smtp.gmail.com with ESMTPSA id r17sm12574405qtx.17.2021.10.06.06.17.50
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=vOkTBrJ8rFY8f9IVX0lA4SgMpHXgic0fky3oKRvqHqk=;
+        b=J+uydIRkmafsK9OhDSSx4VfZYD8PPpslFu7/SSpXY9ZkEZ6MMmcmI1o+cp9OJQ6cXz
+         1PpYAMIs5NeH7DgUmVww2rigYNqzyQBi5gMbeMHuh56ng4+se5c8kxthSDoprjwiUjbW
+         FeZohP8S4ZQcuPgjg4obuf0TMARkXduGYRzqzd2v13XeP0jzCq81ZngxpWBvW/SEu39s
+         H3t4bL8vdC/E1o7tHdbP9gCd7PWBNyBedTHXwlCzXitMezRXQtjUQQTyeb64v8iY9xzd
+         OegayFQQDfWnvIXA3H2TTaBYLnX+pc9xFwa5kOTe+QpLk7g++w6gFgdRZSjzLZaAMhQg
+         WoWQ==
+X-Gm-Message-State: AOAM532Yo8AAyyvWTlJ6HP2emuiPK9xg4MEMDG5BLxD5mGleTGQVUWB1
+        hte0F/XHSljQtQsvIH9NTh/3omjRcRXKMP7L
+X-Google-Smtp-Source: ABdhPJzRURCze2Xv2ON9Gus1R3C8IKipkTMAWw0JtJHFsMZNdEZtD9geIVbN6L+cKhA7GEBDjl2Yfw==
+X-Received: by 2002:a17:906:c317:: with SMTP id s23mr29050930ejz.127.1633526441458;
+        Wed, 06 Oct 2021 06:20:41 -0700 (PDT)
+Received: from anparri.mshome.net (host-79-49-65-228.retail.telecomitalia.it. [79.49.65.228])
+        by smtp.gmail.com with ESMTPSA id e7sm10952836edk.3.2021.10.06.06.20.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 06 Oct 2021 06:17:50 -0700 (PDT)
-Date:   Wed, 6 Oct 2021 09:17:50 -0400
-From:   Mike Snitzer <snitzer@redhat.com>
-To:     axboe@kernel.dk, martin.petersen@oracle.com, jejb@linux.ibm.com,
-        sagi@grimberg.me, adrian.hunter@intel.com, beanhuo@micron.com,
-        ulf.hansson@linaro.org, avri.altman@wdc.com, swboyd@chromium.org,
-        agk@redhat.com, josef@toxicpanda.com
-Cc:     hch@infradead.org, hare@suse.de, bvanassche@acm.org,
-        ming.lei@redhat.com, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-mmc@vger.kernel.org,
-        dm-devel@redhat.com, nbd@other.debian.org,
-        linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 4/6] dm: add add_disk() error handling
-Message-ID: <YV2h/iA79JhMJt07@redhat.com>
-References: <20210927215958.1062466-1-mcgrof@kernel.org>
- <20210927215958.1062466-5-mcgrof@kernel.org>
+        Wed, 06 Oct 2021 06:20:40 -0700 (PDT)
+From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
+To:     linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: [PATCH v2] scsi: storvsc: Fix validation for unsolicited incoming packets
+Date:   Wed,  6 Oct 2021 15:20:26 +0200
+Message-Id: <20211006132026.4089-1-parri.andrea@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210927215958.1062466-5-mcgrof@kernel.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Sep 27 2021 at  5:59P -0400,
-Luis Chamberlain <mcgrof@kernel.org> wrote:
+The validation on the length of incoming packets performed in
+storvsc_on_channel_callback() does not apply to unsolicited
+packets with ID of 0 sent by Hyper-V.  Adjust the validation
+for such unsolicited packets.
 
-> We never checked for errors on add_disk() as this function
-> returned void. Now that this is fixed, use the shiny new
-> error handling.
-> 
-> There are two calls to dm_setup_md_queue() which can fail then,
-> one on dm_early_create() and we can easily see that the error path
-> there calls dm_destroy in the error path. The other use case is on
-> the ioctl table_load case. If that fails userspace needs to call
-> the DM_DEV_REMOVE_CMD to cleanup the state - similar to any other
-> failure.
-> 
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
-> Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+Fixes: 91b1b640b834b2 ("scsi: storvsc: Validate length of incoming packet in storvsc_on_channel_callback()")
+Reported-by: Dexuan Cui <decui@microsoft.com>
+Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+---
+Changes since v1[1]:
+  - Use sizeof(enum vstor_packet_operation) instead of 48 (Michael Kelley)
+  - Filter out FCHBA_DATA packets (Michael Kelley)
 
-Reviewed-by: Mike Snitzer <snitzer@redhat.com>
+Changes since RFC[2]:
+  - Merge length checks (Haiyang Zhang)
+
+[1] https://lkml.kernel.org/r/20211005114103.3411-1-parri.andrea@gmail.com
+[2] https://lkml.kernel.org/r/20210928163732.5908-1-parri.andrea@gmail.com
+
+ drivers/scsi/storvsc_drv.c | 34 +++++++++++++++++++++++++---------
+ 1 file changed, 25 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ebbbc1299c625..4869ebad7ec97 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1285,11 +1285,15 @@ static void storvsc_on_channel_callback(void *context)
+ 	foreach_vmbus_pkt(desc, channel) {
+ 		struct vstor_packet *packet = hv_pkt_data(desc);
+ 		struct storvsc_cmd_request *request = NULL;
++		u32 pktlen = hv_pkt_datalen(desc);
+ 		u64 rqst_id = desc->trans_id;
++		u32 minlen = rqst_id ? sizeof(struct vstor_packet) -
++			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
+ 
+-		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) -
+-				stor_device->vmscsi_size_delta) {
+-			dev_err(&device->device, "Invalid packet len\n");
++		if (pktlen < minlen) {
++			dev_err(&device->device,
++				"Invalid pkt: id=%llu, len=%u, minlen=%u\n",
++				rqst_id, pktlen, minlen);
+ 			continue;
+ 		}
+ 
+@@ -1302,13 +1306,25 @@ static void storvsc_on_channel_callback(void *context)
+ 			if (rqst_id == 0) {
+ 				/*
+ 				 * storvsc_on_receive() looks at the vstor_packet in the message
+-				 * from the ring buffer.  If the operation in the vstor_packet is
+-				 * COMPLETE_IO, then we call storvsc_on_io_completion(), and
+-				 * dereference the guest memory address.  Make sure we don't call
+-				 * storvsc_on_io_completion() with a guest memory address that is
+-				 * zero if Hyper-V were to construct and send such a bogus packet.
++				 * from the ring buffer.
++				 *
++				 * - If the operation in the vstor_packet is COMPLETE_IO, then
++				 *   we call storvsc_on_io_completion(), and dereference the
++				 *   guest memory address.  Make sure we don't call
++				 *   storvsc_on_io_completion() with a guest memory address
++				 *   that is zero if Hyper-V were to construct and send such
++				 *   a bogus packet.
++				 *
++				 * - If the operation in the vstor_packet is FCHBA_DATA, then
++				 *   we call cache_wwn(), and access the data payload area of
++				 *   the packet (wwn_packet); however, there is no guarantee
++				 *   that the packet is big enough to contain such area.
++				 *   Future-proof the code by rejecting such a bogus packet.
++				 *
++				 * XXX.  Filter out all "invalid" operations.
+ 				 */
+-				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO) {
++				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO ||
++				    packet->operation == VSTOR_OPERATION_FCHBA_DATA) {
+ 					dev_err(&device->device, "Invalid packet with ID of 0\n");
+ 					continue;
+ 				}
+-- 
+2.25.1
 
