@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45135C43217
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE46FC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F57A60E9B
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D365B6103B
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241736AbhJGUbs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S241436AbhJGUbs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 7 Oct 2021 16:31:48 -0400
-Received: from mail-pg1-f169.google.com ([209.85.215.169]:46732 "EHLO
-        mail-pg1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241670AbhJGUbr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:31:47 -0400
-Received: by mail-pg1-f169.google.com with SMTP id m21so888112pgu.13
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:29:53 -0700 (PDT)
+Received: from mail-pl1-f169.google.com ([209.85.214.169]:42844 "EHLO
+        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233328AbhJGUbq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:31:46 -0400
+Received: by mail-pl1-f169.google.com with SMTP id l6so4646550plh.9
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:29:52 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=qbZbc9f4j8TXb5hX7TExS4uqebNwB8amX4dndndB4zE=;
-        b=FIukZxFFcZL6bqTvLMIAoAzd0wpFhcaaONfrGVO0iXePjDrqPnGiqC3RrPnfH37Q1f
-         wUa93WlNB/QG3CSLA3n/K1PpV60YbXGAVKpgW3bhHOPzwUzm+RnSjzJY9RyTd+bSdksN
-         EntYp/aiE2ZhCs8gx5azY6bPgDfBa2uN4CiLzXTAZTivPsPqegaU7syqz8O13TX9kISA
-         aZOVSE3lROjmG6dxKiufsEaUk7PWzbF5Sh0IqOOL5DJF6vn+obCIgNqvzFk0ZRgRAYI8
-         5Ikz/yPWwLwqArLu5s8gcY5Gkw9xihLREAfR7CNFxj2gXUbqgSKSsXSNFWfkFwRk00Np
-         DElQ==
-X-Gm-Message-State: AOAM530tot5odVVBe2m6l472dUk9dooUo7TC9FmbtEsxTEnDOPJNWPCJ
-        c9pRRmWOlWGnbbnuvRwkenvrsj/BfZg=
-X-Google-Smtp-Source: ABdhPJz6QOABlA/6OZHUZee7HmRhkT8lb900zgZHs9xZvxUC9CRSZMy/4IZYIY5y+nQq2qyGXV2wbg==
-X-Received: by 2002:a05:6a00:2d0:b0:446:d18c:9aac with SMTP id b16-20020a056a0002d000b00446d18c9aacmr6523363pft.16.1633638593068;
-        Thu, 07 Oct 2021 13:29:53 -0700 (PDT)
+        bh=FTB59pMPuQhJHl5BS28nOuJXEUIlavD+Yi8w4LNUtqk=;
+        b=HHwUo9aczwYaiwKcoYfvC7jTd/EnnAqM0ZK/WQvuEOqed8H88w1rNWWkbk+SH09iv6
+         Fst0mG1ObdCemZsnRq7VD/fUHTdjiyGwXVKXtIXL45Y/Z8+KWHD+6hvEqzeseMJ6MViF
+         Zmf8fpq2JlnP219PFuaMVt5s9ODN8etQu0923fn4De42pD8U3XYDHUy0AUtPx77DSK5l
+         +lc7hJ0dlCe6Odf8G8WZ4A+hbe/huL/YAFty1JkE/llD17xUrX5s1WzpWUm+PjPDH5NU
+         VZXHcLQO6NgMhdiConUpreeeW1ydn+i/fdEy2NGbkbQtSyF0wun+DpkXBJbVS7/FCrje
+         0Tvw==
+X-Gm-Message-State: AOAM533WxjzieWMY/bdm6b9FBTf8j+R5EqpN2lGvW8U5aJAaTP2A1UgF
+        ddWdZ84wbFHgQeYeaa5wLq8=
+X-Google-Smtp-Source: ABdhPJyOqGv76nqxHdb7EtnefoAP8hg5KJ8zAKj9ePXlc2+WFYlaRx7aqBdESEgDiPuIBR7uUSP+bw==
+X-Received: by 2002:a17:903:18d:b0:13e:f1ef:d80c with SMTP id z13-20020a170903018d00b0013ef1efd80cmr5895312plg.63.1633638591655;
+        Thu, 07 Oct 2021 13:29:51 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.29.51
+        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.29.50
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 13:29:52 -0700 (PDT)
+        Thu, 07 Oct 2021 13:29:51 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Finn Thain <fthain@linux-m68k.org>,
-        Michael Schmitz <schmitzmic@gmail.com>,
+        Khalid Aziz <khalid@gonehiking.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 13/88] NCR5380: Call scsi_done() directly
-Date:   Thu,  7 Oct 2021 13:28:08 -0700
-Message-Id: <20211007202923.2174984-14-bvanassche@acm.org>
+Subject: [PATCH v3 12/88] BusLogic: Call scsi_done() directly
+Date:   Thu,  7 Oct 2021 13:28:07 -0700
+Message-Id: <20211007202923.2174984-13-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007202923.2174984-1-bvanassche@acm.org>
 References: <20211007202923.2174984-1-bvanassche@acm.org>
@@ -59,64 +58,54 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/NCR5380.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/BusLogic.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index a85589a2a8af..55af3e245a92 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -547,7 +547,7 @@ static void complete_cmd(struct Scsi_Host *instance,
- 		hostdata->sensing = NULL;
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index 40088dcb98cd..7287a9081684 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -2624,7 +2624,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 					command->reset_chain;
+ 				command->reset_chain = NULL;
+ 				command->result = DID_RESET << 16;
+-				command->scsi_done(command);
++				scsi_done(command);
+ 				command = nxt_cmd;
+ 			}
+ #endif
+@@ -2641,7 +2641,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 					blogic_dealloc_ccb(ccb, 1);
+ 					adapter->active_cmds[tgt_id]--;
+ 					command->result = DID_RESET << 16;
+-					command->scsi_done(command);
++					scsi_done(command);
+ 				}
+ 			adapter->bdr_pend[tgt_id] = NULL;
+ 		} else {
+@@ -2713,7 +2713,7 @@ static void blogic_process_ccbs(struct blogic_adapter *adapter)
+ 			/*
+ 			   Call the SCSI Command Completion Routine.
+ 			 */
+-			command->scsi_done(command);
++			scsi_done(command);
+ 		}
  	}
- 
--	cmd->scsi_done(cmd);
-+	scsi_done(cmd);
- }
- 
- /**
-@@ -573,7 +573,7 @@ static int NCR5380_queue_command(struct Scsi_Host *instance,
- 	case WRITE_10:
- 		shost_printk(KERN_DEBUG, instance, "WRITE attempted with NDEBUG_NO_WRITE set\n");
- 		cmd->result = (DID_ERROR << 16);
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 		return 0;
+ 	adapter->processing_ccbs = false;
+@@ -3038,7 +3038,6 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 		return SCSI_MLQUEUE_HOST_BUSY;
  	}
- #endif /* (NDEBUG & NDEBUG_NO_WRITE) */
-@@ -960,7 +960,7 @@ static irqreturn_t __maybe_unused NCR5380_intr(int irq, void *dev_id)
-  * hostdata->connected will be set to cmd.
-  * SELECT interrupt will be disabled.
-  *
-- * If failed (no target) : cmd->scsi_done() will be called, and the
-+ * If failed (no target) : scsi_done() will be called, and the
-  * cmd->result host byte set to DID_BAD_TARGET.
-  */
- 
-@@ -2262,7 +2262,7 @@ static int NCR5380_abort(struct scsi_cmnd *cmd)
- 		dsprintk(NDEBUG_ABORT, instance,
- 		         "abort: removed %p from issue queue\n", cmd);
- 		cmd->result = DID_ABORT << 16;
--		cmd->scsi_done(cmd); /* No tag or busy flag to worry about */
-+		scsi_done(cmd); /* No tag or busy flag to worry about */
- 		goto out;
- 	}
- 
-@@ -2357,7 +2357,7 @@ static void bus_reset_cleanup(struct Scsi_Host *instance)
- 	list_for_each_entry(ncmd, &hostdata->autosense, list) {
- 		struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
- 
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 	}
- 	INIT_LIST_HEAD(&hostdata->autosense);
- 
-@@ -2400,7 +2400,7 @@ static int NCR5380_host_reset(struct scsi_cmnd *cmd)
- 		struct scsi_cmnd *scmd = NCR5380_to_scmd(ncmd);
- 
- 		scmd->result = DID_RESET << 16;
--		scmd->scsi_done(scmd);
-+		scsi_done(scmd);
- 	}
- 	INIT_LIST_HEAD(&hostdata->unissued);
- 
+ 	ccb->sensedata = sense_buf;
+-	command->scsi_done = comp_cb;
+ 	if (blogic_multimaster_type(adapter)) {
+ 		/*
+ 		   Place the CCB in an Outgoing Mailbox. The higher levels
+@@ -3060,7 +3059,7 @@ static int blogic_qcmd_lck(struct scsi_cmnd *command,
+ 				blogic_warn("Still unable to write Outgoing Mailbox - Host Adapter Dead?\n", adapter);
+ 				blogic_dealloc_ccb(ccb, 1);
+ 				command->result = DID_ERROR << 16;
+-				command->scsi_done(command);
++				scsi_done(command);
+ 			}
+ 		}
+ 	} else {
