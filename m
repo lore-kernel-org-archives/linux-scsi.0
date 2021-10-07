@@ -2,51 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 42622C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:20:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CEAD2C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:20:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2C323610A0
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:20:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7E5B61130
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:20:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240950AbhJGVWm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 17:22:42 -0400
-Received: from mail-pj1-f45.google.com ([209.85.216.45]:41685 "EHLO
-        mail-pj1-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238287AbhJGVWm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:22:42 -0400
-Received: by mail-pj1-f45.google.com with SMTP id na16-20020a17090b4c1000b0019f5bb661f9so6250579pjb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:20:48 -0700 (PDT)
+        id S240802AbhJGVWp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 17:22:45 -0400
+Received: from mail-pg1-f177.google.com ([209.85.215.177]:36834 "EHLO
+        mail-pg1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233918AbhJGVWn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:22:43 -0400
+Received: by mail-pg1-f177.google.com with SMTP id 75so1049473pga.3
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:20:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gKfpQzpGvviquOa/5ScRBq5qSCTQ056PvQuLg3pgnrM=;
-        b=MjU+zHR8svJ4TE21pwKDfglkZMrJRcPtgZFLFuLjzsG39XykmYAxieKWlZ4L9ZGDH7
-         QF6kCIP7NEivL/gXJYsX4kEz6Nrbj7PnQt8vX36bPgi4xfB2+fQAnyu64+BCqfNR1xbx
-         R14P96l+M/IdQLV3qsguGbltWjqq2zEsgVIheB3A6qkMD4ddj2TRi6G0Vzm69fVmGL1Y
-         UZrLgSyodPfWCMCDlu6zcqiqmRt1I6F0zyivx6ccN0f/Mn4BWC9c6xF1/wifyOy24uvX
-         YlDNSipiJJW/OSZERLyECtDILKQlkCheJ1tL0W7IAnvCBsg9A740YroYytkzQQyB9hVc
-         7cbA==
-X-Gm-Message-State: AOAM532aoU+LrTDWPQXJPzB1JnnP+Vl1IiDpeN9tZISWI5o2vNPiJ3KL
-        S0UQSU/hh3fsgiHNeMDRTjA=
-X-Google-Smtp-Source: ABdhPJwNHWYn67vX2N6g7BqOf/T0AelGPe32rPsEHY+yoU1UGKBcGZ3IaC49Ya5MEbBWieO+38g+WQ==
-X-Received: by 2002:a17:90a:1942:: with SMTP id 2mr7972682pjh.195.1633641647867;
-        Thu, 07 Oct 2021 14:20:47 -0700 (PDT)
+        bh=Jz9hpG1PmutAFUR3RBwmJgaEHPLDPR3rqvzKdXRocR4=;
+        b=wWfxi/FLyQD7RMJ0A7RXXQeIkpJElVRrJXfWzEwRo67yDekvPvYXCcueyPffW08bBP
+         X46xvTPwSbUvv5Ixh+bMMjtvPOGl5asbkcVKST9F01te+9z4S3iKP/pGbgcdnuw8lmsi
+         MAOsANxkyXlZxUTwqcJjkpqVizLPv9tVETdwEiN/ZTvYFk8RyWDWYwi2std3zDIH/S8j
+         VErvGuqh2zR1oBFFAOfqpUb1/K762GfqofEU1B8ZnyHKTrJXHdijJcFhd28FyLGR+Fxs
+         SzFODXGYVeI4E1R+rg+mb2oGdyz25ie+pqja4GZ66IES6t1mdzeIp2aDfj62q+/TVynL
+         CjYQ==
+X-Gm-Message-State: AOAM532UWrAN35IAzYxtVdwhIwrxsICYuIf2TfhtuJ5JvYo0yE5oERpL
+        747+CE8vV4y4HpHDKyl6fEqjqsgF4PIDZg==
+X-Google-Smtp-Source: ABdhPJweiSrZHYMIp2EbY3uizQpyciYkvO5ANDCIbnNn5X6jw/5HuX0xTYOd8HRdsTYCmJ5zGU0LKA==
+X-Received: by 2002:a65:6648:: with SMTP id z8mr1549979pgv.418.1633641649252;
+        Thu, 07 Oct 2021 14:20:49 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.20.46
+        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.20.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 14:20:47 -0700 (PDT)
+        Thu, 07 Oct 2021 14:20:48 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        David Kershner <david.kershner@unisys.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Song Chen <chensong_2000@189.cn>,
-        "Fabio M. De Francesco" <fmdefrancesco@gmail.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [PATCH v2 44/46] scsi: unisys: Remove the shost_attrs member
-Date:   Thu,  7 Oct 2021 14:18:50 -0700
-Message-Id: <20211007211852.256007-45-bvanassche@acm.org>
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: [PATCH v2 45/46] scsi: usb: Switch to attribute groups
+Date:   Thu,  7 Oct 2021 14:18:51 -0700
+Message-Id: <20211007211852.256007-46-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007211852.256007-1-bvanassche@acm.org>
 References: <20211007211852.256007-1-bvanassche@acm.org>
@@ -56,23 +53,47 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch prepares for removal of the shost_attrs member from struct
-scsi_host_template.
+struct device supports attribute groups directly but does not support
+struct device_attribute directly. Hence switch to attribute groups.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/staging/unisys/visorhba/visorhba_main.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/usb/storage/scsiglue.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/unisys/visorhba/visorhba_main.c b/drivers/staging/unisys/visorhba/visorhba_main.c
-index 41f8a72a2a95..f0c647b97354 100644
---- a/drivers/staging/unisys/visorhba/visorhba_main.c
-+++ b/drivers/staging/unisys/visorhba/visorhba_main.c
-@@ -584,7 +584,6 @@ static struct scsi_host_template visorhba_driver_template = {
- 	.eh_device_reset_handler = visorhba_device_reset_handler,
- 	.eh_bus_reset_handler = visorhba_bus_reset_handler,
- 	.eh_host_reset_handler = visorhba_host_reset_handler,
--	.shost_attrs = NULL,
- #define visorhba_MAX_CMNDS 128
- 	.can_queue = visorhba_MAX_CMNDS,
- 	.sg_tablesize = 64,
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index e5a971b83e3f..123273c52fc8 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -588,11 +588,20 @@ static ssize_t max_sectors_store(struct device *dev, struct device_attribute *at
+ }
+ static DEVICE_ATTR_RW(max_sectors);
+ 
+-static struct device_attribute *sysfs_device_attr_list[] = {
+-	&dev_attr_max_sectors,
++static struct attribute *usb_sdev_attrs[] = {
++	&dev_attr_max_sectors.attr,
+ 	NULL,
+ };
+ 
++static const struct attribute_group usb_sdev_attr_group = {
++	.attrs = usb_sdev_attrs
++};
++
++static const struct attribute_group *usb_sdev_attr_groups[] = {
++	&usb_sdev_attr_group,
++	NULL
++};
++
+ /*
+  * this defines our host template, with which we'll allocate hosts
+  */
+@@ -653,7 +662,7 @@ static const struct scsi_host_template usb_stor_host_template = {
+ 	.skip_settle_delay =		1,
+ 
+ 	/* sysfs device attributes */
+-	.sdev_attrs =			sysfs_device_attr_list,
++	.sdev_groups =			usb_sdev_attr_groups,
+ 
+ 	/* module management */
+ 	.module =			THIS_MODULE
