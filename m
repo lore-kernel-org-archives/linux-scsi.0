@@ -2,47 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F9B3C433F5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7462FC433EF
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:33:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 03EB960F9D
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:33:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 504716103B
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:33:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233796AbhJGUfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S234012AbhJGUfM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Thu, 7 Oct 2021 16:35:12 -0400
-Received: from mail-pf1-f178.google.com ([209.85.210.178]:45869 "EHLO
-        mail-pf1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242621AbhJGUdL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:33:11 -0400
-Received: by mail-pf1-f178.google.com with SMTP id i65so3352144pfe.12
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:31:17 -0700 (PDT)
+Received: from mail-pj1-f53.google.com ([209.85.216.53]:54797 "EHLO
+        mail-pj1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242655AbhJGUdO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:33:14 -0400
+Received: by mail-pj1-f53.google.com with SMTP id np13so5794242pjb.4
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:31:21 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=zfxVhZCFvk45D3OUj/xVsg8PqFWL9WcofwLGfuG8Jpw=;
-        b=uRoTg1kvXN/VRmqn+dJkULWg3fW6KTdcoUu6COpsKtaj9VUImO0Q6WOAmYZfe1qksq
-         6rKhdI9juZYHG0ShgNGFugIMPMOMOvfiJmOSRz5JdHrlUIJ/uxkKPQjPu7tnVPqL4Ycu
-         fEpIqQeLIaav4H4ny23hfQaalt0FRRZgfTUf4apkDfNgXjoHYJwRT4kYhRV9vtpA3zqt
-         a3FKiz0T5dOK7aOp/HYm5V3kM1OhJZ3bKRF67VBzGn+J9nuqhYrksB/nEzf1hnXqoXJH
-         oBKaJvDCYu5HcQLpoFq/aIFoOFJ8MXgTlqf0DlZwlea/4XjT7VO681wOWRAey+oq09XY
-         71/g==
-X-Gm-Message-State: AOAM532wdYBfioz2w4FHfngzB2/rpJX88cO/2FmK87Kz9oWxeOKOK0T6
-        Xh4bgHjOFW6JPymSY8BTe+w=
-X-Google-Smtp-Source: ABdhPJydY0gzK3cr57nd5/2/o9RooUg5eyagBkUWegI+cSMYA66gPado9Oxc47wppBxfdVQKCw0udg==
-X-Received: by 2002:aa7:88cc:0:b0:431:c124:52ba with SMTP id k12-20020aa788cc000000b00431c12452bamr6058160pff.63.1633638677511;
-        Thu, 07 Oct 2021 13:31:17 -0700 (PDT)
+        bh=btA8sPcTcQz7vlvxHeXFnK/OlZyN5Komai/m/9bbg4o=;
+        b=DYBtG/hFbItaI6xDjiAzsqBu4TdJ7Z5hya6zcgyz5qp2tTWIKKz2ZPjcSjxQYL1Pc1
+         hpZ2PPVwk4YLmqxnb7/W3vc1fi5FvOTxhUxHXmm0kQoxGLg2hAwhPyjoFbN5TKRLoa5c
+         eDxLJDzGYllPcbvekJed8dENl75qGoy6HTeUYTrJLz4omqIlg5z3nAHRIldnqSp0JbrW
+         1ce5SMH+HwIdQm1szLvovgGuiYtajIhB374AcZ2J0VgRQPLxgKsywOi/VmC8CLNxl+LH
+         35qcCj7/wbpyv5KxfXIUfdCG89ogpoRGhhXR72/MQLE3fdwUzui1aGJS8vVKHzOKksKh
+         XhfQ==
+X-Gm-Message-State: AOAM532jEzlOGvtYcrburzjYPBTdHmGeBCENrQtAWwd7gJe3AQvR02pG
+        xWHR74tuzT515uognNi1fCQ=
+X-Google-Smtp-Source: ABdhPJwasyO6eOHXTbDcUxA5Z7QOkP8EcBp9mEB86YIOx1JXkR/cOeQIlvhs5Ryd7BoerTphiwVGbg==
+X-Received: by 2002:a17:90b:1102:: with SMTP id gi2mr7107962pjb.43.1633638680630;
+        Thu, 07 Oct 2021 13:31:20 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.31.16
+        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.31.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 13:31:17 -0700 (PDT)
+        Thu, 07 Oct 2021 13:31:19 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Saurav Kashyap <skashyap@marvell.com>,
+        Javed Hasan <jhasan@marvell.com>,
+        GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 61/88] ppa: Call scsi_done() directly
-Date:   Thu,  7 Oct 2021 13:28:56 -0700
-Message-Id: <20211007202923.2174984-62-bvanassche@acm.org>
+Subject: [PATCH v3 63/88] qedf: Call scsi_done() directly
+Date:   Thu,  7 Oct 2021 13:28:58 -0700
+Message-Id: <20211007202923.2174984-64-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007202923.2174984-1-bvanassche@acm.org>
 References: <20211007202923.2174984-1-bvanassche@acm.org>
@@ -57,27 +60,78 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ppa.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/qedf/qedf_io.c | 19 ++++++-------------
+ 1 file changed, 6 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/ppa.c b/drivers/scsi/ppa.c
-index 977315fdc254..799ad8562e24 100644
---- a/drivers/scsi/ppa.c
-+++ b/drivers/scsi/ppa.c
-@@ -665,7 +665,7 @@ static void ppa_interrupt(struct work_struct *work)
+diff --git a/drivers/scsi/qedf/qedf_io.c b/drivers/scsi/qedf/qedf_io.c
+index 3404782988d5..14aa544b0bc3 100644
+--- a/drivers/scsi/qedf/qedf_io.c
++++ b/drivers/scsi/qedf/qedf_io.c
+@@ -947,7 +947,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
+ 			 "Number of SG elements %d exceeds what hardware limitation of %d.\n",
+ 			 num_sgs, QEDF_MAX_BDS_PER_CMD);
+ 		sc_cmd->result = DID_ERROR;
+-		sc_cmd->scsi_done(sc_cmd);
++		scsi_done(sc_cmd);
+ 		return 0;
+ 	}
  
- 	dev->cur_cmd = NULL;
+@@ -957,7 +957,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
+ 			  "Returning DNC as unloading or stop io, flags 0x%lx.\n",
+ 			  qedf->flags);
+ 		sc_cmd->result = DID_NO_CONNECT << 16;
+-		sc_cmd->scsi_done(sc_cmd);
++		scsi_done(sc_cmd);
+ 		return 0;
+ 	}
  
--	cmd->scsi_done(cmd);
-+	scsi_done(cmd);
+@@ -966,7 +966,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
+ 		    "Completing sc_cmd=%p DID_NO_CONNECT as MSI-X is not enabled.\n",
+ 		    sc_cmd);
+ 		sc_cmd->result = DID_NO_CONNECT << 16;
+-		sc_cmd->scsi_done(sc_cmd);
++		scsi_done(sc_cmd);
+ 		return 0;
+ 	}
+ 
+@@ -976,7 +976,7 @@ qedf_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc_cmd)
+ 			  "fc_remote_port_chkready failed=0x%x for port_id=0x%06x.\n",
+ 			  rval, rport->port_id);
+ 		sc_cmd->result = rval;
+-		sc_cmd->scsi_done(sc_cmd);
++		scsi_done(sc_cmd);
+ 		return 0;
+ 	}
+ 
+@@ -1313,7 +1313,7 @@ void qedf_scsi_completion(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
+ 
+ 	io_req->sc_cmd = NULL;
+ 	sc_cmd->SCp.ptr =  NULL;
+-	sc_cmd->scsi_done(sc_cmd);
++	scsi_done(sc_cmd);
+ 	kref_put(&io_req->refcount, qedf_release_cmd);
  }
  
- static int ppa_engine(ppa_struct *dev, struct scsi_cmnd *cmd)
-@@ -798,7 +798,6 @@ static int ppa_queuecommand_lck(struct scsi_cmnd *cmd,
- 	dev->failed = 0;
- 	dev->jstart = jiffies;
- 	dev->cur_cmd = cmd;
--	cmd->scsi_done = done;
- 	cmd->result = DID_ERROR << 16;	/* default return code */
- 	cmd->SCp.phase = 0;	/* bus free */
+@@ -1386,13 +1386,6 @@ void qedf_scsi_done(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
+ 		goto bad_scsi_ptr;
+ 	}
+ 
+-	if (!sc_cmd->scsi_done) {
+-		QEDF_ERR(&qedf->dbg_ctx,
+-			 "sc_cmd->scsi_done for sc_cmd %p is NULL.\n",
+-			 sc_cmd);
+-		goto bad_scsi_ptr;
+-	}
+-
+ 	qedf_unmap_sg_list(qedf, io_req);
+ 
+ 	sc_cmd->result = result << 16;
+@@ -1417,7 +1410,7 @@ void qedf_scsi_done(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
+ 
+ 	io_req->sc_cmd = NULL;
+ 	sc_cmd->SCp.ptr = NULL;
+-	sc_cmd->scsi_done(sc_cmd);
++	scsi_done(sc_cmd);
+ 	kref_put(&io_req->refcount, qedf_release_cmd);
+ 	return;
  
