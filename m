@@ -2,210 +2,330 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7B5CFC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B6CC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5AA69610A5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F7E6610A0
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233710AbhJGVUz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 17:20:55 -0400
-Received: from mail-pj1-f49.google.com ([209.85.216.49]:39684 "EHLO
-        mail-pj1-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233283AbhJGVUz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:20:55 -0400
-Received: by mail-pj1-f49.google.com with SMTP id ls18-20020a17090b351200b001a00250584aso7430247pjb.4
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:19:01 -0700 (PDT)
+        id S234018AbhJGVU5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 17:20:57 -0400
+Received: from mail-pj1-f44.google.com ([209.85.216.44]:45628 "EHLO
+        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233283AbhJGVU5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:20:57 -0400
+Received: by mail-pj1-f44.google.com with SMTP id ls14-20020a17090b350e00b001a00e2251c8so6188150pjb.4
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:19:03 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=HpUoZ8YGYZCcc4PTz0iGAzdpSy60JKgc/r67Lfn/QuY=;
-        b=ZNcFAkWdHRLmivjVE5p0VKP29oX5Pni2s8bJFKfyj22qwdrNbC9UEkm3gle6IDLYE3
-         RNF9qGKR2dsHa7GHaPdBafqafJ6tIlqoG3bleK8fhA/+8NTUiai9x/53CvQZMKhAGQBq
-         CMvNjdIXIox/eMK7+Oa9GeHQX4ob8FmSjq2URSWo6iDycShQg+4kLm0SmtfxXn8X6SyY
-         O0Z2n8VIFYxXOGb58mAcQU88ykabvfP1EROu/ASc+YfAR/1GkTTyoRL6q0pIOes0qFbF
-         XpVjfce8ht/xOrW4bh0Wmt2ovKfQ2pILm3Uf0e89fE66axMa5C6oeXvVp2CeqHLQPjnm
-         duvg==
-X-Gm-Message-State: AOAM530sd2RTcL9j7tq18JX7EiFVymneVPXKDy2YGO4/ciALHNHM2+V5
-        6j4F6LDPHHWJjTLgStM5K3M=
-X-Google-Smtp-Source: ABdhPJwKMk/GEkZEgNfEIPZMiFuDp3cElaQXOITISNw8Rdrtk68JpPqaqYEviaaAyu9pTCrp4Nuopg==
-X-Received: by 2002:a17:90b:17d0:: with SMTP id me16mr8115444pjb.152.1633641540797;
-        Thu, 07 Oct 2021 14:19:00 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=Kt2zmEnNC8kSXDLhEYevleO6rodk/ecgntNNeLHdi2w=;
+        b=qwe7ZbmLgBLQEUmW2l5z1F3ZcWeos9bmt6rYnQwaNjxov+IdUwVxrJ1g4OweECVMkm
+         +kZ5wxj610IJhCjkOW2nV88CKom8zPDrRQlvNe4xbtm+ZAGlnigh6+bCUb+baaMKzdno
+         HeYDDmxFILmw1jlTFGfdREFVIv7k8Wwy28LMHds9T8FZNaQzfqzo8iYbEh72jXStXMlV
+         9Nu9uZ6mB6F7ptTpGe7UGR7nYHS+f6mMzVUfAxNoQP1m1trmugPq8pZ0daLq0WzuHDta
+         eOis2pslxdCkt/rwzAAP0GpJEDDUdvckoGGlnMCjbK0J43fpVD+a8+hzQLF9QiXUl/Pb
+         DVWw==
+X-Gm-Message-State: AOAM5334uhiKtPpRKuNN47EidEfLUs10GOySi0nghuYKXTSoP7+PoHMP
+        jmSOgvnFVVBqjh97rSoOrC4=
+X-Google-Smtp-Source: ABdhPJzGNFte1mriNFCUpldNsgtmi4PP8YXRxEgeAT/N5tN7xccSYtW08jG5nYMKujQqZxWMKadeZQ==
+X-Received: by 2002:a17:902:7c8d:b0:13a:768b:d6c0 with SMTP id y13-20020a1709027c8d00b0013a768bd6c0mr6024177pll.83.1633641542615;
+        Thu, 07 Oct 2021 14:19:02 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.18.59
+        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.19.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 14:18:59 -0700 (PDT)
+        Thu, 07 Oct 2021 14:19:02 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v2 00/46] Register SCSI sysfs attributes earlier
-Date:   Thu,  7 Oct 2021 14:18:06 -0700
-Message-Id: <20211007211852.256007-1-bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+Subject: [PATCH v2 01/46] scsi: core: Register sysfs attributes earlier
+Date:   Thu,  7 Oct 2021 14:18:07 -0700
+Message-Id: <20211007211852.256007-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
+In-Reply-To: <20211007211852.256007-1-bvanassche@acm.org>
+References: <20211007211852.256007-1-bvanassche@acm.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Martin,
+A quote from Documentation/driver-api/driver-model/device.rst:
+"Word of warning:  While the kernel allows device_create_file() and
+device_remove_file() to be called on a device at any time, userspace has
+strict expectations on when attributes get created.  When a new device is
+registered in the kernel, a uevent is generated to notify userspace (like
+udev) that a new device is available.  If attributes are added after the
+device is registered, then userspace won't get notified and userspace will
+not know about the new attributes."
 
-For certain user space software, e.g. udev, it is important that sysfs
-attributes are registered before the KOBJ_ADD uevent is emitted. Hence
-this patch series that removes the device_create_file() and
-sysfs_create_groups() calls from the SCSI core. Please consider this
-patch series for kernel v5.16.
+Hence register SCSI host sysfs attributes before the SCSI host shost_dev
+uevent is emitted instead of after that event has been emitted.
 
-Thanks,
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/hosts.c       | 23 ++++++++++-
+ drivers/scsi/scsi_priv.h   |  4 +-
+ drivers/scsi/scsi_sysfs.c  | 81 +++++++++++++++++++-------------------
+ include/scsi/scsi_device.h |  7 ++++
+ include/scsi/scsi_host.h   | 12 ++++++
+ 5 files changed, 84 insertions(+), 43 deletions(-)
 
-Bart.
-
-Changes compared to v1:
-- Switched from struct attribute ** to struct attribute_group **.
-- Added comments that explain how the size of the new arrays have been chosen.
-- Cleaned up the code in the qla2xxx driver that modifies a struct
-  device_attribute array by introducing an .is_visible() callback.
-- Split this patch series into one patch per driver.
-
-Bart Van Assche (46):
-  scsi: core: Register sysfs attributes earlier
-  ata: Switch to attribute groups
-  firewire: sbp2: Switch to attribute groups
-  RDMA/srp: Switch to attribute groups
-  scsi: message: fusion: Switch to attribute groups
-  scsi: zfcp: Switch to attribute groups
-  scsi: 3w-9xxx: Switch to attribute groups
-  scsi: 3w-sas: Switch to attribute groups
-  scsi: 3w-xxxx: Switch to attribute groups
-  scsi: 53c700: Switch to attribute groups
-  scsi: aacraid: Switch to attribute groups
-  scsi: arcmsr: Switch to attribute groups
-  scsi: be2iscsi: Switch to attribute groups
-  scsi: bfa: Switch to attribute groups
-  scsi: bnx2fc: Switch to attribute groups
-  scsi: bnx2i: Switch to attribute groups
-  scsi: csiostor: Switch to attribute groups
-  scsi: cxlflash: Switch to attribute groups
-  scsi: fnic: Switch to attribute groups
-  scsi: hisi_sas: Switch to attribute groups
-  scsi: hpsa: Switch to attribute groups
-  scsi: hptiop: Switch to attribute groups
-  scsi: ibmvscsi: Switch to attribute groups
-  scsi: ibmvfc: Switch to attribute groups
-  scsi: ipr: Switch to attribute groups
-  scsi: isci: Switch to attribute groups
-  scsi: lpfc: Switch to attribute groups
-  scsi: megaraid: Switch to attribute groups
-  scsi: mpt3sas: Switch to attribute groups
-  scsi: mvsas: Switch to attribute groups
-  scsi: myrb: Switch to attribute groups
-  scsi: myrs: Switch to attribute groups
-  scsi: ncr53c8xx: Switch to attribute groups
-  scsi: sym53c500_cs: Switch to attribute groups
-  scsi: pm8001: Switch to attribute groups
-  scsi: pmcraid: Switch to attribute groups
-  scsi: qedf: Switch to attribute groups
-  scsi: qedi: Switch to attribute groups
-  scsi: qla2xxx: Remove a declaration
-  scsi: qla2xxx: Switch to attribute groups
-  scsi: qla4xxx: Switch to attribute groups
-  scsi: smartpqi: Switch to attribute groups
-  scsi: snic: Switch to attribute groups
-  scsi: unisys: Remove the shost_attrs member
-  scsi: usb: Switch to attribute groups
-  scsi: core: Remove two host template members that are no longer used
-
- drivers/ata/ahci.h                            |   8 +-
- drivers/ata/ata_piix.c                        |  15 +-
- drivers/ata/libahci.c                         |  52 ++-
- drivers/ata/libata-sata.c                     |  19 +-
- drivers/ata/libata-scsi.c                     |  15 +-
- drivers/ata/pata_macio.c                      |   2 +-
- drivers/ata/sata_mv.c                         |   2 +-
- drivers/ata/sata_nv.c                         |   4 +-
- drivers/ata/sata_sil24.c                      |   2 +-
- drivers/firewire/sbp2.c                       |  15 +-
- drivers/infiniband/ulp/srp/ib_srp.c           |  58 ++--
- drivers/message/fusion/mptfc.c                |   2 +-
- drivers/message/fusion/mptsas.c               |   2 +-
- drivers/message/fusion/mptscsih.c             |  36 +-
- drivers/message/fusion/mptscsih.h             |   2 +-
- drivers/message/fusion/mptspi.c               |   2 +-
- drivers/s390/scsi/zfcp_ext.h                  |   4 +-
- drivers/s390/scsi/zfcp_scsi.c                 |   4 +-
- drivers/s390/scsi/zfcp_sysfs.c                |  52 ++-
- drivers/scsi/3w-9xxx.c                        |  15 +-
- drivers/scsi/3w-sas.c                         |  15 +-
- drivers/scsi/3w-xxxx.c                        |  15 +-
- drivers/scsi/53c700.c                         |  19 +-
- drivers/scsi/aacraid/linit.c                  |  52 ++-
- drivers/scsi/arcmsr/arcmsr.h                  |   2 +-
- drivers/scsi/arcmsr/arcmsr_attr.c             |  33 +-
- drivers/scsi/arcmsr/arcmsr_hba.c              |   2 +-
- drivers/scsi/be2iscsi/be_main.c               |  28 +-
- drivers/scsi/bfa/bfad_attr.c                  |  68 ++--
- drivers/scsi/bfa/bfad_im.c                    |   4 +-
- drivers/scsi/bfa/bfad_im.h                    |   4 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c             |  15 +-
- drivers/scsi/bnx2i/bnx2i.h                    |   2 +-
- drivers/scsi/bnx2i/bnx2i_iscsi.c              |   2 +-
- drivers/scsi/bnx2i/bnx2i_sysfs.c              |  15 +-
- drivers/scsi/csiostor/csio_scsi.c             |  38 ++-
- drivers/scsi/cxlflash/main.c                  |  54 ++-
- drivers/scsi/fnic/fnic.h                      |   2 +-
- drivers/scsi/fnic/fnic_attrs.c                |  17 +-
- drivers/scsi/fnic/fnic_main.c                 |   2 +-
- drivers/scsi/hisi_sas/hisi_sas_v1_hw.c        |  15 +-
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c        |  15 +-
- drivers/scsi/hisi_sas/hisi_sas_v3_hw.c        |  21 +-
- drivers/scsi/hosts.c                          |  14 +-
- drivers/scsi/hpsa.c                           |  58 ++--
- drivers/scsi/hptiop.c                         |  17 +-
- drivers/scsi/ibmvscsi/ibmvfc.c                |  29 +-
- drivers/scsi/ibmvscsi/ibmvscsi.c              |  29 +-
- drivers/scsi/ipr.c                            |  52 ++-
- drivers/scsi/isci/init.c                      |  15 +-
- drivers/scsi/lpfc/lpfc_attr.c                 | 314 +++++++++---------
- drivers/scsi/lpfc/lpfc_crtn.h                 |   4 +-
- drivers/scsi/lpfc/lpfc_init.c                 |   2 +-
- drivers/scsi/lpfc/lpfc_scsi.c                 |   4 +-
- drivers/scsi/megaraid/megaraid_mbox.c         |  29 +-
- drivers/scsi/megaraid/megaraid_sas_base.c     |  31 +-
- drivers/scsi/mpt3sas/mpt3sas_base.h           |   4 +-
- drivers/scsi/mpt3sas/mpt3sas_ctl.c            |  84 +++--
- drivers/scsi/mpt3sas/mpt3sas_scsih.c          |   8 +-
- drivers/scsi/mvsas/mv_init.c                  |  19 +-
- drivers/scsi/myrb.c                           |  42 ++-
- drivers/scsi/myrs.c                           |  54 ++-
- drivers/scsi/ncr53c8xx.c                      |  17 +-
- drivers/scsi/pcmcia/sym53c500_cs.c            |  15 +-
- drivers/scsi/pm8001/pm8001_ctl.c              |  64 ++--
- drivers/scsi/pm8001/pm8001_init.c             |   2 +-
- drivers/scsi/pm8001/pm8001_sas.h              |   2 +-
- drivers/scsi/pmcraid.c                        |  18 +-
- drivers/scsi/qedf/qedf.h                      |   2 +-
- drivers/scsi/qedf/qedf_attr.c                 |  15 +-
- drivers/scsi/qedf/qedf_main.c                 |   2 +-
- drivers/scsi/qedi/qedi_gbl.h                  |   2 +-
- drivers/scsi/qedi/qedi_iscsi.c                |   2 +-
- drivers/scsi/qedi/qedi_sysfs.c                |  15 +-
- drivers/scsi/qla2xxx/qla_attr.c               | 118 +++----
- drivers/scsi/qla2xxx/qla_gbl.h                |   4 +-
- drivers/scsi/qla2xxx/qla_os.c                 |   5 +-
- drivers/scsi/qla4xxx/ql4_attr.c               |  41 ++-
- drivers/scsi/qla4xxx/ql4_glbl.h               |   3 +-
- drivers/scsi/qla4xxx/ql4_os.c                 |   2 +-
- drivers/scsi/scsi_priv.h                      |   2 +-
- drivers/scsi/scsi_sysfs.c                     |  53 +--
- drivers/scsi/smartpqi/smartpqi_init.c         |  60 ++--
- drivers/scsi/snic/snic.h                      |   2 +-
- drivers/scsi/snic/snic_attrs.c                |  19 +-
- drivers/scsi/snic/snic_main.c                 |   2 +-
- .../staging/unisys/visorhba/visorhba_main.c   |   1 -
- drivers/usb/storage/scsiglue.c                |  15 +-
- include/linux/libata.h                        |   8 +-
- include/scsi/scsi_device.h                    |   6 +
- include/scsi/scsi_host.h                      |  15 +-
- 91 files changed, 1305 insertions(+), 767 deletions(-)
-
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 3f6f14f0cafb..3443f009a9e8 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -376,7 +376,7 @@ static struct device_type scsi_host_type = {
+ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ {
+ 	struct Scsi_Host *shost;
+-	int index;
++	int index, i, j = 0;
+ 
+ 	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, GFP_KERNEL);
+ 	if (!shost)
+@@ -480,7 +480,26 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->shost_dev.parent = &shost->shost_gendev;
+ 	shost->shost_dev.class = &shost_class;
+ 	dev_set_name(&shost->shost_dev, "host%d", shost->host_no);
+-	shost->shost_dev.groups = scsi_sysfs_shost_attr_groups;
++	shost->shost_dev.groups = shost->shost_dev_attr_groups;
++	shost->shost_dev_attr_groups[j++] = &scsi_shost_attr_group;
++	if (sht->shost_attrs) {
++		shost->lld_attr_group = (struct attribute_group){
++			.attrs = scsi_convert_dev_attrs(&shost->shost_gendev,
++							sht->shost_attrs)
++		};
++		if (shost->lld_attr_group.attrs)
++			shost->shost_dev_attr_groups[j++] =
++				&shost->lld_attr_group;
++	}
++	if (sht->shost_groups) {
++		for (i = 0; sht->shost_groups[i] &&
++			     j < ARRAY_SIZE(shost->shost_dev_attr_groups);
++		     i++, j++) {
++			shost->shost_dev_attr_groups[j] =
++				sht->shost_groups[i];
++		}
++	}
++	WARN_ON_ONCE(j >= ARRAY_SIZE(shost->shost_dev_attr_groups));
+ 
+ 	shost->ehandler = kthread_run(scsi_error_handler, shost,
+ 			"scsi_eh_%d", shost->host_no);
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 6d9152031a40..a5a2f18cc734 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -137,13 +137,15 @@ extern int scsi_sysfs_add_sdev(struct scsi_device *);
+ extern int scsi_sysfs_add_host(struct Scsi_Host *);
+ extern int scsi_sysfs_register(void);
+ extern void scsi_sysfs_unregister(void);
++struct attribute **scsi_convert_dev_attrs(struct device *dev,
++					  struct device_attribute **dev_attr);
+ extern void scsi_sysfs_device_initialize(struct scsi_device *);
+ extern int scsi_sysfs_target_initialize(struct scsi_device *);
+ extern struct scsi_transport_template blank_transport_template;
+ extern void __scsi_remove_device(struct scsi_device *);
+ 
+ extern struct bus_type scsi_bus_type;
+-extern const struct attribute_group *scsi_sysfs_shost_attr_groups[];
++extern const struct attribute_group scsi_shost_attr_group;
+ 
+ /* scsi_netlink.c */
+ #ifdef CONFIG_SCSI_NETLINK
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 86793259e541..05b4d69d53d4 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -424,15 +424,10 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
+ 	NULL
+ };
+ 
+-static struct attribute_group scsi_shost_attr_group = {
++const struct attribute_group scsi_shost_attr_group = {
+ 	.attrs =	scsi_sysfs_shost_attrs,
+ };
+ 
+-const struct attribute_group *scsi_sysfs_shost_attr_groups[] = {
+-	&scsi_shost_attr_group,
+-	NULL
+-};
+-
+ static void scsi_device_cls_release(struct device *class_dev)
+ {
+ 	struct scsi_device *sdev;
+@@ -1333,7 +1328,7 @@ static int scsi_target_add(struct scsi_target *starget)
+  **/
+ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ {
+-	int error, i;
++	int error;
+ 	struct scsi_target *starget = sdev->sdev_target;
+ 
+ 	error = scsi_target_add(starget);
+@@ -1386,23 +1381,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ 		}
+ 	}
+ 
+-	/* add additional host specific attributes */
+-	if (sdev->host->hostt->sdev_attrs) {
+-		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
+-			error = device_create_file(&sdev->sdev_gendev,
+-					sdev->host->hostt->sdev_attrs[i]);
+-			if (error)
+-				return error;
+-		}
+-	}
+-
+-	if (sdev->host->hostt->sdev_groups) {
+-		error = sysfs_create_groups(&sdev->sdev_gendev.kobj,
+-				sdev->host->hostt->sdev_groups);
+-		if (error)
+-			return error;
+-	}
+-
+ 	scsi_autopm_put_device(sdev);
+ 	return error;
+ }
+@@ -1442,10 +1420,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		if (res != 0)
+ 			return;
+ 
+-		if (sdev->host->hostt->sdev_groups)
+-			sysfs_remove_groups(&sdev->sdev_gendev.kobj,
+-					sdev->host->hostt->sdev_groups);
+-
+ 		if (IS_ENABLED(CONFIG_BLK_DEV_BSG) && sdev->bsg_dev)
+ 			bsg_unregister_queue(sdev->bsg_dev);
+ 		device_unregister(&sdev->sdev_dev);
+@@ -1584,23 +1558,31 @@ EXPORT_SYMBOL(scsi_register_interface);
+  **/
+ int scsi_sysfs_add_host(struct Scsi_Host *shost)
+ {
+-	int error, i;
+-
+-	/* add host specific attributes */
+-	if (shost->hostt->shost_attrs) {
+-		for (i = 0; shost->hostt->shost_attrs[i]; i++) {
+-			error = device_create_file(&shost->shost_dev,
+-					shost->hostt->shost_attrs[i]);
+-			if (error)
+-				return error;
+-		}
+-	}
+-
+ 	transport_register_device(&shost->shost_gendev);
+ 	transport_configure_device(&shost->shost_gendev);
+ 	return 0;
+ }
+ 
++/*
++ * Convert an array of struct device_attribute pointers into an array of
++ * struct attribute pointers.
++ */
++struct attribute **scsi_convert_dev_attrs(struct device *dev,
++					  struct device_attribute **dev_attr)
++{
++	struct attribute **attrs;
++	int i;
++
++	for (i = 0; dev_attr[i]; i++)
++		;
++	attrs = devm_kzalloc(dev, (i + 1) * sizeof(*attrs), GFP_KERNEL);
++	if (!attrs)
++		return NULL;
++	for (i = 0; dev_attr[i]; i++)
++		attrs[i] = &dev_attr[i]->attr;
++	return attrs;
++}
++
+ static struct device_type scsi_dev_type = {
+ 	.name =		"scsi_device",
+ 	.release =	scsi_device_dev_release,
+@@ -1609,8 +1591,10 @@ static struct device_type scsi_dev_type = {
+ 
+ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+ {
++	int i, j = 0;
+ 	unsigned long flags;
+ 	struct Scsi_Host *shost = sdev->host;
++	struct scsi_host_template *hostt = shost->hostt;
+ 	struct scsi_target  *starget = sdev->sdev_target;
+ 
+ 	device_initialize(&sdev->sdev_gendev);
+@@ -1618,6 +1602,23 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+ 	sdev->sdev_gendev.type = &scsi_dev_type;
+ 	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
+ 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
++	sdev->gendev_attr_groups[j++] = &scsi_sdev_attr_group;
++	if (hostt->sdev_attrs) {
++		sdev->lld_attr_group = (struct attribute_group){
++			.attrs = scsi_convert_dev_attrs(&sdev->sdev_gendev,
++							hostt->sdev_attrs)
++		};
++		if (sdev->lld_attr_group.attrs)
++			sdev->gendev_attr_groups[j++] = &sdev->lld_attr_group;
++	}
++	if (hostt->sdev_groups) {
++		for (i = 0; hostt->sdev_groups[i] &&
++			     j < ARRAY_SIZE(sdev->gendev_attr_groups);
++		     i++, j++) {
++			sdev->gendev_attr_groups[j] = hostt->sdev_groups[i];
++		}
++	}
++	WARN_ON_ONCE(j >= ARRAY_SIZE(sdev->gendev_attr_groups));
+ 
+ 	device_initialize(&sdev->sdev_dev);
+ 	sdev->sdev_dev.parent = get_device(&sdev->sdev_gendev);
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index b97e142a7ca9..01732aabd7c3 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -225,6 +225,13 @@ struct scsi_device {
+ 
+ 	struct device		sdev_gendev,
+ 				sdev_dev;
++	struct attribute_group	lld_attr_group;
++	/*
++	 * The array size 6 provides space for one attribute group for the
++	 * SCSI core, four attribute groups defined by SCSI LLDs and one
++	 * terminating NULL pointer.
++	 */
++	const struct attribute_group *gendev_attr_groups[6];
+ 
+ 	struct execute_work	ew; /* used to get process context on put */
+ 	struct work_struct	requeue_work;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index bc9c45ced145..ab8775811e6f 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -483,6 +483,11 @@ struct scsi_host_template {
+ 	 */
+ 	struct device_attribute **sdev_attrs;
+ 
++	/*
++	 * Pointer to the SCSI host sysfs attribute groups, NULL terminated.
++	 */
++	const struct attribute_group **shost_groups;
++
+ 	/*
+ 	 * Pointer to the SCSI device attribute groups for this host,
+ 	 * NULL terminated.
+@@ -695,6 +700,13 @@ struct Scsi_Host {
+ 
+ 	/* ldm bits */
+ 	struct device		shost_gendev, shost_dev;
++	struct attribute_group	lld_attr_group;
++	/*
++	 * The array size 3 provides space for one attribute group defined by
++	 * the SCSI core, one attribute group defined by the SCSI LLD and one
++	 * terminating NULL pointer.
++	 */
++	const struct attribute_group *shost_dev_attr_groups[3];
+ 
+ 	/*
+ 	 * Points to the transport data (if any) which is allocated
