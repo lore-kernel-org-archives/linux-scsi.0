@@ -2,48 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A153C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:31:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA892C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:31:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15FF760F23
+	by mail.kernel.org (Postfix) with ESMTP id D119B60F22
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:31:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242509AbhJGUdh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 16:33:37 -0400
-Received: from mail-pg1-f177.google.com ([209.85.215.177]:42794 "EHLO
-        mail-pg1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242391AbhJGUdY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:33:24 -0400
-Received: by mail-pg1-f177.google.com with SMTP id 66so907085pgc.9
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:31:30 -0700 (PDT)
+        id S242525AbhJGUdi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 16:33:38 -0400
+Received: from mail-pf1-f181.google.com ([209.85.210.181]:46850 "EHLO
+        mail-pf1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242513AbhJGUdZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:33:25 -0400
+Received: by mail-pf1-f181.google.com with SMTP id u7so6276087pfg.13
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:31:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=ebG8Zj8/jup/7EtMIvvugZMwxuQdc8xv6Kv59v69CJQ=;
-        b=YR6H2HmVPMh9Ec8ZAdjZ9x4eGWQyQjdp3OdUZM4dxPPcL23NcxcJrIP8kLjOY5W3GA
-         /p/SHMKwnAIbOw/JJw4G5ca691/B+224V1/6SHEDCgLq+xiIN59jp+EPA+s1HVTItKzW
-         E8fmrcKIvqCd8Iy2EnOBy6f7v8/CVNy5TyxwRhaW6ahkOh0XKwts+EG/Ddw5DHdxlvkh
-         qhc/FRWXV5CxHEm+le2jr9Z61yQrKWmapYKJNOL1x3kEigyS5lIZXJVSV82EcyBQ9oOa
-         2mcXT9VE+0je4NbZete/tY5VZH2XUxKDEjM7Nt+0N3EK1hooeXcVa21HGiyjcs8pfuIo
-         Ei0A==
-X-Gm-Message-State: AOAM533b76DGTeNOGBZAdZX8T8aDNVd9f+F0zfg0aNEeAchlMhEZ313p
-        9u0Z/Bk34w0TXIesV2t1/DM=
-X-Google-Smtp-Source: ABdhPJxFZlOVsvEPFVVNR6rga/aI0aMClu2+zpIt/EyYzA3ZQ6l6KGvV1rTnYgJUs7bcXKtML/MAbg==
-X-Received: by 2002:a63:1d23:: with SMTP id d35mr1320573pgd.357.1633638690063;
-        Thu, 07 Oct 2021 13:31:30 -0700 (PDT)
+        bh=+QNDak6Eq2QG1TY+hA2ADBZaobdNMgXfezwsWoaJVv4=;
+        b=RMa8EhEOGJmicWjYGdNUVFLHon2uQ+5qyPpkRcR3GlYj4qgYT0bj1pZseVHm+ZB8FF
+         RRnPaIxNlSjcc6Dpy9/Mo+qMo7mSkL74uqCaudV+/56oOEswTWs+p35hbhOM5ZI23WsA
+         c9j18SHJugdFPjHwDwm1ujd5de/DNkS6FzSu86c6ThRPAhyljdthf6Lyh+1ZSmb4t/mz
+         ADut27FC+xPqgCd2iVKt5YnnGToIttlK9HjCUSjg/uEfZ/mxHrG411ew+ZHu55C8kESd
+         jP6fb6C0YlxZKKa2aYWsH0vsYLsRZSJMJDCoGvndmtMYcyq42+XgCgVvoQmnPM5ZXvWM
+         Dy6Q==
+X-Gm-Message-State: AOAM530GhrVzuPGbXpuuMSZLoSkiWDAgxzc+9lQIHzvoX8CEz9QFiTxz
+        nDx/IAQAYFXxulzHDkNKG70=
+X-Google-Smtp-Source: ABdhPJxj33SdIBleYbE6JwFq1347jx93DVzubxX4vNlJRViozLV8ZW6Qc7cAVEvyrkq18D8fdLzGpQ==
+X-Received: by 2002:a63:ec57:: with SMTP id r23mr1342621pgj.17.1633638691517;
+        Thu, 07 Oct 2021 13:31:31 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.31.29
+        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.31.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 13:31:29 -0700 (PDT)
+        Thu, 07 Oct 2021 13:31:31 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
+        Karan Tilak Kumar <kartilak@cisco.com>,
+        Sesidhar Baddela <sebaddel@cisco.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 70/88] smartpqi: Call scsi_done() directly
-Date:   Thu,  7 Oct 2021 13:29:05 -0700
-Message-Id: <20211007202923.2174984-71-bvanassche@acm.org>
+Subject: [PATCH v3 71/88] snic: Call scsi_done() directly
+Date:   Thu,  7 Oct 2021 13:29:06 -0700
+Message-Id: <20211007202923.2174984-72-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007202923.2174984-1-bvanassche@acm.org>
 References: <20211007202923.2174984-1-bvanassche@acm.org>
@@ -58,19 +59,87 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/snic/snic_scsi.c | 33 ++++++++++++++-------------------
+ 1 file changed, 14 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index b966ce3b4385..54c12b149fda 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -195,7 +195,7 @@ static char *pqi_raid_level_to_string(u8 raid_level)
- static inline void pqi_scsi_done(struct scsi_cmnd *scmd)
- {
- 	pqi_prep_for_scsi_done(scmd);
--	scmd->scsi_done(scmd);
-+	scsi_done(scmd);
- }
+diff --git a/drivers/scsi/snic/snic_scsi.c b/drivers/scsi/snic/snic_scsi.c
+index 43a950185e24..5f17666f3e1d 100644
+--- a/drivers/scsi/snic/snic_scsi.c
++++ b/drivers/scsi/snic/snic_scsi.c
+@@ -342,7 +342,7 @@ snic_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc)
+ 		SNIC_HOST_ERR(shost, "Tgt %p id %d Not Ready.\n", tgt, tgt->id);
+ 		atomic64_inc(&snic->s_stats.misc.tgt_not_rdy);
+ 		sc->result = ret;
+-		sc->scsi_done(sc);
++		scsi_done(sc);
  
- static inline void pqi_disable_write_same(struct scsi_device *sdev)
+ 		return 0;
+ 	}
+@@ -676,8 +676,7 @@ snic_icmnd_cmpl_handler(struct snic *snic, struct snic_fw_req *fwreq)
+ 		 SNIC_TRC_CMD(sc), SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+ 
+-	if (sc->scsi_done)
+-		sc->scsi_done(sc);
++	scsi_done(sc);
+ 
+ 	snic_stats_update_io_cmpl(&snic->s_stats);
+ } /* end of snic_icmnd_cmpl_handler */
+@@ -855,14 +854,12 @@ snic_process_itmf_cmpl(struct snic *snic,
+ 
+ 		snic_release_req_buf(snic, rqi, sc);
+ 
+-		if (sc->scsi_done) {
+-			SNIC_TRC(snic->shost->host_no, cmnd_id, (ulong) sc,
+-				 jiffies_to_msecs(jiffies - start_time),
+-				 (ulong) fwreq, SNIC_TRC_CMD(sc),
+-				 SNIC_TRC_CMD_STATE_FLAGS(sc));
++		SNIC_TRC(snic->shost->host_no, cmnd_id, (ulong) sc,
++			 jiffies_to_msecs(jiffies - start_time),
++			 (ulong) fwreq, SNIC_TRC_CMD(sc),
++			 SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+-			sc->scsi_done(sc);
+-		}
++		scsi_done(sc);
+ 
+ 		break;
+ 
+@@ -1475,7 +1472,7 @@ snic_abort_finish(struct snic *snic, struct scsi_cmnd *sc)
+ 		 * Call scsi_done to complete the IO.
+ 		 */
+ 		sc->result = (DID_ERROR << 16);
+-		sc->scsi_done(sc);
++		scsi_done(sc);
+ 		break;
+ 
+ 	default:
+@@ -1855,7 +1852,7 @@ snic_dr_clean_single_req(struct snic *snic,
+ 	snic_release_req_buf(snic, rqi, sc);
+ 
+ 	sc->result = (DID_ERROR << 16);
+-	sc->scsi_done(sc);
++	scsi_done(sc);
+ 
+ 	ret = 0;
+ 
+@@ -2500,14 +2497,12 @@ snic_scsi_cleanup(struct snic *snic, int ex_tag)
+ 		/* Update IO stats */
+ 		snic_stats_update_io_cmpl(&snic->s_stats);
+ 
+-		if (sc->scsi_done) {
+-			SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
+-				 jiffies_to_msecs(jiffies - st_time), 0,
+-				 SNIC_TRC_CMD(sc),
+-				 SNIC_TRC_CMD_STATE_FLAGS(sc));
++		SNIC_TRC(snic->shost->host_no, tag, (ulong) sc,
++			 jiffies_to_msecs(jiffies - st_time), 0,
++			 SNIC_TRC_CMD(sc),
++			 SNIC_TRC_CMD_STATE_FLAGS(sc));
+ 
+-			sc->scsi_done(sc);
+-		}
++		scsi_done(sc);
+ 	}
+ } /* end of snic_scsi_cleanup */
+ 
