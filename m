@@ -2,50 +2,50 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6209C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:20:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25241C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:20:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CEC1F61077
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:20:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F498610A0
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:20:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241064AbhJGVW0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 17:22:26 -0400
-Received: from mail-pf1-f176.google.com ([209.85.210.176]:33762 "EHLO
-        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241022AbhJGVWZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:22:25 -0400
-Received: by mail-pf1-f176.google.com with SMTP id s16so6464590pfk.0
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:20:31 -0700 (PDT)
+        id S241117AbhJGVW3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 17:22:29 -0400
+Received: from mail-pg1-f172.google.com ([209.85.215.172]:41681 "EHLO
+        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241022AbhJGVW1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:22:27 -0400
+Received: by mail-pg1-f172.google.com with SMTP id v11so1029062pgb.8
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:20:33 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=o69cnK/U/335PRQimSnXYVHJgfg3vwULDtpD2oVWF7Y=;
-        b=rKsYKvC8dCdboLAGy4SpUtJWD4eERPiojiLBImHJMk/7hxsMQ/Xscd2tCXV8PKIDxe
-         OU/xMze4UnbBen6Fgc7x54376KPH8mxPznksm19USq/H/OHbuCI02gzeVowSROB9zGW/
-         Ejn8ryoW5IUUh3EAUMB3/onqkiaoA++N2yUCR91q1d5Bcyq8O1VNqrANpjwCxlKmLiYT
-         ZA1XIkAtGEV2kwLPecmSNqQWrj+B+Q04VyPVaRc7i5kYHN4ym+UoV7INtlXlN851Mg5r
-         /t1DpnMp1iiKcKDTN1gDK9kUWm0fpuxUL+/BaXt+QvVAZmzS/hVHNUjxX3Pm5/YKmLOA
-         1huQ==
-X-Gm-Message-State: AOAM533u/ngH4bEvYT9hy+vhLx9o7qu51tUFvJLDEiiKn9Ec8luKZG3Z
-        wcMx50+WaVecsDXM6xpLXwY=
-X-Google-Smtp-Source: ABdhPJxE6gtA4k5ZKFfXe/2kMPFMbKMl4VeUpf4avi9A5GgXxUxBE3gQVQNoEqpOW1v8KNbdGHBvRQ==
-X-Received: by 2002:a62:7a4f:0:b0:448:6a41:14bb with SMTP id v76-20020a627a4f000000b004486a4114bbmr6598015pfc.31.1633641631145;
-        Thu, 07 Oct 2021 14:20:31 -0700 (PDT)
+        bh=4R4gXLjjIZLIkF7sgikLLbh6/kop4jDlVkJ3In8wKi4=;
+        b=BdBGzqEAJDeD5mBUrHlg/y1kHCHVM/F3Mx7x9ojJRNB1ote8YY8ehZ5oaL3ziNAcS1
+         NzCoZbsXx655T99GGUJm1nwxvECEU9Bg8aDWC1xpmYFeC327vX0N9nZsZGePIw7R1xBn
+         mSWZr/nAc8u2u590oElV+2js6qseBvBIeuO5sbDlaKUeWefAj6gSGT8DMYG1znBRjSWg
+         HWYvVVjOdXr5HPEhOLu8x7z3IpACT2FM2abcLHtP8KUIg7JFMYRnQ/9gvnlCdBVGXUhM
+         8kLNcPq8YatgGWlumrkd1AbPtFnU77fFT3Mq4m8V8fTKB7OIxi6CdpjSdmwmie+Jo/LR
+         9gXw==
+X-Gm-Message-State: AOAM532mwGbJzDu8KvxfKhOO7YBYOqtfv8CJJ41LEHvDrYE6C3kQqX9N
+        xvznU7M0BfrxvfHnEbY4lRE=
+X-Google-Smtp-Source: ABdhPJygH4GAu4J0n7b8pLdU1Pp6eABODuFVwUwhklumC4AqZGp2nZrR/O/ihW513Ag3/7hTaXN/ug==
+X-Received: by 2002:a62:8284:0:b0:44c:6490:4a2d with SMTP id w126-20020a628284000000b0044c64904a2dmr6698366pfd.38.1633641632810;
+        Thu, 07 Oct 2021 14:20:32 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.20.30
+        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.20.31
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 14:20:30 -0700 (PDT)
+        Thu, 07 Oct 2021 14:20:32 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Saurav Kashyap <skashyap@marvell.com>,
-        Javed Hasan <jhasan@marvell.com>,
+        Nilesh Javali <njavali@marvell.com>,
+        Manish Rangankar <mrangankar@marvell.com>,
         GR-QLogic-Storage-Upstream@marvell.com,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 37/46] scsi: qedf: Switch to attribute groups
-Date:   Thu,  7 Oct 2021 14:18:43 -0700
-Message-Id: <20211007211852.256007-38-bvanassche@acm.org>
+Subject: [PATCH v2 38/46] scsi: qedi: Switch to attribute groups
+Date:   Thu,  7 Oct 2021 14:18:44 -0700
+Message-Id: <20211007211852.256007-39-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007211852.256007-1-bvanassche@acm.org>
 References: <20211007211852.256007-1-bvanassche@acm.org>
@@ -60,63 +60,59 @@ struct device_attribute directly. Hence switch to attribute groups.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qedf/qedf.h      |  2 +-
- drivers/scsi/qedf/qedf_attr.c | 15 ++++++++++++---
- drivers/scsi/qedf/qedf_main.c |  2 +-
+ drivers/scsi/qedi/qedi_gbl.h   |  2 +-
+ drivers/scsi/qedi/qedi_iscsi.c |  2 +-
+ drivers/scsi/qedi/qedi_sysfs.c | 15 ++++++++++++---
  3 files changed, 14 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf.h b/drivers/scsi/qedf/qedf.h
-index ba94413fe2ea..44d2058a4d78 100644
---- a/drivers/scsi/qedf/qedf.h
-+++ b/drivers/scsi/qedf/qedf.h
-@@ -498,7 +498,7 @@ extern void qedf_process_abts_compl(struct qedf_ctx *qedf, struct fcoe_cqe *cqe,
- extern struct qedf_ioreq *qedf_alloc_cmd(struct qedf_rport *fcport,
- 	u8 cmd_type);
+diff --git a/drivers/scsi/qedi/qedi_gbl.h b/drivers/scsi/qedi/qedi_gbl.h
+index 9f8e8ef405a1..84e575fbd491 100644
+--- a/drivers/scsi/qedi/qedi_gbl.h
++++ b/drivers/scsi/qedi/qedi_gbl.h
+@@ -22,7 +22,7 @@ extern struct iscsi_transport qedi_iscsi_transport;
+ extern const struct qed_iscsi_ops *qedi_ops;
+ extern const struct qedi_debugfs_ops qedi_debugfs_ops[];
+ extern const struct file_operations qedi_dbg_fops[];
+-extern struct device_attribute *qedi_shost_attrs[];
++extern const struct attribute_group *qedi_shost_attr_groups[];
  
--extern struct device_attribute *qedf_host_attrs[];
-+extern const struct attribute_group *qedf_host_attr_groups[];
- extern void qedf_cmd_timer_set(struct qedf_ctx *qedf, struct qedf_ioreq *io_req,
- 	unsigned int timer_msec);
- extern int qedf_init_mp_req(struct qedf_ioreq *io_req);
-diff --git a/drivers/scsi/qedf/qedf_attr.c b/drivers/scsi/qedf/qedf_attr.c
-index 461c0c9180c4..8f04e11d0903 100644
---- a/drivers/scsi/qedf/qedf_attr.c
-+++ b/drivers/scsi/qedf/qedf_attr.c
-@@ -60,12 +60,21 @@ static ssize_t fka_period_show(struct device *dev,
- static DEVICE_ATTR_RO(fcoe_mac);
- static DEVICE_ATTR_RO(fka_period);
- 
--struct device_attribute *qedf_host_attrs[] = {
--	&dev_attr_fcoe_mac,
--	&dev_attr_fka_period,
-+static struct attribute *qedf_host_attrs[] = {
-+	&dev_attr_fcoe_mac.attr,
-+	&dev_attr_fka_period.attr,
- 	NULL,
+ int qedi_alloc_sq(struct qedi_ctx *qedi, struct qedi_endpoint *ep);
+ void qedi_free_sq(struct qedi_ctx *qedi, struct qedi_endpoint *ep);
+diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
+index c5260429c637..29b8e7a88653 100644
+--- a/drivers/scsi/qedi/qedi_iscsi.c
++++ b/drivers/scsi/qedi/qedi_iscsi.c
+@@ -58,7 +58,7 @@ struct scsi_host_template qedi_host_template = {
+ 	.max_sectors = 0xffff,
+ 	.dma_boundary = QEDI_HW_DMA_BOUNDARY,
+ 	.cmd_per_lun = 128,
+-	.shost_attrs = qedi_shost_attrs,
++	.shost_groups = qedi_shost_attr_groups,
  };
  
-+static const struct attribute_group qedf_host_attr_group = {
-+	.attrs = qedf_host_attrs
-+};
-+
-+const struct attribute_group *qedf_host_attr_groups[] = {
-+	&qedf_host_attr_group,
+ static void qedi_conn_free_login_resources(struct qedi_ctx *qedi,
+diff --git a/drivers/scsi/qedi/qedi_sysfs.c b/drivers/scsi/qedi/qedi_sysfs.c
+index be174d30eb7c..2ce8b3926e0a 100644
+--- a/drivers/scsi/qedi/qedi_sysfs.c
++++ b/drivers/scsi/qedi/qedi_sysfs.c
+@@ -42,8 +42,17 @@ static ssize_t speed_show(struct device *dev,
+ static DEVICE_ATTR_RO(port_state);
+ static DEVICE_ATTR_RO(speed);
+ 
+-struct device_attribute *qedi_shost_attrs[] = {
+-	&dev_attr_port_state,
+-	&dev_attr_speed,
++static struct attribute *qedi_shost_attrs[] = {
++	&dev_attr_port_state.attr,
++	&dev_attr_speed.attr,
 +	NULL
 +};
 +
- extern const struct qed_fcoe_ops *qed_ops;
- 
- void qedf_capture_grc_dump(struct qedf_ctx *qedf)
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 42d0d941dba5..3dd60acea4d8 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -986,7 +986,7 @@ static struct scsi_host_template qedf_host_template = {
- 	.cmd_per_lun	= 32,
- 	.max_sectors 	= 0xffff,
- 	.queuecommand 	= qedf_queuecommand,
--	.shost_attrs	= qedf_host_attrs,
-+	.shost_groups	= qedf_host_attr_groups,
- 	.eh_abort_handler	= qedf_eh_abort,
- 	.eh_device_reset_handler = qedf_eh_device_reset, /* lun reset */
- 	.eh_target_reset_handler = qedf_eh_target_reset, /* target reset */
++static const struct attribute_group qedi_shost_attr_group = {
++	.attrs = qedi_shost_attrs
++};
++
++const struct attribute_group *qedi_shost_attr_groups[] = {
++	&qedi_shost_attr_group,
+ 	NULL
+ };
