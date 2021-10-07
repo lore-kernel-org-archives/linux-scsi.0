@@ -2,48 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44FA4C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A481C4332F
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:30:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2649761175
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 83E5961108
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:30:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241979AbhJGUbw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 16:31:52 -0400
-Received: from mail-pj1-f54.google.com ([209.85.216.54]:38576 "EHLO
-        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240788AbhJGUbu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:31:50 -0400
-Received: by mail-pj1-f54.google.com with SMTP id g13-20020a17090a3c8d00b00196286963b9so7796435pjc.3
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:29:56 -0700 (PDT)
+        id S242049AbhJGUbx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 16:31:53 -0400
+Received: from mail-pg1-f170.google.com ([209.85.215.170]:46741 "EHLO
+        mail-pg1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241376AbhJGUbw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:31:52 -0400
+Received: by mail-pg1-f170.google.com with SMTP id m21so888308pgu.13
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:29:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=TrhbdQNUsYsjq8pqmtYvHS1JNRkyvpEBXeOE3cno8L4=;
-        b=TDjHnIL/NWyRNrT/R5/rkGwWb1XTpP4LejQSjbwLEXwy7lFSz5+bkSbRtBf+IQ34EH
-         OBOWNVHbXTHfO8u5OaQX/2rG+aOfA+I//PwIqPy0nXNv/4LwTz3cBNMjNbwj0HXsn0aq
-         E+uGcZH0T/4D1DsKAbv6m+9QQpPVLuuWMbR4OD3d4yal2LGYFp/KQGspzOdyWvOYVoXa
-         LJBP53t/Qtf2wh2esrA+FdPxYF4sjdG5puy4qNuTcWbf4o2XZrpTnob9DWsacaD4shkY
-         oLFwOqkhLCDYn9ny0JXIhwRpPV0HNGR/VphOeVvE4fzVD2BPPYIjye+qY8PSD5vFOD9x
-         cL0w==
-X-Gm-Message-State: AOAM5338ZRxhPPG9I8xoTBQAX7N9wXLj9ANIpWKrj0iL4HvYEGnTblA5
-        qNhmCd13VHhiUTVy0PEzGsg=
-X-Google-Smtp-Source: ABdhPJzJoZ1fr/ollElhjJhJR3z8msvb9i3nJmV0ny6hc1pHNIQxf20XE+smyGWrzL1TBAJDMyOJQA==
-X-Received: by 2002:a17:90b:4c86:: with SMTP id my6mr7160838pjb.77.1633638595791;
-        Thu, 07 Oct 2021 13:29:55 -0700 (PDT)
+        bh=BhjZcNLCb2BcusfJGpL8i+I7xZIdyPmD/+05hmSpo1s=;
+        b=OSmrbMmtgoRMt3IqaNqI4QaXKf3mWS2HqNyZZBp2Ndrnltm/ygJaB6c2t7jQCkOug+
+         FSgmzJgOUK6ZGRRjan8njB4nkYC2ot0xFPJbwBMYyjBTwYbc/KKDKi3wYmcHvL4O0a/B
+         vH6kLrusNveBMLQj9ECgOwt+yXFP91HUdWdZQG0rLIkTNpdp+k/A8vUCs8LXrPmnRI9y
+         tWpaL3kW78NYXUynSCw3Daq9xDUXHpsz+ggVYd70NsdXCEUP8Zw49KLw8ZiVfg9Mc2HP
+         wYQdULjQjKx4tOTBdKGza4TUrS37nWO5QQG8QMFQLN7ljgv3gQ+MtVXuh3C0CnrnECHV
+         XxwA==
+X-Gm-Message-State: AOAM531BvAxnzMpjdpobytl+GqvHwYamnUIP7HlP9sB8+FIBYI1R1lK6
+        oKvgBbvxH0F12p+a5+YwI4c=
+X-Google-Smtp-Source: ABdhPJyqKo9VYvmfVxNr6NGtsTGG7uIn4uX8hRXYmOTnXr7U0LRROGeZMLZzxQClfjsZ0nACSsvx0w==
+X-Received: by 2002:a05:6a00:ac8:b029:320:a6bb:880d with SMTP id c8-20020a056a000ac8b0290320a6bb880dmr6383884pfl.41.1633638598476;
+        Thu, 07 Oct 2021 13:29:58 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.29.54
+        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.29.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 13:29:55 -0700 (PDT)
+        Thu, 07 Oct 2021 13:29:57 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
+        Russell King <linux@armlinux.org.uk>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 15/88] aacraid: Introduce aac_scsi_done()
-Date:   Thu,  7 Oct 2021 13:28:10 -0700
-Message-Id: <20211007202923.2174984-16-bvanassche@acm.org>
+Subject: [PATCH v3 17/88] acornscsi: Call scsi_done() directly
+Date:   Thu,  7 Oct 2021 13:28:12 -0700
+Message-Id: <20211007202923.2174984-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007202923.2174984-1-bvanassche@acm.org>
 References: <20211007202923.2174984-1-bvanassche@acm.org>
@@ -53,180 +53,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This patch does not change any functionality but makes the next patch in
-this series easier to read.
+Conditional statements are faster than indirect calls. Hence call
+scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/aacraid/aachba.c | 39 ++++++++++++++++++++---------------
- 1 file changed, 22 insertions(+), 17 deletions(-)
+ drivers/scsi/arm/acornscsi.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index c2d6f0a9e0b1..40b86acac17b 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -517,6 +517,11 @@ int aac_get_containers(struct aac_dev *dev)
- 	return status;
- }
- 
-+static void aac_scsi_done(struct scsi_cmnd *scmd)
-+{
-+	scmd->scsi_done(scmd);
-+}
-+
- static void get_container_name_callback(void *context, struct fib * fibptr)
- {
- 	struct aac_get_name_resp * get_name_reply;
-@@ -558,7 +563,7 @@ static void get_container_name_callback(void *context, struct fib * fibptr)
- 	scsicmd->result = DID_OK << 16 | SAM_STAT_GOOD;
- 
- 	aac_fib_complete(fibptr);
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
- }
- 
- /*
-@@ -614,7 +619,7 @@ static int aac_probe_container_callback2(struct scsi_cmnd * scsicmd)
- 		return aac_scsi_cmd(scsicmd);
- 
- 	scsicmd->result = DID_NO_CONNECT << 16;
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
- 	return 0;
- }
- 
-@@ -1094,7 +1099,7 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
- 	scsicmd->result = DID_OK << 16 | SAM_STAT_GOOD;
- 
- 	aac_fib_complete(fibptr);
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
- }
- 
- /*
-@@ -1197,7 +1202,7 @@ static int aac_bounds_32(struct aac_dev * dev, struct scsi_cmnd * cmd, u64 lba)
- 		memcpy(cmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
- 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
- 			     SCSI_SENSE_BUFFERSIZE));
--		cmd->scsi_done(cmd);
-+		aac_scsi_done(cmd);
- 		return 1;
- 	}
- 	return 0;
-@@ -2392,7 +2397,7 @@ static void io_callback(void *context, struct fib * fibptr)
- 	}
- 	aac_fib_complete(fibptr);
- 
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
- }
- 
- static int aac_read(struct scsi_cmnd * scsicmd)
-@@ -2463,7 +2468,7 @@ static int aac_read(struct scsi_cmnd * scsicmd)
- 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
- 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
- 			     SCSI_SENSE_BUFFERSIZE));
--		scsicmd->scsi_done(scsicmd);
-+		aac_scsi_done(scsicmd);
- 		return 0;
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index 0cc62c1b0825..dadaf5ee0ea9 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -841,13 +841,10 @@ static void acornscsi_done(AS_Host *host, struct scsi_cmnd **SCpntp,
+ 		}
  	}
  
-@@ -2489,7 +2494,7 @@ static int aac_read(struct scsi_cmnd * scsicmd)
- 	 *	For some reason, the Fib didn't queue, return QUEUE_FULL
- 	 */
- 	scsicmd->result = DID_OK << 16 | SAM_STAT_TASK_SET_FULL;
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
- 	aac_fib_complete(cmd_fibcontext);
- 	aac_fib_free(cmd_fibcontext);
- 	return 0;
-@@ -2554,7 +2559,7 @@ static int aac_write(struct scsi_cmnd * scsicmd)
- 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
- 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
- 			     SCSI_SENSE_BUFFERSIZE));
--		scsicmd->scsi_done(scsicmd);
-+		aac_scsi_done(scsicmd);
- 		return 0;
- 	}
+-	if (!SCpnt->scsi_done)
+-	    panic("scsi%d.H: null scsi_done function in acornscsi_done", host->host->host_no);
+-
+ 	clear_bit(SCpnt->device->id * 8 +
+ 		  (u8)(SCpnt->device->lun & 0x7), host->busyluns);
  
-@@ -2580,7 +2585,7 @@ static int aac_write(struct scsi_cmnd * scsicmd)
- 	 *	For some reason, the Fib didn't queue, return QUEUE_FULL
- 	 */
- 	scsicmd->result = DID_OK << 16 | SAM_STAT_TASK_SET_FULL;
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
+-	SCpnt->scsi_done(SCpnt);
++	scsi_done(SCpnt);
+     } else
+ 	printk("scsi%d: null command in acornscsi_done", host->host->host_no);
  
- 	aac_fib_complete(cmd_fibcontext);
- 	aac_fib_free(cmd_fibcontext);
-@@ -2621,7 +2626,7 @@ static void synchronize_callback(void *context, struct fib *fibptr)
+@@ -2428,7 +2425,6 @@ static int acornscsi_queuecmd_lck(struct scsi_cmnd *SCpnt,
+     }
+ #endif
  
- 	aac_fib_complete(fibptr);
- 	aac_fib_free(fibptr);
--	cmd->scsi_done(cmd);
-+	aac_scsi_done(cmd);
- }
- 
- static int aac_synchronize(struct scsi_cmnd *scsicmd)
-@@ -2688,7 +2693,7 @@ static void aac_start_stop_callback(void *context, struct fib *fibptr)
- 
- 	aac_fib_complete(fibptr);
- 	aac_fib_free(fibptr);
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
- }
- 
- static int aac_start_stop(struct scsi_cmnd *scsicmd)
-@@ -2702,7 +2707,7 @@ static int aac_start_stop(struct scsi_cmnd *scsicmd)
- 	if (!(aac->supplement_adapter_info.supported_options2 &
- 	      AAC_OPTION_POWER_MANAGEMENT)) {
- 		scsicmd->result = DID_OK << 16 | SAM_STAT_GOOD;
--		scsicmd->scsi_done(scsicmd);
-+		aac_scsi_done(scsicmd);
- 		return 0;
- 	}
- 
-@@ -3237,7 +3242,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 
- scsi_done_ret:
- 
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
- 	return 0;
- }
- 
-@@ -3546,7 +3551,7 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
- 	scsicmd->result |= le32_to_cpu(srbreply->scsi_status);
- 
- 	aac_fib_complete(fibptr);
--	scsicmd->scsi_done(scsicmd);
-+	aac_scsi_done(scsicmd);
- }
- 
- static void hba_resp_task_complete(struct aac_dev *dev,
-@@ -3686,7 +3691,7 @@ void aac_hba_callback(void *context, struct fib *fibptr)
- 	if (fibptr->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF)
- 		scsicmd->SCp.sent_command = 1;
- 	else
--		scsicmd->scsi_done(scsicmd);
-+		aac_scsi_done(scsicmd);
- }
- 
- /**
-@@ -3706,7 +3711,7 @@ static int aac_send_srb_fib(struct scsi_cmnd* scsicmd)
- 	if (scmd_id(scsicmd) >= dev->maximum_num_physicals ||
- 			scsicmd->device->lun > 7) {
- 		scsicmd->result = DID_NO_CONNECT << 16;
--		scsicmd->scsi_done(scsicmd);
-+		aac_scsi_done(scsicmd);
- 		return 0;
- 	}
- 
-@@ -3747,7 +3752,7 @@ static int aac_send_hba_fib(struct scsi_cmnd *scsicmd)
- 	if (scmd_id(scsicmd) >= dev->maximum_num_physicals ||
- 			scsicmd->device->lun > AAC_MAX_LUN - 1) {
- 		scsicmd->result = DID_NO_CONNECT << 16;
--		scsicmd->scsi_done(scsicmd);
-+		aac_scsi_done(scsicmd);
- 		return 0;
- 	}
- 
+-    SCpnt->scsi_done = done;
+     SCpnt->host_scribble = NULL;
+     SCpnt->result = 0;
+     SCpnt->SCp.phase = (int)acornscsi_datadirection(SCpnt->cmnd[0]);
