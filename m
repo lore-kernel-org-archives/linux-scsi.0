@@ -2,184 +2,148 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E85CC43219
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 08:12:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E907BC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 09:38:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 665BF610CC
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 08:12:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB66A61019
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 09:38:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240688AbhJGIOo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 04:14:44 -0400
-Received: from mailout1.samsung.com ([203.254.224.24]:43251 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240651AbhJGIOP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 04:14:15 -0400
-Received: from epcas2p4.samsung.com (unknown [182.195.41.56])
-        by mailout1.samsung.com (KnoxPortal) with ESMTP id 20211007081220epoutp01be63d96d7d52d862a1924f0439ddae8b~rsWXffgIG1645416454epoutp01Y
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Oct 2021 08:12:20 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20211007081220epoutp01be63d96d7d52d862a1924f0439ddae8b~rsWXffgIG1645416454epoutp01Y
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1633594340;
-        bh=AtwWk/lYIXpuBY7dYqK7BJvBfyNG81wlZG2P/A0+EEU=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=VMEr970e06yTFgbZel043sHcTl9usJ1VAI12djJcfMf1FtsymdTdftCLMeZft8iPc
-         uLI/UZtgKUA1FUAHZPAf+K8+kdEMUw9ZHjKlaDOjqAoX/Z6yemI4cRryl9TZXiNa5/
-         mDL4vdRgk5dIlh8YVn347bnv6f9Uwzec6KXVtmLg=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas2p1.samsung.com (KnoxPortal) with ESMTP id
-        20211007081159epcas2p1e71d383171530e850798fc614d42f5a3~rsWDgtzvz2609026090epcas2p1d;
-        Thu,  7 Oct 2021 08:11:59 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.89]) by
-        epsnrtp3.localdomain (Postfix) with ESMTP id 4HQ3vG4xwNz4x9QM; Thu,  7 Oct
-        2021 08:11:54 +0000 (GMT)
-Received: from epcas2p1.samsung.com ( [182.195.41.53]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        9E.E5.09749.7CBAE516; Thu,  7 Oct 2021 17:11:51 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
-        20211007081134epcas2p4b6c0673d5b47cd04d9aefcd3d07c75cc~rsVry-m1Z2566325663epcas2p4w;
-        Thu,  7 Oct 2021 08:11:34 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20211007081134epsmtrp173201091d0670ec8be84a8899b3eee4a~rsVrxkjK62192321923epsmtrp1n;
-        Thu,  7 Oct 2021 08:11:34 +0000 (GMT)
-X-AuditID: b6c32a47-d13ff70000002615-7a-615eabc72477
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        8E.53.09091.5BBAE516; Thu,  7 Oct 2021 17:11:33 +0900 (KST)
-Received: from localhost.localdomain (unknown [10.229.9.51]) by
-        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20211007081133epsmtip244070eeae98522b830d972e45b96fef7~rsVrfcs7J0566205662epsmtip27;
-        Thu,  7 Oct 2021 08:11:33 +0000 (GMT)
-From:   Chanho Park <chanho61.park@samsung.com>
-To:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
-Cc:     Bean Huo <beanhuo@micron.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        Can Guo <cang@codeaurora.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Jaehoon Chung <jh80.chung@samsung.com>,
-        Gyunghoon Kwon <goodjob.kwon@samsung.com>,
-        Sowon Na <sowon.na@samsung.com>,
-        linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        jongmin jeong <jjmin.jeong@samsung.com>,
-        Chanho Park <chanho61.park@samsung.com>
-Subject: [PATCH v4 02/16] scsi: ufs: add quirk to enable host controller
- without ph configuration
-Date:   Thu,  7 Oct 2021 17:09:20 +0900
-Message-Id: <20211007080934.108804-3-chanho61.park@samsung.com>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211007080934.108804-1-chanho61.park@samsung.com>
+        id S240592AbhJGJkO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 05:40:14 -0400
+Received: from mx3.molgen.mpg.de ([141.14.17.11]:52659 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S232678AbhJGJkN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 7 Oct 2021 05:40:13 -0400
+Received: from [192.168.0.2] (ip5f5aef71.dynamic.kabel-deutschland.de [95.90.239.113])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: pmenzel)
+        by mx.molgen.mpg.de (Postfix) with ESMTPSA id ECEA561E64784;
+        Thu,  7 Oct 2021 11:38:17 +0200 (CEST)
+Subject: Re: [smartpqi updates PATCH V2 09/11] smartpqi: fix duplicate device
+ nodes for tape changers
+To:     Don Brace <Don.Brace@microchip.com>
+Cc:     Kevin.Barnett@microchip.com, Scott.Teel@microchip.com,
+        Justin.Lindley@microchip.com, Scott.Benesh@microchip.com,
+        Gerry.Morong@microchip.com, Mahesh.Rajashekhara@microchip.com,
+        Mike.McGowen@microchip.com, Murthy.Bhat@microchip.com,
+        Balsundar.P@microchip.com, joseph.szczypek@hpe.com,
+        jeff@canonical.com, POSWALD@suse.com, john.p.donnelly@oracle.com,
+        mwilck@suse.com, linux-kernel@vger.kernel.org, hch@infradead.org,
+        martin.petersen@oracle.com, jejb@linux.vnet.ibm.com,
+        linux-scsi@vger.kernel.org
+References: <20210928235442.201875-1-don.brace@microchip.com>
+ <20210928235442.201875-10-don.brace@microchip.com>
+ <1351a25f-5310-cae3-ae47-01c842e0a185@molgen.mpg.de>
+ <SN6PR11MB2848E6A6F6824C55641FB6FEE1AF9@SN6PR11MB2848.namprd11.prod.outlook.com>
+From:   Paul Menzel <pmenzel@molgen.mpg.de>
+Message-ID: <3d4832bd-9781-9194-2b33-a0e20a9ff913@molgen.mpg.de>
+Date:   Thu, 7 Oct 2021 11:38:17 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
+In-Reply-To: <SN6PR11MB2848E6A6F6824C55641FB6FEE1AF9@SN6PR11MB2848.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01TbUxTZxTOe2+5Lcxud0XGu4ZBd40zhYAtUrhOGQaMu4YuwbEtOofsjt4A
-        oV9rywSzZK1DxodCiZtoGbNA3BQ1dQhYvrQCETsyGFSFsWzABNdqiAiZDgq4loub/55zzvOc
-        85z3g4cKJjAhL1dtYHRqWklgQZzWHrEsuu/8AVpyphaSzqkLGDnxXStGehZuY+T1yVIOeWJ2
-        ASXnbN8HkK5rUeTRthSy31yPkFM2C0rWj7Yi5OhicQB57g5J/jjzD0KeHLyKkOUjdoz8oW8F
-        Ib0L3cgOAeW6lUpZjMcwylVxDKEun42kGjo9CNXUWIpR5noHoJ7YSjDq0fQYh6pobgTUfFM4
-        9ZWjHElb92He9hyGVjA6EaPO0ihy1dmJRGp6ZkqmLF4ijZZuJRMIkZpWMYnETnla9K5cpW83
-        QvQZrcz3pdJovZ7Y/NZ2nSbfwIhyNHpDIsFoFUptgjZGT6v0+ersGDVjeFMqkcTKfMSP83JO
-        Db+urXmp4FyZAzGCX9eVgUAexOPgvY45rAwE8QS4HcDLQ10cNpgDcNLZhrLBYwBvuDt8NN6q
-        ZPxMCpvvArBnqXaN9AhA52I95u+L4dGw+a/7wF9Yjz8EcOru11x/gOIeFN52znP9rYLxLHjJ
-        E+4XcPCNsHa0fTXNx5Pg6DzC+ouAvYulqB8H4jtgZ/vF1f58/GXoPDXF8WPUx/mypWbVBMTd
-        PHit1s1hxTth3cB8AIuD4f2+Zi6LhdBTWcxlBeUAHvnz6VrhPIClJjmLk+BidXOA3xCKi6Gt
-        fTO7/QbYO7Y290VY0rPMZdN8WFIsYIWboONK9ZqD12D5t88cUHCy3YGwZ3UcwObD7gAzEFme
-        W8fy3DqW/wdbAdoIXmG0elU2o4/VbvnvgrM0qiaw+tQj37aDkzOzMd0A4YFuAHkosZ6vScqg
-        BXwFXXiI0WkydflKRt8NZL6zrkKFIVka319RGzKlcVslcfHx0oRYmSSBCOXXriTTAjybNjB5
-        DKNldM90CC9QaERCd0mOO8wt3hl8JbEzSKWqmp/uc8kuXi02ewfvHf7knahKr31pdnD6UHKr
-        LLVO2L9xaO/eYG7/vv0mhRWGc9794EnU+65kwS8xJQPlpbMi04bOlpqwjIcX5ApRsklZVace
-        E7vD0u4Me+zy3XjcePoIMnPTFrEkzw4MuVHxG73fdOR6W0d8z9LPA7e874mHblYeDOsWW7+Z
-        +NuZPHzw88Fp+wvMkFx5V2SZazja+6DgD/eBp9FTV6rL9lx6vCn3bOFImbXIZTidnvWp9PcQ
-        4Z7YBxWzp8czPnrj1ROhRf3b2glNoekn3aSxwujJsHaFLxdEhG3b9wWaiuxu8C4rtliLxARH
-        n0NLI1Gdnv4X/Q5l0HMEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprJIsWRmVeSWpSXmKPExsWy7bCSvO7W1XGJBosOKVmcfLKGzeLBvG1s
-        Fi9/XmWzOPiwk8Vi2oefzBaf1i9jtbi8X9uiZ6ezxekJi5gsnqyfxWyx6MY2Josbv9pYLVZe
-        s7DY+PYHk8WM8/uYLLqv72CzWH78H5PF75+HmByEPC5f8faY1dDL5nG5r5fJY/MKLY/Fe14y
-        eWxa1cnmMWHRAUaP7+s72Dw+Pr3F4tG3ZRWjx+dNch7tB7qZAniiuGxSUnMyy1KL9O0SuDJm
-        XlIsmM1fsbLrAFMD402eLkYODgkBE4n7S527GLk4hAR2M0qcXH+MpYuREyguK/Hs3Q52CFtY
-        4n7LEVaIoveMEo82zgFLsAnoSmx5/ooRxBYR+MgoMeebFkgRs8BXZolNR6cxgSSEBRIl3r+b
-        CVbEIqAqMffGLnaQzbwC9hI3PjNBLJCXOPKrkxnE5hRwkNizay0bSIkQUEnX30iQMK+AoMTJ
-        mU/AbmMGKm/eOpt5AqPALCSpWUhSCxiZVjFKphYU56bnFhsWGOallusVJ+YWl+al6yXn525i
-        BMeeluYOxu2rPugdYmTiYDzEKMHBrCTCm28fmyjEm5JYWZValB9fVJqTWnyIUZqDRUmc90LX
-        yXghgfTEktTs1NSC1CKYLBMHp1QDU5jBy8dv7NuY1Rs4t3AY7k68mcRVwPrednPIJDv9DXxb
-        GJZmuhQXHg6evvrCI+fUlbXWjo1R7Jbnkmuf7rhy5HezGVM2w//l2z3cxPfpBzHvPHS9tKiz
-        7WruNZtz6sF7YiqFvi9b7XR9SvU3o3dq5g07nlqemTDvj3AZt/Snrez/1j1sLtzlnsFj8uwQ
-        MysXq7dQ1gdx3y4uH/PrB/u73JiiRTeY6U920OftXBJR55j84fOajG8/H34oOFVtPO3jVb89
-        B+dFTrXkYcjvY1r+cnXr7sg7t7y5bi2ffc33Gavsp6X790wzWfHx6QG24mU9AY9v68Uz/fmX
-        /37H+Qq/sPDdd74Ylt67pys0y2GqoRJLcUaioRZzUXEiAOR2OtYsAwAA
-X-CMS-MailID: 20211007081134epcas2p4b6c0673d5b47cd04d9aefcd3d07c75cc
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-CMS-TYPE: 102P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20211007081134epcas2p4b6c0673d5b47cd04d9aefcd3d07c75cc
-References: <20211007080934.108804-1-chanho61.park@samsung.com>
-        <CGME20211007081134epcas2p4b6c0673d5b47cd04d9aefcd3d07c75cc@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: jongmin jeong <jjmin.jeong@samsung.com>
+Dear Don,
 
-samsung ExynosAuto SoC has two types of host controller interface to
-support the virtualization of UFS Device.
-One is the physical host(PH) that the same as conventaional UFSHCI,
-and the other is the virtual host(VH) that support data transfer function only.
 
-In this structure, the virtual host does not support like device management.
-This patch skips the physical host interface configuration part that cannot
-be performed in the virtual host.
+Am 05.10.21 um 22:23 schrieb Don.Brace@microchip.com:
 
-Suggested-by: Alim Akhtar <alim.akhtar@samsung.com>
-Cc: James E.J. Bottomley <jejb@linux.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Signed-off-by: jongmin jeong <jjmin.jeong@samsung.com>
-Signed-off-by: Chanho Park <chanho61.park@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 3 +++
- drivers/scsi/ufs/ufshcd.h | 6 ++++++
- 2 files changed, 9 insertions(+)
+>> Our controller FW lists both LUNs in the RPL results.
+> 
+> Please document the firmware version (and controller) you tested with in the commit message.
+> 
+> DON: Done in V3, thanks for your review.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7cf8e688aec8..aec18ce203b9 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -8053,6 +8053,9 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool init_dev_params)
- 	if (ret)
- 		goto out;
- 
-+	if (hba->quirks & UFSHCD_QUIRK_SKIP_PH_CONFIGURATION)
-+		goto out;
+When I understood Martin correctly, he already pulled the patches in. 
+It’d be great if you added it in an answer then.
+
+> Shortly describing the implementation (new struct member ignore_device) would be nice.
+> DON: Don in V3, thanks for your review.
+> 
+>>        u8      rescan : 1;
+>> +     u8      ignore_device : 1;
+> 
+> Why not type bool?
+> Don: They both take the same amount of memory and since the other members are also u8, the new member was also u8 for consistency.
+
+Well, the below struct members are declared as bool.
+
+         u8      volume_offline : 1;
+         u8      rescan : 1;
+         bool    aio_enabled;            /* only valid for physical disks */
+
+It’d be great, if you could clean that up in the future.
+
+>> -                     device->lun = sdev->lun;
+>> -                     device->target_lun_valid = true;
+> 
+> Off topic, with `u8 target_lun_valid : 1`, why is `true` used.
+> Don: Has the same behavior, and carried forward from other member fields.
+
+In my opinion, if bool is used, true/false should be used too.
+
+>> +                     if (device->target_lun_valid) {
+>> +                             device->ignore_device = true;
+>> +                     } else {
+>> +                             device->target = sdev_id(sdev);
+>> +                             device->lun = sdev->lun;
+>> +                             device->target_lun_valid = true;
+>> +                     }
+> 
+> If the LUN should be ignored, is it actually valid? Why not extend target_lun_valid and add a third option (enums?) to ignore it?
+> 
+> Don: The reason is that it takes advantage of the order the devices are added and how slave_alloc and slave_configure fit into this order.
+
+Ok. My answer should have also been to use a bitfield. Sorry about that. 
+It does not look nice to me to add new attributes to work around 
+firmware isuses.
+
+>> +     return device->devtype == TYPE_TAPE || device->devtype ==
+>> +TYPE_MEDIUM_CHANGER;
+> 
+> Why also check for TYPE_TAPE? The function name should be updated then?
+> Don: Because our tape changer consisted of the changer and one or more tape units and both were duplicated.
+
+Yes, I figured. But the function name is still incorrect/misleading then?
+
+>>    static int pqi_slave_configure(struct scsi_device *sdev)
+>> +     if (pqi_is_tape_changer_device(device) && device->ignore_device) {
+>> +             rc = -ENXIO;
+>> +             device->ignore_device = false;
+> 
+> I’d add a `return -ENXIO` here, and remove the variable.
+> Don: This works in conjunction with slave_alloc and is needed.
+
+Instead of
+
++	if (pqi_is_tape_changer_device(device) && device->ignore_device) {
++		rc = -ENXIO;
++		device->ignore_device = false;
++	}
 +
- 	/* Debug counters initialization */
- 	ufshcd_clear_dbg_ufs_stats(hba);
- 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 5d485d65591f..aceaedcc1558 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -594,6 +594,12 @@ enum ufshcd_quirks {
- 	 * support UIC command
- 	 */
- 	UFSHCD_QUIRK_BROKEN_UIC_CMD			= 1 << 15,
-+
-+	/*
-+	 * This quirk needs to be enabled if the host controller cannot
-+	 * support physical host configuration.
-+	 */
-+	UFSHCD_QUIRK_SKIP_PH_CONFIGURATION		= 1 << 16,
- };
- 
- enum ufshcd_caps {
--- 
-2.33.0
++	return rc;
 
+I meant
+
++	if (pqi_is_tape_changer_device(device) && device->ignore_device) {
++		device->ignore_device = false;
++		return -ENXIO;
++	}
++
++	return 0;
+
+Lastly, some (debug) log messages would always be helpful in my opinion, 
+if stuff is worked around.
+
+
+Kind regards,
+
+Paul
