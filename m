@@ -2,50 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63CDDC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0000C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4ECF461077
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD29F610A0
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234337AbhJGVVj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 17:21:39 -0400
-Received: from mail-pf1-f176.google.com ([209.85.210.176]:34754 "EHLO
-        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235301AbhJGVVh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:21:37 -0400
-Received: by mail-pf1-f176.google.com with SMTP id g14so6428725pfm.1
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:19:43 -0700 (PDT)
+        id S234388AbhJGVVo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 17:21:44 -0400
+Received: from mail-pl1-f172.google.com ([209.85.214.172]:46659 "EHLO
+        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234049AbhJGVVn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:21:43 -0400
+Received: by mail-pl1-f172.google.com with SMTP id w11so4720281plz.13
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:19:49 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=S+3Uwj2D4q3hy8MOz5KjrEDG2Gq3Osya5s/ucEvkU7o=;
-        b=zAlAcAqT2zuTbm/NP7c0whVNSkrcuJQaslkUWBkNMZrrRRmpDBpyI5Il+NQtAiWxFe
-         Rt+HBodkemNgu4FPjH/QDrRURgvdFmbyTggAC+25IQgI0zc/W0pwiuc+K1AI6nT+D5O+
-         qk5hg2wm3x8HKynOgY5I7TM83ZbLFqBdoaqiXpQ7zoTpx8G6nzxsik8ksxdDjQbbPK5N
-         HmOvJLnmwt1uQnnodgHGAgB5MIv5Ff7M9QnZj2NH/ZfgxVqvuxPDRGfpw1z7sOM7wqGq
-         RwQcN46mbCkNKaTxHx32mmXlsn2CsEHpsiHKp8HwBHjG0OFsnNIfARWYAramB+X0W6Lr
-         qHwA==
-X-Gm-Message-State: AOAM532m4oUf5LHHUDkDbNiXHDPxF3XXhza/45HWkGhAHVU/VbwSOmVC
-        18OH1jxU8390YFJef3LWX90=
-X-Google-Smtp-Source: ABdhPJzZ2iJtRCQv5yA+eJaiM3YcMT3+mTMn8Ycv1XSDGg1BYtSNYN3ViQAVuMo2M7JwV9cbSk+3iQ==
-X-Received: by 2002:a62:6203:0:b0:44c:7649:90b0 with SMTP id w3-20020a626203000000b0044c764990b0mr6740546pfb.21.1633641582908;
-        Thu, 07 Oct 2021 14:19:42 -0700 (PDT)
+        bh=cW65z7/LTV3aCyXTScAx5pfPvVu6c26bkf/AFoIwOY0=;
+        b=S8uRRTQKv+5ajS20o9mz+wTFYe7sAqZkj28whtvcbXdjH+X+45F/HgbJ9QlXCcW0Ib
+         KM7ou0I48L0jIU15CWuFvX/lQfRVtxFAe9UHPk/+P7GqWvpkOwKAiYl0w/OuMHpv+3QD
+         3nS3WDJ5veoSh/8HOwxiJmQLOwO/gYH//VplYMDlf5YEYIviKbQ7M3T8ZEqzog7NDIJj
+         mLwXFkBpMgaZFtLMZs3Dv3VRCGRk1lFXwwaEClTuQUSGtJdYE6zeX3/OxadVwumNnvj+
+         NvE6pKISq1FuWX/r3a1iiQyleZCFU0Ht38tXlRG4tYF72Jn/qXjmWmDQS2CkihFH1iLJ
+         ew0A==
+X-Gm-Message-State: AOAM532yYPhsbAUQKmY4HpRUCdisn9kQmKQ2mChMebHNnNXwNJXAH8iL
+        jXI/3idSPxIIASdtgi+Z+vU=
+X-Google-Smtp-Source: ABdhPJzVeu3KpNUuzJtq8SJqMh2m8Grbb32UNLFCuvSm29/0qn8hGkZn76gJ8VR0YjiFDXriiAeMnA==
+X-Received: by 2002:a17:90b:3382:: with SMTP id ke2mr7876803pjb.153.1633641589581;
+        Thu, 07 Oct 2021 14:19:49 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.19.41
+        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.19.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 14:19:42 -0700 (PDT)
+        Thu, 07 Oct 2021 14:19:49 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Nilesh Javali <njavali@marvell.com>,
-        Manish Rangankar <mrangankar@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 16/46] scsi: bnx2i: Switch to attribute groups
-Date:   Thu,  7 Oct 2021 14:18:22 -0700
-Message-Id: <20211007211852.256007-17-bvanassche@acm.org>
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Subject: [PATCH v2 17/46] scsi: csiostor: Switch to attribute groups
+Date:   Thu,  7 Oct 2021 14:18:23 -0700
+Message-Id: <20211007211852.256007-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007211852.256007-1-bvanassche@acm.org>
 References: <20211007211852.256007-1-bvanassche@acm.org>
@@ -60,59 +58,82 @@ struct device_attribute directly. Hence switch to attribute groups.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/bnx2i/bnx2i.h       |  2 +-
- drivers/scsi/bnx2i/bnx2i_iscsi.c |  2 +-
- drivers/scsi/bnx2i/bnx2i_sysfs.c | 15 ++++++++++++---
- 3 files changed, 14 insertions(+), 5 deletions(-)
+ drivers/scsi/csiostor/csio_scsi.c | 38 +++++++++++++++++++++++--------
+ 1 file changed, 28 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
-index 663a63d4dae4..e9cf53559408 100644
---- a/drivers/scsi/bnx2i/bnx2i.h
-+++ b/drivers/scsi/bnx2i/bnx2i.h
-@@ -795,7 +795,7 @@ extern struct cnic_ulp_ops bnx2i_cnic_cb;
- extern unsigned int sq_size;
- extern unsigned int rq_size;
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 3b2eb6ce1fcf..b7ef0a6cae22 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -1460,14 +1460,23 @@ static DEVICE_ATTR(disable_port, S_IWUSR, NULL, csio_disable_port);
+ static DEVICE_ATTR(dbg_level, S_IRUGO | S_IWUSR, csio_show_dbg_level,
+ 		  csio_store_dbg_level);
  
--extern struct device_attribute *bnx2i_dev_attributes[];
-+extern const struct attribute_group *bnx2i_dev_attr_groups[];
- 
- 
- 
-diff --git a/drivers/scsi/bnx2i/bnx2i_iscsi.c b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-index 1b5f3e143f07..4d034affbf09 100644
---- a/drivers/scsi/bnx2i/bnx2i_iscsi.c
-+++ b/drivers/scsi/bnx2i/bnx2i_iscsi.c
-@@ -2266,7 +2266,7 @@ static struct scsi_host_template bnx2i_host_template = {
- 	.cmd_per_lun		= 128,
- 	.this_id		= -1,
- 	.sg_tablesize		= ISCSI_MAX_BDS_PER_CMD,
--	.shost_attrs		= bnx2i_dev_attributes,
-+	.shost_groups		= bnx2i_dev_attr_groups,
- 	.track_queue_depth	= 1,
+-static struct device_attribute *csio_fcoe_lport_attrs[] = {
+-	&dev_attr_hw_state,
+-	&dev_attr_device_reset,
+-	&dev_attr_disable_port,
+-	&dev_attr_dbg_level,
++static struct attribute *csio_fcoe_lport_attrs[] = {
++	&dev_attr_hw_state.attr,
++	&dev_attr_device_reset.attr,
++	&dev_attr_disable_port.attr,
++	&dev_attr_dbg_level.attr,
+ 	NULL,
  };
  
-diff --git a/drivers/scsi/bnx2i/bnx2i_sysfs.c b/drivers/scsi/bnx2i/bnx2i_sysfs.c
-index bea00073cb7c..7aa5440aa13c 100644
---- a/drivers/scsi/bnx2i/bnx2i_sysfs.c
-+++ b/drivers/scsi/bnx2i/bnx2i_sysfs.c
-@@ -142,8 +142,17 @@ static DEVICE_ATTR(sq_size, S_IRUGO | S_IWUSR,
- static DEVICE_ATTR(num_ccell, S_IRUGO | S_IWUSR,
- 		   bnx2i_show_ccell_info, bnx2i_set_ccell_info);
- 
--struct device_attribute *bnx2i_dev_attributes[] = {
--	&dev_attr_sq_size,
--	&dev_attr_num_ccell,
-+static struct attribute *bnx2i_dev_attributes[] = {
-+	&dev_attr_sq_size.attr,
-+	&dev_attr_num_ccell.attr,
++static const struct attribute_group csio_fcoe_lport_attr_group = {
++	.attrs = csio_fcoe_lport_attrs
++};
++
++static const struct attribute_group *csio_fcoe_lport_attr_groups[] = {
++	&csio_fcoe_lport_attr_group,
 +	NULL
 +};
 +
-+static const struct attribute_group bnx2i_dev_attr_group = {
-+	.attrs = bnx2i_dev_attributes
+ static ssize_t
+ csio_show_num_reg_rnodes(struct device *dev,
+ 		     struct device_attribute *attr, char *buf)
+@@ -1479,12 +1488,21 @@ csio_show_num_reg_rnodes(struct device *dev,
+ 
+ static DEVICE_ATTR(num_reg_rnodes, S_IRUGO, csio_show_num_reg_rnodes, NULL);
+ 
+-static struct device_attribute *csio_fcoe_vport_attrs[] = {
+-	&dev_attr_num_reg_rnodes,
+-	&dev_attr_dbg_level,
++static struct attribute *csio_fcoe_vport_attrs[] = {
++	&dev_attr_num_reg_rnodes.attr,
++	&dev_attr_dbg_level.attr,
+ 	NULL,
+ };
+ 
++static const struct attribute_group csio_fcoe_vport_attr_group = {
++	.attrs = csio_fcoe_vport_attrs
 +};
 +
-+const struct attribute_group *bnx2i_dev_attr_groups[] = {
-+	&bnx2i_dev_attr_group,
- 	NULL
++static const struct attribute_group *csio_fcoe_vport_attr_groups[] = {
++	&csio_fcoe_vport_attr_group,
++	NULL
++};
++
+ static inline uint32_t
+ csio_scsi_copy_to_sgl(struct csio_hw *hw, struct csio_ioreq *req)
+ {
+@@ -2277,7 +2295,7 @@ struct scsi_host_template csio_fcoe_shost_template = {
+ 	.this_id		= -1,
+ 	.sg_tablesize		= CSIO_SCSI_MAX_SGE,
+ 	.cmd_per_lun		= CSIO_MAX_CMD_PER_LUN,
+-	.shost_attrs		= csio_fcoe_lport_attrs,
++	.shost_groups		= csio_fcoe_lport_attr_groups,
+ 	.max_sectors		= CSIO_MAX_SECTOR_SIZE,
  };
+ 
+@@ -2296,7 +2314,7 @@ struct scsi_host_template csio_fcoe_shost_vport_template = {
+ 	.this_id		= -1,
+ 	.sg_tablesize		= CSIO_SCSI_MAX_SGE,
+ 	.cmd_per_lun		= CSIO_MAX_CMD_PER_LUN,
+-	.shost_attrs		= csio_fcoe_vport_attrs,
++	.shost_groups		= csio_fcoe_vport_attr_groups,
+ 	.max_sectors		= CSIO_MAX_SECTOR_SIZE,
+ };
+ 
