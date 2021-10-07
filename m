@@ -2,70 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9966DC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:33:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B63AEC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:39:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7F44A61077
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:33:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8961460EBD
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:39:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234055AbhJGVfe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 17:35:34 -0400
-Received: from mail-pg1-f181.google.com ([209.85.215.181]:41882 "EHLO
-        mail-pg1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230120AbhJGVfe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:35:34 -0400
-Received: by mail-pg1-f181.google.com with SMTP id v11so1063450pgb.8
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:33:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=5xcXKRwZ74WR4JglJVNYWwS1t0rAzIU9zzht+d5mX6E=;
-        b=S8o612rPD0qairuA+eZH3OcI6ODHeoy7PxvGa6fx8QLAhopFk+pKM81e4ZBUIHdGH3
-         B6gtCeH4ewnVvd0NMVEMNDr7GNuQjXk4wLNgY1aAv+4IVnBANbLGObcu6VojIGhFbeLK
-         dL8MM0Tk0lMfIJvmx1eEY5Z87qyj1m05amsg+OP14wavXSe7nCQpleDIhAFYNOxXQwq/
-         T1z9Y9CTMNlkYv5CAj7Y+d6/x+cTV6LQXf5JybEODIWsvZvYdOqghj5/e9G4cbCQ0q60
-         7AtuGrwSdswYeK8Ue7zxXHfIgE98Blx9XivtYyO+Q7LgAdVA3YP2tfdrx7fc2RrmlGXG
-         bfsg==
-X-Gm-Message-State: AOAM531Az0rzQp1HgCJ1lajpb8ykblVqtQNdVU+nYZ/pvJi1ctP2iL5f
-        CMwwK2RgQyuVJ0hhJqBeAXs=
-X-Google-Smtp-Source: ABdhPJznWN/gFns76NicobUTqxQRAqLnrjdXdqVZq43YfLWxFv2HWCAKC9SCQ68zvHrbN82NK1N1/w==
-X-Received: by 2002:a63:4464:: with SMTP id t36mr1601545pgk.4.1633642419748;
-        Thu, 07 Oct 2021 14:33:39 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id e7sm343158pfc.114.2021.10.07.14.33.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 07 Oct 2021 14:33:38 -0700 (PDT)
-Subject: Re: [PATCH v4] scsi: ufs: support vops pre suspend for mediatek to
- disable auto-hibern8
-To:     peter.wang@mediatek.com, stanley.chu@mediatek.com,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        avri.altman@wdc.com, alim.akhtar@samsung.com, jejb@linux.ibm.com
-Cc:     wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, powen.kao@mediatek.com,
-        jonathan.hsu@mediatek.com, qilin.tan@mediatek.com,
-        lin.gui@mediatek.com, mikebi@micron.com
-References: <20211006054705.21885-1-peter.wang@mediatek.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <0600b929-98cf-034d-a49e-c7d13e887422@acm.org>
-Date:   Thu, 7 Oct 2021 14:33:36 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S242305AbhJGVlM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 17:41:12 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:3943 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235665AbhJGVlM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:41:12 -0400
+Received: from fraeml734-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HQPlc71p7z67bcg;
+        Fri,  8 Oct 2021 05:36:28 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml734-chm.china.huawei.com (10.206.15.215) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.8; Thu, 7 Oct 2021 23:39:15 +0200
+Received: from [10.47.80.141] (10.47.80.141) by lhreml724-chm.china.huawei.com
+ (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Thu, 7 Oct 2021
+ 22:39:14 +0100
+Subject: Re: [PATCH v2] scsi: core: Fix shost->cmd_per_lun calculation in
+ scsi_add_host_with_dma()
+To:     Dexuan Cui <decui@microsoft.com>, <kys@microsoft.com>,
+        <sthemmin@microsoft.com>, <wei.liu@kernel.org>,
+        <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <haiyangz@microsoft.com>, <ming.lei@redhat.com>,
+        <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
+        <linux-hyperv@vger.kernel.org>, <longli@microsoft.com>,
+        <mikelley@microsoft.com>
+CC:     <linux-kernel@vger.kernel.org>, <stable@vger.kernel.org>
+References: <20211007174957.2080-1-decui@microsoft.com>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <8fe3959d-9462-64f6-53d8-ef7036ec0545@huawei.com>
+Date:   Thu, 7 Oct 2021 22:41:46 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
-In-Reply-To: <20211006054705.21885-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20211007174957.2080-1-decui@microsoft.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.47.80.141]
+X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/5/21 10:47 PM, peter.wang@mediatek.com wrote:
-> Mediatek UFS design need disable auto-hibern8 before suspend.
-> This patch introduce an solution to do pre suspned before SSU
-> (sleep) command.
+On 07/10/2021 18:49, Dexuan Cui wrote:
+> After commit ea2f0f77538c, a 416-CPU VM running on Hyper-V hangs during
+> boot because scsi_add_host_with_dma() sets shost->cmd_per_lun to a
+> negative number (the below numbers may differ in different kernel versions):
+> in drivers/scsi/storvsc_drv.c, 	storvsc_drv_init() sets
+> 'max_outstanding_req_per_channel' to 352, and storvsc_probe() sets
+> 'max_sub_channels' to (416 - 1) / 4 = 103 and sets scsi_driver.can_queue to
+> 352 * (103 + 1) * (100 - 10) / 100 = 32947, which exceeds SHRT_MAX.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+I think that you just need to mention that if can_queue exceeds 
+SHRT_MAX, then there is a data truncation issue.
+
+> 
+> Use min_t(int, ...) to fix the issue.
+> 
+> Fixes: ea2f0f77538c ("scsi: core: Cap scsi_host cmd_per_lun at can_queue")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Dexuan Cui <decui@microsoft.com>
+
+It looks ok, I'd just like to test it a bit more.
+
+Thanks,
+John
+
+> ---
+> 
+> v1 tried to fix the issue by changing the storvsc driver:
+> https://lwn.net/ml/linux-kernel/BYAPR21MB1270BBC14D5F1AE69FC31A16BFB09@BYAPR21MB1270.namprd21.prod.outlook.com/
+> 
+> v2 directly fixes the scsi core change instead as Michael Kelley and
+> John Garry suggested (refer to the above link).
+
+To be fair, it was Michael's suggestion
+
+> 
+>   drivers/scsi/hosts.c | 3 ++-
+>   1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index 3f6f14f0cafb..24b72ee4246f 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -220,7 +220,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+>   		goto fail;
+>   	}
+>   
+> -	shost->cmd_per_lun = min_t(short, shost->cmd_per_lun,
+> +	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
+> +	shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
+>   				   shost->can_queue);
+>   
+>   	error = scsi_init_sense_cache(shost);
+> 
+
