@@ -2,106 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DCD6C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 209B6C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:46:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20D2A61074
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:34:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 062BE61100
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:46:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234118AbhJGUg3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 16:36:29 -0400
-Received: from mail-pg1-f174.google.com ([209.85.215.174]:37626 "EHLO
-        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233343AbhJGUg3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:36:29 -0400
-Received: by mail-pg1-f174.google.com with SMTP id r201so932647pgr.4
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:34:35 -0700 (PDT)
+        id S241263AbhJGUsW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 16:48:22 -0400
+Received: from mail-pj1-f48.google.com ([209.85.216.48]:43571 "EHLO
+        mail-pj1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241040AbhJGUsV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:48:21 -0400
+Received: by mail-pj1-f48.google.com with SMTP id k23-20020a17090a591700b001976d2db364so6140547pji.2
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:46:27 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=gETpgcryXTclxQDwE+7u7gIm4n1lVecMk4ciBWqP91I=;
-        b=5uFC4kOH+THLDeOne/DK8EDL5iX1/LBvUDrfoSpUkgtmEkhYJGkxOh+i1fmwyJVpKF
-         mp2HoEEC2xNY/+KDWWcQN0S5sxOarClvQKyPL4h0Yq6IEPG6DRtY8IQjif4tBSRoHxrV
-         NyE3b8vPWHI79aiLwgzFSOprpLlpVhRd0yUi3brKg4wY2oa8WyWXWZom41QAAWIWLpV8
-         TzzmKH2c7SUBvmdnv+YNhD78+401IAXNgud04sYnrKzQElkIllC+CHwolQ66NcJLVTLT
-         RWSuz/+ATp/M6qz2+hnepmRcT/PxVRjwwizvQbTuqZSoVjDzTejbz9Bj8DPWbJCJsVTT
-         e1Ow==
-X-Gm-Message-State: AOAM530he/L8GiHdFADjTPA+FcbGh/FFRbrm/vkBm3rkGBs172wXmBrM
-        PjWjvekvT2CuC+Iijnf/fAItN/MH2Z4=
-X-Google-Smtp-Source: ABdhPJypAnW19UnI5KrxZ6DofwKvlsa3Ht4Uen82jv2D7nA4A6Mn99WXKfWFWX/V/kN39V0tRK51lw==
-X-Received: by 2002:aa7:8b0d:0:b0:44c:89ca:7844 with SMTP id f13-20020aa78b0d000000b0044c89ca7844mr6095937pfd.19.1633638874466;
-        Thu, 07 Oct 2021 13:34:34 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=z2KIcbMyDQWu85zscZeDvvn79i07oQpu1zZ0ct8FFEQ=;
+        b=Fpy/+i5S21l6VnQYhaGeZ8JTJImh04HKq5H9gNRrRCe3wJuHcblij4g4L492zYEOZh
+         hYbKwa81qzMdSwP0cthr7FoyKv3Yp7J4njbl4F0U1hkZ+DVbuiukcTjKBpygFtJiGJTu
+         5hZQF5oCXaDpRuajkHykT2tClUGwBc8CLDIcao8S7PAmwAR/Q/n1bdlTGf+SYoI16IMf
+         h4q0e0+9tMl5OEm21gM41JpumXpCm4O7vbA1sx1SWvUFTen6c0SkBr87YILNFq1Cc9Vl
+         KkaQa2vOef4oxl4fKuzswEx9B/JVC3uIvEL5Tsgk1wG1+yQroedZJa4ido1qHs0QmaXC
+         FuWQ==
+X-Gm-Message-State: AOAM530abqM9tMpgPasE7pxK+Q6iURpmN+FPW0TU6Stq1J88i3o6yzlC
+        TUdMP/N5Thjzy0iJWDg1Cqo=
+X-Google-Smtp-Source: ABdhPJwvdo/mmogxtNaZB5FMe64EQ2VGJozgJPH2R+aLWZxN7R+gtpqpBc+/37AnCHpxR34IV6qeKA==
+X-Received: by 2002:a17:90a:414c:: with SMTP id m12mr7860603pjg.187.1633639587328;
+        Thu, 07 Oct 2021 13:46:27 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id w4sm297153pfb.3.2021.10.07.13.34.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 07 Oct 2021 13:34:33 -0700 (PDT)
-Subject: Re: [PATCH 3/3] scsi: pm: Only runtime resume if necessary
-To:     Alan Stern <stern@rowland.harvard.edu>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Hannes Reinecke <hare@suse.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Martin Kepplinger <martin.kepplinger@puri.sm>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20211006215453.3318929-1-bvanassche@acm.org>
- <20211006215453.3318929-4-bvanassche@acm.org>
- <20211007162408.GA692514@rowland.harvard.edu>
+        by smtp.gmail.com with ESMTPSA id 17sm280831pfh.216.2021.10.07.13.46.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Oct 2021 13:46:26 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <7d4a6e84-dc20-5447-04c3-f1a2bb4abca8@acm.org>
-Date:   Thu, 7 Oct 2021 13:34:31 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Bean Huo <beanhuo@micron.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>
+Subject: [PATCH v3 75/88] ufs: Call scsi_done() directly
+Date:   Thu,  7 Oct 2021 13:46:01 -0700
+Message-Id: <20211007204618.2196847-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
+In-Reply-To: <20211007202923.2174984-1-bvanassche@acm.org>
+References: <20211007202923.2174984-1-bvanassche@acm.org>
 MIME-Version: 1.0
-In-Reply-To: <20211007162408.GA692514@rowland.harvard.edu>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/7/21 9:24 AM, Alan Stern wrote:
-> On Wed, Oct 06, 2021 at 02:54:53PM -0700, Bart Van Assche wrote:
->> The following query shows which drivers define callbacks that are called
->> by the power management support code in the SCSI core (scsi_pm.c):
->>
->> $ git grep -nHEwA16 "$(echo $(git grep -h 'scsi_register_driver(&' |
->>        sed 's/.*&//;s/\..*//') | sed 's/ /|/g')" |
->>      grep '\.pm[[:blank:]]*=[[:blank:]]'
->> drivers/scsi/sd.c-620-		.pm		= &sd_pm_ops,
->> drivers/scsi/sr.c-100-		.pm		= &sr_pm_ops,
->> drivers/scsi/ufs/ufshcd.c-9765-		.pm = &ufshcd_wl_pm_ops,
->>
->> Since unconditionally runtime resuming a device during system resume is
->> not necessary, remove that code. Modify the SCSI disk (sd) driver such
->> that it follows the same approach as the UFS driver, namely to skip
->> system suspend and resume for devices that are runtime suspended. The
->> CD-ROM code does not need to be updated since its PM callbacks do not
->> affect the device power state.
-> 
-> You may already be aware of this, but in case you aren't...
-> 
-> The PM core already contains some provisions for handling these kinds
-> of things.  They are described in
-> Documentation/driver-api/pm/devices.rst.  See particularly the parts
-> relating to the DPM_FLAG_NO_DIRECT_COMPLETE, DPM_FLAG_SMART_PREPARE,
-> DPM_FLAG_SMART_SUSPEND, DPM_FLAG_MAY_SKIP_RESUME, and
-> power.direct_complete flags.
-> 
-> A follow-up patch after this series might be able to take advantage of
-> these facilities.
+Conditional statements are faster than indirect calls. Hence call
+scsi_done() directly.
 
-Hi Alan,
+Reviewed-by: Bean Huo <beanhuo@micron.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Thanks for the feedback. I was not yet aware of these flags. Since using 
-these flags would make patch 3/3 only a few lines shorter and would make 
-it harder to review for anyone who is not familiar with the DPM flags, 
-I'm considering to keep patch 3/3 as is (this means not using the DPM 
-flags).
-
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index d91a405fd181..a04c373e6b07 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2704,7 +2704,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		if (hba->pm_op_in_progress) {
+ 			hba->force_reset = true;
+ 			set_host_byte(cmd, DID_BAD_TARGET);
+-			cmd->scsi_done(cmd);
++			scsi_done(cmd);
+ 			goto out;
+ 		}
+ 		fallthrough;
+@@ -2713,7 +2713,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		goto out;
+ 	case UFSHCD_STATE_ERROR:
+ 		set_host_byte(cmd, DID_ERROR);
+-		cmd->scsi_done(cmd);
++		scsi_done(cmd);
+ 		goto out;
+ 	}
+ 
+@@ -5294,7 +5294,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 			/* Mark completed command as NULL in LRB */
+ 			lrbp->cmd = NULL;
+ 			/* Do not touch lrbp after scsi done */
+-			cmd->scsi_done(cmd);
++			scsi_done(cmd);
+ 			ufshcd_release(hba);
+ 			update_scaling = true;
+ 		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
