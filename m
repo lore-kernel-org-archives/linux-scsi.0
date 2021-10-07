@@ -2,48 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C3B6CC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74711C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9F7E6610A0
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 53FE561130
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234018AbhJGVU5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 17:20:57 -0400
-Received: from mail-pj1-f44.google.com ([209.85.216.44]:45628 "EHLO
-        mail-pj1-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233283AbhJGVU5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:20:57 -0400
-Received: by mail-pj1-f44.google.com with SMTP id ls14-20020a17090b350e00b001a00e2251c8so6188150pjb.4
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:19:03 -0700 (PDT)
+        id S234057AbhJGVVA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 17:21:00 -0400
+Received: from mail-pj1-f48.google.com ([209.85.216.48]:53953 "EHLO
+        mail-pj1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233283AbhJGVU7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:20:59 -0400
+Received: by mail-pj1-f48.google.com with SMTP id ls18so5900089pjb.3
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:19:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=Kt2zmEnNC8kSXDLhEYevleO6rodk/ecgntNNeLHdi2w=;
-        b=qwe7ZbmLgBLQEUmW2l5z1F3ZcWeos9bmt6rYnQwaNjxov+IdUwVxrJ1g4OweECVMkm
-         +kZ5wxj610IJhCjkOW2nV88CKom8zPDrRQlvNe4xbtm+ZAGlnigh6+bCUb+baaMKzdno
-         HeYDDmxFILmw1jlTFGfdREFVIv7k8Wwy28LMHds9T8FZNaQzfqzo8iYbEh72jXStXMlV
-         9Nu9uZ6mB6F7ptTpGe7UGR7nYHS+f6mMzVUfAxNoQP1m1trmugPq8pZ0daLq0WzuHDta
-         eOis2pslxdCkt/rwzAAP0GpJEDDUdvckoGGlnMCjbK0J43fpVD+a8+hzQLF9QiXUl/Pb
-         DVWw==
-X-Gm-Message-State: AOAM5334uhiKtPpRKuNN47EidEfLUs10GOySi0nghuYKXTSoP7+PoHMP
-        jmSOgvnFVVBqjh97rSoOrC4=
-X-Google-Smtp-Source: ABdhPJzGNFte1mriNFCUpldNsgtmi4PP8YXRxEgeAT/N5tN7xccSYtW08jG5nYMKujQqZxWMKadeZQ==
-X-Received: by 2002:a17:902:7c8d:b0:13a:768b:d6c0 with SMTP id y13-20020a1709027c8d00b0013a768bd6c0mr6024177pll.83.1633641542615;
-        Thu, 07 Oct 2021 14:19:02 -0700 (PDT)
+        bh=8i7wrJKoNirhr+hHHb7KuJOmht99FU5BcbDnKqGMb5U=;
+        b=fWPW7DZFlXgHiYSxnUQ+sSo7bdYnnY9rJ5z4d95QcQzkL6aCkq1vaYfQyAgcgufzP5
+         tywEzlXPkOMDePivZzxGGVhIPQx15EefPxb2XxJ0QhxD0Z0IfJnZ9FPSjZGym9DPa+L1
+         Xse9TFPRpsLQ5jV4wQRpAyzNAtbkkdozlY22ZyBPx2NB5ZHGMtgbv2g0p4CqtIez/uGt
+         ZR/c1Oy21BQBhnfrDjLJ+DGoe3EHA0PhaGajYQhAxFlnhmgRNdez/T5VLuJY9RagGjeC
+         JAAt+UtdTStIvPGzTVvOs9gAgNVbZO1bkB5vCsvPy2z0cHlsuibV96S4xYvIv/TPzJ/I
+         AEiA==
+X-Gm-Message-State: AOAM530hYhCGguSFW5SkutaGDDjydnXVS5zmYSUsGIx4W/Biag5elL0X
+        At/AfRm9swrgsjFZ8iAHRnk=
+X-Google-Smtp-Source: ABdhPJzsCc7WvUA8I+19phnE0rCpsPkHWf6fb6XyDzP2/lB/V5FMoLUQOkwxNJ+zhlRpa8Vg2G5MNQ==
+X-Received: by 2002:a17:90a:4e43:: with SMTP id t3mr8061673pjl.163.1633641545093;
+        Thu, 07 Oct 2021 14:19:05 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.19.01
+        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.19.03
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 14:19:02 -0700 (PDT)
+        Thu, 07 Oct 2021 14:19:04 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v2 01/46] scsi: core: Register sysfs attributes earlier
-Date:   Thu,  7 Oct 2021 14:18:07 -0700
-Message-Id: <20211007211852.256007-2-bvanassche@acm.org>
+        Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Subject: [PATCH v2 02/46] ata: Switch to attribute groups
+Date:   Thu,  7 Oct 2021 14:18:08 -0700
+Message-Id: <20211007211852.256007-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007211852.256007-1-bvanassche@acm.org>
 References: <20211007211852.256007-1-bvanassche@acm.org>
@@ -53,279 +52,297 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-A quote from Documentation/driver-api/driver-model/device.rst:
-"Word of warning:  While the kernel allows device_create_file() and
-device_remove_file() to be called on a device at any time, userspace has
-strict expectations on when attributes get created.  When a new device is
-registered in the kernel, a uevent is generated to notify userspace (like
-udev) that a new device is available.  If attributes are added after the
-device is registered, then userspace won't get notified and userspace will
-not know about the new attributes."
+struct device supports attribute groups directly but does not support
+struct device_attribute directly. Hence switch to attribute groups.
 
-Hence register SCSI host sysfs attributes before the SCSI host shost_dev
-uevent is emitted instead of after that event has been emitted.
-
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/hosts.c       | 23 ++++++++++-
- drivers/scsi/scsi_priv.h   |  4 +-
- drivers/scsi/scsi_sysfs.c  | 81 +++++++++++++++++++-------------------
- include/scsi/scsi_device.h |  7 ++++
- include/scsi/scsi_host.h   | 12 ++++++
- 5 files changed, 84 insertions(+), 43 deletions(-)
+ drivers/ata/ahci.h        |  8 +++---
+ drivers/ata/ata_piix.c    | 15 ++++++++---
+ drivers/ata/libahci.c     | 52 ++++++++++++++++++++++++++-------------
+ drivers/ata/libata-sata.c | 19 ++++++++++----
+ drivers/ata/libata-scsi.c | 15 ++++++++---
+ drivers/ata/pata_macio.c  |  2 +-
+ drivers/ata/sata_mv.c     |  2 +-
+ drivers/ata/sata_nv.c     |  4 +--
+ drivers/ata/sata_sil24.c  |  2 +-
+ include/linux/libata.h    |  8 +++---
+ 10 files changed, 86 insertions(+), 41 deletions(-)
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 3f6f14f0cafb..3443f009a9e8 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -376,7 +376,7 @@ static struct device_type scsi_host_type = {
- struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- {
- 	struct Scsi_Host *shost;
--	int index;
-+	int index, i, j = 0;
+diff --git a/drivers/ata/ahci.h b/drivers/ata/ahci.h
+index 2e89499bd9c3..ef77b6551382 100644
+--- a/drivers/ata/ahci.h
++++ b/drivers/ata/ahci.h
+@@ -376,8 +376,8 @@ struct ahci_host_priv {
  
- 	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, GFP_KERNEL);
- 	if (!shost)
-@@ -480,7 +480,26 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	shost->shost_dev.parent = &shost->shost_gendev;
- 	shost->shost_dev.class = &shost_class;
- 	dev_set_name(&shost->shost_dev, "host%d", shost->host_no);
--	shost->shost_dev.groups = scsi_sysfs_shost_attr_groups;
-+	shost->shost_dev.groups = shost->shost_dev_attr_groups;
-+	shost->shost_dev_attr_groups[j++] = &scsi_shost_attr_group;
-+	if (sht->shost_attrs) {
-+		shost->lld_attr_group = (struct attribute_group){
-+			.attrs = scsi_convert_dev_attrs(&shost->shost_gendev,
-+							sht->shost_attrs)
-+		};
-+		if (shost->lld_attr_group.attrs)
-+			shost->shost_dev_attr_groups[j++] =
-+				&shost->lld_attr_group;
-+	}
-+	if (sht->shost_groups) {
-+		for (i = 0; sht->shost_groups[i] &&
-+			     j < ARRAY_SIZE(shost->shost_dev_attr_groups);
-+		     i++, j++) {
-+			shost->shost_dev_attr_groups[j] =
-+				sht->shost_groups[i];
-+		}
-+	}
-+	WARN_ON_ONCE(j >= ARRAY_SIZE(shost->shost_dev_attr_groups));
+ extern int ahci_ignore_sss;
  
- 	shost->ehandler = kthread_run(scsi_error_handler, shost,
- 			"scsi_eh_%d", shost->host_no);
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 6d9152031a40..a5a2f18cc734 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -137,13 +137,15 @@ extern int scsi_sysfs_add_sdev(struct scsi_device *);
- extern int scsi_sysfs_add_host(struct Scsi_Host *);
- extern int scsi_sysfs_register(void);
- extern void scsi_sysfs_unregister(void);
-+struct attribute **scsi_convert_dev_attrs(struct device *dev,
-+					  struct device_attribute **dev_attr);
- extern void scsi_sysfs_device_initialize(struct scsi_device *);
- extern int scsi_sysfs_target_initialize(struct scsi_device *);
- extern struct scsi_transport_template blank_transport_template;
- extern void __scsi_remove_device(struct scsi_device *);
+-extern struct device_attribute *ahci_shost_attrs[];
+-extern struct device_attribute *ahci_sdev_attrs[];
++extern const struct attribute_group *ahci_shost_attr_groups[];
++extern const struct attribute_group *ahci_sdev_attr_groups[];
  
- extern struct bus_type scsi_bus_type;
--extern const struct attribute_group *scsi_sysfs_shost_attr_groups[];
-+extern const struct attribute_group scsi_shost_attr_group;
+ /*
+  * This must be instantiated by the edge drivers.  Read the comments
+@@ -388,8 +388,8 @@ extern struct device_attribute *ahci_sdev_attrs[];
+ 	.can_queue		= AHCI_MAX_CMDS,			\
+ 	.sg_tablesize		= AHCI_MAX_SG,				\
+ 	.dma_boundary		= AHCI_DMA_BOUNDARY,			\
+-	.shost_attrs		= ahci_shost_attrs,			\
+-	.sdev_attrs		= ahci_sdev_attrs,			\
++	.shost_groups		= ahci_shost_attr_groups,		\
++	.sdev_groups		= ahci_sdev_attr_groups,		\
+ 	.change_queue_depth     = ata_scsi_change_queue_depth,		\
+ 	.tag_alloc_policy       = BLK_TAG_ALLOC_RR,             	\
+ 	.slave_configure        = ata_scsi_slave_config
+diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+index 3ca7720e7d8f..f845cee501e8 100644
+--- a/drivers/ata/ata_piix.c
++++ b/drivers/ata/ata_piix.c
+@@ -1085,14 +1085,23 @@ static struct ata_port_operations ich_pata_ops = {
+ 	.set_dmamode		= ich_set_dmamode,
+ };
  
- /* scsi_netlink.c */
- #ifdef CONFIG_SCSI_NETLINK
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 86793259e541..05b4d69d53d4 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -424,15 +424,10 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
+-static struct device_attribute *piix_sidpr_shost_attrs[] = {
+-	&dev_attr_link_power_management_policy,
++static struct attribute *piix_sidpr_shost_attrs[] = {
++	&dev_attr_link_power_management_policy.attr,
++	NULL
++};
++
++static const struct attribute_group piix_sidpr_shost_attr_group = {
++	.attrs = piix_sidpr_shost_attrs
++};
++
++static const struct attribute_group *piix_sidpr_shost_groups[] = {
++	&piix_sidpr_shost_attr_group,
  	NULL
  };
  
--static struct attribute_group scsi_shost_attr_group = {
-+const struct attribute_group scsi_shost_attr_group = {
- 	.attrs =	scsi_sysfs_shost_attrs,
+ static struct scsi_host_template piix_sidpr_sht = {
+ 	ATA_BMDMA_SHT(DRV_NAME),
+-	.shost_attrs		= piix_sidpr_shost_attrs,
++	.shost_groups		= piix_sidpr_shost_groups,
  };
  
--const struct attribute_group *scsi_sysfs_shost_attr_groups[] = {
--	&scsi_shost_attr_group,
--	NULL
--};
--
- static void scsi_device_cls_release(struct device *class_dev)
- {
- 	struct scsi_device *sdev;
-@@ -1333,7 +1328,7 @@ static int scsi_target_add(struct scsi_target *starget)
-  **/
- int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- {
--	int error, i;
-+	int error;
- 	struct scsi_target *starget = sdev->sdev_target;
+ static struct ata_port_operations piix_sidpr_sata_ops = {
+diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+index 5b3fa2cbe722..ebf990944054 100644
+--- a/drivers/ata/libahci.c
++++ b/drivers/ata/libahci.c
+@@ -108,28 +108,46 @@ static DEVICE_ATTR(em_buffer, S_IWUSR | S_IRUGO,
+ 		   ahci_read_em_buffer, ahci_store_em_buffer);
+ static DEVICE_ATTR(em_message_supported, S_IRUGO, ahci_show_em_supported, NULL);
  
- 	error = scsi_target_add(starget);
-@@ -1386,23 +1381,6 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 		}
- 	}
+-struct device_attribute *ahci_shost_attrs[] = {
+-	&dev_attr_link_power_management_policy,
+-	&dev_attr_em_message_type,
+-	&dev_attr_em_message,
+-	&dev_attr_ahci_host_caps,
+-	&dev_attr_ahci_host_cap2,
+-	&dev_attr_ahci_host_version,
+-	&dev_attr_ahci_port_cmd,
+-	&dev_attr_em_buffer,
+-	&dev_attr_em_message_supported,
++static struct attribute *ahci_shost_attrs[] = {
++	&dev_attr_link_power_management_policy.attr,
++	&dev_attr_em_message_type.attr,
++	&dev_attr_em_message.attr,
++	&dev_attr_ahci_host_caps.attr,
++	&dev_attr_ahci_host_cap2.attr,
++	&dev_attr_ahci_host_version.attr,
++	&dev_attr_ahci_port_cmd.attr,
++	&dev_attr_em_buffer.attr,
++	&dev_attr_em_message_supported.attr,
+ 	NULL
+ };
+-EXPORT_SYMBOL_GPL(ahci_shost_attrs);
  
--	/* add additional host specific attributes */
--	if (sdev->host->hostt->sdev_attrs) {
--		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
--			error = device_create_file(&sdev->sdev_gendev,
--					sdev->host->hostt->sdev_attrs[i]);
--			if (error)
--				return error;
--		}
--	}
--
--	if (sdev->host->hostt->sdev_groups) {
--		error = sysfs_create_groups(&sdev->sdev_gendev.kobj,
--				sdev->host->hostt->sdev_groups);
--		if (error)
--			return error;
--	}
--
- 	scsi_autopm_put_device(sdev);
- 	return error;
- }
-@@ -1442,10 +1420,6 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 		if (res != 0)
- 			return;
- 
--		if (sdev->host->hostt->sdev_groups)
--			sysfs_remove_groups(&sdev->sdev_gendev.kobj,
--					sdev->host->hostt->sdev_groups);
--
- 		if (IS_ENABLED(CONFIG_BLK_DEV_BSG) && sdev->bsg_dev)
- 			bsg_unregister_queue(sdev->bsg_dev);
- 		device_unregister(&sdev->sdev_dev);
-@@ -1584,23 +1558,31 @@ EXPORT_SYMBOL(scsi_register_interface);
-  **/
- int scsi_sysfs_add_host(struct Scsi_Host *shost)
- {
--	int error, i;
--
--	/* add host specific attributes */
--	if (shost->hostt->shost_attrs) {
--		for (i = 0; shost->hostt->shost_attrs[i]; i++) {
--			error = device_create_file(&shost->shost_dev,
--					shost->hostt->shost_attrs[i]);
--			if (error)
--				return error;
--		}
--	}
--
- 	transport_register_device(&shost->shost_gendev);
- 	transport_configure_device(&shost->shost_gendev);
- 	return 0;
- }
- 
-+/*
-+ * Convert an array of struct device_attribute pointers into an array of
-+ * struct attribute pointers.
-+ */
-+struct attribute **scsi_convert_dev_attrs(struct device *dev,
-+					  struct device_attribute **dev_attr)
-+{
-+	struct attribute **attrs;
-+	int i;
+-struct device_attribute *ahci_sdev_attrs[] = {
+-	&dev_attr_sw_activity,
+-	&dev_attr_unload_heads,
+-	&dev_attr_ncq_prio_supported,
+-	&dev_attr_ncq_prio_enable,
++static const struct attribute_group ahci_shost_attr_group = {
++	.attrs = ahci_shost_attrs
++};
 +
-+	for (i = 0; dev_attr[i]; i++)
-+		;
-+	attrs = devm_kzalloc(dev, (i + 1) * sizeof(*attrs), GFP_KERNEL);
-+	if (!attrs)
-+		return NULL;
-+	for (i = 0; dev_attr[i]; i++)
-+		attrs[i] = &dev_attr[i]->attr;
-+	return attrs;
-+}
++const struct attribute_group *ahci_shost_attr_groups[] = {
++	&ahci_shost_attr_group,
++	NULL
++};
++EXPORT_SYMBOL_GPL(ahci_shost_attr_groups);
 +
- static struct device_type scsi_dev_type = {
- 	.name =		"scsi_device",
- 	.release =	scsi_device_dev_release,
-@@ -1609,8 +1591,10 @@ static struct device_type scsi_dev_type = {
++struct attribute *ahci_sdev_attrs[] = {
++	&dev_attr_sw_activity.attr,
++	&dev_attr_unload_heads.attr,
++	&dev_attr_ncq_prio_supported.attr,
++	&dev_attr_ncq_prio_enable.attr,
++	NULL
++};
++
++static const struct attribute_group ahci_sdev_attr_group = {
++	.attrs = ahci_sdev_attrs
++};
++
++const struct attribute_group *ahci_sdev_attr_groups[] = {
++	&ahci_sdev_attr_group,
+ 	NULL
+ };
+-EXPORT_SYMBOL_GPL(ahci_sdev_attrs);
++EXPORT_SYMBOL_GPL(ahci_sdev_attr_groups);
  
- void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- {
-+	int i, j = 0;
- 	unsigned long flags;
- 	struct Scsi_Host *shost = sdev->host;
-+	struct scsi_host_template *hostt = shost->hostt;
- 	struct scsi_target  *starget = sdev->sdev_target;
+ struct ata_port_operations ahci_ops = {
+ 	.inherits		= &sata_pmp_port_ops,
+diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+index 8f3ff830ab0c..0d332b40ec42 100644
+--- a/drivers/ata/libata-sata.c
++++ b/drivers/ata/libata-sata.c
+@@ -922,13 +922,22 @@ DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
+ 	    ata_ncq_prio_enable_show, ata_ncq_prio_enable_store);
+ EXPORT_SYMBOL_GPL(dev_attr_ncq_prio_enable);
  
- 	device_initialize(&sdev->sdev_gendev);
-@@ -1618,6 +1602,23 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- 	sdev->sdev_gendev.type = &scsi_dev_type;
- 	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
- 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
-+	sdev->gendev_attr_groups[j++] = &scsi_sdev_attr_group;
-+	if (hostt->sdev_attrs) {
-+		sdev->lld_attr_group = (struct attribute_group){
-+			.attrs = scsi_convert_dev_attrs(&sdev->sdev_gendev,
-+							hostt->sdev_attrs)
-+		};
-+		if (sdev->lld_attr_group.attrs)
-+			sdev->gendev_attr_groups[j++] = &sdev->lld_attr_group;
-+	}
-+	if (hostt->sdev_groups) {
-+		for (i = 0; hostt->sdev_groups[i] &&
-+			     j < ARRAY_SIZE(sdev->gendev_attr_groups);
-+		     i++, j++) {
-+			sdev->gendev_attr_groups[j] = hostt->sdev_groups[i];
-+		}
-+	}
-+	WARN_ON_ONCE(j >= ARRAY_SIZE(sdev->gendev_attr_groups));
+-struct device_attribute *ata_ncq_sdev_attrs[] = {
+-	&dev_attr_unload_heads,
+-	&dev_attr_ncq_prio_enable,
+-	&dev_attr_ncq_prio_supported,
++struct attribute *ata_ncq_sdev_attrs[] = {
++	&dev_attr_unload_heads.attr,
++	&dev_attr_ncq_prio_enable.attr,
++	&dev_attr_ncq_prio_supported.attr,
+ 	NULL
+ };
+-EXPORT_SYMBOL_GPL(ata_ncq_sdev_attrs);
++
++static const struct attribute_group ata_ncq_sdev_attr_group = {
++	.attrs = ata_ncq_sdev_attrs
++};
++
++const struct attribute_group *ata_ncq_sdev_attr_groups[] = {
++	&ata_ncq_sdev_attr_group,
++	NULL
++};
++EXPORT_SYMBOL_GPL(ata_ncq_sdev_attr_groups);
  
- 	device_initialize(&sdev->sdev_dev);
- 	sdev->sdev_dev.parent = get_device(&sdev->sdev_gendev);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index b97e142a7ca9..01732aabd7c3 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -225,6 +225,13 @@ struct scsi_device {
+ static ssize_t
+ ata_scsi_em_message_store(struct device *dev, struct device_attribute *attr,
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 1fb4611f7eeb..84c696960f4c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -234,11 +234,20 @@ static void ata_scsi_set_invalid_parameter(struct ata_device *dev,
+ 				     field, 0xff, 0);
+ }
  
- 	struct device		sdev_gendev,
- 				sdev_dev;
-+	struct attribute_group	lld_attr_group;
-+	/*
-+	 * The array size 6 provides space for one attribute group for the
-+	 * SCSI core, four attribute groups defined by SCSI LLDs and one
-+	 * terminating NULL pointer.
-+	 */
-+	const struct attribute_group *gendev_attr_groups[6];
+-struct device_attribute *ata_common_sdev_attrs[] = {
+-	&dev_attr_unload_heads,
++static struct attribute *ata_common_sdev_attrs[] = {
++	&dev_attr_unload_heads.attr,
+ 	NULL
+ };
+-EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
++
++static const struct attribute_group ata_common_sdev_attr_group = {
++	.attrs = ata_common_sdev_attrs
++};
++
++const struct attribute_group *ata_common_sdev_attr_groups[] = {
++	&ata_common_sdev_attr_group,
++	NULL
++};
++EXPORT_SYMBOL_GPL(ata_common_sdev_attr_groups);
  
- 	struct execute_work	ew; /* used to get process context on put */
- 	struct work_struct	requeue_work;
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index bc9c45ced145..ab8775811e6f 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -483,6 +483,11 @@ struct scsi_host_template {
+ /**
+  *	ata_std_bios_param - generic bios head/sector/cylinder calculator used by sd.
+diff --git a/drivers/ata/pata_macio.c b/drivers/ata/pata_macio.c
+index be0ca8d5b345..a7a6a26175fe 100644
+--- a/drivers/ata/pata_macio.c
++++ b/drivers/ata/pata_macio.c
+@@ -923,7 +923,7 @@ static struct scsi_host_template pata_macio_sht = {
  	 */
- 	struct device_attribute **sdev_attrs;
+ 	.max_segment_size	= MAX_DBDMA_SEG,
+ 	.slave_configure	= pata_macio_slave_config,
+-	.sdev_attrs		= ata_common_sdev_attrs,
++	.sdev_groups		= ata_common_sdev_attr_groups,
+ 	.can_queue		= ATA_DEF_QUEUE,
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+ };
+diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+index 9d86203e1e7a..35a97b7c2791 100644
+--- a/drivers/ata/sata_mv.c
++++ b/drivers/ata/sata_mv.c
+@@ -670,7 +670,7 @@ static struct scsi_host_template mv6_sht = {
+ 	.can_queue		= MV_MAX_Q_DEPTH - 1,
+ 	.sg_tablesize		= MV_MAX_SG_CT / 2,
+ 	.dma_boundary		= MV_DMA_BOUNDARY,
+-	.sdev_attrs             = ata_ncq_sdev_attrs,
++	.sdev_groups		= ata_ncq_sdev_attr_groups,
+ 	.change_queue_depth	= ata_scsi_change_queue_depth,
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+ 	.slave_configure	= ata_scsi_slave_config
+diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+index c385d18ce87b..7ff1a2f30cea 100644
+--- a/drivers/ata/sata_nv.c
++++ b/drivers/ata/sata_nv.c
+@@ -380,7 +380,7 @@ static struct scsi_host_template nv_adma_sht = {
+ 	.sg_tablesize		= NV_ADMA_SGTBL_TOTAL_LEN,
+ 	.dma_boundary		= NV_ADMA_DMA_BOUNDARY,
+ 	.slave_configure	= nv_adma_slave_config,
+-	.sdev_attrs             = ata_ncq_sdev_attrs,
++	.sdev_groups		= ata_ncq_sdev_attr_groups,
+ 	.change_queue_depth     = ata_scsi_change_queue_depth,
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+ };
+@@ -391,7 +391,7 @@ static struct scsi_host_template nv_swncq_sht = {
+ 	.sg_tablesize		= LIBATA_MAX_PRD,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+ 	.slave_configure	= nv_swncq_slave_config,
+-	.sdev_attrs             = ata_ncq_sdev_attrs,
++	.sdev_groups		= ata_ncq_sdev_attr_groups,
+ 	.change_queue_depth     = ata_scsi_change_queue_depth,
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_RR,
+ };
+diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+index 06a1e27c4f84..ada0dbb9f703 100644
+--- a/drivers/ata/sata_sil24.c
++++ b/drivers/ata/sata_sil24.c
+@@ -379,7 +379,7 @@ static struct scsi_host_template sil24_sht = {
+ 	.sg_tablesize		= SIL24_MAX_SGE,
+ 	.dma_boundary		= ATA_DMA_BOUNDARY,
+ 	.tag_alloc_policy	= BLK_TAG_ALLOC_FIFO,
+-	.sdev_attrs		= ata_ncq_sdev_attrs,
++	.sdev_groups		= ata_ncq_sdev_attr_groups,
+ 	.change_queue_depth	= ata_scsi_change_queue_depth,
+ 	.slave_configure	= ata_scsi_slave_config
+ };
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index c0c64f03e107..6df8d0034d77 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1388,7 +1388,7 @@ extern int ata_link_nr_enabled(struct ata_link *link);
+  */
+ extern const struct ata_port_operations ata_base_port_ops;
+ extern const struct ata_port_operations sata_port_ops;
+-extern struct device_attribute *ata_common_sdev_attrs[];
++extern const struct attribute_group *ata_common_sdev_attr_groups[];
  
-+	/*
-+	 * Pointer to the SCSI host sysfs attribute groups, NULL terminated.
-+	 */
-+	const struct attribute_group **shost_groups;
-+
- 	/*
- 	 * Pointer to the SCSI device attribute groups for this host,
- 	 * NULL terminated.
-@@ -695,6 +700,13 @@ struct Scsi_Host {
+ /*
+  * All sht initializers (BASE, PIO, BMDMA, NCQ) must be instantiated
+@@ -1418,14 +1418,14 @@ extern struct device_attribute *ata_common_sdev_attrs[];
  
- 	/* ldm bits */
- 	struct device		shost_gendev, shost_dev;
-+	struct attribute_group	lld_attr_group;
-+	/*
-+	 * The array size 3 provides space for one attribute group defined by
-+	 * the SCSI core, one attribute group defined by the SCSI LLD and one
-+	 * terminating NULL pointer.
-+	 */
-+	const struct attribute_group *shost_dev_attr_groups[3];
+ #define ATA_BASE_SHT(drv_name)					\
+ 	ATA_SUBBASE_SHT(drv_name),				\
+-	.sdev_attrs		= ata_common_sdev_attrs
++	.sdev_groups		= ata_common_sdev_attr_groups
  
- 	/*
- 	 * Points to the transport data (if any) which is allocated
+ #ifdef CONFIG_SATA_HOST
+-extern struct device_attribute *ata_ncq_sdev_attrs[];
++extern const struct attribute_group *ata_ncq_sdev_attr_groups[];
+ 
+ #define ATA_NCQ_SHT(drv_name)					\
+ 	ATA_SUBBASE_SHT(drv_name),				\
+-	.sdev_attrs		= ata_ncq_sdev_attrs,		\
++	.sdev_groups		= ata_ncq_sdev_attr_groups,	\
+ 	.change_queue_depth	= ata_scsi_change_queue_depth
+ #endif
+ 
