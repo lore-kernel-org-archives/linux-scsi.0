@@ -2,156 +2,121 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5982C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 12:28:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BD208C433FE
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 14:10:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9AADA61075
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 12:28:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1E59610A2
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 14:10:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241347AbhJGMah (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 08:30:37 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55722 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241167AbhJGMaf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 08:30:35 -0400
-Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A0E7C061746;
-        Thu,  7 Oct 2021 05:28:42 -0700 (PDT)
-Received: by mail-ed1-x52a.google.com with SMTP id b8so22535598edk.2;
-        Thu, 07 Oct 2021 05:28:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=0gW5u4BhwhxG/oEIcngyv5/5SCvI3u+z/IqA8blrDDU=;
-        b=VkDn2D93CoawI9XWWfHasf5S3RWzT/k7uvP19/IBwH0XAdrAo5zRZiZ8jK4xksx0xp
-         jihJDyxYBHRfmjP9KFK//j7RJYSlGfG7pvEROd8nOAfkCE9gSr3n0S/gVzADJedwlv/R
-         dUa3lirdU94qEfOXMStWaxH1fZ9oWllmvuYPNz5G0YDcVRD/gqmDvQzhktHkCmyNr3Wd
-         aDusuaQCAHyRGrc19KG01HsCNxcjIE2QwxZSHeu/IwmyLmzQeglxg+mQXYwEgOhgSmuX
-         RXWIxkYyEpQbv5vWGyhMQPKVmI/+cMSabVP4yo1Z4eF9Z5pfLi6rp5b4d4iL6GqvNRpx
-         HAjw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=0gW5u4BhwhxG/oEIcngyv5/5SCvI3u+z/IqA8blrDDU=;
-        b=ktziQ+O4rEjpwYTm1M9LnYEYKXUa8N3amw5N4/Lr7do6Eztb+3Qg9ufO+iUyIy31Co
-         TIICUYGE/19firhrUfMFuY+nU3w2iD0Iu9an3hCaH0Go9i64SXlxk+dxT2FcXIQn8wfY
-         u+CsHUwC4LNzrbUvrtf9rdHzFL0vMP+qnMgYWwT+5TKtyJyL0+MfDKo9Wg9maLLHZpvh
-         mLJHutw9cffJnw5RJqFwp4qtl8wD/6bVl4s25jg1U7ci5MXLu+XshTzVLpxavKGxphU5
-         Yfhmmi0u8aosuMikZPSpKVAlNzYUPIewXfCz5K0TBa76jNo2/IebklfNXfxSdZmepx6B
-         INSg==
-X-Gm-Message-State: AOAM5337JUim52o+j2kikREe8PsdpTpSvrPKgwwF/37qfmPx8T3rRUMv
-        lVJzfUfWMGJ8+WIjL64uh6FI/NqQOjm09gvmN1E=
-X-Google-Smtp-Source: ABdhPJz4FI7itBtEDRp3CzwWLpZdPRV57fg4dHaHnuD2URnnOUp9n3b/yi2ojIx0rXn+YPlCKqV5UQ==
-X-Received: by 2002:a17:906:3cb:: with SMTP id c11mr5446794eja.404.1633609720213;
-        Thu, 07 Oct 2021 05:28:40 -0700 (PDT)
-Received: from anparri.mshome.net (host-79-49-65-228.retail.telecomitalia.it. [79.49.65.228])
-        by smtp.gmail.com with ESMTPSA id d17sm7124216edv.58.2021.10.07.05.28.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 05:28:39 -0700 (PDT)
-From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
-To:     linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     "K . Y . Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Stephen Hemminger <sthemmin@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Michael Kelley <mikelley@microsoft.com>,
-        "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
-        Dexuan Cui <decui@microsoft.com>
-Subject: [PATCH v3] scsi: storvsc: Fix validation for unsolicited incoming packets
-Date:   Thu,  7 Oct 2021 14:28:28 +0200
-Message-Id: <20211007122828.469289-1-parri.andrea@gmail.com>
-X-Mailer: git-send-email 2.25.1
+        id S241988AbhJGOM2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 10:12:28 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:57804 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241812AbhJGOM2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 10:12:28 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 197E7MJC012419;
+        Thu, 7 Oct 2021 07:10:29 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=pfpt0220;
+ bh=OxiBiwIOUqnU4gg64pI9Pm96DeK+92bZIXZXOoMjTy8=;
+ b=QiCHUzp1FGFBiJaHs+RhMax7/YjrIh4JTpHwynTIp1nS/zM/fHVFCqVzFYnQhqS87fBy
+ h0xrwZCCCovtDtY29xpK5Dibz6PvTDqBeIb9m1z6t4WWNqrGRdlhiUgR367TUuFjhzFR
+ IqgqJkrlg0Jlq8gvzMYmwIrD9aOdqDmvJHJTp79tUZYtdszAgdHgllZ2mn6UvP3b++Fk
+ lCoN+vENZADMkfcXc67BK35fdV5IPc51PxDPfUieLZ8pvQqz9SUqbOfKJ4t02lYUjTSD
+ ynjFGSP8E4kbPgAyg3KIAzzne9JB7VOYLXapZWQJYzxj/wFC7Q5tkdMuTDTvMw1x0Wxp Jg== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0b-0016f401.pphosted.com with ESMTP id 3bhrg2ah94-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Thu, 07 Oct 2021 07:09:03 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Thu, 7 Oct
+ 2021 07:09:01 -0700
+Received: from lbtlvb-pcie154.il.qlogic.org (10.69.176.80) by
+ DC5-EXCH02.marvell.com (10.69.176.39) with Microsoft SMTP Server id
+ 15.0.1497.18 via Frontend Transport; Thu, 7 Oct 2021 07:08:57 -0700
+From:   Prabhakar Kushwaha <pkushwaha@marvell.com>
+To:     <netdev@vger.kernel.org>, <davem@davemloft.net>, <kuba@kernel.org>
+CC:     <linux-rdma@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <martin.petersen@oracle.com>, <aelior@marvell.com>,
+        <smalin@marvell.com>, <pkushwaha@marvell.com>,
+        <prabhakar.pkin@gmail.com>, <malin1024@gmail.com>,
+        <naresh.kamboju@linaro.org>, <jhasan@marvell.com>,
+        <mrangankar@marvell.com>, Omkar Kulkarni <okulkarni@marvell.com>
+Subject: [PATCH] qed: Fix compilation for CONFIG_QED_SRIOV undefined scenario
+Date:   Thu, 7 Oct 2021 17:08:39 +0300
+Message-ID: <20211007140839.21672-1-pkushwaha@marvell.com>
+X-Mailer: git-send-email 2.16.6
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-GUID: FEdk8M5le2vUBEDg2D7m3f23zv4u0IH3
+X-Proofpoint-ORIG-GUID: FEdk8M5le2vUBEDg2D7m3f23zv4u0IH3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.391,FMLib:17.0.607.475
+ definitions=2021-10-07_01,2021-10-07_02,2020-04-07_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The validation on the length of incoming packets performed in
-storvsc_on_channel_callback() does not apply to unsolicited
-packets with ID of 0 sent by Hyper-V.  Adjust the validation
-for such unsolicited packets.
+This patch fixes below compliation error in case CONFIG_QED_SRIOV not
+defined.
+drivers/net/ethernet/qlogic/qed/qed_dev.c: In function
+‘qed_fw_err_handler’:
+drivers/net/ethernet/qlogic/qed/qed_dev.c:2390:3: error: implicit
+declaration of function ‘qed_sriov_vfpf_malicious’; did you mean
+‘qed_iov_vf_task’? [-Werror=implicit-function-declaration]
+   qed_sriov_vfpf_malicious(p_hwfn, &data->err_data);
+   ^~~~~~~~~~~~~~~~~~~~~~~~
+   qed_iov_vf_task
+drivers/net/ethernet/qlogic/qed/qed_dev.c: In function
+‘qed_common_eqe_event’:
+drivers/net/ethernet/qlogic/qed/qed_dev.c:2410:10: error: implicit
+declaration of function ‘qed_sriov_eqe_event’; did you mean
+‘qed_common_eqe_event’? [-Werror=implicit-function-declaration]
+   return qed_sriov_eqe_event(p_hwfn, opcode, echo, data,
+          ^~~~~~~~~~~~~~~~~~~
+          qed_common_eqe_event
 
-Fixes: 91b1b640b834b2 ("scsi: storvsc: Validate length of incoming packet in storvsc_on_channel_callback()")
-Reported-by: Dexuan Cui <decui@microsoft.com>
-Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
-Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+Fixes: fe40a830dcde ("qed: Update qed_hsi.h for fw 8.59.1.0")
+
+Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
+Cc: Naresh Kamboju <naresh.kamboju@linaro.org>
+Signed-off-by: Ariel Elior <aelior@marvell.com>
+Signed-off-by: Shai Malin <smalin@marvell.com>
+Signed-off-by: Omkar Kulkarni <okulkarni@marvell.com>
+Signed-off-by: Prabhakar Kushwaha <pkushwaha@marvell.com>
 ---
-Changes since v2[1]:
-  - Adjust inline comments (Michael Kelley)
+This patch is targeted for the repo
+git://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git
 
-Changes since v1[2]:
-  - Use sizeof(enum vstor_packet_operation) instead of 48 (Michael Kelley)
-  - Filter out FCHBA_DATA packets (Michael Kelley)
+ drivers/net/ethernet/qlogic/qed/qed_sriov.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-Changes since RFC[3]:
-  - Merge length checks (Haiyang Zhang)
-
-[1] https://lkml.kernel.org/r/20211006132026.4089-1-parri.andrea@gmail.com
-[2] https://lkml.kernel.org/r/20211005114103.3411-1-parri.andrea@gmail.com
-[3] https://lkml.kernel.org/r/20210928163732.5908-1-parri.andrea@gmail.com
-
- drivers/scsi/storvsc_drv.c | 32 +++++++++++++++++++++++---------
- 1 file changed, 23 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index ebbbc1299c625..9eb1b88a29dde 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1285,11 +1285,15 @@ static void storvsc_on_channel_callback(void *context)
- 	foreach_vmbus_pkt(desc, channel) {
- 		struct vstor_packet *packet = hv_pkt_data(desc);
- 		struct storvsc_cmd_request *request = NULL;
-+		u32 pktlen = hv_pkt_datalen(desc);
- 		u64 rqst_id = desc->trans_id;
-+		u32 minlen = rqst_id ? sizeof(struct vstor_packet) -
-+			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
+diff --git a/drivers/net/ethernet/qlogic/qed/qed_sriov.h b/drivers/net/ethernet/qlogic/qed/qed_sriov.h
+index 1edf9c44dc67..f448e3dd6c8b 100644
+--- a/drivers/net/ethernet/qlogic/qed/qed_sriov.h
++++ b/drivers/net/ethernet/qlogic/qed/qed_sriov.h
+@@ -478,6 +478,18 @@ static inline int qed_sriov_disable(struct qed_dev *cdev, bool pci_enabled)
+ static inline void qed_inform_vf_link_state(struct qed_hwfn *hwfn)
+ {
+ }
++
++static inline void qed_sriov_vfpf_malicious(struct qed_hwfn *p_hwfn,
++					    struct fw_err_data *p_data)
++{
++}
++
++static inline int qed_sriov_eqe_event(struct qed_hwfn *p_hwfn, u8 opcode,
++				      __le16 echo, union event_ring_data *data,
++				      u8  fw_return_code)
++{
++	return 0;
++}
+ #endif
  
--		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) -
--				stor_device->vmscsi_size_delta) {
--			dev_err(&device->device, "Invalid packet len\n");
-+		if (pktlen < minlen) {
-+			dev_err(&device->device,
-+				"Invalid pkt: id=%llu, len=%u, minlen=%u\n",
-+				rqst_id, pktlen, minlen);
- 			continue;
- 		}
- 
-@@ -1302,13 +1306,23 @@ static void storvsc_on_channel_callback(void *context)
- 			if (rqst_id == 0) {
- 				/*
- 				 * storvsc_on_receive() looks at the vstor_packet in the message
--				 * from the ring buffer.  If the operation in the vstor_packet is
--				 * COMPLETE_IO, then we call storvsc_on_io_completion(), and
--				 * dereference the guest memory address.  Make sure we don't call
--				 * storvsc_on_io_completion() with a guest memory address that is
--				 * zero if Hyper-V were to construct and send such a bogus packet.
-+				 * from the ring buffer.
-+				 *
-+				 * - If the operation in the vstor_packet is COMPLETE_IO, then
-+				 *   we call storvsc_on_io_completion(), and dereference the
-+				 *   guest memory address.  Make sure we don't call
-+				 *   storvsc_on_io_completion() with a guest memory address
-+				 *   that is zero if Hyper-V were to construct and send such
-+				 *   a bogus packet.
-+				 *
-+				 * - If the operation in the vstor_packet is FCHBA_DATA, then
-+				 *   we call cache_wwn(), and access the data payload area of
-+				 *   the packet (wwn_packet); however, there is no guarantee
-+				 *   that the packet is big enough to contain such area.
-+				 *   Future-proof the code by rejecting such a bogus packet.
- 				 */
--				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO) {
-+				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO ||
-+				    packet->operation == VSTOR_OPERATION_FCHBA_DATA) {
- 					dev_err(&device->device, "Invalid packet with ID of 0\n");
- 					continue;
- 				}
+ #define qed_for_each_vf(_p_hwfn, _i)			  \
 -- 
-2.25.1
+2.24.1
 
