@@ -2,159 +2,156 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4758C43219
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 11:33:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5982C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 12:28:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B79B061251
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 11:33:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9AADA61075
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 12:28:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232851AbhJGLez (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 07:34:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42846 "EHLO
+        id S241347AbhJGMah (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 08:30:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55722 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241063AbhJGLev (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 07:34:51 -0400
-Received: from mail-ed1-x534.google.com (mail-ed1-x534.google.com [IPv6:2a00:1450:4864:20::534])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC31FC061762
-        for <linux-scsi@vger.kernel.org>; Thu,  7 Oct 2021 04:32:57 -0700 (PDT)
-Received: by mail-ed1-x534.google.com with SMTP id d8so21865697edx.9
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 04:32:57 -0700 (PDT)
+        with ESMTP id S241167AbhJGMaf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 08:30:35 -0400
+Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A0E7C061746;
+        Thu,  7 Oct 2021 05:28:42 -0700 (PDT)
+Received: by mail-ed1-x52a.google.com with SMTP id b8so22535598edk.2;
+        Thu, 07 Oct 2021 05:28:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=vyoTVfW0q/Sz3MjyHTCgqtubb6sYVUua8s/Tg/xpMNA=;
-        b=rS7GjWh14BJN1s07cRh9Ip2/XMDUYffaHojGBth76ffHw6Tue2LTzLy2Ec/DiL9yZ4
-         Wix9Prhd3bhQoOxA8upfQxS4A/0FqsbCThw2TL9WjSLhhmy3jWsWzBzAYf/67Z9e8Bzr
-         6KWUNh/Bt9UfxZHZqa6yfxMauOYn/rJj7St0bL9FvkO+1EfYD/wLb9kRMIeg1v1mIg5Y
-         QBrFfoAsI6RCfd6+XfCRAvNm9X70XlQeVvLCPNA0zOkZ6URn6Dq2naqolQ0xIW0IU+iP
-         MSbbRLjMaIxdpmGAf0U5fwHxTwtlkEmcXMNgXikc9NI4E0hLksVdQ0WnH395G2dkUPsD
-         gnhg==
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=0gW5u4BhwhxG/oEIcngyv5/5SCvI3u+z/IqA8blrDDU=;
+        b=VkDn2D93CoawI9XWWfHasf5S3RWzT/k7uvP19/IBwH0XAdrAo5zRZiZ8jK4xksx0xp
+         jihJDyxYBHRfmjP9KFK//j7RJYSlGfG7pvEROd8nOAfkCE9gSr3n0S/gVzADJedwlv/R
+         dUa3lirdU94qEfOXMStWaxH1fZ9oWllmvuYPNz5G0YDcVRD/gqmDvQzhktHkCmyNr3Wd
+         aDusuaQCAHyRGrc19KG01HsCNxcjIE2QwxZSHeu/IwmyLmzQeglxg+mQXYwEgOhgSmuX
+         RXWIxkYyEpQbv5vWGyhMQPKVmI/+cMSabVP4yo1Z4eF9Z5pfLi6rp5b4d4iL6GqvNRpx
+         HAjw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=vyoTVfW0q/Sz3MjyHTCgqtubb6sYVUua8s/Tg/xpMNA=;
-        b=YrCAiI5bjlV1HiKcPOQjhqVK2GEIcpAu7gJWQ7C7OU25fKWFgdnAUwZ5BRqjlW0YX6
-         eEGmV1x0Q+2v9YmYu90EqjIh5wMUxdsUK2R84fXfF9Rt7qubJtz4Th/ioW3lyg0GlIMd
-         4cFajAw5E3HgYO4r8vayU1Q4UQZ0cMcryxolrcrphlzkfRnjn/WfX1YjN6VUbJeFhqgz
-         JirL8aM8I7Gffke7BF3XvwDDp6BWFu6LuMm8NiFNjj+SpDZtezqtrJvh5Nj0qEDIvEGO
-         DMtE5Aw01+bntilCMjTJu5Cjpr9GNpwHymB+ygmuDIKqQIf7ELBWgsNSkTr2g7GYUJDi
-         AcCQ==
-X-Gm-Message-State: AOAM530nXi5LpIM/ycRv5VWLZ8cL7CwCOVNv0g5RKGyVJb+X7nrzjqnq
-        y+W62zAjaneKvX/OAOHL8OBDG93lmRR51WxapVhwtA==
-X-Google-Smtp-Source: ABdhPJx1LxdbI+6Eo1iN/qluMq/FkpUgQwUazu70RZATfKUUIW2IRfqilrQHPRzlPMpYRYiaPBQfkLpphSrTn5AbKKg=
-X-Received: by 2002:a17:906:318b:: with SMTP id 11mr5170753ejy.493.1633606376037;
- Thu, 07 Oct 2021 04:32:56 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=0gW5u4BhwhxG/oEIcngyv5/5SCvI3u+z/IqA8blrDDU=;
+        b=ktziQ+O4rEjpwYTm1M9LnYEYKXUa8N3amw5N4/Lr7do6Eztb+3Qg9ufO+iUyIy31Co
+         TIICUYGE/19firhrUfMFuY+nU3w2iD0Iu9an3hCaH0Go9i64SXlxk+dxT2FcXIQn8wfY
+         u+CsHUwC4LNzrbUvrtf9rdHzFL0vMP+qnMgYWwT+5TKtyJyL0+MfDKo9Wg9maLLHZpvh
+         mLJHutw9cffJnw5RJqFwp4qtl8wD/6bVl4s25jg1U7ci5MXLu+XshTzVLpxavKGxphU5
+         Yfhmmi0u8aosuMikZPSpKVAlNzYUPIewXfCz5K0TBa76jNo2/IebklfNXfxSdZmepx6B
+         INSg==
+X-Gm-Message-State: AOAM5337JUim52o+j2kikREe8PsdpTpSvrPKgwwF/37qfmPx8T3rRUMv
+        lVJzfUfWMGJ8+WIjL64uh6FI/NqQOjm09gvmN1E=
+X-Google-Smtp-Source: ABdhPJz4FI7itBtEDRp3CzwWLpZdPRV57fg4dHaHnuD2URnnOUp9n3b/yi2ojIx0rXn+YPlCKqV5UQ==
+X-Received: by 2002:a17:906:3cb:: with SMTP id c11mr5446794eja.404.1633609720213;
+        Thu, 07 Oct 2021 05:28:40 -0700 (PDT)
+Received: from anparri.mshome.net (host-79-49-65-228.retail.telecomitalia.it. [79.49.65.228])
+        by smtp.gmail.com with ESMTPSA id d17sm7124216edv.58.2021.10.07.05.28.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Oct 2021 05:28:39 -0700 (PDT)
+From:   "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>
+To:     linux-kernel@vger.kernel.org, linux-hyperv@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Cc:     "K . Y . Srinivasan" <kys@microsoft.com>,
+        Haiyang Zhang <haiyangz@microsoft.com>,
+        Stephen Hemminger <sthemmin@microsoft.com>,
+        Wei Liu <wei.liu@kernel.org>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Michael Kelley <mikelley@microsoft.com>,
+        "Andrea Parri (Microsoft)" <parri.andrea@gmail.com>,
+        Dexuan Cui <decui@microsoft.com>
+Subject: [PATCH v3] scsi: storvsc: Fix validation for unsolicited incoming packets
+Date:   Thu,  7 Oct 2021 14:28:28 +0200
+Message-Id: <20211007122828.469289-1-parri.andrea@gmail.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-References: <20211004065851.1903-1-pkushwaha@marvell.com> <20211004065851.1903-7-pkushwaha@marvell.com>
-In-Reply-To: <20211004065851.1903-7-pkushwaha@marvell.com>
-From:   Naresh Kamboju <naresh.kamboju@linaro.org>
-Date:   Thu, 7 Oct 2021 17:02:44 +0530
-Message-ID: <CA+G9fYspE5kQd=hjpLf1nv_kKBQhaHi8jd2qhdH5JfUTzfmjog@mail.gmail.com>
-Subject: Re: [PATCH v2 06/13] qed: Update qed_hsi.h for fw 8.59.1.0
-To:     Prabhakar Kushwaha <pkushwaha@marvell.com>
-Cc:     Netdev <netdev@vger.kernel.org>,
-        "David S. Miller" <davem@davemloft.net>,
-        Jakub Kicinski <kuba@kernel.org>, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        aelior@marvell.com, smalin@marvell.com, jhasan@marvell.com,
-        mrangankar@marvell.com, prabhakar.pkin@gmail.com,
-        malin1024@gmail.com, Omkar Kulkarni <okulkarni@marvell.com>,
-        Stephen Rothwell <sfr@canb.auug.org.au>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        lkft-triage@lists.linaro.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Regression found on arm gcc-11 build.
-Following build warnings / errors reported on Linux next 20211007.
+The validation on the length of incoming packets performed in
+storvsc_on_channel_callback() does not apply to unsolicited
+packets with ID of 0 sent by Hyper-V.  Adjust the validation
+for such unsolicited packets.
 
-On Mon, 4 Oct 2021 at 12:29, Prabhakar Kushwaha <pkushwaha@marvell.com> wrote:
->
-> The qed_hsi.h has been updated to support new FW version 8.59.1.0 with
-> changes.
->  - Updates FW HSI (Hardware Software interface) structures.
->  - Addition/update in function declaration and defines as per HSI.
->  - Add generic infrastructure for FW error reporting as part of
->    common event queue handling.
->  - Move malicious VF error reporting to FW error reporting
->    infrastructure.
->  - Move consolidation queue initialization from FW context to ramrod
->    message.
->
-> qed_hsi.h header file changes lead to change in many files to ensure
-> compilation.
->
-> This patch also fixes the existing checkpatch warnings and few important
-> checks.
+Fixes: 91b1b640b834b2 ("scsi: storvsc: Validate length of incoming packet in storvsc_on_channel_callback()")
+Reported-by: Dexuan Cui <decui@microsoft.com>
+Signed-off-by: Andrea Parri (Microsoft) <parri.andrea@gmail.com>
+Reviewed-by: Michael Kelley <mikelley@microsoft.com>
+---
+Changes since v2[1]:
+  - Adjust inline comments (Michael Kelley)
 
-<trim>
+Changes since v1[2]:
+  - Use sizeof(enum vstor_packet_operation) instead of 48 (Michael Kelley)
+  - Filter out FCHBA_DATA packets (Michael Kelley)
 
-> +static int qed_fw_err_handler(struct qed_hwfn *p_hwfn,
-> +                             u8 opcode,
-> +                             u16 echo,
-> +                             union event_ring_data *data, u8 fw_return_code)
-> +{
-> +       if (fw_return_code != COMMON_ERR_CODE_ERROR)
-> +               goto eqe_unexpected;
-> +
-> +       if (data->err_data.recovery_scope == ERR_SCOPE_FUNC &&
-> +           le16_to_cpu(data->err_data.entity_id) >= MAX_NUM_PFS) {
-> +               qed_sriov_vfpf_malicious(p_hwfn, &data->err_data);
-> +               return 0;
-> +       }
+Changes since RFC[3]:
+  - Merge length checks (Haiyang Zhang)
 
+[1] https://lkml.kernel.org/r/20211006132026.4089-1-parri.andrea@gmail.com
+[2] https://lkml.kernel.org/r/20211005114103.3411-1-parri.andrea@gmail.com
+[3] https://lkml.kernel.org/r/20210928163732.5908-1-parri.andrea@gmail.com
 
-metadata:
-    git_describe: next-20211007
-    git_repo: https://gitlab.com/Linaro/lkft/mirrors/next/linux-next
-    git_short_log: f8dc23b3dc0c (\Add linux-next specific files for 20211007\)
-    target_arch: arm
-    toolchain: gcc-11
+ drivers/scsi/storvsc_drv.c | 32 +++++++++++++++++++++++---------
+ 1 file changed, 23 insertions(+), 9 deletions(-)
 
-build error :
---------------
-drivers/net/ethernet/qlogic/qed/qed_dev.c: In function 'qed_fw_err_handler':
-drivers/net/ethernet/qlogic/qed/qed_dev.c:2390:17: error: implicit
-declaration of function 'qed_sriov_vfpf_malicious'
-[-Werror=implicit-function-declaration]
- 2390 |                 qed_sriov_vfpf_malicious(p_hwfn, &data->err_data);
-      |                 ^~~~~~~~~~~~~~~~~~~~~~~~
-drivers/net/ethernet/qlogic/qed/qed_dev.c: In function 'qed_common_eqe_event':
-drivers/net/ethernet/qlogic/qed/qed_dev.c:2410:24: error: implicit
-declaration of function 'qed_sriov_eqe_event'; did you mean
-'qed_common_eqe_event'? [-Werror=implicit-function-declaration]
- 2410 |                 return qed_sriov_eqe_event(p_hwfn, opcode, echo, data,
-      |                        ^~~~~~~~~~~~~~~~~~~
-      |                        qed_common_eqe_event
-cc1: some warnings being treated as errors
-make[6]: *** [scripts/Makefile.build:288:
-drivers/net/ethernet/qlogic/qed/qed_dev.o] Error 1
-make[6]: Target '__build' not remade because of errors.
-make[5]: *** [scripts/Makefile.build:571:
-drivers/net/ethernet/qlogic/qed] Error 2
-
-
-Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
-
-build link:
------------
-https://builds.tuxbuild.com/1zAeXBdIL6bf5zawzmHpVFEQ3wV/build.log
-
-build config:
--------------
-https://builds.tuxbuild.com/1zAeXBdIL6bf5zawzmHpVFEQ3wV/config
-
-# To install tuxmake on your system globally
-# sudo pip3 install -U tuxmake
-tuxmake --runtime podman --target-arch arm --toolchain gcc-11
---kconfig defconfig --kconfig-add
-https://builds.tuxbuild.com/1zAeXBdIL6bf5zawzmHpVFEQ3wV/config
-
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index ebbbc1299c625..9eb1b88a29dde 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1285,11 +1285,15 @@ static void storvsc_on_channel_callback(void *context)
+ 	foreach_vmbus_pkt(desc, channel) {
+ 		struct vstor_packet *packet = hv_pkt_data(desc);
+ 		struct storvsc_cmd_request *request = NULL;
++		u32 pktlen = hv_pkt_datalen(desc);
+ 		u64 rqst_id = desc->trans_id;
++		u32 minlen = rqst_id ? sizeof(struct vstor_packet) -
++			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
+ 
+-		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) -
+-				stor_device->vmscsi_size_delta) {
+-			dev_err(&device->device, "Invalid packet len\n");
++		if (pktlen < minlen) {
++			dev_err(&device->device,
++				"Invalid pkt: id=%llu, len=%u, minlen=%u\n",
++				rqst_id, pktlen, minlen);
+ 			continue;
+ 		}
+ 
+@@ -1302,13 +1306,23 @@ static void storvsc_on_channel_callback(void *context)
+ 			if (rqst_id == 0) {
+ 				/*
+ 				 * storvsc_on_receive() looks at the vstor_packet in the message
+-				 * from the ring buffer.  If the operation in the vstor_packet is
+-				 * COMPLETE_IO, then we call storvsc_on_io_completion(), and
+-				 * dereference the guest memory address.  Make sure we don't call
+-				 * storvsc_on_io_completion() with a guest memory address that is
+-				 * zero if Hyper-V were to construct and send such a bogus packet.
++				 * from the ring buffer.
++				 *
++				 * - If the operation in the vstor_packet is COMPLETE_IO, then
++				 *   we call storvsc_on_io_completion(), and dereference the
++				 *   guest memory address.  Make sure we don't call
++				 *   storvsc_on_io_completion() with a guest memory address
++				 *   that is zero if Hyper-V were to construct and send such
++				 *   a bogus packet.
++				 *
++				 * - If the operation in the vstor_packet is FCHBA_DATA, then
++				 *   we call cache_wwn(), and access the data payload area of
++				 *   the packet (wwn_packet); however, there is no guarantee
++				 *   that the packet is big enough to contain such area.
++				 *   Future-proof the code by rejecting such a bogus packet.
+ 				 */
+-				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO) {
++				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO ||
++				    packet->operation == VSTOR_OPERATION_FCHBA_DATA) {
+ 					dev_err(&device->device, "Invalid packet with ID of 0\n");
+ 					continue;
+ 				}
 -- 
-Linaro LKFT
-https://lkft.linaro.org
+2.25.1
+
