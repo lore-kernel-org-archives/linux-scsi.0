@@ -2,50 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 44C38C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25471C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2DE376103B
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B30261074
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:29:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233857AbhJGUbb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 16:31:31 -0400
-Received: from mail-pj1-f48.google.com ([209.85.216.48]:52873 "EHLO
-        mail-pj1-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233598AbhJGUba (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:31:30 -0400
-Received: by mail-pj1-f48.google.com with SMTP id oa4so5092605pjb.2
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:29:36 -0700 (PDT)
+        id S233984AbhJGUbc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 16:31:32 -0400
+Received: from mail-pl1-f172.google.com ([209.85.214.172]:33431 "EHLO
+        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233598AbhJGUbc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:31:32 -0400
+Received: by mail-pl1-f172.google.com with SMTP id a11so4729393plm.0
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:29:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=CLO3bI2ukg4hM2P6jquFRoxBPqd4s8Qin+BxyvHB8to=;
-        b=aMcCG6Oug/MhSHtq/pwpi8fWJS4IZeddjaWGos+ONCZ3hv/rMjlQ4YuYtyPL9uIkpO
-         a5dNhlnQAZZbbVQRDA7ej4zw1I1Y+vrX1SSz6A57q1P2NBGxKveNRhyisNETY5THr/U/
-         24yXSW+5vfb8B+jZy4qEPKL8sOUoA2oK0x+00B17dzjzjUj8O0FY9C0qgkiRMfW+78/f
-         FfPhwEzQ0XPtEKsFeMaZi7bxU/Nfe9at2XPK1tBB7j/Fc9vuhZjuFUqiSOh+g3iGObtE
-         88QBpgIn1YKnyRX0p7sEg2KgiOd1oFFdHnwBr6A+vdDMI1lfTFvIKY8Bq3ZQ6NM/DPsS
-         g+Rg==
-X-Gm-Message-State: AOAM531BjVzuX2KHp+iiMPIBKOG/WAB3WqDZZ/S1VAwqbaVr5W0y6ZV3
-        LhU8eYCG54dQfw3FqYM8f2y3ToJNe20=
-X-Google-Smtp-Source: ABdhPJzCYvvEyW7yV9YzOn2ZOoT3C4/A9R5mlI4Rxelk95YYaYmt3wpOZLJd7ds2JTv5LeRlXKLRnw==
-X-Received: by 2002:a17:90b:1642:: with SMTP id il2mr7130874pjb.167.1633638576424;
-        Thu, 07 Oct 2021 13:29:36 -0700 (PDT)
+        bh=2EejsZAOhnHTGf6NPiHxuklMQ5J5EH2LY+Cz1NjHbpU=;
+        b=AFWIXqlLFpeCa5IpyOzkx9oXD/X/8QG4DhtEzIzf7lEjq5zze1dQTk5XbUXQQxgk6P
+         1+VtPMbXO7mTu8B2u3+kky1GAYb6J+lQd+b2u3SWFMgtohB0swGYRIILBdNAlsrxxUZT
+         jHvXsV9lBSiP6sZLIbcBbvMi9TC3m0Ttx5zi3Z/ub2Y5EXnE9lgo6NCX4Mi1ck9k615W
+         yDh1tQHaFaDdNr0gopPBxnBUM6B/FOcxj6HYjb1MZFjEmbj68Gs6qah+ewFhzbcbKU5B
+         4Ql1gICgMWlm2TWmMWddugA02Fa9Cc98hcGoD/ifySq0jKRMv4ApUqk4Ked1i+JP6BAj
+         Ming==
+X-Gm-Message-State: AOAM532wXjcQIRQ6RBR25COapAVTDOGKyEtvYKsNo0SKKKmXt1ztvnOB
+        bF4zOP3quPojSnW1Rglmt5g=
+X-Google-Smtp-Source: ABdhPJyO9iWuimj9e0kBYZFSJ2Vqu6AK3hD7ft8xcoP2nBg2+26Gp6fKlOVVwlfQ/91jueRBUXXeWQ==
+X-Received: by 2002:a17:90a:910:: with SMTP id n16mr7669205pjn.246.1633638577862;
+        Thu, 07 Oct 2021 13:29:37 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.29.35
+        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.29.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 13:29:35 -0700 (PDT)
+        Thu, 07 Oct 2021 13:29:37 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Benjamin Block <bblock@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Hannes Reinecke <hare@suse.com>,
-        Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        Bean Huo <beanhuo@micron.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 01/88] scsi: core: Use a structure member to track the SCSI command submitter
-Date:   Thu,  7 Oct 2021 13:27:56 -0700
-Message-Id: <20211007202923.2174984-2-bvanassche@acm.org>
+Subject: [PATCH v3 02/88] scsi: core: Rename scsi_mq_done() into scsi_done() and export it
+Date:   Thu,  7 Oct 2021 13:27:57 -0700
+Message-Id: <20211007202923.2174984-3-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007202923.2174984-1-bvanassche@acm.org>
 References: <20211007202923.2174984-1-bvanassche@acm.org>
@@ -55,159 +54,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Conditional statements are faster than indirect calls. Use a structure
-member to track the SCSI command submitter such that later patches can
-call scsi_done(scmd) instead of scmd->scsi_done(scmd).
-
-The asymmetric behavior that scsi_send_eh_cmnd() sets the submission
-context to the SCSI error handler and that it does not restore the
-submission context to the SCSI core is retained.
+Since the removal of the legacy block layer there is only one completion
+function left in the SCSI core, namely scsi_mq_done(). Rename it into
+scsi_done(). Export that function to allow SCSI LLDs to call it directly.
 
 Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
 Reviewed-by: Bean Huo <beanhuo@micron.com>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_error.c | 17 ++++++-----------
- drivers/scsi/scsi_lib.c   | 10 ++++++++++
- drivers/scsi/scsi_priv.h  |  1 +
- include/scsi/scsi_cmnd.h  |  7 +++++++
- 4 files changed, 24 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_lib.c  | 5 +++--
+ include/scsi/scsi_cmnd.h | 2 ++
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index b6c86cce57bf..3de03925550e 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -50,8 +50,6 @@
- 
- #include <asm/unaligned.h>
- 
--static void scsi_eh_done(struct scsi_cmnd *scmd);
--
- /*
-  * These should *probably* be handled by the host itself.
-  * Since it is allowed to sleep, it probably should.
-@@ -520,7 +518,8 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
- 		/* handler does not care. Drop down to default handling */
- 	}
- 
--	if (scmd->cmnd[0] == TEST_UNIT_READY && scmd->scsi_done != scsi_eh_done)
-+	if (scmd->cmnd[0] == TEST_UNIT_READY &&
-+	    scmd->submitter != SUBMITTED_BY_SCSI_ERROR_HANDLER)
- 		/*
- 		 * nasty: for mid-layer issued TURs, we need to return the
- 		 * actual sense data without any recovery attempt.  For eh
-@@ -782,7 +781,7 @@ static enum scsi_disposition scsi_eh_completed_normally(struct scsi_cmnd *scmd)
-  * scsi_eh_done - Completion function for error handling.
-  * @scmd:	Cmd that is done.
-  */
--static void scsi_eh_done(struct scsi_cmnd *scmd)
-+void scsi_eh_done(struct scsi_cmnd *scmd)
- {
- 	struct completion *eh_action;
- 
-@@ -1082,7 +1081,7 @@ static enum scsi_disposition scsi_send_eh_cmnd(struct scsi_cmnd *scmd,
- 	shost->eh_action = &done;
- 
- 	scsi_log_send(scmd);
--	scmd->scsi_done = scsi_eh_done;
-+	scmd->submitter = SUBMITTED_BY_SCSI_ERROR_HANDLER;
- 
- 	/*
- 	 * Lock sdev->state_mutex to avoid that scsi_device_quiesce() can
-@@ -1109,6 +1108,7 @@ static enum scsi_disposition scsi_send_eh_cmnd(struct scsi_cmnd *scmd,
- 	if (rtn) {
- 		if (timeleft > stall_for) {
- 			scsi_eh_restore_cmnd(scmd, &ses);
-+
- 			timeleft -= stall_for;
- 			msleep(jiffies_to_msecs(stall_for));
- 			goto retry;
-@@ -2338,11 +2338,6 @@ void scsi_report_device_reset(struct Scsi_Host *shost, int channel, int target)
- }
- EXPORT_SYMBOL(scsi_report_device_reset);
- 
--static void
--scsi_reset_provider_done_command(struct scsi_cmnd *scmd)
--{
--}
--
- /**
-  * scsi_ioctl_reset: explicitly reset a host/bus/target/device
-  * @dev:	scsi_device to operate on
-@@ -2379,7 +2374,7 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
- 	scsi_init_command(dev, scmd);
- 	scmd->cmnd = scsi_req(rq)->cmd;
- 
--	scmd->scsi_done		= scsi_reset_provider_done_command;
-+	scmd->submitter = SUBMITTED_BY_SCSI_RESET_IOCTL;
- 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
- 
- 	scmd->cmd_len			= 0;
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 5f5ad22512f5..3fd24144b805 100644
+index 3fd24144b805..f690a2da21ea 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -1577,6 +1577,15 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
+@@ -1575,7 +1575,7 @@ static blk_status_t scsi_prepare_cmd(struct request *req)
+ 	return scsi_cmd_to_driver(cmd)->init_command(cmd);
+ }
  
- static void scsi_mq_done(struct scsi_cmnd *cmd)
+-static void scsi_mq_done(struct scsi_cmnd *cmd)
++void scsi_done(struct scsi_cmnd *cmd)
  {
-+	switch (cmd->submitter) {
-+	case SUBMITTED_BY_BLOCK_LAYER:
-+		break;
-+	case SUBMITTED_BY_SCSI_ERROR_HANDLER:
-+		return scsi_eh_done(cmd);
-+	case SUBMITTED_BY_SCSI_RESET_IOCTL:
-+		return;
-+	}
-+
- 	if (unlikely(blk_should_fake_timeout(scsi_cmd_to_rq(cmd)->q)))
- 		return;
- 	if (unlikely(test_and_set_bit(SCMD_STATE_COMPLETE, &cmd->state)))
-@@ -1683,6 +1692,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	switch (cmd->submitter) {
+ 	case SUBMITTED_BY_BLOCK_LAYER:
+@@ -1593,6 +1593,7 @@ static void scsi_mq_done(struct scsi_cmnd *cmd)
+ 	trace_scsi_dispatch_cmd_done(cmd);
+ 	blk_mq_complete_request(scsi_cmd_to_rq(cmd));
+ }
++EXPORT_SYMBOL(scsi_done);
  
+ static void scsi_mq_put_budget(struct request_queue *q, int budget_token)
+ {
+@@ -1693,7 +1694,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
  	scsi_set_resid(cmd, 0);
  	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-+	cmd->submitter = SUBMITTED_BY_BLOCK_LAYER;
- 	cmd->scsi_done = scsi_mq_done;
+ 	cmd->submitter = SUBMITTED_BY_BLOCK_LAYER;
+-	cmd->scsi_done = scsi_mq_done;
++	cmd->scsi_done = scsi_done;
  
  	blk_mq_start_request(req);
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 6d9152031a40..b7f963149352 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -84,6 +84,7 @@ void scsi_eh_ready_devs(struct Scsi_Host *shost,
- int scsi_eh_get_sense(struct list_head *work_q,
- 		      struct list_head *done_q);
- int scsi_noretry_cmd(struct scsi_cmnd *scmd);
-+void scsi_eh_done(struct scsi_cmnd *scmd);
- 
- /* scsi_lib.c */
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
+ 	reason = scsi_dispatch_cmd(cmd);
 diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index a2315aac93c7..893c24aab8e4 100644
+index 893c24aab8e4..4edaadc293a7 100644
 --- a/include/scsi/scsi_cmnd.h
 +++ b/include/scsi/scsi_cmnd.h
-@@ -64,6 +64,12 @@ struct scsi_pointer {
- #define SCMD_STATE_COMPLETE	0
- #define SCMD_STATE_INFLIGHT	1
+@@ -171,6 +171,8 @@ static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+ 	return *(struct scsi_driver **)rq->rq_disk->private_data;
+ }
  
-+enum scsi_cmnd_submitter {
-+	SUBMITTED_BY_BLOCK_LAYER = 0,
-+	SUBMITTED_BY_SCSI_ERROR_HANDLER = 1,
-+	SUBMITTED_BY_SCSI_RESET_IOCTL = 2,
-+} __packed;
++void scsi_done(struct scsi_cmnd *cmd);
 +
- struct scsi_cmnd {
- 	struct scsi_request req;
- 	struct scsi_device *device;
-@@ -89,6 +95,7 @@ struct scsi_cmnd {
- 	unsigned char prot_op;
- 	unsigned char prot_type;
- 	unsigned char prot_flags;
-+	enum scsi_cmnd_submitter submitter;
+ extern void scsi_finish_command(struct scsi_cmnd *cmd);
  
- 	unsigned short cmd_len;
- 	enum dma_data_direction sc_data_direction;
+ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
