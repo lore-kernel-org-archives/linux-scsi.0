@@ -2,40 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C418C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:46:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E5F6C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:46:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A7BF603E5
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:46:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48F5B603E5
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:46:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241333AbhJGUsg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 16:48:36 -0400
-Received: from mail-pj1-f46.google.com ([209.85.216.46]:34674 "EHLO
-        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241560AbhJGUsf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:48:35 -0400
-Received: by mail-pj1-f46.google.com with SMTP id q7-20020a17090a2e0700b001a01027dd88so4630383pjd.1
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:46:41 -0700 (PDT)
+        id S241631AbhJGUso (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 16:48:44 -0400
+Received: from mail-pl1-f182.google.com ([209.85.214.182]:43813 "EHLO
+        mail-pl1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241836AbhJGUso (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:48:44 -0400
+Received: by mail-pl1-f182.google.com with SMTP id y1so4668204plk.10
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:46:50 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=tk1iMfDg8FJsNJNO4AOwwGjgSN3v5RCO/M89yAZxYH8=;
-        b=Z2AhhRaWi2Nq8dG4TB0kS4TeWzzkkGMlpdWeW8FBMo73B8pScafEvqdThqkVHbtUq0
-         g3KL1A3gK5syXQCIwbp8GHc2GeSRpgsP0u4nOIq95eP+cuHpQCpB8nKg2rKkEpKTGclI
-         y7c3145Kv4tF3s99kEnheTfg/PgzT/mq1JnGW5cEd+p+glZF6kb7sLEQSe8wIxBVOQOe
-         NaHCz+NjyUyi/ShHwtHQG5FtAArCCsszGQC56lSBgilo3ZKkkFqjzl70ONP2+a9ZchbV
-         uupaSTlEzz3+QXHRoGrjKubHPqQ+Y2jIeZxc7zq2X3YbOzDTC0r4K+jGvWsRdiii4sQD
-         pLXw==
-X-Gm-Message-State: AOAM5320B3DZxPvPA1tHRW/sl0jbSD0l/YDDSHg47UZEn3jeOpVdER5V
-        Zh4TUWzMxBYA3eRmK3584AM=
-X-Google-Smtp-Source: ABdhPJxYbdAlfIG+06ySICW6aFCb92EDodKmipSm2oS00bCxYTxoMPC5UdVQcSmTahqekadF25eTvw==
-X-Received: by 2002:a17:90a:1b8b:: with SMTP id w11mr7298315pjc.58.1633639600586;
-        Thu, 07 Oct 2021 13:46:40 -0700 (PDT)
+        bh=qjug1GLmW/1ZK9+42yO9dldTJjiCOheMITcS+wFWDeE=;
+        b=6L8fNQJSBnO1QpCAyQuO/ImIS3eWztUAyi2nm1/g45EtLZRriBAPVohYdK35j9G/Fv
+         TvgjpIDY3iavU6Q14X1SYINLhPktWkcO1J1Gxe56S06Gw1v0o/UUnHE9y4x21mBrn1D/
+         R4uzfVrcnH89g2l8a3ahJEHYC917aFRoyZZlXkxAx0HZw8TMBnVnmAMHzMqId1sRxjF7
+         33s34K+vaQpnFRm1sCHfcixY02opbjk6mpy7OfzdF/uc0vwqMxZZbgF8r06+m+/MihiV
+         G1u68fJTj6ampvPxNoLJCY8V0WMKyEIXIVx7sa82AcO/76kmxw2vYNlgNhcYpDMu5YL5
+         O07g==
+X-Gm-Message-State: AOAM532enc2jB8WAQWloM7rytZ5xkp74KupeB8ce2D00vxVHdXxAP5jt
+        6FCH+Yv6AdQZjal7TIOM6oU=
+X-Google-Smtp-Source: ABdhPJyp+48CxlAaEK7uDWoAKB1SkCHSaBAkTYDNRiHUR8fPewmNXct2lN3FDPR8Wg7otXJDOsQD1g==
+X-Received: by 2002:a17:902:a385:b0:13e:99e9:17f3 with SMTP id x5-20020a170902a38500b0013e99e917f3mr5838415pla.65.1633639609971;
+        Thu, 07 Oct 2021 13:46:49 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id 17sm280831pfh.216.2021.10.07.13.46.39
+        by smtp.gmail.com with ESMTPSA id 17sm280831pfh.216.2021.10.07.13.46.48
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 13:46:40 -0700 (PDT)
+        Thu, 07 Oct 2021 13:46:49 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
@@ -47,10 +47,14 @@ Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
         Jaegeuk Kim <jaegeuk@kernel.org>,
         Asutosh Das <asutoshd@codeaurora.org>,
         Adrian Hunter <adrian.hunter@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH v3 81/88] staging: rts5208: Call scsi_done() directly
-Date:   Thu,  7 Oct 2021 13:46:07 -0700
-Message-Id: <20211007204618.2196847-7-bvanassche@acm.org>
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        David Kershner <david.kershner@unisys.com>,
+        "Fabio M. De Francesco" <fmdefrancesco@gmail.com>,
+        Dan Carpenter <dan.carpenter@oracle.com>,
+        Song Chen <chensong_2000@189.cn>
+Subject: [PATCH v3 82/88] staging: unisys: visorhba: Call scsi_done() directly
+Date:   Thu,  7 Oct 2021 13:46:08 -0700
+Message-Id: <20211007204618.2196847-8-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007202923.2174984-1-bvanassche@acm.org>
 References: <20211007202923.2174984-1-bvanassche@acm.org>
@@ -66,36 +70,66 @@ scsi_done() directly.
 Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/staging/rts5208/rtsx.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/staging/unisys/visorhba/visorhba_main.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/staging/rts5208/rtsx.c b/drivers/staging/rts5208/rtsx.c
-index 898add4d1fc8..f1136f6bcee2 100644
---- a/drivers/staging/rts5208/rtsx.c
-+++ b/drivers/staging/rts5208/rtsx.c
-@@ -140,7 +140,6 @@ static int queuecommand_lck(struct scsi_cmnd *srb,
+diff --git a/drivers/staging/unisys/visorhba/visorhba_main.c b/drivers/staging/unisys/visorhba/visorhba_main.c
+index 41f8a72a2a95..6a8fa0587280 100644
+--- a/drivers/staging/unisys/visorhba/visorhba_main.c
++++ b/drivers/staging/unisys/visorhba/visorhba_main.c
+@@ -327,7 +327,7 @@ static int visorhba_abort_handler(struct scsi_cmnd *scsicmd)
+ 	rtn = forward_taskmgmt_command(TASK_MGMT_ABORT_TASK, scsidev);
+ 	if (rtn == SUCCESS) {
+ 		scsicmd->result = DID_ABORT << 16;
+-		scsicmd->scsi_done(scsicmd);
++		scsi_done(scsicmd);
  	}
- 
- 	/* enqueue the command and wake up the control thread */
--	srb->scsi_done = done;
- 	chip->srb = srb;
- 	complete(&dev->cmnd_ready);
- 
-@@ -423,7 +422,7 @@ static int rtsx_control_thread(void *__dev)
- 
- 		/* indicate that the command is done */
- 		else if (chip->srb->result != DID_ABORT << 16) {
--			chip->srb->scsi_done(chip->srb);
-+			scsi_done(chip->srb);
- 		} else {
- skip_for_abort:
- 			dev_err(&dev->pci->dev, "scsi command aborted\n");
-@@ -635,7 +634,7 @@ static void quiesce_and_remove_host(struct rtsx_dev *dev)
- 	if (chip->srb) {
- 		chip->srb->result = DID_NO_CONNECT << 16;
- 		scsi_lock(host);
--		chip->srb->scsi_done(dev->chip->srb);
-+		scsi_done(dev->chip->srb);
- 		chip->srb = NULL;
- 		scsi_unlock(host);
+ 	return rtn;
+ }
+@@ -354,7 +354,7 @@ static int visorhba_device_reset_handler(struct scsi_cmnd *scsicmd)
+ 	rtn = forward_taskmgmt_command(TASK_MGMT_LUN_RESET, scsidev);
+ 	if (rtn == SUCCESS) {
+ 		scsicmd->result = DID_RESET << 16;
+-		scsicmd->scsi_done(scsicmd);
++		scsi_done(scsicmd);
  	}
+ 	return rtn;
+ }
+@@ -383,7 +383,7 @@ static int visorhba_bus_reset_handler(struct scsi_cmnd *scsicmd)
+ 	rtn = forward_taskmgmt_command(TASK_MGMT_BUS_RESET, scsidev);
+ 	if (rtn == SUCCESS) {
+ 		scsicmd->result = DID_RESET << 16;
+-		scsicmd->scsi_done(scsicmd);
++		scsi_done(scsicmd);
+ 	}
+ 	return rtn;
+ }
+@@ -476,8 +476,7 @@ static int visorhba_queue_command_lck(struct scsi_cmnd *scsicmd,
+ 	 */
+ 	cmdrsp->scsi.handle = insert_location;
+ 
+-	/* save done function that we have call when cmd is complete */
+-	scsicmd->scsi_done = visorhba_cmnd_done;
++	WARN_ON_ONCE(visorhba_cmnd_done != scsi_done);
+ 	/* save destination */
+ 	cmdrsp->scsi.vdest.channel = scsidev->channel;
+ 	cmdrsp->scsi.vdest.id = scsidev->id;
+@@ -686,8 +685,7 @@ static void visorhba_serverdown_complete(struct visorhba_devdata *devdata)
+ 		case CMD_SCSI_TYPE:
+ 			scsicmd = pendingdel->sent;
+ 			scsicmd->result = DID_RESET << 16;
+-			if (scsicmd->scsi_done)
+-				scsicmd->scsi_done(scsicmd);
++			scsi_done(scsicmd);
+ 			break;
+ 		case CMD_SCSITASKMGMT_TYPE:
+ 			cmdrsp = pendingdel->sent;
+@@ -853,7 +851,7 @@ static void complete_scsi_command(struct uiscmdrsp *cmdrsp,
+ 	else
+ 		do_scsi_nolinuxstat(cmdrsp, scsicmd);
+ 
+-	scsicmd->scsi_done(scsicmd);
++	scsi_done(scsicmd);
+ }
+ 
+ /*
