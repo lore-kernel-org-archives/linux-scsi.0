@@ -2,50 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 883C2C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFCCBC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72FAE61077
-	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5F51610A5
+	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 21:19:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234081AbhJGVVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 17:21:05 -0400
-Received: from mail-pg1-f182.google.com ([209.85.215.182]:34563 "EHLO
-        mail-pg1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234049AbhJGVVE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:21:04 -0400
-Received: by mail-pg1-f182.google.com with SMTP id 133so1052759pgb.1
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:19:10 -0700 (PDT)
+        id S234337AbhJGVVJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 17:21:09 -0400
+Received: from mail-pg1-f171.google.com ([209.85.215.171]:47075 "EHLO
+        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233710AbhJGVVG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 17:21:06 -0400
+Received: by mail-pg1-f171.google.com with SMTP id m21so1009021pgu.13
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 14:19:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=gA6NRNH2A9Xt41KnXTAILbLbUYLHxLunMHE6eX3ZNbw=;
-        b=EqFrSd9fyVH+AmeVUzAapp7o29XC1ao8EdJGLJNsHcKzKEhHO9UrCXt4edPmo+eL56
-         GWmUx+/DpqcfpQfE0HMzVtJHQEv1gIJLGgVbROCJ8vs4f3WF106mcNz3WNRchUTqrZOE
-         AEFPZ0TW7N1VlbfLygvsbnk6W5RkaEgisLafdITjUW9Oy15wqff/+VUVZGG2+blO0oXM
-         G+mFKEyvdC01Lyfa15fUigfZ+cTjvHvOGQn90dI959IXgsWe7+PDq1pW0m0iHPaUHBf2
-         HYABv1UGUJ4LCHkYuq5SNha3qKyXoeuQ8lOfCEC3m8YWETLzIA4YmWxC7ObRGtRzMzgn
-         1VcA==
-X-Gm-Message-State: AOAM530n6pqPrgq38nHchUo4vkbxRhNmYTccpnxMkJpj/1uFKWwcyPtd
-        svncTtyYY2Kr+dwnjUn0Luh/Hp/I5RYr4A==
-X-Google-Smtp-Source: ABdhPJxogWfKzyXdSzX7uSIGVrgbr5E4Z0+HFKg17RdX48kN17/tHtM0bmOZEfkFMbb7fZLprHxLSQ==
-X-Received: by 2002:a63:e057:: with SMTP id n23mr1518174pgj.183.1633641550131;
-        Thu, 07 Oct 2021 14:19:10 -0700 (PDT)
+        bh=R6I1I5eX1La02qCMMnkH/r3EBmKBKA7fd7ebgjOp0Do=;
+        b=ZiNKtyBmOlMwJZZX3nF7a0cwPsFU3axfbYMkSlIEYWfR5N0CqEVmIHTtxxmdXhply7
+         5spcjOG4DOh2uI0KMXsljhKVtHjewiRXiOf4iayYSNctCi3fKcuv1PBIWHLjQ3XbpinE
+         r388S1el06pVxU/AloqhuSAh4zdcPYa+pbN8FYgF0g1WnLydpXX029j3xhRCAGjepcXj
+         L0Wl5PmW2qE06kX6W5dgi0DEDYLfdBn5WNwd/HC2clJ6oBIxGSX4eh8UqmtmJRnkr7ub
+         TDy/Gg4RuOF5gBwVNsVxHWd/VyN9TpfviPqb/NKlD3lSTWdqDmFe4ThqzjE2pe2/q/Ku
+         QwyA==
+X-Gm-Message-State: AOAM533VFuQZXGoTrI4nMzG1R8HAAn82Q+7UPUhROeWMJ2YE4vaf4qrU
+        22YxDzPdHmNeD2laxn9jKS4=
+X-Google-Smtp-Source: ABdhPJxe3OB6JiAPvyRdU/POoCcQpzW/aXbOmLz7l55MlmzzpVoc84S5kQRmEWfG9LJ5DuZFoyFgbA==
+X-Received: by 2002:a63:cc48:: with SMTP id q8mr1486232pgi.171.1633641551988;
+        Thu, 07 Oct 2021 14:19:11 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.19.08
+        by smtp.gmail.com with ESMTPSA id o2sm243290pgc.47.2021.10.07.14.19.10
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 14:19:09 -0700 (PDT)
+        Thu, 07 Oct 2021 14:19:11 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v2 05/46] scsi: message: fusion: Switch to attribute groups
-Date:   Thu,  7 Oct 2021 14:18:11 -0700
-Message-Id: <20211007211852.256007-6-bvanassche@acm.org>
+        Steffen Maier <maier@linux.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: [PATCH v2 06/46] scsi: zfcp: Switch to attribute groups
+Date:   Thu,  7 Oct 2021 14:18:12 -0700
+Message-Id: <20211007211852.256007-7-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007211852.256007-1-bvanassche@acm.org>
 References: <20211007211852.256007-1-bvanassche@acm.org>
@@ -60,112 +61,108 @@ struct device_attribute directly. Hence switch to attribute groups.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/message/fusion/mptfc.c    |  2 +-
- drivers/message/fusion/mptsas.c   |  2 +-
- drivers/message/fusion/mptscsih.c | 36 +++++++++++++++++++------------
- drivers/message/fusion/mptscsih.h |  2 +-
- drivers/message/fusion/mptspi.c   |  2 +-
- 5 files changed, 26 insertions(+), 18 deletions(-)
+ drivers/s390/scsi/zfcp_ext.h   |  4 +--
+ drivers/s390/scsi/zfcp_scsi.c  |  4 +--
+ drivers/s390/scsi/zfcp_sysfs.c | 52 +++++++++++++++++++++++-----------
+ 3 files changed, 39 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-index 572333fadd68..ecca95d2b9bf 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -129,7 +129,7 @@ static struct scsi_host_template mptfc_driver_template = {
- 	.sg_tablesize			= MPT_SCSI_SG_DEPTH,
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
--	.shost_attrs			= mptscsih_host_attrs,
-+	.shost_groups			= mptscsih_host_attr_groups,
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index 6bc96d70254d..87a35a755464 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -184,8 +184,8 @@ extern const struct attribute_group *zfcp_sysfs_adapter_attr_groups[];
+ extern const struct attribute_group *zfcp_unit_attr_groups[];
+ extern const struct attribute_group *zfcp_port_attr_groups[];
+ extern struct mutex zfcp_sysfs_port_units_mutex;
+-extern struct device_attribute *zfcp_sysfs_sdev_attrs[];
+-extern struct device_attribute *zfcp_sysfs_shost_attrs[];
++extern const struct attribute_group *zfcp_sysfs_sdev_attr_groups[];
++extern const struct attribute_group *zfcp_shost_attr_groups[];
+ bool zfcp_sysfs_port_is_removing(const struct zfcp_port *const port);
+ 
+ /* zfcp_unit.c */
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 9da9b2b2a580..875d14489699 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -444,8 +444,8 @@ static struct scsi_host_template zfcp_scsi_host_template = {
+ 	/* report size limit per scatter-gather segment */
+ 	.max_segment_size	 = ZFCP_QDIO_SBALE_LEN,
+ 	.dma_boundary		 = ZFCP_QDIO_SBALE_LEN - 1,
+-	.shost_attrs		 = zfcp_sysfs_shost_attrs,
+-	.sdev_attrs		 = zfcp_sysfs_sdev_attrs,
++	.shost_groups		 = zfcp_shost_attr_groups,
++	.sdev_groups		 = zfcp_sysfs_sdev_attr_groups,
+ 	.track_queue_depth	 = 1,
+ 	.supported_mode		 = MODE_INITIATOR,
  };
+diff --git a/drivers/s390/scsi/zfcp_sysfs.c b/drivers/s390/scsi/zfcp_sysfs.c
+index b8cd75a872ee..999cf6ee3598 100644
+--- a/drivers/s390/scsi/zfcp_sysfs.c
++++ b/drivers/s390/scsi/zfcp_sysfs.c
+@@ -672,17 +672,26 @@ ZFCP_DEFINE_SCSI_ATTR(zfcp_in_recovery, "%d\n",
+ ZFCP_DEFINE_SCSI_ATTR(zfcp_status, "0x%08x\n",
+ 		      atomic_read(&zfcp_sdev->status));
  
- /****************************************************************************
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 85285ba8e817..e31167446a02 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -2020,7 +2020,7 @@ static struct scsi_host_template mptsas_driver_template = {
- 	.sg_tablesize			= MPT_SCSI_SG_DEPTH,
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
--	.shost_attrs			= mptscsih_host_attrs,
-+	.shost_groups			= mptscsih_host_attr_groups,
- 	.no_write_same			= 1,
- };
- 
-diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
-index ce2e5b21978e..03573670c395 100644
---- a/drivers/message/fusion/mptscsih.c
-+++ b/drivers/message/fusion/mptscsih.c
-@@ -3218,23 +3218,31 @@ mptscsih_debug_level_store(struct device *dev, struct device_attribute *attr,
- static DEVICE_ATTR(debug_level, S_IRUGO | S_IWUSR,
- 	mptscsih_debug_level_show, mptscsih_debug_level_store);
- 
--struct device_attribute *mptscsih_host_attrs[] = {
--	&dev_attr_version_fw,
--	&dev_attr_version_bios,
--	&dev_attr_version_mpi,
--	&dev_attr_version_product,
--	&dev_attr_version_nvdata_persistent,
--	&dev_attr_version_nvdata_default,
--	&dev_attr_board_name,
--	&dev_attr_board_assembly,
--	&dev_attr_board_tracer,
--	&dev_attr_io_delay,
--	&dev_attr_device_delay,
--	&dev_attr_debug_level,
-+static struct attribute *mptscsih_host_attrs[] = {
-+	&dev_attr_version_fw.attr,
-+	&dev_attr_version_bios.attr,
-+	&dev_attr_version_mpi.attr,
-+	&dev_attr_version_product.attr,
-+	&dev_attr_version_nvdata_persistent.attr,
-+	&dev_attr_version_nvdata_default.attr,
-+	&dev_attr_board_name.attr,
-+	&dev_attr_board_assembly.attr,
-+	&dev_attr_board_tracer.attr,
-+	&dev_attr_io_delay.attr,
-+	&dev_attr_device_delay.attr,
-+	&dev_attr_debug_level.attr,
- 	NULL,
- };
- 
--EXPORT_SYMBOL(mptscsih_host_attrs);
-+static const struct attribute_group mptscsih_host_attr_group = {
-+	.attrs = mptscsih_host_attrs
-+};
-+
-+const struct attribute_group *mptscsih_host_attr_groups[] = {
-+	&mptscsih_host_attr_group,
+-struct device_attribute *zfcp_sysfs_sdev_attrs[] = {
+-	&dev_attr_fcp_lun,
+-	&dev_attr_wwpn,
+-	&dev_attr_hba_id,
+-	&dev_attr_read_latency,
+-	&dev_attr_write_latency,
+-	&dev_attr_cmd_latency,
+-	&dev_attr_zfcp_access_denied,
+-	&dev_attr_zfcp_failed,
+-	&dev_attr_zfcp_in_recovery,
+-	&dev_attr_zfcp_status,
++struct attribute *zfcp_sysfs_sdev_attrs[] = {
++	&dev_attr_fcp_lun.attr,
++	&dev_attr_wwpn.attr,
++	&dev_attr_hba_id.attr,
++	&dev_attr_read_latency.attr,
++	&dev_attr_write_latency.attr,
++	&dev_attr_cmd_latency.attr,
++	&dev_attr_zfcp_access_denied.attr,
++	&dev_attr_zfcp_failed.attr,
++	&dev_attr_zfcp_in_recovery.attr,
++	&dev_attr_zfcp_status.attr,
 +	NULL
 +};
-+EXPORT_SYMBOL(mptscsih_host_attr_groups);
- 
- EXPORT_SYMBOL(mptscsih_remove);
- EXPORT_SYMBOL(mptscsih_shutdown);
-diff --git a/drivers/message/fusion/mptscsih.h b/drivers/message/fusion/mptscsih.h
-index 2baeefd9be7a..a22c5eaf703c 100644
---- a/drivers/message/fusion/mptscsih.h
-+++ b/drivers/message/fusion/mptscsih.h
-@@ -131,7 +131,7 @@ extern int mptscsih_ioc_reset(MPT_ADAPTER *ioc, int post_reset);
- extern int mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth);
- extern u8 mptscsih_raid_id_to_num(MPT_ADAPTER *ioc, u8 channel, u8 id);
- extern int mptscsih_is_phys_disk(MPT_ADAPTER *ioc, u8 channel, u8 id);
--extern struct device_attribute *mptscsih_host_attrs[];
-+extern const struct attribute_group *mptscsih_host_attr_groups[];
- extern struct scsi_cmnd	*mptscsih_get_scsi_lookup(MPT_ADAPTER *ioc, int i);
- extern void mptscsih_taskmgmt_response_code(MPT_ADAPTER *ioc, u8 response_code);
- extern void mptscsih_flush_running_cmds(MPT_SCSI_HOST *hd);
-diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-index af0ce5611e4a..63c25877a413 100644
---- a/drivers/message/fusion/mptspi.c
-+++ b/drivers/message/fusion/mptspi.c
-@@ -843,7 +843,7 @@ static struct scsi_host_template mptspi_driver_template = {
- 	.sg_tablesize			= MPT_SCSI_SG_DEPTH,
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
--	.shost_attrs			= mptscsih_host_attrs,
-+	.shost_groups			= mptscsih_host_attr_groups,
++
++static const struct attribute_group zfcp_sysfs_sdev_attr_group = {
++	.attrs = zfcp_sysfs_sdev_attrs
++};
++
++const struct attribute_group *zfcp_sysfs_sdev_attr_groups[] = {
++	&zfcp_sysfs_sdev_attr_group,
+ 	NULL
  };
  
- static int mptspi_write_spi_device_pg1(struct scsi_target *starget,
+@@ -783,12 +792,21 @@ static ssize_t zfcp_sysfs_adapter_q_full_show(struct device *dev,
+ }
+ static DEVICE_ATTR(queue_full, S_IRUGO, zfcp_sysfs_adapter_q_full_show, NULL);
+ 
+-struct device_attribute *zfcp_sysfs_shost_attrs[] = {
+-	&dev_attr_utilization,
+-	&dev_attr_requests,
+-	&dev_attr_megabytes,
+-	&dev_attr_seconds_active,
+-	&dev_attr_queue_full,
++static struct attribute *zfcp_sysfs_shost_attrs[] = {
++	&dev_attr_utilization.attr,
++	&dev_attr_requests.attr,
++	&dev_attr_megabytes.attr,
++	&dev_attr_seconds_active.attr,
++	&dev_attr_queue_full.attr,
++	NULL
++};
++
++static const struct attribute_group zfcp_shost_attr_group = {
++	.attrs = zfcp_sysfs_shost_attrs
++};
++
++const struct attribute_group *zfcp_shost_attr_groups[] = {
++	&zfcp_shost_attr_group,
+ 	NULL
+ };
+ 
