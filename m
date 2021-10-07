@@ -2,48 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46525C43219
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4A0CC433FE
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:30:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2ECC661108
+	by mail.kernel.org (Postfix) with ESMTP id 9EC2560E9B
 	for <linux-scsi@archiver.kernel.org>; Thu,  7 Oct 2021 20:30:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242363AbhJGUci (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 7 Oct 2021 16:32:38 -0400
-Received: from mail-pj1-f50.google.com ([209.85.216.50]:35391 "EHLO
-        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242204AbhJGUca (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:32:30 -0400
-Received: by mail-pj1-f50.google.com with SMTP id d13-20020a17090ad3cd00b0019e746f7bd4so7842933pjw.0
-        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:30:36 -0700 (PDT)
+        id S242370AbhJGUcj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 7 Oct 2021 16:32:39 -0400
+Received: from mail-pf1-f176.google.com ([209.85.210.176]:44545 "EHLO
+        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242390AbhJGUcg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Oct 2021 16:32:36 -0400
+Received: by mail-pf1-f176.google.com with SMTP id 145so6282080pfz.11
+        for <linux-scsi@vger.kernel.org>; Thu, 07 Oct 2021 13:30:42 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=pgmaWbpH/nc41CqD55iaw+VDjWvWUX/PaAX77qHWYm0=;
-        b=uSHPT4oMTMRdG1UUQ5O5UnBY8KaRG/s9I+ajKzjCg/zKyiV5YiVEs/xq08TkVhx0XF
-         IM7qwjpSg/vIH38xxwiyW7gSNm01dBdz3ZZpLMibwm/iprPTGvJ72rn567d7NIhphMrJ
-         HT981IqKC9/iMqdohZzuEuO2loGXNEKlRD8iB4eyPW8k1GZ0LV0JQI7QdkRQ+x57Vk/G
-         AUK0+TGu8P9YDG9wbLscoikmkEYBPvYrwB/DcbzKPtwsOa2nUHjHITY+bK3udyC2yfDW
-         /PnyJmqZUDolWCippN/Rg3I4dva8NfsxRUUv7q13n43mBck4EAmKb5MU9KfFmdYDrqEf
-         OQ9w==
-X-Gm-Message-State: AOAM531uEJadYf07UNcYDXzl1v4AX5b1YG0X/K9hCflMel7AmOeg6vSZ
-        b7bP6JHIR8GAJh3+94qasOQ=
-X-Google-Smtp-Source: ABdhPJwwFIDXzNrphwju72uWV8SovOJ7cl0QqeKtdU/n42KHCQqE2rFKqjK65Pt9AOr26qdxpDA42g==
-X-Received: by 2002:a17:903:32cc:b0:13f:c3:4ff3 with SMTP id i12-20020a17090332cc00b0013f00c34ff3mr5821341plr.33.1633638636225;
-        Thu, 07 Oct 2021 13:30:36 -0700 (PDT)
+        bh=ZKOwJEfK2W3RLsiewHHTr3TAHecYRQgSmAIibHOLf7o=;
+        b=YcVdB69leAg3E24nz5FbMXpmxBe72kQRurOxo74sH5O4AygQ4TK0V6N1NXPXDKu4oG
+         XUecefjRbgi4kDxopei2kwuWlyWFGqMcq8OAFClHGg+K6MpGHCNuo9J1rkOPsmNLBgBB
+         KPA5EFLZUWiBXK6sb4yjywq/IYYR24Od8Bqy2JhWc9ZU+q6hfpBHx7KK4HH35tGigDA+
+         /X9H4IepmOps+lPtAMbM75eHZDdnEOg1m22AvTasQwF901/+0wHZnYj79nH3iSdVpcJS
+         OUUPm4RcXJT593w6LCGujadA09ByQHZKSCDtDi5QPnGqjCD6HfNbBuNv2k+wY7ax5oOJ
+         vFIQ==
+X-Gm-Message-State: AOAM5331riDqePltvFEE/dd/e7RYP9EDTyHzMGfduE4qccVY97uuEA08
+        yRl1JJe4ll5MWNw0uqjxhZg=
+X-Google-Smtp-Source: ABdhPJzw5222d2sxBCpy+0JH63dCC7jr9vCdAzxvxI6YoDSpJUFT4zfgGztv8LxX4Haf6lgZ7IGsPA==
+X-Received: by 2002:a63:c045:: with SMTP id z5mr1352874pgi.374.1633638641702;
+        Thu, 07 Oct 2021 13:30:41 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae88:8f16:b90b:5f1d])
-        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.30.35
+        by smtp.gmail.com with ESMTPSA id x35sm303499pfh.52.2021.10.07.13.30.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 07 Oct 2021 13:30:35 -0700 (PDT)
+        Thu, 07 Oct 2021 13:30:41 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Don Brace <don.brace@microchip.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 36/88] hpsa: Call scsi_done() directly
-Date:   Thu,  7 Oct 2021 13:28:31 -0700
-Message-Id: <20211007202923.2174984-37-bvanassche@acm.org>
+Subject: [PATCH v3 40/88] initio: Call scsi_done() directly
+Date:   Thu,  7 Oct 2021 13:28:35 -0700
+Message-Id: <20211007202923.2174984-41-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211007202923.2174984-1-bvanassche@acm.org>
 References: <20211007202923.2174984-1-bvanassche@acm.org>
@@ -58,53 +57,28 @@ scsi_done() directly.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/hpsa.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/initio.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 3faa87fa296a..a1153449344a 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2482,8 +2482,8 @@ static void hpsa_cmd_free_and_done(struct ctlr_info *h,
- 		struct CommandList *c, struct scsi_cmnd *cmd)
- {
- 	hpsa_cmd_resolve_and_free(h, c);
--	if (cmd && cmd->scsi_done)
--		cmd->scsi_done(cmd);
-+	if (cmd)
-+		scsi_done(cmd);
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 9b75e19a9bab..183f95758636 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -2615,8 +2615,6 @@ static int i91u_queuecommand_lck(struct scsi_cmnd *cmd,
+ 	struct initio_host *host = (struct initio_host *) cmd->device->host->hostdata;
+ 	struct scsi_ctrl_blk *cmnd;
+ 
+-	cmd->scsi_done = done;
+-
+ 	cmnd = initio_alloc_scb(host);
+ 	if (!cmnd)
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -2788,7 +2786,7 @@ static void i91uSCBPost(u8 * host_mem, u8 * cblk_mem)
+ 
+ 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
+ 	i91u_unmap_scb(host->pci_dev, cmnd);
+-	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
++	scsi_done(cmnd);	/* Notify system DONE           */
+ 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
  }
- 
- static void hpsa_retry_cmd(struct ctlr_info *h, struct CommandList *c)
-@@ -5671,7 +5671,7 @@ static void hpsa_command_resubmit_worker(struct work_struct *work)
- 		 * if it encountered a dma mapping failure.
- 		 */
- 		cmd->result = DID_IMM_RETRY << 16;
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 	}
- }
- 
-@@ -5691,19 +5691,19 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
- 	dev = cmd->device->hostdata;
- 	if (!dev) {
- 		cmd->result = DID_NO_CONNECT << 16;
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 		return 0;
- 	}
- 
- 	if (dev->removed) {
- 		cmd->result = DID_NO_CONNECT << 16;
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 		return 0;
- 	}
- 
- 	if (unlikely(lockup_detected(h))) {
- 		cmd->result = DID_NO_CONNECT << 16;
--		cmd->scsi_done(cmd);
-+		scsi_done(cmd);
- 		return 0;
- 	}
  
