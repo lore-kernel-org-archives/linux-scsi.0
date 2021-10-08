@@ -2,85 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7299C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 08:05:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD47BC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 08:41:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AD4A061042
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 08:05:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 910416103C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 08:41:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233345AbhJHIGz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Oct 2021 04:06:55 -0400
-Received: from frasgout.his.huawei.com ([185.176.79.56]:3944 "EHLO
-        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233427AbhJHIGy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Oct 2021 04:06:54 -0400
-Received: from fraeml735-chm.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HQgdX0ChLz67vnQ;
-        Fri,  8 Oct 2021 16:02:08 +0800 (CST)
-Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
- fraeml735-chm.china.huawei.com (10.206.15.216) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.8; Fri, 8 Oct 2021 10:04:55 +0200
-Received: from [10.47.80.141] (10.47.80.141) by lhreml724-chm.china.huawei.com
- (10.201.108.75) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2308.8; Fri, 8 Oct 2021
- 09:04:54 +0100
-Subject: Re: [PATCH v5 00/14] blk-mq: Reduce static requests memory footprint
- for shared sbitmap
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Kashyap Desai <kashyap.desai@broadcom.com>,
-        Jens Axboe <axboe@kernel.dk>
-CC:     <linux-block@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <ming.lei@redhat.com>, <hare@suse.de>,
-        <linux-scsi@vger.kernel.org>, Jan Kara <jack@suse.cz>
-References: <1633429419-228500-1-git-send-email-john.garry@huawei.com>
- <ae33dde8-96e8-2978-5f32-c7e0a6136e8e@kernel.dk>
- <81d9e019-b730-221e-a8c0-f72a8422a2ec@huawei.com>
- <e4e92abbe9d52bcba6b8cc6c91c442cc@mail.gmail.com>
- <597c4cbe-ca6c-53e5-1139-be2ca0fbb677@acm.org>
-From:   John Garry <john.garry@huawei.com>
-Message-ID: <0da031cb-427b-abd8-368d-d242e8c844c8@huawei.com>
-Date:   Fri, 8 Oct 2021 09:07:25 +0100
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
- Thunderbird/68.12.1
+        id S234234AbhJHIm4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Oct 2021 04:42:56 -0400
+Received: from mga09.intel.com ([134.134.136.24]:1380 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235662AbhJHIms (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Oct 2021 04:42:48 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10130"; a="226364893"
+X-IronPort-AV: E=Sophos;i="5.85,357,1624345200"; 
+   d="scan'208";a="226364893"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Oct 2021 01:40:52 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,357,1624345200"; 
+   d="scan'208";a="478899126"
+Received: from ahunter-desktop.fi.intel.com ([10.237.72.76])
+  by orsmga007.jf.intel.com with ESMTP; 08 Oct 2021 01:40:49 -0700
+From:   Adrian Hunter <adrian.hunter@intel.com>
+To:     "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH V2] scsi: ufs: core: Fix synchronization between scsi_unjam_host() and ufshcd_queuecommand()
+Date:   Fri,  8 Oct 2021 11:40:48 +0300
+Message-Id: <20211008084048.257498-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-In-Reply-To: <597c4cbe-ca6c-53e5-1139-be2ca0fbb677@acm.org>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.47.80.141]
-X-ClientProxiedBy: lhreml744-chm.china.huawei.com (10.201.108.194) To
- lhreml724-chm.china.huawei.com (10.201.108.75)
-X-CFilter-Loop: Reflected
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 08/10/2021 04:11, Bart Van Assche wrote:
+The SCSI error handler calls scsi_unjam_host() which can call the queue
+function ufshcd_queuecommand() indirectly. The error handler changes the
+state to UFSHCD_STATE_RESET while running, but error interrupts that
+happen while the error handler is running could change the state to
+UFSHCD_STATE_EH_SCHEDULED_NON_FATAL which would allow requests to go
+through ufshcd_queuecommand() even though the error handler is running.
+Block that hole by checking whether the error handler is in progress.
 
-+
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+---
 
-> On 10/7/21 13:31, Kashyap Desai wrote:
->> I tested this patchset on 5.15-rc4 (master) -
->> https://github.com/torvalds/linux.git
->>
->> #1 I noticed some performance regression @mq-deadline scheduler which 
->> is not
->> related to this series. I will bisect and get more detail about this 
->> issue
->> separately.
-> 
-> Please test this patch series on top of Jens' for-next branch 
-> (git://git.kernel.dk/linux-block). The mq-deadline performance on Jens' 
-> for-next branch should match that of kernel v5.13.
+Changes in V2:
 
-Kashyap did also mention earlier that he say the drop from v5.11 -> v5.12.
+	Add comment
 
-The only thing I saw possibly related there was Jan's work in 
-https://lore.kernel.org/linux-block/20210111164717.21937-1-jack@suse.cz/
-to fix a performance regression witnessed on megaraid sas for slower media.
+ drivers/scsi/ufs/ufshcd.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-But I quite doubtful that this is the issue.
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index f34227add27d..29d202207b18 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2688,7 +2688,19 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	switch (hba->ufshcd_state) {
+ 	case UFSHCD_STATE_OPERATIONAL:
++		break;
+ 	case UFSHCD_STATE_EH_SCHEDULED_NON_FATAL:
++		/*
++		 * SCSI error handler can call ->queuecommand() while UFS error
++		 * handler is in progress. Error interrupts could change the
++		 * state from UFSHCD_STATE_RESET to
++		 * UFSHCD_STATE_EH_SCHEDULED_NON_FATAL. Prevent requests
++		 * being issued in that case.
++		 */
++		if (ufshcd_eh_in_progress(hba)) {
++			err = SCSI_MLQUEUE_HOST_BUSY;
++			goto out;
++		}
+ 		break;
+ 	case UFSHCD_STATE_EH_SCHEDULED_FATAL:
+ 		/*
+-- 
+2.25.1
 
-Thanks,
-John
