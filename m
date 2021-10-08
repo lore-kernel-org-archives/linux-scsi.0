@@ -2,48 +2,47 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 49739C433EF
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6916C433F5
 	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 20:24:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 32F9A610E7
+	by mail.kernel.org (Postfix) with ESMTP id 9C467610E7
 	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 20:24:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242366AbhJHU0N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        id S242591AbhJHU0N (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
         Fri, 8 Oct 2021 16:26:13 -0400
-Received: from mail-pf1-f171.google.com ([209.85.210.171]:41872 "EHLO
-        mail-pf1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S242416AbhJHU0J (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Oct 2021 16:26:09 -0400
-Received: by mail-pf1-f171.google.com with SMTP id p1so9099187pfh.8
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Oct 2021 13:24:13 -0700 (PDT)
+Received: from mail-pf1-f170.google.com ([209.85.210.170]:33607 "EHLO
+        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S242570AbhJHU0M (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Oct 2021 16:26:12 -0400
+Received: by mail-pf1-f170.google.com with SMTP id s16so9166537pfk.0
+        for <linux-scsi@vger.kernel.org>; Fri, 08 Oct 2021 13:24:15 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=kSy9HxHylqv2QQOMeguWwGRixQQsbcPSN7ac2lLyVBI=;
-        b=MxbfGKW9LZadR2FNXcFPk/ro7GkqK2bbhjrwS0wtk36wtOtwB0+fitqDM+9fsAVsIV
-         lk1t5v0mqx481XTgGSkZ9IKbEFQtcaXFoSze2HBl6TC7heWMxe5IV6PCIsb2gKohdHP2
-         rGCdSpD2Voe+ZBJGhPsA4FewwK0TaHWJP80fEsSyKnEf0r+6JkPunTKbz1pQDguRAwIC
-         wvxQDFXppar8M9+hUbGwaMz5jvf/hNOqcMZRWY1IkFnSv4df20qiv7Fm+Yjkfw9XrzPy
-         dDYIL2/DlvcRutIRyGGdRmkESCKGowp1tbzurmdy6lFWrUTcWSr2Ffcoty6sZkcAQIXi
-         4nLA==
-X-Gm-Message-State: AOAM531XTI5YI0ash36IcxmMQ6zZXpMJCluX+konqe5lE+rGc5j85tym
-        Ne9WSwkyLwTA+S4lfiRFiK4=
-X-Google-Smtp-Source: ABdhPJwemukT8rNfwgcjAid6+aQghtzxa5Dt7Q5pAjxmQ0Z+/QEby/UTBe2GKCwrwu0UOjwe5G3alw==
-X-Received: by 2002:a63:3301:: with SMTP id z1mr6436264pgz.120.1633724653219;
-        Fri, 08 Oct 2021 13:24:13 -0700 (PDT)
+        bh=bke2QLpps6GpzDcXZNnBKyGGpzVgxKxfRpS6Pp+DtoM=;
+        b=bWKF3QzZl3Ag9qjACPcdjCgrbbIGrS7p4fau6MoEg6W44roxJHzt1m3FqVc+raidQ3
+         RXWaMpfRTW6XINiQ5NWGSAsdc0rjVW1r0Jhyu6N1GgDxbfLD3OU2CI9DI4Rnht6Qd/Ne
+         bYy0nKtfjELAnBZV7vMUAQ6NlrtkzgpWlG09RfbTNPoH5ZEehM+MgF3y6P7ysUO8Fqev
+         dd1sx7jng7W6mgIebVBD1x9J6gV0Y0idMZZvVUrqwlnfZX99VmYJ9WlpfBOhvxy/GGVR
+         VGnuHyDoVdJdtBtA+7inOUrhmnyE+tZ3iWyIterinPntJFlsg9fTlYtwqcB2+RnF44By
+         9pQA==
+X-Gm-Message-State: AOAM530Dj/xcOSid5+kuvSASt1VmGAxuKUSf8+ojI2GRI1RtOUYLePmo
+        JtU4vYBRytq0zUP27NMhJ5Lyazqerdl3CQ==
+X-Google-Smtp-Source: ABdhPJx0cFLO3C3sAsq6yNtBalM2KSN/K8/baY6fJiwZLvGYSIIXaTYacEHYkXBYwPfGNSRbS/63Bw==
+X-Received: by 2002:a63:4f25:: with SMTP id d37mr6476015pgb.61.1633724654578;
+        Fri, 08 Oct 2021 13:24:14 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:a8e9:7950:57f8:970])
-        by smtp.gmail.com with ESMTPSA id x21sm170858pfa.186.2021.10.08.13.24.12
+        by smtp.gmail.com with ESMTPSA id x21sm170858pfa.186.2021.10.08.13.24.13
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Oct 2021 13:24:12 -0700 (PDT)
+        Fri, 08 Oct 2021 13:24:14 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Adam Radford <aradford@gmail.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v3 09/46] scsi: 3w-xxxx: Switch to attribute groups
-Date:   Fri,  8 Oct 2021 13:23:16 -0700
-Message-Id: <20211008202353.1448570-10-bvanassche@acm.org>
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v3 10/46] scsi: 53c700: Switch to attribute groups
+Date:   Fri,  8 Oct 2021 13:23:17 -0700
+Message-Id: <20211008202353.1448570-11-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211008202353.1448570-1-bvanassche@acm.org>
 References: <20211008202353.1448570-1-bvanassche@acm.org>
@@ -58,35 +57,46 @@ struct device_attribute directly. Hence switch to attribute groups.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/3w-xxxx.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/53c700.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index 4ee485ab2714..db4e5449d516 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -532,11 +532,13 @@ static struct device_attribute tw_host_stats_attr = {
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index a12e3525977d..931f9d44e83c 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -163,7 +163,7 @@ STATIC int NCR_700_slave_configure(struct scsi_device *SDpnt);
+ STATIC void NCR_700_slave_destroy(struct scsi_device *SDpnt);
+ static int NCR_700_change_queue_depth(struct scsi_device *SDpnt, int depth);
+ 
+-STATIC struct device_attribute *NCR_700_dev_attrs[];
++STATIC const struct attribute_group *NCR_700_dev_groups[];
+ 
+ STATIC struct scsi_transport_template *NCR_700_transport_template = NULL;
+ 
+@@ -300,8 +300,8 @@ NCR_700_detect(struct scsi_host_template *tpnt,
+ 	static int banner = 0;
+ 	int j;
+ 
+-	if(tpnt->sdev_attrs == NULL)
+-		tpnt->sdev_attrs = NCR_700_dev_attrs;
++	if (tpnt->sdev_groups == NULL)
++		tpnt->sdev_groups = NCR_700_dev_groups;
+ 
+ 	memory = dma_alloc_coherent(dev, TOTAL_MEM_SIZE, &pScript, GFP_KERNEL);
+ 	if (!memory) {
+@@ -2087,11 +2087,13 @@ static struct device_attribute NCR_700_active_tags_attr = {
+ 	.show = NCR_700_show_active_tags,
  };
  
- /* Host attributes initializer */
--static struct device_attribute *tw_host_attrs[] = {
--	&tw_host_stats_attr,
-+static struct attribute *tw_host_attrs[] = {
-+	&tw_host_stats_attr.attr,
+-STATIC struct device_attribute *NCR_700_dev_attrs[] = {
+-	&NCR_700_active_tags_attr,
++STATIC struct attribute *NCR_700_dev_attrs[] = {
++	&NCR_700_active_tags_attr.attr,
  	NULL,
  };
  
-+ATTRIBUTE_GROUPS(tw_host);
++ATTRIBUTE_GROUPS(NCR_700_dev);
 +
- /* This function will read the aen queue from the isr */
- static int tw_aen_read_queue(TW_Device_Extension *tw_dev, int request_id)
- {
-@@ -2242,7 +2244,7 @@ static struct scsi_host_template driver_template = {
- 	.sg_tablesize		= TW_MAX_SGL_LENGTH,
- 	.max_sectors		= TW_MAX_SECTORS,
- 	.cmd_per_lun		= TW_MAX_CMDS_PER_LUN,
--	.shost_attrs		= tw_host_attrs,
-+	.shost_groups		= tw_host_groups,
- 	.emulated		= 1,
- 	.no_write_same		= 1,
- };
+ EXPORT_SYMBOL(NCR_700_detect);
+ EXPORT_SYMBOL(NCR_700_release);
+ EXPORT_SYMBOL(NCR_700_intr);
