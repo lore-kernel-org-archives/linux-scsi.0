@@ -2,85 +2,119 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA5EDC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 16:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4658AC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 16:41:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8D16361038
-	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 16:30:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2324560F9C
+	for <linux-scsi@archiver.kernel.org>; Fri,  8 Oct 2021 16:41:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231205AbhJHQcG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 8 Oct 2021 12:32:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:40510 "EHLO mail.kernel.org"
+        id S230301AbhJHQmy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 8 Oct 2021 12:42:54 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:52023 "EHLO m43-7.mailgun.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230325AbhJHQcF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 8 Oct 2021 12:32:05 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 4D4B161100;
-        Fri,  8 Oct 2021 16:30:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1633710609;
-        bh=a2RWUglBnePDjwXad+5X/rY7xPq8qmbFo2Nu3/OS+OQ=;
-        h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-        b=O3n4sfQ8xlavh/Ib1/6cNjIIAATvMG7ns7isvR/EJzfqBiAqw60nZMUBEzfAoqjlc
-         uzdjpbbbOpu/cADuKGkZho4J6+WtDUqlRpTH5JWvjP/+RzpzXU8a6OnMB5voiWtx9f
-         2mEoH7b+A7mh+8HGuyHgZB4rJXQgPGABe0n+UUh4z+LcrGjiec8+hNHVNOzdK5v4bi
-         7WdKhjJqQTDhToqGzzJRP6hVRt6NCDpuAQbLj/sb5uOKlNQkclnUxVjRZGIsaNIIVz
-         i4qRyp6afGJp8DltGCnxFT44rIFWQaP7G0XnWe7u11PU+S8RHNmMVxozkRlCHeWRL/
-         0mZwabPSg+O3w==
-Content-Type: text/plain; charset="utf-8"
+        id S229606AbhJHQmy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 8 Oct 2021 12:42:54 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1633711259; h=Content-Transfer-Encoding: Content-Type:
+ In-Reply-To: From: References: Cc: To: Subject: MIME-Version: Date:
+ Message-ID: Sender; bh=kHfDDgR5llcD5oBuqF26xeoc++cr4Itq9Lj0qxdQCdY=; b=YUoD+1c4qQ862bHrx179tS+pC7fKnGeceikEI9fBRjJZn0fTMEgxcMHAFQWGv/MchQhixkIN
+ IA9z28SrORjcEb+YY6v7M1Gv4EJztQMZp2sWkIPoYDRg6iNCVayBOQFEUpUStnyUNQoFAGy7
+ JkNIkdfv84gYPD7ncY8pPwNbQ5Y=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n04.prod.us-east-1.postgun.com with SMTP id
+ 61607494ab9da96e647d5f03 (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Fri, 08 Oct 2021 16:40:52
+ GMT
+Sender: asutoshd=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 2DCE8C4361C; Fri,  8 Oct 2021 16:40:51 +0000 (UTC)
+Received: from [10.71.115.70] (i-global254.qualcomm.com [199.106.103.254])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: asutoshd)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id A992FC4338F;
+        Fri,  8 Oct 2021 16:40:49 +0000 (UTC)
+DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org A992FC4338F
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
+Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
+Message-ID: <374d943a-dadf-51e0-ebf1-a3d3db4c4e0c@codeaurora.org>
+Date:   Fri, 8 Oct 2021 09:40:49 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH][v2] qed: Fix compilation for CONFIG_QED_SRIOV undefined
- scenario
-From:   patchwork-bot+netdevbpf@kernel.org
-Message-Id: <163371060925.30754.4325766747283798114.git-patchwork-notify@kernel.org>
-Date:   Fri, 08 Oct 2021 16:30:09 +0000
-References: <20211007155238.4487-1-pkushwaha@marvell.com>
-In-Reply-To: <20211007155238.4487-1-pkushwaha@marvell.com>
-To:     Prabhakar Kushwaha <pkushwaha@marvell.com>
-Cc:     netdev@vger.kernel.org, davem@davemloft.net, kuba@kernel.org,
-        linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com, aelior@marvell.com, smalin@marvell.com,
-        jhasan@marvell.com, mrangankar@marvell.com,
-        prabhakar.pkin@gmail.com, malin1024@gmail.com,
-        naresh.kamboju@linaro.org, okulkarni@marvell.com
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.1.0
+Subject: Re: [PATCH V2] scsi: ufs: core: Fix synchronization between
+ scsi_unjam_host() and ufshcd_queuecommand()
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Bart Van Assche <bvanassche@acm.org>,
+        linux-scsi@vger.kernel.org
+References: <20211008084048.257498-1-adrian.hunter@intel.com>
+From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
+In-Reply-To: <20211008084048.257498-1-adrian.hunter@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello:
-
-This patch was applied to netdev/net-next.git (master)
-by David S. Miller <davem@davemloft.net>:
-
-On Thu, 7 Oct 2021 18:52:38 +0300 you wrote:
-> This patch fixes below compliation error in case CONFIG_QED_SRIOV not
-> defined.
-> drivers/net/ethernet/qlogic/qed/qed_dev.c: In function
-> ‘qed_fw_err_handler’:
-> drivers/net/ethernet/qlogic/qed/qed_dev.c:2390:3: error: implicit
-> declaration of function ‘qed_sriov_vfpf_malicious’; did you mean
-> ‘qed_iov_vf_task’? [-Werror=implicit-function-declaration]
->    qed_sriov_vfpf_malicious(p_hwfn, &data->err_data);
->    ^~~~~~~~~~~~~~~~~~~~~~~~
->    qed_iov_vf_task
-> drivers/net/ethernet/qlogic/qed/qed_dev.c: In function
-> ‘qed_common_eqe_event’:
-> drivers/net/ethernet/qlogic/qed/qed_dev.c:2410:10: error: implicit
-> declaration of function ‘qed_sriov_eqe_event’; did you mean
-> ‘qed_common_eqe_event’? [-Werror=implicit-function-declaration]
->    return qed_sriov_eqe_event(p_hwfn, opcode, echo, data,
->           ^~~~~~~~~~~~~~~~~~~
->           qed_common_eqe_event
+On 10/8/2021 1:40 AM, Adrian Hunter wrote:
+> The SCSI error handler calls scsi_unjam_host() which can call the queue
+> function ufshcd_queuecommand() indirectly. The error handler changes the
+> state to UFSHCD_STATE_RESET while running, but error interrupts that
+> happen while the error handler is running could change the state to
+> UFSHCD_STATE_EH_SCHEDULED_NON_FATAL which would allow requests to go
+> through ufshcd_queuecommand() even though the error handler is running.
+> Block that hole by checking whether the error handler is in progress.
 > 
-> [...]
+> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+> ---
 
-Here is the summary with links:
-  - [v2] qed: Fix compilation for CONFIG_QED_SRIOV undefined scenario
-    https://git.kernel.org/netdev/net-next/c/e761523d0b40
+LGTM.
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
 
-You are awesome, thank you!
---
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+> 
+> Changes in V2:
+> 
+> 	Add comment
+> 
+>   drivers/scsi/ufs/ufshcd.c | 12 ++++++++++++
+>   1 file changed, 12 insertions(+)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index f34227add27d..29d202207b18 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2688,7 +2688,19 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+>   
+>   	switch (hba->ufshcd_state) {
+>   	case UFSHCD_STATE_OPERATIONAL:
+> +		break;
+>   	case UFSHCD_STATE_EH_SCHEDULED_NON_FATAL:
+> +		/*
+> +		 * SCSI error handler can call ->queuecommand() while UFS error
+> +		 * handler is in progress. Error interrupts could change the
+> +		 * state from UFSHCD_STATE_RESET to
+> +		 * UFSHCD_STATE_EH_SCHEDULED_NON_FATAL. Prevent requests
+> +		 * being issued in that case.
+> +		 */
+> +		if (ufshcd_eh_in_progress(hba)) {
+> +			err = SCSI_MLQUEUE_HOST_BUSY;
+> +			goto out;
+> +		}
+>   		break;
+>   	case UFSHCD_STATE_EH_SCHEDULED_FATAL:
+>   		/*
+> 
 
 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+Linux Foundation Collaborative Project
