@@ -2,209 +2,310 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1A5DC433EF
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 13:32:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15F56C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 21:55:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8E50D60F57
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 13:32:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D51F460E95
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 21:55:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233425AbhJINei (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Oct 2021 09:34:38 -0400
-Received: from email.ramaxel.com ([221.4.138.186]:15578 "EHLO
-        VLXDG1SPAM1.ramaxel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S233209AbhJINei (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2021 09:34:38 -0400
-Received: from V12DG1MBS01.ramaxel.local (v12dg1mbs01.ramaxel.local [172.26.18.31])
-        by VLXDG1SPAM1.ramaxel.com with ESMTPS id 199DW9YY023061
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Sat, 9 Oct 2021 21:32:09 +0800 (GMT-8)
-        (envelope-from songyl@ramaxel.com)
-Received: from songyl (10.64.10.54) by V12DG1MBS01.ramaxel.local
- (172.26.18.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Sat, 9
- Oct 2021 21:32:08 +0800
-Date:   Sat, 9 Oct 2021 13:32:07 +0000
-From:   Yanling Song <songyl@ramaxel.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <songyl@ramaxel.com>
-Subject: Re: [PATCH] spraid: initial commit of Ramaxel spraid driver
-Message-ID: <20211009133207.789ad116@songyl>
-In-Reply-To: <526271c5-a745-7666-6b18-9eb61898f1db@acm.org>
-References: <20210930034752.248781-1-songyl@ramaxel.com>
-        <526271c5-a745-7666-6b18-9eb61898f1db@acm.org>
-X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S230308AbhJIV53 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Oct 2021 17:57:29 -0400
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:55276 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230116AbhJIV51 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2021 17:57:27 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1633816529;
+        bh=RVOoFIwtw765v35RQld5MPceTE33+33mpkvCn2tC1GI=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=hv6kJn+AWQAzKfcdc18uih5j6RwO4GV3+cr95FDAnPmZ04q4Cg4jHyf3Ir0bQPH8U
+         40qVKZNyv+Z/DdoGr4/XizfEYOyAHfQGFJRylM/6e3tETCDEV9UCvg4HD4zHIeihqo
+         Pc4RV9rvrr3o7NBbj0gj84Ug6rmLHOfkoZyrx8pE=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id DB88B1280D79;
+        Sat,  9 Oct 2021 14:55:29 -0700 (PDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id XsdJ-zfbuRdM; Sat,  9 Oct 2021 14:55:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1633816529;
+        bh=RVOoFIwtw765v35RQld5MPceTE33+33mpkvCn2tC1GI=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=hv6kJn+AWQAzKfcdc18uih5j6RwO4GV3+cr95FDAnPmZ04q4Cg4jHyf3Ir0bQPH8U
+         40qVKZNyv+Z/DdoGr4/XizfEYOyAHfQGFJRylM/6e3tETCDEV9UCvg4HD4zHIeihqo
+         Pc4RV9rvrr3o7NBbj0gj84Ug6rmLHOfkoZyrx8pE=
+Received: from [172.20.0.118] (unknown [50.237.197.251])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 69EE41280D77;
+        Sat,  9 Oct 2021 14:55:29 -0700 (PDT)
+Message-ID: <4083dcd4a97427aef6ffca411c1147af4fbd1bcd.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.15-rc3
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 09 Oct 2021 16:55:28 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.64.10.54]
-X-ClientProxiedBy: V12DG1MBS03.ramaxel.local (172.26.18.33) To
- V12DG1MBS01.ramaxel.local (172.26.18.31)
-X-DNSRBL: 
-X-MAIL: VLXDG1SPAM1.ramaxel.com 199DW9YY023061
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 8 Oct 2021 20:58:17 -0700
-Bart Van Assche <bvanassche@acm.org> wrote:
+Five fixes, all in drivers.  The big change is the UFS task management
+rework, with lpfc next and the rest being fairly minor and obvious
+fixes.
 
-> On 9/29/21 20:47, Yanling Song wrote:
-> > +#define dev_log_dbg(dev, fmt, ...)	do { \
-> > +	if (unlikely(log_debug_switch))	\
-> > +		dev_info(dev, "[%s] [%d] " fmt,	\
-> > +			__func__, __LINE__, ##__VA_ARGS__);
-> > \ +} while (0)  
-> 
-> Please use pr_debug() instead of introducing dev_log_dbg().
+The patch is available here:
 
-Ok. Will use pr_debug in the next version.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-> 
-> > +static inline
-> > +struct spraid_admin_request *spraid_admin_req(struct request *req)
-> > +{
-> > +	return blk_mq_rq_to_pdu(req);
-> > +}  
-> 
-> Please read the section with the title "The inline disease" in 
-> Documentation/process/coding-style.rst.
+The short changelog is:
 
-Ok. Will use MACRO to replace inline in the next version.
+Adrian Hunter (1):
+      scsi: ufs: core: Fix task management completion
 
-> 
-> > +static inline bool spraid_is_rw_scmd(struct scsi_cmnd *scmd)
-> > +{
-> > +	switch (scmd->cmnd[0]) {
-> > +	case READ_6:
-> > +	case READ_10:
-> > +	case READ_12:
-> > +	case READ_16:
-> > +	case READ_32:
-> > +	case WRITE_6:
-> > +	case WRITE_10:
-> > +	case WRITE_12:
-> > +	case WRITE_16:
-> > +	case WRITE_32:
-> > +		return true;
-> > +	default:
-> > +		return false;
-> > +	}
-> > +}  
-> 
-> Please use op_is_write() instead of reimplementing it.
+Dan Carpenter (1):
+      scsi: elx: efct: Delete stray unlock statement
 
-op_is_write() does not meet our requirement: Both read and write
-commands have to be checked, not just write command.
+James Smart (1):
+      scsi: lpfc: Fix memory overwrite during FC-GS I/O abort handling
 
-> 
-> > +	if (scmd->sc_data_direction == DMA_TO_DEVICE) {
-> > +		rw->opcode = SPRAID_CMD_WRITE;
-> > +	} else if (scmd->sc_data_direction == DMA_FROM_DEVICE) {
-> > +		rw->opcode = SPRAID_CMD_READ;
-> > +	} else {
-> > +		dev_err(hdev->dev, "Invalid IO for unsupported
-> > data direction: %d\n",
-> > +			scmd->sc_data_direction);
-> > +		WARN_ON(1);
-> > +	}
-> > +
-> > +	/* 6-byte READ(0x08) or WRITE(0x0A) cdb */
-> > +	if (scmd->cmd_len == 6) {
-> > +		datalength = (u32)(scmd->cmnd[4] == 0 ?
-> > +				IO_6_DEFAULT_TX_LEN :
-> > scmd->cmnd[4]);
-> > +		start_lba_lo = ((u32)scmd->cmnd[1] << 16) |
-> > +				((u32)scmd->cmnd[2] << 8) |
-> > (u32)scmd->cmnd[3]; +
-> > +		start_lba_lo &= 0x1FFFFF;
-> > +	}
-> > +
-> > +	/* 10-byte READ(0x28) or WRITE(0x2A) cdb */
-> > +	else if (scmd->cmd_len == 10) {
-> > +		datalength = (u32)scmd->cmnd[8] |
-> > ((u32)scmd->cmnd[7] << 8);
-> > +		start_lba_lo = ((u32)scmd->cmnd[2] << 24) |
-> > +				((u32)scmd->cmnd[3] << 16) |
-> > +				((u32)scmd->cmnd[4] << 8) |
-> > (u32)scmd->cmnd[5]; +
-> > +		if (scmd->cmnd[1] & FUA_MASK)
-> > +			control |= SPRAID_RW_FUA;
-> > +	}
-> > +
-> > +	/* 12-byte READ(0xA8) or WRITE(0xAA) cdb */
-> > +	else if (scmd->cmd_len == 12) {
-> > +		datalength = ((u32)scmd->cmnd[6] << 24) |
-> > +				((u32)scmd->cmnd[7] << 16) |
-> > +				((u32)scmd->cmnd[8] << 8) |
-> > (u32)scmd->cmnd[9];
-> > +		start_lba_lo = ((u32)scmd->cmnd[2] << 24) |
-> > +				((u32)scmd->cmnd[3] << 16) |
-> > +				((u32)scmd->cmnd[4] << 8) |
-> > (u32)scmd->cmnd[5]; +
-> > +		if (scmd->cmnd[1] & FUA_MASK)
-> > +			control |= SPRAID_RW_FUA;
-> > +	}
-> > +	/* 16-byte READ(0x88) or WRITE(0x8A) cdb */
-> > +	else if (scmd->cmd_len == 16) {
-> > +		datalength = ((u32)scmd->cmnd[10] << 24) |
-> > +			((u32)scmd->cmnd[11] << 16) |
-> > +			((u32)scmd->cmnd[12] << 8) |
-> > (u32)scmd->cmnd[13];
-> > +		start_lba_lo = ((u32)scmd->cmnd[6] << 24) |
-> > +			((u32)scmd->cmnd[7] << 16) |
-> > +			((u32)scmd->cmnd[8] << 8) |
-> > (u32)scmd->cmnd[9];
-> > +		start_lba_hi = ((u32)scmd->cmnd[2] << 24) |
-> > +			((u32)scmd->cmnd[3] << 16) |
-> > +			((u32)scmd->cmnd[4] << 8) |
-> > (u32)scmd->cmnd[5]; +
-> > +		if (scmd->cmnd[1] & FUA_MASK)
-> > +			control |= SPRAID_RW_FUA;
-> > +	}
-> > +	/* 32-byte READ(0x88) or WRITE(0x8A) cdb */
-> > +	else if (scmd->cmd_len == 32) {
-> > +		datalength = ((u32)scmd->cmnd[28] << 24) |
-> > +			((u32)scmd->cmnd[29] << 16) |
-> > +			((u32)scmd->cmnd[30] << 8) |
-> > (u32)scmd->cmnd[31];
-> > +		start_lba_lo = ((u32)scmd->cmnd[16] << 24) |
-> > +			((u32)scmd->cmnd[17] << 16) |
-> > +			((u32)scmd->cmnd[18] << 8) |
-> > (u32)scmd->cmnd[19];
-> > +		start_lba_hi = ((u32)scmd->cmnd[12] << 24) |
-> > +			((u32)scmd->cmnd[13] << 16) |
-> > +			((u32)scmd->cmnd[14] << 8) |
-> > (u32)scmd->cmnd[15]; +
-> > +		if (scmd->cmnd[10] & FUA_MASK)
-> > +			control |= SPRAID_RW_FUA;
-> > +	}  
-> 
-> Please remove all of the above code and use blk_rq_pos(), 
-> blk_rq_sectors() and rq->cmd_flags & REQ_FUA instead.
+John Garry (1):
+      scsi: acornscsi: Remove scsi_cmd_to_tag() reference
 
-I did not quite get your point. The above is commonly used in many
-similar use cases. For example: megasas_build_ldio() in
-megaraid_sas_base.c. 
-What's the benefit to switch to another way: use
-blk_rq_pos(),blk_rq_sectors()?
+Mike Christie (1):
+      scsi: iscsi: Fix iscsi_task use after free
 
-> 
-> > +	spraid_wq = alloc_workqueue("spraid-wq", WQ_UNBOUND |
-> > WQ_MEM_RECLAIM | WQ_SYSFS, 0);
-> > +	if (!spraid_wq)
-> > +		return -ENOMEM;  
-> 
-> Why does this driver create a workqueue? Why is system_wq not good
-> enough?
+And the diffstat:
 
-In my opinion, there is not much difference by using system_wq or using
-a dedicated wq to execute a work.
-but the dedicated wq is must to execute some serial works. It is easy
-to add more serial works later if using a dedicated wq here.
+ drivers/scsi/arm/acornscsi.c      |  2 +-
+ drivers/scsi/elx/efct/efct_scsi.c |  3 +--
+ drivers/scsi/libiscsi.c           | 15 ++++++-----
+ drivers/scsi/lpfc/lpfc_sli.c      | 11 ++++++---
+ drivers/scsi/ufs/ufshcd.c         | 52 +++++++++++++++++----------------------
+ drivers/scsi/ufs/ufshcd.h         |  1 +
+ 6 files changed, 41 insertions(+), 43 deletions(-)
 
-> 
-> Thanks,
-> 
-> Bart.
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
+index b4cb5fb19998..0cc62c1b0825 100644
+--- a/drivers/scsi/arm/acornscsi.c
++++ b/drivers/scsi/arm/acornscsi.c
+@@ -1776,7 +1776,7 @@ int acornscsi_reconnect_finish(AS_Host *host)
+ 	host->scsi.disconnectable = 0;
+ 	if (host->SCpnt->device->id  == host->scsi.reconnected.target &&
+ 	    host->SCpnt->device->lun == host->scsi.reconnected.lun &&
+-	    scsi_cmd_to_tag(host->SCpnt) == host->scsi.reconnected.tag) {
++	    scsi_cmd_to_rq(host->SCpnt)->tag == host->scsi.reconnected.tag) {
+ #if (DEBUG & (DEBUG_QUEUES|DEBUG_DISCON))
+ 	    DBG(host->SCpnt, printk("scsi%d.%c: reconnected",
+ 		    host->host->host_no, acornscsi_target(host)));
+diff --git a/drivers/scsi/elx/efct/efct_scsi.c b/drivers/scsi/elx/efct/efct_scsi.c
+index 40fb3a724c76..cf2e41dd354c 100644
+--- a/drivers/scsi/elx/efct/efct_scsi.c
++++ b/drivers/scsi/elx/efct/efct_scsi.c
+@@ -32,7 +32,7 @@ efct_scsi_io_alloc(struct efct_node *node)
+ 	struct efct *efct;
+ 	struct efct_xport *xport;
+ 	struct efct_io *io;
+-	unsigned long flags = 0;
++	unsigned long flags;
+ 
+ 	efct = node->efct;
+ 
+@@ -44,7 +44,6 @@ efct_scsi_io_alloc(struct efct_node *node)
+ 	if (!io) {
+ 		efc_log_err(efct, "IO alloc Failed\n");
+ 		atomic_add_return(1, &xport->io_alloc_failed_count);
+-		spin_unlock_irqrestore(&node->active_ios_lock, flags);
+ 		return NULL;
+ 	}
+ 
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 4683c183e9d4..5bc91d34df63 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -2281,11 +2281,6 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+ 		return FAILED;
+ 	}
+ 
+-	conn = session->leadconn;
+-	iscsi_get_conn(conn->cls_conn);
+-	conn->eh_abort_cnt++;
+-	age = session->age;
+-
+ 	spin_lock(&session->back_lock);
+ 	task = (struct iscsi_task *)sc->SCp.ptr;
+ 	if (!task || !task->sc) {
+@@ -2293,8 +2288,16 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
+ 		ISCSI_DBG_EH(session, "sc completed while abort in progress\n");
+ 
+ 		spin_unlock(&session->back_lock);
+-		goto success;
++		spin_unlock_bh(&session->frwd_lock);
++		mutex_unlock(&session->eh_mutex);
++		return SUCCESS;
+ 	}
++
++	conn = session->leadconn;
++	iscsi_get_conn(conn->cls_conn);
++	conn->eh_abort_cnt++;
++	age = session->age;
++
+ 	ISCSI_DBG_EH(session, "aborting [sc %p itt 0x%x]\n", sc, task->itt);
+ 	__iscsi_get_task(task);
+ 	spin_unlock(&session->back_lock);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 78ce38d7251c..026a1196a54d 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -12292,12 +12292,12 @@ void
+ lpfc_ignore_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		     struct lpfc_iocbq *rspiocb)
+ {
+-	struct lpfc_nodelist *ndlp = (struct lpfc_nodelist *) cmdiocb->context1;
++	struct lpfc_nodelist *ndlp = NULL;
+ 	IOCB_t *irsp = &rspiocb->iocb;
+ 
+ 	/* ELS cmd tag <ulpIoTag> completes */
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_ELS,
+-			"0139 Ignoring ELS cmd tag x%x completion Data: "
++			"0139 Ignoring ELS cmd code x%x completion Data: "
+ 			"x%x x%x x%x\n",
+ 			irsp->ulpIoTag, irsp->ulpStatus,
+ 			irsp->un.ulpWord[4], irsp->ulpTimeout);
+@@ -12305,10 +12305,13 @@ lpfc_ignore_els_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 	 * Deref the ndlp after free_iocb. sli_release_iocb will access the ndlp
+ 	 * if exchange is busy.
+ 	 */
+-	if (cmdiocb->iocb.ulpCommand == CMD_GEN_REQUEST64_CR)
++	if (cmdiocb->iocb.ulpCommand == CMD_GEN_REQUEST64_CR) {
++		ndlp = cmdiocb->context_un.ndlp;
+ 		lpfc_ct_free_iocb(phba, cmdiocb);
+-	else
++	} else {
++		ndlp = (struct lpfc_nodelist *) cmdiocb->context1;
+ 		lpfc_els_free_iocb(phba, cmdiocb);
++	}
+ 
+ 	lpfc_nlp_put(ndlp);
+ }
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 188de6f91050..95be7ecdfe10 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6377,27 +6377,6 @@ static irqreturn_t ufshcd_check_errors(struct ufs_hba *hba, u32 intr_status)
+ 	return retval;
+ }
+ 
+-struct ctm_info {
+-	struct ufs_hba	*hba;
+-	unsigned long	pending;
+-	unsigned int	ncpl;
+-};
+-
+-static bool ufshcd_compl_tm(struct request *req, void *priv, bool reserved)
+-{
+-	struct ctm_info *const ci = priv;
+-	struct completion *c;
+-
+-	WARN_ON_ONCE(reserved);
+-	if (test_bit(req->tag, &ci->pending))
+-		return true;
+-	ci->ncpl++;
+-	c = req->end_io_data;
+-	if (c)
+-		complete(c);
+-	return true;
+-}
+-
+ /**
+  * ufshcd_tmc_handler - handle task management function completion
+  * @hba: per adapter instance
+@@ -6408,18 +6387,24 @@ static bool ufshcd_compl_tm(struct request *req, void *priv, bool reserved)
+  */
+ static irqreturn_t ufshcd_tmc_handler(struct ufs_hba *hba)
+ {
+-	unsigned long flags;
+-	struct request_queue *q = hba->tmf_queue;
+-	struct ctm_info ci = {
+-		.hba	 = hba,
+-	};
++	unsigned long flags, pending, issued;
++	irqreturn_t ret = IRQ_NONE;
++	int tag;
++
++	pending = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	ci.pending = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+-	blk_mq_tagset_busy_iter(q->tag_set, ufshcd_compl_tm, &ci);
++	issued = hba->outstanding_tasks & ~pending;
++	for_each_set_bit(tag, &issued, hba->nutmrs) {
++		struct request *req = hba->tmf_rqs[tag];
++		struct completion *c = req->end_io_data;
++
++		complete(c);
++		ret = IRQ_HANDLED;
++	}
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+-	return ci.ncpl ? IRQ_HANDLED : IRQ_NONE;
++	return ret;
+ }
+ 
+ /**
+@@ -6542,9 +6527,9 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	ufshcd_hold(hba, false);
+ 
+ 	spin_lock_irqsave(host->host_lock, flags);
+-	blk_mq_start_request(req);
+ 
+ 	task_tag = req->tag;
++	hba->tmf_rqs[req->tag] = req;
+ 	treq->upiu_req.req_header.dword_0 |= cpu_to_be32(task_tag);
+ 
+ 	memcpy(hba->utmrdl_base_addr + task_tag, treq, sizeof(*treq));
+@@ -6585,6 +6570,7 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
+ 	}
+ 
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
++	hba->tmf_rqs[req->tag] = NULL;
+ 	__clear_bit(task_tag, &hba->outstanding_tasks);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+@@ -9635,6 +9621,12 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 		err = PTR_ERR(hba->tmf_queue);
+ 		goto free_tmf_tag_set;
+ 	}
++	hba->tmf_rqs = devm_kcalloc(hba->dev, hba->nutmrs,
++				    sizeof(*hba->tmf_rqs), GFP_KERNEL);
++	if (!hba->tmf_rqs) {
++		err = -ENOMEM;
++		goto free_tmf_queue;
++	}
+ 
+ 	/* Reset the attached device */
+ 	ufshcd_device_reset(hba);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index f0da5d3db1fa..41f6e06f9185 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -828,6 +828,7 @@ struct ufs_hba {
+ 
+ 	struct blk_mq_tag_set tmf_tag_set;
+ 	struct request_queue *tmf_queue;
++	struct request **tmf_rqs;
+ 
+ 	struct uic_command *active_uic_cmd;
+ 	struct mutex uic_cmd_mutex;
 
