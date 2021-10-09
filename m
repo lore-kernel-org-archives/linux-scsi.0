@@ -2,71 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88D72C433EF
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 04:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 969EAC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 05:55:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 62F5C60F6B
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 04:39:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B3FF60F6B
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 05:55:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231773AbhJIElP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Oct 2021 00:41:15 -0400
-Received: from smtp181.sjtu.edu.cn ([202.120.2.181]:44138 "EHLO
-        smtp181.sjtu.edu.cn" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229596AbhJIElP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2021 00:41:15 -0400
-Received: from proxy02.sjtu.edu.cn (smtp188.sjtu.edu.cn [202.120.2.188])
-        by smtp181.sjtu.edu.cn (Postfix) with ESMTPS id 377B41008CBC1;
-        Sat,  9 Oct 2021 12:39:15 +0800 (CST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-        by proxy02.sjtu.edu.cn (Postfix) with ESMTP id 1FE0B200C082D;
-        Sat,  9 Oct 2021 12:39:15 +0800 (CST)
-X-Virus-Scanned: amavisd-new at 
-Received: from proxy02.sjtu.edu.cn ([127.0.0.1])
-        by localhost (proxy02.sjtu.edu.cn [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id O8Xitoy0QZnE; Sat,  9 Oct 2021 12:39:15 +0800 (CST)
-Received: from guozhi-ipads.ipads-lab.se.sjtu.edu.cn (unknown [202.120.40.82])
-        (Authenticated sender: qtxuning1999@sjtu.edu.cn)
-        by proxy02.sjtu.edu.cn (Postfix) with ESMTPSA id 0808B200B8924;
-        Sat,  9 Oct 2021 12:38:54 +0800 (CST)
-From:   Guo Zhi <qtxuning1999@sjtu.edu.cn>
-To:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     Guo Zhi <qtxuning1999@sjtu.edu.cn>, open-iscsi@googlegroups.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi scsi_transport_iscsi.c: fix misuse of %llu in scsi_transport_iscsi.c
-Date:   Sat,  9 Oct 2021 12:38:51 +0800
-Message-Id: <20211009043851.212503-1-qtxuning1999@sjtu.edu.cn>
-X-Mailer: git-send-email 2.33.0
+        id S243836AbhJIF52 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Oct 2021 01:57:28 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51188 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232529AbhJIF51 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 9 Oct 2021 01:57:27 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id E594460F5B;
+        Sat,  9 Oct 2021 05:55:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1633758931;
+        bh=mPhmaqXT3YwhW1qk+dR/jLrHHuwFCaDQvu5go+GQ558=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=2MvMxhEUYWlrYT6c+r2pprDAQh31UAE2Vyb6mgIC4pwmFqVkO7KUIDtM/bChnwXS4
+         QJhxCdqNvooY4ZbFMXJvTUjveVAMZxdamuhdvFgmWc49Ly1o6tAAUMj7oiRKVsDfRD
+         1KUrKYXkxqwG3r3/GhG++ZXjBp2c6PGWp+3WxH9I=
+Date:   Sat, 9 Oct 2021 07:55:28 +0200
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH v3 45/46] scsi: usb: Switch to attribute groups
+Message-ID: <YWEu0Ko7TaaLuaVy@kroah.com>
+References: <20211008202353.1448570-1-bvanassche@acm.org>
+ <20211008202353.1448570-46-bvanassche@acm.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211008202353.1448570-46-bvanassche@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Pointers should be printed with %p or %px rather than
-cast to (unsigned long long) and printed with %llu.
-Change %llu to %p to print the pointer into sysfs.
+On Fri, Oct 08, 2021 at 01:23:52PM -0700, Bart Van Assche wrote:
+> struct device supports attribute groups directly but does not support
+> struct device_attribute directly. Hence switch to attribute groups.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/usb/storage/scsiglue.c | 8 +++++---
+>  1 file changed, 5 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+> index e5a971b83e3f..4e5a928f0368 100644
+> --- a/drivers/usb/storage/scsiglue.c
+> +++ b/drivers/usb/storage/scsiglue.c
+> @@ -588,11 +588,13 @@ static ssize_t max_sectors_store(struct device *dev, struct device_attribute *at
+>  }
+>  static DEVICE_ATTR_RW(max_sectors);
+>  
+> -static struct device_attribute *sysfs_device_attr_list[] = {
+> -	&dev_attr_max_sectors,
+> +static struct attribute *usb_sdev_attrs[] = {
+> +	&dev_attr_max_sectors.attr,
+>  	NULL,
+>  };
+>  
+> +ATTRIBUTE_GROUPS(usb_sdev);
+> +
+>  /*
+>   * this defines our host template, with which we'll allocate hosts
+>   */
+> @@ -653,7 +655,7 @@ static const struct scsi_host_template usb_stor_host_template = {
+>  	.skip_settle_delay =		1,
+>  
+>  	/* sysfs device attributes */
+> -	.sdev_attrs =			sysfs_device_attr_list,
+> +	.sdev_groups =			usb_sdev_groups,
+>  
+>  	/* module management */
+>  	.module =			THIS_MODULE
 
-Signed-off-by: Guo Zhi <qtxuning1999@sjtu.edu.cn>
----
- drivers/scsi/scsi_transport_iscsi.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 922e4c7bd88e..14050c4fdb89 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -129,8 +129,7 @@ show_transport_handle(struct device *dev, struct device_attribute *attr,
- 
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
--	return sysfs_emit(buf, "%llu\n",
--		  (unsigned long long)iscsi_handle(priv->iscsi_transport));
-+	return sysfs_emit(buf, "%p\n", priv->iscsi_transport);
- }
- static DEVICE_ATTR(handle, S_IRUGO, show_transport_handle, NULL);
- 
--- 
-2.33.0
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
