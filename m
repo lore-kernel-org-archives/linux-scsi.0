@@ -2,69 +2,51 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BC5C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 05:55:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC392C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 07:39:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6756560F6B
-	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 05:55:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8505160F90
+	for <linux-scsi@archiver.kernel.org>; Sat,  9 Oct 2021 07:39:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243850AbhJIF5l (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 9 Oct 2021 01:57:41 -0400
-Received: from mail.kernel.org ([198.145.29.99]:51316 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S232529AbhJIF5k (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 9 Oct 2021 01:57:40 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 08B2160F9C;
-        Sat,  9 Oct 2021 05:55:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1633758944;
-        bh=207xyWLEIddswUEcbxh4YpLepcVucsMrvA+d3lONLho=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=li55zUoj73TUHDr8YA7lOOxPLZSohfeSNe/yeBcIFDXI8GgLIULC7gfCzQdI6Fq55
-         AkObM1KcK/RgK+bQr7NOBml50xdKUPa1vTIqXmSPPRQrKDVDZxq7kqftYFxNRXVLA+
-         AcLQmItjJg1/tCEwYFG5m2JpUdoXRUh5/uonqsSw=
-Date:   Sat, 9 Oct 2021 07:55:42 +0200
-From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        David Kershner <david.kershner@unisys.com>,
-        Dan Carpenter <dan.carpenter@oracle.com>,
-        Song Chen <chensong_2000@189.cn>,
-        "Fabio M. De Francesco" <fmdefrancesco@gmail.com>
-Subject: Re: [PATCH v3 44/46] scsi: unisys: Remove the shost_attrs member
-Message-ID: <YWEu3q+fFe2Ax53o@kroah.com>
-References: <20211008202353.1448570-1-bvanassche@acm.org>
- <20211008202353.1448570-45-bvanassche@acm.org>
+        id S229849AbhJIHlt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 9 Oct 2021 03:41:49 -0400
+Received: from szxga08-in.huawei.com ([45.249.212.255]:24180 "EHLO
+        szxga08-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229560AbhJIHls (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 9 Oct 2021 03:41:48 -0400
+Received: from dggeme754-chm.china.huawei.com (unknown [172.30.72.57])
+        by szxga08-in.huawei.com (SkyGuard) with ESMTP id 4HRH3Z2YD3z1DGn9;
+        Sat,  9 Oct 2021 15:38:18 +0800 (CST)
+Received: from huawei.com (10.175.127.227) by dggeme754-chm.china.huawei.com
+ (10.3.19.100) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.8; Sat, 9 Oct
+ 2021 15:39:49 +0800
+From:   Ye Bin <yebin10@huawei.com>
+To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC:     Ye Bin <yebin10@huawei.com>
+Subject: [PATCH v2 0/2] Fix out-of-bound read in resp_readcap16 and resp_report_tgtpgs
+Date:   Sat, 9 Oct 2021 15:52:29 +0800
+Message-ID: <20211009075231.2489878-1-yebin10@huawei.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211008202353.1448570-45-bvanassche@acm.org>
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.175.127.227]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ dggeme754-chm.china.huawei.com (10.3.19.100)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 08, 2021 at 01:23:51PM -0700, Bart Van Assche wrote:
-> This patch prepares for removal of the shost_attrs member from struct
-> scsi_host_template.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/staging/unisys/visorhba/visorhba_main.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/staging/unisys/visorhba/visorhba_main.c b/drivers/staging/unisys/visorhba/visorhba_main.c
-> index 41f8a72a2a95..f0c647b97354 100644
-> --- a/drivers/staging/unisys/visorhba/visorhba_main.c
-> +++ b/drivers/staging/unisys/visorhba/visorhba_main.c
-> @@ -584,7 +584,6 @@ static struct scsi_host_template visorhba_driver_template = {
->  	.eh_device_reset_handler = visorhba_device_reset_handler,
->  	.eh_bus_reset_handler = visorhba_bus_reset_handler,
->  	.eh_host_reset_handler = visorhba_host_reset_handler,
-> -	.shost_attrs = NULL,
->  #define visorhba_MAX_CMNDS 128
->  	.can_queue = visorhba_MAX_CMNDS,
->  	.sg_tablesize = 64,
+Ye Bin (2):
+  scsi:scsi_debug: Fix out-of-bound read in resp_readcap16
+  scsi:scsi_debug:Fix out-of-bound read in resp_report_tgtpgs
 
+ drivers/scsi/scsi_debug.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+-- 
+2.31.1
+
