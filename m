@@ -2,91 +2,59 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78D52C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Oct 2021 06:40:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAB02C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Oct 2021 06:44:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 56DE860C41
-	for <linux-scsi@archiver.kernel.org>; Mon, 11 Oct 2021 06:40:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8A01F60C41
+	for <linux-scsi@archiver.kernel.org>; Mon, 11 Oct 2021 06:44:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234214AbhJKGml convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Oct 2021 02:42:41 -0400
-Received: from mx1.uni-regensburg.de ([194.94.157.146]:37114 "EHLO
-        mx1.uni-regensburg.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229797AbhJKGml (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Oct 2021 02:42:41 -0400
-X-Greylist: delayed 307 seconds by postgrey-1.27 at vger.kernel.org; Mon, 11 Oct 2021 02:42:40 EDT
-Received: from mx1.uni-regensburg.de (localhost [127.0.0.1])
-        by localhost (Postfix) with SMTP id 4D28A6000056;
-        Mon, 11 Oct 2021 08:35:29 +0200 (CEST)
-Received: from gwsmtp.uni-regensburg.de (gwsmtp1.uni-regensburg.de [132.199.5.51])
-        by mx1.uni-regensburg.de (Postfix) with ESMTP id 321076000052;
-        Mon, 11 Oct 2021 08:35:29 +0200 (CEST)
-Received: from uni-regensburg-smtp1-MTA by gwsmtp.uni-regensburg.de
-        with Novell_GroupWise; Mon, 11 Oct 2021 08:35:29 +0200
-Message-Id: <6163DB2E020000A1000445F1@gwsmtp.uni-regensburg.de>
-X-Mailer: Novell GroupWise Internet Agent 18.3.1 
-Date:   Mon, 11 Oct 2021 08:35:26 +0200
-From:   "Ulrich Windl" <Ulrich.Windl@rz.uni-regensburg.de>
-To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-        "Chris Leech" <cleech@redhat.com>, <qtxuning1999@sjtu.edu.cn>,
-        "Lee Duncan" <lduncan@suse.com>
-Cc:     "open-iscsi" <open-iscsi@googlegroups.com>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-Subject: Antw: [EXT] Re: [PATCH] scsi scsi_transport_iscsi.c: fix
- misuse of %llu in scsi_transport_iscsi.c
-References: <20211009030254.205714-1-qtxuning1999@sjtu.edu.cn>
- <5daf69b365e23ceecee911c4d0f2f66a0b9ec95c.camel@perches.com>
-In-Reply-To: <5daf69b365e23ceecee911c4d0f2f66a0b9ec95c.camel@perches.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+        id S234276AbhJKGqR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Oct 2021 02:46:17 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49536 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229797AbhJKGqQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Oct 2021 02:46:16 -0400
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C35A0C061570;
+        Sun, 10 Oct 2021 23:44:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=In-Reply-To:Content-Type:MIME-Version:
+        References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description;
+        bh=itmTim8I8t0MywMgjw5ukf6bQm80r6xY66lzHRGBkrU=; b=JaADK9WMrPpNoBBHBl9idRMMuD
+        BYqj3G7RrDho83bp87br+1sUORGJ+B66XPhavXtKJhRBH53kPDL10sxYORJ510EH72BCXUB3MfrrP
+        v6PWIYIV5lMVSharrgDeJrRKyDrl8BAXI2aSz9dCmIhjMP5b/OrleQ3qT16i4YS+gCZ35wX7iJeKD
+        x+MO9qlQF60UZOViG0m1Bq5lbjoJH1LGWIgMSHDhr6TJCUFfzqDQOzb4/2/0f90jBkHnZDNugIPc0
+        zOdxKyyxHwOsX1AH2Q4iHill4U++SnwwQLytWAX2mvAnF2zlxb62+zVUREYvXF7GEMcuVSsB9kgHW
+        fn8Px/YQ==;
+Received: from hch by casper.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mZp12-005Iw5-IR; Mon, 11 Oct 2021 06:42:47 +0000
+Date:   Mon, 11 Oct 2021 07:42:28 +0100
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Cai Huoqing <caihuoqing@baidu.com>
+Cc:     Michael Cyr <mikecyr@linux.ibm.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: ibmvscsi_tgt: Use dma_alloc_coherent() instead of
+ get_zeroed_page/dma_map_single()
+Message-ID: <YWPc1GxFiOloHveI@infradead.org>
+References: <20211010160055.488-1-caihuoqing@baidu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20211010160055.488-1-caihuoqing@baidu.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
->>> Joe Perches <joe@perches.com> schrieb am 09.10.2021 um 05:14 in Nachricht
-<5daf69b365e23ceecee911c4d0f2f66a0b9ec95c.camel@perches.com>:
-> On Sat, 2021-10-09 at 11:02 +0800, Guo Zhi wrote:
->> Pointers should be printed with %p or %px rather than
->> cast to (unsigned long long) and printed with %llu.
->> Change %llu to %p to print the pointer into sysfs.
-> ][]
->> diff --git a/drivers/scsi/scsi_transport_iscsi.c 
-> b/drivers/scsi/scsi_transport_iscsi.c
-> []
->> @@ -129,8 +129,8 @@ show_transport_handle(struct device *dev, struct 
-> device_attribute *attr,
->>  
->> 
->>  	if (!capable(CAP_SYS_ADMIN))
->>  		return -EACCES;
->> -	return sysfs_emit(buf, "%llu\n",
->> -		  (unsigned long long)iscsi_handle(priv->iscsi_transport));
->> +	return sysfs_emit(buf, "%p\n",
->> +		iscsi_ptr(priv->iscsi_transport));
-> 
-> iscsi_transport is a pointer isn't it?
-> 
-> so why not just
-> 
-> 	return sysfs_emit(buf, "%p\n", priv->iscsi_transport);
+On Mon, Oct 11, 2021 at 12:00:53AM +0800, Cai Huoqing wrote:
+> Replacing get_zeroed_page/free_page/dma_map_single/dma_unmap_single()
+> with dma_alloc_coherent/dma_free_coherent() helps to reduce
+> code size, and simplify the code, and coherent DMA will not
+> clear the cache every time.
 
-Isn't the difference that %p outputs hex, while %u outputs decimal?
-
-> 
-> ?
-> 
-> -- 
-> You received this message because you are subscribed to the Google Groups 
-> "open-iscsi" group.
-> To unsubscribe from this group and stop receiving emails from it, send an 
-> email to open-iscsi+unsubscribe@googlegroups.com.
-> To view this discussion on the web visit 
-> https://groups.google.com/d/msgid/open-iscsi/5daf69b365e23ceecee911c4d0f2f66a 
-> 0b9ec95c.camel%40perches.com.
-
-
-
-
+This explanation does not make any sense whatsoever.  Please explain
+why it would an show numbers.
