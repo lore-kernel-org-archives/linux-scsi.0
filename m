@@ -2,49 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBD1CC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 23:36:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD179C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 23:36:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C796260F92
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 23:36:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A37460F3A
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 23:36:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236158AbhJLXi4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Oct 2021 19:38:56 -0400
-Received: from mail-pl1-f179.google.com ([209.85.214.179]:39599 "EHLO
-        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234129AbhJLXiz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Oct 2021 19:38:55 -0400
-Received: by mail-pl1-f179.google.com with SMTP id c4so573153pls.6
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Oct 2021 16:36:53 -0700 (PDT)
+        id S236161AbhJLXjA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Oct 2021 19:39:00 -0400
+Received: from mail-pf1-f173.google.com ([209.85.210.173]:40703 "EHLO
+        mail-pf1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236041AbhJLXi4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Oct 2021 19:38:56 -0400
+Received: by mail-pf1-f173.google.com with SMTP id o133so835196pfg.7
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Oct 2021 16:36:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:mime-version:content-transfer-encoding;
-        bh=oPxm0WzT6vqmWC/6Ibhv1IqkIJD1vpHs2ypKVoufU7w=;
-        b=uZbLTkCuZgaRtX0F8o9phLsGWsqExWHeg7EmhyvV6t/lKYX5eb2yB9C5srImAWgXjb
-         5iuX6sZX90RbZ/k0b/3NJTroI4T3t9yUCJOzbjvxpSxY42B96gZFYT8njfZQOIYD7kcD
-         yYhmAJDZoL5eWLzvqCBAxn4Q6xUzh7iCmMX/6ciQM2Kgx0hza1GiynrbgzgE8uelGOOd
-         BxJl2uoQfIAcFu9PGZI74Wgazf/LGB7fA0bZ79MJc2rpRpnDvtm67Z8eEIIjxRT2Z7SQ
-         1pTZ2tFp9PknWu21W7rMMRd25eWJAYd57mcAQWgSaVFq1JW8iat0mzPCLjU5TWW80Me/
-         s7fA==
-X-Gm-Message-State: AOAM533bcWnuY/ZShxn91APITNpaEF1F/X8hcV19Mfd45ytk9EDoEkXS
-        ajx2eRzLjDa/KJLuDfki/UU=
-X-Google-Smtp-Source: ABdhPJzhkdRtyRQlmiYUtYgC1AxZAAKfYUCbA4rAeQHKEzeMLiO74Lvpj2c4iOtz9BlZpo+6/MRJmg==
-X-Received: by 2002:a17:90a:1548:: with SMTP id y8mr9763262pja.151.1634081812569;
-        Tue, 12 Oct 2021 16:36:52 -0700 (PDT)
+        bh=pL0XsSmLM0S09oS82IXJArEaSeEy2ycMIy/uO6hE6rk=;
+        b=IcHGVvWZovK67kVPwoOStuzjNJCTCbPR97Dv6KO46ZWbAuuSBKud+eEBjQkfF1rwDq
+         0aYhyvAqKj+C0hUHI4bclcmIzeW6T3t8fBvkTJ/URwb5xRG+/wkWh33Ao4XZpQAldZmA
+         1iTPhPO/9RizauvEehncCHL1FERi4DdJG7oYNZx1YDv6qyMNVGuYj50rXgBj6IyOGW1h
+         CZfPblW1MNBWdZwhrHGYuDwRpBob2lXOIhlNtQaUIvshA7ZyokWJ4/M4yBUC+YrXeiCn
+         DqZS5N/ufC8/F/w6ZyGEDxAziKgUuMFB9bw9L5SXIeLiGREmGMaDEdD1x1mMnAdW4FB+
+         cqrA==
+X-Gm-Message-State: AOAM532q7NqZ9nlBJ/PANMM9J1y7ap3JE6OYXl3pHHesPfI0981CEsxC
+        eaGOv183nOuurTi5cOk9V+k=
+X-Google-Smtp-Source: ABdhPJykYQBJuIe722enElXg2iMAKNlGTuRKEvWUfQf+ZT0GFnidcuNjtArHQig+kJjpUP+9eY4DpQ==
+X-Received: by 2002:a63:f84f:: with SMTP id v15mr25523699pgj.204.1634081813864;
+        Tue, 12 Oct 2021 16:36:53 -0700 (PDT)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:8c1a:acb2:4eff:5d13])
-        by smtp.gmail.com with ESMTPSA id pi9sm4336676pjb.31.2021.10.12.16.36.51
+        by smtp.gmail.com with ESMTPSA id pi9sm4336676pjb.31.2021.10.12.16.36.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Oct 2021 16:36:52 -0700 (PDT)
+        Tue, 12 Oct 2021 16:36:53 -0700 (PDT)
 From:   Bart Van Assche <bvanassche@acm.org>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     linux-scsi@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
-        Tyrel Datwyler <tyreld@linux.ibm.com>,
-        Michael Ellerman <mpe@ellerman.id.au>,
+        Brian King <brking@us.ibm.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>
-Subject: [PATCH v4 24/46] scsi: ibmvfc: Switch to attribute groups
-Date:   Tue, 12 Oct 2021 16:35:36 -0700
-Message-Id: <20211012233558.4066756-25-bvanassche@acm.org>
+Subject: [PATCH v4 25/46] scsi: ipr: Switch to attribute groups
+Date:   Tue, 12 Oct 2021 16:35:37 -0700
+Message-Id: <20211012233558.4066756-26-bvanassche@acm.org>
 X-Mailer: git-send-email 2.33.0.882.g93a45727a2-goog
 In-Reply-To: <20211012233558.4066756-1-bvanassche@acm.org>
 References: <20211012233558.4066756-1-bvanassche@acm.org>
@@ -59,49 +58,75 @@ struct device_attribute directly. Hence switch to attribute groups.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ drivers/scsi/ipr.c | 38 +++++++++++++++++++++-----------------
+ 1 file changed, 21 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 1f1586ad48fe..bc3a608be136 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -3588,18 +3588,20 @@ static struct bin_attribute ibmvfc_trace_attr = {
- };
- #endif
- 
--static struct device_attribute *ibmvfc_attrs[] = {
--	&dev_attr_partition_name,
--	&dev_attr_device_name,
--	&dev_attr_port_loc_code,
--	&dev_attr_drc_name,
--	&dev_attr_npiv_version,
--	&dev_attr_capabilities,
--	&dev_attr_log_level,
--	&dev_attr_nr_scsi_channels,
-+static struct attribute *ibmvfc_host_attrs[] = {
-+	&dev_attr_partition_name.attr,
-+	&dev_attr_device_name.attr,
-+	&dev_attr_port_loc_code.attr,
-+	&dev_attr_drc_name.attr,
-+	&dev_attr_npiv_version.attr,
-+	&dev_attr_capabilities.attr,
-+	&dev_attr_log_level.attr,
-+	&dev_attr_nr_scsi_channels.attr,
- 	NULL
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 5d78f7e939a3..00862e84308c 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4236,18 +4236,20 @@ static struct bin_attribute ipr_ioa_async_err_log = {
+ 	.write = ipr_next_async_err_log
  };
  
-+ATTRIBUTE_GROUPS(ibmvfc_host);
+-static struct device_attribute *ipr_ioa_attrs[] = {
+-	&ipr_fw_version_attr,
+-	&ipr_log_level_attr,
+-	&ipr_diagnostics_attr,
+-	&ipr_ioa_state_attr,
+-	&ipr_ioa_reset_attr,
+-	&ipr_update_fw_attr,
+-	&ipr_ioa_fw_type_attr,
+-	&ipr_iopoll_weight_attr,
++static struct attribute *ipr_ioa_attrs[] = {
++	&ipr_fw_version_attr.attr,
++	&ipr_log_level_attr.attr,
++	&ipr_diagnostics_attr.attr,
++	&ipr_ioa_state_attr.attr,
++	&ipr_ioa_reset_attr.attr,
++	&ipr_update_fw_attr.attr,
++	&ipr_ioa_fw_type_attr.attr,
++	&ipr_iopoll_weight_attr.attr,
+ 	NULL,
+ };
+ 
++ATTRIBUTE_GROUPS(ipr_ioa);
 +
- static struct scsi_host_template driver_template = {
- 	.module = THIS_MODULE,
- 	.name = "IBM POWER Virtual FC Adapter",
-@@ -3620,7 +3622,7 @@ static struct scsi_host_template driver_template = {
- 	.this_id = -1,
- 	.sg_tablesize = SG_ALL,
- 	.max_sectors = IBMVFC_MAX_SECTORS,
--	.shost_attrs = ibmvfc_attrs,
-+	.shost_groups = ibmvfc_host_groups,
- 	.track_queue_depth = 1,
- 	.host_tagset = 1,
+ #ifdef CONFIG_SCSI_IPR_DUMP
+ /**
+  * ipr_read_dump - Dump the adapter
+@@ -4732,15 +4734,17 @@ static struct device_attribute ipr_raw_mode_attr = {
+ 	.store = ipr_store_raw_mode
  };
+ 
+-static struct device_attribute *ipr_dev_attrs[] = {
+-	&ipr_adapter_handle_attr,
+-	&ipr_resource_path_attr,
+-	&ipr_device_id_attr,
+-	&ipr_resource_type_attr,
+-	&ipr_raw_mode_attr,
++static struct attribute *ipr_dev_attrs[] = {
++	&ipr_adapter_handle_attr.attr,
++	&ipr_resource_path_attr.attr,
++	&ipr_device_id_attr.attr,
++	&ipr_resource_type_attr.attr,
++	&ipr_raw_mode_attr.attr,
+ 	NULL,
+ };
+ 
++ATTRIBUTE_GROUPS(ipr_dev);
++
+ /**
+  * ipr_biosparam - Return the HSC mapping
+  * @sdev:			scsi device struct
+@@ -6762,8 +6766,8 @@ static struct scsi_host_template driver_template = {
+ 	.sg_tablesize = IPR_MAX_SGLIST,
+ 	.max_sectors = IPR_IOA_MAX_SECTORS,
+ 	.cmd_per_lun = IPR_MAX_CMD_PER_LUN,
+-	.shost_attrs = ipr_ioa_attrs,
+-	.sdev_attrs = ipr_dev_attrs,
++	.shost_groups = ipr_ioa_groups,
++	.sdev_groups = ipr_dev_groups,
+ 	.proc_name = IPR_NAME,
+ };
+ 
