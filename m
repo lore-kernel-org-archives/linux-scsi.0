@@ -2,115 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89286C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 08:56:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 03B2BC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 11:10:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7156861076
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 08:56:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3C2E60BD3
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 11:10:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235352AbhJLI6y (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Oct 2021 04:58:54 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49258 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S235263AbhJLI6x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 12 Oct 2021 04:58:53 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1634029011;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2306l8O15sU1vcu4B6Ll737E6aqM79YcUvAzT+nrE/0=;
-        b=efiObAT8+PjasR9TZVEz8ABLa6QMjdiv2fzpfg0XpHLAHd1oHeIpiv6TTOy60aZo8HaCtV
-        mhJ5Li/mR4G4DYs7TYdZpbnDifKA1vy3Kypb9K6UV2AXiconluXTBI48iPXnrmnXeJB6hS
-        Bw6gmwnnP6+gqrqJSj8gP3Tp2CWB/OE=
-Received: from mail-il1-f199.google.com (mail-il1-f199.google.com
- [209.85.166.199]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-453-2TKPlEZKPMC2eHI4f6bFCA-1; Tue, 12 Oct 2021 04:56:49 -0400
-X-MC-Unique: 2TKPlEZKPMC2eHI4f6bFCA-1
-Received: by mail-il1-f199.google.com with SMTP id r18-20020a056e02109200b0025920bc2e5eso6346865ilj.0
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Oct 2021 01:56:49 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=2306l8O15sU1vcu4B6Ll737E6aqM79YcUvAzT+nrE/0=;
-        b=SwDAHP5dVJZ0Bl1Up5b8/fH6nM63t9MUvyeLj561sW57gRW+X4VTdLltmJnkzQCwqT
-         oOiNEERBJBllWSw/5VhdlSmcdgDR83pAAa9cwogBjqfrWvPZe1SpmQpfd6hcwwQK+eJL
-         3Q4lWjTZUi5wYmdgTy03wV6iKHzEb2nZUPxn06YnpNNEE1Rwxy5MKOQ0SXE44yVCB9rv
-         2j0uN/tYTmrCdPDDR/lhWIHfRYkoBY4Nt/E+B5znkFMr5fAECbTC9LGugUs1R7KlcruO
-         cG59Fklo/joeNqtqQOozxIQvY83PZQRdM1iF34YkqIEsYNShKe4670oDMpiry4L/llvB
-         z/+g==
-X-Gm-Message-State: AOAM532vjQ63xiZScSQruBpYZttbW6vBeGBJ0IigUs8eGpMTaIKXIzSZ
-        PgCq8+iccq9qQSmIsnX86/z9YMxjACdmRwWfgH7eTUJsBlJKJ9+nW1QM5l2Iob4+ke2jZuw/mAY
-        6nfe3xiiS7Wr/A3AjQ9eKSgoYcwKtPgTYhGCK3w==
-X-Received: by 2002:a02:c7d0:: with SMTP id s16mr22392935jao.135.1634029008798;
-        Tue, 12 Oct 2021 01:56:48 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJxUkRepXJb8nIg4Y5/prL0OUv2135zbuWmGtHT2J9bKutX3pXKM/gmZMmJRALFncDg4NHaIrKzMurpt7NQlWTA=
-X-Received: by 2002:a02:c7d0:: with SMTP id s16mr22392901jao.135.1634029008278;
- Tue, 12 Oct 2021 01:56:48 -0700 (PDT)
+        id S236032AbhJLLM4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Oct 2021 07:12:56 -0400
+Received: from email.ramaxel.com ([221.4.138.186]:64495 "EHLO
+        VLXDG1SPAM1.ramaxel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S232791AbhJLLM4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Oct 2021 07:12:56 -0400
+Received: from V12DG1MBS01.ramaxel.local (v12dg1mbs01.ramaxel.local [172.26.18.31])
+        by VLXDG1SPAM1.ramaxel.com with ESMTPS id 19CBAMI9031475
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Tue, 12 Oct 2021 19:10:22 +0800 (GMT-8)
+        (envelope-from songyl@ramaxel.com)
+Received: from songyl (10.64.10.54) by V12DG1MBS01.ramaxel.local
+ (172.26.18.31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Tue, 12
+ Oct 2021 19:10:22 +0800
+Date:   Tue, 12 Oct 2021 11:10:21 +0000
+From:   Yanling Song <songyl@ramaxel.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <songyl@ramaxel.com>
+Subject: Re: [PATCH] spraid: initial commit of Ramaxel spraid driver
+Message-ID: <20211012111021.5efd1b67@songyl>
+In-Reply-To: <af2fa285-aa9e-72de-0f19-b3a054678ee0@acm.org>
+References: <20210930034752.248781-1-songyl@ramaxel.com>
+        <526271c5-a745-7666-6b18-9eb61898f1db@acm.org>
+        <20211009133207.789ad116@songyl>
+        <52ee4617-93ba-919f-b990-f04f64a13d4b@acm.org>
+        <20211011083435.6e24a2e8@songyl>
+        <af2fa285-aa9e-72de-0f19-b3a054678ee0@acm.org>
+X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-References: <20210927193814.79111-1-mlombard@redhat.com> <c9f869c7-9e83-6485-e256-f9e6886eb01b@oracle.com>
-In-Reply-To: <c9f869c7-9e83-6485-e256-f9e6886eb01b@oracle.com>
-From:   Maurizio Lombardi <mlombard@redhat.com>
-Date:   Tue, 12 Oct 2021 10:56:37 +0200
-Message-ID: <CAFL455=8Sv1AaPvK1tjouko5ReVgaw_6Y7iLap1ywHeRgN+_tg@mail.gmail.com>
-Subject: Re: [PATCH] target: allow setting dbroot as a module parameter
-To:     Mike Christie <michael.christie@oracle.com>
-Cc:     martin.petersen@oracle.com, Bodo Stroesser <bostroesser@gmail.com>,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        lduncan@suse.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.64.10.54]
+X-ClientProxiedBy: V12DG1MBS03.ramaxel.local (172.26.18.33) To
+ V12DG1MBS01.ramaxel.local (172.26.18.31)
+X-DNSRBL: 
+X-MAIL: VLXDG1SPAM1.ramaxel.com 19CBAMI9031475
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Mike,
+On Mon, 11 Oct 2021 12:40:05 -0700
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-po 11. 10. 2021 v 18:50 odes=C3=ADlatel Mike Christie
-<michael.christie@oracle.com> napsal:
->
-> On 9/27/21 2:38 PM, Maurizio Lombardi wrote:
-> > The target driver prevents the users from changing
-> > the database root directory if a target module like ib_srpt
-> > has already been loaded during boot.
->
-> Why is that not allowed if we have a fabric driver loaded?
->
-> It looks like we don't start using the db_root until we have created
-> a device (alua and pr metadata)
+> On 10/11/21 01:34, Yanling Song wrote:
+> > get_unaligned_be*() is an inline which has the same function as our
+> > current code and there is no difference on performance.
+> > But current code is better when supporting old kernels since it is
+> > implemented on SCSI spec and there is no dependency on
+> > get_unaligned_be*(), which means the code can work on any version
+> > of kernel.
+> > So I prefer to keep current implementation. What's your opinion?  
+> 
+> Hi Yanling,
+> 
+> On all architectures I'm familiar with get_unaligned_be*() is faster 
+> than fetching individual bytes and combining these with shift 
+> operations. As an example, x86 CPU's support unaligned memory
+> accesses and for these CPU's the Linux kernel translates
+> get_unaligned_be*() into a single (potentially unaligned) memory
+> access.
+> 
+> Kernel drivers that are submitted for upstream inclusion should use
+> the upstream kernel API. Whether or not get_unaligned_be*() is
+> available in older kernels does not matter - since it is available in
+> the upstream kernel and since it makes code faster and easier to
+> read, using that function is strongly recommended. Additionally, it
+> can happen that after a driver has been accepted upstream that
+> someone writes a Coccinelle script to change all open-coded
+> get_unaligned_be*() calls into get_unaligned_be*() calls.
+> Compatibility with older kernels would not be accepted as a valid
+> argument against such a patch.
+> 
+> I think that get_unaligned_be*() functions are supported since kernel 
+> version 2.6.26, released in 2008, 13 years ago. Does this address
+> your concern about supporting older kernel versions?
 
-Your solution would work perfectly for me but I still have a doubt:
+Ok. Will used get_unaligned_be*() functions in the next verison.
+> 
+> Regarding supporting older kernel versions, a common approach is to 
+> develop against the latest upstream kernel. To support older kernels, 
+> include a header file called e.g. backport.h and in that header file 
+> implement the latest kernel API in terms of older kernel functions.
+> An example:
+> 
+> #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 14, 0) &&	\
+> 	!defined(CONFIG_SUSE_KERNEL)
+> static inline void bio_set_dev(struct bio *bio,
+>                                 struct block_device *bdev)
+> {
+> 	bio->bi_bdev = bdev;
+> }
+> #endif
 
-CC: Lee Duncan
+Thanks. I'll use this way when supporting older kernel.
 
-I think that changing db_root is not allowed if we have a fabric driver loa=
-ded
-because the latter could have potentially used the core's dbroot
-attribute to access the
-directory's content.
-
-See the description of the commit that introduced the configurable dbroot:
---------
-commit a96e9783e05851d5f06da0ae7635aec55a228e3d
-Author: Lee Duncan <lduncan@suse.com>
-    target: make target db location configurable
-
-    This commit adds the read-write attribute "dbroot",
-    in the top-level CONFIGFS (core) target directory,
-    normally /sys/kernel/config/target. This attribute
-    defaults to "/var/target" but can be changed by
-    writing a new pathname string to it. Changing this
-    attribute is only allowed when no fabric drivers
-    are loaded and the supplied value specifies an
-    existing directory.
-
-    Target modules that care about the target database
-    root directory will be modified to use this
-    attribute in a future commit.
---------
-
-Maurizio
+> 
+> Bart.
 
