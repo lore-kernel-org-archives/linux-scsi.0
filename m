@@ -2,40 +2,42 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D4F0C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 03:21:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2981FC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 03:23:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19CBE60F43
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 03:21:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06CE860F43
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 03:23:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232063AbhJLDXa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 11 Oct 2021 23:23:30 -0400
-Received: from mx24.baidu.com ([111.206.215.185]:35986 "EHLO baidu.com"
+        id S232108AbhJLDZ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 11 Oct 2021 23:25:29 -0400
+Received: from mx24.baidu.com ([111.206.215.185]:38518 "EHLO baidu.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231742AbhJLDX3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 11 Oct 2021 23:23:29 -0400
-Received: from BC-Mail-Ex07.internal.baidu.com (unknown [172.31.51.47])
-        by Forcepoint Email with ESMTPS id 4E7EAD74461F2518E7E5;
-        Tue, 12 Oct 2021 11:21:17 +0800 (CST)
+        id S232098AbhJLDZ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 11 Oct 2021 23:25:28 -0400
+Received: from BC-Mail-Ex12.internal.baidu.com (unknown [172.31.51.52])
+        by Forcepoint Email with ESMTPS id 963E031DEB67981EA3BC;
+        Tue, 12 Oct 2021 11:23:24 +0800 (CST)
 Received: from BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) by
- BC-Mail-EX07.internal.baidu.com (172.31.51.47) with Microsoft SMTP Server
+ BC-Mail-Ex12.internal.baidu.com (172.31.51.52) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2242.12; Tue, 12 Oct 2021 11:21:17 +0800
+ 15.1.2242.12; Tue, 12 Oct 2021 11:23:24 +0800
 Received: from LAPTOP-UKSR4ENP.internal.baidu.com (172.31.63.8) by
  BJHW-MAIL-EX27.internal.baidu.com (10.127.64.42) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
- 15.1.2308.14; Tue, 12 Oct 2021 11:21:16 +0800
+ 15.1.2308.14; Tue, 12 Oct 2021 11:23:23 +0800
 From:   Cai Huoqing <caihuoqing@baidu.com>
-To:     <hch@infradead.org>
-CC:     Cai Huoqing <caihuoqing@baidu.com>,
-        Michael Cyr <mikecyr@linux.ibm.com>,
+To:     <caihuoqing@baidu.com>
+CC:     Tyrel Datwyler <tyreld@linux.ibm.com>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        "Paul Mackerras" <paulus@samba.org>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>, <linuxppc-dev@lists.ozlabs.org>,
         <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2] scsi: ibmvscsi_tgt: Use dma_alloc_noncoherent() instead of get_zeroed_page/dma_map_single()
-Date:   Tue, 12 Oct 2021 11:21:09 +0800
-Message-ID: <20211012032110.2224-1-caihuoqing@baidu.com>
+Subject: [PATCH v2] scsi: ibmvscsi: Use dma_alloc_noncoherent() instead of get_zeroed_page/dma_map_single()
+Date:   Tue, 12 Oct 2021 11:23:16 +0800
+Message-ID: <20211012032317.2360-1-caihuoqing@baidu.com>
 X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
 Content-Type: text/plain
@@ -48,8 +50,8 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 Replacing get_zeroed_page/free_page/dma_map_single/dma_unmap_single()
 with dma_alloc_noncoherent/dma_free_noncoherent() helps to reduce
-code size, and simplify the code, and the hardware keep DMA coherent
-itself.
+code size, and simplify the code, and the hardware can keeep DMA
+coherent itself.
 
 Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
 ---
@@ -57,108 +59,102 @@ v1->v2:
 	*Change to dma_alloc/free_noncoherent from dma_alloc/free_coherent.
 	*Update changelog.
 
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 46 ++++++++----------------
- 1 file changed, 15 insertions(+), 31 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c   | 16 ++++------------
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 29 +++++++++--------------------
+ 2 files changed, 13 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 61f06f6885a5..91199b969718 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3007,20 +3007,13 @@ static long ibmvscsis_create_command_q(struct scsi_info *vscsi, int num_cmds)
- 
- 	vscsi->cmd_q.size = pages;
- 
--	vscsi->cmd_q.base_addr =
--		(struct viosrp_crq *)get_zeroed_page(GFP_KERNEL);
--	if (!vscsi->cmd_q.base_addr)
--		return -ENOMEM;
--
- 	vscsi->cmd_q.mask = ((uint)pages * CRQ_PER_PAGE) - 1;
- 
--	vscsi->cmd_q.crq_token = dma_map_single(&vdev->dev,
--						vscsi->cmd_q.base_addr,
--						PAGE_SIZE, DMA_BIDIRECTIONAL);
--	if (dma_mapping_error(&vdev->dev, vscsi->cmd_q.crq_token)) {
--		free_page((unsigned long)vscsi->cmd_q.base_addr);
-+	vscsi->cmd_q.base_addr = dma_alloc_noncoherent(&vdev->dev, PAGE_SIZE,
-+						       &vscsi->cmd_q.crq_token,
-+						       DMA_BIDIRECTIONAL, GFP_KERNEL);
-+	if (!vscsi->cmd_q.base_addr)
- 		return -ENOMEM;
--	}
- 
- 	return 0;
- }
-@@ -3036,9 +3029,9 @@ static long ibmvscsis_create_command_q(struct scsi_info *vscsi, int num_cmds)
-  */
- static void ibmvscsis_destroy_command_q(struct scsi_info *vscsi)
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 1f1586ad48fe..6e95fd02fd25 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -869,8 +869,8 @@ static void ibmvfc_free_queue(struct ibmvfc_host *vhost,
  {
--	dma_unmap_single(&vscsi->dma_dev->dev, vscsi->cmd_q.crq_token,
--			 PAGE_SIZE, DMA_BIDIRECTIONAL);
--	free_page((unsigned long)vscsi->cmd_q.base_addr);
-+	dma_free_noncoherent(&vscsi->dma_dev->dev,
-+			     PAGE_SIZE, vscsi->cmd_q.base_addr,
-+			     vscsi->cmd_q.crq_token, DMA_BIDIRECTIONAL);
- 	vscsi->cmd_q.base_addr = NULL;
- 	vscsi->state = NO_QUEUE;
- }
-@@ -3504,18 +3497,12 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
- 		goto free_timer;
+ 	struct device *dev = vhost->dev;
+ 
+-	dma_unmap_single(dev, queue->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
+-	free_page((unsigned long)queue->msgs.handle);
++	dma_free_noncoherent(dev, PAGE_SIZE, queue->msgs.handle,
++			     queue->msg_token, DMA_BIDIRECTIONAL);
+ 	queue->msgs.handle = NULL;
+ 
+ 	ibmvfc_free_event_pool(vhost, queue);
+@@ -5663,19 +5663,11 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *vhost,
+ 		return -ENOMEM;
  	}
  
--	vscsi->map_buf = kzalloc(PAGE_SIZE, GFP_KERNEL);
-+	vscsi->map_buf = dma_alloc_noncoherent(&vdev->dev,
-+					       PAGE_SIZE, &vscsi->map_ioba,
-+					       DMA_BIDIRECTIONAL, GFP_KERNEL);
- 	if (!vscsi->map_buf) {
- 		rc = -ENOMEM;
- 		dev_err(&vscsi->dev, "probe: allocating cmd buffer failed\n");
--		goto destroy_queue;
+-	queue->msgs.handle = (void *)get_zeroed_page(GFP_KERNEL);
++	queue->msgs.handle = dma_alloc_noncoherent(dev, PAGE_SIZE, &queue->msg_token,
++						   DMA_BIDIRECTIONAL, GFP_KERNEL);
+ 	if (!queue->msgs.handle)
+ 		return -ENOMEM;
+ 
+-	queue->msg_token = dma_map_single(dev, queue->msgs.handle, PAGE_SIZE,
+-					  DMA_BIDIRECTIONAL);
+-
+-	if (dma_mapping_error(dev, queue->msg_token)) {
+-		free_page((unsigned long)queue->msgs.handle);
+-		queue->msgs.handle = NULL;
+-		return -ENOMEM;
 -	}
 -
--	vscsi->map_ioba = dma_map_single(&vdev->dev, vscsi->map_buf, PAGE_SIZE,
--					 DMA_BIDIRECTIONAL);
--	if (dma_mapping_error(&vdev->dev, vscsi->map_ioba)) {
--		rc = -ENOMEM;
--		dev_err(&vscsi->dev, "probe: error mapping command buffer\n");
- 		goto free_buf;
- 	}
+ 	queue->cur = 0;
+ 	queue->fmt = fmt;
+ 	queue->size = PAGE_SIZE / fmt_size;
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index ea8e01f49cba..68409c298c74 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -151,10 +151,8 @@ static void ibmvscsi_release_crq_queue(struct crq_queue *queue,
+ 			msleep(100);
+ 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
+ 	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
+-	dma_unmap_single(hostdata->dev,
+-			 queue->msg_token,
+-			 queue->size * sizeof(*queue->msgs), DMA_BIDIRECTIONAL);
+-	free_page((unsigned long)queue->msgs);
++	dma_free_noncoherent(hostdata->dev, PAGE_SIZE,
++			     queue->msgs, queue->msg_token, DMA_BIDIRECTIONAL);
+ }
  
-@@ -3544,7 +3531,7 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
- 	if (!vscsi->work_q) {
- 		rc = -ENOMEM;
- 		dev_err(&vscsi->dev, "create_workqueue failed\n");
--		goto unmap_buf;
-+		goto destroy_queue;
- 	}
+ /**
+@@ -331,18 +329,12 @@ static int ibmvscsi_init_crq_queue(struct crq_queue *queue,
+ 	int retrc;
+ 	struct vio_dev *vdev = to_vio_dev(hostdata->dev);
  
- 	rc = request_irq(vdev->irq, ibmvscsis_interrupt, 0, "ibmvscsis", vscsi);
-@@ -3562,11 +3549,9 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
+-	queue->msgs = (struct viosrp_crq *)get_zeroed_page(GFP_KERNEL);
+-
+-	if (!queue->msgs)
+-		goto malloc_failed;
+ 	queue->size = PAGE_SIZE / sizeof(*queue->msgs);
+-
+-	queue->msg_token = dma_map_single(hostdata->dev, queue->msgs,
+-					  queue->size * sizeof(*queue->msgs),
+-					  DMA_BIDIRECTIONAL);
+-
+-	if (dma_mapping_error(hostdata->dev, queue->msg_token))
+-		goto map_failed;
++	queue->msgs = dma_alloc_noncoherent(hostdata->dev,
++					    PAGE_SIZE, &queue->msg_token,
++					    DMA_BIDIRECTIONAL, GFP_KERNEL);
++	if (!queue->msg)
++		goto malloc_failed;
  
- destroy_WQ:
- 	destroy_workqueue(vscsi->work_q);
--unmap_buf:
--	dma_unmap_single(&vdev->dev, vscsi->map_ioba, PAGE_SIZE,
--			 DMA_BIDIRECTIONAL);
- free_buf:
--	kfree(vscsi->map_buf);
-+	dma_free_noncoherent(&vdev->dev, PAGE_SIZE, vscsi->map_buf,
-+			     vscsi->map_ioba, DMA_BIDIRECTIONAL);
- destroy_queue:
- 	tasklet_kill(&vscsi->work_task);
- 	ibmvscsis_unregister_command_q(vscsi);
-@@ -3602,9 +3587,8 @@ static void ibmvscsis_remove(struct vio_dev *vdev)
- 	vio_disable_interrupts(vdev);
- 	free_irq(vdev->irq, vscsi);
- 	destroy_workqueue(vscsi->work_q);
--	dma_unmap_single(&vdev->dev, vscsi->map_ioba, PAGE_SIZE,
--			 DMA_BIDIRECTIONAL);
--	kfree(vscsi->map_buf);
-+	dma_free_noncoherent(&vdev->dev, PAGE_SIZE, vscsi->map_buf,
-+			     vscsi->map_ioba, DMA_BIDIRECTIONAL);
- 	tasklet_kill(&vscsi->work_task);
- 	ibmvscsis_destroy_command_q(vscsi);
- 	ibmvscsis_freetimer(vscsi);
+ 	gather_partition_info();
+ 	set_adapter_info(hostdata);
+@@ -395,11 +387,8 @@ static int ibmvscsi_init_crq_queue(struct crq_queue *queue,
+ 		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
+ 	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
+       reg_crq_failed:
+-	dma_unmap_single(hostdata->dev,
+-			 queue->msg_token,
+-			 queue->size * sizeof(*queue->msgs), DMA_BIDIRECTIONAL);
+-      map_failed:
+-	free_page((unsigned long)queue->msgs);
++	dma_free_noncoherent(hostdata->dev, PAGE_SIZE, queue->msg,
++			     queue->msg_token, DMA_BIDIRECTIONAL);
+       malloc_failed:
+ 	return -1;
+ }
 -- 
 2.25.1
 
