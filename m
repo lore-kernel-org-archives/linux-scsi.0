@@ -2,113 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 32165C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 14:49:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8C3FFC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 15:18:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0C46D6103D
-	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 14:49:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 509E76103D
+	for <linux-scsi@archiver.kernel.org>; Tue, 12 Oct 2021 15:18:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236637AbhJLOvd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 12 Oct 2021 10:51:33 -0400
-Received: from email.unionmem.com ([221.4.138.186]:10158 "EHLO
-        VLXDG1SPAM1.ramaxel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230195AbhJLOvc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Oct 2021 10:51:32 -0400
-Received: from V12DG1MBS01.ramaxel.local (v12dg1mbs01.ramaxel.local [172.26.18.31])
-        by VLXDG1SPAM1.ramaxel.com with ESMTPS id 19CEn7Ek001766
-        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-        Tue, 12 Oct 2021 22:49:07 +0800 (GMT-8)
-        (envelope-from songyl@ramaxel.com)
-Received: from songyl (10.64.10.54) by V12DG1MBS01.ramaxel.local
- (172.26.18.31) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Tue, 12
- Oct 2021 22:49:06 +0800
-Date:   Tue, 12 Oct 2021 14:49:06 +0000
-From:   Yanling Song <songyl@ramaxel.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-        <songyl@ramaxel.com>
-Subject: Re: [PATCH] spraid: initial commit of Ramaxel spraid driver
-Message-ID: <20211012144906.790579d0@songyl>
-In-Reply-To: <cfe5b692-6642-e317-39a7-f38c1460097c@acm.org>
-References: <20210930034752.248781-1-songyl@ramaxel.com>
-        <cfe5b692-6642-e317-39a7-f38c1460097c@acm.org>
-X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
+        id S237402AbhJLPUe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 12 Oct 2021 11:20:34 -0400
+Received: from comms.puri.sm ([159.203.221.185]:51836 "EHLO comms.puri.sm"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229633AbhJLPUd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 12 Oct 2021 11:20:33 -0400
+Received: from localhost (localhost [127.0.0.1])
+        by comms.puri.sm (Postfix) with ESMTP id D6D32DFAC1;
+        Tue, 12 Oct 2021 08:18:31 -0700 (PDT)
+Received: from comms.puri.sm ([127.0.0.1])
+        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id WF3Tp6OFxLqq; Tue, 12 Oct 2021 08:18:31 -0700 (PDT)
+Message-ID: <2d3b0e8f422b7ff08a5c4ce804a1884eaf9b5d60.camel@puri.sm>
+Subject: Re: [PATCH] scsi: sd: print write through due to no caching mode
+ page as warning
+From:   Martin Kepplinger <martin.kepplinger@puri.sm>
+To:     jejb@linux.ibm.com, martin.petersen@oracle.com
+Cc:     dgilbert@interlog.com, bvanassche@acm.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Tue, 12 Oct 2021 17:18:26 +0200
+In-Reply-To: <20210122083000.32598-1-martin.kepplinger@puri.sm>
+References: <20210122083000.32598-1-martin.kepplinger@puri.sm>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.38.3-1 
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.64.10.54]
-X-ClientProxiedBy: V12DG1MBS03.ramaxel.local (172.26.18.33) To
- V12DG1MBS01.ramaxel.local (172.26.18.31)
-X-DNSRBL: 
-X-MAIL: VLXDG1SPAM1.ramaxel.com 19CEn7Ek001766
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 11 Oct 2021 12:54:20 -0700
-Bart Van Assche <bvanassche@acm.org> wrote:
-
-> On 9/29/21 20:47, Yanling Song wrote:
-> > +#define SPRAID_IOCTL_RESET_CMD _IOWR('N', 0x80, struct
-> > spraid_passthru_common_cmd) +#define SPRAID_IOCTL_ADMIN_CMD
-> > _IOWR('N', 0x41, struct spraid_passthru_common_cmd)  
+Am Freitag, dem 22.01.2021 um 09:30 +0100 schrieb Martin Kepplinger:
+> For SD cardreaders it's extremely common not to find cache on disk.
+> The following error messages are thus very common and don't point
+> to a real error one could try to fix but rather describe how the disk
+> works:
 > 
-> Do these new ioctls provide any functionality that is not yet
-> provided by SG_IO + SG_SCSI_RESET_BUS?
-
-These new ioctls are developed to manage our raid controller by our
-private tools, which has no sg device. so SG_IO cannot work for our
-case.
-
+> sd 0:0:0:0: [sda] No Caching mode page found
+> sd 0:0:0:0: [sda] Assuming drive cache: write through
 > 
-> Additionally, mixing driver-internal and user space definitions in a 
-> single header file is not OK. Definitions of data structures and
-> ioctls that are needed by user space software should occur in a
-> header file in the directory include/uapi/scsi/.
+> Print these messages as warnings instead of errors.
+> 
+> Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
+> ---
+>  drivers/scsi/sd.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index e7c52d6df4dc..db0171c81c5b 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2808,7 +2808,8 @@ sd_read_cache_type(struct scsi_disk *sdkp,
+> unsigned char *buffer)
+>                         }
+>                 }
+>  
+> -               sd_first_printk(KERN_ERR, sdkp, "No Caching mode page
+> found\n");
+> +               sd_first_printk(KERN_WARNING, sdkp,
+> +                               "No Caching mode page found\n");
+>                 goto defaults;
+>  
+>         Page_found:
+> @@ -2863,7 +2864,7 @@ sd_read_cache_type(struct scsi_disk *sdkp,
+> unsigned char *buffer)
+>                                 "Assuming drive cache: write
+> back\n");
+>                 sdkp->WCE = 1;
+>         } else {
+> -               sd_first_printk(KERN_ERR, sdkp,
+> +               sd_first_printk(KERN_WARNING, sdkp,
+>                                 "Assuming drive cache: write
+> through\n");
+>                 sdkp->WCE = 0;
+>         }
 
-Sounds reasonable. But after checking the directory include/uapi/scsi/,
-there are only several files in it. It is expected that there should be
-many files if developers follow the rule. Do you know why? 
 
-> 
-> > +#define SPRAID_IOCTL_IOQ_CMD _IOWR('N', 0x42, struct
-> > spraid_ioq_passthru_cmd)  
-> 
-> What functionality does this ioctl provide that is not yet provided
-> by SG_IO?
+hi Bart and all who it may concern,
 
-See the above.
+does this "consmetic" change have any chance of being acceptible? At
+least it'd be nice if messages sent as error are real errors that needs
+fixing.
 
-> 
-> > +#define SPRAID_DRV_VERSION	"1.0.0.0"  
-> 
-> Although many Linux kernel drivers include a version number, a
-> version number is only useful in an out-of-tree driver and not in an
-> upstream driver. The Linux kernel itself already has a version number.
+the patch still applies.
 
-In practice, There are several branch/versions of the driver for
-different purposes, upstream version is one of them. a version number
-can easily tell us where it comes from and what's the relationship
-between different versions. I think that's the reason why many Linux
-kernel drivers have a version number.
+thank you,
 
-> 
-> > +MODULE_AUTHOR("Ramaxel Memory Technology");  
-> 
-> My understanding is that the MODULE_AUTHOR argument should mention
-> the name of a person. From include/linux/module.h:
-> 
-> /*
->   * Author(s), use "Name <email>" or just "Name", for multiple
->   * authors use multiple MODULE_AUTHOR() statements/lines.
->   */
-> #define MODULE_AUTHOR(_author) MODULE_INFO(author, _author)
+                               martin
 
-ok. Will use the name of developer in the next version.
-
-> 
-> Thanks,
-> 
-> Bart.
 
