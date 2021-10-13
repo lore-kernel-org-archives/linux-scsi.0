@@ -2,103 +2,112 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 125F6C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 17:16:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B589C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 17:34:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EACE7610EA
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 17:16:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 545F4610FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 17:34:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237932AbhJMRSf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Oct 2021 13:18:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33064 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229915AbhJMRSe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2021 13:18:34 -0400
-Received: from mail-ed1-x52c.google.com (mail-ed1-x52c.google.com [IPv6:2a00:1450:4864:20::52c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0628BC061570;
-        Wed, 13 Oct 2021 10:16:31 -0700 (PDT)
-Received: by mail-ed1-x52c.google.com with SMTP id w14so13035940edv.11;
-        Wed, 13 Oct 2021 10:16:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=meUYWdb8BVH+ERVVUD1vNcavs7M1t/BOCZO4+emCVbE=;
-        b=jVRR/+SbGLbMEQxv10T3/4LoFsR2rWpBdBg0FFEZ82YDaGexg+pQ0DYs97MtiPRrXf
-         RlXvPOlqm79zVRD7/UriGjMfAL8PNkjkLb0O7mYpTbayYX9EbEi40m2TXwcVaEXQAmCH
-         VxojX/R8cOeE6kW80Ff2ix3PfR1En00jaXM4cHOimNjeajtEqUnzp3j6LogK28xs2qf4
-         AMijJn7Bskfh/hFe92Jpb7Ism0G1DT4OixOa8T5VOznF4WmU0Kq+gLY/we1D5cWpy7Mh
-         lidnCk0VQD9pt9MyaH4YsOglzBMcmq+G9+DIwI4iT7NR8WPM3c9dFWdGFhlFfXjrEkCq
-         KC7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=meUYWdb8BVH+ERVVUD1vNcavs7M1t/BOCZO4+emCVbE=;
-        b=qjgLYwvN2IyX/BDD+MhRddBy9Lf/mGoNCgenpJVRsICfByrX6m328HeK6bzPJse0Y9
-         7i6BCJd7LZMZw3aYvVJXki+Fsf3vvv7QcuGJ9fylJdWgrJTtYVjKDQlMdVHWr/wFXJbz
-         nTEdjttGH6YCa7ulNrzbK/+qY7mKKZdU95+bwoiPkrYDP7V/FgPW2/0PovAfQM/OxgUz
-         1RwCdig418xwYDg/7r8k6ODXFla4vRdXV3OyqUr3hnOFhmgAbXMjG9x05MCfFn6xZPQK
-         tolQGbt149AlyuLz0s50xGnWkcAT8ElSGAFWhtvWJ4flMm1QSPtaEnp7dBXXFSEhhy0N
-         LRUA==
-X-Gm-Message-State: AOAM530oojbRzkaHlZu/LS3lj5W31NXHLTValzpseAWmR8QOjhnSTNbk
-        jKtpj80dQ51J9Ou+Lt8TZce8VF5uzkc=
-X-Google-Smtp-Source: ABdhPJz+PMeUl1mCh5APvyddfyKOozejgyineYoZpcBqqKP6ej6Yl3Au0xMYJ8USF79wBd0X0P2CPg==
-X-Received: by 2002:a17:906:da08:: with SMTP id fi8mr567732ejb.552.1634145389543;
-        Wed, 13 Oct 2021 10:16:29 -0700 (PDT)
-Received: from localhost (ipbcc061e7.dynamic.kabel-deutschland.de. [188.192.97.231])
-        by smtp.gmail.com with ESMTPSA id i6sm129241ejd.57.2021.10.13.10.16.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 13 Oct 2021 10:16:29 -0700 (PDT)
-From:   Bodo Stroesser <bostroesser@gmail.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Mike Christie <michael.christie@oracle.com>
-Cc:     Bodo Stroesser <bostroesser@gmail.com>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Subject: [PATCH] scsi: target: tcmu: allocate zeroed pages for data area
-Date:   Wed, 13 Oct 2021 19:16:06 +0200
-Message-Id: <20211013171606.25197-1-bostroesser@gmail.com>
-X-Mailer: git-send-email 2.12.3
+        id S231213AbhJMRgt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Oct 2021 13:36:49 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:1660 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229714AbhJMRgs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Oct 2021 13:36:48 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19DGJURv020660;
+        Wed, 13 Oct 2021 13:34:40 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
+ subject : message-id : references : content-type : in-reply-to : sender :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=UpaJ9LfYVr98ljuqfJdJcBNu68DCZkrF9ck2+xfaNMA=;
+ b=ZJ6C+gGVVdEvz/uL/OQW+rP2pEwE1BNOqnwfCw1eiRZFUVw9bdSOfKA4bwdZHQW6cKTO
+ eCLdpkqmzEtBIbdy8tRTJrTnx+A41jmdzHgVKdEFlbY3v4jqm7n8ELXF4e6O/DM8o1a8
+ O6ucoRAkERwhIGYw3YwSk3hX/Mo8tBCVk0v++7qjzzN/DR1CO9GZrSpydZwV5BNIfH1a
+ v9aTT2h8DUd3R4fybAZfByhdEjB77Q6TSrSsS3iDem3b6qYFi12WxlHmC7O6kj0Iw3/G
+ K2c/+3fln5GIi2s8kAQx7tngxthKHQMA8cqF2EY5k7mxLm6aFpNQ53Uv11nJi2wiyiw+ 0Q== 
+Received: from ppma04ams.nl.ibm.com (63.31.33a9.ip4.static.sl-reverse.com [169.51.49.99])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3bnwb5hk2g-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 13 Oct 2021 13:34:40 -0400
+Received: from pps.filterd (ppma04ams.nl.ibm.com [127.0.0.1])
+        by ppma04ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19DHHWno023130;
+        Wed, 13 Oct 2021 17:34:38 GMT
+Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
+        by ppma04ams.nl.ibm.com with ESMTP id 3bk2qad7p2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Wed, 13 Oct 2021 17:34:38 +0000
+Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
+        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19DHYY4859310504
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 13 Oct 2021 17:34:34 GMT
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B149BAE053;
+        Wed, 13 Oct 2021 17:34:34 +0000 (GMT)
+Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 9EFECAE051;
+        Wed, 13 Oct 2021 17:34:34 +0000 (GMT)
+Received: from t480-pf1aa2c2 (unknown [9.145.52.41])
+        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTPS;
+        Wed, 13 Oct 2021 17:34:34 +0000 (GMT)
+Received: from bblock by t480-pf1aa2c2 with local (Exim 4.94.2)
+        (envelope-from <bblock@linux.ibm.com>)
+        id 1mai9C-000fcO-4m; Wed, 13 Oct 2021 19:34:34 +0200
+Date:   Wed, 13 Oct 2021 19:34:34 +0200
+From:   Benjamin Block <bblock@linux.ibm.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Steffen Maier <maier@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>,
+        Vasily Gorbik <gor@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@de.ibm.com>
+Subject: Re: [PATCH v4 06/46] scsi: zfcp: Switch to attribute groups
+Message-ID: <YWcYqmyLbzEU2fd5@t480-pf1aa2c2.linux.ibm.com>
+References: <20211012233558.4066756-1-bvanassche@acm.org>
+ <20211012233558.4066756-7-bvanassche@acm.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+In-Reply-To: <20211012233558.4066756-7-bvanassche@acm.org>
+Sender: Benjamin Block <bblock@linux.ibm.com>
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: 8deFJnKe19vPRaQ1nMkv-cTAQDFZCv3A
+X-Proofpoint-ORIG-GUID: 8deFJnKe19vPRaQ1nMkv-cTAQDFZCv3A
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
+ definitions=2021-10-13_06,2021-10-13_02,2020-04-07_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
+ impostorscore=0 spamscore=0 suspectscore=0 mlxscore=0 malwarescore=0
+ bulkscore=0 lowpriorityscore=0 priorityscore=1501 clxscore=1015
+ adultscore=0 phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109230001 definitions=main-2110130106
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Tcmu populates the data area (used for communication with
-userspace) with pages that are allocated by calling
-alloc_page(GFP_NOIO).
-Therefore previous content of the allocated pages is exposed
-to user space. Avoid this by adding __GFP_ZERO flag.
+Hey Bart,
 
-Zeroing the pages does (nearly) not affect tcmu throughput,
-because allocated pages are re-used for the data transfers of
-later SCSI cmds.
+thanks for the change.
 
-Signed-off-by: Bodo Stroesser <bostroesser@gmail.com>
----
- drivers/target/target_core_user.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+On Tue, Oct 12, 2021 at 04:35:18PM -0700, Bart Van Assche wrote:
+> struct device supports attribute groups directly but does not support
+> struct device_attribute directly. Hence switch to attribute groups.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/s390/scsi/zfcp_ext.h   |  4 +--
+>  drivers/s390/scsi/zfcp_scsi.c  |  4 +--
+>  drivers/s390/scsi/zfcp_sysfs.c | 52 +++++++++++++++++++++++-----------
+>  3 files changed, 39 insertions(+), 21 deletions(-)
+> 
 
-diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
-index dc220fad06fa..a19e53877b0b 100644
---- a/drivers/target/target_core_user.c
-+++ b/drivers/target/target_core_user.c
-@@ -5,6 +5,7 @@
-  * Copyright (C) 2015 Arrikto, Inc.
-  * Copyright (C) 2017 Chinamobile, Inc.
-  */
-+#include <linux/delay.h>
- 
- #include <linux/spinlock.h>
- #include <linux/module.h>
-@@ -523,8 +524,8 @@ static inline int tcmu_get_empty_block(struct tcmu_dev *udev,
- 	rcu_read_unlock();
- 
- 	for (i = cnt; i < page_cnt; i++) {
--		/* try to get new page from the mm */
--		page = alloc_page(GFP_NOIO);
-+		/* try to get new zeroed page from the mm */
-+		page = alloc_page(GFP_NOIO | __GFP_ZERO);
- 		if (!page)
- 			break;
- 
+Acked-by: Benjamin Block <bblock@linux.ibm.com>
+
 -- 
-2.12.3
-
+Best Regards, Benjamin Block  / Linux on IBM Z Kernel Development / IBM Systems
+IBM Deutschland Research & Development GmbH    /    https://www.ibm.com/privacy
+Vorsitz. AufsR.: Gregor Pillen         /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
