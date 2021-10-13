@@ -2,86 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E863C43219
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 21:14:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA3D4C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 22:00:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0380A61152
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 21:14:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 92D76610CE
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 22:00:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230119AbhJMVQv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Oct 2021 17:16:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:44862 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230111AbhJMVQt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Oct 2021 17:16:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BCD7761139;
-        Wed, 13 Oct 2021 21:14:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634159685;
-        bh=SlbEmP0SftpYg5Qzgl+3uhbNwtKN42MS1eJbqRVvz8o=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=hiKscGct16rhTAVFUvB8ulUGFNYX0XJpF+2YqPKF0No0/OTxa8B+FbCYvPeznM3IT
-         o7+9DVjPYoKAxa50QdWsJ1gL4J+4wBU1jNZrm6P/FvNKQ8G7E2qrXO9VM2GBzVJvw8
-         S/gFZjYpmMou1VruRE19i94wuylZi24lJbQ6yAN6OeRqXntYIE5B0JYh+T/uz9ctke
-         L86OtKTf7XCkJxLOyXfeIFv5kZLrR3s6zlWx8Mcxq8cYKDBsASwSQxb8GUZPcnzqgT
-         VFHmPHbz4NrsEHQ/qmk1iEmYL+m9W0ImnKdxKKKAOXKE+hMXaoTAVCJomjq0s1kTjo
-         7pgsY+NMeWiSg==
-Received: by mail-lf1-f54.google.com with SMTP id u18so17428163lfd.12;
-        Wed, 13 Oct 2021 14:14:45 -0700 (PDT)
-X-Gm-Message-State: AOAM532FXiGs1sCaGxNpzsJmeQlJzE+mAIiSokLdcbxAMrOP9h09k+b9
-        RNkm7JcYnOu/qJ5EjWa83slixpHkeaKf2YthUvI=
-X-Google-Smtp-Source: ABdhPJy4PwudaFsA5k7zIKbmlSW7M8/j3iWHJKEthDYdjnMO754KPa3JLlK+wmXJkye7TEJ2vXHzCCixulymuZnDiqk=
-X-Received: by 2002:a2e:6e0b:: with SMTP id j11mr1736234ljc.527.1634159683768;
- Wed, 13 Oct 2021 14:14:43 -0700 (PDT)
+        id S229967AbhJMWCO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Oct 2021 18:02:14 -0400
+Received: from mail-pl1-f181.google.com ([209.85.214.181]:45921 "EHLO
+        mail-pl1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229631AbhJMWCN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2021 18:02:13 -0400
+Received: by mail-pl1-f181.google.com with SMTP id s1so929464plg.12
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Oct 2021 15:00:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=bn5eBt3RZxAzYiobI7fZ4i/kcZaEO1UTtNhXWy7d4SM=;
+        b=Yz6p6V9d2F5/EyTrBT0ieECWANmbLvVIHQ6g44V6D1uatFqbl7ShFkzafT4Ul6+JUD
+         NF5bRMF+IRRS9odeIEWzLSuEO9Yayz19jlEc6bEd/Dq0cHPWfM+nNgW5AXTm61qlFfY8
+         9RGpOtJPrFhj2g2v06ij4mHwrJqwT45hgZu3prqBebOapSRa+Q6EDJj5vG2goXJERdhs
+         lCYo9Y26dc/eBpQWormq2FipTszXH6Db0yIwScALuy+1NzbtHzsbLaYmY/4BBs5GY7NR
+         nA7cDbHRapk9bu7RuLizzwvAM7BJ/TieK/QhJMvkI9UuLCBFLcsNnpgj8O/XuUAD2oqn
+         RZyA==
+X-Gm-Message-State: AOAM5328cwrEEP5l32/p+vcgI3JHY91W4yZ2solvMGnZLlVSHcugyZaG
+        2hCpLJajAUtFJm7qSpWaZMFzyjfMh7A=
+X-Google-Smtp-Source: ABdhPJxO5Wgpg85nJQLsBMjLXtRWcn2iWE1Dm4c/KhI9GgBHTdplVibGdwTI6AFh75OQrhXOGG+haw==
+X-Received: by 2002:a17:90b:3e84:: with SMTP id rj4mr150868pjb.177.1634162409189;
+        Wed, 13 Oct 2021 15:00:09 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:ae3:1dc1:f2a3:9c06])
+        by smtp.gmail.com with ESMTPSA id z17sm423282pfa.148.2021.10.13.15.00.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 Oct 2021 15:00:08 -0700 (PDT)
+Subject: Re: [PATCH] spraid: initial commit of Ramaxel spraid driver
+To:     Yanling Song <songyl@ramaxel.com>
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+References: <20210930034752.248781-1-songyl@ramaxel.com>
+ <cfe5b692-6642-e317-39a7-f38c1460097c@acm.org>
+ <20211012144906.790579d0@songyl>
+ <6cd75c09-8374-7b9b-4ecc-3b3781cbe074@acm.org>
+ <20211013065012.02b76336@songyl>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <9d9d2f95-7782-85a7-b79a-ce481292c451@acm.org>
+Date:   Wed, 13 Oct 2021 15:00:07 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-References: <20211013051042.1065752-1-hch@lst.de> <20211013051042.1065752-5-hch@lst.de>
- <202110122311.B43459E21@keescook>
-In-Reply-To: <202110122311.B43459E21@keescook>
-From:   Song Liu <song@kernel.org>
-Date:   Wed, 13 Oct 2021 14:14:32 -0700
-X-Gmail-Original-Message-ID: <CAPhsuW6MFRmKfpUxLL3=TRAgNTuTMFySc=_-NA7YOWDAvYAxyQ@mail.gmail.com>
-Message-ID: <CAPhsuW6MFRmKfpUxLL3=TRAgNTuTMFySc=_-NA7YOWDAvYAxyQ@mail.gmail.com>
-Subject: Re: [PATCH 04/29] md: use bdev_nr_sectors instead of open coding it
-To:     Kees Cook <keescook@chromium.org>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
-        David Sterba <dsterba@suse.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        Anton Altaparmakov <anton@tuxera.com>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
-        linux-bcache@vger.kernel.org,
-        linux-raid <linux-raid@vger.kernel.org>,
-        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        Linux-Fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20211013065012.02b76336@songyl>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Oct 12, 2021 at 11:12 PM Kees Cook <keescook@chromium.org> wrote:
->
-> On Wed, Oct 13, 2021 at 07:10:17AM +0200, Christoph Hellwig wrote:
-> > Use the proper helper to read the block device size.
-> >
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> I think it might make sense, as you suggest earlier, to add a "bytes"
-> helper. This is the first user in the series needing:
->
->         bdev_nr_sectors(...bdev) << SECTOR_SHIFT
->
-> Reviewed-by: Kees Cook <keescook@chromium.org>
+On 10/12/21 11:50 PM, Yanling Song wrote:
+> On Tue, 12 Oct 2021 09:59:30 -0700
+> Bart Van Assche <bvanassche@acm.org> wrote:
+>> Why is it that SG_IO is not sufficient? This is something that should
+>> have been explained in the patch description.
+> 
+> There are two cases that there are no SG devices and SG_IO cannot work.
+> 1. To access raid controller:
+> a. Raid controller is a scsi host, not a scsi device, so there
+> is no SG device associated with it.
+> b. Even there is a scsi device for raid controller, SG_IO
+> cannot work when something wrong with IO queue and only admin queue can
+> work;
+> 2. To access the physical disks behinds raid controller:
+> raid controller only reports VDs to OS and only VDs have SG devices. OS
+> has no idea about physical disks behinds raid controller and there is no
+> SG devices associated with physical disks.
 
-Acked-by: Song Liu <song@kernel.org>
+Please take a look at the bsg_setup_queue() call in ufs_bsg_probe(). 
+That call associates a BSG queue with the UFS host. That queue supports 
+requests of type struct ufs_bsg_request. The Fibre Channel transport 
+driver does something similar. I believe that this is a better solution 
+than introducing entirely new ioctls.
+
+>>>> Additionally, mixing driver-internal and user space definitions in
+>>>> a single header file is not OK. Definitions of data structures and
+>>>> ioctls that are needed by user space software should occur in a
+>>>> header file in the directory include/uapi/scsi/.
+>>>
+>>> Sounds reasonable. But after checking the directory
+>>> include/uapi/scsi/, there are only several files in it. It is
+>>> expected that there should be many files if developers follow the
+>>> rule. Do you know why?
+>>
+>> If this rule is not followed, that will be a red flag for the SCSI
+>> maintainer and something that will probably delay upstream acceptance
+>> of this patch.
+> 
+> Since there are not much examples in include/uapi/scsi/, what' your
+> suggestion on how to put the definitions into the folder? for example,
+> what's the file name? spraid_ioctrl.h?
+
+How about include/uapi/scsi/spraid.h, since I assume that that header 
+file will cover all user space interfaces for interaction with the 
+spraid driver?
+
+Thanks,
+
+Bart.
+
