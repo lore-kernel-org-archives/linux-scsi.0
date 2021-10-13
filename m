@@ -2,302 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA544C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 09:27:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E228C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 09:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C637B60EB4
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 09:27:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 863E7610A1
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 09:31:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237506AbhJMJ3c (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Oct 2021 05:29:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35964 "EHLO
+        id S239169AbhJMJd2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Oct 2021 05:33:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36856 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236145AbhJMJ3Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2021 05:29:24 -0400
-Received: from mail-ed1-x535.google.com (mail-ed1-x535.google.com [IPv6:2a00:1450:4864:20::535])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9A0A3C061570;
-        Wed, 13 Oct 2021 02:27:20 -0700 (PDT)
-Received: by mail-ed1-x535.google.com with SMTP id a25so7445359edx.8;
-        Wed, 13 Oct 2021 02:27:20 -0700 (PDT)
+        with ESMTP id S237572AbhJMJdS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2021 05:33:18 -0400
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 55885C061570;
+        Wed, 13 Oct 2021 02:31:15 -0700 (PDT)
+Received: by mail-ed1-x52b.google.com with SMTP id p13so7741041edw.0;
+        Wed, 13 Oct 2021 02:31:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=+/MfPZS60YJ0eap0AJdMs6gge+XO+BZUvon0pBTzNGA=;
-        b=evc4kDT+QZNhO898nkNWsOvYd5uoHISP2WxjXfUrXPc/LAvzY9eu3qYsrzHLMiVRP3
-         7ek8KrGpW83pP3+71f6NoTqJUNew57wgLSdZESolUuO3w3SjswV4oNuZrRCsx5d2Sz6Z
-         U6Dil/exw/Z01VwoZLKDTI9+cXYT6HoMhvbPnOyg97B0PkHUENz49VLf5qJ3twBM3fy6
-         bHXGjIYLA3Q6jVCBIp04R0UFvkX24frr6ijNGP3vuZmaos7c/PDqm98vd8l9QZ2VLZ00
-         0EBJxe8ZaQK4AqNo/Rk1lDSww7yrEMjrcnUEwQvCtD2OBAhLhOYcZrSIMXdkiq7GrIG/
-         lN/g==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=jSDv3nCwYvRWF60PFzYmVFtCqi6n+8kG/qLGRQcEwXY=;
+        b=XDrKXspyEQaSQYdqJnWhS/O0wblIXJrWl9pE6svv7KjgrDGVXul7dxFR95SMikNbI8
+         dPBwNGXnMZrq9ECfkN9qd8qudIplcKbKQ02+dvBybldEqKgGTDn4o+Q+1yZvLDbQTpxH
+         j0F3JAFmKpiVLRpHTHEBPzaDyzHphlM3B0d+/j7Ro7xiITFiea8XjX1E/h70+j8E07xJ
+         iueofrb4NiJyC6FBpvAD+REiiIZXBpKUegBHgRICkLNGzc50RGa+mMfC0qBppipcUZ0O
+         0MOGnuc/w5sEpIO1qpW0KnLTEIw6dv//T71InSxwu/1xkmLMW6ESgvB/ttIEAHR+9lRU
+         du6Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=+/MfPZS60YJ0eap0AJdMs6gge+XO+BZUvon0pBTzNGA=;
-        b=sB4NJpdNsDPkUy6mxgmKe4HtKEN2nu+cK//OpsRyWcLfqCQ31MaLagEbI4kFORFqWT
-         DXbHANfm+km5qyLipWbKv5591O8apIQedw6yhqLc6B1Lu6kV3JmypGG4iKk2WO5NLkRa
-         zJbI6VauabL7kp7wxsO8rh1LG//nT89gz2Z0A/Ir7ZciqzBTL295g8CrovWFVz0JNd4K
-         KMhMg5Ydf7Xmdxs2sxIPMdWWfBLbKkwgNmHyJEe1KkptIjkS7UtgLwkWzDKnP6F1oiOm
-         4z+NWC8E31Hcy0XwUwG6HCd8EhncS4c00qRbwmTVYNuK5UhVy/FLe+YQo9dJvL2k0Srj
-         swAg==
-X-Gm-Message-State: AOAM531TZwmZkz1ZBJo16E9AqcvamrBTbCU10ocMMZ9lBNlzUFX1/LQp
-        +Azpq2TJkpSzwoXVZ2AYXYmrGbmWlW/LJhHRc6k=
-X-Google-Smtp-Source: ABdhPJzL0SqFZyZBLTfBNcE8CpMsywyY4boERpEcXyUfc9yUq7Z2mLOKk/hnon0PQ/WXXVk02NgEbEHqrWvW2H64g2s=
-X-Received: by 2002:a17:907:7601:: with SMTP id jx1mr40092015ejc.69.1634117238956;
- Wed, 13 Oct 2021 02:27:18 -0700 (PDT)
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=jSDv3nCwYvRWF60PFzYmVFtCqi6n+8kG/qLGRQcEwXY=;
+        b=a/9NWlYe1KD6qiKYTb7tewBmaSvmZudaDcgwZSgkzw86ol10izBu8ANoKwcfmRfK90
+         IimS2YoiRx5C58Zq5B/kSYlmNXuY12eOGOlGdUNdqOdoginCi5kPJ1EdvW0pee+3G1ru
+         HCVSRE5gCuvpt7IJQIRlh4jTotisb1yRrwIzfvUNr2HDa3aRzKBEcSdu5CSTygL5C7qN
+         OxdllwjRcgKH6do7qHj9Dc4f8hT3LLP9H3E5RJwmPHoDlCLSCpN+j3nfy7HzsiO0vAKX
+         CMYCbIP5vSG6oWbdJmdDMsPnhZ6ZIc+xqn4tbShPmjFBIOyZW/hoa7Ak+CJAC8r2B41J
+         ptDw==
+X-Gm-Message-State: AOAM532Crg6in8UMZOaVR9jB3qT11uoF8SZ3tV/5Mcc/aG9r8pPVm4rI
+        0dpoo3ykX5f06s+1QxuMXYZa9lQYh5JzCA==
+X-Google-Smtp-Source: ABdhPJzWnNPujm70ssX25zhSqx1K1lXHECTOGOjBrmNCExix4poiHSM5QToDrvQz8D7ttpAXJOx3mg==
+X-Received: by 2002:a05:6402:51d0:: with SMTP id r16mr7954872edd.353.1634117473882;
+        Wed, 13 Oct 2021 02:31:13 -0700 (PDT)
+Received: from [192.168.178.40] (ipbcc061e7.dynamic.kabel-deutschland.de. [188.192.97.231])
+        by smtp.gmail.com with ESMTPSA id p7sm7639013edr.6.2021.10.13.02.31.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 Oct 2021 02:31:13 -0700 (PDT)
+Subject: Re: [PATCH 07/29] target/iblock: use bdev_nr_sectors instead of open
+ coding it
+To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Song Liu <song@kernel.org>, David Sterba <dsterba@suse.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Kees Cook <keescook@chromium.org>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
+        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
+        linux-nfs@vger.kernel.org, linux-nilfs@vger.kernel.org,
+        linux-ntfs-dev@lists.sourceforge.net, ntfs3@lists.linux.dev,
+        reiserfs-devel@vger.kernel.org
+References: <20211013051042.1065752-1-hch@lst.de>
+ <20211013051042.1065752-8-hch@lst.de>
+From:   Bodo Stroesser <bostroesser@gmail.com>
+Message-ID: <3babe7ca-cf08-fd19-6793-39f6d78bca12@gmail.com>
+Date:   Wed, 13 Oct 2021 11:31:11 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-References: <20211004125935.2300113-1-u.kleine-koenig@pengutronix.de> <20211012233212.GA1806189@bhelgaas>
-In-Reply-To: <20211012233212.GA1806189@bhelgaas>
-From:   Andy Shevchenko <andy.shevchenko@gmail.com>
-Date:   Wed, 13 Oct 2021 12:26:42 +0300
-Message-ID: <CAHp75Vd0uYEdfB0XaQuUV34V91qJdHR5ARku1hX_TCJLJHEjxQ@mail.gmail.com>
-Subject: Re: [PATCH v6 00/11] PCI: Drop duplicated tracking of a pci_dev's
- bound driver
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        Sascha Hauer <kernel@pengutronix.de>,
-        Alexander Duyck <alexanderduyck@fb.com>,
-        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
-        Andrew Donnellan <ajd@linux.ibm.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Arnaldo Carvalho de Melo <acme@kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Borislav Petkov <bp@alien8.de>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Fiona Trahe <fiona.trahe@intel.com>,
-        Frederic Barrat <fbarrat@linux.ibm.com>,
-        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "H. Peter Anvin" <hpa@zytor.com>, Ido Schimmel <idosch@nvidia.com>,
-        Ingo Molnar <mingo@redhat.com>, Jack Xu <jack.xu@intel.com>,
-        Jakub Kicinski <kuba@kernel.org>,
-        Jesse Brandeburg <jesse.brandeburg@intel.com>,
-        Jiri Olsa <jolsa@redhat.com>, Jiri Pirko <jiri@nvidia.com>,
-        Juergen Gross <jgross@suse.com>,
-        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
-        Marco Chiappero <marco.chiappero@intel.com>,
-        Mark Rutland <mark.rutland@arm.com>,
-        Mathias Nyman <mathias.nyman@intel.com>,
-        Michael Buesch <m@bues.ch>,
-        Michael Ellerman <mpe@ellerman.id.au>,
-        Namhyung Kim <namhyung@kernel.org>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        Paul Mackerras <paulus@samba.org>,
-        Peter Zijlstra <peterz@infradead.org>,
-        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-        Russell Currey <ruscur@russell.cc>,
-        Salil Mehta <salil.mehta@huawei.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Simon Horman <simon.horman@corigine.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Stefano Stabellini <sstabellini@kernel.org>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>,
-        Taras Chornyi <tchornyi@marvell.com>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Tomaszx Kowalik <tomaszx.kowalik@intel.com>,
-        Vadym Kochan <vkochan@marvell.com>,
-        Wojciech Ziemba <wojciech.ziemba@intel.com>,
-        Yisen Zhuang <yisen.zhuang@huawei.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        linux-crypto <linux-crypto@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-perf-users@vger.kernel.org,
-        "open list:LINUX FOR POWERPC PA SEMI PWRFICIENT" 
-        <linuxppc-dev@lists.ozlabs.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>,
-        USB <linux-usb@vger.kernel.org>,
-        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-        MPT-FusionLinux.pdl@broadcom.com, netdev <netdev@vger.kernel.org>,
-        oss-drivers@corigine.com, qat-linux@intel.com,
-        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
-        xen-devel@lists.xenproject.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20211013051042.1065752-8-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 13, 2021 at 2:33 AM Bjorn Helgaas <helgaas@kernel.org> wrote:
-> On Mon, Oct 04, 2021 at 02:59:24PM +0200, Uwe Kleine-K=C3=B6nig wrote:
+On 13.10.21 07:10, Christoph Hellwig wrote:
+> Use the proper helper to read the block device size.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>   drivers/target/target_core_iblock.c | 5 +++--
+>   1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
+> index 31df20abe141f..ab7f5678ebc44 100644
+> --- a/drivers/target/target_core_iblock.c
+> +++ b/drivers/target/target_core_iblock.c
+> @@ -232,8 +232,9 @@ static unsigned long long iblock_emulate_read_cap_with_block_size(
+>   	struct block_device *bd,
+>   	struct request_queue *q)
+>   {
+> -	unsigned long long blocks_long = (div_u64(i_size_read(bd->bd_inode),
+> -					bdev_logical_block_size(bd)) - 1);
+> +	loff_t size = bdev_nr_sectors(bd) << SECTOR_SHIFT;
+> +	unsigned long long blocks_long =
+> +		div_u64(size, bdev_logical_block_size(bd)) - 1;
+>   	u32 block_size = bdev_logical_block_size(bd);
 
-> I split some of the bigger patches apart so they only touched one
-> driver or subsystem at a time.  I also updated to_pci_driver() so it
-> returns NULL when given NULL, which makes some of the validations
-> quite a bit simpler, especially in the PM code in pci-driver.c.
+To enhance readability, would it make sense to shift the new lines
+behind "u32 block_size = ...", so block_size can be used in div_u64
+instead of using bdev_logical_block_size twice?
 
-It's a bit unusual. Other to_*_dev() are not NULL-aware IIRC.
-
-Below are some comments as well.
-
-...
-
->  static bool match_id(struct pci_dev *pdev, unsigned short vendor, unsign=
-ed short device)
->  {
-> +       struct pci_driver *drv =3D to_pci_driver(pdev->dev.driver);
->         const struct pci_device_id *id;
->
->         if (pdev->vendor =3D=3D vendor && pdev->device =3D=3D device)
->                 return true;
-
-> +       for (id =3D drv ? drv->id_table : NULL; id && id->vendor; id++)
-> +               if (id->vendor =3D=3D vendor && id->device =3D=3D device)
-
-> +                       break;
-
-return true;
-
->         return id && id->vendor;
-
-return false;
-
->  }
-
-...
-
-> +                       afu_result =3D err_handler->error_detected(afu_de=
-v,
-> +                                                                state);
-
-One line?
-
-...
-
->         device_lock(&vf_dev->dev);
-> -       if (vf_dev->dev.driver) {
-> +       if (to_pci_driver(vf_dev->dev.driver)) {
-
-Hmm...
-
-...
-
-> +               if (!pci_dev->state_saved && pci_dev->current_state !=3D =
-PCI_D0
-
-> +                   && pci_dev->current_state !=3D PCI_UNKNOWN) {
-
-Can we keep && on the previous line?
-
-> +                       pci_WARN_ONCE(pci_dev, pci_dev->current_state !=
-=3D prev,
-> +                                     "PCI PM: Device state not saved by =
-%pS\n",
-> +                                     drv->suspend);
->                 }
-
-...
-
-> +       return drv && drv->resume ?
-> +                       drv->resume(pci_dev) : pci_pm_reenable_device(pci=
-_dev);
-
-One line?
-
-...
-
-> +       struct pci_driver *drv =3D to_pci_driver(dev->dev.driver);
->         const struct pci_error_handlers *err_handler =3D
-> -                       dev->dev.driver ? to_pci_driver(dev->dev.driver)-=
->err_handler : NULL;
-> +                       drv ? drv->err_handler : NULL;
-
-Isn't dev->driver =3D=3D to_pci_driver(dev->dev.driver)?
-
-...
-
-> +       struct pci_driver *drv =3D to_pci_driver(dev->dev.driver);
->         const struct pci_error_handlers *err_handler =3D
-> -                       dev->dev.driver ? to_pci_driver(dev->dev.driver)-=
->err_handler : NULL;
-> +                       drv ? drv->err_handler : NULL;
-
-Ditto.
-
-...
-
->         device_lock(&dev->dev);
-> +       pdrv =3D to_pci_driver(dev->dev.driver);
->         if (!pci_dev_set_io_state(dev, state) ||
-> -               !dev->dev.driver ||
-> -               !(pdrv =3D to_pci_driver(dev->dev.driver))->err_handler |=
-|
-
-> +               !pdrv ||
-> +               !pdrv->err_handler ||
-
-One line now?
-
->                 !pdrv->err_handler->error_detected) {
-
-Or this and the previous line?
-
-...
-
-> +       pdrv =3D to_pci_driver(dev->dev.driver);
-> +       if (!pdrv ||
-> +               !pdrv->err_handler ||
->                 !pdrv->err_handler->mmio_enabled)
->                 goto out;
-
-Ditto.
-
-...
-
-> +       pdrv =3D to_pci_driver(dev->dev.driver);
-> +       if (!pdrv ||
-> +               !pdrv->err_handler ||
->                 !pdrv->err_handler->slot_reset)
->                 goto out;
-
-Ditto.
-
-...
-
->         if (!pci_dev_set_io_state(dev, pci_channel_io_normal) ||
-> -               !dev->dev.driver ||
-> -               !(pdrv =3D to_pci_driver(dev->dev.driver))->err_handler |=
-|
-> +               !pdrv ||
-> +               !pdrv->err_handler ||
->                 !pdrv->err_handler->resume)
->                 goto out;
-
-Ditto.
-
-> -       result =3D PCI_ERS_RESULT_NONE;
->
->         pcidev =3D pci_get_domain_bus_and_slot(domain, bus, devfn);
->         if (!pcidev || !pcidev->dev.driver) {
->                 dev_err(&pdev->xdev->dev, "device or AER driver is NULL\n=
-");
->                 pci_dev_put(pcidev);
-> -               return result;
-> +               return PCI_ERS_RESULT_NONE;
->         }
->         pdrv =3D to_pci_driver(pcidev->dev.driver);
-
-What about splitting the conditional to two with clear error message
-in each and use pci_err() in the second one?
-
-...
-
->                 default:
->                         dev_err(&pdev->xdev->dev,
-> -                               "bad request in aer recovery "
-> -                               "operation!\n");
-> +                               "bad request in AER recovery operation!\n=
-");
-
-Stray change? Or is it in a separate patch in your tree?
-
---=20
-With Best Regards,
-Andy Shevchenko
+>   
+>   	if (block_size == dev->dev_attrib.block_size)
+> 
