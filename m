@@ -2,91 +2,175 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70907C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 07:51:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CBCAC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 08:09:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A86B60F94
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 07:51:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B35B60FDA
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 08:09:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238769AbhJMHxk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Oct 2021 03:53:40 -0400
-Received: from comms.puri.sm ([159.203.221.185]:47924 "EHLO comms.puri.sm"
+        id S238839AbhJMILm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Oct 2021 04:11:42 -0400
+Received: from mga17.intel.com ([192.55.52.151]:35397 "EHLO mga17.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S238733AbhJMHxh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Oct 2021 03:53:37 -0400
-Received: from localhost (localhost [127.0.0.1])
-        by comms.puri.sm (Postfix) with ESMTP id 1A652DFAC1;
-        Wed, 13 Oct 2021 00:51:04 -0700 (PDT)
-Received: from comms.puri.sm ([127.0.0.1])
-        by localhost (comms.puri.sm [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id evIA57ZQRvWE; Wed, 13 Oct 2021 00:51:03 -0700 (PDT)
-From:   Martin Kepplinger <martin.kepplinger@puri.sm>
-To:     martin.kepplinger@puri.sm
-Cc:     bvanassche@acm.org, dgilbert@interlog.com, jejb@linux.ibm.com,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com
-Subject: [PATCH] scsi: sd: print write through due to no caching mode page as warning
-Date:   Wed, 13 Oct 2021 09:50:50 +0200
-Message-Id: <20211013075050.3870354-1-martin.kepplinger@puri.sm>
+        id S238688AbhJMILh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 13 Oct 2021 04:11:37 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10135"; a="208176652"
+X-IronPort-AV: E=Sophos;i="5.85,370,1624345200"; 
+   d="scan'208";a="208176652"
+Received: from orsmga007.jf.intel.com ([10.7.209.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2021 01:09:34 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,370,1624345200"; 
+   d="scan'208";a="480696907"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by orsmga007.jf.intel.com with ESMTP; 13 Oct 2021 01:09:30 -0700
+Subject: Re: [PATCH 5/5] scsi: ufs: Add a sysfs attribute for triggering the
+ UFS EH
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Avri Altman <avri.altman@wdc.com>,
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20211012215433.3725777-1-bvanassche@acm.org>
+ <20211012215433.3725777-6-bvanassche@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <cd4b5103-e0fd-feed-2663-b505bcf019d8@intel.com>
+Date:   Wed, 13 Oct 2021 11:09:29 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211012215433.3725777-6-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For SD cardreaders it's extremely common not to find cache on disk.
-The following error messages are thus very common and don't point
-to a real error one could try to fix but rather describe how the disk
-works:
+On 13/10/2021 00:54, Bart Van Assche wrote:
+> Make it possible to test the impact of the UFS error handler on software
+> that submits SCSI commands to the UFS driver.
 
-sd 0:0:0:0: [sda] No Caching mode page found
-sd 0:0:0:0: [sda] Assuming drive cache: write through
+Are you sure this isn't better suited to debugfs?
 
-Print these messages as warnings instead of errors.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  Documentation/ABI/testing/sysfs-driver-ufs | 10 ++++++
+>  drivers/scsi/ufs/ufshcd.c                  | 37 ++++++++++++++++++++++
+>  2 files changed, 47 insertions(+)
+> 
+> diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+> index ec3a7149ced5..2a46f91d3f1b 100644
+> --- a/Documentation/ABI/testing/sysfs-driver-ufs
+> +++ b/Documentation/ABI/testing/sysfs-driver-ufs
+> @@ -1534,3 +1534,13 @@ Contact:	Avri Altman <avri.altman@wdc.com>
+>  Description:	In host control mode the host is the originator of map requests.
+>  		To avoid flooding the device with map requests, use a simple throttling
+>  		mechanism that limits the number of inflight map requests.
+> +
+> +What:		/sys/class/scsi_host/*/trigger_eh
+> +Date:		October 2021
+> +Contact:	Bart Van Assche <bvanassche@acm.org>
+> +Description:	Writing into this sysfs attribute triggers the UFS error
+> +		handler. This is useful for testing how the UFS error handler
+> +		affects SCSI command processing. The supported values are as
+> +		follows: "1" triggers the error handler without resetting the
+> +		host controller and "2" starts the error handler and makes it
+> +		reset the host interface.
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index ecfe1f124f8a..30ff93979840 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -8144,6 +8144,42 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+>  	}
+>  }
+>  
+> +static ssize_t trigger_eh_store(struct device *dev,
+> +				struct device_attribute *attr,
+> +				const char *buf, size_t count)
+> +{
+> +	struct Scsi_Host *host = class_to_shost(dev);
+> +	struct ufs_hba *hba = shost_priv(host);
+> +
+> +	/*
+> +	 * Using locking would be a better solution. However, this is a debug
+> +	 * attribute so ufshcd_eh_in_progress() should be good enough.
+> +	 */
+> +	if (ufshcd_eh_in_progress(hba))
+> +		return -EBUSY;
 
-Signed-off-by: Martin Kepplinger <martin.kepplinger@puri.sm>
----
+Does it matter if ufshcd_eh_in_progress()?
 
-hi Bart and all who it may concern,
+> +
+> +	if (sysfs_streq(buf, "1")) {
+> +		hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_NON_FATAL;
 
-I only resending the same patch I sent in January before:
-https://lore.kernel.org/linux-scsi/20210122083000.32598-1-martin.kepplinger@puri.sm/
+Shouldn't overwrite UFSHCD_STATE_ERROR
 
-I like it more when messages printed as errors point to real problems that
-need fixing.
+> +		hba->saved_err |= UIC_ERROR;
 
-thanks,
-                         martin
+ufshcd_err_handler() still behaves differently depending on
+hba->saved_uic_err
 
+> +	} else if (sysfs_streq(buf, "2")) {
+> +		hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED_FATAL;
+> +		hba->saved_err |= UIC_ERROR;
 
+In addition, a fatal error must be set to get fatal error behaviour from
+ufshcd_err_handler.
 
+> +	} else {
+> +		return -EINVAL;
+> +	}
+> +
+> +	scsi_schedule_eh(hba->host);
 
- drivers/scsi/sd.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+Probably should be:
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index a646d27df681..33ea36b41136 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2793,7 +2793,8 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 			}
- 		}
- 
--		sd_first_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
-+		sd_first_printk(KERN_WARNING, sdkp,
-+				"No Caching mode page found\n");
- 		goto defaults;
- 
- 	Page_found:
-@@ -2848,7 +2849,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 				"Assuming drive cache: write back\n");
- 		sdkp->WCE = 1;
- 	} else {
--		sd_first_printk(KERN_ERR, sdkp,
-+		sd_first_printk(KERN_WARNING, sdkp,
- 				"Assuming drive cache: write through\n");
- 		sdkp->WCE = 0;
- 	}
--- 
-2.30.2
+	queue_work(hba->eh_wq, &hba->eh_work);
+
+However, it might be simpler to replace everything with:
+
+	spin_lock(hba->host->host_lock);
+	hba->saved_err |= <something>;
+	hba->saved_uic_err |= <something else>;
+	ufshcd_schedule_eh_work(hba);
+	spin_unlock(hba->host->host_lock);
+
+Perhaps letting the user specify values to determine <something>
+and <something else>
+
+> +
+> +	return count;
+> +}
+> +
+> +static DEVICE_ATTR_WO(trigger_eh);
+> +
+> +static struct device_attribute *ufshcd_shost_attrs[] = {
+> +	&dev_attr_trigger_eh,
+> +	NULL
+> +};
+> +
+>  static const struct attribute_group *ufshcd_driver_groups[] = {
+>  	&ufs_sysfs_unit_descriptor_group,
+>  	&ufs_sysfs_lun_attributes_group,
+> @@ -8183,6 +8219,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+>  	.max_segment_size	= PRDT_DATA_BYTE_COUNT_MAX,
+>  	.max_host_blocked	= 1,
+>  	.track_queue_depth	= 1,
+> +	.shost_attrs		= ufshcd_shost_attrs,
+>  	.sdev_groups		= ufshcd_driver_groups,
+>  	.dma_boundary		= PAGE_SIZE - 1,
+>  	.rpm_autosuspend_delay	= RPM_AUTOSUSPEND_DELAY_MS,
+> 
 
