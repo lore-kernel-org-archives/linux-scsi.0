@@ -2,217 +2,177 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EA94C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 12:45:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 672F8C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 13:16:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E841B610F8
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 12:45:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CA22610E7
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 13:16:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234452AbhJMMr3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Oct 2021 08:47:29 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:43028 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S233964AbhJMMrR (ORCPT
+        id S234745AbhJMNSc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Oct 2021 09:18:32 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49872 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S233884AbhJMNSb (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 13 Oct 2021 08:47:17 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19DAVHvk016935
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Oct 2021 05:45:14 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=fdcc34qMuPoYFlnb4b4OvaopPp6IjtMvZR24JDTDa24=;
- b=BzAuLjqXgt11djihzDpXNJR39RB0zWDcuae3YAmFf9wLezasyikKrz4it0V7/RTjBtjP
- wsW3fM0jLzIWnqH7kocWZto+uXNJGXH9s5HoYs1NQXMZ3yDaEQKgriWdznGhuxpw/6iY
- igey6+iCa5sDuNpjqHDs/Kw6p3a4Rt2l4rV0/Yu6YrQ30IjBYIgxRT4jYVourGSMa2sB
- cSsejmrhQVoSyslwjJrFXzjDA+NgasILVK5XtjKyRpRQWHDzs0RNzBUreycfsv0ENpwH
- IlhZ68PWHU16pbssFmcUdQkAajZ7Mq9ooa5mheg+WcEzBuuOKBp0mZQ8gdDdoYXUwmpF Dg== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 3bnwrxghgv-8
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 13 Oct 2021 05:45:14 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 13 Oct
- 2021 05:45:11 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Wed, 13 Oct 2021 05:45:11 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id C822B3F7054;
-        Wed, 13 Oct 2021 05:45:11 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 19DCjBqn017242;
-        Wed, 13 Oct 2021 05:45:11 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 19DCjBGj017241;
-        Wed, 13 Oct 2021 05:45:11 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH 12/13] qla2xxx: edif: fix edif bsg
-Date:   Wed, 13 Oct 2021 05:44:21 -0700
-Message-ID: <20211013124422.17151-13-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20211013124422.17151-1-njavali@marvell.com>
-References: <20211013124422.17151-1-njavali@marvell.com>
+        Wed, 13 Oct 2021 09:18:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1634130988;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=3UweUBspHinuJSQhguEdx6WU40R4nh4wg670z3EQDCs=;
+        b=XNP1QDwX2f719a9ZrFnhwucrTmmJi3xG6/ZEi9kIsyI5EgoqN8WKfM1aPjoQSJIbgOQFYV
+        pFRVUyG4/rV6koPl8MKbwi0AXmQTYeRxBCWmzjs1lY2Bl9yZ8PmUbb1llOU47KJzq7j5Ui
+        2AnDvE9EkAQFUkWYniyGFIldV/jAtHA=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-397-51EXKiPTPNOe2wB9MiFWRQ-1; Wed, 13 Oct 2021 09:16:25 -0400
+X-MC-Unique: 51EXKiPTPNOe2wB9MiFWRQ-1
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 85FDA100A95A;
+        Wed, 13 Oct 2021 13:16:22 +0000 (UTC)
+Received: from horse.redhat.com (unknown [10.22.33.167])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6603219E7E;
+        Wed, 13 Oct 2021 13:16:20 +0000 (UTC)
+Received: by horse.redhat.com (Postfix, from userid 10451)
+        id DEFAB22023A; Wed, 13 Oct 2021 09:16:19 -0400 (EDT)
+Date:   Wed, 13 Oct 2021 09:16:19 -0400
+From:   Vivek Goyal <vgoyal@redhat.com>
+To:     "Michael S. Tsirkin" <mst@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, Jeff Dike <jdike@addtoit.com>,
+        Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gonglei <arei.gonglei@huawei.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Cristian Marussi <cristian.marussi@arm.com>,
+        "Enrico Weigelt, metux IT consult" <info@metux.net>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        David Airlie <airlied@linux.ie>,
+        Gerd Hoffmann <kraxel@redhat.com>,
+        Daniel Vetter <daniel@ffwll.ch>, Jie Deng <jie.deng@intel.com>,
+        Jean-Philippe Brucker <jean-philippe@linaro.org>,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        David Hildenbrand <david@redhat.com>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Eric Van Hensbergen <ericvh@gmail.com>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Stefano Garzarella <sgarzare@redhat.com>,
+        Anton Yakovlev <anton.yakovlev@opensynergy.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, linux-um@lists.infradead.org,
+        virtualization@lists.linux-foundation.org,
+        linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-i2c@vger.kernel.org, iommu@lists.linux-foundation.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-remoteproc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        v9fs-developer@lists.sourceforge.net, kvm@vger.kernel.org,
+        alsa-devel@alsa-project.org
+Subject: Re: [PATCH RFC] virtio: wrap config->reset calls
+Message-ID: <YWbcI15YOkhnPh5x@redhat.com>
+References: <20211013105226.20225-1-mst@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: 5eaEAOPNuw9JBCyt7UC1_raL6MSWFHYN
-X-Proofpoint-GUID: 5eaEAOPNuw9JBCyt7UC1_raL6MSWFHYN
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-10-13_05,2021-10-13_02,2020-04-07_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211013105226.20225-1-mst@redhat.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+On Wed, Oct 13, 2021 at 06:55:31AM -0400, Michael S. Tsirkin wrote:
+> This will enable cleanups down the road.
+> The idea is to disable cbs, then add "flush_queued_cbs" callback
+> as a parameter, this way drivers can flush any work
+> queued after callbacks have been disabled.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  arch/um/drivers/virt-pci.c                 | 2 +-
+>  drivers/block/virtio_blk.c                 | 4 ++--
+>  drivers/bluetooth/virtio_bt.c              | 2 +-
+>  drivers/char/hw_random/virtio-rng.c        | 2 +-
+>  drivers/char/virtio_console.c              | 4 ++--
+>  drivers/crypto/virtio/virtio_crypto_core.c | 8 ++++----
+>  drivers/firmware/arm_scmi/virtio.c         | 2 +-
+>  drivers/gpio/gpio-virtio.c                 | 2 +-
+>  drivers/gpu/drm/virtio/virtgpu_kms.c       | 2 +-
+>  drivers/i2c/busses/i2c-virtio.c            | 2 +-
+>  drivers/iommu/virtio-iommu.c               | 2 +-
+>  drivers/net/caif/caif_virtio.c             | 2 +-
+>  drivers/net/virtio_net.c                   | 4 ++--
+>  drivers/net/wireless/mac80211_hwsim.c      | 2 +-
+>  drivers/nvdimm/virtio_pmem.c               | 2 +-
+>  drivers/rpmsg/virtio_rpmsg_bus.c           | 2 +-
+>  drivers/scsi/virtio_scsi.c                 | 2 +-
+>  drivers/virtio/virtio.c                    | 5 +++++
+>  drivers/virtio/virtio_balloon.c            | 2 +-
+>  drivers/virtio/virtio_input.c              | 2 +-
+>  drivers/virtio/virtio_mem.c                | 2 +-
+>  fs/fuse/virtio_fs.c                        | 4 ++--
 
-Various EDIF bsg's did not properly fill out the reply_payload_rcv_len
-field. This cause app to parse empty data in the return payload.
+fs/fuse/virtio_fs.c changes look good to me.
 
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
----
- drivers/scsi/qla2xxx/qla_edif.c | 49 ++++++++++++++++-----------------
- 1 file changed, 23 insertions(+), 26 deletions(-)
+Reviewed-by: Vivek Goyal <vgoyal@redhat.com>
 
-diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-index 440a3caa28f9..68ae7ab43d0c 100644
---- a/drivers/scsi/qla2xxx/qla_edif.c
-+++ b/drivers/scsi/qla2xxx/qla_edif.c
-@@ -546,14 +546,14 @@ qla_edif_app_start(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 	appreply.edif_enode_active = vha->pur_cinfo.enode_flags;
- 	appreply.edif_edb_active = vha->e_dbell.db_flags;
- 
--	bsg_job->reply_len = sizeof(struct fc_bsg_reply) +
--	    sizeof(struct app_start_reply);
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
- 
- 	SET_DID_STATUS(bsg_reply->result, DID_OK);
- 
--	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	    bsg_job->reply_payload.sg_cnt, &appreply,
--	    sizeof(struct app_start_reply));
-+	bsg_reply->reply_payload_rcv_len = sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+							       bsg_job->reply_payload.sg_cnt,
-+							       &appreply,
-+							       sizeof(struct app_start_reply));
- 
- 	ql_dbg(ql_dbg_edif, vha, 0x911d,
- 	    "%s app start completed with 0x%x\n",
-@@ -750,9 +750,10 @@ qla_edif_app_authok(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 
- errstate_exit:
- 	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
--	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	    bsg_job->reply_payload.sg_cnt, &appplogireply,
--	    sizeof(struct app_plogi_reply));
-+	bsg_reply->reply_payload_rcv_len = sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+							       bsg_job->reply_payload.sg_cnt,
-+							       &appplogireply,
-+							       sizeof(struct app_plogi_reply));
- 
- 	return rval;
- }
-@@ -835,7 +836,7 @@ static int
- qla_edif_app_getfcinfo(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- {
- 	int32_t			rval = 0;
--	int32_t			num_cnt;
-+	int32_t			pcnt = 0;
- 	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
- 	struct app_pinfo_req	app_req;
- 	struct app_pinfo_reply	*app_reply;
-@@ -847,16 +848,14 @@ qla_edif_app_getfcinfo(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 	    bsg_job->request_payload.sg_cnt, &app_req,
- 	    sizeof(struct app_pinfo_req));
- 
--	num_cnt = app_req.num_ports;	/* num of ports alloc'd by app */
--
- 	app_reply = kzalloc((sizeof(struct app_pinfo_reply) +
--	    sizeof(struct app_pinfo) * num_cnt), GFP_KERNEL);
-+	    sizeof(struct app_pinfo) * app_req.num_ports), GFP_KERNEL);
-+
- 	if (!app_reply) {
- 		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
- 		rval = -1;
- 	} else {
- 		struct fc_port	*fcport = NULL, *tf;
--		uint32_t	pcnt = 0;
- 
- 		list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
- 			if (!(fcport->flags & FCF_FCSP_DEVICE))
-@@ -925,9 +924,11 @@ qla_edif_app_getfcinfo(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 		SET_DID_STATUS(bsg_reply->result, DID_OK);
- 	}
- 
--	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	    bsg_job->reply_payload.sg_cnt, app_reply,
--	    sizeof(struct app_pinfo_reply) + sizeof(struct app_pinfo) * num_cnt);
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_reply->reply_payload_rcv_len = sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+							       bsg_job->reply_payload.sg_cnt,
-+							       app_reply,
-+							       sizeof(struct app_pinfo_reply) + sizeof(struct app_pinfo) * pcnt);
- 
- 	kfree(app_reply);
- 
-@@ -944,10 +945,11 @@ qla_edif_app_getstats(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- {
- 	int32_t			rval = 0;
- 	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
--	uint32_t ret_size, size;
-+	uint32_t size;
- 
- 	struct app_sinfo_req	app_req;
- 	struct app_stats_reply	*app_reply;
-+	uint32_t pcnt = 0;
- 
- 	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
- 	    bsg_job->request_payload.sg_cnt, &app_req,
-@@ -963,18 +965,12 @@ qla_edif_app_getstats(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 	size = sizeof(struct app_stats_reply) +
- 	    (sizeof(struct app_sinfo) * app_req.num_ports);
- 
--	if (size > bsg_job->reply_payload.payload_len)
--		ret_size = bsg_job->reply_payload.payload_len;
--	else
--		ret_size = size;
--
- 	app_reply = kzalloc(size, GFP_KERNEL);
- 	if (!app_reply) {
- 		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
- 		rval = -1;
- 	} else {
- 		struct fc_port	*fcport = NULL, *tf;
--		uint32_t	pcnt = 0;
- 
- 		list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
- 			if (fcport->edif.enable) {
-@@ -998,9 +994,11 @@ qla_edif_app_getstats(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 		SET_DID_STATUS(bsg_reply->result, DID_OK);
- 	}
- 
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
- 	bsg_reply->reply_payload_rcv_len =
- 	    sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	       bsg_job->reply_payload.sg_cnt, app_reply, ret_size);
-+	       bsg_job->reply_payload.sg_cnt, app_reply,
-+	       sizeof(struct app_stats_reply) + (sizeof(struct app_sinfo) * pcnt));
- 
- 	kfree(app_reply);
- 
-@@ -1074,8 +1072,7 @@ qla_edif_app_mgmt(struct bsg_job *bsg_job)
- 		    __func__,
- 		    bsg_request->rqst_data.h_vendor.vendor_cmd[1]);
- 		rval = EXT_STATUS_INVALID_PARAM;
--		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
--		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		done = false;
- 		break;
- 	}
- 
--- 
-2.19.0.rc0
+Vivek
+
+[..]
+> diff --git a/fs/fuse/virtio_fs.c b/fs/fuse/virtio_fs.c
+> index 0ad89c6629d7..27c3b74070a2 100644
+> --- a/fs/fuse/virtio_fs.c
+> +++ b/fs/fuse/virtio_fs.c
+> @@ -895,7 +895,7 @@ static int virtio_fs_probe(struct virtio_device *vdev)
+>  	return 0;
+>  
+>  out_vqs:
+> -	vdev->config->reset(vdev);
+> +	virtio_reset_device(vdev);
+>  	virtio_fs_cleanup_vqs(vdev, fs);
+>  	kfree(fs->vqs);
+>  
+> @@ -927,7 +927,7 @@ static void virtio_fs_remove(struct virtio_device *vdev)
+>  	list_del_init(&fs->list);
+>  	virtio_fs_stop_all_queues(fs);
+>  	virtio_fs_drain_all_queues_locked(fs);
+> -	vdev->config->reset(vdev);
+> +	virtio_reset_device(vdev);
+>  	virtio_fs_cleanup_vqs(vdev, fs);
+>  
+>  	vdev->priv = NULL;
+
+
+Thanks
+Vivek
 
