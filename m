@@ -2,176 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 154D8C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 06:39:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 890B9C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 06:50:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F19A560235
-	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 06:39:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68F7E60F11
+	for <linux-scsi@archiver.kernel.org>; Wed, 13 Oct 2021 06:50:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238056AbhJMGlb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 13 Oct 2021 02:41:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53450 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S238103AbhJMGla (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2021 02:41:30 -0400
-Received: from mail-pj1-x1032.google.com (mail-pj1-x1032.google.com [IPv6:2607:f8b0:4864:20::1032])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3CD85C06174E
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Oct 2021 23:39:27 -0700 (PDT)
-Received: by mail-pj1-x1032.google.com with SMTP id ls18so1408097pjb.3
-        for <linux-scsi@vger.kernel.org>; Tue, 12 Oct 2021 23:39:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=DD/2eDntZRvmYFLabpX6hx1U0eeFdg0nt6CnyRZUcUo=;
-        b=BK3/LJ89flw5mVlU3UcEyxJ6LbnnmcNslFQOP5bfSd/QHd96C82eb1OGM/6y9E9tVZ
-         +RxJ42PRvcA8OnuNTe7jWQrLB4kIfwLscnkVOAeCEBYDFaLLczsrzmikDhrnLSmHevHI
-         DJYQS0KGPHFoIgmlnCi12Zqd0uHHCS6ptE1xE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=DD/2eDntZRvmYFLabpX6hx1U0eeFdg0nt6CnyRZUcUo=;
-        b=w2GrPfhRLtIOCaAtlPLoC2Ytsben2KoGD8Uo2SP9ekYKbwAET9TKhpD6WJKckByxk1
-         D7ZSZrUd0uUyHVoZY36q8QzlTvSgCn999Jph5WGxcByokKUxI2va60TpXekQPkdTRvJB
-         DRQLSspkQ5+iaC8iwUHuyJp+atqHpIv1wQ0YHOrzxTAe+Vel3zchhNjunB8cMV/y74/f
-         HREj7Ing0JBXkvGu7XOPC6xCdzlscGIyoctJQXH8o1McT1RdueQM8GFZdHc0N85+u5xB
-         fkOT0pGbcXG2jm0Gm6dtXMnqSzxNNhtjckLCGA+cAr9eg3o7Mv98bbSRs3uZMFRItCU6
-         iEWQ==
-X-Gm-Message-State: AOAM531bRN0PMrM79ANTBiNSZxECZz4eRJnX7XU1kcfqhBJPPf5UuUj6
-        DOZqNfqRP3QbkLtzOAcuMHNX2w==
-X-Google-Smtp-Source: ABdhPJz6dN+fakHkI4mmw5FMrWYwE5jr866artFMUIcBHqytxUEdEx+T1ampoWpSo+mgvVckvfVoUQ==
-X-Received: by 2002:a17:90b:4b4f:: with SMTP id mi15mr808506pjb.97.1634107166729;
-        Tue, 12 Oct 2021 23:39:26 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id y17sm9562796pfn.96.2021.10.12.23.39.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 12 Oct 2021 23:39:26 -0700 (PDT)
-Date:   Tue, 12 Oct 2021 23:39:25 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        David Sterba <dsterba@suse.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        Anton Altaparmakov <anton@tuxera.com>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-mtd@lists.infradead.org, linux-nvme@lists.infradead.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, jfs-discussion@lists.sourceforge.net,
-        linux-nfs@vger.kernel.org, linux-nilfs@vger.kernel.org,
-        linux-ntfs-dev@lists.sourceforge.net, ntfs3@lists.linux.dev,
-        reiserfs-devel@vger.kernel.org
-Subject: Re: don't use ->bd_inode to access the block device size
-Message-ID: <202110122335.19348E8E8@keescook>
-References: <20211013051042.1065752-1-hch@lst.de>
+        id S231929AbhJMGwj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 13 Oct 2021 02:52:39 -0400
+Received: from email.ramaxel.com ([221.4.138.186]:15497 "EHLO
+        VLXDG1SPAM1.ramaxel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S231495AbhJMGwi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Oct 2021 02:52:38 -0400
+Received: from V12DG1MBS01.ramaxel.local (v12dg1mbs01.ramaxel.local [172.26.18.31])
+        by VLXDG1SPAM1.ramaxel.com with ESMTPS id 19D6oDDN085676
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 13 Oct 2021 14:50:13 +0800 (GMT-8)
+        (envelope-from songyl@ramaxel.com)
+Received: from songyl (10.64.10.54) by V12DG1MBS01.ramaxel.local
+ (172.26.18.31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2308.14; Wed, 13
+ Oct 2021 14:50:12 +0800
+Date:   Wed, 13 Oct 2021 06:50:12 +0000
+From:   Yanling Song <songyl@ramaxel.com>
+To:     Bart Van Assche <bvanassche@acm.org>
+CC:     <martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+        <songyl@ramaxel.com>
+Subject: Re: [PATCH] spraid: initial commit of Ramaxel spraid driver
+Message-ID: <20211013065012.02b76336@songyl>
+In-Reply-To: <6cd75c09-8374-7b9b-4ecc-3b3781cbe074@acm.org>
+References: <20210930034752.248781-1-songyl@ramaxel.com>
+        <cfe5b692-6642-e317-39a7-f38c1460097c@acm.org>
+        <20211012144906.790579d0@songyl>
+        <6cd75c09-8374-7b9b-4ecc-3b3781cbe074@acm.org>
+X-Mailer: Claws Mail 3.16.0 (GTK+ 2.24.32; x86_64-pc-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211013051042.1065752-1-hch@lst.de>
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.64.10.54]
+X-ClientProxiedBy: V12DG1MBS03.ramaxel.local (172.26.18.33) To
+ V12DG1MBS01.ramaxel.local (172.26.18.31)
+X-DNSRBL: 
+X-MAIL: VLXDG1SPAM1.ramaxel.com 19D6oDDN085676
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Oct 13, 2021 at 07:10:13AM +0200, Christoph Hellwig wrote:
-> I wondered about adding a helper for looking at the size in byte units
-> to avoid the SECTOR_SHIFT shifts in various places.  But given that
-> I could not come up with a good name and block devices fundamentally
-> work in sector size granularity I decided against that.
+On Tue, 12 Oct 2021 09:59:30 -0700
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-Without something like bdev_nr_bytes(), this series has 13 of 29 patches
-actually _adding_ an open-coded calculation:
+> On 10/12/21 7:49 AM, Yanling Song wrote:
+> > On Mon, 11 Oct 2021 12:54:20 -0700
+> > Bart Van Assche <bvanassche@acm.org> wrote:
+> >   
+> >> On 9/29/21 20:47, Yanling Song wrote:  
+> >>> +#define SPRAID_IOCTL_RESET_CMD _IOWR('N', 0x80, struct
+> >>> spraid_passthru_common_cmd) +#define SPRAID_IOCTL_ADMIN_CMD
+> >>> _IOWR('N', 0x41, struct spraid_passthru_common_cmd)  
+> >>
+> >> Do these new ioctls provide any functionality that is not yet
+> >> provided by SG_IO + SG_SCSI_RESET_BUS?  
+> > 
+> > These new ioctls are developed to manage our raid controller by our
+> > private tools, which has no sg device. so SG_IO cannot work for our
+> > case.  
+> 
+> Why won't an SG device be associated with spraid device nodes? My 
+> understanding is that an SG device is associated with every SCSI
+> device if CONFIG_CHR_DEV_SG is enabled and also that a bsg device is
+> associated with every SCSI device if CONFIG_BLK_DEV_BSG is enabled.
+> 
+> Why is it that SG_IO is not sufficient? This is something that should 
+> have been explained in the patch description.
 
-[PATCH 05/29] mtd/block2mtd: use bdev_nr_sectors instead of open coding it
-[PATCH 06/29] nvmet: use bdev_nr_sectors instead of open coding it
-[PATCH 07/29] target/iblock: use bdev_nr_sectors instead of open coding it
-[PATCH 08/29] fs: use bdev_nr_sectors instead of open coding it in blkdev_max_block
-[PATCH 11/29] btrfs: use bdev_nr_sectors instead of open coding it
-[PATCH 16/29] jfs: use bdev_nr_sectors instead of open coding it
-[PATCH 17/29] nfs/blocklayout: use bdev_nr_sectors instead of open coding it
-[PATCH 18/29] nilfs2: use bdev_nr_sectors instead of open coding it
-[PATCH 19/29] ntfs3: use bdev_nr_sectors instead of open coding it
-[PATCH 20/29] pstore/blk: use bdev_nr_sectors instead of open coding it
-[PATCH 21/29] reiserfs: use bdev_nr_sectors instead of open coding it
-[PATCH 22/29] squashfs: use bdev_nr_sectors instead of open coding it
-[PATCH 23/29] block: use bdev_nr_sectors instead of open coding it in blkdev_fallocate
+There are two cases that there are no SG devices and SG_IO cannot work.
+1. To access raid controller: 
+a. Raid controller is a scsi host, not a scsi device, so there
+is no SG device associated with it. 
+b. Even there is a scsi device for raid controller, SG_IO
+cannot work when something wrong with IO queue and only admin queue can
+work;
+2. To access the physical disks behinds raid controller: 
+raid controller only reports VDs to OS and only VDs have SG devices. OS
+has no idea about physical disks behinds raid controller and there is no
+SG devices associated with physical disks.  
 
-I think it's well worth having that helper (or at least leaving these
-alone). Otherwise, this is a lot of churn without a clear net benefit,
-IMO.
+> 
+> >> Additionally, mixing driver-internal and user space definitions in
+> >> a single header file is not OK. Definitions of data structures and
+> >> ioctls that are needed by user space software should occur in a
+> >> header file in the directory include/uapi/scsi/.  
+> > 
+> > Sounds reasonable. But after checking the directory
+> > include/uapi/scsi/, there are only several files in it. It is
+> > expected that there should be many files if developers follow the
+> > rule. Do you know why?  
+> 
+> If this rule is not followed, that will be a red flag for the SCSI 
+> maintainer and something that will probably delay upstream acceptance
+> of this patch.
 
-The others look good to me, though!
+Since there are not much examples in include/uapi/scsi/, what' your
+suggestion on how to put the definitions into the folder? for example,
+what's the file name? spraid_ioctrl.h?
 
--Kees
+> 
+> Bart.
 
->
-> Diffstat:
->  block/fops.c                        |    2 +-
->  drivers/block/drbd/drbd_int.h       |    3 +--
->  drivers/md/bcache/super.c           |    2 +-
->  drivers/md/bcache/util.h            |    4 ----
->  drivers/md/bcache/writeback.c       |    2 +-
->  drivers/md/dm-bufio.c               |    2 +-
->  drivers/md/dm-cache-metadata.c      |    2 +-
->  drivers/md/dm-cache-target.c        |    2 +-
->  drivers/md/dm-clone-target.c        |    2 +-
->  drivers/md/dm-dust.c                |    5 ++---
->  drivers/md/dm-ebs-target.c          |    2 +-
->  drivers/md/dm-era-target.c          |    2 +-
->  drivers/md/dm-exception-store.h     |    2 +-
->  drivers/md/dm-flakey.c              |    3 +--
->  drivers/md/dm-integrity.c           |    6 +++---
->  drivers/md/dm-linear.c              |    3 +--
->  drivers/md/dm-log-writes.c          |    4 ++--
->  drivers/md/dm-log.c                 |    2 +-
->  drivers/md/dm-mpath.c               |    2 +-
->  drivers/md/dm-raid.c                |    6 +++---
->  drivers/md/dm-switch.c              |    2 +-
->  drivers/md/dm-table.c               |    3 +--
->  drivers/md/dm-thin-metadata.c       |    2 +-
->  drivers/md/dm-thin.c                |    2 +-
->  drivers/md/dm-verity-target.c       |    3 +--
->  drivers/md/dm-writecache.c          |    2 +-
->  drivers/md/dm-zoned-target.c        |    2 +-
->  drivers/md/md.c                     |   26 +++++++++++---------------
->  drivers/mtd/devices/block2mtd.c     |    5 +++--
->  drivers/nvme/target/io-cmd-bdev.c   |    4 ++--
->  drivers/target/target_core_iblock.c |    5 +++--
->  fs/affs/super.c                     |    2 +-
->  fs/btrfs/dev-replace.c              |    2 +-
->  fs/btrfs/disk-io.c                  |    3 ++-
->  fs/btrfs/ioctl.c                    |    4 ++--
->  fs/btrfs/volumes.c                  |    7 ++++---
->  fs/buffer.c                         |    4 ++--
->  fs/cramfs/inode.c                   |    2 +-
->  fs/ext4/super.c                     |    2 +-
->  fs/fat/inode.c                      |    5 +----
->  fs/hfs/mdb.c                        |    2 +-
->  fs/hfsplus/wrapper.c                |    2 +-
->  fs/jfs/resize.c                     |    5 ++---
->  fs/jfs/super.c                      |    5 ++---
->  fs/nfs/blocklayout/dev.c            |    4 ++--
->  fs/nilfs2/ioctl.c                   |    2 +-
->  fs/nilfs2/super.c                   |    2 +-
->  fs/nilfs2/the_nilfs.c               |    3 ++-
->  fs/ntfs/super.c                     |    8 +++-----
->  fs/ntfs3/super.c                    |    3 +--
->  fs/pstore/blk.c                     |    4 ++--
->  fs/reiserfs/super.c                 |    7 ++-----
->  fs/squashfs/super.c                 |    5 +++--
->  fs/udf/lowlevel.c                   |    5 ++---
->  fs/udf/super.c                      |    9 +++------
->  include/linux/genhd.h               |    6 ++++++
->  56 files changed, 100 insertions(+), 117 deletions(-)
-
---
-Kees Cook
