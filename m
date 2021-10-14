@@ -2,207 +2,122 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3024FC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 22:08:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18ADAC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 23:15:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 08D386109E
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 22:08:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCC366108B
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 23:15:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233662AbhJNWKa (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Oct 2021 18:10:30 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:2658 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229829AbhJNWK2 (ORCPT
+        id S231265AbhJNXRz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Oct 2021 19:17:55 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:52852 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230032AbhJNXRy (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Oct 2021 18:10:28 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19EKbnfb002347;
-        Thu, 14 Oct 2021 18:07:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=gcqkgO7usWMi/qHhToo/mTrw8IHuIq/Ug6jZaEWgIVI=;
- b=JgkB8ht6SbLw8x+QDKzhIbQVIdeBiEzFQ60lTjaL8bJVj3Z46OuiJ3m3qdM0pI9wM2Pb
- NTjd6xlcVa8T/oHlBLvduAsy55dlEHVY4lJTWPkNIRI7fMKNSCmAyLWy3CtJjv9KgmuL
- BjkXLsK9+WrzPaFhOf5Dhxgg8fZRxizWFBpfU570sWXq3Ifea+5qjV3qvou7nwmm+cxr
- 8Fht8Zr3BhNaq4K/MZ9iicdH0eXmRCfgLxVyq4qwkFXWO7FqGuCv1ur56DG+xmJVUNmE
- SwmJdTFBanFY3MTB7+GNskmWwanPLtaFYvsZwkeTkcpk58qOjHJpDIe5Y2Cc7oz4lkLq Hg== 
-Received: from ppma05wdc.us.ibm.com (1b.90.2fa9.ip4.static.sl-reverse.com [169.47.144.27])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3bpurn1t36-1
+        Thu, 14 Oct 2021 19:17:54 -0400
+Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19EKdq4B013490;
+        Thu, 14 Oct 2021 19:15:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=to : cc : references :
+ subject : from : message-id : date : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=cCbkqufKm/LzI41BMQVYIhYz7oSMXKDVX6lxZMNyusM=;
+ b=nJ74ofw8dynrPumFYQsc+E4a4WJRTNOsfgG6LT9QCQG1DCAsLj1gl6Bh4QMyDVuHfj5A
+ r85LJYgUqPQIGFvVNPAvnAsJzfAjlcpvamKMt6nwLFP0Nd9dVKZ/gC2ZBBL9axkoW3vy
+ h0BN/JwpoMxbFl2u9PbrYgKrJhQ5Ivc995b2BAJvsaVrfBqaoGpc7SINXQPzPciiEvEG
+ 6hPyAzXbc1kqEpCyn4+FwWYc2PH79yTOHkFazS2QiuUT3gRwk6WYYhTsmCCgOkpznxRm
+ BV2CBmUEbkasHQtFQkVmilIuzg6TPUBb2p7fvI8+UhOVGaVSayndqMKhuFwhmc3gTEot UQ== 
+Received: from ppma02dal.us.ibm.com (a.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.10])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3bpus8jtx5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Oct 2021 18:07:58 -0400
-Received: from pps.filterd (ppma05wdc.us.ibm.com [127.0.0.1])
-        by ppma05wdc.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19ELppN7027402;
-        Thu, 14 Oct 2021 22:07:58 GMT
-Received: from b01cxnp22034.gho.pok.ibm.com (b01cxnp22034.gho.pok.ibm.com [9.57.198.24])
-        by ppma05wdc.us.ibm.com with ESMTP id 3bk2qctmj4-1
+        Thu, 14 Oct 2021 19:15:42 -0400
+Received: from pps.filterd (ppma02dal.us.ibm.com [127.0.0.1])
+        by ppma02dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19ENDkXw025318;
+        Thu, 14 Oct 2021 23:15:39 GMT
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
+        by ppma02dal.us.ibm.com with ESMTP id 3bnm2f15eq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Oct 2021 22:07:58 +0000
+        Thu, 14 Oct 2021 23:15:39 +0000
 Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
-        by b01cxnp22034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19EM7vlP42598748
+        by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19ENFc9Y41025886
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 Oct 2021 22:07:57 GMT
+        Thu, 14 Oct 2021 23:15:38 GMT
 Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 942BDB206B;
-        Thu, 14 Oct 2021 22:07:57 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 5F1EDB206C;
+        Thu, 14 Oct 2021 23:15:38 +0000 (GMT)
 Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 70016B2067;
-        Thu, 14 Oct 2021 22:07:56 +0000 (GMT)
+        by IMSVA (Postfix) with ESMTP id 8254DB206E;
+        Thu, 14 Oct 2021 23:15:37 +0000 (GMT)
 Received: from oc6857751186.ibm.com (unknown [9.65.220.106])
         by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
-        Thu, 14 Oct 2021 22:07:56 +0000 (GMT)
-Subject: Re: [PATCH v2] scsi: ibmvscsi: Use dma_alloc_noncoherent() instead of
- get_zeroed_page/dma_map_single()
-To:     Cai Huoqing <caihuoqing@baidu.com>
-Cc:     Michael Ellerman <mpe@ellerman.id.au>,
-        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
-        Paul Mackerras <paulus@samba.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Thu, 14 Oct 2021 23:15:37 +0000 (GMT)
+To:     tyreld@linux.vnet.ibm.com
+Cc:     brking@linux.vnet.ibm.com, james.bottomley@hansenpartnership.com,
         linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-kernel@vger.kernel.org
-References: <20211012032317.2360-1-caihuoqing@baidu.com>
+        martin.petersen@oracle.com
+References: <1547089149-20577-1-git-send-email-tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvscsi: use GFP_KERNEL with dma_alloc_coherent in
+ initialize_event_pool
 From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-Message-ID: <0a2ef145-b84f-129a-c915-50f32aeeaa1d@linux.ibm.com>
-Date:   Thu, 14 Oct 2021 15:07:55 -0700
+Message-ID: <bbab1043-ee3a-6d5b-7ff5-ea5ed84e9fb8@linux.ibm.com>
+Date:   Thu, 14 Oct 2021 16:15:36 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.13.0
-MIME-Version: 1.0
-In-Reply-To: <20211012032317.2360-1-caihuoqing@baidu.com>
+In-Reply-To: <1547089149-20577-1-git-send-email-tyreld@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: _j95V1l7K9Lv-zgNFqw8wQ1RBemS559Q
-X-Proofpoint-ORIG-GUID: _j95V1l7K9Lv-zgNFqw8wQ1RBemS559Q
+X-Proofpoint-GUID: 2X6hSS2uRndpUdDnPelK54ypMf5nzmcE
+X-Proofpoint-ORIG-GUID: 2X6hSS2uRndpUdDnPelK54ypMf5nzmcE
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+MIME-Version: 1.0
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
  definitions=2021-10-14_11,2021-10-14_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 spamscore=0
- suspectscore=0 impostorscore=0 adultscore=0 lowpriorityscore=0
- clxscore=1011 bulkscore=0 priorityscore=1501 mlxlogscore=999 mlxscore=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxscore=0
+ lowpriorityscore=0 clxscore=1011 priorityscore=1501 suspectscore=0
+ spamscore=0 bulkscore=0 impostorscore=0 adultscore=0 mlxlogscore=999
  malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2110140123
+ engine=8.12.0-2109230001 definitions=main-2110140129
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/11/21 8:23 PM, Cai Huoqing wrote:
-> Replacing get_zeroed_page/free_page/dma_map_single/dma_unmap_single()
-> with dma_alloc_noncoherent/dma_free_noncoherent() helps to reduce
-> code size, and simplify the code, and the hardware can keeep DMA
-> coherent itsel
-Not sure why the switch from coherent in v1 to noncoherent in v2. I think that
-was unnecessary and I believe requires explicit synchronization via
-dma_sync_single_{for_device|for_cpu} calls.
+Just stumbled upon this trivial little patch that looks to have gotten lost in
+the shuffle. Seems it even got a reviewed-by from Brian [1].
 
-Further, as both kernel-bot and Nathan have already pointed out this doesn't
-even compile.
+So, uh I guess after almost 3 years...ping?
 
 -Tyrel
 
-> 
-> Signed-off-by: Cai Huoqing <caihuoqing@baidu.com>
+[1]
+https://yhbt.net/lore/all/fd33df0e-012b-e437-c6e9-29cd0883808d@linux.vnet.ibm.com/
+
+On 01/09/2019 08:59 PM, Tyrel Datwyler wrote:
+> During driver probe we allocate a dma region for our event pool.
+> Currently, zero is passed for the gfp_flags parameter. Driver probe
+> callbacks run in process context and we hold no locks so we can sleep
+> here if necessary.
+>
+> Fix by passing GFP_KERNEL explicitly to dma_alloc_coherent().
+>
+> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 > ---
-> v1->v2:
-> 	*Change to dma_alloc/free_noncoherent from dma_alloc/free_coherent.
-> 	*Update changelog.
-> 
->  drivers/scsi/ibmvscsi/ibmvfc.c   | 16 ++++------------
->  drivers/scsi/ibmvscsi/ibmvscsi.c | 29 +++++++++--------------------
->  2 files changed, 13 insertions(+), 32 deletions(-)
-> 
-> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-> index 1f1586ad48fe..6e95fd02fd25 100644
-> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
-> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-> @@ -869,8 +869,8 @@ static void ibmvfc_free_queue(struct ibmvfc_host *vhost,
->  {
->  	struct device *dev = vhost->dev;
->  
-> -	dma_unmap_single(dev, queue->msg_token, PAGE_SIZE, DMA_BIDIRECTIONAL);
-> -	free_page((unsigned long)queue->msgs.handle);
-> +	dma_free_noncoherent(dev, PAGE_SIZE, queue->msgs.handle,
-> +			     queue->msg_token, DMA_BIDIRECTIONAL);
->  	queue->msgs.handle = NULL;
->  
->  	ibmvfc_free_event_pool(vhost, queue);
-> @@ -5663,19 +5663,11 @@ static int ibmvfc_alloc_queue(struct ibmvfc_host *vhost,
->  		return -ENOMEM;
->  	}
->  
-> -	queue->msgs.handle = (void *)get_zeroed_page(GFP_KERNEL);
-> +	queue->msgs.handle = dma_alloc_noncoherent(dev, PAGE_SIZE, &queue->msg_token,
-> +						   DMA_BIDIRECTIONAL, GFP_KERNEL);
->  	if (!queue->msgs.handle)
->  		return -ENOMEM;
->  
-> -	queue->msg_token = dma_map_single(dev, queue->msgs.handle, PAGE_SIZE,
-> -					  DMA_BIDIRECTIONAL);
-> -
-> -	if (dma_mapping_error(dev, queue->msg_token)) {
-> -		free_page((unsigned long)queue->msgs.handle);
-> -		queue->msgs.handle = NULL;
-> -		return -ENOMEM;
-> -	}
-> -
->  	queue->cur = 0;
->  	queue->fmt = fmt;
->  	queue->size = PAGE_SIZE / fmt_size;
+>  drivers/scsi/ibmvscsi/ibmvscsi.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
 > diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> index ea8e01f49cba..68409c298c74 100644
+> index cb8535e..10d5e77 100644
 > --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
 > +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-> @@ -151,10 +151,8 @@ static void ibmvscsi_release_crq_queue(struct crq_queue *queue,
->  			msleep(100);
->  		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
->  	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
-> -	dma_unmap_single(hostdata->dev,
-> -			 queue->msg_token,
-> -			 queue->size * sizeof(*queue->msgs), DMA_BIDIRECTIONAL);
-> -	free_page((unsigned long)queue->msgs);
-> +	dma_free_noncoherent(hostdata->dev, PAGE_SIZE,
-> +			     queue->msgs, queue->msg_token, DMA_BIDIRECTIONAL);
->  }
->  
->  /**
-> @@ -331,18 +329,12 @@ static int ibmvscsi_init_crq_queue(struct crq_queue *queue,
->  	int retrc;
->  	struct vio_dev *vdev = to_vio_dev(hostdata->dev);
->  
-> -	queue->msgs = (struct viosrp_crq *)get_zeroed_page(GFP_KERNEL);
-> -
-> -	if (!queue->msgs)
-> -		goto malloc_failed;
->  	queue->size = PAGE_SIZE / sizeof(*queue->msgs);
-> -
-> -	queue->msg_token = dma_map_single(hostdata->dev, queue->msgs,
-> -					  queue->size * sizeof(*queue->msgs),
-> -					  DMA_BIDIRECTIONAL);
-> -
-> -	if (dma_mapping_error(hostdata->dev, queue->msg_token))
-> -		goto map_failed;
-> +	queue->msgs = dma_alloc_noncoherent(hostdata->dev,
-> +					    PAGE_SIZE, &queue->msg_token,
-> +					    DMA_BIDIRECTIONAL, GFP_KERNEL);
-> +	if (!queue->msg)
-> +		goto malloc_failed;
->  
->  	gather_partition_info();
->  	set_adapter_info(hostdata);
-> @@ -395,11 +387,8 @@ static int ibmvscsi_init_crq_queue(struct crq_queue *queue,
->  		rc = plpar_hcall_norets(H_FREE_CRQ, vdev->unit_address);
->  	} while ((rc == H_BUSY) || (H_IS_LONG_BUSY(rc)));
->        reg_crq_failed:
-> -	dma_unmap_single(hostdata->dev,
-> -			 queue->msg_token,
-> -			 queue->size * sizeof(*queue->msgs), DMA_BIDIRECTIONAL);
-> -      map_failed:
-> -	free_page((unsigned long)queue->msgs);
-> +	dma_free_noncoherent(hostdata->dev, PAGE_SIZE, queue->msg,
-> +			     queue->msg_token, DMA_BIDIRECTIONAL);
->        malloc_failed:
->  	return -1;
->  }
-> 
-
+> @@ -465,7 +465,7 @@ static int initialize_event_pool(struct event_pool *pool,
+>  	pool->iu_storage =
+>  	    dma_alloc_coherent(hostdata->dev,
+>  			       pool->size * sizeof(*pool->iu_storage),
+> -			       &pool->iu_token, 0);
+> +			       &pool->iu_token, GFP_KERNEL);
+>  	if (!pool->iu_storage) {
+>  		kfree(pool->events);
+>  		return -ENOMEM;
+>
