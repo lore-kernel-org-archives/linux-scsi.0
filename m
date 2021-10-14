@@ -2,51 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F89EC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 06:02:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77711C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 06:11:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F00960FF2
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 06:02:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4857F61166
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 06:11:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229538AbhJNGEY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Oct 2021 02:04:24 -0400
-Received: from mga18.intel.com ([134.134.136.126]:33091 "EHLO mga18.intel.com"
+        id S229551AbhJNGNX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Oct 2021 02:13:23 -0400
+Received: from mga11.intel.com ([192.55.52.93]:64290 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229457AbhJNGEY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Oct 2021 02:04:24 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10136"; a="214546365"
+        id S229502AbhJNGNU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 Oct 2021 02:13:20 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10136"; a="225061304"
 X-IronPort-AV: E=Sophos;i="5.85,371,1624345200"; 
-   d="scan'208";a="214546365"
+   d="scan'208";a="225061304"
 Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2021 23:02:19 -0700
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Oct 2021 23:11:16 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.85,371,1624345200"; 
-   d="scan'208";a="571124458"
+   d="scan'208";a="571126616"
 Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
-  by fmsmga002.fm.intel.com with ESMTP; 13 Oct 2021 23:02:16 -0700
-Subject: Re: [PATCH 1/1] scsi: ufs: core: Fix task management completion
- timeout race
+  by fmsmga002.fm.intel.com with ESMTP; 13 Oct 2021 23:11:12 -0700
+Subject: Re: [PATCH 5/5] scsi: ufs: Add a sysfs attribute for triggering the
+ UFS EH
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
         Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        linux-scsi@vger.kernel.org
-References: <20211013150116.31158-1-adrian.hunter@intel.com>
- <20211013150116.31158-2-adrian.hunter@intel.com>
- <40259621-aac4-e69f-c230-6376bf4d3e36@acm.org>
+        Lukas Bulwahn <lukas.bulwahn@gmail.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20211012215433.3725777-1-bvanassche@acm.org>
+ <20211012215433.3725777-6-bvanassche@acm.org>
+ <cd4b5103-e0fd-feed-2663-b505bcf019d8@intel.com>
+ <598bbbc4-ab07-0354-045a-14ba5220f814@acm.org>
 From:   Adrian Hunter <adrian.hunter@intel.com>
 Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
  Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <235af725-5346-d830-b62b-21b729aa8703@intel.com>
-Date:   Thu, 14 Oct 2021 09:02:15 +0300
+Message-ID: <14c84351-7b3a-e003-fe42-b614b9923de3@intel.com>
+Date:   Thu, 14 Oct 2021 09:11:11 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <40259621-aac4-e69f-c230-6376bf4d3e36@acm.org>
+In-Reply-To: <598bbbc4-ab07-0354-045a-14ba5220f814@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -54,50 +58,58 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 14/10/2021 07:14, Bart Van Assche wrote:
-> On 10/13/21 08:01, Adrian Hunter wrote:
->> __ufshcd_issue_tm_cmd() clears req->end_io_data after timing out,
->> which races with the completion function ufshcd_tmc_handler() which
->> expects req->end_io_data to have a value.
+On 13/10/2021 19:56, Bart Van Assche wrote:
+> On 10/13/21 1:09 AM, Adrian Hunter wrote:
+>> On 13/10/2021 00:54, Bart Van Assche wrote:
+>>> Make it possible to test the impact of the UFS error handler on software
+>>> that submits SCSI commands to the UFS driver.
 >>
->> Note __ufshcd_issue_tm_cmd() and ufshcd_tmc_handler() are already
->> synchronized using hba->tmf_rqs and hba->outstanding_tasks under the
->> host_lock spinlock.
->>
->> It is also not necessary (nor typical) to clear req->end_io_data because
->> the block layer does it before allocating out requests e.g. via
->> blk_get_request().
->>
->> So fix by not clearing it.
->>
->> Fixes: f5ef336fd2e4c3 ("scsi: ufs: core: Fix task management completion")
->> Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
->> ---
->>   drivers/scsi/ufs/ufshcd.c | 5 -----
->>   1 file changed, 5 deletions(-)
->>
->> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->> index 95be7ecdfe10..f34b3994d1aa 100644
->> --- a/drivers/scsi/ufs/ufshcd.c
->> +++ b/drivers/scsi/ufs/ufshcd.c
->> @@ -6550,11 +6550,6 @@ static int __ufshcd_issue_tm_cmd(struct ufs_hba *hba,
->>       err = wait_for_completion_io_timeout(&wait,
->>               msecs_to_jiffies(TM_CMD_TIMEOUT));
->>       if (!err) {
->> -        /*
->> -         * Make sure that ufshcd_compl_tm() does not trigger a
->> -         * use-after-free.
->> -         */
->> -        req->end_io_data = NULL;
->>           ufshcd_add_tm_upiu_trace(hba, task_tag, UFS_TM_ERR);
->>           dev_err(hba->dev, "%s: task management cmd 0x%.2x timed-out\n",
->>                   __func__, tm_function);
+>> Are you sure this isn't better suited to debugfs?
 > 
-> With this patch applied ufshcd_tmc_handler() can trigger a use-after-free of the stack memory used for the 'wait' completion.
+> I will convert this attribute into a debugfs attribute.
+> 
+>>> +    if (ufshcd_eh_in_progress(hba))
+>>> +        return -EBUSY;
+>>
+>> Does it matter if ufshcd_eh_in_progress()?
+> 
+> The UFS error handler modifies hba->ufshcd_state and assumes that no other code modifies hba->ufshcd_state while the error handler is in progress. Hence this check.
 
-AFAICT that would only happen because blk_mq_tagset_busy_iter() is not synchronized with respect to blk_put_request().
-But ufshcd_tmc_handler() does not use blk_mq_tagset_busy_iter() anymore, so that can't happen.
+No the error handler takes care not to overwrite ufshcd_state changes
+made by the interrupt handler, by always checking if the state is
+UFSHCD_STATE_RESET before changing it to UFSHCD_STATE_OPERATIONAL.
 
-Wouldn't it be better to keep the code that clears req->end_io_data and to change complete(c) into if(c) complete(c) in ufshcd_tmc_handler()?
+Setting saved_err/saved_uic_err and calling ufshcd_schedule_eh_work()
+all under spinlock, would be just like an error interrupt, which can
+happen while the error handler is running.
 
-If that were needed, it would imply the synchronization was broken i.e. why are we referencing a request that has already been through blk_put_request()?
+> 
+>>> +    } else {
+>>> +        return -EINVAL;
+>>> +    }
+>>> +
+>>> +    scsi_schedule_eh(hba->host);
+>>
+>> Probably should be:
+>>
+>>     queue_work(hba->eh_wq, &hba->eh_work);
+> 
+> No. This patch is intended for Martin Petersen's 5.16/scsi-queue branch. The patch "Revert "scsi: ufs: Synchronize SCSI and UFS error handling"" has been queued on the 5.15/scsi-fixes branch only.
+> 
+>> However, it might be simpler to replace everything with:
+>>
+>>     spin_lock(hba->host->host_lock);
+>>     hba->saved_err |= <something>;
+>>     hba->saved_uic_err |= <something else>;
+>>     ufshcd_schedule_eh_work(hba);
+>>     spin_unlock(hba->host->host_lock);
+>>
+>> Perhaps letting the user specify values to determine <something>
+>> and <something else>
+> 
+> I will look into this.
+> 
+> Thanks,
+> 
+> Bart.
+
