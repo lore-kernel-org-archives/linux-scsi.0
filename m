@@ -2,46 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08D8AC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 08:03:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CEEAC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 08:36:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E1EC2610E8
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 08:03:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 06020610EA
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 08:36:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230199AbhJNIFl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Oct 2021 04:05:41 -0400
-Received: from verein.lst.de ([213.95.11.211]:49081 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230180AbhJNIFj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Oct 2021 04:05:39 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id BEB7968B05; Thu, 14 Oct 2021 10:03:32 +0200 (CEST)
-Date:   Thu, 14 Oct 2021 10:03:32 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
+        id S230248AbhJNIim (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Oct 2021 04:38:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43654 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230141AbhJNIij (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Oct 2021 04:38:39 -0400
+Received: from mail-wr1-x434.google.com (mail-wr1-x434.google.com [IPv6:2a00:1450:4864:20::434])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B2950C061765
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Oct 2021 01:36:34 -0700 (PDT)
+Received: by mail-wr1-x434.google.com with SMTP id m22so17099317wrb.0
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Oct 2021 01:36:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to;
+        bh=cfakvhen/wxw5fHdRu0DEuLT5DMfJlXe2a/johLjqxo=;
+        b=h40uJnzRy4bIKfqfvwm3i/kik60+Kgx2sfXbHxmv0MsZax7HkeDmryc9yctryM7xlU
+         37bg2VuoZWdH4kTXGosC95Fa3QYJayYirIbI/UeFVNH/Nzn2/7/VodB6g1hiMuG9zp+p
+         egl0Br7pM5vnKxSuUDa7BUq17cmPH9MsIYOosVtDeEDQMUaCZ6h+AWD2esXOH1LRk+zZ
+         X2uV1Nn3ulaudun/4f5AT6jS5oilV0myDq9ozSQAqUnytF1YgcEInQmj+cCLjl5OgT5o
+         004n5bwSXge4iP3a4skCS8avlQccw5QvPN8BVpAjam8zZmlkvShcDVpQvgmxjplGDMKz
+         pkRQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=cfakvhen/wxw5fHdRu0DEuLT5DMfJlXe2a/johLjqxo=;
+        b=KqGouXbrZufy1GpMGUGK6Uocbfd2o8sqgxXBzzb2BTu3UmmYmSByaVICQEgsF7wWfT
+         WVdOnTYuMnMQTRTy+OV0O694HktJGQMBMSmxQvNHmYyKuIfqsQSLVBcWJ9F+DQ7oBtjc
+         gikRmNz2nCrVPQcfVyZOVUQ8vhRNjoUIoFjbcebPLudIa8WOkk3pJu2dx9hglRUByTLt
+         1yyP/EU0VoKuV+4g9aJ1suK/G2l4nHHopScje8zt8fzekcZAZXTLp6T8Tn08tLqIpyDe
+         ALY2jbH0RvpsRPaewM/UvMnSAWt+xHc70BKs4Y6jBig4td2eAYXKGN1531E3q6slq4Nr
+         wE9w==
+X-Gm-Message-State: AOAM5310gl9ixeIrqCRnIi2YZf1GI7WMLYtkBP/PdWlqR8eN0vpO1qxu
+        FEojW7mjGtRHW8jJPvGB2PQWkA==
+X-Google-Smtp-Source: ABdhPJzpVg8OIER+zTALG2ilasSHxD7bC/dTlVAeWBUDgRwrRvN9DCthCd2lRX0ZyZDpw2FTk6Hq6g==
+X-Received: by 2002:a5d:59a9:: with SMTP id p9mr5151873wrr.386.1634200593067;
+        Thu, 14 Oct 2021 01:36:33 -0700 (PDT)
+Received: from myrica (cpc92880-cmbg19-2-0-cust679.5-4.cable.virginm.net. [82.27.106.168])
+        by smtp.gmail.com with ESMTPSA id r4sm2299114wrz.58.2021.10.14.01.36.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Oct 2021 01:36:32 -0700 (PDT)
+Date:   Thu, 14 Oct 2021 09:36:09 +0100
+From:   Jean-Philippe Brucker <jean-philippe@linaro.org>
+To:     "Michael S. Tsirkin" <mst@redhat.com>
+Cc:     linux-kernel@vger.kernel.org, Jeff Dike <jdike@addtoit.com>,
+        Richard Weinberger <richard@nod.at>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Jason Wang <jasowang@redhat.com>,
+        Paolo Bonzini <pbonzini@redhat.com>,
+        Stefan Hajnoczi <stefanha@redhat.com>,
+        Jens Axboe <axboe@kernel.dk>,
+        Marcel Holtmann <marcel@holtmann.org>,
+        Johan Hedberg <johan.hedberg@gmail.com>,
+        Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
+        Matt Mackall <mpm@selenic.com>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        Amit Shah <amit@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gonglei <arei.gonglei@huawei.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Sudeep Holla <sudeep.holla@arm.com>,
+        Cristian Marussi <cristian.marussi@arm.com>,
+        "Enrico Weigelt, metux IT consult" <info@metux.net>,
+        Viresh Kumar <vireshk@kernel.org>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Bartosz Golaszewski <brgl@bgdev.pl>,
+        David Airlie <airlied@linux.ie>,
+        Gerd Hoffmann <kraxel@redhat.com>,
+        Daniel Vetter <daniel@ffwll.ch>, Jie Deng <jie.deng@intel.com>,
+        Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        Kalle Valo <kvalo@codeaurora.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Ohad Ben-Cohen <ohad@wizery.com>,
+        Bjorn Andersson <bjorn.andersson@linaro.org>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>,
-        "J. Bruce Fields" <bfields@fieldses.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org
-Subject: Re: [PATCH 2/7] sd: implement ->get_unique_id
-Message-ID: <20211014080332.GA29337@lst.de>
-References: <20211012120445.861860-1-hch@lst.de> <20211012120445.861860-3-hch@lst.de> <0a7d87ef-fff2-6a63-8edd-604ad8868dbd@suse.de> <20211014080134.GA28835@lst.de>
+        David Hildenbrand <david@redhat.com>,
+        Vivek Goyal <vgoyal@redhat.com>,
+        Miklos Szeredi <miklos@szeredi.hu>,
+        Eric Van Hensbergen <ericvh@gmail.com>,
+        Latchesar Ionkov <lucho@ionkov.net>,
+        Dominique Martinet <asmadeus@codewreck.org>,
+        Stefano Garzarella <sgarzare@redhat.com>,
+        Anton Yakovlev <anton.yakovlev@opensynergy.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Takashi Iwai <tiwai@suse.com>, linux-um@lists.infradead.org,
+        virtualization@lists.linux-foundation.org,
+        linux-block@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+        linux-crypto@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-gpio@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        linux-i2c@vger.kernel.org, iommu@lists.linux-foundation.org,
+        netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+        nvdimm@lists.linux.dev, linux-remoteproc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        v9fs-developer@lists.sourceforge.net, kvm@vger.kernel.org,
+        alsa-devel@alsa-project.org
+Subject: Re: [PATCH RFC] virtio: wrap config->reset calls
+Message-ID: <YWfr+Z0wgpQ48yC5@myrica>
+References: <20211013105226.20225-1-mst@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211014080134.GA28835@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20211013105226.20225-1-mst@redhat.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Oct 14, 2021 at 10:01:34AM +0200, Christoph Hellwig wrote:
-> On Thu, Oct 14, 2021 at 09:30:51AM +0200, Hannes Reinecke wrote:
-> > What's wrong with scsi_vpd_lun_id() ?
+On Wed, Oct 13, 2021 at 06:55:31AM -0400, Michael S. Tsirkin wrote:
+> This will enable cleanups down the road.
+> The idea is to disable cbs, then add "flush_queued_cbs" callback
+> as a parameter, this way drivers can flush any work
+> queued after callbacks have been disabled.
 > 
-> It doesn't allow the caller to pick a specific ID type.
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
 
-... and of course that it returns an ASCSII string instead of the binary
-ID.
+>  drivers/iommu/virtio-iommu.c               | 2 +-
+
+Reviewed-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
