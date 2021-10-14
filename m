@@ -2,93 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51D54C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 18:31:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 983B4C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 18:50:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 318966105A
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 18:31:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D1EF61056
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 18:50:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230225AbhJNSdW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Oct 2021 14:33:22 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:2544 "EHLO
-        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230494AbhJNSdV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Oct 2021 14:33:21 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19EHlsWo022285;
-        Thu, 14 Oct 2021 14:31:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=R2asSbv+NdyzUsI8Jr1RnJVPyY3zko2/IqpUCEiFIXc=;
- b=CqRQGVXM8rNRUcvaIlERsRCPkFxTZLreNxbUZD9iGdzOlpRBTuiiihmQ016h21JM9A4G
- jwyGj4Zxy85Gw9kwU/tmLhCK0T7gLaFn/AmW9w3+ff7c2XeiphJrQ931xKmEdSXTCZLW
- uBlZTz2u6lxmhXRjnqyKbH2sZGZ4P4ZfdS8VK1472+7EKtMhU28GRJHpWcWYf1WeS0od
- xAEDsS16rGBabywio6wopMaKptiCbn+Hl+7FzrG5eMj0ZYHehK0xMV2AwYtt+N2/dEBk
- 0Jq9KpPSSDXp5NvSeLuXv6C2OwDXUlRTxjJuybq6egkCQhqm7exq3Nd1t4ouwdy5pdy5 xA== 
-Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3bps920u4m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Oct 2021 14:31:05 -0400
-Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
-        by ppma04dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19EIHqLW006006;
-        Thu, 14 Oct 2021 18:31:05 GMT
-Received: from b01cxnp23033.gho.pok.ibm.com (b01cxnp23033.gho.pok.ibm.com [9.57.198.28])
-        by ppma04dal.us.ibm.com with ESMTP id 3bkeq8r5ba-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 14 Oct 2021 18:31:05 +0000
-Received: from b01ledav003.gho.pok.ibm.com (b01ledav003.gho.pok.ibm.com [9.57.199.108])
-        by b01cxnp23033.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19EIV4N114090580
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 14 Oct 2021 18:31:04 GMT
-Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2EFD5B2066;
-        Thu, 14 Oct 2021 18:31:04 +0000 (GMT)
-Received: from b01ledav003.gho.pok.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 8EC78B2068;
-        Thu, 14 Oct 2021 18:31:03 +0000 (GMT)
-Received: from oc6857751186.ibm.com (unknown [9.65.220.106])
-        by b01ledav003.gho.pok.ibm.com (Postfix) with ESMTP;
-        Thu, 14 Oct 2021 18:31:03 +0000 (GMT)
-Subject: Re: [PATCH v4 24/46] scsi: ibmvfc: Switch to attribute groups
+        id S231682AbhJNSwu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Oct 2021 14:52:50 -0400
+Received: from mga02.intel.com ([134.134.136.20]:61439 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231549AbhJNSwt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 Oct 2021 14:52:49 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10137"; a="214929301"
+X-IronPort-AV: E=Sophos;i="5.85,373,1624345200"; 
+   d="scan'208";a="214929301"
+Received: from fmsmga002.fm.intel.com ([10.253.24.26])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Oct 2021 11:50:44 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.85,373,1624345200"; 
+   d="scan'208";a="571508238"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by fmsmga002.fm.intel.com with ESMTP; 14 Oct 2021 11:50:41 -0700
+Subject: Re: [PATCH 1/1] scsi: ufs: core: Fix task management completion
+ timeout race
 To:     Bart Van Assche <bvanassche@acm.org>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Michael Ellerman <mpe@ellerman.id.au>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20211012233558.4066756-1-bvanassche@acm.org>
- <20211012233558.4066756-25-bvanassche@acm.org>
-From:   Tyrel Datwyler <tyreld@linux.ibm.com>
-Message-ID: <a1ac5d9a-5536-0be1-ad9a-f0cbbf060c85@linux.ibm.com>
-Date:   Thu, 14 Oct 2021 11:31:02 -0700
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        linux-scsi@vger.kernel.org
+References: <20211013150116.31158-1-adrian.hunter@intel.com>
+ <20211013150116.31158-2-adrian.hunter@intel.com>
+ <40259621-aac4-e69f-c230-6376bf4d3e36@acm.org>
+ <235af725-5346-d830-b62b-21b729aa8703@intel.com>
+ <58b1d411-cb88-468b-e1a7-f7c2f04c8333@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <8782c443-709c-5d62-c0f9-0fbf98745747@intel.com>
+Date:   Thu, 14 Oct 2021 21:50:40 +0300
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <20211012233558.4066756-25-bvanassche@acm.org>
+In-Reply-To: <58b1d411-cb88-468b-e1a7-f7c2f04c8333@acm.org>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: yjcXZ_NmN9VUcsthmgab0nduL0pVJ6zY
-X-Proofpoint-GUID: yjcXZ_NmN9VUcsthmgab0nduL0pVJ6zY
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-10-14_09,2021-10-14_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 mlxlogscore=999
- lowpriorityscore=0 spamscore=0 clxscore=1015 priorityscore=1501
- suspectscore=0 malwarescore=0 phishscore=0 mlxscore=0 bulkscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2110140104
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/12/21 4:35 PM, Bart Van Assche wrote:
-> struct device supports attribute groups directly but does not support
-> struct device_attribute directly. Hence switch to attribute groups.
+On 14/10/2021 19:47, Bart Van Assche wrote:
+> On 10/13/21 11:02 PM, Adrian Hunter wrote:
+>> On 14/10/2021 07:14, Bart Van Assche wrote:
+>>> Wouldn't it be better to keep the code that clears req->end_io_data
+>>> and to change complete(c) into if(c) complete(c) in
+>>> ufshcd_tmc_handler()?
+>>
+>> If that were needed, it would imply the synchronization was broken
+>> i.e. why are we referencing a request that has already been through
+>> blk_put_request()?
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
+> The scenario I'm worried about is as follows:
+> * __ufshcd_issue_tm_cmd() issues a task management function.
+> * No completion is received before TM_CMD_TIMEOUT has expired (100 ms).
+> * ufshcd_clear_tm_cmd() fails.
+> * The TMF completes, ufshcd_tmc_handler() is called and that function calls complete(req->end_io_data).
+> 
+> Can this happen?
 
-Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
+No because the tag's bit is cleared from outstanding_tasks before blk_put_request() and
+access to outstanding_tasks is protected by host_lock in both __ufshcd_issue_tm_cmd()
+and ufshcd_clear_tm_cmd().
+
+> 
+> I agree that this scenario involves completion of a request that has already been through blk_put_request().
+> 
+> Thanks,
+> 
+> Bart.
 
