@@ -2,92 +2,72 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 780C7C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 16:47:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 762DCC43217
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 17:04:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5844461108
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 16:47:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 55FCA611AD
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 17:04:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232370AbhJNQti (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Oct 2021 12:49:38 -0400
-Received: from mail-pl1-f175.google.com ([209.85.214.175]:36430 "EHLO
-        mail-pl1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232078AbhJNQth (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Oct 2021 12:49:37 -0400
-Received: by mail-pl1-f175.google.com with SMTP id f21so4578977plb.3
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Oct 2021 09:47:32 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=SnT1bDgVWQThUZIz7cIhy4mGNISUU2pngNrwF1Nwvy8=;
-        b=JWzoSANhHlARbkXv5Ik5fr8PFWXzJA+W+3W3EgGfy/Czzkt8wSfSujxEdbYoE9cMJ6
-         LPxHPEdtR9AtMYglrlhv9HWi0MzINzp9pfzERzcZ99Q6kcsJqz5TtRu4D/by5STcD5LJ
-         hRnpU2zhPmamQzMYdXq0wlDQIj8t6N4W7tFkGax/iaF7S6LXYpRgJHKjjMkCShucMFBd
-         PDEBGhXcv38InBxGZ7gnQvWRzhpdVf41SxdNIK/Oa/XJGtgTvBORelMazdvntZzfVg3k
-         PYCqa4f+6dCpGxAZ28n6CYT3RcNJDVMRukRAU3sf4daFVGlX5EeYdFM09u7U39rD3UTd
-         kU7Q==
-X-Gm-Message-State: AOAM530oTwIqZ1MqHKLfYMLQ8NILguKjcFFKKywxkd7jQyi22MAC/wT9
-        M4ORv7dK0fvHUILiUtKNTaN3/ICkeXE=
-X-Google-Smtp-Source: ABdhPJwOwj1EdUudT4WzOJfhO/RR6GrsFW6Ta8I9N3J7Vgel4wR2pUquhXZdySlmZGJ3PLzNaAj5RA==
-X-Received: by 2002:a17:902:f691:b0:13f:2034:7613 with SMTP id l17-20020a170902f69100b0013f20347613mr6047412plg.81.1634230051544;
-        Thu, 14 Oct 2021 09:47:31 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:689a:4b1f:cd10:549b])
-        by smtp.gmail.com with ESMTPSA id v20sm3125136pff.171.2021.10.14.09.47.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 14 Oct 2021 09:47:31 -0700 (PDT)
-Subject: Re: [PATCH 1/1] scsi: ufs: core: Fix task management completion
- timeout race
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        linux-scsi@vger.kernel.org
-References: <20211013150116.31158-1-adrian.hunter@intel.com>
- <20211013150116.31158-2-adrian.hunter@intel.com>
- <40259621-aac4-e69f-c230-6376bf4d3e36@acm.org>
- <235af725-5346-d830-b62b-21b729aa8703@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <58b1d411-cb88-468b-e1a7-f7c2f04c8333@acm.org>
-Date:   Thu, 14 Oct 2021 09:47:29 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+        id S233255AbhJNRGw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Oct 2021 13:06:52 -0400
+Received: from smtp.hosts.co.uk ([85.233.160.19]:54728 "EHLO smtp.hosts.co.uk"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S233025AbhJNRGv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 14 Oct 2021 13:06:51 -0400
+X-Greylist: delayed 5331 seconds by postgrey-1.27 at vger.kernel.org; Thu, 14 Oct 2021 13:06:49 EDT
+Received: from host86-155-223-151.range86-155.btcentralplus.com ([86.155.223.151] helo=[192.168.1.65])
+        by smtp.hosts.co.uk with esmtpa (Exim)
+        (envelope-from <antlists@youngman.org.uk>)
+        id 1mb2lr-0006Lw-DM; Thu, 14 Oct 2021 16:35:51 +0100
+Subject: Re: don't use ->bd_inode to access the block device size
+To:     Kees Cook <keescook@chromium.org>,
+        Dave Kleikamp <dave.kleikamp@oracle.com>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-mtd@lists.infradead.org" <linux-mtd@lists.infradead.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "jfs-discussion@lists.sourceforge.net" 
+        <jfs-discussion@lists.sourceforge.net>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "linux-nilfs@vger.kernel.org" <linux-nilfs@vger.kernel.org>,
+        "linux-ntfs-dev@lists.sourceforge.net" 
+        <linux-ntfs-dev@lists.sourceforge.net>,
+        "ntfs3@lists.linux.dev" <ntfs3@lists.linux.dev>,
+        "reiserfs-devel@vger.kernel.org" <reiserfs-devel@vger.kernel.org>
+References: <20211013051042.1065752-1-hch@lst.de>
+ <20211014062844.GA25448@lst.de>
+ <3AB8052D-DD45-478B-85F2-BFBEC1C7E9DF@tuxera.com>
+ <a5eb3c18-deb2-6539-cc24-57e6d5d3500c@oracle.com>
+ <202110140813.44C95229@keescook>
+From:   Wol <antlists@youngman.org.uk>
+Message-ID: <e3d2f358-be1a-3413-fdb8-2e86718cde3e@youngman.org.uk>
+Date:   Thu, 14 Oct 2021 16:35:49 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <235af725-5346-d830-b62b-21b729aa8703@intel.com>
+In-Reply-To: <202110140813.44C95229@keescook>
 Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Language: en-GB
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/13/21 11:02 PM, Adrian Hunter wrote:
-> On 14/10/2021 07:14, Bart Van Assche wrote:
->> Wouldn't it be better to keep the code that clears req->end_io_data
->> and to change complete(c) into if(c) complete(c) in
->> ufshcd_tmc_handler()?
-> 
-> If that were needed, it would imply the synchronization was broken
-> i.e. why are we referencing a request that has already been through
-> blk_put_request()?
+On 14/10/2021 16:14, Kees Cook wrote:
+>> I don't really mind bdev_size since it's analogous to i_size, but
+>> bdev_nr_bytes seems good to me.
 
-The scenario I'm worried about is as follows:
-* __ufshcd_issue_tm_cmd() issues a task management function.
-* No completion is received before TM_CMD_TIMEOUT has expired (100 ms).
-* ufshcd_clear_tm_cmd() fails.
-* The TMF completes, ufshcd_tmc_handler() is called and that function 
-calls complete(req->end_io_data).
+> I much prefer bdev_nr_bytes(), as "size" has no units.
 
-Can this happen?
+Does it mean size IN bytes, or size OF A byte? :-)
 
-I agree that this scenario involves completion of a request that has 
-already been through blk_put_request().
-
-Thanks,
-
-Bart.
+Cheers,
+Wol
