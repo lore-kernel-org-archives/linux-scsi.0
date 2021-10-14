@@ -2,126 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50061C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 15:16:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 780C7C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 16:47:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3125560F4A
-	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 15:16:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5844461108
+	for <linux-scsi@archiver.kernel.org>; Thu, 14 Oct 2021 16:47:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232277AbhJNPSf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 14 Oct 2021 11:18:35 -0400
-Received: from mail.kernel.org ([198.145.29.99]:34526 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S231171AbhJNPSd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 14 Oct 2021 11:18:33 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id 06D8E60F4A
-        for <linux-scsi@vger.kernel.org>; Thu, 14 Oct 2021 15:16:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1634224589;
-        bh=w0/hLQ+VwUM+fNkBNxEtuEj5PoofbclvtfJOulJF8M4=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=AGZcNzSiZJA0m4gE1rw46PBuPaRtsQybmws0IFwlp9JgkSq4jWcFv1JD4wbbVw3PK
-         0B7QTG9WlwxBZWwlAKpzy4eyOkL8nMAAavuPjqwAYOEnWqiqv8pYb4Cgk0M5GJHnq9
-         UprlpUUt1nSg8Q02xVbSDhniw7u4GbmpHV5Chn6DF89KL6l3XsY3L/st9bv7m/+sa3
-         GqqvnhvtNVwnc9GOOjaaEbC2v8XAygBzEUmVsC0Uu7emlPGk4gRTP81hvyoQK5lvmQ
-         d7ElgP6eF3LXlhBRBONnDQqWc2BudcS6J5YXT8KbJteChzQJ/dsTJ8XCPwaIgvrTIV
-         xUgiFGPK6ny7g==
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 214711] Information leak from kernel to user space in
- scsi_ioctl.c
-Date:   Thu, 14 Oct 2021 15:16:28 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: bao00065@umn.edu
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-214711-11613-sU6xQ4PITD@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-214711-11613@https.bugzilla.kernel.org/>
-References: <bug-214711-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S232370AbhJNQti (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 14 Oct 2021 12:49:38 -0400
+Received: from mail-pl1-f175.google.com ([209.85.214.175]:36430 "EHLO
+        mail-pl1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232078AbhJNQth (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Oct 2021 12:49:37 -0400
+Received: by mail-pl1-f175.google.com with SMTP id f21so4578977plb.3
+        for <linux-scsi@vger.kernel.org>; Thu, 14 Oct 2021 09:47:32 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=SnT1bDgVWQThUZIz7cIhy4mGNISUU2pngNrwF1Nwvy8=;
+        b=JWzoSANhHlARbkXv5Ik5fr8PFWXzJA+W+3W3EgGfy/Czzkt8wSfSujxEdbYoE9cMJ6
+         LPxHPEdtR9AtMYglrlhv9HWi0MzINzp9pfzERzcZ99Q6kcsJqz5TtRu4D/by5STcD5LJ
+         hRnpU2zhPmamQzMYdXq0wlDQIj8t6N4W7tFkGax/iaF7S6LXYpRgJHKjjMkCShucMFBd
+         PDEBGhXcv38InBxGZ7gnQvWRzhpdVf41SxdNIK/Oa/XJGtgTvBORelMazdvntZzfVg3k
+         PYCqa4f+6dCpGxAZ28n6CYT3RcNJDVMRukRAU3sf4daFVGlX5EeYdFM09u7U39rD3UTd
+         kU7Q==
+X-Gm-Message-State: AOAM530oTwIqZ1MqHKLfYMLQ8NILguKjcFFKKywxkd7jQyi22MAC/wT9
+        M4ORv7dK0fvHUILiUtKNTaN3/ICkeXE=
+X-Google-Smtp-Source: ABdhPJwOwj1EdUudT4WzOJfhO/RR6GrsFW6Ta8I9N3J7Vgel4wR2pUquhXZdySlmZGJ3PLzNaAj5RA==
+X-Received: by 2002:a17:902:f691:b0:13f:2034:7613 with SMTP id l17-20020a170902f69100b0013f20347613mr6047412plg.81.1634230051544;
+        Thu, 14 Oct 2021 09:47:31 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:689a:4b1f:cd10:549b])
+        by smtp.gmail.com with ESMTPSA id v20sm3125136pff.171.2021.10.14.09.47.30
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 14 Oct 2021 09:47:31 -0700 (PDT)
+Subject: Re: [PATCH 1/1] scsi: ufs: core: Fix task management completion
+ timeout race
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        linux-scsi@vger.kernel.org
+References: <20211013150116.31158-1-adrian.hunter@intel.com>
+ <20211013150116.31158-2-adrian.hunter@intel.com>
+ <40259621-aac4-e69f-c230-6376bf4d3e36@acm.org>
+ <235af725-5346-d830-b62b-21b729aa8703@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <58b1d411-cb88-468b-e1a7-f7c2f04c8333@acm.org>
+Date:   Thu, 14 Oct 2021 09:47:29 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
+In-Reply-To: <235af725-5346-d830-b62b-21b729aa8703@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D214711
+On 10/13/21 11:02 PM, Adrian Hunter wrote:
+> On 14/10/2021 07:14, Bart Van Assche wrote:
+>> Wouldn't it be better to keep the code that clears req->end_io_data
+>> and to change complete(c) into if(c) complete(c) in
+>> ufshcd_tmc_handler()?
+> 
+> If that were needed, it would imply the synchronization was broken
+> i.e. why are we referencing a request that has already been through
+> blk_put_request()?
 
---- Comment #3 from Andrew Bao (bao00065@umn.edu) ---
-Hi Bart,
-Yes, It is an information leak.
+The scenario I'm worried about is as follows:
+* __ufshcd_issue_tm_cmd() issues a task management function.
+* No completion is received before TM_CMD_TIMEOUT has expired (100 ms).
+* ufshcd_clear_tm_cmd() fails.
+* The TMF completes, ufshcd_tmc_handler() is called and that function 
+calls complete(req->end_io_data).
 
-"my understanding of the C standard is that a compiler is required to
-zero-initialize members that have not been mentioned in an initializer list.
-From the ANSI C 202x d"raft: "The initialization shall occur in initializer
-list order, each initializer provided for a particular subobject overriding=
- any
-previously listed initializer for the same subobject; all subobjects that a=
-re
-not
-initialized explicitly shall be initialized implicitly the same as objects =
-that
-have static storage duration."
+Can this happen?
 
-I am wondering in what condition the compiler will zero-initialize the fiel=
-d in
-a struct. And what is the initializer in the context? Let say we have a str=
-uct
-foo:
+I agree that this scenario involves completion of a request that has 
+already been through blk_put_request().
 
-struct foo{
-       int  a;
-       int b;
-       int c;
-};
-method 1:
+Thanks,
 
-struct foo f;=20
-f.a =3D 1;
-f.b =3D 2;
-
-In method 1, will the compiler zero-initialize the field f.c?
-
-method 2:
-struct foo f =3D {
-                        .a      =3D   1
-                        .b      =3D   2
-
-                };
-In method 2, will the compiler zero-initialize the field f.c?
-
-
-By the way,
-struct compat_cdrom_generic_command {
-        unsigned char   cmd[CDROM_PACKET_SIZE];
-        compat_caddr_t  buffer;
-        compat_uint_t   buflen;
-        compat_int_t    stat;
-        compat_caddr_t  sense;
-        unsigned char   data_direction;
-        unsigned char   pad[3];
-        compat_int_t    quiet;
-        compat_int_t    timeout;
-        compat_caddr_t  unused;
-};
-If this struct does not declare unsigned char pad[3] in order to fill with
-padding, will the compiler zero-initialize 3 bytes holes for this struct?
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Bart.
