@@ -2,52 +2,52 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 121DDC4167E
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 16:58:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B74E4C43217
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 16:59:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EEE2D611C1
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 16:58:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1A5D611ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 16:59:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241865AbhJORAS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Oct 2021 13:00:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34424 "EHLO
+        id S241879AbhJORBq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Oct 2021 13:01:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34776 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237693AbhJORAP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 13:00:15 -0400
-Received: from mail-pf1-x431.google.com (mail-pf1-x431.google.com [IPv6:2607:f8b0:4864:20::431])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61EEDC06176D
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Oct 2021 09:58:08 -0700 (PDT)
-Received: by mail-pf1-x431.google.com with SMTP id 187so8847210pfc.10
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Oct 2021 09:58:08 -0700 (PDT)
+        with ESMTP id S241885AbhJORBo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 13:01:44 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 97197C06176C
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Oct 2021 09:59:37 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id s136so5882215pgs.4
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Oct 2021 09:59:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=chromium.org; s=google;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to;
-        bh=D4ik1Lt2fUu7rVQyF8CllyYkKQv1Uz9xzDA6N8pwEt0=;
-        b=Wa0EACpWQ8IomuSobKiAJDXNIo9H/HSTHk3bhesUYAYHCsUAKK+Bjrkw13ye1TxZcf
-         TuQa8RCxeCC8IVmjTZdx5iQYLmOHoIRbNEFY9PFnqm6LcjTjI/8URYdBHdOJCis8Hcgz
-         7OkB4Z6yrhdMDXf4pPYVZP18IZMykjhm0o16E=
+        bh=KeY5Iupdn4Pa1b1ywzkz23CB7y+Fa3Cfufu6RZZIPYI=;
+        b=VfHpzO3tYcRdDu0YlVkKzx/ciItoc9jkR356sB11SejVmPNb6TbARwblxJNv77Pw+N
+         f8l5X6Xk6dZ16M5aIo4oyfynzDADoHwHbbl+nEWOg/Hpm3DtdjVVH1S12Q1eI7nmyOz6
+         dWXhnsHrWbhYXafHG9GJqGCTKk1oPJdLtiQOs=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to;
-        bh=D4ik1Lt2fUu7rVQyF8CllyYkKQv1Uz9xzDA6N8pwEt0=;
-        b=tLp6pLaU2sGfIErtGsPz1eVKU1jsQ6hpUbKgnO/NGjivJC2kb/2stmxLeJhfn76Q5l
-         ClZNZTInFVhy4jxpb1oMANf/Q+73BR90WpBnJygfWgEo1cmhjMPadNKqJjnzRPnsJTa2
-         /tY4V6BMD8QAcCD9Sz+tBWFxVRv4bPlCVCZTNflViZuK2y/b2rUQp5z6ph6nrSwwCuj5
-         iF0Puy7u9y20FCGNzm0BnFbnl8OkdbvDa9a0eGLWG8oJ3lhjxgR3M3R1D2FnR72uQyT9
-         00OEH9VWlXmML0rwPiewDpurCsItlG27htInMtElOlV6XhPYx3m9zC2sEz+qIgrwZRu/
-         xiig==
-X-Gm-Message-State: AOAM531bmFPRxpd5J6+k+PU3Z61vizYACiiVhm9mIgRRbvLJ9u4oJ769
-        rowPtEVtEdtZkTSgxCrTp6DyUw==
-X-Google-Smtp-Source: ABdhPJwjs+d5iHomMRfB84u/9uN/BXfrv3rJikQOTGFeQP4iBMjOf7nvTwY+G4DJFOV8bNrfnz+CuA==
-X-Received: by 2002:a63:4766:: with SMTP id w38mr10056849pgk.104.1634317087874;
-        Fri, 15 Oct 2021 09:58:07 -0700 (PDT)
+        bh=KeY5Iupdn4Pa1b1ywzkz23CB7y+Fa3Cfufu6RZZIPYI=;
+        b=jOLabWMqATa/Gt/mWlQLRhNzCwGn7dpndWvnCIg7j4fWl7FTOjy4+VRGRYUtuX8jD2
+         RdMSbEnv5GkGAdBvvSop0aibJXcRf/1jd3Y5HhgB9ubgXOvE8NIygb/KAeh7m2L6D2bu
+         UmrXAB3xPdJ5bEC3UZqUcphTuNk8uOuObpZm0Uw3EdsPpOkJ8kdupu8lcRUMbQC2zveB
+         FQSrX2a5ifYMTdr6MQZrEOFmrd6jjE0VE42bRcjgC/IDaw8QjWgwi/Mmu7RuQbsJ0lhY
+         FH7Ik0Q/LV2O8LK8I94ImqO4FeIsZk4hSvnCRT64+NaiBDO+jGqJeEIn1GLVblnphnKj
+         aY9Q==
+X-Gm-Message-State: AOAM530jwXifwNzYZ+V9wKx/SmSoy1UyBvknH4pAoed10nKujjs3zan1
+        HWkB7qx5Ek+qe307eLdsvI+1/Q==
+X-Google-Smtp-Source: ABdhPJyZcIPxqI061aZSIz4/wOG8MIjCzx1/IGr1O74KMeY0yclhOMeVn1PfQJDWXy+egSNKM0RvAw==
+X-Received: by 2002:a62:1bd2:0:b0:44c:db2e:5a88 with SMTP id b201-20020a621bd2000000b0044cdb2e5a88mr13192615pfb.29.1634317177017;
+        Fri, 15 Oct 2021 09:59:37 -0700 (PDT)
 Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id e1sm5367341pgi.43.2021.10.15.09.58.07
+        by smtp.gmail.com with ESMTPSA id t38sm1001799pfg.102.2021.10.15.09.59.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Oct 2021 09:58:07 -0700 (PDT)
-Date:   Fri, 15 Oct 2021 09:58:06 -0700
+        Fri, 15 Oct 2021 09:59:35 -0700 (PDT)
+Date:   Fri, 15 Oct 2021 09:59:35 -0700
 From:   Kees Cook <keescook@chromium.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
@@ -69,29 +69,25 @@ Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
         linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
         jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
         linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
-Subject: Re: [PATCH 25/30] block: add a sb_bdev_nr_blocks helper
-Message-ID: <202110150957.44EE74B5@keescook>
+        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org,
+        Anand Jain <anand.jain@oracle.com>,
+        Chaitanya Kulkarni <kch@nvidia.com>
+Subject: Re: [PATCH 12/30] btrfs: use bdev_nr_bytes instead of open coding it
+Message-ID: <202110150959.D3A3EBD2DD@keescook>
 References: <20211015132643.1621913-1-hch@lst.de>
- <20211015132643.1621913-26-hch@lst.de>
+ <20211015132643.1621913-13-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211015132643.1621913-26-hch@lst.de>
+In-Reply-To: <20211015132643.1621913-13-hch@lst.de>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 15, 2021 at 03:26:38PM +0200, Christoph Hellwig wrote:
-> Add a helper to return the size of sb->s_bdev in sb->s_blocksize_bits
-> based unites.  Note that SECTOR_SHIFT has to be open coded due to
-> include dependency issues for now, but I have a plan to sort that out
-> eventually.
+On Fri, Oct 15, 2021 at 03:26:25PM +0200, Christoph Hellwig wrote:
+> Use the proper helper to read the block device size.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-You can adjust this changelog to remove the note about SECTOR_SHIFT
-now. :)
 
 Reviewed-by: Kees Cook <keescook@chromium.org>
 
