@@ -2,914 +2,157 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF63C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 14:33:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5A14C4321E
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 14:37:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1AEF1611C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 14:33:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A222A611ED
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 14:37:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240327AbhJOOfb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Oct 2021 10:35:31 -0400
-Received: from smtp-out2.suse.de ([195.135.220.29]:35488 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S237347AbhJOOfb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 10:35:31 -0400
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id 57F311FD50;
-        Fri, 15 Oct 2021 14:33:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=susede1;
-        t=1634308403; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-         mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-        bh=F3kepskjvyVwimHlSrmq0OiX2n5/35tVfRLzRvQBZrY=;
-        b=G5s/oPCFmUkt02ZywkeXQOrBt4yDDlAWOfppvdIBUS8PYDO+z4KGDSplzDco9Nz3zVf/6o
-        RvJdt8Wm2ohB2X+XNZpK1CfP6Lkuhcu4AzaUzdCapZHi5quYK0Tumx5hA9Cx6I/6ZZKSEq
-        HexfCNLo1+s1DaWDtomRFBJOnDrwaX8=
-Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
-        (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id 1794813C29;
-        Fri, 15 Oct 2021 14:33:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([192.168.254.65])
-        by imap2.suse-dmz.suse.de with ESMTPSA
-        id qn9+BDORaWFlTgAAMHmgww
-        (envelope-from <jgross@suse.com>); Fri, 15 Oct 2021 14:33:23 +0000
-From:   Juergen Gross <jgross@suse.com>
-To:     xen-devel@lists.xenproject.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, Juergen Gross <jgross@suse.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Stefano Stabellini <sstabellini@kernel.org>
-Subject: [PATCH] xen: fix wrong SPDX headers of Xen related headers
-Date:   Fri, 15 Oct 2021 16:33:12 +0200
-Message-Id: <20211015143312.29900-1-jgross@suse.com>
-X-Mailer: git-send-email 2.26.2
+        id S240541AbhJOOjG convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Oct 2021 10:39:06 -0400
+Received: from mgw-01.mpynet.fi ([82.197.21.90]:38372 "EHLO mgw-01.mpynet.fi"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S237521AbhJOOjD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Oct 2021 10:39:03 -0400
+Received: from pps.filterd (mgw-01.mpynet.fi [127.0.0.1])
+        by mgw-01.mpynet.fi (8.16.0.43/8.16.0.43) with SMTP id 19FEWINE065735;
+        Fri, 15 Oct 2021 17:35:41 +0300
+Received: from ex13.tuxera.com (ex13.tuxera.com [178.16.184.72])
+        by mgw-01.mpynet.fi with ESMTP id 3bqa6fr1mk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Fri, 15 Oct 2021 17:35:41 +0300
+Received: from tuxera-exch.ad.tuxera.com (10.20.48.11) by
+ tuxera-exch.ad.tuxera.com (10.20.48.11) with Microsoft SMTP Server (TLS) id
+ 15.0.1497.23; Fri, 15 Oct 2021 17:35:40 +0300
+Received: from tuxera-exch.ad.tuxera.com ([fe80::552a:f9f0:68c3:d789]) by
+ tuxera-exch.ad.tuxera.com ([fe80::552a:f9f0:68c3:d789%12]) with mapi id
+ 15.00.1497.023; Fri, 15 Oct 2021 17:35:40 +0300
+From:   Anton Altaparmakov <anton@tuxera.com>
+To:     Christoph Hellwig <hch@lst.de>
+CC:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
+        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
+        David Sterba <dsterba@suse.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        "Konstantin Komarov" <almaz.alexandrovich@paragon-software.com>,
+        Kees Cook <keescook@chromium.org>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Jan Kara <jack@suse.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "drbd-dev@lists.linbit.com" <drbd-dev@lists.linbit.com>,
+        "linux-bcache@vger.kernel.org" <linux-bcache@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+        "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+        "jfs-discussion@lists.sourceforge.net" 
+        <jfs-discussion@lists.sourceforge.net>,
+        "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>,
+        "linux-nilfs@vger.kernel.org" <linux-nilfs@vger.kernel.org>,
+        "linux-ntfs-dev@lists.sourceforge.net" 
+        <linux-ntfs-dev@lists.sourceforge.net>,
+        "ntfs3@lists.linux.dev" <ntfs3@lists.linux.dev>,
+        "reiserfs-devel@vger.kernel.org" <reiserfs-devel@vger.kernel.org>
+Subject: Re: [PATCH 28/30] ntfs: use sb_bdev_nr_blocks
+Thread-Topic: [PATCH 28/30] ntfs: use sb_bdev_nr_blocks
+Thread-Index: AQHXwch+sOYTA5n1EU2k5d07nGAE/6vT7f2A
+Date:   Fri, 15 Oct 2021 14:35:40 +0000
+Message-ID: <7644804B-2081-4A1E-A40D-9A5C7BF72E2E@tuxera.com>
+References: <20211015132643.1621913-1-hch@lst.de>
+ <20211015132643.1621913-29-hch@lst.de>
+In-Reply-To: <20211015132643.1621913-29-hch@lst.de>
+Accept-Language: en-GB, en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-messagesentrepresentingtype: 1
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [109.154.241.177]
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <3668CC17B52D274985AE4DAF6C11620E@ex13.tuxera.com>
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: 4ZKrI-UQqOuYdNTfa7YqNKQX-GuzVYXg
+X-Proofpoint-GUID: 4ZKrI-UQqOuYdNTfa7YqNKQX-GuzVYXg
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:6.0.425,18.0.790
+ definitions=2021-10-15_04:2021-10-14,2021-10-15 signatures=0
+X-Proofpoint-Spam-Details: rule=mpy_notspam policy=mpy score=0 phishscore=0 mlxlogscore=999
+ bulkscore=0 malwarescore=0 mlxscore=0 spamscore=0 adultscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109230001 definitions=main-2110150089
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit b24413180f5600 ("License cleanup: add SPDX GPL-2.0 license
-identifier to files with no license") was meant to do a tree-wide
-cleanup for files without any license information by adding a SPDX
-GPL-2.0 line to them.
+Hi Christoph,
 
-Unfortunately this was applied even to several Xen-related headers
-which have been originally under the MIT license, but obviously have
-been copied to the Linux tree from the Xen project without keeping the
-license boiler plate as required.
+Looks good, thank you.
 
-Correct that by changing the license of those files back to "MIT".
+Best regards,
 
-Some files still contain the MIT license text. Replace that by the
-related SPDX line.
+	Anton
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
- include/xen/interface/callback.h       | 19 +------------------
- include/xen/interface/elfnote.h        | 19 +------------------
- include/xen/interface/event_channel.h  |  2 +-
- include/xen/interface/features.h       |  2 +-
- include/xen/interface/grant_table.h    | 19 +------------------
- include/xen/interface/hvm/dm_op.h      | 19 +------------------
- include/xen/interface/hvm/hvm_op.h     | 20 +-------------------
- include/xen/interface/hvm/hvm_vcpu.h   | 19 +------------------
- include/xen/interface/hvm/params.h     | 20 +-------------------
- include/xen/interface/hvm/start_info.h | 19 +------------------
- include/xen/interface/io/9pfs.h        | 19 +------------------
- include/xen/interface/io/blkif.h       |  2 +-
- include/xen/interface/io/console.h     |  2 +-
- include/xen/interface/io/displif.h     | 19 +------------------
- include/xen/interface/io/fbif.h        | 19 +------------------
- include/xen/interface/io/kbdif.h       | 19 +------------------
- include/xen/interface/io/netif.h       | 19 +------------------
- include/xen/interface/io/pciif.h       | 19 +------------------
- include/xen/interface/io/protocols.h   |  2 +-
- include/xen/interface/io/pvcalls.h     |  2 ++
- include/xen/interface/io/ring.h        | 19 +------------------
- include/xen/interface/io/sndif.h       | 19 +------------------
- include/xen/interface/io/vscsiif.h     | 19 +------------------
- include/xen/interface/io/xenbus.h      |  2 +-
- include/xen/interface/io/xs_wire.h     |  2 +-
- include/xen/interface/memory.h         |  2 +-
- include/xen/interface/nmi.h            |  2 +-
- include/xen/interface/physdev.h        | 20 +-------------------
- include/xen/interface/platform.h       | 19 +------------------
- include/xen/interface/sched.h          | 19 +------------------
- include/xen/interface/vcpu.h           | 19 +------------------
- include/xen/interface/version.h        |  2 +-
- include/xen/interface/xen-mca.h        |  1 +
- include/xen/interface/xen.h            | 19 +------------------
- include/xen/interface/xenpmu.h         |  2 +-
- 35 files changed, 36 insertions(+), 410 deletions(-)
+> On 15 Oct 2021, at 14:26, Christoph Hellwig <hch@lst.de> wrote:
+> 
+> Use the sb_bdev_nr_blocks helper instead of open coding it and clean up
+> ntfs_fill_super a bit by moving an assignment a little earlier that has
+> no negative side effects.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Kees Cook <keescook@chromium.org>
 
-diff --git a/include/xen/interface/callback.h b/include/xen/interface/callback.h
-index dc3193f4b581..c67822a25ea6 100644
---- a/include/xen/interface/callback.h
-+++ b/include/xen/interface/callback.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * callback.h
-  *
-  * Register guest OS callbacks with Xen.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2006, Ian Campbell
-  */
- 
-diff --git a/include/xen/interface/elfnote.h b/include/xen/interface/elfnote.h
-index 449bd383cb76..38deb1214613 100644
---- a/include/xen/interface/elfnote.h
-+++ b/include/xen/interface/elfnote.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * elfnote.h
-  *
-  * Definitions used for the Xen ELF notes.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2006, Ian Campbell, XenSource Ltd.
-  */
- 
-diff --git a/include/xen/interface/event_channel.h b/include/xen/interface/event_channel.h
-index cf80e338fbb0..5f8da466e8a9 100644
---- a/include/xen/interface/event_channel.h
-+++ b/include/xen/interface/event_channel.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * event_channel.h
-  *
-diff --git a/include/xen/interface/features.h b/include/xen/interface/features.h
-index 5a7bdefa06a8..53f760378e39 100644
---- a/include/xen/interface/features.h
-+++ b/include/xen/interface/features.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * features.h
-  *
-diff --git a/include/xen/interface/grant_table.h b/include/xen/interface/grant_table.h
-index 7fb7112d667c..3eeabbc7ee09 100644
---- a/include/xen/interface/grant_table.h
-+++ b/include/xen/interface/grant_table.h
-@@ -1,27 +1,10 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * grant_table.h
-  *
-  * Interface for granting foreign access to page frames, and receiving
-  * page-ownership transfers.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2004, K A Fraser
-  */
- 
-diff --git a/include/xen/interface/hvm/dm_op.h b/include/xen/interface/hvm/dm_op.h
-index ee9e480bc559..08d972f87c7b 100644
---- a/include/xen/interface/hvm/dm_op.h
-+++ b/include/xen/interface/hvm/dm_op.h
-@@ -1,23 +1,6 @@
-+/* SPDX-License-Identifier: MIT */
- /*
-  * Copyright (c) 2016, Citrix Systems Inc
-- *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-  */
- 
- #ifndef __XEN_PUBLIC_HVM_DM_OP_H__
-diff --git a/include/xen/interface/hvm/hvm_op.h b/include/xen/interface/hvm/hvm_op.h
-index 25d945ef17de..f3097e79bb03 100644
---- a/include/xen/interface/hvm/hvm_op.h
-+++ b/include/xen/interface/hvm/hvm_op.h
-@@ -1,22 +1,4 @@
--/*
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- */
-+/* SPDX-License-Identifier: MIT */
- 
- #ifndef __XEN_PUBLIC_HVM_HVM_OP_H__
- #define __XEN_PUBLIC_HVM_HVM_OP_H__
-diff --git a/include/xen/interface/hvm/hvm_vcpu.h b/include/xen/interface/hvm/hvm_vcpu.h
-index bfc2138e0bf5..cbf93493275c 100644
---- a/include/xen/interface/hvm/hvm_vcpu.h
-+++ b/include/xen/interface/hvm/hvm_vcpu.h
-@@ -1,22 +1,5 @@
-+/* SPDX-License-Identifier: MIT */
- /*
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2015, Roger Pau Monne <roger.pau@citrix.com>
-  */
- 
-diff --git a/include/xen/interface/hvm/params.h b/include/xen/interface/hvm/params.h
-index 4d61fc58d99d..4e2c94b3c466 100644
---- a/include/xen/interface/hvm/params.h
-+++ b/include/xen/interface/hvm/params.h
-@@ -1,22 +1,4 @@
--/*
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- */
-+/* SPDX-License-Identifier: MIT */
- 
- #ifndef __XEN_PUBLIC_HVM_PARAMS_H__
- #define __XEN_PUBLIC_HVM_PARAMS_H__
-diff --git a/include/xen/interface/hvm/start_info.h b/include/xen/interface/hvm/start_info.h
-index 50af9ea2ff1e..e33557c0b4e9 100644
---- a/include/xen/interface/hvm/start_info.h
-+++ b/include/xen/interface/hvm/start_info.h
-@@ -1,22 +1,5 @@
-+/* SPDX-License-Identifier: MIT */
- /*
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2016, Citrix Systems, Inc.
-  */
- 
-diff --git a/include/xen/interface/io/9pfs.h b/include/xen/interface/io/9pfs.h
-index 5b6c19dae5e2..f1a4c5ad2fd1 100644
---- a/include/xen/interface/io/9pfs.h
-+++ b/include/xen/interface/io/9pfs.h
-@@ -1,24 +1,7 @@
-+/* SPDX-License-Identifier: MIT */
- /*
-  * 9pfs.h -- Xen 9PFS transport
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (C) 2017 Stefano Stabellini <stefano@aporeto.com>
-  */
- 
-diff --git a/include/xen/interface/io/blkif.h b/include/xen/interface/io/blkif.h
-index 5e40041c7e95..ba1e9f5b630e 100644
---- a/include/xen/interface/io/blkif.h
-+++ b/include/xen/interface/io/blkif.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * blkif.h
-  *
-diff --git a/include/xen/interface/io/console.h b/include/xen/interface/io/console.h
-index 85ca8b02695a..cf17e89ed861 100644
---- a/include/xen/interface/io/console.h
-+++ b/include/xen/interface/io/console.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * console.h
-  *
-diff --git a/include/xen/interface/io/displif.h b/include/xen/interface/io/displif.h
-index d43ca0361f86..18417b017869 100644
---- a/include/xen/interface/io/displif.h
-+++ b/include/xen/interface/io/displif.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * displif.h
-  *
-  * Unified display device I/O interface for Xen guest OSes.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (C) 2016-2017 EPAM Systems Inc.
-  *
-  * Authors: Oleksandr Andrushchenko <oleksandr_andrushchenko@epam.com>
-diff --git a/include/xen/interface/io/fbif.h b/include/xen/interface/io/fbif.h
-index 974a51ed9165..60ca808cef97 100644
---- a/include/xen/interface/io/fbif.h
-+++ b/include/xen/interface/io/fbif.h
-@@ -1,24 +1,7 @@
-+/* SPDX-License-Identifier: MIT */
- /*
-  * fbif.h -- Xen virtual frame buffer device
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (C) 2005 Anthony Liguori <aliguori@us.ibm.com>
-  * Copyright (C) 2006 Red Hat, Inc., Markus Armbruster <armbru@redhat.com>
-  */
-diff --git a/include/xen/interface/io/kbdif.h b/include/xen/interface/io/kbdif.h
-index 5c7630d7376e..b8b08aa53325 100644
---- a/include/xen/interface/io/kbdif.h
-+++ b/include/xen/interface/io/kbdif.h
-@@ -1,24 +1,7 @@
-+/* SPDX-License-Identifier: MIT */
- /*
-  * kbdif.h -- Xen virtual keyboard/mouse
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (C) 2005 Anthony Liguori <aliguori@us.ibm.com>
-  * Copyright (C) 2006 Red Hat, Inc., Markus Armbruster <armbru@redhat.com>
-  */
-diff --git a/include/xen/interface/io/netif.h b/include/xen/interface/io/netif.h
-index 2194322c3c7f..cb0c1a25d5d4 100644
---- a/include/xen/interface/io/netif.h
-+++ b/include/xen/interface/io/netif.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * xen_netif.h
-  *
-  * Unified network-device I/O interface for Xen guest OSes.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2003-2004, Keir Fraser
-  */
- 
-diff --git a/include/xen/interface/io/pciif.h b/include/xen/interface/io/pciif.h
-index d9922ae36eb5..d1a87b62daae 100644
---- a/include/xen/interface/io/pciif.h
-+++ b/include/xen/interface/io/pciif.h
-@@ -1,24 +1,7 @@
-+/* SPDX-License-Identifier: MIT */
- /*
-  * PCI Backend/Frontend Common Data Structures & Macros
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  *   Author: Ryan Wilson <hap9@epoch.ncsc.mil>
-  */
- #ifndef __XEN_PCI_COMMON_H__
-diff --git a/include/xen/interface/io/protocols.h b/include/xen/interface/io/protocols.h
-index 6a89dc1bf225..22099bb4079f 100644
---- a/include/xen/interface/io/protocols.h
-+++ b/include/xen/interface/io/protocols.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- #ifndef __XEN_PROTOCOLS_H__
- #define __XEN_PROTOCOLS_H__
- 
-diff --git a/include/xen/interface/io/pvcalls.h b/include/xen/interface/io/pvcalls.h
-index ccf97b817e72..b6680fdbe2a8 100644
---- a/include/xen/interface/io/pvcalls.h
-+++ b/include/xen/interface/io/pvcalls.h
-@@ -1,3 +1,5 @@
-+/* SPDX-License-Identifier: MIT */
-+
- #ifndef __XEN_PUBLIC_IO_XEN_PVCALLS_H__
- #define __XEN_PUBLIC_IO_XEN_PVCALLS_H__
- 
-diff --git a/include/xen/interface/io/ring.h b/include/xen/interface/io/ring.h
-index b39cdbc522ec..2470ec45ebb2 100644
---- a/include/xen/interface/io/ring.h
-+++ b/include/xen/interface/io/ring.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * ring.h
-  *
-  * Shared producer-consumer ring macros.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Tim Deegan and Andrew Warfield November 2004.
-  */
- 
-diff --git a/include/xen/interface/io/sndif.h b/include/xen/interface/io/sndif.h
-index 2aac8f73614c..445657cdb1de 100644
---- a/include/xen/interface/io/sndif.h
-+++ b/include/xen/interface/io/sndif.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * sndif.h
-  *
-  * Unified sound-device I/O interface for Xen guest OSes.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (C) 2013-2015 GlobalLogic Inc.
-  * Copyright (C) 2016-2017 EPAM Systems Inc.
-  *
-diff --git a/include/xen/interface/io/vscsiif.h b/include/xen/interface/io/vscsiif.h
-index d07d7aca8d1c..1f6047d3de44 100644
---- a/include/xen/interface/io/vscsiif.h
-+++ b/include/xen/interface/io/vscsiif.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * vscsiif.h
-  *
-  * Based on the blkif.h code.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright(c) FUJITSU Limited 2008.
-  */
- 
-diff --git a/include/xen/interface/io/xenbus.h b/include/xen/interface/io/xenbus.h
-index fb8716112251..44456e2853fc 100644
---- a/include/xen/interface/io/xenbus.h
-+++ b/include/xen/interface/io/xenbus.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /*****************************************************************************
-  * xenbus.h
-  *
-diff --git a/include/xen/interface/io/xs_wire.h b/include/xen/interface/io/xs_wire.h
-index 1517c7e93a3a..d40a44f09b16 100644
---- a/include/xen/interface/io/xs_wire.h
-+++ b/include/xen/interface/io/xs_wire.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /*
-  * Details of the "wire" protocol between Xen Store Daemon and client
-  * library or guest kernel.
-diff --git a/include/xen/interface/memory.h b/include/xen/interface/memory.h
-index 447004861f00..1a371a825c55 100644
---- a/include/xen/interface/memory.h
-+++ b/include/xen/interface/memory.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * memory.h
-  *
-diff --git a/include/xen/interface/nmi.h b/include/xen/interface/nmi.h
-index 73d9b0a2974e..b665fdbef1fd 100644
---- a/include/xen/interface/nmi.h
-+++ b/include/xen/interface/nmi.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * nmi.h
-  *
-diff --git a/include/xen/interface/physdev.h b/include/xen/interface/physdev.h
-index 610dba9b620a..a237af867873 100644
---- a/include/xen/interface/physdev.h
-+++ b/include/xen/interface/physdev.h
-@@ -1,22 +1,4 @@
--/*
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- */
-+/* SPDX-License-Identifier: MIT */
- 
- #ifndef __XEN_PUBLIC_PHYSDEV_H__
- #define __XEN_PUBLIC_PHYSDEV_H__
-diff --git a/include/xen/interface/platform.h b/include/xen/interface/platform.h
-index 732efb08c3e1..655d92e803e1 100644
---- a/include/xen/interface/platform.h
-+++ b/include/xen/interface/platform.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * platform.h
-  *
-  * Hardware platform operations. Intended for use by domain-0 kernel.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2002-2006, K Fraser
-  */
- 
-diff --git a/include/xen/interface/sched.h b/include/xen/interface/sched.h
-index a4c4d735d781..4dac0634ffff 100644
---- a/include/xen/interface/sched.h
-+++ b/include/xen/interface/sched.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * sched.h
-  *
-  * Scheduler state interactions
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2005, Keir Fraser <keir@xensource.com>
-  */
- 
-diff --git a/include/xen/interface/vcpu.h b/include/xen/interface/vcpu.h
-index 504c71601511..c7cc28ad8d63 100644
---- a/include/xen/interface/vcpu.h
-+++ b/include/xen/interface/vcpu.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * vcpu.h
-  *
-  * VCPU initialisation, query, and hotplug.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2005, Keir Fraser <keir@xensource.com>
-  */
- 
-diff --git a/include/xen/interface/version.h b/include/xen/interface/version.h
-index 8772b552c006..37d6588873d6 100644
---- a/include/xen/interface/version.h
-+++ b/include/xen/interface/version.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * version.h
-  *
-diff --git a/include/xen/interface/xen-mca.h b/include/xen/interface/xen-mca.h
-index 7483a78d2425..464aa6b3a5f9 100644
---- a/include/xen/interface/xen-mca.h
-+++ b/include/xen/interface/xen-mca.h
-@@ -1,3 +1,4 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * arch-x86/mca.h
-  * Guest OS machine check interface to x86 Xen.
-diff --git a/include/xen/interface/xen.h b/include/xen/interface/xen.h
-index 5ee37a296481..5e9916939268 100644
---- a/include/xen/interface/xen.h
-+++ b/include/xen/interface/xen.h
-@@ -1,26 +1,9 @@
-+/* SPDX-License-Identifier: MIT */
- /******************************************************************************
-  * xen.h
-  *
-  * Guest OS interface to Xen.
-  *
-- * Permission is hereby granted, free of charge, to any person obtaining a copy
-- * of this software and associated documentation files (the "Software"), to
-- * deal in the Software without restriction, including without limitation the
-- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-- * sell copies of the Software, and to permit persons to whom the Software is
-- * furnished to do so, subject to the following conditions:
-- *
-- * The above copyright notice and this permission notice shall be included in
-- * all copies or substantial portions of the Software.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-- * DEALINGS IN THE SOFTWARE.
-- *
-  * Copyright (c) 2004, K A Fraser
-  */
- 
-diff --git a/include/xen/interface/xenpmu.h b/include/xen/interface/xenpmu.h
-index ad603eab24b3..e2ee73d91bd6 100644
---- a/include/xen/interface/xenpmu.h
-+++ b/include/xen/interface/xenpmu.h
-@@ -1,4 +1,4 @@
--/* SPDX-License-Identifier: GPL-2.0 */
-+/* SPDX-License-Identifier: MIT */
- #ifndef __XEN_PUBLIC_XENPMU_H__
- #define __XEN_PUBLIC_XENPMU_H__
- 
+Acked-by: Anton Altaparmakov <anton@tuxera.com>
+
+> ---
+> fs/ntfs/super.c | 8 +++-----
+> 1 file changed, 3 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/ntfs/super.c b/fs/ntfs/super.c
+> index 0d7e948cb29c9..5ae8de09b271b 100644
+> --- a/fs/ntfs/super.c
+> +++ b/fs/ntfs/super.c
+> @@ -2772,13 +2772,12 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+> 	ntfs_debug("Set device block size to %i bytes (block size bits %i).",
+> 			blocksize, sb->s_blocksize_bits);
+> 	/* Determine the size of the device in units of block_size bytes. */
+> -	if (!i_size_read(sb->s_bdev->bd_inode)) {
+> +	vol->nr_blocks = sb_bdev_nr_blocks(sb);
+> +	if (!vol->nr_blocks) {
+> 		if (!silent)
+> 			ntfs_error(sb, "Unable to determine device size.");
+> 		goto err_out_now;
+> 	}
+> -	vol->nr_blocks = i_size_read(sb->s_bdev->bd_inode) >>
+> -			sb->s_blocksize_bits;
+> 	/* Read the boot sector and return unlocked buffer head to it. */
+> 	if (!(bh = read_ntfs_boot_sector(sb, silent))) {
+> 		if (!silent)
+> @@ -2816,8 +2815,7 @@ static int ntfs_fill_super(struct super_block *sb, void *opt, const int silent)
+> 			goto err_out_now;
+> 		}
+> 		BUG_ON(blocksize != sb->s_blocksize);
+> -		vol->nr_blocks = i_size_read(sb->s_bdev->bd_inode) >>
+> -				sb->s_blocksize_bits;
+> +		vol->nr_blocks = sb_bdev_nr_blocks(sb);
+> 		ntfs_debug("Changed device block size to %i bytes (block size "
+> 				"bits %i) to match volume sector size.",
+> 				blocksize, sb->s_blocksize_bits);
+> -- 
+> 2.30.2
+> 
+
+
+
 -- 
-2.26.2
+Anton Altaparmakov <anton at tuxera.com> (replace at with @)
+Lead in File System Development, Tuxera Inc., http://www.tuxera.com/
+Linux NTFS maintainer
 
