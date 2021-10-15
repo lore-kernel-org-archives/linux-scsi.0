@@ -2,79 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94F65C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 13:33:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D30CC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 13:37:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 732C8611C8
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 13:33:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12AA261056
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 13:37:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235112AbhJONfS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Oct 2021 09:35:18 -0400
-Received: from mailgw02.mediatek.com ([210.61.82.184]:54288 "EHLO
-        mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S234697AbhJONfS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 09:35:18 -0400
-X-UUID: 733481741c3b4448b60da58bc95f8d4a-20211015
-X-UUID: 733481741c3b4448b60da58bc95f8d4a-20211015
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 25211326; Fri, 15 Oct 2021 21:33:09 +0800
-Received: from mtkcas11.mediatek.inc (172.21.101.40) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.792.3;
- Fri, 15 Oct 2021 21:33:08 +0800
-Received: from mtksdccf07 (172.21.84.99) by mtkcas11.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Fri, 15 Oct 2021 21:33:08 +0800
-Message-ID: <d656179616d61623e1c2b45c1df219c0693749a1.camel@mediatek.com>
-Subject: Re: [PATCH] scsi: sd: fix crashes in sd_resume_runtime
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Miles Chen <miles.chen@mediatek.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Martin Kepplinger <martink@posteo.de>
-CC:     <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-mediatek@lists.infradead.org>, <wsd_upstream@mediatek.com>
-Date:   Fri, 15 Oct 2021 21:33:08 +0800
-In-Reply-To: <20211015074654.19615-1-miles.chen@mediatek.com>
-References: <20211015074654.19615-1-miles.chen@mediatek.com>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+        id S239754AbhJONjP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Oct 2021 09:39:15 -0400
+Received: from helcar.hmeau.com ([216.24.177.18]:56098 "EHLO deadmen.hmeau.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239730AbhJONjJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Oct 2021 09:39:09 -0400
+Received: from gondobar.mordor.me.apana.org.au ([192.168.128.4] helo=gondobar)
+        by deadmen.hmeau.com with esmtp (Exim 4.92 #5 (Debian))
+        id 1mbNOH-0002be-4b; Fri, 15 Oct 2021 21:36:53 +0800
+Received: from herbert by gondobar with local (Exim 4.92)
+        (envelope-from <herbert@gondor.apana.org.au>)
+        id 1mbNNz-0006se-3m; Fri, 15 Oct 2021 21:36:35 +0800
+Date:   Fri, 15 Oct 2021 21:36:35 +0800
+From:   Herbert Xu <herbert@gondor.apana.org.au>
+To:     Vegard Nossum <vegard.nossum@oracle.com>
+Cc:     Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: libiscsi: select CRYPTO_HASH for ISCSI_TCP
+Message-ID: <20211015133635.GA26418@gondor.apana.org.au>
+References: <20211015131115.12720-1-vegard.nossum@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-MTK:  N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211015131115.12720-1-vegard.nossum@oracle.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Miles,
-
-On Fri, 2021-10-15 at 15:46 +0800, Miles Chen wrote:
-> After merging commit ed4246d37f3b ("scsi: sd: REQUEST SENSE for
-> BLIST_IGN_MEDIA_CHANGE devices in runtime_resume()"), I hit the
-> following crash on my device.
+On Fri, Oct 15, 2021 at 03:11:15PM +0200, Vegard Nossum wrote:
+> Fix the following build/link error by adding a dependency on CRYPTO_HASH:
 > 
-> static int sd_resume_runtime(struct device *dev)
-> {
->         struct scsi_disk *sdkp = dev_get_drvdata(dev);
->         struct scsi_device *sdp = sdkp->device; // sdkp == NULL and
-> crash
+>   ld: drivers/scsi/libiscsi_tcp.o: in function `iscsi_tcp_dgst_header':
+>   libiscsi_tcp.c:(.text+0x237): undefined reference to `crypto_ahash_digest'
+>   ld: drivers/scsi/libiscsi_tcp.o: in function `iscsi_tcp_segment_done':
+>   libiscsi_tcp.c:(.text+0x1325): undefined reference to `crypto_ahash_final'
 > 
->         if (sdp->ignore_media_change) {
-> 	...
-> }
+> Fixes: 5d6ac29b9ebf2 ("iscsi_tcp: Use ahash")
+> Cc: Herbert Xu <herbert@gondor.apana.org.au>
+> Signed-off-by: Vegard Nossum <vegard.nossum@oracle.com>
+> ---
+>  drivers/scsi/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
 > 
-> I checked sd_resume() and found that sdkp is possbile to be NULL, and
-> there is a null pointer test in sd_resume() for this case.
-> To fix this crash, follow sd_resume() to test if sdkp is NULL
-> before dereferencing it.
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 6e3a04107bb65..09764f3c42447 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -290,6 +290,7 @@ config ISCSI_TCP
+>  	tristate "iSCSI Initiator over TCP/IP"
+>  	depends on SCSI && INET
+>  	select CRYPTO
+> +	select CRYPTO_HASH
+>  	select CRYPTO_MD5
+>  	select CRYPTO_CRC32C
+>  	select SCSI_ISCSI_ATTRS
 
+CRYPTO_MD5 already selects CRYPTO_HASH so this shouldn't be needed.
 
-LGTM.
-
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
-
+Thanks,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
