@@ -2,196 +2,238 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B676C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 06:33:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A2805C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 06:49:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DD5E60F44
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 06:33:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89778610E5
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 06:49:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233032AbhJOGgB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Oct 2021 02:36:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58320 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231315AbhJOGgA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 02:36:00 -0400
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7BFF4C061570;
-        Thu, 14 Oct 2021 23:33:54 -0700 (PDT)
-Received: by mail-pj1-x102c.google.com with SMTP id e5-20020a17090a804500b001a116ad95caso1031928pjw.2;
-        Thu, 14 Oct 2021 23:33:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=LgmdE1XOeelCIv9kprKZKgpgZX3+QsY9KrSqoYhDPwk=;
-        b=SL1fMcOyAqx0UTJqjwDaIm09RWUguTv2VxPrz+sUUZi9iFYZn96Orj1xgRgZ9A1gfH
-         G7uvomr81v1Uiua6NV4PmgQHa3vcd3VzElW/Kr7ozHlm/qEqzhmbhrHXfNqIcVtOBwGy
-         cN3rY/XaZwVe4Oy1P+RgPmzSW5X5ayRPzHjoj72B/hmECCt6P6QJhx9FmuZX3Hd326N8
-         /CjalOsY7ZgJ42sLA9SR/NzuFppJT7d+6zYDK0vCsnOwp9Gvaw3nM2vsim1USScEVtpX
-         b4kymYwcomjvsOvBN5bna1be+kDQoLdkiLy9xzDemN8LDPQfokQGPHKb7nzu9sau5Bh6
-         RH5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=LgmdE1XOeelCIv9kprKZKgpgZX3+QsY9KrSqoYhDPwk=;
-        b=rqJ4fA8YSzRTMUDsqvYprD40iO1EtpFbe3zqg2jsSEnJ/JMaIRDXvlXppdeD5Zmui1
-         DUy/BBE8808jGlqU/XV0WF3SNb4jqwoxXC7cKxnYvxfpFU/ITQNBNb2fIfjata2OTLj9
-         HQ187iXRXsYSQXBR443SKaE0PZDtRVYz57ER7tP5ilOC0/OofHendw8bZeA3qHMUhwP+
-         uG4WzhYVhP6NSf5Xcxw844SgEWCszewCvgWN4KMdLCWZEeF1md2sOvE5MXKzdPPHv1tA
-         3OI20I5NV0kW8wvcm5P890gqgfmZ2N0Fh5XpV4LLMASGTZ69Injew5zydei3cD2L+TDa
-         80AQ==
-X-Gm-Message-State: AOAM530GAjYhLy9HGxStzIkPrPCOBqZ7gcuV0yW+eQMtOKfw/M5hrd87
-        xApYFYomBmgaOaOxTl3XxQ==
-X-Google-Smtp-Source: ABdhPJyCn0Z5GgQIXcv2A+f7t9yhBa5Cgu2IEWK+5DuCeY/cLJBG9WxTykagaHOeniC1+cmLMMDqsQ==
-X-Received: by 2002:a17:90a:cc01:: with SMTP id b1mr11623433pju.104.1634279634035;
-        Thu, 14 Oct 2021 23:33:54 -0700 (PDT)
-Received: from vultr.guest ([107.191.53.97])
-        by smtp.gmail.com with ESMTPSA id gk1sm2723795pjb.2.2021.10.14.23.33.52
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 14 Oct 2021 23:33:53 -0700 (PDT)
-From:   Zheyu Ma <zheyuma97@gmail.com>
-To:     james.smart@broadcom.com, dick.kennedy@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zheyu Ma <zheyuma97@gmail.com>
-Subject: [PATCH] scsi: lpfc: Fix the misuse of the logging function
-Date:   Fri, 15 Oct 2021 06:33:41 +0000
-Message-Id: <1634279621-27115-1-git-send-email-zheyuma97@gmail.com>
+        id S235682AbhJOGvz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Oct 2021 02:51:55 -0400
+Received: from mail-eopbgr1300094.outbound.protection.outlook.com ([40.107.130.94]:6377
+        "EHLO APC01-HK2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S230512AbhJOGvy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 15 Oct 2021 02:51:54 -0400
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=SrRYbZTpu/rEpv3jJ7T9BY3mvAkkikJEyZxlNyG8MTQZInETsTpo6S5LpYMJ1XJkTIClmPN7/LLQfgKvNPin8ONt4aTT21XoC+eBIOcKR9J4fnMdzdICQJRfX1nlaqzCZoVMmBb2IFWwIYLfUqKETf8ozy0XWE38bkfIEPQ3mmjYCNloACz2sn6TBfwEDsBIF9p/mbmvSx8huVhxSuu5iwd7v+VPPnk2QXYy2kWwT2/fE7syN3bI4UVf1xObgAvBYe1ZfX1pad8hch6DSqepKYwkqXdK/NUadqXzQJR6BkpnLKqYK06rSIem4bBDTmiHxCcmtlWZjZF+Ht/mnW0Fqg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=7GFrZ2kpj0iJtiuCp/XFuuTcQEjI8fi1hB8aAQYlMAk=;
+ b=QmueUErdPq+OyA/ldjXFvNCtzbLKtTERNCISY06Su5E+iiH6c5iBDmvlvvNqs/tDNySLugSL/V3h+blLz57qWnu6tlzGXEwNVTod/7hTLMzJPWGE/JbmDs/qYPebtezlC7JxbBPH1sR0H4Z121WDBfB+nSP0l/hwTEphwrSnlwaUwGOx1wpQEiH2LvNFb/UZHw+hstfUU7ju2U/7AWcv7bAeSWgZxFOjxdTRJ7SBbQPpTGM6IG+BlT4uk5NlL5ZUwHKowGDnWLUgg4KymT2zMCMB+NZ1eMqzUj0jfLriM7YlfyA6SF8Fr9IbLcPk6NdIqmj0wSKK0rBPI+vfVKBmkA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo0.onmicrosoft.com;
+ s=selector2-vivo0-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=7GFrZ2kpj0iJtiuCp/XFuuTcQEjI8fi1hB8aAQYlMAk=;
+ b=YBvAuJ5teR6dmqWSfjlj46Ua1dAOuUUMM9Lu7Cwdht1nvaGvAoq/H3Y8RQ1FHV1q56rUfyf+fd8i1gGlHdbiJcFDJIQ3wcSNKn0e8sYApa7x0opEe4Pc9bkLfO6Hu9zKnSyqya6oqJBMuN7cFmPcg0oMkwaMNfmzlTh3IjT0sho=
+Authentication-Results: broadcom.com; dkim=none (message not signed)
+ header.d=none;broadcom.com; dmarc=none action=none header.from=vivo.com;
+Received: from SL2PR06MB3082.apcprd06.prod.outlook.com (2603:1096:100:37::17)
+ by SL2PR06MB3388.apcprd06.prod.outlook.com (2603:1096:100:3c::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16; Fri, 15 Oct
+ 2021 06:49:46 +0000
+Received: from SL2PR06MB3082.apcprd06.prod.outlook.com
+ ([fe80::4c9b:b71f:fb67:6414]) by SL2PR06MB3082.apcprd06.prod.outlook.com
+ ([fe80::4c9b:b71f:fb67:6414%6]) with mapi id 15.20.4608.017; Fri, 15 Oct 2021
+ 06:49:46 +0000
+From:   Qing Wang <wangqing@vivo.com>
+To:     Sathya Prakash <sathya.prakash@broadcom.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Cc:     Qing Wang <wangqing@vivo.com>
+Subject: [PATCH] message: fusion: replace snprintf in show functions with sysfs_emit
+Date:   Thu, 14 Oct 2021 23:49:35 -0700
+Message-Id: <1634280575-4675-1-git-send-email-wangqing@vivo.com>
 X-Mailer: git-send-email 2.7.4
+Content-Type: text/plain
+X-ClientProxiedBy: HK2PR06CA0002.apcprd06.prod.outlook.com
+ (2603:1096:202:2e::14) To SL2PR06MB3082.apcprd06.prod.outlook.com
+ (2603:1096:100:37::17)
+MIME-Version: 1.0
+Received: from ubuntu.localdomain (218.213.202.189) by HK2PR06CA0002.apcprd06.prod.outlook.com (2603:1096:202:2e::14) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256) id 15.20.4608.17 via Frontend Transport; Fri, 15 Oct 2021 06:49:45 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: eeef5f7d-0d97-4981-88e7-08d98fa7f9a6
+X-MS-TrafficTypeDiagnostic: SL2PR06MB3388:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <SL2PR06MB3388E0C1855561843C5DE5E5BDB99@SL2PR06MB3388.apcprd06.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:248;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: x/w3SI4HvjcE4RhRODDv3mFIIZJ1mwdMYLZdlTMZNotq8AI0m4Kn9uGMaw8+TbnYXLOJHIE+A9A2fe1TE2+KsA0egEq7aPWZx+hKMNBR4PIs6tTQNdsB2bzcE92VS2MvzttI44qpmt99JrUIew7naT7EIyzVzmd9ebiw1kiMzSYav87mcwKAFdult0Pwf4grGodgbK37eFy9KiWiM3y/wtoMZZIyfQER8GHDDlAFPC0oYhAu8//gIGt67bLahYsV0QAuGsNNjzYxx4bXVA89U6MMzS60U0TB/6PTVaAvSSJRgyHNwt159tai+Rhm+cAdoanbAXrInvy3bHY7g8hXle7ORmPy6jJBK0I6dTXT8w7czm9+njR2/kyws2t7a002ySszhYvO70FM6VoKm45s7F0oEYJN6HD3hW5NWgS0apf0qJHhluIjdDdlaMnmbw4QRK/oDS/5nlqLGM/6y8LZlxWb2HoRV/yFmIIIYDsE4Xrx2sutAug5IoUO4FMX07zVUTw3AauAVJj1nms/4yJtzzkCwUIx07Rs5e5ey/eokDRw+vB5hvn4q3yT9nwl/bdaxMCYhJWW3OXr2YX8H96ssig5VymWOzZdmGk8wMiQcq0J1mos7j/VX6+s/QUORzQnW451y+i+xc2K9MnOLcJ3hp3U53uMxUSh5ZZNMHRbL+L8pqYaIeY+y8B4OmF0a67An5b3ySB+ZKdur0vRBN6Knw==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SL2PR06MB3082.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(38350700002)(38100700002)(2616005)(316002)(2906002)(26005)(107886003)(8676002)(15650500001)(66556008)(83380400001)(186003)(66946007)(6486002)(956004)(508600001)(36756003)(4326008)(66476007)(6666004)(6506007)(8936002)(110136005)(5660300002)(86362001)(6512007)(52116002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?QTckuCKHZvLDK6yHN5H5ZqNJYj7F/8uInuvETgfiEE2tHmJT+s/P3N41/lWD?=
+ =?us-ascii?Q?BBkLuaS5FcVUSlVp9wPovjuSrveib+CMkQts9MPXX0M0Q9D4soNdlKnieqp1?=
+ =?us-ascii?Q?FG5wn4N6pdyMsdS+ukSkLfmnK60vowcWWmcOQ6BLNWWQCcBsCiUhfbTAyroa?=
+ =?us-ascii?Q?QhDgkPK7Qd/jK0SBlrMVH2fYGPbI1Hur5mM0Vk7/P8iBcWQPNEqrjbx88++d?=
+ =?us-ascii?Q?bF/2Ci8y6XYuOP23peI+mUFzmECY3/TtpMr9jF20Jckusfk8ifCHF2PBBlAa?=
+ =?us-ascii?Q?csu9qECRUrD4cEjlp5V/PfDdEzcz1loGkuKHaPCuqCDDCTSmZ6B5r2hCEst9?=
+ =?us-ascii?Q?eFKtZFqC4FPxH761cn82pNT/XjrBKucmGiL3bcdFHXVc8FfdARUdfda4Af7F?=
+ =?us-ascii?Q?MvmSJdQjLHlWcnlBiE3tsQkj9rPnskI9OdHb7sQGw1AmtxiaxaxND4aPX+ZU?=
+ =?us-ascii?Q?y3v2/kXceFcIg7ib3h3cqjR9aOG12Pz2nUDFNh450XO4WST/395TYm0Nqr4T?=
+ =?us-ascii?Q?qzuKqNrCAByTiVo0/y0QwFv7XTNaXG390c6IkbL9TMceJSnA6bRFSmKl0sNT?=
+ =?us-ascii?Q?KGtVDpyIQxw6NSRGGKb3TSeVfHYSWm5bXZQcavFnNr/cOa/aOma+jRsQEboe?=
+ =?us-ascii?Q?wBgiE9CWbG/lEyan4ZzPlg01C4v4/HWrPWiFL+0q/gDiG0ppwpyrCnG8hfDt?=
+ =?us-ascii?Q?q8hJEHu2WEqIu0Ex/ScdtdmOFyHdMaBHX3DEAFN4sfDFmThTyoMEbZqhwnr5?=
+ =?us-ascii?Q?+W2ggEGyqb4vlj+QsFmoB2evpBOhG+hfY6QJcOQ23O2NPLkzSjWhs+FnSMKZ?=
+ =?us-ascii?Q?fvP4M05QaYwVwI9qr4PK8sOun1LSvzLm6LSN6dnOHbCHtEUQ/oP6A59J27mi?=
+ =?us-ascii?Q?22BXk2xwTcduQuVmS2jtZlO4EVwB8bXzbfO8jIe4bN6c7QQDhUSNyrUTcsk6?=
+ =?us-ascii?Q?ofLWkvkPZxl4D429TOtywparna9e5jDZamTpW4rU8tLfL9DSaIcqREOs0JPf?=
+ =?us-ascii?Q?DKHBm+bleUCs98wMod5uafSKv/RMqMD/YdjX0jxkEFEH6db6A1KSwnOmh65K?=
+ =?us-ascii?Q?xxoY7FpA9AMOsO7OTkA+DUBZKquzKiF0H7c6MRXe3E6xcJB+WUU/QpbPK6zU?=
+ =?us-ascii?Q?E3iHiJ1QVG8rBaClPqJsRMubtBTRHR/j2adu3dfHrX0IVBtmmWET8my3bFvO?=
+ =?us-ascii?Q?1NrqrCAbayhhT+X3gauVvMo749ppuFSv92oy6z3blRztfdtjZcdmJDUWWVHZ?=
+ =?us-ascii?Q?VFC33JBIdHW8N0CJEykgTjcwpwJLHbuKda9IZoh6N9J7w0EaFkZkfjZ+PBJx?=
+ =?us-ascii?Q?VgMlfJiefEMYGC5/UtiTZZRd?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: eeef5f7d-0d97-4981-88e7-08d98fa7f9a6
+X-MS-Exchange-CrossTenant-AuthSource: SL2PR06MB3082.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Oct 2021 06:49:46.1676
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: GgRG6wHSJP3qQO0LoW5BcrEAKmqAmj/8fe7Ub7IvDKRd5u7hTc2jEtfOdv7imFkDkYpn5KArBmEM2F0XjFIP3Q==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SL2PR06MB3388
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the driver fails in lpfc_enable_pci_dev(), it will call
-lpfc_printf_log(), and in a certain case the lpfc_dmp_dbg() is
-eventually called, this function uses 'phba->port_list_lock', and at
-this time this lock is not been initialized, which may cause a bug.
+show() must not use snprintf() when formatting the value to be
+returned to user space.
 
-Fix this by using 'dev_printk' to replace the previous function.
+Fix the coccicheck warnings:
+WARNING: use scnprintf or sprintf.
 
-The following log reveals it:
+Use sysfs_emit instead of scnprintf or sprintf makes more sense.
 
-[   32.955597  ] INFO: trying to register non-static key.
-[   32.956002  ] The code is fine but needs lockdep annotation, or maybe
-[   32.956491  ] you didn't initialize this object before use?
-[   32.956916  ] turning off the locking correctness validator.
-[   32.958801  ] Call Trace:
-[   32.958994  ]  dump_stack_lvl+0xa8/0xd1
-[   32.959286  ]  dump_stack+0x15/0x17
-[   32.959547  ]  assign_lock_key+0x212/0x220
-[   32.959853  ]  ? SOFTIRQ_verbose+0x10/0x10
-[   32.960158  ]  ? lock_is_held_type+0xd6/0x130
-[   32.960483  ]  register_lock_class+0x126/0x790
-[   32.960815  ]  ? rcu_read_lock_sched_held+0x33/0x70
-[   32.961233  ]  __lock_acquire+0xe9/0x1e20
-[   32.961565  ]  ? delete_node+0x71e/0x790
-[   32.961859  ]  ? __this_cpu_preempt_check+0x13/0x20
-[   32.962220  ]  ? lock_is_held_type+0xd6/0x130
-[   32.962545  ]  lock_acquire+0x244/0x490
-[   32.962831  ]  ? lpfc_dmp_dbg+0x65/0x600 [lpfc]
-[   32.963241  ]  ? __kasan_check_write+0x14/0x20
-[   32.963572  ]  ? read_lock_is_recursive+0x20/0x20
-[   32.963921  ]  ? __this_cpu_preempt_check+0x13/0x20
-[   32.964284  ]  ? lpfc_dmp_dbg+0x65/0x600 [lpfc]
-[   32.964685  ]  ? _raw_spin_lock_irqsave+0x29/0x70
-[   32.965086  ]  ? __kasan_check_read+0x11/0x20
-[   32.965410  ]  ? trace_irq_disable_rcuidle+0x85/0x170
-[   32.965787  ]  _raw_spin_lock_irqsave+0x4e/0x70
-[   32.966124  ]  ? lpfc_dmp_dbg+0x65/0x600 [lpfc]
-[   32.966526  ]  lpfc_dmp_dbg+0x65/0x600 [lpfc]
-[   32.966913  ]  ? lockdep_init_map_type+0x162/0x710
-[   32.967269  ]  ? error_prone+0x25/0x30 [lpfc]
-[   32.967657  ]  lpfc_enable_pci_dev+0x157/0x250 [lpfc]
-
-Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
+Signed-off-by: Qing Wang <wangqing@vivo.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 12 +++++-------
- drivers/scsi/lpfc/lpfc_scsi.c |  5 ++---
- drivers/scsi/lpfc/lpfc_sli.c  | 10 ++++------
- 3 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/message/fusion/mptscsih.c | 24 ++++++++++++------------
+ 1 file changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 0ec322f0e3cb..226b9ccfffb3 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7331,10 +7331,10 @@ static void lpfc_log_intr_mode(struct lpfc_hba *phba, uint32_t intr_mode)
- static int
- lpfc_enable_pci_dev(struct lpfc_hba *phba)
- {
--	struct pci_dev *pdev;
-+	struct pci_dev *pdev = phba->pcidev;
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index ce2e5b2..45bb974 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -3046,7 +3046,7 @@ mptscsih_version_fw_show(struct device *dev, struct device_attribute *attr,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
  
- 	/* Obtain PCI device reference */
--	if (!phba->pcidev)
-+	if (!pdev)
- 		goto out_error;
- 	else
- 		pdev = phba->pcidev;
-@@ -7358,8 +7358,7 @@ lpfc_enable_pci_dev(struct lpfc_hba *phba)
- out_disable_device:
- 	pci_disable_device(pdev);
- out_error:
--	lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--			"1401 Failed to enable pci device\n");
-+	dev_err(&pdev->dev, "1401 Failed to enable pci device\n");
- 	return -ENODEV;
+-	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
++	return sysfs_emit(buf, "%02d.%02d.%02d.%02d\n",
+ 	    (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
+ 	    (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
+ 	    (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
+@@ -3062,7 +3062,7 @@ mptscsih_version_bios_show(struct device *dev, struct device_attribute *attr,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
++	return sysfs_emit(buf, "%02x.%02x.%02x.%02x\n",
+ 	    (ioc->biosVersion & 0xFF000000) >> 24,
+ 	    (ioc->biosVersion & 0x00FF0000) >> 16,
+ 	    (ioc->biosVersion & 0x0000FF00) >> 8,
+@@ -3078,7 +3078,7 @@ mptscsih_version_mpi_show(struct device *dev, struct device_attribute *attr,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%03x\n", ioc->facts.MsgVersion);
++	return sysfs_emit(buf, "%03x\n", ioc->facts.MsgVersion);
  }
+ static DEVICE_ATTR(version_mpi, S_IRUGO, mptscsih_version_mpi_show, NULL);
  
-@@ -8401,9 +8400,8 @@ lpfc_init_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 		phba->lpfc_stop_port = lpfc_stop_port_s4;
- 		break;
- 	default:
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"1431 Invalid HBA PCI-device group: 0x%x\n",
--				dev_grp);
-+		dev_err(&phba->pcidev->dev,
-+				"1431 Invalid HBA PCI-device group: 0x%x\n", dev_grp);
- 		return -ENODEV;
- 	}
- 	return 0;
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 0fde1e874c7a..8ffce2d2a993 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5096,9 +5096,8 @@ lpfc_scsi_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 		phba->lpfc_scsi_prep_cmnd_buf = lpfc_scsi_prep_cmnd_buf_s4;
- 		break;
- 	default:
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"1418 Invalid HBA PCI-device group: 0x%x\n",
--				dev_grp);
-+		dev_err(&phba->pcidev->dev,
-+				"1418 Invalid HBA PCI-device group: 0x%x\n", dev_grp);
- 		return -ENODEV;
- 	}
- 	phba->lpfc_rampdown_queue_depth = lpfc_rampdown_queue_depth;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index ffd8a140638c..c1cf0ad018e0 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -10010,9 +10010,8 @@ lpfc_mbox_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 		phba->lpfc_sli_brdready = lpfc_sli_brdready_s4;
- 		break;
- 	default:
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"1420 Invalid HBA PCI-device group: 0x%x\n",
--				dev_grp);
-+		dev_err(&phba->pcidev->dev,
-+				"1420 Invalid HBA PCI-device group: 0x%x\n", dev_grp);
- 		return -ENODEV;
- 	}
- 	return 0;
-@@ -11178,9 +11177,8 @@ lpfc_sli_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
- 		phba->__lpfc_sli_issue_fcp_io = __lpfc_sli_issue_fcp_io_s4;
- 		break;
- 	default:
--		lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
--				"1419 Invalid HBA PCI-device group: 0x%x\n",
--				dev_grp);
-+		dev_err(&phba->pcidev->dev,
-+				"1419 Invalid HBA PCI-device group: 0x%x\n", dev_grp);
- 		return -ENODEV;
- 	}
- 	phba->lpfc_get_iocb_from_iocbq = lpfc_get_iocb_from_iocbq;
+@@ -3091,7 +3091,7 @@ char *buf)
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->prod_name);
++	return sysfs_emit(buf, "%s\n", ioc->prod_name);
+ }
+ static DEVICE_ATTR(version_product, S_IRUGO,
+     mptscsih_version_product_show, NULL);
+@@ -3105,7 +3105,7 @@ mptscsih_version_nvdata_persistent_show(struct device *dev,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02xh\n",
++	return sysfs_emit(buf, "%02xh\n",
+ 	    ioc->nvdata_version_persistent);
+ }
+ static DEVICE_ATTR(version_nvdata_persistent, S_IRUGO,
+@@ -3119,7 +3119,7 @@ mptscsih_version_nvdata_default_show(struct device *dev,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02xh\n",ioc->nvdata_version_default);
++	return sysfs_emit(buf, "%02xh\n",ioc->nvdata_version_default);
+ }
+ static DEVICE_ATTR(version_nvdata_default, S_IRUGO,
+     mptscsih_version_nvdata_default_show, NULL);
+@@ -3132,7 +3132,7 @@ mptscsih_board_name_show(struct device *dev, struct device_attribute *attr,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_name);
++	return sysfs_emit(buf, "%s\n", ioc->board_name);
+ }
+ static DEVICE_ATTR(board_name, S_IRUGO, mptscsih_board_name_show, NULL);
+ 
+@@ -3144,7 +3144,7 @@ mptscsih_board_assembly_show(struct device *dev,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_assembly);
++	return sysfs_emit(buf, "%s\n", ioc->board_assembly);
+ }
+ static DEVICE_ATTR(board_assembly, S_IRUGO,
+     mptscsih_board_assembly_show, NULL);
+@@ -3157,7 +3157,7 @@ mptscsih_board_tracer_show(struct device *dev, struct device_attribute *attr,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_tracer);
++	return sysfs_emit(buf, "%s\n", ioc->board_tracer);
+ }
+ static DEVICE_ATTR(board_tracer, S_IRUGO,
+     mptscsih_board_tracer_show, NULL);
+@@ -3170,7 +3170,7 @@ mptscsih_io_delay_show(struct device *dev, struct device_attribute *attr,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
++	return sysfs_emit(buf, "%02d\n", ioc->io_missing_delay);
+ }
+ static DEVICE_ATTR(io_delay, S_IRUGO,
+     mptscsih_io_delay_show, NULL);
+@@ -3183,7 +3183,7 @@ mptscsih_device_delay_show(struct device *dev, struct device_attribute *attr,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->device_missing_delay);
++	return sysfs_emit(buf, "%02d\n", ioc->device_missing_delay);
+ }
+ static DEVICE_ATTR(device_delay, S_IRUGO,
+     mptscsih_device_delay_show, NULL);
+@@ -3196,7 +3196,7 @@ mptscsih_debug_level_show(struct device *dev, struct device_attribute *attr,
+ 	MPT_SCSI_HOST	*hd = shost_priv(host);
+ 	MPT_ADAPTER *ioc = hd->ioc;
+ 
+-	return snprintf(buf, PAGE_SIZE, "%08xh\n", ioc->debug_level);
++	return sysfs_emit(buf, "%08xh\n", ioc->debug_level);
+ }
+ static ssize_t
+ mptscsih_debug_level_store(struct device *dev, struct device_attribute *attr,
 -- 
-2.17.6
+2.7.4
 
