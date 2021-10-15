@@ -2,33 +2,33 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EA4FC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 23:31:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36A40C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 23:31:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 26924611C1
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 23:31:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 20261611C1
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 23:31:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243594AbhJOXdJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Oct 2021 19:33:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38874 "EHLO
+        id S243565AbhJOXdF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Oct 2021 19:33:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38858 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243545AbhJOXdE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 19:33:04 -0400
+        with ESMTP id S243522AbhJOXdC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 19:33:02 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EFDD2C061570;
-        Fri, 15 Oct 2021 16:30:56 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 583AEC061765;
+        Fri, 15 Oct 2021 16:30:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=o1//ec0r5e8VTnwYNp5R5eQwtP7WISCGubCypYTw4Jw=; b=LW2F7o9AfnmLff+UOqZtBvoesh
-        ZDxjZh8yGJTFjoCXtG72Qf6wiK50Ivqs2nLYTyK0D4PE3RqGQeM7NHkQc1HgaiuC389ySfZ9y6tbY
-        VRe+cl9qKO5Q6YIJqZ7sL3W1y4lRXKxWamL98pgo7JKgSyLRT/JDscfv355hCy4dMGDT46XBVp+Nm
-        wVo9xMhmi3IrJFUR2gl64sdIHlMJnpD1Q59OFtrhwk/RMNq6/KnSG6DyCHHu7BJ6DTes7dtF/Fbid
-        VAD77+Ygj0Xd4lLc0+I1bb/qHRVoHESD8eaekIlUicJJVR3pSkX9z1zbRu8FVAewt6xEX6yxhkckp
-        FUXhxm9Q==;
+        bh=1bxbk0s3lfDVOxUu9YL+DFpJGCsQmsW80G59PebYRqE=; b=aalz1ZDhgOT13yhanR/NqZ5sjs
+        X5pioDiqsq7wCK2104+ErSt/d87llJaWu6pQoxxECmaoO81hQebB3KNTX5PwVwh0Wlle8KkYwZZBB
+        EY4W4L6CCmX4otbH/vrigBKCha0gJhBOPJveGJURS1xTFt80WQfF7LB3v5CMYxLrjOS8eZd3kniVy
+        HyXUMIAEzA7S5SKbG2+6Yqkl2uLf/5+8Zq1fNAP9Axdv7DJBliakso6t7DsDPgMdI8rCvMziP5o8M
+        CGo1BDA88hi8eOF897sCgWMsxi2JB/fnJEqvFbB4ooRNqP1S/IXuebirvfHfM/xaTn3IphBxajPsD
+        XdhftxIw==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mbWej-0095ux-8E; Fri, 15 Oct 2021 23:30:29 +0000
+        id 1mbWej-0095v9-FL; Fri, 15 Oct 2021 23:30:29 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, jejb@linux.ibm.com, martin.petersen@oracle.com,
         agk@redhat.com, snitzer@redhat.com, colyli@suse.de,
@@ -46,9 +46,9 @@ Cc:     linux-scsi@vger.kernel.org, dm-devel@redhat.com,
         linux-m68k@lists.linux-m68k.org, linux-um@lists.infradead.org,
         linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
         Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 3/9] dm: add add_disk() error handling
-Date:   Fri, 15 Oct 2021 16:30:22 -0700
-Message-Id: <20211015233028.2167651-4-mcgrof@kernel.org>
+Subject: [PATCH 9/9] mtd: add add_disk() error handling
+Date:   Fri, 15 Oct 2021 16:30:28 -0700
+Message-Id: <20211015233028.2167651-10-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20211015233028.2167651-1-mcgrof@kernel.org>
 References: <20211015233028.2167651-1-mcgrof@kernel.org>
@@ -63,34 +63,36 @@ We never checked for errors on add_disk() as this function
 returned void. Now that this is fixed, use the shiny new
 error handling.
 
-There are two calls to dm_setup_md_queue() which can fail then,
-one on dm_early_create() and we can easily see that the error path
-there calls dm_destroy in the error path. The other use case is on
-the ioctl table_load case. If that fails userspace needs to call
-the DM_DEV_REMOVE_CMD to cleanup the state - similar to any other
-failure.
-
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Miquel Raynal <miquel.raynal@bootlin.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/md/dm.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/mtd/mtd_blkdevs.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 245fa4153306..6d3265ed37c0 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -2086,7 +2086,9 @@ int dm_setup_md_queue(struct mapped_device *md, struct dm_table *t)
- 	if (r)
- 		return r;
+diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
+index b8ae1ec14e17..4eaba6f4ec68 100644
+--- a/drivers/mtd/mtd_blkdevs.c
++++ b/drivers/mtd/mtd_blkdevs.c
+@@ -384,7 +384,9 @@ int add_mtd_blktrans_dev(struct mtd_blktrans_dev *new)
+ 	if (new->readonly)
+ 		set_disk_ro(gd, 1);
  
--	add_disk(md->disk);
-+	r = add_disk(md->disk);
-+	if (r)
-+		return r;
+-	device_add_disk(&new->mtd->dev, gd, NULL);
++	ret = device_add_disk(&new->mtd->dev, gd, NULL);
++	if (ret)
++		goto out_cleanup_disk;
  
- 	r = dm_sysfs_init(md);
- 	if (r) {
+ 	if (new->disk_attributes) {
+ 		ret = sysfs_create_group(&disk_to_dev(gd)->kobj,
+@@ -393,6 +395,8 @@ int add_mtd_blktrans_dev(struct mtd_blktrans_dev *new)
+ 	}
+ 	return 0;
+ 
++out_cleanup_disk:
++	blk_cleanup_disk(new->disk);
+ out_free_tag_set:
+ 	blk_mq_free_tag_set(new->tag_set);
+ out_kfree_tag_set:
 -- 
 2.30.2
 
