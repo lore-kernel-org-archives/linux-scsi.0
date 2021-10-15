@@ -2,92 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4BF98C43217
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 16:52:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A6A5C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 16:53:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3404E61037
-	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 16:52:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5A6F2611EE
+	for <linux-scsi@archiver.kernel.org>; Fri, 15 Oct 2021 16:53:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241696AbhJOQyS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 15 Oct 2021 12:54:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60966 "EHLO
+        id S241706AbhJOQzm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 15 Oct 2021 12:55:42 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33110 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S241701AbhJOQyF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 12:54:05 -0400
-Received: from mail-pf1-x429.google.com (mail-pf1-x429.google.com [IPv6:2607:f8b0:4864:20::429])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0558DC06176F
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Oct 2021 09:51:58 -0700 (PDT)
-Received: by mail-pf1-x429.google.com with SMTP id m14so8836212pfc.9
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Oct 2021 09:51:58 -0700 (PDT)
+        with ESMTP id S236428AbhJOQzl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Oct 2021 12:55:41 -0400
+Received: from mail-ed1-x52f.google.com (mail-ed1-x52f.google.com [IPv6:2a00:1450:4864:20::52f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A57FCC061762;
+        Fri, 15 Oct 2021 09:53:34 -0700 (PDT)
+Received: by mail-ed1-x52f.google.com with SMTP id y12so42189837eda.4;
+        Fri, 15 Oct 2021 09:53:34 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=8gI6mB0v8/bvGUktJ4Ms64SCq44VzGlslt0/tVmUcu0=;
-        b=QdjfyqDFD4soQMEMSOicdhBdVamKBaYeLFRjv2+GeJkhkobBQ1wXcffRbrMri+SgXS
-         ho2ZSrthIeYBE7Wx2MPp5VyuPKs5uKhB2/hHDVUacoeny7NW+A6nzAebO0KCgT+nfajN
-         4woprmqITLxBlJcOq6oS9FryrMRcuTjaoqcfg=
+        d=gmail.com; s=20210112;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=DFAfhL2wTnA/x1oOiRIEIccRhRGZWYerK6em4KwuQr0=;
+        b=WhznUYR2nkpwiwbTRwmHKoc047JsFdk3RvHIe/jtOLSDmdxX07MCX9Eow0Bi+yLoQp
+         EyU08OzLxLG5ZCsUs7GUsgWdhql+ygc3SL2hgpQj7qkueaPaH4FCl+VEJFbTT66B35gH
+         GDagaCdrbJmPFv3m1vjK25dlCo+SurtmwsJpbtn+lVZ1hUtQu8pPUJ/3APaMcce/rMb+
+         gK4/JKJga2A5DLyU3cXWQ467mYYMbHs26I04bEcKD9mvTuveZ0BpijvVaw9Fg5WzWNNW
+         l7COh3PfIisjI8gWM0rsyxYaukEsrZpFMim7hIuXFIwI4NkGZUXxkbzqxVTnksr3mpP4
+         SUYg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=8gI6mB0v8/bvGUktJ4Ms64SCq44VzGlslt0/tVmUcu0=;
-        b=GCwGcfG+zwWJYhnQHjIsNALkvQ7Na7r6N9YhPyPHV+scL0Ct2LfvVVkQmmkFBecI/v
-         0xHcO47VI2K/wKuI2dKdvnZwd2AZw5ctOqg1Mv+C/ys5UaSCUV+ZHFgBcJrEdjkLW3mC
-         9NaienU/NMPhcVEEgFvXNqacDoGGtTUnlpS1E6l++ZNsngpd7GsGeOmhmXYzB6kr5k9q
-         WVybK1vwtpyvpEYbd645upGkLVuLFTC/Vq11/0n8wvjjppg1VAOM2bH932sJ+NKmP1Zk
-         zkSuHFKMeYRC9UUMwHMi7rXZqe5pqVvCPUlWBoBLfo0Njh0jzwUs1XwnmWCxqicEiHHO
-         caag==
-X-Gm-Message-State: AOAM531uz72IsMaWRgcmu7kNn2A2nE9hLgbubXgsrkeclciivjy+II4e
-        sLM3+c79LrTl0wde/GlKAoKgqA==
-X-Google-Smtp-Source: ABdhPJzqeoukQXK8ExXBqth3GcTvhtURMxE+sN7W7wsB5KXgmz+OQ2/XE0rohu9GSzNW6fPwLJfBIw==
-X-Received: by 2002:a05:6a00:1a15:b0:44d:a80:a194 with SMTP id g21-20020a056a001a1500b0044d0a80a194mr12521866pfv.78.1634316717195;
-        Fri, 15 Oct 2021 09:51:57 -0700 (PDT)
-Received: from www.outflux.net (smtp.outflux.net. [198.145.64.163])
-        by smtp.gmail.com with ESMTPSA id w18sm5617464pfj.170.2021.10.15.09.51.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Oct 2021 09:51:56 -0700 (PDT)
-Date:   Fri, 15 Oct 2021 09:51:56 -0700
-From:   Kees Cook <keescook@chromium.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        David Sterba <dsterba@suse.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        Anton Altaparmakov <anton@tuxera.com>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
-Subject: Re: [PATCH 13/30] cramfs: use bdev_nr_bytes instead of open coding it
-Message-ID: <202110150951.94FEBC4C@keescook>
-References: <20211015132643.1621913-1-hch@lst.de>
- <20211015132643.1621913-14-hch@lst.de>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=DFAfhL2wTnA/x1oOiRIEIccRhRGZWYerK6em4KwuQr0=;
+        b=Pz66uXOYVPkKHpFryMN1vuv3PRaUUufVOktG/MXAyn+Mbnw67Hg+Y9A5/5ATuNWpbN
+         2apggTaSkDPxZ0TXvlb7Yc2fkPKHAqAH6cPp0ZRCyIhRq5T/Ga+wN92BZY22KWRL0px0
+         kr3ipbNNYsXFEfbnMnDFID1N0gdKA3BqLM+r9mGWrrMHp26dHnH2mwYGb/5/gQlnYc1Q
+         ArLpMWvshnVXU7a8w1Gp8dngNucMAhb62ma12skWTfwT7Kljvwc42Ges/nmkAMVmyRsa
+         FboJls257B2pG0z6DUpE/Rinw4YeDgbQmKpklsvYMMoCGqS84dFt7TluRpTUrsSBS1JO
+         lSow==
+X-Gm-Message-State: AOAM531fRDtVFQmGAgEdDX8QQ9FKZCV0/Fcr/6I7qlFhhfOBUo0iN3R/
+        2HQYIpNqVOsbxTFimIu3oU9vvzetwldYc5ybjC8=
+X-Google-Smtp-Source: ABdhPJw1GMYkf4/DzQ6xCdDldbViFURlmc0YnNdhDKa/6j1hrF7JWMyfM92nI6tIEj+fn7ChYTDQotvOC+uhf3cE48A=
+X-Received: by 2002:a50:e188:: with SMTP id k8mr19911628edl.119.1634316813165;
+ Fri, 15 Oct 2021 09:53:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211015132643.1621913-14-hch@lst.de>
+References: <YWbdvc7EWEZLVTHM@smile.fi.intel.com> <20211015164653.GA2108651@bhelgaas>
+In-Reply-To: <20211015164653.GA2108651@bhelgaas>
+From:   Andy Shevchenko <andy.shevchenko@gmail.com>
+Date:   Fri, 15 Oct 2021 22:52:45 +0300
+Message-ID: <CAHp75VdpVwvOkjDWHcnWA-qZFm062UBp7VwdcpWbkdVR=i75Hw@mail.gmail.com>
+Subject: Re: [PATCH v6 00/11] PCI: Drop duplicated tracking of a pci_dev's
+ bound driver
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>,
+        linux-pci <linux-pci@vger.kernel.org>,
+        Sascha Hauer <kernel@pengutronix.de>,
+        Alexander Duyck <alexanderduyck@fb.com>,
+        Alexander Shishkin <alexander.shishkin@linux.intel.com>,
+        Andrew Donnellan <ajd@linux.ibm.com>,
+        Arnaldo Carvalho de Melo <acme@kernel.org>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Borislav Petkov <bp@alien8.de>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        Fiona Trahe <fiona.trahe@intel.com>,
+        Frederic Barrat <fbarrat@linux.ibm.com>,
+        Giovanni Cabiddu <giovanni.cabiddu@intel.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "H. Peter Anvin" <hpa@zytor.com>, Ido Schimmel <idosch@nvidia.com>,
+        Ingo Molnar <mingo@redhat.com>, Jack Xu <jack.xu@intel.com>,
+        Jakub Kicinski <kuba@kernel.org>,
+        Jesse Brandeburg <jesse.brandeburg@intel.com>,
+        Jiri Olsa <jolsa@redhat.com>, Jiri Pirko <jiri@nvidia.com>,
+        Juergen Gross <jgross@suse.com>,
+        Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>,
+        Marco Chiappero <marco.chiappero@intel.com>,
+        Mark Rutland <mark.rutland@arm.com>,
+        Mathias Nyman <mathias.nyman@intel.com>,
+        Michael Buesch <m@bues.ch>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Namhyung Kim <namhyung@kernel.org>,
+        "Oliver O'Halloran" <oohall@gmail.com>,
+        Paul Mackerras <paulus@samba.org>,
+        Peter Zijlstra <peterz@infradead.org>,
+        =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+        Russell Currey <ruscur@russell.cc>,
+        Salil Mehta <salil.mehta@huawei.com>,
+        Sathya Prakash <sathya.prakash@broadcom.com>,
+        Simon Horman <simon.horman@corigine.com>,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+        Stefano Stabellini <sstabellini@kernel.org>,
+        Suganath Prabu Subramani 
+        <suganath-prabu.subramani@broadcom.com>,
+        Taras Chornyi <tchornyi@marvell.com>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Tomaszx Kowalik <tomaszx.kowalik@intel.com>,
+        Vadym Kochan <vkochan@marvell.com>,
+        Wojciech Ziemba <wojciech.ziemba@intel.com>,
+        Yisen Zhuang <yisen.zhuang@huawei.com>,
+        Zhou Wang <wangzhou1@hisilicon.com>,
+        linux-crypto <linux-crypto@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-perf-users@vger.kernel.org,
+        "open list:LINUX FOR POWERPC PA SEMI PWRFICIENT" 
+        <linuxppc-dev@lists.ozlabs.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        USB <linux-usb@vger.kernel.org>,
+        "open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+        MPT-FusionLinux.pdl@broadcom.com, netdev <netdev@vger.kernel.org>,
+        oss-drivers@corigine.com, qat-linux@intel.com,
+        "maintainer:X86 ARCHITECTURE (32-BIT AND 64-BIT)" <x86@kernel.org>,
+        xen-devel@lists.xenproject.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 15, 2021 at 03:26:26PM +0200, Christoph Hellwig wrote:
-> Use the proper helper to read the block device size.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Fri, Oct 15, 2021 at 7:46 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
+> On Wed, Oct 13, 2021 at 04:23:09PM +0300, Andy Shevchenko wrote:
 
-Reviewed-by: Kees Cook <keescook@chromium.org>
+...
+
+> so compared to Uwe's v6, I restored that section to the original code.
+> My goal here was to make the patch as simple and easy to review as
+> possible.
+
+Thanks for elaboration. I have got it.
+
+...
+
+> You're right, this didn't make much sense in that patch.  I moved the
+> line join to the previous patch, which unindented this section and
+> made space for this to fit on one line.  Here's the revised commit:
+>
+>   https://git.kernel.org/cgit/linux/kernel/git/helgaas/pci.git/commit/?id=34ab316d7287
+
+Side remark: default without break or return is error prone (okay, to
+some extent). Perhaps adding the return statement there will make
+things robust and clean.
 
 -- 
-Kees Cook
+With Best Regards,
+Andy Shevchenko
