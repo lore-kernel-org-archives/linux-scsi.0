@@ -2,124 +2,85 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CEB01C43219
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Oct 2021 07:40:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 149BDC433FE
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Oct 2021 21:21:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BAEA861267
-	for <linux-scsi@archiver.kernel.org>; Sat, 16 Oct 2021 07:40:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9F246115C
+	for <linux-scsi@archiver.kernel.org>; Sat, 16 Oct 2021 21:21:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S243813AbhJPHmW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 16 Oct 2021 03:42:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60084 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S243801AbhJPHmU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Oct 2021 03:42:20 -0400
-Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B080CC061765;
-        Sat, 16 Oct 2021 00:40:12 -0700 (PDT)
-Received: by mail-lf1-x132.google.com with SMTP id n8so51503793lfk.6;
-        Sat, 16 Oct 2021 00:40:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=yeYbTALLt+81wu8WFfyKx0a33Kod/SnDLZRAl1Frm5U=;
-        b=cVnZ6+l+2XB64KtPGPsew2EuurYnsOpcBevvm/IVGVDWp/Lr378D4lUZAb7Ldqn1aU
-         Nechfd+nevnKJt8FFrjsUkhQRsZN4OdAe+y/4UgENJDxkcBm3bvvsqVp0+i7kz/ncskC
-         VTNCGAMRL2zXauGox8hUYH0e6cLX9YNzHMmZx68OgeqDdd/IPTSNwVgM/hhe43XfbD/A
-         Rsr2ngeAq8MwLS8wYqIQpA7q0jGrbmoIHsnPPXNshCS3yofpN7y1D6hLbuTi/3aHu8Hg
-         WHPyyYAgwzwuGQtuqb861mn1fmCGJ4Gxolg4kHeKn8eV14e/nwAYLFHNCnrx2jzkQiPm
-         sdiw==
+        id S244687AbhJPVXw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 16 Oct 2021 17:23:52 -0400
+Received: from mail-pf1-f174.google.com ([209.85.210.174]:40556 "EHLO
+        mail-pf1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241000AbhJPVXt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 16 Oct 2021 17:23:49 -0400
+Received: by mail-pf1-f174.google.com with SMTP id o133so11472902pfg.7;
+        Sat, 16 Oct 2021 14:21:41 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=yeYbTALLt+81wu8WFfyKx0a33Kod/SnDLZRAl1Frm5U=;
-        b=1huJ5oysI05xJ1aHtwvlAGyBBPx/KuQAWKBT2mbRy2s/c41Q02EyXPqdoYas7YhLiw
-         aZbl36IYg9/w54HDTlWv4uwV92L/19zz/n+atRnkd5JmwAh2kzomA4aCed4ye4XkwNfx
-         WSvvvAgkB150U5+i7Eleh8RUEYD9u6cQzCrK4rStxxrWjDru8KdQqpcNhWPGLiUUTwg+
-         wFdr2niwD0jSxq5jXhK6t+Vyn/l4eCZUNNNBvs0UsPCami3Ng9vjevcxUAMLmUYIxA3I
-         zf7WZo/4dERpFEWwK9wv8SsuuczE/In0WD4P7RWskmZW1k6qwQKdX2O4YuO2x5Jzxjn8
-         gCMQ==
-X-Gm-Message-State: AOAM532mdIbON8UzZvjWjFYsfzqBlgByhpATVexRGrMZcPUC8hVnqM5c
-        KdHF7iq0yktmgbV/ThcmIrV6DO5XAhPEQA==
-X-Google-Smtp-Source: ABdhPJz42JllLibAuMU4PSsWo9d4pmXBI6FidoZzBNe3/Oe9MjVOfwHK8qKnrFH4pZzBziLDXJNmxQ==
-X-Received: by 2002:a05:6512:3190:: with SMTP id i16mr9019031lfe.224.1634370011048;
-        Sat, 16 Oct 2021 00:40:11 -0700 (PDT)
-Received: from kari-VirtualBox (85-23-89-224.bb.dnainternet.fi. [85.23.89.224])
-        by smtp.gmail.com with ESMTPSA id a19sm827633ljb.3.2021.10.16.00.40.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 16 Oct 2021 00:40:10 -0700 (PDT)
-Date:   Sat, 16 Oct 2021 10:40:08 +0300
-From:   Kari Argillander <kari.argillander@gmail.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Jens Axboe <axboe@kernel.dk>, Coly Li <colyli@suse.de>,
-        Mike Snitzer <snitzer@redhat.com>, Song Liu <song@kernel.org>,
-        David Sterba <dsterba@suse.com>,
-        Josef Bacik <josef@toxicpanda.com>,
-        Theodore Ts'o <tytso@mit.edu>,
-        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
-        Dave Kleikamp <shaggy@kernel.org>,
-        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
-        Anton Altaparmakov <anton@tuxera.com>,
-        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
-        Kees Cook <keescook@chromium.org>,
-        Phillip Lougher <phillip@squashfs.org.uk>,
-        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
-        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
-        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
-        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
-        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
-Subject: Re: [PATCH 20/30] ntfs3: use bdev_nr_bytes instead of open coding it
-Message-ID: <20211016074008.o6wl7uy3vsrz4v3b@kari-VirtualBox>
-References: <20211015132643.1621913-1-hch@lst.de>
- <20211015132643.1621913-21-hch@lst.de>
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=pP45eXzz1JfHD3xUyRKD/lLddvhCQLEQjybOQXsKJZk=;
+        b=spV28wBqRYQCuNjuzFlqG/D716dSPcWcub8LjEOjEdZb2ZQ84uvwO5D+J/55cP+N4G
+         cfWN93Q3BjJggPUfGaWTICC94pN6fb7E6MXDXAOqYXjixLhf6RUdNWv7wPZagrTQnwdJ
+         PJPsXxYRZsUzxUL1lgxbYmvdWjmfogKz5Zrfu2Ho5aaIHT2Hyv51kH0ndoYOF15bvMHJ
+         eIiSCEM8fUSKIU5WEGqldOU/Fj/g30hvsld9AXjBRW7wOMUU6TIhVp4wv1Wc6o8rz4fe
+         9spAvxyGYJuYBuFF85B4Ba997lbyRtBvimgdo1wGfDrNpVnjxyRmBxWOrwNE3sZJdIPV
+         b/fg==
+X-Gm-Message-State: AOAM533a/vheEriQYK4PVn09ns00kDO4XR4scM6/JPVst5eA98kHxERk
+        tPD3NouOQzRDSppHgFmbEv0=
+X-Google-Smtp-Source: ABdhPJzPTxj6WaG/HsuZwJMHGnDS0JgiG83KKopx8Ui7F+UjhcNXoTQQG+G0LUYmgeY01QR00i7skg==
+X-Received: by 2002:a63:3481:: with SMTP id b123mr15521900pga.230.1634419300624;
+        Sat, 16 Oct 2021 14:21:40 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:f0a3:eba0:b940:fc7c? ([2601:647:4000:d7:f0a3:eba0:b940:fc7c])
+        by smtp.gmail.com with ESMTPSA id k3sm14836806pjg.43.2021.10.16.14.21.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 16 Oct 2021 14:21:39 -0700 (PDT)
+Message-ID: <a6354cfb-753a-8376-b96c-f35fda9b9b8a@acm.org>
+Date:   Sat, 16 Oct 2021 14:21:37 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211015132643.1621913-21-hch@lst.de>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
+Subject: Re: [RFC PATCH 3/3] scsi, usb: storage: Complete the blk-request
+ directly.
+Content-Language: en-US
+To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+        linux-block@vger.kernel.org, linux-mmc@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
+        usb-storage@lists.one-eyed-alien.net
+Cc:     Jens Axboe <axboe@kernel.dk>, Ulf Hansson <ulf.hansson@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Thomas Gleixner <tglx@linutronix.de>
+References: <20211015151412.3229037-1-bigeasy@linutronix.de>
+ <20211015151412.3229037-4-bigeasy@linutronix.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20211015151412.3229037-4-bigeasy@linutronix.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, Oct 15, 2021 at 03:26:33PM +0200, Christoph Hellwig wrote:
-> Use the proper helper to read the block device size.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/ntfs3/super.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
-> index 55bbc9200a10e..7ed2cb5e8b1d9 100644
-> --- a/fs/ntfs3/super.c
-> +++ b/fs/ntfs3/super.c
-> @@ -918,7 +918,6 @@ static int ntfs_fill_super(struct super_block *sb, void *data, int silent)
->  	int err;
->  	struct ntfs_sb_info *sbi;
->  	struct block_device *bdev = sb->s_bdev;
-> -	struct inode *bd_inode = bdev->bd_inode;
+On 10/15/21 08:14, Sebastian Andrzej Siewior wrote:
+> +static inline void scsi_done(struct scsi_cmnd *scmd)
+> +{
+> +	scmd->scsi_done(scmd);
+> +}
 
-Linus merged latest ntfs3 stuff and this temp variable is not anymore in
-upstream. So this patch will conflict. Just so that you know.
+How about leaving out this function definition and open-coding it into 
+its callers?
 
->  	struct request_queue *rq = bdev_get_queue(bdev);
->  	struct inode *inode = NULL;
->  	struct ntfs_inode *ni;
-> @@ -967,7 +966,7 @@ static int ntfs_fill_super(struct super_block *sb, void *data, int silent)
->  
->  	/* Parse boot. */
->  	err = ntfs_init_from_boot(sb, rq ? queue_logical_block_size(rq) : 512,
-> -				  bd_inode->i_size);
-> +				  bdev_nr_bytes(bdev));
->  	if (err)
->  		goto out;
->  
-> -- 
-> 2.30.2
-> 
-> 
+Additionally, please rebase this patch series on top of "[PATCH v3 
+00/88] Call scsi_done() directly" 
+(https://lore.kernel.org/linux-scsi/20211007202923.2174984-1-bvanassche@acm.org/ 
+or https://github.com/bvanassche/linux/tree/scsi-remove-done-callback). 
+Otherwise Linus will have to resolve a very complicated merge conflict.
+
+Thank you,
+
+Bart.
