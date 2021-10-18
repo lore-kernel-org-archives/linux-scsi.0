@@ -2,67 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AA7BBC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD642C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:53:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7E5CD610A3
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:53:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B81961212
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:53:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229653AbhJRKze (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Oct 2021 06:55:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54440 "EHLO
+        id S230439AbhJRK4G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Oct 2021 06:56:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54570 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229491AbhJRKzd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 06:55:33 -0400
-Received: from bombadil.infradead.org (unknown [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EF806C06161C;
-        Mon, 18 Oct 2021 03:53:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=PYEyLBKPEiLefC1Su7n2R+mYeFRQvlAM8yBTFCwjueM=; b=rUm5vNgAbVR2F1C34gVTJtaGvk
-        LCA6vlXmUdo8OXuSXVQP17YcMzmFfetDFOhd8TXwUMmuo+eWowynPchij8+M5TkAqqR9D4LwbUQX0
-        5tMRTcaoKk91bsghDtgYFbTFYmC3JAlcOe3cTXKbTftJndnbTUZHE9xuUO8wMJ+gIIMhgjPoV30Zt
-        6OeK8DLtENvhIEidAMRN7vQ9t0Q7Lx3DqAnw1gxY9/nGAHVk94freh8hGP2Beo4XBbFAa9klqzYkn
-        vSNlWVk593z1y0ciGhz5W/am3OrVbZPXjUZNHybtrPKGMNwANrD8jaJXp/Rcpv7rWclFVZfbTkU7a
-        W92gUEqA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mcQGe-00F9Mm-NY; Mon, 18 Oct 2021 10:53:20 +0000
-Date:   Mon, 18 Oct 2021 03:53:20 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Peter Zijlstra <peterz@infradead.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Christoph Hellwig <hch@infradead.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH] irq_poll: Use raise_softirq_irqoff() in cpu_dead notifier
-Message-ID: <YW1SIE08f3X3joxe@infradead.org>
-References: <20210930103754.2128949-1-bigeasy@linutronix.de>
+        with ESMTP id S229714AbhJRK4F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 06:56:05 -0400
+Received: from galois.linutronix.de (Galois.linutronix.de [IPv6:2a0a:51c0:0:12e:550::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BB534C06161C;
+        Mon, 18 Oct 2021 03:53:54 -0700 (PDT)
+Date:   Mon, 18 Oct 2021 12:53:50 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020; t=1634554432;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DmyYIQ6/Gn+EjOYyOfOHPKtVvGqXG+QS63gXgRjV3is=;
+        b=c1JjhlVq2JLxhaE4mEibOQ0Rr42NuWh6jXeIqf/j+WBGOhmUZ1+4VPNlBBQyxIRdcbxxnd
+        HQSpfaErRqgwy8WlkNKSTlbszmOU1MiGTd2L6Bv7apQABT0x/TMBHLLxLoKiW2xl/AdED5
+        1XUN9gwz2w2KQNF+D6KmHgm1BmDu6WEJEXGxQmnOCEhvnpXfhw8nF6NW8tqt2OcOq8fT3+
+        RXIBz4MQ7JCtSkCOaQJcJ0f2N8Ik+pEhKG92DEt6zHSARghm/h/eFJSmrZoH0uFvxPGSNe
+        4bW9B29me+gDNziczQYfLK8V66lRsHtzcUm0gmf7NZU7zRwW3QCRBdCmVSq95A==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+        s=2020e; t=1634554432;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=DmyYIQ6/Gn+EjOYyOfOHPKtVvGqXG+QS63gXgRjV3is=;
+        b=BLoxm2wOMyY2yny6TnhD5ICCWoAVKALx1QkCvtqk4fTKD8wzdr9gXqfPMoyRDtrbRm9r3P
+        s8GIPEsCAX8CUkBg==
+From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-block@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+        Jens Axboe <axboe@kernel.dk>,
+        Ulf Hansson <ulf.hansson@linaro.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Alan Stern <stern@rowland.harvard.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [RFC PATCH 3/3] scsi, usb: storage: Complete the blk-request
+ directly.
+Message-ID: <20211018105350.7p2exznyn6e2gbtn@linutronix.de>
+References: <20211015151412.3229037-1-bigeasy@linutronix.de>
+ <20211015151412.3229037-4-bigeasy@linutronix.de>
+ <YWmmn4MpTSGHRVOU@infradead.org>
+ <20211015161653.muq37x6mkeru6lxc@linutronix.de>
+ <e567fc59-46b1-bc83-c90c-199257ff8c93@acm.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20210930103754.2128949-1-bigeasy@linutronix.de>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <e567fc59-46b1-bc83-c90c-199257ff8c93@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Sep 30, 2021 at 12:37:54PM +0200, Sebastian Andrzej Siewior wrote:
-> __raise_softirq_irqoff() adds a bit to the pending sofirq mask and this
-> is it. The softirq won't be handled in a deterministic way but randomly
-> when an interrupt fires and handles softirq in its irq_exit() routine or
-> if something randomly checks and handles pending softirqs in the call
-> chain before the CPU goes idle.
+On 2021-10-16 19:17:05 [-0700], Bart Van Assche wrote:
+> On 10/15/21 09:16, Sebastian Andrzej Siewior wrote:
+> > On 2021-10-15 09:04:47 [-0700], Christoph Hellwig wrote:
+> > > Bart has been working on removing the ->scsi_done indirection, so this
+> > > will need to find a way to interact with that
+> > 
+> > Okay. So I just wait until it is there. Is this v5.15/16 material?
 > 
-> Add a local_bh_disable/enable() around the IRQ-off section which will
-> handle pending softirqs.
+> Isn't it too late to submit patches for v5.15 other than bugfixes for
+> patches merged during the v5.15 merge window?
 
-This patch leaves me extremely confused, and it would even more if I was
-just reading the code.  local_irq_disable is supposed to disable BHs
-as well, so the code looks pretty much nonsensical to me.  But
-apparently that isn't the point if I follow your commit message as you
-don't care about an extra level of BH disabling but want to force a
-side-effect of the re-enabling?  Why not directly call the helper
-to schedule the softirq then? 
+yeah, off by one, meant 16/17 ;)
+
+> Martin Petersen, the SCSI maintainer, has been so kind to queue the patch
+> series that removes the scsi_done member for the v5.16 merge window. So that
+> patch series should become available soon in the following git repository:
+> git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git
+
+Thanks.
+
+> Thanks,
+> 
+> Bart.
+
+Sebastian
