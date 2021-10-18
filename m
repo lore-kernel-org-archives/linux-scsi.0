@@ -2,417 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41687C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 15:33:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04685C43219
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 17:16:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 192496103D
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 15:33:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E526D61263
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 17:16:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232968AbhJRPgF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Oct 2021 11:36:05 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:39260 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231946AbhJRPgE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 11:36:04 -0400
-Date:   Mon, 18 Oct 2021 17:33:51 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1634571232;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=X5PLVM+v85DEZl575kxIvRhSuueGuUp8y25ivz6nr4c=;
-        b=cFEqQK+DtsgyuaMeqPBRnSwOpWX75TDDARBn39YmCASB1nFW1Ulsl2rrU0Czo+InNaM6jE
-        LiOyY0LtgNVGuhO7JzoG+hEpHp0jQnA0OVZgo+lQ49x/KDs9aFXO1DkQ2LbveIzJ7n7LXV
-        kYiW/Jxo3fI5i0I56KAJ3aJTLLXwpLMcrXZ+cTPALpwZs4au77y1mAX3hSS8q+Q6Oo76p3
-        K62JEB+iC9sAV26G417uHNvPihEDfG5n5PjkYYq319t2j4WQIE5VLJLFtj4+2xgCsTkrJi
-        TJSZZU3EUr/wpFt7rkIgTI1x2Tni00fbjHtoSuw28PMgUPE2S0L5Go3s2CxBvg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1634571232;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type;
-        bh=X5PLVM+v85DEZl575kxIvRhSuueGuUp8y25ivz6nr4c=;
-        b=oTeipKltCk6EaJGTUlRQUR9rqVL9N3XIzDSgmW+gVivZKCjvpTWGPqosx+9+zDr7dPzUIH
-        cktuZALJkmz0j/AA==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     linux-scsi@vger.kernel.org
-Cc:     Subbu Seetharaman <subbu.seetharaman@broadcom.com>,
-        Ketan Mukadam <ketan.mukadam@broadcom.com>,
-        Jitendra Bhivare <jitendra.bhivare@broadcom.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH] scsi: be2iscsi: Replace irq_poll with threaded IRQ handler.
-Message-ID: <20211018153351.t6mz4x3ugppet23k@linutronix.de>
+        id S233959AbhJRRSZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Oct 2021 13:18:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59376 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233902AbhJRRSX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 13:18:23 -0400
+Received: from mail-io1-xd36.google.com (mail-io1-xd36.google.com [IPv6:2607:f8b0:4864:20::d36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 543D1C06176E
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2021 10:16:11 -0700 (PDT)
+Received: by mail-io1-xd36.google.com with SMTP id z69so14024432iof.9
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2021 10:16:11 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=TVetvWb4+B/byEt0HFTw7Li/1VctyD/QgsPHbsid4H8=;
+        b=rkRLnHg1S4u8HX11jOSUsmgOu279172YT/qIHLznH/jwI1IdjUhSA0m6I5uyrdNBJQ
+         GZpTrNqHq3BbgsfYzCH0RiwOG+GG3HdSbaxtt1+taUjeE/o2nf0qjkZ23LPZL14mgyVx
+         r5QceDW/MeG8za7F5qhNzSKPR2x7wRt1a8B5T995CSTZ1u9OS6Ch+FzWEBtUbHpcq9AQ
+         KUlG6PBJnMhvawvbI3ONNOa5vJZRKzg+iSpti1pyNyehN+8MHnCAxM/sIrViilbzyvRG
+         Q5nXCXvu4cEFPGfCltmsbNSsOl86kwWVB1XaqYHb9cyqB+54s92TMxyv7jKS0YWyf0KL
+         kSjg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=TVetvWb4+B/byEt0HFTw7Li/1VctyD/QgsPHbsid4H8=;
+        b=5tNe/QLCjPzz3PILyD16E8cStdredWQyB+t9Re1q608C8H4ylBR9P/vdU8WAFcixtW
+         pMFhvkJ6o/pZYtYTrreVhHcIWXbQyoEXSYDCA0L4+SIb+JxQoI45MFpGTIxjmp9gK3C4
+         hcainXwNp4E0Wtrbc++3xGRcTH/s05Ekcgw3CndojtmwDzWiQYcUsfr1C/TbztdkPoyE
+         cB81JDsmYjXY6Km1/kreL/qbWsLX3kq8DGVq8bSg9WIL29aI06RlQnGNvpn2MBZk7IqJ
+         271VcOX8letyOSUrVo/NmswargglswIi6RxNgVj5/p2tXkWPs30B8sKSQvsIBuIv1eR0
+         jIXQ==
+X-Gm-Message-State: AOAM530wVe58RfiM7OZv7DYnoksmPkI+puWYEJX8ozZ6hlwTfOLbk+yd
+        5+BXfD8Q5SNGlR5ABrqkLo2rLA==
+X-Google-Smtp-Source: ABdhPJz+RKspHd19wACUssDbTNQ6NJRkN4g7OdL6jX2ni5qwlHyFbIbt1tgTl8EVs5WghyoBxus9iA==
+X-Received: by 2002:a02:ac8a:: with SMTP id x10mr745552jan.43.1634577370548;
+        Mon, 18 Oct 2021 10:16:10 -0700 (PDT)
+Received: from [192.168.1.30] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id u12sm7081225ioc.33.2021.10.18.10.16.08
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 18 Oct 2021 10:16:09 -0700 (PDT)
+Subject: Re: don't use ->bd_inode to access the block device size v3
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
+        Song Liu <song@kernel.org>, David Sterba <dsterba@suse.com>,
+        Josef Bacik <josef@toxicpanda.com>,
+        Theodore Ts'o <tytso@mit.edu>,
+        OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>,
+        Dave Kleikamp <shaggy@kernel.org>,
+        Ryusuke Konishi <konishi.ryusuke@gmail.com>,
+        Anton Altaparmakov <anton@tuxera.com>,
+        Konstantin Komarov <almaz.alexandrovich@paragon-software.com>,
+        Kees Cook <keescook@chromium.org>,
+        Phillip Lougher <phillip@squashfs.org.uk>,
+        Jan Kara <jack@suse.com>, linux-block@vger.kernel.org,
+        dm-devel@redhat.com, drbd-dev@lists.linbit.com,
+        linux-bcache@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-btrfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+        linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
+        ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
+References: <20211018101130.1838532-1-hch@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <4a8c3a39-9cd3-5b2f-6d0f-a16e689755e6@kernel.dk>
+Date:   Mon, 18 Oct 2021 11:16:08 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
+In-Reply-To: <20211018101130.1838532-1-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The driver is using irq_poll() (a NAPI like generic interface) for
-completing individual I/O requests.
-This could be replaced with threaded interrupts. The threaded interrupt
-runs as a RT thread with priority 50-FIFO. It should run as the first
-task after the interrupt unless a task with higher priority is active.
-It can be interrupt by another hardware interrupt or a softirq.
+On 10/18/21 4:11 AM, Christoph Hellwig wrote:
+> Hi Jens,
+> 
+> various drivers currently poke directy at the block device inode, which
+> is a bit of a mess.  This series cleans up the places that read the
+> block device size to use the proper helpers.  I have separate patches
+> for many of the other bd_inode uses, but this series is already big
+> enough as-is,
 
-This has been compile tested only. I'm interested if it causes any
-regressions, improves the situation or neither.
+This looks good to me. Followup question, as it's related - I've got a
+hacky patch that caches the inode size in the bdev:
 
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
----
- drivers/scsi/be2iscsi/Kconfig    |   1 -
- drivers/scsi/be2iscsi/be.h       |   3 +-
- drivers/scsi/be2iscsi/be_iscsi.c |   8 +-
- drivers/scsi/be2iscsi/be_main.c  | 145 ++++++++++++++-----------------
- drivers/scsi/be2iscsi/be_main.h  |   2 +-
- 5 files changed, 74 insertions(+), 85 deletions(-)
+https://git.kernel.dk/cgit/linux-block/commit/?h=perf-wip&id=c754951eb7193258c35a574bd1ccccb7c4946ee4
 
-diff --git a/drivers/scsi/be2iscsi/Kconfig b/drivers/scsi/be2iscsi/Kconfig
-index 958c9b46ec787..0118b2a765caf 100644
---- a/drivers/scsi/be2iscsi/Kconfig
-+++ b/drivers/scsi/be2iscsi/Kconfig
-@@ -4,7 +4,6 @@ config BE2ISCSI
- 	depends on PCI && SCSI && NET
- 	select SCSI_ISCSI_ATTRS
- 	select ISCSI_BOOT_SYSFS
--	select IRQ_POLL
- 
- 	help
- 	This driver implements the iSCSI functionality for Emulex
-diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-index 4c58a02590c7b..8623886810310 100644
---- a/drivers/scsi/be2iscsi/be.h
-+++ b/drivers/scsi/be2iscsi/be.h
-@@ -12,7 +12,7 @@
- 
- #include <linux/pci.h>
- #include <linux/if_vlan.h>
--#include <linux/irq_poll.h>
-+
- #define FW_VER_LEN	32
- #define MCC_Q_LEN	128
- #define MCC_CQ_LEN	256
-@@ -90,7 +90,6 @@ struct be_eq_obj {
- 	struct beiscsi_hba *phba;
- 	struct be_queue_info *cq;
- 	struct work_struct mcc_work; /* Work Item */
--	struct irq_poll	iopoll;
- };
- 
- struct be_mcc_obj {
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 8aeaddc93b167..e15d5c7ef611e 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -1224,15 +1224,17 @@ static void beiscsi_flush_cq(struct beiscsi_hba *phba)
- 	struct be_eq_obj *pbe_eq;
- 	struct hwi_controller *phwi_ctrlr;
- 	struct hwi_context_memory *phwi_context;
-+	struct pci_dev *pcidev;
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
-+	pcidev = phba->pcidev;
- 
- 	for (i = 0; i < phba->num_cpus; i++) {
- 		pbe_eq = &phwi_context->be_eq[i];
--		irq_poll_disable(&pbe_eq->iopoll);
--		beiscsi_process_cq(pbe_eq, BE2_MAX_NUM_CQ_PROC);
--		irq_poll_enable(&pbe_eq->iopoll);
-+		disable_irq(pci_irq_vector(pcidev, i));
-+		beiscsi_process_cq(pbe_eq);
-+		enable_irq(pci_irq_vector(pcidev, i));
- 	}
- }
- 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index e70f69f791db6..c911444376459 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -35,7 +35,6 @@
- #include <linux/iscsi_boot_sysfs.h>
- #include <linux/module.h>
- #include <linux/bsg-lib.h>
--#include <linux/irq_poll.h>
- 
- #include <scsi/libiscsi.h>
- #include <scsi/scsi_bsg_iscsi.h>
-@@ -51,7 +50,6 @@
- #include "be_mgmt.h"
- #include "be_cmds.h"
- 
--static unsigned int be_iopoll_budget = 10;
- static unsigned int be_max_phys_size = 64;
- static unsigned int enable_msix = 1;
- 
-@@ -59,7 +57,6 @@ MODULE_DESCRIPTION(DRV_DESC " " BUILD_STR);
- MODULE_VERSION(BUILD_STR);
- MODULE_AUTHOR("Emulex Corporation");
- MODULE_LICENSE("GPL");
--module_param(be_iopoll_budget, int, 0);
- module_param(enable_msix, int, 0);
- module_param(be_max_phys_size, uint, S_IRUGO);
- MODULE_PARM_DESC(be_max_phys_size,
-@@ -696,6 +693,53 @@ static irqreturn_t be_isr_mcc(int irq, void *dev_id)
- 	return IRQ_HANDLED;
- }
- 
-+static irqreturn_t be_iopoll(struct beiscsi_hba *phba)
-+{
-+	unsigned int ret, io_events;
-+	struct be_eq_obj *pbe_eq;
-+	struct be_eq_entry *eqe = NULL;
-+	struct be_queue_info *eq;
-+
-+	if (beiscsi_hba_in_error(phba))
-+		return IRQ_NONE;
-+
-+	io_events = 0;
-+	eq = &pbe_eq->q;
-+	eqe = queue_tail_node(eq);
-+	while (eqe->dw[offsetof(struct amap_eq_entry, valid) / 32] &
-+			EQE_VALID_MASK) {
-+		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
-+		queue_tail_inc(eq);
-+		eqe = queue_tail_node(eq);
-+		io_events++;
-+	}
-+	hwi_ring_eq_db(phba, eq->id, 1, io_events, 0, 1);
-+
-+	ret = beiscsi_process_cq(pbe_eq);
-+	pbe_eq->cq_count += ret;
-+	beiscsi_log(phba, KERN_INFO,
-+		    BEISCSI_LOG_CONFIG | BEISCSI_LOG_IO,
-+		    "BM_%d : rearm pbe_eq->q.id =%d ret %d\n",
-+		    pbe_eq->q.id, ret);
-+	if (!beiscsi_hba_in_error(phba))
-+		hwi_ring_eq_db(phba, pbe_eq->q.id, 0, 0, 1, 1);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static irqreturn_t be_isr_misx_th(int irq, void *dev_id)
-+{
-+	struct beiscsi_hba *phba;
-+	struct be_queue_info *eq;
-+	struct be_eq_obj *pbe_eq;
-+
-+	pbe_eq = dev_id;
-+	eq = &pbe_eq->q;
-+
-+	phba = pbe_eq->phba;
-+	return be_iopoll(phba);
-+}
-+
- /**
-  * be_isr_msix - The isr routine of the driver.
-  * @irq: Not used
-@@ -713,9 +757,16 @@ static irqreturn_t be_isr_msix(int irq, void *dev_id)
- 	phba = pbe_eq->phba;
- 	/* disable interrupt till iopoll completes */
- 	hwi_ring_eq_db(phba, eq->id, 1,	0, 0, 1);
--	irq_poll_sched(&pbe_eq->iopoll);
- 
--	return IRQ_HANDLED;
-+	return IRQ_WAKE_THREAD;
-+}
-+
-+static irqreturn_t be_isr_thread(int irq, void *dev_id)
-+{
-+	struct beiscsi_hba *phba;
-+
-+	phba = dev_id;
-+	return be_iopoll(phba);
- }
- 
- /**
-@@ -735,6 +786,7 @@ static irqreturn_t be_isr(int irq, void *dev_id)
- 	struct be_ctrl_info *ctrl;
- 	struct be_eq_obj *pbe_eq;
- 	int isr, rearm;
-+	irqreturn_t ret;
- 
- 	phba = dev_id;
- 	ctrl = &phba->ctrl;
-@@ -774,10 +826,11 @@ static irqreturn_t be_isr(int irq, void *dev_id)
- 		/* rearm for MCCQ */
- 		rearm = 1;
- 	}
-+	ret = IRQ_HANDLED;
- 	if (io_events)
--		irq_poll_sched(&pbe_eq->iopoll);
-+		ret = IRQ_WAKE_THREAD;
- 	hwi_ring_eq_db(phba, eq->id, 0, (io_events + mcc_events), rearm, 1);
--	return IRQ_HANDLED;
-+	return ret;
- }
- 
- static void beiscsi_free_irqs(struct beiscsi_hba *phba)
-@@ -819,9 +872,10 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
- 				goto free_msix_irqs;
- 			}
- 
--			ret = request_irq(pci_irq_vector(pcidev, i),
--					  be_isr_msix, 0, phba->msi_name[i],
--					  &phwi_context->be_eq[i]);
-+			ret = request_threaded_irq(pci_irq_vector(pcidev, i),
-+						   be_isr_msix, be_isr_misx_th,
-+						   0, phba->msi_name[i],
-+						   &phwi_context->be_eq[i]);
- 			if (ret) {
- 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 					    "BM_%d : %s-Failed to register msix for i = %d\n",
-@@ -847,8 +901,8 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
- 		}
- 
- 	} else {
--		ret = request_irq(pcidev->irq, be_isr, IRQF_SHARED,
--				  "beiscsi", phba);
-+		ret = request_threaded_irq(pcidev->irq, be_isr, be_isr_thread,
-+					   IRQF_SHARED, "beiscsi", phba);
- 		if (ret) {
- 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 				    "BM_%d : %s-Failed to register irq\n",
-@@ -1839,12 +1893,11 @@ static void beiscsi_mcc_work(struct work_struct *work)
- /**
-  * beiscsi_process_cq()- Process the Completion Queue
-  * @pbe_eq: Event Q on which the Completion has come
-- * @budget: Max number of events to processed
-  *
-  * return
-  *     Number of Completion Entries processed.
-  **/
--unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq, int budget)
-+unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq)
- {
- 	struct be_queue_info *cq;
- 	struct sol_cqe *sol;
-@@ -2018,55 +2071,12 @@ unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq, int budget)
- 		queue_tail_inc(cq);
- 		sol = queue_tail_node(cq);
- 		num_processed++;
--		if (total == budget)
--			break;
- 	}
- 
- 	hwi_ring_cq_db(phba, cq->id, num_processed, 1);
- 	return total;
- }
- 
--static int be_iopoll(struct irq_poll *iop, int budget)
--{
--	unsigned int ret, io_events;
--	struct beiscsi_hba *phba;
--	struct be_eq_obj *pbe_eq;
--	struct be_eq_entry *eqe = NULL;
--	struct be_queue_info *eq;
--
--	pbe_eq = container_of(iop, struct be_eq_obj, iopoll);
--	phba = pbe_eq->phba;
--	if (beiscsi_hba_in_error(phba)) {
--		irq_poll_complete(iop);
--		return 0;
--	}
--
--	io_events = 0;
--	eq = &pbe_eq->q;
--	eqe = queue_tail_node(eq);
--	while (eqe->dw[offsetof(struct amap_eq_entry, valid) / 32] &
--			EQE_VALID_MASK) {
--		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
--		queue_tail_inc(eq);
--		eqe = queue_tail_node(eq);
--		io_events++;
--	}
--	hwi_ring_eq_db(phba, eq->id, 1, io_events, 0, 1);
--
--	ret = beiscsi_process_cq(pbe_eq, budget);
--	pbe_eq->cq_count += ret;
--	if (ret < budget) {
--		irq_poll_complete(iop);
--		beiscsi_log(phba, KERN_INFO,
--			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_IO,
--			    "BM_%d : rearm pbe_eq->q.id =%d ret %d\n",
--			    pbe_eq->q.id, ret);
--		if (!beiscsi_hba_in_error(phba))
--			hwi_ring_eq_db(phba, pbe_eq->q.id, 0, 0, 1, 1);
--	}
--	return ret;
--}
--
- static void
- hwi_write_sgl_v2(struct iscsi_wrb *pwrb, struct scatterlist *sg,
- 		  unsigned int num_sg, struct beiscsi_io_task *io_task)
-@@ -5308,10 +5318,6 @@ static int beiscsi_enable_port(struct beiscsi_hba *phba)
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
--	for (i = 0; i < phba->num_cpus; i++) {
--		pbe_eq = &phwi_context->be_eq[i];
--		irq_poll_init(&pbe_eq->iopoll, be_iopoll_budget, be_iopoll);
--	}
- 
- 	i = (phba->pcidev->msix_enabled) ? i : 0;
- 	/* Work item for MCC handling */
-@@ -5344,10 +5350,6 @@ static int beiscsi_enable_port(struct beiscsi_hba *phba)
- 	return 0;
- 
- cleanup_port:
--	for (i = 0; i < phba->num_cpus; i++) {
--		pbe_eq = &phwi_context->be_eq[i];
--		irq_poll_disable(&pbe_eq->iopoll);
--	}
- 	hwi_cleanup_port(phba);
- 
- disable_msix:
-@@ -5379,10 +5381,6 @@ static void beiscsi_disable_port(struct beiscsi_hba *phba, int unload)
- 	beiscsi_free_irqs(phba);
- 	pci_free_irq_vectors(phba->pcidev);
- 
--	for (i = 0; i < phba->num_cpus; i++) {
--		pbe_eq = &phwi_context->be_eq[i];
--		irq_poll_disable(&pbe_eq->iopoll);
--	}
- 	cancel_delayed_work_sync(&phba->eqd_update);
- 	cancel_work_sync(&phba->boot_work);
- 	/* WQ might be running cancel queued mcc_work if we are not exiting */
-@@ -5637,11 +5635,6 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
- 
--	for (i = 0; i < phba->num_cpus; i++) {
--		pbe_eq = &phwi_context->be_eq[i];
--		irq_poll_init(&pbe_eq->iopoll, be_iopoll_budget, be_iopoll);
--	}
--
- 	i = (phba->pcidev->msix_enabled) ? i : 0;
- 	/* Work item for MCC handling */
- 	pbe_eq = &phwi_context->be_eq[i];
-@@ -5698,10 +5691,6 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	hwi_disable_intr(phba);
- 	beiscsi_free_irqs(phba);
- disable_iopoll:
--	for (i = 0; i < phba->num_cpus; i++) {
--		pbe_eq = &phwi_context->be_eq[i];
--		irq_poll_disable(&pbe_eq->iopoll);
--	}
- 	destroy_workqueue(phba->wq);
- free_twq:
- 	hwi_cleanup_port(phba);
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 98977c0700f1a..5c0e54eaf9e99 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -799,7 +799,7 @@ void hwi_ring_cq_db(struct beiscsi_hba *phba,
- 		     unsigned int id, unsigned int num_processed,
- 		     unsigned char rearm);
- 
--unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq, int budget);
-+unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq);
- void beiscsi_process_mcc_cq(struct beiscsi_hba *phba);
- 
- struct pdu_nop_out {
+so we don't have to dip into the inode itself for the fast path. While
+it's obviously not something being proposed for inclusion right now, is
+there a world in which we can make something like that work?
+
 -- 
-2.33.0
+Jens Axboe
 
