@@ -2,139 +2,191 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DB09C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 12:27:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AED61C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 12:45:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0DA8560174
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 12:27:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 94CAC60EE9
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 12:45:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231167AbhJRM3O (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Oct 2021 08:29:14 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:40186 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S229843AbhJRM3N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 18 Oct 2021 08:29:13 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 7F48141206;
-        Mon, 18 Oct 2021 12:27:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:date:subject:subject:from:from
-        :received:received:received; s=mta-01; t=1634560020; x=
-        1636374421; bh=SPDSUZyQ+LkQQv0yTHGMYMcsB0vdKmmmorWkm9qTSjI=; b=c
-        Bs0N10m/jNemmZOFMaunnythey9+QJNYvipj58VYaLYIBZhqzFY4MN5m1V4ArNh3
-        bn9o5BgZgFM5on/dAc6QpNLnTz0/zqHuiv1Ik+V8EUC+pMdzqaz883GWtzuGAwXT
-        MhWYqdCfsQoZswzxaVQh0MjP4aPUv9cG84Pw9hIb0Q=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 0PAGD45EFvas; Mon, 18 Oct 2021 15:27:00 +0300 (MSK)
-Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id C6588400F6;
-        Mon, 18 Oct 2021 15:26:59 +0300 (MSK)
-Received: from NB-591.corp.yadro.com (10.199.10.157) by
- T-EXCH-04.corp.yadro.com (172.17.100.104) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Mon, 18 Oct 2021 15:26:58 +0300
-From:   Dmitry Bogdanov <d.bogdanov@yadro.com>
-To:     Martin Petersen <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        Nilesh Javali <njavali@marvell.com>,
-        Dmitry Bogdanov <d.bogdanov@yadro.com>
-Subject: [PATCH RESEND] scsi: qla2xxx: fix unmap already freed sgl
-Date:   Mon, 18 Oct 2021 15:26:50 +0300
-Message-ID: <20211018122650.11846-1-d.bogdanov@yadro.com>
-X-Mailer: git-send-email 2.25.1
+        id S231601AbhJRMrZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Oct 2021 08:47:25 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:63896 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231682AbhJRMrY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 08:47:24 -0400
+Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20211018124509epoutp041aefb2ec6b1b3a6fa3c4c42b21f49ecf~vIKsyErpC0084700847epoutp04E
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2021 12:45:09 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20211018124509epoutp041aefb2ec6b1b3a6fa3c4c42b21f49ecf~vIKsyErpC0084700847epoutp04E
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1634561109;
+        bh=xLivwsWbFoOvzAMprtaF5HPMWnZzSR74VzNY3pKyuHA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Hbl4NkqtM9nHNIOVurZIhxp5ZYeGBV4c6aelzjxchU8Xhwx7JZMnfucCqbuSVmj3k
+         Yr63QQmvvMwfWSvisEnHZC+g71fub5oOh6QvpQMhOwJJtqJ7t8t9V8NyqdtpSjY/kW
+         fB5OaHAoaWrYlfq48TVmprO/ppumHUAGFr+/l/Co=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        epcas2p4.samsung.com (KnoxPortal) with ESMTP id
+        20211018124508epcas2p489a202c517805dac71e37b39a0deef70~vIKrl-cxS2241122411epcas2p4W;
+        Mon, 18 Oct 2021 12:45:08 +0000 (GMT)
+Received: from epsmges2p3.samsung.com (unknown [182.195.36.88]) by
+        epsnrtp1.localdomain (Postfix) with ESMTP id 4HXxRP6wNSz4x9Pv; Mon, 18 Oct
+        2021 12:45:05 +0000 (GMT)
+Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
+        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
+        58.2C.10014.15C6D616; Mon, 18 Oct 2021 21:45:05 +0900 (KST)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+        20211018124505epcas2p22a463738c9ee028274be7ad06ed97a0d~vIKpChUHj2030920309epcas2p2D;
+        Mon, 18 Oct 2021 12:45:05 +0000 (GMT)
+Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20211018124505epsmtrp165d9e15d896f695d1addfb303bbff9bf~vIKpBmunM1580315803epsmtrp1M;
+        Mon, 18 Oct 2021 12:45:05 +0000 (GMT)
+X-AuditID: b6c32a47-489ff7000000271e-89-616d6c51f153
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
+        FB.40.08738.15C6D616; Mon, 18 Oct 2021 21:45:05 +0900 (KST)
+Received: from localhost.localdomain (unknown [10.229.9.51]) by
+        epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+        20211018124505epsmtip2b3872f440f8f73402b96a17cee80a8ff~vIKozFstg0224202242epsmtip2h;
+        Mon, 18 Oct 2021 12:45:05 +0000 (GMT)
+From:   Chanho Park <chanho61.park@samsung.com>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>
+Cc:     Bean Huo <beanhuo@micron.com>,
+        Bart Van Assche <bvanassche@acm.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Can Guo <cang@codeaurora.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Jaehoon Chung <jh80.chung@samsung.com>,
+        Gyunghoon Kwon <goodjob.kwon@samsung.com>,
+        Sowon Na <sowon.na@samsung.com>,
+        linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Chanho Park <chanho61.park@samsung.com>
+Subject: [PATCH v5 04/15] scsi: ufs: ufs-exynos: simplify drv_data retrieval
+Date:   Mon, 18 Oct 2021 21:42:05 +0900
+Message-Id: <20211018124216.153072-5-chanho61.park@samsung.com>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211018124216.153072-1-chanho61.park@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.199.10.157]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-04.corp.yadro.com (172.17.100.104)
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Te0xTVxzOube9Lc3KLkXmSc0cXrLIY0ALLRyYgBls3k0Smc69EgfXcqWk
+        z7QFH9scYmS8QVxEyjYX5hDZJoFRQGU8CgyJUTeqE8hAkcoGatQyH6DI2l62+d/3+53v+36P
+        c44Ql4wTUmG23sKa9IyWIkS8tr4QFP62VsfITj6IQUPOHwh07es2As3MXyZQ72QRDx2+O48j
+        V1M9Hzm6w1DpqWR0rrIOQ84mK47qRtowNLJQwEfNtx9h6MjFLgyVXOkg0PHBpxh6PG/H1vvR
+        jksbaWteGUE7yssw+qeGUPrbzhmMbmksIujKuh5AP2wqJOh7N8Z4dHlrI6DnWlbTn/eUYGnP
+        fahZp2aZTNYUyOpVhsxsfVYCtXFLenK6MkYmD5fHoVgqUM/o2AQqJTUt/I1srXsuKjCX0ea4
+        U2mM2UxFJq4zGXIsbKDaYLYkUKwxU2uMNUaYGZ05R58VoWct8XKZLErpJmZo1LeOLgLjsN+u
+        o2cPEnlg2rcY+AghqYAlfb38YiASSsgOAJ/aDgAucAE43ehaDuYAdN14QhQDoVfSfcbI5U8D
+        WHa2UMAF9wAsPzlIeHwJMhy2/jnrVa8g7wDonPrCy8LJHhxOnZrne1j+ZCrstJ33Yh75Mvyl
+        vcOrFpNJsHNyDHAdvgT7F4pwD/Yh18PSun6M4/jBoRonz4NxN2e/rRb3FICkUwgnHzkA12sK
+        PDwq5Hz84exgq4DDUjhTUSDg+CUAHri+tHzwPYBF+1I5nAQXqlv5Hh+cDIFNpyM5yyDYP7Zc
+        1hcW9i0KuLQYFhZIOOFa2NNezePwi7Dkyzk+R6HhiQoNt6tD7pUM1AoqQaD1mWGszwxj/b/u
+        NwBvBC+wRrMuizVHGaP/u2GVQdcCvO88dEMHOHL7boQdYEJgB1CIUyvE21/XMRJxJrN7D2sy
+        pJtytKzZDpTuVR/EpQEqg/uj6C3pckWcTBETI4+NUspiqZXiuAANIyGzGAurYVkja/pXhwl9
+        pHmYYDhEpb6YUfmd6PzMxK9UaVfjzm3Nt3Z/taVK00YOWxsWqyKT/oY3g6X3Hw+5jhVpC9cc
+        f996TakpvdDQtiPkQm9nforMVS+69PNUQfdVFxHlG1fbX/1H/B4qCNQmTHQxYS3j/gO5q2aq
+        t79SWVGfAS3jqVufd5a/d2csuqq5TJm/17bhxNpPEjflil6bIIIcDVupqr+QgtncHWZXsCmR
+        O1dJNr1ja9/mEzNlwj+u+fHcmzevjK68f2ZIl/dZ9FtXax+MTmetGciI3x+buReIflvKGb68
+        Otkm+WjXE7Hm4e8Nm/N6PghIHF+q2vdu8CHZSLAKlC0cAzs+zYfo1Zr++OuzeopnVjPyUNxk
+        Zv4BjADV93AEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprBIsWRmVeSWpSXmKPExsWy7bCSvG5gTm6iwZ3D/BYnn6xhs3gwbxub
+        xcufV9ksDj7sZLGY9uEns8Wn9ctYLS7v17bo2elscXrCIiaLJ+tnMVssurGNyeLGrzZWi41v
+        fzBZzDi/j8mi+/oONovlx/8xWfz+eYjJQdDj8hVvj1kNvWwel/t6mTw2r9DyWLznJZPHplWd
+        bB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn0X6gmymAJ4rLJiU1J7MstUjfLoEr4838v4wF
+        lwQr5p+YyNbA+Iyvi5GDQ0LARGL/7oIuRi4OIYEdjBJPp29l7mLkBIrLSjx7t4MdwhaWuN9y
+        hBWi6D2jRPvULrAiNgFdiS3PXzGC2CICHxkl5nzTAiliFjjFLLF23SYWkISwgI/Enq1nWUFs
+        FgFViWPbd7CB2LwC9hJ7Ht5ihNggL3HkVyfYUE4BB4meRUeYQGwhoJrFL2czQ9QLSpyc+QRs
+        JjNQffPW2cwTGAVmIUnNQpJawMi0ilEytaA4Nz232LDAKC+1XK84Mbe4NC9dLzk/dxMjOPK0
+        tHYw7ln1Qe8QIxMH4yFGCQ5mJRHeJNfcRCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8F7pOxgsJ
+        pCeWpGanphakFsFkmTg4pRqYulVOvWt1UNDslC7gfqXj8nTBm3W6HY0hFy7aiejaGHo9KEuQ
+        Klg1k4s7ZJXZHo2pf159mzFlUtr/CjcTdSEftao1hb/fZB96Na9rkflurR8icqc3883r10+K
+        WFX994/5SZ+cGMGXSyz6jzzjFG98aT69gzPtl/uzIrXa2v2HE05xKZTF73PziSle+khDbHdv
+        Ykyp8u5mmy2HAnlm9t+PqnxawajW/VvJ1OPKxLfS348lu38pr+b5uoovPVrhjODR/ND7qt/0
+        c5+XXPnvMWtGcPNy14pkx7TnUl57L/A4/rddxGN1YF6B2YEv1x+9axAUW2j967XcviuxDlMc
+        pZlZDimsff1mnpP9khUJnR1KLMUZiYZazEXFiQD9ZT5mKwMAAA==
+X-CMS-MailID: 20211018124505epcas2p22a463738c9ee028274be7ad06ed97a0d
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20211018124505epcas2p22a463738c9ee028274be7ad06ed97a0d
+References: <20211018124216.153072-1-chanho61.park@samsung.com>
+        <CGME20211018124505epcas2p22a463738c9ee028274be7ad06ed97a0d@epcas2p2.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-sgl is freed in the target stack in target_release_cmd_kref before
-calling qlt_free_cmd, but there is an unmap of sgl in qlt_free_cmd that
-causes such a panic if sgl is not yet DMA unmapped:
+The compatible field of exynos_ufs_drv_data is not necessary because
+of_device_id already has it. Thus, we don't need it anymore and we can
+get drv_data by device_get_match_data.
 
-NIP dma_direct_unmap_sg+0xdc/0x180
-LR  dma_direct_unmap_sg+0xc8/0x180
-Call Trace:
- ql_dbg_prefix+0x68/0xc0 [qla2xxx] (unreliable)
- dma_unmap_sg_attrs+0x54/0xf0
- qlt_unmap_sg.part.19+0x54/0x1c0 [qla2xxx]
- qlt_free_cmd+0x124/0x1d0 [qla2xxx]
- tcm_qla2xxx_release_cmd+0x4c/0xa0 [tcm_qla2xxx]
- target_put_sess_cmd+0x198/0x370 [target_core_mod]
- transport_generic_free_cmd+0x6c/0x1b0 [target_core_mod]
- tcm_qla2xxx_complete_free+0x6c/0x90 [tcm_qla2xxx]
-
-SGL may be left unmapped in error cases of response sending.
-For instance, qlt_rdy_to_xfer maps sgl and exits when sesssion is being
-deleted keeping sgl mapped.
-
-This patch removes use-after-free of sgl, and ensures that sgl is
-unmapped for the cmd that was not send to FW.
-
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Signed-off-by: Chanho Park <chanho61.park@samsung.com>
 ---
-This patchset is intended for scsi-fix.
----
- drivers/scsi/qla2xxx/qla_target.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ drivers/scsi/ufs/ufs-exynos.c | 10 +---------
+ drivers/scsi/ufs/ufs-exynos.h |  3 +--
+ 2 files changed, 2 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b3478ed9b12e..7d8242c120fc 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3319,8 +3319,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
- 			vha->flags.online, qla2x00_reset_active(vha),
- 			cmd->reset_count, qpair->chip_reset);
--		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
--		return 0;
-+		goto out_unmap_unlock;
- 	}
+diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+index 30d0c1aba0c7..57210114ca0a 100644
+--- a/drivers/scsi/ufs/ufs-exynos.c
++++ b/drivers/scsi/ufs/ufs-exynos.c
+@@ -893,17 +893,10 @@ static int exynos_ufs_post_link(struct ufs_hba *hba)
+ static int exynos_ufs_parse_dt(struct device *dev, struct exynos_ufs *ufs)
+ {
+ 	struct device_node *np = dev->of_node;
+-	struct exynos_ufs_drv_data *drv_data = &exynos_ufs_drvs;
+ 	struct exynos_ufs_uic_attr *attr;
+ 	int ret = 0;
  
- 	/* Does F/W have an IOCBs for this request */
-@@ -3445,10 +3444,6 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 	prm.sg = NULL;
- 	prm.req_cnt = 1;
+-	while (drv_data->compatible) {
+-		if (of_device_is_compatible(np, drv_data->compatible)) {
+-			ufs->drv_data = drv_data;
+-			break;
+-		}
+-		drv_data++;
+-	}
++	ufs->drv_data = device_get_match_data(dev);
  
--	/* Calculate number of entries and segments required */
--	if (qlt_pci_map_calc_cnt(&prm) != 0)
--		return -EAGAIN;
--
- 	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
- 	    (cmd->sess && cmd->sess->deleted)) {
- 		/*
-@@ -3466,6 +3461,10 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 		return 0;
- 	}
+ 	if (ufs->drv_data && ufs->drv_data->uic_attr) {
+ 		attr = ufs->drv_data->uic_attr;
+@@ -1262,7 +1255,6 @@ static struct exynos_ufs_uic_attr exynos7_uic_attr = {
+ };
  
-+	/* Calculate number of entries and segments required */
-+	if (qlt_pci_map_calc_cnt(&prm) != 0)
-+		return -EAGAIN;
-+
- 	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
- 	/* Does F/W have an IOCBs for this request */
- 	res = qlt_check_reserve_free_req(qpair, prm.req_cnt);
-@@ -3870,9 +3869,6 @@ void qlt_free_cmd(struct qla_tgt_cmd *cmd)
+ static struct exynos_ufs_drv_data exynos_ufs_drvs = {
+-	.compatible		= "samsung,exynos7-ufs",
+ 	.uic_attr		= &exynos7_uic_attr,
+ 	.quirks			= UFSHCD_QUIRK_PRDT_BYTE_GRAN |
+ 				  UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR |
+diff --git a/drivers/scsi/ufs/ufs-exynos.h b/drivers/scsi/ufs/ufs-exynos.h
+index 0a31f77a5f48..2e72aabaa673 100644
+--- a/drivers/scsi/ufs/ufs-exynos.h
++++ b/drivers/scsi/ufs/ufs-exynos.h
+@@ -142,7 +142,6 @@ struct exynos_ufs_uic_attr {
+ };
  
- 	BUG_ON(cmd->cmd_in_wq);
+ struct exynos_ufs_drv_data {
+-	char *compatible;
+ 	struct exynos_ufs_uic_attr *uic_attr;
+ 	unsigned int quirks;
+ 	unsigned int opts;
+@@ -191,7 +190,7 @@ struct exynos_ufs {
+ 	struct ufs_pa_layer_attr dev_req_params;
+ 	struct ufs_phy_time_cfg t_cfg;
+ 	ktime_t entry_hibern8_t;
+-	struct exynos_ufs_drv_data *drv_data;
++	const struct exynos_ufs_drv_data *drv_data;
  
--	if (cmd->sg_mapped)
--		qlt_unmap_sg(cmd->vha, cmd);
--
- 	if (!cmd->q_full)
- 		qlt_decr_num_pend_cmds(cmd->vha);
- 
+ 	u32 opts;
+ #define EXYNOS_UFS_OPT_HAS_APB_CLK_CTRL		BIT(0)
 -- 
-2.25.1
+2.33.0
 
