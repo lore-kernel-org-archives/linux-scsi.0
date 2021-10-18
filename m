@@ -2,54 +2,54 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AED61C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 12:45:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 84D80C43217
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 12:45:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 94CAC60EE9
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 12:45:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72C2460EE9
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 12:45:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231601AbhJRMrZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Oct 2021 08:47:25 -0400
-Received: from mailout4.samsung.com ([203.254.224.34]:63896 "EHLO
+        id S231727AbhJRMr0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Oct 2021 08:47:26 -0400
+Received: from mailout4.samsung.com ([203.254.224.34]:63950 "EHLO
         mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231682AbhJRMrY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 08:47:24 -0400
+        with ESMTP id S229843AbhJRMrZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 08:47:25 -0400
 Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
-        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20211018124509epoutp041aefb2ec6b1b3a6fa3c4c42b21f49ecf~vIKsyErpC0084700847epoutp04E
-        for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2021 12:45:09 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20211018124509epoutp041aefb2ec6b1b3a6fa3c4c42b21f49ecf~vIKsyErpC0084700847epoutp04E
+        by mailout4.samsung.com (KnoxPortal) with ESMTP id 20211018124510epoutp04d96a3a3582848c51a8a06ecfdce805cc~vIKuPawhR3052930529epoutp04D
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Oct 2021 12:45:10 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20211018124510epoutp04d96a3a3582848c51a8a06ecfdce805cc~vIKuPawhR3052930529epoutp04D
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1634561109;
-        bh=xLivwsWbFoOvzAMprtaF5HPMWnZzSR74VzNY3pKyuHA=;
+        s=mail20170921; t=1634561111;
+        bh=7BL2AWr6+0k7oxNShoCpcCYD/b8/ltLEIlEjR8sYOls=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Hbl4NkqtM9nHNIOVurZIhxp5ZYeGBV4c6aelzjxchU8Xhwx7JZMnfucCqbuSVmj3k
-         Yr63QQmvvMwfWSvisEnHZC+g71fub5oOh6QvpQMhOwJJtqJ7t8t9V8NyqdtpSjY/kW
-         fB5OaHAoaWrYlfq48TVmprO/ppumHUAGFr+/l/Co=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+        b=B5Bp7ti+N5cWfAXjU/18l8/yelODsLP1eUQ5GMmBjELPXFpogISGkELF1xc7WSUas
+         ZbeNWnufMmGvpvC8AmcHK5QKcdGKUms8eOGlGiIOM4YtJG3NtqOBHUWRb8RNm1gcjO
+         KcvGCzj8UcV/XMaxm82tTKXfOO9O6srviJPiRX7U=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
         epcas2p4.samsung.com (KnoxPortal) with ESMTP id
-        20211018124508epcas2p489a202c517805dac71e37b39a0deef70~vIKrl-cxS2241122411epcas2p4W;
-        Mon, 18 Oct 2021 12:45:08 +0000 (GMT)
-Received: from epsmges2p3.samsung.com (unknown [182.195.36.88]) by
-        epsnrtp1.localdomain (Postfix) with ESMTP id 4HXxRP6wNSz4x9Pv; Mon, 18 Oct
-        2021 12:45:05 +0000 (GMT)
+        20211018124510epcas2p41245c8ca2ed1d3f63050472f5d280612~vIKtyJP-z2534425344epcas2p4z;
+        Mon, 18 Oct 2021 12:45:10 +0000 (GMT)
+Received: from epsmges2p1.samsung.com (unknown [182.195.36.98]) by
+        epsnrtp4.localdomain (Postfix) with ESMTP id 4HXxRQ11Wdz4x9Q5; Mon, 18 Oct
+        2021 12:45:06 +0000 (GMT)
 Received: from epcas2p4.samsung.com ( [182.195.41.56]) by
-        epsmges2p3.samsung.com (Symantec Messaging Gateway) with SMTP id
-        58.2C.10014.15C6D616; Mon, 18 Oct 2021 21:45:05 +0900 (KST)
+        epsmges2p1.samsung.com (Symantec Messaging Gateway) with SMTP id
+        B4.14.09868.25C6D616; Mon, 18 Oct 2021 21:45:06 +0900 (KST)
 Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
-        20211018124505epcas2p22a463738c9ee028274be7ad06ed97a0d~vIKpChUHj2030920309epcas2p2D;
+        epcas2p4.samsung.com (KnoxPortal) with ESMTPA id
+        20211018124505epcas2p4f96cd4d9ea01a030d07fdf25c5a3d163~vIKo9t3kv2534425344epcas2p4t;
         Mon, 18 Oct 2021 12:45:05 +0000 (GMT)
-Received: from epsmgms1p2.samsung.com (unknown [182.195.42.42]) by
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
         epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20211018124505epsmtrp165d9e15d896f695d1addfb303bbff9bf~vIKpBmunM1580315803epsmtrp1M;
+        20211018124505epsmtrp1ae9f772a792b7a8865e85aad609c959d~vIKo5OH-R1588315883epsmtrp1A;
         Mon, 18 Oct 2021 12:45:05 +0000 (GMT)
-X-AuditID: b6c32a47-489ff7000000271e-89-616d6c51f153
+X-AuditID: b6c32a45-9a3ff7000000268c-7a-616d6c51f00a
 Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-        epsmgms1p2.samsung.com (Symantec Messaging Gateway) with SMTP id
-        FB.40.08738.15C6D616; Mon, 18 Oct 2021 21:45:05 +0900 (KST)
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        93.50.08902.15C6D616; Mon, 18 Oct 2021 21:45:05 +0900 (KST)
 Received: from localhost.localdomain (unknown [10.229.9.51]) by
         epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-        20211018124505epsmtip2b3872f440f8f73402b96a17cee80a8ff~vIKozFstg0224202242epsmtip2h;
+        20211018124505epsmtip271bd4b3b0a232dc2494d00fa867a706f~vIKortQeN0235402354epsmtip2q;
         Mon, 18 Oct 2021 12:45:05 +0000 (GMT)
 From:   Chanho Park <chanho61.park@samsung.com>
 To:     Alim Akhtar <alim.akhtar@samsung.com>,
@@ -67,126 +67,87 @@ Cc:     Bean Huo <beanhuo@micron.com>,
         Gyunghoon Kwon <goodjob.kwon@samsung.com>,
         Sowon Na <sowon.na@samsung.com>,
         linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Chanho Park <chanho61.park@samsung.com>
-Subject: [PATCH v5 04/15] scsi: ufs: ufs-exynos: simplify drv_data retrieval
-Date:   Mon, 18 Oct 2021 21:42:05 +0900
-Message-Id: <20211018124216.153072-5-chanho61.park@samsung.com>
+        Chanho Park <chanho61.park@samsung.com>,
+        Inki Dae <inki.dae@samsung.com>
+Subject: [PATCH v5 03/15] scsi: ufs: ufs-exynos: change pclk available max
+ value
+Date:   Mon, 18 Oct 2021 21:42:04 +0900
+Message-Id: <20211018124216.153072-4-chanho61.park@samsung.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211018124216.153072-1-chanho61.park@samsung.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Te0xTVxzOube9Lc3KLkXmSc0cXrLIY0ALLRyYgBls3k0Smc69EgfXcqWk
-        z7QFH9scYmS8QVxEyjYX5hDZJoFRQGU8CgyJUTeqE8hAkcoGatQyH6DI2l62+d/3+53v+36P
-        c44Ql4wTUmG23sKa9IyWIkS8tr4QFP62VsfITj6IQUPOHwh07es2As3MXyZQ72QRDx2+O48j
-        V1M9Hzm6w1DpqWR0rrIOQ84mK47qRtowNLJQwEfNtx9h6MjFLgyVXOkg0PHBpxh6PG/H1vvR
-        jksbaWteGUE7yssw+qeGUPrbzhmMbmksIujKuh5AP2wqJOh7N8Z4dHlrI6DnWlbTn/eUYGnP
-        fahZp2aZTNYUyOpVhsxsfVYCtXFLenK6MkYmD5fHoVgqUM/o2AQqJTUt/I1srXsuKjCX0ea4
-        U2mM2UxFJq4zGXIsbKDaYLYkUKwxU2uMNUaYGZ05R58VoWct8XKZLErpJmZo1LeOLgLjsN+u
-        o2cPEnlg2rcY+AghqYAlfb38YiASSsgOAJ/aDgAucAE43ehaDuYAdN14QhQDoVfSfcbI5U8D
-        WHa2UMAF9wAsPzlIeHwJMhy2/jnrVa8g7wDonPrCy8LJHhxOnZrne1j+ZCrstJ33Yh75Mvyl
-        vcOrFpNJsHNyDHAdvgT7F4pwD/Yh18PSun6M4/jBoRonz4NxN2e/rRb3FICkUwgnHzkA12sK
-        PDwq5Hz84exgq4DDUjhTUSDg+CUAHri+tHzwPYBF+1I5nAQXqlv5Hh+cDIFNpyM5yyDYP7Zc
-        1hcW9i0KuLQYFhZIOOFa2NNezePwi7Dkyzk+R6HhiQoNt6tD7pUM1AoqQaD1mWGszwxj/b/u
-        NwBvBC+wRrMuizVHGaP/u2GVQdcCvO88dEMHOHL7boQdYEJgB1CIUyvE21/XMRJxJrN7D2sy
-        pJtytKzZDpTuVR/EpQEqg/uj6C3pckWcTBETI4+NUspiqZXiuAANIyGzGAurYVkja/pXhwl9
-        pHmYYDhEpb6YUfmd6PzMxK9UaVfjzm3Nt3Z/taVK00YOWxsWqyKT/oY3g6X3Hw+5jhVpC9cc
-        f996TakpvdDQtiPkQm9nforMVS+69PNUQfdVFxHlG1fbX/1H/B4qCNQmTHQxYS3j/gO5q2aq
-        t79SWVGfAS3jqVufd5a/d2csuqq5TJm/17bhxNpPEjflil6bIIIcDVupqr+QgtncHWZXsCmR
-        O1dJNr1ja9/mEzNlwj+u+fHcmzevjK68f2ZIl/dZ9FtXax+MTmetGciI3x+buReIflvKGb68
-        Otkm+WjXE7Hm4e8Nm/N6PghIHF+q2vdu8CHZSLAKlC0cAzs+zYfo1Zr++OuzeopnVjPyUNxk
-        Zv4BjADV93AEAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprBIsWRmVeSWpSXmKPExsWy7bCSvG5gTm6iwZ3D/BYnn6xhs3gwbxub
-        xcufV9ksDj7sZLGY9uEns8Wn9ctYLS7v17bo2elscXrCIiaLJ+tnMVssurGNyeLGrzZWi41v
-        fzBZzDi/j8mi+/oONovlx/8xWfz+eYjJQdDj8hVvj1kNvWwel/t6mTw2r9DyWLznJZPHplWd
-        bB4TFh1g9Pi+voPN4+PTWywefVtWMXp83iTn0X6gmymAJ4rLJiU1J7MstUjfLoEr4838v4wF
-        lwQr5p+YyNbA+Iyvi5GDQ0LARGL/7oIuRi4OIYEdjBJPp29l7mLkBIrLSjx7t4MdwhaWuN9y
-        hBWi6D2jRPvULrAiNgFdiS3PXzGC2CICHxkl5nzTAiliFjjFLLF23SYWkISwgI/Enq1nWUFs
-        FgFViWPbd7CB2LwC9hJ7Ht5ihNggL3HkVyfYUE4BB4meRUeYQGwhoJrFL2czQ9QLSpyc+QRs
-        JjNQffPW2cwTGAVmIUnNQpJawMi0ilEytaA4Nz232LDAKC+1XK84Mbe4NC9dLzk/dxMjOPK0
-        tHYw7ln1Qe8QIxMH4yFGCQ5mJRHeJNfcRCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8F7pOxgsJ
-        pCeWpGanphakFsFkmTg4pRqYulVOvWt1UNDslC7gfqXj8nTBm3W6HY0hFy7aiejaGHo9KEuQ
-        Klg1k4s7ZJXZHo2pf159mzFlUtr/CjcTdSEftao1hb/fZB96Na9rkflurR8icqc3883r10+K
-        WFX994/5SZ+cGMGXSyz6jzzjFG98aT69gzPtl/uzIrXa2v2HE05xKZTF73PziSle+khDbHdv
-        Ykyp8u5mmy2HAnlm9t+PqnxawajW/VvJ1OPKxLfS348lu38pr+b5uoovPVrhjODR/ND7qt/0
-        c5+XXPnvMWtGcPNy14pkx7TnUl57L/A4/rddxGN1YF6B2YEv1x+9axAUW2j967XcviuxDlMc
-        pZlZDimsff1mnpP9khUJnR1KLMUZiYZazEXFiQD9ZT5mKwMAAA==
-X-CMS-MailID: 20211018124505epcas2p22a463738c9ee028274be7ad06ed97a0d
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Te0xbVRzHc+4ttxcC7lKGHkGk69wMFVhLKL0YngPmnSMdmWEzZMIu9Fqg
+        T9tiHCYGdLzkVYYRVyZDzHTBRyfrGDPAugIhg0XimKMjujEoko4QxyNqIUxvuUz33+f8zu97
+        vr/f75yDo4I5LAwv0ZkZo47WiLAAXu9QFBlzRKOlJf33UPKG+1uMnOnoxUiP9xeMvP6gjkd+
+        +siLkiu2r/zIyWuvkA1XM8hxSxdCnr5v4ZFumxUlu1y9COlar/Yjf1j6GyE/mxhEyPqpPoz8
+        evQxQm54nUiagJq8fYiyVjRi1GRTI0JduiCmvuz3IFRPdx1GWbocgPrLVotRy/PTPKrJ3g2o
+        1Z4XqRpHPZITmKdOKmZoJWMUMroivbJEp0oWHXqjIKNAliCRxkgTSblIqKO1TLIoMzsn5kCJ
+        hm1OJHyX1pSxoRzaZBLtS0ky6svMjLBYbzInixiDUmOQG2JNtNZUplPF6hjzq1KJJE7GJp5Q
+        F9/yNKOGFb/3zrvW/CpApd/HwB+HRDycnXEgPhYQfQBOLLPxAJZXAHTe7txe/Ang48a7yBOF
+        paYD4TYGAKw7dwvl5MsADriNPsaIGGhfeAh8STuJPwB0z33C9y1Q4gEKqy5Wbx0VQhyBA6c/
+        5PuYR+yBZ6+2bxUVRKTC1ZtVgLOLhMPrdVsO/kQabOgaRricYHjjjJvnY5TN+ehyO+ozgIQb
+        h9N3f8I4cSbsHLuDchwCH47a+RyHQU9zNZ8T1ANYNfvP9sY3bEOV2RynwvU2O1sRzjpEQduP
+        +3wIid1weHrb9xlYO7TJ58JBsLZawAlfho4rbTyOI2D92dXtWVOw5pSNz02uFcDKK/2YBQit
+        T7Vjfaod6//GnQDtBs8yBpNWxZjiDNL/rrhIr+0BW69dnNUHWpcexToBggMngDgq2hlUmKWl
+        BUFK+mQ5Y9QXGMs0jMkJZOywW9Cw0CI9+1105gJpfKIkPiFBKo+TSeSi54ISQ9W0gFDRZkbN
+        MAbG+ESH4P5hFUhk5Kqlrff7KC0VcdnVShcdG93EjGs0ruifP6HOEwwG71CMb1wfM6+0tyz2
+        8+Pz8d8u7R/0DuIjF0pT0gUBwc8HjnSkvfa2N9wxNSh/oWF38KnWa9Lz9OGS4Wjxrx8cHC8N
+        UYS//3tYZ7ogrXZsbTF6ajYvta8+05EhzqXMc69/rmjeKBUGLqWE5q7vzR+i33R5ugyqoejw
+        2kKLRXP8qHtk1BHR8/PN8rdeWrCORayXyr8IvzdTyuyKNig0anQqHZutDG2ZyCjEHTv2WhOK
+        1gru55xcPJfEHG2aT84vz9bLjinX9jTNecr3jx4/IHC+s5mlPNwoK/zO3pB78U51xYKIZyqm
+        pWLUaKL/BRDLh1l2BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprLIsWRmVeSWpSXmKPExsWy7bCSvG5gTm6iwZVjXBYnn6xhs3gwbxub
+        xcufV9ksDj7sZLGY9uEns8Wn9ctYLS7v17bo2elscXrCIiaLSfcnsFg8WT+L2WLRjW1MFjd+
+        tbFabHz7g8lixvl9TBbd13ewWSw//o/J4vfPQ0wOQh6Xr3h7zGroZfO43NfL5LF5hZbH4j0v
+        mTw2repk85iw6ACjx/f1HWweH5/eYvHo27KK0ePzJjmP9gPdTAE8UVw2Kak5mWWpRfp2CVwZ
+        l172Mxd8Yq1YeuMLawNjI2sXIyeHhICJxIT2eUwgtpDAbkaJDRPMIeKyEs/e7WCHsIUl7rcc
+        AarnAqp5zyhx9PpCNpAEm4CuxJbnrxhBbBGBj4wSc75pgRQxC7xlljh/8A1YQlggQGJT53aw
+        SSwCqhJzds4G28wrYC/x+UwrI8QGeYkjvzqZQWxOAQeJnkVHoC6yl1j8cjYzRL2gxMmZT1hA
+        bGag+uats5knMArMQpKahSS1gJFpFaNkakFxbnpusWGBYV5quV5xYm5xaV66XnJ+7iZGcAxq
+        ae5g3L7qg94hRiYOxkOMEhzMSiK8Sa65iUK8KYmVValF+fFFpTmpxYcYpTlYlMR5L3SdjBcS
+        SE8sSc1OTS1ILYLJMnFwSjUwJaY3NZXdFtTepN9xbfoi7te6k/mdjA8nZpUmHLi3+irTn/3m
+        u3OMvmj055YqudW8MJb+J33yyceXbI8mfVPn5j24pZur58QsyxkCy11m3Pg937Ews5RX+ETb
+        8pdvmUtOJzRve3nLo+TbFR22DTWzTMv+ZW4MLjf1FHeeUSKps9vla4xTp5Zd56y1Ufv7Cu+7
+        LHN/VZ5wp6RkVf4Cq8DGxyb37U4rqURlVXC9bK32M51Z7rS+b6Vuj+ebD1d7WNmuqH2f1SY+
+        7+Sr4CvSuTs5QuVcZO9N9liysejqtN+mV5PtTdNbi1sDd65SsDpy605J8tKZmjwFEnw/Nx4T
+        jNoXHLs/bt9V4SN/uB6d27JRiaU4I9FQi7moOBEA4NMKXTADAAA=
+X-CMS-MailID: 20211018124505epcas2p4f96cd4d9ea01a030d07fdf25c5a3d163
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: AUTO_CONFIDENTIAL
 CMS-TYPE: 102P
 DLP-Filter: Pass
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20211018124505epcas2p22a463738c9ee028274be7ad06ed97a0d
+X-CMS-RootMailID: 20211018124505epcas2p4f96cd4d9ea01a030d07fdf25c5a3d163
 References: <20211018124216.153072-1-chanho61.park@samsung.com>
-        <CGME20211018124505epcas2p22a463738c9ee028274be7ad06ed97a0d@epcas2p2.samsung.com>
+        <CGME20211018124505epcas2p4f96cd4d9ea01a030d07fdf25c5a3d163@epcas2p4.samsung.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The compatible field of exynos_ufs_drv_data is not necessary because
-of_device_id already has it. Thus, we don't need it anymore and we can
-get drv_data by device_get_match_data.
+To support 167MHz PCLK, we need to adjust the maximum value.
 
 Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Reviewed-by: Inki Dae <inki.dae@samsung.com>
 Signed-off-by: Chanho Park <chanho61.park@samsung.com>
 ---
- drivers/scsi/ufs/ufs-exynos.c | 10 +---------
- drivers/scsi/ufs/ufs-exynos.h |  3 +--
- 2 files changed, 2 insertions(+), 11 deletions(-)
+ drivers/scsi/ufs/ufs-exynos.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
-index 30d0c1aba0c7..57210114ca0a 100644
---- a/drivers/scsi/ufs/ufs-exynos.c
-+++ b/drivers/scsi/ufs/ufs-exynos.c
-@@ -893,17 +893,10 @@ static int exynos_ufs_post_link(struct ufs_hba *hba)
- static int exynos_ufs_parse_dt(struct device *dev, struct exynos_ufs *ufs)
- {
- 	struct device_node *np = dev->of_node;
--	struct exynos_ufs_drv_data *drv_data = &exynos_ufs_drvs;
- 	struct exynos_ufs_uic_attr *attr;
- 	int ret = 0;
- 
--	while (drv_data->compatible) {
--		if (of_device_is_compatible(np, drv_data->compatible)) {
--			ufs->drv_data = drv_data;
--			break;
--		}
--		drv_data++;
--	}
-+	ufs->drv_data = device_get_match_data(dev);
- 
- 	if (ufs->drv_data && ufs->drv_data->uic_attr) {
- 		attr = ufs->drv_data->uic_attr;
-@@ -1262,7 +1255,6 @@ static struct exynos_ufs_uic_attr exynos7_uic_attr = {
- };
- 
- static struct exynos_ufs_drv_data exynos_ufs_drvs = {
--	.compatible		= "samsung,exynos7-ufs",
- 	.uic_attr		= &exynos7_uic_attr,
- 	.quirks			= UFSHCD_QUIRK_PRDT_BYTE_GRAN |
- 				  UFSHCI_QUIRK_BROKEN_REQ_LIST_CLR |
 diff --git a/drivers/scsi/ufs/ufs-exynos.h b/drivers/scsi/ufs/ufs-exynos.h
-index 0a31f77a5f48..2e72aabaa673 100644
+index dadf4fd10dd8..0a31f77a5f48 100644
 --- a/drivers/scsi/ufs/ufs-exynos.h
 +++ b/drivers/scsi/ufs/ufs-exynos.h
-@@ -142,7 +142,6 @@ struct exynos_ufs_uic_attr {
- };
+@@ -99,7 +99,7 @@ struct exynos_ufs;
+ #define PA_HIBERN8TIME_VAL	0x20
  
- struct exynos_ufs_drv_data {
--	char *compatible;
- 	struct exynos_ufs_uic_attr *uic_attr;
- 	unsigned int quirks;
- 	unsigned int opts;
-@@ -191,7 +190,7 @@ struct exynos_ufs {
- 	struct ufs_pa_layer_attr dev_req_params;
- 	struct ufs_phy_time_cfg t_cfg;
- 	ktime_t entry_hibern8_t;
--	struct exynos_ufs_drv_data *drv_data;
-+	const struct exynos_ufs_drv_data *drv_data;
+ #define PCLK_AVAIL_MIN	70000000
+-#define PCLK_AVAIL_MAX	133000000
++#define PCLK_AVAIL_MAX	167000000
  
- 	u32 opts;
- #define EXYNOS_UFS_OPT_HAS_APB_CLK_CTRL		BIT(0)
+ struct exynos_ufs_uic_attr {
+ 	/* TX Attributes */
 -- 
 2.33.0
 
