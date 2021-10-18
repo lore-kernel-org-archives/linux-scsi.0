@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95F68C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:13:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C96EFC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:13:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8099661260
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:13:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7F8860E90
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:13:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231646AbhJRKPO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Oct 2021 06:15:14 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44774 "EHLO
+        id S231676AbhJRKPP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Oct 2021 06:15:15 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44758 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231206AbhJRKOk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 06:14:40 -0400
+        with ESMTP id S231817AbhJRKOw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 06:14:52 -0400
 Received: from bombadil.infradead.org (unknown [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E7EF1C061768;
-        Mon, 18 Oct 2021 03:12:29 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 42923C061777;
+        Mon, 18 Oct 2021 03:12:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=Y/n231v6mya+HLQ5553wYpz7337dsR2Clc1g640C0Nc=; b=SCcF5DiQPtaryC8amaczOmgHaE
-        EWl+pclINoiVWjiFCEJTcUQty+0UJDH3If97VwAzA56GdzMXjmUVYq0tZT4P4MLFmaQB1bQ2izaeP
-        YIItZQNSyFH3kgZvt4cmrVPksL8l8dxWqgYHClJSHI1toZACMqIdpvbMEZHP7B9bUYFuuO0zTP08q
-        EZaz+7U8UqJWANDcHETl8ZQVzoaKg+cIte8Qc2VSKthKmsgqIn0x5au5NGmOyErKVbsM3M1MwlrMW
-        UKP1IF81u09Jm1W7i2MknZYPp85pQdssf21yzAio0Zgpcii7ZDbgQ74NHj/NkGQaAW0fixaEguw6L
-        SVvqXYvw==;
+        bh=7vy0+8EI8WhVCxcCPpT3E3xZPAv/h7863mIj0HITKC4=; b=dSgrFBalcG5IC5gy8leFi0/QUI
+        8jbCvHeQvsAMp2Vc8XaJNgaFomPjUZxHYyC0Lr8ip+cEGSd3e9dOsE9BLDAOXLiIxKskzuJNVL/fJ
+        9/vz7wC6aJeWCOa866cMrDClVUyh/nPJwEgGnkT7aSULX7H/Rx0e6fz/pzjosefYz2bVFgXRlecrl
+        OK92p3ALP6pCTMlkZ3qBMnoKoRHEVAF7nq96GJlCV7bX4ForSv41tAleJNCMrpQJckjzxO/kA47Wn
+        OAc86dc6jd8RmrmIqLhJBcqnOCCDYnNAaZzrQ6Qs4EG0Do8+0MqgT7yVBLcb6ir4m1vlBzJoKJsMs
+        +PeH0mvg==;
 Received: from [2001:4bb8:199:73c5:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mcPcu-00EuPk-5o; Mon, 18 Oct 2021 10:12:16 +0000
+        id 1mcPd4-00Eubv-MF; Mon, 18 Oct 2021 10:12:27 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
@@ -52,9 +52,9 @@ Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
         jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
         linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
         ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org
-Subject: [PATCH 16/30] hfsplus: use bdev_nr_sectors instead of open coding it
-Date:   Mon, 18 Oct 2021 12:11:16 +0200
-Message-Id: <20211018101130.1838532-17-hch@lst.de>
+Subject: [PATCH 20/30] ntfs3: use bdev_nr_bytes instead of open coding it
+Date:   Mon, 18 Oct 2021 12:11:20 +0200
+Message-Id: <20211018101130.1838532-21-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211018101130.1838532-1-hch@lst.de>
 References: <20211018101130.1838532-1-hch@lst.de>
@@ -68,24 +68,31 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 Use the proper helper to read the block device size.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Kees Cook <keescook@chromium.org>
 ---
- fs/hfsplus/wrapper.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/ntfs3/super.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/fs/hfsplus/wrapper.c b/fs/hfsplus/wrapper.c
-index 0350dc7821bf9..51ae6f1eb4a55 100644
---- a/fs/hfsplus/wrapper.c
-+++ b/fs/hfsplus/wrapper.c
-@@ -131,7 +131,7 @@ static int hfsplus_get_last_session(struct super_block *sb,
+diff --git a/fs/ntfs3/super.c b/fs/ntfs3/super.c
+index 55bbc9200a10e..7ed2cb5e8b1d9 100644
+--- a/fs/ntfs3/super.c
++++ b/fs/ntfs3/super.c
+@@ -918,7 +918,6 @@ static int ntfs_fill_super(struct super_block *sb, void *data, int silent)
+ 	int err;
+ 	struct ntfs_sb_info *sbi;
+ 	struct block_device *bdev = sb->s_bdev;
+-	struct inode *bd_inode = bdev->bd_inode;
+ 	struct request_queue *rq = bdev_get_queue(bdev);
+ 	struct inode *inode = NULL;
+ 	struct ntfs_inode *ni;
+@@ -967,7 +966,7 @@ static int ntfs_fill_super(struct super_block *sb, void *data, int silent)
  
- 	/* default values */
- 	*start = 0;
--	*size = i_size_read(sb->s_bdev->bd_inode) >> 9;
-+	*size = bdev_nr_sectors(sb->s_bdev);
+ 	/* Parse boot. */
+ 	err = ntfs_init_from_boot(sb, rq ? queue_logical_block_size(rq) : 512,
+-				  bd_inode->i_size);
++				  bdev_nr_bytes(bdev));
+ 	if (err)
+ 		goto out;
  
- 	if (HFSPLUS_SB(sb)->session >= 0) {
- 		struct cdrom_tocentry te;
 -- 
 2.30.2
 
