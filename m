@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DFF9C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:12:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4763C4167D
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:12:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EC29160FD8
-	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:12:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9765E603E9
+	for <linux-scsi@archiver.kernel.org>; Mon, 18 Oct 2021 10:12:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231540AbhJRKOW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Oct 2021 06:14:22 -0400
+        id S231289AbhJRKOP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Oct 2021 06:14:15 -0400
 Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44642 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231480AbhJRKOO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 06:14:14 -0400
+        with ESMTP id S231459AbhJRKON (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 06:14:13 -0400
 Received: from bombadil.infradead.org (unknown [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 82DABC061745;
-        Mon, 18 Oct 2021 03:12:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AF574C061768;
+        Mon, 18 Oct 2021 03:12:02 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=fFiyZJBuziQrITu6AwTrNzk8Coj3yxtnkFBgzy+4utY=; b=f1ZTns0vT6m845qkA0baYXk2PG
-        ByKkbnJ+m6x5JEcOlt7OJK30pWXcBBAY2xcc1oOX/GlP+t0jufCSgL5H/v+FL2ep0WYs4CjBQ1ZvD
-        lQG5Q7+G38xvKKRPiacPni83/F9CmBbksfoCmOynDY23d+ddtPSvZOtRc/6cK3nk51j7atKYi19r6
-        Kag73b5r1mpakcbI/gVx0eS5fxTuecjZwPlCdUJUHarqJZdEd5rQWMGiN5zJahL6UlgGggT0wn6rZ
-        vPA0cQ+2G72skx+/d7YG1mcJHEgaG8vk2XDNYrEfowDDgHBQKzmj5azhf7DDo48pGaGARYpawN4ej
-        JsMT/KGQ==;
+        bh=6+r/5plvJ8OP57S4LNsM02c/IkmCxsa75L+hdJWrUDU=; b=CDejVvRDk7Qb9gEhmgVjzqQBVb
+        hvfANwFgD7mOJI0RdAxab+2iVmaL0EuslPUiSh8SHK8RScRHDdkm+lx4pF6Ai1uKLbtJJIbF7vWFx
+        X5xYRd2RUCJuROiA0FbpJdYGvAApQ7ITvpqhJkJ6O5MDI0+PBQADpk12TdZMvXI/cKUgdVyS4Tace
+        LoxsNvO3Dw9y1fZLvdmOdSwrPtf8ErzRdno4kZO0tgeZ4ODs+8bVCKv0QR2EgOvzhnPnPmFFuJ2R7
+        CihJa9cH9kwa15XDTY3ZZMl8Xagl5mAfuWw8Ry/2YwSJlxXugjUSblFi9tIr/9Ewm9gOhaodLSiJd
+        vFU/zxiw==;
 Received: from [2001:4bb8:199:73c5:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mcPcV-00Eu56-U0; Mon, 18 Oct 2021 10:11:52 +0000
+        id 1mcPcN-00Eu1r-TL; Mon, 18 Oct 2021 10:11:44 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
@@ -52,10 +52,11 @@ Cc:     Coly Li <colyli@suse.de>, Mike Snitzer <snitzer@redhat.com>,
         jfs-discussion@lists.sourceforge.net, linux-nfs@vger.kernel.org,
         linux-nilfs@vger.kernel.org, linux-ntfs-dev@lists.sourceforge.net,
         ntfs3@lists.linux.dev, reiserfs-devel@vger.kernel.org,
+        Lee Duncan <lduncan@suse.com>,
         Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [PATCH 07/30] nvmet: use bdev_nr_bytes instead of open coding it
-Date:   Mon, 18 Oct 2021 12:11:07 +0200
-Message-Id: <20211018101130.1838532-8-hch@lst.de>
+Subject: [PATCH 04/30] drbd: use bdev_nr_sectors instead of open coding it
+Date:   Mon, 18 Oct 2021 12:11:04 +0200
+Message-Id: <20211018101130.1838532-5-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211018101130.1838532-1-hch@lst.de>
 References: <20211018101130.1838532-1-hch@lst.de>
@@ -70,33 +71,26 @@ Use the proper helper to read the block device size.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Kees Cook <keescook@chromium.org>
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 Reviewed-by: Chaitanya Kulkarni <kch@nvidia.com>
 ---
- drivers/nvme/target/io-cmd-bdev.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/block/drbd/drbd_int.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
-index 6139e1de50a66..70ca9dfc1771a 100644
---- a/drivers/nvme/target/io-cmd-bdev.c
-+++ b/drivers/nvme/target/io-cmd-bdev.c
-@@ -87,7 +87,7 @@ int nvmet_bdev_ns_enable(struct nvmet_ns *ns)
- 		ns->bdev = NULL;
- 		return ret;
- 	}
--	ns->size = i_size_read(ns->bdev->bd_inode);
-+	ns->size = bdev_nr_bytes(ns->bdev);
- 	ns->blksize_shift = blksize_bits(bdev_logical_block_size(ns->bdev));
- 
- 	ns->pi_type = 0;
-@@ -108,7 +108,7 @@ int nvmet_bdev_ns_enable(struct nvmet_ns *ns)
- 
- void nvmet_bdev_ns_revalidate(struct nvmet_ns *ns)
+diff --git a/drivers/block/drbd/drbd_int.h b/drivers/block/drbd/drbd_int.h
+index 5d9181382ce19..75fda53eed8cf 100644
+--- a/drivers/block/drbd/drbd_int.h
++++ b/drivers/block/drbd/drbd_int.h
+@@ -1826,8 +1826,7 @@ static inline sector_t drbd_md_last_sector(struct drbd_backing_dev *bdev)
+ /* Returns the number of 512 byte sectors of the device */
+ static inline sector_t drbd_get_capacity(struct block_device *bdev)
  {
--	ns->size = i_size_read(ns->bdev->bd_inode);
-+	ns->size = bdev_nr_bytes(ns->bdev);
+-	/* return bdev ? get_capacity(bdev->bd_disk) : 0; */
+-	return bdev ? i_size_read(bdev->bd_inode) >> 9 : 0;
++	return bdev ? bdev_nr_sectors(bdev) : 0;
  }
  
- u16 blk_to_nvme_status(struct nvmet_req *req, blk_status_t blk_sts)
+ /**
 -- 
 2.30.2
 
