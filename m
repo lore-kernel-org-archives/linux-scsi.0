@@ -2,292 +2,169 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E942C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Oct 2021 02:23:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 138ABC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Oct 2021 02:53:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F017E611EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Oct 2021 02:23:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E14EE6128B
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Oct 2021 02:53:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230016AbhJSCZf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 18 Oct 2021 22:25:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40768 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229663AbhJSCZe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Oct 2021 22:25:34 -0400
-Received: from mail-pj1-x1034.google.com (mail-pj1-x1034.google.com [IPv6:2607:f8b0:4864:20::1034])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8E4E3C06161C;
-        Mon, 18 Oct 2021 19:23:22 -0700 (PDT)
-Received: by mail-pj1-x1034.google.com with SMTP id lk8-20020a17090b33c800b001a0a284fcc2so855654pjb.2;
-        Mon, 18 Oct 2021 19:23:22 -0700 (PDT)
+        id S230287AbhJSCzw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 18 Oct 2021 22:55:52 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:32052 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229663AbhJSCzv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 18 Oct 2021 22:55:51 -0400
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19J2SWJl007657;
+        Tue, 19 Oct 2021 02:52:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=q5WscohXE6hl8xO2BiSNQnKNBIB9w5cD1KUepAFbGZE=;
+ b=br9u4Yj1dcDMmWH+RoAkRen6gBNlmYDqlew+XZYZak/J0Zl/dHuDFDAyxmpqqSwSVW2q
+ y6cudBsQB9trwfuZXeQcqMemsyY8UOV11uUFOpqgkvHCmb9/Qv+xB7W6ZJSggvel+zLV
+ zZKp0tiZSe3TR4kYwAh6jqcZSu/jQMuaUjsW5vE9VOjpKs4SXdQ0wU0m0z4JOMSgc5R/
+ XQCBGT/prsTo4odw0GbOyeELK9ilJl12UAoqcG8oFkDCv8/AVSmJirrQUNsSgzq2c/sB
+ AF4cKsH55BQ0WNS1Wxlzj0oMl2Upk3BMFh4ujGFzjZypU5+C0xfq+ih6zl/nvG4sUoIR 7A== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3brnmf7xwy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 19 Oct 2021 02:52:51 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19J2VUj8014130;
+        Tue, 19 Oct 2021 02:52:50 GMT
+Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12lp2172.outbound.protection.outlook.com [104.47.59.172])
+        by userp3030.oracle.com with ESMTP id 3bqkuwgp15-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 19 Oct 2021 02:52:50 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=QL3Zc4b0LrsA3lsa/QKS9tojFOP0PoKtErWETowpu9GSGGpo1Xx1LEIYWoOBhROffgpkb+x7yJIN5vkkKHo6z7C9BNTAG/Fx/qAhFqvOJN7RjF9Z+1CLmhw4nWX0At3dJ87CNzb60h1s3X2IglfPxySAJULP1RpBUVaTPudL4rQMbMKKsFmrZEqA4RZ1dXrfTCxAhKZk/q28hHLH7NF0EjoQ/L0Ke1TBSEC5UCeUgRr8LWm4WUo9vaYt2BG1P3fSI6g9MAm7Vjq9T/d0RhAzes31onbZ3rV3lBFH+SpFu2JZ7jJUV7AYKOca5XPyGeD4+bDayxbd0sef22Vz56iDWw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=q5WscohXE6hl8xO2BiSNQnKNBIB9w5cD1KUepAFbGZE=;
+ b=kkcnryQmJbx/DALsNBsBRN1f/dW6eHjjhUYUeV0akFirkrEHUA4puWZEa/LaYw5yFVv24ULNZdFiZjluvC4dCGN+7U88KLbxrKz/3UEiR0XCUMUbiBkClqom71X1dOvxYI+uAKTcXbmX5OkmpkfyIB4Lo6pQZxqRDJhbplod1teP9ATcZy/wXcRsyJIIHBMVed+TMnv655ko8oYuRFo4pOK0EIjAcNJB3ktnLuwHz+1VdSwM7reuwcqNXKW5lpbWGYBK6yQ1YGa6hRzspzA83gplP7EKa6G7//PHyDI1n9tEHZPPmoCd2eNGWcPXrBL8fif/2OjHizfy38c+yuWq1A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=w/5ympYvhaN2axaHCFvNwG3dKfShNuC/zGFJZLprG+k=;
-        b=SHGeA8+clXrQJL+NCOSUmjtpoXaBosuoxzhsvEXid71kNNC+GcBcEFpgmj71btzpHQ
-         44HJzeubCVBWxHCu9xivnwy1dpiyd5rLVvdibycVkpQu+402a1hhN5QwAKCCnU7eMnkH
-         TEtaR3Tg9MkUKnp7MdS3XlYzKdlMccWBezNbJFuH5aTenywfdmZBjWcJp4B6HdqqTpQS
-         zMS6fyXvztHcH3hpVgrEbHGI+wyX3nQsuNZEFyWS27n7IYziqmKO34re9er4d0DCbwyc
-         4mqCxSeISMXGDb76n9QsRvTyztnhhl3zs+rIkjhiYoiwj1X+08rI6CtSqq5enIu1a906
-         6+nw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=w/5ympYvhaN2axaHCFvNwG3dKfShNuC/zGFJZLprG+k=;
-        b=xuNedo3Zp17hTtT7JcsuRvWV2aAad3NnYE8N5Ie9Jz/jmfukSL8auduphfAcXE57n5
-         0csDyewmSwknKrCK+7KRuwG3UZkDqsA01AkcjOnXXiR7AaioezAJI03+WEt4f+Dhw5Ws
-         Or9HN5sDtDtYVaMf3CkSrd30hUB3YrrVs+dosTv8ZxTsTomM0Z2takJUDOFCa/u6ZQdw
-         RCDEyO+HZ7sxvBz9FhL3hEo7OJvfNuaiDvbSRSdGBLIVsTP7HqWisremr4tlyLYlGAhE
-         KZYSk6UXyOc0Ix4TddL7y9p1ssriajQZQdCgHs7ukI00Zt4B7WJuqVBglP6sgzgjbsJR
-         I9ZA==
-X-Gm-Message-State: AOAM53181PxLIV2PENNIeS/tXOeNp1NPLchx604cx4hy948UkNzS/Mcd
-        oJL3I/PKPOjHomY1tCbH1gxkft/F8UQ=
-X-Google-Smtp-Source: ABdhPJxIW7SvUXHBYY3sELLyC7TDVKb4xUjvhQtAaAX5rx8jr6NVpsr9aTlQVNP+o/mNvti+h799lg==
-X-Received: by 2002:a17:902:7246:b0:138:a6ed:66cc with SMTP id c6-20020a170902724600b00138a6ed66ccmr31746920pll.22.1634610201926;
-        Mon, 18 Oct 2021 19:23:21 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id gm14sm707678pjb.40.2021.10.18.19.23.20
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 18 Oct 2021 19:23:21 -0700 (PDT)
-From:   Ye Guojin <cgel.zte@gmail.com>
-X-Google-Original-From: Ye Guojin <ye.guojin@zte.com.cn>
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, zealci@zte.com.cn,
-        ye.guojin@zte.com.cn
-Subject: [PATCH] scsi: fixup coccinelle warnings
-Date:   Tue, 19 Oct 2021 02:22:52 +0000
-Message-Id: <20211019022252.971916-1-ye.guojin@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=q5WscohXE6hl8xO2BiSNQnKNBIB9w5cD1KUepAFbGZE=;
+ b=IugBsrfwGeUU/5+qjE5ynmMmg8pSs6mwMMSALUkwAXMNWg9YOJ4CCCfLdrqky9xgS0WJjVFKIakrKqibenIMko+RUNzU6odQMxB5dD5hX16wNiF+qTpRELZSDKQuidcO9ytfU9gWSBGOcgP8JdhXKoiliam7MVfZrG1Cui1mrGo=
+Authentication-Results: kernel.org; dkim=none (message not signed)
+ header.d=none;kernel.org; dmarc=none action=none header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB5612.namprd10.prod.outlook.com (2603:10b6:510:fa::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.16; Tue, 19 Oct
+ 2021 02:52:47 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::a457:48f2:991f:c349]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::a457:48f2:991f:c349%9]) with mapi id 15.20.4608.018; Tue, 19 Oct 2021
+ 02:52:47 +0000
+To:     Luis Chamberlain <mcgrof@kernel.org>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>, axboe@kernel.dk,
+        jejb@linux.ibm.com, agk@redhat.com, snitzer@redhat.com,
+        colyli@suse.de, kent.overstreet@gmail.com,
+        boris.ostrovsky@oracle.com, jgross@suse.com,
+        sstabellini@kernel.org, roger.pau@citrix.com, geert@linux-m68k.org,
+        ulf.hansson@linaro.org, tj@kernel.org, hare@suse.de,
+        jdike@addtoit.com, richard@nod.at, anton.ivanov@cambridgegreys.com,
+        johannes.berg@intel.com, krisman@collabora.com,
+        chris.obbard@collabora.com, thehajime@gmail.com,
+        zhuyifei1999@gmail.com, haris.iqbal@ionos.com,
+        jinpu.wang@ionos.com, miquel.raynal@bootlin.com, vigneshr@ti.com,
+        linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
+        dm-devel@redhat.com, linux-bcache@vger.kernel.org,
+        xen-devel@lists.xenproject.org, linux-m68k@lists.linux-m68k.org,
+        linux-um@lists.infradead.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/9] scsi/sd: add error handling support for add_disk()
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1pms1d8w4.fsf@ca-mkp.ca.oracle.com>
+References: <20211015233028.2167651-1-mcgrof@kernel.org>
+        <20211015233028.2167651-2-mcgrof@kernel.org>
+        <yq1bl3ofjo5.fsf@ca-mkp.ca.oracle.com>
+        <YW3ZuQv1qpIXkd5b@bombadil.infradead.org>
+Date:   Mon, 18 Oct 2021 22:52:44 -0400
+In-Reply-To: <YW3ZuQv1qpIXkd5b@bombadil.infradead.org> (Luis Chamberlain's
+        message of "Mon, 18 Oct 2021 13:31:53 -0700")
+Content-Type: text/plain
+X-ClientProxiedBy: BL0PR02CA0117.namprd02.prod.outlook.com
+ (2603:10b6:208:35::22) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from ca-mkp.ca.oracle.com (138.3.201.18) by BL0PR02CA0117.namprd02.prod.outlook.com (2603:10b6:208:35::22) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.15 via Frontend Transport; Tue, 19 Oct 2021 02:52:47 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: f71b47af-e5d2-4a46-cf55-08d992ab8837
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5612:
+X-MS-Exchange-Transport-Forked: True
+X-Microsoft-Antispam-PRVS: <PH0PR10MB5612CBB25690C25EED7375268EBD9@PH0PR10MB5612.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:7219;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: jGRqMuGIFJtch3sQkmWNIo3DxaSILxOgnlM6Yyr2SchOySNj8nd2dFjZeggnQrQHnf0pJTUT/ocWogUWcOcA4QXGGPCO3d3fnVvljJLK1gcuYugYQiQmpUF8gqYhyaOBJ5q3PMa5L0aNAjQ8A6UM1cytzeEK91RBVo4Lezz/KDiq9Y/nL6b8BF335UGkR6okyTJ8lxJJ5tAeYK29z4Akz6h0MWBETdXf8YUQ8zp97wk9fpQhb6x0mOoxMitCDiiuMnBvtbdFz1Zwjl3IpCMM3A/37OMVxqtyQZ+vZ/IaiAmcf7hSq41yfaswC1WkTSp5LNhaRc4rKYCU3MFaKqjwtphIYR8UPTHDjTDV0jr3xr+9F8OTWK13cvQtCRs9QItpJnbcZ/c2aqmTZe0tgeGe6d2Ky3/Lz3qNfmTLP/gaWzSZMcD7LSNlyreE9XibY65mtsWnwErdvICIPMiNZCcIODLa2bh/KsEC46hnHwazOSdGPg70JW3CMNLnYnG/sgAlTknfCp9kHKjn07jvqVLWiIHldwVKzL3fOzNdjPScVtOEo1HBH2oV59zMJakyVyfit54YaTpDwntYdO0MnslQiSGhOmLBe/JywHT9mFL5nxEWAzATsXFCgUMH2olk61DCAQ+L0SbLkWVaODezLLDPgf4npsnKRElr9/9Fur5tzsXH0UE58ao/mGzxY/IbjevFnmtc7pXnMN3TGhT8c5xr5w==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(6666004)(7406005)(4326008)(7416002)(558084003)(8936002)(956004)(6916009)(316002)(2906002)(7696005)(86362001)(26005)(38350700002)(38100700002)(54906003)(186003)(55016002)(8676002)(66556008)(66476007)(66946007)(5660300002)(36916002)(52116002)(508600001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?meZ11y0UqDFMVR8LwY48iHN+B2ZAJ2DS7unaUAOmJQU7p1kC0uyKI0gpGOCz?=
+ =?us-ascii?Q?gsgck0SSO1gEbziQu1uWrl+Himk4wJGBH1OY5hPheMyjTgbcoiSwKIGoK58Q?=
+ =?us-ascii?Q?x4Bv0cLGCehVSC+FPwGO/sQZhb3mArHLehb88qPj57a4uk77Wu5MUI6UOM0F?=
+ =?us-ascii?Q?0O7P6FALq9Wp9spgA6Nf4BzthgZsQKy1YTY1Q6b3UQqimzDL64HCKL6AvAgI?=
+ =?us-ascii?Q?6eVQxKFxCTXIo/DTUPICOdRi9Tx3XVbBj+OeteYg/WwZJS8PN0Rs3Da8kluO?=
+ =?us-ascii?Q?4tgJJcW8fSsHbf4nlAgsD0C696KyfwXD1uKEIs++OmQTWohWQ0kKqnwtjXnt?=
+ =?us-ascii?Q?N4XFQZ1lIz2ICesiP0tu/vAxBDRm9cQzx+IDvWzUbozEyZnFVVMPAl4DPAOc?=
+ =?us-ascii?Q?oqH4LFRf5T6HvrJ5Iw11Ra+Y1s299n7SG8HMBRUOPy8Q07KvKwWiNmiq+9hR?=
+ =?us-ascii?Q?Sdcy1uURx6A1AHnMX7mGvmFMzyPok+M+SJFXNZ6DZ+aM8AgBETwXp+/9KZis?=
+ =?us-ascii?Q?NqfkW+rbNXztE9MSFsVZXXpvcxOcs6RPhqhN2soaW4FpkKde4RXxNbRVp30T?=
+ =?us-ascii?Q?pWlreM7OGFjoWA0LvBuhsqbB9m7D3QQ1FddMY+QbVXGIaUP+AdPfRfmbBVEl?=
+ =?us-ascii?Q?yOWq6iWvEk2vY2/zCYERhU7jeHFHoo6LKlCj+vWWr+TM0yTvYlip/UIMz4ND?=
+ =?us-ascii?Q?+OR7uwDPTTidJLmDMZd3+MJf+QHKL3IeYG80KLmdmixaaZUF6Xyg62Al3Dql?=
+ =?us-ascii?Q?xCflg7F087vsKPR/C889V5dOBDhbA9NKie3gyMjdXA72rJ9xtIjNBiEP9KlZ?=
+ =?us-ascii?Q?QwxL/xXzxokdkA4f0C0yyJtN9XpxnHM2zeRuUbNecKIbP+S4A6WQmZ+quRuZ?=
+ =?us-ascii?Q?0qz41NwM+aOvEduibJ8N74tbbKYRvRpvi1cIA1GD/LOL3bcIg45du1F1TnL8?=
+ =?us-ascii?Q?SRGkAEhM48ZgaSWxbGQ/1hOQRXBtHvVF5oUpFCV5C8wMiH2uXx4kSVKllMdK?=
+ =?us-ascii?Q?geoX2J9XkEkkJeHyyvU+hDP51lRTtLuE7nc2WdGn/4mqQ6bC1MJPB6uILkpi?=
+ =?us-ascii?Q?kNSAvUFkprFOlioF134mXjvjEE8+tHxYjwi8WXig9QCAZJZQmcFp04tBhC6z?=
+ =?us-ascii?Q?zx1QbiUN7GphDTDan1y9GrPioq4KJn7u6v6Z660EZfYqv0X2m3pGIJSiI4W5?=
+ =?us-ascii?Q?P/Jn9yK41w+maH1Aab+AbY6URwpqQZXJEbTEHP4/DNN8u3413jzEXsLlOL2i?=
+ =?us-ascii?Q?/dCFFzl0tenq7PK/3GMPK83gHPWsvRGAcxvcBBahfbks7TmgtnYueW0N1Htq?=
+ =?us-ascii?Q?hbVqXAGYSkZLXKtP6Jl1ehtN?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f71b47af-e5d2-4a46-cf55-08d992ab8837
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Oct 2021 02:52:47.5144
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: hxwuuPShKyKXOVCuyR2GEPaEFztujWky8m0/kKzFB0dIBmxOllLsoIqtc8AkZQ5sw3Tbo/+nRP1sD53gpaCIctKMLHtP0WEm8WEs0NXOia4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5612
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10141 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ malwarescore=0 bulkscore=0 phishscore=0 adultscore=0 spamscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109230001 definitions=main-2110190013
+X-Proofpoint-GUID: iauxcMEjFutpKRN5OBYZcn6MHISXq-QI
+X-Proofpoint-ORIG-GUID: iauxcMEjFutpKRN5OBYZcn6MHISXq-QI
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-coccicheck complains about the use of snprintf() in sysfs show
-functions:
-WARNING  use scnprintf or sprintf
 
-Use sysfs_emit instead of scnprintf or sprintf makes more sense.
+Luis,
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Ye Guojin <ye.guojin@zte.com.cn>
----
- drivers/scsi/scsi_sysfs.c | 50 +++++++++++++++++++--------------------
- 1 file changed, 25 insertions(+), 25 deletions(-)
+> Thanks, would you like Jens to pick this up and the other scsi/sr patch
+> or are you taking it through your tree?
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index a35841b34bfd..69885999ec5f 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -163,7 +163,7 @@ show_##name (struct device *dev, struct device_attribute *attr, 	\
- 	     char *buf)							\
- {									\
- 	struct Scsi_Host *shost = class_to_shost(dev);			\
--	return snprintf (buf, 20, format_string, shost->field);		\
-+	return sysfs_emit(buf, format_string, shost->field);		\
- }
- 
- /*
-@@ -228,7 +228,7 @@ show_shost_state(struct device *dev, struct device_attribute *attr, char *buf)
- 	if (!name)
- 		return -EINVAL;
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return sysfs_emit(buf, "%s\n", name);
- }
- 
- /* DEVICE_ATTR(state) clashes with dev_attr_state for sdev */
-@@ -274,7 +274,7 @@ show_shost_active_mode(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 
- 	if (shost->active_mode == MODE_UNKNOWN)
--		return snprintf(buf, 20, "unknown\n");
-+		return sysfs_emit(buf, "unknown\n");
- 	else
- 		return show_shost_mode(shost->active_mode, buf);
- }
-@@ -324,8 +324,8 @@ show_shost_eh_deadline(struct device *dev,
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 
- 	if (shost->eh_deadline == -1)
--		return snprintf(buf, strlen("off") + 2, "off\n");
--	return sprintf(buf, "%u\n", shost->eh_deadline / HZ);
-+		return sysfs_emit(buf, "off\n");
-+	return sysfs_emit(buf, "%u\n", shost->eh_deadline / HZ);
- }
- 
- static ssize_t
-@@ -382,14 +382,14 @@ static ssize_t
- show_host_busy(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct Scsi_Host *shost = class_to_shost(dev);
--	return snprintf(buf, 20, "%d\n", scsi_host_busy(shost));
-+	return sysfs_emit(buf, "%d\n", scsi_host_busy(shost));
- }
- static DEVICE_ATTR(host_busy, S_IRUGO, show_host_busy, NULL);
- 
- static ssize_t
- show_use_blk_mq(struct device *dev, struct device_attribute *attr, char *buf)
- {
--	return sprintf(buf, "1\n");
-+	return sysfs_emit(buf, "1\n");
- }
- static DEVICE_ATTR(use_blk_mq, S_IRUGO, show_use_blk_mq, NULL);
- 
-@@ -399,7 +399,7 @@ show_nr_hw_queues(struct device *dev, struct device_attribute *attr, char *buf)
- 	struct Scsi_Host *shost = class_to_shost(dev);
- 	struct blk_mq_tag_set *tag_set = &shost->tag_set;
- 
--	return snprintf(buf, 20, "%d\n", tag_set->nr_hw_queues);
-+	return sysfs_emit(buf, "%d\n", tag_set->nr_hw_queues);
- }
- static DEVICE_ATTR(nr_hw_queues, S_IRUGO, show_nr_hw_queues, NULL);
- 
-@@ -593,7 +593,7 @@ sdev_show_##field (struct device *dev, struct device_attribute *attr,	\
- {									\
- 	struct scsi_device *sdev;					\
- 	sdev = to_scsi_device(dev);					\
--	return snprintf (buf, 20, format_string, sdev->field);		\
-+	return sysfs_emit(buf, format_string, sdev->field);		\
- }									\
- 
- /*
-@@ -680,7 +680,7 @@ sdev_show_device_busy(struct device *dev, struct device_attribute *attr,
- 		char *buf)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", scsi_device_busy(sdev));
-+	return sysfs_emit(buf, "%d\n", scsi_device_busy(sdev));
- }
- static DEVICE_ATTR(device_busy, S_IRUGO, sdev_show_device_busy, NULL);
- 
-@@ -689,7 +689,7 @@ sdev_show_device_blocked(struct device *dev, struct device_attribute *attr,
- 		char *buf)
- {
- 	struct scsi_device *sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", atomic_read(&sdev->device_blocked));
-+	return sysfs_emit(buf, "%d\n", atomic_read(&sdev->device_blocked));
- }
- static DEVICE_ATTR(device_blocked, S_IRUGO, sdev_show_device_blocked, NULL);
- 
-@@ -701,7 +701,7 @@ sdev_show_timeout (struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%d\n", sdev->request_queue->rq_timeout / HZ);
-+	return sysfs_emit(buf, "%d\n", sdev->request_queue->rq_timeout / HZ);
- }
- 
- static ssize_t
-@@ -722,7 +722,7 @@ sdev_show_eh_timeout(struct device *dev, struct device_attribute *attr, char *bu
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%u\n", sdev->eh_timeout / HZ);
-+	return sysfs_emit(buf, "%u\n", sdev->eh_timeout / HZ);
- }
- 
- static ssize_t
-@@ -842,7 +842,7 @@ show_state_field(struct device *dev, struct device_attribute *attr, char *buf)
- 	if (!name)
- 		return -EINVAL;
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return sysfs_emit(buf, "%s\n", name);
- }
- 
- static DEVICE_ATTR(state, S_IRUGO | S_IWUSR, show_state_field, store_state_field);
-@@ -857,7 +857,7 @@ show_queue_type_field(struct device *dev, struct device_attribute *attr,
- 	if (sdev->simple_tags)
- 		name = "simple";
- 
--	return snprintf(buf, 20, "%s\n", name);
-+	return sysfs_emit(buf, "%s\n", name);
- }
- 
- static ssize_t
-@@ -934,7 +934,7 @@ static ssize_t
- show_iostat_counterbits(struct device *dev, struct device_attribute *attr,
- 			char *buf)
- {
--	return snprintf(buf, 20, "%d\n", (int)sizeof(atomic_t) * 8);
-+	return sysfs_emit(buf, "%d\n", (int)sizeof(atomic_t) * 8);
- }
- 
- static DEVICE_ATTR(iocounterbits, S_IRUGO, show_iostat_counterbits, NULL);
-@@ -946,7 +946,7 @@ show_iostat_##field(struct device *dev, struct device_attribute *attr,	\
- {									\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	unsigned long long count = atomic_read(&sdev->field);		\
--	return snprintf(buf, 20, "0x%llx\n", count);			\
-+	return sysfs_emit(buf, "0x%llx\n", count);			\
- }									\
- static DEVICE_ATTR(field, S_IRUGO, show_iostat_##field, NULL)
- 
-@@ -959,7 +959,7 @@ sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf (buf, 20, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
-+	return sysfs_emit(buf, SCSI_DEVICE_MODALIAS_FMT "\n", sdev->type);
- }
- static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
- 
-@@ -970,7 +970,7 @@ sdev_show_evt_##name(struct device *dev, struct device_attribute *attr,	\
- {									\
- 	struct scsi_device *sdev = to_scsi_device(dev);			\
- 	int val = test_bit(SDEV_EVT_##Cap_name, sdev->supported_events);\
--	return snprintf(buf, 20, "%d\n", val);				\
-+	return sysfs_emit(buf, "%d\n", val);				\
- }
- 
- #define DECLARE_EVT_STORE(name, Cap_name)				\
-@@ -1092,9 +1092,9 @@ sdev_show_dh_state(struct device *dev, struct device_attribute *attr,
- 	struct scsi_device *sdev = to_scsi_device(dev);
- 
- 	if (!sdev->handler)
--		return snprintf(buf, 20, "detached\n");
-+		return sysfs_emit(buf, "detached\n");
- 
--	return snprintf(buf, 20, "%s\n", sdev->handler->name);
-+	return sysfs_emit(buf, "%s\n", sdev->handler->name);
- }
- 
- static ssize_t
-@@ -1152,7 +1152,7 @@ sdev_show_access_state(struct device *dev,
- 	access_state = (sdev->access_state & SCSI_ACCESS_STATE_MASK);
- 	access_state_name = scsi_access_state_name(access_state);
- 
--	return sprintf(buf, "%s\n",
-+	return sysfs_emit(buf, "%s\n",
- 		       access_state_name ? access_state_name : "unknown");
- }
- static DEVICE_ATTR(access_state, S_IRUGO, sdev_show_access_state, NULL);
-@@ -1168,9 +1168,9 @@ sdev_show_preferred_path(struct device *dev,
- 		return -EINVAL;
- 
- 	if (sdev->access_state & SCSI_ACCESS_STATE_PREFERRED)
--		return sprintf(buf, "1\n");
-+		return sysfs_emit(buf, "1\n");
- 	else
--		return sprintf(buf, "0\n");
-+		return sysfs_emit(buf, "0\n");
- }
- static DEVICE_ATTR(preferred_path, S_IRUGO, sdev_show_preferred_path, NULL);
- #endif
-@@ -1182,7 +1182,7 @@ sdev_show_queue_ramp_up_period(struct device *dev,
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf(buf, 20, "%u\n",
-+	return sysfs_emit(buf, "%u\n",
- 			jiffies_to_msecs(sdev->queue_ramp_up_period));
- }
- 
+Didn't think I had the relevant add_disk() patch in my baseline tree but
+it turns out I do. So I queued them up.
+
+Thanks!
+
 -- 
-2.25.1
-
-
+Martin K. Petersen	Oracle Linux Engineering
