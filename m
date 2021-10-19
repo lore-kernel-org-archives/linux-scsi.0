@@ -2,89 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29948C4332F
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Oct 2021 17:09:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A232C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Oct 2021 18:16:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 01EC461360
-	for <linux-scsi@archiver.kernel.org>; Tue, 19 Oct 2021 17:09:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15DB260ED3
+	for <linux-scsi@archiver.kernel.org>; Tue, 19 Oct 2021 18:16:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234584AbhJSRL6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 19 Oct 2021 13:11:58 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46082 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231956AbhJSRLz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Oct 2021 13:11:55 -0400
-Received: from mail-il1-x135.google.com (mail-il1-x135.google.com [IPv6:2607:f8b0:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B1A1C06174E
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Oct 2021 10:09:42 -0700 (PDT)
-Received: by mail-il1-x135.google.com with SMTP id h10so19161730ilq.3
-        for <linux-scsi@vger.kernel.org>; Tue, 19 Oct 2021 10:09:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=NC+QH1lLA2irkAvHgLGE0udswvy9H8J65nP8TCJKrZI=;
-        b=o6vk4FISvimEK8NjzWLh71S+R+sbcpT5J1tSiaBXWMPWbd3mKL+fboJreGLKo6Bztf
-         7FmcevHC4OmU8CBasGQ4F55i//4n6ioRFxgYyn203PlCncFPNiKJ/KfzCTfW8f6AzvZ1
-         HYVeXG/Hcp5z71mKA1iS4YsJSksICRqFho3U8rTE07CSaLtWVegYz6CTqOsIOz3jozcg
-         dwpdrj5jYem/Zdkm7BmPJFuRnfaGZ3BjuWERBenEpXIZQlwAEr5LX9jajeA/5SZ5Z0iV
-         Tvqta1jqTAfdTITwuhT+TPBGhP40syTE9uLu9UVuCc1dCYK5sefZKvAKssAouGn5Uynl
-         VL+w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=NC+QH1lLA2irkAvHgLGE0udswvy9H8J65nP8TCJKrZI=;
-        b=fK+MzcGsszQaxZGIoUkb76mBRgoTmQbqlW8kcOFQpxlevOCwYUYDtbnTCwn3BTrpQl
-         AM4LjdVdnL6vRzWn2XyZWWFNwrXc5/cZ0Xs8KN5PkW8Rkfs+gEY0Acfut7zS/9LFsjLm
-         hCF4YqCm+jEPRFeEbSE9IG7Jsru8xjbqkhBfsqgew4NN/xE5tlSvT7jmuQ1Do2f19b0p
-         QIG9R7WzxDJJMLaH00tA1X4Mby4h+6C9yq93FXJo+v71XXoBjMx0mYGzGzmaULctQhP4
-         P+DGlCG0Jr4WSSXwby7z0jHqzYgAcObB+tvEdFbhQd8AuPSB94APZ0uXf+SFxtqm/STb
-         dd2w==
-X-Gm-Message-State: AOAM533+YH8d646EbviRVMqebetYxL60tGJZ/wMUWvxnZnxxcoB1V0wj
-        tX9kGWTatGRvXzXNDhqe8dilfQ==
-X-Google-Smtp-Source: ABdhPJwv1eidFbcPTz9i8Dlqlw4ktg2hwOVw+WoLVH5jOamSIQ1CXxQvIplNqHnMOPgikO6AV2QuyA==
-X-Received: by 2002:a05:6e02:158c:: with SMTP id m12mr18721522ilu.132.1634663381823;
-        Tue, 19 Oct 2021 10:09:41 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id j17sm8634387ilq.1.2021.10.19.10.09.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 19 Oct 2021 10:09:41 -0700 (PDT)
-Subject: Re: [PATCH] block: add documentation for inflight
-To:     Steffen Maier <maier@linux.ibm.com>,
-        Nikanth Karthikesan <knikanth@suse.de>,
-        linux-block@vger.kernel.org, linux-doc@vger.kernel.org
-Cc:     Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-s390@vger.kernel.org
-References: <20211019130230.77594-1-maier@linux.ibm.com>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <572fd6c4-ccb9-4799-3882-685efa4492ad@kernel.dk>
-Date:   Tue, 19 Oct 2021 11:09:40 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S233340AbhJSSST (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 19 Oct 2021 14:18:19 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:24724 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231783AbhJSSSS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 19 Oct 2021 14:18:18 -0400
+Received: from pps.filterd (m0127361.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19JHNs6w015964;
+        Tue, 19 Oct 2021 14:16:03 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=pp1;
+ bh=3Mhlaj/hfcCOJ5gKZvd05vIt+8q8aE3XEqvFde3WcCs=;
+ b=U0W4TeLke1rgYm8/0GDEQFZfulmK2p9rvWc5xrG4M9o8AKtGFvtoXMYQdkVrAtfO0A8i
+ URX1vb5EqnP2CV0Bm2y2U8tOXRXy/7nZ0uAxMke6+mIL0ms0B3jmShp7RwzuyMzuQ5BZ
+ NbYA7Y5YUznbbgcG0cErv0TPOvHhhvNlrWqtzoEFJR6cvHJk4HcwdoyYV+RjWqeRqpBM
+ py2jYeMBfVLqM0aNBTlk+5iZN2Dh5Zv7CvdBDsF+7SbN5krMCanzKd30kGeXWsQmUgAl
+ sBVBsYjbeQ03fqdGbEnSNe+rTTz346mUnQ96hZVa7Jqi/gAKoQY+pzQ4a5lFMH2+WyL9 OQ== 
+Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3bt2crs0xg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 19 Oct 2021 14:16:03 -0400
+Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
+        by ppma03dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19JI7NRQ017618;
+        Tue, 19 Oct 2021 18:16:02 GMT
+Received: from b03cxnp08025.gho.boulder.ibm.com (b03cxnp08025.gho.boulder.ibm.com [9.17.130.17])
+        by ppma03dal.us.ibm.com with ESMTP id 3bqpcbafm1-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Tue, 19 Oct 2021 18:16:02 +0000
+Received: from b03ledav006.gho.boulder.ibm.com (b03ledav006.gho.boulder.ibm.com [9.17.130.237])
+        by b03cxnp08025.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19JIG1Zp53346704
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 19 Oct 2021 18:16:01 GMT
+Received: from b03ledav006.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 12DC4C605B;
+        Tue, 19 Oct 2021 18:16:01 +0000 (GMT)
+Received: from b03ledav006.gho.boulder.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id DD501C6055;
+        Tue, 19 Oct 2021 18:15:59 +0000 (GMT)
+Received: from oc6857751186.ibm.com (unknown [9.65.235.71])
+        by b03ledav006.gho.boulder.ibm.com (Postfix) with ESMTP;
+        Tue, 19 Oct 2021 18:15:59 +0000 (GMT)
+Subject: Re: [PATCH] ibmvfc: Fixup duplicate response detection
+To:     Brian King <brking@linux.vnet.ibm.com>
+Cc:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
+        jejb@linux.ibm.com, stable@vger.kernel.org
+References: <20211019152129.16558-1-brking@linux.vnet.ibm.com>
+From:   Tyrel Datwyler <tyreld@linux.ibm.com>
+Message-ID: <e36b7858-0408-e21d-de9f-76284db1dea0@linux.ibm.com>
+Date:   Tue, 19 Oct 2021 11:15:58 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <20211019130230.77594-1-maier@linux.ibm.com>
+In-Reply-To: <20211019152129.16558-1-brking@linux.vnet.ibm.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: MLBmpu0XTfa0uPZjydcfXtDpI5Dlbdi2
+X-Proofpoint-GUID: MLBmpu0XTfa0uPZjydcfXtDpI5Dlbdi2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
+ definitions=2021-10-19_02,2021-10-19_01,2020-04-07_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ clxscore=1011 spamscore=0 mlxscore=0 phishscore=0 malwarescore=0
+ lowpriorityscore=0 adultscore=0 suspectscore=0 impostorscore=0 bulkscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109230001 definitions=main-2110190105
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/19/21 7:02 AM, Steffen Maier wrote:
-> Complements v2.6.32 commit a9327cac440b ("Seperate read and write
-> statistics of in_flight requests") and commit 316d315bffa4 ("block:
-> Seperate read and write statistics of in_flight requests v2").
+On 10/19/21 8:21 AM, Brian King wrote:
+> Commit a264cf5e81c7 ("scsi: ibmvfc: Fix command state accounting and stale response detection")
+> introduced a regression in detecting duplicate responses. This was observed
+> in test where a command was sent to the VIOS and completed before
+> ibmvfc_send_event set the active flag to 1, which resulted in the
+> atomic_dec_if_positive call in ibmvfc_handle_crq thinking this was a
+> duplicate response, which resulted in scsi_done not getting called, so we
+> then hit a scsi command timeout for this command once the timeout expires.
+> This simply ensures the active flag gets set prior to making the hcall to
+> send the command to the VIOS, in order to close this window.
+> 
+> Fixes: a264cf5e81c7 ("scsi: ibmvfc: Fix command state accounting and stale response detection")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 
-Jon, probably better if you take this through the doc tree. You can
-add my:
+Acked-by: Tyrel Datwyler <tyreld@linux.ibm.com>
 
-Reviewed-by: Jens Axboe <axboe@kernel.dk>
-
--- 
-Jens Axboe
+> ---
+>  drivers/scsi/ibmvscsi/ibmvfc.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+> index a4b0a12f8a97..d0eab5700dc5 100644
+> --- a/drivers/scsi/ibmvscsi/ibmvfc.c
+> +++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+> @@ -1696,6 +1696,7 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+>  
+>  	spin_lock_irqsave(&evt->queue->l_lock, flags);
+>  	list_add_tail(&evt->queue_list, &evt->queue->sent);
+> +	atomic_set(&evt->active, 1);
+>  
+>  	mb();
+>  
+> @@ -1710,6 +1711,7 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+>  				     be64_to_cpu(crq_as_u64[1]));
+>  
+>  	if (rc) {
+> +		atomic_set(&evt->active, 0);
+>  		list_del(&evt->queue_list);
+>  		spin_unlock_irqrestore(&evt->queue->l_lock, flags);
+>  		del_timer(&evt->timer);
+> @@ -1737,7 +1739,6 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+>  
+>  		evt->done(evt);
+>  	} else {
+> -		atomic_set(&evt->active, 1);
+>  		spin_unlock_irqrestore(&evt->queue->l_lock, flags);
+>  		ibmvfc_trc_start(evt);
+>  	}
+> 
 
