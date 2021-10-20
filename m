@@ -2,98 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D385C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 14:33:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A3C1C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 14:54:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 20A58610A1
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 14:33:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DAA061359
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 14:54:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230174AbhJTOfc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Oct 2021 10:35:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52596 "EHLO
+        id S230089AbhJTO4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Oct 2021 10:56:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57486 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229570AbhJTOfc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Oct 2021 10:35:32 -0400
-Received: from mail-pl1-x62e.google.com (mail-pl1-x62e.google.com [IPv6:2607:f8b0:4864:20::62e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D6F87C06161C;
-        Wed, 20 Oct 2021 07:33:17 -0700 (PDT)
-Received: by mail-pl1-x62e.google.com with SMTP id 21so16254960plo.13;
-        Wed, 20 Oct 2021 07:33:17 -0700 (PDT)
+        with ESMTP id S229952AbhJTO4c (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Oct 2021 10:56:32 -0400
+Received: from mail-ot1-x332.google.com (mail-ot1-x332.google.com [IPv6:2607:f8b0:4864:20::332])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 330C5C061749
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2021 07:54:18 -0700 (PDT)
+Received: by mail-ot1-x332.google.com with SMTP id s18-20020a0568301e1200b0054e77a16651so8540316otr.7
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2021 07:54:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=u5DOSeHOTZkZZGLPLKG3YA5D+MxgiJ7IvT74eqMUdzw=;
-        b=HzuNKj/Mo6lAcoORCX1FT11zc2x+2AFTBDIOP1iv/agUSbtHcKhtP7H5k4Y+ErSPXO
-         COTzAd9fT0AEzLNM/AELcAZWfOq597E88L2Ohm9Asmy/IGsVsZT5Kvm1xc5eaWZ0nbWb
-         6YAiIABRtMvBDosZPcxUtpFY6g0R86HCkUL8y/JFN4vE0D2aAerboa0oeCukNQHpLuG7
-         tV2bn/vRPJSP6s3WQ7e6Naksyx11pbUe1gmhuVO7ttuG/TZMr8DFoNSSSbkLdbG4UIvC
-         aDkCZK4vC0Ma1ByjaZr4KaQmj1hAChZdGjzWQsjGVHM/Io06QS2axKhmoUIYtdrVVdGg
-         klHg==
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=TZZSEfWCStHUfXhWoXkg5KMgJocnV57u5o2CEcJ7HCc=;
+        b=m6t8lcoqFlEuO2YtgUGyJOgTFG9r3gegg328r7yqi7ahbS8ubR2dD0/Pj2EWCTAUuA
+         M02ojT0kPrzHZYYG+nzIM/amlc0aviTrC5h073WmzUsDG5kSpMZnjhuK+i8EoLI8XtFV
+         tAOJI6Dq6RqsaFkY7XaLCF+jWOo8HC09LBuWXmFGMukDr003XnwiD9sz7/I/c5Gdrkja
+         EgQndCGLKNGRW6KF4GgsUvpBI9e/r1wrQDvkfxN5dmsQcuosbJ5bD+47WPJHDtMVt1ox
+         UNh+E6Iq9tCpN0OMN/AP4Ti0h/SP/2gadP9EfeelfLwNwKFK/cs3CzBNoPypeMhUfQ1Q
+         8tNQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=u5DOSeHOTZkZZGLPLKG3YA5D+MxgiJ7IvT74eqMUdzw=;
-        b=x4feP+91VS9e5pfrhPkyST4PzLWmKz9GvP1lff58a35qTqOP3R6HOIoeBRDJWihOuP
-         rN3H5ZgaXO14JVfYvIQS3J9pU8l6AOVc1IXT24fKPTaL3Pq24R79Z4IBZF0OmqNiPCCI
-         2GtLhlQnlzSIJM4uL8BFk1JwXdom4d7+DSlkWJKi8wVCS9Ek6F7+OCqGCzG9UB5r8DJ2
-         SQ7Jvh9mpID+rjqy0LPMdKNiI9/ttYumMLCYNNCuUpN/sG7u1ZOl/HimPYqBFnpPIvB2
-         oSDYTBbR/Vu2osXJTtTfq6bEYNz+eSMx02efsI6JGNXYXKmkZHlbKkBReKOWiiJWZ2Cw
-         +sVA==
-X-Gm-Message-State: AOAM531ygqFUCIJIe1RyGIj/UqzWRu468GiWY7qDvnKIRYUtVsX3mBrQ
-        usr+tNetycOVT6BDt4G8MA==
-X-Google-Smtp-Source: ABdhPJw/xwo1EfpCHxX+UNPaVbn1dkiEDSMWBET0zrkkMENfrZ7XpE3j5GRdx+H2HNI+rN5AwuG5hA==
-X-Received: by 2002:a17:90b:30d6:: with SMTP id hi22mr8001207pjb.4.1634740397380;
-        Wed, 20 Oct 2021 07:33:17 -0700 (PDT)
-Received: from vultr.guest ([107.191.53.97])
-        by smtp.gmail.com with ESMTPSA id j9sm2512018pji.20.2021.10.20.07.33.15
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 20 Oct 2021 07:33:16 -0700 (PDT)
-From:   Zheyu Ma <zheyuma97@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        skashyap@marvell.com, jhasan@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zheyu Ma <zheyuma97@gmail.com>
-Subject: [PATCH] scsi: qedf: Fix return values of the probe function
-Date:   Wed, 20 Oct 2021 14:33:08 +0000
-Message-Id: <1634740388-27238-1-git-send-email-zheyuma97@gmail.com>
-X-Mailer: git-send-email 2.7.4
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=TZZSEfWCStHUfXhWoXkg5KMgJocnV57u5o2CEcJ7HCc=;
+        b=TACTcJwUlife21pfjBR5lJSzAKYByxGRZCCHAqJKGjVN0kUDbCueGq5zPzrNsFhz2E
+         PUy4I1n7DHZ2+k5tJcz8toF6pD521+Vaa4TiPxVt15cpzqg2wBLSCwcMZbkKcMo73fmi
+         rEjYBf42HOO+GPpnL/ir4/rpvYNdZR15Ty3C7WlXaz9mfmuhEeG95Ssz2/uCxEgq+IWk
+         lfSf+cp+KEXA4tNnBLKqZtIXHslT4cNWFHZPRtLf2p4KG/y0QlAyvOLGmGtfrVaU3hIL
+         Mf6YxZeZrsnwybo41hXHwPj6hJ7wUnrb7S5H1SMwv8Oqu7KsfzFJc0oG3FcYgC3c6Ddw
+         gIyw==
+X-Gm-Message-State: AOAM533kxFAB17SpaTvxsIHYHkzZnxzePSU1/pewFFdOWvZ+F31JKGgL
+        ajy6nNRlKNT7N4Ybtu5o1AIPI183eOCZLQ==
+X-Google-Smtp-Source: ABdhPJyA70p8IeSf47juIEqV0A0ohyswwqnHS0r02Wg4m/IZ8h7PlFDckmkiOFfwNwbTNzml/h726Q==
+X-Received: by 2002:a9d:4c99:: with SMTP id m25mr294329otf.204.1634741657447;
+        Wed, 20 Oct 2021 07:54:17 -0700 (PDT)
+Received: from [192.168.1.30] ([207.135.234.126])
+        by smtp.gmail.com with ESMTPSA id bc41sm476898oob.2.2021.10.20.07.54.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 20 Oct 2021 07:54:17 -0700 (PDT)
+Subject: Re: remove QUEUE_FLAG_SCSI_PASSTHROUGH v2
+To:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
+        Chuck Lever <chuck.lever@oracle.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org
+References: <20211019075418.2332481-1-hch@lst.de>
+ <yq15ytsbawr.fsf@ca-mkp.ca.oracle.com> <20211020053341.GA25529@lst.de>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <0a70e163-d6cb-9733-a91f-d0bee2c23c69@kernel.dk>
+Date:   Wed, 20 Oct 2021 08:54:16 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+In-Reply-To: <20211020053341.GA25529@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-qedf_set_fcoe_pf_param() propagates the return value to the probe
-function __qedf_probe() and then hits local_pci_probe().
+On 10/19/21 11:33 PM, Christoph Hellwig wrote:
+> On Wed, Oct 20, 2021 at 12:05:24AM -0400, Martin K. Petersen wrote:
+>>
+>> Christoph,
+>>
+>>> The changes to support pktcdvd are a bit ugly, but I can't think of
+>>> anything better (except for removing the driver entirely).  If we'd
+>>> want to support packet writing today it would probably live entirely
+>>> inside the sr driver.
+>>
+>> Yeah, I agree.
+>>
+>> Anyway. No major objections from me. Not sure whether it makes most
+>> sense for this to go through block or scsi?
+> 
+> I'm not sure either, but either tree is fine with me.
 
-During the process of driver probing, the probe function should return < 0
-for failure, otherwise, the kernel will treat value > 0 as success.
+Looks fine to me, outside of the spelling error in patch 1. I can set
+up a topic branch for this one.
 
-Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
----
- drivers/scsi/qedf/qedf_main.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Christoph, can you do a resend with the enum naming fixed?
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 42d0d941dba5..52f2a52bea2c 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3161,14 +3161,14 @@ static int qedf_set_fcoe_pf_param(struct qedf_ctx *qedf)
- 
- 	if (!qedf->p_cpuq) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "dma_alloc_coherent failed.\n");
--		return 1;
-+		return -ENOMEM;
- 	}
- 
- 	rval = qedf_alloc_global_queues(qedf);
- 	if (rval) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Global queue allocation "
- 			  "failed.\n");
--		return 1;
-+		return rval;
- 	}
- 
- 	/* Calculate SQ PBL size in the same manner as in qedf_sq_alloc() */
 -- 
-2.17.6
+Jens Axboe
 
