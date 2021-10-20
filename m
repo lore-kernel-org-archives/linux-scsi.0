@@ -2,146 +2,90 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8013C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 21:42:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE43C43217
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 22:50:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A8D7B6113D
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 21:42:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EC5F61354
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 22:50:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230484AbhJTVos (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Oct 2021 17:44:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38670 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231328AbhJTVoq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Oct 2021 17:44:46 -0400
-Received: from mail-pf1-x44a.google.com (mail-pf1-x44a.google.com [IPv6:2607:f8b0:4864:20::44a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35898C06161C
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2021 14:42:32 -0700 (PDT)
-Received: by mail-pf1-x44a.google.com with SMTP id x123-20020a626381000000b0044da6d19df6so2567389pfb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2021 14:42:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:in-reply-to:message-id:mime-version:references:subject:from:to
-         :cc;
-        bh=esmIH5744cgQv95ezcRFuqCsC+7pCLMg68diJU8YDWQ=;
-        b=h1fUC3pwCb1GV8I0MdtKM6n4NEaYOd2/UcMkDLBbDqA2B84KiYDU9+AZZgUwvTZktb
-         608mg9RosXdDWPDmn/qOwLs6m7s1LCwnuAtDFvNrjGl2LmcEEAqALNApwM7dzAIFSDrb
-         iDGbbN19x2x0sgbBZQ68vh+O8OO+XNgKZg9v8P7P+DycnYplMu0PpYA/3x/qi46fDAGj
-         uaPahue3SWQg98NXgRHvuR5xKN8nERXjZXMw+dlEu+KTC5EUP2ryZGVJC5mu697g1HHa
-         cqCc47dJlDMGp/sc6PhQOgkNU34Vc0JNS7aw/k6U8Pcu82Qe2zJD5BRosfZUjYW/V8pb
-         astQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:in-reply-to:message-id:mime-version
-         :references:subject:from:to:cc;
-        bh=esmIH5744cgQv95ezcRFuqCsC+7pCLMg68diJU8YDWQ=;
-        b=x0Xh3QtGtEM+yjGdNYfTGEcj0sw/wzC1bFg/wfggR0L4l1qome6Lqsab91sVn5paED
-         eC+VUUQ6p0eUrgik9bKTLUBFxudQehP6LdulLvE6xTPq0yEsOdvc5htUjY2KqqsM7HI1
-         RrptQofyM+H1oo3lJdKaSVrsJE2fYvZ2NDz1H5nJpKmGjylSFeQzxuEPm0I60Tym3SD4
-         1wTt0yg51bzEwpM7GvgsleiAyGekHQOS144fQMSp1VZYdqD/+ZJ4y3bihxzA25J9Akby
-         BIRc815vCIn27ubKswbs6uzXbvdK/jsyKvKw4L5IU1BJkBD6BkbXUhNuNcZGmwEEWNEg
-         eMIg==
-X-Gm-Message-State: AOAM530lZBFjC68hPSJb2aRpH5f1gtsRa1yjRuO8BFHqduJVy2NPe6pn
-        Smri/rMQtyZ7QbKdOBmxm+OBrIq8sKj7CCFa
-X-Google-Smtp-Source: ABdhPJwMldoYN3BJ+A8taVz+MFfTXwfPboECW/lmsDqPuBxZhHG/ZklVFiP1FG61zdjqznVoh4a51vbPU1y7p9No
-X-Received: from changyuanl-desktop.svl.corp.google.com ([2620:15c:2c5:13:a1d4:87fc:d5c6:fa8f])
- (user=changyuanl job=sendgmr) by 2002:a17:90a:ec14:: with SMTP id
- l20mr154342pjy.0.1634766151280; Wed, 20 Oct 2021 14:42:31 -0700 (PDT)
-Date:   Wed, 20 Oct 2021 14:42:07 -0700
-In-Reply-To: <20211020214207.1248986-1-changyuanl@google.com>
-Message-Id: <20211020214207.1248986-3-changyuanl@google.com>
-Mime-Version: 1.0
-References: <20211020214207.1248986-1-changyuanl@google.com>
-X-Mailer: git-send-email 2.33.0.1079.g6e70778dc9-goog
-Subject: [PATCH v1 2/2] scsi: pm80xx: Add pm80xx_mpi_build_cmd tracepoint
-From:   Changyuan Lyu <changyuanl@google.com>
-To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Vishakha Channapattan <vishakhavc@google.com>,
-        Akshat Jain <akshatzen@google.com>,
-        Igor Pylypiv <ipylypiv@google.com>,
-        Changyuan Lyu <changyuanl@google.com>
-Content-Type: text/plain; charset="UTF-8"
+        id S230474AbhJTWwi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Oct 2021 18:52:38 -0400
+Received: from out3-smtp.messagingengine.com ([66.111.4.27]:42995 "EHLO
+        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230123AbhJTWwh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Oct 2021 18:52:37 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.nyi.internal (Postfix) with ESMTP id 722E55C0257;
+        Wed, 20 Oct 2021 18:50:20 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Wed, 20 Oct 2021 18:50:20 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=lSsjbO
+        QwefFnogmBYkQShNyvBodWyjPRyIlY4BZCdbY=; b=XTFPUQpIgFUb5/+zQnC3+q
+        E7iOxXZPkaMDV1LZeLMZHcNWaAPPNFYwJArhDaxHz04DhUA8SWNsm8dI1fjXUkgo
+        2soX9rJ7FjQLUmxi+xkJEsyrBs149cTEC9jikjMUNPsE8wF2gEZL8vJS7NftJADm
+        heU+kExqUoInTXCuSLkwVKw26Kyj8tbG/GZi0cPRCatdUq55KdlqrDzW6THS6+v2
+        6XBYAugsRB6Ko7srZzO5hi79sgj7nuzYlRwxtg7FzDrA2XFWqzDDmLcoPQSOEGqI
+        Ex8CTizCH4Y3S9yAXbSIGIvvhCM8LzL1gjBQyNZ/i7lAzj3T7VrD6A0OhkrwifNQ
+        ==
+X-ME-Sender: <xms:K51wYZFewfi-AL5pGcvaYooQnbQruG7uh8zSvvgNPnuo-76Eao6KPA>
+    <xme:K51wYeWl7djtgVf_Zr8AUhNqQugbl_XPOCON2FfCnXjxpGNWnWhJoUkwoH475B5WU
+    GCg6vKb3ssCAT-mN-k>
+X-ME-Received: <xmr:K51wYbK4t1wdd7x2RxraeXnIMIeJkaCJXKeqYyDIEOTvuXSg3oO8l_U9hO6mWri98jzRJOOc4caH977EWV0Rdgb42xGw51fIlms>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrvddvhedguddtucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
+    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
+    htvghrnhepffduhfegfedvieetudfgleeugeehkeekfeevfffhieevteelvdfhtdevffet
+    uedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfh
+    hthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgh
+X-ME-Proxy: <xmx:K51wYfH7JG_tsZcCvO-7-jwWBNyJ0m62pku7J5lc43Cxx9k0WAtGIA>
+    <xmx:K51wYfWPiQnbtJ1qik-osTUwE-1UkDVKdX4euCyH-p86CapKUl5jzg>
+    <xmx:K51wYaMFq1Mrf-siJAmOwrH52khfjKTXlKFUX8GGsfRej4SaJdM3Yw>
+    <xmx:LJ1wYRKK95A2MlNqsylBLp9qGuHy1TeVawjzntlTvweGVmAUAtc0ag>
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 20 Oct 2021 18:50:18 -0400 (EDT)
+Date:   Thu, 21 Oct 2021 09:50:26 +1100 (AEDT)
+From:   Finn Thain <fthain@linux-m68k.org>
+To:     James Bottomley <jejb@linux.ibm.com>
+cc:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
+        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
+        shivasharan.srikanteshwara@broadcom.com,
+        martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: megaraid_mbox: return -ENOMEM on megaraid_init_mbox()
+ allocation failure
+In-Reply-To: <670213ce9e6c3b625e9f8ed66b9fad8ea2843322.camel@linux.ibm.com>
+Message-ID: <cf8da58-de8b-e171-5a40-2b10983d447@linux-m68k.org>
+References: <1634640800-22502-1-git-send-email-jiapeng.chong@linux.alibaba.com>  <2482854e18365087266c2f0907c1bbfd42bd2731.camel@linux.ibm.com>  <c1a6e7f3-d62f-5c5e-b3ef-2320339e142a@linux-m68k.org>
+ <670213ce9e6c3b625e9f8ed66b9fad8ea2843322.camel@linux.ibm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-pm8001_mpi_build_cmd() prepares and sends all commands to a controller.
-Having pm80xx_mpi_build_cmd tracepoint can help us with latency issues.
+On Wed, 20 Oct 2021, James Bottomley wrote:
 
-this patch depends on patch "scsi: pm80xx: Add tracepoints".
+> > 
+> > ... and arguably they would be correct.
+> 
+> Well, yes ... that's why I don't want one "fix" that generates a 
+> cascading sequence of further "fixes".
+> 
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Changyuan Lyu <changyuanl@google.com>
----
- drivers/scsi/pm8001/pm8001_hwi.c         |  5 +++++
- drivers/scsi/pm8001/pm80xx_tracepoints.h | 28 ++++++++++++++++++++++++
- 2 files changed, 33 insertions(+)
+OTOH, if you don't "fix" it, it generates a cascading sequence of 
+copy-and-paste antipatterns in new code, and poor training data for those 
+of us reading old code.
 
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm8001_hwi.c
-index 63690508313b..a56ae05bb9d3 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.c
-+++ b/drivers/scsi/pm8001/pm8001_hwi.c
-@@ -42,6 +42,7 @@
-  #include "pm8001_hwi.h"
-  #include "pm8001_chips.h"
-  #include "pm8001_ctl.h"
-+ #include "pm80xx_tracepoints.h"
- 
- /**
-  * read_main_config_table - read the configure table and save it.
-@@ -1324,6 +1325,10 @@ int pm8001_mpi_build_cmd(struct pm8001_hba_info *pm8001_ha,
- 	unsigned long flags;
- 	int q_index = circularQ - pm8001_ha->inbnd_q_tbl;
- 	int rv;
-+	u32 htag = le32_to_cpu(*(__le32 *)payload);
-+
-+	trace_pm80xx_mpi_build_cmd(pm8001_ha->id, opCode, htag, q_index,
-+		circularQ->producer_idx, circularQ->consumer_index);
- 
- 	WARN_ON(q_index >= PM8001_MAX_INB_NUM);
- 	spin_lock_irqsave(&circularQ->iq_lock, flags);
-diff --git a/drivers/scsi/pm8001/pm80xx_tracepoints.h b/drivers/scsi/pm8001/pm80xx_tracepoints.h
-index 84fcfecfd624..5e669a8a9344 100644
---- a/drivers/scsi/pm8001/pm80xx_tracepoints.h
-+++ b/drivers/scsi/pm8001/pm80xx_tracepoints.h
-@@ -75,6 +75,34 @@ TRACE_EVENT(pm80xx_request_complete,
- 		    __entry->running_req)
- );
- 
-+TRACE_EVENT(pm80xx_mpi_build_cmd,
-+	    TP_PROTO(u32 id, u32 opc, u32 htag, u32 qi, u32 pi, u32 ci),
-+
-+	    TP_ARGS(id, opc, htag, qi, pi, ci),
-+
-+	    TP_STRUCT__entry(
-+		    __field(u32, id)
-+		    __field(u32, opc)
-+		    __field(u32, htag)
-+		    __field(u32, qi)
-+		    __field(u32, pi)
-+		    __field(u32, ci)
-+		    ),
-+
-+	    TP_fast_assign(
-+		    __entry->id = id;
-+		    __entry->opc = opc;
-+		    __entry->htag = htag;
-+		    __entry->qi = qi;
-+		    __entry->pi = pi;
-+		    __entry->ci = ci;
-+		    ),
-+
-+	    TP_printk("ctlr_id = %u opc = %#x htag = %#x QI = %u PI = %u CI = %u",
-+		    __entry->id, __entry->opc, __entry->htag, __entry->qi,
-+		    __entry->pi, __entry->ci)
-+);
-+
- #endif /* _TRACE_PM80XX_H_ */
- 
- #undef TRACE_INCLUDE_PATH
--- 
-2.33.0.1079.g6e70778dc9-goog
+Anyway, I agree that the churn would be too risky. But it sure would be 
+nice if automatic tools were able to perform a program transformation of 
+this kind at the source level, being that the compiler will surely do it 
+anyway at a lower level.
 
+There's a lot to be said for source code that reflects the compiler's 
+understanding of the logic, rather than the human's.
