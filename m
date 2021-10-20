@@ -2,71 +2,48 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A3C1C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 14:54:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 097A6C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 15:43:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DAA061359
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 14:54:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D0B1B610E6
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 15:43:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230089AbhJTO4d (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Oct 2021 10:56:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57486 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229952AbhJTO4c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Oct 2021 10:56:32 -0400
-Received: from mail-ot1-x332.google.com (mail-ot1-x332.google.com [IPv6:2607:f8b0:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 330C5C061749
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2021 07:54:18 -0700 (PDT)
-Received: by mail-ot1-x332.google.com with SMTP id s18-20020a0568301e1200b0054e77a16651so8540316otr.7
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2021 07:54:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=TZZSEfWCStHUfXhWoXkg5KMgJocnV57u5o2CEcJ7HCc=;
-        b=m6t8lcoqFlEuO2YtgUGyJOgTFG9r3gegg328r7yqi7ahbS8ubR2dD0/Pj2EWCTAUuA
-         M02ojT0kPrzHZYYG+nzIM/amlc0aviTrC5h073WmzUsDG5kSpMZnjhuK+i8EoLI8XtFV
-         tAOJI6Dq6RqsaFkY7XaLCF+jWOo8HC09LBuWXmFGMukDr003XnwiD9sz7/I/c5Gdrkja
-         EgQndCGLKNGRW6KF4GgsUvpBI9e/r1wrQDvkfxN5dmsQcuosbJ5bD+47WPJHDtMVt1ox
-         UNh+E6Iq9tCpN0OMN/AP4Ti0h/SP/2gadP9EfeelfLwNwKFK/cs3CzBNoPypeMhUfQ1Q
-         8tNQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=TZZSEfWCStHUfXhWoXkg5KMgJocnV57u5o2CEcJ7HCc=;
-        b=TACTcJwUlife21pfjBR5lJSzAKYByxGRZCCHAqJKGjVN0kUDbCueGq5zPzrNsFhz2E
-         PUy4I1n7DHZ2+k5tJcz8toF6pD521+Vaa4TiPxVt15cpzqg2wBLSCwcMZbkKcMo73fmi
-         rEjYBf42HOO+GPpnL/ir4/rpvYNdZR15Ty3C7WlXaz9mfmuhEeG95Ssz2/uCxEgq+IWk
-         lfSf+cp+KEXA4tNnBLKqZtIXHslT4cNWFHZPRtLf2p4KG/y0QlAyvOLGmGtfrVaU3hIL
-         Mf6YxZeZrsnwybo41hXHwPj6hJ7wUnrb7S5H1SMwv8Oqu7KsfzFJc0oG3FcYgC3c6Ddw
-         gIyw==
-X-Gm-Message-State: AOAM533kxFAB17SpaTvxsIHYHkzZnxzePSU1/pewFFdOWvZ+F31JKGgL
-        ajy6nNRlKNT7N4Ybtu5o1AIPI183eOCZLQ==
-X-Google-Smtp-Source: ABdhPJyA70p8IeSf47juIEqV0A0ohyswwqnHS0r02Wg4m/IZ8h7PlFDckmkiOFfwNwbTNzml/h726Q==
-X-Received: by 2002:a9d:4c99:: with SMTP id m25mr294329otf.204.1634741657447;
-        Wed, 20 Oct 2021 07:54:17 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id bc41sm476898oob.2.2021.10.20.07.54.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 20 Oct 2021 07:54:17 -0700 (PDT)
-Subject: Re: remove QUEUE_FLAG_SCSI_PASSTHROUGH v2
-To:     Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org
-References: <20211019075418.2332481-1-hch@lst.de>
- <yq15ytsbawr.fsf@ca-mkp.ca.oracle.com> <20211020053341.GA25529@lst.de>
-From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <0a70e163-d6cb-9733-a91f-d0bee2c23c69@kernel.dk>
-Date:   Wed, 20 Oct 2021 08:54:16 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        id S230229AbhJTPpi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Oct 2021 11:45:38 -0400
+Received: from mga17.intel.com ([192.55.52.151]:10076 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S229570AbhJTPph (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 20 Oct 2021 11:45:37 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10143"; a="209603976"
+X-IronPort-AV: E=Sophos;i="5.87,167,1631602800"; 
+   d="scan'208";a="209603976"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2021 08:33:15 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,167,1631602800"; 
+   d="scan'208";a="491315850"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by fmsmga007.fm.intel.com with ESMTP; 20 Oct 2021 08:33:12 -0700
+Subject: Re: [PATCH RESEND v2] scsi: ufs: clear doorbell for hibern8 errors
+ when using ah8
+To:     Kiwoong Kim <kwmad.kim@samsung.com>, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, alim.akhtar@samsung.com,
+        avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        cang@codeaurora.org, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
+        vkumar.1997@samsung.com
+References: <CGME20211019051346epcas2p132d3b9c6a1c812f3132e913525235b83@epcas2p1.samsung.com>
+ <1634619427-171880-1-git-send-email-kwmad.kim@samsung.com>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <2e35d23b-babb-a617-d93e-ce9b522dafb3@intel.com>
+Date:   Wed, 20 Oct 2021 18:33:11 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-In-Reply-To: <20211020053341.GA25529@lst.de>
+In-Reply-To: <1634619427-171880-1-git-send-email-kwmad.kim@samsung.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -74,28 +51,56 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/19/21 11:33 PM, Christoph Hellwig wrote:
-> On Wed, Oct 20, 2021 at 12:05:24AM -0400, Martin K. Petersen wrote:
->>
->> Christoph,
->>
->>> The changes to support pktcdvd are a bit ugly, but I can't think of
->>> anything better (except for removing the driver entirely).  If we'd
->>> want to support packet writing today it would probably live entirely
->>> inside the sr driver.
->>
->> Yeah, I agree.
->>
->> Anyway. No major objections from me. Not sure whether it makes most
->> sense for this to go through block or scsi?
+On 19/10/2021 07:57, Kiwoong Kim wrote:
+> Changes from v1:
+> * Change the time to requeue pended commands
 > 
-> I'm not sure either, but either tree is fine with me.
+> When an scsi command is dispatched right after host complete
+> all the pended requests and ufs driver tries to ring a doorbell,
+> host might be still during entering into hibern8.
+> If the hibern8 error occurrs during that period, the doorbell
+> might not be zero and clearing it should have done.
+> But, current ufshcd_err_handler goes directly to reset
+> w/o clearing the doorbell when the driver's link state is broken.
 
-Looks fine to me, outside of the spelling error in patch 1. I can set
-up a topic branch for this one.
+So you mean HCE 1->0 does not clear the doorbell register?
 
-Christoph, can you do a resend with the enum naming fixed?
+> This patch is to requeue pended commands after host reset.
 
--- 
-Jens Axboe
+So you mean HCE 0->1 does clear the doorbell register?
+
+> 
+> Here's an actual symptom that I've faced. At the time, tag #17
+> is still pended even after host reset. And then the block timer
+> is expired.
+> 
+> exynos-ufs 11100000.ufs: ufshcd_check_errors: Auto Hibern8
+> Enter failed - status: 0x00000040, upmcrs: 0x00000001
+> ..
+> host_regs: 00000050: b8671000 00000008 00020000 00000000
+> ..
+> exynos-ufs 11100000.ufs: ufshcd_abort: Device abort task at tag 17
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 9faf02c..e5d4ef7 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7136,8 +7136,10 @@ static int ufshcd_host_reset_and_restore(struct ufs_hba *hba)
+>  	err = ufshcd_hba_enable(hba);
+>  
+>  	/* Establish the link again and restore the device */
+> -	if (!err)
+> +	if (!err) {
+> +		ufshcd_retry_aborted_requests(hba);
+>  		err = ufshcd_probe_hba(hba, false);
+> +	}
+>  
+>  	if (err)
+>  		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
+> 
 
