@@ -2,112 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ABE13C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 11:08:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 065F7C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 11:14:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 80E96613D3
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 11:08:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D648461372
+	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 11:14:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230200AbhJTLHF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Oct 2021 07:07:05 -0400
-Received: from mailgw01.mediatek.com ([60.244.123.138]:48380 "EHLO
-        mailgw01.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S230029AbhJTLHE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Oct 2021 07:07:04 -0400
-X-UUID: ce69122baba64e8dbf72e8e6e9dd1c21-20211020
-X-UUID: ce69122baba64e8dbf72e8e6e9dd1c21-20211020
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw01.mediatek.com
-        (envelope-from <stanley.chu@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 719726207; Wed, 20 Oct 2021 19:04:47 +0800
-Received: from mtkcas10.mediatek.inc (172.21.101.39) by
- mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- 15.2.792.15; Wed, 20 Oct 2021 19:04:46 +0800
-Received: from mtksdccf07 (172.21.84.99) by mtkcas10.mediatek.inc
- (172.21.101.73) with Microsoft SMTP Server id 15.0.1497.2 via Frontend
- Transport; Wed, 20 Oct 2021 19:04:44 +0800
-Message-ID: <b20bd855eb2ec7aab66dd0026fbda8e6625b30ef.camel@mediatek.com>
-Subject: Re: [PATCH] scsi: ufs: mediatek: avoid sched_clock() misuse
-From:   Stanley Chu <stanley.chu@mediatek.com>
-To:     Arnd Bergmann <arnd@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-CC:     Arnd Bergmann <arnd@arndb.de>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "Avri Altman" <avri.altman@wdc.com>,
-        Matthias Brugger <matthias.bgg@gmail.com>,
-        "Bean Huo" <beanhuo@micron.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        "Bart Van Assche" <bvanassche@acm.org>,
-        <linux-scsi@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>
-Date:   Wed, 20 Oct 2021 19:04:44 +0800
-In-Reply-To: <20211018132022.2281589-1-arnd@kernel.org>
-References: <20211018132022.2281589-1-arnd@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-X-Mailer: Evolution 3.28.5-0ubuntu0.18.04.2 
+        id S230125AbhJTLQ4 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Oct 2021 07:16:56 -0400
+Received: from frasgout.his.huawei.com ([185.176.79.56]:4008 "EHLO
+        frasgout.his.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229864AbhJTLQz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Oct 2021 07:16:55 -0400
+Received: from fraeml706-chm.china.huawei.com (unknown [172.18.147.200])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4HZ7FG37HVz6896K;
+        Wed, 20 Oct 2021 19:10:26 +0800 (CST)
+Received: from lhreml724-chm.china.huawei.com (10.201.108.75) by
+ fraeml706-chm.china.huawei.com (10.206.15.55) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
+ 15.1.2308.15; Wed, 20 Oct 2021 13:14:40 +0200
+Received: from [10.202.227.179] (10.202.227.179) by
+ lhreml724-chm.china.huawei.com (10.201.108.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2308.15; Wed, 20 Oct 2021 12:14:39 +0100
+Subject: Re: [PATCHSET v3] Batched completions
+To:     Jens Axboe <axboe@kernel.dk>, <linux-block@vger.kernel.org>
+References: <20211017020623.77815-1-axboe@kernel.dk>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From:   John Garry <john.garry@huawei.com>
+Message-ID: <b47e9ae3-52e0-8cfa-9dcb-bfd46ad4c46d@huawei.com>
+Date:   Wed, 20 Oct 2021 12:14:37 +0100
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:68.0) Gecko/20100101
+ Thunderbird/68.12.1
 MIME-Version: 1.0
+In-Reply-To: <20211017020623.77815-1-axboe@kernel.dk>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-MTK:  N
+X-Originating-IP: [10.202.227.179]
+X-ClientProxiedBy: lhreml748-chm.china.huawei.com (10.201.108.198) To
+ lhreml724-chm.china.huawei.com (10.201.108.75)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Arnd,
+On 17/10/2021 03:06, Jens Axboe wrote:
+> Hi,
 
-On Mon, 2021-10-18 at 15:20 +0200, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> sched_clock() is not meant to be used in portable driver code,
-> and assuming a particular clock frequency is not how this is
-> meant to be used. It also causes a build failure because of
-> a missing header inclusion:
-> 
-> drivers/scsi/ufs/ufs-mediatek.c:321:12: error: implicit declaration
-> of function 'sched_clock' [-Werror,-Wimplicit-function-declaration]
->         timeout = sched_clock() + retry_ms * 1000000UL;
-> 
-> A better interface to use here ktime_get_mono_fast_ns(), which
-> works mostly like ktime_get() but is safe to use inside of a
-> suspend callback.
-> 
-> Fixes: 9561f58442e4 ("scsi: ufs: mediatek: Support vops pre suspend
-> to disable auto-hibern8")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/scsi/ufs/ufs-mediatek.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-
-> mediatek.c
-> index d1696db70ce8..a47241ed0a57 100644
-> --- a/drivers/scsi/ufs/ufs-mediatek.c
-> +++ b/drivers/scsi/ufs/ufs-mediatek.c
-> @@ -318,15 +318,15 @@ static void ufs_mtk_wait_idle_state(struct
-> ufs_hba *hba,
->  	u32 val, sm;
->  	bool wait_idle;
->  
-> -	timeout = sched_clock() + retry_ms * 1000000UL;
-> -
-> +	/* cannot use plain ktime_get() in suspend */
-> +	timeout = ktime_get_mono_fast_ns() + retry_ms * 1000000UL;
++linux-scsi
 
-Thanks for this fix.
+> 
+> We now do decent batching of allocations for submit, but we still
+> complete requests individually. This costs a lot of CPU cycles.
+> 
+> This patchset adds support for collecting requests for completion,
+> and then completing them as a batch. This includes things like freeing
+> a batch of tags.
+> 
+> This version is looking pretty good to me now, and should be ready
+> for 5.16.
 
-Reviewed-by: Stanley Chu <stanley.chu@mediatek.com>
+Just wondering if anyone was looking at supporting this for SCSI 
+midlayer? I was thinking about looking at it...
 
->  
->  	/* wait a specific time after check base */
->  	udelay(10);
->  	wait_idle = false;
->  
->  	do {
-> -		time_checked = sched_clock();
-> +		time_checked = ktime_get_mono_fast_ns();
->  		ufs_mtk_dbg_sel(hba);
->  		val = ufshcd_readl(hba, REG_UFS_PROBE);
->  
+> 
+> Changes since v2:
+> - Get rid of dev_id
+> - Get rid of mq_ops->complete_batch
+> - Drop now unnecessary ib->complete setting in blk_poll()
+> - Drop one sbitmap patch that was questionnable
+> - Rename io_batch to io_comp_batch
+> - Track need_timestamp on per-iob basis instead of for each request
+> - Drop elevator support for batching, cleaner without
+> - Make the batched driver addition simpler
+> - Unify nvme polled/irq handling
+> - Drop io_uring file checking, no longer neededd
+> - Cleanup io_uring completion side
+> 
 
