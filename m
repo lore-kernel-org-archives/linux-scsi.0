@@ -2,237 +2,242 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59B96C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 13:35:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22BA1C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 13:58:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36BD26121F
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 13:35:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02592611F2
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 13:58:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231196AbhJUNhp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Oct 2021 09:37:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55006 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230483AbhJUNho (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Oct 2021 09:37:44 -0400
-Received: from mail-ed1-x52a.google.com (mail-ed1-x52a.google.com [IPv6:2a00:1450:4864:20::52a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FDE4C061243
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2021 06:35:27 -0700 (PDT)
-Received: by mail-ed1-x52a.google.com with SMTP id 5so1337320edw.7
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2021 06:35:27 -0700 (PDT)
+        id S230329AbhJUOAn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Oct 2021 10:00:43 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:57458 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229878AbhJUOAl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Oct 2021 10:00:41 -0400
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19LDhHls005276;
+        Thu, 21 Oct 2021 13:58:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : references : in-reply-to : content-type :
+ content-id : content-transfer-encoding : mime-version; s=corp-2021-07-09;
+ bh=5wPFW27jHN+mZXJGNlpWAUvO2a4iyc5HflJbIqC1iHk=;
+ b=zOyWyq1XKRw+Ekhq5yBbHa7vFYVlooh21pqK3y/iHt0r9RaavkmmsaGj/Snn5+Bv1AcJ
+ UgKBNIXb+Ni8QJGdNovfqPUCX+ydZgWkwhikVf8vMaWfgtRI7fOzJVyoupBJY1ch1FHI
+ qiuDsBks/wGRrYfph6sauwMM+9jkUCbmY1q5gsC33dQdTBgGpN1J3RgzPtcFektgiiRM
+ C68xWu2bUGJlkYqT37aupuYCHAy/cH+x1ny0ABbScaE/hrO547SDhWCAy/yWZdH1LJTW
+ xU/FFblVpRpcQUC+oQX+7xB4rOrLrkrGofxsmzGa++PNbRnFU9DBTQ2nJv7eGJXQ3LAT bQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3btqp2n8m2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Oct 2021 13:58:21 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19LDotwI063945;
+        Thu, 21 Oct 2021 13:58:21 GMT
+Received: from nam02-dm3-obe.outbound.protection.outlook.com (mail-dm3nam07lp2047.outbound.protection.outlook.com [104.47.56.47])
+        by aserp3030.oracle.com with ESMTP id 3bqmsj6s08-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Oct 2021 13:58:20 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=W/nv51TUoETEFFdwdSCm68cadKr53BE7PRmg//AOS5rfXvdrewFZLtG5F4K7cZ5AlDVhIMpEfj3DSdowifH04n3CsCW4nHDHXftEeIftiGbfRcJUaqluqhNGcCdAvsrbEBfoYFsjTCVnLRTuE9KiTeqUegSPtz0E+3fRIXjvbeeah2Bf5uXmyS5zTMz4afcHaHGeycKXwvcyoZE0IDi3ySi2bxPafAA2a43/DDgjKlOr2aC4oFNKbftUpJcrEk7mC7UkTGCaQ+oA5t99KaA8cmfmhqjqPFSNG9HQBjjQubgqihUxnkFHCcVnScEdzBXYlKwJSnY/5+aXrTUL+/tpEw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5wPFW27jHN+mZXJGNlpWAUvO2a4iyc5HflJbIqC1iHk=;
+ b=dit2bku8kHIx5AmzO/EHnrGzq+bBfMh0fuKk3UTjW9ti6I1eKNJt97LWxtaTut7VOS7hWTQGTMATJPUelxW4G+WAgNVlepqTn9f9Hv483ZZwD4B1Zp8hfKTHHSR6lEW4LxNmoXfVN6QqybRcfVLVmWBixbDIEjVqZpi6pTBiHwTz+o/KZGKY1fukXF2BNt1v/ZxQzE2GSYQANsNOpV/1LwRn5AtFbdpu+vy0ECX5Cn838LpDS/R1M73ogfECkXx4rYhkubx93c3T8cAjoDXYUdtZal4lVnw6EqBRyy8hEmiBC1KPnZOQ6kx8ZIj+x33y8HS2Fv9PekFZjTP0ltE5Mg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=mK3OqhfTR/3crHzqfGZ0OC0iJVa2/KLLqHbKu+TtMvc=;
-        b=eyP5gEGuSRObkLlREcZNFYMrKz4gk+fJus5vdchUCF3pvAf5trjBlYhJ8XB3h1figc
-         MtEVsVXvtKn79LsvUIIQou5H0ZjDqyrJv2S/1p81jjL2kxFQLVXXqWZU7R9bcEB3zYiD
-         bzNtMqUpWqSRoHGcfF3/lGu18EApwFA7H1bpdlT9Q0VvuLCMff6Bb/wCxQ0p4w9WXqMM
-         YN/SaBZfLUYyFMYIbEiCqiLxQRaaHQrL3+Id0+G/tsjaTt30FcgwA8wkV1QpBfssoUm2
-         hzEYSWLo87iw6pKXAbGNX2C+zO1zM+h9BcVHuifWLHdzmc5nW7h1v4JtuTVl8I37kRJh
-         qEWw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=mK3OqhfTR/3crHzqfGZ0OC0iJVa2/KLLqHbKu+TtMvc=;
-        b=Hl87Y1mrAIbh5+CAQ+cN46G/HhVtw5sFRgbEvvaFPS8uv39Li0tC2/1PZZwKj/8nBW
-         6Bfdt10O2COnl4IlTk+00ult5GkuOAbFE2CzQt3+jE472mJBfBFRqZjOqTmgKJFFHUY7
-         FbmRz979x/KE1SiH1ywZibCXU9Aee1deOMeGybv9T7CFk1B2afIvdXn3MJreAsDd55qq
-         tGY4AzvEK5WFCNKWbaJlBkuE9okibi+f6iV7yJ55aiaohFlnEXmwIIp0LqhyLm/IIUfs
-         i6YfDsDQ0NxbiH886Y5NqxohkWEzB3P4/YSzMG0pmlII5822/9LZmQ6nc81GeYPRrys9
-         QNdw==
-X-Gm-Message-State: AOAM532GmqVMcZwA0l2g0zff9rVI/OrfsbLWjs9EsspUL4GlyugL2VFh
-        lcmyC2hC70E717MFcfsCVZSQdljShiGnfJpxWPX44w==
-X-Google-Smtp-Source: ABdhPJzVR7aQr0Mb+s6OFUQLPhmMpZxgYebrmg/iz1/DMldqo1P5pDs2rmbmTuLsNucbTmdUYkIhoui9xptPiAG5LWM=
-X-Received: by 2002:aa7:df83:: with SMTP id b3mr7700838edy.294.1634823324792;
- Thu, 21 Oct 2021 06:35:24 -0700 (PDT)
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5wPFW27jHN+mZXJGNlpWAUvO2a4iyc5HflJbIqC1iHk=;
+ b=Yx8iX49B7kSBXqo9+JG0c92SBJMrWtMQNgCFKPdnDZhcC0NG9Iolyy9MMN8MLyjENLkl9qGa59V/BJneeDNOpAK7H4eOVDF5Ql6OpYuYRT82fc7/XDNWgGkTzFqzrYaMbiyQq4NaN0q4FR1E4edf1bZE7/osUbxteAGL/7YOLMU=
+Received: from BL0PR10MB2932.namprd10.prod.outlook.com (2603:10b6:208:30::16)
+ by BL0PR10MB2963.namprd10.prod.outlook.com (2603:10b6:208:78::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4608.18; Thu, 21 Oct
+ 2021 13:58:19 +0000
+Received: from BL0PR10MB2932.namprd10.prod.outlook.com
+ ([fe80::6162:d16a:53c1:4188]) by BL0PR10MB2932.namprd10.prod.outlook.com
+ ([fe80::6162:d16a:53c1:4188%3]) with mapi id 15.20.4608.019; Thu, 21 Oct 2021
+ 13:58:19 +0000
+From:   Himanshu Madhani <himanshu.madhani@oracle.com>
+To:     Nilesh Javali <njavali@marvell.com>
+CC:     Martin Petersen <martin.petersen@oracle.com>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        "GR-QLogic-Storage-Upstream@marvell.com" 
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: Re: [PATCH v2 01/13] qla2xxx: relogin during fabric disturbance
+Thread-Topic: [PATCH v2 01/13] qla2xxx: relogin during fabric disturbance
+Thread-Index: AQHXxk3Txb78aRmdX02Ovjb+G9a17qvdesoA
+Date:   Thu, 21 Oct 2021 13:58:19 +0000
+Message-ID: <71BA552E-F062-4289-A250-B17488524083@oracle.com>
+References: <20211021073208.27582-1-njavali@marvell.com>
+ <20211021073208.27582-2-njavali@marvell.com>
+In-Reply-To: <20211021073208.27582-2-njavali@marvell.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-mailer: Apple Mail (2.3608.120.23.2.7)
+authentication-results: marvell.com; dkim=none (message not signed)
+ header.d=none;marvell.com; dmarc=none action=none header.from=oracle.com;
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 0ad6bd7f-cf71-484c-b79c-08d9949ad660
+x-ms-traffictypediagnostic: BL0PR10MB2963:
+x-microsoft-antispam-prvs: <BL0PR10MB2963D006AFD722D754825C6EE6BF9@BL0PR10MB2963.namprd10.prod.outlook.com>
+x-ms-oob-tlc-oobclassifiers: OLM:5516;
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info: vChk5LxLGL9ufLBchplBfRkpWi5Bb+nVNAnvzr+59g5K17FEE1QbZ8Z45BdoZcA06YXUli8Hr9ck7VY5yReeZhA+h4nACtMnRJJVDckkvqMxB/YBOT4lTjXRxpOs7GSzo8sL7qS1cfA2H1sV0NMlwZPX30oolS/mlROr9dZ5lv0ttA3naUqoIW9kx9QTJiXUDNCIAGtbvtyrxcjJ6UPxzvewXjz20M6OzZu1RMDpbR/27D1NOUcfgrRvhd20oV+p1une+LPYqKVTYzHWFtqbxGYLtBOQCyfIUzBWB5Yr1z2Y+2C7yY3xtMa8Z0Z6dUk0kmt+KvmajoFJ8sKSZxRi9Gwvow4f/lTvdy/3DcJT9tBleFWchP5PRQhQiwL1BXFrId4J7v2pu6zuvGt5hS0nfNC+fwa/ENekPYEa2fyeDLqyp9NzX326Zt7ujZSNzravRVxB/JbQiIBHjjNHkbbLmPQTa/zlKd3vhZ9v/IB/LjcWebYjzB/rkUDTMNJ15HTWPa2zhoZ+WoOiVWFM5vMznUBHrIvOHAoXtB+wuGxzEqHjTmayqZo9slBvlRpKpjeIE7Efu16vILpdyoH3hWl7ERu/IXCwqdjzDmmfIR5pbXC5zi70hJ2JNy58Q7wMGVL/xETS7eVPhwzaBjC5uZTq1Dh7auMIoUzvTFEVZnNb3Rwjm7OD+B8L48tYIIhwe0AQNhZp6y1Zj5y0AzdzEg5/5RfCXhigk30T01RDmdTCSJ1bfNevo0nGDgtzUT4O0iN6
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BL0PR10MB2932.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(316002)(66446008)(8936002)(8676002)(64756008)(66946007)(76116006)(91956017)(66476007)(4326008)(53546011)(186003)(71200400001)(54906003)(2616005)(44832011)(66556008)(6916009)(2906002)(6512007)(508600001)(33656002)(36756003)(26005)(6506007)(38100700002)(5660300002)(6486002)(122000001)(38070700005)(86362001)(83380400001)(45980500001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?T/sxsUBTzCiKWXulkMKbuf43VMad+FrR8wfwPK9vc0InfzUFWas31e0dsEXB?=
+ =?us-ascii?Q?ZsYy09lzgFQhd6IYfuoKAhsajmfwoHcyjzRYfjJeVUDlA7TQF/dN8cmJV0iz?=
+ =?us-ascii?Q?cdPernrkMwuuF/9EtURkUBaa5gYvesTihfUeEMRylm5q7O07/71PfzOVhLR3?=
+ =?us-ascii?Q?1Bx6XZYyKNwTvcLgan/ZnAxox8XNvDMZZqWuQXDmorTdqy0d7sjRVjlmZKFZ?=
+ =?us-ascii?Q?i1oT7NboBgF6W8RerDDVBaaCBCJLC6M/U6cYlIXyhwJNHjI0SQPScYmRkPSQ?=
+ =?us-ascii?Q?7+AChTOG3Wf73veXK0YVaWiWbvge3RoO6Q8j4Xhg+scwgU8dnftI74fHFZnc?=
+ =?us-ascii?Q?vWBO9QXgaiF2y9Zw1mzPoOOfOWGg/+TUh3jnzjHKtuG5WAdNIBaWViS3aeZu?=
+ =?us-ascii?Q?FCCgsStD2Tuaa8omzMZPD7gd433aYvGVpXji8HSNkS6OADDXS7m1fZ0o5ZYC?=
+ =?us-ascii?Q?cFlczkRZe2V8EwW+Japjxms2RcTER0XjNxpcz/aiaqi/1jkBsWzRt4JWVBnr?=
+ =?us-ascii?Q?tihQ+QKPy/lNpfF0fRcWUR6WZLxWVddJuzYtlEUlUGxk4C/nplCVZT2yHb35?=
+ =?us-ascii?Q?GBOYRWjeNwag2l6qj7Vb6+8dz8tkbpOJkrIkAomS5c6oipVAX3RoEdTAKuvY?=
+ =?us-ascii?Q?Jb0dL0ia5PbGm2JQKYAw2/Bh6XE2vQhMAUc+4M5ztWWRslXd3jYfnJhpmdiB?=
+ =?us-ascii?Q?jUNKEYMPQ0O4OYvjLm9tsTiHK0NydCdgjs5DcshtYRPQQ9P34WpXQdfGFf3g?=
+ =?us-ascii?Q?2C9ij8DgORS8tZWxvHociIVHhZXYtxteqtE/QaQSd1aA9ui2bFKATVBY4Rlz?=
+ =?us-ascii?Q?FI2W9AHSVU9/MM+C2d2skNj9yy8b1lgUrTtDoA6WfqZinkrn5H/okW0x9H1L?=
+ =?us-ascii?Q?OIR8E8QzMZgGA3nT2aQl9hG+zlzGLfRogCrFiVv/ZPGTaL1XVQTC9X6qkauj?=
+ =?us-ascii?Q?/7GJj/hU1B7qd2677+HXowiYf5JjzXgkmlPx8ka/s8sbqG/tHs3Ce6CKB/pY?=
+ =?us-ascii?Q?9qlc1E0pBQrD5Nzoe21WnHpJYjssYSH8K06wQIV89DJ9q74xWUYnvYrFjM6q?=
+ =?us-ascii?Q?loJLPGdFjyIKvpoFc/wQvTirejuXUM8VPTe/ygkyxunVd2niz8IZJAIiW2zo?=
+ =?us-ascii?Q?z4Ef8Fpp/E9Fd0A/T/kCawUhF8CzXXbXN+/wxi02I+eHPiSk27aqCXxz3C46?=
+ =?us-ascii?Q?Omc1XAjTelZnnwH8QBofRaddvkAlXZeCuNGQmU31zP71cjc240VnhMFAh8oK?=
+ =?us-ascii?Q?/klAES8ON30891z1RFNgvcHEGG9y8ZnQzn6/YaVrIo0wFMBJlhWkZHrvQPeu?=
+ =?us-ascii?Q?w4A2CtmlbeIOsKsDgGl3X6xIGcMh4j1jiikzzOkUIwVC0g=3D=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <F70D7A621AF73945A9E71D1A0FC0F42D@namprd10.prod.outlook.com>
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-References: <CA+G9fYvv6YsRM2Qf7AGMo3nwqkuAt_D1i+6H_ApHk3kmScyDyg@mail.gmail.com>
- <788ceb78-c0b8-b1cd-b658-31c377e24711@huawei.com>
-In-Reply-To: <788ceb78-c0b8-b1cd-b658-31c377e24711@huawei.com>
-From:   Anders Roxell <anders.roxell@linaro.org>
-Date:   Thu, 21 Oct 2021 15:35:13 +0200
-Message-ID: <CADYN=9KqNsJL4PSdZYM89RRW6qwNGLrJd_+evXFO6XHSfAqYfA@mail.gmail.com>
-Subject: Re: BUG: KASAN: use-after-free in blk_mq_sched_tags_teardown
-To:     John Garry <john.garry@huawei.com>
-Cc:     Naresh Kamboju <naresh.kamboju@linaro.org>,
-        linux-block <linux-block@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>,
-        Hannes Reinecke <hare@suse.de>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        Arnd Bergmann <arnd@arndb.de>,
-        "lkft-triage@lists.linaro.org" <lkft-triage@lists.linaro.org>
-Content-Type: text/plain; charset="UTF-8"
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BL0PR10MB2932.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0ad6bd7f-cf71-484c-b79c-08d9949ad660
+X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Oct 2021 13:58:19.0274
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: himanshu.madhani@oracle.com
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR10MB2963
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10143 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 malwarescore=0
+ phishscore=0 mlxlogscore=999 bulkscore=0 suspectscore=0 mlxscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109230001
+ definitions=main-2110210074
+X-Proofpoint-ORIG-GUID: u5y8PAZ1s_aX1OnCLx4hoctaGYuFvE2k
+X-Proofpoint-GUID: u5y8PAZ1s_aX1OnCLx4hoctaGYuFvE2k
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 21 Oct 2021 at 14:17, John Garry <john.garry@huawei.com> wrote:
->
-> On 21/10/2021 13:01, Naresh Kamboju wrote:
-> > Following KASAN BUG noticed on linux next 20211021 while booting qemu-arm64
-> > with allmodconfig.
->
-> Thanks for the report.
->
-> I can't read comments and have broken the same thing twice ... please
-> try this change:
->
-> ---8<---
->
-> diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-> index e85b7556b096..6a9444848e3a 100644
-> --- a/block/blk-mq-sched.c
-> +++ b/block/blk-mq-sched.c
-> @@ -541,7 +541,7 @@ static void blk_mq_sched_tags_teardown(struct
-> request_queue *q, unsigned int fla
->
->          queue_for_each_hw_ctx(q, hctx, i) {
->                  if (hctx->sched_tags) {
-> -                       if (!blk_mq_is_shared_tags(q->tag_set->flags))
-> +                       if (!blk_mq_is_shared_tags(flags))
->                                  blk_mq_free_rq_map(hctx->sched_tags);
->                          hctx->sched_tags = NULL;
->                  }
 
-That fixed this issue.
 
-Tested-by: Anders Roxell <anders.roxell@linaro.org>
+> On Oct 21, 2021, at 2:31 AM, Nilesh Javali <njavali@marvell.com> wrote:
+>=20
+> From: Quinn Tran <qutran@marvell.com>
+>=20
+> For RSCN of type "Area, Domain, or Fabric", which indicate
+> a portion or entire fabric was disturbed. Current driver
+> does not set the scan_need flag to indicate a session was
+> affected by the disturbance. This in turn, can lead to
+> IO timeout and delay of relogin. Hence initiate relogin
+> in the event of fabric disturbance.
+>=20
+> Fixes: 1560bafdff9e ("scsi: qla2xxx: Use complete switch scan for RSCN ev=
+ents")
+> Signed-off-by: Quinn Tran <qutran@marvell.com>
+> Signed-off-by: Nilesh Javali <njavali@marvell.com>
+> ---
+> drivers/scsi/qla2xxx/qla_init.c | 54 +++++++++++++++++++++++++++------
+> 1 file changed, 45 insertions(+), 9 deletions(-)
+>=20
+> diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_i=
+nit.c
+> index a9a4243cb15a..339aa3b2737a 100644
+> --- a/drivers/scsi/qla2xxx/qla_init.c
+> +++ b/drivers/scsi/qla2xxx/qla_init.c
+> @@ -1786,16 +1786,52 @@ void qla2x00_handle_rscn(scsi_qla_host_t *vha, st=
+ruct event_arg *ea)
+> 	fc_port_t *fcport;
+> 	unsigned long flags;
+>=20
+> -	fcport =3D qla2x00_find_fcport_by_nportid(vha, &ea->id, 1);
+> -	if (fcport) {
+> -		if (fcport->flags & FCF_FCP2_DEVICE) {
+> -			ql_dbg(ql_dbg_disc, vha, 0x2115,
+> -			       "Delaying session delete for FCP2 portid=3D%06x %8phC ",
+> -			       fcport->d_id.b24, fcport->port_name);
+> -			return;
+> +	switch (ea->id.b.rsvd_1) {
+> +	case RSCN_PORT_ADDR:
+> +		fcport =3D qla2x00_find_fcport_by_nportid(vha, &ea->id, 1);
+> +		if (fcport) {
+> +			if (fcport->flags & FCF_FCP2_DEVICE) {
+> +				ql_dbg(ql_dbg_disc, vha, 0x2115,
+> +				       "Delaying session delete for FCP2 portid=3D%06x %8phC ",
+> +					fcport->d_id.b24, fcport->port_name);
+> +				return;
+> +			}
+> +			fcport->scan_needed =3D 1;
+> +			fcport->rscn_gen++;
+> +		}
+> +		break;
+> +	case RSCN_AREA_ADDR:
+> +		list_for_each_entry(fcport, &vha->vp_fcports, list) {
+> +			if (fcport->flags & FCF_FCP2_DEVICE)
+> +				continue;
+> +
+> +			if ((ea->id.b24 & 0xffff00) =3D=3D (fcport->d_id.b24 & 0xffff00)) {
+> +				fcport->scan_needed =3D 1;
+> +				fcport->rscn_gen++;
+> +			}
+> 		}
+> -		fcport->scan_needed =3D 1;
+> -		fcport->rscn_gen++;
+> +		break;
+> +	case RSCN_DOM_ADDR:
+> +		list_for_each_entry(fcport, &vha->vp_fcports, list) {
+> +			if (fcport->flags & FCF_FCP2_DEVICE)
+> +				continue;
+> +
+> +			if ((ea->id.b24 & 0xff0000) =3D=3D (fcport->d_id.b24 & 0xff0000)) {
+> +				fcport->scan_needed =3D 1;
+> +				fcport->rscn_gen++;
+> +			}
+> +		}
+> +		break;
+> +	case RSCN_FAB_ADDR:
+> +	default:
+> +		list_for_each_entry(fcport, &vha->vp_fcports, list) {
+> +			if (fcport->flags & FCF_FCP2_DEVICE)
+> +				continue;
+> +
+> +			fcport->scan_needed =3D 1;
+> +			fcport->rscn_gen++;
+> +		}
+> +		break;
+> 	}
+>=20
+> 	spin_lock_irqsave(&vha->work_lock, flags);
+> --=20
+> 2.19.0.rc0
+>=20
 
-Cheers,
-Anders
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 
->
->
-> --- >8 ---
->
-> thanks
->
-> >
-> > [   77.613151][    T5] BUG: KASAN: use-after-free in
-> > blk_mq_sched_tags_teardown+0x54/0x140
-> > [   77.616733][    T5] Read of size 4 at addr ffff000010d9b258 by task
-> > kworker/0:0/5
-> > [   77.620107][    T5]
-> > [   77.621306][    T5] CPU: 0 PID: 5 Comm: kworker/0:0 Tainted: G
-> >    W       T 5.15.0-rc6-next-20211021 #1
-> > 4d661763b10b5f85042868a82a033ba2fc3e45c4
-> > [   77.626986][    T5] Hardware name: linux,dummy-virt (DT)
-> > [   77.629480][    T5] Workqueue: events kobject_delayed_cleanup
-> > [   77.632269][    T5] Call trace:
-> > [   77.633853][    T5]  dump_backtrace+0x0/0x340
-> > [   77.635938][    T5]  show_stack+0x34/0x80
-> > [   77.637934][    T5]  dump_stack_lvl+0x88/0xd8
-> > [   77.640070][    T5]  print_address_description.constprop.0+0x38/0x340
-> > [   77.643034][    T5]  __kasan_report+0x160/0x200
-> > [   77.645227][    T5]  kasan_report+0x5c/0x180
-> > [   77.647312][    T5]  __asan_load4+0xc8/0x100
-> > [   77.649391][    T5]  blk_mq_sched_tags_teardown+0x54/0x140
-> > [   77.651984][    T5]  blk_mq_exit_sched+0x128/0x180
-> > [   77.654299][    T5]  __elevator_exit+0x44/0x80
-> > [   77.656415][    T5]  blk_release_queue+0x138/0x200
-> > [   77.658710][    T5]  kobject_cleanup+0x144/0x200
-> > [   77.660971][    T5]  kobject_delayed_cleanup+0x1c/0x40
-> > [   77.663404][    T5]  process_one_work+0x50c/0x880
-> > [   77.665684][    T5]  worker_thread+0x3ec/0x740
-> > [   77.667838][    T5]  kthread+0x220/0x240
-> > [   77.669740][    T5]  ret_from_fork+0x10/0x20
-> > [   77.671778][    T5]
-> > [   77.672974][    T5] Allocated by task 1:
-> > [   77.674888][    T5]  kasan_save_stack+0x30/0x80
-> > [   77.677082][    T5]  __kasan_kmalloc+0x78/0x100
-> > [   77.679235][    T5]  kmem_cache_alloc_trace+0x360/0x400
-> > [   77.681707][    T5]  add_mtd_blktrans_dev+0x274/0x6c0
-> > [   77.684079][    T5]  mtdblock_add_mtd+0x110/0x180
-> > [   77.686333][    T5]  blktrans_notify_add+0x68/0xc0
-> > [   77.688521][    T5]  add_mtd_device+0x4e8/0x6c0
-> > [   77.690659][    T5]  mtd_device_parse_register+0x13c/0x3c0
-> > [   77.693258][    T5]  physmap_flash_probe+0x83c/0x8c0
-> > [   77.695630][    T5]  platform_probe+0x98/0x140
-> > [   77.697776][    T5]  really_probe+0x234/0x6c0
-> > [   77.699913][    T5]  __driver_probe_device+0x144/0x240
-> > [   77.702307][    T5]  driver_probe_device+0x68/0x140
-> > [   77.704502][    T5]  __driver_attach+0x1f0/0x280
-> > [   77.706598][    T5]  bus_for_each_dev+0xdc/0x1c0
-> > [   77.708669][    T5]  driver_attach+0x40/0x80
-> > [   77.710621][    T5]  bus_add_driver+0x1c0/0x300
-> > [   77.712660][    T5]  driver_register+0x170/0x200
-> > [   77.714749][    T5]  __platform_driver_register+0x50/0x80
-> > [   77.717148][    T5]  physmap_init+0x5c/0xfc
-> > [   77.719074][    T5]  do_one_initcall+0xb0/0x2c0
-> > [   77.721127][    T5]  do_initcalls+0x17c/0x244
-> > [   77.723109][    T5]  kernel_init_freeable+0x2d4/0x378
-> > [   77.725376][    T5]  kernel_init+0x34/0x180
-> > [   77.727304][    T5]  ret_from_fork+0x10/0x20
-> > [   77.729261][    T5]
-> > [   77.730367][    T5] Freed by task 1:
-> > [   77.732009][    T5]  kasan_save_stack+0x30/0x80
-> > [   77.734083][    T5]  kasan_set_track+0x30/0x80
-> > [   77.736085][    T5]  kasan_set_free_info+0x34/0x80
-> > [   77.738261][    T5]  ____kasan_slab_free+0xfc/0x1c0
-> > [   77.740433][    T5]  __kasan_slab_free+0x3c/0x80
-> > [   77.742518][    T5]  slab_free_freelist_hook+0x1d4/0x2c0
-> > [   77.744892][    T5]  kfree+0x160/0x300
-> > [   77.746618][    T5]  blktrans_dev_release+0x64/0x100
-> > [   77.748821][    T5]  del_mtd_blktrans_dev+0x1c0/0x240
-> > [   77.751079][    T5]  mtdblock_remove_dev+0x28/0x80
-> > [   77.753246][    T5]  blktrans_notify_remove+0xa4/0x140
-> > [   77.755507][    T5]  del_mtd_device+0x84/0x1c0
-> > [   77.757541][    T5]  mtd_device_unregister+0x90/0xc0
-> > [   77.759764][    T5]  physmap_flash_remove+0x58/0x180
-> > [   77.762012][    T5]  platform_remove+0x48/0xc0
-> > [   77.764032][    T5]  __device_release_driver+0x1dc/0x340
-> > [   77.766393][    T5]  driver_detach+0x138/0x200
-> > [   77.768396][    T5]  bus_remove_driver+0x100/0x180
-> > [   77.770554][    T5]  driver_unregister+0x64/0xc0
-> > [   77.772633][    T5]  platform_driver_unregister+0x28/0x80
-> > [   77.775042][    T5]  physmap_init+0xc4/0xfc
-> > [   77.776994][    T5]  do_one_initcall+0xb0/0x2c0
-> > [   77.779028][    T5]  do_initcalls+0x17c/0x244
-> > [   77.781023][    T5]  kernel_init_freeable+0x2d4/0x378
-> > [   77.783269][    T5]  kernel_init+0x34/0x180
-> > [   77.785196][    T5]  ret_from_fork+0x10/0x20
-> > [   77.787135][    T5]
-> > [   77.788230][    T5] The buggy address belongs to the object at
-> > ffff000010d9b200
-> > [   77.788230][    T5]  which belongs to the cache kmalloc-512 of size 512
-> > [   77.793866][    T5] The buggy address is located 88 bytes inside of
-> > [   77.793866][    T5]  512-byte region [ffff000010d9b200, ffff000010d9b400)
-> > [   77.799169][    T5] The buggy address belongs to the page:
-> > [   77.801555][    T5] page:fffffc0000436600 refcount:1 mapcount:0
-> > mapping:0000000000000000 index:0x0 pfn:0x50d98
-> > [   77.805683][    T5] head:fffffc0000436600 order:2
-> > compound_mapcount:0 compound_pincount:0
-> > [   77.809109][    T5] flags:
-> > 0x1fffe0000010200(slab|head|node=0|zone=0|lastcpupid=0xffff)
-> > [   77.812496][    T5] raw: 01fffe0000010200 fffffc0000436408
-> > fffffc0000436908 ffff000006c03080
-> > [   77.816037][    T5] raw: 0000000000000000 00000000000a000a
-> > 00000001ffffffff 0000000000000000
-> > [   77.819566][    T5] page dumped because: kasan: bad access detected
-> > [   77.822255][    T5]
-> > [   77.823357][    T5] Memory state around the buggy address:
-> > [   77.825747][    T5]  ffff000010d9b100: fc fc fc fc fc fc fc fc fc
-> > fc fc fc fc fc fc fc
-> > [   77.829081][    T5]  ffff000010d9b180: fc fc fc fc fc fc fc fc fc
-> > fc fc fc fc fc fc fc
-> > [   77.832393][    T5] >ffff000010d9b200: fa fb fb fb fb fb fb fb fb
-> > fb fb fb fb fb fb fb
-> > [   77.835714][    T5]                                                     ^
-> > [   77.838602][    T5]  ffff000010d9b280: fb fb fb fb fb fb fb fb fb
-> > fb fb fb fb fb fb fb
-> > [   77.841936][    T5]  ffff000010d9b300: fb fb fb fb fb fb fb fb fb
-> > fb fb fb fb fb fb fb
-> >
-> > full boot log link,
-> > https://pastebin.com/xL5MYSD6
-> >
-> > Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
-> >
-> > --
-> > Linaro LKFT
-> > https://lkft.linaro.org
-> >
->
+--
+Himanshu Madhani	 Oracle Linux Engineering
+
