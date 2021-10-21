@@ -2,90 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FE43C43217
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 22:50:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA990C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 01:37:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1EC5F61354
-	for <linux-scsi@archiver.kernel.org>; Wed, 20 Oct 2021 22:50:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 950E060EBD
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 01:37:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230474AbhJTWwi (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 20 Oct 2021 18:52:38 -0400
-Received: from out3-smtp.messagingengine.com ([66.111.4.27]:42995 "EHLO
-        out3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230123AbhJTWwh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 20 Oct 2021 18:52:37 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.nyi.internal (Postfix) with ESMTP id 722E55C0257;
-        Wed, 20 Oct 2021 18:50:20 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Wed, 20 Oct 2021 18:50:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=lSsjbO
-        QwefFnogmBYkQShNyvBodWyjPRyIlY4BZCdbY=; b=XTFPUQpIgFUb5/+zQnC3+q
-        E7iOxXZPkaMDV1LZeLMZHcNWaAPPNFYwJArhDaxHz04DhUA8SWNsm8dI1fjXUkgo
-        2soX9rJ7FjQLUmxi+xkJEsyrBs149cTEC9jikjMUNPsE8wF2gEZL8vJS7NftJADm
-        heU+kExqUoInTXCuSLkwVKw26Kyj8tbG/GZi0cPRCatdUq55KdlqrDzW6THS6+v2
-        6XBYAugsRB6Ko7srZzO5hi79sgj7nuzYlRwxtg7FzDrA2XFWqzDDmLcoPQSOEGqI
-        Ex8CTizCH4Y3S9yAXbSIGIvvhCM8LzL1gjBQyNZ/i7lAzj3T7VrD6A0OhkrwifNQ
-        ==
-X-ME-Sender: <xms:K51wYZFewfi-AL5pGcvaYooQnbQruG7uh8zSvvgNPnuo-76Eao6KPA>
-    <xme:K51wYeWl7djtgVf_Zr8AUhNqQugbl_XPOCON2FfCnXjxpGNWnWhJoUkwoH475B5WU
-    GCg6vKb3ssCAT-mN-k>
-X-ME-Received: <xmr:K51wYbK4t1wdd7x2RxraeXnIMIeJkaCJXKeqYyDIEOTvuXSg3oO8l_U9hO6mWri98jzRJOOc4caH977EWV0Rdgb42xGw51fIlms>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvtddrvddvhedguddtucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvffujgfkfhggtgesthdtredttddtvdenucfhrhhomhephfhinhhnucfv
-    hhgrihhnuceofhhthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgheqnecuggftrfgrth
-    htvghrnhepffduhfegfedvieetudfgleeugeehkeekfeevfffhieevteelvdfhtdevffet
-    uedunecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepfh
-    hthhgrihhnsehlihhnuhigqdhmieekkhdrohhrgh
-X-ME-Proxy: <xmx:K51wYfH7JG_tsZcCvO-7-jwWBNyJ0m62pku7J5lc43Cxx9k0WAtGIA>
-    <xmx:K51wYfWPiQnbtJ1qik-osTUwE-1UkDVKdX4euCyH-p86CapKUl5jzg>
-    <xmx:K51wYaMFq1Mrf-siJAmOwrH52khfjKTXlKFUX8GGsfRej4SaJdM3Yw>
-    <xmx:LJ1wYRKK95A2MlNqsylBLp9qGuHy1TeVawjzntlTvweGVmAUAtc0ag>
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 20 Oct 2021 18:50:18 -0400 (EDT)
-Date:   Thu, 21 Oct 2021 09:50:26 +1100 (AEDT)
-From:   Finn Thain <fthain@linux-m68k.org>
-To:     James Bottomley <jejb@linux.ibm.com>
-cc:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>,
-        kashyap.desai@broadcom.com, sumit.saxena@broadcom.com,
-        shivasharan.srikanteshwara@broadcom.com,
-        martin.petersen@oracle.com, megaraidlinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: megaraid_mbox: return -ENOMEM on megaraid_init_mbox()
- allocation failure
-In-Reply-To: <670213ce9e6c3b625e9f8ed66b9fad8ea2843322.camel@linux.ibm.com>
-Message-ID: <cf8da58-de8b-e171-5a40-2b10983d447@linux-m68k.org>
-References: <1634640800-22502-1-git-send-email-jiapeng.chong@linux.alibaba.com>  <2482854e18365087266c2f0907c1bbfd42bd2731.camel@linux.ibm.com>  <c1a6e7f3-d62f-5c5e-b3ef-2320339e142a@linux-m68k.org>
- <670213ce9e6c3b625e9f8ed66b9fad8ea2843322.camel@linux.ibm.com>
+        id S230286AbhJUBjr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 20 Oct 2021 21:39:47 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:13604 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230192AbhJUBjr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Oct 2021 21:39:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1634780250; x=1666316250;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=jwOrXSWMi/h8yhJ2POQSyR+DIDfPu/1xNtKYNmwPAro=;
+  b=Y0dy+Rk26CSJ7Hki8RttpBuz97Fu8IVa933hgZnIG57lZJnZcHq1EZ5u
+   6mvGDJtsDtfycn7+R+fmhgTLnteVfYAfsolOtyQrmdeLCKKCK/4JNOaI5
+   t6mKf3zpOX05t08dNmm7JEM2MBfqzUc8HTGUiRZk8JzuldU8567yVhqbc
+   7pOxArtF4w2xcTiJEMhPwCGDEBQGBP2Z6xQDjmnjR+mVmFRqUEL/15q5R
+   RnLs4n06L6wieuTzt5hoTdTw/xjrHHidC1ACHZPYaD1AFY3WxRW5SbkFw
+   CHi2ZH5/6rmT4RtmDFkv/tmNgeVcej1MpXpYCraE+WIPuDKXWaQo5ecgW
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.87,168,1631548800"; 
+   d="scan'208";a="183467349"
+Received: from uls-op-cesaip02.wdc.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 21 Oct 2021 09:37:30 +0800
+IronPort-SDR: 3wUmckiFZ72zXiaVhPRa29scevm1o2RKXxbLgf3ImrjChMh8tdD3EeQM1YOkh1GeSBkv598c7w
+ wvOmjwDc6CaTDDje5QL3Nk9v/S/l4DtH3SOQ5TzuUP8catpL8EVIzB0hGL92NbaYAV8UMgNjvm
+ z17mJXiUGhf6NiVXVEa8zZweCLsvzJ+ElCeNelh5Hkg6Ekzi7GjEUQpuEgpLTB6hNUA9tVy9Og
+ AN+/cKTsfwO/91i6WeTji1gcyM/s48hJyKsXhQoHfPYGwwYuGL5MZF93HyXr4T1dDlIV1ZgeKp
+ X5qyfxBqdbSV36/ZgtGJTRgi
+Received: from uls-op-cesaip01.wdc.com ([10.248.3.36])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2021 18:11:35 -0700
+IronPort-SDR: 2vJFRlBINCGdTdiN9H+CqtiH9SWtzq5UYVOjiMi+UIpr+8RuBVLPT8X38BT5SgpOCHSMwzULDo
+ XJNvg1yQy0Qu8n0UIEfMIAaqcpxVHXBnmxy7+jawweTfGjQIBj9NNhzJNrsbULg7SyS2iE8GDD
+ n+NbdG8GfOVH1mauCj81s6Cmkh9sJHxJRZEJlIojAP8+4XO5TPuEUjvgb2X2rQ1xYR1dBMp6rM
+ ssY5OeeOfEw4m2JkDl1APtUmWmDdt1aoHqAdD7Ec4lIrnINdFOa5y9m+yGGrC0RhHWvMvkNVJD
+ pXo=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Oct 2021 18:37:32 -0700
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4HZVTl3Nmlz1RvmD
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Oct 2021 18:37:31 -0700 (PDT)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:content-type
+        :in-reply-to:organization:from:references:to:content-language
+        :subject:user-agent:mime-version:date:message-id; s=dkim; t=
+        1634780250; x=1637372251; bh=jwOrXSWMi/h8yhJ2POQSyR+DIDfPu/1xNtK
+        YNmwPAro=; b=K6Qu8WOl7wmxvDxE7eQjTqZkkrCRYHqVUmf8xMBxpSG+k08iuXU
+        IqIVntaUXvS8CJz7cpVorzw7BK9W9ct5XqNjMUWOrDwmeNowdUolaouWBOyI+98I
+        VxQtpnY7FziMRdXh90aTKdkeOKQdBaSUCEcnagM+/aixOuyFuHIzZNHJHsky8J/l
+        jyB2tQPGvBdu1pvZpwsUy4YxE8YWR1pxXvyeKugOiSALLGmqpXV+BsHKkO/UzIeB
+        Yd9nBbXcbHrxfXqvlPAMcLNdH4BsLyVhGBBoj7r91MytHrr/LxjecD7v3ay3pyFc
+        9CxCDSrxbMjxIDB8PU27N85BdCv35HhWFxA==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id vYJ5A6GuEY-e for <linux-scsi@vger.kernel.org>;
+        Wed, 20 Oct 2021 18:37:30 -0700 (PDT)
+Received: from [10.225.163.67] (unknown [10.225.163.67])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4HZVTk1rT3z1RvlZ;
+        Wed, 20 Oct 2021 18:37:30 -0700 (PDT)
+Message-ID: <42eb2c97-7ebd-b369-5fd6-ba342cb3c89b@opensource.wdc.com>
+Date:   Thu, 21 Oct 2021 10:37:28 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
+Subject: Re: [PATCH] scsi: ata: make ahci_sdev_attrs static
+Content-Language: en-US
+To:     Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc:     linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+References: <1634639082-1007-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+Organization: Western Digital Research
+In-Reply-To: <1634639082-1007-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 20 Oct 2021, James Bottomley wrote:
-
-> > 
-> > ... and arguably they would be correct.
+On 10/19/21 19:24, Jiapeng Chong wrote:
+> From: chongjiapeng <jiapeng.chong@linux.alibaba.com>
 > 
-> Well, yes ... that's why I don't want one "fix" that generates a 
-> cascading sequence of further "fixes".
+> This symbol is not used outside of libahci.c, so marks it static.
+> 
+> Fix the following sparse warning:
+> 
+> drivers/ata/libahci.c:134:18: warning: symbol 'ahci_sdev_attrs' was not
+> declared. Should it be static?
+> 
+> Reported-by: Abaci Robot <abaci@linux.alibaba.com>
+> Fixes: c3f69c7f629f ("scsi: ata: Switch to attribute groups")
+> Signed-off-by: chongjiapeng <jiapeng.chong@linux.alibaba.com>
+> ---
+>  drivers/ata/libahci.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 28430c093a7f..8a6835bfd18a 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -131,7 +131,7 @@ const struct attribute_group *ahci_shost_groups[] = {
+>  };
+>  EXPORT_SYMBOL_GPL(ahci_shost_groups);
+>  
+> -struct attribute *ahci_sdev_attrs[] = {
+> +static struct attribute *ahci_sdev_attrs[] = {
+>  	&dev_attr_sw_activity.attr,
+>  	&dev_attr_unload_heads.attr,
+>  	&dev_attr_ncq_prio_supported.attr,
 > 
 
-OTOH, if you don't "fix" it, it generates a cascading sequence of 
-copy-and-paste antipatterns in new code, and poor training data for those 
-of us reading old code.
+Jiapeng,
 
-Anyway, I agree that the churn would be too risky. But it sure would be 
-nice if automatic tools were able to perform a program transformation of 
-this kind at the source level, being that the compiler will surely do it 
-anyway at a lower level.
+This patch does not apply to the current libata tree since it is against
+the latest changes queued in the scsi tree. After fixing the patch
+title, can you resend this patch to the linux-scsi list and to Martin ?
 
-There's a lot to be said for source code that reflects the compiler's 
-understanding of the logic, rather than the human's.
+
+
+-- 
+Damien Le Moal
+Western Digital Research
