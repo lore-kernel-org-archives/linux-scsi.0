@@ -2,158 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF933C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 06:06:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98D39C433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 06:10:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D56EB6112D
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 06:06:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7629A60F57
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 06:10:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229499AbhJUGIy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Oct 2021 02:08:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36310 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231332AbhJUGIu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Oct 2021 02:08:50 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7A794C061753;
-        Wed, 20 Oct 2021 23:06:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=3ECccBF3V87U61r03r9dtFoWy4sVS87UrAHGw16xpd0=; b=hp+JOWgiVfmNlWB/QGA3DiL1Er
-        SKn8nc6AsUs5Y2VzmRe03g4cwKeq86WXucsp+PUZLI3KPd/zkMXuxeH/uD2SJTzKxYrUEPncYsmP7
-        kxLCyCrsK0c8p/C/5gP2aizdeyUd9Jyhpu861uJvL0ezpSH6yK6ZbRvb4oE7D2ldusDGWTrS5sRn7
-        Mat8Ji8EOOfnUxOE0b0OmXHoOUfMpj4RMMWxmg5SD1AFljs0cnuRShEEDLwY1FYrcHgo1vHyg3r10
-        Fmn+xjY8G5z6i2a75y8xbmXACZg7krovMGmOSZ3TZNTumRjdc+KyD9XGLXQSEuXUba/CVTaJGwJST
-        TBE2F3aQ==;
-Received: from [2001:4bb8:180:8777:7df0:a8d8:40cc:3310] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mdRDk-006UAe-5b; Thu, 21 Oct 2021 06:06:32 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Jens Axboe <axboe@kernel.dk>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     "J. Bruce Fields" <bfields@fieldses.org>,
-        Chuck Lever <chuck.lever@oracle.com>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-nfs@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 7/7] block: remove QUEUE_FLAG_SCSI_PASSTHROUGH
-Date:   Thu, 21 Oct 2021 08:06:07 +0200
-Message-Id: <20211021060607.264371-8-hch@lst.de>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20211021060607.264371-1-hch@lst.de>
-References: <20211021060607.264371-1-hch@lst.de>
+        id S231248AbhJUGMu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Oct 2021 02:12:50 -0400
+Received: from m43-7.mailgun.net ([69.72.43.7]:22853 "EHLO m43-7.mailgun.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230095AbhJUGMu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 21 Oct 2021 02:12:50 -0400
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
+ s=smtp; t=1634796635; h=Message-ID: References: In-Reply-To: Subject:
+ Cc: To: From: Date: Content-Transfer-Encoding: Content-Type:
+ MIME-Version: Sender; bh=JfB3g7Mo4BBuUaUjm4HKsQghLnYQpwiZK7oz3TCDBnI=;
+ b=wrsdXf3m0uHbqBh2/k1nxBhc0zVqtb2b2KMdHfcP/2ZQGGKffCsHBsVBGbi0ejeyk3g7yvi6
+ wYtn0LQiUoCOTNcEqdQVCIqA4INp7xmocTagkZJnfwc35U0/svnkIjMBsTRWgrE5RMEXNNrV
+ rYpERhcPgGUxRRmrmoiem/ctJXA=
+X-Mailgun-Sending-Ip: 69.72.43.7
+X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
+Received: from smtp.codeaurora.org
+ (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
+ smtp-out-n06.prod.us-west-2.postgun.com with SMTP id
+ 6171044dbc30296958a5453a (version=TLS1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 21 Oct 2021 06:10:21
+ GMT
+Sender: cang=codeaurora.org@mg.codeaurora.org
+Received: by smtp.codeaurora.org (Postfix, from userid 1001)
+        id 36E02C4360D; Thu, 21 Oct 2021 06:10:21 +0000 (UTC)
+Received: from mail.codeaurora.org (localhost.localdomain [127.0.0.1])
+        (using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: cang)
+        by smtp.codeaurora.org (Postfix) with ESMTPSA id 28BE3C4338F;
+        Thu, 21 Oct 2021 06:10:19 +0000 (UTC)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Date:   Thu, 21 Oct 2021 14:10:19 +0800
+From:   Can Guo <cang@codeaurora.org>
+To:     Kiwoong Kim <kwmad.kim@samsung.com>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        adrian.hunter@intel.com, sc.suh@samsung.com, hy50.seo@samsung.com,
+        sh425.lee@samsung.com, bhoon95.kim@samsung.com,
+        vkumar.1997@samsung.com
+Subject: Re: [PATCH RESEND v2] scsi: ufs: clear doorbell for hibern8 errors
+ when using ah8
+In-Reply-To: <1634619427-171880-1-git-send-email-kwmad.kim@samsung.com>
+References: <CGME20211019051346epcas2p132d3b9c6a1c812f3132e913525235b83@epcas2p1.samsung.com>
+ <1634619427-171880-1-git-send-email-kwmad.kim@samsung.com>
+Message-ID: <ce88a8c47d46acd43b3645a3b97ab956@codeaurora.org>
+X-Sender: cang@codeaurora.org
+User-Agent: Roundcube Webmail/1.3.9
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Export scsi_device_from_queue for use with pktcdvd and use that instead
-of the otherwise unused QUEUE_FLAG_SCSI_PASSTHROUGH queue flag.
+On 2021-10-19 12:57, Kiwoong Kim wrote:
+> Changes from v1:
+> * Change the time to requeue pended commands
+> 
+> When an scsi command is dispatched right after host complete
+> all the pended requests and ufs driver tries to ring a doorbell,
+> host might be still during entering into hibern8.
+> If the hibern8 error occurrs during that period, the doorbell
+> might not be zero and clearing it should have done.
+> But, current ufshcd_err_handler goes directly to reset
+> w/o clearing the doorbell when the driver's link state is broken.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- block/blk-mq-debugfs.c   | 1 -
- drivers/block/pktcdvd.c  | 5 ++++-
- drivers/scsi/scsi_lib.c  | 8 ++++++++
- drivers/scsi/scsi_scan.c | 1 -
- include/linux/blkdev.h   | 3 ---
- 5 files changed, 12 insertions(+), 6 deletions(-)
+         /*
+          * Stop the host controller and complete the requests
+          * cleared by h/w
+          */
+         ufshcd_hba_stop(hba);
+         hba->silence_err_logs = true;
+         ufshcd_complete_requests(hba);
 
-diff --git a/block/blk-mq-debugfs.c b/block/blk-mq-debugfs.c
-index 68ca5d21cda77..a317f05de466a 100644
---- a/block/blk-mq-debugfs.c
-+++ b/block/blk-mq-debugfs.c
-@@ -124,7 +124,6 @@ static const char *const blk_queue_flag_name[] = {
- 	QUEUE_FLAG_NAME(STATS),
- 	QUEUE_FLAG_NAME(POLL_STATS),
- 	QUEUE_FLAG_NAME(REGISTERED),
--	QUEUE_FLAG_NAME(SCSI_PASSTHROUGH),
- 	QUEUE_FLAG_NAME(QUIESCED),
- 	QUEUE_FLAG_NAME(PCI_P2PDMA),
- 	QUEUE_FLAG_NAME(ZONE_RESETALL),
-diff --git a/drivers/block/pktcdvd.c b/drivers/block/pktcdvd.c
-index d7d37131ab9dd..d7bcd12394b3c 100644
---- a/drivers/block/pktcdvd.c
-+++ b/drivers/block/pktcdvd.c
-@@ -2536,6 +2536,7 @@ static int pkt_new_dev(struct pktcdvd_device *pd, dev_t dev)
- 	int i;
- 	char b[BDEVNAME_SIZE];
- 	struct block_device *bdev;
-+	struct scsi_device *sdev;
- 
- 	if (pd->pkt_dev == dev) {
- 		pkt_err(pd, "recursive setup not allowed\n");
-@@ -2559,10 +2560,12 @@ static int pkt_new_dev(struct pktcdvd_device *pd, dev_t dev)
- 	bdev = blkdev_get_by_dev(dev, FMODE_READ | FMODE_NDELAY, NULL);
- 	if (IS_ERR(bdev))
- 		return PTR_ERR(bdev);
--	if (!blk_queue_scsi_passthrough(bdev_get_queue(bdev))) {
-+	sdev = scsi_device_from_queue(bdev->bd_disk->queue);
-+	if (!sdev) {
- 		blkdev_put(bdev, FMODE_READ | FMODE_NDELAY);
- 		return -EINVAL;
- 	}
-+	put_device(&sdev->sdev_gendev);
- 
- 	/* This is safe, since we have a reference from open(). */
- 	__module_get(THIS_MODULE);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index a0f801fc8943b..9823b65d15368 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1967,6 +1967,14 @@ struct scsi_device *scsi_device_from_queue(struct request_queue *q)
- 
- 	return sdev;
- }
-+/*
-+ * pktcdvd should have been integrated into the SCSI layers, but for historical
-+ * reasons like the old IDE driver it isn't.  This export allows it to safely
-+ * probe if a given device is a SCSI one and only attach to that.
-+ */
-+#ifdef CONFIG_CDROM_PKTCDVD_MODULE
-+EXPORT_SYMBOL_GPL(scsi_device_from_queue);
-+#endif
- 
- /**
-  * scsi_block_requests - Utility function used by low-level drivers to prevent
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index fe22191522a3b..2808c0cb57114 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -280,7 +280,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	sdev->request_queue = q;
- 	q->queuedata = sdev;
- 	__scsi_init_queue(sdev->host, q);
--	blk_queue_flag_set(QUEUE_FLAG_SCSI_PASSTHROUGH, q);
- 	WARN_ON_ONCE(!blk_get_queue(q));
- 
- 	depth = sdev->host->cmd_per_lun ?: 1;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index af61fb3e1502c..558aa7ab4c4c8 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -356,7 +356,6 @@ struct request_queue {
- #define QUEUE_FLAG_STATS	20	/* track IO start and completion times */
- #define QUEUE_FLAG_POLL_STATS	21	/* collecting stats for hybrid polling */
- #define QUEUE_FLAG_REGISTERED	22	/* queue has been registered to a disk */
--#define QUEUE_FLAG_SCSI_PASSTHROUGH 23	/* queue supports SCSI commands */
- #define QUEUE_FLAG_QUIESCED	24	/* queue has been quiesced */
- #define QUEUE_FLAG_PCI_P2PDMA	25	/* device supports PCI p2p requests */
- #define QUEUE_FLAG_ZONE_RESETALL 26	/* supports Zone Reset All */
-@@ -390,8 +389,6 @@ bool blk_queue_flag_test_and_set(unsigned int flag, struct request_queue *q);
- #define blk_queue_secure_erase(q) \
- 	(test_bit(QUEUE_FLAG_SECERASE, &(q)->queue_flags))
- #define blk_queue_dax(q)	test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
--#define blk_queue_scsi_passthrough(q)	\
--	test_bit(QUEUE_FLAG_SCSI_PASSTHROUGH, &(q)->queue_flags)
- #define blk_queue_pci_p2pdma(q)	\
- 	test_bit(QUEUE_FLAG_PCI_P2PDMA, &(q)->queue_flags)
- #ifdef CONFIG_BLK_RQ_ALLOC_TIME
--- 
-2.30.2
+Same ask as Adrian did, ufshcd_hba_stop() should clear all doorbell
+bits as it disables UFS host controller, then ufshcd_complete_requests()
+completes any pending requests, no?
 
+> This patch is to requeue pended commands after host reset.
+> 
+> Here's an actual symptom that I've faced. At the time, tag #17
+> is still pended even after host reset. And then the block timer
+> is expired.
+> 
+> exynos-ufs 11100000.ufs: ufshcd_check_errors: Auto Hibern8
+> Enter failed - status: 0x00000040, upmcrs: 0x00000001
+> ..
+> host_regs: 00000050: b8671000 00000008 00020000 00000000
+> ..
+> exynos-ufs 11100000.ufs: ufshcd_abort: Device abort task at tag 17
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 9faf02c..e5d4ef7 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -7136,8 +7136,10 @@ static int ufshcd_host_reset_and_restore(struct
+> ufs_hba *hba)
+>  	err = ufshcd_hba_enable(hba);
+> 
+>  	/* Establish the link again and restore the device */
+> -	if (!err)
+> +	if (!err) {
+> +		ufshcd_retry_aborted_requests(hba);
+>  		err = ufshcd_probe_hba(hba, false);
+> +	}
+> 
+>  	if (err)
+>  		dev_err(hba->dev, "%s: Host init failed %d\n", __func__, err);
