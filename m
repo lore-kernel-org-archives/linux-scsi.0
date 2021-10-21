@@ -2,166 +2,236 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BA968C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 06:22:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AF39C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 06:48:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 90D3561183
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 06:22:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 002F161372
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 06:48:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231174AbhJUGZL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Oct 2021 02:25:11 -0400
-Received: from mx0a-0064b401.pphosted.com ([205.220.166.238]:6604 "EHLO
-        mx0a-0064b401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230515AbhJUGZK (ORCPT
+        id S230220AbhJUGuV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Oct 2021 02:50:21 -0400
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:43496 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229539AbhJUGuU (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 21 Oct 2021 02:25:10 -0400
-Received: from pps.filterd (m0250810.ppops.net [127.0.0.1])
-        by mx0a-0064b401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19L5wMpX032749;
-        Wed, 20 Oct 2021 23:22:49 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=windriver.com; h=from : to : cc :
- subject : date : message-id : content-transfer-encoding : content-type :
- mime-version; s=PPS06212021;
- bh=u3VVvvGOTC+Ng0omkU5yspvArYR/iTas7DCYbPKcvT0=;
- b=CpK328LCbvwkbBe0PEfJhelJKjJKV4SOSDPqsuv5RPRKUEr1HxwmPwUcwreXUtK/TL+2
- yjMknfLmANJ7dcIATFSBU8wQ1dgNoTA1RUVRQnm3pwBXWnXIGg0OZbBVhWddfrwKJjB+
- QkuuJ0fyeJ/2G2gtvSMqUYjYVl8P7rPmeAD54aPp0+vNbZNweFKMw9lgBdsqIYd/w226
- H9qjBIql1x4OLICEroLsILsEwY842IbSEByazJ1MbP3sCrokLRM1o/Rot1/Mk4vsp+PQ
- JVJnxxPdPd1+Z8RlSXQsinoknekq7iOMxR4k1Q4h/6SEUqsj4EX7NtHOMYNUYMsRLXTE PA== 
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2168.outbound.protection.outlook.com [104.47.58.168])
-        by mx0a-0064b401.pphosted.com with ESMTP id 3bu07t03b1-1
+        Thu, 21 Oct 2021 02:50:20 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19L410GX015966;
+        Thu, 21 Oct 2021 02:47:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ mime-version : from : subject : to : cc : content-type :
+ content-transfer-encoding; s=pp1;
+ bh=YOToBGzx831blHEuAymZ7sSaqz9XnuYhYrMwjgjIbLw=;
+ b=LdJIENPzEZyTMRT1G9XqmQkvlGKMHFcorfnLibRQ/QCNxgYZBfzIeZ0OMlI39/cW/TE8
+ Owy/bm9UW2EQ4KjwbS3/DpuXafkiE+MdxYgcNQ3eZY6W6NDc+35hciZGPb3kT0quFDDT
+ NCNfVEz0HgnYyX+vTlSSYOuHPGDFlX/RGEJXLjk47VI1nvqgG4xdDkOOZxt8+bGRKUVO
+ y1Pn17fZ9/F0aX0PyOhWzPd5k4OAvz8l4tCdqJippeWA+H2IdhaaLzclHAqX6tbAkV6b
+ L8hjCLEJa0m2kxLbIPUFt+Xf3xSmUvHPhs4AJeBLgIFxD/BBUIvnrpHTmqd74jvcyRMC lA== 
+Received: from ppma04dal.us.ibm.com (7a.29.35a9.ip4.static.sl-reverse.com [169.53.41.122])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3btwh9ek8q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 20 Oct 2021 23:22:48 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=nhPO/InZOhx+QT3ld1P5v+b6b95vE3q0q9GlSFzg+PHCPWBM0gpIHaprGncF1kDxWewi/aI0qRVRW6DP77VJCKou2Zb+DiZ0YFzoLM9NizC9ulYe6NyE7D9UypA/f3KycRRUGeYwLlttLOQI/YCQMy4beNj8KsTZ9yOmbyWlwtcwZcunyIqrFK5gHQQOJRiTaXXQK1TUdCN621kgpi9I5z+HX53ofD//xrmRnQNcFzZuj4OoEbiceVL0FqeWFryevMydxEeE7l7wDPMR9rOE7Gmd8ooeoJuFr+zlRjdHVv1hpWDeDk1baTdX0svuA/urMoPXPsWvf4UBvfEQFgcHVA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=u3VVvvGOTC+Ng0omkU5yspvArYR/iTas7DCYbPKcvT0=;
- b=XK11VaUVnc5TvyRqLOkAK5lY8Tk0uoMfN5nQTbMEDNs48rQP9xaF01t7M7JDnxIximIkH6tVOaljOo7Ob3uBzOwSKXiHLS3mWxTCCulqgT+VMMjm5lLovFRr11NvyTenI3dGIZglq8rNn1KuBb+FoRzVoR0rajCLHunJdo9FX9EzJg76xDI6ESCftm/mrvsYNimOxxzpgjXIjEfteWse4BSOVkvEZ4WafBT9/eRrDYg1CZ/Ma4H/0wLDz/PplnDtj0ASnxuNQgQec2E8lHtZDLOHlvIs7MWsgL/qYVxaFWd+BQWLzhhyXX3o6eL2rK1zBK7V/GdyCPd6DAAQINxEDw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=windriver.com; dmarc=pass action=none
- header.from=windriver.com; dkim=pass header.d=windriver.com; arc=none
-Authentication-Results: linux.ibm.com; dkim=none (message not signed)
- header.d=none;linux.ibm.com; dmarc=none action=none
- header.from=windriver.com;
-Received: from DM6PR11MB2747.namprd11.prod.outlook.com (2603:10b6:5:c6::22) by
- DM5PR11MB1564.namprd11.prod.outlook.com (2603:10b6:4:d::13) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4608.18; Thu, 21 Oct 2021 06:22:46 +0000
-Received: from DM6PR11MB2747.namprd11.prod.outlook.com
- ([fe80::b431:e0f0:891a:f6ec]) by DM6PR11MB2747.namprd11.prod.outlook.com
- ([fe80::b431:e0f0:891a:f6ec%7]) with mapi id 15.20.4608.018; Thu, 21 Oct 2021
- 06:22:46 +0000
-From:   Jiping Ma <jiping.ma2@windriver.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        scott.benesh@microchip.com, don.brace@microchip.com,
-        scott.teel@microchip.com, kevin.barnett@microchip.com,
-        Murthy.Bhat@microchip.com, jiping.ma2@windriver.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        yue.tao@windriver.com
-Subject: [PATCH][V2] scsi: smartpqi: Enable sas_address sysfs for SATA device type.
-Date:   Wed, 20 Oct 2021 23:22:39 -0700
-Message-Id: <20211021062239.185327-1-jiping.ma2@windriver.com>
-X-Mailer: git-send-email 2.31.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: BYAPR11CA0044.namprd11.prod.outlook.com
- (2603:10b6:a03:80::21) To DM6PR11MB2747.namprd11.prod.outlook.com
- (2603:10b6:5:c6::22)
+        Thu, 21 Oct 2021 02:47:58 -0400
+Received: from pps.filterd (ppma04dal.us.ibm.com [127.0.0.1])
+        by ppma04dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19L6jenm031610;
+        Thu, 21 Oct 2021 06:47:57 GMT
+Received: from b01cxnp23034.gho.pok.ibm.com (b01cxnp23034.gho.pok.ibm.com [9.57.198.29])
+        by ppma04dal.us.ibm.com with ESMTP id 3bqpcdcpb8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 21 Oct 2021 06:47:57 +0000
+Received: from b01ledav006.gho.pok.ibm.com (b01ledav006.gho.pok.ibm.com [9.57.199.111])
+        by b01cxnp23034.gho.pok.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19L6luH843844064
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 21 Oct 2021 06:47:56 GMT
+Received: from b01ledav006.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id C9D54AC15D;
+        Thu, 21 Oct 2021 06:47:55 +0000 (GMT)
+Received: from b01ledav006.gho.pok.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id B98CDAC2B3;
+        Thu, 21 Oct 2021 06:46:51 +0000 (GMT)
+Received: from [9.160.53.122] (unknown [9.160.53.122])
+        by b01ledav006.gho.pok.ibm.com (Postfix) with ESMTP;
+        Thu, 21 Oct 2021 06:46:51 +0000 (GMT)
+Message-ID: <30cabacf-b12a-3dd6-6d6e-b1c5585bd1c9@linux.vnet.ibm.com>
+Date:   Thu, 21 Oct 2021 12:14:39 +0530
 MIME-Version: 1.0
-Received: from ala-lpggp3.wrs.com (147.11.105.124) by BYAPR11CA0044.namprd11.prod.outlook.com (2603:10b6:a03:80::21) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.16 via Frontend Transport; Thu, 21 Oct 2021 06:22:45 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 46434145-eaa3-4a28-ce1f-08d9945b32e7
-X-MS-TrafficTypeDiagnostic: DM5PR11MB1564:
-X-MS-Exchange-Transport-Forked: True
-X-Microsoft-Antispam-PRVS: <DM5PR11MB15648BC6FC6764B4B01B3778D8BF9@DM5PR11MB1564.namprd11.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6790;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 4t4v7IUk5EjhyHmN7+3TL3YhpjNvV395LEORUVfJBzTl+XH0PTLZUAQ/fbBHmh7sNSmJ/hjuPFJiLeQw3AkoG/HQGp5Syuh0iOCme8pgXcgjzBIQ/NZNwE60tNCzgEF2R/y+0FIkLW/9X8+h34aEbDsDKnS3rGM9uqzKr9te/3XOC0YG3NsQcN2fs03uMkM39qJuAAxHLDjqR4dd5+SZMSx5vnJYJITeeVYhdgI94kWVIO9xvB5LjNVQWZAQmlunO9ilzceQjQHTGCT0BPw5SxBcFVK6IxP08A+Ko4nnvjkNYaTT9iqVn7fYbfaulkUCN8eDS0aQ2QZ57wJaHVpJU70Yefs9KRL99pYrYkTMhROyOixpyPZ4bwhLtYk/79hFy6uvgcMnCqwrDb4meZ3GZmsLQUwmLFlu0d7g90uxSBrAfPzowtBDoE6dXmLQtm4TBkkff7JwkgLU8L5Kk9VC7pE48yBX/ziijdtqyw3KadFYIS3cL71khX2DY4P40356dHj8Xkk3axEn6TIoSni3oNd3VWsBZCN6EH/4YZHBgpuA2DgBSDDE3MxjJSIJePpQjWvc2NaYqZPKFhmrrjHnMZTaNzPQ5ZNX2eAFDA4ZYcBDNDfuwMjl8XmdvkgH7xEJaqL2Si9IgYieqmHiX8lH++MvtAIly2zQbseTiBGzxI54Ij6y82xs/0ZEARF/anZPuTrmctxmxEZqhyrDlTl9NA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR11MB2747.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(4636009)(366004)(86362001)(2616005)(186003)(6512007)(956004)(2906002)(6486002)(107886003)(36756003)(66556008)(52116002)(66946007)(66476007)(38100700002)(8676002)(8936002)(6506007)(26005)(4326008)(83380400001)(508600001)(5660300002)(316002)(6666004)(38350700002)(1076003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?yXi6HEzOfkJPuJZ7zPPugrOrv6Nv/sexQmBTJoqbewnh+OTXJf4lwDsN+AT9?=
- =?us-ascii?Q?1TQz62453cyVNLIG0pyJ2BbsYzIrfBQIxmLk27LwUQQY1f5AQFYv7TJcyXOW?=
- =?us-ascii?Q?j8nvU7SlPawhRbJ6apIoOcSaLZRHYg5egO9CqlhAYh+7E7pEDjpZylzXnLxB?=
- =?us-ascii?Q?l3ljGApDiTsGgk/c4smrLNX/TZVVfA0aMlAzU+Omx63w7xr02zS7BmbcSDpz?=
- =?us-ascii?Q?fWavgdVfngf5/StBOXb3dUsEqEH1tTD/fDW8DLa1hKJJJfXkUiosK34MxUgx?=
- =?us-ascii?Q?G5iNOmBmW446FSuzBg++mmWTei0kn7HV28jmOQdENFYsNKTMJDDi/ua1gCKk?=
- =?us-ascii?Q?h7dXZHoEaiurvfAiIceBjS9cA9lpm0b0+my0rYjQiUf52yHyultiU93HWzJt?=
- =?us-ascii?Q?8cYYdr2WiPg4rriZGFg8ITZaZKo1edDIo9EjEFCw9ch9EaMZES77lLJJGAtJ?=
- =?us-ascii?Q?D8W+Raei/lOaDXQC1sXgnrzkI6G2kBlY8nHkdyMsVTAcZROYIS1ZdvHYZehr?=
- =?us-ascii?Q?TfAUD/7RSKsDs9PfJu5pf/I0NPMmowR2K3AZZ4NRT8CCj2yJt/TMuCLsGFZq?=
- =?us-ascii?Q?NhEnGcyBNKA5XzjH0ZxInv70OSsCVPGGtMIXoNTnn3Cqc2FGWRnjvRUxobvn?=
- =?us-ascii?Q?axF8hsQc/7wqqsczYZxygVEIKBy+NNyOAUi4WIelVccGwhHJW4ihp+4I7NGs?=
- =?us-ascii?Q?+y5ZgLZ8J0qlhG+s5LWevUcAC8nsCIJdde3iV80yfMdVCV1d3/xorBd4nXFn?=
- =?us-ascii?Q?piQHnEmOwFVJb7SZMtMBSnjPQAb7x+yXgM8VL5xr2JS/75bMKHSFrmTcqhX/?=
- =?us-ascii?Q?elF4sfJfZ45Y5o/TicT6WgFQv5W20nQWaY6KgMn8MrMpiEur1YKaKEySaKBH?=
- =?us-ascii?Q?1gmY3/d9hR72b8FwZ3xVgRsWu+w2gKZcbKvMkmvEi0yVPYae89Oz3zp5M3Cu?=
- =?us-ascii?Q?hiI7ggb6aV6UjxjwEfyVWg6bivRSTN6lLl00hQOtX2jEyrRlicbcio0/Lf7g?=
- =?us-ascii?Q?iU2W4TgKR4frPakSj3nd9yAUikGq6me2ogF68RC07dm5/ZV+OxFUut0TLuxw?=
- =?us-ascii?Q?YP48g81q43A4NkPtGASywAac3KfHBonxwIF1L3fIh72dKLuPjnbvXoxPxyeg?=
- =?us-ascii?Q?wYkeOTtiXQT1+oPT9xgwqGw/F0jgNkyjytN4EYO47PekMA31e6PrDFrFGBXx?=
- =?us-ascii?Q?ZVNTpu26RHtbxxXJIQ5Ti3Rl7+odnrcsGp0cEqQDQnUwHNus4IadrGGmjGTh?=
- =?us-ascii?Q?/xgjXvGtpqbMAlR6pZix75RR5K4QkaVDm3bD72SJSYjccR/q4P/p6gOMQQ8K?=
- =?us-ascii?Q?1tOqcFUeygZ0S/GPCMlddaGq?=
-X-OriginatorOrg: windriver.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 46434145-eaa3-4a28-ce1f-08d9945b32e7
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR11MB2747.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Oct 2021 06:22:46.7672
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 8ddb2873-a1ad-4a18-ae4e-4644631433be
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: jiping.ma2@windriver.com
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM5PR11MB1564
-X-Proofpoint-GUID: ZXGclHwBup2Box5AMma3toGOFzVyo6ZA
-X-Proofpoint-ORIG-GUID: ZXGclHwBup2Box5AMma3toGOFzVyo6ZA
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.1.0
+Content-Language: en-US
+From:   Abdul Haleem <abdhalee@linux.vnet.ibm.com>
+Subject: [next-20211019][PPC] kernel panics with lspci -vvnn command
+To:     linuxppc-dev <linuxppc-dev@lists.ozlabs.org>
+Cc:     linux-next <linux-next@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>,
+        linux-pci@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>,
+        Stephen Rothwell <sfr@canb.auug.org.au>, dougmill@us.ibm.com
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: DOF6jFKjKYon93cxz65m4V8F3fAOK05q
+X-Proofpoint-ORIG-GUID: DOF6jFKjKYon93cxz65m4V8F3fAOK05q
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
  definitions=2021-10-21_01,2021-10-20_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0 clxscore=1015
- malwarescore=0 bulkscore=0 phishscore=0 adultscore=0 suspectscore=0
- lowpriorityscore=0 priorityscore=1501 spamscore=0 mlxlogscore=999
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2110210028
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 bulkscore=0
+ impostorscore=0 malwarescore=0 mlxscore=0 suspectscore=0 mlxlogscore=487
+ clxscore=1011 phishscore=0 lowpriorityscore=0 priorityscore=1501
+ spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109230001 definitions=main-2110210029
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-We met the issue DM complains that it can't find the disk specified
-in the deployment config file after we updated the Linux kernel to 5.10.
-The error is "failed to find disk for path /dev/disk/by-path/
-pci-0000:3b:00.0-sas-0x31402ec001d92983-lun-0"
+Greeting's
 
-This happens because device type SATA is excluded from being
-processed with the function pqi_is_device_with_sas_address.
-which causes all SATA type disk drives to appear the same, having
-zeroes in the lun name. /dev/disk/by-path/
-pci-0000:3b:00.0-sas-0x0000000000000000-lun-0
+Today's next kernel panics when lspci -vvnn commands is executed on my 
+powerpc machine
 
-We can add type SA_DEVICE_TYPE_SATA to class device_with_sas_address,
-since it will also get the sas_address from wwid. and works transparently
-with the old kernel without gaps.
+# lspci -vvnn
+0012:01:00.0 Fibre Channel [0c04]: QLogic Corp. ISP2722-based 16/32Gb 
+Fibre Channel to PCIe Adapter [1077:2261] (rev 01)
+     Subsystem: IBM Device [1014:0650]
+     Physical Slot: U78D8.ND0.FGD004S-P0-C2-C0
+     Device tree node: 
+/sys/firmware/devicetree/base/pci@800000020000012/fibre-channel@0
+     Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr+ 
+Stepping- SERR+ FastB2B- DisINTx-
+     Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- 
+<TAbort- <MAbort- >SERR- <PERR- INTx-
+     Latency: 0, Cache Line Size: 128 bytes
+     Interrupt: pin A routed to IRQ 48
+     NUMA node: 2
+     IOMMU group: 0
+     Region 0: Memory at 40000285000 (64-bit, prefetchable) [size=4K]
+     Region 2: Memory at 40000282000 (64-bit, prefetchable) [size=8K]
+     Region 4: Memory at 40000100000 (64-bit, prefetchable) [size=1M]
+     Expansion ROM at 40000240000 [disabled] [size=256K]
+     Capabilities: [44] Power Management version 3
+         Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA 
+PME(D0-,D1-,D2-,D3hot-,D3cold-)
+         Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+     Capabilities: [4c] Express (v2) Endpoint, MSI 00
+         DevCap:    MaxPayload 2048 bytes, PhantFunc 0, Latency L0s 
+<4us, L1 <1us
+             ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ 
+SlotPowerLimit 0.000W
+         DevCtl:    CorrErr+ NonFatalErr+ FatalErr+ UnsupReq+
+             RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+ FLReset-
+             MaxPayload 512 bytes, MaxReadReq 4096 bytes
+         DevSta:    CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- 
+TransPend-
+         LnkCap:    Port #0, Speed 8GT/s, Width x8, ASPM L0s L1, Exit 
+Latency L0s <2us, L1 <2us
+             ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp+
+         LnkCtl:    ASPM Disabled; RCB 64 bytes, Disabled- CommClk-
+             ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+         LnkSta:    Speed 8GT/s (ok), Width x8 (ok)
+             TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+         DevCap2: Completion Timeout: Range B, TimeoutDis+ NROPrPrP- LTR-
+              10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- 
+EETLPPrefix-
+              EmergencyPowerReduction Not Supported, 
+EmergencyPowerReductionInit-
+              FRS- TPHComp- ExtTPHComp-
+              AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+         DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis+ LTR- 
+OBFF Disabled,
+              AtomicOpsCtl: ReqEn-
+         LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retimer- 
+2Retimers- DRS-
+         LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+              Transmit Margin: Normal Operating Range, 
+EnterModifiedCompliance- ComplianceSOS-
+              Compliance De-emphasis: -6dB
+         LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete+ 
+EqualizationPhase1+
+              EqualizationPhase2+ EqualizationPhase3+ 
+LinkEqualizationRequest-
+              Retimer- 2Retimers- CrosslinkRes: unsupported
+     Capabilities: [88] Vital Product Data
+BUG: Kernel NULL pointer dereference on read at 0x000080a0
+BUG: Unable to handle kernel data access on read at 0x3949ffff40920078
+BUG: Unable to handle kernel data access on read at 0x694a0002e94d00f0
+Faulting instruction address: 0xc0000000006f4498
+Faulting instruction address: 0xc0000000001d3680
+Oops: Kernel access of bad area, sig: 11 [#1]
+LE PAGE_SIZE=64K MMU=Radix SMP NR_CPUS=2048 NUMA pSeries
+Faulting instruction address: 0xc0000000001abcf0
+Modules linked in:
+Thread overran stack, or stack corrupted
+  rpadlpar_io rpaphp nfnetlink tcp_diag udp_diag inet_diag unix_diag 
+af_packet_diag netlink_diag bonding rfkill sunrpc raid456 async_raid6_recov
+async_memcpy async_pq async_xor async_tx xor raid6_pq libcrc32c 
+pseries_rng xts vmx_crypto gf128mul binfmt_misc sch_fq_codel ip_tables ext4
+mbcache jbd2 dm_service_time sd_mod sg qla2xxx ibmvfc ibmveth nvme_fc 
+nvme_fabrics nvme_core t10_pi scsi_transport_fc dm_multipath dm_mirror
+dm_region_hash dm_log dm_mod fuse
+CPU: 24 PID: 0 Comm: swapper/24 Kdump: loaded Not tainted 
+5.15.0-rc5-next-20211012-autotest #1
+NIP:  c0000000006f4498 LR: c0000000006f9c18 CTR: c000000000026e60
+REGS: c000000006797560 TRAP: 0380   Not tainted 
+(5.15.0-rc5-next-20211012-autotest)
+MSR:  8000000000009033 <SF,EE,ME,IR,DR,RI,LE>  CR: 42000824  XER: 00000000
+CFAR: c0000000006f440c IRQMASK: 1
+GPR00: c00000000022434c c000000006797800 c0000000019b2500 c00000117db0ac28
+GPR04: c00000117db0a520 0000000000000000 3949ffff40920078 0000000000000001
+GPR08: c000000063bd3cf0 c00000000073a7a8 892100602e3f0000 7265677368657265
+GPR12: c000000000026e60 c00000117fb4be80 0000000000000000 000000001eef2b00
+GPR16: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+GPR20: 0000000000000000 0000000000000000 0000000000000003 0000000000000001
+GPR24: 0000638695346493 0000000000000002 0000000000000003 c00000117db0a480
+GPR28: c00000117db0a480 0000000000000000 c00000117db0a520 c00000117db0ac28
+NIP [c0000000006f4498] rb_erase+0x158/0x440
+LR [c0000000006f9c18] timerqueue_del+0x58/0xa0
+Call Trace:
+[c000000006797800] [0000000000000003] 0x3 (unreliable)
+[c000000006797830] [c00000000022434c] __remove_hrtimer+0x5c/0xf0
+[c000000006797870] [c000000000224b84] __hrtimer_run_queues+0x144/0x360
+[c0000000067978f0] [c000000000225b90] hrtimer_interrupt+0x120/0x2f0
+[c0000000067979a0] [c0000000000272d4] timer_interrupt+0x144/0x3e0
+[c000000006797a00] [c000000000009a60] decrementer_common_virt+0x210/0x220
+--- interrupt: 900 at plpar_hcall_norets_notrace+0x18/0x2c
+NIP:  c0000000000ef100 LR: c0000000009bca88 CTR: 0000000000000000
+REGS: c000000006797a70 TRAP: 0900   Not tainted 
+(5.15.0-rc5-next-20211012-autotest)
+MSR:  800000000280b033 <SF,VEC,VSX,EE,FP,ME,IR,DR,RI,LE>  CR: 24000224  
+XER: 00000000
+CFAR: 0000000000000c00 IRQMASK: 0
+GPR00: 0000000000000000 c000000006797d10 c0000000019b2500 0000000000000000
+GPR04: 8004001f54ca7c10 0000000000000000 0000000000000004 0000000000000018
+GPR08: 0000000000000000 0000000000000090 0000000000000001 8004001f54ca7c00
+GPR12: 0000000000000000 c00000117fb4be80 0000000000000000 000000001eef2b00
+GPR16: 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+GPR20: 0000000000000000 0000000000000000 0000000000000000 c0000000018f1e28
+GPR24: 0000000000000001 0000638691f200fe 0000000000000000 0000000000000000
+GPR28: 0000000000000001 0000000000000000 c000000001192090 c000000001192098
+NIP [c0000000000ef100] plpar_hcall_norets_notrace+0x18/0x2c
+LR [c0000000009bca88] check_and_cede_processor+0x48/0x60
+--- interrupt: 900
+[c000000006797d10] [c00000117db0ac28] 0xc00000117db0ac28 (unreliable)
+[c000000006797d70] [c0000000009bcec4] dedicated_cede_loop+0x94/0x1a0
+[c000000006797dc0] [c0000000009b97f4] cpuidle_enter_state+0x2d4/0x4e0
+[c000000006797e20] [c0000000009b9a98] cpuidle_enter+0x48/0x70
+[c000000006797e60] [c0000000001a0264] call_cpuidle+0x44/0x80
+[c000000006797e80] [c0000000001a0840] do_idle+0x340/0x390
+[c000000006797f00] [c0000000001a0ac4] cpu_startup_entry+0x34/0x50
+[c000000006797f30] [c00000000006144c] start_secondary+0x27c/0x290
+[c000000006797f90] [c00000000000d254] start_secondary_prolog+0x10/0x14
+Instruction dump:
+7d284b78 e9280008 7fa95040 409eff9c e9280010 e8e90000 e9490008 70e70001
+41820168 e8c90010 2fa60000 419e0010 <e8e60000> 70e70001 41820044 2faa0000
+---[ end trace 3024a0b7ce3c6f83 ]---
 
-Signed-off-by: Jiping Ma <jiping.ma2@windriver.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 1 +
- 1 file changed, 1 insertion(+)
+# lspci -nn
+0012:01:00.0 Fibre Channel [0c04]: QLogic Corp. ISP2722-based 16/32Gb 
+Fibre Channel to PCIe Adapter [1077:2261] (rev 01)
+0012:01:00.1 Fibre Channel [0c04]: QLogic Corp. ISP2722-based 16/32Gb 
+Fibre Channel to PCIe Adapter [1077:2261] (rev 01)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index ecb2af3f43ca..df16e0a27a41 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2101,6 +2101,7 @@ static inline void pqi_mask_device(u8 *scsi3addr)
- static inline bool pqi_is_device_with_sas_address(struct pqi_scsi_dev *device)
- {
- 	switch (device->device_type) {
-+	case SA_DEVICE_TYPE_SATA:
- 	case SA_DEVICE_TYPE_SAS:
- 	case SA_DEVICE_TYPE_EXPANDER_SMP:
- 	case SA_DEVICE_TYPE_SES:
+Problem is not seen with 5.15.0-rc4-next-20211005
+
 -- 
-2.31.1
+Regard's
+
+Abdul Haleem
+IBM Linux Technology Center
 
