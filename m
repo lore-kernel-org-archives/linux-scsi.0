@@ -2,103 +2,96 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D844C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 16:22:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D381BC4332F
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 16:39:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1F3DB610EA
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 16:22:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAD66615E3
+	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 16:39:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231627AbhJUQZF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Oct 2021 12:25:05 -0400
-Received: from mail-pf1-f176.google.com ([209.85.210.176]:47019 "EHLO
-        mail-pf1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230072AbhJUQZE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Oct 2021 12:25:04 -0400
-Received: by mail-pf1-f176.google.com with SMTP id x66so1066835pfx.13;
-        Thu, 21 Oct 2021 09:22:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=XdjveOQuWQpe9c88w6YkAw9IMQkaAD2HUvEGV/fm9Uo=;
-        b=FsJYZ+hmsYxlhOzVJOLBJVM7Wdm4/IcXkUDxgxZFuH/8nGc6ytC48+tAspP50jTJxp
-         6/XdCtMvGnOoLAwxmK/lVYHUDxm5RjC8urjC3x8nOqVgMNJ4P1wnLF1gqvFmT+GEe0VE
-         CQdjQVUmPG+cQfoI0jXeaSOGxgHiPCZ69Tk+XRVq8W0DyvKx2WCyBw8H+BoQsT2pIlGr
-         G+zclEQCDXTuG9Kyd9+1wq6c6XBFLsaMVhkLwdhQaaeK3/BVXgO7GM4r18EDrwCF74eY
-         yHwRQR7+gdoljUQPuXskHhFixt77oQeQxpud0iGU3+PfHvBMsIWJ+3Xiz8iedRK5mXND
-         QyaQ==
-X-Gm-Message-State: AOAM530XK536C55xCFCiA04q528qelDIBqjoLX1eect/K243reZJEKtx
-        GrhF0yqCfLyDElHl8+qDVk4=
-X-Google-Smtp-Source: ABdhPJzTVu0+/rGQjKRaHpEV4QXGZMVCOqOrVWkgv0AeSRIkkc4jbpl7CEra0juPsyBghRAy6pQTCg==
-X-Received: by 2002:a62:3387:0:b0:44d:7ec:906a with SMTP id z129-20020a623387000000b0044d07ec906amr6543521pfz.69.1634833368168;
-        Thu, 21 Oct 2021 09:22:48 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:452c:8e0d:d8a1:4d6])
-        by smtp.gmail.com with ESMTPSA id s22sm6407691pfe.76.2021.10.21.09.22.47
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Oct 2021 09:22:47 -0700 (PDT)
-Subject: Re: please revert the UFS HPB support
-To:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org,
-        Daejun Park <daejun7.park@samsung.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-References: <20211021144210.GA28195@lst.de>
- <84fac5a3-135a-2ac8-5929-a1031a311cb7@kernel.dk>
- <20211021151520.GA31407@lst.de> <20211021151728.GA31600@lst.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <2cba13c3-bcd5-2a47-e4cb-54fa1ca088f3@acm.org>
-Date:   Thu, 21 Oct 2021 09:22:46 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S232090AbhJUQlX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Oct 2021 12:41:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42320 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230103AbhJUQlW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Oct 2021 12:41:22 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 43783C0613B9;
+        Thu, 21 Oct 2021 09:39:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=+HTJWJrd9rZKk81dNjjaOacqrLI32yRAcBDJVKSMPKU=; b=fDQKgsDz6lz/2o0SgY00VzX+Dq
+        AVM6dWMf6vomhDcR+uJaiANhzqqDW/KSK1SRfoPUmWVKLSbjJZGA1ZEuvVFjmEDXFAZ6xy1d/dPB+
+        H+Y1vzMxLr4gT766Fd9xwI0mLv92P97flZflO7UbnJ9gID7regIXJvm/7sc0sfBvKKZTibRcjwX9I
+        S2qaowC3KN03Ms0HB4qSwdf8jc1aDB+pKxBlKaUyKtBgQ+eUWfuokUZv6x3u/x6UhcLqfAfjWQpKH
+        GbGnFJo+S1cgErwXS8azOYZ2ogzfwj22prCFURukhk1nC2HeG6AQKpjQxZtmGKnO0OpY6RsYlRGS5
+        khIFBxrg==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mdb5l-008OYu-UU; Thu, 21 Oct 2021 16:38:57 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     axboe@kernel.dk, hch@lst.de, penguin-kernel@i-love.sakura.ne.jp,
+        schmitzmic@gmail.com, efremov@linux.com, song@kernel.org,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, hare@suse.de, jack@suse.cz,
+        ming.lei@redhat.com, tj@kernel.org
+Cc:     linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH v3 0/3] last batch of add_disk() error handling conversions
+Date:   Thu, 21 Oct 2021 09:38:53 -0700
+Message-Id: <20211021163856.2000993-1-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-In-Reply-To: <20211021151728.GA31600@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/21/21 8:17 AM, Christoph Hellwig wrote:
-> On Thu, Oct 21, 2021 at 05:15:20PM +0200, Christoph Hellwig wrote:
->>>> I just noticed the UFS HPB support landed in 5.15, and just as
->>>> before it is completely broken by allocating another request on
->>>> the same device and then reinserting it in the queue.  It is bad
->>>> enough that we have to live with blk_insert_cloned_request for
->>>> dm-mpath, but this is too big of an API abuse to make it into
->>>> a release.  We need to drop this code ASAP, and I can prepare
->>>> a patch for that.
->>>
->>> That sounds awful, do you have a link to the offending commit(s)?
->>
->> I'll need to look for it, busy in calls right now, but just grep for
->> blk_insert_cloned_request.
-> 
-> Might as well finish the git blame:
-> 
-> commit 41d8a9333cc96f5ad4dd7a52786585338257d9f1
-> Author: Daejun Park <daejun7.park@samsung.com>
-> Date:   Mon Jul 12 18:00:25 2021 +0900
-> 
->      scsi: ufs: ufshpb: Add HPB 2.0 support
->          
->      Version 2.0 of HBP supports reads of varying sizes from 4KB to 1MB.
-> 
->      A read operation <= 32KB is supported as single HPB read. A read between
->      36KB and 1MB is supported by a combination of write buffer command and HPB
->      read command to deliver more PPN. The write buffer commands may not be
->      issued immediately due to busy tags. To use HPB read more aggressively, the
->      driver can requeue the write buffer command. The requeue threshold is
->      implemented as timeout and can be modified with requeue_timeout_ms entry in
->      sysfs.
+This is v3 series of the last patch set which should be considered
+once nvdimm/blk driver is removed, as Dan Williams noted it would be
+gone and once *all* add_disk() error handling patches have been merged.
 
-(+Daejun)
+I rebased Tetsuo Handa's patch onto the latest linux-next as this
+series depends on it, and so I am sending it part of this series as
+without it, this won't apply. Tetsuo, does the rebase of your patch
+look OK?
 
-Daejun, can the HPB code be reworked such that it does not use 
-blk_insert_cloned_request()? I'm concerned that if the HPB code is not 
-reworked that it will be removed from the upstream kernel.
+If it is not too much trouble, I'd like to ask for testing for the
+ataflop changes from Michael Schmitz, if possible, that is he'd just
+have to merge Tetsuo's rebased patch and the 2nd patch in this series.
+This is all rebased on linux-next tag 20211020.
 
-Thanks,
+Changes in this v3:
 
-Bart.
+  - we don't set ataflop registered to true when we fail, an issue
+    spotted during review by Tetsuo
+  - rebased to take into consideration Tetsuo's changes, both his old
+    and the latest patch carried in this series
+  - sets the floppy to null on failure from add_disk(), an issue spotted
+    by Tetsuo during patch review
+  - removes out label from ataflop as suggested by Finn Thain
+  - we return the failure from floppy_alloc_disk as suggested by Finn Thain
+
+Luis Chamberlain (2):
+  block: make __register_blkdev() return an error
+  block: add __must_check for *add_disk*() callers
+
+Tetsuo Handa (1):
+  ataflop: remove ataflop_probe_lock mutex
+
+ block/bdev.c            |  5 +++-
+ block/genhd.c           | 27 +++++++++++------
+ drivers/block/ataflop.c | 66 +++++++++++++++++++++++++----------------
+ drivers/block/brd.c     |  7 +++--
+ drivers/block/floppy.c  | 17 ++++++++---
+ drivers/block/loop.c    | 11 +++++--
+ drivers/md/md.c         | 12 ++++++--
+ drivers/scsi/sd.c       |  3 +-
+ include/linux/genhd.h   | 10 +++----
+ 9 files changed, 105 insertions(+), 53 deletions(-)
+
+-- 
+2.30.2
+
