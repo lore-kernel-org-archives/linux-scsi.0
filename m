@@ -2,219 +2,368 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3058C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 04:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 64DE9C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 05:19:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F61F60F93
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 04:18:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4588A60E97
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 05:19:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230175AbhJVEUV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Oct 2021 00:20:21 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:2928 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229463AbhJVEUV (ORCPT
+        id S230175AbhJVFVt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Oct 2021 01:21:49 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:35414 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229478AbhJVFVs (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Oct 2021 00:20:21 -0400
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19M2vb9k016544;
-        Fri, 22 Oct 2021 04:18:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=2P+9WQKlO+3uoRe6ZgqvKaMyNRWT8Kc0lhX3wlohJm8=;
- b=uS7koApQd5gxEye7JZjJBO3+fw9FyuPZLUWz0Qxk7bx3zUgK5ddadZcC4tmTqjlQHHwv
- PL1fCerz5y4jWB5BQSHp9Erv6xiUhhQaKdcB5xrA3skTQ3hwf0khzlW2uEVpgFbcelp0
- aFLn4M+4+DnrQ1QuMx22ZGFWnItye6mBXSdRBBBGUi5JdgaPxNVi2c1Pum8klcsqX4PG
- 8oCzvu83xPapKHhsaRxbOcGAGb0/PtQcoIuDRrscySNjCcqkbP4SYldctTBG03HSPKn4
- RXzzqibS711Z2Cnl4fPjyLs65X1g1wxCQN+Fea5y2HaaHZYuquck0lMDzXLsLP5Agria Tg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3btrfm8mne-1
+        Fri, 22 Oct 2021 01:21:48 -0400
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19M3R0C3010002;
+        Fri, 22 Oct 2021 05:19:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references :
+ content-transfer-encoding : content-type : mime-version;
+ s=corp-2021-07-09; bh=i1K9Q+8wKKbVXZVifF2EhDXzLFqt2vHRHXa5/AqZccg=;
+ b=NEFKk8RdkvtlwtuIOsAx6dXVkP6ll5DK4Gw7p9w5Qk83B3Jr25B2C9BLfMg1scVliRCm
+ OFvc7S67lIuBQTGbE6KmQtMbHuVqpzHMMsHdkwtHfaAMG+3yVmTg0FFkPtZvjFawa5Dh
+ Pwvf+H7aI4TxSuZBXBtGyK1KHlBvpr2R1e7oAJPeA9TmYAgExPRLiO5gzkQX08ZPnizZ
+ I1Zi3Q7d6VF0cZr8tfbH5Vl+DPG4serifbQguSzsTKKex5vlVpp5X8wXZjU8T2IMDe+F
+ Kr41RMDn1LBqiGLiFkxY5wMTxd+Hu2hsaC3mZB3koc6t+C2acqJm6TK44sPYFLxwqqXC TQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3bundfg9e9-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Oct 2021 04:18:03 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19M4Ff7s129344;
-        Fri, 22 Oct 2021 04:18:02 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2100.outbound.protection.outlook.com [104.47.58.100])
-        by userp3030.oracle.com with ESMTP id 3bqkv32w09-1
+        Fri, 22 Oct 2021 05:19:26 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19M5BHIZ139141;
+        Fri, 22 Oct 2021 05:19:25 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2175.outbound.protection.outlook.com [104.47.58.175])
+        by aserp3020.oracle.com with ESMTP id 3bqpja16nf-2
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Oct 2021 04:18:02 +0000
+        Fri, 22 Oct 2021 05:19:25 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ipuYSBdftJLhFFsL1ZK30RrLgXV07TP31rGdldwZcAtDXpl5h6CDIsvDoxw8rT0y5xOwBgoZ+StE8D9PvtCQ4ue3r661DZJHqoIMDIMbXkLH8GTmf8T4oq+ASmL59Mm2H+w4N6JCSLiZFaeUH6JXTl9se4hgjGDNlj426+8J69pzl5VyJ0YnmBWrEHA5xj4QjvAAEmnPPdJh1E3S8vlURmLTIIVzJfQeCLOAjZl/R1kXZbbLl+greSYafzJROqmVoQ6iHuZe8PZ65ZMpORJLhuQbEx4QWByBL+96sdhcQNuC9P1UMkanUU8JYRswTdnhhv/8TFuaU9LJdSJdCGK/Ww==
+ b=WwdsViYEWmjSq/cTyfxZ01l84azbV/9HElzS5Bvg8m33/loGSkDx1o3H4IqIW4u4uwM0MncVvYvkT+2IfGEhiVvU8Mkp5y6SSZO494EM1xks7B75sJe8fi/yO00UMr64mI3YcvHZAUPBdeWmmpbuXmbGg8v/2raU4Q9eWivmtyeRRH2bhPrq5/AZkTTc4pn8Yk1F8gH2VTy56G3TkqAssy32J9sqPwt3bq5SyJoEHzkldyBvs392cgZUnDJhojjzg9GiqtwlO8tpZOkpTEd1lo2UogplWJVMNtxW5UBatNgn/LZTsr5MnKJrRV5rj25+KEf9juilR/k7lJNNqnHgdA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2P+9WQKlO+3uoRe6ZgqvKaMyNRWT8Kc0lhX3wlohJm8=;
- b=hnEPwi8Ute/i8klzNPQo9HN4NdHNHbeJI5k3bI8dwyw83m9ZYU9iMhszckyxrd2/zaCL32VJilIfj8zi2awdCpJUpf6WVHhlKyvdbA15y87xeTl99UdkRKjpICF9GQe4QhLGz7EI9Cu/67Z1XRlB//X/ofjfWQrGX296K2bEODLBa3t7KjAl0DT+MYALxpUDyVEWXwVamTXDZ/NL3+8FFU8CeObc43PNn3uP2Zcl3jNMGcJUd0ScZAzGk1ILG++K8SJ0IYaiMHnrfjfJzoJt8zNhStsSaJ37VrM/I4wjrvQ4WM3JsxlcgDUbkhLAL+yfgHOQNND0kNz79Vyf/iCAGQ==
+ bh=i1K9Q+8wKKbVXZVifF2EhDXzLFqt2vHRHXa5/AqZccg=;
+ b=NNyqWFFOPKnkGF914Di3bXdY1141JScO+L0bgFppncE7VXNCeMGP+hRxTqtgTCoMKjuD0ojI8Ut7fwzeWDmDpzgxydG87K0QRkewZaNkONxAlNXs2CkK+iih7yoHO5G1CBg25vTHEUlFumFJTFiSR3+zf++ZOwSDWFzQqC+OMHRJPdSIi8hT8v+Mi7NAi+xMo5xStTi+0WbCCLNaA7jjwnZJXpVpvB3fAm2Pcsv7qYwuhwwV8wwRzwS888DgfXOMCeCIEmGg2fXSxbf6NaTUEFXdRLefaXL4w8YpeCVM40J9G5/ecqRoBXGOzw5eny7TnFDF8KSxwOSuAzxGcRudhg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=2P+9WQKlO+3uoRe6ZgqvKaMyNRWT8Kc0lhX3wlohJm8=;
- b=YklZaVGGyLjQ4jM1I4Kop/EiIfpR6QHOInCIgfXKzR1read2yyFfjfL+YeuLSoKPri+rozCFbvpyg33DkBTKdSGjdAZE1lfJE6m7Le5PjkXb6zRT326SHDGqd0Y6N47DLH+gGfjnjbMPkuxn1UXp2IqkXOjPMfrSN3vdviBSJqk=
-Authentication-Results: yadro.com; dkim=none (message not signed)
- header.d=none;yadro.com; dmarc=none action=none header.from=oracle.com;
+ bh=i1K9Q+8wKKbVXZVifF2EhDXzLFqt2vHRHXa5/AqZccg=;
+ b=IPOfpeZ5vrvXKhERB9j3VKwNTSyswAEU9kc4YsjKbZtGhinaBsXQv+9kiinvBx8h35zWxOmLfWZXEOzL3/TKHTP+l46CEEzvfD8bZN4QfQ3RmAmG8oc79KeHjFlKcDF1w8qEuZzUzOlvFgd83ZJe1fOqUmOq6jRBIJx09n8oFvM=
+Authentication-Results: vger.kernel.org; dkim=none (message not signed)
+ header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
- DM6PR10MB3388.namprd10.prod.outlook.com (2603:10b6:5:1b1::16) with Microsoft
+ DS7PR10MB4974.namprd10.prod.outlook.com (2603:10b6:5:3a0::24) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.4628.18; Fri, 22 Oct 2021 04:18:00 +0000
+ 15.20.4628.16; Fri, 22 Oct 2021 05:19:23 +0000
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::195:7e6b:efcc:f531]) by DM5PR10MB1466.namprd10.prod.outlook.com
  ([fe80::195:7e6b:efcc:f531%5]) with mapi id 15.20.4628.018; Fri, 22 Oct 2021
- 04:18:00 +0000
-Message-ID: <fb6ca898-8a70-e626-b3a2-c3ad1734c953@oracle.com>
-Date:   Thu, 21 Oct 2021 23:17:58 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: [PATCH v4] target: core: remove from tmr_list at lun unlink
-Content-Language: en-US
-To:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org
-Cc:     linux-scsi@vger.kernel.org, linux@yadro.com,
-        Roman Bolshakov <r.bolshakov@yadro.com>
-References: <20211018135753.15297-1-d.bogdanov@yadro.com>
+ 05:19:23 +0000
 From:   Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <20211018135753.15297-1-d.bogdanov@yadro.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DM6PR12CA0029.namprd12.prod.outlook.com
- (2603:10b6:5:1c0::42) To DM5PR10MB1466.namprd10.prod.outlook.com
+To:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        stefanha@redhat.com, pbonzini@redhat.com, jasowang@redhat.com,
+        mst@redhat.com, sgarzare@redhat.com,
+        virtualization@lists.linux-foundation.org
+Cc:     Mike Christie <michael.christie@oracle.com>
+Subject: [PATCH] QEMU vhost-scsi: add support for VHOST_SET_VRING_WORKER
+Date:   Fri, 22 Oct 2021 00:19:00 -0500
+Message-Id: <20211022051911.108383-2-michael.christie@oracle.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211022051911.108383-1-michael.christie@oracle.com>
+References: <20211022051911.108383-1-michael.christie@oracle.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: DM6PR08CA0012.namprd08.prod.outlook.com
+ (2603:10b6:5:80::25) To DM5PR10MB1466.namprd10.prod.outlook.com
  (2603:10b6:3:b::7)
 MIME-Version: 1.0
-Received: from [20.15.0.204] (73.88.28.6) by DM6PR12CA0029.namprd12.prod.outlook.com (2603:10b6:5:1c0::42) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.18 via Frontend Transport; Fri, 22 Oct 2021 04:17:59 +0000
+Received: from localhost.localdomain (73.88.28.6) by DM6PR08CA0012.namprd08.prod.outlook.com (2603:10b6:5:80::25) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.16 via Frontend Transport; Fri, 22 Oct 2021 05:19:23 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 32054bee-0a28-49c4-efe4-08d99512eebc
-X-MS-TrafficTypeDiagnostic: DM6PR10MB3388:
-X-Microsoft-Antispam-PRVS: <DM6PR10MB338863CE2B5430C1B1BFA687F1809@DM6PR10MB3388.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Office365-Filtering-Correlation-Id: f999dce5-700c-476b-17d5-08d9951b828c
+X-MS-TrafficTypeDiagnostic: DS7PR10MB4974:
+X-Microsoft-Antispam-PRVS: <DS7PR10MB49746C497379556B182EB9EAF1809@DS7PR10MB4974.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:272;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: boYzAUe04Z+FtTKA9YY0A6DiebpRxvQifOPo0wNfhybJpsBvOF5J4N5IJqPouep53WSBElbIugGRIiqXkRYnYOabjwbyUcoP2F5gylkpXjhdslY99DtTxPaTxxX0WstMkCBaFXnhnkthqPRfiuYEks6BlT3af813811toN+1YORTionAVdCMzj0cYXNTx6fGYp30aKbL21TogXgIqy244N/uifT6QYXGy0PU7eCmkF4LCtLG1Blfep71OjORCyVBqIGA53rj2nvenI3TcZI7APWDEWdQ/1LFZpx5M5cB3Ga2CP/S/YY1YByIHYV+5vidvakKdCDuP38hZ31BZap5N5G2MeIelydy4dCHmghl9tiY7yzxX3mGDPZCgJ0GIi7Upx17yBQMyN7zwptFoYlvt06D7EGlNXemWgElIHWTsoNDMu5aPiZfvnhErJjbsQjzeCukk8e7fzrZF7vdIT1pTPFyunY4qQeH+04lsUfqzgIYLbCZkdsyhb1WpkW1ixuCLejfZvrs27WotncvdjIo5mGNcAzQT4GJqGqfZxdSg6GSEBtQXvjVsQWC3xeduLoCiHRbbUCYKwJOukAqL+rotHqgolXN+T6xV/mU1aMoXROqKfZ/xpqBaZTgfySVIvG5T57xq3w3ySI9bH/bZo9hEgrrLSHYQuVwziZkO/8PpjNCyZ7WPZi+L7zkRiIk1Oq6gsAApszrApdwyN7wPqJa3FxEGEyOIllktkeRk8TyZlKmM6Mizgy4S2VbQHPc0AN06lPWMxnmzH8YXSbTnDTus895ACFWLiQ5BpjqPu0szDetN9frkmLzfC9uWdl6CNs3hFl8E1Al33C2Uh1zOmlNPA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(2906002)(31696002)(66946007)(83380400001)(36756003)(316002)(4326008)(16576012)(86362001)(110136005)(8936002)(66556008)(38100700002)(8676002)(6706004)(53546011)(966005)(5660300002)(508600001)(186003)(26005)(31686004)(2616005)(956004)(6486002)(66476007)(78286007)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: e4+JtirSTEzlVcppqHHNGT61le4K0OJkBsstbjyoEkvPoXHXg1SDNLvT026NMi97h6wTy23qZgCVEhJxsBYfxCqDFbWl//5LEJmDdiI/W8s1hh+42B5bLLCilt93NxeSlPtERYV0VBgLW5Ij71sHNt2kHebvbrWxM6LxZdmRIfAE0zZa4PF0YHA2pc2YNhnh7UsFpwpwwvf1ovkCaHHBZaLgSh03nE83is9AMTN9ZgdWSYisu42UHZXD8vuAn9XYZqIQmkbrJfe+wEw5icZ6JOjG1Melde6MMOl1Cc0jt09wAfVo+LfprwC4prgMH/FC38Z1O1LrZteNm9ZP/f03HoqW72Iy4gkjh92/qZukEY04A2grFsxguXDuylkBeg4ElPDvyMIWP9o52QqlcSogUgihkhVbA0RXE6AJs8iRBhDfY4Y2mvnYL0QWDIY/o27Gb8f+hyKWGjM4L3QoL0+pRIY7jwGKeNz6rEe4aN/4d8QdyTfLU+wRRJGoafPcDn2W8dzZ98xIEgmbCyapeGvmPIRyIoP2ax3llLbOx2yGMMNx+t0bCdiJeYXpfKygaof+Ynf6v+zFpN3TECjzvLuTxByOxlQ5Qi9XBTdhVnfpd44IGAhqxJTiMTZ4JcP1VdpE+9yo5nVQzlSC1PAMMXMDPdJ8jBYcayPk3Wb2DndjzwKvNB2jffUnfj11bnid2Sl04HVJrTP5nP4wshEBXAWLPg==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(8676002)(107886003)(38350700002)(66556008)(4326008)(36756003)(6666004)(1076003)(508600001)(2906002)(66476007)(66946007)(8936002)(38100700002)(316002)(6506007)(186003)(26005)(6486002)(6512007)(52116002)(2616005)(86362001)(5660300002)(956004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?MTlGSE11SXRhaDVuQTkydTd0TWZ0N0M1K050VFNycWhlajMxSmpieGtGOVNV?=
- =?utf-8?B?QVdQZmxXN2EwSFppZnFUR1BIVGpZekdKcjBpWkMzY2tpOFNIOEZMZWErazJN?=
- =?utf-8?B?VU9IcUFsRSt0dWZsQllRVG9zVGRyelRKQnBxZENsazRadVhOZVNKY2x1cnVN?=
- =?utf-8?B?bjUvSDZFU3ZoS3VvV3NheWJmSldLanBjbENYSDBIV1V3TkYzRzVhNHlyRFNx?=
- =?utf-8?B?d2ZCYmV0S203R2lYZllFdzZUMnZZRFNhR1lZQWp5THp5dEQ5ZjM2bWIvSEJh?=
- =?utf-8?B?bVFDdGNCY2EwdEdiZjRha2JDWXVCbXMwMEw0YjlXNU14UFZEQ25KMXNDdUZU?=
- =?utf-8?B?emljMEkrbDZ4ZWNUTFQxbTZXVStZb0M4aWJkeTI2ZTFBT3paakU4dXRDVVcv?=
- =?utf-8?B?dXZ5dnczR1ZEaVdoaDc5NkcyaDVjdmxyaHJGTGNLbk02cmJPTk1ZTFcrbUpF?=
- =?utf-8?B?Q0FKMlREVnh4S2VzQVVHZVVJQS9hM1V6QWg1amRJSUoxVzByTHlIemc3bzV3?=
- =?utf-8?B?aGlIT2tRNldIYU9qOEJJOC9VMWNwSzgrd3F4anNHMVQrdTZCcTdMWjh1cWRp?=
- =?utf-8?B?MVlQaTZySGpBVktiRG9aMTNFalgrekplTy9IUHRnSURYY2ZUQmNGVE13ai9P?=
- =?utf-8?B?Mkp2VWxzM2NlU3ZrQ1NvUHl0SkxjT2wwZ202M1RiZDd6UlprQ0JEeTc5SE9O?=
- =?utf-8?B?MVJRcnBSaUZMSDR4cWFnRThMeGtEK0RJNW9pUjU4aUFYaVVsRDQrRUZPQkdz?=
- =?utf-8?B?eXVkbDRQN0VuWUwvL3hvNjJQQ3BLWXZLSTF6ZGhXYzRTRjZzdFhOVFh1STRZ?=
- =?utf-8?B?WlprdXdyTytqTmUzbzR6eHRPTE0yVkJaMFc1VHQvakduUzZnd3ZjWmplem9N?=
- =?utf-8?B?VjZzTGJzMzRMNnlGbjZGRlhhdEhodEtKaFFaVmNzelBiT1NzRStZRGdvbjQ3?=
- =?utf-8?B?YXE4aFQrWitGVk5ncnVMcGdrOVpKV245U2d1TUpkTzBMUVhSVHdQR3AxUk9U?=
- =?utf-8?B?dkg3bEw0TmhJWWYzdURwVmFGdU5WWThrQnFwbWoxT1RwQTVSSlBKVU5IaHFK?=
- =?utf-8?B?TXhpVVZhTnhkZGdSYm0rYzFwTFE1bTlFaE0vaGZCajJtL0dVUGhMUXpXNUdD?=
- =?utf-8?B?WFUzVTVCTDAvc04rYmp4eXNFREF1QU9KNkt1T2pWSGVWM3IrOE5NS1NhVDRF?=
- =?utf-8?B?NEZYWWRScUhYd0FXdFNOYU1vQkh1UXBFTlZZV1Z1WTF1YUFOMkI5TDZlUktE?=
- =?utf-8?B?U3dBQVBCeW9ZVUxJaVdjbUd5b2oyL1FBaEhkZzg3K3k0b0p6U3EwcnYxRmNn?=
- =?utf-8?B?bU5CZmZDUUFpQk1JY2xxTGY4c2VLTWtqOWMrZ25qdzZtUGlWampqR2JObmVm?=
- =?utf-8?B?dXgxeHMrRmpiVXNlZU5Xa1BHb1dJLzBzcUhjMzY5ZVhETEZla3RWaWVhQ3Jj?=
- =?utf-8?B?T2VDT3Y0akEwZjM1MzM3bmlYVGJlUXgzdlVlakhSSmp3UStqbk1WazV5VzFm?=
- =?utf-8?B?aVhrNGt3WTVZaFMxSGsxcGx2clhHZW9LSDBMTEN3OUNMbVliOHNwMzcreGRO?=
- =?utf-8?B?VzZTQjkycHJTV2lBMHRHclU0QzdXaE40ZjdFWExDZTFPUEJmWkdUN2Zzc21O?=
- =?utf-8?B?UERqOFpHVElLQ1dBVDRtNmE4Y1F5T0RwT0JRckErdFpOcGFvWUNweEVabTlU?=
- =?utf-8?B?ZHJoUWRiN3N6MS9wYTNaYzdEY3RwRFMrYlNXRXd5Z1dCZEFzem1XazR5WDZs?=
- =?utf-8?B?SEtNbDRjYklvQ0x6UWprTVdKK0Rkdysvb1lINnViUXErdXJXWDBKYktUMDR5?=
- =?utf-8?B?VVRVZzFDL0VoejJkamUzWFJhMlVPeCs2QS82Y3B5Lyt6eDFxTmRMMjVJdTJ0?=
- =?utf-8?B?bUgrcThIK2xKSXRsRW1Oc0dEWlczNEEwNzdYdVZqcTlpY3hWKzNXYW5PRFox?=
- =?utf-8?Q?xm/ki0+EsTW9RxKlKx3AkqXfDhkL9lQJ?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Gi25lf6PCgs9d3n649q8QM7/a/Grn3NtbLmSKG3cir4n5dg1sjWbFAp8qKo8?=
+ =?us-ascii?Q?WRWlUbnh9pv+XrRPmOzVZmqQQ+n7wetEchUden7ffGvBS+BBR1wHwD8w+L85?=
+ =?us-ascii?Q?A6DTxqzi0/qwshnA8yh/ZO/bukwLMqxbsZV5ZZ9PEuRhocsDGrvVU5upRVHx?=
+ =?us-ascii?Q?HjHqLaHvnO+C2K64ASMZSPRUm/iFNK5o5veAPCo6rSSAf7e9aFPbX+wMb8sl?=
+ =?us-ascii?Q?WUyT1cXj0NM0Z0AEOQe2ls/iJLLwUYGgGEmWFzZcjSKRVOSCBFt/5CJXuAHZ?=
+ =?us-ascii?Q?PtqCcWxiKhKZ2cmBVyyWZ5Roxnus7HQ57VhRZg3aNdH9m2bGWB9afqeS2h89?=
+ =?us-ascii?Q?YPLOgcPG6+2nI1iNQdM00JpYoWZHkRQe4Lehan7YrAPFdqaSEZDqLnhe8rxY?=
+ =?us-ascii?Q?Uk5iAYPgg846q1cmYw4MqX3dJ2Rchkk5GNXInSkRaPDaRhG2Et1EmKsi5fyj?=
+ =?us-ascii?Q?KdHKAeX4BVy79WHs1VaCIAU+n23N968AgFYa/kpmgatesOc6B/yNKZBJ16ZP?=
+ =?us-ascii?Q?X7GeqrvwbMljIrnde9i+Ens3mLUPP+hgiCFIyc3FC5PuGR+Hw+knd1WC3Wyw?=
+ =?us-ascii?Q?mjfUuTSUkObxMNGu7DxrPrbaE/HeRQq1joBn1qBi172wgnrE1KP/0hdXZfR4?=
+ =?us-ascii?Q?ekJ4hhQ4qTrqYfweRRwZ47R8mcoKswPS7eAyZasA8/5YRXuXKad3ze5AYaz3?=
+ =?us-ascii?Q?sfKqGBtYu1dnCcLTp1OEm9UVYDoCqVx28M5/WcRMT7JQGGDiLGherBFHe8pD?=
+ =?us-ascii?Q?Ax0EeU+BICH2pJaKYz0H97KXm/X4eWXdA/+MztvTvkvf2NU8b3tOLM1ehddJ?=
+ =?us-ascii?Q?P8QFH4veazRu8jLfbZ7UpuJsxF2HA48iouqHfDQb2jAqNqcPzXbpY0BhUEm9?=
+ =?us-ascii?Q?VDk1rgBpHbvBXAkNQ/v9VdrWKqD7jFKB02Mo1XltI+C5KKicZ3oSnXBbKnca?=
+ =?us-ascii?Q?e0E5cjEpHedHR4roniKoYub8yHF3TTx8uQb/xDXXSMUW+QQX+LSzUKrRq7pg?=
+ =?us-ascii?Q?4s8YBkG34uRtXnlnyWyvUKulrIUeUpRPtmlviy8Fmy2fjX42+Fm29sjDlTeC?=
+ =?us-ascii?Q?GLyQfBQvWj6UUC0lTb5pFyXRR9yhwH4rhk5sgiBrpBBAjXWNo1nn/0xKIi42?=
+ =?us-ascii?Q?v3iUkG0fyjC79F3JPZgCmkNuk2bsRIe7uxoj7V96PEHbJ617V3IcEgVzpRhh?=
+ =?us-ascii?Q?ymDTqybN1ldr3dPHCMtV4fXyb2ZVsPvlG5Dsj1T9xbYX8RqzzLsQgHomwV7e?=
+ =?us-ascii?Q?9oPrpQN1OgT9+1ry0sqzjS6oMByfrcio1IPqxFS/9Lipr8o7NXjaJJGPQB2v?=
+ =?us-ascii?Q?WFFASeB9oHe9Lq1B2DCHMfNPQggfLrrXI5D4td05rbbRaRZGduWF545dnJ1t?=
+ =?us-ascii?Q?H6E+sR8OFUyCR5pUzAh0Y+WRN+iwB5EKjDDs8EnviMNXKY1D7srg1UXQsOoV?=
+ =?us-ascii?Q?BI5tACvffufzO7Eqf309jwPOl3fOIsyj?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 32054bee-0a28-49c4-efe4-08d99512eebc
+X-MS-Exchange-CrossTenant-Network-Message-Id: f999dce5-700c-476b-17d5-08d9951b828c
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2021 04:17:59.9604
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2021 05:19:23.8189
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
 X-MS-Exchange-CrossTenant-UserPrincipalName: michael.christie@oracle.com
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR10MB3388
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB4974
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10144 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=719 suspectscore=0
- malwarescore=0 bulkscore=0 phishscore=0 adultscore=0 spamscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2110220024
-X-Proofpoint-GUID: tknzHpFUJ6YE7btTwwLbEoaHaUTIGeGp
-X-Proofpoint-ORIG-GUID: tknzHpFUJ6YE7btTwwLbEoaHaUTIGeGp
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
+ malwarescore=0 phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109230001
+ definitions=main-2110220028
+X-Proofpoint-ORIG-GUID: HQT-aRGQerP9O0ct6PDlxYNb7ijAfH92
+X-Proofpoint-GUID: HQT-aRGQerP9O0ct6PDlxYNb7ijAfH92
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/18/21 8:57 AM, Dmitry Bogdanov wrote:
-> Currently TMF commands are removed from de_device.dev_tmf_list at
-> the very end of se_cmd lifecycle. But se_lun unlinks from se_cmd
-> up on a command status (response) is queued in transport layer.
-> It means that LUN and backend device can be deleted meantime and at
-> the moment of repsonse completion a panic is occured:
-> 
-> target_tmr_work()
-> 	cmd->se_tfo->queue_tm_rsp(cmd); // send abort_rsp to a wire
-> 	transport_lun_remove_cmd(cmd) // unlink se_cmd from se_lun
-> - // - // - // -
-> <<<--- lun remove
-> <<<--- core backend device remove
-> - // - // - // -
-> qlt_handle_abts_completion()
->   tfo->free_mcmd()
->     transport_generic_free_cmd()
->       target_put_sess_cmd()
->         core_tmr_release_req() {
->           if (dev) { // backend device, can not be null
->             spin_lock_irqsave(&dev->se_tmr_lock, flags); //<<<--- CRASH
-> 
-> Call Trace:
-> NIP [c000000000e1683c] _raw_spin_lock_irqsave+0x2c/0xc0
-> LR [c00800000e433338] core_tmr_release_req+0x40/0xa0 [target_core_mod]
-> Call Trace:
-> (unreliable)
-> 0x0
-> target_put_sess_cmd+0x2a0/0x370 [target_core_mod]
-> transport_generic_free_cmd+0x6c/0x1b0 [target_core_mod]
-> tcm_qla2xxx_complete_mcmd+0x28/0x50 [tcm_qla2xxx]
-> process_one_work+0x2c4/0x5c0
-> worker_thread+0x88/0x690
-> 
-> For FC protocol it is a race condition, but for iSCSI protocol it is
-> easyly reproduced by manual sending iSCSI commands:
-> - Send some SCSI sommand
-> - Send Abort of that command over iSCSI
-> - Remove LUN on target
-> - Send next iSCSI command to acknowledge the Abort_Response
-> - target panics
-> 
-> There is no sense to keep the command in tmr_list until response
-> completion, so move the removal from tmr_list from the response
-> completion to the response queueing when lun is unlinked.
-> Move the removal from state list too as it is a subject to the same
-> race condition.
-> 
-> Fixes: c66ac9db8d4a ("[SCSI] target: Add LIO target core v4.0.0-rc6")
-> Reviewed-by: Roman Bolshakov <r.bolshakov@yadro.com>
-> Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
-> 
-> ---
-> v4:
->  remove superfluous transport_lookup_tmr_lun that could race with lun
-> reset
-> v3:
->  remove iscsi fix as not related to the issue
->  avoid double removal from tmr_list
-> v2:
->  fix stuck in tmr list in error case
-> 
-> The issue exists from the very begining.
-> I uploaded a scapy script that helps to reproduce the issue at
-> https://gist.github.com/logost/cb93df41dd2432454324449b390403c4
+This patch adds support for the proposed ioctl that allows userspace
+to create virtqueue workers. For vhost-scsi you can set virtqueue_workers
+to:
 
+ 0: default behavior where we have 1 worker for all vqs.
+-1: create a worker per vq.
+>0: create N workers and allow the vqs to share them.
 
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+TODO:
+- Better support for sharing workers where we bind based on ISR to vq
+mapping.
+
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
+---
+ hw/scsi/vhost-scsi.c                         | 65 ++++++++++++++++++++
+ hw/virtio/vhost-backend.c                    |  8 +++
+ include/hw/virtio/vhost-backend.h            |  4 ++
+ include/hw/virtio/virtio-scsi.h              |  1 +
+ include/standard-headers/linux/vhost_types.h | 12 ++++
+ linux-headers/linux/vhost.h                  | 11 ++++
+ 6 files changed, 101 insertions(+)
+
+diff --git a/hw/scsi/vhost-scsi.c b/hw/scsi/vhost-scsi.c
+index 039caf2614eb..74363f9a519e 100644
+--- a/hw/scsi/vhost-scsi.c
++++ b/hw/scsi/vhost-scsi.c
+@@ -163,6 +163,62 @@ static const VMStateDescription vmstate_virtio_vhost_scsi = {
+     .pre_save = vhost_scsi_pre_save,
+ };
+ 
++static int vhost_scsi_set_workers(VHostSCSICommon *vsc, int vq_workers)
++{
++    struct vhost_dev *dev = &vsc->dev;
++    int workers_per_queue = 1, io_queues;
++    struct vhost_vring_worker w;
++    int i, ret, cnt = 0;
++
++    if (vq_workers < VHOST_VRING_NEW_WORKER)
++        return -EINVAL;
++
++    if (vq_workers == 0 ||
++        dev->nvqs == VHOST_SCSI_VQ_NUM_FIXED + 1)
++        /* Use the single default worker */
++        return 0;
++
++    io_queues = dev->nvqs - VHOST_SCSI_VQ_NUM_FIXED;
++    if (vq_workers > 0 && io_queues > vq_workers)
++        workers_per_queue = io_queues / vq_workers;
++
++    w.pid = VHOST_VRING_NEW_WORKER;
++    /*
++     * ctl/evt share the first worker since it will be rare for them
++     * to send cmds while IO is running. The rest of the vqs get their
++     * own worker.
++     */
++    for (i = VHOST_SCSI_VQ_NUM_FIXED + 1; i < dev->nvqs; i++) {
++        w.index = i;
++
++        switch (vq_workers) {
++        case VHOST_VRING_NEW_WORKER:
++            w.pid = VHOST_VRING_NEW_WORKER;
++            break;
++        default:
++            /*
++             * TODO: we should get the ISR to vq mapping and bind workers
++             * so vqs sharing a ISR share a worker.
++             */
++            if (cnt == workers_per_queue) {
++                w.pid = VHOST_VRING_NEW_WORKER;
++                cnt = 0;
++            } else {
++                cnt++;
++            }
++        }
++
++        ret = dev->vhost_ops->vhost_set_vring_worker(dev, &w);
++        if (ret == -ENOTTY) {
++            ret = 0;
++            break;
++        } else if (ret)
++            break;
++    }
++
++    return ret;
++}
++
+ static void vhost_scsi_realize(DeviceState *dev, Error **errp)
+ {
+     VirtIOSCSICommon *vs = VIRTIO_SCSI_COMMON(dev);
+@@ -223,6 +279,13 @@ static void vhost_scsi_realize(DeviceState *dev, Error **errp)
+         goto free_vqs;
+     }
+ 
++    ret = vhost_scsi_set_workers(vsc, vs->conf.virtqueue_workers);
++    if (ret < 0) {
++        error_setg(errp, "vhost-scsi: vhost worker setup failed: %s",
++                   strerror(-ret));
++        goto free_vqs;
++    }
++
+     /* At present, channel and lun both are 0 for bootable vhost-scsi disk */
+     vsc->channel = 0;
+     vsc->lun = 0;
+@@ -281,6 +344,8 @@ static Property vhost_scsi_properties[] = {
+                                                  VIRTIO_SCSI_F_T10_PI,
+                                                  false),
+     DEFINE_PROP_BOOL("migratable", VHostSCSICommon, migratable, false),
++    DEFINE_PROP_INT32("virtqueue_workers", VirtIOSCSICommon,
++                      conf.virtqueue_workers, 0),
+     DEFINE_PROP_END_OF_LIST(),
+ };
+ 
+diff --git a/hw/virtio/vhost-backend.c b/hw/virtio/vhost-backend.c
+index b65f8f7e97bf..175ed1f1c3a8 100644
+--- a/hw/virtio/vhost-backend.c
++++ b/hw/virtio/vhost-backend.c
+@@ -152,6 +152,13 @@ static int vhost_kernel_set_vring_busyloop_timeout(struct vhost_dev *dev,
+     return vhost_kernel_call(dev, VHOST_SET_VRING_BUSYLOOP_TIMEOUT, s);
+ }
+ 
++static int vhost_kernel_set_vring_worker(struct vhost_dev *dev,
++                                         struct vhost_vring_worker *worker)
++{
++    return vhost_kernel_call(dev, VHOST_SET_VRING_WORKER, worker);
++}
++
++
+ static int vhost_kernel_set_features(struct vhost_dev *dev,
+                                      uint64_t features)
+ {
+@@ -313,6 +320,7 @@ const VhostOps kernel_ops = {
+         .vhost_set_vring_call = vhost_kernel_set_vring_call,
+         .vhost_set_vring_busyloop_timeout =
+                                 vhost_kernel_set_vring_busyloop_timeout,
++        .vhost_set_vring_worker = vhost_kernel_set_vring_worker,
+         .vhost_set_features = vhost_kernel_set_features,
+         .vhost_get_features = vhost_kernel_get_features,
+         .vhost_set_backend_cap = vhost_kernel_set_backend_cap,
+diff --git a/include/hw/virtio/vhost-backend.h b/include/hw/virtio/vhost-backend.h
+index 81bf3109f837..bede35cf4686 100644
+--- a/include/hw/virtio/vhost-backend.h
++++ b/include/hw/virtio/vhost-backend.h
+@@ -33,6 +33,7 @@ struct vhost_memory;
+ struct vhost_vring_file;
+ struct vhost_vring_state;
+ struct vhost_vring_addr;
++struct vhost_vring_worker;
+ struct vhost_scsi_target;
+ struct vhost_iotlb_msg;
+ struct vhost_virtqueue;
+@@ -71,6 +72,8 @@ typedef int (*vhost_set_vring_call_op)(struct vhost_dev *dev,
+                                        struct vhost_vring_file *file);
+ typedef int (*vhost_set_vring_busyloop_timeout_op)(struct vhost_dev *dev,
+                                                    struct vhost_vring_state *r);
++typedef int (*vhost_set_vring_worker_op)(struct vhost_dev *dev,
++                                         struct vhost_vring_worker *worker);
+ typedef int (*vhost_set_features_op)(struct vhost_dev *dev,
+                                      uint64_t features);
+ typedef int (*vhost_get_features_op)(struct vhost_dev *dev,
+@@ -146,6 +149,7 @@ typedef struct VhostOps {
+     vhost_set_vring_kick_op vhost_set_vring_kick;
+     vhost_set_vring_call_op vhost_set_vring_call;
+     vhost_set_vring_busyloop_timeout_op vhost_set_vring_busyloop_timeout;
++    vhost_set_vring_worker_op vhost_set_vring_worker;
+     vhost_set_features_op vhost_set_features;
+     vhost_get_features_op vhost_get_features;
+     vhost_set_backend_cap_op vhost_set_backend_cap;
+diff --git a/include/hw/virtio/virtio-scsi.h b/include/hw/virtio/virtio-scsi.h
+index 543681bc1838..694221601dad 100644
+--- a/include/hw/virtio/virtio-scsi.h
++++ b/include/hw/virtio/virtio-scsi.h
+@@ -58,6 +58,7 @@ struct VirtIOSCSIConf {
+ #ifdef CONFIG_VHOST_SCSI
+     char *vhostfd;
+     char *wwpn;
++    int virtqueue_workers;
+ #endif
+     CharBackend chardev;
+     uint32_t boot_tpgt;
+diff --git a/include/standard-headers/linux/vhost_types.h b/include/standard-headers/linux/vhost_types.h
+index 0bd2684a2ae4..0b844969a524 100644
+--- a/include/standard-headers/linux/vhost_types.h
++++ b/include/standard-headers/linux/vhost_types.h
+@@ -27,6 +27,18 @@ struct vhost_vring_file {
+ 
+ };
+ 
++#define VHOST_VRING_NEW_WORKER -1
++
++struct vhost_vring_worker {
++	unsigned int index;
++	/*
++	 * The pid of the vhost worker that the vq will be bound to. If
++	 * pid is VHOST_VRING_NEW_WORKER a new worker will be created and it's
++	 * pid will be returned in pid.
++	 */
++	pid_t pid;
++};
++
+ struct vhost_vring_addr {
+ 	unsigned int index;
+ 	/* Option flags. */
+diff --git a/linux-headers/linux/vhost.h b/linux-headers/linux/vhost.h
+index c998860d7bbc..6823f3b5309c 100644
+--- a/linux-headers/linux/vhost.h
++++ b/linux-headers/linux/vhost.h
+@@ -70,6 +70,17 @@
+ #define VHOST_VRING_BIG_ENDIAN 1
+ #define VHOST_SET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x13, struct vhost_vring_state)
+ #define VHOST_GET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x14, struct vhost_vring_state)
++/* By default, a device gets one vhost_worker created during VHOST_SET_OWNER
++ * that its virtqueues share. This allows userspace to create a vhost_worker
++ * and bind a virtqueue to it or bind a virtqueue to an existing worker.
++ *
++ * If pid > 0 and it matches an existing vhost_worker thread it will be bound
++ * to the virtqueue. If pid is VHOST_VRING_NEW_WORKER, then a new worker will be
++ * created and bound to the virtqueue.
++ *
++ * This must be called after VHOST_SET_OWNER and before the virtqueue is active.
++ */
++#define VHOST_SET_VRING_WORKER _IOWR(VHOST_VIRTIO, 0x15, struct vhost_vring_worker)
+ 
+ /* The following ioctls use eventfd file descriptors to signal and poll
+  * for events. */
+-- 
+2.25.1
+
