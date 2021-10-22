@@ -2,57 +2,57 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AA18C43217
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 05:21:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF46AC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 05:21:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 339B86124D
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 05:21:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B579E60EE2
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 05:21:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230332AbhJVFXS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Oct 2021 01:23:18 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:55058 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230428AbhJVFVw (ORCPT
+        id S231134AbhJVFXU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Oct 2021 01:23:20 -0400
+Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:46692 "EHLO
+        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231773AbhJVFV4 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Oct 2021 01:21:52 -0400
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19M2lxtB016493;
-        Fri, 22 Oct 2021 05:19:32 GMT
+        Fri, 22 Oct 2021 01:21:56 -0400
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19M3R0C5010002;
+        Fri, 22 Oct 2021 05:19:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references :
  content-transfer-encoding : content-type : mime-version;
- s=corp-2021-07-09; bh=fspmCOXmEpt+I2Zli2AQcYiLadL+u7tR5vrwNrLtu8w=;
- b=jIslBeu/znzJ0syxoFEXJwiTfxKFw2Ijj+AYLj4aThkRqOnFmdWehdZ++Y/5Oems5k9y
- QRUT50Ny709V+OkAjirMNyRJ64QuzYMeWeqdJQauRzvP4wDJ4NKqZEbVMGk1bXbEAeLW
- bzC9xzh4EYnqeKBo0at3iKYmRpbozJqAj+chwtM8yAAnw8cTlSSjzQ3BBKyswCPo5E1k
- UXFvh/VWO1i1JksTUm9uzQhOYWsBTiargMPVVgFnd/Zay8+EXL53N8nhCA9a1tkSbAcF
- +pGiiLTUP7apzDJW8nH0FH+yGD0mX8qRpoWIIBeJJzShkPpJaT57dvWvGDpMGCB2/yYi AA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3btrfm8sxv-1
+ s=corp-2021-07-09; bh=3KYSseobhLsX3CCyduMS8iQ/XqjAJDgW1U5mrujvZwY=;
+ b=gVvCtJ7kYdcYR+vmUWoJxAOdhjm/XE+yd3M3b4b3t7uvlPvOVYDA+JR7WkD8YQFlD/6Y
+ aHhDpXDo8WMrWJ9QKGezSZBXOqzItMyQJrjs5qGoOmGPKh36MBVhTig4JY4c18+51k89
+ LNabbxVD0D2jy8fAooq/ZCPyNcixBX4LMCv3DpskKYLOWnKvF1VSH1vteE9+AwQqfh2b
+ J/QbFdKU8k1K8onnM06BK9WqDhH8k9nbdoJEoHD47ldvIXdp4+KFGxpa2WOOH7a56pUj
+ ASzayaxResreh5Kbej/3AwuyPu7RLiYmZZtGJAVoFWbEJOPBuNMCyXLXL4uOK4ibf+Zb yg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3bundfg9ek-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Oct 2021 05:19:31 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19M5BHIj139141;
-        Fri, 22 Oct 2021 05:19:31 GMT
-Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2175.outbound.protection.outlook.com [104.47.58.175])
-        by aserp3020.oracle.com with ESMTP id 3bqpja16nf-12
+        Fri, 22 Oct 2021 05:19:34 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19M5BfsG096761;
+        Fri, 22 Oct 2021 05:19:32 GMT
+Received: from nam11-bn8-obe.outbound.protection.outlook.com (mail-bn8nam11lp2174.outbound.protection.outlook.com [104.47.58.174])
+        by userp3030.oracle.com with ESMTP id 3bqkv35pvd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 22 Oct 2021 05:19:31 +0000
+        Fri, 22 Oct 2021 05:19:32 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=ZPpHjE1IxZmpg8dePmCtzX3lksDjphLcTjoUPfvgpvfNwrYyC/TbXsY2f3PSPZ461aDeSqzpzPNARjJqMtzXPoI8pcN55Pq/8r7xalSG4VleS4n4xNbvtrwh7eV7q7nACNC3MzX8uXlP5GGNYujATjzUmdZISkPm85GfrRiMCjX9dfwYq9ZjrVZl/BnUHweOJeP6FHR4jtOBOlkfqyy6qLCejSdd4jLfuYsCPsyJvJ6D/D0eL/4ZvxL9qWUziO8TQ5yi9oYEVSdb1aw4MmRxw12f3km/IdottnuqCmXZJbLDjd7VbaJRUtaa1E7HyFcGC+Q3DIFDsftW2aFnb9QUeA==
+ b=RcumpIpgeoChP7/mC61QL+WN5K4BW5RC/+JW/wMnf8TJKO3vstY1s3cae1uDC04wXodxa9asEj45I+Beq1+vF1Sl7UrVsfIVHkaLqo3AnuFwolwTqQW5fWzoJzUBu1EHKByZ+kJRkNoNxojrhwnWyR56WGGQuhDjfrzCXLqDxIrGZ/Qns2GpCGwukqFYuU2f5uDuF7InCWVS7E8cuWs9ysM9fkfFlImuXm5htp2MvD2TKZgGc/wFSrNiY3iTDMufXEsjZoeMK7tpId1r3RYtPdGzb4la7Qxojc0JwzlFVjokU+e/pdM20YKtStWn2jobP3RB4vgRiSuaKyXJw60ydQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=fspmCOXmEpt+I2Zli2AQcYiLadL+u7tR5vrwNrLtu8w=;
- b=mIUZwH4t3qkGbXFznAhHGVCOIOWXjryfuaEwFzeXb++34p1kVRnqN7dttKrYiOIcq/1yhRdCxQAz7pJwiaO7KsIobzE74CSfoXC5zWyZc32RoWHI1eeWU7dibc2pCzHXj6TQUoApqH8vFjMd0dbQXNF76zkME2ed+U+IjgNbK38EI9M318AKJhMj/7H+TzVR+ou6taQ0QuQdW+vMkGc7SFwQljGwoCg8QptqAyyd+Qk98AsW2vA9i2dc1hkoRsNwuZhq2fDMp6GhKT3a7elavlZIiYC/DGfeoBVj2UYz+OvfFiNUptv5MiKPy+yBU31Hh5p7s6fZ+xG3DVGTe8LDlg==
+ bh=3KYSseobhLsX3CCyduMS8iQ/XqjAJDgW1U5mrujvZwY=;
+ b=M7Z8gnflnx1a3D601AgheVJ0ayVBmm+D6iY53c3OzWeu/OySxv/WJ/gQBj/1aXYQIkIX3r62i/aSG75cfkOi+4IhoknJ+/s9YDW0KUC2hkWSVrv/EbqTLqXL9Oc5eguAVfTrVsR3QQDpuemkmMoQ6QOjhvzOId7ZkBrWWLHeHYKDmIUAMZvI7u6FohJbGoeHw8Na5Q5zCw5JCJJEEjybIW9x+6EVu5MqLWSm+CNYkawZu++6+fTcrnvOWff5luOj4ZPGY2qC5W6uIkmQyemZQuTf1t828KTCeOAsq6oGFAwWqWDa+hFMfWnaFWtbML471RghCbJpI3YL0KadCNehWw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=fspmCOXmEpt+I2Zli2AQcYiLadL+u7tR5vrwNrLtu8w=;
- b=kO+R9JyciXyrTqZ4dnIKhD2IV3RY685PprDuofId3LfUEbFk/d7SZlqzybO1d9sUrrHXpT/2FjDuU/HZPXnq43KeOuX1HikcHZQKeEvowqkLRcjH0wpXMY9Ijccnew6LGfWdyLjSdIB8m3JevyrJfPGpXSOA85t9AjiXb3NcnJs=
+ bh=3KYSseobhLsX3CCyduMS8iQ/XqjAJDgW1U5mrujvZwY=;
+ b=OZyFbL6CafpkJtLNfPB0n1zjUiUJFTHCaFZ4bdSkZE1DdTxdiogBtVYYhAbSp0EFJDCgEcKQ0qpQ3nbmD3wb9x/LMdFw/Ku1d4C4DGcfAIK+Vy6tGoNrS+svyzQ4GgzH4i9N02hCR7BMpJzWuRvNSfWw3GnQfSvU4VyZY3CjZWg=
 Authentication-Results: vger.kernel.org; dkim=none (message not signed)
  header.d=none;vger.kernel.org; dmarc=none action=none header.from=oracle.com;
 Received: from DM5PR10MB1466.namprd10.prod.outlook.com (2603:10b6:3:b::7) by
@@ -69,9 +69,9 @@ To:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
         mst@redhat.com, sgarzare@redhat.com,
         virtualization@lists.linux-foundation.org
 Cc:     Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH V3 10/11] vhost: remove device wide queu/flushing helpers
-Date:   Fri, 22 Oct 2021 00:19:10 -0500
-Message-Id: <20211022051911.108383-12-michael.christie@oracle.com>
+Subject: [PATCH V3 11/11] vhost: allow userspace to create workers
+Date:   Fri, 22 Oct 2021 00:19:11 -0500
+Message-Id: <20211022051911.108383-13-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20211022051911.108383-1-michael.christie@oracle.com>
 References: <20211022051911.108383-1-michael.christie@oracle.com>
@@ -81,48 +81,48 @@ X-ClientProxiedBy: DM6PR08CA0012.namprd08.prod.outlook.com
  (2603:10b6:5:80::25) To DM5PR10MB1466.namprd10.prod.outlook.com
  (2603:10b6:3:b::7)
 MIME-Version: 1.0
-Received: from localhost.localdomain (73.88.28.6) by DM6PR08CA0012.namprd08.prod.outlook.com (2603:10b6:5:80::25) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.16 via Frontend Transport; Fri, 22 Oct 2021 05:19:29 +0000
+Received: from localhost.localdomain (73.88.28.6) by DM6PR08CA0012.namprd08.prod.outlook.com (2603:10b6:5:80::25) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.16 via Frontend Transport; Fri, 22 Oct 2021 05:19:30 +0000
 X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: 29dee8b6-e106-4484-e506-08d9951b8654
+X-MS-Office365-Filtering-Correlation-Id: ed2c5601-2585-4285-26c6-08d9951b86b3
 X-MS-TrafficTypeDiagnostic: DS7PR10MB4974:
-X-Microsoft-Antispam-PRVS: <DS7PR10MB4974E900196A531AFD203ABCF1809@DS7PR10MB4974.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:813;
+X-Microsoft-Antispam-PRVS: <DS7PR10MB497438CC353FD32FF48AD0B3F1809@DS7PR10MB4974.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:324;
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: ptSYYqs/iFeTc8sCSVgzyNaJ3VvY3zagY44zGDtZauOOLXtDhu3ZEUyf8HBd7Ie+T6/kDiTn88UcZIMCZ2xHPVdaHKmC5dDwIaL0ndOSbulHZBNuI2ofMK/tq3le91A6cupvvWuezWk/JfdyQMlDiY80UY329/OuDVDJklmxdb5CYKSJiPdh8a6I5OULprbdNV47vuIv9wUwLb7wvpVzt9lJ9H4f91P/tbes7EkKFFB4H+fduuvSiniMnWjwj8s/9GQ/xu7z+g2MZjY/SvmXTUTvYWP8ueoGCg7OuCN355nKOOa0Go/svFTyKPwDnZU47nr2COBP5waexXrtZWH2ZYSk5o/3XP2St7TfpXa00ul3In2tEtQNNDdw6vNEJojM8sU0xoVrfM/iuwCGMdRTjnvw8BKNvSqGYMfW1JMwF9zQYe+dmDqwk3I980LW7ShRif3COmXJbqh7jKwz7u5eVt/l+5MIvEwvkRqllwUouicJiMZ1eD/L9XJWlYOBd4hFJwHLpHVzn0qvNyuPLeBx5zFFqlq9hYgZp5fyCejxPzQ6tluT6PkgwASHZKC8dA35mmz5HbOtIV94fB3jzgwODXXBjbt1zVeopZJ8M0oX+b4eO/Xlet6toWZphYRJw/rKQIDX1L7qUcRrhqEyxpzqLMIx1L4azJnem15TGtM9HZM2BgyGsSOOVZBEfuudYyaV/LDpZni4x4+tp2JpzZ8mGA==
+X-Microsoft-Antispam-Message-Info: hQqsgnKD0yZYPLRegDrRyoj3npC6mydEDFYSULyCgiDsoGqS8upSQuhOXAsyLTMugBbT+eKVwvufjqrujr44FD4obRXQguD2tKu4zT86yQ7JbkTYamvF/MyKJ+kzThMPRqK6OAQeBPZAccViL5g8FZraWu5djYITBsvE83OaHNfxy5zEuzE9OiMPFdsfGNUfrteJvdMriA/EChhYEX0maHwutjnlv6sK5Cbi9ajmzLoULR5bXX89zoXO7X0+OcuVVBMFnQBNA/pzfLRwlBvSooaF1SxsaaXN3PBxsWt+/g7/8ndKdTFaWEjrOKoq4QuYuimQHhq0lVcxPPeTrJ95UKSE0N5kK7F+Py2/+7glebvhW4mxmmNAR+Yu0BSF5sx1f1yVFKiFG37GJv5JsFadkhNryfRPKubvAvTkso5mxRmj8tJBzFVJm8jv8QnGn71v+p9F9KAQVug9sEc2RdUU4Mtcio/FhxTyxAdAOV4WbAA1vn9tvahKllkBitKKwRqRgsR1mfbpKUP3gNF2g7lPCI5muNjQh42exGUigHabnUJyegvg0DOpsPl3eXBqoXTHZc5Cqmj2ndb/f/KImxRvX8HXgLb6ms74/7WP/mZIHaq/VLO3RE8IeAokq0JOcdsW5ce1WySKhYoxTYG46rSXjMzidjuhjNLntrfdWcHNxUQRB43Q9W1j6ql6KySypSs/B2NgBIeSn2pZy57XQIlkoA==
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM5PR10MB1466.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(8676002)(107886003)(38350700002)(66556008)(4326008)(36756003)(6666004)(1076003)(508600001)(2906002)(66476007)(66946007)(8936002)(38100700002)(316002)(6506007)(186003)(26005)(6486002)(6512007)(83380400001)(52116002)(2616005)(86362001)(5660300002)(956004);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?8xzvUgQyx770zfJEKy5KOjbxNA3aQA1G4WGMVaVGSnhM68BvRcLqSRAUism2?=
- =?us-ascii?Q?DzsOzhxj+ANjwt6HDSXI/Pf5cTj4rmWkSD40VtulY/Rf7eO6aTeR79U2mGei?=
- =?us-ascii?Q?AblnxNNjkLwJknYmpNlxJFF8mE3YHlF81A9Yg5YhLpYf229lDLB4vBXZTrip?=
- =?us-ascii?Q?ND7zYCy+c6zGDAm69ii/r2E1QDVQj7wJFfDgQaCcB+2gawp/6HqodLcrBqEA?=
- =?us-ascii?Q?q+8/v1setSt0bBLPp6q4Wu4Kwbc+Zpi0XcCViu97TpRj5kX+Vze1195pzjfE?=
- =?us-ascii?Q?yT5LwpZ8rmCkaOVukUBZqndTbk5DbhtCBKcQv9pbz1COy1ScPZbQDEo4hU1N?=
- =?us-ascii?Q?/uFdBtblRG4aD1vZ9/aXzS2qpEt0Gx7fG/gPQHboWO96t7fGpTIHYBSBT/MA?=
- =?us-ascii?Q?iVUy5K+FKUvtHem2KPsiW3MznOIxjVsp66E8WUy5uQAX3SEvZ+QWSSjtX3I2?=
- =?us-ascii?Q?hh4OnRtxP+hrY8oHoviUeenSkhqUIHtzqrZmGGd6F/CyL4d9vv/4E4oUo3+q?=
- =?us-ascii?Q?1K72ojyG/d2Lpw1Z+BP9+hokxqJmDtmJU5EAipXnFLjrk0CrXelqRsdrxMED?=
- =?us-ascii?Q?sWNba1Oww5Mhf9eqOgaEtaeJT0PxC+rm0t1E9FAnd4L2uYX3qlyVV5BrxVHh?=
- =?us-ascii?Q?jXgqGho2xlI0B76Q8a9aL0IHVFV3YUr+NF+2jFffp7lSpJpFN41J4wBU+fap?=
- =?us-ascii?Q?M/5o2YZZTBgN6PDnZ+E7EmPZTLNhD1It5Ccpkut8NQamOc9hcFJcliykeihN?=
- =?us-ascii?Q?CjmzWutKDZX+YKLlNGU7bKNC6h4ZawznKRzMZ7JW4PaACxQjjpJQ73HUtU7p?=
- =?us-ascii?Q?F0wEdlPOG1J2z0q70bFXHysYvgSiVGjZRr/WcOIzq7yeAFoeCv86m1GRxz4J?=
- =?us-ascii?Q?34JZQH+9xfPv0rUmwXi8f3LVrB4i+/BNVmVtR+8t61NDmRYgXac8VNCL+zHV?=
- =?us-ascii?Q?92hOS1N2PjM9O1U+DWVDlZJZIUwuWo4V1MjoR6T/Hb0as+Ap0L6MIo3k7Y7+?=
- =?us-ascii?Q?ld6NAZVFpoS8dlQ4ik0ejhxCQxfdaCvxgAKkoY8SYdR+9K4D7xf/X3FE9wZR?=
- =?us-ascii?Q?285061xQFnGoLk/08WgqczkVrS9KDbQ8PXLnQaLLQqJv9BjYKrM6717xYYba?=
- =?us-ascii?Q?LUXfWgbUE6hgKGyPXaWEcZdc/AbI0Rh4JqQswCusHxiE9UnEKuZqPtPYQjJ+?=
- =?us-ascii?Q?jT6+wiM7CFpPgPxe0jEOzl7Q0baUQDjr5zA6h04nKeBfYlBhBvuFxNj6OzQ7?=
- =?us-ascii?Q?+F59r+THo6Aqvl8mm1QzJhSkvQAlRSXolXa4LP5WK9FaWZyNoeGaVINRf4zZ?=
- =?us-ascii?Q?U72lrDyHWug2Hyr32e2TVlps+yZFuIJWYZKocBtQF0DSPbTBZo0o8cDMa7YM?=
- =?us-ascii?Q?xcpPZbo0z+fJH7zxMff7FLnJHqwRB3if8NAU8TcrKvGKMNQW7fkylf2B+DQq?=
- =?us-ascii?Q?+LSycNQ+cimpRfNG0knwXsxMmg2GZtDN?=
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?igNS9s9a42JXBULYqgHELn4SIdULhLJvti0VcgWIFLxUcYcA0EzpxSVi7c5y?=
+ =?us-ascii?Q?D9M54izml33D4lPKyad5WO3Tf46NZHHYNYXWqMKScenX/BZGGLoK4A4LMzA8?=
+ =?us-ascii?Q?ATuD2v60uMBqLvbAJ/OMbvZe+AABo2s8LqojBy7Zcy0zGIoEk0BDllU1MD1j?=
+ =?us-ascii?Q?77UemcbhfVIqI0NRuW/Hnq8yXoHflI5TOQxE1dMmzIwO19xUEqllYSnirZ5J?=
+ =?us-ascii?Q?W7mw+12GgDAaeLW7H7ycuuSHDlvUqSQ4gEHvxklds+syd97MTCZieXs7niEx?=
+ =?us-ascii?Q?Zp0ByU9VKKmtHPnhR33Z8n+BDMXeTwZR9Y7XAktQNhHUr4PRh1bY5yDEaIIQ?=
+ =?us-ascii?Q?i4UdK3Sf7mPWo1asGrq1n8M5BG1KPvY2nDLQd9ygU3S/Y2dUJR2ZHCqIdRLl?=
+ =?us-ascii?Q?5dfiEIUCwhKs91m88GdyHToa/PQYOgj5mwNHiF289AzLj/T2UbqeCUFFaCq3?=
+ =?us-ascii?Q?6rWoNJrB6tKM596YFd3JWc2vRaEZkVj3mkHz7YV4KM1sFVktfqFCk1HN5hSp?=
+ =?us-ascii?Q?+9pkGaA/DcxEo2VJCN535YBmvBjcIjDgBIziuNmTICH2ceYPaWnjpRPIEEB6?=
+ =?us-ascii?Q?0V1882GtBu3whLXqTGCCIWLFSMskvPu1Yrk8F8DREKX79XFHV+blDX0aplrO?=
+ =?us-ascii?Q?k5IO+lBEoK8XNfCozc/G6Z+UTlNhnfUQsUzDf6FHOnwI6EIS55hV6a1lgzMA?=
+ =?us-ascii?Q?6ujG0nQApRMMT/pao/b/D9lVrgPvMr4HxThwCyK78tYquuus0h+iKJkwFgxx?=
+ =?us-ascii?Q?+B6kPqo3xzivMqZJzmlPxOpBJ0q9hzpH/vqlohLKLpiIp3joa8tNbt9vWNpI?=
+ =?us-ascii?Q?Bmi2jd9leEN4rYyTvIcJiABpA8gpUHKGz94hqHb5MfUIA6+I6QgtahjRy1sa?=
+ =?us-ascii?Q?/Y65gk5t00EaJu4+bbdXsidAIya7BJadA/KizqbzwHqml5l59RSCdripO/dy?=
+ =?us-ascii?Q?fXMJihxhA9uoJSqXyM2RMutloYarvnNm0OW2UDI6sPTKLJb48hMa8RP8ySQB?=
+ =?us-ascii?Q?S/jDFfWNMGq85szyUioXz1F14azKs+cFh9+CkQvz263BbsuFdJHRy2PZR4YR?=
+ =?us-ascii?Q?eIa4rWc9cZXvQE6P/lyLzX+Z7FUomqwPfoMhexQxAEPvx946Ctjl1rAzT3he?=
+ =?us-ascii?Q?KN6v90EYM2KiVOoels6tNmwKrDTdT9A83fz2thTxQa9ZTieT41b/oCwmj3OZ?=
+ =?us-ascii?Q?EUc1AelaT6jrsV19GJt+h+3Z3OY3MrdrF+XU+UQS4HXJSOBCxbVMAdAbDXcN?=
+ =?us-ascii?Q?1+HbUxLDwQ8Ik5+Q3Y+bFignoEXLW8B/g/uEhGrCePEXhQ5S1UU3NFS3uqFX?=
+ =?us-ascii?Q?yxV8L2smgC/flBm6EIc99TdGruthrUFnyYo+JIABOuX2uwU0/A3+iawRQfvS?=
+ =?us-ascii?Q?mntJNTXkrmPCwUKEy4nUTTRQeqS/UlXqSiXrCpVKqL6jrV8oPkkZjP2gvjTj?=
+ =?us-ascii?Q?Uq1q5y8yl59sCk77HQLekN8a5mTDFkIb?=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 29dee8b6-e106-4484-e506-08d9951b8654
+X-MS-Exchange-CrossTenant-Network-Message-Id: ed2c5601-2585-4285-26c6-08d9951b86b3
 X-MS-Exchange-CrossTenant-AuthSource: DM5PR10MB1466.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2021 05:19:30.1321
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Oct 2021 05:19:30.7998
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
@@ -130,74 +130,272 @@ X-MS-Exchange-CrossTenant-MailboxType: HOSTED
 X-MS-Exchange-CrossTenant-UserPrincipalName: michael.christie@oracle.com
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB4974
 X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10144 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
- malwarescore=0 phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2109230001
- definitions=main-2110220028
-X-Proofpoint-GUID: nJRjA_Zh2jCWSmzoJzALE6WRGxJg97qR
-X-Proofpoint-ORIG-GUID: nJRjA_Zh2jCWSmzoJzALE6WRGxJg97qR
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 suspectscore=0
+ malwarescore=0 bulkscore=0 phishscore=0 adultscore=0 spamscore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109230001 definitions=main-2110220028
+X-Proofpoint-ORIG-GUID: dsdACF8mSAPZprrxMjka07R7BkqYeXl7
+X-Proofpoint-GUID: dsdACF8mSAPZprrxMjka07R7BkqYeXl7
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-vhost_work_queue and vhost_work_dev_flush are no longer used, so drop
-them.
+This patch allows userspace to create workers and bind them to vqs. You
+can have N workers per dev and also share N workers with M vqs.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 ---
- drivers/vhost/vhost.c | 12 ------------
- drivers/vhost/vhost.h |  2 --
- 2 files changed, 14 deletions(-)
+ drivers/vhost/vhost.c            | 99 ++++++++++++++++++++++++++++----
+ drivers/vhost/vhost.h            |  2 +-
+ include/uapi/linux/vhost.h       | 11 ++++
+ include/uapi/linux/vhost_types.h | 12 ++++
+ 4 files changed, 112 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/vhost/vhost.c b/drivers/vhost/vhost.c
-index c84024afefff..04f43a6445e1 100644
+index 04f43a6445e1..c86e88d7f35c 100644
 --- a/drivers/vhost/vhost.c
 +++ b/drivers/vhost/vhost.c
-@@ -268,24 +268,12 @@ void vhost_vq_work_flush(struct vhost_virtqueue *vq)
+@@ -493,7 +493,6 @@ void vhost_dev_init(struct vhost_dev *dev,
+ 	dev->umem = NULL;
+ 	dev->iotlb = NULL;
+ 	dev->mm = NULL;
+-	dev->worker = NULL;
+ 	dev->iov_limit = iov_limit;
+ 	dev->weight = weight;
+ 	dev->byte_weight = byte_weight;
+@@ -576,20 +575,40 @@ static void vhost_worker_stop(struct vhost_worker *worker)
+ 	wait_for_completion(worker->exit_done);
  }
- EXPORT_SYMBOL_GPL(vhost_vq_work_flush);
  
--void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work)
+-static void vhost_worker_free(struct vhost_dev *dev)
 -{
--	vhost_work_queue_on(dev->worker, work);
--}
--EXPORT_SYMBOL_GPL(vhost_work_queue);
--
- void vhost_vq_work_queue(struct vhost_virtqueue *vq, struct vhost_work *work)
+-	struct vhost_worker *worker = dev->worker;
+ 
++static void vhost_worker_put(struct vhost_worker *worker)
++{
+ 	if (!worker)
+ 		return;
+ 
+-	dev->worker = NULL;
++	if (!refcount_dec_and_test(&worker->refcount))
++		return;
++
+ 	WARN_ON(!llist_empty(&worker->work_list));
+ 	vhost_worker_stop(worker);
+ 	kfree(worker);
+ }
+ 
+-static struct vhost_worker *vhost_worker_create(struct vhost_dev *dev)
++static void vhost_vq_clear_worker(struct vhost_virtqueue *vq)
++{
++	if (vq->worker)
++		vhost_worker_put(vq->worker);
++	vq->worker = NULL;
++}
++
++static void vhost_workers_free(struct vhost_dev *dev)
++{
++	int i;
++
++	if (!dev->use_worker)
++		return;
++
++	for (i = 0; i < dev->nvqs; i++)
++		vhost_vq_clear_worker(dev->vqs[i]);
++}
++
++static struct vhost_worker *vhost_worker_create(struct vhost_dev *dev,
++						int init_vq_map_count)
  {
- 	vhost_work_queue_on(vq->worker, work);
- }
- EXPORT_SYMBOL_GPL(vhost_vq_work_queue);
+ 	struct vhost_worker *worker;
+ 	struct task_struct *task;
+@@ -598,9 +617,9 @@ static struct vhost_worker *vhost_worker_create(struct vhost_dev *dev)
+ 	if (!worker)
+ 		return NULL;
  
--void vhost_work_dev_flush(struct vhost_dev *dev)
--{
--	vhost_work_flush_on(dev->worker);
--}
--EXPORT_SYMBOL_GPL(vhost_work_dev_flush);
--
- /* Flush any work that has been scheduled. When calling this, don't hold any
-  * locks that are also used by the callback. */
- void vhost_poll_flush(struct vhost_poll *poll)
+-	dev->worker = worker;
+ 	worker->kcov_handle = kcov_common_handle();
+ 	init_llist_head(&worker->work_list);
++	refcount_set(&worker->refcount, init_vq_map_count);
+ 
+ 	/*
+ 	 * vhost used to use the kthread API which ignores all signals by
+@@ -617,10 +636,58 @@ static struct vhost_worker *vhost_worker_create(struct vhost_dev *dev)
+ 
+ free_worker:
+ 	kfree(worker);
+-	dev->worker = NULL;
+ 	return NULL;
+ }
+ 
++static struct vhost_worker *vhost_worker_find(struct vhost_dev *dev, pid_t pid)
++{
++	struct vhost_worker *worker = NULL;
++	int i;
++
++	for (i = 0; i < dev->nvqs; i++) {
++		if (dev->vqs[i]->worker->task->pid != pid)
++			continue;
++
++		worker = dev->vqs[i]->worker;
++		break;
++	}
++
++	return worker;
++}
++
++/* Caller must have device mutex */
++static int vhost_vq_setup_worker(struct vhost_virtqueue *vq,
++				 struct vhost_vring_worker *info)
++{
++	struct vhost_dev *dev = vq->dev;
++	struct vhost_worker *worker;
++
++	if (!dev->use_worker)
++		return -EINVAL;
++
++	/* We don't support setting a worker on an active vq */
++	if (vq->private_data)
++		return -EBUSY;
++
++	if (info->pid == VHOST_VRING_NEW_WORKER) {
++		worker = vhost_worker_create(dev, 1);
++		if (!worker)
++			return -ENOMEM;
++
++		info->pid = worker->task->pid;
++	} else {
++		worker = vhost_worker_find(dev, info->pid);
++		if (!worker)
++			return -ENODEV;
++
++		refcount_inc(&worker->refcount);
++	}
++
++	vhost_vq_clear_worker(vq);
++	vq->worker = worker;
++	return 0;
++}
++
+ /* Caller should have device mutex */
+ long vhost_dev_set_owner(struct vhost_dev *dev)
+ {
+@@ -636,7 +703,7 @@ long vhost_dev_set_owner(struct vhost_dev *dev)
+ 	vhost_attach_mm(dev);
+ 
+ 	if (dev->use_worker) {
+-		worker = vhost_worker_create(dev);
++		worker = vhost_worker_create(dev, dev->nvqs);
+ 		if (!worker)
+ 			goto err_worker;
+ 
+@@ -650,7 +717,7 @@ long vhost_dev_set_owner(struct vhost_dev *dev)
+ 
+ 	return 0;
+ err_iovecs:
+-	vhost_worker_free(dev);
++	vhost_workers_free(dev);
+ err_worker:
+ 	vhost_detach_mm(dev);
+ err_mm:
+@@ -742,7 +809,7 @@ void vhost_dev_cleanup(struct vhost_dev *dev)
+ 	dev->iotlb = NULL;
+ 	vhost_clear_msg(dev);
+ 	wake_up_interruptible_poll(&dev->wait, EPOLLIN | EPOLLRDNORM);
+-	vhost_worker_free(dev);
++	vhost_workers_free(dev);
+ 	vhost_detach_mm(dev);
+ }
+ EXPORT_SYMBOL_GPL(vhost_dev_cleanup);
+@@ -1612,6 +1679,7 @@ long vhost_vring_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *arg
+ 	struct eventfd_ctx *ctx = NULL;
+ 	u32 __user *idxp = argp;
+ 	struct vhost_virtqueue *vq;
++	struct vhost_vring_worker w;
+ 	struct vhost_vring_state s;
+ 	struct vhost_vring_file f;
+ 	u32 idx;
+@@ -1719,6 +1787,15 @@ long vhost_vring_ioctl(struct vhost_dev *d, unsigned int ioctl, void __user *arg
+ 		if (copy_to_user(argp, &s, sizeof(s)))
+ 			r = -EFAULT;
+ 		break;
++	case VHOST_SET_VRING_WORKER:
++		if (copy_from_user(&w, argp, sizeof(w))) {
++			r = -EFAULT;
++			break;
++		}
++		r = vhost_vq_setup_worker(vq, &w);
++		if (!r && copy_to_user(argp, &w, sizeof(w)))
++			r = -EFAULT;
++		break;
+ 	default:
+ 		r = -ENOIOCTLCMD;
+ 	}
 diff --git a/drivers/vhost/vhost.h b/drivers/vhost/vhost.h
-index d9650da2be2c..33c63b24187a 100644
+index 33c63b24187a..0911d1a9bd3b 100644
 --- a/drivers/vhost/vhost.h
 +++ b/drivers/vhost/vhost.h
-@@ -50,7 +50,6 @@ struct vhost_poll {
+@@ -35,6 +35,7 @@ struct vhost_worker {
+ 	struct llist_head	work_list;
+ 	u64			kcov_handle;
+ 	unsigned long		flags;
++	refcount_t		refcount;
  };
  
- void vhost_work_init(struct vhost_work *work, vhost_work_fn_t fn);
--void vhost_work_queue(struct vhost_dev *dev, struct vhost_work *work);
+ /* Poll a file (eventfd or socket) */
+@@ -160,7 +161,6 @@ struct vhost_dev {
+ 	struct vhost_virtqueue **vqs;
+ 	int nvqs;
+ 	struct eventfd_ctx *log_ctx;
+-	struct vhost_worker *worker;
+ 	struct vhost_iotlb *umem;
+ 	struct vhost_iotlb *iotlb;
+ 	spinlock_t iotlb_lock;
+diff --git a/include/uapi/linux/vhost.h b/include/uapi/linux/vhost.h
+index c998860d7bbc..e5c0669430e5 100644
+--- a/include/uapi/linux/vhost.h
++++ b/include/uapi/linux/vhost.h
+@@ -70,6 +70,17 @@
+ #define VHOST_VRING_BIG_ENDIAN 1
+ #define VHOST_SET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x13, struct vhost_vring_state)
+ #define VHOST_GET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x14, struct vhost_vring_state)
++/* By default, a device gets one vhost_worker created during VHOST_SET_OWNER
++ * that its virtqueues share. This allows userspace to create a vhost_worker
++ * and map a virtqueue to it or map a virtqueue to an existing worker.
++ *
++ * If pid > 0 and it matches an existing vhost_worker thread it will be bound
++ * to the vq. If pid is VHOST_VRING_NEW_WORKER, then a new worker will be
++ * created and bound to the vq.
++ *
++ * This must be called after VHOST_SET_OWNER and before the vq is active.
++ */
++#define VHOST_SET_VRING_WORKER _IOWR(VHOST_VIRTIO, 0x15, struct vhost_vring_worker)
  
- void vhost_poll_init(struct vhost_poll *poll, vhost_work_fn_t fn,
- 		     __poll_t mask, struct vhost_dev *dev,
-@@ -59,7 +58,6 @@ int vhost_poll_start(struct vhost_poll *poll, struct file *file);
- void vhost_poll_stop(struct vhost_poll *poll);
- void vhost_poll_flush(struct vhost_poll *poll);
- void vhost_poll_queue(struct vhost_poll *poll);
--void vhost_work_dev_flush(struct vhost_dev *dev);
+ /* The following ioctls use eventfd file descriptors to signal and poll
+  * for events. */
+diff --git a/include/uapi/linux/vhost_types.h b/include/uapi/linux/vhost_types.h
+index f7f6a3a28977..af654e3cef0e 100644
+--- a/include/uapi/linux/vhost_types.h
++++ b/include/uapi/linux/vhost_types.h
+@@ -47,6 +47,18 @@ struct vhost_vring_addr {
+ 	__u64 log_guest_addr;
+ };
  
- struct vhost_log {
- 	u64 addr;
++#define VHOST_VRING_NEW_WORKER -1
++
++struct vhost_vring_worker {
++	unsigned int index;
++	/*
++	 * The pid of the vhost worker that the vq will be bound to. If
++	 * pid is VHOST_VRING_NEW_WORKER a new worker will be created and its
++	 * pid will be returned in pid.
++	 */
++	__kernel_pid_t pid;
++};
++
+ /* no alignment requirement */
+ struct vhost_iotlb_msg {
+ 	__u64 iova;
 -- 
 2.25.1
 
