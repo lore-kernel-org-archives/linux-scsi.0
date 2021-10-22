@@ -2,95 +2,185 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DEF5C433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 16:50:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40B63C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 00:43:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 812186141B
-	for <linux-scsi@archiver.kernel.org>; Thu, 21 Oct 2021 16:50:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DE186135F
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 00:43:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231750AbhJUQwR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 21 Oct 2021 12:52:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44878 "EHLO
+        id S232103AbhJVApW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 21 Oct 2021 20:45:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38704 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229702AbhJUQwQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Oct 2021 12:52:16 -0400
-Received: from mail-ot1-x32a.google.com (mail-ot1-x32a.google.com [IPv6:2607:f8b0:4864:20::32a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AFF14C061764
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2021 09:50:00 -0700 (PDT)
-Received: by mail-ot1-x32a.google.com with SMTP id l10-20020a056830154a00b00552b74d629aso1172802otp.5
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Oct 2021 09:50:00 -0700 (PDT)
+        with ESMTP id S231518AbhJVApV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Oct 2021 20:45:21 -0400
+Received: from mail-pj1-x102b.google.com (mail-pj1-x102b.google.com [IPv6:2607:f8b0:4864:20::102b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 98B4BC061764;
+        Thu, 21 Oct 2021 17:43:04 -0700 (PDT)
+Received: by mail-pj1-x102b.google.com with SMTP id oa12-20020a17090b1bcc00b0019f715462a8so1818165pjb.3;
+        Thu, 21 Oct 2021 17:43:04 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:to:cc:in-reply-to:references:subject:message-id:date
-         :mime-version:content-transfer-encoding;
-        bh=H/Eozbq7KtLQv7I05PmFbNf/apdYsXdfHT73zybO8ZE=;
-        b=WVreQnwbDkzUfWoXogfNSbxO7gQ5mEHdBCGow+FGfeTLO8lAO0KQ5uqcOslFmoLHrs
-         2clYpPgdW10cKh1EId/lbwHWD5bXnZ4ftdhbtW9266w35OBGRf/06VDOkBeSjjSRBA7e
-         2dXHzDSVLw9JVo4yngyMXyrNwx7QDTY4/94hxomTPJvSI58BrpiF7LQSD34rKKhLMWqt
-         JjvP085MeYyMXzEOHbT7WF2P2vyXarBnsQsSd6gs8S5A6lqCRrXbntxu4gWyBSomycpq
-         FE5K+hfoY0OGxR0+JVTC2hHYvrysUA6cCDnnApbvDJJfiV7kIqrcitBT6bX87Wz4gKTd
-         g45Q==
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=VNOVxOw71ipLbpQarDFMri/rDm9N6i/dmhNtzdX06Dw=;
+        b=F+1mUxMmQHDDbRn4KS1V2l7xUPUrSVtSwT71KCZ/tqGx2zuahKGekU1zLUsj4819H2
+         4ltmEvv1GI4krzoEvrxhGKbAaBbIkvZyKZYDbMtA5xiuQ0bT177yNLdO+hOsVs2X76Q9
+         Z5Wxj9Lim4MvNjp9135Ud6qPpqT3b6kpTh412v0/7Bybj9n1bQYfrazZ00No0s///jLe
+         ldS/E7e6by8AXiyU2xYVRUJKelkB08VhEtTV/yz5Zylwko5bwxkN0OGqdTZNk+M8qs1d
+         jzf7lL0LFhWwMCQHnAC2cHe5g3qkeGb5e+o7+G1yIsCW4lE5AP3R4WSyWH43c97Ju5N7
+         va1Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
-         :message-id:date:mime-version:content-transfer-encoding;
-        bh=H/Eozbq7KtLQv7I05PmFbNf/apdYsXdfHT73zybO8ZE=;
-        b=5XjGFdLBzSrRlznPXf6zTYqjVvKia0XQSPZcw49XNVBhUsYhtB6bYl4TO4DkWSs04Y
-         A3rE/bMmdsXwc5IUvr2pgDgj2xD4a9uA4CAN8iAmMVvP0BNj9lvyaCXDqaB99RPd8wM1
-         8umdBGH8FONuomiyorOcyt+ed/I7bOmWgipuXAlxijLfRH0uC7BaeHqYe/3VdqxykaVH
-         w1x3Db8fKH1UJyiQNT204CttwqdbynBcBSz86f4pk+rUxrLrPrQOO8FkTgQ8qAu/xEfa
-         G6+oObszngO+m5+EixlxnffQEk1yeQixwjUaitTlW/hyQd6+JAGqc1vPD0hZ2oko7K88
-         8Elw==
-X-Gm-Message-State: AOAM530kfQPmddIuvZlDnxJJ09G6jFUJXCvzfGQuFUGMJBCPiL00+7ho
-        VxgnP5rI6v5bmFDLn/9pFZsqJg==
-X-Google-Smtp-Source: ABdhPJw4fg+s6o/fbrAgM6IxFUri1B2riMoKLYLBK8KHXUcxmp3h8VPW/Swvw/MRzkp1OZUSWEvhAw==
-X-Received: by 2002:a9d:3b8:: with SMTP id f53mr6001846otf.253.1634834999951;
-        Thu, 21 Oct 2021 09:49:59 -0700 (PDT)
-Received: from [127.0.1.1] ([2600:380:783a:c43c:af64:c142:4db7:63ac])
-        by smtp.gmail.com with ESMTPSA id g29sm1179353oic.27.2021.10.21.09.49.59
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=VNOVxOw71ipLbpQarDFMri/rDm9N6i/dmhNtzdX06Dw=;
+        b=mJO+Sc3LofN2wbAym6mXp9KpgVduAehoQsPaTlxCMFm0O+BQZzjz+LBzoHFybRpN93
+         +b1k5hk1rVKZIuu22GsY3kLIWTHSUV57tHO7WgY2QS4nzf/gjdRLaezasLYYRXBN4sW0
+         asVsy7EUMhm6oDw5lUM+lJurWfB++7fSoffggdyZZAp3ZGnZlPCjqDvYwustYCgdszyz
+         7tdv8GICQ3+Ainz/dSoksBc4h0DWUqA2mTXOZJ10ovfD0zNVwFhS6tTqchmJ3BKYoGOU
+         h0k+ZD1SombVdUIHN0NprS7zhfatJWe3Obkw14vLpHoj805xQ5i4I3GNMDOdBR2YGyTt
+         PT6A==
+X-Gm-Message-State: AOAM531rO1OhmYUJDoV7IdkC6nBvQOmruCxhnpjxisSMwNsinwOpOmbF
+        vzgQZhfewBds5gdHN2PekAhs8bmQ6Ow=
+X-Google-Smtp-Source: ABdhPJzUtcFDw7YZrz7mJNpg1hCLCG+fkCMkbpDGV+aTWttOMbTPCPn+wNNrsP62y8Zpn/Grtfn0Rw==
+X-Received: by 2002:a17:90a:5b0c:: with SMTP id o12mr10568417pji.11.1634863384224;
+        Thu, 21 Oct 2021 17:43:04 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id p13sm10488692pjb.44.2021.10.21.17.43.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Oct 2021 09:49:59 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-To:     linux-block@vger.kernel.org, Eric Biggers <ebiggers@kernel.org>
-Cc:     linux-mmc@vger.kernel.org,
-        Satya Tangirala <satyaprateek2357@gmail.com>,
-        linux-scsi@vger.kernel.org, dm-devel@redhat.com
-In-Reply-To: <20211018180453.40441-1-ebiggers@kernel.org>
-References: <20211018180453.40441-1-ebiggers@kernel.org>
-Subject: Re: [PATCH v6 0/4] blk-crypto cleanups
-Message-Id: <163483499921.66288.14458324918559511031.b4-ty@kernel.dk>
-Date:   Thu, 21 Oct 2021 10:49:59 -0600
+        Thu, 21 Oct 2021 17:43:03 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: ran.jianping@zte.com.cn
+To:     jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        ran jianping <ran.jianping@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi:aha1542: remove unneeded semicolon
+Date:   Fri, 22 Oct 2021 00:42:45 +0000
+Message-Id: <20211022004245.1061879-1-ran.jianping@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 18 Oct 2021 11:04:49 -0700, Eric Biggers wrote:
-> This series renames struct blk_keyslot_manager to struct
-> blk_crypto_profile, as it is misnamed; it doesn't always manage
-> keyslots.  It's much more logical to think of it as the
-> "blk-crypto profile" of a device, similar to blk_integrity_profile.
-> 
-> This series also improves the inline-encryption.rst documentation file,
-> and cleans up blk-crypto-fallback a bit.
-> 
-> [...]
+From: ran jianping <ran.jianping@zte.com.cn>
 
-Applied, thanks!
+ Eliminate the following coccinelle check warning:
+ drivers/scsi/aha1542.c:553:2-3
+ drivers/scsi/aha1542.c:582:2-3
+ drivers/scsi/aha1542.c:605:2-3
+ drivers/scsi/aha1542.c:306:2-3
+ drivers/scsi/aha1542.c:348:3-4
+ drivers/scsi/aha1542.c:412:2-3
+ drivers/scsi/aha1542.c:640:2-3
+ drivers/scsi/aha1542.c:658:2-3
+ drivers/scsi/aha1542.c:677:2-3
+ drivers/scsi/aha1542.c:538:2-3
 
-[1/4] blk-crypto-fallback: properly prefix function and struct names
-      commit: eebcafaebb17cb8fda671709fab5dd836bdc3a08
-[2/4] blk-crypto: rename keyslot-manager files to blk-crypto-profile
-      commit: 1e8d44bddf57f6d878e083f281a34d5c88feb7db
-[3/4] blk-crypto: rename blk_keyslot_manager to blk_crypto_profile
-      commit: cb77cb5abe1f4fae4a33b735606aae22f9eaa1c7
-[4/4] blk-crypto: update inline encryption documentation
-      commit: 8e9f666a6e66d3f882c094646d35536d2759103a
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: ran jianping <ran.jianping@zte.com.cn>
+---
+ drivers/scsi/aha1542.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-Best regards,
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index f0e8ae9f5e40..a5a0a3e5c6ea 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -303,7 +303,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+ 		if (flag & SCRD)
+ 			printk("SCRD ");
+ 		printk("status %02x\n", inb(STATUS(sh->io_port)));
+-	};
++	}
+ #endif
+ 	number_serviced = 0;
+ 
+@@ -345,7 +345,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+ 			if (!number_serviced)
+ 				shost_printk(KERN_WARNING, sh, "interrupt received, but no mail.\n");
+ 			return IRQ_HANDLED;
+-		};
++		}
+ 
+ 		mbo = (scsi2int(mb[mbi].ccbptr) - (unsigned long)aha1542->ccb_handle) / sizeof(struct ccb);
+ 		mbistatus = mb[mbi].status;
+@@ -409,7 +409,7 @@ static irqreturn_t aha1542_interrupt(int irq, void *dev_id)
+ 						 */
+ 		scsi_done(tmp_cmd);
+ 		number_serviced++;
+-	};
++	}
+ }
+ 
+ static int aha1542_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+@@ -535,7 +535,7 @@ static void setup_mailboxes(struct Scsi_Host *sh)
+ 		any2scsi(aha1542->mb[i].ccbptr,
+ 			 aha1542->ccb_handle + i * sizeof(struct ccb));
+ 		aha1542->mb[AHA1542_MAILBOXES + i].status = 0;
+-	};
++	}
+ 	aha1542_intr_reset(sh->io_port);	/* reset interrupts, so they don't block */
+ 	any2scsi(mb_cmd + 2, aha1542->mb_handle);
+ 	if (aha1542_out(sh->io_port, mb_cmd, 5))
+@@ -550,7 +550,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
+ 	i = inb(STATUS(sh->io_port));
+ 	if (i & DF) {
+ 		i = inb(DATA(sh->io_port));
+-	};
++	}
+ 	aha1542_outb(sh->io_port, CMD_RETCONF);
+ 	aha1542_in(sh->io_port, inquiry_result, 3, 0);
+ 	if (!wait_mask(INTRFLAGS(sh->io_port), INTRMASK, HACC, 0, 0))
+@@ -579,7 +579,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
+ 	default:
+ 		shost_printk(KERN_ERR, sh, "Unable to determine DMA channel.\n");
+ 		return -1;
+-	};
++	}
+ 	switch (inquiry_result[1]) {
+ 	case 0x40:
+ 		sh->irq = 15;
+@@ -602,7 +602,7 @@ static int aha1542_getconfig(struct Scsi_Host *sh)
+ 	default:
+ 		shost_printk(KERN_ERR, sh, "Unable to determine IRQ level.\n");
+ 		return -1;
+-	};
++	}
+ 	sh->this_id = inquiry_result[2] & 7;
+ 	return 0;
+ }
+@@ -637,7 +637,7 @@ static int aha1542_mbenable(struct Scsi_Host *sh)
+ 
+ 		if (aha1542_out(sh->io_port, mbenable_cmd, 3))
+ 			goto fail;
+-	};
++	}
+ 	while (0) {
+ fail:
+ 		shost_printk(KERN_ERR, sh, "Mailbox init failed\n");
+@@ -655,7 +655,7 @@ static int aha1542_query(struct Scsi_Host *sh)
+ 	i = inb(STATUS(sh->io_port));
+ 	if (i & DF) {
+ 		i = inb(DATA(sh->io_port));
+-	};
++	}
+ 	aha1542_outb(sh->io_port, CMD_INQUIRY);
+ 	aha1542_in(sh->io_port, inquiry_result, 4, 0);
+ 	if (!wait_mask(INTRFLAGS(sh->io_port), INTRMASK, HACC, 0, 0))
+@@ -674,7 +674,7 @@ static int aha1542_query(struct Scsi_Host *sh)
+ 	if (inquiry_result[0] == 0x43) {
+ 		shost_printk(KERN_INFO, sh, "Emulation mode not supported for AHA-1740 hardware, use aha1740 driver instead.\n");
+ 		return 1;
+-	};
++	}
+ 
+ 	/*
+ 	 * Always call this - boards that do not support extended bios translation
 -- 
-Jens Axboe
-
+2.25.1
 
