@@ -2,83 +2,166 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16086C433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 07:48:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B666C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 09:48:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EACB260F43
-	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 07:48:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10B3A60F46
+	for <linux-scsi@archiver.kernel.org>; Fri, 22 Oct 2021 09:48:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231941AbhJVHub (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 22 Oct 2021 03:50:31 -0400
-Received: from mta-02.yadro.com ([89.207.88.252]:44088 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S231773AbhJVHua (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 22 Oct 2021 03:50:30 -0400
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 84FEA43B9A;
-        Fri, 22 Oct 2021 07:48:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        mime-version:content-transfer-encoding:content-type:content-type
-        :content-language:accept-language:in-reply-to:references
-        :message-id:date:date:subject:subject:from:from:received
-        :received:received:received; s=mta-01; t=1634888891; x=
-        1636703292; bh=UlmBZOypFnZoEHyHev75QC+FAdiumfFof7f0RVuR3xU=; b=m
-        PeWv+H6ifLTBzqrz8Zzoxv/kIj5cnDLa8feb0Z2NEDW2CvdldMQCpYQmn3NVw2I1
-        pSITdignwgeRvTB9f1sLTw5YzE+gNnXg4AieSnEO8eb0gKzHmvvNB+XXCBJ1NBFy
-        fVCio0owS8z5jpps4rij3MWaFNOHrRLN7aLo/YBUkI=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id PmIsfc4kTn4i; Fri, 22 Oct 2021 10:48:11 +0300 (MSK)
-Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id B23E743BB0;
-        Fri, 22 Oct 2021 10:48:08 +0300 (MSK)
-Received: from T-EXCH-04.corp.yadro.com (172.17.100.104) by
- T-EXCH-04.corp.yadro.com (172.17.100.104) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id
- 15.1.669.32; Fri, 22 Oct 2021 10:48:07 +0300
-Received: from T-EXCH-04.corp.yadro.com ([fe80::d8c5:6f0a:3d48:18df]) by
- T-EXCH-04.corp.yadro.com ([fe80::d8c5:6f0a:3d48:18df%15]) with mapi id
- 15.01.0669.032; Fri, 22 Oct 2021 10:48:07 +0300
-From:   Dmitriy Bogdanov <d.bogdanov@yadro.com>
-To:     Mike Christie <michael.christie@oracle.com>,
-        Martin Petersen <martin.petersen@oracle.com>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux@yadro.com" <linux@yadro.com>
-Subject: RE: [PATCH v3 0/3] target: iscsi: control authentication per ACL
-Thread-Topic: [PATCH v3 0/3] target: iscsi: control authentication per ACL
-Thread-Index: AQHXxLmS7SuA9HdbIk2r5RVxhcl+j6veWFEAgABFs0A=
-Date:   Fri, 22 Oct 2021 07:48:07 +0000
-Message-ID: <15af5f6f490a42c5a02c9d9bd79f1a28@yadro.com>
-References: <20211019071843.14890-1-d.bogdanov@yadro.com>
- <ec9e01a3-73d0-a06b-8c20-ae492c0c3313@oracle.com>
-In-Reply-To: <ec9e01a3-73d0-a06b-8c20-ae492c0c3313@oracle.com>
-Accept-Language: ru-RU, en-US
-Content-Language: ru-RU
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-originating-ip: [10.178.112.183]
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+        id S232038AbhJVJuo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 22 Oct 2021 05:50:44 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:21531 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231992AbhJVJun (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 22 Oct 2021 05:50:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1634896106;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=W9T8B018h78tAIOUbGw7DY/sbBrHy3hSwuPRlF8fWKY=;
+        b=hmednXfqlYx50/lvfqcblUswjvqnLBXHtGoF6n6I1DaMLMjUJ9qMYseosGrHBA37X4DXcn
+        xLL0AtowL09cNU3Oq3N758gTgaqOEjL8QdgoV6ImdYq1wRRacr6/eVjxPEeilL68nxPPUD
+        lmrBe8DKwUsDw25W71joEbC5vEyDYD4=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-172-oQ343KurMfW5XwwN-BpeTQ-1; Fri, 22 Oct 2021 05:48:24 -0400
+X-MC-Unique: oQ343KurMfW5XwwN-BpeTQ-1
+Received: by mail-wr1-f69.google.com with SMTP id n14-20020a5d420e000000b00167c303d862so796351wrq.9
+        for <linux-scsi@vger.kernel.org>; Fri, 22 Oct 2021 02:48:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=W9T8B018h78tAIOUbGw7DY/sbBrHy3hSwuPRlF8fWKY=;
+        b=RiJeM4jMS9MynPFgi6TiNXEhK59gO1hce+yLcaQQZm9oDUyrcdmdDF0dVwJKRIkAd5
+         IJeo8D3p2YLs24q90kPMp9Xvz8gkLd4g9x+TH6nKqVb9D2ZT0xjFg5pBUDsGfUR2Xmxn
+         UZJxjEnQHhbXsOCVk65NY62i/El7iBqqHQo+IIO2fFcepjlMMx6wUXmV+zoDRCDF8SeD
+         KNamVsPRnWPniO3b8hlTHhJEIw6pyzQj1CojhBDYU62nWd+ciulQglNibFaavjq2MCcX
+         uPkxjIyxEabK9zgEyXBPoyP/P8SgLZdKpZV1+JTP7HQw4kWa2OOqgYUQzey+W7uELC5V
+         7fqw==
+X-Gm-Message-State: AOAM5328a8x/0y4NffmKFF/D/61h+dQw4o6Ip1a0ztaHqk+OisajIYx/
+        HDt2Ti8z6wZ9qjJNDiLQ4lkIY+w0JOBsO2iWIc6DnKxmm+2Jbn9w3Y+4hWDKzFbyxudktlpuUtJ
+        0j5ewIMYWVQ6QG1ANLe/V7w==
+X-Received: by 2002:a5d:64af:: with SMTP id m15mr13896846wrp.117.1634896103279;
+        Fri, 22 Oct 2021 02:48:23 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJwLnEzXyZnIH2I896CP+ucefqoe5BtlT1z2DOdAq4RH4UEuXUz/gmRg1JCXs+m4D8ZaqZDE3g==
+X-Received: by 2002:a5d:64af:: with SMTP id m15mr13896831wrp.117.1634896103097;
+        Fri, 22 Oct 2021 02:48:23 -0700 (PDT)
+Received: from redhat.com ([2.55.24.172])
+        by smtp.gmail.com with ESMTPSA id 186sm10973877wmc.20.2021.10.22.02.48.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 22 Oct 2021 02:48:22 -0700 (PDT)
+Date:   Fri, 22 Oct 2021 05:48:18 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     Mike Christie <michael.christie@oracle.com>
+Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        stefanha@redhat.com, pbonzini@redhat.com, jasowang@redhat.com,
+        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH V3 00/11] vhost: multiple worker support
+Message-ID: <20211022054625-mutt-send-email-mst@kernel.org>
+References: <20211022051911.108383-1-michael.christie@oracle.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211022051911.108383-1-michael.christie@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-SGkgTWlrZSwNCg0KPiBJIGNhbid0IHNlZW0gdG8gZ2V0IHRoZSBwYXRjaGVzIHdvcmtpbmcgd2l0
-aCB0aGUgdGFyZ2V0Y2xpIGNvbmZpZyBmaWxlIGJlbG93IEl0IHdvcmtlZCBvayBiZWZvcmUgdGhl
-IHBhdGNoZXMuDQo+DQo+IEkgZ2V0IHRoaXMgZXJyb3I6DQo+DQo+IE9jdCAyMiAwMDo1NjoyNSBv
-bDQga2VybmVsOiBDSEFQIHVzZXIgb3IgcGFzc3dvcmQgbm90IHNldCBmb3IgSW5pdGlhdG9yIEFD
-TA0KPiBPY3QgMjIgMDA6NTY6MjUgb2w0IGtlcm5lbDogU2VjdXJpdHkgbmVnb3RpYXRpb24gZmFp
-bGVkLg0KPiBPY3QgMjIgMDA6NTY6MjUgb2w0IGtlcm5lbDogaVNDU0kgTG9naW4gbmVnb3RpYXRp
-b24gZmFpbGVkLg0KDQpUaGlzIGtpbmQgb2YgZXJyb3IgaXMgcmVwb3J0ZWQgZm9yIHRoZSB1bmtu
-b3duIChkeW5hbWljKSBBQ0wgc2luY2UgdGhlIGNvbmZpZyBmaWxlIGhhdmUgbm90IGhhdmUNCnVz
-ZXJpZC9wYXNzd29yZCBjb25maWd1cmVkIGZvciBUUEcuIFlvdXIgY29uZmlnIGZpbGUgbG9va3Mg
-c3RyYW5nZSAtIGl0IGhhcyBnZW5lcmF0ZV9keW5fYWNscz0xDQpidXQgaGFzIG5vdCBjcmVkZW50
-aWFscyBmb3IgZHluYW1pYyBhY2xzLg0KDQpMb2dpbiBmcm9tIHRoZSBjb25maWd1cmVkIEFDTCBp
-biB0aGlzIGNvbmZpZyBmaWxlIHdvcmtzIHdlbGwgZm9yIG1lLg0KDQpDb3VsZCB5b3UsIHBsZWFz
-ZSwgZGVzY3JpYmUgbW9yZSBkZXRhaWxzIG9mIHlvdXIgdXNlY2FzZT8NCg0KQlIsDQogRG1pdHJ5
-DQo=
+On Fri, Oct 22, 2021 at 12:18:59AM -0500, Mike Christie wrote:
+> The following patches apply over linus's tree and this patchset
+> 
+> https://lore.kernel.org/all/20211007214448.6282-1-michael.christie@oracle.com/
+> 
+> which allows us to check the vhost owner thread's RLIMITs:
+
+
+Unfortunately that patchset in turn triggers kbuild warnings.
+I was hoping you would address them, I don't think
+merging that patchset before kbuild issues are addressed
+is possible.
+
+It also doesn't have lots of acks, I'm a bit apprehensive
+of merging core changes like this through the vhost tree.
+Try to CC more widely/ping people?
+
+> It looks like that patchset has been ok'd by all the major parties
+> and just needs a small cleanup to apply to Jens and Paul trees, so I
+> wanted to post my threading patches based over it for review.
+> 
+> The following patches allow us to support multiple vhost workers per
+> device. I ended up just doing Stefan's original idea where userspace has
+> the kernel create a worker and we pass back the pid. This has the benefit
+> over the workqueue and userspace thread approach where we only have
+> one'ish code path in the kernel during setup to detect old tools. The
+> main IO paths and device/vq setup/teardown paths all use common code.
+> 
+> I've also included a patch for qemu so you can get an idea of how it
+> works. If we are ok with the kernel code then I'll break that up into
+> a patchset and send to qemu-devel for review.
+> 
+> Results:
+> --------
+> 
+> fio jobs        1       2       4       8       12      16
+> ----------------------------------------------------------
+> 1 worker        84k    492k    510k    -       -       -
+> worker per vq   184k   380k    744k    1422k   2256k   2434k
+> 
+> Notes:
+> 0. This used a simple fio command:
+> 
+> fio --filename=/dev/sdb  --direct=1 --rw=randrw --bs=4k \
+> --ioengine=libaio --iodepth=128  --numjobs=$JOBS_ABOVE
+> 
+> and I used a VM with 16 vCPUs and 16 virtqueues.
+> 
+> 1. The patches were tested with emulate_pr=0 and these patches:
+> 
+> https://lore.kernel.org/all/yq1tuhge4bg.fsf@ca-mkp.ca.oracle.com/t/
+> 
+> which are in mkp's scsi branches for the next kernel. They fix the perf
+> issues where IOPs dropped at 12 vqs/jobs.
+> 
+> 2. Because we have a hard limit of 1024 cmds, if the num jobs * iodepth
+> was greater than 1024, I would decrease iodepth. So 12 jobs used 85 cmds,
+> and 16 used 64.
+> 
+> 3. The perf issue above at 2 jobs is because when we only have 1 worker
+> we execute more cmds per vhost_work due to all vqs funneling to one worker.
+> This results in less context switches and better batching without having to
+> tweak any settings. I'm working on patches to add back batching during lio
+> completion and do polling on the submission side.
+> 
+> We will still want the threading patches, because if we batch at the fio
+> level plus use the vhost theading patches, we can see a big boost like
+> below. So hopefully doing it at the kernel will allow apps to just work
+> without having to be smart like fio.
+> 
+> fio using io_uring and batching with the iodepth_batch* settings:
+> 
+> fio jobs        1       2       4       8       12      16
+> -------------------------------------------------------------
+> 1 worker        494k    520k    -       -       -       -
+> worker per vq   496k    878k    1542k   2436k   2304k   2590k
+> 
+> V3:
+> - fully convert vhost code to use vq based APIs instead of leaving it
+> half per dev and half per vq.
+> - rebase against kernel worker API.
+> - Drop delayed worker creation. We always create the default worker at
+> VHOST_SET_OWNER time. Userspace can create and bind workers after that.
+> 
+> v2:
+> - change loop that we take a refcount to the worker in
+> - replaced pid == -1 with define.
+> - fixed tabbing/spacing coding style issue
+> - use hash instead of list to lookup workers.
+> - I dropped the patch that added an ioctl cmd to get a vq's worker's
+> pid. I saw we might do a generic netlink interface instead.
+> 
+> 
+> 
+
