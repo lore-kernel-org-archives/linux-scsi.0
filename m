@@ -2,414 +2,152 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A5EC433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 Oct 2021 16:10:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC46C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 Oct 2021 20:11:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 48EB26105A
-	for <linux-scsi@archiver.kernel.org>; Sat, 23 Oct 2021 16:10:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BBA3F60F6F
+	for <linux-scsi@archiver.kernel.org>; Sat, 23 Oct 2021 20:11:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230142AbhJWQND (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 23 Oct 2021 12:13:03 -0400
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:50672 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230037AbhJWQNC (ORCPT
+        id S230361AbhJWUNg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 23 Oct 2021 16:13:36 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:27791 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229954AbhJWUNf (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 23 Oct 2021 12:13:02 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1635005443;
-        bh=uWU6OxYQsM5INugsJf6auKYNXnrogubCfUFv12YZ1B8=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=NeIBSvB0RiTgRiKo1Djb0JiJYSM4HVcU/uVRUrK1n1FvpjTSeJdmhYQ5Ylp1hWEAV
-         wrzi6LxlregPBzL8ETrN7dBf7VvzmiukCvAfDzlLG5lyvD74K9M3MxF32CbGw5mBKM
-         kT+6t8yrEhkrF7c4NM5/ZidhpjNWwoeuLV+YmSnA=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id D008F12805A8;
-        Sat, 23 Oct 2021 12:10:43 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id 0MT4efYzSJ59; Sat, 23 Oct 2021 12:10:43 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1635005443;
-        bh=uWU6OxYQsM5INugsJf6auKYNXnrogubCfUFv12YZ1B8=;
-        h=Message-ID:Subject:From:To:Date:From;
-        b=NeIBSvB0RiTgRiKo1Djb0JiJYSM4HVcU/uVRUrK1n1FvpjTSeJdmhYQ5Ylp1hWEAV
-         wrzi6LxlregPBzL8ETrN7dBf7VvzmiukCvAfDzlLG5lyvD74K9M3MxF32CbGw5mBKM
-         kT+6t8yrEhkrF7c4NM5/ZidhpjNWwoeuLV+YmSnA=
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 447C11280383;
-        Sat, 23 Oct 2021 12:10:43 -0400 (EDT)
-Message-ID: <14c6e40fec98dbd042c37ea6f65cbd0617b79d78.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 5.15-rc6
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Andrew Morton <akpm@linux-foundation.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
-        linux-kernel <linux-kernel@vger.kernel.org>
-Date:   Sat, 23 Oct 2021 12:10:42 -0400
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        Sat, 23 Oct 2021 16:13:35 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1635019875;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=aXVp8tyrghvJw92JwPIZDHyEdU7IU/XO1DvnZcDPNf8=;
+        b=XfuXp4iYVvrsk4TAOm0e09BL3RJqToocR/nuAcOFt6i4y51FpEimJldNNP2GtEnUjn/JTB
+        2HYKPxQxNiwGXxCq5dC1axFg4YVXH0umiQh8a5pmyWs02LRQkVk6Ejjuch0j8WuhwrZ5ZF
+        gIVx6t6MZH9fHtILaCoK4S49eH9Rov4=
+Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
+ [209.85.128.70]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-496-wgwQGsiQNCu_SHJjT6IknQ-1; Sat, 23 Oct 2021 16:11:13 -0400
+X-MC-Unique: wgwQGsiQNCu_SHJjT6IknQ-1
+Received: by mail-wm1-f70.google.com with SMTP id a18-20020a1cf012000000b0032ca3eb2ac3so1896680wmb.0
+        for <linux-scsi@vger.kernel.org>; Sat, 23 Oct 2021 13:11:13 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=aXVp8tyrghvJw92JwPIZDHyEdU7IU/XO1DvnZcDPNf8=;
+        b=3bFgvYATiHLGvh8QuF3GThVKhsw5qUuYyopnwsech/pp1EcmFfDq++kKra5+TYCFoM
+         I8CiuFypROEeuwbH8V4Uct5fBPYZoWpsUXxc0agXRgcI3yLihQ6+AWyRTGsAXAYfehN9
+         Z38EEFX06VRheK74H49jZ3gaX+q7xvtJAyaXP296gctEKnRBoTz1JRBaHmcZ8/sKyAXB
+         6v/NMJJ5LlOaTQa66sz8Bia/j8XrfPJmmJwPX0z11tuVOK9fEnKa9VQhO4LRrXDuPlr7
+         GnoYd4dRhvH+SWNpGguKAJUtEogcaBfdlvyCOcNDpCciQF2ArsTCWxjZ426J1+nYHcOA
+         wcNw==
+X-Gm-Message-State: AOAM532z/+sApwzDptc1ZvHWCoF/LkxTfwvpE+Sv0nwwCsDhex/Bv0Ep
+        9OPjJEekxPEkXjgM8V/mwPcTEN1SYwnVRSu94WmqhuwGH2yVmgunEgk/HP/LFdEW14of8XDBanF
+        SmRBlOUYnj4qvOSCSqrGUCg==
+X-Received: by 2002:a05:600c:4e94:: with SMTP id f20mr8838244wmq.166.1635019872630;
+        Sat, 23 Oct 2021 13:11:12 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJw0SYiUm8Dg2wDtDS76O9WIfq6qcZsbjs5OvzyUDna2Kx4HMh0JOKdg+tqLwDRmgRp5+ULpfw==
+X-Received: by 2002:a05:600c:4e94:: with SMTP id f20mr8838220wmq.166.1635019872410;
+        Sat, 23 Oct 2021 13:11:12 -0700 (PDT)
+Received: from redhat.com ([2.55.9.147])
+        by smtp.gmail.com with ESMTPSA id f18sm11302380wrg.3.2021.10.23.13.11.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 23 Oct 2021 13:11:11 -0700 (PDT)
+Date:   Sat, 23 Oct 2021 16:11:07 -0400
+From:   "Michael S. Tsirkin" <mst@redhat.com>
+To:     michael.christie@oracle.com
+Cc:     target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        stefanha@redhat.com, pbonzini@redhat.com, jasowang@redhat.com,
+        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
+Subject: Re: [PATCH V3 11/11] vhost: allow userspace to create workers
+Message-ID: <20211023160838-mutt-send-email-mst@kernel.org>
+References: <20211022051911.108383-1-michael.christie@oracle.com>
+ <20211022051911.108383-13-michael.christie@oracle.com>
+ <20211022064359-mutt-send-email-mst@kernel.org>
+ <94289c36-431a-513f-9b52-b55225f6b89d@oracle.com>
+ <28250f62-ff38-901f-6014-9e975381d523@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <28250f62-ff38-901f-6014-9e975381d523@oracle.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Ten fixes, seven of which are in drivers.  The core fixes are one to
-fix a potential crash on resume, one to sort out our reference count
-releases to avoid releasing in-use modules and one to adjust the cmd
-per lun calculation to avoid an overflow in hyper-v.
+On Fri, Oct 22, 2021 at 01:17:26PM -0500, michael.christie@oracle.com wrote:
+> On 10/22/21 11:12 AM, michael.christie@oracle.com wrote:
+> > On 10/22/21 5:47 AM, Michael S. Tsirkin wrote:
+> >>> diff --git a/include/uapi/linux/vhost.h b/include/uapi/linux/vhost.h
+> >>> index c998860d7bbc..e5c0669430e5 100644
+> >>> --- a/include/uapi/linux/vhost.h
+> >>> +++ b/include/uapi/linux/vhost.h
+> >>> @@ -70,6 +70,17 @@
+> >>>  #define VHOST_VRING_BIG_ENDIAN 1
+> >>>  #define VHOST_SET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x13, struct vhost_vring_state)
+> >>>  #define VHOST_GET_VRING_ENDIAN _IOW(VHOST_VIRTIO, 0x14, struct vhost_vring_state)
+> >>> +/* By default, a device gets one vhost_worker created during VHOST_SET_OWNER
+> >>> + * that its virtqueues share. This allows userspace to create a vhost_worker
+> >>> + * and map a virtqueue to it or map a virtqueue to an existing worker.
+> >>> + *
+> >>> + * If pid > 0 and it matches an existing vhost_worker thread it will be bound
+> >>> + * to the vq. If pid is VHOST_VRING_NEW_WORKER, then a new worker will be
+> >>> + * created and bound to the vq.
+> >>> + *
+> >>> + * This must be called after VHOST_SET_OWNER and before the vq is active.
+> >>> + */
+> >>
+> >> A couple of things here:
+> >> it's probably a good idea not to make it match pid exactly,
+> >> if for no other reason than I'm not sure we want to
+> >> commit this being a pid. Let's just call it an id?
+> > 
+> > Ok.
+> > 
+> >> And maybe byteswap it or xor with some value
+> >> just to make sure userspace does not begin abusing it anyway.
+> >>
+> >> Also, interaction with pid namespace is unclear to me.
+> >> Can you document what happens here?
+> > 
+> > This current patchset only allows the vhost_dev owner to
+> > create/bind workers for devices it owns, so namespace don't come
+> 
+> I made a mistake here. The patches do restrict VHOST_SET_VRING_WORKER
+> to the same owner like I wrote. However, it looks like we could have 2
+> threads with the same mm pointer so vhost_dev_check_owner returns true,
+> but they could be in different namespaces.
+> 
+> Even though we are not going to pass the pid_t between user/kernel
+> space, should I add a pid namespace check when I repost the patches?
 
-The patch is available here:
+Um it's part of the ioctl. How you are not going to pass it around?
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Adrian Hunter (1):
-      scsi: ufs: ufs-pci: Force a full restore after suspend-to-disk
-
-Andrea Parri (Microsoft) (1):
-      scsi: storvsc: Fix validation for unsolicited incoming packets
-
-Dexuan Cui (1):
-      scsi: core: Fix shost->cmd_per_lun calculation in scsi_add_host_with_dma()
-
-Dmitry Bogdanov (1):
-      scsi: qla2xxx: Fix unmap of already freed sgl
-
-Joy Gu (1):
-      scsi: qla2xxx: Fix a memory leak in an error path of qla2x00_process_els()
-
-Mike Christie (1):
-      scsi: iscsi: Fix set_param() handling
-
-Miles Chen (1):
-      scsi: sd: Fix crashes in sd_resume_runtime()
-
-Ming Lei (1):
-      scsi: core: Put LLD module refcnt after SCSI device is released
-
-Sreekanth Reddy (1):
-      scsi: mpi3mr: Fix duplicate device entries when scanning through sysfs
-
-Zheyu Ma (1):
-      scsi: qla2xxx: Return -ENOMEM if kzalloc() fails
-
-And the diffstat:
-
- drivers/scsi/hosts.c                |  3 ++-
- drivers/scsi/mpi3mr/mpi3mr_os.c     |  2 +-
- drivers/scsi/qla2xxx/qla_bsg.c      |  2 +-
- drivers/scsi/qla2xxx/qla_os.c       |  2 +-
- drivers/scsi/qla2xxx/qla_target.c   | 14 +++++---------
- drivers/scsi/scsi.c                 |  4 +++-
- drivers/scsi/scsi_sysfs.c           |  9 +++++++++
- drivers/scsi/scsi_transport_iscsi.c |  2 --
- drivers/scsi/sd.c                   |  7 ++++++-
- drivers/scsi/storvsc_drv.c          | 32 +++++++++++++++++++++++---------
- drivers/scsi/ufs/ufshcd-pci.c       | 33 ++++++++++++++++++---------------
- 11 files changed, 69 insertions(+), 41 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 3f6f14f0cafb..24b72ee4246f 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -220,7 +220,8 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 		goto fail;
- 	}
+So if we do worry about this, I would just make it a 64 bit integer,
+rename it "id" and increment each time a thread is created.
  
--	shost->cmd_per_lun = min_t(short, shost->cmd_per_lun,
-+	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
-+	shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
- 				   shost->can_queue);
- 
- 	error = scsi_init_sense_cache(shost);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 2197988333fe..3cae8803383b 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -3736,7 +3736,7 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	shost->max_lun = -1;
- 	shost->unique_id = mrioc->id;
- 
--	shost->max_channel = 1;
-+	shost->max_channel = 0;
- 	shost->max_id = 0xFFFFFFFF;
- 
- 	if (prot_mask >= 0)
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index 4b5d28d89d69..655cf5de604b 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -431,7 +431,7 @@ qla2x00_process_els(struct bsg_job *bsg_job)
- 	goto done_free_fcport;
- 
- done_free_fcport:
--	if (bsg_request->msgcode == FC_BSG_RPT_ELS)
-+	if (bsg_request->msgcode != FC_BSG_RPT_ELS)
- 		qla2x00_free_fcport(fcport);
- done:
- 	return rval;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d2e40aaba734..836fedcea241 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4157,7 +4157,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
- 					ql_dbg_pci(ql_dbg_init, ha->pdev,
- 					    0xe0ee, "%s: failed alloc dsd\n",
- 					    __func__);
--					return 1;
-+					return -ENOMEM;
- 				}
- 				ha->dif_bundle_kallocs++;
- 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b3478ed9b12e..7d8242c120fc 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3319,8 +3319,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
- 			vha->flags.online, qla2x00_reset_active(vha),
- 			cmd->reset_count, qpair->chip_reset);
--		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
--		return 0;
-+		goto out_unmap_unlock;
- 	}
- 
- 	/* Does F/W have an IOCBs for this request */
-@@ -3445,10 +3444,6 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 	prm.sg = NULL;
- 	prm.req_cnt = 1;
- 
--	/* Calculate number of entries and segments required */
--	if (qlt_pci_map_calc_cnt(&prm) != 0)
--		return -EAGAIN;
--
- 	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
- 	    (cmd->sess && cmd->sess->deleted)) {
- 		/*
-@@ -3466,6 +3461,10 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 		return 0;
- 	}
- 
-+	/* Calculate number of entries and segments required */
-+	if (qlt_pci_map_calc_cnt(&prm) != 0)
-+		return -EAGAIN;
-+
- 	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
- 	/* Does F/W have an IOCBs for this request */
- 	res = qlt_check_reserve_free_req(qpair, prm.req_cnt);
-@@ -3870,9 +3869,6 @@ void qlt_free_cmd(struct qla_tgt_cmd *cmd)
- 
- 	BUG_ON(cmd->cmd_in_wq);
- 
--	if (cmd->sg_mapped)
--		qlt_unmap_sg(cmd->vha, cmd);
--
- 	if (!cmd->q_full)
- 		qlt_decr_num_pend_cmds(cmd->vha);
- 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index b241f9e3885c..291ecc33b1fe 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -553,8 +553,10 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--	module_put(sdev->host->hostt->module);
-+	struct module *mod = sdev->host->hostt->module;
-+
- 	put_device(&sdev->sdev_gendev);
-+	module_put(mod);
- }
- EXPORT_SYMBOL(scsi_device_put);
- 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 86793259e541..a35841b34bfd 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -449,9 +449,12 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
- 	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
- 	unsigned long flags;
-+	struct module *mod;
- 
- 	sdev = container_of(work, struct scsi_device, ew.work);
- 
-+	mod = sdev->host->hostt->module;
-+
- 	scsi_dh_release_device(sdev);
- 
- 	parent = sdev->sdev_gendev.parent;
-@@ -502,11 +505,17 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 
- 	if (parent)
- 		put_device(parent);
-+	module_put(mod);
- }
- 
- static void scsi_device_dev_release(struct device *dev)
- {
- 	struct scsi_device *sdp = to_scsi_device(dev);
-+
-+	/* Set module pointer as NULL in case of module unloading */
-+	if (!try_module_get(sdp->host->hostt->module))
-+		sdp->host->hostt->module = NULL;
-+
- 	execute_in_process_context(scsi_device_dev_release_usercontext,
- 				   &sdp->ew);
- }
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 922e4c7bd88e..78343d3f9385 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2930,8 +2930,6 @@ iscsi_set_param(struct iscsi_transport *transport, struct iscsi_uevent *ev)
- 			session->recovery_tmo = value;
- 		break;
- 	default:
--		err = transport->set_param(conn, ev->u.set_param.param,
--					   data, ev->u.set_param.len);
- 		if ((conn->state == ISCSI_CONN_BOUND) ||
- 			(conn->state == ISCSI_CONN_UP)) {
- 			err = transport->set_param(conn, ev->u.set_param.param,
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 523bf2fdc253..fce63335084e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3683,7 +3683,12 @@ static int sd_resume(struct device *dev)
- static int sd_resume_runtime(struct device *dev)
- {
- 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
--	struct scsi_device *sdp = sdkp->device;
-+	struct scsi_device *sdp;
-+
-+	if (!sdkp)	/* E.g.: runtime resume at the start of sd_probe() */
-+		return 0;
-+
-+	sdp = sdkp->device;
- 
- 	if (sdp->ignore_media_change) {
- 		/* clear the device's sense data */
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index ebbbc1299c62..9eb1b88a29dd 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1285,11 +1285,15 @@ static void storvsc_on_channel_callback(void *context)
- 	foreach_vmbus_pkt(desc, channel) {
- 		struct vstor_packet *packet = hv_pkt_data(desc);
- 		struct storvsc_cmd_request *request = NULL;
-+		u32 pktlen = hv_pkt_datalen(desc);
- 		u64 rqst_id = desc->trans_id;
-+		u32 minlen = rqst_id ? sizeof(struct vstor_packet) -
-+			stor_device->vmscsi_size_delta : sizeof(enum vstor_packet_operation);
- 
--		if (hv_pkt_datalen(desc) < sizeof(struct vstor_packet) -
--				stor_device->vmscsi_size_delta) {
--			dev_err(&device->device, "Invalid packet len\n");
-+		if (pktlen < minlen) {
-+			dev_err(&device->device,
-+				"Invalid pkt: id=%llu, len=%u, minlen=%u\n",
-+				rqst_id, pktlen, minlen);
- 			continue;
- 		}
- 
-@@ -1302,13 +1306,23 @@ static void storvsc_on_channel_callback(void *context)
- 			if (rqst_id == 0) {
- 				/*
- 				 * storvsc_on_receive() looks at the vstor_packet in the message
--				 * from the ring buffer.  If the operation in the vstor_packet is
--				 * COMPLETE_IO, then we call storvsc_on_io_completion(), and
--				 * dereference the guest memory address.  Make sure we don't call
--				 * storvsc_on_io_completion() with a guest memory address that is
--				 * zero if Hyper-V were to construct and send such a bogus packet.
-+				 * from the ring buffer.
-+				 *
-+				 * - If the operation in the vstor_packet is COMPLETE_IO, then
-+				 *   we call storvsc_on_io_completion(), and dereference the
-+				 *   guest memory address.  Make sure we don't call
-+				 *   storvsc_on_io_completion() with a guest memory address
-+				 *   that is zero if Hyper-V were to construct and send such
-+				 *   a bogus packet.
-+				 *
-+				 * - If the operation in the vstor_packet is FCHBA_DATA, then
-+				 *   we call cache_wwn(), and access the data payload area of
-+				 *   the packet (wwn_packet); however, there is no guarantee
-+				 *   that the packet is big enough to contain such area.
-+				 *   Future-proof the code by rejecting such a bogus packet.
- 				 */
--				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO) {
-+				if (packet->operation == VSTOR_OPERATION_COMPLETE_IO ||
-+				    packet->operation == VSTOR_OPERATION_FCHBA_DATA) {
- 					dev_err(&device->device, "Invalid packet with ID of 0\n");
- 					continue;
- 				}
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index 149c1aa09103..51424557810d 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -370,20 +370,6 @@ static void ufs_intel_common_exit(struct ufs_hba *hba)
- 
- static int ufs_intel_resume(struct ufs_hba *hba, enum ufs_pm_op op)
- {
--	/*
--	 * To support S4 (suspend-to-disk) with spm_lvl other than 5, the base
--	 * address registers must be restored because the restore kernel can
--	 * have used different addresses.
--	 */
--	ufshcd_writel(hba, lower_32_bits(hba->utrdl_dma_addr),
--		      REG_UTP_TRANSFER_REQ_LIST_BASE_L);
--	ufshcd_writel(hba, upper_32_bits(hba->utrdl_dma_addr),
--		      REG_UTP_TRANSFER_REQ_LIST_BASE_H);
--	ufshcd_writel(hba, lower_32_bits(hba->utmrdl_dma_addr),
--		      REG_UTP_TASK_REQ_LIST_BASE_L);
--	ufshcd_writel(hba, upper_32_bits(hba->utmrdl_dma_addr),
--		      REG_UTP_TASK_REQ_LIST_BASE_H);
--
- 	if (ufshcd_is_link_hibern8(hba)) {
- 		int ret = ufshcd_uic_hibern8_exit(hba);
- 
-@@ -463,6 +449,18 @@ static struct ufs_hba_variant_ops ufs_intel_lkf_hba_vops = {
- 	.device_reset		= ufs_intel_device_reset,
- };
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int ufshcd_pci_restore(struct device *dev)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	/* Force a full reset and restore */
-+	ufshcd_set_link_off(hba);
-+
-+	return ufshcd_system_resume(dev);
-+}
-+#endif
-+
- /**
-  * ufshcd_pci_shutdown - main function to put the controller in reset state
-  * @pdev: pointer to PCI device handle
-@@ -546,9 +544,14 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- }
- 
- static const struct dev_pm_ops ufshcd_pci_pm_ops = {
--	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
- 	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
- #ifdef CONFIG_PM_SLEEP
-+	.suspend	= ufshcd_system_suspend,
-+	.resume		= ufshcd_system_resume,
-+	.freeze		= ufshcd_system_suspend,
-+	.thaw		= ufshcd_system_resume,
-+	.poweroff	= ufshcd_system_suspend,
-+	.restore	= ufshcd_pci_restore,
- 	.prepare	= ufshcd_suspend_prepare,
- 	.complete	= ufshcd_resume_complete,
- #endif
+> 
+> > into play. If a thread from another namespace tried to create/bind
+> > a worker we would hit the owner checks in vhost_dev_ioctl which is
+> > done before vhost_vring_ioctl normally (for vdpa we hit the use_worker
+> > check and fail there).
+> > 
+> > However, with the kernel worker API changes the worker threads will
+> > now be in the vhost dev owner's namespace and not the kthreadd/default
+> > one, so in the future we are covered if we want to do something more
+> > advanced. For example, I've seen people working on an API to export the
+> > worker pids:
+> > 
+> > https://lore.kernel.org/netdev/20210507154332.hiblsd6ot5wzwkdj@steredhat/T/
+> > 
+> > and in the future for interfaces that export that info we could restrict
+> > access to root or users from the same namespace or I guess add interfaces
+> > to allow different namespaces to see the workers and share them.
+> > 
+> > 
+> >> No need to fix funky things like moving the fd between
+> >> pid namespaces while also creating/destroying workers, but let's
+> >> document it's not supported.
+> > 
+> > Ok. I'll add a comment.
+> > 
 
