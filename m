@@ -2,95 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 468FBC433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 19:48:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 66CE1C433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 21:25:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2645A60E96
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 19:48:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4E4AC60EE9
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 21:25:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232093AbhJXTug (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Oct 2021 15:50:36 -0400
-Received: from smtp01.smtpout.orange.fr ([80.12.242.123]:59105 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231300AbhJXTuf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2021 15:50:35 -0400
-Received: from pop-os.home ([92.140.161.106])
-        by smtp.orange.fr with ESMTPA
-        id ejTWmbi84dmYbejTWmLmaJ; Sun, 24 Oct 2021 21:48:12 +0200
-X-ME-Helo: pop-os.home
-X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
-X-ME-Date: Sun, 24 Oct 2021 21:48:12 +0200
-X-ME-IP: 92.140.161.106
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     james.smart@broadcom.com, ram.vegesna@broadcom.com,
-        jejb@linux.ibm.com, martin.petersen@oracle.com, dwagner@suse.de,
-        hare@suse.de
-Cc:     linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: elx: libefc_sli: Use 'bitmap_zalloc()' when applicable
-Date:   Sun, 24 Oct 2021 21:48:09 +0200
-Message-Id: <2a0a83949fb896a0a236dcca94dfdc8486d489f5.1635104793.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.30.2
+        id S232049AbhJXV1w (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Oct 2021 17:27:52 -0400
+Received: from mail-pg1-f169.google.com ([209.85.215.169]:35809 "EHLO
+        mail-pg1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229537AbhJXV1u (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2021 17:27:50 -0400
+Received: by mail-pg1-f169.google.com with SMTP id q187so8973538pgq.2;
+        Sun, 24 Oct 2021 14:25:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=pJDD/v04sfjRKB3/TxhJ7E4ItPwl7Sfp4PT/SwwRXYc=;
+        b=ZW0kS8TF6eHWYKeF2JmFkwZfsaOnfmQiJGcoZ5O8NXTlPLjU/FLoGYKP4GLYt2eR5w
+         i8YQF+lUFnJEJ+YD8tq/dw0SnHqCSXlYyVrumVMxRloWKdL2iPzS4OId/YPURNcWlDJb
+         dxv5EXIWzIWXrPjYyW5AdRP0DG6zgdEqZVq566aZot0QBawl1JtriJVZ5NRejffszRGr
+         x/VWkUm1vDyHJLnWy8O87BQM3dqYoIPX26X8qi1CXmIdCTJerK2McG98g3Plyh6+snE8
+         aNv2Ay/h4BmPjraAS3jBTioy8QrqMVGhJ2xCach9ISDg8IDtYmPFyiwGt4RbGGE2SmPa
+         4dSg==
+X-Gm-Message-State: AOAM533Ti9g+AU+kLa+RXIabcOIK6Myr6UwPOJ/CRzGseuBF3ZxSGvb6
+        rc2dRQhidyKyqKUS/JVDY5c=
+X-Google-Smtp-Source: ABdhPJy+yXD9hVkMWN+x+U/QsZKU7cRsNCHsc1497wj0Nhbn1GVaJiVKvQ0wBDoWUSEHNHWR/s4/rw==
+X-Received: by 2002:a63:790b:: with SMTP id u11mr10364809pgc.71.1635110728627;
+        Sun, 24 Oct 2021 14:25:28 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:1d23:4f1f:253d:c1e1? ([2601:647:4000:d7:1d23:4f1f:253d:c1e1])
+        by smtp.gmail.com with ESMTPSA id c12sm16558663pfc.161.2021.10.24.14.25.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 24 Oct 2021 14:25:28 -0700 (PDT)
+Message-ID: <b5e69621-e2ee-750a-e542-a27aaa9293e5@acm.org>
+Date:   Sun, 24 Oct 2021 14:25:26 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
+Subject: Re: [PATCH] scsi: core: Fix early registration of sysfs attributes
+ for scsi_device
+Content-Language: en-US
+To:     Steffen Maier <maier@linux.ibm.com>, martin.petersen@oracle.com,
+        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
+Cc:     gregkh@linuxfoundation.org, bblock@linux.ibm.com,
+        linux-next@vger.kernel.org, linux-s390@vger.kernel.org
+References: <604fad4c-4003-b413-b3c8-00abcd65341e@linux.ibm.com>
+ <20211024111815.556995-1-maier@linux.ibm.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20211024111815.556995-1-maier@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-'sli4->ext[i].use_map' is a bitmap. Use 'bitmap_zalloc()' to simplify code,
-improve the semantic and avoid some open-coded arithmetic in allocator
-arguments.
+On 10/24/21 04:18, Steffen Maier wrote:
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index c26f0e29e8cd..a3e37d3728df 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1583,7 +1583,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+>   	scsi_enable_async_suspend(&sdev->sdev_gendev);
+>   	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
+>   		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+> -	sdev->gendev_attr_groups[j++] = &scsi_sdev_attr_group;
+> +	sdev->sdev_gendev.groups = sdev->gendev_attr_groups;
+>   	if (hostt->sdev_groups) {
+>   		for (i = 0; hostt->sdev_groups[i] &&
+>   			     j < ARRAY_SIZE(sdev->gendev_attr_groups);
 
-Also change the corresponding 'kfree()' into 'bitmap_free()' to keep
-consistency.
+How about also updating the comment above the gendev_attr_groups
+declaration since the above change makes that comment incorrect?
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/scsi/elx/libefc_sli/sli4.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+Thanks,
 
-diff --git a/drivers/scsi/elx/libefc_sli/sli4.c b/drivers/scsi/elx/libefc_sli/sli4.c
-index 6c6c04e1b74d..907d67aeac23 100644
---- a/drivers/scsi/elx/libefc_sli/sli4.c
-+++ b/drivers/scsi/elx/libefc_sli/sli4.c
-@@ -4145,7 +4145,7 @@ static int
- sli_get_read_config(struct sli4 *sli4)
- {
- 	struct sli4_rsp_read_config *conf = sli4->bmbx.virt;
--	u32 i, total, total_size;
-+	u32 i, total;
- 	u32 *base;
- 
- 	if (sli_cmd_read_config(sli4, sli4->bmbx.virt)) {
-@@ -4203,8 +4203,7 @@ sli_get_read_config(struct sli4 *sli4)
- 
- 	for (i = 0; i < SLI4_RSRC_MAX; i++) {
- 		total = sli4->ext[i].number * sli4->ext[i].size;
--		total_size = BITS_TO_LONGS(total) * sizeof(long);
--		sli4->ext[i].use_map = kzalloc(total_size, GFP_KERNEL);
-+		sli4->ext[i].use_map = bitmap_zalloc(total, GFP_KERNEL);
- 		if (!sli4->ext[i].use_map) {
- 			efc_log_err(sli4, "bitmap memory allocation failed %d\n",
- 				    i);
-@@ -4743,7 +4742,7 @@ sli_reset(struct sli4 *sli4)
- 	sli4->ext[0].base = NULL;
- 
- 	for (i = 0; i < SLI4_RSRC_MAX; i++) {
--		kfree(sli4->ext[i].use_map);
-+		bitmap_free(sli4->ext[i].use_map);
- 		sli4->ext[i].use_map = NULL;
- 		sli4->ext[i].base = NULL;
- 	}
-@@ -4784,7 +4783,7 @@ sli_teardown(struct sli4 *sli4)
- 	for (i = 0; i < SLI4_RSRC_MAX; i++) {
- 		sli4->ext[i].base = NULL;
- 
--		kfree(sli4->ext[i].use_map);
-+		bitmap_free(sli4->ext[i].use_map);
- 		sli4->ext[i].use_map = NULL;
- 	}
- 
--- 
-2.30.2
+Bart.
+
 
