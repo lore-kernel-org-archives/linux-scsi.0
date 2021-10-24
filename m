@@ -2,190 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0F89C433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 22:16:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27FBBC433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 23:35:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8EDA16103C
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 22:16:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DEDDB61002
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 23:35:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229706AbhJXWTD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Oct 2021 18:19:03 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:18626 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S229533AbhJXWS4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 24 Oct 2021 18:18:56 -0400
-Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19OGrBkg003082;
-        Sun, 24 Oct 2021 18:16:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=GbwkcL9DOVSwp4uDiMhxaHO7SnZqKhMidk9aBx/cFKY=;
- b=SdcpNB4r0vku8yq73MIbIuj5qlVwJtvIKfC4wGbeSQCCH/YODx+WaQc8cHe0fvc0Ejnr
- uSnUhLabzRfRZLE8nz7G6b3sataczzBOGpFT/UUrS/T+NC+iVhGRO1hXvGbZIebPEdOA
- GOD8r63f0fhU3biGJjtl1nc6d/ogpMk/nKZai0mM0YgYu6r6uuBXSa8sLHJCTl8UXy5n
- FHAIY2R+8OKi3skXT5/Tk/y6F8/nsnI7nUYtaCSGqsOiDoCakBnM2gmPEWxFQMaDGzVp
- 56JIoYdccmf0ElO3CXBii4w8GTM+BLidBlDC31Y8fPXELBqnTX8e5twDT0nK7EI9+5/d Pg== 
-Received: from ppma01fra.de.ibm.com (46.49.7a9f.ip4.static.sl-reverse.com [159.122.73.70])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3bvywc3dyc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 24 Oct 2021 18:16:28 -0400
-Received: from pps.filterd (ppma01fra.de.ibm.com [127.0.0.1])
-        by ppma01fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19OMDKNk018615;
-        Sun, 24 Oct 2021 22:16:26 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma01fra.de.ibm.com with ESMTP id 3bva18xvug-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Sun, 24 Oct 2021 22:16:26 +0000
-Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19OMGMYM64225742
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 24 Oct 2021 22:16:22 GMT
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 98C104C059;
-        Sun, 24 Oct 2021 22:16:22 +0000 (GMT)
-Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 483904C044;
-        Sun, 24 Oct 2021 22:16:22 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Sun, 24 Oct 2021 22:16:22 +0000 (GMT)
-From:   Steffen Maier <maier@linux.ibm.com>
-To:     bvanassche@acm.org, martin.petersen@oracle.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, maier@linux.ibm.com,
-        bblock@linux.ibm.com, linux-next@vger.kernel.org,
-        linux-s390@vger.kernel.org
-Subject: [PATCH v2] scsi: core: Fix early registration of sysfs attributes for scsi_device
-Date:   Mon, 25 Oct 2021 00:16:20 +0200
-Message-Id: <20211024221620.760160-1-maier@linux.ibm.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <b5e69621-e2ee-750a-e542-a27aaa9293e5@acm.org>
-References: <b5e69621-e2ee-750a-e542-a27aaa9293e5@acm.org>
+        id S229706AbhJXXiJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Oct 2021 19:38:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36596 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229533AbhJXXiI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2021 19:38:08 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DF4CC061745;
+        Sun, 24 Oct 2021 16:35:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
+        Subject:Sender:Reply-To:Content-ID:Content-Description;
+        bh=vojAuA0zWMRXeMKM5FxwLkBGAJx4XzX1DoS3E/l+TR0=; b=WUs8HXwAmUMisHaiHQeTYLKozq
+        JaBHeB0Uim6oNL+9a5VryUfm88jMIX9SjpcfFY1+ld58tTr1jij2ZzC1sPaXwZZ255f24aF6+I7bQ
+        MrcQhLisdadLzgot9iIuVD38gaYv9nV1zTphcBALgsPjRvaTsN9FH++eKsC5k4xG8I9/KRTBRxoM1
+        VVrs1SPcL+C01ALzKz8/3ydimYBAduzy0SVyHEF9Lk2M+Bn7zFcSJqcYoBYc58tkmj0f9CCk9Foxa
+        qzeN5+zK8TL0SjT6VDHEf57aeNts5fpg9tC0TUcZy+fudlpNsSjb6XR3nLi4AwQ3k8h15uDfD6RaV
+        wWigPwYg==;
+Received: from [2601:1c0:6280:3f0::aa0b]
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1men1j-00Emhv-Ta; Sun, 24 Oct 2021 23:35:43 +0000
+Subject: Re: [PATCH] scsi: ufs: clean up the Kconfig file
+To:     Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org
+Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20211024064332.16360-1-rdunlap@infradead.org>
+ <8578e393-2a25-bc52-65ea-599d071387e9@acm.org>
+From:   Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <5b13f32c-0cdb-26de-2bb7-af56a099b0b2@infradead.org>
+Date:   Sun, 24 Oct 2021 16:35:43 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
+In-Reply-To: <8578e393-2a25-bc52-65ea-599d071387e9@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: gWGxPWfnDqZPzJyp1dHGOwrB0obs4Ii5
-X-Proofpoint-ORIG-GUID: gWGxPWfnDqZPzJyp1dHGOwrB0obs4Ii5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-10-24_06,2021-10-22_01,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
- lowpriorityscore=0 priorityscore=1501 mlxlogscore=999 phishscore=0
- clxscore=1015 spamscore=0 adultscore=0 malwarescore=0 suspectscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2110240153
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-v4.17 commit 86b87cde0b55 ("scsi: core: host template attribute groups")
-introduced explicit sysfs_create_groups() in scsi_sysfs_add_sdev()
-and sysfs_remove_groups() in __scsi_remove_device(), both for sdev_gendev,
-based on a new field const struct attribute_group **sdev_groups
-of struct scsi_host_template.
+On 10/24/21 2:29 PM, Bart Van Assche wrote:
+> On 10/23/21 23:43, Randy Dunlap wrote:
+>> @@ -39,7 +38,7 @@ config SCSI_UFSHCD
+>>       select DEVFREQ_GOV_SIMPLE_ONDEMAND
+>>       select NLS
+>>       help
+>> -      This selects the support for UFS devices in Linux, say Y and make
+>> +      This selects the support for UFS devices in Linux. Say Y and make
+> 
+> How about changing "This selects the support for UFS devices in Linux"
+> into "Enables support for UFS devices"? "the" should be left out from a
+> grammatical point of view and "in Linux" is redundant.
 
-Commit 92c4b58b15c5 ("scsi: core: Register sysfs attributes earlier")
-removed above explicit (de)registration of scsi_device attribute groups.
-It also converted all scsi_device attributes and attribute_groups to
-end up in a new field const struct attribute_group *gendev_attr_groups[6]
-of struct scsi_device. However, that new field was not used anywhere.
+OK, done (locally).
 
-Surprisingly, this only caused missing LLDD specific scsi_device sysfs
-attributes. Whereas, scsi core attributes from scsi_sdev_attr_groups
-did continue to exist because of scsi_dev_type.groups.
+>>         sure that you know the name of your UFS host adapter (the card
+>>         inside your computer that "speaks" the UFS protocol, also
+>>         called UFS Host Controller), because you will be asked for it.
+>> @@ -51,7 +50,7 @@ config SCSI_UFSHCD
+>>         (the one containing the directory /) is located on a UFS device.
+>>   config SCSI_UFSHCD_PCI
+>> -    tristate "PCI bus based UFS Controller support"
+>> +    tristate "PCI bus-based UFS Controller support"
+> 
+> Even with this change applied capitalization is inconsistent.
 
-Fix it by assigning the pointer of that new field to the groups
-field of sdev_gendev so the driver core gets our LLDD groups.
-Just like scsi_host_alloc() was changed by the same commit,
-although scsi_host_alloc() already had assigned something to
-shost_dev.groups so the necessary change was more obvious there.
+I don't doubt it, but could you be more explicit about
+which word(s) you mean, please?
 
-We separate scsi core attibutes from LLDD specific attributes.
-Hence, we keep the initializing assignment scsi_dev_type =
-{ .groups = scsi_sdev_attr_groups, } as this takes care of core
-attributes. Without the separation, it would cause attribute double
-registration due to scsi_dev_type.groups and sdev_gendev.groups.
+I see one "pci" in the Kconfig file.
+I see several "Controller" vs. "controller."
+I see a few of "Support" vs. "support."
 
-Since we now no longer have an index offset between left and right
-hand side of the assignment in the loop, one counter variable suffices.
+Which are you referring to? (or something else)
 
-Alternative approaches ruled out:
-Assigning gendev_attr_groups to sdev_dev has no visible effect.
-Assigning sdev->gendev_attr_groups to scsi_dev_type.groups
-caused scsi_device of all scsi host types to get LLDD specific
-attributes of the LLDD for which the last sdev alloc happened to occur,
-as that overwrote scsi_dev_type.groups,
-e.g. scsi_debug had zfcp-specific scsi_device attributes.
-
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 92c4b58b15c5 ("scsi: core: Register sysfs attributes earlier")
----
-
-Changes in v2:
-* integrated Bart's feedback of updating the comment for
-  the gendev_attr_groups declaration to match the code change
-* in that spirit also adapted the vector size of that field
-* eliminated the now unnecessary second loop counter 'j'
-
- drivers/scsi/scsi_sysfs.c  | 12 ++++++------
- include/scsi/scsi_device.h |  7 +++----
- 2 files changed, 9 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index c26f0e29e8cd..d73e84e1cb37 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1571,7 +1571,7 @@ static struct device_type scsi_dev_type = {
- 
- void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- {
--	int i, j = 0;
-+	int i = 0;
- 	unsigned long flags;
- 	struct Scsi_Host *shost = sdev->host;
- 	struct scsi_host_template *hostt = shost->hostt;
-@@ -1583,15 +1583,15 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- 	scsi_enable_async_suspend(&sdev->sdev_gendev);
- 	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
- 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
--	sdev->gendev_attr_groups[j++] = &scsi_sdev_attr_group;
-+	sdev->sdev_gendev.groups = sdev->gendev_attr_groups;
- 	if (hostt->sdev_groups) {
- 		for (i = 0; hostt->sdev_groups[i] &&
--			     j < ARRAY_SIZE(sdev->gendev_attr_groups);
--		     i++, j++) {
--			sdev->gendev_attr_groups[j] = hostt->sdev_groups[i];
-+			     i < ARRAY_SIZE(sdev->gendev_attr_groups);
-+		     i++) {
-+			sdev->gendev_attr_groups[i] = hostt->sdev_groups[i];
- 		}
- 	}
--	WARN_ON_ONCE(j >= ARRAY_SIZE(sdev->gendev_attr_groups));
-+	WARN_ON_ONCE(i >= ARRAY_SIZE(sdev->gendev_attr_groups));
- 
- 	device_initialize(&sdev->sdev_dev);
- 	sdev->sdev_dev.parent = get_device(&sdev->sdev_gendev);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index b1e9b3bd3a60..b6f0d031217e 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -226,11 +226,10 @@ struct scsi_device {
- 	struct device		sdev_gendev,
- 				sdev_dev;
- 	/*
--	 * The array size 6 provides space for one attribute group for the
--	 * SCSI core, four attribute groups defined by SCSI LLDs and one
--	 * terminating NULL pointer.
-+	 * The array size 5 provides space for four attribute groups
-+	 * defined by SCSI LLDs and one terminating NULL pointer.
- 	 */
--	const struct attribute_group *gendev_attr_groups[6];
-+	const struct attribute_group *gendev_attr_groups[5];
- 
- 	struct execute_work	ew; /* used to get process context on put */
- 	struct work_struct	requeue_work;
+thanks.
 -- 
-2.25.1
-
+~Randy
