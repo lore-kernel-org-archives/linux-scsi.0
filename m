@@ -2,249 +2,252 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DDB8C43217
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 00:03:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EA5CC433FE
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 00:40:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F24A760E96
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 00:03:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 416D560EFE
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 00:40:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231376AbhJXAFj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 23 Oct 2021 20:05:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41378 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230284AbhJXAFj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Oct 2021 20:05:39 -0400
-Received: from mail-pj1-x102d.google.com (mail-pj1-x102d.google.com [IPv6:2607:f8b0:4864:20::102d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 77DD3C061764;
-        Sat, 23 Oct 2021 17:03:19 -0700 (PDT)
-Received: by mail-pj1-x102d.google.com with SMTP id o4-20020a17090a3d4400b001a1c8344c3fso6383022pjf.3;
-        Sat, 23 Oct 2021 17:03:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=subject:to:references:cc:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-transfer-encoding;
-        bh=PxwtS641WYFpHkOEkJn+avDYn2BdLBo4DP4nO7ftXvU=;
-        b=SL+DviOgCpxPI+EbDKx7sGamzqbXdpRsT5d2ofbPZ+yYodnja4MW8Lad1M/CNZPT64
-         I+U2gmuBI0efwEGbGCqjMvnrDsJTrvKHAfycXNj9L39TUIHasPMQZ1x+J1jXtBoskT12
-         jd6ViLyPLlic6RofzOWCIzMiRJpw5/SGTV+5676o48mQ3AJly+W83rNvwls+6m5Zj0SD
-         r7BOd58BuvuMBpBQeMQjIg0qAsw7QELlYvKOZQI8Ik5V/wK3tHAwKCY1oz/4bvvAh0S9
-         9A0DafTMwU1OJATeuQO/3rE81wt8XY4twDyn8neJ3+TdR9+V1+mAHPSkRhQOdZK2l97v
-         XNjg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:references:cc:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-transfer-encoding;
-        bh=PxwtS641WYFpHkOEkJn+avDYn2BdLBo4DP4nO7ftXvU=;
-        b=BUiZZUr/xKRyxbzAExQ6IfzlDpv4E17G6ID5gDNb7omarwLPC65qQvioCE7Wjf6Ely
-         YOCg7CCZaMOy+g9nPYt/9PEJ+fo6ifWFMUZvASagO2Am0oNT1xf3lQojssSySYvTKk/e
-         kV7ah74Z54u61n8fUyVbwsNj3GgaemkqUQjSy1ODV948/HRk+X4uDb7LgXXTBtBbdvyP
-         hdoWvu4mojjLJXpEWhAgOKFbax0Fer7MudLjWZeyllmXL6oxVos5wCVlDq8IlqH0R47l
-         cc2Bpu6n+Wm5cdG3nmI5OWzDCgWZ6hCDNAy75Ffj6Pp1Ozl2D8qnqEU0qnThzJchqZOM
-         CFRA==
-X-Gm-Message-State: AOAM530cL/Bh86SiPWs5MJ0rGvhcJiZ+yjLsAXhuhXOzGDDCy5v66BHN
-        2vXYN64Z+bpMaZLnrokWC4o=
-X-Google-Smtp-Source: ABdhPJyXCyLbpKo7n5tJ9eyNZbqsG3IqcrSFvApjQOyYw/gbVWMlhSJkUplRCpSeujKHRZk9IXEDUg==
-X-Received: by 2002:a17:90b:388a:: with SMTP id mu10mr10384183pjb.0.1635033798833;
-        Sat, 23 Oct 2021 17:03:18 -0700 (PDT)
-Received: from [10.1.1.26] (222-155-4-20-adsl.sparkbb.co.nz. [222.155.4.20])
-        by smtp.gmail.com with ESMTPSA id h1sm15243550pfi.168.2021.10.23.17.03.10
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 23 Oct 2021 17:03:18 -0700 (PDT)
-Subject: Re: [PATCH v3 0/3] last batch of add_disk() error handling
- conversions
-To:     Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>,
-        Luis Chamberlain <mcgrof@kernel.org>
-References: <20211021163856.2000993-1-mcgrof@kernel.org>
- <66655777-6f9b-adbc-03ff-125aecd3f509@i-love.sakura.ne.jp>
-Cc:     linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org, axboe@kernel.dk, hch@lst.de,
-        efremov@linux.com, song@kernel.org, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, viro@zeniv.linux.org.uk, hare@suse.de,
-        jack@suse.cz, ming.lei@redhat.com, tj@kernel.org
-From:   Michael Schmitz <schmitzmic@gmail.com>
-Message-ID: <ad1546c4-cfb7-3dd2-9592-9916c23ae164@gmail.com>
-Date:   Sun, 24 Oct 2021 13:03:02 +1300
-User-Agent: Mozilla/5.0 (X11; Linux ppc64; rv:45.0) Gecko/20100101
- Thunderbird/45.8.0
+        id S231469AbhJXAmW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 23 Oct 2021 20:42:22 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:22442 "EHLO
+        mx0b-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231131AbhJXAmW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 23 Oct 2021 20:42:22 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19NNi8L0029098;
+        Sat, 23 Oct 2021 20:39:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
+ subject : from : to : cc : references : in-reply-to : content-type :
+ content-transfer-encoding : mime-version; s=pp1;
+ bh=DKFPhH2mYYuleP5I4kPW8Tq6giZY2HeDOmxWjzskfVk=;
+ b=sYE5MU+gy3yVvaMXNIs+TOCuZMkzBz1CfNixYSrVrvHK6x9ZGPsPFJGbEjPZyXvwD3s+
+ S4UMMC3x7VnvEYFf9qhEoW8+Qvrdua54oY4g1tJrcacVmvUedJj8Nl/CSMixD0OaIbQx
+ AESZVSDXhAEP79LR72C3XC54K7dyMqKlghj9XrnYwkNBVb+O3XsnnYgq2UQB8g1Z4XOP
+ o6cH8wfhOlo7vxcG6wmF8F+qEU15EYE1PkguqXaPOdqUnpYcmmfcPu6XcGtP3EhcQXEX
+ zwh2sYKfasZm5jneXdY916nUluKZsU7/jbWGIYpD5jU2h4KiQOKo+n5Kq3lmwkVB8qD8 7Q== 
+Received: from ppma03ams.nl.ibm.com (62.31.33a9.ip4.static.sl-reverse.com [169.51.49.98])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 3bvecsafvf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sat, 23 Oct 2021 20:39:56 -0400
+Received: from pps.filterd (ppma03ams.nl.ibm.com [127.0.0.1])
+        by ppma03ams.nl.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19O0WJab025901;
+        Sun, 24 Oct 2021 00:39:55 GMT
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (d06relay13.portsmouth.uk.ibm.com [9.149.109.198])
+        by ppma03ams.nl.ibm.com with ESMTP id 3bva19c4dh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Sun, 24 Oct 2021 00:39:55 +0000
+Received: from d06av21.portsmouth.uk.ibm.com (d06av21.portsmouth.uk.ibm.com [9.149.105.232])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19O0dqVM3736280
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sun, 24 Oct 2021 00:39:52 GMT
+Received: from d06av21.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id BAAF15205A;
+        Sun, 24 Oct 2021 00:39:52 +0000 (GMT)
+Received: from [9.145.189.27] (unknown [9.145.189.27])
+        by d06av21.portsmouth.uk.ibm.com (Postfix) with ESMTP id 6215052050;
+        Sun, 24 Oct 2021 00:39:52 +0000 (GMT)
+Message-ID: <604fad4c-4003-b413-b3c8-00abcd65341e@linux.ibm.com>
+Date:   Sun, 24 Oct 2021 02:39:52 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
+Subject: Re: Missing driver-specific sysfs attributes of scsi_device [was: Re:
+ [PATCH v4 00/46] Register SCSI sysfs attributes earlier]
+Content-Language: en-US
+From:   Steffen Maier <maier@linux.ibm.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-scsi@vger.kernel.org,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        Benjamin Block <bblock@linux.ibm.com>
+References: <20211012233558.4066756-1-bvanassche@acm.org>
+ <163478764102.7011.9375895285870786953.b4-ty@oracle.com>
+ <7c0af228-e098-5657-934e-d2bd2bff5ee3@linux.ibm.com>
+In-Reply-To: <7c0af228-e098-5657-934e-d2bd2bff5ee3@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+X-TM-AS-GCONF: 00
+X-Proofpoint-GUID: A-wlCNd2dwlg_ZztWVp03uFf4pr96cTS
+X-Proofpoint-ORIG-GUID: A-wlCNd2dwlg_ZztWVp03uFf4pr96cTS
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 MIME-Version: 1.0
-In-Reply-To: <66655777-6f9b-adbc-03ff-125aecd3f509@i-love.sakura.ne.jp>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
+ definitions=2021-10-23_03,2021-10-22_01,2020-04-07_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ impostorscore=0 spamscore=0 mlxscore=0 phishscore=0 adultscore=0
+ suspectscore=0 clxscore=1015 bulkscore=0 malwarescore=0 lowpriorityscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2109230001 definitions=main-2110240002
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Tetsuo,
+On 10/23/21 22:54, Steffen Maier wrote:
+> Hi Bart, hi Martin,
+> 
+> since Friday 2021-10-22 our CI reports errors with linux-next. It complains 
+> about missing zfcp-lun resources (although that's a follow-on error). Machines 
+> that have their root-fs on zfcp-attached SCSI disk(s) are stuck in boot. 
+> Looking at user visible effects, I see zfcp-specific sysfs attributes of 
+> scsi_device missing:
+> 
+> $ lszfcp -D
+> /usr/sbin/lszfcp: line 390: 
+> /sys/bus/ccw/drivers/zfcp/0.0.1780/host0/rport-0:0-0/target0:0:0/0:0:0:1089224725//hba_id: 
+> No such file or directory
 
-On 22/10/21 14:06, Tetsuo Handa wrote:
-> On 2021/10/22 1:38, Luis Chamberlain wrote:
->> I rebased Tetsuo Handa's patch onto the latest linux-next as this
->> series depends on it, and so I am sending it part of this series as
->> without it, this won't apply. Tetsuo, does the rebase of your patch
->> look OK?
->
-> OK, though I wanted my fix to be sent to upstream and stable before this series.
->
+> That made me think of this patch series. It also happened so that Martin 
+> applied the series to 5.16/scsi-queue on 2021-10-21. Linux-next merged it on 
+> 2021-10-22:
+
+> So this seems to match with the occurrence of problems for us.
+> 
+> I wonder if any of the other LLDDs see similar problems. I left those LLDD 
+> patches in the list below, that also were migrated from sdev_attrs to sdev_groups.
+> 
+> Guess it would be good to fix this before the v5.16 merge window opens 
+> (2021-11-08 after predicted v5.15 release? [http://phb-crystal-ball.org/]) so 
+> the error does not land in Linus' tree (which our CI also tests).
+> 
+> Not sure if I'll find time to dig deeper.
+
+v4.17 commit 86b87cde0b55 ("scsi: core: host template attribute groups")
+introduced explicit sysfs_create_groups() in scsi_sysfs_add_sdev()
+and sysfs_remove_groups() in __scsi_remove_device(), both for sdev_gendev,
+based on a new field const struct attribute_group **sdev_groups
+of struct scsi_host_template.
+
+Commit 92c4b58b15c5 ("scsi: core: Register sysfs attributes earlier")
+removed above explicit (de)registration of scsi_device attribute groups.
+It also converted all scsi_device attributes and attribute_groups to
+end up in a new field const struct attribute_group *gendev_attr_groups[6]
+of struct scsi_device. However, that new field is not used anywhere.
+
+I tried to fix it by assigning the pointer of that new field to the groups
+field of sdev_gendev so the driver core gets our groups on devide_add().
+Just like scsi_host_alloc() was changed by the same commit,
+although scsi_host_alloc() already had assigned something to
+shost_dev.groups so the necessary change was more obvious there.
+
+However, that gave me:
+
+> Oct 24 02:06:20 t3545002 kernel: scsi 1:0:2:1090207765: scsi scan: INQUIRY pass 1 length 36
+> Oct 24 02:06:20 t3545002 kernel: scsi 1:0:2:1090207765: scsi scan: INQUIRY successful with code 0x0
+> Oct 24 02:06:20 t3545002 kernel: scsi 1:0:2:1090207765: scsi scan: INQUIRY pass 2 length 164
+> Oct 24 02:06:20 t3545002 kernel: scsi 1:0:2:1090207765: scsi scan: INQUIRY successful with code 0x0
+> Oct 24 02:06:20 t3545002 kernel: scsi 1:0:2:1090207765: Direct-Access     IBM      2107900          2.19 PQ: 0 ANSI: 5
+> Oct 24 02:06:20 t3545002 kernel: scsi 1:0:2:1090207765: alua: supports implicit TPGS
+> Oct 24 02:06:20 t3545002 kernel: scsi 1:0:2:1090207765: alua: device naa.6005076309ffd43000000000000015fb port group 0 rel port 103
+> Oct 24 02:06:20 t3545002 kernel: sysfs: cannot create duplicate filename '/devices/css0/0.0.0019/0.0.1880/host1/rport-1:0-2/target1:0:2/1:0:2:1090207765/device_blocked'
+> Oct 24 02:06:20 t3545002 kernel: CPU: 1 PID: 1530 Comm: chzdev Not tainted 5.15.0-rc1sdevattr+ #29
+> Oct 24 02:06:20 t3545002 kernel: Hardware name: IBM 8561 T01 703 (z/VM 7.2.0)
+> Oct 24 02:06:20 t3545002 kernel: Call Trace:
+> Oct 24 02:06:20 t3545002 kernel: [<00000000701c923e>] dump_stack_lvl+0x8e/0xc8 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f991408>] sysfs_warn_dup+0x78/0x88 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f990fb0>] sysfs_add_file_mode_ns+0x1c8/0x1e8 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f991e3c>] create_files+0xb4/0x230 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f992068>] internal_create_group+0xb0/0x1e8 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f9928b0>] internal_create_groups.part.0+0x60/0xc8 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006fe807ca>] device_add_attrs+0x72/0x1d0 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006fe85168>] device_add+0x360/0x690 
+> Oct 24 02:06:20 t3545002 kernel: [<000003ff801429b0>] scsi_sysfs_add_sdev+0x60/0x1a0 [scsi_mod] 
+> Oct 24 02:06:20 t3545002 kernel: [<000003ff8013d870>] scsi_add_lun+0x3b0/0x5d0 [scsi_mod] 
+> Oct 24 02:06:20 t3545002 kernel: [<000003ff8013e62c>] scsi_probe_and_add_lun+0x184/0x4a0 [scsi_mod] 
+> Oct 24 02:06:20 t3545002 kernel: [<000003ff8013f4ec>] __scsi_scan_target+0x9c/0x240 [scsi_mod] 
+> Oct 24 02:06:20 t3545002 kernel: [<000003ff8013f76a>] scsi_scan_target+0xda/0xf8 [scsi_mod] 
+> Oct 24 02:06:20 t3545002 kernel: [<000003ff802d2a9c>] zfcp_unit_scsi_scan+0x6c/0x78 [zfcp] 
+> Oct 24 02:06:20 t3545002 kernel: [<000003ff802d2e32>] zfcp_unit_add+0x1ea/0x220 [zfcp] 
+> Oct 24 02:06:20 t3545002 kernel: [<000003ff802d0f3c>] zfcp_sysfs_unit_add_store+0x4c/0x70 [zfcp] 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f98f946>] kernfs_fop_write_iter+0x13e/0x1e0 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f899ff8>] new_sync_write+0x100/0x190 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f89ced0>] vfs_write+0x230/0x2e0 
+> Oct 24 02:06:20 t3545002 kernel: [<000000006f89d1ec>] ksys_write+0x6c/0xf8 
+> Oct 24 02:06:20 t3545002 kernel: [<00000000701cc7ba>] __do_syscall+0x1c2/0x1f0 
+> Oct 24 02:06:20 t3545002 kernel: [<00000000701df168>] system_call+0x78/0xa0 
+> Oct 24 02:06:20 t3545002 kernel: 4 locks held by chzdev/1530:
+> Oct 24 02:06:20 t3545002 kernel: #0: 0000000003711498 (sb_writers#3){.+.+}-{0:0}, at: ksys_write+0x6c/0xf8
+> Oct 24 02:06:20 t3545002 kernel: #1: 000000000e77fa90 (&of->mutex){+.+.}-{3:3}, at: kernfs_fop_write_iter+0x102/0x1e0
+> Oct 24 02:06:20 t3545002 kernel: #2: 0000000035754e10 (kn->active#83){++++}-{0:0}, at: kernfs_fop_write_iter+0x10e/0x1e0
+> Oct 24 02:06:20 t3545002 kernel: #3: 0000000031bf90f0 (&shost->scan_mutex){+.+.}-{3:3}, at: scsi_scan_target+0x90/0xf8 [scsi_mod]
+> Oct 24 02:06:20 t3545002 kernel: scsi 1:0:2:1090207765: failed to add device: -17
+
+So I suspected that sdev_gendev is not a good idea and tried with its child 
+sdev_dev instead. But now I'm back at square one with the attributes missing.
+
+Where can I read about sdev_gendev vs. sdev_dev in a hopefully easy to 
+understand way?
+
+And how do we get to pass our scsi_device.gendev_attr_groups to the driver core 
+to appear in sysfs?
+
+> On 10/21/21 05:42, Martin K. Petersen wrote:
+>> On Tue, 12 Oct 2021 16:35:12 -0700, Bart Van Assche wrote:
 >>
->> If it is not too much trouble, I'd like to ask for testing for the
->> ataflop changes from Michael Schmitz, if possible, that is he'd just
->> have to merge Tetsuo's rebased patch and the 2nd patch in this series.
->> This is all rebased on linux-next tag 20211020.
->
-> Yes, please.
+>>> For certain user space software, e.g. udev, it is important that sysfs
+>>> attributes are registered before the KOBJ_ADD uevent is emitted. Hence
+>>> this patch series that removes the device_create_file() and
+>>> sysfs_create_groups() calls from the SCSI core. Please consider this
+>>> patch series for kernel v5.16.
+>>>
+>>> Thanks,
+>>>
+>>> [...]
+>>
+>> Applied to 5.16/scsi-queue, thanks!
+>>
+>> [01/46] scsi: core: Register sysfs attributes earlier
+>>          https://git.kernel.org/mkp/scsi/c/92c4b58b15c5
+>> [02/46] ata: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/c3f69c7f629f
+>> [03/46] firewire: sbp2: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/5e88e67b6f3b
+> 
+>> [06/46] scsi: zfcp: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/d8d7cf3f7d07
+> 
+>> [10/46] scsi: 53c700: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/90cb6538b5da
+>> [11/46] scsi: aacraid: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/bd16d71185c8
+> 
+>> [18/46] scsi: cxlflash: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/780c678912fb
+> 
+>> [21/46] scsi: hpsa: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/4cd16323b523
+> 
+>> [25/46] scsi: ipr: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/47d1e6ae0e1e
+> 
+>> [28/46] scsi: megaraid: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/09723bb252ca
+>> [29/46] scsi: mpt3sas: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/1bb3ca27d2ca
+> 
+>> [31/46] scsi: myrb: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/582c0360db90
+>> [32/46] scsi: myrs: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/087c3ace6337
+> 
+>> [42/46] scsi: smartpqi: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/64fc9015fbeb
+> 
+>> [45/46] scsi: usb: Switch to attribute groups
+>>          https://git.kernel.org/mkp/scsi/c/01e570febaaa
+>> [46/46] scsi: core: Remove two host template members that are no longer used
+>>          https://git.kernel.org/mkp/scsi/c/a47c6b713e89
+-- 
+Mit freundlichen Gruessen / Kind regards
+Steffen Maier
 
-Took a little convincing (patch 2 didn't apply cleanly by 'git am' on 
-yesterday's top of linux-next), but works just fine, thanks.
+Linux on IBM Z and LinuxONE
 
-I'll submit another patch with ataflop fixes that were used in my tests, 
-but nothing in that interacts with your patches at all.
-
-Tested-by: Michael Schmitz <schmitzmic@gmail.com>
-
-
-> After this series, I guess we can remove "bool registered[NUM_DISK_MINORS];" like below
-> due to (unit[drive].disk[type] != NULL) == (unit[drive].registered[type] == true).
-> Regarding this series, setting unit[drive].registered[type] = true in ataflop_probe() is
-> pointless because atari_floppy_cleanup() checks unit[i].disk[type] != NULL for calling
-> del_gendisk(). And we need to fix __register_blkdev() in driver/block/floppy.c because
-> floppy_probe_lock is pointless.
->
->  drivers/block/ataflop.c | 75 +++++++++++++++--------------------------
->  1 file changed, 28 insertions(+), 47 deletions(-)
->
-> diff --git a/drivers/block/ataflop.c b/drivers/block/ataflop.c
-> index c58750dcc685..7fedf8506335 100644
-> --- a/drivers/block/ataflop.c
-> +++ b/drivers/block/ataflop.c
-> @@ -299,7 +299,6 @@ static struct atari_floppy_struct {
->  				   disk change detection) */
->  	int flags;		/* flags */
->  	struct gendisk *disk[NUM_DISK_MINORS];
-> -	bool registered[NUM_DISK_MINORS];
->  	int ref;
->  	int type;
->  	struct blk_mq_tag_set tag_set;
-> @@ -1988,41 +1987,20 @@ static int ataflop_probe(dev_t dev)
->  	if (drive >= FD_MAX_UNITS || type >= NUM_DISK_MINORS)
->  		return -EINVAL;
->
-> -	if (!unit[drive].disk[type]) {
-> -		err = ataflop_alloc_disk(drive, type);
-> -		if (err == 0) {
-> -			err = add_disk(unit[drive].disk[type]);
-> -			if (err) {
-> -				blk_cleanup_disk(unit[drive].disk[type]);
-> -				unit[drive].disk[type] = NULL;
-> -			} else
-> -				unit[drive].registered[type] = true;
-> +	if (unit[drive].disk[type])
-> +		return 0;
-> +	err = ataflop_alloc_disk(drive, type);
-> +	if (err == 0) {
-> +		err = add_disk(unit[drive].disk[type]);
-> +		if (err) {
-> +			blk_cleanup_disk(unit[drive].disk[type]);
-> +			unit[drive].disk[type] = NULL;
->  		}
->  	}
->
->  	return err;
->  }
->
-> -static void atari_floppy_cleanup(void)
-> -{
-> -	int i;
-> -	int type;
-> -
-> -	for (i = 0; i < FD_MAX_UNITS; i++) {
-> -		for (type = 0; type < NUM_DISK_MINORS; type++) {
-> -			if (!unit[i].disk[type])
-> -				continue;
-> -			del_gendisk(unit[i].disk[type]);
-> -			blk_cleanup_queue(unit[i].disk[type]->queue);
-> -			put_disk(unit[i].disk[type]);
-> -		}
-> -		blk_mq_free_tag_set(&unit[i].tag_set);
-> -	}
-> -
-> -	del_timer_sync(&fd_timer);
-> -	atari_stram_free(DMABuffer);
-> -}
-> -
->  static void atari_cleanup_floppy_disk(struct atari_floppy_struct *fs)
->  {
->  	int type;
-> @@ -2030,13 +2008,24 @@ static void atari_cleanup_floppy_disk(struct atari_floppy_struct *fs)
->  	for (type = 0; type < NUM_DISK_MINORS; type++) {
->  		if (!fs->disk[type])
->  			continue;
-> -		if (fs->registered[type])
-> -			del_gendisk(fs->disk[type]);
-> +		del_gendisk(fs->disk[type]);
->  		blk_cleanup_disk(fs->disk[type]);
->  	}
->  	blk_mq_free_tag_set(&fs->tag_set);
->  }
->
-> +static void atari_floppy_cleanup(void)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < FD_MAX_UNITS; i++)
-> +		atari_cleanup_floppy_disk(&unit[i]);
-> +
-> +	del_timer_sync(&fd_timer);
-> +	if (DMABuffer)
-> +		atari_stram_free(DMABuffer);
-> +}
-> +
->  static int __init atari_floppy_init (void)
->  {
->  	int i;
-> @@ -2055,13 +2044,10 @@ static int __init atari_floppy_init (void)
->  		unit[i].tag_set.numa_node = NUMA_NO_NODE;
->  		unit[i].tag_set.flags = BLK_MQ_F_SHOULD_MERGE;
->  		ret = blk_mq_alloc_tag_set(&unit[i].tag_set);
-> -		if (ret)
-> -			goto err;
-> -
-> -		ret = ataflop_alloc_disk(i, 0);
->  		if (ret) {
-> -			blk_mq_free_tag_set(&unit[i].tag_set);
-> -			goto err;
-> +			while (--i >= 0)
-> +				blk_mq_free_tag_set(&unit[i].tag_set);
-> +			return ret;
->  		}
->  	}
->
-> @@ -2090,10 +2076,9 @@ static int __init atari_floppy_init (void)
->  	for (i = 0; i < FD_MAX_UNITS; i++) {
->  		unit[i].track = -1;
->  		unit[i].flags = 0;
-> -		ret = add_disk(unit[i].disk[0]);
-> -		if (ret)
-> -			goto err_out_dma;
-> -		unit[i].registered[0] = true;
-> +		ret = ataflop_probe(MKDEV(0, 1 << 2));
-> +		if (err)
-> +			goto err;
->  	}
->
->  	printk(KERN_INFO "Atari floppy driver: max. %cD, %strack buffering\n",
-> @@ -2108,12 +2093,8 @@ static int __init atari_floppy_init (void)
->  	}
->  	return ret;
->
-> -err_out_dma:
-> -	atari_stram_free(DMABuffer);
->  err:
-> -	while (--i >= 0)
-> -		atari_cleanup_floppy_disk(&unit[i]);
-> -
-> +	atari_floppy_cleanup();
->  	return ret;
->  }
->
->
+https://www.ibm.com/privacy/us/en/
+IBM Deutschland Research & Development GmbH
+Vorsitzender des Aufsichtsrats: Gregor Pillen
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
