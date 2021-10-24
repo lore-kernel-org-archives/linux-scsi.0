@@ -2,87 +2,171 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6884DC433FE
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 02:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB1B9C433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 06:43:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40B4560F48
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 02:56:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9028C60D43
+	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 06:43:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231131AbhJXC6X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 23 Oct 2021 22:58:23 -0400
-Received: from mail-pg1-f171.google.com ([209.85.215.171]:36701 "EHLO
-        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229868AbhJXC6W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 23 Oct 2021 22:58:22 -0400
-Received: by mail-pg1-f171.google.com with SMTP id 75so7270163pga.3;
-        Sat, 23 Oct 2021 19:56:02 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=g2Rk3YDPTuYbL2gFB+QH8xxl7jPYpZtFgoHvTdHDfDA=;
-        b=sM21s8Jm4DYpDmiGvO9Rl2/5U+/K9fU9ah1eDJaQ4ZpvhwrQBCJ51J34Yjl73ICCa/
-         IqSI0R4Se9e61NZuGSeRl8qBOACT9kRkWyLrqQUbKeVSlBvbSGMaXOE3UrqlxnfDvcp0
-         c2e3lh5jx6L/cL7Ev1fdTaVzkdk/JPqvvHL2/Zj8MzAWZxXOteul0/S9nPV0oc5osdGv
-         0+RlI4KhVJhePVCbRLFcfYtmDiP5MYEg9A8U/A4UJ3LUQOIKd4ZBWcfdMGtQF86DV+rI
-         cP45eeodcAq4pbXtfP5HRN8TPWPkaB7I9av0+OhfVDa15tVC5GD+VTZq955IzT+pGFs8
-         4JFg==
-X-Gm-Message-State: AOAM533oOP6wbL2ln1OfKvuAceVA1N/79YuJDtSnVGN+FbxVRulVC0HT
-        QVv6NaFT2ZB2eXFQXw2wrVqoiTNUXrc=
-X-Google-Smtp-Source: ABdhPJwSt48OED4S4IbjhKux968vwNO0aUaTmkICa54MJunsmDrEvj51/n0B7EDYM4uiKlIE/TwfTA==
-X-Received: by 2002:aa7:88cb:0:b0:44d:4b3f:36c1 with SMTP id k11-20020aa788cb000000b0044d4b3f36c1mr9541392pff.76.1635044162284;
-        Sat, 23 Oct 2021 19:56:02 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:5c9:2be7:90ec:788b? ([2601:647:4000:d7:5c9:2be7:90ec:788b])
-        by smtp.gmail.com with ESMTPSA id t8sm13039432pgk.66.2021.10.23.19.56.00
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 23 Oct 2021 19:56:01 -0700 (PDT)
-Message-ID: <783db5c0-c5c5-eb10-512e-f78e6d7abaef@acm.org>
-Date:   Sat, 23 Oct 2021 19:55:59 -0700
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: Missing driver-specific sysfs attributes of scsi_device [was: Re:
- [PATCH v4 00/46] Register SCSI sysfs attributes earlier]
-Content-Language: en-US
-To:     Steffen Maier <maier@linux.ibm.com>,
+        id S229956AbhJXGqA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Oct 2021 02:46:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42396 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229464AbhJXGqA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2021 02:46:00 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3077EC061764;
+        Sat, 23 Oct 2021 23:43:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=9D6IPm6QOys3FHSBukDZ2TCC5Jf/U+2diaiKdo3uyjs=; b=0SGqxYTJ6fT3oBL2/2RwLx3g3E
+        DQKj/op6h7vVFsP5HyhQoNPoMI38j8PjtnL9Q+8g3Fk+5RoOIrUMnib+A2e3QFUc5MzaZUDSJKLBh
+        wVntnPXLcvSmrtB6bL7BKGgw4KwP4n8Am8Z3XN+GKcMNxyJ6YO0TcFqmYYbYI0Yh5920lkiCDo8mM
+        GCvMXzfSFyXxpE+Msyer/IckL8/f+tLsz3JAMQkQ5EucPN3mujc5enF6i4DpWB9cgpyJOVlidUcj0
+        10lDLIgl5Voaej+kHBy1fmQZGNitK7fZvV6RYNAkU7bY+3WBd2ZpjaAUMDO3topvYBGWbWT5YXh1H
+        2GbeS6Dg==;
+Received: from [2601:1c0:6280:3f0::aa0b] (helo=bombadil.infradead.org)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1meXED-00Djcr-IM; Sun, 24 Oct 2021 06:43:33 +0000
+From:   Randy Dunlap <rdunlap@infradead.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Randy Dunlap <rdunlap@infradead.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        Benjamin Block <bblock@linux.ibm.com>
-References: <20211012233558.4066756-1-bvanassche@acm.org>
- <163478764102.7011.9375895285870786953.b4-ty@oracle.com>
- <7c0af228-e098-5657-934e-d2bd2bff5ee3@linux.ibm.com>
- <604fad4c-4003-b413-b3c8-00abcd65341e@linux.ibm.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <604fad4c-4003-b413-b3c8-00abcd65341e@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] scsi: ufs: clean up the Kconfig file
+Date:   Sat, 23 Oct 2021 23:43:32 -0700
+Message-Id: <20211024064332.16360-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.31.1
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/23/21 17:39, Steffen Maier wrote:
-> I tried to fix it by assigning the pointer of that new field to the groups
-> field of sdev_gendev so the driver core gets our groups on devide_add().
-> Just like scsi_host_alloc() was changed by the same commit,
-> although scsi_host_alloc() already had assigned something to
-> shost_dev.groups so the necessary change was more obvious there.
+Fix multiple problems of punctuation, grammar, and spacing in the
+UFS Kconfig file.
+Also remove the line that says that this code is based on itself.
 
-Thanks for having reported this early. We probably need something like this
-(entirely untested):
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>
+Cc: Avri Altman <avri.altman@wdc.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+---
+ drivers/scsi/ufs/Kconfig |   33 ++++++++++++++++-----------------
+ 1 file changed, 16 insertions(+), 17 deletions(-)
 
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1583,7 +1583,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
-  	scsi_enable_async_suspend(&sdev->sdev_gendev);
-  	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
-  		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
--	sdev->gendev_attr_groups[j++] = &scsi_sdev_attr_group;
-+	sdev->sdev_gendev.groups = sdev->gendev_attr_groups;
-  	if (hostt->sdev_groups) {
-  		for (i = 0; hostt->sdev_groups[i] &&
-  			     j < ARRAY_SIZE(sdev->gendev_attr_groups);
-
-Bart.
+--- linux-next-20211022.orig/drivers/scsi/ufs/Kconfig
++++ linux-next-20211022/drivers/scsi/ufs/Kconfig
+@@ -1,7 +1,6 @@
+ #
+ # Kernel configuration file for the UFS Host Controller
+ #
+-# This code is based on drivers/scsi/ufs/Kconfig
+ # Copyright (C) 2011-2013 Samsung India Software Operations
+ #
+ # Authors:
+@@ -39,7 +38,7 @@ config SCSI_UFSHCD
+ 	select DEVFREQ_GOV_SIMPLE_ONDEMAND
+ 	select NLS
+ 	help
+-	  This selects the support for UFS devices in Linux, say Y and make
++	  This selects the support for UFS devices in Linux. Say Y and make
+ 	  sure that you know the name of your UFS host adapter (the card
+ 	  inside your computer that "speaks" the UFS protocol, also
+ 	  called UFS Host Controller), because you will be asked for it.
+@@ -51,7 +50,7 @@ config SCSI_UFSHCD
+ 	  (the one containing the directory /) is located on a UFS device.
+ 
+ config SCSI_UFSHCD_PCI
+-	tristate "PCI bus based UFS Controller support"
++	tristate "PCI bus-based UFS Controller support"
+ 	depends on SCSI_UFSHCD && PCI
+ 	help
+ 	  This selects the PCI UFS Host Controller Interface. Select this if
+@@ -70,12 +69,12 @@ config SCSI_UFS_DWC_TC_PCI
+ 	  If unsure, say N.
+ 
+ config SCSI_UFSHCD_PLATFORM
+-	tristate "Platform bus based UFS Controller support"
++	tristate "Platform bus-based UFS Controller support"
+ 	depends on SCSI_UFSHCD
+ 	depends on HAS_IOMEM
+ 	help
+ 	  This selects the UFS host controller support. Select this if
+-	  you have an UFS controller on Platform bus.
++	  you have a UFS controller on Platform bus.
+ 
+ 	  If you have a controller with this interface, say Y or M here.
+ 
+@@ -103,23 +102,23 @@ config SCSI_UFS_QCOM
+ 	select QCOM_SCM if SCSI_UFS_CRYPTO
+ 	select RESET_CONTROLLER
+ 	help
+-	  This selects the QCOM specific additions to UFSHCD platform driver.
+-	  UFS host on QCOM needs some vendor specific configuration before
+-	  accessing the hardware which includes PHY configuration and vendor
++	  This selects the QCOM-specific additions to UFSHCD platform driver.
++	  UFS host on QCOM needs some vendor-specific configuration before
++	  accessing the hardware which includes PHY configuration and vendor-
+ 	  specific registers.
+ 
+ 	  Select this if you have UFS controller on QCOM chipset.
+ 	  If unsure, say N.
+ 
+ config SCSI_UFS_MEDIATEK
+-	tristate "Mediatek specific hooks to UFS controller platform driver"
++	tristate "Mediatek-specific hooks to UFS controller platform driver"
+ 	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
+ 	select PHY_MTK_UFS
+ 	select RESET_TI_SYSCON
+ 	help
+-	  This selects the Mediatek specific additions to UFSHCD platform driver.
+-	  UFS host on Mediatek needs some vendor specific configuration before
+-	  accessing the hardware which includes PHY configuration and vendor
++	  This selects the Mediatek-specific additions to UFSHCD platform driver.
++	  UFS host on Mediatek needs some vendor-specific configuration before
++	  accessing the hardware which includes PHY configuration and vendor-
+ 	  specific registers.
+ 
+ 	  Select this if you have UFS controller on Mediatek chipset.
+@@ -127,10 +126,10 @@ config SCSI_UFS_MEDIATEK
+ 	  If unsure, say N.
+ 
+ config SCSI_UFS_HISI
+-	tristate "Hisilicon specific hooks to UFS controller platform driver"
++	tristate "Hisilicon-specific hooks to UFS controller platform driver"
+ 	depends on (ARCH_HISI || COMPILE_TEST) && SCSI_UFSHCD_PLATFORM
+ 	help
+-	  This selects the Hisilicon specific additions to UFSHCD platform driver.
++	  This selects the Hisilicon-specific additions to UFSHCD platform driver.
+ 
+ 	  Select this if you have UFS controller on Hisilicon chipset.
+ 	  If unsure, say N.
+@@ -165,10 +164,10 @@ config SCSI_UFS_BSG
+ 	  If unsure, say N.
+ 
+ config SCSI_UFS_EXYNOS
+-	tristate "Exynos specific hooks to UFS controller platform driver"
++	tristate "Exynos-specific hooks to UFS controller platform driver"
+ 	depends on SCSI_UFSHCD_PLATFORM && (ARCH_EXYNOS || COMPILE_TEST)
+ 	help
+-	  This selects the Samsung Exynos SoC specific additions to UFSHCD
++	  This selects the Samsung Exynos SoC-specific additions to UFSHCD
+ 	  platform driver.  UFS host on Samsung Exynos SoC includes HCI and
+ 	  UNIPRO layer, and associates with UFS-PHY driver.
+ 
+@@ -201,7 +200,7 @@ config SCSI_UFS_FAULT_INJECTION
+ 	  to test the UFS error handler and abort handler.
+ 
+ config SCSI_UFS_HWMON
+-	bool "UFS  Temperature Notification"
++	bool "UFS Temperature Notification"
+ 	depends on SCSI_UFSHCD=HWMON || HWMON=y
+ 	help
+ 	  This provides support for UFS hardware monitoring. If enabled,
