@@ -2,91 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27FBBC433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 23:35:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC08C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 01:18:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DEDDB61002
-	for <linux-scsi@archiver.kernel.org>; Sun, 24 Oct 2021 23:35:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9856E60FBF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 01:18:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229706AbhJXXiJ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Oct 2021 19:38:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36596 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229533AbhJXXiI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2021 19:38:08 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DF4CC061745;
-        Sun, 24 Oct 2021 16:35:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-        Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:
-        Subject:Sender:Reply-To:Content-ID:Content-Description;
-        bh=vojAuA0zWMRXeMKM5FxwLkBGAJx4XzX1DoS3E/l+TR0=; b=WUs8HXwAmUMisHaiHQeTYLKozq
-        JaBHeB0Uim6oNL+9a5VryUfm88jMIX9SjpcfFY1+ld58tTr1jij2ZzC1sPaXwZZ255f24aF6+I7bQ
-        MrcQhLisdadLzgot9iIuVD38gaYv9nV1zTphcBALgsPjRvaTsN9FH++eKsC5k4xG8I9/KRTBRxoM1
-        VVrs1SPcL+C01ALzKz8/3ydimYBAduzy0SVyHEF9Lk2M+Bn7zFcSJqcYoBYc58tkmj0f9CCk9Foxa
-        qzeN5+zK8TL0SjT6VDHEf57aeNts5fpg9tC0TUcZy+fudlpNsSjb6XR3nLi4AwQ3k8h15uDfD6RaV
-        wWigPwYg==;
-Received: from [2601:1c0:6280:3f0::aa0b]
-        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1men1j-00Emhv-Ta; Sun, 24 Oct 2021 23:35:43 +0000
+        id S231954AbhJYBUW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Oct 2021 21:20:22 -0400
+Received: from mail-pl1-f172.google.com ([209.85.214.172]:40560 "EHLO
+        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229554AbhJYBUV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2021 21:20:21 -0400
+Received: by mail-pl1-f172.google.com with SMTP id v20so6791729plo.7;
+        Sun, 24 Oct 2021 18:18:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=q5O4UBSKbAyhKsuzmZP4VB7n8u3QEGlpbp2iyZiAqqw=;
+        b=yIF/T8DkWDnLNSlBoGqMolkl1hNA4F/QTC+COaxH6rxwZG6SM2KnkI8N53POe5pN+6
+         s3qaRTvhL2qGX0ZIAx3IR8bN0Xr3+wyAJxsJjCYbOMu1HIr1O7MmsP4/6ZOF8B1v9SWW
+         HXbrDdNdMwqVcd7tZDgO58IwTD2YBN4CaFA2Q4o5eizuCjxSM7bnxs+NsXF+iGiCEVq3
+         lReNZPNqtpRlH1uqpES6ZNPN0oRHqnjomBloLecwJeaNqXlDxHcAvSrnZFlrL8wBVi2O
+         HcaT2JF1bTxZ81kTkoy5uIa5yHDdP+O2aszU/nj7Ye+Bgy1PhDhiiXG2rqoeFkX0hwYb
+         qkXw==
+X-Gm-Message-State: AOAM532xnp3HOJslCmfrs1ZgdIXxl4kZyU3kZtHO16+miR5FPw/zr1yp
+        3A8zF3PRML0B4RZwt+zBERs=
+X-Google-Smtp-Source: ABdhPJzUd1g7LQesE692U+SJJhHOV3woPCI/hMm1zSuEzf+KYORHfg9HyJyHverPXkihxkZ6/oX8pQ==
+X-Received: by 2002:a17:90a:d311:: with SMTP id p17mr2476735pju.95.1635124679565;
+        Sun, 24 Oct 2021 18:17:59 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:1d23:4f1f:253d:c1e1? ([2601:647:4000:d7:1d23:4f1f:253d:c1e1])
+        by smtp.gmail.com with ESMTPSA id z5sm14328623pge.2.2021.10.24.18.17.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 24 Oct 2021 18:17:58 -0700 (PDT)
+Message-ID: <b3344662-03a7-43ca-21ea-7e2c4f0f658a@acm.org>
+Date:   Sun, 24 Oct 2021 18:17:57 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
 Subject: Re: [PATCH] scsi: ufs: clean up the Kconfig file
-To:     Bart Van Assche <bvanassche@acm.org>, linux-kernel@vger.kernel.org
+Content-Language: en-US
+To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
 Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
         Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
         "Martin K. Petersen" <martin.petersen@oracle.com>
 References: <20211024064332.16360-1-rdunlap@infradead.org>
  <8578e393-2a25-bc52-65ea-599d071387e9@acm.org>
-From:   Randy Dunlap <rdunlap@infradead.org>
-Message-ID: <5b13f32c-0cdb-26de-2bb7-af56a099b0b2@infradead.org>
-Date:   Sun, 24 Oct 2021 16:35:43 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
-MIME-Version: 1.0
-In-Reply-To: <8578e393-2a25-bc52-65ea-599d071387e9@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+ <5b13f32c-0cdb-26de-2bb7-af56a099b0b2@infradead.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <5b13f32c-0cdb-26de-2bb7-af56a099b0b2@infradead.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/24/21 2:29 PM, Bart Van Assche wrote:
-> On 10/23/21 23:43, Randy Dunlap wrote:
->> @@ -39,7 +38,7 @@ config SCSI_UFSHCD
->>       select DEVFREQ_GOV_SIMPLE_ONDEMAND
->>       select NLS
->>       help
->> -      This selects the support for UFS devices in Linux, say Y and make
->> +      This selects the support for UFS devices in Linux. Say Y and make
+On 10/24/21 16:35, Randy Dunlap wrote:
+> On 10/24/21 2:29 PM, Bart Van Assche wrote:
+>> On 10/23/21 23:43, Randy Dunlap wrote:
+>>>         sure that you know the name of your UFS host adapter (the card
+>>>         inside your computer that "speaks" the UFS protocol, also
+>>>         called UFS Host Controller), because you will be asked for it.
+>>> @@ -51,7 +50,7 @@ config SCSI_UFSHCD
+>>>         (the one containing the directory /) is located on a UFS device.
+>>>   config SCSI_UFSHCD_PCI
+>>> -    tristate "PCI bus based UFS Controller support"
+>>> +    tristate "PCI bus-based UFS Controller support"
+>>
+>> Even with this change applied capitalization is inconsistent.
 > 
-> How about changing "This selects the support for UFS devices in Linux"
-> into "Enables support for UFS devices"? "the" should be left out from a
-> grammatical point of view and "in Linux" is redundant.
-
-OK, done (locally).
-
->>         sure that you know the name of your UFS host adapter (the card
->>         inside your computer that "speaks" the UFS protocol, also
->>         called UFS Host Controller), because you will be asked for it.
->> @@ -51,7 +50,7 @@ config SCSI_UFSHCD
->>         (the one containing the directory /) is located on a UFS device.
->>   config SCSI_UFSHCD_PCI
->> -    tristate "PCI bus based UFS Controller support"
->> +    tristate "PCI bus-based UFS Controller support"
+> I don't doubt it, but could you be more explicit about
+> which word(s) you mean, please?
 > 
-> Even with this change applied capitalization is inconsistent.
+> I see one "pci" in the Kconfig file.
+> I see several "Controller" vs. "controller."
+> I see a few of "Support" vs. "support."
+> 
+> Which are you referring to? (or something else)
 
-I don't doubt it, but could you be more explicit about
-which word(s) you mean, please?
+I was referring to the word "Controller". Although English is not my native
+language, shouldn't "UFS Controller" be changed into "UFS controller" since
+neither "bus-based" nor "support" are capitalized?
 
-I see one "pci" in the Kconfig file.
-I see several "Controller" vs. "controller."
-I see a few of "Support" vs. "support."
+Thanks,
 
-Which are you referring to? (or something else)
-
-thanks.
--- 
-~Randy
+Bart.
