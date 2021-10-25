@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 95D0DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 07:05:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B91D2C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 07:05:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 803E561002
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 07:05:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A083961040
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 07:05:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230321AbhJYHHx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 03:07:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50660 "EHLO
+        id S231162AbhJYHH6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 03:07:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50670 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230236AbhJYHHw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Oct 2021 03:07:52 -0400
+        with ESMTP id S230236AbhJYHHy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Oct 2021 03:07:54 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0EFF5C061764;
-        Mon, 25 Oct 2021 00:05:30 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1D48DC061745;
+        Mon, 25 Oct 2021 00:05:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=mQ4RV+kl5HFBPPRUuufU/frBPWLaw14/dH5L1z+CoeQ=; b=XOsC6DuJ4kgdptkx24f/lSKTnV
-        EitJjBmL419UWtJc9i07/ZuzEkEuklZplMUtwTKiOqLfOX4wEvz0ToCA8J8pq+tS5k4hYTF5usu47
-        CHjT0DasW5vW6G9p+k+QswQxo88Q6FrobCWxnuTdY26Gjd7RDsVjk5c5obnl6M1FgixcQ9CWMulLJ
-        xZtA7fG0ubuZyBt/MOBznNL7vsz1n+vM5ottIwzuzpdTmwC3U9JfpmN5XD8/zg+twcufyylDahXGJ
-        5tGTIP72mSaFWOBZ8lMqbrPu8htnMjhFXI4fFmgB485Xl4xapDWwtJZmzaO3EoeJ8cJPKIlMp0ggK
-        2ii3TTVQ==;
+        bh=oAf0cozBABJodjGjeGfj2mHJ5q1G5mTFnT8jXPv2KNo=; b=tuoyrK3hZtrEL114mS3hEazypB
+        SZTpmDVBiCszkW8cu7xBLiLdtSn1x6ymFdwRi1DnkHhuXtbm3AKPhlfju7bU/sUDuO2et3l+Kz8ZZ
+        T8xBNpAsNjn7EXTjj9jGWC7vlzYRkiixc0QU1pwi0g1QHhmjZh6LsPhrIR/u+ObOicAg7nlrP1IXP
+        ChaBi4tHgGJh2yz84tTnySZ4qcnVFB3IjWDkXpEE3QPJbHMDNwJvWh45xkmqKXZYgflL1fGc84jHn
+        QD8Ihs4Gf6CPSCxwbFYJtjNy53nM5XgEMHFC25Bmsvz6AXPx3ZV5+5GnLvCDl0f5SrVOS9FgX14GO
+        9r8p6QpQ==;
 Received: from [2001:4bb8:184:6dcb:6093:467a:cccc:351c] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1meu2r-00FUOA-Lu; Mon, 25 Oct 2021 07:05:22 +0000
+        id 1meu2w-00FUQE-Vw; Mon, 25 Oct 2021 07:05:27 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -38,9 +38,9 @@ Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-mtd@lists.infradead.org
-Subject: [PATCH 01/12] block: move blk_rq_err_bytes to scsi
-Date:   Mon, 25 Oct 2021 09:05:06 +0200
-Message-Id: <20211025070517.1548584-2-hch@lst.de>
+Subject: [PATCH 03/12] block: remove rq_flush_dcache_pages
+Date:   Mon, 25 Oct 2021 09:05:08 +0200
+Message-Id: <20211025070517.1548584-4-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211025070517.1548584-1-hch@lst.de>
 References: <20211025070517.1548584-1-hch@lst.de>
@@ -51,148 +51,123 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-blk_rq_err_bytes is only used by the scsi midlayer, so move it there.
+This function is trivial, and flush_dcache_page is always defined, so
+just open code it in the 2.5 callers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-core.c        | 41 ----------------------------------------
- drivers/scsi/scsi_lib.c | 42 ++++++++++++++++++++++++++++++++++++++++-
- include/linux/blk-mq.h  |  3 ---
- 3 files changed, 41 insertions(+), 45 deletions(-)
+ block/blk-core.c          | 19 -------------------
+ drivers/mtd/mtd_blkdevs.c | 10 ++++++++--
+ drivers/mtd/ubi/block.c   |  6 +++++-
+ include/linux/blk-mq.h    | 10 ----------
+ 4 files changed, 13 insertions(+), 32 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 5ffe05b1d17ce..3edc5c5178dd6 100644
+index 0d267cfb71484..08c6077365ac9 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -1221,47 +1221,6 @@ blk_status_t blk_insert_cloned_request(struct request_queue *q, struct request *
+@@ -1324,25 +1324,6 @@ void blk_steal_bios(struct bio_list *list, struct request *rq)
  }
- EXPORT_SYMBOL_GPL(blk_insert_cloned_request);
+ EXPORT_SYMBOL_GPL(blk_steal_bios);
  
+-#if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
 -/**
-- * blk_rq_err_bytes - determine number of bytes till the next failure boundary
-- * @rq: request to examine
+- * rq_flush_dcache_pages - Helper function to flush all pages in a request
+- * @rq: the request to be flushed
 - *
 - * Description:
-- *     A request could be merge of IOs which require different failure
-- *     handling.  This function determines the number of bytes which
-- *     can be failed from the beginning of the request without
-- *     crossing into area which need to be retried further.
-- *
-- * Return:
-- *     The number of bytes to fail.
+- *     Flush all pages in @rq.
 - */
--unsigned int blk_rq_err_bytes(const struct request *rq)
+-void rq_flush_dcache_pages(struct request *rq)
 -{
--	unsigned int ff = rq->cmd_flags & REQ_FAILFAST_MASK;
--	unsigned int bytes = 0;
--	struct bio *bio;
+-	struct req_iterator iter;
+-	struct bio_vec bvec;
 -
--	if (!(rq->rq_flags & RQF_MIXED_MERGE))
--		return blk_rq_bytes(rq);
--
--	/*
--	 * Currently the only 'mixing' which can happen is between
--	 * different fastfail types.  We can safely fail portions
--	 * which have all the failfast bits that the first one has -
--	 * the ones which are at least as eager to fail as the first
--	 * one.
--	 */
--	for (bio = rq->bio; bio; bio = bio->bi_next) {
--		if ((bio->bi_opf & ff) != ff)
--			break;
--		bytes += bio->bi_iter.bi_size;
--	}
--
--	/* this could lead to infinite loop */
--	BUG_ON(blk_rq_bytes(rq) && !bytes);
--	return bytes;
+-	rq_for_each_segment(bvec, rq, iter)
+-		flush_dcache_page(bvec.bv_page);
 -}
--EXPORT_SYMBOL_GPL(blk_rq_err_bytes);
+-EXPORT_SYMBOL_GPL(rq_flush_dcache_pages);
+-#endif
 -
- static void update_io_ticks(struct block_device *part, unsigned long now,
- 		bool end)
+ /**
+  * blk_lld_busy - Check if underlying low-level drivers of a device are busy
+  * @q : the queue of the device being checked
+diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
+index b8ae1ec14e178..356b5bb4db51a 100644
+--- a/drivers/mtd/mtd_blkdevs.c
++++ b/drivers/mtd/mtd_blkdevs.c
+@@ -46,6 +46,8 @@ static blk_status_t do_blktrans_request(struct mtd_blktrans_ops *tr,
+ 			       struct mtd_blktrans_dev *dev,
+ 			       struct request *req)
  {
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9823b65d15368..1f7e68699941f 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -617,6 +617,46 @@ static blk_status_t scsi_result_to_blk_status(struct scsi_cmnd *cmd, int result)
- 	}
- }
++	struct req_iterator iter;
++	struct bio_vec bvec;
+ 	unsigned long block, nsect;
+ 	char *buf;
  
-+/**
-+ * scsi_rq_err_bytes - determine number of bytes till the next failure boundary
-+ * @rq: request to examine
-+ *
-+ * Description:
-+ *     A request could be merge of IOs which require different failure
-+ *     handling.  This function determines the number of bytes which
-+ *     can be failed from the beginning of the request without
-+ *     crossing into area which need to be retried further.
-+ *
-+ * Return:
-+ *     The number of bytes to fail.
-+ */
-+static unsigned int scsi_rq_err_bytes(const struct request *rq)
-+{
-+	unsigned int ff = rq->cmd_flags & REQ_FAILFAST_MASK;
-+	unsigned int bytes = 0;
-+	struct bio *bio;
-+
-+	if (!(rq->rq_flags & RQF_MIXED_MERGE))
-+		return blk_rq_bytes(rq);
-+
-+	/*
-+	 * Currently the only 'mixing' which can happen is between
-+	 * different fastfail types.  We can safely fail portions
-+	 * which have all the failfast bits that the first one has -
-+	 * the ones which are at least as eager to fail as the first
-+	 * one.
-+	 */
-+	for (bio = rq->bio; bio; bio = bio->bi_next) {
-+		if ((bio->bi_opf & ff) != ff)
-+			break;
-+		bytes += bio->bi_iter.bi_size;
-+	}
-+
-+	/* this could lead to infinite loop */
-+	BUG_ON(blk_rq_bytes(rq) && !bytes);
-+	return bytes;
-+}
-+
- /* Helper for scsi_io_completion() when "reprep" action required. */
- static void scsi_io_completion_reprep(struct scsi_cmnd *cmd,
- 				      struct request_queue *q)
-@@ -794,7 +834,7 @@ static void scsi_io_completion_action(struct scsi_cmnd *cmd, int result)
- 				scsi_print_command(cmd);
+@@ -76,13 +78,17 @@ static blk_status_t do_blktrans_request(struct mtd_blktrans_ops *tr,
  			}
  		}
--		if (!scsi_end_request(req, blk_stat, blk_rq_err_bytes(req)))
-+		if (!scsi_end_request(req, blk_stat, scsi_rq_err_bytes(req)))
- 			return;
- 		fallthrough;
- 	case ACTION_REPREP:
+ 		kunmap(bio_page(req->bio));
+-		rq_flush_dcache_pages(req);
++
++		rq_for_each_segment(bvec, req, iter)
++			flush_dcache_page(bvec.bv_page);
+ 		return BLK_STS_OK;
+ 	case REQ_OP_WRITE:
+ 		if (!tr->writesect)
+ 			return BLK_STS_IOERR;
+ 
+-		rq_flush_dcache_pages(req);
++		rq_for_each_segment(bvec, req, iter)
++			flush_dcache_page(bvec.bv_page);
++
+ 		buf = kmap(bio_page(req->bio)) + bio_offset(req->bio);
+ 		for (; nsect > 0; nsect--, block++, buf += tr->blksize) {
+ 			if (tr->writesect(dev, block, buf)) {
+diff --git a/drivers/mtd/ubi/block.c b/drivers/mtd/ubi/block.c
+index e003b4b44ffa2..99e17ee13feb7 100644
+--- a/drivers/mtd/ubi/block.c
++++ b/drivers/mtd/ubi/block.c
+@@ -294,6 +294,8 @@ static void ubiblock_do_work(struct work_struct *work)
+ 	int ret;
+ 	struct ubiblock_pdu *pdu = container_of(work, struct ubiblock_pdu, work);
+ 	struct request *req = blk_mq_rq_from_pdu(pdu);
++	struct req_iterator iter;
++	struct bio_vec bvec;
+ 
+ 	blk_mq_start_request(req);
+ 
+@@ -305,7 +307,9 @@ static void ubiblock_do_work(struct work_struct *work)
+ 	blk_rq_map_sg(req->q, req, pdu->usgl.sg);
+ 
+ 	ret = ubiblock_read(pdu);
+-	rq_flush_dcache_pages(req);
++
++	rq_for_each_segment(bvec, req, iter)
++		flush_dcache_page(bvec.bv_page);
+ 
+ 	blk_mq_end_request(req, errno_to_blk_status(ret));
+ }
 diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index ebc45cf0450b3..9f9634cd4cfd2 100644
+index 850ecfdebe595..047ce54fca96c 100644
 --- a/include/linux/blk-mq.h
 +++ b/include/linux/blk-mq.h
-@@ -949,7 +949,6 @@ struct req_iterator {
-  * blk_rq_pos()			: the current sector
-  * blk_rq_bytes()		: bytes left in the entire request
-  * blk_rq_cur_bytes()		: bytes left in the current segment
-- * blk_rq_err_bytes()		: bytes left till the next error boundary
-  * blk_rq_sectors()		: sectors left in the entire request
-  * blk_rq_cur_sectors()		: sectors left in the current segment
-  * blk_rq_stats_sectors()	: sectors of the entire request used for stats
-@@ -973,8 +972,6 @@ static inline int blk_rq_cur_bytes(const struct request *rq)
- 	return bio_iovec(rq->bio).bv_len;
+@@ -1131,14 +1131,4 @@ static inline bool blk_req_can_dispatch_to_zone(struct request *rq)
  }
+ #endif /* CONFIG_BLK_DEV_ZONED */
  
--unsigned int blk_rq_err_bytes(const struct request *rq);
--
- static inline unsigned int blk_rq_sectors(const struct request *rq)
- {
- 	return blk_rq_bytes(rq) >> SECTOR_SHIFT;
+-#ifndef ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
+-# error	"You should define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE for your platform"
+-#endif
+-#if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
+-void rq_flush_dcache_pages(struct request *rq);
+-#else
+-static inline void rq_flush_dcache_pages(struct request *rq)
+-{
+-}
+-#endif /* ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE */
+ #endif /* BLK_MQ_H */
 -- 
 2.30.2
 
