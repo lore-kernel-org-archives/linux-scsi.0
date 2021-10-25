@@ -2,79 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 917AAC433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 06:55:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D371C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 07:05:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6E7EF61027
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 06:55:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3657160F6F
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 07:05:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231350AbhJYG6R (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 02:58:17 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55026 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229727AbhJYG6Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Oct 2021 02:58:16 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2FE2B60FBF;
-        Mon, 25 Oct 2021 06:55:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635144955;
-        bh=mCUUICw/JeXhAZz3eSIXTOZdzi+Udz+TQU0R3Z2yS5E=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=PeLi8oMrZObadCGLF1LOUnP7iNF/bwmCw/WHlLWuN7cu51mee8+a9tdUMfi3SC6Ya
-         OZHgQUxWeH59ggZqSuE2twrHhkV+eVs9zAamyeXR7Nyd83RLezKQPLkokRlTUzUltz
-         P3zYpvG3YkKBlCoPl7hyZWgumhbR7BnK5OK6MhnHLc5MDjRgCZTnyNfTzvkuG+QUI6
-         5WM+ZtWLUCk+QPIyX/TWpAt3fuJMG4jGjcGAKLjFBn9NmyWr/KIUbtqIfh2Umg0ui8
-         RGIb9pSHSkvbbidAmw2q5hvsgIsk5814LApAy4Gerjzc9Usi85bKBjLrrLiConxtGO
-         MRdrP5WXgNrRg==
-Date:   Mon, 25 Oct 2021 12:25:50 +0530
-From:   Vinod Koul <vkoul@kernel.org>
-To:     Qing Wang <wangqing@vivo.com>
-Cc:     Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-        Viresh Kumar <vireshk@kernel.org>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Zhou Wang <wangzhou1@hisilicon.com>,
-        Logan Gunthorpe <logang@deltatee.com>,
-        Sathya Prakash <sathya.prakash@broadcom.com>,
-        Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-        Suganath Prabu Subramani 
-        <suganath-prabu.subramani@broadcom.com>, dmaengine@vger.kernel.org,
-        linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V3 0/7] switch from 'pci_' to 'dma_' API
-Message-ID: <YXZU9suGqrIurbX2@matsya>
-References: <1633663733-47199-1-git-send-email-wangqing@vivo.com>
+        id S230183AbhJYHHs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 03:07:48 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50640 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229979AbhJYHHr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Oct 2021 03:07:47 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 069DBC061745;
+        Mon, 25 Oct 2021 00:05:26 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:In-Reply-To:References;
+        bh=MWfB/Pp9FZbja07tYucEjisRFC0HHkvFMwtwn3gyp3o=; b=iYjOpX6U1STCkN0OBRL3wUW+pj
+        lq61H5lzNBFdkjygcXrFzebRbs5zTLj2vCwNUvz8ibdeTvQyxfB7T8pzvjdiQ9pelfHpUmtADRAuy
+        gzTveXNaTNxIQ6CwFcF8ssczvalPLNqioI8Oxbfl3/c6pd1Rd4HHOojx48lTatSy5twHuhg3RZXJg
+        FZa7noPc8mLvcGEG7sBXxo1MEG6aABF3MMcjV2Cc7RtmkzMhYgS4dZHVhGZs7VQLla9BXDCRTFpHF
+        B91GjTc0FzbsnJmGRzI+4YSKyx159kUBQpKFxQFC9TeQGQ2imvj2A54eSNFbdKA4eR0F7Wx22dWEz
+        sDcehvPw==;
+Received: from [2001:4bb8:184:6dcb:6093:467a:cccc:351c] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1meu2p-00FUNj-1e; Mon, 25 Oct 2021 07:05:19 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-mtd@lists.infradead.org
+Subject: move all struct request releated code out of blk-core.c
+Date:   Mon, 25 Oct 2021 09:05:05 +0200
+Message-Id: <20211025070517.1548584-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1633663733-47199-1-git-send-email-wangqing@vivo.com>
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 07-10-21, 20:28, Qing Wang wrote:
-> The wrappers in include/linux/pci-dma-compat.h should go away.
-> 
-> The patch has been generated with the coccinelle script below.
-> expression e1, e2;
-> @@
-> -    pci_set_dma_mask(e1, e2)
-> +    dma_set_mask(&e1->dev, e2)
-> 
-> @@
-> expression e1, e2;
-> @@
-> -    pci_set_consistent_dma_mask(e1, e2)
-> +    dma_set_coherent_mask(&e1->dev, e2)
-> 
-> While at it, some 'dma_set_mask()/dma_set_coherent_mask()' have been
-> updated to a much less verbose 'dma_set_mask_and_coherent()'.
-> 
-> This type of patches has been going on for a long time, I plan to 
-> clean it up in the near future. If needed, see post from 
-> Christoph Hellwig on the kernel-janitors ML:
-> https://marc.info/?l=kernel-janitors&m=158745678307186&w=4
+Hi Jens,
 
-Applied, thanks
+this series (against the for-5.16/passthrough-flag branch) removes the
+remaining struct request related code from blk-core.c and cleans up a
+few related bits around that.
 
--- 
-~Vinod
+Diffstat:
+ b/block/Makefile                     |    2 
+ b/block/blk-core.c                   |  362 ----------------------
+ b/block/blk-mq.c                     |  573 +++++++++++++++++++++++++++++------
+ b/block/blk-mq.h                     |    3 
+ b/block/blk.h                        |   33 --
+ b/drivers/block/paride/pd.c          |    4 
+ b/drivers/block/pktcdvd.c            |    2 
+ b/drivers/block/virtio_blk.c         |    4 
+ b/drivers/md/dm-mpath.c              |    4 
+ b/drivers/mmc/core/block.c           |   20 -
+ b/drivers/mtd/mtd_blkdevs.c          |   10 
+ b/drivers/mtd/ubi/block.c            |    6 
+ b/drivers/scsi/scsi_bsg.c            |    2 
+ b/drivers/scsi/scsi_error.c          |    2 
+ b/drivers/scsi/scsi_ioctl.c          |    4 
+ b/drivers/scsi/scsi_lib.c            |   46 ++
+ b/drivers/scsi/sg.c                  |    6 
+ b/drivers/scsi/sr.c                  |    2 
+ b/drivers/scsi/st.c                  |    4 
+ b/drivers/scsi/ufs/ufshcd.c          |   20 -
+ b/drivers/scsi/ufs/ufshpb.c          |    8 
+ b/drivers/target/target_core_pscsi.c |    4 
+ b/include/linux/blk-mq.h             |   16 
+ block/blk-exec.c                     |  116 -------
+ 24 files changed, 597 insertions(+), 656 deletions(-)
