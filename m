@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D9EA2C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:04:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D132C433FE
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:05:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C570B60F9B
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:04:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 87B1860F9D
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:05:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234772AbhJYRG5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 13:06:57 -0400
-Received: from mail.kernel.org ([198.145.29.99]:55192 "EHLO mail.kernel.org"
+        id S234955AbhJYRHg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 13:07:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56224 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234900AbhJYREt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Oct 2021 13:04:49 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id BFB1D60FDC;
-        Mon, 25 Oct 2021 17:01:42 +0000 (UTC)
+        id S234799AbhJYREc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Oct 2021 13:04:32 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 33217610C8;
+        Mon, 25 Oct 2021 17:01:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635181303;
-        bh=KSuovJGWTbD+j4Bd4JZWJgMnfIC6bfWi7Y8qT2B384E=;
+        s=k20201202; t=1635181295;
+        bh=N4jTZEiCI/fgjQxxjR1nGSDTqF4wAhBvJtiTVgB91UM=;
         h=From:To:Cc:Subject:Date:From;
-        b=Eway/W0mg5hqepC3WZuwKsWixEW2XhuGmvKLrIg9nk1m3PvaC0LnoSFaXD8Q6ojGn
-         Plbq/NRL53I4a52bw7S/Lhfiu57eU73cpn4UyOscPfUz1iUx5Ry9aJOg8oQHK1pkiU
-         ZuIB8nMtDl4miigSHy5nCt3eluD6wBzL7NI83K99uR22dBEzIE1VNlrBb+k4xKvDsJ
-         ns0GxsXiqa6FA0etaHAcdkmcMHhYDIlZSISHLwy7WdOneY3MCkPT4RjUORdkRvJZIl
-         n5PSIQeXWccmLDXtGvCQkAC1wBXo8LabSJUQyiz6H4EVvYWF8qYESvneuG28UOrr01
-         cyWYKwK18jLUw==
+        b=mcfDnVD+Dpzl9H4spCwbTijo9wgf+WiZyIIN7BqgBDx73cHJHEL511VRdllQlIhJ6
+         M17ePP93azGets8Lg/OlawJX9XHYHfeSPcR7awCNeLUXxure11jW9om6O1Whwi7rwa
+         PHA/1SGA19ZNTX2BElbY+9pmbi0sqq25UbayuFJMIyUCPejYIlnxYhoJqQ8WIcRrQt
+         EtNGqeEyDuycoYooEqbLiO0ej3mUKDeiVwAGVb4ZUQ3XVzY3vK+Haj8PyG68aZmgNZ
+         50eqhEjWIAuax/kx6Buuns1PrCggMdw8z3E6KJ7ndLQcBc+jM0mm5fLq6QN4P8bKgp
+         W4hhq2OFPehMg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     Ming Lei <ming.lei@redhat.com>,
@@ -35,9 +35,9 @@ Cc:     Ming Lei <ming.lei@redhat.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.4 1/3] scsi: core: Put LLD module refcnt after SCSI device is released
-Date:   Mon, 25 Oct 2021 13:01:38 -0400
-Message-Id: <20211025170141.1394943-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.9 1/4] scsi: core: Put LLD module refcnt after SCSI device is released
+Date:   Mon, 25 Oct 2021 13:01:29 -0400
+Message-Id: <20211025170132.1394887-1-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 MIME-Version: 1.0
 X-stable: review
@@ -75,10 +75,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  2 files changed, 12 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index d07fb653f5dc..d59ce94fdf73 100644
+index 1deb6adc411f..4c9c1a8db8c3 100644
 --- a/drivers/scsi/scsi.c
 +++ b/drivers/scsi/scsi.c
-@@ -936,8 +936,10 @@ EXPORT_SYMBOL(scsi_device_get);
+@@ -951,8 +951,10 @@ EXPORT_SYMBOL(scsi_device_get);
   */
  void scsi_device_put(struct scsi_device *sdev)
  {
@@ -91,10 +91,10 @@ index d07fb653f5dc..d59ce94fdf73 100644
  EXPORT_SYMBOL(scsi_device_put);
  
 diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index b89af3841e44..7497917afdec 100644
+index 38830818bfb6..eae43a85e9b0 100644
 --- a/drivers/scsi/scsi_sysfs.c
 +++ b/drivers/scsi/scsi_sysfs.c
-@@ -396,9 +396,12 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+@@ -427,9 +427,12 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
  	struct device *parent;
  	struct list_head *this, *tmp;
  	unsigned long flags;
@@ -107,7 +107,7 @@ index b89af3841e44..7497917afdec 100644
  	scsi_dh_release_device(sdev);
  
  	parent = sdev->sdev_gendev.parent;
-@@ -430,11 +433,17 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+@@ -461,11 +464,17 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
  
  	if (parent)
  		put_device(parent);
