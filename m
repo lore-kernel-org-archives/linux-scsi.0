@@ -2,83 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B46D7C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 16:12:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 076F9C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 16:59:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 933E46058D
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 16:12:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC38560EE3
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 16:59:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233885AbhJYQOj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 12:14:39 -0400
-Received: from mail-pl1-f180.google.com ([209.85.214.180]:35553 "EHLO
-        mail-pl1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230177AbhJYQOi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Oct 2021 12:14:38 -0400
-Received: by mail-pl1-f180.google.com with SMTP id n12so3596566plc.2;
-        Mon, 25 Oct 2021 09:12:16 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=+qW5evmThMV91an/ENDTvnEGIo+rhzLqS9sPVu9KTo0=;
-        b=Z0s5Fl2Iz0+mpHIhnsolAllWc9OqtAtaAqFV2/oWUxjnvtDo0Obx6jlfGGoLIWurrE
-         3jnK2BuW0y7G4LspCj6gwQbiNUVIpooMQegvQYgAiCk07N8VPORTylozB/qgeFw0bheT
-         Z+T5U3/3hLi1QIkZfqrGsL+s9Fi/61FQnGe/dMTF0dEQ2tvle+zCBxJVgUNyMyVn/8vM
-         wldFSHEMXltnbaClCAnyIL6jpdZOfCVm33r3iZENenZ9A2g1sI0lUgEiGPF97ZWCN68e
-         bLNhBEc/Sb7oTgHeT09giXMDvnnm2/SI3f2XbcBkovA1za47kxXbxth+lsb35yDm4hcR
-         kYdg==
-X-Gm-Message-State: AOAM532KqIRaeMmN4rLgVgWocRvCe+Ok6p2kFZVOKpIbHJXXlEX+afn+
-        H2RzVhBFHUHFQ4t2waVub48=
-X-Google-Smtp-Source: ABdhPJw8kxOk107Tm99wsQRBcZYYFyQvHZD3wFAvArs6FbOm1vw/qzhSzJB55/WSkW+gvppMcSCbgg==
-X-Received: by 2002:a17:90a:764e:: with SMTP id s14mr6742822pjl.221.1635178336018;
-        Mon, 25 Oct 2021 09:12:16 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f863:1daa:afe1:156])
-        by smtp.gmail.com with ESMTPSA id z8sm16847102pgc.53.2021.10.25.09.12.15
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Oct 2021 09:12:15 -0700 (PDT)
-Subject: Re: [PATCH] scsi: ufs: revert HPB support
-To:     Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com,
-        axboe@kernel.dk
-Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-References: <20211022062011.1262184-1-hch@lst.de>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <4199e780-32e5-a1ce-65ba-85e0b7a3eda5@acm.org>
-Date:   Mon, 25 Oct 2021 09:12:14 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S234199AbhJYRCN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 13:02:13 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54512 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S234151AbhJYRCJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Oct 2021 13:02:09 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C1D8660F92;
+        Mon, 25 Oct 2021 16:59:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1635181186;
+        bh=3TFO/T2EnCi4p90u8EHPpy5i/lZnFyiAgAbYZ9zQVOU=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=bZ/D5NEVZKaNlUKxKVF5u77OqL2+z31cTN6+SG8/LWYjSAn70mj78XAS9MGinvrbh
+         U/PVyzNnyxRDFOBZDPl8eGTHQqGDFerFlRGwvHLZff/ENANNRkR3PScT5Kk4FO6e/7
+         LEEpKNnDP/cFWoINj3AgdrrZYdo2uzVn6wM3x2pvN44Bf+ybIJqMLG/a3+n5W2Q1yZ
+         PLL8U9Hr2Ow10YD7GDPAJsSCVIHDaoGo0xp9HRRim37yA0wg3co3nbtKGJe4zK8bXu
+         qNob7pnaTz2smk4bQXLd1atDZZstcmVPRrHawosTLZeVLKXwSM7QGvovilxrI6TfyU
+         T3L6IJhVZMrdw==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Ming Lei <ming.lei@redhat.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Changhui Zhong <czhong@redhat.com>,
+        Yi Zhang <yi.zhang@redhat.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.14 04/18] scsi: core: Put LLD module refcnt after SCSI device is released
+Date:   Mon, 25 Oct 2021 12:59:17 -0400
+Message-Id: <20211025165939.1393655-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211025165939.1393655-1-sashal@kernel.org>
+References: <20211025165939.1393655-1-sashal@kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <20211022062011.1262184-1-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/21/21 11:20 PM, Christoph Hellwig wrote:
-> The HPB support added this merge window is fundanetally flawed as it
-> uses blk_insert_cloned_request to insert a cloned request onto the same
-> queue as the one that the original request came from, leading to all
-> kinds of issues in blk-mq accounting (in addition to this API being
-> a special case for dm-mpath that should not see other users).
+From: Ming Lei <ming.lei@redhat.com>
 
-I do not agree with removing the UFS HPB code from the upstream kernel 
-at this time.
+[ Upstream commit f2b85040acec9a928b4eb1b57a989324e8e38d3f ]
 
-One of the HPB users promised to look into removing the 
-blk_insert_cloned_request() call from the UFS HPB code. Shouldn't that 
-person be given the chance to come up with a patch before removal of the 
-UFS HPB code is considered?
+SCSI host release is triggered when SCSI device is freed. We have to make
+sure that the low-level device driver module won't be unloaded before SCSI
+host instance is released because shost->hostt is required in the release
+handler.
 
-Additionally, removing the UFS HPB code from the upstream kernel won't 
-affect UFS users much. As far as I know all HPB users use Android. UFS 
-HPB is supported by Android 12 and will also be supported by Android 13. 
-Whether or not this patch is goes upstream won't affect the Android 
-kernel. I am not aware of any plans to make any changes in the Android 
-kernel UFS HPB code if this patch would be integrated in the upstream 
-kernel.
+Make sure to put LLD module refcnt after SCSI device is released.
 
-Bart.
+Fixes a kernel panic of 'BUG: unable to handle page fault for address'
+reported by Changhui and Yi.
+
+Link: https://lore.kernel.org/r/20211008050118.1440686-1-ming.lei@redhat.com
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Reported-by: Changhui Zhong <czhong@redhat.com>
+Reported-by: Yi Zhang <yi.zhang@redhat.com>
+Tested-by: Yi Zhang <yi.zhang@redhat.com>
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/scsi.c       | 4 +++-
+ drivers/scsi/scsi_sysfs.c | 9 +++++++++
+ 2 files changed, 12 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index d26025cf5de3..71dd0989c78a 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -553,8 +553,10 @@ EXPORT_SYMBOL(scsi_device_get);
+  */
+ void scsi_device_put(struct scsi_device *sdev)
+ {
+-	module_put(sdev->host->hostt->module);
++	struct module *mod = sdev->host->hostt->module;
++
+ 	put_device(&sdev->sdev_gendev);
++	module_put(mod);
+ }
+ EXPORT_SYMBOL(scsi_device_put);
+ 
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index c0d31119d6d7..ed05c3565e83 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -448,9 +448,12 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
+ 	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
+ 	unsigned long flags;
++	struct module *mod;
+ 
+ 	sdev = container_of(work, struct scsi_device, ew.work);
+ 
++	mod = sdev->host->hostt->module;
++
+ 	scsi_dh_release_device(sdev);
+ 
+ 	parent = sdev->sdev_gendev.parent;
+@@ -501,11 +504,17 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+ 
+ 	if (parent)
+ 		put_device(parent);
++	module_put(mod);
+ }
+ 
+ static void scsi_device_dev_release(struct device *dev)
+ {
+ 	struct scsi_device *sdp = to_scsi_device(dev);
++
++	/* Set module pointer as NULL in case of module unloading */
++	if (!try_module_get(sdp->host->hostt->module))
++		sdp->host->hostt->module = NULL;
++
+ 	execute_in_process_context(scsi_device_dev_release_usercontext,
+ 				   &sdp->ew);
+ }
+-- 
+2.33.0
+
