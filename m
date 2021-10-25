@@ -2,172 +2,150 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BF80BC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 09:24:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00D6FC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 11:39:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9D40260F92
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 09:24:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6ED760F4F
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 11:39:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232371AbhJYJ0h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 05:26:37 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:4486 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230010AbhJYJ0h (ORCPT
+        id S232975AbhJYLlk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 07:41:40 -0400
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:51052 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232967AbhJYLli (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Oct 2021 05:26:37 -0400
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19P759RG012696;
-        Mon, 25 Oct 2021 05:24:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- mime-version : subject : to : cc : references : from : in-reply-to :
- content-type : content-transfer-encoding; s=pp1;
- bh=PO340YsaGcgMAYBxeHlAvJJ6UIEJH6wkWIABAKDcBrU=;
- b=sQqs6hZLy7dG32cryjBeBBsTMyImmAn0C+ZDjk3qW5+0ktTT35n3egjtiP8ng1E63MPl
- qGj7Faw+rEnQ1fm4Cx9IR0ciZrnrST8HXiflYGo1Res4pOQA2jeSRBg2qODY4x/xkb7p
- b5mfBYV7ZQkyZs82uGd9an+Az8QhFqElicFqSU1aFik/ZdhekJp0T/lW7mFumInG4fY3
- 0NH6QT0xITSiooFSalyWOj8vhCVz4cGUlvlyeo7OKMsZx+jneDQd0mg+qVNMgZvboVnZ
- VJI8Or+0FbL0g0oa/xVDXyoLXE1sBD+MDe58CVkDl+M137Y6v6mQfjcVU3ZmIHqZFkV5 og== 
-Received: from ppma04fra.de.ibm.com (6a.4a.5195.ip4.static.sl-reverse.com [149.81.74.106])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3bvych5qhe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 25 Oct 2021 05:24:00 -0400
-Received: from pps.filterd (ppma04fra.de.ibm.com [127.0.0.1])
-        by ppma04fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19P9MNdt025706;
-        Mon, 25 Oct 2021 09:23:58 GMT
-Received: from b06cxnps4075.portsmouth.uk.ibm.com (d06relay12.portsmouth.uk.ibm.com [9.149.109.197])
-        by ppma04fra.de.ibm.com with ESMTP id 3bva1a2gw8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Mon, 25 Oct 2021 09:23:58 +0000
-Received: from d06av26.portsmouth.uk.ibm.com (d06av26.portsmouth.uk.ibm.com [9.149.105.62])
-        by b06cxnps4075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19P9NsfW64029074
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 25 Oct 2021 09:23:54 GMT
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id B51FAAE051;
-        Mon, 25 Oct 2021 09:23:54 +0000 (GMT)
-Received: from d06av26.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 51907AE045;
-        Mon, 25 Oct 2021 09:23:54 +0000 (GMT)
-Received: from [9.171.63.35] (unknown [9.171.63.35])
-        by d06av26.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Mon, 25 Oct 2021 09:23:54 +0000 (GMT)
-Message-ID: <2f5e5d18-7ba9-10f6-1855-84546172b473@linux.ibm.com>
-Date:   Mon, 25 Oct 2021 11:23:54 +0200
+        Mon, 25 Oct 2021 07:41:38 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1635161956;
+        bh=p+az3OvBrOIPQBWOo7u8s1OubNSQmhmDFk1qfzBLanY=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=jJLCf9+ev4wRzgBuTw+xu2oz9I+UypwZykx4v79/sRg+0FqMj+dQdxI4Re53fD4jH
+         VKwRIJaBdSjrS1tEzPJJHBfHE4KjFpyvAXeIHGPHX/iq52kejVi4ELCsp8eOifuFt+
+         R1ScHPCamG9grCGsRACCIJ2Xe06vS/unvAka4rI0=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 16FA51280597;
+        Mon, 25 Oct 2021 07:39:16 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id i56CYmEQW6W1; Mon, 25 Oct 2021 07:39:16 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1635161955;
+        bh=p+az3OvBrOIPQBWOo7u8s1OubNSQmhmDFk1qfzBLanY=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=JhIUDxjILuTh2xRX+fw/UVoT5DQDuCi3XXjy6htkoHm4fzj/C4jL3c7ysVk5tlYBm
+         Z5/5QWOHr41BZiPZbFcomL+t26fPX9VL4hgXp6P5bGreE2pDfas4qTEHLWVCKrg0of
+         OsKF06mI+hj9U3WfvTEELDi6i0JU7xbF/2C6txRg=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 3EB9D1280518;
+        Mon, 25 Oct 2021 07:39:15 -0400 (EDT)
+Message-ID: <ac5c6248cfd73af5306c109be03adc320bb7d83f.camel@HansenPartnership.com>
+Subject: Re: please revert the UFS HPB support
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     daejun7.park@samsung.com, Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
+Cc:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>
+Date:   Mon, 25 Oct 2021 07:39:14 -0400
+In-Reply-To: <20211025051654epcms2p36b259d237eb2b8b885210148118c5d3f@epcms2p3>
+References: <571fc7393fb043e3c34bca57402bd098a56ea8ac.camel@HansenPartnership.com>
+         <20211021144210.GA28195@lst.de>
+         <84fac5a3-135a-2ac8-5929-a1031a311cb7@kernel.dk>
+         <20211021151520.GA31407@lst.de> <20211021151728.GA31600@lst.de>
+         <2cba13c3-bcd5-2a47-e4cb-54fa1ca088f3@acm.org>
+         <CGME20211023154316epcas2p208f95cf1e4a87a4b61d2daf1a2b3c725@epcms2p3>
+         <20211025051654epcms2p36b259d237eb2b8b885210148118c5d3f@epcms2p3>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: [PATCH v2] scsi: core: Fix early registration of sysfs attributes
- for scsi_device
-Content-Language: en-US
-To:     Steffen Maier <maier@linux.ibm.com>, bvanassche@acm.org,
-        martin.petersen@oracle.com, jejb@linux.ibm.com,
-        linux-scsi@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, bblock@linux.ibm.com,
-        linux-next@vger.kernel.org, linux-s390@vger.kernel.org
-References: <b5e69621-e2ee-750a-e542-a27aaa9293e5@acm.org>
- <20211024221620.760160-1-maier@linux.ibm.com>
-From:   Julian Wiedmann <jwi@linux.ibm.com>
-In-Reply-To: <20211024221620.760160-1-maier@linux.ibm.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: Mt8gxOf6GMmN8eB5xKwqDNJbvrliUWxZ
-X-Proofpoint-GUID: Mt8gxOf6GMmN8eB5xKwqDNJbvrliUWxZ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-10-25_03,2021-10-25_01,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 lowpriorityscore=0
- malwarescore=0 impostorscore=0 mlxlogscore=999 suspectscore=0
- clxscore=1011 priorityscore=1501 spamscore=0 adultscore=0 phishscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2109230001 definitions=main-2110250054
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 25.10.21 00:16, Steffen Maier wrote:
-> v4.17 commit 86b87cde0b55 ("scsi: core: host template attribute groups")
-> introduced explicit sysfs_create_groups() in scsi_sysfs_add_sdev()
-> and sysfs_remove_groups() in __scsi_remove_device(), both for sdev_gendev,
-> based on a new field const struct attribute_group **sdev_groups
-> of struct scsi_host_template.
+On Mon, 2021-10-25 at 14:16 +0900, Daejun Park wrote:
+> > On Thu, 2021-10-21 at 09:22 -0700, Bart Van Assche wrote:
+> > > On 10/21/21 8:17 AM, Christoph Hellwig wrote:
+> > > > On Thu, Oct 21, 2021 at 05:15:20PM +0200, Christoph Hellwig
+> > > > wrote:
+> > > > > > > I just noticed the UFS HPB support landed in 5.15, and
+> > > > > > > just as before it is completely broken by allocating
+> > > > > > > another request on the same device and then reinserting
+> > > > > > > it in the queue.  It is bad enough that we have to live
+> > > > > > > with blk_insert_cloned_request for dm-mpath, but this is
+> > > > > > > too big of an API abuse to make it into a release.  We
+> > > > > > > need to drop this code ASAP, and I can prepare a patch
+> > > > > > > for that.
+> > > > > > 
+> > > > > > That sounds awful, do you have a link to the offending
+> > > > > > commit(s)?
+> > > > > 
+> > > > > I'll need to look for it, busy in calls right now, but just
+> > > > > grep for blk_insert_cloned_request.
+> > > > 
+> > > > Might as well finish the git blame:
+> > > > 
+> > > > commit 41d8a9333cc96f5ad4dd7a52786585338257d9f1
+> > > > Author: Daejun Park <daejun7.park@samsung.com>
+> > > > Date:   Mon Jul 12 18:00:25 2021 +0900
+> > > > 
+> > > >      scsi: ufs: ufshpb: Add HPB 2.0 support
+> > > >          
+> > > >      Version 2.0 of HBP supports reads of varying sizes from
+> > > > 4KB to 1MB.
+> > > > 
+> > > >      A read operation <= 32KB is supported as single HPB read.
+> > > > A read between
+> > > >      36KB and 1MB is supported by a combination of write buffer
+> > > > command and HPB
+> > > >      read command to deliver more PPN. The write buffer
+> > > > commands may not be
+> > > >      issued immediately due to busy tags. To use HPB read more
+> > > > aggressively, the
+> > > >      driver can requeue the write buffer command. The requeue
+> > > > threshold is
+> > > >      implemented as timeout and can be modified with
+> > > > requeue_timeout_ms entry in
+> > > >      sysfs.
+> > > 
+> > > (+Daejun)
+> > > 
+> > > Daejun, can the HPB code be reworked such that it does not use 
+> > > blk_insert_cloned_request()? I'm concerned that if the HPB code
+> > > is not reworked that it will be removed from the upstream kernel.
+> >  
+> > Just to give urgency to Bart's request: we have two or three weeks
+> > before the kernel is due to go final.  Can the problems identified
+> > by Christoph be fixed within that timeframe?
 > 
+> I'm checking to see if I can replace blk_execute_rq_nowait with
+> blk_insert_cloned_request in the HPB code.
 
-...
-
-> Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-> Fixes: 92c4b58b15c5 ("scsi: core: Register sysfs attributes earlier")
-> ---
+That's not going to help: removing blk_insert_cloned_request() is what
+we need.
+ 
+> > Specifically, looking at the paper you reference, it only uses READ
+> > BUFFER for the host cache sharing.  Since the JDEC standard appears
+> > to be proprietary, I have no method of understanding why the driver
+> > now uses WRITE BUFFER as well, but it appears to be a simple
+> > optimization.  If you can cut out the WRITE BUFFER code,
+> > blk_insert_cloned_request() will also be gone and thus the API
+> > abuse.  Can you get us a simple patch doing this ASAP so we don't
+> > have to revert the driver?
 > 
-> Changes in v2:
-> * integrated Bart's feedback of updating the comment for
->   the gendev_attr_groups declaration to match the code change
-> * in that spirit also adapted the vector size of that field
-> * eliminated the now unnecessary second loop counter 'j'
-> 
->  drivers/scsi/scsi_sysfs.c  | 12 ++++++------
->  include/scsi/scsi_device.h |  7 +++----
->  2 files changed, 9 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index c26f0e29e8cd..d73e84e1cb37 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1571,7 +1571,7 @@ static struct device_type scsi_dev_type = {
->  
->  void scsi_sysfs_device_initialize(struct scsi_device *sdev)
->  {
-> -	int i, j = 0;
-> +	int i = 0;
->  	unsigned long flags;
->  	struct Scsi_Host *shost = sdev->host;
->  	struct scsi_host_template *hostt = shost->hostt;
-> @@ -1583,15 +1583,15 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
->  	scsi_enable_async_suspend(&sdev->sdev_gendev);
->  	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
->  		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
-> -	sdev->gendev_attr_groups[j++] = &scsi_sdev_attr_group;
-> +	sdev->sdev_gendev.groups = sdev->gendev_attr_groups;
->  	if (hostt->sdev_groups) {
->  		for (i = 0; hostt->sdev_groups[i] &&
-> -			     j < ARRAY_SIZE(sdev->gendev_attr_groups);
-> -		     i++, j++) {
-> -			sdev->gendev_attr_groups[j] = hostt->sdev_groups[i];
-> +			     i < ARRAY_SIZE(sdev->gendev_attr_groups);
-> +		     i++) {
-> +			sdev->gendev_attr_groups[i] = hostt->sdev_groups[i];
->  		}
->  	}
-> -	WARN_ON_ONCE(j >= ARRAY_SIZE(sdev->gendev_attr_groups));
-> +	WARN_ON_ONCE(i >= ARRAY_SIZE(sdev->gendev_attr_groups));
->  
+> If WRITE BUFFER is not used, only READs with a size of 32KB or less
+> can be changed to HPB READs. This becomes a limiting factor in how
+> READ performance can be improved by the HPB.
 
-Can't we simply assign the hostt->sdev_groups now, without the additional
-indirection?
+Well, precisely: it's an optimization.  It can be removed now and you
+can work out how to add the code back without the problem API later. 
+We're running critically short of time to fix this, so unless you have
+a different proposal, it's either this hunk of code or the entire
+driver.
 
-sdev->sdev_gendev.groups = hostt->sdev_groups;
+James
 
-
->  	device_initialize(&sdev->sdev_dev);
->  	sdev->sdev_dev.parent = get_device(&sdev->sdev_gendev);
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index b1e9b3bd3a60..b6f0d031217e 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -226,11 +226,10 @@ struct scsi_device {
->  	struct device		sdev_gendev,
->  				sdev_dev;
->  	/*
-> -	 * The array size 6 provides space for one attribute group for the
-> -	 * SCSI core, four attribute groups defined by SCSI LLDs and one
-> -	 * terminating NULL pointer.
-> +	 * The array size 5 provides space for four attribute groups
-> +	 * defined by SCSI LLDs and one terminating NULL pointer.
->  	 */
-> -	const struct attribute_group *gendev_attr_groups[6];
-> +	const struct attribute_group *gendev_attr_groups[5];
->  
->  	struct execute_work	ew; /* used to get process context on put */
->  	struct work_struct	requeue_work;
-> 
 
