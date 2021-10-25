@@ -2,150 +2,84 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00D6FC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 11:39:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A54CC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 14:39:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D6ED760F4F
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 11:39:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 341DB60F46
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 14:39:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232975AbhJYLlk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 07:41:40 -0400
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:51052 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232967AbhJYLli (ORCPT
+        id S231411AbhJYOmS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 10:42:18 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:31449 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229727AbhJYOmS (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Oct 2021 07:41:38 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1635161956;
-        bh=p+az3OvBrOIPQBWOo7u8s1OubNSQmhmDFk1qfzBLanY=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=jJLCf9+ev4wRzgBuTw+xu2oz9I+UypwZykx4v79/sRg+0FqMj+dQdxI4Re53fD4jH
-         VKwRIJaBdSjrS1tEzPJJHBfHE4KjFpyvAXeIHGPHX/iq52kejVi4ELCsp8eOifuFt+
-         R1ScHPCamG9grCGsRACCIJ2Xe06vS/unvAka4rI0=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 16FA51280597;
-        Mon, 25 Oct 2021 07:39:16 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id i56CYmEQW6W1; Mon, 25 Oct 2021 07:39:16 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1635161955;
-        bh=p+az3OvBrOIPQBWOo7u8s1OubNSQmhmDFk1qfzBLanY=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=JhIUDxjILuTh2xRX+fw/UVoT5DQDuCi3XXjy6htkoHm4fzj/C4jL3c7ysVk5tlYBm
-         Z5/5QWOHr41BZiPZbFcomL+t26fPX9VL4hgXp6P5bGreE2pDfas4qTEHLWVCKrg0of
-         OsKF06mI+hj9U3WfvTEELDi6i0JU7xbF/2C6txRg=
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        Mon, 25 Oct 2021 10:42:18 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1635172795;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=WUwIocy4Zq5z3rtGiYtkg4ndMTXRknS5wQX84i/+Cuo=;
+        b=b2/2EYuEw26jQZvTSB6nJAyOhQUMvlNCq1cwWBCojEsc2fCYCal//I8m0a/DM0z5/oyaX7
+        GdnSpQ+A5ILiuH8W5tVYACtHOLC6r5UisIDHLHU2AlALOP4L0vSiI74d7c+jyF+tMNq41V
+        Xo7Zbg5rsN17dEYxC4E1OxNvqWJkKlY=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-237-QsDv3bkyPc6RAa0qVhzcxw-1; Mon, 25 Oct 2021 10:39:54 -0400
+X-MC-Unique: QsDv3bkyPc6RAa0qVhzcxw-1
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 3EB9D1280518;
-        Mon, 25 Oct 2021 07:39:15 -0400 (EDT)
-Message-ID: <ac5c6248cfd73af5306c109be03adc320bb7d83f.camel@HansenPartnership.com>
-Subject: Re: please revert the UFS HPB support
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     daejun7.park@samsung.com, Bart Van Assche <bvanassche@acm.org>,
-        Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc:     "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-Date:   Mon, 25 Oct 2021 07:39:14 -0400
-In-Reply-To: <20211025051654epcms2p36b259d237eb2b8b885210148118c5d3f@epcms2p3>
-References: <571fc7393fb043e3c34bca57402bd098a56ea8ac.camel@HansenPartnership.com>
-         <20211021144210.GA28195@lst.de>
-         <84fac5a3-135a-2ac8-5929-a1031a311cb7@kernel.dk>
-         <20211021151520.GA31407@lst.de> <20211021151728.GA31600@lst.de>
-         <2cba13c3-bcd5-2a47-e4cb-54fa1ca088f3@acm.org>
-         <CGME20211023154316epcas2p208f95cf1e4a87a4b61d2daf1a2b3c725@epcms2p3>
-         <20211025051654epcms2p36b259d237eb2b8b885210148118c5d3f@epcms2p3>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 34A4BBBEE6
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2021 14:39:53 +0000 (UTC)
+Received: from emilne.bos.redhat.com (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 03F145D9D5
+        for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2021 14:39:52 +0000 (UTC)
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Subject: [PATCH 0/2] Fix SCSI async abort handling when eh_deadline is active
+Date:   Mon, 25 Oct 2021 10:39:50 -0400
+Message-Id: <20211025143952.17128-1-emilne@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 2021-10-25 at 14:16 +0900, Daejun Park wrote:
-> > On Thu, 2021-10-21 at 09:22 -0700, Bart Van Assche wrote:
-> > > On 10/21/21 8:17 AM, Christoph Hellwig wrote:
-> > > > On Thu, Oct 21, 2021 at 05:15:20PM +0200, Christoph Hellwig
-> > > > wrote:
-> > > > > > > I just noticed the UFS HPB support landed in 5.15, and
-> > > > > > > just as before it is completely broken by allocating
-> > > > > > > another request on the same device and then reinserting
-> > > > > > > it in the queue.  It is bad enough that we have to live
-> > > > > > > with blk_insert_cloned_request for dm-mpath, but this is
-> > > > > > > too big of an API abuse to make it into a release.  We
-> > > > > > > need to drop this code ASAP, and I can prepare a patch
-> > > > > > > for that.
-> > > > > > 
-> > > > > > That sounds awful, do you have a link to the offending
-> > > > > > commit(s)?
-> > > > > 
-> > > > > I'll need to look for it, busy in calls right now, but just
-> > > > > grep for blk_insert_cloned_request.
-> > > > 
-> > > > Might as well finish the git blame:
-> > > > 
-> > > > commit 41d8a9333cc96f5ad4dd7a52786585338257d9f1
-> > > > Author: Daejun Park <daejun7.park@samsung.com>
-> > > > Date:   Mon Jul 12 18:00:25 2021 +0900
-> > > > 
-> > > >      scsi: ufs: ufshpb: Add HPB 2.0 support
-> > > >          
-> > > >      Version 2.0 of HBP supports reads of varying sizes from
-> > > > 4KB to 1MB.
-> > > > 
-> > > >      A read operation <= 32KB is supported as single HPB read.
-> > > > A read between
-> > > >      36KB and 1MB is supported by a combination of write buffer
-> > > > command and HPB
-> > > >      read command to deliver more PPN. The write buffer
-> > > > commands may not be
-> > > >      issued immediately due to busy tags. To use HPB read more
-> > > > aggressively, the
-> > > >      driver can requeue the write buffer command. The requeue
-> > > > threshold is
-> > > >      implemented as timeout and can be modified with
-> > > > requeue_timeout_ms entry in
-> > > >      sysfs.
-> > > 
-> > > (+Daejun)
-> > > 
-> > > Daejun, can the HPB code be reworked such that it does not use 
-> > > blk_insert_cloned_request()? I'm concerned that if the HPB code
-> > > is not reworked that it will be removed from the upstream kernel.
-> >  
-> > Just to give urgency to Bart's request: we have two or three weeks
-> > before the kernel is due to go final.  Can the problems identified
-> > by Christoph be fixed within that timeframe?
-> 
-> I'm checking to see if I can replace blk_execute_rq_nowait with
-> blk_insert_cloned_request in the HPB code.
+There is a code path in the SCSI async abort handling that can cause error
+handling of subsequent scsi_cmnds to proceed immediately to host reset with no
+other attempt at recovery.
 
-That's not going to help: removing blk_insert_cloned_request() is what
-we need.
- 
-> > Specifically, looking at the paper you reference, it only uses READ
-> > BUFFER for the host cache sharing.  Since the JDEC standard appears
-> > to be proprietary, I have no method of understanding why the driver
-> > now uses WRITE BUFFER as well, but it appears to be a simple
-> > optimization.  If you can cut out the WRITE BUFFER code,
-> > blk_insert_cloned_request() will also be gone and thus the API
-> > abuse.  Can you get us a simple patch doing this ASAP so we don't
-> > have to revert the driver?
-> 
-> If WRITE BUFFER is not used, only READs with a size of 32KB or less
-> can be changed to HPB READs. This becomes a limiting factor in how
-> READ performance can be improved by the HPB.
+This can be seen by the following:
 
-Well, precisely: it's an optimization.  It can be removed now and you
-can work out how to add the code back without the problem API later. 
-We're running critically short of time to fix this, so unless you have
-a different proposal, it's either this hunk of code or the entire
-driver.
+    modprobe scsi_debug every_nth=10 opts=4
+    echo 7 > /sys/module/scsi_mod/parameters/scsi_logging_level
+    echo 10 > /sys/devices/pseudo_0/adapter0/host8/scsi_host/host<N>/eh_deadline
 
-James
+and performing I/O to the scsi_debug device, the host will get reset immediately
+when prior aborts succeeded, because ->last_reset does not get invalidated.
 
+The patch series contains a fix, followed by a simplification
+of the control flow to remove duplicate code.  Only the first patch
+is Cc: stable as the second part doesn't qualify.  Yes, I know the
+first patch is >100 lines, I couldn't make it smaller unfortunately.
+
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+
+Ewan D. Milne (2):
+  scsi: core: avoid leaving shost->last_reset with stale value if EH
+    does not run
+  scsi: core: simplify control flow in scmd_eh_abort_handler
+
+ drivers/scsi/hosts.c      |  1 +
+ drivers/scsi/scsi_error.c | 92 ++++++++++++++++++++++++++++++-----------------
+ drivers/scsi/scsi_lib.c   |  1 +
+ include/scsi/scsi_cmnd.h  |  2 +-
+ include/scsi/scsi_host.h  |  1 +
+ 5 files changed, 63 insertions(+), 34 deletions(-)
+
+-- 
+2.1.0
 
