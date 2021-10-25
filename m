@@ -2,186 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91598C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 14:39:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9532C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 16:00:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73FB160F0F
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 14:39:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A06B860C49
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 16:00:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231970AbhJYOmU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 10:42:20 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:43998 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231428AbhJYOmS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Oct 2021 10:42:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635172796;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=qi8Ur0wkNUJlDPOKm89KiDQQH4Qv7IkArSPtNrLZQr0=;
-        b=YVOowHK/FoEp+AF0VvYVxf7/jzgGcJPdcuotaYXC8T/KmCGXAkKR625pW/LccqATzK/oIQ
-        FZvvdQ+OZiVG5UFphqDnte3jq+qzNu2BJ5JPFXHY3rtjcIg6i9yGFxvHEurGC3Kqqyz4gd
-        5xhWAa+GRXO7vEOL3PyKQOKifruVkuY=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-374-UVUFWwSSNM6ps63DNjV8ZA-1; Mon, 25 Oct 2021 10:39:54 -0400
-X-MC-Unique: UVUFWwSSNM6ps63DNjV8ZA-1
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id CDC54112C143
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2021 14:39:53 +0000 (UTC)
-Received: from emilne.bos.redhat.com (unknown [10.18.25.205])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9B7D75D9D5
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Oct 2021 14:39:53 +0000 (UTC)
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     linux-scsi@vger.kernel.org
-Subject: [PATCH 2/2] scsi: core: simplify control flow in scmd_eh_abort_handler
-Date:   Mon, 25 Oct 2021 10:39:52 -0400
-Message-Id: <20211025143952.17128-3-emilne@redhat.com>
-In-Reply-To: <20211025143952.17128-1-emilne@redhat.com>
-References: <20211025143952.17128-1-emilne@redhat.com>
+        id S233713AbhJYQCd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 12:02:33 -0400
+Received: from mail-pl1-f179.google.com ([209.85.214.179]:44898 "EHLO
+        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230447AbhJYQCc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Oct 2021 12:02:32 -0400
+Received: by mail-pl1-f179.google.com with SMTP id t11so8229405plq.11;
+        Mon, 25 Oct 2021 09:00:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0u8W/iYUBoL/HAmKfloyvmKN5Wzvk8aMyu1vdRl20Ig=;
+        b=l6+r0KjEOWZ5S9PWNzV1lqo1XJl8yhNk2ALQNAAntroFHPzrZWDuBUyQlJed420hJK
+         ipLfemsh0NBOZT5n5jfOX9J7ExzY4F90CZUf2ArM0WTfnGKXQCP8YhCvbwIb8QvaoK8a
+         nnQx5+5qarJGSIgaV3v5k6lD6VVH7uTelaD06eVg5J/HYFvGGQD1xIbqDjUEl+apArA+
+         PkjRYdzdof6SjuaGq5TJVVcYRFUJb27dau3PBfmDJC99eaDYUcks+O2SEPK6LmDAYaQm
+         3bZJFHZyEY/8SYGVrk6ypub3wNOs8iFH5DSszNvR9ovmALHCGMmvvVmq4L7mV13cuY3F
+         hJbA==
+X-Gm-Message-State: AOAM533msCKduQVBeRREy+AML4cKNonkRkklKbPx4j7mWi4IWKZgSHmL
+        8JgfFk+Qi9ZUmvpq4WMqO5WxklRndOiXTg==
+X-Google-Smtp-Source: ABdhPJwTQYXbQvR9Jcn0daCHQvVLuzkh/0+OpFLt1PZ0b42pfMnghUC8JClcjh+S9pQ6jm3McyOzsA==
+X-Received: by 2002:a17:90b:4a4d:: with SMTP id lb13mr36265214pjb.122.1635177607387;
+        Mon, 25 Oct 2021 09:00:07 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:f863:1daa:afe1:156])
+        by smtp.gmail.com with ESMTPSA id 23sm21888090pjc.37.2021.10.25.09.00.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 25 Oct 2021 09:00:06 -0700 (PDT)
+Subject: Re: [PATCH v2] scsi: core: Fix early registration of sysfs attributes
+ for scsi_device
+To:     Julian Wiedmann <jwi@linux.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>,
+        martin.petersen@oracle.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org
+Cc:     gregkh@linuxfoundation.org, bblock@linux.ibm.com,
+        linux-next@vger.kernel.org, linux-s390@vger.kernel.org
+References: <b5e69621-e2ee-750a-e542-a27aaa9293e5@acm.org>
+ <20211024221620.760160-1-maier@linux.ibm.com>
+ <2f5e5d18-7ba9-10f6-1855-84546172b473@linux.ibm.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <eaa30030-120a-8e72-82d9-873e992007fd@acm.org>
+Date:   Mon, 25 Oct 2021 09:00:05 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+In-Reply-To: <2f5e5d18-7ba9-10f6-1855-84546172b473@linux.ibm.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Simplify the nested conditionals in the function by using
-a label for the error path, and remove duplicate code.
+On 10/25/21 2:23 AM, Julian Wiedmann wrote:
+> On 25.10.21 00:16, Steffen Maier wrote:
+>>   void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+>>   {
+>> -	int i, j = 0;
+>> +	int i = 0;
+>>   	unsigned long flags;
+>>   	struct Scsi_Host *shost = sdev->host;
+>>   	struct scsi_host_template *hostt = shost->hostt;
+>> @@ -1583,15 +1583,15 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+>>   	scsi_enable_async_suspend(&sdev->sdev_gendev);
+>>   	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
+>>   		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
+>> -	sdev->gendev_attr_groups[j++] = &scsi_sdev_attr_group;
+>> +	sdev->sdev_gendev.groups = sdev->gendev_attr_groups;
+>>   	if (hostt->sdev_groups) {
+>>   		for (i = 0; hostt->sdev_groups[i] &&
+>> -			     j < ARRAY_SIZE(sdev->gendev_attr_groups);
+>> -		     i++, j++) {
+>> -			sdev->gendev_attr_groups[j] = hostt->sdev_groups[i];
+>> +			     i < ARRAY_SIZE(sdev->gendev_attr_groups);
+>> +		     i++) {
+>> +			sdev->gendev_attr_groups[i] = hostt->sdev_groups[i];
+>>   		}
+>>   	}
+>> -	WARN_ON_ONCE(j >= ARRAY_SIZE(sdev->gendev_attr_groups));
+>> +	WARN_ON_ONCE(i >= ARRAY_SIZE(sdev->gendev_attr_groups));
+>>   
+> 
+> Can't we simply assign the hostt->sdev_groups now, without the additional
+> indirection?
+> 
+> sdev->sdev_gendev.groups = hostt->sdev_groups;
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/scsi_error.c | 104 ++++++++++++++++++++--------------------------
- 1 file changed, 46 insertions(+), 58 deletions(-)
+Hi Steffen,
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 9f4001e..e8248bb 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -159,72 +159,60 @@ scmd_eh_abort_handler(struct work_struct *work)
- 		SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
- 				    "eh timeout, not aborting\n"));
--	} else {
--		SCSI_LOG_ERROR_RECOVERY(3,
-+		goto out;
-+	}
-+
-+	SCSI_LOG_ERROR_RECOVERY(3,
- 			scmd_printk(KERN_INFO, scmd,
- 				    "aborting command\n"));
--		rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
--		if (rtn == SUCCESS) {
--			set_host_byte(scmd, DID_TIME_OUT);
--			if (scsi_host_eh_past_deadline(shost)) {
--				SCSI_LOG_ERROR_RECOVERY(3,
--					scmd_printk(KERN_INFO, scmd,
--						    "eh timeout, not retrying "
--						    "aborted command\n"));
--			} else if (!scsi_noretry_cmd(scmd) &&
--				   scsi_cmd_retry_allowed(scmd) &&
--				scsi_eh_should_retry_cmd(scmd)) {
--				SCSI_LOG_ERROR_RECOVERY(3,
--					scmd_printk(KERN_WARNING, scmd,
--						    "retry aborted command\n"));
--
--				spin_lock_irqsave(shost->host_lock, flags);
--				list_del_init(&scmd->eh_entry);
--
--				/*
--				 * If the abort succeeds, and there is no further
--				 * EH action, clear the ->last_reset time.
--				 */
--				if (list_empty(&shost->eh_abort_list) &&
--				    list_empty(&shost->eh_cmd_q))
--					if (shost->eh_deadline != -1)
--						shost->last_reset = 0;
--
--				spin_unlock_irqrestore(shost->host_lock, flags);
--
--				scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
--				return;
--			} else {
--				SCSI_LOG_ERROR_RECOVERY(3,
--					scmd_printk(KERN_WARNING, scmd,
--						    "finish aborted command\n"));
-+	rtn = scsi_try_to_abort_cmd(shost->hostt, scmd);
-+	if (rtn != SUCCESS) {
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			scmd_printk(KERN_INFO, scmd,
-+				    "cmd abort %s\n",
-+				    (rtn == FAST_IO_FAIL) ?
-+				    "not send" : "failed"));
-+		goto out;
-+	}
-+	set_host_byte(scmd, DID_TIME_OUT);
-+	if (scsi_host_eh_past_deadline(shost)) {
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			scmd_printk(KERN_INFO, scmd,
-+				    "eh timeout, not retrying "
-+				    "aborted command\n"));
-+		goto out;
-+	}
- 
--				spin_lock_irqsave(shost->host_lock, flags);
--				list_del_init(&scmd->eh_entry);
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	list_del_init(&scmd->eh_entry);
- 
--				/*
--				 * If the abort succeeds, and there is no further
--				 * EH action, clear the ->last_reset time.
--				 */
--				if (list_empty(&shost->eh_abort_list) &&
--				    list_empty(&shost->eh_cmd_q))
--					if (shost->eh_deadline != -1)
--						shost->last_reset = 0;
-+	/*
-+	 * If the abort succeeds, and there is no further
-+	 * EH action, clear the ->last_reset time.
-+	 */
-+	if (list_empty(&shost->eh_abort_list) &&
-+	    list_empty(&shost->eh_cmd_q))
-+		if (shost->eh_deadline != -1)
-+			shost->last_reset = 0;
- 
--				spin_unlock_irqrestore(shost->host_lock, flags);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
- 
--				scsi_finish_command(scmd);
--				return;
--			}
--		} else {
--			SCSI_LOG_ERROR_RECOVERY(3,
--				scmd_printk(KERN_INFO, scmd,
--					    "cmd abort %s\n",
--					    (rtn == FAST_IO_FAIL) ?
--					    "not send" : "failed"));
--		}
-+	if (!scsi_noretry_cmd(scmd) &&
-+	    scsi_cmd_retry_allowed(scmd) &&
-+	    scsi_eh_should_retry_cmd(scmd)) {
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			scmd_printk(KERN_WARNING, scmd,
-+				    "retry aborted command\n"));
-+		scsi_queue_insert(scmd, SCSI_MLQUEUE_EH_RETRY);
-+	} else {
-+		SCSI_LOG_ERROR_RECOVERY(3,
-+			scmd_printk(KERN_WARNING, scmd,
-+				    "finish aborted command\n"));
-+		scsi_finish_command(scmd);
- 	}
-+	return;
- 
-+out:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_del_init(&scmd->eh_entry);
- 	spin_unlock_irqrestore(shost->host_lock, flags);
--- 
-2.1.0
+Please let me know if you wouldn't have the time to integrate the 
+approach mentioned above in a new version of your patch.
 
+Thanks,
+
+Bart.
