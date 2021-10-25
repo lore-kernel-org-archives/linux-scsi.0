@@ -2,43 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D132C433FE
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:05:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 90A97C4321E
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 87B1860F9D
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:05:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D70761039
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:08:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234955AbhJYRHg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 13:07:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56224 "EHLO mail.kernel.org"
+        id S234937AbhJYRLE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 13:11:04 -0400
+Received: from mail.kernel.org ([198.145.29.99]:55598 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234799AbhJYREc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Oct 2021 13:04:32 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 33217610C8;
-        Mon, 25 Oct 2021 17:01:34 +0000 (UTC)
+        id S234596AbhJYRDl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Oct 2021 13:03:41 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 43AAE61027;
+        Mon, 25 Oct 2021 17:01:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635181295;
-        bh=N4jTZEiCI/fgjQxxjR1nGSDTqF4wAhBvJtiTVgB91UM=;
-        h=From:To:Cc:Subject:Date:From;
-        b=mcfDnVD+Dpzl9H4spCwbTijo9wgf+WiZyIIN7BqgBDx73cHJHEL511VRdllQlIhJ6
-         M17ePP93azGets8Lg/OlawJX9XHYHfeSPcR7awCNeLUXxure11jW9om6O1Whwi7rwa
-         PHA/1SGA19ZNTX2BElbY+9pmbi0sqq25UbayuFJMIyUCPejYIlnxYhoJqQ8WIcRrQt
-         EtNGqeEyDuycoYooEqbLiO0ej3mUKDeiVwAGVb4ZUQ3XVzY3vK+Haj8PyG68aZmgNZ
-         50eqhEjWIAuax/kx6Buuns1PrCggMdw8z3E6KJ7ndLQcBc+jM0mm5fLq6QN4P8bKgp
-         W4hhq2OFPehMg==
+        s=k20201202; t=1635181274;
+        bh=doOLAH2kCv/3+qYJKorjzb/pfvFoGs3s+FDwAxY7kqA=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Hu+JjLh/4yEUrmV89DavhMCI0kk5ULcn94J1gnWt++E1tW79+x0eFc6+hb0uVuZxY
+         ofEYs8GMh5W+gD2QiqPaQxvNTDpkqULfIn4ihUREBb48b61Z6p0vxD7hZ/d0650NEK
+         nBjUsCmE9A8glTWrvpJdbJ4m2xwjxJ4oeZbnidvzicKnqA9aFm8WTy48q33K/SzDtA
+         6miCbw7UDeBL6MBxf4+wrBsRfyz5KJdG5ewU2PqiB3geYbIPhuHY1GYRya3zm+OwjF
+         klA59AXkciWhGC0E2H84xs/9jNCv4uWoskJyevcYNcTDjWGR6tjsiaP1pAPKNNiuVz
+         CHGwVoW23AZ7g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Changhui Zhong <czhong@redhat.com>,
-        Yi Zhang <yi.zhang@redhat.com>,
+Cc:     Dmitry Bogdanov <d.bogdanov@yadro.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, njavali@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.9 1/4] scsi: core: Put LLD module refcnt after SCSI device is released
-Date:   Mon, 25 Oct 2021 13:01:29 -0400
-Message-Id: <20211025170132.1394887-1-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 3/7] scsi: qla2xxx: Fix unmap of already freed sgl
+Date:   Mon, 25 Oct 2021 13:00:58 -0400
+Message-Id: <20211025170103.1394651-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211025170103.1394651-1-sashal@kernel.org>
+References: <20211025170103.1394651-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -47,84 +48,88 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+From: Dmitry Bogdanov <d.bogdanov@yadro.com>
 
-[ Upstream commit f2b85040acec9a928b4eb1b57a989324e8e38d3f ]
+[ Upstream commit 4a8f71014b4d56c4fb287607e844c0a9f68f46d9 ]
 
-SCSI host release is triggered when SCSI device is freed. We have to make
-sure that the low-level device driver module won't be unloaded before SCSI
-host instance is released because shost->hostt is required in the release
-handler.
+The sgl is freed in the target stack in target_release_cmd_kref() before
+calling qlt_free_cmd() but there is an unmap of sgl in qlt_free_cmd() that
+causes a panic if sgl is not yet DMA unmapped:
 
-Make sure to put LLD module refcnt after SCSI device is released.
+NIP dma_direct_unmap_sg+0xdc/0x180
+LR  dma_direct_unmap_sg+0xc8/0x180
+Call Trace:
+ ql_dbg_prefix+0x68/0xc0 [qla2xxx] (unreliable)
+ dma_unmap_sg_attrs+0x54/0xf0
+ qlt_unmap_sg.part.19+0x54/0x1c0 [qla2xxx]
+ qlt_free_cmd+0x124/0x1d0 [qla2xxx]
+ tcm_qla2xxx_release_cmd+0x4c/0xa0 [tcm_qla2xxx]
+ target_put_sess_cmd+0x198/0x370 [target_core_mod]
+ transport_generic_free_cmd+0x6c/0x1b0 [target_core_mod]
+ tcm_qla2xxx_complete_free+0x6c/0x90 [tcm_qla2xxx]
 
-Fixes a kernel panic of 'BUG: unable to handle page fault for address'
-reported by Changhui and Yi.
+The sgl may be left unmapped in error cases of response sending.  For
+instance, qlt_rdy_to_xfer() maps sgl and exits when session is being
+deleted keeping the sgl mapped.
 
-Link: https://lore.kernel.org/r/20211008050118.1440686-1-ming.lei@redhat.com
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Reported-by: Changhui Zhong <czhong@redhat.com>
-Reported-by: Yi Zhang <yi.zhang@redhat.com>
-Tested-by: Yi Zhang <yi.zhang@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+This patch removes use-after-free of the sgl and ensures that the sgl is
+unmapped for any command that was not sent to firmware.
+
+Link: https://lore.kernel.org/r/20211018122650.11846-1-d.bogdanov@yadro.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi.c       | 4 +++-
- drivers/scsi/scsi_sysfs.c | 9 +++++++++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_target.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1deb6adc411f..4c9c1a8db8c3 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -951,8 +951,10 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--	module_put(sdev->host->hostt->module);
-+	struct module *mod = sdev->host->hostt->module;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index ec54c8f34bc8..5fbac85d7adf 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -3216,8 +3216,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
+ 			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
+ 			vha->flags.online, qla2x00_reset_active(vha),
+ 			cmd->reset_count, qpair->chip_reset);
+-		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+-		return 0;
++		goto out_unmap_unlock;
+ 	}
+ 
+ 	/* Does F/W have an IOCBs for this request */
+@@ -3339,10 +3338,6 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 	prm.sg = NULL;
+ 	prm.req_cnt = 1;
+ 
+-	/* Calculate number of entries and segments required */
+-	if (qlt_pci_map_calc_cnt(&prm) != 0)
+-		return -EAGAIN;
+-
+ 	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
+ 	    (cmd->sess && cmd->sess->deleted)) {
+ 		/*
+@@ -3358,6 +3353,10 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
+ 		return 0;
+ 	}
+ 
++	/* Calculate number of entries and segments required */
++	if (qlt_pci_map_calc_cnt(&prm) != 0)
++		return -EAGAIN;
 +
- 	put_device(&sdev->sdev_gendev);
-+	module_put(mod);
- }
- EXPORT_SYMBOL(scsi_device_put);
+ 	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
+ 	/* Does F/W have an IOCBs for this request */
+ 	res = qlt_check_reserve_free_req(qpair, prm.req_cnt);
+@@ -3785,9 +3784,6 @@ void qlt_free_cmd(struct qla_tgt_cmd *cmd)
  
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 38830818bfb6..eae43a85e9b0 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -427,9 +427,12 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	struct device *parent;
- 	struct list_head *this, *tmp;
- 	unsigned long flags;
-+	struct module *mod;
+ 	BUG_ON(cmd->cmd_in_wq);
  
- 	sdev = container_of(work, struct scsi_device, ew.work);
+-	if (cmd->sg_mapped)
+-		qlt_unmap_sg(cmd->vha, cmd);
+-
+ 	if (!cmd->q_full)
+ 		qlt_decr_num_pend_cmds(cmd->vha);
  
-+	mod = sdev->host->hostt->module;
-+
- 	scsi_dh_release_device(sdev);
- 
- 	parent = sdev->sdev_gendev.parent;
-@@ -461,11 +464,17 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 
- 	if (parent)
- 		put_device(parent);
-+	module_put(mod);
- }
- 
- static void scsi_device_dev_release(struct device *dev)
- {
- 	struct scsi_device *sdp = to_scsi_device(dev);
-+
-+	/* Set module pointer as NULL in case of module unloading */
-+	if (!try_module_get(sdp->host->hostt->module))
-+		sdp->host->hostt->module = NULL;
-+
- 	execute_in_process_context(scsi_device_dev_release_usercontext,
- 				   &sdp->ew);
- }
 -- 
 2.33.0
 
