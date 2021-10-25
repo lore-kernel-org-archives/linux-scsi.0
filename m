@@ -2,91 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDC08C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 01:18:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68643C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 01:44:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 9856E60FBF
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 01:18:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41CD061076
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 01:44:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231954AbhJYBUW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 24 Oct 2021 21:20:22 -0400
-Received: from mail-pl1-f172.google.com ([209.85.214.172]:40560 "EHLO
-        mail-pl1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229554AbhJYBUV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 24 Oct 2021 21:20:21 -0400
-Received: by mail-pl1-f172.google.com with SMTP id v20so6791729plo.7;
-        Sun, 24 Oct 2021 18:18:00 -0700 (PDT)
+        id S231928AbhJYBqf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 24 Oct 2021 21:46:35 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:35261 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229604AbhJYBqc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 24 Oct 2021 21:46:32 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1635126250;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=N+DIrvZXbcAkXJ/OchXf+lha18HEJRfjUfzTN2XxsYY=;
+        b=FKyndxWp+sbASCdTad6q/t5VpyYTOOA/8NB0GaEiKVIFksrhtQj8noyErj2/DPeOk/n1+L
+        4sQhm5R0TNoX/8mZsFy8VWns4NIrD9XqSv2S3aOjnZLhnhgmOzlDmWz4RNB0hBo2JhQnd7
+        sqgZ9TXT8yT3tBhi0L8tEyfLHmwPBOU=
+Received: from mail-yb1-f199.google.com (mail-yb1-f199.google.com
+ [209.85.219.199]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-269-4EApigEQMLuFn5nX1vUjQg-1; Sun, 24 Oct 2021 21:44:09 -0400
+X-MC-Unique: 4EApigEQMLuFn5nX1vUjQg-1
+Received: by mail-yb1-f199.google.com with SMTP id f92-20020a25a465000000b005bea37bc0baso15247712ybi.5
+        for <linux-scsi@vger.kernel.org>; Sun, 24 Oct 2021 18:44:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=q5O4UBSKbAyhKsuzmZP4VB7n8u3QEGlpbp2iyZiAqqw=;
-        b=yIF/T8DkWDnLNSlBoGqMolkl1hNA4F/QTC+COaxH6rxwZG6SM2KnkI8N53POe5pN+6
-         s3qaRTvhL2qGX0ZIAx3IR8bN0Xr3+wyAJxsJjCYbOMu1HIr1O7MmsP4/6ZOF8B1v9SWW
-         HXbrDdNdMwqVcd7tZDgO58IwTD2YBN4CaFA2Q4o5eizuCjxSM7bnxs+NsXF+iGiCEVq3
-         lReNZPNqtpRlH1uqpES6ZNPN0oRHqnjomBloLecwJeaNqXlDxHcAvSrnZFlrL8wBVi2O
-         HcaT2JF1bTxZ81kTkoy5uIa5yHDdP+O2aszU/nj7Ye+Bgy1PhDhiiXG2rqoeFkX0hwYb
-         qkXw==
-X-Gm-Message-State: AOAM532xnp3HOJslCmfrs1ZgdIXxl4kZyU3kZtHO16+miR5FPw/zr1yp
-        3A8zF3PRML0B4RZwt+zBERs=
-X-Google-Smtp-Source: ABdhPJzUd1g7LQesE692U+SJJhHOV3woPCI/hMm1zSuEzf+KYORHfg9HyJyHverPXkihxkZ6/oX8pQ==
-X-Received: by 2002:a17:90a:d311:: with SMTP id p17mr2476735pju.95.1635124679565;
-        Sun, 24 Oct 2021 18:17:59 -0700 (PDT)
-Received: from ?IPV6:2601:647:4000:d7:1d23:4f1f:253d:c1e1? ([2601:647:4000:d7:1d23:4f1f:253d:c1e1])
-        by smtp.gmail.com with ESMTPSA id z5sm14328623pge.2.2021.10.24.18.17.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 24 Oct 2021 18:17:58 -0700 (PDT)
-Message-ID: <b3344662-03a7-43ca-21ea-7e2c4f0f658a@acm.org>
-Date:   Sun, 24 Oct 2021 18:17:57 -0700
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=N+DIrvZXbcAkXJ/OchXf+lha18HEJRfjUfzTN2XxsYY=;
+        b=Emah7LVoEImOIbpx2x3f8osTb60uCzx/M4/uSL/rPvWvZjkyoFbn9UF6mNK3StLR8s
+         wSg9a9i3w6cCZccTCzAARZZwWjIf9Wbm9lkP5fGqRJjFxjcVKKSMCcGaig36jhixQg1E
+         NE5r2YYYlMbK6Rx6D03AzuBkFK5al4rVIexquvOHZJCDe22cMAMQ7cJJCNQ9COtzrExU
+         VDhyCC5DXfBt1zJ5zR/sivvlm/pgSicQ662SnW6MWlrDKGz9Wll4HXC+rS8QN/YX/tNQ
+         VCBVojPX6+om+X8NqtJUCfxtckgInkonSQJiY85QPY64MCpMYxMIOEVzq8Go/yLivCsr
+         WIfg==
+X-Gm-Message-State: AOAM530L2iU6v1JdrzAH1hiKqblQQV8l1BvcbL7a0F5F2Ku6RFRACP6O
+        q4oQbKDBh+OH8xqN52aWOKD24nIQQ/SJJswWTHfH87WBdGvJ+TvlTfbbt3MAQSChO1mFDUrCVdU
+        nf7By3tDHibpvo/r1b5M1/0wwpWon6kzhZLNLBA==
+X-Received: by 2002:a5b:18c:: with SMTP id r12mr14527340ybl.308.1635126248668;
+        Sun, 24 Oct 2021 18:44:08 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxXgAebb5EiOX8n3xGCGi7pF2GMyeviasxkrMIBZ4FLVtuGqvIhRrxVJyTEMj3M5GvFesVhioiqCJC2jL6JZ2s=
+X-Received: by 2002:a5b:18c:: with SMTP id r12mr14527331ybl.308.1635126248542;
+ Sun, 24 Oct 2021 18:44:08 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: [PATCH] scsi: ufs: clean up the Kconfig file
-Content-Language: en-US
-To:     Randy Dunlap <rdunlap@infradead.org>, linux-kernel@vger.kernel.org
-Cc:     Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-References: <20211024064332.16360-1-rdunlap@infradead.org>
- <8578e393-2a25-bc52-65ea-599d071387e9@acm.org>
- <5b13f32c-0cdb-26de-2bb7-af56a099b0b2@infradead.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <5b13f32c-0cdb-26de-2bb7-af56a099b0b2@infradead.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20211021145918.2691762-1-ming.lei@redhat.com>
+In-Reply-To: <20211021145918.2691762-1-ming.lei@redhat.com>
+From:   Yi Zhang <yi.zhang@redhat.com>
+Date:   Mon, 25 Oct 2021 09:43:57 +0800
+Message-ID: <CAHj4cs8QB7QCc7t+bweesdZPOLmAXrwrj8yEnAtJPk80L_v1kQ@mail.gmail.com>
+Subject: Re: [PATCH 0/3] block: keep quiesce & unquiesce balanced for scsi/dm
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>,
+        linux-block <linux-block@vger.kernel.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>,
+        dm-devel@redhat.com
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/24/21 16:35, Randy Dunlap wrote:
-> On 10/24/21 2:29 PM, Bart Van Assche wrote:
->> On 10/23/21 23:43, Randy Dunlap wrote:
->>>         sure that you know the name of your UFS host adapter (the card
->>>         inside your computer that "speaks" the UFS protocol, also
->>>         called UFS Host Controller), because you will be asked for it.
->>> @@ -51,7 +50,7 @@ config SCSI_UFSHCD
->>>         (the one containing the directory /) is located on a UFS device.
->>>   config SCSI_UFSHCD_PCI
->>> -    tristate "PCI bus based UFS Controller support"
->>> +    tristate "PCI bus-based UFS Controller support"
->>
->> Even with this change applied capitalization is inconsistent.
-> 
-> I don't doubt it, but could you be more explicit about
-> which word(s) you mean, please?
-> 
-> I see one "pci" in the Kconfig file.
-> I see several "Controller" vs. "controller."
-> I see a few of "Support" vs. "support."
-> 
-> Which are you referring to? (or something else)
+Verified with the blktests srp/, thanks Ming.
 
-I was referring to the word "Controller". Although English is not my native
-language, shouldn't "UFS Controller" be changed into "UFS controller" since
-neither "bus-based" nor "support" are capitalized?
+Tested-by: Yi Zhang <yi.zhang@redhat.com>
 
-Thanks,
+On Thu, Oct 21, 2021 at 11:00 PM Ming Lei <ming.lei@redhat.com> wrote:
+>
+> Hello Jens,
+>
+> Recently we merge the patch of e70feb8b3e68 ("blk-mq: support concurrent queue
+> quiesce/unquiesce") for fixing race between driver and block layer wrt.
+> queue quiesce.
+>
+> Yi reported that srp/002 is broken with this patch, turns out scsi and
+> dm don't keep the two balanced actually.
+>
+> So fix dm and scsi and make srp/002 pass again.
+>
+>
+> Ming Lei (3):
+>   scsi: avoid to quiesce sdev->request_queue two times
+>   scsi: make sure that request queue queiesce and unquiesce balanced
+>   dm: don't stop request queue after the dm device is suspended
+>
+>  drivers/md/dm.c            | 10 ------
+>  drivers/scsi/scsi_lib.c    | 70 ++++++++++++++++++++++++++------------
+>  include/scsi/scsi_device.h |  1 +
+>  3 files changed, 49 insertions(+), 32 deletions(-)
+>
+> --
+> 2.31.1
+>
 
-Bart.
+
+-- 
+Best Regards,
+  Yi Zhang
+
