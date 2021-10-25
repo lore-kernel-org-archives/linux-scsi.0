@@ -2,42 +2,41 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 076F9C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 16:59:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58AFEC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:00:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC38560EE3
-	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 16:59:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4325461039
+	for <linux-scsi@archiver.kernel.org>; Mon, 25 Oct 2021 17:00:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234199AbhJYRCN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 13:02:13 -0400
-Received: from mail.kernel.org ([198.145.29.99]:54512 "EHLO mail.kernel.org"
+        id S234314AbhJYRCn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 25 Oct 2021 13:02:43 -0400
+Received: from mail.kernel.org ([198.145.29.99]:54932 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234151AbhJYRCJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Oct 2021 13:02:09 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id C1D8660F92;
-        Mon, 25 Oct 2021 16:59:45 +0000 (UTC)
+        id S234264AbhJYRC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 25 Oct 2021 13:02:29 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 406FD60EE3;
+        Mon, 25 Oct 2021 17:00:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635181186;
-        bh=3TFO/T2EnCi4p90u8EHPpy5i/lZnFyiAgAbYZ9zQVOU=;
+        s=k20201202; t=1635181207;
+        bh=k6hRgrW1wvRBZh7M1MsTSIZZUcz0slUi4Br1HntwG1o=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=bZ/D5NEVZKaNlUKxKVF5u77OqL2+z31cTN6+SG8/LWYjSAn70mj78XAS9MGinvrbh
-         U/PVyzNnyxRDFOBZDPl8eGTHQqGDFerFlRGwvHLZff/ENANNRkR3PScT5Kk4FO6e/7
-         LEEpKNnDP/cFWoINj3AgdrrZYdo2uzVn6wM3x2pvN44Bf+ybIJqMLG/a3+n5W2Q1yZ
-         PLL8U9Hr2Ow10YD7GDPAJsSCVIHDaoGo0xp9HRRim37yA0wg3co3nbtKGJe4zK8bXu
-         qNob7pnaTz2smk4bQXLd1atDZZstcmVPRrHawosTLZeVLKXwSM7QGvovilxrI6TfyU
-         T3L6IJhVZMrdw==
+        b=q0l/iyJvjENm7b/0dXw6qg+NY/jhSszxFPEEQ0RVABmiz4SNz1hRbOdPGwJ+fchri
+         2eu9a6QtDkkE8PRkP86Fr+WEaQqIeqmPu3lCWW45iMprR3swjstNy+8ZId6gbAFc9E
+         DQgrUYIGEHeJNDTGd/nSbMLPmqnR0gfo8G8/JPyakKTUuYeGK3Wpeh/ecuBc/CS1JP
+         8Uo1TkL614pTQh3V28kcj46rGtnm4uora0xEg3vNFo96xvIcnMqpRHWM8Q8/Cz0PFZ
+         l9fm6lwWz8svN0UCdhFjmeMgLPTpy/t55OELaMwb/BJPofmy3wIPF+JHoZY2JJqNHR
+         mm9fTvdIEiHtQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Changhui Zhong <czhong@redhat.com>,
-        Yi Zhang <yi.zhang@redhat.com>,
+Cc:     Zheyu Ma <zheyuma97@gmail.com>,
+        Himanshu Madhani <himanshu.madhani@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, jejb@linux.ibm.com,
+        Sasha Levin <sashal@kernel.org>, njavali@marvell.com,
+        GR-QLogic-Storage-Upstream@marvell.com, jejb@linux.ibm.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 04/18] scsi: core: Put LLD module refcnt after SCSI device is released
-Date:   Mon, 25 Oct 2021 12:59:17 -0400
-Message-Id: <20211025165939.1393655-4-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.14 10/18] scsi: qla2xxx: Return -ENOMEM if kzalloc() fails
+Date:   Mon, 25 Oct 2021 12:59:23 -0400
+Message-Id: <20211025165939.1393655-10-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211025165939.1393655-1-sashal@kernel.org>
 References: <20211025165939.1393655-1-sashal@kernel.org>
@@ -49,84 +48,35 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Ming Lei <ming.lei@redhat.com>
+From: Zheyu Ma <zheyuma97@gmail.com>
 
-[ Upstream commit f2b85040acec9a928b4eb1b57a989324e8e38d3f ]
+[ Upstream commit 06634d5b6e923ed0d4772aba8def5a618f44c7fe ]
 
-SCSI host release is triggered when SCSI device is freed. We have to make
-sure that the low-level device driver module won't be unloaded before SCSI
-host instance is released because shost->hostt is required in the release
-handler.
+The driver probing function should return < 0 for failure, otherwise
+kernel will treat value > 0 as success.
 
-Make sure to put LLD module refcnt after SCSI device is released.
-
-Fixes a kernel panic of 'BUG: unable to handle page fault for address'
-reported by Changhui and Yi.
-
-Link: https://lore.kernel.org/r/20211008050118.1440686-1-ming.lei@redhat.com
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Reported-by: Changhui Zhong <czhong@redhat.com>
-Reported-by: Yi Zhang <yi.zhang@redhat.com>
-Tested-by: Yi Zhang <yi.zhang@redhat.com>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Link: https://lore.kernel.org/r/1634522181-31166-1-git-send-email-zheyuma97@gmail.com
+Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
+Signed-off-by: Zheyu Ma <zheyuma97@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi.c       | 4 +++-
- drivers/scsi/scsi_sysfs.c | 9 +++++++++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_os.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index d26025cf5de3..71dd0989c78a 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -553,8 +553,10 @@ EXPORT_SYMBOL(scsi_device_get);
-  */
- void scsi_device_put(struct scsi_device *sdev)
- {
--	module_put(sdev->host->hostt->module);
-+	struct module *mod = sdev->host->hostt->module;
-+
- 	put_device(&sdev->sdev_gendev);
-+	module_put(mod);
- }
- EXPORT_SYMBOL(scsi_device_put);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 37ab71b6a8a7..5eed11042f78 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4071,7 +4071,7 @@ qla2x00_mem_alloc(struct qla_hw_data *ha, uint16_t req_len, uint16_t rsp_len,
+ 					ql_dbg_pci(ql_dbg_init, ha->pdev,
+ 					    0xe0ee, "%s: failed alloc dsd\n",
+ 					    __func__);
+-					return 1;
++					return -ENOMEM;
+ 				}
+ 				ha->dif_bundle_kallocs++;
  
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index c0d31119d6d7..ed05c3565e83 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -448,9 +448,12 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	struct scsi_vpd *vpd_pg80 = NULL, *vpd_pg83 = NULL;
- 	struct scsi_vpd *vpd_pg0 = NULL, *vpd_pg89 = NULL;
- 	unsigned long flags;
-+	struct module *mod;
- 
- 	sdev = container_of(work, struct scsi_device, ew.work);
- 
-+	mod = sdev->host->hostt->module;
-+
- 	scsi_dh_release_device(sdev);
- 
- 	parent = sdev->sdev_gendev.parent;
-@@ -501,11 +504,17 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 
- 	if (parent)
- 		put_device(parent);
-+	module_put(mod);
- }
- 
- static void scsi_device_dev_release(struct device *dev)
- {
- 	struct scsi_device *sdp = to_scsi_device(dev);
-+
-+	/* Set module pointer as NULL in case of module unloading */
-+	if (!try_module_get(sdp->host->hostt->module))
-+		sdp->host->hostt->module = NULL;
-+
- 	execute_in_process_context(scsi_device_dev_release_usercontext,
- 				   &sdp->ew);
- }
 -- 
 2.33.0
 
