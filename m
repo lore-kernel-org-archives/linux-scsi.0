@@ -2,186 +2,165 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD97C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 01:42:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB47BC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 04:14:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0D6CC603E9
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 01:42:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C333360EDF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 04:14:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232068AbhJZBpU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 25 Oct 2021 21:45:20 -0400
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:51536 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S230183AbhJZBpU (ORCPT
+        id S230049AbhJZEQ2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Oct 2021 00:16:28 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:44572 "EHLO
+        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229487AbhJZEQ1 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 25 Oct 2021 21:45:20 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19PMJ7sX007783;
-        Tue, 26 Oct 2021 01:42:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=from : to : cc : subject
- : date : message-id : in-reply-to : references : mime-version :
- content-transfer-encoding; s=pp1;
- bh=gmrTaMPNxQ4/kZOEQtH0uydfComeq4SJRWJOX0p0aJc=;
- b=hvz9KeKpAndzpihpAbPzU1gaaqEUzW9AFfJLTeQ7ykdyuSvDqn0fSP2YszvWOJcPwNqS
- 16fT50LwtWgJfrBKtCRk4MNREW9gQqsa50B0oHhOnB726CMYl1qQRficA1ID4y7jILiA
- 4CVpJ8EWAxD0fXdjBlbIHsFpcEb67R8ZD3TUKqyv02799MtOxuLSRx5EEX9cBdMHZoln
- fc9P2fDQz6JWNS83/7tPx80tvAuvk29gp8HwbQxuPaTy5Qla8vbiUNhYYUrqYYQ3UQW7
- SZwVAij2kC1GnrS9Y6vVY/psisZESfuhLJMYO6ynDUJ8QWR9E8lZFESYaSWycyxjIz0B Kg== 
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 3bx596bst3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 26 Oct 2021 01:42:50 +0000
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19Q1cOrb019026;
-        Tue, 26 Oct 2021 01:42:48 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma05fra.de.ibm.com with ESMTP id 3bx4er8ts1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 26 Oct 2021 01:42:48 +0000
-Received: from d06av23.portsmouth.uk.ibm.com (d06av23.portsmouth.uk.ibm.com [9.149.105.59])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19Q1gjmT56820084
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 26 Oct 2021 01:42:45 GMT
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 44BFCA4053;
-        Tue, 26 Oct 2021 01:42:45 +0000 (GMT)
-Received: from d06av23.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id E379FA404D;
-        Tue, 26 Oct 2021 01:42:44 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-        by d06av23.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Tue, 26 Oct 2021 01:42:44 +0000 (GMT)
-From:   Steffen Maier <maier@linux.ibm.com>
-To:     jwi@linux.ibm.com, bvanassche@acm.org, martin.petersen@oracle.com,
-        jejb@linux.ibm.com, linux-scsi@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org, maier@linux.ibm.com,
-        bblock@linux.ibm.com, linux-next@vger.kernel.org,
-        linux-s390@vger.kernel.org
-Subject: [PATCH v3] scsi: core: Fix early registration of sysfs attributes for scsi_device
-Date:   Tue, 26 Oct 2021 03:42:40 +0200
-Message-Id: <20211026014240.4098365-1-maier@linux.ibm.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <2f5e5d18-7ba9-10f6-1855-84546172b473@linux.ibm.com>
-References: <2f5e5d18-7ba9-10f6-1855-84546172b473@linux.ibm.com>
+        Tue, 26 Oct 2021 00:16:27 -0400
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19Q3b3Gt013759;
+        Tue, 26 Oct 2021 04:13:58 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
+ from : message-id : references : date : in-reply-to : content-type :
+ mime-version; s=corp-2021-07-09;
+ bh=0VZknSKbUcRPjPBvdXebGCuV2NTImUONk3hmqJIYbtU=;
+ b=OxnqaSMqdsHR5HnVzvOp3wXwunLFPsVxd4sswVQOWlUZITzh6PoW/ONlu4xqr7YYMzZF
+ /1PprOEVIOvnQhb8/yLQUsJ9N8jx+N1LWAxtGZHF2YVcf8EO5JWa3xJGlyWUnfylVn9C
+ xRiHBsQIm9IUBRnxHIPOo/sNoFVOGhol01kFGz1N6mLxuVow6txABWb34Wbg2g/bxilW
+ uhgPgmXiDDRbHBDPDE0LFhN8AAtdv+oBHkAZjvOb/R2Ln/jsrn/ckEph801R4EqTWW62
+ 0Za+BcTvVVkLzlit2ShK2CGJqk6gaG1o2Qks3yw390vco7pwLu8aTss82eL/Qrv2F90w Tw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by mx0b-00069f02.pphosted.com with ESMTP id 3bx4fhs1qc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 26 Oct 2021 04:13:58 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19Q4Bb4V129903;
+        Tue, 26 Oct 2021 04:13:57 GMT
+Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2107.outbound.protection.outlook.com [104.47.58.107])
+        by aserp3020.oracle.com with ESMTP id 3bx4gacavm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 26 Oct 2021 04:13:57 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=Y3TBiZbCDx79M2JJUZneJbpVsVJ5PQ+eAg9XuY2aaNAq6QvBsYc/ClxtqfLHm+CXOAP5l1FXe/6DJFWNYkTRZtOLTc5twsb7l0PzKH2/eu2EfrDzUK9fG0enWY5MnenW57XkEJUSQV/ad3hKgggbaYAfcy1ZG+2+YYGLnQDvujdG2nB0+D8+lov16obibX1uMYvV0OzYtq6/alFLBQ57k4ZlxN6mrbfmfggM1uYjkvX4tdiJDbV0PHUkqOizBOj5OUYrxbo8tYuDdK6n8NiVfyUSYPIwDtlO14eJKFF4sSUDtoGHrS6PdStHcIseU3c5ICsYslotIJXaLD/Z+YP+Aw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=0VZknSKbUcRPjPBvdXebGCuV2NTImUONk3hmqJIYbtU=;
+ b=f6u53wj+NNLyJ9b2C0kYmcNsBI27VTBzOTvXe0hXBWiqi9d09wrrzfGnDg2pFeQLZ6h9IcloWERtEof/QxawXllGmnolUOlWba13jKKHoxCuID2O5u5CL+L1mwyI8iHLc2rOpDeKLRsIqCXvZhRfTzK+WKZphTC1ixRgaxSEr/e5+1votT8wBCGmA5b69E2IS07+j5LGVDZ/CeuYOKMc5Wnkl5ejYFeCoeWan/F/PPSiEuk9dUg2dVJc/alNFXy8nlXM4PqCsdR0VyZA3i4gWfKNN1BHnUoSbWpUcBnWxnw+JwoxTXr8oV4uOSU6O5NdbdWp4Fo0h+0Dc4fyn+o91A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=0VZknSKbUcRPjPBvdXebGCuV2NTImUONk3hmqJIYbtU=;
+ b=xKlrR+l6HzUpO+vYKByuQoteLkIA1a7X/GEUgew3pX9pKi7MlSFrwtd+ub9PmTgc54eQOnXgODn069R0uBCADqauNFvbgUEUv8F9wpfjMBmDjkJFQao6vPytuI3y1UIqtrf+oX0puxBiTW9Xyr+eoMtrQJ+up0IwdwOQ/zZzBO8=
+Authentication-Results: linuxfoundation.org; dkim=none (message not signed)
+ header.d=none;linuxfoundation.org; dmarc=none action=none
+ header.from=oracle.com;
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
+ by PH0PR10MB4517.namprd10.prod.outlook.com (2603:10b6:510:36::16) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.18; Tue, 26 Oct
+ 2021 04:13:55 +0000
+Received: from PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::a457:48f2:991f:c349]) by PH0PR10MB4759.namprd10.prod.outlook.com
+ ([fe80::a457:48f2:991f:c349%8]) with mapi id 15.20.4649.014; Tue, 26 Oct 2021
+ 04:13:55 +0000
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com,
+        axboe@kernel.dk, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: revert HPB support
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+Organization: Oracle Corporation
+Message-ID: <yq1pmrs2zln.fsf@ca-mkp.ca.oracle.com>
+References: <20211022062011.1262184-1-hch@lst.de>
+        <4199e780-32e5-a1ce-65ba-85e0b7a3eda5@acm.org>
+        <YXb2uO55W33/6ZFq@kroah.com>
+Date:   Tue, 26 Oct 2021 00:13:46 -0400
+In-Reply-To: <YXb2uO55W33/6ZFq@kroah.com> (Greg Kroah-Hartman's message of
+        "Mon, 25 Oct 2021 20:26:00 +0200")
+Content-Type: text/plain
+X-ClientProxiedBy: TYBP286CA0036.JPNP286.PROD.OUTLOOK.COM
+ (2603:1096:404:10a::24) To PH0PR10MB4759.namprd10.prod.outlook.com
+ (2603:10b6:510:3d::12)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: AaUGkOiNI1MDrbg3K94kAjpYM8uaOoQW
-X-Proofpoint-GUID: AaUGkOiNI1MDrbg3K94kAjpYM8uaOoQW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-10-25_08,2021-10-25_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 malwarescore=0
- mlxlogscore=999 phishscore=0 adultscore=0 impostorscore=0 bulkscore=0
- mlxscore=0 lowpriorityscore=0 priorityscore=1501 spamscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2110260006
+Received: from ca-mkp.ca.oracle.com (138.3.201.47) by TYBP286CA0036.JPNP286.PROD.OUTLOOK.COM (2603:1096:404:10a::24) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4628.18 via Frontend Transport; Tue, 26 Oct 2021 04:13:54 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 1280eeca-f9b3-485d-2e26-08d9983706eb
+X-MS-TrafficTypeDiagnostic: PH0PR10MB4517:
+X-Microsoft-Antispam-PRVS: <PH0PR10MB4517F62A50CF51714CDB7D1B8E849@PH0PR10MB4517.namprd10.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:8882;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: sUGQzZVz9PWOevnpX5PZWlh1SQAl8ZHaKcectB/rKLJwmAHAp6TA8RVed2YGeP6mnSBrCOdjVUwrIv1gZNUAMJrASEnbfNs48QYKf4JQ9v693AWzy2IOr4XClhX99cPGyZNaMv7GFtqP4xVgBJqo5450TPLB0wBlF3+TDJSjTIkpxZQqyKiMKW7H+5pufqs6eOqOOiEYnfmIYk4tsKYAA0i1+KXieFrBbg8yVR8qYRFQd5aRVo/VV8ANPh5CAZw8e4vhhcjFXp0s4JR4I41+MEU1wxctzQv3GLgalE6S4kPs92ATFkT4SSmr015kGAaM9VeWZCEZSWJs4gLQajf1inUvbmYvKtbTA/y6dQ/BBHU9RzQe3+dEcniVXouz1Je+pXsl92iM9N1TAcMJz56XtbtEZH3zXqZrqqbe76jGlgOkzel1aztL29UaNk493xQIxRlARIzvMCk8ws2i7GUEdv28r0lml0yHHdnFBy/a1hcwbpdiJYJiNMD8fZUIz1/ooGei2vd+6+KOYlkzSvCiZ1ruZmWsUC2Sb5pI7yrvXpZyTcBASmkZ1q5gLn3sI1hkrDUMLg2DmDGhykEhaIOFMpB78+xoaX39oRMTdooQOrNt1GMJz1XzDp64PFBE7jdN/AtRstZYypY/lu3Ty8uuXLKN59/YVXDd88dhIMR0RY/oqYg3etVNxMYeU1O0304mUeSm9IRk8MTu4fLxU2gQkQ==
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(52116002)(66476007)(66556008)(38350700002)(36916002)(316002)(7696005)(38100700002)(86362001)(2906002)(54906003)(4326008)(66946007)(8936002)(26005)(6916009)(508600001)(6666004)(956004)(186003)(5660300002)(8676002)(55016002)(4744005);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?/ZaHGRItC3Kn0k7hofGovXEN6tABAINHksrQ5SYtmTxRk7bCLBJ+bM7LGr+8?=
+ =?us-ascii?Q?SuB3YcErlbyETi2zzKai5o4MlDWczIUszV4y2wci0hu34LzlcofdYazYP8wD?=
+ =?us-ascii?Q?fedFuxKKqxGjbamKDO1e2vNNzEFq9AO5P+GcSqOOYnXkHKDsrmKsONBjTasg?=
+ =?us-ascii?Q?PHc7smasH54BV304P16eMQIe8A8OPFLR+xOoFzAEN9fJqCbVto/c45WiNrUz?=
+ =?us-ascii?Q?PtBIdBhuFLn8XOS+MTpKzZIjLxDene+Z5aJAko6popxR9OZ7SjzyLfzzmEvp?=
+ =?us-ascii?Q?BtZFP2CTskV7IZQgBdDNKVmabBionDmpruPci784EvT9omrdfDYutYj3QR5y?=
+ =?us-ascii?Q?6mvvJpYN+IyJf2V8R5YiwVWesk1yL/Hlh6rlRBUfIE9ncFML4z3TvizZopMo?=
+ =?us-ascii?Q?sVHuWBq1pYQEoW9RVglaeuquNO45/L4TDYaBcyaCeiDhgT5UJmM+dApuOwiS?=
+ =?us-ascii?Q?fpeWftPqMkIEISDlyN3YTIiQuiKEXDShnqjK2tTz4lh4Ek82lc8VqiMpqbk5?=
+ =?us-ascii?Q?FHfIAnAIC2Sn9YyczxWcBxmimMIX6rtUyZr7SIAS0JU24KUn5ePzsr7adcKy?=
+ =?us-ascii?Q?dalj+OZrOWpiMABAv9Oql7C1ysyubFBRJBBtrHUC56O34oo8l0RheORDUaVE?=
+ =?us-ascii?Q?w7clY0ZHzS0croP6dH1zQB/W3I91PGv5wvk3B5D6xgV+gTNSE4Lu4bYR1Uec?=
+ =?us-ascii?Q?Vpg/beZHce5qljI7a+NuU0C0io3dlJkwKXFEeJSFBbHwHLu7tTmT9ZMg6Bmj?=
+ =?us-ascii?Q?l0E4ZM6c/Z2m1tAoRi9bFFTQHzeqbEdt4Ih3DHNhIwMsQiV17e11aHdMd6CP?=
+ =?us-ascii?Q?iT7lynp695wqYmixGSgF7OxVnId2R+vJXFncrizxrsTTkoQeEoVIgQUv+uGX?=
+ =?us-ascii?Q?bQcd+yj6s/4jhXr8FGWauthhf6M6x+Y56YDN4xuRgLvihaAyrv9IweYRj/SM?=
+ =?us-ascii?Q?b212T3Xh0jAyZ3KyPkRuwkW08PA3So4/VZYo0WPHCcyRq6N7BIQFbGxzPO8J?=
+ =?us-ascii?Q?VhJIzCm2L9WsiXKT4KxQokNOMllpe1YJEwoglrQ96fAs3jZiouh4OieWfxrI?=
+ =?us-ascii?Q?3s4DH3JJYB4vhCkJ/L2GHq4akp5TunWphSsTIWIs+3NejLQg/u9zar+H5wcX?=
+ =?us-ascii?Q?8+vs0bPKwvnDtlruSTWsLEccQ336Nb9j3Ozf0IVrbzlKAcFe/sapaLgHehGx?=
+ =?us-ascii?Q?kE+mjqIwAEYVN5qToEr9FgEVRynoQ9ZFlm7OgkM1K27eY3Jxh42/VXTUQ+2Z?=
+ =?us-ascii?Q?1ZEy0CgJ3bGKr4Qdotkz9jXXYM+7hyezio2B31AnxTUJGCjJ1S8VemHd1UER?=
+ =?us-ascii?Q?X8PzS1sTOzE8bzQYydlW1M8MpnCjer5ZsN66VxACcH4x74lE62FppsBAwgwp?=
+ =?us-ascii?Q?h4+8IrbWze3QAyeQGl/uxsUnDB7WT1T16LLgEbVkUyuDLteAREC6d1n6RaEo?=
+ =?us-ascii?Q?ybGbzODpR04sqw8fNMarTeQpgajXhYeuoVJHobfDZFTcKIhUs7ljHcnGqEoy?=
+ =?us-ascii?Q?ZCN3Vq+ofKvF6mWo9nTAuVc/vkta+w5bf3n0QPJ2/wvwYW8U+0kuhR0lBxsO?=
+ =?us-ascii?Q?NNdTg4i+j5QVgiCw+YoIFqHeJ/c8ugbkhV8XC9xj1Bm9NREFEYHquq1WQz2j?=
+ =?us-ascii?Q?ic/riNXxdhmTfYZWDFZt6FoiLrSAnANM72FEX4ZsSSIE8XiDAzlwfdG1Eqnb?=
+ =?us-ascii?Q?eUjAUg=3D=3D?=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1280eeca-f9b3-485d-2e26-08d9983706eb
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 26 Oct 2021 04:13:55.8196
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: WTuUzkaokxbukQ7DHe7peatZ14u96OtyMKwfYIYFd19CaLv9Sx/JuYD8fQRTjX2vxL91XVm28z+KNJEJ8O1YlLXnTr8p+1q74eiJqYU0RRc=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB4517
+X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10148 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 mlxlogscore=993
+ bulkscore=0 phishscore=0 mlxscore=0 spamscore=0 adultscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2110150000 definitions=main-2110260021
+X-Proofpoint-GUID: TfJ6FTyi-OAJYBRrhVgipjyosTEuS90d
+X-Proofpoint-ORIG-GUID: TfJ6FTyi-OAJYBRrhVgipjyosTEuS90d
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-v4.17 commit 86b87cde0b55 ("scsi: core: host template attribute groups")
-introduced explicit sysfs_create_groups() in scsi_sysfs_add_sdev()
-and sysfs_remove_groups() in __scsi_remove_device(), both for sdev_gendev,
-based on a new field const struct attribute_group **sdev_groups
-of struct scsi_host_template.
 
-Commit 92c4b58b15c5 ("scsi: core: Register sysfs attributes earlier")
-removed above explicit (de)registration of scsi_device attribute groups.
-It also converted all scsi_device attributes and attribute_groups to
-end up in a new field const struct attribute_group *gendev_attr_groups[6]
-of struct scsi_device. However, that new field was not used anywhere.
+Greg,
 
-Surprisingly, this only caused missing LLDD specific scsi_device sysfs
-attributes. Whereas, scsi core attributes from scsi_sdev_attr_groups
-did continue to exist because of scsi_dev_type.groups.
+> Under this line of reasoning, why would upstream take the code at all?
+>
+> {sigh}
 
-We separate scsi core attibutes from LLDD specific attributes.
-Hence, we keep the initializing assignment scsi_dev_type =
-{ .groups = scsi_sdev_attr_groups, } as this takes care of core
-attributes. Without the separation, it would cause attribute double
-registration due to scsi_dev_type.groups and sdev_gendev.groups.
+Sigh indeed.
 
-Julian suggested to assign the sdev_groups pointer of the
-scsi_host_template directly to the groups pointer of sdev_gendev.
-This way we can delete the container scsi_device.gendev_attr_groups
-and the loop copying each entry from hostt->sdev_groups to
-sdev->gendev_attr_groups.
+> Is there a link to where the HPB developer said they would look into
+> this?  Perhaps until that happens this should be marked as BROKEN?
 
-Alternative approaches ruled out:
-Assigning gendev_attr_groups to sdev_dev has no visible effect.
-Assigning sdev->gendev_attr_groups to scsi_dev_type.groups
-caused scsi_device of all scsi host types to get LLDD specific
-attributes of the LLDD for which the last sdev alloc happened to occur,
-as that overwrote scsi_dev_type.groups,
-e.g. scsi_debug had zfcp-specific scsi_device attributes.
+I say we just mark it broken for now.
 
-Signed-off-by: Steffen Maier <maier@linux.ibm.com>
-Fixes: 92c4b58b15c5 ("scsi: core: Register sysfs attributes earlier")
-Suggested-by: Julian Wiedmann <jwi@linux.ibm.com>
----
-
-Notes:
-    Changes in v3:
-    * integrated Julian's feedback of dropping detour through
-      gendev_attr_groups
-    
-    Changes in v2:
-    * integrated Bart's feedback of updating the comment for
-      the gendev_attr_groups declaration to match the code change
-    * in that spirit also adapted the vector size of that field
-    * eliminated the now unnecessary second loop counter 'j'
-
- drivers/scsi/scsi_sysfs.c  | 11 +----------
- include/scsi/scsi_device.h |  6 ------
- 2 files changed, 1 insertion(+), 16 deletions(-)
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index c26f0e29e8cd..fa064bf9a55c 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1571,7 +1571,6 @@ static struct device_type scsi_dev_type = {
- 
- void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- {
--	int i, j = 0;
- 	unsigned long flags;
- 	struct Scsi_Host *shost = sdev->host;
- 	struct scsi_host_template *hostt = shost->hostt;
-@@ -1583,15 +1582,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
- 	scsi_enable_async_suspend(&sdev->sdev_gendev);
- 	dev_set_name(&sdev->sdev_gendev, "%d:%d:%d:%llu",
- 		     sdev->host->host_no, sdev->channel, sdev->id, sdev->lun);
--	sdev->gendev_attr_groups[j++] = &scsi_sdev_attr_group;
--	if (hostt->sdev_groups) {
--		for (i = 0; hostt->sdev_groups[i] &&
--			     j < ARRAY_SIZE(sdev->gendev_attr_groups);
--		     i++, j++) {
--			sdev->gendev_attr_groups[j] = hostt->sdev_groups[i];
--		}
--	}
--	WARN_ON_ONCE(j >= ARRAY_SIZE(sdev->gendev_attr_groups));
-+	sdev->sdev_gendev.groups = hostt->sdev_groups;
- 
- 	device_initialize(&sdev->sdev_dev);
- 	sdev->sdev_dev.parent = get_device(&sdev->sdev_gendev);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index b1e9b3bd3a60..b97e142a7ca9 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -225,12 +225,6 @@ struct scsi_device {
- 
- 	struct device		sdev_gendev,
- 				sdev_dev;
--	/*
--	 * The array size 6 provides space for one attribute group for the
--	 * SCSI core, four attribute groups defined by SCSI LLDs and one
--	 * terminating NULL pointer.
--	 */
--	const struct attribute_group *gendev_attr_groups[6];
- 
- 	struct execute_work	ew; /* used to get process context on put */
- 	struct work_struct	requeue_work;
 -- 
-2.25.1
-
+Martin K. Petersen	Oracle Linux Engineering
