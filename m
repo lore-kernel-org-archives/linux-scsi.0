@@ -2,127 +2,81 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CE67C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 15:45:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76AB8C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 16:36:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 72C9261040
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 15:45:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 562836108B
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 16:36:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237064AbhJZPr3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Oct 2021 11:47:29 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:49400 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237052AbhJZPrX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Oct 2021 11:47:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635263099;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=ydavJn7DI5FQeuBROtYPyYrL+o3WSf2VUpZ//UwJoaI=;
-        b=NaB6nPGgUEibfR+/4rT3E0e8cMnRK1C7WhC0RKOGX0fRVqFSMycZT53g6WG2xMZjzpY9lB
-        2vwianhNxcVLTXqvqiFYYEl/WuSFEbKmipY9T1sHomHQ4uMTu0zH0bm2A7omySEKG/WN28
-        bDkZfSXRcZnQpCF2zqtM4ypby2NsWmU=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-537-lhFgLe3HMe-kxCJV5owltA-1; Tue, 26 Oct 2021 11:44:57 -0400
-X-MC-Unique: lhFgLe3HMe-kxCJV5owltA-1
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 5B1C55074C;
-        Tue, 26 Oct 2021 15:44:56 +0000 (UTC)
-Received: from localhost (unknown [10.39.195.43])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 956B6AFD87;
-        Tue, 26 Oct 2021 15:44:33 +0000 (UTC)
-Date:   Tue, 26 Oct 2021 16:44:32 +0100
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     Jason Wang <jasowang@redhat.com>
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        pbonzini@redhat.com, mst@redhat.com, sgarzare@redhat.com,
-        virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH V3 11/11] vhost: allow userspace to create workers
-Message-ID: <YXgiYFIUTKtoRJWW@stefanha-x1.localdomain>
-References: <20211022051911.108383-1-michael.christie@oracle.com>
- <20211022051911.108383-13-michael.christie@oracle.com>
- <8aee8f07-76bd-f111-bc5f-fc5cad46ce56@redhat.com>
+        id S235839AbhJZQjL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Oct 2021 12:39:11 -0400
+Received: from mail-pg1-f172.google.com ([209.85.215.172]:41973 "EHLO
+        mail-pg1-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234299AbhJZQjK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2021 12:39:10 -0400
+Received: by mail-pg1-f172.google.com with SMTP id 83so11661pgc.8;
+        Tue, 26 Oct 2021 09:36:46 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=dAqe3YnTOdTV+SdN4Z4XT4EnkTy0b5083zzk171qBC0=;
+        b=TPaXNsOtz3xm+dUGhCPEelKAQJkPYKBHvYH4mA1gZ6tbtnZi+HWlIc78ESx2XTKdnx
+         UEVOT2X0mh73Q6RJEoNLpptIS8oIFjfN6hUipPM26dcKtrpr+QQIpCeO79D1uAZzAckW
+         Nka32tB9c+ZW7Xs0h2q08oeHW2Wsnptw9Rxx73KHf4jfRI1fdfyrQNgmW7TZkv9ROxVd
+         rhFA9hcKvwkO8QYU7lP/vj4tySicvIDVB88x+Cb9KYMNP4wcgCT780bSBSwfDKh+x0X/
+         O9j3VgG9QS8VboTUGWBpmOUNkGYEiReCTWp0NxFuAl3aDAouaxHYvAsfVv8Mf6s/CBQw
+         bgzw==
+X-Gm-Message-State: AOAM532gOaY22naaygalqRlMWXv5AM9rM9ip9dni5rgMfez5oIHFu5M8
+        C+RCdERDSZrfhoxiORRxeMN7HqlcA3S+Ug==
+X-Google-Smtp-Source: ABdhPJztnj190k8biAi6qT1Cq9ZUO6zQSL5ez8cdvbIcEY88OnzKGBUbDokriozgwkeyiyWb7iFU9w==
+X-Received: by 2002:a63:1406:: with SMTP id u6mr19767758pgl.106.1635266205096;
+        Tue, 26 Oct 2021 09:36:45 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:26a4:3b5f:3c4f:53f5])
+        by smtp.gmail.com with ESMTPSA id mp14sm1328815pjb.17.2021.10.26.09.36.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 26 Oct 2021 09:36:44 -0700 (PDT)
+Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
+To:     Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
+Cc:     axboe@kernel.dk, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+References: <20211026071204.1709318-1-hch@lst.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <99641481-523a-e5a9-db48-dac2b547b4bd@acm.org>
+Date:   Tue, 26 Oct 2021 09:36:43 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="VMwuMuFNjq9JI4o+"
-Content-Disposition: inline
-In-Reply-To: <8aee8f07-76bd-f111-bc5f-fc5cad46ce56@redhat.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+In-Reply-To: <20211026071204.1709318-1-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On 10/26/21 12:12 AM, Christoph Hellwig wrote:
+> The HPB support added this merge window is fundanetally flawed as it
+                                              ^^^^^^^^^^^^
+                                              fundanetally -> fundamentally
 
---VMwuMuFNjq9JI4o+
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Since the implementation can be reworked not to use
+blk_insert_cloned_request() I'm not sure using the word "fundamentally"
+is appropriate.
 
-On Tue, Oct 26, 2021 at 01:37:14PM +0800, Jason Wang wrote:
->=20
-> =E5=9C=A8 2021/10/22 =E4=B8=8B=E5=8D=881:19, Mike Christie =E5=86=99=E9=
-=81=93:
-> > This patch allows userspace to create workers and bind them to vqs. You
-> > can have N workers per dev and also share N workers with M vqs.
-> >=20
-> > Signed-off-by: Mike Christie <michael.christie@oracle.com>
->=20
->=20
-> A question, who is the best one to determine the binding? Is it the VMM
-> (Qemu etc) or the management stack? If the latter, it looks to me it's
-> better to expose this via sysfs?
+> uses blk_insert_cloned_request to insert a cloned request onto the same
+> queue as the one that the original request came from, leading to all
+> kinds of issues in blk-mq accounting (in addition to this API being
+> a special case for dm-mpath that should not see other users).
 
-A few options that let the management stack control vhost worker CPU
-affinity:
+More detailed information would have been welcome.
 
-1. The management tool opens the vhost device node, calls
-   ioctl(VHOST_SET_VRING_WORKER), sets up CPU affinity, and then passes
-   the fd to the VMM. In this case the VMM is still able to call the
-   ioctl, which may be undesirable from an attack surface perspective.
+> Fixes: f02bc9754a68 ("scsi: ufs: ufshpb: Introduce Host Performance Buffer
+> feature")
 
-2. The VMM calls ioctl(VHOST_SET_VRING_WORKER) itself and the management
-   tool queries the vq:worker details from the VMM (e.g. a new QEMU QMP
-   query-vhost-workers command similar to query-iothreads). The
-   management tool can then control CPU affinity on the vhost worker
-   threads.
+I assume that you wanted to refer to commit 41d8a9333cc9 ("scsi: ufs: ufshpb:
+Add HPB 2.0 support") instead since that commit is the only commit that
+introduced a blk_insert_cloned_request() call in the UFS HPB code?
 
-   (This is how CPU affinity works in QEMU and libvirt today.)
-
-3. The sysfs approach you suggested. Does sysfs export vq-0/, vq-1/, etc
-   directories with a "worker" attribute? Do we need to define a point
-   when the VMM has set up vqs and the management stack is able to query
-   them? Vhost devices currently pre-allocate the maximum number of vqs
-   and I'm not sure how to determine the number of vqs that will
-   actually be used?
-
-   One advantage of this is that access to the vq:worker mapping can be
-   limited to the management stack and the VMM cannot access it. But it
-   seems a little tricky because the vhost model today doesn't use sysfs
-   or define a lifecycle where the management stack can configure
-   devices.
-
-Stefan
-
---VMwuMuFNjq9JI4o+
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmF4ImAACgkQnKSrs4Gr
-c8gRxgf/e4VddkwF5mz1ehejjissc2bD+9Qs4+4UBTGivifiCSzfT6H9wO4jnas2
-iyTdVOfZrtNR1TpeHFlgl8oOAM8VGL6lOkeshxznpITYwit2yfZWRZS67bR1lP4e
-aC5STvrI9s8uglVezSIfFvlLwqDfzaSA0QyZiyOZjrVJ4Tru/BB2CjGttuW07D2r
-vFu4qZRjmbeugTSklPMvhKSGVN5dfunFZ/AYIH5QypUW01T5LkE23F7Z2TULidjT
-lmKeR9QLvG8vvw8r7bRdfG2lhqz244jAEGwKYKnoiUQhOEyxgOz7X4zOLNfkeIOg
-jJqvytP/GaJjYNtanCW5j/zn1o/xwA==
-=yQjM
------END PGP SIGNATURE-----
-
---VMwuMuFNjq9JI4o+--
-
+Bart.
