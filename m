@@ -2,63 +2,58 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81103C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 20:10:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF67C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 21:49:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4D2406103B
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 20:10:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A51FA6109D
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 21:49:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232000AbhJZUNS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Oct 2021 16:13:18 -0400
-Received: from mail-pf1-f173.google.com ([209.85.210.173]:33542 "EHLO
-        mail-pf1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235809AbhJZUNN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2021 16:13:13 -0400
-Received: by mail-pf1-f173.google.com with SMTP id t184so582206pfd.0;
-        Tue, 26 Oct 2021 13:10:49 -0700 (PDT)
+        id S239690AbhJZVvj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Oct 2021 17:51:39 -0400
+Received: from mail-pl1-f173.google.com ([209.85.214.173]:37547 "EHLO
+        mail-pl1-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237419AbhJZVvW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2021 17:51:22 -0400
+Received: by mail-pl1-f173.google.com with SMTP id n11so527643plf.4;
+        Tue, 26 Oct 2021 14:48:58 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=cRJjKdjODsDGNWpTgbNuHe6+D24pXZwSNAIhUexlwMs=;
-        b=jDbk+p2zIgkMoUByPGY2akf4AziCqbnNV9g7vFCdsQP8x9QgTzw3OUntbeP5ABqxhi
-         Qn088XunBk4JPaqzYKozinY7+GvzoNLWr6mBKu7Nn5iwadFAw7HhN2kpk2UdMwvjnGgB
-         MPNfAiwEcu6TsHW4vnNDAA4CjTPPG+AhwM9QztmiMq/MkgFJmOyCNzxXHAXhWvAPqbKj
-         4175Rn9EIn+QQGna+hGDx3SLH+D0Ai8STM5lFQiJN4I0KkNrIXF7DambvOXR7GWnQqtO
-         qphg4fv+J3UllZ4FdRrn138nS7TSzog4meXnR1mWJ/vESsTZu20CmRto2XkfWKUnj8bj
-         BOgQ==
-X-Gm-Message-State: AOAM5339gDSfcLCq7vjcQAYCeZfAlTvR5YdLvrrL53OvIK5Pg86k3Z3T
-        MjetXyouDGPGE9f5fmqCry0/w9OC6gXk2g==
-X-Google-Smtp-Source: ABdhPJwI7XCn3zcIGTyqriWQKSmtKZJohOznCObtdW6KYCTBJhmaQSDtvqMkBUe3M32uOuR8CsT4jQ==
-X-Received: by 2002:aa7:90d0:0:b0:44d:b8a:8837 with SMTP id k16-20020aa790d0000000b0044d0b8a8837mr28167199pfk.47.1635279048754;
-        Tue, 26 Oct 2021 13:10:48 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:26a4:3b5f:3c4f:53f5])
-        by smtp.gmail.com with ESMTPSA id l11sm25486514pfu.55.2021.10.26.13.10.47
+        bh=PTfDtU9ITgZgQpCYO9Pe8JKDuiPUT22FD3M2pisYMu4=;
+        b=AChTEHmBek/hSb6aXZvPNVQ+r6H8QErwP4hTF+ZIvCcc9CRFxiMPZpGYl0PfSNU0D9
+         Ed5amRDpFtX6NuTT02AWGRoNODLwURl2wHgfCIj/sXaroi+ezzjJq4eqB0XbKlOFxzZP
+         EyOGJa7ftNKRkUNxbaUTONBF+KeXj3eAxFJHpDIoyky/n+h5/Qi28ke/cnHXc+rx0fen
+         3TWEC22vfPFdMi7yU7oquXaB/vc0kGXT4R/AI5q92xmF1e5yTOsq63MSxwqo/Th6iRwk
+         9PIJUmsqu14r+91KH6LswzdvCYMFLicUA5oGUSuvVJLAAlX5OH13JtAYVz7CtEiYmY5a
+         Y3ig==
+X-Gm-Message-State: AOAM531A0wKSnCZNuDZwQyuD7JEAhq2bTIY5Sw0gwIsED+3DTNc58KRp
+        rGVpTguV7WjXOtUxXK4dRKkkbRgJfoMNmQ==
+X-Google-Smtp-Source: ABdhPJzlF/fGJS5G4v9d3WlqG0vlxAB2D6rFvKigGkGrF+U3YfMmwWlFd3DkaUSRjD+23M0+ozwxyw==
+X-Received: by 2002:a17:90a:784a:: with SMTP id y10mr1476356pjl.211.1635284937199;
+        Tue, 26 Oct 2021 14:48:57 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:d40:ea48:4805:9a5e])
+        by smtp.gmail.com with ESMTPSA id p3sm23113031pfb.205.2021.10.26.14.48.55
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 26 Oct 2021 13:10:48 -0700 (PDT)
-Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, alim.akhtar@samsung.com,
-        avri.altman@wdc.com, linux-scsi@vger.kernel.org,
-        linux-block@vger.kernel.org
-References: <20211026071204.1709318-1-hch@lst.de>
- <99641481-523a-e5a9-db48-dac2b547b4bd@acm.org>
- <7ed11ee1f8beca9a27c0cb2eb0dcea4dbd557961.camel@HansenPartnership.com>
- <870e986c-08dd-2fa2-a593-0f97e10d6df5@kernel.dk>
- <4438ab72-7da0-33de-ecc9-91c3c179eca7@acm.org>
- <c3d85be5-2708-ea50-09ac-2285928bbe0e@kernel.dk>
- <36729509daa80fd48453e8a3a1b5c23750948e6c.camel@HansenPartnership.com>
- <yq1ee873av4.fsf@ca-mkp.ca.oracle.com>
+        Tue, 26 Oct 2021 14:48:56 -0700 (PDT)
+Subject: Re: [PATCH v3] scsi: core: Fix early registration of sysfs attributes
+ for scsi_device
+To:     Benjamin Block <bblock@linux.ibm.com>,
+        Steffen Maier <maier@linux.ibm.com>
+Cc:     jwi@linux.ibm.com, martin.petersen@oracle.com, jejb@linux.ibm.com,
+        linux-scsi@vger.kernel.org, gregkh@linuxfoundation.org,
+        linux-next@vger.kernel.org, linux-s390@vger.kernel.org
+References: <2f5e5d18-7ba9-10f6-1855-84546172b473@linux.ibm.com>
+ <20211026014240.4098365-1-maier@linux.ibm.com>
+ <YXfRvxKu/xXVubF8@t480-pf1aa2c2.linux.ibm.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <679b4d3b-778e-47cd-d53f-f7bf77315f7c@acm.org>
-Date:   Tue, 26 Oct 2021 13:10:47 -0700
+Message-ID: <ab1a9bfd-c1d2-e101-a9f3-f969ed3d1cad@acm.org>
+Date:   Tue, 26 Oct 2021 14:48:55 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <yq1ee873av4.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <YXfRvxKu/xXVubF8@t480-pf1aa2c2.linux.ibm.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -66,82 +61,125 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/26/21 11:27 AM, Martin K. Petersen wrote:
->> Agreed, that was my initial proposed solution: get rid of the write
->> buffer optimzation now to fix the API abuse and see if we can add it
->> back in a more acceptable form later.
+On 10/26/21 3:00 AM, Benjamin Block wrote:
+> Hmm, maybe this is out of scope for this fix, but couldn't we
+> essentially do the same thing for the host attributes. Have the
+> `shost_class` take the `scsi_shost_attr_group` as default attributes for
+> the shost class, and then assign the `shost_groups` from the LLDD
+> template to `shost_dev.groups` as optional attributes?
 > 
-> Doesn't matter to me whether we back out the 2.0 stuff or mark it as
-> broken. I merely objected to reverting all of HPB since I don't think
-> that would solve anything.
+> Then we get rid of the indirection loop in `hosts.c` as well, that was
+> introduce with he original patch by Bart.
 > 
-> But obviously we'll need a patch to fix 5.15 ASAP...
+> Just a shot in the dark, I don't know whether the `struct class` behaves
+> the same in this case as `struct device_type`.
 
-I do not have access to a test setup that supports HPB.
-
-If blk_insert_cloned_request() is moved into the device mapper then I
-think that blk_mq_request_issue_directly() will need to be exported. How
-about the (totally untested) patch below for removing the
-blk_insert_cloned_request() call from the UFS-HPB code?
+Is something like this what you have in mind?
 
 Thanks,
 
 Bart.
 
 
+Subject: [PATCH] scsi: core: Remove Scsi_Host.shost_dev_attr_groups
+
+Suggested-by: Benjamin Block <bblock@linux.ibm.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
-  block/blk-mq.c            | 1 +
-  block/blk-mq.h            | 1 -
-  drivers/scsi/ufs/ufshpb.c | 2 +-
-  include/linux/blkdev.h    | 1 +
-  4 files changed, 3 insertions(+), 2 deletions(-)
+  drivers/scsi/hosts.c      | 15 +++------------
+  drivers/scsi/scsi_priv.h  |  2 +-
+  drivers/scsi/scsi_sysfs.c |  7 ++++++-
+  include/scsi/scsi_host.h  |  6 ------
+  4 files changed, 10 insertions(+), 20 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 108a352051be..186321f450f6 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2084,6 +2084,7 @@ blk_status_t blk_mq_request_issue_directly(struct request *rq, bool last)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 17aef936bc90..f88e7ed77dbb 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -61,6 +61,7 @@ static void scsi_host_cls_release(struct device *dev)
+  static struct class shost_class = {
+  	.name		= "scsi_host",
+  	.dev_release	= scsi_host_cls_release,
++	.dev_groups	= scsi_shost_groups,
+  };
 
-  	return ret;
-  }
-+EXPORT_SYMBOL_GPL(blk_mq_request_issue_directly);
+  /**
+@@ -376,7 +377,7 @@ static struct device_type scsi_host_type = {
+  struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+  {
+  	struct Scsi_Host *shost;
+-	int index, i, j = 0;
++	int index;
 
-  void blk_mq_try_issue_list_directly(struct blk_mq_hw_ctx *hctx,
-  		struct list_head *list)
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index d08779f77a26..ffba52189b18 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -74,7 +74,6 @@ void blk_mq_insert_requests(struct blk_mq_hw_ctx *hctx, struct blk_mq_ctx *ctx,
-  				struct list_head *list);
+  	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, GFP_KERNEL);
+  	if (!shost)
+@@ -481,17 +482,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+  	shost->shost_dev.parent = &shost->shost_gendev;
+  	shost->shost_dev.class = &shost_class;
+  	dev_set_name(&shost->shost_dev, "host%d", shost->host_no);
+-	shost->shost_dev.groups = shost->shost_dev_attr_groups;
+-	shost->shost_dev_attr_groups[j++] = &scsi_shost_attr_group;
+-	if (sht->shost_groups) {
+-		for (i = 0; sht->shost_groups[i] &&
+-			     j < ARRAY_SIZE(shost->shost_dev_attr_groups);
+-		     i++, j++) {
+-			shost->shost_dev_attr_groups[j] =
+-				sht->shost_groups[i];
+-		}
+-	}
+-	WARN_ON_ONCE(j >= ARRAY_SIZE(shost->shost_dev_attr_groups));
++	shost->shost_dev.groups = sht->shost_groups;
 
-  /* Used by blk_insert_cloned_request() to issue request directly */
--blk_status_t blk_mq_request_issue_directly(struct request *rq, bool last);
-  void blk_mq_try_issue_list_directly(struct blk_mq_hw_ctx *hctx,
-  				    struct list_head *list);
+  	shost->ehandler = kthread_run(scsi_error_handler, shost,
+  			"scsi_eh_%d", shost->host_no);
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index a278fc8948f4..0f5743f4769b 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -144,7 +144,7 @@ extern struct scsi_transport_template blank_transport_template;
+  extern void __scsi_remove_device(struct scsi_device *);
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 66b19500844e..458eadcb604f 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -547,7 +547,7 @@ static int ufshpb_execute_pre_req(struct ufshpb_lu *hpb, struct scsi_cmnd *cmd,
-  				 read_id);
-  	rq->cmd_len = scsi_command_size(rq->cmd);
+  extern struct bus_type scsi_bus_type;
+-extern const struct attribute_group scsi_shost_attr_group;
++extern const struct attribute_group *scsi_shost_groups[];
 
--	if (blk_insert_cloned_request(q, req) != BLK_STS_OK)
-+	if (blk_mq_request_issue_directly(req, true) != BLK_STS_OK)
-  		return -EAGAIN;
+  /* scsi_netlink.c */
+  #ifdef CONFIG_SCSI_NETLINK
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index c26f0e29e8cd..f360154b5241 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -424,10 +424,15 @@ static struct attribute *scsi_sysfs_shost_attrs[] = {
+  	NULL
+  };
 
-  	hpb->stats.pre_req_cnt++;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 12b9dbcc980e..f203c7ea205b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -867,6 +867,7 @@ extern int blk_rq_prep_clone(struct request *rq, struct request *rq_src,
-  extern void blk_rq_unprep_clone(struct request *rq);
-  extern blk_status_t blk_insert_cloned_request(struct request_queue *q,
-  				     struct request *rq);
-+blk_status_t blk_mq_request_issue_directly(struct request *rq, bool last);
-  int blk_rq_append_bio(struct request *rq, struct bio *bio);
-  extern void blk_queue_split(struct bio **);
-  extern int blk_queue_enter(struct request_queue *q, blk_mq_req_flags_t flags);
+-const struct attribute_group scsi_shost_attr_group = {
++static const struct attribute_group scsi_shost_attr_group = {
+  	.attrs =	scsi_sysfs_shost_attrs,
+  };
+
++const struct attribute_group *scsi_shost_groups[] = {
++	&scsi_shost_attr_group,
++	NULL
++};
++
+  static void scsi_device_cls_release(struct device *class_dev)
+  {
+  	struct scsi_device *sdev;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index ae715959f886..97cdad14de56 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -690,12 +690,6 @@ struct Scsi_Host {
+
+  	/* ldm bits */
+  	struct device		shost_gendev, shost_dev;
+-	/*
+-	 * The array size 3 provides space for one attribute group defined by
+-	 * the SCSI core, one attribute group defined by the SCSI LLD and one
+-	 * terminating NULL pointer.
+-	 */
+-	const struct attribute_group *shost_dev_attr_groups[3];
+
+  	/*
+  	 * Points to the transport data (if any) which is allocated
