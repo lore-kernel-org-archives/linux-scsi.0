@@ -2,219 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A760C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 11:54:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8D29C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 13:04:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 27BCF60F21
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 11:54:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC3AD60F9B
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 13:04:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235663AbhJZL5L (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Oct 2021 07:57:11 -0400
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:27240 "EHLO
-        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S235612AbhJZL46 (ORCPT
+        id S236128AbhJZNGn (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Oct 2021 09:06:43 -0400
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:51254 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236129AbhJZNGn (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 26 Oct 2021 07:56:58 -0400
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-        by mx0a-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19QAMn6f014732
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2021 04:54:35 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type; s=pfpt0220; bh=fbtWqaNpI10ieWESD/PpqvaTw+uBTvnTBDGM3BC5GYo=;
- b=HdCxv1/j8DYkTinbDkkOvt6XnDyymLgJVqfV51+1xgn+Fr7qNNgPlgomxpVQ+YXpnNue
- mv0ivJTaCPzCHxBJUzD8EvUIAEIQ748yOX/9Embr3ZJq9AYq5tBkZuWk0gOpNipncmJw
- e+tP4qwUR+2nA96B+JXYyM4o0zcw9Pj7Jq88xgVVRVpfDzHaZ4hrWq5JZ2ox4n/PqBeJ
- 62ZxU9wK2iWNLtQnyn7eVO8z27bv7fnAW+HOoZ7ewc5RI7Z+k/iPCiiA434VsKdc+eCW
- 3IfpnRgZfaCqlj2vpRowmxymKmBii5FvbenQ6B7rYiH4u/VUPl9o52inw+Ebz+DA6xw+ HA== 
-Received: from dc5-exch02.marvell.com ([199.233.59.182])
-        by mx0a-0016f401.pphosted.com with ESMTP id 3bxfv8gc0f-10
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2021 04:54:34 -0700
-Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Tue, 26 Oct
- 2021 04:54:31 -0700
-Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
- (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
- Transport; Tue, 26 Oct 2021 04:54:31 -0700
-Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
-        by maili.marvell.com (Postfix) with ESMTP id D8FD83F707E;
-        Tue, 26 Oct 2021 04:54:31 -0700 (PDT)
-Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 19QBsVjl027783;
-        Tue, 26 Oct 2021 04:54:31 -0700
-Received: (from root@localhost)
-        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 19QBsVcA027782;
-        Tue, 26 Oct 2021 04:54:31 -0700
-From:   Nilesh Javali <njavali@marvell.com>
-To:     <martin.petersen@oracle.com>
-CC:     <linux-scsi@vger.kernel.org>,
-        <GR-QLogic-Storage-Upstream@marvell.com>
-Subject: [PATCH v3 12/13] qla2xxx: edif: fix edif bsg
-Date:   Tue, 26 Oct 2021 04:54:11 -0700
-Message-ID: <20211026115412.27691-13-njavali@marvell.com>
-X-Mailer: git-send-email 2.12.0
-In-Reply-To: <20211026115412.27691-1-njavali@marvell.com>
-References: <20211026115412.27691-1-njavali@marvell.com>
+        Tue, 26 Oct 2021 09:06:43 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1635253459;
+        bh=VNpiwuvlu3wcbtCV3obWrd1KExtIuUa1np0HXZKsSbo=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=LCCCLK7Y2sQIDHsKyUGC/35Ajst1wXD/4mLKAJNo9jb6Qg2CS9AwaB3m3GaCEW8NK
+         q05VbeQ/vA4zH1LHkj8bnrUViZMqj/bmg6g/oJyZlpyV67bwa+hQcqP1tlIE/XpbqC
+         UR/mtBtK8fPtmO4kUGhkPbZ1ldDGkZy9XTzk8Tnc=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 3F1DF128049B;
+        Tue, 26 Oct 2021 09:04:19 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id BvZh_1pq-bvr; Tue, 26 Oct 2021 09:04:19 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1635253459;
+        bh=VNpiwuvlu3wcbtCV3obWrd1KExtIuUa1np0HXZKsSbo=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=LCCCLK7Y2sQIDHsKyUGC/35Ajst1wXD/4mLKAJNo9jb6Qg2CS9AwaB3m3GaCEW8NK
+         q05VbeQ/vA4zH1LHkj8bnrUViZMqj/bmg6g/oJyZlpyV67bwa+hQcqP1tlIE/XpbqC
+         UR/mtBtK8fPtmO4kUGhkPbZ1ldDGkZy9XTzk8Tnc=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 64A60128045F;
+        Tue, 26 Oct 2021 09:04:18 -0400 (EDT)
+Message-ID: <0ea55be8c300f098b17e21d185a49e24b81b9c2b.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
+Cc:     axboe@kernel.dk, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Date:   Tue, 26 Oct 2021 09:04:16 -0400
+In-Reply-To: <3088804d-16f0-8f19-590e-8651bb5ef949@opensource.wdc.com>
+References: <20211026071204.1709318-1-hch@lst.de>
+         <3088804d-16f0-8f19-590e-8651bb5ef949@opensource.wdc.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Proofpoint-GUID: xXc8Jp7LnaqPVPln8_KRNWTxpBKn6s_O
-X-Proofpoint-ORIG-GUID: xXc8Jp7LnaqPVPln8_KRNWTxpBKn6s_O
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-10-26_02,2021-10-26_01,2020-04-07_01
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <qutran@marvell.com>
+On Tue, 2021-10-26 at 16:24 +0900, Damien Le Moal wrote:
+> On 2021/10/26 16:12, Christoph Hellwig wrote:
+> > The HPB support added this merge window is fundanetally
 
-Various EDIF bsg's did not properly fill out the reply_payload_rcv_len
-field. This cause app to parse empty data in the return payload.
+And s/n/m/ while you're at it: fundamentally
 
-Fixes: 7ebb336e45ef ("scsi: qla2xxx: edif: Add start + stop bsgs")
-Signed-off-by: Quinn Tran <qutran@marvell.com>
-Signed-off-by: Nilesh Javali <njavali@marvell.com>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
----
- drivers/scsi/qla2xxx/qla_edif.c | 49 ++++++++++++++++-----------------
- 1 file changed, 23 insertions(+), 26 deletions(-)
+Otherwise:
 
-diff --git a/drivers/scsi/qla2xxx/qla_edif.c b/drivers/scsi/qla2xxx/qla_edif.c
-index 1a16588433c7..2e37b189cb75 100644
---- a/drivers/scsi/qla2xxx/qla_edif.c
-+++ b/drivers/scsi/qla2xxx/qla_edif.c
-@@ -544,14 +544,14 @@ qla_edif_app_start(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 	appreply.edif_enode_active = vha->pur_cinfo.enode_flags;
- 	appreply.edif_edb_active = vha->e_dbell.db_flags;
- 
--	bsg_job->reply_len = sizeof(struct fc_bsg_reply) +
--	    sizeof(struct app_start_reply);
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
- 
- 	SET_DID_STATUS(bsg_reply->result, DID_OK);
- 
--	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	    bsg_job->reply_payload.sg_cnt, &appreply,
--	    sizeof(struct app_start_reply));
-+	bsg_reply->reply_payload_rcv_len = sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+							       bsg_job->reply_payload.sg_cnt,
-+							       &appreply,
-+							       sizeof(struct app_start_reply));
- 
- 	ql_dbg(ql_dbg_edif, vha, 0x911d,
- 	    "%s app start completed with 0x%x\n",
-@@ -748,9 +748,10 @@ qla_edif_app_authok(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 
- errstate_exit:
- 	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
--	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	    bsg_job->reply_payload.sg_cnt, &appplogireply,
--	    sizeof(struct app_plogi_reply));
-+	bsg_reply->reply_payload_rcv_len = sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+							       bsg_job->reply_payload.sg_cnt,
-+							       &appplogireply,
-+							       sizeof(struct app_plogi_reply));
- 
- 	return rval;
- }
-@@ -833,7 +834,7 @@ static int
- qla_edif_app_getfcinfo(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- {
- 	int32_t			rval = 0;
--	int32_t			num_cnt;
-+	int32_t			pcnt = 0;
- 	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
- 	struct app_pinfo_req	app_req;
- 	struct app_pinfo_reply	*app_reply;
-@@ -845,16 +846,14 @@ qla_edif_app_getfcinfo(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 	    bsg_job->request_payload.sg_cnt, &app_req,
- 	    sizeof(struct app_pinfo_req));
- 
--	num_cnt = app_req.num_ports;	/* num of ports alloc'd by app */
--
- 	app_reply = kzalloc((sizeof(struct app_pinfo_reply) +
--	    sizeof(struct app_pinfo) * num_cnt), GFP_KERNEL);
-+	    sizeof(struct app_pinfo) * app_req.num_ports), GFP_KERNEL);
-+
- 	if (!app_reply) {
- 		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
- 		rval = -1;
- 	} else {
- 		struct fc_port	*fcport = NULL, *tf;
--		uint32_t	pcnt = 0;
- 
- 		list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
- 			if (!(fcport->flags & FCF_FCSP_DEVICE))
-@@ -923,9 +922,11 @@ qla_edif_app_getfcinfo(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 		SET_DID_STATUS(bsg_reply->result, DID_OK);
- 	}
- 
--	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	    bsg_job->reply_payload.sg_cnt, app_reply,
--	    sizeof(struct app_pinfo_reply) + sizeof(struct app_pinfo) * num_cnt);
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_reply->reply_payload_rcv_len = sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+							       bsg_job->reply_payload.sg_cnt,
-+							       app_reply,
-+							       sizeof(struct app_pinfo_reply) + sizeof(struct app_pinfo) * pcnt);
- 
- 	kfree(app_reply);
- 
-@@ -942,10 +943,11 @@ qla_edif_app_getstats(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- {
- 	int32_t			rval = 0;
- 	struct fc_bsg_reply	*bsg_reply = bsg_job->reply;
--	uint32_t ret_size, size;
-+	uint32_t size;
- 
- 	struct app_sinfo_req	app_req;
- 	struct app_stats_reply	*app_reply;
-+	uint32_t pcnt = 0;
- 
- 	sg_copy_to_buffer(bsg_job->request_payload.sg_list,
- 	    bsg_job->request_payload.sg_cnt, &app_req,
-@@ -961,18 +963,12 @@ qla_edif_app_getstats(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 	size = sizeof(struct app_stats_reply) +
- 	    (sizeof(struct app_sinfo) * app_req.num_ports);
- 
--	if (size > bsg_job->reply_payload.payload_len)
--		ret_size = bsg_job->reply_payload.payload_len;
--	else
--		ret_size = size;
--
- 	app_reply = kzalloc(size, GFP_KERNEL);
- 	if (!app_reply) {
- 		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
- 		rval = -1;
- 	} else {
- 		struct fc_port	*fcport = NULL, *tf;
--		uint32_t	pcnt = 0;
- 
- 		list_for_each_entry_safe(fcport, tf, &vha->vp_fcports, list) {
- 			if (fcport->edif.enable) {
-@@ -996,9 +992,11 @@ qla_edif_app_getstats(scsi_qla_host_t *vha, struct bsg_job *bsg_job)
- 		SET_DID_STATUS(bsg_reply->result, DID_OK);
- 	}
- 
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
- 	bsg_reply->reply_payload_rcv_len =
- 	    sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
--	       bsg_job->reply_payload.sg_cnt, app_reply, ret_size);
-+	       bsg_job->reply_payload.sg_cnt, app_reply,
-+	       sizeof(struct app_stats_reply) + (sizeof(struct app_sinfo) * pcnt));
- 
- 	kfree(app_reply);
- 
-@@ -1072,8 +1070,7 @@ qla_edif_app_mgmt(struct bsg_job *bsg_job)
- 		    __func__,
- 		    bsg_request->rqst_data.h_vendor.vendor_cmd[1]);
- 		rval = EXT_STATUS_INVALID_PARAM;
--		bsg_job->reply_len = sizeof(struct fc_bsg_reply);
--		SET_DID_STATUS(bsg_reply->result, DID_ERROR);
-+		done = false;
- 		break;
- 	}
- 
--- 
-2.19.0.rc0
+Reviewed-by: James E.J. Bottomley <jejb@linux.ibm.com>
+
+James
+
+> >  flawed as it uses blk_insert_cloned_request to insert a cloned
+> > request onto the same queue as the one that the original request
+> > came from, leading to all kinds of issues in blk-mq accounting (in
+> > addition to this API being a special case for dm-mpath that should
+> > not see other users).
+> > 
+> > Mark is as BROKEN as the non-intrusive alternative to a last minute
+> 
+> s/Mark is/Mark it
+> 
+> > large scale revert.
+> > 
+> > Fixes: f02bc9754a68 ("scsi: ufs: ufshpb: Introduce Host Performance
+> > Buffer
+> > feature")
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  drivers/scsi/ufs/Kconfig | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+> > index 432df76e6318a..7835d9082aae4 100644
+> > --- a/drivers/scsi/ufs/Kconfig
+> > +++ b/drivers/scsi/ufs/Kconfig
+> > @@ -186,7 +186,7 @@ config SCSI_UFS_CRYPTO
+> >  
+> >  config SCSI_UFS_HPB
+> >  	bool "Support UFS Host Performance Booster"
+> > -	depends on SCSI_UFSHCD
+> > +	depends on SCSI_UFSHCD && BROKEN
+> >  	help
+> >  	  The UFS HPB feature improves random read performance. It
+> > caches
+> >  	  L2P (logical to physical) map of UFS to host DRAM. The driver
+> > uses HPB
+> > 
+> 
+> Otherwise, looks good to me.
+> 
+> Reviewed-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
+> 
+
 
