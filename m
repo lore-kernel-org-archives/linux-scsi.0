@@ -2,79 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A1C8FC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 16:54:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF429C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 17:19:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C64F60F92
-	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 16:54:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C81DD6103C
+	for <linux-scsi@archiver.kernel.org>; Tue, 26 Oct 2021 17:19:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237329AbhJZQ4o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 26 Oct 2021 12:56:44 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33190 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236290AbhJZQ4o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Oct 2021 12:56:44 -0400
-Received: from mail-ed1-x52e.google.com (mail-ed1-x52e.google.com [IPv6:2a00:1450:4864:20::52e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF75CC061745
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2021 09:54:19 -0700 (PDT)
-Received: by mail-ed1-x52e.google.com with SMTP id m17so4980067edc.12
-        for <linux-scsi@vger.kernel.org>; Tue, 26 Oct 2021 09:54:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
-        bh=lrJ05Ai9WwApEpT26ZesWSV9nC3EDaeMEn67reBF5mQ=;
-        b=cMHwRb80leHU8MEpeu6N/LWKicCvBGHLCdjNzaEgZDq5qgmWdZ0VSZlWrU4AMiR47r
-         iGEiPRATIXipLTX0MVsGKWASjoWZE+FgSUrEfHWXYKN8mvFYYORpMc9AeimEPgK4vD61
-         KkQMU9HT3J/cGW0COzZKLwzotST9BpW3ayNU3rKyabnULVy/KZupTxUiB/dPJLTv1YFs
-         o+ZR99ajVFNbKDZfMomG258RO1+n5DD+/HR6TMLJrEn1JZpyIzg54hiPBWEKB0K8yECm
-         1x42SSmbwLW3hEo5aREiWffXa2KxReZ6sXcIHO6PMZeEb0bve5/U6BouoSE4E8tbGLlI
-         2W0w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=lrJ05Ai9WwApEpT26ZesWSV9nC3EDaeMEn67reBF5mQ=;
-        b=WYvrWaxk7lDMcWRZI6LC/+BZSWxmWz80oI2k8VAsBTid4yjzeVgPm/2fMO4Z9J412Q
-         irslK9GYvBiOATdkqah/F7wbm4+KHnFxXoRUfLns1Ys70nlnm6FB9NN/gwsSq2KtZscH
-         X1VP3sdd+K8cdM/7r8cmjvhnnZAKF6nngWYKDjFNP3y2/OO0zm7eH/6Ori5DyP60AMqg
-         EDz4mNchMEWtkwXT3L9UXIPJlRlRQtd0CUuKBuzRYwLjwm8s4eI9L5A3xzbrGtK1CbTn
-         34rKA7yQM6O5oZrkolo6rwljnFYdjWAUuSgbipEP6K8Q2zF7Q6VQpzYUkIA8aM1qvCdK
-         bLIQ==
-X-Gm-Message-State: AOAM533zE0MVUcoZikGMpOOMMHkgELx6EZ9l9N7iE0asPk8vdgqdPU/v
-        a1y7aTASOMysGIAYj8uPCg==
-X-Google-Smtp-Source: ABdhPJx0bNNwubPWFxtD+KtP6tLVS7TNDtPCkE/7/Hy1QDWEK5AaQREAq6ocJntMt/A1PKxxOrIlVQ==
-X-Received: by 2002:a50:9dca:: with SMTP id l10mr37334628edk.61.1635267184207;
-        Tue, 26 Oct 2021 09:53:04 -0700 (PDT)
-Received: from localhost.localdomain ([46.53.251.249])
-        by smtp.gmail.com with ESMTPSA id g26sm3010632ejz.21.2021.10.26.09.53.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Oct 2021 09:53:03 -0700 (PDT)
-Date:   Tue, 26 Oct 2021 19:53:01 +0300
-From:   Alexey Dobriyan <adobriyan@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: [PATCH] scsi, sr: remove duplicate assignment
-Message-ID: <YXgybUhYN+Vrruj8@localhost.localdomain>
+        id S237754AbhJZRWB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 26 Oct 2021 13:22:01 -0400
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:51314 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S237595AbhJZRWA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 26 Oct 2021 13:22:00 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1635268776;
+        bh=52xK43kRKfdluKoJGhYc3FsNA0B0U9qwYIxYqNUo/Iw=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=Y+ZTU/RWspPBQdmW8KVwKWskjBGUVY4y199yzzfSAAr0vrc2yN3u5cfK4+fi6OgCd
+         z2r/D/Bhn2z1fddQMw92AWLWnW8umxrjthG9ihGXq3cV+wq7hx6dDcGIbWaNSROabk
+         3609xkxHuyWyisXX4o7tyFQ1VlTXSqVkAxlngN6I=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 7AE9E12805D0;
+        Tue, 26 Oct 2021 13:19:36 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id xPGqYtobtT2F; Tue, 26 Oct 2021 13:19:36 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1635268776;
+        bh=52xK43kRKfdluKoJGhYc3FsNA0B0U9qwYIxYqNUo/Iw=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=Y+ZTU/RWspPBQdmW8KVwKWskjBGUVY4y199yzzfSAAr0vrc2yN3u5cfK4+fi6OgCd
+         z2r/D/Bhn2z1fddQMw92AWLWnW8umxrjthG9ihGXq3cV+wq7hx6dDcGIbWaNSROabk
+         3609xkxHuyWyisXX4o7tyFQ1VlTXSqVkAxlngN6I=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id A7A291280518;
+        Tue, 26 Oct 2021 13:19:35 -0400 (EDT)
+Message-ID: <7ed11ee1f8beca9a27c0cb2eb0dcea4dbd557961.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
+Cc:     axboe@kernel.dk, alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Date:   Tue, 26 Oct 2021 13:19:34 -0400
+In-Reply-To: <99641481-523a-e5a9-db48-dac2b547b4bd@acm.org>
+References: <20211026071204.1709318-1-hch@lst.de>
+         <99641481-523a-e5a9-db48-dac2b547b4bd@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
----
+On Tue, 2021-10-26 at 09:36 -0700, Bart Van Assche wrote:
+> On 10/26/21 12:12 AM, Christoph Hellwig wrote:
+> > The HPB support added this merge window is fundanetally flawed as
+> > it
+>                                               ^^^^^^^^^^^^
+>                                               fundanetally ->
+> fundamentally
+> 
+> Since the implementation can be reworked not to use
+> blk_insert_cloned_request() I'm not sure using the word
+> "fundamentally" is appropriate.
 
- drivers/scsi/sr.c |    1 -
- 1 file changed, 1 deletion(-)
+I'm not so sure about that.  The READ BUFFER implementation runs from a
+work queue and looks fine.  The WRITE BUFFER implementation is trying
+to spawn a second command to precede the queued command which is a
+fundamental problem for the block API.  It's not clear to me that the
+WRITE BUFFER can be fixed because of the tying to the sent command ...
+but like I said, the standard is proprietary so I can't look at it to
+see if there are alternative ways of achieving the same effect.
 
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -692,7 +692,6 @@ static int sr_probe(struct device *dev)
- 	cd->device = sdev;
- 	cd->disk = disk;
- 	cd->driver = &sr_template;
--	cd->disk = disk;
- 	cd->capacity = 0x1fffff;
- 	cd->device->changed = 1;	/* force recheck CD type */
- 	cd->media_present = 1;
+James
+
+
