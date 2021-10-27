@@ -2,197 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB11FC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:06:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3EE04C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:16:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C942B60F39
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:06:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 138CA61052
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:16:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236937AbhJ0NIs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Oct 2021 09:08:48 -0400
-Received: from mga02.intel.com ([134.134.136.20]:49295 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236323AbhJ0NIr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Oct 2021 09:08:47 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10149"; a="217326197"
-X-IronPort-AV: E=Sophos;i="5.87,186,1631602800"; 
-   d="scan'208";a="217326197"
-Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2021 06:06:22 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,186,1631602800"; 
-   d="scan'208";a="597352740"
-Received: from ahunter-desktop.fi.intel.com ([10.237.72.76])
-  by orsmga004.jf.intel.com with ESMTP; 27 Oct 2021 06:06:19 -0700
-From:   Adrian Hunter <adrian.hunter@intel.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH V8 1/1] scsi: ufs: Let devices remain runtime suspended during system suspend
-Date:   Wed, 27 Oct 2021 16:06:14 +0300
-Message-Id: <20211027130614.406985-2-adrian.hunter@intel.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20211027130614.406985-1-adrian.hunter@intel.com>
-References: <20211027130614.406985-1-adrian.hunter@intel.com>
+        id S237227AbhJ0NSs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Oct 2021 09:18:48 -0400
+Received: from mail-pf1-f177.google.com ([209.85.210.177]:45642 "EHLO
+        mail-pf1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S236464AbhJ0NSs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Oct 2021 09:18:48 -0400
+Received: by mail-pf1-f177.google.com with SMTP id f11so2681383pfc.12;
+        Wed, 27 Oct 2021 06:16:23 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=RxGdKvpK4OULd8cS2o0dRz2hnuGIH9NxZACigE+2c3o=;
+        b=0hJU7OYJ57SKm6TwWg4o2uMAwYWTRHCwQSnuTi0wm+q8s7W4ISGRbtFrTdGnao6/MF
+         5NLbmDusZsIolJaSmyIEJTR4fuiP78zt0r6JE5ptppO8yRbGIPqnNJGDb+oS8wqqtNKW
+         ElQu8ZdMJjyUHqreYagz1pA2VXTL0e1a26Hnp703fLgIqnIFVTBeTC7svX1eeMOC5kjF
+         +mDnfpo8Er2QpSI+AI00KSvriZfKMpyLyohnW2WXivC5oI9uvkK6Twzh7tw8YznkMRm7
+         q2uQX9Dm1yWRKYa4NdgXB7rZihrQA0MUKQOAALVPExwrmW/j8lka025VzliWzF9CE0nX
+         XF5Q==
+X-Gm-Message-State: AOAM532vmPS+bUvm9uZI7FzBNASr0o6hP9GrSIYeQwXl/U1i1MUen0nS
+        fn9uwab6qx/vygDr7b583J9gBeML1eo=
+X-Google-Smtp-Source: ABdhPJwQuj8Y+OK3dVAEU+H0eFs40hz4YLj2tBsARNnGsRdeT2i6wXcAZBZ2XmC0rwYKEQ5bCsuDKg==
+X-Received: by 2002:aa7:8246:0:b0:44b:4870:1b09 with SMTP id e6-20020aa78246000000b0044b48701b09mr33249471pfn.82.1635340581882;
+        Wed, 27 Oct 2021 06:16:21 -0700 (PDT)
+Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
+        by smtp.gmail.com with ESMTPSA id t22sm7404113pfg.63.2021.10.27.06.16.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 27 Oct 2021 06:16:20 -0700 (PDT)
+Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Jens Axboe <axboe@kernel.dk>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+References: <20211026071204.1709318-1-hch@lst.de>
+ <99641481-523a-e5a9-db48-dac2b547b4bd@acm.org>
+ <7ed11ee1f8beca9a27c0cb2eb0dcea4dbd557961.camel@HansenPartnership.com>
+ <870e986c-08dd-2fa2-a593-0f97e10d6df5@kernel.dk>
+ <4438ab72-7da0-33de-ecc9-91c3c179eca7@acm.org>
+ <c3d85be5-2708-ea50-09ac-2285928bbe0e@kernel.dk>
+ <36729509daa80fd48453e8a3a1b5c23750948e6c.camel@HansenPartnership.com>
+ <yq1ee873av4.fsf@ca-mkp.ca.oracle.com>
+ <679b4d3b-778e-47cd-d53f-f7bf77315f7c@acm.org> <20211027052724.GA8946@lst.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <b8aec3cb-75f1-3e1f-1dfc-5d77322b736f@acm.org>
+Date:   Wed, 27 Oct 2021 06:16:19 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20211027052724.GA8946@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-If the UFS Device WLUN is runtime suspended and is in the same power
-mode, link state and b_rpm_dev_flush_capable (BKOP or WB buffer flush etc)
-state, then it can remain runtime suspended instead of being runtime
-resumed and then system suspended.
+On 10/26/21 10:27 PM, Christoph Hellwig wrote:
+> On Tue, Oct 26, 2021 at 01:10:47PM -0700, Bart Van Assche wrote:
+>> If blk_insert_cloned_request() is moved into the device mapper then I
+>> think that blk_mq_request_issue_directly() will need to be exported.
+> 
+> Which is even worse.
+> 
+>> How
+>> about the (totally untested) patch below for removing the
+>> blk_insert_cloned_request() call from the UFS-HPB code?
+> 
+> Which again doesn't fix anything.  The problem is that it fans out one
+> request into two on the same queue, not the specific interface used.
 
-The following patch has cleared the way for that to happen:
-  scsi: core: pm: Only runtime resume if necessary
+That patch fixes the reported issue, namely removing the additional accounting
+caused by calling blk_insert_cloned_request(). Please explain why it is
+considered wrong to fan out one request into two. That code could be reworked
+such that the block layer is not involved as Adrian Hunter explained. However,
+before someone spends time on making these changes I think that someone should
+provide more information about why it is considered wrong to fan out one request
+into two.
 
-So amend the logic accordingly.
+Thanks,
 
-Note, the ufs-hisi driver uses different RPM and SPM, but it is made
-explicit by a new parameter to suspend prepare.
-
-Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
-Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
----
- drivers/scsi/ufs/ufs-hisi.c |  8 ++++++-
- drivers/scsi/ufs/ufshcd.c   | 45 ++++++++++++++++++++++++++++++++-----
- drivers/scsi/ufs/ufshcd.h   | 11 +++++++++
- 3 files changed, 58 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
-index 8c7e8d321746..ab1a7ebd89b1 100644
---- a/drivers/scsi/ufs/ufs-hisi.c
-+++ b/drivers/scsi/ufs/ufs-hisi.c
-@@ -396,6 +396,12 @@ static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
- 	return ret;
- }
- 
-+static int ufs_hisi_suspend_prepare(struct device *dev)
-+{
-+	/* RPM and SPM are different. Refer ufs_hisi_suspend() */
-+	return __ufshcd_suspend_prepare(dev, false);
-+}
-+
- static int ufs_hisi_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 	enum ufs_notify_change_status status)
- {
-@@ -578,7 +584,7 @@ static int ufs_hisi_remove(struct platform_device *pdev)
- static const struct dev_pm_ops ufs_hisi_pm_ops = {
- 	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
- 	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
--	.prepare	 = ufshcd_suspend_prepare,
-+	.prepare	 = ufs_hisi_suspend_prepare,
- 	.complete	 = ufshcd_resume_complete,
- };
- 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 04cb67995750..115ea16f5a22 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -9707,7 +9707,27 @@ void ufshcd_resume_complete(struct device *dev)
- }
- EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
- 
--int ufshcd_suspend_prepare(struct device *dev)
-+static bool ufshcd_rpm_ok_for_spm(struct ufs_hba *hba)
-+{
-+	struct device *dev = &hba->sdev_ufs_device->sdev_gendev;
-+	enum ufs_dev_pwr_mode dev_pwr_mode;
-+	enum uic_link_state link_state;
-+	unsigned long flags;
-+	bool res;
-+
-+	spin_lock_irqsave(&dev->power.lock, flags);
-+	dev_pwr_mode = ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl);
-+	link_state = ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl);
-+	res = pm_runtime_suspended(dev) &&
-+	      hba->curr_dev_pwr_mode == dev_pwr_mode &&
-+	      hba->uic_link_state == link_state &&
-+	      !hba->dev_info.b_rpm_dev_flush_capable;
-+	spin_unlock_irqrestore(&dev->power.lock, flags);
-+
-+	return res;
-+}
-+
-+int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm)
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 	int ret;
-@@ -9719,15 +9739,30 @@ int ufshcd_suspend_prepare(struct device *dev)
- 	 * Refer ufshcd_resume_complete()
- 	 */
- 	if (hba->sdev_ufs_device) {
--		ret = ufshcd_rpm_get_sync(hba);
--		if (ret < 0 && ret != -EACCES) {
--			ufshcd_rpm_put(hba);
--			return ret;
-+		/* Prevent runtime suspend */
-+		ufshcd_rpm_get_noresume(hba);
-+		/*
-+		 * Check if already runtime suspended in same state as system
-+		 * suspend would be.
-+		 */
-+		if (!rpm_ok_for_spm || !ufshcd_rpm_ok_for_spm(hba)) {
-+			/* RPM state is not ok for SPM, so runtime resume */
-+			ret = ufshcd_rpm_resume(hba);
-+			if (ret < 0 && ret != -EACCES) {
-+				ufshcd_rpm_put(hba);
-+				return ret;
-+			}
- 		}
- 		hba->complete_put = true;
- 	}
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(__ufshcd_suspend_prepare);
-+
-+int ufshcd_suspend_prepare(struct device *dev)
-+{
-+	return __ufshcd_suspend_prepare(dev, true);
-+}
- EXPORT_SYMBOL_GPL(ufshcd_suspend_prepare);
- 
- #ifdef CONFIG_PM_SLEEP
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 3f5dc6732fe1..b9492f300bd1 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -1199,6 +1199,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
- 
- int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
- int ufshcd_suspend_prepare(struct device *dev);
-+int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
- void ufshcd_resume_complete(struct device *dev);
- 
- /* Wrapper functions for safely calling variant operations */
-@@ -1408,6 +1409,16 @@ static inline int ufshcd_rpm_put_sync(struct ufs_hba *hba)
- 	return pm_runtime_put_sync(&hba->sdev_ufs_device->sdev_gendev);
- }
- 
-+static inline void ufshcd_rpm_get_noresume(struct ufs_hba *hba)
-+{
-+	pm_runtime_get_noresume(&hba->sdev_ufs_device->sdev_gendev);
-+}
-+
-+static inline int ufshcd_rpm_resume(struct ufs_hba *hba)
-+{
-+	return pm_runtime_resume(&hba->sdev_ufs_device->sdev_gendev);
-+}
-+
- static inline int ufshcd_rpm_put(struct ufs_hba *hba)
- {
- 	return pm_runtime_put(&hba->sdev_ufs_device->sdev_gendev);
--- 
-2.25.1
-
+Bart.
