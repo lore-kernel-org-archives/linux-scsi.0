@@ -2,134 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4768C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 09:01:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79FECC4332F
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 09:03:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDEE760FC0
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 09:01:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5CA6361040
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 09:03:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239800AbhJ0JEV (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Oct 2021 05:04:21 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:41411 "EHLO
+        id S239830AbhJ0JGR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Oct 2021 05:06:17 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:57431 "EHLO
         us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236159AbhJ0JEU (ORCPT
+        by vger.kernel.org with ESMTP id S234246AbhJ0JGQ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Oct 2021 05:04:20 -0400
+        Wed, 27 Oct 2021 05:06:16 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635325315;
+        s=mimecast20190719; t=1635325430;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          in-reply-to:in-reply-to:references:references;
-        bh=wauAe2a13htRLUou8eOus0V9+ON8mGohpili1PfUnLw=;
-        b=WU5oSqFxsH7McH5rXLzZdb9MspE+7Hb8E1S3uspCY4afZQ0QGde8oYBgI97q5FjOBiifAW
-        jKCy6yngMG45idtVHahSMYB6oOuJn67K+dNLKXZP2BX13rjgx7FyxEbS1z8p+MVp5oL861
-        NVr5CZZSBk/X/xxzsYLnzYy2JiEMKhI=
+        bh=HiJPaiuyZPbcdwIA9KdMWyKh2jI2bcomXoBjA/5KsHk=;
+        b=LzFMhfrh7nUUrqhWsLi+orKVVzFLYB9Etd7vFP28casr4fW9Kilj+nDgen6B6Y5sjFqz9C
+        DoREKxKrDK8lyQss/wK5/I6bO8Yh/rEhvYWuLVGl1M1yAHqMzebrU4oLfzQF3MgeF9/hmh
+        SYKHIuRrXGAt9iDblpUuY/NK4Le6Z0c=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-126-lYaDzzYRPyafPQ7MRBjptQ-1; Wed, 27 Oct 2021 05:01:51 -0400
-X-MC-Unique: lYaDzzYRPyafPQ7MRBjptQ-1
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-324-2IE4rjOqM8SdmhK3Pzt2HQ-1; Wed, 27 Oct 2021 05:03:48 -0400
+X-MC-Unique: 2IE4rjOqM8SdmhK3Pzt2HQ-1
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 8A72F19200CB;
-        Wed, 27 Oct 2021 09:01:50 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A90189126B;
+        Wed, 27 Oct 2021 09:03:47 +0000 (UTC)
 Received: from localhost (unknown [10.39.195.83])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 2595779450;
-        Wed, 27 Oct 2021 09:01:49 +0000 (UTC)
-Date:   Wed, 27 Oct 2021 10:01:49 +0100
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6FCDD5F4EE;
+        Wed, 27 Oct 2021 09:03:44 +0000 (UTC)
+Date:   Wed, 27 Oct 2021 10:03:43 +0100
 From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     Jason Wang <jasowang@redhat.com>
-Cc:     Mike Christie <michael.christie@oracle.com>,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        pbonzini <pbonzini@redhat.com>, mst <mst@redhat.com>,
-        Stefano Garzarella <sgarzare@redhat.com>,
-        virtualization <virtualization@lists.linux-foundation.org>
+To:     michael.christie@oracle.com
+Cc:     Jason Wang <jasowang@redhat.com>, target-devel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, pbonzini@redhat.com, mst@redhat.com,
+        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
 Subject: Re: [PATCH V3 11/11] vhost: allow userspace to create workers
-Message-ID: <YXkVfbdOEKTPnY+t@stefanha-x1.localdomain>
+Message-ID: <YXkV73jK7fNGzcoX@stefanha-x1.localdomain>
 References: <20211022051911.108383-1-michael.christie@oracle.com>
  <20211022051911.108383-13-michael.christie@oracle.com>
  <8aee8f07-76bd-f111-bc5f-fc5cad46ce56@redhat.com>
- <YXgiYFIUTKtoRJWW@stefanha-x1.localdomain>
- <CACGkMEsD=JwjWgTM4XpcKVy+ZKs6siW_1Q=3zzB8jZ3vq1CyZA@mail.gmail.com>
+ <4d33b7e1-5efb-3729-ee15-98608704f096@oracle.com>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="zhj4RK4pWGOqEvNg"
+        protocol="application/pgp-signature"; boundary="7VOiUeZYb/rbOPB5"
 Content-Disposition: inline
-In-Reply-To: <CACGkMEsD=JwjWgTM4XpcKVy+ZKs6siW_1Q=3zzB8jZ3vq1CyZA@mail.gmail.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+In-Reply-To: <4d33b7e1-5efb-3729-ee15-98608704f096@oracle.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
 
---zhj4RK4pWGOqEvNg
-Content-Type: text/plain; charset=utf-8
+--7VOiUeZYb/rbOPB5
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 27, 2021 at 10:55:04AM +0800, Jason Wang wrote:
-> On Tue, Oct 26, 2021 at 11:45 PM Stefan Hajnoczi <stefanha@redhat.com> wr=
-ote:
-> >
-> > On Tue, Oct 26, 2021 at 01:37:14PM +0800, Jason Wang wrote:
-> > >
-> > > =E5=9C=A8 2021/10/22 =E4=B8=8B=E5=8D=881:19, Mike Christie =E5=86=99=
-=E9=81=93:
-> > > > This patch allows userspace to create workers and bind them to vqs.=
- You
-> > > > can have N workers per dev and also share N workers with M vqs.
-> > > >
-> > > > Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> > >
-> > >
-> > > A question, who is the best one to determine the binding? Is it the V=
-MM
-> > > (Qemu etc) or the management stack? If the latter, it looks to me it's
-> > > better to expose this via sysfs?
-> >
-> > A few options that let the management stack control vhost worker CPU
-> > affinity:
-> >
-> > 1. The management tool opens the vhost device node, calls
-> >    ioctl(VHOST_SET_VRING_WORKER), sets up CPU affinity, and then passes
-> >    the fd to the VMM. In this case the VMM is still able to call the
-> >    ioctl, which may be undesirable from an attack surface perspective.
+On Tue, Oct 26, 2021 at 11:49:37AM -0500, michael.christie@oracle.com wrote:
+> On 10/26/21 12:37 AM, Jason Wang wrote:
+> > Do we need VHOST_VRING_FREE_WORKER? And I wonder if using dedicated ioc=
+tls are better:
+> >=20
+> > VHOST_VRING_NEW/FREE_WORKER
+> > VHOST_VRING_ATTACH_WORKER
 >=20
-> Yes, and we can't do post or dynamic configuration afterwards after
-> the VM is launched?
-
-Yes, at least it's a little risky for the management stack to keep the
-vhost fd open and make ioctl calls while the VMM is using it.
-
-> >
-> > 2. The VMM calls ioctl(VHOST_SET_VRING_WORKER) itself and the management
-> >    tool queries the vq:worker details from the VMM (e.g. a new QEMU QMP
-> >    query-vhost-workers command similar to query-iothreads). The
-> >    management tool can then control CPU affinity on the vhost worker
-> >    threads.
-> >
-> >    (This is how CPU affinity works in QEMU and libvirt today.)
 >=20
-> Then we also need a "bind-vhost-workers" command.
+> We didn't need a free worker, because the kernel handles it for userspace=
+=2E I
+> tried to make it easy for userspace because in some cases it may not be a=
+ble
+> to do syscalls like close on the device. For example if qemu crashes or f=
+or
+> vhost-scsi we don't do an explicit close during VM shutdown.
+>=20
+> So we start off with the default worker thread that's used by all vqs lik=
+e we do
+> today. Userspace can then override it by creating a new worker. That also=
+ unbinds/
+> detaches the existing worker and does a put on the workers refcount. We a=
+lso do a
+> put on the worker when we stop using it during device shutdown/closure/re=
+lease.
+> When the worker's refcount goes to zero the kernel deletes it.
 
-The VMM doesn't but the management tool does.
+Please document the worker (p)id lifetime for the ioctl. Otherwise
+userspace doesn't know whether a previously created worker is still
+alive.
 
-Stefan
+SSTefan
 
---zhj4RK4pWGOqEvNg
+--7VOiUeZYb/rbOPB5
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmF5FXwACgkQnKSrs4Gr
-c8jO1wgAtIXGYe1wRi8nwef0ov+cUVVVhMWYzrRpJBtIQlvn8M4oMTBBlAAeaBZP
-QzHjuCcS3mcx0Ab4Q/wDJDwNbgm6GW9ucaGWkWUsu2htgZcWg2pYm2xE3jWeavR7
-AoDJlLUbC8fmI9hbOMtTqDpsAUXAuiEfw3ht3DAN2mS09w/6Qxnd5/ATLz1vfg1h
-0uZesc1w+bfikB2Wg6KtaveBtEPJbzMUHI0alpyevi0Y2oswUZ9FKmLSsaDXmQAm
-9Y8vwP0TZZW/G2868ilGJLMy5w66eUcSC6Mixiylhe/7SvieSmTK81Bp6vgZur3z
-Fmfyjq6XCgDGA2aGgqbIaDAZbWiBNg==
-=rfJ4
+iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmF5Fe8ACgkQnKSrs4Gr
+c8jfMwf/WNxR+7YZbmsVZ+oUXAYb2qAG6sPNc4zPOt3GHye/2a0FuI59d6dKn/R9
+aNuf1C/a5YMTigcqOSnV3pHjLEjQP7hHElDGJJIePNJqHTRf8rgRHX/+ORalRu24
+HH6CkCfGvwKkfztFa1jjwc9e6YNjtSVXBsPcD9EV3WQ7ZO5BaRBL8fiEcoHWmhRJ
+8YUO6TCv+aSZFltkM+9G3DBf90SPrcwixImuesvbP8J455/zAwBg4tYns0YLZvW5
+4PcbVP56MyoThHzbfA7g8FFLct9zDr4cFGYjuq+q8YX2da+dILEY/5PHkjPzWKcp
+ahFfycIxAyGsIcgqEtpcu7WC0HIFVg==
+=87xD
 -----END PGP SIGNATURE-----
 
---zhj4RK4pWGOqEvNg--
+--7VOiUeZYb/rbOPB5--
 
