@@ -2,28 +2,28 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C357C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:06:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB11FC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:06:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3412F60F6F
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:06:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C942B60F39
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:06:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236857AbhJ0NIo (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Oct 2021 09:08:44 -0400
+        id S236937AbhJ0NIs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Oct 2021 09:08:48 -0400
 Received: from mga02.intel.com ([134.134.136.20]:49295 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S236323AbhJ0NIo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Oct 2021 09:08:44 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10149"; a="217326186"
+        id S236323AbhJ0NIr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Oct 2021 09:08:47 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10149"; a="217326197"
 X-IronPort-AV: E=Sophos;i="5.87,186,1631602800"; 
-   d="scan'208";a="217326186"
+   d="scan'208";a="217326197"
 Received: from orsmga004.jf.intel.com ([10.7.209.38])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2021 06:06:18 -0700
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Oct 2021 06:06:22 -0700
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.87,186,1631602800"; 
-   d="scan'208";a="597352729"
+   d="scan'208";a="597352740"
 Received: from ahunter-desktop.fi.intel.com ([10.237.72.76])
-  by orsmga004.jf.intel.com with ESMTP; 27 Oct 2021 06:06:15 -0700
+  by orsmga004.jf.intel.com with ESMTP; 27 Oct 2021 06:06:19 -0700
 From:   Adrian Hunter <adrian.hunter@intel.com>
 To:     "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
@@ -36,10 +36,12 @@ Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
         Kiwoong Kim <kwmad.kim@samsung.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
         Wei Li <liwei213@huawei.com>, linux-scsi@vger.kernel.org
-Subject: [PATCH V8 0/1] scsi: ufs: Let devices remain runtime suspended during system suspend
-Date:   Wed, 27 Oct 2021 16:06:13 +0300
-Message-Id: <20211027130614.406985-1-adrian.hunter@intel.com>
+Subject: [PATCH V8 1/1] scsi: ufs: Let devices remain runtime suspended during system suspend
+Date:   Wed, 27 Oct 2021 16:06:14 +0300
+Message-Id: <20211027130614.406985-2-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20211027130614.406985-1-adrian.hunter@intel.com>
+References: <20211027130614.406985-1-adrian.hunter@intel.com>
 MIME-Version: 1.0
 Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
@@ -47,73 +49,150 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi
+If the UFS Device WLUN is runtime suspended and is in the same power
+mode, link state and b_rpm_dev_flush_capable (BKOP or WB buffer flush etc)
+state, then it can remain runtime suspended instead of being runtime
+resumed and then system suspended.
 
-UFS devices can remain runtime suspended at system suspend time,
-if the conditions are right.  Add support for that, first fixing
-the impediments.
+The following patch has cleared the way for that to happen:
+  scsi: core: pm: Only runtime resume if necessary
 
+So amend the logic accordingly.
 
-Changes in V8:
+Note, the ufs-hisi driver uses different RPM and SPM, but it is made
+explicit by a new parameter to suspend prepare.
 
-      scsi: ufs: Fix runtime PM dependencies getting broken
-	Dropped because superseded by "scsi: core: pm: Only runtime resume
-	if necessary"
-
-      scsi: ufs: Let devices remain runtime suspended during system suspend
-	Updated commit message
-	Re-based
-
-Changes in V7:
-
-      scsi: ufs: Fix error handler clear ua deadlock
-	Dropped because superseded by "scsi: ufs: core: Stop clearing
-	UNIT ATTENTIONS"
-
-      scsi: ufs: Let devices remain runtime suspended during system suspend
-	Re-based
-
-Changes in V6:
-
-      scsi: ufs: Fix error handler clear ua deadlock
-	Ensure data byte count bits 1:0 are 11b
-	Use ufshcd_compose_dev_cmd() to set up command
-
-Changes in V5:
-
-      scsi: ufs: Fix error handler clear ua deadlock
-	Update commit message
-	Try to abort REQUEST SENSE if it times out
-
-Changes in V4:
-
-      scsi: ufs: Fix error handler clear ua deadlock
-
-	Do request-sense directly
-
-Changes in V3:
-
-      scsi: ufs: Fix error handler clear ua deadlock
-
-	Correct commit message.
-	Amend stable tags to add dependent cherry picks
-
-Changes in V2:
-
-    scsi: ufs: Let devices remain runtime suspended during system suspend
-
-	The ufs-hisi driver uses different RPM and SPM, but it is made
-	explicit by a new parameter to suspend prepare.
-
-
-Adrian Hunter (1):
-      scsi: ufs: Let devices remain runtime suspended during system suspend
-
- drivers/scsi/ufs/ufs-hisi.c |  8 +++++++-
- drivers/scsi/ufs/ufshcd.c   | 45 ++++++++++++++++++++++++++++++++++++++++-----
- drivers/scsi/ufs/ufshcd.h   | 11 +++++++++++
+Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
+Reviewed-by: Asutosh Das <asutoshd@codeaurora.org>
+---
+ drivers/scsi/ufs/ufs-hisi.c |  8 ++++++-
+ drivers/scsi/ufs/ufshcd.c   | 45 ++++++++++++++++++++++++++++++++-----
+ drivers/scsi/ufs/ufshcd.h   | 11 +++++++++
  3 files changed, 58 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/ufs/ufs-hisi.c b/drivers/scsi/ufs/ufs-hisi.c
+index 8c7e8d321746..ab1a7ebd89b1 100644
+--- a/drivers/scsi/ufs/ufs-hisi.c
++++ b/drivers/scsi/ufs/ufs-hisi.c
+@@ -396,6 +396,12 @@ static int ufs_hisi_pwr_change_notify(struct ufs_hba *hba,
+ 	return ret;
+ }
+ 
++static int ufs_hisi_suspend_prepare(struct device *dev)
++{
++	/* RPM and SPM are different. Refer ufs_hisi_suspend() */
++	return __ufshcd_suspend_prepare(dev, false);
++}
++
+ static int ufs_hisi_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+ 	enum ufs_notify_change_status status)
+ {
+@@ -578,7 +584,7 @@ static int ufs_hisi_remove(struct platform_device *pdev)
+ static const struct dev_pm_ops ufs_hisi_pm_ops = {
+ 	SET_SYSTEM_SLEEP_PM_OPS(ufshcd_system_suspend, ufshcd_system_resume)
+ 	SET_RUNTIME_PM_OPS(ufshcd_runtime_suspend, ufshcd_runtime_resume, NULL)
+-	.prepare	 = ufshcd_suspend_prepare,
++	.prepare	 = ufs_hisi_suspend_prepare,
+ 	.complete	 = ufshcd_resume_complete,
+ };
+ 
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 04cb67995750..115ea16f5a22 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -9707,7 +9707,27 @@ void ufshcd_resume_complete(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_resume_complete);
+ 
+-int ufshcd_suspend_prepare(struct device *dev)
++static bool ufshcd_rpm_ok_for_spm(struct ufs_hba *hba)
++{
++	struct device *dev = &hba->sdev_ufs_device->sdev_gendev;
++	enum ufs_dev_pwr_mode dev_pwr_mode;
++	enum uic_link_state link_state;
++	unsigned long flags;
++	bool res;
++
++	spin_lock_irqsave(&dev->power.lock, flags);
++	dev_pwr_mode = ufs_get_pm_lvl_to_dev_pwr_mode(hba->spm_lvl);
++	link_state = ufs_get_pm_lvl_to_link_pwr_state(hba->spm_lvl);
++	res = pm_runtime_suspended(dev) &&
++	      hba->curr_dev_pwr_mode == dev_pwr_mode &&
++	      hba->uic_link_state == link_state &&
++	      !hba->dev_info.b_rpm_dev_flush_capable;
++	spin_unlock_irqrestore(&dev->power.lock, flags);
++
++	return res;
++}
++
++int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm)
+ {
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
+ 	int ret;
+@@ -9719,15 +9739,30 @@ int ufshcd_suspend_prepare(struct device *dev)
+ 	 * Refer ufshcd_resume_complete()
+ 	 */
+ 	if (hba->sdev_ufs_device) {
+-		ret = ufshcd_rpm_get_sync(hba);
+-		if (ret < 0 && ret != -EACCES) {
+-			ufshcd_rpm_put(hba);
+-			return ret;
++		/* Prevent runtime suspend */
++		ufshcd_rpm_get_noresume(hba);
++		/*
++		 * Check if already runtime suspended in same state as system
++		 * suspend would be.
++		 */
++		if (!rpm_ok_for_spm || !ufshcd_rpm_ok_for_spm(hba)) {
++			/* RPM state is not ok for SPM, so runtime resume */
++			ret = ufshcd_rpm_resume(hba);
++			if (ret < 0 && ret != -EACCES) {
++				ufshcd_rpm_put(hba);
++				return ret;
++			}
+ 		}
+ 		hba->complete_put = true;
+ 	}
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(__ufshcd_suspend_prepare);
++
++int ufshcd_suspend_prepare(struct device *dev)
++{
++	return __ufshcd_suspend_prepare(dev, true);
++}
+ EXPORT_SYMBOL_GPL(ufshcd_suspend_prepare);
+ 
+ #ifdef CONFIG_PM_SLEEP
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 3f5dc6732fe1..b9492f300bd1 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -1199,6 +1199,7 @@ int ufshcd_exec_raw_upiu_cmd(struct ufs_hba *hba,
+ 
+ int ufshcd_wb_toggle(struct ufs_hba *hba, bool enable);
+ int ufshcd_suspend_prepare(struct device *dev);
++int __ufshcd_suspend_prepare(struct device *dev, bool rpm_ok_for_spm);
+ void ufshcd_resume_complete(struct device *dev);
+ 
+ /* Wrapper functions for safely calling variant operations */
+@@ -1408,6 +1409,16 @@ static inline int ufshcd_rpm_put_sync(struct ufs_hba *hba)
+ 	return pm_runtime_put_sync(&hba->sdev_ufs_device->sdev_gendev);
+ }
+ 
++static inline void ufshcd_rpm_get_noresume(struct ufs_hba *hba)
++{
++	pm_runtime_get_noresume(&hba->sdev_ufs_device->sdev_gendev);
++}
++
++static inline int ufshcd_rpm_resume(struct ufs_hba *hba)
++{
++	return pm_runtime_resume(&hba->sdev_ufs_device->sdev_gendev);
++}
++
+ static inline int ufshcd_rpm_put(struct ufs_hba *hba)
+ {
+ 	return pm_runtime_put(&hba->sdev_ufs_device->sdev_gendev);
+-- 
+2.25.1
 
-Regards
-Adrian
