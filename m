@@ -2,181 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF76DC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:21:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D822C43219
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 14:12:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 92121610A5
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 13:21:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A84860F38
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 14:12:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235285AbhJ0NXy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Oct 2021 09:23:54 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:22498 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229585AbhJ0NXw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Oct 2021 09:23:52 -0400
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19RCTjTU017577;
-        Wed, 27 Oct 2021 13:21:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=corp-2021-07-09;
- bh=XeUytp3hIPU0AtblceHI1LRrE4kwQgGDTm2effsGT+s=;
- b=Iu7hrbT7DsjyLG4l6tQL9+wMYk3BtKITUpYMcWAZAtETT4EFJK+xgQrNSCoYthLYAhkX
- /xXEG8+cOMJp19vWtxsxFz+y/i6xf4CIely652KhZczafjyvjF4LUql1hGZyMUaAJWKQ
- 6Y3aPWB8yaarAE48wg5CR8J2jysDvPFuHXmtvzMfYHD6TbImpqk0O+Pxnr03RexWRfCt
- GaB71qvSUdkQDlsNnXbbVlLpUvmrichoFoB9rveqPhUgnyn5TMt83gqSPpDDoAS1aplB
- Pos437EvANWFWYDzjt4cS/TntgpZNHRqKh6aPRDXk7Jq6Dt6aXIGGQL64I9+E8U/wPNa PA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3bx4fg29tg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Oct 2021 13:21:19 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19RDJvYC055161;
-        Wed, 27 Oct 2021 13:21:18 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2103.outbound.protection.outlook.com [104.47.58.103])
-        by userp3020.oracle.com with ESMTP id 3bx4gr2dea-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 27 Oct 2021 13:21:18 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WpkrwFBE+kVkrKsgp2333kG7IbMPIPg1dFkuaH+F/paye5JO/mf9f8IM5xPBahb3kukgQWjNv8QkF1+MzNJf/ntw+/pKNdkShZ6I9gXnc1T9G1gHE4j1FRA/8OnQh/6yTEQkPfLfCme8a2Jlc5ao6YEsJ5/rEi5qft52H/YEW2UJlF1w6Iw4kArnwrafjQQK+ne31e/o//FqVfYilf5IH/OMibq8fknpzTM8Rb0JSw0H6OZldMlKmxMJOCSFtpUSKgHB/bTMokpTr8u4fBUBp04fPyr1OBWA40g8BUvYjQ5dpPWQwV8NzsMOfGwu6PMKV75ebFbMhL9x++ttal7XyQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=XeUytp3hIPU0AtblceHI1LRrE4kwQgGDTm2effsGT+s=;
- b=N03VFWWpWDG+u9ch+IM8jK7Hj4WsmlYd9xbmMfcLXGKbdPBHituIFPaZXwFq13zoWV90QosdSqWZhZCuwknUh+uKJOT6ondwF6dU17DAf9avKxA+fS8WfoNbmbZygnJoXjJt87vlT3UMvCe4zXteNfYtyt2ksmoykQR3226EzD29rQECl8K7UKFKafFmn5x8sCR0Lfx0Z8SXdY87L8hYV2n4HYMGO/JeSAc2R9uxY2zQgGYilRufRoVFz/z2vPmwdklNMjVFEt+H91J5z8sCX+5CQm77D+2irUWSkOTt5PQ3dsV2j/FWEVtyx47aTCGfYVoxNiPCEs64cHavrqwmkQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=XeUytp3hIPU0AtblceHI1LRrE4kwQgGDTm2effsGT+s=;
- b=pnn+EJdVJQ8ISyl6dpIhYAY0/n5BLFG2grSo6QMSucQBNVK3/BV/zIAO+RIJpoC33W0QfnGI9h9ll3GRqaF9fb3HI4kZZpgJFEtTkeuw1sL08edvTOj8823KNDi2hWAsBPxNJW1ZncIooB6ggdsXfebLUUamRt+ndvYzZbfKYhw=
-Authentication-Results: suse.com; dkim=none (message not signed)
- header.d=none;suse.com; dmarc=none action=none header.from=oracle.com;
-Received: from BLAPR10MB5009.namprd10.prod.outlook.com (2603:10b6:208:321::10)
- by BL0PR10MB2883.namprd10.prod.outlook.com (2603:10b6:208:73::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4649.15; Wed, 27 Oct
- 2021 13:21:14 +0000
-Received: from BLAPR10MB5009.namprd10.prod.outlook.com
- ([fe80::3c49:46aa:83e1:a329]) by BLAPR10MB5009.namprd10.prod.outlook.com
- ([fe80::3c49:46aa:83e1:a329%6]) with mapi id 15.20.4649.014; Wed, 27 Oct 2021
- 13:21:14 +0000
-Message-ID: <f08cdb58-dbcc-406a-d3ff-cd4ca507efb9@oracle.com>
-Date:   Wed, 27 Oct 2021 09:21:08 -0400
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:91.0)
- Gecko/20100101 Thunderbird/91.2.1
-Subject: Re: [PATCH] xen: fix wrong SPDX headers of Xen related headers
-Content-Language: en-US
-To:     Juergen Gross <jgross@suse.com>, xen-devel@lists.xenproject.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc:     gregkh@linuxfoundation.org,
-        Stefano Stabellini <sstabellini@kernel.org>
-References: <20211015143312.29900-1-jgross@suse.com>
-From:   Boris Ostrovsky <boris.ostrovsky@oracle.com>
-In-Reply-To: <20211015143312.29900-1-jgross@suse.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SN7P220CA0005.NAMP220.PROD.OUTLOOK.COM
- (2603:10b6:806:123::10) To BLAPR10MB5009.namprd10.prod.outlook.com
- (2603:10b6:208:321::10)
+        id S242441AbhJ0OPA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Oct 2021 10:15:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:41770 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S242439AbhJ0OO7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 27 Oct 2021 10:14:59 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4485C60E0B;
+        Wed, 27 Oct 2021 14:12:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1635343953;
+        bh=7uqyQdn7aTLuLLNNnb9swS95tU5WJ2AnOQUdf11oYfw=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=qXFvqv930NHTcj3bADDQfSXme8k9n/LaahcuKPF9noBsfa35HZTCczNlTEt+NJZxO
+         n2KkIZhEXkZB2WEJkZ/DSa+UYmHh47pEspZRmdVPrskQZnLR2IBHn7YFzVPfpNyLVR
+         +eaAxwbEtqD0MVpqTjCdQIuLgDVZJe99t82jUTH2l22eRZsWRVm07op3BTwUUHXSux
+         jcrnNbZxoMCrgCUXRWizTWE7CajHBR8UDuiz3yBbigkKm6GCeRmYjbYp+k4ChOJvQa
+         YF5DpCA2Ry3qxlRfLUgbIUSgOuohozcW8TGpwDtgsq77+L53PdbrvbWzlTEdq5GYzM
+         dIRETadydUa2Q==
+Date:   Wed, 27 Oct 2021 07:12:31 -0700
+From:   Keith Busch <kbusch@kernel.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        Jens Axboe <axboe@kernel.dk>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
+Message-ID: <20211027141231.GA2338303@dhcp-10-100-145-180.wdc.com>
+References: <99641481-523a-e5a9-db48-dac2b547b4bd@acm.org>
+ <7ed11ee1f8beca9a27c0cb2eb0dcea4dbd557961.camel@HansenPartnership.com>
+ <870e986c-08dd-2fa2-a593-0f97e10d6df5@kernel.dk>
+ <4438ab72-7da0-33de-ecc9-91c3c179eca7@acm.org>
+ <c3d85be5-2708-ea50-09ac-2285928bbe0e@kernel.dk>
+ <36729509daa80fd48453e8a3a1b5c23750948e6c.camel@HansenPartnership.com>
+ <yq1ee873av4.fsf@ca-mkp.ca.oracle.com>
+ <679b4d3b-778e-47cd-d53f-f7bf77315f7c@acm.org>
+ <20211027052724.GA8946@lst.de>
+ <b8aec3cb-75f1-3e1f-1dfc-5d77322b736f@acm.org>
 MIME-Version: 1.0
-Received: from [10.74.107.92] (138.3.200.28) by SN7P220CA0005.NAMP220.PROD.OUTLOOK.COM (2603:10b6:806:123::10) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4649.14 via Frontend Transport; Wed, 27 Oct 2021 13:21:12 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: ea34547b-6dde-4d0f-b0f0-08d9994ca676
-X-MS-TrafficTypeDiagnostic: BL0PR10MB2883:
-X-Microsoft-Antispam-PRVS: <BL0PR10MB28830C063A9C5F1184E406218A859@BL0PR10MB2883.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: lYCEK6eUt5bF8P7R1aVwawdmxr3BQ3rp5IIow1mo2KsA8MflYTT+KBB3MGAYM2Xmstezpe2Y5pH6gRfsjnHpFOB3zY04aLd32PNs7DoWRyZLahWCkHJ72Jqa3HH8crUpgpyO4M753B/38EqYfJSd056QbNJnkD+eJ9P6IF4TJ6lnLgNKfrRqECFcC9xX0tuRa2PQfhUYB9mTngQ27RuTKqvZyaIKkShCkmH/7rPJkgRnoZ8HO2+qpI0657AcBVB0zdgt3dEeRTJ54iyiHW7UXSq4bJrC+BRGCK9mWwUrA5U0tFYBouHsO2E27AUvbt1riMKjj0EtkxdTvrfBlVX7U6Gwz/XqEKJVvFcDaI4e1RQfusTnEHTy5PRdEbl61aiaVjwzfl+dBf3Jv0QsqMp7IO9stxYw0qIPW38paNaESjSxBtASVD4uGPp8589LCxj/qtMe4cZPLOYGTNcqXE41IYIhpJC4JnYJfnvqPl6AeCBhKiXFPblS7f6kruKZ3MToZ0c2gt3hoLnfmnCd0Fk26nrtiDbMc1W9UMTBf1D+ZUBz1ab7CzvCymmdUp6ohQiw5FzubtZYmdtO+YgRQ2g3JXio3+GcgHcpbTcWehZ1W78B+86y1lrAXa800T+OFepSrSNeL2rHUsZTZOqjDSSECE7KN1sPI7Tf7LGKe0UetgtVXX1wYoUoJ4zfYhZU5j7EYlYc1LN1mlvSe6chlhHvf1lUS3ELOt9wP9yuEsggWAo=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BLAPR10MB5009.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(4744005)(31686004)(66556008)(66476007)(66946007)(38100700002)(8676002)(86362001)(31696002)(956004)(2616005)(36756003)(44832011)(8936002)(5660300002)(53546011)(6666004)(26005)(508600001)(186003)(4326008)(16576012)(6486002)(316002)(2906002)(45980500001)(43740500002);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?NFdRQ3JhbXkzdmtYWEQ2TU90U3B4UG5VVTVlSUVUOGdRUWVBd2dhSlY3UjNS?=
- =?utf-8?B?UHJaNmlSRzZkbGxiN0szZko4N0pxR3lxNDNkL0t1SmdOQ2lvb0xSM09tWnNH?=
- =?utf-8?B?RmRnSUZiR2dJVloxSEJPdTMxVzFaZEFsMmpKYXZycllaS0kzeDN0ZVRVYzBF?=
- =?utf-8?B?REhqUk04L0lUbUdHa1o4MUh6c0RpZzJmVk5tWjAxeis5dG5JeU1vL1VIa0F2?=
- =?utf-8?B?WEFxTDFvMkMyS2JVSnNvTm8xazBPN3ZRRUxmZmdCdmp0NFczM2lyVHN3eWJz?=
- =?utf-8?B?WXpJaXRCYzhQUFM4eHlhMkdOaW93THBLUEhCUEYxTjhxczBoY09oY2JabXpm?=
- =?utf-8?B?emVrUExGRS84NjdvejUxdU5MMFFiRjVhK3JnOGMxeXhYekNLdk1RRXk5cm9V?=
- =?utf-8?B?cS9LMTIraWtzUC8vWCtTWW1EdlZHUXBHbXJIamVWZlNwTnM1YnBRbERvUWZa?=
- =?utf-8?B?YkFsWWJZSFNxb2tvdXZDV3RIaFpqUmJ3VGxJYUxqYUt4WXpCUktFOHdtcVZy?=
- =?utf-8?B?ZVdIN1lQd2JIWjBOSGtEOUMxNWdZMnNZUk9INm5OTUVKckNUaG81L3BxbHZL?=
- =?utf-8?B?SGhYMjNXTldFSDc0Tjl1WUxyRDNBd2VkT0RtanVGdDh2ZkUyemN5bmF3a2JX?=
- =?utf-8?B?cTQzaVhWNVhwOEZKcEp0ZFlSemlTcmlEVzhXL1JkSDRQbHJkYzRiYXFoMEk3?=
- =?utf-8?B?NExSS3owQjBFQk1ac2srVVJzc2JrVjFGTmpvbWZyajErTklKV1RGSHpwdFVG?=
- =?utf-8?B?QlhlQWtOM3RHZ3Q3RVE1S3RadW9iUDhMRHNCY3VVMFJGcVIvRHl6SXJjQlNY?=
- =?utf-8?B?Q29iMDRBTm12aGkwbWtqNWpVR21rODdDeUFaMUJjeTlvVk5qWGVLMURKZ3hV?=
- =?utf-8?B?NStPZ2F5T21lbUFnSlArN21ONVVnbS9XaExrN2E2aHV3SEpIR1Z0enRLSStL?=
- =?utf-8?B?MWdhTFlRWnJIeVZzYy9aeG1JZUp6RVpSbGpIVkZraGkySG1xRzN0UjZ2ZjZ3?=
- =?utf-8?B?RWtnQ3pKeUQybzIrbGlSVDZtSnRuRFQydVJNNitGOXNnK01SRkU1b25PWG1F?=
- =?utf-8?B?eXlLb0QrajFMSEdla3FmVzMrYWtWdERLdEdsOVdmSlp5c2NUNmd0UGJLUURu?=
- =?utf-8?B?SHFDcTZVcTVCaVFPWnZCUUJ6WmpxRXpnUkNjQXVTZDNkMGpwbEhvSE1oTzdj?=
- =?utf-8?B?cnNSaENodXBCVURjRmFPYjdUdUhxVnQ4YXY4V1d0bUtVZG1iMjVBcWZHaktK?=
- =?utf-8?B?cEJDRTNySmhPOTNUSTJ6WTZuc0FYNXYvRjdBeDVHeERnaWdHQ2FHMUJ6eERm?=
- =?utf-8?B?ZzRteXJSaFhNRTVEaE9YUFVkVjJHNE4rbGNUREtIeEE0VWlVVGRvYSt2VUd0?=
- =?utf-8?B?QVdNQ1FmTkprUE5paDhJNGRXQ0JyU1VzUFNIaXRyRHNKbHJFNitUZGZtNVB1?=
- =?utf-8?B?ZDh4VSsrak14UUNVbEorV1UvVVg3SGt0SVZXQmh4VEo1S21TN2M3YlVncUpJ?=
- =?utf-8?B?OVdoMGxqK0xRbE5RblR5YjU3Si9jdXVaYlYxa0RzTVR3MDlaNzM3TmxENzZZ?=
- =?utf-8?B?ei9vcjArYllBWkJKZ0FhT2JxMVVJYjFtMnhxdmNvOTIwcjlXazFUN3lvbGZO?=
- =?utf-8?B?d0ptODVrVU5GbGdpYSsyenMzRTh4RXU4M2VNTHhMMTBqcGZGTGlwcVkrNUVi?=
- =?utf-8?B?WUczYWRsUFRMTUVEeFR1cEg3dDR5L2plcEp3S25xNHpiWmpWcFh1YjNGQXg1?=
- =?utf-8?B?N1ZpQTNXS1pKTTZDTVo5eU5GNnVwU2tUREpEc0xRM3pQcjJPaU9DY0FXNkNY?=
- =?utf-8?B?Z0hmRytRL2RJbDFhYzdnc2h2N0hDbW54MnNST1NqajNoT0luN21rOTNtZWNw?=
- =?utf-8?B?MVZZRzdNbk1yTWIwNTdNZEtsQW9KMXk3WDdVdE56NS9DK01uT0p5ZzBWbHJV?=
- =?utf-8?B?ekxkMXp5dENhSWhCS0ZCVW1xTGU1MjNpL3RSMmN5dCtBRStrOExkRXFHSDd6?=
- =?utf-8?B?THNLT1Brc2JHZ1BoUEhqa0k1TFA4V2x6aEhXN2lGWUh3dDI4S3ZLV0ZldWk0?=
- =?utf-8?B?ZDJzRzg4ZDBjbHF3UjZoUnJHQVNwY2tkUGh6djZGdk1hcW9RZUNoWHR1bzZs?=
- =?utf-8?B?d0pyb1ozK1JQNkY0WkhNbnpOT0NKV1VlZkNibVgzb3lVNDZNUE1IVlBZMnRJ?=
- =?utf-8?B?WUx2ZXVqNmVPZE8vNDdMbUQxdmo5NjdoUDkwWmhJTm9NZ3FZL1FUTjk3VHJ6?=
- =?utf-8?B?T1kzZi90L0RhYjg2Y2lWRVh3bzN3PT0=?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ea34547b-6dde-4d0f-b0f0-08d9994ca676
-X-MS-Exchange-CrossTenant-AuthSource: BLAPR10MB5009.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Oct 2021 13:21:14.1774
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: B9quMx5P2gw/dBWae72opcDJhiIBFZqZ7cUnvUQePZ3cfpCiamvwhCMdH4IiJmzjEfUYZftxG2VNMIIgdISovkKlhJxzMSvwRTY08dgLkq4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL0PR10MB2883
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10149 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 malwarescore=0
- adultscore=0 suspectscore=0 bulkscore=0 mlxscore=0 spamscore=0
- mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2110270082
-X-Proofpoint-ORIG-GUID: O23f2bqCU6iHhSNnYTERd-M2G1K2CNrc
-X-Proofpoint-GUID: O23f2bqCU6iHhSNnYTERd-M2G1K2CNrc
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b8aec3cb-75f1-3e1f-1dfc-5d77322b736f@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Wed, Oct 27, 2021 at 06:16:19AM -0700, Bart Van Assche wrote:
+> On 10/26/21 10:27 PM, Christoph Hellwig wrote:
+> > On Tue, Oct 26, 2021 at 01:10:47PM -0700, Bart Van Assche wrote:
+> > > If blk_insert_cloned_request() is moved into the device mapper then I
+> > > think that blk_mq_request_issue_directly() will need to be exported.
+> > 
+> > Which is even worse.
+> > 
+> > > How
+> > > about the (totally untested) patch below for removing the
+> > > blk_insert_cloned_request() call from the UFS-HPB code?
+> > 
+> > Which again doesn't fix anything.  The problem is that it fans out one
+> > request into two on the same queue, not the specific interface used.
+> 
+> That patch fixes the reported issue, namely removing the additional accounting
+> caused by calling blk_insert_cloned_request(). Please explain why it is
+> considered wrong to fan out one request into two. That code could be reworked
+> such that the block layer is not involved as Adrian Hunter explained. However,
+> before someone spends time on making these changes I think that someone should
+> provide more information about why it is considered wrong to fan out one request
+> into two.
 
-On 10/15/21 10:33 AM, Juergen Gross wrote:
-> Commit b24413180f5600 ("License cleanup: add SPDX GPL-2.0 license
-> identifier to files with no license") was meant to do a tree-wide
-> cleanup for files without any license information by adding a SPDX
-> GPL-2.0 line to them.
->
-> Unfortunately this was applied even to several Xen-related headers
-> which have been originally under the MIT license, but obviously have
-> been copied to the Linux tree from the Xen project without keeping the
-> license boiler plate as required.
->
-> Correct that by changing the license of those files back to "MIT".
->
-> Some files still contain the MIT license text. Replace that by the
-> related SPDX line.
->
-> Signed-off-by: Juergen Gross <jgross@suse.com>
-
-
-Applied to for-linus-5.16
-
-
--boris
-
+The original request consumes a tag from that queue's tagset. If the
+lifetime of that tag depends on that same queue having another free tag,
+you can deadlock.
