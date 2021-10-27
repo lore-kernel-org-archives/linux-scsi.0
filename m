@@ -2,115 +2,123 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79FECC4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 09:03:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FF68C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 09:59:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5CA6361040
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 09:03:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4EB3E6109E
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 09:59:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239830AbhJ0JGR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Oct 2021 05:06:17 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:57431 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S234246AbhJ0JGQ (ORCPT
+        id S241422AbhJ0KCT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Oct 2021 06:02:19 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:51266 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S241457AbhJ0KBj (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Oct 2021 05:06:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635325430;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=HiJPaiuyZPbcdwIA9KdMWyKh2jI2bcomXoBjA/5KsHk=;
-        b=LzFMhfrh7nUUrqhWsLi+orKVVzFLYB9Etd7vFP28casr4fW9Kilj+nDgen6B6Y5sjFqz9C
-        DoREKxKrDK8lyQss/wK5/I6bO8Yh/rEhvYWuLVGl1M1yAHqMzebrU4oLfzQF3MgeF9/hmh
-        SYKHIuRrXGAt9iDblpUuY/NK4Le6Z0c=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-324-2IE4rjOqM8SdmhK3Pzt2HQ-1; Wed, 27 Oct 2021 05:03:48 -0400
-X-MC-Unique: 2IE4rjOqM8SdmhK3Pzt2HQ-1
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A90189126B;
-        Wed, 27 Oct 2021 09:03:47 +0000 (UTC)
-Received: from localhost (unknown [10.39.195.83])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 6FCDD5F4EE;
-        Wed, 27 Oct 2021 09:03:44 +0000 (UTC)
-Date:   Wed, 27 Oct 2021 10:03:43 +0100
-From:   Stefan Hajnoczi <stefanha@redhat.com>
-To:     michael.christie@oracle.com
-Cc:     Jason Wang <jasowang@redhat.com>, target-devel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, pbonzini@redhat.com, mst@redhat.com,
-        sgarzare@redhat.com, virtualization@lists.linux-foundation.org
-Subject: Re: [PATCH V3 11/11] vhost: allow userspace to create workers
-Message-ID: <YXkV73jK7fNGzcoX@stefanha-x1.localdomain>
-References: <20211022051911.108383-1-michael.christie@oracle.com>
- <20211022051911.108383-13-michael.christie@oracle.com>
- <8aee8f07-76bd-f111-bc5f-fc5cad46ce56@redhat.com>
- <4d33b7e1-5efb-3729-ee15-98608704f096@oracle.com>
+        Wed, 27 Oct 2021 06:01:39 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+        by mx0b-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19R6I9j6032384
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Oct 2021 02:59:13 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=from : to : cc :
+ subject : date : message-id : mime-version : content-type; s=pfpt0220;
+ bh=GO9VgERVdZyyav8A15MX4BBRc2bhaWW4edmYp121roE=;
+ b=DpQ64zb+HyCRzWNXjGn1Bgj9EK01E4aWM9RXvNNzZrbgytRLE9/8nsAqju3s8yWKraqv
+ Sd8RVHgGW+xpBp2Y7yyV7TcnHYQlpAvrwsdgQs/YOBaSSHhm5I4ev9g9JJzfliJt0K1e
+ 5+KjoyKtcVqz/vjacah/NjR4kh6gRXu6mfub3e+ELQamAQErcwDD4QQYBJFNx1wodlvG
+ j0vKOMfVTdDx5e63YIsrGf3J3MCAC7u7RjM6Ln/33oynDR9/ptXtxFTb7hfL6Gervlfd
+ wJ3UTtlGTGPlMqqc6YitX7W1TdJUhM9k9a1JAMd5T+3//uyLgy2pABLOYQnndF4CnxU0 VA== 
+Received: from dc5-exch01.marvell.com ([199.233.59.181])
+        by mx0b-0016f401.pphosted.com with ESMTP id 3by1ca8the-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 27 Oct 2021 02:59:13 -0700
+Received: from DC5-EXCH02.marvell.com (10.69.176.39) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Wed, 27 Oct
+ 2021 02:59:11 -0700
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Wed, 27 Oct 2021 02:59:11 -0700
+Received: from dut1171.mv.qlogic.com (unknown [10.112.88.18])
+        by maili.marvell.com (Postfix) with ESMTP id 67DA63F7070;
+        Wed, 27 Oct 2021 02:59:11 -0700 (PDT)
+Received: from dut1171.mv.qlogic.com (localhost [127.0.0.1])
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7) with ESMTP id 19R9x64E016397;
+        Wed, 27 Oct 2021 02:59:06 -0700
+Received: (from root@localhost)
+        by dut1171.mv.qlogic.com (8.14.7/8.14.7/Submit) id 19R9wpEd016396;
+        Wed, 27 Oct 2021 02:58:51 -0700
+From:   Nilesh Javali <njavali@marvell.com>
+To:     <martin.petersen@oracle.com>
+CC:     <linux-scsi@vger.kernel.org>,
+        <GR-QLogic-Storage-Upstream@marvell.com>
+Subject: [PATCH v4 00/13] qla2xxx - misc driver and EDIF bug fixes
+Date:   Wed, 27 Oct 2021 02:58:38 -0700
+Message-ID: <20211027095851.16362-1-njavali@marvell.com>
+X-Mailer: git-send-email 2.12.0
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="7VOiUeZYb/rbOPB5"
-Content-Disposition: inline
-In-Reply-To: <4d33b7e1-5efb-3729-ee15-98608704f096@oracle.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+Content-Type: text/plain
+X-Proofpoint-GUID: oqmEaZXfcbk74pTHt9zLZAdNcSygnjbv
+X-Proofpoint-ORIG-GUID: oqmEaZXfcbk74pTHt9zLZAdNcSygnjbv
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
+ definitions=2021-10-27_03,2021-10-26_01,2020-04-07_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Martin,
 
---7VOiUeZYb/rbOPB5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Please apply the miscellaneous qla2xxx driver and EDIF bug fixes to the
+scsi tree at your earliest convenience.
 
-On Tue, Oct 26, 2021 at 11:49:37AM -0500, michael.christie@oracle.com wrote:
-> On 10/26/21 12:37 AM, Jason Wang wrote:
-> > Do we need VHOST_VRING_FREE_WORKER? And I wonder if using dedicated ioc=
-tls are better:
-> >=20
-> > VHOST_VRING_NEW/FREE_WORKER
-> > VHOST_VRING_ATTACH_WORKER
->=20
->=20
-> We didn't need a free worker, because the kernel handles it for userspace=
-=2E I
-> tried to make it easy for userspace because in some cases it may not be a=
-ble
-> to do syscalls like close on the device. For example if qemu crashes or f=
-or
-> vhost-scsi we don't do an explicit close during VM shutdown.
->=20
-> So we start off with the default worker thread that's used by all vqs lik=
-e we do
-> today. Userspace can then override it by creating a new worker. That also=
- unbinds/
-> detaches the existing worker and does a put on the workers refcount. We a=
-lso do a
-> put on the worker when we stop using it during device shutdown/closure/re=
-lease.
-> When the worker's refcount goes to zero the kernel deletes it.
+v4:
+- remove split lines from debug message for patch 04/13
 
-Please document the worker (p)id lifetime for the ioctl. Otherwise
-userspace doesn't know whether a previously created worker is still
-alive.
+v3:
+- Change port_id display format to %06x
+- Add meaningful debug messages
+- Add Reviewed-by tags
 
-SSTefan
+v2:
+Add Fixes tag for relevant commits
 
---7VOiUeZYb/rbOPB5
-Content-Type: application/pgp-signature; name="signature.asc"
+Thanks,
+Nilesh
 
------BEGIN PGP SIGNATURE-----
+Nilesh Javali (1):
+  qla2xxx: Update version to 10.02.07.200-k
 
-iQEzBAEBCAAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmF5Fe8ACgkQnKSrs4Gr
-c8jfMwf/WNxR+7YZbmsVZ+oUXAYb2qAG6sPNc4zPOt3GHye/2a0FuI59d6dKn/R9
-aNuf1C/a5YMTigcqOSnV3pHjLEjQP7hHElDGJJIePNJqHTRf8rgRHX/+ORalRu24
-HH6CkCfGvwKkfztFa1jjwc9e6YNjtSVXBsPcD9EV3WQ7ZO5BaRBL8fiEcoHWmhRJ
-8YUO6TCv+aSZFltkM+9G3DBf90SPrcwixImuesvbP8J455/zAwBg4tYns0YLZvW5
-4PcbVP56MyoThHzbfA7g8FFLct9zDr4cFGYjuq+q8YX2da+dILEY/5PHkjPzWKcp
-ahFfycIxAyGsIcgqEtpcu7WC0HIFVg==
-=87xD
------END PGP SIGNATURE-----
+Quinn Tran (12):
+  qla2xxx: relogin during fabric disturbance
+  qla2xxx: fix gnl list corruption
+  qla2xxx: turn off target reset during issue_lip
+  qla2xxx: edif: fix app start fail
+  qla2xxx: edif: fix app start delay
+  qla2xxx: edif: flush stale events and msgs on session down
+  qla2xxx: edif: replace list_for_each_safe with
+    list_for_each_entry_safe
+  qla2xxx: edif: tweak trace message
+  qla2xxx: edif: reduce connection thrash
+  qla2xxx: edif: increase ELS payload
+  qla2xxx: edif: fix inconsistent check of db_flags
+  qla2xxx: edif: fix edif bsg
 
---7VOiUeZYb/rbOPB5--
+ drivers/scsi/qla2xxx/qla_attr.c     |   7 +-
+ drivers/scsi/qla2xxx/qla_def.h      |   4 +-
+ drivers/scsi/qla2xxx/qla_edif.c     | 325 +++++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_edif.h     |  13 +-
+ drivers/scsi/qla2xxx/qla_edif_bsg.h |   2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h      |   4 +-
+ drivers/scsi/qla2xxx/qla_init.c     | 108 +++++++--
+ drivers/scsi/qla2xxx/qla_iocb.c     |   3 +-
+ drivers/scsi/qla2xxx/qla_isr.c      |   4 +
+ drivers/scsi/qla2xxx/qla_mr.c       |  23 --
+ drivers/scsi/qla2xxx/qla_os.c       |  37 +---
+ drivers/scsi/qla2xxx/qla_target.c   |   3 +-
+ drivers/scsi/qla2xxx/qla_version.h  |   4 +-
+ 13 files changed, 290 insertions(+), 247 deletions(-)
+
+
+base-commit: efe1dc571a5b808baa26682eef16561be2e356fd
+prerequisite-patch-id: 505841911eadc4a52bd4b72393ab50f095664f55
+-- 
+2.19.0.rc0
 
