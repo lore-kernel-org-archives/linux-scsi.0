@@ -2,95 +2,88 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DDEAC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 04:00:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54AA9C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 04:00:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E8DFC61073
-	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 04:00:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2BD22610CA
+	for <linux-scsi@archiver.kernel.org>; Wed, 27 Oct 2021 04:00:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229448AbhJ0ECy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 27 Oct 2021 00:02:54 -0400
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:61950 "EHLO
+        id S229486AbhJ0EC6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 27 Oct 2021 00:02:58 -0400
+Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:3650 "EHLO
         mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229441AbhJ0ECx (ORCPT
+        by vger.kernel.org with ESMTP id S229474AbhJ0EC5 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 27 Oct 2021 00:02:53 -0400
+        Wed, 27 Oct 2021 00:02:57 -0400
 Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19R0mpLp014956;
-        Wed, 27 Oct 2021 04:00:28 GMT
+        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19R0mtNJ014988;
+        Wed, 27 Oct 2021 04:00:27 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
  subject : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=S+iUQkqK8y5W3fP2e670HdQJxnqDIpoakO/WPxLlFEE=;
- b=Pua1RbAUma3XxVq0+hwqe1hvmwJzIWGp8y4F0mTfxFtxDXAzQ6GbtaT8xoBe00TRQ+VN
- uMw3k6oSfuRewffMvW0aR74ptDvC6eZkcI9HBGdHEEPhA7D9UYpMqB1CmLkZeoKsd7tm
- 5OqpFXbGJea/wuuyRY7/T9moc5AHUE8D70COLaS2Wo56S55SP3Pb9GsY89Yu4GfgAtc+
- jv0BLglB2B6xPrjRha3lazZw0SGs+Wz+Imu113zSHT8JEEzcl3BaVj9RS+5Ac+AWCkWi
- Xw1iTxdIZGABSIWMMTkj4DCrehhbFaGUbnAwSe6oD19/XKxce2dCoApk/ouLVD0DipJD zg== 
+ bh=pwqxpzGNRZtOWd8MU2sYQAOSubU+t0EcPB64EXz+SHU=;
+ b=c/53WKey/sutpzucP36ZcfZEEmRdlMy/xdIbEdQUtAtT+KxmZGJF174z61WMZQ1mJ7ae
+ L+64GLR4fmMBKhBi9FPCt8yL/o7qipLkIPUuOpmsuMM8vm+IxcFi/rJi8jWlZr2RzaPr
+ 5iVciswtPmZ208/tDwWx1DICiumJGaeIPF5X9ivKcrmcktCswBFpCjk4XMYXwAn9fDhO
+ 7GNjlCGk0Z6Zj8Vn0Erz2WuYFWCeBz43XhaZPPb6ae206kmMHfwcTKi9tQInBUy/IOM/
+ IgdhHvDbeCXj3JKuvnRjME8gnaIyG8EdDCO3QHF8Ee2S82JJisKlvzidyrYH3GbY1Tmr Vw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3bx4fj0g92-1
+        by mx0b-00069f02.pphosted.com with ESMTP id 3bx4fj0g91-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 27 Oct 2021 04:00:27 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19R3xw5h068729;
+        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19R3xwtn068726;
         Wed, 27 Oct 2021 04:00:26 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3020.oracle.com with ESMTP id 3bx4gqcnac-1
+        by userp3020.oracle.com with ESMTP id 3bx4gqcn9v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 27 Oct 2021 04:00:26 +0000
 Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 19R40O5G070915;
-        Wed, 27 Oct 2021 04:00:26 GMT
+        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 19R40O5E070915;
+        Wed, 27 Oct 2021 04:00:25 GMT
 Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3020.oracle.com with ESMTP id 3bx4gqcn88-3;
+        by userp3020.oracle.com with ESMTP id 3bx4gqcn88-2;
         Wed, 27 Oct 2021 04:00:25 +0000
 From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     linux-scsi@vger.kernel.org, James Smart <jsmart2021@gmail.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/8] lpfc: Update lpfc to revision 14.0.0.3
-Date:   Wed, 27 Oct 2021 00:00:21 -0400
-Message-Id: <163530706458.10775.13953794183234723341.b4-ty@oracle.com>
+To:     sathya.prakash@broadcom.com,
+        Jiapeng Chong <jiapeng.chong@linux.alibaba.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        sreekanth.reddy@broadcom.com, jejb@linux.ibm.com,
+        suganath-prabu.subramani@broadcom.com,
+        MPT-FusionLinux.pdl@broadcom.com
+Subject: Re: [PATCH] scsi: mpt3sas: make mpt3sas_dev_attrs static
+Date:   Wed, 27 Oct 2021 00:00:20 -0400
+Message-Id: <163530706457.10775.10874628422170650730.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211020211417.88754-1-jsmart2021@gmail.com>
-References: <20211020211417.88754-1-jsmart2021@gmail.com>
+In-Reply-To: <1634639239-2892-1-git-send-email-jiapeng.chong@linux.alibaba.com>
+References: <1634639239-2892-1-git-send-email-jiapeng.chong@linux.alibaba.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: TcY0cXlXb553E77g_ooGk6vs2ow1FMhN
-X-Proofpoint-ORIG-GUID: TcY0cXlXb553E77g_ooGk6vs2ow1FMhN
+X-Proofpoint-GUID: V_bdkzHpLFsrQw0xbqkvbJsN2XaPzVLT
+X-Proofpoint-ORIG-GUID: V_bdkzHpLFsrQw0xbqkvbJsN2XaPzVLT
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 20 Oct 2021 14:14:09 -0700, James Smart wrote:
+On Tue, 19 Oct 2021 18:27:19 +0800, Jiapeng Chong wrote:
 
-> Update lpfc to revision 14.0.0.3
+> From: chongjiapeng <jiapeng.chong@linux.alibaba.com>
 > 
-> This patch set contains several bug fixes.
+> This symbol is not used outside of mpt3sas_ctl.c, so marks it static.
 > 
-> The patches were cut against Martin's 5.16/scsi-queue tree
+> Fixes the following sparse warning:
 > 
+> drivers/scsi/mpt3sas/mpt3sas_ctl.c:3988:18: warning: symbol
+> 'mpt3sas_dev_attrs' was not declared. Should it be static?
 > 
 > [...]
 
 Applied to 5.16/scsi-queue, thanks!
 
-[1/8] lpfc: Revert LOG_TRACE_EVENT back to LOG_INIT prior to driver_resource_setup
-      https://git.kernel.org/mkp/scsi/c/a516074c2026
-[2/8] lpfc: Wait for successful restart of SLI3 adapter during host sg_reset
-      https://git.kernel.org/mkp/scsi/c/d305c253af69
-[3/8] lpfc: Correct sysfs reporting of loop support after SFP status change
-      https://git.kernel.org/mkp/scsi/c/7a1dda943630
-[4/8] lpfc: Fix use-after-free in lpfc_unreg_rpi() routine
-      https://git.kernel.org/mkp/scsi/c/79b20beccea3
-[5/8] lpfc: Allow PLOGI retry if previous PLOGI was aborted
-      https://git.kernel.org/mkp/scsi/c/15af02d8a585
-[6/8] lpfc: Fix link down processing to address NULL pointer dereference
-      https://git.kernel.org/mkp/scsi/c/1854f53ccd88
-[7/8] lpfc: Allow fabric node recovery if recovery is in progress before devloss
-      https://git.kernel.org/mkp/scsi/c/af984c87293b
-[8/8] lpfc: Update lpfc version to 14.0.0.3
-      https://git.kernel.org/mkp/scsi/c/83c3a7beaef7
+[1/1] scsi: mpt3sas: make mpt3sas_dev_attrs static
+      https://git.kernel.org/mkp/scsi/c/0ae8f4785107
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
