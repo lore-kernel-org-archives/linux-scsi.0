@@ -2,135 +2,361 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C901CC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:12:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3D6CC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:21:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A6D9B60C4A
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:12:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 995EA61108
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:21:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230381AbhJ1UOt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Oct 2021 16:14:49 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:10258 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230104AbhJ1UOs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Oct 2021 16:14:48 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19SJx2wW001311;
-        Thu, 28 Oct 2021 20:12:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : subject :
- from : reply-to : to : cc : date : in-reply-to : references : content-type
- : mime-version : content-transfer-encoding; s=pp1;
- bh=Z/3hJoKeT+P0qYCR6I9qk6FbOWD/Ypqht9BjPk9dvmA=;
- b=MoxqXp+VSVa4qIVrDOIoAz1i8g6JaTdv2/Zhdt7ppNLyzqg5G16CzHFDrny2DNs5k/SE
- 2S3Cv830A0w3H6yxzFQgwNwopeBl1i0O9SRQZIM4g+4zyHafQvjvWpTNq/6SMyubijWj
- qJEEeu7ESpDO5qprjuV0Q4e/X84L1/HKVosmGCneKL0y1m2v1Z2qAbD+UxB6YWO87OH7
- DJxG6MfQy5dlsBXAAdt5jBl8QATAYlWBiXokNDFAYXrD5Twa4K3ar8BU9QT9uZXgB9MP
- pzltWBGhVndrO2+pNu2s968/bKTVZPzE/dzwxYGsnPXe5IwAwKLfjX/JWYoPMHOwy1Ld vA== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3c02d1gdrq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Oct 2021 20:12:08 +0000
-Received: from m0098396.ppops.net (m0098396.ppops.net [127.0.0.1])
-        by pps.reinject (8.16.0.43/8.16.0.43) with SMTP id 19SK0JGq004689;
-        Thu, 28 Oct 2021 20:12:07 GMT
-Received: from ppma03dal.us.ibm.com (b.bd.3ea9.ip4.static.sl-reverse.com [169.62.189.11])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3c02d1gdr8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Oct 2021 20:12:07 +0000
-Received: from pps.filterd (ppma03dal.us.ibm.com [127.0.0.1])
-        by ppma03dal.us.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 19SJrPbi009183;
-        Thu, 28 Oct 2021 20:12:06 GMT
-Received: from b03cxnp08027.gho.boulder.ibm.com (b03cxnp08027.gho.boulder.ibm.com [9.17.130.19])
-        by ppma03dal.us.ibm.com with ESMTP id 3bx4fnf9e8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 28 Oct 2021 20:12:06 +0000
-Received: from b03ledav004.gho.boulder.ibm.com (b03ledav004.gho.boulder.ibm.com [9.17.130.235])
-        by b03cxnp08027.gho.boulder.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 19SKC4fx15597920
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 28 Oct 2021 20:12:04 GMT
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 5B7DA78064;
-        Thu, 28 Oct 2021 20:12:04 +0000 (GMT)
-Received: from b03ledav004.gho.boulder.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id C673C7808C;
-        Thu, 28 Oct 2021 20:12:02 +0000 (GMT)
-Received: from jarvis.int.hansenpartnership.com (unknown [9.163.12.226])
-        by b03ledav004.gho.boulder.ibm.com (Postfix) with ESMTP;
-        Thu, 28 Oct 2021 20:12:02 +0000 (GMT)
-Message-ID: <ed088511bfe2414a7f84a459b954192f9992af3b.camel@linux.ibm.com>
-Subject: Re: [PATCH] scsi: ufs: Fix proper API to send HPB pre-request
-From:   James Bottomley <jejb@linux.ibm.com>
-Reply-To: jejb@linux.ibm.com
-To:     Bart Van Assche <bvanassche@acm.org>, daejun7.park@samsung.com,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        Keoseong Park <keosung.park@samsung.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
-        Jaegeuk Kim <jaegeuk@kernel.org>
-Date:   Thu, 28 Oct 2021 16:12:01 -0400
-In-Reply-To: <42ca5f60-4c57-ade1-5fb7-be935ac4ccce@acm.org>
-References: <CGME20211027223619epcms2p60bbc74c9ba9757c58709a99acd0892ff@epcms2p6>
-         <20211027223619epcms2p60bbc74c9ba9757c58709a99acd0892ff@epcms2p6>
-         <0f9229c3c4c7859524411a47db96a3b53ac89c90.camel@linux.ibm.com>
-         <0d66b6d0-26c6-573f-e2a0-022e22c47b52@acm.org>
-         <1d7c1faf6b6fa71599b5157ae95fc48ce479b722.camel@linux.ibm.com>
-         <42ca5f60-4c57-ade1-5fb7-be935ac4ccce@acm.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S231231AbhJ1UYM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Oct 2021 16:24:12 -0400
+Received: from mail-pj1-f52.google.com ([209.85.216.52]:46985 "EHLO
+        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231206AbhJ1UYM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2021 16:24:12 -0400
+Received: by mail-pj1-f52.google.com with SMTP id lx5-20020a17090b4b0500b001a262880e99so5682488pjb.5;
+        Thu, 28 Oct 2021 13:21:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Bdl1W785S9//M7tjvJhEvajwnPMEKADExtalMMLObjs=;
+        b=XQaqg3P6W0k6tgFJT7X2s2BNa9ZVNWLgjp/I3GUj5v/NKApFVUFu3Q8SWRdlmeKtSg
+         GB9wpvVz7BDBB6AxDg+nR2aONOYZ72Xxw1tPzCmvUr/PVWzNHlhC+7x2WYT5a3gB4WeP
+         LcNh3e3YYprja2Q8+raBgjvOB1wf1UiZEBEojBnDGx7D6XE555djQfIiS6Bgp7fQHECz
+         LO8dd1k/3C1aZdVV07XEYqQluL4q8Jz7msdFL+q7vUHb6+eij+wjTKD/QhDwJnWxu3qO
+         seeHfQAA+7xu7+8smBmezrQcVSK/aaacz6Gd17SV49c1sE1Crmal69J++O752ppR+PIS
+         UHLw==
+X-Gm-Message-State: AOAM533f63BlnXFr1FBgynqngRDXHbwera/ProTSpdhGdN+q7K1/e6zn
+        HA/4OIx9NG3fhKDajsjO+gs8Bp+wnn/FZg==
+X-Google-Smtp-Source: ABdhPJygXqDG1hJ9iFkSg0gb9TDzNfdXIqEkauwy1B1jAMT7eFLLW4CKsZ775Br8IHPaOoU7Vnxsyw==
+X-Received: by 2002:a17:90a:7e13:: with SMTP id i19mr6748966pjl.120.1635452504555;
+        Thu, 28 Oct 2021 13:21:44 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:e816:bd0d:426c:f959])
+        by smtp.gmail.com with ESMTPSA id u10sm4230288pfk.211.2021.10.28.13.21.43
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 28 Oct 2021 13:21:43 -0700 (PDT)
+Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Daejun Park <daejun7.park@samsung.com>
+References: <20211026071204.1709318-1-hch@lst.de>
+ <99641481-523a-e5a9-db48-dac2b547b4bd@acm.org>
+ <7ed11ee1f8beca9a27c0cb2eb0dcea4dbd557961.camel@HansenPartnership.com>
+ <870e986c-08dd-2fa2-a593-0f97e10d6df5@kernel.dk>
+ <4438ab72-7da0-33de-ecc9-91c3c179eca7@acm.org>
+ <c3d85be5-2708-ea50-09ac-2285928bbe0e@kernel.dk>
+ <36729509daa80fd48453e8a3a1b5c23750948e6c.camel@HansenPartnership.com>
+ <yq1ee873av4.fsf@ca-mkp.ca.oracle.com>
+ <679b4d3b-778e-47cd-d53f-f7bf77315f7c@acm.org> <20211027052724.GA8946@lst.de>
+ <b2bcc13ccdc584962128a69fa5992936068e1a9b.camel@HansenPartnership.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <a6af2ce7-4a03-ab0c-67cd-c58022e5ded1@acm.org>
+Date:   Thu, 28 Oct 2021 13:21:42 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
+In-Reply-To: <b2bcc13ccdc584962128a69fa5992936068e1a9b.camel@HansenPartnership.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: zEUnaoyLhw7QU2dZQxD3DI-_4LJm6DV8
-X-Proofpoint-ORIG-GUID: Lt_dkF0Q_MoZawqNaZXpDxKY_36e4Seq
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.182.1,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-10-28_05,2021-10-26_01,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
- spamscore=0 phishscore=0 mlxscore=0 suspectscore=0 malwarescore=0
- clxscore=1011 mlxlogscore=999 impostorscore=0 bulkscore=0
- priorityscore=1501 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.12.0-2110150000 definitions=main-2110280105
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2021-10-28 at 13:04 -0700, Bart Van Assche wrote:
-> On 10/28/21 12:12 PM, James Bottomley wrote:
-> > I think the deadlock is triggered if the system is down to its last
-> > reserved request on the memory clearing device and the next entry
-> > in the queue for this device is one which does a fanout so we can't
-> > service it with the single reserved request we have left for the
-> > purposes of making forward progress.  Sending it back doesn't help,
-> > assuming this is the only memory clearing path, because retrying it
-> > won't help ... we have to succeed with a request on this path to
-> > move forward with clearing memory.
-> > 
-> > I think this problem could be solved by processing the WRITE BUFFER
-> > and the request serially by hijacking the request sent down, but we
-> > can't solve it if we try to allocate a new request.
+On 10/27/21 5:20 AM, James Bottomley wrote:
+> We don't have to revert it entirely, we can just remove the API since
+> it's in an optimization path.  The below patch does exactly that.  It's
+> compile tested but I don't have hardware so I've no idea if it works;
+> Daejun can you please test it as a matter of urgency since we have to
+> get this in before the end of the week.
 > 
-> Hi James,
+> James
 > 
-> How about fixing the abuse of blk_insert_cloned_request() in the UFS
-> HPB before the v5.16 SCSI pull request is sent to Linus and
-> implementing the proposal from your email at a later time? I'm
-> proposing to defer further UFS HPB rework since the issue described
-> above only affects UFS HPB users and does not obstruct maintenance or
-> refactoring of the block layer core.
+> ---
+> 
+> diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+> index 66b19500844e..1c89eafe0c1d 100644
+> --- a/drivers/scsi/ufs/ufshpb.c
+> +++ b/drivers/scsi/ufs/ufshpb.c
+> @@ -365,148 +365,6 @@ static inline void ufshpb_set_write_buf_cmd(unsigned char *cdb,
+>   	cdb[9] = 0x00;	/* Control = 0x00 */
+>   }
+>   
+> -static struct ufshpb_req *ufshpb_get_pre_req(struct ufshpb_lu *hpb)
+> -{
+> -	struct ufshpb_req *pre_req;
+> -
+> -	if (hpb->num_inflight_pre_req >= hpb->throttle_pre_req) {
+> -		dev_info(&hpb->sdev_ufs_lu->sdev_dev,
+> -			 "pre_req throttle. inflight %d throttle %d",
+> -			 hpb->num_inflight_pre_req, hpb->throttle_pre_req);
+> -		return NULL;
+> -	}
+> -
+> -	pre_req = list_first_entry_or_null(&hpb->lh_pre_req_free,
+> -					   struct ufshpb_req, list_req);
+> -	if (!pre_req) {
+> -		dev_info(&hpb->sdev_ufs_lu->sdev_dev, "There is no pre_req");
+> -		return NULL;
+> -	}
+> -
+> -	list_del_init(&pre_req->list_req);
+> -	hpb->num_inflight_pre_req++;
+> -
+> -	return pre_req;
+> -}
+> -
+> -static inline void ufshpb_put_pre_req(struct ufshpb_lu *hpb,
+> -				      struct ufshpb_req *pre_req)
+> -{
+> -	pre_req->req = NULL;
+> -	bio_reset(pre_req->bio);
+> -	list_add_tail(&pre_req->list_req, &hpb->lh_pre_req_free);
+> -	hpb->num_inflight_pre_req--;
+> -}
+> -
+> -static void ufshpb_pre_req_compl_fn(struct request *req, blk_status_t error)
+> -{
+> -	struct ufshpb_req *pre_req = (struct ufshpb_req *)req->end_io_data;
+> -	struct ufshpb_lu *hpb = pre_req->hpb;
+> -	unsigned long flags;
+> -
+> -	if (error) {
+> -		struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
+> -		struct scsi_sense_hdr sshdr;
+> -
+> -		dev_err(&hpb->sdev_ufs_lu->sdev_dev, "block status %d", error);
+> -		scsi_command_normalize_sense(cmd, &sshdr);
+> -		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> -			"code %x sense_key %x asc %x ascq %x",
+> -			sshdr.response_code,
+> -			sshdr.sense_key, sshdr.asc, sshdr.ascq);
+> -		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> -			"byte4 %x byte5 %x byte6 %x additional_len %x",
+> -			sshdr.byte4, sshdr.byte5,
+> -			sshdr.byte6, sshdr.additional_length);
+> -	}
+> -
+> -	blk_mq_free_request(req);
+> -	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> -	ufshpb_put_pre_req(pre_req->hpb, pre_req);
+> -	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> -}
+> -
+> -static int ufshpb_prep_entry(struct ufshpb_req *pre_req, struct page *page)
+> -{
+> -	struct ufshpb_lu *hpb = pre_req->hpb;
+> -	struct ufshpb_region *rgn;
+> -	struct ufshpb_subregion *srgn;
+> -	__be64 *addr;
+> -	int offset = 0;
+> -	int copied;
+> -	unsigned long lpn = pre_req->wb.lpn;
+> -	int rgn_idx, srgn_idx, srgn_offset;
+> -	unsigned long flags;
+> -
+> -	addr = page_address(page);
+> -	ufshpb_get_pos_from_lpn(hpb, lpn, &rgn_idx, &srgn_idx, &srgn_offset);
+> -
+> -	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> -
+> -next_offset:
+> -	rgn = hpb->rgn_tbl + rgn_idx;
+> -	srgn = rgn->srgn_tbl + srgn_idx;
+> -
+> -	if (!ufshpb_is_valid_srgn(rgn, srgn))
+> -		goto mctx_error;
+> -
+> -	if (!srgn->mctx)
+> -		goto mctx_error;
+> -
+> -	copied = ufshpb_fill_ppn_from_page(hpb, srgn->mctx, srgn_offset,
+> -					   pre_req->wb.len - offset,
+> -					   &addr[offset]);
+> -
+> -	if (copied < 0)
+> -		goto mctx_error;
+> -
+> -	offset += copied;
+> -	srgn_offset += copied;
+> -
+> -	if (srgn_offset == hpb->entries_per_srgn) {
+> -		srgn_offset = 0;
+> -
+> -		if (++srgn_idx == hpb->srgns_per_rgn) {
+> -			srgn_idx = 0;
+> -			rgn_idx++;
+> -		}
+> -	}
+> -
+> -	if (offset < pre_req->wb.len)
+> -		goto next_offset;
+> -
+> -	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> -	return 0;
+> -mctx_error:
+> -	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> -	return -ENOMEM;
+> -}
+> -
+> -static int ufshpb_pre_req_add_bio_page(struct ufshpb_lu *hpb,
+> -				       struct request_queue *q,
+> -				       struct ufshpb_req *pre_req)
+> -{
+> -	struct page *page = pre_req->wb.m_page;
+> -	struct bio *bio = pre_req->bio;
+> -	int entries_bytes, ret;
+> -
+> -	if (!page)
+> -		return -ENOMEM;
+> -
+> -	if (ufshpb_prep_entry(pre_req, page))
+> -		return -ENOMEM;
+> -
+> -	entries_bytes = pre_req->wb.len * sizeof(__be64);
+> -
+> -	ret = bio_add_pc_page(q, bio, page, entries_bytes, 0);
+> -	if (ret != entries_bytes) {
+> -		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+> -			"bio_add_pc_page fail: %d", ret);
+> -		return -ENOMEM;
+> -	}
+> -	return 0;
+> -}
+> -
+>   static inline int ufshpb_get_read_id(struct ufshpb_lu *hpb)
+>   {
+>   	if (++hpb->cur_read_id >= MAX_HPB_READ_ID)
+> @@ -514,88 +372,6 @@ static inline int ufshpb_get_read_id(struct ufshpb_lu *hpb)
+>   	return hpb->cur_read_id;
+>   }
+>   
+> -static int ufshpb_execute_pre_req(struct ufshpb_lu *hpb, struct scsi_cmnd *cmd,
+> -				  struct ufshpb_req *pre_req, int read_id)
+> -{
+> -	struct scsi_device *sdev = cmd->device;
+> -	struct request_queue *q = sdev->request_queue;
+> -	struct request *req;
+> -	struct scsi_request *rq;
+> -	struct bio *bio = pre_req->bio;
+> -
+> -	pre_req->hpb = hpb;
+> -	pre_req->wb.lpn = sectors_to_logical(cmd->device,
+> -					     blk_rq_pos(scsi_cmd_to_rq(cmd)));
+> -	pre_req->wb.len = sectors_to_logical(cmd->device,
+> -					     blk_rq_sectors(scsi_cmd_to_rq(cmd)));
+> -	if (ufshpb_pre_req_add_bio_page(hpb, q, pre_req))
+> -		return -ENOMEM;
+> -
+> -	req = pre_req->req;
+> -
+> -	/* 1. request setup */
+> -	blk_rq_append_bio(req, bio);
+> -	req->rq_disk = NULL;
+> -	req->end_io_data = (void *)pre_req;
+> -	req->end_io = ufshpb_pre_req_compl_fn;
+> -
+> -	/* 2. scsi_request setup */
+> -	rq = scsi_req(req);
+> -	rq->retries = 1;
+> -
+> -	ufshpb_set_write_buf_cmd(rq->cmd, pre_req->wb.lpn, pre_req->wb.len,
+> -				 read_id);
+> -	rq->cmd_len = scsi_command_size(rq->cmd);
+> -
+> -	if (blk_insert_cloned_request(q, req) != BLK_STS_OK)
+> -		return -EAGAIN;
+> -
+> -	hpb->stats.pre_req_cnt++;
+> -
+> -	return 0;
+> -}
+> -
+> -static int ufshpb_issue_pre_req(struct ufshpb_lu *hpb, struct scsi_cmnd *cmd,
+> -				int *read_id)
+> -{
+> -	struct ufshpb_req *pre_req;
+> -	struct request *req = NULL;
+> -	unsigned long flags;
+> -	int _read_id;
+> -	int ret = 0;
+> -
+> -	req = blk_get_request(cmd->device->request_queue,
+> -			      REQ_OP_DRV_OUT | REQ_SYNC, BLK_MQ_REQ_NOWAIT);
+> -	if (IS_ERR(req))
+> -		return -EAGAIN;
+> -
+> -	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> -	pre_req = ufshpb_get_pre_req(hpb);
+> -	if (!pre_req) {
+> -		ret = -EAGAIN;
+> -		goto unlock_out;
+> -	}
+> -	_read_id = ufshpb_get_read_id(hpb);
+> -	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> -
+> -	pre_req->req = req;
+> -
+> -	ret = ufshpb_execute_pre_req(hpb, cmd, pre_req, _read_id);
+> -	if (ret)
+> -		goto free_pre_req;
+> -
+> -	*read_id = _read_id;
+> -
+> -	return ret;
+> -free_pre_req:
+> -	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+> -	ufshpb_put_pre_req(hpb, pre_req);
+> -unlock_out:
+> -	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+> -	blk_put_request(req);
+> -	return ret;
+> -}
+> -
+>   /*
+>    * This function will set up HPB read command using host-side L2P map data.
+>    */
+> @@ -685,23 +461,6 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>   		dev_err(hba->dev, "get ppn failed. err %d\n", err);
+>   		return err;
+>   	}
+> -	if (!ufshpb_is_legacy(hba) &&
+> -	    ufshpb_is_required_wb(hpb, transfer_len)) {
+> -		err = ufshpb_issue_pre_req(hpb, cmd, &read_id);
+> -		if (err) {
+> -			unsigned long timeout;
+> -
+> -			timeout = cmd->jiffies_at_alloc + msecs_to_jiffies(
+> -				  hpb->params.requeue_timeout_ms);
+> -
+> -			if (time_before(jiffies, timeout))
+> -				return -EAGAIN;
+> -
+> -			hpb->stats.miss_cnt++;
+> -			return 0;
+> -		}
+> -	}
+> -
+>   	ufshpb_set_hpb_read_to_upiu(hba, lrbp, ppn, transfer_len, read_id);
+>   
+>   	hpb->stats.hit_cnt++;
 
-Well, yes, I'm already on record as saying we need to do that and add
-the functionality back compatibly in a later release.  I think excising
-the WRITE BUFFER path, which is simply an optimization and will affect
-performance but not function, solves the above issue (and the clone API
-problem as well) completely but I haven't heard the patch I proposed
-has actually been tested yet.
+Hi James,
 
-James
+The help with trying to find a solution is appreciated.
 
+One of the software developers who is familiar with HPB explained to me that
+READ BUFFER and WRITE BUFFER commands may be received in an arbitrary order
+by UFS devices. The UFS HPB spec requires UFS devices to be able to stash up
+to 128 such pairs. I'm concerned that leaving out WRITE BUFFER commands only
+will break the HPB protocol in a subtle way.
 
+Thanks,
+
+Bart.
