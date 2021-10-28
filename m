@@ -2,90 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1652C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:45:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41640C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:53:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A542B61056
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:45:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 18B72608FB
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:53:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230404AbhJ1UsL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Oct 2021 16:48:11 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:43779 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231316AbhJ1UsK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 28 Oct 2021 16:48:10 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635453942;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=TNZhMUykwMIUELoAtzU5QjLe7Bo0nKj1aB9wpNQKrxs=;
-        b=hvJektkMKwuPhqobWuPiFB/wq28dfqURA4yXKyAIybh6uv67Pd4gAweZau77DlDKh0gzf+
-        KXnzLepfLuPIwWm42BecmVK8Mg45FkjVehe8lhOD+rWzEardjyIILQWK8vVetSsl5kL6Ri
-        5x3/U1N1pikPEsooEYndyYufzL8sjww=
-Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com
- [209.85.160.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-51-V0O51ZEsPpmxAzpj3t0U6Q-1; Thu, 28 Oct 2021 16:45:41 -0400
-X-MC-Unique: V0O51ZEsPpmxAzpj3t0U6Q-1
-Received: by mail-qt1-f200.google.com with SMTP id x28-20020ac8701c000000b0029f4b940566so5264329qtm.19
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2021 13:45:40 -0700 (PDT)
+        id S231157AbhJ1U4G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Oct 2021 16:56:06 -0400
+Received: from mail-pf1-f170.google.com ([209.85.210.170]:44898 "EHLO
+        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230404AbhJ1U4F (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2021 16:56:05 -0400
+Received: by mail-pf1-f170.google.com with SMTP id a26so7076347pfr.11;
+        Thu, 28 Oct 2021 13:53:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
-         :references:user-agent:mime-version:content-transfer-encoding;
-        bh=TNZhMUykwMIUELoAtzU5QjLe7Bo0nKj1aB9wpNQKrxs=;
-        b=MbYcLruj5SPxFes/GxnA/91yg+n8oaVbNNJthWDKprOqv7K7zEz7FMf1Q3y2U9aq9y
-         eF02FxTYB3KQ4Z9AuZSRwDdPxAWdQPwRK69TBMrJoiIPX7aj37b2ACBeZf0MLVuYkWPX
-         CEcBksfxB7QQy17nY2kSgWYMh2kkqEGR3YV5WkH06bvmJBlXJwtq0RX4HCSQ2Xt4M++G
-         Ko/dWkZLcG8/fZyf6gsIq5koQCcL3jG5gHDGWSta5oQmXR/+yJ8p9eQyCgGrNXtuw0uI
-         BhDUCCE1dpyvc/F/g/FiQ7dhLaXwMVfnnEgza83DhGXrD9+JrNJejQMVbTad+hJ+QOBv
-         4YLA==
-X-Gm-Message-State: AOAM531LpxqK1TpkuVxBZN7c1C2cBUzaimzhk1eLKZZD6AZPtlcl+jz6
-        /mfPuBnc7Fp1IFylBjHdooqLthZ4KK4WQ7eew4MOZMGJQ1Ttnd2JNOUrpgTSifgqa6oHiTodOsj
-        ZqFWVNxkV8zespj0nX+l2sQ==
-X-Received: by 2002:ae9:ef0d:: with SMTP id d13mr5581539qkg.290.1635453940270;
-        Thu, 28 Oct 2021 13:45:40 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJzrko4/M6m5nD78DZNZXLvnEcUWi/jbBgGecgTrbqTtQkBLjwi/xUNuPWpSc4bH0oCzMJtzhg==
-X-Received: by 2002:ae9:ef0d:: with SMTP id d13mr5581534qkg.290.1635453940133;
-        Thu, 28 Oct 2021 13:45:40 -0700 (PDT)
-Received: from emilne (nat-pool-bos-t.redhat.com. [66.187.233.206])
-        by smtp.gmail.com with ESMTPSA id q14sm2651139qtl.73.2021.10.28.13.45.39
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Oct 2021 13:45:39 -0700 (PDT)
-Message-ID: <de901c38a3a5282cff9e5e5a604b0a152c89693d.camel@redhat.com>
-Subject: Re: [PATCH 2/2] scsi: core: simplify control flow in
- scmd_eh_abort_handler
-From:   "Ewan D. Milne" <emilne@redhat.com>
-To:     "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org
-Date:   Thu, 28 Oct 2021 16:45:38 -0400
-In-Reply-To: <yq1mtmtygg2.fsf@ca-mkp.ca.oracle.com>
-References: <20211025143952.17128-1-emilne@redhat.com>
-         <20211025143952.17128-3-emilne@redhat.com>
-         <yq1mtmtygg2.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=53hJGGwZpzRu5RUX9RBgGrb7hsPcvv9GN9T8wxu6NEw=;
+        b=asckzHS9VBGYdZhv+0YhMy8ZnkFOfVYV4Xs6N6OCFuysutl0AXJagid2I7SaFQRH9m
+         xhmjepiylVplJngVAuBzwDN1By0tAgXcLNI237fG1fWz6WH/+RPVZdWZQ4UhhfF7kavT
+         JAoOHOH/htX92CIgmgvNgCdQSF7uU4KRiv3aG7GgedGNcPkUZL9cN66myQrB9HC9p8Rb
+         qU30rPOr4tonVZghI8TRYhdjqSYVrnN6DPOORZ2fTatNXuRoGHlUzhQG+erHx4WaJJz4
+         bk3AvstIfvReTCVq5/LrgprF1EYrMtLLEwXQVXDYCTUp12J6qPdthiSYqcRf/FaRmUk8
+         l+JA==
+X-Gm-Message-State: AOAM531N69/ARgo0J6GIJd5kMxQaBoLXuqB++CvO5P92v7wOIcljFcV2
+        irI6qRLOAy5TCxQ0Qz0cWQs=
+X-Google-Smtp-Source: ABdhPJxs/mwQZw2E6fuIQod6mlK+HBVShLxwOYiqMMnlfIq9HbDobgKrwxa9zaDs8uxqifGj+86y6w==
+X-Received: by 2002:a63:1cd:: with SMTP id 196mr4908239pgb.39.1635454418269;
+        Thu, 28 Oct 2021 13:53:38 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:e816:bd0d:426c:f959])
+        by smtp.gmail.com with ESMTPSA id b2sm3511228pgh.33.2021.10.28.13.53.37
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 28 Oct 2021 13:53:37 -0700 (PDT)
+Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
+To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Christoph Hellwig <hch@lst.de>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        alim.akhtar@samsung.com, avri.altman@wdc.com,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Daejun Park <daejun7.park@samsung.com>
+References: <20211026071204.1709318-1-hch@lst.de>
+ <99641481-523a-e5a9-db48-dac2b547b4bd@acm.org>
+ <7ed11ee1f8beca9a27c0cb2eb0dcea4dbd557961.camel@HansenPartnership.com>
+ <870e986c-08dd-2fa2-a593-0f97e10d6df5@kernel.dk>
+ <4438ab72-7da0-33de-ecc9-91c3c179eca7@acm.org>
+ <c3d85be5-2708-ea50-09ac-2285928bbe0e@kernel.dk>
+ <36729509daa80fd48453e8a3a1b5c23750948e6c.camel@HansenPartnership.com>
+ <yq1ee873av4.fsf@ca-mkp.ca.oracle.com>
+ <679b4d3b-778e-47cd-d53f-f7bf77315f7c@acm.org> <20211027052724.GA8946@lst.de>
+ <b2bcc13ccdc584962128a69fa5992936068e1a9b.camel@HansenPartnership.com>
+ <a6af2ce7-4a03-ab0c-67cd-c58022e5ded1@acm.org>
+ <4f16a99974be6f2a0f207d5ca7327719cdf4e36e.camel@HansenPartnership.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <76b67325-9788-2876-5546-5be6df615a5c@acm.org>
+Date:   Thu, 28 Oct 2021 13:53:36 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
+In-Reply-To: <4f16a99974be6f2a0f207d5ca7327719cdf4e36e.camel@HansenPartnership.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, 2021-10-27 at 23:31 -0400, Martin K. Petersen wrote:
-> Ewan,
+On 10/28/21 1:33 PM, James Bottomley wrote:
+> On Thu, 2021-10-28 at 13:21 -0700, Bart Van Assche wrote:
+> [...]
+>> Hi James,
+>>
+>> The help with trying to find a solution is appreciated.
+>>
+>> One of the software developers who is familiar with HPB explained to
+>> me that READ BUFFER and WRITE BUFFER commands may be received in an
+>> arbitrary order by UFS devices. The UFS HPB spec requires UFS devices
+>> to be able to stash up to 128 such pairs. I'm concerned that leaving
+>> out WRITE BUFFER commands only will break the HPB protocol in a
+>> subtle way.
 > 
-> > Simplify the nested conditionals in the function by using
-> > a label for the error path, and remove duplicate code.
+> Based on the publicly available information (the hotstorage paper) I
+> don't belive it can.  The Samsung guys also appear to confirm that the
+> use of WRITE BUFFER is simply an optimzation for large requests:
 > 
-> Oh, I see you shuffled things for the follow-on patch. That's
-> better. I'd still like the stable fix to be smaller, though.
+> https://lore.kernel.org/all/20211025051654epcms2p36b259d237eb2b8b885210148118c5d3f@epcms2p3/
 > 
+> As did the excerpt from the spec you posted.  It will cause slowdowns
+> for reads of > 32kb, because they have to go through the native FTL
+> lookup now, but there shouldn't be any functional change.  Unless
+> there's anything else in the proprietary spec that contradicts this?
 
-Sure, let me work on it a bit more to get the first patch as
-small as possible.  I'll submit a v2.
+Are the UFS standards really proprietary? On https://www.t10.org/pubs.htm
+I found the following: "Approved American National Standards and Technical
+Reports may be purchased from: [ ... ]". And on
+https://www.jedec.org/document_search?search_api_views_fulltext=hpb I found
+the following: "Available for purchase: $80.00". It seems to me that SCSI
+and JEDEC standards are available under similar conditions?
 
--Ewan
+Regarding the question about the impact of leaving out WRITE BUFFER
+commands on the HPB protocol, I hope that one of the HPB experts will be so
+kind to answer that question.
+
+Bart.
 
 
