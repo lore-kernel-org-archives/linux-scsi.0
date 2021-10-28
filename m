@@ -2,105 +2,141 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F650C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:35:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5876C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:44:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 385D260F0F
-	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:35:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 835E060E8B
+	for <linux-scsi@archiver.kernel.org>; Thu, 28 Oct 2021 20:44:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231201AbhJ1UiG (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 28 Oct 2021 16:38:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58960 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230323AbhJ1UiF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Oct 2021 16:38:05 -0400
-Received: from mail-qk1-x72a.google.com (mail-qk1-x72a.google.com [IPv6:2607:f8b0:4864:20::72a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C01A9C061570;
-        Thu, 28 Oct 2021 13:35:37 -0700 (PDT)
-Received: by mail-qk1-x72a.google.com with SMTP id ay10so2036758qkb.12;
-        Thu, 28 Oct 2021 13:35:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=sender:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=RJ/TZBmAjtBZEQ7SF9pt737iGPmZZZE1EbwprVB6+B8=;
-        b=cuXtA5t15HjnPp7OPl35fJNotIP9gC4nBC9TPE9YctYbO5ObFZHbko0xoAiamkVypR
-         fb3HPJxSC26+7bEhYxyhm4pk5v9Wb/X3mMz46/h6lc7Q6l5Nq7vTunKQHC6FqQu1jhE0
-         jKkbX9xeWuS+72ePM+SNTfgCTMialYZ8nDqW5UgN3E5dHX6uQjvHvoPHGAQAnIsV2Q+Y
-         6gcXwignr0+ziJuuiyiSwJhrOoWheNNlCDpMvEj51dMoK8gjnJwBVPGJpefRMfwzLawW
-         IGdMQh+udMfdMxl1SJSSIiB6gltmAd46fNUTwxeichW9LFCCoXGevcfXtZFVNwr3Nl7V
-         H55Q==
+        id S231215AbhJ1Uqm (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 28 Oct 2021 16:46:42 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:51126 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231221AbhJ1Uql (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 28 Oct 2021 16:46:41 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1635453854;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=SUgXJSIh8EFoSAMumEnxtmiGI4n5OomF7wYpw8hip98=;
+        b=EjXeqqfMQk0cKAI6wiiBeXlZ9099NuhMwxrmuxjWy5gOMybMMx5EYajepGQ+6e5bIaQSkV
+        iqdxDvxQFK/4FujKYyE7ZXHzsHgaFE7fbuYXlLHkUE+Ys2BjNg7//1eYyeuVMVMAanOv/f
+        XcEYKX7dk94vJavcm5/UzKMn9DR4KM0=
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
+ [209.85.160.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-15-t9wpZyQJM0SHMlp0F9ivvw-1; Thu, 28 Oct 2021 16:44:12 -0400
+X-MC-Unique: t9wpZyQJM0SHMlp0F9ivvw-1
+Received: by mail-qt1-f198.google.com with SMTP id 100-20020aed30ed000000b002a6b3dc6465so5276438qtf.13
+        for <linux-scsi@vger.kernel.org>; Thu, 28 Oct 2021 13:44:12 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
-         :mime-version:content-transfer-encoding;
-        bh=RJ/TZBmAjtBZEQ7SF9pt737iGPmZZZE1EbwprVB6+B8=;
-        b=f5IPjMXUd8tPkhtN+tAPdCs06LIAbjN24w8H2Hom2f2s5jkneUkozRQ21/00Jk+Qc3
-         7b81AD910t4d+PzFH6w3BZ3zwR6LbKTqcfj99zp7zWCgOBmNkNjDf10LYMTKtpkwNdRZ
-         udmyJOcwjfvVLWLzxgptJiDTnBZRlXif18HTk3Kmf9e8MjgvQzhiAeH3F7zNwys9bJED
-         x4UmGZIlMqzHvenIV47VG/LkNi9xuIBYDC8D17j9gM/jb1NDuisHDGAENsx6TgVgFRQR
-         VhZDolVYxj7uAohg3nGSdQeFqfhDX0q/661hFM0u4HaruvUd6Oitm+PPUQQZiNsjviJM
-         Hjwg==
-X-Gm-Message-State: AOAM533MfiHj2McP+XEHhkHjuqFJsb5r7Bwu69Zw0pg73UGaoNFw8TBQ
-        LD7Vl9IOZcZeuyUkUJQjFR0=
-X-Google-Smtp-Source: ABdhPJxTlzO10r5Nzl9pSYnQeYSG2R240FixGykJH96yXDFciOwLRHsZhD7PRGO41qpFtjBEeih1YQ==
-X-Received: by 2002:a05:620a:d85:: with SMTP id q5mr5502693qkl.64.1635453336806;
-        Thu, 28 Oct 2021 13:35:36 -0700 (PDT)
-Received: from localhost.localdomain ([67.8.38.84])
-        by smtp.gmail.com with ESMTPSA id 9sm2593575qkn.84.2021.10.28.13.35.35
+        h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
+         :references:user-agent:mime-version:content-transfer-encoding;
+        bh=SUgXJSIh8EFoSAMumEnxtmiGI4n5OomF7wYpw8hip98=;
+        b=da08+283jhvUYVWS05EttB/txBDC8tABpgWk/ZOxFn7Q3Hkk7FEa6KAN31N7inH0DD
+         vkCjPAAA9DEavfhjP9yEF6u8dVFCqWPPCXiN78vH8+nZYH5qOPpKJ7MIwKUQGlGCX0II
+         +jofdEtVWFUmm36GXLuIhNLndzts2a/EEJ6fc1FETlXnFuuV/gkzt+U0IV/UV3QuakKn
+         FPmVyaYjDWmh0MgqqWVWOyuJ4h2dy0Az1rsw3vGW9vTLKa8EE7jw5ZFkF0l0bLb58E5X
+         V36ICHgxxRAFfxYdRLIEpvVO8QkA5KIK0wWRXjw127p5svKSMeOth0UNmzx90V8wB+bV
+         +/AQ==
+X-Gm-Message-State: AOAM532wKRdZ2OQczqhR7aB5nxbBFa+eo28JDVUKi49RCr3TDTepiPi+
+        Ot35uL1/lDZgo/MzQeC4DHWnn7YIQNP5oPxePnh/4oEPMFshDZpRAQbWif+7GLT4ljwjr0h53E0
+        jFOZFGRH9Pd43Z1tSnojS6g==
+X-Received: by 2002:a05:622a:1305:: with SMTP id v5mr7336192qtk.62.1635453852367;
+        Thu, 28 Oct 2021 13:44:12 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxW/pZCx3BUmMoOnbwLyJXXWjlVZfGY0QV8draJxhGBGHnbSdRJ0s3LzZ0AFGYy/3OheLLGBQ==
+X-Received: by 2002:a05:622a:1305:: with SMTP id v5mr7336173qtk.62.1635453852141;
+        Thu, 28 Oct 2021 13:44:12 -0700 (PDT)
+Received: from emilne (nat-pool-bos-t.redhat.com. [66.187.233.206])
+        by smtp.gmail.com with ESMTPSA id s7sm1480148qta.3.2021.10.28.13.44.11
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 28 Oct 2021 13:35:36 -0700 (PDT)
-Sender: Julian Braha <julian.braha@gmail.com>
-From:   Julian Braha <julianbraha@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, beanhuo@micron.com,
-        rdunlap@infradead.org, daejun7.park@samsung.com
-Cc:     fazilyildiran@gmail.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: fix unmet dependency on RESET_CONTROLLER for RESET_TI_SYSCON
-Date:   Thu, 28 Oct 2021 16:35:35 -0400
-Message-Id: <20211028203535.7771-1-julianbraha@gmail.com>
-X-Mailer: git-send-email 2.30.2
+        Thu, 28 Oct 2021 13:44:11 -0700 (PDT)
+Message-ID: <59d97121fb10961b0d6df291f983c9a578bc86e6.camel@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: core: avoid leaving shost->last_reset with
+ stale value if EH does not run
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Date:   Thu, 28 Oct 2021 16:44:10 -0400
+In-Reply-To: <yq1sfwlygts.fsf@ca-mkp.ca.oracle.com>
+References: <20211025143952.17128-1-emilne@redhat.com>
+         <20211025143952.17128-2-emilne@redhat.com>
+         <yq1sfwlygts.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.30.5 (3.30.5-1.fc29) 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When RESET_TI_SYSCON is selected, and RESET_CONTROLLER
-is not selected, Kbuild gives the following warning:
+On Wed, 2021-10-27 at 23:29 -0400, Martin K. Petersen wrote:
+> Ewan,
+> 
+> No particular objections to the functional change, although I would
+> appreciate if Hannes would have a look.
 
-WARNING: unmet direct dependencies detected for RESET_TI_SYSCON
-  Depends on [n]: RESET_CONTROLLER [=n] && HAS_IOMEM [=y]
-  Selected by [y]:
-  - SCSI_UFS_MEDIATEK [=y] && SCSI_LOWLEVEL [=y] && SCSI [=y] && SCSI_UFSHCD_PLATFORM [=y] && ARCH_MEDIATEK [=y]
+Absolutely.
 
-This is because RESET_TI_SYSCON is selected by
-SCSI_UFS_MEDIATEK, but SCSI_UFS_MEDIATEK does
-not select or depend on RESET_CONTROLLER, despite
-RESET_TI_SYSCON depending on RESET_CONTROLLER.
+> 
+> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> > index b6c86cc..9f4001e 100644
+> > --- a/drivers/scsi/scsi_error.c
+> > +++ b/drivers/scsi/scsi_error.c
+> > @@ -151,9 +151,11 @@ scmd_eh_abort_handler(struct work_struct *work)
+> >  	struct scsi_cmnd *scmd =
+> >  		container_of(work, struct scsi_cmnd, abort_work.work);
+> >  	struct scsi_device *sdev = scmd->device;
+> > +	struct Scsi_Host *shost = sdev->host;
+> >  	enum scsi_disposition rtn;
+> > +	unsigned long flags;
+> >  
+> > -	if (scsi_host_eh_past_deadline(sdev->host)) {
+> > +	if (scsi_host_eh_past_deadline(shost)) {
+> >  		SCSI_LOG_ERROR_RECOVERY(3,
+> >  			scmd_printk(KERN_INFO, scmd,
+> >  				    "eh timeout, not aborting\n"));
+> 
+> Changing sdev->host to shost makes this patch harder to review and
+> creates unnecessary churn for a stable fix. Maybe postpone that
+> particular cleanup?
 
-These unmet dependency bugs were detected by Kismet,
-a static analysis tool for Kconfig. Please advise if this
-is not the appropriate solution.
+Sure.  I added shost because the later code I added would have used
+sdev->shost a lot, seemed like I should have changed all uses.
+But I can it the other way, it will end up being the same after the
+subsequent patch.
 
-Signed-off-by: Julian Braha <julianbraha@gmail.com>
----
- drivers/scsi/ufs/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+> 
+> > @@ -175,12 +177,42 @@ scmd_eh_abort_handler(struct work_struct *work)
+> >  				SCSI_LOG_ERROR_RECOVERY(3,
+> >  					scmd_printk(KERN_WARNING, scmd,
+> >  						    "retry aborted command\n"));
+> > +
+> > +				spin_lock_irqsave(shost->host_lock, flags);
+> > +				list_del_init(&scmd->eh_entry);
+> > +
+> > +				/*
+> > +				 * If the abort succeeds, and there is no further
+> > +				 * EH action, clear the ->last_reset time.
+> > +				 */
+> > +				if (list_empty(&shost->eh_abort_list) &&
+> > +				    list_empty(&shost->eh_cmd_q))
+> > +					if (shost->eh_deadline != -1)
+> > +						shost->last_reset = 0;
+> > +
+> > +				spin_unlock_irqrestore(shost->host_lock, flags);
+> > +
+> 
+> Perhaps you could introduce a scsi_host_clear_last_reset() helper to
+> avoid duplicating this code?
 
-diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-index b2521b830be7..0427f8277a5d 100644
---- a/drivers/scsi/ufs/Kconfig
-+++ b/drivers/scsi/ufs/Kconfig
-@@ -115,6 +115,7 @@ config SCSI_UFS_MEDIATEK
- 	tristate "Mediatek specific hooks to UFS controller platform driver"
- 	depends on SCSI_UFSHCD_PLATFORM && ARCH_MEDIATEK
- 	select PHY_MTK_UFS
-+  select RESET_CONTROLLER
- 	select RESET_TI_SYSCON
- 	help
- 	  This selects the Mediatek specific additions to UFSHCD platform driver.
--- 
-2.30.2
+I removed the duplication in the subsequent patch, the reason it is duplicated
+here is to keep the control flow the same and avoid taking the ->host_lock twice.
+
+-Ewan
+
+> 
 
