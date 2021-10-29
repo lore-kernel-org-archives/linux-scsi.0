@@ -2,74 +2,116 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67A1DC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Oct 2021 11:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7A21C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Oct 2021 12:52:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 42C3961181
-	for <linux-scsi@archiver.kernel.org>; Fri, 29 Oct 2021 11:39:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AE94F61181
+	for <linux-scsi@archiver.kernel.org>; Fri, 29 Oct 2021 12:52:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231942AbhJ2Llr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 29 Oct 2021 07:41:47 -0400
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:51862 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231807AbhJ2Llr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 29 Oct 2021 07:41:47 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1635507558;
-        bh=l8eKkyWifkJcRVaeSzJ+LwsrAy/jA+WHQIcFrcLxLkk=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=BZSzyuBCq4bqwgsBexYweVjm7r0mdv59B46doANAAEXXwxJVmQK3V2mCKJIK03Dti
-         EwcUDeNty781tm+O1vHU/92lleGeetRkz7wA6LCSAfD9BAITh8ZJGto8blPjUfKL3h
-         z4umc8vKVx2VxZMFhVg+TQ4OYmeHzPQG4NecDueg=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C4D3D128012A;
-        Fri, 29 Oct 2021 07:39:18 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id hVWbNjhWUqUU; Fri, 29 Oct 2021 07:39:18 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1635507558;
-        bh=l8eKkyWifkJcRVaeSzJ+LwsrAy/jA+WHQIcFrcLxLkk=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=BZSzyuBCq4bqwgsBexYweVjm7r0mdv59B46doANAAEXXwxJVmQK3V2mCKJIK03Dti
-         EwcUDeNty781tm+O1vHU/92lleGeetRkz7wA6LCSAfD9BAITh8ZJGto8blPjUfKL3h
-         z4umc8vKVx2VxZMFhVg+TQ4OYmeHzPQG4NecDueg=
-Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 1B73F1280123;
-        Fri, 29 Oct 2021 07:39:18 -0400 (EDT)
-Message-ID: <a9641903818fd5e68397d9e42826640d9578c1ce.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: ufs: mark HPB support as BROKEN
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
-Cc:     axboe@kernel.dk, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Date:   Fri, 29 Oct 2021 07:39:16 -0400
-In-Reply-To: <20211029105353.GA25156@lst.de>
-References: <20211026071204.1709318-1-hch@lst.de>
-         <20211029105353.GA25156@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        id S230492AbhJ2MzN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 29 Oct 2021 08:55:13 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51308 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230134AbhJ2MzM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Oct 2021 08:55:12 -0400
+Received: from mail-il1-x130.google.com (mail-il1-x130.google.com [IPv6:2607:f8b0:4864:20::130])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00F3EC061714
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2021 05:52:44 -0700 (PDT)
+Received: by mail-il1-x130.google.com with SMTP id i12so4314541ila.12
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Oct 2021 05:52:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:to:cc:in-reply-to:references:subject:message-id:date
+         :mime-version:content-transfer-encoding;
+        bh=uhb6XVldQ6Tqmc638dZl/EsCqLPiV0DWHYdItNojyKA=;
+        b=5GN0r5l7hiNpTcfLkqhYBuNFAySG3bDs0RzGVfLozpBbOOqcW2Ol5fjMfiztfSwGR7
+         ecsfF4O7pN/iQHAQtqmWUAKbmPkaoUO6QANa1l6qh0P9P+dJPK6c5vvQxdCtXkDBmqzN
+         wcuzr6fHGMRM7IpqZvOq+ym0pgdpkjYalqhNslx4X8xU4LltacTcQM3T9XxlDouHOCfD
+         k2dsJPduQqzjvNb+bs1y1L6g/Vb4tCTRIRw25UKqIX7xro2yvpnlJU3bf48TPfCx8RHm
+         x0Q933IFlQ7nga0pwTdZcQICicL+1yG8JDbm1vO32ZDYTrXoqEH7n32/zz0XT+k84C2I
+         d8IQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:in-reply-to:references:subject
+         :message-id:date:mime-version:content-transfer-encoding;
+        bh=uhb6XVldQ6Tqmc638dZl/EsCqLPiV0DWHYdItNojyKA=;
+        b=qrku0yDFdd8jXBYsAqJENq1xdVS1xnNP/21uEM1bYHFS6BjB1RbYE8VU/wcLmIQC2x
+         iweq2dsyqniNH/yEWxR9ZaT04tLhRlsEvodKfwZWEKvxIsqH2KJqmJRO4XZVIBp30Z/x
+         ufAEc1Q4VGImjOsVoTkEwhvimNj+0iiGJOVflCw+29dNZBvJ4EzC8RNpI4HAl2fRpd4v
+         8SHVtiUA9cR9xFYS1RAMu3d267WBeAl+RFIZBTioMc670hR3icoEVqgHWO0jr6hJve3K
+         dAyMEMx7hq3oC3ZHHUzqdsUl2sNZfsSG+OdWOqNHl7ykoHAClKc8TENHunykbsG1nqHJ
+         mVrw==
+X-Gm-Message-State: AOAM532eK7Su3pZ67DRuGPUe+FgYSxVGP0EQH6sLh7i0S/OhKDja4eIU
+        pRm+iflwfmV0vf+PczWMJNQu+A==
+X-Google-Smtp-Source: ABdhPJxlsx7MLgDr//casvyGS6hISvFBN0+MeYK+NGcV0Ht28rkLQLfyTGFFc8OUgybOJDEyA0wdfw==
+X-Received: by 2002:a92:cda5:: with SMTP id g5mr7783563ild.36.1635511963406;
+        Fri, 29 Oct 2021 05:52:43 -0700 (PDT)
+Received: from [127.0.1.1] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id c23sm560811iob.52.2021.10.29.05.52.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 29 Oct 2021 05:52:42 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-block@vger.kernel.org,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        linux-mtd@lists.infradead.org
+In-Reply-To: <20211025070517.1548584-1-hch@lst.de>
+References: <20211025070517.1548584-1-hch@lst.de>
+Subject: Re: (subset) move all struct request releated code out of blk-core.c
+Message-Id: <163551196149.84649.4583690575292414176.b4-ty@kernel.dk>
+Date:   Fri, 29 Oct 2021 06:52:41 -0600
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Fri, 2021-10-29 at 12:53 +0200, Christoph Hellwig wrote:
-> Given that the discussion is now turning into bikeshedding wether the
-> non-public UFS spec is mereley completly broken or utterly completely
-> broken can we please add this patch or the revert before 5.15
-> goes in?  I don't think this mess will be resolved in any reasonable
-> time.
+On Mon, 25 Oct 2021 09:05:05 +0200, Christoph Hellwig wrote:
+> this series (against the for-5.16/passthrough-flag branch) removes the
+> remaining struct request related code from blk-core.c and cleans up a
+> few related bits around that.
+> 
+> Diffstat:
+>  b/block/Makefile                     |    2
+>  b/block/blk-core.c                   |  362 ----------------------
+>  b/block/blk-mq.c                     |  573 +++++++++++++++++++++++++++++------
+>  b/block/blk-mq.h                     |    3
+>  b/block/blk.h                        |   33 --
+>  b/drivers/block/paride/pd.c          |    4
+>  b/drivers/block/pktcdvd.c            |    2
+>  b/drivers/block/virtio_blk.c         |    4
+>  b/drivers/md/dm-mpath.c              |    4
+>  b/drivers/mmc/core/block.c           |   20 -
+>  b/drivers/mtd/mtd_blkdevs.c          |   10
+>  b/drivers/mtd/ubi/block.c            |    6
+>  b/drivers/scsi/scsi_bsg.c            |    2
+>  b/drivers/scsi/scsi_error.c          |    2
+>  b/drivers/scsi/scsi_ioctl.c          |    4
+>  b/drivers/scsi/scsi_lib.c            |   46 ++
+>  b/drivers/scsi/sg.c                  |    6
+>  b/drivers/scsi/sr.c                  |    2
+>  b/drivers/scsi/st.c                  |    4
+>  b/drivers/scsi/ufs/ufshcd.c          |   20 -
+>  b/drivers/scsi/ufs/ufshpb.c          |    8
+>  b/drivers/target/target_core_pscsi.c |    4
+>  b/include/linux/blk-mq.h             |   16
+>  block/blk-exec.c                     |  116 -------
+>  24 files changed, 597 insertions(+), 656 deletions(-)
+> 
+> [...]
 
-No.  Removing the 2.0 HPB optimization fixes all your complaints about
-the block API problems, so there's no need to do a full revert.  I just
-need someone to test the partial revert ASAP.  If no-one can test the
-partial revert then we can consider more drastic options.
+Applied, thanks!
 
-James
+[02/12] block: remove blk_{get,put}_request
+        commit: 0bf6d96cb8294094ce1e44cbe8cf65b0899d0a3a
+
+Best regards,
+-- 
+Jens Axboe
 
 
