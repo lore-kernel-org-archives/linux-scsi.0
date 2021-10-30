@@ -2,69 +2,66 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65412C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Oct 2021 07:15:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E88BC433F5
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Oct 2021 07:18:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2F51A60E0C
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Oct 2021 07:15:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4AFAB60D07
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Oct 2021 07:18:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231655AbhJ3HRz (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Oct 2021 03:17:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42394 "EHLO
+        id S231680AbhJ3HVW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Oct 2021 03:21:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43132 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231497AbhJ3HRy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Oct 2021 03:17:54 -0400
-Received: from mail-wm1-x332.google.com (mail-wm1-x332.google.com [IPv6:2a00:1450:4864:20::332])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9FFA0C061570;
-        Sat, 30 Oct 2021 00:15:22 -0700 (PDT)
-Received: by mail-wm1-x332.google.com with SMTP id y196so525970wmc.3;
-        Sat, 30 Oct 2021 00:15:22 -0700 (PDT)
+        with ESMTP id S231492AbhJ3HVV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Oct 2021 03:21:21 -0400
+Received: from mail-wm1-x32f.google.com (mail-wm1-x32f.google.com [IPv6:2a00:1450:4864:20::32f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7ADDC061570;
+        Sat, 30 Oct 2021 00:18:51 -0700 (PDT)
+Received: by mail-wm1-x32f.google.com with SMTP id z11-20020a1c7e0b000000b0030db7b70b6bso13413396wmc.1;
+        Sat, 30 Oct 2021 00:18:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=message-id:subject:from:to:cc:date:in-reply-to:references
          :user-agent:mime-version:content-transfer-encoding;
-        bh=PFGDK9bCYbd4pBxhevoLI4HDoaNJZr1Sew/oRuGM/KA=;
-        b=h8BT8l1IBxijVsphHwXpq4gvLRhYXHkFbRQl/2j9lQ5c0LR97LQuV/k+xcAd+oZYov
-         X0oJTZ6yL2BLfOmbJ1O2sVGCVBcldhiH2VqexC71vpOUMs3vwTfg99OMLfYojfAKAWja
-         27cChN+NoUiTmOTS6l0fc1aBhFO17Rsod1Ry7IpUK0wZb/5+mKE+DsMPUxBtKXTORA7C
-         fR/ZykWPNTXC3Lbc0bld1CVIMR35v6zAFGWbb9+PNybprSBqe65RRKCwiRG2QtqyTaLa
-         Gh7NbgwSX+uIjaypuonaUePZuvoru0wFoDOoGt7bhBK4Ab/s9bHvMJqlhgtoXZx0cLS8
-         P04Q==
+        bh=oVcNCx2IbAJ0wX8mqH7Uz5fTRfj9jXWXASNFwbc4lx0=;
+        b=KU7L3Ss03GDMunJYmFi8WaDD0j+MButs+kfWEFlcesCOaoo5pbTqia3pGZLy2aBrM6
+         ZRXvBgXkPNQ8Exfsar/s2k8t34YkJLJYyb0OyWR425v3swxoCKRLE611YE89QwD7fkSZ
+         5eX//L16kVspCZSPUhWGLZC3wrVCmWy9ArHFSOnHlJnFK8ZeTWKgS9Z4bvsT46s5Y8/n
+         S4uJrUSWPoU3Yrr87BJL8s4aOjqdUu+KkBpwX7HkEJf76bWMsv0sCSevDSnFMTNxgceJ
+         bEiPZ+tzl2Cio3ez+hukkDbX0dBCNQHCTIdqF3a+5sHT9fHeyg3kJCEfeXbvIm/JnDoY
+         Yobw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:message-id:subject:from:to:cc:date:in-reply-to
          :references:user-agent:mime-version:content-transfer-encoding;
-        bh=PFGDK9bCYbd4pBxhevoLI4HDoaNJZr1Sew/oRuGM/KA=;
-        b=Ene2utnb17UhGg109Z3Hu9PAHlk7WHE7esmMpQCx1nw6B+781pmaS9L9U7gN9Yj7c6
-         sEAP+uWNj5qpHXf/Ovudx1nmoJK/9n/9f3ZXBFptGjp5uwZ/1h0kHigep4aDtDvui7f2
-         5QzzErvRZW9MpcY0+cP+ycc8IN/s/mFWxBHB/c/73hXiCKEKjtXGYaQF2/oHIkKrBy1W
-         JazIaerv9ZK7N3MCjtkGICCFSOzOlVvuzvF9m3yqF1q35VMw8FH/efghjDFZ9yZen94o
-         8/usD4Etsojb1WKljdVqqEAaLU4g5G9/EcIx8Ns5EVE+lkYphLmV4ATv33gaTss0G3Rl
-         iM4w==
-X-Gm-Message-State: AOAM5324S3H60vdZQ1HGmbJrw9nlaxI8A6rp5io1e941ucC2sVkCNSlV
-        Dgb0MEbF8Uwe1cCbLoBS6ow=
-X-Google-Smtp-Source: ABdhPJyRn7ImEEqyDZEooVWhl/2m/t/nVqwhX+5PFa88iopn2lKGEM5KsMnLbwII2fJNRgXPB/Hemg==
-X-Received: by 2002:a05:600c:19d3:: with SMTP id u19mr23987716wmq.164.1635578120902;
-        Sat, 30 Oct 2021 00:15:20 -0700 (PDT)
+        bh=oVcNCx2IbAJ0wX8mqH7Uz5fTRfj9jXWXASNFwbc4lx0=;
+        b=JUO+MRAHHHItdS+2suhF1zVvJg+sxK4tgpJDjclOONLVRh805LehuJA9YdYHgnZ6M2
+         P3RuacZ+Hj5JcK2cYrRirGjmMAeo959/0VcbT/OKpSR2UfjdotXyxaCCF1an+lgt6DVh
+         OCn6MakcZQyiGq1ayj20b5flHbcL7IpooLqwF9vJltsBcSdpy0lrroEMnyLw5l2DI3v8
+         /wS/KKMthj3DZceEt0jrLvTDDokzUn4e2LmqgoN0qCU1wCp3ZDGwwo993anOZFqCHrTt
+         vF2lVpbYLQW77okWZTT973cgDsVkya2bISbnoElXby7P1i/rAV8i3sej20f2XnTOwav1
+         sUOg==
+X-Gm-Message-State: AOAM5314nLceBBHg4hktHg1yG1pIlz5DyjO1HBcNWFJZxJMj9n5I0MfI
+        UwGDTRCwn++fvhmfdYiBdSY=
+X-Google-Smtp-Source: ABdhPJwVMiAS5hNCE9cSf1+mvLG+NkA/S/EMLY/bXbmZtcT0LqnYL8sx9FRH2m0vc+/SREa+K4kCQQ==
+X-Received: by 2002:a1c:a405:: with SMTP id n5mr16388836wme.49.1635578330546;
+        Sat, 30 Oct 2021 00:18:50 -0700 (PDT)
 Received: from p200300e94719c92a81a9947a27df1b21.dip0.t-ipconnect.de (p200300e94719c92a81a9947a27df1b21.dip0.t-ipconnect.de. [2003:e9:4719:c92a:81a9:947a:27df:1b21])
-        by smtp.googlemail.com with ESMTPSA id s8sm7755852wrr.15.2021.10.30.00.15.19
+        by smtp.googlemail.com with ESMTPSA id l20sm12318956wmq.42.2021.10.30.00.18.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 30 Oct 2021 00:15:20 -0700 (PDT)
-Message-ID: <0f81b6d74a6bde6606ac93e20b65cc59b9bed5df.camel@gmail.com>
-Subject: Re: [PATCH v3] scsi: ufshpb: Opt out pre-reqs from HPB2.0 flows
+        Sat, 30 Oct 2021 00:18:50 -0700 (PDT)
+Message-ID: <29a3fd17a9a8b369af4adefb2b2b1eaabc56cb8c.camel@gmail.com>
+Subject: Re: [PATCH v2 0/2] Clean UFS HPB 2.0
 From:   Bean Huo <huobean@gmail.com>
-To:     Avri Altman <avri.altman@wdc.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>
-Date:   Sat, 30 Oct 2021 09:15:19 +0200
-In-Reply-To: <20211030062301.248-1-avri.altman@wdc.com>
-References: <20211030062301.248-1-avri.altman@wdc.com>
+To:     alim.akhtar@samsung.com, avri.altman@wdc.com,
+        asutoshd@codeaurora.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, stanley.chu@mediatek.com,
+        beanhuo@micron.com, bvanassche@acm.org, tomas.winkler@intel.com,
+        cang@codeaurora.org, daejun7.park@samsung.com
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date:   Sat, 30 Oct 2021 09:18:49 +0200
+In-Reply-To: <20211029194931.293826-1-huobean@gmail.com>
+References: <20211029194931.293826-1-huobean@gmail.com>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.36.5-0ubuntu1 
 MIME-Version: 1.0
@@ -73,144 +70,29 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sat, 2021-10-30 at 09:23 +0300, Avri Altman wrote:
-> v1 -> v2:
-> 
->  - forgot to remove ufshpb_set_write_buf_cmd
-> 
-> 
-> 
-> v2 -> v3:
-> 
->  - restore bMAX_ DATA_SIZE_FOR_HPB_SINGLE_CMD
-> 
->  - remove read_id - it is now always 0
-> 
->  - Ignore ufshpb_prep returned error - does not return -EAGAIN no
-> more
-> 
-> 
-> 
-> HPB allows its read commands to carry the physical addresses along
-> with
-> 
-> the LBAs, thus allowing less internal L2P-table switches in the
-> device.
-> 
-> HPB1.0 allowed a single LBA, while HPB2.0 increases this capacity up
-> to
-> 
-> 255 blocks.
-> 
-> 
-> 
-> Carrying more than a single record, the read operation is no longer
-> 
-> of type "read" per-se, but some sort of a "hybrid" command - writing
-> the
-> 
-> physical address to the device and reading the required payload.
-> 
-> 
-> 
-> The HPB JEDEC spec came-up with a dual-command for that operation:
-> 
-> HPB-WRITE-BUFFER (0x2) to write the physical addresses to device, and
-> 
-> HPB-READ to read the payload.
-> 
-> 
-> 
-> Alas, the current HPB driver design - a single-scsi-LLD-module, has
-> no
-> 
-> other alternative but to spawn the READ10 command into 2 commands:
-> 
-> HPB-WRITE-BUFFER and HPB-READ.
-> 
-> This causes a grat deal of aggrevation to the block layer guys, up to
-> a
-> 
-> point, in which that they were willing to revert the entire HPB
-> driver,
-> 
-> regardless of the huge amount of corporate effort already inversted
-> in
-> 
-> it.
-> 
-> 
-> 
-> Therefore, remove the pre-req API for now, as a matter of urgency to
-> get
-> 
-> it done before the closing of the merge window.
-> 
-> 
-> 
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com
-> >
-> 
-> Signed-off-by: Avri Altman <avri.altman@wdc.com>
-> 
-> Tested-by: Avri Altman <avri.altman@wdc.com>
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> 
-> ---
-> 
->  drivers/scsi/ufs/ufshcd.c |   7 +-
-> 
->  drivers/scsi/ufs/ufshpb.c | 283 +-----------------------------------
-> --
-> 
->  drivers/scsi/ufs/ufshpb.h |   2 -
-> 
->  3 files changed, 4 insertions(+), 288 deletions(-)
-> 
-> 
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> 
-> index f5ba8f953b87..470affdec426 100644
-> 
-> --- a/drivers/scsi/ufs/ufshcd.c
-> 
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> 
-> @@ -2767,12 +2767,7 @@ static int ufshcd_queuecommand(struct
-> Scsi_Host *host, struct scsi_cmnd *cmd)
-> 
->  
-> 
->         lrbp->req_abort_skip = false;
-> 
->  
-> 
-> -       err = ufshpb_prep(hba, lrbp);
-> 
-> -       if (err == -EAGAIN) {
-> 
-> -               lrbp->cmd = NULL;
-> 
-> -               ufshcd_release(hba);
-> 
-> -               goto out;
-> 
-> -       }
-> 
-> +       ufshpb_prep(hba, lrbp);
+
+Ignore this series of patches, because Avri's latest V3 already
+contains these changes.
 
 
-it is better to add one line comment to highlight that HPB preperation
-failure will not impact original read request.
-
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Tested-by: Bean Huo <beanhuo@micron.com>
-
-
-Bean
-
-
- 
+On Fri, 2021-10-29 at 21:49 +0200, Bean Huo wrote:
+> From: Bean Huo <beanhuo@micron.com>
+> 
+> Hi Martin and  Bart,
+> 
+> These patches are based on Avri's patch "scsi: ufs: ufshpb: Remove
+> HPB2.0 flows",
+> which has been applied to 5.15/scsi-fixes.
+> 
+> v1-v2:
+>     fix typoes in the commit message
+> 
+> Bean Huo (2):
+>   scsi: core: Ignore the UFSHPB preparation result
+>   scsi: ufshpb: Delete ufshpb_set_write_buf_cmd()
+> 
+>  drivers/scsi/ufs/ufshcd.c | 11 +++++------
+>  drivers/scsi/ufs/ufshpb.c | 14 --------------
+>  2 files changed, 5 insertions(+), 20 deletions(-)
+> 
 
