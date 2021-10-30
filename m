@@ -2,168 +2,533 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC323C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Oct 2021 14:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E02D7C433EF
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Oct 2021 21:45:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7C83860F55
-	for <linux-scsi@archiver.kernel.org>; Sat, 30 Oct 2021 14:07:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BF94760720
+	for <linux-scsi@archiver.kernel.org>; Sat, 30 Oct 2021 21:45:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229993AbhJ3OJ3 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 30 Oct 2021 10:09:29 -0400
-Received: from mx0a-00069f02.pphosted.com ([205.220.165.32]:1306 "EHLO
-        mx0a-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229585AbhJ3OJ3 (ORCPT
+        id S231387AbhJ3VsR (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 30 Oct 2021 17:48:17 -0400
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:52170 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230299AbhJ3VsQ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 30 Oct 2021 10:09:29 -0400
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 19UDUnNs009158;
-        Sat, 30 Oct 2021 14:06:51 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=to : cc : subject :
- from : message-id : references : date : in-reply-to : content-type :
- mime-version; s=corp-2021-07-09;
- bh=bgibXoZ/kHgfEJCpR0i6eBJkR2lm99RZowcDTdjJiVU=;
- b=L4YwYZHjnBxXp/a7KwSzyv1PtwYMm2G74eo5hEbGqmxOWtY3N+ib1iA+/fntiR0Dltxw
- 8qWKeTzyFLJ9jQxin/ynh57ppgCE0axcD8VPrvRPh54YQ7E/yTvHRyPC30g2GU+fdVdR
- qpmHO1tPCE5JD3gDDtdDSHT3uj3ttTUc+eAoBf57gegvGMLKJQxG6Zjf81aTYFxSEQam
- nnQOH0BjcKLJr7D5wAeZ4IXzf6xvOFZF6ZeRw1WYhmce0VY7QKS+lp3GAYCJv2Z1VkE5
- yL5ZRcWTg3DAio0IaY5w98RgtjSfm/zRlqw/WWPl0Jmwtre+q3BofhLAn5BvAkCfPXYT OA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3c0xkvgsgt-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 30 Oct 2021 14:06:51 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 19UE6Bgr054570;
-        Sat, 30 Oct 2021 14:06:50 GMT
-Received: from nam10-dm6-obe.outbound.protection.outlook.com (mail-dm6nam10lp2109.outbound.protection.outlook.com [104.47.58.109])
-        by userp3030.oracle.com with ESMTP id 3c0u5t238y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 30 Oct 2021 14:06:50 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=eG05HY5dWJX1Uux+hrMyRTRmoxImWTSAjNRjp8noxGezKYryPNNSRwecRVeWkBdGEu3ceXMdum4KKkCdWxwDCoXp3G/k+v9SptaDMmEet6bcLiBBS0XncMk5w+xRIok0RHrsq5mwlexIUZK5ceXcl/MjvLKH3kzEbcy0KH+zcBnW6D5zXfiQ+svfb2+m4jkbLU9UXd2LFmt5YiqlyvT2fbW+g37QpHvrFCODFB4P8CzzYN/E77Nyy7wD9q+RB5FuHg/XZ/bpw8Fp88WVjNBj4fzpJwGLSqjHuJIyE96grhchnOE3+IU1Uo64HXvNJQ7QGj77waXZeE3McZ7pJ1+TXQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bgibXoZ/kHgfEJCpR0i6eBJkR2lm99RZowcDTdjJiVU=;
- b=MJXqGanCV/u8YY6sTKLQ9Of0bl/9o4pGbbYyBjEYU5BCcLN91XKUgrfzes2Ht/zpVvCzfmA9D4AblxGSTBD1gDAA/ROiFZByrJsSjchy05up3JSqD5qIAVbUJ9lftJ+yBkaZ5PAG5+bwyiCI0+1qcvx9jLkVnQW6sx/t+Jn5n08U8Zw5SjL7wwJzEMR0/zCQBK+9h38zg+xymGIno9iUprSrMdQacpRvnRphJrvFH+A7G8EYw0p5LvWulyD+BAcIrYF+Rpqr2TJjzNjvo6IcaTPYGW2gkMmhedVm1KJvS8RjNi9jgiLU3pROgQAzbJRAWYdxKG3qdQIUf8i2Dom/Ww==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bgibXoZ/kHgfEJCpR0i6eBJkR2lm99RZowcDTdjJiVU=;
- b=BcMw15q7uIU4ThTY8grnCSpzuud8qcdlinGscOyy0gjo2wdg7x1lsrnSOEgW7Z0jdKvGAkvffhUzL5Gf/axl5jlFGKPgDTX6ZZ27dkYhaCD3EAeWXCDjqvk2BEkQJwYmHfRmx7mnVy0i/x0nbMIgo+1/Djs9KpsDKM7q5STxUCE=
-Authentication-Results: wdc.com; dkim=none (message not signed)
- header.d=none;wdc.com; dmarc=none action=none header.from=oracle.com;
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com (2603:10b6:510:3d::12)
- by PH0PR10MB5893.namprd10.prod.outlook.com (2603:10b6:510:149::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4649.17; Sat, 30 Oct
- 2021 14:06:48 +0000
-Received: from PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::a457:48f2:991f:c349]) by PH0PR10MB4759.namprd10.prod.outlook.com
- ([fe80::a457:48f2:991f:c349%8]) with mapi id 15.20.4649.018; Sat, 30 Oct 2021
- 14:06:48 +0000
-To:     Avri Altman <Avri.Altman@wdc.com>
-Cc:     Bean Huo <huobean@gmail.com>,
-        "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v3] scsi: ufshpb: Opt out pre-reqs from HPB2.0 flows
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-Organization: Oracle Corporation
-Message-ID: <yq11r42txpi.fsf@ca-mkp.ca.oracle.com>
-References: <20211030062301.248-1-avri.altman@wdc.com>
-        <0f81b6d74a6bde6606ac93e20b65cc59b9bed5df.camel@gmail.com>
-        <DM6PR04MB6575F504229146B3C465C8EBFC889@DM6PR04MB6575.namprd04.prod.outlook.com>
-        <DM6PR04MB65753D4C8069120AF4590D7EFC889@DM6PR04MB6575.namprd04.prod.outlook.com>
-Date:   Sat, 30 Oct 2021 10:06:45 -0400
-In-Reply-To: <DM6PR04MB65753D4C8069120AF4590D7EFC889@DM6PR04MB6575.namprd04.prod.outlook.com>
-        (Avri Altman's message of "Sat, 30 Oct 2021 10:57:09 +0000")
-Content-Type: text/plain
-X-ClientProxiedBy: SA9PR10CA0014.namprd10.prod.outlook.com
- (2603:10b6:806:a7::19) To PH0PR10MB4759.namprd10.prod.outlook.com
- (2603:10b6:510:3d::12)
+        Sat, 30 Oct 2021 17:48:16 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1635630346;
+        bh=zKB1pZmHpOgoFoyme2O36VT2hQR1Y3A6cTVVfvpqYmI=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=gEcvy7On+yG6qfzBTLhQJN3VRshhmJRDAyKZND5vk/uy2LSPPpyDmIr/zVLblG649
+         XPTAoyRyy37VCrE+kHKjKSlTj3yMvtLn1l7e4mmdwtIytno2+NgKx44va4EAxmcR77
+         wwouYdbQLARfiuyMKSPry6j2pvuoVKN6/EIwg4jQ=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 5C7A4128043D;
+        Sat, 30 Oct 2021 17:45:46 -0400 (EDT)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id eoURyQrgnMhj; Sat, 30 Oct 2021 17:45:46 -0400 (EDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1635630346;
+        bh=zKB1pZmHpOgoFoyme2O36VT2hQR1Y3A6cTVVfvpqYmI=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=gEcvy7On+yG6qfzBTLhQJN3VRshhmJRDAyKZND5vk/uy2LSPPpyDmIr/zVLblG649
+         XPTAoyRyy37VCrE+kHKjKSlTj3yMvtLn1l7e4mmdwtIytno2+NgKx44va4EAxmcR77
+         wwouYdbQLARfiuyMKSPry6j2pvuoVKN6/EIwg4jQ=
+Received: from [172.20.7.191] (65-126-61-114.dia.static.qwest.net [65.126.61.114])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id AD987128012A;
+        Sat, 30 Oct 2021 17:45:45 -0400 (EDT)
+Message-ID: <fd550fa6f72861294271fdbaf98c09b34a1a8c95.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 5.15-rc7
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Sat, 30 Oct 2021 14:45:43 -0700
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Received: from ca-mkp.ca.oracle.com (138.3.201.62) by SA9PR10CA0014.namprd10.prod.outlook.com (2603:10b6:806:a7::19) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4649.17 via Frontend Transport; Sat, 30 Oct 2021 14:06:47 +0000
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id: fec73034-906d-4a0d-18b7-08d99bae8333
-X-MS-TrafficTypeDiagnostic: PH0PR10MB5893:
-X-Microsoft-Antispam-PRVS: <PH0PR10MB589393F24C69D6FE23E9D9B08E889@PH0PR10MB5893.namprd10.prod.outlook.com>
-X-MS-Oob-TLC-OOBClassifiers: OLM:6430;
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: AVYyNeJs7KdE4WxE/uExaW+dfRkgNQes+e6Cs8shveF/AELo5fAo/kiGeXr+B4Zi2SjLEEy0CZQag6R4zK463fH8rpTQrvLA/r+YDzxAE2/kVkLaL9jIwmMHgWPT1TsdIR3YFyAbNa6n325Tw8/iZKgq7Xn3k3xg0q3oc7QNoVG+eM3RHJUSQt6ArX4+I2XP2aJZY52b4deuwa2xI0JWiWJ3ZZIbnoeYjaTHMi7hpWFXmwN0x1QlsJnBK8yEydcrLpOy6m5jmxMCfezcv520iyATSdKnKg+phXlestiNDXLxfPZ/yxfQNhsqoenDAKf65U3ALjBOv7mTy8xmMtUPEdizkZKH1W/sV58gmVjUUXO5sar3nwDPkerFwKHCHTCW1Rz+wdIDCnsMD7Vski6IxvnHCbzHI0O5q9Qpdk3A4g+rJfSExMPp9PNRWVFBeoha380pu8xHBl/RBlaDuJikzbidI2Bklb2a4A3IwvCRtjqR/Jhi/Zv8keM/DyVWhLdEU2/7KIZ6ZlRjzE85Pe0MKrvaRagdBaxEJBnNCSbQ6AP0/BqKfCKt/PIxBQAPi9AHfN48T8BA+bIac5Q7D411pD28cfTbLfnBGddzV2CBt3HpGbjF2hGf1hGcibu8cnSCfiBF+TFwDzQlp3V72vwsIxmPgsyHIq/Z0dm18t3ayKVp52cotbwDyXypgPsozl9AoTpkxItuxllc39jzCxYZbA==
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB4759.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(66946007)(8676002)(7416002)(38350700002)(38100700002)(66556008)(54906003)(83380400001)(66476007)(8936002)(6916009)(316002)(86362001)(2906002)(26005)(4326008)(5660300002)(956004)(55016002)(558084003)(36916002)(7696005)(52116002)(508600001)(186003);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?EJpSgv653/dqB8UHRbyXcn54MkEnpP3h80l1t4OAvZwmk/ZY8fFLY2VbYTCd?=
- =?us-ascii?Q?n4c7uH1CuDtux4h6Nu0h0w6nvSPFkkvQVazi+vnpoDlAvHH57MNtG2VC0gMO?=
- =?us-ascii?Q?mtmHYEkJeDbXNK/g/TXNoiApg8rbEy1OcEpjM/ApO3wgHryb/PSkiR/onjK9?=
- =?us-ascii?Q?exI4WTbOXXcOoAl5arpYDb8bEfFqoM89htXlTo9/2f/QeDGAiqsXNkw/n1rU?=
- =?us-ascii?Q?oI6twWeV0pg+CiMuHXqps3liY+QnGRyGRJHCHXianAteiCsGrkH5rTdB8glZ?=
- =?us-ascii?Q?MsZrWV9WAR/HTeqVXE7XM3hoEohP2cQMEtGSzCoEWgPLS1ywtHCej/yltG/o?=
- =?us-ascii?Q?iMNbLKS6Zdol+L6EkvMvojUMKUe/gnEtvpiXMZJDKV+h5lJ3f/JxLaXEsqF+?=
- =?us-ascii?Q?9yx10YnUWbUy3idcbAjlWAA6DTYwLFXHRl0kjZuDlZ+GJbgRVN0ML4o2hco2?=
- =?us-ascii?Q?rnJAFCP6nsc3JNWpbkvkf4hxFsdi1wKVDJwQzjjhoBh3wPxNB89L1R069mf0?=
- =?us-ascii?Q?gP3MOFvzTZn6cuT5xTnByL7O/SLr79J+VL+1XKED0+9oIa7SDiBea6sftiri?=
- =?us-ascii?Q?lX3+zFMkl1Wf7U4lV1FQZBMRRzWQqfrspWMt1pwjyNLBwOZ1ecym7O7cXFBf?=
- =?us-ascii?Q?aIb8YhZifwi29m+Q6CNJIjqq611c1ppk1w8+n0GwKlu4WGibAlp5Y+ueq6fw?=
- =?us-ascii?Q?ysjvbpJVpgutynGVfb7IpkxagAwHyxPvTFpxCkpd3qDAydDaUl8F1VHvmHg6?=
- =?us-ascii?Q?56G5NsTBF+gtSvq9yqUYHOTQscI4LDVAdzjxF0RLyIAike/UGb7pznLLJfca?=
- =?us-ascii?Q?YVoqYUgMO0ZOASy9BygCciwZURPG8Xv9M3LmuVrQlaenDPIM+MEffzlWt/vF?=
- =?us-ascii?Q?6r815xa7fdXFgTS202Hj3VTd/PkbJ0Ps7aLA5qESm33ORCBiN4Y0Dy3hunRV?=
- =?us-ascii?Q?q+lEKZPRPCoUftQr033fG/pWMSD3VVHRkHXfP38n0BXFFF7VRqjLViTWU/N8?=
- =?us-ascii?Q?CfUkmY+O7SCm2OWGagiv8Qpxon3xCG7X65Wv8p4+t6SFlKmqwBpxycu1QR48?=
- =?us-ascii?Q?SSaIjG0c8ZMRsZAmR1klq4fmVuwF5S8S7lU2b/ZoZM4AsGB0BwQHEyWgE55v?=
- =?us-ascii?Q?ncXhptwNQ+M1k/sRX7v9zATR10hO38OvPhYFapMkHpow0lT3npwaRWuKhSF9?=
- =?us-ascii?Q?LUwlG+rUT9h0COti3x6410/ERdAa1qfz5FvN9CCltTp+tEV5d32drga5yTSy?=
- =?us-ascii?Q?ZAsItWLCzglN8OUBwxmt+smLj2xAnBySA6h3DzwCLuh+dGzjdTyrLwbB7Y70?=
- =?us-ascii?Q?Sfb69a/5M+0nmcCt0deoT8D13MyBXJDvJP4EoQtb3z8LT+pIpWvag6Zph4Fv?=
- =?us-ascii?Q?R3YeHZ44Y53aEFLZm2Xj9f2c69wZmK8eFU8fdJBp8bJyFyPr6h7VaEvtGFGf?=
- =?us-ascii?Q?ClobPmvscXj4erSpK1c3xJK6anDF+hK8TzZLzeCsiAZ41rXWqUCE5aK2N7/q?=
- =?us-ascii?Q?Meh/J5OrvMDKp1B01qjVW6YKKpZjvxAn2DqJUXJ2Od3a8NA3mYRiA+BToJMa?=
- =?us-ascii?Q?ZGLSRdTULJLEreZuRhGTpIfdkamMAEJuSUbvMzzXHN3Sg6NkkayfLIN3uS1d?=
- =?us-ascii?Q?nLNEPNuuPjxnT5+Q8ekO0H4tB0HcP8QtR0T8ugdtEPbgFLh922VgJbUOy9JW?=
- =?us-ascii?Q?RIim+g=3D=3D?=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fec73034-906d-4a0d-18b7-08d99bae8333
-X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB4759.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Oct 2021 14:06:47.8400
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ZVN2c2I5XGRHo/Sy9+3zMAqGc1yS7N8J6ZlH/FqZVPWcrp6xLEhYnXUG5VmsJ9YrPi01DWbTA9Y5F5zkIys6MHyhWbCZRpGHMeerauNB7oA=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5893
-X-Proofpoint-Virus-Version: vendor=nai engine=6300 definitions=10152 signatures=668683
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 adultscore=0
- mlxlogscore=984 bulkscore=0 malwarescore=0 mlxscore=0 suspectscore=0
- spamscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2110300081
-X-Proofpoint-GUID: m0eb9gvIaWO6SJpqU9qlRy6rlwF8nw4C
-X-Proofpoint-ORIG-GUID: m0eb9gvIaWO6SJpqU9qlRy6rlwF8nw4C
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+Three small fixes, all in drivers, and one sizeable update to the UFS
+driver to remove the HPB 2.0 feature that has been objected to by Jens
+and Christoph.  Although the UFS patch is large and last minute, it's
+essentially the least intrusive way of resolving the objections in time
+for the 5.15 release.
 
-Avri,
+The patch is available here:
 
-> Alternatively, would you prefer that instead of all that, I'll submit
-> a fix to facdc632bb5f (scsi: ufs: ufshpb: Remove HPB2.0 flows), which
-> you already picked?
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-I updated to v3.
+The short changelog is:
 
-Thanks again for working on this, much appreciated!
+Avri Altman (1):
+      scsi: ufs: ufshpb: Remove HPB2.0 flows
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Brian King (1):
+      scsi: ibmvfc: Fix up duplicate response detection
+
+Chanho Park (1):
+      scsi: ufs: ufs-exynos: Correct timeout value setting registers
+
+Martin K. Petersen (1):
+      scsi: mpt3sas: Fix reference tag handling for WRITE_INSERT
+
+And the diffstat:
+
+ drivers/scsi/ibmvscsi/ibmvfc.c       |   3 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   9 +-
+ drivers/scsi/ufs/ufs-exynos.c        |   6 +-
+ drivers/scsi/ufs/ufshcd.c            |   7 +-
+ drivers/scsi/ufs/ufshpb.c            | 283 +----------------------------------
+ drivers/scsi/ufs/ufshpb.h            |   2 -
+ 6 files changed, 15 insertions(+), 295 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 1f1586ad48fe..01f79991bf4a 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1696,6 +1696,7 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+ 
+ 	spin_lock_irqsave(&evt->queue->l_lock, flags);
+ 	list_add_tail(&evt->queue_list, &evt->queue->sent);
++	atomic_set(&evt->active, 1);
+ 
+ 	mb();
+ 
+@@ -1710,6 +1711,7 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+ 				     be64_to_cpu(crq_as_u64[1]));
+ 
+ 	if (rc) {
++		atomic_set(&evt->active, 0);
+ 		list_del(&evt->queue_list);
+ 		spin_unlock_irqrestore(&evt->queue->l_lock, flags);
+ 		del_timer(&evt->timer);
+@@ -1737,7 +1739,6 @@ static int ibmvfc_send_event(struct ibmvfc_event *evt,
+ 
+ 		evt->done(evt);
+ 	} else {
+-		atomic_set(&evt->active, 1);
+ 		spin_unlock_irqrestore(&evt->queue->l_lock, flags);
+ 		ibmvfc_trc_start(evt);
+ 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index d383d4a03436..ad1b6c2b37a7 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5065,9 +5065,12 @@ _scsih_setup_eedp(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+ 	if (scmd->prot_flags & SCSI_PROT_GUARD_CHECK)
+ 		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_CHECK_GUARD;
+ 
+-	if (scmd->prot_flags & SCSI_PROT_REF_CHECK) {
+-		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG |
+-			MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG;
++	if (scmd->prot_flags & SCSI_PROT_REF_CHECK)
++		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_CHECK_REFTAG;
++
++	if (scmd->prot_flags & SCSI_PROT_REF_INCREMENT) {
++		eedp_flags |= MPI2_SCSIIO_EEDPFLAGS_INC_PRI_REFTAG;
++
+ 		mpi_request->CDB.EEDP32.PrimaryReferenceTag =
+ 			cpu_to_be32(scsi_prot_ref_tag(scmd));
+ 	}
+diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+index a14dd8ce56d4..bb2dd79a1bcd 100644
+--- a/drivers/scsi/ufs/ufs-exynos.c
++++ b/drivers/scsi/ufs/ufs-exynos.c
+@@ -642,9 +642,9 @@ static int exynos_ufs_pre_pwr_mode(struct ufs_hba *hba,
+ 	}
+ 
+ 	/* setting for three timeout values for traffic class #0 */
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0), 8064);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1), 28224);
+-	ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2), 20160);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(DL_FC0PROTTIMEOUTVAL), 8064);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(DL_TC0REPLAYTIMEOUTVAL), 28224);
++	ufshcd_dme_set(hba, UIC_ARG_MIB(DL_AFC0REQTIMEOUTVAL), 20160);
+ 
+ 	return 0;
+ out:
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 95be7ecdfe10..41f2ff35f82b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2737,12 +2737,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	lrbp->req_abort_skip = false;
+ 
+-	err = ufshpb_prep(hba, lrbp);
+-	if (err == -EAGAIN) {
+-		lrbp->cmd = NULL;
+-		ufshcd_release(hba);
+-		goto out;
+-	}
++	ufshpb_prep(hba, lrbp);
+ 
+ 	ufshcd_comp_scsi_upiu(hba, lrbp);
+ 
+diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
+index 589af5f6b940..026a133149dc 100644
+--- a/drivers/scsi/ufs/ufshpb.c
++++ b/drivers/scsi/ufs/ufshpb.c
+@@ -84,16 +84,6 @@ static bool ufshpb_is_supported_chunk(struct ufshpb_lu *hpb, int transfer_len)
+ 	return transfer_len <= hpb->pre_req_max_tr_len;
+ }
+ 
+-/*
+- * In this driver, WRITE_BUFFER CMD support 36KB (len=9) ~ 1MB (len=256) as
+- * default. It is possible to change range of transfer_len through sysfs.
+- */
+-static inline bool ufshpb_is_required_wb(struct ufshpb_lu *hpb, int len)
+-{
+-	return len > hpb->pre_req_min_tr_len &&
+-	       len <= hpb->pre_req_max_tr_len;
+-}
+-
+ static bool ufshpb_is_general_lun(int lun)
+ {
+ 	return lun < UFS_UPIU_MAX_UNIT_NUM_ID;
+@@ -334,7 +324,7 @@ ufshpb_get_pos_from_lpn(struct ufshpb_lu *hpb, unsigned long lpn, int *rgn_idx,
+ 
+ static void
+ ufshpb_set_hpb_read_to_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+-			    __be64 ppn, u8 transfer_len, int read_id)
++			    __be64 ppn, u8 transfer_len)
+ {
+ 	unsigned char *cdb = lrbp->cmd->cmnd;
+ 	__be64 ppn_tmp = ppn;
+@@ -346,256 +336,11 @@ ufshpb_set_hpb_read_to_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 	/* ppn value is stored as big-endian in the host memory */
+ 	memcpy(&cdb[6], &ppn_tmp, sizeof(__be64));
+ 	cdb[14] = transfer_len;
+-	cdb[15] = read_id;
++	cdb[15] = 0;
+ 
+ 	lrbp->cmd->cmd_len = UFS_CDB_SIZE;
+ }
+ 
+-static inline void ufshpb_set_write_buf_cmd(unsigned char *cdb,
+-					    unsigned long lpn, unsigned int len,
+-					    int read_id)
+-{
+-	cdb[0] = UFSHPB_WRITE_BUFFER;
+-	cdb[1] = UFSHPB_WRITE_BUFFER_PREFETCH_ID;
+-
+-	put_unaligned_be32(lpn, &cdb[2]);
+-	cdb[6] = read_id;
+-	put_unaligned_be16(len * HPB_ENTRY_SIZE, &cdb[7]);
+-
+-	cdb[9] = 0x00;	/* Control = 0x00 */
+-}
+-
+-static struct ufshpb_req *ufshpb_get_pre_req(struct ufshpb_lu *hpb)
+-{
+-	struct ufshpb_req *pre_req;
+-
+-	if (hpb->num_inflight_pre_req >= hpb->throttle_pre_req) {
+-		dev_info(&hpb->sdev_ufs_lu->sdev_dev,
+-			 "pre_req throttle. inflight %d throttle %d",
+-			 hpb->num_inflight_pre_req, hpb->throttle_pre_req);
+-		return NULL;
+-	}
+-
+-	pre_req = list_first_entry_or_null(&hpb->lh_pre_req_free,
+-					   struct ufshpb_req, list_req);
+-	if (!pre_req) {
+-		dev_info(&hpb->sdev_ufs_lu->sdev_dev, "There is no pre_req");
+-		return NULL;
+-	}
+-
+-	list_del_init(&pre_req->list_req);
+-	hpb->num_inflight_pre_req++;
+-
+-	return pre_req;
+-}
+-
+-static inline void ufshpb_put_pre_req(struct ufshpb_lu *hpb,
+-				      struct ufshpb_req *pre_req)
+-{
+-	pre_req->req = NULL;
+-	bio_reset(pre_req->bio);
+-	list_add_tail(&pre_req->list_req, &hpb->lh_pre_req_free);
+-	hpb->num_inflight_pre_req--;
+-}
+-
+-static void ufshpb_pre_req_compl_fn(struct request *req, blk_status_t error)
+-{
+-	struct ufshpb_req *pre_req = (struct ufshpb_req *)req->end_io_data;
+-	struct ufshpb_lu *hpb = pre_req->hpb;
+-	unsigned long flags;
+-
+-	if (error) {
+-		struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(req);
+-		struct scsi_sense_hdr sshdr;
+-
+-		dev_err(&hpb->sdev_ufs_lu->sdev_dev, "block status %d", error);
+-		scsi_command_normalize_sense(cmd, &sshdr);
+-		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+-			"code %x sense_key %x asc %x ascq %x",
+-			sshdr.response_code,
+-			sshdr.sense_key, sshdr.asc, sshdr.ascq);
+-		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+-			"byte4 %x byte5 %x byte6 %x additional_len %x",
+-			sshdr.byte4, sshdr.byte5,
+-			sshdr.byte6, sshdr.additional_length);
+-	}
+-
+-	blk_mq_free_request(req);
+-	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+-	ufshpb_put_pre_req(pre_req->hpb, pre_req);
+-	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+-}
+-
+-static int ufshpb_prep_entry(struct ufshpb_req *pre_req, struct page *page)
+-{
+-	struct ufshpb_lu *hpb = pre_req->hpb;
+-	struct ufshpb_region *rgn;
+-	struct ufshpb_subregion *srgn;
+-	__be64 *addr;
+-	int offset = 0;
+-	int copied;
+-	unsigned long lpn = pre_req->wb.lpn;
+-	int rgn_idx, srgn_idx, srgn_offset;
+-	unsigned long flags;
+-
+-	addr = page_address(page);
+-	ufshpb_get_pos_from_lpn(hpb, lpn, &rgn_idx, &srgn_idx, &srgn_offset);
+-
+-	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+-
+-next_offset:
+-	rgn = hpb->rgn_tbl + rgn_idx;
+-	srgn = rgn->srgn_tbl + srgn_idx;
+-
+-	if (!ufshpb_is_valid_srgn(rgn, srgn))
+-		goto mctx_error;
+-
+-	if (!srgn->mctx)
+-		goto mctx_error;
+-
+-	copied = ufshpb_fill_ppn_from_page(hpb, srgn->mctx, srgn_offset,
+-					   pre_req->wb.len - offset,
+-					   &addr[offset]);
+-
+-	if (copied < 0)
+-		goto mctx_error;
+-
+-	offset += copied;
+-	srgn_offset += copied;
+-
+-	if (srgn_offset == hpb->entries_per_srgn) {
+-		srgn_offset = 0;
+-
+-		if (++srgn_idx == hpb->srgns_per_rgn) {
+-			srgn_idx = 0;
+-			rgn_idx++;
+-		}
+-	}
+-
+-	if (offset < pre_req->wb.len)
+-		goto next_offset;
+-
+-	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+-	return 0;
+-mctx_error:
+-	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+-	return -ENOMEM;
+-}
+-
+-static int ufshpb_pre_req_add_bio_page(struct ufshpb_lu *hpb,
+-				       struct request_queue *q,
+-				       struct ufshpb_req *pre_req)
+-{
+-	struct page *page = pre_req->wb.m_page;
+-	struct bio *bio = pre_req->bio;
+-	int entries_bytes, ret;
+-
+-	if (!page)
+-		return -ENOMEM;
+-
+-	if (ufshpb_prep_entry(pre_req, page))
+-		return -ENOMEM;
+-
+-	entries_bytes = pre_req->wb.len * sizeof(__be64);
+-
+-	ret = bio_add_pc_page(q, bio, page, entries_bytes, 0);
+-	if (ret != entries_bytes) {
+-		dev_err(&hpb->sdev_ufs_lu->sdev_dev,
+-			"bio_add_pc_page fail: %d", ret);
+-		return -ENOMEM;
+-	}
+-	return 0;
+-}
+-
+-static inline int ufshpb_get_read_id(struct ufshpb_lu *hpb)
+-{
+-	if (++hpb->cur_read_id >= MAX_HPB_READ_ID)
+-		hpb->cur_read_id = 1;
+-	return hpb->cur_read_id;
+-}
+-
+-static int ufshpb_execute_pre_req(struct ufshpb_lu *hpb, struct scsi_cmnd *cmd,
+-				  struct ufshpb_req *pre_req, int read_id)
+-{
+-	struct scsi_device *sdev = cmd->device;
+-	struct request_queue *q = sdev->request_queue;
+-	struct request *req;
+-	struct scsi_request *rq;
+-	struct bio *bio = pre_req->bio;
+-
+-	pre_req->hpb = hpb;
+-	pre_req->wb.lpn = sectors_to_logical(cmd->device,
+-					     blk_rq_pos(scsi_cmd_to_rq(cmd)));
+-	pre_req->wb.len = sectors_to_logical(cmd->device,
+-					     blk_rq_sectors(scsi_cmd_to_rq(cmd)));
+-	if (ufshpb_pre_req_add_bio_page(hpb, q, pre_req))
+-		return -ENOMEM;
+-
+-	req = pre_req->req;
+-
+-	/* 1. request setup */
+-	blk_rq_append_bio(req, bio);
+-	req->rq_disk = NULL;
+-	req->end_io_data = (void *)pre_req;
+-	req->end_io = ufshpb_pre_req_compl_fn;
+-
+-	/* 2. scsi_request setup */
+-	rq = scsi_req(req);
+-	rq->retries = 1;
+-
+-	ufshpb_set_write_buf_cmd(rq->cmd, pre_req->wb.lpn, pre_req->wb.len,
+-				 read_id);
+-	rq->cmd_len = scsi_command_size(rq->cmd);
+-
+-	if (blk_insert_cloned_request(q, req) != BLK_STS_OK)
+-		return -EAGAIN;
+-
+-	hpb->stats.pre_req_cnt++;
+-
+-	return 0;
+-}
+-
+-static int ufshpb_issue_pre_req(struct ufshpb_lu *hpb, struct scsi_cmnd *cmd,
+-				int *read_id)
+-{
+-	struct ufshpb_req *pre_req;
+-	struct request *req = NULL;
+-	unsigned long flags;
+-	int _read_id;
+-	int ret = 0;
+-
+-	req = blk_get_request(cmd->device->request_queue,
+-			      REQ_OP_DRV_OUT | REQ_SYNC, BLK_MQ_REQ_NOWAIT);
+-	if (IS_ERR(req))
+-		return -EAGAIN;
+-
+-	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+-	pre_req = ufshpb_get_pre_req(hpb);
+-	if (!pre_req) {
+-		ret = -EAGAIN;
+-		goto unlock_out;
+-	}
+-	_read_id = ufshpb_get_read_id(hpb);
+-	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+-
+-	pre_req->req = req;
+-
+-	ret = ufshpb_execute_pre_req(hpb, cmd, pre_req, _read_id);
+-	if (ret)
+-		goto free_pre_req;
+-
+-	*read_id = _read_id;
+-
+-	return ret;
+-free_pre_req:
+-	spin_lock_irqsave(&hpb->rgn_state_lock, flags);
+-	ufshpb_put_pre_req(hpb, pre_req);
+-unlock_out:
+-	spin_unlock_irqrestore(&hpb->rgn_state_lock, flags);
+-	blk_put_request(req);
+-	return ret;
+-}
+-
+ /*
+  * This function will set up HPB read command using host-side L2P map data.
+  */
+@@ -609,7 +354,6 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	__be64 ppn;
+ 	unsigned long flags;
+ 	int transfer_len, rgn_idx, srgn_idx, srgn_offset;
+-	int read_id = 0;
+ 	int err = 0;
+ 
+ 	hpb = ufshpb_get_hpb_data(cmd->device);
+@@ -685,24 +429,8 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 		dev_err(hba->dev, "get ppn failed. err %d\n", err);
+ 		return err;
+ 	}
+-	if (!ufshpb_is_legacy(hba) &&
+-	    ufshpb_is_required_wb(hpb, transfer_len)) {
+-		err = ufshpb_issue_pre_req(hpb, cmd, &read_id);
+-		if (err) {
+-			unsigned long timeout;
+-
+-			timeout = cmd->jiffies_at_alloc + msecs_to_jiffies(
+-				  hpb->params.requeue_timeout_ms);
+-
+-			if (time_before(jiffies, timeout))
+-				return -EAGAIN;
+-
+-			hpb->stats.miss_cnt++;
+-			return 0;
+-		}
+-	}
+ 
+-	ufshpb_set_hpb_read_to_upiu(hba, lrbp, ppn, transfer_len, read_id);
++	ufshpb_set_hpb_read_to_upiu(hba, lrbp, ppn, transfer_len);
+ 
+ 	hpb->stats.hit_cnt++;
+ 	return 0;
+@@ -1841,16 +1569,11 @@ static void ufshpb_lu_parameter_init(struct ufs_hba *hba,
+ 	u32 entries_per_rgn;
+ 	u64 rgn_mem_size, tmp;
+ 
+-	/* for pre_req */
+-	hpb->pre_req_min_tr_len = hpb_dev_info->max_hpb_single_cmd + 1;
+-
+ 	if (ufshpb_is_legacy(hba))
+ 		hpb->pre_req_max_tr_len = HPB_LEGACY_CHUNK_HIGH;
+ 	else
+ 		hpb->pre_req_max_tr_len = HPB_MULTI_CHUNK_HIGH;
+ 
+-	hpb->cur_read_id = 0;
+-
+ 	hpb->lu_pinned_start = hpb_lu_info->pinned_start;
+ 	hpb->lu_pinned_end = hpb_lu_info->num_pinned ?
+ 		(hpb_lu_info->pinned_start + hpb_lu_info->num_pinned - 1)
+diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
+index a79e07398970..f15d8fdbce2e 100644
+--- a/drivers/scsi/ufs/ufshpb.h
++++ b/drivers/scsi/ufs/ufshpb.h
+@@ -241,8 +241,6 @@ struct ufshpb_lu {
+ 	spinlock_t param_lock;
+ 
+ 	struct list_head lh_pre_req_free;
+-	int cur_read_id;
+-	int pre_req_min_tr_len;
+ 	int pre_req_max_tr_len;
+ 
+ 	/* cached L2P map management worker */
+
