@@ -2,163 +2,111 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EB60C433F5
-	for <linux-scsi@archiver.kernel.org>; Sun, 31 Oct 2021 12:37:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C83DC433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 31 Oct 2021 19:42:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 622F26054F
-	for <linux-scsi@archiver.kernel.org>; Sun, 31 Oct 2021 12:37:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 02A5261077
+	for <linux-scsi@archiver.kernel.org>; Sun, 31 Oct 2021 19:42:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229974AbhJaMjh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 31 Oct 2021 08:39:37 -0400
-Received: from esa3.hgst.iphmx.com ([216.71.153.141]:61936 "EHLO
-        esa3.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229798AbhJaMjh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Oct 2021 08:39:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1635683825; x=1667219825;
-  h=from:to:cc:subject:date:message-id;
-  bh=WST+ZJjjkk2uWz+yUQQEmMKVyNSyU9zWN6oFNekvMxg=;
-  b=fkB1LiC/XHnbqM0KL0U/brqoNHQKkn9pwucNH7Z2X+XNAwqiaUOlcJoS
-   vWCh8wRgHPN07NWzF52TOOmB4V6t0I492q/7Q+TW1OT9z0QeHxexTJ/Ea
-   P3L9+MZ47wqovM5/vGygElK1azZ9XAXcRV/q14h0Hn2lPIypN8drre4Q2
-   8Cwf9Akyh+EnUd+cluLQmxeOG6oZvzGFl9Zgfq2wLg2p/MlaCYNun5DqR
-   tWLxF/loxaINrFihgsH5clC/EsZ51+LJFvsT99qthvL7XGB2VVhBHUElg
-   BZOtHqFxPbJ4D9icWU2V0xgazMqFSj+UQQHERgYWZfZ/FkQE7rhGlizXU
-   g==;
-X-IronPort-AV: E=Sophos;i="5.87,197,1631548800"; 
-   d="scan'208";a="189075297"
-Received: from h199-255-45-14.hgst.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
-  by ob1.hgst.iphmx.com with ESMTP; 31 Oct 2021 20:37:05 +0800
-IronPort-SDR: D51smixvpYaM31vCRujN/izq09Z++JMMFdCRvqfcIczaImlPMosbW6k8iZKOowM5D7F7X7gzTt
- BTg2gg/UYqtXvsnaVi/3o3uAmVrpQgSgGigA0DpbUvz3Zk+buBzXrCrNr0Kj3GCt66ci/pzMsh
- BOiS6u3GhKrHEMFu2Z5k7JcarDkEqdEl7loUIke1NE4sgt59vQRvnIhrHqCXJ+oi/wIIdHZX3Q
- Bueh8XeHiUsVlwXLYxDxO3elZjdjrSJimwzo2EPYREYjlHyC0k2QORIfdBJpg4mNXIzglJVarf
- t9rZNgejlQJIdaL6faqhz/gu
-Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
-  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2021 05:12:28 -0700
-IronPort-SDR: q0L7WEqtrUkZMxhlfWVjGZBIZxDXL7gWBYbQD8yCov5C1cccCC/e1q5pDlgmKrKAUhtcAGV9F8
- CfsiGIcKvfU/+ZfG1roIznCmTWjQADtulWhxDZVPZZwz0mAKl79JOjUH3RcQi5JDXNxK5aPmuE
- ffnNqhvWdI98ilCRYy6uZNuvC4czi4WEUBQS9N0NFg4ovkJfdO1mR+pERoVDqQONX9xNRjc7X8
- YL+vTCITUGSK83cLtlaC9v8NUFlacODOFBkXko6colGeQZkAIsrYRZAxCOLyrU9RN/LXR+6oI7
- iKQ=
-WDCIronportException: Internal
-Received: from bxygm33.ad.shared ([10.45.30.255])
-  by uls-op-cesaip02.wdc.com with ESMTP; 31 Oct 2021 05:37:02 -0700
-From:   Avri Altman <avri.altman@wdc.com>
-To:     "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH] scsi: ufshpb: Properly handle max-single-cmd
-Date:   Sun, 31 Oct 2021 14:36:54 +0200
-Message-Id: <20211031123654.17719-1-avri.altman@wdc.com>
-X-Mailer: git-send-email 2.17.1
+        id S231134AbhJaTod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 31 Oct 2021 15:44:33 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33536 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231317AbhJaToc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Oct 2021 15:44:32 -0400
+Received: from mail-il1-x12a.google.com (mail-il1-x12a.google.com [IPv6:2607:f8b0:4864:20::12a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0EA3C061746
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2021 12:42:00 -0700 (PDT)
+Received: by mail-il1-x12a.google.com with SMTP id h23so2868124ila.4
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2021 12:42:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=from:subject:to:cc:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=hlMJUQ5tJAJOcDvzdSEHB3wKufZfvQwyRD3UIZQHrs0=;
+        b=sSQNR/mIOpJrIoZwQgrcNNfoBl4POu1peI6ogutkrDUn63twMz1WQIbOkVamgPDa3I
+         lH0znMfnxB1myxGRBoNu0BAnSji9RHsr71VDYElac6ntDzGRt8MfyuIx+EbRz4IEboE6
+         fL6DDdEWfv023Caz7D7zMaIXMvHUL1AA589Ex78J2R/K+nJKrVJiy5H6CJm4x5jpnj7a
+         L2dAjCQF089fimTwttOAI0mbL62UB3Ua4YNp5smUmIrfRPISkn7mj+nAN3bTho4dZQ0s
+         h0fbpDuHkPbBEf8F8+yaIoiSttv3qaAjUlmr0XEGR6A3nVT5Nh1p9X60bfznyq1j+z3i
+         nq9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:subject:to:cc:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=hlMJUQ5tJAJOcDvzdSEHB3wKufZfvQwyRD3UIZQHrs0=;
+        b=gZ+f8CY3cynjlaevgaYJSpu/1qye6fR1FlLo7gREmCGCRstkNpwpOvtza01xcBg1ZP
+         +C+/pYqFp64dSo9f0YMrwghETMj2RlI7OqdbUF0FaPEzDkRM6PDJJe8eOm/LMtzvUspn
+         s8ufqvX1i5OueeTdVFHXEHoZmHSpm8qAWwyrQbScdr+HWRws0qUm3FabwiEuH63SHSuk
+         xomgk/yNL3TUPehvsCdy80C/hv5GT7yp2obAV1WJzVkI3kLLCJ6L4WNTTw6GvNqAr8Td
+         A2ODtJIhLFd8V1E1CDBvqUnsHAFJbh9crw//BpztDhf+ygGsd4qYXVA+wXRjuyUUlAT7
+         CznA==
+X-Gm-Message-State: AOAM531TRGaMJmCmxECeFqPlqmvE4H4ZxNUih2OSgpEZCgaMky+cBeDw
+        0h1qUuEXIwnezKaYTQbAeY552cN0BQ0RpQ==
+X-Google-Smtp-Source: ABdhPJw1nPV+gxkmTuviAfalHZOJJVz+PkkASGKVSZWBXZPiC0KlBzQ1EPYSdELUc7oByHEcW2XFqQ==
+X-Received: by 2002:a92:c5a1:: with SMTP id r1mr16583691ilt.228.1635709319967;
+        Sun, 31 Oct 2021 12:41:59 -0700 (PDT)
+Received: from [192.168.1.116] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id k7sm6431487iob.7.2021.10.31.12.41.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 31 Oct 2021 12:41:59 -0700 (PDT)
+From:   Jens Axboe <axboe@kernel.dk>
+Subject: [GIT PULL] SCSI multi-actuator support
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+Message-ID: <93d17044-440c-a7f6-45fe-ea804b2a0977@kernel.dk>
+Date:   Sun, 31 Oct 2021 13:41:58 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The spec recommends that for transfer length larger than the
-max-single-cmd attribute (bMAX_ DATA_SIZE_FOR_HPB_SINGLE_CMD) it is
-possible to couple pre-reqs with the HPB-READ command.  Being a
-recommendation, using pre-reqs can be perceived merely as a mean of
-optimization.  A common practice was to send pre-reqs for chunks within
-some interval, and leave the READ10 untouched if larger.
+Hi Linus,
 
-Anyway, now that the pre-reqs flows have been opt-out, all the commands
-are single commands.  So properly handle this attribute and do not send
-HPB-READ for transfer lengths larger than max-single-cmd.
+On top of the core block tree, this pull request adds SCSI support for
+the recently merged block multi-actuator support. Since this was sitting
+on top of the block tree, the SCSI side asked me to queue it up.
 
-Fixes: 09d9e4d04187 (scsi: ufs: ufshpb: Remove HPB2.0 flows)
+Please pull!
 
-Signed-off-by: Avri Altman <avri.altman@wdc.com>
----
- drivers/scsi/ufs/ufshpb.c | 29 +++++++++++++++--------------
- drivers/scsi/ufs/ufshpb.h |  1 -
- 2 files changed, 15 insertions(+), 15 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshpb.c b/drivers/scsi/ufs/ufshpb.c
-index 026a133149dc..40e62d9e2c89 100644
---- a/drivers/scsi/ufs/ufshpb.c
-+++ b/drivers/scsi/ufs/ufshpb.c
-@@ -394,8 +394,6 @@ int ufshpb_prep(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	if (!ufshpb_is_supported_chunk(hpb, transfer_len))
- 		return 0;
- 
--	WARN_ON_ONCE(transfer_len > HPB_MULTI_CHUNK_HIGH);
--
- 	if (hpb->is_hcm) {
- 		/*
- 		 * in host control mode, reads are the main source for
-@@ -1572,7 +1570,7 @@ static void ufshpb_lu_parameter_init(struct ufs_hba *hba,
- 	if (ufshpb_is_legacy(hba))
- 		hpb->pre_req_max_tr_len = HPB_LEGACY_CHUNK_HIGH;
- 	else
--		hpb->pre_req_max_tr_len = HPB_MULTI_CHUNK_HIGH;
-+		hpb->pre_req_max_tr_len = hpb_dev_info->max_hpb_single_cmd;
- 
- 	hpb->lu_pinned_start = hpb_lu_info->pinned_start;
- 	hpb->lu_pinned_end = hpb_lu_info->num_pinned ?
-@@ -2582,7 +2580,7 @@ void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf)
- {
- 	struct ufshpb_dev_info *hpb_dev_info = &hba->ufshpb_dev;
- 	int version, ret;
--	u32 max_hpb_single_cmd = HPB_MULTI_CHUNK_LOW;
-+	int max_single_cmd;
- 
- 	hpb_dev_info->control_mode = desc_buf[DEVICE_DESC_PARAM_HPB_CONTROL];
- 
-@@ -2598,21 +2596,24 @@ void ufshpb_get_dev_info(struct ufs_hba *hba, u8 *desc_buf)
- 	if (version == HPB_SUPPORT_LEGACY_VERSION)
- 		hpb_dev_info->is_legacy = true;
- 
--	pm_runtime_get_sync(hba->dev);
--	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
--		QUERY_ATTR_IDN_MAX_HPB_SINGLE_CMD, 0, 0, &max_hpb_single_cmd);
--	pm_runtime_put_sync(hba->dev);
--
--	if (ret)
--		dev_err(hba->dev, "%s: idn: read max size of single hpb cmd query request failed",
--			__func__);
--	hpb_dev_info->max_hpb_single_cmd = max_hpb_single_cmd;
--
- 	/*
- 	 * Get the number of user logical unit to check whether all
- 	 * scsi_device finish initialization
- 	 */
- 	hpb_dev_info->num_lu = desc_buf[DEVICE_DESC_PARAM_NUM_LU];
-+
-+	if (hpb_dev_info->is_legacy)
-+		return;
-+
-+	pm_runtime_get_sync(hba->dev);
-+	ret = ufshcd_query_attr_retry(hba, UPIU_QUERY_OPCODE_READ_ATTR,
-+		QUERY_ATTR_IDN_MAX_HPB_SINGLE_CMD, 0, 0, &max_single_cmd);
-+	pm_runtime_put_sync(hba->dev);
-+
-+	if (ret)
-+		hpb_dev_info->max_hpb_single_cmd = HPB_LEGACY_CHUNK_HIGH;
-+	else
-+		hpb_dev_info->max_hpb_single_cmd = min(max_single_cmd + 1, HPB_MULTI_CHUNK_HIGH);
- }
- 
- void ufshpb_init(struct ufs_hba *hba)
-diff --git a/drivers/scsi/ufs/ufshpb.h b/drivers/scsi/ufs/ufshpb.h
-index f15d8fdbce2e..b475dbd78988 100644
---- a/drivers/scsi/ufs/ufshpb.h
-+++ b/drivers/scsi/ufs/ufshpb.h
-@@ -31,7 +31,6 @@
- 
- /* hpb support chunk size */
- #define HPB_LEGACY_CHUNK_HIGH			1
--#define HPB_MULTI_CHUNK_LOW			7
- #define HPB_MULTI_CHUNK_HIGH			255
- 
- /* hpb vender defined opcode */
+The following changes since commit a2247f19ee1c5ad75ef095cdfb909a3244b88aa8:
+
+  block: Add independent access ranges support (2021-10-26 20:36:47 -0600)
+
+are available in the Git repository at:
+
+  git://git.kernel.dk/linux-block.git tags/for-5.16/scsi-ma-2021-10-29
+
+for you to fetch changes up to 9d824642889823c464847342d6ff530b9eee3241:
+
+  doc: Fix typo in request queue sysfs documentation (2021-10-26 21:01:48 -0600)
+
+----------------------------------------------------------------
+for-5.16/scsi-ma-2021-10-29
+
+----------------------------------------------------------------
+Damien Le Moal (4):
+      scsi: sd: add concurrent positioning ranges support
+      libata: support concurrent positioning ranges log
+      doc: document sysfs queue/independent_access_ranges attributes
+      doc: Fix typo in request queue sysfs documentation
+
+ Documentation/block/queue-sysfs.rst | 33 ++++++++++++++-
+ drivers/ata/libata-core.c           | 57 +++++++++++++++++++++++++-
+ drivers/ata/libata-scsi.c           | 48 +++++++++++++++++-----
+ drivers/scsi/sd.c                   | 81 +++++++++++++++++++++++++++++++++++++
+ drivers/scsi/sd.h                   |  1 +
+ include/linux/ata.h                 |  1 +
+ include/linux/libata.h              | 15 +++++++
+ 7 files changed, 224 insertions(+), 12 deletions(-)
+
 -- 
-2.17.1
+Jens Axboe
 
