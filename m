@@ -2,111 +2,144 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C83DC433EF
-	for <linux-scsi@archiver.kernel.org>; Sun, 31 Oct 2021 19:42:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDAA2C433F5
+	for <linux-scsi@archiver.kernel.org>; Sun, 31 Oct 2021 23:19:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 02A5261077
-	for <linux-scsi@archiver.kernel.org>; Sun, 31 Oct 2021 19:42:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C153E60E9B
+	for <linux-scsi@archiver.kernel.org>; Sun, 31 Oct 2021 23:19:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231134AbhJaTod (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sun, 31 Oct 2021 15:44:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33536 "EHLO
+        id S230197AbhJaXVv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sun, 31 Oct 2021 19:21:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52272 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231317AbhJaToc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Oct 2021 15:44:32 -0400
-Received: from mail-il1-x12a.google.com (mail-il1-x12a.google.com [IPv6:2607:f8b0:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B0EA3C061746
-        for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2021 12:42:00 -0700 (PDT)
-Received: by mail-il1-x12a.google.com with SMTP id h23so2868124ila.4
-        for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2021 12:42:00 -0700 (PDT)
+        with ESMTP id S230121AbhJaXVu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 31 Oct 2021 19:21:50 -0400
+Received: from mail-qv1-xf2c.google.com (mail-qv1-xf2c.google.com [IPv6:2607:f8b0:4864:20::f2c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4CF5FC061714
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2021 16:19:18 -0700 (PDT)
+Received: by mail-qv1-xf2c.google.com with SMTP id gh1so10181731qvb.8
+        for <linux-scsi@vger.kernel.org>; Sun, 31 Oct 2021 16:19:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=from:subject:to:cc:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=hlMJUQ5tJAJOcDvzdSEHB3wKufZfvQwyRD3UIZQHrs0=;
-        b=sSQNR/mIOpJrIoZwQgrcNNfoBl4POu1peI6ogutkrDUn63twMz1WQIbOkVamgPDa3I
-         lH0znMfnxB1myxGRBoNu0BAnSji9RHsr71VDYElac6ntDzGRt8MfyuIx+EbRz4IEboE6
-         fL6DDdEWfv023Caz7D7zMaIXMvHUL1AA589Ex78J2R/K+nJKrVJiy5H6CJm4x5jpnj7a
-         L2dAjCQF089fimTwttOAI0mbL62UB3Ua4YNp5smUmIrfRPISkn7mj+nAN3bTho4dZQ0s
-         h0fbpDuHkPbBEf8F8+yaIoiSttv3qaAjUlmr0XEGR6A3nVT5Nh1p9X60bfznyq1j+z3i
-         nq9A==
+        d=lucidpixels.com; s=google;
+        h=from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding:thread-index:content-language;
+        bh=PUwVOgF3iqhh9XXg1Q2T+QedNlG9uGi/p8Zh/U78VhE=;
+        b=PNiFaGo4/HmrFjb1nTJerGH8lnv2vus3yVTZ2sCWLCK3fDYtsKm4onFb6+QIgDBDTg
+         rng9AxTIhp3itrm57B5erOUMYTCUuzJxA2IyNi/ac0qkvhLtDhlbyi+mlmK5f05jODln
+         +anYtIm8cJb48oWEtHzj2Qao0Cys8l+hhZfKc=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:subject:to:cc:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=hlMJUQ5tJAJOcDvzdSEHB3wKufZfvQwyRD3UIZQHrs0=;
-        b=gZ+f8CY3cynjlaevgaYJSpu/1qye6fR1FlLo7gREmCGCRstkNpwpOvtza01xcBg1ZP
-         +C+/pYqFp64dSo9f0YMrwghETMj2RlI7OqdbUF0FaPEzDkRM6PDJJe8eOm/LMtzvUspn
-         s8ufqvX1i5OueeTdVFHXEHoZmHSpm8qAWwyrQbScdr+HWRws0qUm3FabwiEuH63SHSuk
-         xomgk/yNL3TUPehvsCdy80C/hv5GT7yp2obAV1WJzVkI3kLLCJ6L4WNTTw6GvNqAr8Td
-         A2ODtJIhLFd8V1E1CDBvqUnsHAFJbh9crw//BpztDhf+ygGsd4qYXVA+wXRjuyUUlAT7
-         CznA==
-X-Gm-Message-State: AOAM531TRGaMJmCmxECeFqPlqmvE4H4ZxNUih2OSgpEZCgaMky+cBeDw
-        0h1qUuEXIwnezKaYTQbAeY552cN0BQ0RpQ==
-X-Google-Smtp-Source: ABdhPJw1nPV+gxkmTuviAfalHZOJJVz+PkkASGKVSZWBXZPiC0KlBzQ1EPYSdELUc7oByHEcW2XFqQ==
-X-Received: by 2002:a92:c5a1:: with SMTP id r1mr16583691ilt.228.1635709319967;
-        Sun, 31 Oct 2021 12:41:59 -0700 (PDT)
-Received: from [192.168.1.116] ([66.219.217.159])
-        by smtp.gmail.com with ESMTPSA id k7sm6431487iob.7.2021.10.31.12.41.59
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 31 Oct 2021 12:41:59 -0700 (PDT)
-From:   Jens Axboe <axboe@kernel.dk>
-Subject: [GIT PULL] SCSI multi-actuator support
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-Message-ID: <93d17044-440c-a7f6-45fe-ea804b2a0977@kernel.dk>
-Date:   Sun, 31 Oct 2021 13:41:58 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        h=x-gm-message-state:from:to:subject:date:message-id:mime-version
+         :content-transfer-encoding:thread-index:content-language;
+        bh=PUwVOgF3iqhh9XXg1Q2T+QedNlG9uGi/p8Zh/U78VhE=;
+        b=G7kszEqwyEBiAF47noEgdvH68lCtCs3C2f3AUPIvnrjIpBUc2HGJp7X3ppoABvjjEY
+         aGd8fYRN9Qwdpo5PJw6n03dyh1SpuYp+5RnXOP628ExeH2KdM2iFQhm6cP28zQNtnw6c
+         oXrz30iI5e42mIY00QQFqs/OKfP+UBQjuLNqNrsw3rAhQzcNnUBOsAcJKtCMzenjM/85
+         ZZr9pMfyc4X6o3nxvzxInag/9FOfe5zBWynelZHxldAM+mGaQM3jWyYcekBD8xaU0fob
+         KZtwy1y59b8PdETm66ujoR0lzNid6yNWtnimx+Clpfva/BwyJs0R+yYu2yq+pOQJ/mfd
+         RLCQ==
+X-Gm-Message-State: AOAM530E9qdhvTOA7B9NSNtTMltPA3EwPBoxDCkmIlmtpVmAyhAIfp+/
+        s+EZysqvWzpr96Aghd2kWVg505S2MZKER0r8
+X-Google-Smtp-Source: ABdhPJz5GDIyL5jZ59zB5o5j8dA4Ud0wCFkGak9gGxRV56KcnE3LosqRxDNsaRnidStN59StC8whtw==
+X-Received: by 2002:ad4:5e8d:: with SMTP id jl13mr24922062qvb.61.1635722356729;
+        Sun, 31 Oct 2021 16:19:16 -0700 (PDT)
+Received: from WARPC (pool-70-106-225-116.clppva.fios.verizon.net. [70.106.225.116])
+        by smtp.gmail.com with ESMTPSA id t4sm9592177qkp.42.2021.10.31.16.19.16
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 31 Oct 2021 16:19:16 -0700 (PDT)
+From:   "Justin Piszcz" <jpiszcz@lucidpixels.com>
+To:     <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+Subject: kernel 5.15 does not boot with 3ware card (never had this issue <= 5.14) - scsi 0:0:0:0: WARNING: (0x06:0x002C) : Command (0x12) timed out, resetting card
+Date:   Sun, 31 Oct 2021 19:19:12 -0400
+Message-ID: <006a01d7cead$b9262d70$2b728850$@lucidpixels.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain;
+        charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AdfOrHtQ7dw+5hwzQUSCiXXnGDbBmA==
+Content-Language: en-us
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Linus,
+Hello,
 
-On top of the core block tree, this pull request adds SCSI support for
-the recently merged block multi-actuator support. Since this was sitting
-on top of the block tree, the SCSI side asked me to queue it up.
+Issue: 5.15 hangs at boot (hangs when trying to initialize the 3ware card,
+have not had this issue with any prior 5.x kernel 5.(0-14).
 
-Please pull!
+Arch: x86_64
+Kernel: 5.15
+Distribution: Debian testing
+Note: Upgraded from 5.14.8 to 5.15, the diff between the two .config's is
+posted below, thoughts?
 
+dmesg snippet:
+-------------------------------
+[8.0574191 loop: module loaded
+[8.0575251 the cryptoloop driver has been deprecated and will be removed in
+in Linux 5.16
+[8.057809] LSI 3uare SAS/SATA-RAID Controller device driver for Linux
+v3.26.02.000.
+[8.3369831 tc: Refined TC clocksource calibration: 3699.999 MHz
+[8.3371911 clocksource: tsc: mask: Oxffffffffffffffff max_cycles:
+Ox6aaaa900000, max_idle_ns: 881590498719 ns
+[8.3375551 clocksource: Switched to clocksource tsc
+( ... )
+[9.097964] 3u-sas: scsiO: AEN: INFO (0x04:0x0053): Battery capacity test is
+overdue:.
+[9.201986] scsi host: 3w-sas
+[9.305954] 3u-sas: scsi0: Found an LSI 3ware 9750-2414e Controller at
+Oxfb760000, IRQ: 45.
+[9.6179701 3u-sas: scsi0: Firmuare FH9X 5.12.00.016, BIOS BE9X 5.11.00.007,
+Phys: 28.
+[30.498007] scsi 0:0:0:0: WARNING: (0x06:0x002C) : Command (0x12) timed out,
+resetting card
+[71.4419581 scsi 0:0:0:0: WARNING: (0x06: 0x002C): Command (0x0) timed out,
+resetting card.
 
-The following changes since commit a2247f19ee1c5ad75ef095cdfb909a3244b88aa8:
+--
 
-  block: Add independent access ranges support (2021-10-26 20:36:47 -0600)
+Full configs:
+https://installkernel.tripod.com/5.14.txt
+https://installkernel.tripod.com/5.15.txt
 
-are available in the Git repository at:
+Diff between 5.14 and 5.15 .config files-- could it be something to do with
+CONFIG_IOMMU_DEFAULT_DMA_LAZY=y?
 
-  git://git.kernel.dk/linux-block.git tags/for-5.16/scsi-ma-2021-10-29
+-CONFIG_PRINTK_NMI=y
++CONFIG_ARCH_NR_GPIO=1024
+-CONFIG_X86_SYSFB=y
+-CONFIG_FIRMWARE_MEMMAP=y
+-CONFIG_DMIID=y
+-CONFIG_DMI_SYSFS=y
+-CONFIG_DMI_SCAN_MACHINE_NON_EFI_FALLBACK=y
++CONFIG_TRACE_IRQFLAGS_SUPPORT=y
++CONFIG_ARCH_HAS_PARANOID_L1D_FLUSH=y
+-CONFIG_BLK_SCSI_REQUEST=y
+-CONFIG_BLK_DEV_BSG=y
++CONFIG_BLK_DEV_BSG_COMMON=y
++CONFIG_BLOCK_HOLDER_DEPRECATED=y
++CONFIG_AF_UNIX_OOB=y
++CONFIG_FIRMWARE_MEMMAP=y
++CONFIG_DMIID=y
++CONFIG_DMI_SYSFS=y
++CONFIG_DMI_SCAN_MACHINE_NON_EFI_FALLBACK=y
++CONFIG_SYSFB=y
++CONFIG_SCSI_COMMON=y
++CONFIG_BLK_DEV_BSG=y
++CONFIG_PTP_1588_CLOCK_OPTIONAL=y
++CONFIG_IOMMU_DEFAULT_DMA_LAZY=y
+-CONFIG_MANDATORY_FILE_LOCKING=y
++CONFIG_NETFS_STATS=y
++CONFIG_NTFS3_FS=y
++CONFIG_NTFS3_LZX_XPRESS=y
++CONFIG_SMB_SERVER=y
++CONFIG_SMB_SERVER_CHECK_CAP_NET_ADMIN=y
++CONFIG_SMBFS_COMMON=y
+-CONFIG_TRACE_IRQFLAGS_SUPPORT=y
 
-for you to fetch changes up to 9d824642889823c464847342d6ff530b9eee3241:
+Thanks,
 
-  doc: Fix typo in request queue sysfs documentation (2021-10-26 21:01:48 -0600)
-
-----------------------------------------------------------------
-for-5.16/scsi-ma-2021-10-29
-
-----------------------------------------------------------------
-Damien Le Moal (4):
-      scsi: sd: add concurrent positioning ranges support
-      libata: support concurrent positioning ranges log
-      doc: document sysfs queue/independent_access_ranges attributes
-      doc: Fix typo in request queue sysfs documentation
-
- Documentation/block/queue-sysfs.rst | 33 ++++++++++++++-
- drivers/ata/libata-core.c           | 57 +++++++++++++++++++++++++-
- drivers/ata/libata-scsi.c           | 48 +++++++++++++++++-----
- drivers/scsi/sd.c                   | 81 +++++++++++++++++++++++++++++++++++++
- drivers/scsi/sd.h                   |  1 +
- include/linux/ata.h                 |  1 +
- include/linux/libata.h              | 15 +++++++
- 7 files changed, 224 insertions(+), 12 deletions(-)
-
--- 
-Jens Axboe
+Justin.
 
