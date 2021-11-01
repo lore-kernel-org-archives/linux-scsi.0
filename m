@@ -2,95 +2,83 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 469CFC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 09:18:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D94C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 10:36:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 18061610CA
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 09:18:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DE0B610CA
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 10:36:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231728AbhKAJVF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Nov 2021 05:21:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42916 "EHLO
+        id S231952AbhKAKjS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Nov 2021 06:39:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60458 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231420AbhKAJVE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2021 05:21:04 -0400
-Received: from mail-qk1-x735.google.com (mail-qk1-x735.google.com [IPv6:2607:f8b0:4864:20::735])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B34C8C061714;
-        Mon,  1 Nov 2021 02:18:31 -0700 (PDT)
-Received: by mail-qk1-x735.google.com with SMTP id bi29so15879341qkb.5;
-        Mon, 01 Nov 2021 02:18:31 -0700 (PDT)
+        with ESMTP id S231841AbhKAKjR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2021 06:39:17 -0400
+Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C4A7C061714
+        for <linux-scsi@vger.kernel.org>; Mon,  1 Nov 2021 03:36:44 -0700 (PDT)
+Received: by mail-lj1-x233.google.com with SMTP id k22so7078109ljk.5
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Nov 2021 03:36:44 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Zp2Tl/CjuwQMl4Hw6vIct+XQzOdHpUX1ecIrs5lSgyA=;
-        b=mJh9H/O8ofpSvEbcqwpthDWpBErOHclwMbcXANgaPCRUXuM3Pq5U/LPsX2ImMnzZhe
-         JYirP5lAl62fFKD3OQ/MH1JpF/SwH4aCPAKM2loCY7oKq+aCzhOJn91dWPo2ICIGXLqh
-         x0WO6ULFBB6FLCVcDtK9/lxLkBpFaAH8o8AQScXjMW1PYNKXG+d/dVfa2QpllLdPyTmi
-         VmPsfzRkvCe1BN8nl+RSVyVkeVEEXubxlQaE3VOhNxoyx55rYYx7/JDPR9W9CJm8mTr1
-         givT5JGRqavleI0HG6VDD2KwcoximLp61dt2dDs1ARVwq0TDU9jvdZ4SJnp07UwJImKq
-         J9jQ==
+        d=lucidpixels.com; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=pVQav619x2X4UjJPey8K98Bzw1lSGkzDCrHK2MvFUJI=;
+        b=etJVtLo4xD9B0y1aSZRUUg46nSq4jP2Q7/rAydrcYobYd1vPVRNbqK8EBchgakuUHo
+         aqFsDGqBHRhN2ps0gefV6pRk+WPGBUOLZA8T+M8kFGuSpOBnUVWup7o1yOaY9uuQoKOl
+         qsjzEOOH0BYdJY/7s85nCiY7qsa63eKLmDPrg=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=Zp2Tl/CjuwQMl4Hw6vIct+XQzOdHpUX1ecIrs5lSgyA=;
-        b=YBfA+RuMxRW+nRGEQjrLwAdlIRSkirbRmFuukoS5MOHWYOOPJYPbP+v6v5Jnmj3d0J
-         kXJ7z0jTb1qDrYI4dq//fSrWqIJ8gjYC3WdcT63bA6R/WZvCfn5Ib3/NqiogpCBqoyFW
-         Cww6buVm/EXv2I1RXLttmD5i6CMzhWBv4te1Y7pNQP2D4jRKMC/UfeuArp1aW89R8wFy
-         z9eNhr8c0x1jFlwbB31RTNqgM37AwFD1ObP67kKxDPK94nU3P5JA2d5t3tqq7AUkq2ql
-         LW8YQK++Sh3/853AYEezXbiQiLTmlZXXH/8oQVwRdgLwnuK5EyHBYz3BysmDwlG3+0/Q
-         FExQ==
-X-Gm-Message-State: AOAM530zq4Kk1LPZ6GZXvqz2pe7rY921rrdMKcRpL3n1ARdZ8k4u7UNz
-        F38OZRCRt+wjzXDS5I2ZCWw=
-X-Google-Smtp-Source: ABdhPJzEJFOA4NCjhDPwB4K6TQXPQtaic/9JzDn6Q09j0DkaBMQ+/vl8g1jyEG9krZf2CeIT+5eCdA==
-X-Received: by 2002:a05:620a:17a3:: with SMTP id ay35mr9929121qkb.476.1635758310981;
-        Mon, 01 Nov 2021 02:18:30 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id c3sm10390575qkp.47.2021.11.01.02.18.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Nov 2021 02:18:30 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: zhang.mingyu@zte.com.cn
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Zhang Mingyu <zhang.mingyu@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi:qlogicpti:Remove unneeded semicolon
-Date:   Mon,  1 Nov 2021 09:18:19 +0000
-Message-Id: <20211101091819.37517-1-zhang.mingyu@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=pVQav619x2X4UjJPey8K98Bzw1lSGkzDCrHK2MvFUJI=;
+        b=aBcHhPWO2OL2Ufcfi6yp3AAOIY3ffAfbcw/REyOOsOPuAZ3ce3fWXsNSfYiDT2bBvk
+         Fmkp5mBLA0N5I/nDOkBNB1uCAY1A1Q8TXbI8mOcJ4VYiC27NyLqRoNud1Xi0rIFrGbJK
+         ILlLbIyW73kE55iE1F20ZKp4BH71UNNu0FRafqzT7H/TRd28rzfRtK3lEgkmGlqXGN1p
+         X+0jn4/Lyhspnpz+MnApyQNtHCjupPrRt8bN9R3DAwQdQvHdaS+DXYWxZJppO0fKpwRX
+         I8YDzfvHs0TpGxjVHurrJJFRHP0QxTnXuk2JbPd+7EaUKldHCxtbQXIdn4UthOQZiMDk
+         GnbQ==
+X-Gm-Message-State: AOAM533eQg1dQ0K9zgjbNxufqIPK0ulN4u3jrm9tSfJJcVOpAjaxqJv/
+        hZ3nIgYExE0+2SVO9GyndNxCZ6JWLqxAa0HZE+rWZA==
+X-Google-Smtp-Source: ABdhPJw4ZOW74T2/vG+sfv8hc085u8aY8g2XwvVtUnLvClybodH8isp1yXatVcjVtoTPTNUn9/a2+IcMzrlpDkG7Hrk=
+X-Received: by 2002:a2e:b8cd:: with SMTP id s13mr12321124ljp.527.1635763002593;
+ Mon, 01 Nov 2021 03:36:42 -0700 (PDT)
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <006a01d7cead$b9262d70$2b728850$@lucidpixels.com> <a4a88807-8f52-ef9a-c58e-0ff454da5ade@acm.org>
+In-Reply-To: <a4a88807-8f52-ef9a-c58e-0ff454da5ade@acm.org>
+From:   Justin Piszcz <jpiszcz@lucidpixels.com>
+Date:   Mon, 1 Nov 2021 06:36:31 -0400
+Message-ID: <CAO9zADxiobgwDE5dtvo98EL0djdgQyrGJA_w4Oxb+pZ9pvOEjQ@mail.gmail.com>
+Subject: Re: kernel 5.15 does not boot with 3ware card (never had this issue
+ <= 5.14) - scsi 0:0:0:0: WARNING: (0x06:0x002C) : Command (0x12) timed out,
+ resetting card
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Zhang Mingyu <zhang.mingyu@zte.com.cn>
+On Sun, Oct 31, 2021 at 7:52 PM Bart Van Assche <bvanassche@acm.org> wrote:
+>
+> On 10/31/21 16:19, Justin Piszcz wrote:
+> > Diff between 5.14 and 5.15 .config files-- could it be something to do with
+> > CONFIG_IOMMU_DEFAULT_DMA_LAZY=y?
+>
+> That's hard to say. Is CONFIG_MAGIC_SYSRQ enabled? If not, please enable
+> it and hit Alt-Printscreen-t (dump task list; see also
+> Documentation/admin-guide/sysrq.rst) and share the contents of the
+> kernel log. If that would not be convenient, please try to bisect this
+> issue.
 
-Eliminate the following coccinelle check warning:
-drivers/scsi/qlogicpti.c:1152:3-4
+[ .. ]
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Zhang Mingyu <zhang.mingyu@zte.com.cn>
----
- drivers/scsi/qlogicpti.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+It appears at this point in the boot process the keyboard (USB and
+PS2) are not yet available and/or do not respond in this scenario (I
+do have CONFIG_MAGIC_SYSRQ enabled+have used it in the past).  I'll
+build the prior 5.15-rc(1-7) to check where it stopped working and
+reply back to the list when I have that info.
 
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 57f2f4135a06..59c82d740139 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -1149,7 +1149,7 @@ static struct scsi_cmnd *qlogicpti_intr_handler(struct qlogicpti *qpti)
- 		case COMMAND_ERROR:
- 		case COMMAND_PARAM_ERROR:
- 			break;
--		};
-+		}
- 		sbus_writew(0, qpti->qregs + SBUS_SEMAPHORE);
- 	}
- 
--- 
-2.25.1
+Thanks!
 
+Justin.
