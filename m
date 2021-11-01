@@ -2,83 +2,127 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46D94C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 10:36:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04BCBC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 16:56:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1DE0B610CA
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 10:36:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5F83611F2
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 16:56:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231952AbhKAKjS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Nov 2021 06:39:18 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60458 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231841AbhKAKjR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2021 06:39:17 -0400
-Received: from mail-lj1-x233.google.com (mail-lj1-x233.google.com [IPv6:2a00:1450:4864:20::233])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7C4A7C061714
-        for <linux-scsi@vger.kernel.org>; Mon,  1 Nov 2021 03:36:44 -0700 (PDT)
-Received: by mail-lj1-x233.google.com with SMTP id k22so7078109ljk.5
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Nov 2021 03:36:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lucidpixels.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=pVQav619x2X4UjJPey8K98Bzw1lSGkzDCrHK2MvFUJI=;
-        b=etJVtLo4xD9B0y1aSZRUUg46nSq4jP2Q7/rAydrcYobYd1vPVRNbqK8EBchgakuUHo
-         aqFsDGqBHRhN2ps0gefV6pRk+WPGBUOLZA8T+M8kFGuSpOBnUVWup7o1yOaY9uuQoKOl
-         qsjzEOOH0BYdJY/7s85nCiY7qsa63eKLmDPrg=
+        id S231453AbhKAQ7F (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Nov 2021 12:59:05 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:60727 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231303AbhKAQ7E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2021 12:59:04 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1635785791;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=mfuVTEKtPZu4oGKU5CQj62mdS9UTfznANVeOzt6yo5M=;
+        b=XwQhINaMF8PJN8POI9CYIsIOKv0cQcdjPmMVnVNU9ZTfX4r2Y6axXWJWbDI4MbLVzlgAHv
+        +nd7NGuPhGiiSBRj+jyrt0XJPXDFQpDQnWExW4m2P68zLtHoDol+qdV/9b9cgf9pBDnwbw
+        rbImXNe9rqUBUqtn9DP96HEE6fe0NkA=
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
+ [209.85.160.198]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-237-qpy2G2MWMVC6bDJky6GPug-1; Mon, 01 Nov 2021 12:56:29 -0400
+X-MC-Unique: qpy2G2MWMVC6bDJky6GPug-1
+Received: by mail-qt1-f198.google.com with SMTP id k1-20020ac80201000000b002a7200b449eso12499536qtg.18
+        for <linux-scsi@vger.kernel.org>; Mon, 01 Nov 2021 09:56:29 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=pVQav619x2X4UjJPey8K98Bzw1lSGkzDCrHK2MvFUJI=;
-        b=aBcHhPWO2OL2Ufcfi6yp3AAOIY3ffAfbcw/REyOOsOPuAZ3ce3fWXsNSfYiDT2bBvk
-         Fmkp5mBLA0N5I/nDOkBNB1uCAY1A1Q8TXbI8mOcJ4VYiC27NyLqRoNud1Xi0rIFrGbJK
-         ILlLbIyW73kE55iE1F20ZKp4BH71UNNu0FRafqzT7H/TRd28rzfRtK3lEgkmGlqXGN1p
-         X+0jn4/Lyhspnpz+MnApyQNtHCjupPrRt8bN9R3DAwQdQvHdaS+DXYWxZJppO0fKpwRX
-         I8YDzfvHs0TpGxjVHurrJJFRHP0QxTnXuk2JbPd+7EaUKldHCxtbQXIdn4UthOQZiMDk
-         GnbQ==
-X-Gm-Message-State: AOAM533eQg1dQ0K9zgjbNxufqIPK0ulN4u3jrm9tSfJJcVOpAjaxqJv/
-        hZ3nIgYExE0+2SVO9GyndNxCZ6JWLqxAa0HZE+rWZA==
-X-Google-Smtp-Source: ABdhPJw4ZOW74T2/vG+sfv8hc085u8aY8g2XwvVtUnLvClybodH8isp1yXatVcjVtoTPTNUn9/a2+IcMzrlpDkG7Hrk=
-X-Received: by 2002:a2e:b8cd:: with SMTP id s13mr12321124ljp.527.1635763002593;
- Mon, 01 Nov 2021 03:36:42 -0700 (PDT)
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=mfuVTEKtPZu4oGKU5CQj62mdS9UTfznANVeOzt6yo5M=;
+        b=DqI5mgYCqL/SWmmXV8duXwgSRS3/sdo6T719XHhvds7E/iBDCTfuj7Tqybc2dHbyZB
+         jeufeXook9K5TdrqkIGLj3SxC70sJVfh42pVshvsBts2oEqeM49C54NkQoziGkXYvjIf
+         PvZ+x4sn005d3Cy9Go0vhxcv/MKqyBOPJWkfwU6wK/ubE9L9WeqaHNBt51nP3O5XGufW
+         fImFwfGY0TSFX2ADOqg8gBVCn93y+hK9er6Ycv3j2Jp4qpAsBS+XKyoImJBjgCZ1D+eL
+         W7kN6ke/7ctSkaIDKiPh781JlEIHsCyKgagUBOelW5GvVKXpWoktGfkpwRll9UXz9gr7
+         s6cw==
+X-Gm-Message-State: AOAM530PHqiRmd+qIuBJH0MIsYgoWPyi0uBtgxN/Cv5rkRbj94eGKxW3
+        M+nHj/qqNnjl3nyJzlwUP+BPPR05o3mqKkVZsNwa14XE5pWHI8iHjDBHzGKFtrAB0aWeDkVyItO
+        rYK8H6YmEdeHDL7dFZAiK
+X-Received: by 2002:a0c:fa07:: with SMTP id q7mr29081302qvn.18.1635785789550;
+        Mon, 01 Nov 2021 09:56:29 -0700 (PDT)
+X-Google-Smtp-Source: ABdhPJxh4wJKFaHJKXShFvRsJDDiN/gGiV8SeRubZYTL3eGqZM/PtHnVS+1hVdsIppxoO3JwPYaACw==
+X-Received: by 2002:a0c:fa07:: with SMTP id q7mr29081280qvn.18.1635785789312;
+        Mon, 01 Nov 2021 09:56:29 -0700 (PDT)
+Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
+        by smtp.gmail.com with ESMTPSA id i1sm114002qkn.67.2021.11.01.09.56.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 01 Nov 2021 09:56:28 -0700 (PDT)
+Date:   Mon, 1 Nov 2021 12:56:27 -0400
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Jens Axboe <axboe@kernel.dk>, Yi Zhang <yi.zhang@redhat.com>,
+        linux-block@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Subject: Re: [PATCH 3/3] dm: don't stop request queue after the dm device is
+ suspended
+Message-ID: <YYAcO1GAEGK7f3XI@redhat.com>
+References: <20211021145918.2691762-1-ming.lei@redhat.com>
+ <20211021145918.2691762-4-ming.lei@redhat.com>
 MIME-Version: 1.0
-References: <006a01d7cead$b9262d70$2b728850$@lucidpixels.com> <a4a88807-8f52-ef9a-c58e-0ff454da5ade@acm.org>
-In-Reply-To: <a4a88807-8f52-ef9a-c58e-0ff454da5ade@acm.org>
-From:   Justin Piszcz <jpiszcz@lucidpixels.com>
-Date:   Mon, 1 Nov 2021 06:36:31 -0400
-Message-ID: <CAO9zADxiobgwDE5dtvo98EL0djdgQyrGJA_w4Oxb+pZ9pvOEjQ@mail.gmail.com>
-Subject: Re: kernel 5.15 does not boot with 3ware card (never had this issue
- <= 5.14) - scsi 0:0:0:0: WARNING: (0x06:0x002C) : Command (0x12) timed out,
- resetting card
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211021145918.2691762-4-ming.lei@redhat.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Sun, Oct 31, 2021 at 7:52 PM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> On 10/31/21 16:19, Justin Piszcz wrote:
-> > Diff between 5.14 and 5.15 .config files-- could it be something to do with
-> > CONFIG_IOMMU_DEFAULT_DMA_LAZY=y?
->
-> That's hard to say. Is CONFIG_MAGIC_SYSRQ enabled? If not, please enable
-> it and hit Alt-Printscreen-t (dump task list; see also
-> Documentation/admin-guide/sysrq.rst) and share the contents of the
-> kernel log. If that would not be convenient, please try to bisect this
-> issue.
+On Thu, Oct 21 2021 at 10:59P -0400,
+Ming Lei <ming.lei@redhat.com> wrote:
 
-[ .. ]
+> For fixing queue quiesce race between driver and block layer(elevator
+> switch, update nr_requests, ...), we need to support concurrent quiesce
+> and unquiesce, which requires the two call to be balanced.
+> 
+> __bind() is only called from dm_swap_table() in which dm device has been
+> suspended already, so not necessary to stop queue again. With this way,
+> request queue quiesce and unquiesce can be balanced.
+> 
+> Reported-by: Yi Zhang <yi.zhang@redhat.com>
+> Fixes: e70feb8b3e68 ("blk-mq: support concurrent queue quiesce/unquiesce")
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  drivers/md/dm.c | 10 ----------
+>  1 file changed, 10 deletions(-)
+> 
+> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> index 7870e6460633..727282d79b26 100644
+> --- a/drivers/md/dm.c
+> +++ b/drivers/md/dm.c
+> @@ -1927,16 +1927,6 @@ static struct dm_table *__bind(struct mapped_device *md, struct dm_table *t,
+>  
+>  	dm_table_event_callback(t, event_callback, md);
+>  
+> -	/*
+> -	 * The queue hasn't been stopped yet, if the old table type wasn't
+> -	 * for request-based during suspension.  So stop it to prevent
+> -	 * I/O mapping before resume.
+> -	 * This must be done before setting the queue restrictions,
+> -	 * because request-based dm may be run just after the setting.
+> -	 */
+> -	if (request_based)
+> -		dm_stop_queue(q);
+> -
+>  	if (request_based) {
+>  		/*
+>  		 * Leverage the fact that request-based DM targets are
+> -- 
+> 2.31.1
+> 
 
-It appears at this point in the boot process the keyboard (USB and
-PS2) are not yet available and/or do not respond in this scenario (I
-do have CONFIG_MAGIC_SYSRQ enabled+have used it in the past).  I'll
-build the prior 5.15-rc(1-7) to check where it stopped working and
-reply back to the list when I have that info.
+I think this is fine given your previous commit (b4459b11e8f dm rq:
+don't queue request to blk-mq during DM suspend).
 
-Thanks!
+Acked-by: Mike Snitzer <snitzer@redhat.com>
 
-Justin.
+Jens: given this series fixes a 5.16 regression in srp test, please
+pick it up for 5.16-rc
+
+Thanks,
+Mike
+
