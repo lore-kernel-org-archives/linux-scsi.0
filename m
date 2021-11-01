@@ -2,60 +2,74 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5F0EC43217
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 17:28:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D9BD4C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 17:54:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B3AC760E9C
-	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 17:28:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B9B93610E8
+	for <linux-scsi@archiver.kernel.org>; Mon,  1 Nov 2021 17:54:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230321AbhKARb2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Nov 2021 13:31:28 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53470 "EHLO mail.kernel.org"
+        id S231168AbhKAR4p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Nov 2021 13:56:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:37650 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229541AbhKARb0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 1 Nov 2021 13:31:26 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPS id C9C5F60ED5;
-        Mon,  1 Nov 2021 17:28:52 +0000 (UTC)
+        id S229802AbhKAR4p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 1 Nov 2021 13:56:45 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 00C82610D2;
+        Mon,  1 Nov 2021 17:54:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1635787732;
-        bh=ltpFxnB+g8AK8uV4bpIVUPm5lviQ2I3+KFNpCyEumjo=;
-        h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-        b=jgdgbEr16n6yR+MGQBpOxgOAznZXBq3znfDcQy0dEunPIKP7f0QZ+01AnFIUWcloO
-         BPfx0fz45hOZraQ0yH2jY3axz7Aprz5j7YRN80syUTbkzlIPMAmATJIuLDnOsc5D8M
-         tFuW/2vdtlE87Wsj7qcuhbKd9qaEKBlL8HX57XQlT6zJKZqHLpsYoo95zS90Ook9P1
-         gE8XRJvpIse3N5jplBCr2B7ILrz+G97CdK+drL4j6hdoudBONXpmyiZRlkH1AKNnq5
-         ncH26JqGouohwhT3BiOegQqUuPMfXv/r2i9h+5S1J86ec/BcrDDkcQzsCKedkAgEQo
-         IOhUL9F7YAUsQ==
-Subject: Re: [GIT PULL] SCSI multi-actuator support
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <93d17044-440c-a7f6-45fe-ea804b2a0977@kernel.dk>
-References: <93d17044-440c-a7f6-45fe-ea804b2a0977@kernel.dk>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <93d17044-440c-a7f6-45fe-ea804b2a0977@kernel.dk>
-X-PR-Tracked-Remote: git://git.kernel.dk/linux-block.git tags/for-5.16/scsi-ma-2021-10-29
-X-PR-Tracked-Commit-Id: 9d824642889823c464847342d6ff530b9eee3241
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: fcaec17b3657a4f8b0b131d5c1ab87e255c3dee6
-Message-Id: <163578773279.18307.13436670741876022751.pr-tracker-bot@kernel.org>
-Date:   Mon, 01 Nov 2021 17:28:52 +0000
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        s=k20201202; t=1635789251;
+        bh=lYi2aGJ1ooV9VTgAd9ni2Aq8I8gmC2AMQ2WBvVmGyXo=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=USAxOoUpoPthTp0gPLaP0Dmz+IrOklnbz3hxfaINU34HdN1KKLosqti5cOqQYAaqx
+         vAzwAmlRKJCS4A+x3oMJQC9AcOKtiJT2KoUaJ4cme5I1NotGS1dDN/bvui3u93bbcE
+         B3Rn9jI2etOBKHaGzpWpNSKH8+DKvAoPRJRFBtf6N1zm28ciWQseguItfGTE8S5SGE
+         gJyHvhjcrWhkpnG1mmJggGByc6GpS8LMJMtHSKeqjbFpDR5Mxh0w5yTRZEV8GrOCxe
+         BxgY+sBpcZee82y2ujQ1VYBu2NSTbwyTRob4gcnvVGQ+X4+T1CrWDHjF0DwblF8aJB
+         gzM9v7RS/EqpQ==
+Date:   Mon, 1 Nov 2021 10:54:09 -0700
+From:   Keith Busch <kbusch@kernel.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+Cc:     Hannes Reinecke <hare@suse.de>,
         "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "lsf-pc@lists.linux-foundation.org" 
+        <lsf-pc@lists.linux-foundation.org>
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+Message-ID: <20211101175409.GA2651512@dhcp-10-100-145-180.wdc.com>
+References: <PH0PR04MB74161CD0BD15882BBD8838AB9B529@PH0PR04MB7416.namprd04.prod.outlook.com>
+ <CGME20210928191342eucas1p23448dcd51b23495fa67cdc017e77435c@eucas1p2.samsung.com>
+ <20210928191340.dcoj7qrclpudtjbo@mpHalley.domain_not_set.invalid>
+ <c2d0dff9-ad6d-c32b-f439-00b7ee955d69@acm.org>
+ <20211006100523.7xrr3qpwtby3bw3a@mpHalley.domain_not_set.invalid>
+ <fbe69cc0-36ea-c096-d247-f201bad979f4@acm.org>
+ <20211008064925.oyjxbmngghr2yovr@mpHalley.local>
+ <2a65e231-11dd-d5cc-c330-90314f6a8eae@nvidia.com>
+ <ba6c099b-42bf-4c7d-a923-00e7758fc835@suse.de>
+ <5edcab45-afc6-3766-cede-f859da2934d1@acm.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5edcab45-afc6-3766-cede-f859da2934d1@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The pull request you sent on Sun, 31 Oct 2021 13:41:58 -0600:
+On Fri, Oct 29, 2021 at 09:15:43AM -0700, Bart Van Assche wrote:
+> On 10/28/21 10:51 PM, Hannes Reinecke wrote:
+> > Also Keith presented his work on a simple zone-based remapping block device, which included an in-kernel copy offload facility.
+> > Idea is to lift that as a standalone patch such that we can use it a fallback (ie software) implementation if no other copy offload mechanism is available.
+> 
+> Is a link to the presentation available?
 
-> git://git.kernel.dk/linux-block.git tags/for-5.16/scsi-ma-2021-10-29
+Thanks for the interest.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/fcaec17b3657a4f8b0b131d5c1ab87e255c3dee6
+I didn't post them online as the conference didn't provide it, and I
+don't think the slides would be particularly interesting without the
+prepared speech anyway.
 
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+The presentation described a simple prototype implementing a redirection
+table on zone block devices. There was one bullet point explaining how a
+generic kernel implementation would be an improvement. For zoned block
+devices, an "append" like copy offload would be an even better option.
