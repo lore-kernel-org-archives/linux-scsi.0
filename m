@@ -2,55 +2,55 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9F21C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 14:49:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BED1C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 14:52:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF69F6112E
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 14:49:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 852496112D
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 14:52:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232199AbhKBOvu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Nov 2021 10:51:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46436 "EHLO
+        id S233866AbhKBOyu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Nov 2021 10:54:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47160 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231669AbhKBOvr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 10:51:47 -0400
-Received: from mail-il1-x135.google.com (mail-il1-x135.google.com [IPv6:2607:f8b0:4864:20::135])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DB9ADC061714
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Nov 2021 07:49:12 -0700 (PDT)
-Received: by mail-il1-x135.google.com with SMTP id w10so22118551ilc.13
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 07:49:12 -0700 (PDT)
+        with ESMTP id S233839AbhKBOyp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 10:54:45 -0400
+Received: from mail-il1-x12d.google.com (mail-il1-x12d.google.com [IPv6:2607:f8b0:4864:20::12d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90071C061767
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Nov 2021 07:52:10 -0700 (PDT)
+Received: by mail-il1-x12d.google.com with SMTP id j28so15761959ila.1
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 07:52:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=kernel-dk.20210112.gappssmtp.com; s=20210112;
         h=subject:to:cc:references:from:message-id:date:user-agent
          :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=n5vsr1blLtZr1Apgp+oeIu4pae3laGQZ1FeiamiQ+5k=;
-        b=STWOmeHADQcNtTKj/xeuQyA5XKvhYXU7r4py78YEL94LnpKQ6f1FTfrcIzT4I6RmgY
-         WTA5voayiNlgRy8M2ROo2vAkX5AoHJKq4zOfGkzSQyQZB1/nGUtswDVTBL3HymoGQLbg
-         DsUjW9cxktYAU7H4QVIWu8BtztCmdEiR1btu3uvOiOUScSWXzqPqnoZbmIKo+r4CQPX0
-         hpTjop0KYUMNZ8jLfBN0qpPGq6GargxTRHNfjtVHUbRQqGj2FjPOeZfiY6iPHkb0jvXd
-         EVYtReBeakXbbBq1Ci6RBn31d/dMaSeDeReavjebzUMKAbfqBaVB5fDiJcqTFTRwV3vo
-         53cw==
+        bh=WAgm1SAm4X0FYW2rU/FS9LeENK/vmRBg+l/CIt4wHbI=;
+        b=hW4HTnS5Uowx8NBxztTYPhN+gbmRQyGzV7y5E0cJqNSRRoHZVulRejadRrM2JLGx2z
+         B1M+tqr0uEs1PP69Pg8daGzLc73TIiCkHqcvpXWtqhBALrVzeMkbbOxMCKdKYTP4snPa
+         bi88k4cgzPD48R2ywqcbDS0+0xOi6lyTtFGabQhq3b0llTfALbwITDJ0AJfhObAK3bew
+         l2xemmS1biN7pPw2FPaAItXcCJqLLNLKPv4AXExbUD6RZRx9AOSi3e0VaAC4k64NmxUS
+         kEY+zMjp5oxygzDswN8iDr6R3AGAHxGnRLnnXpaBIfx8sIo8tgLnidyzDXA/ZgXY4ZGh
+         EoAg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=n5vsr1blLtZr1Apgp+oeIu4pae3laGQZ1FeiamiQ+5k=;
-        b=W7WlW8boQdO5ikJC5UeqC+mlbg8tUeqIGahzzb1Dt4lg346R3Amn8R3GavItPQHs6/
-         Yqv/Fqjg85d41qiODRyt8OvFx4+AbLQcSGwuWD4rZ4YEXaQUM2jXc66sW4hl9d3B/H9U
-         RptbiWCdNf9ZUP0e9VA8h6IZXsoMPIwfXKHwumCFEWCEhBH0LgfFKWpWiiCrFiUm0QOR
-         +q+PJQjjjhZwycg+EkQh+GzwjMMUSf5GJdMj270/EUYiO+sQRlGzZlE1kQOui7t6xuZX
-         1oXuUjL61WMDTnoQ6Nsrc4XZpEzeVFMxu8lZB3SaUSx8TZpBQhopoftenOhXwpK56gXk
-         JuAg==
-X-Gm-Message-State: AOAM531WsN4PRkk4ValLXx3V0OWdc+GIyJR60DLnEY8iyD7pLhNHWHJD
-        NBxRdmFGnbKnk4pA50umGken3RTpF+Y0ZQ==
-X-Google-Smtp-Source: ABdhPJzWl9Abf8ma96v/QgyQYBPkoFBrkv3+kXhY/qT2XMB1Y04fTvAuQ2pIyEbOgGzaINuPgRXo7A==
-X-Received: by 2002:a92:dc0c:: with SMTP id t12mr17658768iln.198.1635864552300;
-        Tue, 02 Nov 2021 07:49:12 -0700 (PDT)
+        bh=WAgm1SAm4X0FYW2rU/FS9LeENK/vmRBg+l/CIt4wHbI=;
+        b=bRZ36bBayaJ8OkcIhTr5NJ6V8kcaho5IOfvd0RMs03mHATOSoq+pbkHCEfcqSAOCSf
+         Z1CqAr9kbQUAxDCIlocBtvjPQx5FLFwdRhnnCpVXZBJkUHOeEJMYSWWzn64VQDJ5HVqe
+         zKh3YV5mjUdATIRjhlgG21u8QAm9Bgq15eBobOR8W9FJWY0owHqu5BXJ3JaEza3JvZRO
+         71SXHAT7abo8WXnU1NAqn99UcDaXQ1ikjCPRF/8xvgRqvb39I2s5qIqcBMclDeJz59fW
+         NdA8ZTEcfBynla+O7BrvqmW2YW5+XZiGtsgGwRpkMiFsVJ/Bq3R+wMpcOzbdA0+ej0oU
+         wVmw==
+X-Gm-Message-State: AOAM531cFA0QyUUV7plgk6CKKUSmc+iXj+3CUUm5VvRbSDuZz5wXpX51
+        3ASpt/T3y3+wsZrESsVWbf+QRg==
+X-Google-Smtp-Source: ABdhPJygwe3kBQ9KqqZTmFFDPKCSSltYP6EKpwTkMKVUdlFgCks3+DwlVvdITVyOMBaQB5Yru0TiLQ==
+X-Received: by 2002:a05:6e02:1be2:: with SMTP id y2mr21593663ilv.22.1635864729956;
+        Tue, 02 Nov 2021 07:52:09 -0700 (PDT)
 Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id g13sm9552515ilc.54.2021.11.02.07.49.11
+        by smtp.gmail.com with ESMTPSA id c11sm9298983ilm.74.2021.11.02.07.52.09
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Nov 2021 07:49:11 -0700 (PDT)
+        Tue, 02 Nov 2021 07:52:09 -0700 (PDT)
 Subject: Re: [PATCH 2/3] scsi: make sure that request queue queiesce and
  unquiesce balanced
 To:     James Bottomley <James.Bottomley@HansenPartnership.com>,
@@ -68,8 +68,8 @@ References: <20211021145918.2691762-1-ming.lei@redhat.com>
  <042056b5-6fea-1bcf-bfae-274f23e9e5c5@kernel.dk>
  <461ac99c7d9d4493f37d2b8377ec3f05ce8a2735.camel@HansenPartnership.com>
 From:   Jens Axboe <axboe@kernel.dk>
-Message-ID: <3f5b68c6-ac4b-56e3-069e-19c4a889d40e@kernel.dk>
-Date:   Tue, 2 Nov 2021 08:49:10 -0600
+Message-ID: <2ae8db2f-2455-e43c-4197-d9fd92ef94c0@kernel.dk>
+Date:   Tue, 2 Nov 2021 08:52:08 -0600
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
@@ -181,8 +181,9 @@ On 11/2/21 8:47 AM, James Bottomley wrote:
 > 
 > Well, that's what I suggested originally, so I agree ... I don't think
 > 31 more bytes is going to be a huge burden to scsi_device.
+          ^^^^
 
-Yeah I know, just saying I agree with that being the better solution.
+Bits? :-)
 
 -- 
 Jens Axboe
