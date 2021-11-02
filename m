@@ -2,156 +2,267 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A63FFC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 20:03:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 887B7C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 20:49:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 86EEB61075
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 20:03:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6B00360F24
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 20:49:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231405AbhKBUG1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Nov 2021 16:06:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35532 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230370AbhKBUG1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 16:06:27 -0400
-Received: from mail-il1-x12a.google.com (mail-il1-x12a.google.com [IPv6:2607:f8b0:4864:20::12a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A6C3C061205
-        for <linux-scsi@vger.kernel.org>; Tue,  2 Nov 2021 13:03:52 -0700 (PDT)
-Received: by mail-il1-x12a.google.com with SMTP id x9so252159ilu.6
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 13:03:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
-        h=subject:from:to:references:message-id:date:user-agent:mime-version
-         :in-reply-to:content-language:content-transfer-encoding;
-        bh=resFEWoOdN09ZSVZIsdi2ZYEbDtdi9mIy0Lkm6ORhH0=;
-        b=BIhJo1PbCs2Rc4u+irYeP4J0PLCn2okyyOYvGToZOR0y3MjRayObVY2T5pS1UNZzvG
-         m6hi7NCLd/r78DBlWLN47P56gtnQFyfF9P7geU976TZZ3UIA8uurq3CQxzyPTjfEzbK9
-         DXbmhmXUVq2ZrSvHnIs8saAM3rT6r6HEu6M8yfdYkqvyQR61xJpeTj6wa79ASFVLHZOF
-         Xg0jurr7iw1kCgYcocjpr68kWlz3w2EgAn/lXyr0tkSLrIlZ7hS/JYzecsJrNWw5CMev
-         fqFfTuZJACunk0KlpNGeNpBUDXU+0y5uoeke9TkMYv0cA64MQYfN8eJ1wWSgGcLkXqCP
-         wKhw==
+        id S231326AbhKBUvq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Nov 2021 16:51:46 -0400
+Received: from mail-pf1-f169.google.com ([209.85.210.169]:43793 "EHLO
+        mail-pf1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230061AbhKBUvo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 16:51:44 -0400
+Received: by mail-pf1-f169.google.com with SMTP id o14so154259pfu.10
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 13:49:09 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:from:to:references:message-id:date
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=resFEWoOdN09ZSVZIsdi2ZYEbDtdi9mIy0Lkm6ORhH0=;
-        b=ctI+NYc7IK2neLMo4GI1M0ZMiPcVk6xpWO2jn4JHOPiec65c/wjwBmxi/PzV8lLsaN
-         gAa+ZKwdOUcMrEwhAslHdDbZOcI6BwzBj5J5UPdkadxUgpE7opYvk2Goe+1LCVzEtckF
-         U6zjT2C8b6XDuzXz3oDyKzNxfAEsqqZCOngQXZOc3/ynlN6oNI1A5lCAKiFKiOkY9A0R
-         6RH2g/B5Z62s52uoSnynu81JaYzAzuVXcu+5zQccPceFlGe4wbb8I+uMjVW34xF3kWb1
-         kx9MeWK1rl4IrvrEXFW5SEXTKu1ZQ5XgwKgqDOvj6lmZ/7oOIPRH5yRT0eCfEOq28QF9
-         hpOg==
-X-Gm-Message-State: AOAM533DHiH2YfFBHji2Ka0TkTqeVZRydbnxxUgKei49r67VgY2vHiSE
-        NYCWbyDTOaGIGTbgi+oadyn86aHASC3SoQ==
-X-Google-Smtp-Source: ABdhPJyHrdbwhKHbPTpIcbVJyeoVIBtc5ro2t0B08XAmnfDGMlVyczm8ylmrzsGGTKUojkNbI8Fr1w==
-X-Received: by 2002:a92:1e03:: with SMTP id e3mr28272675ile.148.1635883430811;
-        Tue, 02 Nov 2021 13:03:50 -0700 (PDT)
-Received: from [192.168.1.30] ([207.135.234.126])
-        by smtp.gmail.com with ESMTPSA id n13sm17391ilk.71.2021.11.02.13.03.42
+        bh=XI9fbyH+lunmi434E8I0H0Fn5+/JQUme6ST6vOb1xa8=;
+        b=pJxingBGLL8cKcljxVZIVZ+/XgSkopkyovGehM+YV0X4il28zNv1tlHRlqArxzEjaB
+         T51w1ZoU8+L0dyKwtiI1oiwcjSZrRftcZlvM57hHYqODp34tyzu2OlFm92TMnZ49MwMF
+         p1VFsegrpwHijEk5gSS9uPqaHJVWt0SzANf0D8yZGlQStZlxB98YtTk9fq5QnVQm809z
+         JIEydZfLnWSjOAneVrmKEikr4+hTT81MaUiIzvcqNScfWHtZVz9yAls0ts6aA6kRCP79
+         NAvFz2bBIFUmgZPI7kf21MiYibQ2V3ueB6Gle1faAdcM6eI3vQ7uJnXWl5KJdWoWUvXV
+         CDVA==
+X-Gm-Message-State: AOAM530i9+0be33H/bd6ZUCF+YFph9pD1bCqRK34cI3iXZyc4+dqKpoW
+        HO1B0AO3VH7GYaqm265R9uIMjEel6WzsHA==
+X-Google-Smtp-Source: ABdhPJyZYmruTrmxyiQyfxdFh6UdIc+h7S4rUCnm6FokUfwl3l/GNYLlO7ZGEH050d14tkdtW9D3qg==
+X-Received: by 2002:a63:7542:: with SMTP id f2mr29590080pgn.147.1635886148113;
+        Tue, 02 Nov 2021 13:49:08 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:55da:34a:7577:bc7])
+        by smtp.gmail.com with ESMTPSA id a21sm59194pfv.67.2021.11.02.13.49.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Nov 2021 13:03:50 -0700 (PDT)
-Subject: Re: [bug report] WARNING: CPU: 1 PID: 1386 at
- block/blk-mq-sched.c:432 blk_mq_sched_insert_request+0x54/0x178
-From:   Jens Axboe <axboe@kernel.dk>
-To:     Steffen Maier <maier@linux.ibm.com>,
-        Yi Zhang <yi.zhang@redhat.com>,
-        linux-block <linux-block@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-References: <CAHj4cs-NUKzGj5pgzRhDgdrGGbgPBqUoQ44+xgvk6njH9a_RYQ@mail.gmail.com>
- <1cf57bc2-5283-a2ce-0bbc-db6a62953c8f@linux.ibm.com>
- <e9965a7c-faba-496e-8110-dbe8f7065080@kernel.dk>
-Message-ID: <4f3811f6-88d9-c0c6-055f-1a3220357e22@kernel.dk>
-Date:   Tue, 2 Nov 2021 14:03:37 -0600
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.10.0
+        Tue, 02 Nov 2021 13:49:07 -0700 (PDT)
+Subject: Re: [PATCH RFC] scsi: ufs-core: Do not use clk_scaling_lock in
+ ufshcd_queuecommand()
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Luca Porzio <lporzio@micron.com>, linux-scsi@vger.kernel.org
+References: <20211029133751.420015-1-adrian.hunter@intel.com>
+ <24e21ff3-c992-c71e-70e3-e0c3926fbcda@acm.org>
+ <c2d76154-b2ef-2e66-0a56-cd22ac8c652f@intel.com>
+ <d3d70c8e-f260-ca2d-f4c1-2c9dd1a08c5d@acm.org>
+ <3f4ef5e8-38e8-2e90-6da4-abc67aac9e4d@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <263538ad-51b5-4594-9951-8bcc2373da19@acm.org>
+Date:   Tue, 2 Nov 2021 13:49:06 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <e9965a7c-faba-496e-8110-dbe8f7065080@kernel.dk>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <3f4ef5e8-38e8-2e90-6da4-abc67aac9e4d@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/2/21 1:02 PM, Jens Axboe wrote:
-> On 11/2/21 1:00 PM, Steffen Maier wrote:
->> On 11/2/21 07:42, Yi Zhang wrote:
->>> Below WARNING was triggered with blktests srp/001 on the latest
->>> linux-block/for-next, and it cannot be reproduced with v5.15, pls help
->>> check it, thanks.
->>>
->>> 88d2c6ab15f7 (origin/for-next) Merge branch 'for-5.16/block' into for-next
+On 11/1/21 11:11 PM, Adrian Hunter wrote:
+> On 01/11/2021 20:35, Bart Van Assche wrote:
+>> On 11/1/21 2:16 AM, Adrian Hunter wrote:
+>>> Also, there is the outstanding question of synchronization for the call to
+>>> ufshcd_reset_and_restore() further down.
 >>
->> Same warning here with a slightly different stack trace.
->> It breaks root-fs on zfcp-attached SCSI disks for us, because we run our CI 
->> intentionally with panic_on_warn.
->>
->>> [    9.031740] ------------[ cut here ]------------
->>> [    9.031743] WARNING: CPU: 13 PID: 196 at block/blk-mq-sched.c:432 blk_mq_sched_insert_request+0x54/0x178
->>> [    9.031751] Modules linked in: nft_reject_inet(E) nf_reject_ipv4(E) nf_reject_ipv6(E) nft_reject(E) dm_service_time(E) nft_ct(E) nft_chain_nat(E) nf_nat(E) nf_conntrack(E) nf_defrag_ipv6(E) nf_defrag_ipv4(E) ip_set(E) nf_tables(E) nfnetlink(E) sunrpc(E) zfcp(E) scsi_transport_fc(E) dm_multipath(E) scsi_dh_rdac(E) scsi_dh_emc(E) scsi_dh_alua(E) s390_trng(E) vfio_ccw(E) mdev(E) vfio_iommu_type1(E) zcrypt_cex4(E) vfio(E) eadm_sch(E) sch_fq_codel(E) configfs(E) ip_tables(E) x_tables(E) ghash_s390(E) prng(E) aes_s390(E) des_s390(E) libdes(E) sha3_512_s390(E) sha3_256_s390(E) sha512_s390(E) sha256_s390(E) sha1_s390(E) sha_common(E) pkey(E) zcrypt(E) rng_core(E) autofs4(E)
->>> [    9.031785] CPU: 13 PID: 196 Comm: kworker/13:2 Tainted: G            E     5.16.0-20211102.rc0.git0.9febf1194306.300.fc34.s390x+next #1
->>> [    9.031789] Hardware name: IBM 3906 M04 704 (LPAR)
->>> [    9.031791] Workqueue: kaluad alua_rtpg_work [scsi_dh_alua]
->>> [    9.031795] Krnl PSW : 0704e00180000000 000000006558e948 (blk_mq_sched_insert_request+0x58/0x178)
->>> [    9.031800]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:2 PM:0 RI:0 EA:3
->>> [    9.031803] Krnl GPRS: 0000000000000080 00000000000004c6 00000000ade56000 0000000000000001
->>> [    9.031806]            0000000000000001 0000000000000000 00000000a2d6a400 0000000084003c00
->>> [    9.031808]            0000000000000000 0000000000000001 0000000000000001 00000000ade56000
->>> [    9.031810]            000000008aef0000 000003ff7af59400 000003800e3d7b00 000003800e3d7a90
->>> [    9.031817] Krnl Code: 000000006558e93c: a71effff		chi	%r1,-1
->>>                           000000006558e940: a7840004		brc	8,000000006558e948
->>>                          #000000006558e944: af000000		mc	0,0
->>>                          >000000006558e948: 5810b01c		l	%r1,28(%r11)
->>>                           000000006558e94c: ec213bbb0055	risbg	%r2,%r1,59,187,0
->>>                           000000006558e952: a7740057		brc	7,000000006558ea00
->>>                           000000006558e956: 5810b018		l	%r1,24(%r11)
->>>                           000000006558e95a: c01b000000ff	nilf	%r1,255
->>> [    9.031833] Call Trace:
->>> [    9.031835]  [<000000006558e948>] blk_mq_sched_insert_request+0x58/0x178 
->>> [    9.031838]  [<000000006557effe>] blk_execute_rq+0x56/0xd8 
->>> [    9.031841]  [<0000000065768708>] __scsi_execute+0x118/0x240 
->>> [    9.031847]  [<000003ff803c3788>] alua_rtpg+0x120/0x8f8 [scsi_dh_alua] 
->>> [    9.031849]  [<000003ff803c402c>] alua_rtpg_work+0xcc/0x648 [scsi_dh_alua] 
->>> [    9.031852]  [<0000000064f024d2>] process_one_work+0x1fa/0x470 
->>> [    9.031856]  [<0000000064f02c74>] worker_thread+0x64/0x498 
->>> [    9.031859]  [<0000000064f0a894>] kthread+0x17c/0x188 
->>> [    9.031861]  [<0000000064e933c4>] __ret_from_fork+0x3c/0x58 
->>> [    9.031864]  [<0000000065a71cea>] ret_from_fork+0xa/0x40 
->>> [    9.031868] Last Breaking-Event-Address:
->>> [    9.031869]  [<000000006557ef72>] blk_execute_rq_nowait+0x82/0x98
->>> [    9.031871] Kernel panic - not syncing: panic_on_warn set ...
+>> Please clarify this comment further. I assume that you are referring to the
+>> ufshcd_reset_and_restore() call guarded by if (needs_reset)? It is not clear
+>> to me what the outstanding question is?
 > 
-> I'm looking into this one, it's a bit puzzling. The WARN is:
-> 
-> WARN_ON(e && (rq->tag != BLK_MQ_NO_TAG));
-> 
-> which is "we have an elevator", yet the tag isn't initialized to BLK_MQ_NO_TAG.
-> That seems to hint at the initialization changes there, but nothing sticks out
-> there for me.
-> 
-> I'll keep looking.
+> What is to stop it racing with BSG, sysfs, debugfs, abort, reset etc?
 
-Can either one of you try with this patch? Won't fix anything, but it'll
-hopefully shine a bit of light on the issue.
+The patch below should address all feedback that has been provided so far.
+Instead of removing the clock scaling lock entirely, it is only removed from
+ufshcd_queuecommand().
 
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 4a6789e4398b..1b7647722ec0 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -429,7 +429,8 @@ void blk_mq_sched_insert_request(struct request *rq, bool at_head,
- 	struct blk_mq_ctx *ctx = rq->mq_ctx;
- 	struct blk_mq_hw_ctx *hctx = rq->mq_hctx;
- 
--	WARN_ON(e && (rq->tag != BLK_MQ_NO_TAG));
-+	if (e && (rq->tag != BLK_MQ_NO_TAG))
-+		printk("tag=%d/%d, e=%lx, rq cmd_flags %x, rq_flags %x\n", rq->tag, rq->internal_tag, (long) e, rq->cmd_flags, rq->rq_flags);
- 
- 	if (blk_mq_sched_bypass_insert(hctx, rq)) {
- 		/*
+Subject: [PATCH] scsi: ufs: Remove the clock scaling lock from the command queueing code
 
--- 
-Jens Axboe
+Remove the clock scaling lock from ufshcd_queuecommand() since it is a
+performance bottleneck. Freeze request queues from inside
+ufshcd_clock_scaling_prepare() to wait for ongoing SCSI and dev cmds.
+Insert a rcu_read_lock() / rcu_read_unlock() pair in ufshcd_queuecommand().
+Use synchronize_rcu() to wait for ongoing ufshcd_queuecommand() calls.
 
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+  drivers/scsi/ufs/ufshcd.c | 97 ++++++++++-----------------------------
+  drivers/scsi/ufs/ufshcd.h |  1 +
+  2 files changed, 26 insertions(+), 72 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 35a1af70f705..9d964b979aa2 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1069,65 +1069,6 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+  	return false;
+  }
+
+-static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+-					u64 wait_timeout_us)
+-{
+-	unsigned long flags;
+-	int ret = 0;
+-	u32 tm_doorbell;
+-	u32 tr_doorbell;
+-	bool timeout = false, do_last_check = false;
+-	ktime_t start;
+-
+-	ufshcd_hold(hba, false);
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	/*
+-	 * Wait for all the outstanding tasks/transfer requests.
+-	 * Verify by checking the doorbell registers are clear.
+-	 */
+-	start = ktime_get();
+-	do {
+-		if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
+-			ret = -EBUSY;
+-			goto out;
+-		}
+-
+-		tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+-		tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-		if (!tm_doorbell && !tr_doorbell) {
+-			timeout = false;
+-			break;
+-		} else if (do_last_check) {
+-			break;
+-		}
+-
+-		spin_unlock_irqrestore(hba->host->host_lock, flags);
+-		schedule();
+-		if (ktime_to_us(ktime_sub(ktime_get(), start)) >
+-		    wait_timeout_us) {
+-			timeout = true;
+-			/*
+-			 * We might have scheduled out for long time so make
+-			 * sure to check if doorbells are cleared by this time
+-			 * or not.
+-			 */
+-			do_last_check = true;
+-		}
+-		spin_lock_irqsave(hba->host->host_lock, flags);
+-	} while (tm_doorbell || tr_doorbell);
+-
+-	if (timeout) {
+-		dev_err(hba->dev,
+-			"%s: timedout waiting for doorbell to clear (tm=0x%x, tr=0x%x)\n",
+-			__func__, tm_doorbell, tr_doorbell);
+-		ret = -EBUSY;
+-	}
+-out:
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-	ufshcd_release(hba);
+-	return ret;
+-}
+-
+  /**
+   * ufshcd_scale_gear - scale up/down UFS gear
+   * @hba: per adapter instance
+@@ -1175,20 +1116,29 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
+
+  static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+  {
+-	#define DOORBELL_CLR_TOUT_US		(1000 * 1000) /* 1 sec */
+  	int ret = 0;
++
+  	/*
+-	 * make sure that there are no outstanding requests when
+-	 * clock scaling is in progress
++	 * Make sure that there are no outstanding requests while clock scaling
++	 * is in progress. Since the error handler may submit TMFs, limit the
++	 * time during which to block hba->tmf_queue in order not to block the
++	 * UFS error handler.
++	 *
++	 * Since ufshcd_exec_dev_cmd() and ufshcd_issue_devman_upiu_cmd() lock
++	 * the clk_scaling_lock before calling blk_get_request(), lock
++	 * clk_scaling_lock before freezing the request queues to prevent a
++	 * deadlock.
+  	 */
+-	ufshcd_scsi_block_requests(hba);
+  	down_write(&hba->clk_scaling_lock);
+-
++	blk_freeze_queue_start(hba->cmd_queue);
++	blk_freeze_queue_start(hba->tmf_queue);
+  	if (!hba->clk_scaling.is_allowed ||
+-	    ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
++	    blk_mq_freeze_queue_wait_timeout(hba->cmd_queue, HZ) <= 0 ||
++	    blk_mq_freeze_queue_wait_timeout(hba->tmf_queue, HZ / 10) <= 0) {
+  		ret = -EBUSY;
++		blk_mq_unfreeze_queue(hba->tmf_queue);
++		blk_mq_unfreeze_queue(hba->cmd_queue);
+  		up_write(&hba->clk_scaling_lock);
+-		ufshcd_scsi_unblock_requests(hba);
+  		goto out;
+  	}
+
+@@ -1201,11 +1151,12 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+
+  static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
+  {
++	blk_mq_unfreeze_queue(hba->tmf_queue);
++	blk_mq_unfreeze_queue(hba->cmd_queue);
+  	if (writelock)
+  		up_write(&hba->clk_scaling_lock);
+  	else
+  		up_read(&hba->clk_scaling_lock);
+-	ufshcd_scsi_unblock_requests(hba);
+  	ufshcd_release(hba);
+  }
+
+@@ -2698,8 +2649,11 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+
+  	WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
+
+-	if (!down_read_trylock(&hba->clk_scaling_lock))
+-		return SCSI_MLQUEUE_HOST_BUSY;
++	/*
++	 * Allows the UFS error handler to wait for prior ufshcd_queuecommand()
++	 * calls.
++	 */
++	rcu_read_lock();
+
+  	switch (hba->ufshcd_state) {
+  	case UFSHCD_STATE_OPERATIONAL:
+@@ -2785,7 +2739,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+
+  	ufshcd_send_command(hba, tag);
+  out:
+-	up_read(&hba->clk_scaling_lock);
++	rcu_read_unlock();
+
+  	if (ufs_trigger_eh()) {
+  		unsigned long flags;
+@@ -5991,8 +5945,7 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
+  	}
+  	ufshcd_scsi_block_requests(hba);
+  	/* Drain ufshcd_queuecommand() */
+-	down_write(&hba->clk_scaling_lock);
+-	up_write(&hba->clk_scaling_lock);
++	synchronize_rcu();
+  	cancel_work_sync(&hba->eeh_work);
+  }
+
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index a911ad72de7a..c8c2bddb1d33 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -778,6 +778,7 @@ struct ufs_hba_monitor {
+   * @clk_list_head: UFS host controller clocks list node head
+   * @pwr_info: holds current power mode
+   * @max_pwr_info: keeps the device max valid pwm
++ * @clk_scaling_lock: used to serialize device commands and clock scaling
+   * @desc_size: descriptor sizes reported by device
+   * @urgent_bkops_lvl: keeps track of urgent bkops level for device
+   * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
