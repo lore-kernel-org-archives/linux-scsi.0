@@ -2,126 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56C5EC433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 01:43:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 582FDC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 01:56:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 40CDC608FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 01:43:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2EA2660724
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 01:56:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229762AbhKBBqF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Nov 2021 21:46:05 -0400
-Received: from bedivere.hansenpartnership.com ([96.44.175.130]:52562 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229479AbhKBBqF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2021 21:46:05 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1635817410;
-        bh=FZUkYKuDKg058Pg46ijjCbmsyqBvT/Cy51LUuz29wLE=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=RM/9KsV6QVoExFGw/bPBfrpeHnLxBFA7RtBtiHpvObU7NPmQnn1T/zEnIOlKNd90t
-         cwYNnBRrXdsgNSv4rLcn/qWYk2TZp8oKnQxO+FaK4QD649xFMkHYYRnUj9LU5ct/r/
-         iq5BH1kOvuW5tdLuXz49L9NcM43cSmVkYPBkbHKQ=
-Received: from localhost (localhost [127.0.0.1])
-        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C82DB1280A86;
-        Mon,  1 Nov 2021 21:43:30 -0400 (EDT)
-Received: from bedivere.hansenpartnership.com ([127.0.0.1])
-        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id woUwEHJk3ESK; Mon,  1 Nov 2021 21:43:30 -0400 (EDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-        d=hansenpartnership.com; s=20151216; t=1635817410;
-        bh=FZUkYKuDKg058Pg46ijjCbmsyqBvT/Cy51LUuz29wLE=;
-        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-        b=RM/9KsV6QVoExFGw/bPBfrpeHnLxBFA7RtBtiHpvObU7NPmQnn1T/zEnIOlKNd90t
-         cwYNnBRrXdsgNSv4rLcn/qWYk2TZp8oKnQxO+FaK4QD649xFMkHYYRnUj9LU5ct/r/
-         iq5BH1kOvuW5tdLuXz49L9NcM43cSmVkYPBkbHKQ=
-Received: from [172.20.40.112] (unknown [12.248.214.166])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S229902AbhKBB6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Nov 2021 21:58:37 -0400
+Received: from mail-1.ca.inter.net ([208.85.220.69]:46492 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229486AbhKBB6g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2021 21:58:36 -0400
+Received: from mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 26CC92EA40E;
+        Mon,  1 Nov 2021 21:56:01 -0400 (EDT)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19]) (amavisd-new, port 10024)
+        with ESMTP id YUyp_3wp9qgl; Mon,  1 Nov 2021 21:56:00 -0400 (EDT)
+Received: from [192.168.48.23] (host-45-58-208-241.dyn.295.ca [45.58.208.241])
+        (using TLSv1 with cipher AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 187A912809EF;
-        Mon,  1 Nov 2021 21:43:30 -0400 (EDT)
-Message-ID: <10c279f54ed0b24cb1ac0861f9a407e6b64f64da.camel@HansenPartnership.com>
-Subject: Re: [PATCH 2/3] scsi: make sure that request queue queiesce and
- unquiesce balanced
-From:   James Bottomley <James.Bottomley@HansenPartnership.com>
-To:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     Yi Zhang <yi.zhang@redhat.com>, linux-block@vger.kernel.org,
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 6E7532EA0BD;
+        Mon,  1 Nov 2021 21:56:00 -0400 (EDT)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH] scsi: core: initialize cmd->cmnd before it is used
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Tadeusz Struk <tadeusz.struk@linaro.org>,
+        linux-scsi@vger.kernel.org
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>,
-        dm-devel@redhat.com
-Date:   Mon, 01 Nov 2021 21:43:27 -0400
-In-Reply-To: <20211021145918.2691762-3-ming.lei@redhat.com>
-References: <20211021145918.2691762-1-ming.lei@redhat.com>
-         <20211021145918.2691762-3-ming.lei@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.34.4 
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        syzbot+5516b30f5401d4dcbcae@syzkaller.appspotmail.com
+References: <20211101192417.324799-1-tadeusz.struk@linaro.org>
+ <4cfa4049-aae5-51db-4ad2-b4c9db996525@acm.org>
+ <0024e0e1-589c-e2cd-2468-f4af8ec1cb95@linaro.org>
+ <da8d3418-b95c-203d-16c3-8c4086ceaf73@acm.org>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <8fbb619a-37b3-4890-37e0-b586bdee49d6@interlog.com>
+Date:   Mon, 1 Nov 2021 21:56:00 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <da8d3418-b95c-203d-16c3-8c4086ceaf73@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 2021-10-21 at 22:59 +0800, Ming Lei wrote:
-> For fixing queue quiesce race between driver and block layer(elevator
-> switch, update nr_requests, ...), we need to support concurrent
-> quiesce
-> and unquiesce, which requires the two call balanced.
+On 2021-11-01 4:20 p.m., Bart Van Assche wrote:
+> On 11/1/21 1:13 PM, Tadeusz Struk wrote:
+>> On 11/1/21 13:06, Bart Van Assche wrote:
+>>> This patch is a duplicate and has been posted before.
+>>>
+>>> Please take a look at 
+>>> https://lore.kernel.org/linux-scsi/20210904064534.1919476-1-qiulaibin@huawei.com/. 
+>>>
+>>>  From the replies to that email:
+>>> "> Thinking further about this: is there any code left that depends on
+>>>  > scsi_setup_scsi_cmnd() setting cmd->cmd_len? Can the cmd->cmd_len
+>>>  > assignment be removed from scsi_setup_scsi_cmnd()?
+>>>
+>>> cmd_len should never be 0 now, so I think we can remove it."
+>>
+>> Thanks for quick response, but I'm not sure if statement
+>> "cmd_len should never be 0 now" is correct, because the cmd_len is
+>> in fact equal to 0 here and this BUG can be triggered on mainline, 5.14,
+>> and 5.10 stable kernels.
 > 
-> It isn't easy to audit that in all scsi drivers, especially the two
-> may
-> be called from different contexts, so do it in scsi core with one
-> per-device
-> bit flag & global spinlock, basically zero cost since request queue
-> quiesce
-> is seldom triggered.
+> (+Doug Gilbert)
 > 
-> Reported-by: Yi Zhang <yi.zhang@redhat.com>
-> Fixes: e70feb8b3e68 ("blk-mq: support concurrent queue
-> quiesce/unquiesce")
-> Signed-off-by: Ming Lei <ming.lei@redhat.com>
-> ---
->  drivers/scsi/scsi_lib.c    | 45 ++++++++++++++++++++++++++++++----
-> ----
->  include/scsi/scsi_device.h |  1 +
->  2 files changed, 37 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 51fcd46be265..414f4daf8005 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -2638,6 +2638,40 @@ static int
-> __scsi_internal_device_block_nowait(struct scsi_device *sdev)
->  	return 0;
->  }
->  
-> +static DEFINE_SPINLOCK(sdev_queue_stop_lock);
-> +
-> +void scsi_start_queue(struct scsi_device *sdev)
-> +{
-> +	bool need_start;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&sdev_queue_stop_lock, flags);
-> +	need_start = sdev->queue_stopped;
-> +	sdev->queue_stopped = 0;
-> +	spin_unlock_irqrestore(&sdev_queue_stop_lock, flags);
-> +
-> +	if (need_start)
-> +		blk_mq_unquiesce_queue(sdev->request_queue);
+> One of the functions in the call stack in the first message of this email
+> thread is sg_io(). I am not aware of any documentation that specifies whether
+> it is valid to set cmd_len in the sg_io header to zero. My opinion is that
+> the SG_IO implementation should either reject cmd_len == 0 or set cmd_len
+> to a valid value if it is zero.
 
-Well, this is a classic atomic pattern:
+For the sg driver in production, the v3 interface users (including
+ioctl(<sg_fd>, SG_IO,) ) have this check:
 
-if (cmpxchg(&sdev->queue_stopped, 1, 0))
-	blk_mq_unquiesce_queue(sdev->request_queue);
+        if ((!hp->cmdp) || (hp->cmd_len < 6) || (hp->cmd_len > sizeof (cmnd))) {
+                 sg_remove_request(sfp, srp);
+                 return -EMSGSIZE;
+         }
 
-The reason to do it with atomics rather than spinlocks is
+For the v1 and v2 interface users there was no cmd_len. It was deduced via
+COMMAND_SIZE(opcode) or by calling ioctl(SG_NEXT_CMD_LEN) prior to the write()
+to issue the SCSI command.
 
-   1. no need to disable interrupts: atomics are locked
-   2. faster because a spinlock takes an exclusive line every time but the
-      read to check the value can be in shared mode in cmpxchg
-   3. it's just shorter and better code.
+Looking at the block layer/ SCSI mid level implementation of ioctl(SG_IO) I
+can see no lower bound check on cmd_len (which is 'unsigned char' so at least
+it can't go negative).
 
-The only minor downside is queue_stopped now needs to be a u32.
-
-James
-
+Doug Gilbert
 
