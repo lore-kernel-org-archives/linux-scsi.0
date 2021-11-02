@@ -2,43 +2,63 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0F84C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 22:27:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19364C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 23:01:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C242461073
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 22:27:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0137F60C4A
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 23:01:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231151AbhKBW3p (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Nov 2021 18:29:45 -0400
-Received: from mail-pg1-f182.google.com ([209.85.215.182]:43654 "EHLO
-        mail-pg1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229685AbhKBW3m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 18:29:42 -0400
-Received: by mail-pg1-f182.google.com with SMTP id b4so620101pgh.10;
-        Tue, 02 Nov 2021 15:27:07 -0700 (PDT)
+        id S229685AbhKBXDq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Nov 2021 19:03:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47102 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229747AbhKBXDp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 19:03:45 -0400
+Received: from mail-pg1-x52d.google.com (mail-pg1-x52d.google.com [IPv6:2607:f8b0:4864:20::52d])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B49CC061714
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Nov 2021 16:01:10 -0700 (PDT)
+Received: by mail-pg1-x52d.google.com with SMTP id e65so693464pgc.5
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 16:01:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=message-id:date:mime-version:user-agent:subject:content-language:to
+         :cc:references:from:in-reply-to:content-transfer-encoding;
+        bh=p3U7Ew/W+tbL4gceCW5wKoRUR8TYR8jX2l7VfK2xpRc=;
+        b=eBalN+j2S1Hc+t9eAuReZCnxpTHRdKSe3xN72ntQZhDMgHX0Fwrnk8UZ6SxPqvMRtx
+         kG1BHJkTq1A88kNvwOMmIEEzr8xXWAPmSMhTrjp44t9vpA/lNxb3NDvxFkI6+FWSVjPD
+         jNulI3vKLJtlmYIA2lDZr03xB1qcUpiKPZAvoYtfj7MsmKq+pGafcxno4hy0GxGtC7xz
+         xsvUN9CDeu+FOqnj6xkCNMj/y4SGEzZBRdF2qatC8i+tyOIWqxhlv6yD+frLA7p9CISe
+         zlqOH6u1+acosdHAQyJRv5yS5EpCW49CqAAKLGFUToFlwnV/dqZkUYL+KLVWoSeKz/eX
+         jb2g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
          :content-transfer-encoding;
-        bh=LPagmY9ax5jGwuuYaLAQO2StTmpuEoeH5CDXl+WMcP0=;
-        b=mzdk7bA0Tzx2fOS9H/zthww5CmGblzRU04TxVH1RbXpuSR4fGwcI0G+pOUbY5JTtYN
-         DPrqXwv7tOKikYpy0lOitY+f9JHAwDJSiwdUlBb7OovXT44plkz1FCQ3iWx/ms8Cq1RP
-         OUsBJh4KsTGmL0Tl5jgTe1ZkyjnyuImE7dnZeygVQ8dShKxEHlnA2VDJSkQ3mhGaZVU0
-         PnosyalokxEOxFZ/KUwDbiWTmoe6lqsJEBQU0a5rcd+k4NjooRuvxCVCDMZGoEiKJuhN
-         mPn6/01+7FscaEe0hdsOvyrDujh5wHOBQhDwa61vG2h4R1Eh+mYO/fcgZLZOaymZLEfF
-         6Dqw==
-X-Gm-Message-State: AOAM530UkzUplXnZcn9AdJTzaXNf85nPuiaYeHoxOcK8UYkUHA7kVT8r
-        bQ2t5Re8uJMypR4dax6lOV0=
-X-Google-Smtp-Source: ABdhPJyj7hc3qRc+L8ZUozDCjohl33jRvYGbO4S0ha0Ex/fT1ibQcpQs4rSMq4fAuqpnUDiF39UpnQ==
-X-Received: by 2002:a63:9f1a:: with SMTP id g26mr29819553pge.170.1635892027169;
-        Tue, 02 Nov 2021 15:27:07 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:55da:34a:7577:bc7])
-        by smtp.gmail.com with ESMTPSA id y7sm101248pge.44.2021.11.02.15.27.06
+        bh=p3U7Ew/W+tbL4gceCW5wKoRUR8TYR8jX2l7VfK2xpRc=;
+        b=qYG7LjMhkcnCMpHZcpP4V9+oYEDVSLe0D721IVdcegmjCXsoF3GKArttMt1QT2P9nO
+         iPgwS3KQZW5OwHKlCw4M5hzq6dFeCTmngIR40DU2BK3KfeATM3p8czDNEAJuBUhKQcUo
+         cgPPgITiAmqlG0UR7cQM69+xNtFy64eiMs3rPk5F6V5GqEsWBAOdNNlbQXgmF02ugnFs
+         7HeVV1FirfbkzvA74UL3L9U5y5omqZizHZ5Lb76TDHMbQ8iN5zU6yfJ7bNhFn3UfEO4U
+         maPe7OxMj2vvnh0BizW1E0A+oUnZcGd5ssyDeQKeHN4Qv7xtYqXP3ltI458qc4eJVdp7
+         kTGQ==
+X-Gm-Message-State: AOAM531DM+2VeFco2ZyUGY8zNNm+xToDYtk9xyBGJUGq4lPW7VZ767hW
+        jlT31QxYiTJ/mItjrTJGhmIFqw==
+X-Google-Smtp-Source: ABdhPJzxJGHGRui/fHlPNNW8myCISikNziQ1qnSGdiz1EsgAa1iEqVHgQB3FRvCK7mK/jvJjNjC4mQ==
+X-Received: by 2002:a63:df13:: with SMTP id u19mr19657494pgg.450.1635894069696;
+        Tue, 02 Nov 2021 16:01:09 -0700 (PDT)
+Received: from [192.168.254.17] ([50.39.160.154])
+        by smtp.gmail.com with ESMTPSA id t38sm207636pfg.61.2021.11.02.16.01.09
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Nov 2021 15:27:06 -0700 (PDT)
+        Tue, 02 Nov 2021 16:01:09 -0700 (PDT)
+Message-ID: <5dd944cd-e3be-acb1-3d96-e7939dc7bae8@linaro.org>
+Date:   Tue, 2 Nov 2021 16:01:08 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.0
 Subject: Re: [PATCH] scsi: core: initialize cmd->cmnd before it is used
-To:     Tadeusz Struk <tadeusz.struk@linaro.org>, dgilbert@interlog.com,
+Content-Language: en-US
+To:     Bart Van Assche <bvanassche@acm.org>, dgilbert@interlog.com,
         linux-scsi@vger.kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
@@ -53,32 +73,30 @@ References: <20211101192417.324799-1-tadeusz.struk@linaro.org>
  <17a1b72e-2c2a-8492-cb92-4dec36a6531d@acm.org>
  <cad499a9-7587-1fa9-9f7d-223e66a18efa@interlog.com>
  <f80fd188-a0e5-2e75-506c-3e82d138fe28@linaro.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <9115c893-3fcd-ae81-7422-723ae5370319@acm.org>
-Date:   Tue, 2 Nov 2021 15:27:05 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
-MIME-Version: 1.0
-In-Reply-To: <f80fd188-a0e5-2e75-506c-3e82d138fe28@linaro.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+ <9115c893-3fcd-ae81-7422-723ae5370319@acm.org>
+From:   Tadeusz Struk <tadeusz.struk@linaro.org>
+In-Reply-To: <9115c893-3fcd-ae81-7422-723ae5370319@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/2/21 3:22 PM, Tadeusz Struk wrote:
-> Do you want me to send a patch with the check in scsi_fill_sghdr_rq()?
-> I want to close the mentioned syzbot issue in 5.10. I can also do the
-> back-porting if anything will be required.
+On 11/2/21 15:27, Bart Van Assche wrote:
+> On 11/2/21 3:22 PM, Tadeusz Struk wrote:
+>> Do you want me to send a patch with the check in scsi_fill_sghdr_rq()?
+>> I want to close the mentioned syzbot issue in 5.10. I can also do the
+>> back-porting if anything will be required.
+> 
+> Hi Tadeusz,
+> 
+> I think we need two patches: one for the SG_IO code that rejects SG_IO
+> requests if the CDB length is not valid and a second patch that removes
+> the code from scsi_lib.c for assigning the CDB length. Please let me
+> know if you would not have the time to work on this.
 
-Hi Tadeusz,
+Yes, I agree. I will send the patches today.
 
-I think we need two patches: one for the SG_IO code that rejects SG_IO
-requests if the CDB length is not valid and a second patch that removes
-the code from scsi_lib.c for assigning the CDB length. Please let me
-know if you would not have the time to work on this.
-
-Bart.
-
-
+-- 
+Thanks,
+Tadeusz
