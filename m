@@ -2,34 +2,49 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 582FDC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 01:56:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCC89C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 03:06:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2EA2660724
-	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 01:56:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 923D960524
+	for <linux-scsi@archiver.kernel.org>; Tue,  2 Nov 2021 03:06:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229902AbhKBB6h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 1 Nov 2021 21:58:37 -0400
-Received: from mail-1.ca.inter.net ([208.85.220.69]:46492 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229486AbhKBB6g (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2021 21:58:36 -0400
-Received: from mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 26CC92EA40E;
-        Mon,  1 Nov 2021 21:56:01 -0400 (EDT)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19]) (amavisd-new, port 10024)
-        with ESMTP id YUyp_3wp9qgl; Mon,  1 Nov 2021 21:56:00 -0400 (EDT)
-Received: from [192.168.48.23] (host-45-58-208-241.dyn.295.ca [45.58.208.241])
-        (using TLSv1 with cipher AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 6E7532EA0BD;
-        Mon,  1 Nov 2021 21:56:00 -0400 (EDT)
-Reply-To: dgilbert@interlog.com
+        id S230015AbhKBDJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 1 Nov 2021 23:09:15 -0400
+Received: from mail-pl1-f177.google.com ([209.85.214.177]:41858 "EHLO
+        mail-pl1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229526AbhKBDJP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Nov 2021 23:09:15 -0400
+Received: by mail-pl1-f177.google.com with SMTP id k4so3967939plx.8;
+        Mon, 01 Nov 2021 20:06:41 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
+         :content-language:to:cc:references:from:in-reply-to
+         :content-transfer-encoding;
+        bh=sRFLt+ScwC+b6JXHsh7TwBXtQ96PKTlE+P2DMsJLhhs=;
+        b=FcCe4/f+3Xg8dmHE0Kj0NAPeHu/r1im4y5i+/AC4/t459C8MmtJtRO2jxqzp7rj2Zk
+         eW/ydBUeoZWutoYBnBYBldo75gKO6j8Z3EOymANhWWMJNdMAZVPOj2NjPe9psX/neByk
+         S+yORPF/WVmRjHqUBj6E0B8hRI/znhbEKziq9xwMq4XNb7YSfgDwNf1AGomDG1tV4Z2f
+         eWKuQeJYkH3dw1tAyhqAKzUy7njWNUJW3JaBE75Uij8njgVCGF5qVC+I/YbmYL1fGg7v
+         aWaapEIbjsXbYr7y96Y97fmBn4/b+z/GxYBusnlXzYo7ACLIRwIrf6VRhSDVoQ48bBTM
+         SQpg==
+X-Gm-Message-State: AOAM533iURa9eeEG72DFzqXq8IgHNS/QBraUtzm0ywadzoEEjHLaISDH
+        TGFhuD2AMd381Wi3w/prWes=
+X-Google-Smtp-Source: ABdhPJwkWYOi+Mc8Z28I2BpP/jo7JaPVHapN3DGw0ezCNQ5DEAQ0Kf5GXkVA0qAyVFdOfGX6qxRhtg==
+X-Received: by 2002:a17:90b:1e0e:: with SMTP id pg14mr3354228pjb.143.1635822400637;
+        Mon, 01 Nov 2021 20:06:40 -0700 (PDT)
+Received: from ?IPV6:2601:647:4000:d7:70a9:502a:2a58:d9ba? ([2601:647:4000:d7:70a9:502a:2a58:d9ba])
+        by smtp.gmail.com with ESMTPSA id w5sm14147382pgp.79.2021.11.01.20.06.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 01 Nov 2021 20:06:39 -0700 (PDT)
+Message-ID: <17a1b72e-2c2a-8492-cb92-4dec36a6531d@acm.org>
+Date:   Mon, 1 Nov 2021 20:06:38 -0700
+MIME-Version: 1.0
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.2.1
 Subject: Re: [PATCH] scsi: core: initialize cmd->cmnd before it is used
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Tadeusz Struk <tadeusz.struk@linaro.org>,
+Content-Language: en-US
+To:     dgilbert@interlog.com, Tadeusz Struk <tadeusz.struk@linaro.org>,
         linux-scsi@vger.kernel.org
 Cc:     Christoph Hellwig <hch@lst.de>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
@@ -40,63 +55,43 @@ References: <20211101192417.324799-1-tadeusz.struk@linaro.org>
  <4cfa4049-aae5-51db-4ad2-b4c9db996525@acm.org>
  <0024e0e1-589c-e2cd-2468-f4af8ec1cb95@linaro.org>
  <da8d3418-b95c-203d-16c3-8c4086ceaf73@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <8fbb619a-37b3-4890-37e0-b586bdee49d6@interlog.com>
-Date:   Mon, 1 Nov 2021 21:56:00 -0400
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
-MIME-Version: 1.0
-In-Reply-To: <da8d3418-b95c-203d-16c3-8c4086ceaf73@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
+ <8fbb619a-37b3-4890-37e0-b586bdee49d6@interlog.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <8fbb619a-37b3-4890-37e0-b586bdee49d6@interlog.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-11-01 4:20 p.m., Bart Van Assche wrote:
-> On 11/1/21 1:13 PM, Tadeusz Struk wrote:
->> On 11/1/21 13:06, Bart Van Assche wrote:
->>> This patch is a duplicate and has been posted before.
->>>
->>> Please take a look at 
->>> https://lore.kernel.org/linux-scsi/20210904064534.1919476-1-qiulaibin@huawei.com/. 
->>>
->>>  From the replies to that email:
->>> "> Thinking further about this: is there any code left that depends on
->>>  > scsi_setup_scsi_cmnd() setting cmd->cmd_len? Can the cmd->cmd_len
->>>  > assignment be removed from scsi_setup_scsi_cmnd()?
->>>
->>> cmd_len should never be 0 now, so I think we can remove it."
->>
->> Thanks for quick response, but I'm not sure if statement
->> "cmd_len should never be 0 now" is correct, because the cmd_len is
->> in fact equal to 0 here and this BUG can be triggered on mainline, 5.14,
->> and 5.10 stable kernels.
+On 11/1/21 18:56, Douglas Gilbert wrote:
+> On 2021-11-01 4:20 p.m., Bart Van Assche wrote:
+>> One of the functions in the call stack in the first message of this email
+>> thread is sg_io(). I am not aware of any documentation that specifies 
+>> whether
+>> it is valid to set cmd_len in the sg_io header to zero. My opinion is 
+>> that
+>> the SG_IO implementation should either reject cmd_len == 0 or set cmd_len
+>> to a valid value if it is zero.
 > 
-> (+Doug Gilbert)
+> For the sg driver in production, the v3 interface users (including
+> ioctl(<sg_fd>, SG_IO,) ) have this check:
 > 
-> One of the functions in the call stack in the first message of this email
-> thread is sg_io(). I am not aware of any documentation that specifies whether
-> it is valid to set cmd_len in the sg_io header to zero. My opinion is that
-> the SG_IO implementation should either reject cmd_len == 0 or set cmd_len
-> to a valid value if it is zero.
+>         if ((!hp->cmdp) || (hp->cmd_len < 6) || (hp->cmd_len > sizeof 
+> (cmnd))) {
+>                  sg_remove_request(sfp, srp);
+>                  return -EMSGSIZE;
+>          }
 
-For the sg driver in production, the v3 interface users (including
-ioctl(<sg_fd>, SG_IO,) ) have this check:
+Hi Doug,
 
-        if ((!hp->cmdp) || (hp->cmd_len < 6) || (hp->cmd_len > sizeof (cmnd))) {
-                 sg_remove_request(sfp, srp);
-                 return -EMSGSIZE;
-         }
+Thanks for having taken a look. I found the above check in 
+sg_new_write(). To me that function seems to come from a code path that 
+is unrelated to sg_io(), the function shown in the call stack in the 
+email at the start of this thread. Maybe I overlooked something but I 
+haven't found a minimum size check for hdr->cmd_len in sg_io() before 
+the blk_execute_rq() call. Should such a check perhaps be added?
 
-For the v1 and v2 interface users there was no cmd_len. It was deduced via
-COMMAND_SIZE(opcode) or by calling ioctl(SG_NEXT_CMD_LEN) prior to the write()
-to issue the SCSI command.
+Thanks,
 
-Looking at the block layer/ SCSI mid level implementation of ioctl(SG_IO) I
-can see no lower bound check on cmd_len (which is 'unsigned char' so at least
-it can't go negative).
-
-Doug Gilbert
-
+Bart.
