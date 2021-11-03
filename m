@@ -2,165 +2,117 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 798ADC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 03:07:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 954F4C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 03:21:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5B5BA60D07
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 03:07:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F7D2610A8
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 03:21:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230132AbhKCDKE (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Nov 2021 23:10:04 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:34233 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229974AbhKCDKC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 23:10:02 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635908846;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=jpqQa9a0qrY2ZT6oclRiigl9i7AVTT9OBGUueGQ8BpM=;
-        b=Pd+maS3m7dDkpYX/bhiUQYTkyhedai/lKTCadczX5NqYUI2GSscaiZD9WrsJs4SclYszth
-        fqLLH2xSDB3JjXJt4m+icrQYJd1FZfeP5HMgdxhwSjaQrBYRllb2r9JvJQctcWWCNqrOPA
-        OvcCegrTC7TDBYLE1n1JM+AiNLqe7Aw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-228-vunX49t4PEWUdt1ApQ2X7A-1; Tue, 02 Nov 2021 23:07:23 -0400
-X-MC-Unique: vunX49t4PEWUdt1ApQ2X7A-1
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D71BC806688;
-        Wed,  3 Nov 2021 03:07:22 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 398DD57CD2;
-        Wed,  3 Nov 2021 03:07:03 +0000 (UTC)
-Date:   Wed, 3 Nov 2021 11:06:58 +0800
-From:   Ming Lei <ming.lei@redhat.com>
+        id S230049AbhKCDXu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Nov 2021 23:23:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48556 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229899AbhKCDXt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 23:23:49 -0400
+Received: from mail-il1-x12f.google.com (mail-il1-x12f.google.com [IPv6:2607:f8b0:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32BB2C061205
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Nov 2021 20:21:14 -0700 (PDT)
+Received: by mail-il1-x12f.google.com with SMTP id w10so1135221ilc.13
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 20:21:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20210112.gappssmtp.com; s=20210112;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=0nndE3bXje7v1hNIF7AwZXvSEQQyGas46aJLK284tBE=;
+        b=j9z7xjNnS5ETYg8Q72T5Xdf6iuSHyqOGf0yU1wJNbbqUezM2apSlpnMP3RHZ2oZm8P
+         /WzviMl42aB+xpNu0obC9UpvYGKIDHcEfdEcBYN0HpesuAvPnY9TqxHnty/ltR5xTTxh
+         /z/g5LvMy4RYv583LPMF6urmOVXTTu8rSFR8gmz+53+OvUCvSGm9M2k7FpunFsN0M/D/
+         rE0UCcgkJy/7DAB3gqL2PQRBXn8ipB+nn2NuDufjeeYS7ieObPR9gyQeVWGzvKOp2/C9
+         uTsSFvgi9AlgzH+ho1jbS0TvpSq0C+f83gyzHYfgwlI7vbjp4dKNBRz48mD8aYS7beRE
+         htTQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=0nndE3bXje7v1hNIF7AwZXvSEQQyGas46aJLK284tBE=;
+        b=e1FxyxVPs/Qyhro24XyCQL5hzq09yU1vnO/QCEXMV07N+Hw0xh8F/ReZdWSoRysQdz
+         fa9Nvp1/vaqvae5aS5p4ZIUKDZyEsqwlmVRp/nb1c1HOu8bksMp587bNmFh4DLBsEvA8
+         LauYDnq61h1mPZgjhvW8fZLicn2L53lZ4AiF8+bmSed73ytlH9z5vc+OD/Q1H7HU2Y1J
+         pdQbFmdOFgPy4dYFFOX1RNbjbDlUapFtRwOvJUnRNPAIW6YHeMa0O20N9LbcAtKc6gQy
+         NP+Z+ZSjb6Odg9ynIVBMyyBUBJJpvrQivbEg/LN8Ez5wmDIFy2QFW8bWiFnNL9/MVLsy
+         Q2gw==
+X-Gm-Message-State: AOAM532yiXm8ZBFpNyi2c1HvGDxzbsIqBINICe1eLqnPoA6/LpPXWgZB
+        RVCT7Yd2af6BwNDTIL9he++quV1KCFIzZw==
+X-Google-Smtp-Source: ABdhPJzGYSHWgG5gxXyAsqg8Tw8gDMfzIc938IuDdh0mkt+a7Zficg5mNUWgA+73MBBxMI6zSTOGtQ==
+X-Received: by 2002:a05:6e02:1d9e:: with SMTP id h30mr21815713ila.138.1635909673421;
+        Tue, 02 Nov 2021 20:21:13 -0700 (PDT)
+Received: from [192.168.1.116] ([66.219.217.159])
+        by smtp.gmail.com with ESMTPSA id s12sm435613iol.30.2021.11.02.20.21.12
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 02 Nov 2021 20:21:13 -0700 (PDT)
+Subject: Re: [bug report] WARNING: CPU: 1 PID: 1386 at
+ block/blk-mq-sched.c:432 blk_mq_sched_insert_request+0x54/0x178
 To:     Yi Zhang <yi.zhang@redhat.com>
-Cc:     linux-block <linux-block@vger.kernel.org>,
-        linux-scsi@vger.kernel.org, stable@vger.kernel.org,
-        gregkh@linuxfoundation.org
-Subject: Re: [bug report] kernel null pointer observed with blktests srp/006
- on 5.14.15
-Message-ID: <YYH80vbE8DnCG94r@T590>
-References: <CAHj4cs-QxAmz=pM=cd1UJEg+HRUH_yMf5jDnBbirgW1oq1CaKw@mail.gmail.com>
+Cc:     Steffen Maier <maier@linux.ibm.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        Linux-Next Mailing List <linux-next@vger.kernel.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>
+References: <CAHj4cs-NUKzGj5pgzRhDgdrGGbgPBqUoQ44+xgvk6njH9a_RYQ@mail.gmail.com>
+ <1cf57bc2-5283-a2ce-0bbc-db6a62953c8f@linux.ibm.com>
+ <e9965a7c-faba-496e-8110-dbe8f7065080@kernel.dk>
+ <4f3811f6-88d9-c0c6-055f-1a3220357e22@kernel.dk>
+ <CAHj4cs_+ZDe3KVbKYUK0XnupTxU2MqfA6ARxMkhkTwg9hYBiLg@mail.gmail.com>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <cb1c00aa-8d06-ef04-4621-0f7b02f54d93@kernel.dk>
+Date:   Tue, 2 Nov 2021 21:21:10 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.10.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAHj4cs-QxAmz=pM=cd1UJEg+HRUH_yMf5jDnBbirgW1oq1CaKw@mail.gmail.com>
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+In-Reply-To: <CAHj4cs_+ZDe3KVbKYUK0XnupTxU2MqfA6ARxMkhkTwg9hYBiLg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, Nov 02, 2021 at 03:31:43PM +0800, Yi Zhang wrote:
-> Hello
+On 11/2/21 8:21 PM, Yi Zhang wrote:
+>>
+>> Can either one of you try with this patch? Won't fix anything, but it'll
+>> hopefully shine a bit of light on the issue.
+>>
+> Hi Jens
 > 
-> Below null pointer was triggered with blktests srp/006 on aarch64, pls
-> help check it, thanks.
+> Here is the full log:
 
-...
+Thanks! I think I see what it could be - can you try this one as well,
+would like to confirm that the condition I think is triggering is what
+is triggering.
 
-> [  491.786766] Unable to handle kernel paging request at virtual
-> address ffff8000096f9438
-> [  491.794676] Mem abort info:
-> [  491.797480]   ESR = 0x96000007
-> [  491.800527]   EC = 0x25: DABT (current EL), IL = 32 bits
-> [  491.805833]   SET = 0, FnV = 0
-> [  491.808896]   EA = 0, S1PTW = 0
-> [  491.812028]   FSC = 0x07: level 3 translation fault
-> [  491.816901] Data abort info:
-> [  491.819769]   ISV = 0, ISS = 0x00000007
-> [  491.823593]   CM = 0, WnR = 0
-> [  491.826553] swapper pgtable: 4k pages, 48-bit VAs, pgdp=0000000f82320000
-> [  491.833243] [ffff8000096f9438] pgd=1000000fff0ff003,
-> p4d=1000000fff0ff003, pud=1000000fff0fe003, pmd=100000010c48a003,
-> pte=0000000000000000
-> [  491.845768] Internal error: Oops: 96000007 [#1] SMP
-> [  491.850636] Modules linked in: target_core_user uio
-> target_core_pscsi target_core_file ib_srpt target_core_iblock
-> target_core_mod rdma_cm iw_cm ib_cm scsi_debug rdma_rxe ib_uverbs
-> ip6_udp_tunnel udp_tunnel null_blk dm_service_time ib_umad
-> crc32_generic scsi_dh_rdac scsi_dh_emc scsi_dh_alua dm_multipath
-> ib_core rfkill sunrpc vfat fat joydev be2net nicvf cavium_ptp
-> mdio_thunder cavium_rng_vf nicpf thunderx_edac mdio_cavium thunder_bgx
-> thunder_xcv cavium_rng ipmi_ssif ipmi_devintf ipmi_msghandler fuse
-> zram ip_tables xfs ast i2c_algo_bit drm_vram_helper drm_kms_helper
-> syscopyarea sysfillrect sysimgblt fb_sys_fops crct10dif_ce cec
-> ghash_ce drm_ttm_helper ttm drm i2c_thunderx thunderx_mmc aes_neon_bs
-> [last unloaded: scsi_transport_srp]
-> [  491.915381] CPU: 6 PID: 11622 Comm: multipathd Not tainted 5.14.15 #1
-> [  491.921812] Hardware name: GIGABYTE R120-T34-00/MT30-GS2-00, BIOS
-> F02 08/06/2019
-> [  491.929196] pstate: 20400005 (nzCv daif +PAN -UAO -TCO BTYPE=--)
-> [  491.935192] pc : scsi_mq_exit_request+0x28/0x60
-> [  491.939721] lr : blk_mq_free_rqs+0x7c/0x1ec
-> [  491.943897] sp : ffff800016a536c0
-> [  491.947200] x29: ffff800016a536c0 x28: ffff0001375b8000 x27: 0000000000000131
-> [  491.954330] x26: ffff000102bb5c28 x25: ffff0001333d1000 x24: ffff0001333d1200
-> [  491.961460] x23: 0000000000000000 x22: ffff0001386870a8 x21: 0000000000000000
-> [  491.968589] x20: 0000000000000001 x19: ffff00010d878128 x18: ffffffffffffffff
-> [  491.975719] x17: 5342555300355f66 x16: 6d745f697363732f x15: 0000000000000000
-> [  491.982848] x14: 0000000000000000 x13: 0000000000000030 x12: 0101010101010101
-> [  491.989977] x11: ffff8000114a1298 x10: 0000000000001c90 x9 : ffff800010764030
-> [  491.997109] x8 : ffff0001375b9cf0 x7 : 0000000000000004 x6 : 00000002a7f08498
-> [  492.004242] x5 : 0000000000000001 x4 : ffff000130092128 x3 : ffff800010b1e7e0
-> [  492.011371] x2 : 0000000000000000 x1 : ffff8000096f93f0 x0 : ffff000138687000
-> [  492.018501] Call trace:
-> [  492.020937]  scsi_mq_exit_request+0x28/0x60
-> [  492.025112]  blk_mq_free_rqs+0x7c/0x1ec
-> [  492.028939]  blk_mq_free_tag_set+0x58/0x100
-> [  492.033113]  scsi_mq_destroy_tags+0x20/0x30
-> [  492.037286]  scsi_host_dev_release+0x9c/0x100
-> [  492.041633]  device_release+0x40/0xa0
-> [  492.045286]  kobject_cleanup+0x4c/0x180
-> [  492.049115]  kobject_put+0x50/0xd0
-> [  492.052510]  put_device+0x20/0x30
-> [  492.055819]  scsi_target_dev_release+0x34/0x44
-> [  492.060253]  device_release+0x40/0xa0
-> [  492.063905]  kobject_cleanup+0x4c/0x180
-> [  492.067732]  kobject_put+0x50/0xd0
-> [  492.071124]  put_device+0x20/0x30
-> [  492.074428]  scsi_device_dev_release_usercontext+0x228/0x244
-> [  492.080079]  execute_in_process_context+0x50/0xa0
-> [  492.084775]  scsi_device_dev_release+0x28/0x3c
-> [  492.089208]  device_release+0x40/0xa0
-> [  492.092860]  kobject_cleanup+0x4c/0x180
-> [  492.096686]  kobject_put+0x50/0xd0
-> [  492.100081]  put_device+0x20/0x30
-> [  492.103396]  scsi_device_put+0x38/0x50
-> [  492.107140]  sd_release151]  free_multipath+0x80/0xc0 [dm_multipath]
-> [  492.132109]  multipath_dtr+0x38/0x50 [dm_multipath]
-> [  492.136980]  dm_table_destroy+0x68/0x150
-> [  492.140892]  __dm_destroy+0x138/0x204
-> [  492.144548]  dm_destroy+0x20/0x30
-> [  492.147859]  dev_remove+0x144/0x1e0
-> [  492.151339]  ctl_ioctl+0x278/0x4d0
-> [  492.154731]  dm_ctl_ioctl+0x1c/0x30
-> [  492.158210]  __arm64_sys_ioctl+0xb4/0x100
-> [  492.162212]  invoke_syscall+0x50/0x120
-> [  492.165955]  el0_svc_common+0x48/0x100
-> [  492.169694]  do_el0_svc+0x34/0xa0
-> [  492.173000]  el0_svc+0x2c/0x54
-> [  492.176048]  el0t_64_sync_handler+0xa4/0x130
-> [  492.180307]  el0t_64_sync+0x19c/0x1a0
-> [  492.183962] Code: f9000bf3 9104a033 f9403000 f9404c01 (f9402422)
-> [  492.190068] ---[ end trace dbfeac019a702ce7 ]---
-> [  492.194678] Kernel panic - not syncing: Oops: Fatal exception
-> [  492.200431] SMP: stopping secondary CPUs
-> [  492.204354] Kernel Offset: 0x80000 from 0xffff800010000000
-> [  492.209828] PHYS_OFFSET: 0x0
-> [  492.212697] CPU features: 0x00180051,20800a40
-> [  492.217043] Memory Limit: none
-> [  492.220102] ---[ end Kernel panic - not syncing: Oops: Fatal exception ]---
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 07eb1412760b..81dede885231 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -2515,6 +2515,8 @@ void blk_mq_submit_bio(struct bio *bio)
+ 	if (plug && plug->cached_rq) {
+ 		rq = rq_list_pop(&plug->cached_rq);
+ 		INIT_LIST_HEAD(&rq->queuelist);
++		WARN_ON_ONCE(q->elevator && !(rq->rq_flags & RQF_ELV));
++		WARN_ON_ONCE(!q->elevator && (rq->rq_flags & RQF_ELV));
+ 	} else {
+ 		struct blk_mq_alloc_data data = {
+ 			.q		= q,
+@@ -2535,6 +2537,8 @@ void blk_mq_submit_bio(struct bio *bio)
+ 				bio_wouldblock_error(bio);
+ 			goto queue_exit;
+ 		}
++		WARN_ON_ONCE(q->elevator && !(rq->rq_flags & RQF_ELV));
++		WARN_ON_ONCE(!q->elevator && (rq->rq_flags & RQF_ELV));
+ 	}
+ 
+ 	trace_block_getrq(bio);
 
-Hi Yi,
-
-It was fixed by f2b85040acec ("scsi: core: Put LLD module refcnt after SCSI device
-is released"), look not ported to 5.14.y yet.
-
-
-Thanks,
-Ming
+-- 
+Jens Axboe
 
