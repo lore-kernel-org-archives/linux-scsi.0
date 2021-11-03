@@ -2,101 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CE50EC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:06:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7F5C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:07:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B02E561053
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:06:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E9584610EA
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:07:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233022AbhKCRJY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 13:09:24 -0400
-Received: from mail-pg1-f174.google.com ([209.85.215.174]:43597 "EHLO
-        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233000AbhKCRJX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 13:09:23 -0400
-Received: by mail-pg1-f174.google.com with SMTP id b4so2899378pgh.10
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Nov 2021 10:06:47 -0700 (PDT)
+        id S233032AbhKCRKF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 13:10:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38674 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233008AbhKCRKF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 13:10:05 -0400
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92FDDC061714
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Nov 2021 10:07:28 -0700 (PDT)
+Received: by mail-pf1-x430.google.com with SMTP id 127so3037234pfu.1
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Nov 2021 10:07:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=mnf5X/iTgBRFMMZkRgyzc0OpnzavKwGRo8XYeAaztzo=;
+        b=F0ekRK3HoxvdErW+5fKZ6AZS1b99D2x2oYZNVXwHCbjzMYD2YGfPn2h+icOXWeRAs6
+         QqabmdvtHlOyw3RF1RDr1FKdUl2mi9z9VJCE833ubY5AkijeiB39tr6AFPfG1K7yTI0A
+         ZR7y5fmFtyM4Wg6mwdb2zNW6i5txQYhUdcmOlqwjUbj6SD+NgXQQ8BijaUC/dSg1TqXa
+         AYaZK+sMb5VkZWIJqbqf4iKDdnH/j1nFGrTb7PfOuoaZNF9n4j2Fc8c2NbRBQvs3EV0d
+         7qb7prde9wqykNUPAAbHIqvcM9rcgThDTTyV5qwIaevIX/utioCXQ+pDplqOmtos0Ci+
+         DiHg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=U2WhGsQTwxW7tS0hTAu0M8xlz3is/bV7hYwfb7I6y1U=;
-        b=rLOwOHOZ4gkh7JkeAuF8wF2husyumyqJpIndctSqiEZSnYndjswZmDIhkV6ohXiH0j
-         LL2NApnKXcMoWFz0gq+Czt8qQ2lkdbmVHraWAHbK4bSYBKf0wCkb9FYIdLYfGp5ZE7pH
-         3mbf9TyxZZkg5hUwS19ZR//tsbsNJzVbOpnoAjriCUhdp2nhRMWVPmuL9CMsLSJDFSW2
-         kTRgqBdjzF2+k99lgj0sJN+wFnINJrStb67CNl4GGw5rWJYFwa9gNrh8eYWkFFmIGEmx
-         wtqz/Yo+pFcLRXZssP4aULNUikjM0T63K2qOxugpFBuM6+/xBJhxkYakIOnqWwr58UKT
-         ldxA==
-X-Gm-Message-State: AOAM530voHTbdq52TeBtAuwe1TF+p+lNtn2FnnBuDDD7wvMAiBFo+TZe
-        FPKEtVSV79/qyrmBNezEZKhoaDWx2FOdww==
-X-Google-Smtp-Source: ABdhPJzndGvBHGHVbggNeDKxMttTuHEMd3qap4tlM1rBuZnuzNasboPEzI3Zl3hSkptsABVWrisCUQ==
-X-Received: by 2002:a62:5250:0:b0:480:ffbe:9e9b with SMTP id g77-20020a625250000000b00480ffbe9e9bmr25840518pfb.54.1635959206191;
-        Wed, 03 Nov 2021 10:06:46 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:9416:5327:a40e:e300])
-        by smtp.gmail.com with ESMTPSA id n11sm2296947pgm.74.2021.11.03.10.06.45
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Nov 2021 10:06:45 -0700 (PDT)
-Subject: Re: [PATCH RFC] scsi: ufs-core: Do not use clk_scaling_lock in
- ufshcd_queuecommand()
-To:     Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Luca Porzio <lporzio@micron.com>, linux-scsi@vger.kernel.org
-References: <20211029133751.420015-1-adrian.hunter@intel.com>
- <24e21ff3-c992-c71e-70e3-e0c3926fbcda@acm.org>
- <c2d76154-b2ef-2e66-0a56-cd22ac8c652f@intel.com>
- <d3d70c8e-f260-ca2d-f4c1-2c9dd1a08c5d@acm.org>
- <3f4ef5e8-38e8-2e90-6da4-abc67aac9e4d@intel.com>
- <263538ad-51b5-4594-9951-8bcc2373da19@acm.org>
- <24399ee4-4feb-4670-ce9c-0872795c03ea@intel.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <1a6fef86-9917-ddad-1845-d0406150ecb8@acm.org>
-Date:   Wed, 3 Nov 2021 10:06:44 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        bh=mnf5X/iTgBRFMMZkRgyzc0OpnzavKwGRo8XYeAaztzo=;
+        b=MpuPbePJJMebpKRO2cl0ObZ4WlJntixRv60bcZkd+HxVG/4/SKSNdJDoTLZ5/F8MLP
+         qvOjcXv5DW+uv1C3ZXRUHVoEV197WV5rMhGGjycujRHZLIVGqmJfltgWfeZ3AAIGZMmW
+         ZzL+n5OU+xo3E/t2mAseRKl2z7mg7YeHiJcWfwmKY8dBSGqgpFeHnlZMJlaHlqJNklQz
+         upLcERG73MG8T3ObkGcu1Q3jUzXBQ7mitxVLYEaP4ETqRkJQLQxfiYXyPcG3pEOg+tsC
+         +WB53SfJzhY/MIBGwkDeZ5ynfUuYWWZMwMqRfM9+H/DFlvKMdv+K+tT9KaPGJwp4y6kJ
+         ln4Q==
+X-Gm-Message-State: AOAM530LPxKoGvzWgB1UMuH8zAaCwh7SRzUp+KxOCkIxIJt2beRd4nAR
+        Be/V0o1MfkBhhF2LDRtTJ/o19w==
+X-Google-Smtp-Source: ABdhPJxSteJafoUWZ7oIH9dsvQq45m1SnOzEvy2k21xAG29248x5Dmvmt6v/lRSa7YGxCHe/Zu1fcA==
+X-Received: by 2002:a63:af09:: with SMTP id w9mr33816541pge.323.1635959248142;
+        Wed, 03 Nov 2021 10:07:28 -0700 (PDT)
+Received: from localhost.localdomain ([50.39.160.154])
+        by smtp.gmail.com with ESMTPSA id k14sm3110810pff.64.2021.11.03.10.07.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 03 Nov 2021 10:07:27 -0700 (PDT)
+From:   Tadeusz Struk <tadeusz.struk@linaro.org>
+To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
+Cc:     Tadeusz Struk <tadeusz.struk@linaro.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH v2 1/2] scsi: scsi_ioctl: Validate command size
+Date:   Wed,  3 Nov 2021 10:06:58 -0700
+Message-Id: <20211103170659.22151-1-tadeusz.struk@linaro.org>
+X-Mailer: git-send-email 2.33.1
 MIME-Version: 1.0
-In-Reply-To: <24399ee4-4feb-4670-ce9c-0872795c03ea@intel.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/3/21 12:46 AM, Adrian Hunter wrote:
-> On 02/11/2021 22:49, Bart Van Assche wrote:
->>   static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
->>   {
->> -    #define DOORBELL_CLR_TOUT_US        (1000 * 1000) /* 1 sec */
->>       int ret = 0;
->> +
->>       /*
->> -     * make sure that there are no outstanding requests when
->> -     * clock scaling is in progress
->> +     * Make sure that there are no outstanding requests while clock scaling
->> +     * is in progress. Since the error handler may submit TMFs, limit the
->> +     * time during which to block hba->tmf_queue in order not to block the
->> +     * UFS error handler.
->> +     *
->> +     * Since ufshcd_exec_dev_cmd() and ufshcd_issue_devman_upiu_cmd() lock
->> +     * the clk_scaling_lock before calling blk_get_request(), lock
->> +     * clk_scaling_lock before freezing the request queues to prevent a
->> +     * deadlock.
->>        */
->> -    ufshcd_scsi_block_requests(hba);
-> 
-> How are requests from LUN queues blocked?
+Need to make sure the command size is valid before copying
+the command from user.
 
-I will add blk_freeze_queue() calls for the LUNs.
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: <linux-scsi@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Cc: <stable@vger.kernel.org> # 5.15, 5.14, 5.10
+Signed-off-by: Tadeusz Struk <tadeusz.struk@linaro.org>
+---
+Changes in v2:
+- removed check for upper len limit as it is handled in sg_io()
+---
+ drivers/scsi/scsi_ioctl.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks,
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index 6ff2207bd45a..a06c61f22742 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -347,6 +347,8 @@ static int scsi_fill_sghdr_rq(struct scsi_device *sdev, struct request *rq,
+ {
+ 	struct scsi_request *req = scsi_req(rq);
+ 
++	if (hdr->cmd_len < 6)
++		return -EMSGSIZE;
+ 	if (copy_from_user(req->cmd, hdr->cmdp, hdr->cmd_len))
+ 		return -EFAULT;
+ 	if (!scsi_cmd_allowed(req->cmd, mode))
+-- 
+2.33.1
 
-Bart.
