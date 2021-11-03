@@ -2,265 +2,159 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3956C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 07:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9DF7C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 08:14:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BD37660240
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 07:46:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9578B61139
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 08:14:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230076AbhKCHtQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 03:49:16 -0400
-Received: from mga06.intel.com ([134.134.136.31]:56033 "EHLO mga06.intel.com"
+        id S231267AbhKCIQg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 04:16:36 -0400
+Received: from mail.kernel.org ([198.145.29.99]:39228 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S230389AbhKCHtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 3 Nov 2021 03:49:11 -0400
-X-IronPort-AV: E=McAfee;i="6200,9189,10156"; a="292284141"
-X-IronPort-AV: E=Sophos;i="5.87,205,1631602800"; 
-   d="scan'208";a="292284141"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2021 00:46:32 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,205,1631602800"; 
-   d="scan'208";a="449692931"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
-  by orsmga006.jf.intel.com with ESMTP; 03 Nov 2021 00:46:29 -0700
-Subject: Re: [PATCH RFC] scsi: ufs-core: Do not use clk_scaling_lock in
- ufshcd_queuecommand()
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Luca Porzio <lporzio@micron.com>, linux-scsi@vger.kernel.org
-References: <20211029133751.420015-1-adrian.hunter@intel.com>
- <24e21ff3-c992-c71e-70e3-e0c3926fbcda@acm.org>
- <c2d76154-b2ef-2e66-0a56-cd22ac8c652f@intel.com>
- <d3d70c8e-f260-ca2d-f4c1-2c9dd1a08c5d@acm.org>
- <3f4ef5e8-38e8-2e90-6da4-abc67aac9e4d@intel.com>
- <263538ad-51b5-4594-9951-8bcc2373da19@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <24399ee4-4feb-4670-ce9c-0872795c03ea@intel.com>
-Date:   Wed, 3 Nov 2021 09:46:28 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S230352AbhKCIQg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 Nov 2021 04:16:36 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id BE50C6109F;
+        Wed,  3 Nov 2021 08:13:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1635927240;
+        bh=cvnO3VXO3eEGiZjcVHRPmpCT0NgPoK7q7TLN7iveUuY=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=jNj5W+lqDaQY9imi2Xoyab595Ln4rEhlp9Gr5215r0pz33TbmYf19xHeREceDdJZU
+         u8seREOoHbBiMsr/sOSZr/2YiNAX/mMia7yeFkIORb9sGtjMvIzO90CFCZoB03o6df
+         kP57VHCQOPdc8RpwUlw7P8jdZtquwieyYH6j6nq0=
+Date:   Wed, 3 Nov 2021 09:13:57 +0100
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Ming Lei <ming.lei@redhat.com>
+Cc:     Yi Zhang <yi.zhang@redhat.com>,
+        linux-block <linux-block@vger.kernel.org>,
+        linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [bug report] kernel null pointer observed with blktests srp/006
+ on 5.14.15
+Message-ID: <YYJExddmf7FQiM/h@kroah.com>
+References: <CAHj4cs-QxAmz=pM=cd1UJEg+HRUH_yMf5jDnBbirgW1oq1CaKw@mail.gmail.com>
+ <YYH80vbE8DnCG94r@T590>
 MIME-Version: 1.0
-In-Reply-To: <263538ad-51b5-4594-9951-8bcc2373da19@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YYH80vbE8DnCG94r@T590>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 02/11/2021 22:49, Bart Van Assche wrote:
-> On 11/1/21 11:11 PM, Adrian Hunter wrote:
->> On 01/11/2021 20:35, Bart Van Assche wrote:
->>> On 11/1/21 2:16 AM, Adrian Hunter wrote:
->>>> Also, there is the outstanding question of synchronization for the call to
->>>> ufshcd_reset_and_restore() further down.
->>>
->>> Please clarify this comment further. I assume that you are referring to the
->>> ufshcd_reset_and_restore() call guarded by if (needs_reset)? It is not clear
->>> to me what the outstanding question is?
->>
->> What is to stop it racing with BSG, sysfs, debugfs, abort, reset etc?
+On Wed, Nov 03, 2021 at 11:06:58AM +0800, Ming Lei wrote:
+> On Tue, Nov 02, 2021 at 03:31:43PM +0800, Yi Zhang wrote:
+> > Hello
+> > 
+> > Below null pointer was triggered with blktests srp/006 on aarch64, pls
+> > help check it, thanks.
 > 
-> The patch below should address all feedback that has been provided so far.
-> Instead of removing the clock scaling lock entirely, it is only removed from
-> ufshcd_queuecommand().
+> ...
 > 
+> > [  491.786766] Unable to handle kernel paging request at virtual
+> > address ffff8000096f9438
+> > [  491.794676] Mem abort info:
+> > [  491.797480]   ESR = 0x96000007
+> > [  491.800527]   EC = 0x25: DABT (current EL), IL = 32 bits
+> > [  491.805833]   SET = 0, FnV = 0
+> > [  491.808896]   EA = 0, S1PTW = 0
+> > [  491.812028]   FSC = 0x07: level 3 translation fault
+> > [  491.816901] Data abort info:
+> > [  491.819769]   ISV = 0, ISS = 0x00000007
+> > [  491.823593]   CM = 0, WnR = 0
+> > [  491.826553] swapper pgtable: 4k pages, 48-bit VAs, pgdp=0000000f82320000
+> > [  491.833243] [ffff8000096f9438] pgd=1000000fff0ff003,
+> > p4d=1000000fff0ff003, pud=1000000fff0fe003, pmd=100000010c48a003,
+> > pte=0000000000000000
+> > [  491.845768] Internal error: Oops: 96000007 [#1] SMP
+> > [  491.850636] Modules linked in: target_core_user uio
+> > target_core_pscsi target_core_file ib_srpt target_core_iblock
+> > target_core_mod rdma_cm iw_cm ib_cm scsi_debug rdma_rxe ib_uverbs
+> > ip6_udp_tunnel udp_tunnel null_blk dm_service_time ib_umad
+> > crc32_generic scsi_dh_rdac scsi_dh_emc scsi_dh_alua dm_multipath
+> > ib_core rfkill sunrpc vfat fat joydev be2net nicvf cavium_ptp
+> > mdio_thunder cavium_rng_vf nicpf thunderx_edac mdio_cavium thunder_bgx
+> > thunder_xcv cavium_rng ipmi_ssif ipmi_devintf ipmi_msghandler fuse
+> > zram ip_tables xfs ast i2c_algo_bit drm_vram_helper drm_kms_helper
+> > syscopyarea sysfillrect sysimgblt fb_sys_fops crct10dif_ce cec
+> > ghash_ce drm_ttm_helper ttm drm i2c_thunderx thunderx_mmc aes_neon_bs
+> > [last unloaded: scsi_transport_srp]
+> > [  491.915381] CPU: 6 PID: 11622 Comm: multipathd Not tainted 5.14.15 #1
+> > [  491.921812] Hardware name: GIGABYTE R120-T34-00/MT30-GS2-00, BIOS
+> > F02 08/06/2019
+> > [  491.929196] pstate: 20400005 (nzCv daif +PAN -UAO -TCO BTYPE=--)
+> > [  491.935192] pc : scsi_mq_exit_request+0x28/0x60
+> > [  491.939721] lr : blk_mq_free_rqs+0x7c/0x1ec
+> > [  491.943897] sp : ffff800016a536c0
+> > [  491.947200] x29: ffff800016a536c0 x28: ffff0001375b8000 x27: 0000000000000131
+> > [  491.954330] x26: ffff000102bb5c28 x25: ffff0001333d1000 x24: ffff0001333d1200
+> > [  491.961460] x23: 0000000000000000 x22: ffff0001386870a8 x21: 0000000000000000
+> > [  491.968589] x20: 0000000000000001 x19: ffff00010d878128 x18: ffffffffffffffff
+> > [  491.975719] x17: 5342555300355f66 x16: 6d745f697363732f x15: 0000000000000000
+> > [  491.982848] x14: 0000000000000000 x13: 0000000000000030 x12: 0101010101010101
+> > [  491.989977] x11: ffff8000114a1298 x10: 0000000000001c90 x9 : ffff800010764030
+> > [  491.997109] x8 : ffff0001375b9cf0 x7 : 0000000000000004 x6 : 00000002a7f08498
+> > [  492.004242] x5 : 0000000000000001 x4 : ffff000130092128 x3 : ffff800010b1e7e0
+> > [  492.011371] x2 : 0000000000000000 x1 : ffff8000096f93f0 x0 : ffff000138687000
+> > [  492.018501] Call trace:
+> > [  492.020937]  scsi_mq_exit_request+0x28/0x60
+> > [  492.025112]  blk_mq_free_rqs+0x7c/0x1ec
+> > [  492.028939]  blk_mq_free_tag_set+0x58/0x100
+> > [  492.033113]  scsi_mq_destroy_tags+0x20/0x30
+> > [  492.037286]  scsi_host_dev_release+0x9c/0x100
+> > [  492.041633]  device_release+0x40/0xa0
+> > [  492.045286]  kobject_cleanup+0x4c/0x180
+> > [  492.049115]  kobject_put+0x50/0xd0
+> > [  492.052510]  put_device+0x20/0x30
+> > [  492.055819]  scsi_target_dev_release+0x34/0x44
+> > [  492.060253]  device_release+0x40/0xa0
+> > [  492.063905]  kobject_cleanup+0x4c/0x180
+> > [  492.067732]  kobject_put+0x50/0xd0
+> > [  492.071124]  put_device+0x20/0x30
+> > [  492.074428]  scsi_device_dev_release_usercontext+0x228/0x244
+> > [  492.080079]  execute_in_process_context+0x50/0xa0
+> > [  492.084775]  scsi_device_dev_release+0x28/0x3c
+> > [  492.089208]  device_release+0x40/0xa0
+> > [  492.092860]  kobject_cleanup+0x4c/0x180
+> > [  492.096686]  kobject_put+0x50/0xd0
+> > [  492.100081]  put_device+0x20/0x30
+> > [  492.103396]  scsi_device_put+0x38/0x50
+> > [  492.107140]  sd_release151]  free_multipath+0x80/0xc0 [dm_multipath]
+> > [  492.132109]  multipath_dtr+0x38/0x50 [dm_multipath]
+> > [  492.136980]  dm_table_destroy+0x68/0x150
+> > [  492.140892]  __dm_destroy+0x138/0x204
+> > [  492.144548]  dm_destroy+0x20/0x30
+> > [  492.147859]  dev_remove+0x144/0x1e0
+> > [  492.151339]  ctl_ioctl+0x278/0x4d0
+> > [  492.154731]  dm_ctl_ioctl+0x1c/0x30
+> > [  492.158210]  __arm64_sys_ioctl+0xb4/0x100
+> > [  492.162212]  invoke_syscall+0x50/0x120
+> > [  492.165955]  el0_svc_common+0x48/0x100
+> > [  492.169694]  do_el0_svc+0x34/0xa0
+> > [  492.173000]  el0_svc+0x2c/0x54
+> > [  492.176048]  el0t_64_sync_handler+0xa4/0x130
+> > [  492.180307]  el0t_64_sync+0x19c/0x1a0
+> > [  492.183962] Code: f9000bf3 9104a033 f9403000 f9404c01 (f9402422)
+> > [  492.190068] ---[ end trace dbfeac019a702ce7 ]---
+> > [  492.194678] Kernel panic - not syncing: Oops: Fatal exception
+> > [  492.200431] SMP: stopping secondary CPUs
+> > [  492.204354] Kernel Offset: 0x80000 from 0xffff800010000000
+> > [  492.209828] PHYS_OFFSET: 0x0
+> > [  492.212697] CPU features: 0x00180051,20800a40
+> > [  492.217043] Memory Limit: none
+> > [  492.220102] ---[ end Kernel panic - not syncing: Oops: Fatal exception ]---
 > 
-> Subject: [PATCH] scsi: ufs: Remove the clock scaling lock from the command queueing code
+> Hi Yi,
 > 
-> Remove the clock scaling lock from ufshcd_queuecommand() since it is a
-> performance bottleneck. Freeze request queues from inside
-> ufshcd_clock_scaling_prepare() to wait for ongoing SCSI and dev cmds.
-> Insert a rcu_read_lock() / rcu_read_unlock() pair in ufshcd_queuecommand().
-> Use synchronize_rcu() to wait for ongoing ufshcd_queuecommand() calls.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 97 ++++++++++-----------------------------
->  drivers/scsi/ufs/ufshcd.h |  1 +
->  2 files changed, 26 insertions(+), 72 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 35a1af70f705..9d964b979aa2 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1069,65 +1069,6 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
->      return false;
->  }
-> 
-> -static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
-> -                    u64 wait_timeout_us)
-> -{
-> -    unsigned long flags;
-> -    int ret = 0;
-> -    u32 tm_doorbell;
-> -    u32 tr_doorbell;
-> -    bool timeout = false, do_last_check = false;
-> -    ktime_t start;
-> -
-> -    ufshcd_hold(hba, false);
-> -    spin_lock_irqsave(hba->host->host_lock, flags);
-> -    /*
-> -     * Wait for all the outstanding tasks/transfer requests.
-> -     * Verify by checking the doorbell registers are clear.
-> -     */
-> -    start = ktime_get();
-> -    do {
-> -        if (hba->ufshcd_state != UFSHCD_STATE_OPERATIONAL) {
-> -            ret = -EBUSY;
-> -            goto out;
-> -        }
-> -
-> -        tm_doorbell = ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
-> -        tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> -        if (!tm_doorbell && !tr_doorbell) {
-> -            timeout = false;
-> -            break;
-> -        } else if (do_last_check) {
-> -            break;
-> -        }
-> -
-> -        spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -        schedule();
-> -        if (ktime_to_us(ktime_sub(ktime_get(), start)) >
-> -            wait_timeout_us) {
-> -            timeout = true;
-> -            /*
-> -             * We might have scheduled out for long time so make
-> -             * sure to check if doorbells are cleared by this time
-> -             * or not.
-> -             */
-> -            do_last_check = true;
-> -        }
-> -        spin_lock_irqsave(hba->host->host_lock, flags);
-> -    } while (tm_doorbell || tr_doorbell);
-> -
-> -    if (timeout) {
-> -        dev_err(hba->dev,
-> -            "%s: timedout waiting for doorbell to clear (tm=0x%x, tr=0x%x)\n",
-> -            __func__, tm_doorbell, tr_doorbell);
-> -        ret = -EBUSY;
-> -    }
-> -out:
-> -    spin_unlock_irqrestore(hba->host->host_lock, flags);
-> -    ufshcd_release(hba);
-> -    return ret;
-> -}
-> -
->  /**
->   * ufshcd_scale_gear - scale up/down UFS gear
->   * @hba: per adapter instance
-> @@ -1175,20 +1116,29 @@ static int ufshcd_scale_gear(struct ufs_hba *hba, bool scale_up)
-> 
->  static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
->  {
-> -    #define DOORBELL_CLR_TOUT_US        (1000 * 1000) /* 1 sec */
->      int ret = 0;
-> +
->      /*
-> -     * make sure that there are no outstanding requests when
-> -     * clock scaling is in progress
-> +     * Make sure that there are no outstanding requests while clock scaling
-> +     * is in progress. Since the error handler may submit TMFs, limit the
-> +     * time during which to block hba->tmf_queue in order not to block the
-> +     * UFS error handler.
-> +     *
-> +     * Since ufshcd_exec_dev_cmd() and ufshcd_issue_devman_upiu_cmd() lock
-> +     * the clk_scaling_lock before calling blk_get_request(), lock
-> +     * clk_scaling_lock before freezing the request queues to prevent a
-> +     * deadlock.
->       */
-> -    ufshcd_scsi_block_requests(hba);
+> It was fixed by f2b85040acec ("scsi: core: Put LLD module refcnt after SCSI device
+> is released"), look not ported to 5.14.y yet.
 
-How are requests from LUN queues blocked?
+Did anyone ask for it to be backported to stable kernels yet?  I don't
+see a request, nor was stable@vger cc:ed on the signed-off-by: line, so
+how were we to know to pick this up?
 
->      down_write(&hba->clk_scaling_lock);
-> -
-> +    blk_freeze_queue_start(hba->cmd_queue);
-> +    blk_freeze_queue_start(hba->tmf_queue);
->      if (!hba->clk_scaling.is_allowed ||
-> -        ufshcd_wait_for_doorbell_clr(hba, DOORBELL_CLR_TOUT_US)) {
+Anyway, I've now done so...
 
-As above, couldn't there be requests from LUN queues?
+thanks,
 
-> +        blk_mq_freeze_queue_wait_timeout(hba->cmd_queue, HZ) <= 0 ||
-> +        blk_mq_freeze_queue_wait_timeout(hba->tmf_queue, HZ / 10) <= 0) {
->          ret = -EBUSY;
-> +        blk_mq_unfreeze_queue(hba->tmf_queue);
-> +        blk_mq_unfreeze_queue(hba->cmd_queue);
->          up_write(&hba->clk_scaling_lock);
-> -        ufshcd_scsi_unblock_requests(hba);
->          goto out;
->      }
-> 
-> @@ -1201,11 +1151,12 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
-> 
->  static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, bool writelock)
->  {
-> +    blk_mq_unfreeze_queue(hba->tmf_queue);
-> +    blk_mq_unfreeze_queue(hba->cmd_queue);
->      if (writelock)
->          up_write(&hba->clk_scaling_lock);
->      else
->          up_read(&hba->clk_scaling_lock);
-> -    ufshcd_scsi_unblock_requests(hba);
->      ufshcd_release(hba);
->  }
-> 
-> @@ -2698,8 +2649,11 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-> 
->      WARN_ONCE(tag < 0, "Invalid tag %d\n", tag);
-> 
-> -    if (!down_read_trylock(&hba->clk_scaling_lock))
-> -        return SCSI_MLQUEUE_HOST_BUSY;
-> +    /*
-> +     * Allows the UFS error handler to wait for prior ufshcd_queuecommand()
-> +     * calls.
-> +     */
-> +    rcu_read_lock();
-> 
->      switch (hba->ufshcd_state) {
->      case UFSHCD_STATE_OPERATIONAL:
-> @@ -2785,7 +2739,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
-> 
->      ufshcd_send_command(hba, tag);
->  out:
-> -    up_read(&hba->clk_scaling_lock);
-> +    rcu_read_unlock();
-> 
->      if (ufs_trigger_eh()) {
->          unsigned long flags;
-> @@ -5991,8 +5945,7 @@ static void ufshcd_err_handling_prepare(struct ufs_hba *hba)
->      }
->      ufshcd_scsi_block_requests(hba);
->      /* Drain ufshcd_queuecommand() */
-> -    down_write(&hba->clk_scaling_lock);
-> -    up_write(&hba->clk_scaling_lock);
-> +    synchronize_rcu();
->      cancel_work_sync(&hba->eeh_work);
->  }
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index a911ad72de7a..c8c2bddb1d33 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -778,6 +778,7 @@ struct ufs_hba_monitor {
->   * @clk_list_head: UFS host controller clocks list node head
->   * @pwr_info: holds current power mode
->   * @max_pwr_info: keeps the device max valid pwm
-> + * @clk_scaling_lock: used to serialize device commands and clock scaling
->   * @desc_size: descriptor sizes reported by device
->   * @urgent_bkops_lvl: keeps track of urgent bkops level for device
->   * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
-
+greg k-h
