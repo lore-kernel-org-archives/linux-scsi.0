@@ -2,143 +2,100 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF43C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 00:05:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CB58C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 00:37:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73E8460F02
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 00:05:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FEC361177
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 00:37:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230496AbhKCAIW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 2 Nov 2021 20:08:22 -0400
-Received: from mail-pj1-f52.google.com ([209.85.216.52]:45910 "EHLO
-        mail-pj1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230293AbhKCAIV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 20:08:21 -0400
-Received: by mail-pj1-f52.google.com with SMTP id gb13-20020a17090b060d00b001a674e2c4a8so76840pjb.4
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 17:05:46 -0700 (PDT)
+        id S232842AbhKCAkX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 2 Nov 2021 20:40:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40984 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231137AbhKCAkW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Nov 2021 20:40:22 -0400
+Received: from mail-pj1-x102f.google.com (mail-pj1-x102f.google.com [IPv6:2607:f8b0:4864:20::102f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2559CC061205
+        for <linux-scsi@vger.kernel.org>; Tue,  2 Nov 2021 17:37:47 -0700 (PDT)
+Received: by mail-pj1-x102f.google.com with SMTP id n36-20020a17090a5aa700b0019fa884ab85so195484pji.5
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 17:37:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=wa3NOHCf3U1aur5kRZW335EJTyvo20m6TWpz6Ee93z4=;
+        b=qeoNPWCDisFMYbqOExPhP7lwmk3zdmH9O9ZQGvHISlNSlwEAPnqKhXn/cMhVPZv7SV
+         51R1D3RjVIXTO/57fsGpBvCUmLuPBbULkyG71KLy2CleqM4T8XPEhx250bxSYw8QrCt9
+         qhJ5qrJlqe9V9InnPzX6BYEkXf+ulE2An33dO5RNbczxNQKGnV0pqjxLWz7lhR5WSXXd
+         yD3olysYAUME5VL93e2LdmrW4Q/arnkLUaJS8y5cDM54e9h10oAdDnTHOfdwa4FYYnqA
+         DHcRRksc5SkYc7CJfMAsrM+CHSWUXglTBw42ZIqcVxwfoe5rKD7hnBWIesSjtDoLWyf7
+         bdxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=4E7aiZ2Jw5N5uNx2a/jD4xOI/fWN48VTWY0iJWm8D9A=;
-        b=4ThTJPHD5pfl4vbPWKYaioYkQyYruk+3yK8T01vpNKzJKb6v9kRmz5jaMGqYJ3djdE
-         xdaSZduDGqIAqsBTB7C00sjY4HSibCwBZEU5GdtlnZbPmP45ZKtXrQSTjdjzFuw890AV
-         RGCigu+HuZ/tTj3J5GC31TFgAP2SLYF7AK1Fun0J03GXn/mwfJfmZ8LN+3oNag46AC0g
-         PNOSY95B2IaR5RRF29kFxlG2vL8TI8st1Bpu4JPO75fK7hEpfVyvDLVowF7zy5QwWvRA
-         bQOQGdXaPeys2CdLjFOrtPaFmW5g2haMLMCtz1fqxEutVpARDbndQ5/tnHXEbsa8YacG
-         E2ww==
-X-Gm-Message-State: AOAM532tOtelroMNUK2Ku7hKS2bqbF5ycL8tftW92GWSvm4Jc5uS6sZo
-        1W8HbJfYfIHzeQ1mcM/9p/Q=
-X-Google-Smtp-Source: ABdhPJxaaV/eRqVWNP8VtUeNOcbJsTQT5G7lwLZhJbZ1Q+sOAWw5uNJZ5tsPcWX6PB6/Bw96JHZNZw==
-X-Received: by 2002:a17:902:db07:b0:141:ea12:218b with SMTP id m7-20020a170902db0700b00141ea12218bmr15929078plx.46.1635897945821;
-        Tue, 02 Nov 2021 17:05:45 -0700 (PDT)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:9416:5327:a40e:e300])
-        by smtp.gmail.com with ESMTPSA id u2sm279282pfk.142.2021.11.02.17.05.44
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=wa3NOHCf3U1aur5kRZW335EJTyvo20m6TWpz6Ee93z4=;
+        b=Du7kOR0oCNI+I0hgXJVNLMgxlWwr3jZrswHI63MDZdEsSlBNensmK9qvE+Rny46rag
+         o4FLkVduxpeLMv5V03szYAMVmpr5gCpKAbOFXCiaV377UBYyJPf1LLp4v85q2DLLHKrm
+         A2Gc7ekBcn4RufUE+Hh3oSmthCm1ICISECVWPTVFCl7fLf+cBFbemF5MN/vxQn3UobZX
+         f14LtuTywm8nuTRCr0hVKhywNSmeuzsWJX9+/u6ef3LTmRY+pXlrfy2BcSEtf3Bee2a1
+         z9LOsnb6D+DjCNa1uMWASPMXMFaabamgqiZNZoRG6PAp0giCwFDM0KTeX16T9pixOnUQ
+         snuA==
+X-Gm-Message-State: AOAM532hPHiM2Uh8v52MKKWN2WJalq3JtninNsdkY1NMk/DdKaStj6te
+        85n9DLxb5KtjtbD0ha/9n1YIdKAru+vhWVOq
+X-Google-Smtp-Source: ABdhPJzkyqxuxEaanIPZ4V895U+b0wUB+nkMnRg4hv4eTHxChiPPXzjJShuyAcaJ+IPNzQtXka8kkw==
+X-Received: by 2002:a17:90a:de0d:: with SMTP id m13mr10970746pjv.85.1635899866162;
+        Tue, 02 Nov 2021 17:37:46 -0700 (PDT)
+Received: from localhost.localdomain ([50.39.160.154])
+        by smtp.gmail.com with ESMTPSA id n20sm219159pgc.10.2021.11.02.17.37.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Nov 2021 17:05:45 -0700 (PDT)
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        Tue, 02 Nov 2021 17:37:45 -0700 (PDT)
+From:   Tadeusz Struk <tadeusz.struk@linaro.org>
+To:     linux-scsi@vger.kernel.org
+Cc:     Tadeusz Struk <tadeusz.struk@linaro.org>,
         Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-Subject: [PATCH 2/2] scsi: ufs: Fix a deadlock in the error handler
-Date:   Tue,  2 Nov 2021 17:05:29 -0700
-Message-Id: <20211103000529.1549411-3-bvanassche@acm.org>
-X-Mailer: git-send-email 2.33.1.1089.g2158813163f-goog
-In-Reply-To: <20211103000529.1549411-1-bvanassche@acm.org>
-References: <20211103000529.1549411-1-bvanassche@acm.org>
+        Christoph Hellwig <hch@lst.de>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: [PATCH 1/2] scsi: scsi_ioctl: Validate command size
+Date:   Tue,  2 Nov 2021 17:37:18 -0700
+Message-Id: <20211103003719.1041490-1-tadeusz.struk@linaro.org>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-The following deadlock has been observed on a test setup:
-* All tags allocated.
-* The SCSI error handler calls ufshcd_eh_host_reset_handler()
-* ufshcd_eh_host_reset_handler() queues work that calls ufshcd_err_handler()
-* ufshcd_err_handler() locks up as follows:
+Need to make sure the command size before copying the
+command from user.
 
-Workqueue: ufs_eh_wq_0 ufshcd_err_handler.cfi_jt
-Call trace:
- __switch_to+0x298/0x5d8
- __schedule+0x6cc/0xa94
- schedule+0x12c/0x298
- blk_mq_get_tag+0x210/0x480
- __blk_mq_alloc_request+0x1c8/0x284
- blk_get_request+0x74/0x134
- ufshcd_exec_dev_cmd+0x68/0x640
- ufshcd_verify_dev_init+0x68/0x35c
- ufshcd_probe_hba+0x12c/0x1cb8
- ufshcd_host_reset_and_restore+0x88/0x254
- ufshcd_reset_and_restore+0xd0/0x354
- ufshcd_err_handler+0x408/0xc58
- process_one_work+0x24c/0x66c
- worker_thread+0x3e8/0xa4c
- kthread+0x150/0x1b4
- ret_from_fork+0x10/0x30
-
-Fix this lockup by making ufshcd_exec_dev_cmd() allocate a reserved
-request.
-
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: <linux-scsi@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Cc: <stable@vger.kernel.org> # 5.15, 5.14, 5.10
+Signed-off-by: Tadeusz Struk <tadeusz.struk@linaro.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 20 ++++++--------------
- 1 file changed, 6 insertions(+), 14 deletions(-)
+ drivers/scsi/scsi_ioctl.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9d964b979aa2..6b0101169974 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2904,12 +2904,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 
- 	down_read(&hba->clk_scaling_lock);
- 
--	/*
--	 * Get free slot, sleep if slots are unavailable.
--	 * Even though we use wait_event() which sleeps indefinitely,
--	 * the maximum wait time is bounded by SCSI request timeout.
--	 */
--	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
-+	req = blk_mq_alloc_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED);
- 	if (IS_ERR(req)) {
- 		err = PTR_ERR(req);
- 		goto out_unlock;
-@@ -4919,11 +4914,7 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
-  */
- static int ufshcd_change_queue_depth(struct scsi_device *sdev, int depth)
+diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
+index 6ff2207bd45a..58c1f62aca68 100644
+--- a/drivers/scsi/scsi_ioctl.c
++++ b/drivers/scsi/scsi_ioctl.c
+@@ -347,6 +347,8 @@ static int scsi_fill_sghdr_rq(struct scsi_device *sdev, struct request *rq,
  {
--	struct ufs_hba *hba = shost_priv(sdev->host);
--
--	if (depth > hba->nutrs)
--		depth = hba->nutrs;
--	return scsi_change_queue_depth(sdev, depth);
-+	return scsi_change_queue_depth(sdev, min(depth, sdev->host->can_queue));
- }
+ 	struct scsi_request *req = scsi_req(rq);
  
- static void ufshcd_hpb_destroy(struct ufs_hba *hba, struct scsi_device *sdev)
-@@ -8124,7 +8115,8 @@ static struct scsi_host_template ufshcd_driver_template = {
- 	.this_id		= -1,
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
--	.can_queue		= UFSHCD_CAN_QUEUE,
-+	.can_queue		= UFSHCD_CAN_QUEUE - 1,
-+	.reserved_tags		= 1,
- 	.max_segment_size	= PRDT_DATA_BYTE_COUNT_MAX,
- 	.max_host_blocked	= 1,
- 	.track_queue_depth	= 1,
-@@ -9485,8 +9477,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	/* Configure LRB */
- 	ufshcd_host_memory_configure(hba);
- 
--	host->can_queue = hba->nutrs;
--	host->cmd_per_lun = hba->nutrs;
-+	host->can_queue = hba->nutrs - 1;
-+	host->cmd_per_lun = hba->nutrs - 1;
- 	host->max_id = UFSHCD_MAX_ID;
- 	host->max_lun = UFS_MAX_LUNS;
- 	host->max_channel = UFSHCD_MAX_CHANNEL;
++	if (hdr->cmd_len < 6 || hdr->cmd_len > sizeof(req->__cmd))
++		return -EMSGSIZE;
+ 	if (copy_from_user(req->cmd, hdr->cmdp, hdr->cmd_len))
+ 		return -EFAULT;
+ 	if (!scsi_cmd_allowed(req->cmd, mode))
+-- 
+2.31.1
+
