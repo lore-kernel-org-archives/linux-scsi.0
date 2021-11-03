@@ -2,73 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7F5C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:07:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79651C433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:07:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E9584610EA
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:07:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BC6861139
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:07:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233032AbhKCRKF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 13:10:05 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38674 "EHLO
+        id S233076AbhKCRKT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 13:10:19 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38742 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233008AbhKCRKF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 13:10:05 -0400
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92FDDC061714
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Nov 2021 10:07:28 -0700 (PDT)
-Received: by mail-pf1-x430.google.com with SMTP id 127so3037234pfu.1
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Nov 2021 10:07:28 -0700 (PDT)
+        with ESMTP id S233059AbhKCRKR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 13:10:17 -0400
+Received: from mail-pf1-x42a.google.com (mail-pf1-x42a.google.com [IPv6:2607:f8b0:4864:20::42a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 32388C061205
+        for <linux-scsi@vger.kernel.org>; Wed,  3 Nov 2021 10:07:41 -0700 (PDT)
+Received: by mail-pf1-x42a.google.com with SMTP id l3so1078208pfu.13
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Nov 2021 10:07:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=linaro.org; s=google;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=mnf5X/iTgBRFMMZkRgyzc0OpnzavKwGRo8XYeAaztzo=;
-        b=F0ekRK3HoxvdErW+5fKZ6AZS1b99D2x2oYZNVXwHCbjzMYD2YGfPn2h+icOXWeRAs6
-         QqabmdvtHlOyw3RF1RDr1FKdUl2mi9z9VJCE833ubY5AkijeiB39tr6AFPfG1K7yTI0A
-         ZR7y5fmFtyM4Wg6mwdb2zNW6i5txQYhUdcmOlqwjUbj6SD+NgXQQ8BijaUC/dSg1TqXa
-         AYaZK+sMb5VkZWIJqbqf4iKDdnH/j1nFGrTb7PfOuoaZNF9n4j2Fc8c2NbRBQvs3EV0d
-         7qb7prde9wqykNUPAAbHIqvcM9rcgThDTTyV5qwIaevIX/utioCXQ+pDplqOmtos0Ci+
-         DiHg==
+        h=from:to:cc:subject:date:message-id:in-reply-to:references
+         :mime-version:content-transfer-encoding;
+        bh=8PZdsIgJ7o56oudhsOIKiAeNLgKu9PFgrqrBHXJbLAE=;
+        b=jTLkI2qiLoMk3mhIAcG2QBo3TCoHT4cuvNl3BHq07EzQb3l9GXFc7uMZhmNlXbcJY+
+         r7stJfGZlc73iFJbeU7Oh+iYruQvRyBH/4Mz3V2bJE7Snqxi8hObvScZ77IxTUuE6Qic
+         tSlmyuHaPJD7uRnj0LX4av+Al3jG8JOeZ234WWM6u6goXKFXdLBg6OcYBE5VCLLo+89R
+         hwuAO00euVp5+jWI5V6aFHcmoHtSW2UiGMzu2vUJCdDAqnCkqcXVMLzeus9jz/81d2sA
+         gpxI2lzvnMuKwQGK5Vs+Uw7tZHFZ4y7DdldW4R4bgxajtUOsM2/23Juxaxd6UlWVBnJs
+         OGDA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=mnf5X/iTgBRFMMZkRgyzc0OpnzavKwGRo8XYeAaztzo=;
-        b=MpuPbePJJMebpKRO2cl0ObZ4WlJntixRv60bcZkd+HxVG/4/SKSNdJDoTLZ5/F8MLP
-         qvOjcXv5DW+uv1C3ZXRUHVoEV197WV5rMhGGjycujRHZLIVGqmJfltgWfeZ3AAIGZMmW
-         ZzL+n5OU+xo3E/t2mAseRKl2z7mg7YeHiJcWfwmKY8dBSGqgpFeHnlZMJlaHlqJNklQz
-         upLcERG73MG8T3ObkGcu1Q3jUzXBQ7mitxVLYEaP4ETqRkJQLQxfiYXyPcG3pEOg+tsC
-         +WB53SfJzhY/MIBGwkDeZ5ynfUuYWWZMwMqRfM9+H/DFlvKMdv+K+tT9KaPGJwp4y6kJ
-         ln4Q==
-X-Gm-Message-State: AOAM530LPxKoGvzWgB1UMuH8zAaCwh7SRzUp+KxOCkIxIJt2beRd4nAR
-        Be/V0o1MfkBhhF2LDRtTJ/o19w==
-X-Google-Smtp-Source: ABdhPJxSteJafoUWZ7oIH9dsvQq45m1SnOzEvy2k21xAG29248x5Dmvmt6v/lRSa7YGxCHe/Zu1fcA==
-X-Received: by 2002:a63:af09:: with SMTP id w9mr33816541pge.323.1635959248142;
-        Wed, 03 Nov 2021 10:07:28 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=8PZdsIgJ7o56oudhsOIKiAeNLgKu9PFgrqrBHXJbLAE=;
+        b=vOiQn9rx8FqvDrZT4QXLPdWlh8PsVlQJskvIZz8NR6k2oGS1LbEnQfJEv7LmcAsH05
+         bwPfZMQyF/Y3vMj9fQk/Ftmpm8YY6fCK4Nl2beZgI56MvjWvEmpzggGhNXj2Hp6z1nf7
+         vIokRoVVOyWwoozC7xRX2ccceEeeo2zSeHSR0sYnd6iKd1opTpWKr3HjyaNtwUyMfIng
+         QfIGakZKd1B5ij+oBRL1HM2KLVFpbJBJi4DQpwq+2HZBrhzFSq7xOAxNMa/H27GD2wCs
+         cM5veXrMq1fJeh2W1gyhyEyqqCQdahb5Sd3srRXegeAn6lvakm8XxEdPtIYjuLxTE5v9
+         b4Ig==
+X-Gm-Message-State: AOAM532l8CeOwQwW8xiOEs18OuXOpYqg1WA3rUB7pXc7Px5VfwwEM7eZ
+        aIYB1JzDMhS8d4adZvd608zEBQ==
+X-Google-Smtp-Source: ABdhPJywslGu8/XLLI7D32OSa9abMUfDu7BG0N+nJrTal3Y8saV3vwt2xSi7bYdo00rfgsmqhZ7U4g==
+X-Received: by 2002:a62:6411:0:b0:44c:bf9f:f584 with SMTP id y17-20020a626411000000b0044cbf9ff584mr45439674pfb.29.1635959260670;
+        Wed, 03 Nov 2021 10:07:40 -0700 (PDT)
 Received: from localhost.localdomain ([50.39.160.154])
-        by smtp.gmail.com with ESMTPSA id k14sm3110810pff.64.2021.11.03.10.07.27
+        by smtp.gmail.com with ESMTPSA id k14sm3110810pff.64.2021.11.03.10.07.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Nov 2021 10:07:27 -0700 (PDT)
+        Wed, 03 Nov 2021 10:07:40 -0700 (PDT)
 From:   Tadeusz Struk <tadeusz.struk@linaro.org>
 To:     Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org
 Cc:     Tadeusz Struk <tadeusz.struk@linaro.org>,
         Christoph Hellwig <hch@lst.de>,
         "James E . J . Bottomley" <jejb@linux.ibm.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Subject: [PATCH v2 1/2] scsi: scsi_ioctl: Validate command size
-Date:   Wed,  3 Nov 2021 10:06:58 -0700
-Message-Id: <20211103170659.22151-1-tadeusz.struk@linaro.org>
+        linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+        syzbot+5516b30f5401d4dcbcae@syzkaller.appspotmail.com
+Subject: [PATCH v2 2/2] scsi: core: remove command size deduction from scsi_setup_scsi_cmnd
+Date:   Wed,  3 Nov 2021 10:06:59 -0700
+Message-Id: <20211103170659.22151-2-tadeusz.struk@linaro.org>
 X-Mailer: git-send-email 2.33.1
+In-Reply-To: <20211103170659.22151-1-tadeusz.struk@linaro.org>
+References: <20211103170659.22151-1-tadeusz.struk@linaro.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Need to make sure the command size is valid before copying
-the command from user.
+No need to deduce command size in scsi_setup_scsi_cmnd() anymore
+as appropriate checks have been added to scsi_fill_sghdr_rq() function
+and the cmd_len should never be zero here.
+The code to do that wasn't correct anyway, as it used uninitialized
+cmd->cmnd, which caused a null-ptr-deref if the command size was zero
+as in the trace below. Fix this by removing the unneeded code.
+
+KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+CPU: 0 PID: 1822 Comm: repro Not tainted 5.15.0 #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-4.fc34 04/01/2014
+Call Trace:
+ blk_mq_dispatch_rq_list+0x7c7/0x12d0
+ __blk_mq_sched_dispatch_requests+0x244/0x380
+ blk_mq_sched_dispatch_requests+0xf0/0x160
+ __blk_mq_run_hw_queue+0xe8/0x160
+ __blk_mq_delay_run_hw_queue+0x252/0x5d0
+ blk_mq_run_hw_queue+0x1dd/0x3b0
+ blk_mq_sched_insert_request+0x1ff/0x3e0
+ blk_execute_rq_nowait+0x173/0x1e0
+ blk_execute_rq+0x15c/0x540
+ sg_io+0x97c/0x1370
+ scsi_ioctl+0xe16/0x28e0
+ sd_ioctl+0x134/0x170
+ blkdev_ioctl+0x362/0x6e0
+ block_ioctl+0xb0/0xf0
+ vfs_ioctl+0xa7/0xf0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+---[ end trace 8b086e334adef6d2 ]---
+Kernel panic - not syncing: Fatal exception
 
 Cc: Bart Van Assche <bvanassche@acm.org>
 Cc: Christoph Hellwig <hch@lst.de>
@@ -77,27 +108,29 @@ Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: <linux-scsi@vger.kernel.org>
 Cc: <linux-kernel@vger.kernel.org>
 Cc: <stable@vger.kernel.org> # 5.15, 5.14, 5.10
+Fixes: 2ceda20f0a99a74a82b78870f3b3e5fa93087a7f
+Reported-by: syzbot+5516b30f5401d4dcbcae@syzkaller.appspotmail.com
 Signed-off-by: Tadeusz Struk <tadeusz.struk@linaro.org>
 ---
 Changes in v2:
-- removed check for upper len limit as it is handled in sg_io()
+- prune trace dump according to feedback
 ---
- drivers/scsi/scsi_ioctl.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/scsi_lib.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index 6ff2207bd45a..a06c61f22742 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -347,6 +347,8 @@ static int scsi_fill_sghdr_rq(struct scsi_device *sdev, struct request *rq,
- {
- 	struct scsi_request *req = scsi_req(rq);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 572673873ddf..e026da7549be 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1174,8 +1174,6 @@ static blk_status_t scsi_setup_scsi_cmnd(struct scsi_device *sdev,
+ 	}
  
-+	if (hdr->cmd_len < 6)
-+		return -EMSGSIZE;
- 	if (copy_from_user(req->cmd, hdr->cmdp, hdr->cmd_len))
- 		return -EFAULT;
- 	if (!scsi_cmd_allowed(req->cmd, mode))
+ 	cmd->cmd_len = scsi_req(req)->cmd_len;
+-	if (cmd->cmd_len == 0)
+-		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+ 	cmd->cmnd = scsi_req(req)->cmd;
+ 	cmd->transfersize = blk_rq_bytes(req);
+ 	cmd->allowed = scsi_req(req)->retries;
 -- 
 2.33.1
 
