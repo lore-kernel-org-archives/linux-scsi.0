@@ -2,33 +2,33 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63959C43217
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C796AC4321E
 	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 23:05:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 4B265604DC
+	by mail.kernel.org (Postfix) with ESMTP id BE97D611C1
 	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 23:05:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231230AbhKCXHe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 19:07:34 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34258 "EHLO
+        id S231265AbhKCXHf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 19:07:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34260 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230301AbhKCXH2 (ORCPT
+        with ESMTP id S230302AbhKCXH2 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 19:07:28 -0400
 Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D031EC06127A;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E590EC061203;
         Wed,  3 Nov 2021 16:04:51 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
         Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=L7hxD23EIH5qQAkdWQTmq7v8YZDzjmjzMRPg3ACQ/4g=; b=ZVyRfbjwWpDl6+4gSan/sG/DIA
-        dau2d+QmpDDUAN8Ln8JppFhCBIzkvPli2/c3lElKh4Dn7y9Lr46a9oHk8w9IE2syYM88ue4feSQHB
-        QDlUcZulr1AXLKB30SMZqDebwyKkAEOD3CZYRdaCXXlAI+gaZ3NpbtMgDt+BOccPHPrSV5VuhbhF0
-        lr4h3slV55fZgd5FWro2QusevYh2luYXpVDyOx7RoWZGvAdqRwp3kzBjkpCldhoujTehmMU5P3z4Y
-        2kLLuGs8SRKP/FHrels3fBlyFdKYYGT3C8QRTe2C+elhfgdD8vtw6IH88cSyq062yCjsKKNnv9uVs
-        cFkC6Ilw==;
+        bh=+G0HrywYCBknnU1QiNcJpSRJV8fKSVVdTBscrCYx8+A=; b=Zmqaf5rDkt5BDgJ7358IxzRO6L
+        XYuL/LPlxrmXXxk6CReFpJeC8CNnR6Xn3GeW1dFC6BTz4AD5oGR8Z4KuSY2xHaMbnnYf5a24ruCVn
+        wYIMvRI9O0ZU4aJfEliph7dDmGxH7oAJeL79U34TIrSuc5R4aY/cVXN0wbr25TvyTJ6pG7o0dne5g
+        n5LDSiQOV5lMgrJsBcmtTBuFGY5pt3Nztn8i/eu7exI+yRg8nYPNBsMMyNA3EXAdAKYYS0VpeJE0j
+        8mmZfqCDJ4abGMYg1bWb8o+XEMJ5sLtOamvDK9PoixHGHji9J6SK0tP1eoMhlcQi/S/e7rF4P0HD9
+        6GBcHewQ==;
 Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1miPJ8-006seG-Fr; Wed, 03 Nov 2021 23:04:38 +0000
+        id 1miPJ8-006seb-Og; Wed, 03 Nov 2021 23:04:38 +0000
 From:   Luis Chamberlain <mcgrof@kernel.org>
 To:     axboe@kernel.dk, hch@lst.de, penguin-kernel@i-love.sakura.ne.jp,
         dan.j.williams@intel.com, vishal.l.verma@intel.com,
@@ -39,9 +39,9 @@ To:     axboe@kernel.dk, hch@lst.de, penguin-kernel@i-love.sakura.ne.jp,
 Cc:     linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
         linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH v5 01/14] nvdimm/btt: use goto error labels on btt_blk_init()
-Date:   Wed,  3 Nov 2021 16:04:24 -0700
-Message-Id: <20211103230437.1639990-2-mcgrof@kernel.org>
+Subject: [PATCH v5 09/14] mtd/ubi/block: add error handling support for add_disk()
+Date:   Wed,  3 Nov 2021 16:04:32 -0700
+Message-Id: <20211103230437.1639990-10-mcgrof@kernel.org>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20211103230437.1639990-1-mcgrof@kernel.org>
 References: <20211103230437.1639990-1-mcgrof@kernel.org>
@@ -52,56 +52,40 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This will make it easier to share common error paths.
+We never checked for errors on add_disk() as this function
+returned void. Now that this is fixed, use the shiny new
+error handling.
 
-Reviewed-by: Dan Williams <dan.j.williams@intel.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/nvdimm/btt.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/mtd/ubi/block.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/nvdimm/btt.c b/drivers/nvdimm/btt.c
-index 9b9d5e506e11..5cb6d7ac6e36 100644
---- a/drivers/nvdimm/btt.c
-+++ b/drivers/nvdimm/btt.c
-@@ -1519,6 +1519,7 @@ static int btt_blk_init(struct btt *btt)
- {
- 	struct nd_btt *nd_btt = btt->nd_btt;
- 	struct nd_namespace_common *ndns = nd_btt->ndns;
-+	int rc = -ENOMEM;
+diff --git a/drivers/mtd/ubi/block.c b/drivers/mtd/ubi/block.c
+index e003b4b44ffa..062e6c2c45f5 100644
+--- a/drivers/mtd/ubi/block.c
++++ b/drivers/mtd/ubi/block.c
+@@ -447,12 +447,18 @@ int ubiblock_create(struct ubi_volume_info *vi)
+ 	list_add_tail(&dev->list, &ubiblock_devices);
  
- 	btt->btt_disk = blk_alloc_disk(NUMA_NO_NODE);
- 	if (!btt->btt_disk)
-@@ -1534,19 +1535,22 @@ static int btt_blk_init(struct btt *btt)
- 	blk_queue_flag_set(QUEUE_FLAG_NONROT, btt->btt_disk->queue);
- 
- 	if (btt_meta_size(btt)) {
--		int rc = nd_integrity_init(btt->btt_disk, btt_meta_size(btt));
--
--		if (rc) {
--			blk_cleanup_disk(btt->btt_disk);
--			return rc;
--		}
-+		rc = nd_integrity_init(btt->btt_disk, btt_meta_size(btt));
-+		if (rc)
-+			goto out_cleanup_disk;
- 	}
+ 	/* Must be the last step: anyone can call file ops from now on */
+-	add_disk(dev->gd);
++	ret = add_disk(dev->gd);
++	if (ret)
++		goto out_destroy_wq;
 +
- 	set_capacity(btt->btt_disk, btt->nlba * btt->sector_size >> 9);
- 	device_add_disk(&btt->nd_btt->dev, btt->btt_disk, NULL);
-+
- 	btt->nd_btt->size = btt->nlba * (u64)btt->sector_size;
- 	nvdimm_check_and_set_ro(btt->btt_disk);
- 
+ 	dev_info(disk_to_dev(dev->gd), "created from ubi%d:%d(%s)",
+ 		 dev->ubi_num, dev->vol_id, vi->name);
+ 	mutex_unlock(&devices_mutex);
  	return 0;
-+
-+out_cleanup_disk:
-+	blk_cleanup_disk(btt->btt_disk);
-+	return rc;
- }
  
- static void btt_blk_cleanup(struct btt *btt)
++out_destroy_wq:
++	list_del(&dev->list);
++	destroy_workqueue(dev->wq);
+ out_remove_minor:
+ 	idr_remove(&ubiblock_minor_idr, gd->first_minor);
+ out_cleanup_disk:
 -- 
 2.33.0
 
