@@ -2,80 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBC7BC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 16:18:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C50FCC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 16:23:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 8F83360EB8
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 16:18:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9161060F58
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 16:23:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232764AbhKCQVd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 12:21:33 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55556 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232756AbhKCQVa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 12:21:30 -0400
-Received: from mail-lj1-x22e.google.com (mail-lj1-x22e.google.com [IPv6:2a00:1450:4864:20::22e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52199C061714
-        for <linux-scsi@vger.kernel.org>; Wed,  3 Nov 2021 09:18:53 -0700 (PDT)
-Received: by mail-lj1-x22e.google.com with SMTP id k24so4757484ljg.3
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Nov 2021 09:18:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lucidpixels.com; s=google;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=lKZRM9TUFkVAeIb2C2Wso1kpJ0hOy7Q/4bXfr6arM1E=;
-        b=dAvBHeKf4Qe6/Zt+fMgW+K0cbNVBgn5eP7UboBVX/IgaWCdhTUy7zaNXykU/kFaE6p
-         73FFkm2wlVBYl8CIIOpl34J2Agfp5zsexl3n5+TB2EHv7/k1yBlMdCnZ8GLaost93oZl
-         CgSkB8hLB4SEeeMLvVQUMh15LaEYc2p7Ljabo=
+        id S232760AbhKCQ0I (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 12:26:08 -0400
+Received: from mail-pl1-f179.google.com ([209.85.214.179]:44628 "EHLO
+        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232745AbhKCQ0H (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 12:26:07 -0400
+Received: by mail-pl1-f179.google.com with SMTP id t11so2778429plq.11;
+        Wed, 03 Nov 2021 09:23:28 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=lKZRM9TUFkVAeIb2C2Wso1kpJ0hOy7Q/4bXfr6arM1E=;
-        b=Li9Yr7TYE43PCC7uY4TMCO1dgvX7Pnf4Te/3dLR/6ZvJl4lTX+H1ixETAcz0ZoEgGU
-         t1Knx7GnsuKfLxnQUj5UF/1l7gXzTS03o7Xo02KeSpNrJ3VCKx2v8l2bbDpDKlBM/qNF
-         kQSXvdLYuM3UHjP5DY2fO1wsFGDg76B9+ocVjiRk/qKZNuqf/xH2VzGGghlhtDStY5Q5
-         2V3hB3CYNkCOVbM00IHUqpVIg+UJZ6kflcWqh7f6dVGqPLw016brpPSdwxuTbeNULRKm
-         G3ppnZu1J7wvVzrBXvWSlgusAhaVwq6lUfWin6iUboTACz1H30kTedlvJ4xBBe7gpSmD
-         YSEA==
-X-Gm-Message-State: AOAM533fEQjaG8HAcV9y8OvR3KBNgg4IrVTMaYDb0LOfz5yTC1MkEYxH
-        CZrVBSI3YUF0zpe23quARGH+I9Oy0QLVfMUFT3DC6g==
-X-Google-Smtp-Source: ABdhPJwGtNFUjhgfwyP/7wcssx6KZPZbLQ+EQGmtuh5R31Mn16RgF5E3uRLtGagWxPk5lXX1Q3a48F6KWC1hH5yqg0I=
-X-Received: by 2002:a2e:8605:: with SMTP id a5mr49690291lji.107.1635956331518;
- Wed, 03 Nov 2021 09:18:51 -0700 (PDT)
-MIME-Version: 1.0
-References: <006a01d7cead$b9262d70$2b728850$@lucidpixels.com>
- <a4a88807-8f52-ef9a-c58e-0ff454da5ade@acm.org> <CAO9zADxiobgwDE5dtvo98EL0djdgQyrGJA_w4Oxb+pZ9pvOEjQ@mail.gmail.com>
- <CAO9zADycForyq9cmh=epw9r-Wzz=xt32vL3mePuBAPehCgUTjw@mail.gmail.com> <50a16ee2-dfa4-d009-17c5-1984cf0a6161@linux.vnet.ibm.com>
-In-Reply-To: <50a16ee2-dfa4-d009-17c5-1984cf0a6161@linux.vnet.ibm.com>
-From:   Justin Piszcz <jpiszcz@lucidpixels.com>
-Date:   Wed, 3 Nov 2021 12:18:40 -0400
-Message-ID: <CAO9zADwVnuKU-tfZxm4USjf76yJhTZqWfZw4yspv8sc93RuBbQ@mail.gmail.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=cUoN3Jf7ze15Ze1I6TWgtZLhkp0qQPWGYTaiuciHyZM=;
+        b=1GwGI93OqzZt0P0NeTl7+gYc0KLfdO50iA4oatHEwaZNnUuMC1xADKTEg8C5Rnk0AP
+         U3DZPZk1sGiZgOugQx3VSJWfj5zB7GhoCm8SVA3GccN0rWMpE9ANH2wDT/i0gMD0Psn/
+         e7mHwTiejwd31MHyX7aR9eBEM15tw7jYmUuE/7dwV5MUId0Gs/VvqvOmfiXnlmKl5X5t
+         be3LBbyS1spDFHTco8PPHyLU+OTjZHs2lRLt/2xPtmy9ZT0U5zMeVe7CLr134/lgDiwg
+         fgzEObuE3ZFh82tMhhhHhiPXZ4UMQmiD1+SZoIZR+XRZNSgNl1OGLSFz5RWxfdHNE0dq
+         Kyhw==
+X-Gm-Message-State: AOAM532T3QQQiHxl1ZBaZVZChPE2bycHljo2psHeAgSoCqYPrKJFgx3h
+        tDx84e3fXatZs4Bwr5d2tU+4flRR+53lcw==
+X-Google-Smtp-Source: ABdhPJzP11S30D47yxpOmjlgXUSpOLbouptt4JxJyV6701Q4HkduWL0HOfIqY5cQJtAM7sGPH3zG2w==
+X-Received: by 2002:a17:902:900c:b0:13f:974c:19b0 with SMTP id a12-20020a170902900c00b0013f974c19b0mr38732145plp.12.1635956607230;
+        Wed, 03 Nov 2021 09:23:27 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:9416:5327:a40e:e300])
+        by smtp.gmail.com with ESMTPSA id h12sm2959965pfv.117.2021.11.03.09.23.26
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 03 Nov 2021 09:23:26 -0700 (PDT)
 Subject: Re: kernel 5.15 does not boot with 3ware card (never had this issue
  <= 5.14) - scsi 0:0:0:0: WARNING: (0x06:0x002C) : Command (0x12) timed out,
  resetting card
-To:     Douglas Miller <dougmill@linux.vnet.ibm.com>
-Cc:     Bart Van Assche <bvanassche@acm.org>,
-        LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+To:     Justin Piszcz <jpiszcz@lucidpixels.com>,
+        Douglas Miller <dougmill@linux.vnet.ibm.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+References: <006a01d7cead$b9262d70$2b728850$@lucidpixels.com>
+ <a4a88807-8f52-ef9a-c58e-0ff454da5ade@acm.org>
+ <CAO9zADxiobgwDE5dtvo98EL0djdgQyrGJA_w4Oxb+pZ9pvOEjQ@mail.gmail.com>
+ <CAO9zADycForyq9cmh=epw9r-Wzz=xt32vL3mePuBAPehCgUTjw@mail.gmail.com>
+ <50a16ee2-dfa4-d009-17c5-1984cf0a6161@linux.vnet.ibm.com>
+ <CAO9zADwVnuKU-tfZxm4USjf76yJhTZqWfZw4yspv8sc93RuBbQ@mail.gmail.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <e0c2935d-d961-11a0-1b4c-580b55dc6b59@acm.org>
+Date:   Wed, 3 Nov 2021 09:23:25 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
+MIME-Version: 1.0
+In-Reply-To: <CAO9zADwVnuKU-tfZxm4USjf76yJhTZqWfZw4yspv8sc93RuBbQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 1, 2021 at 4:03 PM Douglas Miller
-<dougmill@linux.vnet.ibm.com> wrote:
->
-> I have seen a problem, with a different adapter and arch but similar
-> symptoms, where 5.14 worked and 5.15 did not. That was tracked down to a
-> difference in IRQ domain handling between the two kernels, resulting in
-> an IRQ essentially not working anymore. The fix was arch-specific and
-> not x86_64, but might be of interest:
->
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=5a4b0320783a
->
+On 11/3/21 9:18 AM, Justin Piszcz wrote:
+> Thanks!-- Has anyone else reading run into this issue and/or are there
+> any suggestions how I can troubleshoot this further (as all -rc's have
+> the same issue)?
 
-Thanks!-- Has anyone else reading run into this issue and/or are there
-any suggestions how I can troubleshoot this further (as all -rc's have
-the same issue)?
+How about bisecting this issue
+(https://www.kernel.org/doc/html/latest/admin-guide/bug-bisect.html)?
 
-[ .. ]
+Thanks,
+
+Bart.
