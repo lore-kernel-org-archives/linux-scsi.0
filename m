@@ -2,91 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52B36C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 23:05:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 650DDC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 23:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 41B8561220
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 23:05:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 45363611C5
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 23:19:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229652AbhKCXH5 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 19:07:57 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34282 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230361AbhKCXH3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 19:07:29 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BE762C06120C;
-        Wed,  3 Nov 2021 16:04:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
-        Reply-To:Content-Type:Content-ID:Content-Description;
-        bh=ZWWXDd/V8wSyF3GgA6ARDfKWedgyIPB1+zJe650uNsc=; b=gcZn3ERWC0VTuhgdk9N5H/ZgIU
-        iRLL3boTrpaJ0tRIa2hYP7WQ4/m9P77DQ7IOyZowCmJB2G71SCHVmJgP/+GNvR5DHaTm5AGzJE0h4
-        e1mb2pS0x6iXRPd2KS6UQFzXAnkgIdi0+dtzjDoNaKC2D8xC9Vx1uWt8XFiD9QQcfJa8smNOxj4xM
-        J12EZ8XwAPCFPZ4vedxPXhGMCkbXiBKiQ7ZCVUanSC6HkfTPPPXtN2KOxfk3mW1dDgDXWP/Q6Uioa
-        OqlvFtWnuefCyylqbvwTZ3XXYFcLmLR2MQcd06Tc3sRH86rziutJ4ctJrkUbwTiefUxb4VRNJRrdg
-        qHIidldg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1miPJ8-006seV-L7; Wed, 03 Nov 2021 23:04:38 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     axboe@kernel.dk, hch@lst.de, penguin-kernel@i-love.sakura.ne.jp,
-        dan.j.williams@intel.com, vishal.l.verma@intel.com,
-        dave.jiang@intel.com, ira.weiny@intel.com, richard@nod.at,
-        miquel.raynal@bootlin.com, vigneshr@ti.com, efremov@linux.com,
-        song@kernel.org, martin.petersen@oracle.com, hare@suse.de,
-        jack@suse.cz, ming.lei@redhat.com, tj@kernel.org, mcgrof@kernel.org
-Cc:     linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v5 06/14] nvdimm/pmem: use add_disk() error handling
-Date:   Wed,  3 Nov 2021 16:04:29 -0700
-Message-Id: <20211103230437.1639990-7-mcgrof@kernel.org>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20211103230437.1639990-1-mcgrof@kernel.org>
-References: <20211103230437.1639990-1-mcgrof@kernel.org>
+        id S229948AbhKCXVs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 19:21:48 -0400
+Received: from alexa-out.qualcomm.com ([129.46.98.28]:37911 "EHLO
+        alexa-out.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229652AbhKCXVr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 19:21:47 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=quicinc.com; i=@quicinc.com; q=dns/txt; s=qcdkim;
+  t=1635981551; x=1667517551;
+  h=from:to:cc:subject:date:message-id:mime-version;
+  bh=k64ynEfu975pQWgOL6O+bE+0nql5whpTZa6mWxc4sNg=;
+  b=vfYdhCCNio9Nj2sUAo43ZeQe+DGyJ83NDjaVhjxrMQfAgM+8J2FR4ylD
+   bAzjjvdbLmtmxYBaVatQ/3G594CDBse3NudnQLNCH06JQqdfGBFuiusEy
+   1EbVWdcpAc/fbGwarCLMwqbProBS4a1SFH484AQKf9G4m2UCbGJL/CG3P
+   E=;
+Received: from ironmsg07-lv.qualcomm.com ([10.47.202.151])
+  by alexa-out.qualcomm.com with ESMTP; 03 Nov 2021 16:19:11 -0700
+X-QCInternal: smtphost
+Received: from nasanex01c.na.qualcomm.com ([10.47.97.222])
+  by ironmsg07-lv.qualcomm.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2021 16:19:10 -0700
+Received: from nalasex01a.na.qualcomm.com (10.47.209.196) by
+ nasanex01c.na.qualcomm.com (10.47.97.222) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.922.7;
+ Wed, 3 Nov 2021 16:19:09 -0700
+Received: from gabriel.qualcomm.com (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.922.7; Wed, 3 Nov 2021
+ 16:19:09 -0700
+From:   Gaurav Kashyap <quic_gaurkash@quicinc.com>
+To:     <linux-scsi@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+CC:     <linux-mmc@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <linux-fscrypt@vger.kernel.org>, <thara.gopinath@linaro.org>,
+        <asutoshd@codeaurora.org>,
+        Gaurav Kashyap <quic_gaurkash@quicinc.com>
+Subject: [PATCH 0/4] Adds wrapped key support for inline storage encryption
+Date:   Wed, 3 Nov 2021 16:18:36 -0700
+Message-ID: <20211103231840.115521-1-quic_gaurkash@quicinc.com>
+X-Mailer: git-send-email 2.17.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+Content-Type: text/plain
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Now that device_add_disk() supports returning an error, use
-that. We must unwind alloc_dax() on error.
+This currently has 4 patches with another coming in shortly for MMC.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- drivers/nvdimm/pmem.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+1. Moves ICE functionality to a common library, so that different storage controllers can use it.
+2. Adds a SCM call for derive raw secret needed for wrapped keys.
+3. Adds a hardware key manager library needed for wrapped keys.
+4. Adds wrapped key support in ufs for storage encryption
 
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index bcfc36e7295f..37fc03058556 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -462,7 +462,9 @@ static int pmem_attach_disk(struct device *dev,
- 	dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
- 	pmem->dax_dev = dax_dev;
- 
--	device_add_disk(dev, disk, pmem_attribute_groups);
-+	rc = device_add_disk(dev, disk, pmem_attribute_groups);
-+	if (rc)
-+		goto out_cleanup_dax;
- 	if (devm_add_action_or_reset(dev, pmem_release_disk, pmem))
- 		return -ENOMEM;
- 
-@@ -473,6 +475,10 @@ static int pmem_attach_disk(struct device *dev,
- 	if (!pmem->bb_state)
- 		dev_warn(dev, "'badblocks' notification disabled\n");
- 	return 0;
-+
-+out_cleanup_dax:
-+	kill_dax(pmem->dax_dev);
-+	put_dax(pmem->dax_dev);
- out:
- 	blk_cleanup_disk(pmem->disk);
- 	return rc;
+Gaurav Kashyap (4):
+  ufs: move ICE functionality to a common library
+  qcom_scm: scm call for deriving a software secret
+  soc: qcom: add HWKM library for storage encryption
+  soc: qcom: add wrapped key support for ICE
+
+ drivers/firmware/qcom_scm.c       |  61 +++++++
+ drivers/firmware/qcom_scm.h       |   1 +
+ drivers/scsi/ufs/ufs-qcom-ice.c   | 200 ++++++-----------------
+ drivers/scsi/ufs/ufs-qcom.c       |   1 +
+ drivers/scsi/ufs/ufs-qcom.h       |   5 +
+ drivers/scsi/ufs/ufshcd-crypto.c  |  47 ++++--
+ drivers/scsi/ufs/ufshcd.h         |   5 +
+ drivers/soc/qcom/Kconfig          |  14 ++
+ drivers/soc/qcom/Makefile         |   2 +
+ drivers/soc/qcom/qti-ice-common.c | 215 +++++++++++++++++++++++++
+ drivers/soc/qcom/qti-ice-hwkm.c   |  77 +++++++++
+ drivers/soc/qcom/qti-ice-regs.h   | 257 ++++++++++++++++++++++++++++++
+ include/linux/qcom_scm.h          |   5 +
+ include/linux/qti-ice-common.h    |  37 +++++
+ 14 files changed, 766 insertions(+), 161 deletions(-)
+ create mode 100644 drivers/soc/qcom/qti-ice-common.c
+ create mode 100644 drivers/soc/qcom/qti-ice-hwkm.c
+ create mode 100644 drivers/soc/qcom/qti-ice-regs.h
+ create mode 100644 include/linux/qti-ice-common.h
+
 -- 
-2.33.0
+2.17.1
 
