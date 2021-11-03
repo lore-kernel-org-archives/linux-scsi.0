@@ -2,71 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AC04C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 21:24:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11118C4332F
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 23:04:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 24ACC60F58
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 21:24:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC85C604DC
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 23:04:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230229AbhKCV11 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 17:27:27 -0400
-Received: from smtp02.smtpout.orange.fr ([80.12.242.124]:56778 "EHLO
-        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229893AbhKCV10 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 17:27:26 -0400
-Received: from pop-os.home ([86.243.171.122])
-        by smtp.orange.fr with ESMTPA
-        id iNkVmLbELBazoiNkWmwzkt; Wed, 03 Nov 2021 22:24:48 +0100
-X-ME-Helo: pop-os.home
-X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
-X-ME-Date: Wed, 03 Nov 2021 22:24:48 +0100
-X-ME-IP: 86.243.171.122
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-To:     martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        kernel-janitors@vger.kernel.org,
-        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] scsi: target: Save a few cycles in 'transport_lookup_[cmd|tmr]_lun()'
-Date:   Wed,  3 Nov 2021 22:24:46 +0100
-Message-Id: <e4a21bc607c39935cb98d4825cd63ba349820550.1635974637.git.christophe.jaillet@wanadoo.fr>
-X-Mailer: git-send-email 2.30.2
+        id S230233AbhKCXH2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 19:07:28 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34252 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229698AbhKCXH1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 19:07:27 -0400
+Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 099AFC061714;
+        Wed,  3 Nov 2021 16:04:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20210309; h=Sender:Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:
+        Reply-To:Content-Type:Content-ID:Content-Description;
+        bh=kKuyk0it+UywLX6eUgF3vZCrnbiGfSWFOUp8zvmSh8Y=; b=ef+fiMlfjhcpLl5jo5UAKF90Kq
+        4KQ7KFuiNUPNTJEDK4bIAkRkcyl5A+wU1UZWABknExtJUr9ixhyG/bN+j09cY/BnbSgP2ytqwiA8u
+        3ZiI8+DmPVVSzLewpnp0hd/tJucz9qWcsqPMb50DQqNEeIja0AUndbF71NjNu/YeSYN/GACPfILjV
+        4ZRSFo3zfxGgoBSo0melaer5gp9te525rvvVqvqS6r1/x9dJTN6cZ/QDyDR6R5V+set3m+6RUJoZ9
+        Xspmt0hfZXlDvTC7qpDcv30QanDV5odiaBAGN3HSJ+LPnocJDVXHhlzk64qRzYB0qbDlltgo2u5SO
+        EGdiJv5Q==;
+Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1miPJ8-006seR-J4; Wed, 03 Nov 2021 23:04:38 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     axboe@kernel.dk, hch@lst.de, penguin-kernel@i-love.sakura.ne.jp,
+        dan.j.williams@intel.com, vishal.l.verma@intel.com,
+        dave.jiang@intel.com, ira.weiny@intel.com, richard@nod.at,
+        miquel.raynal@bootlin.com, vigneshr@ti.com, efremov@linux.com,
+        song@kernel.org, martin.petersen@oracle.com, hare@suse.de,
+        jack@suse.cz, ming.lei@redhat.com, tj@kernel.org, mcgrof@kernel.org
+Cc:     linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
+        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH v5 04/14] nvdimm/blk: add error handling support for add_disk()
+Date:   Wed,  3 Nov 2021 16:04:27 -0700
+Message-Id: <20211103230437.1639990-5-mcgrof@kernel.org>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20211103230437.1639990-1-mcgrof@kernel.org>
+References: <20211103230437.1639990-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Sender: Luis Chamberlain <mcgrof@infradead.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Use 'percpu_ref_tryget_live_rcu()' instead of 'percpu_ref_tryget_live()' to
-save a few cycles when it is known that the rcu lock is already
-taken/released.
+We never checked for errors on add_disk() as this function
+returned void. Now that this is fixed, use the shiny new
+error handling.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Since nvdimm/blk uses devm we just need to move the devm
+registration towards the end. And in hindsight, that seems
+to also provide a fix given del_gendisk() should not be
+called unless the disk was already added via add_disk().
+The probably of that issue happening is low though, like
+OOM while calling devm_add_action(), so the fix is minor.
+
+We manually unwind in case of add_disk() failure prior
+to the devm registration.
+
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- drivers/target/target_core_device.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/nvdimm/blk.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 44bb380e7390..bfd5d5606522 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -77,7 +77,7 @@ transport_lookup_cmd_lun(struct se_cmd *se_cmd)
+diff --git a/drivers/nvdimm/blk.c b/drivers/nvdimm/blk.c
+index 4eef67918a7e..228c33b8d1d6 100644
+--- a/drivers/nvdimm/blk.c
++++ b/drivers/nvdimm/blk.c
+@@ -264,7 +264,9 @@ static int nsblk_attach_disk(struct nd_namespace_blk *nsblk)
+ 	}
  
- 		se_lun = rcu_dereference(deve->se_lun);
+ 	set_capacity(disk, available_disk_size >> SECTOR_SHIFT);
+-	device_add_disk(dev, disk, NULL);
++	rc = device_add_disk(dev, disk, NULL);
++	if (rc)
++		goto out_before_devm_err;
  
--		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
-+		if (!percpu_ref_tryget_live_rcu(&se_lun->lun_ref)) {
- 			se_lun = NULL;
- 			goto out_unlock;
- 		}
-@@ -154,7 +154,7 @@ int transport_lookup_tmr_lun(struct se_cmd *se_cmd)
- 	if (deve) {
- 		se_lun = rcu_dereference(deve->se_lun);
- 
--		if (!percpu_ref_tryget_live(&se_lun->lun_ref)) {
-+		if (!percpu_ref_tryget_live_rcu(&se_lun->lun_ref)) {
- 			se_lun = NULL;
- 			goto out_unlock;
- 		}
+ 	/* nd_blk_release_disk() is called if this fails */
+ 	if (devm_add_action_or_reset(dev, nd_blk_release_disk, disk))
 -- 
-2.30.2
+2.33.0
 
