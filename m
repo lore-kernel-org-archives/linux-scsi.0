@@ -2,404 +2,169 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 087F6C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 04:00:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C25BC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 06:56:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D47DD61058
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 04:00:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 005C46115B
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 06:56:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230297AbhKCEDZ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 00:03:25 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:59378 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S229832AbhKCEDY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 00:03:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1635912048;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=2BSPWZQMruRW/mKA0nL0R6gEAavXmbvIhxUFLaA63D4=;
-        b=K2gvr0kNWEc4VKw2JfPg1rIBkLPinFuCg21ZQylDurZFz61pH8Tdp64m8kGgk8+pFRHZs4
-        KIIRBWKJrF8HV662SMHeUYEyt+clDM0vNHkEXI55wks/+g2YAFzOapJbGZp6iTne2hJzX8
-        2JJUOAXy06Yq0PUNqi2t+vcZoAJWCzg=
-Received: from mail-yb1-f200.google.com (mail-yb1-f200.google.com
- [209.85.219.200]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-394-KBwxbXbGMIqKim_WysCEvA-1; Wed, 03 Nov 2021 00:00:47 -0400
-X-MC-Unique: KBwxbXbGMIqKim_WysCEvA-1
-Received: by mail-yb1-f200.google.com with SMTP id f92-20020a25a465000000b005bea37bc0baso2378618ybi.5
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Nov 2021 21:00:47 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=2BSPWZQMruRW/mKA0nL0R6gEAavXmbvIhxUFLaA63D4=;
-        b=uHM5p1BjPVusNoLhWLrxd+7fsdgC6S/YKhsPErmcZFV3owBsRKYpdBrqL5/yNJbOLR
-         RV6Z7lcHugrepFHF+yWVKJzQIZhURzDzqkHmgiUSqh58vzAkvypH4QlS04GFZ13sR6DJ
-         bsdQW6iCbiB7vgBgobbeR7hjQdhXQNIy5E5r15hit92cqK6hP0zZcyQmayD5m8kcEJng
-         JAUuTN03Cgg3QOrkXgDwFJbylYYCNMRBHExDUmrQ1+G66jEgxd7o8wLjDop6PCv3ZKpK
-         NAXBOIsBl8qnBeMcE32Es3TVH4ukZjnwpuAD/TXJJBXp1Rii/aIhbkysrvhRUOnjecBt
-         47eg==
-X-Gm-Message-State: AOAM531Bt+KcfQUf5F/y64zBVYkDBMh2rdbjtRusGkLoM8+Wvei4snUZ
-        40Hzn9RAaaRkmFMELEx+gG14nvebelvZ6HhTQ44ccLrFB4rNdaQr8u/9PwO0wEmz+GeWeuBCoBV
-        Hx/4Gmde7HHt6pvSfNJhf0AAWHn9E47E8n2zMlg==
-X-Received: by 2002:a25:b9cc:: with SMTP id y12mr21981205ybj.153.1635912046050;
-        Tue, 02 Nov 2021 21:00:46 -0700 (PDT)
-X-Google-Smtp-Source: ABdhPJyG7CPF2gOUw9KSy0Skltd40MeRVRHWlGxFSx8KR+Na/vVkpLKea0aX1XOArOgCCHwooO598VJ/zTF6ntswmjc=
-X-Received: by 2002:a25:b9cc:: with SMTP id y12mr21981173ybj.153.1635912045738;
- Tue, 02 Nov 2021 21:00:45 -0700 (PDT)
+        id S231751AbhKCG6s (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 02:58:48 -0400
+Received: from mga09.intel.com ([134.134.136.24]:32034 "EHLO mga09.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S230152AbhKCG6r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 3 Nov 2021 02:58:47 -0400
+X-IronPort-AV: E=McAfee;i="6200,9189,10156"; a="231291604"
+X-IronPort-AV: E=Sophos;i="5.87,205,1631602800"; 
+   d="scan'208";a="231291604"
+Received: from orsmga006.jf.intel.com ([10.7.209.51])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Nov 2021 23:56:11 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,205,1631602800"; 
+   d="scan'208";a="449680467"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by orsmga006.jf.intel.com with ESMTP; 02 Nov 2021 23:56:08 -0700
+Subject: Re: [PATCH 2/2] scsi: ufs: Fix a deadlock in the error handler
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20211103000529.1549411-1-bvanassche@acm.org>
+ <20211103000529.1549411-3-bvanassche@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <82dffddc-15e8-dc1a-abda-e84e7e441d87@intel.com>
+Date:   Wed, 3 Nov 2021 08:56:07 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
-References: <YYIHXGSb2O5va0vA@T590> <85F2E9AC-385F-4BCA-BD3C-7A093442F87F@kernel.dk>
-In-Reply-To: <85F2E9AC-385F-4BCA-BD3C-7A093442F87F@kernel.dk>
-From:   Yi Zhang <yi.zhang@redhat.com>
-Date:   Wed, 3 Nov 2021 12:00:34 +0800
-Message-ID: <CAHj4cs-pTYoksSQDjfFpK13Xtg0jB6EOvhfOZu5cDHowZa=ueg@mail.gmail.com>
-Subject: Re: [bug report] WARNING: CPU: 1 PID: 1386 at block/blk-mq-sched.c:432
- blk_mq_sched_insert_request+0x54/0x178
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Ming Lei <ming.lei@redhat.com>,
-        Steffen Maier <maier@linux.ibm.com>,
-        linux-block <linux-block@vger.kernel.org>,
-        Linux-Next Mailing List <linux-next@vger.kernel.org>,
-        linux-scsi <linux-scsi@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20211103000529.1549411-3-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-> >
-> > Hello Jens,
-> >
-> > I guess the issue could be the following code run without grabbing
-> > ->q_usage_counter from blk_mq_alloc_request() and blk_mq_alloc_request_=
-hctx().
-> >
-> > .rq_flags       =3D q->elevator ? RQF_ELV : 0,
-> >
-> > then elevator is switched to real one from none, and check on q->elevat=
-or
-> > becomes not consistent.
->
-> Indeed, that=E2=80=99s where I was going with this. I have a patch, testi=
-ng it locally but it=E2=80=99s getting late. Will send it out tomorrow. The=
- nice benefit is that it allows dropping the weird ref get on plug flush, a=
-nd batches getting the refs as well.
->
+On 03/11/2021 02:05, Bart Van Assche wrote:
+> The following deadlock has been observed on a test setup:
+> * All tags allocated.
+> * The SCSI error handler calls ufshcd_eh_host_reset_handler()
+> * ufshcd_eh_host_reset_handler() queues work that calls ufshcd_err_handler()
+> * ufshcd_err_handler() locks up as follows:
+> 
+> Workqueue: ufs_eh_wq_0 ufshcd_err_handler.cfi_jt
+> Call trace:
+>  __switch_to+0x298/0x5d8
+>  __schedule+0x6cc/0xa94
+>  schedule+0x12c/0x298
+>  blk_mq_get_tag+0x210/0x480
+>  __blk_mq_alloc_request+0x1c8/0x284
+>  blk_get_request+0x74/0x134
+>  ufshcd_exec_dev_cmd+0x68/0x640
+>  ufshcd_verify_dev_init+0x68/0x35c
+>  ufshcd_probe_hba+0x12c/0x1cb8
+>  ufshcd_host_reset_and_restore+0x88/0x254
+>  ufshcd_reset_and_restore+0xd0/0x354
+>  ufshcd_err_handler+0x408/0xc58
+>  process_one_work+0x24c/0x66c
+>  worker_thread+0x3e8/0xa4c
+>  kthread+0x150/0x1b4
+>  ret_from_fork+0x10/0x30
+> 
+> Fix this lockup by making ufshcd_exec_dev_cmd() allocate a reserved
+> request.
 
-Hi Jens
-Here is the log in case you still need it. :)
+It is worth noting that the error handler itself could always find
+a free slot, either by waiting for one, or by taking the reset
+path which clears all slots.
 
-[  147.962222] run blktests srp/001 at 2021-11-02 23:57:02
-[  148.220309] alua: device handler registered
-[  148.223332] emc: device handler registered
-[  148.226203] rdac: device handler registered
-[  148.231724] null_blk: module loaded
-[  150.275727] rdma_rxe: loaded
-[  150.281728] infiniband enc8000_rxe: set active
-[  150.281732] infiniband enc8000_rxe: added enc8000
-[  150.381380] scsi_debug:sdebug_add_store: dif_storep 524288 bytes @ 00000=
-00098
-4c2b06
-[  150.382109] scsi_debug:sdebug_driver_probe: scsi_debug: trim poll_queues=
- to 0
-. poll_q/nr_hw =3D (0/1)
-[  150.382112] scsi_debug:sdebug_driver_probe: host protection DIF3 DIX3
-[  150.382116] scsi host0: scsi_debug: version 0190 [20200710]
-[  150.382116]   dev_size_mb=3D32, opts=3D0x0, submit_queues=3D1, statistic=
-s=3D0
-[  150.382802] scsi 0:0:0:0: Direct-Access     Linux    scsi_debug       01=
-90 PQ
-: 0 ANSI: 7
-[  150.383007] sd 0:0:0:0: Power-on or device reset occurred
-[  150.383029] sd 0:0:0:0: [sda] Enabling DIF Type 3 protection
-[  150.383053] sd 0:0:0:0: [sda] 65536 512-byte logical blocks: (33.6 MB/32=
-.0 Mi
-B)
-[  150.383061] sd 0:0:0:0: [sda] Write Protect is off
-[  150.383075] sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled,=
- supp
-orts DPO and FUA
-[  150.383093] sd 0:0:0:0: [sda] Optimal transfer size 524288 bytes
-[  150.383104] sd 0:0:0:0: Attached scsi generic sg0 type 0
-[  150.467327] sd 0:0:0:0: [sda] Enabling DIX T10-DIF-TYPE3-CRC protection
-[  150.467332] sd 0:0:0:0: [sda] DIF application tag size 6
-[  150.547390] sd 0:0:0:0: [sda] Attached SCSI disk
-[  150.655136] Rounding down aligned max_sectors from 4294967295 to 4294967=
-288
-[  151.972911] Rounding down aligned max_sectors from 255 to 248
-[  151.982162] Rounding down aligned max_sectors from 255 to 248
-[  151.991500] Rounding down aligned max_sectors from 4294967295 to 4294967=
-288
-[  153.254537] ib_srpt Received SRP_LOGIN_REQ with i_port_id fe80:0000:0000=
-:0000
-:00de:bdff:febe:ef80, t_port_id 00de:bdff:febe:ef80:00de:bdff:febe:ef80 and=
- it_i
-u_len 8260 on port 1 (guid=3Dfe80:0000:0000:0000:00de:bdff:febe:ef80); pkey=
- 0xffff
+However, the problem would then be places that cause the error
+handler to wait, like sysfs (due to hba->host_sem), exception
+event handler (due to cancel_work_sync(&hba->eeh_work)), or
+potentially any other dev cmd user (due to hba->dev_cmd.lock).
 
-[  153.262242] ib_srpt Received SRP_LOGIN_REQ with i_port_id fe80:0000:0000=
-:0000
-:00de:bdff:febe:ef80, t_port_id 00de:bdff:febe:ef80:00de:bdff:febe:ef80 and=
- it_i
-u_len 8260 on port 1 (guid=3Dfe80:0000:0000:0000:00de:bdff:febe:ef80); pkey=
- 0xffff
+Once the layering and locking is sorted out, it might be possible
+to get rid of the reserved tag, if there was a performance
+benefit.
 
-[  153.264644] scsi host1: SRP.T10:00DEBDFFFEBEEF80
-[  153.265188] scsi 1:0:0:0: Direct-Access     LIO-ORG  IBLOCK           4.=
-0  PQ
-: 0 ANSI: 6
-[  153.265611] scsi 1:0:0:0: alua: supports implicit and explicit TPGS
-[  153.265618] scsi 1:0:0:0: alua: device naa.60014056e756c6c62300000000000=
-000
-ort group 0 rel port 1
-[  153.265765] sd 1:0:0:0: Warning! Received an indication that the LUN ass=
-ignme
-nts on this target have changed. The Linux SCSI layer does not automatical
-[  153.265782] sd 1:0:0:0: Attached scsi generic sg1 type 0
-[  153.287283] sd 1:0:0:0: alua: transition timeout set to 60 seconds
-[  153.287299] sd 1:0:0:0: alua: port group 00 state A non-preferred suppor=
-ts TO
-lUSNA
-[  153.287479] scsi 1:0:0:2: Direct-Access     LIO-ORG  IBLOCK           4.=
-0  PQ
-: 0 ANSI: 6
-[  153.287656] sd 1:0:0:0: [sdb] 65536 512-byte logical blocks: (33.6 MB/32=
-.0 Mi
-B)
-[  153.287687] scsi 1:0:0:2: alua: supports implicit and explicit TPGS
-[  153.287691] scsi 1:0:0:2: alua: device naa.60014057363736964626700000000=
-000 p
-ort group 0 rel port 1
-[  153.287824] sd 1:0:0:2: Attached scsi generic sg2 type 0
-[  153.288006] sd 1:0:0:0: [sdb] Write Protect is off
-[  153.288133] scsi 1:0:0:1: Direct-Access     LIO-ORG  IBLOCK           4.=
-0  PQ
-: 0 ANSI: 6
-[  153.288161] sd 1:0:0:0: [sdb] Write cache: disabled, read cache: enabled=
-, doe
-sn't support DPO or FUA
-[  153.288171] srpt/10.16.69.39: Unsupported SCSI Opcode 0xa3, sending CHEC=
-K_CON
-DITION.
-[  153.288817] sd 1:0:0:0: [sdb] Optimal transfer size 126976 bytes
-[  153.289825] sd 1:0:0:2: [sdc] 65536 512-byte logical blocks: (33.6 MB/32=
-.0 Mi
-B)
-[  153.289853] scsi 1:0:0:1: alua: supports implicit and explicit TPGS
-[  153.289857] scsi 1:0:0:1: alua: device naa.60014056e756c6c62310000000000=
-000 p
-ort group 0 rel port 1
-[  153.289981] sd 1:0:0:1: Warning! Received an indication that the LUN ass=
-ignme
-nts on this target have changed. The Linux SCSI layer does not automatical
-[  153.289993] sd 1:0:0:1: Attached scsi generic sg3 type 0
-[  153.291415] sd 1:0:0:2: [sdc] Write Protect is off
-[  153.291574] sd 1:0:0:2: [sdc] Write cache: enabled, read cache: enabled,=
- supp
-orts DPO and FUA
-[  153.291584] srpt/10.16.69.39: Unsupported SCSI Opcode 0xa3, sending CHEC=
-K_CON
-DITION.
-[  153.291634] sd 1:0:0:2: [sdc] Optimal transfer size 524288 bytes
-[  153.293587] scsi host2: ib_srp: Already connected to target port with id=
-_ext=3D
-00debdfffebeef80;ioc_guid=3D00debdfffebeef80;dest=3D2620:0052:0000:1040:00d=
-e:bdff:fe
-be:ef80
-[  153.327364] sd 1:0:0:2: alua: transition timeout set to 60 seconds
-[  153.327371] sd 1:0:0:2: alua: port group 00 state A non-preferred suppor=
-ts TO
-lUSNA
-[  153.329782] scsi host2: ib_srp: Already connected to target port with id=
-_ext=3D
-00debdfffebeef80;ioc_guid=3D00debdfffebeef80;dest=3Dfe80:0000:0000:0000:00d=
-e:bdff:fe
-be:ef80
-[  153.347178] sd 1:0:0:1: alua: transition timeout set to 60 seconds
-[  153.347183] sd 1:0:0:1: alua: port group 00 state A non-preferred suppor=
-ts TO
-lUSNA
-[  153.347301] sd 1:0:0:1: [sdd] 65536 512-byte logical blocks: (33.6 MB/32=
-.0 Mi
-B)
-[  153.347327] sd 1:0:0:1: [sdd] Write Protect is off
-[  153.347376] sd 1:0:0:1: [sdd] Write cache: disabled, read cache: enabled=
-, doe
-sn't support DPO or FUA
-[  153.347386] srpt/10.16.69.39: Unsupported SCSI Opcode 0xa3, sending CHEC=
-K_CON
-DITION.
-[  153.347423] sd 1:0:0:1: [sdd] Optimal transfer size 126976 bytes
-[  153.397703] ------------[ cut here ]------------
-[  153.397707] WARNING: CPU: 1 PID: 38 at block/blk-mq-sched.c:432 blk_mq_s=
-ched_
-insert_request+0x54/0x178
-[  153.397719] Modules linked in: ib_srp scsi_transport_srp target_core_psc=
-si ta
-rget_core_file ib_srpt target_core_iblock target_core_mod rdma_cm iw_cm ib_=
-cm ib
-_umad scsi_debug rdma_rxe ib_uverbs ip6_udp_tunnel udp_tunnel null_blk scsi=
-_dh_r
-dac scsi_dh_emc scsi_dh_alua dm_multipath ib_core sunrpc qeth_l2 bridge stp=
- llc
-qeth qdio ccwgroup vfio_ccw mdev vfio_iommu_type1 vfio zcrypt_cex4 drm fb f=
-ont d
-rm_panel_orientation_quirks i2c_core fuse backlight zram ip_tables xfs crc3=
-2_vx_
-s390 ghash_s390 prng aes_s390 des_s390 libdes sha512_s390 sha256_s390 sha1_=
-s390
-sha_common dasd_eckd_mod dasd_mod pkey zcrypt
-[  153.397770] CPU: 1 PID: 38 Comm: kworker/u128:1 Not tainted 5.15.0.v2+ #=
-5
-[  153.397774] Hardware name: IBM 2964 N96 400 (z/VM 6.4.0)
-[  153.397776] Workqueue: events_unbound async_run_entry_fn
-[  153.397783] Krnl PSW : 0704e00180000000 000000002bd6e0c0 (blk_mq_sched_i=
-nsert
-_request+0x58/0x178)
-[  153.397788]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:2 PM:=
-0 RI:
-0 EA:3
-[  153.397792] Krnl GPRS: 0000000000000004 0000000000000022 000000001da6880=
-0 000
-0000000000001
-[  153.397794]            0000000000000001 0000000000000000 000000000c99f80=
-0 000
-00000168b1c00
-[  153.397796]            0000000000000000 0000000000000001 000000000000000=
-1 000
-000001da68800
-[  153.397799]            0000000000f5c200 000003ff7e82b000 000003800035383=
-0 00
-00380003537c0
-[  153.397807] Krnl Code: 000000002bd6e0b4: a71effff            chi     %r1=
-,-1
-[  153.397807]            000000002bd6e0b8: a7840004            brc     8,0=
-00000
-002bd6e0c0
-[  153.397807]           #000000002bd6e0bc: af000000            mc      0,0
-[  153.397807]           >000000002bd6e0c0: 5810b01c            l       %r1=
-,28(%
-r11)
-[  153.397807]            000000002bd6e0c4: ec213bbb0055        risbg   %r2=
-,%r1,
-59,187,0
-[  153.397807]            000000002bd6e0ca: a7740057            brc     7,0=
-00000
-002bd6e178
-[  153.397807]            000000002bd6e0ce: 5810b018            l       %r1=
-,24(%
-r11)
-[  153.397807]            000000002bd6e0d2: c01b000000ff        nilf    %r1=
-,255
-[  153.397827] Call Trace:
-[  153.397829]  [<000000002bd6e0c0>] blk_mq_sched_insert_request+0x58/0x178
-[  153.397834]  [<000000002bd5e926>] blk_execute_rq+0x56/0xd8
-[  153.397840]  [<000000002bf20d50>] __scsi_execute+0x110/0x230
-[  153.397846]  [<000000002bf20fb2>] scsi_mode_sense+0x142/0x340
-[  153.397849]  [<000000002bf322c6>] sd_revalidate_disk.isra.0+0x74e/0x2240
-[  153.397853]  [<000000002bf342ea>] sd_probe+0x312/0x4b0
-[  153.397856]  [<000000002bee76e0>] really_probe+0xd0/0x4b0
-[  153.397862]  [<000000002bee7c70>] driver_probe_device+0x40/0xf0
-[  153.397865]  [<000000002bee837c>] __device_attach_driver+0xa4/0x128
-[  153.397869]  [<000000002bee4a80>] bus_for_each_drv+0x88/0xc0
-[  153.397872]  [<000000002bee6be0>] __device_attach_async_helper+0x90/0xf0
-[  153.397875]  [<000000002b7c0d1e>] async_run_entry_fn+0x4e/0x1b0
-[  153.397878]  [<000000002b7b362a>] process_one_work+0x21a/0x498
-[  153.397881]  [<000000002b7b3dd4>] worker_thread+0x64/0x498
-[  153.397884]  [<000000002b7bc71c>] kthread+0x184/0x190
-[  153.397889]  [<000000002b747468>] __ret_from_fork+0x40/0x58
-[  153.397892]  [<000000002c2952fa>] ret_from_fork+0xa/0x30
-[  153.397899] Last Breaking-Event-Address:
-[  153.397901]  [<0000000000000000>] 0x0
-[  153.397903] ---[ end trace e8c7933cbb1a7d90 ]---
-[  153.398050] sd 1:0:0:0: [sdb] Attached SCSI disk
-[  153.428144] ------------[ cut here ]------------
-[  153.428148] WARNING: CPU: 0 PID: 7 at block/blk-mq-sched.c:432 blk_mq_sc=
-hed_i
-nsert_request+0x54/0x178
-[  153.428154] Modules linked in: ib_srp scsi_transport_srp target_core_psc=
-si ta
-rget_core_file ib_srpt target_core_iblock target_core_mod rdma_cm iw_cm ib_=
-cm i
-_umad scsi_debug rdma_rxe ib_uverbs ip6_udp_tunnel udp_tunnel null_blk scsi=
-_dh_r
-dac scsi_dh_emc scsi_dh_alua dm_multipath ib_core sunrpc qeth_l2 bridge stp=
- llc
-qeth qdio ccwgroup vfio_ccw mdev vfio_iommu_type1 vfio zcrypt_cex4 drm fb f=
-ont d
-rm_panel_orientation_quirks i2c_core fuse backlight zram ip_tables xfs crc3=
-2_vx_
-s390 ghash_s390 prng aes_s390 des_s390 libdes sha512_s390 sha256_s390 sha1_=
-s390
-sha_common dasd_eckd_mod dasd_mod pkey zcrypt
-[  153.428200] CPU: 0 PID: 7 Comm: kworker/u128:0 Tainted: G        W      =
-   5.
-15.0.v2+ #5
-[  153.428203] Hardware name: IBM 2964 N96 400 (z/VM 6.4.0)
-[  153.428205] Workqueue: events_unbound async_run_entry_fn
-[  153.428208] Krnl PSW : 0704e00180000000 000000002bd6e0c0 (blk_mq_sched_i=
-nsert
-_request+0x58/0x178)
-[  153.428214]            R:0 T:1 IO:1 EX:1 Key:0 M:1 W:0 P:0 AS:3 CC:2 PM:=
-0 RI:
-0 EA:3
-[  153.428218] Krnl GPRS: 0000000000000004 000000000000003a 000000001d86e80=
-0 000
-0000000000001
-[  153.428220]            0000000000000001 0000000000000000 000000001d83d80=
-0 000
-000001e74dc00
-[  153.428222]            0000000000000000 0000000000000001 000000000000000=
-1 000
-000001d86e800
-[  153.428225]            00000000006ba100 000003ff7e80b700 000003800003f83=
-0 000
-003800003f7c0
-[  153.428231] Krnl Code: 000000002bd6e0b4: a71effff            chi     %r1=
-,-1
-[  153.428231]            000000002bd6e0b8: a7840004            brc     8,0=
-00000
-002bd6e0c0
-[  153.428231]           #000000002bd6e0bc: af000000            mc      0,0
-[  153.428231]           >000000002bd6e0c0: 5810b01c            l       %r1=
-,28(%
-r11)
-[  153.428231]            000000002bd6e0c4: ec213bbb0055        risbg   %r2=
-,%r1,
-59,187,0
-[  153.428231]            000000002bd6e0ca: a7740057            brc     7,0=
-00000
-002bd6e178
-[  153.428231]            000000002bd6e0ce: 5810b018            l       %r1=
-,24(%
-r11)
-[  153.428231]            000000002bd6e0d2: c01b000000ff        nilf    %r1=
-,255
-[  153.428251] Call Trace:
-[  153.428253]  [<000000002bd6e0c0>] blk_mq_sched_insert_request+0x58/0x178
-[  153.428257]  [<000000002bd5e926>] blk_execute_rq+0x56/0xd8
-[  153.428261]  [<000000002bf20d50>] __scsi_execute+0x110/0x230
-[  153.428264]  [<000000002bf20fb2>] scsi_mode_sense+0x142/0x340
-[  153.428267]  [<000000002bf322c6>] sd_revalidate_disk.isra.0+0x74e/0x2240
-[  153.428270]  [<000000002bf342ea>] sd_probe+0x312/0x4b0
-[  153.428273]  [<000000002bee76e0>] really_probe+0xd0/0x4b0
-[  153.428277]  [<000000002bee7c70>] driver_probe_device+0x40/0xf0
-[  153.428280]  [<000000002bee837c>] __device_attach_driver+0xa4/0x128
-[  153.428283]  [<000000002bee4a80>] bus_for_each_drv+0x88/0xc0
-[  153.428286]  [<000000002bee6be0>] __device_attach_async_helper+0x90/0xf0
-[  153.428289]  [<000000002b7c0d1e>] async_run_entry_fn+0x4e/0x1b0
-[  153.428292]  [<000000002b7b362a>] process_one_work+0x21a/0x498
-[  153.428295]  [<000000002b7b3dd4>] worker_thread+0x64/0x498
-[  153.428298]  [<000000002b7bc71c>] kthread+0x184/0x190
-[  153.428301]  [<000000002b747468>] __ret_from_fork+0x40/0x58
-[  153.428304]  [<000000002c2952fa>] ret_from_fork+0xa/0x30
-[  153.428308] Last Breaking-Event-Address:
-[  153.428309]  [<0000000000000000>] 0x0
-[  153.428311] ---[ end trace e8c7933cbb1a7d91 ]---
+More to the point though, for the reasons above, you need to
+change the other dev cmd path also
+i.e. ufshcd_issue_devman_upiu_cmd()
 
---=20
-Best Regards,
-  Yi Zhang
+For UFS-specific patch sets please always cc me on all patches
+in a series including the cover letter.
+
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 20 ++++++--------------
+>  1 file changed, 6 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 9d964b979aa2..6b0101169974 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -2904,12 +2904,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+>  
+>  	down_read(&hba->clk_scaling_lock);
+>  
+> -	/*
+> -	 * Get free slot, sleep if slots are unavailable.
+> -	 * Even though we use wait_event() which sleeps indefinitely,
+> -	 * the maximum wait time is bounded by SCSI request timeout.
+> -	 */
+> -	req = blk_get_request(q, REQ_OP_DRV_OUT, 0);
+> +	req = blk_mq_alloc_request(q, REQ_OP_DRV_OUT, BLK_MQ_REQ_RESERVED);
+
+ufshcd_issue_devman_upiu_cmd() needs this also.
+
+>  	if (IS_ERR(req)) {
+>  		err = PTR_ERR(req);
+>  		goto out_unlock;
+> @@ -4919,11 +4914,7 @@ static int ufshcd_slave_alloc(struct scsi_device *sdev)
+>   */
+>  static int ufshcd_change_queue_depth(struct scsi_device *sdev, int depth)
+>  {
+> -	struct ufs_hba *hba = shost_priv(sdev->host);
+> -
+> -	if (depth > hba->nutrs)
+> -		depth = hba->nutrs;
+> -	return scsi_change_queue_depth(sdev, depth);
+> +	return scsi_change_queue_depth(sdev, min(depth, sdev->host->can_queue));
+>  }
+>  
+>  static void ufshcd_hpb_destroy(struct ufs_hba *hba, struct scsi_device *sdev)
+> @@ -8124,7 +8115,8 @@ static struct scsi_host_template ufshcd_driver_template = {
+>  	.this_id		= -1,
+>  	.sg_tablesize		= SG_ALL,
+>  	.cmd_per_lun		= UFSHCD_CMD_PER_LUN,
+> -	.can_queue		= UFSHCD_CAN_QUEUE,
+> +	.can_queue		= UFSHCD_CAN_QUEUE - 1,
+> +	.reserved_tags		= 1,
+
+Number of reserved tags needs to be #define'd
+
+>  	.max_segment_size	= PRDT_DATA_BYTE_COUNT_MAX,
+>  	.max_host_blocked	= 1,
+>  	.track_queue_depth	= 1,
+> @@ -9485,8 +9477,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>  	/* Configure LRB */
+>  	ufshcd_host_memory_configure(hba);
+>  
+> -	host->can_queue = hba->nutrs;
+> -	host->cmd_per_lun = hba->nutrs;
+> +	host->can_queue = hba->nutrs - 1;
+> +	host->cmd_per_lun = hba->nutrs - 1;
+
+Number of reserved tags needs to be #define'd
+
+>  	host->max_id = UFSHCD_MAX_ID;
+>  	host->max_lun = UFS_MAX_LUNS;
+>  	host->max_channel = UFSHCD_MAX_CHANNEL;
+> 
 
