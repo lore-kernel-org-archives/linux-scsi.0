@@ -2,81 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F6A5C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:04:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CE50EC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:06:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3489E61108
-	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:04:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B02E561053
+	for <linux-scsi@archiver.kernel.org>; Wed,  3 Nov 2021 17:06:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233050AbhKCRGx (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 3 Nov 2021 13:06:53 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37848 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233061AbhKCRGv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 13:06:51 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33EEBC061714;
-        Wed,  3 Nov 2021 10:04:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:Content-Type:
-        MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description;
-        bh=u8Z/qqIhbDRh0Z9lXwnrC3LA7dcBQsND+N8bG1R6OJY=; b=y4OqgbyNItZScy80WmoDdm0cDF
-        Hur9oxkdvGoWlTSYEZhGzRfh8TUCRw2KlvesxH1ijn4vJrQysX66/7ncAQIRjEB3PPA08Q3jVLAyL
-        Vl2aYcsKvgiWt8J98lSUZ3hTC89wTmKEYw+YStjFwNCckDUlpOHTD3HRUgxb5Q0ybem/+K57J6QD9
-        jnz+lUXFm854hfwfO/X2yNEUkW2b/ul9t4CY2/cfytY6un/2jKt9BKcQfhRym+LGnKfkznUroDC3d
-        fTDyUjO5c+Qi3Ro58kWOo4rL/LxsnyKe5Ype/4xV2WIxGWE3qf+w4BOh6O5Gk9HpMF4x93iMXn1wu
-        oaos+0RQ==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1miJfy-005tqu-Dd; Wed, 03 Nov 2021 17:03:50 +0000
-Date:   Wed, 3 Nov 2021 10:03:50 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     axboe@kernel.dk, penguin-kernel@i-love.sakura.ne.jp,
-        dan.j.williams@intel.com, vishal.l.verma@intel.com,
-        dave.jiang@intel.com, ira.weiny@intel.com, richard@nod.at,
-        miquel.raynal@bootlin.com, vigneshr@ti.com, efremov@linux.com,
-        song@kernel.org, martin.petersen@oracle.com, hare@suse.de,
-        jack@suse.cz, ming.lei@redhat.com, tj@kernel.org,
-        linux-mtd@lists.infradead.org, linux-scsi@vger.kernel.org,
-        linux-raid@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 12/13] block: make __register_blkdev() return an error
-Message-ID: <YYLA9g0cYBsEFZkm@bombadil.infradead.org>
-References: <20211103122157.1215783-1-mcgrof@kernel.org>
- <20211103122157.1215783-13-mcgrof@kernel.org>
- <20211103160933.GK31562@lst.de>
- <YYK8hY/giSBFN8YJ@bombadil.infradead.org>
- <20211103170049.GA4108@lst.de>
+        id S233022AbhKCRJY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 3 Nov 2021 13:09:24 -0400
+Received: from mail-pg1-f174.google.com ([209.85.215.174]:43597 "EHLO
+        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233000AbhKCRJX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Nov 2021 13:09:23 -0400
+Received: by mail-pg1-f174.google.com with SMTP id b4so2899378pgh.10
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Nov 2021 10:06:47 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=U2WhGsQTwxW7tS0hTAu0M8xlz3is/bV7hYwfb7I6y1U=;
+        b=rLOwOHOZ4gkh7JkeAuF8wF2husyumyqJpIndctSqiEZSnYndjswZmDIhkV6ohXiH0j
+         LL2NApnKXcMoWFz0gq+Czt8qQ2lkdbmVHraWAHbK4bSYBKf0wCkb9FYIdLYfGp5ZE7pH
+         3mbf9TyxZZkg5hUwS19ZR//tsbsNJzVbOpnoAjriCUhdp2nhRMWVPmuL9CMsLSJDFSW2
+         kTRgqBdjzF2+k99lgj0sJN+wFnINJrStb67CNl4GGw5rWJYFwa9gNrh8eYWkFFmIGEmx
+         wtqz/Yo+pFcLRXZssP4aULNUikjM0T63K2qOxugpFBuM6+/xBJhxkYakIOnqWwr58UKT
+         ldxA==
+X-Gm-Message-State: AOAM530voHTbdq52TeBtAuwe1TF+p+lNtn2FnnBuDDD7wvMAiBFo+TZe
+        FPKEtVSV79/qyrmBNezEZKhoaDWx2FOdww==
+X-Google-Smtp-Source: ABdhPJzndGvBHGHVbggNeDKxMttTuHEMd3qap4tlM1rBuZnuzNasboPEzI3Zl3hSkptsABVWrisCUQ==
+X-Received: by 2002:a62:5250:0:b0:480:ffbe:9e9b with SMTP id g77-20020a625250000000b00480ffbe9e9bmr25840518pfb.54.1635959206191;
+        Wed, 03 Nov 2021 10:06:46 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:9416:5327:a40e:e300])
+        by smtp.gmail.com with ESMTPSA id n11sm2296947pgm.74.2021.11.03.10.06.45
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 03 Nov 2021 10:06:45 -0700 (PDT)
+Subject: Re: [PATCH RFC] scsi: ufs-core: Do not use clk_scaling_lock in
+ ufshcd_queuecommand()
+To:     Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Luca Porzio <lporzio@micron.com>, linux-scsi@vger.kernel.org
+References: <20211029133751.420015-1-adrian.hunter@intel.com>
+ <24e21ff3-c992-c71e-70e3-e0c3926fbcda@acm.org>
+ <c2d76154-b2ef-2e66-0a56-cd22ac8c652f@intel.com>
+ <d3d70c8e-f260-ca2d-f4c1-2c9dd1a08c5d@acm.org>
+ <3f4ef5e8-38e8-2e90-6da4-abc67aac9e4d@intel.com>
+ <263538ad-51b5-4594-9951-8bcc2373da19@acm.org>
+ <24399ee4-4feb-4670-ce9c-0872795c03ea@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <1a6fef86-9917-ddad-1845-d0406150ecb8@acm.org>
+Date:   Wed, 3 Nov 2021 10:06:44 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211103170049.GA4108@lst.de>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <24399ee4-4feb-4670-ce9c-0872795c03ea@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 03, 2021 at 06:00:49PM +0100, Christoph Hellwig wrote:
-> On Wed, Nov 03, 2021 at 09:44:53AM -0700, Luis Chamberlain wrote:
-> > Here's the thing, prober call a form of add_disk(), and so do we want
-> > to always ignore the errors on probe? If so we should document why that
-> > is sane then. I think this approach is a bit more sane though.
+On 11/3/21 12:46 AM, Adrian Hunter wrote:
+> On 02/11/2021 22:49, Bart Van Assche wrote:
+>>   static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
+>>   {
+>> -    #define DOORBELL_CLR_TOUT_US        (1000 * 1000) /* 1 sec */
+>>       int ret = 0;
+>> +
+>>       /*
+>> -     * make sure that there are no outstanding requests when
+>> -     * clock scaling is in progress
+>> +     * Make sure that there are no outstanding requests while clock scaling
+>> +     * is in progress. Since the error handler may submit TMFs, limit the
+>> +     * time during which to block hba->tmf_queue in order not to block the
+>> +     * UFS error handler.
+>> +     *
+>> +     * Since ufshcd_exec_dev_cmd() and ufshcd_issue_devman_upiu_cmd() lock
+>> +     * the clk_scaling_lock before calling blk_get_request(), lock
+>> +     * clk_scaling_lock before freezing the request queues to prevent a
+>> +     * deadlock.
+>>        */
+>> -    ufshcd_scsi_block_requests(hba);
 > 
-> I suspect the right thing is to just kill of ->probe.
-> 
-> The only thing it supports is pre-devtmpfs, pre-udev semantics that
-> want to magically create disks when their pre-created device node
-> is accesses.
+> How are requests from LUN queues blocked?
 
-That sounds like a possible userspace impact? And so not for v5.16 for
-sure.
+I will add blk_freeze_queue() calls for the LUNs.
 
-> But if we don't remove it, yes I think not reporting
-> the error is best.  Just clean up whatever local resources were set
-> up in the ->probe method and let the open fail without the need of
-> passing on the actual error.
+Thanks,
 
-Alright, I'll do that and send a final v3 for the last 2 patches.
-
-  Luis
+Bart.
