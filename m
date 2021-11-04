@@ -2,128 +2,207 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE590C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 14:24:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12BACC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 14:25:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id D132D611C3
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 14:24:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EFC6C611C0
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 14:25:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231152AbhKDO0r (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Nov 2021 10:26:47 -0400
-Received: from so254-9.mailgun.net ([198.61.254.9]:37911 "EHLO
-        so254-9.mailgun.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230509AbhKDO0q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2021 10:26:46 -0400
-DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed; d=mg.codeaurora.org; q=dns/txt;
- s=smtp; t=1636035848; h=Content-Transfer-Encoding: Content-Type:
- In-Reply-To: From: References: Cc: To: Subject: MIME-Version: Date:
- Message-ID: Sender; bh=sttjvltaxAxJW4LytASOupOrEOzMe95PnK38QtFiLFI=; b=pIGHnJPxadtRxtXP9Va9E9iskSdfS8YyeQggrzcoRIB6HApoPa6TZ+qLqm4C2UKxM2S+vFRq
- NFvAVlGJU/EOrK0ppgoAPZRwDDe36OZnaAAFVxdtdwk/awWYEjrxc3+fa6JHl4q6gNbYvH9H
- b7VM1Sly00lxkWWFHaR553wqKpA=
-X-Mailgun-Sending-Ip: 198.61.254.9
-X-Mailgun-Sid: WyJlNmU5NiIsICJsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyIsICJiZTllNGEiXQ==
-Received: from smtp.codeaurora.org
- (ec2-35-166-182-171.us-west-2.compute.amazonaws.com [35.166.182.171]) by
- smtp-out-n01.prod.us-west-2.postgun.com with SMTP id
- 6183ecf7f97c48cc48ac9dbc (version=TLS1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256); Thu, 04 Nov 2021 14:23:51
- GMT
-Sender: asutoshd=codeaurora.org@mg.codeaurora.org
-Received: by smtp.codeaurora.org (Postfix, from userid 1001)
-        id 48970C43617; Thu,  4 Nov 2021 14:23:50 +0000 (UTC)
-Received: from [192.168.1.3] (cpe-66-27-70-157.san.res.rr.com [66.27.70.157])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S231152AbhKDO2b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Nov 2021 10:28:31 -0400
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30177 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230511AbhKDO2b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2021 10:28:31 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636035953;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=NFsYeY+DZhBBjUyzxzEsLkkJzjVOvCvjl3UiBsdrpm8=;
+        b=GJry64Soph/Y3DFSR4SJ8VottEq7HudqGTyFdju3nnZng4oAWzT7SK94y2O5RCTXWf6WMO
+        08INUvSKUuCtlGTwDdqQYbIoMFBFqDqI+nPBTWuUDSgygeLBG5GN2LS7wveK2KmjpfittS
+        X5rIgiqDAtFV3Bcergpy5oHu1cafMJo=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-337-P27Qvx1LN_WcrdbVLOGTOw-1; Thu, 04 Nov 2021 10:25:50 -0400
+X-MC-Unique: P27Qvx1LN_WcrdbVLOGTOw-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        (Authenticated sender: asutoshd)
-        by smtp.codeaurora.org (Postfix) with ESMTPSA id A9AE0C4360D;
-        Thu,  4 Nov 2021 14:23:48 +0000 (UTC)
-DMARC-Filter: OpenDMARC Filter v1.4.1 smtp.codeaurora.org A9AE0C4360D
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; dmarc=none (p=none dis=none) header.from=codeaurora.org
-Authentication-Results: aws-us-west-2-caf-mail-1.web.codeaurora.org; spf=fail smtp.mailfrom=codeaurora.org
-Message-ID: <4895a54b-6d49-9204-e7b2-336854c83ed4@codeaurora.org>
-Date:   Thu, 4 Nov 2021 07:23:47 -0700
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A960210168EA;
+        Thu,  4 Nov 2021 14:25:48 +0000 (UTC)
+Received: from raketa.redhat.com (unknown [10.40.193.51])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1707960FB8;
+        Thu,  4 Nov 2021 14:25:46 +0000 (UTC)
+From:   Maurizio Lombardi <mlombard@redhat.com>
+To:     martin.petersen@oracle.com
+Cc:     bostroesser@gmail.com, michael.christie@oracle.com,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        k.shelekhin@yadro.com
+Subject: [PATCH] target: iscsi: simplify the connection closing mechanism
+Date:   Thu,  4 Nov 2021 15:25:45 +0100
+Message-Id: <20211104142545.40797-1-mlombard@redhat.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.1
-Subject: Re: [PATCH RFC] scsi: ufs-core: Do not use clk_scaling_lock in
- ufshcd_queuecommand()
-To:     Bart Van Assche <bvanassche@acm.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <huobean@gmail.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Can Guo <cang@codeaurora.org>,
-        Daejun Park <daejun7.park@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Luca Porzio <lporzio@micron.com>, linux-scsi@vger.kernel.org
-References: <20211029133751.420015-1-adrian.hunter@intel.com>
- <24e21ff3-c992-c71e-70e3-e0c3926fbcda@acm.org>
- <c2d76154-b2ef-2e66-0a56-cd22ac8c652f@intel.com>
- <d3d70c8e-f260-ca2d-f4c1-2c9dd1a08c5d@acm.org>
- <3f4ef5e8-38e8-2e90-6da4-abc67aac9e4d@intel.com>
- <263538ad-51b5-4594-9951-8bcc2373da19@acm.org>
- <24399ee4-4feb-4670-ce9c-0872795c03ea@intel.com>
- <1a6fef86-9917-ddad-1845-d0406150ecb8@acm.org>
-From:   "Asutosh Das (asd)" <asutoshd@codeaurora.org>
-In-Reply-To: <1a6fef86-9917-ddad-1845-d0406150ecb8@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/3/2021 10:06 AM, Bart Van Assche wrote:
-> On 11/3/21 12:46 AM, Adrian Hunter wrote:
->> On 02/11/2021 22:49, Bart Van Assche wrote:
->>>   static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba)
->>>   {
->>> -    #define DOORBELL_CLR_TOUT_US        (1000 * 1000) /* 1 sec */
->>>       int ret = 0;
->>> +
->>>       /*
->>> -     * make sure that there are no outstanding requests when
->>> -     * clock scaling is in progress
->>> +     * Make sure that there are no outstanding requests while clock 
->>> scaling
->>> +     * is in progress. Since the error handler may submit TMFs, 
->>> limit the
->>> +     * time during which to block hba->tmf_queue in order not to 
->>> block the
->>> +     * UFS error handler.
->>> +     *
->>> +     * Since ufshcd_exec_dev_cmd() and 
->>> ufshcd_issue_devman_upiu_cmd() lock
->>> +     * the clk_scaling_lock before calling blk_get_request(), lock
->>> +     * clk_scaling_lock before freezing the request queues to prevent a
->>> +     * deadlock.
->>>        */
->>> -    ufshcd_scsi_block_requests(hba);
->>
->> How are requests from LUN queues blocked?
-> 
-> I will add blk_freeze_queue() calls for the LUNs.
-> 
-> Thanks,
-> 
-> Bart.
-Hi Bart,
+When the connection reinstatement is performed, the target driver
+executes a complex scheme of complete()/wait_for_completion() that is not
+really needed.
 
-In the current clock scaling code, the expectation is to scale up as 
-soon as possible.
+Considering that:
 
-For e.g. say, the current gear is G1 and there're pending requests in 
-the queue but the DBR is empty and there's a decision to scale up. 
-During scale-up, if the queues are frozen, wouldn't those requests be 
-issued to the driver and executed in G1 instead of G4?
-I think this would lead to higher run to run variance in performance.
+1) The callers of iscsit_connection_reinstatement_rcfr() and
+   iscsit_cause_connection_reinstatement() hold a reference
+   to the conn structure.
 
-What do you think?
+2) iscsit_close_connection() will sleep when calling
+   iscsit_check_conn_usage_count() until the conn structure's refcount
+   reaches zero.
 
-Thanks,
--asd
+we can optimize the driver the following way:
 
+* The threads that must sleep until the connection is closed
+  will all wait for the "conn_wait_comp" completion,
+  iscsit_close_connection() will then call complete_all() to wake them up.
+  No need to have multiple completion structures.
+
+* The conn_post_wait_comp completion is not necessary and can be removed
+  because iscsit_close_connection() sleeps until all the other threads
+  release the conn structure.
+  (see the iscsit_check_conn_usage_count() function)
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/target/iscsi/iscsi_target.c       | 31 +++++------------------
+ drivers/target/iscsi/iscsi_target_erl0.c  |  6 +----
+ drivers/target/iscsi/iscsi_target_login.c |  2 --
+ drivers/target/iscsi/iscsi_target_util.c  |  3 ---
+ include/target/iscsi/iscsi_target_core.h  |  4 ---
+ 5 files changed, 8 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 2c54c5d8412d..7df10cfcba2a 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4223,34 +4223,17 @@ int iscsit_close_connection(
+ 
+ 	spin_unlock_bh(&sess->conn_lock);
+ 
+-	/*
+-	 * If connection reinstatement is being performed on this connection,
+-	 * up the connection reinstatement semaphore that is being blocked on
+-	 * in iscsit_cause_connection_reinstatement().
+-	 */
+ 	spin_lock_bh(&conn->state_lock);
+-	if (atomic_read(&conn->sleep_on_conn_wait_comp)) {
+-		spin_unlock_bh(&conn->state_lock);
+-		complete(&conn->conn_wait_comp);
+-		wait_for_completion(&conn->conn_post_wait_comp);
+-		spin_lock_bh(&conn->state_lock);
+-	}
+-
+-	/*
+-	 * If connection reinstatement is being performed on this connection
+-	 * by receiving a REMOVECONNFORRECOVERY logout request, up the
+-	 * connection wait rcfr semaphore that is being blocked on
+-	 * an iscsit_connection_reinstatement_rcfr().
+-	 */
+-	if (atomic_read(&conn->connection_wait_rcfr)) {
+-		spin_unlock_bh(&conn->state_lock);
+-		complete(&conn->conn_wait_rcfr_comp);
+-		wait_for_completion(&conn->conn_post_wait_comp);
+-		spin_lock_bh(&conn->state_lock);
+-	}
+ 	atomic_set(&conn->connection_reinstatement, 1);
+ 	spin_unlock_bh(&conn->state_lock);
+ 
++	/*
++	 * If connection reinstatement is being performed on this connection,
++	 * up the connection reinstatement semaphore that is being blocked on
++	 * in iscsit_cause_connection_reinstatement() or
++	 * in iscsit_connection_reinstatement_rcfr()
++	 */
++	complete_all(&conn->conn_wait_comp);
+ 	/*
+ 	 * If any other processes are accessing this connection pointer we
+ 	 * must wait until they have completed.
+diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
+index 102c9cbf59f3..584e0a0b517d 100644
+--- a/drivers/target/iscsi/iscsi_target_erl0.c
++++ b/drivers/target/iscsi/iscsi_target_erl0.c
+@@ -839,8 +839,7 @@ void iscsit_connection_reinstatement_rcfr(struct iscsi_conn *conn)
+ 		send_sig(SIGINT, conn->rx_thread, 1);
+ 
+ sleep:
+-	wait_for_completion(&conn->conn_wait_rcfr_comp);
+-	complete(&conn->conn_post_wait_comp);
++	wait_for_completion(&conn->conn_wait_comp);
+ }
+ 
+ void iscsit_cause_connection_reinstatement(struct iscsi_conn *conn, int sleep)
+@@ -871,12 +870,9 @@ void iscsit_cause_connection_reinstatement(struct iscsi_conn *conn, int sleep)
+ 		spin_unlock_bh(&conn->state_lock);
+ 		return;
+ 	}
+-
+-	atomic_set(&conn->sleep_on_conn_wait_comp, 1);
+ 	spin_unlock_bh(&conn->state_lock);
+ 
+ 	wait_for_completion(&conn->conn_wait_comp);
+-	complete(&conn->conn_post_wait_comp);
+ }
+ EXPORT_SYMBOL(iscsit_cause_connection_reinstatement);
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 1a9c50401bdb..982c23459272 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -1096,9 +1096,7 @@ static struct iscsi_conn *iscsit_alloc_conn(struct iscsi_np *np)
+ 	INIT_LIST_HEAD(&conn->conn_cmd_list);
+ 	INIT_LIST_HEAD(&conn->immed_queue_list);
+ 	INIT_LIST_HEAD(&conn->response_queue_list);
+-	init_completion(&conn->conn_post_wait_comp);
+ 	init_completion(&conn->conn_wait_comp);
+-	init_completion(&conn->conn_wait_rcfr_comp);
+ 	init_completion(&conn->conn_waiting_on_uc_comp);
+ 	init_completion(&conn->conn_logout_comp);
+ 	init_completion(&conn->rx_half_close_comp);
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index 6dd5810e2af1..d7b1f9110d49 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -824,9 +824,6 @@ struct iscsi_conn *iscsit_get_conn_from_cid_rcfr(struct iscsi_session *sess, u16
+ 	list_for_each_entry(conn, &sess->sess_conn_list, conn_list) {
+ 		if (conn->cid == cid) {
+ 			iscsit_inc_conn_usage_count(conn);
+-			spin_lock(&conn->state_lock);
+-			atomic_set(&conn->connection_wait_rcfr, 1);
+-			spin_unlock(&conn->state_lock);
+ 			spin_unlock_bh(&sess->conn_lock);
+ 			return conn;
+ 		}
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 1eccb2ac7d02..aeb8932507c2 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -542,12 +542,8 @@ struct iscsi_conn {
+ 	atomic_t		connection_exit;
+ 	atomic_t		connection_recovery;
+ 	atomic_t		connection_reinstatement;
+-	atomic_t		connection_wait_rcfr;
+-	atomic_t		sleep_on_conn_wait_comp;
+ 	atomic_t		transport_failed;
+-	struct completion	conn_post_wait_comp;
+ 	struct completion	conn_wait_comp;
+-	struct completion	conn_wait_rcfr_comp;
+ 	struct completion	conn_waiting_on_uc_comp;
+ 	struct completion	conn_logout_comp;
+ 	struct completion	tx_half_close_comp;
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-Linux Foundation Collaborative Project
+2.27.0
+
