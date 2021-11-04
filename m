@@ -2,101 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89DE8C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 23:46:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A73CEC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 23:54:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 643E76121E
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 23:46:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7373560E93
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 23:54:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231756AbhKDXtO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Nov 2021 19:49:14 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49692 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S229725AbhKDXtK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 4 Nov 2021 19:49:10 -0400
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E1D2060F02;
-        Thu,  4 Nov 2021 23:46:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636069592;
-        bh=NfcKgvRyUI4mm0kWBjGff1rEuSTCRBAgPnRi41K8ioc=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=EDijRI2oEdBSUJt+coQ0QCuvGA3Hv6ESgUS5V5MMh9A2TcVwewTmx0uxVXmpOKnix
-         V9oNdLpyDmiPaTR5mFkmEYdHk72Z2irSJ6DP8UzXqirASbrdjX+9xKbAOIUPhSWkLR
-         9oflqoMylK4sMj+wjUAhim9ryZqPjUa664XV93kF7tn03LFkDxhPlPeRCAHEHzvXun
-         pc9NjcRvBrKNkk0oQjHMMGSDf7LME5F62ce3i5fxoErYstyER04sp3A6NGteZ7Ph6F
-         qRS97NhmhsaHBr6rnMhznd4EzcA67f9W0GnCaK0YVgYX7gmQsHF+/BoJjOpQ5rrwvK
-         ZNa80eXWnYPgA==
-Date:   Thu, 4 Nov 2021 16:46:30 -0700
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     Gaurav Kashyap <quic_gaurkash@quicinc.com>
-Cc:     linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-mmc@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-fscrypt@vger.kernel.org, thara.gopinath@linaro.org,
-        asutoshd@codeaurora.org
-Subject: Re: [PATCH 3/4] soc: qcom: add HWKM library for storage encryption
-Message-ID: <YYRw1nhgtWPgbtKk@gmail.com>
-References: <20211103231840.115521-1-quic_gaurkash@quicinc.com>
- <20211103231840.115521-4-quic_gaurkash@quicinc.com>
+        id S231731AbhKDX5W (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Nov 2021 19:57:22 -0400
+Received: from mail-pg1-f171.google.com ([209.85.215.171]:36381 "EHLO
+        mail-pg1-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229725AbhKDX5W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2021 19:57:22 -0400
+Received: by mail-pg1-f171.google.com with SMTP id 75so6825813pga.3
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Nov 2021 16:54:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=HqQMIJWqjlWWKdA5UZDTt3ryYCursmS0wbm6nsJNKvQ=;
+        b=zHD91AbUrnYs6eReDX5yhQviTBO8qCTJV5Gpb//RHojGhWEFvYwiqwONoTHX50Y5rn
+         iC0ydPCn+0Fvr6Qjfyw+RJgWVIYwav6Hpvm1kmmYgfG9krppODFfwCexZFHRE3Ryq9uI
+         bAFPJ1QQLPTFFHzyKzxS6YwMhQ171gMD3iss0DiIjLRrAUpCFzI/Pz3uPr/nhd41aOl8
+         mB/K93+F5FpJPNHz1QqJuTM80b7sMksC3MiepFDPIgbQJTO0+Cfr4mKYWKxkZFt6PzUh
+         04VDUnzoW00iGMeR1pN1Zv69JkN0J4M5d7gThG9io4+pXCTNPvpoE9gXZpiLbszpjil9
+         WQHw==
+X-Gm-Message-State: AOAM533FAgg6lKEpFuNXKClzk+dXp5goVsy3SGfGZewPX9QgeOu/Vqw6
+        pyDAV3pubzLCnc+kpKYfQhY=
+X-Google-Smtp-Source: ABdhPJxBcw5+ej4o7OxJxfPBoMpx+AHkzbuYN/LSFel027eZP5IRPTN6Gh6pN741x96ks+4qRAKI/g==
+X-Received: by 2002:a63:cf48:: with SMTP id b8mr20763844pgj.434.1636070079597;
+        Thu, 04 Nov 2021 16:54:39 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:6f63:8570:36af:9b56])
+        by smtp.gmail.com with ESMTPSA id h1sm6162649pfi.168.2021.11.04.16.54.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 04 Nov 2021 16:54:39 -0700 (PDT)
+Subject: Re: [PATCH] scsi: ufs: Improve SCSI abort handling
+To:     daejun7.park@samsung.com,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Vinayak Holikatti <vinholikatti@gmail.com>,
+        VISHAK G <vishak.g@samsung.com>,
+        Girish K S <girish.shivananjappa@linaro.org>,
+        Santosh Yaraganavi <santoshsy@gmail.com>,
+        "huobean@gmail.com" <huobean@gmail.com>
+References: <087fe1fe-173d-50dd-a52e-d794c97648da@acm.org>
+ <20211104181059.4129537-1-bvanassche@acm.org>
+ <1891546521.01636066202065.JavaMail.epsvc@epcpadp3>
+ <CGME20211104181111epcas2p2965ba25c905be783c39f098210cc4c61@epcms2p1>
+ <1891546521.01636069381755.JavaMail.epsvc@epcpadp4>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <cb0982d2-1124-a8ee-d129-e2e4975ef1c4@acm.org>
+Date:   Thu, 4 Nov 2021 16:54:37 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20211103231840.115521-4-quic_gaurkash@quicinc.com>
+In-Reply-To: <1891546521.01636069381755.JavaMail.epsvc@epcpadp4>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 03, 2021 at 04:18:39PM -0700, Gaurav Kashyap wrote:
-> Wrapped keys should utilize hardware to protect the keys
-> used for storage encryption. Qualcomm's Inline Crypto Engine
-> supports a hardware block called Hardware Key Manager (HWKM)
-> for key management.
+On 11/4/21 4:39 PM, Daejun Park wrote:
+>> On 11/4/21 3:39 PM, Daejun Park wrote:
+>>> I found similar code in the ufshcd_err_handler(). I think the following
+>>> patch will required to fix another warning.
+>>>
+>>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>>> index f5ba8f953b87..cce9abc6b879 100644
+>>> --- a/drivers/scsi/ufs/ufshcd.c
+>>> +++ b/drivers/scsi/ufs/ufshcd.c
+>>> @@ -6190,6 +6190,7 @@ static void ufshcd_err_handler(struct work_struct *work)
+>>>                   }
+>>>                   dev_err(hba->dev, "Aborted tag %d / CDB %#02x\n", tag,
+>>>                           hba->lrb[tag].cmd ? hba->lrb[tag].cmd->cmnd[0] : -1);
+>>> +               hba->lrb[tag].cmd = NULL;
+>>>           }
+>>>
+>>>           /* Clear pending task management requests */
+>>
+>> Hmm ... since the error handler calls ufshcd_complete_requests(),
+>> shouldn't the completion function clear the 'cmd' member? I'm concerned
+>> that the above change would break the completion handler.
 > 
-> Although most of the interactions to this hardware block happens
-> via a secure execution environment, some initializations for the
-> slave present in ICE can be done from the kernel.
+> I missed that the error handler calls ufshcd_complete_requests(). Please
+> ignore my suggestion.
 > 
-> This can also be a placeholder for when the hardware provides more
-> capabilites to be acessed from the linux kernel in the future.
+> By the way, I give my reviewed-by tag.
 > 
-> Signed-off-by: Gaurav Kashyap <quic_gaurkash@quicinc.com>
-> ---
->  drivers/soc/qcom/Kconfig        |   7 ++
->  drivers/soc/qcom/Makefile       |   1 +
->  drivers/soc/qcom/qti-ice-hwkm.c |  77 ++++++++++++++++++++++
->  drivers/soc/qcom/qti-ice-regs.h | 112 ++++++++++++++++++++++++++++++++
->  include/linux/qti-ice-common.h  |   6 ++
->  5 files changed, 203 insertions(+)
->  create mode 100644 drivers/soc/qcom/qti-ice-hwkm.c
-> 
-> diff --git a/drivers/soc/qcom/Kconfig b/drivers/soc/qcom/Kconfig
-> index 39f223ed8cdd..d441d5b81c53 100644
-> --- a/drivers/soc/qcom/Kconfig
-> +++ b/drivers/soc/qcom/Kconfig
-> @@ -216,4 +216,11 @@ config QTI_ICE_COMMON
->  	help
->  	  Enable the common ICE library that can be used
->  	  by UFS and EMMC drivers for ICE functionality.
-> +
-> +config QTI_HW_WRAPPED_KEYS
-> +	tristate "QTI HW Wrapped Keys"
-> +	depends on QTI_ICE_COMMON
-> +	help
-> +	  Enable wrapped key functionality for storage
-> +	  encryption.
+> Reviewed-by: Daejun Park <daejun7.park@samsung.com>
 
-It might be reasonable to just include the hardware-wrapped key support whenever
-QTI_ICE_COMMON is enabled.  Note that I'm not planning separate kconfig options
-at the block or fscrypt levels.
+Thanks Daejun! However, your question made me wonder whether ufshcd_abort()
+should clear the 'tag' bit from hba->outstanding_reqs. Although the SCSI
+standard requires that a command that is aborted is not completed, the UFSHCI
+specification requires that writing into the UTRLCLR register clears the
+corresponding bit(s) in the UTRLDBR register. I think bit 'tag' will have to
+be cleared from hba->outstanding_reqs to prevent that the aborted request is
+completed while the SCSI core is resubmitting it.
 
-If we do have this kconfig option, then please make sure that the help text
-properly explains it.  That should include linking to the documentation where
-the reader can find out more about what this feature is, and hence why they
-might want to enable it, or not enable it.
+Thanks,
 
-Also this code probably should be part of the qti-ice-common module (which maybe
-should be called "qti-ice-lib"?) rather than its own module.  That would mean
-making QTI_HW_WRAPPED_KEYS a bool option that controls whether qti-ice-hwkm.c is
-built into qti-ice-common, rather than a tristate that controls whether it's
-built into its own module.
+Bart.
 
-- Eric
