@@ -2,124 +2,109 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B469BC433EF
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 17:08:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07A0BC433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 17:10:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 938B9611EE
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 17:08:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD9156103B
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 17:10:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232001AbhKDRKj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Nov 2021 13:10:39 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52102 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231186AbhKDRKj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2021 13:10:39 -0400
-Received: from bombadil.infradead.org (bombadil.infradead.org [IPv6:2607:7c80:54:e::133])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 07DE9C061714;
-        Thu,  4 Nov 2021 10:08:00 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20210309; h=Sender:In-Reply-To:
-        Content-Transfer-Encoding:Content-Type:MIME-Version:References:Message-ID:
-        Subject:Cc:To:From:Date:Reply-To:Content-ID:Content-Description;
-        bh=5lMkOS6mdqYvX76YLp0lHMCiGc25jm9/Te+lsE56UR4=; b=lEfQifSXneL5FWvCpOeIubdwcS
-        8LeSf6tgQGAHL9mRAu5cvd46X33AckfG/Ki6acBx+9KXSYYeXBcm8o5pXvOZ5/hHnMkOVvHqKsQvE
-        jTv9nXCn2U+/3dDX8VUaKrUF6OjVo5DW+lJgPIqp4NEZGdssywtWjuSKz9ZZo4LcCTkoCfQfxu+U7
-        OPHXscK0LTmg3e3Pwh5Xo2/ioPlJpGEsBn7LHE8eFx5TSjL34xQntK/CqKlpD43+fR1OJsZJufinX
-        aqGZkGaCqZEeHjA0jYr5AMuOtILAzkCbpYAQ06RiO3CXmmL6/T5R3dmExFNTCzyP8LK2Rutb1dKCg
-        h8UztIxg==;
-Received: from mcgrof by bombadil.infradead.org with local (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1migDJ-009ada-E1; Thu, 04 Nov 2021 17:07:45 +0000
-Date:   Thu, 4 Nov 2021 10:07:45 -0700
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     Jens Axboe <axboe@kernel.dk>, martin.petersen@oracle.com
-Cc:     miquel.raynal@bootlin.com, hare@suse.de, jack@suse.cz, hch@lst.de,
-        song@kernel.org, dave.jiang@intel.com, richard@nod.at,
-        vishal.l.verma@intel.com, penguin-kernel@i-love.sakura.ne.jp,
-        tj@kernel.org, ira.weiny@intel.com, vigneshr@ti.com,
-        dan.j.williams@intel.com, ming.lei@redhat.com, efremov@linux.com,
-        linux-raid@vger.kernel.org, linux-mtd@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH v5 00/14] last set for add_disk() error handling
-Message-ID: <YYQTYctDjaxU2tkQ@bombadil.infradead.org>
-References: <20211103230437.1639990-1-mcgrof@kernel.org>
- <163602655191.22491.10844091970007142957.b4-ty@kernel.dk>
- <4764286a-99b4-39f7-ce5c-9e88cee1a538@kernel.dk>
+        id S231882AbhKDRNX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Nov 2021 13:13:23 -0400
+Received: from mail-pg1-f174.google.com ([209.85.215.174]:34669 "EHLO
+        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232290AbhKDRNW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2021 13:13:22 -0400
+Received: by mail-pg1-f174.google.com with SMTP id j9so5994482pgh.1
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Nov 2021 10:10:44 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=4iRxl3VsVmXXN1hwrgiL/SEYw+Z4WiKafuVe2MYejHc=;
+        b=W6iWJxocpoSm4Sx7YTt70BWiqifPJerPPYubucrbjQC3v76uEmMkBhCwjsVGA993CX
+         LAUQv6VB8jJ0tmIF0gnqZI28yWXjMV2jhwkvCm7NrAYwrFcfVSk/rq6y6FZCkWvWURYU
+         CRzHTIrEymT+Gsr/MER6gNTbgpE9ZsCo73/A8oXaZ4Ppttl2qfgaCrjrdsYQaZTnUEc1
+         rXMsXoqMwEHZfVzhOzaHsC3xt8OhOvkzcQP3KmQqR4dAHDzgUC74JZ00c9IHBs9HMeA9
+         bN4Moqm/tpAvrwIynRK7g/WBtHUK44+x08VcdHBS5qclZUngW72fO9dz8XLlvAJ1rpng
+         6n6A==
+X-Gm-Message-State: AOAM533tp2Sw+AXC58lBQ0ORFpqz+a779V/Uwt/b2sFsW6WfFMNYPXS2
+        rf5kbJImwObxkZpAa6NP6Phc+K9g6eT6Rw==
+X-Google-Smtp-Source: ABdhPJyILykgaLhUSstlaWzZ8dCpLoRyMnwVuW2xhkTb0tNcS7kIQD4J9ZJ3lWhz3S7PWbO4KaHH/w==
+X-Received: by 2002:a63:88c2:: with SMTP id l185mr23643714pgd.168.1636045843530;
+        Thu, 04 Nov 2021 10:10:43 -0700 (PDT)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:6f63:8570:36af:9b56])
+        by smtp.gmail.com with ESMTPSA id j19sm5508259pfj.127.2021.11.04.10.10.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 04 Nov 2021 10:10:42 -0700 (PDT)
+Subject: Re: [PATCH RFC] scsi: ufs-core: Do not use clk_scaling_lock in
+ ufshcd_queuecommand()
+To:     "Asutosh Das (asd)" <asutoshd@codeaurora.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <huobean@gmail.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Can Guo <cang@codeaurora.org>,
+        Daejun Park <daejun7.park@samsung.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Luca Porzio <lporzio@micron.com>, linux-scsi@vger.kernel.org
+References: <20211029133751.420015-1-adrian.hunter@intel.com>
+ <24e21ff3-c992-c71e-70e3-e0c3926fbcda@acm.org>
+ <c2d76154-b2ef-2e66-0a56-cd22ac8c652f@intel.com>
+ <d3d70c8e-f260-ca2d-f4c1-2c9dd1a08c5d@acm.org>
+ <3f4ef5e8-38e8-2e90-6da4-abc67aac9e4d@intel.com>
+ <263538ad-51b5-4594-9951-8bcc2373da19@acm.org>
+ <24399ee4-4feb-4670-ce9c-0872795c03ea@intel.com>
+ <1a6fef86-9917-ddad-1845-d0406150ecb8@acm.org>
+ <4895a54b-6d49-9204-e7b2-336854c83ed4@codeaurora.org>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <c06be499-fc66-1260-400c-0458eb6de7cf@acm.org>
+Date:   Thu, 4 Nov 2021 10:10:41 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <4764286a-99b4-39f7-ce5c-9e88cee1a538@kernel.dk>
-Sender: Luis Chamberlain <mcgrof@infradead.org>
+In-Reply-To: <4895a54b-6d49-9204-e7b2-336854c83ed4@codeaurora.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, Nov 04, 2021 at 06:53:34AM -0600, Jens Axboe wrote:
-> On 11/4/21 5:49 AM, Jens Axboe wrote:
-> > On Wed, 3 Nov 2021 16:04:23 -0700, Luis Chamberlain wrote:
-> >> Jens,
-> >>
-> >> as requested, I've folded all pending changes into this series. This
-> >> v5 pegs on Christoph's reviewed-by tags and since I was respinning I
-> >> modified the ataprobe and floppy driver changes as he suggested.
-> >>
-> >> I think this is it. The world of floppy has been exciting for v5.16.
-> >>
-> >> [...]
-> > 
-> > Applied, thanks!
-> > 
-> > [01/14] nvdimm/btt: use goto error labels on btt_blk_init()
-> >         commit: 2762ff06aa49e3a13fb4b779120f4f8c12c39fd1
-> > [02/14] nvdimm/btt: add error handling support for add_disk()
-> >         commit: 16be7974ff5d0a5cd9f345571c3eac1c3f6ba6de
-> > [03/14] nvdimm/blk: avoid calling del_gendisk() on early failures
-> >         commit: b7421afcec0c77ab58633587ddc29d53e6eb95af
-> > [04/14] nvdimm/blk: add error handling support for add_disk()
-> >         commit: dc104f4bb2d0a652dee010e47bc89c1ad2ab37c9
-> > [05/14] nvdimm/pmem: cleanup the disk if pmem_release_disk() is yet assigned
-> >         commit: accf58afb689f81daadde24080ea1164ad2db75f
-> > [06/14] nvdimm/pmem: use add_disk() error handling
-> >         commit: 5a192ccc32e2981f721343c750b8cfb4c3f41007
-> > [07/14] z2ram: add error handling support for add_disk()
-> >         commit: 15733754ccf35c49d2f36a7ac51adc8b975c1c78
-> > [08/14] block/sunvdc: add error handling support for add_disk()
-> >         commit: f583eaef0af39b792d74e39721b5ba4b6948a270
-> > [09/14] mtd/ubi/block: add error handling support for add_disk()
-> >         commit: ed73919124b2e48490adbbe48ffe885a2a4c6fee
-> > [10/14] ataflop: remove ataflop_probe_lock mutex
-> >         commit: 4ddb85d36613c45bde00d368bf9f357bd0708a0c
-> > [11/14] block: update __register_blkdev() probe documentation
-> >         commit: 26e06f5b13671d194d67ae8e2b66f524ab174153
-> > [12/14] ataflop: address add_disk() error handling on probe
-> >         commit: 46a7db492e7a27408bc164cbe6424683e79529b0
-> > [13/14] floppy: address add_disk() error handling on probe
-> >         commit: ec28fcc6cfcd418d20038ad2c492e87bf3a9f026
-> > [14/14] block: add __must_check for *add_disk*() callers
-> >         commit: 1698712d85ec2f128fc7e7c5dc2018b5ed2b7cf6
+On 11/4/21 7:23 AM, Asutosh Das (asd) wrote:
+> In the current clock scaling code, the expectation is to scale up as 
+> soon as possible.
 > 
-> rivers/scsi/sd.c: In function ‘sd_probe’:
-> drivers/scsi/sd.c:3573:9: warning: ignoring return value of ‘device_add_disk’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
->  3573 |         device_add_disk(dev, gd, NULL);
->       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> drivers/scsi/sr.c: In function ‘sr_probe’:
-> drivers/scsi/sr.c:731:9: warning: ignoring return value of ‘device_add_disk’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
->   731 |         device_add_disk(&sdev->sdev_gendev, disk, NULL);
->       |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> 
-> 
-> Dropping the last two patches...
+> For e.g. say, the current gear is G1 and there're pending requests in 
+> the queue but the DBR is empty and there's a decision to scale up. 
+> During scale-up, if the queues are frozen, wouldn't those requests be 
+> issued to the driver and executed in G1 instead of G4?
+> I think this would lead to higher run to run variance in performance.
 
-Martin K Peterson has the respective patches needed queued up on his tree
-for v5.16:
+Hi Asutosh,
 
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=5.16/scsi-staging&id=e9d658c2175b95a8f091b12ddefb271683aeacd9
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=5.16/scsi-staging&id=2a7a891f4c406822801ecd676b076c64de072c9e
+My understanding of the current clock scaling implementation is as 
+follows (please correct me if I got anything wrong):
+* ufshcd_clock_scaling_prepare() is called before clock scaling happens
+   and ufshcd_clock_scaling_unprepare() is called after clock scaling has
+   finished.
+* ufshcd_clock_scaling_prepare() calls ufshcd_scsi_block_requests() and
+   ufshcd_wait_for_doorbell_clr().
+* ufshcd_wait_for_doorbell_clr() waits until both the UTP Transfer
+   Request List Doorbell Register and UTP Task Management Request List
+   DoorBell Register are zero. Hence, it waits until all pending SCSI
+   commands, task management commands and device commands have finished.
 
-Would the last patch be sent once that gets to Linus?
+As far as I can see from a conceptual viewpoint there is no difference
+between calling ufshcd_wait_for_doorbell_clr() or freezing the request
+queues. There is an implementation difference however: 
+blk_mq_freeze_queue() waits for an RCU grace period. This can introduce
+an additional delay of several milliseconds compared to 
+ufshcd_wait_for_doorbell_clr(). If this is a concern I can look into 
+expediting the RCU grace period during clock scaling.
 
-Also curious why drop the last two patches instead just the last one for
-now?
+Thanks,
 
-  Luis
+Bart.
