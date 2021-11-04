@@ -2,207 +2,205 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12BACC433F5
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 14:25:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54371C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 15:16:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EFC6C611C0
-	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 14:25:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 36EDC611EE
+	for <linux-scsi@archiver.kernel.org>; Thu,  4 Nov 2021 15:16:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231152AbhKDO2b (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 4 Nov 2021 10:28:31 -0400
-Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:30177 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S230511AbhKDO2b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2021 10:28:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1636035953;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=NFsYeY+DZhBBjUyzxzEsLkkJzjVOvCvjl3UiBsdrpm8=;
-        b=GJry64Soph/Y3DFSR4SJ8VottEq7HudqGTyFdju3nnZng4oAWzT7SK94y2O5RCTXWf6WMO
-        08INUvSKUuCtlGTwDdqQYbIoMFBFqDqI+nPBTWuUDSgygeLBG5GN2LS7wveK2KmjpfittS
-        X5rIgiqDAtFV3Bcergpy5oHu1cafMJo=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-337-P27Qvx1LN_WcrdbVLOGTOw-1; Thu, 04 Nov 2021 10:25:50 -0400
-X-MC-Unique: P27Qvx1LN_WcrdbVLOGTOw-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S231341AbhKDPT1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 4 Nov 2021 11:19:27 -0400
+Received: from mail-1.ca.inter.net ([208.85.220.69]:59343 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S231152AbhKDPT1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Nov 2021 11:19:27 -0400
+Received: from mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 61BD72EA1BD;
+        Thu,  4 Nov 2021 11:16:45 -0400 (EDT)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19]) (amavisd-new, port 10024)
+        with ESMTP id eveuZKOwWI_I; Thu,  4 Nov 2021 11:16:44 -0400 (EDT)
+Received: from [192.168.48.23] (host-45-58-208-241.dyn.295.ca [45.58.208.241])
+        (using TLSv1 with cipher AES128-SHA (128/128 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id A960210168EA;
-        Thu,  4 Nov 2021 14:25:48 +0000 (UTC)
-Received: from raketa.redhat.com (unknown [10.40.193.51])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 1707960FB8;
-        Thu,  4 Nov 2021 14:25:46 +0000 (UTC)
-From:   Maurizio Lombardi <mlombard@redhat.com>
-To:     martin.petersen@oracle.com
-Cc:     bostroesser@gmail.com, michael.christie@oracle.com,
-        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        k.shelekhin@yadro.com
-Subject: [PATCH] target: iscsi: simplify the connection closing mechanism
-Date:   Thu,  4 Nov 2021 15:25:45 +0100
-Message-Id: <20211104142545.40797-1-mlombard@redhat.com>
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 78D192EA1A2;
+        Thu,  4 Nov 2021 11:16:42 -0400 (EDT)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [RFC PATCH 0/8] block: add support for REQ_OP_VERIFY
+To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        linux-block@vger.kernel.org, linux-raid@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, dm-devel@redhat.com
+Cc:     axboe@kernel.dk, agk@redhat.com, snitzer@redhat.com,
+        song@kernel.org, djwong@kernel.org, kbusch@kernel.org, hch@lst.de,
+        sagi@grimberg.me, jejb@linux.ibm.com, martin.petersen@oracle.com,
+        viro@zeniv.linux.org.uk, javier@javigon.com,
+        johannes.thumshirn@wdc.com, bvanassche@acm.org,
+        dongli.zhang@oracle.com, ming.lei@redhat.com, osandov@fb.com,
+        willy@infradead.org, jefflexu@linux.alibaba.com,
+        josef@toxicpanda.com, clm@fb.com, dsterba@suse.com, jack@suse.com,
+        tytso@mit.edu, adilger.kernel@dilger.ca, jlayton@kernel.org,
+        idryomov@gmail.com, danil.kipnis@cloud.ionos.com,
+        ebiggers@google.com, jinpu.wang@cloud.ionos.com,
+        Chaitanya Kulkarni <kch@nvidia.com>
+References: <20211104064634.4481-1-chaitanyak@nvidia.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <7f734d14-c107-daa3-aaa8-0eda3c592add@interlog.com>
+Date:   Thu, 4 Nov 2021 11:16:41 -0400
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+In-Reply-To: <20211104064634.4481-1-chaitanyak@nvidia.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-When the connection reinstatement is performed, the target driver
-executes a complex scheme of complete()/wait_for_completion() that is not
-really needed.
+On 2021-11-04 2:46 a.m., Chaitanya Kulkarni wrote:
+> From: Chaitanya Kulkarni <kch@nvidia.com>
+> 
+> Hi,
+> 
+> One of the responsibilities of the Operating System, along with managing
+> resources, is to provide a unified interface to the user by creating
+> hardware abstractions. In the Linux Kernel storage stack that
+> abstraction is created by implementing the generic request operations
+> such as REQ_OP_READ/REQ_OP_WRITE or REQ_OP_DISCARD/REQ_OP_WRITE_ZEROES,
+> etc that are mapped to the specific low-level hardware protocol commands
+> e.g. SCSI or NVMe.
+> 
+> With that in mind, this RFC patch-series implements a new block layer
+> operation to offload the data verification on to the controller if
+> supported or emulate the operation if not. The main advantage is to free
+> up the CPU and reduce the host link traffic since, for some devices,
+> their internal bandwidth is higher than the host link and offloading this
+> operation can improve the performance of the proactive error detection
+> applications such as file system level scrubbing.
+> 
+> * Background *
+> -----------------------------------------------------------------------
+> 
+> NVMe Specification provides a controller level Verify command [1] which
+> is similar to the ATA Verify [2] command where the controller is
+> responsible for data verification without transferring the data to the
+> host. (Offloading LBAs verification). This is designed to proactively
+> discover any data corruption issues when the device is free so that
+> applications can protect sensitive data and take corrective action
+> instead of waiting for failure to occur.
+> 
+> The NVMe Verify command is added in order to provide low level media
+> scrubbing and possibly moving the data to the right place in case it has
+> correctable media degradation. Also, this provides a way to enhance
+> file-system level scrubbing/checksum verification and optinally offload
+> this task, which is CPU intensive, to the kernel (when emulated), over
+> the fabric, and to the controller (when supported).
+> 
+> This is useful when the controller's internal bandwidth is higher than
+> the host's bandwith showing a sharp increase in the performance due to
+> _no host traffic or host CPU involvement_.
+> 
+> * Implementation *
+> -----------------------------------------------------------------------
+> 
+> Right now there is no generic interface which can be used by the
+> in-kernel components such as file-system or userspace application
+> (except passthru commands or some combination of write/read/compare) to
+> issue verify command with the central block layer API. This can lead to
+> each userspace applications having protocol specific IOCTL which
+> defeates the purpose of having the OS provide a H/W abstraction.
+> 
+> This patch series introduces a new block layer payloadless request
+> operation REQ_OP_VERIFY that allows in-kernel components & userspace
+> applications to verify the range of the LBAs by offloading checksum
+> scrubbing/verification to the controller that is directly attached to
+> the host. For direct attached devices this leads to decrease in the host
+> DMA traffic and CPU usage and for the fabrics attached device over the
+> network that leads to a decrease in the network traffic and CPU usage
+> for both host & target.
+> 
+> * Scope *
+> -----------------------------------------------------------------------
+> 
+> Please note this only covers the operating system level overhead.
+> Analyzing controller verify command performance for common protocols
+> (SCSI/NVMe) is out of scope for REQ_OP_VERIFY.
+> 
+> * Micro Benchmarks *
+> -----------------------------------------------------------------------
+> 
+> When verifing 500GB of data on NVMeOF with nvme-loop and null_blk as a
+> target backend block device results show almost a 80% performance
+> increase :-
+> 
+> With Verify resulting in REQ_OP_VERIFY to null_blk :-
+> 
+> real	2m3.773s
+> user	0m0.000s
+> sys	0m59.553s
+> 
+> With Emulation resulting in REQ_OP_READ null_blk :-
+> 
+> real	12m18.964s
+> user	0m0.002s
+> sys	1m15.666s
+> 
+> 
+> A detailed test log is included at the end of the cover letter.
+> Each of the following was tested:
+> 
+> 1. Direct Attached REQ_OP_VERIFY.
+> 2. Fabrics Attached REQ_OP_VERIFY.
+> 3. Multi-device (md) REQ_OP_VERIFY.
+> 
+> * The complete picture *
+> -----------------------------------------------------------------------
+> 
+>    For the completeness the whole kernel stack support is divided into
+>    two phases :-
+>   
+>    Phase I :-
+>   
+>     Add and stabilize the support for the Block layer & low level drivers
+>     such as SCSI, NVMe, MD, and NVMeOF, implement necessary emulations in
+>     the block layer if needed and provide block level tools such as
+>     _blkverify_. Also, add appropriate testcases for code-coverage.
+> 
+>    Phase II :-
+>   
+>     Add and stabilize the support for upper layer kernel components such
+>     as file-systems and provide userspace tools such _fsverify_ to route
+>     the request from file systems to block layer to Low level device
+>     drivers.
+> 
+> 
+> Please note that the interfaces for blk-lib.c REQ_OP_VERIFY emulation
+> will change in future I put together for the scope of RFC.
+> 
+> Any comments are welcome.
 
-Considering that:
+Hi,
+You may also want to consider higher level support for the NVME COMPARE
+and SCSI VERIFY(BYTCHK=1) commands. Since PCIe and SAS transports are
+full duplex, replacing two READs (plus a memcmp in host memory) with
+one READ and one COMPARE may be a win on a bandwidth constrained
+system. It is a safe to assume the data-in transfers on a storage transport
+exceed (probably by a significant margin) the data-out transfers. An
+offloaded COMPARE switches one of those data-in transfers to a data-out
+transfer, so it should improve the bandwidth utilization.
 
-1) The callers of iscsit_connection_reinstatement_rcfr() and
-   iscsit_cause_connection_reinstatement() hold a reference
-   to the conn structure.
+I did some brief benchmarking on a NVME SSD's COMPARE command (its optional)
+and the results were underwhelming. OTOH using my own dd variants (which
+can do compare instead of copy) and a scsi_debug target (i.e. RAM) I have
+seen compare times of > 15 GBps while a copy rarely exceeds 9 GBps.
 
-2) iscsit_close_connection() will sleep when calling
-   iscsit_check_conn_usage_count() until the conn structure's refcount
-   reaches zero.
 
-we can optimize the driver the following way:
+BTW The SCSI VERIFY(BYTCHK=3) command compares one block sent from
+the host with a sequence of logical blocks on the media. So, for example,
+it would be a quick way of checking that a sequence of blocks contained
+zero-ed data.
 
-* The threads that must sleep until the connection is closed
-  will all wait for the "conn_wait_comp" completion,
-  iscsit_close_connection() will then call complete_all() to wake them up.
-  No need to have multiple completion structures.
-
-* The conn_post_wait_comp completion is not necessary and can be removed
-  because iscsit_close_connection() sleeps until all the other threads
-  release the conn structure.
-  (see the iscsit_check_conn_usage_count() function)
-
-Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
----
- drivers/target/iscsi/iscsi_target.c       | 31 +++++------------------
- drivers/target/iscsi/iscsi_target_erl0.c  |  6 +----
- drivers/target/iscsi/iscsi_target_login.c |  2 --
- drivers/target/iscsi/iscsi_target_util.c  |  3 ---
- include/target/iscsi/iscsi_target_core.h  |  4 ---
- 5 files changed, 8 insertions(+), 38 deletions(-)
-
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 2c54c5d8412d..7df10cfcba2a 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -4223,34 +4223,17 @@ int iscsit_close_connection(
- 
- 	spin_unlock_bh(&sess->conn_lock);
- 
--	/*
--	 * If connection reinstatement is being performed on this connection,
--	 * up the connection reinstatement semaphore that is being blocked on
--	 * in iscsit_cause_connection_reinstatement().
--	 */
- 	spin_lock_bh(&conn->state_lock);
--	if (atomic_read(&conn->sleep_on_conn_wait_comp)) {
--		spin_unlock_bh(&conn->state_lock);
--		complete(&conn->conn_wait_comp);
--		wait_for_completion(&conn->conn_post_wait_comp);
--		spin_lock_bh(&conn->state_lock);
--	}
--
--	/*
--	 * If connection reinstatement is being performed on this connection
--	 * by receiving a REMOVECONNFORRECOVERY logout request, up the
--	 * connection wait rcfr semaphore that is being blocked on
--	 * an iscsit_connection_reinstatement_rcfr().
--	 */
--	if (atomic_read(&conn->connection_wait_rcfr)) {
--		spin_unlock_bh(&conn->state_lock);
--		complete(&conn->conn_wait_rcfr_comp);
--		wait_for_completion(&conn->conn_post_wait_comp);
--		spin_lock_bh(&conn->state_lock);
--	}
- 	atomic_set(&conn->connection_reinstatement, 1);
- 	spin_unlock_bh(&conn->state_lock);
- 
-+	/*
-+	 * If connection reinstatement is being performed on this connection,
-+	 * up the connection reinstatement semaphore that is being blocked on
-+	 * in iscsit_cause_connection_reinstatement() or
-+	 * in iscsit_connection_reinstatement_rcfr()
-+	 */
-+	complete_all(&conn->conn_wait_comp);
- 	/*
- 	 * If any other processes are accessing this connection pointer we
- 	 * must wait until they have completed.
-diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
-index 102c9cbf59f3..584e0a0b517d 100644
---- a/drivers/target/iscsi/iscsi_target_erl0.c
-+++ b/drivers/target/iscsi/iscsi_target_erl0.c
-@@ -839,8 +839,7 @@ void iscsit_connection_reinstatement_rcfr(struct iscsi_conn *conn)
- 		send_sig(SIGINT, conn->rx_thread, 1);
- 
- sleep:
--	wait_for_completion(&conn->conn_wait_rcfr_comp);
--	complete(&conn->conn_post_wait_comp);
-+	wait_for_completion(&conn->conn_wait_comp);
- }
- 
- void iscsit_cause_connection_reinstatement(struct iscsi_conn *conn, int sleep)
-@@ -871,12 +870,9 @@ void iscsit_cause_connection_reinstatement(struct iscsi_conn *conn, int sleep)
- 		spin_unlock_bh(&conn->state_lock);
- 		return;
- 	}
--
--	atomic_set(&conn->sleep_on_conn_wait_comp, 1);
- 	spin_unlock_bh(&conn->state_lock);
- 
- 	wait_for_completion(&conn->conn_wait_comp);
--	complete(&conn->conn_post_wait_comp);
- }
- EXPORT_SYMBOL(iscsit_cause_connection_reinstatement);
- 
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index 1a9c50401bdb..982c23459272 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -1096,9 +1096,7 @@ static struct iscsi_conn *iscsit_alloc_conn(struct iscsi_np *np)
- 	INIT_LIST_HEAD(&conn->conn_cmd_list);
- 	INIT_LIST_HEAD(&conn->immed_queue_list);
- 	INIT_LIST_HEAD(&conn->response_queue_list);
--	init_completion(&conn->conn_post_wait_comp);
- 	init_completion(&conn->conn_wait_comp);
--	init_completion(&conn->conn_wait_rcfr_comp);
- 	init_completion(&conn->conn_waiting_on_uc_comp);
- 	init_completion(&conn->conn_logout_comp);
- 	init_completion(&conn->rx_half_close_comp);
-diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
-index 6dd5810e2af1..d7b1f9110d49 100644
---- a/drivers/target/iscsi/iscsi_target_util.c
-+++ b/drivers/target/iscsi/iscsi_target_util.c
-@@ -824,9 +824,6 @@ struct iscsi_conn *iscsit_get_conn_from_cid_rcfr(struct iscsi_session *sess, u16
- 	list_for_each_entry(conn, &sess->sess_conn_list, conn_list) {
- 		if (conn->cid == cid) {
- 			iscsit_inc_conn_usage_count(conn);
--			spin_lock(&conn->state_lock);
--			atomic_set(&conn->connection_wait_rcfr, 1);
--			spin_unlock(&conn->state_lock);
- 			spin_unlock_bh(&sess->conn_lock);
- 			return conn;
- 		}
-diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
-index 1eccb2ac7d02..aeb8932507c2 100644
---- a/include/target/iscsi/iscsi_target_core.h
-+++ b/include/target/iscsi/iscsi_target_core.h
-@@ -542,12 +542,8 @@ struct iscsi_conn {
- 	atomic_t		connection_exit;
- 	atomic_t		connection_recovery;
- 	atomic_t		connection_reinstatement;
--	atomic_t		connection_wait_rcfr;
--	atomic_t		sleep_on_conn_wait_comp;
- 	atomic_t		transport_failed;
--	struct completion	conn_post_wait_comp;
- 	struct completion	conn_wait_comp;
--	struct completion	conn_wait_rcfr_comp;
- 	struct completion	conn_waiting_on_uc_comp;
- 	struct completion	conn_logout_comp;
- 	struct completion	tx_half_close_comp;
--- 
-2.27.0
-
+Doug Gilbert
