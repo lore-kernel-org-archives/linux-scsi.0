@@ -2,124 +2,120 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 221CCC4321E
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Nov 2021 08:25:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D58FC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Nov 2021 09:03:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0A95761212
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Nov 2021 08:25:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7720961268
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Nov 2021 09:03:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231682AbhKEI1q (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Nov 2021 04:27:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57734 "EHLO
+        id S229971AbhKEJGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Nov 2021 05:06:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38266 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232677AbhKEI1o (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2021 04:27:44 -0400
-Received: from mail-wm1-x32d.google.com (mail-wm1-x32d.google.com [IPv6:2a00:1450:4864:20::32d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 24FC1C06120B
-        for <linux-scsi@vger.kernel.org>; Fri,  5 Nov 2021 01:25:05 -0700 (PDT)
-Received: by mail-wm1-x32d.google.com with SMTP id j128-20020a1c2386000000b003301a98dd62so8972045wmj.5
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Nov 2021 01:25:05 -0700 (PDT)
+        with ESMTP id S229482AbhKEJGI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2021 05:06:08 -0400
+Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB009C061714;
+        Fri,  5 Nov 2021 02:03:28 -0700 (PDT)
+Received: by mail-qk1-x72c.google.com with SMTP id bk22so8150879qkb.6;
+        Fri, 05 Nov 2021 02:03:28 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=javigon-com.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=EFUXh461CIiXVx1x45I6hR/O2ueRgYCwIDIidW8J+Tw=;
-        b=lMD/pi28y/Uv87QFeGqi0ofGemcaTx7QwUjSrauWalLa469Orq1Qism8wG/Zujo4DV
-         XEqrKE0BTjAS5ohOcQPDQpCzeHVg6xpGVaa6dMCJN7psjsa3R0ZylPVI8xKmBsw2HcdF
-         fT4JBNVt+B+3Y4qpWJQ0DkUerPO6Nn213HCtaKFKnOx5YpRZMykH6ocakGNFpu7aisod
-         XUBewMdfBmEudQkXh5zAxOmiNk18R4APKkSq+aIWB2ARaGpnG0Ng8YAyR2fGaAtCLH/M
-         NOI8a+Uu6gwDVNLWesNr2iVNbTRMPPSvUzA6rKSJP6tS1RZVpLM9qt8P6TFo+eL13yc+
-         u2wA==
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RvXU3TzZJE0WgQ5a4zt4EIB12q4I8O54Traj0ZCO/MI=;
+        b=R1BMxzb926eBIPilf9yOuD/rXezyX0n0aIZytSurOkhRpASg9QjPKbdWw2R58HyYld
+         7dnT/SRXsWi8KuADQaaNjfGqNliSbH/4NANON7aAjGcTdDVX3A9TOjia9d7mkAs4SvWn
+         kVCZck9q5wKf/OsHCWhk1/PPLUd2OTzaXcKAaAjlIxcY0v0Yolgm/2MA/1KVJuPV/VJM
+         WzCV+hlDbdIvwkSAbGI1ewyu3XMUYj3RP+FO2VYxB6JBIsPDtZZHXJY1UNS/9vl/0bGL
+         Sr2UKGXwZ0+fpxBIOgXpQmYph0ZAzQxOKGOemQ8Cm4Os4NjtT6vqV98oetfWuh9ZF3bc
+         Y0cA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=EFUXh461CIiXVx1x45I6hR/O2ueRgYCwIDIidW8J+Tw=;
-        b=ph1FWGxpLgm4TlUVkeEWXNVXZOiGmj6qUMJaWQzSERhmdvvXSO7iL2jLbc9YrmGIrq
-         nv8Nz4T1JK15yOriUaOhzyqzpIuB78I/+/rEeaFagZ8a0SpMC0JC67TNpiN8VkvZgVPx
-         tPIwlHvaAQXG1mZmSw3XEHICZp43etVfz5G5J4tVGBf3sOe+/BFnvRJsoL+Qz8QekakV
-         3SSE3FVSZpST86iclFPsJPbEL+4ZQL8glDkhQ4k+zDZE13F099TuS7QWztrPLexsLDS7
-         bbSLQ2CgBNMGcF0my+I6Xc7MUYxqGIEUyJ/jySfvX/kWtr+obbUbYKDom/+9u0VZlC+s
-         ZJIg==
-X-Gm-Message-State: AOAM530J7PN/edPbhjDdhDoLFy5LWClFcICpeJjXY0ZkbR/B1je1BGZo
-        oBCs/4lRdkzcd2fZnjOEXvmAUg==
-X-Google-Smtp-Source: ABdhPJx8UdeUgoUtHGGn9mgxXZu5qrGkFYtzQTF9umijJZfwGuuTFS/MsOT6GwSa2FPyLrvx70gJsw==
-X-Received: by 2002:a1c:1b08:: with SMTP id b8mr27658572wmb.28.1636100703566;
-        Fri, 05 Nov 2021 01:25:03 -0700 (PDT)
-Received: from localhost (5.186.126.13.cgn.fibianet.dk. [5.186.126.13])
-        by smtp.gmail.com with ESMTPSA id r17sm3448703wmq.5.2021.11.05.01.25.02
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=RvXU3TzZJE0WgQ5a4zt4EIB12q4I8O54Traj0ZCO/MI=;
+        b=BZe7glc751pU9nlU8h2SA+Fz5kdnIlGuWU3Cus+apFALfI3H19BPtVnCHISmgh+iB6
+         676tdBo1jlZPK0iqpwlXDEwsx58aGjKFyZ/h8kyr3vKU7pL/dMSbWgbNMl35u6C8DaMK
+         WNG5YnCS+hs5Srtr70bRANqjqXAQcx8W9QiYUWYyMLBnzXsAMhiDEd0atbgQoKt/f5sz
+         FGvDDbqpdYZW97SuP5XLfP5mtH7118nmNyyY7EgIAsHW2Wq7dx2Ln16eR1Wn0Ggb23wN
+         9/XuzGDurC9kpimYpRXsI11aBlMpFH74FPiMKjRaegnASLViG6rJH1H5W2MiMm7oqBTv
+         /FZQ==
+X-Gm-Message-State: AOAM532NI3FclY6hAX67pZdgSdX2CC/eM21A5Wnssl8PceT6Dqs+RwNs
+        Qu9kQgWdqH/KkggvGP2/M3gnTMFAFfw=
+X-Google-Smtp-Source: ABdhPJwZAYytbOt7HFTK4TeCTGyu6xSt282z/ZEIPJCJb9J9kQPBw92RNACSnSeKbI+RTDyegS5HMA==
+X-Received: by 2002:a05:620a:28ce:: with SMTP id l14mr29881294qkp.456.1636103007991;
+        Fri, 05 Nov 2021 02:03:27 -0700 (PDT)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id j192sm1829817qke.13.2021.11.05.02.03.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Nov 2021 01:25:02 -0700 (PDT)
-Date:   Fri, 5 Nov 2021 09:25:01 +0100
-From:   "javier@javigon.com" <javier@javigon.com>
-To:     Keith Busch <kbusch@kernel.org>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "agk@redhat.com" <agk@redhat.com>,
-        "snitzer@redhat.com" <snitzer@redhat.com>,
-        "song@kernel.org" <song@kernel.org>,
-        "sagi@grimberg.me" <sagi@grimberg.me>,
-        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        "willy@infradead.org" <willy@infradead.org>,
-        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
-        "josef@toxicpanda.com" <josef@toxicpanda.com>,
-        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
-        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
-        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-        "jlayton@kernel.org" <jlayton@kernel.org>,
-        "idryomov@gmail.com" <idryomov@gmail.com>,
-        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
-        "ebiggers@google.com" <ebiggers@google.com>,
-        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
-Subject: Re: [RFC PATCH 0/8] block: add support for REQ_OP_VERIFY
-Message-ID: <20211105082501.ltdfepz6inrffiux@mpHalley-2>
-References: <20211104064634.4481-1-chaitanyak@nvidia.com>
- <20211104071439.GA21927@lst.de>
- <661bcadd-a030-4a72-81ae-ef15080f0241@nvidia.com>
- <20211104173235.GI2237511@magnolia>
- <20211104173431.GA31740@lst.de>
- <20211104223736.GA2655721@dhcp-10-100-145-180.wdc.com>
+        Fri, 05 Nov 2021 02:03:27 -0700 (PDT)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: yao.jing2@zte.com.cn
+To:     jejb@linux.ibm.com
+Cc:     martin.petersen@oracle.com, bvanassche@acm.org,
+        jiapeng.chong@linux.alibaba.com, yao.jing2@zte.com.cn,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: csiostor: Replace snprintf in show functions with  sysfs_emit
+Date:   Fri,  5 Nov 2021 09:03:21 +0000
+Message-Id: <20211105090321.77350-1-yao.jing2@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-In-Reply-To: <20211104223736.GA2655721@dhcp-10-100-145-180.wdc.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 04.11.2021 15:37, Keith Busch wrote:
->On Thu, Nov 04, 2021 at 06:34:31PM +0100, Christoph Hellwig wrote:
->> On Thu, Nov 04, 2021 at 10:32:35AM -0700, Darrick J. Wong wrote:
->> > I also wonder if it would be useful (since we're already having a
->> > discussion elsewhere about data integrity syscalls for pmem) to be able
->> > to call this sort of thing against files?  In which case we'd want
->> > another preadv2 flag or something, and then plumb all that through the
->> > vfs/iomap as needed?
->>
->> IFF we do this (can't answer if there is a need) we should not
->> overload read with it.  It is an operation that does not return
->> data but just a status, so let's not get into that mess.
->
->If there is a need for this, a new io_uring opcode seems like the
->appropirate user facing interface for it.
+From: Jing Yao <yao.jing2@zte.com.cn>
 
-+1 to this. I was looking at the patchset yesterday and this was one of
-the questions I had. Any reasons to not do it this way Chaitanya?
+coccicheck complains about the use of snprintf() in sysfs show
+functions:
+WARNING use scnprintf or sprintf
+
+Use sysfs_emit instead of scnprintf, snprintf or sprintf makes more
+sense.
+
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Jing Yao <yao.jing2@zte.com.cn>
+---
+ drivers/scsi/csiostor/csio_scsi.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
+index 55db02521221..f9b87ae2aa25 100644
+--- a/drivers/scsi/csiostor/csio_scsi.c
++++ b/drivers/scsi/csiostor/csio_scsi.c
+@@ -1366,9 +1366,9 @@ csio_show_hw_state(struct device *dev,
+ 	struct csio_hw *hw = csio_lnode_to_hw(ln);
+ 
+ 	if (csio_is_hw_ready(hw))
+-		return snprintf(buf, PAGE_SIZE, "ready\n");
++		return sysfs_emit(buf, "ready\n");
+ 	else
+-		return snprintf(buf, PAGE_SIZE, "not ready\n");
++		return sysfs_emit(buf, "not ready\n");
+ }
+ 
+ /* Device reset */
+@@ -1430,7 +1430,7 @@ csio_show_dbg_level(struct device *dev,
+ {
+ 	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%x\n", ln->params.log_level);
++	return sysfs_emit(buf, "%x\n", ln->params.log_level);
+ }
+ 
+ /* Store debug level */
+@@ -1476,7 +1476,7 @@ csio_show_num_reg_rnodes(struct device *dev,
+ {
+ 	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+ 
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ln->num_reg_rnodes);
++	return sysfs_emit(buf, "%d\n", ln->num_reg_rnodes);
+ }
+ 
+ static DEVICE_ATTR(num_reg_rnodes, S_IRUGO, csio_show_num_reg_rnodes, NULL);
+-- 
+2.25.1
 
