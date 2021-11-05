@@ -2,120 +2,138 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D58FC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Nov 2021 09:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B987C4332F
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Nov 2021 09:06:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7720961268
-	for <linux-scsi@archiver.kernel.org>; Fri,  5 Nov 2021 09:03:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3D9A61283
+	for <linux-scsi@archiver.kernel.org>; Fri,  5 Nov 2021 09:06:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229971AbhKEJGI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 5 Nov 2021 05:06:08 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38266 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229482AbhKEJGI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Nov 2021 05:06:08 -0400
-Received: from mail-qk1-x72c.google.com (mail-qk1-x72c.google.com [IPv6:2607:f8b0:4864:20::72c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EB009C061714;
-        Fri,  5 Nov 2021 02:03:28 -0700 (PDT)
-Received: by mail-qk1-x72c.google.com with SMTP id bk22so8150879qkb.6;
-        Fri, 05 Nov 2021 02:03:28 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=RvXU3TzZJE0WgQ5a4zt4EIB12q4I8O54Traj0ZCO/MI=;
-        b=R1BMxzb926eBIPilf9yOuD/rXezyX0n0aIZytSurOkhRpASg9QjPKbdWw2R58HyYld
-         7dnT/SRXsWi8KuADQaaNjfGqNliSbH/4NANON7aAjGcTdDVX3A9TOjia9d7mkAs4SvWn
-         kVCZck9q5wKf/OsHCWhk1/PPLUd2OTzaXcKAaAjlIxcY0v0Yolgm/2MA/1KVJuPV/VJM
-         WzCV+hlDbdIvwkSAbGI1ewyu3XMUYj3RP+FO2VYxB6JBIsPDtZZHXJY1UNS/9vl/0bGL
-         Sr2UKGXwZ0+fpxBIOgXpQmYph0ZAzQxOKGOemQ8Cm4Os4NjtT6vqV98oetfWuh9ZF3bc
-         Y0cA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=RvXU3TzZJE0WgQ5a4zt4EIB12q4I8O54Traj0ZCO/MI=;
-        b=BZe7glc751pU9nlU8h2SA+Fz5kdnIlGuWU3Cus+apFALfI3H19BPtVnCHISmgh+iB6
-         676tdBo1jlZPK0iqpwlXDEwsx58aGjKFyZ/h8kyr3vKU7pL/dMSbWgbNMl35u6C8DaMK
-         WNG5YnCS+hs5Srtr70bRANqjqXAQcx8W9QiYUWYyMLBnzXsAMhiDEd0atbgQoKt/f5sz
-         FGvDDbqpdYZW97SuP5XLfP5mtH7118nmNyyY7EgIAsHW2Wq7dx2Ln16eR1Wn0Ggb23wN
-         9/XuzGDurC9kpimYpRXsI11aBlMpFH74FPiMKjRaegnASLViG6rJH1H5W2MiMm7oqBTv
-         /FZQ==
-X-Gm-Message-State: AOAM532NI3FclY6hAX67pZdgSdX2CC/eM21A5Wnssl8PceT6Dqs+RwNs
-        Qu9kQgWdqH/KkggvGP2/M3gnTMFAFfw=
-X-Google-Smtp-Source: ABdhPJwZAYytbOt7HFTK4TeCTGyu6xSt282z/ZEIPJCJb9J9kQPBw92RNACSnSeKbI+RTDyegS5HMA==
-X-Received: by 2002:a05:620a:28ce:: with SMTP id l14mr29881294qkp.456.1636103007991;
-        Fri, 05 Nov 2021 02:03:27 -0700 (PDT)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id j192sm1829817qke.13.2021.11.05.02.03.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Nov 2021 02:03:27 -0700 (PDT)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: yao.jing2@zte.com.cn
-To:     jejb@linux.ibm.com
-Cc:     martin.petersen@oracle.com, bvanassche@acm.org,
-        jiapeng.chong@linux.alibaba.com, yao.jing2@zte.com.cn,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: csiostor: Replace snprintf in show functions with  sysfs_emit
-Date:   Fri,  5 Nov 2021 09:03:21 +0000
-Message-Id: <20211105090321.77350-1-yao.jing2@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        id S232877AbhKEJJA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 5 Nov 2021 05:09:00 -0400
+Received: from mail.kernel.org ([198.145.29.99]:42254 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S232847AbhKEJIz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 5 Nov 2021 05:08:55 -0400
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 301FF6125F;
+        Fri,  5 Nov 2021 09:06:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636103172;
+        bh=R8qodyw2m475khfL+DRSSu/VNh2gpTvr5DpjCjqYQa0=;
+        h=Date:From:To:Cc:Subject:From;
+        b=f6kE8T85zKSfS7aUEEKjJ80DjPCdn4cei3ieyxjDTaqJ2BtDeb41pYIRFZKmDFSO9
+         b4j8WTItqnuGFEk9YG4n7JnDPkam1Uq9Qn8HeKERIPzIEu3AJlkouV33FZydrz6nFZ
+         S3U36WmNLTfiTln3O8BpKqS7tBG8i3j/ZRbdAQ6ja6UwsXAvn7SPoL2p4UcMevpG7B
+         x/KKIk9WSAbH7rXIkxUYdOU5Lgt7VldmstATmVPuAqyk/kLzyQSeo1f5triAa/g6iQ
+         dFkwMGTKMg0yZWC69sbo84VxQdMZuki3UbFXRdGgB5clNxnaxbN0oTN7e9DBaw7QCv
+         SQ3JyfMmuMmKA==
+Date:   Fri, 5 Nov 2021 04:11:02 -0500
+From:   "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Hannes Reinecke <hare@suse.de>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>,
+        linux-hardening@vger.kernel.org, Kees Cook <keescook@chromium.org>
+Subject: [PATCH][next] scsi: Replace one-element arrays with flexible-array
+ members
+Message-ID: <20211105091102.GA126301@embeddedor>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Jing Yao <yao.jing2@zte.com.cn>
+Use flexible-array members in struct fc_fdmi_attr_entry and
+fs_fdmi_attrs instead of one-element arrays, and refactor the
+code accordingly.
 
-coccicheck complains about the use of snprintf() in sysfs show
-functions:
-WARNING use scnprintf or sprintf
+Also, turn the one-element array _port_ in struct fc_fdmi_rpl
+into a simple object of type struct fc_fdmi_port_name, as it
+seems there is no more than just one port expected:
 
-Use sysfs_emit instead of scnprintf, snprintf or sprintf makes more
-sense.
+$ git grep -nw numport drivers/scsi/
+drivers/scsi/csiostor/csio_lnode.c:447: reg_pl->numport = htonl(1);
+drivers/scsi/libfc/fc_encode.h:232:             put_unaligned_be32(1, &ct->payload.rhba.port.numport);
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Jing Yao <yao.jing2@zte.com.cn>
+Also, this helps with the ongoing efforts to globally enable
+-Warray-bounds and get us closer to being able to tighten the
+FORTIFY_SOURCE routines on memcpy().
+
+https://github.com/KSPP/linux/issues/79
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
- drivers/scsi/csiostor/csio_scsi.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/csiostor/csio_lnode.c | 2 +-
+ drivers/scsi/libfc/fc_encode.h     | 4 ++--
+ include/scsi/fc/fc_ms.h            | 6 +++---
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index 55db02521221..f9b87ae2aa25 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1366,9 +1366,9 @@ csio_show_hw_state(struct device *dev,
- 	struct csio_hw *hw = csio_lnode_to_hw(ln);
+diff --git a/drivers/scsi/csiostor/csio_lnode.c b/drivers/scsi/csiostor/csio_lnode.c
+index d5ac93897023..cf9dd79ee488 100644
+--- a/drivers/scsi/csiostor/csio_lnode.c
++++ b/drivers/scsi/csiostor/csio_lnode.c
+@@ -445,7 +445,7 @@ csio_ln_fdmi_dprt_cbfn(struct csio_hw *hw, struct csio_ioreq *fdmi_req)
+ 	/* Register one port per hba */
+ 	reg_pl = (struct fc_fdmi_rpl *)pld;
+ 	reg_pl->numport = htonl(1);
+-	memcpy(&reg_pl->port[0].portname, csio_ln_wwpn(ln), 8);
++	memcpy(&reg_pl->port.portname, csio_ln_wwpn(ln), 8);
+ 	pld += sizeof(*reg_pl);
  
- 	if (csio_is_hw_ready(hw))
--		return snprintf(buf, PAGE_SIZE, "ready\n");
-+		return sysfs_emit(buf, "ready\n");
- 	else
--		return snprintf(buf, PAGE_SIZE, "not ready\n");
-+		return sysfs_emit(buf, "not ready\n");
- }
+ 	/* Start appending HBA attributes hba */
+diff --git a/drivers/scsi/libfc/fc_encode.h b/drivers/scsi/libfc/fc_encode.h
+index 74ae7fd15d8d..5806f99e4061 100644
+--- a/drivers/scsi/libfc/fc_encode.h
++++ b/drivers/scsi/libfc/fc_encode.h
+@@ -232,7 +232,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be32(1, &ct->payload.rhba.port.numport);
+ 		/* Port Name */
+ 		put_unaligned_be64(lport->wwpn,
+-				   &ct->payload.rhba.port.port[0].portname);
++				   &ct->payload.rhba.port.port.portname);
  
- /* Device reset */
-@@ -1430,7 +1430,7 @@ csio_show_dbg_level(struct device *dev,
- {
- 	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+ 		/* HBA Attributes */
+ 		put_unaligned_be32(numattrs,
+@@ -246,7 +246,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 				   &entry->type);
+ 		put_unaligned_be16(len, &entry->len);
+ 		put_unaligned_be64(lport->wwnn,
+-				   (__be64 *)&entry->value[0]);
++				   (__be64 *)&entry->value);
  
--	return snprintf(buf, PAGE_SIZE, "%x\n", ln->params.log_level);
-+	return sysfs_emit(buf, "%x\n", ln->params.log_level);
- }
+ 		/* Manufacturer */
+ 		entry = (struct fc_fdmi_attr_entry *)((char *)entry->value +
+diff --git a/include/scsi/fc/fc_ms.h b/include/scsi/fc/fc_ms.h
+index 00191695233a..44fbe84fa664 100644
+--- a/include/scsi/fc/fc_ms.h
++++ b/include/scsi/fc/fc_ms.h
+@@ -158,7 +158,7 @@ struct fc_fdmi_port_name {
+ struct fc_fdmi_attr_entry {
+ 	__be16		type;
+ 	__be16		len;
+-	__u8		value[1];
++	__u8		value[];
+ } __attribute__((__packed__));
  
- /* Store debug level */
-@@ -1476,7 +1476,7 @@ csio_show_num_reg_rnodes(struct device *dev,
- {
- 	struct csio_lnode *ln = shost_priv(class_to_shost(dev));
+ /*
+@@ -166,7 +166,7 @@ struct fc_fdmi_attr_entry {
+  */
+ struct fs_fdmi_attrs {
+ 	__be32				numattrs;
+-	struct fc_fdmi_attr_entry	attr[1];
++	struct fc_fdmi_attr_entry	attr[];
+ } __attribute__((__packed__));
  
--	return snprintf(buf, PAGE_SIZE, "%d\n", ln->num_reg_rnodes);
-+	return sysfs_emit(buf, "%d\n", ln->num_reg_rnodes);
- }
+ /*
+@@ -174,7 +174,7 @@ struct fs_fdmi_attrs {
+  */
+ struct fc_fdmi_rpl {
+ 	__be32				numport;
+-	struct fc_fdmi_port_name	port[1];
++	struct fc_fdmi_port_name	port;
+ } __attribute__((__packed__));
  
- static DEVICE_ATTR(num_reg_rnodes, S_IRUGO, csio_show_num_reg_rnodes, NULL);
+ /*
 -- 
-2.25.1
+2.27.0
 
