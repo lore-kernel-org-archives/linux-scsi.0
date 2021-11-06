@@ -2,125 +2,176 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA3D4C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Nov 2021 16:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7FB2C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 Nov 2021 17:45:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C128261165
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Nov 2021 16:51:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89C7E61058
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 Nov 2021 17:45:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233310AbhKFQyS (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 6 Nov 2021 12:54:18 -0400
-Received: from mail-vk1-f174.google.com ([209.85.221.174]:35729 "EHLO
-        mail-vk1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232907AbhKFQyR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Nov 2021 12:54:17 -0400
-Received: by mail-vk1-f174.google.com with SMTP id u130so6111582vku.2;
-        Sat, 06 Nov 2021 09:51:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=R9PO0YzwC2Jw+Hhm1KmFXfAei65K8Unw+7A6Xi9XIdM=;
-        b=AprHLVYC68mFjVrjQ4lqLlZbTEwaVZ8CctKYpsxeijSs5JNeizPvDJp6Sex2nw1L+Y
-         T1FI2yBdNB38fAREOAL/T3TVNddik2cQShAZhIlgww6KdLx5haxAebtcRaBa9256Pmrr
-         FePYdY9wkD9KgjIvX04n0ykS/5e94WgT3FkAZgiHycbOFUujf7ajqsAtgk99VE+tsGAd
-         TH+1weKUCG0fdHLiP1Ky2MmhyqNz4NJ80bot7uJqyOy/M6ihRvssW/vAeAQx7nxGWCqJ
-         TuMUSCJiG+hBjCA4EOrxsjL6H67iYAgxDqzeECYkptglGsVHuyOv+xOuEjqYN0dRxTcf
-         AyvQ==
-X-Gm-Message-State: AOAM530rWNRZrTnbMp91MmbN+Oyx52nYiZ5NjjfAHkNkCc7xvRn2FgMP
-        ABUxEf+ijVTEvFxCKCc4xBOeO81DmFI8dA==
-X-Google-Smtp-Source: ABdhPJwSxbm0Oj00JEuVMrHoPrNeHhw6eIQl3WFx37SpxV5Y3O71w7coDZFBfqm13zx6fmL/1+4siw==
-X-Received: by 2002:a1f:2345:: with SMTP id j66mr81593322vkj.20.1636217495538;
-        Sat, 06 Nov 2021 09:51:35 -0700 (PDT)
-Received: from mail-vk1-f174.google.com (mail-vk1-f174.google.com. [209.85.221.174])
-        by smtp.gmail.com with ESMTPSA id r25sm1830298uab.13.2021.11.06.09.51.35
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 06 Nov 2021 09:51:35 -0700 (PDT)
-Received: by mail-vk1-f174.google.com with SMTP id e64so6137640vke.4;
-        Sat, 06 Nov 2021 09:51:35 -0700 (PDT)
-X-Received: by 2002:a05:6122:20ab:: with SMTP id i43mr3542895vkd.19.1636217494892;
- Sat, 06 Nov 2021 09:51:34 -0700 (PDT)
+        id S234707AbhKFRrq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 6 Nov 2021 13:47:46 -0400
+Received: from de-smtp-delivery-102.mimecast.com ([194.104.111.102]:56419 "EHLO
+        de-smtp-delivery-102.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S234709AbhKFRrp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Nov 2021 13:47:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.com; s=mimecast20200619;
+        t=1636220702;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=4LIyE8qUYUAbVuFrf/7dYxaILYNyxQu90zrS/mar/qk=;
+        b=ngag7BXBM9VoUWTI3lG7tp81SdXRY4SEDLltrJ5CfzEYcOVC9YnmCAxiIkCiSs5uwrhnZ/
+        2eE1bnFohE+k7jyWKQTwlJDfxM+oM+/A1QHP7ec5pl8FCc3OQuCs9NItk1KEWjTcTabkDD
+        ljMk7VLOuhoWemeoJ6lq2uXo9pKhHPU=
+Received: from EUR01-VE1-obe.outbound.protection.outlook.com
+ (mail-ve1eur01lp2053.outbound.protection.outlook.com [104.47.1.53]) (Using
+ TLS) by relay.mimecast.com with ESMTP id
+ de-mta-22-uVKrt56tO0C8W-FCpUzM2w-1; Sat, 06 Nov 2021 18:45:01 +0100
+X-MC-Unique: uVKrt56tO0C8W-FCpUzM2w-1
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=hSmQLRq7s+rCSpW9J/KaCnMncGGi6htS79QwquBDQnMKCEQGhKNKxVnMotC08fo+FEXWUOlSe1oeRniNivZwMak7p8djsXyTPot+AwRALnuB3MBfnXyWxp/YN8oLt45W5ptCBnRnA0EzyEkC2uwd3YZEIXSt8s6bUm/k79IWio1jtUpky41EUwLemDXEB2nE6i7rmBv6RESUDjpgoMS4K9HXaFAwuHesL1ypYmbbAubXuF9jD98NaSyCur3riOhrAmQeK6eVD0ZZvA19nzQInRKJAxbwH16nEchipmYOUQlqlEAuq/HEeBHJTsV2z4qWT+Bh4jQ4IPmDCn2r5ue6Rg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4LIyE8qUYUAbVuFrf/7dYxaILYNyxQu90zrS/mar/qk=;
+ b=eyp9COUdjetAocGgKE21alTtUlWv73SVrF9qrpsEiquXWGU79f/PdQ/jKHZK+XJA680uI6ca7leYde54lBF/1eAbz/ReZI594Y+lFw7hxVUte+wEqGpt+flk+BVdrDo+A7fnxywfsgpmOogSPnKheTJsCYa3J9OUfM+gOPFilVWfEoIqpOw/kAqpMxUyax6Xi0NBRcGfADxyz0w4pLhJXbQgwPBDiTbHwZcAMr9+KskYqcoSMhf0+pWbtLbueDzmdaaTls18QEuB2/ggxupb6HaVjaHIdqya4tNWEnxG4WiZFy8eLvDOZvoh8RS1/JzAx4QyXj8o/A0IS7V1EKEONQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=suse.com; dmarc=pass action=none header.from=suse.com;
+ dkim=pass header.d=suse.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=suse.com;
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com (2603:10a6:206:b::28)
+ by AM5PR0401MB2658.eurprd04.prod.outlook.com (2603:10a6:203:37::19) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4669.10; Sat, 6 Nov
+ 2021 17:44:59 +0000
+Received: from AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::a555:3b27:dc03:8fcb]) by AM5PR04MB3089.eurprd04.prod.outlook.com
+ ([fe80::a555:3b27:dc03:8fcb%6]) with mapi id 15.20.4669.015; Sat, 6 Nov 2021
+ 17:44:59 +0000
+Subject: Re: [PATCH 1/2] iscsi: Unblock session then wake up error handler
+To:     Mike Christie <michael.christie@oracle.com>, cleech@redhat.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        jejb@linux.ibm.com
+References: <20211105221048.6541-1-michael.christie@oracle.com>
+ <20211105221048.6541-2-michael.christie@oracle.com>
+From:   Lee Duncan <lduncan@suse.com>
+Message-ID: <a104170c-d8e1-3071-7379-8d77554f987b@suse.com>
+Date:   Sat, 6 Nov 2021 10:44:54 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.12.0
+In-Reply-To: <20211105221048.6541-2-michael.christie@oracle.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: AM6P195CA0085.EURP195.PROD.OUTLOOK.COM
+ (2603:10a6:209:86::26) To AM5PR04MB3089.eurprd04.prod.outlook.com
+ (2603:10a6:206:b::28)
 MIME-Version: 1.0
-References: <DM6PR04MB6575F2F6841B0573560E10ADFCA49@DM6PR04MB6575.namprd04.prod.outlook.com>
- <20210927084615.1938432-1-anders.roxell@linaro.org>
-In-Reply-To: <20210927084615.1938432-1-anders.roxell@linaro.org>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Sat, 6 Nov 2021 17:51:23 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdU53qiLwkx4XdB=SvjeeXLHCjn=kTZbT45YQv6KVRfR4g@mail.gmail.com>
-Message-ID: <CAMuHMdU53qiLwkx4XdB=SvjeeXLHCjn=kTZbT45YQv6KVRfR4g@mail.gmail.com>
-Subject: Re: [PATCHv2] scsi: ufs: Kconfig: SCSI_UFS_HWMON depens on HWMON=y
-To:     Anders Roxell <anders.roxell@linaro.org>
-Cc:     "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Jean Delvare <jdelvare@suse.com>,
-        Guenter Roeck <linux@roeck-us.net>, avri.altman@wdc.com,
-        scsi <linux-scsi@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-hwmon@vger.kernel.org, Randy Dunlap <rdunlap@infradead.org>
-Content-Type: text/plain; charset="UTF-8"
+Received: from [192.168.20.3] (73.25.22.216) by AM6P195CA0085.EURP195.PROD.OUTLOOK.COM (2603:10a6:209:86::26) with Microsoft SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.4669.10 via Frontend Transport; Sat, 6 Nov 2021 17:44:58 +0000
+X-MS-PublicTrafficType: Email
+X-MS-Office365-Filtering-Correlation-Id: 7d377c24-6e81-40cd-90f3-08d9a14d274b
+X-MS-TrafficTypeDiagnostic: AM5PR0401MB2658:
+X-Microsoft-Antispam-PRVS: <AM5PR0401MB2658A29AF9C38D3E9B2D3249DA8F9@AM5PR0401MB2658.eurprd04.prod.outlook.com>
+X-MS-Oob-TLC-OOBClassifiers: OLM:6108;
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: bZpu4YEJDAOWrR4aHBUOR8eWYkXbr13Vd7zgDLEiMsbzpFYY22VkSaLRnwjdeSohDbhw5hGlFNgIw94feRp76nHRL0VWnKFmxFlt/FuCgd5s5vPMAHYCAhZVgSO3Uv3FE7Vzjj5S249FMp5F8IQfANN/V5xGMkO1jWJ4mxNOnZl6RKncUp6oYVGWjV7h/idXxW/U/UZ1UscMf8chS/cNAEZH4NuOsSJOHKTYG5A7BkXXt40eZMqRzgQcrdNAQbZepsMn+y2kD6WKH/VGtwNHSV3lmO+/J7/NaFWqfcScrzCfLzv3y4MeiQVBd92q80eFy3G3bQS6zTEvEmw8l6yFOJGHweC/cXb0QM5NGfDXJ7/MxUY778aJaVIC475DXiZSOcjOTXEkXbKNS8tRiyTxzI4WwG44WmTDjpaoDJ/OBw73tCOtHuyJmzsltEKK+ajd0cLzih0lT5NXcdZOfUgH72x6BFX3zWec+FismLnIrqx5DNX1yY9hmMw/vYVoivDTVn+uSVHogvuupS4Ge5G9xf2b5QDClBhWBt4uwZ+ZwKbw21gHmCfpv0jafTwzBM3HaxuwK4DQ0ubRu87MvdBEFnWulxz2EVZCNQN1mQjalg/DFYnnxkMRW6czCxp+KEfBEfYZFxYLIDziLm8iX/CPkap/8gs9QpbIX55mLY06f21NU3RygES/dpkonrnS+l7g+U4BEmXQ3Zhr4BFhAItvIbCaPse2Q3wvsByfDG+VHbI=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AM5PR04MB3089.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(366004)(38100700002)(66946007)(6486002)(508600001)(66556008)(66476007)(53546011)(316002)(6666004)(956004)(31686004)(16576012)(2616005)(83380400001)(5660300002)(8676002)(31696002)(86362001)(2906002)(36756003)(8936002)(26005)(186003)(43740500002)(45980500001);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?bHhNNTl0UDNXNUFhQ1E1Q01pbWtYanFhVU1qYzd1SXJVQ1ZXNmRVQ09ERHlT?=
+ =?utf-8?B?UGp2bHJiM0VuUjFUZUtNM0VvOGxkUm5IRnZSMXJrVlZFV1MrQWk5d0ExRHRh?=
+ =?utf-8?B?bGlhb1ZndlhDQzR5NTg5NFh4UDJWdWk0VytnK2FlQ3ZGUms5UE9rQW9GSnlY?=
+ =?utf-8?B?LzAzbWhhdEFDNkFOakxzOGlPOTBJT2Y0M3lhd05EeGVtQUthZjhaSDhVQVF4?=
+ =?utf-8?B?Z0dBdGpseDlzV3FPalNrUjZQQVdPUHBTVFAvWDZLZnQ2YlU1QWdVT0toM2U3?=
+ =?utf-8?B?ekcrc3pxcVo5MFVCVjUyalhWOTZGREFSTXpiL1JpalV1eE5hN0tpWlVZc1VE?=
+ =?utf-8?B?dnpZTVB4dW1EU005MVhtT2M4eFV3K2d4VDB1bnVIaHNDYWFJMmhMTkVTYk9V?=
+ =?utf-8?B?akpVV3BBcjVCbG12ZTlGUlhuM0drZHlBOGgwa3FOMFN2TGFYQVAxRTJWYm96?=
+ =?utf-8?B?L1AxaG9wYTJPcVlSajFPSjI3TzIxR3k4Ry9GL3IrL1lJTEIxenByMm10SE5F?=
+ =?utf-8?B?dzFIVGFFaGNWUkNXUHlwbFdUenBMMkVYNWN0Sm85ZlRhWmFUZEhWam1tNlRY?=
+ =?utf-8?B?Rmd5MlhHZFExUjZINENDUWFSSHZwU3VyTHVLTUJqaWFJS0c1YTVEODZZVVVC?=
+ =?utf-8?B?ckt2Y0VKc2VkdGlNNTJXNU5NMllrc1hYNDQ5MFVOK0I3c2FILzRmUDZCK29p?=
+ =?utf-8?B?TDFxdXRtV2JueHo2eWNlMmtmdEZSTjZmV3FaSHkvT2lMNkU2dWFlNEw2cDQ0?=
+ =?utf-8?B?UFN3ZzhsQ1YySGlWL1IwL2UyRXo0bTJYWE43WFFERUY1eGZqYm5FcFBwV092?=
+ =?utf-8?B?M2hQQjYwZFhZbVJzQ0FZV0FkWGlrbFlYZFgvU0NsdFo2MFNxN1hKenZyMjNw?=
+ =?utf-8?B?c2xwM0dKaGpLMGZVcVZ3WFJBRG5rZEF0UUxKdTQ2WDdjTGFrWnppdmdMOXha?=
+ =?utf-8?B?cUtkbGFabjN6cmZEWk5XUG9peS9Sa0x6TTFaaEh4THF1bkZJcWpQSS9OdkZK?=
+ =?utf-8?B?cncrYmN5L2pDaFo0Q0J1WXFsaUFVbWVTdnAvT2RDaVJDSTZTSWdPYm1FQ1BG?=
+ =?utf-8?B?SktYNUQrMjVPd0tQTWRLSjJ4b1RycXJnQWwydUU5Z1EvL0pEdnJ6c0pKV0NU?=
+ =?utf-8?B?eW4rSFlHYlMyZU52eVFpSFBwcXEzZ0ZZMzJ1QXRlMXE4bUNmUE5aK2FYZjND?=
+ =?utf-8?B?aUpiMXlrWERDZ21LTzM5T1JWUjhydFdZYXlsM1RNYUE3SEhlRUNEZHNLMkZZ?=
+ =?utf-8?B?Sjg2OS9LUlczT1BMQkZqSFJiRkdTTVVjSGlnMVRwMDBLTXhvZUxYUnA3N1pu?=
+ =?utf-8?B?S1BHS1hLTnd6dC95TDVBODJZM2wyRkxoWXp5WkQ5aEtoMjRzaHZUcTNheW84?=
+ =?utf-8?B?U2R4YXZmSi82OGdlT2lEQi9JajZFWFZNTG00VVJqZW5UVWNOYm9hRkNmM2pL?=
+ =?utf-8?B?RVRKQXAzZXZkdlhxbDE3WTY4LzFzdGpTTlAwV1h0b05aYXFJa2JPdU84VzJx?=
+ =?utf-8?B?R3FjNFNCVWpDSnlQUHRLOEVFWWFHb3FkLzZUZ2Fybnk3U0d3b1NnYm44VWps?=
+ =?utf-8?B?RkpnMjhienByZWtac0V4RGdJWTZNN28yQjNNclpyZnZQMHRBY1AxYm5EUG15?=
+ =?utf-8?B?ZC91cDlaRkxGUGI4QUJlZ2lpUUl2NUJ2ay9nNVpNRHc1UXY5bitkUnpQMEx0?=
+ =?utf-8?B?MlJvQWtMYXZHOFVPSkhTcXJwU3FIc1V5dXp4S0tCcmN5WloyZ1RWaFQyT2ZM?=
+ =?utf-8?B?YytxRFloTXhiU0RCUkJQS1ZaNDJPU3BvY3cySkN5dDN6eWFTZDduaWFUWURO?=
+ =?utf-8?B?RHR5S0h6Wm5ZUVdHVlNoWjRlUmVLTVdjbDFmaXV4RDJLTnRHMFdwS04yZmxh?=
+ =?utf-8?B?Qm04WUtJVDJFSEc1U3UwSitBUjBxeC9yUVM5Y2FXdGN4YldOMWpHRmtqakRo?=
+ =?utf-8?B?REFTWktRRTA4LytiNjZPWEIreGFFcE1ldm0vT1NkemtTK29JNWxzbU1rdHRt?=
+ =?utf-8?B?djdCd0sxSXV2eWlhdWEwNUl1MkoyVkJJUnhYcWpBazZaNjFtZkdTNXA1SzZO?=
+ =?utf-8?B?OGkxZnQ5NkxNZi91OHdBcE0rT3M1RVNHUVoySnZabkpJaGJSa25nc1FwQzU4?=
+ =?utf-8?B?c1pRUFdnQUoxeHM3RGtXSk1IUmo5cHdTRmJOdUdUQmlEWXJTdFJNWTFBK0tX?=
+ =?utf-8?Q?3kVLHlxjSTdQgQEavHRxo3o=3D?=
+X-OriginatorOrg: suse.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7d377c24-6e81-40cd-90f3-08d9a14d274b
+X-MS-Exchange-CrossTenant-AuthSource: AM5PR04MB3089.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Nov 2021 17:44:59.5132
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: f7a17af6-1c5c-4a36-aa8b-f5be247aa4ba
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: rCqtpwBLN2R+7QTF4hZI+C+XCBGb2mj8VpTT+Sb+108i9kDPnkIEVD4tDs7VkVNxK3kIPCIfgJ5T/LrLOO08Ww==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM5PR0401MB2658
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Anders,
-
-On Mon, Sep 27, 2021 at 10:47 AM Anders Roxell <anders.roxell@linaro.org> wrote:
-> When building an allmodconfig kernel, the following build error shows
-> up:
->
-> aarch64-linux-gnu-ld: drivers/scsi/ufs/ufs-hwmon.o: in function `ufs_hwmon_probe':
-> /kernel/next/drivers/scsi/ufs/ufs-hwmon.c:177: undefined reference to `hwmon_device_register_with_info'
-> /kernel/next/drivers/scsi/ufs/ufs-hwmon.c:177:(.text+0x510): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `hwmon_device_register_with_info'
-> aarch64-linux-gnu-ld: drivers/scsi/ufs/ufs-hwmon.o: in function `ufs_hwmon_remove':
-> /kernel/next/drivers/scsi/ufs/ufs-hwmon.c:195: undefined reference to `hwmon_device_unregister'
-> /kernel/next/drivers/scsi/ufs/ufs-hwmon.c:195:(.text+0x5c8): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `hwmon_device_unregister'
-> aarch64-linux-gnu-ld: drivers/scsi/ufs/ufs-hwmon.o: in function `ufs_hwmon_notify_event':
-> /kernel/next/drivers/scsi/ufs/ufs-hwmon.c:206: undefined reference to `hwmon_notify_event'
-> /kernel/next/drivers/scsi/ufs/ufs-hwmon.c:206:(.text+0x64c): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `hwmon_notify_event'
-> aarch64-linux-gnu-ld: /home/anders/src/kernel/next/drivers/scsi/ufs/ufs-hwmon.c:209: undefined reference to `hwmon_notify_event'
-> /kernel/next/drivers/scsi/ufs/ufs-hwmon.c:209:(.text+0x66c): relocation truncated to fit: R_AARCH64_CALL26 against undefined symbol `hwmon_notify_event'
->
-> Since fragment 'SCSI_UFS_HWMON' can't be build as a module,
-> 'SCSI_UFS_HWMON' has to depend on 'HWMON=y'.
->
-> Fixes: e88e2d32200a ("scsi: ufs: core: Probe for temperature notification support")
-> Also-Reported-by: Randy Dunlap <rdunlap@infradead.org>
-> Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
-> Acked-by: Randy Dunlap <rdunlap@infradead.org> # build-tested
-> Acked-by: Avri Altman <avri.altman@wdc.com>
+On 11/5/21 3:10 PM, Mike Christie wrote:
+> We can race where iscsi_session_recovery_timedout has woken up the error
+> handler thread and it's now setting the devices to offline, and
+> session_recovery_timedout's call to scsi_target_unblock is also trying to
+> set the device's state to transport-offline. We can then get a mix of
+> states.
+> 
+> For the case where we can't relogin we want the devices to be in
+> transport-offline so when we have repaired the connection
+> __iscsi_unblock_session can set the state back to running. So this patch
+> has us set the device state then call into libiscsi to wake up the error
+> handler.
+> 
+> Signed-off-by: Mike Christie <michael.christie@oracle.com>
 > ---
->  drivers/scsi/ufs/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
-> index 565e8aa6319d..2ca69f87e4de 100644
-> --- a/drivers/scsi/ufs/Kconfig
-> +++ b/drivers/scsi/ufs/Kconfig
-> @@ -202,7 +202,7 @@ config SCSI_UFS_FAULT_INJECTION
->
->  config SCSI_UFS_HWMON
->         bool "UFS  Temperature Notification"
-> -       depends on SCSI_UFSHCD && HWMON
-> +       depends on SCSI_UFSHCD=HWMON || HWMON=y
+>  drivers/scsi/scsi_transport_iscsi.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+> index 78343d3f9385..554b6f784223 100644
+> --- a/drivers/scsi/scsi_transport_iscsi.c
+> +++ b/drivers/scsi/scsi_transport_iscsi.c
+> @@ -1899,12 +1899,12 @@ static void session_recovery_timedout(struct work_struct *work)
+>  	}
+>  	spin_unlock_irqrestore(&session->lock, flags);
+>  
+> -	if (session->transport->session_recovery_timedout)
+> -		session->transport->session_recovery_timedout(session);
+> -
+>  	ISCSI_DBG_TRANS_SESSION(session, "Unblocking SCSI target\n");
+>  	scsi_target_unblock(&session->dev, SDEV_TRANSPORT_OFFLINE);
+>  	ISCSI_DBG_TRANS_SESSION(session, "Completed unblocking SCSI target\n");
+> +
+> +	if (session->transport->session_recovery_timedout)
+> +		session->transport->session_recovery_timedout(session);
+>  }
+>  
+>  static void __iscsi_unblock_session(struct work_struct *work)
+> 
 
-Which is also true if both SCSI_UFSHCD and HWMON are disabled,
-thus exposing this question to everyone?
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 
-Fix sent
-"[PATCH] scsi: ufs: Wrap Universal Flash Storage drivers in SCSI_UFSHCD"
-https://lore.kernel.org/all/20211106164650.1571068-1-geert@linux-m68k.org/
-
->         help
->           This provides support for UFS hardware monitoring. If enabled,
->           a hardware monitoring device will be created for the UFS device.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
