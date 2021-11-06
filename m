@@ -2,116 +2,134 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAE99C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Nov 2021 11:54:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F664C433F5
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 Nov 2021 16:47:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FD356120A
-	for <linux-scsi@archiver.kernel.org>; Sat,  6 Nov 2021 11:54:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D59560F9D
+	for <linux-scsi@archiver.kernel.org>; Sat,  6 Nov 2021 16:47:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234087AbhKFL5G (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 6 Nov 2021 07:57:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55628 "EHLO
+        id S234604AbhKFQtl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 6 Nov 2021 12:49:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34324 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229968AbhKFL5G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Nov 2021 07:57:06 -0400
-Received: from mail-qk1-x733.google.com (mail-qk1-x733.google.com [IPv6:2607:f8b0:4864:20::733])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E9051C061570
-        for <linux-scsi@vger.kernel.org>; Sat,  6 Nov 2021 04:54:24 -0700 (PDT)
-Received: by mail-qk1-x733.google.com with SMTP id c20so1140559qko.10
-        for <linux-scsi@vger.kernel.org>; Sat, 06 Nov 2021 04:54:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=lucidpixels.com; s=google;
-        h=from:to:cc:references:in-reply-to:subject:date:message-id
-         :mime-version:content-transfer-encoding:content-language
-         :thread-index;
-        bh=dqPN2n6BjpQRetBTCE2FROhnqvD7qwFmp4cQx0DCJAE=;
-        b=e8BP8vCKZPi9SAnUi2ZdXWN29CSndyqNyIBge6g4qsrac+Uc6hED/QUyuDPs5h53k+
-         yWPhev/Verz2YkE83/2AJaJrnLflor+7LYbtdbM2SnV22dKzB8pmdUlcwsvKaxM4M/sb
-         +OlNWTfOJxisRw5ispf4Sn7h9WsqqdQhwzasE=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:references:in-reply-to:subject:date
-         :message-id:mime-version:content-transfer-encoding:content-language
-         :thread-index;
-        bh=dqPN2n6BjpQRetBTCE2FROhnqvD7qwFmp4cQx0DCJAE=;
-        b=zHmHxwSk4Q6EMLsYHH+pPC3iApnnbAZhCMZl6H09cr2av0WOPQys3JeeV5gkV3jMqn
-         3Z0tPDhKX/RuDpITOw4qLoOdEc/wfpHyFCfJi0YxAMd3eQ27wIH4x2RK1+FiHPg8u1d2
-         eGw0Vv/Dc4rebFioUhQFTSrA1TbFzs3eVVzLh+kz6Xs40NY+fSiLnFnEtxJ+yhIlotRJ
-         QUmvLvD+Rr8xBWU59PT4mWeJBf4aBi1q1FpEvdRgmPGwOYbMvjzp0DVSK560//stNzY7
-         w9Pv2j1rvBrJpsJkl/P1ZJegATkbGjmPn+aVJ7It4q0j8P5kyU9mp6Aa59jKga9ILW8w
-         MwSA==
-X-Gm-Message-State: AOAM533wSA2fffoAVrntKOQm3fFEiZmnawg4xp8miD4D8rQmhcN4XtmS
-        YwJ1d8ZzlRk8brOwlpNLJZj/Yn9HWMULRJ5H
-X-Google-Smtp-Source: ABdhPJyGC3/GU/JXOGG46ZDEFvTm4JDoKDH7HXKCf0YyFVsvRmMltjDzixYF1sWDURkeHN5fR4VC/A==
-X-Received: by 2002:a05:620a:460a:: with SMTP id br10mr5225023qkb.314.1636199663730;
-        Sat, 06 Nov 2021 04:54:23 -0700 (PDT)
-Received: from WARPC (pool-70-106-225-116.clppva.fios.verizon.net. [70.106.225.116])
-        by smtp.gmail.com with ESMTPSA id h11sm7328425qkp.46.2021.11.06.04.54.22
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Sat, 06 Nov 2021 04:54:23 -0700 (PDT)
-From:   "Justin Piszcz" <jpiszcz@lucidpixels.com>
-To:     "'Bart Van Assche'" <bvanassche@acm.org>,
-        "'Douglas Miller'" <dougmill@linux.vnet.ibm.com>
-Cc:     "'LKML'" <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>
-References: <006a01d7cead$b9262d70$2b728850$@lucidpixels.com> <a4a88807-8f52-ef9a-c58e-0ff454da5ade@acm.org> <CAO9zADxiobgwDE5dtvo98EL0djdgQyrGJA_w4Oxb+pZ9pvOEjQ@mail.gmail.com> <CAO9zADycForyq9cmh=epw9r-Wzz=xt32vL3mePuBAPehCgUTjw@mail.gmail.com> <50a16ee2-dfa4-d009-17c5-1984cf0a6161@linux.vnet.ibm.com> <CAO9zADwVnuKU-tfZxm4USjf76yJhTZqWfZw4yspv8sc93RuBbQ@mail.gmail.com> <e0c2935d-d961-11a0-1b4c-580b55dc6b59@acm.org>
-In-Reply-To: <e0c2935d-d961-11a0-1b4c-580b55dc6b59@acm.org>
-Subject: RE: kernel 5.15 does not boot with 3ware card (never had this issue <= 5.14) - scsi 0:0:0:0: WARNING: (0x06:0x002C) : Command (0x12) timed out, resetting card
-Date:   Sat, 6 Nov 2021 07:54:19 -0400
-Message-ID: <002401d7d305$082971b0$187c5510$@lucidpixels.com>
+        with ESMTP id S233931AbhKFQtk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Nov 2021 12:49:40 -0400
+Received: from albert.telenet-ops.be (albert.telenet-ops.be [IPv6:2a02:1800:110:4::f00:1a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CAD63C061714
+        for <linux-scsi@vger.kernel.org>; Sat,  6 Nov 2021 09:46:58 -0700 (PDT)
+Received: from ramsan.of.borg ([IPv6:2a02:1810:ac12:ed20:91c6:551:e507:741f])
+        by albert.telenet-ops.be with bizsmtp
+        id F4ms260094BJ5g4064msF8; Sat, 06 Nov 2021 17:46:55 +0100
+Received: from rox.of.borg ([192.168.97.57])
+        by ramsan.of.borg with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1mjOqC-00AbhT-9P; Sat, 06 Nov 2021 17:46:52 +0100
+Received: from geert by rox.of.borg with local (Exim 4.93)
+        (envelope-from <geert@linux-m68k.org>)
+        id 1mjOqB-006aiZ-LK; Sat, 06 Nov 2021 17:46:51 +0100
+From:   Geert Uytterhoeven <geert@linux-m68k.org>
+To:     Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Anders Roxell <anders.roxell@linaro.org>,
+        Randy Dunlap <rdunlap@infradead.org>
+Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: [PATCH] scsi: ufs: Wrap Universal Flash Storage drivers in SCSI_UFSHCD
+Date:   Sat,  6 Nov 2021 17:46:50 +0100
+Message-Id: <20211106164650.1571068-1-geert@linux-m68k.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain;
-        charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Content-Language: en-us
-Thread-Index: AQFvog4DBvS/YijzZ80RtFVSnXGKrgJY98sAAayFrYQByo6A5QHYGZ9yAapycYICkRDNnKxnoB7g
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+The build only descends into drivers/scsi/ufs/ if SCSI_UFSHCD is
+enabled.  Hence all later config symbols should depend on SCSI_UFSHCD,
+to prevent asking the user about config symbols for driver code that
+won't be build anyway.  Unfortunately not all symbols have that
+dependency.
 
+Fix this by wrapping them all into a big if/endif block.  Remove the now
+superfluous explicit dependencies on SCSI_UFSHCD from all symbols that
+already had it.
 
------Original Message-----
-From: Bart Van Assche <bvanassche@acm.org>=20
-Sent: Wednesday, November 3, 2021 12:23 PM
-To: Justin Piszcz <jpiszcz@lucidpixels.com>; Douglas Miller =
-<dougmill@linux.vnet.ibm.com>
-Cc: LKML <linux-kernel@vger.kernel.org>; linux-scsi@vger.kernel.org
-Subject: Re: kernel 5.15 does not boot with 3ware card (never had this =
-issue <=3D 5.14) - scsi 0:0:0:0: WARNING: (0x06:0x002C) : Command (0x12) =
-timed out, resetting card
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+Exposed by commit 60c98a87fcaad9e7 ("scsi: ufs: core: SCSI_UFS_HWMON
+depends on HWMON=y").
+---
+ drivers/scsi/ufs/Kconfig | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-On 11/3/21 9:18 AM, Justin Piszcz wrote:
-> Thanks!-- Has anyone else reading run into this issue and/or are there
-> any suggestions how I can troubleshoot this further (as all -rc's have
-> the same issue)?
-
-How about bisecting this issue
-(https://www.kernel.org/doc/html/latest/admin-guide/bug-bisect.html)?
-
-[ .. ]
-
-I was having some issues finding a list of changes with git bisect, so I =
-started checking the kernel .config and boot parameters:
-
-I found the option that was causing the system not to boot (tested with =
-5.15.0 and latest linux-git as of 6 NOV 2021)
-append=3D"3w-sas.use_msi=3D1"
-
-3w-sas.use_msi defaults to 0 (so now it is using IR-IO-APIC instead of =
-MSI but now the machine boots using 5.15)
-https://lwn.net/Articles/358679/
-
-Something between 5.14 and 5.15 changed regarding x86_64's handling of =
-Message Signaled Interrupts.
-... which causes the kernel to no longer boot when 3w-sas.use_msi=3D1 is =
-specified starting with 5.15.
-
-Regards,
-
-Justin.
-
-
-
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index b2521b830be72fa5..a43f4d947f1bf8a8 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -50,9 +50,11 @@ config SCSI_UFSHCD
+ 	  However, do not compile this as a module if your root file system
+ 	  (the one containing the directory /) is located on a UFS device.
+ 
++if SCSI_UFSHCD
++
+ config SCSI_UFSHCD_PCI
+ 	tristate "PCI bus based UFS Controller support"
+-	depends on SCSI_UFSHCD && PCI
++	depends on PCI
+ 	help
+ 	  This selects the PCI UFS Host Controller Interface. Select this if
+ 	  you have UFS Host Controller with PCI Interface.
+@@ -71,7 +73,6 @@ config SCSI_UFS_DWC_TC_PCI
+ 
+ config SCSI_UFSHCD_PLATFORM
+ 	tristate "Platform bus based UFS Controller support"
+-	depends on SCSI_UFSHCD
+ 	depends on HAS_IOMEM
+ 	help
+ 	  This selects the UFS host controller support. Select this if
+@@ -147,7 +148,6 @@ config SCSI_UFS_TI_J721E
+ 
+ config SCSI_UFS_BSG
+ 	bool "Universal Flash Storage BSG device node"
+-	depends on SCSI_UFSHCD
+ 	select BLK_DEV_BSGLIB
+ 	help
+ 	  Universal Flash Storage (UFS) is SCSI transport specification for
+@@ -177,7 +177,7 @@ config SCSI_UFS_EXYNOS
+ 
+ config SCSI_UFS_CRYPTO
+ 	bool "UFS Crypto Engine Support"
+-	depends on SCSI_UFSHCD && BLK_INLINE_ENCRYPTION
++	depends on BLK_INLINE_ENCRYPTION
+ 	help
+ 	  Enable Crypto Engine Support in UFS.
+ 	  Enabling this makes it possible for the kernel to use the crypto
+@@ -186,7 +186,6 @@ config SCSI_UFS_CRYPTO
+ 
+ config SCSI_UFS_HPB
+ 	bool "Support UFS Host Performance Booster"
+-	depends on SCSI_UFSHCD
+ 	help
+ 	  The UFS HPB feature improves random read performance. It caches
+ 	  L2P (logical to physical) map of UFS to host DRAM. The driver uses HPB
+@@ -195,7 +194,7 @@ config SCSI_UFS_HPB
+ 
+ config SCSI_UFS_FAULT_INJECTION
+ 	bool "UFS Fault Injection Support"
+-	depends on SCSI_UFSHCD && FAULT_INJECTION
++	depends on FAULT_INJECTION
+ 	help
+ 	  Enable fault injection support in the UFS driver. This makes it easier
+ 	  to test the UFS error handler and abort handler.
+@@ -208,3 +207,5 @@ config SCSI_UFS_HWMON
+ 	  a hardware monitoring device will be created for the UFS device.
+ 
+ 	  If unsure, say N.
++
++endif
+-- 
+2.25.1
 
