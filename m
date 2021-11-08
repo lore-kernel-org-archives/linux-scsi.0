@@ -2,162 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08729C2BA80
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 14:07:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53A26C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 14:08:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DD083610F8
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 14:07:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F853610F8
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 14:08:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S240289AbhKHOKK convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Nov 2021 09:10:10 -0500
-Received: from mail-ua1-f54.google.com ([209.85.222.54]:34507 "EHLO
-        mail-ua1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S240246AbhKHOKC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2021 09:10:02 -0500
-Received: by mail-ua1-f54.google.com with SMTP id b3so31739471uam.1;
-        Mon, 08 Nov 2021 06:07:16 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=srssYsTsVb5ivMDmTAt6Y7lXgP/lHHGiJX97jzZpFII=;
-        b=lT7Q627YXwAYYti9TyWmhNrAwxF37ER+DnnHvi8ZOaxozyOw/rwlQ66wlApkNuyNN0
-         l/36WyzNYJX7UwsJU1aMV3bW5Sz7j/IP33Z/kZbh3aJA6GtHX+o7tNp9p+l7GF4QkKIB
-         sjbbINID3WCsCkZrFWfMUwfrp9PjYh6onoNzXUnoEQ/95F5HYU5n5UHmTstBfe0urn4h
-         1SE5gPNj3Pc2mvjTTyE8StQTFs4/Z7quYn3ZeZl33bFkXJAPxUlQqv23fQ05cU4PyTMU
-         am1ot2b90FgHRA4kFfiBdu8fFSdh6YxyoBpITiqz4ORJJJdFb9hLqYTU1fxm5MWEErbR
-         0b5Q==
-X-Gm-Message-State: AOAM531VcfMwSWKNLwI/Nir0vc2ScGiGBGnffpEeKxm2KOJGi6tJeJ4f
-        ZdyVgO2KwEjymrO3gMZbXCXik2FZgi7ZJAl7
-X-Google-Smtp-Source: ABdhPJx9G54VGw4oc23XJRelgp9dkMEtXydk+uvqLajllgER83nLii76Q7zBboH+kgBjAPFdw36B5A==
-X-Received: by 2002:ab0:3e3:: with SMTP id 90mr185644uau.102.1636380435783;
-        Mon, 08 Nov 2021 06:07:15 -0800 (PST)
-Received: from mail-vk1-f171.google.com (mail-vk1-f171.google.com. [209.85.221.171])
-        by smtp.gmail.com with ESMTPSA id c11sm3226781vsh.22.2021.11.08.06.07.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Nov 2021 06:07:14 -0800 (PST)
-Received: by mail-vk1-f171.google.com with SMTP id a129so8254621vkb.8;
-        Mon, 08 Nov 2021 06:07:14 -0800 (PST)
-X-Received: by 2002:a05:6122:1350:: with SMTP id f16mr21288847vkp.26.1636380434409;
- Mon, 08 Nov 2021 06:07:14 -0800 (PST)
-MIME-Version: 1.0
-References: <20211108101157.15189-1-bp@alien8.de> <20211108101157.15189-43-bp@alien8.de>
-In-Reply-To: <20211108101157.15189-43-bp@alien8.de>
-From:   Geert Uytterhoeven <geert@linux-m68k.org>
-Date:   Mon, 8 Nov 2021 15:07:03 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdWH+txiSP_d7Jc4f_bU8Lf9iWpT4E3o5o7BJr-YdA6-VA@mail.gmail.com>
-Message-ID: <CAMuHMdWH+txiSP_d7Jc4f_bU8Lf9iWpT4E3o5o7BJr-YdA6-VA@mail.gmail.com>
-Subject: Re: [PATCH v0 42/42] notifier: Return an error when callback is
- already registered
-To:     Borislav Petkov <bp@alien8.de>
-Cc:     LKML <linux-kernel@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ayush Sawal <ayush.sawal@chelsio.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rohit Maheshwari <rohitm@chelsio.com>,
-        Steven Rostedt <rostedt@goodmis.org>,
-        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
-        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
-        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
-        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
-        intel-gvt-dev@lists.freedesktop.org,
-        alpha <linux-alpha@vger.kernel.org>,
-        Linux ARM <linux-arm-kernel@lists.infradead.org>,
-        linux-clk <linux-clk@vger.kernel.org>,
-        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-        linux-edac@vger.kernel.org,
-        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
-        linux-hyperv@vger.kernel.org, linux-iio@vger.kernel.org,
-        linux-leds <linux-leds@vger.kernel.org>,
-        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
-        Parisc List <linux-parisc@vger.kernel.org>,
-        Linux PM list <linux-pm@vger.kernel.org>,
-        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
-        "open list:REMOTE PROCESSOR (REMOTEPROC) SUBSYSTEM" 
-        <linux-remoteproc@vger.kernel.org>,
-        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
-        linux-s390 <linux-s390@vger.kernel.org>,
-        scsi <linux-scsi@vger.kernel.org>,
-        Linux-sh list <linux-sh@vger.kernel.org>,
-        linux-staging@lists.linux.dev,
-        linux-tegra <linux-tegra@vger.kernel.org>,
-        linux-um <linux-um@lists.infradead.org>,
-        USB list <linux-usb@vger.kernel.org>,
-        "open list:TENSILICA XTENSA PORT (xtensa)" 
-        <linux-xtensa@linux-xtensa.org>, netdev <netdev@vger.kernel.org>,
-        openipmi-developer@lists.sourceforge.net, rcu@vger.kernel.org,
-        sparclinux <sparclinux@vger.kernel.org>,
-        "the arch/x86 maintainers" <x86@kernel.org>,
-        xen-devel@lists.xenproject.org
+        id S238850AbhKHOLF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Nov 2021 09:11:05 -0500
+Received: from mail.kernel.org ([198.145.29.99]:57276 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236232AbhKHOLC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Nov 2021 09:11:02 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id 9EA3A61179
+        for <linux-scsi@vger.kernel.org>; Mon,  8 Nov 2021 14:08:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636380498;
+        bh=0clGinoahwipFzuBP+OfPM5hDxLZRi7bNMsk+oB6aa4=;
+        h=From:To:Subject:Date:From;
+        b=UQT+cpOSHUsPM5Hse0t4+wkmpD98t+8at45x8kByC5Axr8Gw/6af65HpVvBIfyF6y
+         4gHnML2R+ZNAvxsqCVsY3f9ELhjQ1LiLBIhB7Kyd+NciofEpUiwLElqubQjxkos6hm
+         LwKTRgAk8vYUB2yhYWVzzIjB0zUjIMFlt/TK+okS83Wo7IQnY13ktzKeF5XAf7KKGx
+         gbKENFdIqSc0Vy9XgdIBw+mG3yVG8L3d2Bjbi3YGkuk30BfPaNHY+tXxlt3f/Mb8V3
+         obRl/PbTRT58UpMYzezMOzEOTGHoLZ7sVBrwHNh7XbaZLHMGsiYwvRyMQnRsgkC3NH
+         OZadMG2ijVrOw==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 214967] New: mvsas not detecting some disks
+Date:   Mon, 08 Nov 2021 14:08:18 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: mgperkow@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version
+ cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
+ priority component assigned_to reporter cf_regression attachments.created
+Message-ID: <bug-214967-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
+MIME-Version: 1.0
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Borislav,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
 
-On Mon, Nov 8, 2021 at 11:13 AM Borislav Petkov <bp@alien8.de> wrote:
-> From: Borislav Petkov <bp@suse.de>
->
-> The notifier registration routine doesn't return a proper error value
-> when a callback has already been registered, leading people to track
-> whether that registration has happened at the call site:
->
->   https://lore.kernel.org/amd-gfx/20210512013058.6827-1-mukul.joshi@amd.com/
->
-> Which is unnecessary.
->
-> Return -EEXIST to signal that case so that callers can act accordingly.
-> Enforce callers to check the return value, leading to loud screaming
-> during build:
->
->   arch/x86/kernel/cpu/mce/core.c: In function ‘mce_register_decode_chain’:
->   arch/x86/kernel/cpu/mce/core.c:167:2: error: ignoring return value of \
->    ‘blocking_notifier_chain_register’, declared with attribute warn_unused_result [-Werror=unused-result]
->     blocking_notifier_chain_register(&x86_mce_decoder_chain, nb);
->   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->
-> Drop the WARN too, while at it.
->
-> Suggested-by: Thomas Gleixner <tglx@linutronix.de>
-> Signed-off-by: Borislav Petkov <bp@suse.de>
+            Bug ID: 214967
+           Summary: mvsas not detecting some disks
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 5.15.x
+          Hardware: Intel
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: mgperkow@gmail.com
+        Regression: No
 
-Thanks for your patch!
+Created attachment 299493
+  --> https://bugzilla.kernel.org/attachment.cgi?id=3D299493&action=3Dedit
+Kernel log
 
-> --- a/include/linux/notifier.h
-> +++ b/include/linux/notifier.h
-> @@ -141,13 +141,13 @@ extern void srcu_init_notifier_head(struct srcu_notifier_head *nh);
->
->  #ifdef __KERNEL__
->
-> -extern int atomic_notifier_chain_register(struct atomic_notifier_head *nh,
-> +extern int __must_check atomic_notifier_chain_register(struct atomic_notifier_head *nh,
->                 struct notifier_block *nb);
-> -extern int blocking_notifier_chain_register(struct blocking_notifier_head *nh,
-> +extern int __must_check blocking_notifier_chain_register(struct blocking_notifier_head *nh,
->                 struct notifier_block *nb);
-> -extern int raw_notifier_chain_register(struct raw_notifier_head *nh,
-> +extern int __must_check raw_notifier_chain_register(struct raw_notifier_head *nh,
->                 struct notifier_block *nb);
-> -extern int srcu_notifier_chain_register(struct srcu_notifier_head *nh,
-> +extern int __must_check srcu_notifier_chain_register(struct srcu_notifier_head *nh,
->                 struct notifier_block *nb);
+mvsas module fails to IDENTIFY some disks on RocketRaid 2744. Started happe=
+ning
+with 5.15.0, continues with 5.15.1.
 
-I think the addition of __must_check is overkill, leading to the
-addition of useless error checks and message printing.  Many callers
-call this where it cannot fail, and where nothing can be done in the
-very unlikely event that the call would ever start to fail.
+Excerpt from kernel log attached.
 
-Gr{oetje,eeting}s,
+--=20
+You may reply to this email to add a comment.
 
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+You are receiving this mail because:
+You are watching the assignee of the bug.=
