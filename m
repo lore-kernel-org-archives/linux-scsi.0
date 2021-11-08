@@ -2,77 +2,80 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F079DC433EF
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 18:26:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC22C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 18:30:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CBB8261029
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 18:26:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16FA761055
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 18:30:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235383AbhKHS3j (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Nov 2021 13:29:39 -0500
-Received: from mail-pf1-f170.google.com ([209.85.210.170]:33376 "EHLO
-        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229558AbhKHS3j (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2021 13:29:39 -0500
-Received: by mail-pf1-f170.google.com with SMTP id c126so8410390pfb.0
-        for <linux-scsi@vger.kernel.org>; Mon, 08 Nov 2021 10:26:54 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=CxH87AxeY9lKWo5PzT/bziVGyijLBBB9I267ZQcLj04=;
-        b=NX7gPffkieaZgdZKO3fD5cNjjGLNeC3sgqaT2AhZ7OT7RI4OOC/5mFN8luixtZOP3I
-         Gf++jYaszG1fm+Li6gfIU1mga8Rb/c0pQpAcMHdUftGwnXnRXUcT5U6ivxR0xFyqNuae
-         e+PTowJBEeoUKd00uQUR9mMafe7O6fHNvJdexFwERydI7//uqYzndJEJaGaqSo7MAOx3
-         Sf8WhtjlobWMb9Em9e7TtLp81n3Y8HTpZ1uRFycDrUW7nqaMebG9XtP4BN41wqC8UnLP
-         FEzfieCXq+g3SEfuKqVZm9q+66GPHDhHOO00AK+2KFf+q7N854aogm0x2xZ/6eVXNM8e
-         5yjA==
-X-Gm-Message-State: AOAM532pm7eWgQhN3eH2LvbtWwkKi8Pd6wyyZnksS22oMcwEiOdryz+f
-        ysXaMcUARhdptmP+XU+SCow=
-X-Google-Smtp-Source: ABdhPJz2F/IFGQHhCuLdJJTBdLSsoBodjiWIFrQF3P038tYUfM0mtFTeLum+B0W/IK2THHy7AlpHYg==
-X-Received: by 2002:a63:f70a:: with SMTP id x10mr1123375pgh.12.1636396014241;
-        Mon, 08 Nov 2021 10:26:54 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:4ca8:59a2:ad3c:1580])
-        by smtp.gmail.com with ESMTPSA id 17sm16830534pfp.14.2021.11.08.10.26.53
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 08 Nov 2021 10:26:53 -0800 (PST)
-Subject: Re: [PATCH 2/2] scsi: ufs: Fix a deadlock in the error handler
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Can Guo <cang@codeaurora.org>, Bean Huo <beanhuo@micron.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-References: <20211103000529.1549411-1-bvanassche@acm.org>
- <20211103000529.1549411-3-bvanassche@acm.org>
- <82dffddc-15e8-dc1a-abda-e84e7e441d87@intel.com>
- <DM6PR04MB6575BC6BCE4A6BFBB0E3F519FC909@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <91e73a18-0487-d9e9-920e-5d3477410b69@acm.org>
-Date:   Mon, 8 Nov 2021 10:26:52 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S235792AbhKHSdX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Nov 2021 13:33:23 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:33861 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S229558AbhKHSdQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2021 13:33:16 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636396231;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=J7zHPC1Uvz98lt8Q4KZHHsPhYbhlJHhHtX19XXiFYag=;
+        b=dGRlH1sjbjFu4O1nb8k2+QojUBgNQbTXUZhErm6HwukyqPRvpLmpcz/NB7gEyEQjHIbPtb
+        AsV0WBiIHzleOd0OA9Ph71KI6dg3LyUC1nhhRBbTHyFRqrLmfjUXqJH/F7s49/f4A+8cYU
+        TJe8nHCcnTjpTKX2tXXXWKKQWz4bJD8=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-25-DZjNaKfENKi766IF2MoeKA-1; Mon, 08 Nov 2021 13:30:29 -0500
+X-MC-Unique: DZjNaKfENKi766IF2MoeKA-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6A06315720;
+        Mon,  8 Nov 2021 18:30:28 +0000 (UTC)
+Received: from emilne.bos.redhat.com (unknown [10.18.25.205])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 86FF01007605;
+        Mon,  8 Nov 2021 18:30:12 +0000 (UTC)
+From:   "Ewan D. Milne" <emilne@redhat.com>
+To:     linux-scsi@vger.kernel.org
+Cc:     stable@vger.kernel.org, njavali@marvell.com, aeasi@marvell.com
+Subject: [PATCH] scsi: qla2xxx: fix mailbox direction flags in qla2xxx_get_adapter_id()
+Date:   Mon,  8 Nov 2021 13:30:12 -0500
+Message-Id: <20211108183012.13895-1-emilne@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <DM6PR04MB6575BC6BCE4A6BFBB0E3F519FC909@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/7/21 3:07 AM, Avri Altman wrote:
-> Instead of the reserved tag mechanism, since we are in reset-and-restore path,
-> how about forcing one slot out if the doorbell is full?
+The SCM changes set the flags in mcp->out_mb instead of mcp->in_mb
+so the data was not actually being read into the mcp->mb[] array from
+the adapter.
 
-That would result in significantly more complex code. I prefer the 
-reserved tag approach since it results in elegant code and since this 
-approach does not affect performance significantly.
+Fixes: 9f2475fe7406 ("scsi: qla2xxx: SAN congestion management implementation")
+Cc: stable@vger.kernel.org
+Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+---
+ drivers/scsi/qla2xxx/qla_mbx.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-Thanks,
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 7811c4952035..a6debeea3079 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -1695,10 +1695,8 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
+ 		mcp->in_mb |= MBX_13|MBX_12|MBX_11|MBX_10;
+ 	if (IS_FWI2_CAPABLE(vha->hw))
+ 		mcp->in_mb |= MBX_19|MBX_18|MBX_17|MBX_16;
+-	if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw)) {
+-		mcp->in_mb |= MBX_15;
+-		mcp->out_mb |= MBX_7|MBX_21|MBX_22|MBX_23;
+-	}
++	if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw))
++		mcp->in_mb |= MBX_15|MBX_21|MBX_22|MBX_23;
+ 
+ 	mcp->tov = MBX_TOV_SECONDS;
+ 	mcp->flags = 0;
+-- 
+2.31.1
 
-Bart.
