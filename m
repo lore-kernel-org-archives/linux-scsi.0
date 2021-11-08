@@ -2,88 +2,93 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 97556C197A0
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 16:30:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 553F3C433EF
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 16:42:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7FB8061361
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 16:30:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 33B806120A
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 16:42:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241294AbhKHQcu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Nov 2021 11:32:50 -0500
-Received: from mail.skyhub.de ([5.9.137.197]:40218 "EHLO mail.skyhub.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S239403AbhKHQcr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 Nov 2021 11:32:47 -0500
-Received: from zn.tnic (p200300ec2f331100181cb4ce2fe9e1de.dip0.t-ipconnect.de [IPv6:2003:ec:2f33:1100:181c:b4ce:2fe9:e1de])
+        id S241314AbhKHQot (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Nov 2021 11:44:49 -0500
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:34198 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S236528AbhKHQos (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2021 11:44:48 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1636389723;
+        bh=lpuLhbP5D8y7Rh++3/m1gJ/kmzDRQihOj3d0Ea3+naw=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=vGp3HXQPGECmrit0ElRfIxrq4UE5s9ccP2I5N4d1tx20bGxFJQirlcN25WzOorCX1
+         c+hY1TzUrSDiD8rZK9oHTJNaB7MtpRngWZi0Yw52XwCWC8j5HeoFLrPIFwRqofowOL
+         y6ommqbMLoQDxDhuGatF3WLs1OICVeJc/gIxOxHc=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 8F42112804CC;
+        Mon,  8 Nov 2021 11:42:03 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id u_heyEEjYIWy; Mon,  8 Nov 2021 11:42:03 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1636389723;
+        bh=lpuLhbP5D8y7Rh++3/m1gJ/kmzDRQihOj3d0Ea3+naw=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=vGp3HXQPGECmrit0ElRfIxrq4UE5s9ccP2I5N4d1tx20bGxFJQirlcN25WzOorCX1
+         c+hY1TzUrSDiD8rZK9oHTJNaB7MtpRngWZi0Yw52XwCWC8j5HeoFLrPIFwRqofowOL
+         y6ommqbMLoQDxDhuGatF3WLs1OICVeJc/gIxOxHc=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
         (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mail.skyhub.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id 652D11EC0512;
-        Mon,  8 Nov 2021 17:29:57 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=dkim;
-        t=1636388997;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:in-reply-to:in-reply-to:  references:references;
-        bh=OSbzA4U/ida8aXvLATS9A1smiSvQH5VirglC+wMEOMM=;
-        b=pBzIQNPgz9f6MnJz8NuSpWeZa+X2KJ2EY1gkFfqIgUOOdk5ooj7nS3SZlOvvPfnLO1w7js
-        1rE5oU8U3sZ2kD0zZzsPOjz5Rjy821j5ugVLv+TE7mQzDtZGil7p5QTxNJmqJYfQhl3i/U
-        43Oeu8iAMBrtl8n9GGHPMyt/ODoo1Kk=
-Date:   Mon, 8 Nov 2021 17:29:55 +0100
-From:   Borislav Petkov <bp@alien8.de>
-To:     Steven Rostedt <rostedt@goodmis.org>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ayush Sawal <ayush.sawal@chelsio.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rohit Maheshwari <rohitm@chelsio.com>,
-        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
-        alsa-devel@alsa-project.org, bcm-kernel-feedback-list@broadcom.com,
-        intel-gfx@lists.freedesktop.org,
-        intel-gvt-dev@lists.freedesktop.org, linux-alpha@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-leds@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-remoteproc@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-tegra@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-usb@vger.kernel.org,
-        linux-xtensa@linux-xtensa.org, netdev@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, rcu@vger.kernel.org,
-        sparclinux@vger.kernel.org, x86@kernel.org,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v0 00/42] notifiers: Return an error when callback is
- already registered
-Message-ID: <YYlQg+OvUpUL630W@zn.tnic>
-References: <20211108101157.15189-1-bp@alien8.de>
- <20211108101924.15759-1-bp@alien8.de>
- <20211108141703.GB1666297@rowland.harvard.edu>
- <YYkzJ3+faVga2Tl3@zn.tnic>
- <YYk1xi3eJdMJdjHC@zn.tnic>
- <20211108112313.73d0727e@gandalf.local.home>
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id C56881280492;
+        Mon,  8 Nov 2021 11:42:02 -0500 (EST)
+Message-ID: <08f0e186093b0d5067347a1376228010cb4cc7f4.camel@HansenPartnership.com>
+Subject: Re: [PATCH 3/4] scsi: make sure that request queue queiesce and
+ unquiesce balanced
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
+Cc:     Yi Zhang <yi.zhang@redhat.com>, linux-block@vger.kernel.org,
+        linux-nvme@lists.infradead.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org
+Date:   Mon, 08 Nov 2021 11:42:01 -0500
+In-Reply-To: <20211103034305.3691555-4-ming.lei@redhat.com>
+References: <20211103034305.3691555-1-ming.lei@redhat.com>
+         <20211103034305.3691555-4-ming.lei@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20211108112313.73d0727e@gandalf.local.home>
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, Nov 08, 2021 at 11:23:13AM -0500, Steven Rostedt wrote:
-> Question, how often does this warning trigger? Is it common to see in
-> development?
+On Wed, 2021-11-03 at 11:43 +0800, Ming Lei wrote:
+[...]
+> +void scsi_start_queue(struct scsi_device *sdev)
+> +{
+> +	if (cmpxchg(&sdev->queue_stopped, 1, 0))
+> +		blk_mq_unquiesce_queue(sdev->request_queue);
+> +}
+> +
+> +static void scsi_stop_queue(struct scsi_device *sdev, bool nowait)
+> +{
+> +	if (!cmpxchg(&sdev->queue_stopped, 0, 1)) {
+> +		if (nowait)
+> +			blk_mq_quiesce_queue_nowait(sdev-
+> >request_queue);
+> +		else
+> +			blk_mq_quiesce_queue(sdev->request_queue);
+> +	} else {
+> +		if (!nowait)
+> +			blk_mq_wait_quiesce_done(sdev->request_queue);
+> +	}
+> +}
 
-Yeah, haven't seen it myself yet.
+This looks counter intuitive.  I assume it's done so that if we call
+scsi_stop_queue when the queue has already been stopped, it waits until
+the queue is actually quiesced before returning so the behaviour is the
+same in the !nowait case?  Some sort of comment explaining that would
+be useful.
 
-But we hashed it out over IRC. :-)
+James
 
--- 
-Regards/Gruss,
-    Boris.
 
-https://people.kernel.org/tglx/notes-about-netiquette
+
