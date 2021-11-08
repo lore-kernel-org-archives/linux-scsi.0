@@ -2,146 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2FB8C4332F
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 20:45:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E7EC2BBC7
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 20:59:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC4EF619F8
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 20:45:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A59CD619E8
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 20:59:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S238526AbhKHUrw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Nov 2021 15:47:52 -0500
-Received: from outgoing-stata.csail.mit.edu ([128.30.2.210]:51205 "EHLO
-        outgoing-stata.csail.mit.edu" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S237467AbhKHUrv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2021 15:47:51 -0500
-X-Greylist: delayed 1086 seconds by postgrey-1.27 at vger.kernel.org; Mon, 08 Nov 2021 15:47:49 EST
-Received: from [128.177.79.46] (helo=[10.118.101.22])
-        by outgoing-stata.csail.mit.edu with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.82)
-        (envelope-from <srivatsa@csail.mit.edu>)
-        id 1mkBEE-000DLY-2j; Mon, 08 Nov 2021 15:26:54 -0500
-Subject: [PATCH 2/2] MAINTAINERS: Mark VMware mailing list entries as private
-From:   "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
-To:     jgross@suse.com, x86@kernel.org, pv-drivers@vmware.com
-Cc:     Nadav Amit <namit@vmware.com>, Vivek Thampi <vithampi@vmware.com>,
-        Vishal Bhakta <vbhakta@vmware.com>,
-        Ronak Doshi <doshir@vmware.com>,
-        linux-graphics-maintainer@vmware.com,
-        dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        linux-input@vger.kernel.org, Zack Rusin <zackr@vmware.com>,
-        srivatsa@csail.mit.edu, sdeep@vmware.com, amakhalov@vmware.com,
-        virtualization@lists.linux-foundation.org, keerthanak@vmware.com,
-        srivatsab@vmware.com, anishs@vmware.com, vithampi@vmware.com,
-        linux-kernel@vger.kernel.org
-Date:   Mon, 08 Nov 2021 12:30:07 -0800
-Message-ID: <163640339370.62866.3435211389009241865.stgit@srivatsa-dev>
-In-Reply-To: <163640336232.62866.489924062999332446.stgit@srivatsa-dev>
-References: <163640336232.62866.489924062999332446.stgit@srivatsa-dev>
-User-Agent: StGit/0.21
+        id S238706AbhKHVCQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Nov 2021 16:02:16 -0500
+Received: from netrider.rowland.org ([192.131.102.5]:33849 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S238302AbhKHVCO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2021 16:02:14 -0500
+Received: (qmail 1679175 invoked by uid 1000); 8 Nov 2021 15:59:26 -0500
+Date:   Mon, 8 Nov 2021 15:59:26 -0500
+From:   Alan Stern <stern@rowland.harvard.edu>
+To:     Borislav Petkov <bp@alien8.de>
+Cc:     Geert Uytterhoeven <geert@linux-m68k.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Ayush Sawal <ayush.sawal@chelsio.com>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Rohit Maheshwari <rohitm@chelsio.com>,
+        Steven Rostedt <rostedt@goodmis.org>,
+        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
+        ALSA Development Mailing List <alsa-devel@alsa-project.org>,
+        bcm-kernel-feedback-list <bcm-kernel-feedback-list@broadcom.com>,
+        Intel Graphics Development <intel-gfx@lists.freedesktop.org>,
+        intel-gvt-dev@lists.freedesktop.org,
+        alpha <linux-alpha@vger.kernel.org>,
+        Linux ARM <linux-arm-kernel@lists.infradead.org>,
+        linux-clk <linux-clk@vger.kernel.org>,
+        Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+        linux-edac@vger.kernel.org,
+        Linux Fbdev development list <linux-fbdev@vger.kernel.org>,
+        linux-hyperv@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-leds <linux-leds@vger.kernel.org>,
+        "open list:BROADCOM NVRAM DRIVER" <linux-mips@vger.kernel.org>,
+        Parisc List <linux-parisc@vger.kernel.org>,
+        Linux PM list <linux-pm@vger.kernel.org>,
+        linuxppc-dev <linuxppc-dev@lists.ozlabs.org>,
+        "open list:REMOTE PROCESSOR \(REMOTEPROC\) SUBSYSTEM" 
+        <linux-remoteproc@vger.kernel.org>,
+        Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
+        linux-s390 <linux-s390@vger.kernel.org>,
+        scsi <linux-scsi@vger.kernel.org>,
+        Linux-sh list <linux-sh@vger.kernel.org>,
+        linux-staging@lists.linux.dev,
+        linux-tegra <linux-tegra@vger.kernel.org>,
+        linux-um <linux-um@lists.infradead.org>,
+        USB list <linux-usb@vger.kernel.org>,
+        "open list:TENSILICA XTENSA PORT \(xtensa\)" 
+        <linux-xtensa@linux-xtensa.org>, netdev <netdev@vger.kernel.org>,
+        openipmi-developer@lists.sourceforge.net, rcu@vger.kernel.org,
+        sparclinux <sparclinux@vger.kernel.org>,
+        the arch/x86 maintainers <x86@kernel.org>,
+        xen-devel@lists.xenproject.org
+Subject: Re: [PATCH v0 42/42] notifier: Return an error when callback is
+ already registered
+Message-ID: <20211108205926.GA1678880@rowland.harvard.edu>
+References: <20211108101157.15189-1-bp@alien8.de>
+ <20211108101157.15189-43-bp@alien8.de>
+ <CAMuHMdWH+txiSP_d7Jc4f_bU8Lf9iWpT4E3o5o7BJr-YdA6-VA@mail.gmail.com>
+ <YYkyUEqcsOwQMb1S@zn.tnic>
+ <CAMuHMdXiBEQyEXJagSfpH44hxVA2t0sDH7B7YubLGHrb2MJLLA@mail.gmail.com>
+ <YYlJQYLiIrhjwOmT@zn.tnic>
+ <CAMuHMdXHikGrmUzuq0WG5JRHUUE=5zsaVCTF+e4TiHpM5tc5kA@mail.gmail.com>
+ <YYlOmd0AeA8DSluD@zn.tnic>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <YYlOmd0AeA8DSluD@zn.tnic>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
+On Mon, Nov 08, 2021 at 05:21:45PM +0100, Borislav Petkov wrote:
+> On Mon, Nov 08, 2021 at 05:12:16PM +0100, Geert Uytterhoeven wrote:
+> > Returning void is the other extreme ;-)
+> > 
+> > There are 3 levels (ignoring BUG_ON()/panic () inside the callee):
+> >   1. Return void: no one can check success or failure,
+> >   2. Return an error code: up to the caller to decide,
+> >   3. Return a __must_check error code: every caller must check.
+> > 
+> > I'm in favor of 2, as there are several places where it cannot fail.
+> 
+> Makes sense to me. I'll do that in the next iteration.
 
-VMware mailing lists in the MAINTAINERS file are private lists meant
-for VMware-internal review/notification for patches to the respective
-subsystems. So, in an earlier discussion [1][2], it was recommended to
-mark them as such. Update all the remaining VMware mailing list
-references to use that format -- "L: list@address (private)".
+Is there really any reason for returning an error code?  For example, is 
+it anticipated that at some point in the future these registration calls 
+might fail?
 
-[1]. https://lore.kernel.org/r/YPfp0Ff6KuyPlyrc@kroah.com
-[2]. https://lore.kernel.org/r/1626861766-11115-1-git-send-email-jhansen@vmware.com
+Currently, the only reason for failing to register a notifier callback 
+is because the callback is already registered.  In a sense this isn't 
+even an actual failure -- after the registration returns the callback 
+_will_ still be registered.
 
-Signed-off-by: Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
-Cc: Nadav Amit <namit@vmware.com>
-Cc: Vivek Thampi <vithampi@vmware.com>
-Cc: Vishal Bhakta <vbhakta@vmware.com>
-Cc: Ronak Doshi <doshir@vmware.com>
-Cc: pv-drivers@vmware.com
-Cc: linux-graphics-maintainer@vmware.com
-Cc: dri-devel@lists.freedesktop.org
-Cc: linux-rdma@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-input@vger.kernel.org
-Acked-by: Zack Rusin <zackr@vmware.com>
----
+So if the call can never really fail, why bother with a return code?  
+Especially since the caller can't do anything with such a code value.
 
- MAINTAINERS |   16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+Given the current state of affairs, I vote in favor of 1 (plus a WARN or 
+something similar to generate a stack dump in the callee, since double 
+registration really is a bug).
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 118cf8170d02..3e92176e68fb 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6134,8 +6134,8 @@ T:	git git://anongit.freedesktop.org/drm/drm-misc
- F:	drivers/gpu/drm/vboxvideo/
- 
- DRM DRIVER FOR VMWARE VIRTUAL GPU
--M:	"VMware Graphics" <linux-graphics-maintainer@vmware.com>
- M:	Zack Rusin <zackr@vmware.com>
-+L:	linux-graphics-maintainer@vmware.com (private)
- L:	dri-devel@lists.freedesktop.org
- S:	Supported
- T:	git git://anongit.freedesktop.org/drm/drm-misc
-@@ -20032,7 +20032,7 @@ F:	tools/testing/vsock/
- 
- VMWARE BALLOON DRIVER
- M:	Nadav Amit <namit@vmware.com>
--M:	"VMware, Inc." <pv-drivers@vmware.com>
-+L:	pv-drivers@vmware.com (private)
- L:	linux-kernel@vger.kernel.org
- S:	Maintained
- F:	drivers/misc/vmw_balloon.c
-@@ -20050,14 +20050,14 @@ F:	arch/x86/kernel/cpu/vmware.c
- 
- VMWARE PVRDMA DRIVER
- M:	Adit Ranadive <aditr@vmware.com>
--M:	VMware PV-Drivers <pv-drivers@vmware.com>
-+L:	pv-drivers@vmware.com (private)
- L:	linux-rdma@vger.kernel.org
- S:	Maintained
- F:	drivers/infiniband/hw/vmw_pvrdma/
- 
- VMware PVSCSI driver
- M:	Vishal Bhakta <vbhakta@vmware.com>
--M:	VMware PV-Drivers <pv-drivers@vmware.com>
-+L:	pv-drivers@vmware.com (private)
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
- F:	drivers/scsi/vmw_pvscsi.c
-@@ -20065,7 +20065,7 @@ F:	drivers/scsi/vmw_pvscsi.h
- 
- VMWARE VIRTUAL PTP CLOCK DRIVER
- M:	Vivek Thampi <vithampi@vmware.com>
--M:	"VMware, Inc." <pv-drivers@vmware.com>
-+L:	pv-drivers@vmware.com (private)
- L:	netdev@vger.kernel.org
- S:	Supported
- F:	drivers/ptp/ptp_vmw.c
-@@ -20079,8 +20079,8 @@ S:	Maintained
- F:	drivers/misc/vmw_vmci/
- 
- VMWARE VMMOUSE SUBDRIVER
--M:	"VMware Graphics" <linux-graphics-maintainer@vmware.com>
--M:	"VMware, Inc." <pv-drivers@vmware.com>
-+L:	linux-graphics-maintainer@vmware.com (private)
-+L:	pv-drivers@vmware.com (private)
- L:	linux-input@vger.kernel.org
- S:	Maintained
- F:	drivers/input/mouse/vmmouse.c
-@@ -20088,7 +20088,7 @@ F:	drivers/input/mouse/vmmouse.h
- 
- VMWARE VMXNET3 ETHERNET DRIVER
- M:	Ronak Doshi <doshir@vmware.com>
--M:	pv-drivers@vmware.com
-+L:	pv-drivers@vmware.com (private)
- L:	netdev@vger.kernel.org
- S:	Maintained
- F:	drivers/net/vmxnet3/
-
+Alan Stern
