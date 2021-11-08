@@ -2,85 +2,79 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C23EDC433FE
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 16:23:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7C9DC433F5
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 16:28:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 96AD861359
-	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 16:23:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9131D61361
+	for <linux-scsi@archiver.kernel.org>; Mon,  8 Nov 2021 16:28:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241250AbhKHQ0J (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Nov 2021 11:26:09 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59728 "EHLO mail.kernel.org"
+        id S239777AbhKHQas (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Nov 2021 11:30:48 -0500
+Received: from mail.kernel.org ([198.145.29.99]:60754 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S237287AbhKHQ0D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 8 Nov 2021 11:26:03 -0500
-Received: from gandalf.local.home (cpe-66-24-58-225.stny.res.rr.com [66.24.58.225])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id E868D61284;
-        Mon,  8 Nov 2021 16:23:14 +0000 (UTC)
-Date:   Mon, 8 Nov 2021 11:23:13 -0500
-From:   Steven Rostedt <rostedt@goodmis.org>
-To:     Borislav Petkov <bp@alien8.de>
-Cc:     Alan Stern <stern@rowland.harvard.edu>,
-        Geert Uytterhoeven <geert@linux-m68k.org>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Arnd Bergmann <arnd@arndb.de>,
-        Ayush Sawal <ayush.sawal@chelsio.com>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Rohit Maheshwari <rohitm@chelsio.com>,
-        Vinay Kumar Yadav <vinay.yadav@chelsio.com>,
-        alsa-devel@alsa-project.org, bcm-kernel-feedback-list@broadcom.com,
-        intel-gfx@lists.freedesktop.org,
-        intel-gvt-dev@lists.freedesktop.org, linux-alpha@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
-        linux-crypto@vger.kernel.org, linux-edac@vger.kernel.org,
-        linux-fbdev@vger.kernel.org, linux-hyperv@vger.kernel.org,
-        linux-iio@vger.kernel.org, linux-leds@vger.kernel.org,
-        linux-mips@vger.kernel.org, linux-parisc@vger.kernel.org,
-        linux-pm@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-        linux-remoteproc@vger.kernel.org,
-        linux-renesas-soc@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-sh@vger.kernel.org,
-        linux-staging@lists.linux.dev, linux-tegra@vger.kernel.org,
-        linux-um@lists.infradead.org, linux-usb@vger.kernel.org,
-        linux-xtensa@linux-xtensa.org, netdev@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net, rcu@vger.kernel.org,
-        sparclinux@vger.kernel.org, x86@kernel.org,
-        xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v0 00/42] notifiers: Return an error when callback is
- already registered
-Message-ID: <20211108112313.73d0727e@gandalf.local.home>
-In-Reply-To: <YYk1xi3eJdMJdjHC@zn.tnic>
-References: <20211108101157.15189-1-bp@alien8.de>
-        <20211108101924.15759-1-bp@alien8.de>
-        <20211108141703.GB1666297@rowland.harvard.edu>
-        <YYkzJ3+faVga2Tl3@zn.tnic>
-        <YYk1xi3eJdMJdjHC@zn.tnic>
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+        id S237175AbhKHQar (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 8 Nov 2021 11:30:47 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id 2BF5C61378
+        for <linux-scsi@vger.kernel.org>; Mon,  8 Nov 2021 16:28:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636388883;
+        bh=jjuVVn0VnUWP4nu6BiTTglJPFVEdrBHGpuWLdi7jy7c=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=tMtmwVOYUQO+eur0xp9j58h79XOLClzghIh0dk8xtbKc3XoETXG9J2H/Rdg9Nat7z
+         mFmMYTGKEZH3nlb6ci3fa1VYk58oAkeCyK6zLTz5u+8bB2Te/NsBRJlI2EmtY3xDMH
+         u0hs1Ozmam6cUguVs3ilpMFwNoYa9rx8r89Lpsi1/aoymrlIgf9K5PwaIPackLcue5
+         6KpUpjZ8QGZ55qjkjQdAqqJDOasGmtJnJDC10lXeH51ijLDd1UEbcsNb8WkfpZPSzY
+         CwkVyOBZox4r35sjbYuh6nUsXc5FuBz9jwPNu4oc+9fJ+ZbRHOg7j1vKq5zK0hoQvu
+         AvnmdejpoDXPg==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 214967] mvsas not detecting some disks
+Date:   Mon, 08 Nov 2021 16:28:02 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: mgperkow@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-214967-11613-ae7kGcm7JM@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214967-11613@https.bugzilla.kernel.org/>
+References: <bug-214967-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Mon, 8 Nov 2021 15:35:50 +0100
-Borislav Petkov <bp@alien8.de> wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
 
-> On Mon, Nov 08, 2021 at 03:24:39PM +0100, Borislav Petkov wrote:
-> > I guess I can add another indirection to notifier_chain_register() and
-> > avoid touching all the call sites.  
-> 
-> IOW, something like this below.
-> 
-> This way I won't have to touch all the callsites and the registration
-> routines would still return a proper value instead of returning 0
-> unconditionally.
+--- Comment #1 from Matthew Perkowski (mgperkow@gmail.com) ---
+I stumbled across this and gave it a try, and it fixed my immediate problem:
 
-I prefer this method.
+https://sourceforge.net/p/scst/mailman/scst-devel/thread/4FDDA78C.400@acm.o=
+rg/
 
-Question, how often does this warning trigger? Is it common to see in
-development?
+However, it doesn't look like the mvsas driver has changed in some time, so=
+ I'm
+thinking the problem was caused by another change somewhere else in the ker=
+nel,
+and adding that one line of code to mv_sas.c simply "band-aided" the immedi=
+ate
+issue I was experiencing.
 
--- Steve
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
