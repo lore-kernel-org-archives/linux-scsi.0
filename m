@@ -2,30 +2,30 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A140CC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:29:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC6EC4332F
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:32:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 88CA960E54
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:29:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9619861208
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:32:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344499AbhKIWc2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 17:32:28 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50850 "EHLO mail.kernel.org"
+        id S1345016AbhKIWet (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 17:34:49 -0500
+Received: from mail.kernel.org ([198.145.29.99]:55958 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1344610AbhKIWa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Nov 2021 17:30:29 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 1F16F6187A;
-        Tue,  9 Nov 2021 22:20:46 +0000 (UTC)
+        id S1344449AbhKIWcI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Nov 2021 17:32:08 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 4981D61AAA;
+        Tue,  9 Nov 2021 22:21:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636496447;
-        bh=VA8DjA6TqwDJParLb/eZ22TvXnDnZdbSH74M12a34pI=;
+        s=k20201202; t=1636496479;
+        bh=qfFlfqDA5pAXcEcgIuDZ+7gYPnCF+hGsicps8o7dUY0=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=I/6ovdVxAI1Qe4MKfTyXOm4Gv+HT0lRjnBPTs6Jswh3A5x8Xr/2LtLPNBytLPTtH4
-         jzUJjDiMF2AparabmjY0U2efr+ofYgp6xZXtCgcCVlswMP16Drv+a/ZyTOvYsxHmWy
-         cHMasmBP+Q9S7rfyYjDvtmTWwsFunR4zTiVZelQja4lCUrR2cVhlzBNa82pYDZaj0c
-         hkBIy4IHeC/hMpst0zz562hf1XDUfNvBG+BRhDNszXPTY3egMLpaWcEkm7RfL/oIdQ
-         m8Mb0a/GdYnd9xMbQROzt2XRmX15tgro/hEIhUBWVcGEqkCNEt+93dbEJR2lUej7uD
-         3Im8Gz2ij6oZw==
+        b=IlNhzZdVOG56/JVXhopATKPyMTeeNRt098b8ngI3UXtdma+iENMoVbUSbg/cIG1Iq
+         1hIot9L685vby5ShZxYLFRynj6OctO3OsJnWNSgjf+fywwpNyT5PMc910xlJC71QmH
+         HJ9jnK5WAFylZNHM+aNgSiJqey0TlMQLWOSoPF+NF47iq+Q4MqLLiv4sMmEl7S4o8W
+         SlZZTvDd9AOMynwh19Fnfprz92HTzsvfvfACEWbjFVrA+0OQnFqQsxTKXGIMVq5to5
+         1o0Nijfe1zERykABi4pNd/kfKUqRkX2s+YdvGAn6qukDPpHBD9OlLULa9M2+R2bntp
+         lpv22TBQW/zyA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
 Cc:     James Smart <jsmart2021@gmail.com>,
@@ -34,12 +34,12 @@ Cc:     James Smart <jsmart2021@gmail.com>,
         Sasha Levin <sashal@kernel.org>, james.smart@avagotech.com,
         dick.kennedy@avagotech.com, JBottomley@odin.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 65/75] scsi: lpfc: Fix link down processing to address NULL pointer dereference
-Date:   Tue,  9 Nov 2021 17:18:55 -0500
-Message-Id: <20211109221905.1234094-65-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 08/50] scsi: lpfc: Fix list_add() corruption in lpfc_drain_txq()
+Date:   Tue,  9 Nov 2021 17:20:21 -0500
+Message-Id: <20211109222103.1234885-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211109221905.1234094-1-sashal@kernel.org>
-References: <20211109221905.1234094-1-sashal@kernel.org>
+In-Reply-To: <20211109222103.1234885-1-sashal@kernel.org>
+References: <20211109222103.1234885-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -50,63 +50,44 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 1854f53ccd88ad4e7568ddfafafffe71f1ceb0a6 ]
+[ Upstream commit 99154581b05c8fb22607afb7c3d66c1bace6aa5d ]
 
-If an FC link down transition while PLOGIs are outstanding to fabric well
-known addresses, outstanding ABTS requests may result in a NULL pointer
-dereference. Driver unload requests may hang with repeated "2878" log
-messages.
+When parsing the txq list in lpfc_drain_txq(), the driver attempts to pass
+the requests to the adapter. If such an attempt fails, a local "fail_msg"
+string is set and a log message output.  The job is then added to a
+completions list for cancellation.
 
-The Link down processing results in ABTS requests for outstanding ELS
-requests. The Abort WQEs are sent for the ELSs before the driver had set
-the link state to down. Thus the driver is sending the Abort with the
-expectation that an ABTS will be sent on the wire. The Abort request is
-stalled waiting for the link to come up. In some conditions the driver may
-auto-complete the ELSs thus if the link does come up, the Abort completions
-may reference an invalid structure.
+Processing of any further jobs from the txq list continues, but since
+"fail_msg" remains set, jobs are added to the completions list regardless
+of whether a wqe was passed to the adapter.  If successfully added to
+txcmplq, jobs are added to both lists resulting in list corruption.
 
-Fix by ensuring that Abort set the flag to avoid link traffic if issued due
-to conditions where the link failed.
+Fix by clearing the fail_msg string after adding a job to the completions
+list. This stops the subsequent jobs from being added to the completions
+list unless they had an appropriate failure.
 
-Link: https://lore.kernel.org/r/20211020211417.88754-7-jsmart2021@gmail.com
+Link: https://lore.kernel.org/r/20210910233159.115896-2-jsmart2021@gmail.com
 Co-developed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 1 +
+ 1 file changed, 1 insertion(+)
 
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 260e09b8ba38d..fd48664b531cf 100644
+index 990b700de6892..06a23718a7c7f 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -11722,17 +11722,17 @@ lpfc_sli_issue_abort_iotag(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 
- 	/* ABTS WQE must go to the same WQ as the WQE to be aborted */
- 	abtsiocbp->hba_wqidx = cmdiocb->hba_wqidx;
--	if (cmdiocb->iocb_flag & LPFC_IO_FCP) {
--		abtsiocbp->iocb_flag |= LPFC_IO_FCP;
--		abtsiocbp->iocb_flag |= LPFC_USE_FCPWQIDX;
--	}
-+	if (cmdiocb->iocb_flag & LPFC_IO_FCP)
-+		abtsiocbp->iocb_flag |= (LPFC_IO_FCP | LPFC_USE_FCPWQIDX);
- 	if (cmdiocb->iocb_flag & LPFC_IO_FOF)
- 		abtsiocbp->iocb_flag |= LPFC_IO_FOF;
- 
--	if (phba->link_state >= LPFC_LINK_UP)
--		iabt->ulpCommand = CMD_ABORT_XRI_CN;
--	else
-+	if (phba->link_state < LPFC_LINK_UP ||
-+	    (phba->sli_rev == LPFC_SLI_REV4 &&
-+	     phba->sli4_hba.link_state.status == LPFC_FC_LA_TYPE_LINK_DOWN))
- 		iabt->ulpCommand = CMD_CLOSE_XRI_CN;
-+	else
-+		iabt->ulpCommand = CMD_ABORT_XRI_CN;
- 
- 	if (cmpl)
- 		abtsiocbp->iocb_cmpl = cmpl;
+@@ -20080,6 +20080,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
+ 					fail_msg,
+ 					piocbq->iotag, piocbq->sli4_xritag);
+ 			list_add_tail(&piocbq->list, &completions);
++			fail_msg = NULL;
+ 		}
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
+ 	}
 -- 
 2.33.0
 
