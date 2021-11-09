@@ -2,44 +2,40 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 824E8C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:27:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6273DC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:28:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6537D61038
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:27:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 48EA6611BF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:28:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235324AbhKIWaO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 17:30:14 -0500
-Received: from mail.kernel.org ([198.145.29.99]:50284 "EHLO mail.kernel.org"
+        id S1344072AbhKIWbj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 17:31:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:49758 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1344323AbhKIW2M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Nov 2021 17:28:12 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id EE3CD61A54;
-        Tue,  9 Nov 2021 22:20:12 +0000 (UTC)
+        id S1344422AbhKIW3r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Nov 2021 17:29:47 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id EB07F61A59;
+        Tue,  9 Nov 2021 22:20:36 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636496414;
-        bh=T4ePQrinh7Pn5hUvyn6ca6etOixhirsSaSC88lrxfDA=;
+        s=k20201202; t=1636496437;
+        bh=JXqHEpmyDYneHPyenJLoWV4u2Jk6B2/RgAVzHCFF/ug=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=MljM/AvUkXF7Q654O0KiDm6scC+8bTQNfXVhmyTeU916qWMyq9aDcWFg8Q3x6/h04
-         DwjnRADEpfOJOCHWysIpo8xoEzjk23apY0CsrXxml0jni4iMmTnU6H5Qy3mIXOAMEq
-         aMS8Szwn/rPvo8Dvk9pi3ygOhnMozC9RtwdKfCnHYq2WpOMhc7o/aJ8X7xv1OXRfa7
-         HDD0Uvwt52FAX8Bg5HT6r615NvOiCAssn90DJ5JAFgeVQvpumI0i5LUT+8BTvIZQZs
-         JEaFaCSlnSvdENmG3bkgPUaeszLUVO5UhLyvxilYkXjcPRElYNTN12lm9oUXlI5yUs
-         EO8YWFndlhw7A==
+        b=XquJcly9WmcxfUbou6DSBgBCLD2wAxcoOchVRwaYWP2C1VSEnnGhmGkbxu5/j7u2Y
+         cpfKpqpQ1QZP/z5NrT2kfBLYYY5fG1ASYbb0bG18/ufsGFIaD/7aONxAzeStNT7w5B
+         70YO87Sp3sPnBbHB5dWU4c6u44U5j9pzn62JlbcO9Rfe/ByZIXcCM10v/LyKuE4ZFm
+         wlFqBvN1jKbGdti7Xkfnyv1pdENIxf5SeP3yG0vUQqFA6XksQrr2oKMhQZ4+QXvjvw
+         1paap72dbO1YcXuaftjWrILpSAM8iVnXd3Na58DXNfRuOtexfCtAwFhcst3I+R7l9s
+         t4CpdCu+pONmw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>,
-        Scott Benesh <scott.benesh@microchip.com>,
-        Scott Teel <scott.teel@microchip.com>,
-        Mike McGowen <mike.mcgowen@microchip.com>,
-        John Donnelly <john.p.donnelly@oracle.com>,
-        Don Brace <don.brace@microchip.com>,
+Cc:     Ye Bin <yebin10@huawei.com>,
+        Douglas Gilbert <dgilbert@interlog.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, JBottomley@odin.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.14 41/75] scsi: smartpqi: Add controller handshake during kdump
-Date:   Tue,  9 Nov 2021 17:18:31 -0500
-Message-Id: <20211109221905.1234094-41-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.14 58/75] scsi: scsi_debug: Fix out-of-bound read in resp_readcap16()
+Date:   Tue,  9 Nov 2021 17:18:48 -0500
+Message-Id: <20211109221905.1234094-58-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211109221905.1234094-1-sashal@kernel.org>
 References: <20211109221905.1234094-1-sashal@kernel.org>
@@ -51,216 +47,87 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+From: Ye Bin <yebin10@huawei.com>
 
-[ Upstream commit 9ee5d6e9ac52a3c8625697535f8e35864d9fd38c ]
+[ Upstream commit 4e3ace0051e7e504b55d239daab8789dd89b863c ]
 
-Correct kdump hangs when controller is locked up.
+The following warning was observed running syzkaller:
 
-There are occasions when a controller reboot (controller soft reset) is
-issued when a controller firmware crash dump is in progress.
+[ 3813.830724] sg_write: data in/out 65466/242 bytes for SCSI command 0x9e-- guessing data in;
+[ 3813.830724]    program syz-executor not setting count and/or reply_len properly
+[ 3813.836956] ==================================================================
+[ 3813.839465] BUG: KASAN: stack-out-of-bounds in sg_copy_buffer+0x157/0x1e0
+[ 3813.841773] Read of size 4096 at addr ffff8883cf80f540 by task syz-executor/1549
+[ 3813.846612] Call Trace:
+[ 3813.846995]  dump_stack+0x108/0x15f
+[ 3813.847524]  print_address_description+0xa5/0x372
+[ 3813.848243]  kasan_report.cold+0x236/0x2a8
+[ 3813.849439]  check_memory_region+0x240/0x270
+[ 3813.850094]  memcpy+0x30/0x80
+[ 3813.850553]  sg_copy_buffer+0x157/0x1e0
+[ 3813.853032]  sg_copy_from_buffer+0x13/0x20
+[ 3813.853660]  fill_from_dev_buffer+0x135/0x370
+[ 3813.854329]  resp_readcap16+0x1ac/0x280
+[ 3813.856917]  schedule_resp+0x41f/0x1630
+[ 3813.858203]  scsi_debug_queuecommand+0xb32/0x17e0
+[ 3813.862699]  scsi_dispatch_cmd+0x330/0x950
+[ 3813.863329]  scsi_request_fn+0xd8e/0x1710
+[ 3813.863946]  __blk_run_queue+0x10b/0x230
+[ 3813.864544]  blk_execute_rq_nowait+0x1d8/0x400
+[ 3813.865220]  sg_common_write.isra.0+0xe61/0x2420
+[ 3813.871637]  sg_write+0x6c8/0xef0
+[ 3813.878853]  __vfs_write+0xe4/0x800
+[ 3813.883487]  vfs_write+0x17b/0x530
+[ 3813.884008]  ksys_write+0x103/0x270
+[ 3813.886268]  __x64_sys_write+0x77/0xc0
+[ 3813.886841]  do_syscall_64+0x106/0x360
+[ 3813.887415]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
 
-This leads to incomplete controller firmware crash dump:
+This issue can be reproduced with the following syzkaller log:
 
- - When the controller crash dump is in progress, and a kdump is initiated,
-   the driver issues inbound doorbell reset to bring back the controller in
-   SIS mode.
+r0 = openat(0xffffffffffffff9c, &(0x7f0000000040)='./file0\x00', 0x26e1, 0x0)
+r1 = syz_open_procfs(0xffffffffffffffff, &(0x7f0000000000)='fd/3\x00')
+open_by_handle_at(r1, &(0x7f00000003c0)=ANY=[@ANYRESHEX], 0x602000)
+r2 = syz_open_dev$sg(&(0x7f0000000000), 0x0, 0x40782)
+write$binfmt_aout(r2, &(0x7f0000000340)=ANY=[@ANYBLOB="00000000deff000000000000000000000000000000000000000000000000000047f007af9e107a41ec395f1bded7be24277a1501ff6196a83366f4e6362bc0ff2b247f68a972989b094b2da4fb3607fcf611a22dd04310d28c75039d"], 0x126)
 
- - If the controller is in locked up state, the inbound doorbell reset does
-   not work causing controller initialization failures. This results in the
-   driver hanging waiting for SIS mode.
+In resp_readcap16() we get "int alloc_len" value -1104926854, and then pass
+the huge arr_len to fill_from_dev_buffer(), but arr is only 32 bytes. This
+leads to OOB in sg_copy_buffer().
 
-To avoid an incomplete controller crash dump, add in a controller crash
-dump handshake:
+To solve this issue, define alloc_len as u32.
 
- - Controller will indicate start and end of the controller crash dump by
-   setting some register bits.
-
- - Driver will look these bits when a kdump is initiated.  If a controller
-   crash dump is in progress, the driver will wait for the controller crash
-   dump to complete before issuing the controller soft reset then complete
-   driver initialization.
-
-Link: https://lore.kernel.org/r/20210928235442.201875-3-don.brace@microchip.com
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Acked-by: John Donnelly <john.p.donnelly@oracle.com>
-Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
+Link: https://lore.kernel.org/r/20211013033913.2551004-2-yebin10@huawei.com
+Acked-by: Douglas Gilbert <dgilbert@interlog.com>
+Signed-off-by: Ye Bin <yebin10@huawei.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c | 41 +++++++++++++++++++--
- drivers/scsi/smartpqi/smartpqi_sis.c  | 51 +++++++++++++++++++++++++++
- drivers/scsi/smartpqi/smartpqi_sis.h  |  1 +
- 3 files changed, 91 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_debug.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 8819a407c02b6..94f01b372fcfa 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -234,15 +234,46 @@ static inline bool pqi_is_hba_lunid(u8 *scsi3addr)
- 	return pqi_scsi3addr_equal(scsi3addr, RAID_CTLR_LUNID);
- }
- 
-+#define PQI_DRIVER_SCRATCH_PQI_MODE			0x1
-+#define PQI_DRIVER_SCRATCH_FW_TRIAGE_SUPPORTED		0x2
-+
- static inline enum pqi_ctrl_mode pqi_get_ctrl_mode(struct pqi_ctrl_info *ctrl_info)
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 5b3a20a140f9e..a5125df0b7842 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -1856,7 +1856,7 @@ static int resp_readcap16(struct scsi_cmnd *scp,
  {
--	return sis_read_driver_scratch(ctrl_info);
-+	return sis_read_driver_scratch(ctrl_info) & PQI_DRIVER_SCRATCH_PQI_MODE ? PQI_MODE : SIS_MODE;
- }
+ 	unsigned char *cmd = scp->cmnd;
+ 	unsigned char arr[SDEBUG_READCAP16_ARR_SZ];
+-	int alloc_len;
++	u32 alloc_len;
  
- static inline void pqi_save_ctrl_mode(struct pqi_ctrl_info *ctrl_info,
- 	enum pqi_ctrl_mode mode)
- {
--	sis_write_driver_scratch(ctrl_info, mode);
-+	u32 driver_scratch;
-+
-+	driver_scratch = sis_read_driver_scratch(ctrl_info);
-+
-+	if (mode == PQI_MODE)
-+		driver_scratch |= PQI_DRIVER_SCRATCH_PQI_MODE;
-+	else
-+		driver_scratch &= ~PQI_DRIVER_SCRATCH_PQI_MODE;
-+
-+	sis_write_driver_scratch(ctrl_info, driver_scratch);
-+}
-+
-+static inline bool pqi_is_fw_triage_supported(struct pqi_ctrl_info *ctrl_info)
-+{
-+	return (sis_read_driver_scratch(ctrl_info) & PQI_DRIVER_SCRATCH_FW_TRIAGE_SUPPORTED) != 0;
-+}
-+
-+static inline void pqi_save_fw_triage_setting(struct pqi_ctrl_info *ctrl_info, bool is_supported)
-+{
-+	u32 driver_scratch;
-+
-+	driver_scratch = sis_read_driver_scratch(ctrl_info);
-+
-+	if (is_supported)
-+		driver_scratch |= PQI_DRIVER_SCRATCH_FW_TRIAGE_SUPPORTED;
-+	else
-+		driver_scratch &= ~PQI_DRIVER_SCRATCH_FW_TRIAGE_SUPPORTED;
-+
-+	sis_write_driver_scratch(ctrl_info, driver_scratch);
- }
- 
- static inline void pqi_ctrl_block_scan(struct pqi_ctrl_info *ctrl_info)
-@@ -7300,6 +7331,7 @@ static void pqi_ctrl_update_feature_flags(struct pqi_ctrl_info *ctrl_info,
- 		ctrl_info->unique_wwid_in_report_phys_lun_supported =
- 			firmware_feature->enabled;
- 		break;
-+		pqi_save_fw_triage_setting(ctrl_info, firmware_feature->enabled);
+ 	alloc_len = get_unaligned_be32(cmd + 10);
+ 	/* following just in case virtual_gb changed */
+@@ -1885,7 +1885,7 @@ static int resp_readcap16(struct scsi_cmnd *scp,
  	}
  
- 	pqi_firmware_feature_status(ctrl_info, firmware_feature);
-@@ -7626,6 +7658,11 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
- 	u32 product_id;
- 
- 	if (reset_devices) {
-+		if (pqi_is_fw_triage_supported(ctrl_info)) {
-+			rc = sis_wait_for_fw_triage_completion(ctrl_info);
-+			if (rc)
-+				return rc;
-+		}
- 		sis_soft_reset(ctrl_info);
- 		msleep(PQI_POST_RESET_DELAY_SECS * PQI_HZ);
- 	} else {
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
-index c954620628e03..4bf90443e5056 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.c
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.c
-@@ -51,12 +51,20 @@
- #define SIS_BASE_STRUCT_REVISION		9
- #define SIS_BASE_STRUCT_ALIGNMENT		16
- 
-+#define SIS_CTRL_KERNEL_FW_TRIAGE		0x3
- #define SIS_CTRL_KERNEL_UP			0x80
- #define SIS_CTRL_KERNEL_PANIC			0x100
- #define SIS_CTRL_READY_TIMEOUT_SECS		180
- #define SIS_CTRL_READY_RESUME_TIMEOUT_SECS	90
- #define SIS_CTRL_READY_POLL_INTERVAL_MSECS	10
- 
-+enum sis_fw_triage_status {
-+	FW_TRIAGE_NOT_STARTED = 0,
-+	FW_TRIAGE_STARTED,
-+	FW_TRIAGE_COND_INVALID,
-+	FW_TRIAGE_COMPLETED
-+};
-+
- #pragma pack(1)
- 
- /* for use with SIS_CMD_INIT_BASE_STRUCT_ADDRESS command */
-@@ -419,12 +427,55 @@ u32 sis_read_driver_scratch(struct pqi_ctrl_info *ctrl_info)
- 	return readl(&ctrl_info->registers->sis_driver_scratch);
+ 	return fill_from_dev_buffer(scp, arr,
+-			    min_t(int, alloc_len, SDEBUG_READCAP16_ARR_SZ));
++			    min_t(u32, alloc_len, SDEBUG_READCAP16_ARR_SZ));
  }
  
-+static inline enum sis_fw_triage_status
-+	sis_read_firmware_triage_status(struct pqi_ctrl_info *ctrl_info)
-+{
-+	return ((enum sis_fw_triage_status)(readl(&ctrl_info->registers->sis_firmware_status) &
-+		SIS_CTRL_KERNEL_FW_TRIAGE));
-+}
-+
- void sis_soft_reset(struct pqi_ctrl_info *ctrl_info)
- {
- 	writel(SIS_SOFT_RESET,
- 		&ctrl_info->registers->sis_host_to_ctrl_doorbell);
- }
- 
-+#define SIS_FW_TRIAGE_STATUS_TIMEOUT_SECS		300
-+#define SIS_FW_TRIAGE_STATUS_POLL_INTERVAL_SECS		1
-+
-+int sis_wait_for_fw_triage_completion(struct pqi_ctrl_info *ctrl_info)
-+{
-+	int rc;
-+	enum sis_fw_triage_status status;
-+	unsigned long timeout;
-+
-+	timeout = (SIS_FW_TRIAGE_STATUS_TIMEOUT_SECS * PQI_HZ) + jiffies;
-+	while (1) {
-+		status = sis_read_firmware_triage_status(ctrl_info);
-+		if (status == FW_TRIAGE_COND_INVALID) {
-+			dev_err(&ctrl_info->pci_dev->dev,
-+				"firmware triage condition invalid\n");
-+			rc = -EINVAL;
-+			break;
-+		} else if (status == FW_TRIAGE_NOT_STARTED ||
-+			status == FW_TRIAGE_COMPLETED) {
-+			rc = 0;
-+			break;
-+		}
-+
-+		if (time_after(jiffies, timeout)) {
-+			dev_err(&ctrl_info->pci_dev->dev,
-+				"timed out waiting for firmware triage status\n");
-+			rc = -ETIMEDOUT;
-+			break;
-+		}
-+
-+		ssleep(SIS_FW_TRIAGE_STATUS_POLL_INTERVAL_SECS);
-+	}
-+
-+	return rc;
-+}
-+
- static void __attribute__((unused)) verify_structures(void)
- {
- 	BUILD_BUG_ON(offsetof(struct sis_base_struct,
-diff --git a/drivers/scsi/smartpqi/smartpqi_sis.h b/drivers/scsi/smartpqi/smartpqi_sis.h
-index 12cd2ab1aeadd..905352ebba6f4 100644
---- a/drivers/scsi/smartpqi/smartpqi_sis.h
-+++ b/drivers/scsi/smartpqi/smartpqi_sis.h
-@@ -28,5 +28,6 @@ void sis_write_driver_scratch(struct pqi_ctrl_info *ctrl_info, u32 value);
- u32 sis_read_driver_scratch(struct pqi_ctrl_info *ctrl_info);
- void sis_soft_reset(struct pqi_ctrl_info *ctrl_info);
- u32 sis_get_product_id(struct pqi_ctrl_info *ctrl_info);
-+int sis_wait_for_fw_triage_completion(struct pqi_ctrl_info *ctrl_info);
- 
- #endif	/* _SMARTPQI_SIS_H */
+ #define SDEBUG_MAX_TGTPGS_ARR_SZ 1412
 -- 
 2.33.0
 
