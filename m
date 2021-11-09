@@ -2,39 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF0AC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:19:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7741DC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:19:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 1518E61A0D
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:19:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6064D61A3A
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:19:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343616AbhKIWWK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 17:22:10 -0500
-Received: from mail.kernel.org ([198.145.29.99]:41022 "EHLO mail.kernel.org"
+        id S1344064AbhKIWWb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 17:22:31 -0500
+Received: from mail.kernel.org ([198.145.29.99]:41238 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S245475AbhKIWUw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Nov 2021 17:20:52 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B5DA160524;
-        Tue,  9 Nov 2021 22:17:53 +0000 (UTC)
+        id S241654AbhKIWVF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Nov 2021 17:21:05 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 3BE2361027;
+        Tue,  9 Nov 2021 22:18:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636496274;
-        bh=7RNfVy3XxtsBTqoQwptlnEhpciqJvnAuuiD3CWrqgmE=;
+        s=k20201202; t=1636496284;
+        bh=6ihV7+OEOF2MZG7aA57b/NjEKuL8r16e1rIClyXObL4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oZDraMeSLKZJuV5tz8dD8z/wbdlYl6qJALc9xZZ8jQ+Uc66//1e7dmYWeUhd1iSzZ
-         P/d9OTWrZ8CKls5c+ZKvGQC7YBYTPbvmiIH4ZzJi7jewSVxlCOhm/F7RfH+QodhVbH
-         ceK2fyC2scWvGROrI84HMDY2BF1gTL1SGX2ojjG0tF/QtRN4luAhme17cUaeGWBe7s
-         ZWW6d6jHWJT1Zl9jP2ryYOnYb347qi3ut7itM9fdMvtF3fpgx7irakK4iXIHaa6GL6
-         FualVbdpx8WyQRnLsADAyvplH/Ai0emYrLiOk8TPQFJRQKya9/lwfk+zf6+WBkp0hW
-         tXRcYi8LFAidg==
+        b=NMQzb6lOBVQV0cBuoAeYDKjgd67Sx5yFouANlh96djmnT4pOi8kGv796TmHWt5z6y
+         eMVCLzxnIiPEktP9XHmADqtj+7kcL6Oy2fpgoGwUm5OTjbLU3oqtk9Q9UV2QI4ATIN
+         oxSnJ7xnEKPKrAo5w3sEp4CCqRmVlTLILQ9IDnwenzG0Hzrf3ca3KOmAvY19tTzENe
+         v6ORaZIjS3+JwRb7C0HcrToVIUHt4GGkr1kNq4b3WwR4eIxnzs/FeTARpRV5i9erKU
+         dqKwRaZsozgVfGrHSRu0qZ0HmKSzfXyam9+2jaBlARQ5N5FZMIansqGUnM799knfAY
+         Mxqcs28rynW/A==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Damien Le Moal <damien.lemoal@wdc.com>,
+Cc:     Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>,
+        Scott Benesh <scott.benesh@microchip.com>,
+        Scott Teel <scott.teel@microchip.com>,
+        Mike McGowen <mike.mcgowen@microchip.com>,
+        John Donnelly <john.p.donnelly@oracle.com>,
+        Don Brace <don.brace@microchip.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
         Sasha Levin <sashal@kernel.org>, JBottomley@odin.com,
         linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 37/82] scsi: core: Fix scsi_mode_sense() buffer length handling
-Date:   Tue,  9 Nov 2021 17:15:55 -0500
-Message-Id: <20211109221641.1233217-37-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 44/82] scsi: smartpqi: Add controller handshake during kdump
+Date:   Tue,  9 Nov 2021 17:16:02 -0500
+Message-Id: <20211109221641.1233217-44-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211109221641.1233217-1-sashal@kernel.org>
 References: <20211109221641.1233217-1-sashal@kernel.org>
@@ -46,122 +51,216 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Damien Le Moal <damien.lemoal@wdc.com>
+From: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
 
-[ Upstream commit 17b49bcbf8351d3dbe57204468ac34f033ed60bc ]
+[ Upstream commit 9ee5d6e9ac52a3c8625697535f8e35864d9fd38c ]
 
-Several problems exist with scsi_mode_sense() buffer length handling:
+Correct kdump hangs when controller is locked up.
 
- 1) The allocation length field of the MODE SENSE(10) command is 16-bits,
-    occupying bytes 7 and 8 of the CDB. With this command, access to mode
-    pages larger than 255 bytes is thus possible. However, the CDB
-    allocation length field is set by assigning len to byte 8 only, thus
-    truncating buffer length larger than 255.
+There are occasions when a controller reboot (controller soft reset) is
+issued when a controller firmware crash dump is in progress.
 
- 2) If scsi_mode_sense() is called with len smaller than 8 with
-    sdev->use_10_for_ms set, or smaller than 4 otherwise, the buffer length
-    is increased to 8 and 4 respectively, and the buffer is zero filled
-    with these increased values, thus corrupting the memory following the
-    buffer.
+This leads to incomplete controller firmware crash dump:
 
-Fix these 2 problems by using put_unaligned_be16() to set the allocation
-length field of MODE SENSE(10) CDB and by returning an error when len is
-too small.
+ - When the controller crash dump is in progress, and a kdump is initiated,
+   the driver issues inbound doorbell reset to bring back the controller in
+   SIS mode.
 
-Furthermore, if len is larger than 255B, always try MODE SENSE(10) first,
-even if the device driver did not set sdev->use_10_for_ms. In case of
-invalid opcode error for MODE SENSE(10), access to mode pages larger than
-255 bytes are not retried using MODE SENSE(6). To avoid buffer length
-overflows for the MODE_SENSE(10) case, check that len is smaller than 65535
-bytes.
+ - If the controller is in locked up state, the inbound doorbell reset does
+   not work causing controller initialization failures. This results in the
+   driver hanging waiting for SIS mode.
 
-While at it, also fix the folowing:
+To avoid an incomplete controller crash dump, add in a controller crash
+dump handshake:
 
- * Use get_unaligned_be16() to retrieve the mode data length and block
-   descriptor length fields of the mode sense reply header instead of using
-   an open coded calculation.
+ - Controller will indicate start and end of the controller crash dump by
+   setting some register bits.
 
- * Fix the kdoc dbd argument explanation: the DBD bit stands for Disable
-   Block Descriptor, which is the opposite of what the dbd argument
-   description was.
+ - Driver will look these bits when a kdump is initiated.  If a controller
+   crash dump is in progress, the driver will wait for the controller crash
+   dump to complete before issuing the controller soft reset then complete
+   driver initialization.
 
-Link: https://lore.kernel.org/r/20210820070255.682775-2-damien.lemoal@wdc.com
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+Link: https://lore.kernel.org/r/20210928235442.201875-3-don.brace@microchip.com
+Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
+Reviewed-by: Scott Teel <scott.teel@microchip.com>
+Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
+Acked-by: John Donnelly <john.p.donnelly@oracle.com>
+Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microchip.com>
+Signed-off-by: Don Brace <don.brace@microchip.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/scsi_lib.c | 25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c | 41 +++++++++++++++++++--
+ drivers/scsi/smartpqi/smartpqi_sis.c  | 51 +++++++++++++++++++++++++++
+ drivers/scsi/smartpqi/smartpqi_sis.h  |  1 +
+ 3 files changed, 91 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 572673873ddf8..701d8e8480f22 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2075,7 +2075,7 @@ EXPORT_SYMBOL_GPL(scsi_mode_select);
- /**
-  *	scsi_mode_sense - issue a mode sense, falling back from 10 to six bytes if necessary.
-  *	@sdev:	SCSI device to be queried
-- *	@dbd:	set if mode sense will allow block descriptors to be returned
-+ *	@dbd:	set to prevent mode sense from returning block descriptors
-  *	@modepage: mode page being requested
-  *	@buffer: request buffer (may not be smaller than eight bytes)
-  *	@len:	length of request buffer.
-@@ -2110,18 +2110,18 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 		sshdr = &my_sshdr;
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index ecb2af3f43ca3..a5453f5e87c3e 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -234,15 +234,46 @@ static inline bool pqi_is_hba_lunid(u8 *scsi3addr)
+ 	return pqi_scsi3addr_equal(scsi3addr, RAID_CTLR_LUNID);
+ }
  
-  retry:
--	use_10_for_ms = sdev->use_10_for_ms;
-+	use_10_for_ms = sdev->use_10_for_ms || len > 255;
++#define PQI_DRIVER_SCRATCH_PQI_MODE			0x1
++#define PQI_DRIVER_SCRATCH_FW_TRIAGE_SUPPORTED		0x2
++
+ static inline enum pqi_ctrl_mode pqi_get_ctrl_mode(struct pqi_ctrl_info *ctrl_info)
+ {
+-	return sis_read_driver_scratch(ctrl_info);
++	return sis_read_driver_scratch(ctrl_info) & PQI_DRIVER_SCRATCH_PQI_MODE ? PQI_MODE : SIS_MODE;
+ }
  
- 	if (use_10_for_ms) {
--		if (len < 8)
--			len = 8;
-+		if (len < 8 || len > 65535)
-+			return -EINVAL;
+ static inline void pqi_save_ctrl_mode(struct pqi_ctrl_info *ctrl_info,
+ 	enum pqi_ctrl_mode mode)
+ {
+-	sis_write_driver_scratch(ctrl_info, mode);
++	u32 driver_scratch;
++
++	driver_scratch = sis_read_driver_scratch(ctrl_info);
++
++	if (mode == PQI_MODE)
++		driver_scratch |= PQI_DRIVER_SCRATCH_PQI_MODE;
++	else
++		driver_scratch &= ~PQI_DRIVER_SCRATCH_PQI_MODE;
++
++	sis_write_driver_scratch(ctrl_info, driver_scratch);
++}
++
++static inline bool pqi_is_fw_triage_supported(struct pqi_ctrl_info *ctrl_info)
++{
++	return (sis_read_driver_scratch(ctrl_info) & PQI_DRIVER_SCRATCH_FW_TRIAGE_SUPPORTED) != 0;
++}
++
++static inline void pqi_save_fw_triage_setting(struct pqi_ctrl_info *ctrl_info, bool is_supported)
++{
++	u32 driver_scratch;
++
++	driver_scratch = sis_read_driver_scratch(ctrl_info);
++
++	if (is_supported)
++		driver_scratch |= PQI_DRIVER_SCRATCH_FW_TRIAGE_SUPPORTED;
++	else
++		driver_scratch &= ~PQI_DRIVER_SCRATCH_FW_TRIAGE_SUPPORTED;
++
++	sis_write_driver_scratch(ctrl_info, driver_scratch);
+ }
  
- 		cmd[0] = MODE_SENSE_10;
--		cmd[8] = len;
-+		put_unaligned_be16(len, &cmd[7]);
- 		header_length = 8;
+ static inline void pqi_ctrl_block_scan(struct pqi_ctrl_info *ctrl_info)
+@@ -7301,6 +7332,7 @@ static void pqi_ctrl_update_feature_flags(struct pqi_ctrl_info *ctrl_info,
+ 		ctrl_info->unique_wwid_in_report_phys_lun_supported =
+ 			firmware_feature->enabled;
+ 		break;
++		pqi_save_fw_triage_setting(ctrl_info, firmware_feature->enabled);
+ 	}
+ 
+ 	pqi_firmware_feature_status(ctrl_info, firmware_feature);
+@@ -7627,6 +7659,11 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ 	u32 product_id;
+ 
+ 	if (reset_devices) {
++		if (pqi_is_fw_triage_supported(ctrl_info)) {
++			rc = sis_wait_for_fw_triage_completion(ctrl_info);
++			if (rc)
++				return rc;
++		}
+ 		sis_soft_reset(ctrl_info);
+ 		msleep(PQI_POST_RESET_DELAY_SECS * PQI_HZ);
  	} else {
- 		if (len < 4)
--			len = 4;
-+			return -EINVAL;
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
+index d63c46a8e38bb..8acd3a80f5822 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.c
++++ b/drivers/scsi/smartpqi/smartpqi_sis.c
+@@ -51,12 +51,20 @@
+ #define SIS_BASE_STRUCT_REVISION		9
+ #define SIS_BASE_STRUCT_ALIGNMENT		16
  
- 		cmd[0] = MODE_SENSE;
- 		cmd[4] = len;
-@@ -2145,9 +2145,15 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 			if ((sshdr->sense_key == ILLEGAL_REQUEST) &&
- 			    (sshdr->asc == 0x20) && (sshdr->ascq == 0)) {
- 				/*
--				 * Invalid command operation code
-+				 * Invalid command operation code: retry using
-+				 * MODE SENSE(6) if this was a MODE SENSE(10)
-+				 * request, except if the request mode page is
-+				 * too large for MODE SENSE single byte
-+				 * allocation length field.
- 				 */
- 				if (use_10_for_ms) {
-+					if (len > 255)
-+						return -EIO;
- 					sdev->use_10_for_ms = 0;
- 					goto retry;
- 				}
-@@ -2171,12 +2177,11 @@ scsi_mode_sense(struct scsi_device *sdev, int dbd, int modepage,
- 		data->longlba = 0;
- 		data->block_descriptor_length = 0;
- 	} else if (use_10_for_ms) {
--		data->length = buffer[0]*256 + buffer[1] + 2;
-+		data->length = get_unaligned_be16(&buffer[0]) + 2;
- 		data->medium_type = buffer[2];
- 		data->device_specific = buffer[3];
- 		data->longlba = buffer[4] & 0x01;
--		data->block_descriptor_length = buffer[6]*256
--			+ buffer[7];
-+		data->block_descriptor_length = get_unaligned_be16(&buffer[6]);
- 	} else {
- 		data->length = buffer[0] + 1;
- 		data->medium_type = buffer[1];
++#define SIS_CTRL_KERNEL_FW_TRIAGE		0x3
+ #define SIS_CTRL_KERNEL_UP			0x80
+ #define SIS_CTRL_KERNEL_PANIC			0x100
+ #define SIS_CTRL_READY_TIMEOUT_SECS		180
+ #define SIS_CTRL_READY_RESUME_TIMEOUT_SECS	90
+ #define SIS_CTRL_READY_POLL_INTERVAL_MSECS	10
+ 
++enum sis_fw_triage_status {
++	FW_TRIAGE_NOT_STARTED = 0,
++	FW_TRIAGE_STARTED,
++	FW_TRIAGE_COND_INVALID,
++	FW_TRIAGE_COMPLETED
++};
++
+ #pragma pack(1)
+ 
+ /* for use with SIS_CMD_INIT_BASE_STRUCT_ADDRESS command */
+@@ -419,12 +427,55 @@ u32 sis_read_driver_scratch(struct pqi_ctrl_info *ctrl_info)
+ 	return readl(&ctrl_info->registers->sis_driver_scratch);
+ }
+ 
++static inline enum sis_fw_triage_status
++	sis_read_firmware_triage_status(struct pqi_ctrl_info *ctrl_info)
++{
++	return ((enum sis_fw_triage_status)(readl(&ctrl_info->registers->sis_firmware_status) &
++		SIS_CTRL_KERNEL_FW_TRIAGE));
++}
++
+ void sis_soft_reset(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	writel(SIS_SOFT_RESET,
+ 		&ctrl_info->registers->sis_host_to_ctrl_doorbell);
+ }
+ 
++#define SIS_FW_TRIAGE_STATUS_TIMEOUT_SECS		300
++#define SIS_FW_TRIAGE_STATUS_POLL_INTERVAL_SECS		1
++
++int sis_wait_for_fw_triage_completion(struct pqi_ctrl_info *ctrl_info)
++{
++	int rc;
++	enum sis_fw_triage_status status;
++	unsigned long timeout;
++
++	timeout = (SIS_FW_TRIAGE_STATUS_TIMEOUT_SECS * PQI_HZ) + jiffies;
++	while (1) {
++		status = sis_read_firmware_triage_status(ctrl_info);
++		if (status == FW_TRIAGE_COND_INVALID) {
++			dev_err(&ctrl_info->pci_dev->dev,
++				"firmware triage condition invalid\n");
++			rc = -EINVAL;
++			break;
++		} else if (status == FW_TRIAGE_NOT_STARTED ||
++			status == FW_TRIAGE_COMPLETED) {
++			rc = 0;
++			break;
++		}
++
++		if (time_after(jiffies, timeout)) {
++			dev_err(&ctrl_info->pci_dev->dev,
++				"timed out waiting for firmware triage status\n");
++			rc = -ETIMEDOUT;
++			break;
++		}
++
++		ssleep(SIS_FW_TRIAGE_STATUS_POLL_INTERVAL_SECS);
++	}
++
++	return rc;
++}
++
+ static void __attribute__((unused)) verify_structures(void)
+ {
+ 	BUILD_BUG_ON(offsetof(struct sis_base_struct,
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.h b/drivers/scsi/smartpqi/smartpqi_sis.h
+index d29c1352a826a..c1db93054c863 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.h
++++ b/drivers/scsi/smartpqi/smartpqi_sis.h
+@@ -28,5 +28,6 @@ void sis_write_driver_scratch(struct pqi_ctrl_info *ctrl_info, u32 value);
+ u32 sis_read_driver_scratch(struct pqi_ctrl_info *ctrl_info);
+ void sis_soft_reset(struct pqi_ctrl_info *ctrl_info);
+ u32 sis_get_product_id(struct pqi_ctrl_info *ctrl_info);
++int sis_wait_for_fw_triage_completion(struct pqi_ctrl_info *ctrl_info);
+ 
+ #endif	/* _SMARTPQI_SIS_H */
 -- 
 2.33.0
 
