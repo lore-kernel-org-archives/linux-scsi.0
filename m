@@ -2,39 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 254A2C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:39:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BB43C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:39:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 11A2961054
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:39:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8893B6109D
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:39:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345693AbhKIWly (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 17:41:54 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59864 "EHLO mail.kernel.org"
+        id S1345737AbhKIWmO (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 17:42:14 -0500
+Received: from mail.kernel.org ([198.145.29.99]:58688 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1345022AbhKIWjv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Nov 2021 17:39:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 4515C61B2C;
-        Tue,  9 Nov 2021 22:23:27 +0000 (UTC)
+        id S1345285AbhKIWkM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Nov 2021 17:40:12 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 9CB6B61B2B;
+        Tue,  9 Nov 2021 22:23:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636496608;
-        bh=K/XMC/1eGJD8Ny3WM6Yf8Gse2GhSI96Vpk6Ju+DMte8=;
+        s=k20201202; t=1636496618;
+        bh=LjySgigGEFpkpOaIZGBYUfKCdv1hq1lfUA+Da8866Sk=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iO0Nyjh28O7hi6pWxX7+i6cTGU184ODvMrPC1p9t+P06jqe/I17ChFBadgcx0serT
-         8Cgjk0WNXZRehII4bEkvHufu8g098xEbT0Scb02wcyaYGAb7AYhUzk3lZHZX7FirS7
-         F9LMiXgmrwHUSF/AHuR+naF5V9Q8mWVNjDi0B5kCLup11q+4Kbp9/xuxqRUbFFiujx
-         tmUlmEMEwrOhMIsGzi1C3M8XpKSoo/FoqgJbMFxORtnSCur1WnePz+PR6ZhH8k4tha
-         NALR3sGBZG+VF2g0a77jTve4+ejAeiQLWntOFhwEhPG+GnSGxYCyntnZEjt28gG6x5
-         uVZZVBQPye5iA==
+        b=aMT/DaryCKmTKixklZ72pHzAySvgMBcCIk0wUvR3ZzmU7gQlnRfvfLtTZ2tDowD6y
+         zuMSyPdZYX6YXcVJYtpqjA1QM/Ffx157Avg1dUs1cv7pI6R29yUbp+ktCkFluJRS+K
+         I0RhlCf3vGUHfoHYpxdNHdxFCPmH6B6M1z1MYJkNU1pZVhUbRWn/TnU/2mpy9WCddK
+         I0Umdi5Dw+dFSk3Egu7AlO6zIdUAMdP1g2KhkLWtrnJi3lX5ARgMwzyqn1a8XSgd20
+         wiNdeVpJPwupv+Y7OB6n37QAWS07MgOgiPDmBdM2fWXnYynte08ySRTL2fY7Bpb7nJ
+         jy9KTVLmCqGYA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Guo Zhi <qtxuning1999@sjtu.edu.cn>,
+Cc:     Mike Christie <michael.christie@oracle.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, matthew@wil.cx, hare@suse.com,
-        JBottomley@odin.com, linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 10/21] scsi: advansys: Fix kernel pointer leak
-Date:   Tue,  9 Nov 2021 17:22:59 -0500
-Message-Id: <20211109222311.1235686-10-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, nab@linux-iscsi.org,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.19 18/21] scsi: target: Fix alua_tg_pt_gps_count tracking
+Date:   Tue,  9 Nov 2021 17:23:07 -0500
+Message-Id: <20211109222311.1235686-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211109222311.1235686-1-sashal@kernel.org>
 References: <20211109222311.1235686-1-sashal@kernel.org>
@@ -46,38 +46,43 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Guo Zhi <qtxuning1999@sjtu.edu.cn>
+From: Mike Christie <michael.christie@oracle.com>
 
-[ Upstream commit d4996c6eac4c81b8872043e9391563f67f13e406 ]
+[ Upstream commit 1283c0d1a32bb924324481586b5d6e8e76f676ba ]
 
-Pointers should be printed with %p or %px rather than cast to 'unsigned
-long' and printed with %lx.
+We can't free the tg_pt_gp in core_alua_set_tg_pt_gp_id() because it's
+still accessed via configfs. Its release must go through the normal
+configfs/refcount process.
 
-Change %lx to %p to print the hashed pointer.
+The max alua_tg_pt_gps_count check should probably have been done in
+core_alua_allocate_tg_pt_gp(), but with the current code userspace could
+have created 0x0000ffff + 1 groups, but only set the id for 0x0000ffff.
+Then it could have deleted a group with an ID set, and then set the ID for
+that extra group and it would work ok.
 
-Link: https://lore.kernel.org/r/20210929122538.1158235-1-qtxuning1999@sjtu.edu.cn
-Signed-off-by: Guo Zhi <qtxuning1999@sjtu.edu.cn>
+It's unlikely, but just in case this patch continues to allow that type of
+behavior, and just fixes the kfree() while in use bug.
+
+Link: https://lore.kernel.org/r/20210930020422.92578-4-michael.christie@oracle.com
+Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/advansys.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/target/target_core_alua.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 713f69033f201..2856b0ce7ab9a 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -3370,8 +3370,8 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
- 		   shost->host_no);
- 
- 	seq_printf(m,
--		   " iop_base 0x%lx, cable_detect: %X, err_code %u\n",
--		   (unsigned long)v->iop_base,
-+		   " iop_base 0x%p, cable_detect: %X, err_code %u\n",
-+		   v->iop_base,
- 		   AdvReadWordRegister(iop_base,IOPW_SCSI_CFG1) & CABLE_DETECT,
- 		   v->err_code);
- 
+diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
+index e46ca968009c0..804956c712a5a 100644
+--- a/drivers/target/target_core_alua.c
++++ b/drivers/target/target_core_alua.c
+@@ -1716,7 +1716,6 @@ int core_alua_set_tg_pt_gp_id(
+ 		pr_err("Maximum ALUA alua_tg_pt_gps_count:"
+ 			" 0x0000ffff reached\n");
+ 		spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
+-		kmem_cache_free(t10_alua_tg_pt_gp_cache, tg_pt_gp);
+ 		return -ENOSPC;
+ 	}
+ again:
 -- 
 2.33.0
 
