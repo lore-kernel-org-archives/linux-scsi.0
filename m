@@ -2,103 +2,105 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80279C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 00:44:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 93B20C433FE
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 00:49:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 694D561178
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 00:44:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7436161208
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 00:49:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235122AbhKIArY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 8 Nov 2021 19:47:24 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:41165 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231272AbhKIArV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2021 19:47:21 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1636418672;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=6y2CSINO7ZO/q4u9acqEKykXpomoTCTu7/e6MyVdqzc=;
-        b=JgoAlWxYDctcCTt01wdzWq+xl/srwi2KnDNHgUHjLqMgODIfQKtlabNJ0R6GLP2qw2k6BR
-        iNHuNr2sT0CDryWtLNEM8ST1n11GTXHqaLl95oZw2dn1qmiVQpPLi+/r1nPPwa+HzOb557
-        c4654sdmgUV3OVo56FPAh6fVdLpIq8I=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-295-QF7HsbBFOFqUbaJzmuB39Q-1; Mon, 08 Nov 2021 19:44:29 -0500
-X-MC-Unique: QF7HsbBFOFqUbaJzmuB39Q-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B3EB3871805;
-        Tue,  9 Nov 2021 00:44:27 +0000 (UTC)
-Received: from T590 (ovpn-8-17.pek2.redhat.com [10.72.8.17])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5C2601017E35;
-        Tue,  9 Nov 2021 00:44:11 +0000 (UTC)
-Date:   Tue, 9 Nov 2021 08:44:06 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc:     Jens Axboe <axboe@kernel.dk>, Yi Zhang <yi.zhang@redhat.com>,
-        linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, ming.lei@redhat.com
-Subject: Re: [PATCH 3/4] scsi: make sure that request queue queiesce and
- unquiesce balanced
-Message-ID: <YYnEVuwp/jMngPYo@T590>
-References: <20211103034305.3691555-1-ming.lei@redhat.com>
- <20211103034305.3691555-4-ming.lei@redhat.com>
- <08f0e186093b0d5067347a1376228010cb4cc7f4.camel@HansenPartnership.com>
+        id S235951AbhKIAwb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 8 Nov 2021 19:52:31 -0500
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:42814 "EHLO
+        mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S235850AbhKIAwa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Nov 2021 19:52:30 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+        by mx0a-0016f401.pphosted.com (8.16.1.2/8.16.1.2) with ESMTP id 1A8I0K1A011746;
+        Mon, 8 Nov 2021 16:49:43 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=date : from : to :
+ cc : subject : in-reply-to : message-id : references : mime-version :
+ content-type; s=pfpt0220; bh=Ly3oDC5BauenDJ6aZ3RGgF7++ooIQx/3RQ/9PYdZY+s=;
+ b=EQ3BiUqgfsch/Cl/6YwJeMunYR3xyxzw8CJdZ0czGgzS4r3OVEAQKPVW05tGVYtFOiir
+ CKKWRqyNKNYmxia3N/YzdxdFtpZ0WjmkEPa3ZU3R+5zGHLownZXPLf+zprnSstAdfZ6M
+ L0R9b6aJ9adQsoSnm/dEz0z3GlS8Yyr1srDf9AUOZWT12wNyQQdwvr9ZGl6cRQNSTQJ7
+ UUV2DqLVfCUULtT41l6GSSikBS4ImHw3bi2gPMV9bIyRmLT1tlVnNPRRpYUCcg8ia3D1
+ QFxw5AqCrSPHPKJbMuS85VzjYpYYzx3R2nA2IPZqb8Xw67u/kf8fCnURJlGWuEwvsCxg Ow== 
+Received: from dc5-exch02.marvell.com ([199.233.59.182])
+        by mx0a-0016f401.pphosted.com (PPS) with ESMTPS id 3c726bkn97-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT);
+        Mon, 08 Nov 2021 16:49:43 -0800
+Received: from DC5-EXCH01.marvell.com (10.69.176.38) by DC5-EXCH02.marvell.com
+ (10.69.176.39) with Microsoft SMTP Server (TLS) id 15.0.1497.18; Mon, 8 Nov
+ 2021 16:49:42 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH01.marvell.com
+ (10.69.176.38) with Microsoft SMTP Server id 15.0.1497.18 via Frontend
+ Transport; Mon, 8 Nov 2021 16:49:42 -0800
+Received: from irv1user01.caveonetworks.com (unknown [10.104.116.179])
+        by maili.marvell.com (Postfix) with ESMTP id 3F6673F7041;
+        Mon,  8 Nov 2021 16:49:42 -0800 (PST)
+Received: from localhost (aeasi@localhost)
+        by irv1user01.caveonetworks.com (8.14.4/8.14.4/Submit) with ESMTP id 1A90nfdh011120;
+        Mon, 8 Nov 2021 16:49:42 -0800
+X-Authentication-Warning: irv1user01.caveonetworks.com: aeasi owned process doing -bs
+Date:   Mon, 8 Nov 2021 16:49:41 -0800
+From:   Arun Easi <aeasi@marvell.com>
+X-X-Sender: aeasi@irv1user01.caveonetworks.com
+To:     "Ewan D. Milne" <emilne@redhat.com>
+CC:     <linux-scsi@vger.kernel.org>, <stable@vger.kernel.org>,
+        <njavali@marvell.com>
+Subject: Re: [EXT] [PATCH] scsi: qla2xxx: fix mailbox direction flags in
+ qla2xxx_get_adapter_id()
+In-Reply-To: <20211108183012.13895-1-emilne@redhat.com>
+Message-ID: <alpine.LRH.2.21.9999.2111081648230.30062@irv1user01.caveonetworks.com>
+References: <20211108183012.13895-1-emilne@redhat.com>
+User-Agent: Alpine 2.21.9999 (LRH 334 2019-03-29)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <08f0e186093b0d5067347a1376228010cb4cc7f4.camel@HansenPartnership.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Type: text/plain; charset="US-ASCII"
+X-Proofpoint-ORIG-GUID: 6sSZrXN6_SkSuRuTUwIJzIXtmtS6KTLn
+X-Proofpoint-GUID: 6sSZrXN6_SkSuRuTUwIJzIXtmtS6KTLn
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
+ definitions=2021-11-08_07,2021-11-08_02,2020-04-07_01
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello James,
+Looks good. Thanks Ewan.
 
-On Mon, Nov 08, 2021 at 11:42:01AM -0500, James Bottomley wrote:
-> On Wed, 2021-11-03 at 11:43 +0800, Ming Lei wrote:
-> [...]
-> > +void scsi_start_queue(struct scsi_device *sdev)
-> > +{
-> > +	if (cmpxchg(&sdev->queue_stopped, 1, 0))
-> > +		blk_mq_unquiesce_queue(sdev->request_queue);
-> > +}
-> > +
-> > +static void scsi_stop_queue(struct scsi_device *sdev, bool nowait)
-> > +{
-> > +	if (!cmpxchg(&sdev->queue_stopped, 0, 1)) {
-> > +		if (nowait)
-> > +			blk_mq_quiesce_queue_nowait(sdev-
-> > >request_queue);
-> > +		else
-> > +			blk_mq_quiesce_queue(sdev->request_queue);
-> > +	} else {
-> > +		if (!nowait)
-> > +			blk_mq_wait_quiesce_done(sdev->request_queue);
-> > +	}
-> > +}
+Reviewed-by: Arun Easi <aeasi@marvell.com>
+
+Regards,
+-Arun
+
+On Mon, 8 Nov 2021, 10:30am, Ewan D. Milne wrote:
+
+>
+> The SCM changes set the flags in mcp->out_mb instead of mcp->in_mb
+> so the data was not actually being read into the mcp->mb[] array from
+> the adapter.
 > 
-> This looks counter intuitive.  I assume it's done so that if we call
-> scsi_stop_queue when the queue has already been stopped, it waits until
-
-The motivation is to balance blk_mq_quiesce_queue_nowait()/blk_mq_quiesce_queue()
-and blk_mq_unquiesce_queue().
-
-That needs one extra mutex to cover the quiesce action and update
-the flag, but we can't hold the mutex in scsi_internal_device_block_nowait(),
-so take this way with the atomic flag.
-
-> the queue is actually quiesced before returning so the behaviour is the
-> same in the !nowait case?  Some sort of comment explaining that would
-> be useful.
-
-I will add comment on the current usage.
-
-
-Thanks,
-Ming
-
+> Fixes: 9f2475fe7406 ("scsi: qla2xxx: SAN congestion management implementation")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_mbx.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+> index 7811c4952035..a6debeea3079 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -1695,10 +1695,8 @@ qla2x00_get_adapter_id(scsi_qla_host_t *vha, uint16_t *id, uint8_t *al_pa,
+>  		mcp->in_mb |= MBX_13|MBX_12|MBX_11|MBX_10;
+>  	if (IS_FWI2_CAPABLE(vha->hw))
+>  		mcp->in_mb |= MBX_19|MBX_18|MBX_17|MBX_16;
+> -	if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw)) {
+> -		mcp->in_mb |= MBX_15;
+> -		mcp->out_mb |= MBX_7|MBX_21|MBX_22|MBX_23;
+> -	}
+> +	if (IS_QLA27XX(vha->hw) || IS_QLA28XX(vha->hw))
+> +		mcp->in_mb |= MBX_15|MBX_21|MBX_22|MBX_23;
+>  
+>  	mcp->tov = MBX_TOV_SECONDS;
+>  	mcp->flags = 0;
+> 
