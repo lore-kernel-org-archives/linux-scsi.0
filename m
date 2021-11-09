@@ -2,70 +2,91 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A3C3C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 21:09:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3077EC433EF
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 21:57:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 00DFC61166
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 21:09:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0289761186
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 21:57:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237576AbhKIVM2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 16:12:28 -0500
-Received: from mail-pl1-f169.google.com ([209.85.214.169]:33549 "EHLO
-        mail-pl1-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230497AbhKIVM2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 16:12:28 -0500
-Received: by mail-pl1-f169.google.com with SMTP id y7so1002690plp.0
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Nov 2021 13:09:41 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=tZHN1azO17LHNLfrG2Yw3KqzsUa+sVQT0GQ6pE0a+cE=;
-        b=tb3zBX28HosbdlEpJOB1Hlq2IYpZBz/w2cORHaDyqvJDiHdumppUQKXpYzVVPs0JQ2
-         xQBavYxu3JnRLDCTVuxDSzAz+Z/sMjd6a7fOFHP8YUBwnHz8Iy7UBqgW88UN/HJpKDAr
-         u2iIVWY5CnVMGa3Ntar6kUpGvFQOo173xg0fbtY2Wr4d9Z7b98QM6yglX8EgGcMgqayp
-         bttuSnq4jUixvFWXdPxOZ/p67nsrZBgU+UJhN2Mip3S7ets3xz5KGIgSG0AuoMSjbA/T
-         SKhbh2YD8I87aMnSoWhqMUjvluZyhsona5a+JWw+gr/c8DgclHe6mysDsUYROGwu5onC
-         Wi1A==
-X-Gm-Message-State: AOAM530QM2YZJ9giY6UrgZIybnWNoNtm10eyGc048f2rhLyAvnz6ULmK
-        Jj4gSHGyZjmiY+hNBxrhz/M=
-X-Google-Smtp-Source: ABdhPJwUCEzW2d3ZdKoXVJqSXiNn0pwvbneN5ArSsbCZ1ugyaGYvlVzCUh6j6euEIg8G3vEWZ8Vovw==
-X-Received: by 2002:a17:90a:f481:: with SMTP id bx1mr10973460pjb.117.1636492181162;
-        Tue, 09 Nov 2021 13:09:41 -0800 (PST)
-Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:a582:6939:6a97:9cbf])
-        by smtp.gmail.com with ESMTPSA id t4sm20428010pfj.166.2021.11.09.13.09.39
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 09 Nov 2021 13:09:40 -0800 (PST)
-Subject: Re: [PATCH 1/2] scsi: core: Add support for reserved tags
-To:     Hannes Reinecke <hare@suse.de>, John Garry <john.garry@huawei.com>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20211103000529.1549411-1-bvanassche@acm.org>
- <20211103000529.1549411-2-bvanassche@acm.org>
-From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <4266c58a-8a49-0ef3-d532-7aa1465571ae@acm.org>
-Date:   Tue, 9 Nov 2021 13:09:39 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S241341AbhKIWA0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 17:00:26 -0500
+Received: from smtprelay0006.hostedemail.com ([216.40.44.6]:49108 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S237422AbhKIWA0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 17:00:26 -0500
+Received: from omf09.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay07.hostedemail.com (Postfix) with ESMTP id B72C8184C6E43;
+        Tue,  9 Nov 2021 21:57:38 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf09.hostedemail.com (Postfix) with ESMTPA id CE6C81E04D4;
+        Tue,  9 Nov 2021 21:57:32 +0000 (UTC)
+Message-ID: <1875b0458294d23d8e3260d2824894b095d6a62d.camel@perches.com>
+Subject: Re: [PATCH 2/2] MAINTAINERS: Mark VMware mailing list entries as
+ private
+From:   Joe Perches <joe@perches.com>
+To:     Nadav Amit <namit@vmware.com>
+Cc:     "srivatsa@csail.mit.edu" <srivatsa@csail.mit.edu>,
+        Juergen Gross <jgross@suse.com>, X86 ML <x86@kernel.org>,
+        Pv-drivers <Pv-drivers@vmware.com>,
+        Vivek Thampi <vithampi@vmware.com>,
+        Vishal Bhakta <vbhakta@vmware.com>,
+        Ronak Doshi <doshir@vmware.com>,
+        Linux-graphics-maintainer <Linux-graphics-maintainer@vmware.com>,
+        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+        Zack Rusin <zackr@vmware.com>, Deep Shah <sdeep@vmware.com>,
+        Alexey Makhalov <amakhalov@vmware.com>,
+        Linux Virtualization <virtualization@lists.linux-foundation.org>,
+        Keerthana Kalyanasundaram <keerthanak@vmware.com>,
+        Srivatsa Bhat <srivatsab@vmware.com>,
+        Anish Swaminathan <anishs@vmware.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        Thomas Gleixner <tglx@linutronix.de>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date:   Tue, 09 Nov 2021 13:57:31 -0800
+In-Reply-To: <5C24FB2A-D2C0-4D95-A0C0-B48C4B8D5AF4@vmware.com>
+References: <163640336232.62866.489924062999332446.stgit@srivatsa-dev>
+         <163640339370.62866.3435211389009241865.stgit@srivatsa-dev>
+         <5179a7c097e0bb88f95642a394f53c53e64b66b1.camel@perches.com>
+         <cb03ca42-b777-3d1a-5aba-b01cd19efa9a@csail.mit.edu>
+         <dcbd19fcd1625146f4db267f84abd7412513d20e.camel@perches.com>
+         <5C24FB2A-D2C0-4D95-A0C0-B48C4B8D5AF4@vmware.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.40.4-1 
 MIME-Version: 1.0
-In-Reply-To: <20211103000529.1549411-2-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
+X-Rspamd-Server: rspamout04
+X-Rspamd-Queue-Id: CE6C81E04D4
+X-Stat-Signature: xphw7gem3ckanztarthni3x91po8eitn
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-Session-ID: U2FsdGVkX18k+m4zQxO7Jw0A5AU3JcKPJ/10qFxleFI=
+X-HE-Tag: 1636495052-266614
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/2/21 5:05 PM, Bart Van Assche wrote:
-> Allow SCSI LLDs to allocate reserved tags by passing the BLK_MQ_REQ_RESERVED
-> flag to blk_get_request().
+On Tue, 2021-11-09 at 00:58 +0000, Nadav Amit wrote:
+> > On Nov 8, 2021, at 4:37 PM, Joe Perches <joe@perches.com> wrote:
+> > On Mon, 2021-11-08 at 16:22 -0800, Srivatsa S. Bhat wrote:
+> > 
+> > So it's an exploder not an actual maintainer and it likely isn't
+> > publically archived with any normal list mechanism.
+> > 
+> > So IMO "private" isn't appropriate.  Neither is "L:"
+> > Perhaps just mark it as what it is as an "exploder".
+> > 
+> > Or maybe these blocks should be similar to:
+> > 
+> > M:	Name of Lead Developer <somebody@vmware.com>
+> > M:	VMware <foo> maintainers <linux-<foo>-maintainers@vmlinux.com>
 
-(replying to my own email)
+Maybe adding entries like
 
-Hannes and John, please help with reviewing this patch.
+M:	Named maintainer <whoever@vmware.com>
+R:	VMware <foo> reviewers <linux-<foo>-maintainers@vmware.com>
 
-Thanks,
+would be best/simplest.
 
-Bart.
+
