@@ -2,42 +2,44 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70621C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:34:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35890C43219
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:35:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5A42861208
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:34:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 227746109D
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:35:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345393AbhKIWhU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 17:37:20 -0500
-Received: from mail.kernel.org ([198.145.29.99]:55748 "EHLO mail.kernel.org"
+        id S1345550AbhKIWiN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 17:38:13 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56332 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1343881AbhKIWfQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Nov 2021 17:35:16 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id B1A4E60F36;
-        Tue,  9 Nov 2021 22:22:10 +0000 (UTC)
+        id S1345056AbhKIWf6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Nov 2021 17:35:58 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id AA1F361AE0;
+        Tue,  9 Nov 2021 22:22:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636496531;
-        bh=OSnGHfoonZUMR5n0uTW0l0jcpsipm3GfZ/IacPzI8Yk=;
+        s=k20201202; t=1636496552;
+        bh=+rDN7N/jbkDnn0hQ8X5WZx5qfX//9WsZuSxaPhm+Hro=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=iQlCJXDId9nC8XK5ZEmri6HSVM1UNBpPGhhZ2cyO/rWI2vdf03LZaB7l5rxC+Efph
-         ihqtdn/V9+unRJZtGAKQUgo2ds/5kHDbVW6L8Lq3l02fksFU9o0wcI3uUe54j0CXwI
-         WD9TGIb9xrCgAuCTZNOZuaTd6nHsDaa9QSpL55Kr6fjwbg7My6sF2UqQxGefMY5RxA
-         nPzkPZh+yy65Mh5jEMQcpCH2LUE+GDdQp8itjgIbieBpJ9xxUVYVUSdv3EFaBcEs9r
-         d4G6rtOUZCuHNvko0KIBLNZpXEs4h/ow6dchEm5ikws4qDh+n7ObNcVVfyYuvHLUUG
-         ISpWjm6dXp+9Q==
+        b=ZJO0QSNMGPJ9Kuq253juMU/+k9cuV0Lmq8ZRmqiDAoASRCMZkFx/S+irzwzNDlyt/
+         xkTmEAQ/dl8Xu3DDGha5ZLrantRseiwquz2yNO4IXHdPLALRNmkKYGQMVjIm4BoD6w
+         Do885neJP4pW6XXGHDUoOD5x1WmMg9e9lJxBdQxVW1OzeYKEAUdGXvRnTRudfT5T44
+         fPNITOzHOxAzaYnWl3FUzEKQV7cnffF+hloWIETePixQlGUknXJ3WSj9QUDRzpTOqt
+         wkEzv2LNU9CsXevnjUisVQZF9WG/vjWSefPWouXPGSJ1KdkKValRwcFILLuqLsbhIe
+         2cMrcWj7htWxg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Mike Christie <michael.christie@oracle.com>,
+Cc:     James Smart <jsmart2021@gmail.com>,
+        Justin Tee <justin.tee@broadcom.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, nab@linux-iscsi.org,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 43/50] scsi: target: Fix alua_tg_pt_gps_count tracking
-Date:   Tue,  9 Nov 2021 17:20:56 -0500
-Message-Id: <20211109222103.1234885-43-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, james.smart@avagotech.com,
+        dick.kennedy@avagotech.com, JBottomley@odin.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.4 04/30] scsi: lpfc: Fix list_add() corruption in lpfc_drain_txq()
+Date:   Tue,  9 Nov 2021 17:21:58 -0500
+Message-Id: <20211109222224.1235388-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20211109222103.1234885-1-sashal@kernel.org>
-References: <20211109222103.1234885-1-sashal@kernel.org>
+In-Reply-To: <20211109222224.1235388-1-sashal@kernel.org>
+References: <20211109222224.1235388-1-sashal@kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
@@ -46,43 +48,46 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Mike Christie <michael.christie@oracle.com>
+From: James Smart <jsmart2021@gmail.com>
 
-[ Upstream commit 1283c0d1a32bb924324481586b5d6e8e76f676ba ]
+[ Upstream commit 99154581b05c8fb22607afb7c3d66c1bace6aa5d ]
 
-We can't free the tg_pt_gp in core_alua_set_tg_pt_gp_id() because it's
-still accessed via configfs. Its release must go through the normal
-configfs/refcount process.
+When parsing the txq list in lpfc_drain_txq(), the driver attempts to pass
+the requests to the adapter. If such an attempt fails, a local "fail_msg"
+string is set and a log message output.  The job is then added to a
+completions list for cancellation.
 
-The max alua_tg_pt_gps_count check should probably have been done in
-core_alua_allocate_tg_pt_gp(), but with the current code userspace could
-have created 0x0000ffff + 1 groups, but only set the id for 0x0000ffff.
-Then it could have deleted a group with an ID set, and then set the ID for
-that extra group and it would work ok.
+Processing of any further jobs from the txq list continues, but since
+"fail_msg" remains set, jobs are added to the completions list regardless
+of whether a wqe was passed to the adapter.  If successfully added to
+txcmplq, jobs are added to both lists resulting in list corruption.
 
-It's unlikely, but just in case this patch continues to allow that type of
-behavior, and just fixes the kfree() while in use bug.
+Fix by clearing the fail_msg string after adding a job to the completions
+list. This stops the subsequent jobs from being added to the completions
+list unless they had an appropriate failure.
 
-Link: https://lore.kernel.org/r/20210930020422.92578-4-michael.christie@oracle.com
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
+Link: https://lore.kernel.org/r/20210910233159.115896-2-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_alua.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/target/target_core_alua.c b/drivers/target/target_core_alua.c
-index 6b72afee2f8b7..b240bd1ccb71d 100644
---- a/drivers/target/target_core_alua.c
-+++ b/drivers/target/target_core_alua.c
-@@ -1702,7 +1702,6 @@ int core_alua_set_tg_pt_gp_id(
- 		pr_err("Maximum ALUA alua_tg_pt_gps_count:"
- 			" 0x0000ffff reached\n");
- 		spin_unlock(&dev->t10_alua.tg_pt_gps_lock);
--		kmem_cache_free(t10_alua_tg_pt_gp_cache, tg_pt_gp);
- 		return -ENOSPC;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 4a7ceaa34341c..51bab0979527b 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -19692,6 +19692,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
+ 					fail_msg,
+ 					piocbq->iotag, piocbq->sli4_xritag);
+ 			list_add_tail(&piocbq->list, &completions);
++			fail_msg = NULL;
+ 		}
+ 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
  	}
- again:
 -- 
 2.33.0
 
