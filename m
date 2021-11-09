@@ -2,41 +2,39 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0070CC433FE
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:40:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB23C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:41:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DC3B261054
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:40:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C784E61077
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:41:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345656AbhKIWnL (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 17:43:11 -0500
-Received: from mail.kernel.org ([198.145.29.99]:59348 "EHLO mail.kernel.org"
+        id S238824AbhKIWok (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 17:44:40 -0500
+Received: from mail.kernel.org ([198.145.29.99]:59456 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S240687AbhKIWlL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 9 Nov 2021 17:41:11 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id E90DD61B1E;
-        Tue,  9 Nov 2021 22:23:46 +0000 (UTC)
+        id S1344987AbhKIWl3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Nov 2021 17:41:29 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id 43CB461B2E;
+        Tue,  9 Nov 2021 22:23:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1636496627;
-        bh=04myLnVuw5E9uoLK0x56JMej242g2owyW1MHElDCN68=;
+        s=k20201202; t=1636496632;
+        bh=AUBpS3ubOHiAhI5sJh5pGe9SIkaMFAgSqepsC0LcDGM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=goTCb0uZLQFQK3AHGD6m3C2aSGFVjQk+yxHTty0GD1XPM1350F3zTtISHSy1oVxQu
-         EoX8pR+cP0e6DZBsLXftcWT6jux4hEVXhkBwMjFcJLrgA2R0dUydC4QtMnPusd8lPf
-         KOh9H/5iYYDcUWajmMKEbWi8CEFXaAwDOpL9YZUJgPGXIlEaWbXcyiBe9yV1/6ETsm
-         iTTSXuqsMjtdgYfhLyrWS4kL8XCvh7ksDCwVQuqbzq9SkylTf/9nV93WVuYz5afq74
-         aJRXWwxLnlKt8AIivnOCGWXIP8JzwiKixff4L50EhWsjkoJqYBs61aYbWke60IVEh6
-         /7toYnMUb3SEw==
+        b=ni54swNVd99B7vibtFgHH03VCByXQo6YkojmT+q+QloAkRQSruhmW819Sie7+zdRC
+         yqrlXsPHzEghamDCBC5v9f0hQjanSe7j0bvXKqOsUz706SXZr89/gsOfz3cyjmVfJ9
+         gyzAHgvL0xkxLTBmcG6OExUXh85kXv5U/DAfxpQl0eZL7IYX2suIufO/zRvoFNB9Hs
+         9rPyelWHLZYv6MARCx78aaVwYgrsm/tqnxdVAA0kODPG1jYiR30QrD0x6Bo7Tsas5D
+         55RRr/fMID/jTwM0djFKa6CTosSX0D2cONlqyNY2ebm9x9mdTDlq0FKgHixOLnVoGJ
+         OAQVTwRTdiUtw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     James Smart <jsmart2021@gmail.com>,
-        Justin Tee <justin.tee@broadcom.com>,
+Cc:     Guo Zhi <qtxuning1999@sjtu.edu.cn>,
         "Martin K . Petersen" <martin.petersen@oracle.com>,
-        Sasha Levin <sashal@kernel.org>, james.smart@avagotech.com,
-        dick.kennedy@avagotech.com, JBottomley@odin.com,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.14 02/14] scsi: lpfc: Fix list_add() corruption in lpfc_drain_txq()
-Date:   Tue,  9 Nov 2021 17:23:31 -0500
-Message-Id: <20211109222343.1235902-2-sashal@kernel.org>
+        Sasha Levin <sashal@kernel.org>, matthew@wil.cx, hare@suse.com,
+        JBottomley@odin.com, linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 4.14 05/14] scsi: advansys: Fix kernel pointer leak
+Date:   Tue,  9 Nov 2021 17:23:34 -0500
+Message-Id: <20211109222343.1235902-5-sashal@kernel.org>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20211109222343.1235902-1-sashal@kernel.org>
 References: <20211109222343.1235902-1-sashal@kernel.org>
@@ -48,46 +46,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: James Smart <jsmart2021@gmail.com>
+From: Guo Zhi <qtxuning1999@sjtu.edu.cn>
 
-[ Upstream commit 99154581b05c8fb22607afb7c3d66c1bace6aa5d ]
+[ Upstream commit d4996c6eac4c81b8872043e9391563f67f13e406 ]
 
-When parsing the txq list in lpfc_drain_txq(), the driver attempts to pass
-the requests to the adapter. If such an attempt fails, a local "fail_msg"
-string is set and a log message output.  The job is then added to a
-completions list for cancellation.
+Pointers should be printed with %p or %px rather than cast to 'unsigned
+long' and printed with %lx.
 
-Processing of any further jobs from the txq list continues, but since
-"fail_msg" remains set, jobs are added to the completions list regardless
-of whether a wqe was passed to the adapter.  If successfully added to
-txcmplq, jobs are added to both lists resulting in list corruption.
+Change %lx to %p to print the hashed pointer.
 
-Fix by clearing the fail_msg string after adding a job to the completions
-list. This stops the subsequent jobs from being added to the completions
-list unless they had an appropriate failure.
-
-Link: https://lore.kernel.org/r/20210910233159.115896-2-jsmart2021@gmail.com
-Co-developed-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Signed-off-by: James Smart <jsmart2021@gmail.com>
+Link: https://lore.kernel.org/r/20210929122538.1158235-1-qtxuning1999@sjtu.edu.cn
+Signed-off-by: Guo Zhi <qtxuning1999@sjtu.edu.cn>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_sli.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/advansys.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 20deb6715c36e..6f9ba3272721a 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -18777,6 +18777,7 @@ lpfc_drain_txq(struct lpfc_hba *phba)
- 					fail_msg,
- 					piocbq->iotag, piocbq->sli4_xritag);
- 			list_add_tail(&piocbq->list, &completions);
-+			fail_msg = NULL;
- 		}
- 		spin_unlock_irqrestore(&pring->ring_lock, iflags);
- 	}
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 24e57e770432b..6efd17692a55a 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -3370,8 +3370,8 @@ static void asc_prt_adv_board_info(struct seq_file *m, struct Scsi_Host *shost)
+ 		   shost->host_no);
+ 
+ 	seq_printf(m,
+-		   " iop_base 0x%lx, cable_detect: %X, err_code %u\n",
+-		   (unsigned long)v->iop_base,
++		   " iop_base 0x%p, cable_detect: %X, err_code %u\n",
++		   v->iop_base,
+ 		   AdvReadWordRegister(iop_base,IOPW_SCSI_CFG1) & CABLE_DETECT,
+ 		   v->err_code);
+ 
 -- 
 2.33.0
 
