@@ -2,91 +2,114 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3077EC433EF
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 21:57:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0CE2C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:17:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0289761186
-	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 21:57:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C98BA6108C
+	for <linux-scsi@archiver.kernel.org>; Tue,  9 Nov 2021 22:17:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S241341AbhKIWA0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 17:00:26 -0500
-Received: from smtprelay0006.hostedemail.com ([216.40.44.6]:49108 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S237422AbhKIWA0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 17:00:26 -0500
-Received: from omf09.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
-        by smtprelay07.hostedemail.com (Postfix) with ESMTP id B72C8184C6E43;
-        Tue,  9 Nov 2021 21:57:38 +0000 (UTC)
-Received: from [HIDDEN] (Authenticated sender: joe@perches.com) by omf09.hostedemail.com (Postfix) with ESMTPA id CE6C81E04D4;
-        Tue,  9 Nov 2021 21:57:32 +0000 (UTC)
-Message-ID: <1875b0458294d23d8e3260d2824894b095d6a62d.camel@perches.com>
-Subject: Re: [PATCH 2/2] MAINTAINERS: Mark VMware mailing list entries as
- private
-From:   Joe Perches <joe@perches.com>
-To:     Nadav Amit <namit@vmware.com>
-Cc:     "srivatsa@csail.mit.edu" <srivatsa@csail.mit.edu>,
-        Juergen Gross <jgross@suse.com>, X86 ML <x86@kernel.org>,
-        Pv-drivers <Pv-drivers@vmware.com>,
-        Vivek Thampi <vithampi@vmware.com>,
-        Vishal Bhakta <vbhakta@vmware.com>,
-        Ronak Doshi <doshir@vmware.com>,
-        Linux-graphics-maintainer <Linux-graphics-maintainer@vmware.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-        Zack Rusin <zackr@vmware.com>, Deep Shah <sdeep@vmware.com>,
-        Alexey Makhalov <amakhalov@vmware.com>,
-        Linux Virtualization <virtualization@lists.linux-foundation.org>,
-        Keerthana Kalyanasundaram <keerthanak@vmware.com>,
-        Srivatsa Bhat <srivatsab@vmware.com>,
-        Anish Swaminathan <anishs@vmware.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Date:   Tue, 09 Nov 2021 13:57:31 -0800
-In-Reply-To: <5C24FB2A-D2C0-4D95-A0C0-B48C4B8D5AF4@vmware.com>
-References: <163640336232.62866.489924062999332446.stgit@srivatsa-dev>
-         <163640339370.62866.3435211389009241865.stgit@srivatsa-dev>
-         <5179a7c097e0bb88f95642a394f53c53e64b66b1.camel@perches.com>
-         <cb03ca42-b777-3d1a-5aba-b01cd19efa9a@csail.mit.edu>
-         <dcbd19fcd1625146f4db267f84abd7412513d20e.camel@perches.com>
-         <5C24FB2A-D2C0-4D95-A0C0-B48C4B8D5AF4@vmware.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-User-Agent: Evolution 3.40.4-1 
+        id S245443AbhKIWUj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 17:20:39 -0500
+Received: from mail.kernel.org ([198.145.29.99]:40468 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S245446AbhKIWUA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 9 Nov 2021 17:20:00 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id ED44B60524;
+        Tue,  9 Nov 2021 22:17:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636496233;
+        bh=7k1WS9uVJRujblIhvJOmlph87wwIMaxi9obiwhT3fZY=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=QhsahzE5mWszKDv9poaXD7Df5DwKfSNvMcCA3qVh9U5FUqNW9oeZsj0ElT4TWAt5R
+         0pNyajf/ttcnY/noNh7w66NU2Pr1dFFKP9W8KHFOx5Ybb4sP8dWDcxxt0n+9aI0WvL
+         p+ht4iLMItOUVHSptnRiGuhYQLnmOY45YAcA/iOgjrJkn8GhQX21OQso7jlE90j8nA
+         VLXTYnioeHdLcpxp3A8j1hIeFEuPgieNaX1cyDcStm27apc+DnQSC5TzadENHTnJQL
+         H9sRY/JOj5EIVczzAjnIfSSdqfGpw6WkCAot2DHV4hmSNv8I6jKLd//L9nggL50Bkj
+         zjYMAtIC1LNOg==
+From:   Sasha Levin <sashal@kernel.org>
+To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc:     Ajish Koshy <Ajish.Koshy@microchip.com>,
+        Jack Wang <jinpu.wang@ionos.com>,
+        Viswas G <Viswas.G@microchip.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Sasha Levin <sashal@kernel.org>, jinpu.wang@profitbricks.com,
+        lindar_liu@usish.com, JBottomley@odin.com, pmchba@pmcs.com,
+        linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 12/82] scsi: pm80xx: Fix memory leak during rmmod
+Date:   Tue,  9 Nov 2021 17:15:30 -0500
+Message-Id: <20211109221641.1233217-12-sashal@kernel.org>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20211109221641.1233217-1-sashal@kernel.org>
+References: <20211109221641.1233217-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Rspamd-Server: rspamout04
-X-Rspamd-Queue-Id: CE6C81E04D4
-X-Stat-Signature: xphw7gem3ckanztarthni3x91po8eitn
-X-Session-Marker: 6A6F6540706572636865732E636F6D
-X-Session-ID: U2FsdGVkX18k+m4zQxO7Jw0A5AU3JcKPJ/10qFxleFI=
-X-HE-Tag: 1636495052-266614
+X-stable: review
+X-Patchwork-Hint: Ignore
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Tue, 2021-11-09 at 00:58 +0000, Nadav Amit wrote:
-> > On Nov 8, 2021, at 4:37 PM, Joe Perches <joe@perches.com> wrote:
-> > On Mon, 2021-11-08 at 16:22 -0800, Srivatsa S. Bhat wrote:
-> > 
-> > So it's an exploder not an actual maintainer and it likely isn't
-> > publically archived with any normal list mechanism.
-> > 
-> > So IMO "private" isn't appropriate.  Neither is "L:"
-> > Perhaps just mark it as what it is as an "exploder".
-> > 
-> > Or maybe these blocks should be similar to:
-> > 
-> > M:	Name of Lead Developer <somebody@vmware.com>
-> > M:	VMware <foo> maintainers <linux-<foo>-maintainers@vmlinux.com>
+From: Ajish Koshy <Ajish.Koshy@microchip.com>
 
-Maybe adding entries like
+[ Upstream commit 51e6ed83bb4ade7c360551fa4ae55c4eacea354b ]
 
-M:	Named maintainer <whoever@vmware.com>
-R:	VMware <foo> reviewers <linux-<foo>-maintainers@vmware.com>
+Driver failed to release all memory allocated. This would lead to memory
+leak during driver removal.
 
-would be best/simplest.
+Properly free memory when the module is removed.
 
+Link: https://lore.kernel.org/r/20210906170404.5682-5-Ajish.Koshy@microchip.com
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
+Signed-off-by: Ajish Koshy <Ajish.Koshy@microchip.com>
+Signed-off-by: Viswas G <Viswas.G@microchip.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/scsi/pm8001/pm8001_init.c | 11 +++++++++++
+ drivers/scsi/pm8001/pm8001_sas.h  |  1 +
+ 2 files changed, 12 insertions(+)
+
+diff --git a/drivers/scsi/pm8001/pm8001_init.c b/drivers/scsi/pm8001/pm8001_init.c
+index 47db7e0beae6f..729d8252028e8 100644
+--- a/drivers/scsi/pm8001/pm8001_init.c
++++ b/drivers/scsi/pm8001/pm8001_init.c
+@@ -1198,6 +1198,7 @@ pm8001_init_ccb_tag(struct pm8001_hba_info *pm8001_ha, struct Scsi_Host *shost,
+ 		goto err_out;
+ 
+ 	/* Memory region for ccb_info*/
++	pm8001_ha->ccb_count = ccb_count;
+ 	pm8001_ha->ccb_info =
+ 		kcalloc(ccb_count, sizeof(struct pm8001_ccb_info), GFP_KERNEL);
+ 	if (!pm8001_ha->ccb_info) {
+@@ -1259,6 +1260,16 @@ static void pm8001_pci_remove(struct pci_dev *pdev)
+ 			tasklet_kill(&pm8001_ha->tasklet[j]);
+ #endif
+ 	scsi_host_put(pm8001_ha->shost);
++
++	for (i = 0; i < pm8001_ha->ccb_count; i++) {
++		dma_free_coherent(&pm8001_ha->pdev->dev,
++			sizeof(struct pm8001_prd) * PM8001_MAX_DMA_SG,
++			pm8001_ha->ccb_info[i].buf_prd,
++			pm8001_ha->ccb_info[i].ccb_dma_handle);
++	}
++	kfree(pm8001_ha->ccb_info);
++	kfree(pm8001_ha->devices);
++
+ 	pm8001_free(pm8001_ha);
+ 	kfree(sha->sas_phy);
+ 	kfree(sha->sas_port);
+diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
+index 62d08b535a4b6..f5b6a9d8099e5 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.h
++++ b/drivers/scsi/pm8001/pm8001_sas.h
+@@ -516,6 +516,7 @@ struct pm8001_hba_info {
+ 	u32			iomb_size; /* SPC and SPCV IOMB size */
+ 	struct pm8001_device	*devices;
+ 	struct pm8001_ccb_info	*ccb_info;
++	u32			ccb_count;
+ #ifdef PM8001_USE_MSIX
+ 	int			number_of_intr;/*will be used in remove()*/
+ 	char			intr_drvname[PM8001_MAX_MSIX_VEC]
+-- 
+2.33.0
 
