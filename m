@@ -2,160 +2,135 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B644C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:36:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6B3AC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:53:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 10DC96112F
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:36:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AC95F611BF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:53:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229526AbhKJBj0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 20:39:26 -0500
-Received: from mail-1.ca.inter.net ([208.85.220.69]:59422 "EHLO
-        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229513AbhKJBjZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 20:39:25 -0500
-Received: from mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19])
-        by mail-1.ca.inter.net (Postfix) with ESMTP id 1CDEA2EAA0D;
-        Tue,  9 Nov 2021 20:36:36 -0500 (EST)
-Received: from mail-1.ca.inter.net ([208.85.220.69])
-        by mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19]) (amavisd-new, port 10024)
-        with ESMTP id AitXvYCCv9Tb; Tue,  9 Nov 2021 20:36:35 -0500 (EST)
-Received: from [192.168.48.23] (host-45-58-208-241.dyn.295.ca [45.58.208.241])
-        (using TLSv1 with cipher AES128-SHA (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: dgilbert@interlog.com)
-        by mail-1.ca.inter.net (Postfix) with ESMTPSA id E323C2EAA0B;
-        Tue,  9 Nov 2021 20:36:34 -0500 (EST)
-Reply-To: dgilbert@interlog.com
-Subject: Re: [PATCH 11/11] scsi: ufs: Implement polling support
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-References: <20211110004440.3389311-1-bvanassche@acm.org>
- <20211110004440.3389311-12-bvanassche@acm.org>
-From:   Douglas Gilbert <dgilbert@interlog.com>
-Message-ID: <b921b85e-1685-da71-2ee7-806d8e75ce9d@interlog.com>
-Date:   Tue, 9 Nov 2021 20:36:34 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        id S229513AbhKJBzu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 20:55:50 -0500
+Received: from mailout2.samsung.com ([203.254.224.25]:50200 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229470AbhKJBzu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 20:55:50 -0500
+Received: from epcas3p1.samsung.com (unknown [182.195.41.19])
+        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20211110015301epoutp028edd6428b332da8e29fedf71fd2944c1~2DG4fSafP1535515355epoutp02c
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2021 01:53:01 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20211110015301epoutp028edd6428b332da8e29fedf71fd2944c1~2DG4fSafP1535515355epoutp02c
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1636509181;
+        bh=lvZsKN2VXM+DetM3+EhURhhk1fgBFNLPww3YigJckr4=;
+        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+        b=g55/7bInwBUxEfuolTwduy8IerdypmFQ2yPaN1JxHrOPK3bEd21p+xNjJkhRxfAgB
+         VwSikLYTnuB20BJgAEc+6/Vwk1pfiCIDBZqqeH/sFVx3N8aZmVOnkqyV1Z2Ytfoexq
+         4tS6Etdk79adip8OBAi4I+PFWYrvaebvpGTvxvLI=
+Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
+        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
+        20211110015301epcas3p1573d1aed9a599f2da8f86c2ba5a33c17~2DG4CJ_Ve1738317383epcas3p1y;
+        Wed, 10 Nov 2021 01:53:01 +0000 (GMT)
+Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp3.localdomain
+        (Postfix) with ESMTP id 4HpntP1HG5z4x9QL; Wed, 10 Nov 2021 01:53:01 +0000
+        (GMT)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+        20211110012815epcas2p3b4f8d4e1cea2cb2cc13f0fcdefc39c9a~2CxQyeXXb1559315593epcas2p3R;
+        Wed, 10 Nov 2021 01:28:15 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+        20211110012815epsmtrp1f2e192fa1f888fc59837fd5c3801dc4b~2CxQwkuhD0577505775epsmtrp1I;
+        Wed, 10 Nov 2021 01:28:15 +0000 (GMT)
+X-AuditID: b6c32a29-409ff700000074af-da-618b202f5b4d
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+        8D.47.29871.F202B816; Wed, 10 Nov 2021 10:28:15 +0900 (KST)
+Received: from KORCO082417 (unknown [10.229.8.121]) by epsmtip1.samsung.com
+        (KnoxPortal) with ESMTPA id
+        20211110012815epsmtip1d674c38c0bbde95030df0599fce64d13~2CxQmBWi70790607906epsmtip1G;
+        Wed, 10 Nov 2021 01:28:15 +0000 (GMT)
+From:   "Chanho Park" <chanho61.park@samsung.com>
+To:     "'Bart Van Assche'" <bvanassche@acm.org>,
+        "'Martin K . Petersen'" <martin.petersen@oracle.com>
+Cc:     <linux-scsi@vger.kernel.org>, "'Jaegeuk Kim'" <jaegeuk@kernel.org>,
+        "'Adrian Hunter'" <adrian.hunter@intel.com>,
+        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
+        "'Krzysztof Kozlowski'" <krzysztof.kozlowski@canonical.com>,
+        "'Alim Akhtar'" <alim.akhtar@samsung.com>,
+        "'Bean Huo'" <beanhuo@micron.com>,
+        "'Avri Altman'" <avri.altman@wdc.com>,
+        "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
+        "'Yue Hu'" <huyue2@yulong.com>,
+        "'Peter Wang'" <peter.wang@mediatek.com>,
+        "'Stanley Chu'" <stanley.chu@mediatek.com>,
+        "'Can Guo'" <cang@codeaurora.org>,
+        "'Asutosh Das'" <asutoshd@codeaurora.org>,
+        "'Keoseong Park'" <keosung.park@samsung.com>
+In-Reply-To: <20211110004440.3389311-2-bvanassche@acm.org>
+Subject: RE: [PATCH 01/11] scsi: ufs: Rename a function argument
+Date:   Wed, 10 Nov 2021 10:28:15 +0900
+Message-ID: <2038148563.21636509181613.JavaMail.epsvc@epcpadp4>
 MIME-Version: 1.0
-In-Reply-To: <20211110004440.3389311-12-bvanassche@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-CA
 Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQGNlQ1VLD3900m/KRSp2q44GuuT/wHYmWGEAh9o+aascLln4A==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0hTYRzGe885OztbrE7baG+WFovCCW1JF18jSyrikARiEFiMOuphM52u
+        zS5WH6zEyyzTrjq7WJLmMsU53SJvTS1XKIbdjNSyKUlZapCti9Wmkd9+8Dz/H8+HP4WL+wk/
+        Kj4phTMksYlyUkjUtcgDVqiW5LArHQ0K5HJXkOjN1ToSNWS089Gw5xmJ7r/NJtDFUQ+OxqtK
+        eWjYqUD1Rb04cleZcXTjZR2GHro+AVQ98g1DPbY2AuW8cJCo7OEkhmrHf/DQzdoeEC5mup9G
+        MOa00yTTnXsaY0rqhzHGaskmmbwbzYBJdzURzERVFsmMDb4imFybBTBfrAFMZnMOxtRWlOCR
+        ol3C9XFcYvxBzqDasFeofZ35k68/JTjceH6Slwbe801AQEF6NawcKyNNQEiJ6XsAtjvP4VOB
+        Pxz65JguSWB/eitvqjQEYOlAmS8gaRUczqrjeVlKx8GC4jG+t4TTOTz4vPYa8AZi+i6AFTVC
+        LwvoddBkn8C8LKHDoeVJv09E0MtgycdeH4voUNh82YZN8TzoKnQTJkD9lSphRrVPidOLoX3k
+        8vTQJdAzWDq9YRO02ruxqY4UFmVn4HlAYp5hMv83mWeYzDMuigFhAQs4vVGn0RmD9cFJ3CGl
+        kdUZDyRplLHJOivw/UCQwgHsllGlE2AUcAJI4XKpqK8tixWL4tjUI5wheY/hQCJndIKFFCGX
+        ibpMrj1iWsOmcAkcp+cM/1KMEvilYaW9zR+iWYvt0glFj62IOVKesOnU6sqCgi2a/A51387P
+        qQ3+Fz3alBQXJdUoHi3XRgC6rH1o3KOdLAgs94s5udGubNPtuHbUf+m7vqh0v0tf84+tGZWp
+        F65QB/5muJr83XyVxP2uemuXiY6KFNyh6lvnBAJ8bTm17sWq+R1RXfOKuX2pnWmfCyOsndmL
+        XgcJvn6PfixTOxI6ZOwA1VgIVJ3h+kPXbSGzo0OC1ANhufSDX22TjuiwWW9HmlpVyfW3s64c
+        l4rwynuyAE6g21YcYpm7edUa+ZnMbtudC3vzYt9s7r31eHvTxAPe7bDB2MgYR/xg6P4Wydnr
+        ee5Q/13v5YRRywYH4QYj+wdI9/BDcgMAAA==
+X-CMS-MailID: 20211110012815epcas2p3b4f8d4e1cea2cb2cc13f0fcdefc39c9a
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20211110004503epcas2p1fb75c50cd82cba2217b917d85cc939fb
+References: <20211110004440.3389311-1-bvanassche@acm.org>
+        <CGME20211110004503epcas2p1fb75c50cd82cba2217b917d85cc939fb@epcas2p1.samsung.com>
+        <20211110004440.3389311-2-bvanassche@acm.org>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-11-09 7:44 p.m., Bart Van Assche wrote:
-> The time spent in io_schedule() is significant when submitting direct
-> I/O to a UFS device. Hence this patch that implements polling support.
-> User space software can enable polling by passing the RWF_HIPRI flag to
-> the preadv2() system call or the IORING_SETUP_IOPOLL flag to the
-> io_uring interface.
+Hello,
 
-There have been some changes recently (i.e. in linux-stable now),
-"HIPRI" seems to be on the out, replaced by "POLLED". [I'm using
-poll_lld in my sg rewrite to refer to this type of polling, as "poll"
-is an overloaded term in the kernel].
-
-REQ_HIPRI has become REQ_POLLED and blk_poll() is now bio_poll().
-That said RWF_HIPRI is still in fs.h and there is no RWF_POLLED (yet).
-
-LL_POLL or LOW_POLL would be more indicative of what is happening,
-rather than POLLED, IMO.
-
-
-Not sure if the new bio_poll() code is working, I'm looking at an
-NULL pointer dereference at: RIP: 0010:bio_poll+0x17/0xe0
-
+> -----Original Message-----
+> From: Bart Van Assche <bvanassche@acm.org>
+> Sent: Wednesday, November 10, 2021 9:45 AM
+> To: Martin K . Petersen <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org; Jaegeuk Kim <jaegeuk@kernel.org>; Adrian
+> Hunter <adrian.hunter@intel.com>; Bart Van Assche <bvanassche@acm.org>;
+> James E.J. Bottomley <jejb@linux.ibm.com>; Krzysztof Kozlowski
+> <krzysztof.kozlowski@canonical.com>; Alim Akhtar
+<alim.akhtar@samsung.com>;
+> Bean Huo <beanhuo@micron.com>; Avri Altman <avri.altman@wdc.com>; Kiwoong
+> Kim <kwmad.kim@samsung.com>; Yue Hu <huyue2@yulong.com>; Peter Wang
+> <peter.wang@mediatek.com>; Chanho Park <chanho61.park@samsung.com>;
+> Stanley Chu <stanley.chu@mediatek.com>; Can Guo <cang@codeaurora.org>;
+> Asutosh Das <asutoshd@codeaurora.org>; Keoseong Park
+> <keosung.park@samsung.com>
+> Subject: [PATCH 01/11] scsi: ufs: Rename a function argument
+> 
+> The new name makes it clear what the meaning of the function argument is.
+> 
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->   drivers/scsi/ufs/ufshcd.c | 45 +++++++++++++++++++++++----------------
->   1 file changed, 27 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 36df89e8a575..70f128f12445 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5250,6 +5250,31 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
->   	}
->   }
->   
-> +/*
-> + * Returns > 0 if one or more commands have been completed or 0 if no
-> + * requests have been completed.
-> + */
-> +static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
-> +{
-> +	struct ufs_hba *hba = shost_priv(shost);
-> +	unsigned long completed_reqs, flags;
-> +	u32 tr_doorbell;
-> +
-> +	spin_lock_irqsave(&hba->outstanding_lock, flags);
-> +	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> +	completed_reqs = ~tr_doorbell & hba->outstanding_reqs;
-> +	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
-> +		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
-> +		  hba->outstanding_reqs);
-> +	hba->outstanding_reqs &= ~completed_reqs;
-> +	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-> +
-> +	if (completed_reqs)
-> +		__ufshcd_transfer_req_compl(hba, completed_reqs);
-> +
-> +	return completed_reqs;
-> +}
-> +
->   /**
->    * ufshcd_transfer_req_compl - handle SCSI and query command completion
->    * @hba: per adapter instance
-> @@ -5260,9 +5285,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
->    */
->   static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
->   {
-> -	unsigned long completed_reqs, flags;
-> -	u32 tr_doorbell;
-> -
->   	/* Resetting interrupt aggregation counters first and reading the
->   	 * DOOR_BELL afterward allows us to handle all the completed requests.
->   	 * In order to prevent other interrupts starvation the DB is read once
-> @@ -5277,21 +5299,7 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
->   	if (ufs_fail_completion())
->   		return IRQ_HANDLED;
->   
-> -	spin_lock_irqsave(&hba->outstanding_lock, flags);
-> -	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> -	completed_reqs = ~tr_doorbell & hba->outstanding_reqs;
-> -	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
-> -		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
-> -		  hba->outstanding_reqs);
-> -	hba->outstanding_reqs &= ~completed_reqs;
-> -	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
-> -
-> -	if (completed_reqs) {
-> -		__ufshcd_transfer_req_compl(hba, completed_reqs);
-> -		return IRQ_HANDLED;
-> -	} else {
-> -		return IRQ_NONE;
-> -	}
-> +	return ufshcd_poll(hba->host, 0) ? IRQ_HANDLED : IRQ_NONE;
->   }
->   
->   int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask)
-> @@ -8112,6 +8120,7 @@ static struct scsi_host_template ufshcd_driver_template = {
->   	.name			= UFSHCD,
->   	.proc_name		= UFSHCD,
->   	.queuecommand		= ufshcd_queuecommand,
-> +	.mq_poll		= ufshcd_poll,
->   	.slave_alloc		= ufshcd_slave_alloc,
->   	.slave_configure	= ufshcd_slave_configure,
->   	.slave_destroy		= ufshcd_slave_destroy,
-> 
+
+Great.
+Reviewed-by: Chanho Park <chanho61.park@samsung.com>
+
+Best Regards,
+Chanho Park
+
 
