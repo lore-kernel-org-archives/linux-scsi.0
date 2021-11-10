@@ -2,93 +2,133 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33E1FC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 14:33:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 411C7C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 14:40:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 09C6861186
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 14:33:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2803F61106
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 14:40:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232131AbhKJOfs (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Nov 2021 09:35:48 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43040 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231731AbhKJOfr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2021 09:35:47 -0500
-Received: from mail-ed1-x529.google.com (mail-ed1-x529.google.com [IPv6:2a00:1450:4864:20::529])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 281E9C061764
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2021 06:33:00 -0800 (PST)
-Received: by mail-ed1-x529.google.com with SMTP id ee33so11329742edb.8
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2021 06:33:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
-        bh=tZGBi8SzUs+nTCkXAkbEXeB8WapfDAJ2ywqTs87TVro=;
-        b=B2ApFHTFapiGbt8lmVMc4dHsKaau6gk208gcIWTU5HjTNIhGFuMY87DS3kN+RJkYyO
-         5q8Br4pxxYVKNEHUFo5hZMiBZDxsA3cq2ZQLOKkw0iJlNZvHr4cfaLYUKhUaWw5PoK4Y
-         nVWDOoaNhc/Al7x67Sy3GUshKu7Y67ehxIIGMXTQR7cacbELvUD3qmu8GZP5qilwpB+K
-         zXNOftadYgc3/HE41IVvhbnD8OLpJZ25mYra+OzKHV7w/36UIr6HBwTw7oEUkjigUH7j
-         v/X6eVQbeq+tpFSNaKKwHa3H1J91MPHJSd33Oso4BPVwi52K5V1mhUdxIXx0avfKwxWu
-         dUfw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition;
-        bh=tZGBi8SzUs+nTCkXAkbEXeB8WapfDAJ2ywqTs87TVro=;
-        b=Ebji/Rpx/jiMmsrK/ipAXC66jVU2S//9jA9ma92CODdhOs3cn/Wyr8tY3qbsgKH75f
-         J2+U+ovqRUayHbBRXQy4CQ0Z9rt7KTgKHUKUe89CNZGUfANJdakF5waU6A7wr+HujkRb
-         fke47rBHl1u6hkWvdQDvBQV/vSNSFNObw4QjdcB5D1j6PZmNM7h86MYH33TKzandOvAA
-         EFNWyJPwQ4jHM2ELiS9JLbPwMLp67rit5qEm2nWoG4cwTk2ILANw+3BXTzuRctZCUl34
-         jeW5XdbFNqE4oJBf4aW7KQjEv2Ag8L1FgmEsxCRD/05ee8sX5egeNkJ7gT2fC2U/ECLx
-         yYCA==
-X-Gm-Message-State: AOAM531L8msEj9b2lJ/IF0PWYSM8/h7rxYK58rk92b5moeEeMgxO7f9X
-        KJxdFt6ff2z6oBa6diCYqraMwfrIsA==
-X-Google-Smtp-Source: ABdhPJxCaladc0dHBAiiTp7Cu5nHgZxLjvojGLpWke3aEj3XMOzzDJdANWezPtd2gGNZep0gS9GlXg==
-X-Received: by 2002:a05:6402:430a:: with SMTP id m10mr21570119edc.273.1636554778724;
-        Wed, 10 Nov 2021 06:32:58 -0800 (PST)
-Received: from localhost.localdomain ([46.53.254.6])
-        by smtp.gmail.com with ESMTPSA id b11sm13634649ede.52.2021.11.10.06.32.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Nov 2021 06:32:58 -0800 (PST)
-Date:   Wed, 10 Nov 2021 17:32:56 +0300
-From:   Alexey Dobriyan <adobriyan@gmail.com>
-To:     alim.akhtar@samsung.com, avri.altman@wdc.com
-Cc:     linux-scsi@vger.kernel.org
-Subject: ufs: setting "hba" private pointer too late -- oops in
- ufshcd_devfreq_get_dev_status()
-Message-ID: <YYvYGBuzZzAuNzxp@localhost.localdomain>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+        id S232265AbhKJOmy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Nov 2021 09:42:54 -0500
+Received: from mailout3.samsung.com ([203.254.224.33]:59247 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232257AbhKJOmx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2021 09:42:53 -0500
+Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
+        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20211110144004epoutp036b7cf1702db17aeda013d73f999c12df~2NkmuICd40699206992epoutp03a
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2021 14:40:04 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20211110144004epoutp036b7cf1702db17aeda013d73f999c12df~2NkmuICd40699206992epoutp03a
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+        s=mail20170921; t=1636555204;
+        bh=Bbx8/yZMDl8n81zbuICa1aVYnHiG+IrDi2ucjUvPebA=;
+        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
+        b=gFzJ9vvUhm2zaIHG7TRxtJzM+ePlgr7mM5D4vOzYnAaSQf6xAIR7QqcCcgz5OdZ4K
+         8+anPKISPqp7nwWaALxiGo2OA6khuNH4gJ5xvNwE+8JzZWiCtQQjNLtqlptnsBWYUj
+         wKRH3LW2mWtTQR3HA1NSFXC30YFfPEnRjGrWy7sk=
+Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
+        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
+        20211110144001epcas3p1ace910dd304a3414d290052a44ebb37b~2NkkBEIMF2215822158epcas3p1F;
+        Wed, 10 Nov 2021 14:40:01 +0000 (GMT)
+Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp2.localdomain
+        (Postfix) with ESMTP id 4Hq6vP53YPz4x9Py; Wed, 10 Nov 2021 14:40:01 +0000
+        (GMT)
+Mime-Version: 1.0
+Subject: RE: [PATCH 01/11] scsi: ufs: Rename a function argument
+Reply-To: keosung.park@samsung.com
+Sender: Keoseong Park <keosung.park@samsung.com>
+From:   Keoseong Park <keosung.park@samsung.com>
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
+        ALIM AKHTAR <alim.akhtar@samsung.com>,
+        Bean Huo <beanhuo@micron.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        Yue Hu <huyue2@yulong.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        CHANHO PARK <chanho61.park@samsung.com>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Can Guo <cang@codeaurora.org>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        Keoseong Park <keosung.park@samsung.com>
+X-Priority: 3
+X-Content-Kind-Code: NORMAL
+In-Reply-To: <20211110004440.3389311-2-bvanassche@acm.org>
+X-CPGS-Detection: blocking_info_exchange
+X-Drm-Type: N,general
+X-Msg-Generator: Mail
+X-Msg-Type: PERSONAL
+X-Reply-Demand: N
+Message-ID: <1891546521.01636555201689.JavaMail.epsvc@epcpadp3>
+Date:   Wed, 10 Nov 2021 18:48:59 +0900
+X-CMS-MailID: 20211110094859epcms2p45c9708f216c3965bd227c8854781ff6d
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+X-CPGSPASS: Y
+X-CPGSPASS: Y
+X-Hop-Count: 3
+X-CMS-RootMailID: 20211110004503epcas2p420544000401f38525f70bac1528623ee
+References: <20211110004440.3389311-2-bvanassche@acm.org>
+        <20211110004440.3389311-1-bvanassche@acm.org>
+        <CGME20211110004503epcas2p420544000401f38525f70bac1528623ee@epcms2p4>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-I've stumbled into a race while working on an earlier kernel,
-but it looks like mainline is affected as well.
+Hi Bart,
 
-        err = ufshcd_init(hba, mmio_base, irq);
-		async_schedule(ufshcd_async_scan, hba);
-		ufshcd_add_lus(hba);
-		if (ufshcd_is_clkscaling_supported(hba)) {
-			[enable devfreq]
+>The new name makes it clear what the meaning of the function argument is.
+>
+>Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-        platform_set_drvdata(pdev, hba);
+Reviewed-by: Keoseong Park <keosung.park@samsung.com>
 
-Device's private pointer is set too late, as devfreq hook get HBA
-pointer from private data and uses it:
+Best Regards,
+Keoseong Park
 
-	static int ufshcd_devfreq_get_dev_status(struct device *dev, struct devfreq_dev_status *stat)
-	{
-	        struct ufs_hba *hba = dev_get_drvdata(dev);
-		if (!ufshcd_is_clkscaling_supported(hba))
-			return -EINVAL;
-
-Unable to handle kernel NULL pointer dereference at virtual address ...0f10
-pc :	ufshcd_devfreq_get_dev_status
-lr :	devfreq_simple_ondemand_func
-	update_devfreq
-	devfreq_monitor
-
-
-I reproduced it by turning async LU scan into sync, so it is easier to
-trigger.
+>---
+> drivers/scsi/ufs/ufs-exynos.c | 4 ++--
+> drivers/scsi/ufs/ufshcd.h     | 3 ++-
+> 2 files changed, 4 insertions(+), 3 deletions(-)
+>
+>diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
+>index cd26bc82462e..474a4a064a68 100644
+>--- a/drivers/scsi/ufs/ufs-exynos.c
+>+++ b/drivers/scsi/ufs/ufs-exynos.c
+>@@ -853,14 +853,14 @@ static int exynos_ufs_post_pwr_mode(struct ufs_hba *hba,
+> }
+> 
+> static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
+>-						int tag, bool op)
+>+						int tag, bool is_scsi_cmd)
+> {
+> 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
+> 	u32 type;
+> 
+> 	type =  hci_readl(ufs, HCI_UTRL_NEXUS_TYPE);
+> 
+>-	if (op)
+>+	if (is_scsi_cmd)
+> 		hci_writel(ufs, type | (1 << tag), HCI_UTRL_NEXUS_TYPE);
+> 	else
+> 		hci_writel(ufs, type & ~(1 << tag), HCI_UTRL_NEXUS_TYPE);
+>diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>index 4ceb3c7e65b4..a911ad72de7a 100644
+>--- a/drivers/scsi/ufs/ufshcd.h
+>+++ b/drivers/scsi/ufs/ufshcd.h
+>@@ -338,7 +338,8 @@ struct ufs_hba_variant_ops {
+> 					enum ufs_notify_change_status status,
+> 					struct ufs_pa_layer_attr *,
+> 					struct ufs_pa_layer_attr *);
+>-	void	(*setup_xfer_req)(struct ufs_hba *, int, bool);
+>+	void	(*setup_xfer_req)(struct ufs_hba *hba, int tag,
+>+				  bool is_scsi_cmd);
+> 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
+> 	void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
+> 					enum ufs_notify_change_status);
+>
