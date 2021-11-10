@@ -2,176 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA19CC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 19:09:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24783C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 19:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B1C416117A
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 19:09:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2E5D6108B
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 19:19:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232831AbhKJTMp (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Nov 2021 14:12:45 -0500
-Received: from outgoing-stata.csail.mit.edu ([128.30.2.210]:49739 "EHLO
-        outgoing-stata.csail.mit.edu" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232512AbhKJTMo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Nov 2021 14:12:44 -0500
-Received: from [128.177.79.46] (helo=csail.mit.edu)
-        by outgoing-stata.csail.mit.edu with esmtpsa (TLS1.2:RSA_AES_256_CBC_SHA1:256)
-        (Exim 4.82)
-        (envelope-from <srivatsa@csail.mit.edu>)
-        id 1mksyl-000UxK-A3; Wed, 10 Nov 2021 14:09:51 -0500
-Date:   Wed, 10 Nov 2021 11:13:03 -0800
-From:   "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
-To:     Nadav Amit <namit@vmware.com>
-Cc:     Joe Perches <joe@perches.com>, Juergen Gross <jgross@suse.com>,
-        X86 ML <x86@kernel.org>, Pv-drivers <Pv-drivers@vmware.com>,
-        Vivek Thampi <vithampi@vmware.com>,
-        Vishal Bhakta <vbhakta@vmware.com>,
-        Ronak Doshi <doshir@vmware.com>,
-        Linux-graphics-maintainer <Linux-graphics-maintainer@vmware.com>,
-        "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
-        "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-        Zack Rusin <zackr@vmware.com>, Deep Shah <sdeep@vmware.com>,
-        Alexey Makhalov <amakhalov@vmware.com>,
-        Linux Virtualization <virtualization@lists.linux-foundation.org>,
-        Keerthana Kalyanasundaram <keerthanak@vmware.com>,
-        Srivatsa Bhat <srivatsab@vmware.com>,
-        Anish Swaminathan <anishs@vmware.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        Thomas Gleixner <tglx@linutronix.de>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 2/2] MAINTAINERS: Mark VMware mailing list entries as
- private
-Message-ID: <20211110191303.GA122235@csail.mit.edu>
-References: <163640336232.62866.489924062999332446.stgit@srivatsa-dev>
- <163640339370.62866.3435211389009241865.stgit@srivatsa-dev>
- <5179a7c097e0bb88f95642a394f53c53e64b66b1.camel@perches.com>
- <cb03ca42-b777-3d1a-5aba-b01cd19efa9a@csail.mit.edu>
- <dcbd19fcd1625146f4db267f84abd7412513d20e.camel@perches.com>
- <5C24FB2A-D2C0-4D95-A0C0-B48C4B8D5AF4@vmware.com>
- <1875b0458294d23d8e3260d2824894b095d6a62d.camel@perches.com>
- <20211110172000.GA121926@csail.mit.edu>
- <F21C4118-BFDE-4DA7-B42F-90EC71CFED57@vmware.com>
+        id S231779AbhKJTV6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Nov 2021 14:21:58 -0500
+Received: from mail-pj1-f46.google.com ([209.85.216.46]:51040 "EHLO
+        mail-pj1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232303AbhKJTV4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2021 14:21:56 -0500
+Received: by mail-pj1-f46.google.com with SMTP id x7so2320067pjn.0
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2021 11:19:08 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=keYQ5mOcLgQQxLVIJ8kgqpApi3+/zTEmC9Dev3DivvA=;
+        b=yoZzpKnvpMfGxaUWjUfPyw0s1SgQDdbs/oofjhEmExX4dVK8wbHN/1bA6Hdg78wUEr
+         rkJwg19R0QrnpQQYzgPC4dGVX85f3qKvjMCM7RgzsmFBwKJcrv1y+4Fp5tvMvN0Di9pP
+         m0495cIfEh7LZrHk1Yufttmc5DxNZH6P8hBwatPj7N4cFKbMAO7XpCm/eyhBsFftI+Mo
+         MEcSaTry/a5mPQirpPHdvhrxNXUFtgZEYYwuZID/AvHzUeXUX6+YM+aUx6GsJpT4iSZz
+         reo+ZlTUyGRAJc8dOjMTTRZEKn8STlDY75X76aqWRzVd4K3DquO1LpzBDX7+ldKo8iOB
+         N0WQ==
+X-Gm-Message-State: AOAM533ItI2YLMVz2U2Zef6n4DvKT4UoKRA6BL7gkWPjaxSatILMyVaU
+        xtjONf+PZF3ETcH7hrSzWAs=
+X-Google-Smtp-Source: ABdhPJw2Eh8nNGsfnPVjdOySbmjbAPdl5sOdmDy6bBH8H78Ckw3mu+1VjG15PFhiy+5NF+j28uDRNQ==
+X-Received: by 2002:a17:902:bd98:b0:13f:9ae7:54d1 with SMTP id q24-20020a170902bd9800b0013f9ae754d1mr1601740pls.15.1636571948219;
+        Wed, 10 Nov 2021 11:19:08 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:b41d:11d3:d117:fe23])
+        by smtp.gmail.com with ESMTPSA id md6sm370977pjb.22.2021.11.10.11.19.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 10 Nov 2021 11:19:07 -0800 (PST)
+Subject: Re: [PATCH 1/2] scsi: core: Add support for reserved tags
+To:     Hannes Reinecke <hare@suse.de>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
+        John Garry <john.garry@huawei.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>
+References: <20211103000529.1549411-1-bvanassche@acm.org>
+ <20211103000529.1549411-2-bvanassche@acm.org>
+ <139e5cb6-c91e-fa64-f261-6359b6abe376@suse.de>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <57aa04ba-edd5-93b9-4e0d-2fda4ccbe975@acm.org>
+Date:   Wed, 10 Nov 2021 11:19:06 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <F21C4118-BFDE-4DA7-B42F-90EC71CFED57@vmware.com>
+In-Reply-To: <139e5cb6-c91e-fa64-f261-6359b6abe376@suse.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 10, 2021 at 05:40:09PM +0000, Nadav Amit wrote:
+On 11/9/21 10:59 PM, Hannes Reinecke wrote:
+> This is essentially the same patch as I posted a while ago (cf 
+> https://lore.kernel.org/linux-scsi/20210222132405.91369-1- hare@suse.de/).
 > 
+> But there had been push-back on that series as it would also try to use 
+> a scsi host device for driver-internal commands.
 > 
-> > On Nov 10, 2021, at 9:20 AM, Srivatsa S. Bhat <srivatsa@csail.mit.edu> wrote:
-> > 
-> > On Tue, Nov 09, 2021 at 01:57:31PM -0800, Joe Perches wrote:
-> >> On Tue, 2021-11-09 at 00:58 +0000, Nadav Amit wrote:
-> >>>> On Nov 8, 2021, at 4:37 PM, Joe Perches <joe@perches.com> wrote:
-> >>>> On Mon, 2021-11-08 at 16:22 -0800, Srivatsa S. Bhat wrote:
-> >>>> 
-> >>>> So it's an exploder not an actual maintainer and it likely isn't
-> >>>> publically archived with any normal list mechanism.
-> >>>> 
-> >>>> So IMO "private" isn't appropriate.  Neither is "L:"
-> >>>> Perhaps just mark it as what it is as an "exploder".
-> >>>> 
-> >>>> Or maybe these blocks should be similar to:
-> >>>> 
-> >>>> M:	Name of Lead Developer <somebody@vmware.com>
-> >>>> M:	VMware <foo> maintainers <linux-<foo>-maintainers@vmlinux.com>
-> >> 
-> >> Maybe adding entries like
-> >> 
-> >> M:	Named maintainer <whoever@vmware.com>
-> >> R:	VMware <foo> reviewers <linux-<foo>-maintainers@vmware.com>
-> >> 
-> >> would be best/simplest.
-> >> 
-> > 
-> > Sure, that sounds good to me. I also considered adding "(email alias)"
-> > like Juergen suggested, but I think the R: entry is clear enough.
-> > Please find the updated patch below.
-> > 
-> > ---
-> > 
-> > From f66faa238facf504cfc66325912ce7af8cbf79ec Mon Sep 17 00:00:00 2001
-> > From: "Srivatsa S. Bhat (VMware)" <srivatsa@csail.mit.edu>
-> > Date: Mon, 8 Nov 2021 11:46:57 -0800
-> > Subject: [PATCH v2 2/2] MAINTAINERS: Mark VMware mailing list entries as email
-> > aliases
-> > 
-> > VMware mailing lists in the MAINTAINERS file are private lists meant
-> > for VMware-internal review/notification for patches to the respective
-> > subsystems. Anyone can post to these addresses, but there is no public
-> > read access like open mailing lists, which makes them more like email
-> > aliases instead (to reach out to reviewers).
-> > 
-> > So update all the VMware mailing list references in the MAINTAINERS
-> > file to mark them as such, using "R: email-alias@vmware.com".
-> > 
-> > Signed-off-by: Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
-> > Cc: Zack Rusin <zackr@vmware.com>
-> > Cc: Nadav Amit <namit@vmware.com>
-> > Cc: Vivek Thampi <vithampi@vmware.com>
-> > Cc: Vishal Bhakta <vbhakta@vmware.com>
-> > Cc: Ronak Doshi <doshir@vmware.com>
-> > Cc: pv-drivers@vmware.com
-> > Cc: linux-graphics-maintainer@vmware.com
-> > Cc: dri-devel@lists.freedesktop.org
-> > Cc: linux-rdma@vger.kernel.org
-> > Cc: linux-scsi@vger.kernel.org
-> > Cc: netdev@vger.kernel.org
-> > Cc: linux-input@vger.kernel.org
-> > ---
-> > MAINTAINERS | 22 +++++++++++-----------
-> > 1 file changed, 11 insertions(+), 11 deletions(-)
-> > 
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 118cf8170d02..4372d79027e9 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -6134,8 +6134,8 @@ T:	git git://anongit.freedesktop.org/drm/drm-misc
-> > F:	drivers/gpu/drm/vboxvideo/
-> > 
-> > DRM DRIVER FOR VMWARE VIRTUAL GPU
-> > -M:	"VMware Graphics" <linux-graphics-maintainer@vmware.com>
-> > M:	Zack Rusin <zackr@vmware.com>
-> > +R:	VMware Graphics Reviewers <linux-graphics-maintainer@vmware.com>
-> > L:	dri-devel@lists.freedesktop.org
-> > S:	Supported
-> > T:	git git://anongit.freedesktop.org/drm/drm-misc
-> > @@ -14189,7 +14189,7 @@ F:	include/uapi/linux/ppdev.h
-> > PARAVIRT_OPS INTERFACE
-> > M:	Juergen Gross <jgross@suse.com>
-> > M:	Srivatsa S. Bhat (VMware) <srivatsa@csail.mit.edu>
-> > -L:	pv-drivers@vmware.com (private)
-> > +R:	VMware PV-Drivers Reviewers <pv-drivers@vmware.com>
+> Maybe we should combine our efforts; patch 2 is equivalent to your 
+> patch, and 3-5 are a conversion of the fnic driver to use those 
+> commands. So we should merge our efforts to get this thing off the ground.
 > 
-> This patch that you just sent seems to go on top of the previous patches
-> (as it removes "L: pv-drivers@vmware.com (private)”).
-> 
+> For the remainder of the patchset I'm currently working on a solution to 
+> address the upstream concerns.
 
-Actually, that's a bit misleading, since I had corrected that entry in
-the first patch itself, while adding myself as the maintainer. So
-there are still only 2 patches in this series right now.
+Hi Hannes,
 
-Thanks for pointing this out! I'll move the VMware list modifications
-out of the first patch, to avoid confusion.
+In the UFS driver we are using a request queue that is not associated 
+with any SCSI device for allocating driver-internal tags from the same 
+tags space as SCSI commands. Is this a solution that is generic enough 
+to be re-used by other SCSI drivers? See also the output of git grep -nH 
+'hba->cmd_queue'.
 
-> Since the patches were still not merged, I would presume you should squash
-> the old 2/2 with this new patch and send v3 of these patches.
-> 
+Thanks,
 
-I'll send out a v3, and also add Zack Rusin as the maintainer for the
-vmmouse sub-driver, since it does not have a named maintainer at the
-moment (Zack indicated that he will be taking up the maintainership).
-
-Thank you!
-
-Regards,
-Srivatsa
+Bart.
