@@ -2,133 +2,86 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 411C7C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 14:40:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AB99AC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 14:56:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2803F61106
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 14:40:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 89D5460FD8
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 14:56:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232265AbhKJOmy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Nov 2021 09:42:54 -0500
-Received: from mailout3.samsung.com ([203.254.224.33]:59247 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232257AbhKJOmx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2021 09:42:53 -0500
-Received: from epcas3p3.samsung.com (unknown [182.195.41.21])
-        by mailout3.samsung.com (KnoxPortal) with ESMTP id 20211110144004epoutp036b7cf1702db17aeda013d73f999c12df~2NkmuICd40699206992epoutp03a
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2021 14:40:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20211110144004epoutp036b7cf1702db17aeda013d73f999c12df~2NkmuICd40699206992epoutp03a
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1636555204;
-        bh=Bbx8/yZMDl8n81zbuICa1aVYnHiG+IrDi2ucjUvPebA=;
-        h=Subject:Reply-To:From:To:CC:In-Reply-To:Date:References:From;
-        b=gFzJ9vvUhm2zaIHG7TRxtJzM+ePlgr7mM5D4vOzYnAaSQf6xAIR7QqcCcgz5OdZ4K
-         8+anPKISPqp7nwWaALxiGo2OA6khuNH4gJ5xvNwE+8JzZWiCtQQjNLtqlptnsBWYUj
-         wKRH3LW2mWtTQR3HA1NSFXC30YFfPEnRjGrWy7sk=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
-        20211110144001epcas3p1ace910dd304a3414d290052a44ebb37b~2NkkBEIMF2215822158epcas3p1F;
-        Wed, 10 Nov 2021 14:40:01 +0000 (GMT)
-Received: from epcpadp3 (unknown [182.195.40.17]) by epsnrtp2.localdomain
-        (Postfix) with ESMTP id 4Hq6vP53YPz4x9Py; Wed, 10 Nov 2021 14:40:01 +0000
-        (GMT)
-Mime-Version: 1.0
-Subject: RE: [PATCH 01/11] scsi: ufs: Rename a function argument
-Reply-To: keosung.park@samsung.com
-Sender: Keoseong Park <keosung.park@samsung.com>
-From:   Keoseong Park <keosung.park@samsung.com>
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-CC:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        ALIM AKHTAR <alim.akhtar@samsung.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Yue Hu <huyue2@yulong.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        CHANHO PARK <chanho61.park@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Keoseong Park <keosung.park@samsung.com>
-X-Priority: 3
-X-Content-Kind-Code: NORMAL
-In-Reply-To: <20211110004440.3389311-2-bvanassche@acm.org>
-X-CPGS-Detection: blocking_info_exchange
-X-Drm-Type: N,general
-X-Msg-Generator: Mail
-X-Msg-Type: PERSONAL
-X-Reply-Demand: N
-Message-ID: <1891546521.01636555201689.JavaMail.epsvc@epcpadp3>
-Date:   Wed, 10 Nov 2021 18:48:59 +0900
-X-CMS-MailID: 20211110094859epcms2p45c9708f216c3965bd227c8854781ff6d
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20211110004503epcas2p420544000401f38525f70bac1528623ee
-References: <20211110004440.3389311-2-bvanassche@acm.org>
-        <20211110004440.3389311-1-bvanassche@acm.org>
-        <CGME20211110004503epcas2p420544000401f38525f70bac1528623ee@epcms2p4>
+        id S232312AbhKJO7h (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Nov 2021 09:59:37 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:23409 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232280AbhKJO7e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Nov 2021 09:59:34 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636556207;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=W7cJ877Sjjq5oc7jJvg2EQRkkagoEG/3Etdis5neQYc=;
+        b=HXsytoZ8d+cVbHs2pc9qn7eC1qBOc19caALFQvR/TC2VtBYYTQbVRsXv411+yWXDOWYmDC
+        sndEN2REMF0HLiMrFlToi7wys7RJlgo9+qQcARMt3uHdr2OfNbn1uSeqGLixnvNnN3GY6W
+        pJAhMFCJc9MW65qYq5242WFCKIbXWQ4=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-158-7TusmjS5M6qoNkhw4LdjIQ-1; Wed, 10 Nov 2021 09:56:44 -0500
+X-MC-Unique: 7TusmjS5M6qoNkhw4LdjIQ-1
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id D544F100D680;
+        Wed, 10 Nov 2021 14:56:42 +0000 (UTC)
+Received: from T590 (ovpn-8-19.pek2.redhat.com [10.72.8.19])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7CF0460843;
+        Wed, 10 Nov 2021 14:56:26 +0000 (UTC)
+Date:   Wed, 10 Nov 2021 22:56:21 +0800
+From:   Ming Lei <ming.lei@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org,
+        linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Subject: Re: sorting out the freeze / quiesce mess
+Message-ID: <YYvdlcHeWOxPACrK@T590>
+References: <20211110091407.GA8396@lst.de>
+ <YYuQ9mhHtDNDVFQ3@T590>
+ <20211110125856.GA25614@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20211110125856.GA25614@lst.de>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart,
-
->The new name makes it clear what the meaning of the function argument is.
->
->Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-
-Reviewed-by: Keoseong Park <keosung.park@samsung.com>
-
-Best Regards,
-Keoseong Park
-
->---
-> drivers/scsi/ufs/ufs-exynos.c | 4 ++--
-> drivers/scsi/ufs/ufshcd.h     | 3 ++-
-> 2 files changed, 4 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
->index cd26bc82462e..474a4a064a68 100644
->--- a/drivers/scsi/ufs/ufs-exynos.c
->+++ b/drivers/scsi/ufs/ufs-exynos.c
->@@ -853,14 +853,14 @@ static int exynos_ufs_post_pwr_mode(struct ufs_hba *hba,
-> }
+On Wed, Nov 10, 2021 at 01:58:56PM +0100, Christoph Hellwig wrote:
+> On Wed, Nov 10, 2021 at 05:29:26PM +0800, Ming Lei wrote:
+> > On Wed, Nov 10, 2021 at 10:14:07AM +0100, Christoph Hellwig wrote:
+> > > Hi Jens and Ming,
+> > > 
+> > > I've been looking into properly supporting queue freezing for bio based
+> > > drivers (that is only release q_usage_counter on bio completion for them).
+> > > And the deeper I look into the code the more I'm confused by us having
+> > > the blk_mq_quiesce* interface in addition to blk_freeze_queue.  What
+> > > is a good reason to do a quiesce separately from a freeze?
+> > 
+> > freeze can make sure that all requests are done, quiesce can make sure that
+> > dispatch critical area(covered by hctx lock/unlock) is done.
 > 
-> static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
->-						int tag, bool op)
->+						int tag, bool is_scsi_cmd)
-> {
-> 	struct exynos_ufs *ufs = ufshcd_get_variant(hba);
-> 	u32 type;
-> 
-> 	type =  hci_readl(ufs, HCI_UTRL_NEXUS_TYPE);
-> 
->-	if (op)
->+	if (is_scsi_cmd)
-> 		hci_writel(ufs, type | (1 << tag), HCI_UTRL_NEXUS_TYPE);
-> 	else
-> 		hci_writel(ufs, type & ~(1 << tag), HCI_UTRL_NEXUS_TYPE);
->diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
->index 4ceb3c7e65b4..a911ad72de7a 100644
->--- a/drivers/scsi/ufs/ufshcd.h
->+++ b/drivers/scsi/ufs/ufshcd.h
->@@ -338,7 +338,8 @@ struct ufs_hba_variant_ops {
-> 					enum ufs_notify_change_status status,
-> 					struct ufs_pa_layer_attr *,
-> 					struct ufs_pa_layer_attr *);
->-	void	(*setup_xfer_req)(struct ufs_hba *, int, bool);
->+	void	(*setup_xfer_req)(struct ufs_hba *hba, int tag,
->+				  bool is_scsi_cmd);
-> 	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
-> 	void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
-> 					enum ufs_notify_change_status);
->
+> Yeah, but why do we need to still call quiesce after we just did a
+> freeze, which is about half of the users?
+
+Because the caller need to make sure that dispatch critical area is
+gone, otherwise dispatch code path may see intermediate state of the
+change, such as switching elevator, and __blk_mq_update_nr_hw_queues()
+may need quiesce too, I remember that there was kernel panic log in
+some test.
+
+Please see the point in commit 662156641bc4 ("block: don't drain
+in-progress dispatch in blk_cleanup_queue()").
+
+
+Thanks,
+Ming
+
