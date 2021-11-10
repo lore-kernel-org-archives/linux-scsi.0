@@ -2,135 +2,137 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6B3AC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:53:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49F26C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 02:36:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id AC95F611BF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:53:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DB4B61181
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 02:36:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229513AbhKJBzu (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 20:55:50 -0500
-Received: from mailout2.samsung.com ([203.254.224.25]:50200 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229470AbhKJBzu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 20:55:50 -0500
-Received: from epcas3p1.samsung.com (unknown [182.195.41.19])
-        by mailout2.samsung.com (KnoxPortal) with ESMTP id 20211110015301epoutp028edd6428b332da8e29fedf71fd2944c1~2DG4fSafP1535515355epoutp02c
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Nov 2021 01:53:01 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20211110015301epoutp028edd6428b332da8e29fedf71fd2944c1~2DG4fSafP1535515355epoutp02c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-        s=mail20170921; t=1636509181;
-        bh=lvZsKN2VXM+DetM3+EhURhhk1fgBFNLPww3YigJckr4=;
-        h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-        b=g55/7bInwBUxEfuolTwduy8IerdypmFQ2yPaN1JxHrOPK3bEd21p+xNjJkhRxfAgB
-         VwSikLYTnuB20BJgAEc+6/Vwk1pfiCIDBZqqeH/sFVx3N8aZmVOnkqyV1Z2Ytfoexq
-         4tS6Etdk79adip8OBAi4I+PFWYrvaebvpGTvxvLI=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-        epcas3p1.samsung.com (KnoxPortal) with ESMTP id
-        20211110015301epcas3p1573d1aed9a599f2da8f86c2ba5a33c17~2DG4CJ_Ve1738317383epcas3p1y;
-        Wed, 10 Nov 2021 01:53:01 +0000 (GMT)
-Received: from epcpadp4 (unknown [182.195.40.18]) by epsnrtp3.localdomain
-        (Postfix) with ESMTP id 4HpntP1HG5z4x9QL; Wed, 10 Nov 2021 01:53:01 +0000
-        (GMT)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-        epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
-        20211110012815epcas2p3b4f8d4e1cea2cb2cc13f0fcdefc39c9a~2CxQyeXXb1559315593epcas2p3R;
-        Wed, 10 Nov 2021 01:28:15 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-        epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-        20211110012815epsmtrp1f2e192fa1f888fc59837fd5c3801dc4b~2CxQwkuhD0577505775epsmtrp1I;
-        Wed, 10 Nov 2021 01:28:15 +0000 (GMT)
-X-AuditID: b6c32a29-409ff700000074af-da-618b202f5b4d
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-        epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-        8D.47.29871.F202B816; Wed, 10 Nov 2021 10:28:15 +0900 (KST)
-Received: from KORCO082417 (unknown [10.229.8.121]) by epsmtip1.samsung.com
-        (KnoxPortal) with ESMTPA id
-        20211110012815epsmtip1d674c38c0bbde95030df0599fce64d13~2CxQmBWi70790607906epsmtip1G;
-        Wed, 10 Nov 2021 01:28:15 +0000 (GMT)
-From:   "Chanho Park" <chanho61.park@samsung.com>
-To:     "'Bart Van Assche'" <bvanassche@acm.org>,
-        "'Martin K . Petersen'" <martin.petersen@oracle.com>
-Cc:     <linux-scsi@vger.kernel.org>, "'Jaegeuk Kim'" <jaegeuk@kernel.org>,
-        "'Adrian Hunter'" <adrian.hunter@intel.com>,
-        "'James E.J. Bottomley'" <jejb@linux.ibm.com>,
-        "'Krzysztof Kozlowski'" <krzysztof.kozlowski@canonical.com>,
-        "'Alim Akhtar'" <alim.akhtar@samsung.com>,
-        "'Bean Huo'" <beanhuo@micron.com>,
-        "'Avri Altman'" <avri.altman@wdc.com>,
-        "'Kiwoong Kim'" <kwmad.kim@samsung.com>,
-        "'Yue Hu'" <huyue2@yulong.com>,
-        "'Peter Wang'" <peter.wang@mediatek.com>,
-        "'Stanley Chu'" <stanley.chu@mediatek.com>,
-        "'Can Guo'" <cang@codeaurora.org>,
-        "'Asutosh Das'" <asutoshd@codeaurora.org>,
-        "'Keoseong Park'" <keosung.park@samsung.com>
-In-Reply-To: <20211110004440.3389311-2-bvanassche@acm.org>
-Subject: RE: [PATCH 01/11] scsi: ufs: Rename a function argument
-Date:   Wed, 10 Nov 2021 10:28:15 +0900
-Message-ID: <2038148563.21636509181613.JavaMail.epsvc@epcpadp4>
+        id S229945AbhKJCj1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 21:39:27 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51378 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229717AbhKJCjZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 21:39:25 -0500
+Received: from mail-pf1-x436.google.com (mail-pf1-x436.google.com [IPv6:2607:f8b0:4864:20::436])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9911DC061764;
+        Tue,  9 Nov 2021 18:36:38 -0800 (PST)
+Received: by mail-pf1-x436.google.com with SMTP id x131so1234154pfc.12;
+        Tue, 09 Nov 2021 18:36:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/RI8za/likW6wn/T62JKpZilA0DKYeC75oCxGkpsJyk=;
+        b=j9E8jk4Regjp7QT8Ke5KzZ7nu8DaIRKgAW3S1XNLn8W/bgjcx4rqDK3QBRoc2CRsh/
+         otXq0c+djWOKUxrAMBDXqE7w1Sk5gEytTk22FuMqwFCTgkr/DteMiLX5G666ZPlquONH
+         ISPsFrmR94PbXkYpQJT297IYTg5oHm/xRWV/GihGyD67K9lxN1nRVYhak3R/MJJWRIwX
+         sIgjyP4IEMKr1r5NgS68uWPlzVRwa4V85d3f74Z1neWyGkzRuJzPjQSDErcKHzaiOF/i
+         6s6wMhn/t28facyou/ChEEw+s6Bu0LUZOzJUcjkAcZEICnJ5kbuHilg+dPCj9s5WSXz0
+         zfjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=/RI8za/likW6wn/T62JKpZilA0DKYeC75oCxGkpsJyk=;
+        b=wiEFKUGxgoJV0bxdW5Sw2Tl1vS6mUfNdbRjigKHwk5bZQcsLKvPoe2xtR1o9+CvLgC
+         x6kRA9Crua+6eZokOaz6kSeK9mEwQemA1TbNb7HQMWX0uzVTNdS8HGQVB5VqZEWmkXe1
+         kT4IQ1/EQA/JE6wZcHVAsoH509pUIdTeXrM/kJ1YX4t1RkiE1xbv1KMG43JAyzJ4oG3T
+         2Uqh8rA63ixVynKWSxgCCbTI4dEF9dDQ8c9DZu8iErRYlC8rwqIAgDGS5oMIxcge6J0O
+         wHeDdhRDmJfjB+1jUxtzbj1xqr0kedXJinWPiJt6LXNv4Z4ZJ9c4olNsLGupTDyu2APF
+         g7Yg==
+X-Gm-Message-State: AOAM533LQkmfGRmBupOwuWBCR4qvSI480LG/L+GLzhdRNzQjBLjQSzuR
+        MdnULeDAjUkCcIg7xDKIkdk=
+X-Google-Smtp-Source: ABdhPJyT7ug2NPRa8K074vc5mtJH4XcGQEBh9sxjpkbZt6xMLAh8fIuHlf3plIUkwvZuqh3/GMaXUw==
+X-Received: by 2002:a65:558f:: with SMTP id j15mr3277836pgs.311.1636511798055;
+        Tue, 09 Nov 2021 18:36:38 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id gc22sm3769568pjb.57.2021.11.09.18.36.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Nov 2021 18:36:37 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: yao.jing2@zte.com.cn
+To:     subbu.seetharaman@broadcom.com
+Cc:     ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Jing Yao <yao.jing2@zte.com.cn>, Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: be2iscsi: Replace snprintf in show functions with  sysfs_emit
+Date:   Wed, 10 Nov 2021 02:35:35 +0000
+Message-Id: <20211110023535.135713-1-yao.jing2@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQGNlQ1VLD3900m/KRSp2q44GuuT/wHYmWGEAh9o+aascLln4A==
-Content-Language: ko
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0hTYRzGe885OztbrE7baG+WFovCCW1JF18jSyrikARiEFiMOuphM52u
-        zS5WH6zEyyzTrjq7WJLmMsU53SJvTS1XKIbdjNSyKUlZapCti9Wmkd9+8Dz/H8+HP4WL+wk/
-        Kj4phTMksYlyUkjUtcgDVqiW5LArHQ0K5HJXkOjN1ToSNWS089Gw5xmJ7r/NJtDFUQ+OxqtK
-        eWjYqUD1Rb04cleZcXTjZR2GHro+AVQ98g1DPbY2AuW8cJCo7OEkhmrHf/DQzdoeEC5mup9G
-        MOa00yTTnXsaY0rqhzHGaskmmbwbzYBJdzURzERVFsmMDb4imFybBTBfrAFMZnMOxtRWlOCR
-        ol3C9XFcYvxBzqDasFeofZ35k68/JTjceH6Slwbe801AQEF6NawcKyNNQEiJ6XsAtjvP4VOB
-        Pxz65JguSWB/eitvqjQEYOlAmS8gaRUczqrjeVlKx8GC4jG+t4TTOTz4vPYa8AZi+i6AFTVC
-        LwvoddBkn8C8LKHDoeVJv09E0MtgycdeH4voUNh82YZN8TzoKnQTJkD9lSphRrVPidOLoX3k
-        8vTQJdAzWDq9YRO02ruxqY4UFmVn4HlAYp5hMv83mWeYzDMuigFhAQs4vVGn0RmD9cFJ3CGl
-        kdUZDyRplLHJOivw/UCQwgHsllGlE2AUcAJI4XKpqK8tixWL4tjUI5wheY/hQCJndIKFFCGX
-        ibpMrj1iWsOmcAkcp+cM/1KMEvilYaW9zR+iWYvt0glFj62IOVKesOnU6sqCgi2a/A51387P
-        qQ3+Fz3alBQXJdUoHi3XRgC6rH1o3KOdLAgs94s5udGubNPtuHbUf+m7vqh0v0tf84+tGZWp
-        F65QB/5muJr83XyVxP2uemuXiY6KFNyh6lvnBAJ8bTm17sWq+R1RXfOKuX2pnWmfCyOsndmL
-        XgcJvn6PfixTOxI6ZOwA1VgIVJ3h+kPXbSGzo0OC1ANhufSDX22TjuiwWW9HmlpVyfW3s64c
-        l4rwynuyAE6g21YcYpm7edUa+ZnMbtudC3vzYt9s7r31eHvTxAPe7bDB2MgYR/xg6P4Wydnr
-        ee5Q/13v5YRRywYH4QYj+wdI9/BDcgMAAA==
-X-CMS-MailID: 20211110012815epcas2p3b4f8d4e1cea2cb2cc13f0fcdefc39c9a
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: AUTO_CONFIDENTIAL
-X-CPGSPASS: Y
-X-Hop-Count: 3
-X-CMS-RootMailID: 20211110004503epcas2p1fb75c50cd82cba2217b917d85cc939fb
-References: <20211110004440.3389311-1-bvanassche@acm.org>
-        <CGME20211110004503epcas2p1fb75c50cd82cba2217b917d85cc939fb@epcas2p1.samsung.com>
-        <20211110004440.3389311-2-bvanassche@acm.org>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hello,
+From: Jing Yao <yao.jing2@zte.com.cn>
 
-> -----Original Message-----
-> From: Bart Van Assche <bvanassche@acm.org>
-> Sent: Wednesday, November 10, 2021 9:45 AM
-> To: Martin K . Petersen <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org; Jaegeuk Kim <jaegeuk@kernel.org>; Adrian
-> Hunter <adrian.hunter@intel.com>; Bart Van Assche <bvanassche@acm.org>;
-> James E.J. Bottomley <jejb@linux.ibm.com>; Krzysztof Kozlowski
-> <krzysztof.kozlowski@canonical.com>; Alim Akhtar
-<alim.akhtar@samsung.com>;
-> Bean Huo <beanhuo@micron.com>; Avri Altman <avri.altman@wdc.com>; Kiwoong
-> Kim <kwmad.kim@samsung.com>; Yue Hu <huyue2@yulong.com>; Peter Wang
-> <peter.wang@mediatek.com>; Chanho Park <chanho61.park@samsung.com>;
-> Stanley Chu <stanley.chu@mediatek.com>; Can Guo <cang@codeaurora.org>;
-> Asutosh Das <asutoshd@codeaurora.org>; Keoseong Park
-> <keosung.park@samsung.com>
-> Subject: [PATCH 01/11] scsi: ufs: Rename a function argument
-> 
-> The new name makes it clear what the meaning of the function argument is.
-> 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+coccicheck complains about the use of snprintf() in sysfs show
+functions:
+WARNING use scnprintf or sprintf
 
-Great.
-Reviewed-by: Chanho Park <chanho61.park@samsung.com>
+Use sysfs_emit instead of scnprintf, snprintf or sprintf makes more
+sense.
 
-Best Regards,
-Chanho Park
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Jing Yao <yao.jing2@zte.com.cn>
+---
+ drivers/scsi/be2iscsi/be_mgmt.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 4e899ec1477d..b0f90b3925fc 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1142,7 +1142,7 @@ ssize_t
+ beiscsi_drvr_ver_disp(struct device *dev, struct device_attribute *attr,
+ 		       char *buf)
+ {
+-	return snprintf(buf, PAGE_SIZE, BE_NAME "\n");
++	return sysfs_emit(buf, BE_NAME "\n");
+ }
+ 
+ /**
+@@ -1161,7 +1161,7 @@ beiscsi_fw_ver_disp(struct device *dev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "%s\n", phba->fw_ver_str);
++	return sysfs_emit(buf, "%s\n", phba->fw_ver_str);
+ }
+ 
+ /**
+@@ -1248,15 +1248,15 @@ beiscsi_adap_family_disp(struct device *dev, struct device_attribute *attr,
+ 	case BE_DEVICE_ID1:
+ 	case OC_DEVICE_ID1:
+ 	case OC_DEVICE_ID2:
+-		return snprintf(buf, PAGE_SIZE,
++		return sysfs_emit(buf,
+ 				"Obsolete/Unsupported BE2 Adapter Family\n");
+ 	case BE_DEVICE_ID2:
+ 	case OC_DEVICE_ID3:
+-		return snprintf(buf, PAGE_SIZE, "BE3-R Adapter Family\n");
++		return sysfs_emit(buf, "BE3-R Adapter Family\n");
+ 	case OC_SKH_ID1:
+-		return snprintf(buf, PAGE_SIZE, "Skyhawk-R Adapter Family\n");
++		return sysfs_emit(buf, "Skyhawk-R Adapter Family\n");
+ 	default:
+-		return snprintf(buf, PAGE_SIZE,
++		return sysfs_emit(buf,
+ 				"Unknown Adapter Family: 0x%x\n", dev_id);
+ 	}
+ }
+@@ -1277,7 +1277,7 @@ beiscsi_phys_port_disp(struct device *dev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 
+-	return snprintf(buf, PAGE_SIZE, "Port Identifier : %u\n",
++	return sysfs_emit(buf, "Port Identifier : %u\n",
+ 			phba->fw_config.phys_port);
+ }
+ 
+-- 
+2.25.1
 
