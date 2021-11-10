@@ -2,89 +2,98 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 904B5C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 10:46:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 141A6C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 10:51:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 79138611AD
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 10:46:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E67EC6112D
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 10:51:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231232AbhKJKsy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Nov 2021 05:48:54 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.129.124]:37858 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231174AbhKJKsx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 10 Nov 2021 05:48:53 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1636541165;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=eqCttD3Xd5hwRL+t63xG9x7gvxrIP+8WdXxav6/uzGQ=;
-        b=dNV+lAx9O58dlRi9AD1xRLmeVlv8dTnK8pwDwNqGaQtJsa92PGnHjN319firljtGddy4Bz
-        OUdy6hqXC2xJvf4c9ozUsXZpJTH/C3HV20EFkMyIMguGFr3XStY+yZ1q4kIBQrPP5aHL0M
-        Pi/gjLbTl8JZi40ID1gynhGc3VEhP/M=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-247-7ug1M-ffNG6h2smBDU4Y7Q-1; Wed, 10 Nov 2021 05:46:02 -0500
-X-MC-Unique: 7ug1M-ffNG6h2smBDU4Y7Q-1
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DD6CE871803;
-        Wed, 10 Nov 2021 10:46:00 +0000 (UTC)
-Received: from T590 (ovpn-8-19.pek2.redhat.com [10.72.8.19])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 34E4410074E0;
-        Wed, 10 Nov 2021 10:45:56 +0000 (UTC)
-Date:   Wed, 10 Nov 2021 18:45:52 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Hannes Reinecke <hare@suse.de>
-Cc:     Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-        linux-nvme@lists.infradead.org
-Subject: Re: sorting out the freeze / quiesce mess
-Message-ID: <YYui4DJeeKyq0HI8@T590>
-References: <20211110091407.GA8396@lst.de>
- <477f3098-39be-ad07-e2fb-3ef3309c4dce@suse.de>
+        id S231240AbhKJKy2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Nov 2021 05:54:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48130 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229653AbhKJKy1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2021 05:54:27 -0500
+Received: from mail-pf1-x42f.google.com (mail-pf1-x42f.google.com [IPv6:2607:f8b0:4864:20::42f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C70AC061764;
+        Wed, 10 Nov 2021 02:51:40 -0800 (PST)
+Received: by mail-pf1-x42f.google.com with SMTP id x131so2283641pfc.12;
+        Wed, 10 Nov 2021 02:51:40 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+dzXYDr4i+8E1rpU2w4lIdJbKk6ZeJdjzAy1gZDTXjo=;
+        b=iIwVK3BZa4OjsgzCh7y2ME1f8c/dppxSc8gobbBP1kvkAH5lbWH+RSLXi2YSdI21lG
+         qoRpQi4ZYgq0NYJYChWMWE3GuiC0ehi9DMlgySL6OFRL8igyEglWGENgGjo8yB7rBwhw
+         BiUXeBRl9qMrKdBd+5PIzoX+/BYlj+icjlFlXzKxtjdNnNkpTAuPLXJNAncKtru5Ut+X
+         PGMLr6p6787Ess7MUvPxOOuaC0UQaJqB1GRrf8mhfzo40hzjIQSlGw233zzgrq1Vw9J8
+         sxNI+wPF9TE3GbYQPYA9HTWAS+czqNf23+LrZ0oX5oMts+MKD0z7eFXWh1EvmnRl6XhX
+         Wuvw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=+dzXYDr4i+8E1rpU2w4lIdJbKk6ZeJdjzAy1gZDTXjo=;
+        b=y/BO2PmL5qEiHkDYo1Q46IuDxsrcL5FHG2bghgwlqg/+Yfppbu5nBvu5G5y2EPqKve
+         1oNikz/qYBWijZMQahry+ifwjDPfkfF94XCuBPwGiJM9KhwL5ttq+jZ3ke8vzWsT0yEm
+         gKc6+SyTHZyzo403yRq8EgAtcw+zVS1wIh7iGkKIo6Syh14Yko4c6wK7spV8Ft2Sc6Xr
+         IXdU61L9wBO6lf56PESDviS7v7w7Vv6yxSVtR42tfxrBZtEIi+UYHB2NziFh8Une+CaT
+         EJeL2vw2KSBbv7hka97xnuV7KUYSHe6NYfSazTWMdi5TuaxFKjAubncHTMOGn4AlsTJj
+         M1Lg==
+X-Gm-Message-State: AOAM532rvqPVXktP3p4ZtG0FFC9M9YprxNqSaQF78iJL4b2ktE7fBaYR
+        wqstT9G9JLjkviuBqZSMQmU=
+X-Google-Smtp-Source: ABdhPJwMPdRMzl4AmzcgyZZhbVTwDWb6Obrc6Y5hq7A8Y0uO83r6bdhuU6WCgPatiKQw7X4Roev4wA==
+X-Received: by 2002:a05:6a00:1903:b0:47c:34c1:c6b6 with SMTP id y3-20020a056a00190300b0047c34c1c6b6mr14883980pfi.17.1636541499684;
+        Wed, 10 Nov 2021 02:51:39 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id h4sm5516552pjm.14.2021.11.10.02.51.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Nov 2021 02:51:39 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: ye.guojin@zte.com.cn
+To:     stanley.chu@mediatek.com
+Cc:     alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, matthias.bgg@gmail.com,
+        linux-scsi@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        Ye Guojin <ye.guojin@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: ufs: ufs-mediatek: add put_device() after of_find_device_by_node()
+Date:   Wed, 10 Nov 2021 10:51:33 +0000
+Message-Id: <20211110105133.150171-1-ye.guojin@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <477f3098-39be-ad07-e2fb-3ef3309c4dce@suse.de>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Wed, Nov 10, 2021 at 11:22:05AM +0100, Hannes Reinecke wrote:
-> On 11/10/21 10:14 AM, Christoph Hellwig wrote:
-> > Hi Jens and Ming,
-> > 
-> > I've been looking into properly supporting queue freezing for bio based
-> > drivers (that is only release q_usage_counter on bio completion for them).
-> > And the deeper I look into the code the more I'm confused by us having
-> > the blk_mq_quiesce* interface in addition to blk_freeze_queue.  What
-> > is a good reason to do a quiesce separately from a freeze?
-> > 
-> IIRC the 'quiesce' interface was an abstraction from the SCSI 'quiesce'
-> operation, where we had to stop all I/O except for TMFs and scanning.
-> And 'freeze' was designed fro stopping all I/O.
-> 
-> But I'm not sure if that ever was the distinction, or if it still
-> applies today.
-> 
-> And yeah, I've been wondering myself.
-> 
-> Probably we should just kill the 'quiesce' stuff and see where we end up :-)
+From: Ye Guojin <ye.guojin@zte.com.cn>
 
-In case of EH, no queued requests can be completed, however driver still
-needs to stop queue and reset hardware, then how can you use freeze to stop
-queue? See nvme_dev_disable().
+This was found by coccicheck:
+./drivers/scsi/ufs/ufs-mediatek.c, 211, 1-7, ERROR missing put_device;
+call of_find_device_by_node on line 1185, but without a corresponding
+object release within this function.
 
-Freeze can stop to allocate new request and drain all queued requests, but
-it can't prevent IO from being queued to LLD. On the contrary,
-blk_mq_freeze_queue_wait() requires LLD to handle IO for moving on,
-otherwise it will wait forever.
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Ye Guojin <ye.guojin@zte.com.cn>
+---
+ drivers/scsi/ufs/ufs-mediatek.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-Ming
+diff --git a/drivers/scsi/ufs/ufs-mediatek.c b/drivers/scsi/ufs/ufs-mediatek.c
+index fc5b214347b3..5393b5c9dd9c 100644
+--- a/drivers/scsi/ufs/ufs-mediatek.c
++++ b/drivers/scsi/ufs/ufs-mediatek.c
+@@ -1189,6 +1189,7 @@ static int ufs_mtk_probe(struct platform_device *pdev)
+ 	}
+ 	link = device_link_add(dev, &reset_pdev->dev,
+ 		DL_FLAG_AUTOPROBE_CONSUMER);
++	put_device(&reset_pdev->dev);
+ 	if (!link) {
+ 		dev_notice(dev, "add reset device_link fail\n");
+ 		goto skip_reset;
+-- 
+2.25.1
 
