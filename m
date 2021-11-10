@@ -2,105 +2,104 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C05C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 12:16:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CA82BC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 12:32:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 15DB96124B
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 12:16:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B394661055
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 12:32:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231559AbhKJMT0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 10 Nov 2021 07:19:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40048 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231131AbhKJMT0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Nov 2021 07:19:26 -0500
-Received: from mail-pj1-x102c.google.com (mail-pj1-x102c.google.com [IPv6:2607:f8b0:4864:20::102c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B6672C061764;
-        Wed, 10 Nov 2021 04:16:38 -0800 (PST)
-Received: by mail-pj1-x102c.google.com with SMTP id t5-20020a17090a4e4500b001a0a284fcc2so1693128pjl.2;
-        Wed, 10 Nov 2021 04:16:38 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=d1kXfwfcDtODWa9uzbuhDs0/KwXOsZ3LY3iX8QnvlxA=;
-        b=pHsI2vJSNu8g0GHaN1RV4BQKDHgk3fZtMh3FGHTCYoZElo1D9iSmylhyGxWcjK5otK
-         CBHmEHtzOIT90awgZUstknnWs0BOyeF5LpcRCiwBRvKuHUzFIGKU2kmIUDjV7qC2LE6U
-         3+Fmf/ZUZF27nB7SQkIEbNzSv/T7ozYCpzSQvamZDPh3o8uxPZ++30LLGK4N9ssFZX8I
-         Ai3imO+Zr3ajF9huOii3Rm7EIgmNkA5CdWxAA5aiQoT+id1Ud3TeFmZ6xU230fhqgWeZ
-         PSPLDXeNrimaBq+100xsFm83lvwlB3fpHlFCeZqJ7eBeHqbaB+w88lh96j0UOlkyxM7T
-         x2Sg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=d1kXfwfcDtODWa9uzbuhDs0/KwXOsZ3LY3iX8QnvlxA=;
-        b=qBKSS1KxX+YLboN4SIqElxKxsMivr1odsz1MGG0W6EpBH1Nl2YnavihrznQHg1JrE1
-         8PMWLnswNBA8GYx85eZQgMz3A0u5/rRvPQg3K8Z0EQ9J8SKkJmFCKXFzvDYXMZrDT6KE
-         3M99jTx1lo5UuVHeNN8gIcoNvfGCPyqM7I8/1CwsSiXAwV7q9HZrF3crVI1nrcB/5N+c
-         d638HcgezmIyLY1RhiDeGcAoEMHPBvjg2EAIrWUYEPXqhs96c7XSDbj96Uo6NkEuWLF+
-         D/9vUxgApOLuo8w45lwGd0+3NZy4rGGsDlqyjrXO9FxuhSifrpCjtj2VKEF4ki3aVe1s
-         HOwA==
-X-Gm-Message-State: AOAM530L1i3zrzImtWrSbUkdyfxm7y/VTEmmzVMF/G0dbgPFlOEbHPIu
-        LqExgNBSsCIAsoBBekRC6Kg=
-X-Google-Smtp-Source: ABdhPJw/Y3uEEX/L9s6wkAehsjYngCEUqPJ0ZZe3Y3EVsOf/ObsoKu1tSTLKkYMLV47N+a1AUV2Ocg==
-X-Received: by 2002:a17:90a:3d42:: with SMTP id o2mr16805227pjf.150.1636546598267;
-        Wed, 10 Nov 2021 04:16:38 -0800 (PST)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id k7sm19316104pgn.47.2021.11.10.04.16.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 10 Nov 2021 04:16:38 -0800 (PST)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: deng.changcheng@zte.com.cn
-To:     brking@us.ibm.com
-Cc:     jejb@linux.ibm.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Changcheng Deng <deng.changcheng@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: ipr: remove unneeded variable
-Date:   Wed, 10 Nov 2021 12:16:31 +0000
-Message-Id: <20211110121631.151422-1-deng.changcheng@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        id S231542AbhKJMfD (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 10 Nov 2021 07:35:03 -0500
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:34358 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231503AbhKJMfC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 10 Nov 2021 07:35:02 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1636547535;
+        bh=Z3YhinHc8QcbATN4epE+xiKzHYWvAPm6wVUqFFN14TI=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=vyJ+fGgyrDLFBqsvq/+O4TvOfAfQiSj4ADfAzC74KBvIJEM0dRIJaMijnlJjFJkPu
+         9tLD4RbJFaE4DQ0DDuWDrQiJWFkkKlK6ZasenSU0UJ/ma8l0/viCM8ATS1jNI/mNpI
+         QpS4MInhLSQSooQdoJPauMT1zWSFS2PRltDGbGh0=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id 21726128094A;
+        Wed, 10 Nov 2021 07:32:15 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id TXkaZrjrk1bF; Wed, 10 Nov 2021 07:32:15 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1636547534;
+        bh=Z3YhinHc8QcbATN4epE+xiKzHYWvAPm6wVUqFFN14TI=;
+        h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+        b=xj2h/XZyfmg5xrko5DoctyB0RyZbyuwBIMn6le8dUK3PdcB8jUG1Yftn1vCkCzo3+
+         vofbWN+lR7xJm9tLjWy2olqG49MqczbmlsTZBJ7LRAyrSuhtr7KqilAtwtVtkmAgQ3
+         1wKGdv+UD2rcUHIeWzswvFabzECRQyE557vJGQrc=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 4E943128088B;
+        Wed, 10 Nov 2021 07:32:14 -0500 (EST)
+Message-ID: <4829537ded072df6fe596e7fd0387a790f1b87d0.camel@HansenPartnership.com>
+Subject: Re: sorting out the freeze / quiesce mess
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Cc:     linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org
+Date:   Wed, 10 Nov 2021 07:32:13 -0500
+In-Reply-To: <477f3098-39be-ad07-e2fb-3ef3309c4dce@suse.de>
+References: <20211110091407.GA8396@lst.de>
+         <477f3098-39be-ad07-e2fb-3ef3309c4dce@suse.de>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Changcheng Deng <deng.changcheng@zte.com.cn>
+On Wed, 2021-11-10 at 11:22 +0100, Hannes Reinecke wrote:
+> On 11/10/21 10:14 AM, Christoph Hellwig wrote:
+> > Hi Jens and Ming,
+> > 
+> > I've been looking into properly supporting queue freezing for bio
+> > based
+> > drivers (that is only release q_usage_counter on bio completion for
+> > them).
+> > And the deeper I look into the code the more I'm confused by us
+> > having
+> > the blk_mq_quiesce* interface in addition to
+> > blk_freeze_queue.  What
+> > is a good reason to do a quiesce separately from a freeze?
+> > 
+> IIRC the 'quiesce' interface was an abstraction from the SCSI
+> 'quiesce'
+> operation, where we had to stop all I/O except for TMFs and scanning.
+> And 'freeze' was designed fro stopping all I/O.
 
-Fix the following coccicheck review:
-./drivers/scsi/ipr.c: 9512: 5-7: Unneeded variable
+Quiesce was a specific invention for SPI Domain Validation.  That's
+where you try a specific set of patterns to the buffer and read them
+back and try to jack up the transport parameters.  Pretty much every
+transport does this type of retraining, but on all but SPI it's usually
+hidden in hardware.
 
-Remove unneeded variable used to store return value.
+The point is you need to be able to stop all other I/O and then send
+READ/WRITE_BUFFER commands to the device.
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Changcheng Deng <deng.changcheng@zte.com.cn>
----
- drivers/scsi/ipr.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> But I'm not sure if that ever was the distinction, or if it still
+> applies today.
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 104bee9b3a9d..013a43b6a12a 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -9509,7 +9509,6 @@ static pci_ers_result_t ipr_pci_error_detected(struct pci_dev *pdev,
-  **/
- static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
- {
--	int rc = 0;
- 	unsigned long host_lock_flags = 0;
- 
- 	ENTER;
-@@ -9525,7 +9524,7 @@ static int ipr_probe_ioa_part2(struct ipr_ioa_cfg *ioa_cfg)
- 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, host_lock_flags);
- 
- 	LEAVE;
--	return rc;
-+	return 0;
- }
- 
- /**
--- 
-2.25.1
+As long as the SPI transport class exists, there'll be a distinction.
+I'm not sure there's a use for quiesce beyond that.
+
+> And yeah, I've been wondering myself.
+> 
+> Probably we should just kill the 'quiesce' stuff and see where we end
+> up :-)
+
+The SPI transport class would break.
+
+James
+
 
