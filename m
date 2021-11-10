@@ -2,100 +2,160 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50095C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:23:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B644C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:36:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2B7B96112D
-	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:23:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10DC96112F
+	for <linux-scsi@archiver.kernel.org>; Wed, 10 Nov 2021 01:36:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229522AbhKJB0X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 9 Nov 2021 20:26:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35302 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229485AbhKJB0W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 20:26:22 -0500
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED495C061764;
-        Tue,  9 Nov 2021 17:23:35 -0800 (PST)
-Received: by mail-pl1-x62b.google.com with SMTP id u17so1603537plg.9;
-        Tue, 09 Nov 2021 17:23:35 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id;
-        bh=8KsAKNFuVz5kAl4IdR8XgWDYzhLIM4iFKTO/IbBl8jM=;
-        b=l98xyTblDrwgpcixHuBMvmrGHTaL79voaUPmTqScyLLI/yZa576mu8h5IWKZiN4tW0
-         G2SgpYkx49/m0jwcbWBufXMQwB66Y0naBKvLNLQaqDn0FwLRkGip/d8URMNzhzlwm3Sc
-         8SUZWKHoiKNepKcAEgG+OtgUViYEn1jvpFYjgeW5faYUZv0m2OEwbJwso6p3lzr+c3b7
-         zvgEel4IaemLb3Fkp2Mnn6q5RInoWTWU+JLVloBZAW7EXKPRrL59gylEX4AqEl5Ez2yx
-         0LLzNOmEWdjowAPvvqxRWN20Tq4NVLfOD2w1vt56eES+5e+9lDdEfLltAdWbhf8TI3dL
-         C+BA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=8KsAKNFuVz5kAl4IdR8XgWDYzhLIM4iFKTO/IbBl8jM=;
-        b=u4FwtD1xS9u4F5PFSasorFm6cw7UYMHiTlFisRd0wJ8ve3hJhKnW0XbkOZeB8GxUsW
-         J+yK1m2xEeza0yogDN/mbbsAvMt9MXKt+XqjCODy7VNMxe4k874Xe0K8OCpEWIg9oufN
-         ZL4dGPVGeC5qjDNqEXEihuEeLcG4b53G9c4oQDFer0NrBAhDfysOIMDxzw10zPqbzj5P
-         SQbtsyI5L/O2t8YnnhIR8caVkHpqnN1vQJYI7HU/bUXGYDke1TDyArQJ0hg8AfxmKKiY
-         Au2k/JokhMdhpfqvt2j7UyTMNx46PcaYNxRpsgJfKSq/UVegATbcT9X3MpjVLbhEDS71
-         oWRQ==
-X-Gm-Message-State: AOAM532iaSgUexOj55h+O+CS3YvaOtkWXHp6TonTfqHMMmuShiwuxcfI
-        KEt0EFL9UWD65cSQIRkbBXi6/L9+bXA=
-X-Google-Smtp-Source: ABdhPJw9EojWf0yLnUAZZFxA4gUUOqn3Osdr+3wuJzYohtAhx/+HYis5OJM2teZOTfWfGAy2C4Ua/A==
-X-Received: by 2002:a17:903:18d:b0:142:8ab:d11f with SMTP id z13-20020a170903018d00b0014208abd11fmr11921617plg.47.1636507415443;
-        Tue, 09 Nov 2021 17:23:35 -0800 (PST)
-Received: from VM-0-3-centos.localdomain ([101.32.213.191])
-        by smtp.gmail.com with ESMTPSA id j6sm16099210pgq.0.2021.11.09.17.23.34
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 09 Nov 2021 17:23:35 -0800 (PST)
-From:   brookxu <brookxu.cn@gmail.com>
-To:     jejb@linux.ibm.com, martin.petersen@oracle.com
-Cc:     hch@infradead.org, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: core: use eh_timeout to timeout start_unit command
-Date:   Wed, 10 Nov 2021 09:23:32 +0800
-Message-Id: <1636507412-21678-1-git-send-email-brookxu.cn@gmail.com>
-X-Mailer: git-send-email 1.8.3.1
+        id S229526AbhKJBj0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 9 Nov 2021 20:39:26 -0500
+Received: from mail-1.ca.inter.net ([208.85.220.69]:59422 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229513AbhKJBjZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Nov 2021 20:39:25 -0500
+Received: from mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 1CDEA2EAA0D;
+        Tue,  9 Nov 2021 20:36:36 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19]) (amavisd-new, port 10024)
+        with ESMTP id AitXvYCCv9Tb; Tue,  9 Nov 2021 20:36:35 -0500 (EST)
+Received: from [192.168.48.23] (host-45-58-208-241.dyn.295.ca [45.58.208.241])
+        (using TLSv1 with cipher AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id E323C2EAA0B;
+        Tue,  9 Nov 2021 20:36:34 -0500 (EST)
+Reply-To: dgilbert@interlog.com
+Subject: Re: [PATCH 11/11] scsi: ufs: Implement polling support
+To:     Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20211110004440.3389311-1-bvanassche@acm.org>
+ <20211110004440.3389311-12-bvanassche@acm.org>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Message-ID: <b921b85e-1685-da71-2ee7-806d8e75ce9d@interlog.com>
+Date:   Tue, 9 Nov 2021 20:36:34 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
+MIME-Version: 1.0
+In-Reply-To: <20211110004440.3389311-12-bvanassche@acm.org>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Chunguang Xu <brookxu@tencent.com>
+On 2021-11-09 7:44 p.m., Bart Van Assche wrote:
+> The time spent in io_schedule() is significant when submitting direct
+> I/O to a UFS device. Hence this patch that implements polling support.
+> User space software can enable polling by passing the RWF_HIPRI flag to
+> the preadv2() system call or the IORING_SETUP_IOPOLL flag to the
+> io_uring interface.
 
-In some abnormal scenarios, STU may timeout. The recovery
-time of 30 seconds is relatively large. Now we need to modify
-rq_timeout to adjust STU timeout value, but it will affect the
-actual IO.
+There have been some changes recently (i.e. in linux-stable now),
+"HIPRI" seems to be on the out, replaced by "POLLED". [I'm using
+poll_lld in my sg rewrite to refer to this type of polling, as "poll"
+is an overloaded term in the kernel].
 
-commit 9728c0814ecb ("[SCSI] make scsi_eh_try_stu use block
-timeout") use rq_timeout to timeout the STU command, but after
-commit 0816c9251a71 ("[SCSI] Allow error handling timeout to
-be specified") eh_timeout will init to SCSI_DEFAULT_EH_TIMEOUT,
-so it is more reasonable to use eh_timeout as the timeout value
-of STU command. In this way, we can uniformly control recovery
-time through eh_timeout.
+REQ_HIPRI has become REQ_POLLED and blk_poll() is now bio_poll().
+That said RWF_HIPRI is still in fs.h and there is no RWF_POLLED (yet).
 
-Signed-off-by: Chunguang Xu <brookxu@tencent.com>
----
-v2: Update commit log and fix some format issues.
+LL_POLL or LOW_POLL would be more indicative of what is happening,
+rather than POLLED, IMO.
 
- drivers/scsi/scsi_error.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index a531336..a665318 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1404,7 +1404,8 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
- 		enum scsi_disposition rtn = NEEDS_RETRY;
- 
- 		for (i = 0; rtn == NEEDS_RETRY && i < 2; i++)
--			rtn = scsi_send_eh_cmnd(scmd, stu_command, 6, scmd->device->request_queue->rq_timeout, 0);
-+			rtn = scsi_send_eh_cmnd(scmd, stu_command, 6,
-+						scmd->device->eh_timeout, 0);
- 
- 		if (rtn == SUCCESS)
- 			return 0;
--- 
-1.8.3.1
+Not sure if the new bio_poll() code is working, I'm looking at an
+NULL pointer dereference at: RIP: 0010:bio_poll+0x17/0xe0
+
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/ufs/ufshcd.c | 45 +++++++++++++++++++++++----------------
+>   1 file changed, 27 insertions(+), 18 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 36df89e8a575..70f128f12445 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -5250,6 +5250,31 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+>   	}
+>   }
+>   
+> +/*
+> + * Returns > 0 if one or more commands have been completed or 0 if no
+> + * requests have been completed.
+> + */
+> +static int ufshcd_poll(struct Scsi_Host *shost, unsigned int queue_num)
+> +{
+> +	struct ufs_hba *hba = shost_priv(shost);
+> +	unsigned long completed_reqs, flags;
+> +	u32 tr_doorbell;
+> +
+> +	spin_lock_irqsave(&hba->outstanding_lock, flags);
+> +	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> +	completed_reqs = ~tr_doorbell & hba->outstanding_reqs;
+> +	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
+> +		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
+> +		  hba->outstanding_reqs);
+> +	hba->outstanding_reqs &= ~completed_reqs;
+> +	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+> +
+> +	if (completed_reqs)
+> +		__ufshcd_transfer_req_compl(hba, completed_reqs);
+> +
+> +	return completed_reqs;
+> +}
+> +
+>   /**
+>    * ufshcd_transfer_req_compl - handle SCSI and query command completion
+>    * @hba: per adapter instance
+> @@ -5260,9 +5285,6 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+>    */
+>   static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>   {
+> -	unsigned long completed_reqs, flags;
+> -	u32 tr_doorbell;
+> -
+>   	/* Resetting interrupt aggregation counters first and reading the
+>   	 * DOOR_BELL afterward allows us to handle all the completed requests.
+>   	 * In order to prevent other interrupts starvation the DB is read once
+> @@ -5277,21 +5299,7 @@ static irqreturn_t ufshcd_transfer_req_compl(struct ufs_hba *hba)
+>   	if (ufs_fail_completion())
+>   		return IRQ_HANDLED;
+>   
+> -	spin_lock_irqsave(&hba->outstanding_lock, flags);
+> -	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> -	completed_reqs = ~tr_doorbell & hba->outstanding_reqs;
+> -	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
+> -		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
+> -		  hba->outstanding_reqs);
+> -	hba->outstanding_reqs &= ~completed_reqs;
+> -	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+> -
+> -	if (completed_reqs) {
+> -		__ufshcd_transfer_req_compl(hba, completed_reqs);
+> -		return IRQ_HANDLED;
+> -	} else {
+> -		return IRQ_NONE;
+> -	}
+> +	return ufshcd_poll(hba->host, 0) ? IRQ_HANDLED : IRQ_NONE;
+>   }
+>   
+>   int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask)
+> @@ -8112,6 +8120,7 @@ static struct scsi_host_template ufshcd_driver_template = {
+>   	.name			= UFSHCD,
+>   	.proc_name		= UFSHCD,
+>   	.queuecommand		= ufshcd_queuecommand,
+> +	.mq_poll		= ufshcd_poll,
+>   	.slave_alloc		= ufshcd_slave_alloc,
+>   	.slave_configure	= ufshcd_slave_configure,
+>   	.slave_destroy		= ufshcd_slave_destroy,
+> 
 
