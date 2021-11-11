@@ -2,132 +2,131 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70804C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 17:00:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2ED94C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 17:02:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 461D661390
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 17:00:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 12FB961075
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 17:02:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233598AbhKKRD0 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Nov 2021 12:03:26 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35068 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229539AbhKKRDY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2021 12:03:24 -0500
-Received: from mail-io1-xd2c.google.com (mail-io1-xd2c.google.com [IPv6:2607:f8b0:4864:20::d2c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7A3CC061766
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Nov 2021 09:00:34 -0800 (PST)
-Received: by mail-io1-xd2c.google.com with SMTP id k22so7675473iol.13
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Nov 2021 09:00:34 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=fu5O0u80ylrE0u3Do5JNvTkSvjHrbbWQiBH5btVlTuk=;
-        b=XYRZp40SXjiv7ETDO/9DrIQxjarqTdBUeSFxzj9dMgtMxXLLQc7QZ7WFGBDM8V1Ykk
-         go9NxC2+gGJjH/R3wwRVsclQ0xeCiz2C/nBLvY8Pe7X6f5g0HCjCMi6RQwgrIpsMsgmX
-         WQe3v22hUTtF9CeZ96WHRAe6RLrXWZfAWuZMMedATa0EHPIJfbic1Lt7pn1AsCDqcdrY
-         PjX5m1n7M4mMwUSKXjDvEwt68HgCG91EIZ0IQAeGAsWfvmTRDK7EvfrNOlVBokqkh6ER
-         aYm6hfPbJY5+TcsoWdNAB9kSRUv9sf3+prQgmeDuUlRNjDfMuIIp5S+ajoarm4tOPqI/
-         RMCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=fu5O0u80ylrE0u3Do5JNvTkSvjHrbbWQiBH5btVlTuk=;
-        b=32jk35GNSG6Ph7+PwZBWTb+z2Oq7sHlI7UOPRUtHhQiIOtuLiTvVS0KwYk/1FLhdU4
-         PM1B/7FKFeXaUfugApISJ1LHZmBv6GfgHA4noOfF0bMKUTg6JAtFTSnH22LvJZirTTyt
-         789g9/fL+qthrwwanr91/pcrELKL73DDaTxozajFkh+ouP1LXK0YmAbU1KvFumrX3zt1
-         wB81LIGq5tIK71qsk6ExaOqY+6AOVxAi8eSSaECKjwi9GbOFWT4Zxv7C5+8M6PHxaxH4
-         NdSYyPMbKm8KF1yt0rSRKkcwRWbRdqFbmqGbYmUPQh+CBZkn6yiFvNolJOYzSGUsuR7r
-         bfRw==
-X-Gm-Message-State: AOAM530ZjRw7XQpZSHmPh9T8wXjY6cYMCYD5t/tyUcF7ysrMx+IAICMt
-        xyUqJ9rxP439dGiapNbaYmK5l2OgB8tHvv0yE9QABclO1OY=
-X-Google-Smtp-Source: ABdhPJzqqBGeJJU5IoYMlHP8FPsMmmCs1jouQo9fnTTwx55V+FEpwXA2/WAf7rZO8kERVv9fDlV/Mhb41tsuNYt5ogk=
-X-Received: by 2002:a05:6638:4183:: with SMTP id az3mr6584039jab.56.1636650034239;
- Thu, 11 Nov 2021 09:00:34 -0800 (PST)
+        id S233500AbhKKRFh (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Nov 2021 12:05:37 -0500
+Received: from mail-1.ca.inter.net ([208.85.220.69]:52715 "EHLO
+        mail-1.ca.inter.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S233392AbhKKRFg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2021 12:05:36 -0500
+Received: from mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19])
+        by mail-1.ca.inter.net (Postfix) with ESMTP id 08A162EA1B3;
+        Thu, 11 Nov 2021 12:02:47 -0500 (EST)
+Received: from mail-1.ca.inter.net ([208.85.220.69])
+        by mp-mx11.ca.inter.net (mp-mx11.ca.inter.net [208.85.217.19]) (amavisd-new, port 10024)
+        with ESMTP id GCTPuOKQKJdA; Thu, 11 Nov 2021 12:02:40 -0500 (EST)
+Received: from [192.168.48.23] (host-45-58-208-241.dyn.295.ca [45.58.208.241])
+        (using TLSv1 with cipher AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: dgilbert@interlog.com)
+        by mail-1.ca.inter.net (Postfix) with ESMTPSA id 17A122EA475;
+        Thu, 11 Nov 2021 12:02:40 -0500 (EST)
+Reply-To: dgilbert@interlog.com
+To:     SCSI development list <linux-scsi@vger.kernel.org>
+Cc:     =?UTF-8?B?VG9tw6HFoSBCxb5hdGVr?= <tbzatek@redhat.com>,
+        Martin Pitt <mpitt@debian.org>, Hannes Reinecke <hare@suse.de>,
+        Ritesh Raj Sarraf <rrs@researchut.com>,
+        "Robin H. Johnson" <robbat2@gentoo.org>,
+        Martin Wilck <mwilck@suse.com>
+From:   Douglas Gilbert <dgilbert@interlog.com>
+Subject: [Announce] sg3_utils-1.47 available
+Message-ID: <d872a3ae-48f2-9431-a16f-8fe976ae89f1@interlog.com>
+Date:   Thu, 11 Nov 2021 12:02:39 -0500
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.13.0
 MIME-Version: 1.0
-References: <20211110004440.3389311-1-bvanassche@acm.org> <20211110004440.3389311-2-bvanassche@acm.org>
-In-Reply-To: <20211110004440.3389311-2-bvanassche@acm.org>
-From:   Alim Akhtar <alim.akhtar@gmail.com>
-Date:   Thu, 11 Nov 2021 22:29:58 +0530
-Message-ID: <CAGOxZ502ciD7OP9dfJi5FFVDb0NaTrby4kKw0wqQwby7NFcUXQ@mail.gmail.com>
-Subject: Re: [PATCH 01/11] scsi: ufs: Rename a function argument
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@canonical.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Bean Huo <beanhuo@micron.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Kiwoong Kim <kwmad.kim@samsung.com>,
-        Yue Hu <huyue2@yulong.com>,
-        Peter Wang <peter.wang@mediatek.com>,
-        Chanho Park <chanho61.park@samsung.com>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Can Guo <cang@codeaurora.org>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        Keoseong Park <keosung.park@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-CA
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Hi Bart
+sg3_utils is a package of command line utilities for sending SCSI commands
+to storage devices. In some contexts it can send ATA and/or NVMe commands.
+The package targets the Linux 5, 4, 3, 2.6 and 2.4 kernel series. It has
+ports to FreeBSD, Android, Solaris, and Windows (cygwin and MinGW). There
+is now a dummy port for unsupported OSes (e.g. NetBSD) which will permit
+decoding of some SCSI command responses via the --inhex=FN option.
 
-On Wed, Nov 10, 2021 at 6:22 AM Bart Van Assche <bvanassche@acm.org> wrote:
->
-> The new name makes it clear what the meaning of the function argument is.
->
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
-Thanks
-Acked-by: Alim Akhtar <alim.akhtar@samsung.com>
+For an overview of sg3_utils and downloads see either of these pages:
+     https://sg.danny.cz/sg/sg3_utils.html
+     https://doug-gilbert.github.io/sg3_utils.html
+The sg_ses utility (for enclosure devices) is discussed at:
+     https://sg.danny.cz/sg/sg_ses.html
+A full changelog can be found at:
+     https://sg.danny.cz/sg/p/sg3_utils.ChangeLog
+     https://doug-gilbert.github.io/p/sg3_utils.ChangeLog
+This github mirror needs to be updated:
+     https://github.com/hreinecke/sg3_utils
+Plus the author's own github mirror:
+     https://github.com/doug-gilbert/sg3_utils
 
->  drivers/scsi/ufs/ufs-exynos.c | 4 ++--
->  drivers/scsi/ufs/ufshcd.h     | 3 ++-
->  2 files changed, 4 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/ufs/ufs-exynos.c b/drivers/scsi/ufs/ufs-exynos.c
-> index cd26bc82462e..474a4a064a68 100644
-> --- a/drivers/scsi/ufs/ufs-exynos.c
-> +++ b/drivers/scsi/ufs/ufs-exynos.c
-> @@ -853,14 +853,14 @@ static int exynos_ufs_post_pwr_mode(struct ufs_hba *hba,
->  }
->
->  static void exynos_ufs_specify_nexus_t_xfer_req(struct ufs_hba *hba,
-> -                                               int tag, bool op)
-> +                                               int tag, bool is_scsi_cmd)
->  {
->         struct exynos_ufs *ufs = ufshcd_get_variant(hba);
->         u32 type;
->
->         type =  hci_readl(ufs, HCI_UTRL_NEXUS_TYPE);
->
-> -       if (op)
-> +       if (is_scsi_cmd)
->                 hci_writel(ufs, type | (1 << tag), HCI_UTRL_NEXUS_TYPE);
->         else
->                 hci_writel(ufs, type & ~(1 << tag), HCI_UTRL_NEXUS_TYPE);
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 4ceb3c7e65b4..a911ad72de7a 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -338,7 +338,8 @@ struct ufs_hba_variant_ops {
->                                         enum ufs_notify_change_status status,
->                                         struct ufs_pa_layer_attr *,
->                                         struct ufs_pa_layer_attr *);
-> -       void    (*setup_xfer_req)(struct ufs_hba *, int, bool);
-> +       void    (*setup_xfer_req)(struct ufs_hba *hba, int tag,
-> +                                 bool is_scsi_cmd);
->         void    (*setup_task_mgmt)(struct ufs_hba *, int, u8);
->         void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
->                                         enum ufs_notify_change_status);
+That last mirror is up-to-date and has git tags going back to "r1.20"
+which is sg3_utils 1.20 released 15 years ago.
 
 
+Here is the top of that ChangeLog, stopping at the previous release:
 
--- 
-Regards,
-Alim
+Changelog for released sg3_utils-1.47 [20211110] [svn: r919]
+   - sg_rep_zones: add support for REPORT ZONE DOMAINS and
+     REPORT REALMS in this utility
+   - sg_raw: fix prints of NVMe NVM command names
+   - sg_ses: fix Windows problem "No command (cdb) given"
+     - fix crash when '-m LEN' < 252
+     - guard against smaller '--maxlen=' values
+   - sg_logs: additions to Volume statistics lpage [ssc5r05c]
+     - additions to Command duration limits statistics log
+       page [spc6r06]
+   - sg_vpd: fix do_hex type on some recent pages
+     - zoned block dev char vpd: add zone alignment mode and
+       zone starting LBA granularity [zbc2r11]
+   - sg_read_buffer: fix --length= problem
+   - sg_dd, sgm_dd, sgp_dd: don't close negative file descriptors
+   - sg_dd: srand48_r() and mrand48_r() are GNU libc specific,
+     put conditional in so non-reentrant version used otherwise
+     - 'iflag=00,ff' places the 32 bit block address (big endian)
+       into each block
+   - sgp_dd: major rework, fix issue with error being ignored
+     - new: --chkaddr which checks for block address in each block
+     - add check for stdatomic.h presence in configure.ac
+   - sg_xcopy: tweak CSCD identification descriptor
+   - sg_get_elem_status: fix issue with '--maxlen=' option
+     - add 2 depopulation revocation health attributes [sbc5r01]
+   - transport error handling improved. To fix report of a
+     BAD_TARGET transport error but the utility still continued.
+     - introduce SG_LIB_TRANSPORT_ERROR [35] exit status
+   - several utilities: override '--maxlen=LEN' when LEN
+     is < 16 (or 4), take default (or 4) instead
+   - scripts: 55-scsi-sg3_id.rules remove outdated rule
+   - sg_lib: add sg_scsi_status_is_good(),
+     sg_scsi_status_is_bad() and sg_get_zone_type_str()
+   - pt_linux: fix verify(BytChk=0) which Linux SNTL translated
+     to write, other SNTL cleanups
+   - pt_linux_nvme: fix fua setting
+   - pt: check_pt_file_handle() add return value of 5 for
+     FreeBSD for nvme(cam)
+   - pt: new configure option --enable-pt_dummy builds the
+     library with sg_pt_dummy.c instead of OS specific code;
+     for experimenting with --inhex= decoding on netbsd
+   - pt: add Haiku OS support
+   - gcc -fanalyzer fixes: in sg_pt_linux.c + sg_write_x.c
+   - sg_pt_dummy.c: add list of functions that a new pt
+     needs to define
+   - configure.ac: tweak to accept uclinux as linux
+   - move some hex files from examples to inhex directory
+   - major rework of lib/sg_pt_freebsd.c; make SNTL as similar
+     as practical to the Linux implementation
+   - add testing/sg_take_snap
+   - change links to http://sg.danny/cz/sg/* to https
+
+Changelog for released sg3_utils-1.46 [20210329] [svn: r891]
+...
+
+
+Doug Gilbert
