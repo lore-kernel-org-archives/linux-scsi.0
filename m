@@ -2,69 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B00C433EF
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 06:54:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 281A4C433F5
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 06:57:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id C2AD161284
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 06:54:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0DD7461078
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 06:57:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230300AbhKKG45 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Nov 2021 01:56:57 -0500
-Received: from smtp-out2.suse.de ([195.135.220.29]:58784 "EHLO
-        smtp-out2.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230027AbhKKG45 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2021 01:56:57 -0500
+        id S231169AbhKKHAA (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Nov 2021 02:00:00 -0500
+Received: from smtp-out1.suse.de ([195.135.220.28]:54602 "EHLO
+        smtp-out1.suse.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229706AbhKKHAA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2021 02:00:00 -0500
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by smtp-out2.suse.de (Postfix) with ESMTPS id CFF6A1FD39;
-        Thu, 11 Nov 2021 06:54:07 +0000 (UTC)
+        by smtp-out1.suse.de (Postfix) with ESMTPS id 127D621B33;
+        Thu, 11 Nov 2021 06:57:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-        t=1636613647; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+        t=1636613830; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=RPOH6bWfkgS1VX/Jdk8Xe5WLGpb1gLMABmi83XGjnhY=;
-        b=mEv7lsYJQ2zx0OWPiBcesOx9zQp9YT2Yjl+YkNe87hT3in2Bxiek+EW/EkhlfNMDUNAj6o
-        Mlk4+baWuqhLNoas4FCxu+3d/2OGvpG2XTwO6qbDRahfFcxg5BD/S8Q1YXz1YzIhhtbwfW
-        IkIqiJHFjaXc1Ppk9rm8Rvs+OP10AqA=
+        bh=xw8fHYiEtouwqtPJm+vIIwBfsR/SiX/AFywa+eNyWRU=;
+        b=kVM7HAmwDZUkxL+zwWi3DRUJ/O2aEzG4OqmX96GPP8oSw/WRKApihr0HpFBGaqvvQLY5tF
+        7EdV+YeWPwnLCPkpDxnABkpakh5HfNdimLYyyJv3XeredSqsQjyO7X0bVt0C2gyyax3X4j
+        r3KNIOzkOtQcyd0WS6sYiLokvt8R024=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-        s=susede2_ed25519; t=1636613647;
+        s=susede2_ed25519; t=1636613830;
         h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
          mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=RPOH6bWfkgS1VX/Jdk8Xe5WLGpb1gLMABmi83XGjnhY=;
-        b=l5iCsjMFMF5t/C9O4HlyofkCp1Kz3TRM0zlQLPY770LCdJPTqWDcGEgzBR5s6PN5Qd2Nvw
-        5CXzTAh+RhUFUZBA==
+        bh=xw8fHYiEtouwqtPJm+vIIwBfsR/SiX/AFywa+eNyWRU=;
+        b=1Pcz/73HeRdvKcZseWs4AA3f8NmAAk5m4dgR7yySiYsxIGyso/K/i8AmwircnEGu/jPhRA
+        qah19Nn7jkXObQBw==
 Received: from imap2.suse-dmz.suse.de (imap2.suse-dmz.suse.de [192.168.254.74])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature ECDSA (P-521) server-digest SHA512)
         (No client certificate requested)
-        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id A4F5313D4F;
-        Thu, 11 Nov 2021 06:54:07 +0000 (UTC)
+        by imap2.suse-dmz.suse.de (Postfix) with ESMTPS id D726C13D4F;
+        Thu, 11 Nov 2021 06:57:09 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([192.168.254.65])
         by imap2.suse-dmz.suse.de with ESMTPSA
-        id TDn0Jg++jGH3JgAAMHmgww
-        (envelope-from <hare@suse.de>); Thu, 11 Nov 2021 06:54:07 +0000
-Subject: Re: [PATCH 1/2] scsi: core: Add support for reserved tags
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Jaegeuk Kim <jaegeuk@kernel.org>, linux-scsi@vger.kernel.org,
-        John Garry <john.garry@huawei.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>
-References: <20211103000529.1549411-1-bvanassche@acm.org>
- <20211103000529.1549411-2-bvanassche@acm.org>
- <139e5cb6-c91e-fa64-f261-6359b6abe376@suse.de>
- <57aa04ba-edd5-93b9-4e0d-2fda4ccbe975@acm.org>
+        id dYBZM8W+jGHsJwAAMHmgww
+        (envelope-from <hare@suse.de>); Thu, 11 Nov 2021 06:57:09 +0000
+Subject: Re: Unreliable disk detection order in 5.x
+To:     Simon Kirby <sim@hostway.ca>, Bart Van Assche <bvanassche@acm.org>
+Cc:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
+        linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+References: <20211105064623.GD32560@hostway.ca>
+ <9c14628f-4d23-dedf-3cdc-4b4266d5a694@opensource.wdc.com>
+ <20211107022410.GA6530@hostway.ca>
+ <ce4f925f-cbf9-9bbb-4bde-dd57059e3c84@acm.org>
+ <20211111010106.GA27431@hostway.ca>
 From:   Hannes Reinecke <hare@suse.de>
-Message-ID: <7f778b12-fe9b-f685-30f4-1c9f2ecdd571@suse.de>
-Date:   Thu, 11 Nov 2021 07:54:07 +0100
+Message-ID: <67af6917-653c-28a9-368a-db9599620bfa@suse.de>
+Date:   Thu, 11 Nov 2021 07:57:09 +0100
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.12.0
 MIME-Version: 1.0
-In-Reply-To: <57aa04ba-edd5-93b9-4e0d-2fda4ccbe975@acm.org>
+In-Reply-To: <20211111010106.GA27431@hostway.ca>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -72,39 +71,38 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/10/21 8:19 PM, Bart Van Assche wrote:
-> On 11/9/21 10:59 PM, Hannes Reinecke wrote:
->> This is essentially the same patch as I posted a while ago (cf 
->> https://lore.kernel.org/linux-scsi/20210222132405.91369-1- 
->> hare@suse.de/).
->>
->> But there had been push-back on that series as it would also try to 
->> use a scsi host device for driver-internal commands.
->>
->> Maybe we should combine our efforts; patch 2 is equivalent to your 
->> patch, and 3-5 are a conversion of the fnic driver to use those 
->> commands. So we should merge our efforts to get this thing off the 
->> ground.
->>
->> For the remainder of the patchset I'm currently working on a solution 
->> to address the upstream concerns.
+On 11/11/21 2:01 AM, Simon Kirby wrote:
+> On Sun, Nov 07, 2021 at 11:51:45AM -0800, Bart Van Assche wrote:
 > 
-> Hi Hannes,
+>> On 11/6/21 19:24, Simon Kirby wrote:
+>>> This occurs regardless of the CONFIG_SCSI_SCAN_ASYNC setting, and
+>>> also with scsi_mod.scan=sync on vendor kernels. All of these disks
+>>> are coming from the same driver and card.
+>>>
+>>> I understand that using UUIDs, by-id, etc., is an option to work
+>>> around this, but then we would have to push IDs for disks in every
+>>> server to our configuration management. It does not seem that this
+>>> change is really intentional.
+>>
+>> SCSI disk detection is asynchronous on purpose since a long time. The most
+>> recent commit I know of that changed SCSI disk scanning
+>> behavior is commit f049cf1a7b67 ("scsi: sd: Rely on the driver core for
+>> asynchronous probing").
+>>
+>> Please use one of the /dev/disk/by-*/* identifiers as Damien requested.
 > 
-> In the UFS driver we are using a request queue that is not associated 
-> with any SCSI device for allocating driver-internal tags from the same 
-> tags space as SCSI commands. Is this a solution that is generic enough 
-> to be re-used by other SCSI drivers? See also the output of git grep -nH 
-> 'hba->cmd_queue'.
+> Hi Bart,
 > 
-Ah. Even easier.
-I've made a prototype for this kind of operation in
-git.kernel.org/pub/scm/linux/kernel/git/hare/scsi-devel.git
-branch scsi-internal.v1
-
-That introduces a function 'scsi_host_get_internal_tag()'
-to retrieve a tag from the reserved pool of the host tagset.
-Would that work for you?
+> So, we're using DRBD on top of these, which means by-uuid is not
+> available; we can use only by-id and by-path. by-id is dependent on disk
+> models and serial numbers, and by-path is dependent on PCI bus details.
+> Both are going to be a good deal more work to maintain, since they're
+> both not just a simple enumeration.
+> 
+Why is by-uuid not available?
+The uuid is the disk-internal unique identification, and to my knowledge 
+all recent SCSI and SATA drives implement them.
+So where is the problem here?
 
 Cheers,
 
