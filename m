@@ -2,173 +2,204 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8159DC433FE
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 10:35:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10DBDC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 13:38:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 6FE3161284
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 10:35:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E090C60C40
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 13:38:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232952AbhKKKiQ (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Nov 2021 05:38:16 -0500
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:37886 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S232922AbhKKKiP (ORCPT
+        id S233389AbhKKNku (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Nov 2021 08:40:50 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:43096 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S232778AbhKKNkt (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 11 Nov 2021 05:38:15 -0500
-Received: from pps.filterd (m0187473.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1ABAHaHO004256;
-        Thu, 11 Nov 2021 10:35:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=pp1;
- bh=/hpsZJ1bCSQfwAmmWkn7uUeO6iNkv02N9EZFyQ7gnGI=;
- b=HimeU2D5kbCaYDvgkbZxQ2st5N01FgSADQ4mbfnr3XZ//hiBy/PsH8kdCxlsgAzxaKhg
- LhEfjD7p4vYMl/yLgrhtSAeaT9VJkwhMmfK5zAuUca4zLTPZgBm2JEiLt0zClkH8u94E
- Adbd+ZJju78AAqBX4Vg8rbu3SvTv22YsvkVZ+FAN6o3epiuBUs921rSsZleeA2hj2u8+
- 5NlDym5g066CwV60dz3WaZf0yZBXgEpsVwqBu9FRyk1/LfUBkte80tQV3/KvQIurNPL3
- h76VC69hDTmPI68rDjgaZfLZzdUp8VCEJXUTaC723f1ov3Ltpa+5k2rfdBl8M/NfuLBd CA== 
-Received: from ppma05fra.de.ibm.com (6c.4a.5195.ip4.static.sl-reverse.com [149.81.74.108])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 3c919y8bmg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 11 Nov 2021 10:35:20 +0000
-Received: from pps.filterd (ppma05fra.de.ibm.com [127.0.0.1])
-        by ppma05fra.de.ibm.com (8.16.1.2/8.16.1.2) with SMTP id 1ABAXc6x030838;
-        Thu, 11 Nov 2021 10:35:17 GMT
-Received: from b06cxnps3074.portsmouth.uk.ibm.com (d06relay09.portsmouth.uk.ibm.com [9.149.109.194])
-        by ppma05fra.de.ibm.com with ESMTP id 3c5hba1w3q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Thu, 11 Nov 2021 10:35:17 +0000
-Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
-        by b06cxnps3074.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 1ABAZFZc11600272
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 11 Nov 2021 10:35:15 GMT
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 2390E11C05C;
-        Thu, 11 Nov 2021 10:35:15 +0000 (GMT)
-Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 7A82311C04C;
-        Thu, 11 Nov 2021 10:35:14 +0000 (GMT)
-Received: from [9.145.16.148] (unknown [9.145.16.148])
-        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu, 11 Nov 2021 10:35:14 +0000 (GMT)
-Message-ID: <0cdf8e28-2fcc-9aa6-e8cb-ef1c0c77bd69@linux.ibm.com>
-Date:   Thu, 11 Nov 2021 11:35:13 +0100
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.2.0
-Subject: Re: [PATCH] scsi: fix scsi device attributes registration
-Content-Language: en-US
-To:     Damien Le Moal <damien.lemoal@opensource.wdc.com>,
-        linux-scsi@vger.kernel.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-ide@vger.kernel.org
-Cc:     Bart Van Assche <bvanassche@acm.org>
-References: <20211111084551.446548-1-damien.lemoal@opensource.wdc.com>
-From:   Steffen Maier <maier@linux.ibm.com>
-In-Reply-To: <20211111084551.446548-1-damien.lemoal@opensource.wdc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: ixwrj5A9d0zMzRVCR-1MBKABr5UAfbUi
-X-Proofpoint-ORIG-GUID: ixwrj5A9d0zMzRVCR-1MBKABr5UAfbUi
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-UnRewURL: 0 URL was un-rewritten
+        Thu, 11 Nov 2021 08:40:49 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636637880;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=MlnqQ7ly4klw7WQJ5BlWyKDfOaJYsxCwVIzv9m5ceD4=;
+        b=M6goEsgxVkGyFgaJ48xo2PuD7gZkLFwksj8mXyIEiqmO9HEu3ybAhUGeU3kiuYKz+nqo3P
+        DmKKstzbIQ8Prc55fj2h21EpBp3DxNvst8ynh3hnfE06Fhk4t0bWaLUnarC0dPisRHdG1r
+        V0ysF8sP3jnpCwcP7Et4hs624zMgC8g=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-502-KCHJhQdiOoq3a0vp_A50AQ-1; Thu, 11 Nov 2021 08:37:56 -0500
+X-MC-Unique: KCHJhQdiOoq3a0vp_A50AQ-1
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 725641017965;
+        Thu, 11 Nov 2021 13:37:55 +0000 (UTC)
+Received: from raketa.redhat.com (unknown [10.40.193.75])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BF5431017CF3;
+        Thu, 11 Nov 2021 13:37:53 +0000 (UTC)
+From:   Maurizio Lombardi <mlombard@redhat.com>
+To:     martin.petersen@oracle.com
+Cc:     bostroesser@gmail.com, michael.christie@oracle.com,
+        target-devel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        k.shelekhin@yadro.com
+Subject: [PATCH V2] target: iscsi: simplify the connection closing mechanism
+Date:   Thu, 11 Nov 2021 14:37:52 +0100
+Message-Id: <20211111133752.159379-1-mlombard@redhat.com>
 MIME-Version: 1.0
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.205,Aquarius:18.0.790,Hydra:6.0.425,FMLib:17.0.607.475
- definitions=2021-11-11_03,2021-11-08_02,2020-04-07_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxlogscore=999
- suspectscore=0 priorityscore=1501 impostorscore=0 clxscore=1011
- spamscore=0 mlxscore=0 lowpriorityscore=0 adultscore=0 phishscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2110150000 definitions=main-2111110064
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/11/21 09:45, Damien Le Moal wrote:
-> Since the sdev_gendev device of a scsi device defines its attributes
-> using scsi_sdev_attr_groups as the groups field value of its device
-> type, the execution of device_add() in scsi_sysfs_add_sdev() register
-> with sysfs only the attributes defined using scsi_sdev_attr_groups. As
-> a results, the attributes defined by an LLD using the scsi host
-> sdev_groups attribute groups are never registered with sysfs and not
-> visible to the users.
-> 
-> Fix this problem by removing scsi_sdev_attr_groups and manually setting
-> the groups field of a scsi device sdev_gendev to point to the scsi
-> device gendev_attr_groups. As the first entry of this array of
-> attribute groups is scsi_sdev_attr_group, using gendev_attr_groups as
-> the gendev groups result in all defined attributes to be created in
-> sysfs when device_add() is called.
-> 
-> Fixes: 92c4b58b15c5 ("scsi: core: Register sysfs attributes earlier")
-> cc: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
-> ---
->   drivers/scsi/scsi_sysfs.c | 7 +------
->   1 file changed, 1 insertion(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> index d3d362289ecc..92c92853f516 100644
-> --- a/drivers/scsi/scsi_sysfs.c
-> +++ b/drivers/scsi/scsi_sysfs.c
-> @@ -1301,11 +1301,6 @@ static struct attribute_group scsi_sdev_attr_group = {
->   	.is_bin_visible = scsi_sdev_bin_attr_is_visible,
->   };
->   
-> -static const struct attribute_group *scsi_sdev_attr_groups[] = {
-> -	&scsi_sdev_attr_group,
-> -	NULL
-> -};
-> -
->   static int scsi_target_add(struct scsi_target *starget)
->   {
->   	int error;
-> @@ -1575,7 +1570,6 @@ int scsi_sysfs_add_host(struct Scsi_Host *shost)
->   static struct device_type scsi_dev_type = {
->   	.name =		"scsi_device",
->   	.release =	scsi_device_dev_release,
-> -	.groups =	scsi_sdev_attr_groups,
->   };
->   
->   void scsi_sysfs_device_initialize(struct scsi_device *sdev)
-> @@ -1601,6 +1595,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
->   		}
->   	}
->   	WARN_ON_ONCE(j >= ARRAY_SIZE(sdev->gendev_attr_groups));
-> +	sdev->sdev_gendev.groups = sdev->gendev_attr_groups;
->   
->   	device_initialize(&sdev->sdev_dev);
->   	sdev->sdev_dev.parent = get_device(&sdev->sdev_gendev);
-> 
+When the connection reinstatement is performed, the target driver
+executes a complex scheme of complete()/wait_for_completion() that is not
+really needed.
 
-Damien, which kernel were you using?
+Considering that:
 
-Isn't this fixed by?:
+1) The callers of iscsit_connection_reinstatement_rcfr() and
+   iscsit_cause_connection_reinstatement() hold a reference
+   to the conn structure.
 
-next:
+2) iscsit_close_connection() will sleep when calling
+   iscsit_check_conn_usage_count() until the conn structure's refcount
+   reaches zero.
 
-https://lore.kernel.org/linux-scsi/163478764102.7011.9375895285870786953.b4-ty@oracle.com/t/#mab0eeb4a8d8db95c3ace0013bfef775736e124cb
-("scsi: core: Fix early registration of sysfs attributes for scsi_device")
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=5.16/scsi-staging&id=3a71f0f7a51259b3cb95d79cac1e19dcc5e89ce9
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=5.16/scsi-queue&id=3a71f0f7a51259b3cb95d79cac1e19dcc5e89ce9
-https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git/commit/?h=for-next&id=3a71f0f7a51259b3cb95d79cac1e19dcc5e89ce9
-=>
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next-history.git/commit/?h=next-20211028&id=503f375baa99edff894eb1a534d2ac0b4f799573
+we can optimize the driver the following way:
 
-soon in vanilla:
+* The threads that must sleep until the connection is closed
+  will all wait for the "conn_wait_comp" completion,
+  iscsit_close_connection() will then call complete_all() to wake them up.
+  No need to have multiple completion structures.
 
-https://lore.kernel.org/linux-scsi/163612851260.17201.4106345384610850520.pr-tracker-bot@kernel.org/t/#md79869a3966ccceb30eef658b85743e49cf31dc1
+* The conn_post_wait_comp completion is not necessary and can be removed
+  because iscsit_close_connection() sleeps until all the other threads
+  release the conn structure.
+  (see the iscsit_check_conn_usage_count() function)
 
+V2: do not set connection_reinstatement to 1 in iscsit_close_connection(),
+    leave iscsit_cause_connection_reinstatement() deal with reentrancy.
 
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/target/iscsi/iscsi_target.c       | 27 +++--------------------
+ drivers/target/iscsi/iscsi_target_erl0.c  |  6 +----
+ drivers/target/iscsi/iscsi_target_login.c |  2 --
+ drivers/target/iscsi/iscsi_target_util.c  |  3 ---
+ include/target/iscsi/iscsi_target_core.h  |  4 ----
+ 5 files changed, 4 insertions(+), 38 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 2c54c5d8412d..d558c4c064cb 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4226,31 +4226,10 @@ int iscsit_close_connection(
+ 	/*
+ 	 * If connection reinstatement is being performed on this connection,
+ 	 * up the connection reinstatement semaphore that is being blocked on
+-	 * in iscsit_cause_connection_reinstatement().
++	 * in iscsit_cause_connection_reinstatement() or
++	 * in iscsit_connection_reinstatement_rcfr()
+ 	 */
+-	spin_lock_bh(&conn->state_lock);
+-	if (atomic_read(&conn->sleep_on_conn_wait_comp)) {
+-		spin_unlock_bh(&conn->state_lock);
+-		complete(&conn->conn_wait_comp);
+-		wait_for_completion(&conn->conn_post_wait_comp);
+-		spin_lock_bh(&conn->state_lock);
+-	}
+-
+-	/*
+-	 * If connection reinstatement is being performed on this connection
+-	 * by receiving a REMOVECONNFORRECOVERY logout request, up the
+-	 * connection wait rcfr semaphore that is being blocked on
+-	 * an iscsit_connection_reinstatement_rcfr().
+-	 */
+-	if (atomic_read(&conn->connection_wait_rcfr)) {
+-		spin_unlock_bh(&conn->state_lock);
+-		complete(&conn->conn_wait_rcfr_comp);
+-		wait_for_completion(&conn->conn_post_wait_comp);
+-		spin_lock_bh(&conn->state_lock);
+-	}
+-	atomic_set(&conn->connection_reinstatement, 1);
+-	spin_unlock_bh(&conn->state_lock);
+-
++	complete_all(&conn->conn_wait_comp);
+ 	/*
+ 	 * If any other processes are accessing this connection pointer we
+ 	 * must wait until they have completed.
+diff --git a/drivers/target/iscsi/iscsi_target_erl0.c b/drivers/target/iscsi/iscsi_target_erl0.c
+index 102c9cbf59f3..584e0a0b517d 100644
+--- a/drivers/target/iscsi/iscsi_target_erl0.c
++++ b/drivers/target/iscsi/iscsi_target_erl0.c
+@@ -839,8 +839,7 @@ void iscsit_connection_reinstatement_rcfr(struct iscsi_conn *conn)
+ 		send_sig(SIGINT, conn->rx_thread, 1);
+ 
+ sleep:
+-	wait_for_completion(&conn->conn_wait_rcfr_comp);
+-	complete(&conn->conn_post_wait_comp);
++	wait_for_completion(&conn->conn_wait_comp);
+ }
+ 
+ void iscsit_cause_connection_reinstatement(struct iscsi_conn *conn, int sleep)
+@@ -871,12 +870,9 @@ void iscsit_cause_connection_reinstatement(struct iscsi_conn *conn, int sleep)
+ 		spin_unlock_bh(&conn->state_lock);
+ 		return;
+ 	}
+-
+-	atomic_set(&conn->sleep_on_conn_wait_comp, 1);
+ 	spin_unlock_bh(&conn->state_lock);
+ 
+ 	wait_for_completion(&conn->conn_wait_comp);
+-	complete(&conn->conn_post_wait_comp);
+ }
+ EXPORT_SYMBOL(iscsit_cause_connection_reinstatement);
+ 
+diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
+index 1a9c50401bdb..982c23459272 100644
+--- a/drivers/target/iscsi/iscsi_target_login.c
++++ b/drivers/target/iscsi/iscsi_target_login.c
+@@ -1096,9 +1096,7 @@ static struct iscsi_conn *iscsit_alloc_conn(struct iscsi_np *np)
+ 	INIT_LIST_HEAD(&conn->conn_cmd_list);
+ 	INIT_LIST_HEAD(&conn->immed_queue_list);
+ 	INIT_LIST_HEAD(&conn->response_queue_list);
+-	init_completion(&conn->conn_post_wait_comp);
+ 	init_completion(&conn->conn_wait_comp);
+-	init_completion(&conn->conn_wait_rcfr_comp);
+ 	init_completion(&conn->conn_waiting_on_uc_comp);
+ 	init_completion(&conn->conn_logout_comp);
+ 	init_completion(&conn->rx_half_close_comp);
+diff --git a/drivers/target/iscsi/iscsi_target_util.c b/drivers/target/iscsi/iscsi_target_util.c
+index 6dd5810e2af1..d7b1f9110d49 100644
+--- a/drivers/target/iscsi/iscsi_target_util.c
++++ b/drivers/target/iscsi/iscsi_target_util.c
+@@ -824,9 +824,6 @@ struct iscsi_conn *iscsit_get_conn_from_cid_rcfr(struct iscsi_session *sess, u16
+ 	list_for_each_entry(conn, &sess->sess_conn_list, conn_list) {
+ 		if (conn->cid == cid) {
+ 			iscsit_inc_conn_usage_count(conn);
+-			spin_lock(&conn->state_lock);
+-			atomic_set(&conn->connection_wait_rcfr, 1);
+-			spin_unlock(&conn->state_lock);
+ 			spin_unlock_bh(&sess->conn_lock);
+ 			return conn;
+ 		}
+diff --git a/include/target/iscsi/iscsi_target_core.h b/include/target/iscsi/iscsi_target_core.h
+index 1eccb2ac7d02..aeb8932507c2 100644
+--- a/include/target/iscsi/iscsi_target_core.h
++++ b/include/target/iscsi/iscsi_target_core.h
+@@ -542,12 +542,8 @@ struct iscsi_conn {
+ 	atomic_t		connection_exit;
+ 	atomic_t		connection_recovery;
+ 	atomic_t		connection_reinstatement;
+-	atomic_t		connection_wait_rcfr;
+-	atomic_t		sleep_on_conn_wait_comp;
+ 	atomic_t		transport_failed;
+-	struct completion	conn_post_wait_comp;
+ 	struct completion	conn_wait_comp;
+-	struct completion	conn_wait_rcfr_comp;
+ 	struct completion	conn_waiting_on_uc_comp;
+ 	struct completion	conn_logout_comp;
+ 	struct completion	tx_half_close_comp;
 -- 
-Mit freundlichen Gruessen / Kind regards
-Steffen Maier
+2.27.0
 
-Linux on IBM Z and LinuxONE
-
-https://www.ibm.com/privacy/us/en/
-IBM Deutschland Research & Development GmbH
-Vorsitzender des Aufsichtsrats: Gregor Pillen
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
