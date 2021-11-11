@@ -2,33 +2,33 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46A18C433F5
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 05:41:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 280ABC433EF
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 05:52:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 19D1B6103B
-	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 05:41:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1B606101C
+	for <linux-scsi@archiver.kernel.org>; Thu, 11 Nov 2021 05:52:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230021AbhKKFoT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 11 Nov 2021 00:44:19 -0500
-Received: from mailgw02.mediatek.com ([210.61.82.184]:57688 "EHLO
+        id S229643AbhKKFzB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 11 Nov 2021 00:55:01 -0500
+Received: from mailgw02.mediatek.com ([210.61.82.184]:47172 "EHLO
         mailgw02.mediatek.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-        with ESMTP id S229463AbhKKFoT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2021 00:44:19 -0500
-X-UUID: 5d98166b89384666a99459a552fec35e-20211111
+        with ESMTP id S229379AbhKKFzA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Nov 2021 00:55:00 -0500
+X-UUID: 7d811d0450dd4fc3900d3df737020a61-20211111
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:CC:To:Subject; bh=uU3GXZThZjqCV+0NTVcHqLrhCFqb20KUFxJbZ2ItdwY=;
-        b=KPR8G72/hldnGPX5E2m1h56pVeQMKHwC0vech0uDAn3URu2n4ZeKKvBWRwX1AYzbTCbuJmAZtSGavKjaEYLNITdU7wImCy1eFLugGgWi7FUAlcTyXui01r9MypLeU6c/rem6HJDuc1xiS75HiRmlP9NNGtre/rd+0RtEbByx/64=;
-X-UUID: 5d98166b89384666a99459a552fec35e-20211111
-Received: from mtkexhb02.mediatek.inc [(172.21.101.103)] by mailgw02.mediatek.com
+        h=Content-Transfer-Encoding:Content-Type:In-Reply-To:MIME-Version:Date:Message-ID:From:References:CC:To:Subject; bh=MK+z4HNd2YFz9V+YGPzL05tuq66xxcNIrnCbC5g3B+Y=;
+        b=mDcLwma5BhIR8AiEhAd4NlgbRK3sQW4cBtlL4NZw+rcn0Me+WhEcI2gFrAT+OCCmUwukp0AQVQJgwdytlnPJehU9EPAa85dlWSMLdAZoS7i50mPZ7plGOUciB9Ispf8oL3XrdB31B8V2dOnE+0TdZZeoxlJ+SyA5AYJJ+8joWpg=;
+X-UUID: 7d811d0450dd4fc3900d3df737020a61-20211111
+Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
         (envelope-from <peter.wang@mediatek.com>)
-        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-SHA384 256/256)
-        with ESMTP id 904434180; Thu, 11 Nov 2021 13:41:25 +0800
+        (Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+        with ESMTP id 1049544693; Thu, 11 Nov 2021 13:52:09 +0800
 Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
  mtkmbs07n2.mediatek.inc (172.21.101.141) with Microsoft SMTP Server (TLS) id
- 15.0.1497.2; Thu, 11 Nov 2021 13:41:24 +0800
+ 15.0.1497.2; Thu, 11 Nov 2021 13:52:08 +0800
 Received: from [172.21.84.99] (172.21.84.99) by mtkmbs10n1.mediatek.inc
  (172.21.101.73) with Microsoft SMTP Server id 15.2.792.15 via Frontend
- Transport; Thu, 11 Nov 2021 13:41:24 +0800
+ Transport; Thu, 11 Nov 2021 13:52:08 +0800
 Subject: Re: [PATCH] scsi: ufs: ufs-mediatek: add put_device() after
  of_find_device_by_node()
 To:     <cgel.zte@gmail.com>, <stanley.chu@mediatek.com>
@@ -42,8 +42,8 @@ CC:     <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
         Zeal Robot <zealci@zte.com.cn>
 References: <20211110105133.150171-1-ye.guojin@zte.com.cn>
 From:   Peter Wang <peter.wang@mediatek.com>
-Message-ID: <16e61844-6fc7-2d1d-ee30-364c6df59545@mediatek.com>
-Date:   Thu, 11 Nov 2021 13:41:24 +0800
+Message-ID: <b4b38f93-27a7-53d0-b20f-0e9728ef6dbe@mediatek.com>
+Date:   Thu, 11 Nov 2021 13:52:08 +0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
  Thunderbird/68.10.0
 MIME-Version: 1.0
@@ -71,8 +71,8 @@ cnMvc2NzaS91ZnMvdWZzLW1lZGlhdGVrLmMNCj4gQEAgLTExODksNiArMTE4OSw3IEBAIHN0YXRp
 YyBpbnQgdWZzX210a19wcm9iZShzdHJ1Y3QgcGxhdGZvcm1fZGV2aWNlICpwZGV2KQ0KPiAgIAl9
 DQo+ICAgCWxpbmsgPSBkZXZpY2VfbGlua19hZGQoZGV2LCAmcmVzZXRfcGRldi0+ZGV2LA0KPiAg
 IAkJRExfRkxBR19BVVRPUFJPQkVfQ09OU1VNRVIpOw0KPiArCXB1dF9kZXZpY2UoJnJlc2V0X3Bk
-ZXYtPmRldik7DQoNClRoYW5rcyBmb3IgZml4IHRoaXMgbWlzc2luZy4NClJldmlld2VkLWJ5OiBQ
-ZXRlciBXYW5nIDxwZXRlci53YW5nQG1lZGlhdGVrLmNvbT4NCg0KPiAgIAlpZiAoIWxpbmspIHsN
-Cj4gICAJCWRldl9ub3RpY2UoZGV2LCAiYWRkIHJlc2V0IGRldmljZV9saW5rIGZhaWxcbiIpOw0K
-PiAgIAkJZ290byBza2lwX3Jlc2V0Ow==
+ZXYtPmRldik7DQoNCg0KVGhhbmtzIGZvciBmaXggdGhpcyBtaXNzaW5nLg0KUmV2aWV3ZWQtYnk6
+IFBldGVyIFdhbmcgPHBldGVyLndhbmdAbWVkaWF0ZWsuY29tPg0KDQoNCj4gICAJaWYgKCFsaW5r
+KSB7DQo+ICAgCQlkZXZfbm90aWNlKGRldiwgImFkZCByZXNldCBkZXZpY2VfbGluayBmYWlsXG4i
+KTsNCj4gICAJCWdvdG8gc2tpcF9yZXNldDs=
 
