@@ -2,130 +2,106 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 28349C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 12:07:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF24C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 13:02:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0BBF460F70
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 12:07:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F10CD61078
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 13:02:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234948AbhKLMJt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Nov 2021 07:09:49 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36546 "EHLO
+        id S235026AbhKLNFY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Nov 2021 08:05:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49326 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234910AbhKLMJn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2021 07:09:43 -0500
-Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B602BC061203;
-        Fri, 12 Nov 2021 04:06:52 -0800 (PST)
-Received: by mail-pf1-x430.google.com with SMTP id c4so8345834pfj.2;
-        Fri, 12 Nov 2021 04:06:52 -0800 (PST)
+        with ESMTP id S234998AbhKLNFT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2021 08:05:19 -0500
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F920C0613F5;
+        Fri, 12 Nov 2021 05:02:27 -0800 (PST)
+Received: by mail-pl1-x62b.google.com with SMTP id n8so8350706plf.4;
+        Fri, 12 Nov 2021 05:02:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20210112;
         h=from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=MIyRtrqfmfv9Q70WA5OuleW3S97RwfmhJIbO/13nPI0=;
-        b=eUrb7nENr9K/JwpH4dsIeY4/ml8fLrNKUXppJa64u3i+7roPNJxy6uMNnHS2YadqUZ
-         yCPkY8CybmqjnJT6khQDAItloHqXM9bZZUIkOdyMYTXVK5m/36NwK9b+FLviishKTAIO
-         YYkRqV+0h3lAmwuQgRtb+P4tkD3JnOCdy4yY9kZx/kG+Q3jVoPT/vSqlN7FP/5HtMBDQ
-         bF/KmXFYQpClbh1z0IYOwhDQmY35nM+9i1KzpdMYL/6e4EjeOlfMYXpmeP+fqyejc+lE
-         S7Gh16ymepXekxve8I7zwHXpMASvM5Ckjgc2m9yXaEGq8hN9bjmfWRmkFbDtISNIgNml
-         s8+w==
+        bh=5DDh4jKNY942Gl/i8dUbs2Mkijh1sNJCdeUegqogFsE=;
+        b=Z8vBO/pyAz/7yfuKfpeCMeHOJ4L6xdiskutvoNm8WPJDgUwbkRs0MS0ZcLJ64KOsPF
+         QQckZ2PTSjadOr3TV0vDHmJbywE6jtZHFdeqDOxW1YT8NgVThXbNo3sCRBjtaFIe3uoD
+         IFq2IyHux9Op/sb93+3c9n85m24IeKRFQIYUxT8ahQDUYkl8Yw5GT4hxQycvTO+ByEkM
+         GYBjZi7fvomL6x0DNp+6TmQ3S2we7YiKWvyTz4LWbQfdJXA6NFI1rylioeAf+8EIw3xI
+         umxWVvQcLGCdg7twPIBx0kr/8/pTT+0978oeOEtzbrOEXPC91VaH4oJWrxgxiO0GaO5n
+         iM3g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
          :content-transfer-encoding;
-        bh=MIyRtrqfmfv9Q70WA5OuleW3S97RwfmhJIbO/13nPI0=;
-        b=QmMGqb8A9SKjJWwdxDPtH0oiTJpnWh1JdLs+jtnO8hSXAmAGAkAbKy2nwiSiFBO517
-         PJQjSMYHVeA0xWcth6ipXJPT/bb6o4LJJwgHwZTki3ko0g0o7ZqsV19UMyI8vkK5VGrL
-         x8CigZ10grSNVZo5gL1V+bHbwa6v2aIjz8Wg3H4wCp+8ISa6RWVRJzr1djxrxYtHUtt5
-         YQT5ESMO72a61Is3DaAP1FC0yiAZXSpqM0/sUveyXrMkpVnltj6A/NZdHIOEt0ZamcyJ
-         iMAqJNHxeIec1eJlfEY8+ikZlZTeRXQS18C91gOGvmcZ23yVFTRShvBKsmt99/KhUmIj
-         ha8g==
-X-Gm-Message-State: AOAM532c9C+Yq+/oAhUWE7e6EX8cKe/TS7K7lhKIkdl77iAfm8QwYIGN
-        ErrjYPRuhfUJkXfMwLPlBkdl+4L2prr3JDqfQcbSWQ==
-X-Google-Smtp-Source: ABdhPJx8ypXWbxfOJRQS60YeMql/1h8CczQ/+31wcaOfd4KGWHLiyyGTBRhCBrI4M6Pm9qh361QThQ==
-X-Received: by 2002:a63:5c13:: with SMTP id q19mr9459006pgb.350.1636718812226;
-        Fri, 12 Nov 2021 04:06:52 -0800 (PST)
-Received: from fanta-arch.localdomain ([148.163.172.142])
-        by smtp.gmail.com with ESMTPSA id f15sm7058837pfe.171.2021.11.12.04.06.46
+        bh=5DDh4jKNY942Gl/i8dUbs2Mkijh1sNJCdeUegqogFsE=;
+        b=GDmj6YQRRRX236aoxLQGtEx/Gbb2c8TJl8S3McRQ2ZrJbxzNc64duE/B8XEhYHj5LK
+         Y+x2yie+qTvrz5EBPYHRrIZykswguvPLGlFDRWEEfYQgCrkR+75T/OWzf8JLiC549Ht6
+         5m43aVr9QWTyoADIf5JunV/KGKQ71uhPG/vy7AFzKlTl2Uz3GmE/QYbPdMx3ljTVdoLC
+         /+mQ2qJj4FWsDMHtsB7igRFQcCm3VR2w4yZpW5bS33ju1YAeYekGNwCemy/gq+lJHVa1
+         rV0Bn3/+sjm8KdEsH0v7V7osgPqijq+IdrP6k03J+1WIQoijaVYM+HA1La9wUFBQGEag
+         cYig==
+X-Gm-Message-State: AOAM532lWWtfhNRFuN9z4HUCVnk/bQ2lpOi/+ZuprGSvLkrzAJCnHbSu
+        grFbI3qNfPoz1xC3BKmkQ/0=
+X-Google-Smtp-Source: ABdhPJy6tZtAnigJMcLzG99Dwhc4diNcfzyLltbIEChePSsJosJRZDjox+cnwSfVKYVuW4L/MQA98g==
+X-Received: by 2002:a17:903:248f:b0:143:8e81:4d7c with SMTP id p15-20020a170903248f00b001438e814d7cmr7827668plw.1.1636722147064;
+        Fri, 12 Nov 2021 05:02:27 -0800 (PST)
+Received: from localhost.localdomain ([193.203.214.57])
+        by smtp.gmail.com with ESMTPSA id d15sm7331493pfu.12.2021.11.12.05.02.25
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Nov 2021 04:06:51 -0800 (PST)
-From:   Letu Ren <fantasquex@gmail.com>
-To:     skashyap@marvell.com, jhasan@marvell.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Letu Ren <fantasquex@gmail.com>,
-        Zheyu Ma <zheyuma97@gmail.com>, Wende Tan <twd2.me@gmail.com>
-Subject: [PATCH] scsi: qedf: Fix a UAF bug in __qedf_probe
-Date:   Fri, 12 Nov 2021 20:06:41 +0800
-Message-Id: <20211112120641.16073-1-fantasquex@gmail.com>
-X-Mailer: git-send-email 2.33.1
+        Fri, 12 Nov 2021 05:02:26 -0800 (PST)
+From:   cgel.zte@gmail.com
+X-Google-Original-From: deng.changcheng@zte.com.cn
+To:     james.smart@broadcom.com
+Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Changcheng Deng <deng.changcheng@zte.com.cn>,
+        Zeal Robot <zealci@zte.com.cn>
+Subject: [PATCH] scsi: lpfc: remove unneeded variable
+Date:   Fri, 12 Nov 2021 13:02:20 +0000
+Message-Id: <20211112130220.10741-1-deng.changcheng@zte.com.cn>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-In __qedf_probe, if `qedf->cdev` is NULL which means
-qed_ops->common->probe() failed, then the program will goto label err1,
-scsi_host_put() will free `lport->host` pointer. Because the memory `qedf`
-points to is allocated by libfc_host_alloc(), it will be freed by
-scsi_host_put(). However, the if statement below label err0 only checks
-whether qedf is NULL but doesn't check whether the memory has been freed.
-So a UAF bug occurred.
+From: Changcheng Deng <deng.changcheng@zte.com.cn>
 
-There are two ways to get to the statements below err0. the first one is
-described as before. `qedf` should be set to NULL. The second way is goto
-`err0` directly. In this way `qedf` hasn't been changed and it has the
-initial value `NULL`. So the program wont't go to the if statement in any
-situation.
+Fix the following coccicheck review:
+./drivers/scsi/lpfc/lpfc_sli.c: 3655: 5-7: Unneeded variable
 
-The KASAN logs are as follows:
+Remove unneeded variable used to store return value.
 
-[    2.312969] BUG: KASAN: use-after-free in __qedf_probe+0x5dcf/0x6bc0
-[    2.312969]
-[    2.312969] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.12.0-59-gc9ba5276e321-prebuilt.qemu.org 04/01/2014
-[    2.312969] Call Trace:
-[    2.312969]  dump_stack_lvl+0x59/0x7b
-[    2.312969]  print_address_description+0x7c/0x3b0
-[    2.312969]  ? __qedf_probe+0x5dcf/0x6bc0
-[    2.312969]  __kasan_report+0x160/0x1c0
-[    2.312969]  ? __qedf_probe+0x5dcf/0x6bc0
-[    2.312969]  kasan_report+0x4b/0x70
-[    2.312969]  ? kobject_put+0x25d/0x290
-[    2.312969]  kasan_check_range+0x2ca/0x310
-[    2.312969]  __qedf_probe+0x5dcf/0x6bc0
-[    2.312969]  ? selinux_kernfs_init_security+0xdc/0x5f0
-[    2.312969]  ? trace_rpm_return_int_rcuidle+0x18/0x120
-[    2.312969]  ? rpm_resume+0xa5c/0x16e0
-[    2.312969]  ? qedf_get_generic_tlv_data+0x160/0x160
-[    2.312969]  local_pci_probe+0x13c/0x1f0
-[    2.312969]  pci_device_probe+0x37e/0x6c0
-
-Reported-by: Zheyu Ma <zheyuma97@gmail.com>
-Signed-off-by: Letu Ren <fantasquex@gmail.com>
-Co-developed-by: Wende Tan <twd2.me@gmail.com>
-Signed-off-by: Wende Tan <twd2.me@gmail.com>
+Reported-by: Zeal Robot <zealci@zte.com.cn>
+Signed-off-by: Changcheng Deng <deng.changcheng@zte.com.cn>
 ---
- drivers/scsi/qedf/qedf_main.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_sli.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 42d0d941dba5..3ea552acd82a 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3683,11 +3683,6 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- err1:
- 	scsi_host_put(lport->host);
- err0:
--	if (qedf) {
--		QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC, "Probe done.\n");
--
--		clear_bit(QEDF_PROBING, &qedf->flags);
--	}
- 	return rc;
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 53f154a301b5..93596cdd66a7 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -3652,7 +3652,6 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 			  struct lpfc_iocbq *saveq)
+ {
+ 	struct lpfc_iocbq *cmdiocbp;
+-	int rc = 1;
+ 	unsigned long iflag;
+ 
+ 	cmdiocbp = lpfc_sli_iocbq_lookup(phba, pring, saveq);
+@@ -3777,7 +3776,7 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 		}
+ 	}
+ 
+-	return rc;
++	return 1;
  }
  
+ /**
 -- 
-2.33.1
+2.25.1
 
