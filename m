@@ -2,125 +2,130 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51288C43217
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 10:56:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28349C433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 12:07:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 3E7CB60F8F
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 10:56:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BBF460F70
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 12:07:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234857AbhKLK7o (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Nov 2021 05:59:44 -0500
-Received: from mga07.intel.com ([134.134.136.100]:45946 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S234872AbhKLK7h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 12 Nov 2021 05:59:37 -0500
-X-IronPort-AV: E=McAfee;i="6200,9189,10165"; a="296551590"
-X-IronPort-AV: E=Sophos;i="5.87,229,1631602800"; 
-   d="scan'208";a="296551590"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2021 02:56:46 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.87,229,1631602800"; 
-   d="scan'208";a="546898338"
-Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
-  by fmsmga008.fm.intel.com with ESMTP; 12 Nov 2021 02:56:41 -0800
-Subject: Re: [PATCH 08/11] scsi: ufs: Improve SCSI abort handling further
-To:     Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <asutoshd@codeaurora.org>,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        Santosh Yaraganavi <santoshsy@gmail.com>,
-        Arnd Bergmann <arnd@arndb.de>, Vishak G <vishak.g@samsung.com>
-References: <20211110004440.3389311-1-bvanassche@acm.org>
- <20211110004440.3389311-9-bvanassche@acm.org>
- <509e2b2c-689a-04e3-e773-b8b99d9f6d0e@intel.com>
- <aac7b8c8-7474-4317-c342-1714cc61a331@acm.org>
-From:   Adrian Hunter <adrian.hunter@intel.com>
-Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
- Business Identity Code: 0357606 - 4, Domiciled in Helsinki
-Message-ID: <985b86c5-e45f-8d07-31e3-7eed1c7c894c@intel.com>
-Date:   Fri, 12 Nov 2021 12:56:40 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Firefox/78.0 Thunderbird/78.13.0
+        id S234948AbhKLMJt (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Nov 2021 07:09:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36546 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S234910AbhKLMJn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2021 07:09:43 -0500
+Received: from mail-pf1-x430.google.com (mail-pf1-x430.google.com [IPv6:2607:f8b0:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B602BC061203;
+        Fri, 12 Nov 2021 04:06:52 -0800 (PST)
+Received: by mail-pf1-x430.google.com with SMTP id c4so8345834pfj.2;
+        Fri, 12 Nov 2021 04:06:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20210112;
+        h=from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=MIyRtrqfmfv9Q70WA5OuleW3S97RwfmhJIbO/13nPI0=;
+        b=eUrb7nENr9K/JwpH4dsIeY4/ml8fLrNKUXppJa64u3i+7roPNJxy6uMNnHS2YadqUZ
+         yCPkY8CybmqjnJT6khQDAItloHqXM9bZZUIkOdyMYTXVK5m/36NwK9b+FLviishKTAIO
+         YYkRqV+0h3lAmwuQgRtb+P4tkD3JnOCdy4yY9kZx/kG+Q3jVoPT/vSqlN7FP/5HtMBDQ
+         bF/KmXFYQpClbh1z0IYOwhDQmY35nM+9i1KzpdMYL/6e4EjeOlfMYXpmeP+fqyejc+lE
+         S7Gh16ymepXekxve8I7zwHXpMASvM5Ckjgc2m9yXaEGq8hN9bjmfWRmkFbDtISNIgNml
+         s8+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
+         :content-transfer-encoding;
+        bh=MIyRtrqfmfv9Q70WA5OuleW3S97RwfmhJIbO/13nPI0=;
+        b=QmMGqb8A9SKjJWwdxDPtH0oiTJpnWh1JdLs+jtnO8hSXAmAGAkAbKy2nwiSiFBO517
+         PJQjSMYHVeA0xWcth6ipXJPT/bb6o4LJJwgHwZTki3ko0g0o7ZqsV19UMyI8vkK5VGrL
+         x8CigZ10grSNVZo5gL1V+bHbwa6v2aIjz8Wg3H4wCp+8ISa6RWVRJzr1djxrxYtHUtt5
+         YQT5ESMO72a61Is3DaAP1FC0yiAZXSpqM0/sUveyXrMkpVnltj6A/NZdHIOEt0ZamcyJ
+         iMAqJNHxeIec1eJlfEY8+ikZlZTeRXQS18C91gOGvmcZ23yVFTRShvBKsmt99/KhUmIj
+         ha8g==
+X-Gm-Message-State: AOAM532c9C+Yq+/oAhUWE7e6EX8cKe/TS7K7lhKIkdl77iAfm8QwYIGN
+        ErrjYPRuhfUJkXfMwLPlBkdl+4L2prr3JDqfQcbSWQ==
+X-Google-Smtp-Source: ABdhPJx8ypXWbxfOJRQS60YeMql/1h8CczQ/+31wcaOfd4KGWHLiyyGTBRhCBrI4M6Pm9qh361QThQ==
+X-Received: by 2002:a63:5c13:: with SMTP id q19mr9459006pgb.350.1636718812226;
+        Fri, 12 Nov 2021 04:06:52 -0800 (PST)
+Received: from fanta-arch.localdomain ([148.163.172.142])
+        by smtp.gmail.com with ESMTPSA id f15sm7058837pfe.171.2021.11.12.04.06.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Nov 2021 04:06:51 -0800 (PST)
+From:   Letu Ren <fantasquex@gmail.com>
+To:     skashyap@marvell.com, jhasan@marvell.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com
+Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, Letu Ren <fantasquex@gmail.com>,
+        Zheyu Ma <zheyuma97@gmail.com>, Wende Tan <twd2.me@gmail.com>
+Subject: [PATCH] scsi: qedf: Fix a UAF bug in __qedf_probe
+Date:   Fri, 12 Nov 2021 20:06:41 +0800
+Message-Id: <20211112120641.16073-1-fantasquex@gmail.com>
+X-Mailer: git-send-email 2.33.1
 MIME-Version: 1.0
-In-Reply-To: <aac7b8c8-7474-4317-c342-1714cc61a331@acm.org>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 10/11/2021 20:56, Bart Van Assche wrote:
-> On 11/10/21 12:57 AM, Adrian Hunter wrote:
->> On 10/11/2021 02:44, Bart Van Assche wrote:
->>> Make sure that aborted commands are completed once by clearing the
->>> corresponding tag bit from hba->outstanding_reqs. This patch is a
->>> follow-up for commit cd892096c940 ("scsi: ufs: core: Improve SCSI
->>> abort handling").
->>>
->>> Fixes: 7a3e97b0dc4b ("[SCSI] ufshcd: UFS Host controller driver")
->>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->>> ---
->>>   drivers/scsi/ufs/ufshcd.c | 9 +++++++++
->>>   1 file changed, 9 insertions(+)
->>>
->>> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
->>> index 8f5640647054..1e15ed1f639f 100644
->>> --- a/drivers/scsi/ufs/ufshcd.c
->>> +++ b/drivers/scsi/ufs/ufshcd.c
->>> @@ -7090,6 +7090,15 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
->>>           goto release;
->>>       }
->>>   +    /*
->>> +     * ufshcd_try_to_abort_task() cleared the 'tag' bit in the doorbell
->>> +     * register. Clear the corresponding bit from outstanding_reqs to
->>> +     * prevent early completion.
->>> +     */
->>> +    spin_lock_irqsave(&hba->outstanding_lock, flags);
->>> +    __clear_bit(tag, &hba->outstanding_reqs);
->>> +    spin_unlock_irqrestore(&hba->outstanding_lock, flags);
->>
->> Seems like something ufshcd_clear_cmd() should be doing instead?
-> 
-> Hi Adrian,
-> 
-> I'm concerned that would break ufshcd_eh_device_reset_handler() since that reset handler retries SCSI commands by calling __ufshcd_transfer_req_compl() after having called ufshcd_clear_cmd().
+In __qedf_probe, if `qedf->cdev` is NULL which means
+qed_ops->common->probe() failed, then the program will goto label err1,
+scsi_host_put() will free `lport->host` pointer. Because the memory `qedf`
+points to is allocated by libfc_host_alloc(), it will be freed by
+scsi_host_put(). However, the if statement below label err0 only checks
+whether qedf is NULL but doesn't check whether the memory has been freed.
+So a UAF bug occurred.
 
-Whenever an outstanding_reqs bit transitions 1 -> 0, then
-__ufshcd_transfer_req_compl() must be called.
+There are two ways to get to the statements below err0. the first one is
+described as before. `qedf` should be set to NULL. The second way is goto
+`err0` directly. In this way `qedf` hasn't been changed and it has the
+initial value `NULL`. So the program wont't go to the if statement in any
+situation.
 
-In all cases, the correct logic must have the effect of:
+The KASAN logs are as follows:
 
-	spin_lock_irqsave(&hba->outstanding_lock, flags);
-	bit = __test_and_clear_bit(tag, &hba->outstanding_reqs);
-	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+[    2.312969] BUG: KASAN: use-after-free in __qedf_probe+0x5dcf/0x6bc0
+[    2.312969]
+[    2.312969] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS rel-1.12.0-59-gc9ba5276e321-prebuilt.qemu.org 04/01/2014
+[    2.312969] Call Trace:
+[    2.312969]  dump_stack_lvl+0x59/0x7b
+[    2.312969]  print_address_description+0x7c/0x3b0
+[    2.312969]  ? __qedf_probe+0x5dcf/0x6bc0
+[    2.312969]  __kasan_report+0x160/0x1c0
+[    2.312969]  ? __qedf_probe+0x5dcf/0x6bc0
+[    2.312969]  kasan_report+0x4b/0x70
+[    2.312969]  ? kobject_put+0x25d/0x290
+[    2.312969]  kasan_check_range+0x2ca/0x310
+[    2.312969]  __qedf_probe+0x5dcf/0x6bc0
+[    2.312969]  ? selinux_kernfs_init_security+0xdc/0x5f0
+[    2.312969]  ? trace_rpm_return_int_rcuidle+0x18/0x120
+[    2.312969]  ? rpm_resume+0xa5c/0x16e0
+[    2.312969]  ? qedf_get_generic_tlv_data+0x160/0x160
+[    2.312969]  local_pci_probe+0x13c/0x1f0
+[    2.312969]  pci_device_probe+0x37e/0x6c0
 
-	if (bit)
-		__ufshcd_transfer_req_compl(hba, 1UL << tag);
+Reported-by: Zheyu Ma <zheyuma97@gmail.com>
+Signed-off-by: Letu Ren <fantasquex@gmail.com>
+Co-developed-by: Wende Tan <twd2.me@gmail.com>
+Signed-off-by: Wende Tan <twd2.me@gmail.com>
+---
+ drivers/scsi/qedf/qedf_main.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-To put it another way, how else does the driver know whether or
-not __ufshcd_transfer_req_compl() has been called already.
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 42d0d941dba5..3ea552acd82a 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -3683,11 +3683,6 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ err1:
+ 	scsi_host_put(lport->host);
+ err0:
+-	if (qedf) {
+-		QEDF_INFO(&qedf->dbg_ctx, QEDF_LOG_DISC, "Probe done.\n");
+-
+-		clear_bit(QEDF_PROBING, &qedf->flags);
+-	}
+ 	return rc;
+ }
+ 
+-- 
+2.33.1
 
-
-As a separate issue, in ufshcd_abort() there is:
-
-	/* If command is already aborted/completed, return FAILED. */
-	if (!(test_bit(tag, &hba->outstanding_reqs))) {
-		dev_err(hba->dev,
-			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
-			__func__, tag, hba->outstanding_reqs, reg);
-		goto release;
-	}
-
-which seems wrong. FAILED should only be returned to escalate the
-error handling, so if the slot has already successfully been
-cleared, that is SUCCESS.  scsi_times_out() has already blocked
-the scsi_done() path (by setting SCMD_STATE_COMPLETE), so any use
-after free must be being caused by SCSI not the ufs driver.
-
-path
