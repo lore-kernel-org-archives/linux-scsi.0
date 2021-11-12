@@ -2,91 +2,129 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79A08C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 14:54:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDC7CC433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 15:19:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 5929261075
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 14:54:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEC5C61075
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 15:19:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235124AbhKLO5n (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Nov 2021 09:57:43 -0500
-Received: from mta-02.yadro.com ([89.207.88.252]:36538 "EHLO mta-01.yadro.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S235086AbhKLO5m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 12 Nov 2021 09:57:42 -0500
-Received: from localhost (unknown [127.0.0.1])
-        by mta-01.yadro.com (Postfix) with ESMTP id 97E2A45EF2;
-        Fri, 12 Nov 2021 14:54:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=yadro.com; h=
-        content-type:content-type:content-transfer-encoding:mime-version
-        :x-mailer:message-id:date:date:subject:subject:from:from
-        :received:received:received; s=mta-01; t=1636728889; x=
-        1638543290; bh=mqBJQNwOobrzjyHVHW5ArqQIiv9cWEhbKXD2O0BuDrY=; b=f
-        u1SzsbnqN9kxVF5zJ3ee3JSzbglKmDmunNwbOwQJhJ9/GNeX4JbRIPyATfR7t3cR
-        DAc1gdZSWlqs9g7dzPoV9nbH5pZ/qB8al0MwVu6RlcZKKV45MrGQVnItfWPSclvz
-        D2Fg72gtALiI1fK0z8nZEBjvIon40ORUnYpGzR65C4=
-X-Virus-Scanned: amavisd-new at yadro.com
-Received: from mta-01.yadro.com ([127.0.0.1])
-        by localhost (mta-01.yadro.com [127.0.0.1]) (amavisd-new, port 10024)
-        with ESMTP id jexl9PWAki8t; Fri, 12 Nov 2021 17:54:49 +0300 (MSK)
-Received: from T-EXCH-04.corp.yadro.com (t-exch-04.corp.yadro.com [172.17.100.104])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mta-01.yadro.com (Postfix) with ESMTPS id C5CD145E32;
-        Fri, 12 Nov 2021 17:54:48 +0300 (MSK)
-Received: from localhost (172.22.1.233) by T-EXCH-04.corp.yadro.com
- (172.17.100.104) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384_P384) id 15.1.669.32; Fri, 12
- Nov 2021 17:54:47 +0300
-From:   Roman Bolshakov <r.bolshakov@yadro.com>
-To:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        <target-devel@vger.kernel.org>
-CC:     <linux-scsi@vger.kernel.org>, <linux@yadro.com>,
-        <GR-QLogic-Storage-Upstream@marvell.com>,
-        Roman Bolshakov <r.bolshakov@yadro.com>,
-        Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>,
-        <stable@vger.kernel.org>
-Subject: [PATCH] scsi: qla2xxx: Format log strings only if needed
-Date:   Fri, 12 Nov 2021 17:54:46 +0300
-Message-ID: <20211112145446.51210-1-r.bolshakov@yadro.com>
-X-Mailer: git-send-email 2.33.1
+        id S229959AbhKLPW2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Nov 2021 10:22:28 -0500
+Received: from us-smtp-delivery-124.mimecast.com ([216.205.24.124]:31197 "EHLO
+        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S230182AbhKLPW1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 12 Nov 2021 10:22:27 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1636730376;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         in-reply-to:in-reply-to:references:references;
+        bh=VFN3YfKrrN4rviirmH1lG0NY9uufAM6YHK0vPxccEaw=;
+        b=IEmTYYOVu8mnNf8dncwvv63iPXnTzw+SDFVpHEr5SCq5O1ZxbPCmPqq7Wdw97KhFccVCcs
+        PpvF0X6sLfvePo+htyPszZOVP9OPJFw+TC9+/jUt+DHqLVkcJdZ2V8c3AfrjHJX4R0Iaf/
+        vTUFGcudgKajU4OGV7+iJCc739D3CyQ=
+Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
+ [209.85.222.200]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-501-HCwmsxR3ObuVLBpo4Ks9xw-1; Fri, 12 Nov 2021 10:19:35 -0500
+X-MC-Unique: HCwmsxR3ObuVLBpo4Ks9xw-1
+Received: by mail-qk1-f200.google.com with SMTP id v14-20020a05620a0f0e00b0043355ed67d1so6649459qkl.7
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Nov 2021 07:19:35 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to;
+        bh=VFN3YfKrrN4rviirmH1lG0NY9uufAM6YHK0vPxccEaw=;
+        b=rFdSVhGHbRHvd7yiozLhsaTt7yZzb2I2dKsiY/OVv14DKLr1af2RWzCAUymD1uezsu
+         YszTxhHEXUjlKmRJUlMJbl198z98mHCH8fcqk8AmZYcZDOrAsvRdFEXx3QVGl4obcEap
+         7s07Sh8RRnQVvriXRhnsjUzAhRA3mLrK4FiSyZZ247UTWOzQjuujop2g0RrliqiqAWp9
+         XNoujQ9wPLbibSPrMGD7Cl1qv1mEoyHpUtmPWl3NflizhPYmKq3GKMF7vKCgE/Dru8+3
+         YUcu8N9lVV47xTZ1EAc65EuB8PJNZ5rfBq2mIxs86Z/G6hbJRTBRQ0+Ihm8yBfxNozX4
+         FUqA==
+X-Gm-Message-State: AOAM5307fwBeVEpV3WzTIO6AMP0FnmkYBCEM6OF7lOm781R2RfFU1a7K
+        eOHjlFUa+8V5bRTfyJHobp+3wCklLNolefet/1nPcknm27g7ym+RPZFv9f7XQ6lFZ2Pqla6Br2Q
+        B2veBKpOXd2zPgDAphDE6
+X-Received: by 2002:a37:2f02:: with SMTP id v2mr13127490qkh.232.1636730375044;
+        Fri, 12 Nov 2021 07:19:35 -0800 (PST)
+X-Google-Smtp-Source: ABdhPJxk6sSDPzw7jrkKAxFn/K0PAx9HKUToVCIsJBG7fV34DkkAlHg0N9AMoil4JWoJAqjFdQQ15g==
+X-Received: by 2002:a37:2f02:: with SMTP id v2mr13127438qkh.232.1636730374828;
+        Fri, 12 Nov 2021 07:19:34 -0800 (PST)
+Received: from localhost (pool-68-160-176-52.bstnma.fios.verizon.net. [68.160.176.52])
+        by smtp.gmail.com with ESMTPSA id az14sm2791255qkb.125.2021.11.12.07.19.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Nov 2021 07:19:34 -0800 (PST)
+Date:   Fri, 12 Nov 2021 10:19:33 -0500
+From:   Mike Snitzer <snitzer@redhat.com>
+To:     Chaitanya Kulkarni <chaitanyak@nvidia.com>
+Cc:     "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>,
+        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "dm-devel@redhat.com" <dm-devel@redhat.com>,
+        "axboe@kernel.dk" <axboe@kernel.dk>,
+        "agk@redhat.com" <agk@redhat.com>,
+        "song@kernel.org" <song@kernel.org>,
+        "djwong@kernel.org" <djwong@kernel.org>,
+        "kbusch@kernel.org" <kbusch@kernel.org>, "hch@lst.de" <hch@lst.de>,
+        "sagi@grimberg.me" <sagi@grimberg.me>,
+        "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
+        "javier@javigon.com" <javier@javigon.com>,
+        "johannes.thumshirn@wdc.com" <johannes.thumshirn@wdc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "dongli.zhang@oracle.com" <dongli.zhang@oracle.com>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "osandov@fb.com" <osandov@fb.com>,
+        "willy@infradead.org" <willy@infradead.org>,
+        "jefflexu@linux.alibaba.com" <jefflexu@linux.alibaba.com>,
+        "josef@toxicpanda.com" <josef@toxicpanda.com>,
+        "clm@fb.com" <clm@fb.com>, "dsterba@suse.com" <dsterba@suse.com>,
+        "jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
+        "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+        "jlayton@kernel.org" <jlayton@kernel.org>,
+        "idryomov@gmail.com" <idryomov@gmail.com>,
+        "danil.kipnis@cloud.ionos.com" <danil.kipnis@cloud.ionos.com>,
+        "ebiggers@google.com" <ebiggers@google.com>,
+        "jinpu.wang@cloud.ionos.com" <jinpu.wang@cloud.ionos.com>
+Subject: Re: [RFC PATCH 8/8] md: add support for REQ_OP_VERIFY
+Message-ID: <YY6GBaSypKNPZnBj@redhat.com>
+References: <20211104064634.4481-1-chaitanyak@nvidia.com>
+ <20211104064634.4481-9-chaitanyak@nvidia.com>
+ <d770a769-7f2c-bb10-a3bd-0aca371a724e@nvidia.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [172.22.1.233]
-X-ClientProxiedBy: T-EXCH-01.corp.yadro.com (172.17.10.101) To
- T-EXCH-04.corp.yadro.com (172.17.100.104)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <d770a769-7f2c-bb10-a3bd-0aca371a724e@nvidia.com>
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Commit 598a90f2002c4 ("scsi: qla2xxx: add ring buffer for tracing debug
-logs") introduced unconditional log string formatting to ql_dbg() even
-if ql_dbg_log event is disabled. It harms performance because some
-strings are formatted in fastpath and/or interrupt context.
+On Thu, Nov 11 2021 at  3:13P -0500,
+Chaitanya Kulkarni <chaitanyak@nvidia.com> wrote:
 
-Cc: Rajan Shanmugavelu <rajan.shanmugavelu@oracle.com>
-Cc: stable@vger.kernel.org
-Fixes: 598a90f2002c4 ("scsi: qla2xxx: add ring buffer for tracing debug logs")
-Signed-off-by: Roman Bolshakov <r.bolshakov@yadro.com>
----
- drivers/scsi/qla2xxx/qla_dbg.c | 3 +++
- 1 file changed, 3 insertions(+)
+> On 11/3/2021 11:46 PM, Chaitanya Kulkarni wrote:
+> > From: Chaitanya Kulkarni <kch@nvidia.com>
+> > 
+> > Signed-off-by: Chaitanya Kulkarni <kch@nvidia.com>
+> 
+> I want to make sure the new REQ_OP_VERIFY is compatible with the
+> dm side as it is a generic interface.
+> 
+> Any comments on the dm side ? It will help me to respin the series for
+> V1 of this proposal.
 
-diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
-index 25549a8a2d72..7cf1f78cbaee 100644
---- a/drivers/scsi/qla2xxx/qla_dbg.c
-+++ b/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -2491,6 +2491,9 @@ ql_dbg(uint level, scsi_qla_host_t *vha, uint id, const char *fmt, ...)
- 	struct va_format vaf;
- 	char pbuf[64];
- 
-+	if (!ql_mask_match(level) && !trace_ql_dbg_log_enabled())
-+		return;
-+
- 	va_start(va, fmt);
- 
- 	vaf.fmt = fmt;
--- 
-2.33.1
+I can review, but have you tested your XFS scrub usecase ontop of
+the various DM devices you modified?
+
+Also, you seem to have missed Keith's suggestion of using io_uring to
+expose this capability.  If you happen to go that route: making sure
+DM has required io_uring capabilities would be needed (IIRC there
+were/are some lingering patches from Ming Lei to facilitate more
+efficient io_uring on DM.. I'll try to find, could be I'm wrong).
+
+Mike
 
