@@ -2,106 +2,181 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF24C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 13:02:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D87DC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 13:43:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id F10CD61078
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 13:02:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1996360F46
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 13:43:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235026AbhKLNFY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Nov 2021 08:05:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49326 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234998AbhKLNFT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2021 08:05:19 -0500
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7F920C0613F5;
-        Fri, 12 Nov 2021 05:02:27 -0800 (PST)
-Received: by mail-pl1-x62b.google.com with SMTP id n8so8350706plf.4;
-        Fri, 12 Nov 2021 05:02:27 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20210112;
-        h=from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=5DDh4jKNY942Gl/i8dUbs2Mkijh1sNJCdeUegqogFsE=;
-        b=Z8vBO/pyAz/7yfuKfpeCMeHOJ4L6xdiskutvoNm8WPJDgUwbkRs0MS0ZcLJ64KOsPF
-         QQckZ2PTSjadOr3TV0vDHmJbywE6jtZHFdeqDOxW1YT8NgVThXbNo3sCRBjtaFIe3uoD
-         IFq2IyHux9Op/sb93+3c9n85m24IeKRFQIYUxT8ahQDUYkl8Yw5GT4hxQycvTO+ByEkM
-         GYBjZi7fvomL6x0DNp+6TmQ3S2we7YiKWvyTz4LWbQfdJXA6NFI1rylioeAf+8EIw3xI
-         umxWVvQcLGCdg7twPIBx0kr/8/pTT+0978oeOEtzbrOEXPC91VaH4oJWrxgxiO0GaO5n
-         iM3g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=5DDh4jKNY942Gl/i8dUbs2Mkijh1sNJCdeUegqogFsE=;
-        b=GDmj6YQRRRX236aoxLQGtEx/Gbb2c8TJl8S3McRQ2ZrJbxzNc64duE/B8XEhYHj5LK
-         Y+x2yie+qTvrz5EBPYHRrIZykswguvPLGlFDRWEEfYQgCrkR+75T/OWzf8JLiC549Ht6
-         5m43aVr9QWTyoADIf5JunV/KGKQ71uhPG/vy7AFzKlTl2Uz3GmE/QYbPdMx3ljTVdoLC
-         /+mQ2qJj4FWsDMHtsB7igRFQcCm3VR2w4yZpW5bS33ju1YAeYekGNwCemy/gq+lJHVa1
-         rV0Bn3/+sjm8KdEsH0v7V7osgPqijq+IdrP6k03J+1WIQoijaVYM+HA1La9wUFBQGEag
-         cYig==
-X-Gm-Message-State: AOAM532lWWtfhNRFuN9z4HUCVnk/bQ2lpOi/+ZuprGSvLkrzAJCnHbSu
-        grFbI3qNfPoz1xC3BKmkQ/0=
-X-Google-Smtp-Source: ABdhPJy6tZtAnigJMcLzG99Dwhc4diNcfzyLltbIEChePSsJosJRZDjox+cnwSfVKYVuW4L/MQA98g==
-X-Received: by 2002:a17:903:248f:b0:143:8e81:4d7c with SMTP id p15-20020a170903248f00b001438e814d7cmr7827668plw.1.1636722147064;
-        Fri, 12 Nov 2021 05:02:27 -0800 (PST)
-Received: from localhost.localdomain ([193.203.214.57])
-        by smtp.gmail.com with ESMTPSA id d15sm7331493pfu.12.2021.11.12.05.02.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Nov 2021 05:02:26 -0800 (PST)
-From:   cgel.zte@gmail.com
-X-Google-Original-From: deng.changcheng@zte.com.cn
-To:     james.smart@broadcom.com
-Cc:     dick.kennedy@broadcom.com, jejb@linux.ibm.com,
-        martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Changcheng Deng <deng.changcheng@zte.com.cn>,
-        Zeal Robot <zealci@zte.com.cn>
-Subject: [PATCH] scsi: lpfc: remove unneeded variable
-Date:   Fri, 12 Nov 2021 13:02:20 +0000
-Message-Id: <20211112130220.10741-1-deng.changcheng@zte.com.cn>
-X-Mailer: git-send-email 2.25.1
+        id S232925AbhKLNqK (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Nov 2021 08:46:10 -0500
+Received: from bedivere.hansenpartnership.com ([96.44.175.130]:34548 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S231436AbhKLNqH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 12 Nov 2021 08:46:07 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1636724596;
+        bh=Dc3pPXaBd8QfDvYOqsz4KdRQcZ4o3mhiYLkSlLaQXZg=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=OABkiMmdc+LvbQjs7CzAqiw6X0NZvaVOp0G0wxzNraq4UrlX7a87aFJ3RnZxqGiLR
+         oW/eKXLyA01ZoVraIYT1cyqawqIu4EDxPdpaDQAXphokBBBPkB45F3k1Gn0Wwua3IT
+         WdKa/oYVATd1Mt7UuYZe/Df9u64DKxls2VOko9RM=
+Received: from localhost (localhost [127.0.0.1])
+        by bedivere.hansenpartnership.com (Postfix) with ESMTP id C2FDF1280989;
+        Fri, 12 Nov 2021 08:43:16 -0500 (EST)
+Received: from bedivere.hansenpartnership.com ([127.0.0.1])
+        by localhost (bedivere.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+        with ESMTP id XhiV1SqqL5Pv; Fri, 12 Nov 2021 08:43:16 -0500 (EST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+        d=hansenpartnership.com; s=20151216; t=1636724596;
+        bh=Dc3pPXaBd8QfDvYOqsz4KdRQcZ4o3mhiYLkSlLaQXZg=;
+        h=Message-ID:Subject:From:To:Date:From;
+        b=OABkiMmdc+LvbQjs7CzAqiw6X0NZvaVOp0G0wxzNraq4UrlX7a87aFJ3RnZxqGiLR
+         oW/eKXLyA01ZoVraIYT1cyqawqIu4EDxPdpaDQAXphokBBBPkB45F3k1Gn0Wwua3IT
+         WdKa/oYVATd1Mt7UuYZe/Df9u64DKxls2VOko9RM=
+Received: from jarvis.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4300:c551::527])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by bedivere.hansenpartnership.com (Postfix) with ESMTPSA id 3282C1280966;
+        Fri, 12 Nov 2021 08:43:16 -0500 (EST)
+Message-ID: <d9405d786496756564b31540cc73a9d22cc97730.camel@HansenPartnership.com>
+Subject: [GIT PULL] final round of SCSI updates for the 5.15+ merge window
+From:   James Bottomley <James.Bottomley@HansenPartnership.com>
+To:     Andrew Morton <akpm@linux-foundation.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Date:   Fri, 12 Nov 2021 08:43:14 -0500
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.34.4 
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-From: Changcheng Deng <deng.changcheng@zte.com.cn>
+This series is all the stragglers that didn't quite make the first
+merge window pull.  It's mostly minor updates and bug fixes of merge
+window code but it also has two driver updates: ufs and qla2xxx.
 
-Fix the following coccicheck review:
-./drivers/scsi/lpfc/lpfc_sli.c: 3655: 5-7: Unneeded variable
+James
 
-Remove unneeded variable used to store return value.
 
-Reported-by: Zeal Robot <zealci@zte.com.cn>
-Signed-off-by: Changcheng Deng <deng.changcheng@zte.com.cn>
----
- drivers/scsi/lpfc/lpfc_sli.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+The patch is available here:
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 53f154a301b5..93596cdd66a7 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -3652,7 +3652,6 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			  struct lpfc_iocbq *saveq)
- {
- 	struct lpfc_iocbq *cmdiocbp;
--	int rc = 1;
- 	unsigned long iflag;
- 
- 	cmdiocbp = lpfc_sli_iocbq_lookup(phba, pring, saveq);
-@@ -3777,7 +3776,7 @@ lpfc_sli_process_sol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 		}
- 	}
- 
--	return rc;
-+	return 1;
- }
- 
- /**
--- 
-2.25.1
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The short changelog is:
+
+Adrian Hunter (1):
+      scsi: ufs: ufs-pci: Force a full restore after suspend-to-disk
+
+Alexey Dobriyan (1):
+      scsi: sr: Remove duplicate assignment
+
+Andrea Parri (Microsoft) (1):
+      scsi: storvsc: Fix validation for unsolicited incoming packets
+
+Avri Altman (2):
+      scsi: ufs: ufshpb: Properly handle max-single-cmd
+      scsi: ufs: ufshpb: Remove HPB2.0 flows
+
+Bart Van Assche (10):
+      scsi: ufs: core: Micro-optimize ufshcd_map_sg()
+      scsi: ufs: core: Add a compile-time structure size check
+      scsi: ufs: core: Remove three superfluous casts
+      scsi: ufs: core: Add debugfs attributes for triggering the UFS EH
+      scsi: ufs: core: Make it easier to add new debugfs attributes
+      scsi: ufs: core: Export ufshcd_schedule_eh_work()
+      scsi: ufs: core: Log error handler activity
+      scsi: ufs: core: Improve static type checking
+      scsi: ufs: core: Improve source code comments
+      scsi: ufs: Revert "Retry aborted SCSI commands instead of completing these successfully"
+
+Brian King (1):
+      scsi: ibmvfc: Fix up duplicate response detection
+
+Chanho Park (12):
+      scsi: ufs: ufs-exynos: Introduce ExynosAuto v9 virtual host
+      scsi: ufs: ufs-exynos: Multi-host configuration for ExynosAuto v9
+      scsi: ufs: ufs-exynos: Support ExynosAuto v9 UFS
+      scsi: ufs: ufs-exynos: Add pre/post_hce_enable drv callbacks
+      scsi: ufs: ufs-exynos: Factor out priv data init
+      scsi: ufs: ufs-exynos: Add EXYNOS_UFS_OPT_SKIP_CONFIG_PHY_ATTR option
+      scsi: ufs: ufs-exynos: Support custom version of ufs_hba_variant_ops
+      scsi: ufs: ufs-exynos: Add setup_clocks callback
+      scsi: ufs: ufs-exynos: Add refclkout_stop control
+      scsi: ufs: ufs-exynos: Simplify drv_data retrieval
+      scsi: ufs: ufs-exynos: Change pclk available max value
+      scsi: ufs: ufs-exynos: Correct timeout value setting registers
+
+Christophe JAILLET (1):
+      scsi: elx: Use 'bitmap_zalloc()' when applicable
+
+Dexuan Cui (1):
+      scsi: core: Fix shost->cmd_per_lun calculation in scsi_add_host_with_dma()
+
+Dmitry Bogdanov (2):
+      scsi: target: core: Remove from tmr_list during LUN unlink
+      scsi: qla2xxx: Fix unmap of already freed sgl
+
+Ewan D. Milne (1):
+      scsi: core: Avoid leaving shost->last_reset with stale value if EH does not run
+
+George Kennedy (1):
+      scsi: scsi_debug: Don't call kcalloc() if size arg is zero
+
+Jackie Liu (1):
+      scsi: bsg: Fix errno when scsi_bsg_register_queue() fails
+
+Joy Gu (1):
+      scsi: qla2xxx: Fix a memory leak in an error path of qla2x00_process_els()
+
+Martin K. Petersen (1):
+      scsi: mpt3sas: Fix reference tag handling for WRITE_INSERT
+
+Mike Christie (1):
+      scsi: iscsi: Fix set_param() handling
+
+Miles Chen (1):
+      scsi: sd: Fix crashes in sd_resume_runtime()
+
+Ming Lei (1):
+      scsi: core: Put LLD module refcnt after SCSI device is released
+
+Nilesh Javali (1):
+      scsi: qla2xxx: Update version to 10.02.07.200-k
+
+Quinn Tran (12):
+      scsi: qla2xxx: edif: Fix EDIF bsg
+      scsi: qla2xxx: edif: Fix inconsistent check of db_flags
+      scsi: qla2xxx: edif: Increase ELS payload
+      scsi: qla2xxx: edif: Reduce connection thrash
+      scsi: qla2xxx: edif: Tweak trace message
+      scsi: qla2xxx: edif: Replace list_for_each_safe with list_for_each_entry_safe
+      scsi: qla2xxx: edif: Flush stale events and msgs on session down
+      scsi: qla2xxx: edif: Fix app start delay
+      scsi: qla2xxx: edif: Fix app start fail
+      scsi: qla2xxx: Turn off target reset during issue_lip
+      scsi: qla2xxx: Fix gnl list corruption
+      scsi: qla2xxx: Relogin during fabric disturbance
+
+Sreekanth Reddy (1):
+      scsi: mpi3mr: Fix duplicate device entries when scanning through sysfs
+
+Steffen Maier (1):
+      scsi: core: Fix early registration of sysfs attributes for scsi_device
+
+Tadeusz Struk (2):
+      scsi: core: Remove command size deduction from scsi_setup_scsi_cmnd()
+      scsi: scsi_ioctl: Validate command size
+
+Zheyu Ma (1):
+      scsi: qla2xxx: Return -ENOMEM if kzalloc() fails
+
+jongmin jeong (2):
+      scsi: ufs: Add quirk to enable host controller without PH configuration
+      scsi: ufs: Add quirk to handle broken UIC command
+
 
