@@ -2,62 +2,136 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CA67C433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 15:39:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2200AC433F5
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 16:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EB91160F41
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 15:39:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0EDAB60ED5
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 16:39:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235471AbhKLPmI (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Nov 2021 10:42:08 -0500
-Received: from mail-qt1-f178.google.com ([209.85.160.178]:37392 "EHLO
-        mail-qt1-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235493AbhKLPlq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2021 10:41:46 -0500
-Received: by mail-qt1-f178.google.com with SMTP id f20so8472611qtb.4;
-        Fri, 12 Nov 2021 07:38:55 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=nWpDQmZNg8zKVk12QskQ7NNS05C4fI/JmZBKLdKyu8Q=;
-        b=N5V65Ao2NSOslG/cgmP+wOxwtRJeUsntlYPC91JC4tdb+I3z2uUf2shRUg5VrMQanf
-         mEK15PkjfYBK/0F8ZlNkVOe6XOu+1mwjqOyiiCOcKSYAKoZjwtM/Mc7Uw6q9MuvuZQVo
-         yuBFa6fDeqwB2yUlJ5AKsCIm+em+hscs4vOJLJLGZvx9uSZ3WtUWqVPjxbq2oXr8CZwX
-         fhx4Msk5SZAWBsTcboFgREq5Zr8PWcOoyXTZBpqXMRyTW9BOEUYGx3zSM84f5p9+ozN5
-         EyP7V1ywemrYXVnVbYyNg8j4XuCCrO+XGyUL8FR8f2DOxHQt0gt8Lq1kzbt5D+knFxs2
-         zsKA==
-X-Gm-Message-State: AOAM531Osa81cxpQTRT/C5LO0jK0PHLSXF4pH7cBxQqo4rxEEmnIELml
-        8rt7ZFxZ/fhKlUesNMmN32U=
-X-Google-Smtp-Source: ABdhPJyNHeu9f/ZUxvOfxORx124sMvrbBsqcA7M4TM/h+R2WxA+t8TF0JDonrogyvFS5J2fkxYVjCQ==
-X-Received: by 2002:a05:622a:1a93:: with SMTP id s19mr6774258qtc.291.1636731535094;
-        Fri, 12 Nov 2021 07:38:55 -0800 (PST)
-Received: from [192.168.4.254] ([72.166.42.242])
-        by smtp.gmail.com with ESMTPSA id bm35sm1893202qkb.86.2021.11.12.07.38.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Nov 2021 07:38:54 -0800 (PST)
-Subject: Re: [PATCH 4/4] nvme: wait until quiesce is done
-To:     Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>
-Cc:     Yi Zhang <yi.zhang@redhat.com>, linux-block@vger.kernel.org,
-        linux-nvme@lists.infradead.org,
-        "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>
-References: <20211103034305.3691555-1-ming.lei@redhat.com>
- <20211103034305.3691555-5-ming.lei@redhat.com>
-From:   Sagi Grimberg <sagi@grimberg.me>
-Message-ID: <0f098e85-0da8-6337-5fba-b6e68a6d2ad2@grimberg.me>
-Date:   Fri, 12 Nov 2021 10:38:44 -0500
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.13.0
+        id S235432AbhKLQma (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Nov 2021 11:42:30 -0500
+Received: from smtp01.smtpout.orange.fr ([80.12.242.123]:60706 "EHLO
+        smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235421AbhKLQm3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2021 11:42:29 -0500
+Received: from pop-os.home ([86.243.171.122])
+        by smtp.orange.fr with ESMTPA
+        id lZaQmTkjd1UGBlZaQmGHpS; Fri, 12 Nov 2021 17:39:37 +0100
+X-ME-Helo: pop-os.home
+X-ME-Auth: YWZlNiIxYWMyZDliZWIzOTcwYTEyYzlhMmU3ZiQ1M2U2MzfzZDfyZTMxZTBkMTYyNDBjNDJlZmQ3ZQ==
+X-ME-Date: Fri, 12 Nov 2021 17:39:37 +0100
+X-ME-IP: 86.243.171.122
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To:     anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com,
+        jejb@linux.ibm.com, martin.petersen@oracle.com, satishkh@cisco.com,
+        sebaddel@cisco.com, kartilak@cisco.com, james.smart@broadcom.com,
+        dick.kennedy@broadcom.com, njavali@marvell.com,
+        mrangankar@marvell.com
+Cc:     GR-QLogic-Storage-Upstream@marvell.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: Remove redundant 'flush_workqueue()' calls
+Date:   Fri, 12 Nov 2021 17:39:33 +0100
+Message-Id: <feb3511c02b9df0848c9cac8af3daf87d9ea5821.1636734915.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-In-Reply-To: <20211103034305.3691555-5-ming.lei@redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+'destroy_workqueue()' already drains the queue before destroying it, so
+there is no need to flush it explicitly.
+
+Remove the redundant 'flush_workqueue()' calls.
+
+This was generated with coccinelle:
+
+@@
+expression E;
+@@
+- 	flush_workqueue(E);
+	destroy_workqueue(E);
+
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/bfa/bfad_im.c    | 1 -
+ drivers/scsi/fnic/fnic_main.c | 4 +---
+ drivers/scsi/lpfc/lpfc_init.c | 1 -
+ drivers/scsi/qedi/qedi_main.c | 2 --
+ drivers/scsi/qla2xxx/qla_os.c | 1 -
+ 5 files changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index 759d2bb1ecdd..b5c1729974ac 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -756,7 +756,6 @@ void
+ bfad_destroy_workq(struct bfad_im_s *im)
+ {
+ 	if (im && im->drv_workq) {
+-		flush_workqueue(im->drv_workq);
+ 		destroy_workqueue(im->drv_workq);
+ 		im->drv_workq = NULL;
+ 	}
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 44dbaa662d94..806aaf411d10 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -1145,10 +1145,8 @@ static void __exit fnic_cleanup_module(void)
+ {
+ 	pci_unregister_driver(&fnic_driver);
+ 	destroy_workqueue(fnic_event_queue);
+-	if (fnic_fip_queue) {
+-		flush_workqueue(fnic_fip_queue);
++	if (fnic_fip_queue)
+ 		destroy_workqueue(fnic_fip_queue);
+-	}
+ 	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_MAX]);
+ 	kmem_cache_destroy(fnic_sgl_cache[FNIC_SGL_CACHE_DFLT]);
+ 	kmem_cache_destroy(fnic_io_req_cache);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index ba17a8f740a9..93decd6c7ab1 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -8529,7 +8529,6 @@ static void
+ lpfc_unset_driver_resource_phase2(struct lpfc_hba *phba)
+ {
+ 	if (phba->wq) {
+-		flush_workqueue(phba->wq);
+ 		destroy_workqueue(phba->wq);
+ 		phba->wq = NULL;
+ 	}
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index 1dec814d8788..542dde3a1cfd 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -2422,13 +2422,11 @@ static void __qedi_remove(struct pci_dev *pdev, int mode)
+ 		iscsi_host_remove(qedi->shost);
+ 
+ 		if (qedi->tmf_thread) {
+-			flush_workqueue(qedi->tmf_thread);
+ 			destroy_workqueue(qedi->tmf_thread);
+ 			qedi->tmf_thread = NULL;
+ 		}
+ 
+ 		if (qedi->offload_thread) {
+-			flush_workqueue(qedi->offload_thread);
+ 			destroy_workqueue(qedi->offload_thread);
+ 			qedi->offload_thread = NULL;
+ 		}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index abcd30917263..9f9d2f075bbe 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3922,7 +3922,6 @@ qla2x00_free_device(scsi_qla_host_t *vha)
+ 
+ 	/* Flush the work queue and remove it */
+ 	if (ha->wq) {
+-		flush_workqueue(ha->wq);
+ 		destroy_workqueue(ha->wq);
+ 		ha->wq = NULL;
+ 	}
+-- 
+2.30.2
+
