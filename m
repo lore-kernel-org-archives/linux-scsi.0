@@ -2,113 +2,108 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A191AC433FE
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 17:50:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CBAEC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 20:34:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 807AD61029
-	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 17:50:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27CDD60FE7
+	for <linux-scsi@archiver.kernel.org>; Fri, 12 Nov 2021 20:34:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235487AbhKLRxk (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 12 Nov 2021 12:53:40 -0500
-Received: from outgoing-stata.csail.mit.edu ([128.30.2.210]:43694 "EHLO
-        outgoing-stata.csail.mit.edu" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S231919AbhKLRxj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 12 Nov 2021 12:53:39 -0500
-Received: from c-24-16-8-193.hsd1.wa.comcast.net ([24.16.8.193] helo=srivatsab-a02.vmware.com)
-        by outgoing-stata.csail.mit.edu with esmtpsa (TLS1.2:RSA_AES_128_CBC_SHA1:128)
-        (Exim 4.82)
-        (envelope-from <srivatsa@csail.mit.edu>)
-        id 1mlahI-0006py-1E; Fri, 12 Nov 2021 12:50:44 -0500
-Subject: Re: [PATCH v3 3/3] MAINTAINERS: Mark VMware mailing list entries as
- email aliases
-To:     Jakub Kicinski <kuba@kernel.org>, Joe Perches <joe@perches.com>
-Cc:     jgross@suse.com, x86@kernel.org, pv-drivers@vmware.com,
-        Zack Rusin <zackr@vmware.com>, Nadav Amit <namit@vmware.com>,
-        Vivek Thampi <vithampi@vmware.com>,
-        Vishal Bhakta <vbhakta@vmware.com>,
-        Ronak Doshi <doshir@vmware.com>,
-        linux-graphics-maintainer@vmware.com,
-        dri-devel@lists.freedesktop.org, linux-rdma@vger.kernel.org,
-        linux-scsi@vger.kernel.org, netdev@vger.kernel.org,
-        linux-input@vger.kernel.org, amakhalov@vmware.com,
-        sdeep@vmware.com, virtualization@lists.linux-foundation.org,
-        keerthanak@vmware.com, srivatsab@vmware.com, anishs@vmware.com,
-        linux-kernel@vger.kernel.org, rostedt@goodmis.org,
-        srivatsa@csail.mit.edu
-References: <163657479269.84207.13658789048079672839.stgit@srivatsa-dev>
- <163657493334.84207.11063282485812745766.stgit@srivatsa-dev>
- <20211110173935.45a9f495@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
- <d7f3fec79287a149d6edc828583a771c84646b42.camel@perches.com>
- <20211111055554.4f257fd2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-From:   "Srivatsa S. Bhat" <srivatsa@csail.mit.edu>
-Message-ID: <fd9df647-4c1a-b4fb-159b-4876bc5cd0b6@csail.mit.edu>
-Date:   Fri, 12 Nov 2021 09:50:33 -0800
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:78.0)
- Gecko/20100101 Thunderbird/78.12.0
+        id S235542AbhKLUhd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 12 Nov 2021 15:37:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39674 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S230235AbhKLUhc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Nov 2021 15:37:32 -0500
+Received: from mail-ed1-x52b.google.com (mail-ed1-x52b.google.com [IPv6:2a00:1450:4864:20::52b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 92E4FC061766
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Nov 2021 12:34:41 -0800 (PST)
+Received: by mail-ed1-x52b.google.com with SMTP id e3so6049806edu.4
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Nov 2021 12:34:41 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=mjblWpkZmA6rFymP49f/48JH9c+4gNeh5ax2LSXFwEA=;
+        b=T9kHzfZhPS10OGQ53AhZYYWKgrXeBJe5gyUT16UduNRoGpFPBq0JVBNJMsB4PR0DN6
+         ydz+7t2z/GeeBaqBbFa9WVdvSvGS40ajz3ToQrfUodMXaExIGHQKGLZXnwka3QK7BMgt
+         yeCygngQvcKXHZX3xdLaXBXxuspRXfXYcgYeQ=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=mjblWpkZmA6rFymP49f/48JH9c+4gNeh5ax2LSXFwEA=;
+        b=Ygo2uBjbX9Kl98pbTmdFzsISrHeNEZNSd7RAkCHm/iqycoJbQEACqItJe0kPHwwn4X
+         EeZQo+SPAX3m/s2fjrjH44eL9ZSjdrKBgYeWvuCSOpzizfJS+4deubPFUs4ABpsOzyjr
+         KGwPUOGQNBbtaMoRyuGjwNHLvQTbq2gS/NrftFIA86NtpRbABZ43SWzX8ifK1SxWtSZa
+         KJEhwDYtR8De5qiJ6RwV5Gikxg6mMXwUt9tWqaanebi8ettfeCEEk8otPPrxPGtLMIgc
+         XR8jyjtJK0EYzAb2JUJY8s7uqee7orLy3qrX6C/4KC/BvIDSLtZaR4fc/PwHRphpl8ez
+         4zSw==
+X-Gm-Message-State: AOAM530z6/7UAHrPOMvikesPw7EynIVcyYOh+zdJ9MA/Ts+XofPQKAfC
+        qnSXUZcgI63orOfu/tF99bAOQG00Wv4Ix4rKhTo=
+X-Google-Smtp-Source: ABdhPJyJclF/H6tkrZJnGuNIhQcS6rRrmJtXRZptqdd1RS+dSZg+Y7CMkNOp9Gbdp1VxO1TGo35YfA==
+X-Received: by 2002:a17:906:dc8d:: with SMTP id cs13mr22293764ejc.109.1636749279773;
+        Fri, 12 Nov 2021 12:34:39 -0800 (PST)
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com. [209.85.221.47])
+        by smtp.gmail.com with ESMTPSA id dk5sm3429766edb.20.2021.11.12.12.34.38
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 12 Nov 2021 12:34:39 -0800 (PST)
+Received: by mail-wr1-f47.google.com with SMTP id i5so17658998wrb.2
+        for <linux-scsi@vger.kernel.org>; Fri, 12 Nov 2021 12:34:38 -0800 (PST)
+X-Received: by 2002:adf:cf05:: with SMTP id o5mr22589155wrj.325.1636749278606;
+ Fri, 12 Nov 2021 12:34:38 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20211111055554.4f257fd2@kicinski-fedora-pc1c0hjn.dhcp.thefacebook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <d9405d786496756564b31540cc73a9d22cc97730.camel@HansenPartnership.com>
+In-Reply-To: <d9405d786496756564b31540cc73a9d22cc97730.camel@HansenPartnership.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 12 Nov 2021 12:34:22 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wgJz2-KgygzF6s4D80=ib0AmP99TGd3Wgc_GqyKg1=pHA@mail.gmail.com>
+Message-ID: <CAHk-=wgJz2-KgygzF6s4D80=ib0AmP99TGd3Wgc_GqyKg1=pHA@mail.gmail.com>
+Subject: Re: [GIT PULL] final round of SCSI updates for the 5.15+ merge window
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+On Fri, Nov 12, 2021 at 5:43 AM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> This series is all the stragglers that didn't quite make the first
+> merge window pull.  It's mostly minor updates and bug fixes of merge
+> window code but it also has two driver updates: ufs and qla2xxx.
 
-[ Resending since my previous reply didn't reach the mailing lists. ]
+Hmm? No diffstat?
 
-On 11/11/21 5:55 AM, Jakub Kicinski wrote:
-> On Wed, 10 Nov 2021 21:19:53 -0800 Joe Perches wrote:
->> On Wed, 2021-11-10 at 17:39 -0800, Jakub Kicinski wrote:
->>> On Wed, 10 Nov 2021 12:09:06 -0800 Srivatsa S. Bhat wrote:  
->>>>  DRM DRIVER FOR VMWARE VIRTUAL GPU
->>>> -M:	"VMware Graphics" <linux-graphics-maintainer@vmware.com>
->>>>  M:	Zack Rusin <zackr@vmware.com>
->>>> +R:	VMware Graphics Reviewers <linux-graphics-maintainer@vmware.com>
->>>>  L:	dri-devel@lists.freedesktop.org
->>>>  S:	Supported
->>>>  T:	git git://anongit.freedesktop.org/drm/drm-misc  
->>>
->>> It'd be preferable for these corporate entries to be marked or
->>> otherwise distinguishable so that we can ignore them when we try 
->>> to purge MAINTAINERS from developers who stopped participating.
->>>
->>> These addresses will never show up in a commit tag which is normally
->>> sign of inactivity.  
->>
->> Funny.
->>
->> The link below is from over 5 years ago.
->>
->> https://lore.kernel.org/lkml/1472081625.3746.217.camel@perches.com/
->>
->> Almost all of those entries are still in MAINTAINERS.
->>
->> I think the concept of purging is a non-issue.
-> 
-> I cleaned networking in January and intend to do it again in 2 months.
-> See:
-> 
-> 054c4610bd05 MAINTAINERS: dccp: move Gerrit Renker to CREDITS
-> 4f3786e01194 MAINTAINERS: ipvs: move Wensong Zhang to CREDITS
-> 0e4ed0b62b5a MAINTAINERS: tls: move Aviad to CREDITS
-> c41efbf2ad56 MAINTAINERS: ena: remove Zorik Machulsky from reviewers
-> 5e62d124f75a MAINTAINERS: vrf: move Shrijeet to CREDITS
-> 09cd3f4683a9 MAINTAINERS: net: move Alexey Kuznetsov to CREDITS
-> 93089de91e85 MAINTAINERS: altx: move Jay Cliburn to CREDITS
-> 8b0f64b113d6 MAINTAINERS: remove names from mailing list maintainers
-> 
-I'm assuming the purging is not totally automated, is it? As long as
-the entries are informative to a human reader, it should be possible
-to skip the relevant ones when purging inactive entries.
+I suspect it's because there's a merge in there, and thus multiple
+merge base commits, and the autogenerated diffstat ends up being
+worthless.
 
-I believe this patch makes the situation better than it is currently
-(at least for the human reader), by marking lists without public
-read-access in a format that is more appropriate. In the future, we
-could perhaps improve on it to ease automation too, but for now I
-think it is worthwhile to merge this change (unless there are strong
-objections or better alternatives that everyone agrees on).
+In that situation, the nice thing to do is to at least tell me why
+there's no diffstat, but optimally you can do a temporary throw-away
+merge in a temporary branch just to get the diffstat.
 
-Regards,
-Srivatsa
+And yes, "git request-pull" could do that, automating this all and
+reporting any conflicts at the same time.
+
+But git historically did *not* do that just because it requires a
+working tree and can be messy, and because the "just do the diff from
+the merge base" works fine for maintainers that don't do merges
+themselves, and so the only maintainers that can hit this issue are
+the maintainers that also should be able to do that temporary merge
+thing on their own.
+
+Anyway, I don't require that temporary merge, but I _do_ really want
+to get notified of "look, I did the diffstat, and it was useless
+garbage, so I'm not including it here".
+
+Because as-is, this just looks like an incomplete pull request.
+
+I've done the pull, verified the shortlog, and checked that the
+(proper) diffstat all looks sane. But I am writing this email just to
+say "you could have done so much better".
+
+                 Linus
