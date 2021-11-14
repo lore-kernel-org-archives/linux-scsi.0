@@ -2,85 +2,75 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E0F0C433F5
-	for <linux-scsi@archiver.kernel.org>; Sat, 13 Nov 2021 11:30:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3FEEC433EF
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Nov 2021 00:19:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 33E6B610FE
-	for <linux-scsi@archiver.kernel.org>; Sat, 13 Nov 2021 11:30:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A6E0761106
+	for <linux-scsi@archiver.kernel.org>; Sun, 14 Nov 2021 00:19:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235645AbhKMLcw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Sat, 13 Nov 2021 06:32:52 -0500
-Received: from mail.kernel.org ([198.145.29.99]:48850 "EHLO mail.kernel.org"
+        id S231736AbhKNAWe (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Sat, 13 Nov 2021 19:22:34 -0500
+Received: from mail.kernel.org ([198.145.29.99]:33964 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S235377AbhKMLcv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 13 Nov 2021 06:32:51 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPSA id 2A9B7610A1;
-        Sat, 13 Nov 2021 11:29:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-        s=korg; t=1636802999;
-        bh=4t4C5M9a84MkDb+tGoXF7AaK6vfmBvpn5F+aRzl4JOY=;
-        h=Subject:To:Cc:From:Date:From;
-        b=OVSfjMjijHCs0/lSPzreKJq0bUtPMsZQgiVMFW/uyWeKUiMSn6rgabSS4K57plp+a
-         4WVyFjHHHuHS3gpggl6UxD956Zbjh61qVrQPSzunxD6gamQ7f48Pm5bdRZ7AI1NQ+c
-         5SURbYyxjhm4vx6UTZZik9cNgh10W/rkgEkkQZ3A=
-Subject: FAILED: patch "[PATCH] scsi: scsi_ioctl: Validate command size" failed to apply to 5.14-stable tree
-To:     tadeusz.struk@linaro.org, bvanassche@acm.org, hch@lst.de,
-        jejb@linux.ibm.com, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
-        stable@vger.kernel.org
-Cc:     <stable@vger.kernel.org>
-From:   <gregkh@linuxfoundation.org>
-Date:   Sat, 13 Nov 2021 12:29:49 +0100
-Message-ID: <1636802989232252@kroah.com>
+        id S229988AbhKNAWd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 13 Nov 2021 19:22:33 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id E493861154
+        for <linux-scsi@vger.kernel.org>; Sun, 14 Nov 2021 00:19:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1636849180;
+        bh=8Ru02P17/U0Pl6mX9/LiyqX85mq4OlbAzBjw1MN906o=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=FASuVv+oyGSkf4rU9FYrybsQKyKNcUA5hA2g/IqfZhM+nn6CdgryvJB1WjX5Ld1el
+         Hw8xQuCuaFJHej433EsHg1GS8WOfWfVZ+wMBR9QU69N9WOwhZS2K7v0SoPWXmSp9hf
+         iS2QHRmur1O2KoOSHM8ghLSZlphiriAgMd6x+lOFGxy1+u7Iqq89lbG4F+M//I587l
+         8UEaAt9+vZP/X9k2a/VvFxxlwJ7NQQytdVdPwiMU3EdlmYXvWJYFzc//Ggai/shN2D
+         nkgkthMLfX0ysqFUworSIfmXTJIAHt97qxLylzkJGVLRVnsDNVDBkn0z/H+rr9BJVp
+         MC+1iWFd2avfA==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 214967] mvsas not detecting some disks
+Date:   Sun, 14 Nov 2021 00:19:40 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: bvanassche@acm.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-214967-11613-p1UMEDWh1a@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214967-11613@https.bugzilla.kernel.org/>
+References: <bug-214967-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
 
-The patch below does not apply to the 5.14-stable tree.
-If someone wants it applied there, or to any other stable or longterm
-tree, then please email the backport, including the original git commit
-id to <stable@vger.kernel.org>.
+Bart Van Assche (bvanassche@acm.org) changed:
 
-thanks,
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |bvanassche@acm.org
 
-greg k-h
+--- Comment #2 from Bart Van Assche (bvanassche@acm.org) ---
+It would help a lot if this issue would be bisected. See also
+https://www.kernel.org/doc/html/latest/admin-guide/bug-bisect.html.
 
------------------- original commit in Linus's tree ------------------
+--=20
+You may reply to this email to add a comment.
 
-From 20aaef52eb08f1d987d46ad26edb8f142f74d83a Mon Sep 17 00:00:00 2001
-From: Tadeusz Struk <tadeusz.struk@linaro.org>
-Date: Wed, 3 Nov 2021 10:06:58 -0700
-Subject: [PATCH] scsi: scsi_ioctl: Validate command size
-
-Need to make sure the command size is valid before copying the command from
-user space.
-
-Link: https://lore.kernel.org/r/20211103170659.22151-1-tadeusz.struk@linaro.org
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: James E.J. Bottomley <jejb@linux.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>
-Cc: <stable@vger.kernel.org> # 5.15, 5.14, 5.10
-Signed-off-by: Tadeusz Struk <tadeusz.struk@linaro.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-
-diff --git a/drivers/scsi/scsi_ioctl.c b/drivers/scsi/scsi_ioctl.c
-index 6ff2207bd45a..a06c61f22742 100644
---- a/drivers/scsi/scsi_ioctl.c
-+++ b/drivers/scsi/scsi_ioctl.c
-@@ -347,6 +347,8 @@ static int scsi_fill_sghdr_rq(struct scsi_device *sdev, struct request *rq,
- {
- 	struct scsi_request *req = scsi_req(rq);
- 
-+	if (hdr->cmd_len < 6)
-+		return -EMSGSIZE;
- 	if (copy_from_user(req->cmd, hdr->cmdp, hdr->cmd_len))
- 		return -EFAULT;
- 	if (!scsi_cmd_allowed(req->cmd, mode))
-
+You are receiving this mail because:
+You are watching the assignee of the bug.=
