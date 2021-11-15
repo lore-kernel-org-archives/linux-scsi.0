@@ -2,88 +2,110 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C30B3C433EF
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 22:51:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 641E6C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 23:11:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id ACA0E63219
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 22:51:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 473C16187F
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 23:11:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233690AbhKOWyg (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Nov 2021 17:54:36 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52740 "EHLO
-        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1353653AbhKOWpF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2021 17:45:05 -0500
-Received: from mail-pf1-x44a.google.com (mail-pf1-x44a.google.com [IPv6:2607:f8b0:4864:20::44a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 83D2EC034018
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2021 13:57:54 -0800 (PST)
-Received: by mail-pf1-x44a.google.com with SMTP id l7-20020a622507000000b00494608c84a4so10644373pfl.6
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2021 13:57:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20210112;
-        h=date:message-id:mime-version:subject:from:to:cc;
-        bh=YsZ4KXChLC2bUyDKJS2V3W28EBYy33HBmNk1vhM7ndI=;
-        b=aSRJKMLHc3cI8ZL+CvOSUurM8LRCt8tXGgxYIv0pE2+/T9r/vALk1q6Bqagd8YY5r1
-         9g1IR6g4muicYfbchQowKcmxoYCtS8kP6S2eN7FcbMkkFea90Lr76YvvmHRpgg3nDIzE
-         mzcwFAaEriCur0N8Be2UuHwLJkG7TUtwuLWxEYWK7WFtTlWnjl6iEtTjSgHzIHT4hX/t
-         sVk/sRIXc2+XmZmFmzQiQk33Fij+F39rGaC586Ag05ruwahowI9osuvrUWjhArex0CmH
-         Ie86l+qHLqZk/vS4n91QBUpVVY8QmS2ric6THgl9HPISGj0W+4u+lqgaoA4Qm5L1JnjO
-         nr1g==
+        id S1350796AbhKOXOY (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Nov 2021 18:14:24 -0500
+Received: from mail-pj1-f54.google.com ([209.85.216.54]:38698 "EHLO
+        mail-pj1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S243737AbhKOXMR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2021 18:12:17 -0500
+Received: by mail-pj1-f54.google.com with SMTP id p18-20020a17090ad31200b001a78bb52876so531635pju.3
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2021 15:09:21 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:message-id:mime-version:subject:from:to:cc;
-        bh=YsZ4KXChLC2bUyDKJS2V3W28EBYy33HBmNk1vhM7ndI=;
-        b=ROiCX3XAz81Z5ZZCh2ixRL+YZRGl84lZPykoCbxZE8Edm9cH7rZZr3asL1pP8dTbyP
-         iV72ivmrmSWxODyGWV6sT+BkuoRjzKsslJNp76xEqWzmhUwSyTtI/ajQgGnhYQtg8VV2
-         xbFyHhMCTXAgzmzQD11WUVU8N769oJPtlC14Zhp47lNRmijp2yOtQuQgl50eH8pztXHR
-         3L+J16Ix/eEzfuTJzwcvOSbYaxbfj8bvLr2e98VG3Y2amb0U4Gv7JBo/D0qHosTnYlUT
-         2UsknqwRSDzCUQVCr/UBVIJo3D0L22XMuZQQX6h9smsKjGwjgr1NCwx/STbtebd+t5nX
-         vvHQ==
-X-Gm-Message-State: AOAM531qYmo4Xt8sxP7c2uX8IOE8eJpU7pIGx8ZnrGBgoSI4lJOZzFft
-        TvhC2vD2jNjtCVfCHQBmBPENEfz8cPvhAxJ3
-X-Google-Smtp-Source: ABdhPJzMwB1g00OkBWgE4lJYP+k7rXA4EB+LKxhm3cIyVNDNwH389eriVb+ECb+EksL0WG2zJQ/Mv+4d1dHgdpnX
-X-Received: from changyuanl-desktop.svl.corp.google.com ([2620:15c:2c5:13:f30c:72b6:c6d5:9b63])
- (user=changyuanl job=sendgmr) by 2002:a17:90b:2389:: with SMTP id
- mr9mr69500533pjb.152.1637013473984; Mon, 15 Nov 2021 13:57:53 -0800 (PST)
-Date:   Mon, 15 Nov 2021 13:57:48 -0800
-Message-Id: <20211115215750.131696-1-changyuanl@google.com>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.34.0.rc1.387.gb447b232ab-goog
-Subject: [PATCH v2 0/2] This patchset adds tracepoints to pm80xx
-From:   Changyuan Lyu <changyuanl@google.com>
-To:     Jack Wang <jinpu.wang@cloud.ionos.com>,
-        "James E . J . Bottomley" <jejb@linux.ibm.com>,
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=OoMA7VKuIgYXl8JEmeSwcajHYATY9/of0PJ+olVDp+w=;
+        b=DxJsnWVcg2mvCEbLA6bUPehAGFCd00pX51ccVzWep1+IrZqIUSfStOnMM347uLpX+h
+         /DHNl/5jpR9PnDbbd6cMD9WOpc7T1O2fakg3i3aEUMkUbYOcp5tnrZMCYwc+Gb5kHZRE
+         s0c/DtK9f9wRFl2MGhWQA6qEwWKxvvO0T8zIwevMezDCHZmStvBmopSd1UsUCHO188IW
+         QwIH73tO3TMIfHV1g5G9LsLapYotgK7WIoeHPQmj2xvC3dBgR4LoypART7H8vq6K/0V9
+         AiHXEJ7m06ldsaH4Shy8/t/TT4xbO0pQMAiEBFobgkvBOhOosSta+Vv8+8ZS1zMefPXV
+         JSkg==
+X-Gm-Message-State: AOAM532s0OmsKXwmWaPOXsXuyCTUjrAFXiHFZ46ReSq47GRhKA+YD3/2
+        GX/htUnuO6UaEUcuj3PXBKA=
+X-Google-Smtp-Source: ABdhPJwGW940XJSb3uGih+MXQoA5/UlbvcGu2rpClm0wRPHXMzCjYicAtbMOpzp8fz8pVFO8iIje5Q==
+X-Received: by 2002:a17:90a:e7d0:: with SMTP id kb16mr2971652pjb.22.1637017761366;
+        Mon, 15 Nov 2021 15:09:21 -0800 (PST)
+Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:c779:caf7:7b7f:3ecd])
+        by smtp.gmail.com with ESMTPSA id g1sm15911162pfm.25.2021.11.15.15.09.20
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 15 Nov 2021 15:09:20 -0800 (PST)
+Subject: Re: [PATCH 08/11] scsi: ufs: Improve SCSI abort handling further
+To:     Adrian Hunter <adrian.hunter@intel.com>,
         "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     linux-scsi@vger.kernel.org,
-        Vishakha Channapattan <vishakhavc@google.com>,
-        Akshat Jain <akshatzen@google.com>,
-        Igor Pylypiv <ipylypiv@google.com>,
-        Changyuan Lyu <changyuanl@google.com>,
-        kernel test robot <lkp@intel.com>
-Content-Type: text/plain; charset="UTF-8"
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Santosh Yaraganavi <santoshsy@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>, Vishak G <vishak.g@samsung.com>
+References: <20211110004440.3389311-1-bvanassche@acm.org>
+ <20211110004440.3389311-9-bvanassche@acm.org>
+ <509e2b2c-689a-04e3-e773-b8b99d9f6d0e@intel.com>
+ <aac7b8c8-7474-4317-c342-1714cc61a331@acm.org>
+ <985b86c5-e45f-8d07-31e3-7eed1c7c894c@intel.com>
+From:   Bart Van Assche <bvanassche@acm.org>
+Message-ID: <9ebeec91-ff62-3dcd-a377-1d6f98bd7c32@acm.org>
+Date:   Mon, 15 Nov 2021 15:09:19 -0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Thunderbird/78.14.0
+MIME-Version: 1.0
+In-Reply-To: <985b86c5-e45f-8d07-31e3-7eed1c7c894c@intel.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-v2: added le32_to_cpu() when calling trace_pm80xx_mpi_build_cmd()
-to eliminate the incorrect type error in patch `scsi: pm80xx: Add 
-pm80xx_mpi_build_cmd tracepoint`.
-Reported-by: kernel test robot <lkp@intel.com>
+On 11/12/21 2:56 AM, Adrian Hunter wrote:
+> On 10/11/2021 20:56, Bart Van Assche wrote:
+>> On 11/10/21 12:57 AM, Adrian Hunter wrote:
+>>> Seems like something ufshcd_clear_cmd() should be doing instead?
+>>
+>> I'm concerned that would break ufshcd_eh_device_reset_handler()
+ >> since that reset handler retries SCSI commands by calling
+ >> __ufshcd_transfer_req_compl() after having called ufshcd_clear_cmd().
+> Whenever an outstanding_reqs bit transitions 1 -> 0, then
+> __ufshcd_transfer_req_compl() must be called.
 
-Changyuan Lyu (2):
-  scsi: pm80xx: Add tracepoints
-  scsi: pm80xx: Add pm80xx_mpi_build_cmd tracepoint
+I will look further into this.
 
- drivers/scsi/pm8001/Makefile             |   7 +-
- drivers/scsi/pm8001/pm8001_hwi.c         |   5 +
- drivers/scsi/pm8001/pm8001_sas.c         |  16 ++++
- drivers/scsi/pm8001/pm80xx_hwi.c         |   7 ++
- drivers/scsi/pm8001/pm80xx_tracepoints.c |  10 ++
- drivers/scsi/pm8001/pm80xx_tracepoints.h | 113 +++++++++++++++++++++++
- 6 files changed, 156 insertions(+), 2 deletions(-)
- create mode 100644 drivers/scsi/pm8001/pm80xx_tracepoints.c
- create mode 100644 drivers/scsi/pm8001/pm80xx_tracepoints.h
+> As a separate issue, in ufshcd_abort() there is:
+> 
+> 	/* If command is already aborted/completed, return FAILED. */
+> 	if (!(test_bit(tag, &hba->outstanding_reqs))) {
+> 		dev_err(hba->dev,
+> 			"%s: cmd at tag %d already completed, outstanding=0x%lx, doorbell=0x%x\n",
+> 			__func__, tag, hba->outstanding_reqs, reg);
+> 		goto release;
+> 	}
+> 
+> which seems wrong. FAILED should only be returned to escalate the
+> error handling, so if the slot has already successfully been
+> cleared, that is SUCCESS.  scsi_times_out() has already blocked
+> the scsi_done() path (by setting SCMD_STATE_COMPLETE), so any use
+> after free must be being caused by SCSI not the ufs driver.
 
--- 
-2.34.0.rc1.387.gb447b232ab-goog
+scmd_eh_abort_handler() would trigger a use-after-free if ufshcd_abort() 
+would return SUCCESS for completed commands. Hence the choice for the 
+return value FAILED for completed commands.
+
+BTW, can this code path ever be reached since scsi_done() sets the 
+SCMD_STATE_COMPLETE bit before it calls blk_mq_complete_request() and 
+since scsi_times_out() tests that bit before it schedules a call of 
+ufshcd_abort()?
+
+Thanks,
+
+Bart.
 
