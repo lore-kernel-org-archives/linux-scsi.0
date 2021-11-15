@@ -2,218 +2,183 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98826C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 07:58:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0107FC433EF
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 09:30:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 7431560E8D
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 07:58:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA71563217
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 09:30:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236478AbhKOIAj (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Nov 2021 03:00:39 -0500
-Received: from us-smtp-delivery-124.mimecast.com ([170.10.133.124]:51010 "EHLO
-        us-smtp-delivery-124.mimecast.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S236511AbhKOIAC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 Nov 2021 03:00:02 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1636963027;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=VmohK0tiIlRIVbO7XoY7h1rjoxi/NcnBHYHOCX4xRYo=;
-        b=VNzK6Re2LMDFMcKTGLac3/D1JVeH6TZnwYrIiCesYdwrLKLvfe7mQo/s+iL3mE4RxCrlzb
-        B8pCEMTFEAbmv+BFdKqO3+pr1c7dolvte7fHhEsQCox3Q8bjI5ZUR4cUYBMNUyMNuk2nNS
-        3HRb85eK/QrTTPkLtLF12aaXzU9lCD8=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-296-iW_v4f2JM62vPnk3AIm1XQ-1; Mon, 15 Nov 2021 02:57:03 -0500
-X-MC-Unique: iW_v4f2JM62vPnk3AIm1XQ-1
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 6F627100F942;
-        Mon, 15 Nov 2021 07:57:02 +0000 (UTC)
-Received: from localhost (ovpn-8-36.pek2.redhat.com [10.72.8.36])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0068E60BE5;
-        Mon, 15 Nov 2021 07:56:58 +0000 (UTC)
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
-        ChanghuiZhong <czhong@redhat.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        linux-scsi@vger.kernel.org
-Subject: [PATCH] blk-mq: sync blk-mq queue in both blk_cleanup_queue and disk_release()
-Date:   Mon, 15 Nov 2021 15:56:50 +0800
-Message-Id: <20211115075650.578051-1-ming.lei@redhat.com>
+        id S237323AbhKOJcv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Nov 2021 04:32:51 -0500
+Received: from esa4.hgst.iphmx.com ([216.71.154.42]:46193 "EHLO
+        esa4.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S237554AbhKOJco (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2021 04:32:44 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1636968589; x=1668504589;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=VAdOrRT0DNNhPdb7LOZzJiS0gTpM8rkpkjL/dbqp7Ic=;
+  b=eWEUlAnZwlKYahpcU1Y9DZzEmbjzBhW9D0EY5HrEnokEvKKBvyh62JAQ
+   uzFgkkwSlpMcZh0LwlzJMFjkiLkp3N2FE48KtG8n4nAJs4iv7XMrntUeg
+   bMajouvUCsjcuZpfkJIfkOWnjV9ifu/RO7TbRdIaXU2XyiUSYpJ9Hu+Mi
+   oVvejkdN1EryNG9HtPlZYO+o9VPRA9jJxegduq1h1TXykk4L8dXk/41/c
+   6vpVdwYrcSNZ6cTLewwHpi/la/79SMz+j7JbYFUYEO0vTla47GN3qR1Fu
+   czubvJMsYh2fcsrQlUM8ylCc7gqy9Ys8ShQI/4z2JmaWvlb69fqAA9H1Y
+   Q==;
+X-IronPort-AV: E=Sophos;i="5.87,236,1631548800"; 
+   d="scan'208";a="184613131"
+Received: from h199-255-45-15.hgst.com (HELO uls-op-cesaep02.wdc.com) ([199.255.45.15])
+  by ob1.hgst.iphmx.com with ESMTP; 15 Nov 2021 17:29:30 +0800
+IronPort-SDR: k3HcApD876bBvMxGHnPaHmNmMEqSALc2oM/q6NMcLb1110hbTr5v7GKVC/dPmT5Rhn/RWu5Qo6
+ T9BIqtxnVz9Fm6HOfCsQNLsZs/zM9f/Z/RkBJrAoSJB2mvuD3wSbEGe2nHj1hMrcgS/3ecbnWA
+ Hybqt9L3D7M60Qmz62EWvmHPwJNcKW4gzHcd4V5NmSyZoOVsSsHu8rOJcehTkEA63km6oG7jda
+ pzZHDkvXSvigzo14qEpWEMmucXgVxZQRb4VrG7UWjLDT3cs+7icgaIBt3oabp0AJv2zwDYeTld
+ 3N0Frjl+YuYurEgT9nn/Tc7I
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2021 01:03:02 -0800
+IronPort-SDR: /NztMPdapfY2Flmo55MCnCQ6hwhNqIh8Nh6Vdb5Jrl+Oz5fcxZY+WBFjPCQ39bEmlCmWpxhdm7
+ u+t2nvIWyUoPTtgPN1kv1HtOUHnoX8l9GYkDP/0Vu3SFfKVCxjVJpJykqnpLUp2Xj2bMF77XCv
+ bqXrprf42bpYMxU9iHhIZSN1qP2LL9xx0tL2Xs6vhKGOkoUI/XuOCMt9DVDajNK51ihepP7/aS
+ wX6y1OPeY6wngrB0wCOuiv7ihvMW268GjEbXOoIiy4MGLseBagOB1XpFGsv72H4Lcv8TTO+dgx
+ dHY=
+WDCIronportException: Internal
+Received: from usg-ed-osssrv.wdc.com ([10.3.10.180])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2021 01:29:30 -0800
+Received: from usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTP id 4Ht3mp1sCsz1RtVm
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2021 01:29:30 -0800 (PST)
+Authentication-Results: usg-ed-osssrv.wdc.com (amavisd-new); dkim=pass
+        reason="pass (just generated, assumed good)"
+        header.d=opensource.wdc.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=
+        opensource.wdc.com; h=content-transfer-encoding:mime-version
+        :x-mailer:message-id:date:subject:to:from; s=dkim; t=1636968565;
+         x=1639560566; bh=VAdOrRT0DNNhPdb7LOZzJiS0gTpM8rkpkjL/dbqp7Ic=; b=
+        ticb0NHwdjm8fG2t2yReNKqK4+Rv6/8ofhbGth30MutmJGGiZ9Xb0ES40pqHbiB1
+        VdXPFVQZjdL5ngFN+0zjwATRMX9yT+c3WiKSyh1tDh7uB23bV8zrdulo1DIwfQF5
+        +UrbKsSSilbvuY2Tc/wmU+p1V94/BLr8I3xHCi5ThnnBN22xHQX62mTA1V9U7U0f
+        HlYBLIFuiCejJZ9MsVL5NrbQz2+vVKsW5cnIjFExor58i92jADBjwUci4I+mbKTd
+        /H58HoVsqCT4EwcIRpk3NA17xaJM8Y+RECPrwzYi41s6FBv71FBiYMh0uhKSQSOy
+        aVUGlSGXFGcQyAZu/EK5SQ==
+X-Virus-Scanned: amavisd-new at usg-ed-osssrv.wdc.com
+Received: from usg-ed-osssrv.wdc.com ([127.0.0.1])
+        by usg-ed-osssrv.wdc.com (usg-ed-osssrv.wdc.com [127.0.0.1]) (amavisd-new, port 10026)
+        with ESMTP id 2s5pdOVaMKRP for <linux-scsi@vger.kernel.org>;
+        Mon, 15 Nov 2021 01:29:25 -0800 (PST)
+Received: from washi.fujisawa.hgst.com (washi.fujisawa.hgst.com [10.149.53.254])
+        by usg-ed-osssrv.wdc.com (Postfix) with ESMTPSA id 4Ht3mh3X4Cz1RtVl;
+        Mon, 15 Nov 2021 01:29:24 -0800 (PST)
+From:   Damien Le Moal <damien.lemoal@opensource.wdc.com>
+To:     linux-scsi@vger.kernel.org,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH] scsi: simplify registration of scsi host sysfs attributes
+Date:   Mon, 15 Nov 2021 18:29:22 +0900
+Message-Id: <20211115092922.367777-1-damien.lemoal@opensource.wdc.com>
+X-Mailer: git-send-email 2.31.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-For avoiding to slow down queue destroy, we don't call
-blk_mq_quiesce_queue() in blk_cleanup_queue(), instead of delaying to
-sync blk-mq queue in blk_release_queue().
+Similarly to the way attribute groups are registered for a scsi device
+using the device sdev_gendev, a scsi host attribute groups can be
+registered by specifying the generic attribute groups using the groups
+field of the scsi_host_type (struct device_type) and set the array of
+host attribute groups provided by the LLDD using the groups field of the
+host shost_dev generic device. This partially reverts the changes
+introduced by commit 92c4b58b15c5 ("scsi: core: Register sysfs
+attributes earlier"), avoiding the for loop to build a size limited
+array of attribute groups from the generic attributes and LLDD provided
+attribut groups.
 
-However, this way has caused kernel oops[1], reported by Changhui. The log
-shows that scsi_device can be freed before running blk_release_queue(),
-which is expected too since scsi_device is released after the scsi disk
-is closed and the scsi_device is removed.
-
-Fixes the issue by sync blk-mq in both blk_cleanup_queue() and
-disk_release():
-
-1) when disk_release() is run, the disk has been closed, and any sync
-dispatch activities have been done, so sync blk-mq queue is enough to quiesce
-filesystem dispatch activity.
-
-2) in blk_cleanup_queue(), we only focus on passthrough request, and
-passthrough request is always explicitly allocated & freed by
-passthrough request caller, so once queue is frozen, all sync dispatch activity
-for passthrough request has been done, then it is enough to sync blk-mq queue
-for avoiding to run any dispatch activity.
-
-[1] kernel panic log
-[12622.769416] BUG: kernel NULL pointer dereference, address: 0000000000000300
-[12622.777186] #PF: supervisor read access in kernel mode
-[12622.782918] #PF: error_code(0x0000) - not-present page
-[12622.788649] PGD 0 P4D 0
-[12622.791474] Oops: 0000 [#1] PREEMPT SMP PTI
-[12622.796138] CPU: 10 PID: 744 Comm: kworker/10:1H Kdump: loaded Not tainted 5.15.0+ #1
-[12622.804877] Hardware name: Dell Inc. PowerEdge R730/0H21J3, BIOS 1.5.4 10/002/2015
-[12622.813321] Workqueue: kblockd blk_mq_run_work_fn
-[12622.818572] RIP: 0010:sbitmap_get+0x75/0x190
-[12622.823336] Code: 85 80 00 00 00 41 8b 57 08 85 d2 0f 84 b1 00 00 00 45 31 e4 48 63 cd 48 8d 1c 49 48 c1 e3 06 49 03 5f 10 4c 8d 6b 40 83 f0 01 <48> 8b 33 44 89 f2 4c 89 ef 0f b6 c8 e8 fa f3 ff ff 83 f8 ff 75 58
-[12622.844290] RSP: 0018:ffffb00a446dbd40 EFLAGS: 00010202
-[12622.850120] RAX: 0000000000000001 RBX: 0000000000000300 RCX: 0000000000000004
-[12622.858082] RDX: 0000000000000006 RSI: 0000000000000082 RDI: ffffa0b7a2dfe030
-[12622.866042] RBP: 0000000000000004 R08: 0000000000000001 R09: ffffa0b742721334
-[12622.874003] R10: 0000000000000008 R11: 0000000000000008 R12: 0000000000000000
-[12622.881964] R13: 0000000000000340 R14: 0000000000000000 R15: ffffa0b7a2dfe030
-[12622.889926] FS:  0000000000000000(0000) GS:ffffa0baafb40000(0000) knlGS:0000000000000000
-[12622.898956] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[12622.905367] CR2: 0000000000000300 CR3: 0000000641210001 CR4: 00000000001706e0
-[12622.913328] Call Trace:
-[12622.916055]  <TASK>
-[12622.918394]  scsi_mq_get_budget+0x1a/0x110
-[12622.922969]  __blk_mq_do_dispatch_sched+0x1d4/0x320
-[12622.928404]  ? pick_next_task_fair+0x39/0x390
-[12622.933268]  __blk_mq_sched_dispatch_requests+0xf4/0x140
-[12622.939194]  blk_mq_sched_dispatch_requests+0x30/0x60
-[12622.944829]  __blk_mq_run_hw_queue+0x30/0xa0
-[12622.949593]  process_one_work+0x1e8/0x3c0
-[12622.954059]  worker_thread+0x50/0x3b0
-[12622.958144]  ? rescuer_thread+0x370/0x370
-[12622.962616]  kthread+0x158/0x180
-[12622.966218]  ? set_kthread_struct+0x40/0x40
-[12622.970884]  ret_from_fork+0x22/0x30
-[12622.974875]  </TASK>
-[12622.977309] Modules linked in: scsi_debug rpcsec_gss_krb5 auth_rpcgss nfsv4 dns_resolver nfs lockd grace fscache netfs sunrpc dm_multipath intel_rapl_msr intel_rapl_common dell_wmi_descriptor sb_edac rfkill video x86_pkg_temp_thermal intel_powerclamp dcdbas coretemp kvm_intel kvm mgag200 irqbypass i2c_algo_bit rapl drm_kms_helper ipmi_ssif intel_cstate intel_uncore syscopyarea sysfillrect sysimgblt fb_sys_fops pcspkr cec mei_me lpc_ich mei ipmi_si ipmi_devintf ipmi_msghandler acpi_power_meter drm fuse xfs libcrc32c sr_mod cdrom sd_mod t10_pi sg ixgbe ahci libahci crct10dif_pclmul crc32_pclmul crc32c_intel libata megaraid_sas ghash_clmulni_intel tg3 wdat_wdt mdio dca wmi dm_mirror dm_region_hash dm_log dm_mod [last unloaded: scsi_debug]
-
-Reported-by: ChanghuiZhong <czhong@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@opensource.wdc.com>
 ---
- block/blk-core.c  |  4 +++-
- block/blk-mq.c    | 13 +++++++++++++
- block/blk-mq.h    |  2 ++
- block/blk-sysfs.c | 10 ----------
- block/genhd.c     |  2 ++
- 5 files changed, 20 insertions(+), 11 deletions(-)
+ drivers/scsi/hosts.c      | 15 +++------------
+ drivers/scsi/scsi_priv.h  |  2 +-
+ drivers/scsi/scsi_sysfs.c |  7 ++++++-
+ 3 files changed, 10 insertions(+), 14 deletions(-)
 
-diff --git a/block/blk-core.c b/block/blk-core.c
-index 9ee32f85d74e..78710567cf69 100644
---- a/block/blk-core.c
-+++ b/block/blk-core.c
-@@ -363,8 +363,10 @@ void blk_cleanup_queue(struct request_queue *q)
- 	blk_queue_flag_set(QUEUE_FLAG_DEAD, q);
- 
- 	blk_sync_queue(q);
--	if (queue_is_mq(q))
-+	if (queue_is_mq(q)) {
-+		blk_mq_sync_queue(q);
- 		blk_mq_exit_queue(q);
-+	}
- 
- 	/*
- 	 * In theory, request pool of sched_tags belongs to request queue.
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 3ab34c4f20da..36260ce0b9ec 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -4417,6 +4417,19 @@ unsigned int blk_mq_rq_cpu(struct request *rq)
- }
- EXPORT_SYMBOL(blk_mq_rq_cpu);
- 
-+void blk_mq_sync_queue(struct request_queue *q)
-+{
-+	if (queue_is_mq(q)) {
-+		struct blk_mq_hw_ctx *hctx;
-+		int i;
-+
-+		cancel_delayed_work_sync(&q->requeue_work);
-+
-+		queue_for_each_hw_ctx(q, hctx, i)
-+			cancel_delayed_work_sync(&hctx->run_work);
-+	}
-+}
-+
- static int __init blk_mq_init(void)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 8049b00b6766..c3b6812aac5b 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -359,6 +359,7 @@ static void scsi_host_dev_release(struct device *dev)
+ static struct device_type scsi_host_type =3D {
+ 	.name =3D		"scsi_host",
+ 	.release =3D	scsi_host_dev_release,
++	.groups =3D	scsi_sysfs_shost_attr_groups,
+ };
+=20
+ /**
+@@ -377,7 +378,7 @@ static struct device_type scsi_host_type =3D {
+ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int pr=
+ivsize)
  {
- 	int i;
-diff --git a/block/blk-mq.h b/block/blk-mq.h
-index 8acfa650f575..cb49591454c3 100644
---- a/block/blk-mq.h
-+++ b/block/blk-mq.h
-@@ -128,6 +128,8 @@ extern void blk_mq_hctx_kobj_init(struct blk_mq_hw_ctx *hctx);
- void blk_mq_free_plug_rqs(struct blk_plug *plug);
- void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule);
- 
-+void blk_mq_sync_queue(struct request_queue *q);
-+
- void blk_mq_release(struct request_queue *q);
- 
- static inline struct blk_mq_ctx *__blk_mq_get_ctx(struct request_queue *q,
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index cef1f713370b..cd75b0f73dc6 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -791,16 +791,6 @@ static void blk_release_queue(struct kobject *kobj)
- 
- 	blk_free_queue_stats(q->stats);
- 
--	if (queue_is_mq(q)) {
--		struct blk_mq_hw_ctx *hctx;
--		int i;
--
--		cancel_delayed_work_sync(&q->requeue_work);
--
--		queue_for_each_hw_ctx(q, hctx, i)
--			cancel_delayed_work_sync(&hctx->run_work);
+ 	struct Scsi_Host *shost;
+-	int index, i, j =3D 0;
++	int index;
+=20
+ 	shost =3D kzalloc(sizeof(struct Scsi_Host) + privsize, GFP_KERNEL);
+ 	if (!shost)
+@@ -483,17 +484,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_t=
+emplate *sht, int privsize)
+ 	shost->shost_dev.parent =3D &shost->shost_gendev;
+ 	shost->shost_dev.class =3D &shost_class;
+ 	dev_set_name(&shost->shost_dev, "host%d", shost->host_no);
+-	shost->shost_dev.groups =3D shost->shost_dev_attr_groups;
+-	shost->shost_dev_attr_groups[j++] =3D &scsi_shost_attr_group;
+-	if (sht->shost_groups) {
+-		for (i =3D 0; sht->shost_groups[i] &&
+-			     j < ARRAY_SIZE(shost->shost_dev_attr_groups);
+-		     i++, j++) {
+-			shost->shost_dev_attr_groups[j] =3D
+-				sht->shost_groups[i];
+-		}
 -	}
--
- 	blk_exit_queue(q);
- 
- 	blk_queue_free_zone_bitmaps(q);
-diff --git a/block/genhd.c b/block/genhd.c
-index c5392cc24d37..01fdc0025550 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -1111,6 +1111,8 @@ static void disk_release(struct device *dev)
- 	might_sleep();
- 	WARN_ON_ONCE(disk_live(disk));
- 
-+	blk_mq_sync_queue(disk->queue);
+-	WARN_ON_ONCE(j >=3D ARRAY_SIZE(shost->shost_dev_attr_groups));
++	shost->shost_dev.groups =3D sht->shost_groups;
+=20
+ 	shost->ehandler =3D kthread_run(scsi_error_handler, shost,
+ 			"scsi_eh_%d", shost->host_no);
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index a278fc8948f4..f8ca22d495d9 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -144,7 +144,7 @@ extern struct scsi_transport_template blank_transport=
+_template;
+ extern void __scsi_remove_device(struct scsi_device *);
+=20
+ extern struct bus_type scsi_bus_type;
+-extern const struct attribute_group scsi_shost_attr_group;
++extern const struct attribute_group *scsi_sysfs_shost_attr_groups[];
+=20
+ /* scsi_netlink.c */
+ #ifdef CONFIG_SCSI_NETLINK
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 55addd78fde4..c3b93d2de081 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -424,10 +424,15 @@ static struct attribute *scsi_sysfs_shost_attrs[] =3D=
+ {
+ 	NULL
+ };
+=20
+-const struct attribute_group scsi_shost_attr_group =3D {
++static const struct attribute_group scsi_shost_attr_group =3D {
+ 	.attrs =3D	scsi_sysfs_shost_attrs,
+ };
+=20
++const struct attribute_group *scsi_sysfs_shost_attr_groups[] =3D {
++	&scsi_shost_attr_group,
++	NULL,
++};
 +
- 	disk_release_events(disk);
- 	kfree(disk->random);
- 	xa_destroy(&disk->part_tbl);
--- 
+ static void scsi_device_cls_release(struct device *class_dev)
+ {
+ 	struct scsi_device *sdev;
+--=20
 2.31.1
 
