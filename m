@@ -2,60 +2,61 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 446A7C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 18:06:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50DC1C433F5
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 18:29:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 2E8E463389
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 18:06:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31DCF63509
+	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 18:29:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S239647AbhKOSJb (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Nov 2021 13:09:31 -0500
-Received: from mail-pg1-f176.google.com ([209.85.215.176]:33515 "EHLO
-        mail-pg1-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239141AbhKOSBT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2021 13:01:19 -0500
-Received: by mail-pg1-f176.google.com with SMTP id 136so10597897pgc.0;
-        Mon, 15 Nov 2021 09:58:21 -0800 (PST)
+        id S241876AbhKOScq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Nov 2021 13:32:46 -0500
+Received: from mail-pf1-f182.google.com ([209.85.210.182]:40942 "EHLO
+        mail-pf1-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S241788AbhKOSah (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Nov 2021 13:30:37 -0500
+Received: by mail-pf1-f182.google.com with SMTP id z6so15799229pfe.7
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2021 10:27:42 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:subject:to:cc:references:from:message-id:date
          :user-agent:mime-version:in-reply-to:content-language
          :content-transfer-encoding;
-        bh=f6pGxvlWDiR0ktlk64UQrKY7yANUCgJE84uRs04H3yY=;
-        b=jJkS73wvbVJIa3gSme2JqxSX0jKlzyhaNdDkhYqtvRUKnXsrG+/2GTWCFQXlOYWIKd
-         AemhlFWY6VTpO3cbclVwpKMfz6EDLDUz3xSl66suaeLxdc4E7Ie9VJG+coEAxfEtZ7Dj
-         2tn8uOcu0MrlViZu+i6wDeW17CvDEAYOLhQgbaGumJfC4jyqvHtDFkqN6QXw8L4ZtCRL
-         Wzxjo0dTd0HGuW3zJtVl2Cf4xgcvAacNyJc5cxq+UlP01IAu1+huFEnBGdfuesIhuvH1
-         lv9AzxEeN6o0yTerin4ro8eCuU3LrvUqQUnotrAUYok8NVYAys9phWVFdjehwfdAFH6Q
-         epTQ==
-X-Gm-Message-State: AOAM530cPkjleW8NLKfzELw/75A4Cx1nPhQ3aIk0b2TZWHFtasbQ/Fga
-        pfi2xyNhWRS9XtIOcWUgdoU=
-X-Google-Smtp-Source: ABdhPJxhPbXXAmQ2obiiSEJL6w5Iukm9mTS1wTuvJZntMTAOgkbxXkvj4aX8QvB1I6BZAqeGq/fl8Q==
-X-Received: by 2002:a05:6a00:158a:b0:49f:be86:c78f with SMTP id u10-20020a056a00158a00b0049fbe86c78fmr34818214pfk.56.1636999100921;
-        Mon, 15 Nov 2021 09:58:20 -0800 (PST)
+        bh=gyiJwSeUrIoCepym1YAOUtLeanoLUac2GiYqRIZZa88=;
+        b=OYfoAvwBDiBDX/egUlBp+49wQwV/XOsRvksE3H1iivFWVwgyPkRTAPIMXdfSTSFKth
+         TB6m+M95m+Wba/LqDieipXtkVPqgLxLaY8IbEO4Km1Xa7iBHWmEi8JnunVTHPr7yFryx
+         bdrLaxLUHU/kTWeBaHZZ+Qb4Wb2z472gctNrwEv/SNek5u9b4KLp6g8oEDq0zrb2bIPb
+         /ln4u77j8w5lMl/Qf4WkX5DckoNmnpROPILyrPCmmbvV9EX5c4Ys/IRYI+z3H+ELv+g5
+         jVyoyBQE2C7lg2G+MrpniRzXbdHko25q2i4Ck1EwvBNIReq4yqL5AC5TGet54pTXKaTu
+         Kohg==
+X-Gm-Message-State: AOAM531PlgnbBcxAwDieteBEIw7TTMjcMibbc5RQlxsNIiGf3+Z9P1VA
+        rGuv4Z1CNW/fmcZE+rVh58dolJbZzQNHcw==
+X-Google-Smtp-Source: ABdhPJxoxHXZLEf8BG0yROHSa10OYjeUMIUi19RwZdLi4Wr0Qw3VB1PzG/iEyoPhLbx20DxwWON6mg==
+X-Received: by 2002:a62:ae0f:0:b0:481:7fe:c719 with SMTP id q15-20020a62ae0f000000b0048107fec719mr35497560pff.14.1637000861892;
+        Mon, 15 Nov 2021 10:27:41 -0800 (PST)
 Received: from bvanassche-linux.mtv.corp.google.com ([2620:15c:211:201:c779:caf7:7b7f:3ecd])
-        by smtp.gmail.com with ESMTPSA id w1sm3308265pfg.11.2021.11.15.09.58.19
+        by smtp.gmail.com with ESMTPSA id ls14sm48871pjb.49.2021.11.15.10.27.40
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 15 Nov 2021 09:58:20 -0800 (PST)
-Subject: Re: [PATCH 5.10 011/575] scsi: core: Remove command size deduction
- from scsi_setup_scsi_cmnd()
-To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        linux-kernel@vger.kernel.org
-Cc:     stable@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Mon, 15 Nov 2021 10:27:40 -0800 (PST)
+Subject: Re: [PATCH 06/11] scsi: ufs: Rework ufshcd_change_queue_depth()
+To:     Avri Altman <Avri.Altman@wdc.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Adrian Hunter <adrian.hunter@intel.com>,
         "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org,
-        syzbot+5516b30f5401d4dcbcae@syzkaller.appspotmail.com,
-        Tadeusz Struk <tadeusz.struk@linaro.org>
-References: <20211115165343.579890274@linuxfoundation.org>
- <20211115165343.996963128@linuxfoundation.org>
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>
+References: <20211110004440.3389311-1-bvanassche@acm.org>
+ <20211110004440.3389311-7-bvanassche@acm.org>
+ <DM6PR04MB6575DE9B188092CBE7A893DEFC949@DM6PR04MB6575.namprd04.prod.outlook.com>
 From:   Bart Van Assche <bvanassche@acm.org>
-Message-ID: <7ed36c27-a150-39a6-d8e3-483c76bbedc5@acm.org>
-Date:   Mon, 15 Nov 2021 09:58:19 -0800
+Message-ID: <3e62af92-529f-d2b3-2332-b8003b6f8864@acm.org>
+Date:   Mon, 15 Nov 2021 10:27:40 -0800
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
  Thunderbird/78.14.0
 MIME-Version: 1.0
-In-Reply-To: <20211115165343.996963128@linuxfoundation.org>
+In-Reply-To: <DM6PR04MB6575DE9B188092CBE7A893DEFC949@DM6PR04MB6575.namprd04.prod.outlook.com>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -63,18 +64,15 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/15/21 8:55 AM, Greg Kroah-Hartman wrote:
-> From: Tadeusz Struk <tadeusz.struk@linaro.org>
-> 
-> commit 703535e6ae1e94c89a9c1396b4c7b6b41160ef0c upstream.
+On 11/10/21 11:22 PM, Avri Altman wrote:
+>>
+>> Prepare for making sdev->host->can_queue less than hba->nutrs. This patch
+>> does not change any functionality.
+ >
+> ufshcd_set_queue_depth() may also needs similar adjustments?
 
-Hi Greg,
-
-Thanks for having queued this patch for the 5.10 stable branch.
-
-Do you plan to also include commit 20aaef52eb08 ("scsi: scsi_ioctl: 
-Validate command size")? That patch prevents that the bug in the commit 
-mentioned above can be triggered.
+That's a great question. I will modify scsi_change_queue_depth() such 
+that it limits the queue depth to host->can_queue.
 
 Thanks,
 
