@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0114C433F5
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 23:57:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7ACD9C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 00:02:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BF3A963253
-	for <linux-scsi@archiver.kernel.org>; Mon, 15 Nov 2021 23:57:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61A2360EFD
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 00:02:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S242732AbhKPAAf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Nov 2021 19:00:35 -0500
-Received: from mail.kernel.org ([198.145.29.99]:52070 "EHLO mail.kernel.org"
+        id S1347817AbhKPAFr (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Nov 2021 19:05:47 -0500
+Received: from mail.kernel.org ([198.145.29.99]:54238 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1356700AbhKOX4u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 Nov 2021 18:56:50 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id BDF8061AFD
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2021 23:53:54 +0000 (UTC)
+        id S233374AbhKPACw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 Nov 2021 19:02:52 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id 18E9760EFD
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Nov 2021 23:59:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637020434;
-        bh=oiBNGtTCTKyRkb03qtzC8fozskbZu1sL82Crtn44vi8=;
+        s=k20201202; t=1637020796;
+        bh=sspNCaI5VcKdjkEEPUggWWzWo1D6V46KMWbIswuMPL4=;
         h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=jfPFaedAwFjywaN5SVTn0pAZ5zqMgFFGtLpy6mZuGYXNflSF0gU921Wvi9fnd7YaS
-         1Rur/Fb0MR2n7mEb6pkuQ79RXB6AUrkNEJiA7WDL1rTBPYDJvPteH6S4R7DfUtB3oH
-         /P61weKXJisPLhaPo/p8IuqnQWVr842ZV78CJQJXM4D0dJPkdUc2BEG4M45teFhqoM
-         qkKLuicM7P//GS867uooifthqyXB9KPK/k8fi+X8A9R3qhgrgGd5xhQsdEa+4eCcNu
-         lGEYNH+ryeasg53kLxQgA5cTkCudWGZHN7R6S1fHVDhYp05UD66/CMswrs4ppGifh+
-         dkI/S12jCEQKg==
+        b=mO6eAZAe8IRAOOdl0vrdEcUhr2IdTFHrbohzVIbA9uQ/czjZUFEjNDsY1dOsNMoxD
+         ++ADimxKNVtRpz0xJ/lIZ2aYKNT0qttxDfVypEzzxsUSt5bILmzySCNRES4UMK8jro
+         q65ea+BepyRvKb9+j6zHLyoSN4d+tPd8mM0uH4zsKeJxAZZZ0hgLwuIJd+isZKZd+y
+         +fEHenxwSo3OyrJ8cv86AwAONMBMsHGJjadd9fCrvJEsGQJmi6+8Nk0PgSLzEJfOm4
+         JTjwGN4/Vfi9whJzIKGhnFcAu6kWR0LjDJQMqMbtO+5vZ3tqgWrXCRGsLwN+eiJc6Y
+         UG0QgmX1VtvIg==
 From:   bugzilla-daemon@bugzilla.kernel.org
 To:     linux-scsi@vger.kernel.org
 Subject: [Bug 214967] mvsas not detecting some disks
-Date:   Mon, 15 Nov 2021 23:53:54 +0000
+Date:   Mon, 15 Nov 2021 23:59:55 +0000
 X-Bugzilla-Reason: None
 X-Bugzilla-Type: changed
 X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
@@ -45,7 +45,7 @@ X-Bugzilla-Priority: P1
 X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
 X-Bugzilla-Flags: 
 X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-214967-11613-qJ0KkPU9vk@https.bugzilla.kernel.org/>
+Message-ID: <bug-214967-11613-Pv7UjYNkSY@https.bugzilla.kernel.org/>
 In-Reply-To: <bug-214967-11613@https.bugzilla.kernel.org/>
 References: <bug-214967-11613@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
@@ -59,49 +59,39 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
 
---- Comment #8 from Matthew Perkowski (mgperkow@gmail.com) ---
-(In reply to Damien Le Moal from comment #6)
-> (In reply to Bart Van Assche from comment #5)
-> > On 11/15/21 2:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> > > https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
-> > >=20
-> > > --- Comment #4 from Matthew Perkowski (mgperkow@gmail.com) ---
-> > > Bisection has identified commit 2360fa1812cd77e1de13d3cca789fbd23462b=
-651
-> as
-> > > the
-> > > origin of the issue.
->=20
-> Hmm... It seems very strange that this patch creates the problem. Even wi=
-th
-> a bug, the worst that could happen is failing to detect NCQ priority supp=
-ort.
->=20
-> The problem is likely related to the errors "ata14.00: Read log page 0x08
-> failed, Emask 0x1" which come from the kernel trying to access a non
-> existent log page (IDENTIFY DEVICE data log), which is tried when probing
-> for NCQ priority support.
->=20
-> libata ignores this error, not enabling the feature that was being probed.
-> The mvsas driver may not.
->=20
-> I posted a patch yesterday to prevent such access to log pages not suppor=
-ted
-> by the device. See:
->=20
-> https://lore.kernel.org/linux-ide/20211115060559.232835-1-damien.
-> lemoal@opensource.wdc.com/
->=20
-> Can you try these ?
->=20
->=20
+--- Comment #9 from Matthew Perkowski (mgperkow@gmail.com) ---
+(In reply to Damien Le Moal from comment #7)
+> (In reply to Matthew Perkowski from comment #1)
+> > I stumbled across this and gave it a try, and it fixed my immediate
+> problem:
 > >=20
-> > This commit: 2360fa1812cd ("libata: cleanup NCQ priority handling")?
+> > https://sourceforge.net/p/scst/mailman/scst-devel/thread/4FDDA78C.400@a=
+cm.
+> > org/
 > >=20
-> > Damien, can you take a look?
+> > However, it doesn't look like the mvsas driver has changed in some time=
+, so
+> > I'm thinking the problem was caused by another change somewhere else in=
+ the
+> > kernel, and adding that one line of code to mv_sas.c simply "band-aided"
+> the
+> > immediate issue I was experiencing.
+>=20
+> I am not familiar with the mv_sas driver & associated HBAs. Do these
+> implement SAT using libata on the host ? Or does the HBA firmware handle
+> scsi command translation ? Some quick grep in the driver code does not
+> reveal much.
 
-I will try rebuilding with the patches at my first opportunity and report b=
-ack.
+I'm afraid I don't know that for certain. I know the card HAS firmware since
+I've updated it once before. I'll see if those patches solve the problem. If
+not, maybe I can figure out more about the card to help us along. I can tell
+you that the card uses this controller chip:
+
+https://www.marvell.com/content/dam/marvell/en/public-collateral/storage/ma=
+rvell-storage-88se94xx-product-brief-2011-04.pdf
+
+I'm not accustomed to interpreting hardware information at such a low level
+myself, but it mentions offering "native 6Gb/s SATA interface support."
 
 --=20
 You may reply to this email to add a comment.
