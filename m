@@ -2,115 +2,115 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BEF7C433EF
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 00:06:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB13C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 01:07:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 861F263219
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 00:06:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B776461350
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 01:07:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1352478AbhKPAJd (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Nov 2021 19:09:33 -0500
-Received: from mail.kernel.org ([198.145.29.99]:57154 "EHLO mail.kernel.org"
+        id S1346298AbhKPBKB (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Nov 2021 20:10:01 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44634 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1348328AbhKPAHb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 Nov 2021 19:07:31 -0500
-Received: by mail.kernel.org (Postfix) with ESMTPS id 6EE3463223
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2021 00:04:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1637021075;
-        bh=irDv2e4AdZJ/k5fSugIsnS/LIxlqP1GOO8Kf2ZAQpFc=;
-        h=From:To:Subject:Date:In-Reply-To:References:From;
-        b=hzFwg/7Jlr2y6HVprBxv7GZzS1Hva3VsUvCWNxXel/NlwnVRZDoRrPWwcEW6kqBCC
-         C1g2U0uOXbE98QGPidi0zqBGMulUoJ8yXEw/QhX4MwYoPJuN2CxELHZL9qHjY6LAnY
-         93Uh6E/UT+GESv81/7eap0kq/EkQNZTRFIvBougOJcugg5lcAyzrItdM9lJORSCRZs
-         l6ty+DjZXiSAl0sG1mg/5EfA4B0h7QA+zTjm/cQmBgc3XVpEds+p8m1+Sr1hrlgfWD
-         Vf0g44Fl/rme0UImbke8Z60iHOxBgcCvgDSbWn5O/w8tcRvqSPVgM+py7FoqRZZQXf
-         jkOBy746wli9Q==
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-scsi@vger.kernel.org
-Subject: [Bug 214967] mvsas not detecting some disks
-Date:   Tue, 16 Nov 2021 00:04:35 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: changed
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: normal
-X-Bugzilla-Who: damien.lemoal@wdc.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: 
-Message-ID: <bug-214967-11613-HeFJ1R7gbA@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-214967-11613@https.bugzilla.kernel.org/>
-References: <bug-214967-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S245148AbhKOTTe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 Nov 2021 14:19:34 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPSA id C37776344E;
+        Mon, 15 Nov 2021 18:29:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1637000964;
+        bh=9OQeXWGBa7k14EEoRTUvZdEPgT9vo/YX8wldcCJkAFg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Nh+FMAE1EfYh663z3sEw9W7HigS+2Ja7mQ57EAnVOVo2oEU1gKP37/ZELopxYgReZ
+         keXSIEUDXUxIL0Q5VJu0ilETe5BFuv0HelUphm3rN51D43zAHH7D6Yn79soKej+rBn
+         bp6hkDVb5lInra4wQkL/M0AL8zVam0/XuDrszfi0=
+From:   Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To:     linux-kernel@vger.kernel.org
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        stable@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+        Christoph Hellwig <hch@lst.de>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org,
+        syzbot+5516b30f5401d4dcbcae@syzkaller.appspotmail.com,
+        Tadeusz Struk <tadeusz.struk@linaro.org>
+Subject: [PATCH 5.15 010/917] scsi: core: Remove command size deduction from scsi_setup_scsi_cmnd()
+Date:   Mon, 15 Nov 2021 17:51:45 +0100
+Message-Id: <20211115165429.075341468@linuxfoundation.org>
+X-Mailer: git-send-email 2.33.1
+In-Reply-To: <20211115165428.722074685@linuxfoundation.org>
+References: <20211115165428.722074685@linuxfoundation.org>
+User-Agent: quilt/0.66
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
+From: Tadeusz Struk <tadeusz.struk@linaro.org>
 
---- Comment #11 from Damien Le Moal (damien.lemoal@wdc.com) ---
-(In reply to Matthew Perkowski from comment #8)
-> (In reply to Damien Le Moal from comment #6)
-> > (In reply to Bart Van Assche from comment #5)
-> > > On 11/15/21 2:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
-> > > > https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
-> > > >=20
-> > > > --- Comment #4 from Matthew Perkowski (mgperkow@gmail.com) ---
-> > > > Bisection has identified commit
-> 2360fa1812cd77e1de13d3cca789fbd23462b651
-> > as
-> > > > the
-> > > > origin of the issue.
-> >=20
-> > Hmm... It seems very strange that this patch creates the problem. Even =
-with
-> > a bug, the worst that could happen is failing to detect NCQ priority
-> support.
-> >=20
-> > The problem is likely related to the errors "ata14.00: Read log page 0x=
-08
-> > failed, Emask 0x1" which come from the kernel trying to access a non
-> > existent log page (IDENTIFY DEVICE data log), which is tried when probi=
-ng
-> > for NCQ priority support.
-> >=20
-> > libata ignores this error, not enabling the feature that was being prob=
-ed.
-> > The mvsas driver may not.
-> >=20
-> > I posted a patch yesterday to prevent such access to log pages not
-> supported
-> > by the device. See:
-> >=20
-> > https://lore.kernel.org/linux-ide/20211115060559.232835-1-damien.
-> > lemoal@opensource.wdc.com/
-> >=20
-> > Can you try these ?
-> >=20
-> >=20
-> > >=20
-> > > This commit: 2360fa1812cd ("libata: cleanup NCQ priority handling")?
-> > >=20
-> > > Damien, can you take a look?
->=20
-> I will try rebuilding with the patches at my first opportunity and report
-> back.
+commit 703535e6ae1e94c89a9c1396b4c7b6b41160ef0c upstream.
 
-That would be great. Thanks.
+No need to deduce command size in scsi_setup_scsi_cmnd() anymore as
+appropriate checks have been added to scsi_fill_sghdr_rq() function and the
+cmd_len should never be zero here.  The code to do that wasn't correct
+anyway, as it used uninitialized cmd->cmnd, which caused a null-ptr-deref
+if the command size was zero as in the trace below. Fix this by removing
+the unneeded code.
 
---=20
-You may reply to this email to add a comment.
+KASAN: null-ptr-deref in range [0x0000000000000000-0x0000000000000007]
+CPU: 0 PID: 1822 Comm: repro Not tainted 5.15.0 #1
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.14.0-4.fc34 04/01/2014
+Call Trace:
+ blk_mq_dispatch_rq_list+0x7c7/0x12d0
+ __blk_mq_sched_dispatch_requests+0x244/0x380
+ blk_mq_sched_dispatch_requests+0xf0/0x160
+ __blk_mq_run_hw_queue+0xe8/0x160
+ __blk_mq_delay_run_hw_queue+0x252/0x5d0
+ blk_mq_run_hw_queue+0x1dd/0x3b0
+ blk_mq_sched_insert_request+0x1ff/0x3e0
+ blk_execute_rq_nowait+0x173/0x1e0
+ blk_execute_rq+0x15c/0x540
+ sg_io+0x97c/0x1370
+ scsi_ioctl+0xe16/0x28e0
+ sd_ioctl+0x134/0x170
+ blkdev_ioctl+0x362/0x6e0
+ block_ioctl+0xb0/0xf0
+ vfs_ioctl+0xa7/0xf0
+ do_syscall_64+0x3d/0xb0
+ entry_SYSCALL_64_after_hwframe+0x44/0xae
+---[ end trace 8b086e334adef6d2 ]---
+Kernel panic - not syncing: Fatal exception
 
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Link: https://lore.kernel.org/r/20211103170659.22151-2-tadeusz.struk@linaro.org
+Fixes: 2ceda20f0a99 ("scsi: core: Move command size detection out of the fast path")
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: James E.J. Bottomley <jejb@linux.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: <linux-scsi@vger.kernel.org>
+Cc: <linux-kernel@vger.kernel.org>
+Cc: <stable@vger.kernel.org> # 5.15, 5.14, 5.10
+Reported-by: syzbot+5516b30f5401d4dcbcae@syzkaller.appspotmail.com
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Tadeusz Struk <tadeusz.struk@linaro.org>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ drivers/scsi/scsi_lib.c |    2 --
+ 1 file changed, 2 deletions(-)
+
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1175,8 +1175,6 @@ static blk_status_t scsi_setup_scsi_cmnd
+ 	}
+ 
+ 	cmd->cmd_len = scsi_req(req)->cmd_len;
+-	if (cmd->cmd_len == 0)
+-		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+ 	cmd->cmnd = scsi_req(req)->cmd;
+ 	cmd->transfersize = blk_rq_bytes(req);
+ 	cmd->allowed = scsi_req(req)->retries;
+
+
