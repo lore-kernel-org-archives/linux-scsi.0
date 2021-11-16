@@ -2,94 +2,76 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 12098C433F5
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 12:04:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A847C433EF
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 12:29:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id EF62D61A7D
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 12:04:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E992361ABA
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 12:29:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235922AbhKPMHM (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Nov 2021 07:07:12 -0500
-Received: from szxga02-in.huawei.com ([45.249.212.188]:26318 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235938AbhKPMFD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Nov 2021 07:05:03 -0500
-Received: from dggemv704-chm.china.huawei.com (unknown [172.30.72.53])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Htl0d64YMzbhrv;
-        Tue, 16 Nov 2021 19:57:05 +0800 (CST)
-Received: from dggpeml500019.china.huawei.com (7.185.36.137) by
- dggemv704-chm.china.huawei.com (10.3.19.47) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.20; Tue, 16 Nov 2021 20:02:00 +0800
-Received: from [10.174.179.189] (10.174.179.189) by
- dggpeml500019.china.huawei.com (7.185.36.137) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2308.15; Tue, 16 Nov 2021 20:01:59 +0800
-Subject: Re: [PATCH v2] scsi: core: use eh_timeout to timeout start_unit
- command
-To:     brookxu <brookxu.cn@gmail.com>, <jejb@linux.ibm.com>,
-        <martin.petersen@oracle.com>
-CC:     <hch@infradead.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-References: <1636507412-21678-1-git-send-email-brookxu.cn@gmail.com>
-From:   Wu Bo <wubo40@huawei.com>
-Message-ID: <34b23c4f-65b0-4c01-4148-d536732b3aeb@huawei.com>
-Date:   Tue, 16 Nov 2021 20:01:59 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:78.0) Gecko/20100101
- Thunderbird/78.2.2
+        id S236269AbhKPMcU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Nov 2021 07:32:20 -0500
+Received: from mail.kernel.org ([198.145.29.99]:56244 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S236271AbhKPMcE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 16 Nov 2021 07:32:04 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id ADD2961284
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2021 12:29:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637065747;
+        bh=+VJZlvDypNOTCKdMCZ4IbhV8Itdq24hT+0P+Hw51opg=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=e+jH98s2/5tO6LZpMMKWhI3mZL0M7Q2SEraf1zMWWdNUr5ekhEhhll1Bz2i74c6Kz
+         RQ5kjlzg5xFNmvl0QEMqLruEZhdM3oW/HQhVIzybcaYmCsIQzJPEYd42XeBhMcnL2P
+         5nxaZd0eG6AU+s08bHQcweancJtX0FJm9eq8NKGSUY+CSldJreCE+jSePcJEx4IX89
+         hHaLY5X5CKgTGHSmOo1nFz7cyR3r3J2kcv/Sij4JAD4awPC044dZqWsO7SKi+saIec
+         d84nzk9FMAWa5xkxTniankAQKbBQOxgYFSns+yHG2+qAFIbl/hhI4Q8r/P9V6tiptS
+         +SYulcSN6k2Sg==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 214967] mvsas not detecting some disks
+Date:   Tue, 16 Nov 2021 12:29:07 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: mgperkow@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-214967-11613-Rf6eDK3C4n@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214967-11613@https.bugzilla.kernel.org/>
+References: <bug-214967-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-In-Reply-To: <1636507412-21678-1-git-send-email-brookxu.cn@gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.174.179.189]
-X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
- dggpeml500019.china.huawei.com (7.185.36.137)
-X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021/11/10 9:23, brookxu wrote:
-> From: Chunguang Xu <brookxu@tencent.com>
-> 
-> In some abnormal scenarios, STU may timeout. The recovery
-> time of 30 seconds is relatively large. Now we need to modify
-> rq_timeout to adjust STU timeout value, but it will affect the
-> actual IO.
-> 
-> commit 9728c0814ecb ("[SCSI] make scsi_eh_try_stu use block
-> timeout") use rq_timeout to timeout the STU command, but after
-> commit 0816c9251a71 ("[SCSI] Allow error handling timeout to
-> be specified") eh_timeout will init to SCSI_DEFAULT_EH_TIMEOUT,
-> so it is more reasonable to use eh_timeout as the timeout value
-> of STU command. In this way, we can uniformly control recovery
-> time through eh_timeout.
-> 
-> Signed-off-by: Chunguang Xu <brookxu@tencent.com>
-> ---
-> v2: Update commit log and fix some format issues.
-> 
->   drivers/scsi/scsi_error.c | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index a531336..a665318 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -1404,7 +1404,8 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
->   		enum scsi_disposition rtn = NEEDS_RETRY;
->   
->   		for (i = 0; rtn == NEEDS_RETRY && i < 2; i++)
-> -			rtn = scsi_send_eh_cmnd(scmd, stu_command, 6, scmd->device->request_queue->rq_timeout, 0);
-> +			rtn = scsi_send_eh_cmnd(scmd, stu_command, 6,
-> +						scmd->device->eh_timeout, 0);
->   
->   		if (rtn == SUCCESS)
->   			return 0;
-> 
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
 
-Reviewed-by: Wu Bo <wubo40@huawei.com>
+--- Comment #16 from Matthew Perkowski (mgperkow@gmail.com) ---
+(In reply to Damien Le Moal from comment #15)
+> Could you test with the latest 5.16-rc1 kernel too please ?
 
--- 
-Wu Bo
+Built, patched, and tested with 5.16-rc1. mvsas detected all drives as
+expected. Scanned the kernel log after boot to check more in-depth as well.=
+ No
+unusual messages from the mvsas driver. Seems to be working exactly as I wo=
+uld
+expect.
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
