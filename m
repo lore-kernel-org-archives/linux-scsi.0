@@ -2,59 +2,124 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26C42C433FE
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 02:48:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 70412C433F5
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 03:08:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 0E17561C4F
-	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 02:48:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 40AC260E78
+	for <linux-scsi@archiver.kernel.org>; Tue, 16 Nov 2021 03:08:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1350652AbhKPCvc (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Mon, 15 Nov 2021 21:51:32 -0500
-Received: from mailgw.kylinos.cn ([123.150.8.42]:23460 "EHLO nksmu.kylinos.cn"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S242592AbhKPCtH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 15 Nov 2021 21:49:07 -0500
-X-UUID: 9a027e8e361d429caf9c5402f373c751-20211116
-X-UUID: 9a027e8e361d429caf9c5402f373c751-20211116
-X-User: zhangyue1@kylinos.cn
-Received: from localhost.localdomain [(118.26.139.139)] by nksmu.kylinos.cn
-        (envelope-from <zhangyue1@kylinos.cn>)
-        (Generic MTA)
-        with ESMTP id 1200601199; Tue, 16 Nov 2021 10:54:51 +0800
-From:   zhangyue <zhangyue1@kylinos.cn>
-To:     qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: fix the problem that the pointer "sp" is double free
-Date:   Tue, 16 Nov 2021 10:45:58 +0800
-Message-Id: <20211116024558.7647-1-zhangyue1@kylinos.cn>
-X-Mailer: git-send-email 2.30.0
+        id S238536AbhKPDLv (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Mon, 15 Nov 2021 22:11:51 -0500
+Received: from mail.kernel.org ([198.145.29.99]:44794 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S239353AbhKPDLW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 15 Nov 2021 22:11:22 -0500
+Received: by mail.kernel.org (Postfix) with ESMTPS id 5F34261C4F
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2021 03:08:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1637032104;
+        bh=XkwvxJ2V1qOzMxs4myoHvEupFyCb+jBgdeX92l5YA1U=;
+        h=From:To:Subject:Date:In-Reply-To:References:From;
+        b=RNRjYiVvUX4/6auh0lsXo7zFlJpM7aYPz8Ju5r4lXZ4DlYby/e++AjTEEpzzdw87m
+         g7SYLlgIII4nMRfN7pnfY7Bv88FCn2lZsz1RARJvC653wGp0AObPVodjvZ6Gc5tv9/
+         TEPQCz9W1oIMQ8C1IN9tHA12/RVr3LVR2Rv//Kg3kUbnXO65bZwImZJjLZbyQ/mvkU
+         plk5X3b9yllC/4gXCUpmD7AOh9DDZBTvtkooDSGkxiseNVjpfjHTvnC1TbzxNLwkxj
+         AMNZUAAkCETRzI+gKjnpK8vFaPK2iIc2ZXrpKcwg6yE0cLJI/bYyRGV8e6kAkwvi/9
+         JOLSU1zQ1CBRA==
+From:   bugzilla-daemon@bugzilla.kernel.org
+To:     linux-scsi@vger.kernel.org
+Subject: [Bug 214967] mvsas not detecting some disks
+Date:   Tue, 16 Nov 2021 03:08:23 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: mgperkow@gmail.com
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: 
+Message-ID: <bug-214967-11613-kpYowokcLj@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-214967-11613@https.bugzilla.kernel.org/>
+References: <bug-214967-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-in function qla24xx_sp_unmap, it is already called sp->free(sp), then
-it`s not need to called sp->free(sp) after qla24xx_sp_unmap is called.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
 
-Signed-off-by: zhangyue <zhangyue1@kylinos.cn>
----
- drivers/scsi/qla2xxx/qla_gs.c | 1 -
- 1 file changed, 1 deletion(-)
+--- Comment #12 from Matthew Perkowski (mgperkow@gmail.com) ---
+(In reply to Damien Le Moal from comment #11)
+> (In reply to Matthew Perkowski from comment #8)
+> > (In reply to Damien Le Moal from comment #6)
+> > > (In reply to Bart Van Assche from comment #5)
+> > > > On 11/15/21 2:34 PM, bugzilla-daemon@bugzilla.kernel.org wrote:
+> > > > > https://bugzilla.kernel.org/show_bug.cgi?id=3D214967
+> > > > >=20
+> > > > > --- Comment #4 from Matthew Perkowski (mgperkow@gmail.com) ---
+> > > > > Bisection has identified commit
+> > 2360fa1812cd77e1de13d3cca789fbd23462b651
+> > > as
+> > > > > the
+> > > > > origin of the issue.
+> > >=20
+> > > Hmm... It seems very strange that this patch creates the problem. Even
+> with
+> > > a bug, the worst that could happen is failing to detect NCQ priority
+> > support.
+> > >=20
+> > > The problem is likely related to the errors "ata14.00: Read log page =
+0x08
+> > > failed, Emask 0x1" which come from the kernel trying to access a non
+> > > existent log page (IDENTIFY DEVICE data log), which is tried when pro=
+bing
+> > > for NCQ priority support.
+> > >=20
+> > > libata ignores this error, not enabling the feature that was being
+> probed.
+> > > The mvsas driver may not.
+> > >=20
+> > > I posted a patch yesterday to prevent such access to log pages not
+> > supported
+> > > by the device. See:
+> > >=20
+> > > https://lore.kernel.org/linux-ide/20211115060559.232835-1-damien.
+> > > lemoal@opensource.wdc.com/
+> > >=20
+> > > Can you try these ?
+> > >=20
+> > >=20
+> > > >=20
+> > > > This commit: 2360fa1812cd ("libata: cleanup NCQ priority handling")?
+> > > >=20
+> > > > Damien, can you take a look?
+> >=20
+> > I will try rebuilding with the patches at my first opportunity and repo=
+rt
+> > back.
+>=20
+> That would be great. Thanks.
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index c3195d4c25e5..a7198a1e23fb 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -4228,7 +4228,6 @@ static void qla2x00_async_gpnft_gnnft_sp_done(void *s, int res)
- 		if (rc) {
- 			/* Cleanup here to prevent memory leak */
- 			qla24xx_sp_unmap(vha, sp);
--			sp->free(sp);
- 		}
- 
- 		spin_lock_irqsave(&vha->work_lock, flags);
--- 
-2.30.0
+Looks like your hunch may have been right on. I applied your patches to a f=
+resh
+copy of the 5.15.2 source (which was not working properly with my RR 2744 c=
+ard
+via the mvsas driver in vanilla form), and the issue did not arise when I
+booted into it.
 
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
