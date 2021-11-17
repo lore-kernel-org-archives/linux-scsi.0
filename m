@@ -2,98 +2,87 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E97FC433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 07:25:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81DFEC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 07:37:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 645EF6321A
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 07:25:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6167363214
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 07:37:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233144AbhKQH2m (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 02:28:42 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:57998 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231547AbhKQH2m (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 02:28:42 -0500
-Date:   Wed, 17 Nov 2021 08:25:41 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637133942;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=vblSOwk8WY8Wbht9jIU+VQDIA+N8xtAsFZfUXoQLMU8=;
-        b=kmhukvnhJTe597OCSDVWQgXYK2zl6pnm1ldjoOXt9hN/1GSS77MtLaFqo6uEcLwSSTqe2z
-        sVQGMXXuiiClUEbZ0g2X4SUB281P+T62VU/VWkhyU449apgl8VMb+sIHthfF3059HRgdwN
-        1A9EJ8frBOM9fRFR6fo3FCjC6Im5TqyNFMGSRccmqqRhHCot5FtjAF3uRP6nfBeLVhSkwj
-        qzQAFuFZEZHH3y7uWzea62jBGS8wDFlWUhQkO0FM5E2GeS1dcG+UkNDCrscasLNJkEcqTc
-        wX2XZbqVw/nY551w7o8tD/qQOvQxH/Zgwavf7RsqW8O/8BtefIh+ex3RBa1kqQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637133942;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=vblSOwk8WY8Wbht9jIU+VQDIA+N8xtAsFZfUXoQLMU8=;
-        b=g5JiPL8QJW7dvwGvH4yVf5ubxSsCScKPQa03vioTKkolVHpwb1RXEUBwRMXVJCSOVVkXkw
-        5M2717DPQbs8e1CA==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Davidlohr Bueso <dave@stgolabs.net>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com, hare@suse.de,
-        tglx@linutronix.de, linux-scsi@vger.kernel.org,
-        linux-rt-users@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Davidlohr Bueso <dbueso@suse.de>
-Subject: Re: [PATCH 1/3] scsi/libfc: Remove get_cpu() semantics in
- fc_exch_em_alloc()
-Message-ID: <20211117072541.fpgp23twyaawiool@linutronix.de>
-References: <20211117025956.79616-1-dave@stgolabs.net>
- <20211117025956.79616-2-dave@stgolabs.net>
+        id S234175AbhKQHkN (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 02:40:13 -0500
+Received: from mga17.intel.com ([192.55.52.151]:14464 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S231718AbhKQHkM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Nov 2021 02:40:12 -0500
+X-IronPort-AV: E=McAfee;i="6200,9189,10170"; a="214617967"
+X-IronPort-AV: E=Sophos;i="5.87,240,1631602800"; 
+   d="scan'208";a="214617967"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2021 23:37:14 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.87,240,1631602800"; 
+   d="scan'208";a="506804597"
+Received: from ahunter-desktop.fi.intel.com (HELO [10.237.72.76]) ([10.237.72.76])
+  by orsmga008.jf.intel.com with ESMTP; 16 Nov 2021 23:37:10 -0800
+Subject: Re: [PATCH 08/11] scsi: ufs: Improve SCSI abort handling further
+To:     Bart Van Assche <bvanassche@acm.org>,
+        Peter Wang <peter.wang@mediatek.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     linux-scsi@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>,
+        "James E.J. Bottomley" <jejb@linux.ibm.com>,
+        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
+        Stanley Chu <stanley.chu@mediatek.com>,
+        Asutosh Das <asutoshd@codeaurora.org>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        Santosh Yaraganavi <santoshsy@gmail.com>,
+        Arnd Bergmann <arnd@arndb.de>, Vishak G <vishak.g@samsung.com>
+References: <20211110004440.3389311-1-bvanassche@acm.org>
+ <20211110004440.3389311-9-bvanassche@acm.org>
+ <b728d150-3271-c6b0-25dc-881141ef3630@mediatek.com>
+ <1a196e1b-1412-90f3-e511-3f669572a619@mediatek.com>
+ <87d8a036-087d-f1fa-19f4-f50c7279170a@acm.org>
+ <59620452-e5a2-74e1-5971-a5535de3d536@intel.com>
+ <03036140-a7c6-fe0c-13e3-def8fcf2ecb3@acm.org>
+From:   Adrian Hunter <adrian.hunter@intel.com>
+Organization: Intel Finland Oy, Registered Address: PL 281, 00181 Helsinki,
+ Business Identity Code: 0357606 - 4, Domiciled in Helsinki
+Message-ID: <d96ef6fd-f36b-5403-2ef9-8944b94df918@intel.com>
+Date:   Wed, 17 Nov 2021 09:37:09 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
+ Firefox/78.0 Thunderbird/78.13.0
 MIME-Version: 1.0
+In-Reply-To: <03036140-a7c6-fe0c-13e3-def8fcf2ecb3@acm.org>
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20211117025956.79616-2-dave@stgolabs.net>
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-11-16 18:59:54 [-0800], Davidlohr Bueso wrote:
-> The get_cpu() in fc_exch_em_alloc() was introduced in:
+On 16/11/2021 23:53, Bart Van Assche wrote:
+> On 11/16/21 12:16, Adrian Hunter wrote:
+>> On 16/11/2021 18:08, Bart Van Assche wrote:
+>>> On 11/16/21 1:07 AM, Peter Wang wrote:
+>>>> Should we add unmap?
+>>>
+>>> Hi Peter,
+>>>
+>>> I will add DMA unmapping code in the abort handler.
+>>
+>> I would note that __ufshcd_transfer_req_compl() does that, as well as providing
+>> a matching ufshcd_release() for the ufshcd_hold() in ufshcd_queuecommand(), so
+>> do consider __ufshcd_transfer_req_compl().
+>>
+>> Using __ufshcd_transfer_req_compl() seems consistent with the error handler which
+>> uses __ufshcd_transfer_req_compl() via ufshcd_complete_requests(), which will pick
+>> up all the requests that the error handler has just aborted via
+>> ufshcd_try_to_abort_task().  Also ufshcd_host_reset_and_restore() uses
+>> __ufshcd_transfer_req_compl() via ufshcd_complete_requests(), which will pick
+>> up anything still in outstanding_reqs because the doorbell has become zero at
+>> that point.
 > 
->     f018b73af6db ([SCSI] libfc, libfcoe, fcoe: use smp_processor_id() only when preempt disabled)
+> Hi Adrian,
 > 
-> for no other reason than to simply use smp_processor_id()
-> without getting a warning, because everything is done with
-> the pool->lock held anyway. However, get_cpu(), by disabling
-> preemption, does not play well with PREEMPT_RT, particularly
-> when acquiring a regular (and thus sleepable) spinlock.
-> 
-> Therefore remove the get_cpu() and just use the unstable value
-> as we will have CPU locality guarantees next by taking the lock.
-> The window of migration, as noted by Sebastian, is small and
-> even if it happens the result is correct.
-> 
-> Signed-off-by: Davidlohr Bueso <dbueso@suse.de>
-Acked-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+> Although I agree with minimizing code duplication, I'm not sure that __ufshcd_transfer_req_compl() should be called from inside ufshcd_abort(). __ufshcd_transfer_req_compl() also calls ufshcd_update_monitor() and ufshcd_add_command_trace(hba, index, UFS_CMD_COMP). Neither function should be called when aborting a command.
 
-> diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-> index 841000445b9a..be37bfb2814d 100644
-> --- a/drivers/scsi/libfc/fc_exch.c
-> +++ b/drivers/scsi/libfc/fc_exch.c
-> @@ -825,10 +825,9 @@ static struct fc_exch *fc_exch_em_alloc(struct fc_lport *lport,
->  	}
->  	memset(ep, 0, sizeof(*ep));
->  
-> -	cpu = get_cpu();
-> +	cpu = raw_smp_processor_id();
->  	pool = per_cpu_ptr(mp->pool, cpu);
->  	spin_lock_bh(&pool->lock);
-> -	put_cpu();
-
-The `cpu' variable is later ORed into ep->oxid. I haven't figured out
-why this is important/ required. The ep variable/ `fc_exch' is allocated
-from a per-CPU memory pool and is later released to the same pool but
-the pool's CPU number is not obtained from fc_exch::oxid but there is a
-pointer to its pool stored in fc_exch::em. 
-So it remains a mystery to why the CPU number is stored here.
-
->  	/* peek cache of free slot */
->  	if (pool->left != FC_XID_UNKNOWN) {
-
-Sebastian
+But we should trace the abort I would have thought - seems like a separate issue though.
