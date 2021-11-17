@@ -2,21 +2,21 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1FFEC433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 02:50:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6CE59C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 02:50:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id BDDE661C12
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 02:50:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5B6F261C12
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 02:50:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232797AbhKQCxT (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Tue, 16 Nov 2021 21:53:19 -0500
-Received: from szxga01-in.huawei.com ([45.249.212.187]:14946 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232705AbhKQCxK (ORCPT
+        id S232803AbhKQCxU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Tue, 16 Nov 2021 21:53:20 -0500
+Received: from szxga02-in.huawei.com ([45.249.212.188]:15831 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S232699AbhKQCxK (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Nov 2021 21:53:10 -0500
-Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.56])
-        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4Hv6mN5GMZzZd0q;
-        Wed, 17 Nov 2021 10:47:48 +0800 (CST)
+Received: from dggeme756-chm.china.huawei.com (unknown [172.30.72.54])
+        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4Hv6pk5wW8z918L;
+        Wed, 17 Nov 2021 10:49:50 +0800 (CST)
 Received: from localhost.localdomain (10.69.192.58) by
  dggeme756-chm.china.huawei.com (10.3.19.102) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id
@@ -25,9 +25,9 @@ From:   chenxiang <chenxiang66@hisilicon.com>
 To:     <jejb@linux.ibm.com>, <martin.petersen@oracle.com>
 CC:     <linux-scsi@vger.kernel.org>, <linuxarm@huawei.com>,
         <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
-Subject: [PATCH 12/15] scsi: libsas: Defer works of new phys during suspend
-Date:   Wed, 17 Nov 2021 10:45:05 +0800
-Message-ID: <1637117108-230103-13-git-send-email-chenxiang66@hisilicon.com>
+Subject: [PATCH 11/15] scsi: libsas: Refactor out sas_queue_deferred_work()
+Date:   Wed, 17 Nov 2021 10:45:04 +0800
+Message-ID: <1637117108-230103-12-git-send-email-chenxiang66@hisilicon.com>
 X-Mailer: git-send-email 2.8.1
 In-Reply-To: <1637117108-230103-1-git-send-email-chenxiang66@hisilicon.com>
 References: <1637117108-230103-1-git-send-email-chenxiang66@hisilicon.com>
@@ -43,89 +43,76 @@ X-Mailing-List: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-During the process of event PORT_BYTES_DMAED, it queues work
-DISCE_DISCOVER_DOMAIN and then flush workqueue ha->disco_q.
-If new phyup occurs during resming SAS controller, the work
-PORTE_BYTES_DMAED of new phys occurs before suspended phys', then work
-DISCE_DISCOVER_DOMAIN of new phy requires the active of SAS controller
-(It requires to resume SAS controller by function scsi_sysfs_add_sdev()
-and some other functions such as fucntion add_device_link()).
-But the active of SAS controller requires the complete of work
-PORTE_BYTES_DMAED of suspended phys while it is blocked by new phy's work
-on ha->event_q. So there is a deadlock and it is released only after
-resume timeout.
-
-To solve the issue, defer works of new phys during suspend and queue those
-defer works after SAS controller becomes active.
+In the 2rd part of function __sas_drain_work, it queues defer work. And it
+will be used in other places, so refactor out sas_queue_deferred_work().
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Reviewed-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/libsas/sas_event.c | 24 ++++++++++++++++++++++++
- drivers/scsi/libsas/sas_init.c  |  1 +
- 2 files changed, 25 insertions(+)
+ drivers/scsi/libsas/sas_event.c    | 25 ++++++++++++++-----------
+ drivers/scsi/libsas/sas_internal.h |  1 +
+ 2 files changed, 15 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/libsas/sas_event.c b/drivers/scsi/libsas/sas_event.c
-index 01e544ca518a..626ef96b9348 100644
+index af605620ea13..01e544ca518a 100644
 --- a/drivers/scsi/libsas/sas_event.c
 +++ b/drivers/scsi/libsas/sas_event.c
-@@ -139,6 +139,24 @@ static void sas_phy_event_worker(struct work_struct *work)
- 	sas_free_event(ev);
+@@ -41,12 +41,23 @@ static int sas_queue_event(int event, struct sas_work *work,
+ 	return rc;
  }
  
-+/* defer works of new phys during suspend */
-+static bool sas_defer_event(struct asd_sas_phy *phy, struct asd_sas_event *ev)
-+{
-+	struct sas_ha_struct *ha = phy->ha;
-+	unsigned long flags;
-+	bool deferred = false;
-+
-+	spin_lock_irqsave(&ha->lock, flags);
-+	if (test_bit(SAS_HA_RESUMING, &ha->state) && !phy->suspended) {
-+		struct sas_work *sw = &ev->work;
-+
-+		list_add_tail(&sw->drain_node, &ha->defer_q);
-+		deferred = true;
+-
+-void __sas_drain_work(struct sas_ha_struct *ha)
++void sas_queue_deferred_work(struct sas_ha_struct *ha)
+ {
+ 	struct sas_work *sw, *_sw;
+ 	int ret;
+ 
++	spin_lock_irq(&ha->lock);
++	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
++		list_del_init(&sw->drain_node);
++		ret = sas_queue_work(ha, sw);
++		if (ret != 1)
++			sas_free_event(to_asd_sas_event(&sw->work));
 +	}
-+	spin_unlock_irqrestore(&ha->lock, flags);
-+	return deferred;
++	spin_unlock_irq(&ha->lock);
 +}
 +
- int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
- 			  gfp_t gfp_flags)
- {
-@@ -154,6 +172,9 @@ int sas_notify_port_event(struct asd_sas_phy *phy, enum port_event event,
++void __sas_drain_work(struct sas_ha_struct *ha)
++{
+ 	set_bit(SAS_HA_DRAINING, &ha->state);
+ 	/* flush submitters */
+ 	spin_lock_irq(&ha->lock);
+@@ -55,16 +66,8 @@ void __sas_drain_work(struct sas_ha_struct *ha)
+ 	drain_workqueue(ha->event_q);
+ 	drain_workqueue(ha->disco_q);
  
- 	INIT_SAS_EVENT(ev, sas_port_event_worker, phy, event);
- 
-+	if (sas_defer_event(phy, ev))
-+		return 0;
-+
- 	ret = sas_queue_event(event, &ev->work, ha);
- 	if (ret != 1)
- 		sas_free_event(ev);
-@@ -177,6 +198,9 @@ int sas_notify_phy_event(struct asd_sas_phy *phy, enum phy_event event,
- 
- 	INIT_SAS_EVENT(ev, sas_phy_event_worker, phy, event);
- 
-+	if (sas_defer_event(phy, ev))
-+		return 0;
-+
- 	ret = sas_queue_event(event, &ev->work, ha);
- 	if (ret != 1)
- 		sas_free_event(ev);
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 069e40fc8411..dc35f0f8eae3 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -446,6 +446,7 @@ static void _sas_resume_ha(struct sas_ha_struct *ha, bool drain)
- 		sas_drain_work(ha);
- 	clear_bit(SAS_HA_RESUMING, &ha->state);
- 
+-	spin_lock_irq(&ha->lock);
+ 	clear_bit(SAS_HA_DRAINING, &ha->state);
+-	list_for_each_entry_safe(sw, _sw, &ha->defer_q, drain_node) {
+-		list_del_init(&sw->drain_node);
+-		ret = sas_queue_work(ha, sw);
+-		if (ret != 1)
+-			sas_free_event(to_asd_sas_event(&sw->work));
+-
+-	}
+-	spin_unlock_irq(&ha->lock);
 +	sas_queue_deferred_work(ha);
- 	/* send event PORTE_BROADCAST_RCVD to identify some new inserted
- 	 * disks for expander
- 	 */
+ }
+ 
+ int sas_drain_work(struct sas_ha_struct *ha)
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index ad9764a976c3..acd515c01861 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -57,6 +57,7 @@ void sas_unregister_ports(struct sas_ha_struct *sas_ha);
+ 
+ void sas_disable_revalidation(struct sas_ha_struct *ha);
+ void sas_enable_revalidation(struct sas_ha_struct *ha);
++void sas_queue_deferred_work(struct sas_ha_struct *ha);
+ void __sas_drain_work(struct sas_ha_struct *ha);
+ 
+ void sas_deform_port(struct asd_sas_phy *phy, int gone);
 -- 
 2.33.0
 
