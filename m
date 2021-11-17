@@ -2,222 +2,101 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15021C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 10:43:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF53C433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 12:24:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E509F63238
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 10:43:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CE3F61544
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 12:24:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234321AbhKQKqF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 05:46:05 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33330 "EHLO
+        id S237262AbhKQM1X (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 07:27:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56162 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231650AbhKQKqF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 05:46:05 -0500
-Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2698AC061570
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 02:43:07 -0800 (PST)
-Received: by mail-pl1-x62b.google.com with SMTP id b11so1744465pld.12
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 02:43:07 -0800 (PST)
+        with ESMTP id S233318AbhKQM1W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 07:27:22 -0500
+Received: from mail-pj1-x1036.google.com (mail-pj1-x1036.google.com [IPv6:2607:f8b0:4864:20::1036])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0D36BC061570
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 04:24:24 -0800 (PST)
+Received: by mail-pj1-x1036.google.com with SMTP id w33-20020a17090a6ba400b001a722a06212so4333173pjj.0
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 04:24:24 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:mime-version;
-        bh=T54WfLJKrVRvLZ1LMuisO39598TAhuMzh2M+iNDr5Ms=;
-        b=hJZw53UGdTsLLFNbsXG70vbZYSz8bOFvQN7Y7KrwuXSeJl9r1p1D2A70rEHGAqEf2w
-         uZkC1V0Q35mjAAX8BYM422j4rJqc5bWq1wkVTKtSGbN8Y0vKjrkrOU1nWLi0x2tc9sVa
-         6q8itPt8FD1cAGSRm/L/uRaXjMo43YdeB88ig=
+        bh=FyZnQATfmBEocUPJamwyU6YqoVMNOgdnEJtyZC2ZT1A=;
+        b=YF62MwTbWkioswLrjaM3lJlEBwgauvEWdwZfPV+27OPsFqoYacNIn+nKiQMmB+r2A5
+         UCfTc64jLJzsEw7Rt02DeuAzHY4/OSuNeEFTUNfmiBnXJ36yLAk0huZBz8lqymOrB94o
+         aviykVQtO7iuehgiWscRE64Fhh2XZmMrnJwn0=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=T54WfLJKrVRvLZ1LMuisO39598TAhuMzh2M+iNDr5Ms=;
-        b=ZdpfCMUL1EC0phiLQtn8rkd3MjlUO3h9Rphstn+tkuc8onj7JdW2oZtY9oHHriX6Y6
-         lA0M/D+bY5Z+m3NWbRs8GhJS8vR4bTooTiUbyLbUnQpoPhCoYCt1jFRb3nikrwmSZoiN
-         ll5qgYwGML7FX8Hrnsn5iWvuLc7Fy1xM4M2o4IQScFa8v63ler+0Xqf3kWh2cJ7Ytkny
-         tyiCWpO7ka/Ct0Vz9m3iD5VdXFdaFCZm/eTBC2b3AE5DQLFGQ22moO7ijqcqLSurdixZ
-         4damjKcu8/v2aqPFzeH0wHVC4evu+7+bzAV96Md97ybw+fCWP7JXBicLOlmZOFxY9/TE
-         B48g==
-X-Gm-Message-State: AOAM532lBJnHxlMOQTkntOisMG/3iZHs/JWHHzgM5fe+xDtNK1v/+fae
-        IHyj94ZmdY5cuc4/1jDOXYcGs2f28opCQV6vOOoAUFPpSsvrhy32hwTc4oabZwuET+tLByQQqJc
-        1aZ4PhSbMMmfUZXzW1UZfhIbs7fKwjAvzQKFuADn3dvHkWqdXKSRP3gK7dfOhdzNr1G5Vo9lKC2
-        bFyeAhPwoK
-X-Google-Smtp-Source: ABdhPJw1Imp0YoKyxzTQVGjuNjbIsGvVx6HaRyCVWIqxUJ6SP9SWEAwO8KTFkr4IAMtvnVhb3WRJ+g==
-X-Received: by 2002:a17:90b:4c8c:: with SMTP id my12mr8292504pjb.157.1637145786272;
-        Wed, 17 Nov 2021 02:43:06 -0800 (PST)
+        bh=FyZnQATfmBEocUPJamwyU6YqoVMNOgdnEJtyZC2ZT1A=;
+        b=ZO2OIGvJOM9d2P+Mf2OBkASaspKsovH+uhAHtHc44rsWlLIi+o12B8eLIemVjBlmoH
+         1wbTSI9DXQwUpNZb2PtwuTYB+QbTQELcDRH+F5sclJzSXic7PnodFrGX4p2NeITDXoKA
+         dlOrV1u0jhBFHcy1UeISY2vvKOSQPJXiBg8yBvaDDQXYt44jnxUTtxVL7BzR+KJtp5kj
+         oiTa8Gux2Widftrifi+5nFABz/8sQwVJx+/263Lt22NdYVUIA5sE9numbXc0eWQtr5b0
+         7CuhCSAgWkRL1F0TzBicxruxIO1rcjq7leG6etv19mU6LCoPTnJmVo7iO7lbyxPJYJnL
+         /iWQ==
+X-Gm-Message-State: AOAM532XyBRqH+x3I7B9rsWQqNCHhINBwCcVi+ERUUyQfTTMaVBL3x80
+        SOITCQRgQHanVqZ5UMUGTgxMk+I/tB3brppgwrfdSzbxWsviGIEGTqhlHH7jXw7ddkQ38kX8BWW
+        q5sQ9DWELLpaXCnVx4gCsmgvPgu0cO5A7qms5Og8iMhVLMBR/JHWwXcjhWfk6zRHH4rGB/mUBYC
+        4jklNidS11
+X-Google-Smtp-Source: ABdhPJxlap/vq2b/7uDDADtMSc3S5+Lpkxime9dSyAwCdzKfs25Rd948PskrT2psw2qs5L43bLcYwQ==
+X-Received: by 2002:a17:90b:4f84:: with SMTP id qe4mr9170763pjb.102.1637151863253;
+        Wed, 17 Nov 2021 04:24:23 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id om8sm5392708pjb.12.2021.11.17.02.43.04
+        by smtp.gmail.com with ESMTPSA id bf13sm5013257pjb.47.2021.11.17.04.24.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Nov 2021 02:43:05 -0800 (PST)
+        Wed, 17 Nov 2021 04:24:22 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 Cc:     suganath-prabu.subramani@broadcom.com,
         Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpt3sas: Fix system falling into readonly mode
-Date:   Wed, 17 Nov 2021 16:20:58 +0530
-Message-Id: <20211117105058.3505-1-sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Fix incorrect system timestamp showed in IOC FW
+Date:   Wed, 17 Nov 2021 18:02:15 +0530
+Message-Id: <20211117123215.25487-1-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="0000000000001065bd05d0f9b547"
+        boundary="00000000000046a25d05d0fb1fc3"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---0000000000001065bd05d0f9b547
-Content-Type: text/plain; charset=UTF-8
+--00000000000046a25d05d0fb1fc3
 Content-Transfer-Encoding: 8bit
 
-While determining the SAS address of a drive, the driver checks whether
-the handle number is less than the HBA phys count or not.
-If the handle number is less than the HBA phy’s count then driver
-assumes that this handle belongs to HBA and hence it assigns the
-HBA SAS address.
-During IOC firmware downgrade operation, if the number of HBA phys got
-reduced and the OS drive’s device handle falls below start of the day
-HBA phys count then while determining the OS drive’s SAS address
-driver uses the HBA SAS address. This leads to a mismatch of drive’s
-SAS address and hence the driver unregisters the OS drive and the
-system falls into read only mode.
+For updating the IOC Fimrware's timestamp with
+system timestamp, driver issues the Mpi26IoUnitControlRequest
+message. While framing the Mpi26IoUnitControlRequest
+driver should copy the current timestamp value's lower 32 bits in
+IOCParameterValue field and higher 32 bits in Reserved7 field.
 
-Updated the IOC's num_phys to HBA phy’s count provided by actual
-loaded firmware. So that while determining the SAS address driver
-uses updated HBA phy’s count value instead of using a
-start of the day’s HBA phy’s count.
-
-Fixes: a5e99fda0172("mpt3sas: Update hba_port objects after host reset")
+Fixes: f98790c00375("mpt3sas: Sync time periodically between driver and firmware")
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  4 ++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 57 +++++++++++++++++++++++++++-
- 2 files changed, 60 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index db6a759de1e9..a0af986633d2 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -142,6 +142,8 @@
- 
- #define MPT_MAX_CALLBACKS		32
- 
-+#define MPT_MAX_HBA_NUM_PHYS		32
-+
- #define INTERNAL_CMDS_COUNT		10	/* reserved cmds */
- /* reserved for issuing internally framed scsi io cmds */
- #define INTERNAL_SCSIIO_CMDS_COUNT	3
-@@ -798,6 +800,7 @@ struct _sas_phy {
-  * @enclosure_handle: handle for this a member of an enclosure
-  * @device_info: bitwise defining capabilities of this sas_host/expander
-  * @responding: used in _scsih_expander_device_mark_responding
-+ * @nr_phys_allocated: Allocated memory for this many count phys
-  * @phy: a list of phys that make up this sas_host/expander
-  * @sas_port_list: list of ports attached to this sas_host/expander
-  * @port: hba port entry containing node's port number info
-@@ -813,6 +816,7 @@ struct _sas_node {
- 	u16	enclosure_handle;
- 	u64	enclosure_logical_id;
- 	u8	responding;
-+	u8	nr_phys_allocated;
- 	struct hba_port *port;
- 	struct	_sas_phy *phy;
- 	struct list_head sas_port_list;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index bb0036b41825..589d0515a00c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -6406,11 +6406,26 @@ _scsih_sas_port_refresh(struct MPT3SAS_ADAPTER *ioc)
- 	int i, j, count = 0, lcount = 0;
- 	int ret;
- 	u64 sas_addr;
-+	u8 num_phys;
- 
- 	drsprintk(ioc, ioc_info(ioc,
- 	    "updating ports for sas_host(0x%016llx)\n",
- 	    (unsigned long long)ioc->sas_hba.sas_address));
- 
-+	mpt3sas_config_get_number_hba_phys(ioc, &num_phys);
-+	if (!num_phys) {
-+		ioc_err(ioc, "failure at %s:%d/%s()!\n",
-+		    __FILE__, __LINE__, __func__);
-+		return;
-+	}
-+
-+	if (num_phys > ioc->sas_hba.nr_phys_allocated) {
-+		ioc_err(ioc, "failure at %s:%d/%s()!\n",
-+		   __FILE__, __LINE__, __func__);
-+		return;
-+	}
-+	ioc->sas_hba.num_phys = num_phys;
-+
- 	port_table = kcalloc(ioc->sas_hba.num_phys,
- 	    sizeof(struct hba_port), GFP_KERNEL);
- 	if (!port_table)
-@@ -6611,6 +6626,30 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
- 			ioc->sas_hba.phy[i].hba_vphy = 1;
- 		}
- 
-+		/*
-+		 * Add new HBA phys to STL if these new phys got added as part
-+		 * of HBA Firmware upgrade/downgrade operation.
-+		 */
-+		if (!ioc->sas_hba.phy[i].phy) {
-+			if ((mpt3sas_config_get_phy_pg0(ioc, &mpi_reply,
-+			    &phy_pg0, i))) {
-+				ioc_err(ioc, "failure at %s:%d/%s()!\n",
-+				    __FILE__, __LINE__, __func__);
-+				continue;
-+			}
-+			ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
-+			    MPI2_IOCSTATUS_MASK;
-+			if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
-+				ioc_err(ioc, "failure at %s:%d/%s()!\n",
-+				    __FILE__, __LINE__, __func__);
-+				continue;
-+			}
-+			ioc->sas_hba.phy[i].phy_id = i;
-+			mpt3sas_transport_add_host_phy(ioc,
-+			    &ioc->sas_hba.phy[i], phy_pg0,
-+			    ioc->sas_hba.parent_dev);
-+			continue;
-+		}
- 		ioc->sas_hba.phy[i].handle = ioc->sas_hba.handle;
- 		attached_handle = le16_to_cpu(sas_iounit_pg0->PhyData[i].
- 		    AttachedDevHandle);
-@@ -6622,6 +6661,19 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
- 		    attached_handle, i, link_rate,
- 		    ioc->sas_hba.phy[i].port);
- 	}
-+	/*
-+	 * Clear the phy details if this phy got disabled as part of
-+	 * HBA Firmware upgrade/downgrade operation.
-+	 */
-+	for (i = ioc->sas_hba.num_phys;
-+	    i < ioc->sas_hba.nr_phys_allocated; i++) {
-+		if (ioc->sas_hba.phy[i].phy &&
-+		    ioc->sas_hba.phy[i].phy->negotiated_linkrate >=
-+		    SAS_LINK_RATE_1_5_GBPS)
-+			mpt3sas_transport_update_links(ioc,
-+			    ioc->sas_hba.sas_address, 0, i,
-+			    MPI2_SAS_NEG_LINK_RATE_PHY_DISABLED, NULL);
-+	}
-  out:
- 	kfree(sas_iounit_pg0);
- }
-@@ -6654,7 +6706,10 @@ _scsih_sas_host_add(struct MPT3SAS_ADAPTER *ioc)
- 			__FILE__, __LINE__, __func__);
- 		return;
- 	}
--	ioc->sas_hba.phy = kcalloc(num_phys,
-+
-+	ioc->sas_hba.nr_phys_allocated = max_t(u8,
-+	    MPT_MAX_HBA_NUM_PHYS, num_phys);
-+	ioc->sas_hba.phy = kcalloc(ioc->sas_hba.nr_phys_allocated,
- 	    sizeof(struct _sas_phy), GFP_KERNEL);
- 	if (!ioc->sas_hba.phy) {
- 		ioc_err(ioc, "failure at %s:%d/%s()!\n",
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 27eb652b564f..81dab9b82f79 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -639,8 +639,8 @@ static void _base_sync_drv_fw_timestamp(struct MPT3SAS_ADAPTER *ioc)
+ 	mpi_request->IOCParameter = MPI26_SET_IOC_PARAMETER_SYNC_TIMESTAMP;
+ 	current_time = ktime_get_real();
+ 	TimeStamp = ktime_to_ms(current_time);
+-	mpi_request->Reserved7 = cpu_to_le32(TimeStamp & 0xFFFFFFFF);
+-	mpi_request->IOCParameterValue = cpu_to_le32(TimeStamp >> 32);
++	mpi_request->Reserved7 = cpu_to_le32(TimeStamp >> 32);
++	mpi_request->IOCParameterValue = cpu_to_le32(TimeStamp & 0xFFFFFFFF);
+ 	init_completion(&ioc->scsih_cmds.done);
+ 	ioc->put_smid_default(ioc, smid);
+ 	dinitprintk(ioc, ioc_info(ioc,
 -- 
 2.27.0
 
 
---0000000000001065bd05d0f9b547
+--00000000000046a25d05d0fb1fc3
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -288,13 +167,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOn+zbhNwhBr8FfPOYMN
-z5LhKrAz44FTphz6L7kusnLZMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTExNzEwNDMwNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOUkVIqblrqKAUexv0Q4
+uDTrxXmKHIsHJuZHciaYpkcUMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTExNzEyMjQyM1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBIivLSVi/cjXgphAFBWM12aPTw+FzfQIRsvd4r
-MHKR8oCjEHx0ZTZVUsSJQp2xk2rxTaFqmBKnzg9aL8PaGwg8lQMDyvtVecXUTHFryx0djuSHewSN
-F6Ze2un915Ji6VAwXfJu1cYVWnUm/LyRz3pXnsIsjY2/Z69mMFDZ3oLTyY23fWy0/IO52DNlOU9E
-ZxgCYe+7+51g7IeSkVuRcQTSct6OzQoFp9Py3kRU5XU/d8Txtxtyho+ARTnJndSw3dC8ExcWuRXT
-qB6mIXB6iCXqjf/mLPL+5ooLcV9dVyXlVad2x9YS0rFDzKgnJ8FweiovMrQhk0zEVinE9NVP8X1m
---0000000000001065bd05d0f9b547--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQCF6jIMThugV+90uJo0+gyyVGR611DekRG51nZq
+B4fnPZY1IgGoytqC7a/rbVVt+vG4hy7em1Pf9XZmgIbfHXpInX4v4GTtHkji4DluY/PCQ8VFTx/3
+QxLFThkV0jYVr2dKd1uj7D/iVOzyMW/7HmDXzflZn/RPhvkrYvVvsGMk/H99aqoSUsaP6GHMDSio
+XDyXtnIpsV3s2iaXSY4yqbn4t844dc0loScJBrGMrak3kR3tgjX91iY8H7dRxNctfAQRs6gQMAmE
+MnWlgiesbbkLfCLs8Uz61kpBzbRoVJxy6vGmQlgnnrCSG9IYT9GzJv/oEA1q7GQZU6tsFdU7lIk4
+--00000000000046a25d05d0fb1fc3--
