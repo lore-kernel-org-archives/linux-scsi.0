@@ -2,74 +2,68 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA8E8C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 05:06:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 04F0FC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B5673619E3
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 05:06:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA56561B2B
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229575AbhKQFJP (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 00:09:15 -0500
-Received: from mail-pl1-f179.google.com ([209.85.214.179]:38575 "EHLO
-        mail-pl1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229436AbhKQFJP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 00:09:15 -0500
-Received: by mail-pl1-f179.google.com with SMTP id o14so1106556plg.5
-        for <linux-scsi@vger.kernel.org>; Tue, 16 Nov 2021 21:06:17 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20210112;
-        h=x-gm-message-state:subject:from:to:cc:references:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=9lwKFazQ6G5LS0TZo/VrRi1lrR/Uvr51kovE8KL9KGw=;
-        b=vDn1f7646H74r0o17Zmo0EL1OSg+BCIiCpMlEfCIGv7ehODKQrS66ZHUfJXQiJPEdC
-         SAH3hg3G55eMhONdpkbO/q4ZreXWGOpQ6v91kwL/ab95TUnofAFlwe1j+Ak4R5eiPkcx
-         7ai5/7xtDF0I/tqMz1mXZ5wd7h6wsXPyDdBqnNi/AmWVvs41pL2OFT/xzu4Vp4EK9gNA
-         XXn6ti/hMT16gWEIsEERCYB+2UyNSJlH/za4l8H8RQFdI7fGm1eE91enbKoqv7UwTLzo
-         sSo8r7x1TXl/MqBHlbfXi96FY0VuzxbQiTq5j3190s8W/19BK2oFDgnAl1NfyRYntqDk
-         Vx0g==
-X-Gm-Message-State: AOAM531DkWVyZjQAxEqsMpunQW1+Po4pJH3b2nMbuk0uJmpz5Tm8c++q
-        KLPgkefQU1Y9g6DZB5XdvtQ=
-X-Google-Smtp-Source: ABdhPJwTyPzK5SUJ3Ur+dE/rzM72IXcBIFjl6tWhxS1JPPsT9dv5BLPANfPaFdAwkRCZSXayqCMIMw==
-X-Received: by 2002:a17:90a:3b02:: with SMTP id d2mr5690814pjc.159.1637125577391;
-        Tue, 16 Nov 2021 21:06:17 -0800 (PST)
-Received: from [192.168.51.110] (c-73-241-217-19.hsd1.ca.comcast.net. [73.241.217.19])
-        by smtp.gmail.com with ESMTPSA id f1sm21394335pfj.184.2021.11.16.21.06.16
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 16 Nov 2021 21:06:16 -0800 (PST)
-Subject: Re: [PATCH 01/15] libsas: Don't always drain event workqueue for HA
- resume
-From:   Bart Van Assche <bvanassche@acm.org>
-To:     chenxiang <chenxiang66@hisilicon.com>, jejb@linux.ibm.com,
-        martin.petersen@oracle.com
-Cc:     linux-scsi@vger.kernel.org, linuxarm@huawei.com,
-        john.garry@huawei.com
-References: <1637117108-230103-1-git-send-email-chenxiang66@hisilicon.com>
- <1637117108-230103-2-git-send-email-chenxiang66@hisilicon.com>
- <91972e78-78cc-2b38-f730-a26a8a1b607c@acm.org>
-Message-ID: <af98a24a-60ec-4cd0-e676-6d1f4e75b938@acm.org>
-Date:   Tue, 16 Nov 2021 21:06:14 -0800
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101
- Thunderbird/78.14.0
+        id S233001AbhKQGRU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 01:17:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56026 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229632AbhKQGRT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 01:17:19 -0500
+Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 828C7C061746;
+        Tue, 16 Nov 2021 22:14:21 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
+        Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:Content-ID:
+        Content-Description:In-Reply-To:References;
+        bh=DFAEmPcXtpPd/YSnlYCa7vsCV48/DH47DKoFE2HC6W8=; b=RQs+dlZc/iJE0doyQERQ7LRMgh
+        3X1tfu/Q30APhRnF5Ef4VirkMrLgZ1op5aImQLxh2b11YXZPQ4A0b1Pz5C7orl1nszA1fJNUQa1s0
+        CchP5jsjhwMwU8fbUZMY/AVoGjYPobNJqsscv2ur2eRykbRO9NEACOeX4jVtYHit0/ub9X2HwUSu9
+        WhX5xrw4sP/NC1ISaYvxPA0dNQlSlQB8TtXdtJEuSaZI8m5mgr7EpJIYUzCcZnw9qw7C2F1eLhak7
+        ELd0fHnmNS+wpmEoMjwzFV2S7/f1OMSiHxhzHgT9BUeFCP/qEfqGOup2GJtEsihFbjIKuIkEG2qNC
+        27gP8/EQ==;
+Received: from 213-225-5-109.nat.highway.a1.net ([213.225.5.109] helo=localhost)
+        by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
+        id 1mnECr-007MEM-GM; Wed, 17 Nov 2021 06:14:06 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     Jens Axboe <axboe@kernel.dk>
+Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Miquel Raynal <miquel.raynal@bootlin.com>,
+        Richard Weinberger <richard@nod.at>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-mtd@lists.infradead.org
+Subject: move all struct request releated code out of blk-core.c (rebased)
+Date:   Wed, 17 Nov 2021 07:13:53 +0100
+Message-Id: <20211117061404.331732-1-hch@lst.de>
+X-Mailer: git-send-email 2.30.2
 MIME-Version: 1.0
-In-Reply-To: <91972e78-78cc-2b38-f730-a26a8a1b607c@acm.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by casper.infradead.org. See http://www.infradead.org/rpr.html
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/16/21 8:14 PM, Bart Van Assche wrote:
-> On 11/16/21 18:44, chenxiang wrote:
->> [ ... ]
-> 
-> Where is the cover letter of this patch series? Please always
-> include a cover letter with a patch series.
+Hi Jens,
 
-Oops, I was too fast. Patches 01/15..15/15 arrived in my mailbox before the cover
-letter. I just received the cover letter.
+this series (against the for-5.16/passthrough-flag branch) removes the
+remaining struct request related code from blk-core.c and cleans up a
+few related bits around that.
 
-Thanks,
-
-Bart.
+Diffstat:
+ b/block/Makefile            |    2 
+ b/block/blk-core.c          |  341 --------------------------
+ b/block/blk-mq.c            |  573 ++++++++++++++++++++++++++++++++++++--------
+ b/block/blk-mq.h            |    3 
+ b/block/blk.h               |   33 --
+ b/drivers/mtd/mtd_blkdevs.c |   10 
+ b/drivers/mtd/ubi/block.c   |    6 
+ b/drivers/scsi/scsi_lib.c   |   42 +++
+ b/include/linux/blk-mq.h    |   13 
+ block/blk-exec.c            |  116 --------
+ 10 files changed, 552 insertions(+), 587 deletions(-)
