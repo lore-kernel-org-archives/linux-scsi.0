@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B38C0C4332F
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E84EFC433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A0BA761BFE
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAE3661BFE
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233553AbhKQGR2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 01:17:28 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56072 "EHLO
+        id S233563AbhKQGRf (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 01:17:35 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56098 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233549AbhKQGRZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 01:17:25 -0500
+        with ESMTP id S233573AbhKQGR2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 01:17:28 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A02BDC061746;
-        Tue, 16 Nov 2021 22:14:27 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A5582C061206;
+        Tue, 16 Nov 2021 22:14:29 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=ZokOpOCOOVArEBa9U6jFCgb/N+Jgswld+TuNUukB1Xw=; b=QkLvdG6MDjp9hn2CJkAmpoKZxc
-        ySgsWoUOmSavCwQkV9lJtIHBA2KjQDfy/ODn5dbQeBwPiYnbNQBquPKpTVhSWDqz+OI3zGi1PpQsa
-        7qXdXaRVUoDgXW1mxGw2gTU9NjO1ux2LUn6ryYIrWHSJSA5YhXvGTmKgTIXH9d+qRIYoaUuNDRkID
-        vtdmvBsn/gFmEeeAE022krvuArHIzCbjmIbQDAhVGkr5nlL8I2TroEwc0aoIZYEaCN5KQSr01PwuC
-        wTi7pXxYcyvQl+c6AlmQKlRqPXTwvwu5JVEWwdropRtDgMtnyuOd0KOZSm7sKHxC1+Iop5o7aJ2Jl
-        w57hJOkg==;
+        bh=viN/M0s94isJpAI9XG+tAyGwzk5B+gYmCJUD6Ta5toY=; b=DmCyOSBxb/zzr/09ETedwRIi2e
+        wWu/BkxWyRBfumSegeofjM4bpJqi0m9vEI6i0xBOuwI9Gwh9MMNARP0J1F9Vi9I05uDZZCDVSr+W7
+        v9lYzYgc/g9CT+TAXDZrBx3TfrOM9xdGQVNfZ5UL98rTwqUPY69IfH0kbS2cMcJum/4sAFZCyejEl
+        Ld9+aLsy/l6DJB7tm7Tuw0xxCu6mDG81/dFRT8+GIjorxEdkJ7tDF6hlJWRn+vUKnOlAoGTIyotui
+        COsMsboULPAegSzeAsB1bqpm86SsCfyVxLTBY193JUQFR0jleXGT9xRyU2za1UJ6jIBPeHLvLrHJd
+        qU0PwygQ==;
 Received: from 213-225-5-109.nat.highway.a1.net ([213.225.5.109] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mnED7-007MGw-Qg; Wed, 17 Nov 2021 06:14:22 +0000
+        id 1mnED9-007MHU-OQ; Wed, 17 Nov 2021 06:14:24 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -38,9 +38,9 @@ Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-mtd@lists.infradead.org
-Subject: [PATCH 10/11] block: move blk_print_req_error to blk-mq.c
-Date:   Wed, 17 Nov 2021 07:14:03 +0100
-Message-Id: <20211117061404.331732-11-hch@lst.de>
+Subject: [PATCH 11/11] block: don't include blk-mq headers in blk-core.c
+Date:   Wed, 17 Nov 2021 07:14:04 +0100
+Message-Id: <20211117061404.331732-12-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211117061404.331732-1-hch@lst.de>
 References: <20211117061404.331732-1-hch@lst.de>
@@ -51,83 +51,34 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-This function is only used by the request completion path.  Factor out
-a blk_status_to_str to keep blk_errors private in blk-core.c.
+All request based code is in the blk-mq files now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-core.c | 15 +++------------
- block/blk-mq.c   | 13 +++++++++++++
- block/blk.h      |  2 +-
- 3 files changed, 17 insertions(+), 13 deletions(-)
+ block/blk-core.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 89971630f092f..5722c1d9da09c 100644
+index 5722c1d9da09c..ee54b34d5e99c 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -199,22 +199,13 @@ int blk_status_to_errno(blk_status_t status)
- }
- EXPORT_SYMBOL_GPL(blk_status_to_errno);
+@@ -16,7 +16,6 @@
+ #include <linux/module.h>
+ #include <linux/bio.h>
+ #include <linux/blkdev.h>
+-#include <linux/blk-mq.h>
+ #include <linux/blk-pm.h>
+ #include <linux/blk-integrity.h>
+ #include <linux/highmem.h>
+@@ -47,8 +46,6 @@
+ #include <trace/events/block.h>
  
--void blk_print_req_error(struct request *req, blk_status_t status)
-+const char *blk_status_to_str(blk_status_t status)
- {
- 	int idx = (__force int)status;
+ #include "blk.h"
+-#include "blk-mq.h"
+-#include "blk-mq-sched.h"
+ #include "blk-pm.h"
+ #include "blk-throttle.h"
  
- 	if (WARN_ON_ONCE(idx >= ARRAY_SIZE(blk_errors)))
--		return;
--
--	printk_ratelimited(KERN_ERR
--		"%s error, dev %s, sector %llu op 0x%x:(%s) flags 0x%x "
--		"phys_seg %u prio class %u\n",
--		blk_errors[idx].name,
--		req->rq_disk ? req->rq_disk->disk_name : "?",
--		blk_rq_pos(req), req_op(req), blk_op_str(req_op(req)),
--		req->cmd_flags & ~REQ_OP_MASK,
--		req->nr_phys_segments,
--		IOPRIO_PRIO_CLASS(req->ioprio));
-+		return "<null>";
-+	return blk_errors[idx].name;
- }
- 
- /**
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index f8a39f4fce01e..1feb9ab65f28a 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -717,6 +717,19 @@ static void blk_account_io_completion(struct request *req, unsigned int bytes)
- 	}
- }
- 
-+static void blk_print_req_error(struct request *req, blk_status_t status)
-+{
-+	printk_ratelimited(KERN_ERR
-+		"%s error, dev %s, sector %llu op 0x%x:(%s) flags 0x%x "
-+		"phys_seg %u prio class %u\n",
-+		blk_status_to_str(status),
-+		req->rq_disk ? req->rq_disk->disk_name : "?",
-+		blk_rq_pos(req), req_op(req), blk_op_str(req_op(req)),
-+		req->cmd_flags & ~REQ_OP_MASK,
-+		req->nr_phys_segments,
-+		IOPRIO_PRIO_CLASS(req->ioprio));
-+}
-+
- /**
-  * blk_update_request - Complete multiple bytes without completing the request
-  * @req:      the request being processed
-diff --git a/block/blk.h b/block/blk.h
-index a1cbf17d18b98..296e3010f8d65 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -250,7 +250,7 @@ static inline void blk_integrity_del(struct gendisk *disk)
- 
- unsigned long blk_rq_timeout(unsigned long timeout);
- void blk_add_timer(struct request *req);
--void blk_print_req_error(struct request *req, blk_status_t status);
-+const char *blk_status_to_str(blk_status_t status);
- 
- bool blk_attempt_plug_merge(struct request_queue *q, struct bio *bio,
- 		unsigned int nr_segs, bool *same_queue_rq);
 -- 
 2.30.2
 
