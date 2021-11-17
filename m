@@ -2,77 +2,77 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55D56C433FE
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 08:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 61EDBC433F5
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 10:00:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 36F2D63231
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 08:34:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B8A661AED
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 10:00:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229944AbhKQIhw (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 03:37:52 -0500
-Received: from Galois.linutronix.de ([193.142.43.55]:58402 "EHLO
-        galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229716AbhKQIhv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 03:37:51 -0500
-Date:   Wed, 17 Nov 2021 09:34:50 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020; t=1637138092;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LmkNgBHietKVu8Mte2YXrWfeDL2G6tqiH2IZ5HuMaQo=;
-        b=mRUTOVzNf7t1sNT3UWDiqwbesA3vtPGtA1rkL6doTGzPLrchC16Cbu5aBXizU3ACaxyX03
-        8jravJiQNio60wp/JEueci1W1XReq8X6WYROtk30/tro/ggocT+Ke09UV8o2onPms/vWCV
-        TTD/SkQXmiQ4BptiosCHBkH/Q78T5ElMGOkvD5oA4daD81l8NUzfa+wjOYgUlSlDU7PMJ0
-        lXnWKP+GbHCw6T4iTFw+AWNjg1TxPnv1o/aR/uA/AyBVrYzs+CLLHAHDS0Rz8TEQJfOte+
-        qJuNAbVf02Sxu3MkPUrQdwuckmyuECmxvUrsCkIo4kJqkCXiaC5ER+n8LRNcXQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-        s=2020e; t=1637138092;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         in-reply-to:in-reply-to:references:references;
-        bh=LmkNgBHietKVu8Mte2YXrWfeDL2G6tqiH2IZ5HuMaQo=;
-        b=hv+xK+RYzJAupVxyMrZ7Q+e7GbLjaNeEQdZI5Tu0pK2knXxMtS9DGJ9FbmD7JhXQzJQGNI
-        W6UEZfN4qz5yUOCA==
-From:   Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-To:     Davidlohr Bueso <dave@stgolabs.net>
-Cc:     martin.petersen@oracle.com, jejb@linux.ibm.com, hare@suse.de,
-        tglx@linutronix.de, linux-scsi@vger.kernel.org,
-        linux-rt-users@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Davidlohr Bueso <dbueso@suse.de>
-Subject: Re: [PATCH 3/3] scsi/fcoe: Add a local_lock to percpu localport
- statistics
-Message-ID: <20211117083450.ccgbcmgtwmbkqiqy@linutronix.de>
-References: <20211117025956.79616-1-dave@stgolabs.net>
- <20211117025956.79616-4-dave@stgolabs.net>
+        id S235926AbhKQKC6 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 05:02:58 -0500
+Received: from verein.lst.de ([213.95.11.211]:49815 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S235849AbhKQKC5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 17 Nov 2021 05:02:57 -0500
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 863B668AFE; Wed, 17 Nov 2021 10:59:53 +0100 (CET)
+Date:   Wed, 17 Nov 2021 10:59:53 +0100
+From:   Christoph Hellwig <hch@lst.de>
+To:     Tianyu Lan <ltykernel@gmail.com>
+Cc:     dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+        tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, x86@kernel.org,
+        hpa@zytor.com, jgross@suse.com, sstabellini@kernel.org,
+        boris.ostrovsky@oracle.com, kys@microsoft.com,
+        haiyangz@microsoft.com, sthemmin@microsoft.com, wei.liu@kernel.org,
+        decui@microsoft.com, joro@8bytes.org, will@kernel.org,
+        davem@davemloft.net, kuba@kernel.org, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, hch@lst.de, m.szyprowski@samsung.com,
+        robin.murphy@arm.com, xen-devel@lists.xenproject.org,
+        michael.h.kelley@microsoft.com,
+        Tianyu Lan <Tianyu.Lan@microsoft.com>,
+        iommu@lists.linux-foundation.org, linux-hyperv@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        netdev@vger.kernel.org, vkuznets@redhat.com, brijesh.singh@amd.com,
+        konrad.wilk@oracle.com, parri.andrea@gmail.com,
+        thomas.lendacky@amd.com, dave.hansen@intel.com
+Subject: Re: [PATCH 1/5] x86/Swiotlb: Add Swiotlb bounce buffer remap
+ function for HV IVM
+Message-ID: <20211117095953.GA10330@lst.de>
+References: <20211116153923.196763-1-ltykernel@gmail.com> <20211116153923.196763-2-ltykernel@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20211117025956.79616-4-dave@stgolabs.net>
+In-Reply-To: <20211116153923.196763-2-ltykernel@gmail.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 2021-11-16 18:59:56 [-0800], Davidlohr Bueso wrote:
-> Updating the per-CPU lport->stats relies on disabling preemption
-> with get/put_cpu() semantics. However, this is a bit harsh for
-> PREEMPT_RT and by using a local_lock, it can allow the region
-> to be preemptible, guaranteeing CPU locality, without making any
-> difference to the non-RT common case as it will continue to
-> disable preemption.
+The subject is wrong, nothing x86-specific here.  Please use
+"swiotlb: " as the prefix
 
-What about adding a struct u64_stats_sync where the stats are updated.
-You have to use u64_stats_update_begin() at the beginning and the
-matching end function instead the get_cpu()/ local_lock().
-You need just ensure that there is only one writer at a time. Network
-wise it is easy as there are often per-queue stats so one writer at a
-time :)
+> + * @vaddr:	The vaddr of the swiotlb memory pool. The swiotlb
+> + *		memory pool may be remapped in the memory encrypted case and store
 
-Looking closer, the current approach appears broken in that regard:
-stats members, such as TxFrames/ TxWords which are incremented in
-bnx2fc_xmit(), are 64bit. Reading/ writing them requires two operations
-on 32bit architectures. But we probably don't care because stats and it
-happens hardly and performance of course. This is the cute part about
-u64_stats_sync, it magically vanishes on 64bit architectures.
+Please avoid the overly long line.
 
-Sebastian
+> +	/*
+> +	 * With swiotlb_unencrypted_base setting, swiotlb bounce buffer will
+> +	 * be remapped in the swiotlb_update_mem_attributes() and return here
+> +	 * directly.
+> +	 */
+
+I'd word this as:
+
+	/*
+	 * If swiotlb_unencrypted_base is set, the bounce buffer memory will
+	 * be remapped and cleared in swiotlb_update_mem_attributes.
+	 */
+> +	ret = swiotlb_init_io_tlb_mem(mem, __pa(tlb), nslabs, false);
+> +	if (ret) {
+> +		memblock_free(mem->slots, alloc_size);
+> +		return ret;
+> +	}
+
+With the latest update swiotlb_init_io_tlb_mem will always return 0,
+so no need for the return value change or error handling here.
