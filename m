@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA4DBC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37E6DC433FE
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id B4E2861B66
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 248B861BFA
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233561AbhKQGR1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 01:17:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56052 "EHLO
+        id S233574AbhKQGR2 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 01:17:28 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56062 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233524AbhKQGRW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 01:17:22 -0500
+        with ESMTP id S233539AbhKQGRY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 01:17:24 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BF1CDC061746;
-        Tue, 16 Nov 2021 22:14:24 -0800 (PST)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4609EC061764;
+        Tue, 16 Nov 2021 22:14:26 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=YsVADdvySqvor3UK21cvT33w97NZxYXDkS3ex6r86iI=; b=nYaz/QtfTEsCoimgiVeMSnR0a3
-        bjCAdWiszNJ8oMHq6AbygQXk6w31+50+LS1945gYguXMa004V4s3rIVlTfEzEHFceh+FCKmw0f5Yi
-        U51HtmnUDzX3QWk99YWczAf8dYie0DZ+7xDm1I02g0ADyzgp5NLhCMaq7uimHALZT4/xSqvk3gKP9
-        gfEiZJQ8OhSjUh1eZtnFjOrHtTb7hczAsVcdkkTmDk8zy7MPEX9jOl0jg7NMN9HcYCp2ryfKANwtF
-        +gxJOKZR6RBJ/P3x6cWi/xFDRGzwxlXT9hGY9R5poco7LObpxki51UWPHUSB/m5MOPxcdx5Nynj+l
-        igqlBEfw==;
+        bh=5Y57JG7VXaoFWW1akQPI6hTMWlsbyIej2L4X3VlG1LE=; b=EWByrGMG+/If75tDNJKhTRfVCs
+        8wmJEu33W62TXmRsyr2sJE7UB0/H6rgMJq6/naMYCMVc0hGTlAAJURaRmiSnC/bnOYrp79rbGutil
+        nleJTeHxJYdm/VaoVyRkuuNYS4q8ydLUz0PiNxIOfrBCfpdzrB+jbHREtOfi5zNzKGbzSnKEMiIJO
+        dsGrwD/ME6GTH7RhEHRkCmPsLS55YGh3enE4+7FSRwIOpsdHUXtCW7dHq6dQkgKck1zVCasr23MFV
+        4IxjnmFzX9Scqr2yT/29aRFUO3dP8K9T3zeLLBgSBDCF0Dwticqzv19aotFn6izACPL6CMoCRRDZ/
+        EKBaTgiQ==;
 Received: from 213-225-5-109.nat.highway.a1.net ([213.225.5.109] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mnED4-007MGI-Hw; Wed, 17 Nov 2021 06:14:19 +0000
+        id 1mnED6-007MGe-9r; Wed, 17 Nov 2021 06:14:21 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -38,9 +38,9 @@ Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-mtd@lists.infradead.org
-Subject: [PATCH 08/11] block: move blk_account_io_{start,done} to blk-mq.c
-Date:   Wed, 17 Nov 2021 07:14:01 +0100
-Message-Id: <20211117061404.331732-9-hch@lst.de>
+Subject: [PATCH 09/11] block: move blk_dump_rq_flags to blk-mq.c
+Date:   Wed, 17 Nov 2021 07:14:02 +0100
+Message-Id: <20211117061404.331732-10-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211117061404.331732-1-hch@lst.de>
 References: <20211117061404.331732-1-hch@lst.de>
@@ -51,152 +51,63 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-These are only used for request based I/O, so move them where they are
-used.
+blk_dump_rq_flags deals with a request, so move it to blk-mq.c.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-core.c | 27 +--------------------------
- block/blk-mq.c   | 42 ++++++++++++++++++++++++++++++++++++++++++
- block/blk.h      | 21 +--------------------
- 3 files changed, 44 insertions(+), 46 deletions(-)
+ block/blk-core.c | 14 --------------
+ block/blk-mq.c   | 14 ++++++++++++++
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
 diff --git a/block/blk-core.c b/block/blk-core.c
-index 723a8c84aef12..60cc44418ce79 100644
+index 60cc44418ce79..89971630f092f 100644
 --- a/block/blk-core.c
 +++ b/block/blk-core.c
-@@ -1061,8 +1061,7 @@ int iocb_bio_iopoll(struct kiocb *kiocb, struct io_comp_batch *iob,
- }
- EXPORT_SYMBOL_GPL(iocb_bio_iopoll);
- 
--static void update_io_ticks(struct block_device *part, unsigned long now,
--		bool end)
-+void update_io_ticks(struct block_device *part, unsigned long now, bool end)
- {
- 	unsigned long stamp;
- again:
-@@ -1077,30 +1076,6 @@ static void update_io_ticks(struct block_device *part, unsigned long now,
- 	}
+@@ -217,20 +217,6 @@ void blk_print_req_error(struct request *req, blk_status_t status)
+ 		IOPRIO_PRIO_CLASS(req->ioprio));
  }
  
--void __blk_account_io_done(struct request *req, u64 now)
+-void blk_dump_rq_flags(struct request *rq, char *msg)
 -{
--	const int sgrp = op_stat_group(req_op(req));
+-	printk(KERN_INFO "%s: dev %s: flags=%llx\n", msg,
+-		rq->rq_disk ? rq->rq_disk->disk_name : "?",
+-		(unsigned long long) rq->cmd_flags);
 -
--	part_stat_lock();
--	update_io_ticks(req->part, jiffies, true);
--	part_stat_inc(req->part, ios[sgrp]);
--	part_stat_add(req->part, nsecs[sgrp], now - req->start_time_ns);
--	part_stat_unlock();
+-	printk(KERN_INFO "  sector %llu, nr/cnr %u/%u\n",
+-	       (unsigned long long)blk_rq_pos(rq),
+-	       blk_rq_sectors(rq), blk_rq_cur_sectors(rq));
+-	printk(KERN_INFO "  bio %p, biotail %p, len %u\n",
+-	       rq->bio, rq->biotail, blk_rq_bytes(rq));
 -}
+-EXPORT_SYMBOL(blk_dump_rq_flags);
 -
--void __blk_account_io_start(struct request *rq)
--{
--	/* passthrough requests can hold bios that do not have ->bi_bdev set */
--	if (rq->bio && rq->bio->bi_bdev)
--		rq->part = rq->bio->bi_bdev;
--	else
--		rq->part = rq->rq_disk->part0;
--
--	part_stat_lock();
--	update_io_ticks(rq->part, jiffies, false);
--	part_stat_unlock();
--}
--
- static unsigned long __part_start_io_acct(struct block_device *part,
- 					  unsigned int sectors, unsigned int op)
- {
+ /**
+  * blk_sync_queue - cancel any pending callbacks on a queue
+  * @q: the queue
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 300fa393e6445..8b7edfc9623dd 100644
+index 8b7edfc9623dd..f8a39f4fce01e 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -809,6 +809,48 @@ bool blk_update_request(struct request *req, blk_status_t error,
- }
- EXPORT_SYMBOL_GPL(blk_update_request);
- 
-+static void __blk_account_io_done(struct request *req, u64 now)
-+{
-+	const int sgrp = op_stat_group(req_op(req));
-+
-+	part_stat_lock();
-+	update_io_ticks(req->part, jiffies, true);
-+	part_stat_inc(req->part, ios[sgrp]);
-+	part_stat_add(req->part, nsecs[sgrp], now - req->start_time_ns);
-+	part_stat_unlock();
-+}
-+
-+static inline void blk_account_io_done(struct request *req, u64 now)
-+{
-+	/*
-+	 * Account IO completion.  flush_rq isn't accounted as a
-+	 * normal IO on queueing nor completion.  Accounting the
-+	 * containing request is enough.
-+	 */
-+	if (blk_do_io_stat(req) && req->part &&
-+	    !(req->rq_flags & RQF_FLUSH_SEQ))
-+		__blk_account_io_done(req, now);
-+}
-+
-+static void __blk_account_io_start(struct request *rq)
-+{
-+	/* passthrough requests can hold bios that do not have ->bi_bdev set */
-+	if (rq->bio && rq->bio->bi_bdev)
-+		rq->part = rq->bio->bi_bdev;
-+	else
-+		rq->part = rq->rq_disk->part0;
-+
-+	part_stat_lock();
-+	update_io_ticks(rq->part, jiffies, false);
-+	part_stat_unlock();
-+}
-+
-+static inline void blk_account_io_start(struct request *req)
-+{
-+	if (blk_do_io_stat(req))
-+		__blk_account_io_start(req);
-+}
-+
- static inline void __blk_mq_end_request_acct(struct request *rq, u64 now)
- {
- 	if (rq->rq_flags & RQF_STATS) {
-diff --git a/block/blk.h b/block/blk.h
-index 1bac4063afffb..a1cbf17d18b98 100644
---- a/block/blk.h
-+++ b/block/blk.h
-@@ -257,9 +257,6 @@ bool blk_attempt_plug_merge(struct request_queue *q, struct bio *bio,
- bool blk_bio_list_merge(struct request_queue *q, struct list_head *list,
- 			struct bio *bio, unsigned int nr_segs);
- 
--void __blk_account_io_start(struct request *req);
--void __blk_account_io_done(struct request *req, u64 now);
--
- /*
-  * Plug flush limits
-  */
-@@ -350,23 +347,7 @@ static inline bool blk_do_io_stat(struct request *rq)
- 	return (rq->rq_flags & RQF_IO_STAT) && rq->rq_disk;
+@@ -667,6 +667,20 @@ void blk_mq_free_plug_rqs(struct blk_plug *plug)
+ 		blk_mq_free_request(rq);
  }
  
--static inline void blk_account_io_done(struct request *req, u64 now)
--{
--	/*
--	 * Account IO completion.  flush_rq isn't accounted as a
--	 * normal IO on queueing nor completion.  Accounting the
--	 * containing request is enough.
--	 */
--	if (blk_do_io_stat(req) && req->part &&
--	    !(req->rq_flags & RQF_FLUSH_SEQ))
--		__blk_account_io_done(req, now);
--}
--
--static inline void blk_account_io_start(struct request *req)
--{
--	if (blk_do_io_stat(req))
--		__blk_account_io_start(req);
--}
-+void update_io_ticks(struct block_device *part, unsigned long now, bool end);
- 
- static inline void req_set_nomerge(struct request_queue *q, struct request *req)
++void blk_dump_rq_flags(struct request *rq, char *msg)
++{
++	printk(KERN_INFO "%s: dev %s: flags=%llx\n", msg,
++		rq->rq_disk ? rq->rq_disk->disk_name : "?",
++		(unsigned long long) rq->cmd_flags);
++
++	printk(KERN_INFO "  sector %llu, nr/cnr %u/%u\n",
++	       (unsigned long long)blk_rq_pos(rq),
++	       blk_rq_sectors(rq), blk_rq_cur_sectors(rq));
++	printk(KERN_INFO "  bio %p, biotail %p, len %u\n",
++	       rq->bio, rq->biotail, blk_rq_bytes(rq));
++}
++EXPORT_SYMBOL(blk_dump_rq_flags);
++
+ static void req_bio_endio(struct request *rq, struct bio *bio,
+ 			  unsigned int nbytes, blk_status_t error)
  {
 -- 
 2.30.2
