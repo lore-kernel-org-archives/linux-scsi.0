@@ -2,99 +2,222 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D79E3C433F5
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 10:41:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15021C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 10:43:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id A55F56323F
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 10:41:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E509F63238
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 10:43:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232704AbhKQKo1 (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 05:44:27 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32976 "EHLO
+        id S234321AbhKQKqF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 05:46:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231650AbhKQKo1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 05:44:27 -0500
-Received: from mail-pl1-x62d.google.com (mail-pl1-x62d.google.com [IPv6:2607:f8b0:4864:20::62d])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BCF8DC061570
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 02:41:28 -0800 (PST)
-Received: by mail-pl1-x62d.google.com with SMTP id y8so1794172plg.1
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 02:41:28 -0800 (PST)
+        with ESMTP id S231650AbhKQKqF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 05:46:05 -0500
+Received: from mail-pl1-x62b.google.com (mail-pl1-x62b.google.com [IPv6:2607:f8b0:4864:20::62b])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2698AC061570
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 02:43:07 -0800 (PST)
+Received: by mail-pl1-x62b.google.com with SMTP id b11so1744465pld.12
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 02:43:07 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=broadcom.com; s=google;
         h=from:to:cc:subject:date:message-id:mime-version;
-        bh=BeTyAju2Nj/baYE+4+mavFN0tRAx0YiBlOw8hTfr5E8=;
-        b=gUO507fSxfh97vrY1wEelh1bz6oR/ljH/rw3ix3JrMXKzQCJU/QtrJy8jVKgBUCsLY
-         /c5rZb4KAwJfNP5F+EFbr0kgIddyExHR7wCQjW9hMKrsD/zoqaWDxhtGu91LtspqB4zo
-         1NK3TkvQ6W/7OXnCcVGlVo92F9TyuqFiMK7PY=
+        bh=T54WfLJKrVRvLZ1LMuisO39598TAhuMzh2M+iNDr5Ms=;
+        b=hJZw53UGdTsLLFNbsXG70vbZYSz8bOFvQN7Y7KrwuXSeJl9r1p1D2A70rEHGAqEf2w
+         uZkC1V0Q35mjAAX8BYM422j4rJqc5bWq1wkVTKtSGbN8Y0vKjrkrOU1nWLi0x2tc9sVa
+         6q8itPt8FD1cAGSRm/L/uRaXjMo43YdeB88ig=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version;
-        bh=BeTyAju2Nj/baYE+4+mavFN0tRAx0YiBlOw8hTfr5E8=;
-        b=KDOs02e9zlR6zqczI99ZDwySjs9jDLOjWIjPgldTgjl4ggntRa15Um1totkGHHgoZH
-         HMlRIjzorIgueFj7z7uwqVGRyAHKD8GoLMkX+opIGNiF91dUbRO/NXPyBB6fn5EcrHOr
-         6yuDrYiWRcnZ50S/p143o5lN8lB8yP5WN/PD67xAM8xQCyYftz2tzGNUfgP8gj5wevwf
-         eDjiig4wQH7g5iIURiCASWhGWcSkyJ7s4L/iMXM0rIb6i17dFeUQ8CORCy78TXr8BBvS
-         RQruOCwZpUcpc7tNCUmt3Dn4e6ZQU//WeVXfKiungMPrHqXOLCQhPA2fWVMovJ4n1W72
-         hByg==
-X-Gm-Message-State: AOAM5305SEMj5hOSzKoNktC45+McxQc6+CspbFH4x5d67HMHJtTvlhzT
-        GvZ6xB8MO8dpNdDPkxol7OVIXO4/H/l5yUrOpzeHJTHFQ5IdI6gI0TDEA4iN/rEOFS+IJNyjQbF
-        sZFXnXUEUy+FmYQuJfFt7dw2yrdCUF6U4CTtF2kQAef2GGvS5dQEOn7cGyDaEL9KbQN/QUoBgEj
-        Dwoi6GZ5Sb
-X-Google-Smtp-Source: ABdhPJzsYbxMPzLU96Kc6JMizcysSzAJx9pRjOvy3JoGFHAfDA0MGQFT75HE16kPIX+U71VPYCbkPw==
-X-Received: by 2002:a17:902:ce8f:b0:141:f85a:e0de with SMTP id f15-20020a170902ce8f00b00141f85ae0demr54256355plg.69.1637145687146;
-        Wed, 17 Nov 2021 02:41:27 -0800 (PST)
+        bh=T54WfLJKrVRvLZ1LMuisO39598TAhuMzh2M+iNDr5Ms=;
+        b=ZdpfCMUL1EC0phiLQtn8rkd3MjlUO3h9Rphstn+tkuc8onj7JdW2oZtY9oHHriX6Y6
+         lA0M/D+bY5Z+m3NWbRs8GhJS8vR4bTooTiUbyLbUnQpoPhCoYCt1jFRb3nikrwmSZoiN
+         ll5qgYwGML7FX8Hrnsn5iWvuLc7Fy1xM4M2o4IQScFa8v63ler+0Xqf3kWh2cJ7Ytkny
+         tyiCWpO7ka/Ct0Vz9m3iD5VdXFdaFCZm/eTBC2b3AE5DQLFGQ22moO7ijqcqLSurdixZ
+         4damjKcu8/v2aqPFzeH0wHVC4evu+7+bzAV96Md97ybw+fCWP7JXBicLOlmZOFxY9/TE
+         B48g==
+X-Gm-Message-State: AOAM532lBJnHxlMOQTkntOisMG/3iZHs/JWHHzgM5fe+xDtNK1v/+fae
+        IHyj94ZmdY5cuc4/1jDOXYcGs2f28opCQV6vOOoAUFPpSsvrhy32hwTc4oabZwuET+tLByQQqJc
+        1aZ4PhSbMMmfUZXzW1UZfhIbs7fKwjAvzQKFuADn3dvHkWqdXKSRP3gK7dfOhdzNr1G5Vo9lKC2
+        bFyeAhPwoK
+X-Google-Smtp-Source: ABdhPJw1Imp0YoKyxzTQVGjuNjbIsGvVx6HaRyCVWIqxUJ6SP9SWEAwO8KTFkr4IAMtvnVhb3WRJ+g==
+X-Received: by 2002:a17:90b:4c8c:: with SMTP id my12mr8292504pjb.157.1637145786272;
+        Wed, 17 Nov 2021 02:43:06 -0800 (PST)
 Received: from dhcp-10-123-20-36.dhcp.broadcom.net ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id g7sm18058424pfv.159.2021.11.17.02.41.25
+        by smtp.gmail.com with ESMTPSA id om8sm5392708pjb.12.2021.11.17.02.43.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Nov 2021 02:41:26 -0800 (PST)
+        Wed, 17 Nov 2021 02:43:05 -0800 (PST)
 From:   Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 To:     linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Cc:     Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpt3sas:Fix kernel panic during drive powercycle test
-Date:   Wed, 17 Nov 2021 16:19:09 +0530
-Message-Id: <20211117104909.2069-1-sreekanth.reddy@broadcom.com>
+Cc:     suganath-prabu.subramani@broadcom.com,
+        Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Fix system falling into readonly mode
+Date:   Wed, 17 Nov 2021 16:20:58 +0530
+Message-Id: <20211117105058.3505-1-sreekanth.reddy@broadcom.com>
 X-Mailer: git-send-email 2.27.0
 MIME-Version: 1.0
 Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-        boundary="00000000000026c5f205d0f9af8e"
+        boundary="0000000000001065bd05d0f9b547"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
---00000000000026c5f205d0f9af8e
+--0000000000001065bd05d0f9b547
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-While looping over shost's sdev list it is possible that one
-of the drive is getting removed and it's sas_target object is
-freed but it's sdev object is still intact with the sdev list.
-So, kernel panic occurred while driver trying to access the sas_address
-field of sas_target object without checking the sas_target object
-for NULL pointer.
+While determining the SAS address of a drive, the driver checks whether
+the handle number is less than the HBA phys count or not.
+If the handle number is less than the HBA phy’s count then driver
+assumes that this handle belongs to HBA and hence it assigns the
+HBA SAS address.
+During IOC firmware downgrade operation, if the number of HBA phys got
+reduced and the OS drive’s device handle falls below start of the day
+HBA phys count then while determining the OS drive’s SAS address
+driver uses the HBA SAS address. This leads to a mismatch of drive’s
+SAS address and hence the driver unregisters the OS drive and the
+system falls into read only mode.
 
-Fixes: f92363d12359("mpt3sas: add new driver supporting 12GB SAS")
+Updated the IOC's num_phys to HBA phy’s count provided by actual
+loaded firmware. So that while determining the SAS address driver
+uses updated HBA phy’s count value instead of using a
+start of the day’s HBA phy’s count.
+
+Fixes: a5e99fda0172("mpt3sas: Update hba_port objects after host reset")
 Signed-off-by: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  4 ++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 57 +++++++++++++++++++++++++++-
+ 2 files changed, 60 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index db6a759de1e9..a0af986633d2 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -142,6 +142,8 @@
+ 
+ #define MPT_MAX_CALLBACKS		32
+ 
++#define MPT_MAX_HBA_NUM_PHYS		32
++
+ #define INTERNAL_CMDS_COUNT		10	/* reserved cmds */
+ /* reserved for issuing internally framed scsi io cmds */
+ #define INTERNAL_SCSIIO_CMDS_COUNT	3
+@@ -798,6 +800,7 @@ struct _sas_phy {
+  * @enclosure_handle: handle for this a member of an enclosure
+  * @device_info: bitwise defining capabilities of this sas_host/expander
+  * @responding: used in _scsih_expander_device_mark_responding
++ * @nr_phys_allocated: Allocated memory for this many count phys
+  * @phy: a list of phys that make up this sas_host/expander
+  * @sas_port_list: list of ports attached to this sas_host/expander
+  * @port: hba port entry containing node's port number info
+@@ -813,6 +816,7 @@ struct _sas_node {
+ 	u16	enclosure_handle;
+ 	u64	enclosure_logical_id;
+ 	u8	responding;
++	u8	nr_phys_allocated;
+ 	struct hba_port *port;
+ 	struct	_sas_phy *phy;
+ 	struct list_head sas_port_list;
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index cee7170beae8..bb0036b41825 100644
+index bb0036b41825..589d0515a00c 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3869,7 +3869,7 @@ _scsih_ublock_io_device(struct MPT3SAS_ADAPTER *ioc,
+@@ -6406,11 +6406,26 @@ _scsih_sas_port_refresh(struct MPT3SAS_ADAPTER *ioc)
+ 	int i, j, count = 0, lcount = 0;
+ 	int ret;
+ 	u64 sas_addr;
++	u8 num_phys;
  
- 	shost_for_each_device(sdev, ioc->shost) {
- 		sas_device_priv_data = sdev->hostdata;
--		if (!sas_device_priv_data)
-+		if (!sas_device_priv_data || !sas_device_priv_data->sas_target)
- 			continue;
- 		if (sas_device_priv_data->sas_target->sas_address
- 		    != sas_address)
+ 	drsprintk(ioc, ioc_info(ioc,
+ 	    "updating ports for sas_host(0x%016llx)\n",
+ 	    (unsigned long long)ioc->sas_hba.sas_address));
+ 
++	mpt3sas_config_get_number_hba_phys(ioc, &num_phys);
++	if (!num_phys) {
++		ioc_err(ioc, "failure at %s:%d/%s()!\n",
++		    __FILE__, __LINE__, __func__);
++		return;
++	}
++
++	if (num_phys > ioc->sas_hba.nr_phys_allocated) {
++		ioc_err(ioc, "failure at %s:%d/%s()!\n",
++		   __FILE__, __LINE__, __func__);
++		return;
++	}
++	ioc->sas_hba.num_phys = num_phys;
++
+ 	port_table = kcalloc(ioc->sas_hba.num_phys,
+ 	    sizeof(struct hba_port), GFP_KERNEL);
+ 	if (!port_table)
+@@ -6611,6 +6626,30 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
+ 			ioc->sas_hba.phy[i].hba_vphy = 1;
+ 		}
+ 
++		/*
++		 * Add new HBA phys to STL if these new phys got added as part
++		 * of HBA Firmware upgrade/downgrade operation.
++		 */
++		if (!ioc->sas_hba.phy[i].phy) {
++			if ((mpt3sas_config_get_phy_pg0(ioc, &mpi_reply,
++			    &phy_pg0, i))) {
++				ioc_err(ioc, "failure at %s:%d/%s()!\n",
++				    __FILE__, __LINE__, __func__);
++				continue;
++			}
++			ioc_status = le16_to_cpu(mpi_reply.IOCStatus) &
++			    MPI2_IOCSTATUS_MASK;
++			if (ioc_status != MPI2_IOCSTATUS_SUCCESS) {
++				ioc_err(ioc, "failure at %s:%d/%s()!\n",
++				    __FILE__, __LINE__, __func__);
++				continue;
++			}
++			ioc->sas_hba.phy[i].phy_id = i;
++			mpt3sas_transport_add_host_phy(ioc,
++			    &ioc->sas_hba.phy[i], phy_pg0,
++			    ioc->sas_hba.parent_dev);
++			continue;
++		}
+ 		ioc->sas_hba.phy[i].handle = ioc->sas_hba.handle;
+ 		attached_handle = le16_to_cpu(sas_iounit_pg0->PhyData[i].
+ 		    AttachedDevHandle);
+@@ -6622,6 +6661,19 @@ _scsih_sas_host_refresh(struct MPT3SAS_ADAPTER *ioc)
+ 		    attached_handle, i, link_rate,
+ 		    ioc->sas_hba.phy[i].port);
+ 	}
++	/*
++	 * Clear the phy details if this phy got disabled as part of
++	 * HBA Firmware upgrade/downgrade operation.
++	 */
++	for (i = ioc->sas_hba.num_phys;
++	    i < ioc->sas_hba.nr_phys_allocated; i++) {
++		if (ioc->sas_hba.phy[i].phy &&
++		    ioc->sas_hba.phy[i].phy->negotiated_linkrate >=
++		    SAS_LINK_RATE_1_5_GBPS)
++			mpt3sas_transport_update_links(ioc,
++			    ioc->sas_hba.sas_address, 0, i,
++			    MPI2_SAS_NEG_LINK_RATE_PHY_DISABLED, NULL);
++	}
+  out:
+ 	kfree(sas_iounit_pg0);
+ }
+@@ -6654,7 +6706,10 @@ _scsih_sas_host_add(struct MPT3SAS_ADAPTER *ioc)
+ 			__FILE__, __LINE__, __func__);
+ 		return;
+ 	}
+-	ioc->sas_hba.phy = kcalloc(num_phys,
++
++	ioc->sas_hba.nr_phys_allocated = max_t(u8,
++	    MPT_MAX_HBA_NUM_PHYS, num_phys);
++	ioc->sas_hba.phy = kcalloc(ioc->sas_hba.nr_phys_allocated,
+ 	    sizeof(struct _sas_phy), GFP_KERNEL);
+ 	if (!ioc->sas_hba.phy) {
+ 		ioc_err(ioc, "failure at %s:%d/%s()!\n",
 -- 
 2.27.0
 
 
---00000000000026c5f205d0f9af8e
+--0000000000001065bd05d0f9b547
 Content-Type: application/pkcs7-signature; name="smime.p7s"
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="smime.p7s"
@@ -165,13 +288,13 @@ X1hfOcCDBgT7eSvf9YRLaV935mB9/V+KYX8lT4E0lB4wQ0OLV8qUS9UuNoG2lCJ5UQTMrBgeUFFY
 eKKhn+R91COmRlKGlaCdTtzKG5atS6dPnGEYUHjcpUvzejmJ5ghBk6P01HqSACsszDOzmBvdiOs+
 Ux0xggJtMIICaQIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxTaWduIG52LXNh
 MTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAyMDIwAgxyeqr1
-0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEINr9m5dnUfvNwY89ig73
-jOg+pslzqKLdhC2YMBttHiX8MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
-MQ8XDTIxMTExNzEwNDEyN1owaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
+0keLkvPdYw4wDQYJYIZIAWUDBAIBBQCggdQwLwYJKoZIhvcNAQkEMSIEIOn+zbhNwhBr8FfPOYMN
+z5LhKrAz44FTphz6L7kusnLZMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkF
+MQ8XDTIxMTExNzEwNDMwNlowaQYJKoZIhvcNAQkPMVwwWjALBglghkgBZQMEASowCwYJYIZIAWUD
 BAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQowCwYJKoZIhvcNAQEHMAsG
-CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQC2MDFNmW03317Eg6HOLxkKaB5/5Psue8F7t73F
-2fGJh5el1W79uls0Up3kDFrRwTiKqBYcjLgzspx2LMqMasXq1l/p97xV6ttF68e04hZGKJrHdRGx
-kQm/xbaMEQwcleE3g8FGPaZRJa2d8/fzeHj8wtln7p68ZSZTfx09jtrKITrYHZdmzDdNk/xjsBh1
-Tkd/Ss+QcBII53mtLGoIq4e9tItFEIvhAUx/tq1cArmpjRWr/4edsSjXS81GcQ7Vvzxl3SjEhOrz
-cj/qKYAKqL3V4eIXegIlURKJwrz8ZGNudA6zETROjF8NOA7koGrVEhbqANqeAgjrgwMdtRCo/9Lf
---00000000000026c5f205d0f9af8e--
+CWCGSAFlAwQCATANBgkqhkiG9w0BAQEFAASCAQBIivLSVi/cjXgphAFBWM12aPTw+FzfQIRsvd4r
+MHKR8oCjEHx0ZTZVUsSJQp2xk2rxTaFqmBKnzg9aL8PaGwg8lQMDyvtVecXUTHFryx0djuSHewSN
+F6Ze2un915Ji6VAwXfJu1cYVWnUm/LyRz3pXnsIsjY2/Z69mMFDZ3oLTyY23fWy0/IO52DNlOU9E
+ZxgCYe+7+51g7IeSkVuRcQTSct6OzQoFp9Py3kRU5XU/d8Txtxtyho+ARTnJndSw3dC8ExcWuRXT
+qB6mIXB6iCXqjf/mLPL+5ooLcV9dVyXlVad2x9YS0rFDzKgnJ8FweiovMrQhk0zEVinE9NVP8X1m
+--0000000000001065bd05d0f9b547--
