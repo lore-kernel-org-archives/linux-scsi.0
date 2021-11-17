@@ -2,34 +2,34 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFD6CC433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 857CEC43217
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id CB8E662F90
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 70B1163231
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 06:14:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233523AbhKQGRW (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 01:17:22 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56032 "EHLO
+        id S233534AbhKQGRX (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 01:17:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56034 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232300AbhKQGRT (ORCPT
+        with ESMTP id S232688AbhKQGRT (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 01:17:19 -0500
 Received: from casper.infradead.org (casper.infradead.org [IPv6:2001:8b0:10b:1236::1])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 95F7BC061767;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9C97BC0613B9;
         Tue, 16 Nov 2021 22:14:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=casper.20170209; h=Content-Transfer-Encoding:MIME-Version:
         References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:
         Content-Type:Content-ID:Content-Description;
-        bh=B5W4T0FJ3gk7XDJbVOEv8wyaVixGSlICP7LZCQ2Vt60=; b=PpHW+4xxxLkPpXHIkvdTcUdodH
-        FR8uxhRsUF0VS4H9e2LnN0wdH2kFZhESvE6U8eWCdWPewlEYA6OGHWjScPQThz5UxThEBhibJukDN
-        bt2KOm1DNWJqFHlpbUd8sEOENuJWte281IFte1DHGsT42a8shsKW5I8CQ23nWKjS6Pd/PvQ/8yxbZ
-        53XpGAdkhd8YakpmZzpanxl4+R4iz+/pK/1X495uod/s/w1tXwUwg7cS1WoyHKYSTDESs4RmC8gZo
-        h86Xp0K/Sry0eai9BRh0CVTrGvIDmYKmxhhIz2p/Sz/1l82UC9zLTO6tkqt5LukzuQN4N1mF+dqdH
-        Ot9ZerLw==;
+        bh=LjB+PW6droKOhO2mj2A/+eYS7xjIK3FEJ790igEy5r8=; b=AlqY5MsRheu/bSJmGs+30xVC25
+        rAvzNtaIjwPTM0j5hsCxtXTsvzL7kjEIhKYivvjaMQp9uoaIrnnIrHMQDexNSkT0dSCIDpBd4Hr9M
+        QoCvg8p6I7DuCpMq1rSiORlguB+rzdeS6OMMctRCr0TnOgNldxStgv/tRyJzeMLTcJDusBV7/sslb
+        5c7/N2I/3d3Bh6kP3fpsWRa4AqtGIAwSIigY0qY9IXVO/BvBK3keqUhkCW2eIX9X4m60pvNVlwI9O
+        3J1SHAdmh8xaF7LWVLe3cYMsLXMCD13WLSEANEb2tTqk9iry7rUQPTHhWFBpzU8qJkN00kKAq1A9X
+        xzlgs5Gg==;
 Received: from 213-225-5-109.nat.highway.a1.net ([213.225.5.109] helo=localhost)
         by casper.infradead.org with esmtpsa (Exim 4.94.2 #2 (Red Hat Linux))
-        id 1mnECx-007MEp-TD; Wed, 17 Nov 2021 06:14:12 +0000
+        id 1mnECu-007MER-Q0; Wed, 17 Nov 2021 06:14:09 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Jens Axboe <axboe@kernel.dk>
 Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -38,9 +38,9 @@ Cc:     "Martin K. Petersen" <martin.petersen@oracle.com>,
         Vignesh Raghavendra <vigneshr@ti.com>,
         linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
         linux-mtd@lists.infradead.org
-Subject: [PATCH 04/11] blk-mq: move blk_mq_flush_plug_list
-Date:   Wed, 17 Nov 2021 07:13:57 +0100
-Message-Id: <20211117061404.331732-5-hch@lst.de>
+Subject: [PATCH 02/11] block: remove rq_flush_dcache_pages
+Date:   Wed, 17 Nov 2021 07:13:55 +0100
+Message-Id: <20211117061404.331732-3-hch@lst.de>
 X-Mailer: git-send-email 2.30.2
 In-Reply-To: <20211117061404.331732-1-hch@lst.de>
 References: <20211117061404.331732-1-hch@lst.de>
@@ -51,217 +51,123 @@ Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-Move blk_mq_flush_plug_list and blk_mq_plug_issue_direct down in blk-mq.c
-to prepare for marking blk_mq_request_issue_directly static without the
-need of a forward declaration.
+This function is trivial, and flush_dcache_page is always defined, so
+just open code it in the 2.5 callers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- block/blk-mq.c | 184 ++++++++++++++++++++++++-------------------------
- 1 file changed, 92 insertions(+), 92 deletions(-)
+ block/blk-core.c          | 19 -------------------
+ drivers/mtd/mtd_blkdevs.c | 10 ++++++++--
+ drivers/mtd/ubi/block.c   |  6 +++++-
+ include/linux/blk-mq.h    | 10 ----------
+ 4 files changed, 13 insertions(+), 32 deletions(-)
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index c33411f9ce898..d70a470c9c1f1 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -2308,98 +2308,6 @@ static void blk_mq_commit_rqs(struct blk_mq_hw_ctx *hctx, int *queued,
- 	*queued = 0;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index e27a659973965..f1ca31a89493a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1297,25 +1297,6 @@ void blk_steal_bios(struct bio_list *list, struct request *rq)
  }
+ EXPORT_SYMBOL_GPL(blk_steal_bios);
  
--static void blk_mq_plug_issue_direct(struct blk_plug *plug, bool from_schedule)
+-#if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
+-/**
+- * rq_flush_dcache_pages - Helper function to flush all pages in a request
+- * @rq: the request to be flushed
+- *
+- * Description:
+- *     Flush all pages in @rq.
+- */
+-void rq_flush_dcache_pages(struct request *rq)
 -{
--	struct blk_mq_hw_ctx *hctx = NULL;
--	struct request *rq;
--	int queued = 0;
--	int errors = 0;
+-	struct req_iterator iter;
+-	struct bio_vec bvec;
 -
--	while ((rq = rq_list_pop(&plug->mq_list))) {
--		bool last = rq_list_empty(plug->mq_list);
--		blk_status_t ret;
--
--		if (hctx != rq->mq_hctx) {
--			if (hctx)
--				blk_mq_commit_rqs(hctx, &queued, from_schedule);
--			hctx = rq->mq_hctx;
--		}
--
--		ret = blk_mq_request_issue_directly(rq, last);
--		switch (ret) {
--		case BLK_STS_OK:
--			queued++;
--			break;
--		case BLK_STS_RESOURCE:
--		case BLK_STS_DEV_RESOURCE:
--			blk_mq_request_bypass_insert(rq, false, last);
--			blk_mq_commit_rqs(hctx, &queued, from_schedule);
--			return;
--		default:
--			blk_mq_end_request(rq, ret);
--			errors++;
--			break;
--		}
--	}
--
--	/*
--	 * If we didn't flush the entire list, we could have told the driver
--	 * there was more coming, but that turned out to be a lie.
--	 */
--	if (errors)
--		blk_mq_commit_rqs(hctx, &queued, from_schedule);
+-	rq_for_each_segment(bvec, rq, iter)
+-		flush_dcache_page(bvec.bv_page);
 -}
+-EXPORT_SYMBOL_GPL(rq_flush_dcache_pages);
+-#endif
 -
--void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
--{
--	struct blk_mq_hw_ctx *this_hctx;
--	struct blk_mq_ctx *this_ctx;
--	unsigned int depth;
--	LIST_HEAD(list);
--
--	if (rq_list_empty(plug->mq_list))
--		return;
--	plug->rq_count = 0;
--
--	if (!plug->multiple_queues && !plug->has_elevator && !from_schedule) {
--		blk_mq_plug_issue_direct(plug, false);
--		if (rq_list_empty(plug->mq_list))
--			return;
--	}
--
--	this_hctx = NULL;
--	this_ctx = NULL;
--	depth = 0;
--	do {
--		struct request *rq;
--
--		rq = rq_list_pop(&plug->mq_list);
--
--		if (!this_hctx) {
--			this_hctx = rq->mq_hctx;
--			this_ctx = rq->mq_ctx;
--		} else if (this_hctx != rq->mq_hctx || this_ctx != rq->mq_ctx) {
--			trace_block_unplug(this_hctx->queue, depth,
--						!from_schedule);
--			blk_mq_sched_insert_requests(this_hctx, this_ctx,
--						&list, from_schedule);
--			depth = 0;
--			this_hctx = rq->mq_hctx;
--			this_ctx = rq->mq_ctx;
--
--		}
--
--		list_add(&rq->queuelist, &list);
--		depth++;
--	} while (!rq_list_empty(plug->mq_list));
--
--	if (!list_empty(&list)) {
--		trace_block_unplug(this_hctx->queue, depth, !from_schedule);
--		blk_mq_sched_insert_requests(this_hctx, this_ctx, &list,
--						from_schedule);
--	}
--}
--
- static void blk_mq_bio_to_request(struct request *rq, struct bio *bio,
- 		unsigned int nr_segs)
+ /**
+  * blk_lld_busy - Check if underlying low-level drivers of a device are busy
+  * @q : the queue of the device being checked
+diff --git a/drivers/mtd/mtd_blkdevs.c b/drivers/mtd/mtd_blkdevs.c
+index 4eaba6f4ec680..66f81d42fe778 100644
+--- a/drivers/mtd/mtd_blkdevs.c
++++ b/drivers/mtd/mtd_blkdevs.c
+@@ -46,6 +46,8 @@ static blk_status_t do_blktrans_request(struct mtd_blktrans_ops *tr,
+ 			       struct mtd_blktrans_dev *dev,
+ 			       struct request *req)
  {
-@@ -2539,6 +2447,98 @@ blk_status_t blk_mq_request_issue_directly(struct request *rq, bool last)
- 	return ret;
++	struct req_iterator iter;
++	struct bio_vec bvec;
+ 	unsigned long block, nsect;
+ 	char *buf;
+ 
+@@ -76,13 +78,17 @@ static blk_status_t do_blktrans_request(struct mtd_blktrans_ops *tr,
+ 			}
+ 		}
+ 		kunmap(bio_page(req->bio));
+-		rq_flush_dcache_pages(req);
++
++		rq_for_each_segment(bvec, req, iter)
++			flush_dcache_page(bvec.bv_page);
+ 		return BLK_STS_OK;
+ 	case REQ_OP_WRITE:
+ 		if (!tr->writesect)
+ 			return BLK_STS_IOERR;
+ 
+-		rq_flush_dcache_pages(req);
++		rq_for_each_segment(bvec, req, iter)
++			flush_dcache_page(bvec.bv_page);
++
+ 		buf = kmap(bio_page(req->bio)) + bio_offset(req->bio);
+ 		for (; nsect > 0; nsect--, block++, buf += tr->blksize) {
+ 			if (tr->writesect(dev, block, buf)) {
+diff --git a/drivers/mtd/ubi/block.c b/drivers/mtd/ubi/block.c
+index 062e6c2c45f5f..302426ab30f8d 100644
+--- a/drivers/mtd/ubi/block.c
++++ b/drivers/mtd/ubi/block.c
+@@ -294,6 +294,8 @@ static void ubiblock_do_work(struct work_struct *work)
+ 	int ret;
+ 	struct ubiblock_pdu *pdu = container_of(work, struct ubiblock_pdu, work);
+ 	struct request *req = blk_mq_rq_from_pdu(pdu);
++	struct req_iterator iter;
++	struct bio_vec bvec;
+ 
+ 	blk_mq_start_request(req);
+ 
+@@ -305,7 +307,9 @@ static void ubiblock_do_work(struct work_struct *work)
+ 	blk_rq_map_sg(req->q, req, pdu->usgl.sg);
+ 
+ 	ret = ubiblock_read(pdu);
+-	rq_flush_dcache_pages(req);
++
++	rq_for_each_segment(bvec, req, iter)
++		flush_dcache_page(bvec.bv_page);
+ 
+ 	blk_mq_end_request(req, errno_to_blk_status(ret));
  }
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index a78d9a0f2a1be..308edc2a4925b 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -1132,14 +1132,4 @@ static inline bool blk_req_can_dispatch_to_zone(struct request *rq)
+ }
+ #endif /* CONFIG_BLK_DEV_ZONED */
  
-+static void blk_mq_plug_issue_direct(struct blk_plug *plug, bool from_schedule)
-+{
-+	struct blk_mq_hw_ctx *hctx = NULL;
-+	struct request *rq;
-+	int queued = 0;
-+	int errors = 0;
-+
-+	while ((rq = rq_list_pop(&plug->mq_list))) {
-+		bool last = rq_list_empty(plug->mq_list);
-+		blk_status_t ret;
-+
-+		if (hctx != rq->mq_hctx) {
-+			if (hctx)
-+				blk_mq_commit_rqs(hctx, &queued, from_schedule);
-+			hctx = rq->mq_hctx;
-+		}
-+
-+		ret = blk_mq_request_issue_directly(rq, last);
-+		switch (ret) {
-+		case BLK_STS_OK:
-+			queued++;
-+			break;
-+		case BLK_STS_RESOURCE:
-+		case BLK_STS_DEV_RESOURCE:
-+			blk_mq_request_bypass_insert(rq, false, last);
-+			blk_mq_commit_rqs(hctx, &queued, from_schedule);
-+			return;
-+		default:
-+			blk_mq_end_request(rq, ret);
-+			errors++;
-+			break;
-+		}
-+	}
-+
-+	/*
-+	 * If we didn't flush the entire list, we could have told the driver
-+	 * there was more coming, but that turned out to be a lie.
-+	 */
-+	if (errors)
-+		blk_mq_commit_rqs(hctx, &queued, from_schedule);
-+}
-+
-+void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
-+{
-+	struct blk_mq_hw_ctx *this_hctx;
-+	struct blk_mq_ctx *this_ctx;
-+	unsigned int depth;
-+	LIST_HEAD(list);
-+
-+	if (rq_list_empty(plug->mq_list))
-+		return;
-+	plug->rq_count = 0;
-+
-+	if (!plug->multiple_queues && !plug->has_elevator && !from_schedule) {
-+		blk_mq_plug_issue_direct(plug, false);
-+		if (rq_list_empty(plug->mq_list))
-+			return;
-+	}
-+
-+	this_hctx = NULL;
-+	this_ctx = NULL;
-+	depth = 0;
-+	do {
-+		struct request *rq;
-+
-+		rq = rq_list_pop(&plug->mq_list);
-+
-+		if (!this_hctx) {
-+			this_hctx = rq->mq_hctx;
-+			this_ctx = rq->mq_ctx;
-+		} else if (this_hctx != rq->mq_hctx || this_ctx != rq->mq_ctx) {
-+			trace_block_unplug(this_hctx->queue, depth,
-+						!from_schedule);
-+			blk_mq_sched_insert_requests(this_hctx, this_ctx,
-+						&list, from_schedule);
-+			depth = 0;
-+			this_hctx = rq->mq_hctx;
-+			this_ctx = rq->mq_ctx;
-+
-+		}
-+
-+		list_add(&rq->queuelist, &list);
-+		depth++;
-+	} while (!rq_list_empty(plug->mq_list));
-+
-+	if (!list_empty(&list)) {
-+		trace_block_unplug(this_hctx->queue, depth, !from_schedule);
-+		blk_mq_sched_insert_requests(this_hctx, this_ctx, &list,
-+						from_schedule);
-+	}
-+}
-+
- void blk_mq_try_issue_list_directly(struct blk_mq_hw_ctx *hctx,
- 		struct list_head *list)
- {
+-#ifndef ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
+-# error	"You should define ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE for your platform"
+-#endif
+-#if ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE
+-void rq_flush_dcache_pages(struct request *rq);
+-#else
+-static inline void rq_flush_dcache_pages(struct request *rq)
+-{
+-}
+-#endif /* ARCH_IMPLEMENTS_FLUSH_DCACHE_PAGE */
+ #endif /* BLK_MQ_H */
 -- 
 2.30.2
 
