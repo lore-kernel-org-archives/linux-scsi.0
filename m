@@ -2,135 +2,221 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 104B3C433EF
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 12:53:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C9F1C433EF
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 13:14:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E358E61465
-	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 12:53:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2A1E06103E
+	for <linux-scsi@archiver.kernel.org>; Wed, 17 Nov 2021 13:14:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235200AbhKQM4v (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Wed, 17 Nov 2021 07:56:51 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34530 "EHLO
+        id S236934AbhKQNRF (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Wed, 17 Nov 2021 08:17:05 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234764AbhKQM4v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 07:56:51 -0500
-Received: from mail-wm1-x32c.google.com (mail-wm1-x32c.google.com [IPv6:2a00:1450:4864:20::32c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A8BA9C061570
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 04:53:52 -0800 (PST)
-Received: by mail-wm1-x32c.google.com with SMTP id b184-20020a1c1bc1000000b0033140bf8dd5so2027305wmb.5
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Nov 2021 04:53:52 -0800 (PST)
+        with ESMTP id S235640AbhKQNRE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Nov 2021 08:17:04 -0500
+Received: from mail-lf1-x12f.google.com (mail-lf1-x12f.google.com [IPv6:2a00:1450:4864:20::12f])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D7E90C061570;
+        Wed, 17 Nov 2021 05:14:05 -0800 (PST)
+Received: by mail-lf1-x12f.google.com with SMTP id u3so8314887lfl.2;
+        Wed, 17 Nov 2021 05:14:05 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=javigon-com.20210112.gappssmtp.com; s=20210112;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:content-transfer-encoding:in-reply-to;
-        bh=hss0my1U543SYA62Ffactpc9+//eg0/Fsm4KpfOP4TA=;
-        b=cNSGVCgXy2Jr0DDROORE8h8J8ohDTgYgTeZwzXZy1XX72D7vMjy8+FDF8OElAFsPlt
-         YU9hPx/B9RhVz9/JaIqmgAPMZsUtogLmKaV2ijNZ05+Z/4iFpO3J8Umt6jEbcvAWAcZK
-         mcrAEBQkoqFKbQKvlwGe8/9d/35yaUQoHDbiLSEQR+TrKeunKkyCyKnQZJWWVlKj1RBP
-         AZ1vSLkAoORo7sWj9raNWButcAjsPxq5x4irMkgt8Vh/lC9uY2RebAWWlyQfk7rpPU8I
-         H96skOZMMuajYOxCQGi9C76/4onuRGkYVs1n7zwvLjpY4xg/f+XVlxq+ev/f9uqThiNu
-         wsqw==
+        d=gmail.com; s=20210112;
+        h=from:mime-version:subject:message-id:date:cc:to;
+        bh=bGbWYoqOp4VoWzvoiIP9woCc0L8iKhtKFSf31az8TBo=;
+        b=eyBE44VSd7ab4IXTIPId7qSYnMLT7/5/0F/mhyFNjDyXBWWw4Hvg4Cmb95bjNV2UnI
+         /xapd/yaXfOSOfjQc3yGcSQw0Ppuc0HfkZV4oGdgBEPsLDENT8OVvl4hY25l4aP54O8M
+         OW23J42Z15KXzkMAcAsI9sefwyMU88teXV15Ivxl+psIbk9iAojbXb/3ehD1UXgEz8/5
+         s/4wn5xb2OAGxCKrQIzAHoTWbYZmoKYsAoK63TyYTHakL74lYOXvJWnvt7J7FpPlF5n4
+         Iv07HipgC14POcwxq+uiCXeCd0EXFGDcKDXdT72nvOVeI+xuLavsxmnIn4xqTZeL7+nz
+         ECfg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:content-transfer-encoding
-         :in-reply-to;
-        bh=hss0my1U543SYA62Ffactpc9+//eg0/Fsm4KpfOP4TA=;
-        b=A8VpQ5arnkixukLY5v30pqSo9i5AEE/Z6PBY4HO+/bYaHO+Wex7J2e4aBhhlhScOWO
-         /+eBOglv+2WVS0VA4YG4rzGjq9sI6nrJU+0GvI4J2X40VWVVarHUdxdAMIwRdOK6axFF
-         PFG2bHYxxcGxxnGYjJCQbbMp8CePjdsETwj81FjE2YDiptwE1zEXwAp2D52fVkKsXUVO
-         9iFxGcTmyGZ+dxL3pmtGrkXUaTE6Mf7OSeRBhqR0lcbZ6vkoE9smWwnqVBWIYpCTZZPv
-         kydlbBB8KGcJxrKWmL4q38ttcS5NhiOF1aA8cpWEVT8qy+aizbPAG92I6mBP81vEP6T+
-         yFRw==
-X-Gm-Message-State: AOAM53310lGNEG/awgmDuMStEi+ho43M3oKk01rxyv+1B60pBQk7kR0G
-        XVO8eu38Z+tQp6Gw8G6Uhgb/aw==
-X-Google-Smtp-Source: ABdhPJxOXnHxfcN/nA4AKyAuhHjB0XGlYF1ByvmNcUHfw88xbXLPy+hq3hyfltHTbv+vqGO7YiaBXA==
-X-Received: by 2002:a1c:43c2:: with SMTP id q185mr77977369wma.30.1637153631243;
-        Wed, 17 Nov 2021 04:53:51 -0800 (PST)
-Received: from localhost ([194.62.217.57])
-        by smtp.gmail.com with ESMTPSA id w4sm8368899wrs.88.2021.11.17.04.53.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Nov 2021 04:53:50 -0800 (PST)
-Date:   Wed, 17 Nov 2021 13:53:49 +0100
-From:   Javier =?utf-8?B?R29uesOhbGV6?= <javier@javigon.com>
-To:     Bart Van Assche <bvanassche@acm.org>
-Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
-        Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
-        Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-        "dm-devel@redhat.com" <dm-devel@redhat.com>,
-        "lsf-pc@lists.linux-foundation.org" 
-        <lsf-pc@lists.linux-foundation.org>,
-        "axboe@kernel.dk" <axboe@kernel.dk>,
-        "msnitzer@redhat.com" <msnitzer@redhat.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "roland@purestorage.com" <roland@purestorage.com>,
-        "mpatocka@redhat.com" <mpatocka@redhat.com>,
-        "hare@suse.de" <hare@suse.de>,
-        "kbusch@kernel.org" <kbusch@kernel.org>,
-        "rwheeler@redhat.com" <rwheeler@redhat.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "Frederick.Knight@netapp.com" <Frederick.Knight@netapp.com>,
-        "zach.brown@ni.com" <zach.brown@ni.com>,
-        "osandov@fb.com" <osandov@fb.com>,
-        Adam Manzanares <a.manzanares@samsung.com>,
-        SelvaKumar S <selvakuma.s1@samsung.com>,
-        Nitesh Shetty <nj.shetty@samsung.com>,
-        Kanchan Joshi <joshi.k@samsung.com>,
-        Vincent Fu <vincent.fu@samsung.com>
-Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
-Message-ID: <20211117125224.z36hp2crpj4fwngc@ArmHalley.local>
-References: <20210928191340.dcoj7qrclpudtjbo@mpHalley.domain_not_set.invalid>
- <c2d0dff9-ad6d-c32b-f439-00b7ee955d69@acm.org>
- <20211006100523.7xrr3qpwtby3bw3a@mpHalley.domain_not_set.invalid>
- <fbe69cc0-36ea-c096-d247-f201bad979f4@acm.org>
- <20211008064925.oyjxbmngghr2yovr@mpHalley.local>
- <2a65e231-11dd-d5cc-c330-90314f6a8eae@nvidia.com>
- <20211029081447.ativv64dofpqq22m@ArmHalley.local>
- <20211103192700.clqzvvillfnml2nu@mpHalley-2>
- <20211116134324.hbs3tp5proxootd7@ArmHalley.localdomain>
- <ab4ec640-9a89-ea25-fe68-85bae2ae5d8d@acm.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <ab4ec640-9a89-ea25-fe68-85bae2ae5d8d@acm.org>
+        h=x-gm-message-state:from:mime-version:subject:message-id:date:cc:to;
+        bh=bGbWYoqOp4VoWzvoiIP9woCc0L8iKhtKFSf31az8TBo=;
+        b=syP0xFjB9kzQEf+v97rSd3GOdi0mCrOPDLkAsf6FtW53PV3kydtROSGKpnUkranYEI
+         AaLUmA48wGrdsqEe6rW/j+zduZzA+DgBTqwgTpWyAiG2lCGoOWIyUU9hsPRCCENX5ruz
+         corQqRmJboqYiyy86tjVDcTvH6Mf8Vjeb7woNBTp7XPlfdQeaOK8yRGIWH4PfpQOE4x3
+         pRineUqZ1fyrdCwdYg4DSW9aQmZFVHzLqH1J+0mRjsVdGN9KJKgffjShTIPvkoxkIvfx
+         gxTMerdPAoiCVEfM12ei+SDC1GkoOb6YkaXUSI+LW72acqfAb3cRcoqLRL9kclLaczjX
+         qVyw==
+X-Gm-Message-State: AOAM531r+qYQfT0bhrhOVxepLaY5FQadTs78+EWhmdgcJQRpBMA7EF/L
+        YbmbNRh8/JOQNSATrrWmSv7+4yY3POCUkzNt
+X-Google-Smtp-Source: ABdhPJy/saBY9U/b8p+qOeevpjAIp3B9fq+zvwpUI4j5veCcZctHxfJl0Axx0OhT6A6O52YWOjRBIw==
+X-Received: by 2002:a05:6512:33c8:: with SMTP id d8mr15217715lfg.573.1637154844178;
+        Wed, 17 Nov 2021 05:14:04 -0800 (PST)
+Received: from smtpclient.apple ([5.8.48.45])
+        by smtp.gmail.com with ESMTPSA id d22sm1695935lfe.158.2021.11.17.05.14.02
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 17 Nov 2021 05:14:03 -0800 (PST)
+From:   Alexey Lyashkov <alexey.lyashkov@gmail.com>
+Content-Type: multipart/mixed;
+        boundary="Apple-Mail=_C6614723-5315-4C39-B42C-A71A3AFDF89B"
+Mime-Version: 1.0 (Mac OS X Mail 14.0 \(3654.120.0.1.13\))
+Subject: T10 DIX bug for the md raid with 4k block devices
+Message-Id: <08E36BA8-FD6F-42A0-8411-0A3B54FDD0DD@gmail.com>
+Date:   Wed, 17 Nov 2021 16:14:02 +0300
+Cc:     linux-block@vger.kernel.org, Max Gurtovoy <mgurtovoy@nvidia.com>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Jens Axboe <axboe@kernel.dk>, yann.livis@hpe.com
+To:     linux-scsi@vger.kernel.org
+X-Mailer: Apple Mail (2.3654.120.0.1.13)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 16.11.2021 09:59, Bart Van Assche wrote:
->On 11/16/21 05:43, Javier González wrote:
->>             - Here, we need copy emulation to support encryption 
->>without dealing with HW issues and garbage
->
->Hi Javier,
->
->Thanks very much for having taken notes and also for having shared 
->these.
 
-My pleasure. Thanks for attending. Happy to see this moving.
+--Apple-Mail=_C6614723-5315-4C39-B42C-A71A3AFDF89B
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=utf-8
 
->Regarding the above comment, after the meeting I learned that 
->the above is not correct. Encryption in Android is LBA independent and 
->hence it should be possible to offload F2FS garbage collection in 
->Android once the (UFS) storage controller supports this.
->
->For the general case, I propose to let the dm-crypt driver decide 
->whether or not to offload data copying since that driver knows whether 
->or not data copying can be offloaded.
+Hello All,
 
-Thanks for sharing this. We will make sure that DM / MD are supported
-and then we can cover examples. Hopefully, you guys can help with the
-bits for dm-crypt to make the decision to offload when it make sense.
+I was requested to create a raid0 device on top NVMe with 4k block size =
+and DPS2 enabled.
+But this config failed in case bio_intergrity_pre called before =
+bio_split.
+Some research pointed me to the two fixes related to my problem,
+first was=20
+commit f36ea50ca0043e7b1204feaf1d2ba6bd68c08d36
+Author: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Date:   Wed May 10 08:54:11 2017 -0500
 
-I will update the notes to keep them alive. Maybe we can have them open
-in your github page?
+    blk-mq: NVMe 512B/4K+T10 DIF/DIX format returns I/O error on dd with =
+split op
 
->
->Thanks,
->
->Bart.
+    When formatting NVMe to 512B/4K + T10 DIf/DIX, dd with split op =
+returns
+    "Input/output error". Looks block layer split the bio after calling
+    bio_integrity_prep(bio). This patch fixes the issue.
 
+and second was
+commit e4dc9a4c31fe10d1751c542702afc85be8a5c56a
+Author: Israel Rukshin <israelr@mellanox.com>
+Date:   Wed Dec 11 17:36:02 2019 +0200
+
+    scsi: target/iblock: Fix protection error with blocks greater than =
+512B
+
+=E2=80=A6
+But both ideas not acceptable for me and i continue a research.
+Block io trace pointed me to the three functions called in my case, it =
+is
+t10_pi_generate, bio_integrity_advance, t10_pi_type1_prepare.
+
+Looking in code - t10_pi_generate generate a ref_tag based on =
+=E2=80=9Cvirtual=E2=80=9D block number (512b base), and =
+t10_pi_type1_prepare - converts this data to the the real ref_tag (aka =
+device block number), but sometimes it=E2=80=99s don=E2=80=99t mapped.
+Looking to the=20
+void bio_integrity_advance(struct bio *bio, unsigned int bytes_done)
+{
+        struct bio_integrity_payload *bip =3D bio_integrity(bio);
+        struct blk_integrity *bi =3D blk_get_integrity(bio->bi_disk);
+        unsigned bytes =3D bio_integrity_bytes(bi, bytes_done >> 9);
+        bip->bip_iter.bi_sector +=3D bytes_done >> 9;
+        bvec_iter_advance(bip->bip_vec, &bip->bip_iter, bytes);
+}
+
+it have shit an iterator in the 512b block size base it looks right, but =
+wait=E2=80=A6=20
+static blk_status_t t10_pi_generate(struct blk_integrity_iter *iter,
+                csum_fn *fn, enum t10_dif_type type)
+{
+        unsigned int i;
+
+        for (i =3D 0 ; i < iter->data_size ; i +=3D iter->interval) {
+                struct t10_pi_tuple *pi =3D iter->prot_buf;
+
+
+                iter->seed++; <<<
+        }
+
+        return BLK_STS_OK;
+}
+
+t10_pi_generate / t10_pi_type1_prepare have just a increment by =E2=80=9C1=
+=E2=80=9D for the integrity internal which is 4k in my case,
+so any bio_integrity_advance call will be move an iterator outside of =
+generated sequence and t10_pi_type1_prepare can=E2=80=99t be found a =
+good virt sector for the mapping.
+Changing an increment by =E2=80=9C1=E2=80=9D to be related to the real =
+integrity size solve a problem completely.
+Attached patch passed my own testing on raid0 with 4k block size.=20
+
+
+--Apple-Mail=_C6614723-5315-4C39-B42C-A71A3AFDF89B
+Content-Disposition: attachment;
+	filename=t10-pi-fix-intergrity-iterator.patch
+Content-Type: application/octet-stream;
+	x-unix-mode=0777;
+	name="t10-pi-fix-intergrity-iterator.patch"
+Content-Transfer-Encoding: quoted-printable
+
+=46rom=206a8f488be163f8ff33897177d7b744dd70a77203=20Mon=20Sep=2017=20=
+00:00:00=202001=0AFrom:=20Alexey=20Lyashkov=20<umka@cloudlinux.com>=0A=
+Date:=20Wed,=2017=20Nov=202021=2016:09:20=20+0300=0ASubject:=20[PATCH]=20=
+t10-pi:=20fix=20intergrity=20iterator=0A=0AIntegrity=20iterator=20should=20=
+be=20in=20the=20SECTOR_SIZE=20units,=0Anot=20an=20count=20interity=20=
+intervals=20to=20make=20bio_integrity_advance=0Abe=20happy=20on=20=
+bio_split.=0A=0ASigned-off-by:=20Alexey=20Lyashkov=20=
+<alexey.lyashkov@gmail.com>=0A---=0A=20block/t10-pi.c=20|=2014=20=
+++++++++++----=0A=201=20file=20changed,=2010=20insertions(+),=204=20=
+deletions(-)=0A=0Adiff=20--git=20a/block/t10-pi.c=20b/block/t10-pi.c=0A=
+index=2025a52a2a09a8..bbdecead214e=20100644=0A---=20a/block/t10-pi.c=0A=
++++=20b/block/t10-pi.c=0A@@=20-31,6=20+31,7=20@@=20static=20blk_status_t=20=
+t10_pi_generate(struct=20blk_integrity_iter=20*iter,=0A=20=09=09csum_fn=20=
+*fn,=20enum=20t10_dif_type=20type)=0A=20{=0A=20=09unsigned=20int=20i;=0A=
++=09unsigned=20int=20pi_size=20=3D=20iter->interval=20>>=20SECTOR_SHIFT;=0A=
+=20=0A=20=09for=20(i=20=3D=200=20;=20i=20<=20iter->data_size=20;=20i=20=
++=3D=20iter->interval)=20{=0A=20=09=09struct=20t10_pi_tuple=20*pi=20=3D=20=
+iter->prot_buf;=0A@@=20-45,7=20+46,7=20@@=20static=20blk_status_t=20=
+t10_pi_generate(struct=20blk_integrity_iter=20*iter,=0A=20=0A=20=09=09=
+iter->data_buf=20+=3D=20iter->interval;=0A=20=09=09iter->prot_buf=20+=3D=20=
+sizeof(struct=20t10_pi_tuple);=0A-=09=09iter->seed++;=0A+=09=09=
+iter->seed+=3D=20pi_size;=0A=20=09}=0A=20=0A=20=09return=20BLK_STS_OK;=0A=
+@@=20-55,6=20+56,7=20@@=20static=20blk_status_t=20t10_pi_verify(struct=20=
+blk_integrity_iter=20*iter,=0A=20=09=09csum_fn=20*fn,=20enum=20=
+t10_dif_type=20type)=0A=20{=0A=20=09unsigned=20int=20i;=0A+=09unsigned=20=
+int=20pi_size=20=3D=20iter->interval=20>>=20SECTOR_SHIFT;=0A=20=0A=20=09=
+BUG_ON(type=20=3D=3D=20T10_PI_TYPE0_PROTECTION);=0A=20=0A@@=20-94,7=20=
++96,7=20@@=20static=20blk_status_t=20t10_pi_verify(struct=20=
+blk_integrity_iter=20*iter,=0A=20next:=0A=20=09=09iter->data_buf=20+=3D=20=
+iter->interval;=0A=20=09=09iter->prot_buf=20+=3D=20sizeof(struct=20=
+t10_pi_tuple);=0A-=09=09iter->seed++;=0A+=09=09iter->seed=20+=3D=20=
+pi_size;=0A=20=09}=0A=20=0A=20=09return=20BLK_STS_OK;=0A@@=20-135,6=20=
++137,7=20@@=20static=20void=20t10_pi_type1_prepare(struct=20request=20=
+*rq)=0A=20=09const=20int=20tuple_sz=20=3D=20rq->q->integrity.tuple_size;=0A=
+=20=09u32=20ref_tag=20=3D=20t10_pi_ref_tag(rq);=0A=20=09struct=20bio=20=
+*bio;=0A+=09unsigned=20int=20pi_size=20=3D=201=20<<=20=
+(rq->q->integrity.interval_exp=20-=20SECTOR_SHIFT);=0A=20=0A=20=09=
+__rq_for_each_bio(bio,=20rq)=20{=0A=20=09=09struct=20=
+bio_integrity_payload=20*bip=20=3D=20bio_integrity(bio);=0A@@=20-156,7=20=
++159,8=20@@=20static=20void=20t10_pi_type1_prepare(struct=20request=20=
+*rq)=0A=20=0A=20=09=09=09=09if=20(be32_to_cpu(pi->ref_tag)=20=3D=3D=20=
+virt)=0A=20=09=09=09=09=09pi->ref_tag=20=3D=20cpu_to_be32(ref_tag);=0A-=09=
+=09=09=09virt++;=0A+=0A+=09=09=09=09virt=20+=3D=20pi_size;=0A=20=09=09=09=
+=09ref_tag++;=0A=20=09=09=09=09p=20+=3D=20tuple_sz;=0A=20=09=09=09}=0A@@=20=
+-185,6=20+189,7=20@@=20static=20void=20t10_pi_type1_complete(struct=20=
+request=20*rq,=20unsigned=20int=20nr_bytes)=0A=20=09const=20int=20=
+tuple_sz=20=3D=20rq->q->integrity.tuple_size;=0A=20=09u32=20ref_tag=20=3D=20=
+t10_pi_ref_tag(rq);=0A=20=09struct=20bio=20*bio;=0A+=09unsigned=20int=20=
+pi_size=20=3D=201=20<<=20(rq->q->integrity.interval_exp=20-=20=
+SECTOR_SHIFT);=0A=20=0A=20=09__rq_for_each_bio(bio,=20rq)=20{=0A=20=09=09=
+struct=20bio_integrity_payload=20*bip=20=3D=20bio_integrity(bio);=0A@@=20=
+-202,7=20+207,8=20@@=20static=20void=20t10_pi_type1_complete(struct=20=
+request=20*rq,=20unsigned=20int=20nr_bytes)=0A=20=0A=20=09=09=09=09if=20=
+(be32_to_cpu(pi->ref_tag)=20=3D=3D=20ref_tag)=0A=20=09=09=09=09=09=
+pi->ref_tag=20=3D=20cpu_to_be32(virt);=0A-=09=09=09=09virt++;=0A+=0A+=09=09=
+=09=09virt+=3D=20pi_size;=0A=20=09=09=09=09ref_tag++;=0A=20=09=09=09=09=
+intervals--;=0A=20=09=09=09=09p=20+=3D=20tuple_sz;=0A--=20=0A2.27.0=0A=0A=
+
+--Apple-Mail=_C6614723-5315-4C39-B42C-A71A3AFDF89B
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
+
+
+
+Alex
+--Apple-Mail=_C6614723-5315-4C39-B42C-A71A3AFDF89B--
