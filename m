@@ -2,82 +2,102 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9635AC433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 04:30:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56AA4C433FE
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 07:38:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id 73240611C3
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 04:30:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2DAFB61407
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 07:38:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233406AbhKSEdy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Nov 2021 23:33:54 -0500
-Received: from mail-pj1-f50.google.com ([209.85.216.50]:34335 "EHLO
-        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229754AbhKSEdx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2021 23:33:53 -0500
-Received: by mail-pj1-f50.google.com with SMTP id j5-20020a17090a318500b001a6c749e697so8090894pjb.1;
-        Thu, 18 Nov 2021 20:30:52 -0800 (PST)
+        id S229805AbhKSHlU (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 02:41:20 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50562 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229523AbhKSHlU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 02:41:20 -0500
+Received: from mail-ed1-x536.google.com (mail-ed1-x536.google.com [IPv6:2a00:1450:4864:20::536])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 284F4C06173E
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2021 23:38:19 -0800 (PST)
+Received: by mail-ed1-x536.google.com with SMTP id r11so38833320edd.9
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Nov 2021 23:38:19 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=javigon-com.20210112.gappssmtp.com; s=20210112;
+        h=content-transfer-encoding:from:mime-version:subject:date:message-id
+         :references:cc:in-reply-to:to;
+        bh=fcOZftOIPB4r0uAJLe+Pg56VAFmuAH5o7kKJUEtxQ7w=;
+        b=JrNP4f4EnHLdrKVwg4tmxvvKYQHOn+W8wogoY+K374sXI2UA0H899+88MFvCem8aJ5
+         X3MrqgM+dlqbmvqHyfByhX4BPhJUGbFxxxg7Y91x9i3u2ZV3oLNe86Qa1q4UT5KXfi/3
+         By9jJPX1PAfMLLB8OafLnZjRjt16+piRlgH5MW2GlYjZThxLlMs0DSx0yCUbSaCA/7Fr
+         srcGbzV9mFszfv2dTzCpcZkj6ZdaFEsY8jI1LEDVOfCHayH0hhz60Af2U0/kTKBR3PFq
+         QJzF48P9S+CPgQLheMDNy+jxnzosadzBbkON9Q8J10nQixrb8JFTEDOFUHnsjp8sKwp8
+         nMiA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:from
-         :subject:to:cc:references:content-language:in-reply-to
-         :content-transfer-encoding;
-        bh=jKkpEgqy21F+6MHgAKXtL1mfPkm3IkM1lMAPVxq134I=;
-        b=r6p1nv4Et4N+wSjg/zHds8RVEnAx4KFGgeWtkWLZhf6C074FxchZYI9yNGKENHxhTo
-         dNoIwpB8aFLVXcc3ZVM+S0KE0brR+s5TmDUDDsZo+odxJgLmrnimkrAJP9XLCBrNkjFi
-         FYjecgA0qkJHuGk2a/zmnK6Ej1tQR0D9TmjoSGIIrYU/K5wE9aZZhs4LEFhop1yAFhFe
-         seXFj6q/Amh22wzOS6280wW0ZQuZeIfWRaYKHfoP2Hq2Vf9klFGamV0vXcTJcOmj1OP4
-         8RWSH3DHnmHWBADuyGeVmZanZZTMoMb2EwDpM6XSP4FrOSLln8Yk1WxzqdSW7PfxNrRm
-         yfUA==
-X-Gm-Message-State: AOAM5314C0/LJWIeAm1zyvIQdhC2i/r7/T+iIYuSGHiUQQqOeIgDaeyD
-        gOiTivvzhKYDxl+bzx6DQY4=
-X-Google-Smtp-Source: ABdhPJxeWkmCq0jJll1lI7VBTooLeihaoBCi0Kb4+SXOXNeC/pbSeIT5DrNT2lOoVc6HsGT3Bn/pHQ==
-X-Received: by 2002:a17:90b:1812:: with SMTP id lw18mr1051673pjb.96.1637296252254;
-        Thu, 18 Nov 2021 20:30:52 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id m127sm892396pgm.64.2021.11.18.20.30.50
+        h=x-gm-message-state:content-transfer-encoding:from:mime-version
+         :subject:date:message-id:references:cc:in-reply-to:to;
+        bh=fcOZftOIPB4r0uAJLe+Pg56VAFmuAH5o7kKJUEtxQ7w=;
+        b=lhAk4QPJBKejFLA9lr48hLNZSl3w9Ap1CEwnH7lpg7qVQdIkC87QZR2PwTBD7wy+C1
+         6BdbuD212xbLHt4f9fQ5nzJQsdu8zgf4qqBdwXyafnsCPHAfLcu08zJjcnHiz0VUH4sU
+         H16olhx7CanxjBvULuyXJ8+r+3ukVUwcBDOoolzJK6Z5xrdwRf5vsGT/Ockwjm686lJC
+         5K4KhuoWjV8IKiH5yJ85iQ2ofvooEzjV/axPLVFhneorvnpcBwK/p2WUuBpJ4co5leiA
+         Zg5ar5giFxecMRytyBbLp4CUpEeBB0ydX6MJOnuhwQQ5cp5u6UiQglhxepwXF/KNyH30
+         brXg==
+X-Gm-Message-State: AOAM532bP+YwodLz+EP6r+f1V+HM0wemB6sIVOvr/LqqJcGTviVCj5nV
+        /GWZneN5Js7jBOk+SIZTY3P26w==
+X-Google-Smtp-Source: ABdhPJzl3e3tr3wqllyN2JYawuC7z5WZOElioUzFElEVQo3rNUU9jKhLOL1ITRd1APloUJ9qojdtJA==
+X-Received: by 2002:a17:906:fa87:: with SMTP id lt7mr5190544ejb.426.1637307497317;
+        Thu, 18 Nov 2021 23:38:17 -0800 (PST)
+Received: from smtpclient.apple (5.186.126.13.cgn.fibianet.dk. [5.186.126.13])
+        by smtp.gmail.com with ESMTPSA id nd36sm823788ejc.17.2021.11.18.23.38.16
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 18 Nov 2021 20:30:51 -0800 (PST)
-Message-ID: <a3192b20-fa76-0b64-a2a9-c0c337741156@acm.org>
-Date:   Thu, 18 Nov 2021 20:30:49 -0800
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.0
-From:   Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 1/5] blk-mq: move srcu from blk_mq_hw_ctx to request_queue
-To:     Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
-        Jens Axboe <axboe@kernel.dk>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
-        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-        Keith Busch <kbusch@kernel.org>
-References: <20211119021849.2259254-1-ming.lei@redhat.com>
- <20211119021849.2259254-2-ming.lei@redhat.com>
-Content-Language: en-US
-In-Reply-To: <20211119021849.2259254-2-ming.lei@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+        Thu, 18 Nov 2021 23:38:16 -0800 (PST)
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
+From:   =?utf-8?Q?Javier_Gonz=C3=A1lez?= <javier@javigon.com>
+Mime-Version: 1.0 (1.0)
+Subject: Re: [LSF/MM/BFP ATTEND] [LSF/MM/BFP TOPIC] Storage: Copy Offload
+Date:   Fri, 19 Nov 2021 08:38:16 +0100
+Message-Id: <28961370-9842-41B7-8814-DBB20CEEE1E2@javigon.com>
+References: <553c2a78-1902-aa10-6cc6-a76cbd14364c@acm.org>
+Cc:     Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+        Johannes Thumshirn <johannes.thumshirn@wdc.com>,
+        Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>,
+        linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-nvme@lists.infradead.org, dm-devel@redhat.com,
+        lsf-pc@lists.linux-foundation.org, axboe@kernel.dk,
+        msnitzer@redhat.com, martin.petersen@oracle.com,
+        roland@purestorage.com, mpatocka@redhat.com, hare@suse.de,
+        kbusch@kernel.org, rwheeler@redhat.com, hch@lst.de,
+        Frederick.Knight@netapp.com, zach.brown@ni.com, osandov@fb.com,
+        Adam Manzanares <a.manzanares@samsung.com>,
+        SelvaKumar S <selvakuma.s1@samsung.com>,
+        Nitesh Shetty <nj.shetty@samsung.com>,
+        Kanchan Joshi <joshi.k@samsung.com>,
+        Vincent Fu <vincent.fu@samsung.com>
+In-Reply-To: <553c2a78-1902-aa10-6cc6-a76cbd14364c@acm.org>
+To:     Bart Van Assche <bvanassche@acm.org>
+X-Mailer: iPhone Mail (19A404)
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/18/21 18:18, Ming Lei wrote:
-> +	bool			alloc_srcu;
 
-I found the following statement multiple times in this patch:
 
-WARN_ON_ONCE(q->alloc_srcu != !!(q->tag_set->flags & BLK_MQ_F_BLOCKING));
+> On 17 Nov 2021, at 16.52, Bart Van Assche <bvanassche@acm.org> wrote:
+>=20
+> =EF=BB=BFOn 11/17/21 04:53, Javier Gonz=C3=A1lez wrote:
+>> Thanks for sharing this. We will make sure that DM / MD are supported
+>> and then we can cover examples. Hopefully, you guys can help with the
+>> bits for dm-crypt to make the decision to offload when it make sense.
+>=20
+> Will ask around to learn who should work on this.
 
-Does this mean that the new q->alloc_srcu member variable can be left out
-and that it can be replaced with the following test?
+Great. Thanks.=20
+>=20
+>> I will update the notes to keep them alive. Maybe we can have them open
+>> in your github page?
+>=20
+> Feel free to submit a pull request.
 
-q->tag_set->flags & BLK_MQ_F_BLOCKING
+Will do.
 
-Please note that I'm not concerned about the memory occupied by this
-variable but only about avoiding redundancy.
-
-If this variable is retained it probably should be renamed, e.g. "has_srcu"
-instead of "alloc_srcu".
-
-Thanks,
-
-Bart.
+Javier=20
