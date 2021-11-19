@@ -2,81 +2,92 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 184DDC433F5
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:01:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5793BC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:29:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id E4CAA61AEC
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:01:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41EF860F4F
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 19:29:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235676AbhKSTEl (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Fri, 19 Nov 2021 14:04:41 -0500
-Received: from mail-pf1-f179.google.com ([209.85.210.179]:34617 "EHLO
-        mail-pf1-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234568AbhKSTEl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 14:04:41 -0500
-Received: by mail-pf1-f179.google.com with SMTP id r130so10135484pfc.1
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2021 11:01:39 -0800 (PST)
+        id S236012AbhKSTcq (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Fri, 19 Nov 2021 14:32:46 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43630 "EHLO
+        lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S235999AbhKSTcp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Nov 2021 14:32:45 -0500
+Received: from mail-ed1-x530.google.com (mail-ed1-x530.google.com [IPv6:2a00:1450:4864:20::530])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 33580C061574
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2021 11:29:43 -0800 (PST)
+Received: by mail-ed1-x530.google.com with SMTP id l25so30399400eda.11
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2021 11:29:43 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linux-foundation.org; s=google;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=EcWMNc6Vpg51MXv4sgBrEJhLBETGzdtE97VuddJjcLc=;
+        b=FoqppIpL9PH09xZ/j3XRcFrAQH3P0pqGLDIX7HSq0Xb+Hc2SihFt3aREYLVVwJb8hC
+         mEgrdLC0kruoIuxf4cZZ8bCv46sqpNNq5K5EHHZjXw229OrWvjZq3zdA8xjhX9kWpgEy
+         FbvD/p21wbE87Ilb/jZhIM5LtilfTq122kZ0s=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20210112;
-        h=x-gm-message-state:message-id:date:mime-version:user-agent:subject
-         :content-language:to:cc:references:from:in-reply-to
-         :content-transfer-encoding;
-        bh=hxVGPHyBkUoUmibpdQR5YG6223FvP5Q7v1GwOax71Ko=;
-        b=aQJEREMwKZhg2t6KWtObZzeDtnw4kUo1qHHtUwBAAfBahBPB3W7IlSOJBJGpfGPnPJ
-         1+J/5unJFZ/3jGh8dePHjPHozZgtGHcY+CSm5H8+P+8yuqKuVTQ/c5m5fT8DycE6ejX8
-         MtLUF804rNumCRXjYTXwa9FNwa5McQexocd+Lb9kecsckPvKZJ0UJIZGQ9fYOxPNSdCW
-         P4C2GcdLn8g+wsJTJ1XDi6ATPvE8aSX0k546r2Tbj0CwNoLr6KgsVEXSl5CW2BO7D8g2
-         5Z/p4jPmBDykL5pmwTD5LA14p7rdkeIExU5lahUWsxv/abxnfScbCDKe731XozdR9aaQ
-         plwQ==
-X-Gm-Message-State: AOAM53299+uAzRKus7HnNhYpnHdYiB4gzSpoH30lDsR7MMYsFpyQXpmY
-        34HGxvGTHpZv9bmY2Hg8ZxM=
-X-Google-Smtp-Source: ABdhPJxridcEL2HvPiSZ7nKkw9BOMaKSq49+17Rfv31wWhBWsy2OaT8p82Y6i+Apr3ac4/DYCXJiEg==
-X-Received: by 2002:a05:6a00:2186:b0:473:5a61:a7f6 with SMTP id h6-20020a056a00218600b004735a61a7f6mr24799345pfi.15.1637348498618;
-        Fri, 19 Nov 2021 11:01:38 -0800 (PST)
-Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
-        by smtp.gmail.com with ESMTPSA id g7sm389014pfv.159.2021.11.19.11.01.37
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=EcWMNc6Vpg51MXv4sgBrEJhLBETGzdtE97VuddJjcLc=;
+        b=zEiHB5s4HhXcSKPmZ3Rtg7upojXbd9NBVCkAm+gTZ+IP2EtLoE1/wKqqO1gHDIxDyh
+         FfwR946THWXUjBmINx9VqcMQcgUbhu43QpYP8g2WkYhnJS0YteX1vvGOihqMoHIaCAEW
+         rghQin8cbZgaur2xY2Wu187Q+WpEJn53O6Gbp409lZcaTg3EEipyhbZZokxGjgfke3lL
+         HPHs1uF3BajTUVR2ZW29XLSLkkZjVbGLklF5UR8DfHb/NpEvc7JUDgIMofPOcPsCMRxL
+         RdI61M8aN5GhWOWbiymGRDv517S5pPSVakhjmo34ml7v5KIS6VYcEofsaTpzU9oCXpTf
+         +dNA==
+X-Gm-Message-State: AOAM531IBK9O3dXBAgAvq97yjlY8rtLqMn7Hp1vdEGbyQQyGY2Tyq3/G
+        bNtShf72SvLx8NjQKck6ETfFOa0zIK56WOOr
+X-Google-Smtp-Source: ABdhPJzFEYZBLKIFPFDvvOm2t3hImd5idLB7fuw0r3Bw98MHEe5yggYNQ5YL17v2iPW18mAF1Yb/zQ==
+X-Received: by 2002:a50:c909:: with SMTP id o9mr28066477edh.122.1637350181144;
+        Fri, 19 Nov 2021 11:29:41 -0800 (PST)
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com. [209.85.221.47])
+        by smtp.gmail.com with ESMTPSA id sa17sm327232ejc.123.2021.11.19.11.29.40
+        for <linux-scsi@vger.kernel.org>
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 19 Nov 2021 11:01:38 -0800 (PST)
-Message-ID: <fe970625-67e4-c94b-04df-707e5be1bddb@acm.org>
-Date:   Fri, 19 Nov 2021 11:01:36 -0800
+        Fri, 19 Nov 2021 11:29:40 -0800 (PST)
+Received: by mail-wr1-f47.google.com with SMTP id s13so19904907wrb.3
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Nov 2021 11:29:40 -0800 (PST)
+X-Received: by 2002:adf:cf05:: with SMTP id o5mr10758365wrj.325.1637350180007;
+ Fri, 19 Nov 2021 11:29:40 -0800 (PST)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.3.0
-Subject: Re: [PATCH 11/11] scsi: ufs: Implement polling support
-Content-Language: en-US
-To:     Avri Altman <Avri.Altman@wdc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc:     "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Adrian Hunter <adrian.hunter@intel.com>,
-        "James E.J. Bottomley" <jejb@linux.ibm.com>,
-        Bean Huo <beanhuo@micron.com>, Can Guo <cang@codeaurora.org>,
-        Stanley Chu <stanley.chu@mediatek.com>,
-        Asutosh Das <asutoshd@codeaurora.org>
-References: <20211110004440.3389311-1-bvanassche@acm.org>
- <20211110004440.3389311-12-bvanassche@acm.org>
- <DM6PR04MB6575F4155E19B2D08A4EFB94FC949@DM6PR04MB6575.namprd04.prod.outlook.com>
-From:   Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DM6PR04MB6575F4155E19B2D08A4EFB94FC949@DM6PR04MB6575.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <0a508ff31bbfa9cd73c24713c54a29ac459e3254.camel@HansenPartnership.com>
+In-Reply-To: <0a508ff31bbfa9cd73c24713c54a29ac459e3254.camel@HansenPartnership.com>
+From:   Linus Torvalds <torvalds@linux-foundation.org>
+Date:   Fri, 19 Nov 2021 11:29:24 -0800
+X-Gmail-Original-Message-ID: <CAHk-=wjiTXOy3EJ4Eb++umuCgiDufJxrNZ9Z17_NhdORKZGbSA@mail.gmail.com>
+Message-ID: <CAHk-=wjiTXOy3EJ4Eb++umuCgiDufJxrNZ9Z17_NhdORKZGbSA@mail.gmail.com>
+Subject: Re: [GIT PULL] SCSI fixes for 5.16-rc1
+To:     James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        linux-scsi <linux-scsi@vger.kernel.org>,
+        linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On 11/11/21 00:11, Avri Altman wrote:
-> Also I think this should be a separate patch as well.
+On Fri, Nov 19, 2021 at 10:20 AM James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+>
+> Six fixes, five in drivers (ufs, qla2xxx, iscsi) and one core change to
+> fix a regression in user space device state setting, which is used by
+> the iscsi daemons to effect device recovery.
 
-I see an 8x IOPS improvement on my test setup (2736 IOPS with interrupt based
-completions; 22000 IOPS when using polling).
+Language nit.
 
->> +       .mq_poll                = ufshcd_poll,
-> Did you consider to use some form blk_mq_tagset_busy_iter,
-> And return nutrs - busy?
+One of the few correct uses of "to effect" - but perhaps best avoided
+just because even native speakers get it wrong. And we have a lot of
+non-native speakers too.
 
-Hmm ... wouldn't it be racy to use blk_mq_tagset_busy_iter() inside ufshcd_poll()
-since multiple threads may be polling at the same time?
+It might have been clearer to just say "to start device recovery" or
+perhaps just "as part of device recovery". Just to avoid confusion
+with "affect". Which it obviously _also_ does.
 
-Thanks,
+I kept your wording, but this is just a note that maybe commit
+messages should strive to generally use fairly basic English language
+and try to avoid things that are known to trip people up.
 
-Bart.
+            Linus
