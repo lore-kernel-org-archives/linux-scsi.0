@@ -2,89 +2,82 @@ Return-Path: <linux-scsi-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 06CB9C433EF
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 04:17:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9635AC433EF
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 04:30:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by mail.kernel.org (Postfix) with ESMTP id DF24161AD2
-	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 04:17:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 73240611C3
+	for <linux-scsi@archiver.kernel.org>; Fri, 19 Nov 2021 04:30:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234417AbhKSEUH (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
-        Thu, 18 Nov 2021 23:20:07 -0500
-Received: from mx0b-00069f02.pphosted.com ([205.220.177.32]:24086 "EHLO
-        mx0b-00069f02.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S233983AbhKSEUG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Nov 2021 23:20:06 -0500
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-        by mx0b-00069f02.pphosted.com (8.16.1.2/8.16.1.2) with SMTP id 1AJ1jgjW019269;
-        Fri, 19 Nov 2021 04:16:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2021-07-09;
- bh=AkNrTnsK4Nx5aHqL4a0yL4DcZ5lqLWUiyfR978RpBC4=;
- b=XolRhgkr4oVeO74yqlfPeMHNzcHMeIBGVNce7IB6mw0ol8SaVyy2mLNNiRkB9OTpHu0d
- mjLFSSq9TFSyxizYt2t3tTx/tof3L+YAgEKLbB43BilWMVv07nSxhEayjJTVCDpOdRPw
- 9UWqvt4R07p8XALqLyX8VOBBrfLp8Pqvu3B3yr0agHdTg7bWBJqLfRURa+qf9wxmRFSu
- 7M555SDcr0G5QFeAtPTkVlgdXoIQ9QwJB83oC+ondicm3jghvfkMKC04IOiPFd6fB0sX
- gHxXE2Bdu2CsfJg6MqdHHsQ84Bbhlynr7iPeH0htimfpV8mZVVTmZlB7C4t3Lh/7f92R Lg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by mx0b-00069f02.pphosted.com with ESMTP id 3cd2w93kbc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 19 Nov 2021 04:16:53 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.1.2/8.16.1.2) with SMTP id 1AJ4FBms020355;
-        Fri, 19 Nov 2021 04:16:52 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by userp3020.oracle.com with ESMTP id 3caq4x7c23-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 19 Nov 2021 04:16:52 +0000
-Received: from userp3020.oracle.com (userp3020.oracle.com [127.0.0.1])
-        by pps.reinject (8.16.0.36/8.16.0.36) with SMTP id 1AJ4GiwU024731;
-        Fri, 19 Nov 2021 04:16:51 GMT
-Received: from ca-mkp.mkp.ca.oracle.com (ca-mkp.ca.oracle.com [10.156.108.201])
-        by userp3020.oracle.com with ESMTP id 3caq4x7bx2-8;
-        Fri, 19 Nov 2021 04:16:51 +0000
-From:   "Martin K. Petersen" <martin.petersen@oracle.com>
-To:     asutoshd@codeaurora.org, stanley.chu@mediatek.com,
-        Bean Huo <huobean@gmail.com>, tomas.winkler@intel.com,
-        jejb@linux.ibm.com, bvanassche@acm.org, avri.altman@wdc.com,
-        cang@codeaurora.org, daejun7.park@samsung.com, beanhuo@micron.com,
-        alim.akhtar@samsung.com
-Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, kernel test robot <lkp@intel.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v1] scsi: ufs: ufshpb: Fix sparse warning in ufshpb_set_hpb_read_to_upiu()
-Date:   Thu, 18 Nov 2021 23:16:37 -0500
-Message-Id: <163729506336.21244.4172261199164965765.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.32.0
-In-Reply-To: <20211111222452.384089-1-huobean@gmail.com>
-References: <20211111222452.384089-1-huobean@gmail.com>
+        id S233406AbhKSEdy (ORCPT <rfc822;linux-scsi@archiver.kernel.org>);
+        Thu, 18 Nov 2021 23:33:54 -0500
+Received: from mail-pj1-f50.google.com ([209.85.216.50]:34335 "EHLO
+        mail-pj1-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S229754AbhKSEdx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Nov 2021 23:33:53 -0500
+Received: by mail-pj1-f50.google.com with SMTP id j5-20020a17090a318500b001a6c749e697so8090894pjb.1;
+        Thu, 18 Nov 2021 20:30:52 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20210112;
+        h=x-gm-message-state:message-id:date:mime-version:user-agent:from
+         :subject:to:cc:references:content-language:in-reply-to
+         :content-transfer-encoding;
+        bh=jKkpEgqy21F+6MHgAKXtL1mfPkm3IkM1lMAPVxq134I=;
+        b=r6p1nv4Et4N+wSjg/zHds8RVEnAx4KFGgeWtkWLZhf6C074FxchZYI9yNGKENHxhTo
+         dNoIwpB8aFLVXcc3ZVM+S0KE0brR+s5TmDUDDsZo+odxJgLmrnimkrAJP9XLCBrNkjFi
+         FYjecgA0qkJHuGk2a/zmnK6Ej1tQR0D9TmjoSGIIrYU/K5wE9aZZhs4LEFhop1yAFhFe
+         seXFj6q/Amh22wzOS6280wW0ZQuZeIfWRaYKHfoP2Hq2Vf9klFGamV0vXcTJcOmj1OP4
+         8RWSH3DHnmHWBADuyGeVmZanZZTMoMb2EwDpM6XSP4FrOSLln8Yk1WxzqdSW7PfxNrRm
+         yfUA==
+X-Gm-Message-State: AOAM5314C0/LJWIeAm1zyvIQdhC2i/r7/T+iIYuSGHiUQQqOeIgDaeyD
+        gOiTivvzhKYDxl+bzx6DQY4=
+X-Google-Smtp-Source: ABdhPJxeWkmCq0jJll1lI7VBTooLeihaoBCi0Kb4+SXOXNeC/pbSeIT5DrNT2lOoVc6HsGT3Bn/pHQ==
+X-Received: by 2002:a17:90b:1812:: with SMTP id lw18mr1051673pjb.96.1637296252254;
+        Thu, 18 Nov 2021 20:30:52 -0800 (PST)
+Received: from ?IPV6:2601:647:4000:d7:feaa:14ff:fe9d:6dbd? ([2601:647:4000:d7:feaa:14ff:fe9d:6dbd])
+        by smtp.gmail.com with ESMTPSA id m127sm892396pgm.64.2021.11.18.20.30.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 18 Nov 2021 20:30:51 -0800 (PST)
+Message-ID: <a3192b20-fa76-0b64-a2a9-c0c337741156@acm.org>
+Date:   Thu, 18 Nov 2021 20:30:49 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: pdgvvIzyWJs1R2GKjOqHFoYgLqGaqVRZ
-X-Proofpoint-ORIG-GUID: pdgvvIzyWJs1R2GKjOqHFoYgLqGaqVRZ
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
+ Thunderbird/91.3.0
+From:   Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [PATCH 1/5] blk-mq: move srcu from blk_mq_hw_ctx to request_queue
+To:     Ming Lei <ming.lei@redhat.com>, Christoph Hellwig <hch@lst.de>,
+        Jens Axboe <axboe@kernel.dk>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc:     Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
+        linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+        Keith Busch <kbusch@kernel.org>
+References: <20211119021849.2259254-1-ming.lei@redhat.com>
+ <20211119021849.2259254-2-ming.lei@redhat.com>
+Content-Language: en-US
+In-Reply-To: <20211119021849.2259254-2-ming.lei@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-scsi.vger.kernel.org>
 X-Mailing-List: linux-scsi@vger.kernel.org
 
-On Thu, 11 Nov 2021 23:24:52 +0100, Bean Huo wrote:
+On 11/18/21 18:18, Ming Lei wrote:
+> +	bool			alloc_srcu;
 
-> From: Bean Huo <beanhuo@micron.com>
-> 
-> This patch is to fix the following sparse warnings in ufshpb_set_hpb_read_to_upiu():
-> 
-> sparse warnings: (new ones prefixed by >>)
-> drivers/scsi/ufs/ufshpb.c:335:27: sparse: sparse: cast from restricted __be64
-> drivers/scsi/ufs/ufshpb.c:335:25: sparse: expected restricted __be64 [usertype] ppn_tmp
-> drivers/scsi/ufs/ufshpb.c:335:25: sparse: got unsigned long long [usertype]
-> 
-> [...]
+I found the following statement multiple times in this patch:
 
-Applied to 5.16/scsi-fixes, thanks!
+WARN_ON_ONCE(q->alloc_srcu != !!(q->tag_set->flags & BLK_MQ_F_BLOCKING));
 
-[1/1] scsi: ufs: ufshpb: Fix sparse warning in ufshpb_set_hpb_read_to_upiu()
-      https://git.kernel.org/mkp/scsi/c/73185a13773a
+Does this mean that the new q->alloc_srcu member variable can be left out
+and that it can be replaced with the following test?
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+q->tag_set->flags & BLK_MQ_F_BLOCKING
+
+Please note that I'm not concerned about the memory occupied by this
+variable but only about avoiding redundancy.
+
+If this variable is retained it probably should be renamed, e.g. "has_srcu"
+instead of "alloc_srcu".
+
+Thanks,
+
+Bart.
